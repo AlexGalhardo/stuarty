@@ -41,9 +41,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.HistoryList(ctx, service.HistoryListRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
-		"Undo": func() error { _, err := e.svc.Undo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
-		"Redo": func() error { _, err := e.svc.Redo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
-		"Lint": func() error { _, err := e.svc.Lint(ctx, service.LintRequest{ProjectID: "prj_0000000001"}); return err },
+		"CommandHelp": func() error { _, err := e.svc.CommandHelp(ctx, service.CommandHelpRequest{}); return err },
+		"Undo":        func() error { _, err := e.svc.Undo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
+		"Redo":        func() error { _, err := e.svc.Redo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
+		"Lint":        func() error { _, err := e.svc.Lint(ctx, service.LintRequest{ProjectID: "prj_0000000001"}); return err },
 	}
 
 	// Every method of the interface is checked here and has a scope entry.
@@ -576,7 +577,8 @@ func TestCommandHelp(t *testing.T) {
 	}
 
 	one, err := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Name: "item.move"})
-	if err != nil || one.Command == nil || one.Command.ArgsSchema["$schema"] == nil || one.Command.Example["item_id"] == nil {
+	if err != nil || one.Command == nil || one.Command.ArgsSchema["$schema"] == nil ||
+		one.Command.Example["item_id"] == nil {
 		t.Fatalf("detail = %+v, %v", one, err)
 	}
 
@@ -587,7 +589,12 @@ func TestCommandHelp(t *testing.T) {
 		}
 	}
 
-	if _, err = e.svc.CommandHelp(context.Background(), service.CommandHelpRequest{}); code(err) != service.CodeUnauthorized {
+	if _, err = e.svc.CommandHelp(
+		context.Background(),
+		service.CommandHelpRequest{},
+	); code(
+		err,
+	) != service.CodeUnauthorized {
 		t.Errorf("without a caller: %v", err)
 	}
 }

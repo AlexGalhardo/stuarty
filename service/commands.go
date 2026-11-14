@@ -74,7 +74,8 @@ func (s *svc) CommandHelp(ctx context.Context, req CommandHelpRequest) (*Command
 		detail.Errors = []string{}
 	}
 
-	if json.Unmarshal(schemaRaw, &detail.ArgsSchema) != nil || json.Unmarshal([]byte(cmd.Example), &detail.Example) != nil {
+	if json.Unmarshal(schemaRaw, &detail.ArgsSchema) != nil ||
+		json.Unmarshal([]byte(cmd.Example), &detail.Example) != nil {
 		return nil, internalError()
 	}
 
