@@ -109,37 +109,47 @@ func TimeEffective(fps timeval.FPS, frame int, requested string) map[string]any 
 // Apply applies one operation to doc and returns the new document, the inverse
 // primitives, the diff and the effective values. It validates the arguments, runs
 // the command on a private copy and leaves doc untouched, also on error.
-func (r *Registry) Apply(doc *timeline.Document, op Operation, env Env) (res Result, err error) {
-	cmd, ok := r.cmds[op.Op]
-	if !ok {
-		return Result{}, r.unknown(op.Op)
-	}
-	args, e := decodeArgs(op.Args, cmd.argsType)
-	if e != nil {
-		return Result{}, e
-	}
+func (r *Registry) Apply(doc *timeline.Document, op Operation, env Env) (Result, error) {
 	work := timeline.Clone(doc)
-	ctx := &Context{Doc: work, Env: env, effective: map[string]any{}}
-	defer func() {
-		if recover() != nil {
-			res, err = Result{}, AsError(nil)
-		}
-	}()
-	if cerr := cmd.apply(ctx, args.Addr().Interface()); cerr != nil {
-		return Result{}, AsError(cerr)
+	effective, err := r.run(work, op, env)
+	if err != nil {
+		return Result{}, err
 	}
-	if r.Debug {
-		if vs := timeline.Validate(work); len(vs) > 0 {
-			return Result{}, validationBug(op.Op, vs)
-		}
-	}
-	before, after := timeline.Raw(doc), timeline.Raw(work)
+	before, after := rawPair(doc, work)
 	return Result{
 		Doc:       work,
 		Inverse:   inverseOf(before, after),
 		Diff:      diffOf(before, after),
-		Effective: ctx.effective,
+		Effective: effective,
 	}, nil
+}
+
+// run applies op to work in place. work is the caller's private copy; on error it
+// may be half edited and must be dropped.
+func (r *Registry) run(work *timeline.Document, op Operation, env Env) (effective map[string]any, err error) {
+	cmd, ok := r.cmds[op.Op]
+	if !ok {
+		return nil, r.unknown(op.Op)
+	}
+	args, e := decodeArgs(op.Args, cmd.argsType)
+	if e != nil {
+		return nil, e
+	}
+	ctx := &Context{Doc: work, Env: env, effective: map[string]any{}}
+	defer func() {
+		if recover() != nil {
+			effective, err = nil, AsError(nil)
+		}
+	}()
+	if cerr := cmd.apply(ctx, args.Addr().Interface()); cerr != nil {
+		return nil, AsError(cerr)
+	}
+	if r.Debug {
+		if vs := timeline.Validate(work); len(vs) > 0 {
+			return nil, validationBug(op.Op, vs)
+		}
+	}
+	return ctx.effective, nil
 }
 
 func validationBug(name string, vs []timeline.Violation) *Error {
@@ -160,22 +170,21 @@ func (r *Registry) ApplyBatch(doc *timeline.Document, ops []Operation, env Env) 
 		return BatchResult{}, Errorf(CodeValidation, "The batch has no operations.").
 			WithPath("ops").WithHint("Send at least one operation.")
 	}
-	cur := doc
+	work := timeline.Clone(doc) // one private copy for the whole batch; dropped if an operation fails
 	effective := make([]map[string]any, 0, len(ops))
 	for i, op := range ops {
-		res, err := r.Apply(cur, op, env)
+		eff, err := r.run(work, op, env)
 		if err != nil {
 			e := *AsError(err)
 			idx := i
 			e.OpIndex = &idx
 			return BatchResult{}, &e
 		}
-		cur = res.Doc
-		effective = append(effective, res.Effective)
+		effective = append(effective, eff)
 	}
-	before, after := timeline.Raw(doc), timeline.Raw(cur)
+	before, after := rawPair(doc, work)
 	return BatchResult{
-		Doc:       cur,
+		Doc:       work,
 		Inverse:   inverseOf(before, after),
 		Diff:      diffOf(before, after),
 		Effective: effective,
