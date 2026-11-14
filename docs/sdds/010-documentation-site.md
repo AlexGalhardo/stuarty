@@ -45,6 +45,8 @@ ADR-0024 item 1: the site starts from the **current** vukem `site/`, not from th
 | `site/package-lock.json` | Created by `npm install` in `SITE-COPY`; never copied from vukem |
 | `scripts/refresh-last-updated.sh` (repository root) | The pre-push hook script (SDD-009 section 15.1) |
 
+**Theme and visual identity of the site.** The site keeps the theme behaviour of the copied shell (its `globals.css` and theme toggle, unchanged): D-024's dark default is a rule of the editor interface (SDD-012 §17), not of the documentation. The site does not import the product's `web/resources/css/app.css`; it keeps the shell's typography, spacing and layout, and takes from `docs/design-system.md` §8.4 only the product mark and the `--brand` colour (when the mark exists), the content style and the shared glossary (section 10), and the rule for screenshots of the UI (dark theme, 1600 by 900, the fixture project of the end-to-end suite, no personal paths visible).
+
 `package.json` dependencies are copied with the exact versions of `vukem/site/package.json` (astro 7.4.7, react 19.3.1, tailwindcss 4.3.3, @mdx-js/mdx 3.1.1, shiki 4.5.0 and the rest; `package.json:15-40`). `SITE-COPY` re-checks each against the newest stable release at copy time (the author's dependency rule: stable only, no `latest`, no pre-release) and records any difference; it does not add a package that vukem's site does not use. The package manager is **npm** with `package-lock.json`, as in vukem and in the Studio's `site/` (Decision of this SDD: the author's global rule prefers Bun unless the project already uses another manager, and both predecessors have an npm lockfile here; the React UI in `web/` stays on Bun). Node 24 in CI (`site.yml:35-37`).
 
 ### 1.2 Changed
