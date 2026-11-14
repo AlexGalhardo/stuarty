@@ -1,36 +1,12 @@
-# Local framework notes. Never commit.
-vukem-feedback.md
-
-# Original skill archives. The unpacked kits live in .agents/skills/.
-zip/
-
-# Dependencies and builds
-node_modules/
-site/node_modules/
-site/.next/
-site/dist/
-dist/
-coverage/
-*.log
-
-# Secrets and local env
-.env
-.env.*
-!.env.example
-
-# OS and editors
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-
 # Vukem app
 /bin/
 .vukem/
 storage/*
 !storage/.gitkeep
-/resources/public/hot
+
+# Web build and test output
 /resources/public/build/
+/resources/public/hot
 /bootstrap/ssr/
 test-results/
 playwright-report/
