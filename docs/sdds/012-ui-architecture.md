@@ -65,7 +65,7 @@ Each rule has an identifier used by the checks of §20.
 | T9 | Every user-facing string is looked up through `t(key)` (§16). The only strings shown as received are core-supplied error `message` and `hint`, the text of history steps and a user's own content (project, track and item names, text, caption words) | `check-i18n` rule I3 |
 | T10 | Every non-internal command of the catalogue has a UI entry point (D-013) | contract test `command-coverage` (§9.3) |
 
-**Untrusted text.** Item names, asset names, caption text, history text and project names come from agents and from files, and may contain right-to-left or bidirectional control characters (SDD-007 §8.5 item 3). They are rendered only through the component `ui/UntrustedText.tsx`, an element with `dir="auto"` and `unicode-bidi: isolate`, so such text cannot reorder the surrounding interface. §7.4, §12.1 (word table), §13.2 and §15 refer to this rule.
+**Untrusted text.** Item names, asset names, caption text, history text and project names come from agents and from files, and may contain right-to-left or bidirectional control characters (SDD-007 §8.5 item 3). They are rendered only through the component `components/UntrustedText.tsx` (it lives in `components/` because the Inertia pages use it too), an element with `dir="auto"` and `unicode-bidi: isolate`, so such text cannot reorder the surrounding interface. §7.4, §12.1 (word table), §13.2 and §15 refer to this rule.
 
 ### 1.3 Decoration limits
 
@@ -164,7 +164,7 @@ resources/js/
 ├── editor.tsx                 editor entry
 ├── layouts/AppLayout.tsx      Inertia pages layout
 ├── pages/                     Inertia pages: Projects/Index, Settings/Index, Settings/Keys, Auth/Login, Error
-├── components/                shadcn ui/, ThemeToggle, LocaleSelect, LocaleSwitcher (shared by both kinds of page)
+├── components/                shadcn ui/, ThemeToggle, LocaleSelect, LocaleSwitcher, UntrustedText (shared by both kinds of page)
 ├── lib/                       cn.ts, i18n.ts (context based useT), format.ts (Intl helpers)
 ├── hooks/                     use-mobile.ts
 ├── generated/                 COMMITTED, produced by CI (ADR-0014); never edited by hand
@@ -186,7 +186,7 @@ resources/js/
     ├── library/               Library.tsx, ImportBar.tsx, AssetCard.tsx, AssetDetails.tsx
     ├── export/                ExportDialog.tsx, JobsChip.tsx, LintList.tsx
     ├── history/               HistoryPanel.tsx
-    ├── ui/                    small shared atoms used by two or more feature folders: Toolbar, IconButton, Panel, Splitter, Toast, ErrorNotice, Timecode, TimeField, UntrustedText
+    ├── ui/                    small shared atoms used by two or more feature folders: Toolbar, IconButton, Panel, Splitter, Toast, ErrorNotice, Timecode, TimeField
     ├── layout/                EditorShell.tsx, TopBar.tsx, ActivityIndicator.tsx, panel sizing
     └── a11y/                  LiveRegion.tsx, focus helpers, announce()
 ```

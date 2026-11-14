@@ -1,5 +1,7 @@
 import { Head, Link } from "@inertiajs/react";
 
+import { useT } from "@/lib/i18n";
+
 // Rendered by the server for errors on Inertia visits (404, 403, 500…).
 // message is safe to show: 5xx only ever carry the status text.
 export default function ErrorPage({
@@ -9,6 +11,7 @@ export default function ErrorPage({
 	status: number;
 	message: string;
 }) {
+	const t = useT();
 	return (
 		<>
 			<Head title={`${status} ${message}`} />
@@ -20,10 +23,10 @@ export default function ErrorPage({
 					{message}
 				</h1>
 				<Link
-					href="/"
+					href="/projects"
 					className="mt-6 inline-block text-indigo-600 hover:underline dark:text-indigo-400"
 				>
-					Back to the home page
+					{t("ui.error.back")}
 				</Link>
 			</section>
 		</>
