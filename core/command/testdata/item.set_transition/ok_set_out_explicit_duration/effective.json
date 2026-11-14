@@ -1,0 +1,9 @@
+{
+  "duration": {
+    "frame": 30,
+    "requested": "1s",
+    "seconds": 1
+  },
+  "edge": "out",
+  "kind": "slide_left"
+}

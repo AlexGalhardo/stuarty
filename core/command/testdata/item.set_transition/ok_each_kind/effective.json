@@ -1,0 +1,9 @@
+{
+  "duration": {
+    "frame": 10,
+    "requested": "10f",
+    "seconds": 0.333
+  },
+  "edge": "in",
+  "kind": "slide_down"
+}

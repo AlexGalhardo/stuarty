@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.scale is 20.001, outside the accepted range.",
+  "hint": "Use a value of at most 20.",
+  "retryable": false,
+  "path": "args.scale"
+}

@@ -1,0 +1,9 @@
+{
+  "duration": {
+    "frame": 90,
+    "requested": "90f",
+    "seconds": 3
+  },
+  "edge": "out",
+  "kind": "fade"
+}

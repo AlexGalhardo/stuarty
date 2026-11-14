@@ -1,0 +1,8 @@
+{
+  "op": "item.set_transition",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "edge": "in",
+    "kind": "fade"
+  }
+}

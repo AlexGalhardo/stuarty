@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "transition_in 60 frames plus transition_out 100 frames exceeds duration 150 of itm_m1n2p3q4r5.",
+  "hint": "Use a duration of at most \"50f\" (1.667s) or shorten transition_out first.",
+  "retryable": false,
+  "path": "args.duration"
+}

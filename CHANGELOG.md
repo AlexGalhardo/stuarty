@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **command:** Add `item.rename`, `item.set_transform`, `item.set_transition` and `item.set_audio`
 - **command:** Add `settings.set_fps` and `asset.remove`; the default registry now builds the ALPHA catalogue
 - **timeline:** Add one invalid example per violation code and valid examples for the ALPHA features (keyframes, transitions, shapes, slots, per-word highlight)
 - **timeline:** Add the `migrate` package with the migration chain, the frozen `versions/v1` fixtures and their manifest

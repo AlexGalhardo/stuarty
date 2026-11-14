@@ -176,7 +176,7 @@ func init() {
 	}
 	sp("ok_clip_speed_1", at("97f"), c())
 	sp("ok_clip_speed_3_2_floor_source_in", at("97f"), c(speed(3, 2)))
-	sp("ok_audio_item", at("97f"), func() *B { return base().audio(itemA, audTr, 60, 120, 30) })
+	sp("ok_audio_item", at("97f"), func() *B { return base().audio(itemA, 60, 120, 30) })
 	sp("ok_image_clip", at("97f"), c(image))
 	sp("ok_text_item", at("97f"), func() *B { return base().text(itemA, vidTr, 60, 120) })
 	sp("ok_shape_item", at("97f"), func() *B { return base().shape(itemA, vidTr, 60, 120) })

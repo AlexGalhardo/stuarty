@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "item_id": {
+      "description": "The item to label.",
+      "type": "string"
+    },
+    "name": {
+      "description": "The label, 0 to 120 characters; empty clears it.",
+      "maxLength": 120,
+      "minLength": 0,
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id",
+    "name"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,7 @@
+{
+  "op": "item.set_transform",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "x": 1
+  }
+}
