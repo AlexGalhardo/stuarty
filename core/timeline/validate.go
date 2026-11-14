@@ -284,23 +284,22 @@ func (v *validator) style(path, id string, s *CaptionStyle, caption bool) {
 }
 
 func (v *validator) styleFont(path, id string, s *CaptionStyle) {
+	if s.FontFamily == nil && s.FontWeight == nil {
+		return
+	}
+	family, weight := "Inter", 700
 	if s.FontFamily != nil {
-		family := *s.FontFamily
-		if ff, ok := v.doc.Fonts[family]; ok {
-			weight := 700
-			if s.FontWeight != nil {
-				weight = *s.FontWeight
-			}
-			found := false
-			for _, f := range ff.Files {
-				found = found || f.Weight == weight
-			}
-			if !found {
-				v.add(VFont, path+".font_weight", id, "font %q has no weight %d", family, weight)
-			}
-		} else if !isBundled(family) {
-			v.add(VFont, path+".font_family", id, "font family %q is not bundled and not in fonts", family)
-		}
+		family = *s.FontFamily
+	}
+	if s.FontWeight != nil {
+		weight = *s.FontWeight
+	}
+	weights, ok := FontWeights(v.doc, family)
+	switch {
+	case !ok:
+		v.add(VFont, path+".font_family", id, "font family %q is not bundled and not in fonts", family)
+	case weight%100 == 0 && weight >= 100 && weight <= 900 && !slices.Contains(weights, weight):
+		v.add(VFont, path+".font_weight", id, "font %q has no weight %d; it has %v", family, weight, weights)
 	}
 }
 
@@ -365,10 +364,6 @@ func (v *validator) styleCaption(path, id string, s *CaptionStyle, caption bool)
 		(s.Position != nil || s.Highlight != nil || s.HighlightColor != nil || s.HighlightBackground != nil) {
 		v.add(VShape, path, id, "position and highlight fields apply to caption items only")
 	}
-}
-
-func isBundled(family string) bool {
-	return slices.Contains(BundledFamilies, family)
 }
 
 func (v *validator) item(key string, it Item) {

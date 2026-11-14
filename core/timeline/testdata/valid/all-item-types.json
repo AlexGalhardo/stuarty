@@ -28,7 +28,7 @@
     "itm_p000000002": {"id": "itm_p000000002", "type": "clip", "track": "trk_t000000002", "start": 30, "duration": 60, "asset": "ast_a000000003", "name": "Logo"},
     "itm_p000000003": {"id": "itm_p000000003", "type": "audio", "track": "trk_t000000004", "start": 0, "duration": 300, "asset": "ast_a000000002", "volume": 1.5, "fade_out": 30},
     "itm_p000000004": {"id": "itm_p000000004", "type": "text", "track": "trk_t000000001", "start": 0, "duration": 90, "text": "Hello\nworld",
-      "style": {"font_family": "Anton", "size": 96, "color": "#FFD700", "stroke_width": 0, "align": "left", "shadow_dx": 2, "background_color": "#00000080"}},
+      "style": {"font_family": "Anton", "font_weight": 400, "size": 96, "color": "#FFD700", "stroke_width": 0, "align": "left", "shadow_dx": 2, "background_color": "#00000080"}},
     "itm_p000000005": {"id": "itm_p000000005", "type": "shape", "track": "trk_t000000002", "start": 100, "duration": 50, "shape": "rounded_rect",
       "width": 400, "height": 120, "radius": 24, "fill": "#ff0000", "stroke_width": 4, "opacity": 0.5, "x": 100, "y": 100},
     "itm_p000000006": {"id": "itm_p000000006", "type": "caption", "track": "trk_t000000001", "start": 100, "duration": 60,

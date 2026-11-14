@@ -6,16 +6,16 @@ import (
 	"slices"
 )
 
-// BundledWeights lists the weights shipped for each bundled family. It is provisional
-// until engine/raster/fonts/FONTS.md, written by the font task, lists the real ones;
-// commands use it to answer E_FONT_UNKNOWN, Validate checks families only.
+// BundledWeights lists the weights shipped for each bundled family, as in
+// engine/raster/fonts/FONTS.md (a test keeps the two in step). The variable fonts
+// cover every multiple of 100 in their range.
 var BundledWeights = map[string][]int{
-	"Inter":            {400, 700},
-	"Montserrat":       {400, 700},
+	"Inter":            {100, 200, 300, 400, 500, 600, 700, 800, 900},
+	"Montserrat":       {100, 200, 300, 400, 500, 600, 700, 800, 900},
 	"Anton":            {400},
 	"Bebas Neue":       {400},
-	"Playfair Display": {400, 700},
-	"JetBrains Mono":   {400, 700},
+	"Playfair Display": {400, 500, 600, 700, 800, 900},
+	"JetBrains Mono":   {100, 200, 300, 400, 500, 600, 700, 800},
 }
 
 // FontWeights returns the weights available for a family of the bundled set or of
