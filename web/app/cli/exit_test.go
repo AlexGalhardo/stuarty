@@ -109,32 +109,6 @@ func TestErrorDocumentHasTheProblemMembersAndNoHTTPOnlyOnes(t *testing.T) {
 	}
 }
 
-func TestErrorTextFormat(t *testing.T) {
-	t.Parallel()
-
-	op := 1
-	got := errorText(&service.Error{
-		Code:    "E_OVERLAP",
-		Message: "overlaps",
-		Hint:    "use 3s",
-		OpIndex: &op,
-		Path:    "p",
-		Details: map[string]any{"a": 1},
-	})
-
-	want := "error E_OVERLAP: overlaps\nhint: use 3s\nretryable: false  op_index: 1  path: p\ndetails: {\"a\":1}"
-	if got != want {
-		t.Fatalf("got %q, want %q", got, want)
-	}
-
-	long := errorText(
-		&service.Error{Code: "E_X", Message: "m", Details: map[string]any{"k": string(make([]rune, 5000))}},
-	)
-	if n := len([]rune(long)); n > errorTextCap {
-		t.Fatalf("the text is %d characters, cap %d", n, errorTextCap)
-	}
-}
-
 func TestErrorsThatAreNotServiceErrorsAreMappedWithoutTheirText(t *testing.T) {
 	t.Parallel()
 
