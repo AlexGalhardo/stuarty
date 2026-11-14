@@ -12,6 +12,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -26,7 +27,8 @@ func main() {
 
 // listPackages asks the go tool for the packages of the module.
 func listPackages() ([]Package, error) {
-	out, err := exec.Command("go", "list", "-f", `{{.ImportPath}}|{{.Dir}}|{{join .GoFiles ","}}`, "./...").Output()
+	out, err := exec.CommandContext(context.Background(), "go", "list", "-f", `{{.ImportPath}}|{{.Dir}}|{{join .GoFiles ","}}`, "./...").
+		Output()
 	if err != nil {
 		return nil, fmt.Errorf("go list: %w", err)
 	}

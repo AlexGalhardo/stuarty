@@ -237,16 +237,24 @@ func TestRun(t *testing.T) {
 			wantStdout: []string{"ok   core/timeval", "100.0% (gate 90%)", "ok   service", "(gate 80%)"},
 		},
 		{
-			name:       "core below its floor",
-			content:    profile(m+"/core/timeval/t.go:1.1,2.2 85 1", m+"/core/timeval/t.go:3.1,4.2 15 0", m+"/service/s.go:1.1,2.2 1 1"),
+			name: "core below its floor",
+			content: profile(
+				m+"/core/timeval/t.go:1.1,2.2 85 1",
+				m+"/core/timeval/t.go:3.1,4.2 15 0",
+				m+"/service/s.go:1.1,2.2 1 1",
+			),
 			list:       allCovered,
 			wantCode:   1,
 			wantStdout: []string{"FAIL core/timeval", "85.0% (gate 90%)"},
 			wantStderr: "1 package(s) below the coverage gate",
 		},
 		{
-			name:       "same coverage passes outside core",
-			content:    profile(m+"/core/timeval/t.go:1.1,2.2 1 1", m+"/service/s.go:1.1,2.2 85 1", m+"/service/s.go:3.1,4.2 15 0"),
+			name: "same coverage passes outside core",
+			content: profile(
+				m+"/core/timeval/t.go:1.1,2.2 1 1",
+				m+"/service/s.go:1.1,2.2 85 1",
+				m+"/service/s.go:3.1,4.2 15 0",
+			),
 			list:       allCovered,
 			wantStdout: []string{"covergate: 2 packages meet their gate"},
 		},
@@ -278,7 +286,13 @@ func TestRun(t *testing.T) {
 			var stdout, stderr bytes.Buffer
 
 			if code := run(args, &stdout, &stderr, tt.list); code != tt.wantCode {
-				t.Fatalf("run() = %d, want %d; stdout:\n%s\nstderr:\n%s", code, tt.wantCode, stdout.String(), stderr.String())
+				t.Fatalf(
+					"run() = %d, want %d; stdout:\n%s\nstderr:\n%s",
+					code,
+					tt.wantCode,
+					stdout.String(),
+					stderr.String(),
+				)
 			}
 
 			for _, w := range tt.wantStdout {
