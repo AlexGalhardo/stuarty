@@ -1,9 +1,9 @@
 name: CI
 
 # Pull-request checks of SDD-009 section 9.4 and 13. This file holds the jobs
-# whose tools exist today; the jobs that need tools of later tasks (generated
-# files, release dry run, security suites, fuzz, no egress, Playwright)
-# are added by those tasks, each with the display name the ruleset requires.
+# whose tools exist today; the jobs that need tools of later tasks (security
+# suites, fuzz, no egress, the contract and OpenAPI jobs) are added by those
+# tasks, each with the display name the ruleset requires.
 on:
   push:
     branches: [main]
@@ -46,17 +46,6 @@ jobs:
         run: task lint:go
       - name: task vet
         run: task vet
-      # ADR-0014 item 2: the committed contracts are what the generators write.
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-      - name: task codegen leaves the tree unchanged
-        run: |
-          bun install --frozen-lockfile --cwd web
-          task codegen
-          git status --short
-          git diff --exit-code
-          test -z "$(git status --porcelain)"
       - name: task tidy:check
         run: task tidy:check
       - name: go fix (modernizers)
@@ -152,6 +141,18 @@ jobs:
         # execute: the wiring packages of web/ (bootstrap, routes, seeders) are
         # exercised by web/tests, not by tests of their own.
         run: go test -race -count=1 -timeout=20m -coverpkg=./... -coverprofile=coverage.out ./...
+      # SDD-004 section 12: the common-case export must run at 1.5 x real time or
+      # better. Benchmarks do not run under go test, and the race detector skips this
+      # one, so it has a step of its own, on the three runners, with the pinned FFmpeg
+      # (it skips with a message where only a GPL build exists, risk R6). The numbers
+      # are in the log and in the job summary.
+      - name: Export benchmark (BenchmarkExportCommonCase)
+        shell: bash
+        env:
+          VUKEM_VIDEO_BENCH_MIN_RT: "1.5"
+        run: |
+          go test -run '^$' -bench BenchmarkExportCommonCase -benchtime=1x -count=1 -timeout=10m ./engine/export/ | tee bench.txt
+          { echo '### BenchmarkExportCommonCase (${{ matrix.os }})'; echo '```'; grep -E "^Benchmark|x real time" bench.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Coverage gate
         if: matrix.os == 'ubuntu-latest'
         run: go run ./internal/tools/covergate -v coverage.out
@@ -161,6 +162,152 @@ jobs:
         with:
           name: coverage
           path: coverage.out
+
+  # ADR-0014 item 2 and ADR-0024: the committed contracts and generated
+  # references are what the generators write. A generated folder edited by hand,
+  # or a generator that was not run, fails here and passes after task codegen.
+  generated:
+    name: Generated files
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Install go-task
+        run: go install github.com/go-task/task/v3/cmd/task@${{ env.TASK_VERSION }}
+      - run: bun install --frozen-lockfile --cwd web
+      - run: task codegen
+      # Only the folders that exist; site/generated and site/content/generated join
+      # when the site generators (SDD-010) do.
+      - name: The generated folders are unchanged
+        run: |
+          paths=()
+          for d in core/schema web/resources/js/generated site/generated site/content/generated; do
+            if [ -e "$d" ]; then paths+=("$d"); fi
+          done
+          git status --short -- "${paths[@]}"
+          git diff --exit-code -- "${paths[@]}"
+          test -z "$(git status --porcelain -- "${paths[@]}")"
+
+  browser:
+    name: Browser tests (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Install FFmpeg
+        run: |
+          bin_dir="$(bash scripts/install-ffmpeg.sh)"
+          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+      - run: bun install --frozen-lockfile
+        working-directory: web
+      - run: bun run build
+        working-directory: web
+      - run: bunx playwright install --with-deps chromium
+        working-directory: web
+      - run: bun run e2e
+        working-directory: web
+
+  snapshot:
+    name: Release build (snapshot)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          syft-version: v1.54.1
+      - run: bun install --frozen-lockfile --cwd web
+      - uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
+        with:
+          version: "v2.18.2"
+          args: release --snapshot --clean --skip=sign,publish --config .config/goreleaser.yaml
+      # NFR-041: the archive of every platform, without FFmpeg, is under 60 MB (60,000,000 bytes).
+      - name: Every archive is under 60 MB
+        run: |
+          count=0
+          for f in dist/vukem-video_*.tar.gz dist/vukem-video_*.zip; do
+            size="$(stat -c %s "$f")"
+            echo "$f $size"
+            [ "$size" -lt 60000000 ] || { echo "::error::$f is $size bytes"; exit 1; }
+            count=$((count + 1))
+          done
+          [ "$count" -eq 6 ] || { echo "::error::expected 6 archives, found $count"; exit 1; }
+
+  # SDD-007 section 12 and SDD-009 section 9.4 job 17: the sandbox tests run for
+  # real. A skipped test would pass silently, so the output is checked for PASS.
+  bwrap:
+    name: Sandbox (bwrap)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - run: sudo apt-get update && sudo apt-get install -y bubblewrap
+      # Ubuntu 24.04 restricts unprivileged user namespaces, which bwrap needs.
+      - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: TestSecurity_T16_
+        run: |
+          go test -count=1 -v -run 'TestSecurity_T16_' ./engine/... | tee t16.log
+          if grep -E -- "--- SKIP: TestSecurity_T16_" t16.log; then
+            echo "::error::a sandbox test was skipped"
+            exit 1
+          fi
+          grep -q -- "--- PASS: TestSecurity_T16_" t16.log
+          # The test of P2-RND-005 must have run, not been skipped, once it exists.
+          if grep -rq "func TestSecurity_T16_BwrapHasNoNetwork" engine; then
+            grep -q -- "--- PASS: TestSecurity_T16_BwrapHasNoNetwork" t16.log
+          fi
+
+  # SDD-004 section 11: the golden cases with the FFmpeg of the distribution
+  # instead of the pinned one. Reported, not blocking.
+  golden:
+    name: Golden cases (PATH FFmpeg)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: VUKEM_VIDEO_FFMPEG="$(command -v ffmpeg)" go test -count=1 -v -run Golden ./engine/export/...
 
   vuln:
     name: Vulnerabilities
