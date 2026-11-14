@@ -146,13 +146,17 @@ func captionStyle(doc *timeline.Document, it *timeline.Item) (st ResolvedStyle, 
 	return st, position
 }
 
-// pixelScale is the oversampling factor of SDD-004 §5.3 at output scale 1:
-// the largest scale the item reaches, rounded up to the next quarter and
-// clamped to 0.25..4.
-func pixelScale(it *timeline.Item) float64 {
+// pixelScale is the oversampling factor of SDD-004 §5.3:
+// the largest scale the item reaches times the output scale (0 means 1),
+// rounded up to the next quarter and clamped to 0.25..4.
+func pixelScale(it *timeline.Item, output float64) float64 {
 	top := it.Scale
 	for _, kf := range it.Keyframes["scale"] {
 		top = max(top, kf.Value)
+	}
+
+	if output > 0 {
+		top *= output
 	}
 
 	return min(max(math.Ceil(top*4)/4, 0.25), 4)
