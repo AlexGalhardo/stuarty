@@ -56,8 +56,12 @@ func TestCrashChild(t *testing.T) {
 	switch os.Getenv(actionEnv) {
 	case "edit":
 		_, err = svc.Edit(ctx, service.EditRequest{
-			ProjectID: project, BaseRevision: 1, IdempotencyKey: "crash-test-key",
-			Operations: []command.Operation{op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"x"}`, track))},
+			ProjectID:      project,
+			BaseRevision:   1,
+			IdempotencyKey: "crash-test-key",
+			Operations: []command.Operation{
+				op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"x"}`, track)),
+			},
 		})
 	case "undo":
 		_, err = svc.Undo(ctx, service.UndoRequest{ProjectID: project})
@@ -106,9 +110,19 @@ func crashAt(t *testing.T, action, point string) {
 	switch action {
 	case "undo":
 		// something to undo besides the track: the child undoes r2
-		e.mustEdit(ui, project, 1, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"4s","duration":"1s","text":"seed"}`, track)))
+		e.mustEdit(
+			ui,
+			project,
+			1,
+			op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"4s","duration":"1s","text":"seed"}`, track)),
+		)
 	case "redo":
-		e.mustEdit(ui, project, 1, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"4s","duration":"1s","text":"seed"}`, track)))
+		e.mustEdit(
+			ui,
+			project,
+			1,
+			op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"4s","duration":"1s","text":"seed"}`, track)),
+		)
 
 		if _, err := e.undo(ui, project); err != nil {
 			t.Fatal(err)
@@ -151,10 +165,20 @@ func crashAt(t *testing.T, action, point string) {
 
 	if durable(point) {
 		if after.Revision != before.Revision+1 {
-			t.Errorf("crash at %s: revision %d, want %d (the commit was durable)", point, after.Revision, before.Revision+1)
+			t.Errorf(
+				"crash at %s: revision %d, want %d (the commit was durable)",
+				point,
+				after.Revision,
+				before.Revision+1,
+			)
 		}
 	} else if after.Revision != before.Revision || string(after.Document) != docBefore {
-		t.Errorf("crash at %s: revision %d and a changed document, want revision %d untouched", point, after.Revision, before.Revision)
+		t.Errorf(
+			"crash at %s: revision %d and a changed document, want revision %d untouched",
+			point,
+			after.Revision,
+			before.Revision,
+		)
 	}
 
 	invariants(t, st, project)
@@ -181,9 +205,9 @@ func invariants(t *testing.T, st *store.Store, project string) {
 		t.Fatalf("%d log rows for revision %d", len(rows), row.Revision)
 	}
 
-	for i, r := range rows {
-		if r.Revision != row.Revision-int64(i) {
-			t.Fatalf("log not contiguous: row %d is r%d under r%d", i, r.Revision, row.Revision)
+	for i := range rows {
+		if rows[i].Revision != row.Revision-int64(i) {
+			t.Fatalf("log not contiguous: row %d is r%d under r%d", i, rows[i].Revision, row.Revision)
 		}
 	}
 
@@ -203,8 +227,10 @@ func invariants(t *testing.T, st *store.Store, project string) {
 		t.Fatal(err)
 	}
 
-	if row.Summary.Items != len(doc.Items) || row.Summary.Tracks != len(doc.Tracks) || row.Summary.Assets != len(doc.Assets) ||
-		row.Summary.Width != doc.Settings.Width || row.Summary.DurationFrames != endOf(doc) {
+	if row.Summary.Items != len(doc.Items) || row.Summary.Tracks != len(doc.Tracks) ||
+		row.Summary.Assets != len(doc.Assets) ||
+		row.Summary.Width != doc.Settings.Width ||
+		row.Summary.DurationFrames != endOf(doc) {
 		t.Errorf("summary %+v does not match the document", row.Summary)
 	}
 

@@ -5,6 +5,7 @@
 package textview
 
 import (
+	"encoding/json"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -93,3 +94,14 @@ func Range(fps timeval.FPS, start, end int64) string {
 
 // runeLen is the length in characters, which is what the caps count.
 func runeLen(s string) int { return utf8.RuneCountInString(s) }
+
+// marshalOrNull encodes a number or a document value, which cannot fail to
+// encode; the fallback exists so that no error is ignored.
+func marshalOrNull(v any) []byte {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return []byte("null")
+	}
+
+	return b
+}

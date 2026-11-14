@@ -1,6 +1,7 @@
 package servicetest
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"reflect"
@@ -47,8 +48,8 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 
 	// Every method of the interface is checked here and has a scope entry.
 	typ := reflect.TypeFor[service.Service]()
-	for i := range typ.NumMethod() {
-		name := typ.Method(i).Name
+	for method := range typ.Methods() {
+		name := method.Name
 		if _, ok := checks[name]; !ok {
 			t.Errorf("method %s has no missing-caller check", name)
 		}
@@ -83,17 +84,35 @@ func TestScopesAreEnforcedPerMethod(t *testing.T) {
 		t.Errorf("read must read: %v", err)
 	}
 
-	if _, err := e.svc.Edit(only(service.ScopeRead), service.EditRequest{ProjectID: project, Operations: []command.Operation{op("track.add", `{"kind":"visual"}`)}}); code(err) != service.CodeForbidden {
+	if _, err := e.svc.Edit(
+		only(service.ScopeRead),
+		service.EditRequest{ProjectID: project, Operations: []command.Operation{op("track.add", `{"kind":"visual"}`)}},
+	); code(
+		err,
+	) != service.CodeForbidden {
 		t.Errorf("a read key editing = %v, want E_FORBIDDEN", err)
 	}
 
-	if _, err := e.svc.ProjectGet(only(service.ScopeEdit), service.ProjectGetRequest{ProjectID: project}); code(err) != service.CodeForbidden {
+	if _, err := e.svc.ProjectGet(
+		only(service.ScopeEdit),
+		service.ProjectGetRequest{ProjectID: project},
+	); code(
+		err,
+	) != service.CodeForbidden {
 		t.Errorf("an edit key reading = %v, want E_FORBIDDEN", err)
 	}
 
 	// A key limited to one project cannot reach another.
-	limited := service.WithCaller(context.Background(), service.Caller{Actor: "key:key_h8v2n5q7w3", Scopes: service.AllScopes, ProjectID: "prj_0000000099"})
-	if _, err := e.svc.ProjectGet(limited, service.ProjectGetRequest{ProjectID: project}); code(err) != service.CodeForbidden {
+	limited := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "key:key_h8v2n5q7w3", Scopes: service.AllScopes, ProjectID: "prj_0000000099"},
+	)
+	if _, err := e.svc.ProjectGet(
+		limited,
+		service.ProjectGetRequest{ProjectID: project},
+	); code(
+		err,
+	) != service.CodeForbidden {
 		t.Errorf("a project-limited key = %v, want E_FORBIDDEN", err)
 	}
 
@@ -117,7 +136,10 @@ func TestProjectCreateListGetAndTrash(t *testing.T) {
 	e := newEnv(t)
 	ctx := e.as(ui)
 
-	res, err := e.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "Launch \"teaser\"", Preset: "16:9", FPS: "30000/1001"})
+	res, err := e.svc.ProjectCreate(
+		ctx,
+		service.ProjectCreateRequest{Name: "Launch \"teaser\"", Preset: "16:9", FPS: "30000/1001"},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +178,8 @@ func TestProjectCreateListGetAndTrash(t *testing.T) {
 	}
 
 	list, err := e.svc.ProjectList(ctx, service.ProjectListRequest{})
-	if err != nil || len(list.Projects) != 1 || list.Projects[0].ID != res.ProjectID || list.Projects[0].FPS != "30000/1001" {
+	if err != nil || len(list.Projects) != 1 || list.Projects[0].ID != res.ProjectID ||
+		list.Projects[0].FPS != "30000/1001" {
 		t.Fatalf("list = %+v, %v", list, err)
 	}
 
@@ -168,7 +191,11 @@ func TestProjectCreateListGetAndTrash(t *testing.T) {
 	before := e.document(res.ProjectID)
 
 	for range 2 {
-		if st, err := e.svc.ProjectTrash(ctx, service.ProjectTrashRequest{ProjectID: res.ProjectID}); err != nil || st.State != "trashed" {
+		if st, err := e.svc.ProjectTrash(
+			ctx,
+			service.ProjectTrashRequest{ProjectID: res.ProjectID},
+		); err != nil ||
+			st.State != "trashed" {
 			t.Fatalf("trash = %+v, %v", st, err)
 		}
 	}
@@ -183,7 +210,14 @@ func TestProjectCreateListGetAndTrash(t *testing.T) {
 		}
 	}
 
-	if _, err := e.edit(ui, res.ProjectID, 0, op("track.add", `{"kind":"visual"}`)); code(err) != command.CodeInvalidState {
+	if _, err := e.edit(
+		ui,
+		res.ProjectID,
+		0,
+		op("track.add", `{"kind":"visual"}`),
+	); code(
+		err,
+	) != command.CodeInvalidState {
 		t.Errorf("edit of a trashed project = %v, want E_INVALID_STATE", err)
 	}
 
@@ -191,7 +225,10 @@ func TestProjectCreateListGetAndTrash(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if h := e.head(res.ProjectID); h.Revision != 0 || h.State != service.ProjectActive || string(e.document(res.ProjectID)) != string(before) {
+	if h := e.head(
+		res.ProjectID,
+	); h.Revision != 0 || h.State != service.ProjectActive ||
+		!bytes.Equal(e.document(res.ProjectID), before) {
 		t.Errorf("trash changed the revision or the document: %+v", h)
 	}
 
@@ -200,15 +237,30 @@ func TestProjectCreateListGetAndTrash(t *testing.T) {
 		t.Fatalf("audit = %+v, %v; want project.create, project.trash, project.restore", audit, err)
 	}
 
-	if _, err := e.svc.ProjectList(ctx, service.ProjectListRequest{State: "everything"}); code(err) != command.CodeValidation {
+	if _, err := e.svc.ProjectList(
+		ctx,
+		service.ProjectListRequest{State: "everything"},
+	); code(
+		err,
+	) != command.CodeValidation {
 		t.Errorf("unknown state = %v", err)
 	}
 
-	if _, err := e.svc.ProjectList(ctx, service.ProjectListRequest{Page: service.Page{Cursor: "!!"}}); code(err) != command.CodeValidation {
+	if _, err := e.svc.ProjectList(
+		ctx,
+		service.ProjectListRequest{Cursor: "!!"},
+	); code(
+		err,
+	) != command.CodeValidation {
 		t.Errorf("bad cursor = %v", err)
 	}
 
-	if _, err := e.svc.ProjectTrash(ctx, service.ProjectTrashRequest{ProjectID: "prj_0000000777"}); code(err) != command.CodeNotFound {
+	if _, err := e.svc.ProjectTrash(
+		ctx,
+		service.ProjectTrashRequest{ProjectID: "prj_0000000777"},
+	); code(
+		err,
+	) != command.CodeNotFound {
 		t.Errorf("trash of a missing project = %v", err)
 	}
 }
@@ -232,7 +284,8 @@ func TestProjectGetViews(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got.Revision != 4 || got.Counts.Items != 3 || got.Counts.Tracks != 1 || got.Duration.Frame != 150 || got.Document != nil {
+	if got.Revision != 4 || got.Counts.Items != 3 || got.Counts.Tracks != 1 || got.Duration.Frame != 150 ||
+		got.Document != nil {
 		t.Errorf("head = %+v", got)
 	}
 
@@ -247,11 +300,21 @@ func TestProjectGetViews(t *testing.T) {
 		t.Fatalf("document = %+v, %v", doc, err)
 	}
 
-	if _, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project, Detail: "document", Page: service.Page{Limit: 5}}); code(err) != command.CodeValidation {
+	if _, err := e.svc.ProjectGet(
+		ctx,
+		service.ProjectGetRequest{ProjectID: project, Detail: "document", Limit: 5},
+	); code(
+		err,
+	) != command.CodeValidation {
 		t.Errorf("document with limit = %v", err)
 	}
 
-	if _, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project, Detail: "weird"}); code(err) != command.CodeValidation {
+	if _, err := e.svc.ProjectGet(
+		ctx,
+		service.ProjectGetRequest{ProjectID: project, Detail: "weird"},
+	); code(
+		err,
+	) != command.CodeValidation {
 		t.Errorf("unknown detail = %v", err)
 	}
 
@@ -261,12 +324,15 @@ func TestProjectGetViews(t *testing.T) {
 	}
 
 	// Paging by item, a cursor that goes stale after a write.
-	page1, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project, Page: service.Page{Limit: 1}})
+	page1, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project, Limit: 1})
 	if err != nil || page1.NextCursor == nil || !strings.Contains(page1.Text, "next_cursor: ") {
 		t.Fatalf("page 1 = %+v, %v", page1, err)
 	}
 
-	page2, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project, Page: service.Page{Cursor: *page1.NextCursor, Limit: 1}})
+	page2, err := e.svc.ProjectGet(
+		ctx,
+		service.ProjectGetRequest{ProjectID: project, Cursor: *page1.NextCursor, Limit: 1},
+	)
 	if err != nil || !strings.Contains(page2.Text, "(page 2)") {
 		t.Fatalf("page 2 = %v\n%s", err, page2.Text)
 	}
@@ -275,14 +341,23 @@ func TestProjectGetViews(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project, Page: service.Page{Cursor: *page1.NextCursor}})
+	_, err = e.svc.ProjectGet(
+		ctx,
+		service.ProjectGetRequest{ProjectID: project, Cursor: *page1.NextCursor},
+	)
 	se := serviceError(t, err)
 
-	if se.Code != command.CodeValidation || se.Path != "cursor" || se.Details["reason"] != "stale" || se.Details["revision"] != int64(5) {
+	if se.Code != command.CodeValidation || se.Path != "cursor" || se.Details["reason"] != "stale" ||
+		se.Details["revision"] != int64(5) {
 		t.Errorf("stale cursor = %+v", se)
 	}
 
-	if _, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: "prj_0000000777"}); code(err) != command.CodeNotFound {
+	if _, err := e.svc.ProjectGet(
+		ctx,
+		service.ProjectGetRequest{ProjectID: "prj_0000000777"},
+	); code(
+		err,
+	) != command.CodeNotFound {
 		t.Errorf("missing project = %v", err)
 	}
 }
@@ -291,19 +366,38 @@ func TestNetworkModeOwnersSeeOnlyTheirProjects(t *testing.T) {
 	t.Parallel()
 
 	e := newEnv(t)
-	alice := service.WithCaller(context.Background(), service.Caller{Actor: "user:usr_a", Scopes: service.AllScopes, OwnerUserID: "usr_a"})
-	bob := service.WithCaller(context.Background(), service.Caller{Actor: "user:usr_b", Scopes: service.AllScopes, OwnerUserID: "usr_b"})
+	alice := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "user:usr_a", Scopes: service.AllScopes, OwnerUserID: "usr_a"},
+	)
+	bob := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "user:usr_b", Scopes: service.AllScopes, OwnerUserID: "usr_b"},
+	)
 
 	res, err := e.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "alice's"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := e.svc.ProjectGet(bob, service.ProjectGetRequest{ProjectID: res.ProjectID}); code(err) != command.CodeNotFound {
+	if _, err := e.svc.ProjectGet(
+		bob,
+		service.ProjectGetRequest{ProjectID: res.ProjectID},
+	); code(
+		err,
+	) != command.CodeNotFound {
 		t.Errorf("bob reading alice's project = %v, want E_NOT_FOUND (no disclosure)", err)
 	}
 
-	if _, err := e.svc.Edit(bob, service.EditRequest{ProjectID: res.ProjectID, Operations: []command.Operation{op("track.add", `{"kind":"visual"}`)}}); code(err) != command.CodeNotFound {
+	if _, err := e.svc.Edit(
+		bob,
+		service.EditRequest{
+			ProjectID:  res.ProjectID,
+			Operations: []command.Operation{op("track.add", `{"kind":"visual"}`)},
+		},
+	); code(
+		err,
+	) != command.CodeNotFound {
 		t.Errorf("bob editing alice's project = %v", err)
 	}
 
@@ -336,7 +430,10 @@ func TestErrorStatusAndExitCode(t *testing.T) {
 }
 
 func network(actor, owner string) context.Context {
-	return service.WithCaller(context.Background(), service.Caller{Actor: actor, Scopes: service.AllScopes, OwnerUserID: owner})
+	return service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: actor, Scopes: service.AllScopes, OwnerUserID: owner},
+	)
 }
 
 func TestSecurity_T06_ProjectLimitedKeyConfined(t *testing.T) {
@@ -369,11 +466,21 @@ func TestSecurity_T06_ProjectLimitedKeyConfined(t *testing.T) {
 		t.Errorf("a project-limited key lists %+v\n%s", l.Projects, l.Text)
 	}
 
-	if _, err := e.svc.ProjectCreate(key, service.ProjectCreateRequest{Name: "more"}); code(err) != service.CodeForbidden {
+	if _, err := e.svc.ProjectCreate(
+		key,
+		service.ProjectCreateRequest{Name: "more"},
+	); code(
+		err,
+	) != service.CodeForbidden {
 		t.Errorf("a project-limited key creating a project = %v, want E_FORBIDDEN", err)
 	}
 
-	if _, err := e.svc.ProjectGet(key, service.ProjectGetRequest{ProjectID: ids[0]}); code(err) != service.CodeForbidden {
+	if _, err := e.svc.ProjectGet(
+		key,
+		service.ProjectGetRequest{ProjectID: ids[0]},
+	); code(
+		err,
+	) != service.CodeForbidden {
 		t.Errorf("a project-limited key reading another project = %v, want E_FORBIDDEN", err)
 	}
 }
@@ -385,7 +492,10 @@ func TestSecurity_T06_ListAndCountAreScopedToTheOwner(t *testing.T) {
 	alice, bob := network("user:usr_a", "usr_a"), network("user:usr_b", "usr_b")
 
 	for i := range 5 {
-		if _, err := e.svc.ProjectCreate(bob, service.ProjectCreateRequest{Name: fmt.Sprintf("bob %d", i)}); err != nil {
+		if _, err := e.svc.ProjectCreate(
+			bob,
+			service.ProjectCreateRequest{Name: fmt.Sprintf("bob %d", i)},
+		); err != nil {
 			t.Fatal(err)
 		}
 
@@ -441,7 +551,10 @@ func TestSecurity_T06_ProjectIDIsNotAnExistenceOracle(t *testing.T) {
 	}
 
 	// Local mode keeps the client-chosen id (and E_ID_EXISTS), there is no other owner.
-	if _, err := e.svc.ProjectCreate(e.as(ui), service.ProjectCreateRequest{Name: "l", ID: "prj_00000aaaaa"}); err != nil {
+	if _, err := e.svc.ProjectCreate(
+		e.as(ui),
+		service.ProjectCreateRequest{Name: "l", ID: "prj_00000aaaaa"},
+	); err != nil {
 		t.Errorf("local create with an id: %v", err)
 	}
 }

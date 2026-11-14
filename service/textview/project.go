@@ -1,7 +1,6 @@
 package textview
 
 import (
-	"encoding/json"
 	"fmt"
 	"maps"
 	"slices"
@@ -183,11 +182,25 @@ func head(doc *timeline.Document, o ProjectOptions, fps timeval.FPS, emit func(s
 	}
 
 	emit(fmt.Sprintf("project %s %s rev %d", doc.ID, Quote(doc.Name, 60), o.Revision))
-	emit(fmt.Sprintf("%dx%d %sfps duration=%s tracks=%d items=%d assets=%d",
-		doc.Settings.Width, doc.Settings.Height, fps, Cell(fps, EndFrame(doc)), len(doc.Tracks), len(doc.Items), len(doc.Assets)))
+	emit(fmt.Sprintf(
+		"%dx%d %sfps duration=%s tracks=%d items=%d assets=%d",
+		doc.Settings.Width,
+		doc.Settings.Height,
+		fps,
+		Cell(fps, EndFrame(doc)),
+		len(doc.Tracks),
+		len(doc.Items),
+		len(doc.Assets),
+	))
 
 	if o.Full {
-		emit(fmt.Sprintf("settings background=%s loudness_target=%s", doc.Settings.Background, num(doc.Settings.LoudnessTarget)))
+		emit(
+			fmt.Sprintf(
+				"settings background=%s loudness_target=%s",
+				doc.Settings.Background,
+				num(doc.Settings.LoudnessTarget),
+			),
+		)
 
 		if len(doc.Fonts) > 0 {
 			families := slices.Sorted(maps.Keys(doc.Fonts))
@@ -204,7 +217,14 @@ func head(doc *timeline.Document, o ProjectOptions, fps timeval.FPS, emit func(s
 
 // rowLines renders a track row, or an item row with the track line before it
 // when the page resumes in that track.
-func rowLines(doc *timeline.Document, fps timeval.FPS, r row, full bool, byTrack map[string][]string, trackLine bool) []string {
+func rowLines(
+	doc *timeline.Document,
+	fps timeval.FPS,
+	r row,
+	full bool,
+	byTrack map[string][]string,
+	trackLine bool,
+) []string {
 	var lines []string
 
 	if r.item == "" || trackLine {
@@ -216,7 +236,7 @@ func rowLines(doc *timeline.Document, fps timeval.FPS, r row, full bool, byTrack
 	}
 
 	it := doc.Items[r.item]
-	lines = append(lines, itemLine(doc, fps, &it))
+	lines = append(lines, itemLine(fps, &it))
 
 	if full {
 		lines = append(lines, continuation(fps, &it)...)
@@ -253,11 +273,11 @@ func trackLineOf(doc *timeline.Document, id string, items int) string {
 }
 
 func num(f float64) string {
-	b, _ := json.Marshal(f)
+	b := marshalOrNull(f)
 	return string(b)
 }
 
-func itemLine(doc *timeline.Document, fps timeval.FPS, it *timeline.Item) string {
+func itemLine(fps timeval.FPS, it *timeline.Item) string {
 	s := fmt.Sprintf("%s %s %s %s", it.ID, it.Type, Cell(fps, int64(it.Start)), Dur(fps, int64(it.Duration)))
 
 	if d := itemDetail(it); d != "" {
@@ -339,9 +359,9 @@ func assetDuration(doc *timeline.Document, a *timeline.Asset) int64 {
 		return int64(a.FrameCount) * int64(fps.Num) * int64(a.FrameRate.Den) / (int64(fps.Den) * int64(a.FrameRate.Num))
 	case timeline.AssetAudio:
 		return int64(a.SampleCount) * int64(fps.Num) / (48000 * int64(fps.Den))
+	default:
+		return 0
 	}
-
-	return 0
 }
 
 func assetLines(doc *timeline.Document, fps timeval.FPS, full bool) []string {
@@ -385,7 +405,7 @@ const wrapAt = 160
 // their default, as key=value (SDD-003 section 3.3): end first, a caption's
 // words next, then the rest sorted by key; wrapped at 160 characters.
 func continuation(fps timeval.FPS, it *timeline.Item) []string {
-	end := fmt.Sprintf("end=%s", Cell(fps, int64(it.Start+it.Duration)))
+	end := "end=" + Cell(fps, int64(it.Start+it.Duration))
 	parts := []string{end}
 
 	if it.Type == timeline.ItemCaption {
@@ -408,7 +428,7 @@ func continuation(fps timeval.FPS, it *timeline.Item) []string {
 func extraFields(fps timeval.FPS, it *timeline.Item) map[string]string {
 	f := map[string]string{}
 	frames := func(v int) string { return Cell(fps, int64(v)) }
-	jsonOf := func(v any) string { b, _ := json.Marshal(v); return string(b) }
+	jsonOf := func(v any) string { return string(marshalOrNull(v)) }
 
 	if it.Name != "" {
 		f["name"] = Quote(it.Name, 80)

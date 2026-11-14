@@ -55,8 +55,14 @@ func (e *Error) HTTPStatus() int {
 		return http.StatusConflict
 	case CodePayloadTooLarge:
 		return http.StatusRequestEntityTooLarge
-	case command.CodeLimit, "E_LIMIT_EXCEEDED", "E_UNSUPPORTED_MEDIA", command.CodeTypeMismatch, command.CodeOutOfSource,
-		command.CodeFontUnknown, command.CodeSlot, CodeLintBlocking:
+	case command.CodeLimit,
+		"E_LIMIT_EXCEEDED",
+		"E_UNSUPPORTED_MEDIA",
+		command.CodeTypeMismatch,
+		command.CodeOutOfSource,
+		command.CodeFontUnknown,
+		command.CodeSlot,
+		CodeLintBlocking:
 		return http.StatusUnprocessableEntity
 	case CodeQueueFull, CodeRateLimited:
 		return http.StatusTooManyRequests
@@ -143,8 +149,7 @@ func asError(err error) error {
 		return internalError()
 	}
 
-	var full *QueueFullError
-	if errors.As(err, &full) {
+	if full, ok := errors.AsType[*QueueFullError](err); ok {
 		return newError(CodeQueueFull, "a concurrency limit is reached.").withDetail("running", full.Running)
 	}
 
