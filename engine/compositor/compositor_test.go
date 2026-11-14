@@ -252,3 +252,30 @@ func TestComposeRejectsAPaddedFrame(t *testing.T) {
 		t.Error("a padded frame was accepted")
 	}
 }
+
+func TestResize(t *testing.T) {
+	t.Parallel()
+	flat := Image{Pix: bytes.Repeat([]byte{40, 80, 120, 255}, 64*48), W: 64, H: 48, Opaque: true}
+	for _, size := range [][2]int{{64, 48}, {32, 24}, {10, 7}, {200, 150}} {
+		got := Resize(flat, size[0], size[1])
+		if got.W != size[0] || got.H != size[1] || len(got.Pix) != size[0]*size[1]*4 {
+			t.Fatalf("size %v gave %dx%d", size, got.W, got.H)
+		}
+		for i := 0; i < len(got.Pix); i += 4 {
+			if got.Pix[i] != 40 || got.Pix[i+1] != 80 || got.Pix[i+2] != 120 || got.Pix[i+3] != 255 {
+				t.Fatalf("size %v: pixel %d = %v", size, i/4, got.Pix[i:i+4])
+			}
+		}
+	}
+
+	// Averaging 2x2: black and white in a checker give grey 128 (127.5 rounded up).
+	chk := Image{
+		Pix:    []byte{0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 0, 255},
+		W:      2,
+		H:      2,
+		Opaque: true,
+	}
+	if got := Resize(chk, 1, 1); got.Pix[0] != 128 {
+		t.Errorf("average = %d", got.Pix[0])
+	}
+}
