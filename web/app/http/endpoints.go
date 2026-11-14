@@ -114,27 +114,27 @@ var Endpoints = []Endpoint{
 
 	{
 		ID: "media.import", Method: http.MethodPost, Path: "/projects/{id}/media", Scope: service.ScopeMedia,
-		Service: "MediaImport", Status: 202, Summary: "Import media files", Pending: "P1-SRV-004",
+		Service: "MediaImport", Status: 202, Summary: "Import media files",
 	},
 	{
 		ID: "media.list", Method: http.MethodGet, Path: "/projects/{id}/media", Scope: service.ScopeRead,
-		Service: "MediaList", Status: 200, Summary: "List the assets of a project", Pending: "P1-SRV-004",
+		Service: "MediaList", Status: 200, Summary: "List the assets of a project",
 	},
 	{
 		ID: "media.inspect", Method: http.MethodGet, Path: "/projects/{id}/media/{asset_id}", Scope: service.ScopeRead,
-		Service: "MediaInspect", Status: 200, Summary: "Inspect an asset", Pending: "P1-SRV-004",
+		Service: "MediaInspect", Status: 200, Summary: "Inspect an asset",
 	},
 	{
 		ID: "jobs.start", Method: http.MethodPost, Path: "/projects/{id}/jobs", Scope: service.ScopeRender,
-		Service: "JobStart", Status: 202, Summary: "Start a job", Pending: "P1-SRV-004",
+		Service: "JobStart", Status: 202, Summary: "Start a job",
 	},
 	{
 		ID: "jobs.list", Method: http.MethodGet, Path: "/projects/{id}/jobs", Scope: service.ScopeRead,
-		Service: "JobList", Status: 200, Summary: "List the jobs of a project", Pending: "P1-SRV-004",
+		Service: "JobList", Status: 200, Summary: "List the jobs of a project",
 	},
 	{
 		ID: "jobs.get", Method: http.MethodGet, Path: "/jobs/{job_id}", Scope: service.ScopeRead,
-		Service: "JobGet", Status: 200, Summary: "Read a job", Pending: "P1-SRV-004",
+		Service: "JobGet", Status: 200, Summary: "Read a job",
 	},
 	{
 		ID: "projects.frame", Method: http.MethodGet, Path: "/projects/{id}/frame", Scope: service.ScopeRead,
@@ -161,32 +161,33 @@ var Endpoints = []Endpoint{
 		ID:      "media.proxy",
 		Method:  http.MethodGet,
 		Path:    "/projects/{id}/media/{asset_id}/proxy",
+		Service: "OpenFile",
 		Scope:   service.ScopeRead,
 		Status:  200,
 		Summary: "Download the proxy of an asset",
-		Pending: "P1-SRV-004",
 	},
 	{
 		ID: "media.thumbnail", Method: http.MethodGet, Path: "/projects/{id}/media/{asset_id}/thumbnail",
-		Scope: service.ScopeRead, Status: 200, Summary: "Download a thumbnail of an asset", Pending: "P1-SRV-004",
+		Service: "OpenFile",
+		Scope:   service.ScopeRead, Status: 200, Summary: "Download a thumbnail of an asset",
 	},
 	{
 		ID:      "media.strip",
 		Method:  http.MethodGet,
 		Path:    "/projects/{id}/media/{asset_id}/strip",
+		Service: "OpenFile",
 		Scope:   service.ScopeRead,
 		Status:  200,
 		Summary: "Download the tile strip of an asset",
-		Pending: "P1-SRV-004",
 	},
 	{
 		ID:      "media.peaks",
 		Method:  http.MethodGet,
 		Path:    "/projects/{id}/media/{asset_id}/peaks",
+		Service: "OpenFile",
 		Scope:   service.ScopeRead,
 		Status:  200,
 		Summary: "Download the audio peaks of an asset",
-		Pending: "P1-SRV-004",
 	},
 	{
 		ID: "bitmaps.get", Method: http.MethodGet, Path: "/projects/{id}/bitmaps/{key}", Scope: service.ScopeRead,
