@@ -1,0 +1,30 @@
+name: Documentation
+description: A page, specification or README that is missing, wrong or unclear.
+title: "docs: "
+labels: [documentation, needs-triage]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Where
+      description: The file path or page address.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested text
+      description: Optional. A pull request is welcome.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched open and closed issues and found no duplicate.
+          required: true

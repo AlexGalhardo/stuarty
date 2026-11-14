@@ -1,0 +1,42 @@
+name: Feature request
+description: An idea for something the product does not do yet.
+title: "feat: "
+labels: [enhancement, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One idea per issue. Read the scope of the current phase in
+        [docs/prds](https://github.com/AlexGalhardo/vukem-video/tree/main/docs/prds) first: some things are out of scope on purpose.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [core, timeline, command, plan, lint, engine, raster, ingest, export, transcribe, service, web, api, mcp, cli, ui, site, docs, repo, ci, deps, other]
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to do and cannot, for a person in the UI, an agent, or both.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What you would like to happen. An editing rule belongs to the command core, so say which command or operation it would be.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched open and closed issues and found no duplicate.
+          required: true

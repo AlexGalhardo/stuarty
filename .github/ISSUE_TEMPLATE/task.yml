@@ -1,0 +1,61 @@
+name: Task
+description: A planned piece of work with a clear done criterion (maintainers and agents).
+title: "task: "
+labels: [task, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For planned work: a roadmap item, an audit finding or tech debt.
+        Bugs and feature ideas have their own forms.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [core, timeline, command, plan, lint, engine, raster, ingest, export, transcribe, service, web, api, mcp, cli, ui, site, docs, repo, ci, deps, other]
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this matters
+      description: The problem and its cost, in two to five sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Files or packages in scope, and what is explicitly out of scope.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done criteria
+      description: Commands and expected results, one per line. No prose like "works correctly".
+      placeholder: |
+        - `go test ./core/...` passes, including the new TestX
+        - `task ci` exits 0
+    validations:
+      required: true
+  - type: input
+    id: refs
+    attributes:
+      label: Reference
+      description: The task id or finding, if any.
+      placeholder: "P1-ENG-003"
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      options: [S, M, L]
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched open and closed issues and found no duplicate.
+          required: true
