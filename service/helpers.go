@@ -103,8 +103,18 @@ func requestHash(ops []command.Operation) (string, error) {
 			return "", err
 		}
 
-		name := marshalOrNull(op.Op)
-		canon = append(canon, json.RawMessage(`{"args":`+string(args)+`,"op":`+string(name)+`}`))
+		entry, err := json.Marshal(struct {
+			Args json.RawMessage `json:"args"`
+			Op   any             `json:"op"`
+		}{
+			Args: json.RawMessage(args),
+			Op:   op.Op,
+		})
+		if err != nil {
+			return "", err
+		}
+
+		canon = append(canon, json.RawMessage(entry))
 	}
 
 	b, err := json.Marshal(canon)
