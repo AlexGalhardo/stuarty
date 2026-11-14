@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "item.added",
+    "id": "itm_k000000001",
+    "object": {
+      "duration": 10,
+      "id": "itm_k000000001",
+      "start": 100,
+      "text": "Hi",
+      "track": "trk_a1b2c3d4e5",
+      "type": "text"
+    }
+  }
+]

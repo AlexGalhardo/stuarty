@@ -1,0 +1,285 @@
+package command
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"reflect"
+	"regexp"
+	"slices"
+	"strings"
+	"sync"
+)
+
+// Phase is the product phase that introduces a command.
+type Phase string
+
+// The phases of the roadmap. A command is registered only in builds of its phase
+// or later (SDD-002 §A.2).
+const (
+	Prototype Phase = "prototype"
+	Alpha     Phase = "alpha"
+	Beta      Phase = "beta"
+)
+
+func (p Phase) rank() int {
+	switch p {
+	case Prototype:
+		return 1
+	case Alpha:
+		return 2
+	case Beta:
+		return 3
+	}
+	return 0
+}
+
+// Scope is the permission a caller needs to issue a command (ADR-0019).
+type Scope string
+
+// The scopes of a command.
+const (
+	ScopeEdit  Scope = "edit"
+	ScopeMedia Scope = "media"
+)
+
+// Spec describes a command. Everything a surface shows about a command comes from
+// here and from the arguments type (SDD-002 §A.2).
+type Spec struct {
+	Name        string   // namespace.action, lower case, stable
+	Summary     string   // one sentence, tool and help text
+	Description string   // a short paragraph for command_help
+	Example     string   // a valid args value, as JSON
+	Errors      []string // the error codes the command can return
+	Scope       Scope
+	Phase       Phase
+	Internal    bool // only the service may issue it (SDD-002 §A.9)
+}
+
+// Command is a registered kind of edit: its Spec, the Go struct that is the schema
+// of its arguments, and the function that applies it.
+type Command struct {
+	Spec
+	argsType reflect.Type
+	apply    func(*Context, any) error
+}
+
+// Define builds a Command whose arguments are the struct A. The tags of A are
+// documented in args.go. apply receives a pointer to the decoded arguments and
+// edits c.Doc, which is a private copy; it returns an *Error for a failed
+// precondition.
+func Define[A any](s Spec, apply func(c *Context, a *A) error) Command {
+	return Command{
+		Spec:     s,
+		argsType: reflect.TypeFor[A](),
+		apply: func(c *Context, a any) error {
+			typed, ok := a.(*A)
+			if !ok {
+				return Errorf(CodeInternal, "the arguments have an unexpected type.")
+			}
+			return apply(c, typed)
+		},
+	}
+}
+
+var namePattern = regexp.MustCompile(`^[a-z][a-z0-9]*\.[a-z][a-z0-9_]*$`)
+
+// Check returns every way in which the command is incomplete: no schema, example,
+// error list, description, scope or phase, an example that its own schema rejects,
+// or an unknown error code.
+func (c Command) Check() error {
+	var problems []string
+	add := func(format string, a ...any) { problems = append(problems, fmt.Sprintf(format, a...)) }
+	if !namePattern.MatchString(c.Name) {
+		add("name %q is not namespace.action in lower case", c.Name)
+	}
+	if strings.TrimSpace(c.Summary) == "" {
+		add("no summary")
+	}
+	if strings.TrimSpace(c.Description) == "" {
+		add("no description")
+	}
+	if c.apply == nil {
+		add("no apply function")
+	}
+	switch {
+	case c.argsType == nil || c.argsType.Kind() != reflect.Struct:
+		add("no arguments schema (the arguments must be a struct)")
+	case strings.TrimSpace(c.Example) == "":
+		add("no example")
+	default:
+		if _, e := decodeArgs(json.RawMessage(c.Example), c.argsType); e != nil {
+			add("the example does not satisfy the schema: %s", e.Message)
+		}
+	}
+	if len(c.Errors) == 0 {
+		add("no error list")
+	}
+	seen := map[string]bool{}
+	for _, code := range c.Errors {
+		if !KnownCode(code) {
+			add("unknown error code %q", code)
+		}
+		if seen[code] {
+			add("error code %s listed twice", code)
+		}
+		seen[code] = true
+	}
+	if c.Scope != ScopeEdit && c.Scope != ScopeMedia {
+		add("scope must be edit or media")
+	}
+	if c.Phase.rank() == 0 {
+		add("phase must be prototype, alpha or beta")
+	}
+	if len(problems) == 0 {
+		return nil
+	}
+	return fmt.Errorf("command %q: %s", c.Name, strings.Join(problems, "; "))
+}
+
+// Registry holds the commands of one build.
+type Registry struct {
+	// Debug makes Apply run timeline.Validate on every result and report a
+	// violation as E_INTERNAL (SDD-002 §A.3 rule 3). Tests turn it on.
+	Debug bool
+
+	phase Phase
+	cmds  map[string]*Command
+}
+
+// NewRegistry returns an empty registry for a build of the given phase.
+func NewRegistry(build Phase) *Registry {
+	return &Registry{phase: build, cmds: map[string]*Command{}}
+}
+
+// Register adds a command. An incomplete command, or one whose name is taken, is an
+// error. A command of a later phase than the build is checked and then left out.
+func (r *Registry) Register(c Command) error {
+	if err := c.Check(); err != nil {
+		return err
+	}
+	if _, dup := r.cmds[c.Name]; dup {
+		return fmt.Errorf("command %q is registered twice", c.Name)
+	}
+	if c.Phase.rank() > r.phase.rank() {
+		return nil
+	}
+	r.cmds[c.Name] = &c
+	return nil
+}
+
+// MustRegister registers commands and panics on an error: for init functions.
+func (r *Registry) MustRegister(cs ...Command) {
+	for i := range cs {
+		if err := r.Register(cs[i]); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// Get returns the command with that name.
+func (r *Registry) Get(name string) (*Command, bool) {
+	c, ok := r.cmds[name]
+	return c, ok
+}
+
+// Lookup is Get.
+func (r *Registry) Lookup(name string) (*Command, bool) { return r.Get(name) }
+
+// List returns every registered command sorted by name.
+func (r *Registry) List() []*Command {
+	out := make([]*Command, 0, len(r.cmds))
+	for _, c := range r.cmds {
+		out = append(out, c)
+	}
+	slices.SortFunc(out, func(a, b *Command) int { return strings.Compare(a.Name, b.Name) })
+	return out
+}
+
+// Names returns the sorted names of the registered commands.
+func (r *Registry) Names() []string {
+	out := make([]string, 0, len(r.cmds))
+	for n := range r.cmds {
+		out = append(out, n)
+	}
+	slices.Sort(out)
+	return out
+}
+
+// Schema returns the JSON Schema of the arguments of a command, with
+// additionalProperties false at every object level.
+func (r *Registry) Schema(name string) (json.RawMessage, error) {
+	c, ok := r.cmds[name]
+	if !ok {
+		return nil, r.unknown(name)
+	}
+	s := schemaOf(c.argsType)
+	s["$schema"] = "https://json-schema.org/draft/2020-12/schema"
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, AsError(err)
+	}
+	return b, nil
+}
+
+// Help returns the help text of a command: what it does, its arguments, an
+// example and its errors.
+func (r *Registry) Help(name string) (string, error) {
+	c, ok := r.cmds[name]
+	if !ok {
+		return "", r.unknown(name)
+	}
+	var b strings.Builder
+	fmt.Fprintf(&b, "%s: %s\n\n%s\n\nArguments:\n", c.Name, c.Summary, c.Description)
+	fields := argFields(c.argsType)
+	if len(fields) == 0 {
+		b.WriteString("  none\n")
+	}
+	for _, f := range fields {
+		need := "optional"
+		if f.required {
+			need = "required"
+		}
+		fmt.Fprintf(&b, "  %s (%s, %s)", f.name, typeWord(f.fieldType), need)
+		if f.enum != nil {
+			fmt.Fprintf(&b, " one of %s", strings.Join(f.enum, ", "))
+		}
+		if f.min != nil || f.max != nil {
+			fmt.Fprintf(&b, " %s", rangeWord(f))
+		}
+		if f.desc != "" {
+			fmt.Fprintf(&b, ": %s", f.desc)
+		}
+		b.WriteByte('\n')
+	}
+	fmt.Fprintf(&b, "\nExample: {\"op\": %q, \"args\": %s}\n", c.Name, c.Example)
+	fmt.Fprintf(&b, "Errors: %s\nScope: %s, phase: %s\n", strings.Join(c.Errors, ", "), c.Scope, c.Phase)
+	return b.String(), nil
+}
+
+func (r *Registry) unknown(name string) *Error {
+	known := r.Names()
+	return Errorf(CodeUnknownCommand, "There is no command named %q.", name).
+		WithHint("Use one of the known commands: %s.", strings.Join(known, ", ")).
+		WithDetail("known", known)
+}
+
+var (
+	defaultOnce sync.Once
+	defaultReg  *Registry
+)
+
+// Default is the registry of the Prototype build, filled by the init functions of
+// the command files.
+func Default() *Registry {
+	defaultOnce.Do(func() { defaultReg = NewRegistry(Prototype) })
+	return defaultReg
+}
+
+// Register adds a command to the Default registry and panics when it is incomplete;
+// command files call it from init.
+func Register(c Command) {
+	if err := Default().Register(c); err != nil {
+		panic(errors.Join(errors.New("command registry"), err))
+	}
+}
