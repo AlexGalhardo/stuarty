@@ -52,7 +52,7 @@ func runEdit(ctx context.Context, c *call) (*output, error) {
 		return nil, err
 	}
 
-	return &output{value: res, text: editText(res, editState(res), "", nil)}, nil
+	return &output{value: res, text: service.EditText(res)}, nil
 }
 
 // batchRequest is an EditRequest plus whether the batch named its own base.

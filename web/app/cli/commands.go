@@ -209,7 +209,7 @@ func undoCommand(name, summary string, redo bool) *spec {
 				return nil, err
 			}
 
-			return &output{value: res, text: undoText(res)}, nil
+			return &output{value: res, text: service.UndoText(res)}, nil
 		},
 	}
 }

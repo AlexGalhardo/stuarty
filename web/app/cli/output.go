@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
@@ -22,16 +21,6 @@ const (
 	ExitTransient = 2
 )
 
-// retryableCodes are the codes SDD-000 section 8 marks retryable. The exit code
-// follows the code, so a remote error that lost its flag still exits 2.
-var retryableCodes = map[string]bool{
-	command.CodeRevisionConflict: true,
-	service.CodeWorkspaceLocked:  true,
-	service.CodeQueueFull:        true,
-	service.CodeRateLimited:      true,
-	"E_ASSET_NOT_READY":          true,
-}
-
 // output is what a handler returns: the document for --json, the text for a
 // person, and an exit code when a successful call still reports a failure
 // (lint --strict).
@@ -39,22 +28,6 @@ type output struct {
 	value any
 	text  string
 	exit  int
-}
-
-// errorDoc is the error document of SDD-003 section 1.4 without the HTTP-only
-// members instance and request_id.
-type errorDoc struct {
-	Type      string         `json:"type"`
-	Title     string         `json:"title"`
-	Status    int            `json:"status"`
-	Detail    string         `json:"detail"`
-	Code      string         `json:"code"`
-	Message   string         `json:"message"`
-	Hint      string         `json:"hint,omitempty"`
-	Retryable bool           `json:"retryable"`
-	OpIndex   *int           `json:"op_index,omitempty"`
-	Path      string         `json:"path,omitempty"`
-	Details   map[string]any `json:"details,omitempty"`
 }
 
 // asServiceError turns any error into the *service.Error the CLI reports. An
@@ -85,62 +58,11 @@ func asServiceError(err error) *service.Error {
 
 // exitCodeOf maps an error to its exit code.
 func exitCodeOf(se *service.Error) int {
-	if se.Retryable || retryableCodes[se.Code] {
+	if se.IsRetryable() {
 		return ExitTransient
 	}
 
 	return ExitFailure
-}
-
-func newErrorDoc(se *service.Error) errorDoc {
-	return errorDoc{
-		Type: "urn:vukem-video:error:" + se.Code, Title: se.Code, Status: se.HTTPStatus(),
-		Detail: se.Message, Code: se.Code, Message: se.Message, Hint: se.Hint,
-		Retryable: se.Retryable || retryableCodes[se.Code], OpIndex: se.OpIndex, Path: se.Path, Details: se.Details,
-	}
-}
-
-const errorTextCap = 2000
-
-// errorText is the text of SDD-003 section 3.9 for an error, capped at 2,000
-// characters with the details cut first.
-func errorText(se *service.Error) string {
-	var b strings.Builder
-
-	fmt.Fprintf(&b, "error %s: %s", se.Code, se.Message)
-
-	if se.Hint != "" {
-		fmt.Fprintf(&b, "\nhint: %s", se.Hint)
-	}
-
-	fmt.Fprintf(&b, "\nretryable: %t", se.Retryable || retryableCodes[se.Code])
-
-	if se.OpIndex != nil {
-		fmt.Fprintf(&b, "  op_index: %d", *se.OpIndex)
-	}
-
-	if se.Path != "" {
-		fmt.Fprintf(&b, "  path: %s", se.Path)
-	}
-
-	if len(se.Details) > 0 {
-		if raw, err := json.Marshal(se.Details); err == nil {
-			room := max(errorTextCap-b.Len()-len("\ndetails: "), 0)
-			b.WriteString("\ndetails: ")
-			b.WriteString(truncate(string(raw), room))
-		}
-	}
-
-	return truncate(b.String(), errorTextCap)
-}
-
-func truncate(s string, limit int) string {
-	r := []rune(s)
-	if len(r) <= limit {
-		return s
-	}
-
-	return string(r[:max(limit-1, 0)]) + "…"
 }
 
 // writeJSON prints one JSON document and a newline.
@@ -168,9 +90,9 @@ func writeError(rt *Runtime, asJSON bool, err error) int {
 	se := asServiceError(err)
 
 	if asJSON {
-		_ = writeJSON(rt.Stdout, newErrorDoc(se))
+		_ = writeJSON(rt.Stdout, se.Document())
 	} else {
-		fmt.Fprintln(rt.Stderr, errorText(se))
+		fmt.Fprintln(rt.Stderr, se.Text(true))
 	}
 
 	return exitCodeOf(se)
@@ -190,6 +112,3 @@ func writeOutput(rt *Runtime, asJSON bool, out *output) int {
 
 	return out.exit
 }
-
-// itoa keeps the text renderers short.
-func itoa(n int64) string { return strconv.FormatInt(n, 10) }
