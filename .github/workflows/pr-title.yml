@@ -48,6 +48,7 @@ jobs:
             raster
             ingest
             export
+            image
             transcribe
             installers
             service
@@ -84,23 +85,24 @@ jobs:
       # Same rules as the title (SDD-009 section 6.1 and 6.2): an allowed type,
       # an optional allowed scope, "!" for a breaking change, a description that
       # starts in lower case and does not end with a period, a header of at most
-      # 100 characters. A "Revert" subject made by git and a merge commit are
-      # skipped; a fixup! or squash! commit is not, because rebase-merge would
-      # put it on main.
+      # 100 characters. A "Revert" subject made by git, a merge commit and a
+      # GitHub code-scanning autofix ("Potential fix for ...", committed from the
+      # pull request page) are skipped; a fixup! or squash! commit is not,
+      # because rebase-merge would put it on main.
       - name: Every commit is a Conventional Commit with an allowed scope
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           types='build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test'
-          scopes='core|timeline|schema|command|plan|lint|engine|raster|ingest|export|transcribe|installers|service|workspace|web|api|mcp|cli|ui|site|docs|repo|ci|deps|deps-dev|release|adr|sdd|sdd-[0-9]{3}|go|security'
+          scopes='core|timeline|schema|command|plan|lint|engine|raster|ingest|export|image|transcribe|installers|service|workspace|web|api|mcp|cli|ui|site|docs|repo|ci|deps|deps-dev|release|adr|sdd|sdd-[0-9]{3}|go|security'
           pattern="^(${types})(\((${scopes})\))?!?: [^A-Z ].*[^. ]$|^(${types})(\((${scopes})\))?!?: [^A-Z ]$"
           bad=0
           while IFS= read -r line; do
             sha="${line%% *}"
             subject="${line#* }"
             case "$subject" in
-              Merge\ *|Revert\ \"*) continue ;;
+              Merge\ *|Revert\ \"*|Potential\ fix\ for\ *) continue ;;
             esac
             if [ "${#subject}" -gt 100 ] || ! printf '%s\n' "$subject" | grep -qE "$pattern"; then
               echo "::error title=Not a Conventional Commit::${sha:0:9} ${subject}"

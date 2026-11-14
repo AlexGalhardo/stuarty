@@ -29,6 +29,7 @@ area:engine|c5def5|engine
 area:raster|c5def5|raster
 area:ingest|c5def5|ingest
 area:export|c5def5|export
+area:image|c5def5|image
 area:transcribe|c5def5|transcribe
 area:installers|c5def5|installers
 area:service|c5def5|service
