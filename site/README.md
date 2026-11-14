@@ -1,0 +1,37 @@
+# Vukem Video site
+
+The public site of Vukem Video: a landing page at `/` (and `/pt-br/`) and the documentation under `/docs/`. It is static HTML built with Astro (`output: "static"`, directory `out/`) and published to GitHub Pages by `.github/workflows/site.yml`. No server, no external script, font or analytics.
+
+The shell is copied from the vukem documentation site (`vukem/site/`, the template of vukem.dev/docs) as SDD-010 section 1 describes. It was copied from vukem commit `c9a3fcca` (the last commit that touched `site/` in the vukem clone at `c4949ed0`, the head of its pull request 222).
+
+## Run it
+
+```sh
+npm ci
+npm run dev        # http://localhost:3000/vukem-video/
+npm run build      # static export to out/
+npm run preview
+```
+
+The site is served under the base path of its address. `SITE_URL` (default `https://alexgalhardo.github.io/vukem-video`) sets both the address and the base path; a custom domain makes the base `/`. Every internal link goes through `withBase` in `lib/site.ts` or the `Link` component.
+
+## Checks
+
+| Command | What it checks |
+| --- | --- |
+| `npm run lint` | ESLint |
+| `npm run check:mdx` | every page compiles, its components exist, its `/docs/` links resolve |
+| `npm run build` then `npm run check:built` | only static files; no resource from another origin; every root-relative link carries the base path |
+| `npm run test:scripts`, `npm run test:site` | the script tests |
+| `npm run check:last-updated` | every docs page has a "Last updated" date at least as new as its last commit |
+
+## Add a docs page
+
+1. Create `content/docs/<dir>/<slug>.mdx` with `title` and `description` front matter.
+2. List the slug in `content/navigation.ts`.
+3. Run `npm run check:mdx`.
+4. After the commit, run `npm run last-updated` (needs the full git history) and commit `content/last-updated.json`. Never edit it by hand.
+
+## Status
+
+Only English documentation exists, with an introduction and a getting-started page. The landing page has an English and a Brazilian Portuguese version. The generated reference, the language switcher for the docs and the translated docs come with P1-DOC-001.
