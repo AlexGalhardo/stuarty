@@ -1,0 +1,466 @@
+package servicetest
+
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/service"
+)
+
+const clipBytes = "not really a clip, but long enough for the store"
+
+func (m *mediaEnv) importOne(project, path string) *service.MediaImportResult {
+	m.t.Helper()
+
+	res, err := m.svc.MediaImport(m.as(ui), service.MediaImportRequest{
+		ProjectID: project, Files: []service.ImportFile{{Path: path}},
+	})
+	if err != nil {
+		m.t.Fatalf("MediaImport: %v", err)
+	}
+
+	return res
+}
+
+func TestImportRunsTheIngestAndAddsTheAssetToTheDocument(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.newProject("p")
+	clip := m.write("clip.mp4", clipBytes)
+
+	res := m.importOne(project, clip)
+
+	if len(res.Assets) != 1 || res.Failed != 0 {
+		t.Fatalf("result = %+v", res)
+	}
+
+	a := res.Assets[0]
+	if a.State != "ready" || a.Kind != "video" || a.Name != "clip.mp4" || a.JobID == "" || a.Deduplicated ||
+		a.Probe == nil {
+		t.Fatalf("entry = %+v", a)
+	}
+
+	if a.Probe.Width != 320 || a.Probe.VideoCodec != "h264" || !a.Probe.HasAudio || a.Probe.Duration == nil ||
+		a.Probe.Duration.Frame != 60 {
+		t.Errorf("probe = %+v", a.Probe)
+	}
+
+	if strings.Contains(res.Text, m.files) {
+		t.Errorf("the text names the directory of the path: %s", res.Text)
+	}
+
+	// The asset is in the document through an asset.add batch of the importer.
+	doc, err := timeline.Decode(m.document(project))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, ok := doc.Assets[a.AssetID]
+	if !ok || got.Width != 320 || got.FrameCount != 60 || got.SampleCount != 96000 || !got.HasAudio ||
+		got.Kind != timeline.AssetVideo {
+		t.Fatalf("asset in the document = %+v (%v)", got, ok)
+	}
+
+	if res.Revision != 1 || m.head(project).Revision != 1 {
+		t.Errorf("revision = %d, head %d, want 1", res.Revision, m.head(project).Revision)
+	}
+
+	rows, _ := m.store.Assets().ListProjectAssets(context.Background(), project)
+	if len(rows) != 1 || rows[0].State != service.ProjectAssetActive {
+		t.Errorf("project assets = %+v", rows)
+	}
+
+	// The job is done and has no result member; the events tell the story.
+	job, err := m.svc.JobGet(m.as(ui), service.JobGetRequest{JobID: a.JobID})
+	if err != nil || job.State != service.JobSucceeded || job.ProjectID != nil || job.Result != nil {
+		t.Fatalf("job = %+v, %v", job, err)
+	}
+
+	var states []string
+	for _, ev := range m.eventsOf("asset.updated") {
+		if ev.AssetID == a.AssetID && ev.ProjectID == project {
+			states = append(states, ev.State)
+		}
+	}
+
+	if len(states) < 3 || states[0] != "pending" || states[1] != "ingesting" || states[len(states)-1] != "ready" {
+		t.Errorf("asset.updated states = %v", states)
+	}
+
+	if j := m.eventsOf("job.updated"); len(j) < 3 || j[0].State != "queued" || j[len(j)-1].State != "succeeded" ||
+		j[0].ProjectID != project {
+		t.Errorf("job.updated = %+v", j)
+	}
+}
+
+func TestImportingTheSameBytesTwice(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	p1, p2 := m.newProject("one"), m.newProject("two")
+	clip := m.write("clip.mp4", clipBytes)
+	copyOf := m.write("copy.mp4", clipBytes)
+
+	first := m.importOne(p1, clip).Assets[0]
+	again := m.importOne(p1, copyOf).Assets[0]
+
+	if again.AssetID != first.AssetID || !again.Deduplicated || again.JobID != "" || again.State != "ready" {
+		t.Errorf("same project: first %+v, again %+v", first, again)
+	}
+
+	other := m.importOne(p2, clip).Assets[0]
+	if other.AssetID == first.AssetID || other.State != "ready" || other.JobID != "" || !other.Deduplicated {
+		t.Errorf("other project: %+v (first %+v)", other, first)
+	}
+
+	if m.ingests.Load() != 1 {
+		t.Errorf("ingest ran %d times for one file", m.ingests.Load())
+	}
+
+	// The second project got the asset in its document without a job.
+	doc, _ := timeline.Decode(m.document(p2))
+	if _, ok := doc.Assets[other.AssetID]; !ok {
+		t.Error("the asset is not in the document of the second project")
+	}
+}
+
+func TestOneIngestServesEveryProjectThatWaits(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true})
+	p1, p2 := m.newProject("one"), m.newProject("two")
+	clip := m.write("clip.mp4", clipBytes)
+
+	a1 := m.importOne(p1, clip).Assets[0]
+	a2 := m.importOne(p2, clip).Assets[0]
+
+	if a1.JobID == "" || a1.JobID != a2.JobID || a1.AssetID == a2.AssetID || a1.State != "pending" {
+		t.Fatalf("a1 = %+v, a2 = %+v: one job, two identifiers", a1, a2)
+	}
+
+	if err := m.runner.RunJob(context.Background(), a1.JobID); err != nil {
+		t.Fatal(err)
+	}
+
+	for p, a := range map[string]service.ImportedAsset{p1: a1, p2: a2} {
+		doc, _ := timeline.Decode(m.document(p))
+		if _, ok := doc.Assets[a.AssetID]; !ok {
+			t.Errorf("project %s lacks its asset", p)
+		}
+	}
+
+	// job.updated of the ingest reached the stream of both projects.
+	seen := map[string]bool{}
+	for _, ev := range m.eventsOf("job.updated") {
+		if ev.JobID == a1.JobID {
+			seen[ev.ProjectID] = true
+		}
+	}
+
+	if !seen[p1] || !seen[p2] {
+		t.Errorf("job.updated streams = %v", seen)
+	}
+}
+
+func TestMediaListShowsEveryAssetIncludingPendingAndFailed(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true})
+	project := m.newProject("p")
+	m.importOne(project, m.write("a.mp4", clipBytes))
+
+	res, err := m.svc.MediaList(m.as(ui), service.MediaListRequest{ProjectID: project})
+	if err != nil || len(res.Assets) != 1 {
+		t.Fatalf("list = %+v, %v", res, err)
+	}
+
+	if e := res.Assets[0]; e.State != "pending" || e.Name != "a.mp4" || e.Trashed {
+		t.Errorf("entry = %+v", e)
+	}
+
+	if !strings.Contains(res.Text, "pending") || !strings.Contains(res.Text, `"a.mp4"`) {
+		t.Errorf("text = %s", res.Text)
+	}
+
+	insp, err := m.svc.MediaInspect(
+		m.as(ui),
+		service.MediaInspectRequest{ProjectID: project, AssetID: res.Assets[0].AssetID},
+	)
+	if err != nil || insp.State != "pending" || insp.Probe != nil {
+		t.Errorf("an asset that is not ready answers with its state: %+v, %v", insp, err)
+	}
+}
+
+func TestMediaInspectSections(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.newProject("p")
+	a := m.importOne(project, m.write("a.mp4", clipBytes)).Assets[0]
+
+	res, err := m.svc.MediaInspect(m.as(ui), service.MediaInspectRequest{
+		ProjectID: project, AssetID: a.AssetID, Sections: []string{"probe", "loudness", "silences", "transcript"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Strip == nil || res.Strip.Count != 2 || res.Loudness == nil || *res.Loudness.IntegratedLUFS != -17.2 {
+		t.Errorf("result = %+v", res)
+	}
+
+	// 24000..48000 samples at 48 kHz is 0.5 s to 1 s: 15 to 30 whole frames at 30 fps.
+	if len(res.Silences) != 1 || res.Silences[0].Start.Frame != 15 || res.Silences[0].End.Frame != 30 {
+		t.Errorf("silences = %+v", res.Silences)
+	}
+
+	for _, want := range []string{"probe: mov,mp4 | 320x240 | 30/1fps", "loudness: integrated -17.2 LUFS", "silences (min 400ms", "transcript: none yet"} {
+		if !strings.Contains(res.Text, want) {
+			t.Errorf("text lacks %q:\n%s", want, res.Text)
+		}
+	}
+
+	if _, err := m.svc.MediaInspect(m.as(ui), service.MediaInspectRequest{
+		ProjectID: project, AssetID: a.AssetID, Sections: []string{"colour"},
+	}); code(err) != command.CodeValidation {
+		t.Errorf("unknown section: %v", err)
+	}
+
+	if _, err := m.svc.MediaInspect(m.as(ui), service.MediaInspectRequest{
+		ProjectID: project, AssetID: "ast_0000009999",
+	}); code(err) != command.CodeNotFound {
+		t.Errorf("unknown asset: %v", err)
+	}
+}
+
+func TestOpenFileResolvesTheArtifactsOfAReadyAsset(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.newProject("p")
+	a := m.importOne(project, m.write("a.mp4", clipBytes)).Assets[0]
+
+	cases := map[string]struct {
+		ref   service.FileRef
+		ctype string
+	}{
+		"proxy":     {service.FileRef{Kind: "proxy"}, "video/mp4"},
+		"thumbnail": {service.FileRef{Kind: "thumbnail", Variant: "320"}, "image/jpeg"},
+		"strip":     {service.FileRef{Kind: "strip"}, "image/jpeg"},
+		"peaks":     {service.FileRef{Kind: "peaks"}, "application/octet-stream"},
+	}
+
+	for name, c := range cases {
+		c.ref.ProjectID, c.ref.ID = project, a.AssetID
+
+		f, err := m.svc.OpenFile(m.as(ui), c.ref)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+
+		if f.ContentType != c.ctype || !strings.HasPrefix(f.Path, "artifacts/") || f.Size == 0 || f.ETag == "" {
+			t.Errorf("%s: %+v", name, f)
+		}
+
+		if _, err := os.Stat(filepath.Join(m.ws, filepath.FromSlash(f.Path))); err != nil {
+			t.Errorf("%s: %v", name, err)
+		}
+	}
+
+	if _, err := m.svc.OpenFile(m.as(ui), service.FileRef{
+		Kind: "thumbnail", Variant: "999", ProjectID: project, ID: a.AssetID,
+	}); code(err) != command.CodeValidation {
+		t.Errorf("a width that is not offered: %v", err)
+	}
+}
+
+func TestImportRefusalsAreEntriesOfTheCall(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.newProject("p")
+	good := m.write("good.mp4", clipBytes)
+	empty := m.write("empty.mp4", "")
+
+	// One file that is refused is the error of the call.
+	_, err := m.svc.MediaImport(m.as(ui), service.MediaImportRequest{
+		ProjectID: project, Files: []service.ImportFile{{Path: "http://169.254.169.254/x.mp4"}},
+	})
+	if code(err) != "E_PATH_NOT_ALLOWED" {
+		t.Errorf("a URL: %v", err)
+	}
+
+	// Several files: the call succeeds, the refusals are entries, in order.
+	res, err := m.svc.MediaImport(m.as(ui), service.MediaImportRequest{
+		ProjectID: project, Files: []service.ImportFile{
+			{Path: filepath.Join(m.files, "missing.mp4")}, {Path: good}, {Path: empty}, {Path: "relative.mp4"},
+		},
+	})
+	if err != nil || res.Failed != 3 || len(res.Assets) != 4 {
+		t.Fatalf("result = %+v, %v", res, err)
+	}
+
+	want := []string{"E_FILE_NOT_FOUND", "", "E_UNSUPPORTED_MEDIA", "E_PATH_NOT_ALLOWED"}
+	for i, a := range res.Assets {
+		got := ""
+		if a.Error != nil {
+			got = a.Error.Code
+		}
+
+		if got != want[i] {
+			t.Errorf("entry %d: %q, want %q (%+v)", i, got, want[i], a)
+		}
+	}
+
+	if res.Assets[1].State != "ready" || !strings.Contains(res.Text, "3 of 4 files failed") {
+		t.Errorf("good entry %+v\n%s", res.Assets[1], res.Text)
+	}
+
+	for _, a := range res.Assets {
+		if strings.Contains(a.Name, string(filepath.Separator)) || a.Name == "" {
+			t.Errorf("name %q holds a directory or is empty", a.Name)
+		}
+	}
+}
+
+func TestImportLimits(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{limits: service.Limits{MaxImportBytes: 20}})
+	project := m.newProject("p")
+
+	_, err := m.svc.MediaImport(m.as(ui), service.MediaImportRequest{
+		ProjectID: project, Files: []service.ImportFile{{Path: m.write("big.mp4", clipBytes)}},
+	})
+
+	se := serviceError(t, err)
+	if se.Code != "E_LIMIT_EXCEEDED" || se.Details["limit"] != "import_bytes" || se.Details["ceiling"] != int64(20) ||
+		se.Details["variable"] != "VUKEM_VIDEO_MAX_IMPORT_BYTES" {
+		t.Errorf("error = %+v", se)
+	}
+
+	if entries, _ := os.ReadDir(filepath.Join(m.ws, "store")); len(entries) != 0 {
+		t.Errorf("a refused file left something in the store: %v", entries)
+	}
+}
+
+func TestImportScopesAndProjectState(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.newProject("p")
+	clip := m.write("a.mp4", clipBytes)
+	req := service.MediaImportRequest{ProjectID: project, Files: []service.ImportFile{{Path: clip}}}
+
+	readOnly := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "key:k", Scopes: []string{service.ScopeRead}},
+	)
+	if _, err := m.svc.MediaImport(readOnly, req); code(err) != service.CodeForbidden {
+		t.Errorf("a caller without the media scope: %v", err)
+	}
+
+	if _, err := m.svc.ProjectTrash(m.as(ui), service.ProjectTrashRequest{ProjectID: project}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := m.svc.MediaImport(m.as(ui), req); code(err) != command.CodeInvalidState {
+		t.Errorf("a trashed project: %v", err)
+	}
+
+	if _, err := m.svc.MediaImport(
+		m.as(ui),
+		service.MediaImportRequest{ProjectID: project},
+	); code(
+		err,
+	) != command.CodeValidation {
+		t.Errorf("no files: %v", err)
+	}
+}
+
+func TestDryRunCopiesNothing(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.newProject("p")
+
+	res, err := m.svc.MediaImport(m.as(ui), service.MediaImportRequest{
+		ProjectID: project, DryRun: true, Files: []service.ImportFile{{Path: m.write("a.mp4", clipBytes)}},
+	})
+	if err != nil || res.Assets[0].AssetID != "" {
+		t.Fatalf("dry run = %+v, %v", res, err)
+	}
+
+	if entries, _ := os.ReadDir(filepath.Join(m.ws, "store")); len(entries) != 0 {
+		t.Errorf("the store holds %v", entries)
+	}
+
+	if rows, _ := m.store.Assets().ListProjectAssets(context.Background(), project); len(rows) != 0 {
+		t.Errorf("rows = %+v", rows)
+	}
+}
+
+// A text file renamed .mp4 ends with the asset failed and E_UNSUPPORTED_MEDIA,
+// and the event the UI listens to carries the hint (P1-SRV-004 assert 3).
+func TestImportingATextFileRenamedMp4(t *testing.T) {
+	// The real ingest: the file is refused by its first bytes, before any process starts.
+	m := newMediaEnv(t, mediaCfg{realIngest: true})
+
+	project := m.newProject("p")
+	text := m.write("notes.mp4", "this is a text file that somebody renamed to .mp4 and nothing else")
+
+	res := m.importOne(project, text)
+	a := res.Assets[0]
+
+	if a.State != "failed" || a.Error == nil || a.Error.Code != "E_UNSUPPORTED_MEDIA" {
+		t.Fatalf("entry = %+v", a)
+	}
+
+	list, err := m.svc.MediaList(m.as(ui), service.MediaListRequest{ProjectID: project})
+	if err != nil || list.Assets[0].State != "failed" || list.Assets[0].Error == nil ||
+		list.Assets[0].Error.Code != "E_UNSUPPORTED_MEDIA" || list.Assets[0].Error.Hint == "" {
+		t.Fatalf("list = %+v, %v", list, err)
+	}
+
+	var failed *service.Event
+
+	for _, ev := range m.eventsOf("asset.updated") {
+		if ev.State == "failed" {
+			failed = &ev
+		}
+	}
+
+	if failed == nil || failed.Error == nil || failed.Error.Code != "E_UNSUPPORTED_MEDIA" || failed.Error.Hint == "" {
+		t.Errorf("the failed event = %+v", failed)
+	}
+
+	job, _ := m.svc.JobGet(m.as(ui), service.JobGetRequest{JobID: a.JobID})
+	if job.State != service.JobFailed || job.Error == nil || job.Error.Code != "E_UNSUPPORTED_MEDIA" {
+		t.Errorf("job = %+v", job)
+	}
+
+	// Nothing reached the document, and a retry runs a new job over the stored original.
+	if doc, _ := timeline.Decode(m.document(project)); len(doc.Assets) != 0 {
+		t.Errorf("assets in the document: %v", doc.Assets)
+	}
+
+	again := m.importOne(project, text).Assets[0]
+	if again.JobID == "" || again.JobID == a.JobID || !again.Deduplicated || again.AssetID != a.AssetID {
+		t.Errorf("retry = %+v (first %+v)", again, a)
+	}
+}
+
+func TestEveryQueuedJobIsRunExactlyOnceUnderConcurrentDeliveries(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true})
+	project := m.newProject("p")
+	a := m.importOne(project, m.write("a.mp4", clipBytes)).Assets[0]
+
+	var wg sync.WaitGroup
+
+	for range 20 {
+		wg.Go(func() { _ = m.runner.RunJob(context.Background(), a.JobID) })
+	}
+
+	wg.Wait()
+
+	if m.ingests.Load() != 1 {
+		t.Errorf("the ingest ran %d times for 20 deliveries", m.ingests.Load())
+	}
+
+	// A redelivery for a finished job does nothing.
+	before := m.ingests.Load()
+	if err := m.runner.RunJob(context.Background(), a.JobID); err != nil || m.ingests.Load() != before {
+		t.Errorf("a finished job ran again: %v", err)
+	}
+
+	if err := m.runner.RunJob(context.Background(), "job_0000009999"); err != nil {
+		t.Errorf("a message for a job that does not exist: %v", err)
+	}
+}
