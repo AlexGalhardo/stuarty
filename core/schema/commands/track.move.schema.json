@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "above": {
+      "type": "string"
+    },
+    "below": {
+      "type": "string"
+    },
+    "position": {
+      "enum": [
+        "top",
+        "bottom"
+      ],
+      "type": "string"
+    },
+    "track_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "track_id"
+  ],
+  "type": "object"
+}

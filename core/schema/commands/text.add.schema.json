@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "duration": {
+      "description": "A length of at least 1 frame.",
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "start": {
+      "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+      "type": "string"
+    },
+    "style": {
+      "additionalProperties": {},
+      "description": "A partial TextStyle.",
+      "type": "object"
+    },
+    "text": {
+      "description": "The text; line breaks are allowed.",
+      "maxLength": 2000,
+      "minLength": 1,
+      "type": "string"
+    },
+    "track_id": {
+      "description": "A visual track.",
+      "type": "string"
+    },
+    "x": {
+      "type": "number"
+    },
+    "y": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "track_id",
+    "start",
+    "duration",
+    "text"
+  ],
+  "type": "object"
+}

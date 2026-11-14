@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "item_id": {
+      "description": "A text item.",
+      "type": "string"
+    },
+    "reset_style": {
+      "description": "Empty the stored style before applying style.",
+      "type": "boolean"
+    },
+    "style": {
+      "additionalProperties": {},
+      "description": "A partial TextStyle, merged; null removes a key.",
+      "type": "object"
+    },
+    "text": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id"
+  ],
+  "type": "object"
+}

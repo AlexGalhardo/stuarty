@@ -1,0 +1,746 @@
+{
+  "$defs": {
+    "Asset": {
+      "properties": {
+        "frame_count": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "frame_rate": {
+          "$ref": "#/$defs/Rational"
+        },
+        "has_audio": {
+          "type": "boolean"
+        },
+        "hash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "height": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "id": {
+          "pattern": "^ast_[0-9a-hjkmnp-tv-z]{10}$",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "video",
+            "audio",
+            "image"
+          ],
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sample_count": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "width": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "hash",
+        "id",
+        "kind",
+        "name"
+      ],
+      "type": "object"
+    },
+    "CaptionStyle": {
+      "properties": {
+        "align": {
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "type": "string"
+        },
+        "background_color": {
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "type": "string"
+        },
+        "background_padding": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "background_radius": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "color": {
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "type": "string"
+        },
+        "font_family": {
+          "type": "string"
+        },
+        "font_weight": {
+          "maximum": 900,
+          "minimum": 100,
+          "multipleOf": 100,
+          "type": "integer"
+        },
+        "highlight": {
+          "enum": [
+            "none",
+            "word"
+          ],
+          "type": "string"
+        },
+        "highlight_background": {
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "type": "string"
+        },
+        "highlight_color": {
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "type": "string"
+        },
+        "line_height": {
+          "maximum": 3,
+          "minimum": 0.8,
+          "type": "number"
+        },
+        "max_width": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "position": {
+          "enum": [
+            "bottom",
+            "middle",
+            "top",
+            "custom"
+          ],
+          "type": "string"
+        },
+        "shadow_blur": {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        "shadow_color": {
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "type": "string"
+        },
+        "shadow_dx": {
+          "type": "number"
+        },
+        "shadow_dy": {
+          "type": "number"
+        },
+        "size": {
+          "maximum": 1000,
+          "minimum": 8,
+          "type": "number"
+        },
+        "stroke_color": {
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "type": "string"
+        },
+        "stroke_width": {
+          "maximum": 40,
+          "minimum": 0,
+          "type": "number"
+        },
+        "uppercase": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "Crop": {
+      "properties": {
+        "bottom": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "left": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "right": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "top": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "FontFile": {
+      "properties": {
+        "hash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "weight": {
+          "maximum": 900,
+          "minimum": 100,
+          "multipleOf": 100,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "hash",
+        "weight"
+      ],
+      "type": "object"
+    },
+    "Item": {
+      "properties": {
+        "asset": {
+          "pattern": "^ast_([0-9a-hjkmnp-tv-z]{10}|placeholder)$",
+          "type": "string"
+        },
+        "audio_muted": {
+          "type": "boolean"
+        },
+        "breaks": {
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "brightness": {
+          "maximum": 1,
+          "minimum": -1,
+          "type": "number"
+        },
+        "contrast": {
+          "default": 1,
+          "maximum": 2,
+          "minimum": 0,
+          "type": "number"
+        },
+        "crop": {
+          "$ref": "#/$defs/Crop"
+        },
+        "duration": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "fade_in": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "fade_out": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "fill": {
+          "default": "#FFFFFF",
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "type": "string"
+        },
+        "fit": {
+          "default": "cover",
+          "enum": [
+            "cover",
+            "contain",
+            "none"
+          ],
+          "type": "string"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "id": {
+          "pattern": "^itm_[0-9a-hjkmnp-tv-z]{10}$",
+          "type": "string"
+        },
+        "keyframes": {
+          "additionalProperties": {
+            "items": {
+              "$ref": "#/$defs/Keyframe"
+            },
+            "maxItems": 100,
+            "type": "array"
+          },
+          "propertyNames": {
+            "enum": [
+              "x",
+              "y",
+              "scale",
+              "rotation",
+              "opacity",
+              "volume"
+            ]
+          },
+          "type": "object"
+        },
+        "linked_item": {
+          "pattern": "^itm_[0-9a-hjkmnp-tv-z]{10}$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 120,
+          "type": "string"
+        },
+        "opacity": {
+          "default": 1,
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "radius": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "saturation": {
+          "default": 1,
+          "maximum": 2,
+          "minimum": 0,
+          "type": "number"
+        },
+        "scale": {
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "maximum": 20,
+          "type": "number"
+        },
+        "shape": {
+          "enum": [
+            "rect",
+            "rounded_rect",
+            "ellipse"
+          ],
+          "type": "string"
+        },
+        "slot": {
+          "$ref": "#/$defs/Slot"
+        },
+        "source_in": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "speed": {
+          "$ref": "#/$defs/Rational",
+          "default": {
+            "den": 1,
+            "num": 1
+          }
+        },
+        "start": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "stroke_color": {
+          "default": "#000000",
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "type": "string"
+        },
+        "stroke_width": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "style": {
+          "$ref": "#/$defs/CaptionStyle"
+        },
+        "text": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "track": {
+          "pattern": "^trk_[0-9a-hjkmnp-tv-z]{10}$",
+          "type": "string"
+        },
+        "transition_in": {
+          "$ref": "#/$defs/Transition"
+        },
+        "transition_out": {
+          "$ref": "#/$defs/Transition"
+        },
+        "type": {
+          "enum": [
+            "clip",
+            "audio",
+            "text",
+            "caption",
+            "shape"
+          ],
+          "type": "string"
+        },
+        "volume": {
+          "default": 1,
+          "maximum": 4,
+          "minimum": 0,
+          "type": "number"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "words": {
+          "items": {
+            "$ref": "#/$defs/Word"
+          },
+          "maxItems": 60,
+          "minItems": 1,
+          "type": "array"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "duration",
+        "id",
+        "start",
+        "track",
+        "type"
+      ],
+      "type": "object"
+    },
+    "Keyframe": {
+      "properties": {
+        "easing": {
+          "default": "linear",
+          "enum": [
+            "linear",
+            "ease_in",
+            "ease_out",
+            "ease_in_out",
+            "hold"
+          ],
+          "type": "string"
+        },
+        "t": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "t",
+        "value"
+      ],
+      "type": "object"
+    },
+    "ProjectFont": {
+      "properties": {
+        "files": {
+          "items": {
+            "$ref": "#/$defs/FontFile"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "files"
+      ],
+      "type": "object"
+    },
+    "Rational": {
+      "properties": {
+        "den": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "num": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "den",
+        "num"
+      ],
+      "type": "object"
+    },
+    "Settings": {
+      "properties": {
+        "background": {
+          "default": "#000000",
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "type": "string"
+        },
+        "fps": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/Rational"
+            },
+            {
+              "properties": {
+                "den": {
+                  "enum": [
+                    1,
+                    1001
+                  ]
+                },
+                "num": {
+                  "maximum": 120120
+                }
+              }
+            }
+          ],
+          "default": {
+            "den": 1,
+            "num": 30
+          },
+          "description": "den is 1 or 1001; num/den between 1 and 120."
+        },
+        "height": {
+          "default": 1920,
+          "maximum": 4096,
+          "minimum": 16,
+          "multipleOf": 2,
+          "type": "integer"
+        },
+        "loudness_target": {
+          "default": -14,
+          "maximum": -5,
+          "minimum": -30,
+          "type": "number"
+        },
+        "width": {
+          "default": 1080,
+          "maximum": 4096,
+          "minimum": 16,
+          "multipleOf": 2,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "Slot": {
+      "properties": {
+        "description": {
+          "maxLength": 200,
+          "type": "string"
+        },
+        "duration_policy": {
+          "default": "fit",
+          "enum": [
+            "fit",
+            "stretch_timeline"
+          ],
+          "type": "string"
+        },
+        "filled": {
+          "type": "boolean"
+        },
+        "kind": {
+          "enum": [
+            "media",
+            "text",
+            "caption"
+          ],
+          "type": "string"
+        },
+        "name": {
+          "pattern": "^[a-z][a-z0-9_]{0,39}$",
+          "type": "string"
+        },
+        "required": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "type": "object"
+    },
+    "TemplateInfo": {
+      "properties": {
+        "colors": {
+          "additionalProperties": {
+            "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "description"
+      ],
+      "type": "object"
+    },
+    "Track": {
+      "properties": {
+        "caption_style": {
+          "$ref": "#/$defs/CaptionStyle"
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "id": {
+          "pattern": "^trk_[0-9a-hjkmnp-tv-z]{10}$",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "visual",
+            "audio"
+          ],
+          "type": "string"
+        },
+        "muted": {
+          "type": "boolean"
+        },
+        "name": {
+          "maxLength": 60,
+          "type": "string"
+        },
+        "order": {
+          "pattern": "^[0-9a-z]+$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "order"
+      ],
+      "type": "object"
+    },
+    "Transition": {
+      "properties": {
+        "duration": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "fade",
+            "slide_left",
+            "slide_right",
+            "slide_up",
+            "slide_down"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "duration",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "Word": {
+      "properties": {
+        "duration": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "start": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "text": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "duration",
+        "start",
+        "text"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://vukem-video.dev/schema/timeline.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "assets": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Asset"
+      },
+      "maxProperties": 200,
+      "propertyNames": {
+        "pattern": "^ast_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "type": "object"
+    },
+    "fonts": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ProjectFont"
+      },
+      "type": "object"
+    },
+    "id": {
+      "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$",
+      "type": "string"
+    },
+    "items": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Item"
+      },
+      "maxProperties": 500,
+      "propertyNames": {
+        "pattern": "^itm_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "type": "object"
+    },
+    "name": {
+      "maxLength": 120,
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "description": "Version of this schema.",
+      "enum": [
+        1
+      ],
+      "type": "integer"
+    },
+    "settings": {
+      "$ref": "#/$defs/Settings"
+    },
+    "template": {
+      "$ref": "#/$defs/TemplateInfo"
+    },
+    "tracks": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Track"
+      },
+      "maxProperties": 50,
+      "propertyNames": {
+        "pattern": "^trk_[0-9a-hjkmnp-tv-z]{10}$"
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "assets",
+    "id",
+    "items",
+    "name",
+    "schema_version",
+    "settings",
+    "tracks"
+  ],
+  "title": "Timeline document",
+  "type": "object",
+  "x-status": "frozen"
+}

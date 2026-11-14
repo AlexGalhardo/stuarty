@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "replace": {
+      "description": "Replace the whole style instead of merging.",
+      "type": "boolean"
+    },
+    "style": {
+      "additionalProperties": {},
+      "description": "A partial CaptionStyle; null removes a key when merging.",
+      "type": "object"
+    },
+    "track_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "track_id",
+    "style"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "duration": {
+      "description": "A length; with text only.",
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "linked_item": {
+      "description": "The clip whose speech this transcribes; it need not exist.",
+      "type": "string"
+    },
+    "start": {
+      "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+      "type": "string"
+    },
+    "text": {
+      "description": "Text to split on whitespace; needs duration.",
+      "type": "string"
+    },
+    "track_id": {
+      "description": "A visual track.",
+      "type": "string"
+    },
+    "words": {
+      "description": "Words with times relative to the caption, as lengths.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+            "type": "string"
+          },
+          "start": {
+            "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "start",
+          "duration"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "x": {
+      "type": "number"
+    },
+    "y": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "track_id",
+    "start"
+  ],
+  "type": "object"
+}

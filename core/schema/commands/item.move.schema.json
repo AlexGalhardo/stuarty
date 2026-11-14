@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "item_id": {
+      "type": "string"
+    },
+    "start": {
+      "description": "The new absolute position of the first frame.",
+      "type": "string"
+    },
+    "track_id": {
+      "description": "A track that accepts the item type.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id"
+  ],
+  "type": "object"
+}

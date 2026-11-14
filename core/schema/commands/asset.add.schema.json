@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset": {
+      "additionalProperties": false,
+      "description": "An Asset object of SDD-001 section 3.2.",
+      "properties": {
+        "frame_count": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "frame_rate": {
+          "additionalProperties": false,
+          "properties": {
+            "den": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "num": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "num",
+            "den"
+          ],
+          "type": "object"
+        },
+        "has_audio": {
+          "type": "boolean"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "height": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "video",
+            "audio",
+            "image"
+          ],
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sample_count": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "width": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "hash",
+        "kind",
+        "name"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "asset"
+  ],
+  "type": "object"
+}
