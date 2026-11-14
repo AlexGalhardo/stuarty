@@ -14,7 +14,7 @@ import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
-import { useDocumentState, useRuntime } from "../boot/EditorContext";
+import { useDocumentState, useRuntime } from "../state/EditorContext";
 import ActivityIndicator from "./ActivityIndicator";
 
 type Shown =

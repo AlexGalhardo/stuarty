@@ -1,8 +1,8 @@
 import { createContext, type ReactNode, useContext } from "react";
-import type { ActivityState } from "../state/activityStore";
-import { useStore } from "../state/createStore";
-import type { DocumentState } from "../state/documentStore";
-import type { UiState } from "../state/uiStore";
+import type { ActivityState } from "./activityStore";
+import { useStore } from "./createStore";
+import type { DocumentState } from "./documentStore";
+import type { UiState } from "./uiStore";
 import type { EditorRuntime } from "./runtime";
 
 const EditorContext = createContext<EditorRuntime | null>(null);
