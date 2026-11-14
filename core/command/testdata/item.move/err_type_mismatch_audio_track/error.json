@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_m1n2p3q4r5 is a clip; track trk_m1n2p3q4r5 is a audio track.",
+  "hint": "Move it to a visual track.",
+  "retryable": false,
+  "path": "args.track_id"
+}

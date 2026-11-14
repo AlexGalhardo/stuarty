@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give at least one of start, track_id.",
+  "hint": "Send for example {\"start\": ...}.",
+  "retryable": false,
+  "path": "args"
+}

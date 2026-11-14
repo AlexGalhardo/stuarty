@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Trimming the start of caption itm_s6t7v8w9x0 to frame 120 leaves no word.",
+  "hint": "Use a start before the last word, or delete the caption.",
+  "retryable": false,
+  "path": "args.to"
+}

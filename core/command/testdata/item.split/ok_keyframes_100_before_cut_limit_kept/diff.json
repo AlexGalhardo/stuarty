@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        120,
+        100
+      ]
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_s6t7v8w9x0",
+    "object": {
+      "asset": "ast_3c5v8n2w6d",
+      "duration": 20,
+      "id": "itm_s6t7v8w9x0",
+      "scale": 0.99,
+      "source_in": 130,
+      "start": 160,
+      "track": "trk_f6g7h8j9k0",
+      "type": "clip"
+    }
+  }
+]

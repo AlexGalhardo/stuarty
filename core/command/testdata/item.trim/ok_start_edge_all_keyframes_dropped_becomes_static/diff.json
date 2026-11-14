@@ -1,0 +1,39 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        150,
+        140
+      ],
+      "keyframes": [
+        {
+          "opacity": [
+            {
+              "t": 0,
+              "value": 1
+            },
+            {
+              "t": 5,
+              "value": 0.5
+            }
+          ]
+        },
+        null
+      ],
+      "opacity": [
+        null,
+        0.5
+      ],
+      "source_in": [
+        60,
+        70
+      ],
+      "start": [
+        90,
+        100
+      ]
+    }
+  }
+]

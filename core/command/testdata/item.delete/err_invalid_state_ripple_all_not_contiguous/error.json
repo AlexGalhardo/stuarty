@@ -1,0 +1,12 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Deleted items cover frames 0-59 and 90-119; frames 60-89 are not covered.",
+  "hint": "Add the item covering frames 60-89 to item_ids, or use ripple \"track\".",
+  "retryable": false,
+  "details": {
+    "gap": {
+      "end": 90,
+      "start": 60
+    }
+  }
+}

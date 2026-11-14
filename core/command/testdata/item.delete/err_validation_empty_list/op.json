@@ -1,0 +1,6 @@
+{
+  "op": "item.delete",
+  "args": {
+    "item_ids": []
+  }
+}

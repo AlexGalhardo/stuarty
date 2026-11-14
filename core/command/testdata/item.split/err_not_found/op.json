@@ -1,0 +1,7 @@
+{
+  "op": "item.split",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "at": "97f"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "op": "item.delete",
+  "args": {
+    "item_ids": [
+      "itm_f6g7h8j9k0"
+    ],
+    "ripple": "none"
+  }
+}

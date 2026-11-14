@@ -1,0 +1,51 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "breaks": [
+        2,
+        4
+      ],
+      "duration": 60,
+      "words": [
+        {
+          "duration": 10,
+          "start": 0,
+          "text": "w1"
+        },
+        {
+          "duration": 10,
+          "start": 10,
+          "text": "w2"
+        },
+        {
+          "duration": 10,
+          "start": 20,
+          "text": "w3"
+        },
+        {
+          "duration": 10,
+          "start": 30,
+          "text": "w4"
+        },
+        {
+          "duration": 10,
+          "start": 40,
+          "text": "w5"
+        },
+        {
+          "duration": 10,
+          "start": 50,
+          "text": "w6"
+        }
+      ]
+    }
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_s6t7v8w9x0"
+  }
+]

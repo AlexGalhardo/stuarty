@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_TIME",
+  "message": "args.to \"2000000f\" is past the timeline limit of 108000 frames.",
+  "hint": "Use a value up to \"108000f\" (3600s).",
+  "retryable": false,
+  "path": "args.to"
+}
