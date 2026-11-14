@@ -94,7 +94,8 @@ func TestErrorDocumentHasTheProblemMembersAndNoHTTPOnlyOnes(t *testing.T) {
 	h.run("project:list", "--json")
 
 	doc := oneJSONDocument(t, h.stdout.String())
-	if doc["type"] != "urn:vukem-video:error:E_OVERLAP" || doc["title"] != "E_OVERLAP" || doc["status"] != float64(409) ||
+	if doc["type"] != "urn:vukem-video:error:E_OVERLAP" || doc["title"] != "E_OVERLAP" ||
+		doc["status"] != float64(409) ||
 		doc["detail"] != "overlaps" ||
 		doc["op_index"] != float64(2) ||
 		doc["path"] != "operations[2]" {
