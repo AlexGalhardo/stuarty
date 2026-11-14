@@ -967,8 +967,8 @@ func (d Dir) RemoveRuntime() error
 
 | Platform | Implementation | Release |
 | --- | --- | --- |
-| Linux, macOS | `unix.Flock(fd, LOCK_EX|LOCK_NB)` on `lock`, opened `O_RDWR|O_CREATE|O_CLOEXEC` | when the descriptor closes or the process exits |
-| Windows | `windows.LockFileEx(h, LOCKFILE_EXCLUSIVE_LOCK|LOCKFILE_FAIL_IMMEDIATELY, 0, 1, 0, &Overlapped{Offset: 0x7fffff00})` on a handle from `CreateFile` with share mode read and write (what `os.OpenFile` uses) | when the handle closes or the process terminates |
+| Linux, macOS | `unix.Flock(fd, LOCK_EX\|LOCK_NB)` on `lock`, opened `O_RDWR\|O_CREATE\|O_CLOEXEC` | when the descriptor closes or the process exits |
+| Windows | `windows.LockFileEx(h, LOCKFILE_EXCLUSIVE_LOCK\|LOCKFILE_FAIL_IMMEDIATELY, 0, 1, 0, &Overlapped{Offset: 0x7fffff00})` on a handle from `CreateFile` with share mode read and write (what `os.OpenFile` uses) | when the handle closes or the process terminates |
 
 Windows specifics, which are why the design differs from a naive `os.OpenFile`:
 
