@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	clipKey  = "itm_m1n2p3q4r5"
-	capKey   = "itm_s6t7v8w9x0"
-	capTrack = "trk_a1b2c3d4e5"
-	vidTrack = "trk_f6g7h8j9k0"
-	assetKey = "ast_3c5v8n2w6d"
+	clipID    = "itm_m1n2p3q4r5"
+	capItemID = "itm_s6t7v8w9x0"
+	capTrack  = "trk_a1b2c3d4e5"
+	vidTrack  = "trk_f6g7h8j9k0"
+	assetID   = "ast_3c5v8n2w6d"
 )
 
 func base(t *testing.T) *Document {
@@ -27,9 +27,9 @@ func editItem(d *Document, key string, f func(*Item)) {
 }
 
 func editAsset(d *Document, f func(*Asset)) {
-	a := d.Assets[assetKey]
+	a := d.Assets[assetID]
 	f(&a)
-	d.Assets[assetKey] = a
+	d.Assets[assetID] = a
 }
 
 func editCaptionTrack(d *Document, f func(*Track)) {
@@ -76,10 +76,10 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 			func(d *Document) { editCaptionTrack(d, func(tr *Track) { tr.ID = "trk_0000000000" }) },
 			VID,
 		},
-		{"item id key", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.ID = "itm_0000000000" }) }, VID},
-		{"item track form", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Track = "x" }) }, VID},
-		{"item asset form", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Asset = "x" }) }, VID},
-		{"linked item form", func(d *Document) { editItem(d, capKey, func(i *Item) { i.LinkedItem = "x" }) }, VID},
+		{"item id key", func(d *Document) { editItem(d, clipID, func(i *Item) { i.ID = "itm_0000000000" }) }, VID},
+		{"item track form", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Track = "x" }) }, VID},
+		{"item asset form", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Asset = "x" }) }, VID},
+		{"linked item form", func(d *Document) { editItem(d, capItemID, func(i *Item) { i.LinkedItem = "x" }) }, VID},
 
 		// V_SHAPE: document, settings, assets, tracks
 		{"name empty", func(d *Document) { d.Name = "" }, VShape},
@@ -90,7 +90,7 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"fps high", func(d *Document) { d.Settings.FPS = Rational{121, 1} }, VShape},
 		{"fps low", func(d *Document) {
 			d.Settings.FPS = Rational{1000, 1001}
-			editItem(d, clipKey, func(i *Item) { i.Duration, i.SourceIn = 10, 0 })
+			editItem(d, clipID, func(i *Item) { i.Duration, i.SourceIn = 10, 0 })
 		}, VShape},
 		{"loudness", func(d *Document) { d.Settings.LoudnessTarget = 0 }, VShape},
 		{"background", func(d *Document) { d.Settings.Background = "red" }, VShape},
@@ -103,7 +103,7 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"video samples", func(d *Document) { editAsset(d, func(a *Asset) { a.SampleCount = -1 }) }, VShape},
 		{"audio no samples", func(d *Document) {
 			editAsset(d, func(a *Asset) { a.Kind, a.SampleCount = AssetAudio, 0 })
-			delete(d.Items, clipKey)
+			delete(d.Items, clipID)
 		}, VShape},
 		{
 			"image no size",
@@ -138,49 +138,49 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		// V_ITEM_TRACK
 		{
 			"track missing",
-			func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Track = "trk_zzzzzzzzzz" }) },
+			func(d *Document) { editItem(d, clipID, func(i *Item) { i.Track = "trk_zzzzzzzzzz" }) },
 			VItemTrack,
 		},
 		{"audio on visual", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { i.Type = ItemAudio })
+			editItem(d, clipID, func(i *Item) { i.Type = ItemAudio })
 		}, VItemTrack},
 		{"clip on audio track", func(d *Document) {
 			d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
-			editItem(d, clipKey, func(i *Item) { i.Track = "trk_k000000001" })
+			editItem(d, clipID, func(i *Item) { i.Track = "trk_k000000001" })
 		}, VItemTrack},
 
 		// V_ITEM_RANGE
-		{"start negative", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Start = -1 }) }, VItemRange},
+		{"start negative", func(d *Document) { editItem(d, capItemID, func(i *Item) { i.Start = -1 }) }, VItemRange},
 		{"duration zero", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { i.Duration = 0 })
+			editItem(d, clipID, func(i *Item) { i.Duration = 0 })
 		}, VItemRange},
 		{
 			"past the end",
-			func(d *Document) { editItem(d, capKey, func(i *Item) { i.Start = MaxFrames - 10 }) },
+			func(d *Document) { editItem(d, capItemID, func(i *Item) { i.Start = MaxFrames - 10 }) },
 			VItemRange,
 		},
-		{"item type", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Type = "video" }) }, VShape},
+		{"item type", func(d *Document) { editItem(d, capItemID, func(i *Item) { i.Type = "video" }) }, VShape},
 		{
 			"item name",
-			func(d *Document) { editItem(d, capKey, func(i *Item) { i.Name = strings.Repeat("n", 121) }) },
+			func(d *Document) { editItem(d, capItemID, func(i *Item) { i.Name = strings.Repeat("n", 121) }) },
 			VShape,
 		},
 
 		// V_OVERLAP
 		{"overlap", func(d *Document) {
-			editItem(d, capKey, func(i *Item) { i.Track = vidTrack; i.Start = 100 })
+			editItem(d, capItemID, func(i *Item) { i.Track = vidTrack; i.Start = 100 })
 		}, VOverlap},
 
 		// V_ASSET_REF
 		{
 			"asset missing",
-			func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Asset = "ast_zzzzzzzzzz" }) },
+			func(d *Document) { editItem(d, clipID, func(i *Item) { i.Asset = "ast_zzzzzzzzzz" }) },
 			VAssetRef,
 		},
-		{"asset empty", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Asset = "" }) }, VShape},
+		{"asset empty", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Asset = "" }) }, VShape},
 		{
 			"placeholder outside template",
-			func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Asset = PlaceholderAsset }) },
+			func(d *Document) { editItem(d, clipID, func(i *Item) { i.Asset = PlaceholderAsset }) },
 			VAssetRef,
 		},
 		{"clip of audio asset", func(d *Document) { editAsset(d, func(a *Asset) { a.Kind = AssetAudio }) }, VAssetRef},
@@ -188,26 +188,26 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 			d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
 			editAsset(d, func(a *Asset) { a.HasAudio = false })
 			addItem(d, NewItem("itm_a000000001", ItemAudio, "trk_k000000001", 0, 10))
-			editItem(d, "itm_a000000001", func(i *Item) { i.Asset = assetKey })
+			editItem(d, "itm_a000000001", func(i *Item) { i.Asset = assetID })
 		}, VAssetRef},
 		{"audio of image", func(d *Document) {
 			d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
 			editAsset(d, func(a *Asset) { a.Kind = AssetImage })
 			addItem(d, NewItem("itm_a000000001", ItemAudio, "trk_k000000001", 0, 10))
-			editItem(d, "itm_a000000001", func(i *Item) { i.Asset = assetKey })
-			delete(d.Items, clipKey)
+			editItem(d, "itm_a000000001", func(i *Item) { i.Asset = assetID })
+			delete(d.Items, clipID)
 		}, VAssetRef},
 
 		// V_SOURCE_RANGE
-		{"source range", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.SourceIn = 800 }) }, VSourceRange},
+		{"source range", func(d *Document) { editItem(d, clipID, func(i *Item) { i.SourceIn = 800 }) }, VSourceRange},
 		{"source range with speed", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { i.Speed = Rational{4, 1}; i.Duration = 200; i.SourceIn = 150 })
+			editItem(d, clipID, func(i *Item) { i.Speed = Rational{4, 1}; i.Duration = 200; i.SourceIn = 150 })
 		}, VSourceRange},
 		{"audio source range", func(d *Document) {
 			d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
 			d.Assets["ast_k000000001"] = Asset{
 				ID:          "ast_k000000001",
-				Hash:        d.Assets[assetKey].Hash,
+				Hash:        d.Assets[assetID].Hash,
 				Kind:        AssetAudio,
 				Name:        "a",
 				SampleCount: 48000,
@@ -219,54 +219,54 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 
 		// V_SPEED, V_FADES
 		{"speed fast", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { i.Speed = Rational{8, 1}; i.Duration = 100; i.SourceIn = 0 })
+			editItem(d, clipID, func(i *Item) { i.Speed = Rational{8, 1}; i.Duration = 100; i.SourceIn = 0 })
 		}, VSpeed},
-		{"speed slow", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Speed = Rational{1, 5} }) }, VSpeed},
-		{"speed zero", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Speed = Rational{0, 1} }) }, VShape},
-		{"fades", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.FadeIn, i.FadeOut = 100, 51 }) }, VFades},
-		{"fade negative", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.FadeIn = -1 }) }, VShape},
-		{"source_in negative", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.SourceIn = -1 }) }, VShape},
-		{"volume", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Volume = 5 }) }, VShape},
+		{"speed slow", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Speed = Rational{1, 5} }) }, VSpeed},
+		{"speed zero", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Speed = Rational{0, 1} }) }, VShape},
+		{"fades", func(d *Document) { editItem(d, clipID, func(i *Item) { i.FadeIn, i.FadeOut = 100, 51 }) }, VFades},
+		{"fade negative", func(d *Document) { editItem(d, clipID, func(i *Item) { i.FadeIn = -1 }) }, VShape},
+		{"source_in negative", func(d *Document) { editItem(d, clipID, func(i *Item) { i.SourceIn = -1 }) }, VShape},
+		{"volume", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Volume = 5 }) }, VShape},
 
 		// V_SHAPE: visual and clip fields
-		{"scale zero", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Scale = 0 }) }, VShape},
-		{"scale big", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Scale = 21 }) }, VShape},
-		{"opacity", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Opacity = 2 }) }, VShape},
-		{"rotation NaN", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Rotation = math.NaN() }) }, VShape},
-		{"x infinite", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.X = new(math.Inf(1)) }) }, VShape},
-		{"fit", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Fit = "stretch" }) }, VShape},
-		{"crop range", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Crop = &Crop{Left: 1.5} }) }, VShape},
+		{"scale zero", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Scale = 0 }) }, VShape},
+		{"scale big", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Scale = 21 }) }, VShape},
+		{"opacity", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Opacity = 2 }) }, VShape},
+		{"rotation NaN", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Rotation = math.NaN() }) }, VShape},
+		{"x infinite", func(d *Document) { editItem(d, clipID, func(i *Item) { i.X = new(math.Inf(1)) }) }, VShape},
+		{"fit", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Fit = "stretch" }) }, VShape},
+		{"crop range", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Crop = &Crop{Left: 1.5} }) }, VShape},
 		{
 			"crop sum",
-			func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Crop = &Crop{Left: 0.6, Right: 0.5} }) },
+			func(d *Document) { editItem(d, clipID, func(i *Item) { i.Crop = &Crop{Left: 0.6, Right: 0.5} }) },
 			VShape,
 		},
-		{"brightness", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Brightness = 2 }) }, VShape},
-		{"contrast", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Contrast = 3 }) }, VShape},
-		{"saturation", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Saturation = -1 }) }, VShape},
+		{"brightness", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Brightness = 2 }) }, VShape},
+		{"contrast", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Contrast = 3 }) }, VShape},
+		{"saturation", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Saturation = -1 }) }, VShape},
 
 		// Fields of another item type.
-		{"text on clip", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Text = "x" }) }, VShape},
-		{"words on clip", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Words = manyWords(1) }) }, VShape},
-		{"crop on caption", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Crop = &Crop{} }) }, VShape},
-		{"asset on caption", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Asset = assetKey }) }, VShape},
-		{"shape on clip", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Width = 5 }) }, VShape},
+		{"text on clip", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Text = "x" }) }, VShape},
+		{"words on clip", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Words = manyWords(1) }) }, VShape},
+		{"crop on caption", func(d *Document) { editItem(d, capItemID, func(i *Item) { i.Crop = &Crop{} }) }, VShape},
+		{"asset on caption", func(d *Document) { editItem(d, capItemID, func(i *Item) { i.Asset = assetID }) }, VShape},
+		{"shape on clip", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Width = 5 }) }, VShape},
 		{
 			"style on clip",
-			func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Style = &CaptionStyle{} }) },
+			func(d *Document) { editItem(d, clipID, func(i *Item) { i.Style = &CaptionStyle{} }) },
 			VShape,
 		},
 		{"transition on audio", func(d *Document) {
 			d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
 			a := NewItem("itm_a000000001", ItemAudio, "trk_k000000001", 0, 10)
-			a.Asset = assetKey
+			a.Asset = assetID
 			a.TransitionIn = &Transition{Kind: "fade", Duration: 1}
 			addItem(d, a)
 		}, VShape},
 
 		// V_TRANSITIONS
 		{"transitions sum", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) {
+			editItem(d, clipID, func(i *Item) {
 				i.TransitionIn, i.TransitionOut = &Transition{
 					Kind:     "fade",
 					Duration: 100,
@@ -277,55 +277,55 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 			})
 		}, VTransitions},
 		{"transition kind", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { i.TransitionIn = &Transition{Kind: "wipe", Duration: 5} })
+			editItem(d, clipID, func(i *Item) { i.TransitionIn = &Transition{Kind: "wipe", Duration: 5} })
 		}, VShape},
 		{
 			"transition duration",
-			func(d *Document) { editItem(d, clipKey, func(i *Item) { i.TransitionOut = &Transition{Kind: "fade"} }) },
+			func(d *Document) { editItem(d, clipID, func(i *Item) { i.TransitionOut = &Transition{Kind: "fade"} }) },
 			VShape,
 		},
 
 		// V_KEYFRAMES
 		{"keyframe property", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { i.Keyframes = Keyframes{"foo": {NewKeyframe(0, 1)}} })
+			editItem(d, clipID, func(i *Item) { i.Keyframes = Keyframes{"foo": {NewKeyframe(0, 1)}} })
 		}, VKeyframes},
 		{"keyframe t past end", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { i.Keyframes = Keyframes{"scale": {NewKeyframe(151, 1)}} })
+			editItem(d, clipID, func(i *Item) { i.Keyframes = Keyframes{"scale": {NewKeyframe(151, 1)}} })
 		}, VKeyframes},
 		{"keyframe t negative", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { i.Keyframes = Keyframes{"x": {NewKeyframe(-1, 1)}} })
+			editItem(d, clipID, func(i *Item) { i.Keyframes = Keyframes{"x": {NewKeyframe(-1, 1)}} })
 		}, VKeyframes},
 		{"keyframe order", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { i.Keyframes = Keyframes{"y": {NewKeyframe(5, 1), NewKeyframe(5, 2)}} })
+			editItem(d, clipID, func(i *Item) { i.Keyframes = Keyframes{"y": {NewKeyframe(5, 1), NewKeyframe(5, 2)}} })
 		}, VKeyframes},
 		{"keyframe count", func(d *Document) {
 			kfs := make([]Keyframe, 101)
 			for i := range kfs {
 				kfs[i] = NewKeyframe(i, 1)
 			}
-			editItem(d, clipKey, func(i *Item) { i.Keyframes = Keyframes{"rotation": kfs} })
+			editItem(d, clipID, func(i *Item) { i.Keyframes = Keyframes{"rotation": kfs} })
 		}, VKeyframes},
 		{"keyframe value", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { i.Keyframes = Keyframes{"opacity": {NewKeyframe(0, 1.5)}} })
+			editItem(d, clipID, func(i *Item) { i.Keyframes = Keyframes{"opacity": {NewKeyframe(0, 1.5)}} })
 		}, VKeyframes},
 		{"keyframe scale value", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { i.Keyframes = Keyframes{"scale": {NewKeyframe(0, 0)}} })
+			editItem(d, clipID, func(i *Item) { i.Keyframes = Keyframes{"scale": {NewKeyframe(0, 0)}} })
 		}, VKeyframes},
 		{"keyframe volume value", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { i.Keyframes = Keyframes{"volume": {NewKeyframe(0, 5)}} })
+			editItem(d, clipID, func(i *Item) { i.Keyframes = Keyframes{"volume": {NewKeyframe(0, 5)}} })
 		}, VKeyframes},
 		{"keyframe easing", func(d *Document) {
 			k := NewKeyframe(0, 1)
 			k.Easing = "bounce"
-			editItem(d, clipKey, func(i *Item) { i.Keyframes = Keyframes{"x": {k}} })
+			editItem(d, clipID, func(i *Item) { i.Keyframes = Keyframes{"x": {k}} })
 		}, VKeyframes},
 		{"volume keyframes on caption", func(d *Document) {
-			editItem(d, capKey, func(i *Item) { i.Keyframes = Keyframes{"volume": {NewKeyframe(0, 1)}} })
+			editItem(d, capItemID, func(i *Item) { i.Keyframes = Keyframes{"volume": {NewKeyframe(0, 1)}} })
 		}, VKeyframes},
 		{"scale keyframes on audio", func(d *Document) {
 			d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
 			a := NewItem("itm_a000000001", ItemAudio, "trk_k000000001", 0, 10)
-			a.Asset = assetKey
+			a.Asset = assetID
 			a.Keyframes = Keyframes{"scale": {NewKeyframe(0, 1)}}
 			addItem(d, a)
 		}, VKeyframes},
@@ -346,49 +346,49 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"shape fill ref", func(d *Document) { addShape(d, func(i *Item) { i.Fill = "$brand" }) }, VColorRef},
 
 		// V_WORDS
-		{"words none", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Words = nil }) }, VShape},
+		{"words none", func(d *Document) { editItem(d, capItemID, func(i *Item) { i.Words = nil }) }, VShape},
 		{
 			"words 61",
-			func(d *Document) { editItem(d, capKey, func(i *Item) { i.Duration = 100; i.Words = manyWords(61) }) },
+			func(d *Document) { editItem(d, capItemID, func(i *Item) { i.Duration = 100; i.Words = manyWords(61) }) },
 			VShape,
 		},
 		{"word text empty", func(d *Document) {
-			editItem(d, capKey, func(i *Item) { i.Words = []Word{{Text: "", Start: 0, Duration: 1}} })
+			editItem(d, capItemID, func(i *Item) { i.Words = []Word{{Text: "", Start: 0, Duration: 1}} })
 		}, VShape},
 		{"word text long", func(d *Document) {
 			editItem(
 				d,
-				capKey,
+				capItemID,
 				func(i *Item) { i.Words = []Word{{Text: strings.Repeat("w", 81), Start: 0, Duration: 1}} },
 			)
 		}, VShape},
 		{"words overlap", func(d *Document) {
-			editItem(d, capKey, func(i *Item) {
+			editItem(d, capItemID, func(i *Item) {
 				i.Words = []Word{{Text: "a", Start: 0, Duration: 10}, {Text: "b", Start: 5, Duration: 10}}
 			})
 		}, VWords},
 		{"word past end", func(d *Document) {
-			editItem(d, capKey, func(i *Item) { i.Words = []Word{{Text: "a", Start: 40, Duration: 9}} })
+			editItem(d, capItemID, func(i *Item) { i.Words = []Word{{Text: "a", Start: 40, Duration: 9}} })
 		}, VWords},
 		{"word negative", func(d *Document) {
-			editItem(d, capKey, func(i *Item) { i.Words = []Word{{Text: "a", Start: -1, Duration: 2}} })
+			editItem(d, capItemID, func(i *Item) { i.Words = []Word{{Text: "a", Start: -1, Duration: 2}} })
 		}, VWords},
 		{"word duration", func(d *Document) {
-			editItem(d, capKey, func(i *Item) { i.Words = []Word{{Text: "a", Start: 0, Duration: 0}} })
+			editItem(d, capItemID, func(i *Item) { i.Words = []Word{{Text: "a", Start: 0, Duration: 0}} })
 		}, VWords},
-		{"breaks range", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Breaks = []int{9} }) }, VWords},
-		{"breaks order", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Breaks = []int{2, 1} }) }, VWords},
+		{"breaks range", func(d *Document) { editItem(d, capItemID, func(i *Item) { i.Breaks = []int{9} }) }, VWords},
+		{"breaks order", func(d *Document) { editItem(d, capItemID, func(i *Item) { i.Breaks = []int{2, 1} }) }, VWords},
 
 		// V_FONT and style fields.
 		{"font family", func(d *Document) {
 			text(d, "itm_x000000001", 60, &CaptionStyle{FontFamily: new("Comic Sans")})
 		}, VFont},
 		{"user font weight", func(d *Document) {
-			d.Fonts = map[string]ProjectFont{"Mine": {Files: []FontFile{{Weight: 400, Hash: d.Assets[assetKey].Hash}}}}
+			d.Fonts = map[string]ProjectFont{"Mine": {Files: []FontFile{{Weight: 400, Hash: d.Assets[assetID].Hash}}}}
 			text(d, "itm_x000000001", 60, &CaptionStyle{FontFamily: new("Mine"), FontWeight: new(700)})
 		}, VFont},
 		{"user font default weight", func(d *Document) {
-			d.Fonts = map[string]ProjectFont{"Mine": {Files: []FontFile{{Weight: 400, Hash: d.Assets[assetKey].Hash}}}}
+			d.Fonts = map[string]ProjectFont{"Mine": {Files: []FontFile{{Weight: 400, Hash: d.Assets[assetID].Hash}}}}
 			text(d, "itm_x000000001", 60, &CaptionStyle{FontFamily: new("Mine")})
 		}, VFont},
 		{"font weight step", func(d *Document) {
@@ -412,14 +412,14 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 			VShape,
 		},
 		{"caption position", func(d *Document) {
-			editItem(d, capKey, func(i *Item) { i.Style = &CaptionStyle{Position: new("left")} })
+			editItem(d, capItemID, func(i *Item) { i.Style = &CaptionStyle{Position: new("left")} })
 		}, VShape},
 		{"caption highlight", func(d *Document) {
-			editItem(d, capKey, func(i *Item) { i.Style = &CaptionStyle{Highlight: new("all")} })
+			editItem(d, capItemID, func(i *Item) { i.Style = &CaptionStyle{Highlight: new("all")} })
 		}, VShape},
 		{"fonts no files", func(d *Document) { d.Fonts = map[string]ProjectFont{"Mine": {}} }, VShape},
 		{"fonts weight", func(d *Document) {
-			d.Fonts = map[string]ProjectFont{"Mine": {Files: []FontFile{{Weight: 150, Hash: d.Assets[assetKey].Hash}}}}
+			d.Fonts = map[string]ProjectFont{"Mine": {Files: []FontFile{{Weight: 150, Hash: d.Assets[assetID].Hash}}}}
 		}, VShape},
 		{"fonts hash", func(d *Document) {
 			d.Fonts = map[string]ProjectFont{"Mine": {Files: []FontFile{{Weight: 400, Hash: "x"}}}}
@@ -427,36 +427,36 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 
 		// V_SLOT
 		{"slot name", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { s := NewSlot("Bad Name", "media"); i.Slot = &s })
+			editItem(d, clipID, func(i *Item) { s := NewSlot("Bad Name", "media"); i.Slot = &s })
 		}, VSlot},
 		{
 			"slot kind on clip",
-			func(d *Document) { editItem(d, clipKey, func(i *Item) { s := NewSlot("a", "text"); i.Slot = &s }) },
+			func(d *Document) { editItem(d, clipID, func(i *Item) { s := NewSlot("a", "text"); i.Slot = &s }) },
 			VSlot,
 		},
 		{
 			"media slot on caption",
-			func(d *Document) { editItem(d, capKey, func(i *Item) { s := NewSlot("a", "media"); i.Slot = &s }) },
+			func(d *Document) { editItem(d, capItemID, func(i *Item) { s := NewSlot("a", "media"); i.Slot = &s }) },
 			VSlot,
 		},
 		{
 			"slot kind unknown",
-			func(d *Document) { editItem(d, clipKey, func(i *Item) { s := NewSlot("a", "video"); i.Slot = &s }) },
+			func(d *Document) { editItem(d, clipID, func(i *Item) { s := NewSlot("a", "video"); i.Slot = &s }) },
 			VShape,
 		},
 		{"slot description", func(d *Document) {
 			editItem(
 				d,
-				clipKey,
+				clipID,
 				func(i *Item) { s := NewSlot("a", "media"); s.Description = strings.Repeat("d", 201); i.Slot = &s },
 			)
 		}, VShape},
 		{"slot policy", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { s := NewSlot("a", "media"); s.DurationPolicy = "grow"; i.Slot = &s })
+			editItem(d, clipID, func(i *Item) { s := NewSlot("a", "media"); s.DurationPolicy = "grow"; i.Slot = &s })
 		}, VShape},
 		{"slot duplicate", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { s := NewSlot("same", "media"); i.Slot = &s })
-			editItem(d, capKey, func(i *Item) { s := NewSlot("same", "caption"); i.Slot = &s })
+			editItem(d, clipID, func(i *Item) { s := NewSlot("same", "media"); i.Slot = &s })
+			editItem(d, capItemID, func(i *Item) { s := NewSlot("same", "caption"); i.Slot = &s })
 		}, VSlot},
 
 		// V_COLOR_REF and template colours.
@@ -484,7 +484,7 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		}, VLimits},
 		{"too many assets", func(d *Document) {
 			for i := range MaxAssets {
-				a := d.Assets[assetKey]
+				a := d.Assets[assetID]
 				a.ID = fmt.Sprintf("ast_x%09d", i)
 				d.Assets[a.ID] = a
 			}
@@ -518,15 +518,15 @@ func addShape(d *Document, f func(*Item)) {
 func TestValidateAcceptsEdgeValues(t *testing.T) {
 	d := base(t)
 	// End is exclusive: an item may start where the previous one ends.
-	editItem(d, clipKey, func(i *Item) { i.Duration = 100; i.Start = 0 })
+	editItem(d, clipID, func(i *Item) { i.Duration = 100; i.Start = 0 })
 	next := NewItem("itm_x000000001", ItemClip, vidTrack, 100, 50)
-	next.Asset = assetKey
+	next.Asset = assetID
 	addItem(d, next)
 	// An item may end exactly at the last frame, and a speed bound is inclusive.
 	last := NewItem("itm_x000000002", ItemShape, capTrack, MaxFrames-5, 5)
 	last.Shape, last.Width, last.Height = "ellipse", 1, 1
 	addItem(d, last)
-	editItem(d, clipKey, func(i *Item) { i.Speed = Rational{1, 4} })
+	editItem(d, clipID, func(i *Item) { i.Speed = Rational{1, 4} })
 	editItem(d, "itm_x000000001", func(i *Item) { i.Speed = Rational{4, 1}; i.Duration = 100 })
 	if vs := Validate(d); len(vs) != 0 {
 		t.Errorf("%v", vs)
@@ -536,11 +536,11 @@ func TestValidateAcceptsEdgeValues(t *testing.T) {
 func TestValidateReportsEveryViolationWithPathAndID(t *testing.T) {
 	d := base(t)
 	d.Name = ""
-	editItem(d, clipKey, func(i *Item) { i.Scale = 0; i.SourceIn = 800 })
+	editItem(d, clipID, func(i *Item) { i.Scale = 0; i.SourceIn = 800 })
 	vs := Validate(d)
 	want := []Violation{
-		{Code: VShape, Path: "items." + clipKey + ".scale", ID: clipKey},
-		{Code: VSourceRange, Path: "items." + clipKey + ".source_in", ID: clipKey},
+		{Code: VShape, Path: "items." + clipID + ".scale", ID: clipID},
+		{Code: VSourceRange, Path: "items." + clipID + ".source_in", ID: clipID},
 		{Code: VShape, Path: "name", ID: d.ID},
 	}
 	if len(vs) != 3 {
@@ -576,7 +576,7 @@ func TestValidateTemplatePlaceholderAndColourRef(t *testing.T) {
 
 func TestValidateOverlapNamesTheFrames(t *testing.T) {
 	d := base(t)
-	editItem(d, capKey, func(i *Item) { i.Track = vidTrack; i.Start = 100 })
+	editItem(d, capItemID, func(i *Item) { i.Track = vidTrack; i.Start = 100 })
 	vs := Validate(d)
 	if len(vs) != 1 || vs[0].Code != VOverlap || !strings.Contains(vs[0].Message, "frames 100 to 147") {
 		t.Errorf("%v", vs)
@@ -585,10 +585,10 @@ func TestValidateOverlapNamesTheFrames(t *testing.T) {
 
 func TestValidateOverlapNestedItems(t *testing.T) {
 	d := base(t)
-	editItem(d, clipKey, func(i *Item) { i.Duration = 100; i.SourceIn = 0 })
+	editItem(d, clipID, func(i *Item) { i.Duration = 100; i.SourceIn = 0 })
 	for i, start := range []int{10, 20} { // both inside the first item
 		it := NewItem(fmt.Sprintf("itm_x00000000%d", i), ItemClip, vidTrack, start, 5)
-		it.Asset = assetKey
+		it.Asset = assetID
 		addItem(d, it)
 	}
 	if n := len(Validate(d)); n != 2 {
