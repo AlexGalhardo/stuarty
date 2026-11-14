@@ -129,11 +129,15 @@ func withDefaults[T any]() T {
 
 // Violation is one broken invariant. Code is a V_* code of SDD-001 §4, Path the
 // dotted path of the offending value and ID the identifier of the object it is on.
+// Related lists the other objects the violation involves (the track of an item that
+// is on the wrong kind of track, the asset of an item whose source range is wrong,
+// the item an overlapping item collides with).
 type Violation struct {
-	Code    string `json:"code"`
-	Path    string `json:"path"`
-	ID      string `json:"id,omitempty"`
-	Message string `json:"message"`
+	Code    string   `json:"code"`
+	Path    string   `json:"path"`
+	ID      string   `json:"id,omitempty"`
+	Message string   `json:"message"`
+	Related []string `json:"related,omitempty"`
 }
 
 func (v Violation) String() string {
