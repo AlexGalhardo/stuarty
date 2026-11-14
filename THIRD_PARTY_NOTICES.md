@@ -29,36 +29,6 @@ The production dependency closure of `web/package.json` (`dependencies`, transit
 
 | Name | Version | Licence | Copyright | Licence text | Notes |
 | --- | --- | --- | --- | --- | --- |
-| @babel/code-frame | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/code-frame@7.29.7/LICENSE>) | - |
-| @babel/compat-data | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/compat-data@7.29.7/LICENSE>) | - |
-| @babel/core | 7.29.13 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/core@7.29.13/LICENSE>) | - |
-| @babel/generator | 7.29.13 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/generator@7.29.13/LICENSE>) | - |
-| @babel/helper-annotate-as-pure | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-annotate-as-pure@7.29.7/LICENSE>) | - |
-| @babel/helper-compilation-targets | 7.29.13 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-compilation-targets@7.29.13/LICENSE>) | - |
-| @babel/helper-create-class-features-plugin | 7.29.13 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-create-class-features-plugin@7.29.13/LICENSE>) | - |
-| @babel/helper-globals | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-globals@7.29.7/LICENSE>) | - |
-| @babel/helper-member-expression-to-functions | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-member-expression-to-functions@7.29.7/LICENSE>) | - |
-| @babel/helper-module-imports | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-module-imports@7.29.7/LICENSE>) | - |
-| @babel/helper-module-transforms | 7.29.13 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-module-transforms@7.29.13/LICENSE>) | - |
-| @babel/helper-optimise-call-expression | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-optimise-call-expression@7.29.7/LICENSE>) | - |
-| @babel/helper-plugin-utils | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-plugin-utils@7.29.7/LICENSE>) | - |
-| @babel/helper-replace-supers | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-replace-supers@7.29.7/LICENSE>) | - |
-| @babel/helper-skip-transparent-expression-wrappers | 7.29.13 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-skip-transparent-expression-wrappers@7.29.13/LICENSE>) | - |
-| @babel/helper-string-parser | 7.29.13 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-string-parser@7.29.13/LICENSE>) | - |
-| @babel/helper-validator-identifier | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-validator-identifier@7.29.7/LICENSE>) | - |
-| @babel/helper-validator-option | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helper-validator-option@7.29.7/LICENSE>) | - |
-| @babel/helpers | 7.29.13 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/helpers@7.29.13/LICENSE>) | - |
-| @babel/parser | 7.29.13 | MIT | Copyright (C) 2012-2014 by various contributors (see AUTHORS) | [LICENSE](<licenses/npm/@babel/parser@7.29.13/LICENSE>) | - |
-| @babel/plugin-syntax-jsx | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/plugin-syntax-jsx@7.29.7/LICENSE>) | - |
-| @babel/plugin-syntax-typescript | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/plugin-syntax-typescript@7.29.7/LICENSE>) | - |
-| @babel/plugin-transform-modules-commonjs | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/plugin-transform-modules-commonjs@7.29.7/LICENSE>) | - |
-| @babel/plugin-transform-typescript | 7.29.9 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/plugin-transform-typescript@7.29.9/LICENSE>) | - |
-| @babel/preset-typescript | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/preset-typescript@7.29.7/LICENSE>) | - |
-| @babel/template | 7.29.7 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/template@7.29.7/LICENSE>) | - |
-| @babel/traverse | 7.29.13 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/traverse@7.29.13/LICENSE>) | - |
-| @babel/types | 7.29.11 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | [LICENSE](<licenses/npm/@babel/types@7.29.11/LICENSE>) | - |
-| @dotenvx/dotenvx | 1.75.1 | BSD-3-Clause | Copyright (c) 2024, Scott Motte | [LICENSE](<licenses/npm/@dotenvx/dotenvx@1.75.1/LICENSE>) | - |
-| @dotenvx/primitives | 0.8.0 | BSD-3-Clause | Copyright (c) 2024, Scott Motte | [LICENSE](<licenses/npm/@dotenvx/primitives@0.8.0/LICENSE>) | - |
 | @floating-ui/core | 1.8.0 | MIT | Copyright (c) 2021-present Floating UI contributors | [LICENSE](<licenses/npm/@floating-ui/core@1.8.0/LICENSE>) | - |
 | @floating-ui/dom | 1.8.0 | MIT | Copyright (c) 2021-present Floating UI contributors | [LICENSE](<licenses/npm/@floating-ui/dom@1.8.0/LICENSE>) | - |
 | @floating-ui/react-dom | 2.1.9 | MIT | Copyright (c) 2021-present Floating UI contributors | [LICENSE](<licenses/npm/@floating-ui/react-dom@2.1.9/LICENSE>) | - |
@@ -66,16 +36,9 @@ The production dependency closure of `web/package.json` (`dependencies`, transit
 | @fontsource-variable/geist | 5.3.0 | OFL-1.1 | Copyright 2024 The Geist Project Authors (<https://github.com/vercel/geist-font>) Geist-Italic[wght].ttf: Copyright 2024 The Geist Project Authors (<https://githu…> | [LICENSE](<licenses/npm/@fontsource-variable/geist@5.3.0/LICENSE>) | - |
 | @inertiajs/core | 3.9.1 | MIT | Copyright (c) Jonathan Reinink <jonathan@reinink.ca> | [LICENSE](<licenses/npm/@inertiajs/core@3.9.1/LICENSE>) | - |
 | @inertiajs/react | 3.9.1 | MIT | Copyright (c) Jonathan Reinink <jonathan@reinink.ca> | [LICENSE](<licenses/npm/@inertiajs/react@3.9.1/LICENSE>) | - |
-| @jridgewell/gen-mapping | 0.3.13 | MIT | Copyright 2024 Justin Ridgewell <justin@ridgewell.name> | [LICENSE](<licenses/npm/@jridgewell/gen-mapping@0.3.13/LICENSE>) | - |
-| @jridgewell/remapping | 2.3.5 | MIT | Copyright 2024 Justin Ridgewell <justin@ridgewell.name> | [LICENSE](<licenses/npm/@jridgewell/remapping@2.3.5/LICENSE>) | - |
 | @jridgewell/resolve-uri | 3.1.2 | MIT | Copyright 2019 Justin Ridgewell <jridgewell@google.com> | [LICENSE](<licenses/npm/@jridgewell/resolve-uri@3.1.2/LICENSE>) | - |
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT | Copyright 2024 Justin Ridgewell <justin@ridgewell.name> | [LICENSE](<licenses/npm/@jridgewell/sourcemap-codec@1.6.0/LICENSE>) | - |
 | @jridgewell/trace-mapping | 0.3.31 | MIT | Copyright 2024 Justin Ridgewell <justin@ridgewell.name> | [LICENSE](<licenses/npm/@jridgewell/trace-mapping@0.3.31/LICENSE>) | - |
-| @modelcontextprotocol/core | 2.4.0 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/npm/@modelcontextprotocol/core@2.4.0/LICENSE>) | - |
-| @modelcontextprotocol/server | 2.4.0 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/npm/@modelcontextprotocol/server@2.4.0/LICENSE>) | - |
-| @nodelib/fs.scandir | 2.1.5 | MIT | Copyright (c) Denis Malinochkin | [LICENSE](<licenses/npm/@nodelib/fs.scandir@2.1.5/LICENSE>) | - |
-| @nodelib/fs.stat | 2.0.5 | MIT | Copyright (c) Denis Malinochkin | [LICENSE](<licenses/npm/@nodelib/fs.stat@2.0.5/LICENSE>) | - |
-| @nodelib/fs.walk | 1.2.8 | MIT | Copyright (c) Denis Malinochkin | [LICENSE](<licenses/npm/@nodelib/fs.walk@1.2.8/LICENSE>) | - |
 | @radix-ui/number | 1.1.3 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/number@1.1.3/LICENSE>) | - |
 | @radix-ui/primitive | 1.2.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/primitive@1.2.0/LICENSE>) | - |
 | @radix-ui/react-accessible-icon | 1.2.0 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-accessible-icon@1.2.0/LICENSE>) | - |
@@ -136,209 +99,39 @@ The production dependency closure of `web/package.json` (`dependencies`, transit
 | @radix-ui/react-use-size | 1.1.5 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-use-size@1.1.5/LICENSE>) | - |
 | @radix-ui/react-visually-hidden | 1.2.13 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/react-visually-hidden@1.2.13/LICENSE>) | - |
 | @radix-ui/rect | 1.1.3 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/@radix-ui/rect@1.1.3/LICENSE>) | - |
-| @sec-ant/readable-stream | 0.4.1 | MIT | Copyright (c) 2022 Ze-Zheng Wu | [LICENSE](<licenses/npm/@sec-ant/readable-stream@0.4.1/LICENSE>) | - |
-| @shadcn/registry | 0.2.1 | MIT | Copyright (c) 2023 shadcn | [LICENSE.md](<licenses/npm/@shadcn/registry@0.2.1/LICENSE.md>) | - |
-| @sindresorhus/merge-streams | 4.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/@sindresorhus/merge-streams@4.0.0/license>) | - |
-| @ts-morph/common | 0.27.0 | MIT | Copyright (c) 2017 David Sherret | [LICENSE](<licenses/npm/@ts-morph/common@0.27.0/LICENSE>) | - |
-| @types/validate-npm-package-name | 4.0.2 | MIT | Copyright (c) Microsoft Corporation. | [LICENSE](<licenses/npm/@types/validate-npm-package-name@4.0.2/LICENSE>) | - |
-| ajv | 8.20.0 | MIT | Copyright (c) 2015-2021 Evgeny Poberezkin | [LICENSE](<licenses/npm/ajv@8.20.0/LICENSE>) | - |
-| ajv-formats | 2.1.1 | MIT | Copyright (c) 2020 Evgeny Poberezkin | [LICENSE](<licenses/npm/ajv-formats@2.1.1/LICENSE>) | - |
-| ansi-colors | 4.1.3 | MIT | Copyright (c) 2015-present, Brian Woodward. | [LICENSE](<licenses/npm/ansi-colors@4.1.3/LICENSE>) | - |
-| ansi-regex | 5.0.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/ansi-regex@5.0.1/license>) | - |
-| ansi-regex | 6.6.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/ansi-regex@6.6.0/license>) | - |
+| @types/earcut | 3.0.0 | MIT | Copyright (c) Microsoft Corporation. | [LICENSE](<licenses/npm/@types/earcut@3.0.0/LICENSE>) | - |
+| @webgpu/types | 0.1.74 | BSD-3-Clause | Copyright 2022 WebGPU Developers | [LICENSE](<licenses/npm/@webgpu/types@0.1.74/LICENSE>) | - |
+| @xmldom/xmldom | 0.8.15 | MIT | Copyright 2019 - present Christopher J. Brody and other contributors, as listed in: <https://github.com/xmldom/xmldom/graphs/contributors> | [LICENSE](<licenses/npm/@xmldom/xmldom@0.8.15/LICENSE>) | - |
 | aria-hidden | 1.2.6 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/aria-hidden@1.2.6/LICENSE>) | - |
-| ast-types | 0.16.3 | MIT | Copyright (c) 2013 Ben Newman <bn@cs.stanford.edu> | [LICENSE](<licenses/npm/ast-types@0.16.3/LICENSE>) | - |
-| atomically | 1.7.0 | MIT | Copyright (c) 2020-present Fabio Spampinato | [LICENSE](<licenses/npm/atomically@1.7.0/LICENSE>) | - |
-| balanced-match | 4.0.4 | MIT | - | [LICENSE.md](<licenses/npm/balanced-match@4.0.4/LICENSE.md>) | - |
-| baseline-browser-mapping | 2.11.35 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE.txt](<licenses/npm/baseline-browser-mapping@2.11.35/LICENSE.txt>) | - |
-| brace-expansion | 5.0.12 | MIT | Copyright Julian Gruber <julian@juliangruber.com> | [LICENSE](<licenses/npm/brace-expansion@5.0.12/LICENSE>) | - |
-| braces | 3.0.3 | MIT | Copyright (c) 2014-present, Jon Schlinkert. | [LICENSE](<licenses/npm/braces@3.0.3/LICENSE>) | - |
-| browserslist | 4.29.5 | MIT | Copyright 2014 Andrey Sitnik <andrey@sitnik.es> and other contributors | [LICENSE](<licenses/npm/browserslist@4.29.5/LICENSE>) | - |
-| bundle-name | 4.1.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/bundle-name@4.1.1/license>) | - |
-| caniuse-lite | 1.0.30001823 | CC-BY-4.0 | copyright and certain other rights. Our licenses are | [LICENSE](<licenses/npm/caniuse-lite@1.0.30001823/LICENSE>) | - |
-| chalk | 5.6.2 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/chalk@5.6.2/license>) | - |
 | class-variance-authority | 0.7.1 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/npm/class-variance-authority@0.7.1/LICENSE>) | - |
-| cli-cursor | 5.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/cli-cursor@5.0.0/license>) | - |
-| cli-spinners | 2.9.2 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/cli-spinners@2.9.2/license>) | - |
 | clsx | 2.1.1 | MIT | Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com) | [license](<licenses/npm/clsx@2.1.1/license>) | - |
-| cn | 0.2.6 | MIT | Copyright (c) 2026 shadcn | [LICENSE](<licenses/npm/cn@0.2.6/LICENSE>) | - |
-| code-block-writer | 13.0.3 | MIT | Copyright (c) 2015-2024 David Sherret | [LICENSE](<licenses/npm/code-block-writer@13.0.3/LICENSE>) | - |
-| commander | 11.1.0 | MIT | Copyright (c) 2011 TJ Holowaychuk <tj@vision-media.ca> | [LICENSE](<licenses/npm/commander@11.1.0/LICENSE>) | - |
-| commander | 14.0.3 | MIT | Copyright (c) 2011 TJ Holowaychuk <tj@vision-media.ca> | [LICENSE](<licenses/npm/commander@14.0.3/LICENSE>) | - |
-| conf | 10.2.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/conf@10.2.0/license>) | - |
-| convert-source-map | 2.0.0 | MIT | Copyright 2013 Thorsten Lorenz. | [LICENSE](<licenses/npm/convert-source-map@2.0.0/LICENSE>) | - |
-| cross-spawn | 7.0.6 | MIT | Copyright (c) 2018 Made With MOXY Lda <hello@moxy.studio> | [LICENSE](<licenses/npm/cross-spawn@7.0.6/LICENSE>) | - |
-| cssesc | 3.0.0 | MIT | Copyright Mathias Bynens <<https://mathiasbynens.be/>> | [LICENSE-MIT.txt](<licenses/npm/cssesc@3.0.0/LICENSE-MIT.txt>) | - |
-| debounce-fn | 4.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/debounce-fn@4.0.0/license>) | - |
-| debug | 4.4.3 | MIT | Copyright (c) 2014-2017 TJ Holowaychuk <tj@vision-media.ca> | [LICENSE](<licenses/npm/debug@4.4.3/LICENSE>) | - |
-| dedent | 1.7.2 | MIT | Desmond Brand | [LICENSE.md](<licenses/npm/dedent@1.7.2/LICENSE.md>) | - |
-| deepmerge | 4.3.1 | MIT | Copyright (c) 2012 James Halliday, Josh Duff, and other contributors | [license.txt](<licenses/npm/deepmerge@4.3.1/license.txt>) | - |
-| default-browser | 5.5.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/default-browser@5.5.1/license>) | - |
-| default-browser-id | 5.0.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/default-browser-id@5.0.1/license>) | - |
-| define-lazy-prop | 2.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/define-lazy-prop@2.0.0/license>) | - |
-| define-lazy-prop | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/define-lazy-prop@3.0.0/license>) | - |
+| colord | 2.13.0 | MIT | Copyright (c) 2020 Vlad Shilov omgovich@ya.ru | [LICENSE.md](<licenses/npm/colord@2.13.0/LICENSE.md>) | - |
 | detect-node-es | 1.1.0 | MIT | Copyright (c) 2017 Ilya Kantor | [LICENSE](<licenses/npm/detect-node-es@1.1.0/LICENSE>) | - |
-| diff | 8.0.4 | BSD-3-Clause | Copyright (c) 2009-2015, Kevin Decker <kpdecker@gmail.com> | [LICENSE](<licenses/npm/diff@8.0.4/LICENSE>) | - |
-| dot-prop | 6.0.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/dot-prop@6.0.1/license>) | - |
-| dotenv | 17.4.2 | BSD-2-Clause | Copyright (c) 2015, Scott Motte | [LICENSE](<licenses/npm/dotenv@17.4.2/LICENSE>) | - |
-| electron-to-chromium | 1.5.478 | ISC | Copyright 2018 Kilian Valkhof | [LICENSE](<licenses/npm/electron-to-chromium@1.5.478/LICENSE>) | - |
-| emoji-regex | 10.6.0 | MIT | Copyright Mathias Bynens <<https://mathiasbynens.be/>> | [LICENSE-MIT.txt](<licenses/npm/emoji-regex@10.6.0/LICENSE-MIT.txt>) | - |
-| enquirer | 2.4.1 | MIT | Copyright (c) 2016-present, Jon Schlinkert. | [LICENSE](<licenses/npm/enquirer@2.4.1/LICENSE>) | - |
-| env-paths | 2.2.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/env-paths@2.2.1/license>) | - |
+| earcut | 3.2.4 | ISC | Copyright (c) 2026, Mapbox | [LICENSE](<licenses/npm/earcut@3.2.4/LICENSE>) | - |
 | es-toolkit | 1.53.1 | MIT | Copyright (c) 2024 Viva Republica, Inc. | [LICENSE](<licenses/npm/es-toolkit@1.53.1/LICENSE>), [NOTICE](<licenses/npm/es-toolkit@1.53.1/NOTICE>) | - |
-| escalade | 3.2.0 | MIT | Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com) | [license](<licenses/npm/escalade@3.2.0/license>) | - |
-| esprima | 4.0.1 | BSD-2-Clause | Copyright JS Foundation and other contributors, <https://js.foundation/> | [LICENSE.BSD](<licenses/npm/esprima@4.0.1/LICENSE.BSD>) | - |
-| execa | 5.1.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/execa@5.1.1/license>) | - |
-| execa | 9.6.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/execa@9.6.1/license>) | - |
-| fast-deep-equal | 3.1.3 | MIT | Copyright (c) 2017 Evgeny Poberezkin | [LICENSE](<licenses/npm/fast-deep-equal@3.1.3/LICENSE>) | - |
-| fast-glob | 3.3.3 | MIT | Copyright (c) Denis Malinochkin | [LICENSE](<licenses/npm/fast-glob@3.3.3/LICENSE>) | - |
-| fast-uri | 3.1.9 | BSD-3-Clause | Copyright (c) 2011-2021, Gary Court until <https://github.com/garycourt/uri-js/commit/a1acf730b4bba3f1097c9f52e7d9d3aba8cdcaae> | [LICENSE](<licenses/npm/fast-uri@3.1.9/LICENSE>) | - |
-| fastq | 1.20.3 | ISC | Copyright (c) 2015-2020, Matteo Collina <matteo.collina@gmail.com> | [LICENSE](<licenses/npm/fastq@1.20.3/LICENSE>) | - |
-| fdir | 6.5.0 | MIT | Copyright 2023 Abdullah Atta | [LICENSE](<licenses/npm/fdir@6.5.0/LICENSE>) | - |
-| figures | 6.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/figures@6.1.0/license>) | - |
-| fill-range | 7.1.1 | MIT | Copyright (c) 2014-present, Jon Schlinkert. | [LICENSE](<licenses/npm/fill-range@7.1.1/LICENSE>) | - |
-| find-up | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/find-up@3.0.0/license>) | - |
-| fs-extra | 11.4.1 | MIT | Copyright (c) 2011-2024 JP Richardson | [LICENSE](<licenses/npm/fs-extra@11.4.1/LICENSE>) | - |
-| fuzzysort | 3.1.0 | MIT | Copyright (c) 2018 Stephen Kamenar | [LICENSE](<licenses/npm/fuzzysort@3.1.0/LICENSE>) | - |
-| gensync | 1.0.0-beta.2 | MIT | Copyright 2018 Logan Smyth <loganfsmyth@gmail.com> | [LICENSE](<licenses/npm/gensync@1.0.0-beta.2/LICENSE>) | - |
-| get-east-asian-width | 1.7.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/get-east-asian-width@1.7.0/license>) | - |
+| eventemitter3 | 5.0.4 | MIT | Copyright (c) 2014 Arnout Kazemier | [LICENSE](<licenses/npm/eventemitter3@5.0.4/LICENSE>) | - |
 | get-nonce | 1.0.1 | MIT | Copyright (c) 2020 Anton Korzunov | [LICENSE](<licenses/npm/get-nonce@1.0.1/LICENSE>) | - |
-| get-own-enumerable-keys | 1.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/get-own-enumerable-keys@1.0.0/license>) | - |
-| get-stream | 6.0.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/get-stream@6.0.1/license>) | - |
-| get-stream | 9.0.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/get-stream@9.0.1/license>) | - |
-| glob-parent | 5.1.2 | ISC | Copyright (c) 2015, 2019 Elan Shanker | [LICENSE](<licenses/npm/glob-parent@5.1.2/LICENSE>) | - |
-| graceful-fs | 4.2.11 | ISC | Copyright (c) 2011-2022 Isaac Z. Schlueter, Ben Noordhuis, and Contributors | [LICENSE](<licenses/npm/graceful-fs@4.2.11/LICENSE>) | - |
-| human-signals | 2.1.0 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/npm/human-signals@2.1.0/LICENSE>) | - |
-| human-signals | 8.0.1 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/npm/human-signals@8.0.1/LICENSE>) | - |
-| ignore | 5.3.2 | MIT | Copyright (c) 2013 Kael Zhang <i@kael.me>, contributors | [LICENSE-MIT](<licenses/npm/ignore@5.3.2/LICENSE-MIT>) | - |
-| ip-address | 10.7.6 | MIT | Copyright (C) 2011 by Beau Gunderson | [LICENSE](<licenses/npm/ip-address@10.7.6/LICENSE>) | - |
-| is-docker | 2.2.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/is-docker@2.2.1/license>) | - |
-| is-docker | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/is-docker@3.0.0/license>) | - |
-| is-extglob | 2.1.1 | MIT | Copyright (c) 2014-2016, Jon Schlinkert | [LICENSE](<licenses/npm/is-extglob@2.1.1/LICENSE>) | - |
-| is-glob | 4.0.3 | MIT | Copyright (c) 2014-2017, Jon Schlinkert. | [LICENSE](<licenses/npm/is-glob@4.0.3/LICENSE>) | - |
-| is-in-ssh | 1.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/is-in-ssh@1.0.0/license>) | - |
-| is-inside-container | 1.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/is-inside-container@1.0.0/license>) | - |
-| is-interactive | 2.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/is-interactive@2.0.0/license>) | - |
-| is-number | 7.0.0 | MIT | Copyright (c) 2014-present, Jon Schlinkert. | [LICENSE](<licenses/npm/is-number@7.0.0/LICENSE>) | - |
-| is-obj | 2.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/is-obj@2.0.0/license>) | - |
-| is-obj | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/is-obj@3.0.0/license>) | - |
-| is-plain-obj | 4.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/is-plain-obj@4.1.0/license>) | - |
-| is-regexp | 3.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/is-regexp@3.1.0/license>) | - |
-| is-stream | 2.0.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/is-stream@2.0.1/license>) | - |
-| is-stream | 4.0.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/is-stream@4.0.1/license>) | - |
-| is-unicode-supported | 1.3.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/is-unicode-supported@1.3.0/license>) | - |
-| is-unicode-supported | 2.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/is-unicode-supported@2.1.0/license>) | - |
-| is-wsl | 2.2.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/is-wsl@2.2.0/license>) | - |
-| is-wsl | 3.1.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/is-wsl@3.1.1/license>) | - |
-| isexe | 2.0.0 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | [LICENSE](<licenses/npm/isexe@2.0.0/LICENSE>) | - |
-| isexe | 3.1.5 | BlueOak-1.0.0 | ## Copyright | [LICENSE.md](<licenses/npm/isexe@3.1.5/LICENSE.md>) | - |
-| js-tokens | 4.0.0 | MIT | Copyright (c) 2014, 2015, 2016, 2017, 2018 Simon Lydell | [LICENSE](<licenses/npm/js-tokens@4.0.0/LICENSE>) | - |
-| jsesc | 3.1.0 | MIT | Copyright Mathias Bynens <<https://mathiasbynens.be/>> | [LICENSE-MIT.txt](<licenses/npm/jsesc@3.1.0/LICENSE-MIT.txt>) | - |
-| json-schema-traverse | 1.0.0 | MIT | Copyright (c) 2017 Evgeny Poberezkin | [LICENSE](<licenses/npm/json-schema-traverse@1.0.0/LICENSE>) | - |
-| json-schema-typed | 7.0.3 | BSD-2-Clause | Copyright (c) 2018 IETF Trust, Austin Wright, Henry Andrews, Geraint Luff, | [LICENSE](<licenses/npm/json-schema-typed@7.0.3/LICENSE>) | - |
-| json5 | 2.2.3 | MIT | Copyright (c) 2012-2018 Aseem Kishore, and [others]. | [LICENSE.md](<licenses/npm/json5@2.2.3/LICENSE.md>) | - |
-| jsonfile | 6.2.1 | MIT | Copyright (c) 2012-2015, JP Richardson <jprichardson@gmail.com> | [LICENSE](<licenses/npm/jsonfile@6.2.1/LICENSE>) | - |
-| kleur | 3.0.3 | MIT | Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com) | [license](<licenses/npm/kleur@3.0.3/license>) | - |
-| kleur | 4.1.5 | MIT | Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com) | [license](<licenses/npm/kleur@4.1.5/license>) | - |
+| gifuct-js | 2.1.2 | MIT | Copyright (c) 2015 Matt Way | [LICENSE](<licenses/npm/gifuct-js@2.1.2/LICENSE>) | - |
+| ismobilejs | 1.1.1 | MIT | Copyright (c) 2019 Kai Mallea | [LICENSE](<licenses/npm/ismobilejs@1.1.1/LICENSE>) | - |
+| js-binary-schema-parser | 2.0.3 | MIT | Copyright (c) 2015 Matt Way | [LICENSE](<licenses/npm/js-binary-schema-parser@2.0.3/LICENSE>) | - |
 | laravel-precognition | 2.1.1 | MIT | Copyright (c) Taylor Otwell | [LICENSE.md](<licenses/npm/laravel-precognition@2.1.1/LICENSE.md>) | - |
-| locate-path | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/locate-path@3.0.0/license>) | - |
-| log-symbols | 6.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/log-symbols@6.0.0/license>) | - |
-| lru-cache | 5.1.1 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | [LICENSE](<licenses/npm/lru-cache@5.1.1/LICENSE>) | - |
 | lucide-react | 1.68.0 | ISC | Copyright (c) 2026 Lucide Icons and Contributors | [LICENSE](<licenses/npm/lucide-react@1.68.0/LICENSE>) | - |
-| merge-stream | 2.0.0 | MIT | Copyright (c) Stephen Sugden <me@stephensugden.com> (stephensugden.com) | [LICENSE](<licenses/npm/merge-stream@2.0.0/LICENSE>) | - |
-| merge2 | 1.4.1 | MIT | Copyright (c) 2014-2020 Teambition | [LICENSE](<licenses/npm/merge2@1.4.1/LICENSE>) | - |
-| micromatch | 4.0.8 | MIT | Copyright (c) 2014-present, Jon Schlinkert. | [LICENSE](<licenses/npm/micromatch@4.0.8/LICENSE>) | - |
-| mimic-fn | 2.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/mimic-fn@2.1.0/license>) | - |
-| mimic-fn | 3.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/mimic-fn@3.1.0/license>) | - |
-| mimic-function | 5.0.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/mimic-function@5.0.1/license>) | - |
-| minimatch | 10.2.6 | BlueOak-1.0.0 | ## Copyright | [LICENSE.md](<licenses/npm/minimatch@10.2.6/LICENSE.md>) | - |
-| minimist | 1.2.8 | MIT | James Halliday | [LICENSE](<licenses/npm/minimist@1.2.8/LICENSE>) | - |
-| ms | 2.1.3 | MIT | Copyright (c) 2020 Vercel, Inc. | [license.md](<licenses/npm/ms@2.1.3/license.md>) | - |
-| nanoid | 3.3.20 | MIT | Copyright 2017 Andrey Sitnik <andrey@sitnik.ru> | [LICENSE](<licenses/npm/nanoid@3.3.20/LICENSE>) | - |
-| node-releases | 2.0.63 | MIT | Copyright (c) 2017 Sergey Rubanov (<https://github.com/chicoxyzzy>) | [LICENSE](<licenses/npm/node-releases@2.0.63/LICENSE>) | - |
-| npm-run-path | 4.0.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/npm-run-path@4.0.1/license>) | - |
-| npm-run-path | 6.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/npm-run-path@6.0.0/license>) | - |
-| object-treeify | 1.1.33 | MIT OR MIT | Copyright (c) 2019 Lukas Siemon | [LICENSE](<licenses/npm/object-treeify@1.1.33/LICENSE>) | - |
-| onetime | 5.1.2 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/onetime@5.1.2/license>) | - |
-| onetime | 7.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/onetime@7.0.0/license>) | - |
-| open | 11.0.4 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/open@11.0.4/license>) | - |
-| open | 8.4.2 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/open@8.4.2/license>) | - |
-| ora | 8.2.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/ora@8.2.0/license>) | - |
-| p-limit | 2.3.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/p-limit@2.3.0/license>) | - |
-| p-locate | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/p-locate@3.0.0/license>) | - |
-| p-try | 2.2.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/p-try@2.2.0/license>) | - |
-| parse-ms | 4.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/parse-ms@4.0.0/license>) | - |
-| path-browserify | 1.0.1 | MIT | Copyright (c) 2013 James Halliday | [LICENSE](<licenses/npm/path-browserify@1.0.1/LICENSE>) | - |
-| path-exists | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/path-exists@3.0.0/license>) | - |
-| path-key | 3.1.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/path-key@3.1.1/license>) | - |
-| path-key | 4.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/path-key@4.0.0/license>) | - |
-| picocolors | 1.1.1 | ISC | Copyright (c) 2021-2024 Oleksii Raspopov, Kostiantyn Denysov, Anton Verinov | [LICENSE](<licenses/npm/picocolors@1.1.1/LICENSE>) | - |
-| picomatch | 2.3.2 | MIT | Copyright (c) 2017-present, Jon Schlinkert. | [LICENSE](<licenses/npm/picomatch@2.3.2/LICENSE>) | - |
-| picomatch | 4.0.7 | MIT | Copyright (c) 2017-present, Jon Schlinkert. | [LICENSE](<licenses/npm/picomatch@4.0.7/LICENSE>) | - |
-| pkg-up | 3.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/pkg-up@3.1.0/license>) | - |
-| postcss | 8.5.32 | MIT | Copyright 2013 Andrey Sitnik <andrey@sitnik.es> | [LICENSE](<licenses/npm/postcss@8.5.32/LICENSE>) | - |
-| postcss-selector-parser | 7.1.7 | MIT | Copyright (c) Ben Briggs <beneb.info@gmail.com> (<http://beneb.info>) | [LICENSE-MIT](<licenses/npm/postcss-selector-parser@7.1.7/LICENSE-MIT>) | - |
-| powershell-utils | 0.2.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/powershell-utils@0.2.1/license>) | - |
-| pretty-ms | 9.3.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/pretty-ms@9.3.1/license>) | - |
-| prompts | 2.4.2 | MIT | Copyright (c) 2018 Terkel Gjervig Nielsen | [license](<licenses/npm/prompts@2.4.2/license>) | - |
-| queue-microtask | 1.2.3 | MIT | Copyright (c) Feross Aboukhadijeh | [LICENSE](<licenses/npm/queue-microtask@1.2.3/LICENSE>) | - |
+| parse-svg-path | 0.2.0 | MIT | Copyright (c) 2013 Jake Rosoman <jkroso@gmail.com> | [LICENSE](<licenses/npm/parse-svg-path@0.2.0/LICENSE>) | - |
+| pixi.js | 8.23.0 | MIT | Copyright (c) 2013-2023 Mathew Groves, Chad Engler | [LICENSE](<licenses/npm/pixi.js@8.23.0/LICENSE>) | - |
 | radix-ui | 1.8.1 | MIT | Copyright (c) 2022 WorkOS | [LICENSE](<licenses/npm/radix-ui@1.8.1/LICENSE>) | - |
 | react | 19.3.1 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | [LICENSE](<licenses/npm/react@19.3.1/LICENSE>) | - |
 | react-dom | 19.3.1 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | [LICENSE](<licenses/npm/react-dom@19.3.1/LICENSE>) | - |
 | react-remove-scroll | 2.7.2 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/react-remove-scroll@2.7.2/LICENSE>) | - |
 | react-remove-scroll-bar | 2.3.8 | MIT | Anton Korzunov <thekashey@gmail.com> |  | - |
 | react-style-singleton | 2.2.3 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/react-style-singleton@2.2.3/LICENSE>) | - |
-| recast | 0.23.21 | MIT | Copyright (c) 2012 Ben Newman <bn@cs.stanford.edu> | [LICENSE](<licenses/npm/recast@0.23.21/LICENSE>) | - |
-| require-from-string | 2.0.2 | MIT | Copyright (c) Vsevolod Strukchinsky <floatdrop@gmail.com> (github.com/floatdrop) | [license](<licenses/npm/require-from-string@2.0.2/license>) | - |
-| restore-cursor | 5.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/restore-cursor@5.1.0/license>) | - |
-| reusify | 1.1.0 | MIT | Copyright (c) 2015-2024 Matteo Collina | [LICENSE](<licenses/npm/reusify@1.1.0/LICENSE>) | - |
-| run-applescript | 7.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/run-applescript@7.1.0/license>) | - |
-| run-parallel | 1.2.0 | MIT | Copyright (c) Feross Aboukhadijeh | [LICENSE](<licenses/npm/run-parallel@1.2.0/LICENSE>) | - |
 | scheduler | 0.28.0 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | [LICENSE](<licenses/npm/scheduler@0.28.0/LICENSE>) | - |
-| semver | 6.3.2 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | [LICENSE](<licenses/npm/semver@6.3.2/LICENSE>) | - |
-| semver | 7.8.6 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | [LICENSE](<licenses/npm/semver@7.8.6/LICENSE>) | - |
-| shadcn | 4.23.0 | MIT | Copyright (c) 2023 shadcn | [LICENSE.md](<licenses/npm/shadcn@4.23.0/LICENSE.md>) | - |
-| shebang-command | 2.0.0 | MIT | Copyright (c) Kevin Mårtensson <kevinmartensson@gmail.com> (github.com/kevva) | [license](<licenses/npm/shebang-command@2.0.0/license>) | - |
-| shebang-regex | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/shebang-regex@3.0.0/license>) | - |
-| signal-exit | 3.0.7 | ISC | Copyright (c) 2015, Contributors | [LICENSE.txt](<licenses/npm/signal-exit@3.0.7/LICENSE.txt>) | - |
-| signal-exit | 4.1.0 | ISC | Copyright (c) 2015-2023 Benjamin Coe, Isaac Z. Schlueter, and Contributors | [LICENSE.txt](<licenses/npm/signal-exit@4.1.0/LICENSE.txt>) | - |
-| sisteransi | 1.0.5 | MIT | Copyright (c) 2018 Terkel Gjervig Nielsen | [license](<licenses/npm/sisteransi@1.0.5/license>) | - |
-| smart-buffer | 4.2.0 | MIT | Copyright (c) 2013-2017 Josh Glazebrook | [LICENSE](<licenses/npm/smart-buffer@4.2.0/LICENSE>) | - |
-| socks | 2.8.10 | MIT | Copyright (c) 2013 Josh Glazebrook | [LICENSE](<licenses/npm/socks@2.8.10/LICENSE>) | - |
-| source-map | 0.6.1 | BSD-3-Clause | Copyright (c) 2009-2011, Mozilla Foundation and contributors | [LICENSE](<licenses/npm/source-map@0.6.1/LICENSE>) | - |
-| source-map-js | 1.2.2 | BSD-3-Clause | Copyright (c) 2009-2011, Mozilla Foundation and contributors | [LICENSE](<licenses/npm/source-map-js@1.2.2/LICENSE>) | - |
-| stdin-discarder | 0.2.2 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/stdin-discarder@0.2.2/license>) | - |
-| string-width | 7.2.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/string-width@7.2.0/license>) | - |
-| stringify-object | 5.0.0 | BSD-2-Clause | Copyright (c) 2015, Yeoman team | [LICENSE](<licenses/npm/stringify-object@5.0.0/LICENSE>) | - |
-| strip-ansi | 6.0.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/strip-ansi@6.0.1/license>) | - |
-| strip-ansi | 7.2.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/strip-ansi@7.2.0/license>) | - |
-| strip-bom | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/strip-bom@3.0.0/license>) | - |
-| strip-final-newline | 2.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | [license](<licenses/npm/strip-final-newline@2.0.0/license>) | - |
-| strip-final-newline | 4.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/strip-final-newline@4.0.0/license>) | - |
-| systeminformation | 5.33.19 | MIT | Copyright (c) 2014-2026 Sebastian Hildebrandt | [LICENSE](<licenses/npm/systeminformation@5.33.19/LICENSE>) | - |
 | tailwind-merge | 3.7.0 | MIT | Copyright (c) 2021 Dany Castillo | [LICENSE.md](<licenses/npm/tailwind-merge@3.7.0/LICENSE.md>) | - |
-| tiny-invariant | 1.3.3 | MIT | Copyright (c) 2019 Alexander Reardon | [LICENSE](<licenses/npm/tiny-invariant@1.3.3/LICENSE>) | - |
-| to-regex-range | 5.0.1 | MIT | Copyright (c) 2015-present, Jon Schlinkert. | [LICENSE](<licenses/npm/to-regex-range@5.0.1/LICENSE>) | - |
-| ts-morph | 26.0.0 | MIT | Copyright (c) 2017 David Sherret | [LICENSE](<licenses/npm/ts-morph@26.0.0/LICENSE>) | - |
-| tsconfig-paths | 4.2.0 | MIT | Copyright (c) 2016 Jonas Kello | [LICENSE](<licenses/npm/tsconfig-paths@4.2.0/LICENSE>) | - |
+| tiny-lru | 11.4.7 | BSD-3-Clause | Copyright (c) 2026, Jason Mulligan | [LICENSE](<licenses/npm/tiny-lru@11.4.7/LICENSE>) | - |
 | tslib | 2.9.1 | 0BSD | Copyright (c) Microsoft Corporation. | [LICENSE.txt](<licenses/npm/tslib@2.9.1/LICENSE.txt>) | - |
 | tw-animate-css | 1.4.0 | MIT | Copyright (c) 2025 Wombosvideo | [LICENSE](<licenses/npm/tw-animate-css@1.4.0/LICENSE>) | - |
-| type-fest | 4.41.0 | (MIT OR CC0-1.0) | Sindre Sorhus | [license-cc0](<licenses/npm/type-fest@4.41.0/license-cc0>), [license-mit](<licenses/npm/type-fest@4.41.0/license-mit>) | - |
-| undici | 7.30.2 | MIT | Copyright (c) Matteo Collina and Undici contributors | [LICENSE](<licenses/npm/undici@7.30.2/LICENSE>) | - |
-| unicorn-magic | 0.3.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/unicorn-magic@0.3.0/license>) | - |
-| universalify | 2.0.1 | MIT | Copyright (c) 2017, Ryan Zimmerman <opensrc@ryanzim.com> | [LICENSE](<licenses/npm/universalify@2.0.1/LICENSE>) | - |
-| update-browserslist-db | 1.3.4 | MIT | Copyright 2022 Andrey Sitnik <andrey@sitnik.es> and other contributors | [LICENSE](<licenses/npm/update-browserslist-db@1.3.4/LICENSE>) | - |
 | use-callback-ref | 1.3.3 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/use-callback-ref@1.3.3/LICENSE>) | - |
 | use-sidecar | 1.1.3 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/use-sidecar@1.1.3/LICENSE>) | - |
-| util-deprecate | 1.0.2 | MIT | Copyright (c) 2014 Nathan Rajlich <nathan@tootallnate.net> | [LICENSE](<licenses/npm/util-deprecate@1.0.2/LICENSE>) | - |
-| validate-npm-package-name | 7.0.2 | ISC | Copyright (c) 2015, npm, Inc | [LICENSE](<licenses/npm/validate-npm-package-name@7.0.2/LICENSE>) | - |
-| which | 2.0.2 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | [LICENSE](<licenses/npm/which@2.0.2/LICENSE>) | - |
-| which | 4.0.0 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | [LICENSE](<licenses/npm/which@4.0.0/LICENSE>) | - |
-| wsl-utils | 1.0.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/wsl-utils@1.0.1/license>) | - |
-| yallist | 3.1.1 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | [LICENSE](<licenses/npm/yallist@3.1.1/LICENSE>) | - |
-| yocto-spinner | 1.2.2 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/yocto-spinner@1.2.2/license>) | - |
-| yoctocolors | 2.2.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (<https://sindresorhus.com>) | [license](<licenses/npm/yoctocolors@2.2.0/license>) | - |
-| zod | 4.6.7 | MIT | Copyright (c) 2025 Colin McDonnell | [LICENSE](<licenses/npm/zod@4.6.7/LICENSE>) | - |
+| zustand | 5.1.0 | MIT | Copyright (c) 2019 Paul Henschel | [LICENSE](<licenses/npm/zustand@5.1.0/LICENSE>) | - |
 
 ## Fonts
 
