@@ -1337,7 +1337,7 @@ The files are `.config/docker/vukem-video.Dockerfile`, its `.dockerignore`, `scr
 - **Not in the Dockerfile yet.** No `# syntax=docker/dockerfile:1` line (a floating tag); no `version` check and no `VERSION` stamp assertion, because `vukem-video version` does not exist (the `VERSION` and `REVISION` build arguments still set the image labels); no `COPY THIRD_PARTY_NOTICES.md` or `licenses/`, which do not exist until RF-215. The image carries the FFmpeg licence text, configure line and source pointer, and `base-image-packages.txt`.
 - **Git worktrees.** The build stage checks that git works in the context and builds without VCS stamping when it does not (a worktree `.git` file points outside the context), instead of failing as section 11.1 predicted.
 - **Smoke test.** `image-smoke.sh` has no `version` run and no notices check; it adds a boot test: it starts the container published on a free loopback port and waits up to 30 s for `/up`, then removes the container. `image.yml` has no dummy tag and no `VERSION` argument, for the same reason; it builds on pull requests that touch what goes into the image and pushes nothing.
-- **Secrets for publishing.** `release.yml` will need the repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (a Docker Hub access token with write scope for `alexgalhardo/vukem-video`), created by the author before the first release; GHCR uses the automatic `GITHUB_TOKEN`, and the package must be made public once after the first push (section 7 step 11).
+- **Secrets for publishing.** `release.yml` will need the repository variable `DOCKERHUB_USERNAME` and the secret `DOCKERHUB_TOKEN` (a Docker Hub access token with write scope for `alexgalhardo/vukem-video`), created by the author before the first release; GHCR uses the automatic `GITHUB_TOKEN`, and the package must be made public once after the first push (section 7 step 11).
 
 ## 12. Third-party notices
 
@@ -1716,7 +1716,7 @@ Section 18 step 8 removes the required status checks from this ruleset, by the a
 | Secret | Used by | Who creates it |
 | --- | --- | --- |
 | `GITHUB_TOKEN` | all workflows | automatic |
-| `DOCKERHUB_USERNAME` | `release.yml` job `image` | the author, repository secret, value `alexgalhardo` |
+| `DOCKERHUB_USERNAME` | `release.yml` job `image` | the author, repository variable, value `alexgalhardo` |
 | `DOCKERHUB_TOKEN` | `release.yml` job `image` | the author: a Docker Hub access token with read and write scope on `alexgalhardo/vukem-video`, stored as a repository secret. It is the one manual prerequisite named in ADR-0025 |
 | none | `site.yml` deploy | Pages uses OIDC (`id-token: write`) |
 
