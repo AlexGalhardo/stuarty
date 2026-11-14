@@ -1,6 +1,6 @@
 # ADR-0012: Text and shapes are rasterized by Go code with bundled fonts
 
-- Status: Accepted (2026-11-14); library choice to be confirmed by a Prototype measurement
+- Status: Accepted (2026-11-14); library choice confirmed by the Prototype measurement below (P1-RND-003, 2026-11-14)
 - Deciders: author (D-001, D-014, D-022), architect
 - Links: [post-mortems §1, §6](../search/post-mortems.md), [stack trade-offs §3](../search/stack-tradeoffs.md), ADR-0003, SDD-004
 
@@ -35,3 +35,19 @@ Negative: text features are what our code implements: no arbitrary CSS, no font 
 Negative: colour emoji and complex scripts depend on what `go-text/typesetting` supports, which was not verified. A Prototype task measures emoji, right-to-left text and rendering speed before the text contract is frozen; if the library falls short, the fallback is `tdewolff/canvas` or a narrower documented scope.
 
 Negative: bundled fonts add to the binary size.
+
+## Measurement (P1-RND-003, 2026-11-14)
+
+`go-text/typesetting` v0.3.5 with `golang.org/x/image/vector` is kept. The fallback (`tdewolff/canvas`) is not needed, and the text contract is frozen with the scope below. The code is `engine/raster`; the tests named here are in it.
+
+**Speed** (Ryzen 7 5700X3D, Windows 11, Go 1.27.4, `go test -bench Caption`). The caption of the reference scene (six words on two lines, Inter 700 at 64 px, stroke 5, shadow blur 6, one highlighted word with its box, 1080 wide frame): 3.7 ms on a cache miss, 4.9 ms with one core, 10.8 ms at oversampling 2; 6 µs on a cache hit. The budgets are 5 ms and 0.1 ms. Shaping and layout are a small part of the miss; the time goes to filling the glyph outlines, the stroke and the shadow blur. The Linux and macOS numbers are recorded in SDD-004 section 12 after the first CI run.
+
+**Emoji.** The shaping library draws colour glyphs when a font has them, but none of the six bundled families has an emoji, and no free colour emoji font small enough to bundle was approved. An emoji is therefore drawn with the `.notdef` glyph of the font (Inter draws a box that reads "NO GLYPH"), the rest of the line is laid out normally, and a sequence (a ZWJ family, a skin tone) is drawn as one box per code point because the font has no ligature for it. `TestEmojiDrawsTheNotdefGlyph`, the golden case `emoji-sequence-and-notdef`. **Not supported in the Prototype**; the lint reports characters the font lacks (SDD-004 section 5.1 item 9).
+
+**Right-to-left.** The bidirectional algorithm and the visual reordering of runs work: Hebrew inside English text is placed right to left between the English words, and a paragraph that starts right to left starts on the right (`TestRightToLeftRunsAreReordered`, `TestRightToLeftParagraphStartsOnTheRight`, the golden case `right-to-left-mixed`). The shaping of Arabic (joining forms) and Hebrew could **not** be verified with real letters, because none of the six families has Arabic or Hebrew glyphs: every letter is `.notdef` (`TestRightToLeftScriptsAreOutsideTheBundledFonts` fails the day a family gains them). The same holds for Devanagari, Thai and CJK. **Not supported in the Prototype**: they need a font, which is user fonts (BETA, RF-053) or a new bundled family approved by the author.
+
+**Supported scope of the text contract.** Latin and Latin Extended (accents, Vietnamese) in all six families, plus Cyrillic in Inter, Montserrat and Playfair Display, plus Greek in Inter; digits, punctuation and common symbols as each font has them. Everything else is `.notdef`.
+
+**Size.** The six files add 2.3 MB to the binary (Inter 877 KB, Montserrat 745 KB, Playfair Display 301 KB, JetBrains Mono 187 KB, Anton 171 KB, Bebas Neue 61 KB).
+
+**Determinism.** The golden bitmaps are compared byte for byte on the three operating systems in CI. The geometry written in this package avoids the fused multiply-add that arm64 compilers may use, and `golang.org/x/image/vector` disables it itself.
