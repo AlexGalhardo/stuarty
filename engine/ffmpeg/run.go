@@ -294,11 +294,12 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 
 	var res engine.Result
 	var err error
-	if s.stdin != nil {
+	switch {
+	case s.stdin != nil:
 		res, err = runWithStdin(dctx, s.tool, s.dir, s.stdin, stdout, s.argv)
-	} else if stdout != nil {
+	case stdout != nil:
 		res, err = s.tool.RunStream(dctx, s.dir, stdout, s.argv...)
-	} else {
+	default:
 		res, err = s.tool.Run(dctx, s.dir, s.argv...)
 	}
 	if err == nil {

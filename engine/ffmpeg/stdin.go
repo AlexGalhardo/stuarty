@@ -51,7 +51,8 @@ func runWithStdin(
 	}
 
 	stderr := &tailWriter{max: maxStderrTail}
-	cmd := exec.CommandContext(ctx, tool.Path(), argv...)
+	// The argv went through ffargs.Check in RunFFmpeg and the path is the discovered FFmpeg.
+	cmd := exec.CommandContext(ctx, tool.Path(), argv...) //nolint:gosec // G204: checked argv, discovered binary
 	cmd.Dir = dir
 	cmd.Env = childEnv(dir)
 	cmd.Stdin = stdin
