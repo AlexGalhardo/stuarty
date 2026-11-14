@@ -75,7 +75,8 @@ func checkEntries(argv []string, e string, seen map[string]string) error {
 	if !strings.Contains(e, "packet=") {
 		return nil
 	}
-	if _, ok := seen["-select_streams"]; !ok || seen["-of"] != "csv=p=0" || e != "packet=pts_time,dts_time" {
+	if _, ok := seen["-select_streams"]; !ok || seen["-of"] != "csv=p=0" ||
+		(e != "packet=pts_time,dts_time" && e != "packet=pts_time,flags") {
 		return violate("FF-09", argv, -1, "packet entries are only the timestamps of one selected stream as csv")
 	}
 	return nil

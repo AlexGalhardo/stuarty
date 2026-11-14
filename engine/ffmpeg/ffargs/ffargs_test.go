@@ -478,6 +478,7 @@ func TestSecurity_T15_ArgvPolicy(t *testing.T) {
 		probes := map[string]func() ([]string, error){
 			"json":      func() ([]string, error) { return ProbeJSON(pol, storeFile()) },
 			"packets":   func() ([]string, error) { return ProbePacketTimes(pol, storeFile(), 0) },
+			"flags":     func() ([]string, error) { return ProbePacketFlags(pol, storeFile(), 0) },
 			"side data": func() ([]string, error) { return ProbeFirstFrameSideData(pol, storeFile(), 0) },
 			"count":     func() ([]string, error) { return ProbeCountPackets(pol, storeFile()) },
 			"timing":    func() ([]string, error) { return ProbeStreamTiming(pol, run("normalized.mov")) },
