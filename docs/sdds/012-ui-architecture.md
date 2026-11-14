@@ -73,7 +73,7 @@ A decoration may read `source_in`, `speed`, `start` and `duration` of an item. I
 
 ### 1.4 The check that enforces it
 
-`web/scripts/check-thin-client.ts`, run with `bun run check:thin-client` and in CI. It parses every file under `web/resources/js/editor/` with the TypeScript compiler API (already a development dependency, no new package) and fails with file, line and rule id. Biome stays the formatter and general linter; this script is the only authority on the rules below. Rules:
+`web/scripts/check-thin-client.ts`, run with `bun run check:thin-client` and in CI. It parses every file under `web/resources/js/editor/` with the syntax tree API shipped inside the `typescript` package (`typescript/unstable/sync`: TypeScript 7 is the native compiler and has no JavaScript compiler API, and that API is marked unstable, so `typescript` stays pinned to an exact version; no new package) and fails with file, line and rule id. Rule R3 is syntactic: a write on an expression rooted at a name declared with one of the document types (the `DeepReadonly` types reject the same writes at typecheck). Biome stays the formatter and general linter; this script is the only authority on the rules below. Rules:
 
 | Rule | What it looks for |
 | --- | --- |
@@ -288,7 +288,7 @@ Binary URL builders (no function call, only strings, in `api/urls.ts`): `proxyUr
 
 ```ts
 export interface EditRequest {
-  ops: Operation[];            // 1 to 200
+  operations: Operation[];     // 1 to 200 (SDD-003 section 2.4)
   base_revision: number;       // the revision the user was looking at when the gesture was composed
   idempotency_key: string;     // 8 to 64 characters; crypto.randomUUID() (36)
   dry_run?: boolean;
@@ -299,9 +299,9 @@ export interface EditResponse {          // mirrors SDD-003 and SDD-002 A.5 to A
   applied: boolean;
   replayed?: boolean;
   diff: Change[];                        // same shape as the diff of batch.committed
-  effective: Record<string, unknown>;
+  effective: OpEffect[];                 // one per operation (SDD-003 section 2.4)
   description: string;                   // DescribeDiff output, English, shown in history (same name as in the event, SDD-006)
-  lint?: LintFinding[];                  // new findings (RF-107)
+  findings: LintFinding[];               // new findings (RF-107); `lint` carries the totals
 }
 
 export interface EditOptions {
