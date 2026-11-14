@@ -1,0 +1,334 @@
+package servicetest
+
+import (
+	"context"
+	"reflect"
+	"slices"
+	"strings"
+	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
+)
+
+// SDD-007 T-05.
+func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	ctx := context.Background()
+
+	checks := map[string]func() error{
+		"ProjectList":   func() error { _, err := e.svc.ProjectList(ctx, service.ProjectListRequest{}); return err },
+		"ProjectCreate": func() error { _, err := e.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "x"}); return err },
+		"ProjectGet": func() error {
+			_, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectTrash": func() error {
+			_, err := e.svc.ProjectTrash(ctx, service.ProjectTrashRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectRestore": func() error {
+			_, err := e.svc.ProjectRestore(ctx, service.ProjectTrashRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"Edit": func() error { _, err := e.svc.Edit(ctx, service.EditRequest{ProjectID: "prj_0000000001"}); return err },
+		"HistoryList": func() error {
+			_, err := e.svc.HistoryList(ctx, service.HistoryListRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"Undo": func() error { _, err := e.svc.Undo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
+		"Redo": func() error { _, err := e.svc.Redo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
+		"Lint": func() error { _, err := e.svc.Lint(ctx, service.LintRequest{ProjectID: "prj_0000000001"}); return err },
+	}
+
+	// Every method of the interface is checked here and has a scope entry.
+	typ := reflect.TypeFor[service.Service]()
+	for i := range typ.NumMethod() {
+		name := typ.Method(i).Name
+		if _, ok := checks[name]; !ok {
+			t.Errorf("method %s has no missing-caller check", name)
+		}
+
+		if _, ok := service.Scopes[name]; !ok {
+			t.Errorf("method %s has no entry in service.Scopes", name)
+		}
+	}
+
+	for name, call := range checks {
+		if got := code(call()); got != service.CodeUnauthorized {
+			t.Errorf("%s without a caller = %q, want %s", name, got, service.CodeUnauthorized)
+		}
+	}
+
+	if _, ok := service.CallerFrom(service.WithCaller(ctx, service.Caller{})); ok {
+		t.Error("a caller with no actor must not count")
+	}
+}
+
+func TestScopesAreEnforcedPerMethod(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	project := e.newProject("p")
+
+	only := func(scopes ...string) context.Context {
+		return service.WithCaller(context.Background(), service.Caller{Actor: ui, Scopes: scopes})
+	}
+
+	if _, err := e.svc.ProjectGet(only(service.ScopeRead), service.ProjectGetRequest{ProjectID: project}); err != nil {
+		t.Errorf("read must read: %v", err)
+	}
+
+	if _, err := e.svc.Edit(only(service.ScopeRead), service.EditRequest{ProjectID: project, Operations: []command.Operation{op("track.add", `{"kind":"visual"}`)}}); code(err) != service.CodeForbidden {
+		t.Errorf("a read key editing = %v, want E_FORBIDDEN", err)
+	}
+
+	if _, err := e.svc.ProjectGet(only(service.ScopeEdit), service.ProjectGetRequest{ProjectID: project}); code(err) != service.CodeForbidden {
+		t.Errorf("an edit key reading = %v, want E_FORBIDDEN", err)
+	}
+
+	// A key limited to one project cannot reach another.
+	limited := service.WithCaller(context.Background(), service.Caller{Actor: "key:key_h8v2n5q7w3", Scopes: service.AllScopes, ProjectID: "prj_0000000099"})
+	if _, err := e.svc.ProjectGet(limited, service.ProjectGetRequest{ProjectID: project}); code(err) != service.CodeForbidden {
+		t.Errorf("a project-limited key = %v, want E_FORBIDDEN", err)
+	}
+
+	// A batch needs the scope of every command in it: asset.add is internal and unknown to callers.
+	_, err := e.edit(ui, project, 0, op("asset.add", `{}`))
+	se := serviceError(t, err)
+
+	if se.Code != command.CodeUnknownCommand || se.Path != "operations[0].op" || se.OpIndex == nil || *se.OpIndex != 0 {
+		t.Errorf("asset.add from a caller = %+v, want E_UNKNOWN_COMMAND at operations[0].op", se)
+	}
+
+	known, _ := se.Details["known"].([]string)
+	if len(known) == 0 || slices.Contains(known, "asset.add") {
+		t.Errorf("known = %v, want the public commands without asset.add", known)
+	}
+}
+
+func TestProjectCreateListGetAndTrash(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	ctx := e.as(ui)
+
+	res, err := e.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "Launch \"teaser\"", Preset: "16:9", FPS: "30000/1001"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Width != 1920 || res.Height != 1080 || res.FPS != "30000/1001" || res.Revision != 0 || !res.Created {
+		t.Errorf("created = %+v", res)
+	}
+
+	if !strings.Contains(res.Text, `"Launch \"teaser\""`) || !strings.HasPrefix(res.Text, "note:") {
+		t.Errorf("text = %s", res.Text)
+	}
+
+	// A dry run creates nothing.
+	dry, err := e.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "dry", DryRun: true})
+	if err != nil || dry.Created {
+		t.Fatalf("dry run = %+v, %v", dry, err)
+	}
+
+	for name, req := range map[string]service.ProjectCreateRequest{
+		"empty name":   {Name: ""},
+		"long name":    {Name: strings.Repeat("n", 121)},
+		"bad preset":   {Name: "x", Preset: "2:1"},
+		"bad fps":      {Name: "x", FPS: "29.97"},
+		"bad den":      {Name: "x", FPS: "30/2"},
+		"bad id":       {Name: "x", ID: "prj_short"},
+		"too fast fps": {Name: "x", FPS: "240"},
+	} {
+		if _, err := e.svc.ProjectCreate(ctx, req); code(err) != command.CodeValidation {
+			t.Errorf("%s: err = %v, want E_VALIDATION", name, err)
+		}
+	}
+
+	again, err := e.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "same id", ID: res.ProjectID})
+	if code(err) != command.CodeIDExists || again != nil {
+		t.Errorf("a taken id = %v, want E_ID_EXISTS", err)
+	}
+
+	list, err := e.svc.ProjectList(ctx, service.ProjectListRequest{})
+	if err != nil || len(list.Projects) != 1 || list.Projects[0].ID != res.ProjectID || list.Projects[0].FPS != "30000/1001" {
+		t.Fatalf("list = %+v, %v", list, err)
+	}
+
+	if !strings.Contains(list.Text, "projects (1 of 1, active)") {
+		t.Errorf("list text = %s", list.Text)
+	}
+
+	// Trash and restore are idempotent, touch neither revision nor document, and are audited.
+	before := e.document(res.ProjectID)
+
+	for range 2 {
+		if st, err := e.svc.ProjectTrash(ctx, service.ProjectTrashRequest{ProjectID: res.ProjectID}); err != nil || st.State != "trashed" {
+			t.Fatalf("trash = %+v, %v", st, err)
+		}
+	}
+
+	if l, _ := e.svc.ProjectList(ctx, service.ProjectListRequest{}); len(l.Projects) != 0 {
+		t.Error("a trashed project is not in the active list")
+	}
+
+	for state, want := range map[string]int{"trashed": 1, "all": 1} {
+		if l, _ := e.svc.ProjectList(ctx, service.ProjectListRequest{State: state}); len(l.Projects) != want {
+			t.Errorf("list %s = %d, want %d", state, len(l.Projects), want)
+		}
+	}
+
+	if _, err := e.edit(ui, res.ProjectID, 0, op("track.add", `{"kind":"visual"}`)); code(err) != command.CodeInvalidState {
+		t.Errorf("edit of a trashed project = %v, want E_INVALID_STATE", err)
+	}
+
+	if _, err := e.svc.ProjectRestore(ctx, service.ProjectTrashRequest{ProjectID: res.ProjectID}); err != nil {
+		t.Fatal(err)
+	}
+
+	if h := e.head(res.ProjectID); h.Revision != 0 || h.State != service.ProjectActive || string(e.document(res.ProjectID)) != string(before) {
+		t.Errorf("trash changed the revision or the document: %+v", h)
+	}
+
+	audit, err := e.store.Audit().List(context.Background(), res.ProjectID, 0, 10)
+	if err != nil || len(audit) != 3 {
+		t.Fatalf("audit = %+v, %v; want project.create, project.trash, project.restore", audit, err)
+	}
+
+	if _, err := e.svc.ProjectList(ctx, service.ProjectListRequest{State: "everything"}); code(err) != command.CodeValidation {
+		t.Errorf("unknown state = %v", err)
+	}
+
+	if _, err := e.svc.ProjectList(ctx, service.ProjectListRequest{Page: service.Page{Cursor: "!!"}}); code(err) != command.CodeValidation {
+		t.Errorf("bad cursor = %v", err)
+	}
+
+	if _, err := e.svc.ProjectTrash(ctx, service.ProjectTrashRequest{ProjectID: "prj_0000000777"}); code(err) != command.CodeNotFound {
+		t.Errorf("trash of a missing project = %v", err)
+	}
+}
+
+func TestProjectGetViews(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	project, track := e.withTrack()
+
+	for i := range 3 {
+		if _, err := e.addText(ui, project, track, int64(1+i), []string{"0s", "2s", "4s"}[i], "hello"); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	ctx := e.as(agent)
+
+	got, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got.Revision != 4 || got.Counts.Items != 3 || got.Counts.Tracks != 1 || got.Duration.Frame != 150 || got.Document != nil {
+		t.Errorf("head = %+v", got)
+	}
+
+	for _, want := range []string{"project " + project, "rev 4", "tracks=1 items=3", `"hello"`} {
+		if !strings.Contains(got.Text, want) {
+			t.Errorf("concise text lacks %q:\n%s", want, got.Text)
+		}
+	}
+
+	doc, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project, Detail: "document"})
+	if err != nil || doc.Document == nil || doc.Text != "" || len(doc.Document.Items) != 3 {
+		t.Fatalf("document = %+v, %v", doc, err)
+	}
+
+	if _, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project, Detail: "document", Page: service.Page{Limit: 5}}); code(err) != command.CodeValidation {
+		t.Errorf("document with limit = %v", err)
+	}
+
+	if _, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project, Detail: "weird"}); code(err) != command.CodeValidation {
+		t.Errorf("unknown detail = %v", err)
+	}
+
+	full, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project, Detail: "full"})
+	if err != nil || !strings.Contains(full.Text, "end=") {
+		t.Errorf("full view = %v\n%s", err, full.Text)
+	}
+
+	// Paging by item, a cursor that goes stale after a write.
+	page1, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project, Page: service.Page{Limit: 1}})
+	if err != nil || page1.NextCursor == nil || !strings.Contains(page1.Text, "next_cursor: ") {
+		t.Fatalf("page 1 = %+v, %v", page1, err)
+	}
+
+	page2, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project, Page: service.Page{Cursor: *page1.NextCursor, Limit: 1}})
+	if err != nil || !strings.Contains(page2.Text, "(page 2)") {
+		t.Fatalf("page 2 = %v\n%s", err, page2.Text)
+	}
+
+	if _, err := e.addText(ui, project, track, 4, "6s", "late"); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: project, Page: service.Page{Cursor: *page1.NextCursor}})
+	se := serviceError(t, err)
+
+	if se.Code != command.CodeValidation || se.Path != "cursor" || se.Details["reason"] != "stale" || se.Details["revision"] != int64(5) {
+		t.Errorf("stale cursor = %+v", se)
+	}
+
+	if _, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: "prj_0000000777"}); code(err) != command.CodeNotFound {
+		t.Errorf("missing project = %v", err)
+	}
+}
+
+func TestNetworkModeOwnersSeeOnlyTheirProjects(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	alice := service.WithCaller(context.Background(), service.Caller{Actor: "user:usr_a", Scopes: service.AllScopes, OwnerUserID: "usr_a"})
+	bob := service.WithCaller(context.Background(), service.Caller{Actor: "user:usr_b", Scopes: service.AllScopes, OwnerUserID: "usr_b"})
+
+	res, err := e.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "alice's"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := e.svc.ProjectGet(bob, service.ProjectGetRequest{ProjectID: res.ProjectID}); code(err) != command.CodeNotFound {
+		t.Errorf("bob reading alice's project = %v, want E_NOT_FOUND (no disclosure)", err)
+	}
+
+	if _, err := e.svc.Edit(bob, service.EditRequest{ProjectID: res.ProjectID, Operations: []command.Operation{op("track.add", `{"kind":"visual"}`)}}); code(err) != command.CodeNotFound {
+		t.Errorf("bob editing alice's project = %v", err)
+	}
+
+	if l, _ := e.svc.ProjectList(bob, service.ProjectListRequest{}); len(l.Projects) != 0 {
+		t.Errorf("bob's list = %+v", l.Projects)
+	}
+
+	if l, _ := e.svc.ProjectList(alice, service.ProjectListRequest{}); len(l.Projects) != 1 {
+		t.Errorf("alice's list = %+v", l.Projects)
+	}
+}
+
+func TestErrorStatusAndExitCode(t *testing.T) {
+	t.Parallel()
+
+	for code, want := range map[string]int{
+		command.CodeValidation: 400, service.CodeUnauthorized: 401, service.CodeForbidden: 403, command.CodeNotFound: 404,
+		command.CodeRevisionConflict: 409, service.CodePayloadTooLarge: 413, command.CodeOverlap: 409, service.CodeLintBlocking: 422,
+		service.CodeQueueFull: 429, service.CodeWorkspaceLocked: 503, command.CodeInternal: 500, "E_SOMETHING_ELSE": 500,
+		service.CodeNothingToUndo: 409,
+	} {
+		if got := (&service.Error{Code: code}).HTTPStatus(); got != want {
+			t.Errorf("HTTPStatus(%s) = %d, want %d", code, got, want)
+		}
+	}
+
+	if (&service.Error{Retryable: true}).ExitCode() != 2 || (&service.Error{}).ExitCode() != 1 {
+		t.Error("exit code is 2 when retryable and 1 otherwise")
+	}
+}
