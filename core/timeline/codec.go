@@ -12,11 +12,12 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"unicode/utf8"
 )
 
 var (
-	extraType = reflect.TypeOf(Extra(nil))
-	colorType = reflect.TypeOf(Color(""))
+	extraType = reflect.TypeFor[Extra]()
+	colorType = reflect.TypeFor[Color]()
 )
 
 type field struct {
@@ -36,7 +37,9 @@ var infoCache sync.Map
 
 func infoOf(t reflect.Type) *structInfo {
 	if v, ok := infoCache.Load(t); ok {
-		return v.(*structInfo)
+		if si, ok := v.(*structInfo); ok {
+			return si
+		}
 	}
 	si := &structInfo{}
 	collect(t, nil, si)
@@ -45,7 +48,7 @@ func infoOf(t reflect.Type) *structInfo {
 }
 
 func collect(t reflect.Type, prefix []int, si *structInfo) {
-	for i := 0; i < t.NumField(); i++ {
+	for i := range t.NumField() {
 		sf := t.Field(i)
 		idx := append(append([]int(nil), prefix...), i)
 		if sf.Type == extraType {
@@ -61,7 +64,7 @@ func collect(t reflect.Type, prefix []int, si *structInfo) {
 			continue
 		}
 		name, opts, _ := strings.Cut(tag, ",")
-		f := field{name: name, index: idx, omitempty: opts == "omitempty"}
+		f := field{name: name, index: idx, omitempty: opts == "omitempty" || opts == "omitzero"}
 		f.def, f.hasDef = sf.Tag.Lookup("default")
 		si.fields = append(si.fields, f)
 	}
@@ -87,7 +90,7 @@ func parseDefault(t reflect.Type, def string) reflect.Value {
 		b, err = strconv.ParseBool(def)
 		v.SetBool(b)
 	case reflect.Struct:
-		if t != reflect.TypeOf(Rational{}) {
+		if t != reflect.TypeFor[Rational]() {
 			err = errors.New("unsupported struct default")
 			break
 		}
@@ -292,7 +295,7 @@ func isHexColor(s string) bool {
 		return false
 	}
 	for _, c := range []byte(s[1:]) {
-		if !(c >= '0' && c <= '9' || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F') {
+		if (c < '0' || c > '9') && (c < 'a' || c > 'f') && (c < 'A' || c > 'F') {
 			return false
 		}
 	}
@@ -312,11 +315,15 @@ func DecodeRaw(data []byte) (RawDoc, error) {
 		return nil, &ViolationsError{[]Violation{{Code: VShape, Path: "", Message: "not valid JSON: " + err.Error()}}}
 	}
 	if _, err := dec.Token(); !errors.Is(err, io.EOF) {
-		return nil, &ViolationsError{[]Violation{{Code: VShape, Path: "", Message: "unexpected data after the JSON document"}}}
+		return nil, &ViolationsError{
+			[]Violation{{Code: VShape, Path: "", Message: "unexpected data after the JSON document"}},
+		}
 	}
 	m, ok := src.(map[string]any)
 	if !ok {
-		return nil, &ViolationsError{[]Violation{{Code: VShape, Path: "", Message: "the document must be a JSON object"}}}
+		return nil, &ViolationsError{
+			[]Violation{{Code: VShape, Path: "", Message: "the document must be a JSON object"}},
+		}
 	}
 	return RawDoc(m), nil
 }
@@ -352,8 +359,7 @@ func FromRaw(raw RawDoc) (*Document, error) {
 func Check(data []byte) []Violation {
 	doc, err := Decode(data)
 	if err != nil {
-		var ve *ViolationsError
-		if errors.As(err, &ve) {
+		if ve, ok := errors.AsType[*ViolationsError](err); ok {
 			return ve.Violations
 		}
 		return []Violation{{Code: VShape, Message: err.Error()}}
@@ -410,7 +416,7 @@ func writeValue(buf *bytes.Buffer, v reflect.Value) {
 		buf.WriteByte('}')
 	case reflect.Slice:
 		buf.WriteByte('[')
-		for i := 0; i < v.Len(); i++ {
+		for i := range v.Len() {
 			if i > 0 {
 				buf.WriteByte(',')
 			}
@@ -450,7 +456,8 @@ func writeStruct(buf *bytes.Buffer, v reflect.Value) {
 		entries[f.name] = b.Bytes()
 	}
 	if si.extra != nil {
-		for k, val := range v.FieldByIndex(si.extra).Interface().(Extra) {
+		extra, _ := reflect.TypeAssert[Extra](v.FieldByIndex(si.extra)) // the field is always an Extra
+		for k, val := range extra {
 			if _, dup := entries[k]; dup {
 				continue
 			}
@@ -529,19 +536,41 @@ func writeFloat(buf *bytes.Buffer, f float64) {
 	buf.WriteString(strconv.FormatFloat(f, 'f', -1, 64))
 }
 
+// writeString writes a JSON string. HTML characters are not escaped, so the bytes
+// stay readable; U+2028, U+2029 and control characters are escaped, and invalid
+// UTF-8 becomes U+FFFD.
 func writeString(buf *bytes.Buffer, s string) {
-	var b bytes.Buffer
-	enc := json.NewEncoder(&b)
-	enc.SetEscapeHTML(false)
-	_ = enc.Encode(s)
-	buf.Write(bytes.TrimRight(b.Bytes(), "\n"))
+	const hex = "0123456789abcdef"
+	buf.WriteByte('"')
+	for _, r := range s {
+		switch {
+		case r == '"' || r == '\\':
+			buf.WriteByte('\\')
+			buf.WriteRune(r)
+		case r == '\n':
+			buf.WriteString(`\n`)
+		case r == '\r':
+			buf.WriteString(`\r`)
+		case r == '\t':
+			buf.WriteString(`\t`)
+		case r < 0x20 || r == ' ' || r == ' ' || r == utf8.RuneError:
+			buf.WriteString(`\u`)
+			buf.WriteByte(hex[r>>12&15])
+			buf.WriteByte(hex[r>>8&15])
+			buf.WriteByte(hex[r>>4&15])
+			buf.WriteByte(hex[r&15])
+		default:
+			buf.WriteRune(r)
+		}
+	}
+	buf.WriteByte('"')
 }
 
 func allDigits(s string) bool {
 	if s == "" {
 		return false
 	}
-	for i := 0; i < len(s); i++ {
+	for i := range len(s) {
 		if s[i] < '0' || s[i] > '9' {
 			return false
 		}

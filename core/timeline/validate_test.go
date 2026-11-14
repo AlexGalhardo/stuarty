@@ -32,16 +32,10 @@ func editAsset(d *Document, f func(*Asset)) {
 	d.Assets[assetKey] = a
 }
 
-func editTrack(d *Document, key string, f func(*Track)) {
-	tr := d.Tracks[key]
+func editCaptionTrack(d *Document, f func(*Track)) {
+	tr := d.Tracks[capTrack]
 	f(&tr)
-	d.Tracks[key] = tr
-}
-
-func ptr[T any](v T) *T { return &v }
-
-func addAudioTrack(d *Document) {
-	d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
+	d.Tracks[capTrack] = tr
 }
 
 func addItem(d *Document, it Item) { d.Items[it.ID] = it }
@@ -76,8 +70,12 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"project id", func(d *Document) { d.ID = "project" }, VID},
 		{"asset id form", func(d *Document) { editAsset(d, func(a *Asset) { a.ID = "x" }) }, VID},
 		{"asset id key", func(d *Document) { editAsset(d, func(a *Asset) { a.ID = "ast_0000000000" }) }, VID},
-		{"track id form", func(d *Document) { editTrack(d, capTrack, func(tr *Track) { tr.ID = "x" }) }, VID},
-		{"track id key", func(d *Document) { editTrack(d, capTrack, func(tr *Track) { tr.ID = "trk_0000000000" }) }, VID},
+		{"track id form", func(d *Document) { editCaptionTrack(d, func(tr *Track) { tr.ID = "x" }) }, VID},
+		{
+			"track id key",
+			func(d *Document) { editCaptionTrack(d, func(tr *Track) { tr.ID = "trk_0000000000" }) },
+			VID,
+		},
 		{"item id key", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.ID = "itm_0000000000" }) }, VID},
 		{"item track form", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Track = "x" }) }, VID},
 		{"item asset form", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Asset = "x" }) }, VID},
@@ -107,23 +105,47 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 			editAsset(d, func(a *Asset) { a.Kind, a.SampleCount = AssetAudio, 0 })
 			delete(d.Items, clipKey)
 		}, VShape},
-		{"image no size", func(d *Document) { editAsset(d, func(a *Asset) { a.Kind, a.Width = AssetImage, 0 }) }, VShape},
-		{"track kind", func(d *Document) { editTrack(d, capTrack, func(tr *Track) { tr.Kind = "x" }) }, VShape},
-		{"track name", func(d *Document) { editTrack(d, capTrack, func(tr *Track) { tr.Name = strings.Repeat("n", 61) }) }, VShape},
-		{"caption style size", func(d *Document) { editTrack(d, capTrack, func(tr *Track) { tr.CaptionStyle.Size = ptr(1.0) }) }, VShape},
+		{
+			"image no size",
+			func(d *Document) { editAsset(d, func(a *Asset) { a.Kind, a.Width = AssetImage, 0 }) },
+			VShape,
+		},
+		{"track kind", func(d *Document) { editCaptionTrack(d, func(tr *Track) { tr.Kind = "x" }) }, VShape},
+		{
+			"track name",
+			func(d *Document) { editCaptionTrack(d, func(tr *Track) { tr.Name = strings.Repeat("n", 61) }) },
+			VShape,
+		},
+		{
+			"caption style size",
+			func(d *Document) { editCaptionTrack(d, func(tr *Track) { tr.CaptionStyle.Size = new(1.0) }) },
+			VShape,
+		},
 
 		// V_TRACK_ORDER
-		{"order duplicate", func(d *Document) { editTrack(d, capTrack, func(tr *Track) { tr.Order = "a1" }) }, VTrackOrder},
-		{"order empty", func(d *Document) { editTrack(d, capTrack, func(tr *Track) { tr.Order = "" }) }, VTrackOrder},
-		{"order alphabet", func(d *Document) { editTrack(d, capTrack, func(tr *Track) { tr.Order = "A!" }) }, VTrackOrder},
+		{
+			"order duplicate",
+			func(d *Document) { editCaptionTrack(d, func(tr *Track) { tr.Order = "a1" }) },
+			VTrackOrder,
+		},
+		{"order empty", func(d *Document) { editCaptionTrack(d, func(tr *Track) { tr.Order = "" }) }, VTrackOrder},
+		{
+			"order alphabet",
+			func(d *Document) { editCaptionTrack(d, func(tr *Track) { tr.Order = "A!" }) },
+			VTrackOrder,
+		},
 
 		// V_ITEM_TRACK
-		{"track missing", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Track = "trk_zzzzzzzzzz" }) }, VItemTrack},
+		{
+			"track missing",
+			func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Track = "trk_zzzzzzzzzz" }) },
+			VItemTrack,
+		},
 		{"audio on visual", func(d *Document) {
 			editItem(d, clipKey, func(i *Item) { i.Type = ItemAudio })
 		}, VItemTrack},
 		{"clip on audio track", func(d *Document) {
-			addAudioTrack(d)
+			d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
 			editItem(d, clipKey, func(i *Item) { i.Track = "trk_k000000001" })
 		}, VItemTrack},
 
@@ -132,9 +154,17 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"duration zero", func(d *Document) {
 			editItem(d, clipKey, func(i *Item) { i.Duration = 0 })
 		}, VItemRange},
-		{"past the end", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Start = MaxFrames - 10 }) }, VItemRange},
+		{
+			"past the end",
+			func(d *Document) { editItem(d, capKey, func(i *Item) { i.Start = MaxFrames - 10 }) },
+			VItemRange,
+		},
 		{"item type", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Type = "video" }) }, VShape},
-		{"item name", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Name = strings.Repeat("n", 121) }) }, VShape},
+		{
+			"item name",
+			func(d *Document) { editItem(d, capKey, func(i *Item) { i.Name = strings.Repeat("n", 121) }) },
+			VShape,
+		},
 
 		// V_OVERLAP
 		{"overlap", func(d *Document) {
@@ -142,18 +172,26 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		}, VOverlap},
 
 		// V_ASSET_REF
-		{"asset missing", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Asset = "ast_zzzzzzzzzz" }) }, VAssetRef},
+		{
+			"asset missing",
+			func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Asset = "ast_zzzzzzzzzz" }) },
+			VAssetRef,
+		},
 		{"asset empty", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Asset = "" }) }, VShape},
-		{"placeholder outside template", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Asset = PlaceholderAsset }) }, VAssetRef},
+		{
+			"placeholder outside template",
+			func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Asset = PlaceholderAsset }) },
+			VAssetRef,
+		},
 		{"clip of audio asset", func(d *Document) { editAsset(d, func(a *Asset) { a.Kind = AssetAudio }) }, VAssetRef},
 		{"audio of silent video", func(d *Document) {
-			addAudioTrack(d)
+			d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
 			editAsset(d, func(a *Asset) { a.HasAudio = false })
 			addItem(d, NewItem("itm_a000000001", ItemAudio, "trk_k000000001", 0, 10))
 			editItem(d, "itm_a000000001", func(i *Item) { i.Asset = assetKey })
 		}, VAssetRef},
 		{"audio of image", func(d *Document) {
-			addAudioTrack(d)
+			d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
 			editAsset(d, func(a *Asset) { a.Kind = AssetImage })
 			addItem(d, NewItem("itm_a000000001", ItemAudio, "trk_k000000001", 0, 10))
 			editItem(d, "itm_a000000001", func(i *Item) { i.Asset = assetKey })
@@ -166,8 +204,14 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 			editItem(d, clipKey, func(i *Item) { i.Speed = Rational{4, 1}; i.Duration = 200; i.SourceIn = 150 })
 		}, VSourceRange},
 		{"audio source range", func(d *Document) {
-			addAudioTrack(d)
-			d.Assets["ast_k000000001"] = Asset{ID: "ast_k000000001", Hash: d.Assets[assetKey].Hash, Kind: AssetAudio, Name: "a", SampleCount: 48000}
+			d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
+			d.Assets["ast_k000000001"] = Asset{
+				ID:          "ast_k000000001",
+				Hash:        d.Assets[assetKey].Hash,
+				Kind:        AssetAudio,
+				Name:        "a",
+				SampleCount: 48000,
+			}
 			a := NewItem("itm_a000000001", ItemAudio, "trk_k000000001", 0, 31)
 			a.Asset = "ast_k000000001"
 			addItem(d, a)
@@ -189,10 +233,14 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"scale big", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Scale = 21 }) }, VShape},
 		{"opacity", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Opacity = 2 }) }, VShape},
 		{"rotation NaN", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Rotation = math.NaN() }) }, VShape},
-		{"x infinite", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.X = ptr(math.Inf(1)) }) }, VShape},
+		{"x infinite", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.X = new(math.Inf(1)) }) }, VShape},
 		{"fit", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Fit = "stretch" }) }, VShape},
 		{"crop range", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Crop = &Crop{Left: 1.5} }) }, VShape},
-		{"crop sum", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Crop = &Crop{Left: 0.6, Right: 0.5} }) }, VShape},
+		{
+			"crop sum",
+			func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Crop = &Crop{Left: 0.6, Right: 0.5} }) },
+			VShape,
+		},
 		{"brightness", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Brightness = 2 }) }, VShape},
 		{"contrast", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Contrast = 3 }) }, VShape},
 		{"saturation", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Saturation = -1 }) }, VShape},
@@ -203,9 +251,13 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"crop on caption", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Crop = &Crop{} }) }, VShape},
 		{"asset on caption", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Asset = assetKey }) }, VShape},
 		{"shape on clip", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Width = 5 }) }, VShape},
-		{"style on clip", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Style = &CaptionStyle{} }) }, VShape},
+		{
+			"style on clip",
+			func(d *Document) { editItem(d, clipKey, func(i *Item) { i.Style = &CaptionStyle{} }) },
+			VShape,
+		},
 		{"transition on audio", func(d *Document) {
-			addAudioTrack(d)
+			d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
 			a := NewItem("itm_a000000001", ItemAudio, "trk_k000000001", 0, 10)
 			a.Asset = assetKey
 			a.TransitionIn = &Transition{Kind: "fade", Duration: 1}
@@ -215,13 +267,23 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		// V_TRANSITIONS
 		{"transitions sum", func(d *Document) {
 			editItem(d, clipKey, func(i *Item) {
-				i.TransitionIn, i.TransitionOut = &Transition{Kind: "fade", Duration: 100}, &Transition{Kind: "slide_up", Duration: 51}
+				i.TransitionIn, i.TransitionOut = &Transition{
+					Kind:     "fade",
+					Duration: 100,
+				}, &Transition{
+					Kind:     "slide_up",
+					Duration: 51,
+				}
 			})
 		}, VTransitions},
 		{"transition kind", func(d *Document) {
 			editItem(d, clipKey, func(i *Item) { i.TransitionIn = &Transition{Kind: "wipe", Duration: 5} })
 		}, VShape},
-		{"transition duration", func(d *Document) { editItem(d, clipKey, func(i *Item) { i.TransitionOut = &Transition{Kind: "fade"} }) }, VShape},
+		{
+			"transition duration",
+			func(d *Document) { editItem(d, clipKey, func(i *Item) { i.TransitionOut = &Transition{Kind: "fade"} }) },
+			VShape,
+		},
 
 		// V_KEYFRAMES
 		{"keyframe property", func(d *Document) {
@@ -261,7 +323,7 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 			editItem(d, capKey, func(i *Item) { i.Keyframes = Keyframes{"volume": {NewKeyframe(0, 1)}} })
 		}, VKeyframes},
 		{"scale keyframes on audio", func(d *Document) {
-			addAudioTrack(d)
+			d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
 			a := NewItem("itm_a000000001", ItemAudio, "trk_k000000001", 0, 10)
 			a.Asset = assetKey
 			a.Keyframes = Keyframes{"scale": {NewKeyframe(0, 1)}}
@@ -285,12 +347,20 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 
 		// V_WORDS
 		{"words none", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Words = nil }) }, VShape},
-		{"words 61", func(d *Document) { editItem(d, capKey, func(i *Item) { i.Duration = 100; i.Words = manyWords(61) }) }, VShape},
+		{
+			"words 61",
+			func(d *Document) { editItem(d, capKey, func(i *Item) { i.Duration = 100; i.Words = manyWords(61) }) },
+			VShape,
+		},
 		{"word text empty", func(d *Document) {
 			editItem(d, capKey, func(i *Item) { i.Words = []Word{{Text: "", Start: 0, Duration: 1}} })
 		}, VShape},
 		{"word text long", func(d *Document) {
-			editItem(d, capKey, func(i *Item) { i.Words = []Word{{Text: strings.Repeat("w", 81), Start: 0, Duration: 1}} })
+			editItem(
+				d,
+				capKey,
+				func(i *Item) { i.Words = []Word{{Text: strings.Repeat("w", 81), Start: 0, Duration: 1}} },
+			)
 		}, VShape},
 		{"words overlap", func(d *Document) {
 			editItem(d, capKey, func(i *Item) {
@@ -311,37 +381,41 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 
 		// V_FONT and style fields.
 		{"font family", func(d *Document) {
-			text(d, "itm_x000000001", 60, &CaptionStyle{TextStyle: TextStyle{FontFamily: ptr("Comic Sans")}})
+			text(d, "itm_x000000001", 60, &CaptionStyle{FontFamily: new("Comic Sans")})
 		}, VFont},
 		{"user font weight", func(d *Document) {
 			d.Fonts = map[string]ProjectFont{"Mine": {Files: []FontFile{{Weight: 400, Hash: d.Assets[assetKey].Hash}}}}
-			text(d, "itm_x000000001", 60, &CaptionStyle{TextStyle: TextStyle{FontFamily: ptr("Mine"), FontWeight: ptr(700)}})
+			text(d, "itm_x000000001", 60, &CaptionStyle{FontFamily: new("Mine"), FontWeight: new(700)})
 		}, VFont},
 		{"user font default weight", func(d *Document) {
 			d.Fonts = map[string]ProjectFont{"Mine": {Files: []FontFile{{Weight: 400, Hash: d.Assets[assetKey].Hash}}}}
-			text(d, "itm_x000000001", 60, &CaptionStyle{TextStyle: TextStyle{FontFamily: ptr("Mine")}})
+			text(d, "itm_x000000001", 60, &CaptionStyle{FontFamily: new("Mine")})
 		}, VFont},
 		{"font weight step", func(d *Document) {
-			text(d, "itm_x000000001", 60, &CaptionStyle{TextStyle: TextStyle{FontWeight: ptr(750)}})
+			text(d, "itm_x000000001", 60, &CaptionStyle{FontWeight: new(750)})
 		}, VShape},
 		{"style size", func(d *Document) {
-			text(d, "itm_x000000001", 60, &CaptionStyle{TextStyle: TextStyle{Size: ptr(2000.0)}})
+			text(d, "itm_x000000001", 60, &CaptionStyle{Size: new(2000.0)})
 		}, VShape},
 		{"style align", func(d *Document) {
-			text(d, "itm_x000000001", 60, &CaptionStyle{TextStyle: TextStyle{Align: ptr("justify")}})
+			text(d, "itm_x000000001", 60, &CaptionStyle{Align: new("justify")})
 		}, VShape},
 		{"style color", func(d *Document) {
-			text(d, "itm_x000000001", 60, &CaptionStyle{TextStyle: TextStyle{Color: ptr(Color("nope"))}})
+			text(d, "itm_x000000001", 60, &CaptionStyle{Color: new(Color("nope"))})
 		}, VShape},
 		{"style color ref", func(d *Document) {
-			text(d, "itm_x000000001", 60, &CaptionStyle{TextStyle: TextStyle{Color: ptr(Color("$accent"))}})
+			text(d, "itm_x000000001", 60, &CaptionStyle{Color: new(Color("$accent"))})
 		}, VColorRef},
-		{"style position on text", func(d *Document) { text(d, "itm_x000000001", 60, &CaptionStyle{Position: ptr("top")}) }, VShape},
+		{
+			"style position on text",
+			func(d *Document) { text(d, "itm_x000000001", 60, &CaptionStyle{Position: new("top")}) },
+			VShape,
+		},
 		{"caption position", func(d *Document) {
-			editItem(d, capKey, func(i *Item) { i.Style = &CaptionStyle{Position: ptr("left")} })
+			editItem(d, capKey, func(i *Item) { i.Style = &CaptionStyle{Position: new("left")} })
 		}, VShape},
 		{"caption highlight", func(d *Document) {
-			editItem(d, capKey, func(i *Item) { i.Style = &CaptionStyle{Highlight: ptr("all")} })
+			editItem(d, capKey, func(i *Item) { i.Style = &CaptionStyle{Highlight: new("all")} })
 		}, VShape},
 		{"fonts no files", func(d *Document) { d.Fonts = map[string]ProjectFont{"Mine": {}} }, VShape},
 		{"fonts weight", func(d *Document) {
@@ -355,11 +429,27 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"slot name", func(d *Document) {
 			editItem(d, clipKey, func(i *Item) { s := NewSlot("Bad Name", "media"); i.Slot = &s })
 		}, VSlot},
-		{"slot kind on clip", func(d *Document) { editItem(d, clipKey, func(i *Item) { s := NewSlot("a", "text"); i.Slot = &s }) }, VSlot},
-		{"media slot on caption", func(d *Document) { editItem(d, capKey, func(i *Item) { s := NewSlot("a", "media"); i.Slot = &s }) }, VSlot},
-		{"slot kind unknown", func(d *Document) { editItem(d, clipKey, func(i *Item) { s := NewSlot("a", "video"); i.Slot = &s }) }, VShape},
+		{
+			"slot kind on clip",
+			func(d *Document) { editItem(d, clipKey, func(i *Item) { s := NewSlot("a", "text"); i.Slot = &s }) },
+			VSlot,
+		},
+		{
+			"media slot on caption",
+			func(d *Document) { editItem(d, capKey, func(i *Item) { s := NewSlot("a", "media"); i.Slot = &s }) },
+			VSlot,
+		},
+		{
+			"slot kind unknown",
+			func(d *Document) { editItem(d, clipKey, func(i *Item) { s := NewSlot("a", "video"); i.Slot = &s }) },
+			VShape,
+		},
 		{"slot description", func(d *Document) {
-			editItem(d, clipKey, func(i *Item) { s := NewSlot("a", "media"); s.Description = strings.Repeat("d", 201); i.Slot = &s })
+			editItem(
+				d,
+				clipKey,
+				func(i *Item) { s := NewSlot("a", "media"); s.Description = strings.Repeat("d", 201); i.Slot = &s },
+			)
 		}, VShape},
 		{"slot policy", func(d *Document) {
 			editItem(d, clipKey, func(i *Item) { s := NewSlot("a", "media"); s.DurationPolicy = "grow"; i.Slot = &s })
@@ -370,33 +460,37 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		}, VSlot},
 
 		// V_COLOR_REF and template colours.
-		{"template colour", func(d *Document) { d.Template = &TemplateInfo{Colors: map[string]Color{"accent": "red"}} }, VShape},
+		{
+			"template colour",
+			func(d *Document) { d.Template = &TemplateInfo{Colors: map[string]Color{"accent": "red"}} },
+			VShape,
+		},
 		{"colour ref missing", func(d *Document) {
 			d.Template = &TemplateInfo{Colors: map[string]Color{"other": "#FFFFFF"}}
-			text(d, "itm_x000000001", 60, &CaptionStyle{TextStyle: TextStyle{Color: ptr(Color("$accent"))}})
+			text(d, "itm_x000000001", 60, &CaptionStyle{Color: new(Color("$accent"))})
 		}, VColorRef},
 
 		// V_LIMITS
 		{"too many tracks", func(d *Document) {
-			for i := 0; i < MaxTracks; i++ {
+			for i := range MaxTracks {
 				id := fmt.Sprintf("trk_x%09d", i)
 				d.Tracks[id] = Track{ID: id, Kind: TrackVisual, Order: fmt.Sprintf("c%03d", i)}
 			}
 		}, VLimits},
 		{"too many items", func(d *Document) {
-			for i := 0; i < MaxItems; i++ {
+			for i := range MaxItems {
 				text(d, fmt.Sprintf("itm_x%09d", i), 100+i*10, nil)
 			}
 		}, VLimits},
 		{"too many assets", func(d *Document) {
-			for i := 0; i < MaxAssets; i++ {
+			for i := range MaxAssets {
 				a := d.Assets[assetKey]
 				a.ID = fmt.Sprintf("ast_x%09d", i)
 				d.Assets[a.ID] = a
 			}
 		}, VLimits},
 		{"too many words", func(d *Document) {
-			for i := 0; i < 84; i++ {
+			for i := range 84 {
 				c := NewItem(fmt.Sprintf("itm_x%09d", i), ItemCaption, capTrack, 100+i*60, 60)
 				c.Words = manyWords(60)
 				addItem(d, c)

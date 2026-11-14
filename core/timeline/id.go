@@ -34,7 +34,7 @@ func ValidID(prefix, id string) bool {
 	if !ok || len(rest) != idLen {
 		return false
 	}
-	for i := 0; i < len(rest); i++ {
+	for i := range len(rest) {
 		if strings.IndexByte(idAlphabet, rest[i]) < 0 {
 			return false
 		}
@@ -56,7 +56,7 @@ func ValidOrder(s string) bool {
 	if s == "" {
 		return false
 	}
-	for i := 0; i < len(s); i++ {
+	for i := range len(s) {
 		if strings.IndexByte(orderDigits, s[i]) < 0 {
 			return false
 		}

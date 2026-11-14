@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/big"
 	"regexp"
+	"slices"
 	"sort"
 	"unicode/utf8"
 )
@@ -70,9 +71,23 @@ func (v *validator) document() {
 	d := v.doc
 	switch {
 	case d.SchemaVersion > CurrentSchemaVersion:
-		v.add(VSchemaVersion, "schema_version", d.ID, "schema_version %d is newer than the %d this program supports; upgrade the program", d.SchemaVersion, CurrentSchemaVersion)
+		v.add(
+			VSchemaVersion,
+			"schema_version",
+			d.ID,
+			"schema_version %d is newer than the %d this program supports; upgrade the program",
+			d.SchemaVersion,
+			CurrentSchemaVersion,
+		)
 	case d.SchemaVersion != CurrentSchemaVersion:
-		v.add(VSchemaVersion, "schema_version", d.ID, "schema_version %d is not supported (current is %d)", d.SchemaVersion, CurrentSchemaVersion)
+		v.add(
+			VSchemaVersion,
+			"schema_version",
+			d.ID,
+			"schema_version %d is not supported (current is %d)",
+			d.SchemaVersion,
+			CurrentSchemaVersion,
+		)
 	}
 	if !ValidID(PrefixProject, d.ID) {
 		v.add(VID, "id", d.ID, "%q is not a valid project identifier", d.ID)
@@ -91,8 +106,8 @@ func (v *validator) document() {
 		v.add(VLimits, "assets", d.ID, "%d assets exceed the limit of %d", len(d.Assets), MaxAssets)
 	}
 	words := 0
-	for _, it := range d.Items {
-		words += len(it.Words)
+	for k := range d.Items {
+		words += len(d.Items[k].Words)
 	}
 	if words > MaxCaptionWords {
 		v.add(VLimits, "items", d.ID, "%d caption words exceed the limit of %d", words, MaxCaptionWords)
@@ -227,10 +242,20 @@ func (v *validator) projectFont(family string, f ProjectFont) {
 	}
 	for i, ff := range f.Files {
 		if ff.Weight < 100 || ff.Weight > 900 || ff.Weight%100 != 0 {
-			v.add(VShape, fmt.Sprintf("%s.files[%d].weight", path, i), family, "weight must be 100 to 900 in steps of 100")
+			v.add(
+				VShape,
+				fmt.Sprintf("%s.files[%d].weight", path, i),
+				family,
+				"weight must be 100 to 900 in steps of 100",
+			)
 		}
 		if !hashPattern.MatchString(ff.Hash) {
-			v.add(VShape, fmt.Sprintf("%s.files[%d].hash", path, i), family, "hash must be sha256: followed by 64 lower-case hex characters")
+			v.add(
+				VShape,
+				fmt.Sprintf("%s.files[%d].hash", path, i),
+				family,
+				"hash must be sha256: followed by 64 lower-case hex characters",
+			)
 		}
 	}
 }
@@ -246,6 +271,13 @@ func (v *validator) template() {
 }
 
 func (v *validator) style(path, id string, s *CaptionStyle, caption bool) {
+	v.styleFont(path, id, s)
+	v.styleNumbers(path, id, s)
+	v.styleColors(path, id, s)
+	v.styleCaption(path, id, s, caption)
+}
+
+func (v *validator) styleFont(path, id string, s *CaptionStyle) {
 	if s.FontFamily != nil {
 		family := *s.FontFamily
 		if ff, ok := v.doc.Fonts[family]; ok {
@@ -264,6 +296,9 @@ func (v *validator) style(path, id string, s *CaptionStyle, caption bool) {
 			v.add(VFont, path+".font_family", id, "font family %q is not bundled and not in fonts", family)
 		}
 	}
+}
+
+func (v *validator) styleNumbers(path, id string, s *CaptionStyle) {
 	if s.FontWeight != nil && (*s.FontWeight < 100 || *s.FontWeight > 900 || *s.FontWeight%100 != 0) {
 		v.add(VShape, path+".font_weight", id, "font_weight must be 100 to 900 in steps of 100")
 	}
@@ -272,10 +307,14 @@ func (v *validator) style(path, id string, s *CaptionStyle, caption bool) {
 		val    *float64
 		lo, hi float64
 	}{
-		{"size", s.Size, 8, 1000}, {"stroke_width", s.StrokeWidth, 0, 40},
-		{"shadow_dx", s.ShadowDX, -math.MaxFloat64, math.MaxFloat64}, {"shadow_dy", s.ShadowDY, -math.MaxFloat64, math.MaxFloat64},
-		{"shadow_blur", s.ShadowBlur, 0, 100}, {"background_padding", s.BackgroundPadding, 0, math.MaxFloat64},
-		{"background_radius", s.BackgroundRadius, 0, math.MaxFloat64}, {"line_height", s.LineHeight, 0.8, 3},
+		{"size", s.Size, 8, 1000},
+		{"stroke_width", s.StrokeWidth, 0, 40},
+		{"shadow_dx", s.ShadowDX, -math.MaxFloat64, math.MaxFloat64},
+		{"shadow_dy", s.ShadowDY, -math.MaxFloat64, math.MaxFloat64},
+		{"shadow_blur", s.ShadowBlur, 0, 100},
+		{"background_padding", s.BackgroundPadding, 0, math.MaxFloat64},
+		{"background_radius", s.BackgroundRadius, 0, math.MaxFloat64},
+		{"line_height", s.LineHeight, 0.8, 3},
 		{"max_width", s.MaxWidth, math.SmallestNonzeroFloat64, math.MaxFloat64},
 	} {
 		if r.val != nil && !inRange(*r.val, r.lo, r.hi) {
@@ -285,18 +324,27 @@ func (v *validator) style(path, id string, s *CaptionStyle, caption bool) {
 	if s.Align != nil && *s.Align != "left" && *s.Align != "center" && *s.Align != "right" {
 		v.add(VShape, path+".align", id, "align must be left, center or right")
 	}
+}
+
+func (v *validator) styleColors(path, id string, s *CaptionStyle) {
 	for _, c := range []struct {
 		name string
 		val  *Color
 	}{
-		{"color", s.Color}, {"stroke_color", s.StrokeColor}, {"shadow_color", s.ShadowColor},
-		{"background_color", s.BackgroundColor}, {"highlight_color", s.HighlightColor},
+		{"color", s.Color},
+		{"stroke_color", s.StrokeColor},
+		{"shadow_color", s.ShadowColor},
+		{"background_color", s.BackgroundColor},
+		{"highlight_color", s.HighlightColor},
 		{"highlight_background", s.HighlightBackground},
 	} {
 		if c.val != nil {
 			v.color(path+"."+c.name, id, *c.val, true)
 		}
 	}
+}
+
+func (v *validator) styleCaption(path, id string, s *CaptionStyle, caption bool) {
 	if s.Position != nil {
 		switch *s.Position {
 		case "bottom", "middle", "top", "custom":
@@ -307,18 +355,14 @@ func (v *validator) style(path, id string, s *CaptionStyle, caption bool) {
 	if s.Highlight != nil && *s.Highlight != "none" && *s.Highlight != "word" {
 		v.add(VShape, path+".highlight", id, "highlight must be none or word")
 	}
-	if !caption && (s.Position != nil || s.Highlight != nil || s.HighlightColor != nil || s.HighlightBackground != nil) {
+	if !caption &&
+		(s.Position != nil || s.Highlight != nil || s.HighlightColor != nil || s.HighlightBackground != nil) {
 		v.add(VShape, path, id, "position and highlight fields apply to caption items only")
 	}
 }
 
 func isBundled(family string) bool {
-	for _, f := range BundledFamilies {
-		if f == family {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(BundledFamilies, family)
 }
 
 func (v *validator) item(key string, it Item) {
@@ -351,7 +395,15 @@ func (v *validator) item(key string, it Item) {
 
 	// Range.
 	if it.Start < 0 || it.Duration < 1 || it.Start+it.Duration > MaxFrames {
-		v.add(VItemRange, path, key, "start %d and duration %d must satisfy start >= 0, duration >= 1 and end <= %d", it.Start, it.Duration, MaxFrames)
+		v.add(
+			VItemRange,
+			path,
+			key,
+			"start %d and duration %d must satisfy start >= 0, duration >= 1 and end <= %d",
+			it.Start,
+			it.Duration,
+			MaxFrames,
+		)
 	}
 
 	v.itemFieldsForType(path, key, it)
@@ -364,6 +416,8 @@ func (v *validator) item(key string, it Item) {
 	switch it.Type {
 	case ItemClip:
 		v.clip(path, key, it)
+	case ItemAudio:
+		// Fully checked by media above.
 	case ItemText:
 		if n := runes(it.Text); n < 1 || n > 2000 {
 			v.add(VShape, path+".text", key, "text must have 1 to 2000 characters")
@@ -400,7 +454,8 @@ func (v *validator) itemFieldsForType(path, key string, it Item) {
 	if it.Type != ItemCaption && (len(it.Words) > 0 || len(it.Breaks) > 0 || it.LinkedItem != "") {
 		bad("words")
 	}
-	if it.Type != ItemShape && (it.Shape != "" || it.Width != 0 || it.Height != 0 || it.Radius != 0 || it.StrokeWidth != 0) {
+	if it.Type != ItemShape &&
+		(it.Shape != "" || it.Width != 0 || it.Height != 0 || it.Radius != 0 || it.StrokeWidth != 0) {
 		bad("shape")
 	}
 	if it.Type == ItemAudio && (it.TransitionIn != nil || it.TransitionOut != nil || it.X != nil || it.Y != nil) {
@@ -474,7 +529,13 @@ func (v *validator) media(path, key string, it Item) {
 		v.add(VAssetRef, path+".asset", key, "a clip needs a video or image asset, %s is audio", it.Asset)
 		return
 	case it.Type == ItemAudio && (a.Kind == AssetImage || a.Kind == AssetVideo && !a.HasAudio):
-		v.add(VAssetRef, path+".asset", key, "an audio item needs an audio asset or a video with audio, %s is not", it.Asset)
+		v.add(
+			VAssetRef,
+			path+".asset",
+			key,
+			"an audio item needs an audio asset or a video with audio, %s is not",
+			it.Asset,
+		)
 		return
 	}
 	if sp.Num < 1 || sp.Den < 1 || it.SourceIn < 0 || it.Duration < 1 {
@@ -487,7 +548,15 @@ func (v *validator) media(path, key string, it Item) {
 		need.Div(need, big.NewInt(int64(sp.Den)))
 		need.Add(need, big.NewInt(int64(it.SourceIn)))
 		if need.Cmp(total) > 0 {
-			v.add(VSourceRange, path+".source_in", key, "source range ends at frame %s but asset %s has %s frames", need, it.Asset, total)
+			v.add(
+				VSourceRange,
+				path+".source_in",
+				key,
+				"source range ends at frame %s but asset %s has %s frames",
+				need,
+				it.Asset,
+				total,
+			)
 		}
 	}
 }
@@ -514,6 +583,8 @@ func assetFrames(a Asset, fps Rational) (*big.Int, bool) {
 		n := new(big.Int).Mul(big.NewInt(int64(a.SampleCount)), big.NewInt(int64(fps.Num)))
 		d := new(big.Int).Mul(big.NewInt(48000), big.NewInt(int64(fps.Den)))
 		return n.Div(n, d), true
+	case AssetImage:
+		// An image has no duration limit.
 	}
 	return nil, false
 }
@@ -581,7 +652,14 @@ func (v *validator) caption(path, key string, it Item) {
 		case w.Start < 0 || w.Duration < 1:
 			v.add(VWords, wp, key, "word start must be at least 0 and duration at least 1")
 		case w.Start < end:
-			v.add(VWords, wp, key, "words overlap or are out of order: word starts at %d, the previous one ends at %d", w.Start, end)
+			v.add(
+				VWords,
+				wp,
+				key,
+				"words overlap or are out of order: word starts at %d, the previous one ends at %d",
+				w.Start,
+				end,
+			)
 		case w.Start+w.Duration > it.Duration:
 			v.add(VWords, wp, key, "word ends at %d, after the item duration %d", w.Start+w.Duration, it.Duration)
 		}
@@ -736,7 +814,17 @@ func (v *validator) overlaps() {
 			it := v.doc.Items[k]
 			if blocker != "" && it.Start < blockEnd {
 				last := min(blockEnd, it.Start+it.Duration) - 1
-				v.add(VOverlap, "items."+k, k, "frames %d to %d on track %s are occupied by both %s and %s", it.Start, last, track, blocker, k)
+				v.add(
+					VOverlap,
+					"items."+k,
+					k,
+					"frames %d to %d on track %s are occupied by both %s and %s",
+					it.Start,
+					last,
+					track,
+					blocker,
+					k,
+				)
 			}
 			if end := it.Start + it.Duration; blocker == "" || end > blockEnd {
 				blocker, blockEnd = k, end

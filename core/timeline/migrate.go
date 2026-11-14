@@ -27,10 +27,19 @@ func migrateChain(doc RawDoc, current int, steps map[int]migration) (RawDoc, err
 		return nil, err
 	}
 	if version > current {
-		return nil, &ViolationsError{[]Violation{{
-			Code: VSchemaVersion, Path: "schema_version",
-			Message: fmt.Sprintf("schema_version %d is newer than the %d this program supports; upgrade the program", version, current),
-		}}}
+		return nil, &ViolationsError{
+			[]Violation{
+				{
+					Code: VSchemaVersion,
+					Path: "schema_version",
+					Message: fmt.Sprintf(
+						"schema_version %d is newer than the %d this program supports; upgrade the program",
+						version,
+						current,
+					),
+				},
+			},
+		}
 	}
 	for ; version < current; version++ {
 		step, ok := steps[version]
@@ -51,11 +60,23 @@ func migrateChain(doc RawDoc, current int, steps map[int]migration) (RawDoc, err
 func rawVersion(doc RawDoc) (int, error) {
 	n, ok := doc["schema_version"].(json.Number)
 	if !ok {
-		return 0, &ViolationsError{[]Violation{{Code: VShape, Path: "schema_version", Message: "schema_version is required and must be an integer"}}}
+		return 0, &ViolationsError{
+			[]Violation{
+				{Code: VShape, Path: "schema_version", Message: "schema_version is required and must be an integer"},
+			},
+		}
 	}
 	version, err := strconv.Atoi(string(n))
 	if err != nil || version < 1 {
-		return 0, &ViolationsError{[]Violation{{Code: VSchemaVersion, Path: "schema_version", Message: "schema_version must be a positive integer, got " + string(n)}}}
+		return 0, &ViolationsError{
+			[]Violation{
+				{
+					Code:    VSchemaVersion,
+					Path:    "schema_version",
+					Message: "schema_version must be a positive integer, got " + string(n),
+				},
+			},
+		}
 	}
 	return version, nil
 }
