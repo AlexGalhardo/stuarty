@@ -1,0 +1,23 @@
+{{/* layout: none */}}<!doctype html>
+<html lang="{{or locale "en"}}" data-hydrating>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Vukem Video</title>
+	<meta property="csp-nonce" nonce="{{cspNonce}}">
+	<meta name="color-scheme" content="dark light">
+	<script nonce="{{cspNonce}}">var d=document.documentElement;d.classList.add("dark");try{if(localStorage.getItem("theme")==="light")d.classList.remove("dark")}catch(e){}</script>
+	{{viteReactRefresh}}
+	{{vite "resources/css/app.css" "resources/js/editor.tsx"}}
+</head>
+<body class="antialiased">
+	{{/*
+		The editor is not an Inertia page (SDD-012 section 2.2). The handler of
+		GET /editor/{project_id} passes .Bootstrap, the EditorBootstrap of
+		resources/js/editor/boot/bootstrap.ts; html/template writes it as JSON
+		inside the script element.
+	*/}}
+	<script type="application/json" id="vv-bootstrap" nonce="{{cspNonce}}">{{.Bootstrap}}</script>
+	<div id="editor"></div>
+</body>
+</html>
