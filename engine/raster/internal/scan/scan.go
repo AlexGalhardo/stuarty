@@ -89,7 +89,7 @@ func floatingCeil(x float32) int32  { return int32(math.Ceil(float64(x))) }
 
 // LineTo adds a line segment, from the pen to (bx, by), and moves the pen to
 // (bx, by). The coordinates may be out of the bounds.
-func (z *Rasterizer) LineTo(bx, by float32) { //nolint:gocognit // copied unchanged from golang.org/x/image/vector
+func (z *Rasterizer) LineTo(bx, by float32) {
 	ax, ay := z.penX, z.penY
 	z.penX, z.penY = bx, by
 	dir := float32(1)

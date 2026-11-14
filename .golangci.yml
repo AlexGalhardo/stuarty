@@ -197,6 +197,12 @@ linters:
           - gocognit
           - gosec
           - noctx
+      # Copied unchanged from golang.org/x/image/vector (BSD-3) so the raster is
+      # byte-equal on every architecture (ADR-0012); splitting it would drift
+      # from upstream, so the complexity rule does not apply to it.
+      - path: engine/raster/internal/scan/scan\.go
+        linters:
+          - gocognit
       # The owner probe and the handshake only talk to a loopback address (SDD-007 section 3.8).
       - path: service/workspace/open(_test)?\.go
         linters:
