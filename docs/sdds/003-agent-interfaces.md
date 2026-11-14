@@ -2283,6 +2283,7 @@ Every path argument (`media:import <path>`, `template:import <path>`) is made ab
 | `fonts` | `fonts` | none | none | `FontListResult` | A |
 | `audit` | `audit [--cursor c] [--limit n]` | `--cursor`; `--limit` int 50. Scope `admin` | none | `AuditListResult` | A |
 | `events` | `events --project <id> [--from-id n] [--since n] [--count n]` | `--from-id` string, the `Last-Event-ID`; `--since` int, a revision (the `since` query); `--count` int 0 (until interrupted) | none | one JSON object per line (NDJSON), each `{"id","name","data"}`; the only command whose `--json` output is not one document | P |
+| `version` | `version` | none | none | `{"version","text"}`; prints `vukem-video <version>` and needs no workspace or server (the image build checks it against the tag) | P |
 | `serve` | `serve` | vukem's `serve` flags (address from `VUKEM_VIDEO_ADDR`) | none | none | P |
 | `mcp` | `mcp [--actor label]` | `--actor` string, default derived from the client's `clientInfo.name` (else `mcp`, §4.5); the process is the owner of the workspace when none exists | the MCP protocol | none | P |
 | `open` | `open` | none | none | none: opens the browser at the UI of the running owner with a fresh launch code (SDD-007 §3.4) | P |
