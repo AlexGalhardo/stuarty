@@ -146,6 +146,12 @@ func ToneMapHDR(matrixIn, primariesIn, transferIn, rangeIn string) []Filter {
 	}
 }
 
+// SetParamsBT709 tags the frames BT.709 limited range. FFmpeg writes the colour tags of an encoder
+// from the frames, so a source with no tags needs this before the encoder (SDD-011 4.3.1).
+func SetParamsBT709() Filter {
+	return "setparams=colorspace=bt709:color_primaries=bt709:color_trc=bt709:range=tv"
+}
+
 // SetParamsHLG tags a synthetic source as BT.2020 HLG, for the capability test of SDD-011 8.3.
 func SetParamsHLG() Filter {
 	return "setparams=colorspace=bt2020nc:color_primaries=bt2020:color_trc=arib-std-b67:range=tv"
