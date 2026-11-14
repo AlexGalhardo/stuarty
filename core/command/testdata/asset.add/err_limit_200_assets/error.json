@@ -1,0 +1,6 @@
+{
+  "code": "E_LIMIT",
+  "message": "The document already has 200 assets; the limit is 200.",
+  "hint": "Delete unused assets first.",
+  "retryable": false
+}

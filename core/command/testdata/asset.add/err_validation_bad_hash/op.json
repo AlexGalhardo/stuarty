@@ -1,0 +1,13 @@
+{
+  "op": "asset.add",
+  "args": {
+    "asset": {
+      "id": "ast_k000000001",
+      "hash": "md5:abc",
+      "name": "x",
+      "kind": "image",
+      "width": 1,
+      "height": 1
+    }
+  }
+}

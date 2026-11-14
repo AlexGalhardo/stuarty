@@ -1,0 +1,21 @@
+[
+  {
+    "kind": "asset.added",
+    "id": "ast_k000000001",
+    "object": {
+      "frame_count": 900,
+      "frame_rate": {
+        "den": 1,
+        "num": 30
+      },
+      "has_audio": true,
+      "hash": "sha256:00000000000000000000000000000000000000000000000000000000000003e9",
+      "height": 1920,
+      "id": "ast_k000000001",
+      "kind": "video",
+      "name": "clip.mov",
+      "sample_count": 1440000,
+      "width": 1080
+    }
+  }
+]

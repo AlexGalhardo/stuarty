@@ -1,0 +1,7 @@
+{
+  "code": "E_ID_EXISTS",
+  "message": "Asset id ast_3c5v8n2w6d already exists with a different hash.",
+  "hint": "Send a new id, or omit it so the service generates one.",
+  "retryable": false,
+  "path": "args.asset.id"
+}

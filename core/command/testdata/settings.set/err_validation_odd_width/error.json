@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.width must be even and between 16 and 4096, got 1081.",
+  "hint": "Use width 1080 or 1082.",
+  "retryable": false,
+  "path": "args.width"
+}

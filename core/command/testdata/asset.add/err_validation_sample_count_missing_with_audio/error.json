@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.asset.sample_count is required for an asset with audio (kind \"video\").",
+  "hint": "Send the facts measured on the normalized media: sample_count at 48000 Hz.",
+  "retryable": false,
+  "path": "args.asset.sample_count"
+}

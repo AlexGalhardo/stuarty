@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
@@ -93,6 +94,7 @@ func runGoldenCase(t *testing.T, reg *Registry, dir string) {
 		return ""
 	}}
 	res, applyErr := reg.Apply(doc, op, env)
+	checkCaseName(t, filepath.Base(dir), applyErr)
 	if applyErr != nil {
 		e := AsError(applyErr)
 		if cerr := CheckError(e); cerr != nil {
@@ -168,4 +170,22 @@ func TestGoldenRunner(t *testing.T) {
 // The real catalogue: its cases arrive with the commands (P1-ENG-002).
 func TestGoldenCases(t *testing.T) {
 	runGolden(t, Default(), "testdata")
+}
+
+// checkCaseName holds a case to its name: ok_ succeeds, err_<code> fails with that code.
+func checkCaseName(t *testing.T, name string, err error) {
+	t.Helper()
+	switch {
+	case strings.HasPrefix(name, "ok_"):
+		if err != nil {
+			t.Errorf("an ok_ case failed: %v", err)
+		}
+	case strings.HasPrefix(name, "err_"):
+		e := AsError(err)
+		if err == nil || !caseHasCode(name, e.Code) {
+			t.Errorf("case %s should fail with its code, got %v", name, err)
+		}
+	default:
+		t.Errorf("case name %q starts with neither ok_ nor err_", name)
+	}
 }

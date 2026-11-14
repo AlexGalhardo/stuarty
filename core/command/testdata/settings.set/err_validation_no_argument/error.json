@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give at least one of width, height, background, loudness_target.",
+  "hint": "Send for example {\"width\": ...}.",
+  "retryable": false,
+  "path": "args"
+}

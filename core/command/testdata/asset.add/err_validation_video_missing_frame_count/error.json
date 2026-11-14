@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.asset.frame_count is required for kind \"video\".",
+  "hint": "Send the facts measured on the normalized media: frame_rate, frame_count, width and height.",
+  "retryable": false,
+  "path": "args.asset.frame_count"
+}

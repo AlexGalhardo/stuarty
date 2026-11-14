@@ -42,18 +42,18 @@ func baseDoc(t *testing.T) *timeline.Document {
 // of Apply, the diff, the inverse and the primitives is tested without the real
 // commands (SDD-002 Part C is task P1-ENG-002).
 
-type nameArgs struct {
+type tNameArgs struct {
 	Name string `json:"name" min:"1" max:"120"`
 }
 
-type trackAddArgs struct {
+type tTrackAddArgs struct {
 	ID    string `json:"id,omitempty"`
 	Kind  string `json:"kind"           enum:"visual,audio"`
 	Order string `json:"order"`
 	Name  string `json:"name,omitempty"`
 }
 
-type itemAddArgs struct {
+type tItemAddArgs struct {
 	TrackID  string `json:"track_id"`
 	ID       string `json:"id,omitempty"`
 	Start    string `json:"start"`
@@ -61,25 +61,25 @@ type itemAddArgs struct {
 	Text     string `json:"text,omitempty"`
 }
 
-type itemMoveArgs struct {
+type tItemMoveArgs struct {
 	ItemID string `json:"item_id"`
 	Start  string `json:"start"`
 }
 
-type itemRemoveArgs struct {
+type tItemRemoveArgs struct {
 	ItemIDs []string `json:"item_ids" min:"1" max:"200"`
 }
 
-type settingsArgs struct {
+type tSettingsArgs struct {
 	Width  *int `json:"width,omitempty"`
 	Height *int `json:"height,omitempty"`
 }
 
-type assetArgs struct {
+type tAssetArgs struct {
 	Asset map[string]any `json:"asset"`
 }
 
-type fontArgs struct {
+type tFontArgs struct {
 	Family string `json:"family"`
 	Hash   string `json:"hash,omitempty"`
 }
@@ -97,7 +97,7 @@ func testCommands() []Command {
 		Define(Spec{
 			Name: "test.name", Summary: "Renames the project.", Description: "Sets the project name.",
 			Example: `{"name": "Teaser"}`, Errors: []string{CodeValidation}, Scope: ScopeEdit, Phase: Prototype,
-		}, func(c *Context, a *nameArgs) error {
+		}, func(c *Context, a *tNameArgs) error {
 			c.Doc.Name = a.Name
 			return nil
 		}),
@@ -105,7 +105,7 @@ func testCommands() []Command {
 			Name: "test.track_add", Summary: "Adds a track.", Description: "Adds an empty track with the given order.",
 			Example: `{"kind": "visual", "order": "b0", "id": "trk_k000000001"}`,
 			Errors:  []string{CodeValidation, CodeIDExists}, Scope: ScopeEdit, Phase: Prototype,
-		}, func(c *Context, a *trackAddArgs) error {
+		}, func(c *Context, a *tTrackAddArgs) error {
 			id, err := c.NewID(timeline.PrefixTrack, a.ID)
 			if err != nil {
 				return err
@@ -121,7 +121,7 @@ func testCommands() []Command {
 			Name: "test.item_add", Summary: "Adds a text item.", Description: "Adds a text item on a visual track.",
 			Example: `{"track_id": "trk_a1b2c3d4e5", "start": "100f", "duration": 10}`,
 			Errors:  errorsOfTest, Scope: ScopeEdit, Phase: Prototype,
-		}, func(c *Context, a *itemAddArgs) error {
+		}, func(c *Context, a *tItemAddArgs) error {
 			if _, ok := c.Doc.Tracks[a.TrackID]; !ok {
 				return Errorf(CodeNotFound, "Track %s does not exist.", a.TrackID).
 					WithHint("Read the project for the track ids.").
@@ -151,7 +151,7 @@ func testCommands() []Command {
 			Name: "test.item_move", Summary: "Moves an item.", Description: "Sets the start of an item.",
 			Example: `{"item_id": "itm_m1n2p3q4r5", "start": "30f"}`,
 			Errors:  errorsOfTest, Scope: ScopeEdit, Phase: Prototype,
-		}, func(c *Context, a *itemMoveArgs) error {
+		}, func(c *Context, a *tItemMoveArgs) error {
 			it, ok := c.Doc.Items[a.ItemID]
 			if !ok {
 				return Errorf(CodeNotFound, "Item %s does not exist.", a.ItemID).
@@ -172,7 +172,7 @@ func testCommands() []Command {
 			Name: "test.item_remove", Summary: "Removes items.", Description: "Deletes the given items.",
 			Example: `{"item_ids": ["itm_m1n2p3q4r5"]}`, Errors: []string{CodeValidation, CodeNotFound},
 			Scope: ScopeEdit, Phase: Prototype,
-		}, func(c *Context, a *itemRemoveArgs) error {
+		}, func(c *Context, a *tItemRemoveArgs) error {
 			for _, id := range a.ItemIDs {
 				if _, ok := c.Doc.Items[id]; !ok {
 					return Errorf(
@@ -193,7 +193,7 @@ func testCommands() []Command {
 			Errors:      []string{CodeValidation},
 			Scope:       ScopeEdit,
 			Phase:       Prototype,
-		}, func(c *Context, a *settingsArgs) error {
+		}, func(c *Context, a *tSettingsArgs) error {
 			if a.Width != nil {
 				c.Doc.Settings.Width = *a.Width
 			}
@@ -206,7 +206,7 @@ func testCommands() []Command {
 			Name: "test.asset_add", Summary: "Adds an asset.", Description: "Adds an asset object as given.",
 			Example: `{"asset": {"id": "ast_k000000001"}}`, Errors: []string{CodeValidation}, Scope: ScopeMedia,
 			Phase: Prototype, Internal: true,
-		}, func(c *Context, a *assetArgs) error {
+		}, func(c *Context, a *tAssetArgs) error {
 			id, _ := a.Asset["id"].(string)
 			c.Doc.Assets[id] = timeline.Asset{
 				ID:     id,
@@ -221,7 +221,7 @@ func testCommands() []Command {
 		Define(Spec{
 			Name: "test.font", Summary: "Adds a font.", Description: "Adds or replaces a user font.",
 			Example: `{"family": "Mine"}`, Errors: []string{CodeValidation}, Scope: ScopeEdit, Phase: Alpha,
-		}, func(c *Context, a *fontArgs) error {
+		}, func(c *Context, a *tFontArgs) error {
 			if c.Doc.Fonts == nil {
 				c.Doc.Fonts = map[string]timeline.ProjectFont{}
 			}

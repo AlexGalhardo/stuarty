@@ -1,0 +1,29 @@
+[
+  {
+    "type": "patch",
+    "collection": "settings",
+    "id": "prj_7k2m9x4q1b",
+    "unset": [
+      "width"
+    ]
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_s6t7v8w9x0",
+    "set": {
+      "keyframes": {
+        "x": [
+          {
+            "t": 0,
+            "value": 810
+          },
+          {
+            "t": 30,
+            "value": 270
+          }
+        ]
+      }
+    }
+  }
+]
