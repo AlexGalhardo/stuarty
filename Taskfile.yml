@@ -98,6 +98,31 @@ tasks:
     cmds:
       - go mod tidy -diff
 
+  changelog:
+    desc: Preview the next changelog section (writes nothing)
+    cmds:
+      - git cliff --config .config/cliff.toml --unreleased --strip all
+
+  release:prepare:
+    desc: "On branch release/vX.Y.Z: write the changelog section and commit it (task release:prepare -- vX.Y.Z)"
+    cmds:
+      - go run ./internal/tools/release prepare {{.CLI_ARGS}}
+
+  release:tag:
+    desc: "On main after the release pull request merged: tag and push the tag (task release:tag -- vX.Y.Z)"
+    cmds:
+      - go run ./internal/tools/release tag {{.CLI_ARGS}}
+
+  release:notes:
+    desc: "Print the notes release.yml will publish (task release:notes -- vX.Y.Z)"
+    cmds:
+      - go run ./internal/tools/release notes {{.CLI_ARGS}}
+
+  release:snapshot:
+    desc: Build the six archives locally with GoReleaser, signing and SBOMs skipped, publishing nothing
+    cmds:
+      - goreleaser release --snapshot --clean --skip=sign,sbom --config .config/goreleaser.yaml
+
   ci:
     desc: Everything the pull request pipeline runs locally
     cmds:
