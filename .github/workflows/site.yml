@@ -1,0 +1,93 @@
+name: Site
+
+# Every pull request that touches the site builds the static export and runs its
+# checks; a push to main publishes it to GitHub Pages (source "GitHub Actions").
+# Free tier only: no server, no paid service (D-015, D-028).
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", "CHANGELOG.md", ".github/workflows/site.yml"]
+  pull_request:
+    paths: ["site/**", "CHANGELOG.md", ".github/workflows/site.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      # upload-pages-artifact writes the special Pages artifact.
+      actions: write
+      pages: write
+    defaults:
+      run:
+        working-directory: site
+    env:
+      # Optional repository variable; the default is the GitHub Pages project site (SDD-010 section 12.4).
+      SITE_URL: ${{ vars.SITE_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+      # Tests that import the site's own modules need its dependencies;
+      # test:scripts stays dependency-free for the Last updated job.
+      - run: npm run test:site
+      - run: npm run lint
+      - run: npm run check:mdx
+      - run: npm run build
+      - run: npm run check:built
+      - name: Upload GitHub Pages artifact
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site/out
+
+  # Every docs page must ship a "Last updated" date (site/README.md); dates come
+  # from git, so full history.
+  last-updated:
+    name: Last updated
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm run test:scripts
+      - run: npm run check:last-updated
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: [build, last-updated]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
