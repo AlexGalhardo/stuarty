@@ -28,12 +28,30 @@ const (
 var errReplay = errors.New(errReplayedMarker)
 
 func (s *svc) Edit(ctx context.Context, req EditRequest) (*EditResult, error) {
+	return s.edit(ctx, req, false)
+}
+
+// EditInternal is Edit for the commands only the service itself issues, such
+// as the asset.add batch that closes an ingest (SDD-005 section 5.5). The scope
+// of the command is still checked against the caller; only the refusal of an
+// internal command is lifted. It returns an error for a Service that was not
+// made by New.
+func EditInternal(ctx context.Context, s Service, req EditRequest) (*EditResult, error) {
+	impl, ok := s.(*svc)
+	if !ok {
+		return nil, internalError()
+	}
+
+	return impl.edit(ctx, req, true)
+}
+
+func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*EditResult, error) {
 	c, err := authorize(ctx, "Edit", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
 
-	hash, cerr := s.checkBatch(c, &req)
+	hash, cerr := s.checkBatch(c, &req, allowInternal)
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -160,7 +178,7 @@ func projectErr(id string, err error) error {
 // checkBatch is step 0 of SDD-005 section 9.2: the shape checks, outside the
 // lock and the transaction, and the scope of every command. It returns the
 // request hash.
-func (s *svc) checkBatch(c Caller, req *EditRequest) (string, error) {
+func (s *svc) checkBatch(c Caller, req *EditRequest, allowInternal bool) (string, error) {
 	switch n := len(req.Operations); {
 	case n == 0:
 		return "", newError(command.CodeValidation, "the batch has no operations.").
@@ -203,7 +221,7 @@ func (s *svc) checkBatch(c Caller, req *EditRequest) (string, error) {
 
 	for i, op := range req.Operations {
 		cmd, ok := s.reg.Get(op.Op)
-		if !ok || cmd.Internal {
+		if !ok || cmd.Internal && !allowInternal {
 			return "", s.unknownOp(i)
 		}
 
