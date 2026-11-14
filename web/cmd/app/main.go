@@ -1,5 +1,5 @@
-// Command app runs studio-vukem-app: the HTTP server by default, or a command such
-// as migrate, route:list or about (vukem <command> delegates here).
+// Command app is the vukem-video binary: the HTTP server by default, or a
+// command such as migrate, route:list or about (vukem <command> delegates here).
 package main
 
 import (
@@ -7,7 +7,7 @@ import (
 
 	vukem "github.com/AlexGalhardo/vukem"
 
-	"github.com/AlexGalhardo/vukem-studio/bootstrap"
+	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
 )
 
 func main() { os.Exit(vukem.Main(bootstrap.New)) }
