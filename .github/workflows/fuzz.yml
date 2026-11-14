@@ -1,0 +1,65 @@
+name: Fuzz
+
+# Fuzzing campaign of the native Go targets: weekly, and on demand with a
+# longer time. Crashers are uploaded as artifacts; commit them under
+# testdata/fuzz/<Target>/ as regression seeds together with the fix. Add a
+# line to the matrix when a package gets a Fuzz target (SDD-007 section 12
+# lists the ones planned).
+on:
+  schedule:
+    - cron: "17 3 * * 0" # Sundays 03:17 UTC
+  workflow_dispatch:
+    inputs:
+      fuzztime:
+        description: Duration per target (go test -fuzztime)
+        default: 30s
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fuzz:
+    name: ${{ matrix.target }} (${{ matrix.pkg }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { pkg: ./core/timeval, target: FuzzParse }
+    env:
+      FUZZTIME: ${{ inputs.fuzztime || '30s' }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: go test -fuzz
+        env:
+          PKG: ${{ matrix.pkg }}
+          TARGET: ${{ matrix.target }}
+        run: go test "$PKG" -run '^$' -fuzz "^${TARGET}\$" -fuzztime "$FUZZTIME"
+      # upload-artifact rejects "." segments, so normalise the corpus path first.
+      - name: Locate crashers
+        id: corpus
+        if: failure()
+        env:
+          PKG: ${{ matrix.pkg }}
+          TARGET: ${{ matrix.target }}
+        run: echo "dir=$(realpath -m --relative-to="$GITHUB_WORKSPACE" "$PKG/testdata/fuzz/$TARGET")" >> "$GITHUB_OUTPUT"
+      - name: Upload crashers
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: crashers-${{ matrix.target }}
+          path: ${{ steps.corpus.outputs.dir }}/
+          if-no-files-found: ignore
