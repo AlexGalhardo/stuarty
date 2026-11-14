@@ -49,6 +49,10 @@ Release notes have five sections only (D-027), so pick the commit type with that
 
 The task runner (`task lint`, `task test`, `task ci`) and the pull request pipeline arrive with later tasks. Until then run what exists: `go build ./...`, `go vet ./...` and `go test ./...` at the root, and the scripts of `web/package.json` in `web/` (Bun, not npm). The same checks run on Linux, macOS and Windows.
 
+### Third-party notices
+
+`THIRD_PARTY_NOTICES.md` and the licence texts in `licenses/go-modules/` and `licenses/npm/` are generated (SDD-009 section 12). When a change touches `go.mod`, `go.sum`, `web/package.json` or `web/bun.lock`, or an entry of `.config/third-party.json`, run `task notices` and commit the result; `task notices:check` (the `Notices` job of CI) fails with a diff when they are stale, and with the module name when a licence is outside the allow-list (MIT, BSD-2-Clause, BSD-3-Clause, ISC, Apache-2.0, MPL-2.0, 0BSD, Unlicense, OFL-1.1 for fonts, LGPL-3.0-or-later for FFmpeg only, and, pending the author's confirmation, the SQLite public-domain dedication, BlueOak-1.0.0 and CC-BY-4.0 for npm data). `licenses/fonts/`, `licenses/programs/` and `licenses/vendored/` are kept by hand and listed in the inventory; a new bundled font, program or copied source adds its entry and its licence file there. `task notices` needs `bun install --frozen-lockfile` in `web/` (it runs it).
+
 ## Editor settings
 
 Indentation is tabs of width 4, except in files whose format needs spaces (YAML, Markdown lists and tables). Git expects LF endings in the repository.
