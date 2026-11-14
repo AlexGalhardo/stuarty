@@ -1,0 +1,203 @@
+# yaml-language-server: $schema=https://golangci-lint.run/jsonschema/golangci.jsonschema.json
+version: "2"
+
+run:
+  timeout: 5m
+  relative-path-mode: gomod
+  tests: true
+
+formatters:
+  enable:
+    - gofumpt
+    - gci
+    - golines
+  settings:
+    gofumpt:
+      module-path: github.com/AlexGalhardo/vukem-video
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/AlexGalhardo/vukem)
+        - prefix(github.com/AlexGalhardo/vukem-video)
+    golines:
+      max-len: 120
+      tab-len: 4
+      shorten-comments: false
+      reformat-tags: true
+  exclusions:
+    generated: lax
+    paths:
+      - site/
+      - testdata/ # golden files must stay byte-for-byte
+      - spikes/
+      - web/resources/
+
+linters:
+  default: standard
+  enable:
+    # correctness
+    - bodyclose
+    - durationcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+    - fatcontext
+    - forcetypeassert
+    - makezero
+    - musttag
+    - nilerr
+    - noctx
+    - reassign
+    - rowserrcheck
+    - sqlclosecheck
+    # security and dependencies
+    - depguard
+    - forbidigo
+    - gosec
+    # style and API quality
+    - copyloopvar
+    - exptostd
+    - gocheckcompilerdirectives
+    - gocognit
+    - gocritic
+    - godot
+    - intrange
+    - misspell
+    - modernize
+    - nakedret
+    - nolintlint
+    - perfsprint
+    - predeclared
+    - revive
+    - sloglint
+    - unconvert
+    - unparam
+    - usestdlibvars
+    # tests
+    - thelper
+    - tparallel
+    - usetesting
+  settings:
+    depguard:
+      rules:
+        core-is-pure:
+          list-mode: lax
+          files:
+            - "**/core/**"
+          deny:
+            - pkg: github.com/AlexGalhardo/vukem-video/engine
+              desc: core never imports engine (ADR-0001 rule 1)
+            - pkg: github.com/AlexGalhardo/vukem-video/service
+              desc: core never imports service (ADR-0001 rule 1)
+            - pkg: github.com/AlexGalhardo/vukem-video/web
+              desc: core never imports web (ADR-0001 rule 1)
+            - pkg: github.com/AlexGalhardo/vukem
+              desc: core never imports vukem (ADR-0001 rule 1)
+        engine-is-not-web:
+          list-mode: lax
+          files:
+            - "**/engine/**"
+          deny:
+            - pkg: github.com/AlexGalhardo/vukem-video/service
+              desc: engine never imports service (ADR-0001 rule 2)
+            - pkg: github.com/AlexGalhardo/vukem-video/web
+              desc: engine never imports web (ADR-0001 rule 2)
+        service-is-not-vukem:
+          list-mode: lax
+          files:
+            - "**/service/**"
+          deny:
+            - pkg: github.com/AlexGalhardo/vukem-video/web
+              desc: service defines interfaces that web implements (ADR-0001 rule 3)
+            - pkg: github.com/AlexGalhardo/vukem
+              desc: only web imports vukem application packages (ADR-0001 rule 4)
+        tests-use-stdlib:
+          list-mode: lax
+          files:
+            - "$all"
+          deny:
+            - pkg: github.com/stretchr/testify
+              desc: use the standard library and go-cmp
+        crypto-randomness:
+          list-mode: lax
+          files:
+            - "**/web/**/auth/**"
+            - "**/service/**"
+          deny:
+            - pkg: math/rand
+              desc: key and token generation must use crypto/rand (ADR-0019)
+            - pkg: math/rand/v2
+              desc: key and token generation must use crypto/rand (ADR-0019)
+    forbidigo:
+      forbid:
+        - pattern: ^net\.(Dial|DialTimeout|DialTCP|DialUDP|Dialer)$
+          msg: outbound connections go through internal/outbound (SDD-007 section 10.2)
+        - pattern: ^http\.(Get|Post|PostForm|Head|DefaultClient|DefaultTransport|Client)$
+          msg: outbound HTTP goes through internal/outbound (SDD-007 section 10.2)
+      exclude-godoc-examples: true
+    gocognit:
+      min-complexity: 30
+    errcheck:
+      check-type-assertions: true
+    exhaustive:
+      default-signifies-exhaustive: true
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+      disabled-checks:
+        - hugeParam
+        - paramTypeCombine
+        - unnamedResult
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+        - shadow
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+    revive:
+      rules:
+        - name: context-as-argument
+        - name: error-return
+        - name: error-strings
+        - name: exported
+        - name: package-comments
+        - name: receiver-naming
+        - name: unexported-return
+        - name: unused-parameter
+        - name: var-naming
+    sloglint:
+      context: scope
+  exclusions:
+    generated: lax
+    paths:
+      - site/
+      - testdata/
+      - spikes/
+      - web/resources/
+    # No "comments" preset: it hides revive's exported and package-comments
+    # findings, and every exported identifier needs a doc comment that
+    # starts with its name.
+    presets:
+      - std-error-handling
+      - common-false-positives
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - forcetypeassert
+          - gocognit
+          - gosec
+          - noctx
+      - path: internal/outbound/
+        linters:
+          - forbidigo
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
