@@ -108,7 +108,9 @@ func BenchmarkCommit200Items(b *testing.B) {
 
 	var err error
 
-	e.svc, err = service.New(service.Options{Store: clock, Registry: command.Default(), Now: e.clock.now, NewIDs: e.newID})
+	e.svc, err = service.New(
+		service.Options{Store: clock, Registry: command.Default(), Now: e.clock.now, NewIDs: e.newID},
+	)
 	if err != nil {
 		b.Fatal(err)
 	}

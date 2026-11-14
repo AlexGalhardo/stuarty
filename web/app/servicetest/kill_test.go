@@ -67,9 +67,11 @@ func TestKillChild(t *testing.T) {
 					return
 				}
 
-				res, err := svc.Edit(ctx, service.EditRequest{ProjectID: parts[0], BaseRevision: head.Revision,
+				res, err := svc.Edit(ctx, service.EditRequest{
+					ProjectID: parts[0], BaseRevision: head.Revision,
 					Operations: []command.Operation{op("text.add",
-						fmt.Sprintf(`{"track_id":%q,"start":"%ds","duration":"1s","text":"w%d"}`, parts[1+w], i*2, w))}})
+						fmt.Sprintf(`{"track_id":%q,"start":"%ds","duration":"1s","text":"w%d"}`, parts[1+w], i*2, w))},
+				})
 				if err != nil {
 					return
 				}
