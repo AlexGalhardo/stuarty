@@ -104,12 +104,12 @@ Each state has one token usable as text and icon colour on `--background`, `--ca
 | `--warning` (`text-warning`) | `oklch(0.52 0.12 70)` | `oklch(0.80 0.14 80)` | lint warnings, `reconnecting`, small-window notice, missing-media icon on an item, conflict notice |
 | `--info` (`text-info`) | `oklch(0.50 0.15 250)` | `oklch(0.75 0.12 240)` | lint notes, `resyncing`, neutral notices that need attention |
 | `--danger` | alias of `--destructive` | alias of `--destructive` | the name used in this document for the error state; code uses `destructive` (shadcn name kept) |
-| `--agent` (`text-agent`, `bg-agent/10`) | `oklch(0.50 0.10 190)` | `oklch(0.78 0.11 190)` | attribution of another actor: the activity dot and label, actor chips of agents in history and notices, "changed by `<actor>`" notes under inspector fields |
+| `--agent` (`text-agent`, `bg-agent/10`) | `oklch(0.50 0.10 190)` | `oklch(0.78 0.11 190)` | attribution of another actor: the activity dot and label, actor chips of agents in history and notices, "changed by `<actor>`" notes under inspector fields, the 2 px remote-edit outline on timeline items (D-030) |
 | `--brand`, `--brand-foreground` | `oklch(0.511 0.262 276.966)`, `oklch(0.985 0 0)` | same as light | the product mark placeholder only (section 5.3) and the documentation site's accent; never a button or a state |
 
 Hues are spread so no state is mistaken for an item type: agent teal (190) sits between audio green (150) and clip blue (250); the playhead and danger are red (25 to 27), which no item type uses.
 
-**Decision of this document.** `--agent` is a new token. SDD-012 §17 says the remote-edit outline on timeline items uses `--ed-selection`; this document keeps that rule (section 4.3.9), and uses `--agent` for every attribution label and chip. Section 10 asks SDD-012 to consider `--agent` for the outline too, so a remote edit is not mistaken for a selection.
+**Decision of this document.** `--agent` is a new token, used for every attribution label and chip and for the 2 px remote-edit outline on timeline items (D-030, SDD-012 §5.8 item 4 and §17), so a remote edit is not mistaken for a selection, which keeps `--ed-selection`. As an outline it meets 3:1 against `--ed-timeline` (4.82 light, 9.84 dark) and against every item fill (3.00 to 3.39 light, 3.22 to 4.43 dark).
 
 ### 2.5 Colour: editor (`--ed-*`)
 
@@ -127,7 +127,7 @@ Names and initial values are those of SDD-012 §17. Values changed here failed t
 | `--ed-item-caption`, `-fg` | `oklch(0.82 0.08 300)`, `oklch(0.2 0 0)` | `oklch(0.44 0.14 300)`, `oklch(0.98 0 0)` | caption blocks | no |
 | `--ed-item-shape`, `-fg` | `oklch(0.82 0.08 350)`, `oklch(0.2 0 0)` | `oklch(0.46 0.13 350)`, `oklch(0.98 0 0)` | shape blocks | no |
 | `--ed-playhead` | `oklch(0.55 0.22 25)` | `oklch(0.70 0.20 25)` | playhead line and handle | no |
-| `--ed-selection` | `oklch(0.45 0.18 250)` | `oklch(0.85 0.12 230)` | selection ring, focus ring in the timeline, remote-edit outline (SDD-012 §17) | no |
+| `--ed-selection` | `oklch(0.45 0.18 250)` | `oklch(0.85 0.12 230)` | selection ring, focus ring in the timeline (SDD-012 §17); the remote-edit outline uses `--agent` (D-030) | no |
 | `--ed-snap` | `oklch(0.50 0.15 90)` | `oklch(0.85 0.15 90)` | snap line | no |
 | `--ed-ghost` | **`oklch(0.45 0.18 250 / 0.75)`** | `oklch(0.85 0.12 230 / 0.5)` | ghost outline and fill (fill at a further 15%) of a pending gesture | **yes, light alpha `0.5` to `0.75`**: `0.5` gave 2.33:1 against `--ed-timeline` |
 | `--ed-safe-area` | `oklch(0.50 0.15 90)` | `oklch(0.80 0.15 90)` | safe-area guide | no (light passes at 3.03:1 on the surround, the smallest margin of the set; see section 10) |
@@ -157,6 +157,8 @@ Method: OKLCH to linear sRGB (Björn Ottosson's matrices), gamut clamp, sRGB enc
 | `info` on `background` | 4.5 | 5.97 | 9.04 |
 | `agent` on `background` | 4.5 | 5.58 | 10.35 |
 | `agent` on `ed-panel` | 4.5 | 5.58 | 9.47 |
+| `agent` (remote-edit outline) on `ed-timeline` | 3 | 4.82 | 9.84 |
+| `agent` (remote-edit outline) on the item fills | 3 | 3.00 to 3.39 | 3.22 to 4.43 |
 | each state on its tint (`/10` light, `/20` dark over the panel) | 4.5 | 4.84 to 5.15 | 5.68 to 6.31 |
 | `brand-foreground` on `brand` | 4.5 | 6.17 | 6.17 |
 | `ring` on `background` | 3 | 7.25 | 12.64 |
@@ -189,11 +191,11 @@ Item fills against `--ed-timeline` are 1.61:1 (light clip) to 2.22:1 (dark clip)
 | `--font-heading` | `var(--font-sans)` | no |
 | `--font-mono` (`font-mono`) | Tailwind 4 default: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace` | no (Tailwind default, not redefined) |
 
-**Fonts of the video are not UI fonts.** The six families of D-022 (Inter, Montserrat, Anton, Bebas Neue, Playfair Display, JetBrains Mono) are bundled in the Go binary for rasterizing text into the picture (ADR-0012). The browser never loads them and never lays out video text (SDD-012 rule T6): the inspector's font select lists the family names in the UI font.
+**Fonts of the video are not UI fonts.** The six families of D-022 (Inter, Montserrat, Anton, Bebas Neue, Playfair Display, JetBrains Mono) are bundled in the Go binary for rasterizing text into the picture (ADR-0012). The browser never loads them and never lays out video text (SDD-012 rule T6): the inspector's font select lists the family names in the UI font, with no rendered samples in the MVP (D-030).
 
 **Timecodes and numbers.** Every time, duration, revision number, frame count, percentage and size uses `tabular-nums` (`font-variant-numeric: tabular-nums`) so digits do not jump while the playhead moves. Timecodes are set in `font-sans` with tabular figures, not in a monospace font: the mono stack above is a system font and differs between Windows, macOS and Linux, which would break P6. `font-mono` is used only for code-like content: file paths, command names, ids, error codes, the install command, diff text from the core.
 
-**Decision of this document.** Timecodes use Geist with `tabular-nums` instead of a monospace face. Geist Variable ships the `tnum` feature; the implementer verifies it in the bundled file with a test that measures that `0` and `1` have the same advance width. If it does not, the fallback is `@fontsource-variable/geist-mono`, a new dependency that needs the author's approval.
+**Decision of this document, confirmed by D-030.** Timecodes use Geist with `tabular-nums` instead of a monospace face. The digit-width test of SDD-012 §11.5 passes on the bundled Geist Variable: senior-e measured equal advance widths for the digits with tabular figures (24.48 px each at 40 px), so `@fontsource-variable/geist-mono` is not needed and is not added. D-030 approves it in advance only if that test ever fails.
 
 Type scale (Tailwind 4 defaults, rem at 16 px):
 
@@ -253,7 +255,7 @@ The Tailwind 4 spacing unit stays `--spacing: 0.25rem` (4 px). Only these steps 
 | Selected item | 2 px inset ring (`box-shadow: inset 0 0 0 2px`) | `--ed-selection` | selected and focused can show together: ring inside, outline outside |
 | Item block edge | 1 px solid | `--ed-track-line` | carries the boundary of the block |
 | Pending ghost | 2 px dashed | `--ed-ghost` | fill `--ed-ghost` at 15% |
-| Remote-edit highlight | 2 px solid, 1.5 s | `--ed-selection` | SDD-012 §5.8 item 4; class toggle, not an animation |
+| Remote-edit highlight | 2 px solid, 1.5 s | `--agent` | SDD-012 §5.8 item 4 and D-030; class toggle, not an animation |
 | Conflict or overlap highlight | 2 px solid, 2 s | `--ed-error-flash` | SDD-012 §8.4 |
 | Snap line | 1 px solid, full height | `--ed-snap` | |
 | Safe-area guide | 1 px dashed (6 px dash, 4 px gap) | `--ed-safe-area` | band outside it: black at 40% |
@@ -485,9 +487,9 @@ Names are the files of SDD-012 §3.2. Each entry gives anatomy, variants, states
 
 - Anatomy: a button containing a 8 px dot (`--agent`, static), the actor label (`UntrustedText`) and a text: "claude-code is editing" while active (3 s), then "Last edit by claude-code, 12 s ago" (relative time, updated every 10 s), cleared after 5 min (SDD-012 §5.8).
 - Variants: `active` (dot filled, text `text-agent`), `settled` (dot outlined, text `text-muted-foreground`), `hidden` (nothing rendered, no empty space reserved beyond the button's minimum).
-- Popover (level 1): the 20 latest entries, each with actor chip, relative time and summary; a link "Open history" (ALPHA).
+- Popover (level 1): first one row per active actor (actor chip, its last action, relative time), then the 20 latest entries, each with actor chip, relative time and summary; a link "Open history" (ALPHA).
 - Keyboard: `Enter` and `Space` open the popover, `Esc` closes; the live region announces remote edits at most every 2 s (SDD-012 §18.1 item 5).
-- **Decision of this document.** With two or more actors active at once, the badge shows the most recent actor and a count ("claude-code and 1 other are editing"); the popover lists each. SDD-012 §5.8 does not say how several agents are shown.
+- Several actors at once (D-030, SDD-012 §5.8): one badge, naming the actor of the latest remote batch and counting the other active actors ("claude-code and 1 other are editing", plural through `params.count`); the popover lists each active actor with its last action.
 
 #### 4.3.5 Actor chip
 
@@ -509,7 +511,7 @@ Timeline item (`tl-item` with `tl-clip`, `tl-audio`, `tl-text`, `tl-caption`, `t
 | Caption block | below 120 px wide or `ppf` under 0.5: one block with the word count ("12 words"); else one segment per word, separated by 1 px lines in `-fg` at 40% (decorative); the selected word gets a 2 px `--ed-selection` inset ring |
 | Handles (ALPHA) | 8 px wide visual edge zones, 24 px hit area, cursor `ew-resize`, visible on hover and when selected |
 
-Item states: default; hover (border becomes `-fg` at 60%); focus-visible (2 px `--ed-selection` outline, 1 px offset); selected (2 px `--ed-selection` inset ring plus `aria-selected="true"`); ghost pending (2 px dashed `--ed-ghost`, fill at 15%); remote-changed (2 px `--ed-selection` outline for 1.5 s); conflicting (2 px `--ed-error-flash` outline for 2 s); disabled does not exist (an item is always selectable); on a hidden track the fill is mixed 50% with `--ed-timeline` and the label keeps full `-fg` colour.
+Item states: default; hover (border becomes `-fg` at 60%); focus-visible (2 px `--ed-selection` outline, 1 px offset); selected (2 px `--ed-selection` inset ring plus `aria-selected="true"`); ghost pending (2 px dashed `--ed-ghost`, fill at 15%); remote-changed (2 px `--agent` outline for 1.5 s, D-030); conflicting (2 px `--ed-error-flash` outline for 2 s); disabled does not exist (an item is always selectable); on a hidden track the fill is mixed 50% with `--ed-timeline` and the label keeps full `-fg` colour.
 
 Ruler: 28 px high, `<canvas>`, ticks in `--ed-track-line`, labels `text-xs tabular-nums` in `--muted-foreground`, at least 70 px apart (SDD-012 §7.3); the `role="slider"` wrapper shows the focus outline around the whole ruler.
 
@@ -702,7 +704,7 @@ All of these use `tabular-nums` when they are in a column or change while visibl
 - Never build a sentence by concatenating translated pieces; one key per sentence, with placeholders.
 - Text expansion: Portuguese runs about 20 to 30% longer than English. Every label is designed for 35% more width: no fixed widths on text buttons, tabs or badges; toolbars collapse text to icons rather than wrap (section 4.3.1); dialog buttons may wrap to a second row, never truncate. User content truncates with an ellipsis and a tooltip; UI labels in menus and dialogs wrap instead of truncating.
 - The test `i18n-switch` (SDD-012 §20.1) checks pt-BR in both themes at 1280 by 720.
-- Timecodes, frame counts and time strings are never localized (section 6.4). Other numbers use the locale (`1,5` in pt-BR for a displayed decimal); see section 10 for the open point about typed decimals.
+- Timecodes, frame counts and time strings are never localized (section 6.4). Other numbers use the locale (`1,5` in pt-BR for a displayed decimal). In pt-BR, number and time fields also accept a typed decimal comma and send it as `.` (`12,5` becomes `"12.5s"`); timecodes are always shown with `.` (D-030, SDD-012 §12.2).
 - Core text (messages, hints, history descriptions) stays English in both locales and is marked `lang="en"` inside a pt-BR page, so screen readers pronounce it correctly.
 
 ## 7. Accessibility
@@ -775,16 +777,16 @@ Tokens and both themes; typography (bundled, not system fonts); layout and break
 | --- | --- | --- |
 | Window chrome | the browser's | native title bar and decorations of the operating system; no custom title bar, no draggable CSS region (`app-region`), so the web UI needs no desktop-only layout |
 | Window size | any; section 3.2 notices below 1280 px | minimum inner size 1280 by 640 (section 3.2) |
-| Menus | none; the top bar and the palette | native menu bar: File (Import files, Export), Edit (Undo, Redo, Select all), View (toggle panels, zoom, theme, language), Help (documentation, version). Each item calls the same action as its in-page control. **Accelerators that also mean something inside a text field (`Mod+Z`, `Mod+Shift+Z`, `Mod+A`) are shown in the menu but not registered as native accelerators**, so the in-page rule of SDD-012 §18.2 (native undo inside a field) keeps working |
+| Menus | none; the top bar and the palette | native menu bar: File (Import files, Export), Edit (Undo, Redo, Select all), View (toggle panels, zoom, theme, language), Help (documentation, version). Each item calls the same action as its in-page control through `window.vukemDesktop.onMenuAction(cb)`. **`Mod+Z`, `Mod+Shift+Z` and `Mod+A` are shown in the menu but not registered as native accelerators** (D-030), so text fields keep their native undo and select-all and project undo applies elsewhere (SDD-012 §18.2, §21.3) |
 | File choice | path field only (SDD-012 §13.1 item 1) | "Choose files" button through `window.vukemDesktop.pickFiles()`; the path field stays |
 | Drag and drop from the OS | drop shows the "cannot see the path" message | drop imports through `onDropPaths`; the library shows the drop target of section 4.3.9 |
 | Context menu | the in-app Radix menus; the browser's own menu elsewhere | the in-app Radix menus; the webview's native menu is kept only in editable fields (cut, copy, paste) |
-| Theme | D-024: dark by default, the toggle, `localStorage.theme`; `prefers-color-scheme` ignored | the same, inside the webview. The shell paints the window background `oklch(0.16 0 0)` (`#0d0d0d`, dark `--ed-bg`) before the page loads, so there is no white flash, and matches the native title bar to the theme the page reports |
+| Theme | D-024: dark by default, the toggle, `localStorage.theme`; `prefers-color-scheme` ignored | the same, inside the webview. The shell paints the window background `oklch(0.16 0 0)` (`#0d0d0d`, dark `--ed-bg`) before the page loads, so there is no white flash, and sets the native title bar to the theme the page passes to `window.vukemDesktop.setTheme(theme)` at boot and on every toggle (D-030) |
 | Zoom | browser zoom applies; `Ctrl+wheel` on the timeline is taken by the timeline (non-passive listener) | page zoom fixed at 100% by the shell; `Ctrl+wheel` belongs to the timeline |
 | Text rendering | the browser's | the webview's; small anti-aliasing differences are accepted, layout must not depend on them |
 | Scrollbars | the browser's | the webview's (overlay scrollbars on macOS); no component depends on scrollbar width or styled scrollbars |
 
-The only coupling between the UI and the shell is `window.vukemDesktop`, feature-detected (SDD-012 §13.1, §21.1). The theme sync and the menu dispatch named above need two more optional members (section 10).
+The only coupling between the UI and the shell is `window.vukemDesktop`, feature-detected (SDD-012 §13.1, §21.1). Its members are `pickFiles()`, `onDropPaths(cb)`, `onMenuAction(cb)` and `setTheme(theme)`, all optional (D-030).
 
 ### 8.4 The documentation site
 
@@ -843,33 +845,33 @@ Copy into the pull request description and tick each line that applies.
 
 ## 10. Decisions of this document and open points for the specifications
 
-Decisions taken here (each is cheap to undo):
+Decisions taken here (each is cheap to undo). "Recorded in" names where the specifications now say the same; D-030 is the author's answer of 2026-11-14 to the questions this document raised.
 
-| # | Decision | Section | Should be absorbed by |
+| # | Decision | Section | Recorded in |
 | --- | --- | --- | --- |
 | DS-1 | `--ring` equals `--ed-selection`; a solid 2 px outline in `app.css` makes the focus indicator meet 3:1 without editing the kept components | 2.3, 2.10 | SDD-012 §17, §18.1 item 6 |
 | DS-2 | Changed values: light `--muted-foreground`, light `--destructive`, `--input`, `--ring`, `--ed-track-line`, light `--ed-ghost` (contrast) | 2.3, 2.5 | SDD-012 §17 table |
 | DS-3 | New tokens `--success`, `--warning`, `--info`, `--agent`, `--brand`, `--ed-handle`, `--radius-xs` at 4 px, motion tokens | 2.4, 2.5, 2.9, 2.13 | SDD-012 §17 |
-| DS-4 | Timecodes in Geist with tabular figures, no monospace UI font | 2.7 | SDD-012 §11.5 |
-| DS-5 | No bottom status bar | 3.1 | SDD-012 §6.1 |
-| DS-6 | Desktop window minimum inner size 1280 by 640, default 1600 by 900 | 3.2 | SDD-012 §21, ADR-0023 |
-| DS-7 | Several active agents shown as "`<actor>` and `<n>` others" | 4.3.4 | SDD-012 §5.8 |
-| DS-8 | The command palette is built on `Dialog` and a listbox, without `cmdk` | 4.3.11 | SDD-012 §9.2 |
-| DS-9 | Toast placement, durations and the persistent conflict notice | 4.3.13, 4.3.14 | SDD-012 §4.4, §4.5 |
+| DS-4 | Timecodes in Geist with tabular figures, no monospace UI font; the digit-width test passes (24.48 px per digit at 40 px), so Geist Mono is not added | 2.7 | SDD-012 §11.5, D-030 |
+| DS-5 | No bottom status bar | 3.1 | this document only (SDD-012 §6.1 has none) |
+| DS-6 | Desktop window minimum inner size 1280 by 640, default 1600 by 900 | 3.2 | SDD-012 §21.3 |
+| DS-7 | Several active agents: one badge with the latest actor and a count, a popover listing each actor and its last action | 4.3.4 | decided by D-030; SDD-012 §5.8 |
+| DS-8 | The command palette is built on `Dialog` and a listbox, without `cmdk` | 4.3.11 | SDD-012 §3.1, §9.2 |
+| DS-9 | Toast placement, durations and the persistent conflict notice | 4.3.13, 4.3.14 | this document only |
 | DS-10 | shadcn components to add (`Dialog`, `AlertDialog`, `Popover`, `DropdownMenu`, `ContextMenu`, `Slider`, `Switch`, `Checkbox`, `RadioGroup`, `Progress`, `Toggle`, `ToggleGroup`), all from `radix-ui` | 4.2 | SDD-012 §3.1 |
-| DS-11 | Native menus do not register accelerators that also act inside text fields | 8.3 | SDD-012 §21 |
+| DS-11 | Native menus show `Mod+Z`, `Mod+Shift+Z` and `Mod+A` without registering them as accelerators; menu items and the title-bar theme go through `onMenuAction` and `setTheme` | 8.3 | decided by D-030; SDD-012 §13.1, §21.3 |
 
-Open points found in the specifications while writing this document:
+Open points found in the specifications while writing this document, and how each was closed:
 
-1. **SDD-012 §17 initial values fail its own §18.3 pairs**: `--ed-track-line` in both themes (1.24:1 and 1.29:1) and light `--ed-ghost` (2.33:1); and §18.3 asks the handles to be checked against `--ed-preview-surround` while the table gives them no token (light `--ed-selection` there is 2.50:1). Fixed here by DS-2 and `--ed-handle`; the SDD table should take these values. §18.3 could also mark row separators as decorative, which would let `--ed-track-line` stay subtle and move the 3:1 rule to ruler ticks only.
-2. **SDD-012 §17 says the remote-edit outline uses `--ed-selection`**, the colour of selection and focus, so a remote edit looks like a selection. Consider `--agent` for that outline.
-3. **SDD-012 §17 item 5 forbids interface animations**, but the kept shadcn components carry `tw-animate-css` animations and `transition-all`; the SDD does not say they are allowed or how reduced motion applies to them. Section 2.13 keeps them and adds the reduced-motion rule.
-4. **SDD-012 §3.1 lists only the thirteen kept components**, yet §4.4, §9.2, §12, §14 need dialogs, popovers, menus, sliders, switches and progress bars. DS-10 lists them.
-5. **No timecode or mono UI font is specified**; D-022 fonts are for rendering only (ADR-0012). DS-4.
-6. **Typed decimals in pt-BR**: SDD-012 §12.2 accepts `12.5` but does not say whether `12,5` is accepted when the locale is pt-BR. Time strings sent to the core use `.` (SDD-002 A.4); the field should probably accept `,` and normalize it.
-7. **Font select samples**: the UI cannot show the D-022 families in their own face (the browser never loads them, T6). If a sample is wanted, the core would need to serve a small rasterized name per family; no SDD covers it.
-8. **Desktop shell**: SDD-012 §21 and ADR-0023 do not define the window's minimum size, the native menu and its accelerators, the theme sync of the native title bar, or the pre-paint window background. `window.vukemDesktop` would need two optional members (for example `onMenuAction(cb)` and `setTheme(theme)`); they belong in SDD-012 §13.1 and §21.
-9. **Connection-state colours and multiple active agents** are not specified (SDD-012 §6.2, §5.8). Sections 4.3.3 and 4.3.4 propose them.
-10. **The site's theme default**: D-024 states the interface theme; SDD-010 does not say whether the site follows it or the copied shell's behaviour. Section 8.4 keeps the shell's behaviour.
-11. **Light `--ed-safe-area` on the preview surround is 3.03:1**, the smallest margin of the whole set. Since the surround is the same in both themes, the overlay colours drawn on it could be theme-independent (the dark value, 9.65:1).
-12. **The error envelope** is specified in SDD-002 A.8; SDD-003 §1.4 carries it across surfaces. Briefings that cite only SDD-003 should cite both.
+1. **SDD-012 §17 initial values failed its own §18.3 pairs** (`--ed-track-line` in both themes, light `--ed-ghost`, no handle token). Decided: SDD-012 §17 now has the values of section 2.5 and `--ed-handle`. Still open as a suggestion: §18.3 could mark row separators as decorative, which would let `--ed-track-line` stay subtle and keep the 3:1 rule for ruler ticks only.
+2. **The remote-edit outline used `--ed-selection`**, so a remote edit looked like a selection. Decided by D-030: it uses `--agent` (sections 2.4, 2.5, 2.10, 4.3.6; SDD-012 §5.8, §17).
+3. **Shadcn animations versus "no interface animations".** Decided: SDD-012 §17 item 5 keeps what the kept components carry and adds the reduced-motion rule of section 2.13.
+4. **Components missing from SDD-012 §3.1.** Decided: §3.1 lists the components of DS-10.
+5. **No timecode font.** Decided by D-030 and measured: Geist with tabular figures (DS-4, SDD-012 §11.5).
+6. **Typed decimals in pt-BR.** Decided by D-030: the comma is accepted and sent as `.`; timecodes are always shown with `.` (section 6.5, SDD-012 §12.2).
+7. **Font select samples.** Decided by D-030: names in the UI font, no samples in the MVP (section 2.7, SDD-012 §12.1).
+8. **Desktop shell details.** Decided: SDD-012 §21.3 (window size, chrome, pre-paint background) and D-030 (menus, accelerators, `onMenuAction`, `setTheme`, SDD-012 §13.1).
+9. **Connection-state colours and several active agents.** Decided: SDD-012 §6.2 (tones of section 4.3.3) and D-030 (section 4.3.4, SDD-012 §5.8).
+10. **The site's theme default.** Decided: SDD-010 §1.1 keeps the copied shell's behaviour (section 8.4).
+11. **Light `--ed-safe-area` on the preview surround is 3.03:1**, the smallest margin of the whole set. Open: since the surround is the same in both themes, the overlay colours drawn on it could be theme-independent (the dark value, 9.65:1).
+12. **The error envelope** is specified in SDD-002 A.8; SDD-003 §1.4 carries it across surfaces. A note for briefings, no change needed.
