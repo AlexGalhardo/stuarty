@@ -12,6 +12,7 @@
     "codegen:ts": "bun scripts/codegen-ts.mjs",
     "lint": "biome ci resources/js e2e",
     "test": "bun test resources/js",
+    "check:thin-client": "bun scripts/check-thin-client.ts",
     "format": "biome format --write resources/js e2e",
     "check:contrast": "bun scripts/check-contrast.ts",
     "e2e": "playwright test -c e2e/playwright.config.ts"
