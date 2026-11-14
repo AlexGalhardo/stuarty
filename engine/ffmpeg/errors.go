@@ -65,3 +65,7 @@ func scrub(s string, limit int) string {
 func internalErr(msg string, err error) *Error {
 	return &Error{Code: CodeInternal, Reason: "ffmpeg_internal", Message: msg, Err: err}
 }
+
+// Scrub removes paths and control characters from tool output and keeps the last limit
+// characters, so a message or a detail never carries a server path (SDD-002 A.8).
+func Scrub(s string, limit int) string { return scrub(s, limit) }
