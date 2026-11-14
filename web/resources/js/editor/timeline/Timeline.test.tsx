@@ -1,5 +1,5 @@
-import { describe, expect, test } from "bun:test";
 import { renderToString } from "react-dom/server";
+import { describe, expect, test } from "vitest";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";

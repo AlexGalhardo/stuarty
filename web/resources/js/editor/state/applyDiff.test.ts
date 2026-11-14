@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import type { Change } from "../api/types";
 import { fakeId, makeDocument } from "../fixtures/fixtureServer";
