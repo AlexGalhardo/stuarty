@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math/rand"
+	"reflect"
 	"slices"
 	"testing"
 
@@ -185,6 +186,11 @@ func TestPropertyRealCommands(t *testing.T) {
 		}
 		if vs := timeline.Validate(res.Doc); len(vs) != 0 {
 			t.Fatalf("seed %d, batch %d: invalid result %v\nops %v", seed, i, vs, ops)
+		}
+		fullBefore, fullAfter := timeline.Raw(doc), timeline.Raw(res.Doc)
+		if !reflect.DeepEqual(res.Diff, diffOf(fullBefore, fullAfter)) ||
+			!reflect.DeepEqual(res.Inverse, inverseOf(fullBefore, fullAfter)) {
+			t.Fatalf("seed %d, batch %d: the lazy diff differs from the full diff; ops %v", seed, i, ops)
 		}
 		back, skipped := ApplyPrimitives(res.Doc, reversed(res.Inverse), nil)
 		if len(skipped) != 0 || !bytes.Equal(timeline.Canonical(back.Doc), before) {
