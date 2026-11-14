@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "id": "prj_3c5e7g9j1m",
+  "name": "Vertical cut",
+  "settings": {},
+  "assets": {},
+  "tracks": {
+    "trk_t000000001": {
+      "id": "trk_t000000001",
+      "kind": "visual",
+      "order": "a0"
+    },
+    "trk_t000000002": {
+      "id": "trk_t000000002",
+      "kind": "visual",
+      "order": "a1"
+    }
+  },
+  "items": {
+    "itm_p000000001": {
+      "id": "itm_p000000001",
+      "type": "clip",
+      "track": "trk_t000000002",
+      "start": 0,
+      "duration": 300,
+      "asset": "ast_placeholder",
+      "slot": {
+        "name": "main_video",
+        "kind": "media",
+        "description": "The footage to cut",
+        "duration_policy": "stretch_timeline"
+      }
+    },
+    "itm_p000000002": {
+      "id": "itm_p000000002",
+      "type": "text",
+      "track": "trk_t000000001",
+      "start": 0,
+      "duration": 90,
+      "text": "Your title",
+      "style": {
+        "color": "$accent"
+      },
+      "slot": {
+        "name": "title",
+        "kind": "media",
+        "required": false
+      }
+    },
+    "itm_p000000003": {
+      "id": "itm_p000000003",
+      "type": "shape",
+      "track": "trk_t000000001",
+      "start": 100,
+      "duration": 20,
+      "shape": "rect",
+      "width": 50,
+      "height": 50,
+      "fill": "$accent"
+    }
+  },
+  "template": {
+    "description": "A short vertical cut",
+    "colors": {
+      "accent": "#ff8800"
+    }
+  }
+}

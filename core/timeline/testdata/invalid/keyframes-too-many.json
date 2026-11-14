@@ -1,0 +1,608 @@
+{
+  "schema_version": 1,
+  "id": "prj_2b4d6f8h0k",
+  "name": "Every item type",
+  "settings": {
+    "width": 1920,
+    "height": 1080,
+    "fps": {
+      "num": 30000,
+      "den": 1001
+    },
+    "background": "#102030",
+    "loudness_target": -16
+  },
+  "assets": {
+    "ast_a000000001": {
+      "id": "ast_a000000001",
+      "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000001",
+      "kind": "video",
+      "name": "wide.mp4",
+      "frame_rate": {
+        "num": 30000,
+        "den": 1001
+      },
+      "frame_count": 3000,
+      "width": 1920,
+      "height": 1080
+    },
+    "ast_a000000002": {
+      "id": "ast_a000000002",
+      "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000002",
+      "kind": "audio",
+      "name": "music.wav",
+      "sample_count": 4800000
+    },
+    "ast_a000000003": {
+      "id": "ast_a000000003",
+      "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000003",
+      "kind": "image",
+      "name": "logo.png",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "tracks": {
+    "trk_t000000001": {
+      "id": "trk_t000000001",
+      "kind": "visual",
+      "order": "a0",
+      "caption_style": {
+        "font_family": "Montserrat",
+        "font_weight": 800,
+        "size": 64,
+        "color": "#ffffff",
+        "highlight": "word",
+        "highlight_color": "#ffe600",
+        "position": "middle",
+        "uppercase": false
+      }
+    },
+    "trk_t000000002": {
+      "id": "trk_t000000002",
+      "kind": "visual",
+      "order": "a1",
+      "hidden": true
+    },
+    "trk_t000000003": {
+      "id": "trk_t000000003",
+      "kind": "visual",
+      "name": "Video",
+      "order": "a2"
+    },
+    "trk_t000000004": {
+      "id": "trk_t000000004",
+      "kind": "audio",
+      "name": "Music",
+      "order": "a3",
+      "muted": true
+    }
+  },
+  "items": {
+    "itm_p000000001": {
+      "id": "itm_p000000001",
+      "type": "clip",
+      "track": "trk_t000000003",
+      "start": 0,
+      "duration": 300,
+      "asset": "ast_a000000001",
+      "source_in": 30,
+      "speed": {
+        "num": 2,
+        "den": 1
+      },
+      "volume": 0.5,
+      "audio_muted": true,
+      "fade_in": 10,
+      "fade_out": 10,
+      "fit": "contain",
+      "crop": {
+        "left": 0.1,
+        "bottom": 0.25
+      },
+      "brightness": 0.1,
+      "contrast": 1.2,
+      "saturation": 0.8,
+      "x": 960,
+      "y": 540.5,
+      "scale": 1.5,
+      "rotation": -12.5,
+      "opacity": 0.9,
+      "transition_in": {
+        "kind": "fade",
+        "duration": 15
+      },
+      "transition_out": {
+        "kind": "slide_left",
+        "duration": 15
+      },
+      "keyframes": {
+        "x": [
+          {
+            "t": 0,
+            "value": 0
+          },
+          {
+            "t": 1,
+            "value": 1
+          },
+          {
+            "t": 2,
+            "value": 2
+          },
+          {
+            "t": 3,
+            "value": 3
+          },
+          {
+            "t": 4,
+            "value": 4
+          },
+          {
+            "t": 5,
+            "value": 5
+          },
+          {
+            "t": 6,
+            "value": 6
+          },
+          {
+            "t": 7,
+            "value": 7
+          },
+          {
+            "t": 8,
+            "value": 8
+          },
+          {
+            "t": 9,
+            "value": 9
+          },
+          {
+            "t": 10,
+            "value": 10
+          },
+          {
+            "t": 11,
+            "value": 11
+          },
+          {
+            "t": 12,
+            "value": 12
+          },
+          {
+            "t": 13,
+            "value": 13
+          },
+          {
+            "t": 14,
+            "value": 14
+          },
+          {
+            "t": 15,
+            "value": 15
+          },
+          {
+            "t": 16,
+            "value": 16
+          },
+          {
+            "t": 17,
+            "value": 17
+          },
+          {
+            "t": 18,
+            "value": 18
+          },
+          {
+            "t": 19,
+            "value": 19
+          },
+          {
+            "t": 20,
+            "value": 20
+          },
+          {
+            "t": 21,
+            "value": 21
+          },
+          {
+            "t": 22,
+            "value": 22
+          },
+          {
+            "t": 23,
+            "value": 23
+          },
+          {
+            "t": 24,
+            "value": 24
+          },
+          {
+            "t": 25,
+            "value": 25
+          },
+          {
+            "t": 26,
+            "value": 26
+          },
+          {
+            "t": 27,
+            "value": 27
+          },
+          {
+            "t": 28,
+            "value": 28
+          },
+          {
+            "t": 29,
+            "value": 29
+          },
+          {
+            "t": 30,
+            "value": 30
+          },
+          {
+            "t": 31,
+            "value": 31
+          },
+          {
+            "t": 32,
+            "value": 32
+          },
+          {
+            "t": 33,
+            "value": 33
+          },
+          {
+            "t": 34,
+            "value": 34
+          },
+          {
+            "t": 35,
+            "value": 35
+          },
+          {
+            "t": 36,
+            "value": 36
+          },
+          {
+            "t": 37,
+            "value": 37
+          },
+          {
+            "t": 38,
+            "value": 38
+          },
+          {
+            "t": 39,
+            "value": 39
+          },
+          {
+            "t": 40,
+            "value": 40
+          },
+          {
+            "t": 41,
+            "value": 41
+          },
+          {
+            "t": 42,
+            "value": 42
+          },
+          {
+            "t": 43,
+            "value": 43
+          },
+          {
+            "t": 44,
+            "value": 44
+          },
+          {
+            "t": 45,
+            "value": 45
+          },
+          {
+            "t": 46,
+            "value": 46
+          },
+          {
+            "t": 47,
+            "value": 47
+          },
+          {
+            "t": 48,
+            "value": 48
+          },
+          {
+            "t": 49,
+            "value": 49
+          },
+          {
+            "t": 50,
+            "value": 50
+          },
+          {
+            "t": 51,
+            "value": 51
+          },
+          {
+            "t": 52,
+            "value": 52
+          },
+          {
+            "t": 53,
+            "value": 53
+          },
+          {
+            "t": 54,
+            "value": 54
+          },
+          {
+            "t": 55,
+            "value": 55
+          },
+          {
+            "t": 56,
+            "value": 56
+          },
+          {
+            "t": 57,
+            "value": 57
+          },
+          {
+            "t": 58,
+            "value": 58
+          },
+          {
+            "t": 59,
+            "value": 59
+          },
+          {
+            "t": 60,
+            "value": 60
+          },
+          {
+            "t": 61,
+            "value": 61
+          },
+          {
+            "t": 62,
+            "value": 62
+          },
+          {
+            "t": 63,
+            "value": 63
+          },
+          {
+            "t": 64,
+            "value": 64
+          },
+          {
+            "t": 65,
+            "value": 65
+          },
+          {
+            "t": 66,
+            "value": 66
+          },
+          {
+            "t": 67,
+            "value": 67
+          },
+          {
+            "t": 68,
+            "value": 68
+          },
+          {
+            "t": 69,
+            "value": 69
+          },
+          {
+            "t": 70,
+            "value": 70
+          },
+          {
+            "t": 71,
+            "value": 71
+          },
+          {
+            "t": 72,
+            "value": 72
+          },
+          {
+            "t": 73,
+            "value": 73
+          },
+          {
+            "t": 74,
+            "value": 74
+          },
+          {
+            "t": 75,
+            "value": 75
+          },
+          {
+            "t": 76,
+            "value": 76
+          },
+          {
+            "t": 77,
+            "value": 77
+          },
+          {
+            "t": 78,
+            "value": 78
+          },
+          {
+            "t": 79,
+            "value": 79
+          },
+          {
+            "t": 80,
+            "value": 80
+          },
+          {
+            "t": 81,
+            "value": 81
+          },
+          {
+            "t": 82,
+            "value": 82
+          },
+          {
+            "t": 83,
+            "value": 83
+          },
+          {
+            "t": 84,
+            "value": 84
+          },
+          {
+            "t": 85,
+            "value": 85
+          },
+          {
+            "t": 86,
+            "value": 86
+          },
+          {
+            "t": 87,
+            "value": 87
+          },
+          {
+            "t": 88,
+            "value": 88
+          },
+          {
+            "t": 89,
+            "value": 89
+          },
+          {
+            "t": 90,
+            "value": 90
+          },
+          {
+            "t": 91,
+            "value": 91
+          },
+          {
+            "t": 92,
+            "value": 92
+          },
+          {
+            "t": 93,
+            "value": 93
+          },
+          {
+            "t": 94,
+            "value": 94
+          },
+          {
+            "t": 95,
+            "value": 95
+          },
+          {
+            "t": 96,
+            "value": 96
+          },
+          {
+            "t": 97,
+            "value": 97
+          },
+          {
+            "t": 98,
+            "value": 98
+          },
+          {
+            "t": 99,
+            "value": 99
+          },
+          {
+            "t": 100,
+            "value": 100
+          }
+        ]
+      }
+    },
+    "itm_p000000002": {
+      "id": "itm_p000000002",
+      "type": "clip",
+      "track": "trk_t000000002",
+      "start": 30,
+      "duration": 60,
+      "asset": "ast_a000000003",
+      "name": "Logo"
+    },
+    "itm_p000000003": {
+      "id": "itm_p000000003",
+      "type": "audio",
+      "track": "trk_t000000004",
+      "start": 0,
+      "duration": 300,
+      "asset": "ast_a000000002",
+      "volume": 1.5,
+      "fade_out": 30
+    },
+    "itm_p000000004": {
+      "id": "itm_p000000004",
+      "type": "text",
+      "track": "trk_t000000001",
+      "start": 0,
+      "duration": 90,
+      "text": "Hello\nworld",
+      "style": {
+        "font_family": "Anton",
+        "font_weight": 400,
+        "size": 96,
+        "color": "#FFD700",
+        "stroke_width": 0,
+        "align": "left",
+        "shadow_dx": 2,
+        "background_color": "#00000080"
+      }
+    },
+    "itm_p000000005": {
+      "id": "itm_p000000005",
+      "type": "shape",
+      "track": "trk_t000000002",
+      "start": 100,
+      "duration": 50,
+      "shape": "rounded_rect",
+      "width": 400,
+      "height": 120,
+      "radius": 24,
+      "fill": "#ff0000",
+      "stroke_width": 4,
+      "opacity": 0.5,
+      "x": 100,
+      "y": 100
+    },
+    "itm_p000000006": {
+      "id": "itm_p000000006",
+      "type": "caption",
+      "track": "trk_t000000001",
+      "start": 100,
+      "duration": 60,
+      "words": [
+        {
+          "text": "One",
+          "start": 0,
+          "duration": 20
+        },
+        {
+          "text": "two",
+          "start": 25,
+          "duration": 20
+        }
+      ],
+      "breaks": [
+        1
+      ],
+      "style": {
+        "max_width": 800,
+        "highlight": "none"
+      }
+    }
+  }
+}

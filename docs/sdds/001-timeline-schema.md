@@ -1,6 +1,6 @@
 # SDD-001: Timeline document schema
 
-- Status: Draft for freeze (2026-11-14). Frozen when `core/schema/timeline.v1.schema.json` is merged (ROADMAP task P1-SCH-003).
+- Status: Frozen (2026-11-14, ROADMAP task P1-SCH-003). Validators frozen for ALPHA (ROADMAP task P2-SCH-001): every code of section 4 has an invalid example under `core/timeline/testdata/invalid/`.
 - Depends on: ADR-0004 (time), ADR-0005 (timeline model), ADR-0009 (persistence), ADR-0012 (text), ADR-0014 (JSON Schema), ADR-0022 (templates)
 - Implements: RF-002, RF-010 to RF-012, RF-015, RF-020 to RF-026, RF-030 to RF-032, RF-035, RF-040 to RF-042, RF-050, NFR-012
 - Owner area: senior-a (command core and schema)
