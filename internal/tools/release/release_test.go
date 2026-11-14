@@ -189,6 +189,7 @@ func happy() *fake {
 		"git rev-parse --abbrev-ref HEAD": "release/v0.2.0\n",
 		"git rev-parse HEAD":              "aaaaaaaaaaaaaaaa\n",
 		"git rev-parse origin/main":       "aaaaaaaaaaaaaaaa\n",
+		"git rev-parse origin/release/":   "aaaaaaaaaaaaaaaa\n",
 		"git describe":                    "v0.1.0\n",
 		"gh run list":                     `[{"name":"CI","status":"completed","conclusion":"success"}]`,
 		"gh issue list":                   "[]",
@@ -262,9 +263,23 @@ func TestPrepareRefusals(t *testing.T) {
 		},
 		{"dirty tree", func(f *fake) { f.answers["git status"] = " M a.go\n" }, "not clean"},
 		{
+			"branch not pushed as it is",
+			func(f *fake) { f.answers["git rev-parse origin/release/"] = "bbbbbbbbbbbbbbbb\n" },
+			"push the branch",
+		},
+		{
+			"branch not on origin",
+			func(f *fake) {
+				f.errs = map[string]error{"git rev-parse origin/release/": errors.New("unknown revision")}
+			},
+			"not on origin",
+		},
+		{
 			"behind origin/main",
-			func(f *fake) { f.answers["git rev-parse origin/main"] = "bbbbbbbbbbbbbbbb\n" },
-			"not origin/main",
+			func(f *fake) {
+				f.errs = map[string]error{"git merge-base --is-ancestor": errors.New("exit status 1")}
+			},
+			"does not contain origin/main",
 		},
 		{"tag exists locally", func(f *fake) { f.answers["git tag --list"] = "v0.2.0\n" }, "already exists locally"},
 		{

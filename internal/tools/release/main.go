@@ -1,7 +1,7 @@
 // Command release prepares and tags a release of Vukem Video (SDD-009
 // sections 7 and 8, ADR-0028).
 //
-//	release prepare vX.Y.Z   on branch release/vX.Y.Z: write the changelog section, commit it
+//	release prepare vX.Y.Z   on branch release/vX.Y.Z, pushed and green: write the changelog section, commit it
 //	release tag vX.Y.Z       on main, after the release pull request merged: tag and push the tag
 //	release notes vX.Y.Z     print the notes release.yml will publish
 //	release dispatch vX.Y.Z  start release.yml by hand (recovery)
@@ -167,6 +167,40 @@ func (t *tool) checkAtOriginMain() error {
 	return nil
 }
 
+// checkReleaseBranch refuses a release branch that is not pushed as it is, or
+// that does not contain origin/main. The release pull request carries every
+// commit of the release (D-031), so prepare runs on its tip, not on main.
+func (t *tool) checkReleaseBranch(version string) error {
+	if t.skipRemote {
+		return nil
+	}
+
+	if _, err := t.git("fetch", "origin", "--tags"); err != nil {
+		return err
+	}
+
+	head, err := t.git("rev-parse", "HEAD")
+	if err != nil {
+		return err
+	}
+
+	remote, err := t.git("rev-parse", "origin/release/"+version)
+	if err != nil {
+		return fmt.Errorf("release/%s is not on origin: push it first: %w", version, err)
+	}
+
+	if head != remote {
+		return fmt.Errorf("HEAD %s is not origin/release/%s %s: push the branch and wait for its checks",
+			short(head), version, short(remote))
+	}
+
+	if _, err := t.git("merge-base", "--is-ancestor", "origin/main", "HEAD"); err != nil {
+		return fmt.Errorf("release/%s does not contain origin/main: rebase it on main first", version)
+	}
+
+	return nil
+}
+
 func short(sha string) string {
 	if len(sha) > 9 {
 		return sha[:9]
@@ -175,20 +209,20 @@ func short(sha string) string {
 	return sha
 }
 
-// checkGreen refuses a commit with a workflow run that is not a success and
-// refuses one with no run at all (SDD-009 section 7 step 2c), and refuses an
-// open ci-failure issue (step 2d).
-func (t *tool) checkGreen() error {
+// checkGreen refuses a tip of branch with a workflow run that is not a success
+// and refuses one with no run at all (SDD-009 section 7 step 2c), and refuses
+// an open ci-failure issue (step 2d).
+func (t *tool) checkGreen(branch string) error {
 	if t.skipRemote {
 		return nil
 	}
 
-	sha, err := t.git("rev-parse", "origin/main")
+	sha, err := t.git("rev-parse", "HEAD")
 	if err != nil {
 		return err
 	}
 
-	raw, err := t.run(t.dir, "gh", "run", "list", "--branch", "main", "--commit", sha, "--limit", "50",
+	raw, err := t.run(t.dir, "gh", "run", "list", "--branch", branch, "--commit", sha, "--limit", "50",
 		"--json", "name,status,conclusion")
 	if err != nil {
 		return err
@@ -262,11 +296,11 @@ func (t *tool) prepare(version string) error {
 		return err
 	}
 
-	if err := t.checkAtOriginMain(); err != nil {
+	if err := t.checkReleaseBranch(version); err != nil {
 		return err
 	}
 
-	if err := t.checkGreen(); err != nil {
+	if err := t.checkGreen("release/" + version); err != nil {
 		return err
 	}
 
