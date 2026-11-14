@@ -22,7 +22,7 @@ export default defineConfig({
 	},
 	projects: [{ name: "chromium", use: { browserName: "chromium" } }],
 	webServer: {
-		command: "go run ./web/cmd/app",
+		command: "go run ./web/cmd/app serve",
 		cwd: "../..",
 		url: `http://127.0.0.1:${port}/up`,
 		reuseExistingServer: !process.env.CI,
