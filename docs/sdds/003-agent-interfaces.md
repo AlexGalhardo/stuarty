@@ -712,6 +712,7 @@ type ExportResult struct {
 	Path        string       `json:"path,omitempty"` // absolute, under <workspace>/exports/<project id>/; local mode only
 	DownloadURL string       `json:"download_url"`   // "/api/v1/jobs/<job id>/file"
 	Bytes       int64        `json:"bytes"`
+	SHA256      string       `json:"sha256,omitempty"` // of the file; the ETag of the file route is its first 16 hex characters
 	Duration    TimeValue    `json:"duration"`
 	Width       int          `json:"width"`
 	Height      int          `json:"height"`
@@ -743,6 +744,7 @@ Rules:
 6. A job's `Text` is the line of §3.9.
 7. `job.updated` of an ingest job (`project_id` null) is published on the stream of every project that references the file (SDD-006 §3.5). `JobGet` of an ingest job (`project_id` null) is allowed to a caller who can read a project that uses that asset; any other caller gets `E_NOT_FOUND`. `JobList` returns only jobs of the project, so ingest jobs appear there through the assets (`MediaEntry.State`), not as `Job` rows.
 8. `E_INGEST_FAILED`, `E_EXPORT_FAILED`, `E_VERIFY_FAILED`, `E_TRANSCRIBE_FAILED` and `E_CANCELLED` describe the outcome of a job: they are carried inside the `Job` (`error`) with HTTP status 200. They are HTTP 500 only when raised as the error of a call (for example an internal failure while starting a job).
+9. **Revision of an export (deviation, P1-SRV-004).** The row of an export records the revision read at the start (`input.revision`), and the lint gate runs on that revision, but the job renders the document as it is when it runs and reports that revision in `result.export.revision`. Pinning the start revision needs a snapshot or a rewind of the log, which no task owns yet; the two revisions differ only when an edit lands while the job waits in the queue. `JobCancel` is not an operation of the Prototype build: the cancellation of SDD-005 §14.4 is reached by trashing the project and by `service.JobRunner.Cancel`.
 
 ### 2.9 Templates, system, events, files
 
