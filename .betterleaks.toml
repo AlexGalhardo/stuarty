@@ -55,3 +55,14 @@ condition = "AND"
 paths = ['''^docs/sdds/.*\.md$''']
 regexTarget = "match"
 regexes = ['''key:key_[a-z0-9]{10}''']
+
+# P1-ENG-001 first committed id-like constants named clipKey, capKey and assetKey and an
+# example actor id in core/command tests; Betterleaks read them as generic API keys.
+# They were renamed in the next commits, but rebase-merged history keeps the old
+# lines in the scanned range. Only those lines are allowed, only in core tests.
+[[allowlists]]
+description = "P1-ENG-001 historical test identifiers (renamed later) in core tests"
+condition = "AND"
+paths = ['''^core/.+_test\.go$''']
+regexTarget = "line"
+regexes = ['''\b(?:clip|cap|asset)Key\s*=|key:key_[a-z0-9]{10}''']
