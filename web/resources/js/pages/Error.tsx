@@ -16,7 +16,7 @@ export default function ErrorPage({
 		<>
 			<Head title={`${status} ${message}`} />
 			<section className="py-12 text-center">
-				<p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+				<p className="text-sm font-semibold text-muted-foreground">
 					{status}
 				</p>
 				<h1 className="mt-2 text-3xl font-semibold tracking-tight">
@@ -24,7 +24,7 @@ export default function ErrorPage({
 				</h1>
 				<Link
 					href="/projects"
-					className="mt-6 inline-block text-indigo-600 hover:underline dark:text-indigo-400"
+					className="mt-6 inline-block underline underline-offset-4 hover:text-muted-foreground"
 				>
 					{t("ui.error.back")}
 				</Link>
