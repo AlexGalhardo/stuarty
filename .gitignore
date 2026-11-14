@@ -1,0 +1,38 @@
+# Working files of the workspace live outside the repository (D-025).
+# This line is a safety net in case one is copied in.
+vukem-feedback.md
+
+# Dependencies, builds and caches
+node_modules/
+dist/
+coverage*
+.cache/
+site/out/
+*.log
+
+# Secrets and local env
+.env
+.env.*
+!.env.example
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Spikes: downloaded tools and generated media are never committed
+spikes/**/bin/
+spikes/**/*.exe
+spikes/**/*.dll
+spikes/**/*.mp4
+spikes/**/*.mov
+spikes/**/*.mkv
+spikes/**/*.webm
+spikes/**/*.wav
+spikes/**/*.mp3
+spikes/**/*.png
+spikes/**/*.ppm
+spikes/**/*.raw
+spikes/**/*.yuv
+spikes/**/models/
