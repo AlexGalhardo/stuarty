@@ -537,3 +537,22 @@ func TestDefaultsConstructors(t *testing.T) {
 		t.Error("IsVisual")
 	}
 }
+
+// Group audit G2.1: every violation code of SDD-001 §4 has at least one invalid
+// example with its codes file.
+func TestEveryViolationCodeHasAnInvalidExample(t *testing.T) {
+	covered := map[string]bool{}
+	for _, f := range files(t, "testdata/invalid/*.codes.txt") {
+		for _, c := range strings.Fields(string(readFile(t, f))) {
+			covered[c] = true
+		}
+	}
+	for _, code := range []string{
+		VSchemaVersion, VShape, VID, VTrackOrder, VItemTrack, VItemRange, VOverlap, VAssetRef, VSourceRange,
+		VSpeed, VFades, VTransitions, VKeyframes, VWords, VFont, VSlot, VColorRef, VLimits,
+	} {
+		if !covered[code] {
+			t.Errorf("%s has no example in testdata/invalid", code)
+		}
+	}
+}
