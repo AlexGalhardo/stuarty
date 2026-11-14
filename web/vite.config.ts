@@ -12,6 +12,8 @@ export default defineConfig({
     tailwindcss(),
     react(),
     inertia(),
-    vukem({ input: ["resources/css/app.css", "resources/js/app.tsx"] }),
+    vukem({
+      input: ["resources/css/app.css", "resources/js/app.tsx", "resources/js/editor.tsx"],
+    }),
   ],
 });

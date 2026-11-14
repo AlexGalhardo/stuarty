@@ -38,5 +38,8 @@ export function useStore<S, T>(
 	store: ReadStore<S>,
 	select: (state: S) => T,
 ): T {
-	return useSyncExternalStore(store.subscribe, () => select(store.getState()));
+	const snapshot = () => select(store.getState());
+	// The server snapshot is the same state: the editor has no server render, but
+	// the tests render to a string.
+	return useSyncExternalStore(store.subscribe, snapshot, snapshot);
 }

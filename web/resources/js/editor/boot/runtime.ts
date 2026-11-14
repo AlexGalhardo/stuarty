@@ -37,6 +37,8 @@ export interface EditorRuntime {
 	activity: ReadStore<ActivityState>;
 	sync: Sync;
 	edits: EditQueue;
+	// Called on visibilitychange to visible and on online (SDD-012 5.5 step 7).
+	checkStale(): void;
 	dispose(): void;
 }
 
@@ -118,6 +120,7 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		activity,
 		sync,
 		edits,
+		checkStale: () => stream.checkStale(),
 		dispose: () => sync.stop(),
 	};
 }

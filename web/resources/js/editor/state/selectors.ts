@@ -80,3 +80,16 @@ export function selectAsset(
 export function selectEndFrame(state: DocumentState): number {
 	return state.endFrame;
 }
+
+export interface FrameRate {
+	readonly num: number;
+	readonly den: number;
+}
+
+// The project rate as written in the document, or undefined when the
+// document leaves it to the schema default. The generated type of
+// settings.fps is an intersection that json-schema-to-typescript could not
+// reduce to {num, den}, hence the cast.
+export function selectFps(state: DocumentState): FrameRate | undefined {
+	return state.document?.settings.fps as unknown as FrameRate | undefined;
+}
