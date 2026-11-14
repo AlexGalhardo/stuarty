@@ -27,9 +27,14 @@ const (
 )
 
 // excluded reports whether pkg (relative to the module, "" for the root) is
-// outside the gate: commands, internal tooling, disposable spikes and the
-// desktop shell (SDD-009 section 13.2).
+// outside the gate: commands, internal tooling, disposable spikes, the
+// desktop shell (SDD-009 section 13.2) and vendored node_modules.
 func excluded(pkg string) bool {
+	// Go files that npm packages ship (site/node_modules) are not ours.
+	if slices.Contains(strings.Split(pkg, "/"), "node_modules") {
+		return true
+	}
+
 	for _, root := range []string{"web/cmd", "internal/tools", "spikes", "desktop"} {
 		if pkg == root || strings.HasPrefix(pkg, root+"/") {
 			return true

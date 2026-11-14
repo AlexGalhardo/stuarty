@@ -119,6 +119,7 @@ func TestExcluded(t *testing.T) {
 		"web/cmd": true, "web/cmd/app": true, "internal/tools": true, "internal/tools/covergate": true,
 		"internal/outbound": false, "internal": false, "spikes/export-pipeline": true, "desktop": true,
 		"desktop/shell": true, "desktopx": false,
+		"site/node_modules/flatted/golang/pkg/flatted": true, "node_modules": true, "site/node_modules_x": false,
 	}
 
 	for pkg, want := range tests {
