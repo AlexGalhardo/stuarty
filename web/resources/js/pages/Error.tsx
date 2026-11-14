@@ -16,9 +16,7 @@ export default function ErrorPage({
 		<>
 			<Head title={`${status} ${message}`} />
 			<section className="py-12 text-center">
-				<p className="text-sm font-semibold text-muted-foreground">
-					{status}
-				</p>
+				<p className="text-sm font-semibold text-muted-foreground">{status}</p>
 				<h1 className="mt-2 text-3xl font-semibold tracking-tight">
 					{message}
 				</h1>
