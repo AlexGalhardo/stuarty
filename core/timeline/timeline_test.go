@@ -135,7 +135,15 @@ func TestSDD001_UnknownFieldsPreserved(t *testing.T) {
 		"keyframe": get("items", "itm_m1n2p3q4r5", "keyframes", "volume", "x_key"),
 		"word":     get("items", "itm_s6t7v8w9x0", "words", "x_word"),
 	}
-	want := map[string]any{"top": "text", "settings": float64(1), "asset": "kept", "style": float64(3), "item": "kept", "keyframe": float64(1), "word": "kept"}
+	want := map[string]any{
+		"top":      "text",
+		"settings": float64(1),
+		"asset":    "kept",
+		"style":    float64(3),
+		"item":     "kept",
+		"keyframe": float64(1),
+		"word":     "kept",
+	}
 	for k, w := range want {
 		if checks[k] != w {
 			t.Errorf("%s: got %v, want %v", k, checks[k], w)
@@ -196,7 +204,7 @@ func TestCanonicalNumbersAndStrings(t *testing.T) {
 		t.Errorf("string escaping: %s", g)
 	}
 	x := 1e21
-	it.X, it.Rotation = &x, -0.0
+	it.X, it.Rotation = &x, math.Copysign(0, -1)
 	doc.Items["itm_p000000004"] = it
 	if g := string(Canonical(doc)); !strings.Contains(g, `"x":1000000000000000000000`) || strings.Contains(g, "-0") {
 		t.Errorf("number form: %s", g)
@@ -215,7 +223,9 @@ func TestCanonicalNonFiniteAndNil(t *testing.T) {
 	if vs := Validate(doc); len(codesOf(vs)) != 1 || codesOf(vs)[0] != VShape {
 		t.Errorf("non-finite loudness must be V_SHAPE: %v", vs)
 	}
-	b := Canonical(&Document{Extra: Extra{"f": 1.5, "n": json.Number("12345678901234567890"), "big": json.Number("1e999")}})
+	b := Canonical(
+		&Document{Extra: Extra{"f": 1.5, "n": json.Number("12345678901234567890"), "big": json.Number("1e999")}},
+	)
 	if !bytes.Contains(b, []byte(`"big":1e999,"f":1.5`)) || !bytes.Contains(b, []byte(`"n":12345678901234567890`)) {
 		t.Errorf("extras: %s", b)
 	}
@@ -228,23 +238,64 @@ func TestDecodeErrors(t *testing.T) {
 		code string
 		in   string
 	}{
-		"not json":         {`{`, VShape, "not valid JSON"},
-		"trailing":         {good + ` {}`, VShape, "unexpected data"},
-		"array":            {`[]`, VShape, "must be a JSON object"},
-		"missing version":  {`{}`, VShape, "schema_version"},
-		"fractional":       {strings.Replace(good, `"start":0`, `"start":1.5`, 1), VShape, "items.itm_m1n2p3q4r5.start"},
-		"exponent int":     {strings.Replace(good, `"start":0`, `"start":1e1`, 1), VShape, "expected an integer"},
-		"string for int":   {strings.Replace(good, `"start":0`, `"start":"0"`, 1), VShape, "expected an integer"},
-		"int for string":   {strings.Replace(good, `"Launch teaser"`, `5`, 1), VShape, "expected a string"},
-		"string for bool":  {strings.Replace(good, `"has_audio":true`, `"has_audio":"yes"`, 1), VShape, "expected a boolean"},
-		"string for float": {strings.Replace(good, `"source_in":60`, `"source_in":60,"scale":"big"`, 1), VShape, "expected a number"},
-		"float overflow":   {strings.Replace(good, `"source_in":60`, `"source_in":60,"scale":1e999`, 1), VShape, "out of range"},
-		"object for array": {strings.Replace(good, `"tracks":{`, `"fonts":{"Z":{"files":{}}},"tracks":{`, 1), VShape, "expected an array"},
+		"not json":        {`{`, VShape, "not valid JSON"},
+		"trailing":        {good + ` {}`, VShape, "unexpected data"},
+		"array":           {`[]`, VShape, "must be a JSON object"},
+		"missing version": {`{}`, VShape, "schema_version"},
+		"fractional": {
+			strings.Replace(good, `"start":0`, `"start":1.5`, 1),
+			VShape,
+			"items.itm_m1n2p3q4r5.start",
+		},
+		"exponent int":   {strings.Replace(good, `"start":0`, `"start":1e1`, 1), VShape, "expected an integer"},
+		"string for int": {strings.Replace(good, `"start":0`, `"start":"0"`, 1), VShape, "expected an integer"},
+		"int for string": {strings.Replace(good, `"Launch teaser"`, `5`, 1), VShape, "expected a string"},
+		"string for bool": {
+			strings.Replace(good, `"has_audio":true`, `"has_audio":"yes"`, 1),
+			VShape,
+			"expected a boolean",
+		},
+		"string for float": {
+			strings.Replace(good, `"source_in":60`, `"source_in":60,"scale":"big"`, 1),
+			VShape,
+			"expected a number",
+		},
+		"float overflow": {
+			strings.Replace(good, `"source_in":60`, `"source_in":60,"scale":1e999`, 1),
+			VShape,
+			"out of range",
+		},
+		"object for array": {
+			strings.Replace(good, `"tracks":{`, `"fonts":{"Z":{"files":{}}},"tracks":{`, 1),
+			VShape,
+			"expected an array",
+		},
 		"array for object": {strings.Replace(good, `"assets":{`, `"assets":[],"x":{`, 1), VShape, "expected an object"},
-		"missing required": {strings.Replace(good, `"hash":"sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",`, ``, 1), VShape, "required field is missing"},
-		"newer schema":     {strings.Replace(good, `"schema_version":1`, `"schema_version":2`, 1), VSchemaVersion, "upgrade the program"},
-		"zero schema":      {strings.Replace(good, `"schema_version":1`, `"schema_version":0`, 1), VSchemaVersion, "positive integer"},
-		"float schema":     {strings.Replace(good, `"schema_version":1`, `"schema_version":1.5`, 1), VSchemaVersion, "positive integer"},
+		"missing required": {
+			strings.Replace(
+				good,
+				`"hash":"sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",`,
+				``,
+				1,
+			),
+			VShape,
+			"required field is missing",
+		},
+		"newer schema": {
+			strings.Replace(good, `"schema_version":1`, `"schema_version":2`, 1),
+			VSchemaVersion,
+			"upgrade the program",
+		},
+		"zero schema": {
+			strings.Replace(good, `"schema_version":1`, `"schema_version":0`, 1),
+			VSchemaVersion,
+			"positive integer",
+		},
+		"float schema": {
+			strings.Replace(good, `"schema_version":1`, `"schema_version":1.5`, 1),
+			VSchemaVersion,
+			"positive integer",
+		},
 	}
 	for name, c := range cases {
 		doc, err := Decode([]byte(c.src))
@@ -299,7 +350,8 @@ func TestMigrateChainWithFakeOlderVersion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if out["title"] != "Launch teaser" || out["name"] != nil || out["step3"] != true || out["schema_version"] != json.Number("3") {
+	if out["title"] != "Launch teaser" || out["name"] != nil || out["step3"] != true ||
+		out["schema_version"] != json.Number("3") {
 		t.Errorf("chain result: %v", out)
 	}
 
@@ -310,23 +362,36 @@ func TestMigrateChainWithFakeOlderVersion(t *testing.T) {
 	}
 
 	// A missing step, a failing step, a newer document and a bad version.
-	if _, err := migrateChain(RawDoc{"schema_version": json.Number("1")}, 2, nil); err == nil || !strings.Contains(err.Error(), "no migration from schema_version 1") {
+	if _, err := migrateChain(
+		RawDoc{"schema_version": json.Number("1")},
+		2,
+		nil,
+	); err == nil ||
+		!strings.Contains(err.Error(), "no migration from schema_version 1") {
 		t.Errorf("missing step: %v", err)
 	}
 	boom := errors.New("boom")
-	if _, err := migrateChain(RawDoc{"schema_version": json.Number("1")}, 2, map[int]migration{1: func(RawDoc) (RawDoc, error) { return nil, boom }}); !errors.Is(err, boom) {
+	if _, err := migrateChain(
+		RawDoc{"schema_version": json.Number("1")},
+		2,
+		map[int]migration{1: func(RawDoc) (RawDoc, error) { return nil, boom }},
+	); !errors.Is(
+		err,
+		boom,
+	) {
 		t.Errorf("failing step: %v", err)
 	}
 	_, err = migrateChain(RawDoc{"schema_version": json.Number("4")}, 3, steps)
 	var ve *ViolationsError
-	if !errors.As(err, &ve) || ve.Violations[0].Code != VSchemaVersion || !strings.Contains(ve.Error(), "4") || !strings.Contains(ve.Error(), "3") {
+	if !errors.As(err, &ve) || ve.Violations[0].Code != VSchemaVersion || !strings.Contains(ve.Error(), "4") ||
+		!strings.Contains(ve.Error(), "3") {
 		t.Errorf("newer: %v", err)
 	}
 }
 
 func TestNewID(t *testing.T) {
 	seen := map[string]bool{}
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		id := NewID(PrefixItem)
 		if !ValidID(PrefixItem, id) || len(id) != 14 || seen[id] {
 			t.Fatalf("bad or repeated id %q", id)
@@ -342,7 +407,19 @@ func TestValidID(t *testing.T) {
 			t.Errorf("%s should be valid", id)
 		}
 	}
-	bad := []string{"", "clip-1", "prj_7k2m9x4q1", "prj_7k2m9x4q1bb", "prj_7k2m9x4q1B", "prj_7k2m9x4q1i", "prj_7k2m9x4q1l", "prj_7k2m9x4q1o", "prj_7k2m9x4q1u", "prj-7k2m9x4q1b", "ast_7k2m9x4q1b"}
+	bad := []string{
+		"",
+		"clip-1",
+		"prj_7k2m9x4q1",
+		"prj_7k2m9x4q1bb",
+		"prj_7k2m9x4q1B",
+		"prj_7k2m9x4q1i",
+		"prj_7k2m9x4q1l",
+		"prj_7k2m9x4q1o",
+		"prj_7k2m9x4q1u",
+		"prj-7k2m9x4q1b",
+		"ast_7k2m9x4q1b",
+	}
 	for _, id := range bad {
 		if ValidID("prj", id) {
 			t.Errorf("%q should be invalid", id)
@@ -386,7 +463,7 @@ func TestOrderBetweenProperty(t *testing.T) {
 		}
 		return string(b)
 	}
-	for i := 0; i < 10000; i++ {
+	for range 10000 {
 		a, b := randOrder(), randOrder()
 		if a == b {
 			continue
@@ -395,13 +472,13 @@ func TestOrderBetweenProperty(t *testing.T) {
 			a, b = b, a
 		}
 		c := OrderBetween(a, b)
-		if !(a < c && c < b) || !ValidOrder(c) || strings.HasSuffix(c, "0") {
+		if (a >= c || c >= b) || !ValidOrder(c) || strings.HasSuffix(c, "0") {
 			t.Fatalf("OrderBetween(%q, %q) = %q", a, b, c)
 		}
-		if c := OrderBetween("", b); !(c < b) || c == "" {
+		if c := OrderBetween("", b); (c >= b) || c == "" {
 			t.Fatalf("OrderBetween(\"\", %q) = %q", b, c)
 		}
-		if c := OrderBetween(a, ""); !(c > a) || c == "" {
+		if c := OrderBetween(a, ""); (c <= a) || c == "" {
 			t.Fatalf("OrderBetween(%q, \"\") = %q", a, c)
 		}
 	}
@@ -409,14 +486,14 @@ func TestOrderBetweenProperty(t *testing.T) {
 
 func TestOrderBetweenSuccessiveInsertions(t *testing.T) {
 	for name, next := range map[string]func(lo, hi string) string{
-		"after the last":    func(lo, hi string) string { return OrderBetween(hi, "") },
-		"before the first":  func(lo, hi string) string { return OrderBetween("", lo) },
-		"between the same":  func(lo, hi string) string { return OrderBetween(lo, hi) },
-		"just after the lo": func(lo, hi string) string { return OrderBetween(lo, hi) },
+		"after the last":    func(_, hi string) string { return OrderBetween(hi, "") },
+		"before the first":  func(lo, _ string) string { return OrderBetween("", lo) },
+		"between the same":  OrderBetween,
+		"just after the lo": OrderBetween,
 	} {
 		lo, hi := "a0", "a1"
 		seen := map[string]bool{lo: true, hi: true}
-		for i := 0; i < 1000; i++ {
+		for i := range 1000 {
 			c := next(lo, hi)
 			if c == "" || !ValidOrder(c) || strings.HasSuffix(c, "0") || seen[c] {
 				t.Fatalf("%s: insertion %d produced %q", name, i, c)
@@ -441,11 +518,13 @@ func TestOrderBetweenSuccessiveInsertions(t *testing.T) {
 
 func TestDefaultsConstructors(t *testing.T) {
 	s := DefaultSettings()
-	if s.Width != 1080 || s.Height != 1920 || s.FPS != (Rational{30, 1}) || s.Background != "#000000" || s.LoudnessTarget != -14 {
+	if s.Width != 1080 || s.Height != 1920 || s.FPS != (Rational{30, 1}) || s.Background != "#000000" ||
+		s.LoudnessTarget != -14 {
 		t.Errorf("%+v", s)
 	}
 	it := NewItem("itm_s6t7v8w9x0", ItemClip, "trk_a1b2c3d4e5", 3, 9)
-	if it.Scale != 1 || it.Opacity != 1 || it.Speed != (Rational{1, 1}) || it.Fit != "cover" || it.Start != 3 || it.Duration != 9 {
+	if it.Scale != 1 || it.Opacity != 1 || it.Speed != (Rational{1, 1}) || it.Fit != "cover" || it.Start != 3 ||
+		it.Duration != 9 {
 		t.Errorf("%+v", it)
 	}
 	if sl := NewSlot("a", "text"); !sl.Required || sl.DurationPolicy != "fit" {

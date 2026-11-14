@@ -4,7 +4,8 @@ package timeline
 // drive the decoder, the canonical encoder and, later, the generated JSON Schema:
 //
 //   - `json:"name"`            the field is required and always written.
-//   - `json:"name,omitempty"`  the field is optional; it is omitted when empty.
+//   - `json:"name,omitempty"`  the field is optional; it is omitted when empty
+//     (`omitzero` is the same, used on struct values).
 //     A nil pointer, an empty map or slice, a zero scalar or an object that
 //     encodes to {} is empty.
 //   - `default:"v"`            the field has a default: it is filled in on decode
@@ -46,11 +47,15 @@ type Extra map[string]any
 type Color string
 
 type (
+	// AssetKind is video, audio or image.
 	AssetKind string
+	// TrackKind is visual or audio.
 	TrackKind string
-	ItemType  string
+	// ItemType is clip, audio, text, caption or shape.
+	ItemType string
 )
 
+// Asset kinds, track kinds and item types.
 const (
 	AssetVideo AssetKind = "video"
 	AssetAudio AssetKind = "audio"
@@ -88,10 +93,10 @@ type Document struct {
 
 // Settings of the project (SDD-001 §3.1).
 type Settings struct {
-	Width          int      `json:"width" default:"1080"`
-	Height         int      `json:"height" default:"1920"`
-	FPS            Rational `json:"fps" default:"30/1"`
-	Background     Color    `json:"background" default:"#000000"`
+	Width          int      `json:"width"           default:"1080"`
+	Height         int      `json:"height"          default:"1920"`
+	FPS            Rational `json:"fps"             default:"30/1"`
+	Background     Color    `json:"background"      default:"#000000"`
 	LoudnessTarget float64  `json:"loudness_target" default:"-14"`
 	Extra          Extra    `json:"-"`
 }
@@ -102,7 +107,7 @@ type Asset struct {
 	Hash        string    `json:"hash"`
 	Kind        AssetKind `json:"kind"`
 	Name        string    `json:"name"`
-	FrameRate   Rational  `json:"frame_rate,omitempty"`
+	FrameRate   Rational  `json:"frame_rate,omitzero"`
 	FrameCount  int       `json:"frame_count,omitempty"`
 	SampleCount int       `json:"sample_count,omitempty"`
 	Width       int       `json:"width,omitempty"`
@@ -141,25 +146,25 @@ type Item struct {
 	// Visual items.
 	X        *float64 `json:"x,omitempty"`
 	Y        *float64 `json:"y,omitempty"`
-	Scale    float64  `json:"scale" default:"1"`
+	Scale    float64  `json:"scale"              default:"1"`
 	Rotation float64  `json:"rotation,omitempty"`
-	Opacity  float64  `json:"opacity" default:"1"`
+	Opacity  float64  `json:"opacity"            default:"1"`
 
 	// Clip and audio.
 	Asset      string   `json:"asset,omitempty"`
 	SourceIn   int      `json:"source_in,omitempty"`
-	Speed      Rational `json:"speed" default:"1/1"`
-	Volume     float64  `json:"volume" default:"1"`
+	Speed      Rational `json:"speed"                 default:"1/1"`
+	Volume     float64  `json:"volume"                default:"1"`
 	AudioMuted bool     `json:"audio_muted,omitempty"`
 	FadeIn     int      `json:"fade_in,omitempty"`
 	FadeOut    int      `json:"fade_out,omitempty"`
 
 	// Clip only.
-	Fit        string  `json:"fit" default:"cover"`
+	Fit        string  `json:"fit"                  default:"cover"`
 	Crop       *Crop   `json:"crop,omitempty"`
 	Brightness float64 `json:"brightness,omitempty"`
-	Contrast   float64 `json:"contrast" default:"1"`
-	Saturation float64 `json:"saturation" default:"1"`
+	Contrast   float64 `json:"contrast"             default:"1"`
+	Saturation float64 `json:"saturation"           default:"1"`
 
 	// Text and caption. Style of a text item uses the TextStyle fields only.
 	Text  string        `json:"text,omitempty"`
@@ -175,8 +180,8 @@ type Item struct {
 	Width       float64 `json:"width,omitempty"`
 	Height      float64 `json:"height,omitempty"`
 	Radius      float64 `json:"radius,omitempty"`
-	Fill        Color   `json:"fill" default:"#FFFFFF"`
-	StrokeColor Color   `json:"stroke_color" default:"#000000"`
+	Fill        Color   `json:"fill"                   default:"#FFFFFF"`
+	StrokeColor Color   `json:"stroke_color"           default:"#000000"`
 	StrokeWidth float64 `json:"stroke_width,omitempty"`
 
 	Extra Extra `json:"-"`
@@ -266,8 +271,8 @@ type Slot struct {
 	Name           string `json:"name"`
 	Kind           string `json:"kind"`
 	Description    string `json:"description,omitempty"`
-	Required       bool   `json:"required" default:"true"`
-	DurationPolicy string `json:"duration_policy" default:"fit"`
+	Required       bool   `json:"required"              default:"true"`
+	DurationPolicy string `json:"duration_policy"       default:"fit"`
 	Filled         bool   `json:"filled,omitempty"`
 	Extra          Extra  `json:"-"`
 }
