@@ -5,6 +5,7 @@ package bootstrap
 import (
 	vukem "github.com/AlexGalhardo/vukem"
 
+	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 	"github.com/AlexGalhardo/vukem-video/web/app/listeners"
 	"github.com/AlexGalhardo/vukem-video/web/database/migrations"
 	"github.com/AlexGalhardo/vukem-video/web/database/seeders"
@@ -22,7 +23,11 @@ var defaultEnv = map[string]string{
 //
 // The editor keeps its own jobs table (ADR-0018), so the vukem queue is not
 // enabled here: WithJobsFunc is deliberately absent.
-func New(opts ...vukem.Option) (*vukem.App, error) {
+func New(opts ...vukem.Option) (*vukem.App, error) { return NewWith(nil, opts...) }
+
+// NewWith is New with the HTTP API of SDD-003 section 6 installed over the
+// given dependencies; nil installs none (the commands that never serve).
+func NewWith(api *httpapi.Deps, opts ...vukem.Option) (*vukem.App, error) {
 	base := []vukem.Option{
 		vukem.WithName("Vukem Video"),
 		vukem.WithEnvDefaults(defaultEnv),
@@ -30,6 +35,11 @@ func New(opts ...vukem.Option) (*vukem.App, error) {
 		vukem.WithMigrations(migrations.All()),
 		vukem.WithSeeders(seeders.All()...),
 		vukem.WithListeners(listeners.All()...),
+	}
+
+	if api != nil {
+		// First, so that the guard of the API is the outermost layer.
+		base = append(base, vukem.WithOpenAPI(httpapi.Info()), vukem.WithRoutes(httpapi.Routes(api)))
 	}
 
 	for _, fn := range routes.All() {

@@ -1,0 +1,241 @@
+// Package httpapi is the HTTP adapter of service.Service (ADR-0017): one typed
+// handler per Prototype operation of SDD-000 section 1, the error envelope, the
+// local-mode trust checks of SDD-007 section 3 and the OpenAPI document. A
+// handler parses its input, calls one Service method and formats the result;
+// it holds no rule about timelines (ADR-0008).
+package httpapi
+
+import (
+	"net/http"
+
+	"github.com/AlexGalhardo/vukem-video/service"
+)
+
+// BasePath is where the API lives (SDD-003 section 6.1).
+const BasePath = "/api/v1"
+
+// Endpoint is one row of the route and scope table (SDD-003 section 6.3, SDD-007
+// section 5.2). The table is data: a route that has no row is not registered,
+// and a test fails for a router route or a Service method without one.
+type Endpoint struct {
+	ID      string // the operation id and the route name
+	Method  string
+	Path    string // under BasePath, except Root
+	Root    bool   // Path is relative to the origin, not to BasePath
+	Scope   string // "" for the routes that carry no scope (handshake, launch)
+	Service string // the Service method that answers it, "" when it is not a service operation
+	Status  int
+	Summary string
+	// Pending marks an operation of the Prototype whose Service method arrives
+	// with a later task; its handler answers E_INTERNAL until then.
+	Pending string
+}
+
+// FullPath is the path a client requests.
+func (e Endpoint) FullPath() string {
+	if e.Root {
+		return e.Path
+	}
+
+	return BasePath + e.Path
+}
+
+// Endpoints is every route of the Prototype (SDD-000 section 1, phase P),
+// plus the trash and restore routes whose Service methods already exist.
+var Endpoints = []Endpoint{
+	{
+		ID:      "projects.list",
+		Method:  http.MethodGet,
+		Path:    "/projects",
+		Scope:   service.ScopeRead,
+		Service: "ProjectList",
+		Status:  200,
+		Summary: "List projects",
+	},
+	{
+		ID:      "projects.create",
+		Method:  http.MethodPost,
+		Path:    "/projects",
+		Scope:   service.ScopeEdit,
+		Service: "ProjectCreate",
+		Status:  201,
+		Summary: "Create a project",
+	},
+	{
+		ID:      "projects.get",
+		Method:  http.MethodGet,
+		Path:    "/projects/{id}",
+		Scope:   service.ScopeRead,
+		Service: "ProjectGet",
+		Status:  200,
+		Summary: "Read a project",
+	},
+	{
+		ID: "projects.trash", Method: http.MethodPost, Path: "/projects/{id}/trash", Scope: service.ScopeEdit,
+		Service: "ProjectTrash", Status: 200, Summary: "Move a project to the trash",
+	},
+	{
+		ID: "projects.restore", Method: http.MethodPost, Path: "/projects/{id}/restore", Scope: service.ScopeEdit,
+		Service: "ProjectRestore", Status: 200, Summary: "Restore a project from the trash",
+	},
+	{
+		ID: "projects.edit", Method: http.MethodPost, Path: "/projects/{id}/edit", Scope: service.ScopeEdit,
+		Service: "Edit", Status: 200, Summary: "Apply a batch of operations",
+	},
+	{
+		ID:      "commands.list",
+		Method:  http.MethodGet,
+		Path:    "/commands",
+		Scope:   service.ScopeRead,
+		Service: "CommandHelp",
+		Status:  200,
+		Summary: "List the commands",
+	},
+	{
+		ID: "commands.get", Method: http.MethodGet, Path: "/commands/{name}", Scope: service.ScopeRead,
+		Service: "CommandHelp", Status: 200, Summary: "Explain one command",
+	},
+	{
+		ID: "projects.history", Method: http.MethodGet, Path: "/projects/{id}/history", Scope: service.ScopeRead,
+		Service: "HistoryList", Status: 200, Summary: "List the history of a project",
+	},
+	{
+		ID: "projects.undo", Method: http.MethodPost, Path: "/projects/{id}/undo", Scope: service.ScopeEdit,
+		Service: "Undo", Status: 200, Summary: "Undo the caller's latest step",
+	},
+	{
+		ID: "projects.redo", Method: http.MethodPost, Path: "/projects/{id}/redo", Scope: service.ScopeEdit,
+		Service: "Redo", Status: 200, Summary: "Redo the caller's latest undone step",
+	},
+	{
+		ID: "projects.lint", Method: http.MethodGet, Path: "/projects/{id}/lint", Scope: service.ScopeRead,
+		Service: "Lint", Status: 200, Summary: "Lint a project",
+	},
+
+	{
+		ID: "media.import", Method: http.MethodPost, Path: "/projects/{id}/media", Scope: service.ScopeMedia,
+		Service: "MediaImport", Status: 202, Summary: "Import media files", Pending: "P1-SRV-004",
+	},
+	{
+		ID: "media.list", Method: http.MethodGet, Path: "/projects/{id}/media", Scope: service.ScopeRead,
+		Service: "MediaList", Status: 200, Summary: "List the assets of a project", Pending: "P1-SRV-004",
+	},
+	{
+		ID: "media.inspect", Method: http.MethodGet, Path: "/projects/{id}/media/{asset_id}", Scope: service.ScopeRead,
+		Service: "MediaInspect", Status: 200, Summary: "Inspect an asset", Pending: "P1-SRV-004",
+	},
+	{
+		ID: "jobs.start", Method: http.MethodPost, Path: "/projects/{id}/jobs", Scope: service.ScopeRender,
+		Service: "JobStart", Status: 202, Summary: "Start a job", Pending: "P1-SRV-004",
+	},
+	{
+		ID: "jobs.list", Method: http.MethodGet, Path: "/projects/{id}/jobs", Scope: service.ScopeRead,
+		Service: "JobList", Status: 200, Summary: "List the jobs of a project", Pending: "P1-SRV-004",
+	},
+	{
+		ID: "jobs.get", Method: http.MethodGet, Path: "/jobs/{job_id}", Scope: service.ScopeRead,
+		Service: "JobGet", Status: 200, Summary: "Read a job", Pending: "P1-SRV-004",
+	},
+	{
+		ID: "projects.frame", Method: http.MethodGet, Path: "/projects/{id}/frame", Scope: service.ScopeRead,
+		Service: "ViewFrame", Status: 200, Summary: "Render one frame", Pending: "P1-RND-005",
+	},
+	{
+		ID: "projects.sheet", Method: http.MethodGet, Path: "/projects/{id}/sheet", Scope: service.ScopeRead,
+		Service: "ViewSheet", Status: 200, Summary: "Render a contact sheet", Pending: "P1-RND-005",
+	},
+	{
+		ID: "projects.plan", Method: http.MethodGet, Path: "/projects/{id}/plan", Scope: service.ScopeRead,
+		Service: "PlanWindow", Status: 200, Summary: "Read the render plan of a window", Pending: "P1-RND-005",
+	},
+	{
+		ID: "events.stream", Method: http.MethodGet, Path: "/projects/{id}/events", Scope: service.ScopeRead,
+		Status: 200, Summary: "Stream the events of a project", Pending: "P1-SRV-006",
+	},
+
+	{
+		ID: "jobs.file", Method: http.MethodGet, Path: "/jobs/{job_id}/file", Scope: service.ScopeRead,
+		Status: 200, Summary: "Download the file of a finished export",
+	},
+	{
+		ID:      "media.proxy",
+		Method:  http.MethodGet,
+		Path:    "/projects/{id}/media/{asset_id}/proxy",
+		Scope:   service.ScopeRead,
+		Status:  200,
+		Summary: "Download the proxy of an asset",
+		Pending: "P1-SRV-004",
+	},
+	{
+		ID: "media.thumbnail", Method: http.MethodGet, Path: "/projects/{id}/media/{asset_id}/thumbnail",
+		Scope: service.ScopeRead, Status: 200, Summary: "Download a thumbnail of an asset", Pending: "P1-SRV-004",
+	},
+	{
+		ID:      "media.strip",
+		Method:  http.MethodGet,
+		Path:    "/projects/{id}/media/{asset_id}/strip",
+		Scope:   service.ScopeRead,
+		Status:  200,
+		Summary: "Download the tile strip of an asset",
+		Pending: "P1-SRV-004",
+	},
+	{
+		ID:      "media.peaks",
+		Method:  http.MethodGet,
+		Path:    "/projects/{id}/media/{asset_id}/peaks",
+		Scope:   service.ScopeRead,
+		Status:  200,
+		Summary: "Download the audio peaks of an asset",
+		Pending: "P1-SRV-004",
+	},
+	{
+		ID: "bitmaps.get", Method: http.MethodGet, Path: "/projects/{id}/bitmaps/{key}", Scope: service.ScopeRead,
+		Status: 200, Summary: "Download a rasterized text or shape", Pending: "P1-RND-005",
+	},
+
+	{
+		ID: "handshake.get", Method: http.MethodGet, Path: "/handshake", Status: 200,
+		Summary: "Prove that the server knows the local token",
+	},
+	{
+		ID: "system.launch", Method: http.MethodPost, Path: "/system/launch", Scope: service.ScopeAdmin, Status: 200,
+		Summary: "Issue a one-time browser launch code",
+	},
+
+	{
+		ID:      "openapi.get",
+		Method:  http.MethodGet,
+		Path:    "/openapi.json",
+		Root:    true,
+		Scope:   service.ScopeRead,
+		Status:  200,
+		Summary: "The OpenAPI document",
+	},
+	{
+		ID: "docs.get", Method: http.MethodGet, Path: "/api/docs", Root: true, Scope: service.ScopeRead, Status: 200,
+		Summary: "The API reference page",
+	},
+	{
+		ID: "docs.scalar", Method: http.MethodGet, Path: "/api/docs/scalar.js", Root: true, Scope: service.ScopeRead,
+		Status: 200, Summary: "The API reference page script",
+	},
+	{
+		ID: "docs.page", Method: http.MethodGet, Path: "/api/docs/page.js", Root: true, Scope: service.ScopeRead,
+		Status: 200, Summary: "The API reference page shim",
+	},
+	{
+		ID: "auth.launch", Method: http.MethodGet, Path: "/auth/launch", Root: true, Status: 303,
+		Summary: "Exchange a launch code for a browser session",
+	},
+}
+
+// Endpoint returns the row of an operation id.
+func endpointOf(id string) Endpoint {
+	for i := range Endpoints {
+		if Endpoints[i].ID == id {
+			return Endpoints[i]
+		}
+	}
+
+	panic("httpapi: no endpoint " + id)
+}
