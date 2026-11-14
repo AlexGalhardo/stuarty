@@ -1,0 +1,400 @@
+package export
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"image"
+	"image/draw"
+	"image/png"
+	"io"
+	"math"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+
+	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/compositor"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+)
+
+// layerInfo is what the pre-pass learns about a media layer over its whole item: whether its drawn
+// size and rotation never change, which lets the decoder deliver frames already scaled to it
+// (SDD-004 section 6, pre-scaling, and section 12 rule 1).
+type layerInfo struct {
+	w, h, rot float64
+	constant  bool
+}
+
+// scanLayers plans every frame once and records, for each media item, whether its size and rotation are
+// constant. The plans are not kept: they are cheap to make again and a long project has many frames.
+func (s *state) scanLayers() map[string]*layerInfo {
+	infos := map[string]*layerInfo{}
+	for t := range s.frames {
+		fp := plan.FrameWith(s.job.Doc, t, s.opts)
+		for i := range fp.Layers {
+			l := &fp.Layers[i]
+			if l.Kind != plan.Media {
+				continue
+			}
+			in, ok := infos[l.ItemID]
+			if !ok {
+				infos[l.ItemID] = &layerInfo{w: l.W, h: l.H, rot: l.Rotation, constant: l.Rotation == 0}
+				continue
+			}
+			if l.W != in.w || l.H != in.h || l.Rotation != in.rot {
+				in.constant = false
+			}
+		}
+	}
+	return infos
+}
+
+// frameSource gives the compositor the pixels of media layers: decoded video frames, read in order
+// from one FFmpeg process per active clip, and decoded images.
+type frameSource struct {
+	s     *state
+	infos map[string]*layerInfo
+
+	vids   map[string]*videoDecoder
+	used   map[string]bool
+	images map[string]compositor.Image // decoded PNG by asset id
+	placed map[string]compositor.Image // an image cropped and scaled for its item
+}
+
+func newFrameSource(s *state, infos map[string]*layerInfo) *frameSource {
+	return &frameSource{
+		s: s, infos: infos,
+		vids: map[string]*videoDecoder{}, used: map[string]bool{},
+		images: map[string]compositor.Image{}, placed: map[string]compositor.Image{},
+	}
+}
+
+// media is the compositor.MediaSource.
+func (f *frameSource) media(l *plan.Layer) (compositor.Image, error) {
+	a, ok := f.s.job.Doc.Assets[l.AssetID]
+	if !ok {
+		return compositor.Image{}, fmt.Errorf("the asset %s is not in the document", l.AssetID)
+	}
+	if a.Kind == timeline.AssetImage {
+		return f.image(l, &a)
+	}
+	return f.video(l, &a)
+}
+
+// cropRect is the crop of the layer in whole source pixels, inside the asset.
+func cropRect(l *plan.Layer, a *timeline.Asset) (x, y, w, h int) {
+	x, y = max(round(l.Crop.X), 0), max(round(l.Crop.Y), 0)
+	x, y = min(x, max(a.Width-1, 0)), min(y, max(a.Height-1, 0))
+	w, h = max(round(l.Crop.W), 1), max(round(l.Crop.H), 1)
+	return x, y, min(w, a.Width-x), min(h, a.Height-y)
+}
+
+func round(v float64) int { return int(math.Floor(v + 0.5)) }
+
+// target is the size the decoder or the image scaler delivers: the drawn size when the layer is constant
+// and not rotated (the compositor then copies), otherwise the cropped size of the source.
+func (f *frameSource) target(l *plan.Layer, cw, ch int) (w, h int, scaled bool) {
+	if in := f.infos[l.ItemID]; in != nil && in.constant && l.Rotation == 0 {
+		return max(round(l.W), 1), max(round(l.H), 1), true
+	}
+	return cw, ch, false
+}
+
+func (f *frameSource) image(l *plan.Layer, a *timeline.Asset) (compositor.Image, error) {
+	if img, ok := f.placed[l.ItemID]; ok {
+		return img, nil
+	}
+	src, ok := f.images[l.AssetID]
+	if !ok {
+		path, err := f.s.artifact(a, "png")
+		if err != nil {
+			return compositor.Image{}, err
+		}
+		if src, err = loadImage(path); err != nil {
+			return compositor.Image{}, fmt.Errorf("image %s: %w", l.AssetID, err)
+		}
+		f.images[l.AssetID] = src
+	}
+
+	cx, cy, cw, ch := cropRect(l, a)
+	cw, ch = min(cw, src.W-cx), min(ch, src.H-cy)
+	img := cropImage(src, cx, cy, cw, ch)
+	if w, h, scaled := f.target(l, cw, ch); scaled && (w != cw || h != ch) {
+		img = compositor.Resize(img, w, h)
+	}
+	f.placed[l.ItemID] = img
+	return img, nil
+}
+
+func cropImage(src compositor.Image, x, y, w, h int) compositor.Image {
+	if x == 0 && y == 0 && w == src.W && h == src.H {
+		return src
+	}
+	pix := make([]byte, w*h*4)
+	for row := range h {
+		copy(pix[row*w*4:(row+1)*w*4], src.Pix[((y+row)*src.W+x)*4:((y+row)*src.W+x+w)*4])
+	}
+	return compositor.Image{Pix: pix, W: w, H: h, Opaque: src.Opaque}
+}
+
+// loadImage decodes a normalized PNG into premultiplied RGBA.
+func loadImage(path string) (compositor.Image, error) {
+	fh, err := os.Open(path)
+	if err != nil {
+		return compositor.Image{}, err
+	}
+	defer func() { _ = fh.Close() }()
+	im, err := png.Decode(fh)
+	if err != nil {
+		return compositor.Image{}, err
+	}
+	b := im.Bounds()
+	rgba := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(rgba, rgba.Bounds(), im, b.Min, draw.Src)
+	opaque := true
+	for i := 3; i < len(rgba.Pix); i += 4 {
+		if rgba.Pix[i] != 255 {
+			opaque = false
+			break
+		}
+	}
+	return compositor.Image{Pix: rgba.Pix, W: b.Dx(), H: b.Dy(), Opaque: opaque}, nil
+}
+
+func (f *frameSource) video(l *plan.Layer, a *timeline.Asset) (compositor.Image, error) {
+	f.used[l.ItemID] = true
+	d := f.vids[l.ItemID]
+	if d == nil {
+		cx, cy, cw, ch := cropRect(l, a)
+		w, h, _ := f.target(l, cw, ch)
+		path, err := f.s.artifact(a, "mov")
+		if err != nil {
+			return compositor.Image{}, err
+		}
+		var vf []ffargs.Filter
+		if cx != 0 || cy != 0 || cw != a.Width || ch != a.Height {
+			vf = append(vf, ffargs.Crop(cw, ch, cx, cy))
+		}
+		vf = append(vf, ffargs.ScaleFrameToRGBA(w, h), ffargs.Format("rgba"))
+		d = &videoDecoder{s: f.s, path: path, w: w, h: h, vf: ffargs.Chain1(vf...), rate: a.FrameRate, item: l.ItemID}
+		f.vids[l.ItemID] = d
+	}
+	pix, err := d.frame(l.SourceFrame)
+	if err != nil {
+		return compositor.Image{}, err
+	}
+	return compositor.Image{Pix: pix, W: d.w, H: d.h, Opaque: true}, nil
+}
+
+// endFrame stops the decoders of the clips that were not drawn in the frame that just ended.
+func (f *frameSource) endFrame() {
+	for id, d := range f.vids {
+		if !f.used[id] {
+			d.stop()
+			delete(f.vids, id)
+		}
+	}
+	clear(f.used)
+}
+
+func (f *frameSource) close() {
+	for id, d := range f.vids {
+		d.stop()
+		delete(f.vids, id)
+	}
+}
+
+// restartGap is how many source frames a decoder reads and drops before it is cheaper to start a new
+// process at the wanted frame.
+const restartGap = 120
+
+// videoDecoder is one FFmpeg process delivering the raw RGBA frames of a normalized clip in order, from the
+// frame it was started at. A reader goroutine fills a few buffers ahead so that decoding overlaps composing.
+type videoDecoder struct {
+	s    *state
+	item string
+	path string
+	w, h int
+	vf   string
+	rate timeline.Rational
+
+	cancel context.CancelFunc
+	out    chan []byte
+	free   chan []byte
+	exited chan struct{} // closed when the process has ended and the pipe holds all it will hold
+	read   chan struct{} // closed when the reader goroutine has ended
+	dir    *ffmpeg.RunDir
+	runErr error
+	stderr string
+
+	cur    []byte
+	curIdx int
+}
+
+const decoderBuffers = 3
+
+func (d *videoDecoder) frameBytes() int { return d.w * d.h * 4 }
+
+// frame returns the pixels of source frame sf. A frame past the end of the media repeats the last one.
+func (d *videoDecoder) frame(sf int) ([]byte, error) {
+	if d.cur == nil || sf < d.curIdx || sf-d.curIdx > restartGap {
+		if err := d.start(sf); err != nil {
+			return nil, err
+		}
+	}
+	for d.curIdx < sf {
+		buf, ok := <-d.out
+		if !ok {
+			<-d.exited
+			if d.cur != nil && d.runErr == nil {
+				d.curIdx = sf
+				break
+			}
+			return nil, d.failure()
+		}
+		if d.cur != nil {
+			d.free <- d.cur
+		}
+		d.cur = buf
+		d.curIdx++
+	}
+	return d.cur, nil
+}
+
+func (d *videoDecoder) failure() error {
+	if err := d.s.ctx.Err(); err != nil {
+		return err
+	}
+	cause := d.runErr
+	if cause == nil {
+		cause = io.ErrUnexpectedEOF
+	}
+	return wrapRun(cause, ReasonDecoder, "A clip of the project could not be decoded.", d.stderr)
+}
+
+// start (re)starts the process at source frame sf.
+func (d *videoDecoder) start(sf int) error {
+	d.stop()
+	r := d.s.job.Runner
+	dir, err := d.s.childDir()
+	if err != nil {
+		return err
+	}
+	ms := int64(sf) * 1000 * int64(d.rate.Den) / int64(d.rate.Num)
+	argv, err := ffargs.Cmd{
+		Threads: r.In.ThreadLimit(), FilterThreads: r.In.ThreadLimit(),
+		Inputs: []ffargs.Input{ffargs.FileInput(d.path).At(ms)},
+		Outputs: []ffargs.Output{{
+			Format: "rawvideo", Pipe: true, Maps: []string{"0:v:0"}, NoAudio: true, VF: d.vf,
+			Opts: []ffargs.Opt{ffargs.Enum("-pix_fmt", "rgba")},
+		}},
+	}.Argv(r.Policy(dir, d.s.inputDirs...))
+	if err != nil {
+		_ = dir.Remove()
+		return exportErr(ReasonDecoder, "The decoder command was refused.", err, "")
+	}
+	pr, pw, err := os.Pipe()
+	if err != nil {
+		_ = dir.Remove()
+		return exportErr(ReasonDecoder, "A pipe for the decoder could not be made.", err, "")
+	}
+
+	ctx, cancel := context.WithCancel(d.s.ctx)
+	d.cancel, d.dir = cancel, dir
+	d.out, d.free = make(chan []byte, decoderBuffers), make(chan []byte, decoderBuffers)
+	d.exited, d.read = make(chan struct{}), make(chan struct{})
+	d.runErr, d.stderr = nil, ""
+	d.cur, d.curIdx = nil, sf-1
+	for range decoderBuffers {
+		d.free <- make([]byte, d.frameBytes())
+	}
+
+	go func() {
+		res, err := r.RunFFmpeg(ctx, ffmpeg.Request{
+			Dir: dir, Argv: argv, InputDirs: d.s.inputDirs, Deadline: d.s.deadline, Stdout: pw,
+		})
+		_ = pw.Close()
+		d.runErr, d.stderr = err, res.Stderr
+		close(d.exited)
+	}()
+	go func() {
+		defer close(d.read)
+		defer close(d.out)
+		for {
+			var buf []byte
+			select {
+			case buf = <-d.free:
+			case <-ctx.Done():
+				return
+			}
+			if _, err := io.ReadFull(pr, buf); err != nil {
+				return
+			}
+			select {
+			case d.out <- buf:
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	go func() {
+		<-d.read
+		<-d.exited
+		_ = pr.Close()
+	}()
+	return nil
+}
+
+// stop ends the process tree and waits until nothing of the decoder is left.
+func (d *videoDecoder) stop() {
+	if d.cancel == nil {
+		return
+	}
+	d.cancel()
+	<-d.exited
+	<-d.read
+	_ = d.dir.Remove()
+	d.cancel, d.dir, d.cur = nil, nil, nil
+}
+
+// childDirs hands out the run directories of the child processes of one export.
+type childDirs struct {
+	mu sync.Mutex
+	n  int
+}
+
+// childDir makes the run directory of one child: every child has its own (SDD-007 6.4).
+func (s *state) childDir() (*ffmpeg.RunDir, error) {
+	s.children.mu.Lock()
+	s.children.n++
+	n := s.children.n
+	s.children.mu.Unlock()
+	d, err := s.job.Runner.NewRunDir(fmt.Sprintf("%s-c%d", s.job.JobID, n))
+	if err != nil {
+		return nil, wrapRun(err, ReasonRender, "A work folder for the export could not be made.", "")
+	}
+	return d, nil
+}
+
+// artifact is the path of the normalized artifact of an asset with the given extension.
+func (s *state) artifact(a *timeline.Asset, ext string) (string, error) {
+	hash := strings.TrimPrefix(a.Hash, "sha256:")
+	if !strings.HasPrefix(a.Hash, "sha256:") || len(hash) != 64 {
+		return "", fmt.Errorf("the asset %s has no content hash", a.ID)
+	}
+	p := filepath.Join(s.job.ArtifactsDir, hash, ingest.ArtifactName("normalized", ingest.ProfileNormalized, "", ext))
+	if _, err := os.Stat(p); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "", exportErr(
+				ReasonRender, "The prepared media of "+a.Name+" is missing; it must be prepared again.", err, "",
+			)
+		}
+		return "", err
+	}
+	return p, nil
+}
