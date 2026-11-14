@@ -12,6 +12,7 @@
 			"e2e/**",
 			"site/**",
 			"!resources/js/components/ui",
+			"!resources/js/generated",
 			"!site/.next",
 			"!site/node_modules",
 			"!site/package-lock.json"

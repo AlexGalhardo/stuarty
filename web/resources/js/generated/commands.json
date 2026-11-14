@@ -1,0 +1,865 @@
+[
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"asset": {
+					"additionalProperties": false,
+					"description": "An Asset object of SDD-001 section 3.2.",
+					"properties": {
+						"frame_count": {
+							"minimum": 1,
+							"type": "integer"
+						},
+						"frame_rate": {
+							"additionalProperties": false,
+							"properties": {
+								"den": {
+									"minimum": 1,
+									"type": "integer"
+								},
+								"num": {
+									"minimum": 1,
+									"type": "integer"
+								}
+							},
+							"required": [
+								"num",
+								"den"
+							],
+							"type": "object"
+						},
+						"has_audio": {
+							"type": "boolean"
+						},
+						"hash": {
+							"type": "string"
+						},
+						"height": {
+							"minimum": 1,
+							"type": "integer"
+						},
+						"id": {
+							"type": "string"
+						},
+						"kind": {
+							"enum": [
+								"video",
+								"audio",
+								"image"
+							],
+							"type": "string"
+						},
+						"name": {
+							"type": "string"
+						},
+						"sample_count": {
+							"minimum": 1,
+							"type": "integer"
+						},
+						"width": {
+							"minimum": 1,
+							"type": "integer"
+						}
+					},
+					"required": [
+						"id",
+						"hash",
+						"kind",
+						"name"
+					],
+					"type": "object"
+				}
+			},
+			"required": [
+				"asset"
+			],
+			"type": "object"
+		},
+		"description": "Adds the asset with the facts measured on the normalized media. An asset whose hash is already in the project is not added again: its identifier is returned in effective.asset_id. Only the import flow issues it.",
+		"errors": [
+			"E_VALIDATION",
+			"E_ID_EXISTS",
+			"E_LIMIT"
+		],
+		"example": {
+			"asset": {
+				"frame_count": 900,
+				"frame_rate": {
+					"den": 1,
+					"num": 30
+				},
+				"has_audio": true,
+				"hash": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+				"height": 1920,
+				"id": "ast_3c5v8n2w6d",
+				"kind": "video",
+				"name": "IMG_0421.MOV",
+				"sample_count": 1440000,
+				"width": 1080
+			}
+		},
+		"internal": true,
+		"name": "asset.add",
+		"phase": "prototype",
+		"scope": "media",
+		"summary": "Adds an asset that the import flow has already ingested."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"duration": {
+					"description": "A length; with text only.",
+					"type": "string"
+				},
+				"id": {
+					"type": "string"
+				},
+				"linked_item": {
+					"description": "The clip whose speech this transcribes; it need not exist.",
+					"type": "string"
+				},
+				"start": {
+					"description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+					"type": "string"
+				},
+				"text": {
+					"description": "Text to split on whitespace; needs duration.",
+					"type": "string"
+				},
+				"track_id": {
+					"description": "A visual track.",
+					"type": "string"
+				},
+				"words": {
+					"description": "Words with times relative to the caption, as lengths.",
+					"items": {
+						"additionalProperties": false,
+						"properties": {
+							"duration": {
+								"description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+								"type": "string"
+							},
+							"start": {
+								"description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+								"type": "string"
+							},
+							"text": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"text",
+							"start",
+							"duration"
+						],
+						"type": "object"
+					},
+					"type": "array"
+				},
+				"x": {
+					"type": "number"
+				},
+				"y": {
+					"type": "number"
+				}
+			},
+			"required": [
+				"track_id",
+				"start"
+			],
+			"type": "object"
+		},
+		"description": "Adds a caption. Give either words (times relative to the caption, as lengths) or text with a duration: the text is split on whitespace and the words share the duration in proportion to their character counts. x and y are used when the caption style position of the track is custom.",
+		"errors": [
+			"E_VALIDATION",
+			"E_INVALID_TIME",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_INVALID_STATE",
+			"E_ID_EXISTS",
+			"E_LIMIT",
+			"E_OVERLAP"
+		],
+		"example": {
+			"duration": "48f",
+			"id": "itm_s6t7v8w9x0",
+			"linked_item": "itm_m1n2p3q4r5",
+			"start": "12f",
+			"text": "Meet the new editor.",
+			"track_id": "trk_a1b2c3d4e5"
+		},
+		"internal": false,
+		"name": "caption.add",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Adds a caption item with timed words."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"asset_id": {
+					"description": "A video or image asset, or ast_placeholder in a template.",
+					"type": "string"
+				},
+				"duration": {
+					"description": "A length; default the rest of the asset, or 5s for an image.",
+					"type": "string"
+				},
+				"fit": {
+					"enum": [
+						"cover",
+						"contain",
+						"none"
+					],
+					"type": "string"
+				},
+				"id": {
+					"type": "string"
+				},
+				"source_in": {
+					"description": "Offset into the asset; default 0s; omit for an image.",
+					"type": "string"
+				},
+				"start": {
+					"description": "Absolute position.",
+					"type": "string"
+				},
+				"track_id": {
+					"description": "A visual track.",
+					"type": "string"
+				}
+			},
+			"required": [
+				"track_id",
+				"asset_id",
+				"start"
+			],
+			"type": "object"
+		},
+		"description": "Adds a clip. The default duration is the rest of the asset from source_in, or 5 seconds for an image. The reserved asset ast_placeholder creates a template slot holder and needs an explicit duration.",
+		"errors": [
+			"E_VALIDATION",
+			"E_INVALID_TIME",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_ID_EXISTS",
+			"E_LIMIT",
+			"E_OUT_OF_SOURCE",
+			"E_OVERLAP"
+		],
+		"example": {
+			"asset_id": "ast_3c5v8n2w6d",
+			"duration": "5s",
+			"id": "itm_m1n2p3q4r5",
+			"source_in": "2s",
+			"start": "0s",
+			"track_id": "trk_f6g7h8j9k0"
+		},
+		"internal": false,
+		"name": "clip.add",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Places a video or image asset on a visual track."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"item_ids": {
+					"items": {
+						"type": "string"
+					},
+					"maxItems": 200,
+					"minItems": 1,
+					"type": "array"
+				},
+				"ripple": {
+					"description": "none (default), track or all.",
+					"enum": [
+						"none",
+						"track",
+						"all"
+					],
+					"type": "string"
+				}
+			},
+			"required": [
+				"item_ids"
+			],
+			"type": "object"
+		},
+		"description": "Removes the items. With ripple track, every later item on each affected track moves earlier by the length freed on that track; with ripple all, every later item on every track moves by the length freed, which requires the deleted items to cover one contiguous range.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_INVALID_STATE",
+			"E_OVERLAP"
+		],
+		"example": {
+			"item_ids": [
+				"itm_a1b2c3d4e5"
+			],
+			"ripple": "track"
+		},
+		"internal": false,
+		"name": "item.delete",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Removes items, and optionally closes the freed space."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"item_id": {
+					"type": "string"
+				},
+				"start": {
+					"description": "The new absolute position of the first frame.",
+					"type": "string"
+				},
+				"track_id": {
+					"description": "A track that accepts the item type.",
+					"type": "string"
+				}
+			},
+			"required": [
+				"item_id"
+			],
+			"type": "object"
+		},
+		"description": "Sets the start of the item, its track, or both; at least one is required. Keyframes, words, transitions and fades are relative to the item and travel with it.",
+		"errors": [
+			"E_VALIDATION",
+			"E_INVALID_TIME",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_OVERLAP"
+		],
+		"example": {
+			"item_id": "itm_m1n2p3q4r5",
+			"start": "5s"
+		},
+		"internal": false,
+		"name": "item.move",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Moves an item in time, to another track of the same kind, or both."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"at": {
+					"description": "Absolute position strictly inside the item.",
+					"type": "string"
+				},
+				"item_id": {
+					"type": "string"
+				},
+				"new_id": {
+					"description": "The id of the right part.",
+					"type": "string"
+				}
+			},
+			"required": [
+				"item_id",
+				"at"
+			],
+			"type": "object"
+		},
+		"description": "The original item keeps its id and becomes the left part; a new item is the right part. Transitions, fades, keyframes and caption words are divided so that the motion is unchanged.",
+		"errors": [
+			"E_VALIDATION",
+			"E_INVALID_TIME",
+			"E_NOT_FOUND",
+			"E_INVALID_STATE",
+			"E_ID_EXISTS",
+			"E_LIMIT"
+		],
+		"example": {
+			"at": "97f",
+			"item_id": "itm_m1n2p3q4r5",
+			"new_id": "itm_s6t7v8w9x0"
+		},
+		"internal": false,
+		"name": "item.split",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Splits an item into two at a timeline frame."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"edge": {
+					"enum": [
+						"start",
+						"end"
+					],
+					"type": "string"
+				},
+				"item_id": {
+					"type": "string"
+				},
+				"to": {
+					"description": "Absolute position of the edge; the end is exclusive.",
+					"type": "string"
+				}
+			},
+			"required": [
+				"item_id",
+				"edge",
+				"to"
+			],
+			"type": "object"
+		},
+		"description": "Moves an edge to an absolute position and keeps the source range, the keyframes and the caption words consistent. The end edge is exclusive: it is the first frame after the item.",
+		"errors": [
+			"E_VALIDATION",
+			"E_INVALID_TIME",
+			"E_NOT_FOUND",
+			"E_INVALID_STATE",
+			"E_OUT_OF_SOURCE",
+			"E_OVERLAP"
+		],
+		"example": {
+			"edge": "start",
+			"item_id": "itm_m1n2p3q4r5",
+			"to": "97f"
+		},
+		"internal": false,
+		"name": "item.trim",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Moves the start edge or the end edge of an item to a timeline position."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"name": {
+					"description": "The new name, 1 to 120 characters.",
+					"maxLength": 120,
+					"minLength": 1,
+					"type": "string"
+				}
+			},
+			"required": [
+				"name"
+			],
+			"type": "object"
+		},
+		"description": "Sets the name of the project. The name is stored exactly as given, without trimming.",
+		"errors": [
+			"E_VALIDATION"
+		],
+		"example": {
+			"name": "Launch teaser v2"
+		},
+		"internal": false,
+		"name": "project.rename",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Sets the project name."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"background": {
+					"description": "A hex colour, or $name from template.colors.",
+					"type": "string"
+				},
+				"height": {
+					"description": "Frame height in pixels; even.",
+					"maximum": 4096,
+					"minimum": 16,
+					"type": "integer"
+				},
+				"loudness_target": {
+					"description": "Integrated loudness target in LUFS.",
+					"maximum": -5,
+					"minimum": -30,
+					"type": "number"
+				},
+				"width": {
+					"description": "Frame width in pixels; even.",
+					"maximum": 4096,
+					"minimum": 16,
+					"type": "integer"
+				}
+			},
+			"required": [],
+			"type": "object"
+		},
+		"description": "Sets the given settings. When the size changes, the explicit x and y of every visual item, and the values of its x and y keyframes, are scaled by the ratio of new to old size on each axis; scale and text size are untouched and items at the default position stay centred.",
+		"errors": [
+			"E_VALIDATION"
+		],
+		"example": {
+			"height": 1280,
+			"width": 720
+		},
+		"internal": false,
+		"name": "settings.set",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Sets the frame size, the background colour or the loudness target."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"duration": {
+					"description": "A length of at least 1 frame.",
+					"type": "string"
+				},
+				"id": {
+					"type": "string"
+				},
+				"start": {
+					"description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+					"type": "string"
+				},
+				"style": {
+					"additionalProperties": {},
+					"description": "A partial TextStyle.",
+					"type": "object"
+				},
+				"text": {
+					"description": "The text; line breaks are allowed.",
+					"maxLength": 2000,
+					"minLength": 1,
+					"type": "string"
+				},
+				"track_id": {
+					"description": "A visual track.",
+					"type": "string"
+				},
+				"x": {
+					"type": "number"
+				},
+				"y": {
+					"type": "number"
+				}
+			},
+			"required": [
+				"track_id",
+				"start",
+				"duration",
+				"text"
+			],
+			"type": "object"
+		},
+		"description": "Adds a text item. The style is stored exactly as given, including keys equal to the default. x and y are the centre of the item in pixels; without them the item is centred.",
+		"errors": [
+			"E_VALIDATION",
+			"E_INVALID_TIME",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_ID_EXISTS",
+			"E_LIMIT",
+			"E_FONT_UNKNOWN",
+			"E_OVERLAP"
+		],
+		"example": {
+			"duration": "2s",
+			"id": "itm_s6t7v8w9x0",
+			"start": "0s",
+			"style": {
+				"size": 96
+			},
+			"text": "Hello",
+			"track_id": "trk_f6g7h8j9k0"
+		},
+		"internal": false,
+		"name": "text.add",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Adds a text item to a visual track."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"item_id": {
+					"description": "A text item.",
+					"type": "string"
+				},
+				"reset_style": {
+					"description": "Empty the stored style before applying style.",
+					"type": "boolean"
+				},
+				"style": {
+					"additionalProperties": {},
+					"description": "A partial TextStyle, merged; null removes a key.",
+					"type": "object"
+				},
+				"text": {
+					"maxLength": 2000,
+					"minLength": 1,
+					"type": "string"
+				}
+			},
+			"required": [
+				"item_id"
+			],
+			"type": "object"
+		},
+		"description": "Replaces the text, merges a partial style into the stored one (null removes a key), or empties the style first with reset_style. At least one of text, style and reset_style is required.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_FONT_UNKNOWN"
+		],
+		"example": {
+			"item_id": "itm_s6t7v8w9x0",
+			"style": {
+				"color": "#FFE600"
+			},
+			"text": "Hello world"
+		},
+		"internal": false,
+		"name": "text.set",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Changes the content or the style of a text item."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"above": {
+					"description": "Place the track directly over this track.",
+					"type": "string"
+				},
+				"below": {
+					"description": "Place the track directly under this track.",
+					"type": "string"
+				},
+				"id": {
+					"type": "string"
+				},
+				"kind": {
+					"enum": [
+						"visual",
+						"audio"
+					],
+					"type": "string"
+				},
+				"name": {
+					"maxLength": 60,
+					"type": "string"
+				},
+				"position": {
+					"description": "top (default) or bottom.",
+					"enum": [
+						"top",
+						"bottom"
+					],
+					"type": "string"
+				}
+			},
+			"required": [
+				"kind"
+			],
+			"type": "object"
+		},
+		"description": "Adds a visual or audio track. It goes on top by default; position bottom, above or below another track places it elsewhere. The first track in the order is the top layer.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_ID_EXISTS",
+			"E_LIMIT"
+		],
+		"example": {
+			"id": "trk_a1b2c3d4e5",
+			"kind": "visual",
+			"name": "Captions"
+		},
+		"internal": false,
+		"name": "track.add",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Adds an empty track at a place in the track order."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"above": {
+					"type": "string"
+				},
+				"below": {
+					"type": "string"
+				},
+				"position": {
+					"enum": [
+						"top",
+						"bottom"
+					],
+					"type": "string"
+				},
+				"track_id": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"track_id"
+			],
+			"type": "object"
+		},
+		"description": "Moves a track to the top or the bottom, or directly above or below another track. Items are untouched.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_INVALID_STATE"
+		],
+		"example": {
+			"below": "trk_a1b2c3d4e5",
+			"track_id": "trk_m1n2p3q4r5"
+		},
+		"internal": false,
+		"name": "track.move",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Changes the place of a track in the track order."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"track_id": {
+					"type": "string"
+				},
+				"with_items": {
+					"description": "Remove the items of the track too.",
+					"type": "boolean"
+				}
+			},
+			"required": [
+				"track_id"
+			],
+			"type": "object"
+		},
+		"description": "Removes the track. A track with items is refused with E_NOT_EMPTY unless with_items is true, in which case its items are removed too.",
+		"errors": [
+			"E_NOT_FOUND",
+			"E_NOT_EMPTY"
+		],
+		"example": {
+			"track_id": "trk_f6g7h8j9k0",
+			"with_items": true
+		},
+		"internal": false,
+		"name": "track.remove",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Removes a track, and its items when with_items is true."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"replace": {
+					"description": "Replace the whole style instead of merging.",
+					"type": "boolean"
+				},
+				"style": {
+					"additionalProperties": {},
+					"description": "A partial CaptionStyle; null removes a key when merging.",
+					"type": "object"
+				},
+				"track_id": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"track_id",
+				"style"
+			],
+			"type": "object"
+		},
+		"description": "Sets the caption style of a visual track. The style is stored exactly as given, including keys equal to the default. A null value removes a key when merging. In this build highlight accepts only \"none\".",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_FONT_UNKNOWN"
+		],
+		"example": {
+			"style": {
+				"position": "middle",
+				"size": 72
+			},
+			"track_id": "trk_a1b2c3d4e5"
+		},
+		"internal": false,
+		"name": "track.set_caption_style",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Merges a partial caption style into a track, or replaces it."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"hidden": {
+					"description": "Visual tracks only.",
+					"type": "boolean"
+				},
+				"muted": {
+					"type": "boolean"
+				},
+				"name": {
+					"description": "The track name; \"\" clears it.",
+					"maxLength": 60,
+					"type": "string"
+				},
+				"track_id": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"track_id"
+			],
+			"type": "object"
+		},
+		"description": "Sets the given fields. hidden applies to visual tracks, muted to both kinds.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH"
+		],
+		"example": {
+			"hidden": true,
+			"track_id": "trk_f6g7h8j9k0"
+		},
+		"internal": false,
+		"name": "track.update",
+		"phase": "prototype",
+		"scope": "edit",
+		"summary": "Sets the name, the hidden flag or the muted flag of a track."
+	}
+]

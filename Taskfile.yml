@@ -77,6 +77,11 @@ tasks:
     desc: Create or update the GitHub labels listed in .github/labels.txt (never deletes; needs gh auth)
     cmds:
       - go run ./internal/tools/labelsync .github/labels.txt
+  codegen:
+    desc: Regenerate the contracts (core/schema and web/resources/js/generated)
+    cmds:
+      - go run ./internal/tools/contractgen
+      - cd web && bun run codegen:ts
 
   test:
     desc: Run the Go tests

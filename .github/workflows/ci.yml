@@ -46,6 +46,17 @@ jobs:
         run: task lint:go
       - name: task vet
         run: task vet
+      # ADR-0014 item 2: the committed contracts are what the generators write.
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: task codegen leaves the tree unchanged
+        run: |
+          bun install --frozen-lockfile --cwd web
+          task codegen
+          git status --short
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
       - name: task tidy:check
         run: task tidy:check
       - name: go fix (modernizers)
