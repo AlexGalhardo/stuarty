@@ -401,6 +401,23 @@ func TestIdempotency(t *testing.T) {
 	if err != nil || n != 1 {
 		t.Errorf("PurgeExpired = %d, %v", n, err)
 	}
+
+	mustCreate(t, s, newProject("prj_b", 1))
+
+	for _, project := range []string{"prj_a", "prj_b"} {
+		row.ProjectID, row.ExpiresMs = project, expired
+		if err := repo.Put(ctx, row); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if n, err := repo.PurgeProjectExpired(ctx, "prj_a", expired+1); err != nil || n != 1 {
+		t.Errorf("PurgeProjectExpired = %d, %v; want only the project's row", n, err)
+	}
+
+	if n, err := repo.PurgeExpired(ctx, expired+1); err != nil || n != 1 {
+		t.Errorf("the other project's expired row was touched: PurgeExpired = %d, %v", n, err)
+	}
 }
 
 func TestAssetsAndArtifacts(t *testing.T) {

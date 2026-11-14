@@ -62,6 +62,11 @@ func (r idempotencyRepo) Put(ctx context.Context, row service.IdempotencyRow) er
 	return nil
 }
 
+func (r idempotencyRepo) PurgeProjectExpired(ctx context.Context, projectID string, nowMs int64) (int64, error) {
+	return rowsAffected(r.ex.ExecContext(ctx,
+		"DELETE FROM idempotency_keys WHERE project_id = ? AND expires_ms <= ?", projectID, nowMs))
+}
+
 func (r idempotencyRepo) PurgeExpired(ctx context.Context, nowMs int64) (int64, error) {
 	return rowsAffected(r.ex.ExecContext(ctx, "DELETE FROM idempotency_keys WHERE expires_ms <= ?", nowMs))
 }

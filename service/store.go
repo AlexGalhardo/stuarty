@@ -242,6 +242,10 @@ type IdempotencyRepo interface {
 	// Put replaces an expired row with the same key; ErrExists when a live row has it.
 	Put(ctx context.Context, row IdempotencyRow) error
 	PurgeExpired(ctx context.Context, nowMs int64) (int64, error)
+	// PurgeProjectExpired deletes the expired keys of one project: the commit
+	// does it in its own transaction (section 9.2 step 12) without touching
+	// another project's rows.
+	PurgeProjectExpired(ctx context.Context, projectID string, nowMs int64) (int64, error)
 }
 
 // Assets, project assets and artifacts
