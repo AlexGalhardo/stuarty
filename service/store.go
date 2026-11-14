@@ -1,0 +1,419 @@
+package service
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+)
+
+// Sentinel errors returned by the store (SDD-005 section 2 item 8). The
+// service maps them to the codes of SDD-000 section 8.
+var (
+	ErrNotFound = errors.New("service: not found")
+	ErrExists   = errors.New("service: already exists")
+	ErrStale    = errors.New("service: stale")
+)
+
+// QueueFullError is returned by JobRepo.CreateLimited.
+type QueueFullError struct{ Running []string } // job ids
+
+func (e *QueueFullError) Error() string { return "service: job limit reached" }
+
+// Store is the only persistence dependency of Service.
+// Reads on Repos use the reader pool and never wait for the writer.
+// A single-statement write on Repos (a job progress update) is allowed
+// outside a transaction; anything that must be atomic with another write
+// goes through Write or WriteProject.
+type Store interface {
+	Repos
+
+	// Write runs fn in one write transaction (BEGIN IMMEDIATE). fn returning
+	// an error rolls back. Hooks added with AfterCommit run after a
+	// successful commit, in order, on the calling goroutine, before Write returns.
+	Write(ctx context.Context, fn func(ctx context.Context, tx Tx) error) error
+
+	// WriteProject is Write plus: it first acquires the in-process lock of
+	// the project (waiting while ctx is live), then loads the project row
+	// inside the transaction, and holds the lock until Write has returned
+	// including the AfterCommit hooks. ErrNotFound when the project does not
+	// exist (fn is not called). A trashed project is passed to fn.
+	WriteProject(ctx context.Context, projectID string, fn func(ctx context.Context, tx ProjectTx) error) error
+
+	Close() error
+}
+
+// Repos groups the repositories. On a Tx they are bound to the transaction.
+type Repos interface {
+	Projects() ProjectRepo
+	Operations() OperationRepo
+	Idempotency() IdempotencyRepo
+	Assets() AssetRepo
+	Jobs() JobRepo
+	Templates() TemplateRepo
+	Backups() BackupRepo
+	Audit() AuditRepo
+}
+
+// Tx is a write transaction.
+type Tx interface {
+	Repos
+	AfterCommit(fn func())
+}
+
+// ProjectTx is a Tx of WriteProject.
+type ProjectTx interface {
+	Tx
+	Project() ProjectRow // as loaded when the transaction started
+}
+
+// Projects
+
+type ProjectState string
+
+const (
+	ProjectActive  ProjectState = "active"
+	ProjectTrashed ProjectState = "trashed"
+)
+
+// ProjectSummary is computed by the service from the document and written by
+// the commit, so that listing never parses a document (SDD-005 section 5.1).
+type ProjectSummary struct {
+	Width, Height         int
+	FPSNum, FPSDen        int
+	DurationFrames        int64 // end of the last item, 0 when empty
+	Tracks, Items, Assets int
+}
+
+type ProjectHead struct {
+	ID            string
+	Name          string
+	State         ProjectState
+	Revision      int64
+	SchemaVersion int
+	Summary       ProjectSummary
+	CreatedMs     int64
+	UpdatedMs     int64
+	CreatedBy     string
+	OwnerUserID   *string // network mode only (SDD-007 4.1)
+	TrashedMs     *int64
+	TrashedBy     *string
+	ResyncFloor   int64
+}
+
+type ProjectRow struct {
+	ProjectHead
+	Document  []byte // canonical JSON as stored
+	DocSHA256 string // lower-case hex of sha256(Document)
+}
+
+type ProjectQuery struct {
+	State          ProjectState // "" means active only
+	IncludeTrashed bool         // both states; wins over State
+	After          string       // opaque cursor from the previous page
+	Limit          int          // 1 to 200; 0 means 50
+}
+
+type ProjectUpdate struct {
+	Name          string
+	SchemaVersion int
+	Document      []byte
+	DocSHA256     string
+	Summary       ProjectSummary
+	UpdatedMs     int64
+	ResyncFloor   *int64 // set only by migration and import
+}
+
+type ProjectRepo interface {
+	List(ctx context.Context, q ProjectQuery) (items []ProjectHead, next string, err error)
+	Head(ctx context.Context, id string) (ProjectHead, error)
+	Get(ctx context.Context, id string) (ProjectRow, error) // with the document
+	Create(ctx context.Context, row ProjectRow) error       // ErrExists
+	// Commit writes the new document and moves revision from expected to
+	// expected+1 in one guarded UPDATE ... WHERE id=? AND revision=?.
+	// ErrStale when no row matched.
+	Commit(ctx context.Context, id string, expected int64, u ProjectUpdate) error
+	SetState(ctx context.Context, id string, st ProjectState, by string, atMs int64) error
+	// Delete is a hard delete; it cascades, and also removes the
+	// document_backups of the project. Only TrashEmpty calls it.
+	Delete(ctx context.Context, id string) error
+}
+
+// Operations
+
+type OperationKind string
+
+const (
+	OpEdit    OperationKind = "edit"
+	OpUndo    OperationKind = "undo"
+	OpRedo    OperationKind = "redo"
+	OpMigrate OperationKind = "migrate"
+	OpImport  OperationKind = "import"
+)
+
+type OperationRow struct {
+	ProjectID      string
+	Revision       int64
+	Kind           OperationKind
+	Actor          string
+	BaseRevision   int64
+	TargetRevision *int64 // undo and redo: the batch consumed
+	AtMs           int64
+	Ops            json.RawMessage // []command.Operation, ids filled in, resolved included
+	Inverse        json.RawMessage // []command.Primitive in apply order
+	Diff           json.RawMessage // []command.Change
+	Skipped        json.RawMessage // []Skipped, undo and redo only; else nil
+	SchemaVersion  int
+	DocSHA256      string
+	ClosedBy       *int64
+	IdempotencyKey *string
+}
+
+type OperationFilter struct {
+	ExcludeActor string // when set, rows of this actor are left out
+	Limit        int    // maximum rows; 0 means 1000
+	MaxBytes     int    // stop after the row that makes the total of Ops+Inverse+Diff exceed this; 0 means no limit
+}
+
+type HistoryQuery struct {
+	Before int64  // revisions below this one; 0 means from the newest
+	Actor  string // optional filter
+	Limit  int    // 1 to 200
+}
+
+type OperationRepo interface {
+	Append(ctx context.Context, row OperationRow) error // ErrExists on a duplicate revision
+	Get(ctx context.Context, projectID string, revision int64) (OperationRow, error)
+	// Since returns rows with revision > after in ascending order.
+	Since(ctx context.Context, projectID string, after int64, f OperationFilter) ([]OperationRow, error)
+	// Page returns rows in descending order and whether older rows exist.
+	Page(ctx context.Context, projectID string, q HistoryQuery) ([]OperationRow, bool, error)
+	UndoCandidate(ctx context.Context, projectID, actor string) (OperationRow, error) // ErrNotFound: nothing to undo
+	RedoCandidate(ctx context.Context, projectID, actor string) (OperationRow, error) // ErrNotFound: nothing to redo
+	// Close sets closed_by on one row (it was consumed by that revision).
+	// ErrStale when the row is missing or already closed.
+	Close(ctx context.Context, projectID string, revision, by int64) error
+	// CloseOpenRedo closes every open undo row of the actor (a new edit ends its redo chain).
+	CloseOpenRedo(ctx context.Context, projectID, actor string, by int64) error
+	// CloseAllOpen closes every open row of the project (a migration or import ends all undo chains).
+	CloseAllOpen(ctx context.Context, projectID string, by int64) error
+}
+
+// Idempotency
+
+type IdempotencyRow struct {
+	ProjectID   string
+	Actor       string
+	Key         string
+	RequestHash string // lower-case hex sha256 of the canonical JSON of the request's operations
+	Revision    int64
+	Result      json.RawMessage // the result as first returned (SDD-003 shape), without "replayed"
+	CreatedMs   int64
+	ExpiresMs   int64
+}
+
+type IdempotencyRepo interface {
+	// Get returns ErrNotFound for a missing or expired row (expires_ms <= nowMs).
+	Get(ctx context.Context, projectID, actor, key string, nowMs int64) (IdempotencyRow, error)
+	// Put replaces an expired row with the same key; ErrExists when a live row has it.
+	Put(ctx context.Context, row IdempotencyRow) error
+	PurgeExpired(ctx context.Context, nowMs int64) (int64, error)
+}
+
+// Assets, project assets and artifacts
+
+type IngestState string // "pending", "ingesting", "ready", "failed"
+
+const (
+	IngestPending   IngestState = "pending"
+	IngestIngesting IngestState = "ingesting"
+	IngestReady     IngestState = "ready"
+	IngestFailed    IngestState = "failed"
+)
+
+type AssetRow struct {
+	Hash         string // sha256:<64 hex>
+	Kind         string // video, audio, image; empty until the probe classified the file
+	SizeBytes    int64
+	OriginalName string // untrusted
+	IngestState  IngestState
+	Progress     float64
+	IngestError  json.RawMessage // typed error (SDD-002 A.8) when failed
+	Facts        AssetFacts
+	CreatedMs    int64
+	UpdatedMs    int64
+}
+
+type AssetFacts struct { // all nil until ingest is ready
+	NormalizedVersion          *int // profile version of the normalized file the facts were measured on
+	DurationMs                 *int64
+	Width, Height              *int
+	HasAudio                   bool
+	FrameRateNum, FrameRateDen *int
+	FrameCount                 *int64
+	SampleCount                *int64
+}
+
+type ProjectAssetState string // "pending", "active", "trashed"
+
+const (
+	ProjectAssetPending ProjectAssetState = "pending"
+	ProjectAssetActive  ProjectAssetState = "active"
+	ProjectAssetTrashed ProjectAssetState = "trashed"
+)
+
+type ProjectAssetRow struct {
+	ProjectID  string
+	AssetID    string // ast_...
+	AssetHash  string
+	State      ProjectAssetState
+	Name       string          // display name at import; untrusted
+	Snapshot   json.RawMessage // the SDD-001 Asset object, kept for restore; nil until known
+	ImportedBy string
+	ImportedMs int64
+	TrashedBy  *string
+	TrashedMs  *int64
+}
+
+type ArtifactRow struct {
+	AssetHash string
+	Kind      string // probe, normalized, proxy, thumbnails, peaks, silence, loudness, transcript
+	Profile   int    // profile version; part of the file name
+	Variant   string // transcripts: the 12 hex key of provider, model and language; empty otherwise
+	Ext       string // file extension without the dot
+	RelPath   string // relative to the workspace, forward slashes
+	SizeBytes int64
+	SHA256    string // of the artifact file
+	Meta      json.RawMessage
+	CreatedMs int64
+}
+
+type AssetRepo interface {
+	// Upsert inserts the row or returns the existing one; created reports which.
+	Upsert(ctx context.Context, row AssetRow) (existing AssetRow, created bool, err error)
+	Get(ctx context.Context, hash string) (AssetRow, error)
+	SetIngest(ctx context.Context, hash string, st IngestState, progress float64, errJSON json.RawMessage, nowMs int64) error
+	SetFacts(ctx context.Context, hash string, f AssetFacts, nowMs int64) error
+	// PutArtifact replaces the same (hash, kind, profile, variant, ext).
+	PutArtifact(ctx context.Context, a ArtifactRow) error
+	Artifacts(ctx context.Context, hash string) ([]ArtifactRow, error)
+
+	// PutProjectAsset inserts or replaces the same (project, asset id);
+	// ErrExists when the project already maps the hash to another asset id.
+	PutProjectAsset(ctx context.Context, r ProjectAssetRow) error
+	GetProjectAsset(ctx context.Context, projectID, assetID string) (ProjectAssetRow, error)
+	FindProjectAssetByHash(ctx context.Context, projectID, hash string) (ProjectAssetRow, error)
+	ListProjectAssets(ctx context.Context, projectID string, states ...ProjectAssetState) ([]ProjectAssetRow, error)
+	SetProjectAssetState(ctx context.Context, projectID, assetID string, st ProjectAssetState, by string, atMs int64, snapshot json.RawMessage) error
+	ProjectsReferencing(ctx context.Context, hash string) ([]string, error) // project ids, any state
+	PendingForHash(ctx context.Context, hash string) ([]ProjectAssetRow, error)
+
+	// For TrashEmpty.
+	DeleteTrashedProjectAssets(ctx context.Context, projectID string) (int64, error)
+	Unreferenced(ctx context.Context) ([]AssetRow, error) // assets with no project_assets row
+	Delete(ctx context.Context, hash string) error        // cascades artifacts
+}
+
+// Jobs, templates, backups
+
+type JobRow struct {
+	ID              string
+	Kind            string  // ingest, transcribe, export, frame
+	ProjectID       *string // nil for ingest
+	AssetHash       *string // ingest and transcribe
+	Actor           string
+	State           string // queued, running, succeeded, failed, cancelled
+	Progress        float64
+	Message         string
+	Input           json.RawMessage
+	Result          json.RawMessage
+	Error           json.RawMessage // typed error object (SDD-002 A.8)
+	CancelRequested bool
+	Attempts        int
+	CreatedMs       int64
+	UpdatedMs       int64
+	StartedMs       *int64
+	FinishedMs      *int64
+}
+
+type JobLimit struct {
+	Kind        string
+	Max         int    // concurrent queued+running jobs of this kind
+	Actor       string // when set, MaxPerActor is applied to this actor's jobs of the kind
+	MaxPerActor int
+}
+
+type JobRepo interface {
+	// CreateLimited inserts the job in state queued unless the limit is
+	// reached, in which case it returns *QueueFullError. Call it inside Write.
+	CreateLimited(ctx context.Context, row JobRow, lim *JobLimit) error
+	Get(ctx context.Context, id string) (JobRow, error)
+	List(ctx context.Context, projectID string, states []string, limit int) ([]JobRow, error)
+	ActiveIngestForHash(ctx context.Context, hash string) (JobRow, error)
+
+	Claim(ctx context.Context, id string, nowMs int64) (claimed bool, err error)
+	Progress(ctx context.Context, id string, progress float64, message string, nowMs int64) (updated bool, err error)
+	// Finish moves a running job to a terminal state; false when it was not running.
+	Finish(ctx context.Context, id, state string, result, errJSON json.RawMessage, nowMs int64) (bool, error)
+	// Requeue moves a running job back to queued (shutdown interruption or recovery).
+	Requeue(ctx context.Context, id, message string, nowMs int64) (bool, error)
+	// RequestCancel sets cancel_requested; a queued job becomes cancelled at once.
+	// It returns the row as it is afterwards.
+	RequestCancel(ctx context.Context, id string, nowMs int64) (JobRow, error)
+	// Running returns every job in state running (used by recovery at start-up).
+	Running(ctx context.Context) ([]JobRow, error)
+}
+
+type TemplateRow struct {
+	ID              string
+	Name            string
+	Description     string
+	SchemaVersion   int
+	Document        []byte
+	DocSHA256       string
+	Slots           json.RawMessage // [{name, kind, required, description}] for listing
+	Summary         ProjectSummary
+	SourceProjectID *string
+	CreatedMs       int64
+	CreatedBy       string
+}
+
+type TemplateRepo interface {
+	Create(ctx context.Context, row TemplateRow) error
+	Get(ctx context.Context, id string) (TemplateRow, error)
+	List(ctx context.Context, limit int, after string) ([]TemplateRow, string, error) // Document left empty
+	UpdateDocument(ctx context.Context, id string, schemaVersion int, doc []byte, sha string, slots json.RawMessage, sum ProjectSummary) error
+}
+
+type BackupRow struct {
+	ID            int64
+	OwnerKind     string // "project" or "template"
+	OwnerID       string
+	Revision      int64 // 0 for a template
+	SchemaVersion int
+	Document      []byte
+	Reason        string // e.g. "migrate v1 to v2", "import"
+	CreatedMs     int64
+}
+
+type BackupRepo interface {
+	Put(ctx context.Context, b BackupRow) error
+	List(ctx context.Context, ownerKind, ownerID string) ([]BackupRow, error) // Document left empty
+	Get(ctx context.Context, id int64) (BackupRow, error)
+}
+
+// Audit
+
+type AuditRow struct {
+	ID        int64
+	AtMs      int64
+	Actor     string
+	Action    string
+	ProjectID *string
+	SubjectID *string
+	Details   json.RawMessage
+}
+
+type AuditRepo interface {
+	Append(ctx context.Context, row AuditRow) error
+	List(ctx context.Context, projectID string, beforeID int64, limit int) ([]AuditRow, error) // projectID "" means all
+}
