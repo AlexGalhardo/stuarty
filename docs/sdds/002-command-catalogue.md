@@ -313,7 +313,7 @@ Part C gives, for every command of Part B: the argument table with types and def
 
 <!-- PART C IS APPENDED BELOW THIS LINE -->
 
-#### Shared rules used by the sections of Part C
+### Shared rules used by the sections of Part C
 
 Each section refers to these rules by number. They add detail to Parts A and B and do not change them.
 
@@ -343,7 +343,7 @@ Each section refers to these rules by number. They add detail to Parts A and B a
 - **R18. Resizing at the back.** When a command changes an item's duration to `D'` and keeps its `start`: if `D' < D` keyframes follow R12; fades and transitions are checked by R14; growth is checked for overlap by R8 and for the 108,000 limit by R7; for `clip` and `audio` the source range is checked by R9.
 - **R19. Diff order.** Entries are sorted by kind group (settings, assets, tracks, items) and then by identifier, as in A.5.
 
-#### Decisions of Part C
+### Decisions of Part C
 
 Part C makes choices that Parts A and B leave open or do not state. Each one is listed here so that it is visible and can be challenged in one place. The sections apply them.
 

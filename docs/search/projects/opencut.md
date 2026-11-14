@@ -212,11 +212,13 @@ FACT: project in **IndexedDB**, media in **OPFS** (`media-files-<projectId>`), w
 8. [#898 captions + karaoke data model](https://github.com/OpenCut-app/OpenCut/issues/898): a production product (FrameOS) lists 5 points where captions as "common elements" clash with split/drag/replace; it argues for captions as a core primitive.
 9. [#881 Dip web, focus on desktop](https://github.com/OpenCut-app/OpenCut/issues/881): browser limits (4 GB of WASM, WebGPU limits, codecs, large-file I/O, GC).
 10. [#719 Import/Export .json project](https://github.com/OpenCut-app/OpenCut/issues/719): no portable project format for automation.
+
 - I did not find a specific VFR issue nor a "preview ≠ export" issue (searches with no results).
 
 ## 13. Lessons for our project (agent-first)
 
 Copy:
+
 - Time as an integer in ticks + rational `FrameRate`, in a single tested module, used by every layer; no float-seconds API. Extend it to audio samples.
 - Chained, versioned, additive migrations, with fixtures and tests.
 - `SceneTracks` typed by role; animatable properties via registered paths; keyframes with `segmentToNext`.
@@ -225,6 +227,7 @@ Copy:
 - Ripple as a pure snapshot-diff function.
 
 Avoid (and how the agent-first differentiator changes the design):
+
 - Inverting OpenCut's order: **build the serializable command core first** (discriminated JSON, validated by schema, structured result/error, stable ids) and make the UI, MCP, CLI and API thin clients of it. OpenCut promised this after 11 months and had to rewrite everything.
 - Undo/redo over a log of serializable commands (command + inverse or patch), not classes with closures. The same log serves agents, replay, tests and collaboration.
 - A versioned, portable JSON project document from day 1 (#719 shows the demand); text, caption and transition with their own typed schema, not a generic `params`.

@@ -1,8 +1,9 @@
 # Research: vukem conventions (primary source)
 
 > **Status of this file.** Research notes delivered by a research agent on 2026-11-14 and reviewed by the architect. The opinions and recommendations in this file predate the author's decisions (`../../brainstorming.md`, D-001 to D-016) and the ADRs (`../../adrs/`). Where they differ, the ADRs prevail. Facts rechecked by the architect are listed in [`architect-verifications.md`](architect-verifications.md).
-
+>
 > **Corrections after the architect's review (2026-11-14).**
+>
 > 1. Module versions: the versions listed below come from the GitHub Releases page, which stopped listing module releases on 2026-10-18. The git tags are newer: `drivers/websocket` is at `v0.1.6` and `contrib/engine` at `v0.1.1` (checked with `git tag -l` in a full clone). Read every `drivers/websocket v0.1.1` below as `v0.1.6`. This gap is recorded as VF-008.
 > 2. Section 2.9 and friction F17 describe `web/` as a git repository with no commits. That was a transient state of the workspace during the research. The workspace was reorganized afterwards: the repository is `C:\dev\vukem-video\video\`, the old Studio tree is in `video\web\`, and the vukem clone is in `C:\dev\vukem-video\vukem\`. Paths written below as `C:\dev\vukem-video\web` mean `C:\dev\vukem-video\video\web`.
 > 3. The framework frictions that were confirmed are recorded as VF-001 to VF-010 in `vukem-feedback.md` at the workspace root. Frictions F1 to F18 below are the raw list; F12, F13, F14, F16, F17 and F18 were not turned into entries (not reproduced, about the Studio fork rather than vukem, or not about vukem at all).
@@ -28,7 +29,7 @@ Labels: **FACT** = verified in the source; **INFERENCE** = deduction (explicit r
 
 | Item | Finding | Label / source |
 | --- | --- | --- |
-| Scheme | SemVer 2.0.0, tag `vMAJOR.MINOR.PATCH`; pre-1.0 ("v0.x: minor may break, patch never") | FACT: `docs/tooling.md#versioning` (https://github.com/AlexGalhardo/vukem/blob/main/docs/tooling.md) |
+| Scheme | SemVer 2.0.0, tag `vMAJOR.MINOR.PATCH`; pre-1.0 ("v0.x: minor may break, patch never") | FACT: `docs/tooling.md#versioning` (<https://github.com/AlexGalhardo/vukem/blob/main/docs/tooling.md>) |
 | Current state | `v0.43.0` (2026-11-12). 92 releases on GitHub (`gh release list --limit 300`): 83 in 2026-10 and 9 in 2026-11 | FACT: `gh release list` |
 | Cadence | Very high: 32 releases on 2026-10-16 alone; then ~1 to 2 per week; v0.38 to v0.43 in 6 days (2026-11-07 to 2026-11-12) | FACT: `gh release list --json publishedAt`; my count |
 | Rule for when to release | "One release per task group in `docs/PLAN.md`" (never merge groups) | FACT: `docs/tooling.md#release-process` |
@@ -52,7 +53,7 @@ Latest module versions that have a GitHub Release (the module Releases list stop
 | Sections | `### Added`, `### Changed`, `### Fixed`, `### Security` (+ `Removed`/`Deprecated` when present). Fixed order by the `<!-- N -->` prefix of cliff | FACT: `.config/cliff.toml` |
 | Item | `- **BREAKING:** **<scope>:** Message starting with a capital letter ([abc1234](https://github.com/AlexGalhardo/vukem/commit/<sha completo>))` | FACT: body of `v0.43.0` |
 | PR link | None. Only a commit link (squash/rebase with one Conventional Commit per entry) | FACT |
-| Module body | Own header: `Module \`github.com/AlexGalhardo/vukem/drivers/s3\``, a `go get ...@vX.Y.Z` block, the sentence `Changes under \`drivers/s3/\` since \`drivers/s3/v0.2.0\`.`, then sections | FACT: `gh release view drivers/s3/v0.3.0` |
+| Module body | Own header: ``Module `github.com/AlexGalhardo/vukem/drivers/s3` ``, a `go get ...@vX.Y.Z` block, the sentence ``Changes under `drivers/s3/` since `drivers/s3/v0.2.0`.``, then sections | FACT: `gh release view drivers/s3/v0.3.0` |
 | Core assets (from ~v0.30 on) | 15 files (see 1.3). Early releases (`v0.5.0`) had only `checksums.txt` + 6 files; modules: 0 assets | FACT: `gh release view --json assets` |
 
 Pre-release: `docs/tooling.md` says "v0.x and pre-releases are marked pre-release", but the releases `v0.5.0`..`v0.43.0` are `isPrerelease=false`. See friction F1.
@@ -119,7 +120,7 @@ commit_parsers = [
 
 ### 1.5 Two real release notes, in full
 
-**`v0.43.0`** (https://github.com/AlexGalhardo/vukem/releases/tag/v0.43.0, published 2026-11-12T16:07:34Z, title `v0.43.0`, `isPrerelease=false`, 15 assets). FACT: `gh release view v0.43.0`.
+**`v0.43.0`** (<https://github.com/AlexGalhardo/vukem/releases/tag/v0.43.0>, published 2026-11-12T16:07:34Z, title `v0.43.0`, `isPrerelease=false`, 15 assets). FACT: `gh release view v0.43.0`.
 
 ```markdown
 ### Added
@@ -302,7 +303,7 @@ FACT (`ls` of the clone, `AGENTS.md#where-things-live`):
 
 ### 2.2 `go.mod` and dependencies
 
-FACT: `go 1.27.4`. The core requires only `github.com/google/go-cmp v0.7.0`, `golang.org/x/crypto v0.59.0` and `modernc.org/sqlite v1.61.0` (pure Go SQLite, no cgo). `go.work` lists the core + all drivers/contrib/`internal/bench` and `ignore ./site`. Architecture rule: "core never imports drivers/* or contrib/*"; new deps only through the "dependency policy" in `docs/architecture.md`. No `replace` in a published go.mod. The `vukem-studio` app (web) has `go 1.27.4` and `require github.com/AlexGalhardo/vukem v0.43.0` (module `github.com/AlexGalhardo/vukem-studio`).
+FACT: `go 1.27.4`. The core requires only `github.com/google/go-cmp v0.7.0`, `golang.org/x/crypto v0.59.0` and `modernc.org/sqlite v1.61.0` (pure Go SQLite, no cgo). `go.work` lists the core + all drivers/contrib/`internal/bench` and `ignore ./site`. Architecture rule: "core never imports drivers/*or contrib/*"; new deps only through the "dependency policy" in `docs/architecture.md`. No `replace` in a published go.mod. The `vukem-studio` app (web) has `go 1.27.4` and `require github.com/AlexGalhardo/vukem v0.43.0` (module `github.com/AlexGalhardo/vukem-studio`).
 
 ### 2.3 Task runner, lint, format, hooks
 
@@ -375,6 +376,7 @@ Task IDs: `<phase>.<group>.<task>` (e.g. `P.3.2`). Reference them in commit bodi
 ```
 
   Each task has an ID, a statement and an executable `→ verify:` line. Groups may mark `needs:`.
+
 - App ROADMAP (`C:\dev\vukem-video\web\ROADMAP.md`, 197 lines, FACT): legend `[x]` done, `[/]` partial, `[ ]` not started; "A phase is done only when every audit box under it is `[x]`"; phases `## Phase N — Title`, subsections `### N.M`, final box `#### Audit — phase N` with verifiable criteria (commands, URLs, CI run IDs). Ex.: `- [x] Scorecard workflow has run on main (runs 42485982009 ..., 2026-11-08 ...)`.
 
 ### 2.9 Note on the `web` repo
@@ -472,7 +474,7 @@ FACT (`site/package.json`, `astro.config.mjs`, `content/navigation.ts`, `.github
 | Site i18n | **Not found**: no locale folder; the site is English only |
 | Versioning | `content/versions/0.20` (snapshot of the 0.20 docs); redirects `/docs` and `/docs/0.20`; canonical for old versions (changelog v0.41.0) |
 | Agents | `llms.txt`, `llms-full.txt`, `robots.txt`, `sitemap.xml` as Astro endpoints; **Markdown twin of each page** (v0.41.0 "Serve a markdown twin of every docs page"); "Agents" link at the top points to `/llms.txt` |
-| Dates | "Last updated: <date> UTC" per page, from git: `content/last-updated.json` (generated by `npm run last-updated`, never edited by hand); 3 checks (`Site / Last updated`, `Docs last updated`, pre-push hook) |
+| Dates | "Last updated: `<date>` UTC" per page, from git: `content/last-updated.json` (generated by `npm run last-updated`, never edited by hand); 3 checks (`Site / Last updated`, `Docs last updated`, pre-push hook) |
 | Quality | `check:mdx`, `eslint`, script tests (`link-anchors`, `markdown-twin`, `trailing-slash`...), `snippetcheck` (the Go blocks in the docs are type-checked in the core CI) |
 | Deploy | GitHub Pages: `actions/upload-pages-artifact` on push to `main` (`site.yml`); changelog rendered at `/changelog` from `CHANGELOG.md` |
 | Docs home page (observed via WebFetch of `https://vukem.dev/docs/introduction`) | top bar "Docs / Agents / Changelog / GitHub icon"; search "Search… Ctrl K"; sidebar on the left; "On this page" on the right; footer "Last updated: November 11, 2026 at 02:48 PM UTC", "Edit this page on GitHub" and previous/next. Version selector and theme toggle **did not appear** in the converted content (I do not claim they do not exist) |

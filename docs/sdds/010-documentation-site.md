@@ -630,6 +630,7 @@ Both are specified in SDD-009 section 9.6; the steps of `site.yml` are, in order
 - Job `last-updated`: `fetch-depth: 0`; `actions/setup-node` (Node 24); `npm run test:scripts`; `npm run check:last-updated`; `npm run check:translations`.
 
 These step lists are the same as in SDD-009 section 9.6.
+
 - Job `deploy` (only on `main` or manual dispatch; needs `build` and `last-updated`): `environment: github-pages`; `actions/deploy-pages`. Permissions: `pages: write`, `id-token: write`.
 
 The job `build` runs the same `reference:check` as the `Generated files` job of `ci.yml` (SDD-009 9.4); the duplication is intended: `Generated files` runs on every pull request and is required, while `site.yml` is path-filtered and guards the deploy.

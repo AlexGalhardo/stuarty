@@ -855,7 +855,7 @@ The jobs below are listed by their display name, which is the string the ruleset
 | 6 | `Generated files` | ubuntu | setup-go; `actions/setup-node` (pinned, `node-version: 24`, npm cache on `site/package-lock.json`); `go run ./internal/tools/contractgen` (writes `core/schema/` and `web/resources/js/generated/`); `go run ./web/cmd/gen-agent-docs --check` (SDD-003 section 7); `cd site && npm ci && npm run reference`; `git diff --exit-code -- core/schema web/resources/js/generated site/generated site/content/generated` | the generated-schema check of ADR-0014 item 2 and the reference check of ADR-0024 item 5. `npm run reference` runs the four generators with the flags of SDD-010 section 8.2 (`vukem-video command:help --json`, `vukem-video openapi:export -prefix /api/v1`, `go run ./internal/tools/configref -json`, `go run ./internal/tools/contractgen -errors`), so the flags are defined once. Node 24 is needed because `site/scripts` run with Node type stripping. Prints the diff on failure |
 | 7 | `Notices` | ubuntu | setup-go, setup-bun; `bun install --frozen-lockfile` in `web/`; `go run ./internal/tools/notices -check` | section 12 |
 | 8 | `Vulnerabilities` | ubuntu | `go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...` | vukem `ci.yml:166` |
-| 9 | `Release build (snapshot)` | ubuntu | setup-go, setup-bun, syft installer; `bun install --frozen-lockfile` in `web/`; `goreleaser/goreleaser-action` with `version: "v2.18.2"` and `args: release --snapshot --clean --skip=sign,publish`; for every archive, `for f in dist/vukem-video_*.tar.gz dist/vukem-video_*.zip; do [ "$(stat -c %s "$f")" -lt 60000000 ] || exit 1; done` | NFR-041: every archive is under 60,000,000 bytes (60 MB, the unit of the requirement). This is the dry run that catches a broken `.config/goreleaser.yaml` before a tag |
+| 9 | `Release build (snapshot)` | ubuntu | setup-go, setup-bun, syft installer; `bun install --frozen-lockfile` in `web/`; `goreleaser/goreleaser-action` with `version: "v2.18.2"` and `args: release --snapshot --clean --skip=sign,publish`; for every archive, `for f in dist/vukem-video_*.tar.gz dist/vukem-video_*.zip; do [ "$(stat -c %s "$f")" -lt 60000000 ] \|\| exit 1; done` | NFR-041: every archive is under 60,000,000 bytes (60 MB, the unit of the requirement). This is the dry run that catches a broken `.config/goreleaser.yaml` before a tag |
 | 10 | `Workflow pins` | ubuntu | `actions/checkout`; the pin check of section 13.1 (an `if` block, so a pinned tree passes and an unpinned line fails) | enforces R23 mechanically; required |
 | 11 | `Security tests (${{ matrix.os }})` | matrix `ubuntu-latest`, `windows-latest`, `macos-latest`, `fail-fast: false` | setup-go; `bash scripts/install-ffmpeg.sh`; `go test -race -count=1 -v -run TestSecurity_ ./... \| tee security.log`; then the skip check of section 9.4.1 | dedicated job of SDD-007 section 12, in addition to the full suite of job 4; fails on a skipped security test that is not marked with its platform in the name |
 | 12 | `Threat coverage` | ubuntu | setup-go; `go run ./internal/tools/threatcheck` | SDD-007 section 12: a threat row without its named test, a `TestSecurity_T..` test no row names, a threat without a mitigation, or an operation missing from the SDD-007 section 5 table fails |
@@ -1412,7 +1412,8 @@ The jobs are parallel, `timeout-minutes: 20` is set on every pull request job, a
 | `task image:smoke` (new) | `bash scripts/image-smoke.sh vukem-video:local` (section 9.5) | |
 | `task site:dev`, `task site:build` | in `site/`: `npm run dev`; `npm ci`, `npm run test:site`, `npm run lint`, `npm run check:mdx`, `npm run reference:check`, `npm run build`, `npm run check:built` (the build steps of SDD-010 section 12.2) | 167-181 |
 | `task site:reference` (new) | `npm run reference` in `site/` (SDD-010 section 8) | |
-| `task site:translations` (new) | `npm run check:translations` in `site/` (SDD-010 section 6) | || `task site:dates` (new) | `npm run last-updated` in `site/` | |
+| `task site:translations` (new) | `npm run check:translations` in `site/` (SDD-010 section 6) | |
+| `task site:dates` (new) | `npm run last-updated` in `site/` | |
 | `task deps:web`, `task deps:images` (new) | `bash scripts/bump-web-deps.sh` (only when Dependabot has no `bun` ecosystem) and `bash scripts/bump-image-args.sh` (section 16.4) | |
 | `task changelog` | `git cliff --config .config/cliff.toml --unreleased --strip all` (preview, writes nothing) | 183-186 |
 | `task labels:sync` | `go run ./internal/tools/labelsync .github/labels.txt` (needs `gh auth`; vukem's tool copied) | 108-111 |
@@ -1527,6 +1528,7 @@ Copied from `vukem/.golangci.yml` (174 lines): `version: "2"`, formatters gofump
 ```
 
   The exception "engine may use vukem's `contrib/engine`" (ADR-0001 rule 2) is expressed by not denying `github.com/AlexGalhardo/vukem/contrib/engine` for `engine/`: the `engine-is-not-web` rule denies only `service` and `web`. Rule 1 and the vukem prefix deny use `github.com/AlexGalhardo/vukem` as a prefix, so the vukem packages that `engine/` may need are limited to what the rule omits; if `engine/` needs a vukem package other than `contrib/engine`, the rule is changed by a pull request that cites ADR-0001.
+
 - The `crypto-randomness` rule of vukem is kept for `**/web/**/auth/**` and `**/service/**` (key and token generation, ADR-0019).
 - `forbidigo` is added (SDD-007 section 10.2 and section 12; vukem's `.golangci.yml` has `gosec` and no `forbidigo`, so it is not copied but written here). It forbids the direct outbound calls outside `internal/outbound/`:
 
@@ -1541,6 +1543,7 @@ Copied from `vukem/.golangci.yml` (174 lines): `version: "2"`, formatters gofump
 ```
 
   with `forbidigo` added to `linters.enable` and `internal/outbound/` excluded from this one linter in `linters.exclusions.rules`. `gosec` keeps the rules G201, G202, G204, G304 and G306 enabled.
+
 - `GOCOGNIT_BUDGET` starts at 0 (no suppression exists yet).
 
 ### 15.4 `.markdownlint-cli2.jsonc`

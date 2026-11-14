@@ -124,6 +124,7 @@ vukem_0.43.0_windows_{amd64,arm64}.zip
 ```
 
   Each task has an identifier `<phase>.<group>.<task>`, a statement and one executable `→ verify:` line. Groups may declare `needs:`.
+
 - **FACT.** The Studio's `ROADMAP.md` uses `[x]` done, `[/]` partial, `[ ]` not started, phases with numbered subsections and a final `#### Audit` box whose items are verifiable (commands, URLs, CI run identifiers), with the rule "A phase is done only when every audit box under it is `[x]`".
 
 **INFERENCE for this project.** The briefing's ROADMAP format (owner, dependencies, files, references, asserts) is a superset of vukem's. The two rules worth copying exactly are: every task has a verification that can be executed, and one release per task group.
