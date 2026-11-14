@@ -1,0 +1,115 @@
+{
+  "op": "caption.add",
+  "args": {
+    "track_id": "trk_a1b2c3d4e5",
+    "start": "12f",
+    "id": "itm_s6t7v8w9x0",
+    "words": [
+      {
+        "text": "w1",
+        "start": "0f",
+        "duration": "1f"
+      },
+      {
+        "text": "w2",
+        "start": "1f",
+        "duration": "1f"
+      },
+      {
+        "text": "w3",
+        "start": "2f",
+        "duration": "1f"
+      },
+      {
+        "text": "w4",
+        "start": "3f",
+        "duration": "1f"
+      },
+      {
+        "text": "w5",
+        "start": "4f",
+        "duration": "1f"
+      },
+      {
+        "text": "w6",
+        "start": "5f",
+        "duration": "1f"
+      },
+      {
+        "text": "w7",
+        "start": "6f",
+        "duration": "1f"
+      },
+      {
+        "text": "w8",
+        "start": "7f",
+        "duration": "1f"
+      },
+      {
+        "text": "w9",
+        "start": "8f",
+        "duration": "1f"
+      },
+      {
+        "text": "w10",
+        "start": "9f",
+        "duration": "1f"
+      },
+      {
+        "text": "w11",
+        "start": "10f",
+        "duration": "1f"
+      },
+      {
+        "text": "w12",
+        "start": "11f",
+        "duration": "1f"
+      },
+      {
+        "text": "w13",
+        "start": "12f",
+        "duration": "1f"
+      },
+      {
+        "text": "w14",
+        "start": "13f",
+        "duration": "1f"
+      },
+      {
+        "text": "w15",
+        "start": "14f",
+        "duration": "1f"
+      },
+      {
+        "text": "w16",
+        "start": "15f",
+        "duration": "1f"
+      },
+      {
+        "text": "w17",
+        "start": "16f",
+        "duration": "1f"
+      },
+      {
+        "text": "w18",
+        "start": "17f",
+        "duration": "1f"
+      },
+      {
+        "text": "w19",
+        "start": "18f",
+        "duration": "1f"
+      },
+      {
+        "text": "w20",
+        "start": "19f",
+        "duration": "1f"
+      },
+      {
+        "text": "w21",
+        "start": "20f",
+        "duration": "1f"
+      }
+    ]
+  }
+}

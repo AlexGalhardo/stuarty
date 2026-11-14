@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.words[1] overlaps words[0]: starts at 5 but the previous word ends at 10.",
+  "hint": "Start each word at or after the end of the previous one.",
+  "retryable": false,
+  "path": "args.words[1]"
+}

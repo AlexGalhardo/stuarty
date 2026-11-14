@@ -1,0 +1,14 @@
+{
+  "code": "E_OUT_OF_SOURCE",
+  "message": "The source_in 900 is at or after the end of asset ast_3c5v8n2w6d, which has 900 frames.",
+  "hint": "Use a source_in before \"900f\".",
+  "retryable": false,
+  "path": "args.source_in",
+  "details": {
+    "available": {
+      "asset_duration": 900,
+      "max_duration": 0,
+      "source_in": 900
+    }
+  }
+}

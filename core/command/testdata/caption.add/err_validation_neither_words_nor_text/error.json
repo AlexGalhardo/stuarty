@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give exactly one of words, text.",
+  "hint": "Send only one of words, text.",
+  "retryable": false,
+  "path": "args"
+}

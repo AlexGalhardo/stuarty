@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The length of args.text is 2001, outside the accepted range.",
+  "hint": "Use a length between 1 and 2000.",
+  "retryable": false,
+  "path": "args.text"
+}

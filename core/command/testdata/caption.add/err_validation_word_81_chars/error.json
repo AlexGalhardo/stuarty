@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.words[0].text must have 1 to 80 characters, got 81.",
+  "hint": "Send one word of at most 80 characters.",
+  "retryable": false,
+  "path": "args.words[0]"
+}

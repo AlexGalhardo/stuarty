@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.duration cannot be used with words: the caption lasts until the end of the last word.",
+  "hint": "Remove duration, or send text instead of words.",
+  "retryable": false,
+  "path": "args.duration"
+}

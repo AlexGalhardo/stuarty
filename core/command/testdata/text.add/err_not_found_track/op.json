@@ -1,0 +1,9 @@
+{
+  "op": "text.add",
+  "args": {
+    "track_id": "trk_zzzzzzzzzz",
+    "start": "0s",
+    "duration": "2s",
+    "text": "Hi"
+  }
+}
