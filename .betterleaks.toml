@@ -44,3 +44,14 @@ regexes = [
 	'''correct horse battery|another long password|a brand new password''',
 	'''^(wrong|guess|Show password|Hide password)$''',
 ]
+
+# The specifications in docs/sdds/ show example actor ids (key:key_<10 characters>,
+# SDD-000 section 2). They are documentation, not secrets: reviewed and approved
+# by the author in P1-REL-001 (7 findings). Both conditions must hold, so the
+# same string outside docs/sdds/ is still reported.
+[[allowlists]]
+description = "documented example actor ids in docs/sdds/"
+condition = "AND"
+paths = ['''^docs/sdds/.*\.md$''']
+regexTarget = "match"
+regexes = ['''key:key_[a-z0-9]{10}''']
