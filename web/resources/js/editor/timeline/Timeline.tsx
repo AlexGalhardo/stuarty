@@ -106,7 +106,7 @@ export default function Timeline(): ReactNode {
 		[ppf, zoomTo],
 	);
 
-	const fit = useCallback(() => {
+	const fitToView = useCallback(() => {
 		const el = scroller.current;
 		const next = fitZoom(el?.clientWidth ?? 0, endFrame);
 		pendingScroll.current = 0;
@@ -151,13 +151,13 @@ export default function Timeline(): ReactNode {
 			if (event.key === "Escape") runtime.uiWriter.select([]);
 			else if (event.key === "+" || event.key === "=") zoomStep(1);
 			else if (event.key === "-") zoomStep(-1);
-			else if (event.shiftKey && event.key.toLowerCase() === "z") fit();
+			else if (event.shiftKey && event.key.toLowerCase() === "z") fitToView();
 			else return;
 			event.preventDefault();
 		};
 		window.addEventListener("keydown", onKeyDown);
 		return () => window.removeEventListener("keydown", onKeyDown);
-	}, [zoomStep, fit, runtime]);
+	}, [zoomStep, fitToView, runtime]);
 
 	const axisPx = extentPx(viewportWidth, endFrame, ppf);
 	const playheadX = frameToContentX(playhead, ppf);
@@ -186,7 +186,7 @@ export default function Timeline(): ReactNode {
 				>
 					<ZoomIn aria-hidden="true" />
 				</Button>
-				<Button type="button" variant="ghost" size="sm" onClick={fit}>
+				<Button type="button" variant="ghost" size="sm" onClick={fitToView}>
 					<Maximize2 aria-hidden="true" />
 					{t("ui.editor.timeline.fit")}
 				</Button>
