@@ -108,6 +108,11 @@ tasks:
     cmds:
       - git cliff --config .config/cliff.toml --unreleased --strip all
 
+  release:pr-body:
+    desc: "Refresh the body of the open release pull request from the commits (task release:pr-body -- vX.Y.Z)"
+    cmds:
+      - bash scripts/release-pr-body.sh {{.CLI_ARGS}}
+
   release:prepare:
     desc: "On branch release/vX.Y.Z: write the changelog section and commit it (task release:prepare -- vX.Y.Z)"
     cmds:
