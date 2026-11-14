@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+web/resources/public/build
+web/resources/public/hot
+web/bootstrap/ssr
+site/out
+.env
+.env.*
+!.env.example
+coverage*
+*.log
