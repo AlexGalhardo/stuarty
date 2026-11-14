@@ -59,7 +59,9 @@ Rules:
 
 Positive: the import rules make "single command core" a property the compiler and a lint rule can check; the core is testable without a database, FFmpeg or a browser.
 
-Negative: vukem's tooling (`vukem serve`, `vukem build`, `make:*`) is written for an application whose `go.mod` is in its own folder. Running it from `web/` with the module root one level up is unverified; the first ROADMAP task group verifies it and records any friction in `vukem-feedback.md`.
+Negative: vukem's tooling (`vukem serve`, `vukem build`, `make:*`) is written for an application whose `go.mod` is in its own folder. Verified on 2026-11-14 with vukem v0.43.0 (P1-REL-003), running from `web/` with the module root one level up: `serve`, `route:list`, `migrate` and `about` work, because the CLI runs `go build ./cmd/app` and the Go tool finds the `go.mod` above. The `make:*` generators refuse (`no go.mod here`) and would generate import paths without the `web/` segment. This is a convenience only (the files are written by hand), so the single-module layout stays and the fallback below is not applied; the friction is recorded in `vukem-feedback.md` as VF-029. The fallback remains available if the author wants the generators.
+
+The import rules are enforced by `internal/tools/importcheck` (a Go test over every package of the module). ADR-0001 rule 1 does not list the "small pure libraries" of `core/`; the test holds the list, and it contains only the JSON Schema validator of ADR-0014. A library is added to the list together with the author's approval of the dependency. Rule 2 allows `engine/` one vukem import, `github.com/AlexGalhardo/vukem/contrib/engine`; any other vukem import outside `web/` fails the test.
 
 Negative: moving the Studio tree and deleting it are large commits; they are isolated in the first task group so later history stays readable.
 
