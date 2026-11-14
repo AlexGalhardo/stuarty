@@ -7,7 +7,7 @@ require (
 	github.com/AlexGalhardo/vukem/contrib/engine v0.1.1
 	github.com/go-text/typesetting v0.3.5
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
-	golang.org/x/image v0.23.0
+	golang.org/x/image v0.38.0
 	golang.org/x/sys v0.49.0
 )
 
