@@ -5,7 +5,12 @@
 # the next `git push` carries it.
 set -euo pipefail
 
-cd "$(git rev-parse --show-toplevel)/site"
+cd "$(git rev-parse --show-toplevel)"
+go vet ./...
+
+# The documentation site is copied by SITE-COPY (SDD-010); until then there is nothing to refresh.
+[ -d site ] || exit 0
+cd site
 if [ ! -d node_modules ]; then
 	echo "pre-push: run npm ci in site/ so the doc dates can be refreshed" >&2
 	exit 1
