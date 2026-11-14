@@ -372,3 +372,39 @@ func EncoderTest(pol Policy, encoder string, di DetectInput, out string) ([]stri
 		Outputs: []Output{{Format: "mp4", Path: out, Maps: []string{"0:v:0"}, NoAudio: true, VF: di.Filter, Opts: opts}},
 	}.Argv(pol)
 }
+
+// SmokeEncoders are the encoders of the capability test of SDD-011 8.3, with the pixel
+// format each accepts.
+var SmokeEncoders = map[string]string{
+	"mpeg4": "yuv420p", "libvpx-vp9": "yuv420p", "mjpeg": "yuvj420p", "png": "rgb24",
+	"aac": "", "pcm_s16le": "",
+}
+
+// EncoderSmoke encodes 5 frames (or 0.5 s of silence for an audio encoder) to the null
+// muxer with one required encoder.
+func EncoderSmoke(pol Policy, encoder string) ([]string, error) {
+	pix, ok := SmokeEncoders[encoder]
+	if !ok {
+		return nil, &Violation{Rule: "FF-15", Index: -1, Msg: "not an encoder of the capability test"}
+	}
+	if pix == "" {
+		return Cmd{
+			LogErrorOnly: true, Inputs: []Input{AnullSrc(48000, 500)},
+			Outputs: []Output{{Format: "null", Maps: []string{"0:a:0"}, Opts: []Opt{Enum("-c:a", encoder)}}},
+		}.Argv(pol)
+	}
+	return Cmd{
+		LogErrorOnly: true, Inputs: []Input{TestSrc2(320, 240, Rate{30, 1}, 500)},
+		Outputs: []Output{{Format: "null", Maps: []string{"0:v:0"}, VF: Chain1(Format(pix)), Opts: []Opt{Enum("-c:v", encoder), Int("-frames:v", 5)}}},
+	}.Argv(pol)
+}
+
+// HDRSmoke runs the tone-mapping chain of SDD-011 4.3.1 on a synthetic HLG source; it sets hdr_ok.
+func HDRSmoke(pol Policy) ([]string, error) {
+	f := append([]Filter{SetParamsHLG()}, ToneMapHDR("2020_ncl", "2020", "arib-std-b67", "tv")...)
+	f = append(f, Format("yuv420p"))
+	return Cmd{
+		LogErrorOnly: true, Inputs: []Input{TestSrc2(320, 240, Rate{30, 1}, 500)},
+		Outputs: []Output{{Format: "null", Maps: []string{"0:v:0"}, VF: Chain1(f...)}},
+	}.Argv(pol)
+}

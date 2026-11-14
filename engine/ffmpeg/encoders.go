@@ -1,0 +1,258 @@
+package ffmpeg
+
+import (
+	"context"
+	"errors"
+	"path/filepath"
+	"runtime"
+	"sort"
+	"strings"
+	"time"
+
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+)
+
+// EncoderOrder is ADR-0011 item 5: the first H.264 encoder that works on the machine wins.
+// libx264 is last and only for the user's own FFmpeg when the user enabled it.
+var EncoderOrder = []string{
+	"h264_videotoolbox", "h264_nvenc", "h264_qsv", "h264_amf", "h264_mf", "h264_vaapi", "libopenh264", "libx264",
+}
+
+// EncoderStatus is the result of one candidate (SDD-011 8.4).
+type EncoderStatus string
+
+const (
+	EncoderOK        EncoderStatus = "ok"
+	EncoderFailed    EncoderStatus = "failed"
+	EncoderNotListed EncoderStatus = "not_listed"
+)
+
+// Candidate is one encoder tried by detection.
+type Candidate struct {
+	Name       string
+	Status     EncoderStatus
+	MS         int64
+	StderrTail string // at most 300 characters, paths removed
+	// Input is what the export must use with this encoder (SDD-011 8.4, DS-13).
+	Input ffargs.DetectInput
+}
+
+// EncoderDetection is the cached result of the test encodes.
+type EncoderDetection struct {
+	Chosen     string // empty when none works
+	Forced     bool
+	Candidates []Candidate
+}
+
+// Chosen returns the candidate record of the chosen encoder.
+func (d *EncoderDetection) ChosenCandidate() (Candidate, bool) {
+	for _, c := range d.Candidates {
+		if c.Name == d.Chosen {
+			return c, true
+		}
+	}
+	return Candidate{}, false
+}
+
+// DetectOptions are the inputs of encoder detection.
+type DetectOptions struct {
+	// Forced is VUKEM_VIDEO_ENCODER: only that candidate is tested and it is never replaced.
+	Forced string
+	// AllowUserX264 is VUKEM_VIDEO_ALLOW_USER_X264; it matters only for a user's own build.
+	AllowUserX264 bool
+	// Candidates replaces the default order when non-nil. An empty non-nil list disables
+	// every encoder, which is how tests simulate a machine with none.
+	Candidates []string
+	// Refresh ignores the cached result (doctor always re-runs, SDD-011 8.5).
+	Refresh bool
+}
+
+func platformOK(name string) bool {
+	switch name {
+	case "h264_videotoolbox":
+		return runtime.GOOS == "darwin"
+	case "h264_mf":
+		return runtime.GOOS == "windows"
+	case "h264_vaapi":
+		return runtime.GOOS == "linux"
+	}
+	return true
+}
+
+func vaapiDevice() string {
+	m, _ := filepath.Glob("/dev/dri/renderD*")
+	sort.Strings(m)
+	if len(m) == 0 {
+		return ""
+	}
+	return m[0]
+}
+
+// DetectEncoder runs a real test encode for each candidate, in the order of ADR-0011 item 5,
+// and caches the result for the life of the runner. No working encoder is E_NO_ENCODER and
+// the message says how to fix it.
+func (r *Runner) DetectEncoder(ctx context.Context, caps *Capabilities, opt DetectOptions) (*EncoderDetection, error) {
+	r.encMu.Lock()
+	defer r.encMu.Unlock()
+	if r.enc != nil && !opt.Refresh {
+		return r.enc, r.encErr
+	}
+	det, err := r.detectEncoder(ctx, caps, opt)
+	if ctx.Err() == nil { // a cancelled detection is not cached
+		r.enc, r.encErr = det, err
+	}
+	return det, err
+}
+
+func (r *Runner) detectEncoder(ctx context.Context, caps *Capabilities, opt DetectOptions) (*EncoderDetection, error) {
+	names := EncoderOrder
+	if opt.Candidates != nil {
+		names = opt.Candidates
+	}
+	det := &EncoderDetection{}
+	if opt.Forced != "" {
+		det.Forced = true
+		names = []string{opt.Forced}
+	}
+
+	dir, err := r.NewRunDir("encoder-detection")
+	if err != nil {
+		return nil, err
+	}
+	defer dir.Remove()
+
+	for _, name := range names {
+		known := false
+		for _, k := range EncoderOrder {
+			known = known || k == name
+		}
+		c := Candidate{Name: name}
+		switch {
+		case !known:
+			c.Status, c.StderrTail = EncoderFailed, "not an H.264 encoder the product knows"
+		case !platformOK(name):
+			c.Status, c.StderrTail = EncoderNotListed, "not available on "+runtime.GOOS
+		case name == "libx264" && !(r.In.UserBuild && opt.AllowUserX264):
+			c.Status, c.StderrTail = EncoderNotListed, "only a user's own FFmpeg with VUKEM_VIDEO_ALLOW_USER_X264=true may use it"
+		case !caps.Encoders[name]:
+			c.Status = EncoderNotListed
+		default:
+			if err := r.testEncoder(ctx, dir, &c); err != nil && ctx.Err() != nil {
+				return nil, err
+			}
+		}
+		det.Candidates = append(det.Candidates, c)
+	}
+	for _, c := range det.Candidates {
+		if c.Status == EncoderOK {
+			det.Chosen = c.Name
+			break
+		}
+	}
+	if det.Chosen == "" {
+		return det, noEncoderError(det)
+	}
+	return det, nil
+}
+
+// testEncoder is the two commands of SDD-011 8.4: the encode, then ffprobe on its output.
+func (r *Runner) testEncoder(ctx context.Context, dir *RunDir, c *Candidate) error {
+	start := time.Now()
+	defer func() { c.MS = time.Since(start).Milliseconds() }()
+
+	di := ffargs.DetectInput{Filter: "format=yuv420p"}
+	if c.Name == "h264_vaapi" {
+		dev := vaapiDevice()
+		if dev == "" {
+			c.Status, c.StderrTail = EncoderFailed, "no render device in /dev/dri"
+			return nil
+		}
+		di = ffargs.DetectInput{VaapiDevice: dev, Filter: "format=nv12,hwupload"}
+	}
+	out, err := dir.Path("probe-" + c.Name + ".mp4")
+	if err != nil {
+		return err
+	}
+	argv, err := ffargs.EncoderTest(r.Policy(dir), c.Name, di, out)
+	if err != nil {
+		c.Status, c.StderrTail = EncoderFailed, "the test encode was refused: "+scrub(err.Error(), 200)
+		return nil
+	}
+	res, err := r.RunFFmpeg(ctx, Request{Dir: dir, Argv: argv, Deadline: detectionTimeout})
+	if err != nil {
+		c.Status, c.StderrTail = EncoderFailed, firstFailureLine(res.Stderr, err)
+		return err
+	}
+	pargv, err := ffargs.ProbeEncodedPackets(r.Policy(dir), out)
+	if err != nil {
+		c.Status, c.StderrTail = EncoderFailed, "the check was refused"
+		return nil
+	}
+	pctx, cancel := context.WithTimeout(ctx, detectionTimeout)
+	defer cancel()
+	b, pres, err := r.RunFFprobe(pctx, dir, pargv, detectionTimeout)
+	if err != nil {
+		c.Status, c.StderrTail = EncoderFailed, firstFailureLine(pres.Stderr, err)
+		return err
+	}
+	// csv=p=0 prints "h264,15": the codec and the packet count.
+	if got := strings.TrimSpace(string(b)); got != "h264,15" {
+		c.Status, c.StderrTail = EncoderFailed, "the test file has "+scrub(got, 40)+" instead of 15 h264 packets"
+		return nil
+	}
+	c.Status = EncoderOK
+	c.Input = di
+	return nil
+}
+
+// firstFailureLine is the explanation of a failed run: the first non-empty line of stderr (FFmpeg
+// prints the cause first and the consequence after it), or a line about the error.
+func firstFailureLine(stderr string, err error) string {
+	lines := strings.Split(strings.TrimSpace(stderr), "\n")
+	line := ""
+	for _, l := range lines {
+		if s := strings.TrimSpace(l); s != "" {
+			line = s
+			break
+		}
+	}
+	if line == "" && err != nil {
+		switch {
+		case errors.Is(err, ErrDeadline):
+			line = "took longer than " + detectionTimeout.String()
+		default:
+			line = "the test encode failed"
+		}
+	}
+	return scrub(line, 300)
+}
+
+func noEncoderError(det *EncoderDetection) *Error {
+	var parts []string
+	details := make([]map[string]any, 0, len(det.Candidates))
+	for _, c := range det.Candidates {
+		switch c.Status {
+		case EncoderNotListed:
+			why := "not in this FFmpeg build"
+			if c.StderrTail != "" {
+				why = c.StderrTail
+			}
+			parts = append(parts, c.Name+" ("+why+")")
+		default:
+			first, _, _ := strings.Cut(c.StderrTail, "\n")
+			parts = append(parts, c.Name+" (failed: "+scrub(first, 120)+")")
+		}
+		details = append(details, map[string]any{"name": c.Name, "status": string(c.Status), "ms": c.MS})
+	}
+	tried := "nothing (every encoder is disabled)"
+	if len(parts) > 0 {
+		tried = strings.Join(parts, ", ")
+	}
+	return &Error{
+		Code:    CodeNoEncoder,
+		Reason:  "no_encoder",
+		Message: "No H.264 encoder works on this machine. Tried: " + tried + ".",
+		Hint:    "Use the FFmpeg that ships with Vukem Video, which includes OpenH264, or point " + EnvFFmpeg + " at an FFmpeg that has libx264 and set VUKEM_VIDEO_ALLOW_USER_X264=true.",
+		Details: map[string]any{"candidates": details, "forced": det.Forced},
+	}
+}

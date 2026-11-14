@@ -62,6 +62,10 @@ type Runner struct {
 	StoreDir string
 
 	started atomic.Int64
+
+	encMu  sync.Mutex
+	enc    *EncoderDetection
+	encErr error
 }
 
 // NewRunner returns a runner for the installation and the workspace root.
