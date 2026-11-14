@@ -165,6 +165,8 @@ type ProjectRow struct {
 type ProjectQuery struct {
 	State  ProjectState // "" means active only; "all" is not a state, use IncludeTrashed
 	IncludeTrashed bool
+	OwnerUserID string // network mode: only this user's projects, in SQL for List and Count
+	ProjectID   string // a key limited to one project: only that project
 	After  string // opaque cursor from the previous page
 	Limit  int    // 1 to 200
 }
