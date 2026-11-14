@@ -285,7 +285,7 @@ func TestSourceFrame(t *testing.T) {
 	}
 }
 
-func TestMediaSizeCoverContainNoneAndCrop(t *testing.T) {
+func TestLayoutFit(t *testing.T) {
 	t.Parallel()
 
 	// A 1920x1080 asset in a 1080x1920 frame.
@@ -510,7 +510,7 @@ func caption(start, dur int) timeline.Item {
 	return it
 }
 
-func TestCaptionDefaultPositionIsOnTheBottomEdgeOfTheSafeArea(t *testing.T) {
+func TestCaptionBottomEdge(t *testing.T) {
 	t.Parallel()
 
 	d := newDoc()
@@ -881,6 +881,18 @@ func TestAudioSources(t *testing.T) {
 	if none := Audio(d, 100, 120); len(none) != 0 {
 		t.Errorf("audio past the end = %+v", none)
 	}
+}
+
+func TestMutedProducesNothing(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	c := clip("itm_v", trkBottom, 10, 30)
+	put(d, c)
+
+	m := timeline.NewItem("itm_m", timeline.ItemAudio, trkSound, 0, 60)
+	m.Asset = astSound
+	put(d, m)
 
 	// Muted: the item, the track, a clip without audio.
 	muted := d.Items["itm_v"]
