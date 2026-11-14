@@ -33,8 +33,8 @@ func exe(n string) string {
 
 // pinnedInstall returns the pinned LGPL FFmpeg and its capabilities, or skips the test. A test never
 // downloads: run scripts/install-ffmpeg.sh and set VUKEM_VIDEO_TEST_FFMPEG_DIR to the folder it prints.
-func pinnedInstall(t *testing.T) (*ffmpeg.Installation, *ffmpeg.Capabilities) {
-	t.Helper()
+func pinnedInstall(tb testing.TB) (*ffmpeg.Installation, *ffmpeg.Capabilities) {
+	tb.Helper()
 	pinOnce.Do(func() {
 		dir := os.Getenv(envTestFFmpegDir)
 		if dir == "" {
@@ -73,14 +73,14 @@ func pinnedInstall(t *testing.T) (*ffmpeg.Installation, *ffmpeg.Capabilities) {
 		pinInst, pinCaps = in, caps
 	})
 	if pinSkip != "" {
-		t.Skip(pinSkip)
+		tb.Skip(pinSkip)
 	}
 	return pinInst, pinCaps
 }
 
 // env is one workspace with the pinned FFmpeg.
 type env struct {
-	t     *testing.T
+	t     testing.TB
 	r     *ffmpeg.Runner
 	caps  *ffmpeg.Capabilities
 	store *store.Store
@@ -89,16 +89,16 @@ type env struct {
 	n     int
 }
 
-func newEnv(t *testing.T) *env {
-	t.Helper()
-	in, caps := pinnedInstall(t)
-	ws := t.TempDir()
+func newEnv(tb testing.TB) *env {
+	tb.Helper()
+	in, caps := pinnedInstall(tb)
+	ws := tb.TempDir()
 	r, err := ffmpeg.NewRunner(in, ws)
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
-	genDir := t.TempDir()
-	return &env{t: t, r: r, caps: caps, store: store.New(ws), ws: ws, gen: mediagen.Gen{
+	genDir := tb.TempDir()
+	return &env{t: tb, r: r, caps: caps, store: store.New(ws), ws: ws, gen: mediagen.Gen{
 		Dir: genDir,
 		Run: func(ctx context.Context, dir string, args ...string) (string, error) {
 			res, err := in.FFmpeg.Run(ctx, dir, args...)
@@ -194,11 +194,11 @@ func (r *Result) names() []string {
 	return n
 }
 
-func readJSONFile(t *testing.T, path string) []byte {
-	t.Helper()
+func readJSONFile(tb testing.TB, path string) []byte {
+	tb.Helper()
 	b, err := os.ReadFile(path)
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 	return bytes.TrimSpace(b)
 }
