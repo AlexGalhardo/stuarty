@@ -3,6 +3,7 @@ package workspace
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -61,7 +62,13 @@ func TestLoadTokenRejectsMalformed(t *testing.T) {
 
 func TestSecurity_T03_TokenFileModeOwnerOnly(t *testing.T) {
 	t.Parallel()
-	d := newDir(t)
+	// The product creates the directory with 0700. An existing one, such as
+	// t.TempDir (0755), is left alone and only warned about (SDD-007 3.2), so
+	// the test must let Resolve create it.
+	d, err := Resolve(env(filepath.Join(t.TempDir(), "ws")))
+	if err != nil {
+		t.Fatal(err)
+	}
 	if _, err := d.EnsureToken(); err != nil {
 		t.Fatal(err)
 	}
