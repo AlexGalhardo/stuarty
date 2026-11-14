@@ -9,6 +9,8 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/lint"
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 // Service is the single application boundary (ADR-0008): the UI, MCP, CLI and
@@ -31,19 +33,43 @@ type Service interface {
 	Redo(ctx context.Context, req UndoRequest) (*UndoResult, error)
 
 	Lint(ctx context.Context, req LintRequest) (*LintResult, error)
+
+	MediaImport(ctx context.Context, req MediaImportRequest) (*MediaImportResult, error)
+	MediaInspect(ctx context.Context, req MediaInspectRequest) (*MediaInspectResult, error)
+	MediaList(ctx context.Context, req MediaListRequest) (*MediaListResult, error)
+
+	JobStart(ctx context.Context, req JobStartRequest) (*Job, error)
+	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
+	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
+
+	// OpenFile resolves a stored file of an asset for download; the caller
+	// serves the bytes.
+	OpenFile(ctx context.Context, ref FileRef) (*File, error)
 }
 
-// Event is what a commit publishes after it is durable (SDD-006 section 3.2).
-// The hub that carries it is the business of the events task; the service
-// only calls Options.Publish.
+// Event is what the service publishes after the change is durable (SDD-006
+// section 3). The hub that carries it is the business of the events task; the
+// service only calls Options.Publish.
 type Event struct {
-	Type        string // "batch.committed" or "project.updated"
+	// Type is "batch.committed", "project.updated", "job.updated" or
+	// "asset.updated".
+	Type        string
 	ProjectID   string
 	Revision    int64
-	Kind        string // edit, undo or redo, for batch.committed
+	Kind        string // edit, undo or redo, for batch.committed; the job kind for job.updated
 	Actor       string
 	Description string
 	At          time.Time
+
+	// The members below are set by job.updated and asset.updated, which are
+	// not replayable and carry no revision.
+	JobID    string
+	AssetID  string // the asset id of this project, for asset.updated
+	State    string
+	Progress float64
+	Message  string
+	Error    *Error
+	Result   *JobResult
 }
 
 // Options configure New. Store is required.
@@ -61,15 +87,37 @@ type Options struct {
 	// plan.SafeArea; TextSize stays nil until a rasterizer supplies it, which
 	// skips L_SAFE_AREA.
 	Lint lint.Env
+
+	// Workspace is the workspace directory: the content store, the artifacts
+	// and the exports are under it.
+	Workspace string
+	// Media is the import and ingest machinery; see Media.
+	Media Media
+	// Exporter renders and verifies exports; JobStart for an export answers
+	// E_INTERNAL without one.
+	Exporter Exporter
+	// Enqueue delivers a job to the workers. Without one the job rows are
+	// created and nothing runs them.
+	Enqueue Enqueuer
+	// Limits are the ceilings of SDD-007 section 9.1.
+	Limits Limits
 }
 
 type svc struct {
-	store   Store
-	reg     *command.Registry
-	now     func() time.Time
-	newIDs  func(string) string
-	publish func(Event)
-	lintEnv lint.Env
+	store     Store
+	reg       *command.Registry
+	now       func() time.Time
+	newIDs    func(string) string
+	publish   func(Event)
+	lintEnv   lint.Env
+	workspace string
+	media     Media
+	exporter  Exporter
+	enqueue   Enqueuer
+	limits    Limits
+
+	running registry
+	sems    map[string]chan struct{}
 }
 
 // New returns the in-process Service over a store.
@@ -78,7 +126,32 @@ func New(o Options) (Service, error) {
 		return nil, errors.New("service: Options.Store is required")
 	}
 
-	s := &svc{store: o.Store, reg: o.Registry, now: o.Now, newIDs: o.NewIDs, publish: o.Publish, lintEnv: o.Lint}
+	s := &svc{
+		store:     o.Store,
+		reg:       o.Registry,
+		now:       o.Now,
+		newIDs:    o.NewIDs,
+		publish:   o.Publish,
+		lintEnv:   o.Lint,
+		workspace: o.Workspace,
+		media:     o.Media,
+		exporter:  o.Exporter,
+		enqueue:   o.Enqueue,
+		limits:    o.Limits.withDefaults(),
+	}
+
+	s.sems = map[string]chan struct{}{
+		JobIngest: make(chan struct{}, s.limits.MaxIngests),
+		JobExport: make(chan struct{}, s.limits.MaxExports),
+	}
+
+	if s.media.Ingest == nil {
+		s.media.Ingest = ingest.Run
+	}
+
+	if s.media.FreeBytes == nil {
+		s.media.FreeBytes = workspace.FreeBytes
+	}
 
 	if s.reg == nil {
 		s.reg = command.Default()

@@ -221,7 +221,7 @@ func TestErrorEnvelope(t *testing.T) {
 			"E_PAYLOAD_TOO_LARGE",
 		},
 		"pending operation": {
-			req{method: http.MethodPost, path: "/api/v1/projects/" + id + "/media", body: `{}`},
+			req{method: http.MethodGet, path: "/api/v1/projects/" + id + "/frame"},
 			500,
 			"E_INTERNAL",
 		},

@@ -45,6 +45,34 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		"Undo":        func() error { _, err := e.svc.Undo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
 		"Redo":        func() error { _, err := e.svc.Redo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
 		"Lint":        func() error { _, err := e.svc.Lint(ctx, service.LintRequest{ProjectID: "prj_0000000001"}); return err },
+		"MediaImport": func() error {
+			_, err := e.svc.MediaImport(ctx, service.MediaImportRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"MediaInspect": func() error {
+			_, err := e.svc.MediaInspect(ctx, service.MediaInspectRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"MediaList": func() error {
+			_, err := e.svc.MediaList(ctx, service.MediaListRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"JobStart": func() error {
+			_, err := e.svc.JobStart(ctx, service.JobStartRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"JobGet": func() error { _, err := e.svc.JobGet(ctx, service.JobGetRequest{JobID: "job_0000000001"}); return err },
+		"JobList": func() error {
+			_, err := e.svc.JobList(ctx, service.JobListRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"OpenFile": func() error {
+			_, err := e.svc.OpenFile(
+				ctx,
+				service.FileRef{Kind: "proxy", ProjectID: "prj_0000000001", ID: "ast_0000000001"},
+			)
+			return err
+		},
 	}
 
 	// Every method of the interface is checked here and has a scope entry.

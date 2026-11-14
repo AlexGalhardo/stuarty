@@ -482,5 +482,9 @@ func (s *svc) setProjectState(
 		return nil, projectNotFound(req.ProjectID, err)
 	}
 
+	if to == ProjectTrashed && !req.DryRun {
+		s.cancelProjectJobs(ctx, req.ProjectID)
+	}
+
 	return res, nil
 }
