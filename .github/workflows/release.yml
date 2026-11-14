@@ -1,0 +1,145 @@
+name: release
+
+# Builds the vukem-video binaries when a version tag is pushed. The release and
+# its notes are created here from CHANGELOG.md (empty notes fail the run);
+# GoReleaser only attaches the archives, checksums, SBOMs (syft) and the cosign
+# keyless bundle of checksums.txt.
+#
+# The container image job (SDD-009 section 9.3, P1-REL-009) and the installers
+# (P1-REL-010) join this file with their tasks; the asset count asserted at the
+# end of the goreleaser job (15) then grows with the installers.
+#
+# workflow_dispatch takes the version to build, because a tag push does not
+# always start a run: GitHub creates no push event when more than three tags
+# go up in a single push. Version tags are pushed one at a time, and a tag
+# that went up without a run is recovered by dispatching that version here
+# instead of moving the tag.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to build (vX.Y.Z). The tag must already be pushed."
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write # create the release and upload assets
+      id-token: write # Sigstore OIDC identity for cosign and attestations
+      attestations: write # build provenance attestations
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      stable: ${{ steps.tag.outputs.stable }}
+    steps:
+      - name: Resolve the tag
+        id: tag
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          tag="${INPUT_VERSION:-$REF_NAME}"
+          case "$tag" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *)
+              echo "::error::not a version tag: $tag"
+              exit 1
+              ;;
+          esac
+          echo "tag=$tag" >>"$GITHUB_OUTPUT"
+          # Only vX.Y.Z moves the image's latest tag; vX.Y.Z-rc.1 and friends do not.
+          if [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "stable=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "stable=false" >>"$GITHUB_OUTPUT"
+          fi
+      # GoReleaser reads the version from HEAD, so a dispatched run checks out
+      # the tag itself rather than the branch the dispatch came from.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ steps.tag.outputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.4
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: v3.1.3
+      - uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          syft-version: v1.54.1
+      # The notes come from the changelog section of the tagged commit. The
+      # heading match is literal: a regex with \[ never matches in awk.
+      - name: Publish the release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          awk -v v="${TAG#v}" '
+            index($0, "## [" v "]") == 1 { found = 1; next }
+            found && index($0, "## [") == 1 { exit }
+            found && /^\[[^]]+\]: / { exit }
+            found
+          ' CHANGELOG.md | sed '/./,$!d' >"$RUNNER_TEMP/notes.raw"
+          printf '%s\n' "$(cat "$RUNNER_TEMP/notes.raw")" >"$RUNNER_TEMP/notes.md"
+          if ! grep -q '[^[:space:]]' "$RUNNER_TEMP/notes.raw"; then
+            echo "::error::CHANGELOG.md has no entries for ${TAG#v}"
+            exit 1
+          fi
+          flags=()
+          case "$TAG" in *-*) flags+=(--prerelease) ;; esac
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" "${flags[@]}"
+          else
+            gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag "${flags[@]}"
+          fi
+      - name: Install the web dependencies
+        working-directory: web
+        run: bun install --frozen-lockfile
+      - uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
+        with:
+          version: "v2.18.2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify the checksums signature
+        run: |
+          cosign verify-blob dist/checksums.txt \
+            --bundle dist/checksums.txt.sigstore.json \
+            --certificate-identity "https://github.com/${GITHUB_REPOSITORY}/.github/workflows/release.yml@${GITHUB_REF}" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        id: attest
+        with:
+          subject-checksums: ./dist/checksums.txt
+      # Also attach the provenance bundle to the release, so tools that read
+      # release assets (OpenSSF Scorecard) see it next to the archives.
+      - name: Upload the provenance bundle
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          cp "$BUNDLE" vukem-video.intoto.jsonl
+          gh release upload "$TAG" vukem-video.intoto.jsonl --clobber --repo "$GITHUB_REPOSITORY"
+      # 6 archives + 6 SBOMs + checksums.txt + its bundle + the provenance.
+      - name: Check the release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          count="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq ".assets | length")"
+          body="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq ".body | length")"
+          echo "assets=$count body_length=$body"
+          [ "$count" -eq 15 ] && [ "$body" -gt 0 ]
