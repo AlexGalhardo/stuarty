@@ -40,6 +40,16 @@ func scanOperation(sc scanner) (service.OperationRow, error) {
 	return o, nil
 }
 
+// Count implements service.OperationRepo.
+func (r operationRepo) Count(ctx context.Context, projectID, actor string) (int64, error) {
+	var n int64
+
+	err := r.ex.QueryRowContext(ctx,
+		"SELECT count(*) FROM operations WHERE project_id = ? AND (? = '' OR actor = ?)", projectID, actor, actor).Scan(&n)
+
+	return n, err
+}
+
 func (r operationRepo) Append(ctx context.Context, o service.OperationRow) error {
 	_, err := r.ex.ExecContext(ctx, `INSERT INTO operations (`+operationColumns+`)
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
