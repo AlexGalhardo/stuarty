@@ -1,0 +1,266 @@
+package plan
+
+import (
+	"cmp"
+	"encoding/json"
+	"slices"
+
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+)
+
+// MaxWindow is the largest number of frames a window covers (SDD-004 §10).
+const MaxWindow = 300
+
+// Series is a value over the frames of a layer: one number when it is the
+// same on every frame, an array with one value per frame otherwise.
+type Series []float64
+
+// MarshalJSON writes the constant form when it applies.
+func (s Series) MarshalJSON() ([]byte, error) {
+	if len(s) > 0 && !slices.ContainsFunc(s, func(v float64) bool { return v != s[0] }) {
+		return json.Marshal(s[0])
+	}
+
+	return json.Marshal([]float64(s))
+}
+
+// WindowPlan is the compact form of SDD-004 §10. The caller sets Revision.
+type WindowPlan struct {
+	Revision   int64         `json:"revision"`
+	From       int           `json:"from"`
+	To         int           `json:"to"`
+	EndFrame   int           `json:"end_frame"`
+	Width      int           `json:"width"`
+	Height     int           `json:"height"`
+	Background string        `json:"background"`
+	SafeArea   [4]float64    `json:"safe_area"`
+	Layers     []WindowLayer `json:"layers"`
+	Audio      []WindowAudio `json:"audio"`
+}
+
+// WindowLayer is one item over the frames of the window in which it is active.
+type WindowLayer struct {
+	Item      string    `json:"item"`
+	Kind      LayerKind `json:"kind"`
+	Asset     string    `json:"asset,omitempty"`
+	AssetKind string    `json:"asset_kind,omitempty"`
+	First     int       `json:"first"`
+	Last      int       `json:"last"`
+
+	// Media layers: the time in the proxy at which each frame starts, the
+	// crop in source pixels [x, y, w, h], and the colour matrix (null when neutral).
+	SourceSeconds []float64       `json:"source_seconds,omitempty"`
+	Crop          *[4]float64     `json:"crop,omitempty"`
+	ColorMatrix   json.RawMessage `json:"color_matrix,omitempty"`
+
+	// Bitmap layers: the cache key of each frame's bitmap and its natural size.
+	Bitmaps *WindowBitmaps `json:"bitmaps,omitempty"`
+	Natural *[2]float64    `json:"natural,omitempty"`
+
+	CX       Series `json:"cx"`
+	CY       Series `json:"cy"`
+	W        Series `json:"w"`
+	H        Series `json:"h"`
+	Rotation Series `json:"rotation"`
+	Opacity  Series `json:"opacity"`
+}
+
+// WindowBitmaps selects, for each frame, one of the keys.
+type WindowBitmaps struct {
+	Keys  []string `json:"keys"`
+	Index []int    `json:"index"`
+}
+
+// WindowAudio is one audio source over the frames of the window.
+type WindowAudio struct {
+	Item          string  `json:"item"`
+	Asset         string  `json:"asset"`
+	First         int     `json:"first"`
+	Last          int     `json:"last"`
+	SourceSeconds float64 `json:"source_seconds"` // at the first frame
+	Speed         float64 `json:"speed"`
+	Gain          Series  `json:"gain"`
+}
+
+// Window returns the plans of frames [from, to) in the compact form of
+// SDD-004 §10. A window has at most MaxWindow frames: a longer one is cut.
+func Window(doc *timeline.Document, from, to int) WindowPlan {
+	return WindowWith(doc, from, to, Options{})
+}
+
+// WindowWith is Window with a Measurer for the natural size of bitmaps.
+func WindowWith(doc *timeline.Document, from, to int, opts Options) WindowPlan {
+	from = max(from, 0)
+	to = min(to, from+MaxWindow)
+	to = max(to, from)
+
+	st := doc.Settings
+	safe := SafeArea(st.Width, st.Height)
+	w := WindowPlan{
+		From: from, To: to, EndFrame: endFrame(doc), Width: st.Width, Height: st.Height,
+		Background: string(st.Background), SafeArea: [4]float64{safe.X, safe.Y, safe.W, safe.H},
+		Layers: []WindowLayer{}, Audio: []WindowAudio{},
+	}
+
+	p := newPlanner(doc, opts)
+	acc := map[string]*layerAcc{}
+
+	for t := from; t < to; t++ {
+		layers := p.frame(t).Layers
+		for i := range layers {
+			l := &layers[i]
+
+			a := acc[l.ItemID]
+			if a == nil {
+				a = newLayerAcc(p, t, to-t, l)
+				acc[l.ItemID] = a
+			}
+
+			a.add(t, l)
+		}
+	}
+
+	for _, id := range sortedLayers(doc, acc) {
+		w.Layers = append(w.Layers, acc[id].wl)
+	}
+
+	w.Audio = windowAudio(doc, from, to)
+
+	return w
+}
+
+// endFrame is the end of the project: the largest start+duration, 0 when empty.
+func endFrame(doc *timeline.Document) int {
+	end := 0
+	for id := range doc.Items {
+		it := doc.Items[id]
+		end = max(end, it.Start+it.Duration)
+	}
+
+	return end
+}
+
+// layerAcc builds the window form of one item as its frames arrive.
+type layerAcc struct {
+	wl        WindowLayer
+	asset     timeline.Asset // media layers
+	keyByWord map[int]int    // bitmap layers: active word -> index in the keys
+}
+
+func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
+	it := p.doc.Items[first.ItemID]
+	room = min(room, it.Start+it.Duration-t)
+
+	a := &layerAcc{}
+	a.wl = WindowLayer{
+		Item: first.ItemID, Kind: first.Kind, Asset: first.AssetID, AssetKind: first.AssetKind, First: t, Last: t,
+		CX: make(Series, 0, room), CY: make(Series, 0, room), W: make(Series, 0, room), H: make(Series, 0, room),
+		Rotation: make(Series, 0, room), Opacity: make(Series, 0, room),
+	}
+
+	if first.Kind == Media {
+		a.asset = p.doc.Assets[first.AssetID]
+		a.wl.SourceSeconds = make([]float64, 0, room)
+		a.wl.Crop = &[4]float64{first.Crop.X, first.Crop.Y, first.Crop.W, first.Crop.H}
+		a.wl.ColorMatrix = json.RawMessage("null")
+
+		if first.ColorMatrix != nil {
+			if data, err := json.Marshal(first.ColorMatrix); err == nil {
+				a.wl.ColorMatrix = data
+			}
+		}
+
+		return a
+	}
+
+	var nw, nh float64
+	if p.opts.Measure != nil {
+		nw, nh = p.opts.Measure(*first.Bitmap)
+	}
+
+	a.wl.Natural = &[2]float64{round3(nw), round3(nh)}
+	a.wl.Bitmaps = &WindowBitmaps{Keys: []string{}, Index: make([]int, 0, room)}
+	a.keyByWord = map[int]int{}
+
+	return a
+}
+
+func (a *layerAcc) add(t int, l *Layer) {
+	wl := &a.wl
+	wl.Last = t
+	wl.CX, wl.CY = append(wl.CX, l.CX), append(wl.CY, l.CY)
+	wl.W, wl.H = append(wl.W, l.W), append(wl.H, l.H)
+	wl.Rotation, wl.Opacity = append(wl.Rotation, l.Rotation), append(wl.Opacity, l.Opacity)
+
+	if l.Kind == Media {
+		sec := 0.0
+		if a.asset.FrameRate.Num > 0 {
+			sec = float64(l.SourceFrame) * float64(a.asset.FrameRate.Den) / float64(a.asset.FrameRate.Num)
+		}
+
+		wl.SourceSeconds = append(wl.SourceSeconds, round3(sec))
+
+		return
+	}
+
+	// Only the active word changes the bitmap of an item from frame to frame.
+	i, ok := a.keyByWord[l.Bitmap.ActiveWord]
+	if !ok {
+		i = len(wl.Bitmaps.Keys)
+		wl.Bitmaps.Keys = append(wl.Bitmaps.Keys, l.Bitmap.Key())
+		a.keyByWord[l.Bitmap.ActiveWord] = i
+	}
+
+	wl.Bitmaps.Index = append(wl.Bitmaps.Index, i)
+}
+
+// sortedLayers orders the items bottom first: by track order descending, then
+// first frame, then id.
+func sortedLayers(doc *timeline.Document, acc map[string]*layerAcc) []string {
+	ids := make([]string, 0, len(acc))
+	for id := range acc {
+		ids = append(ids, id)
+	}
+
+	slices.SortFunc(ids, func(a, b string) int {
+		return cmp.Or(
+			-cmp.Compare(doc.Tracks[doc.Items[a].Track].Order, doc.Tracks[doc.Items[b].Track].Order),
+			cmp.Compare(acc[a].wl.First, acc[b].wl.First),
+			cmp.Compare(a, b),
+		)
+	})
+
+	return ids
+}
+
+// windowAudio lists the audible items that sound in [from, to) with their
+// gain on each frame.
+func windowAudio(doc *timeline.Document, from, to int) []WindowAudio {
+	out := []WindowAudio{}
+	fps := doc.Settings.FPS
+
+	for _, it := range sources(doc) {
+		cs, ce := max(from, it.Start), min(to, it.Start+it.Duration)
+		if cs >= ce {
+			continue
+		}
+
+		wa := WindowAudio{Item: it.ID, Asset: it.Asset, First: cs, Last: ce - 1}
+
+		pos := int64(it.SourceIn)
+		if it.Speed.Den > 0 {
+			pos += int64(cs-it.Start) * int64(it.Speed.Num) / int64(it.Speed.Den)
+			wa.Speed = round3(float64(it.Speed.Num) / float64(it.Speed.Den))
+		}
+
+		wa.SourceSeconds = round3(float64(pos) * float64(fps.Den) / float64(fps.Num))
+
+		for t := cs; t < ce; t++ {
+			wa.Gain = append(wa.Gain, round3(gainAt(it, float64(t-it.Start))))
+		}
+
+		out = append(out, wa)
+	}
+
+	return out
+}
