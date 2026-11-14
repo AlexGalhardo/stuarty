@@ -60,6 +60,7 @@ type Options struct {
 	Wait   time.Duration
 	Poll   time.Duration
 	Client *http.Client
+	OnPoll func() // called before every attempt of the wait, so a test can act deterministically
 }
 
 // Mode tells how the caller reaches the workspace.
@@ -268,6 +269,9 @@ func poll(ctx context.Context, d Dir, o Options, attempt func() (*Session, error
 		case <-deadline.C:
 			return nil, d.LockedError()
 		case <-tick.C:
+			if o.OnPoll != nil {
+				o.OnPoll()
+			}
 			if s, err := attempt(); err != nil || s != nil {
 				return s, err
 			}

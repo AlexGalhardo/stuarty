@@ -213,18 +213,22 @@ func TestOpenWaitsForOwnerStarting(t *testing.T) {
 	defer owner.Release()
 	srv := fakeOwner(t, tok)
 
-	go func() {
-		time.Sleep(300 * time.Millisecond) // migrating
-		advertise(t, d, srv, ModeLocal)
-	}()
+	// The owner finishes starting on the third poll: the command has waited
+	// twice by then, whatever the speed of the machine.
+	polls := 0
+	o := fast(home)
+	o.OnPoll = func() {
+		if polls++; polls == 3 {
+			advertise(t, d, srv, ModeLocal)
+		}
+	}
 
-	start := time.Now()
-	s, err := Open(context.Background(), fast(home))
+	s, err := Open(context.Background(), o)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if s.Mode != ModeHTTP || time.Since(start) < 250*time.Millisecond {
-		t.Errorf("session = %+v after %v", s, time.Since(start))
+	if s.Mode != ModeHTTP || polls < 3 {
+		t.Errorf("session = %+v after %d polls", s, polls)
 	}
 }
 
