@@ -24,6 +24,7 @@ type Service interface {
 	ProjectRestore(ctx context.Context, req ProjectTrashRequest) (*ProjectStateResult, error)
 
 	Edit(ctx context.Context, req EditRequest) (*EditResult, error)
+	CommandHelp(ctx context.Context, req CommandHelpRequest) (*CommandHelpResult, error)
 
 	HistoryList(ctx context.Context, req HistoryListRequest) (*HistoryListResult, error)
 	Undo(ctx context.Context, req UndoRequest) (*UndoResult, error)

@@ -558,3 +558,36 @@ func TestSecurity_T06_ProjectIDIsNotAnExistenceOracle(t *testing.T) {
 		t.Errorf("local create with an id: %v", err)
 	}
 }
+
+func TestCommandHelp(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+
+	list, err := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{})
+	if err != nil || len(list.Commands) == 0 || list.Text == "" {
+		t.Fatalf("list = %+v, %v", list, err)
+	}
+
+	for _, c := range list.Commands {
+		if c.Name == "asset.add" {
+			t.Error("the list shows the internal command asset.add")
+		}
+	}
+
+	one, err := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Name: "item.move"})
+	if err != nil || one.Command == nil || one.Command.ArgsSchema["$schema"] == nil || one.Command.Example["item_id"] == nil {
+		t.Fatalf("detail = %+v, %v", one, err)
+	}
+
+	for _, name := range []string{"asset.add", "nope.nothing"} {
+		_, err = e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Name: name})
+		if se := serviceError(t, err); se.Code != command.CodeUnknownCommand || se.Details["known"] == nil {
+			t.Errorf("CommandHelp(%s) = %+v, want E_UNKNOWN_COMMAND with the known names", name, se)
+		}
+	}
+
+	if _, err = e.svc.CommandHelp(context.Background(), service.CommandHelpRequest{}); code(err) != service.CodeUnauthorized {
+		t.Errorf("without a caller: %v", err)
+	}
+}
