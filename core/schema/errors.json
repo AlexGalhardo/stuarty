@@ -1,0 +1,87 @@
+[
+  {
+    "code": "E_FONT_UNKNOWN",
+    "http": 422,
+    "retryable": false
+  },
+  {
+    "code": "E_IDEMPOTENCY_MISMATCH",
+    "http": 409,
+    "retryable": false
+  },
+  {
+    "code": "E_ID_EXISTS",
+    "http": 409,
+    "retryable": false
+  },
+  {
+    "code": "E_INTERNAL",
+    "http": 500,
+    "retryable": false
+  },
+  {
+    "code": "E_INVALID_STATE",
+    "http": 409,
+    "retryable": false
+  },
+  {
+    "code": "E_INVALID_TIME",
+    "http": 400,
+    "retryable": false
+  },
+  {
+    "code": "E_IN_USE",
+    "http": 409,
+    "retryable": false
+  },
+  {
+    "code": "E_LIMIT",
+    "http": 422,
+    "retryable": false
+  },
+  {
+    "code": "E_NOT_EMPTY",
+    "http": 409,
+    "retryable": false
+  },
+  {
+    "code": "E_NOT_FOUND",
+    "http": 404,
+    "retryable": false
+  },
+  {
+    "code": "E_OUT_OF_SOURCE",
+    "http": 422,
+    "retryable": false
+  },
+  {
+    "code": "E_OVERLAP",
+    "http": 409,
+    "retryable": false
+  },
+  {
+    "code": "E_REVISION_CONFLICT",
+    "http": 409,
+    "retryable": true
+  },
+  {
+    "code": "E_SLOT",
+    "http": 422,
+    "retryable": false
+  },
+  {
+    "code": "E_TYPE_MISMATCH",
+    "http": 422,
+    "retryable": false
+  },
+  {
+    "code": "E_UNKNOWN_COMMAND",
+    "http": 400,
+    "retryable": false
+  },
+  {
+    "code": "E_VALIDATION",
+    "http": 400,
+    "retryable": false
+  }
+]

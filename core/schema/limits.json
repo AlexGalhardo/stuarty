@@ -1,0 +1,11 @@
+{
+  "assets": 200,
+  "batch_bytes": 524288,
+  "batch_operations": 200,
+  "caption_words": 5000,
+  "items": 500,
+  "keyframes_per_property": 100,
+  "max_frames": 108000,
+  "tracks": 50,
+  "words_per_caption": 60
+}

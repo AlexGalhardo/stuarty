@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "above": {
+      "description": "Place the track directly over this track.",
+      "type": "string"
+    },
+    "below": {
+      "description": "Place the track directly under this track.",
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "visual",
+        "audio"
+      ],
+      "type": "string"
+    },
+    "name": {
+      "maxLength": 60,
+      "type": "string"
+    },
+    "position": {
+      "description": "top (default) or bottom.",
+      "enum": [
+        "top",
+        "bottom"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "kind"
+  ],
+  "type": "object"
+}

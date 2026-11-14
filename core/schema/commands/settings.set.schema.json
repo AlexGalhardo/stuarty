@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "background": {
+      "description": "A hex colour, or $name from template.colors.",
+      "type": "string"
+    },
+    "height": {
+      "description": "Frame height in pixels; even.",
+      "maximum": 4096,
+      "minimum": 16,
+      "type": "integer"
+    },
+    "loudness_target": {
+      "description": "Integrated loudness target in LUFS.",
+      "maximum": -5,
+      "minimum": -30,
+      "type": "number"
+    },
+    "width": {
+      "description": "Frame width in pixels; even.",
+      "maximum": 4096,
+      "minimum": 16,
+      "type": "integer"
+    }
+  },
+  "required": [],
+  "type": "object"
+}

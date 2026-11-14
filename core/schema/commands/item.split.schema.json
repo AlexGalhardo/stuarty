@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "at": {
+      "description": "Absolute position strictly inside the item.",
+      "type": "string"
+    },
+    "item_id": {
+      "type": "string"
+    },
+    "new_id": {
+      "description": "The id of the right part.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id",
+    "at"
+  ],
+  "type": "object"
+}

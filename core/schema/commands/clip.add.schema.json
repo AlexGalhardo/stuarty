@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": {
+      "description": "A video or image asset, or ast_placeholder in a template.",
+      "type": "string"
+    },
+    "duration": {
+      "description": "A length; default the rest of the asset, or 5s for an image.",
+      "type": "string"
+    },
+    "fit": {
+      "enum": [
+        "cover",
+        "contain",
+        "none"
+      ],
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "source_in": {
+      "description": "Offset into the asset; default 0s; omit for an image.",
+      "type": "string"
+    },
+    "start": {
+      "description": "Absolute position.",
+      "type": "string"
+    },
+    "track_id": {
+      "description": "A visual track.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "track_id",
+    "asset_id",
+    "start"
+  ],
+  "type": "object"
+}

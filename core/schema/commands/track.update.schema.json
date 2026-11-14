@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "hidden": {
+      "description": "Visual tracks only.",
+      "type": "boolean"
+    },
+    "muted": {
+      "type": "boolean"
+    },
+    "name": {
+      "description": "The track name; \"\" clears it.",
+      "maxLength": 60,
+      "type": "string"
+    },
+    "track_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "track_id"
+  ],
+  "type": "object"
+}
