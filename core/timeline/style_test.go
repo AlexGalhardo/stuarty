@@ -2,6 +2,10 @@ package timeline
 
 import (
 	"encoding/json"
+	"os"
+	"regexp"
+	"slices"
+	"strconv"
 	"testing"
 )
 
@@ -44,10 +48,37 @@ func TestStyleKeysAndFontWeights(t *testing.T) {
 	if w, ok := FontWeights(doc, "Mine"); !ok || len(w) != 2 || w[0] != 400 {
 		t.Errorf("%v %v", w, ok)
 	}
-	if w, ok := FontWeights(doc, "Inter"); !ok || len(w) != 2 {
+	if w, ok := FontWeights(doc, "Inter"); !ok || len(w) != 9 {
 		t.Errorf("%v %v", w, ok)
 	}
 	if _, ok := FontWeights(doc, "Comic"); ok {
 		t.Error("Comic exists")
+	}
+}
+
+// FONTS.md is the source of the shipped weights; BundledWeights must say the same.
+func TestBundledWeightsMatchFontsMD(t *testing.T) {
+	b, err := os.ReadFile("../../engine/raster/fonts/FONTS.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	re := regexp.MustCompile(`(?m)^\| ([A-Za-z ]+?)(?: \(default\))? \| [^|]+ \| (\d+)(?: to (\d+))?`)
+	rows := re.FindAllStringSubmatch(string(b), -1)
+	if len(rows) != len(BundledWeights) {
+		t.Fatalf("FONTS.md has %d families, BundledWeights %d", len(rows), len(BundledWeights))
+	}
+	for _, r := range rows {
+		lo, _ := strconv.Atoi(r[2])
+		hi := lo
+		if r[3] != "" {
+			hi, _ = strconv.Atoi(r[3])
+		}
+		var want []int
+		for w := lo; w <= hi; w += 100 {
+			want = append(want, w)
+		}
+		if !slices.Equal(BundledWeights[r[1]], want) {
+			t.Errorf("%s: FONTS.md says %v, BundledWeights %v", r[1], want, BundledWeights[r[1]])
+		}
 	}
 }

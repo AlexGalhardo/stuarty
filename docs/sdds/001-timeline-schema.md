@@ -261,7 +261,7 @@ When a property has keyframes they define its value: before the first keyframe t
 | key | string | the family name used in styles |
 | `files` | array of `{"weight": int, "hash": "sha256:..."}` | font files, stored in the workspace `fonts/` directory by hash |
 
-User fonts are a BETA feature (RF-053, the brand kit). In the Prototype and ALPHA the map must be empty (`V_FONT` then accepts only the bundled families) and no command writes to it.
+The weights of the bundled families are those of `engine/raster/fonts/FONTS.md`: for example Anton ships 400 only, so a style with `font_family` Anton needs `font_weight` 400. User fonts are a BETA feature (RF-053, the brand kit). In the Prototype and ALPHA the map must be empty (`V_FONT` then accepts only the bundled families) and no command writes to it.
 
 ### 3.10 Template fields
 
@@ -300,7 +300,7 @@ TemplateInfo, at the top of a template document: `{"description": string, "color
 | `V_TRANSITIONS` | transition durations sum to at most `duration` |
 | `V_KEYFRAMES` | keyframe rules of section 3.8 hold |
 | `V_WORDS` | caption word rules of section 3.7 hold |
-| `V_FONT` | every `font_family` and weight exists in the bundled set or in `fonts` (until `engine/raster/fonts/FONTS.md` lists the shipped weights, a bundled family is checked by name only) |
+| `V_FONT` | every `font_family` and weight exists in the bundled set or in `fonts`; the effective weight (the given one, else 700) must be one the family ships, as listed in `engine/raster/fonts/FONTS.md` and kept in `timeline.BundledWeights` by a test |
 | `V_SLOT` | slot names are unique and each slot kind matches its item type |
 | `V_COLOR_REF` | every `"$name"` colour reference exists in `template.colors` |
 | `V_LIMITS` | at most 50 tracks, 500 items, 200 assets and 5,000 caption words in the document |

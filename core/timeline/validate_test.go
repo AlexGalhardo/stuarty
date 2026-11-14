@@ -421,6 +421,17 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"caption highlight", func(d *Document) {
 			editItem(d, capItemID, func(i *Item) { i.Style = &CaptionStyle{Highlight: new("all")} })
 		}, VShape},
+		{"bundled weight missing", func(d *Document) {
+			text(
+				d,
+				"itm_x000000001",
+				60,
+				&CaptionStyle{FontFamily: new("JetBrains Mono"), FontWeight: new(900)},
+			)
+		}, VFont},
+		{"bundled default weight missing", func(d *Document) {
+			text(d, "itm_x000000001", 60, &CaptionStyle{FontFamily: new("Anton")})
+		}, VFont},
 		{"fonts no files", func(d *Document) { d.Fonts = map[string]ProjectFont{"Mine": {}} }, VShape},
 		{"fonts weight", func(d *Document) {
 			d.Fonts = map[string]ProjectFont{"Mine": {Files: []FontFile{{Weight: 150, Hash: d.Assets[assetID].Hash}}}}
