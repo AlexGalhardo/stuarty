@@ -12,7 +12,7 @@ body:
     id: area
     attributes:
       label: Area
-      options: [core, timeline, schema, command, plan, lint, engine, raster, ingest, export, transcribe, service, web, api, mcp, cli, ui, site, docs, repo, ci, deps, adr, sdd, go, security, other]
+      options: [core, timeline, schema, command, plan, lint, engine, raster, ingest, export, transcribe, installers, service, web, api, mcp, cli, ui, site, docs, repo, ci, deps, adr, sdd, go, security, other]
     validations:
       required: true
   - type: textarea

@@ -49,6 +49,7 @@ jobs:
             ingest
             export
             transcribe
+            installers
             service
             web
             api
@@ -91,7 +92,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           types='build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test'
-          scopes='core|timeline|schema|command|plan|lint|engine|raster|ingest|export|transcribe|service|web|api|mcp|cli|ui|site|docs|repo|ci|deps|deps-dev|release|adr|sdd|go|security'
+          scopes='core|timeline|schema|command|plan|lint|engine|raster|ingest|export|transcribe|installers|service|web|api|mcp|cli|ui|site|docs|repo|ci|deps|deps-dev|release|adr|sdd|go|security'
           pattern="^(${types})(\((${scopes})\))?!?: [^A-Z ].*[^. ]$|^(${types})(\((${scopes})\))?!?: [^A-Z ]$"
           bad=0
           while IFS= read -r line; do
