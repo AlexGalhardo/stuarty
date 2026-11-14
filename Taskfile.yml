@@ -98,6 +98,16 @@ tasks:
     cmds:
       - go mod tidy -diff
 
+  image:build:
+    desc: Build the container image as vukem-video:local
+    cmds:
+      - docker build -f .config/docker/vukem-video.Dockerfile -t vukem-video:local .
+
+  image:smoke:
+    desc: Smoke test the image built by image:build
+    cmds:
+      - bash scripts/image-smoke.sh vukem-video:local
+
   ci:
     desc: Everything the pull request pipeline runs locally
     cmds:
