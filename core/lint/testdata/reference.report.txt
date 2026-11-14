@@ -1,0 +1,16 @@
+lint r9 prj_9q8w7e6r5t: errors=2 warnings=3 (showing 5 of 5)
+error L_MEDIA_MISSING itm_g0n3a1b2c3 4s/120f-6s/180f
+  asset ast_3c5v8n2w6d is not in the project; the item cannot be rendered.
+  hint: import the file again, then replace the item's asset
+error L_SOURCE_RANGE itm_m1n2p3q4r5 0s/0f-4s/120f
+  the clip reads source frame 119 of asset ast_video000001, but the media in the store has 60 frames.
+  hint: re-import the file
+warning L_BLACK_FRAMES - 6s/180f-6.667s/200f
+  frames 180-199 have no visible item; they render as the background color #000000.
+  hint: fill the range with a clip or a shape, close it with timeline.close_gap, or shorten the timeline
+warning L_SAFE_AREA itm_s6t7v8w9x0 3.333s/100f-6s/180f
+  the caption box spans x 140-940 and y 25-175; the safe area is x 65-1015 and y 269-1248.
+  hint: move the item inside the safe area or use caption position "middle"
+warning L_SLIVER itm_k4s5l6i7v8 6.667s/200f-6.733s/202f
+  the clip lasts 2 frame(s), which is usually the result of a trim or split at the wrong time.
+  hint: delete it or trim the neighbour
