@@ -1,60 +1,56 @@
-# Contributing
+# Contributing to Vukem Video
 
-Thank you for working on Studio. The product goal is in [ROADMAP.md](ROADMAP.md). The public docs live in `site/`.
+Thank you for helping. Vukem Video is in the Prototype phase, so most of the code does not exist yet; the planning documents in [`docs/`](../docs/README.md) are the contract. Start with the requirements ([`docs/prds/`](../docs/prds)) and the specification of the area you will touch ([`docs/sdds/`](../docs/sdds)).
 
-## Setup
+By taking part you agree to the [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities privately, as described in [SECURITY](SECURITY.md), never in a public issue.
 
-- Git
-- Node.js 24, used by the docs site the same way the vukem.dev site is built
-- [Bun 1.4.4](https://bun.sh) for `bun run check`
-- Docker, only if you are building the image
+## Rules that are never traded
 
-```bash
-git clone https://github.com/AlexGalhardo/vukem-studio.git
-cd vukem-studio
-git config core.hooksPath .githooks
-bun install
-cd site
-npm ci
-npm run dev
+1. **One command core.** Every editing rule lives in `core/` (Go, pure, no I/O). The UI, the MCP server, the CLI and the HTTP API are thin adapters over the service. A rule about timelines written in a handler, a tool or in TypeScript is rejected in review, even "for now".
+2. **The UI never computes an edit result.** It draws what the core says and sends commands. `bun run check:thin-client` (in `web/`) enforces it.
+3. **Names come from one place.** Operations, tables, error codes and variables are in [`docs/sdds/000-shared-definitions.md`](../docs/sdds/000-shared-definitions.md). Change it first, then everything else.
+4. **A specification is the contract.** When the code must differ from an SDD, fix the SDD in the same pull request and say why.
+5. **No outbound network connection by default, no telemetry.**
+6. **No new dependency without the maintainer's approval.** Versions are exact, never `latest`, `next`, `rc`, `beta` or `alpha`.
+7. **Everything in the repository is in English.**
+
+## Commits and pull request titles
+
+Conventional Commits 1.0 in English:
+
+```text
+<type>(<scope>)!: <description>
+
+[body]
+
+[footer(s)]
 ```
 
-The site listens on the port Next prints. `/` redirects to `/docs/introduction`.
+- Types: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `style`, `revert`.
+- The description is imperative, starts with a lower-case letter, has no trailing period, and the header is at most 100 characters.
+- The scope is optional. When present it is one of `core`, `timeline`, `command`, `plan`, `lint`, `engine`, `raster`, `ingest`, `export`, `transcribe`, `service`, `web`, `api`, `mcp`, `cli`, `ui`, `site`, `docs`, `repo`, `ci`, `deps`, `deps-dev`, `release`.
+- A breaking change has `!` after the type or scope and a `BREAKING CHANGE:` footer that describes the impact.
+- A security change on a `feat`, `fix`, `perf` or `refactor` has a `Security: <one line on the risk closed>` footer.
+- The task or the issue goes in the body: `Refs: P1-ENG-003` or `Fixes #123`.
+- One logical change per commit and per pull request.
+
+Pull requests are squash-merged: the pull request title becomes the commit subject and its body the commit message, so the title is what the changelog reads, and the footers above must be in the pull request body. `CHANGELOG.md` is generated from the commits by the release tool and is not edited by hand.
+
+## Pull requests and completion
+
+1. One pull request per task or issue, titled as a Conventional Commit.
+2. Fill in the pull request template: the task or issue, the checks you ran, the thin-client rule and, if you found friction with the vukem framework, its record.
+3. A report that something works is a claim, not evidence. A change is done when its output exists and is tested, and every check of its task has been run and its result is visible in the pull request. A change that cannot meet a check is not silently changed: explain why in the pull request.
+4. The maintainer reviews, fixes the last defects, squash-merges and pushes. Nobody else pushes to `main`.
 
 ## Checks
 
-Run the ones your change can affect.
+The task runner (`task lint`, `task test`, `task ci`) and the pull request pipeline arrive with later tasks. Until then run what exists: `go build ./...`, `go vet ./...` and `go test ./...` at the root, and the scripts of `web/package.json` in `web/` (Bun, not npm). The same checks run on Linux, macOS and Windows.
 
-| Change | Command |
-| --- | --- |
-| Go app | `go test -count=1 ./tests/` |
-| App TypeScript | `bun run typecheck` from the repository root |
-| TypeScript in `site/` | `bun run check` from the repository root |
-| MDX docs | `npm run check:mdx` inside `site/` |
-| ESLint in `site/` | `npm run lint` inside `site/` |
-| Markdown outside `.agents/` | `npx markdownlint-cli2` |
-| Docs production build | `npm run build` inside `site/` |
+## Editor settings
 
-`.agents/skills/` is ignored by markdownlint until those kits are translated. Do not "fix" them by silencing a rule in a kit you were not asked to edit.
+Indentation is tabs of width 4, except in files whose format needs spaces (YAML, Markdown lists and tables). Git expects LF endings in the repository.
 
-## Commits
+## Security-sensitive changes
 
-[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) in English.
-
-```text
-feat(docs): add the render page
-fix(site): keep the changelog path at the repo root
-```
-
-The subject is lowercase and has no final period. Types: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `style`, `revert`.
-
-One logical change per commit. Update `CHANGELOG.md` under `[Unreleased]` when the change is user-visible or changes a command.
-The release commit also sets `"version"` in `package.json` to the new tag without the `v`.
-
-## Pull requests
-
-Branch from `main`. Open the pull request against `main`. The title uses the same conventional header as the commit. `main` is a protected branch: green checks, linear history.
-
-## Skills
-
-A visual skill under `.agents/skills/` is data for the future prompt compiler. Add a skill by unpacking it into its own directory and listing the id on the catalog page. Do not commit `zip/`.
+A change that touches authentication, path handling, the FFmpeg invocation policy or anything that opens a network connection needs a regression test and a `Security:` footer. Read [SDD-007](../docs/sdds/007-security-model.md) first.

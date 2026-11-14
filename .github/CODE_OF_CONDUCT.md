@@ -10,7 +10,7 @@ Examples of behavior that helps:
 
 - Being respectful in disagreement
 - Accepting correction on code and docs
-- Focusing on what is best for the people who use Studio
+- Focusing on what is best for the people who use Vukem Video
 
 Examples of behavior that is not accepted:
 
@@ -22,11 +22,11 @@ Examples of behavior that is not accepted:
 
 ## Scope
 
-This code applies in the repository, the issue tracker, pull requests, and any other Studio space, and it applies when someone represents the project in public.
+This code applies in the repository, the issue tracker, pull requests, and any other Vukem Video space, and it applies when someone represents the project in public.
 
 ## Enforcement
 
-Report incidents through [the security contact path](SECURITY.md) or by emailing the maintainers listed on the GitHub repository. Reports are reviewed and result in a response that the maintainers consider appropriate, including a warning or a ban from community spaces.
+Report incidents through [the security contact path](SECURITY.md) or by contacting the maintainer listed on the GitHub repository. Reports are reviewed and result in a response that the maintainers consider appropriate, including a warning or a ban from community spaces.
 
 Maintainers who do not follow this code may be removed from the maintainer team.
 
