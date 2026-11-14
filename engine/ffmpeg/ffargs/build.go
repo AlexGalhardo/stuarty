@@ -404,6 +404,21 @@ func ProbeJSON(pol Policy, path string) ([]string, error) {
 	return probeArgv(pol, path, "-print_format", "json", "-show_format", "-show_streams")
 }
 
+// ProbePacketFlags lists the pts_time and flags of the packets of one stream, for the keyframe
+// checks of SDD-011 5.1 (a flags value starting with K is a keyframe).
+func ProbePacketFlags(pol Policy, path string, stream int) ([]string, error) {
+	return probeArgv(
+		pol,
+		path,
+		"-select_streams",
+		strconv.Itoa(stream),
+		"-show_entries",
+		"packet=pts_time,flags",
+		"-of",
+		"csv=p=0",
+	)
+}
+
 // ProbePacketTimes lists the timestamps of the packets of one stream, for the nominal frame rate.
 func ProbePacketTimes(pol Policy, path string, stream int) ([]string, error) {
 	return probeArgv(
