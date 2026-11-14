@@ -1,0 +1,84 @@
+package store
+
+import (
+	"database/sql"
+	"encoding/json"
+
+	"github.com/AlexGalhardo/vukem/database"
+
+	"github.com/AlexGalhardo/vukem-video/service"
+)
+
+// repos is the set of repositories over one executor: the database for reads
+// and single statements, or a transaction.
+type repos struct{ ex database.Executor }
+
+func (r repos) Projects() service.ProjectRepo        { return projectRepo{r.ex} }
+func (r repos) Operations() service.OperationRepo    { return operationRepo{r.ex} }
+func (r repos) Idempotency() service.IdempotencyRepo { return idempotencyRepo{r.ex} }
+func (r repos) Assets() service.AssetRepo            { return assetRepo{r.ex} }
+func (r repos) Jobs() service.JobRepo                { return jobRepo{r.ex} }
+func (r repos) Templates() service.TemplateRepo      { return templateRepo{r.ex} }
+func (r repos) Backups() service.BackupRepo          { return backupRepo{r.ex} }
+func (r repos) Audit() service.AuditRepo             { return auditRepo{r.ex} }
+
+// nullJSON stores an empty raw message as NULL.
+func nullJSON(m json.RawMessage) any {
+	if len(m) == 0 {
+		return nil
+	}
+	return string(m)
+}
+
+func rawJSON(s sql.NullString) json.RawMessage {
+	if !s.Valid {
+		return nil
+	}
+	return json.RawMessage(s.String)
+}
+
+func nullString(s string) any {
+	if s == "" {
+		return nil
+	}
+	return s
+}
+
+func ptrInt64(n sql.NullInt64) *int64 {
+	if !n.Valid {
+		return nil
+	}
+	v := n.Int64
+	return &v
+}
+
+func ptrInt(n sql.NullInt64) *int {
+	if !n.Valid {
+		return nil
+	}
+	v := int(n.Int64)
+	return &v
+}
+
+func ptrString(s sql.NullString) *string {
+	if !s.Valid {
+		return nil
+	}
+	v := s.String
+	return &v
+}
+
+func boolInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+// rowsAffected reports how many rows a statement changed.
+func rowsAffected(res sql.Result, err error) (int64, error) {
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
+}
