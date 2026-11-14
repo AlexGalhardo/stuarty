@@ -218,17 +218,20 @@ type BitmapSpec struct {
 func (s BitmapSpec) Key() string
 
 // Render draws the bitmap. It is deterministic: same spec, same bytes.
-func Render(spec BitmapSpec, fonts FontSet) (Bitmap, error)
+func Render(spec BitmapSpec, fonts *FontSet) (Bitmap, error)
 
 type Bitmap struct {
     Pix            []byte // RGBA, 8 bits, straight (non-premultiplied) alpha
     Width, Height  int    // pixels of Pix
     NaturalW, NaturalH float64 // size at PixelScale 1, in frame pixels
-    WordBoxes      []Rect // captions: box of each word at PixelScale 1, for the lint and the UI
+    CenterDX, CenterDY float64 // offset at PixelScale 1 from the centre of the bitmap to the centre of the text block (item 6 of 5.1)
+    WordBoxes      []Rect // captions: box of each word at PixelScale 1, in bitmap coordinates, for the lint and the UI
 }
 
 const Version = 1 // bumped on any change that alters output bytes
 ```
+
+As built (P1-RND-003): `Kind` is `"text"`, `"caption"` or `"shape"`; for a caption `Text` is ignored and the text is `Words` joined by one space, with a line break before every index of `Breaks`. `Colour` is straight RGBA and marshals as `"#RRGGBBAA"`. `ResolvedStyle` has the fields of SDD-001 §3.6 and §3.7 with the colours resolved, `BackgroundColor` and `HighlightBackground` as `*Colour` (nil: none) and `MaxWidth` in pixels. `Render` returns `ErrInvalidSpec` for a pixel scale outside (0, 8], a non-positive size, line height or width, a caption with no words or an active word out of range, an unknown kind or shape, and a bitmap over `MaxPixels` (33.5 million). `FontSet.Lookup(family, weight)` returns a `*FontError` with `Code` `E_FONT_UNKNOWN` and the weights that exist. `Bitmap.PNG()` encodes the bitmap as a PNG with straight alpha; the encoding is deterministic. `Cache` (`NewCache(fonts, bytes)`, `Get(spec)`) is the in-process layer of §5.4: an LRU over the pixels, default budget 64 MiB, safe for concurrent use.
 
 ### 5.1 Layout rules
 
@@ -242,9 +245,23 @@ const Version = 1 // bumped on any change that alters output bytes
 8. Caption highlight: the active word is filled with `highlight_color`; with `highlight_background` a rounded box is drawn behind that word.
 9. A glyph missing from the font is drawn with the font's `.notdef` glyph. There is no fallback to another font. The lint reports text containing characters the font lacks.
 
+Details fixed by the implementation, where the items above leave room (P1-RND-003):
+
+- **Breaking.** The library's line breaker runs with the policy `Never`, so a word wider than `max_width` is never cut (item 2). An empty line (two forced breaks in a row, or a break at the end) is a line. Trailing spaces of a line do not count in its width.
+- **Runs.** Each paragraph (the text between forced breaks) is split into runs by the bidirectional algorithm and then by script; a run is shaped with the language `en`. Spaces, digits, punctuation and combining marks join the script next to them.
+- **Vertical layout.** The line box is `size × line_height` high; the font's ascender and descender (hhea or OS/2 as the library reads them) are centred in it, and the baseline is placed accordingly.
+- **Upper case** (item 7) is the one-to-one Unicode simple mapping (`unicode.ToUpper`): `ß` stays `ß`. It keeps the number of runes, so word ranges and boxes survive it.
+- **Stroke** (item 5) is the union of a rectangle along every segment of the flattened glyph outline and a round join on the outer side of every turn, so no gap or spike appears; it is drawn under the fill, which hides its inner half, so the visible width outside the glyph is `stroke_width / 2`. For a **shape** the stroke is drawn over the fill and is visible on both sides of the edge.
+- **Shadow** is not drawn when `shadow_dx`, `shadow_dy` and `shadow_blur` are all 0 (it would only darken the antialiased edge). The box blur radius is `ceil(shadow_blur × PixelScale)` and the blur is integer arithmetic that rounds half up at every pass.
+- **Highlight box** (item 8) is the word's box (a full line high) grown by `0.1 × size` on the left and on the right, with corner radius `max(background_radius, 0.15 × size)`.
+- **Word box** is the horizontal extent of the glyphs of the word and the height of the line box; the box of a word with no glyph is empty.
+- **Margins.** The bitmap is the union of everything drawn, with one clear pixel on every side, so the antialiased edge never touches the border of the bitmap. `NaturalW` and `NaturalH` include that pixel.
+- **Curves** are flattened to within 0.1 pixel (`flatTolerance`) before filling and stroking. Geometry that adds a product avoids the fused multiply-add the compiler may use on arm64 (`mul` in `geom.go`), and `golang.org/x/image/vector` disables it itself, so the bytes are equal on every architecture.
+- **Variable fonts.** The bundled families are the Google Fonts distribution of the upstream projects (`fonts/FONTS.md`): Inter, Montserrat, Playfair Display and JetBrains Mono are variable fonts, so one file serves every weight of its range; Anton and Bebas Neue have one weight, 400.
+
 ### 5.2 Fonts
 
-Fonts come only from the bundled set, embedded in the binary under `engine/raster/fonts/`, and from the project's `fonts` map. `FontSet.Lookup(family, weight)` returns `E_FONT_UNKNOWN` data for a missing pair. System fonts are never read.
+Fonts come only from the bundled set, embedded in the binary under `engine/raster/fonts/` (the files, their weights, sources and checksums are in `FONTS.md` there, the licences in `licenses/fonts/`), and from the project's `fonts` map (BETA). `FontSet.Lookup(family, weight)` returns `E_FONT_UNKNOWN` data for a missing pair. System fonts are never read.
 
 ### 5.3 Oversampling
 
@@ -409,7 +426,7 @@ The executor, in `web/resources/js/editor/preview/`:
 | Compositor against stored reference frames, same pinned FFmpeg | identical bytes of the composed RGBA frame | `engine/export` golden test: for each case in `engine/export/testdata/golden/<case>/` (a document, tiny media fixtures and `frame-<n>.png` references), compose the listed frames and compare SHA-256 |
 | Compositor on two runs | identical | the same test run twice in one process and across two processes |
 | Compositor with a different FFmpeg build | PSNR at least 50 dB per frame | a CI job that runs the golden cases with the PATH FFmpeg when it differs from the pinned one; reported, not blocking |
-| Rasterizer | identical bytes | `engine/raster/testdata/golden/<case>.png`, one per layout rule of section 5.1, plus right-to-left text, an emoji sequence and a missing glyph |
+| Rasterizer | identical bytes | `engine/raster/testdata/golden/<case>.png`, one per layout rule of section 5.1, plus right-to-left text, an emoji sequence and a missing glyph (15 cases in `golden_test.go`). The test compares the decoded pixel bytes, not the PNG bytes, because the compressor may change between Go versions; regenerate with `go test ./engine/raster -run Golden -update` |
 | Preview executor against compositor, during playback | SSIM at least 0.97 on luma per frame at preview resolution; no layer centre displaced by more than 1 pixel | Playwright test: load each golden case in the editor, step the preview to the listed frames without the truth-on-pause overlay, capture the canvas, compare with `ViewFrame` at the same width |
 | Exported file | passes the verification of section 8 step 7; its frames, decoded, have SSIM at least 0.95 against the composed frames | export test on each golden case with `libopenh264` |
 | Audio mix | sample-exact against `engine/export/testdata/audio/<case>.wav` for cases without speed change; within 1 dB RMS per 100 ms window for cases with `atempo` | mixer golden test |
@@ -442,6 +459,8 @@ Rules that follow from the measurements:
 5. The number of bands is the number of physical cores, at most 8.
 
 Fallback, kept in reserve and not needed for the Prototype: exchange frames with FFmpeg as YUV 4:2:0 instead of RGBA (halving the bytes moved and removing the conversion that dominates), with bitmaps blended in YUV; then let FFmpeg overlay a cropped bitmap region for unanimated full-frame clips, the path the first spike proved identical frame by frame to full-frame piping. Either fallback changes only `engine/export`; the plan, the rasterizer and every contract in this document stay.
+
+Rasterizer (P1-RND-003, `engine/raster`, same machine, Go 1.27.4, `go test -bench Caption`): the caption of the reference scene (six words on two lines, Inter 700 at 64 px, stroke 5, shadow blur 6, one highlighted word with its box, 1080 wide frame) takes **3.7 ms** on a cache miss (4.9 ms with one core, 10.8 ms at `PixelScale` 2) and **6 µs** on a hit (hashing the spec and finding the bitmap). The budgets are 5 ms and 0.1 ms. The Linux and macOS numbers are recorded here after the first CI run of the benchmark.
 
 The measurements came from one Windows machine with other processes running. The Prototype repeats the first row on the Linux and macOS runners and records the numbers here; the first row is also a benchmark in CI (`BenchmarkExportCommonCase`) that fails below 1.5 times real time on the reference runner.
 
