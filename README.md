@@ -6,7 +6,7 @@ An agent edits through MCP, a CLI or an HTTP API. A person edits the same projec
 
 ## Status
 
-**Prototype phase: the product is planned but not built yet.** The repository holds the Go module and package skeleton, the planning documents and a server that boots. The editor, the MCP server, the CLI commands and the HTTP API described below are specified, not released. There is no release and no installer yet. The documentation site is live at <https://alexgalhardo.github.io/vukem-video/>.
+**Prototype phase: the product is planned but not built yet.** The repository holds the Go module and package skeleton, the planning documents and a server that boots. The editor, the MCP server, the CLI commands and the HTTP API described below are specified and being built. The first editor release is `v0.2.0`, with installers and a container image of the local server; it does not edit video yet. The documentation site is live at <https://alexgalhardo.github.io/vukem-video/>.
 
 ## How it is built
 
@@ -19,7 +19,26 @@ The layout is `core/`, `engine/`, `service/`, `web/`, `site/` and `desktop/` (th
 
 ## Quick start
 
-Both paths below describe the planned interface of the Prototype phase ([SDD-003](docs/sdds/003-agent-interfaces.md)). They do not work until the first release.
+The two paths below use the interface of the Prototype phase ([SDD-003](docs/sdds/003-agent-interfaces.md)); the editor, the MCP server and the CLI commands are still being built, so parts of them are specified but not working yet.
+
+### Install
+
+Each release on the [releases page](https://github.com/AlexGalhardo/vukem-video/releases) attaches archives for six targets, installers of the local server and `checksums.txt`, signed with cosign. The installers put `vukem-video` on your system and add a shortcut that starts the local server on `127.0.0.1` and opens the editor in your browser. Uninstalling removes the program and keeps your workspace.
+
+| System | File |
+| --- | --- |
+| Windows 11 | `vukem-video_<version>_windows_amd64_setup.exe` |
+| Debian and Ubuntu | `vukem-video_<version>_linux_<arch>.deb` |
+| Any Linux | `vukem-video_<version>_linux_amd64.AppImage` |
+| macOS | `vukem-video_<version>_darwin_<arch>.pkg` |
+
+The container image runs the web version on your machine only; the published port is bound to the loopback of the host:
+
+```bash
+docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data ghcr.io/alexgalhardo/vukem-video:<version>
+```
+
+**Windows SmartScreen and macOS Gatekeeper.** The installers are not signed with a paid code-signing certificate, so both systems warn before the first run. Windows SmartScreen shows "Windows protected your PC" for the `.exe`: choose "More info", then "Run anyway". macOS Gatekeeper says the package cannot be opened because Apple cannot check it: control-click the `.pkg` and choose Open, or allow it in System Settings, Privacy & Security. To check a download before you run it, verify `checksums.txt` with cosign and compare the SHA-256 of the file, as described in the [security policy](.github/SECURITY.md).
 
 ### For an agent
 
@@ -34,7 +53,7 @@ Both paths below describe the planned interface of the Prototype phase ([SDD-003
 
 ### Contributors
 
-To build from source you need Go (see `go.mod`) and Bun for `web/`. The task runner (`task lint`, `task test`, `task ci`) arrives with a later task; until then use `go build ./...` and `go test ./...`. Read [CONTRIBUTING](.github/CONTRIBUTING.md) first.
+To build from source you need Go (see `go.mod`) and Bun for `web/`. The task runner is [Task](https://taskfile.dev): `task lint`, `task test` and `task ci`. Read [CONTRIBUTING](.github/CONTRIBUTING.md) first.
 
 ## Documentation
 
