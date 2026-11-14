@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.words[0].text \"two words\" contains whitespace.",
+  "hint": "Send one word per entry.",
+  "retryable": false,
+  "path": "args.words[0]"
+}

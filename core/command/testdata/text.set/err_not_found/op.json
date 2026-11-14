@@ -1,0 +1,7 @@
+{
+  "op": "text.set",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "text": "x"
+  }
+}

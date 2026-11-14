@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "item.added",
+    "id": "itm_k000000001",
+    "object": {
+      "asset": "ast_3c5v8n2w6d",
+      "duration": 60,
+      "id": "itm_k000000001",
+      "start": 0,
+      "track": "trk_f6g7h8j9k0",
+      "type": "clip"
+    }
+  }
+]

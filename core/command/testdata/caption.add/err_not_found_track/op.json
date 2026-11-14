@@ -1,0 +1,9 @@
+{
+  "op": "caption.add",
+  "args": {
+    "track_id": "trk_zzzzzzzzzz",
+    "start": "0f",
+    "text": "Hi",
+    "duration": "10f"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.words must have at least 1 word, got 0.",
+  "hint": "Send at least one word, for example {\"text\": \"Hello\", \"start\": \"0f\", \"duration\": \"9f\"}.",
+  "retryable": false,
+  "path": "args.words"
+}

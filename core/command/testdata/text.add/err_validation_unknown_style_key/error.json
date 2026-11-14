@@ -1,0 +1,28 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.style.zzz is not a style key.",
+  "hint": "The style keys are: align, background_color, background_padding, background_radius, color, font_family, font_weight, line_height, max_width, shadow_blur, shadow_color, shadow_dx, shadow_dy, size, stroke_color, stroke_width, uppercase.",
+  "retryable": false,
+  "path": "args.style.zzz",
+  "details": {
+    "allowed": [
+      "align",
+      "background_color",
+      "background_padding",
+      "background_radius",
+      "color",
+      "font_family",
+      "font_weight",
+      "line_height",
+      "max_width",
+      "shadow_blur",
+      "shadow_color",
+      "shadow_dx",
+      "shadow_dy",
+      "size",
+      "stroke_color",
+      "stroke_width",
+      "uppercase"
+    ]
+  }
+}

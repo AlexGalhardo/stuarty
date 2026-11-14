@@ -1,0 +1,10 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Duration 3 frames is too short for 4 words; each word needs 1 frame.",
+  "hint": "Use duration \"4f\" or longer.",
+  "retryable": false,
+  "path": "args.duration",
+  "details": {
+    "min_duration": 4
+  }
+}

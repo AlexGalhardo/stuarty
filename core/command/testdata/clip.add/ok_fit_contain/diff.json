@@ -1,0 +1,15 @@
+[
+  {
+    "kind": "item.added",
+    "id": "itm_m1n2p3q4r5",
+    "object": {
+      "asset": "ast_3c5v8n2w6d",
+      "duration": 900,
+      "fit": "contain",
+      "id": "itm_m1n2p3q4r5",
+      "start": 0,
+      "track": "trk_f6g7h8j9k0",
+      "type": "clip"
+    }
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "duration": {
+    "frame": 10,
+    "requested": "10f",
+    "seconds": 0.333
+  },
+  "id": "itm_k000000001",
+  "start": {
+    "frame": 0,
+    "requested": "0f",
+    "seconds": 0
+  },
+  "word_count": 1
+}

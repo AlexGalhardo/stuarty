@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give at least one of text, style, reset_style.",
+  "hint": "Send for example {\"text\": ...}.",
+  "retryable": false,
+  "path": "args"
+}

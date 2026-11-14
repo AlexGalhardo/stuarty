@@ -1,0 +1,16 @@
+{
+  "op": "caption.add",
+  "args": {
+    "track_id": "trk_a1b2c3d4e5",
+    "start": "12f",
+    "id": "itm_s6t7v8w9x0",
+    "words": [
+      {
+        "text": "a",
+        "start": "0f",
+        "duration": "5f"
+      }
+    ],
+    "duration": "5f"
+  }
+}

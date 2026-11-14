@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.source_in must be omitted for image asset ast_9m8n7p6q5r.",
+  "hint": "Remove source_in; images have no source position.",
+  "retryable": false,
+  "path": "args.source_in"
+}

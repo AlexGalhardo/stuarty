@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.duration is required with the placeholder asset.",
+  "hint": "Send a duration, for example \"5s\".",
+  "retryable": false,
+  "path": "args.duration"
+}

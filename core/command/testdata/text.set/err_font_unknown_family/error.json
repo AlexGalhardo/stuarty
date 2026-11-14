@@ -1,0 +1,17 @@
+{
+  "code": "E_FONT_UNKNOWN",
+  "message": "Font \"Comic\" is not available; available families: Anton, Bebas Neue, Inter, JetBrains Mono, Montserrat, Playfair Display.",
+  "hint": "Use font_family \"Inter\".",
+  "retryable": false,
+  "path": "args.style.font_family",
+  "details": {
+    "available": [
+      "Anton",
+      "Bebas Neue",
+      "Inter",
+      "JetBrains Mono",
+      "Montserrat",
+      "Playfair Display"
+    ]
+  }
+}
