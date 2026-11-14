@@ -1,0 +1,42 @@
+---
+title: Introduction
+description: What Vukem Video is, who it is for, and what exists today. It is in the Prototype phase.
+---
+
+Vukem Video is a minimalist, open source (MIT) video editor, web first and desktop later, built so that an AI agent can operate it as a first-class user. A person edits the same project in a browser.
+
+<Callout type="warning" title="Prototype phase">
+The product is planned but not built yet. There is no release, no installer and no container image, and no editor to open. This site describes what is specified. When a page says "will", it is a plan, not a feature.
+</Callout>
+
+## The idea
+
+An agent edits through **MCP**, a **command-line interface** or an **HTTP API**. A person edits the same project in a **browser UI**. All of them go through one command core written in Go, so a human and an agent see the same result and the same history. The user interface never computes the result of an edit: it draws what the core says and sends commands.
+
+Two use cases decide every priority:
+
+- short vertical videos with captions for social networks (9:16 is the default frame);
+- product commercials with animated text, music and reusable templates.
+
+## What it will not do
+
+- It does not send your media anywhere. There is no outbound network connection by default and no telemetry.
+- It does not need an account or a cloud service. It runs on your machine.
+- It does not ship FFmpeg inside the editor. FFmpeg is used only as a separate LGPL process, and the pixels are composed in Go.
+
+## Where things stand
+
+| Area | State |
+| --- | --- |
+| Requirements, architecture decisions and specifications | written, in the repository `docs/` folder |
+| Go module, package skeleton, a server that boots | in the repository |
+| Command core, editing operations, render, export | specified, not implemented |
+| MCP server, CLI commands, HTTP API | specified, not implemented |
+| Browser editor | specified, not implemented |
+| Generated reference and the agent quick start | planned for this site |
+
+The [changelog](/changelog) lists what has been released. Follow the [repository](https://github.com/AlexGalhardo/vukem-video) for progress.
+
+## Next steps
+
+Read [Getting started](/docs/quick-start) for how you will run it and what is true today.

@@ -1,0 +1,47 @@
+---
+title: Getting started
+description: How Vukem Video will be run, and what you can do today while it is in the Prototype phase.
+---
+
+<Callout type="warning" title="Nothing here works yet">
+Vukem Video is in the Prototype phase. The commands below describe the planned interface of the first release. They are not available today, and the first release is not published.
+</Callout>
+
+## What you can do today
+
+- Read the planning documents in the [repository](https://github.com/AlexGalhardo/vukem-video/tree/main/docs): requirements, architecture decisions and specifications.
+- Build the server skeleton from source. You need Go (the version in `go.mod`) and Bun for the front end. The server boots and answers a health check; it does not edit video yet.
+- Watch the [releases](https://github.com/AlexGalhardo/vukem-video/releases) page and the [changelog](/changelog).
+
+## How it will run
+
+The product runs only on your machine. A release is planned to ship:
+
+- a container image of the web version, started with a command of this shape (the image name is published with the release):
+
+```bash
+docker run -p 127.0.0.1:7878:7878 ghcr.io/alexgalhardo/vukem-video
+```
+
+- installers of the local server for Windows, Linux and macOS, attached to the GitHub release, that install `vukem-video` and a shortcut that opens the editor in your browser.
+
+The server listens on `127.0.0.1:7878` and is reachable from your computer only.
+
+## For a person
+
+1. Start the server (`vukem-video serve`).
+2. Open `http://127.0.0.1:7878` in a browser, or run `vukem-video open`.
+
+## For an agent
+
+Pick one of three routes to the same project:
+
+1. The stdio MCP server: the command is `vukem-video mcp`.
+2. The CLI with `--json`, for example `vukem-video project:create --name "Launch teaser" --json`.
+3. The HTTP API of `vukem-video serve`, with Streamable HTTP MCP at `POST /mcp`.
+
+These routes are specified in the repository (SDD-003) and are not implemented yet.
+
+## Next steps
+
+Back to the [introduction](/docs/introduction).
