@@ -1,0 +1,281 @@
+package servicetest
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	"github.com/AlexGalhardo/vukem/queue"
+
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/pathguard"
+	"github.com/AlexGalhardo/vukem-video/web/app/jobs"
+)
+
+// lazyRunner lets the queue handlers exist before the service that they call.
+type lazyRunner struct {
+	mu sync.Mutex
+	r  service.JobRunner
+}
+
+func (l *lazyRunner) get() service.JobRunner {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	return l.r
+}
+
+func (l *lazyRunner) RunJob(ctx context.Context, id string) error { return l.get().RunJob(ctx, id) }
+func (l *lazyRunner) Recover(ctx context.Context) error           { return l.get().Recover(ctx) }
+func (l *lazyRunner) Cancel(ctx context.Context, id string) error { return l.get().Cancel(ctx, id) }
+
+type mediaCfg struct {
+	ingest   service.Ingester
+	exporter service.Exporter
+	// noQueue leaves the jobs with no worker: the rows are created and stay queued.
+	noQueue bool
+	limits  service.Limits
+	guard   *pathguard.Config
+	// realIngest runs engine/ingest instead of the fake; with no FFmpeg installed it
+	// still refuses what is not media, which is decided by the first bytes.
+	realIngest bool
+	// durable runs the jobs on the database queue with workers instead of inline.
+	durable bool
+}
+
+// mediaEnv is an env whose service has the media and job machinery, with a
+// fake ingest and a fake exporter unless the test brings its own.
+type mediaEnv struct {
+	*env
+	ws      string
+	runner  service.JobRunner
+	queue   *queue.Queue
+	ingests atomic.Int64
+	// hold makes the queue drop what is enqueued, as a crash between the commit
+	// and the delivery would.
+	hold  atomic.Bool
+	files string
+}
+
+func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
+	tb.Helper()
+
+	m := &mediaEnv{files: tb.TempDir()}
+	lazy := &lazyRunner{}
+
+	if cfg.ingest == nil {
+		cfg.ingest = m.fakeIngest
+	}
+
+	m.env = newEnvWith(tb, func(e *env, o *service.Options) {
+		m.ws = string(e.dir)
+		gc := pathguard.Config{Workspace: m.ws}
+
+		if cfg.guard != nil {
+			gc = *cfg.guard
+			gc.Workspace = m.ws
+		}
+
+		guard, err := pathguard.New(gc)
+		if err != nil {
+			tb.Fatal(err)
+		}
+
+		o.Workspace = m.ws
+		o.Media = service.Media{
+			Content: enginestore.New(m.ws), Guard: guard, Ingest: cfg.ingest,
+			FreeBytes: func(string) (uint64, error) { return 1 << 40, nil },
+		}
+		if cfg.realIngest {
+			runner, rerr := ffmpeg.NewRunner(&ffmpeg.Installation{}, m.ws)
+			if rerr != nil {
+				tb.Fatal(rerr)
+			}
+
+			o.Media.Runner, o.Media.Ingest = runner, ingest.Run
+		}
+
+		o.Exporter = cfg.exporter
+		o.Limits = cfg.limits
+
+		if cfg.noQueue {
+			return
+		}
+
+		var driver queue.Driver = queue.Sync{}
+
+		if cfg.durable {
+			db, err := queue.NewDatabase(
+				e.store.DB(),
+				queue.DatabaseOptions{Table: "queue_jobs", FailedTable: "queue_failed_jobs"},
+			)
+			if err != nil {
+				tb.Fatal(err)
+			}
+
+			driver = db
+		}
+
+		m.queue, err = jobs.NewQueue(driver, lazy)
+		if err != nil {
+			tb.Fatal(err)
+		}
+
+		o.Enqueue = gated{inner: jobs.Dispatcher{Queue: m.queue}, hold: &m.hold}
+	})
+
+	r, ok := service.RunnerOf(m.svc)
+	if !ok {
+		tb.Fatal("the service has no job runner")
+	}
+
+	lazy.mu.Lock()
+	lazy.r, m.runner = r, r
+	lazy.mu.Unlock()
+
+	return m
+}
+
+// write makes a file of the media directory and returns its path.
+func (m *mediaEnv) write(name, content string) string {
+	m.t.Helper()
+
+	p := filepath.Join(m.files, name)
+	if err := os.WriteFile(p, []byte(content), 0o600); err != nil {
+		m.t.Fatal(err)
+	}
+
+	return p
+}
+
+// fakeIngest is an ingest that produces the artifacts of a 2 s video with audio
+// without FFmpeg. It counts its calls.
+func (m *mediaEnv) fakeIngest(_ context.Context, in ingest.Input) (*ingest.Result, error) {
+	m.ingests.Add(1)
+
+	return fakeResult(m.ws, in)
+}
+
+func fakeResult(ws string, in ingest.Input) (*ingest.Result, error) {
+	dir := filepath.Join(ws, "artifacts", in.Hash)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return nil, err
+	}
+
+	sum := &ingest.Summary{
+		Version: 1, Kind: ingest.KindVideo, Container: "mov,mp4", SizeBytes: 1000, DurationMS: 2000,
+		Video: &ingest.VideoFacts{
+			Codec: "h264", DisplayWidth: 320, DisplayHeight: 240, NominalFPS: ingest.Rational{Num: 30, Den: 1},
+		},
+		Audio: &ingest.AudioFacts{Codec: "aac", SampleRate: 48000, Channels: 2},
+	}
+
+	probe, err := json.Marshal(sum)
+	if err != nil {
+		return nil, err
+	}
+	silence := `{"version":1,"sample_rate":48000,"sample_count":96000,"min_duration_ms":150,"sets":[` +
+		`{"threshold_db":-35,"ranges":[{"start":24000,"end":48000}]}]}`
+	loud := `{"version":1,"integrated_lufs":-17.2,"lra_lu":5.1,"true_peak_dbtp":-1.4,"silent":false,"sample_count":96000}`
+
+	files := []struct {
+		kind, variant, ext, body string
+		profile                  int
+		meta                     any
+	}{
+		{"probe", "", "json", string(probe), 1, nil},
+		{"normalized", "", "mov", "normalized", 1, nil},
+		{"proxy", "", "mp4", "proxy-bytes", 1, nil},
+		{
+			"thumbnails",
+			"",
+			"jpg",
+			"sheet",
+			1,
+			ingest.ThumbLayout{TileW: 90, TileH: 160, Columns: 2, Count: 2, IntervalMS: 1000},
+		},
+		{"thumbnails", "w320", "jpg", "thumb320", 1, nil},
+		{"peaks", "", "bin", "peaks", 1, nil},
+		{"silence", "", "json", silence, 1, nil},
+		{"loudness", "", "json", loud, 1, nil},
+	}
+
+	res := &ingest.Result{
+		Kind: ingest.KindVideo, Summary: sum, TimingsMS: map[string]int64{"probe": 1},
+		Facts: ingest.Facts{
+			FrameRate: ingest.Rational{Num: 30, Den: 1}, FrameCount: 60, SampleCount: 96000, Width: 320, Height: 240,
+			HasAudio: true,
+		},
+	}
+
+	for _, f := range files {
+		name := ingest.ArtifactName(f.kind, f.profile, f.variant, f.ext)
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(f.body), 0o600); err != nil {
+			return nil, err
+		}
+
+		sum := sha256.Sum256([]byte(f.body))
+		res.Artifacts = append(res.Artifacts, ingest.Artifact{
+			Kind: f.kind, Profile: f.profile, Variant: f.variant, Ext: f.ext,
+			RelPath: "artifacts/" + in.Hash + "/" + name, Size: int64(len(f.body)), SHA256: hex.EncodeToString(sum[:]),
+			Meta: f.meta,
+		})
+	}
+
+	return res, nil
+}
+
+// eventsOf copies the events published so far.
+func (e *env) eventsOf(typ string) []service.Event {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	var out []service.Event
+
+	for i := range e.events {
+		if e.events[i].Type == typ {
+			out = append(out, e.events[i])
+		}
+	}
+
+	return out
+}
+
+// eventually polls cond for up to 5 s.
+func eventually(tb testing.TB, what string, cond func() bool) {
+	tb.Helper()
+
+	deadline := time.Now().Add(5 * time.Second)
+
+	for !cond() {
+		if time.Now().After(deadline) {
+			tb.Fatalf("timed out waiting for %s", what)
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+// gated is an Enqueuer that can be told to lose its messages.
+type gated struct {
+	inner service.Enqueuer
+	hold  *atomic.Bool
+}
+
+func (g gated) Enqueue(ctx context.Context, tx service.Tx, kind, jobID string) error {
+	if g.hold.Load() {
+		return nil
+	}
+
+	return g.inner.Enqueue(ctx, tx, kind, jobID)
+}
