@@ -8,6 +8,9 @@ package timeline
 //     (`omitzero` is the same, used on struct values).
 //     A nil pointer, an empty map or slice, a zero scalar or an object that
 //     encodes to {} is empty.
+//   - `enum`, `min`, `max`, `gt`, `step`, `pattern`, `minlen`, `maxlen`, `minitems`,
+//     `maxitems`, `keypattern`, `maxprops`, `desc`: constraints that only the
+//     generated JSON Schema reads (schema.go).
 //   - `default:"v"`            the field has a default: it is filled in on decode
 //     and omitted on encode when equal to it. A rational default is "num/den".
 //
@@ -73,19 +76,19 @@ const (
 
 // Rational is {"num", "den"}, both positive.
 type Rational struct {
-	Num int `json:"num"`
-	Den int `json:"den"`
+	Num int `json:"num" min:"1"`
+	Den int `json:"den" min:"1"`
 }
 
 // Document is one project (SDD-001 §3).
 type Document struct {
-	SchemaVersion int                    `json:"schema_version"`
-	ID            string                 `json:"id"`
-	Name          string                 `json:"name"`
+	SchemaVersion int                    `json:"schema_version"     enum:"1" desc:"Version of this schema."`
+	ID            string                 `json:"id"                                                         pattern:"^prj_[0-9a-hjkmnp-tv-z]{10}$"`
+	Name          string                 `json:"name"                                                                                              minlen:"1" maxlen:"120"`
 	Settings      Settings               `json:"settings"`
-	Assets        map[string]Asset       `json:"assets"`
-	Tracks        map[string]Track       `json:"tracks"`
-	Items         map[string]Item        `json:"items"`
+	Assets        map[string]Asset       `json:"assets"                                                                                                                    keypattern:"^ast_[0-9a-hjkmnp-tv-z]{10}$" maxprops:"200"`
+	Tracks        map[string]Track       `json:"tracks"                                                                                                                    keypattern:"^trk_[0-9a-hjkmnp-tv-z]{10}$" maxprops:"50"`
+	Items         map[string]Item        `json:"items"                                                                                                                     keypattern:"^itm_[0-9a-hjkmnp-tv-z]{10}$" maxprops:"500"`
 	Fonts         map[string]ProjectFont `json:"fonts,omitempty"`
 	Template      *TemplateInfo          `json:"template,omitempty"`
 	Extra         Extra                  `json:"-"`
@@ -93,35 +96,35 @@ type Document struct {
 
 // Settings of the project (SDD-001 §3.1).
 type Settings struct {
-	Width          int      `json:"width"           default:"1080"`
-	Height         int      `json:"height"          default:"1920"`
+	Width          int      `json:"width"           default:"1080"    min:"16"  max:"4096" step:"2"`
+	Height         int      `json:"height"          default:"1920"    min:"16"  max:"4096" step:"2"`
 	FPS            Rational `json:"fps"             default:"30/1"`
 	Background     Color    `json:"background"      default:"#000000"`
-	LoudnessTarget float64  `json:"loudness_target" default:"-14"`
+	LoudnessTarget float64  `json:"loudness_target" default:"-14"     min:"-30" max:"-5"`
 	Extra          Extra    `json:"-"`
 }
 
 // Asset is a reference to a file in the content store plus the probe facts (SDD-001 §3.2).
 type Asset struct {
-	ID          string    `json:"id"`
-	Hash        string    `json:"hash"`
-	Kind        AssetKind `json:"kind"`
+	ID          string    `json:"id"                     pattern:"^ast_[0-9a-hjkmnp-tv-z]{10}$"`
+	Hash        string    `json:"hash"                   pattern:"^sha256:[0-9a-f]{64}$"`
+	Kind        AssetKind `json:"kind"                                                          enum:"video,audio,image"`
 	Name        string    `json:"name"`
 	FrameRate   Rational  `json:"frame_rate,omitzero"`
-	FrameCount  int       `json:"frame_count,omitempty"`
-	SampleCount int       `json:"sample_count,omitempty"`
-	Width       int       `json:"width,omitempty"`
-	Height      int       `json:"height,omitempty"`
+	FrameCount  int       `json:"frame_count,omitempty"                                                                  min:"1"`
+	SampleCount int       `json:"sample_count,omitempty"                                                                 min:"1"`
+	Width       int       `json:"width,omitempty"                                                                        min:"1"`
+	Height      int       `json:"height,omitempty"                                                                       min:"1"`
 	HasAudio    bool      `json:"has_audio,omitempty"`
 	Extra       Extra     `json:"-"`
 }
 
 // Track is a layer or a lane (SDD-001 §3.3).
 type Track struct {
-	ID           string        `json:"id"`
-	Kind         TrackKind     `json:"kind"`
-	Name         string        `json:"name,omitempty"`
-	Order        string        `json:"order"`
+	ID           string        `json:"id"                      pattern:"^trk_[0-9a-hjkmnp-tv-z]{10}$"`
+	Kind         TrackKind     `json:"kind"                                                           enum:"visual,audio"`
+	Name         string        `json:"name,omitempty"                                                                     maxlen:"60"`
+	Order        string        `json:"order"                   pattern:"^[0-9a-z]+$"`
 	Hidden       bool          `json:"hidden,omitempty"`
 	Muted        bool          `json:"muted,omitempty"`
 	CaptionStyle *CaptionStyle `json:"caption_style,omitempty"`
@@ -132,12 +135,12 @@ type Track struct {
 // the fields of every type; the fields of the other types keep their zero or default
 // value and are omitted on encode. Use NewItem to get the defaults.
 type Item struct {
-	ID            string      `json:"id"`
-	Type          ItemType    `json:"type"`
-	Track         string      `json:"track"`
-	Start         int         `json:"start"`
-	Duration      int         `json:"duration"`
-	Name          string      `json:"name,omitempty"`
+	ID            string      `json:"id"                       pattern:"^itm_[0-9a-hjkmnp-tv-z]{10}$"`
+	Type          ItemType    `json:"type"                                                            enum:"clip,audio,text,caption,shape"`
+	Track         string      `json:"track"                    pattern:"^trk_[0-9a-hjkmnp-tv-z]{10}$"`
+	Start         int         `json:"start"                                                                                                min:"0"`
+	Duration      int         `json:"duration"                                                                                             min:"1"`
+	Name          string      `json:"name,omitempty"                                                                                               maxlen:"120"`
 	TransitionIn  *Transition `json:"transition_in,omitempty"`
 	TransitionOut *Transition `json:"transition_out,omitempty"`
 	Keyframes     Keyframes   `json:"keyframes,omitempty"`
@@ -146,68 +149,68 @@ type Item struct {
 	// Visual items.
 	X        *float64 `json:"x,omitempty"`
 	Y        *float64 `json:"y,omitempty"`
-	Scale    float64  `json:"scale"              default:"1"`
+	Scale    float64  `json:"scale"              default:"1" gt:"0" max:"20"`
 	Rotation float64  `json:"rotation,omitempty"`
-	Opacity  float64  `json:"opacity"            default:"1"`
+	Opacity  float64  `json:"opacity"            default:"1"        max:"1"  min:"0"`
 
 	// Clip and audio.
-	Asset      string   `json:"asset,omitempty"`
-	SourceIn   int      `json:"source_in,omitempty"`
-	Speed      Rational `json:"speed"                 default:"1/1"`
-	Volume     float64  `json:"volume"                default:"1"`
+	Asset      string   `json:"asset,omitempty"       pattern:"^ast_([0-9a-hjkmnp-tv-z]{10}|placeholder)$"`
+	SourceIn   int      `json:"source_in,omitempty"                                                        min:"0"`
+	Speed      Rational `json:"speed"                                                                              default:"1/1"`
+	Volume     float64  `json:"volume"                                                                     min:"0" default:"1"   max:"4"`
 	AudioMuted bool     `json:"audio_muted,omitempty"`
-	FadeIn     int      `json:"fade_in,omitempty"`
-	FadeOut    int      `json:"fade_out,omitempty"`
+	FadeIn     int      `json:"fade_in,omitempty"                                                          min:"0"`
+	FadeOut    int      `json:"fade_out,omitempty"                                                         min:"0"`
 
 	// Clip only.
-	Fit        string  `json:"fit"                  default:"cover"`
+	Fit        string  `json:"fit"                  default:"cover" enum:"cover,contain,none"`
 	Crop       *Crop   `json:"crop,omitempty"`
-	Brightness float64 `json:"brightness,omitempty"`
-	Contrast   float64 `json:"contrast"             default:"1"`
-	Saturation float64 `json:"saturation"           default:"1"`
+	Brightness float64 `json:"brightness,omitempty"                                           min:"-1" max:"1"`
+	Contrast   float64 `json:"contrast"             default:"1"                               min:"0"  max:"2"`
+	Saturation float64 `json:"saturation"           default:"1"                               min:"0"  max:"2"`
 
 	// Text and caption. Style of a text item uses the TextStyle fields only.
-	Text  string        `json:"text,omitempty"`
+	Text  string        `json:"text,omitempty"  minlen:"1" maxlen:"2000"`
 	Style *CaptionStyle `json:"style,omitempty"`
 
 	// Caption only.
-	Words      []Word `json:"words,omitempty"`
+	Words      []Word `json:"words,omitempty"       minitems:"1" maxitems:"60"`
 	Breaks     []int  `json:"breaks,omitempty"`
-	LinkedItem string `json:"linked_item,omitempty"`
+	LinkedItem string `json:"linked_item,omitempty"                            pattern:"^itm_[0-9a-hjkmnp-tv-z]{10}$"`
 
 	// Shape only.
-	Shape       string  `json:"shape,omitempty"`
-	Width       float64 `json:"width,omitempty"`
-	Height      float64 `json:"height,omitempty"`
-	Radius      float64 `json:"radius,omitempty"`
-	Fill        Color   `json:"fill"                   default:"#FFFFFF"`
-	StrokeColor Color   `json:"stroke_color"           default:"#000000"`
-	StrokeWidth float64 `json:"stroke_width,omitempty"`
+	Shape       string  `json:"shape,omitempty"        enum:"rect,rounded_rect,ellipse"`
+	Width       float64 `json:"width,omitempty"                                         gt:"0"`
+	Height      float64 `json:"height,omitempty"                                        gt:"0"`
+	Radius      float64 `json:"radius,omitempty"                                               min:"0"`
+	Fill        Color   `json:"fill"                                                                   default:"#FFFFFF"`
+	StrokeColor Color   `json:"stroke_color"                                                           default:"#000000"`
+	StrokeWidth float64 `json:"stroke_width,omitempty"                                         min:"0"`
 
 	Extra Extra `json:"-"`
 }
 
 // Crop is the fraction removed from each side of the asset.
 type Crop struct {
-	Left   float64 `json:"left,omitempty"`
-	Top    float64 `json:"top,omitempty"`
-	Right  float64 `json:"right,omitempty"`
-	Bottom float64 `json:"bottom,omitempty"`
+	Left   float64 `json:"left,omitempty"   min:"0" max:"1"`
+	Top    float64 `json:"top,omitempty"    min:"0" max:"1"`
+	Right  float64 `json:"right,omitempty"  min:"0" max:"1"`
+	Bottom float64 `json:"bottom,omitempty" min:"0" max:"1"`
 	Extra  Extra   `json:"-"`
 }
 
 // Word is one timed word of a caption; Start is relative to the item.
 type Word struct {
-	Text     string `json:"text"`
-	Start    int    `json:"start"`
-	Duration int    `json:"duration"`
+	Text     string `json:"text"     minlen:"1" maxlen:"80"`
+	Start    int    `json:"start"                           min:"0"`
+	Duration int    `json:"duration"                        min:"1"`
 	Extra    Extra  `json:"-"`
 }
 
 // Transition of an item entry or exit (SDD-001 §3.8).
 type Transition struct {
-	Kind     string `json:"kind"`
-	Duration int    `json:"duration"`
+	Kind     string `json:"kind"     enum:"fade,slide_left,slide_right,slide_up,slide_down"`
+	Duration int    `json:"duration"                                                        min:"1"`
 	Extra    Extra  `json:"-"`
 }
 
@@ -216,38 +219,38 @@ type Keyframes map[string][]Keyframe
 
 // Keyframe animates a property; T is relative to the item's start.
 type Keyframe struct {
-	T      int     `json:"t"`
+	T      int     `json:"t"      min:"0"`
 	Value  float64 `json:"value"`
-	Easing string  `json:"easing" default:"linear"`
+	Easing string  `json:"easing"         default:"linear" enum:"linear,ease_in,ease_out,ease_in_out,hold"`
 	Extra  Extra   `json:"-"`
 }
 
 // TextStyle is the style of a text item; every field is set or not (cascade, SDD-001 §3.7).
 type TextStyle struct {
 	FontFamily        *string  `json:"font_family,omitempty"`
-	FontWeight        *int     `json:"font_weight,omitempty"`
-	Size              *float64 `json:"size,omitempty"`
+	FontWeight        *int     `json:"font_weight,omitempty"        min:"100" max:"900"  step:"100"`
+	Size              *float64 `json:"size,omitempty"               min:"8"   max:"1000"`
 	Color             *Color   `json:"color,omitempty"`
 	StrokeColor       *Color   `json:"stroke_color,omitempty"`
-	StrokeWidth       *float64 `json:"stroke_width,omitempty"`
+	StrokeWidth       *float64 `json:"stroke_width,omitempty"       min:"0"   max:"40"`
 	ShadowColor       *Color   `json:"shadow_color,omitempty"`
 	ShadowDX          *float64 `json:"shadow_dx,omitempty"`
 	ShadowDY          *float64 `json:"shadow_dy,omitempty"`
-	ShadowBlur        *float64 `json:"shadow_blur,omitempty"`
+	ShadowBlur        *float64 `json:"shadow_blur,omitempty"        min:"0"   max:"100"`
 	BackgroundColor   *Color   `json:"background_color,omitempty"`
-	BackgroundPadding *float64 `json:"background_padding,omitempty"`
-	BackgroundRadius  *float64 `json:"background_radius,omitempty"`
-	Align             *string  `json:"align,omitempty"`
-	LineHeight        *float64 `json:"line_height,omitempty"`
-	MaxWidth          *float64 `json:"max_width,omitempty"`
+	BackgroundPadding *float64 `json:"background_padding,omitempty" min:"0"`
+	BackgroundRadius  *float64 `json:"background_radius,omitempty"  min:"0"`
+	Align             *string  `json:"align,omitempty"                                              enum:"left,center,right"`
+	LineHeight        *float64 `json:"line_height,omitempty"        min:"0.8" max:"3"`
+	MaxWidth          *float64 `json:"max_width,omitempty"                                                                   gt:"0"`
 	Uppercase         *bool    `json:"uppercase,omitempty"`
 }
 
 // CaptionStyle is TextStyle plus the caption fields.
 type CaptionStyle struct {
 	TextStyle
-	Position            *string `json:"position,omitempty"`
-	Highlight           *string `json:"highlight,omitempty"`
+	Position            *string `json:"position,omitempty"             enum:"bottom,middle,top,custom"`
+	Highlight           *string `json:"highlight,omitempty"            enum:"none,word"`
 	HighlightColor      *Color  `json:"highlight_color,omitempty"`
 	HighlightBackground *Color  `json:"highlight_background,omitempty"`
 	Extra               Extra   `json:"-"`
@@ -255,24 +258,24 @@ type CaptionStyle struct {
 
 // ProjectFont is a user font of the project (BETA, SDD-001 §3.9).
 type ProjectFont struct {
-	Files []FontFile `json:"files"`
+	Files []FontFile `json:"files" minitems:"1"`
 	Extra Extra      `json:"-"`
 }
 
 // FontFile is one weight of a user font, stored by hash.
 type FontFile struct {
-	Weight int    `json:"weight"`
-	Hash   string `json:"hash"`
+	Weight int    `json:"weight" min:"100" max:"900" step:"100"`
+	Hash   string `json:"hash"                                  pattern:"^sha256:[0-9a-f]{64}$"`
 	Extra  Extra  `json:"-"`
 }
 
 // Slot marks an item as a template slot (SDD-001 §3.10).
 type Slot struct {
-	Name           string `json:"name"`
-	Kind           string `json:"kind"`
-	Description    string `json:"description,omitempty"`
-	Required       bool   `json:"required"              default:"true"`
-	DurationPolicy string `json:"duration_policy"       default:"fit"`
+	Name           string `json:"name"                  pattern:"^[a-z][a-z0-9_]{0,39}$"`
+	Kind           string `json:"kind"                                                   enum:"media,text,caption"`
+	Description    string `json:"description,omitempty"                                                              maxlen:"200"`
+	Required       bool   `json:"required"                                                                                        default:"true"`
+	DurationPolicy string `json:"duration_policy"                                        enum:"fit,stretch_timeline"              default:"fit"`
 	Filled         bool   `json:"filled,omitempty"`
 	Extra          Extra  `json:"-"`
 }
