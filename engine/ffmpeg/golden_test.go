@@ -25,7 +25,26 @@ func TestGoldenCommandsRunOnThePinnedBuild(t *testing.T) {
 	src := putStore(t, r, gen(t, in, dir, "src.mp4",
 		"-f", "lavfi", "-i", "testsrc2=s=320x240:r=30:d=2", "-f", "lavfi", "-i", "sine=f=440:d=2",
 		"-c:v", "mpeg4", "-c:a", "aac", "-f", "mp4"))
-	img := putStore(t, r, gen(t, in, dir, "src.png", "-f", "lavfi", "-i", "testsrc2=s=200x100:r=1:d=1", "-frames:v", "1", "-c:v", "png", "-f", "image2"))
+	img := putStore(
+		t,
+		r,
+		gen(
+			t,
+			in,
+			dir,
+			"src.png",
+			"-f",
+			"lavfi",
+			"-i",
+			"testsrc2=s=200x100:r=1:d=1",
+			"-frames:v",
+			"1",
+			"-c:v",
+			"png",
+			"-f",
+			"image2",
+		),
+	)
 	pol := r.Policy(dir)
 	bx := ffargs.Bitexact()
 	path := func(n string) string {
@@ -44,7 +63,7 @@ func TestGoldenCommandsRunOnThePinnedBuild(t *testing.T) {
 			}
 		}
 	}
-	runCmd := func(name string, c ffargs.Cmd, stall bool) {
+	runCmd := func(name string, c ffargs.Cmd, _ bool) {
 		t.Helper()
 		argv, err := c.Argv(pol)
 		if err != nil {
@@ -71,11 +90,37 @@ func TestGoldenCommandsRunOnThePinnedBuild(t *testing.T) {
 		t.Fatal(err)
 	}
 	g := ffargs.Graph{
-		{In: []string{"0:0"}, Filters: []ffargs.Filter{ffargs.SetPTS(), ffargs.FPS(ffargs.Rate{Num: 30, Den: 1}), ffargs.Format("yuv420p"), ffargs.Split(2)}, Out: []string{"n", "p0"}},
-		{In: []string{"p0"}, Filters: []ffargs.Filter{ffargs.Scale(160, 120, "bicubic"), ffargs.Format("yuv420p"), ffargs.Split(2)}, Out: []string{"q", "r"}},
-		{In: []string{"r"}, Filters: []ffargs.Filter{ffargs.FPS(ffargs.Rate{Num: 1, Den: 1}), ffargs.Scale(72, 54, "bicubic"), ffargs.Format("yuvj420p")}, Out: []string{"s"}},
+		{
+			In: []string{"0:0"},
+			Filters: []ffargs.Filter{
+				ffargs.SetPTS(),
+				ffargs.FPS(ffargs.Rate{Num: 30, Den: 1}),
+				ffargs.Format("yuv420p"),
+				ffargs.Split(2),
+			},
+			Out: []string{"n", "p0"},
+		},
+		{
+			In:      []string{"p0"},
+			Filters: []ffargs.Filter{ffargs.Scale(160, 120, "bicubic"), ffargs.Format("yuv420p"), ffargs.Split(2)},
+			Out:     []string{"q", "r"},
+		},
+		{
+			In: []string{"r"},
+			Filters: []ffargs.Filter{
+				ffargs.FPS(ffargs.Rate{Num: 1, Den: 1}),
+				ffargs.Scale(72, 54, "bicubic"),
+				ffargs.Format("yuvj420p"),
+			},
+			Out: []string{"s"},
+		},
 	}
-	colour := []ffargs.Opt{ffargs.Enum("-colorspace", "bt709"), ffargs.Enum("-color_primaries", "bt709"), ffargs.Enum("-color_trc", "bt709"), ffargs.Enum("-color_range", "tv")}
+	colour := []ffargs.Opt{
+		ffargs.Enum("-colorspace", "bt709"),
+		ffargs.Enum("-color_primaries", "bt709"),
+		ffargs.Enum("-color_trc", "bt709"),
+		ffargs.Enum("-color_range", "tv"),
+	}
 	opts := func(parts ...[]ffargs.Opt) []ffargs.Opt {
 		var o []ffargs.Opt
 		for _, p := range parts {
@@ -87,15 +132,67 @@ func TestGoldenCommandsRunOnThePinnedBuild(t *testing.T) {
 		Progress: true, LogErrorOnly: true, FilterThreads: threads, Threads: threads,
 		Inputs: []ffargs.Input{ffargs.FileInput(src)}, Graph: g,
 		Outputs: []ffargs.Output{
-			{Format: "mov", Path: path("video.mov"), Maps: []string{"[n]"}, NoAudio: true, NoSubs: true, NoData: true,
-				Opts: opts([]ffargs.Opt{ffargs.Enum("-c:v", "mpeg4"), ffargs.Int("-q:v", 2), ffargs.Int("-g", 15), ffargs.Int("-bf", 0), ffargs.Enum("-pix_fmt", "yuv420p")}, colour,
-					[]ffargs.Opt{ffargs.Enum("-fps_mode", "cfr"), ffargs.Int("-video_track_timescale", 30000)}, bx)},
-			{Format: "mp4", Path: path("proxy-video.mp4"), Maps: []string{"[q]"}, NoAudio: true, NoSubs: true, NoData: true,
-				Opts: opts([]ffargs.Opt{ffargs.Enum("-c:v", "libvpx-vp9"), ffargs.Int("-crf", 33), ffargs.Bitrate("-b:v", "0"), ffargs.Enum("-deadline", "realtime"), ffargs.Int("-cpu-used", 8),
-					ffargs.Int("-row-mt", 1), ffargs.Int("-tile-columns", 1), ffargs.Int("-lag-in-frames", 0), ffargs.Int("-g", 15), ffargs.Int("-keyint_min", 15), ffargs.Enum("-pix_fmt", "yuv420p")}, colour,
-					[]ffargs.Opt{ffargs.Enum("-fps_mode", "cfr"), ffargs.Int("-video_track_timescale", 30000)}, bx)},
-			{Format: "image2", Path: filepath.Join(tiles, "t%04d.jpg"), Maps: []string{"[s]"}, NoAudio: true, NoSubs: true, NoData: true,
-				Opts: opts([]ffargs.Opt{ffargs.Enum("-c:v", "mjpeg"), ffargs.Int("-q:v", 4), ffargs.Enum("-fps_mode", "cfr")}, bx, []ffargs.Opt{ffargs.Int("-start_number", 0)})},
+			{
+				Format:  "mov",
+				Path:    path("video.mov"),
+				Maps:    []string{"[n]"},
+				NoAudio: true,
+				NoSubs:  true,
+				NoData:  true,
+				Opts: opts(
+					[]ffargs.Opt{
+						ffargs.Enum("-c:v", "mpeg4"),
+						ffargs.Int("-q:v", 2),
+						ffargs.Int("-g", 15),
+						ffargs.Int("-bf", 0),
+						ffargs.Enum("-pix_fmt", "yuv420p"),
+					},
+					colour,
+					[]ffargs.Opt{ffargs.Enum("-fps_mode", "cfr"), ffargs.Int("-video_track_timescale", 30000)},
+					bx,
+				),
+			},
+			{
+				Format:  "mp4",
+				Path:    path("proxy-video.mp4"),
+				Maps:    []string{"[q]"},
+				NoAudio: true,
+				NoSubs:  true,
+				NoData:  true,
+				Opts: opts([]ffargs.Opt{
+					ffargs.Enum(
+						"-c:v",
+						"libvpx-vp9",
+					),
+					ffargs.Int("-crf", 33),
+					ffargs.Bitrate("-b:v", "0"),
+					ffargs.Enum("-deadline", "realtime"),
+					ffargs.Int("-cpu-used", 8),
+					ffargs.Int(
+						"-row-mt",
+						1,
+					),
+					ffargs.Int("-tile-columns", 1),
+					ffargs.Int("-lag-in-frames", 0),
+					ffargs.Int("-g", 15),
+					ffargs.Int("-keyint_min", 15),
+					ffargs.Enum("-pix_fmt", "yuv420p"),
+				}, colour,
+					[]ffargs.Opt{ffargs.Enum("-fps_mode", "cfr"), ffargs.Int("-video_track_timescale", 30000)}, bx),
+			},
+			{
+				Format:  "image2",
+				Path:    filepath.Join(tiles, "t%04d.jpg"),
+				Maps:    []string{"[s]"},
+				NoAudio: true,
+				NoSubs:  true,
+				NoData:  true,
+				Opts: opts(
+					[]ffargs.Opt{ffargs.Enum("-c:v", "mjpeg"), ffargs.Int("-q:v", 4), ffargs.Enum("-fps_mode", "cfr")},
+					bx,
+					[]ffargs.Opt{ffargs.Int("-start_number", 0)},
+				),
+			},
 		},
 	}, true)
 	exists("video.mov", "proxy-video.mp4", "thumbs/t0000.jpg", "thumbs/t0001.jpg")
@@ -104,70 +201,197 @@ func TestGoldenCommandsRunOnThePinnedBuild(t *testing.T) {
 	runCmd("audio pass", ffargs.Cmd{
 		Progress: true, LogErrorOnly: true,
 		Inputs: []ffargs.Input{ffargs.FileInput(src)},
-		Outputs: []ffargs.Output{{Format: "wav", Path: path("audio.wav"), Maps: []string{"0:1"}, NoVideo: true, NoSubs: true, NoData: true,
-			AF:   ffargs.Chain1(ffargs.AResample(48000), ffargs.AFormatS16Stereo(), ffargs.ADelay(14400), ffargs.APad(96000), ffargs.ATrimEnd(96000)),
-			Opts: opts([]ffargs.Opt{ffargs.Enum("-c:a", "pcm_s16le"), ffargs.Enum("-rf64", "auto")}, bx)}},
+		Outputs: []ffargs.Output{
+			{
+				Format:  "wav",
+				Path:    path("audio.wav"),
+				Maps:    []string{"0:1"},
+				NoVideo: true,
+				NoSubs:  true,
+				NoData:  true,
+				AF: ffargs.Chain1(
+					ffargs.AResample(48000),
+					ffargs.AFormatS16Stereo(),
+					ffargs.ADelay(14400),
+					ffargs.APad(96000),
+					ffargs.ATrimEnd(96000),
+				),
+				Opts: opts([]ffargs.Opt{ffargs.Enum("-c:a", "pcm_s16le"), ffargs.Enum("-rf64", "auto")}, bx),
+			},
+		},
 	}, true)
 	exists("audio.wav")
 	runCmd("audio pass, head trimmed", ffargs.Cmd{
 		LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(src)},
-		Outputs: []ffargs.Output{{Format: "wav", Path: path("audio2.wav"), Maps: []string{"0:1"}, NoVideo: true,
-			AF:   ffargs.Chain1(ffargs.AResample(48000), ffargs.AFormatS16Stereo(), ffargs.ATrimStart(4800), ffargs.ASetPTS(), ffargs.APad(96000), ffargs.ATrimEnd(96000)),
-			Opts: []ffargs.Opt{ffargs.Enum("-c:a", "pcm_s16le")}}},
+		Outputs: []ffargs.Output{
+			{
+				Format:  "wav",
+				Path:    path("audio2.wav"),
+				Maps:    []string{"0:1"},
+				NoVideo: true,
+				AF: ffargs.Chain1(
+					ffargs.AResample(48000),
+					ffargs.AFormatS16Stereo(),
+					ffargs.ATrimStart(4800),
+					ffargs.ASetPTS(),
+					ffargs.APad(96000),
+					ffargs.ATrimEnd(96000),
+				),
+				Opts: []ffargs.Opt{ffargs.Enum("-c:a", "pcm_s16le")},
+			},
+		},
 	}, false)
 	runCmd("mux", ffargs.Cmd{
-		LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(path("video.mov")), ffargs.FileInput(path("audio.wav"))},
-		Outputs: []ffargs.Output{{Format: "mov", Path: path("normalized.mov"), Maps: []string{"0:v:0", "1:a:0"},
-			Opts: opts([]ffargs.Opt{ffargs.Enum("-c:v", "copy"), ffargs.Enum("-c:a", "copy")}, bx)}},
+		LogErrorOnly: true,
+		Inputs:       []ffargs.Input{ffargs.FileInput(path("video.mov")), ffargs.FileInput(path("audio.wav"))},
+		Outputs: []ffargs.Output{{
+			Format: "mov", Path: path("normalized.mov"), Maps: []string{"0:v:0", "1:a:0"},
+			Opts: opts([]ffargs.Opt{ffargs.Enum("-c:v", "copy"), ffargs.Enum("-c:a", "copy")}, bx),
+		}},
 	}, false)
 	runCmd("proxy audio", ffargs.Cmd{
 		LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(path("audio.wav"))},
-		Outputs: []ffargs.Output{{Format: "mp4", Path: path("proxy-audio.mp4"), Maps: []string{"0:a:0"}, NoVideo: true,
-			Opts: opts([]ffargs.Opt{ffargs.Enum("-c:a", "aac"), ffargs.Bitrate("-b:a", "128k"), ffargs.Int("-ar", 48000), ffargs.Int("-ac", 2)}, bx)}},
+		Outputs: []ffargs.Output{
+			{
+				Format:  "mp4",
+				Path:    path("proxy-audio.mp4"),
+				Maps:    []string{"0:a:0"},
+				NoVideo: true,
+				Opts: opts(
+					[]ffargs.Opt{
+						ffargs.Enum("-c:a", "aac"),
+						ffargs.Bitrate("-b:a", "128k"),
+						ffargs.Int("-ar", 48000),
+						ffargs.Int("-ac", 2),
+					},
+					bx,
+				),
+			},
+		},
 	}, false)
 	runCmd("proxy mux", ffargs.Cmd{
-		LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(path("proxy-video.mp4")), ffargs.FileInput(path("proxy-audio.mp4"))},
-		Outputs: []ffargs.Output{{Format: "mp4", Path: path("proxy.mp4"), Maps: []string{"0:v:0", "1:a:0"},
-			Opts: opts([]ffargs.Opt{ffargs.Enum("-c:v", "copy"), ffargs.Enum("-c:a", "copy"), ffargs.Enum("-movflags", "+faststart")}, bx)}},
+		LogErrorOnly: true,
+		Inputs: []ffargs.Input{
+			ffargs.FileInput(path("proxy-video.mp4")),
+			ffargs.FileInput(path("proxy-audio.mp4")),
+		},
+		Outputs: []ffargs.Output{
+			{
+				Format: "mp4",
+				Path:   path("proxy.mp4"),
+				Maps:   []string{"0:v:0", "1:a:0"},
+				Opts: opts(
+					[]ffargs.Opt{
+						ffargs.Enum("-c:v", "copy"),
+						ffargs.Enum("-c:a", "copy"),
+						ffargs.Enum("-movflags", "+faststart"),
+					},
+					bx,
+				),
+			},
+		},
 	}, false)
 	exists("normalized.mov", "proxy-audio.mp4", "proxy.mp4")
 
 	// 4.5: posters from the proxy, with an accurate seek before the input.
 	pg := ffargs.Graph{
 		{In: []string{"0:v:0"}, Filters: []ffargs.Filter{ffargs.Split(2)}, Out: []string{"a", "b"}},
-		{In: []string{"a"}, Filters: []ffargs.Filter{ffargs.ScaleMinWidth(160), ffargs.Format("yuvj420p")}, Out: []string{"x"}},
-		{In: []string{"b"}, Filters: []ffargs.Filter{ffargs.ScaleMinWidth(640), ffargs.Format("yuvj420p")}, Out: []string{"y"}},
+		{
+			In:      []string{"a"},
+			Filters: []ffargs.Filter{ffargs.ScaleMinWidth(160), ffargs.Format("yuvj420p")},
+			Out:     []string{"x"},
+		},
+		{
+			In:      []string{"b"},
+			Filters: []ffargs.Filter{ffargs.ScaleMinWidth(640), ffargs.Format("yuvj420p")},
+			Out:     []string{"y"},
+		},
 	}
 	poster := func(l, n string) ffargs.Output {
-		return ffargs.Output{Format: "image2", Path: path(n), Maps: []string{"[" + l + "]"},
-			Opts: opts([]ffargs.Opt{ffargs.Int("-frames:v", 1), ffargs.Enum("-c:v", "mjpeg"), ffargs.Int("-q:v", 4)}, bx, []ffargs.Opt{ffargs.Int("-update", 1)})}
+		return ffargs.Output{
+			Format: "image2",
+			Path:   path(n),
+			Maps:   []string{"[" + l + "]"},
+			Opts: opts(
+				[]ffargs.Opt{ffargs.Int("-frames:v", 1), ffargs.Enum("-c:v", "mjpeg"), ffargs.Int("-q:v", 4)},
+				bx,
+				[]ffargs.Opt{ffargs.Int("-update", 1)},
+			),
+		}
 	}
-	runCmd("posters", ffargs.Cmd{LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(path("proxy.mp4")).At(1000)}, Graph: pg,
-		Outputs: []ffargs.Output{poster("x", "w160.jpg"), poster("y", "w640.jpg")}}, false)
+	runCmd("posters", ffargs.Cmd{
+		LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(path("proxy.mp4")).At(1000)}, Graph: pg,
+		Outputs: []ffargs.Output{poster("x", "w160.jpg"), poster("y", "w640.jpg")},
+	}, false)
 	exists("w160.jpg", "w640.jpg")
 
 	// 4.7 and 4.8: an image, and an audio-only file.
-	runCmd("image", ffargs.Cmd{LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(img)},
-		Outputs: []ffargs.Output{{Format: "image2", Path: path("normalized.png"), Maps: []string{"0:0"},
-			VF:   ffargs.Chain1(ffargs.Scale(200, 100, "bicubic+accurate_rnd+full_chroma_int"), ffargs.Format("rgb24")),
-			Opts: opts([]ffargs.Opt{ffargs.Int("-frames:v", 1), ffargs.Enum("-c:v", "png"), ffargs.Int("-update", 1)}, bx)}}}, false)
-	runCmd("audio only", ffargs.Cmd{Progress: true, LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(src)},
-		Outputs: []ffargs.Output{{Format: "wav", Path: path("normalized.wav"), Maps: []string{"0:1"}, NoVideo: true, NoSubs: true, NoData: true,
-			AF: ffargs.Chain1(ffargs.AResample(48000), ffargs.AFormatS16Stereo()), Opts: opts([]ffargs.Opt{ffargs.Enum("-c:a", "pcm_s16le"), ffargs.Enum("-rf64", "auto")}, bx)}}}, true)
+	runCmd("image", ffargs.Cmd{
+		LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(img)},
+		Outputs: []ffargs.Output{
+			{
+				Format: "image2",
+				Path:   path("normalized.png"),
+				Maps:   []string{"0:0"},
+				VF: ffargs.Chain1(
+					ffargs.Scale(200, 100, "bicubic+accurate_rnd+full_chroma_int"),
+					ffargs.Format("rgb24"),
+				),
+				Opts: opts(
+					[]ffargs.Opt{ffargs.Int("-frames:v", 1), ffargs.Enum("-c:v", "png"), ffargs.Int("-update", 1)},
+					bx,
+				),
+			},
+		},
+	}, false)
+	runCmd("audio only", ffargs.Cmd{
+		Progress: true, LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(src)},
+		Outputs: []ffargs.Output{
+			{
+				Format:  "wav",
+				Path:    path("normalized.wav"),
+				Maps:    []string{"0:1"},
+				NoVideo: true,
+				NoSubs:  true,
+				NoData:  true,
+				AF: ffargs.Chain1(
+					ffargs.AResample(48000),
+					ffargs.AFormatS16Stereo(),
+				),
+				Opts: opts([]ffargs.Opt{ffargs.Enum("-c:a", "pcm_s16le"), ffargs.Enum("-rf64", "auto")}, bx),
+			},
+		},
+	}, true)
 	exists("normalized.png", "normalized.wav")
 
 	// 9.1 and 9.2: analysis runs that write nothing.
 	var sg ffargs.Graph
-	sg = append(sg, ffargs.Chain{In: []string{"0:a"}, Filters: []ffargs.Filter{ffargs.ASplit(2)}, Out: []string{"a", "b"}})
+	sg = append(
+		sg,
+		ffargs.Chain{In: []string{"0:a"}, Filters: []ffargs.Filter{ffargs.ASplit(2)}, Out: []string{"a", "b"}},
+	)
 	var outs []ffargs.Output
 	for i, l := range []string{"a", "b"} {
 		o := string(rune('w' + i))
-		sg = append(sg, ffargs.Chain{In: []string{l}, Filters: []ffargs.Filter{ffargs.SilenceDetect(30+5*i, 150)}, Out: []string{o}})
+		sg = append(
+			sg,
+			ffargs.Chain{
+				In:      []string{l},
+				Filters: []ffargs.Filter{ffargs.SilenceDetect(30+5*i, 150)},
+				Out:     []string{o},
+			},
+		)
 		outs = append(outs, ffargs.Output{Format: "null", Maps: []string{"[" + o + "]"}})
 	}
-	runCmd("silence", ffargs.Cmd{Inputs: []ffargs.Input{ffargs.FileInput(path("audio.wav"))}, Graph: sg, Outputs: outs}, false)
-	argv, err := ffargs.Cmd{Inputs: []ffargs.Input{ffargs.FileInput(path("audio.wav"))},
-		Outputs: []ffargs.Output{{Format: "null", Maps: []string{"0:a:0"}, AF: ffargs.Chain1(ffargs.Ebur128())}}}.Argv(pol)
+	runCmd(
+		"silence",
+		ffargs.Cmd{Inputs: []ffargs.Input{ffargs.FileInput(path("audio.wav"))}, Graph: sg, Outputs: outs},
+		false,
+	)
+	argv, err := ffargs.Cmd{
+		Inputs:  []ffargs.Input{ffargs.FileInput(path("audio.wav"))},
+		Outputs: []ffargs.Output{{Format: "null", Maps: []string{"0:a:0"}, AF: ffargs.Chain1(ffargs.Ebur128())}},
+	}.Argv(pol)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -177,16 +401,33 @@ func TestGoldenCommandsRunOnThePinnedBuild(t *testing.T) {
 	}
 
 	// 10: audio for transcription, from a file of the run directory.
-	runCmd("transcription audio", ffargs.Cmd{LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(path("normalized.wav"))},
-		Outputs: []ffargs.Output{{Format: "wav", Path: path("in.wav"), Maps: []string{"0:a:0"}, NoVideo: true, NoSubs: true, NoData: true,
-			Opts: []ffargs.Opt{ffargs.Int("-ac", 1), ffargs.Int("-ar", 16000), ffargs.Enum("-c:a", "pcm_s16le")}}}}, false)
+	runCmd("transcription audio", ffargs.Cmd{
+		LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(path("normalized.wav"))},
+		Outputs: []ffargs.Output{{
+			Format: "wav", Path: path("in.wav"), Maps: []string{"0:a:0"}, NoVideo: true, NoSubs: true, NoData: true,
+			Opts: []ffargs.Opt{ffargs.Int("-ac", 1), ffargs.Int("-ar", 16000), ffargs.Enum("-c:a", "pcm_s16le")},
+		}},
+	}, false)
 	exists("in.wav")
 
 	// SDD-004 section 6: one decoded frame as raw RGBA on pipe:1.
 	var frame bytes.Buffer
-	argv, err = ffargs.Cmd{Inputs: []ffargs.Input{ffargs.FileInput(path("normalized.mov")).At(500)},
-		Outputs: []ffargs.Output{{Format: "rawvideo", Pipe: true, Maps: []string{"0:v:0"}, Opts: []ffargs.Opt{ffargs.Int("-frames:v", 1), ffargs.Enum("-pix_fmt", "rgba")},
-			VF: ffargs.Chain1(ffargs.Crop(320, 240, 0, 0), ffargs.ScaleFrameToRGBA(160, 120), ffargs.Format("rgba"))}}}.Argv(pol)
+	argv, err = ffargs.Cmd{
+		Inputs: []ffargs.Input{ffargs.FileInput(path("normalized.mov")).At(500)},
+		Outputs: []ffargs.Output{
+			{
+				Format: "rawvideo",
+				Pipe:   true,
+				Maps:   []string{"0:v:0"},
+				Opts:   []ffargs.Opt{ffargs.Int("-frames:v", 1), ffargs.Enum("-pix_fmt", "rgba")},
+				VF: ffargs.Chain1(
+					ffargs.Crop(320, 240, 0, 0),
+					ffargs.ScaleFrameToRGBA(160, 120),
+					ffargs.Format("rgba"),
+				),
+			},
+		},
+	}.Argv(pol)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,12 +439,18 @@ func TestGoldenCommandsRunOnThePinnedBuild(t *testing.T) {
 	}
 
 	// pipe:0 cannot be fed by this contrib/engine; the runner says so rather than hanging.
-	argv, err = ffargs.Cmd{LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.PipeRawVideo("rgba", 8, 8, ffargs.Rate{Num: 30, Den: 1})},
-		Outputs: []ffargs.Output{{Format: "null", Maps: []string{"0:v:0"}}}}.Argv(pol)
+	argv, err = ffargs.Cmd{
+		LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.PipeRawVideo("rgba", 8, 8, ffargs.Rate{Num: 30, Den: 1})},
+		Outputs: []ffargs.Output{{Format: "null", Maps: []string{"0:v:0"}}},
+	}.Argv(pol)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := r.RunFFmpeg(ctx, Request{Dir: dir, Argv: argv, Deadline: time.Minute}); err == nil || asError(t, err).Reason != "stdin_unsupported" {
+	if _, err := r.RunFFmpeg(
+		ctx,
+		Request{Dir: dir, Argv: argv, Deadline: time.Minute},
+	); err == nil ||
+		asError(t, err).Reason != "stdin_unsupported" {
 		t.Errorf("pipe:0: %v", err)
 	}
 

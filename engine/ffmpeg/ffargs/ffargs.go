@@ -20,6 +20,7 @@ import (
 // Tool is the binary an argv is for.
 type Tool int
 
+// The two programs an argv can be for.
 const (
 	FFmpeg Tool = iota
 	FFprobe
@@ -48,27 +49,27 @@ type Policy struct {
 	MaxThreads int
 }
 
-// ErrPolicy is wrapped by every [Violation].
+// ErrPolicy is wrapped by every [ViolationError].
 var ErrPolicy = errors.New("ffargs: argument list outside the grammar")
 
-// Violation names the rule an argv broke and the token that broke it.
-type Violation struct {
+// ViolationError names the rule an argv broke and the token that broke it.
+type ViolationError struct {
 	Rule  string // FF-01 to FF-16
 	Index int    // position in argv, -1 when the problem is the list as a whole
 	Token string // the offending token, cut to 80 characters
 	Msg   string
 }
 
-func (v *Violation) Error() string {
+func (v *ViolationError) Error() string {
 	if v.Index < 0 {
 		return fmt.Sprintf("%s: %s", v.Rule, v.Msg)
 	}
 	return fmt.Sprintf("%s: %s (argument %d %q)", v.Rule, v.Msg, v.Index, v.Token)
 }
 
-func (v *Violation) Unwrap() error { return ErrPolicy }
+func (v *ViolationError) Unwrap() error { return ErrPolicy }
 
-func violate(rule string, argv []string, i int, format string, a ...any) *Violation {
+func violate(rule string, argv []string, i int, format string, a ...any) *ViolationError {
 	tok := ""
 	if i >= 0 && i < len(argv) {
 		tok = argv[i]
@@ -76,11 +77,11 @@ func violate(rule string, argv []string, i int, format string, a ...any) *Violat
 			tok = tok[:80] + "..."
 		}
 	}
-	return &Violation{Rule: rule, Index: i, Token: tok, Msg: fmt.Sprintf(format, a...)}
+	return &ViolationError{Rule: rule, Index: i, Token: tok, Msg: fmt.Sprintf(format, a...)}
 }
 
 // Check scans argv (without the program name) for tool against the grammar and policy.
-// A nil result means the argv is inside the grammar; anything else is a [*Violation].
+// A nil result means the argv is inside the grammar; anything else is a [*ViolationError].
 func Check(tool Tool, argv []string, pol Policy) error {
 	switch tool {
 	case FFmpeg:
@@ -88,7 +89,7 @@ func Check(tool Tool, argv []string, pol Policy) error {
 	case FFprobe:
 		return checkFFprobe(argv, pol)
 	}
-	return &Violation{Rule: "FF-01", Index: -1, Msg: "unknown tool"}
+	return &ViolationError{Rule: "FF-01", Index: -1, Msg: "unknown tool"}
 }
 
 // MaxAlloc is the -max_alloc value of FF-01: 1 GiB for any single allocation.
@@ -103,7 +104,7 @@ const InputFormats = "mov,mp4,m4a,3gp,3g2,mj2,matroska,webm,avi,mpegts,mpeg,flv,
 // inputFormatSet is InputFormats as a set, for checking ffprobe's format_name.
 var inputFormatSet = func() map[string]bool {
 	m := map[string]bool{}
-	for _, n := range strings.Split(InputFormats, ",") {
+	for n := range strings.SplitSeq(InputFormats, ",") {
 		m[n] = true
 	}
 	return m
@@ -114,7 +115,7 @@ func AllowedFormatName(formatName string) bool {
 	if formatName == "" {
 		return false
 	}
-	for _, n := range strings.Split(formatName, ",") {
+	for n := range strings.SplitSeq(formatName, ",") {
 		if !inputFormatSet[n] {
 			return false
 		}
@@ -176,8 +177,14 @@ func checkFilePath(rule string, argv []string, i int, p string, kind pathKind, p
 	check := func(rel string, store bool) error {
 		parts := strings.Split(rel, "/")
 		if store {
-			if len(parts) != 2 || !hexPair.MatchString(parts[0]) || !hexDigest.MatchString(parts[1]) || parts[0] != parts[1][:2] {
-				return violate(rule, argv, i, "a store path is <store>/<aa>/<sha256> with a lowercase hexadecimal digest")
+			if len(parts) != 2 || !hexPair.MatchString(parts[0]) || !hexDigest.MatchString(parts[1]) ||
+				parts[0] != parts[1][:2] {
+				return violate(
+					rule,
+					argv,
+					i,
+					"a store path is <store>/<aa>/<sha256> with a lowercase hexadecimal digest",
+				)
 			}
 			return nil
 		}
@@ -215,7 +222,12 @@ func checkFilePath(rule string, argv []string, i int, p string, kind pathKind, p
 			return check(rel, false)
 		}
 	}
-	return violate(rule, argv, i, "an input is read only from the store, the run directory or an allowed artifact directory")
+	return violate(
+		rule,
+		argv,
+		i,
+		"an input is read only from the store, the run directory or an allowed artifact directory",
+	)
 }
 
 // splitFilePrefix returns the path of a "file:" argument.

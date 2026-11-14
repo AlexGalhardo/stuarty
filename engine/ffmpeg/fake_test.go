@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -22,11 +23,13 @@ func fakeTool() bool {
 			break
 		}
 	}
-	for _, a := range os.Args[1:] {
-		if a == "-version" {
-			fmt.Printf("%s version %s Copyright (c) the FFmpeg developers\nconfiguration: --enable-version3 --disable-libx264\n", base, version)
-			return true
-		}
+	if slices.Contains(os.Args[1:], "-version") {
+		fmt.Printf(
+			"%s version %s Copyright (c) the FFmpeg developers\nconfiguration: --enable-version3 --disable-libx264\n",
+			base,
+			version,
+		)
+		return true
 	}
 	os.Exit(1)
 	return true

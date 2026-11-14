@@ -50,14 +50,14 @@ var (
 	ctrlRe = regexp.MustCompile(`[\x00-\x08\x0b-\x1f\x7f]`)
 )
 
-// scrub removes paths and control characters from tool output and cuts it to max
+// scrub removes paths and control characters from tool output and cuts it to limit
 // characters. Messages and details never carry a server path (SDD-002 A.8).
-func scrub(s string, max int) string {
+func scrub(s string, limit int) string {
 	s = ctrlRe.ReplaceAllString(s, "")
 	s = pathRe.ReplaceAllString(s, "${1}<path>")
 	s = strings.TrimSpace(s)
-	if len(s) > max {
-		s = s[len(s)-max:]
+	if len(s) > limit {
+		s = s[len(s)-limit:]
 	}
 	return s
 }

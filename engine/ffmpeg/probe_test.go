@@ -87,7 +87,11 @@ func TestSniffAcceptsTheSignaturesOfFF05(t *testing.T) {
 
 func TestCheckProbe(t *testing.T) {
 	video := func(format string, w, h int, dur string) string {
-		return `{"streams":[{"index":0,"codec_type":"video","codec_name":"mpeg4","width":` + itoa(w) + `,"height":` + itoa(h) + `},` +
+		return `{"streams":[{"index":0,"codec_type":"video","codec_name":"mpeg4","width":` + itoa(
+			w,
+		) + `,"height":` + itoa(
+			h,
+		) + `},` +
 			`{"index":1,"codec_type":"audio","codec_name":"aac"}],"format":{"format_name":"` + format + `","nb_streams":2,"duration":"` + dur + `","size":"1000"}}`
 	}
 	if _, err := CheckProbe([]byte(video("mov,mp4,m4a,3gp,3g2,mj2", 1080, 1920, "60.0")), Ceilings{}); err != nil {
@@ -100,10 +104,37 @@ func TestCheckProbe(t *testing.T) {
 		{"format not allowed", video("hls", 10, 10, "1"), CodeUnsupportedMedia, "unrecognized_format", ""},
 		{"concat format", video("concat", 10, 10, "1"), CodeUnsupportedMedia, "unrecognized_format", ""},
 		{"mixed format list", video("mov,hls", 10, 10, "1"), CodeUnsupportedMedia, "unrecognized_format", ""},
-		{"no streams", `{"streams":[],"format":{"format_name":"wav"}}`, CodeUnsupportedMedia, "unrecognized_format", ""},
-		{"only data", `{"streams":[{"index":0,"codec_type":"data","codec_name":"bin_data"}],"format":{"format_name":"mov,mp4,m4a,3gp,3g2,mj2"}}`, CodeUnsupportedMedia, "no_usable_stream", ""},
-		{"unknown codec", `{"streams":[{"index":0,"codec_type":"video","codec_name":"unknown"}],"format":{"format_name":"avi"}}`, CodeUnsupportedMedia, "no_usable_stream", ""},
-		{"too many streams", `{"streams":[` + strings.TrimSuffix(strings.Repeat(`{"index":0,"codec_type":"audio","codec_name":"aac"},`, 17), ",") + `],"format":{"format_name":"matroska,webm"}}`, CodeUnsupportedMedia, "too_many_streams", ""},
+		{
+			"no streams",
+			`{"streams":[],"format":{"format_name":"wav"}}`,
+			CodeUnsupportedMedia,
+			"unrecognized_format",
+			"",
+		},
+		{
+			"only data",
+			`{"streams":[{"index":0,"codec_type":"data","codec_name":"bin_data"}],"format":{"format_name":"mov,mp4,m4a,3gp,3g2,mj2"}}`,
+			CodeUnsupportedMedia,
+			"no_usable_stream",
+			"",
+		},
+		{
+			"unknown codec",
+			`{"streams":[{"index":0,"codec_type":"video","codec_name":"unknown"}],"format":{"format_name":"avi"}}`,
+			CodeUnsupportedMedia,
+			"no_usable_stream",
+			"",
+		},
+		{
+			"too many streams",
+			`{"streams":[` + strings.TrimSuffix(
+				strings.Repeat(`{"index":0,"codec_type":"audio","codec_name":"aac"},`, 17),
+				",",
+			) + `],"format":{"format_name":"matroska,webm"}}`,
+			CodeUnsupportedMedia,
+			"too_many_streams",
+			"",
+		},
 		{"side too long", video("avi", 9000, 100, "1"), CodeLimitExceeded, "source_edge", "source_edge"},
 		{"too many pixels", video("avi", 8000, 7000, "1"), CodeLimitExceeded, "import_pixels", "import_pixels"},
 		{"too long", video("avi", 100, 100, "14401"), CodeLimitExceeded, "import_seconds", "import_seconds"},
@@ -115,7 +146,8 @@ func TestCheckProbe(t *testing.T) {
 		if e.Code != c.code || e.Reason != c.reason {
 			t.Errorf("%s: %s %s, want %s %s", c.name, e.Code, e.Reason, c.code, c.reason)
 		}
-		if c.limit != "" && (e.Details["limit"] != c.limit || e.Details["value"] == nil || e.Details["ceiling"] == nil) {
+		if c.limit != "" &&
+			(e.Details["limit"] != c.limit || e.Details["value"] == nil || e.Details["ceiling"] == nil) {
 			t.Errorf("%s: details %v", c.name, e.Details)
 		}
 	}
@@ -160,7 +192,15 @@ func TestSecurity_T14_NonMediaInputsRefused(t *testing.T) {
 	if r.started.Load() != 0 {
 		t.Fatalf("FFmpeg or ffprobe was started %d times for a non-media file", r.started.Load())
 	}
-	if _, err := r.Probe(context.Background(), nil, filepath.Join(store, "missing"), Ceilings{}); asError(t, err).Code != "E_FILE_NOT_FOUND" {
+	if _, err := r.Probe(
+		context.Background(),
+		nil,
+		filepath.Join(store, "missing"),
+		Ceilings{},
+	); asError(
+		t,
+		err,
+	).Code != "E_FILE_NOT_FOUND" {
 		t.Errorf("a missing file: %v", err)
 	}
 }
@@ -192,7 +232,17 @@ func TestSecurity_T14_RealMediaPassesAndHostileFilesFail(t *testing.T) {
 		"s.flac": append(append([]string{}, a...), "-c:a", "flac", "-f", "flac"),
 		"s.aac":  append(append([]string{}, a...), "-c:a", "aac", "-f", "adts"),
 		"s.png":  append(append([]string{}, v...), "-frames:v", "1", "-c:v", "png", "-f", "image2"),
-		"s.jpg":  append(append([]string{}, v...), "-frames:v", "1", "-vf", "format=yuvj420p", "-c:v", "mjpeg", "-f", "image2"),
+		"s.jpg": append(
+			append([]string{}, v...),
+			"-frames:v",
+			"1",
+			"-vf",
+			"format=yuvj420p",
+			"-c:v",
+			"mjpeg",
+			"-f",
+			"image2",
+		),
 		"s.webp": append(append([]string{}, v...), "-frames:v", "1", "-c:v", "libwebp", "-f", "webp"),
 		"s.gif":  append(append([]string{}, v...), "-frames:v", "1", "-f", "gif"),
 	}
@@ -217,8 +267,10 @@ func TestSecurity_T14_RealMediaPassesAndHostileFilesFail(t *testing.T) {
 		t.Fatal(err)
 	}
 	hostile := map[string][]byte{
-		"aiff behind id3":    append([]byte("ID3\x04\x00\x00\x00\x00\x00\x00"), raw...),
-		"ftyp and garbage":   append([]byte("\x00\x00\x00\x18ftypisom\x00\x00\x02\x00isomiso2"), bytes.Repeat([]byte{0x9a, 0x01, 0xfe}, 200)...),
+		"aiff behind id3": append([]byte("ID3\x04\x00\x00\x00\x00\x00\x00"), raw...),
+		"ftyp and garbage": append(
+			[]byte("\x00\x00\x00\x18ftypisom\x00\x00\x02\x00isomiso2"),
+			bytes.Repeat([]byte{0x9a, 0x01, 0xfe}, 200)...),
 		"truncated riff":     []byte("RIFF\x00\x00\x00\x00WAVEjunk" + strings.Repeat("\x01", 40)),
 		"matroska signature": append([]byte("\x1a\x45\xdf\xa3"), bytes.Repeat([]byte{0xff}, 64)...),
 	}
@@ -229,9 +281,11 @@ func TestSecurity_T14_RealMediaPassesAndHostileFilesFail(t *testing.T) {
 			t.Errorf("%s: accepted", name)
 			continue
 		}
-		if e := asError(t, err); e.Code != CodeUnsupportedMedia {
+		e := asError(t, err)
+		t.Logf("%s: %s (%v)", name, e.Reason, e.Details["ffprobe"])
+		if e.Code != CodeUnsupportedMedia {
 			t.Errorf("%s: %+v", name, e)
-		} else if t.Logf("%s: %s (%v)", name, e.Reason, e.Details["ffprobe"]); strings.ContainsAny(e.Message, `/\`) {
+		} else if strings.ContainsAny(e.Message, `/\`) {
 			t.Errorf("%s: the message names a path: %q", name, e.Message)
 		}
 	}

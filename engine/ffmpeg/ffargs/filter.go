@@ -55,30 +55,64 @@ var filters = map[string]filterSpec{
 		"in_color_matrix":             enum("bt601", "bt709"),
 		"out_color_matrix":            enum("bt601", "bt709"),
 	}},
-	"fps":     {pos: []string{"fps"}, opts: map[string]kind{"fps": kRational, "round": enum("near", "up", "down", "zero", "inf")}},
+	"fps": {
+		pos:  []string{"fps"},
+		opts: map[string]kind{"fps": kRational, "round": enum("near", "up", "down", "zero", "inf")},
+	},
 	"format":  {pos: []string{"pix_fmts"}, opts: map[string]kind{"pix_fmts": kPixList}},
 	"setpts":  {pos: []string{"expr"}, opts: map[string]kind{"expr": kExprWords}},
 	"asetpts": {pos: []string{"expr"}, opts: map[string]kind{"expr": kExprWords}},
 	"split":   {pos: []string{"outputs"}, opts: map[string]kind{"outputs": intRange(2, 8)}},
 	"asplit":  {pos: []string{"outputs"}, opts: map[string]kind{"outputs": intRange(2, 8)}},
 	"setsar":  {pos: []string{"sar"}, opts: map[string]kind{"sar": enum("1")}},
-	"crop":    {pos: []string{"w", "h", "x", "y"}, opts: map[string]kind{"w": kExprWords, "h": kExprWords, "x": kExprWords, "y": kExprWords}},
-	"pad":     {pos: []string{"w", "h", "x", "y", "color"}, opts: map[string]kind{"w": kExprWords, "h": kExprWords, "x": kExprWords, "y": kExprWords, "color": kHexColour}},
-	"bwdif":   {opts: map[string]kind{"mode": enum("send_frame", "send_field"), "parity": enum("auto", "tff", "bff"), "deint": enum("interlaced", "all")}},
-	"yadif":   {opts: map[string]kind{"mode": enum("send_frame", "send_field"), "parity": enum("auto", "tff", "bff"), "deint": enum("interlaced", "all")}},
+	"crop": {
+		pos:  []string{"w", "h", "x", "y"},
+		opts: map[string]kind{"w": kExprWords, "h": kExprWords, "x": kExprWords, "y": kExprWords},
+	},
+	"pad": {
+		pos:  []string{"w", "h", "x", "y", "color"},
+		opts: map[string]kind{"w": kExprWords, "h": kExprWords, "x": kExprWords, "y": kExprWords, "color": kHexColour},
+	},
+	"bwdif": {
+		opts: map[string]kind{
+			"mode":   enum("send_frame", "send_field"),
+			"parity": enum("auto", "tff", "bff"),
+			"deint":  enum("interlaced", "all"),
+		},
+	},
+	"yadif": {
+		opts: map[string]kind{
+			"mode":   enum("send_frame", "send_field"),
+			"parity": enum("auto", "tff", "bff"),
+			"deint":  enum("interlaced", "all"),
+		},
+	},
 	"tonemap": {opts: map[string]kind{"tonemap": enum("hable", "clip", "mobius"), "desat": intRange(0, 10)}},
 	"setparams": {opts: map[string]kind{
 		"colorspace": enum("bt709", "bt2020nc", "smpte170m"), "color_primaries": enum("bt709", "bt2020", "smpte170m"),
 		"color_trc": enum("bt709", "arib-std-b67", "smpte2084"), "range": enum("tv", "pc"),
 	}},
 	"zscale": {opts: map[string]kind{
-		"min": enum("709", "170m", "2020_ncl"), "pin": enum("709", "170m", "2020"), "tin": enum("709", "170m", "arib-std-b67", "smpte2084", "linear"),
-		"rin": enum("tv", "pc", "limited", "full"), "m": enum("709"), "p": enum("709"), "t": enum("709", "linear"),
-		"r": enum("limited", "full"), "d": enum("ordered", "none"), "npl": intRange(1, 10000),
+		"min": enum(
+			"709",
+			"170m",
+			"2020_ncl",
+		),
+		"pin": enum("709", "170m", "2020"),
+		"tin": enum("709", "170m", "arib-std-b67", "smpte2084", "linear"),
+		"rin": enum("tv", "pc", "limited", "full"),
+		"m":   enum("709"),
+		"p":   enum("709"),
+		"t":   enum("709", "linear"),
+		"r":   enum("limited", "full"),
+		"d":   enum("ordered", "none"),
+		"npl": intRange(1, 10000),
 	}},
-	"hwupload":      {opts: map[string]kind{}},
-	"aresample":     {pos: []string{"sample_rate"}, opts: map[string]kind{"sample_rate": intRange(8000, 192000)}},
-	"aformat":       {opts: map[string]kind{"sample_fmts": enum("s16", "fltp"), "channel_layouts": enum("stereo", "mono")}},
+	"hwupload":  {opts: map[string]kind{}},
+	"aresample": {pos: []string{"sample_rate"}, opts: map[string]kind{"sample_rate": intRange(8000, 192000)}},
+	"aformat": {
+		opts: map[string]kind{"sample_fmts": enum("s16", "fltp"), "channel_layouts": enum("stereo", "mono")},
+	},
 	"adelay":        {pos: []string{"delays"}, opts: map[string]kind{"delays": kSamples, "all": kBool}},
 	"apad":          {opts: map[string]kind{"whole_len": intRange(1, 1<<30)}},
 	"atrim":         {opts: map[string]kind{"start_sample": intRange(0, 1<<30), "end_sample": intRange(1, 1<<30)}},
@@ -109,7 +143,7 @@ const maxGraphLen = 4096
 func splitTop(s string, sep byte) ([]string, bool) {
 	var out []string
 	depth, quoted, start := 0, false, 0
-	for i := 0; i < len(s); i++ {
+	for i := range len(s) {
 		switch c := s[i]; {
 		case c == '\'':
 			quoted = !quoted
@@ -228,7 +262,12 @@ func checkFilter(argv []string, i int, f string, table map[string]filterSpec) er
 // checkLavfi validates the source of -f lavfi -i <source> (FF-12).
 func checkLavfi(argv []string, i int, src string) error {
 	if len(src) > 256 || !graphChars.MatchString(src) || strings.ContainsAny(src, ",;[]") {
-		return violate("FF-12", argv, i, "a lavfi source is one of color, nullsrc, anullsrc and testsrc2 with numeric parameters")
+		return violate(
+			"FF-12",
+			argv,
+			i,
+			"a lavfi source is one of color, nullsrc, anullsrc and testsrc2 with numeric parameters",
+		)
 	}
 	return checkFilter(argv, i, src, lavfiSources)
 }

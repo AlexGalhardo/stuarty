@@ -1,6 +1,7 @@
 package ffargs
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -11,127 +12,148 @@ type option struct {
 	value string
 }
 
+// scanner is the state of one pass over an ffmpeg argv.
+type scanner struct {
+	argv              []string
+	pol               Policy
+	pending           []option
+	inputs, outputs   int
+	seenN, seenAlloc  bool
+	progress, pipeOut bool
+}
+
 // checkFFmpeg implements FF-01 to FF-16 as a scanner over an ffmpeg argv.
 func checkFFmpeg(argv []string, pol Policy) error {
-	if len(argv) == 2 && argv[0] == "-hide_banner" {
-		for _, f := range infoFlags {
-			if argv[1] == f {
-				return nil
-			}
-		}
+	if len(argv) == 2 && argv[0] == "-hide_banner" && slices.Contains(infoFlags, argv[1]) {
+		return nil
 	}
 	if len(argv) < 3 || argv[0] != "-nostdin" || argv[1] != "-hide_banner" || argv[2] != "-nostats" {
 		return violate("FF-01", argv, 0, "an ffmpeg run starts with -nostdin -hide_banner -nostats")
 	}
-
-	var (
-		pending   []option
-		inputs    int
-		outputs   int
-		seenN     bool
-		seenAlloc bool
-		progress  bool
-		pipeOut   bool
-	)
-
+	s := &scanner{argv: argv, pol: pol}
 	for i := 3; i < len(argv); i++ {
-		tok := argv[i]
-
-		if tok == "-i" {
-			if i+1 >= len(argv) {
-				return violate("FF-03", argv, i, "-i needs an input")
-			}
-			i++
-			if err := checkInput(argv, i, pending, argv[i], pol); err != nil {
-				return err
-			}
-			inputs++
-			if inputs > 8 {
-				return violate("FF-03", argv, i, "at most 8 inputs")
-			}
-			pending = nil
-			continue
-		}
-
-		if strings.HasPrefix(tok, "-") && tok != "-" {
-			if tok == "-y" {
-				return violate("FF-14", argv, i, "-y is never used; outputs are written once with -n")
-			}
-			spec, ok := ffmpegOptions[tok]
-			if !ok {
-				return violate("FF-07", argv, i, "option %s is not in the grammar", tok)
-			}
-			o := option{idx: i, name: tok}
-			if !spec.flag {
-				if i+1 >= len(argv) {
-					return violate("FF-07", argv, i, "option %s needs a value", tok)
-				}
-				i++
-				o.value = argv[i]
-				if strings.HasPrefix(o.value, "@") {
-					return violate("FF-10", argv, i, "@file option values are refused")
-				}
-				switch tok {
-				case "-filter_complex", "-vf", "-af":
-					if err := checkGraph(argv, i, o.value); err != nil {
-						return err
-					}
-				default:
-					if !spec.value(o.value) {
-						return violate(ruleOf(tok), argv, i, "value of %s is outside the grammar", tok)
-					}
-				}
-			}
-			switch spec.class {
-			case classGlobal:
-				switch tok {
-				case "-n":
-					seenN = true
-				case "-max_alloc":
-					seenAlloc = true
-				case "-progress":
-					progress = true
-				case "-filter_threads":
-					if err := checkThreads(argv, i, o.value, pol); err != nil {
-						return err
-					}
-				}
-			default:
-				if tok == "-threads" {
-					if err := checkThreads(argv, i, o.value, pol); err != nil {
-						return err
-					}
-				}
-				pending = append(pending, o)
-			}
-			continue
-		}
-
-		// An output: a path or "-" for the null muxer.
-		if inputs == 0 {
-			return violate("FF-03", argv, i, "an output before any input")
-		}
-		if !seenN || !seenAlloc {
-			return violate("FF-01", argv, i, "-n and -max_alloc %d come before the first input", MaxAlloc)
-		}
-		if err := checkOutput(argv, i, pending, tok, pol, &pipeOut); err != nil {
+		next, err := s.step(i)
+		if err != nil {
 			return err
 		}
-		outputs++
-		pending = nil
+		i = next
 	}
+	return s.finish()
+}
 
-	if len(pending) != 0 {
-		return violate("FF-14", argv, pending[0].idx, "option %s is not followed by an output", pending[0].name)
+// step handles the token at i and returns the index of the last token it consumed.
+func (s *scanner) step(i int) (int, error) {
+	tok := s.argv[i]
+	switch {
+	case tok == "-i":
+		return s.input(i)
+	case strings.HasPrefix(tok, "-") && tok != "-":
+		return s.option(i)
 	}
-	if inputs == 0 || outputs == 0 {
-		return violate("FF-03", argv, -1, "an ffmpeg run needs an input and an output")
+	return i, s.output(i)
+}
+
+func (s *scanner) input(i int) (int, error) {
+	if i+1 >= len(s.argv) {
+		return i, violate("FF-03", s.argv, i, "-i needs an input")
 	}
-	if !seenN || !seenAlloc {
-		return violate("FF-01", argv, -1, "-n and -max_alloc %d are required", MaxAlloc)
+	i++
+	if err := checkInput(s.argv, i, s.pending, s.argv[i], s.pol); err != nil {
+		return i, err
 	}
-	if progress && pipeOut {
-		return violate("FF-13", argv, -1, "-progress pipe:1 and an output on pipe:1 cannot share standard output")
+	s.inputs++
+	if s.inputs > 8 {
+		return i, violate("FF-03", s.argv, i, "at most 8 inputs")
+	}
+	s.pending = nil
+	return i, nil
+}
+
+// readOption reads an option and its value and checks the value against the grammar.
+func (s *scanner) readOption(i int) (optSpec, option, int, error) {
+	tok := s.argv[i]
+	if tok == "-y" {
+		return optSpec{}, option{}, i, violate("FF-14", s.argv, i, "-y is never used; outputs are written once with -n")
+	}
+	spec, ok := ffmpegOptions[tok]
+	if !ok {
+		return spec, option{}, i, violate("FF-07", s.argv, i, "option %s is not in the grammar", tok)
+	}
+	o := option{idx: i, name: tok}
+	if spec.flag {
+		return spec, o, i, nil
+	}
+	if i+1 >= len(s.argv) {
+		return spec, o, i, violate("FF-07", s.argv, i, "option %s needs a value", tok)
+	}
+	i++
+	o.value = s.argv[i]
+	if strings.HasPrefix(o.value, "@") {
+		return spec, o, i, violate("FF-10", s.argv, i, "@file option values are refused")
+	}
+	switch tok {
+	case "-filter_complex", "-vf", "-af":
+		return spec, o, i, checkGraph(s.argv, i, o.value)
+	}
+	if !spec.value(o.value) {
+		return spec, o, i, violate(ruleOf(tok), s.argv, i, "value of %s is outside the grammar", tok)
+	}
+	return spec, o, i, nil
+}
+
+func (s *scanner) option(i int) (int, error) {
+	spec, o, i, err := s.readOption(i)
+	if err != nil {
+		return i, err
+	}
+	if spec.class == classGlobal {
+		switch o.name {
+		case "-n":
+			s.seenN = true
+		case "-max_alloc":
+			s.seenAlloc = true
+		case "-progress":
+			s.progress = true
+		case "-filter_threads":
+			return i, checkThreads(s.argv, i, o.value, s.pol)
+		}
+		return i, nil
+	}
+	if o.name == "-threads" {
+		if err := checkThreads(s.argv, i, o.value, s.pol); err != nil {
+			return i, err
+		}
+	}
+	s.pending = append(s.pending, o)
+	return i, nil
+}
+
+// output handles a path (or "-" for the null muxer) and the options pending before it.
+func (s *scanner) output(i int) error {
+	if s.inputs == 0 {
+		return violate("FF-03", s.argv, i, "an output before any input")
+	}
+	if !s.seenN || !s.seenAlloc {
+		return violate("FF-01", s.argv, i, "-n and -max_alloc %d come before the first input", MaxAlloc)
+	}
+	if err := checkOutput(s.argv, i, s.pending, s.argv[i], s.pol, &s.pipeOut); err != nil {
+		return err
+	}
+	s.outputs++
+	s.pending = nil
+	return nil
+}
+
+func (s *scanner) finish() error {
+	switch {
+	case len(s.pending) != 0:
+		return violate("FF-14", s.argv, s.pending[0].idx, "option %s is not followed by an output", s.pending[0].name)
+	case s.inputs == 0 || s.outputs == 0:
+		return violate("FF-03", s.argv, -1, "an ffmpeg run needs an input and an output")
+	case !s.seenN || !s.seenAlloc:
+		return violate("FF-01", s.argv, -1, "-n and -max_alloc %d are required", MaxAlloc)
+	case s.progress && s.pipeOut:
+		return violate("FF-13", s.argv, -1, "-progress pipe:1 and an output on pipe:1 cannot share standard output")
 	}
 	return nil
 }
@@ -160,35 +182,61 @@ func checkThreads(argv []string, i int, v string, pol Policy) error {
 	return nil
 }
 
-func has(opts []option, name string) (option, bool) {
-	for _, o := range opts {
-		if o.name == name {
-			return o, true
-		}
-	}
-	return option{}, false
+func has(opts []option, name string) bool {
+	return slices.ContainsFunc(opts, func(o option) bool { return o.name == name })
 }
 
-func checkInput(argv []string, i int, opts []option, path string, pol Policy) error {
-	// Order of FF-02: -protocol_whitelist, then -format_whitelist and -sn -dn for a file.
+var inputOptions = []string{
+	"-protocol_whitelist", "-format_whitelist", "-sn", "-dn", "-ss", "-t", "-threads",
+	"-pix_fmt", "-s", "-framerate", "-ar", "-ac", "-pattern_type",
+}
+
+// inputFormat checks the options before an -i and returns the format they force, if any.
+func inputFormat(argv []string, i int, opts []option) (string, error) {
+	// Order of FF-02: -protocol_whitelist first.
 	if len(opts) == 0 || opts[0].name != "-protocol_whitelist" {
-		return violate("FF-02", argv, i, "-protocol_whitelist file,pipe must come first before every -i")
+		return "", violate("FF-02", argv, i, "-protocol_whitelist file,pipe must come first before every -i")
 	}
 	forced := ""
 	for _, o := range opts {
-		switch o.name {
-		case "-f":
+		if o.name == "-f" {
 			if o.value != "lavfi" && o.value != "rawvideo" && o.value != "s16le" {
-				return violate("FF-13", argv, o.idx, "an input format is lavfi, rawvideo or s16le")
+				return "", violate("FF-13", argv, o.idx, "an input format is lavfi, rawvideo or s16le")
 			}
 			forced = o.value
-		case "-protocol_whitelist", "-format_whitelist", "-sn", "-dn", "-ss", "-t", "-threads", "-pix_fmt", "-s", "-framerate",
-			"-ar", "-ac", "-pattern_type":
-		default:
-			return violate("FF-07", argv, o.idx, "option %s is not an input option", o.name)
+			continue
+		}
+		if !slices.Contains(inputOptions, o.name) {
+			return "", violate("FF-07", argv, o.idx, "option %s is not an input option", o.name)
 		}
 	}
+	return forced, nil
+}
 
+// checkPipeInput requires the explicit format and sizes of a pipe:0 input (FF-03).
+func checkPipeInput(argv []string, i int, opts []option, forced string) error {
+	var need []string
+	switch forced {
+	case "rawvideo":
+		need = []string{"-pix_fmt", "-s", "-framerate"}
+	case "s16le":
+		need = []string{"-ar", "-ac"}
+	default:
+		return violate("FF-03", argv, i, "a pipe input carries an explicit -f rawvideo or -f s16le")
+	}
+	for _, n := range need {
+		if !has(opts, n) {
+			return violate("FF-03", argv, i, "a %s pipe input carries %s", forced, n)
+		}
+	}
+	return nil
+}
+
+func checkInput(argv []string, i int, opts []option, path string, pol Policy) error {
+	forced, err := inputFormat(argv, i, opts)
+	if err != nil {
+		return err
+	}
 	switch {
 	case forced == "lavfi":
 		if path == "" || strings.Contains(path, ":/") {
@@ -196,23 +244,7 @@ func checkInput(argv []string, i int, opts []option, path string, pol Policy) er
 		}
 		return checkLavfi(argv, i, path)
 	case path == "pipe:0":
-		switch forced {
-		case "rawvideo":
-			for _, need := range []string{"-pix_fmt", "-s", "-framerate"} {
-				if _, ok := has(opts, need); !ok {
-					return violate("FF-03", argv, i, "a rawvideo pipe input carries %s", need)
-				}
-			}
-		case "s16le":
-			for _, need := range []string{"-ar", "-ac"} {
-				if _, ok := has(opts, need); !ok {
-					return violate("FF-03", argv, i, "an s16le pipe input carries %s", need)
-				}
-			}
-		default:
-			return violate("FF-03", argv, i, "a pipe input carries an explicit -f rawvideo or -f s16le")
-		}
-		return nil
+		return checkPipeInput(argv, i, opts, forced)
 	}
 
 	p, ok := splitFilePrefix(path)
@@ -223,7 +255,12 @@ func checkInput(argv []string, i int, opts []option, path string, pol Policy) er
 		return violate("FF-13", argv, i, "a file input is probed, never forced with -f")
 	}
 	if len(opts) < 4 || opts[1].name != "-format_whitelist" || opts[2].name != "-sn" || opts[3].name != "-dn" {
-		return violate("FF-02", argv, i, "-format_whitelist, -sn and -dn follow -protocol_whitelist before a file input")
+		return violate(
+			"FF-02",
+			argv,
+			i,
+			"-format_whitelist, -sn and -dn follow -protocol_whitelist before a file input",
+		)
 	}
 	return checkFilePath("FF-03", argv, i, p, pathInput, pol)
 }
@@ -250,11 +287,7 @@ func checkOutput(argv []string, i int, opts []option, path string, pol Policy, p
 	if format == "" {
 		return violate("FF-13", argv, i, "every output names its format with -f")
 	}
-	ok := false
-	for _, f := range outputFormats {
-		ok = ok || f == format
-	}
-	if !ok || format == "lavfi" {
+	if !slices.Contains(outputFormats, format) {
 		return violate("FF-13", argv, i, "output format %q is not allowed", format)
 	}
 	if maps == 0 {

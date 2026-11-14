@@ -97,7 +97,10 @@ func TestDiscoverConfiguredUnusableIsNotReplaced(t *testing.T) {
 	root := t.TempDir()
 	onPath := install(t, filepath.Join(root, "path"), "n9.0.2-path")
 	bad := filepath.Join(root, "missing", exeName("ffmpeg"))
-	_, err := Discover(context.Background(), Config{FFmpegPath: bad, LookPath: func(string) (string, error) { return onPath, nil }})
+	_, err := Discover(
+		context.Background(),
+		Config{FFmpegPath: bad, LookPath: func(string) (string, error) { return onPath, nil }},
+	)
 	var e *Error
 	if !errors.As(err, &e) || e.Code != CodeFFmpegMissing {
 		t.Fatalf("error = %v, want E_FFMPEG_MISSING", err)
@@ -142,17 +145,27 @@ func TestDiscoverMixedPairAndRelativePath(t *testing.T) {
 	}
 
 	// Next to ffmpeg, an ffprobe of another version is refused.
-	if err := os.WriteFile(filepath.Join(filepath.Dir(a), "ffprobe.version"), []byte("n9.0.2-other"), 0o644); err != nil {
+	if err := os.WriteFile(
+		filepath.Join(filepath.Dir(a), "ffprobe.version"),
+		[]byte("n9.0.2-other"),
+		0o644,
+	); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = Discover(context.Background(), Config{FFmpegPath: a, LookPath: noPath}); err == nil {
 		t.Fatal("a mixed pair was accepted when only ffmpeg was configured")
 	}
-	if _, err = Discover(context.Background(), Config{LookPath: func(string) (string, error) { return a, nil }, ExecDir: t.TempDir()}); err == nil {
+	if _, err = Discover(
+		context.Background(),
+		Config{LookPath: func(string) (string, error) { return a, nil }, ExecDir: t.TempDir()},
+	); err == nil {
 		t.Error("a mixed pair found on the PATH was accepted")
 	}
 
-	_, err = Discover(context.Background(), Config{LookPath: func(string) (string, error) { return "relative/ffmpeg", nil }, ExecDir: t.TempDir()})
+	_, err = Discover(
+		context.Background(),
+		Config{LookPath: func(string) (string, error) { return "relative/ffmpeg", nil }, ExecDir: t.TempDir()},
+	)
 	if err == nil {
 		t.Error("a relative PATH result was accepted")
 	}
@@ -162,7 +175,8 @@ func TestParseVersion(t *testing.T) {
 	lgpl := "ffmpeg version n9.0.2-39-g7adfbe40dc-20261031 Copyright (c) 2000-2026 the FFmpeg developers\r\nbuilt with gcc 16.2.0\r\n" +
 		"configuration: --prefix=/ffbuild/prefix --enable-version3 --disable-libx264 --disable-libx265 --enable-libopenh264\r\nlibavutil 60. 8.100\r\n"
 	v, ok := ParseVersion("ffmpeg", lgpl)
-	if !ok || v.Version != "n9.0.2-39-g7adfbe40dc-20261031" || v.License != (License{"lgpl", true}) || v.Major != 9 || len(v.Warnings) != 0 {
+	if !ok || v.Version != "n9.0.2-39-g7adfbe40dc-20261031" || v.License != (License{"lgpl", true}) || v.Major != 9 ||
+		len(v.Warnings) != 0 {
 		t.Errorf("pinned build: %v %+v", ok, v)
 	}
 
@@ -171,10 +185,30 @@ func TestParseVersion(t *testing.T) {
 		license   string
 		warnings  []string
 	}{
-		{"gpl", "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright\nconfiguration: --enable-gpl --enable-version3 --enable-libx264", "gpl", nil},
-		{"nonfree", "ffmpeg version 7.1 Copyright\nconfiguration: --enable-gpl --enable-nonfree", "nonfree", []string{"untested_ffmpeg_version"}},
-		{"old", "ffmpeg version 6.1.1 Copyright\nconfiguration: --enable-gpl", "gpl", []string{"untested_ffmpeg_version", "old_ffmpeg_version"}},
-		{"master", "ffmpeg version N-128227-g4811625b5f Copyright\nconfiguration: --disable-gpl", "lgpl", []string{"untested_ffmpeg_version"}},
+		{
+			"gpl",
+			"ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright\nconfiguration: --enable-gpl --enable-version3 --enable-libx264",
+			"gpl",
+			nil,
+		},
+		{
+			"nonfree",
+			"ffmpeg version 7.1 Copyright\nconfiguration: --enable-gpl --enable-nonfree",
+			"nonfree",
+			[]string{"untested_ffmpeg_version"},
+		},
+		{
+			"old",
+			"ffmpeg version 6.1.1 Copyright\nconfiguration: --enable-gpl",
+			"gpl",
+			[]string{"untested_ffmpeg_version", "old_ffmpeg_version"},
+		},
+		{
+			"master",
+			"ffmpeg version N-128227-g4811625b5f Copyright\nconfiguration: --disable-gpl",
+			"lgpl",
+			[]string{"untested_ffmpeg_version"},
+		},
 		{"no configuration line", "ffmpeg version n9.0.2 Copyright", "lgpl", nil},
 	}
 	for _, c := range cases {

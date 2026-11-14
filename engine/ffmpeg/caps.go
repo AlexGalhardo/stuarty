@@ -25,8 +25,23 @@ type Capabilities struct {
 // Required items of SDD-011 8.3.
 var (
 	requiredEncoders = []string{"mpeg4", "libvpx-vp9", "aac", "mjpeg", "png", "pcm_s16le"}
-	requiredFilters  = []string{"fps", "scale", "split", "format", "setpts", "setsar", "aresample", "aformat", "apad", "atrim", "adelay", "silencedetect", "ebur128", "asplit"}
-	requiredMuxers   = []string{"mov", "mp4", "wav", "image2", "null"}
+	requiredFilters  = []string{
+		"fps",
+		"scale",
+		"split",
+		"format",
+		"setpts",
+		"setsar",
+		"aresample",
+		"aformat",
+		"apad",
+		"atrim",
+		"adelay",
+		"silencedetect",
+		"ebur128",
+		"asplit",
+	}
+	requiredMuxers = []string{"mov", "mp4", "wav", "image2", "null"}
 )
 
 // parseListing reads the names of an ffmpeg -encoders, -decoders, -filters or -muxers listing:
@@ -34,7 +49,7 @@ var (
 func parseListing(out string) map[string]bool {
 	names := map[string]bool{}
 	seen := false
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		line = strings.TrimRight(line, "\r")
 		if t := strings.TrimSpace(line); len(t) >= 2 && strings.Trim(t, "-") == "" {
 			seen = true

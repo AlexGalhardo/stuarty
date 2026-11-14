@@ -71,7 +71,8 @@ func TestMissingRequired(t *testing.T) {
 	delete(full.Muxers, "image2")
 	m := missingRequired(full)
 	e := missingErr(m)
-	if e.Code != CodeFFmpegMissing || len(e.Details["missing"].([]string)) != 3 || !strings.Contains(e.Message, "encoder:libvpx-vp9") {
+	if e.Code != CodeFFmpegMissing || len(e.Details["missing"].([]string)) != 3 ||
+		!strings.Contains(e.Message, "encoder:libvpx-vp9") {
 		t.Errorf("%+v", e)
 	}
 }
@@ -125,7 +126,8 @@ func TestDetectEncoderOnThePinnedBuild(t *testing.T) {
 		if c.Name == "libx264" && c.Status != EncoderNotListed {
 			t.Errorf("libx264 status %s on a bundled-style build", c.Status)
 		}
-		if len(c.StderrTail) > 300 || strings.Contains(c.StderrTail, r.Workspace) || strings.Contains(c.StderrTail, filepath.ToSlash(r.Workspace)) {
+		if len(c.StderrTail) > 300 || strings.Contains(c.StderrTail, r.Workspace) ||
+			strings.Contains(c.StderrTail, filepath.ToSlash(r.Workspace)) {
 			t.Errorf("stderr tail of %s holds a path or is too long: %q", c.Name, c.StderrTail)
 		}
 	}
@@ -182,10 +184,13 @@ func TestNoEncoderNamesTheFix(t *testing.T) {
 		if !errors.As(err, &e) || e.Code != CodeNoEncoder {
 			t.Fatalf("%s: error = %v, want E_NO_ENCODER", name, err)
 		}
-		if !strings.Contains(e.Hint, "Use the FFmpeg that ships with Vukem Video") || !strings.Contains(e.Hint, "VUKEM_VIDEO_ALLOW_USER_X264=true") || !strings.Contains(e.Hint, "VUKEM_VIDEO_FFMPEG") {
+		if !strings.Contains(e.Hint, "Use the FFmpeg that ships with Vukem Video") ||
+			!strings.Contains(e.Hint, "VUKEM_VIDEO_ALLOW_USER_X264=true") ||
+			!strings.Contains(e.Hint, "VUKEM_VIDEO_FFMPEG") {
 			t.Errorf("%s: the hint does not name the fix: %q", name, e.Hint)
 		}
-		if !strings.HasPrefix(e.Message, "No H.264 encoder works on this machine. Tried: ") || !strings.Contains(e.Message, wantTried) {
+		if !strings.HasPrefix(e.Message, "No H.264 encoder works on this machine. Tried: ") ||
+			!strings.Contains(e.Message, wantTried) {
 			t.Errorf("%s: message = %q", name, e.Message)
 		}
 		if strings.Contains(e.Message, "tmp") {
@@ -207,8 +212,7 @@ func TestNoEncoderNamesTheFix(t *testing.T) {
 
 	// A listed-but-failing encoder reports its failure and the others are not tried.
 	_, err = r.DetectEncoder(ctx, caps, DetectOptions{Candidates: []string{"h264_qsv", "h264_amf"}, Refresh: true})
-	var e *Error
-	if errors.As(err, &e) {
+	if _, ok := errors.AsType[*Error](err); ok {
 		check("no hardware", err, "h264_qsv (")
 	} else if err != nil {
 		t.Fatal(err)

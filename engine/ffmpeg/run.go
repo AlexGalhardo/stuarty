@@ -9,14 +9,16 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 	"github.com/AlexGalhardo/vukem/contrib/engine"
+
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 )
 
 // Timeouts and limits of SDD-007 6.5 (defaults; the multipliers may change after the
@@ -30,9 +32,9 @@ const (
 	detectionTimeout = 20 * time.Second
 )
 
-func capped(d, max time.Duration) time.Duration {
-	if d > max {
-		return max
+func capped(d, ceiling time.Duration) time.Duration {
+	if d > ceiling {
+		return ceiling
 	}
 	return d
 }
@@ -118,7 +120,7 @@ func (d *RunDir) Sub(name string) (string, error) {
 // the dying process still holds can fail the first attempts, so it retries briefly.
 func (d *RunDir) Remove() error {
 	var err error
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		if err = os.RemoveAll(d.path); err == nil {
 			return nil
 		}
@@ -174,11 +176,19 @@ var ErrStdinUnsupported = errors.New("ffmpeg: contrib/engine cannot feed standar
 // the stall watchdog. A cancelled ctx kills the whole process tree and the error wraps ctx.Err().
 func (r *Runner) RunFFmpeg(ctx context.Context, req Request) (Result, error) {
 	if err := ffargs.Check(ffargs.FFmpeg, req.Argv, r.Policy(req.Dir, req.InputDirs...)); err != nil {
-		return Result{}, &Error{Code: CodeInternal, Reason: "argv_policy", Message: "the FFmpeg arguments were refused before any start", Err: err}
+		return Result{}, &Error{
+			Code:    CodeInternal,
+			Reason:  "argv_policy",
+			Message: "the FFmpeg arguments were refused before any start",
+			Err:     err,
+		}
 	}
-	for _, a := range req.Argv {
-		if a == "pipe:0" {
-			return Result{}, &Error{Code: CodeInternal, Reason: "stdin_unsupported", Message: "this build cannot feed standard input to FFmpeg", Err: ErrStdinUnsupported}
+	if slices.Contains(req.Argv, "pipe:0") {
+		return Result{}, &Error{
+			Code:    CodeInternal,
+			Reason:  "stdin_unsupported",
+			Message: "this build cannot feed standard input to FFmpeg",
+			Err:     ErrStdinUnsupported,
 		}
 	}
 	progress := false
@@ -187,7 +197,14 @@ func (r *Runner) RunFFmpeg(ctx context.Context, req Request) (Result, error) {
 			progress = true
 		}
 	}
-	s := execSpec{tool: r.In.FFmpeg, dir: req.Dir.path, argv: req.Argv, deadline: req.Deadline, onProgress: req.OnProgress, stdout: req.Stdout}
+	s := execSpec{
+		tool:       r.In.FFmpeg,
+		dir:        req.Dir.path,
+		argv:       req.Argv,
+		deadline:   req.Deadline,
+		onProgress: req.OnProgress,
+		stdout:     req.Stdout,
+	}
 	if progress {
 		s.stall = req.Stall
 		if s.stall <= 0 {
@@ -200,16 +217,34 @@ func (r *Runner) RunFFmpeg(ctx context.Context, req Request) (Result, error) {
 
 // RunFFprobe checks the argv and runs ffprobe. Its JSON is read through a writer capped at
 // 4 MiB (FF-09); more than that is E_UNSUPPORTED_MEDIA.
-func (r *Runner) RunFFprobe(ctx context.Context, dir *RunDir, argv []string, deadline time.Duration, inputDirs ...string) ([]byte, Result, error) {
+func (r *Runner) RunFFprobe(
+	ctx context.Context,
+	dir *RunDir,
+	argv []string,
+	deadline time.Duration,
+	inputDirs ...string,
+) ([]byte, Result, error) {
 	if err := ffargs.Check(ffargs.FFprobe, argv, r.Policy(dir, inputDirs...)); err != nil {
-		return nil, Result{}, &Error{Code: CodeInternal, Reason: "argv_policy", Message: "the ffprobe arguments were refused before any start", Err: err}
+		return nil, Result{}, &Error{
+			Code:    CodeInternal,
+			Reason:  "argv_policy",
+			Message: "the ffprobe arguments were refused before any start",
+			Err:     err,
+		}
 	}
 	w := &limitWriter{max: MaxProbeJSON}
-	res, err := r.exec(ctx, execSpec{tool: r.In.FFprobe, dir: dir.path, argv: argv, deadline: deadline, stdout: w, onOverflow: w})
+	res, err := r.exec(
+		ctx,
+		execSpec{tool: r.In.FFprobe, dir: dir.path, argv: argv, deadline: deadline, stdout: w, onOverflow: w},
+	)
 	out := Result{Stderr: res.Stderr, ExitCode: res.ExitCode, Duration: res.Duration}
 	if w.over.Load() {
-		return nil, out, &Error{Code: CodeUnsupportedMedia, Reason: "probe_output_too_large", Message: "the file declares more stream information than the product reads",
-			Details: map[string]any{"max_bytes": MaxProbeJSON}}
+		return nil, out, &Error{
+			Code:    CodeUnsupportedMedia,
+			Reason:  "probe_output_too_large",
+			Message: "the file declares more stream information than the product reads",
+			Details: map[string]any{"max_bytes": MaxProbeJSON},
+		}
 	}
 	return w.buf.Bytes(), out, err
 }
@@ -277,13 +312,7 @@ var errOverflow = errors.New("output over the cap")
 
 // watchStall cancels the run when -progress shows no advance for the window.
 func watchStall(ctx context.Context, pw *progressWriter, stall time.Duration, kill func()) {
-	tick := stall / 4
-	if tick > 5*time.Second {
-		tick = 5 * time.Second
-	}
-	if tick < 10*time.Millisecond {
-		tick = 10 * time.Millisecond
-	}
+	tick := max(min(stall/4, 5*time.Second), 10*time.Millisecond)
 	t := time.NewTicker(tick)
 	defer t.Stop()
 	for {

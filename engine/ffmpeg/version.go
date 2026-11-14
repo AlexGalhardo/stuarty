@@ -25,14 +25,14 @@ type VersionInfo struct {
 // TestedVersion is the release the product was tested on (SDD-011 8.2).
 const TestedVersion = "9.0.2"
 
-var majorRe = regexp.MustCompile(`^n?([0-9]+)\.`)
+var majorRe = regexp.MustCompile(`^n?(\d+)\.`)
 
 // ParseVersion reads the output of "-version". tool is "ffmpeg" or "ffprobe".
 func ParseVersion(tool, out string) (VersionInfo, bool) {
 	var v VersionInfo
 	prefix := tool + " version "
 	found := false
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		line = strings.TrimRight(line, "\r")
 		switch {
 		case strings.HasPrefix(line, prefix) && !found:
