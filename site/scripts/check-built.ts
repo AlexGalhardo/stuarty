@@ -25,8 +25,17 @@ const INERT_HOSTS = new Set([
 const LOADING =
 	/<(script|img|source|iframe|video|audio|embed|track|input)\b[^>]*?\b(?:src|srcset|poster)\s*=\s*"([^"]*)"|<link\b[^>]*?\bhref\s*=\s*"([^"]*)"[^>]*>/gi;
 
+/** The host of every http(s) URL in text, read with the URL parser rather than a pattern on the host. */
 export function hostsIn(text: string): string[] {
-	return [...new Set([...text.matchAll(/\bhttps?:\/\/([a-z0-9.-]+)/gi)].map((m) => m[1].toLowerCase()))];
+	const hosts = new Set<string>();
+	for (const [candidate] of text.matchAll(/\bhttps?:\/\/[^\s"'<>()\\]+/gi)) {
+		try {
+			hosts.add(new URL(candidate).hostname.toLowerCase());
+		} catch {
+			// Not a URL (a template fragment such as "https://${host}"): nothing to compare.
+		}
+	}
+	return [...hosts];
 }
 
 /** Problems of the "no external origin" property for one built file. */

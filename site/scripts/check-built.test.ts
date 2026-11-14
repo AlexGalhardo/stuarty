@@ -10,19 +10,14 @@ test("a script, stylesheet, font or image from another origin is refused", () =>
 		'<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter">',
 		'<img src="//img.example.com/x.png">',
 	].join("");
-	const problems = foreignOriginProblems("index.html", html, own);
-	assert.ok(
-		problems.some((p) => p.includes("cdn.example.com")),
-		problems.join("\n"),
-	);
-	assert.ok(
-		problems.some((p) => p.includes("fonts.googleapis.com")),
-		problems.join("\n"),
-	);
-	assert.ok(
-		problems.some((p) => p.includes("img.example.com")),
-		problems.join("\n"),
-	);
+	// Whole messages, compared for equality: no substring test on a host name.
+	assert.deepEqual(foreignOriginProblems("index.html", html, own).sort(), [
+		"index.html: loads //img.example.com/x.png",
+		"index.html: loads https://cdn.example.com/a.js",
+		"index.html: loads https://fonts.googleapis.com/css?family=Inter",
+		"index.html: refers to cdn.example.com",
+		"index.html: refers to fonts.googleapis.com",
+	]);
 });
 
 test("own files, inert links and the SVG namespace are accepted", () => {

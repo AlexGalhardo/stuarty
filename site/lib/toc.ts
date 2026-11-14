@@ -4,12 +4,22 @@ export type Heading = { depth: 2 | 3; text: string; id: string };
 
 /** Strips inline markdown so heading text matches what is rendered. */
 export function plainInline(s: string): string {
-	return s
+	const text = s
 		.replace(/`([^`]*)`/g, "$1")
 		.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
-		.replace(/(\*\*|__|\*|_)(.*?)\1/g, "$2")
-		.replace(/<[^>]+>/g, "")
-		.trim();
+		.replace(/(\*\*|__|\*|_)(.*?)\1/g, "$2");
+	return stripTags(text).trim();
+}
+
+/** Removes HTML tags until none is left, so "<<b>script>" cannot reassemble a tag after one pass. */
+function stripTags(s: string): string {
+	let out = s;
+	let previous: string;
+	do {
+		previous = out;
+		out = out.replace(/<[^>]+>/g, "");
+	} while (out !== previous);
+	return out;
 }
 
 /**
