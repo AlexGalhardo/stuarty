@@ -50,4 +50,4 @@ Negative: bundled fonts add to the binary size.
 
 **Size.** The six files add 2.3 MB to the binary (Inter 877 KB, Montserrat 745 KB, Playfair Display 301 KB, JetBrains Mono 187 KB, Anton 171 KB, Bebas Neue 61 KB).
 
-**Determinism.** The golden bitmaps are compared byte for byte on the three operating systems in CI. The geometry written in this package avoids the fused multiply-add that arm64 compilers may use, and `golang.org/x/image/vector` disables it itself.
+**Determinism.** The golden bitmaps are compared byte for byte on the three operating systems in CI. The first macOS arm64 run showed that the filling step of `golang.org/x/image/vector` is not bit-identical between amd64 (SSE accumulation) and arm64 (Go loop). The fallback this ADR names, "our own rasterization path", was applied in its smallest form: `engine/raster/internal/scan` is a copy of the portable path of that module, used everywhere. The geometry avoids the standard library's `Sin`, `Cos`, `Atan2`, `Hypot` and `Acos`, and rounds outline points to a whole font unit so that the last bit of the shaping library's float32 variable-font arithmetic cannot show. Details in SDD-004 section 5.1.
