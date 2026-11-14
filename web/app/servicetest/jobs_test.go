@@ -1,0 +1,825 @@
+package servicetest
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"os"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	"github.com/AlexGalhardo/vukem/queue"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/service"
+)
+
+type exportFn func(ctx context.Context, in service.ExportInput) (*service.ExportOutput, error)
+
+func (f exportFn) Export(ctx context.Context, in service.ExportInput) (*service.ExportOutput, error) {
+	return f(ctx, in)
+}
+
+var okChecks = []service.VerifyCheck{
+	{Name: "streams", OK: true, Detail: "video and audio"},
+	{Name: "duration", OK: true, Detail: "within one frame"},
+	{Name: "dimensions", OK: true, Detail: "1080x1920"},
+	{Name: "pixel_format", OK: true, Detail: "yuv420p"},
+	{Name: "faststart", OK: true, Detail: "moov before mdat"},
+}
+
+// writeOutput is what a good exporter does: the file under OutPath, then its facts.
+func writeOutput(in service.ExportInput, checks []service.VerifyCheck) (*service.ExportOutput, error) {
+	body := []byte("an mp4, more or less")
+	if err := os.WriteFile(in.OutPath, body, 0o600); err != nil {
+		return nil, err
+	}
+
+	sum := sha256.Sum256(body)
+
+	return &service.ExportOutput{
+		Bytes: int64(len(body)), SHA256: hex.EncodeToString(sum[:]), Frames: int(in.End - in.Start),
+		VideoCodec: "h264", AudioCodec: "aac", Checks: checks,
+	}, nil
+}
+
+func goodExporter() exportFn {
+	return func(_ context.Context, in service.ExportInput) (*service.ExportOutput, error) {
+		return writeOutput(in, okChecks)
+	}
+}
+
+// exportable is a project the lint lets through: one visual track with a text.
+func (m *mediaEnv) exportable() string {
+	m.t.Helper()
+
+	project, track := m.withTrack()
+	if _, err := m.addText(ui, project, track, 1, "0s", "hello"); err != nil {
+		m.t.Fatal(err)
+	}
+
+	return project
+}
+
+func (m *mediaEnv) startExport(project string) (*service.Job, error) {
+	return m.svc.JobStart(m.as(ui), service.JobStartRequest{ProjectID: project, Kind: "export"})
+}
+
+func (m *mediaEnv) job(id string) *service.Job {
+	m.t.Helper()
+
+	j, err := m.svc.JobGet(m.as(ui), service.JobGetRequest{JobID: id})
+	if err != nil {
+		m.t.Fatal(err)
+	}
+
+	return j
+}
+
+// An export reaches succeeded only after the output passed verification, and
+// the in-process queue runs it inside the call (P1-SRV-004 asserts 33 and 35).
+func TestExportSucceedsInProcessAndTheFileIsServed(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{exporter: goodExporter()})
+	project := m.exportable()
+
+	job, err := m.startExport(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// queue.Sync runs the job before the call returns: the row is final.
+	if job.State != service.JobSucceeded || job.Result == nil || job.Result.Export == nil {
+		t.Fatalf("job = %+v", job)
+	}
+
+	e := job.Result.Export
+	if e.Revision != 2 || e.Bytes == 0 || e.SHA256 == "" || e.Width != 1080 || e.Height != 1920 ||
+		e.VideoCodec != "h264" ||
+		e.DownloadURL != "/api/v1/jobs/"+job.JobID+"/file" ||
+		len(e.Checks) != 5 ||
+		!strings.HasSuffix(e.Path, job.JobID+".mp4") {
+		t.Errorf("result = %+v", e)
+	}
+
+	if _, err := os.Stat(e.Path); err != nil {
+		t.Errorf("the output is not at the path: %v", err)
+	}
+
+	if !strings.Contains(job.Text, "succeeded 100%") || !strings.Contains(job.Text, "file=") {
+		t.Errorf("text = %s", job.Text)
+	}
+
+	// A network caller never sees the path.
+	remote := service.WithCaller(context.Background(), service.Caller{
+		Actor: "user:u1", Scopes: service.AllScopes, OwnerUserID: "u1",
+	})
+	if got, gerr := m.svc.JobGet(remote, service.JobGetRequest{JobID: job.JobID}); gerr == nil && got.Result != nil &&
+		got.Result.Export.Path != "" {
+		t.Errorf("a network caller sees the path %q", got.Result.Export.Path)
+	}
+
+	list, err := m.svc.JobList(m.as(ui), service.JobListRequest{ProjectID: project})
+	if err != nil || len(list.Jobs) != 1 || list.Jobs[0].JobID != job.JobID ||
+		!strings.HasPrefix(list.Text, "jobs "+project) {
+		t.Errorf("list = %+v, %v", list, err)
+	}
+
+	var states []string
+	for _, ev := range m.eventsOf("job.updated") {
+		states = append(states, ev.State)
+	}
+
+	if strings.Join(states, ",") != "queued,running,succeeded" {
+		t.Errorf("job.updated = %v", states)
+	}
+}
+
+func TestExportThatFailsVerificationNeverSucceeds(t *testing.T) {
+	cases := map[string]exportFn{
+		"a failed check": func(_ context.Context, in service.ExportInput) (*service.ExportOutput, error) {
+			checks := append([]service.VerifyCheck{}, okChecks...)
+			checks[4] = service.VerifyCheck{Name: "faststart", OK: false, Detail: "moov after mdat"}
+
+			return writeOutput(in, checks)
+		},
+		"the exporter says so": func(_ context.Context, in service.ExportInput) (*service.ExportOutput, error) {
+			_, _ = writeOutput(in, okChecks)
+
+			return nil, &ffmpeg.Error{
+				Code: "E_VERIFY_FAILED", Reason: "verify_failed", Message: "The exported file failed 1 check(s).",
+				Details: map[string]any{"checks": []string{"duration"}},
+			}
+		},
+		"no file": func(_ context.Context, in service.ExportInput) (*service.ExportOutput, error) {
+			out, err := writeOutput(in, okChecks)
+			_ = os.Remove(in.OutPath)
+
+			return out, err
+		},
+		"another size": func(_ context.Context, in service.ExportInput) (*service.ExportOutput, error) {
+			out, err := writeOutput(in, okChecks)
+			out.Bytes += 7
+
+			return out, err
+		},
+	}
+
+	for name, fn := range cases {
+		t.Run(name, func(t *testing.T) {
+			m := newMediaEnv(t, mediaCfg{exporter: fn})
+			project := m.exportable()
+
+			job, err := m.startExport(project)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if job.State != service.JobFailed || job.Error == nil || job.Error.Code != "E_VERIFY_FAILED" ||
+				job.Result != nil {
+				t.Fatalf("job = %+v", job)
+			}
+
+			if _, err := os.Stat(m.ws + "/exports/" + project + "/" + job.JobID + ".mp4"); err == nil {
+				t.Error("a file that failed verification is on disk")
+			}
+
+			if !strings.Contains(job.Text, "error E_VERIFY_FAILED") {
+				t.Errorf("text = %s", job.Text)
+			}
+		})
+	}
+}
+
+func TestExportErrorsOfTheEngineTravelInTheJob(t *testing.T) {
+	m := newMediaEnv(
+		t,
+		mediaCfg{exporter: exportFn(func(context.Context, service.ExportInput) (*service.ExportOutput, error) {
+			return nil, &ffmpeg.Error{
+				Code:    "E_EXPORT_FAILED",
+				Reason:  "encode",
+				Message: "The encoder stopped.",
+				Hint:    "try again",
+			}
+		})},
+	)
+
+	job, err := m.startExport(m.exportable())
+	if err != nil || job.State != service.JobFailed || job.Error.Code != "E_EXPORT_FAILED" ||
+		job.Error.Details["reason"] != "encode" || job.Error.Hint != "try again" {
+		t.Fatalf("job = %+v, %v", job, err)
+	}
+
+	crash := newMediaEnv(
+		t,
+		mediaCfg{exporter: exportFn(func(context.Context, service.ExportInput) (*service.ExportOutput, error) {
+			return nil, errors.New("open C:/secret/path: access denied")
+		})},
+	)
+
+	j, _ := crash.startExport(crash.exportable())
+	if j.Error == nil || j.Error.Code != command.CodeInternal || strings.Contains(j.Error.Message, "secret") {
+		t.Errorf("an unknown error must be E_INTERNAL without its text: %+v", j.Error)
+	}
+}
+
+func TestJobStartGates(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{exporter: goodExporter(), noQueue: true})
+
+	// An empty timeline has lint errors: the export is refused.
+	empty := m.newProject("empty")
+	_, err := m.startExport(empty)
+
+	se := serviceError(t, err)
+	if se.Code != service.CodeLintBlocking || se.Details["total"] == nil {
+		t.Errorf("an empty timeline: %+v", se)
+	}
+
+	project := m.exportable()
+
+	for name, req := range map[string]service.JobStartRequest{
+		"unknown kind":     {ProjectID: project, Kind: "render"},
+		"unknown argument": {ProjectID: project, Kind: "export", Args: json.RawMessage(`{"codec":"x"}`)},
+		"range past end":   {ProjectID: project, Kind: "export", Args: json.RawMessage(`{"end":"10m"}`)},
+		"not a time":       {ProjectID: project, Kind: "export", Args: json.RawMessage(`{"start":"soon"}`)},
+		"wait too long":    {ProjectID: project, Kind: "export", WaitMS: 99999},
+	} {
+		if _, err := m.svc.JobStart(m.as(ui), req); err == nil {
+			t.Errorf("%s: accepted", name)
+		}
+	}
+
+	if _, err := m.svc.JobStart(
+		m.as(ui),
+		service.JobStartRequest{ProjectID: project, Kind: "transcribe"},
+	); code(
+		err,
+	) != "E_TRANSCRIBE_UNAVAILABLE" {
+		t.Errorf("transcribe: %v", err)
+	}
+
+	dry, err := m.svc.JobStart(m.as(ui), service.JobStartRequest{ProjectID: project, Kind: "export", DryRun: true})
+	if err != nil || dry.State != service.JobQueued {
+		t.Fatalf("dry run = %+v, %v", dry, err)
+	}
+
+	if rows, _ := m.store.Jobs().List(context.Background(), project, nil, 10); len(rows) != 0 {
+		t.Errorf("a dry run queued %d jobs", len(rows))
+	}
+
+	scoped := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "key:k", Scopes: []string{service.ScopeRead, service.ScopeEdit}},
+	)
+	if _, err := m.svc.JobStart(
+		scoped,
+		service.JobStartRequest{ProjectID: project, Kind: "export"},
+	); code(
+		err,
+	) != service.CodeForbidden {
+		t.Errorf("an export needs render: %v", err)
+	}
+}
+
+// With VUKEM_VIDEO_MAX_EXPORTS=2 the third start is E_QUEUE_FULL naming the two
+// jobs and creates no row; 20 concurrent starts create exactly 2 (check 30).
+func TestExportLimit(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{exporter: goodExporter(), noQueue: true, limits: service.Limits{MaxExports: 2}})
+	project := m.exportable()
+
+	var ids []string
+
+	for i, actor := range []string{"local:a", "local:b"} {
+		job, err := m.svc.JobStart(m.as(actor), service.JobStartRequest{ProjectID: project, Kind: "export"})
+		if err != nil {
+			t.Fatalf("start %d: %v", i, err)
+		}
+
+		ids = append(ids, job.JobID)
+	}
+
+	_, err := m.svc.JobStart(m.as("local:c"), service.JobStartRequest{ProjectID: project, Kind: "export"})
+
+	se := serviceError(t, err)
+	if se.Code != service.CodeQueueFull || !se.Retryable || se.HTTPStatus() != 429 ||
+		se.Details["limit"] != "exports" ||
+		se.Details["variable"] != "VUKEM_VIDEO_MAX_EXPORTS" {
+		t.Fatalf("error = %+v", se)
+	}
+
+	running, _ := se.Details["running"].([]string)
+	if len(running) != 2 || running[0] != ids[0] || running[1] != ids[1] {
+		t.Errorf("details.running = %v, want %v", se.Details["running"], ids)
+	}
+
+	if rows, _ := m.store.Jobs().List(context.Background(), project, nil, 10); len(rows) != 2 {
+		t.Errorf("rows = %d, want 2", len(rows))
+	}
+}
+
+func TestConcurrentExportStartsCreateExactlyTheLimit(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{exporter: goodExporter(), noQueue: true, limits: service.Limits{MaxExports: 2}})
+	project := m.exportable()
+
+	var (
+		wg      sync.WaitGroup
+		started atomic.Int64
+		full    atomic.Int64
+	)
+
+	for i := range 20 {
+		wg.Go(func() {
+			actor := "local:u" + string(rune('a'+i))
+
+			_, err := m.svc.JobStart(m.as(actor), service.JobStartRequest{ProjectID: project, Kind: "export"})
+
+			switch code(err) {
+			case "":
+				started.Add(1)
+			case service.CodeQueueFull:
+				full.Add(1)
+			default:
+				t.Errorf("unexpected error: %v", err)
+			}
+		})
+	}
+
+	wg.Wait()
+
+	if started.Load() != 2 || full.Load() != 18 {
+		t.Errorf("started %d, refused %d, want 2 and 18", started.Load(), full.Load())
+	}
+}
+
+func TestOneActorMayHaveOneRunningAndTwoWaitingExports(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{exporter: goodExporter(), noQueue: true, limits: service.Limits{MaxExports: 10}})
+	project := m.exportable()
+
+	for i := range 3 {
+		if _, err := m.startExport(project); err != nil {
+			t.Fatalf("export %d: %v", i, err)
+		}
+	}
+
+	if _, err := m.startExport(project); code(err) != service.CodeQueueFull {
+		t.Errorf("the fourth export of one actor: %v", err)
+	}
+}
+
+// A handler that reports 1,000 times in a second writes at most 5 updates and
+// 5 events, and the last state reaches the stream (check 31).
+func TestProgressIsThrottled(t *testing.T) {
+	var reports atomic.Int64
+
+	m := newMediaEnv(
+		t,
+		mediaCfg{exporter: exportFn(func(_ context.Context, in service.ExportInput) (*service.ExportOutput, error) {
+			deadline := time.Now().Add(time.Second)
+
+			for i := range 1000 {
+				in.OnProgress(i, 1000)
+				reports.Add(1)
+
+				if wait := time.Until(deadline) / time.Duration(1000-i); wait > 0 {
+					time.Sleep(wait)
+				}
+			}
+
+			return writeOutput(in, okChecks)
+		})},
+	)
+
+	project := m.exportable()
+
+	job, err := m.startExport(project)
+	if err != nil || job.State != service.JobSucceeded {
+		t.Fatalf("job = %+v, %v", job, err)
+	}
+
+	if reports.Load() != 1000 {
+		t.Fatalf("handler reported %d times", reports.Load())
+	}
+
+	var running, last int
+
+	for _, ev := range m.eventsOf("job.updated") {
+		if ev.State == "running" {
+			running++
+		}
+
+		last++
+	}
+
+	// queued, the claim, at most 5 progress events, and the final one.
+	if running-1 > 5 || last > 8 {
+		t.Errorf("%d running events (one is the claim), %d in all", running, last)
+	}
+
+	events := m.eventsOf("job.updated")
+	if final := events[len(events)-1]; final.State != "succeeded" || final.Progress != 1 || final.Result == nil {
+		t.Errorf("the last event = %+v", final)
+	}
+}
+
+func TestCancelQueuedAndRunningAndFinished(t *testing.T) {
+	started := make(chan struct{})
+
+	m := newMediaEnv(
+		t,
+		mediaCfg{exporter: exportFn(func(ctx context.Context, in service.ExportInput) (*service.ExportOutput, error) {
+			_ = os.WriteFile(in.OutPath, []byte("partial"), 0o600)
+			close(started)
+			<-ctx.Done()
+
+			return nil, ctx.Err()
+		}), noQueue: true},
+	)
+
+	project := m.exportable()
+
+	// Queued: cancelled at once, before any claim, and twice is the same.
+	queued, err := m.startExport(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for range 2 {
+		if err := m.runner.Cancel(context.Background(), queued.JobID); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if j := m.job(queued.JobID); j.State != service.JobCancelled || j.Error == nil || j.Error.Code != "E_CANCELLED" {
+		t.Fatalf("queued job after cancel = %+v", j)
+	}
+
+	if err := m.runner.RunJob(
+		context.Background(),
+		queued.JobID,
+	); err != nil ||
+		m.job(queued.JobID).State != service.JobCancelled {
+		t.Error("a delivery for a cancelled job must do nothing")
+	}
+
+	// Running: cancelled within 2 s with no file at the final path.
+	run, err := m.startExport(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	done := make(chan error, 1)
+
+	go func() { done <- m.runner.RunJob(context.Background(), run.JobID) }()
+
+	<-started
+
+	begin := time.Now()
+
+	if err := m.runner.Cancel(context.Background(), run.JobID); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := <-done; err != nil {
+		t.Fatalf("RunJob: %v", err)
+	}
+
+	if d := time.Since(begin); d > 2*time.Second {
+		t.Errorf("cancellation took %v", d)
+	}
+
+	j := m.job(run.JobID)
+	if j.State != service.JobCancelled || j.Error == nil || j.Error.Code != "E_CANCELLED" {
+		t.Fatalf("running job after cancel = %+v", j)
+	}
+
+	if _, err := os.Stat(m.ws + "/exports/" + project + "/" + run.JobID + ".mp4"); err == nil {
+		t.Error("a cancelled export left a file at the final path")
+	}
+
+	// Finished: the final row comes back unchanged.
+	if err := m.runner.Cancel(
+		context.Background(),
+		run.JobID,
+	); err != nil ||
+		m.job(run.JobID).State != service.JobCancelled {
+		t.Errorf("cancel of a final job changed it: %v", err)
+	}
+}
+
+func TestTrashingAProjectCancelsItsExports(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{exporter: goodExporter(), noQueue: true})
+	project := m.exportable()
+
+	job, err := m.startExport(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := m.svc.ProjectTrash(m.as(ui), service.ProjectTrashRequest{ProjectID: project}); err != nil {
+		t.Fatal(err)
+	}
+
+	if j := m.job(job.JobID); j.State != service.JobCancelled {
+		t.Errorf("job after the trash = %+v", j)
+	}
+}
+
+// A job found running at start-up is requeued with a new message and ends
+// succeeded; one interrupted three times fails; a graceful shutdown requeues and
+// the next start completes it (check 34).
+func TestRecoveryRequeuesAndGivesUp(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{exporter: goodExporter()})
+	project := m.exportable()
+	ctx := context.Background()
+
+	// A previous owner claimed the job and died: the row is running, attempts 1.
+	var queued string
+
+	m.insertExport(project, func(id string) { queued = id })
+
+	if ok, err := m.store.Jobs().Claim(ctx, queued, 1); err != nil || !ok {
+		t.Fatalf("claim: %v %v", ok, err)
+	}
+
+	if err := m.runner.Recover(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	if j := m.job(queued); j.State != service.JobSucceeded {
+		t.Fatalf("after recovery: %+v", j)
+	}
+
+	// Interrupted three times: recovery gives up.
+	var third string
+
+	m.insertExport(project, func(id string) { third = id })
+
+	for range 2 {
+		if ok, _ := m.store.Jobs().Claim(ctx, third, 2); !ok {
+			t.Fatal("claim")
+		}
+
+		if _, err := m.store.Jobs().Requeue(ctx, third, "x", 3); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if ok, _ := m.store.Jobs().Claim(ctx, third, 4); !ok {
+		t.Fatal("third claim")
+	}
+
+	// The job was claimed three times and died running: attempts is 3.
+	if err := m.runner.Recover(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	j := m.job(third)
+	if j.State != service.JobFailed || j.Error == nil || j.Error.Code != service.CodeExportFailed ||
+		j.Error.Details["reason"] != "interrupted" {
+		t.Errorf("a job interrupted too often: %+v", j)
+	}
+}
+
+// A queued row whose message was lost gets one more message once it is older
+// than a minute (SDD-005 section 14.5 item 3).
+func TestRecoveryRepairsAQueuedJobWhoseMessageWasLost(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{exporter: goodExporter()})
+	project := m.exportable()
+
+	var id string
+
+	m.insertExport(project, func(got string) { id = got })
+
+	if err := m.runner.Recover(context.Background()); err != nil || m.job(id).State != service.JobQueued {
+		t.Fatalf("a young queued job must be left alone: %v, %+v", err, m.job(id))
+	}
+
+	m.clock.advance(2 * time.Minute)
+
+	if err := m.runner.Recover(context.Background()); err != nil || m.job(id).State != service.JobSucceeded {
+		t.Errorf("after two minutes: %v, %+v", err, m.job(id))
+	}
+}
+
+func TestGracefulShutdownRequeuesAndTheNextStartCompletes(t *testing.T) {
+	entered := make(chan struct{}, 1)
+	block := atomic.Bool{}
+	block.Store(true)
+
+	m := newMediaEnv(
+		t,
+		mediaCfg{
+			noQueue: true,
+			exporter: exportFn(func(ctx context.Context, in service.ExportInput) (*service.ExportOutput, error) {
+				if block.Load() {
+					entered <- struct{}{}
+					<-ctx.Done()
+
+					return nil, ctx.Err()
+				}
+
+				return writeOutput(in, okChecks)
+			}),
+		},
+	)
+
+	project := m.exportable()
+
+	job, err := m.startExport(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	shutdown, stop := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+
+	go func() { done <- m.runner.RunJob(shutdown, job.JobID) }()
+
+	<-entered
+	stop()
+
+	if err := <-done; !errors.Is(err, context.Canceled) {
+		t.Fatalf("RunJob = %v, want the context error so the queue keeps the message", err)
+	}
+
+	j := m.job(job.JobID)
+	if j.State != service.JobQueued || j.Message != "interrupted by shutdown" {
+		t.Fatalf("after the shutdown: %+v", j)
+	}
+
+	block.Store(false)
+
+	if err := m.runner.RunJob(context.Background(), job.JobID); err != nil {
+		t.Fatal(err)
+	}
+
+	if j := m.job(job.JobID); j.State != service.JobSucceeded {
+		t.Errorf("after the next start: %+v", j)
+	}
+}
+
+// insertExport creates a queued export row that no queue message points at.
+func (m *mediaEnv) insertExport(project string, got func(id string)) {
+	m.t.Helper()
+
+	m.hold.Store(true)
+	defer m.hold.Store(false)
+
+	job, err := m.svc.JobStart(m.as(ui), service.JobStartRequest{ProjectID: project, Kind: "export"})
+	if err != nil {
+		m.t.Fatal(err)
+	}
+
+	got(job.JobID)
+}
+
+// The durable queue: the message is inserted with the job row, a worker runs
+// it within the 1.5 s of SDD-005 section 14.1, and with the tables of vukem
+// next to a jobs table of our own (check 36).
+func TestDurableQueueRunsAnExportWithAWorker(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{exporter: goodExporter(), durable: true})
+	project := m.exportable()
+
+	ctx, stop := context.WithCancel(context.Background())
+	worked := make(chan error, 1)
+
+	go func() {
+		worked <- m.queue.Work(ctx, queue.WorkOptions{
+			Queues: []string{"ingest", "export", "default"}, Concurrency: 2, Sleep: 50 * time.Millisecond,
+			StopTimeout: 5 * time.Second,
+		})
+	}()
+
+	begin := time.Now()
+
+	job, err := m.startExport(project)
+	if err != nil || job.State != service.JobQueued {
+		t.Fatalf("job = %+v, %v", job, err)
+	}
+
+	eventually(t, "the export to succeed", func() bool { return m.job(job.JobID).State == service.JobSucceeded })
+
+	if d := time.Since(begin); d > 1500*time.Millisecond {
+		t.Errorf("start latency %v, want under 1.5 s", d)
+	}
+
+	stop()
+
+	if err := <-worked; err != nil {
+		t.Errorf("worker: %v", err)
+	}
+
+	var tables []string
+
+	rows, err := m.store.DB().QueryContext(context.Background(),
+		"SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('queue_jobs','queue_failed_jobs','jobs') ORDER BY name")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var n string
+		_ = rows.Scan(&n)
+		tables = append(tables, n)
+	}
+
+	if strings.Join(tables, ",") != "jobs,queue_failed_jobs,queue_jobs" {
+		t.Errorf("tables = %v", tables)
+	}
+}
+
+func TestIngestOnTheDurableQueueSurvivesARestartOfTheWorker(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{durable: true})
+	project := m.newProject("p")
+
+	a := m.importOne(project, m.write("a.mp4", clipBytes)).Assets[0]
+	if a.State != "pending" || a.JobID == "" {
+		t.Fatalf("entry = %+v", a)
+	}
+
+	// No worker ran: the message waits in the table with the job row.
+	if n, err := m.queue.Driver().(*queue.Database).Pending(context.Background()); err != nil || n != 1 {
+		t.Fatalf("pending messages = %d, %v", n, err)
+	}
+
+	ctx, stop := context.WithCancel(context.Background())
+	worked := make(chan error, 1)
+
+	go func() {
+		worked <- m.queue.Work(ctx, queue.WorkOptions{Queues: []string{"ingest"}, Sleep: 20 * time.Millisecond})
+	}()
+
+	eventually(t, "the ingest", func() bool { return m.job(a.JobID).State == service.JobSucceeded })
+	stop()
+	<-worked
+
+	res, err := m.svc.MediaList(m.as(ui), service.MediaListRequest{ProjectID: project})
+	if err != nil || res.Assets[0].State != "ready" {
+		t.Errorf("list = %+v, %v", res, err)
+	}
+}
+
+// Ingest jobs run at most MaxIngests at once; the others wait queued.
+func TestIngestConcurrencyIsBounded(t *testing.T) {
+	var running, peak atomic.Int64
+
+	var m *mediaEnv
+
+	m = newMediaEnv(
+		t,
+		mediaCfg{
+			noQueue: true,
+			limits:  service.Limits{MaxIngests: 2},
+			ingest: func(_ context.Context, in ingest.Input) (*ingest.Result, error) {
+				n := running.Add(1)
+				defer running.Add(-1)
+
+				for {
+					p := peak.Load()
+					if n <= p || peak.CompareAndSwap(p, n) {
+						break
+					}
+				}
+
+				time.Sleep(40 * time.Millisecond)
+
+				return fakeResult(m.ws, in)
+			},
+		},
+	)
+
+	project := m.newProject("p")
+
+	var ids []string
+
+	for i := range 6 {
+		a := m.importOne(project, m.write("clip"+string(rune('a'+i))+".mp4", clipBytes+string(rune('a'+i)))).Assets[0]
+		ids = append(ids, a.JobID)
+	}
+
+	var wg sync.WaitGroup
+
+	for _, id := range ids {
+		wg.Go(func() { _ = m.runner.RunJob(context.Background(), id) })
+	}
+
+	wg.Wait()
+
+	if peak.Load() > 2 || peak.Load() < 1 {
+		t.Errorf("peak concurrent ingests = %d, want at most 2", peak.Load())
+	}
+
+	for _, id := range ids {
+		if j := m.job(id); j.State != service.JobSucceeded {
+			t.Errorf("job %s = %s", id, j.State)
+		}
+	}
+}
