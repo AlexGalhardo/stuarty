@@ -5,30 +5,30 @@ import { site } from "@/lib/site";
 export const prerender = true;
 
 function escapeXml(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 export const GET: APIRoute = () => {
-  const urls = [
-    { loc: `${site.url}/`, lastmod: undefined, priority: "1.0" },
+	const urls = [
+		{ loc: `${site.url}/`, lastmod: undefined, priority: "1.0" },
 		{ loc: `${site.url}/pt-br/`, lastmod: undefined, priority: "0.6" },
-    ...getAllDocs().map((doc) => ({
-      loc: `${site.url}${doc.href}/`,
-      lastmod: doc.updated,
-      priority: "0.8",
-    })),
-    { loc: `${site.url}/changelog/`, lastmod: undefined, priority: "0.5" },
-  ];
+		...getAllDocs().map((doc) => ({
+			loc: `${site.url}${doc.href}/`,
+			lastmod: doc.updated,
+			priority: "0.8",
+		})),
+		{ loc: `${site.url}/changelog/`, lastmod: undefined, priority: "0.5" },
+	];
 
-  const body = [
-    `<?xml version="1.0" encoding="UTF-8"?>`,
-    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
-    ...urls.map((url) => {
-      const lastmod = url.lastmod ? `<lastmod>${escapeXml(url.lastmod)}</lastmod>` : "";
-      return `<url><loc>${escapeXml(url.loc)}</loc>${lastmod}<changefreq>weekly</changefreq><priority>${url.priority}</priority></url>`;
-    }),
-    `</urlset>`,
-  ].join("");
+	const body = [
+		`<?xml version="1.0" encoding="UTF-8"?>`,
+		`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
+		...urls.map((url) => {
+			const lastmod = url.lastmod ? `<lastmod>${escapeXml(url.lastmod)}</lastmod>` : "";
+			return `<url><loc>${escapeXml(url.loc)}</loc>${lastmod}<changefreq>weekly</changefreq><priority>${url.priority}</priority></url>`;
+		}),
+		`</urlset>`,
+	].join("");
 
-  return new Response(body, { headers: { "Content-Type": "application/xml; charset=utf-8" } });
+	return new Response(body, { headers: { "Content-Type": "application/xml; charset=utf-8" } });
 };

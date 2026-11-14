@@ -12,9 +12,9 @@ const previous: Record<string, string> = fs.existsSync(out) ? JSON.parse(fs.read
 const merged: Record<string, string> = { ...previous, ...gitLastUpdated(contentDir) };
 
 const mdx = Object.fromEntries(
-  Object.entries(merged)
-    .filter(([file]) => file.endsWith(".mdx") && fs.existsSync(path.join(contentDir, file)))
-    .sort(([a], [b]) => a.localeCompare(b)),
+	Object.entries(merged)
+		.filter(([file]) => file.endsWith(".mdx") && fs.existsSync(path.join(contentDir, file)))
+		.sort(([a], [b]) => a.localeCompare(b)),
 );
 
 fs.writeFileSync(out, `${JSON.stringify(mdx, null, 2)}\n`);

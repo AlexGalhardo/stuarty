@@ -13,33 +13,36 @@ export type Changelog = { intro: string; body: string };
 
 /** Splits the changelog into its intro paragraph and the release sections. */
 export function readChangelog(): Changelog {
-  const raw = fs.readFileSync(CHANGELOG, "utf8").replace(/\r\n/g, "\n");
-  const withoutTitle = raw.replace(/^# Changelog\n+/, "");
-  const first = withoutTitle.indexOf("\n## [");
-  const intro = first === -1 ? "" : withoutTitle.slice(0, first).trim();
-  // The empty [Unreleased] heading only matters to the release tool.
-  const body = (first === -1 ? withoutTitle : withoutTitle.slice(first + 1)).replace(/^## \[Unreleased\]\n+(?=## \[)/m, "");
-  return { intro, body };
+	const raw = fs.readFileSync(CHANGELOG, "utf8").replace(/\r\n/g, "\n");
+	const withoutTitle = raw.replace(/^# Changelog\n+/, "");
+	const first = withoutTitle.indexOf("\n## [");
+	const intro = first === -1 ? "" : withoutTitle.slice(0, first).trim();
+	// The empty [Unreleased] heading only matters to the release tool.
+	const body = (first === -1 ? withoutTitle : withoutTitle.slice(first + 1)).replace(
+		/^## \[Unreleased\]\n+(?=## \[)/m,
+		"",
+	);
+	return { intro, body };
 }
 
 /** Renders Markdown (not MDX: braces in commit messages stay literal). */
 export async function renderMarkdown(source: string): Promise<React.ReactElement> {
-  const { default: Content } = await evaluate(source, {
-    ...runtime,
-    format: "md",
-    development: false,
-    remarkPlugins: [remarkGfm],
-    rehypePlugins: [rehypeSlug],
-  });
-  return <Content components={{ a: ExternalLink }} />;
+	const { default: Content } = await evaluate(source, {
+		...runtime,
+		format: "md",
+		development: false,
+		remarkPlugins: [remarkGfm],
+		rehypePlugins: [rehypeSlug],
+	});
+	return <Content components={{ a: ExternalLink }} />;
 }
 
 function ExternalLink(props: React.ComponentProps<"a">): React.ReactElement {
-  const external = props.href?.startsWith("http");
-  const commit = props.href?.includes("/commit/");
-  return (
-    <a {...props} {...(external ? { target: "_blank", rel: "noreferrer" } : {})}>
-      {commit ? <code>{props.children}</code> : props.children}
-    </a>
-  );
+	const external = props.href?.startsWith("http");
+	const commit = props.href?.includes("/commit/");
+	return (
+		<a {...props} {...(external ? { target: "_blank", rel: "noreferrer" } : {})}>
+			{commit ? <code>{props.children}</code> : props.children}
+		</a>
+	);
 }

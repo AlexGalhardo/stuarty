@@ -4,21 +4,21 @@ import { getAllDocs, getDoc } from "@/lib/content";
 import { docMetadata } from "@/components/doc-article";
 import { renderDoc } from "../../prerender";
 export function getStaticPaths() {
-  return getAllDocs().map((doc) => ({
-    params: { slug: doc.slug.join("/") },
-    props: { slug: doc.slug },
-  }));
+	return getAllDocs().map((doc) => ({
+		params: { slug: doc.slug.join("/") },
+		props: { slug: doc.slug },
+	}));
 }
 
 const { slug } = Astro.props as { slug: string[] };
 const doc = getDoc(slug);
 if (!doc) {
-  throw new Error(`missing doc ${slug.join("/")}`);
+	throw new Error(`missing doc ${slug.join("/")}`);
 }
 const meta = docMetadata(doc);
 const html = await renderDoc(doc);
 ---
 
 <Base title={meta.title} description={meta.description} canonical={doc.href} progress>
-  <Fragment set:html={html} />
+	<Fragment set:html={html} />
 </Base>

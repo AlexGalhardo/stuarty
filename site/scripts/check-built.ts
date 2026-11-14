@@ -10,10 +10,20 @@ import path from "node:path";
 const outDir = path.join(import.meta.dirname, "..", "out");
 
 /** Hosts that may appear as text: namespaces, error-message links and the places the site links to. */
-const INERT_HOSTS = new Set(["www.w3.org", "www.sitemaps.org", "react.dev", "base-ui.com", "semver.org", "keepachangelog.com", "github.com", "127.0.0.1"]);
+const INERT_HOSTS = new Set([
+	"www.w3.org",
+	"www.sitemaps.org",
+	"react.dev",
+	"base-ui.com",
+	"semver.org",
+	"keepachangelog.com",
+	"github.com",
+	"127.0.0.1",
+]);
 
 /** Attributes whose value the browser fetches by itself when the page loads. */
-const LOADING = /<(script|img|source|iframe|video|audio|embed|track|input)\b[^>]*?\b(?:src|srcset|poster)\s*=\s*"([^"]*)"|<link\b[^>]*?\bhref\s*=\s*"([^"]*)"[^>]*>/gi;
+const LOADING =
+	/<(script|img|source|iframe|video|audio|embed|track|input)\b[^>]*?\b(?:src|srcset|poster)\s*=\s*"([^"]*)"|<link\b[^>]*?\bhref\s*=\s*"([^"]*)"[^>]*>/gi;
 
 export function hostsIn(text: string): string[] {
 	return [...new Set([...text.matchAll(/\bhttps?:\/\/([a-z0-9.-]+)/gi)].map((m) => m[1].toLowerCase()))];
@@ -33,8 +43,10 @@ export function foreignOriginProblems(file: string, text: string, ownHost: strin
 			}
 		}
 	}
-	if (/@import\s+(?:url\()?["']?(?:https?:)?\/\//i.test(text) && file.endsWith(".css")) problems.push(`${file}: @import of a remote stylesheet`);
-	if (/\burl\(\s*["']?(?:https?:)?\/\/(?!(?:www\.w3\.org)\b)/i.test(text) && file.endsWith(".css")) problems.push(`${file}: url() of a remote resource`);
+	if (/@import\s+(?:url\()?["']?(?:https?:)?\/\//i.test(text) && file.endsWith(".css"))
+		problems.push(`${file}: @import of a remote stylesheet`);
+	if (/\burl\(\s*["']?(?:https?:)?\/\/(?!(?:www\.w3\.org)\b)/i.test(text) && file.endsWith(".css"))
+		problems.push(`${file}: url() of a remote resource`);
 	return problems;
 }
 
@@ -45,13 +57,16 @@ export function basePathProblems(file: string, html: string, base: string): stri
 	for (const m of html.matchAll(/\b(?:href|src)\s*=\s*"(\/[^"]*)"/g)) {
 		const value = m[1];
 		if (value.startsWith("//")) continue;
-		if (value !== base && !value.startsWith(`${base}/`)) problems.push(`${file}: ${value} does not start with ${base}`);
+		if (value !== base && !value.startsWith(`${base}/`))
+			problems.push(`${file}: ${value} does not start with ${base}`);
 	}
 	return problems;
 }
 
 function walk(dir: string): string[] {
-	return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));
+	return fs
+		.readdirSync(dir, { withFileTypes: true })
+		.flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));
 }
 
 function main(): number {
@@ -66,7 +81,10 @@ function main(): number {
 
 	for (const file of files) {
 		const rel = path.relative(outDir, file).split(path.sep).join("/");
-		if (/(^|\/)(server|_worker\.js|entry\.mjs|\.vercel|\.netlify)(\/|$)/.test(rel) || /\.(mjs|cjs)$/.test(rel) && !rel.startsWith("_astro/")) {
+		if (
+			/(^|\/)(server|_worker\.js|entry\.mjs|\.vercel|\.netlify)(\/|$)/.test(rel) ||
+			(/\.(mjs|cjs)$/.test(rel) && !rel.startsWith("_astro/"))
+		) {
 			problems.push(`${rel}: server output in a static site`);
 		}
 		if (!/\.(html|js|css|svg|json|txt|xml|md)$/.test(rel)) continue;

@@ -15,7 +15,7 @@ let dates: Record<string, string> | undefined;
 
 /** ISO 8601 date of the last commit touching content/<source>, if known. */
 export function lastUpdated(source: string): string | undefined {
-  const committed = readCommittedDates(path.join(CONTENT_ROOT, "last-updated.json"));
-  dates ??= { ...committed, ...gitLastUpdated(CONTENT_ROOT) };
-  return dates[source];
+	const committed = readCommittedDates(path.join(CONTENT_ROOT, "last-updated.json"));
+	dates ??= { ...committed, ...gitLastUpdated(CONTENT_ROOT) };
+	return dates[source];
 }
