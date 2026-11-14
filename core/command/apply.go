@@ -96,9 +96,14 @@ func (c *Context) ParseTime(path, s string) (int, *Error) {
 }
 
 // TimeEffective is the effective entry of a time argument: the frame applied, its
-// seconds to the millisecond, and the string that was requested.
+// seconds to the millisecond, and the string that was requested (null when the
+// value is a default).
 func TimeEffective(fps timeval.FPS, frame int, requested string) map[string]any {
-	return map[string]any{"frame": frame, "seconds": fps.Seconds(int64(frame)), "requested": requested}
+	var req any
+	if requested != "" {
+		req = requested
+	}
+	return map[string]any{"frame": frame, "seconds": fps.Seconds(int64(frame)), "requested": req}
 }
 
 // Apply applies one operation to doc and returns the new document, the inverse
