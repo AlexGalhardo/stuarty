@@ -17,7 +17,7 @@
 - [ ] Workflows: actions pinned by full SHA with a `# vX.Y.Z` comment; minimal `permissions`
 - [ ] `CHANGELOG.md` untouched (generated from commits)
 - [ ] Breaking changes use `!` and a `BREAKING CHANGE:` footer in this pull request body
-- [ ] `Security:` footer, when it applies, is in this pull request body (it becomes the squash commit message)
+- [ ] `Security:` footer, when it applies, is in the commit that carries the change (pull requests are rebase-merged, ADR-0028)
 
 ## Asserts run
 
