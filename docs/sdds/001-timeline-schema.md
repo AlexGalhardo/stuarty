@@ -383,8 +383,8 @@ The caption track sorts first (`a0` before `a1`), so captions are drawn over the
 | Artifact | Path | How |
 | --- | --- | --- |
 | Go types | `core/timeline/*.go` | hand-written; the source of truth. Struct tags are `json:"name[,omitempty]"` and `default:"v"` (a field equal to its default is omitted on encode and filled in on decode); a pointer to a scalar means "set or not" |
-| JSON Schema | `core/schema/timeline.v1.schema.json` | generated from the Go types and their tags by `go run ./core/schema/gen`; committed |
-| TypeScript types | `web/resources/js/generated/timeline.ts` | generated from the JSON Schema; committed |
+| JSON Schema | `core/schema/timeline.v1.schema.json` | generated from the Go types and their tags by `timeline.Schema()`, run by `go run ./internal/tools/contractgen` (`task codegen`); committed. The tags besides `json` and `default` are `enum`, `min`, `max`, `gt`, `step`, `pattern`, `minlen`, `maxlen`, `minitems`, `maxitems`, `keypattern`, `maxprops` and `desc`. The schema carries `"x-status": "frozen"` (ADR-0014 item 5) and leaves every object open to unknown fields (section 2 item 9). It states the `V_SHAPE` class and the id patterns; the other invariants live in `Validate` |
+| TypeScript types | `web/resources/js/generated/timeline.ts` | generated from the JSON Schema by `json-schema-to-typescript` (`bun run codegen:ts`, part of `task codegen`); committed |
 | Examples | `core/timeline/testdata/valid/*.json`, `core/timeline/testdata/invalid/*.json` | section 5, one file per case; each invalid file is paired with `<name>.codes.txt` listing the expected violation codes |
 
 CI regenerates the schema and the TypeScript types and fails if the working tree changes.
