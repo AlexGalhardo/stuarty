@@ -936,7 +936,7 @@ The token is in its own `token` file (ADR-0019, SDD-007 §3.2). `runtime.json` h
 
 ### 6.2 The lock
 
-Package `service/workspace` (standard library plus `golang.org/x/sys`, already in the module graph through vukem, to be confirmed with the owner as a direct dependency; fallback without it at the end of this section).
+Package `service/workspace` (standard library plus `golang.org/x/sys`, a direct dependency approved by the author, pinned at v0.49.0; the fallback at the end of this section is not used). Beyond the listing below the package has `Dir.EnsureLayout`, `Dir.Path`, `ProcessAlive`, the token functions of SDD-007 §3.2 (`EnsureToken`, `LoadToken`, `RotateToken`) and `Dir.LockedError`, which builds the `E_WORKSPACE_LOCKED` error naming the owner pid.
 
 ```go
 package workspace
@@ -968,7 +968,7 @@ func (d Dir) RemoveRuntime() error
 | Platform | Implementation | Release |
 | --- | --- | --- |
 | Linux, macOS | `unix.Flock(fd, LOCK_EX|LOCK_NB)` on `lock`, opened `O_RDWR|O_CREATE|O_CLOEXEC` | when the descriptor closes or the process exits |
-| Windows | `windows.LockFileEx(h, LOCKFILE_EXCLUSIVE_LOCK|LOCKFILE_FAIL_IMMEDIATELY, 0, 1, 0, &Overlapped{Offset: 0x7fffff00})` on a handle from `CreateFile` with the default share mode | when the handle closes or the process terminates |
+| Windows | `windows.LockFileEx(h, LOCKFILE_EXCLUSIVE_LOCK|LOCKFILE_FAIL_IMMEDIATELY, 0, 1, 0, &Overlapped{Offset: 0x7fffff00})` on a handle from `CreateFile` with share mode read and write (what `os.OpenFile` uses) | when the handle closes or the process terminates |
 
 Windows specifics, which are why the design differs from a naive `os.OpenFile`:
 
