@@ -6,17 +6,19 @@ import {
 	type ActivityState,
 	createActivityStore,
 } from "../state/activityStore";
-import type { ReadStore } from "../state/createStore";
+import type { ReadStore } from "./createStore";
 import {
 	createDocumentStore,
 	type DocumentState,
-} from "../state/documentStore";
-import { createSync, type Sync } from "../state/sync";
-import { createUiStore, type UiState, type UiWriter } from "../state/uiStore";
-import { type EditorBootstrap, ownActor } from "./bootstrap";
+} from "./documentStore";
+import { createSync, type Sync } from "./sync";
+import { createUiStore, type UiState, type UiWriter } from "./uiStore";
 
 export interface RuntimeOptions {
-	bootstrap: EditorBootstrap;
+	projectId: string;
+	// `local:ui` in local mode, `user:<id>` in network mode (SDD-012 5.8).
+	actor: string;
+	mode: "local" | "network";
 	transport: Transport;
 	timers?: Timers;
 	// Development and test builds: deep-freeze documents and verify every
@@ -43,11 +45,10 @@ export interface EditorRuntime {
 }
 
 export function createRuntime(options: RuntimeOptions): EditorRuntime {
-	const { bootstrap, transport } = options;
+	const { transport } = options;
 	const timers = options.timers ?? browserTimers;
 	const checked = options.checked ?? false;
-	const projectId = bootstrap.project_id;
-	const actor = ownActor(bootstrap);
+	const { projectId, actor } = options;
 
 	const client = createClient(transport);
 	const { store: documents, writer } = createDocumentStore({
@@ -91,7 +92,7 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		// E_UNAUTHORIZED policy (SDD-012 section 4.4): network mode goes to
 		// /login; local mode keeps the failed status and the shell shows the banner.
 		onUnauthorized: () => {
-			if (bootstrap.mode === "network") {
+			if (options.mode === "network") {
 				location.assign(`/login?next=${encodeURIComponent(location.pathname)}`);
 			}
 		},

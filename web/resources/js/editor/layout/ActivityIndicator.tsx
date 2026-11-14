@@ -9,7 +9,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { type Translate, useLocale, useT } from "@/lib/i18n";
-import { useActivityState } from "../boot/EditorContext";
+import { useActivityState } from "../state/EditorContext";
 import {
 	ACTIVE_MS,
 	type ActivityEntry,

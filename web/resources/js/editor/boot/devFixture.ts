@@ -2,7 +2,7 @@ import type { Message } from "@/lib/i18n";
 import en from "../../../lang/en.json";
 import { FixtureServer, makeDocument } from "../fixtures/fixtureServer";
 import type { EditorBootstrap } from "./bootstrap";
-import type { RuntimeOptions } from "./runtime";
+import type { RuntimeOptions } from "../state/runtime";
 
 // Development only: `?fixture=<items per track>` opens the editor on a
 // FixtureServer instead of the HTTP API, so the shell and the timeline can be

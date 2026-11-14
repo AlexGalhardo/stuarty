@@ -1,5 +1,5 @@
 import type { Change } from "../api/types";
-import { createRuntime, type EditorRuntime } from "../boot/runtime";
+import { createRuntime, type EditorRuntime } from "../state/runtime";
 import {
 	type DocumentSpec,
 	FixtureServer,
@@ -24,17 +24,9 @@ export async function startHarness(
 	const timers = new ManualTimers();
 	const mismatches: number[] = [];
 	const runtime = createRuntime({
-		bootstrap: {
-			project_id: server.projectId,
-			mode,
-			api_base: "/api/v1",
-			locale: "en",
-			locales: ["en"],
-			messages: {},
-			user: mode === "network" ? { id: "12", name: "Ana" } : null,
-			phase: "prototype",
-			version: "test",
-		},
+		projectId: server.projectId,
+		actor: mode === "network" ? "user:12" : "local:ui",
+		mode,
 		transport: server,
 		timers,
 		checked: true,

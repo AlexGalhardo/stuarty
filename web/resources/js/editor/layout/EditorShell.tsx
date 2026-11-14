@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
-import { useDocumentState } from "../boot/EditorContext";
+import { useDocumentState } from "../state/EditorContext";
 import Timeline from "../timeline/Timeline";
 import TopBar from "./TopBar";
 
