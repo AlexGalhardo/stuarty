@@ -272,7 +272,7 @@ jobs:
             VERSION=${{ steps.meta.outputs.version }}
             REVISION=${{ steps.meta.outputs.revision }}
       - name: Smoke test the image before publishing
-        run: bash scripts/image-smoke.sh vukem-video:release-smoke
+        run: bash scripts/image-smoke.sh vukem-video:release-smoke ${{ steps.meta.outputs.version }}
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         id: build
         with:

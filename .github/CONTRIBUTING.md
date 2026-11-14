@@ -53,6 +53,10 @@ The task runner (`task lint`, `task test`, `task ci`) and the pull request pipel
 
 `THIRD_PARTY_NOTICES.md` and the licence texts in `licenses/go-modules/` and `licenses/npm/` are generated (SDD-009 section 12). When a change touches `go.mod`, `go.sum`, `web/package.json` or `web/bun.lock`, or an entry of `.config/third-party.json`, run `task notices` and commit the result; `task notices:check` (the `Notices` job of CI) fails with a diff when they are stale, and with the module name when a licence is outside the allow-list (MIT, BSD-2-Clause, BSD-3-Clause, ISC, Apache-2.0, MPL-2.0, 0BSD, Unlicense, OFL-1.1 for fonts, LGPL-3.0-or-later for FFmpeg only, and, pending the author's confirmation, the SQLite public-domain dedication, BlueOak-1.0.0 and CC-BY-4.0 for npm data). `licenses/fonts/`, `licenses/programs/` and `licenses/vendored/` are kept by hand and listed in the inventory; a new bundled font, program or copied source adds its entry and its licence file there. `task notices` needs `bun install --frozen-lockfile` in `web/` (it runs it).
 
+### Container image
+
+`task image:build` builds `.config/docker/vukem-video.Dockerfile` as `vukem-video:local`, and `task image:smoke` runs `scripts/image-smoke.sh` on it: user 10001, `VUKEM_VIDEO_HOME=/data` with a volume, FFmpeg without `--enable-gpl` or `--enable-nonfree` that encodes with `libopenh264`, `prlimit`, the licence files under `/usr/share/doc/vukem-video/`, `/up` on a loopback port, and the CLI scenario with `--network none`. Docker is required. Build from a clone: from a git worktree the `.git` file points outside the build context, so the image gets no version stamp and the version check is skipped. `image.yml` builds on pull requests that change what goes into the image and pushes nothing; `release.yml` publishes. To check a version by hand: `docker build --build-arg VERSION=0.3.0 ...` after `git tag v0.3.0` on a clean tree, then `bash scripts/image-smoke.sh <image> 0.3.0`.
+
 ## Editor settings
 
 Indentation is tabs of width 4, except in files whose format needs spaces (YAML, Markdown lists and tables). Git expects LF endings in the repository.
