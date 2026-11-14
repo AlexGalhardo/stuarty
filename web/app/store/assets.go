@@ -76,7 +76,14 @@ func notFoundIfNone(n int64, err error) error {
 	return nil
 }
 
-func (r assetRepo) SetIngest(ctx context.Context, hash string, st service.IngestState, progress float64, errJSON json.RawMessage, nowMs int64) error {
+func (r assetRepo) SetIngest(
+	ctx context.Context,
+	hash string,
+	st service.IngestState,
+	progress float64,
+	errJSON json.RawMessage,
+	nowMs int64,
+) error {
 	return notFoundIfNone(rowsAffected(r.ex.ExecContext(ctx,
 		"UPDATE assets SET ingest_state = ?, ingest_progress = ?, ingest_error = ?, updated_ms = ? WHERE id = ?",
 		string(st), progress, nullJSON(errJSON), nowMs, hash)))
@@ -91,19 +98,35 @@ func (r assetRepo) SetFacts(ctx context.Context, hash string, f service.AssetFac
 }
 
 func (r assetRepo) PutArtifact(ctx context.Context, a service.ArtifactRow) error {
-	_, err := r.ex.ExecContext(ctx, `INSERT INTO artifacts
+	_, err := r.ex.ExecContext(
+		ctx,
+		`INSERT INTO artifacts
  (asset_hash, kind, profile, variant, ext, rel_path, size_bytes, sha256, meta, created_ms)
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
  ON CONFLICT (asset_hash, kind, profile, variant, ext) DO UPDATE SET
    rel_path = excluded.rel_path, size_bytes = excluded.size_bytes, sha256 = excluded.sha256,
    meta = excluded.meta, created_ms = excluded.created_ms`,
-		a.AssetHash, a.Kind, a.Profile, a.Variant, a.Ext, a.RelPath, a.SizeBytes, a.SHA256, nullJSON(a.Meta), a.CreatedMs)
+		a.AssetHash,
+		a.Kind,
+		a.Profile,
+		a.Variant,
+		a.Ext,
+		a.RelPath,
+		a.SizeBytes,
+		a.SHA256,
+		nullJSON(a.Meta),
+		a.CreatedMs,
+	)
 	return err
 }
 
 func (r assetRepo) Artifacts(ctx context.Context, hash string) ([]service.ArtifactRow, error) {
-	rows, err := r.ex.QueryContext(ctx, `SELECT asset_hash, kind, profile, variant, ext, rel_path, size_bytes, sha256, meta, created_ms
- FROM artifacts WHERE asset_hash = ? ORDER BY kind, profile, variant, ext`, hash)
+	rows, err := r.ex.QueryContext(
+		ctx,
+		`SELECT asset_hash, kind, profile, variant, ext, rel_path, size_bytes, sha256, meta, created_ms
+ FROM artifacts WHERE asset_hash = ? ORDER BY kind, profile, variant, ext`,
+		hash,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -164,13 +187,20 @@ func (r assetRepo) GetProjectAsset(ctx context.Context, projectID, assetID strin
 	return p, mapNoRows(err)
 }
 
-func (r assetRepo) FindProjectAssetByHash(ctx context.Context, projectID, hash string) (service.ProjectAssetRow, error) {
+func (r assetRepo) FindProjectAssetByHash(
+	ctx context.Context,
+	projectID, hash string,
+) (service.ProjectAssetRow, error) {
 	p, err := scanProjectAsset(r.ex.QueryRowContext(ctx,
 		"SELECT "+projectAssetColumns+" FROM project_assets WHERE project_id = ? AND asset_hash = ?", projectID, hash))
 	return p, mapNoRows(err)
 }
 
-func (r assetRepo) queryProjectAssets(ctx context.Context, query string, args ...any) ([]service.ProjectAssetRow, error) {
+func (r assetRepo) queryProjectAssets(
+	ctx context.Context,
+	query string,
+	args ...any,
+) ([]service.ProjectAssetRow, error) {
 	rows, err := r.ex.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -188,7 +218,11 @@ func (r assetRepo) queryProjectAssets(ctx context.Context, query string, args ..
 	return out, rows.Err()
 }
 
-func (r assetRepo) ListProjectAssets(ctx context.Context, projectID string, states ...service.ProjectAssetState) ([]service.ProjectAssetRow, error) {
+func (r assetRepo) ListProjectAssets(
+	ctx context.Context,
+	projectID string,
+	states ...service.ProjectAssetState,
+) ([]service.ProjectAssetRow, error) {
 	query := "SELECT " + projectAssetColumns + " FROM project_assets WHERE project_id = ?"
 	args := []any{projectID}
 	if len(states) > 0 {
@@ -202,7 +236,14 @@ func (r assetRepo) ListProjectAssets(ctx context.Context, projectID string, stat
 
 // SetProjectAssetState changes the state. A snapshot is kept when nil is
 // passed; the trash columns are set for trashed and cleared otherwise.
-func (r assetRepo) SetProjectAssetState(ctx context.Context, projectID, assetID string, st service.ProjectAssetState, by string, atMs int64, snapshot json.RawMessage) error {
+func (r assetRepo) SetProjectAssetState(
+	ctx context.Context,
+	projectID, assetID string,
+	st service.ProjectAssetState,
+	by string,
+	atMs int64,
+	snapshot json.RawMessage,
+) error {
 	var trashedBy, trashedMs any
 	if st == service.ProjectAssetTrashed {
 		trashedBy, trashedMs = by, atMs
@@ -214,7 +255,11 @@ func (r assetRepo) SetProjectAssetState(ctx context.Context, projectID, assetID 
 }
 
 func (r assetRepo) ProjectsReferencing(ctx context.Context, hash string) ([]string, error) {
-	rows, err := r.ex.QueryContext(ctx, "SELECT DISTINCT project_id FROM project_assets WHERE asset_hash = ? ORDER BY project_id", hash)
+	rows, err := r.ex.QueryContext(
+		ctx,
+		"SELECT DISTINCT project_id FROM project_assets WHERE asset_hash = ? ORDER BY project_id",
+		hash,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -232,12 +277,17 @@ func (r assetRepo) ProjectsReferencing(ctx context.Context, hash string) ([]stri
 }
 
 func (r assetRepo) PendingForHash(ctx context.Context, hash string) ([]service.ProjectAssetRow, error) {
-	return r.queryProjectAssets(ctx,
-		"SELECT "+projectAssetColumns+" FROM project_assets WHERE asset_hash = ? AND state = 'pending' ORDER BY project_id, asset_id", hash)
+	return r.queryProjectAssets(
+		ctx,
+		"SELECT "+projectAssetColumns+" FROM project_assets WHERE asset_hash = ? AND state = 'pending' ORDER BY project_id, asset_id",
+		hash,
+	)
 }
 
 func (r assetRepo) DeleteTrashedProjectAssets(ctx context.Context, projectID string) (int64, error) {
-	return rowsAffected(r.ex.ExecContext(ctx, "DELETE FROM project_assets WHERE project_id = ? AND state = 'trashed'", projectID))
+	return rowsAffected(
+		r.ex.ExecContext(ctx, "DELETE FROM project_assets WHERE project_id = ? AND state = 'trashed'", projectID),
+	)
 }
 
 func (r assetRepo) Unreferenced(ctx context.Context) ([]service.AssetRow, error) {

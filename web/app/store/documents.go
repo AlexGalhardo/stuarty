@@ -21,9 +21,11 @@ func scanTemplate(sc scanner, doc *string) (service.TemplateRow, error) {
 		slots  string
 		source sql.NullString
 	)
-	dest := []any{&t.ID, &t.Name, &t.Description, &t.SchemaVersion, &t.DocSHA256, &slots,
+	dest := []any{
+		&t.ID, &t.Name, &t.Description, &t.SchemaVersion, &t.DocSHA256, &slots,
 		&t.Summary.Width, &t.Summary.Height, &t.Summary.FPSNum, &t.Summary.FPSDen,
-		&t.Summary.DurationFrames, &source, &t.CreatedMs, &t.CreatedBy}
+		&t.Summary.DurationFrames, &source, &t.CreatedMs, &t.CreatedBy,
+	}
 	if doc != nil {
 		dest = append(dest, doc)
 	}
@@ -101,11 +103,31 @@ func (r templateRepo) List(ctx context.Context, limit int, after string) ([]serv
 	return out, next, nil
 }
 
-func (r templateRepo) UpdateDocument(ctx context.Context, id string, schemaVersion int, doc []byte, sha string, slots json.RawMessage, sum service.ProjectSummary) error {
-	return notFoundIfNone(rowsAffected(r.ex.ExecContext(ctx, `UPDATE templates SET
+func (r templateRepo) UpdateDocument(
+	ctx context.Context,
+	id string,
+	schemaVersion int,
+	doc []byte,
+	sha string,
+	slots json.RawMessage,
+	sum service.ProjectSummary,
+) error {
+	return notFoundIfNone(rowsAffected(r.ex.ExecContext(
+		ctx,
+		`UPDATE templates SET
  schema_version = ?, document = ?, doc_sha256 = ?, slots = ?, width = ?, height = ?, fps_num = ?, fps_den = ?,
  duration_frames = ? WHERE id = ?`,
-		schemaVersion, string(doc), sha, string(slots), sum.Width, sum.Height, sum.FPSNum, sum.FPSDen, sum.DurationFrames, id)))
+		schemaVersion,
+		string(doc),
+		sha,
+		string(slots),
+		sum.Width,
+		sum.Height,
+		sum.FPSNum,
+		sum.FPSDen,
+		sum.DurationFrames,
+		id,
+	)))
 }
 
 type backupRepo struct{ ex database.Executor }
@@ -129,7 +151,15 @@ func (r backupRepo) List(ctx context.Context, ownerKind, ownerID string) ([]serv
 	var out []service.BackupRow
 	for rows.Next() {
 		var b service.BackupRow
-		if err := rows.Scan(&b.ID, &b.OwnerKind, &b.OwnerID, &b.Revision, &b.SchemaVersion, &b.Reason, &b.CreatedMs); err != nil {
+		if err := rows.Scan(
+			&b.ID,
+			&b.OwnerKind,
+			&b.OwnerID,
+			&b.Revision,
+			&b.SchemaVersion,
+			&b.Reason,
+			&b.CreatedMs,
+		); err != nil {
 			return nil, err
 		}
 		out = append(out, b)
@@ -143,7 +173,8 @@ func (r backupRepo) Get(ctx context.Context, id int64) (service.BackupRow, error
 		doc string
 	)
 	err := r.ex.QueryRowContext(ctx, `SELECT id, owner_kind, owner_id, revision, schema_version, document, reason, created_ms
- FROM document_backups WHERE id = ?`, id).Scan(&b.ID, &b.OwnerKind, &b.OwnerID, &b.Revision, &b.SchemaVersion, &doc, &b.Reason, &b.CreatedMs)
+ FROM document_backups WHERE id = ?`, id).
+		Scan(&b.ID, &b.OwnerKind, &b.OwnerID, &b.Revision, &b.SchemaVersion, &doc, &b.Reason, &b.CreatedMs)
 	if err != nil {
 		return service.BackupRow{}, mapNoRows(err)
 	}

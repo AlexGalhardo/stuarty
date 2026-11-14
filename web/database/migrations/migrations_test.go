@@ -45,7 +45,11 @@ func openMigrated(t *testing.T) *database.DB {
 // column is "name type notnull default pk" with - for no default.
 func columns(t *testing.T, db *database.DB, table string) []string {
 	t.Helper()
-	rows, err := db.QueryContext(context.Background(), "SELECT name, type, \"notnull\", dflt_value, pk FROM pragma_table_info(?)", table)
+	rows, err := db.QueryContext(
+		context.Background(),
+		"SELECT name, type, \"notnull\", dflt_value, pk FROM pragma_table_info(?)",
+		table,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,16 +160,20 @@ func TestIndexesAndTriggers(t *testing.T) {
 		"project_assets_asset_hash_index":             {"ON project_assets (asset_hash)"},
 		"jobs_project_id_created_ms_index":            {"ON jobs (project_id, created_ms)"},
 		"jobs_kind_state_index":                       {"ON jobs (kind, state)"},
-		"jobs_active_ingest_unique":                   {"UNIQUE INDEX", "WHERE kind = 'ingest' AND state IN ('queued','running')"},
-		"templates_created_ms_index":                  {"ON templates (created_ms)"},
-		"document_backups_owner_kind_owner_id_index":  {"ON document_backups (owner_kind, owner_id)"},
-		"audit_project_id_at_ms_index":                {"ON audit (project_id, at_ms)"},
-		"audit_at_ms_index":                           {"ON audit (at_ms)"},
-		"operations_append_only":                      {"BEFORE UPDATE ON operations"},
+		"jobs_active_ingest_unique": {
+			"UNIQUE INDEX",
+			"WHERE kind = 'ingest' AND state IN ('queued','running')",
+		},
+		"templates_created_ms_index":                 {"ON templates (created_ms)"},
+		"document_backups_owner_kind_owner_id_index": {"ON document_backups (owner_kind, owner_id)"},
+		"audit_project_id_at_ms_index":               {"ON audit (project_id, at_ms)"},
+		"audit_at_ms_index":                          {"ON audit (at_ms)"},
+		"operations_append_only":                     {"BEFORE UPDATE ON operations"},
 	}
 	for name, fragments := range want {
 		var sqlText string
-		err := db.QueryRowContext(context.Background(), "SELECT sql FROM sqlite_master WHERE name = ?", name).Scan(&sqlText)
+		err := db.QueryRowContext(context.Background(), "SELECT sql FROM sqlite_master WHERE name = ?", name).
+			Scan(&sqlText)
 		if err != nil {
 			t.Errorf("%s: %v", name, err)
 			continue
@@ -186,8 +194,10 @@ func TestChecksAndForeignKeys(t *testing.T) {
 		_, err := db.ExecContext(ctx, q, args...)
 		return err
 	}
-	if err := exec(`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
- VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`); err != nil {
+	if err := exec(
+		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+ VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -207,7 +217,9 @@ func TestChecksAndForeignKeys(t *testing.T) {
 		}
 	}
 
-	if err := exec(`INSERT INTO operations VALUES ('prj_a', 1, 'edit', 'a', 0, NULL, 1, '[]', '[]', '[]', NULL, 1, 'x', NULL, NULL)`); err != nil {
+	if err := exec(
+		`INSERT INTO operations VALUES ('prj_a', 1, 'edit', 'a', 0, NULL, 1, '[]', '[]', '[]', NULL, 1, 'x', NULL, NULL)`,
+	); err != nil {
 		t.Fatal(err)
 	}
 	if err := exec(`DELETE FROM projects WHERE id = 'prj_a'`); err != nil {
@@ -225,7 +237,9 @@ func TestQueueTablesAndEditorJobs(t *testing.T) {
 	db := openMigrated(t)
 	for _, name := range []string{"queue_jobs", "queue_failed_jobs", "jobs"} {
 		var n int
-		if err := db.QueryRowContext(context.Background(), "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?", name).Scan(&n); err != nil || n != 1 {
+		if err := db.QueryRowContext(context.Background(), "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?", name).
+			Scan(&n); err != nil ||
+			n != 1 {
 			t.Errorf("table %s: %d, %v", name, n, err)
 		}
 	}

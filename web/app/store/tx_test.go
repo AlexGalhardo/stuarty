@@ -72,7 +72,11 @@ func TestWriteProjectLoadsRowAndMapsNotFound(t *testing.T) {
 	}
 
 	called := false
-	err = s.WriteProject(ctx, "prj_missing", func(context.Context, service.ProjectTx) error { called = true; return nil })
+	err = s.WriteProject(
+		ctx,
+		"prj_missing",
+		func(context.Context, service.ProjectTx) error { called = true; return nil },
+	)
 	if !errors.Is(err, service.ErrNotFound) || called {
 		t.Errorf("err = %v, called = %v; want ErrNotFound without calling fn", err, called)
 	}
@@ -96,7 +100,13 @@ func TestWriteProjectOrdersCommitsAndHooks(t *testing.T) {
 	commit := func(id string) {
 		err := s.WriteProject(ctx, id, func(ctx context.Context, tx service.ProjectTx) error {
 			rev := tx.Project().Revision
-			upd := service.ProjectUpdate{Name: "n", SchemaVersion: 1, Document: []byte(`{}`), DocSHA256: "x", UpdatedMs: rev + 10}
+			upd := service.ProjectUpdate{
+				Name:          "n",
+				SchemaVersion: 1,
+				Document:      []byte(`{}`),
+				DocSHA256:     "x",
+				UpdatedMs:     rev + 10,
+			}
 			if err := tx.Projects().Commit(ctx, id, rev, upd); err != nil {
 				return err
 			}

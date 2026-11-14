@@ -42,7 +42,11 @@ func scanJob(sc scanner) (service.JobRow, error) {
 func (r jobRepo) CreateLimited(ctx context.Context, j service.JobRow, lim *service.JobLimit) error {
 	if lim != nil {
 		if lim.Max > 0 {
-			ids, err := r.activeIDs(ctx, "SELECT id FROM jobs WHERE kind = ? AND state IN ('queued','running') ORDER BY created_ms, id", lim.Kind)
+			ids, err := r.activeIDs(
+				ctx,
+				"SELECT id FROM jobs WHERE kind = ? AND state IN ('queued','running') ORDER BY created_ms, id",
+				lim.Kind,
+			)
 			if err != nil {
 				return err
 			}
@@ -51,8 +55,12 @@ func (r jobRepo) CreateLimited(ctx context.Context, j service.JobRow, lim *servi
 			}
 		}
 		if lim.Actor != "" && lim.MaxPerActor > 0 {
-			ids, err := r.activeIDs(ctx,
-				"SELECT id FROM jobs WHERE kind = ? AND state IN ('queued','running') AND actor = ? ORDER BY created_ms, id", lim.Kind, lim.Actor)
+			ids, err := r.activeIDs(
+				ctx,
+				"SELECT id FROM jobs WHERE kind = ? AND state IN ('queued','running') AND actor = ? ORDER BY created_ms, id",
+				lim.Kind,
+				lim.Actor,
+			)
 			if err != nil {
 				return err
 			}
@@ -149,12 +157,23 @@ func (r jobRepo) Claim(ctx context.Context, id string, nowMs int64) (bool, error
 }
 
 func (r jobRepo) Progress(ctx context.Context, id string, progress float64, message string, nowMs int64) (bool, error) {
-	n, err := rowsAffected(r.ex.ExecContext(ctx,
-		"UPDATE jobs SET progress = ?, message = ?, updated_ms = ? WHERE id = ? AND state = 'running'", progress, message, nowMs, id))
+	n, err := rowsAffected(r.ex.ExecContext(
+		ctx,
+		"UPDATE jobs SET progress = ?, message = ?, updated_ms = ? WHERE id = ? AND state = 'running'",
+		progress,
+		message,
+		nowMs,
+		id,
+	))
 	return n == 1, err
 }
 
-func (r jobRepo) Finish(ctx context.Context, id, state string, result, errJSON json.RawMessage, nowMs int64) (bool, error) {
+func (r jobRepo) Finish(
+	ctx context.Context,
+	id, state string,
+	result, errJSON json.RawMessage,
+	nowMs int64,
+) (bool, error) {
 	// A job that succeeded is complete; the others keep the progress they reached.
 	n, err := rowsAffected(r.ex.ExecContext(ctx, `UPDATE jobs SET state = ?,
  progress = CASE WHEN ? = 'succeeded' THEN 1 ELSE progress END,
@@ -173,15 +192,24 @@ func (r jobRepo) Requeue(ctx context.Context, id, message string, nowMs int64) (
 const cancelledError = `{"code":"E_CANCELLED","message":"The job was cancelled.","retryable":false}`
 
 func (r jobRepo) RequestCancel(ctx context.Context, id string, nowMs int64) (service.JobRow, error) {
-	if _, err := r.ex.ExecContext(ctx,
-		"UPDATE jobs SET cancel_requested = 1, updated_ms = ? WHERE id = ? AND state IN ('queued','running')", nowMs, id); err != nil {
+	if _, err := r.ex.ExecContext(
+		ctx,
+		"UPDATE jobs SET cancel_requested = 1, updated_ms = ? WHERE id = ? AND state IN ('queued','running')",
+		nowMs,
+		id,
+	); err != nil {
 		return service.JobRow{}, err
 	}
 	// A queued job never runs once cancel_requested is set (Claim refuses it),
 	// so it can be finished here.
-	if _, err := r.ex.ExecContext(ctx,
+	if _, err := r.ex.ExecContext(
+		ctx,
 		"UPDATE jobs SET state = 'cancelled', error = ?, finished_ms = ?, updated_ms = ? WHERE id = ? AND state = 'queued' AND cancel_requested = 1",
-		cancelledError, nowMs, nowMs, id); err != nil {
+		cancelledError,
+		nowMs,
+		nowMs,
+		id,
+	); err != nil {
 		return service.JobRow{}, err
 	}
 	return r.Get(ctx, id)

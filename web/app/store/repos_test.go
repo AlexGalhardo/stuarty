@@ -63,8 +63,21 @@ func TestProjectsCreateGetCommit(t *testing.T) {
 
 	floor := int64(1)
 	upd := service.ProjectUpdate{
-		Name: "renamed", SchemaVersion: 1, Document: []byte(`{"v":2}`), DocSHA256: "sha2", UpdatedMs: 200,
-		Summary: service.ProjectSummary{Width: 1, Height: 2, FPSNum: 24, FPSDen: 1, DurationFrames: 90, Tracks: 2, Items: 3, Assets: 1},
+		Name:          "renamed",
+		SchemaVersion: 1,
+		Document:      []byte(`{"v":2}`),
+		DocSHA256:     "sha2",
+		UpdatedMs:     200,
+		Summary: service.ProjectSummary{
+			Width:          1,
+			Height:         2,
+			FPSNum:         24,
+			FPSDen:         1,
+			DurationFrames: 90,
+			Tracks:         2,
+			Items:          3,
+			Assets:         1,
+		},
 	}
 	if err := s.Projects().Commit(ctx, "prj_a", 0, upd); err != nil {
 		t.Fatal(err)
@@ -76,7 +89,8 @@ func TestProjectsCreateGetCommit(t *testing.T) {
 		t.Errorf("Commit of a missing project = %v, want ErrStale", err)
 	}
 	got, _ = s.Projects().Get(ctx, "prj_a")
-	if got.Revision != 1 || got.Name != "renamed" || got.Summary.Items != 3 || got.UpdatedMs != 200 || got.ResyncFloor != 0 {
+	if got.Revision != 1 || got.Name != "renamed" || got.Summary.Items != 3 || got.UpdatedMs != 200 ||
+		got.ResyncFloor != 0 {
 		t.Errorf("after Commit: %+v", got)
 	}
 
@@ -127,7 +141,9 @@ func TestProjectsListPagingAndTrash(t *testing.T) {
 		t.Errorf("active %d, all %d, trashed %v", len(active), len(all), trashed)
 	}
 	h, _ := s.Projects().Head(ctx, "prj_3")
-	if h.State != service.ProjectTrashed || h.TrashedBy == nil || *h.TrashedBy != "local:ui" || *h.TrashedMs != 500 || h.UpdatedMs != 500 || h.Revision != 0 {
+	if h.State != service.ProjectTrashed || h.TrashedBy == nil || *h.TrashedBy != "local:ui" || *h.TrashedMs != 500 ||
+		h.UpdatedMs != 500 ||
+		h.Revision != 0 {
 		t.Errorf("trashed head = %+v", h)
 	}
 	if err := s.Projects().SetState(ctx, "prj_3", service.ProjectActive, "local:ui", 600); err != nil {
@@ -137,7 +153,11 @@ func TestProjectsListPagingAndTrash(t *testing.T) {
 	if h.State != service.ProjectActive || h.TrashedMs != nil || h.TrashedBy != nil {
 		t.Errorf("restored head = %+v", h)
 	}
-	if err := s.Projects().SetState(ctx, "prj_none", service.ProjectTrashed, "x", 1); !errors.Is(err, service.ErrNotFound) {
+	if err := s.Projects().
+		SetState(ctx, "prj_none", service.ProjectTrashed, "x", 1); !errors.Is(
+		err,
+		service.ErrNotFound,
+	) {
 		t.Errorf("SetState missing = %v", err)
 	}
 	if _, _, err := s.Projects().List(ctx, service.ProjectQuery{After: "!!"}); !errors.Is(err, ErrBadCursor) {
@@ -295,7 +315,9 @@ func TestOperationsSinceAndPage(t *testing.T) {
 	}
 
 	got, err := s.Operations().Get(ctx, "prj_a", 3)
-	if err != nil || string(got.Skipped) != string(skipped) || got.IdempotencyKey == nil || *got.IdempotencyKey != key || got.ClosedBy != nil {
+	if err != nil || string(got.Skipped) != string(skipped) || got.IdempotencyKey == nil ||
+		*got.IdempotencyKey != key ||
+		got.ClosedBy != nil {
 		t.Errorf("Get = %+v, %v", got, err)
 	}
 	if _, err := s.Operations().Get(ctx, "prj_a", 99); !errors.Is(err, service.ErrNotFound) {
@@ -313,7 +335,11 @@ func TestOperationsSinceAndPage(t *testing.T) {
 	limited, _ := s.Operations().Since(ctx, "prj_a", 0, service.OperationFilter{Limit: 2})
 	capped, _ := s.Operations().Since(ctx, "prj_a", 0, service.OperationFilter{MaxBytes: 250})
 	if len(limited) != 2 || len(capped) != 2 {
-		t.Errorf("limit gave %d, MaxBytes gave %d rows; want 2 and 2 (stops after the row that crosses the limit)", len(limited), len(capped))
+		t.Errorf(
+			"limit gave %d, MaxBytes gave %d rows; want 2 and 2 (stops after the row that crosses the limit)",
+			len(limited),
+			len(capped),
+		)
 	}
 
 	page, more, err := s.Operations().Page(ctx, "prj_a", service.HistoryQuery{Limit: 4})
@@ -334,8 +360,10 @@ func TestIdempotency(t *testing.T) {
 	s := testStore(t)
 	mustCreate(t, s, newProject("prj_a", 1))
 	repo := s.Idempotency()
-	row := service.IdempotencyRow{ProjectID: "prj_a", Actor: "local:ui", Key: "k-12345678", RequestHash: "h1",
-		Revision: 1, Result: json.RawMessage(`{"revision":1}`), CreatedMs: 1000, ExpiresMs: 1000 + 86400000}
+	row := service.IdempotencyRow{
+		ProjectID: "prj_a", Actor: "local:ui", Key: "k-12345678", RequestHash: "h1",
+		Revision: 1, Result: json.RawMessage(`{"revision":1}`), CreatedMs: 1000, ExpiresMs: 1000 + 86400000,
+	}
 	if err := repo.Put(ctx, row); err != nil {
 		t.Fatal(err)
 	}
@@ -358,7 +386,14 @@ func TestIdempotency(t *testing.T) {
 	if err := repo.Put(ctx, row); err != nil {
 		t.Fatalf("Put over an expired row: %v", err)
 	}
-	if got, _ := repo.Get(ctx, "prj_a", "local:ui", "k-12345678", expired); got.RequestHash != "h2" || got.Revision != 2 {
+	if got, _ := repo.Get(
+		ctx,
+		"prj_a",
+		"local:ui",
+		"k-12345678",
+		expired,
+	); got.RequestHash != "h2" ||
+		got.Revision != 2 {
 		t.Errorf("replaced row = %+v", got)
 	}
 	n, err := repo.PurgeExpired(ctx, expired+86400000)
@@ -376,7 +411,8 @@ func TestAssetsAndArtifacts(t *testing.T) {
 	row := service.AssetRow{Hash: hash, SizeBytes: 10, OriginalName: "clip.mp4", CreatedMs: 1, UpdatedMs: 1}
 
 	got, created, err := s.Assets().Upsert(ctx, row)
-	if err != nil || !created || got.IngestState != service.IngestPending || got.Kind != "" || got.Facts.DurationMs != nil {
+	if err != nil || !created || got.IngestState != service.IngestPending || got.Kind != "" ||
+		got.Facts.DurationMs != nil {
 		t.Fatalf("Upsert = %+v, %v, %v", got, created, err)
 	}
 	row.OriginalName = "other.mp4"
@@ -385,28 +421,40 @@ func TestAssetsAndArtifacts(t *testing.T) {
 		t.Errorf("second Upsert = %+v, %v, %v; want the existing row", got, created, err)
 	}
 
-	if err := s.Assets().SetIngest(ctx, hash, service.IngestFailed, 0.5, json.RawMessage(`{"code":"E_INGEST_FAILED"}`), 5); err != nil {
+	if err := s.Assets().
+		SetIngest(ctx, hash, service.IngestFailed, 0.5, json.RawMessage(`{"code":"E_INGEST_FAILED"}`), 5); err != nil {
 		t.Fatal(err)
 	}
 	got, _ = s.Assets().Get(ctx, hash)
-	if got.IngestState != service.IngestFailed || got.Progress != 0.5 || string(got.IngestError) != `{"code":"E_INGEST_FAILED"}` {
+	if got.IngestState != service.IngestFailed || got.Progress != 0.5 ||
+		string(got.IngestError) != `{"code":"E_INGEST_FAILED"}` {
 		t.Errorf("after SetIngest: %+v", got)
 	}
-	facts := service.AssetFacts{NormalizedVersion: in(1), DurationMs: i64(5000), Width: in(1920), Height: in(1080),
-		HasAudio: true, FrameRateNum: in(30000), FrameRateDen: in(1001), FrameCount: i64(150), SampleCount: i64(240000)}
+	facts := service.AssetFacts{
+		NormalizedVersion: in(1), DurationMs: i64(5000), Width: in(1920), Height: in(1080),
+		HasAudio: true, FrameRateNum: in(30000), FrameRateDen: in(1001), FrameCount: i64(150), SampleCount: i64(240000),
+	}
 	if err := s.Assets().SetFacts(ctx, hash, facts, 9); err != nil {
 		t.Fatal(err)
 	}
 	got, _ = s.Assets().Get(ctx, hash)
-	if *got.Facts.DurationMs != 5000 || !got.Facts.HasAudio || *got.Facts.FrameRateDen != 1001 || *got.Facts.NormalizedVersion != 1 || got.UpdatedMs != 9 {
+	if *got.Facts.DurationMs != 5000 || !got.Facts.HasAudio || *got.Facts.FrameRateDen != 1001 ||
+		*got.Facts.NormalizedVersion != 1 ||
+		got.UpdatedMs != 9 {
 		t.Errorf("after SetFacts: %+v", got.Facts)
 	}
-	if err := s.Assets().SetIngest(ctx, "sha256:none", service.IngestReady, 1, nil, 1); !errors.Is(err, service.ErrNotFound) {
+	if err := s.Assets().
+		SetIngest(ctx, "sha256:none", service.IngestReady, 1, nil, 1); !errors.Is(
+		err,
+		service.ErrNotFound,
+	) {
 		t.Errorf("SetIngest missing = %v", err)
 	}
 
-	art := service.ArtifactRow{AssetHash: hash, Kind: "transcript", Profile: 1, Variant: "abc123def456", Ext: "json",
-		RelPath: "artifacts/x/transcript-1.json", SizeBytes: 3, SHA256: "s1", CreatedMs: 1}
+	art := service.ArtifactRow{
+		AssetHash: hash, Kind: "transcript", Profile: 1, Variant: "abc123def456", Ext: "json",
+		RelPath: "artifacts/x/transcript-1.json", SizeBytes: 3, SHA256: "s1", CreatedMs: 1,
+	}
 	if err := s.Assets().PutArtifact(ctx, art); err != nil {
 		t.Fatal(err)
 	}
@@ -415,7 +463,8 @@ func TestAssetsAndArtifacts(t *testing.T) {
 		t.Fatal(err)
 	}
 	arts, _ := s.Assets().Artifacts(ctx, hash)
-	if len(arts) != 1 || arts[0].SizeBytes != 4 || string(arts[0].Meta) != `{"lang":"en"}` || arts[0].Variant != "abc123def456" {
+	if len(arts) != 1 || arts[0].SizeBytes != 4 || string(arts[0].Meta) != `{"lang":"en"}` ||
+		arts[0].Variant != "abc123def456" {
 		t.Errorf("Artifacts = %+v", arts)
 	}
 }
@@ -425,12 +474,15 @@ func TestProjectAssetsTrashAndSweep(t *testing.T) {
 	mustCreate(t, s, newProject("prj_a", 1), newProject("prj_b", 1))
 	const h1, h2 = "sha256:01", "sha256:02"
 	for _, h := range []string{h1, h2} {
-		if _, _, err := s.Assets().Upsert(ctx, service.AssetRow{Hash: h, SizeBytes: 1, OriginalName: "n", CreatedMs: 1, UpdatedMs: 1}); err != nil {
+		if _, _, err := s.Assets().
+			Upsert(ctx, service.AssetRow{Hash: h, SizeBytes: 1, OriginalName: "n", CreatedMs: 1, UpdatedMs: 1}); err != nil {
 			t.Fatal(err)
 		}
 	}
-	pa := service.ProjectAssetRow{ProjectID: "prj_a", AssetID: "ast_1", AssetHash: h1, State: service.ProjectAssetPending,
-		Name: "clip", ImportedBy: "local:ui", ImportedMs: 10}
+	pa := service.ProjectAssetRow{
+		ProjectID: "prj_a", AssetID: "ast_1", AssetHash: h1, State: service.ProjectAssetPending,
+		Name: "clip", ImportedBy: "local:ui", ImportedMs: 10,
+	}
 	if err := s.Assets().PutProjectAsset(ctx, pa); err != nil {
 		t.Fatal(err)
 	}
@@ -443,8 +495,10 @@ func TestProjectAssetsTrashAndSweep(t *testing.T) {
 	if err := s.Assets().PutProjectAsset(ctx, pa); err != nil { // replace
 		t.Fatal(err)
 	}
-	if err := s.Assets().PutProjectAsset(ctx, service.ProjectAssetRow{ProjectID: "prj_b", AssetID: "ast_9", AssetHash: h1,
-		State: service.ProjectAssetPending, Name: "clip", ImportedBy: "local:ui", ImportedMs: 11}); err != nil {
+	if err := s.Assets().PutProjectAsset(ctx, service.ProjectAssetRow{
+		ProjectID: "prj_b", AssetID: "ast_9", AssetHash: h1,
+		State: service.ProjectAssetPending, Name: "clip", ImportedBy: "local:ui", ImportedMs: 11,
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -462,21 +516,29 @@ func TestProjectAssetsTrashAndSweep(t *testing.T) {
 	}
 
 	snap := json.RawMessage(`{"id":"ast_1"}`)
-	if err := s.Assets().SetProjectAssetState(ctx, "prj_a", "ast_1", service.ProjectAssetTrashed, "local:ui", 50, snap); err != nil {
+	if err := s.Assets().
+		SetProjectAssetState(ctx, "prj_a", "ast_1", service.ProjectAssetTrashed, "local:ui", 50, snap); err != nil {
 		t.Fatal(err)
 	}
 	got, _ = s.Assets().GetProjectAsset(ctx, "prj_a", "ast_1")
-	if got.State != service.ProjectAssetTrashed || *got.TrashedBy != "local:ui" || *got.TrashedMs != 50 || string(got.Snapshot) != `{"id":"ast_1"}` {
+	if got.State != service.ProjectAssetTrashed || *got.TrashedBy != "local:ui" || *got.TrashedMs != 50 ||
+		string(got.Snapshot) != `{"id":"ast_1"}` {
 		t.Errorf("trashed = %+v", got)
 	}
-	if err := s.Assets().SetProjectAssetState(ctx, "prj_a", "ast_1", service.ProjectAssetActive, "local:ui", 60, nil); err != nil {
+	if err := s.Assets().
+		SetProjectAssetState(ctx, "prj_a", "ast_1", service.ProjectAssetActive, "local:ui", 60, nil); err != nil {
 		t.Fatal(err)
 	}
 	got, _ = s.Assets().GetProjectAsset(ctx, "prj_a", "ast_1")
-	if got.State != service.ProjectAssetActive || got.TrashedBy != nil || got.TrashedMs != nil || string(got.Snapshot) != `{"id":"ast_1"}` {
+	if got.State != service.ProjectAssetActive || got.TrashedBy != nil || got.TrashedMs != nil ||
+		string(got.Snapshot) != `{"id":"ast_1"}` {
 		t.Errorf("restored = %+v (the snapshot must survive a nil snapshot)", got)
 	}
-	if err := s.Assets().SetProjectAssetState(ctx, "prj_a", "ast_none", service.ProjectAssetActive, "x", 1, nil); !errors.Is(err, service.ErrNotFound) {
+	if err := s.Assets().
+		SetProjectAssetState(ctx, "prj_a", "ast_none", service.ProjectAssetActive, "x", 1, nil); !errors.Is(
+		err,
+		service.ErrNotFound,
+	) {
 		t.Errorf("SetProjectAssetState missing = %v", err)
 	}
 
@@ -497,7 +559,8 @@ func TestProjectAssetsTrashAndSweep(t *testing.T) {
 	if err := s.Assets().Delete(ctx, h2); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Assets().SetProjectAssetState(ctx, "prj_a", "ast_1", service.ProjectAssetTrashed, "x", 1, nil); err != nil {
+	if err := s.Assets().
+		SetProjectAssetState(ctx, "prj_a", "ast_1", service.ProjectAssetTrashed, "x", 1, nil); err != nil {
 		t.Fatal(err)
 	}
 	if n, err := s.Assets().DeleteTrashedProjectAssets(ctx, "prj_a"); err != nil || n != 1 {
@@ -509,8 +572,10 @@ func TestProjectDeleteCascades(t *testing.T) {
 	s := testStore(t)
 	mustCreate(t, s, newProject("prj_a", 1))
 	_ = s.Operations().Append(ctx, op("prj_a", 1, service.OpEdit, "local:ui"))
-	_ = s.Backups().Put(ctx, service.BackupRow{OwnerKind: "project", OwnerID: "prj_a", Revision: 1, SchemaVersion: 1, Document: []byte("{}"), Reason: "r", CreatedMs: 1})
-	_ = s.Audit().Append(ctx, service.AuditRow{AtMs: 1, Actor: "local:ui", Action: "project.create", ProjectID: strPtr("prj_a")})
+	_ = s.Backups().
+		Put(ctx, service.BackupRow{OwnerKind: "project", OwnerID: "prj_a", Revision: 1, SchemaVersion: 1, Document: []byte("{}"), Reason: "r", CreatedMs: 1})
+	_ = s.Audit().
+		Append(ctx, service.AuditRow{AtMs: 1, Actor: "local:ui", Action: "project.create", ProjectID: strPtr("prj_a")})
 
 	if err := s.Projects().Delete(ctx, "prj_a"); err != nil {
 		t.Fatal(err)
@@ -528,7 +593,14 @@ func TestProjectDeleteCascades(t *testing.T) {
 func strPtr(s string) *string { return &s }
 
 func newJob(id, kind, actor string, created int64) service.JobRow {
-	j := service.JobRow{ID: id, Kind: kind, Actor: actor, Input: json.RawMessage(`{}`), CreatedMs: created, UpdatedMs: created}
+	j := service.JobRow{
+		ID:        id,
+		Kind:      kind,
+		Actor:     actor,
+		Input:     json.RawMessage(`{}`),
+		CreatedMs: created,
+		UpdatedMs: created,
+	}
 	if kind == "ingest" {
 		j.AssetHash = strPtr("sha256:01")
 	} else {
@@ -540,7 +612,8 @@ func newJob(id, kind, actor string, created int64) service.JobRow {
 func jobsFixture(t *testing.T) *Store {
 	s := testStore(t)
 	mustCreate(t, s, newProject("prj_a", 1))
-	if _, _, err := s.Assets().Upsert(ctx, service.AssetRow{Hash: "sha256:01", SizeBytes: 1, OriginalName: "n", CreatedMs: 1, UpdatedMs: 1}); err != nil {
+	if _, _, err := s.Assets().
+		Upsert(ctx, service.AssetRow{Hash: "sha256:01", SizeBytes: 1, OriginalName: "n", CreatedMs: 1, UpdatedMs: 1}); err != nil {
 		t.Fatal(err)
 	}
 	return s
@@ -607,7 +680,8 @@ func TestJobLifecycle(t *testing.T) {
 		t.Error("a finished job must not finish again")
 	}
 	j, _ = jobs.Get(ctx, "job_1")
-	if j.State != "succeeded" || j.Progress != 1 || string(j.Result) != `{"export":{}}` || j.FinishedMs == nil || j.Error != nil {
+	if j.State != "succeeded" || j.Progress != 1 || string(j.Result) != `{"export":{}}` || j.FinishedMs == nil ||
+		j.Error != nil {
 		t.Errorf("finished = %+v", j)
 	}
 	if ok, _ := jobs.Claim(ctx, "job_1", 9); ok {
@@ -690,7 +764,11 @@ func TestJobActiveIngestIsUnique(t *testing.T) {
 	if err := s.Jobs().CreateLimited(ctx, newJob("job_1", "ingest", "local:ui", 1), nil); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Jobs().CreateLimited(ctx, newJob("job_2", "ingest", "local:ui", 2), nil); !errors.Is(err, service.ErrExists) {
+	if err := s.Jobs().
+		CreateLimited(ctx, newJob("job_2", "ingest", "local:ui", 2), nil); !errors.Is(
+		err,
+		service.ErrExists,
+	) {
 		t.Errorf("second active ingest of one hash = %v, want ErrExists", err)
 	}
 	j, err := s.Jobs().ActiveIngestForHash(ctx, "sha256:01")
@@ -715,7 +793,9 @@ func TestJobRequestCancel(t *testing.T) {
 	jobs.Claim(ctx, "r", 3)
 
 	q, err := jobs.RequestCancel(ctx, "q", 10)
-	if err != nil || q.State != "cancelled" || !q.CancelRequested || !strings.Contains(string(q.Error), "E_CANCELLED") || q.FinishedMs == nil {
+	if err != nil || q.State != "cancelled" || !q.CancelRequested ||
+		!strings.Contains(string(q.Error), "E_CANCELLED") ||
+		q.FinishedMs == nil {
 		t.Errorf("queued cancel = %+v, %v", q, err)
 	}
 	if ok, _ := jobs.Claim(ctx, "q", 11); ok {
@@ -751,28 +831,43 @@ func TestTemplatesBackupsAudit(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if err := s.Templates().Create(ctx, service.TemplateRow{ID: "tpl_0", Name: "t", Document: []byte("{}"), Slots: json.RawMessage(`[]`)}); !errors.Is(err, service.ErrExists) {
+	if err := s.Templates().
+		Create(ctx, service.TemplateRow{ID: "tpl_0", Name: "t", Document: []byte("{}"), Slots: json.RawMessage(`[]`)}); !errors.Is(
+		err,
+		service.ErrExists,
+	) {
 		t.Errorf("duplicate template = %v", err)
 	}
 	page, next, _ := s.Templates().List(ctx, 2, "")
 	rest, next2, _ := s.Templates().List(ctx, 2, next)
-	if len(page) != 2 || page[0].ID != "tpl_2" || len(page[0].Document) != 0 || len(rest) != 1 || rest[0].ID != "tpl_0" || next2 != "" {
+	if len(page) != 2 || page[0].ID != "tpl_2" || len(page[0].Document) != 0 || len(rest) != 1 ||
+		rest[0].ID != "tpl_0" ||
+		next2 != "" {
 		t.Errorf("template paging: %v %v %q", page, rest, next2)
 	}
-	if err := s.Templates().UpdateDocument(ctx, "tpl_1", 2, []byte(`{"b":2}`), "s2", json.RawMessage(`[{"name":"x"}]`), service.ProjectSummary{Width: 9}); err != nil {
+	if err := s.Templates().
+		UpdateDocument(ctx, "tpl_1", 2, []byte(`{"b":2}`), "s2", json.RawMessage(`[{"name":"x"}]`), service.ProjectSummary{Width: 9}); err != nil {
 		t.Fatal(err)
 	}
 	got, err := s.Templates().Get(ctx, "tpl_1")
-	if err != nil || got.SchemaVersion != 2 || string(got.Document) != `{"b":2}` || string(got.Slots) != `[{"name":"x"}]` || got.Summary.Width != 9 {
+	if err != nil || got.SchemaVersion != 2 || string(got.Document) != `{"b":2}` ||
+		string(got.Slots) != `[{"name":"x"}]` ||
+		got.Summary.Width != 9 {
 		t.Errorf("Get = %+v, %v", got, err)
 	}
-	if err := s.Templates().UpdateDocument(ctx, "tpl_none", 1, nil, "", json.RawMessage(`[]`), service.ProjectSummary{}); !errors.Is(err, service.ErrNotFound) {
+	if err := s.Templates().
+		UpdateDocument(ctx, "tpl_none", 1, nil, "", json.RawMessage(`[]`), service.ProjectSummary{}); !errors.Is(
+		err,
+		service.ErrNotFound,
+	) {
 		t.Errorf("UpdateDocument missing = %v", err)
 	}
 
 	for _, rev := range []int64{3, 5} {
-		if err := s.Backups().Put(ctx, service.BackupRow{OwnerKind: "project", OwnerID: "prj_a", Revision: rev, SchemaVersion: 1,
-			Document: []byte(fmt.Sprintf(`{"rev":%d}`, rev)), Reason: "migrate v1 to v2", CreatedMs: rev}); err != nil {
+		if err := s.Backups().Put(ctx, service.BackupRow{
+			OwnerKind: "project", OwnerID: "prj_a", Revision: rev, SchemaVersion: 1,
+			Document: []byte(fmt.Sprintf(`{"rev":%d}`, rev)), Reason: "migrate v1 to v2", CreatedMs: rev,
+		}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -789,7 +884,12 @@ func TestTemplatesBackupsAudit(t *testing.T) {
 	}
 
 	for i := range 5 {
-		a := service.AuditRow{AtMs: int64(i), Actor: "local:ui", Action: "media.import", Details: json.RawMessage(`{"n":1}`)}
+		a := service.AuditRow{
+			AtMs:    int64(i),
+			Actor:   "local:ui",
+			Action:  "media.import",
+			Details: json.RawMessage(`{"n":1}`),
+		}
 		if i%2 == 0 {
 			a.ProjectID = strPtr("prj_a")
 		}
@@ -800,7 +900,8 @@ func TestTemplatesBackupsAudit(t *testing.T) {
 	all, _ := s.Audit().List(ctx, "", 0, 10)
 	mine, _ := s.Audit().List(ctx, "prj_a", 0, 10)
 	older, _ := s.Audit().List(ctx, "", all[1].ID, 10)
-	if len(all) != 5 || all[0].ID < all[1].ID || len(mine) != 3 || len(older) != 3 || string(all[0].Details) != `{"n":1}` {
+	if len(all) != 5 || all[0].ID < all[1].ID || len(mine) != 3 || len(older) != 3 ||
+		string(all[0].Details) != `{"n":1}` {
 		t.Errorf("audit: all %d, mine %d, older %d", len(all), len(mine), len(older))
 	}
 }
@@ -867,11 +968,31 @@ func TestQueryPlans(t *testing.T) {
 	// table that has a rowid; it is the primary key search of SDD-005 section 11.2.
 	const pkIndex = "sqlite_autoindex_operations_1 (project_id=? AND revision>?)"
 	cases := []struct{ name, query, want string }{
-		{"project listing", `SELECT id FROM projects WHERE state = 'active' AND (updated_ms, id) < (?, ?) ORDER BY updated_ms DESC, id DESC LIMIT 50`, "projects_state_updated_ms_index"},
-		{"Since", `SELECT revision FROM operations WHERE project_id = ? AND revision > ? ORDER BY revision ASC LIMIT 1000`, pkIndex},
-		{"Since excluding an actor", `SELECT revision FROM operations WHERE project_id = ? AND revision > ? AND actor <> ? ORDER BY revision ASC`, pkIndex},
-		{"undo candidate", `SELECT revision FROM operations WHERE project_id = ? AND actor = ? AND closed_by IS NULL AND kind IN ('edit','redo') ORDER BY revision DESC LIMIT 1`, "operations_undo_idx"},
-		{"redo candidate", `SELECT revision FROM operations WHERE project_id = ? AND actor = ? AND closed_by IS NULL AND kind = 'undo' ORDER BY revision DESC LIMIT 1`, "operations_redo_idx"},
+		{
+			"project listing",
+			`SELECT id FROM projects WHERE state = 'active' AND (updated_ms, id) < (?, ?) ORDER BY updated_ms DESC, id DESC LIMIT 50`,
+			"projects_state_updated_ms_index",
+		},
+		{
+			"Since",
+			`SELECT revision FROM operations WHERE project_id = ? AND revision > ? ORDER BY revision ASC LIMIT 1000`,
+			pkIndex,
+		},
+		{
+			"Since excluding an actor",
+			`SELECT revision FROM operations WHERE project_id = ? AND revision > ? AND actor <> ? ORDER BY revision ASC`,
+			pkIndex,
+		},
+		{
+			"undo candidate",
+			`SELECT revision FROM operations WHERE project_id = ? AND actor = ? AND closed_by IS NULL AND kind IN ('edit','redo') ORDER BY revision DESC LIMIT 1`,
+			"operations_undo_idx",
+		},
+		{
+			"redo candidate",
+			`SELECT revision FROM operations WHERE project_id = ? AND actor = ? AND closed_by IS NULL AND kind = 'undo' ORDER BY revision DESC LIMIT 1`,
+			"operations_redo_idx",
+		},
 	}
 	for _, c := range cases {
 		rows, err := s.db.QueryContext(ctx, "EXPLAIN QUERY PLAN "+c.query, "a", "b", "c")

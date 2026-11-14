@@ -28,7 +28,15 @@ func scanOperation(sc scanner) (service.OperationRow, error) {
 		return service.OperationRow{}, err
 	}
 	o.TargetRevision, o.ClosedBy, o.IdempotencyKey = ptrInt64(target), ptrInt64(closed), ptrString(idempotency)
-	o.Ops, o.Inverse, o.Diff, o.Skipped = json.RawMessage(ops), json.RawMessage(inverse), json.RawMessage(diff), rawJSON(skipped)
+	o.Ops, o.Inverse, o.Diff, o.Skipped = json.RawMessage(
+		ops,
+	), json.RawMessage(
+		inverse,
+	), json.RawMessage(
+		diff,
+	), rawJSON(
+		skipped,
+	)
 	return o, nil
 }
 
@@ -52,7 +60,12 @@ func (r operationRepo) Get(ctx context.Context, projectID string, revision int64
 
 const defaultSinceLimit = 1000
 
-func (r operationRepo) Since(ctx context.Context, projectID string, after int64, f service.OperationFilter) ([]service.OperationRow, error) {
+func (r operationRepo) Since(
+	ctx context.Context,
+	projectID string,
+	after int64,
+	f service.OperationFilter,
+) ([]service.OperationRow, error) {
 	limit := f.Limit
 	if limit <= 0 {
 		limit = defaultSinceLimit
@@ -91,7 +104,11 @@ func (r operationRepo) Since(ctx context.Context, projectID string, after int64,
 	return out, rows.Err()
 }
 
-func (r operationRepo) Page(ctx context.Context, projectID string, q service.HistoryQuery) ([]service.OperationRow, bool, error) {
+func (r operationRepo) Page(
+	ctx context.Context,
+	projectID string,
+	q service.HistoryQuery,
+) ([]service.OperationRow, bool, error) {
 	limit := min(max(q.Limit, 1), maxProjectLimit)
 
 	rows, err := r.ex.QueryContext(ctx, `SELECT `+operationColumns+` FROM operations
@@ -143,8 +160,13 @@ func (r operationRepo) RedoCandidate(ctx context.Context, projectID, actor strin
 // only moves closed_by from NULL to a revision (RF-134, SDD-005 section 5.3).
 
 func (r operationRepo) Close(ctx context.Context, projectID string, revision, by int64) error {
-	n, err := rowsAffected(r.ex.ExecContext(ctx,
-		"UPDATE operations SET closed_by = ? WHERE project_id = ? AND revision = ? AND closed_by IS NULL", by, projectID, revision))
+	n, err := rowsAffected(r.ex.ExecContext(
+		ctx,
+		"UPDATE operations SET closed_by = ? WHERE project_id = ? AND revision = ? AND closed_by IS NULL",
+		by,
+		projectID,
+		revision,
+	))
 	if err != nil {
 		return err
 	}
@@ -155,8 +177,13 @@ func (r operationRepo) Close(ctx context.Context, projectID string, revision, by
 }
 
 func (r operationRepo) CloseOpenRedo(ctx context.Context, projectID, actor string, by int64) error {
-	_, err := r.ex.ExecContext(ctx,
-		"UPDATE operations SET closed_by = ? WHERE project_id = ? AND actor = ? AND closed_by IS NULL AND kind = 'undo'", by, projectID, actor)
+	_, err := r.ex.ExecContext(
+		ctx,
+		"UPDATE operations SET closed_by = ? WHERE project_id = ? AND actor = ? AND closed_by IS NULL AND kind = 'undo'",
+		by,
+		projectID,
+		actor,
+	)
 	return err
 }
 

@@ -48,7 +48,11 @@ func (s *Store) Write(ctx context.Context, fn func(ctx context.Context, tx servi
 // the transaction and runs fn. The lock is held until the transaction and its
 // after-commit hooks are done, so commits of one project and the events they
 // publish stay in revision order (SDD-005 section 9.1).
-func (s *Store) WriteProject(ctx context.Context, projectID string, fn func(ctx context.Context, tx service.ProjectTx) error) error {
+func (s *Store) WriteProject(
+	ctx context.Context,
+	projectID string,
+	fn func(ctx context.Context, tx service.ProjectTx) error,
+) error {
 	release, err := s.locks.acquire(ctx, projectID)
 	if err != nil {
 		return err

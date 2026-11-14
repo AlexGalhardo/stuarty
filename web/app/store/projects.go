@@ -28,10 +28,12 @@ func scanProjectHead(sc scanner, extra ...any) (service.ProjectHead, error) {
 		trashedM sql.NullInt64
 		trashedB sql.NullString
 	)
-	dest := []any{&h.ID, &h.Name, &h.State, &h.Revision, &h.SchemaVersion,
+	dest := []any{
+		&h.ID, &h.Name, &h.State, &h.Revision, &h.SchemaVersion,
 		&h.Summary.Width, &h.Summary.Height, &h.Summary.FPSNum, &h.Summary.FPSDen,
 		&h.Summary.DurationFrames, &h.Summary.Tracks, &h.Summary.Items, &h.Summary.Assets,
-		&h.CreatedMs, &h.UpdatedMs, &h.CreatedBy, &owner, &trashedM, &trashedB, &h.ResyncFloor}
+		&h.CreatedMs, &h.UpdatedMs, &h.CreatedBy, &owner, &trashedM, &trashedB, &h.ResyncFloor,
+	}
 	if err := sc.Scan(append(dest, extra...)...); err != nil {
 		return service.ProjectHead{}, err
 	}
@@ -138,14 +140,36 @@ func (r projectRepo) Get(ctx context.Context, id string) (service.ProjectRow, er
 
 func (r projectRepo) Create(ctx context.Context, row service.ProjectRow) error {
 	s := row.Summary
-	_, err := r.ex.ExecContext(ctx, `INSERT INTO projects
+	_, err := r.ex.ExecContext(
+		ctx,
+		`INSERT INTO projects
  (id, name, state, revision, schema_version, document, doc_sha256, width, height, fps_num, fps_den,
   duration_frames, track_count, item_count, asset_count, resync_floor, created_ms, updated_ms,
   created_by, owner_user_id, trashed_ms, trashed_by)
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		row.ID, row.Name, stateOrActive(row.State), row.Revision, row.SchemaVersion, string(row.Document), row.DocSHA256,
-		s.Width, s.Height, s.FPSNum, s.FPSDen, s.DurationFrames, s.Tracks, s.Items, s.Assets,
-		row.ResyncFloor, row.CreatedMs, row.UpdatedMs, row.CreatedBy, row.OwnerUserID, row.TrashedMs, row.TrashedBy)
+		row.ID,
+		row.Name,
+		stateOrActive(row.State),
+		row.Revision,
+		row.SchemaVersion,
+		string(row.Document),
+		row.DocSHA256,
+		s.Width,
+		s.Height,
+		s.FPSNum,
+		s.FPSDen,
+		s.DurationFrames,
+		s.Tracks,
+		s.Items,
+		s.Assets,
+		row.ResyncFloor,
+		row.CreatedMs,
+		row.UpdatedMs,
+		row.CreatedBy,
+		row.OwnerUserID,
+		row.TrashedMs,
+		row.TrashedBy,
+	)
 	if isUnique(r.ex, err) {
 		return service.ErrExists
 	}
@@ -185,11 +209,21 @@ func (r projectRepo) SetState(ctx context.Context, id string, st service.Project
 		err error
 	)
 	if st == service.ProjectTrashed {
-		n, err = rowsAffected(r.ex.ExecContext(ctx,
-			"UPDATE projects SET state = 'trashed', trashed_ms = ?, trashed_by = ?, updated_ms = ? WHERE id = ?", atMs, by, atMs, id))
+		n, err = rowsAffected(r.ex.ExecContext(
+			ctx,
+			"UPDATE projects SET state = 'trashed', trashed_ms = ?, trashed_by = ?, updated_ms = ? WHERE id = ?",
+			atMs,
+			by,
+			atMs,
+			id,
+		))
 	} else {
-		n, err = rowsAffected(r.ex.ExecContext(ctx,
-			"UPDATE projects SET state = 'active', trashed_ms = NULL, trashed_by = NULL, updated_ms = ? WHERE id = ?", atMs, id))
+		n, err = rowsAffected(r.ex.ExecContext(
+			ctx,
+			"UPDATE projects SET state = 'active', trashed_ms = NULL, trashed_by = NULL, updated_ms = ? WHERE id = ?",
+			atMs,
+			id,
+		))
 	}
 	if err != nil {
 		return err
@@ -201,7 +235,11 @@ func (r projectRepo) SetState(ctx context.Context, id string, st service.Project
 }
 
 func (r projectRepo) Delete(ctx context.Context, id string) error {
-	if _, err := r.ex.ExecContext(ctx, "DELETE FROM document_backups WHERE owner_kind = 'project' AND owner_id = ?", id); err != nil {
+	if _, err := r.ex.ExecContext(
+		ctx,
+		"DELETE FROM document_backups WHERE owner_kind = 'project' AND owner_id = ?",
+		id,
+	); err != nil {
 		return err
 	}
 	n, err := rowsAffected(r.ex.ExecContext(ctx, "DELETE FROM projects WHERE id = ?", id))
