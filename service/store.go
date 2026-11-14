@@ -277,6 +277,9 @@ type AssetRow struct {
 
 // AssetFacts are the probe facts of an asset, all nil until ingest is ready.
 type AssetFacts struct {
+	// Kind is the class the probe gave the file; SetFacts leaves the stored
+	// kind alone when it is empty.
+	Kind                       string
 	NormalizedVersion          *int // profile version of the normalized file the facts were measured on
 	DurationMs                 *int64
 	Width, Height              *int
