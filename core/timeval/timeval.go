@@ -68,7 +68,7 @@ func (f FPS) Valid() bool {
 
 func (f FPS) String() string {
 	if f.Den == 1 {
-		return fmt.Sprintf("%d", f.Num)
+		return strconv.FormatInt(f.Num, 10)
 	}
 	return fmt.Sprintf("%d/%d", f.Num, f.Den)
 }
@@ -206,7 +206,7 @@ func allDigits(s string) bool {
 	if s == "" {
 		return false
 	}
-	for i := 0; i < len(s); i++ {
+	for i := range len(s) {
 		if s[i] < '0' || s[i] > '9' {
 			return false
 		}

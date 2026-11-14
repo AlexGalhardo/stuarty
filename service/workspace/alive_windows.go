@@ -14,11 +14,15 @@ func ProcessAlive(pid int) bool {
 	if pid <= 0 {
 		return false
 	}
-	h, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
+	h, err := windows.OpenProcess(
+		windows.PROCESS_QUERY_LIMITED_INFORMATION,
+		false,
+		uint32(pid), //nolint:gosec // pid is positive and a Windows process id is a 32-bit DWORD
+	)
 	if err != nil {
 		return errors.Is(err, windows.ERROR_ACCESS_DENIED)
 	}
-	defer windows.CloseHandle(h)
+	defer func() { _ = windows.CloseHandle(h) }()
 
 	var code uint32
 	if err := windows.GetExitCodeProcess(h, &code); err != nil {

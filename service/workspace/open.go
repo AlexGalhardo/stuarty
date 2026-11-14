@@ -101,7 +101,9 @@ func Open(ctx context.Context, o Options) (*Session, error) {
 		o.Poll = PollEvery
 	}
 	if o.Client == nil {
-		o.Client = &http.Client{Timeout: ProbeTimeout}
+		o.Client = &http.Client{
+			Timeout: ProbeTimeout,
+		}
 	}
 
 	if raw := o.Getenv(EnvURL); raw != "" {
@@ -205,7 +207,10 @@ func tryServer(ctx context.Context, d Dir, o Options) (*Session, error) {
 	}
 
 	if !isLoopback(rt.Addr) {
-		return nil, &Error{Code: CodeUnauthorized, Message: "runtime.json advertises a local owner on a non-loopback address; refusing to send the token"}
+		return nil, &Error{
+			Code:    CodeUnauthorized,
+			Message: "runtime.json advertises a local owner on a non-loopback address; refusing to send the token",
+		}
 	}
 	token, err := d.LoadToken()
 	if errors.Is(err, fs.ErrNotExist) {
@@ -228,7 +233,11 @@ func tryServer(ctx context.Context, d Dir, o Options) (*Session, error) {
 func waitForServer(ctx context.Context, d Dir, o Options) (*Session, error) {
 	if l, err := d.TryLock(); err == nil {
 		_ = l.Release()
-		return nil, &Error{Code: CodeWorkspaceLocked, Message: "no server owns this workspace; start one with serve", Retryable: true}
+		return nil, &Error{
+			Code:      CodeWorkspaceLocked,
+			Message:   "no server owns this workspace; start one with serve",
+			Retryable: true,
+		}
 	} else if !errors.Is(err, ErrLocked) {
 		return nil, err
 	}
@@ -292,8 +301,12 @@ func isLoopback(addr string) bool {
 	return err == nil && ip.Unmap().IsLoopback() && ip.Zone() == ""
 }
 
-func probeUp(ctx context.Context, c *http.Client, base string) bool {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+"/up", nil)
+func probeUp(
+	ctx context.Context,
+	c *http.Client,
+	base string,
+) bool {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+"/up", http.NoBody)
 	if err != nil {
 		return false
 	}
@@ -320,14 +333,18 @@ func HandshakeProof(token, nonce string) string {
 // Handshake checks that the server at base knows the token before the token
 // is sent to it. A transport failure wraps errHandshakeTransport (retryable);
 // a wrong answer is E_UNAUTHORIZED and must not be retried.
-func Handshake(ctx context.Context, c *http.Client, base, token string) error {
+func Handshake(
+	ctx context.Context,
+	c *http.Client,
+	base, token string,
+) error {
 	var raw [16]byte
 	if _, err := rand.Read(raw[:]); err != nil {
 		return fmt.Errorf("workspace: %w", err)
 	}
 	nonce := hex.EncodeToString(raw[:])
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+handshakePath+"?nonce="+nonce, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+handshakePath+"?nonce="+nonce, http.NoBody)
 	if err != nil {
 		return fmt.Errorf("workspace: %w", err)
 	}
@@ -343,7 +360,10 @@ func Handshake(ctx context.Context, c *http.Client, base, token string) error {
 	if resp.StatusCode != http.StatusOK ||
 		json.NewDecoder(io.LimitReader(resp.Body, 4096)).Decode(&body) != nil ||
 		!hmac.Equal([]byte(body.Proof), []byte(HandshakeProof(token, nonce))) {
-		return &Error{Code: CodeUnauthorized, Message: "the process at " + base + " did not prove that it knows the workspace token; the token was not sent"}
+		return &Error{
+			Code:    CodeUnauthorized,
+			Message: "the process at " + base + " did not prove that it knows the workspace token; the token was not sent",
+		}
 	}
 	return nil
 }
