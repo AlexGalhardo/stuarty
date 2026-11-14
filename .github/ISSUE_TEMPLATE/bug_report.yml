@@ -13,7 +13,7 @@ body:
     attributes:
       label: Area
       description: The part of the product. It becomes the commit scope.
-      options: [core, timeline, schema, command, plan, lint, engine, raster, ingest, export, transcribe, installers, service, workspace, web, api, mcp, cli, ui, site, docs, repo, ci, deps, adr, sdd, go, security, other]
+      options: [core, timeline, schema, command, plan, lint, engine, raster, ingest, export, image, transcribe, installers, service, workspace, web, api, mcp, cli, ui, site, docs, repo, ci, deps, adr, sdd, go, security, other]
     validations:
       required: true
   - type: dropdown
