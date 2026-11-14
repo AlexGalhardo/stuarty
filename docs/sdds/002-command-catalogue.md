@@ -594,7 +594,9 @@ Changes the project frame rate, rescaling every time quantity and repairing the 
 ]
 ```
 
-`effective.adjusted` is `[{"id": "itm_a1b2c3d4e5", "field": "duration", "reason": "overlap", "rescaled": 2, "final": 1}, {"id": "itm_p7q8r9s0t1", "field": "duration", "reason": "became_zero", "rescaled": 0, "final": 1}]`.
+`effective.adjusted` is `[{"id": "itm_p7q8r9s0t1", "field": "duration", "reason": "became_zero", "rescaled": 0, "final": 1}, {"id": "itm_a1b2c3d4e5", "field": "duration", "reason": "overlap", "rescaled": 2, "final": 1}]` (step order first: `became_zero` belongs to step a).
+
+As built, `field` is the name of the changed field (`start`, `duration`, `source_in`, `fade_in`, `fade_out`, `transition_in.duration`, `transition_out.duration`, `words[i].duration` for a `became_zero` word, `keyframes.<property>` and `words` for steps d and e); for `keyframes.<property>` `rescaled` and `final` are the lists of `t`, for `words` the lists of `[start, duration]`; a transition removed by the fit fix has `final` 0 and a keyframe list that disappears has `final` null. A caption's `breaks` that point past the last word after step e are dropped.
 
 **Golden cases.**
 

@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.asset_id \"ast_placeholder\" is not an asset identifier.",
+  "hint": "Use the id of an asset listed by project_get.",
+  "retryable": false,
+  "path": "args.asset_id"
+}

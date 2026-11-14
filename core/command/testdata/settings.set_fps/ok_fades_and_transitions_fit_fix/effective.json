@@ -1,0 +1,26 @@
+{
+  "adjusted": [
+    {
+      "id": "itm_m1n2p3q4r5",
+      "field": "fade_out",
+      "reason": "fit",
+      "rescaled": 1,
+      "final": 0
+    },
+    {
+      "id": "itm_m1n2p3q4r5",
+      "field": "transition_out.duration",
+      "reason": "fit",
+      "rescaled": 1,
+      "final": 0
+    }
+  ],
+  "fps": {
+    "den": 1,
+    "num": 1
+  },
+  "ratio": {
+    "den": 30,
+    "num": 1
+  }
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "type": "patch",
+    "collection": "settings",
+    "id": "prj_7k2m9x4q1b",
+    "unset": [
+      "fps"
+    ]
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "duration": 30,
+      "words": [
+        {
+          "duration": 1,
+          "start": 0,
+          "text": "A"
+        },
+        {
+          "duration": 1,
+          "start": 1,
+          "text": "B"
+        },
+        {
+          "duration": 10,
+          "start": 2,
+          "text": "C"
+        }
+      ]
+    }
+  }
+]

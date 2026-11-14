@@ -1,0 +1,47 @@
+[
+  {
+    "kind": "settings.updated",
+    "id": "prj_7k2m9x4q1b",
+    "changes": {
+      "fps": [
+        null,
+        {
+          "den": 1,
+          "num": 120
+        }
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_c3d4e5f6g7",
+    "changes": {
+      "duration": [
+        100,
+        400
+      ],
+      "source_in": [
+        100,
+        400
+      ],
+      "start": [
+        2000,
+        8000
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        100,
+        400
+      ],
+      "start": [
+        1000,
+        4000
+      ]
+    }
+  }
+]

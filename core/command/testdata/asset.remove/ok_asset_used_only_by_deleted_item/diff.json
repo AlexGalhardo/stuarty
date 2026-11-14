@@ -1,0 +1,13 @@
+[
+  {
+    "kind": "asset.removed",
+    "id": "ast_4h6j8k2m3n",
+    "object": {
+      "hash": "sha256:b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "id": "ast_4h6j8k2m3n",
+      "kind": "audio",
+      "name": "music.wav",
+      "sample_count": 1440000
+    }
+  }
+]

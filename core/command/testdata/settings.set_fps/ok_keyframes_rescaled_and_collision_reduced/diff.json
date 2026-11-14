@@ -1,0 +1,64 @@
+[
+  {
+    "kind": "settings.updated",
+    "id": "prj_7k2m9x4q1b",
+    "changes": {
+      "fps": [
+        null,
+        {
+          "den": 1,
+          "num": 12
+        }
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        30,
+        12
+      ],
+      "keyframes": [
+        {
+          "scale": [
+            {
+              "t": 0,
+              "value": 1
+            },
+            {
+              "easing": "ease_in",
+              "t": 4,
+              "value": 2
+            },
+            {
+              "t": 5,
+              "value": 3
+            },
+            {
+              "t": 20,
+              "value": 4
+            }
+          ]
+        },
+        {
+          "scale": [
+            {
+              "t": 0,
+              "value": 1
+            },
+            {
+              "t": 2,
+              "value": 3
+            },
+            {
+              "t": 8,
+              "value": 4
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

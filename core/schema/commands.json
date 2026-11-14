@@ -111,6 +111,36 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "asset_id": {
+          "description": "The id of the asset to remove.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "asset_id"
+      ],
+      "type": "object"
+    },
+    "description": "Removes the asset from the project. It fails with E_IN_USE, listing the items, while an item uses it. The file stays in the content store.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_IN_USE"
+    ],
+    "example": {
+      "asset_id": "ast_3c5v8n2w6d"
+    },
+    "internal": false,
+    "name": "asset.remove",
+    "phase": "alpha",
+    "scope": "media",
+    "summary": "Removes an asset that no item uses."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "duration": {
           "description": "A length; with text only.",
           "type": "string"
@@ -518,6 +548,34 @@
     "phase": "prototype",
     "scope": "edit",
     "summary": "Sets the frame size, the background colour or the loudness target."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "fps": {
+          "description": "\"30\", \"30000/1001\" or {\"num\": 30000, \"den\": 1001}; den is 1 or 1001, 1 to 120 fps."
+        }
+      },
+      "required": [
+        "fps"
+      ],
+      "type": "object"
+    },
+    "description": "Rescales every time quantity q of the project to round(q * new / old), then repairs what rounding can break: durations that became 0, the source range, overlaps, keyframes, caption words, fades and transitions. effective.adjusted lists every item changed by a repair. A rate is 1 to 120 fps with a denominator of 1 or 1001.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME"
+    ],
+    "example": {
+      "fps": "24"
+    },
+    "internal": false,
+    "name": "settings.set_fps",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Changes the project frame rate and rescales every time quantity."
   },
   {
     "args_schema": {

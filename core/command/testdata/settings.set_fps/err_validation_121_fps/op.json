@@ -1,0 +1,6 @@
+{
+  "op": "settings.set_fps",
+  "args": {
+    "fps": "121"
+  }
+}

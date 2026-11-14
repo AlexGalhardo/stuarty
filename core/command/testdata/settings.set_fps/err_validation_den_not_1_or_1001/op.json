@@ -1,0 +1,9 @@
+{
+  "op": "settings.set_fps",
+  "args": {
+    "fps": {
+      "num": 25,
+      "den": 2
+    }
+  }
+}
