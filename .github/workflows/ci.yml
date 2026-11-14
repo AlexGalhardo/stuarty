@@ -102,6 +102,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
       - run: bun run lint
+      - run: bun run check:contrast
       # `bun run test` is added with the unit test runner, which needs the
       # author's approval (SDD-012 section 3.1).
 
