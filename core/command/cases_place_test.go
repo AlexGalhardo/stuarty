@@ -161,7 +161,7 @@ func init() {
 	ta("err_id_exists", textArgs(``), func() *B { return base().text(itemC, capTr, 0, 10) })
 	ta("err_limit_500_items", textArgs(``), func() *B { return base().manyItems(capTr, 500) })
 	ta("err_font_unknown_family", textArgs(`, "style": {"font_family": "Comic"}`), base)
-	ta("err_font_unknown_weight", textArgs(`, "style": {"font_weight": 800}`), base)
+	ta("err_font_unknown_weight", textArgs(`, "style": {"font_family": "JetBrains Mono", "font_weight": 900}`), base)
 	ta("err_overlap", `{"track_id": "`+vidTr+`", "start": "30f", "duration": "60f", "text": "Hi", "id": "`+itemC+`"}`,
 		func() *B { return base().text(itemA, vidTr, 0, 60) })
 
@@ -187,7 +187,7 @@ func init() {
 		func() *B { return base().caption(itemC, 0, 3) },
 	)
 	ts("err_font_unknown_family", setArgs(`"style": {"font_family": "Comic"}`), styledText)
-	ts("err_font_unknown_weight", setArgs(`"style": {"font_weight": 800}`), styledText)
+	ts("err_font_unknown_weight", setArgs(`"style": {"font_family": "JetBrains Mono", "font_weight": 900}`), styledText)
 
 	// caption.add
 	cp := func(name, args string, b func() *B) { gc("caption.add", name, b, op("caption.add", args)) }
