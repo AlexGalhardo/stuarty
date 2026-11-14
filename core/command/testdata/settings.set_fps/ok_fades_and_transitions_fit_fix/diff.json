@@ -1,0 +1,50 @@
+[
+  {
+    "kind": "settings.updated",
+    "id": "prj_7k2m9x4q1b",
+    "changes": {
+      "fps": [
+        null,
+        {
+          "den": 1,
+          "num": 1
+        }
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        40,
+        1
+      ],
+      "fade_in": [
+        15,
+        1
+      ],
+      "fade_out": [
+        15,
+        null
+      ],
+      "transition_in": [
+        {
+          "duration": 20,
+          "kind": "fade"
+        },
+        {
+          "duration": 1,
+          "kind": "fade"
+        }
+      ],
+      "transition_out": [
+        {
+          "duration": 15,
+          "kind": "fade"
+        },
+        null
+      ]
+    }
+  }
+]

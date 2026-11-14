@@ -1,0 +1,28 @@
+{
+  "adjusted": [
+    {
+      "id": "itm_m1n2p3q4r5",
+      "field": "keyframes.scale",
+      "reason": "keyframe_collision",
+      "rescaled": [
+        0,
+        2,
+        2,
+        8
+      ],
+      "final": [
+        0,
+        2,
+        8
+      ]
+    }
+  ],
+  "fps": {
+    "den": 1,
+    "num": 12
+  },
+  "ratio": {
+    "den": 5,
+    "num": 2
+  }
+}

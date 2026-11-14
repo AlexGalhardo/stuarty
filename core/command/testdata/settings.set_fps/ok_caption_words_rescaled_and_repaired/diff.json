@@ -1,0 +1,61 @@
+[
+  {
+    "kind": "settings.updated",
+    "id": "prj_7k2m9x4q1b",
+    "changes": {
+      "fps": [
+        null,
+        {
+          "den": 1,
+          "num": 12
+        }
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        30,
+        12
+      ],
+      "words": [
+        [
+          {
+            "duration": 1,
+            "start": 0,
+            "text": "A"
+          },
+          {
+            "duration": 1,
+            "start": 1,
+            "text": "B"
+          },
+          {
+            "duration": 10,
+            "start": 2,
+            "text": "C"
+          }
+        ],
+        [
+          {
+            "duration": 1,
+            "start": 0,
+            "text": "A"
+          },
+          {
+            "duration": 1,
+            "start": 1,
+            "text": "B"
+          },
+          {
+            "duration": 4,
+            "start": 2,
+            "text": "C"
+          }
+        ]
+      ]
+    }
+  }
+]

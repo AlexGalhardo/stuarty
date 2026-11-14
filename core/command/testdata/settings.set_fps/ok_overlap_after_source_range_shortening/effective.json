@@ -1,0 +1,19 @@
+{
+  "adjusted": [
+    {
+      "id": "itm_m1n2p3q4r5",
+      "field": "duration",
+      "reason": "source_range",
+      "rescaled": 13,
+      "final": 12
+    }
+  ],
+  "fps": {
+    "den": 1,
+    "num": 25
+  },
+  "ratio": {
+    "den": 6,
+    "num": 5
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_TIME",
+  "message": "Item itm_m1n2p3q4r5 would end at frame 210000 at 60 fps; the limit is 108000.",
+  "hint": "Shorten the item so that it ends at or before frame 54000 at 30 fps first, or keep 30 fps.",
+  "retryable": false,
+  "path": "args.fps"
+}

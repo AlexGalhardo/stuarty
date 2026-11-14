@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "asset.removed",
+    "id": "ast_9m8n7p6q5r",
+    "object": {
+      "hash": "sha256:a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "height": 512,
+      "id": "ast_9m8n7p6q5r",
+      "kind": "image",
+      "name": "logo.png",
+      "width": 512
+    }
+  }
+]
