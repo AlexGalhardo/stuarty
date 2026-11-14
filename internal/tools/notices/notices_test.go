@@ -98,7 +98,7 @@ func TestCheckSPDX(t *testing.T) {
 		{"OFL-1.1", groupNPM, "@fontsource-variable/geist", true},
 		{"LGPL-3.0-or-later", groupPrograms, "FFmpeg", true},
 		{"LGPL-3.0-or-later", groupGo, "other", false},
-		{"CC-BY-4.0", groupNPM, "caniuse-lite", true},
+		{"CC-BY-4.0", groupNPM, "caniuse-lite", false},
 		{"CC-BY-4.0", groupGo, "m", false},
 		{"UNKNOWN", groupGo, "m", false},
 	} {
