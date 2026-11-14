@@ -13,11 +13,11 @@ import (
 var update = flag.Bool("update", false, "rewrite the golden files")
 
 const (
-	clipKey  = "itm_m1n2p3q4r5"
-	capKey   = "itm_s6t7v8w9x0"
-	capTrack = "trk_a1b2c3d4e5"
-	vidTrack = "trk_f6g7h8j9k0"
-	assetKey = "ast_3c5v8n2w6d"
+	clipID    = "itm_m1n2p3q4r5"
+	capItemID = "itm_s6t7v8w9x0"
+	capTrack  = "trk_a1b2c3d4e5"
+	vidTrack  = "trk_f6g7h8j9k0"
+	assetID   = "ast_3c5v8n2w6d"
 )
 
 func readTimeline(t *testing.T, name string) []byte {
@@ -210,7 +210,7 @@ func testCommands() []Command {
 			id, _ := a.Asset["id"].(string)
 			c.Doc.Assets[id] = timeline.Asset{
 				ID:     id,
-				Hash:   c.Doc.Assets[assetKey].Hash,
+				Hash:   c.Doc.Assets[assetID].Hash,
 				Kind:   timeline.AssetImage,
 				Name:   "added",
 				Width:  10,
@@ -227,7 +227,7 @@ func testCommands() []Command {
 			}
 			hash := a.Hash
 			if hash == "" {
-				hash = c.Doc.Assets[assetKey].Hash
+				hash = c.Doc.Assets[assetID].Hash
 			}
 			c.Doc.Fonts[a.Family] = timeline.ProjectFont{Files: []timeline.FontFile{{Weight: 400, Hash: hash}}}
 			return nil
@@ -244,9 +244,9 @@ func testCommands() []Command {
 			case "typed":
 				return Errorf(CodeNotFound, "Nothing to find.").WithHint("Look elsewhere.")
 			}
-			it := c.Doc.Items[clipKey]
+			it := c.Doc.Items[clipID]
 			it.Start = -5
-			c.Doc.Items[clipKey] = it
+			c.Doc.Items[clipID] = it
 			return nil
 		}),
 		Define(Spec{

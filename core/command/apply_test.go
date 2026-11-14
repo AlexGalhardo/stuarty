@@ -23,14 +23,14 @@ func TestApplyChangesTheCopyNotTheInput(t *testing.T) {
 	r := testRegistry(t)
 	doc := baseDoc(t)
 	before := timeline.Canonical(doc)
-	res := mustApply(t, r, doc, opJSON("test.item_move", `{"item_id":"`+clipKey+`","start":"30f"}`))
+	res := mustApply(t, r, doc, opJSON("test.item_move", `{"item_id":"`+clipID+`","start":"30f"}`))
 	if !bytes.Equal(timeline.Canonical(doc), before) {
 		t.Fatal("Apply mutated its input document")
 	}
-	if res.Doc == doc || res.Doc.Items[clipKey].Start != 30 {
-		t.Errorf("start %d", res.Doc.Items[clipKey].Start)
+	if res.Doc == doc || res.Doc.Items[clipID].Start != 30 {
+		t.Errorf("start %d", res.Doc.Items[clipID].Start)
 	}
-	if len(res.Diff) != 1 || res.Diff[0].Kind != KindItemUpdated || res.Diff[0].ID != clipKey {
+	if len(res.Diff) != 1 || res.Diff[0].Kind != KindItemUpdated || res.Diff[0].ID != clipID {
 		t.Errorf("diff %+v", res.Diff)
 	}
 	if got := res.Diff[0].Changes["start"]; got != (Pair{json.Number("0"), json.Number("30")}) {
@@ -75,7 +75,7 @@ func TestApplyErrors(t *testing.T) {
 		},
 		{
 			"bare time",
-			opJSON("test.item_move", `{"item_id":"`+clipKey+`","start":"12"}`),
+			opJSON("test.item_move", `{"item_id":"`+clipID+`","start":"12"}`),
 			CodeInvalidTime,
 			"args.start",
 		},
@@ -169,8 +169,8 @@ func TestBatchDiffIsTheNetChange(t *testing.T) {
 	ops := []Operation{
 		opJSON("test.item_add", `{"track_id":"`+capTrack+`","start":"100f","duration":10,"id":"itm_k000000001"}`),
 		opJSON("test.item_move", `{"item_id":"itm_k000000001","start":"200f"}`),
-		opJSON("test.item_move", `{"item_id":"`+clipKey+`","start":"10f"}`),
-		opJSON("test.item_move", `{"item_id":"`+clipKey+`","start":"20f"}`),
+		opJSON("test.item_move", `{"item_id":"`+clipID+`","start":"10f"}`),
+		opJSON("test.item_move", `{"item_id":"`+clipID+`","start":"20f"}`),
 		opJSON("test.item_remove", `{"item_ids":["itm_k000000001"]}`),
 	}
 	res, err := r.ApplyBatch(doc, ops, Env{})
@@ -179,7 +179,7 @@ func TestBatchDiffIsTheNetChange(t *testing.T) {
 	}
 	// The item created and removed inside the batch does not appear; the clip start
 	// appears once with its first before-value and its last after-value.
-	if len(res.Diff) != 1 || res.Diff[0].ID != clipKey ||
+	if len(res.Diff) != 1 || res.Diff[0].ID != clipID ||
 		res.Diff[0].Changes["start"] != (Pair{json.Number("0"), json.Number("20")}) {
 		t.Errorf("%+v", res.Diff)
 	}
