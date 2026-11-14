@@ -30,6 +30,7 @@ area:raster|c5def5|raster
 area:ingest|c5def5|ingest
 area:export|c5def5|export
 area:transcribe|c5def5|transcribe
+area:installers|c5def5|installers
 area:service|c5def5|service
 area:web|c5def5|web
 area:api|c5def5|api
