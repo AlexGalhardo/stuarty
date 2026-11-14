@@ -6,5 +6,5 @@ import AppLayout from "./layouts/AppLayout";
 // top level, not exported: @inertiajs/vite rewrites it into the SSR server
 // that `vukem ssr:start` runs. No browser globals (document, localStorage).
 createInertiaApp({
-  layout: () => AppLayout,
+	layout: () => AppLayout,
 });

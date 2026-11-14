@@ -3,56 +3,56 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useT } from "@/lib/i18n";
 
 const isDark = (): boolean =>
-  typeof document !== "undefined" &&
-  document.documentElement.classList.contains("dark");
+	typeof document !== "undefined" &&
+	document.documentElement.classList.contains("dark");
 
 // ThemeToggle switches the "dark" class on <html> and remembers the choice in
 // localStorage.theme; resources/views/app.html applies it before the first paint.
 export default function ThemeToggle({
-  className = "",
+	className = "",
 }: {
-  className?: string;
+	className?: string;
 }) {
-  const t = useT();
-  const [dark, setDark] = useState(false);
+	const t = useT();
+	const [dark, setDark] = useState(false);
 
-  useEffect(() => setDark(isDark()), []);
+	useEffect(() => setDark(isDark()), []);
 
-  const toggle = () => {
-    const next = !isDark();
-    document.documentElement.classList.toggle("dark", next);
-    try {
-      localStorage.setItem("theme", next ? "dark" : "light");
-    } catch {
-      // Storage can be blocked (private mode): the choice lasts for this page only.
-    }
-    setDark(next);
-  };
+	const toggle = () => {
+		const next = !isDark();
+		document.documentElement.classList.toggle("dark", next);
+		try {
+			localStorage.setItem("theme", next ? "dark" : "light");
+		} catch {
+			// Storage can be blocked (private mode): the choice lasts for this page only.
+		}
+		setDark(next);
+	};
 
-  const label = dark ? t("ui.theme.light") : t("ui.theme.dark");
+	const label = dark ? t("ui.theme.light") : t("ui.theme.dark");
 
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={toggle}
-          aria-label={label}
-          className={className}
-        >
-          {dark ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
-  );
+	return (
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<Button
+					type="button"
+					variant="ghost"
+					size="icon"
+					onClick={toggle}
+					aria-label={label}
+					className={className}
+				>
+					{dark ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+				</Button>
+			</TooltipTrigger>
+			<TooltipContent>{label}</TooltipContent>
+		</Tooltip>
+	);
 }

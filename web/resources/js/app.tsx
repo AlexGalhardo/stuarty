@@ -6,13 +6,13 @@ import AppLayout from "./layouts/AppLayout";
 // (localStorage.theme = "dark" | "light") or the system preference. A theme
 // toggle flips the class and saves it.
 try {
-  const theme = localStorage.getItem("theme");
-  const dark = theme
-    ? theme === "dark"
-    : matchMedia("(prefers-color-scheme: dark)").matches;
-  document.documentElement.classList.toggle("dark", dark);
+	const theme = localStorage.getItem("theme");
+	const dark = theme
+		? theme === "dark"
+		: matchMedia("(prefers-color-scheme: dark)").matches;
+	document.documentElement.classList.toggle("dark", dark);
 } catch {
-  // Storage can be blocked (private mode): keep the default theme.
+	// Storage can be blocked (private mode): keep the default theme.
 }
 
 // The @inertiajs/vite plugin resolves pages from ./pages and mounts the app.
@@ -20,12 +20,12 @@ try {
 // It mounts on #app, the default inertia.Config.RootID; when you change
 // RootID, pass the same value here as `id`.
 createInertiaApp({
-  layout: () => AppLayout,
-  nonce: document.querySelector<HTMLMetaElement>('meta[property="csp-nonce"]')
-    ?.nonce,
-  progress: { color: "#4f46e5" },
+	layout: () => AppLayout,
+	nonce: document.querySelector<HTMLMetaElement>('meta[property="csp-nonce"]')
+		?.nonce,
+	progress: { color: "#4f46e5" },
 }).finally(() => {
-  // app.html sets data-hydrating; style it (button:disabled, a pending hint)
-  // for the gap before the app mounts.
-  document.documentElement.removeAttribute("data-hydrating");
+	// app.html sets data-hydrating; style it (button:disabled, a pending hint)
+	// for the gap before the app mounts.
+	document.documentElement.removeAttribute("data-hydrating");
 });
