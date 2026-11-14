@@ -63,6 +63,19 @@ func (s *svc) ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*Pro
 		return nil, err
 	}
 
+	// A key limited to one project cannot create another (SDD-007 section 12, item 9).
+	if c.ProjectID != "" {
+		return nil, newError(CodeForbidden, "the key is limited to one project and cannot create projects.").
+			withHint("use a key without a project limit")
+	}
+
+	// In network mode the server picks the identifier: a client-chosen one
+	// would answer E_ID_EXISTS for another user's project (an existence oracle).
+	if c.OwnerUserID != "" && req.ID != "" {
+		return nil, newError(command.CodeValidation, "the id of a project is chosen by the server.").
+			withPath("id").withHint("leave id out")
+	}
+
 	doc, verr := s.newDocument(req)
 	if verr != nil {
 		return nil, verr
@@ -171,7 +184,10 @@ func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*Project
 		return nil, err
 	}
 
-	q := ProjectQuery{After: req.Cursor, Limit: clampLimit(req.Limit, defaultProjectLimit, maxProjectLimit)}
+	q := ProjectQuery{
+		After: req.Cursor, Limit: clampLimit(req.Limit, defaultProjectLimit, maxProjectLimit),
+		OwnerUserID: c.OwnerUserID, ProjectID: c.ProjectID,
+	}
 
 	switch req.State {
 	case "", "active":
@@ -214,23 +230,20 @@ func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*Project
 		}
 	}
 
-	total, err := s.store.Projects().Count(ctx, ProjectQuery{State: q.State, IncludeTrashed: q.IncludeTrashed})
+	total, err := s.store.Projects().Count(ctx, ProjectQuery{
+		State: q.State, IncludeTrashed: q.IncludeTrashed, OwnerUserID: q.OwnerUserID, ProjectID: q.ProjectID,
+	})
 	if err != nil {
 		return nil, asError(err)
 	}
 
 	res := &ProjectListResult{Envelope: Envelope{UntrustedNotice: UntrustedNotice}, Projects: []ProjectSummary{}}
 
-	var shown []ProjectHead
-
 	for i := range heads {
-		if visible(c, heads[i].OwnerUserID) {
-			res.Projects = append(res.Projects, headSummary(&heads[i]))
-			shown = append(shown, heads[i])
-		}
+		res.Projects = append(res.Projects, headSummary(&heads[i]))
 	}
 
-	res.Text = textview.ProjectList(lines(shown), total, req.State)
+	res.Text = textview.ProjectList(lines(heads), total, req.State)
 
 	if next != "" {
 		res.NextCursor = &next
