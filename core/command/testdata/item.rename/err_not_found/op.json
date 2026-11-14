@@ -1,0 +1,7 @@
+{
+  "op": "item.rename",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "name": "x"
+  }
+}

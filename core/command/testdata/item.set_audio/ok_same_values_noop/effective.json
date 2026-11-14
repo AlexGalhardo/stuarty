@@ -1,0 +1,14 @@
+{
+  "audio_muted": false,
+  "fade_in": {
+    "frame": 0,
+    "requested": null,
+    "seconds": 0
+  },
+  "fade_out": {
+    "frame": 0,
+    "requested": null,
+    "seconds": 0
+  },
+  "volume": 1
+}

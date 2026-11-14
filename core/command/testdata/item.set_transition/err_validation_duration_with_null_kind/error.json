@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.duration is given with kind null, which removes the transition.",
+  "hint": "Omit duration, or send a kind.",
+  "retryable": false,
+  "path": "args.duration"
+}

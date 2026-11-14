@@ -118,6 +118,88 @@ export interface ItemMoveArgs {
   track_id?: string;
 }
 
+export interface ItemRenameArgs {
+  /**
+   * The item to label.
+   */
+  item_id: string;
+  /**
+   * The label, 0 to 120 characters; empty clears it.
+   */
+  name: string;
+}
+
+export interface ItemSetAudioArgs {
+  /**
+   * Drop the audio of a clip.
+   */
+  audio_muted?: boolean;
+  /**
+   * Fade-in length; 0s removes it.
+   */
+  fade_in?: string;
+  /**
+   * Fade-out length; 0s removes it.
+   */
+  fade_out?: string;
+  /**
+   * A clip or audio item.
+   */
+  item_id: string;
+  /**
+   * Linear gain, 0 to 4.
+   */
+  volume?: number;
+}
+
+export interface ItemSetTransformArgs {
+  /**
+   * A clip, text, caption or shape item.
+   */
+  item_id: string;
+  /**
+   * 0 to 1.
+   */
+  opacity?: number;
+  /**
+   * Degrees clockwise.
+   */
+  rotation?: number;
+  /**
+   * Uniform scale, greater than 0 and at most 20.
+   */
+  scale?: number;
+  /**
+   * Centre of the item in pixels.
+   */
+  x?: number;
+  /**
+   * Centre of the item in pixels.
+   */
+  y?: number;
+}
+
+export interface ItemSetTransitionArgs {
+  /**
+   * Length of the transition, at least 1 frame; default 0.5s.
+   */
+  duration?: string;
+  /**
+   * The edge: in or out.
+   */
+  edge: "in" | "out";
+  /**
+   * A clip, text, caption or shape item.
+   */
+  item_id: string;
+  /**
+   * fade, slide_left, slide_right, slide_up, slide_down, or null to remove.
+   */
+  kind: {
+    [k: string]: unknown;
+  };
+}
+
 export interface ItemSplitArgs {
   /**
    * Absolute position strictly inside the item.
@@ -280,7 +362,7 @@ export interface TrackUpdateArgs {
   track_id: string;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "caption.add" | "clip.add" | "item.delete" | "item.move" | "item.split" | "item.trim" | "project.rename" | "settings.set" | "settings.set_fps" | "text.add" | "text.set" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "caption.add" | "clip.add" | "item.delete" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "project.rename" | "settings.set" | "settings.set_fps" | "text.add" | "text.set" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -289,6 +371,10 @@ export interface CommandArgsMap {
 	"clip.add": ClipAddArgs;
 	"item.delete": ItemDeleteArgs;
 	"item.move": ItemMoveArgs;
+	"item.rename": ItemRenameArgs;
+	"item.set_audio": ItemSetAudioArgs;
+	"item.set_transform": ItemSetTransformArgs;
+	"item.set_transition": ItemSetTransitionArgs;
 	"item.split": ItemSplitArgs;
 	"item.trim": ItemTrimArgs;
 	"project.rename": ProjectRenameArgs;
@@ -312,6 +398,10 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"clip.add": { summary: "Places a video or image asset on a visual track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"item.delete": { summary: "Removes items, and optionally closes the freed space.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE","E_OVERLAP"] },
 	"item.move": { summary: "Moves an item in time, to another track of the same kind, or both.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_OVERLAP"] },
+	"item.rename": { summary: "Sets the label of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
+	"item.set_audio": { summary: "Sets the volume, the fades or the mute flag of a clip or audio item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
+	"item.set_transform": { summary: "Sets the position, scale, rotation or opacity of a visual item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
+	"item.set_transition": { summary: "Sets or removes the transition on one edge of a visual item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.split": { summary: "Splits an item into two at a timeline frame.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT"] },
 	"item.trim": { summary: "Moves the start edge or the end edge of an item to a timeline position.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"project.rename": { summary: "Sets the project name.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION"] },

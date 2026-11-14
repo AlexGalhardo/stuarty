@@ -83,7 +83,7 @@ func init() {
 	})
 
 	r := func(name, args string, b func() *B) { gc("asset.remove", name, b, op("asset.remove", args)) }
-	used := func() *B { return base().clip(itemA, vidTr, 0, 30, 0).audio(itemB, audTr, 0, 30, 0) }
+	used := func() *B { return base().clip(itemA, vidTr, 0, 30, 0).audio(itemB, 0, 30, 0) }
 	r("ok_unused_asset", `{"asset_id": "`+imgAsset+`"}`, used)
 	r("ok_asset_used_only_by_deleted_item", `{"asset_id": "`+audAsset+`"}`, func() *B {
 		return base().clip(itemA, vidTr, 0, 30, 0)
