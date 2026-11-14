@@ -198,7 +198,7 @@ linters:
           - gosec
           - noctx
       # The owner probe and the handshake only talk to a loopback address (SDD-007 section 3.8).
-      - path: service/workspace/open\.go
+      - path: service/workspace/open(_test)?\.go
         linters:
           - forbidigo
       - path: internal/outbound/

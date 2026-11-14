@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -395,5 +396,126 @@ func TestHandshakeProofIsKeyed(t *testing.T) {
 	a := HandshakeProof("t1", "n")
 	if a == HandshakeProof("t2", "n") || a == HandshakeProof("t1", "m") || len(a) != 64 {
 		t.Errorf("proof %q does not depend on key and nonce", a)
+	}
+}
+
+func TestOpenRemoteURLRefusesWhatIsNotHTTP(t *testing.T) {
+	t.Parallel()
+
+	for _, raw := range []string{"ftp://videos.example.org", "videos.example.org", "http://"} {
+		o := Options{Getenv: openEnv(t.TempDir(), map[string]string{EnvURL: raw, EnvKey: "k"})}
+		if _, err := Open(context.Background(), o); err == nil {
+			t.Errorf("Open(%q) = nil, want a refusal", raw)
+		}
+	}
+}
+
+func TestOpenRemoteURLReadsTheKeyFile(t *testing.T) {
+	t.Parallel()
+
+	keyFile := t.TempDir() + "/key"
+	if err := os.WriteFile(keyFile, []byte("  key-from-file\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	o := Options{
+		Getenv:  openEnv(t.TempDir(), map[string]string{EnvURL: "https://videos.example.org"}),
+		KeyFile: keyFile,
+	}
+
+	s, err := Open(context.Background(), o)
+	if err != nil || s.Token != "key-from-file" {
+		t.Fatalf("session = %+v, %v", s, err)
+	}
+
+	o.KeyFile = keyFile + ".missing"
+	if _, err := Open(context.Background(), o); err == nil {
+		t.Error("a missing key file was accepted")
+	}
+}
+
+func TestOpenNetworkModeReadsTheKeyFile(t *testing.T) {
+	t.Parallel()
+
+	home := t.TempDir()
+	d := Dir(home)
+
+	owner, _ := d.TryLock()
+	defer owner.Release()
+
+	advertise(t, d, fakeOwner(t, ""), ModeNetwork)
+
+	keyFile := t.TempDir() + "/key"
+	if err := os.WriteFile(keyFile, []byte("key-2\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	o := fast(home)
+	o.KeyFile = keyFile
+
+	s, err := Open(context.Background(), o)
+	if err != nil || s.Token != "key-2" {
+		t.Fatalf("session = %+v, %v", s, err)
+	}
+
+	o.KeyFile = keyFile + ".missing"
+	if _, err := Open(context.Background(), o); err == nil {
+		t.Error("a missing key file was accepted")
+	}
+}
+
+// The token never goes to a local owner that advertises a non-loopback address.
+func TestOpenRefusesALocalOwnerOnANonLoopbackAddress(t *testing.T) {
+	t.Parallel()
+
+	home := t.TempDir()
+	d := Dir(home)
+
+	if _, err := d.EnsureToken(); err != nil {
+		t.Fatal(err)
+	}
+
+	owner, _ := d.TryLock()
+	defer owner.Release()
+
+	srv := fakeOwner(t, "token")
+
+	err := d.WriteRuntime(Runtime{
+		PID: os.Getpid(), Addr: "192.0.2.10:7878", Mode: ModeLocal, StartedAt: time.Now(), Version: "0.0.0",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Whatever address is dialled, the fake owner answers: only the refusal can stop the token.
+	o := fast(home)
+	o.Client = &http.Client{Transport: &http.Transport{
+		DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
+			return (&net.Dialer{}).DialContext(ctx, network, srv.Listener.Addr().String())
+		},
+	}}
+
+	var we *Error
+	if _, err := Open(context.Background(), o); !errors.As(err, &we) || we.Code != CodeUnauthorized {
+		t.Fatalf("err = %v, want %s", err, CodeUnauthorized)
+	}
+}
+
+func TestOpenStopsWhenTheContextIsCancelledWhileWaiting(t *testing.T) {
+	t.Parallel()
+
+	home := t.TempDir()
+
+	holder, _ := Dir(home).TryLock()
+	defer holder.Release()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	time.AfterFunc(50*time.Millisecond, cancel)
+
+	o := fast(home)
+	o.Wait = 10 * time.Second
+
+	if _, err := Open(ctx, o); !errors.Is(err, context.Canceled) {
+		t.Fatalf("err = %v, want context.Canceled", err)
 	}
 }
