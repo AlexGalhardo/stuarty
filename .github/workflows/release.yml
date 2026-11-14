@@ -5,9 +5,11 @@ name: release
 # GoReleaser only attaches the archives, checksums, SBOMs (syft) and the cosign
 # keyless bundle of checksums.txt.
 #
-# The container image job (SDD-009 section 9.3, P1-REL-009) and the installers
-# (P1-REL-010) join this file with their tasks; the asset count asserted at the
-# end of the goreleaser job (15) then grows with the installers.
+# The installers (SDD-009 section 10.4, P1-REL-010) are built and tested by
+# installers.yml, which this workflow calls first. GoReleaser makes the .deb files
+# itself; the Windows, AppImage and macOS installers are added to the release, to
+# checksums.txt and to its signature after GoReleaser has run. The container image
+# job (SDD-009 section 9.3, P1-REL-009) joins this file with its task.
 #
 # workflow_dispatch takes the version to build, because a tag push does not
 # always start a run: GitHub creates no push event when more than three tags
@@ -27,7 +29,38 @@ permissions:
   contents: read
 
 jobs:
+  tag:
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.tag.outputs.ref }}
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - name: Resolve the tag
+        id: tag
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          tag="${INPUT_VERSION:-$REF_NAME}"
+          case "$tag" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *)
+              echo "::error::not a version tag: $tag"
+              exit 1
+              ;;
+          esac
+          echo "ref=refs/tags/$tag" >>"$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >>"$GITHUB_OUTPUT"
+
+  installers:
+    needs: tag
+    uses: ./.github/workflows/installers.yml
+    with:
+      ref: ${{ needs.tag.outputs.ref }}
+      version: ${{ needs.tag.outputs.version }}
+
   goreleaser:
+    needs: [tag, installers]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -113,6 +146,31 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # The installers of installers.yml join the release here. They carry the binaries of this
+      # run (checked), then their digests go into checksums.txt and the file is signed again, so
+      # the signature covers every asset the release lists.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: installer-*
+          merge-multiple: true
+          path: dist-installers
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: binaries
+          path: binaries
+      - name: Check the installers carry the binaries of the release
+        run: bash scripts/installer-binaries.sh check binaries/binaries.sha256 dist/artifacts.json
+      - name: Attach the installers
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          # The Debian packages are already in checksums.txt; the three other kinds are added here.
+          ls -l dist-installers
+          (cd dist-installers && sha256sum -- *) >>dist/checksums.txt
+          cosign sign-blob --yes --bundle dist/checksums.txt.sigstore.json dist/checksums.txt
+          gh release upload "$TAG" dist-installers/* dist/checksums.txt dist/checksums.txt.sigstore.json --clobber --repo "$GITHUB_REPOSITORY"
       - name: Verify the checksums signature
         run: |
           cosign verify-blob dist/checksums.txt \
@@ -133,7 +191,8 @@ jobs:
         run: |
           cp "$BUNDLE" vukem-video.intoto.jsonl
           gh release upload "$TAG" vukem-video.intoto.jsonl --clobber --repo "$GITHUB_REPOSITORY"
-      # 6 archives + 6 SBOMs + checksums.txt + its bundle + the provenance.
+      # 6 archives + 6 SBOMs + 2 .deb + the Windows, AppImage and 2 macOS installers
+      # + checksums.txt + its bundle + the provenance.
       - name: Check the release assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -142,4 +201,4 @@ jobs:
           count="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq ".assets | length")"
           body="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq ".body | length")"
           echo "assets=$count body_length=$body"
-          [ "$count" -eq 15 ] && [ "$body" -gt 0 ]
+          [ "$count" -eq 21 ] && [ "$body" -gt 0 ]

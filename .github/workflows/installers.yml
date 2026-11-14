@@ -1,0 +1,191 @@
+name: installers
+
+# Builds and tests the installers of the local server (SDD-009 section 10.4, P1-REL-010): the Windows
+# setup .exe (Inno Setup), the AppImage (appimagetool), the macOS .pkg (pkgbuild) and, to test it, the
+# Debian package that GoReleaser makes with nfpm. Each installer is installed on its own system, its
+# shortcut command starts the local server, and the uninstall keeps the workspace.
+#
+# It is called by release.yml with the tag to build (the installers are then attached to the release),
+# and runs on its own for a pull request that touches the installers, and on demand.
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: "Git ref to build, for example refs/tags/v0.2.0"
+        required: true
+        type: string
+      version:
+        description: "Version of the installers, for example 0.2.0"
+        required: true
+        type: string
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/installers.yml"
+      - ".config/installers/**"
+      - ".config/goreleaser.yaml"
+      - "scripts/fetch-installer-tool.sh"
+      - "scripts/installer-binaries.sh"
+      - "web/cmd/app/**"
+
+permissions:
+  contents: read
+
+env:
+  # A pull request or a manual run builds a snapshot; the release passes the tag.
+  VERSION: ${{ inputs.version || '0.0.0-snapshot' }}
+  SNAPSHOT: ${{ inputs.ref == '' && '--snapshot' || '' }}
+
+jobs:
+  binaries:
+    name: Binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.4
+      - name: Install the web dependencies
+        working-directory: web
+        run: bun install --frozen-lockfile
+      # The same builds, with the same hooks, as the release (.config/goreleaser.yaml).
+      - uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
+        with:
+          version: "v2.18.2"
+          args: build --clean ${{ env.SNAPSHOT }}
+      - name: Collect the binaries
+        run: bash scripts/installer-binaries.sh flatten dist/artifacts.json bin
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: binaries
+          path: bin
+          if-no-files-found: error
+
+  windows:
+    name: Windows installer
+    needs: binaries
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: binaries
+          path: binaries
+      - name: Build the installer
+        shell: bash
+        run: |
+          iscc="$(bash scripts/fetch-installer-tool.sh inno)"
+          mkdir -p out
+          MSYS2_ARG_CONV_EXCL='*' "$iscc" "/DAppVersion=${VERSION}" \
+            "/DSourceBinary=$(cygpath -w "$PWD/binaries/windows_amd64/vukem-video.exe")" \
+            "/DOutputDir=$(cygpath -w "$PWD/out")" \
+            .config/installers/windows/vukem-video.iss
+          ls -l out
+      - name: Test the installer
+        shell: pwsh
+        run: ./.config/installers/windows/smoke-test.ps1 -Installer (Get-ChildItem out/*_setup.exe).FullName
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installer-windows
+          path: out/*_setup.exe
+          if-no-files-found: error
+
+  appimage:
+    name: AppImage
+    needs: binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: binaries
+          path: binaries
+      - name: Build the AppImage
+        run: |
+          chmod +x binaries/linux_amd64/vukem-video
+          bash .config/installers/linux/build-appimage.sh binaries/linux_amd64/vukem-video "$VERSION" out
+      - name: Test the AppImage
+        run: bash .config/installers/linux/smoke-test.sh appimage out/*.AppImage
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installer-appimage
+          path: out/*.AppImage
+          if-no-files-found: error
+
+  # The .deb files are made by GoReleaser in release.yml and attached by it; this job builds the same
+  # package from the same configuration only to test it.
+  deb:
+    name: Debian package
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.4
+      - name: Install the web dependencies
+        working-directory: web
+        run: bun install --frozen-lockfile
+      - uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
+        with:
+          version: "v2.18.2"
+          args: release --clean --snapshot --skip=sign,publish,sbom,validate
+      - name: Test the package
+        run: |
+          sudo apt-get install -y --no-install-recommends desktop-file-utils
+          bash .config/installers/linux/smoke-test.sh deb dist/vukem-video_*_linux_amd64.deb
+
+  macos:
+    name: macOS package (${{ matrix.arch }})
+    needs: binaries
+    runs-on: macos-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: binaries
+          path: binaries
+      - name: Build the package
+        run: |
+          chmod +x binaries/darwin_${{ matrix.arch }}/vukem-video
+          bash .config/installers/macos/build-pkg.sh binaries/darwin_${{ matrix.arch }}/vukem-video "$VERSION" ${{ matrix.arch }} out
+      # macos-latest is an Apple silicon machine: only the arm64 package runs here.
+      - name: Test the package
+        if: matrix.arch == 'arm64'
+        run: bash .config/installers/macos/smoke-test.sh out/*_darwin_arm64.pkg
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installer-macos-${{ matrix.arch }}
+          path: out/*.pkg
+          if-no-files-found: error
