@@ -30,7 +30,7 @@ const (
 var debugOnce sync.Once
 
 type env struct {
-	t      *testing.T
+	t      testing.TB
 	store  *store.Store
 	svc    service.Service
 	dir    workspace.Dir
@@ -59,7 +59,7 @@ func (c *clock) advance(d time.Duration) {
 	c.t = c.t.Add(d)
 }
 
-func newDir(t *testing.T) workspace.Dir {
+func newDir(t testing.TB) workspace.Dir {
 	t.Helper()
 
 	d, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
@@ -74,7 +74,7 @@ func newDir(t *testing.T) workspace.Dir {
 	return d
 }
 
-func newEnv(t *testing.T) *env {
+func newEnv(t testing.TB) *env {
 	t.Helper()
 
 	e := &env{t: t, dir: newDir(t), clock: &clock{t: time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)}}
