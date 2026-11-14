@@ -1,0 +1,159 @@
+[
+  {
+    "group": "programs",
+    "name": "FFmpeg",
+    "version": "env:FFMPEG_VERSION",
+    "spdx": "LGPL-3.0-or-later",
+    "copyright": "Copyright the FFmpeg developers",
+    "files": [
+      "licenses/programs/ffmpeg/COPYING.LGPLv3"
+    ],
+    "note": "BtbN lgpl build run as a separate process; the archives do not carry it; its configure line and source link are in /usr/share/doc/vukem-video/ffmpeg/ in the image",
+    "shipped_in": [
+      "image"
+    ]
+  },
+  {
+    "group": "programs",
+    "name": "OpenH264",
+    "version": "inside the FFmpeg build",
+    "spdx": "BSD-2-Clause",
+    "copyright": "Copyright (c) 2013, Cisco Systems",
+    "files": [
+      "licenses/programs/openh264/LICENSE"
+    ],
+    "note": "linked into the FFmpeg build as the H.264 encoder; the Cisco binary distribution has its own patent terms (D-017)",
+    "shipped_in": [
+      "image"
+    ]
+  },
+  {
+    "group": "programs",
+    "name": "whisper.cpp",
+    "version": "v1.9.2",
+    "spdx": "MIT",
+    "copyright": "Copyright (c) 2023-2026 The ggml authors",
+    "files": [
+      "licenses/programs/whisper.cpp/LICENSE"
+    ],
+    "note": "transcription helper, installed by the user on first use (ADR-0021)",
+    "shipped_in": []
+  },
+  {
+    "group": "programs",
+    "name": "Whisper models",
+    "version": "ggml tiny, base, small, large-v3-turbo",
+    "spdx": "MIT",
+    "copyright": "Copyright (c) 2022 OpenAI",
+    "files": [
+      "licenses/programs/whisper-model/LICENSE"
+    ],
+    "note": "model weights downloaded by the user on first use (ADR-0021)",
+    "shipped_in": []
+  },
+  {
+    "group": "vendored",
+    "name": "golang.org/x/image/vector (rasterizer, floating-point path)",
+    "version": "v0.23.0",
+    "spdx": "BSD-3-Clause",
+    "copyright": "Copyright 2009 The Go Authors",
+    "files": [
+      "licenses/vendored/x-image-vector-BSD-3-Clause.txt"
+    ],
+    "note": "copied, with changes, as engine/raster/internal/scan",
+    "shipped_in": [
+      "archive",
+      "image"
+    ]
+  },
+  {
+    "group": "fonts",
+    "name": "Anton",
+    "version": "Google Fonts cc39c4c",
+    "spdx": "OFL-1.1",
+    "copyright": "Copyright 2020 The Anton Project Authors",
+    "files": [
+      "licenses/fonts/Anton-OFL.txt"
+    ],
+    "note": "embedded in the binary",
+    "shipped_in": [
+      "archive",
+      "image"
+    ]
+  },
+  {
+    "group": "fonts",
+    "name": "Bebas Neue",
+    "version": "Google Fonts cc39c4c",
+    "spdx": "OFL-1.1",
+    "copyright": "Copyright 2010 by Dharma Type",
+    "files": [
+      "licenses/fonts/BebasNeue-OFL.txt"
+    ],
+    "note": "embedded in the binary",
+    "shipped_in": [
+      "archive",
+      "image"
+    ]
+  },
+  {
+    "group": "fonts",
+    "name": "Inter",
+    "version": "Google Fonts cc39c4c",
+    "spdx": "OFL-1.1",
+    "copyright": "Copyright 2020 The Inter Project Authors",
+    "files": [
+      "licenses/fonts/Inter-OFL.txt"
+    ],
+    "note": "embedded in the binary",
+    "shipped_in": [
+      "archive",
+      "image"
+    ]
+  },
+  {
+    "group": "fonts",
+    "name": "JetBrains Mono",
+    "version": "Google Fonts cc39c4c",
+    "spdx": "OFL-1.1",
+    "copyright": "Copyright 2020 The JetBrains Mono Project Authors",
+    "files": [
+      "licenses/fonts/JetBrainsMono-OFL.txt"
+    ],
+    "note": "embedded in the binary",
+    "shipped_in": [
+      "archive",
+      "image"
+    ]
+  },
+  {
+    "group": "fonts",
+    "name": "Montserrat",
+    "version": "Google Fonts cc39c4c",
+    "spdx": "OFL-1.1",
+    "copyright": "Copyright 2024 The Montserrat.Git Project Authors",
+    "files": [
+      "licenses/fonts/Montserrat-OFL.txt"
+    ],
+    "note": "embedded in the binary",
+    "shipped_in": [
+      "archive",
+      "image"
+    ]
+  },
+  {
+    "group": "fonts",
+    "name": "Playfair Display",
+    "version": "Google Fonts cc39c4c",
+    "spdx": "OFL-1.1",
+    "copyright": "Copyright 2017 The Playfair Display Project Authors",
+    "files": [
+      "licenses/fonts/PlayfairDisplay-OFL.txt"
+    ],
+    "note": "embedded in the binary",
+    "shipped_in": [
+      "archive",
+      "image"
+    ]
+  }
+]

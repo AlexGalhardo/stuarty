@@ -1,8 +1,13 @@
 # Third-party licences
 
-Licence texts of third-party material that Vukem Video copies into the repository or ships. Until the generator of SDD-009 section 12 (`THIRD_PARTY_NOTICES.md`) exists, this folder and the table below are the list.
+The licence texts of everything Vukem Video ships, runs or copies. [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) lists every component and links its text here.
 
-| Component | Version | Licence | Where it is used | Licence text |
-| --- | --- | --- | --- | --- |
-| `golang.org/x/image/vector` (rasterizer, floating-point path) | v0.23.0 | BSD-3-Clause, Copyright 2009 The Go Authors | copied, with changes, as `engine/raster/internal/scan` | [`go/golang.org-x-image-vector-BSD-3-Clause.txt`](go/golang.org-x-image-vector-BSD-3-Clause.txt), also beside the code in `engine/raster/internal/scan/LICENSE` |
-| Anton, Bebas Neue, Inter, JetBrains Mono, Montserrat, Playfair Display | see each file | SIL OFL 1.1 | bundled in `engine/raster/fonts/` | [`fonts/`](fonts/) |
+| Folder | Content | Kept by |
+| --- | --- | --- |
+| `go-modules/<module>@<version>/` | licence and NOTICE files of the Go modules the binary links | `task notices` (do not edit) |
+| `npm/<package>@<version>/` | the same for the production closure of `web/package.json` | `task notices` (do not edit) |
+| `fonts/` | the SIL OFL text of each bundled font | by hand, listed in `.config/third-party.json` |
+| `programs/` | FFmpeg (LGPL-3.0), OpenH264, whisper.cpp and the Whisper models | by hand, listed in `.config/third-party.json` |
+| `vendored/` | licences of source copied into this repository (the `golang.org/x/image/vector` rasterizer in `engine/raster/internal/scan`) | by hand, listed in `.config/third-party.json` |
+
+To change the generated folders, change a dependency or the inventory and run `task notices`; see [CONTRIBUTING](../.github/CONTRIBUTING.md).
