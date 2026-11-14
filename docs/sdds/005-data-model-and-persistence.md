@@ -298,6 +298,7 @@ type AssetRow struct {
 }
 
 type AssetFacts struct { // all nil until ingest is ready
+	Kind               string // video, audio or image; SetFacts leaves the stored kind alone when empty
 	NormalizedVersion  *int // profile version of the normalized file the facts were measured on
 	DurationMs         *int64
 	Width, Height      *int
@@ -408,6 +409,9 @@ type JobRepo interface {
 	RequestCancel(ctx context.Context, id string, nowMs int64) (JobRow, error)
 	// Running returns every job in state running (used by recovery at start-up).
 	Running(ctx context.Context) ([]JobRow, error)
+	// QueuedBefore returns the jobs still queued that were created before the
+	// instant, oldest first (recovery dispatches them again, 14.5 item 3).
+	QueuedBefore(ctx context.Context, createdBeforeMs int64) ([]JobRow, error)
 }
 
 type TemplateRow struct {
@@ -1355,7 +1359,9 @@ ADR-0018. State vocabulary in SDD-000 §6; table in section 5.6.
 | Kinds | `video.ingest`, `video.transcribe`, `video.export`, `video.frame` | `Kind()` strings, stable |
 | Payload | `{"job_id":"job_..."}` only | |
 
-vukem reads `QUEUE_NAMES`, `QUEUE_CONCURRENCY` and `QUEUE_LIMITS` from configuration with no option to set them in code, so `cmd/app/main.go` sets them with `os.Setenv` when they are not already set, before calling `vukem.Main` (vukem API to be confirmed in task: a programmatic `QueueConfig` option). The worker inside `serve` polls with a fixed 1 second sleep (`background.go`, `WorkOptions` without `Sleep`); a queued job can wait up to 1 s before it starts (VF candidate 2). This is acceptable for exports and ingest; verified by a test that asserts start latency under 1.5 s.
+vukem v0.44.0 reads `QUEUE_NAMES`, `QUEUE_CONCURRENCY` and `QUEUE_LIMITS` from configuration and also takes them in code: `vukem.WithQueueWork(queue.WorkOptions{Queues, Concurrency, Limits, Sleep, StopTimeout})` replaces the configured value for every field that is set, so `serve` needs no `os.Setenv`. The polling interval is `WorkOptions.Sleep` (1 s by default), so a queued job can wait up to that long before it starts; the product keeps the default, which is acceptable for exports and ingest, and a test asserts start latency under 1.5 s.
+
+`service/` does not import vukem, so the queue is behind one interface: `service.Enqueuer.Enqueue(ctx, tx, kind, jobID)` runs inside the write transaction that created the job row. `web/app/jobs` implements it over `queue.DispatchKindTx` (the transaction exposes its `database.Executor`) and registers the handlers `video.ingest`, `video.export` and `video.frame`, which call `service.JobRunner.RunJob`. The recovery of 14.5 is `JobRunner.Recover`, and `JobRepo.QueuedBefore` lists the queued jobs older than an instant for its item 3.
 
 **Enqueue.** `JobStart` runs `Write`: `Jobs.CreateLimited` then `q.DispatchTx(ctx, tx, Payload{JobID})`. On the `database` driver the queue row is inserted in the same transaction as the `jobs` row, so both exist or neither does (`queue.mdx`, "Jobs and transactions"). With `queue.Sync{}` the job runs right after the commit, inside the call, before `Write` returns.
 
