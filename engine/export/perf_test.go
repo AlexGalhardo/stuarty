@@ -89,6 +89,9 @@ func TestExportSixtySecondsStaysUnder500MB(t *testing.T) {
 	if testing.Short() {
 		t.Skip("a 60 s export takes about a minute")
 	}
+	if raceEnabled {
+		t.Skip("the race detector multiplies memory and time; NFR-006 and NFR-007 are measured without it")
+	}
 	doc := perfDoc(t, 60)
 	job := newJob(t, doc, "export-60s", filepath.Join("perf", "60s.mp4"))
 
@@ -113,6 +116,9 @@ func TestExportSixtySecondsStaysUnder500MB(t *testing.T) {
 // clip plus a caption. It reports the speed in times real time and fails below the floor in
 // VUKEM_VIDEO_BENCH_MIN_RT (the CI of the reference runner sets 1.5).
 func BenchmarkExportCommonCase(b *testing.B) {
+	if raceEnabled {
+		b.Skip("the race detector multiplies memory and time")
+	}
 	const secs = 30
 	doc := perfDoc(b, secs)
 	floor, _ := strconv.ParseFloat(os.Getenv("VUKEM_VIDEO_BENCH_MIN_RT"), 64)
