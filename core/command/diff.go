@@ -58,6 +58,87 @@ var collections = []string{"assets", "tracks", "items", "fonts"}
 // reserved are the top-level keys of a document that are not project fields.
 var reserved = map[string]bool{"assets": true, "tracks": true, "items": true, "fonts": true, "settings": true}
 
+// jsonEqual compares two decoded JSON values (the trees of timeline.Raw). It has the
+// result of reflect.DeepEqual on them without its per-call reflection cost.
+func jsonEqual(a, b any) bool {
+	switch x := a.(type) {
+	case nil:
+		return b == nil
+	case string:
+		y, ok := b.(string)
+		return ok && x == y
+	case json.Number:
+		y, ok := b.(json.Number)
+		return ok && x == y
+	case bool:
+		y, ok := b.(bool)
+		return ok && x == y
+	case map[string]any:
+		y, ok := b.(map[string]any)
+		if !ok || (x == nil) != (y == nil) || len(x) != len(y) {
+			return false
+		}
+		for k, xv := range x {
+			yv, ok := y[k]
+			if !ok || !jsonEqual(xv, yv) {
+				return false
+			}
+		}
+		return true
+	case []any:
+		y, ok := b.([]any)
+		if !ok || (x == nil) != (y == nil) || len(x) != len(y) {
+			return false
+		}
+		for i := range x {
+			if !jsonEqual(x[i], y[i]) {
+				return false
+			}
+		}
+		return true
+	default:
+		return reflect.DeepEqual(a, b)
+	}
+}
+
+// rawPair returns the canonical trees of before and after for diffOf and inverseOf.
+// An object of a collection that is equal in both documents is left out of both
+// trees, which is what those functions would conclude from it anyway; only the
+// objects that differ pay for the encoding.
+func rawPair(before, after *timeline.Document) (timeline.RawDoc, timeline.RawDoc) {
+	rb, ra := timeline.Raw(withoutCollections(before)), timeline.Raw(withoutCollections(after))
+	addChanged(rb, ra, "assets", before.Assets, after.Assets)
+	addChanged(rb, ra, "tracks", before.Tracks, after.Tracks)
+	addChanged(rb, ra, "items", before.Items, after.Items)
+	addChanged(rb, ra, "fonts", before.Fonts, after.Fonts)
+	return rb, ra
+}
+
+// withoutCollections is a shallow copy of doc with the collections emptied, so that
+// encoding it yields the project fields and the settings only.
+func withoutCollections(doc *timeline.Document) *timeline.Document {
+	c := *doc
+	c.Assets, c.Tracks, c.Items, c.Fonts = nil, nil, nil, nil
+	return &c
+}
+
+func addChanged[V any](rb, ra timeline.RawDoc, name string, before, after map[string]V) {
+	bm, am := map[string]any{}, map[string]any{}
+	for id, bv := range before {
+		if av, ok := after[id]; ok && reflect.DeepEqual(bv, av) {
+			continue
+		}
+		bm[id] = timeline.RawValue(bv)
+	}
+	for id, av := range after {
+		if bv, ok := before[id]; ok && reflect.DeepEqual(bv, av) {
+			continue
+		}
+		am[id] = timeline.RawValue(av)
+	}
+	rb[name], ra[name] = bm, am
+}
+
 func objects(doc timeline.RawDoc, collection string) map[string]any {
 	m, _ := doc[collection].(map[string]any)
 	return m
@@ -108,7 +189,7 @@ func fieldChanges(before, after map[string]any) map[string]Pair {
 	for _, k := range unionKeys(before, after) {
 		b, bok := before[k]
 		a, aok := after[k]
-		if bok && aok && reflect.DeepEqual(b, a) {
+		if bok && aok && jsonEqual(b, a) {
 			continue
 		}
 		var p Pair
@@ -147,7 +228,7 @@ func diffOf(before, after timeline.RawDoc) []Change {
 				out = append(out, Change{Kind: kind + ".added", ID: key, Object: objectOf(ao)})
 			case !aok:
 				out = append(out, Change{Kind: kind + ".removed", ID: key, Object: objectOf(bo)})
-			case !reflect.DeepEqual(bo, ao):
+			case !jsonEqual(bo, ao):
 				if coll == "fonts" { // a font has no update kind
 					out = append(out,
 						Change{Kind: KindFontRemoved, ID: key, Object: objectOf(bo)},
