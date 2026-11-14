@@ -1048,11 +1048,24 @@ Job steps and weights: `check` (0.02, confirms the provider can run; never downl
 | helper `windows-amd64` (`whisper-bin-x64.zip` of whisper.cpp `v1.9.2`) | `https://github.com/ggml-org/whisper.cpp/releases/download/v1.9.2/whisper-bin-x64.zip` | 8,194,445 | `49dcc16de826f20bd53d44f947a1ae49dfa81f86cad67a64d80820cb192d674a` |
 | helper `linux-amd64` (`whisper-bin-ubuntu-x64.tar.gz`) | `https://github.com/ggml-org/whisper.cpp/releases/download/v1.9.2/whisper-bin-ubuntu-x64.tar.gz` | 9,497,583 | `46811a3ecf584307480a220b9ef5ff81b7b22dc41577cbc274ce3afc61f753b1` |
 | helper `linux-arm64` (`whisper-bin-ubuntu-arm64.tar.gz`) | `https://github.com/ggml-org/whisper.cpp/releases/download/v1.9.2/whisper-bin-ubuntu-arm64.tar.gz` | 4,572,842 | `7e26fa6a36d9174d5c0bf033ccbc026c3b5e569e2ee787058241346ef5392719` |
-| helper `darwin-arm64`, `darwin-amd64` | built by the project's release pipeline from the tag `v1.9.2` (upstream ships only an xcframework for macOS in that release) and published with the product release | set by the release task | set by the release task |
+| helper `darwin-arm64`, `darwin-amd64`, `windows-arm64` | none upstream: built by `helpers.yml` from the pinned source and published as the release `helpers-v1.9.2`, asset `https://github.com/AlexGalhardo/vukem-video/releases/download/helpers-v1.9.2/whisper-cli-v1.9.2-<os>-<arch>.tar.gz` (`.zip` on Windows) | set by the first run of `helpers.yml` | set by that run (the asset's `.sha256` and the release notes) |
 | model `tiny` | `https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-tiny.bin` | 77,691,713 | `be07e048e1e599ad46341c8d2a135645097a538221678b7acdd1b1919c6e1b21` |
 | model `base` | same path, `ggml-base.bin` | 147,951,465 | `60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe` |
 | model `small` (default) | same path, `ggml-small.bin` | 487,601,967 | `1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b` |
 | model `large-v3-turbo` | same path, `ggml-large-v3-turbo.bin` | 1,624,555,275 | `1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69` |
+
+**Which platforms have an upstream helper (checked 2026-11-14 with `gh api repos/ggml-org/whisper.cpp/releases/tags/v1.9.2`, commit `306c88f4d1286aec1bf96e544632897886af5501`).** The release has `whisper-bin-ubuntu-x64.tar.gz`, `whisper-bin-ubuntu-arm64.tar.gz`, `whisper-bin-x64.zip` and `whisper-bin-Win32.zip` (32-bit x86), the BLAS and CUDA Windows builds, and `whisper-v1.9.2-xcframework.zip` (a framework for Apple apps, not a command line program).
+
+| Platform | Helper | Source |
+| --- | --- | --- |
+| linux-amd64 | `whisper-bin-ubuntu-x64.tar.gz` | upstream |
+| linux-arm64 | `whisper-bin-ubuntu-arm64.tar.gz` | upstream |
+| windows-amd64 | `whisper-bin-x64.zip` | upstream |
+| windows-arm64 | none (Windows 11 on ARM can run the amd64 helper under emulation) | built by `helpers.yml` on `windows-11-arm` |
+| darwin-arm64 | none | built by `helpers.yml` on `macos-latest` |
+| darwin-amd64 | none | built by `helpers.yml` on `macos-15-intel` |
+
+The pin is `.config/whisper.env` (tag, commit, source URL and its SHA-256, and the model and speech of the helper test). `scripts/whisper-build.sh` holds the build options: CPU only (no Metal, BLAS, Accelerate, CUDA, Vulkan, OpenCL, SYCL, HIP or RPC), no OpenMP, no SDL, curl or FFmpeg, no `-march=native`, a static MSVC runtime on Windows. `helpers.yml` runs on demand and when `.config/whisper.env` changes on `main`: each build transcribes 20 s of the LibriVox speech with the `tiny` model and must return at least 30 words (`scripts/whisper-test.sh`), then the `publish` job signs every archive with cosign (keyless), attests its provenance and uploads it, its `.sha256` and its `.sigstore.json` to the release `helpers-v1.9.2`. Found while building: `examples/common.cpp` of v1.9.2 lacks `#include <algorithm>` and fails with a libc++ that no longer includes it transitively, so the script adds `-include algorithm` on macOS and Linux.
 
 How these were checked (2026-11-14): the Windows zip's SHA-256 was computed on the downloaded file and equals the `digest` GitHub reports for the asset; the Linux digests are the GitHub `digest` values (those two binaries were not run); each model's SHA-256 was computed on the file used in the spike and each equals the `X-Linked-ETag` of the Hugging Face URL pinned to commit `5359861c739e955e79d9a303bcbc70fb988958b1` (the revision of `ggerganov/whisper.cpp` on 2026-11-14, which fixes the file content, unlike `main`). The upstream release `v1.9.5` has no binaries, so the pin is `v1.9.2` (ADR-0021). A test (A-18) fails if a supported platform has no manifest entry, if a hash is not 64 hex characters, or if a URL is not HTTPS.
 
