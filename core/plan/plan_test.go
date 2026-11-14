@@ -127,7 +127,7 @@ func TestEasing(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		near(t, tt.name, ease(tt.name, tt.u), tt.want)
+		near(t, tt.name, timeline.Ease(tt.name, tt.u), tt.want)
 	}
 }
 

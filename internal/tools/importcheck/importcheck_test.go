@@ -37,6 +37,9 @@ func TestRules(t *testing.T) {
 		{"core own package", "core/command/a.go", mod + "/core/timeline", ""},
 		{"core pure library", "core/command/a.go", "github.com/santhosh-tekuri/jsonschema/v6", ""},
 		{"core third party", "core/command/a.go", "github.com/google/uuid", "core/ imports only"},
+		{"command imports plan", "core/command/a.go", mod + "/core/plan", "never imports core/plan"},
+		{"command test imports plan", "core/command/a_test.go", mod + "/core/plan", "never imports core/plan"},
+		{"plan imports timeline", "core/plan/a.go", mod + "/core/timeline", ""},
 		{"core imports engine", "core/plan/a.go", mod + "/engine/ffmpeg", "core/ imports only"},
 		{"core imports vukem", "core/plan/a.go", VukemModule + "/errs", "core/ imports only"},
 		{"core imports cgo", "core/plan/a.go", "C", "core/ imports only"},
@@ -78,6 +81,12 @@ func TestCheckWalksFilesAndSkipsNestedModules(t *testing.T) {
 	root := t.TempDir()
 	write(t, root, "core/plan/a.go", "package plan\n\nimport _ \"github.com/AlexGalhardo/vukem/errs\"\n")
 	write(t, root, "core/plan/ok.go", "package plan\n\nimport _ \"fmt\"\n")
+	write(
+		t,
+		root,
+		"core/command/b.go",
+		"package command\n\nimport _ \"github.com/AlexGalhardo/vukem-video/core/plan\"\n",
+	)
 	write(t, root, "spikes/x/go.mod", "module x\n")
 	write(t, root, "spikes/x/a.go", "package x\n\nimport _ \"github.com/AlexGalhardo/vukem\"\n")
 	write(t, root, "web/a.go", "package web\n\nimport _ \"github.com/AlexGalhardo/vukem\"\n")
@@ -87,8 +96,8 @@ func TestCheckWalksFilesAndSkipsNestedModules(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(got) != 1 || got[0].File != "core/plan/a.go" {
-		t.Fatalf("violations = %v, want exactly core/plan/a.go", got)
+	if len(got) != 2 || got[0].File != "core/command/b.go" || got[1].File != "core/plan/a.go" {
+		t.Fatalf("violations = %v, want exactly core/command/b.go and core/plan/a.go", got)
 	}
 }
 

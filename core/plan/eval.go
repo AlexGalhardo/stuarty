@@ -6,26 +6,6 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
-// ease is e(u) of SDD-004 §3.1.
-func ease(name string, u float64) float64 {
-	switch name {
-	case "ease_in":
-		return u * u * u
-	case "ease_out":
-		return 1 - (1-u)*(1-u)*(1-u)
-	case "ease_in_out":
-		if u < 0.5 {
-			return 4 * u * u * u
-		}
-
-		return 1 - (-2*u+2)*(-2*u+2)*(-2*u+2)/2
-	case "hold":
-		return 0
-	}
-
-	return u // linear
-}
-
 // keyframeValue evaluates keyframes at r, the frame inside the item (SDD-004
 // §3.1). r may be fractional, which the audio envelope needs. The keyframes
 // are taken in order of t.
@@ -36,29 +16,7 @@ func keyframeValue(kfs []timeline.Keyframe, r float64) float64 {
 		slices.SortStableFunc(k, func(a, b timeline.Keyframe) int { return a.T - b.T })
 	}
 
-	last := len(k) - 1
-	if r <= float64(k[0].T) {
-		return k[0].Value
-	}
-
-	if r >= float64(k[last].T) {
-		return k[last].Value
-	}
-
-	i, _ := slices.BinarySearchFunc(k, r, func(kf timeline.Keyframe, r float64) int {
-		if float64(kf.T) <= r {
-			return -1
-		}
-
-		return 1
-	})
-	// BinarySearch returns the first keyframe after r.
-	i--
-
-	span := float64(k[i+1].T - k[i].T)
-	u := (r - float64(k[i].T)) / span
-
-	return k[i].Value + (k[i+1].Value-k[i].Value)*ease(k[i].Easing, u)
+	return timeline.Interpolate(k, r)
 }
 
 // property is the value of an animated property at r: its keyframes, or the

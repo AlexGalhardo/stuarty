@@ -181,3 +181,34 @@ func splitWords(words []timeline.Word, breaks []int, tc int) (left, right []time
 	}
 	return left, right, lb, rb
 }
+
+// wordTotal counts the caption words of the document, optionally not counting one item.
+func (c *Context) wordTotal(except string) int {
+	n := 0
+	for id := range c.Doc.Items {
+		if id != except {
+			n += len(c.Doc.Items[id].Words)
+		}
+	}
+	return n
+}
+
+// checkWordLimits is the E_LIMIT of R16: a caption has at most 60 words and the
+// document at most 5,000 once n words replace those of the item except (or are added,
+// when except is empty).
+func (c *Context) checkWordLimits(except string, n int) *Error {
+	if n > maxWordsPerCaption {
+		return Errorf(CodeLimit, "The caption would have %d words; the limit is %d.", n, maxWordsPerCaption).
+			WithHint("Split the text into several captions.")
+	}
+	if total := c.wordTotal(except) + n; total > maxWordsPerDocument {
+		return Errorf(
+			CodeLimit,
+			"The document would have %d caption words; the limit is %d.",
+			total,
+			maxWordsPerDocument,
+		).
+			WithHint("Remove captions you no longer need.")
+	}
+	return nil
+}
