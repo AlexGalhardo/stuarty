@@ -21,6 +21,7 @@ phase:beta|c2e0c6|Belongs to BETA
 # area (same list as the commit scopes in SDD-009 section 6.2)
 area:core|c5def5|core
 area:timeline|c5def5|timeline
+area:schema|c5def5|schema
 area:command|c5def5|command
 area:plan|c5def5|plan
 area:lint|c5def5|lint
