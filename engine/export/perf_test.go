@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -45,6 +46,13 @@ func perfDoc(tb testing.TB, secs int) *timeline.Document {
 	return doc
 }
 
+// memoryHeld is the memory the Go process holds from the system and has not returned to it.
+func memoryHeld() uint64 {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	return m.Sys - m.HeapReleased
+}
+
 // peakMemory samples the memory the Go process holds from the system, minus what it has returned, until
 // stop is called, and returns the highest value in bytes.
 func peakMemory() (stop func() uint64) {
@@ -55,10 +63,9 @@ func peakMemory() (stop func() uint64) {
 		wg   sync.WaitGroup
 	)
 	sample := func() {
-		var m runtime.MemStats
-		runtime.ReadMemStats(&m)
+		v := memoryHeld()
 		mu.Lock()
-		peak = max(peak, m.Sys-m.HeapReleased)
+		peak = max(peak, v)
 		mu.Unlock()
 	}
 	wg.Go(func() {
@@ -95,7 +102,9 @@ func TestExportSixtySecondsStaysUnder500MB(t *testing.T) {
 	doc := perfDoc(t, 60)
 	job := newJob(t, doc, "export-60s", filepath.Join("perf", "60s.mp4"))
 
-	runtime.GC()
+	// Hand back what the tests before this one left, so that the sample is the export's.
+	debug.FreeOSMemory()
+	before := memoryHeld()
 	stop := peakMemory()
 	start := time.Now()
 	res, err := Run(context.Background(), job)
@@ -104,8 +113,8 @@ func TestExportSixtySecondsStaysUnder500MB(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("60 s export with %s: %s (%.2f x real time), Go process peak %d MB, file %d MB",
-		res.Encoder, elapsed.Round(time.Millisecond), 60/elapsed.Seconds(), peak>>20, res.Size>>20)
+	t.Logf("60 s export with %s: %s (%.2f x real time), Go process peak %d MB (%d MB before it started), file %d MB",
+		res.Encoder, elapsed.Round(time.Millisecond), 60/elapsed.Seconds(), peak>>20, before>>20, res.Size>>20)
 	if peak > 500<<20 {
 		t.Errorf("the Go process held %d MB, want under 500 MB (NFR-007)", peak>>20)
 	}

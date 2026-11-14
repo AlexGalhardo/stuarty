@@ -486,7 +486,7 @@ The measurements came from one Windows machine with other processes running. The
 | What | Measured |
 | --- | --- |
 | `BenchmarkExportCommonCase`, 30 s (`go test ./engine/export -run XXX -bench ExportCommonCase -benchtime=3x`) | 2.14 to 2.72 times real time (four runs: 2.27, 2.35, 2.14, 2.72) |
-| The 60 s export of the same project (`TestExportSixtySecondsStaysUnder500MB`) | 23.4 s, 2.56 times real time; the Go process peaked at 110 MB (`Sys` minus `HeapReleased`, sampled every 50 ms), under the 500 MB of NFR-007; the file is 57 MB |
+| The 60 s export of the same project (`TestExportSixtySecondsStaysUnder500MB`) | 20.1 to 23.4 s, 2.56 to 2.98 times real time (two runs); the Go process peaked at 110 and 112 MB (`Sys` minus `HeapReleased`, sampled every 50 ms, after handing back what earlier tests left), under the 500 MB of NFR-007; the file is 57 MB. Under the race detector the process holds about 1 GB, so the test and the benchmark do not measure there |
 | A full 1080×1920 layer rotated by 3 degrees through the sampler (`BenchmarkSampleRotatedFullFrame*`) | 38 ms in 1 band (0.88 times real time at 30 fps, against 0.31 to 0.36 for `draw.BiLinear` in the spike), 8 ms in 8 bands (4 times real time) |
 | The same layer as a copy (`BenchmarkCopyFullFrame`) | 0.8 ms |
 | The rotated layer against `x/image/draw.BiLinear` (`TestSamplerAgreesWithXImageBiLinear`) | no pixel differs by more than 2 |
