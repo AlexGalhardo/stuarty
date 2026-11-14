@@ -13,14 +13,14 @@ import (
 // and single statements, or a transaction.
 type repos struct{ ex database.Executor }
 
-func (r repos) Projects() service.ProjectRepo        { return projectRepo{r.ex} }
-func (r repos) Operations() service.OperationRepo    { return operationRepo{r.ex} }
-func (r repos) Idempotency() service.IdempotencyRepo { return idempotencyRepo{r.ex} }
-func (r repos) Assets() service.AssetRepo            { return assetRepo{r.ex} }
-func (r repos) Jobs() service.JobRepo                { return jobRepo{r.ex} }
-func (r repos) Templates() service.TemplateRepo      { return templateRepo{r.ex} }
-func (r repos) Backups() service.BackupRepo          { return backupRepo{r.ex} }
-func (r repos) Audit() service.AuditRepo             { return auditRepo{r.ex} }
+func (r repos) Projects() service.ProjectRepo        { return projectRepo(r) }
+func (r repos) Operations() service.OperationRepo    { return operationRepo(r) }
+func (r repos) Idempotency() service.IdempotencyRepo { return idempotencyRepo(r) }
+func (r repos) Assets() service.AssetRepo            { return assetRepo(r) }
+func (r repos) Jobs() service.JobRepo                { return jobRepo(r) }
+func (r repos) Templates() service.TemplateRepo      { return templateRepo(r) }
+func (r repos) Backups() service.BackupRepo          { return backupRepo(r) }
+func (r repos) Audit() service.AuditRepo             { return auditRepo(r) }
 
 // nullJSON stores an empty raw message as NULL.
 func nullJSON(m json.RawMessage) any {

@@ -67,7 +67,7 @@ func Open(ctx context.Context, dir workspace.Dir, o Options) (*Store, error) {
 		migs = Migrations()
 	}
 
-	path := filepath.ToSlash(string(dir.Path("db.sqlite")))
+	path := filepath.ToSlash(dir.Path("db.sqlite"))
 	if i := strings.IndexAny(path, "?#%"); i >= 0 {
 		return nil, fmt.Errorf(
 			"store: the workspace path holds %q, which breaks the database URL; choose another with %s",

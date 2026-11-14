@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/base64"
-	"fmt"
+	"errors"
 	"strconv"
 	"strings"
 
@@ -104,7 +104,7 @@ func (r projectRepo) List(ctx context.Context, q service.ProjectQuery) ([]servic
 }
 
 // ErrBadCursor is returned for a cursor the store did not produce.
-var ErrBadCursor = fmt.Errorf("store: invalid cursor")
+var ErrBadCursor = errors.New("store: invalid cursor")
 
 func encodeCursor(ms int64, id string) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(strconv.FormatInt(ms, 10) + ":" + id))

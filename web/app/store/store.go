@@ -24,7 +24,7 @@ type Store struct {
 var _ service.Store = (*Store)(nil)
 
 func newStore(db *database.DB) *Store {
-	return &Store{repos: repos{ex: db}, db: db, locks: newProjectLocks()}
+	return &Store{ex: db, db: db, locks: newProjectLocks()}
 }
 
 // DB returns the underlying database, for the migrator and for vukem's queue.
@@ -74,7 +74,7 @@ type tx struct {
 	dtx *database.Tx
 }
 
-func newTx(dtx *database.Tx) *tx { return &tx{repos: repos{ex: dtx}, dtx: dtx} }
+func newTx(dtx *database.Tx) *tx { return &tx{ex: dtx, dtx: dtx} }
 
 func (t *tx) AfterCommit(fn func()) {
 	t.dtx.AfterCommit(func(context.Context) { fn() })
@@ -124,7 +124,8 @@ func (l *projectLocks) acquire(ctx context.Context, id string) (release func(), 
 
 	drop := func() {
 		l.mu.Lock()
-		if e.refs--; e.refs == 0 {
+		e.refs--
+		if e.refs == 0 {
 			delete(l.m, id)
 		}
 		l.mu.Unlock()
