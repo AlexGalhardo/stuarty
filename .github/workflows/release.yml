@@ -221,11 +221,11 @@ jobs:
     steps:
       - name: Check the Docker Hub credentials
         env:
-          HUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          HUB_USER: ${{ vars.DOCKERHUB_USERNAME }}
           HUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
           if [ -z "$HUB_USER" ] || [ -z "$HUB_TOKEN" ]; then
-            echo "::error::add the repository secrets DOCKERHUB_USERNAME and DOCKERHUB_TOKEN (see SDD-009 section 16)"
+            echo "::error::add the repository variable DOCKERHUB_USERNAME and the secret DOCKERHUB_TOKEN (see SDD-009 section 16)"
             exit 1
           fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -257,7 +257,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       # Build and test the amd64 image locally first (load: true); nothing is
       # pushed, and so latest does not move, until the smoke test passes.

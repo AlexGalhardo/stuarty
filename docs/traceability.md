@@ -122,10 +122,10 @@ How to read it: an empty SDD cell or an empty task cell is a gap and is listed a
 | RF-207 | A | A diagnostic command reports versions, FFmpeg details, encoders and workspace health, and can write a bundl... | SDD-003, SDD-011 | ADR-0026 | P2-SRV-019, P2-AGT-002, P2-UI-024, P2-DOC-004 |
 | RF-208 | A | Opening a workspace from an older version migrates it after making a backup; a workspace from a newer versi... | SDD-005 | ADR-0009, ADR-0014, ADR-0022, ADR-0025 | P2-SCH-002, P2-SRV-001, P2-SRV-004, P2-SCH-004, P2-DOC-004, P3-SRV-002, P4-SRV-001, P4-REL-002 |
 | RF-209 | P (first release), A (full) | Releases follow the vukem pattern: tag, title, notes from the changelog, signed binaries for three operatin... | SDD-007, SDD-009 | ADR-0011, ADR-0021, ADR-0023, ADR-0025 | P1-REL-008, P2-SEC-008, P2-REL-003, P2-REL-004, P2-REL-006, P3-RND-001, P3-REL-003, P3-REL-004, P4-REL-001, P4-REL-002, P4-REL-003 |
-| RF-210 | A | A container image published to GHCR and Docker Hub with a pinned LGPL FFmpeg and its licence notices | SDD-009 | ADR-0011, ADR-0021, ADR-0025 | P2-SEC-008, P2-DOC-004, P2-REL-002, P2-REL-004, P3-RND-001, P3-REL-001, P3-REL-002, P4-REL-003 |
-| RF-211 | P (skeleton and reference), A (guide), B (complete) | A documentation site in English and Brazilian Portuguese with a user guide, an agents section, a generated... | SDD-009, SDD-010 | ADR-0024 | P1-DOC-001, P2-DOC-001, P2-DOC-002, P2-DOC-003, P2-DOC-004, P2-I18N-101, P2-I18N-102, P3-DOC-001, P3-DOC-002, P3-I18N-101, P3-I18N-102, P4-DOC-001, P4-I18N-101 |
+| RF-210 | A | A container image published to GHCR and Docker Hub with a pinned LGPL FFmpeg and its licence notices | SDD-009 | ADR-0011, ADR-0021, ADR-0025 | P1-REL-009, P2-SEC-008, P2-DOC-004, P2-REL-002, P2-REL-004, P3-RND-001, P3-REL-001, P3-REL-002, P4-REL-003 |
+| RF-211 | P (skeleton and reference), A (guide), B (complete) | A documentation site in English and Brazilian Portuguese with a user guide, an agents section, a generated... | SDD-009, SDD-010 | ADR-0024 | P1-DOC-002, P1-DOC-001, P2-DOC-001, P2-DOC-002, P2-DOC-003, P2-DOC-004, P2-I18N-101, P2-I18N-102, P3-DOC-001, P3-DOC-002, P3-I18N-101, P3-I18N-102, P4-DOC-001, P4-I18N-101 |
 | RF-212 | P | Every documentation page has a plain Markdown twin, and the site has `llms.txt` and a sitemap | SDD-009, SDD-010 | ADR-0024 | P1-DOC-001, P2-DOC-001, P4-DOC-001 |
-| RF-213 | B | A packaged desktop application with installer, signing and auto-update | SDD-012 | ADR-0023, ADR-0025 | P2-DSK-001, P3-DSK-002, P3-DSK-003, P3-DSK-004, P3-DSK-005, P3-DOC-001, P3-REL-003, P3-REL-004 |
+| RF-213 | B | A packaged desktop application with installer, signing and auto-update | SDD-012 | ADR-0023, ADR-0025 | P1-REL-010, P2-DSK-001, P3-DSK-002, P3-DSK-003, P3-DSK-004, P3-DSK-005, P3-DOC-001, P3-REL-003, P3-REL-004 |
 | RF-214 | P | The repository has `README`, `LICENSE` (MIT), `CONTRIBUTING`, `SECURITY`, `CODE_OF_CONDUCT`, `CHANGELOG` an... | SDD-007, SDD-009, SDD-010 | ADR-0025 | P1-REL-007, P4-REL-001 |
 | RF-215 | A | Third-party notices for everything shipped (FFmpeg, fonts, libraries) are included in each artifact | SDD-007, SDD-009 | ADR-0011, ADR-0012, ADR-0021, ADR-0025 | P2-RND-001, P2-RND-012, P2-SRV-019, P2-DOC-004, P2-REL-001, P2-REL-003, P3-REL-001, P3-REL-002, P3-REL-005, P4-RND-002, P4-REL-003 |
 | NFR-040 |  | From download to the first exported video takes under 10 minutes for a new user following the getting-start... | SDD-008, SDD-010 | ADR-0023 | P1-QA-001, P2-DOC-002, P3-DSK-004, P4-DOC-001 |
@@ -144,4 +144,4 @@ How to read it: an empty SDD cell or an empty task cell is a gap and is listed a
 ## Counts
 
 - Requirements: 116 (91 functional, 25 non-functional).
-- ROADMAP tasks read: 240 (Prototype 39, ALPHA 135, BETA 47, Release 1.0 19).
+- ROADMAP tasks read: 245 (Prototype 44, ALPHA 135, BETA 47, Release 1.0 19).
