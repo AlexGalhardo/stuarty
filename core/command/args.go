@@ -46,7 +46,13 @@ func argFields(t reflect.Type) []argField {
 			continue
 		}
 		name, opts, _ := strings.Cut(tag, ",")
-		f := argField{name: name, index: i, required: opts != "omitempty", desc: sf.Tag.Get("desc"), fieldType: sf.Type}
+		f := argField{
+			name:      name,
+			index:     i,
+			required:  opts != "omitempty" && opts != "omitzero",
+			desc:      sf.Tag.Get("desc"),
+			fieldType: sf.Type,
+		}
 		if e, ok := sf.Tag.Lookup("enum"); ok {
 			f.enum = strings.Split(e, ",")
 		}
@@ -87,6 +93,9 @@ func kindOf(v any) string {
 }
 
 func typeWord(t reflect.Type) string {
+	if t == timeType {
+		return "a time"
+	}
 	switch t.Kind() {
 	case reflect.String:
 		return "a string"
@@ -141,11 +150,31 @@ func syntaxWord(err error) string {
 	return "unexpected end of input"
 }
 
+// Time is a time argument: a string with a unit ("12.5s", "375f", "00:00:12.500").
+// A JSON number is rejected with E_INVALID_TIME (SDD-002 §A.4); parsing the string is
+// the job of Context.ParseTime.
+type Time string
+
+var timeType = reflect.TypeFor[Time]()
+
+const timeForms = `Use one of "12.5s" (seconds), "375f" (frames) or "00:00:12.500" (timecode).`
+
 func decodeArg(v reflect.Value, src any, path string) *Error {
 	t := v.Type()
+	if t == timeType {
+		s, ok := src.(string)
+		if !ok {
+			return Errorf(CodeInvalidTime, "%s is %s, but a time is a string with a unit.", path, kindOf(src)).
+				WithHint("%s", timeForms).WithPath(path)
+		}
+		v.SetString(s)
+		return nil
+	}
 	switch t.Kind() {
 	case reflect.Interface:
-		v.Set(reflect.ValueOf(src))
+		if src != nil {
+			v.Set(reflect.ValueOf(src))
+		}
 		return nil
 	case reflect.Pointer:
 		if src == nil {
@@ -345,6 +374,12 @@ func trimFloat(f float64) string {
 
 // schemaOf builds the JSON Schema (2020-12 subset) of an arguments type.
 func schemaOf(t reflect.Type) map[string]any {
+	if t == timeType {
+		return map[string]any{
+			"type":        "string",
+			"description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+		}
+	}
 	switch t.Kind() {
 	case reflect.Pointer:
 		return schemaOf(t.Elem())

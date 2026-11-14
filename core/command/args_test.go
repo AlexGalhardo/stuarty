@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/core/timeval"
 )
 
 type nested struct {
@@ -132,5 +134,28 @@ func TestSchemaOfArgs(t *testing.T) {
 	}
 	if r, _ := props["ratio"].(map[string]any); r["type"] != "number" {
 		t.Errorf("ratio %v", r)
+	}
+}
+
+type timeArgs struct {
+	At Time `json:"at"`
+}
+
+func TestTimeArgumentsRejectNumbers(t *testing.T) {
+	v, e := decodeArgs([]byte(`{"at": "12.5s"}`), reflect.TypeFor[timeArgs]())
+	if e != nil || v.Field(0).String() != "12.5s" {
+		t.Fatalf("%v", e)
+	}
+	_, e = decodeArgs([]byte(`{"at": 12}`), reflect.TypeFor[timeArgs]())
+	if e == nil || e.Code != CodeInvalidTime || e.Path != "args.at" || !strings.Contains(e.Hint, "375f") ||
+		CheckError(e) != nil {
+		t.Errorf("%+v", e)
+	}
+	props, _ := schemaOf(reflect.TypeFor[timeArgs]())["properties"].(map[string]any)
+	if at, _ := props["at"].(map[string]any); at["type"] != "string" {
+		t.Errorf("%v", props)
+	}
+	if got := TimeEffective(timeval.FPS{Num: 30, Den: 1}, 30, ""); got["requested"] != nil {
+		t.Errorf("a default time has no requested value: %v", got)
 	}
 }
