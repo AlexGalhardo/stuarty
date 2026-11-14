@@ -99,8 +99,9 @@ func round(v float64) int { return int(math.Floor(v + 0.5)) }
 // target is the size the decoder or the image scaler delivers: the drawn size when the layer is constant
 // and not rotated (the compositor then copies), otherwise the cropped size of the source.
 func (f *frameSource) target(l *plan.Layer, cw, ch int) (w, h int, scaled bool) {
-	if in := f.infos[l.ItemID]; in != nil && in.constant && l.Rotation == 0 {
-		return max(round(l.W), 1), max(round(l.H), 1), true
+	in := f.infos[l.ItemID]
+	if (f.s.single || (in != nil && in.constant)) && l.Rotation == 0 {
+		return max(round(l.W*f.s.scale), 1), max(round(l.H*f.s.scale), 1), true
 	}
 	return cw, ch, false
 }
