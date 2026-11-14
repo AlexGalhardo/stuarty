@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 )
 
 // perfClip is the common case of SDD-004 section 12: a full-frame clip of the size of the project.
@@ -147,6 +148,41 @@ func BenchmarkExportCommonCase(b *testing.B) {
 		if floor > 0 && rt < floor {
 			b.Fatalf("%.2f x real time, want at least %.2f", rt, floor)
 		}
+		_ = os.Remove(res.Path)
+	}
+}
+
+// BenchmarkExport60s is NFR-006 and NFR-007: the export of a 60 s 1080x1920 30 fps project with captions
+// completes within 60 s with the encoder the machine detects (a hardware or operating system one where
+// there is one), and the Go process stays under 500 MB. It reports s_export, x_realtime and peak_MB.
+func BenchmarkExport60s(b *testing.B) {
+	if raceEnabled {
+		b.Skip("the race detector multiplies memory and time")
+	}
+	doc := perfDoc(b, 60)
+	r, err := ffmpeg.NewRunner(shared.runner.In, shared.dir)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+	for i := range b.N {
+		job := newJob(b, doc, "bench60-"+strconv.Itoa(i), filepath.Join("bench60", "out.mp4"))
+		job.Runner, job.Encoder = r, ffmpeg.DetectOptions{}
+
+		debug.FreeOSMemory()
+		stop := peakMemory()
+		start := time.Now()
+		res, err := Run(context.Background(), job)
+		elapsed := time.Since(start)
+		peak := stop()
+		if err != nil {
+			b.Fatal(err)
+		}
+		b.ReportMetric(elapsed.Seconds(), "s_export")
+		b.ReportMetric(60/elapsed.Seconds(), "x_realtime")
+		b.ReportMetric(float64(peak>>20), "peak_MB")
+		b.Logf("%s: %.1f s, peak %d MB", res.Encoder, elapsed.Seconds(), peak>>20)
 		_ = os.Remove(res.Path)
 	}
 }
