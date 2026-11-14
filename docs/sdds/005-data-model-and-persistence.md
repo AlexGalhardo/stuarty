@@ -107,6 +107,7 @@ type Repos interface {
 	Jobs() JobRepo
 	Templates() TemplateRepo
 	Backups() BackupRepo
+	Audit() AuditRepo // section 5.9
 }
 
 type Tx interface {
@@ -188,7 +189,7 @@ type ProjectRepo interface {
 	// ErrStale when no row matched.
 	Commit(ctx context.Context, id string, expected int64, u ProjectUpdate) error
 	SetState(ctx context.Context, id string, st ProjectState, by string, atMs int64) error
-	Delete(ctx context.Context, id string) error // hard delete; cascades; only TrashEmpty calls it
+	Delete(ctx context.Context, id string) error // hard delete; cascades, and removes the project's document_backups; only TrashEmpty calls it
 }
 ```
 
@@ -288,13 +289,13 @@ type AssetRow struct {
 	IngestState  IngestState
 	Progress     float64
 	IngestError  json.RawMessage // typed error (SDD-002 A.8) when failed
-	Profile      string          // ingest profile version
-	Facts        AssetFacts
+	Facts        AssetFacts // NormalizedVersion is the ingest profile version (column normalized_version)
 	CreatedMs    int64
 	UpdatedMs    int64
 }
 
 type AssetFacts struct { // all nil until ingest is ready
+	NormalizedVersion  *int // profile version of the normalized file the facts were measured on
 	DurationMs         *int64
 	Width, Height      *int
 	HasAudio           bool
@@ -320,8 +321,10 @@ type ProjectAssetRow struct {
 
 type ArtifactRow struct {
 	AssetHash string
-	Kind      string // probe, normalized, proxy, thumbnails, peaks, transcript
-	Profile   string
+	Kind      string // probe, normalized, proxy, thumbnails, peaks, silence, loudness, transcript
+	Profile   int    // profile version; part of the file name
+	Variant   string // transcripts: the 12 hex key of provider, model and language; empty otherwise
+	Ext       string // file extension without the dot
 	RelPath   string // relative to the workspace, forward slashes
 	SizeBytes int64
 	SHA256    string // of the artifact file
@@ -516,7 +519,7 @@ The set of migrations of release 0.5.0, in order:
 | `20261114100700_create_audit_table` | `audit` |
 | `20261114100800_create_api_keys_table` (ALPHA, with network mode) | `api_keys` |
 
-Example, the first two, in the style of the schema builder (vukem `schema.Table` methods exist for every call shown; `Primary` with one column and with several is supported in `Create`):
+**As built (P1-SRV-001/002).** The migration files hold the `CREATE TABLE` and `CREATE INDEX` statements of this section through `s.Raw`, word for word, instead of the schema builder: the builder has no way to say `REAL`, a partial index or a trigger, and the effective SQL below is the contract. `templates` is in the set (the interfaces need it); `api_keys` waits for network mode. The code is in `web/database/migrations/` and the store in `web/app/store/`. The example that follows is the builder form of the first two, kept as a reference for tables the builder can express (vukem `schema.Table` methods exist for every call shown; `Primary` with one column and with several is supported in `Create`):
 
 ```go
 package migrations
@@ -684,7 +687,7 @@ CREATE INDEX operations_redo_idx ON operations (project_id, actor, revision)
   WHERE closed_by IS NULL AND kind = 'undo';
 ```
 
-The log is never updated except for `closed_by`, which only moves from `NULL` to a revision. No code path deletes a row except the cascade of `Delete` on `projects` (trash emptying). RF-134 ("the record cannot be edited") is enforced by the store interface having no update method other than `Close*`, and by a test that greps the implementation for `UPDATE operations` and finds only those three statements.
+The log is never updated except for `closed_by`, which only moves from `NULL` to a revision. No code path deletes a row except the cascade of `Delete` on `projects` (trash emptying). RF-134 ("the record cannot be edited") is enforced by the store interface having no update method other than `Close*`, and by a test that greps the implementation for `UPDATE operations` and finds only those three statements. The migration also installs the trigger `operations_append_only` (SDD-007 T-28): an `UPDATE` that changes any column other than `closed_by`, or that touches a row whose `closed_by` is already set, aborts with `operations is append-only`. It does not guard `DELETE`, which the cascade of a hard project delete needs.
 
 ### 5.4 `idempotency_keys`
 
@@ -1179,7 +1182,7 @@ SELECT revision, kind, actor, diff
  ORDER BY revision ASC;
 ```
 
-Both use the primary key `(project_id, revision)`. `EXPLAIN QUERY PLAN` shows `SEARCH operations USING PRIMARY KEY (project_id=? AND revision>?)`; checked by a test.
+Both use the primary key `(project_id, revision)`. `EXPLAIN QUERY PLAN` shows `SEARCH operations USING INDEX sqlite_autoindex_operations_1 (project_id=? AND revision>?)` (SQLite's name for the index behind the composite primary key; it prints `USING PRIMARY KEY` only for rowid and integer keys); checked by a test.
 
 History (descending, paged, optional actor filter):
 
