@@ -1,0 +1,41 @@
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      go-deps:
+        patterns: ["*"]
+    commit-message:
+      prefix: build
+      include: scope
+
+  # Workflows pin actions by commit SHA with a "# vX.Y.Z" comment; Dependabot
+  # bumps both together.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci
+      include: scope
+
+  # web/ has only bun.lock; the bun ecosystem updates it (Dependabot supports
+  # the text bun.lock of Bun 1.1.39 and later).
+  - package-ecosystem: bun
+    directory: /web
+    schedule:
+      interval: weekly
+    groups:
+      web-deps:
+        patterns: ["*"]
+    commit-message:
+      prefix: build
+      include: scope
+
+  # The entries for /.config/docker (REL-DOCKER) and /site (SITE-COPY) are added
+  # by the tasks that create those folders: Dependabot fails on a missing path.

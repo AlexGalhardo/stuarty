@@ -1,0 +1,107 @@
+name: PR title
+
+# The title is the summary of the branch. Pull requests are rebase-merged
+# (ADR-0028), so every commit reaches main as it is and is checked too.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  conventional:
+    name: Conventional title
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            build
+            chore
+            ci
+            docs
+            feat
+            fix
+            perf
+            refactor
+            revert
+            style
+            test
+          scopes: |
+            core
+            timeline
+            command
+            plan
+            lint
+            engine
+            raster
+            ingest
+            export
+            transcribe
+            service
+            web
+            api
+            mcp
+            cli
+            ui
+            site
+            docs
+            repo
+            ci
+            deps
+            deps-dev
+            release
+          requireScope: false
+          subjectPattern: ^[^A-Z].*[^.]$
+          subjectPatternError: Description must start lowercase and must not end with a period.
+
+  commits:
+    name: Conventional commits
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # Same rules as the title (SDD-009 section 6.1 and 6.2): an allowed type,
+      # an optional allowed scope, "!" for a breaking change, a description that
+      # starts in lower case and does not end with a period, a header of at most
+      # 100 characters. A "Revert" subject made by git and a merge commit are
+      # skipped; a fixup! or squash! commit is not, because rebase-merge would
+      # put it on main.
+      - name: Every commit is a Conventional Commit with an allowed scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          types='build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test'
+          scopes='core|timeline|command|plan|lint|engine|raster|ingest|export|transcribe|service|web|api|mcp|cli|ui|site|docs|repo|ci|deps|deps-dev|release'
+          pattern="^(${types})(\((${scopes})\))?!?: [^A-Z ].*[^. ]$|^(${types})(\((${scopes})\))?!?: [^A-Z ]$"
+          bad=0
+          while IFS= read -r line; do
+            sha="${line%% *}"
+            subject="${line#* }"
+            case "$subject" in
+              Merge\ *|Revert\ \"*) continue ;;
+            esac
+            if [ "${#subject}" -gt 100 ] || ! printf '%s\n' "$subject" | grep -qE "$pattern"; then
+              echo "::error title=Not a Conventional Commit::${sha:0:9} ${subject}"
+              bad=1
+            fi
+          done < <(git log --format='%H %s' "${BASE_SHA}..${HEAD_SHA}")
+          if [ "$bad" -ne 0 ]; then
+            echo "Allowed types: ${types//|/, }"
+            echo "Allowed scopes: ${scopes//|/, }"
+            exit 1
+          fi

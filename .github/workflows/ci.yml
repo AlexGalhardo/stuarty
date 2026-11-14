@@ -1,0 +1,176 @@
+name: CI
+
+# Pull-request checks of SDD-009 section 9.4 and 13. This file holds the jobs
+# whose tools exist today; the jobs that need tools of later tasks (generated
+# files, notices, release dry run, security suites, fuzz, no egress, Playwright)
+# are added by those tasks, each with the display name the ruleset requires.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TASK_VERSION: v3.54.0
+  GOLANGCI_LINT_VERSION: v2.15.0
+  BUN_VERSION: 1.4.4
+
+jobs:
+  lint-go:
+    name: Lint (Go)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Install go-task
+        run: go install github.com/go-task/task/v3/cmd/task@${{ env.TASK_VERSION }}
+      # The action only installs the binary; Taskfile.yml runs it.
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          install-only: true
+      - name: task lint:go
+        run: task lint:go
+      - name: task vet
+        run: task vet
+      - name: task tidy:check
+        run: task tidy:check
+      - name: go fix (modernizers)
+        run: |
+          go fix -diff ./... > fix.diff || true
+          if [ -s fix.diff ]; then echo "::warning::go fix suggests changes"; cat fix.diff; fi
+      # Decreasing budget: the job fails when a new //nolint:gocognit appears.
+      - name: gocognit suppression budget
+        env:
+          GOCOGNIT_BUDGET: "0"
+        run: |
+          n=$(grep -rn --include='*.go' --exclude='*_test.go' 'nolint:gocognit' . | wc -l)
+          echo "nolint:gocognit in non-test code: $n (budget $GOCOGNIT_BUDGET)"
+          if [ "$n" -gt "$GOCOGNIT_BUDGET" ]; then
+            echo "::error title=gocognit budget::$n suppressions, budget $GOCOGNIT_BUDGET; split the function instead of adding //nolint:gocognit"
+            exit 1
+          fi
+
+  lint-markdown:
+    name: Lint (Markdown)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Install go-task
+        run: go install github.com/go-task/task/v3/cmd/task@${{ env.TASK_VERSION }}
+      # Runs markdownlint-cli2 0.24.1 through bunx, the same as a developer.
+      - name: task lint:md
+        run: task lint:md
+
+  web:
+    name: Types and lint (web)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run lint
+      # `bun run test` is added with the unit test runner, which needs the
+      # author's approval (SDD-012 section 3.1).
+
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      # golang/go#81238 corrupts the heap on Intel AMX hosts: the CPU tells a
+      # runtime crash of that bug from a real one.
+      - name: Runner CPU
+        if: runner.os == 'Windows'
+        run: (Get-CimInstance Win32_Processor).Name
+      # Tests that need FFmpeg will add `bash scripts/install-ffmpeg.sh` here.
+      - name: go test
+        shell: bash # PowerShell would split -coverprofile=coverage.out at the dot
+        run: go test -race -count=1 -timeout=20m -coverprofile=coverage.out ./...
+      - name: Coverage gate
+        if: matrix.os == 'ubuntu-latest'
+        # continue-on-error: the skeleton of the first tasks is below the floors
+        # of SDD-009 section 13.2 (see the job summary). Remove this line, so
+        # the gate blocks, once the listed packages have tests.
+        continue-on-error: true
+        run: go run ./internal/tools/covergate -v coverage.out
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage
+          path: coverage.out
+
+  vuln:
+    name: Vulnerabilities
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+  pins:
+    name: Workflow pins
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # An if block: a bare grep | grep -v pipeline exits 0 on an unpinned
+      # line, the inverse of what a check needs.
+      - name: Every action is pinned by a full commit SHA with a version comment
+        run: |
+          if grep -RnE "^[[:space:]]*(- )?uses: [^@ ]+@" .github/workflows | grep -vE "@[0-9a-f]{40} # v[0-9]"; then
+            echo "::error::an action is not pinned by a full commit SHA with a version comment"
+            exit 1
+          fi
