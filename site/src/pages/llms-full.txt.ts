@@ -6,11 +6,22 @@ import { site } from "@/lib/site";
 export const prerender = true;
 
 export const GET: APIRoute = () => {
-  const parts = [`# ${site.name} documentation`, ""];
+	const parts = [`# ${site.name} documentation`, ""];
 
-  for (const doc of getAllDocs()) {
-    parts.push("---", "", `# ${doc.title}`, "", `Source: ${site.url}${doc.href}/`, "", `> ${doc.description}`, "", mdxToMarkdown(doc.body), "");
-  }
+	for (const doc of getAllDocs()) {
+		parts.push(
+			"---",
+			"",
+			`# ${doc.title}`,
+			"",
+			`Source: ${site.url}${doc.href}/`,
+			"",
+			`> ${doc.description}`,
+			"",
+			mdxToMarkdown(doc.body),
+			"",
+		);
+	}
 
-  return new Response(parts.join("\n"), { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+	return new Response(parts.join("\n"), { headers: { "Content-Type": "text/plain; charset=utf-8" } });
 };

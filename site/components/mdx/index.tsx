@@ -11,73 +11,73 @@ import { Term } from "@/components/mdx/term";
 type HeadingProps = React.ComponentPropsWithoutRef<"h2">;
 
 function anchored(Tag: "h2" | "h3" | "h4") {
-  function Heading({ id, children, ...rest }: HeadingProps) {
-    return (
-      <Tag id={id} {...rest}>
-        {children}
-        {id ? (
-          <a href={`#${id}`} className="heading-anchor" aria-label="Link to this section">
-            #
-          </a>
-        ) : null}
-      </Tag>
-    );
-  }
-  return Heading;
+	function Heading({ id, children, ...rest }: HeadingProps) {
+		return (
+			<Tag id={id} {...rest}>
+				{children}
+				{id ? (
+					<a href={`#${id}`} className="heading-anchor" aria-label="Link to this section">
+						#
+					</a>
+				) : null}
+			</Tag>
+		);
+	}
+	return Heading;
 }
 
 function A({ href = "", children, ...rest }: React.ComponentPropsWithoutRef<"a">) {
-  if (href.startsWith("/")) {
-    return (
-      <Link href={href} {...rest}>
-        {children}
-      </Link>
-    );
-  }
-  if (href.startsWith("#")) {
-    return (
-      <a href={href} {...rest}>
-        {children}
-      </a>
-    );
-  }
-  return (
-    <a href={href} target="_blank" rel="noreferrer" {...rest}>
-      {children}
-    </a>
-  );
+	if (href.startsWith("/")) {
+		return (
+			<Link href={href} {...rest}>
+				{children}
+			</Link>
+		);
+	}
+	if (href.startsWith("#")) {
+		return (
+			<a href={href} {...rest}>
+				{children}
+			</a>
+		);
+	}
+	return (
+		<a href={href} target="_blank" rel="noreferrer" {...rest}>
+			{children}
+		</a>
+	);
 }
 
 // Plain <img>: the demo GIFs are remote and animated, which next/image would
 // not optimize anyway.
 function Img({ alt = "", ...rest }: React.ComponentPropsWithoutRef<"img">) {
-  return <img alt={alt} loading="lazy" decoding="async" {...rest} />;
+	return <img alt={alt} loading="lazy" decoding="async" {...rest} />;
 }
 
 function Table(props: React.ComponentPropsWithoutRef<"table">) {
-  return (
-    <div className="table-wrap">
-      <table {...props} />
-    </div>
-  );
+	return (
+		<div className="table-wrap">
+			<table {...props} />
+		</div>
+	);
 }
 
 export const mdxComponents: MDXComponents = {
-  h2: anchored("h2"),
-  h3: anchored("h3"),
-  h4: anchored("h4"),
-  a: A,
-  img: Img,
-  table: Table,
-  Callout,
-  Card,
-  CardGroup,
-  CodeBlock,
-  CodeGroup,
-  Quote,
-  Step,
-  Steps,
-  Tab,
-  Tabs,
-  Term,
+	h2: anchored("h2"),
+	h3: anchored("h3"),
+	h4: anchored("h4"),
+	a: A,
+	img: Img,
+	table: Table,
+	Callout,
+	Card,
+	CardGroup,
+	CodeBlock,
+	CodeGroup,
+	Quote,
+	Step,
+	Steps,
+	Tab,
+	Tabs,
+	Term,
 };

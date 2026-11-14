@@ -15,7 +15,11 @@ export function LogoMark({ className = "size-6" }: { className?: string }) {
 
 export function Logo() {
 	return (
-		<Link href="/" className="flex items-center gap-2 rounded-md font-semibold tracking-tight text-fg" aria-label={t.logoLabel}>
+		<Link
+			href="/"
+			className="flex items-center gap-2 rounded-md font-semibold tracking-tight text-fg"
+			aria-label={t.logoLabel}
+		>
 			<LogoMark />
 			<span className="text-[0.9375rem]">Vukem Video</span>
 		</Link>
