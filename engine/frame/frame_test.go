@@ -318,9 +318,9 @@ func TestSecondsText(t *testing.T) {
 	}
 }
 
-// BenchmarkSheet9 is the measure of NFR-023 for a nine-cell sheet of the reference scene (the 200-item
+// BenchmarkViewSheet9 is the measure of NFR-023 for a nine-cell sheet of the reference scene (the 200-item
 // project of SDD-003 section 3.11 is the service's benchmark; this one covers the engine alone).
-func BenchmarkSheet9(b *testing.B) {
+func BenchmarkViewSheet9(b *testing.B) {
 	setup(b)
 	doc := sceneDoc(b)
 	f := &Frames{Runner: shared.runner, ArtifactsDir: artifactsDir()}
@@ -330,6 +330,24 @@ func BenchmarkSheet9(b *testing.B) {
 			doc,
 			Ref{Project: doc.ID, Revision: 1},
 			SheetRequest{Times: SheetTimes(0, 89, 9)},
+		); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// BenchmarkViewFrame is NFR-023 for a frame: one frame at the agent width, cold (no cache).
+func BenchmarkViewFrame(b *testing.B) {
+	setup(b)
+	doc := sceneDoc(b)
+	f := &Frames{Runner: shared.runner, ArtifactsDir: artifactsDir()}
+	for range b.N {
+		if _, err := f.Frame(
+			context.Background(),
+			doc,
+			Ref{Project: doc.ID, Revision: 1},
+			40,
+			DefaultAgentWidth,
 		); err != nil {
 			b.Fatal(err)
 		}
