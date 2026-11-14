@@ -27,6 +27,10 @@ func (l ThumbLayout) Rows() int { return (l.Count + l.Columns - 1) / l.Columns }
 // SheetJPEGQuality is the quality of the sheet (SDD-011 4.5).
 const SheetJPEGQuality = 80
 
+// ErrTooManyTiles means more tile files than the plan allows: the sheet is sized from the count, so
+// a count the tool chose must never size an allocation.
+var ErrTooManyTiles = errors.New("thumbnails: more tiles than planned")
+
 // BuildSheet decodes the tile files in order, places them row by row and left to right on a
 // black canvas of columns * tile_w by rows * tile_h, and encodes it as a JPEG. Standard
 // library only. Every tile must decode and have the planned size.
@@ -34,6 +38,12 @@ func BuildSheet(tilePaths []string, plan ThumbPlan) ([]byte, ThumbLayout, error)
 	n := len(tilePaths)
 	if n == 0 {
 		return nil, ThumbLayout{}, errors.New("thumbnails: no tiles")
+	}
+	if n > ThumbMaxCount || (plan.Planned > 0 && n > plan.Planned+1) {
+		return nil, ThumbLayout{}, fmt.Errorf("%w: %d tiles", ErrTooManyTiles, n)
+	}
+	if plan.TileW < 1 || plan.TileW > ThumbMaxTileWidth || plan.TileH != ThumbHeight {
+		return nil, ThumbLayout{}, errors.New("thumbnails: tile size outside the plan")
 	}
 	l := ThumbLayout{
 		TileW:      plan.TileW,
@@ -68,5 +78,16 @@ func decodeJPEG(path string) (image.Image, error) {
 		return nil, err
 	}
 	defer func() { _ = f.Close() }()
+	// The header first: the size a file declares must not size an allocation.
+	cfg, err := jpeg.DecodeConfig(f)
+	if err != nil {
+		return nil, err
+	}
+	if cfg.Width > ThumbMaxTileWidth || cfg.Height > ThumbHeight {
+		return nil, fmt.Errorf("tile declares %dx%d", cfg.Width, cfg.Height)
+	}
+	if _, err := f.Seek(0, 0); err != nil {
+		return nil, err
+	}
 	return jpeg.Decode(f)
 }
