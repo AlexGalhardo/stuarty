@@ -109,7 +109,10 @@ func randomOp(rng *rand.Rand, doc *timeline.Document, track string) command.Oper
 	case 3:
 		return op("item.delete", fmt.Sprintf(`{"item_ids":[%q]}`, pick()))
 	default:
-		return op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"%ds","duration":"1s","text":"t"}`, track, rng.Intn(60)))
+		return op(
+			"text.add",
+			fmt.Sprintf(`{"track_id":%q,"start":"%ds","duration":"1s","text":"t"}`, track, rng.Intn(60)),
+		)
 	}
 }
 
@@ -129,8 +132,14 @@ func assertDerivedState(t *testing.T, e *env, project string) {
 	}
 
 	want := service.DocSummary{
-		Width: doc.Settings.Width, Height: doc.Settings.Height, FPSNum: doc.Settings.FPS.Num, FPSDen: doc.Settings.FPS.Den,
-		DurationFrames: endOf(doc), Tracks: len(doc.Tracks), Items: len(doc.Items), Assets: len(doc.Assets),
+		Width:          doc.Settings.Width,
+		Height:         doc.Settings.Height,
+		FPSNum:         doc.Settings.FPS.Num,
+		FPSDen:         doc.Settings.FPS.Den,
+		DurationFrames: endOf(doc),
+		Tracks:         len(doc.Tracks),
+		Items:          len(doc.Items),
+		Assets:         len(doc.Assets),
 	}
 	if row.Summary != want {
 		t.Fatalf("r%d: summary %+v, recomputed %+v", row.Revision, row.Summary, want)
@@ -146,8 +155,8 @@ func assertDerivedState(t *testing.T, e *env, project string) {
 	}
 
 	var got, wantIDs []string
-	for _, a := range active {
-		got = append(got, a.AssetID)
+	for i := range active {
+		got = append(got, active[i].AssetID)
 	}
 
 	for id := range doc.Assets {
@@ -158,6 +167,11 @@ func assertDerivedState(t *testing.T, e *env, project string) {
 	slices.Sort(wantIDs)
 
 	if !slices.Equal(got, wantIDs) {
-		t.Fatalf("r%d: active project_assets %s, document assets %s", row.Revision, strings.Join(got, ","), strings.Join(wantIDs, ","))
+		t.Fatalf(
+			"r%d: active project_assets %s, document assets %s",
+			row.Revision,
+			strings.Join(got, ","),
+			strings.Join(wantIDs, ","),
+		)
 	}
 }
