@@ -1,0 +1,91 @@
+# yaml-language-server: $schema=https://taskfile.dev/schemas/taskfile.json
+# Single entry point for local development and CI. Run `task --list`.
+# Names follow vukem's Taskfile (SDD-009 section 14). Targets that need files
+# of other tasks (notices, generate, site, image, release) are added with them.
+version: "3"
+
+vars:
+  MARKDOWNLINT_VERSION: 0.24.1
+
+env:
+  # One golangci-lint cache per worktree: a cache shared by worktrees and by
+  # concurrent runs makes gosec miss findings and nolintlint report its
+  # directives as unused. A GOLANGCI_LINT_CACHE already in the environment (CI) wins.
+  GOLANGCI_LINT_CACHE: '{{default (printf "%s/.cache/golangci-lint" (toSlash .ROOT_DIR)) .GOLANGCI_LINT_CACHE}}'
+
+tasks:
+  default:
+    cmds:
+      - task --list
+
+  setup:
+    desc: Verify required tools and install the git hooks
+    cmds:
+      - go version
+      - golangci-lint version
+      - bun --version
+      - task: hooks
+      - git worktree prune
+
+  hooks:
+    desc: Activate the hooks of .githooks/
+    cmds:
+      - git config core.hooksPath .githooks
+
+  fmt:
+    desc: Format Go code and the web front end
+    cmds:
+      - golangci-lint fmt ./...
+      - cd web && bun run format
+
+  lint:
+    desc: Lint Go code, Markdown and the web front end
+    cmds:
+      - task: lint:go
+      - task: lint:md
+      - task: lint:web
+
+  lint:go:
+    desc: Run golangci-lint (linters and formatters)
+    cmds:
+      - golangci-lint run --allow-parallel-runners ./...
+
+  lint:md:
+    desc: Run markdownlint-cli2 at the pinned version
+    cmds:
+      - bunx markdownlint-cli2@{{.MARKDOWNLINT_VERSION}} "**/*.md"
+
+  lint:web:
+    desc: Typecheck and lint the web front end with Biome
+    dir: web
+    cmds:
+      - bun run typecheck
+      - bun run lint
+
+  test:
+    desc: Run the Go tests
+    cmds:
+      - go test -short -count=1 -timeout 20m ./...
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+
+  tidy:
+    desc: Tidy go.mod and go.sum
+    cmds:
+      - go mod tidy
+
+  tidy:check:
+    desc: Fail when go.mod or go.sum need tidying
+    cmds:
+      - go mod tidy -diff
+
+  ci:
+    desc: Everything the pull request pipeline runs locally
+    cmds:
+      - task: lint
+      - task: vet
+      - task: test
+      - task: tidy:check
