@@ -48,6 +48,7 @@ var Scopes = map[string]string{
 	"ProjectTrash":   ScopeEdit,
 	"ProjectRestore": ScopeEdit,
 	"Edit":           ScopeEdit,
+	"CommandHelp":    ScopeRead,
 	"HistoryList":    ScopeRead,
 	"Undo":           ScopeEdit,
 	"Redo":           ScopeEdit,
