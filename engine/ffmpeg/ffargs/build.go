@@ -55,6 +55,10 @@ func ScaleFrameToRGBA(w, h int) Filter {
 	)
 }
 
+// ScaleBT709Out converts RGB to BT.709 limited-range YUV with the colour matrix named, for the
+// encoder input of the export (SDD-004 section 8).
+func ScaleBT709Out() Filter { return "scale=out_color_matrix=bt709:out_range=tv" }
+
 // FPS makes the frame rate constant at r, taking the nearest frame for each slot.
 func FPS(r Rate) Filter { return Filter(fmt.Sprintf("fps=%s:round=near", r)) }
 
@@ -247,6 +251,9 @@ func seconds(ms int64) string {
 
 // Opt is one output option made by a typed constructor.
 type Opt struct{ name, value string }
+
+// Pair is the option name and its value, for a test that compares what a command carries.
+func (o Opt) Pair() (name, value string) { return o.name, o.value }
 
 // Int is an option with an integer value.
 func Int(name string, v int) Opt { return Opt{name, strconv.Itoa(v)} }
