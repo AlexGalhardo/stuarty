@@ -38,7 +38,9 @@ func pinned(t *testing.T) *Installation {
 		}
 	}
 	if dir == "" {
-		t.Skip("no pinned FFmpeg: run scripts/install-ffmpeg.sh and set " + envTestFFmpegDir + " to the folder it prints")
+		t.Skip(
+			"no pinned FFmpeg: run scripts/install-ffmpeg.sh and set " + envTestFFmpegDir + " to the folder it prints",
+		)
 	}
 	in, err := Discover(context.Background(), Config{FFmpegPath: filepath.Join(dir, exeName("ffmpeg")), CPUCount: 2})
 	if err != nil {

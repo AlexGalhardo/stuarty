@@ -16,13 +16,23 @@ func (r Rate) String() string { return fmt.Sprintf("%d/%d", r.Num, r.Den) }
 // fixed names; the checker validates the result like any other graph.
 type Filter string
 
+// Scale scales to w x h with the given scaler flags.
 func Scale(w, h int, flags string) Filter {
 	return Filter(fmt.Sprintf("scale=%d:%d:flags=%s", w, h, flags))
 }
 
 // ScaleRange is the scale-only colour conversion of SDD-011 4.3.1 for a build with no zscale.
 func ScaleRange(w, h int, flags, inRange, inMatrix string) Filter {
-	return Filter(fmt.Sprintf("scale=%d:%d:flags=%s:in_range=%s:out_range=tv:in_color_matrix=%s:out_color_matrix=bt709", w, h, flags, inRange, inMatrix))
+	return Filter(
+		fmt.Sprintf(
+			"scale=%d:%d:flags=%s:in_range=%s:out_range=tv:in_color_matrix=%s:out_color_matrix=bt709",
+			w,
+			h,
+			flags,
+			inRange,
+			inMatrix,
+		),
+	)
 }
 
 // ScaleMinWidth scales to a width that never exceeds the source, keeping an even height (posters).
@@ -40,28 +50,65 @@ func ScaleFit(w, h int) []Filter {
 
 // ScaleFrameToRGBA is the decoder-side scale of SDD-004 section 6: BT.709 limited to RGB.
 func ScaleFrameToRGBA(w, h int) Filter {
-	return Filter(fmt.Sprintf("scale=%d:%d:flags=bicubic+accurate_rnd+full_chroma_int:in_range=tv:in_color_matrix=bt709", w, h))
+	return Filter(
+		fmt.Sprintf("scale=%d:%d:flags=bicubic+accurate_rnd+full_chroma_int:in_range=tv:in_color_matrix=bt709", w, h),
+	)
 }
 
-func FPS(r Rate) Filter               { return Filter(fmt.Sprintf("fps=%s:round=near", r)) }
+// FPS makes the frame rate constant at r, taking the nearest frame for each slot.
+func FPS(r Rate) Filter { return Filter(fmt.Sprintf("fps=%s:round=near", r)) }
+
+// Format converts to one of the pixel formats, in order of preference.
 func Format(pixFmts ...string) Filter { return Filter("format=" + strings.Join(pixFmts, "|")) }
-func SetPTS() Filter                  { return "setpts=PTS-STARTPTS" }
-func ASetPTS() Filter                 { return "asetpts=PTS-STARTPTS" }
-func SetSAR1() Filter                 { return "setsar=1" }
-func Split(n int) Filter              { return Filter("split=" + strconv.Itoa(n)) }
-func ASplit(n int) Filter             { return Filter("asplit=" + strconv.Itoa(n)) }
-func Crop(w, h, x, y int) Filter      { return Filter(fmt.Sprintf("crop=%d:%d:%d:%d", w, h, x, y)) }
-func Bwdif() Filter                   { return "bwdif=mode=send_frame:parity=auto:deint=interlaced" }
-func Yadif() Filter                   { return "yadif=mode=send_frame:parity=auto:deint=interlaced" }
-func AResample(rate int) Filter       { return Filter("aresample=" + strconv.Itoa(rate)) }
-func AFormatS16Stereo() Filter        { return "aformat=sample_fmts=s16:channel_layouts=stereo" }
-func ADelay(samples int) Filter       { return Filter(fmt.Sprintf("adelay=%dS:all=1", samples)) }
-func APad(wholeLen int) Filter        { return Filter("apad=whole_len=" + strconv.Itoa(wholeLen)) }
-func ATrimEnd(endSample int) Filter   { return Filter("atrim=end_sample=" + strconv.Itoa(endSample)) }
+
+// SetPTS makes the first frame time zero.
+func SetPTS() Filter { return "setpts=PTS-STARTPTS" }
+
+// ASetPTS makes the first audio sample time zero.
+func ASetPTS() Filter { return "asetpts=PTS-STARTPTS" }
+
+// SetSAR1 sets square pixels.
+func SetSAR1() Filter { return "setsar=1" }
+
+// Split copies a video link to n outputs.
+func Split(n int) Filter { return Filter("split=" + strconv.Itoa(n)) }
+
+// ASplit copies an audio link to n outputs.
+func ASplit(n int) Filter { return Filter("asplit=" + strconv.Itoa(n)) }
+
+// Crop cuts a w x h rectangle at x, y.
+func Crop(w, h, x, y int) Filter { return Filter(fmt.Sprintf("crop=%d:%d:%d:%d", w, h, x, y)) }
+
+// Bwdif deinterlaces into one frame per source frame.
+func Bwdif() Filter { return "bwdif=mode=send_frame:parity=auto:deint=interlaced" }
+
+// Yadif is the fallback of Bwdif with the same options.
+func Yadif() Filter { return "yadif=mode=send_frame:parity=auto:deint=interlaced" }
+
+// AResample resamples audio to rate hertz.
+func AResample(rate int) Filter { return Filter("aresample=" + strconv.Itoa(rate)) }
+
+// AFormatS16Stereo converts audio to 16-bit stereo.
+func AFormatS16Stereo() Filter { return "aformat=sample_fmts=s16:channel_layouts=stereo" }
+
+// ADelay inserts samples of silence at the head of the audio.
+func ADelay(samples int) Filter { return Filter(fmt.Sprintf("adelay=%dS:all=1", samples)) }
+
+// APad pads the audio with silence up to wholeLen samples.
+func APad(wholeLen int) Filter { return Filter("apad=whole_len=" + strconv.Itoa(wholeLen)) }
+
+// ATrimEnd cuts the audio after endSample.
+func ATrimEnd(endSample int) Filter { return Filter("atrim=end_sample=" + strconv.Itoa(endSample)) }
+
+// ATrimStart drops the audio before startSample.
 func ATrimStart(startSample int) Filter {
 	return Filter("atrim=start_sample=" + strconv.Itoa(startSample))
 }
+
+// Ebur128 measures loudness and prints the summary on stderr.
 func Ebur128() Filter { return "ebur128=peak=true:framelog=quiet" }
+
+// SilenceDetect reports silences below -db decibels that last at least minMS milliseconds.
 func SilenceDetect(db, minMS int) Filter {
 	return Filter(fmt.Sprintf("silencedetect=noise=-%ddB:d=%d.%03d", db, minMS/1000, minMS%1000))
 }
@@ -69,13 +116,29 @@ func SilenceDetect(db, minMS int) Filter {
 // ZScale converts colour with explicit input properties (SDD-011 4.3.1). Each argument is an
 // enumerated name that the checker validates.
 func ZScale(matrixIn, primariesIn, transferIn, rangeIn string) Filter {
-	return Filter(fmt.Sprintf("zscale=min=%s:pin=%s:tin=%s:rin=%s:m=709:p=709:t=709:r=limited:d=ordered", matrixIn, primariesIn, transferIn, rangeIn))
+	return Filter(
+		fmt.Sprintf(
+			"zscale=min=%s:pin=%s:tin=%s:rin=%s:m=709:p=709:t=709:r=limited:d=ordered",
+			matrixIn,
+			primariesIn,
+			transferIn,
+			rangeIn,
+		),
+	)
 }
 
 // ToneMapHDR is the HLG and PQ chain of SDD-011 4.3.1 (hable, npl=100, desat=0).
 func ToneMapHDR(matrixIn, primariesIn, transferIn, rangeIn string) []Filter {
 	return []Filter{
-		Filter(fmt.Sprintf("zscale=min=%s:pin=%s:tin=%s:rin=%s:t=linear:npl=100", matrixIn, primariesIn, transferIn, rangeIn)),
+		Filter(
+			fmt.Sprintf(
+				"zscale=min=%s:pin=%s:tin=%s:rin=%s:t=linear:npl=100",
+				matrixIn,
+				primariesIn,
+				transferIn,
+				rangeIn,
+			),
+		),
 		Format("gbrpf32le"),
 		"zscale=p=709",
 		"tonemap=tonemap=hable:desat=0",
@@ -102,7 +165,8 @@ func label(l string) string { return "[" + l + "]" }
 
 func (g Graph) String() string {
 	var parts []string
-	for _, c := range g {
+	for i := range g {
+		c := &g[i]
 		var b strings.Builder
 		for _, l := range c.In {
 			b.WriteString(label(l))
@@ -174,11 +238,16 @@ func seconds(ms int64) string {
 // Opt is one output option made by a typed constructor.
 type Opt struct{ name, value string }
 
-func Int(name string, v int) Opt        { return Opt{name, strconv.Itoa(v)} }
-func Enum(name, v string) Opt           { return Opt{name, v} }
+// Int is an option with an integer value.
+func Int(name string, v int) Opt { return Opt{name, strconv.Itoa(v)} }
+
+// Enum is an option with a value of a fixed set.
+func Enum(name, v string) Opt { return Opt{name, v} }
+
+// Bitrate is an option with a bit rate value such as 8M or 128k.
 func Bitrate(name string, v string) Opt { return Opt{name, v} }
 
-// Common option sets.
+// Bitexact makes the output reproducible: no encoder tag, no creation time.
 func Bitexact() []Opt { return []Opt{{"-fflags", "+bitexact"}, {"-flags", "+bitexact"}} }
 
 // Output is one output file or pipe.
@@ -222,74 +291,78 @@ func (c Cmd) Argv(pol Policy) ([]string, error) {
 	if c.VaapiDevice != "" {
 		a = append(a, "-vaapi_device", c.VaapiDevice)
 	}
-	for _, in := range c.Inputs {
-		a = append(a, "-protocol_whitelist", "file,pipe")
-		if in.path != "" {
-			a = append(a, "-format_whitelist", InputFormats, "-sn", "-dn")
-		}
-		if c.Threads > 0 {
-			a = append(a, "-threads", strconv.Itoa(c.Threads))
-		}
-		if in.seekMS > 0 {
-			a = append(a, "-ss", seconds(in.seekMS))
-		}
-		switch {
-		case in.lavfi != "":
-			a = append(a, "-f", "lavfi", "-i", in.lavfi)
-		case in.pipe == "rawvideo":
-			a = append(a, "-f", "rawvideo", "-pix_fmt", in.pixFmt, "-s", in.size, "-framerate", in.rate, "-i", "pipe:0")
-		case in.pipe == "s16le":
-			a = append(a, "-f", "s16le", "-ar", strconv.Itoa(in.ar), "-ac", strconv.Itoa(in.ac), "-i", "pipe:0")
-		default:
-			a = append(a, "-i", "file:"+in.path)
-		}
+	for i := range c.Inputs {
+		a = c.Inputs[i].appendTo(a, c.Threads)
 	}
 	if len(c.Graph) > 0 {
 		a = append(a, "-filter_complex", c.Graph.String())
 	}
-	for _, o := range c.Outputs {
-		for _, m := range o.Maps {
-			a = append(a, "-map", m)
-		}
-		if o.NoVideo {
-			a = append(a, "-vn")
-		}
-		if o.NoAudio {
-			a = append(a, "-an")
-		}
-		if o.NoSubs {
-			a = append(a, "-sn")
-		}
-		if o.NoData {
-			a = append(a, "-dn")
-		}
-		a = append(a, "-map_metadata", "-1", "-map_chapters", "-1")
-		if o.VF != "" {
-			a = append(a, "-vf", o.VF)
-		}
-		if o.AF != "" {
-			a = append(a, "-af", o.AF)
-		}
-		for _, op := range o.Opts {
-			a = append(a, op.name, op.value)
-		}
-		if o.Shortest {
-			a = append(a, "-shortest")
-		}
-		a = append(a, "-f", o.Format)
-		switch {
-		case o.Format == "null":
-			a = append(a, "-")
-		case o.Pipe:
-			a = append(a, "pipe:1")
-		default:
-			a = append(a, "file:"+filepath.ToSlash(o.Path))
-		}
+	for i := range c.Outputs {
+		a = c.Outputs[i].appendTo(a)
 	}
 	if err := Check(FFmpeg, a, pol); err != nil {
 		return nil, err
 	}
 	return a, nil
+}
+
+// appendTo adds the whitelist options, the input options and the -i of one input.
+func (in *Input) appendTo(a []string, threads int) []string {
+	a = append(a, "-protocol_whitelist", "file,pipe")
+	if in.path != "" {
+		a = append(a, "-format_whitelist", InputFormats, "-sn", "-dn")
+	}
+	if threads > 0 {
+		a = append(a, "-threads", strconv.Itoa(threads))
+	}
+	if in.seekMS > 0 {
+		a = append(a, "-ss", seconds(in.seekMS))
+	}
+	switch {
+	case in.lavfi != "":
+		return append(a, "-f", "lavfi", "-i", in.lavfi)
+	case in.pipe == "rawvideo":
+		return append(a, "-f", "rawvideo", "-pix_fmt", in.pixFmt, "-s", in.size, "-framerate", in.rate, "-i", "pipe:0")
+	case in.pipe == "s16le":
+		return append(a, "-f", "s16le", "-ar", strconv.Itoa(in.ar), "-ac", strconv.Itoa(in.ac), "-i", "pipe:0")
+	}
+	return append(a, "-i", "file:"+in.path)
+}
+
+// appendTo adds the options and the destination of one output.
+func (o *Output) appendTo(a []string) []string {
+	for _, m := range o.Maps {
+		a = append(a, "-map", m)
+	}
+	for _, d := range []struct {
+		on   bool
+		flag string
+	}{{o.NoVideo, "-vn"}, {o.NoAudio, "-an"}, {o.NoSubs, "-sn"}, {o.NoData, "-dn"}} {
+		if d.on {
+			a = append(a, d.flag)
+		}
+	}
+	a = append(a, "-map_metadata", "-1", "-map_chapters", "-1")
+	if o.VF != "" {
+		a = append(a, "-vf", o.VF)
+	}
+	if o.AF != "" {
+		a = append(a, "-af", o.AF)
+	}
+	for _, op := range o.Opts {
+		a = append(a, op.name, op.value)
+	}
+	if o.Shortest {
+		a = append(a, "-shortest")
+	}
+	a = append(a, "-f", o.Format)
+	switch {
+	case o.Format == "null":
+		return append(a, "-")
+	case o.Pipe:
+		return append(a, "pipe:1")
+	}
+	return append(a, "file:"+filepath.ToSlash(o.Path))
 }
 
 // Info is a capability listing: -hide_banner plus -version, -encoders, -decoders, -filters, -muxers or -demuxers.
@@ -302,8 +375,19 @@ func Info(flag string) ([]string, error) {
 }
 
 func probeBase(extra ...string) []string {
-	a := []string{"-v", "error", "-hide_banner", "-probesize", strconv.Itoa(ProbeSize), "-analyzeduration", strconv.Itoa(ProbeAnalyze),
-		"-protocol_whitelist", "file", "-format_whitelist", InputFormats}
+	a := []string{
+		"-v",
+		"error",
+		"-hide_banner",
+		"-probesize",
+		strconv.Itoa(ProbeSize),
+		"-analyzeduration",
+		strconv.Itoa(ProbeAnalyze),
+		"-protocol_whitelist",
+		"file",
+		"-format_whitelist",
+		InputFormats,
+	}
 	return append(a, extra...)
 }
 
@@ -322,7 +406,16 @@ func ProbeJSON(pol Policy, path string) ([]string, error) {
 
 // ProbePacketTimes lists the timestamps of the packets of one stream, for the nominal frame rate.
 func ProbePacketTimes(pol Policy, path string, stream int) ([]string, error) {
-	return probeArgv(pol, path, "-select_streams", strconv.Itoa(stream), "-show_entries", "packet=pts_time,dts_time", "-of", "csv=p=0")
+	return probeArgv(
+		pol,
+		path,
+		"-select_streams",
+		strconv.Itoa(stream),
+		"-show_entries",
+		"packet=pts_time,dts_time",
+		"-of",
+		"csv=p=0",
+	)
 }
 
 // ProbeFirstFrameSideData reads the display matrix of the first frame of an image.
@@ -333,17 +426,44 @@ func ProbeFirstFrameSideData(pol Policy, path string, stream int) ([]string, err
 
 // ProbeCountPackets tells an animated still image from a single one.
 func ProbeCountPackets(pol Policy, path string) ([]string, error) {
-	return probeArgv(pol, path, "-count_packets", "-show_entries", "stream=nb_read_packets:format=format_name", "-of", "csv=p=0")
+	return probeArgv(
+		pol,
+		path,
+		"-count_packets",
+		"-show_entries",
+		"stream=nb_read_packets:format=format_name",
+		"-of",
+		"csv=p=0",
+	)
 }
 
 // ProbeStreamTiming reads the rates and time base of the first video stream of a produced file.
 func ProbeStreamTiming(pol Policy, path string) ([]string, error) {
-	return probeArgv(pol, path, "-select_streams", "v:0", "-show_entries", "stream=r_frame_rate,avg_frame_rate,time_base", "-of", "json")
+	return probeArgv(
+		pol,
+		path,
+		"-select_streams",
+		"v:0",
+		"-show_entries",
+		"stream=r_frame_rate,avg_frame_rate,time_base",
+		"-of",
+		"json",
+	)
 }
 
 // ProbeEncodedPackets counts the packets of an encoder test file (SDD-011 8.4).
 func ProbeEncodedPackets(pol Policy, path string) ([]string, error) {
-	return probeArgv(pol, path, "-count_packets", "-select_streams", "v:0", "-show_entries", "stream=codec_name,nb_read_packets", "-of", "csv=p=0")
+	return probeArgv(
+		pol,
+		path,
+		"-count_packets",
+		"-select_streams",
+		"v:0",
+		"-show_entries",
+		"stream=codec_name,nb_read_packets",
+		"-of",
+		"csv=p=0",
+	)
 }
 
 // DetectInput is what encoder detection records for the encoder it chose: the input
@@ -367,9 +487,12 @@ func EncoderTest(pol Policy, encoder string, di DetectInput, out string) ([]stri
 		opts = append(opts, Bitrate("-b:v", "8M"), Enum("-profile:v", "high"))
 	}
 	return Cmd{
-		LogErrorOnly: true, VaapiDevice: di.VaapiDevice,
-		Inputs:  []Input{in},
-		Outputs: []Output{{Format: "mp4", Path: out, Maps: []string{"0:v:0"}, NoAudio: true, VF: di.Filter, Opts: opts}},
+		LogErrorOnly: true,
+		VaapiDevice:  di.VaapiDevice,
+		Inputs:       []Input{in},
+		Outputs: []Output{
+			{Format: "mp4", Path: out, Maps: []string{"0:v:0"}, NoAudio: true, VF: di.Filter, Opts: opts},
+		},
 	}.Argv(pol)
 }
 
@@ -385,7 +508,7 @@ var SmokeEncoders = map[string]string{
 func EncoderSmoke(pol Policy, encoder string) ([]string, error) {
 	pix, ok := SmokeEncoders[encoder]
 	if !ok {
-		return nil, &Violation{Rule: "FF-15", Index: -1, Msg: "not an encoder of the capability test"}
+		return nil, &ViolationError{Rule: "FF-15", Index: -1, Msg: "not an encoder of the capability test"}
 	}
 	if pix == "" {
 		return Cmd{
@@ -394,8 +517,16 @@ func EncoderSmoke(pol Policy, encoder string) ([]string, error) {
 		}.Argv(pol)
 	}
 	return Cmd{
-		LogErrorOnly: true, Inputs: []Input{TestSrc2(320, 240, Rate{30, 1}, 500)},
-		Outputs: []Output{{Format: "null", Maps: []string{"0:v:0"}, VF: Chain1(Format(pix)), Opts: []Opt{Enum("-c:v", encoder), Int("-frames:v", 5)}}},
+		LogErrorOnly: true,
+		Inputs:       []Input{TestSrc2(320, 240, Rate{30, 1}, 500)},
+		Outputs: []Output{
+			{
+				Format: "null",
+				Maps:   []string{"0:v:0"},
+				VF:     Chain1(Format(pix)),
+				Opts:   []Opt{Enum("-c:v", encoder), Int("-frames:v", 5)},
+			},
+		},
 	}.Argv(pol)
 }
 

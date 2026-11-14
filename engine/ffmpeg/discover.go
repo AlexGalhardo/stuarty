@@ -17,6 +17,7 @@ import (
 // Source is where an FFmpeg came from (SDD-011 8.1).
 type Source string
 
+// The sources of an FFmpeg, in the order they are tried.
 const (
 	SourceConfigured Source = "configured"
 	SourceBundled    Source = "bundled"
@@ -188,7 +189,16 @@ func tryPair(ctx context.Context, cfg Config, c candidate) (*Installation, error
 		UserBuild: c.source != SourceBundled,
 	}
 	if cfg.Log != nil {
-		cfg.Log.InfoContext(ctx, "ffmpeg resolved", "source", c.source, "version", info.Version, "license", info.License.Name)
+		cfg.Log.InfoContext(
+			ctx,
+			"ffmpeg resolved",
+			"source",
+			c.source,
+			"version",
+			info.Version,
+			"license",
+			info.License.Name,
+		)
 	}
 	return in, nil
 }

@@ -21,6 +21,7 @@ var EncoderOrder = []string{
 // EncoderStatus is the result of one candidate (SDD-011 8.4).
 type EncoderStatus string
 
+// The results of one candidate.
 const (
 	EncoderOK        EncoderStatus = "ok"
 	EncoderFailed    EncoderStatus = "failed"
@@ -44,7 +45,7 @@ type EncoderDetection struct {
 	Candidates []Candidate
 }
 
-// Chosen returns the candidate record of the chosen encoder.
+// ChosenCandidate returns the candidate record of the chosen encoder.
 func (d *EncoderDetection) ChosenCandidate() (Candidate, bool) {
 	for _, c := range d.Candidates {
 		if c.Name == d.Chosen {

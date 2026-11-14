@@ -27,14 +27,14 @@ func TestMain(m *testing.M) {
 	}
 	for _, a := range os.Args[1:] {
 		if mode, ok := strings.CutPrefix(a, helperFlag); ok {
-			helper(mode, os.Args[1:])
+			helper(mode)
 			return
 		}
 	}
 	os.Exit(m.Run())
 }
 
-func helper(mode string, args []string) {
+func helper(mode string) {
 	switch mode {
 	case "version":
 		fmt.Println("helper version 1")
@@ -73,10 +73,10 @@ func helper(mode string, args []string) {
 	}
 }
 
-func helperRunner(t *testing.T, env map[string]string) (*Runner, *RunDir, *engine.Tool) {
+func helperRunner(t *testing.T) (*Runner, *RunDir, *engine.Tool) {
 	t.Helper()
 	tool, err := engine.Find(context.Background(), engine.Config{
-		Name: "helper", Path: os.Args[0], VersionArgs: []string{helperFlag + "version"}, Env: env,
+		Name: "helper", Path: os.Args[0], VersionArgs: []string{helperFlag + "version"},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -98,15 +98,24 @@ func TestSecurity_T16_ChildEnvironmentMinimal(t *testing.T) {
 	for _, k := range []string{"VUKEM_VIDEO_TRANSCRIBE_KEY", "APP_KEY", "VUKEM_VIDEO_KEY", "OTEL_EXPORTER_OTLP_ENDPOINT", "VUKEM_VIDEO_TOKEN", "FFREPORT"} {
 		t.Setenv(k, "canary-"+k)
 	}
-	r, dir, tool := helperRunner(t, nil)
+	r, dir, tool := helperRunner(t)
 
 	var out bytes.Buffer
-	res, err := r.exec(context.Background(), execSpec{tool: tool, dir: dir.Dir(), argv: []string{helperFlag + "env"}, deadline: 30 * time.Second, stdout: &out})
+	res, err := r.exec(
+		context.Background(),
+		execSpec{
+			tool:     tool,
+			dir:      dir.Dir(),
+			argv:     []string{helperFlag + "env"},
+			deadline: 30 * time.Second,
+			stdout:   &out,
+		},
+	)
 	if err != nil {
 		t.Fatalf("%v (stderr %q)", err, res.Stderr)
 	}
 	got := map[string]string{}
-	for _, l := range strings.Split(strings.ReplaceAll(out.String(), "\r", ""), "\n") {
+	for l := range strings.SplitSeq(strings.ReplaceAll(out.String(), "\r", ""), "\n") {
 		if k, v, ok := strings.Cut(l, "="); ok {
 			got[strings.ToUpper(k)] = v
 		}
@@ -122,10 +131,12 @@ func TestSecurity_T16_ChildEnvironmentMinimal(t *testing.T) {
 	if !sameDir(got["CWD"], dir.Dir()) {
 		t.Errorf("cwd = %q, want %q", got["CWD"], dir.Dir())
 	}
-	allowed := map[string]bool{"PATH": true, "SYSTEMROOT": true, "WINDIR": true, "LANG": true, "LC_ALL": true,
+	allowed := map[string]bool{
+		"PATH": true, "SYSTEMROOT": true, "WINDIR": true, "LANG": true, "LC_ALL": true,
 		"HOME": true, "TMPDIR": true, "TEMP": true, "TMP": true, "CWD": true,
 		// Windows adds a few variables itself when it starts a process with a sparse environment.
-		"=C:": true, "SYSTEMDRIVE": true, "COMSPEC": true, "PATHEXT": true}
+		"=C:": true, "SYSTEMDRIVE": true, "COMSPEC": true, "PATHEXT": true,
+	}
 	for k := range got {
 		if k != "" && !allowed[k] && !strings.HasPrefix(k, "=") {
 			t.Errorf("unexpected variable %s in the child environment", k)
@@ -146,11 +157,20 @@ func sameDir(a, b string) bool {
 }
 
 func TestSecurity_T16_CancelKillsProcessTree(t *testing.T) {
-	r, dir, tool := helperRunner(t, nil)
+	r, dir, tool := helperRunner(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
 	go func() {
-		_, err := r.exec(ctx, execSpec{tool: tool, dir: dir.Dir(), argv: []string{helperFlag + "tree"}, deadline: time.Minute, stdout: &bytes.Buffer{}})
+		_, err := r.exec(
+			ctx,
+			execSpec{
+				tool:     tool,
+				dir:      dir.Dir(),
+				argv:     []string{helperFlag + "tree"},
+				deadline: time.Minute,
+				stdout:   &bytes.Buffer{},
+			},
+		)
 		done <- err
 	}()
 
@@ -197,9 +217,18 @@ func TestSecurity_T16_CancelKillsProcessTree(t *testing.T) {
 }
 
 func TestRunDeadlineKillsTheRun(t *testing.T) {
-	r, dir, tool := helperRunner(t, nil)
+	r, dir, tool := helperRunner(t)
 	start := time.Now()
-	_, err := r.exec(context.Background(), execSpec{tool: tool, dir: dir.Dir(), argv: []string{helperFlag + "sleep"}, deadline: 300 * time.Millisecond, stdout: &bytes.Buffer{}})
+	_, err := r.exec(
+		context.Background(),
+		execSpec{
+			tool:     tool,
+			dir:      dir.Dir(),
+			argv:     []string{helperFlag + "sleep"},
+			deadline: 300 * time.Millisecond,
+			stdout:   &bytes.Buffer{},
+		},
+	)
 	if !errors.Is(err, ErrDeadline) {
 		t.Fatalf("error = %v, want ErrDeadline", err)
 	}
@@ -209,10 +238,12 @@ func TestRunDeadlineKillsTheRun(t *testing.T) {
 }
 
 func TestStallWatchdogCancelsWhenProgressStops(t *testing.T) {
-	r, dir, tool := helperRunner(t, nil)
+	r, dir, tool := helperRunner(t)
 	var last Progress
-	_, err := r.exec(context.Background(), execSpec{tool: tool, dir: dir.Dir(), argv: []string{helperFlag + "stall"}, deadline: time.Minute,
-		stall: 400 * time.Millisecond, onProgress: func(p Progress) { last = p }})
+	_, err := r.exec(context.Background(), execSpec{
+		tool: tool, dir: dir.Dir(), argv: []string{helperFlag + "stall"}, deadline: time.Minute,
+		stall: 400 * time.Millisecond, onProgress: func(p Progress) { last = p },
+	})
 	if !errors.Is(err, ErrStalled) {
 		t.Fatalf("error = %v, want ErrStalled", err)
 	}
@@ -222,10 +253,12 @@ func TestStallWatchdogCancelsWhenProgressStops(t *testing.T) {
 }
 
 func TestProgressIsParsedAndLongLinesAreDropped(t *testing.T) {
-	r, dir, tool := helperRunner(t, nil)
+	r, dir, tool := helperRunner(t)
 	var seen []Progress
-	_, err := r.exec(context.Background(), execSpec{tool: tool, dir: dir.Dir(), argv: []string{helperFlag + "progress"}, deadline: time.Minute,
-		stall: time.Minute, onProgress: func(p Progress) { seen = append(seen, p) }})
+	_, err := r.exec(context.Background(), execSpec{
+		tool: tool, dir: dir.Dir(), argv: []string{helperFlag + "progress"}, deadline: time.Minute,
+		stall: time.Minute, onProgress: func(p Progress) { seen = append(seen, p) },
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -234,8 +267,10 @@ func TestProgressIsParsedAndLongLinesAreDropped(t *testing.T) {
 	}
 
 	seen = nil
-	if _, err := r.exec(context.Background(), execSpec{tool: tool, dir: dir.Dir(), argv: []string{helperFlag + "long-line"}, deadline: time.Minute,
-		stall: time.Minute, onProgress: func(p Progress) { seen = append(seen, p) }}); err != nil {
+	if _, err := r.exec(context.Background(), execSpec{
+		tool: tool, dir: dir.Dir(), argv: []string{helperFlag + "long-line"}, deadline: time.Minute,
+		stall: time.Minute, onProgress: func(p Progress) { seen = append(seen, p) },
+	}); err != nil {
 		t.Fatal(err)
 	}
 	if len(seen) != 1 || seen[0].Frame != 7 {
@@ -244,8 +279,11 @@ func TestProgressIsParsedAndLongLinesAreDropped(t *testing.T) {
 }
 
 func TestRunFFmpegRefusesAnArgvOutsideTheGrammarBeforeStarting(t *testing.T) {
-	r, dir, _ := helperRunner(t, nil)
-	_, err := r.RunFFmpeg(context.Background(), Request{Dir: dir, Argv: []string{"-i", "http://example.com/x"}, Deadline: time.Second})
+	r, dir, _ := helperRunner(t)
+	_, err := r.RunFFmpeg(
+		context.Background(),
+		Request{Dir: dir, Argv: []string{"-i", "http://example.com/x"}, Deadline: time.Second},
+	)
 	var e *Error
 	if !errors.As(err, &e) || e.Code != CodeInternal || e.Reason != "argv_policy" {
 		t.Fatalf("error = %v, want E_INTERNAL argv_policy", err)
@@ -260,9 +298,19 @@ func TestRunFFmpegRefusesAnArgvOutsideTheGrammarBeforeStarting(t *testing.T) {
 }
 
 func TestRunFFprobeCapsItsOutputAt4MiB(t *testing.T) {
-	r, dir, tool := helperRunner(t, nil)
+	r, dir, tool := helperRunner(t)
 	w := &limitWriter{max: 1 << 20}
-	_, err := r.exec(context.Background(), execSpec{tool: tool, dir: dir.Dir(), argv: []string{helperFlag + "big"}, deadline: time.Minute, stdout: w, onOverflow: w})
+	_, err := r.exec(
+		context.Background(),
+		execSpec{
+			tool:       tool,
+			dir:        dir.Dir(),
+			argv:       []string{helperFlag + "big"},
+			deadline:   time.Minute,
+			stdout:     w,
+			onOverflow: w,
+		},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -272,7 +320,7 @@ func TestRunFFprobeCapsItsOutputAt4MiB(t *testing.T) {
 }
 
 func TestRunDirIsPrivateAndJobIDsAreChecked(t *testing.T) {
-	r, dir, _ := helperRunner(t, nil)
+	r, dir, _ := helperRunner(t)
 	if filepath.Dir(dir.Dir()) != filepath.Join(r.Workspace, "tmp") {
 		t.Errorf("run dir = %s", dir.Dir())
 	}

@@ -18,11 +18,14 @@ type Ceilings struct {
 }
 
 const (
-	// MaxSourceEdge is the fixed side limit; MaxStreams is FF-06.
+	// MaxSourceEdge is the fixed limit of the longest side of a source.
 	MaxSourceEdge = 8192
-	MaxStreams    = 16
+	// MaxStreams is the stream limit of FF-06.
+	MaxStreams = 16
 
-	DefaultMaxPixels  int64   = 33_177_600
+	// DefaultMaxPixels is the default of VUKEM_VIDEO_MAX_IMPORT_PIXELS.
+	DefaultMaxPixels int64 = 33_177_600
+	// DefaultMaxSeconds is the default of VUKEM_VIDEO_MAX_IMPORT_SECONDS.
 	DefaultMaxSeconds float64 = 14400
 )
 
@@ -60,15 +63,24 @@ type ProbeResult struct {
 // the ceilings). path is a file of the store; dir is the run directory of the probe.
 func (r *Runner) Probe(ctx context.Context, dir *RunDir, path string, c Ceilings) (*ProbeResult, error) {
 	if err := SniffFile(path); err != nil {
-		var e *Error
-		if errors.As(err, &e) {
+		if _, ok := errors.AsType[*Error](err); ok {
 			return nil, err
 		}
-		return nil, &Error{Code: "E_FILE_NOT_FOUND", Reason: "unreadable", Message: "The file could not be read.", Err: err}
+		return nil, &Error{
+			Code:    "E_FILE_NOT_FOUND",
+			Reason:  "unreadable",
+			Message: "The file could not be read.",
+			Err:     err,
+		}
 	}
 	argv, err := ffargs.ProbeJSON(r.Policy(dir), path)
 	if err != nil {
-		return nil, &Error{Code: CodeInternal, Reason: "argv_policy", Message: "the ffprobe arguments were refused before any start", Err: err}
+		return nil, &Error{
+			Code:    CodeInternal,
+			Reason:  "argv_policy",
+			Message: "the ffprobe arguments were refused before any start",
+			Err:     err,
+		}
 	}
 	out, res, err := r.RunFFprobe(ctx, dir, argv, ProbeTimeout)
 	if err != nil {
@@ -77,9 +89,12 @@ func (r *Runner) Probe(ctx context.Context, dir *RunDir, path string, c Ceilings
 			return nil, err
 		}
 		line, _, _ := strings.Cut(strings.TrimSpace(res.Stderr), "\n")
-		return nil, unsupported("unrecognized_format", "The file is not a media file FFmpeg can read.",
+		return nil, unsupported(
+			"unrecognized_format",
+			"The file is not a media file FFmpeg can read.",
 			"Copy the original file from the device again. If the recording was cut short, a repair tool that rebuilds the index can recover it.",
-			map[string]any{"ffprobe": scrub(line, 200)})
+			map[string]any{"ffprobe": scrub(line, 200)},
+		)
 	}
 	return CheckProbe(out, c)
 }
@@ -91,7 +106,12 @@ func CheckProbe(raw []byte, c Ceilings) (*ProbeResult, error) {
 		Streams []ProbeStream `json:"streams"`
 	}
 	if err := json.Unmarshal(raw, &doc); err != nil {
-		return nil, unsupported("unrecognized_format", "The file is not a media file FFmpeg can read.", "", map[string]any{"ffprobe": "unreadable probe output"})
+		return nil, unsupported(
+			"unrecognized_format",
+			"The file is not a media file FFmpeg can read.",
+			"",
+			map[string]any{"ffprobe": "unreadable probe output"},
+		)
 	}
 	pr := &ProbeResult{Raw: raw, Format: doc.Format, Streams: doc.Streams}
 	pr.Format.Seconds, _ = strconv.ParseFloat(doc.Format.Duration, 64)
@@ -101,11 +121,20 @@ func CheckProbe(raw []byte, c Ceilings) (*ProbeResult, error) {
 			"Import a video, audio or image file.", map[string]any{"ffprobe": scrub("container "+pr.Format.Name, 100)})
 	}
 	if len(pr.Streams) == 0 {
-		return nil, unsupported("unrecognized_format", "The file has no stream FFmpeg can read.", "", map[string]any{"ffprobe": "no streams"})
+		return nil, unsupported(
+			"unrecognized_format",
+			"The file has no stream FFmpeg can read.",
+			"",
+			map[string]any{"ffprobe": "no streams"},
+		)
 	}
 	if len(pr.Streams) > MaxStreams || pr.Format.NbStreams > MaxStreams {
-		return nil, unsupported("too_many_streams", "The file has more streams than the product reads.",
-			"Remux the file with only the streams you need.", map[string]any{"streams": max(len(pr.Streams), pr.Format.NbStreams)})
+		return nil, unsupported(
+			"too_many_streams",
+			"The file has more streams than the product reads.",
+			"Remux the file with only the streams you need.",
+			map[string]any{"streams": max(len(pr.Streams), pr.Format.NbStreams)},
+		)
 	}
 	usable := false
 	for _, s := range pr.Streams {
@@ -130,15 +159,48 @@ func CheckProbe(raw []byte, c Ceilings) (*ProbeResult, error) {
 			continue
 		}
 		if edge := max(s.Width, s.Height); edge > MaxSourceEdge {
-			return nil, limit("source_edge", int64(edge), MaxSourceEdge, "", "The picture is "+strconv.Itoa(edge)+" pixels on its longest side; the longest accepted is "+strconv.Itoa(MaxSourceEdge)+".")
+			return nil, limit(
+				"source_edge",
+				int64(edge),
+				MaxSourceEdge,
+				"",
+				"The picture is "+strconv.Itoa(
+					edge,
+				)+" pixels on its longest side; the longest accepted is "+strconv.Itoa(
+					MaxSourceEdge,
+				)+".",
+			)
 		}
 		if px := int64(s.Width) * int64(s.Height); px > maxPixels {
-			return nil, limit("import_pixels", px, maxPixels, "VUKEM_VIDEO_MAX_IMPORT_PIXELS", "The picture has "+strconv.FormatInt(px, 10)+" pixels; the limit is "+strconv.FormatInt(maxPixels, 10)+".")
+			return nil, limit(
+				"import_pixels",
+				px,
+				maxPixels,
+				"VUKEM_VIDEO_MAX_IMPORT_PIXELS",
+				"The picture has "+strconv.FormatInt(
+					px,
+					10,
+				)+" pixels; the limit is "+strconv.FormatInt(
+					maxPixels,
+					10,
+				)+".",
+			)
 		}
 	}
 	if pr.Format.Seconds > maxSeconds {
-		return nil, limit("import_seconds", int64(pr.Format.Seconds), int64(maxSeconds), "VUKEM_VIDEO_MAX_IMPORT_SECONDS",
-			"The media is "+strconv.FormatInt(int64(pr.Format.Seconds), 10)+" seconds long; the longest accepted is "+strconv.FormatInt(int64(maxSeconds), 10)+".")
+		return nil, limit(
+			"import_seconds",
+			int64(pr.Format.Seconds),
+			int64(maxSeconds),
+			"VUKEM_VIDEO_MAX_IMPORT_SECONDS",
+			"The media is "+strconv.FormatInt(
+				int64(pr.Format.Seconds),
+				10,
+			)+" seconds long; the longest accepted is "+strconv.FormatInt(
+				int64(maxSeconds),
+				10,
+			)+".",
+		)
 	}
 	return pr, nil
 }

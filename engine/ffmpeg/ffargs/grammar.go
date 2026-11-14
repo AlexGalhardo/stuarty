@@ -2,6 +2,7 @@ package ffargs
 
 import (
 	"regexp"
+	"slices"
 	"strconv"
 )
 
@@ -20,12 +21,7 @@ func intRange(lo, hi int) kind {
 
 func enum(vals ...string) kind {
 	return func(s string) bool {
-		for _, v := range vals {
-			if s == v {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(vals, s)
 	}
 }
 
