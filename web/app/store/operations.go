@@ -44,8 +44,13 @@ func scanOperation(sc scanner) (service.OperationRow, error) {
 func (r operationRepo) Count(ctx context.Context, projectID, actor string) (int64, error) {
 	var n int64
 
-	err := r.ex.QueryRowContext(ctx,
-		"SELECT count(*) FROM operations WHERE project_id = ? AND (? = '' OR actor = ?)", projectID, actor, actor).Scan(&n)
+	err := r.ex.QueryRowContext(
+		ctx,
+		"SELECT count(*) FROM operations WHERE project_id = ? AND (? = '' OR actor = ?)",
+		projectID,
+		actor,
+		actor,
+	).Scan(&n)
 
 	return n, err
 }

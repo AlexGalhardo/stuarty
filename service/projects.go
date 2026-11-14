@@ -82,8 +82,8 @@ func (s *svc) ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*Pro
 	}
 
 	res := &ProjectCreateResult{
-		Envelope:  Envelope{UntrustedNotice: UntrustedNotice},
-		ProjectID: doc.ID, Name: doc.Name, Width: doc.Settings.Width, Height: doc.Settings.Height,
+		UntrustedNotice: UntrustedNotice,
+		ProjectID:       doc.ID, Name: doc.Name, Width: doc.Settings.Width, Height: doc.Settings.Height,
 		FPS: fpsString(doc.Settings.FPS.Num, doc.Settings.FPS.Den),
 		Text: textview.Created(doc.ID, doc.Name, doc.Settings.Width, doc.Settings.Height,
 			timeval.FPS{Num: int64(doc.Settings.FPS.Num), Den: int64(doc.Settings.FPS.Den)}),
@@ -96,10 +96,8 @@ func (s *svc) ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*Pro
 	canon := timeline.Canonical(doc)
 	now := s.nowMs()
 	row := ProjectRow{
-		ProjectHead: ProjectHead{
-			ID: doc.ID, Name: doc.Name, State: ProjectActive, SchemaVersion: doc.SchemaVersion,
-			Summary: summarize(doc), CreatedMs: now, UpdatedMs: now, CreatedBy: c.Actor,
-		},
+		ID: doc.ID, Name: doc.Name, State: ProjectActive, SchemaVersion: doc.SchemaVersion,
+		Summary: summarize(doc), CreatedMs: now, UpdatedMs: now, CreatedBy: c.Actor,
 		Document: canon, DocSHA256: sha256Hex(canon),
 	}
 
@@ -132,8 +130,14 @@ func (s *svc) ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*Pro
 // newDocument builds the empty document of a new project.
 func (s *svc) newDocument(req ProjectCreateRequest) (*timeline.Document, *Error) {
 	if n := utf8.RuneCountInString(req.Name); n < 1 || n > maxProjectName {
-		return nil, newError(command.CodeValidation, "the name has %d characters; it must have 1 to %d.", n, maxProjectName).
-			withPath("name").withHint("send a name of 1 to %d characters", maxProjectName)
+		return nil, newError(
+			command.CodeValidation,
+			"the name has %d characters; it must have 1 to %d.",
+			n,
+			maxProjectName,
+		).
+			withPath("name").
+			withHint("send a name of 1 to %d characters", maxProjectName)
 	}
 
 	preset := req.Preset
@@ -172,7 +176,11 @@ func (s *svc) newDocument(req ProjectCreateRequest) (*timeline.Document, *Error)
 	doc.Settings.Width, doc.Settings.Height, doc.Settings.FPS = size[0], size[1], fps
 
 	if vs := timeline.Validate(doc); len(vs) > 0 {
-		return nil, newError(command.CodeValidation, "the project is not valid: %s.", vs[0].Message).withPath(vs[0].Path)
+		return nil, newError(
+			command.CodeValidation,
+			"the project is not valid: %s.",
+			vs[0].Message,
+		).withPath(vs[0].Path)
 	}
 
 	return doc, nil
@@ -212,9 +220,18 @@ func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*Project
 		for i := range hs {
 			h := &hs[i]
 			out = append(out, textview.ProjectLine{
-				ID: h.ID, Name: h.Name, Revision: h.Revision, Width: h.Summary.Width, Height: h.Summary.Height,
-				FPS: timeval.FPS{Num: int64(h.Summary.FPSNum), Den: int64(h.Summary.FPSDen)}, DurationFrame: h.Summary.DurationFrames,
-				Items: h.Summary.Items, Trashed: h.State == ProjectTrashed,
+				ID:       h.ID,
+				Name:     h.Name,
+				Revision: h.Revision,
+				Width:    h.Summary.Width,
+				Height:   h.Summary.Height,
+				FPS: timeval.FPS{
+					Num: int64(h.Summary.FPSNum),
+					Den: int64(h.Summary.FPSDen),
+				},
+				DurationFrame: h.Summary.DurationFrames,
+				Items:         h.Summary.Items,
+				Trashed:       h.State == ProjectTrashed,
 			})
 		}
 
@@ -237,7 +254,7 @@ func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*Project
 		return nil, asError(err)
 	}
 
-	res := &ProjectListResult{Envelope: Envelope{UntrustedNotice: UntrustedNotice}, Projects: []ProjectSummary{}}
+	res := &ProjectListResult{UntrustedNotice: UntrustedNotice, Projects: []ProjectSummary{}}
 
 	for i := range heads {
 		res.Projects = append(res.Projects, headSummary(&heads[i]))
@@ -263,7 +280,11 @@ func clampLimit(n, def, maxN int) int {
 
 func listError(err error) error {
 	if errors.Is(err, ErrBadCursor) {
-		return newError(command.CodeValidation, "the cursor is not valid.").withPath("cursor").withHint("repeat the call without cursor")
+		return newError(
+			command.CodeValidation,
+			"the cursor is not valid.",
+		).withPath("cursor").
+			withHint("repeat the call without cursor")
 	}
 
 	return asError(err)
@@ -279,7 +300,7 @@ type viewCursor struct {
 }
 
 func encodeViewCursor(c viewCursor) string {
-	b, _ := json.Marshal(c)
+	b := marshalOrNull(c)
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
@@ -294,8 +315,13 @@ func decodeViewCursor(s, project string, revision int64) (viewCursor, error) {
 	}
 
 	if c.R != revision {
-		return c, newError(command.CodeValidation, "the project changed since the cursor was issued.").withPath("cursor").
-			withDetail("reason", "stale").withDetail("revision", revision).withHint("repeat the call without cursor")
+		return c, newError(
+			command.CodeValidation,
+			"the project changed since the cursor was issued.",
+		).withPath("cursor").
+			withDetail("reason", "stale").
+			withDetail("revision", revision).
+			withHint("repeat the call without cursor")
 	}
 
 	return c, nil
@@ -340,11 +366,22 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 	}
 
 	res := &ProjectGetResult{
-		Envelope:  Envelope{UntrustedNotice: UntrustedNotice},
-		ProjectID: row.ID, Name: row.Name, Revision: row.Revision, State: stateString(row.State),
-		Width: doc.Settings.Width, Height: doc.Settings.Height, FPS: fpsString(doc.Settings.FPS.Num, doc.Settings.FPS.Den),
-		DurationFrames: end, Duration: timeValue(doc.Settings.FPS, end),
-		Counts: ProjectCounts{Tracks: len(doc.Tracks), Items: len(doc.Items), Assets: len(doc.Assets), CaptionWords: words},
+		UntrustedNotice: UntrustedNotice,
+		ProjectID:       row.ID,
+		Name:            row.Name,
+		Revision:        row.Revision,
+		State:           stateString(row.State),
+		Width:           doc.Settings.Width,
+		Height:          doc.Settings.Height,
+		FPS:             fpsString(doc.Settings.FPS.Num, doc.Settings.FPS.Den),
+		DurationFrames:  end,
+		Duration:        timeValue(doc.Settings.FPS, end),
+		Counts: ProjectCounts{
+			Tracks:       len(doc.Tracks),
+			Items:        len(doc.Items),
+			Assets:       len(doc.Assets),
+			CaptionWords: words,
+		},
 	}
 
 	if detail == "document" {
@@ -397,7 +434,13 @@ func (s *svc) ProjectRestore(ctx context.Context, req ProjectTrashRequest) (*Pro
 // setProjectState trashes or restores. Both are idempotent: a project already
 // in the state is reported and left alone. Trash touches the state and the
 // time only, never the revision or the document (SDD-005 section 13.1).
-func (s *svc) setProjectState(ctx context.Context, method string, req ProjectTrashRequest, to ProjectState, action string) (*ProjectStateResult, error) {
+func (s *svc) setProjectState(
+	ctx context.Context,
+	method string,
+	req ProjectTrashRequest,
+	to ProjectState,
+	action string,
+) (*ProjectStateResult, error) {
 	c, err := authorize(ctx, method, req.ProjectID)
 	if err != nil {
 		return nil, err
@@ -423,7 +466,8 @@ func (s *svc) setProjectState(ctx context.Context, method string, req ProjectTra
 		}
 
 		id := req.ProjectID
-		if err := tx.Audit().Append(ctx, AuditRow{AtMs: now, Actor: c.Actor, Action: action, ProjectID: &id}); err != nil {
+		if err := tx.Audit().
+			Append(ctx, AuditRow{AtMs: now, Actor: c.Actor, Action: action, ProjectID: &id}); err != nil {
 			return err
 		}
 

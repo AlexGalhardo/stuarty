@@ -96,10 +96,16 @@ func TestEmptyProject(t *testing.T) {
 	}
 
 	// A track with no item prints its line and nothing under it.
-	doc.Tracks["trk_a1b2c3d4e5"] = timeline.Track{ID: "trk_a1b2c3d4e5", Kind: timeline.TrackVisual, Name: "Empty", Order: "a0"}
+	doc.Tracks["trk_a1b2c3d4e5"] = timeline.Track{
+		ID:    "trk_a1b2c3d4e5",
+		Kind:  timeline.TrackVisual,
+		Name:  "Empty",
+		Order: "a0",
+	}
 
 	got, _ = Project(doc, ProjectOptions{Page: 1})
-	if !strings.HasSuffix(got, `trk_a1b2c3d4e5 top visual "Empty" items=0`) && !strings.Contains(got, `"Empty" items=0`) {
+	if !strings.HasSuffix(got, `trk_a1b2c3d4e5 top visual "Empty" items=0`) &&
+		!strings.Contains(got, `"Empty" items=0`) {
 		t.Errorf("empty track view = %s", got)
 	}
 }
@@ -169,7 +175,7 @@ func TestPagingByCapAndLimit(t *testing.T) {
 			t.Fatalf("page %d has %d characters, cap %d", page, n, CapConcise)
 		}
 
-		for _, l := range strings.Split(text, "\n") {
+		for l := range strings.SplitSeq(text, "\n") {
 			if strings.HasPrefix(l, "itm_") {
 				id, _, _ := strings.Cut(l, " ")
 				if seen[id] {
@@ -211,7 +217,16 @@ func TestLists(t *testing.T) {
 
 	fps := timeval.FPS{Num: 30, Den: 1}
 	got := ProjectList([]ProjectLine{
-		{ID: "prj_7k2m9x4q1b", Name: "Launch teaser", Revision: 4, Width: 1080, Height: 1920, FPS: fps, DurationFrame: 120, Items: 3},
+		{
+			ID:            "prj_7k2m9x4q1b",
+			Name:          "Launch teaser",
+			Revision:      4,
+			Width:         1080,
+			Height:        1920,
+			FPS:           fps,
+			DurationFrame: 120,
+			Items:         3,
+		},
 		{ID: "prj_aaaaaaaaaa", Name: "Old", Revision: 0, Width: 1080, Height: 1080, FPS: fps, Trashed: true},
 	}, 2, "all")
 
@@ -222,7 +237,16 @@ func TestLists(t *testing.T) {
 		t.Errorf("project list:\n%s\nwant:\n%s", got, want)
 	}
 
-	if got := Created("prj_7k2m9x4q1b", "Launch teaser", 1080, 1920, fps); !strings.HasSuffix(got, `created prj_7k2m9x4q1b "Launch teaser" r0 1080x1920 30fps; add tracks with edit op track.add`) {
+	if got := Created(
+		"prj_7k2m9x4q1b",
+		"Launch teaser",
+		1080,
+		1920,
+		fps,
+	); !strings.HasSuffix(
+		got,
+		`created prj_7k2m9x4q1b "Launch teaser" r0 1080x1920 30fps; add tracks with edit op track.add`,
+	) {
 		t.Errorf("created = %s", got)
 	}
 
@@ -245,7 +269,7 @@ func TestLists(t *testing.T) {
 		}
 	}
 
-	for _, l := range strings.Split(hist, "\n") {
+	for l := range strings.SplitSeq(hist, "\n") {
 		if l != strings.TrimRight(l, " ") {
 			t.Errorf("trailing space in %q", l)
 		}
@@ -319,7 +343,7 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 	s := timeline.NewSlot("hero", "media")
 	clip.Slot = &s
 
-	got := itemLine(doc, fps, &clip)
+	got := itemLine(fps, &clip)
 	want := "itm_m1n2p3q4r5 clip 0s/0f +2s/60f ast_3c5v8n2w6d x1.5 [tin:fade tout:slide_left kf:2 vol:0.5 muted slot:hero unfilled]"
 
 	if got != want {
@@ -340,7 +364,12 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 	}
 
 	doc.Assets["ast_aaaaaaaaaa"] = timeline.Asset{ID: "ast_aaaaaaaaaa", Kind: timeline.AssetAudio, SampleCount: 96000}
-	doc.Assets["ast_bbbbbbbbbb"] = timeline.Asset{ID: "ast_bbbbbbbbbb", Kind: timeline.AssetImage, Width: 800, Height: 600}
+	doc.Assets["ast_bbbbbbbbbb"] = timeline.Asset{
+		ID:     "ast_bbbbbbbbbb",
+		Kind:   timeline.AssetImage,
+		Width:  800,
+		Height: 600,
+	}
 
 	lines := strings.Join(assetLines(doc, fps, false), "\n")
 	for _, want := range []string{"ast_aaaaaaaaaa audio 2s/60f", "ast_bbbbbbbbbb image 800x600"} {

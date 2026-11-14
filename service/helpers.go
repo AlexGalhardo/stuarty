@@ -103,7 +103,7 @@ func requestHash(ops []command.Operation) (string, error) {
 			return "", err
 		}
 
-		name, _ := json.Marshal(op.Op)
+		name := marshalOrNull(op.Op)
 		canon = append(canon, json.RawMessage(`{"args":`+string(args)+`,"op":`+string(name)+`}`))
 	}
 
@@ -150,4 +150,15 @@ func headSummary(h *ProjectHead) ProjectSummary {
 		Tracks:   h.Summary.Tracks, Items: h.Summary.Items, Assets: h.Summary.Assets,
 		UpdatedAt: msTime(h.UpdatedMs),
 	}
+}
+
+// marshalOrNull encodes a value of the document model, which cannot fail to
+// encode; the fallback exists so that no error is ignored.
+func marshalOrNull(v any) []byte {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return []byte("null")
+	}
+
+	return b
 }

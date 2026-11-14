@@ -32,7 +32,7 @@ type TimeValue struct {
 // ProjectSummary is an item of the project listing.
 type ProjectSummary struct {
 	ID        string    `json:"id"`
-	Name      string    `json:"name" untrusted:"true"`
+	Name      string    `json:"name"       untrusted:"true"`
 	Revision  int64     `json:"revision"`
 	State     string    `json:"state"` // "active" | "trashed"
 	Width     int       `json:"width"`
@@ -72,7 +72,7 @@ type ProjectCreateRequest struct {
 type ProjectCreateResult struct {
 	Envelope
 	ProjectID string `json:"project_id"`
-	Name      string `json:"name" untrusted:"true"`
+	Name      string `json:"name"       untrusted:"true"`
 	Revision  int64  `json:"revision"` // 0: a new project has an empty document and no batch yet
 	Width     int    `json:"width"`
 	Height    int    `json:"height"`
@@ -100,7 +100,7 @@ type ProjectCounts struct {
 type ProjectGetResult struct {
 	Envelope
 	ProjectID      string             `json:"project_id"`
-	Name           string             `json:"name" untrusted:"true"`
+	Name           string             `json:"name"               untrusted:"true"`
 	Revision       int64              `json:"revision"`
 	State          string             `json:"state"`
 	Width          int                `json:"width"`
@@ -110,7 +110,7 @@ type ProjectGetResult struct {
 	Duration       TimeValue          `json:"duration"`
 	Counts         ProjectCounts      `json:"counts"`
 	NextCursor     *string            `json:"next_cursor"`
-	Document       *timeline.Document `json:"document,omitempty" bulk:"true"`
+	Document       *timeline.Document `json:"document,omitempty"                  bulk:"true"`
 	Text           string             `json:"text,omitempty"`
 }
 

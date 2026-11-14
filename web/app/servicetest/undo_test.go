@@ -16,10 +16,10 @@ func (e *env) undo(actor, project string) (*service.UndoResult, error) {
 	return e.svc.Undo(e.as(actor), service.UndoRequest{ProjectID: project})
 }
 
-func (e *env) redo(actor, project string) (*service.UndoResult, error) {
+func (e *env) redo(project string) (*service.UndoResult, error) {
 	e.t.Helper()
 
-	return e.svc.Redo(e.as(actor), service.UndoRequest{ProjectID: project})
+	return e.svc.Redo(e.as(ui), service.UndoRequest{ProjectID: project})
 }
 
 func (e *env) closedBy(project string, rev int64) *int64 {
@@ -72,7 +72,7 @@ func TestUndoRedoBookkeepingFollowsTheWorkedExample(t *testing.T) {
 		t.Errorf("second undo undid r%d, want r1", u4.Undone.Revision)
 	}
 
-	r5, err := e.redo(ui, project) // redoes undo r4
+	r5, err := e.redo(project) // redoes undo r4
 	if err != nil || r5.Revision != 5 || r5.Redone == nil || r5.Redone.Revision != 4 || r5.Kind != "redo" {
 		t.Fatalf("redo = %+v, %v", r5, err)
 	}
@@ -99,7 +99,7 @@ func TestUndoRedoBookkeepingFollowsTheWorkedExample(t *testing.T) {
 	}
 
 	// Nothing is left to undo but the track's own creation, then nothing at all.
-	if _, err := e.redo(ui, project); code(err) != service.CodeNothingToRedo && err != nil {
+	if _, err := e.redo(project); code(err) != service.CodeNothingToRedo && err != nil {
 		t.Errorf("redo = %v", err)
 	}
 }
@@ -125,7 +125,7 @@ func TestUndoThenRedoRestoresTheDocumentBytes(t *testing.T) {
 		t.Fatal("undo changed nothing")
 	}
 
-	res, err := e.redo(ui, project)
+	res, err := e.redo(project)
 	if err != nil || !res.Applied {
 		t.Fatalf("redo = %+v, %v", res, err)
 	}
@@ -152,7 +152,7 @@ func TestNothingToUndoOrRedo(t *testing.T) {
 
 	for name, call := range map[string]func() error{
 		"undo": func() error { _, err := e.undo(ui, project); return err },
-		"redo": func() error { _, err := e.redo(ui, project); return err },
+		"redo": func() error { _, err := e.redo(project); return err },
 	} {
 		err := call()
 		se := serviceError(t, err)
@@ -179,11 +179,16 @@ func TestNothingToUndoOrRedo(t *testing.T) {
 
 	e.mustEdit(ui, project, 2, op("track.add", `{"kind":"visual"}`))
 
-	if _, err := e.redo(ui, project); code(err) != service.CodeNothingToRedo {
+	if _, err := e.redo(project); code(err) != service.CodeNothingToRedo {
 		t.Errorf("redo after a new edit = %v, want E_NOTHING_TO_REDO", err)
 	}
 
-	if _, err := e.svc.Undo(e.as(ui), service.UndoRequest{ProjectID: "prj_0000000777"}); code(err) != command.CodeNotFound {
+	if _, err := e.svc.Undo(
+		e.as(ui),
+		service.UndoRequest{ProjectID: "prj_0000000777"},
+	); code(
+		err,
+	) != command.CodeNotFound {
 		t.Errorf("undo of a missing project = %v", err)
 	}
 
@@ -234,9 +239,19 @@ func TestUndoIsScopedToTheActorAndSkipsWhatOthersChanged(t *testing.T) {
 		e := newEnv(t)
 		project, track := e.withTrack()
 		id := "itm_00000000aa"
-		e.mustEdit(ui, project, 1, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":%q}`, track, id)))
+		e.mustEdit(
+			ui,
+			project,
+			1,
+			op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":%q}`, track, id)),
+		)
 		e.mustEdit(agent, project, 2, op("item.move", fmt.Sprintf(`{"item_id":%q,"start":"3s"}`, id))) // r3
-		e.mustEdit(ui, project, 3, op("item.move", fmt.Sprintf(`{"item_id":%q,"start":"6s"}`, id)))    // r4 by ui, over the agent's move
+		e.mustEdit(
+			ui,
+			project,
+			3,
+			op("item.move", fmt.Sprintf(`{"item_id":%q,"start":"6s"}`, id)),
+		) // r4 by ui, over the agent's move
 
 		// The agent undoes its r3, but ui changed start since: that field is skipped.
 		res, err := e.undo(agent, project)
@@ -249,7 +264,9 @@ func TestUndoIsScopedToTheActorAndSkipsWhatOthersChanged(t *testing.T) {
 		}
 
 		sk := res.Skipped[0]
-		if sk.Reason != command.SkipFieldChanged || sk.ByActor != ui || sk.ByRevision == nil || *sk.ByRevision != 4 || len(sk.Fields) != 1 || sk.Fields[0] != "start" {
+		if sk.Reason != command.SkipFieldChanged || sk.ByActor != ui || sk.ByRevision == nil || *sk.ByRevision != 4 ||
+			len(sk.Fields) != 1 ||
+			sk.Fields[0] != "start" {
 			t.Errorf("skipped = %+v", sk)
 		}
 
@@ -265,7 +282,12 @@ func TestUndoIsScopedToTheActorAndSkipsWhatOthersChanged(t *testing.T) {
 		e := newEnv(t)
 		project, track := e.withTrack()
 		id := "itm_00000000aa"
-		e.mustEdit(agent, project, 1, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":%q}`, track, id)))
+		e.mustEdit(
+			agent,
+			project,
+			1,
+			op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":%q}`, track, id)),
+		)
 		e.mustEdit(ui, project, 2, op("text.set", fmt.Sprintf(`{"item_id":%q,"text":"changed"}`, id)))
 
 		res, err := e.undo(agent, project) // would remove the item ui changed
@@ -276,7 +298,12 @@ func TestUndoIsScopedToTheActorAndSkipsWhatOthersChanged(t *testing.T) {
 		// Removal by another actor: the object is missing.
 		e2 := newEnv(t)
 		p2, t2 := e2.withTrack()
-		e2.mustEdit(agent, p2, 1, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":%q}`, t2, id)))
+		e2.mustEdit(
+			agent,
+			p2,
+			1,
+			op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":%q}`, t2, id)),
+		)
 		e2.mustEdit(ui, p2, 2, op("item.delete", fmt.Sprintf(`{"item_ids":[%q]}`, id)))
 
 		res, err = e2.undo(agent, p2)
@@ -291,9 +318,27 @@ func TestUndoIsScopedToTheActorAndSkipsWhatOthersChanged(t *testing.T) {
 		e := newEnv(t)
 		project, track := e.withTrack()
 		id, other := "itm_00000000aa", "itm_00000000bb"
-		e.mustEdit(agent, project, 1, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":%q}`, track, id)))
-		e.mustEdit(agent, project, 2, op("item.delete", fmt.Sprintf(`{"item_ids":[%q]}`, id)))                                                   // r3
-		e.mustEdit(ui, project, 3, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"b","id":%q}`, track, other))) // takes the place
+		e.mustEdit(
+			agent,
+			project,
+			1,
+			op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":%q}`, track, id)),
+		)
+		e.mustEdit(
+			agent,
+			project,
+			2,
+			op("item.delete", fmt.Sprintf(`{"item_ids":[%q]}`, id)),
+		) // r3
+		e.mustEdit(
+			ui,
+			project,
+			3,
+			op(
+				"text.add",
+				fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"b","id":%q}`, track, other),
+			),
+		) // takes the place
 
 		res, err := e.undo(agent, project) // would put itm_aa back over itm_bb
 		if err != nil {
@@ -316,7 +361,12 @@ func TestUndoIsScopedToTheActorAndSkipsWhatOthersChanged(t *testing.T) {
 		e := newEnv(t)
 		project, track := e.withTrack()
 		id := "itm_00000000aa"
-		e.mustEdit(agent, project, 1, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":%q}`, track, id)))
+		e.mustEdit(
+			agent,
+			project,
+			1,
+			op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":%q}`, track, id)),
+		)
 		e.mustEdit(ui, project, 2, op("item.delete", fmt.Sprintf(`{"item_ids":[%q]}`, id)))
 
 		if _, err := e.undo(agent, project); err != nil {
@@ -347,7 +397,7 @@ func TestHistoryList(t *testing.T) {
 
 	ctx := e.as(agent)
 
-	page, err := e.svc.HistoryList(ctx, service.HistoryListRequest{ProjectID: project, Page: service.Page{Limit: 3}})
+	page, err := e.svc.HistoryList(ctx, service.HistoryListRequest{ProjectID: project, Limit: 3})
 	if err != nil || len(page.Entries) != 3 || page.NextCursor == nil || page.Revision != 6 {
 		t.Fatalf("page = %+v, %v", page, err)
 	}
@@ -357,7 +407,8 @@ func TestHistoryList(t *testing.T) {
 		t.Errorf("newest = %+v", top)
 	}
 
-	if e := page.Entries[1]; e.Revision != 5 || e.UndoneBy == nil || *e.UndoneBy != 6 || len(e.Ops) != 1 || e.Ops[0] != "text.add" {
+	if e := page.Entries[1]; e.Revision != 5 || e.UndoneBy == nil || *e.UndoneBy != 6 || len(e.Ops) != 1 ||
+		e.Ops[0] != "text.add" {
 		t.Errorf("undone entry = %+v", e)
 	}
 
@@ -367,7 +418,10 @@ func TestHistoryList(t *testing.T) {
 		}
 	}
 
-	next, err := e.svc.HistoryList(ctx, service.HistoryListRequest{ProjectID: project, Page: service.Page{Cursor: *page.NextCursor, Limit: 10}})
+	next, err := e.svc.HistoryList(
+		ctx,
+		service.HistoryListRequest{ProjectID: project, Cursor: *page.NextCursor, Limit: 10},
+	)
 	if err != nil || len(next.Entries) != 3 || next.Entries[0].Revision != 3 || next.NextCursor != nil {
 		t.Fatalf("next page = %+v, %v", next, err)
 	}
@@ -377,11 +431,21 @@ func TestHistoryList(t *testing.T) {
 		t.Errorf("filter by an actor with no steps = %+v, %v", only, err)
 	}
 
-	if _, err := e.svc.HistoryList(ctx, service.HistoryListRequest{ProjectID: project, Page: service.Page{Cursor: "nope"}}); code(err) != command.CodeValidation {
+	if _, err := e.svc.HistoryList(
+		ctx,
+		service.HistoryListRequest{ProjectID: project, Cursor: "nope"},
+	); code(
+		err,
+	) != command.CodeValidation {
 		t.Errorf("bad cursor = %v", err)
 	}
 
-	if _, err := e.svc.HistoryList(ctx, service.HistoryListRequest{ProjectID: "prj_0000000777"}); code(err) != command.CodeNotFound {
+	if _, err := e.svc.HistoryList(
+		ctx,
+		service.HistoryListRequest{ProjectID: "prj_0000000777"},
+	); code(
+		err,
+	) != command.CodeNotFound {
 		t.Errorf("missing project = %v", err)
 	}
 }

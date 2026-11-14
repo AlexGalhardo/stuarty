@@ -52,7 +52,11 @@ func (s *svc) Edit(ctx context.Context, req EditRequest) (*EditResult, error) {
 		}
 
 		if row.State == ProjectTrashed {
-			return newError(command.CodeInvalidState, "the project %s is in the trash.", row.ID).withHint("%s", hintRestore)
+			return newError(
+				command.CodeInvalidState,
+				"the project %s is in the trash.",
+				row.ID,
+			).withHint("%s", hintRestore)
 		}
 
 		if stored, err := s.replay(ctx, tx, c.Actor, &req, hash); err != nil || stored != nil {
@@ -93,8 +97,16 @@ func (s *svc) Edit(ctx context.Context, req EditRequest) (*EditResult, error) {
 		}
 
 		b := &batch{
-			kind: OpEdit, actor: c.Actor, baseRevision: req.BaseRevision, ops: storedOps(req.Operations, out.Effective, &ids),
-			inverse: out.Inverse, diff: out.Diff, before: doc, after: out.Doc, key: req.IdempotencyKey, requestHash: hash,
+			kind:          OpEdit,
+			actor:         c.Actor,
+			baseRevision:  req.BaseRevision,
+			ops:           storedOps(req.Operations, out.Effective, &ids),
+			inverse:       out.Inverse,
+			diff:          out.Diff,
+			before:        doc,
+			after:         out.Doc,
+			key:           req.IdempotencyKey,
+			requestHash:   hash,
 			closeOpenRedo: true,
 			result: func(rev int64) ([]byte, error) {
 				stored := *res
@@ -154,7 +166,12 @@ func (s *svc) checkBatch(c Caller, req *EditRequest) (string, error) {
 		return "", newError(command.CodeValidation, "the batch has no operations.").
 			withPath("operations").withHint("send 1 to %d operations", maxOperationsPerBatch)
 	case n > maxOperationsPerBatch:
-		return "", newError(CodePayloadTooLarge, "the batch has %d operations; the limit is %d.", n, maxOperationsPerBatch).
+		return "", newError(
+			CodePayloadTooLarge,
+			"the batch has %d operations; the limit is %d.",
+			n,
+			maxOperationsPerBatch,
+		).
 			withHint("split it into batches of at most %d operations", maxOperationsPerBatch)
 	}
 
@@ -169,11 +186,18 @@ func (s *svc) checkBatch(c Caller, req *EditRequest) (string, error) {
 	}
 
 	if req.BaseRevision < 0 {
-		return "", newError(command.CodeValidation, "base_revision is %d; it cannot be negative.", req.BaseRevision).withPath("base_revision")
+		return "", newError(
+			command.CodeValidation,
+			"base_revision is %d; it cannot be negative.",
+			req.BaseRevision,
+		).withPath("base_revision")
 	}
 
 	if req.IdempotencyKey != "" && !idempotencyKeyOK(req.IdempotencyKey) {
-		return "", newError(command.CodeValidation, "the idempotency key must have 8 to 64 characters from A-Z a-z 0-9 . _ ~ -.").
+		return "", newError(
+			command.CodeValidation,
+			"the idempotency key must have 8 to 64 characters from A-Z a-z 0-9 . _ ~ -.",
+		).
 			withPath("idempotency_key")
 	}
 
@@ -191,7 +215,10 @@ func (s *svc) checkBatch(c Caller, req *EditRequest) (string, error) {
 
 	hash, err := requestHash(req.Operations)
 	if err != nil {
-		return "", newError(command.CodeValidation, "the arguments of an operation are not valid JSON.").withPath("operations")
+		return "", newError(
+			command.CodeValidation,
+			"the arguments of an operation are not valid JSON.",
+		).withPath("operations")
 	}
 
 	return hash, nil
@@ -219,7 +246,13 @@ func (s *svc) unknownOp(i int) *Error {
 }
 
 // replay is step 3: the stored result of the same key and the same operations.
-func (s *svc) replay(ctx context.Context, tx ProjectTx, actor string, req *EditRequest, hash string) (*EditResult, error) {
+func (s *svc) replay(
+	ctx context.Context,
+	tx ProjectTx,
+	actor string,
+	req *EditRequest,
+	hash string,
+) (*EditResult, error) {
 	if req.IdempotencyKey == "" {
 		return nil, nil
 	}
@@ -234,8 +267,12 @@ func (s *svc) replay(ctx context.Context, tx ProjectTx, actor string, req *EditR
 	}
 
 	if stored.RequestHash != hash {
-		return nil, newError(command.CodeIdempotencyMismatch, "the idempotency key was used with different operations.").
-			withHint("use a new key for a different batch").withPath("idempotency_key")
+		return nil, newError(
+			command.CodeIdempotencyMismatch,
+			"the idempotency key was used with different operations.",
+		).
+			withHint("use a new key for a different batch").
+			withPath("idempotency_key")
 	}
 
 	var res EditResult
@@ -248,16 +285,37 @@ func (s *svc) replay(ctx context.Context, tx ProjectTx, actor string, req *EditR
 
 // checkBase is step 4: base against the current revision, and the conflict
 // check against what other actors did in between (SDD-002 A.7).
-func (s *svc) checkBase(ctx context.Context, tx ProjectTx, actor string, req *EditRequest, current int64, doc *timeline.Document) error {
+func (s *svc) checkBase(
+	ctx context.Context,
+	tx ProjectTx,
+	actor string,
+	req *EditRequest,
+	current int64,
+	doc *timeline.Document,
+) error {
 	switch {
 	case req.BaseRevision > current:
-		return newError(command.CodeValidation, "base_revision %d is ahead of the project, which is at revision %d.", req.BaseRevision, current).
-			withPath("base_revision").withHint("read the project with project_get and use its revision")
+		return newError(
+			command.CodeValidation,
+			"base_revision %d is ahead of the project, which is at revision %d.",
+			req.BaseRevision,
+			current,
+		).
+			withPath("base_revision").
+			withHint("read the project with project_get and use its revision")
 	case req.BaseRevision == current:
 		return nil
 	case req.BaseRevision < current-maxConflictLag:
-		return newError(command.CodeRevisionConflict, "base_revision %d is more than %d revisions behind revision %d.", req.BaseRevision, maxConflictLag, current).
-			withHint("%s", hintReadAgain).withDetail("base_revision", req.BaseRevision).withDetail("current_revision", current)
+		return newError(
+			command.CodeRevisionConflict,
+			"base_revision %d is more than %d revisions behind revision %d.",
+			req.BaseRevision,
+			maxConflictLag,
+			current,
+		).
+			withHint("%s", hintReadAgain).
+			withDetail("base_revision", req.BaseRevision).
+			withDetail("current_revision", current)
 	}
 
 	others, err := tx.Operations().Since(ctx, req.ProjectID, req.BaseRevision, OperationFilter{ExcludeActor: actor})
@@ -284,11 +342,19 @@ func (s *svc) checkBase(ctx context.Context, tx ProjectTx, actor string, req *Ed
 	text, truncated := conflictText(doc, all)
 	by := conflictAuthor(others, conflict)
 
-	return newError(command.CodeRevisionConflict, "the batch refers to %s %s, which another actor changed after revision %d.", conflict.Collection, conflict.ID, req.BaseRevision).
+	return newError(
+		command.CodeRevisionConflict,
+		"the batch refers to %s %s, which another actor changed after revision %d.",
+		conflict.Collection,
+		conflict.ID,
+		req.BaseRevision,
+	).
 		withHint("%s", hintReadAgain).
-		withDetail("base_revision", req.BaseRevision).withDetail("current_revision", current).
+		withDetail("base_revision", req.BaseRevision).
+		withDetail("current_revision", current).
 		withDetail("conflict", map[string]any{"collection": conflict.Collection, "id": conflict.ID, "revision": by.Revision, "actor": by.Actor}).
-		withDetail("diff", text).withDetail("diff_truncated", truncated)
+		withDetail("diff", text).
+		withDetail("diff_truncated", truncated)
 }
 
 func decodeDiff(raw json.RawMessage) []command.Change {
@@ -445,7 +511,14 @@ func valueIs(m map[string]any, s string) bool {
 // editResult builds the result of a batch (steps 6 and 16): created ids,
 // effective values per operation, the net diff, the text and the new lint
 // findings. Revision and Applied are set by the caller.
-func (s *svc) editResult(actor string, req *EditRequest, current int64, before *timeline.Document, out *command.BatchResult, rec *idRecorder) *EditResult {
+func (s *svc) editResult(
+	actor string,
+	req *EditRequest,
+	current int64,
+	before *timeline.Document,
+	out *command.BatchResult,
+	_ *idRecorder,
+) *EditResult {
 	created := createdIDs(out.Diff)
 	effective := make([]OpEffect, len(req.Operations))
 
@@ -461,8 +534,8 @@ func (s *svc) editResult(actor string, req *EditRequest, current int64, before *
 	findings, totals := s.findings(before, out.Doc)
 
 	return &EditResult{
-		Envelope:  Envelope{UntrustedNotice: UntrustedNotice},
-		ProjectID: req.ProjectID, Revision: current, BaseRevision: req.BaseRevision, Actor: actor,
+		UntrustedNotice: UntrustedNotice,
+		ProjectID:       req.ProjectID, Revision: current, BaseRevision: req.BaseRevision, Actor: actor,
 		Created: created, Effective: effective, Diff: nonNilChanges(out.Diff),
 		Findings: findings, Lint: totals, Description: describe(out.Doc, out.Diff),
 	}
