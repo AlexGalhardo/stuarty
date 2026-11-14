@@ -20,10 +20,8 @@ const (
 var allowed = map[string]bool{
 	"MIT": true, "BSD-2-Clause": true, "BSD-3-Clause": true, "ISC": true, "Apache-2.0": true,
 	"MPL-2.0": true, "0BSD": true, "Unlicense": true, "OFL-1.1": true, "LGPL-3.0-or-later": true,
-	// Added by P2-REL-001, pending the author's confirmation (SDD-009 section 12.2 item 4):
-	// SQLite's public-domain dedication (modernc.org/sqlite), the permissive BlueOak licence
-	// (minimatch, isexe) and CC-BY-4.0 data (caniuse-lite, npm only).
-	"blessing": true, "BlueOak-1.0.0": true, "CC-BY-4.0": true,
+	// SQLite's public-domain dedication (modernc.org/sqlite), SDD-009 section 12.2 item 4.
+	"blessing": true,
 }
 
 // signature matches a licence text, already lower-cased with single spaces.
@@ -146,8 +144,6 @@ func allAllowed(alt, group, name string) (bool, string) {
 			return false, id + " is not in the allow-list"
 		case id == "OFL-1.1" && group != groupFonts && !strings.HasPrefix(name, "@fontsource"):
 			return false, "OFL-1.1 is for fonts only"
-		case id == "CC-BY-4.0" && group != groupNPM:
-			return false, "CC-BY-4.0 is for npm data packages only"
 		case id == "LGPL-3.0-or-later" && (group != groupPrograms || name != "FFmpeg"):
 			return false, "LGPL-3.0-or-later is for FFmpeg only"
 		}
