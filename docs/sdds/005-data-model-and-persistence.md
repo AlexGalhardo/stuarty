@@ -1133,6 +1133,15 @@ Inputs: `projectID`, `actor`, `base_revision`, the operations as sent, optional 
 
 NFR-001 gives a command round trip 50 ms at p95 on 200 items. The store's share is 25 ms: one `SELECT` of the row (a primary key lookup, document of about 100 KB), up to a few `operations` rows for the conflict check, and four writes inside one transaction. Verified by `BenchmarkCommit200Items` (section 18, check 12), which fails above 25 ms p95 on the CI reference runner and records the number.
 
+The core's share is measured by `BenchmarkApplyBatch200Items` and `BenchmarkApplyBatch200ItemsEdits` in `core/command` (166 text items and 34 captions of 60 words; one `item.move`, and a batch of 20 of them). `ApplyBatch` clones the document once for the whole batch, builds the canonical trees only for the objects the batch changed (an object equal in both documents contributes nothing to the diff or the inverse, so it is not encoded), and compares decoded trees with a typed `jsonEqual` instead of `reflect.DeepEqual`. Measured on a Ryzen 7 5700X3D (`go test -bench ApplyBatch -count=10`, benchstat):
+
+| Benchmark | before | after |
+| --- | --- | --- |
+| `ApplyBatch200Items` (1 operation) | 53.9 ms, 23.1 MiB, 292,639 allocs | 1.53 ms, 0.85 MiB, 4,245 allocs |
+| `ApplyBatch200ItemsEdits` (20 operations) | 657.5 ms, 241 MiB, 3.1 M allocs | 3.32 ms, 1.06 MiB, 5,442 allocs |
+
+The core keeps under 5 ms of the 50 ms budget, so the store and the service own the rest.
+
 ## 10. Idempotency keys
 
 SDD-002 §A.7. Table in section 5.4.
