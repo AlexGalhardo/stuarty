@@ -1,45 +1,42 @@
-import { useSyncExternalStore } from "react";
+import {
+	createStore as createVanillaStore,
+	type StoreApi,
+	useStore as useZustandStore,
+} from "zustand";
 
-// A minimal external store (the shape of zustand's vanilla store). It is
-// written here because zustand is not an approved dependency yet (SDD-012
-// section 3.1); the interface is the same one a later swap would keep:
-// getState, subscribe, and a selector hook.
-export interface ReadStore<S> {
-	getState(): S;
-	subscribe(listener: () => void): () => void;
-}
+// One zustand vanilla store per concern (SDD-012 section 5.1). Components get
+// the read-only side through ReadStore; only the module that creates a store
+// keeps its setState.
+export type ReadStore<S> = Pick<
+	StoreApi<S>,
+	"getState" | "getInitialState" | "subscribe"
+>;
 
 export interface Store<S> extends ReadStore<S> {
 	setState(update: (state: S) => S): void;
 }
 
 export function createStore<S>(initial: S): Store<S> {
-	let state = initial;
-	const listeners = new Set<() => void>();
+	return createVanillaStore<S>()(() => initial);
+}
+
+// The read-only view of a store. The editor has no server render, so the
+// "initial" state that React's server snapshot uses is the current state; the
+// tests render to a string and need that.
+export function readOnly<S>(store: Store<S>): ReadStore<S> {
 	return {
-		getState: () => state,
-		subscribe(listener) {
-			listeners.add(listener);
-			return () => listeners.delete(listener);
-		},
-		setState(update) {
-			const next = update(state);
-			if (Object.is(next, state)) return;
-			state = next;
-			for (const listener of [...listeners]) listener();
-		},
+		getState: store.getState,
+		getInitialState: store.getState,
+		subscribe: store.subscribe,
 	};
 }
 
 // useStore subscribes a component to a slice. The selector must return a
 // referentially stable value for an unchanged state (a field, not a new
-// object), as useSyncExternalStore requires.
+// object).
 export function useStore<S, T>(
 	store: ReadStore<S>,
 	select: (state: S) => T,
 ): T {
-	const snapshot = () => select(store.getState());
-	// The server snapshot is the same state: the editor has no server render, but
-	// the tests render to a string.
-	return useSyncExternalStore(store.subscribe, snapshot, snapshot);
+	return useZustandStore(store, select);
 }

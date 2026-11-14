@@ -1,5 +1,5 @@
 import type { Change } from "../api/types";
-import { createStore, type ReadStore } from "./createStore";
+import { createStore, type ReadStore, readOnly } from "./createStore";
 
 // SDD-012 section 5.8: who edited last and what the remote edit touched.
 export interface ActivityEntry {
@@ -66,7 +66,7 @@ export function createActivityStore(): {
 		highlighted: [],
 	});
 	return {
-		store: { getState: store.getState, subscribe: store.subscribe },
+		store: readOnly(store),
 		writer: {
 			record(entry, itemIds) {
 				store.setState((s) => ({

@@ -1,4 +1,4 @@
-import { createStore, type ReadStore } from "./createStore";
+import { createStore, type ReadStore, readOnly } from "./createStore";
 
 // UI state, never sent to the core (SDD-012 section 5.1): selection, playhead,
 // zoom and scroll. The Prototype subset.
@@ -25,7 +25,7 @@ export function createUiStore(initialZoom = 1): {
 		timeline: { pxPerFrame: initialZoom },
 	});
 	return {
-		store: { getState: store.getState, subscribe: store.subscribe },
+		store: readOnly(store),
 		writer: {
 			select: (items) =>
 				store.setState((s) => ({ ...s, selection: { items } })),
