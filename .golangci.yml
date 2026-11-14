@@ -114,6 +114,7 @@ linters:
           # The deny prefix of vukem also matches the module path vukem-video.
           allow:
             - github.com/AlexGalhardo/vukem-video/core
+            - github.com/AlexGalhardo/vukem-video/engine
             - github.com/AlexGalhardo/vukem-video/service
             - github.com/AlexGalhardo/vukem-video/internal
           deny:
