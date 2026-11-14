@@ -5,6 +5,8 @@ go 1.27.4
 require (
 	github.com/AlexGalhardo/vukem v0.43.0
 	github.com/AlexGalhardo/vukem/contrib/engine v0.1.1
+	github.com/go-text/typesetting v0.3.5
+	golang.org/x/image v0.23.0
 	golang.org/x/sys v0.49.0
 )
 
