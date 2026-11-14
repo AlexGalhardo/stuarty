@@ -28,12 +28,12 @@ flowchart TB
   DOC[Project document at revision R] --> PLAN["core/plan.Frame(doc, t)<br/>pure, integers and floats only"]
   PLAN --> FP[Frame plan: ordered layers + audio sources]
   FP --> RAST["engine/raster<br/>text and shape bitmaps, cached by hash"]
-  FP --> COMP["engine/export compositor (Go)<br/>draws layers into an RGBA frame"]
+  FP --> COMP["engine/compositor (Go)<br/>draws layers into an RGBA frame"]
   RAST --> COMP
   DEC["ffmpeg decode of normalized media<br/>raw RGBA frames over a pipe"] --> COMP
   COMP -->|every frame| ENC["ffmpeg encode<br/>H.264 + AAC, MP4"]
   COMP -->|one frame| FRAME["ViewFrame / ViewSheet<br/>JPEG for UI pause and for agents"]
-  MIX["engine/export mixer (Go)<br/>48 kHz stereo PCM"] --> ENC
+  MIX["engine/audio mixer (Go)<br/>48 kHz stereo PCM"] --> ENC
   FP -. plan windows as JSON .-> PREV["Browser preview executor<br/>video elements + canvas"]
   RAST -. same bitmaps as PNG .-> PREV
 ```
@@ -283,20 +283,27 @@ Bitmaps are stored under `<workspace>/bitmaps/<key>.png`. The export reads them 
 ## 6. The compositor
 
 ```go
-package export
+package compositor
 
-// Compose draws one frame plan into dst (RGBA, 8 bits, premultiplied alpha), at the given output scale.
-func (c *Compositor) Compose(dst *image.RGBA, fp plan.FramePlan, outScale float64, src FrameSource) error
+// Compose draws one frame plan into dst (RGBA, 8 bits, no stride padding), at the given output scale.
+func (c *Compositor) Compose(dst *image.RGBA, fp plan.FramePlan, outScale float64) error
+
+// The pixels of a layer come from two functions the caller sets: those of a media layer, and the
+// bitmap of a text, caption or shape layer.
+type MediaSource func(l *plan.Layer) (Image, error)
+type BitmapSource func(spec plan.BitmapSpec) (raster.Bitmap, error)
 ```
+
+The compositor is `engine/compositor` (pure Go, no I/O, no FFmpeg); `engine/export` owns the decoders that feed it. An `Image` is RGBA with premultiplied alpha and an `Opaque` flag that lets a copy skip blending (a decoded video frame). `dst` is the project's frame: it is filled with the opaque background first, so it stays opaque.
 
 Rules, applied in this order for each frame:
 
 1. Fill `dst` with the project background.
 2. For each layer, bottom first:
-   1. Obtain the source pixels: a decoded video frame, a decoded image, or a bitmap from the rasterizer.
+   1. Obtain the source pixels: a decoded video frame, a decoded image, or a bitmap from the rasterizer. A bitmap is premultiplied once per key, and drawn with its own centre at the layer's centre minus the rasterizer's `CenterDX`, `CenterDY` (scaled), because the plan places the centre of the text block and the bitmap reaches further on the side of a shadow.
    2. If the layer has a colour matrix, apply it to the source pixels.
-   3. Draw the source into the quadrilateral given by `CX, CY, W, H, Rotation` (all multiplied by `outScale`) with opacity `Opacity`, using source-over blending on premultiplied alpha.
-3. Sampling: when `Rotation` is 0 and the source's pixel size equals the destination rectangle's rounded size, pixels are copied one to one at integer offsets (the rectangle's top-left corner rounded to the nearest pixel). Otherwise the source is sampled with bilinear interpolation through the inverse affine transform.
+   3. Draw the source into the quadrilateral given by `CX, CY, W, H, Rotation` (all multiplied by `outScale`) with opacity `Opacity`, using source-over blending on premultiplied alpha. A destination pixel is drawn when its centre is inside the quadrilateral: the edges of a rotated layer are not smoothed.
+3. Sampling: when `Rotation` is 0 and the source's pixel size equals the destination rectangle's rounded size, pixels are copied one to one at integer offsets (the rectangle's top-left corner rounded half up). Otherwise the source is sampled with bilinear interpolation through the inverse affine transform, in 32.32 fixed point with 8-bit weights: the transform is computed once per layer in floating point (every product rounded before it is added, with a sine and cosine that use only exactly rounded operations, because arm64 fuses `a*b+c` and its `math.Sin`), and every per-pixel step is integer arithmetic. The result is the same on every architecture and for every number of bands.
 4. Blending uses 8-bit channels with rounding to nearest. Blending is done on non-linear values (no gamma linearization), which is what browsers do by default and keeps the two executors close.
 
 **Decoded frames.** The compositor asks a `FrameSource` for `(asset, source frame, delivered size, crop)`. The source is an FFmpeg process per active clip:
@@ -308,9 +315,10 @@ ffmpeg -nostdin -protocol_whitelist file,pipe -ss <time of first needed frame> -
 ```
 
 - **Pre-scaling.** When a layer's crop, `W`, `H` and rotation are constant over the clip and rotation is 0, the decoder delivers frames already cropped and scaled to the rounded destination size, so the compositor copies. When size or rotation is animated, or rotation is not 0, the decoder delivers frames at the cropped native size and the compositor samples.
+- The pre-scaling decision is made by a pre-pass that plans every frame once and records, per item, whether its drawn size and rotation never change (`scanLayers` in `engine/export`). The crop of an item is static, so the decoder always applies it (`crop=<w>:<h>:<x>:<y>` in whole pixels, left out when it is the whole frame); a constant, unrotated layer is also scaled to its rounded drawn size, and any other is delivered at the cropped native size.
 - Conversion from the normalized media's BT.709 limited-range YUV to RGB is done by FFmpeg with explicit `in_color_matrix=bt709:in_range=tv` on the scale filter.
-- Frames are read in order. For speeds above 1 the frames not needed are read and dropped; for speeds below 1 a frame is reused.
-- Images are decoded once by Go's image decoders from the normalized PNG produced at ingest and scaled by the compositor's sampler; scaled results are cached per destination size.
+- Frames are read in order, from the first needed frame, by a goroutine that keeps three buffers ahead so that decoding overlaps composing. For speeds above 1 the frames not needed are read and dropped; for speeds below 1 a frame is reused; a frame asked past the end of the media repeats the last one. A request for an earlier frame, or one more than 120 frames ahead, restarts the process at that frame (a seek). A decoder is stopped as soon as its clip is not drawn in a frame, so the processes alive are the clips active at that frame.
+- Images are decoded once by Go's image decoders from the normalized PNG produced at ingest, cropped, and scaled once by `compositor.Resize` when the layer is constant and unrotated: a source at least twice the target is first halved by averaging 2x2 blocks (bilinear alone would point-sample a photo shrunk to a frame), then sampled by the compositor's sampler. An animated layer samples the cropped image every frame.
 
 **Determinism.** For a fixed FFmpeg build, the composed frames are a function of the document and the media only. Compose never reads the clock, and goroutines used to split a frame into bands write disjoint rows.
 
@@ -334,10 +342,10 @@ Conversions: output sample of timeline frame `t` is `t × 48000 × fps.den / fps
 
 The mixer, in `engine/export`:
 
-1. For each source, FFmpeg decodes the needed range of the normalized audio to 32-bit float stereo PCM over a pipe. With `Speed` other than 1 the decode command adds `-af atempo=<speed>` (chained when outside 0.5..2), which changes tempo without changing pitch.
-2. Go multiplies each source by its envelope, pads or truncates it to exactly `Samples`, and sums the sources into the output buffer at `StartSample`.
+1. For each source, FFmpeg decodes the needed range of the normalized audio to 48 kHz stereo signed 16-bit PCM over a pipe (`-f s16le`: the argument grammar of FF-13 has no float raw format, and the normalized audio is 16-bit, so nothing is lost). The input seeks to a whole millisecond (48 samples), which FFmpeg does to the sample, and at speed 1 the Go side drops the few samples before the wanted one. With `Speed` other than 1 the decode command adds `-af atempo=<speed>` (chained when outside 0.5..2), which changes tempo without changing pitch, and the seek is not sample exact. A decoder that fails is an error, not silence.
+2. Go multiplies each source by its envelope, pads or truncates it to exactly `Samples`, and sums the sources into the output at `StartSample`, in blocks of one second so that memory does not depend on the length of the project. The envelope is linear between its points, flat before the first and after the last, and a step where two points share a sample. Sources are summed in the order of `plan.Audio`, in 32-bit float with every product rounded before it is added, so the mix is the same on every architecture. The blocks are written to a 32-bit float WAV in the job's temporary directory.
 3. Loudness: the integrated loudness and true peak of the mix are measured by running FFmpeg's `ebur128` filter over it. One gain is applied to the whole mix so that integrated loudness reaches the project's `loudness_target`, reduced if needed so that true peak does not exceed -1.5 dBTP. If the mix is silent or shorter than 0.4 s, no gain is applied.
-4. The result is written as a 48 kHz stereo 16-bit WAV in the job's temporary directory and given to the encoder as its audio input.
+4. The float WAV is read back, multiplied by the gain, rounded to nearest and clamped into a 48 kHz stereo 16-bit WAV in the job's temporary directory, which is the audio input of the encoder. `engine/audio` holds the mixer, the WAV writers and `GainDB`.
 
 A project with no audio source exports a silent stereo track, so the file always has an audio stream.
 
@@ -348,7 +356,7 @@ A project with no audio source exports a silent stereo track, so the file always
 1. **Check.** Run the lint; findings marked blocking stop the export with `E_LINT_BLOCKING`. An empty timeline is blocking. Total frames `N` is the end of the last item.
 2. **Encoder.** Pick the H.264 encoder from the detection result (ADR-0011 item 5), or the one forced by `VUKEM_VIDEO_ENCODER`. None available: `E_NO_ENCODER`.
 3. **Audio.** Mix as in section 7.
-4. **Video.** Start the encoder process and write `N` composed frames to its standard input (the pinned `contrib/engine` v0.1.1 cannot feed a child's standard input, so `Runner.RunFFmpeg` refuses a `pipe:0` argv with `E_INTERNAL` `stdin_unsupported` until vukem releases `Config.Prepare`, see `vukem-feedback.md` VF-031):
+4. **Video.** Start the encoder process and write `N` composed frames to its standard input. The pinned `contrib/engine` v0.1.1 cannot feed a child's standard input (VF-031 is fixed in vukem as `Tool.RunWith`, but `contrib/engine` has no tag with it yet, VF-036), so `Request.Stdin` of `engine/ffmpeg` starts such a run with the product's own `exec` (`stdin.go`: the same minimal environment, process group, tree kill and pipe wait as `contrib/engine`); a `pipe:0` argv without a `Stdin` is still refused with `E_INTERNAL` `stdin_unsupported`. The switch to `Tool.RunWith` waits for the tag. The frames go through an `os.Pipe` whose read end is the child's standard input, from a writer goroutine fed by two buffers, so composing the next frame overlaps the encoder reading the last. The partial file is written inside the job's run directory `tmp/<job id>/` (the only place the argument grammar lets an output go), not under `exports/`, and renamed to `exports/<project>/<job>.mp4` after verification (a copy and a rename when the two are on different volumes).
 
 ```text
 ffmpeg -nostdin -protocol_whitelist file,pipe
@@ -358,7 +366,7 @@ ffmpeg -nostdin -protocol_whitelist file,pipe
        -c:v <encoder> <encoder options> -g <ceil(fps / 2)> -bf 2
        -colorspace bt709 -color_primaries bt709 -color_trc bt709 -color_range tv
        -c:a aac -b:a 192k -ar 48000 -ac 2
-       -movflags +faststart -shortest <exports/<project>/<job>.partial.mp4>
+       -movflags +faststart -shortest <tmp/<job id>/<job id>.partial.mp4>
 ```
 
 | Encoder | Options |
@@ -368,11 +376,11 @@ ffmpeg -nostdin -protocol_whitelist file,pipe
 | `libopenh264` | `-b:v 8M` up to 30 fps, `-b:v 12M` above; `-profile:v high` when accepted, else the encoder's default; no `-bf` |
 | `libx264` (user's own FFmpeg, opt-in) | `-crf 18 -preset medium -profile:v high` |
 
-For sizes other than 1080p the bitrate scales with the pixel count relative to 1080×1920, with a floor of 2M. `-bf` is omitted for encoders that reject it.
+For sizes other than 1080p the bitrate scales with the pixel count relative to 1080×1920 (`base × w × h / (1080 × 1920)`), with a floor of 2M. `-bf` is omitted for `libopenh264`, which rejects it. The rate is given in `k` (`8000k`), and `-fflags +bitexact -flags +bitexact` are on, so two runs of the same plan with the same build give the same file. The video filter is `scale=out_color_matrix=bt709:out_range=tv` followed by the filter that encoder detection recorded.
 
 5. **Progress.** After every frame written the job's progress is `frames written / N`, published at most 4 times per second.
 6. **Cancellation.** Cancelling the context closes the pipes and kills both process trees; the partial file is deleted; the job ends `cancelled`.
-7. **Verification.** `ffprobe` the partial file and require: one H.264 video stream and one AAC audio stream; width and height equal to the project's; pixel format `yuv420p`; duration within one frame of `N / fps` for both streams; the `moov` atom before `mdat`. Any failure: delete the file and end `failed` with `E_VERIFY_FAILED` and the list of failed checks.
+7. **Verification.** `ffprobe` the partial file and require: one H.264 video stream and one AAC audio stream; width and height equal to the project's; pixel format `yuv420p`; duration within one frame of `N / fps` for both streams; the `moov` atom before `mdat`. It also requires exactly `N` video packets (`ffprobe -count_packets`) and top-level boxes that fill the file exactly: a file cut short has an `mdat` that claims more than it holds, which ffprobe does not report when `moov` is first, so the box walk is what catches truncation. Any failure: delete the file and end `failed` with `E_VERIFY_FAILED` and `details.checks`, the list of failed checks, each with `name`, `expected` and `got`.
 8. **Publish.** Rename the partial file to `<job>.mp4`. The job ends `succeeded` with the path, size, duration, encoder used and the loudness measured.
 
 Temporary files live in a per-job directory under the workspace and are removed in every outcome.
@@ -437,8 +445,8 @@ The executor, in `web/resources/js/editor/preview/`:
 | Compositor with a different FFmpeg build | PSNR at least 50 dB per frame | a CI job that runs the golden cases with the PATH FFmpeg when it differs from the pinned one; reported, not blocking |
 | Rasterizer | identical bytes | `engine/raster/testdata/golden/<case>.png`, one per layout rule of section 5.1, plus right-to-left text, an emoji sequence and a missing glyph (15 cases in `golden_test.go`). The test compares the decoded pixel bytes, not the PNG bytes, because the compressor may change between Go versions; regenerate with `go test ./engine/raster -run Golden -update` |
 | Preview executor against compositor, during playback | SSIM at least 0.97 on luma per frame at preview resolution; no layer centre displaced by more than 1 pixel | Playwright test: load each golden case in the editor, step the preview to the listed frames without the truth-on-pause overlay, capture the canvas, compare with `ViewFrame` at the same width |
-| Exported file | passes the verification of section 8 step 7; its frames, decoded, have SSIM at least 0.95 against the composed frames | export test on each golden case with `libopenh264` |
-| Audio mix | sample-exact against `engine/export/testdata/audio/<case>.wav` for cases without speed change; within 1 dB RMS per 100 ms window for cases with `atempo` | mixer golden test |
+| Exported file | passes the verification of section 8 step 7; its frames, decoded, have SSIM at least 0.95 against the composed frames | `TestExportReferenceScenes`: each of the three reference scenes with `libopenh264` (`engine/export/testdata/scenes/<name>/` holds the document and the description of the generated media; the golden hashes of 30 frames per scene are in `testdata/golden/<name>.json`) |
+| Audio mix | sample-exact for cases without speed change; within 1 dB RMS per 100 ms window for cases with `atempo` | `engine/audio`: the float WAV of a three-source case with envelopes is pinned by SHA-256 (`TestMixEqualsItsGoldenHash`), the same claim as a stored WAV without committing one; the `atempo` clip is exercised by the `two-clips-cut` export |
 
 Golden cases required at minimum: a single clip with cover fit; contain fit with background; crop; picture in picture with opacity; rotation; each transition kind at the first, middle and last frame; keyframed scale with each easing; a caption with word highlight at three words; text with stroke, shadow and background; a shape; colour adjustment at three settings; speed 0.5 and 2; a 30000/1001 project; a source at a different frame rate from the project.
 
@@ -471,7 +479,19 @@ Fallback, kept in reserve and not needed for the Prototype: exchange frames with
 
 Rasterizer (P1-RND-003, `engine/raster`, same machine, Go 1.27.4, `go test -bench Caption`): the caption of the reference scene (six words on two lines, Inter 700 at 64 px, stroke 5, shadow blur 6, one highlighted word with its box, 1080 wide frame) takes **3.7 ms** on a cache miss (4.9 ms with one core, 10.8 ms at `PixelScale` 2) and **6 µs** on a hit (hashing the spec and finding the bitmap). The budgets are 5 ms and 0.1 ms. The Linux and macOS numbers are recorded here after the first CI run of the benchmark.
 
-The measurements came from one Windows machine with other processes running. The Prototype repeats the first row on the Linux and macOS runners and records the numbers here; the first row is also a benchmark in CI (`BenchmarkExportCommonCase`) that fails below 1.5 times real time on the reference runner.
+The measurements came from one Windows machine with other processes running. The Prototype repeats the first row on the Linux and macOS runners and records the numbers here; the first row is also a benchmark in CI (`BenchmarkExportCommonCase`) that fails below 1.5 times real time on the reference runner (the job sets `VUKEM_VIDEO_BENCH_MIN_RT=1.5`).
+
+**Prototype measurements** (P1-RND-004, `engine/compositor` and `engine/export`; Ryzen 7 5700X3D, Windows 11, Go 1.27.4, the pinned LGPL FFmpeg, `libopenh264`, a 1080×1920 clip of the project's size plus a six-word caption):
+
+| What | Measured |
+| --- | --- |
+| `BenchmarkExportCommonCase`, 30 s (`go test ./engine/export -run XXX -bench ExportCommonCase -benchtime=3x`) | 2.14 to 2.72 times real time (four runs: 2.27, 2.35, 2.14, 2.72) |
+| The 60 s export of the same project (`TestExportSixtySecondsStaysUnder500MB`) | 23.4 s, 2.56 times real time; the Go process peaked at 110 MB (`Sys` minus `HeapReleased`, sampled every 50 ms), under the 500 MB of NFR-007; the file is 57 MB |
+| A full 1080×1920 layer rotated by 3 degrees through the sampler (`BenchmarkSampleRotatedFullFrame*`) | 38 ms in 1 band (0.88 times real time at 30 fps, against 0.31 to 0.36 for `draw.BiLinear` in the spike), 8 ms in 8 bands (4 times real time) |
+| The same layer as a copy (`BenchmarkCopyFullFrame`) | 0.8 ms |
+| The rotated layer against `x/image/draw.BiLinear` (`TestSamplerAgreesWithXImageBiLinear`) | no pixel differs by more than 2 |
+
+The Linux and macOS numbers are recorded here after the first CI run of the benchmark. The encoder this machine detects is `h264_nvenc`; the numbers above are with `libopenh264`, the encoder of the bundled build, because that is the one a clean machine has.
 
 ## 13. Acceptance
 
