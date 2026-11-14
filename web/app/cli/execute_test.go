@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 
@@ -352,5 +353,33 @@ func TestCommandHelp(t *testing.T) {
 
 	if code := h.run("command:help", "a", "b"); code != ExitFailure {
 		t.Fatalf("two names must fail, exit %d", code)
+	}
+}
+
+func TestVersionNeedsNoService(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	h.res.err = errors.New("the workspace must not be opened")
+
+	if code := h.run("version"); code != ExitOK || !strings.HasPrefix(h.stdout.String(), "vukem-video ") {
+		t.Fatalf("exit %d, %q, %q", code, h.stdout.String(), h.stderr.String())
+	}
+
+	if code := h.run("version", "--json"); code != ExitOK {
+		t.Fatalf("exit %d", code)
+	}
+
+	doc := oneJSONDocument(t, h.stdout.String())
+	if doc["version"] == "" || doc["text"] != "vukem-video "+buildVersion() {
+		t.Fatalf("doc = %v", doc)
+	}
+
+	if h.res.resolved != 0 {
+		t.Fatal("version must not resolve a service")
+	}
+
+	if code := h.run("version", "extra"); code != ExitFailure {
+		t.Fatalf("version takes no argument, exit %d", code)
 	}
 }

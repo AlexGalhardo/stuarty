@@ -42,6 +42,9 @@ type spec struct {
 	positional bool
 	// write is true for a command that writes or starts a job.
 	write bool
+	// offline is true for a command that needs no Service: it never opens the
+	// workspace and c.svc is nil.
+	offline bool
 	// pending names the task that delivers the command; the handler is a stub until then.
 	pending string
 	run     handler
@@ -137,6 +140,15 @@ func (rt *Runtime) Execute(ctx context.Context, name string, args []string) int 
 	c, err := rt.prepare(s, p)
 	if err != nil {
 		return writeError(rt, asJSON, err)
+	}
+
+	if s.offline {
+		out, err := s.run(ctx, c)
+		if err != nil {
+			return writeError(rt, asJSON, err)
+		}
+
+		return writeOutput(rt, asJSON, out)
 	}
 
 	conn, err := rt.connect(ctx, s, p)

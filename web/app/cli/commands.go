@@ -6,6 +6,7 @@ package cli
 import (
 	"context"
 	"encoding/json"
+	"runtime/debug"
 
 	"github.com/AlexGalhardo/vukem-video/service"
 )
@@ -14,7 +15,7 @@ import (
 func registry() []*spec {
 	return []*spec{
 		projectList, projectCreate, projectShow, projectTrash, projectRestore,
-		edit, history, undo, redo, lintCmd,
+		edit, history, undo, redo, lintCmd, version,
 		mediaImport, mediaInspect, mediaList, view, export, jobShow, jobList, events, commandHelp,
 	}
 }
@@ -272,5 +273,36 @@ var commandHelp = &spec{
 		}
 
 		return &output{value: res, text: res.Text}, nil
+	},
+}
+
+// versionDoc is the result of version.
+type versionDoc struct {
+	Version string `json:"version"`
+	Text    string `json:"text"`
+}
+
+// buildVersion is the module version Go stamped into the binary: the tag at
+// HEAD of a release build, a pseudo-version with +dirty for a dirty tree, or
+// (devel) when the binary was built without version control information.
+func buildVersion() string {
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" {
+		return info.Main.Version
+	}
+
+	return "(devel)"
+}
+
+var version = &spec{
+	name:    "version",
+	summary: "print the version of this binary",
+	usage:   []string{"vukem-video version [--json]"},
+	example: "vukem-video version",
+	offline: true,
+	run: func(_ context.Context, _ *call) (*output, error) {
+		v := buildVersion()
+		text := "vukem-video " + v
+
+		return &output{value: versionDoc{Version: v, Text: text}, text: text}, nil
 	},
 }
