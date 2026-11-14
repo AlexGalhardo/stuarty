@@ -105,6 +105,10 @@ func ATrimStart(startSample int) Filter {
 	return Filter("atrim=start_sample=" + strconv.Itoa(startSample))
 }
 
+// ATempo changes the tempo of audio without changing its pitch. One filter takes 0.5 to 100;
+// the export chains them for a speed outside 0.5 to 2 (SDD-004 section 7).
+func ATempo(tempo float64) Filter { return Filter(fmt.Sprintf("atempo=%.6f", tempo)) }
+
 // Ebur128 measures loudness and prints the summary on stderr.
 func Ebur128() Filter { return "ebur128=peak=true:framelog=quiet" }
 

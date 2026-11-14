@@ -158,7 +158,11 @@ type Request struct {
 	// OnProgress receives each progress block, from the goroutine that reads the pipe.
 	OnProgress func(Progress)
 	// Stdout receives the standard output of a run whose output is pipe:1 (raw frames).
+	// An *os.File is handed to the child as it is, with no copy through this process.
 	Stdout io.Writer
+	// Stdin feeds a run whose input is pipe:0 (raw frames to the encoder). An *os.File is
+	// handed to the child as it is. The runner never closes it: the caller owns both ends.
+	Stdin io.Reader
 }
 
 // Result is what a run produced.
@@ -168,8 +172,10 @@ type Result struct {
 	Duration time.Duration
 }
 
-// ErrStdinUnsupported is returned for an argv that reads pipe:0: the pinned contrib/engine
-// cannot feed a child's standard input (see vukem-feedback.md, VF-031).
+// ErrStdinUnsupported is returned for an argv that reads pipe:0 when the request has no Stdin.
+// The pinned contrib/engine (v0.1.1) cannot feed a child's standard input (vukem-feedback.md,
+// VF-031), so a run with a Stdin is started by this package (stdin.go) until a contrib/engine
+// tag carries Tool.RunWith.
 var ErrStdinUnsupported = errors.New("ffmpeg: contrib/engine cannot feed standard input")
 
 // RunFFmpeg checks the argv, then runs ffmpeg in the run directory with the deadline and
@@ -183,7 +189,7 @@ func (r *Runner) RunFFmpeg(ctx context.Context, req Request) (Result, error) {
 			Err:     err,
 		}
 	}
-	if slices.Contains(req.Argv, "pipe:0") {
+	if slices.Contains(req.Argv, "pipe:0") && req.Stdin == nil {
 		return Result{}, &Error{
 			Code:    CodeInternal,
 			Reason:  "stdin_unsupported",
@@ -204,6 +210,7 @@ func (r *Runner) RunFFmpeg(ctx context.Context, req Request) (Result, error) {
 		deadline:   req.Deadline,
 		onProgress: req.OnProgress,
 		stdout:     req.Stdout,
+		stdin:      req.Stdin,
 	}
 	if progress {
 		s.stall = req.Stall
@@ -257,6 +264,7 @@ type execSpec struct {
 	stall      time.Duration
 	onProgress func(Progress)
 	stdout     io.Writer
+	stdin      io.Reader
 	onOverflow *limitWriter
 }
 
@@ -286,7 +294,9 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 
 	var res engine.Result
 	var err error
-	if stdout != nil {
+	if s.stdin != nil {
+		res, err = runWithStdin(dctx, s.tool, s.dir, s.stdin, stdout, s.argv)
+	} else if stdout != nil {
 		res, err = s.tool.RunStream(dctx, s.dir, stdout, s.argv...)
 	} else {
 		res, err = s.tool.Run(dctx, s.dir, s.argv...)
