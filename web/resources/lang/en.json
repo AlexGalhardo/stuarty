@@ -33,6 +33,83 @@
         "16:9": "Landscape: YouTube, web",
         "4:5": "Portrait: feeds"
       }
+    },
+    "editor": {
+      "back": "Back to projects",
+      "revision": "rev {revision}",
+      "connection": {
+        "connecting": "Connecting",
+        "live": "Live",
+        "reconnecting": "Reconnecting",
+        "offline": "Offline",
+        "resyncing": "Resyncing",
+        "failed": "Out of sync"
+      },
+      "banner": {
+        "failed": "The editor lost sync with the project. Reload to continue.",
+        "reload": "Reload"
+      },
+      "undo": "Undo",
+      "redo": "Redo",
+      "panels": {
+        "library": "Media",
+        "preview": "Preview",
+        "inspector": "Inspector",
+        "soon": "Not available yet"
+      },
+      "activity": {
+        "label": "Activity",
+        "editing": "{actor} is editing",
+        "editing_others": {
+          "one": "{actor} and {count} other are editing",
+          "other": "{actor} and {count} others are editing"
+        },
+        "last": "Last edit by {actor}, {ago}",
+        "none": "No remote edits yet",
+        "recent": "Recent edits",
+        "revision": "rev {revision}",
+        "summary": {
+          "items": {
+            "one": "changed {count} item",
+            "other": "changed {count} items"
+          },
+          "tracks": {
+            "one": "changed {count} track",
+            "other": "changed {count} tracks"
+          },
+          "assets": {
+            "one": "changed {count} asset",
+            "other": "changed {count} assets"
+          },
+          "other": "changed the project"
+        },
+        "announce": "{actor} changed the project"
+      },
+      "timeline": {
+        "label": "Timeline",
+        "empty": "The timeline is empty. Add a clip from the media panel.",
+        "zoom_in": "Zoom in",
+        "zoom_out": "Zoom out",
+        "fit": "Fit",
+        "zoom": "Zoom {percent}%",
+        "playhead": "Playhead",
+        "ruler": "Seek",
+        "tracks": "Tracks",
+        "track_visual": "Video track",
+        "track_audio": "Audio track",
+        "hidden": "hidden",
+        "muted": "muted",
+        "item_summary": "{type}, {name}"
+      },
+      "item": {
+        "clip": "Clip",
+        "audio": "Audio",
+        "text": "Text",
+        "caption": "Caption",
+        "shape": "Shape"
+      },
+      "loading": "Loading the project",
+      "unsupported_size": "The editor needs a window at least 1024 pixels wide."
     }
   }
 }
