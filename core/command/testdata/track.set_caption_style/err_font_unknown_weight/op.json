@@ -3,7 +3,8 @@
   "args": {
     "track_id": "trk_a1b2c3d4e5",
     "style": {
-      "font_weight": 800
+      "font_family": "JetBrains Mono",
+      "font_weight": 900
     }
   }
 }

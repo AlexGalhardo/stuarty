@@ -144,5 +144,9 @@ func init() {
 	cs("err_not_found_track", `{"track_id": "trk_zzzzzzzzzz", "style": {"size": 72}}`, base)
 	cs("err_type_mismatch_audio_track", `{"track_id": "`+audTr+`", "style": {"size": 72}}`, base)
 	cs("err_font_unknown_family", `{"track_id": "`+capTr+`", "style": {"font_family": "Comic"}}`, base)
-	cs("err_font_unknown_weight", `{"track_id": "`+capTr+`", "style": {"font_weight": 800}}`, base)
+	cs(
+		"err_font_unknown_weight",
+		`{"track_id": "`+capTr+`", "style": {"font_family": "JetBrains Mono", "font_weight": 900}}`,
+		base,
+	)
 }

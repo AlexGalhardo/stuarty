@@ -7,7 +7,8 @@
     "text": "Hello",
     "id": "itm_s6t7v8w9x0",
     "style": {
-      "font_weight": 800
+      "font_family": "JetBrains Mono",
+      "font_weight": 900
     }
   }
 }

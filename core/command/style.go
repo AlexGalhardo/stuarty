@@ -261,15 +261,11 @@ func (c *Context) checkFont(path string, s *timeline.CaptionStyle) *Error {
 			WithDetail("available", avail).
 			WithPath(path + ".font_family")
 	}
-	_, userFont := c.Doc.Fonts[family]
-	weight := 0
-	switch {
-	case s.FontWeight != nil:
+	weight := 700 // the default weight must exist for the family too
+	if s.FontWeight != nil {
 		weight = *s.FontWeight
-	case userFont:
-		weight = 700
 	}
-	if weight == 0 || slices.Contains(weights, weight) {
+	if slices.Contains(weights, weight) {
 		return nil
 	}
 	ws := make([]string, len(weights))

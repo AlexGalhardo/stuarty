@@ -1,13 +1,19 @@
 {
   "code": "E_FONT_UNKNOWN",
-  "message": "Font weight 800 does not exist for family \"Inter\"; available weights: 400, 700.",
-  "hint": "Use font_weight 700.",
+  "message": "Font weight 900 does not exist for family \"JetBrains Mono\"; available weights: 100, 200, 300, 400, 500, 600, 700, 800.",
+  "hint": "Use font_weight 800.",
   "retryable": false,
   "path": "args.style.font_weight",
   "details": {
     "available": [
+      100,
+      200,
+      300,
       400,
-      700
+      500,
+      600,
+      700,
+      800
     ]
   }
 }
