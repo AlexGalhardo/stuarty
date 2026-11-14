@@ -10,6 +10,7 @@
     "build:ssr": "vite build --ssr",
     "typecheck": "tsc --noEmit",
     "lint": "biome ci resources/js e2e",
+    "format": "biome format --write resources/js e2e",
     "e2e": "playwright test -c e2e/playwright.config.ts"
   },
   "dependencies": {
