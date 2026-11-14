@@ -218,3 +218,11 @@ func (r jobRepo) RequestCancel(ctx context.Context, id string, nowMs int64) (ser
 func (r jobRepo) Running(ctx context.Context) ([]service.JobRow, error) {
 	return r.query(ctx, "SELECT "+jobColumns+" FROM jobs WHERE state = 'running' ORDER BY created_ms, id")
 }
+
+func (r jobRepo) QueuedBefore(ctx context.Context, createdBeforeMs int64) ([]service.JobRow, error) {
+	return r.query(
+		ctx,
+		"SELECT "+jobColumns+" FROM jobs WHERE state = 'queued' AND created_ms < ? ORDER BY created_ms, id",
+		createdBeforeMs,
+	)
+}
