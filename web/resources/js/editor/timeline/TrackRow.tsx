@@ -9,7 +9,7 @@ import {
 	useDocumentState,
 	useRuntime,
 	useUiState,
-} from "../boot/EditorContext";
+} from "../state/EditorContext";
 import {
 	selectAsset,
 	selectItem,
