@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **timeline:** Add one invalid example per violation code and valid examples for the ALPHA features (keyframes, transitions, shapes, slots, per-word highlight)
+
 ## [0.2.0] - 2026-11-14
 
 ### Added
