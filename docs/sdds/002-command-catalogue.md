@@ -73,6 +73,8 @@ Every argument that is a time or a duration is a string parsed by `core/timeval.
 
 A JSON number, an empty string or a string with no unit is rejected with `E_INVALID_TIME` and a hint showing the three accepted forms. Seconds and timecode are rounded to the nearest frame, half away from zero. Unless a command says otherwise, a time argument is an absolute timeline position.
 
+Parsing is strict: no spaces, no sign, no exponent, no other unit (`"500ms"` is rejected), minutes and seconds below 60 in a timecode, at most 64 characters, and a result of at most 2^40 frames. The frame rate is a rational between 1 and 1,000 frames per second. `effective.seconds` is the frame's time rounded to the millisecond; it is for reading only and is never parsed back.
+
 For every time argument the result's `effective` map has an entry with the frame applied and its seconds: `"start": {"frame": 374, "seconds": 12.467, "requested": "12.48s"}`.
 
 ### A.5 Diff
