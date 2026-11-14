@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "prj_7k2m9x4q1b",
+  "name": "From a newer minor version",
+  "x_top": {"b": [1, 2.50, {"z": null, "a": true}], "a": "text", "n": 1.0e2},
+  "settings": {"x_settings": 1},
+  "assets": {
+    "ast_3c5v8n2w6d": {"id": "ast_3c5v8n2w6d", "hash": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", "kind": "audio", "name": "a.wav", "sample_count": 480000, "x_asset": "kept"}
+  },
+  "tracks": {
+    "trk_a1b2c3d4e5": {"id": "trk_a1b2c3d4e5", "kind": "visual", "order": "a0", "x_track": {"deep": [true]}, "caption_style": {"size": 60, "x_style": 3}},
+    "trk_f6g7h8j9k0": {"id": "trk_f6g7h8j9k0", "kind": "audio", "order": "a1"}
+  },
+  "items": {
+    "itm_m1n2p3q4r5": {"id": "itm_m1n2p3q4r5", "type": "audio", "track": "trk_f6g7h8j9k0", "start": 0, "duration": 100, "asset": "ast_3c5v8n2w6d", "x_item": "kept",
+      "keyframes": {"volume": [{"t": 0, "value": 1, "x_key": 1}]}},
+    "itm_s6t7v8w9x0": {"id": "itm_s6t7v8w9x0", "type": "caption", "track": "trk_a1b2c3d4e5", "start": 0, "duration": 30,
+      "words": [{"text": "Hi", "start": 0, "duration": 10, "x_word": "kept"}]}
+  }
+}
