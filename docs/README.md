@@ -1,0 +1,96 @@
+# Vukem Video: planning documents
+
+Everything needed to build Vukem Video, written so that an engineer who was not in the planning conversation can work from it. Read in this order: the three PRDs (what and why), the ADR list (how, in one page each), then the SDD of the area you are about to touch.
+
+Work is driven by `ROADMAP.md`, which lives in the workspace root next to `AGENTS.md`, outside this repository (D-025).
+
+## Reading map
+
+| You want to | Read |
+| --- | --- |
+| know what the product is and what is in or out of scope | `prds/001-editor-mvp.md` |
+| know how an agent uses it | `prds/002-agent-operability.md`, then `sdds/003-agent-interfaces.md` |
+| use a name (operation, table, error code, variable) | `sdds/000-shared-definitions.md` |
+| change the document format | `sdds/001-timeline-schema.md` |
+| add or change a command | `sdds/002-command-catalogue.md` |
+| understand why preview and export agree | `adrs/0003-render-one-plan-two-executors.md`, `sdds/004-render-pipeline.md` |
+| know why a decision was taken | `adrs/`, and `brainstorming.md` for the decisions of the author |
+| check that a requirement is covered | `traceability.md` |
+
+## Requirements (`prds/`)
+
+| File | Covers |
+| --- | --- |
+| `001-editor-mvp.md` | the editor: projects, timeline, picture, text and captions, audio, templates, preview and export, UI; RF-001 to RF-075, NFR-001 to NFR-013 |
+| `002-agent-operability.md` | MCP, CLI, HTTP API, text views, verification, safety; RF-100 to RF-134, NFR-020 to NFR-025 |
+| `003-distribution-and-docs.md` | installation, local and network modes, releases, container image, documentation site; RF-200 to RF-215, NFR-040 to NFR-045 |
+
+Each requirement has a phase: `P` Prototype, `A` ALPHA, `B` BETA.
+
+## Decisions of the author (`brainstorming.md`)
+
+D-001 to D-025, each with date, alternatives, reason and impact. They are the input of the ADRs and are not reopened without the author.
+
+## Architecture decisions (`adrs/`)
+
+| ADR | Decision |
+| --- | --- |
+| 0001 | one repository, one Go module: `core/`, `engine/`, `service/`, `web/`, `site/`, `desktop/` |
+| 0002 | the command core is Go, pure, the only place editing logic lives |
+| 0003 | render: one plan, two executors, truth on pause; pixels composed in Go |
+| 0004 | time is integer frames at a rational rate; times cross the boundary as strings with a unit |
+| 0005 | timeline data model: tracks, items with absolute position, captions with words, keyframes |
+| 0006 | operation log, revisions, conflicts per object, undo per actor by compensating batch |
+| 0007 | the UI is a thin client |
+| 0008 | one service boundary; one owner process per workspace |
+| 0009 | persistence: SQLite, the document and an append-only log |
+| 0010 | content-addressed media store; ingest produces normalized media, proxy, thumbnails, peaks |
+| 0011 | FFmpeg: separate process, LGPL build only, encoder selection, argument policy |
+| 0012 | text and shapes rasterized by Go code with bundled open fonts |
+| 0013 | browser stack: React, a canvas compositor behind an interface, `<video>` proxies |
+| 0014 | contracts in JSON Schema, generated to TypeScript and to the reference |
+| 0015 | MCP server: fifteen tools named by intent, stateless |
+| 0016 | CLI on vukem commands, JSON output, exit codes 0, 1, 2 |
+| 0017 | HTTP API under `/api/v1` and server-sent events |
+| 0018 | jobs: own table over the vukem queue, with progress and cancellation |
+| 0019 | authentication: local trust on loopback, login and scoped keys on the network |
+| 0020 | agent safety: no outbound capability, trash, limits, marked untrusted text |
+| 0021 | transcription behind a provider interface; whisper.cpp local by default |
+| 0022 | templates are parameterized projects |
+| 0023 | desktop shell deferred to BETA |
+| 0024 | documentation site: static, two languages, generated reference |
+| 0025 | releases and CI in the vukem pattern |
+| 0026 | observability without telemetry |
+| 0027 | items of the stack draft that were cut or deferred, each with its reason |
+
+## Specifications (`sdds/`)
+
+| SDD | Specifies | Main owner |
+| --- | --- | --- |
+| 000 | shared definitions: the names everything uses | architect |
+| 001 | timeline schema, invariants, examples, versioning | senior-a |
+| 002 | command catalogue: the model (Part A), the 48 commands (Part B), each command in detail with its golden cases (Part C) | senior-a |
+| 003 | agent interfaces: the `Service` interface, text formats, MCP tools, CLI, HTTP API, parity | senior-d |
+| 004 | render pipeline: frame plan, rasterizer, compositor, audio, export, frames, preview executor, tolerance, measurements | senior-b |
+| 005 | data model and persistence: tables, the commit transaction, undo, trash, jobs, workspace ownership | senior-c |
+| 006 | real-time protocol: events, ordering, replay, reconciliation, conflicts between a human and an agent | senior-c |
+| 007 | security model: threats, local and network trust, scopes, process policy, paths, untrusted text, limits | senior-c (coordination) |
+| 008 | test strategy: kinds of test, golden cases, golden frames and tolerance, scenarios, parity, performance | every owner |
+| 009 | releases and CI/CD in the vukem pattern, repository files, the git wiring procedure | senior-d |
+| 010 | documentation site and its two languages | senior-d |
+| 011 | ingest and media: import, probe, profiles, artifacts, analysis, transcription | senior-b |
+| 012 | editor UI architecture: thin-client rules, state, timeline, preview, command coverage | senior-e |
+
+Every SDD except SDD-000 (names only) ends with an Acceptance section; the acceptance of SDD-002 is its golden cases (§A.11 and Part C).
+
+## Research (`search/`)
+
+The evidence behind the decisions. Start at `search/README.md`. The thematic files state what is FACT (with a source), INFERENCE and OPINION. Where a research note and an ADR disagree, the ADR prevails: notes record what was found before decisions were taken.
+
+## Rules for changing these documents
+
+1. A name changes in SDD-000 first.
+2. Code that must differ from an SDD changes the SDD in the same pull request.
+3. A decision of the author changes only with the author; add a new `D-NNN`, do not rewrite an old one.
+4. An ADR is not edited to reverse it: write a new ADR that supersedes it and mark the old one.
+5. Examples inside the SDDs are extracted and validated by tests (SDD-008 §6), so keep them valid.
