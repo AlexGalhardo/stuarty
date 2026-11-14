@@ -233,7 +233,13 @@ func (p VideoPlan) NormalizedFilters() []ffargs.Filter {
 		case ColourNone, ColourScale:
 		}
 	}
-	return append(f, ffargs.Format("yuv420p"))
+	f = append(f, ffargs.Format("yuv420p"))
+	// FFmpeg writes the colour tags from the frames: a stream with none needs them set, and the
+	// zscale paths already set them.
+	if p.Colour == ColourNone || p.Colour == ColourScale {
+		f = append(f, ffargs.SetParamsBT709())
+	}
+	return f
 }
 
 // ProxyFilters scales the normalized picture to the proxy size (flags=bicubic: the cheaper set).
