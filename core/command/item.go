@@ -151,7 +151,7 @@ func (c *Context) checkSource(it *timeline.Item, duration, sourceIn int) *Error 
 	if need <= total {
 		return nil
 	}
-	maxDur := max((total-sourceIn)*sp.Den/sp.Num, 0)
+	maxDur := maxDur(total, sourceIn, sp)
 	e := Errorf(
 		CodeOutOfSource,
 		"The range of %d frames from source frame %d would read to frame %d; asset %s has %d frames.",
@@ -171,40 +171,6 @@ func (c *Context) checkSource(it *timeline.Item, duration, sourceIn int) *Error 
 		)
 	}
 	return e.WithHint("Use a source_in before the end of the asset (%d frames).", total)
-}
-
-// checkFit is R14: fades and transitions must still fit the duration.
-func checkFit(it *timeline.Item, what string) *Error {
-	if over := it.FadeIn + it.FadeOut - it.Duration; over > 0 {
-		return Errorf(
-			CodeInvalidState,
-			"%s leaves fade_in %d and fade_out %d longer than the duration %d by %d frames.",
-			what,
-			it.FadeIn,
-			it.FadeOut,
-			it.Duration,
-			over,
-		).
-			WithHint("Shorten the fades by %d frames with item.set_audio first.", over)
-	}
-	sum := 0
-	for _, t := range []*timeline.Transition{it.TransitionIn, it.TransitionOut} {
-		if t != nil {
-			sum += t.Duration
-		}
-	}
-	if over := sum - it.Duration; over > 0 {
-		return Errorf(
-			CodeInvalidState,
-			"%s leaves transitions of %d frames in total, longer than the duration %d by %d frames.",
-			what,
-			sum,
-			it.Duration,
-			over,
-		).
-			WithHint("Shorten the transitions by %d frames with item.set_transition first.", over)
-	}
-	return nil
 }
 
 type itemTrimArgs struct {
@@ -416,22 +382,8 @@ func applyItemSplit(c *Context, a *itemSplitArgs) error {
 		return err
 	}
 	tc := at - it.Start
-	left, right := kSplit(&it, tc)
-	left.Duration = tc
-	right.ID, right.Start, right.Duration = newID, at, it.Duration-tc
-	if _, reads := c.sourceAsset(&it); reads {
-		right.SourceIn = it.SourceIn + tc*it.Speed.Num/it.Speed.Den
-	}
-	left.FadeOut, left.TransitionOut = 0, nil
-	right.FadeIn, right.TransitionIn, right.Slot = 0, nil, nil
-	for _, p := range []*timeline.Item{&left, &right} {
-		p.FadeIn, p.FadeOut = min(p.FadeIn, p.Duration), min(p.FadeOut, p.Duration)
-		for _, t := range []*timeline.Transition{p.TransitionIn, p.TransitionOut} {
-			if t != nil {
-				t.Duration = min(t.Duration, p.Duration)
-			}
-		}
-	}
+	_, reads := c.sourceAsset(&it)
+	left, right := splitCore(&it, newID, tc, reads)
 	if it.Type == timeline.ItemCaption {
 		var lb, rb []int
 		left.Words, right.Words, lb, rb = splitWords(it.Words, it.Breaks, tc)

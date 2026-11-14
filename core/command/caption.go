@@ -131,18 +131,8 @@ func applyCaptionAdd(c *Context, a *captionAddArgs) error {
 	if err := c.limit("items", len(c.Doc.Items), timeline.MaxItems); err != nil {
 		return err
 	}
-	if len(words) > maxWordsPerCaption {
-		return Errorf(CodeLimit, "The caption would have %d words; the limit is %d.", len(words), maxWordsPerCaption).
-			WithHint("Split the text into several captions.")
-	}
-	if total := c.wordTotal("") + len(words); total > maxWordsPerDocument {
-		return Errorf(
-			CodeLimit,
-			"The document would have %d caption words; the limit is %d.",
-			total,
-			maxWordsPerDocument,
-		).
-			WithHint("Remove captions you no longer need.")
+	if err := c.checkWordLimits("", len(words)); err != nil {
+		return err
 	}
 	if err := c.checkEnd("args.start", start, duration); err != nil {
 		return err

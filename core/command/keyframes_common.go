@@ -9,41 +9,6 @@ import (
 // Keyframe rules R10 to R13 of SDD-002: the value of an animated property, and how
 // keyframes follow a trim or a split.
 
-func ease(kind string, u float64) float64 {
-	switch kind {
-	case "ease_in":
-		return u * u * u
-	case "ease_out":
-		return 1 - (1-u)*(1-u)*(1-u)
-	case "ease_in_out":
-		if u < 0.5 {
-			return 4 * u * u * u
-		}
-		return 1 - (-2*u+2)*(-2*u+2)*(-2*u+2)/2
-	case "hold":
-		return 0
-	}
-	return u
-}
-
-// valueAt is the interpolated value of keyframes at relative frame r (SDD-004 §3.1).
-func valueAt(kfs []timeline.Keyframe, r int) float64 {
-	if r <= kfs[0].T {
-		return kfs[0].Value
-	}
-	last := kfs[len(kfs)-1]
-	if r >= last.T {
-		return last.Value
-	}
-	for i := 0; i+1 < len(kfs); i++ {
-		if kfs[i].T <= r && r < kfs[i+1].T {
-			u := float64(r-kfs[i].T) / float64(kfs[i+1].T-kfs[i].T)
-			return kfs[i].Value + (kfs[i+1].Value-kfs[i].Value)*ease(kfs[i].Easing, u)
-		}
-	}
-	return last.Value
-}
-
 func sortedProps(k timeline.Keyframes) []string {
 	props := make([]string, 0, len(k))
 	for p := range k {
@@ -85,7 +50,7 @@ func kShift(it *timeline.Item, d int) {
 		old := it.Keyframes[prop]
 		v0 := 0.0
 		if d > 0 {
-			v0 = round3(valueAt(old, d))
+			v0 = timeline.ValueAt(old, d, 0)
 		}
 		var kept []timeline.Keyframe
 		dropped, lastEasing := false, "linear"
@@ -128,10 +93,10 @@ func kCut(it *timeline.Item, l int) {
 		case len(kept) == len(old):
 		case len(kept) == 0:
 			delete(it.Keyframes, prop)
-			setStatic(it, prop, valueAt(old, l))
+			setStatic(it, prop, timeline.ValueAt(old, l, 0))
 		default:
 			if kept[len(kept)-1].T < l {
-				kept = append(kept, timeline.NewKeyframe(l, round3(valueAt(old, l))))
+				kept = append(kept, timeline.NewKeyframe(l, timeline.ValueAt(old, l, 0)))
 			}
 			it.Keyframes[prop] = kept
 		}
@@ -161,7 +126,7 @@ func kSplit(it *timeline.Item, tc int) (left, right timeline.Item) {
 				after = append(after, k)
 			}
 		}
-		v := round3(valueAt(kfs, tc))
+		v := timeline.ValueAt(kfs, tc, 0)
 
 		l := slices.Clone(before)
 		if at != nil {

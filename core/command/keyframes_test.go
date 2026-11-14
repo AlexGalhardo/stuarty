@@ -2,38 +2,40 @@ package command
 
 import (
 	"encoding/json"
-	"math"
 	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
-func TestEasingAndValueAt(t *testing.T) {
-	near := func(a, b float64) bool { return math.Abs(a-b) < 1e-9 }
-	cases := []struct {
-		kind string
-		u    float64
-		want float64
-	}{
-		{"linear", 0.25, 0.25},
-		{"", 0.25, 0.25},
-		{"ease_in", 0.5, 0.125},
-		{"ease_out", 0.5, 0.875},
-		{"ease_in_out", 0.25, 0.0625},
-		{"ease_in_out", 0.75, 0.9375},
-		{"hold", 0.9, 0},
+// TestKeyframeHelpers reproduces the worked values of R11 to R13.
+func TestKeyframeHelpers(t *testing.T) {
+	item := func() timeline.Item {
+		it := timeline.NewItem("itm_k000000001", timeline.ItemText, vidTr, 0, 100)
+		it.Keyframes = timeline.Keyframes{"scale": {kf(0, 1), kf(60, 3)}}
+		return it
 	}
-	for _, c := range cases {
-		if got := ease(c.kind, c.u); !near(got, c.want) {
-			t.Errorf("ease(%q, %v) = %v, want %v", c.kind, c.u, got, c.want)
-		}
+	// R13: cut at 30, the cut keyframe carries the interpolated value on both parts.
+	it := item()
+	l, r := kSplit(&it, 30)
+	if got := l.Keyframes["scale"]; len(got) != 2 || got[1].T != 30 || got[1].Value != 2 {
+		t.Errorf("left %+v", got)
 	}
-	k := []timeline.Keyframe{kf(10, 1), kf(20, 3, "hold"), kf(30, 5)}
-	for r, want := range map[int]float64{0: 1, 10: 1, 15: 2, 20: 3, 25: 3, 30: 5, 99: 5} {
-		if got := valueAt(k, r); !near(got, want) {
-			t.Errorf("valueAt(%d) = %v, want %v", r, got, want)
-		}
+	if got := r.Keyframes["scale"]; len(got) != 2 || got[0].T != 0 || got[0].Value != 2 || got[1].T != 30 ||
+		got[1].Value != 3 {
+		t.Errorf("right %+v", got)
+	}
+	// R11: losing the first 30 frames starts the keyframes at the interpolated value.
+	it = item()
+	kShift(&it, 30)
+	if got := it.Keyframes["scale"]; len(got) != 2 || got[0].T != 0 || got[0].Value != 2 || got[1].T != 30 {
+		t.Errorf("shift %+v", got)
+	}
+	// R12: cutting at 30 adds a keyframe with the value there.
+	it = item()
+	kCut(&it, 30)
+	if got := it.Keyframes["scale"]; len(got) != 2 || got[1].T != 30 || got[1].Value != 2 {
+		t.Errorf("cut %+v", got)
 	}
 }
 
