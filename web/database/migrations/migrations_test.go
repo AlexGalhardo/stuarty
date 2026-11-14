@@ -251,3 +251,45 @@ func TestQueueTablesAndEditorJobs(t *testing.T) {
 		t.Errorf("the jobs table is not the editor table: %q", got)
 	}
 }
+
+// Every Down must undo its Up: Reset runs them all and leaves no editor table
+// behind, and the migrations can then run again on the same database.
+func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
+	db := openMigrated(t)
+	ctx := context.Background()
+
+	m, err := schema.NewMigrator(db, slices.Concat(queue.Migrations(queue.DatabaseOptions{
+		Table: "queue_jobs", FailedTable: "queue_failed_jobs",
+	}), All()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tables := []string{
+		"projects", "operations", "idempotency_keys", "assets", "jobs", "templates", "document_backups", "audit",
+	}
+	for _, table := range tables {
+		if len(columns(t, db, table)) == 0 {
+			t.Fatalf("table %s does not exist after Up: the list of this test is stale", table)
+		}
+	}
+
+	rolled, err := m.Reset(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rolled) != 1+len(All()) {
+		t.Fatalf("Reset rolled back %d migrations, want %d", len(rolled), 1+len(All()))
+	}
+
+	for _, table := range tables {
+		if got := columns(t, db, table); len(got) != 0 {
+			t.Errorf("table %s still has columns after Reset: %v", table, got)
+		}
+	}
+
+	again, err := m.Up(ctx)
+	if err != nil || len(again) != 1+len(All()) {
+		t.Fatalf("Up after Reset = %v, %v; want all %d migrations", again, err, 1+len(All()))
+	}
+}
