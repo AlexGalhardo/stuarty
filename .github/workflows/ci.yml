@@ -2,7 +2,7 @@ name: CI
 
 # Pull-request checks of SDD-009 section 9.4 and 13. This file holds the jobs
 # whose tools exist today; the jobs that need tools of later tasks (generated
-# files, notices, release dry run, security suites, fuzz, no egress, Playwright)
+# files, release dry run, security suites, fuzz, no egress, Playwright)
 # are added by those tasks, each with the display name the ruleset requires.
 on:
   push:
@@ -175,6 +175,28 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
       - run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+  # SDD-009 section 12.3: the committed notices are what the generator writes, and
+  # every dependency licence is on the allow-list (NFR-043). The step "Notices are
+  # current" of release.yml, which stops a release from stale notices, joins with
+  # P2-REL-003.
+  notices:
+    name: Notices
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile --cwd web
+      - run: go run ./internal/tools/notices -check
 
   pins:
     name: Workflow pins
