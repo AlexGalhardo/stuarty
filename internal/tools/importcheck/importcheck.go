@@ -131,6 +131,10 @@ func forbidden(rel, imp, modulePath string) string {
 	case "web":
 		return ""
 	case "core":
+		if strings.HasPrefix(rel, "core/command/") && under(imp, modulePath+"/core/plan") {
+			return "core/command never imports core/plan: both read shared helpers from core/timeline (SDD-004 §1 rule 1)"
+		}
+
 		if isStdlib(imp) || under(imp, modulePath+"/core") || underAny(imp, CoreLibraries) {
 			return ""
 		}

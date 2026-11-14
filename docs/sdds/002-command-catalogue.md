@@ -364,6 +364,8 @@ Each section refers to these rules by number. They add detail to Parts A and B a
 - **R18. Resizing at the back.** When a command changes an item's duration to `D'` and keeps its `start`: if `D' < D` keyframes follow R12; fades and transitions are checked by R14; growth is checked for overlap by R8 and for the 108,000 limit by R7; for `clip` and `audio` the source range is checked by R9.
 - **R19. Diff order.** Entries are sorted by kind group (settings, assets, tracks, items) and then by identifier, as in A.5.
 
+**Where the shared rules live.** Each rule has one implementation in `core/command`, named here so a command never carries a copy: R8 `nextFree` and R9 `maxDur` in `nextfree.go` (R9's `checkSource` stays with the item helpers in `item.go`); R10 to R13 (`kShift`, `kCut`, `kSplit`) in `keyframes_common.go`, evaluating values through `timeline.ValueAt` and `timeline.Ease` of `core/timeline/interp.go`, which `core/plan` also calls (SDD-004 §3.1); R14 `checkFit` and the fit fix `fitFix` in `fit.go`; R15 style merge and `E_FONT_UNKNOWN` in `style.go`; R16 word arguments and the `E_LIMIT` of 60 words per caption and 5,000 per document in `words.go`; R17 `splitCore` in `split_core.go`. `core/command` does not import `core/plan`; `internal/tools/importcheck` fails the build when it does.
+
 ### Decisions of Part C
 
 Part C makes choices that Parts A and B leave open or do not state. Each one is listed here so that it is visible and can be challenged in one place. The sections apply them.
