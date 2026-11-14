@@ -186,6 +186,17 @@ func proofServer(token string, seen *[]string) *httptest.Server {
 	}))
 }
 
+func newGet(t *testing.T, url string) *http.Request {
+	t.Helper()
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, url, http.NoBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return req
+}
+
 func TestVerifyAcceptsTheRealServer(t *testing.T) {
 	t.Parallel()
 
@@ -229,9 +240,10 @@ func TestSecurity_T30_ImpostorServerGetsNoToken(t *testing.T) {
 			}))
 			defer srv.Close()
 
-			client := &http.Client{Transport: &Transport{Base: srv.URL, Token: "vvl_secret"}}
+			client := &Client{Base: srv.URL, Token: "vvl_secret", Next: srv.Client()}
 
-			if _, err := client.Get(srv.URL + "/api/v1/projects"); err == nil {
+			if res, err := client.Do(newGet(t, srv.URL+"/api/v1/projects")); err == nil {
+				_ = res.Body.Close()
 				t.Fatal("the request went through to an impostor")
 			}
 
@@ -255,9 +267,9 @@ func TestTransportSendsTheTokenAfterAValidProof(t *testing.T) {
 	srv := proofServer("vvl_secret", &seen)
 	defer srv.Close()
 
-	client := &http.Client{Transport: &Transport{Base: srv.URL, Token: "vvl_secret"}}
+	client := &Client{Base: srv.URL, Token: "vvl_secret", Next: srv.Client()}
 
-	res, err := client.Get(srv.URL + "/api/v1/projects")
+	res, err := client.Do(newGet(t, srv.URL+"/api/v1/projects"))
 	if err != nil {
 		t.Fatal(err)
 	}
