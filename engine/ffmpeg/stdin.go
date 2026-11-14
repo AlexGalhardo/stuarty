@@ -15,7 +15,7 @@ import (
 const maxStderrTail = 4 << 20
 
 // The pinned contrib/engine (v0.1.1) cannot feed a child's standard input, which the export needs
-// to stream raw frames to the encoder (SDD-004 section 8, vukem-feedback.md VF-031). The change
+// to stream raw frames to the encoder (SDD-004 section 8, vukem-feedback.md VF-031, VF-036). The change
 // is merged in vukem as Tool.RunWith but has no contrib/engine tag yet, and the product does not
 // pin a pseudo-version. Until a tag exists, a run with a Stdin is started here, with the same
 // environment, process group, tree kill and pipe wait as contrib/engine. Switch to
