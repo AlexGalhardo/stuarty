@@ -77,9 +77,11 @@ const (
 	ProjectTrashed ProjectState = "trashed"
 )
 
-// ProjectSummary is computed by the service from the document and written by
-// the commit, so that listing never parses a document (SDD-005 section 5.1).
-type ProjectSummary struct {
+// DocSummary is computed by the service from the document and written by the
+// commit, so that listing never parses a document (SDD-005 section 5.1). It is
+// SDD-005's ProjectSummary, renamed because SDD-003 §2.3 gives that name to the
+// listing item of the API.
+type DocSummary struct {
 	Width, Height         int
 	FPSNum, FPSDen        int
 	DurationFrames        int64 // end of the last item, 0 when empty
@@ -93,7 +95,7 @@ type ProjectHead struct {
 	State         ProjectState
 	Revision      int64
 	SchemaVersion int
-	Summary       ProjectSummary
+	Summary       DocSummary
 	CreatedMs     int64
 	UpdatedMs     int64
 	CreatedBy     string
@@ -124,7 +126,7 @@ type ProjectUpdate struct {
 	SchemaVersion int
 	Document      []byte
 	DocSHA256     string
-	Summary       ProjectSummary
+	Summary       DocSummary
 	UpdatedMs     int64
 	ResyncFloor   *int64 // set only by migration and import
 }
@@ -414,7 +416,7 @@ type TemplateRow struct {
 	Document        []byte
 	DocSHA256       string
 	Slots           json.RawMessage // [{name, kind, required, description}] for listing
-	Summary         ProjectSummary
+	Summary         DocSummary
 	SourceProjectID *string
 	CreatedMs       int64
 	CreatedBy       string
@@ -432,7 +434,7 @@ type TemplateRepo interface {
 		doc []byte,
 		sha string,
 		slots json.RawMessage,
-		sum ProjectSummary,
+		sum DocSummary,
 	) error
 }
 

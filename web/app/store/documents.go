@@ -110,7 +110,7 @@ func (r templateRepo) UpdateDocument(
 	doc []byte,
 	sha string,
 	slots json.RawMessage,
-	sum service.ProjectSummary,
+	sum service.DocSummary,
 ) error {
 	return notFoundIfNone(rowsAffected(r.ex.ExecContext(
 		ctx,
