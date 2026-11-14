@@ -121,7 +121,7 @@ func (p *planner) layer(it *timeline.Item, r int) (Layer, bool) {
 		return p.mediaLayer(l, it, r, a)
 	case timeline.ItemShape:
 		sp := &BitmapSpec{
-			Kind: "shape", ActiveWord: -1, PixelScale: pixelScale(it),
+			Kind: "shape", ActiveWord: -1, PixelScale: pixelScale(it, p.opts.OutputScale),
 			Shape: &ShapeSpec{
 				Shape: it.Shape, Width: it.Width, Height: it.Height, Radius: it.Radius,
 				Fill: resolveColor(p.doc, string(it.Fill)), StrokeColor: resolveColor(p.doc, string(it.StrokeColor)),
@@ -204,11 +204,15 @@ func (p *planner) textLayer(l Layer, it *timeline.Item, r int, a animated) Layer
 
 		spec = BitmapSpec{
 			Kind: "caption", Text: captionText(words, it.Breaks), Words: words, Breaks: it.Breaks,
-			ActiveWord: active, Style: st, PixelScale: pixelScale(it),
+			ActiveWord: active, Style: st, PixelScale: pixelScale(it, p.opts.OutputScale),
 		}
 	} else {
 		spec = BitmapSpec{
-			Kind: "text", Text: it.Text, ActiveWord: -1, Style: textStyle(p.doc, it), PixelScale: pixelScale(it),
+			Kind:       "text",
+			Text:       it.Text,
+			ActiveWord: -1,
+			Style:      textStyle(p.doc, it),
+			PixelScale: pixelScale(it, p.opts.OutputScale),
 		}
 	}
 

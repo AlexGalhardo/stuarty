@@ -139,6 +139,9 @@ type Measurer func(BitmapSpec) (w, h float64)
 // Options configure FrameWith and WindowWith.
 type Options struct {
 	Measure Measurer
+	// OutputScale is width / project width of the frame asked for; 0 means 1 (export).
+	// It enters the oversampling of bitmap layers (SDD-004 §5.3).
+	OutputScale float64
 }
 
 // round3 rounds to 3 decimal places and never yields -0 (SDD-004 §2, stability).

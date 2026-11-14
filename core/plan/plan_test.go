@@ -691,7 +691,7 @@ func TestPixelScale(t *testing.T) {
 			it.Keyframes = timeline.Keyframes{"scale": {{T: 0, Value: tt.kf}}}
 		}
 
-		if got := pixelScale(&it); got != tt.want {
+		if got := pixelScale(&it, 0); got != tt.want {
 			t.Errorf("pixelScale(scale %v, keyframe %v) = %v, want %v", tt.scale, tt.kf, got, tt.want)
 		}
 	}
