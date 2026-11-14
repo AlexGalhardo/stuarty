@@ -148,13 +148,12 @@ jobs:
           echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       - name: go test
         shell: bash # PowerShell would split -coverprofile=coverage.out at the dot
-        run: go test -race -count=1 -timeout=20m -coverprofile=coverage.out ./...
+        # -coverpkg=./... credits a package with what the tests of the others
+        # execute: the wiring packages of web/ (bootstrap, routes, seeders) are
+        # exercised by web/tests, not by tests of their own.
+        run: go test -race -count=1 -timeout=20m -coverpkg=./... -coverprofile=coverage.out ./...
       - name: Coverage gate
         if: matrix.os == 'ubuntu-latest'
-        # continue-on-error: the skeleton of the first tasks is below the floors
-        # of SDD-009 section 13.2 (see the job summary). Remove this line, so
-        # the gate blocks, once the listed packages have tests.
-        continue-on-error: true
         run: go run ./internal/tools/covergate -v coverage.out
       - name: Upload coverage
         if: matrix.os == 'ubuntu-latest'
