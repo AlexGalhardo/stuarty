@@ -180,11 +180,14 @@ func TestErrorEnvelopeBecomesAServiceError(t *testing.T) {
 	_, err := c.Edit(asCLI("cli"), service.EditRequest{ProjectID: "prj_a"})
 
 	var se *service.Error
-	if !errors.As(err, &se) || se.Code != command.CodeRevisionConflict || se.Message != "behind" || se.Hint != "read again" ||
-		!se.Retryable || se.OpIndex == nil ||
-		*se.OpIndex != 2 ||
-		se.Path != "operations[2]" ||
-		se.Details["current_revision"] != float64(5) {
+	if !errors.As(err, &se) {
+		t.Fatalf("err = %#v, want a *service.Error", err)
+	}
+
+	sameText := se.Code == command.CodeRevisionConflict && se.Message == "behind" && se.Hint == "read again"
+	sameWhere := se.OpIndex != nil && *se.OpIndex == 2 && se.Path == "operations[2]"
+
+	if !sameText || !se.Retryable || !sameWhere || se.Details["current_revision"] != float64(5) {
 		t.Fatalf("err = %#v", err)
 	}
 }
