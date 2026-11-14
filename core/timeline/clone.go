@@ -11,6 +11,12 @@ func Clone(doc *Document) *Document {
 	return out
 }
 
+// CloneItem returns a deep copy of an item.
+func CloneItem(it Item) Item {
+	out, _ := reflect.TypeAssert[Item](deepCopy(reflect.ValueOf(it)))
+	return out
+}
+
 // Raw returns doc as a RawDoc in canonical form: a field equal to its default is
 // absent. It is the form in which a diff and the primitives of SDD-002 §A.5 and
 // §A.6 see a document.

@@ -56,3 +56,38 @@ func TestRawIsCanonicalTree(t *testing.T) {
 		t.Errorf("round trip: %v", err)
 	}
 }
+
+func TestCloneItemIsDeep(t *testing.T) {
+	doc := mustDecode(t, readFile(t, "testdata/valid/all-item-types.json"))
+	it := doc.Items["itm_p000000001"]
+	c := CloneItem(it)
+	c.Keyframes["scale"][0].Value = 99
+	*c.X = 1
+	c.Crop.Left = 0.9
+	if it.Keyframes["scale"][0].Value == 99 || *it.X == 1 || it.Crop.Left == 0.9 {
+		t.Error("CloneItem shares memory with the original")
+	}
+}
+
+func TestAssetDuration(t *testing.T) {
+	fps := Rational{Num: 30, Den: 1}
+	video := Asset{Kind: AssetVideo, FrameRate: Rational{Num: 24, Den: 1}, FrameCount: 240}
+	audio := Asset{Kind: AssetAudio, SampleCount: 96000}
+	for _, c := range []struct {
+		a    Asset
+		fps  Rational
+		want int
+		ok   bool
+	}{
+		{video, fps, 300, true},
+		{audio, fps, 60, true},
+		{Asset{Kind: AssetImage}, fps, 0, false},
+		{video, Rational{}, 0, false},
+		{Asset{Kind: AssetVideo}, fps, 0, false},
+		{Asset{Kind: AssetAudio}, fps, 0, false},
+	} {
+		if got, ok := AssetDuration(c.a, c.fps); got != c.want || ok != c.ok {
+			t.Errorf("%+v: %d %v", c.a, got, ok)
+		}
+	}
+}

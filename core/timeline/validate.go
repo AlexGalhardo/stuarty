@@ -153,7 +153,7 @@ func (v *validator) settings() {
 	if !inRange(s.LoudnessTarget, -30, -5) {
 		v.add(VShape, "settings.loudness_target", id, "loudness_target must be between -30 and -5")
 	}
-	v.color("settings.background", id, s.Background, false)
+	v.color("settings.background", id, s.Background, true)
 }
 
 // color checks a colour value; refs says whether "$name" is accepted.
@@ -571,6 +571,16 @@ func (v *validator) media(path, key string, it Item) {
 			v.related(it.Asset)
 		}
 	}
+}
+
+// AssetDuration is the length of an asset in project frames (SDD-001 §3.2); ok is
+// false for an image, which has no limit, or for an asset whose facts are unusable.
+func AssetDuration(a Asset, fps Rational) (int, bool) {
+	n, ok := assetFrames(a, fps)
+	if !ok || !n.IsInt64() {
+		return 0, false
+	}
+	return int(n.Int64()), true
 }
 
 // assetFrames is the asset duration in project frames (SDD-001 §3.2); ok is false
