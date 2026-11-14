@@ -1,0 +1,10 @@
+{
+  "code": "E_OVERLAP",
+  "message": "Item itm_d1b2c3d4e5 would occupy frames 20-39 on track trk_a1b2c3d4e5, where item itm_b1b2c3d4e5 already is (frames 20-69).",
+  "hint": "Use ripple \"track\", or delete the straddling item too.",
+  "retryable": false,
+  "details": {
+    "conflicting_item": "itm_b1b2c3d4e5",
+    "next_free": 70
+  }
+}

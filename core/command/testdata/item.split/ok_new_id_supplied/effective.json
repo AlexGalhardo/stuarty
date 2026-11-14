@@ -1,0 +1,18 @@
+{
+  "at": {
+    "frame": 97,
+    "requested": "97f",
+    "seconds": 3.233
+  },
+  "left": {
+    "duration": 37,
+    "id": "itm_m1n2p3q4r5",
+    "start": 60
+  },
+  "new_id": "itm_k000000001",
+  "right": {
+    "duration": 83,
+    "id": "itm_k000000001",
+    "start": 97
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Trimming the end of itm_m1n2p3q4r5 to frame 90 leaves no frame: the item starts at 90.",
+  "hint": "Use an end after \"90f\", or delete the item.",
+  "retryable": false,
+  "path": "args.to"
+}

@@ -1,0 +1,31 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "duration": 120,
+      "keyframes": {
+        "opacity": [
+          {
+            "t": 0,
+            "value": 1
+          },
+          {
+            "t": 37,
+            "value": 0.5
+          },
+          {
+            "t": 80,
+            "value": 0.2
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_s6t7v8w9x0"
+  }
+]

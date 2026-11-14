@@ -1,0 +1,24 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        120,
+        37
+      ]
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_s6t7v8w9x0",
+    "object": {
+      "duration": 83,
+      "id": "itm_s6t7v8w9x0",
+      "start": 97,
+      "text": "Hello",
+      "track": "trk_f6g7h8j9k0",
+      "type": "text"
+    }
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.edge is \"left\", which is not one of the accepted values.",
+  "hint": "Use one of: start, end.",
+  "retryable": false,
+  "path": "args.edge",
+  "details": {
+    "allowed": [
+      "start",
+      "end"
+    ]
+  }
+}

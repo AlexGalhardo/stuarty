@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Splitting caption itm_m1n2p3q4r5 at frame 90 leaves the right part with no word.",
+  "hint": "Split at a word boundary with caption.split.",
+  "retryable": false,
+  "path": "args.at"
+}

@@ -1,0 +1,6 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Trimming the end of itm_m1n2p3q4r5 to frame 105 leaves fade_in 10 and fade_out 12 longer than the duration 15 by 7 frames.",
+  "hint": "Shorten the fades by 7 frames with item.set_audio first.",
+  "retryable": false
+}

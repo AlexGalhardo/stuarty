@@ -1,0 +1,21 @@
+{
+  "deleted": [
+    "itm_a1b2c3d4e5",
+    "itm_p7q8r9s0t1"
+  ],
+  "freed": {
+    "trk_f6g7h8j9k0": 40
+  },
+  "shifted": [
+    {
+      "from": 20,
+      "id": "itm_b1b2c3d4e5",
+      "to": 0
+    },
+    {
+      "from": 60,
+      "id": "itm_d1b2c3d4e5",
+      "to": 20
+    }
+  ]
+}

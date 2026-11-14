@@ -1,0 +1,34 @@
+[
+  {
+    "kind": "item.removed",
+    "id": "itm_a1b2c3d4e5",
+    "object": {
+      "duration": 20,
+      "id": "itm_a1b2c3d4e5",
+      "start": 0,
+      "text": "Hello",
+      "track": "trk_f6g7h8j9k0",
+      "type": "text"
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_b1b2c3d4e5",
+    "changes": {
+      "start": [
+        50,
+        30
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_d1b2c3d4e5",
+    "changes": {
+      "start": [
+        100,
+        80
+      ]
+    }
+  }
+]

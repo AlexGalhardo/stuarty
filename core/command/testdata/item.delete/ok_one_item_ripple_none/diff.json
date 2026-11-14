@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "item.removed",
+    "id": "itm_f6g7h8j9k0",
+    "object": {
+      "duration": 30,
+      "id": "itm_f6g7h8j9k0",
+      "start": 60,
+      "text": "Hello",
+      "track": "trk_f6g7h8j9k0",
+      "type": "text"
+    }
+  }
+]

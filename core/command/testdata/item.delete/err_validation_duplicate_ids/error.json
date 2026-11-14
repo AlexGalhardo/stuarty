@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.item_ids[1] \"itm_a1b2c3d4e5\" is listed twice.",
+  "hint": "List each item id once.",
+  "retryable": false,
+  "path": "args.item_ids[1]"
+}

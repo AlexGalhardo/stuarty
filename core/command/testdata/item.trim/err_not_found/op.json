@@ -1,0 +1,8 @@
+{
+  "op": "item.trim",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "edge": "start",
+    "to": "100f"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "duration": 25,
+  "start": 100,
+  "to": {
+    "frame": 125,
+    "requested": "125f",
+    "seconds": 4.167
+  }
+}

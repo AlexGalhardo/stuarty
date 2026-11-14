@@ -1,0 +1,32 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "duration": 60,
+      "words": [
+        {
+          "duration": 10,
+          "start": 0,
+          "text": "w0"
+        },
+        {
+          "duration": 15,
+          "start": 10,
+          "text": "w10"
+        },
+        {
+          "duration": 15,
+          "start": 25,
+          "text": "w25"
+        }
+      ]
+    }
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_s6t7v8w9x0"
+  }
+]
