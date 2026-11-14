@@ -1291,6 +1291,17 @@ coverage*
 *.log
 ```
 
+### 11.5 What P1-REL-009 built, and where it differs from sections 9.5 and 11.1 to 11.4
+
+The files are `.config/docker/vukem-video.Dockerfile`, its `.dockerignore`, `scripts/image-smoke.sh`, `.github/workflows/image.yml` and the tasks `task image:build` and `task image:smoke`. The image was built and smoke tested on Windows 11 with Docker 29.9.2 (571 MB; amd64 only: the arm64 build runs in `release.yml`).
+
+- **How to run it (D-029, local only).** `docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data ghcr.io/alexgalhardo/vukem-video:<version>`, then open `http://127.0.0.1:7878`. The server inside listens on every interface of the container (`HOST=0.0.0.0`), which is what a published port needs; the `127.0.0.1:` in `-p` is what keeps it reachable from the host only. Checked: `curl http://127.0.0.1:7878/up` answers `{"status":"ok"}` and the same port on the host's other interface (`172.25.80.1`) is refused. Do not publish it with `-p 7878:7878`.
+- **Boot settings until P1-SRV-005.** The binary does not read the `VUKEM_VIDEO_*` variables of SDD-000 section 10 yet; it reads vukem's `HOST` and `PORT`. The image sets `HOST=0.0.0.0`, `PORT=7878` and an explicit `APP_ENV=development`, because vukem refuses to boot without `APP_KEY` unless the environment is set and not production (VF-030). This is a stopgap: P1-SRV-005 settles local mode and the line goes. The workspace variables (`VUKEM_VIDEO_HOME`, `VUKEM_VIDEO_FFMPEG`, `VUKEM_VIDEO_FFPROBE`) are set as section 11.3 has them, and `VUKEM_VIDEO_MODE=network` is not set (it contradicts D-029).
+- **Not in the Dockerfile yet.** No `# syntax=docker/dockerfile:1` line (a floating tag); no `version` check and no `VERSION` stamp assertion, because `vukem-video version` does not exist (the `VERSION` and `REVISION` build arguments still set the image labels); no `COPY THIRD_PARTY_NOTICES.md` or `licenses/`, which do not exist until RF-215. The image carries the FFmpeg licence text, configure line and source pointer, and `base-image-packages.txt`.
+- **Git worktrees.** The build stage checks that git works in the context and builds without VCS stamping when it does not (a worktree `.git` file points outside the context), instead of failing as section 11.1 predicted.
+- **Smoke test.** `image-smoke.sh` has no `version` run and no notices check; it adds a boot test: it starts the container published on a free loopback port and waits up to 30 s for `/up`, then removes the container. `image.yml` has no dummy tag and no `VERSION` argument, for the same reason; it builds on pull requests that touch what goes into the image and pushes nothing.
+- **Secrets for publishing.** `release.yml` will need the repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (a Docker Hub access token with write scope for `alexgalhardo/vukem-video`), created by the author before the first release; GHCR uses the automatic `GITHUB_TOKEN`, and the package must be made public once after the first push (section 7 step 11).
+
 ## 12. Third-party notices
 
 RF-215 and NFR-043 require notices for everything shipped, and ADR-0011 requires the FFmpeg licence text, configure line and source link in every artifact that carries FFmpeg.
