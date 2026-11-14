@@ -6,7 +6,7 @@ An agent edits through MCP, a CLI or an HTTP API. A person edits the same projec
 
 ## Status
 
-**Prototype phase: the product is planned but not built yet.** The repository holds the Go module and package skeleton, the planning documents and a server that boots. The editor, the MCP server, the CLI commands and the HTTP API described below are specified, not released. There is no release and no installer yet, and the documentation site is not live.
+**Prototype phase: the product is planned but not built yet.** The repository holds the Go module and package skeleton, the planning documents and a server that boots. The editor, the MCP server, the CLI commands and the HTTP API described below are specified, not released. There is no release and no installer yet. The documentation site is live at <https://alexgalhardo.github.io/vukem-video/>.
 
 ## How it is built
 
@@ -15,7 +15,7 @@ An agent edits through MCP, a CLI or an HTTP API. A person edits the same projec
 - FFmpeg is used only as a separate LGPL process; pixels are composed in Go.
 - No outbound network connection by default and no telemetry.
 
-The layout is `core/`, `engine/`, `service/`, `web/`, `site/` and `desktop/` (`site/` and the contents of `desktop/` come later); the decision is [ADR-0001](docs/adrs/0001-repository-layout-and-go-module.md).
+The layout is `core/`, `engine/`, `service/`, `web/`, `site/` and `desktop/` (the contents of `desktop/` come later); the decision is [ADR-0001](docs/adrs/0001-repository-layout-and-go-module.md).
 
 ## Quick start
 
@@ -43,7 +43,7 @@ To build from source you need Go (see `go.mod`) and Bun for `web/`. The task run
 - [Security policy](.github/SECURITY.md) and [Code of Conduct](.github/CODE_OF_CONDUCT.md).
 - [Changelog](CHANGELOG.md).
 
-The documentation site is planned (SDD-010) and has no address yet.
+The documentation site (SDD-010) is at <https://alexgalhardo.github.io/vukem-video/>, with the documentation under <https://alexgalhardo.github.io/vukem-video/docs/introduction/>.
 
 ## License
 
