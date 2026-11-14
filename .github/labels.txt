@@ -1,0 +1,48 @@
+# type
+bug|d73a4a|Something does not work as documented
+enhancement|a2eeef|New feature or improvement
+documentation|0075ca|Docs are wrong, missing or unclear
+task|5319e7|Planned work with a done criterion
+tracking|0E8A16|Long-lived tracking issue
+ci-failure|B60205|A scheduled or main-branch workflow failed
+# state
+needs-triage|fbca04|Not yet reviewed by a maintainer
+needs-repro|fbca04|Waiting for a minimal reproduction
+blocked|000000|Cannot proceed until something else lands
+breaking|b60205|Changes or removes public behaviour
+# priority
+priority:p1|b60205|Fix before the next release
+priority:p2|d93f0b|Fix soon
+priority:p3|fef2c0|Nice to have
+# phase
+phase:prototype|bfd4f2|Belongs to the Prototype
+phase:alpha|d4c5f9|Belongs to ALPHA
+phase:beta|c2e0c6|Belongs to BETA
+# area (same list as the commit scopes in SDD-009 section 6.2)
+area:core|c5def5|core
+area:timeline|c5def5|timeline
+area:command|c5def5|command
+area:plan|c5def5|plan
+area:lint|c5def5|lint
+area:engine|c5def5|engine
+area:raster|c5def5|raster
+area:ingest|c5def5|ingest
+area:export|c5def5|export
+area:transcribe|c5def5|transcribe
+area:service|c5def5|service
+area:web|c5def5|web
+area:api|c5def5|api
+area:mcp|c5def5|mcp
+area:cli|c5def5|cli
+area:ui|c5def5|ui
+area:site|c5def5|site
+area:docs|c5def5|docs
+area:repo|c5def5|repo
+area:ci|c5def5|ci
+area:deps|c5def5|deps
+area:deps-dev|c5def5|deps-dev
+area:release|c5def5|release
+area:adr|c5def5|adr
+area:sdd|c5def5|sdd
+area:go|c5def5|go
+area:security|c5def5|security
