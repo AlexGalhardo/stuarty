@@ -1,0 +1,4 @@
+lgpl run1 vs lgpl run2 (S1): frames=900 differing=0
+lgpl vs gyan (S1): frames=900 differing=0
+S1 vs S2 (lgpl): frames=900 differing=0
+S1 vs S3 (lgpl): frames=900 differing=630

@@ -1,0 +1,43 @@
+### H1
+### source
+### H2
+{"strategy":"s1","encoder":"h264_mf","run":1,"mode":"encode","wall_sec":5.6067525,"prerender_ms":34.495,"go_render_sec":1.8461221,"encode_fps":160.52072924567298,"realtime_factor":5.350690974855766,"size_bytes":30781529,"valid":true}
+{"strategy":"s1","encoder":"libopenh264","run":1,"mode":"encode","wall_sec":7.5763835,"prerender_ms":34.983,"go_render_sec":1.0175544,"encode_fps":118.79018531730871,"realtime_factor":3.9596728439102904,"size_bytes":29897777,"valid":true}
+{"strategy":"s1","encoder":"h264_nvenc","run":1,"mode":"encode","wall_sec":4.3639568,"prerender_ms":36.187,"go_render_sec":1.4157625,"encode_fps":206.23485548711204,"realtime_factor":6.874495182903734,"size_bytes":31056252,"valid":true}
+{"strategy":"s1","encoder":"libx264","run":1,"mode":"encode","wall_sec":5.699564,"prerender_ms":34.211,"go_render_sec":1.8684292999999998,"encode_fps":157.9068153283304,"realtime_factor":5.263560510944346,"size_bytes":30650964,"valid":true}
+{"strategy":"s2","encoder":"h264_mf","run":1,"mode":"encode","wall_sec":3.4340372,"prerender_ms":34.593,"go_render_sec":0.6555045,"encode_fps":262.0821929360579,"realtime_factor":8.736073097868596,"size_bytes":30781529,"valid":true}
+{"strategy":"s2","encoder":"libopenh264","run":1,"mode":"encode","wall_sec":5.6168144,"prerender_ms":35.928,"go_render_sec":0.3751036,"encode_fps":160.23317416363267,"realtime_factor":5.341105805454423,"size_bytes":29897777,"valid":true}
+{"strategy":"s2","encoder":"h264_nvenc","run":1,"mode":"encode","wall_sec":2.4934199,"prerender_ms":35.067,"go_render_sec":0.4289641,"encode_fps":360.950034929937,"realtime_factor":12.031667830997899,"size_bytes":31056252,"valid":true}
+{"strategy":"s2","encoder":"libx264","run":1,"mode":"encode","wall_sec":3.7650769,"prerender_ms":35.813,"go_render_sec":0.6794763,"encode_fps":239.03894233873416,"realtime_factor":7.967964744624473,"size_bytes":30650964,"valid":true}
+{"strategy":"s3","encoder":"h264_mf","run":1,"mode":"encode","wall_sec":4.0094633,"prerender_ms":221.669,"go_render_sec":0,"encode_fps":224.46894575640584,"realtime_factor":7.4822981918801945,"size_bytes":30851603,"valid":true}
+{"strategy":"s3","encoder":"libopenh264","run":1,"mode":"encode","wall_sec":6.462040900000001,"prerender_ms":211.877,"go_render_sec":0,"encode_fps":139.27488450282013,"realtime_factor":4.642496150094004,"size_bytes":29847106,"valid":true}
+{"strategy":"s3","encoder":"h264_nvenc","run":1,"mode":"encode","wall_sec":3.2113850999999998,"prerender_ms":211.655,"go_render_sec":0,"encode_fps":280.2529039572364,"realtime_factor":9.341763465241215,"size_bytes":31057157,"valid":true}
+{"strategy":"s3","encoder":"libx264","run":1,"mode":"encode","wall_sec":3.9878126000000003,"prerender_ms":211.891,"go_render_sec":0,"encode_fps":225.68763637488883,"realtime_factor":7.522921212496294,"size_bytes":30638819,"valid":true}
+{"strategy":"s1","encoder":"h264_mf","run":2,"mode":"encode","wall_sec":5.2863337,"prerender_ms":34.71,"go_render_sec":1.6170054999999999,"encode_fps":170.2503192335361,"realtime_factor":5.675010641117869,"size_bytes":30781529,"valid":true}
+{"strategy":"s1","encoder":"libopenh264","run":2,"mode":"encode","wall_sec":7.6444257,"prerender_ms":38.636,"go_render_sec":1.0329775,"encode_fps":117.73284682458225,"realtime_factor":3.924428227486075,"size_bytes":29897777,"valid":true}
+{"strategy":"s1","encoder":"h264_nvenc","run":2,"mode":"encode","wall_sec":4.3380383,"prerender_ms":34.981,"go_render_sec":1.4168153,"encode_fps":207.4670479511442,"realtime_factor":6.915568265038139,"size_bytes":31056252,"valid":true}
+{"strategy":"s1","encoder":"libx264","run":2,"mode":"encode","wall_sec":5.6978221,"prerender_ms":34.797,"go_render_sec":2.1527493,"encode_fps":157.95508954201992,"realtime_factor":5.265169651400664,"size_bytes":30650964,"valid":true}
+{"strategy":"s2","encoder":"h264_mf","run":2,"mode":"encode","wall_sec":3.7200721,"prerender_ms":34.775,"go_render_sec":0.915466,"encode_fps":241.9307948359388,"realtime_factor":8.064359827864626,"size_bytes":30781529,"valid":true}
+{"strategy":"s2","encoder":"libopenh264","run":2,"mode":"encode","wall_sec":6.3447057000000004,"prerender_ms":37.973,"go_render_sec":0.4033122,"encode_fps":141.8505510822984,"realtime_factor":4.72835170274328,"size_bytes":29897777,"valid":true}
+{"strategy":"s2","encoder":"h264_nvenc","run":2,"mode":"encode","wall_sec":2.7259978,"prerender_ms":35.488,"go_render_sec":0.4686879,"encode_fps":330.15433834906247,"realtime_factor":11.005144611635416,"size_bytes":31056252,"valid":true}
+{"strategy":"s2","encoder":"libx264","run":2,"mode":"encode","wall_sec":3.8848302,"prerender_ms":34.541,"go_render_sec":0.7035006,"encode_fps":231.67035717545647,"realtime_factor":7.722345239181882,"size_bytes":30650964,"valid":true}
+{"strategy":"s3","encoder":"h264_mf","run":2,"mode":"encode","wall_sec":4.103461,"prerender_ms":222.352,"go_render_sec":0,"encode_fps":219.32705099427042,"realtime_factor":7.310901699809015,"size_bytes":30851603,"valid":true}
+{"strategy":"s3","encoder":"libopenh264","run":2,"mode":"encode","wall_sec":7.1155931,"prerender_ms":211.196,"go_render_sec":0,"encode_fps":126.48278047264957,"realtime_factor":4.216092682421652,"size_bytes":29847106,"valid":true}
+{"strategy":"s3","encoder":"h264_nvenc","run":2,"mode":"encode","wall_sec":3.284893,"prerender_ms":213.192,"go_render_sec":0,"encode_fps":273.9815269477575,"realtime_factor":9.132717564925251,"size_bytes":31057157,"valid":true}
+{"strategy":"s3","encoder":"libx264","run":2,"mode":"encode","wall_sec":4.4354872,"prerender_ms":499.288,"go_render_sec":0,"encode_fps":202.90893861670935,"realtime_factor":6.763631287223645,"size_bytes":30638819,"valid":true}
+### H3
+{"strategy":"s1","encoder":"h264_mf","run":1,"mode":"framemd5","wall_sec":5.6598424000000005,"prerender_ms":34.054,"go_render_sec":0.6833664,"encode_fps":159.01502840432445,"realtime_factor":5.300500946810815,"size_bytes":72216,"valid":false,"go_raw_sha256":"eec6c5a64162c0cf7faf2bfbc128978de72e52e093cd3efe9fccfef3cd638e46"}
+{"strategy":"s1","encoder":"h264_mf","run":1,"mode":"framemd5","wall_sec":5.6949714,"prerender_ms":34.827,"go_render_sec":0.7389393,"encode_fps":158.0341562382561,"realtime_factor":5.267805207941869,"size_bytes":72216,"valid":false,"go_raw_sha256":"eec6c5a64162c0cf7faf2bfbc128978de72e52e093cd3efe9fccfef3cd638e46"}
+{"strategy":"s1","encoder":"h264_mf","run":1,"mode":"framemd5","wall_sec":5.8527191,"prerender_ms":38.332,"go_render_sec":0.766086,"encode_fps":153.77467884969911,"realtime_factor":5.125822628323304,"size_bytes":72216,"valid":false,"go_raw_sha256":"eec6c5a64162c0cf7faf2bfbc128978de72e52e093cd3efe9fccfef3cd638e46"}
+{"strategy":"s2","encoder":"h264_mf","run":1,"mode":"framemd5","wall_sec":4.1161269,"prerender_ms":37.915,"go_render_sec":0.270406,"encode_fps":218.65215088485243,"realtime_factor":7.288405029495081,"size_bytes":72216,"valid":false,"go_raw_sha256":"6eeb6d758187329ae319c3dcefdf488a6c30ad101886d4ad470ab6a9f3a28178"}
+{"strategy":"s3","encoder":"h264_mf","run":1,"mode":"framemd5","wall_sec":5.0275771,"prerender_ms":207.834,"go_render_sec":0,"encode_fps":179.01266993995975,"realtime_factor":5.967088997998658,"size_bytes":72216,"valid":false}
+lgpl run1 vs lgpl run2 (S1): frames=900 differing=0
+lgpl vs gyan (S1): frames=900 differing=0
+S1 vs S2 (lgpl): frames=900 differing=0
+S1 vs S3 (lgpl): frames=900 differing=630
+### H4
+{"strategy":"s1","encoder":"ffv1","run":1,"mode":"encode","wall_sec":4.563269,"prerender_ms":34.528,"go_render_sec":1.6610879,"encode_fps":197.22703176166033,"realtime_factor":6.574234392055344,"size_bytes":140866543,"valid":false}
+h264_mf size=30285206 bitrate_kbps=8076 | SSIM Y:0.974384 (15.914855) U:0.945141 (12.607522) V:0.948167 (12.853976) All:0.965141 (14.576804) | PSNR y:31.329846 u:29.141367 v:28.579002 average:30.338103 min:23.652483 max:49.612515
+libopenh264 size=29401318 bitrate_kbps=7840 | SSIM Y:0.980125 (17.017018) U:0.977731 (16.523061) V:0.980114 (17.014427) All:0.979724 (16.930268) | PSNR y:31.364965 u:29.282241 v:28.691727 average:30.415587 min:23.651572 max:53.805721
+h264_nvenc size=30559865 bitrate_kbps=8149 | SSIM Y:0.982080 (17.466533) U:0.981530 (17.335258) V:0.982845 (17.656041) All:0.982116 (17.475234) | PSNR y:31.390218 u:29.353556 v:28.719404 average:30.451366 min:23.618437 max:60.065920
+libx264 size=30154581 bitrate_kbps=8041 | SSIM Y:0.982820 (17.649749) U:0.982475 (17.563514) V:0.983489 (17.822272) All:0.982874 (17.663444) | PSNR y:31.421307 u:29.358492 v:28.731662 average:30.472151 min:23.631754 max:56.148761

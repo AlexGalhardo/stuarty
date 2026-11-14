@@ -1,0 +1,35 @@
+## detect language (auto) on pt90, per model
+# tiny
+whisper_full_with_state: auto-detected language: pt (p = 0.990993)
+# base
+whisper_full_with_state: auto-detected language: pt (p = 0.994063)
+# small
+whisper_full_with_state: auto-detected language: pt (p = 0.973001)
+# large-v3-turbo
+whisper_full_with_state: auto-detected language: pt (p = 0.999293)
+## missing file
+  -vp N,     --vad-speech-pad-ms           N [30     ] VAD speech padding (extend segments)
+  -vo N,     --vad-samples-overlap         N [0.10   ] VAD samples overlap (seconds between segments)
+
+exit=2
+## corrupt file
+whisper_print_timings:   batchd time =     0.00 ms /     1 runs (     0.00 ms per run)
+whisper_print_timings:   prompt time =     0.00 ms /     1 runs (     0.00 ms per run)
+whisper_print_timings:    total time =   195.50 ms
+exit=0
+## missing model
+whisper_init_from_file_with_params_no_state: loading model from '$WORK/models/nope.bin'
+whisper_init_from_file_with_params_no_state: failed to open '$WORK/models/nope.bin'
+error: failed to initialize whisper context
+exit=3
+## progress lines (stderr, -pp), tiny pt90
+whisper_print_progress_callback: progress =  32%
+whisper_print_progress_callback: progress =  58%
+whisper_print_progress_callback: progress =  88%
+whisper_print_progress_callback: progress = 100%
+## stdout head
+
+[00:00:00.000 --> 00:00:00.050]  
+[00:00:00.050 --> 00:00:00.330]   As
+[00:00:00.330 --> 00:00:01.770]   crónicas
+[00:00:01.770 --> 00:00:02.000]   da

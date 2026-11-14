@@ -1,0 +1,18 @@
+
+
+Name                      : AMD Ryzen 7 5700X3D 8-Core Processor           
+NumberOfCores             : 8
+NumberOfLogicalProcessors : 16
+
+
+
+RAM bytes: 34278871040
+whisper.cpp version: 1.9.2
+-rwxr-xr-x 1 user 197614 479232 Aug  4 14:21 $WORK/bin/Release/whisper-cli.exe
+
+$WORK/models:
+total 2283012
+-rw-r--r-- 1 user 197614  147951465 Nov 14 14:17 ggml-base.bin
+-rw-r--r-- 1 user 197614 1624555275 Nov 14 14:32 ggml-large-v3-turbo.bin
+-rw-r--r-- 1 user 197614  487601967 Nov 14 14:20 ggml-small.bin
+-rw-r--r-- 1 user 197614   77691713 Nov 14 14:16 ggml-tiny.bin
