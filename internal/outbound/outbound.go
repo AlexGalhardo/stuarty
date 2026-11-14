@@ -37,3 +37,15 @@ func LocalServer(timeout time.Duration) *http.Client {
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 	}
 }
+
+// RemoteServer is the client of the CLI and the stdio MCP server towards the
+// server named by VUKEM_VIDEO_URL (SDD-007 section 10.1, path 4). The operator
+// chose that address, so it may be any host; TLS verification stays on, no proxy
+// is used and no redirect is followed, so the credential goes to that host only.
+func RemoteServer(timeout time.Duration) *http.Client {
+	return &http.Client{
+		Timeout:       timeout,
+		Transport:     &http.Transport{Proxy: nil, DisableKeepAlives: true},
+		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+	}
+}

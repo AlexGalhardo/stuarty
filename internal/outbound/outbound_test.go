@@ -45,3 +45,33 @@ func TestLocalServerReachesLoopbackOnly(t *testing.T) {
 		t.Errorf("err = %v, want ErrNotLoopback", err)
 	}
 }
+
+func TestRemoteServerFollowsNoRedirect(t *testing.T) {
+	t.Parallel()
+
+	target := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		t.Error("the redirect was followed")
+	}))
+	defer target.Close()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, target.URL, http.StatusFound)
+	}))
+	defer srv.Close()
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, srv.URL, http.NoBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := outbound.RemoteServer(2 * time.Second).Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_ = res.Body.Close()
+
+	if res.StatusCode != http.StatusFound {
+		t.Fatalf("status = %d, want the redirect itself", res.StatusCode)
+	}
+}
