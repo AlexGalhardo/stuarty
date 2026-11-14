@@ -53,6 +53,9 @@ type Stream struct {
 	RFrameRate     string `json:"r_frame_rate"`
 	AvgFrameRate   string `json:"avg_frame_rate"`
 	StartTime      string `json:"start_time"`
+	TimeBase       string `json:"time_base"`
+	DurationTS     int64  `json:"duration_ts"`
+	NbFrames       string `json:"nb_frames"`
 	Channels       int    `json:"channels"`
 	SampleRate     string `json:"sample_rate"`
 	Disposition    struct {
