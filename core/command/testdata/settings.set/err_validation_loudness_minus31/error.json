@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.loudness_target is -31, outside the accepted range.",
+  "hint": "Use a value between -30 and -5.",
+  "retryable": false,
+  "path": "args.loudness_target"
+}

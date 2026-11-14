@@ -1,0 +1,20 @@
+{
+  "op": "asset.add",
+  "args": {
+    "asset": {
+      "id": "ast_k000000001",
+      "hash": "sha256:00000000000000000000000000000000000000000000000000000000000003e9",
+      "name": "clip.mov",
+      "kind": "video",
+      "frame_rate": {
+        "num": 30,
+        "den": 1
+      },
+      "frame_count": 900,
+      "width": 1080,
+      "height": 1920,
+      "sample_count": 1440000,
+      "has_audio": true
+    }
+  }
+}

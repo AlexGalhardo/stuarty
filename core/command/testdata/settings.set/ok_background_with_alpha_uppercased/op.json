@@ -1,0 +1,6 @@
+{
+  "op": "settings.set",
+  "args": {
+    "background": "#aabbccdd"
+  }
+}

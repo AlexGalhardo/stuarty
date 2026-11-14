@@ -1,0 +1,19 @@
+[
+  {
+    "kind": "asset.added",
+    "id": "ast_k000000001",
+    "object": {
+      "frame_count": 900,
+      "frame_rate": {
+        "den": 1,
+        "num": 30
+      },
+      "hash": "sha256:00000000000000000000000000000000000000000000000000000000000003e9",
+      "height": 1920,
+      "id": "ast_k000000001",
+      "kind": "video",
+      "name": "clip.mov",
+      "width": 1080
+    }
+  }
+]

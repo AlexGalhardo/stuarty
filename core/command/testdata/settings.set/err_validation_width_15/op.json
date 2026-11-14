@@ -1,0 +1,6 @@
+{
+  "op": "settings.set",
+  "args": {
+    "width": 15
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.asset.hash \"md5:abc\" is not sha256: followed by 64 lower-case hex characters.",
+  "hint": "Send the hash of the original file, for example sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.",
+  "retryable": false,
+  "path": "args.asset.hash"
+}
