@@ -1,0 +1,152 @@
+package service
+
+import (
+	"errors"
+	"fmt"
+	"net/http"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+)
+
+// Codes the service adds to those of the core (SDD-000 section 8).
+const (
+	CodeUnauthorized      = "E_UNAUTHORIZED"
+	CodeForbidden         = "E_FORBIDDEN"
+	CodePayloadTooLarge   = "E_PAYLOAD_TOO_LARGE"
+	CodeNothingToUndo     = "E_NOTHING_TO_UNDO"
+	CodeNothingToRedo     = "E_NOTHING_TO_REDO"
+	CodeQueueFull         = "E_QUEUE_FULL"
+	CodeRateLimited       = "E_RATE_LIMITED"
+	CodeWorkspaceLocked   = "E_WORKSPACE_LOCKED"
+	CodeLintBlocking      = "E_LINT_BLOCKING"
+	codeInternalMessage   = "the operation failed because of an internal error."
+	codeInternalHint      = "Report this as a bug with the operation that was sent."
+	hintRestoreProject    = "restore the project first"
+	hintReadProjectAgain  = "read the project again with project_get and plan the batch against its current revision"
+	maxOperationsPerBatch = 200
+)
+
+// Error is the error of every service method (SDD-003 section 2.2).
+type Error struct {
+	Code      string         `json:"code"`
+	Message   string         `json:"message"`
+	Hint      string         `json:"hint,omitempty"`
+	Retryable bool           `json:"retryable"`
+	OpIndex   *int           `json:"op_index,omitempty"`
+	Path      string         `json:"path,omitempty"`
+	Details   map[string]any `json:"details,omitempty"`
+}
+
+func (e *Error) Error() string { return e.Code + ": " + e.Message }
+
+// HTTPStatus is the status of SDD-000 section 8; an unknown code is 500.
+func (e *Error) HTTPStatus() int {
+	switch e.Code {
+	case command.CodeValidation, command.CodeInvalidTime, command.CodeUnknownCommand:
+		return http.StatusBadRequest
+	case CodeUnauthorized:
+		return http.StatusUnauthorized
+	case CodeForbidden, "E_PATH_NOT_ALLOWED":
+		return http.StatusForbidden
+	case command.CodeNotFound, "E_FILE_NOT_FOUND":
+		return http.StatusNotFound
+	case command.CodeRevisionConflict, command.CodeIdempotencyMismatch, command.CodeOverlap, command.CodeInvalidState,
+		command.CodeInUse, command.CodeNotEmpty, command.CodeIDExists, "E_ASSET_NOT_READY", CodeNothingToUndo, CodeNothingToRedo:
+		return http.StatusConflict
+	case CodePayloadTooLarge:
+		return http.StatusRequestEntityTooLarge
+	case command.CodeLimit, "E_LIMIT_EXCEEDED", "E_UNSUPPORTED_MEDIA", command.CodeTypeMismatch, command.CodeOutOfSource,
+		command.CodeFontUnknown, command.CodeSlot, CodeLintBlocking:
+		return http.StatusUnprocessableEntity
+	case CodeQueueFull, CodeRateLimited:
+		return http.StatusTooManyRequests
+	case CodeWorkspaceLocked, "E_TRANSCRIBE_UNAVAILABLE", "E_FFMPEG_MISSING", "E_NO_ENCODER":
+		return http.StatusServiceUnavailable
+	}
+
+	return http.StatusInternalServerError
+}
+
+// ExitCode is 2 when a retry can succeed and 1 otherwise.
+func (e *Error) ExitCode() int {
+	if e.Retryable {
+		return 2
+	}
+
+	return 1
+}
+
+// newError builds an error whose retryable flag follows the code.
+func newError(code, format string, args ...any) *Error {
+	retryable := code == command.CodeRevisionConflict || code == CodeQueueFull || code == CodeRateLimited ||
+		code == CodeWorkspaceLocked || code == "E_ASSET_NOT_READY"
+
+	return &Error{Code: code, Message: fmt.Sprintf(format, args...), Retryable: retryable}
+}
+
+func (e *Error) withHint(format string, args ...any) *Error {
+	e.Hint = fmt.Sprintf(format, args...)
+	return e
+}
+
+func (e *Error) withPath(path string) *Error {
+	e.Path = path
+	return e
+}
+
+func (e *Error) withDetail(key string, value any) *Error {
+	if e.Details == nil {
+		e.Details = map[string]any{}
+	}
+
+	e.Details[key] = value
+
+	return e
+}
+
+func internalError() *Error {
+	return newError(command.CodeInternal, "%s", codeInternalMessage).withHint("%s", codeInternalHint)
+}
+
+// fromCommand turns an error of the core into a service error.
+func fromCommand(err error) *Error {
+	ce := command.AsError(err)
+
+	return &Error{
+		Code: ce.Code, Message: ce.Message, Hint: ce.Hint, Retryable: ce.Retryable,
+		OpIndex: ce.OpIndex, Path: ce.Path, Details: ce.Details,
+	}
+}
+
+// asError returns err as a *Error. A sentinel of the store maps to its code; a
+// context error is reported as such (the caller gave up), and anything else is
+// E_INTERNAL without its text, which may hold paths or SQL.
+func asError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if se, ok := errors.AsType[*Error](err); ok {
+		return se
+	}
+
+	if ce, ok := errors.AsType[*command.Error](err); ok {
+		return fromCommand(ce)
+	}
+
+	switch {
+	case errors.Is(err, ErrNotFound):
+		return newError(command.CodeNotFound, "the project or object does not exist.")
+	case errors.Is(err, ErrExists):
+		return newError(command.CodeIDExists, "an object with that identifier already exists.")
+	case errors.Is(err, ErrStale):
+		return internalError()
+	}
+
+	var full *QueueFullError
+	if errors.As(err, &full) {
+		return newError(CodeQueueFull, "a concurrency limit is reached.").withDetail("running", full.Running)
+	}
+
+	return internalError()
+}
