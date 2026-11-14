@@ -256,7 +256,7 @@ Measured facts that shape the rest of this section (all on the pinned build):
 
 ### 3.2 Probe summary
 
-The summary is stored as the `probe` artifact (`probe-1.json`) next to the raw ffprobe JSON (with `format.filename` replaced by an empty string: a server path never leaves the process).
+The summary is stored as the `probe` artifact (`probe-1.json`) next to the raw ffprobe JSON (with `format.filename` replaced by an empty string: a server path never leaves the process). As written by `engine/ingest`, `probe-1.json` is `{"summary": <the summary>, "ffprobe": <the raw JSON>}`.
 
 ```json
 {
@@ -301,7 +301,7 @@ The nominal rate is what the capture device was doing, not what a container fiel
 
 1. Sort the packet timestamps ascending, drop `N/A`. Deltas `d_i = pts[i+1] - pts[i]`, keeping those greater than 0.
 2. With at least 10 deltas: `med` is their median; the regular set is `{d : 0.6 * med <= d <= 1.4 * med}`; `v = 1 / mean(regular set)`. The mean over the regular set (not the median alone) is what makes millisecond-quantized timestamps (16 and 17 ms alternating in WebM) come out as 60.0 and not 58.8. With fewer than 10 deltas: `v = r_frame_rate` if it lies in [1, 120], else `avg_frame_rate`, else 30 with the warning `frame_rate_unknown`.
-3. A measured `v` above 240 is refused before this step (3.4). While `v > MaxFPS`, `v = v / 2` (so 120 becomes 60 and 240 becomes 60: whole frames are dropped, never invented).
+3. A measured `v` above 240 is refused before this step (3.4). While `v > MaxFPS`, `v = v / 2` (so 120 becomes 60 and 240 becomes 60: whole frames are dropped, never invented). The comparison is `v > MaxFPS * 1.005`: a 60 fps source whose timestamps are rounded to milliseconds measures 60.0003, and halving that to 30 would drop half of its frames.
 4. Snap: `i = max(1, round(v))`. If `i` is one of 12, 15, 24, 30, 48, 60, 120 and `|v - i * 1000 / 1001| < |v - i|`, the result is `i * 1000 / 1001` (written `(i * 1000) / 1001`); otherwise `i / 1`. If `|v - result| / result` is above 2%, add the warning `irregular_frame_rate`.
 5. `vfr` is true when `avg_frame_rate` differs from `r_frame_rate` by more than 2%, or when more than 1% of the deltas lie outside the regular set. It is informational.
 
@@ -425,6 +425,7 @@ Built by `FilterChain(plan)` as the comma-joined pieces below, in this order. Pi
 | 4 | `scale=<W>:<H>:flags=bicubic+accurate_rnd,setsar=1` | `(W, H)` differs from the rotated coded size (cap, anamorphic pixels) | square pixels, even dimensions, at most `MaxEdge`. `accurate_rnd` is kept for this rare step; the cheaper flag set is used for the proxy |
 | 5 | colour block, below | not already BT.709 limited 8-bit | explicit conversion to BT.709 limited |
 | 6 | `format=yuv420p` | always | 8-bit 4:2:0 |
+| 7 | `setparams=colorspace=bt709:color_primaries=bt709:color_trc=bt709:range=tv` | the colour block is empty (the stream already is the target) or is the scale-only conversion | FFmpeg writes the colour tags of an encoder from the frames: with `-colorspace` and the other output options alone, an untagged source gave `unknown` tags in the MOV (measured on the pinned build, 1080p, 2026-11-14). The `zscale` paths set the properties themselves |
 
 **Colour block.** Let `M, P, T` be the stream's matrix, primaries and transfer, with `unknown` replaced by assumed values: matrix and primaries `bt709` when the coded height is 720 or more, else `smpte170m`; transfer `bt709` (the BT.709 and SMPTE 170M curves are the same function). Let `R` be `pc` when `pix_fmt` starts with `yuvj` or `color_range` is `pc`, else `tv`.
 
@@ -566,7 +567,7 @@ There is no descriptor file. The layout lives in the `meta` column of the sheet'
 Layout, all computed by `PlanThumbnails(duration_ms, W, H)`:
 
 - Tile height 128 pixels; tile width `tw = even(round(W * 128 / H))`. If `tw > 256` the tile is 256 wide and the frame is letterboxed with `scale=256:128:force_original_aspect_ratio=decrease,pad=256:128:(ow-iw)/2:(oh-ih)/2`.
-- Interval `I` in whole seconds: `I = max(1, ceil(duration_s / ThumbMaxCount))`. A clip up to 400 s has a tile per second; longer clips get at most 400 tiles.
+- Interval `I` in whole seconds: `I = max(1, ceil(duration_s / ThumbMaxCount))`. A clip up to 400 s has a tile per second; longer clips get at most 400 tiles. The video pass passes `-frames:v <ceil(duration_s / I) + 1>` (at most `ThumbMaxCount`) on the tile output, and `BuildSheet` refuses more tiles than that plan, so a crafted file cannot make the sheet's size depend on what FFmpeg wrote (security review of the ingest branch).
 - `count` is the number of tile files the video pass wrote (a 60 s clip wrote 60, measured). Tile `i` shows the frame at `i * I` seconds. The viewer uses tile `min(count - 1, floor(t / I))`.
 - The sheet has `columns = min(count, ThumbColumns)` columns (`ThumbColumns` = 20) and `rows = ceil(count / columns)`; tiles are placed row by row, left to right. Go assembles it with the standard library (`image/jpeg` to decode the tiles, `image/draw` to place them, `jpeg.Encode` at quality 80); unused cells are black. A 400-tile sheet of 72×128 tiles is 1440×2560 pixels, one of 228×128 tiles is 4560×2560.
 
