@@ -131,9 +131,9 @@ const (
 	ProjectTrashed ProjectState = "trashed"
 )
 
-// ProjectSummary is computed by the service from the document and written by
+// DocSummary is computed by the service from the document and written by
 // the commit, so that listing never parses a document (section 5.1).
-type ProjectSummary struct {
+type DocSummary struct {
 	Width, Height      int
 	FPSNum, FPSDen     int
 	DurationFrames     int64 // end of the last item, 0 when empty
@@ -146,7 +146,7 @@ type ProjectHead struct {
 	State         ProjectState
 	Revision      int64
 	SchemaVersion int
-	Summary       ProjectSummary
+	Summary       DocSummary
 	CreatedMs     int64
 	UpdatedMs     int64
 	CreatedBy     string
@@ -176,7 +176,7 @@ type ProjectUpdate struct {
 	SchemaVersion int
 	Document      []byte
 	DocSHA256     string
-	Summary       ProjectSummary
+	Summary       DocSummary
 	UpdatedMs     int64
 	ResyncFloor   *int64 // set only by migration and import
 }
@@ -417,7 +417,7 @@ type TemplateRow struct {
 	Document        []byte
 	DocSHA256       string
 	Slots           json.RawMessage // [{name, kind, required, description}] for listing
-	Summary         ProjectSummary
+	Summary         DocSummary
 	SourceProjectID *string
 	CreatedMs       int64
 	CreatedBy       string
@@ -427,7 +427,7 @@ type TemplateRepo interface {
 	Create(ctx context.Context, row TemplateRow) error
 	Get(ctx context.Context, id string) (TemplateRow, error)
 	List(ctx context.Context, limit int, after string) ([]TemplateRow, string, error) // Document left empty
-	UpdateDocument(ctx context.Context, id string, schemaVersion int, doc []byte, sha string, slots json.RawMessage, sum ProjectSummary) error
+	UpdateDocument(ctx context.Context, id string, schemaVersion int, doc []byte, sha string, slots json.RawMessage, sum DocSummary) error
 }
 
 type BackupRow struct {
@@ -654,7 +654,7 @@ CREATE INDEX projects_state_updated_ms_index ON projects (state, updated_ms);
 ```
 
 - **Revision.** A new project has `revision = 0` and no `operations` row. The first committed batch is revision 1. The rows of `operations` of a project are exactly revisions `1..revision`, contiguous.
-- **Denormalized columns** are written by the same statement that writes `document` (section 9, step 10) and are never written by anything else. The service computes `ProjectSummary` from the new document with plain traversal; invariant: for every project, the summary columns equal the summary recomputed from `document` (checked by a test and by `doctor`).
+- **Denormalized columns** are written by the same statement that writes `document` (section 9, step 10) and are never written by anything else. The service computes `DocSummary` from the new document with plain traversal; invariant: for every project, the summary columns equal the summary recomputed from `document` (checked by a test and by `doctor`).
 - **Listing query:** `SELECT <head columns> FROM projects WHERE state = 'active' AND (updated_ms, id) < (?, ?) ORDER BY updated_ms DESC, id DESC LIMIT ?`; the cursor is `base64url(updated_ms ":" id)`. `IncludeTrashed` drops the `state` condition. `EXPLAIN QUERY PLAN` shows `projects_state_updated_ms_index`.
 - **`resync_floor`** is set to the revision of a `migrate` or `import` row (sections 8 and 16) and tells SDD-006 that a client behind that revision cannot replay and must reload.
 - **Trash** touches `state`, `trashed_ms`, `trashed_by` and `updated_ms`; never `revision` or `document` (section 13).
@@ -1111,7 +1111,7 @@ Inputs: `projectID`, `actor`, `base_revision`, the operations as sent, optional 
 | 4 | **Base revision** (SDD-002 A.7). `base > R`: `E_VALIDATION`. `base = R`: continue. `base < R - 1000`: `E_REVISION_CONFLICT` with the hint to read the project again, without reading the log (SDD-007 T-24). `base < R`: `Operations.Since(project, base, {ExcludeActor: actor})`; decode the diffs; `command.Conflicts(ops, diffs)`. A conflict: `E_REVISION_CONFLICT` with the current revision R and the text diff of **all** batches in `(base, R]` (`DescribeDiff`); `retryable: true`. No conflict: continue and apply to the current document. | nothing | nothing happened |
 | 5 | **Fill identifiers.** For every created object whose id was not supplied, `Env.NewIDs(prefix)` (cryptographic, SDD-001 §2 item 6) and write it into the stored copy of `args`. For the two commands that create a number of objects known only after they run, the stored `new_ids` is taken from `effective.new_ids` after step 6 (SDD-002 §A.3 rule 4). | nothing | nothing happened |
 | 6 | **Apply.** Decode the document, fold `command.Apply` over the operations (SDD-002 A.3 rule 5), collecting `Diff` and `Inverse`. Any error: return it with `op_index`; the transaction rolls back. `dry_run`: roll back and return the result with `applied: false` and revision R. | nothing | nothing happened |
-| 7 | Encode `timeline.Canonical(newDoc)`; `doc_sha256`; compute `ProjectSummary`; N = R + 1. | nothing | nothing happened |
+| 7 | Encode `timeline.Canonical(newDoc)`; `doc_sha256`; compute `DocSummary`; N = R + 1. | nothing | nothing happened |
 | 8 | **Append the log row.** `Operations.Append` with `kind = 'edit'`, `revision = N`, `base_revision`, `at_ms`, the operations with identifiers filled in and `resolved` included, `inverse`, `diff`, `schema_version`, `doc_sha256`, `idempotency_key`. | `operations` (uncommitted) | rolled back by SQLite on restart: revision R is the head |
 | 9 | **Close the actor's redo chain.** `Operations.CloseOpenRedo(project, actor, N)`: a new edit makes the actor's undone batches non-redoable (section 12). | `operations.closed_by` (uncommitted) | rolled back |
 | 10 | **Write the document.** `Projects.Commit(project, expected R, {name, schema_version, document, doc_sha256, summary, updated_ms})`. `ErrStale` here is a bug: `E_INTERNAL`, rollback. | `projects` (uncommitted) | rolled back |
@@ -1518,7 +1518,7 @@ The implementation of this SDD is complete when every check passes. File paths a
 **Commit transaction and crash safety**
 
 5. `go test ./service/ -run TestCommit` covers: base equal to current; base older without conflict (applies); base older with conflict (`E_REVISION_CONFLICT` with current revision and text diff of all batches since base); base newer (`E_VALIDATION`); a failing operation (`op_index`, nothing written); `dry_run` (nothing written, `applied: false`); a trashed project (`E_INVALID_STATE`).
-6. Crash-injection suite, `go test -tags crashtest ./service/crashtest/...`. The binary is built with `-tags crashtest`, which compiles `crashpoint.Hit(name)` into the commit path; a parent test starts the binary as a child with the point name in its arguments, the child calls `os.Exit(137)` at that point, the parent reopens the database and checks the invariants of section 9.2. Points: `commit.after_lock`, `commit.after_load`, `commit.after_apply`, `commit.after_operation_append`, `commit.after_project_commit`, `commit.after_assets_sync`, `commit.after_idempotency_put`, `commit.before_commit`, `commit.after_commit`, `commit.after_publish`. Expected: for every point up to `before_commit` the project is at revision R with the old document; from `after_commit` it is at R+1; in both cases all invariants hold and `PRAGMA integrity_check` is `ok`. The same suite runs for `Undo`, `Redo`, `TrashEmpty`, a bundle import and a document migration, with their own points.
+6. Crash-injection suite, `go test -tags crashtest ./web/app/servicetest/...` (the suite lives in `web/` because `service/` may not import `web/`, ADR-0001, and the checks need the SQLite store). The binary is built with `-tags crashtest`, which compiles `crashpoint.Hit(name)` into the commit path; a parent test starts the test binary as a child with the point name in the environment variable `VUKEM_VIDEO_CRASH_AT`, the child exits with code 137 at that point, the parent reopens the database and checks the invariants of section 9.2. Points: `commit.after_lock`, `commit.after_load`, `commit.after_apply`, `commit.after_operation_append`, `commit.after_project_commit`, `commit.after_assets_sync`, `commit.after_idempotency_put`, `commit.before_commit`, `commit.after_commit`, `commit.after_publish`. Expected: for every point up to `before_commit` the project is at revision R with the old document; from `after_commit` it is at R+1; in both cases all invariants hold and `PRAGMA integrity_check` is `ok`. The same suite runs for `Undo` and `Redo` (P1-SRV-003); `TrashEmpty`, a bundle import and a document migration get their own points when those paths exist.
 7. A test kills (`SIGKILL`; `taskkill /F` on Windows) a real `serve` process in the middle of 200 concurrent commits from 4 goroutines over HTTP, restarts it, and asserts: every revision the clients saw acknowledged exists in the log with an equal `doc_sha256`; revisions are contiguous; the final document equals the replay of the log from the initial document (rewind by inverses reaches the revision-0 document).
 8. A race test (`go test -race`) runs 8 goroutines committing to the same project and 8 to others: the revisions of the first project are exactly `1..N` with no gap and no duplicate, and the events captured on the hub topic arrive in revision order.
 9. The idempotency tests: same key and same operations returns the stored result with `replayed: true` and writes nothing (row count unchanged); same key with different operations is `E_IDEMPOTENCY_MISMATCH`; an expired key (clock advanced 24 h 1 s) runs again; keys of different actors do not collide; a failed batch stores nothing.
