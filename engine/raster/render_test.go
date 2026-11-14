@@ -7,12 +7,14 @@ import (
 	"math"
 	"sync"
 	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
-func styledForAllEffects() ResolvedStyle {
+func styledForAllEffects() plan.ResolvedStyle {
 	st := plainStyle()
-	bg := Colour{0, 0, 0, 160}
-	st.BackgroundColor = &bg
+	bg := C(0, 0, 0, 160)
+	st.BackgroundColor = bg
 	st.BackgroundRadius = 12
 	st.StrokeWidth = 6
 	st.ShadowDX, st.ShadowDY, st.ShadowBlur = 5, 5, 7
@@ -136,8 +138,8 @@ func TestBackgroundBoxCoversTheBlockWithPadding(t *testing.T) {
 	t.Parallel()
 
 	st := plainStyle()
-	bg := Colour{10, 20, 30, 255}
-	st.BackgroundColor = &bg
+	bg := C(10, 20, 30, 255)
+	st.BackgroundColor = bg
 	st.BackgroundPadding = 20
 
 	b := render(t, textSpec("Box", st))
@@ -169,7 +171,7 @@ func TestShadowIsOffsetAndOnlyWhenAsked(t *testing.T) {
 
 	st := plainStyle()
 	st.ShadowDX, st.ShadowDY = 12, 12
-	st.ShadowColor = Colour{255, 0, 0, 255}
+	st.ShadowColor = C(255, 0, 0, 255)
 	shadowed := render(t, textSpec("S", st))
 
 	if shadowed.inked() <= none.inked() {
@@ -227,9 +229,9 @@ func TestCaptionStates(t *testing.T) {
 
 	words := []string{"Never", "gonna", "give"}
 	st := plainStyle()
-	st.HighlightColor = Colour{255, 0, 0, 255}
-	hb := Colour{0, 0, 255, 255}
-	st.HighlightBackground = &hb
+	st.HighlightColor = C(255, 0, 0, 255)
+	hb := C(0, 0, 255, 255)
+	st.HighlightBackground = hb
 
 	none := render(t, captionSpec(words, -1, st))
 	second := render(t, captionSpec(words, 1, st))
@@ -278,9 +280,9 @@ func TestCaptionStates(t *testing.T) {
 func TestShapes(t *testing.T) {
 	t.Parallel()
 
-	spec := BitmapSpec{
+	spec := plan.BitmapSpec{
 		Kind: KindShape, PixelScale: 1,
-		Shape: &ShapeSpec{Shape: ShapeRect, Width: 100, Height: 50, Fill: Colour{255, 0, 0, 255}},
+		Shape: &plan.ShapeSpec{Shape: ShapeRect, Width: 100, Height: 50, Fill: C(255, 0, 0, 255)},
 	}
 	rect := render(t, spec)
 
@@ -302,7 +304,7 @@ func TestShapes(t *testing.T) {
 	spec.Shape.Shape = ShapeRoundedRect
 	spec.Shape.Radius = 25
 	spec.Shape.StrokeWidth = 10
-	spec.Shape.StrokeColor = Colour{0, 0, 255, 255}
+	spec.Shape.StrokeColor = C(0, 0, 255, 255)
 	stroked := render(t, spec)
 
 	if stroked.Width != 110 || stroked.Height != 60 {
@@ -317,17 +319,24 @@ func TestShapes(t *testing.T) {
 func TestRenderRejectsBadSpecs(t *testing.T) {
 	t.Parallel()
 
-	bad := map[string]BitmapSpec{
-		"no scale":    {Kind: KindText, Text: "x", Style: plainStyle()},
-		"huge scale":  {Kind: KindText, Text: "x", Style: plainStyle(), PixelScale: 100},
-		"no kind":     {PixelScale: 1},
-		"no shape":    {Kind: KindShape, PixelScale: 1},
-		"no words":    {Kind: KindCaption, Style: plainStyle(), PixelScale: 1},
-		"bad active":  captionSpec([]string{"a"}, 3, plainStyle()),
-		"zero size":   textSpec("x", ResolvedStyle{FontFamily: "Inter", FontWeight: 400, LineHeight: 1, MaxWidth: 10}),
-		"zero width":  {Kind: KindShape, Shape: &ShapeSpec{Shape: ShapeRect, Height: 5}, PixelScale: 1},
-		"bad shape":   {Kind: KindShape, Shape: &ShapeSpec{Shape: "star", Width: 5, Height: 5}, PixelScale: 1},
-		"huge bitmap": {Kind: KindShape, Shape: &ShapeSpec{Shape: ShapeRect, Width: 1e5, Height: 1e5}, PixelScale: 1},
+	bad := map[string]plan.BitmapSpec{
+		"no scale":   {Kind: KindText, Text: "x", Style: plainStyle()},
+		"huge scale": {Kind: KindText, Text: "x", Style: plainStyle(), PixelScale: 100},
+		"no kind":    {PixelScale: 1},
+		"no shape":   {Kind: KindShape, PixelScale: 1},
+		"no words":   {Kind: KindCaption, Style: plainStyle(), PixelScale: 1},
+		"bad active": captionSpec([]string{"a"}, 3, plainStyle()),
+		"zero size": textSpec(
+			"x",
+			plan.ResolvedStyle{FontFamily: "Inter", FontWeight: 400, LineHeight: 1, MaxWidth: 10},
+		),
+		"zero width": {Kind: KindShape, Shape: &plan.ShapeSpec{Shape: ShapeRect, Height: 5}, PixelScale: 1},
+		"bad shape":  {Kind: KindShape, Shape: &plan.ShapeSpec{Shape: "star", Width: 5, Height: 5}, PixelScale: 1},
+		"huge bitmap": {
+			Kind:       KindShape,
+			Shape:      &plan.ShapeSpec{Shape: ShapeRect, Width: 1e5, Height: 1e5},
+			PixelScale: 1,
+		},
 	}
 
 	for name, spec := range bad {
@@ -371,9 +380,9 @@ func TestKey(t *testing.T) {
 	text.Text = "Key."
 
 	bg := spec
-	bg.Style.BackgroundColor = &Colour{1, 2, 3, 4}
+	bg.Style.BackgroundColor = C(1, 2, 3, 4)
 
-	for name, s := range map[string]BitmapSpec{"size": size, "scale": scale, "text": text, "background": bg} {
+	for name, s := range map[string]plan.BitmapSpec{"size": size, "scale": scale, "text": text, "background": bg} {
 		if s.Key() == key {
 			t.Errorf("changing the %s did not change the key", name)
 		}

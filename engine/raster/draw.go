@@ -7,6 +7,8 @@ import (
 	"sync"
 
 	"github.com/go-text/typesetting/font"
+
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // extent is a rectangle given by its edges, in bitmap pixels.
@@ -212,11 +214,33 @@ func split(glyphs []placedGlyph, span [2]int) (inside, outside []placedGlyph) {
 	return inside, outside
 }
 
-// drawText draws a text or caption bitmap. active is the index of the
-// highlighted word, or -1.
-func drawText(spec BitmapSpec, face *font.Face, lay layout, spans [][2]int, active int) (Bitmap, error) {
-	st, s := spec.Style, spec.PixelScale
-	size := mul(st.Size, s)
+// textJob is a text or caption bitmap before any pixel is drawn: the laid out
+// glyphs and the geometry of the bitmap. Measure and Render share it, so the
+// size the plan places a bitmap by is the size Render produces.
+type textJob struct {
+	st    style
+	s     float64 // pixel scale
+	size  float64 // font size in bitmap pixels
+	lay   layout
+	words []plan.Rect
+
+	baseLines, hiLines, allLines []polyline
+
+	block, box, hiBox extent
+	hasHi             bool
+	shadow            bool
+	blur              int
+
+	// ox and oy are the origin of the bitmap in block coordinates, w and h its
+	// size in pixels.
+	ox, oy float64
+	w, h   int
+}
+
+// newTextJob lays the text out and works out the geometry. active is the index
+// of the highlighted word, or -1.
+func newTextJob(st style, s float64, face *font.Face, lay layout, spans [][2]int, active int) *textJob {
+	j := &textJob{st: st, s: s, size: mul(st.size, s), lay: lay, words: lay.words}
 	k := lay.scale
 
 	var hiGlyphs, baseGlyphs []placedGlyph
@@ -226,86 +250,96 @@ func drawText(spec BitmapSpec, face *font.Face, lay layout, spans [][2]int, acti
 		baseGlyphs = lay.glyphs
 	}
 
-	baseLines, hiLines := outlines(face, baseGlyphs, k), outlines(face, hiGlyphs, k)
-	allLines := append(append([]polyline{}, baseLines...), hiLines...)
+	j.baseLines, j.hiLines = outlines(face, baseGlyphs, k), outlines(face, hiGlyphs, k)
+	j.allLines = append(append([]polyline{}, j.baseLines...), j.hiLines...)
 
-	half := mul(st.StrokeWidth, s) / 2
-	block := extent{0, 0, lay.width, lay.height}
-	ink := linesExtent(allLines).grow(half)
-	content := block.grow(half).union(ink)
-	box := content
+	half := mul(st.strokeWidth, s) / 2
+	j.block = extent{0, 0, lay.width, lay.height}
+	ink := linesExtent(j.allLines).grow(half)
+	content := j.block.grow(half).union(ink)
+	j.box = content
 
-	if st.BackgroundColor != nil {
-		box = block.grow(mul(st.BackgroundPadding, s))
-		content = content.union(box)
+	if st.background != nil {
+		j.box = j.block.grow(mul(st.backgroundPadding, s))
+		content = content.union(j.box)
 	}
 
-	var hiBox extent
-
-	if active >= 0 && st.HighlightBackground != nil {
+	if active >= 0 && st.highlightBackground != nil {
 		w := lay.words[active]
-		pad := mul(0.1, size)
-		hiBox = extent{w.X - pad, w.Y, w.X + w.W + pad, w.Y + w.H}
-		content = content.union(hiBox)
+		pad := mul(0.1, j.size)
+		j.hiBox, j.hasHi = extent{w.X - pad, w.Y, w.X + w.W + pad, w.Y + w.H}, true
+		content = content.union(j.hiBox)
 	}
 
-	shadow := st.ShadowColor.A > 0 && (st.ShadowDX != 0 || st.ShadowDY != 0 || st.ShadowBlur != 0)
-	blur := int(math.Ceil(st.ShadowBlur * s))
+	j.shadow = st.shadowColor.A > 0 && (st.shadowDX != 0 || st.shadowDY != 0 || st.shadowBlur != 0)
+	j.blur = int(math.Ceil(st.shadowBlur * s))
 
-	if shadow {
-		content = content.union(ink.shift(mul(st.ShadowDX, s), mul(st.ShadowDY, s)).grow(float64(3 * blur)))
+	if j.shadow {
+		content = content.union(ink.shift(mul(st.shadowDX, s), mul(st.shadowDY, s)).grow(float64(3 * j.blur)))
 	}
 
 	// One clear pixel all around: the antialiased edge of the ink may touch the
 	// last pixel the bounding box reaches, and the bitmap must never clip it.
 	content = content.grow(1)
-	ox, oy := math.Floor(content.x0), math.Floor(content.y0)
-	w, h := int(math.Ceil(content.x1-ox)), int(math.Ceil(content.y1-oy))
+	j.ox, j.oy = math.Floor(content.x0), math.Floor(content.y0)
+	j.w, j.h = int(math.Ceil(content.x1-j.ox)), int(math.Ceil(content.y1-j.oy))
 
-	cv, err := newCanvas(w, h)
+	return j
+}
+
+// naturalSize is the size of the bitmap at PixelScale 1.
+func (j *textJob) naturalSize() (w, h float64) {
+	return float64(j.w) / j.s, float64(j.h) / j.s
+}
+
+// draw paints the bitmap.
+func (j *textJob) draw() (Bitmap, error) {
+	st, s := j.st, j.s
+
+	cv, err := newCanvas(j.w, j.h)
 	if err != nil {
 		return Bitmap{}, err
 	}
 
-	pt := newPainter(w, h)
-	origin := point{-ox, -oy}
+	pt := newPainter(j.w, j.h)
+	origin := point{-j.ox, -j.oy}
 
-	if st.BackgroundColor != nil {
-		r := roundedRect(box.x0, box.y0, box.x1-box.x0, box.y1-box.y0, mul(st.BackgroundRadius, s))
-		cv.over(pt.fill(origin, r.pts), *st.BackgroundColor)
+	if st.background != nil {
+		r := roundedRect(j.box.x0, j.box.y0, j.box.x1-j.box.x0, j.box.y1-j.box.y0, mul(st.backgroundRadius, s))
+		cv.over(pt.fill(origin, r.pts), *st.background)
 	}
 
-	if hiBox != (extent{}) {
-		radius := math.Max(mul(st.BackgroundRadius, s), mul(0.15, size))
-		r := roundedRect(hiBox.x0, hiBox.y0, hiBox.x1-hiBox.x0, hiBox.y1-hiBox.y0, radius)
-		cv.over(pt.fill(origin, r.pts), *st.HighlightBackground)
+	if j.hasHi {
+		radius := math.Max(mul(st.backgroundRadius, s), mul(0.15, j.size))
+		r := roundedRect(j.hiBox.x0, j.hiBox.y0, j.hiBox.x1-j.hiBox.x0, j.hiBox.y1-j.hiBox.y0, radius)
+		cv.over(pt.fill(origin, r.pts), *st.highlightBackground)
 	}
 
-	strokes := strokeShapes(allLines, mul(st.StrokeWidth, s))
+	strokes := strokeShapes(j.allLines, mul(st.strokeWidth, s))
 
-	if shadow {
-		off := point{origin.x + mul(st.ShadowDX, s), origin.y + mul(st.ShadowDY, s)}
-		m := pt.fill(off, append(polygons(allLines), strokes...)...)
-		boxBlur3(m, blur)
-		cv.over(m, st.ShadowColor)
+	if j.shadow {
+		off := point{origin.x + mul(st.shadowDX, s), origin.y + mul(st.shadowDY, s)}
+		m := pt.fill(off, append(polygons(j.allLines), strokes...)...)
+		boxBlur3(m, j.blur)
+		cv.over(m, st.shadowColor)
 	}
 
 	if len(strokes) > 0 {
-		cv.over(pt.fill(origin, strokes...), st.StrokeColor)
+		cv.over(pt.fill(origin, strokes...), st.strokeColor)
 	}
 
-	cv.over(pt.fill(origin, polygons(baseLines)...), st.Color)
+	cv.over(pt.fill(origin, polygons(j.baseLines)...), st.color)
 
-	if len(hiLines) > 0 {
-		cv.over(pt.fill(origin, polygons(hiLines)...), st.HighlightColor)
+	if len(j.hiLines) > 0 {
+		cv.over(pt.fill(origin, polygons(j.hiLines)...), st.highlightColor)
 	}
 
-	return finish(cv, s, block.shift(-ox, -oy), lay.words, ox, oy), nil
+	return finish(cv, s, j.block.shift(-j.ox, -j.oy), j.words, j.ox, j.oy), nil
 }
 
 // finish builds the Bitmap with its metrics at PixelScale 1. block is the text
 // block in canvas pixels; words are in block pixels, ox and oy the canvas origin.
-func finish(cv *canvas, s float64, block extent, words []Rect, ox, oy float64) Bitmap {
+func finish(cv *canvas, s float64, block extent, words []plan.Rect, ox, oy float64) Bitmap {
 	b := Bitmap{
 		Pix: cv.pix, Width: cv.w, Height: cv.h,
 		NaturalW: float64(cv.w) / s, NaturalH: float64(cv.h) / s,
@@ -314,45 +348,55 @@ func finish(cv *canvas, s float64, block extent, words []Rect, ox, oy float64) B
 	}
 
 	for _, w := range words {
-		b.WordBoxes = append(b.WordBoxes, Rect{X: (w.X - ox) / s, Y: (w.Y - oy) / s, W: w.W / s, H: w.H / s})
+		b.WordBoxes = append(b.WordBoxes, plan.Rect{X: (w.X - ox) / s, Y: (w.Y - oy) / s, W: w.W / s, H: w.H / s})
 	}
 
 	return b
 }
 
-func renderShape(spec BitmapSpec) (Bitmap, error) {
-	sh, s := spec.Shape, spec.PixelScale
-	w, h := mul(sh.Width, s), mul(sh.Height, s)
-	half := mul(sh.StrokeWidth, s) / 2
+// shapeBox is the canvas of a shape and the shape's box in it, in pixels.
+type shapeBox struct {
+	cw, ch     int
+	x, y, w, h float64
+}
 
+// shapeGeometry sizes the canvas of a shape: the shape plus half its stroke on
+// every side, with the shape centred.
+func shapeGeometry(sh shape, s float64) shapeBox {
+	w, h := mul(sh.width, s), mul(sh.height, s)
+	half := mul(sh.strokeWidth, s) / 2
 	cw, ch := int(math.Ceil(w+2*half)), int(math.Ceil(h+2*half))
+
+	return shapeBox{cw: cw, ch: ch, x: (float64(cw) - w) / 2, y: (float64(ch) - h) / 2, w: w, h: h}
+}
+
+func renderShape(sh shape, s float64) (Bitmap, error) {
+	g := shapeGeometry(sh, s)
+	cw, ch, x, y, w, h := g.cw, g.ch, g.x, g.y, g.w, g.h
 
 	cv, err := newCanvas(cw, ch)
 	if err != nil {
 		return Bitmap{}, err
 	}
 
-	// The shape is centred in the canvas.
-	x, y := (float64(cw)-w)/2, (float64(ch)-h)/2
-
 	var outline polyline
 
-	switch sh.Shape {
+	switch sh.kind {
 	case ShapeRect:
 		outline = roundedRect(x, y, w, h, 0)
 	case ShapeRoundedRect:
-		outline = roundedRect(x, y, w, h, mul(sh.Radius, s))
+		outline = roundedRect(x, y, w, h, mul(sh.radius, s))
 	case ShapeEllipse:
 		outline = ellipse(x, y, w, h)
 	default:
-		return Bitmap{}, fmt.Errorf("%w: shape %q", ErrInvalidSpec, sh.Shape)
+		return Bitmap{}, fmt.Errorf("%w: shape %q", ErrInvalidSpec, sh.kind)
 	}
 
 	pt := newPainter(cw, ch)
-	cv.over(pt.fill(point{}, outline.pts), sh.Fill)
+	cv.over(pt.fill(point{}, outline.pts), sh.fill)
 
-	if strokes := strokeShapes([]polyline{outline}, mul(sh.StrokeWidth, s)); len(strokes) > 0 {
-		cv.over(pt.fill(point{}, strokes...), sh.StrokeColor)
+	if strokes := strokeShapes([]polyline{outline}, mul(sh.strokeWidth, s)); len(strokes) > 0 {
+		cv.over(pt.fill(point{}, strokes...), sh.strokeColor)
 	}
 
 	return finish(cv, s, extent{x, y, x + w, y + h}, nil, 0, 0), nil

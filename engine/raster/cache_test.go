@@ -3,6 +3,8 @@ package raster
 import (
 	"sync"
 	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 func TestCacheHitSharesPixels(t *testing.T) {
@@ -47,13 +49,13 @@ func TestCacheEvictsLeastRecentlyUsed(t *testing.T) {
 	one := render(t, textSpec("Evict", plainStyle()))
 	c := NewCache(Bundled(), len(one.Pix)*5/2) // room for two bitmaps of this size
 
-	specs := make([]BitmapSpec, 3)
+	specs := make([]plan.BitmapSpec, 3)
 	for i := range specs {
 		specs[i] = textSpec("Evict", plainStyle())
-		specs[i].Style.Color.A = uint8(250 - i) // same size, different keys
+		specs[i].Style.Color = C(255, 255, 255, uint8(250-i)) // same size, different keys
 	}
 
-	get := func(s BitmapSpec) Bitmap {
+	get := func(s plan.BitmapSpec) Bitmap {
 		b, err := c.Get(s)
 		if err != nil {
 			t.Fatal(err)
@@ -102,7 +104,7 @@ func TestCacheConcurrent(t *testing.T) {
 func TestCacheError(t *testing.T) {
 	t.Parallel()
 
-	if _, err := NewCache(Bundled(), 0).Get(BitmapSpec{}); err == nil {
+	if _, err := NewCache(Bundled(), 0).Get(plan.BitmapSpec{}); err == nil {
 		t.Error("Get of an invalid spec succeeded")
 	}
 }

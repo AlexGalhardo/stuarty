@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"slices"
 	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 var update = flag.Bool("update", false, "rewrite testdata/golden from the current output")
@@ -17,10 +19,10 @@ var update = flag.Bool("update", false, "rewrite testdata/golden from the curren
 // bytes must be equal on Linux, macOS and Windows (NFR-010).
 type goldenCase struct {
 	name string
-	spec BitmapSpec
+	spec plan.BitmapSpec
 }
 
-func goldenStyle(mod func(*ResolvedStyle)) ResolvedStyle {
+func goldenStyle(mod func(*plan.ResolvedStyle)) plan.ResolvedStyle {
 	st := plainStyle()
 	if mod != nil {
 		mod(&st)
@@ -30,67 +32,77 @@ func goldenStyle(mod func(*ResolvedStyle)) ResolvedStyle {
 }
 
 func goldenCases() []goldenCase {
-	box := Colour{20, 24, 32, 220}
-	pink := Colour{255, 45, 110, 255}
+	box := C(20, 24, 32, 220)
+	pink := C(255, 45, 110, 255)
 
 	return []goldenCase{
 		{"inter-plain", textSpec("Hello, World!", goldenStyle(nil))},
-		{"inter-stroke-shadow-box", textSpec("Stroke, shadow and box", goldenStyle(func(s *ResolvedStyle) {
+		{"inter-stroke-shadow-box", textSpec("Stroke, shadow and box", goldenStyle(func(s *plan.ResolvedStyle) {
 			s.StrokeWidth, s.ShadowDX, s.ShadowDY, s.ShadowBlur = 6, 4, 6, 8
-			s.BackgroundColor, s.BackgroundRadius = &box, 14
+			s.BackgroundColor, s.BackgroundRadius = box, 14
 		}))},
-		{"montserrat-uppercase", textSpec("Montserrat 800 uppercase", goldenStyle(func(s *ResolvedStyle) {
+		{"montserrat-uppercase", textSpec("Montserrat 800 uppercase", goldenStyle(func(s *plan.ResolvedStyle) {
 			s.FontFamily, s.FontWeight, s.Uppercase, s.Size = "Montserrat", 800, true, 56
 		}))},
-		{"anton-two-lines", textSpec("ANTON\nTWO LINES", goldenStyle(func(s *ResolvedStyle) {
+		{"anton-two-lines", textSpec("ANTON\nTWO LINES", goldenStyle(func(s *plan.ResolvedStyle) {
 			s.FontFamily, s.FontWeight, s.LineHeight = "Anton", 400, 1.1
 		}))},
-		{"bebas-right-aligned", textSpec("Bebas Neue\nright aligned\nthree lines", goldenStyle(func(s *ResolvedStyle) {
-			s.FontFamily, s.FontWeight, s.Align, s.Size = "Bebas Neue", 400, AlignRight, 64
-		}))},
-		{"playfair-accents", textSpec("Café ÅÖ ñ ß — “quotes”", goldenStyle(func(s *ResolvedStyle) {
+		{
+			"bebas-right-aligned",
+			textSpec("Bebas Neue\nright aligned\nthree lines", goldenStyle(func(s *plan.ResolvedStyle) {
+				s.FontFamily, s.FontWeight, s.Align, s.Size = "Bebas Neue", 400, AlignRight, 64
+			})),
+		},
+		{"playfair-accents", textSpec("Café ÅÖ ñ ß — “quotes”", goldenStyle(func(s *plan.ResolvedStyle) {
 			s.FontFamily, s.FontWeight, s.Size = "Playfair Display", 700, 60
 		}))},
 		{
 			"jetbrains-mono-code",
-			textSpec("func main() {\n    fmt.Println(\"hi\")\n}", goldenStyle(func(s *ResolvedStyle) {
+			textSpec("func main() {\n    fmt.Println(\"hi\")\n}", goldenStyle(func(s *plan.ResolvedStyle) {
 				s.FontFamily, s.FontWeight, s.Size, s.Align = "JetBrains Mono", 500, 40, AlignLeft
 			})),
 		},
-		{"inter-cyrillic-greek", textSpec("Привет, мир — Γειά σου Κόσμε", goldenStyle(func(s *ResolvedStyle) {
+		{"inter-cyrillic-greek", textSpec("Привет, мир — Γειά σου Κόσμε", goldenStyle(func(s *plan.ResolvedStyle) {
 			s.FontWeight, s.Size = 600, 48
 		}))},
 		{"inter-wrapped-paragraph", textSpec(
 			"Captions are burned into the picture by the same code that draws the preview, so the two always agree.",
-			goldenStyle(func(s *ResolvedStyle) {
+			goldenStyle(func(s *plan.ResolvedStyle) {
 				s.FontWeight, s.Size, s.MaxWidth, s.LineHeight, s.Align = 400, 36, 420, 1.5, AlignLeft
 			}))},
 		{
 			"caption-plain",
-			captionSpec([]string{"Never", "gonna", "give", "you", "up"}, -1, goldenStyle(func(s *ResolvedStyle) {
+			captionSpec([]string{"Never", "gonna", "give", "you", "up"}, -1, goldenStyle(func(s *plan.ResolvedStyle) {
 				s.Size, s.StrokeWidth = 64, 5
 			})),
 		},
-		{"caption-active-word", func() BitmapSpec {
-			sp := captionSpec([]string{"Never", "gonna", "give", "you", "up"}, 2, goldenStyle(func(s *ResolvedStyle) {
-				s.Size, s.StrokeWidth, s.HighlightBackground = 64, 5, &pink
-			}))
+		{"caption-active-word", func() plan.BitmapSpec {
+			sp := captionSpec(
+				[]string{"Never", "gonna", "give", "you", "up"},
+				2,
+				goldenStyle(func(s *plan.ResolvedStyle) {
+					s.Size, s.StrokeWidth, s.HighlightBackground = 64, 5, pink
+				}),
+			)
 			sp.PixelScale = 2
 
 			return sp
 		}()},
-		{"emoji-sequence-and-notdef", textSpec("Emoji 😀 and 👨‍👩‍👧 draw .notdef", goldenStyle(func(s *ResolvedStyle) {
-			s.Size, s.StrokeWidth, s.StrokeColor = 44, 3, Colour{0, 0, 0, 255}
+		{
+			"emoji-sequence-and-notdef",
+			textSpec("Emoji 😀 and 👨‍👩‍👧 draw .notdef", goldenStyle(func(s *plan.ResolvedStyle) {
+				s.Size, s.StrokeWidth, s.StrokeColor = 44, 3, C(0, 0, 0, 255)
+			})),
+		},
+		{"right-to-left-mixed", textSpec("abc שלום مرحبا def 123", goldenStyle(func(s *plan.ResolvedStyle) {
+			s.Size, s.StrokeWidth, s.StrokeColor = 44, 3, C(0, 0, 0, 255)
 		}))},
-		{"right-to-left-mixed", textSpec("abc שלום مرحبا def 123", goldenStyle(func(s *ResolvedStyle) {
-			s.Size, s.StrokeWidth, s.StrokeColor = 44, 3, Colour{0, 0, 0, 255}
+		{"missing-glyph-no-fallback", textSpec("Latin 你好 สวัสดี text", goldenStyle(func(s *plan.ResolvedStyle) {
+			s.Size, s.StrokeWidth, s.StrokeColor = 44, 3, C(0, 0, 0, 255)
 		}))},
-		{"missing-glyph-no-fallback", textSpec("Latin 你好 สวัสดี text", goldenStyle(func(s *ResolvedStyle) {
-			s.Size, s.StrokeWidth, s.StrokeColor = 44, 3, Colour{0, 0, 0, 255}
-		}))},
-		{"shape-rounded-rect", BitmapSpec{Kind: KindShape, PixelScale: 1, Shape: &ShapeSpec{
+		{"shape-rounded-rect", plan.BitmapSpec{Kind: KindShape, PixelScale: 1, Shape: &plan.ShapeSpec{
 			Shape: ShapeRoundedRect, Width: 300, Height: 120, Radius: 30,
-			Fill: Colour{30, 144, 255, 255}, StrokeColor: Colour{255, 255, 255, 255}, StrokeWidth: 8,
+			Fill: C(30, 144, 255, 255), StrokeColor: C(255, 255, 255, 255), StrokeWidth: 8,
 		}}},
 	}
 }
@@ -196,7 +208,7 @@ func TestGoldenTextsUseOnlyGlyphsTheFontsHave(t *testing.T) {
 		}
 
 		runes, spans := textRunes(c.spec)
-		for _, g := range layoutText(runes, spans, face, c.spec.Style, 1).glyphs {
+		for _, g := range layoutText(runes, spans, face, mustStyle(t, c.spec.Style), 1).glyphs {
 			if g.gid == 0 {
 				t.Errorf("%s: rune %q has no glyph in %s", c.name, runes[g.text], c.spec.Style.FontFamily)
 			}

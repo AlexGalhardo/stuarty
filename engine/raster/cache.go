@@ -3,12 +3,14 @@ package raster
 import (
 	"container/list"
 	"sync"
+
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // DefaultCacheBytes is the default memory budget of a Cache.
 const DefaultCacheBytes = 64 << 20
 
-// Cache keeps rendered bitmaps in memory, keyed by BitmapSpec.Key: the hash of
+// Cache keeps rendered bitmaps in memory, keyed by plan.BitmapSpec.Key: the hash of
 // content, style, size and rasterizer version (SDD-004 section 5.4). It evicts
 // the least recently used bitmaps when the pixels it holds pass the budget.
 // The service stores the same bitmaps on disk under the same key; this cache is
@@ -40,7 +42,7 @@ func NewCache(fonts *FontSet, budget int) *Cache {
 
 // Get returns the bitmap of the spec, rendering it on a miss. The returned
 // bitmap shares its pixels with the cache: callers must not modify them.
-func (c *Cache) Get(spec BitmapSpec) (Bitmap, error) {
+func (c *Cache) Get(spec plan.BitmapSpec) (Bitmap, error) {
 	key := spec.Key()
 
 	c.mu.Lock()
