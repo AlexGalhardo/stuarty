@@ -1,0 +1,92 @@
+{
+  "points": [
+    {
+      "frame": 0,
+      "kind": "timeline_start"
+    },
+    {
+      "frame": 0,
+      "kind": "item_start",
+      "item": "itm_a0000000004",
+      "track": "trk_top0000001"
+    },
+    {
+      "frame": 0,
+      "kind": "caption_word",
+      "item": "itm_a0000000004",
+      "track": "trk_top0000001"
+    },
+    {
+      "frame": 10,
+      "kind": "item_start",
+      "item": "itm_a0000000001",
+      "track": "trk_bottom0001"
+    },
+    {
+      "frame": 20,
+      "kind": "caption_word",
+      "item": "itm_a0000000004",
+      "track": "trk_top0000001"
+    },
+    {
+      "frame": 50,
+      "kind": "caption_word",
+      "item": "itm_a0000000004",
+      "track": "trk_top0000001"
+    },
+    {
+      "frame": 60,
+      "kind": "item_end",
+      "item": "itm_a0000000004",
+      "track": "trk_top0000001"
+    },
+    {
+      "frame": 70,
+      "kind": "item_end",
+      "item": "itm_a0000000001",
+      "track": "trk_bottom0001"
+    },
+    {
+      "frame": 100,
+      "kind": "item_start",
+      "item": "itm_a0000000002",
+      "track": "trk_bottom0001"
+    },
+    {
+      "frame": 150,
+      "kind": "item_start",
+      "item": "itm_a0000000003",
+      "track": "trk_bottom0001"
+    },
+    {
+      "frame": 150,
+      "kind": "item_end",
+      "item": "itm_a0000000002",
+      "track": "trk_bottom0001"
+    },
+    {
+      "frame": 160,
+      "kind": "item_end",
+      "item": "itm_a0000000003",
+      "track": "trk_bottom0001"
+    }
+  ],
+  "limits": {
+    "itm_a0000000001": {
+      "trim_start_min": 0,
+      "trim_end_max": 100
+    },
+    "itm_a0000000002": {
+      "trim_start_min": 100,
+      "trim_end_max": 150
+    },
+    "itm_a0000000003": {
+      "trim_start_min": 150,
+      "trim_end_max": 108000
+    },
+    "itm_a0000000004": {
+      "trim_start_min": 0,
+      "trim_end_max": 108000
+    }
+  }
+}

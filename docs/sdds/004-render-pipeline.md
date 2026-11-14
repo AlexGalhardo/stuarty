@@ -142,6 +142,18 @@ Transitions modify the animated values; they never change the document.
 
 `s(p) = 1 - (1 - p)³`. For `transition_in` the name says where the item comes from; for `transition_out`, where it goes. `Width` and `Height` are the frame size.
 
+Boundary frames that `core/plan` tests pin (`TestTransitionFactors`, `TestSlideLeftOffset`, opacity rounded to 3 decimals):
+
+| Case | `r` | Factor |
+| --- | --- | --- |
+| `fade` in, `T = 10` | 0 | 0.091 (`1/11`) |
+| `fade` in, `T = 10` | 9 | 0.909 (`10/11`) |
+| `fade` in, `T = 10` | 10 | not applied (1) |
+| `fade` out, `D = 100`, `T = 10` | 89 | not applied (1) |
+| `fade` out, `D = 100`, `T = 10` | 90 | 0.909 |
+| `fade` out, `D = 100`, `T = 10` | 99 | 0.091 |
+| `slide_left` in, `T = 10`, width 1080 | 0 | `x` offset `-(1 - s(1/11)) × 1080` |
+
 ### 3.3 Source frame of a clip
 
 ```text
