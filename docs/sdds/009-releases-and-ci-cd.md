@@ -378,9 +378,9 @@ The sequence is the vukem sequence (`docs/tooling.md:112-131`, `docs/maintenance
 
 1. **Confirm.** The author says yes to the version `vX.Y.Z`. The orchestrator states the task group being closed, the previous tag and the phase.
 2. **Preconditions** (the tool checks 2a to 2d and refuses otherwise):
-   - 2a. `git fetch origin --tags` and the local `main` equals `origin/main`: `git switch main && git merge --ff-only origin/main`.
+   - 2a. `git fetch origin --tags`; the local `release/vX.Y.Z` equals `origin/release/vX.Y.Z` and contains `origin/main` (D-031: the release branch carries every commit of the release, so `prepare` runs on its pushed tip, not on `main`).
    - 2b. The tree is clean: `git status --porcelain --untracked-files=no` prints nothing.
-   - 2c. The required checks are green on the `origin/main` commit: `gh run list --branch main --limit 10`.
+   - 2c. The required checks are green on the tip of the release branch: `gh run list --branch release/vX.Y.Z --commit <sha>`.
    - 2d. No open issue labelled `ci-failure`: `gh issue list --label ci-failure --state open` is empty (R25).
    - 2e. Every task of the group is checked in the ROADMAP (workspace root, outside this repository, D-025) and its verification passed. This is checked by the orchestrator, not by the tool.
 3. **Local gate.** `task release:preflight` (section 14): `task ci:full` minus the integration services, plus `task notices:check`, `task generate:check`, `task site:build`, `task site:translations`, `task image:smoke`. It must pass.
