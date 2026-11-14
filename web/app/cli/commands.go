@@ -1,0 +1,251 @@
+package cli
+
+// The product commands of SDD-003 section 5.4. Each handler parses, calls one
+// Service method and formats; no editing rule lives here (ADR-0007).
+
+import (
+	"context"
+	"encoding/json"
+
+	"github.com/AlexGalhardo/vukem-video/service"
+)
+
+// registry lists the commands in the order the short list prints them.
+func registry() []*spec {
+	return []*spec{
+		projectList, projectCreate, projectShow, projectTrash, projectRestore,
+		edit, history, undo, redo, lintCmd,
+		mediaImport, mediaInspect, mediaList, view, export, jobShow, jobList, events, commandHelp,
+	}
+}
+
+func lookup(name string) *spec {
+	for _, s := range registry() {
+		if s.name == name {
+			return s
+		}
+	}
+
+	return nil
+}
+
+func pageFlags(limit string) []flagDef {
+	return []flagDef{
+		{Name: "cursor", Kind: kindString, Usage: "continue a list from this cursor"},
+		{Name: "limit", Kind: kindInt, Default: limit, Usage: "items per page"},
+	}
+}
+
+func page(p *parsed) service.Page {
+	return service.Page{Cursor: p.str("cursor"), Limit: p.integer("limit")}
+}
+
+var projectList = &spec{
+	name:    "project:list",
+	summary: "list the projects of the workspace",
+	usage:   []string{"vukem-video project:list [--state active|trashed|all] [--cursor c] [--limit n]"},
+	example: "vukem-video project:list --json",
+	flags: append([]flagDef{{Name: "state", Kind: kindString, Default: "active", Usage: "active, trashed or all"}},
+		pageFlags("20")...),
+	run: func(ctx context.Context, c *call) (*output, error) {
+		res, err := c.svc.ProjectList(ctx, service.ProjectListRequest{State: c.args.str("state"), Page: page(c.args)})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
+
+var projectCreate = &spec{
+	name:    "project:create",
+	summary: "create a project",
+	usage: []string{
+		"vukem-video project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]",
+	},
+	example: `vukem-video project:create --name "Launch teaser" --json`,
+	globals: []string{"dry-run"},
+	write:   true,
+	flags: []flagDef{
+		{Name: "name", Kind: kindString, Usage: "project name (required)"},
+		{Name: "preset", Kind: kindString, Default: "9:16", Usage: "9:16, 1:1, 16:9 or 4:5"},
+		{Name: "fps", Kind: kindString, Default: "30", Usage: "frames per second, for example 30 or 30000/1001"},
+		{Name: "id", Kind: kindString, Usage: "identifier to give the project"},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		if !c.args.has("name") {
+			return nil, validation("name", "--name is required.")
+		}
+
+		res, err := c.svc.ProjectCreate(ctx, service.ProjectCreateRequest{
+			Name: c.args.str("name"), Preset: c.args.str("preset"), FPS: c.args.str("fps"),
+			ID: c.args.str("id"), DryRun: c.args.boolean("dry-run"),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
+
+var projectShow = &spec{
+	name:    "project:show",
+	summary: "show a project",
+	usage: []string{
+		"vukem-video project:show [<project id>] [--detail concise|full|document] [--cursor c] [--limit n]",
+	},
+	example:           "vukem-video project:show --project prj_7k2m9x4q1b",
+	project:           true,
+	projectPositional: true,
+	flags: append([]flagDef{{Name: "detail", Kind: kindString, Default: "concise", Usage: "concise, full or document"}},
+		pageFlags("")...),
+	run: func(ctx context.Context, c *call) (*output, error) {
+		res, err := c.svc.ProjectGet(ctx, service.ProjectGetRequest{
+			ProjectID: c.projectID, Detail: c.args.str("detail"), Page: page(c.args),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		text := res.Text
+
+		if c.args.str("detail") == "document" {
+			raw, merr := json.Marshal(res.Document)
+			if merr != nil {
+				return nil, merr
+			}
+
+			text = string(raw)
+		}
+
+		return &output{value: res, text: text}, nil
+	},
+}
+
+func projectStateCommand(
+	name, summary string,
+	fn func(service.Service, context.Context, service.ProjectTrashRequest) (*service.ProjectStateResult, error),
+) *spec {
+	return &spec{
+		name:              name,
+		summary:           summary,
+		usage:             []string{"vukem-video " + name + " <project id>"},
+		example:           "vukem-video " + name + " prj_7k2m9x4q1b",
+		project:           true,
+		projectPositional: true,
+		globals:           []string{"dry-run"},
+		write:             true,
+		run: func(ctx context.Context, c *call) (*output, error) {
+			res, err := fn(
+				c.svc,
+				ctx,
+				service.ProjectTrashRequest{ProjectID: c.projectID, DryRun: c.args.boolean("dry-run")},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			return &output{value: res, text: res.Text}, nil
+		},
+	}
+}
+
+var projectTrash = projectStateCommand("project:trash", "move a project to the trash",
+	func(s service.Service, ctx context.Context, r service.ProjectTrashRequest) (*service.ProjectStateResult, error) {
+		return s.ProjectTrash(ctx, r)
+	})
+
+var projectRestore = projectStateCommand("project:restore", "restore a trashed project",
+	func(s service.Service, ctx context.Context, r service.ProjectTrashRequest) (*service.ProjectStateResult, error) {
+		return s.ProjectRestore(ctx, r)
+	})
+
+var history = &spec{
+	name:    "history",
+	summary: "list the steps of a project history",
+	usage:   []string{"vukem-video history --project <id> [--by a] [--cursor c] [--limit n]"},
+	example: "vukem-video history --project prj_7k2m9x4q1b --json",
+	project: true,
+	flags: append([]flagDef{{Name: "by", Kind: kindString, Usage: "only the steps of this actor"}},
+		pageFlags("20")...),
+	run: func(ctx context.Context, c *call) (*output, error) {
+		res, err := c.svc.HistoryList(ctx, service.HistoryListRequest{
+			ProjectID: c.projectID, Actor: c.args.str("by"), Page: page(c.args),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
+
+func undoCommand(name, summary string, redo bool) *spec {
+	return &spec{
+		name:    name,
+		summary: summary,
+		usage:   []string{"vukem-video " + name + " --project <id>"},
+		example: "vukem-video " + name + " --project prj_7k2m9x4q1b",
+		project: true,
+		globals: []string{"dry-run"},
+		write:   true,
+		run: func(ctx context.Context, c *call) (*output, error) {
+			req := service.UndoRequest{ProjectID: c.projectID, DryRun: c.args.boolean("dry-run")}
+
+			var (
+				res *service.UndoResult
+				err error
+			)
+
+			if redo {
+				res, err = c.svc.Redo(ctx, req)
+			} else {
+				res, err = c.svc.Undo(ctx, req)
+			}
+
+			if err != nil {
+				return nil, err
+			}
+
+			return &output{value: res, text: undoText(res)}, nil
+		},
+	}
+}
+
+var (
+	undo = undoCommand("undo", "undo the last step of the caller", false)
+	redo = undoCommand("redo", "redo the last undone step of the caller", true)
+)
+
+var lintCmd = &spec{
+	name:    "lint",
+	summary: "check a project against the lint rules",
+	usage:   []string{"vukem-video lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"},
+	example: "vukem-video lint --project prj_7k2m9x4q1b --json",
+	project: true,
+	flags: append([]flagDef{
+		{
+			Name:    "severity",
+			Kind:    kindString,
+			Default: "warning",
+			Usage:   "error lists only errors; warning lists everything",
+		},
+		{Name: "strict", Kind: kindBool, Default: "false", Usage: "exit 1 when there is at least one error finding"},
+	}, pageFlags("25")...),
+	run: func(ctx context.Context, c *call) (*output, error) {
+		res, err := c.svc.Lint(ctx, service.LintRequest{
+			ProjectID: c.projectID, Severity: c.args.str("severity"), Page: page(c.args),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		out := &output{value: res, text: res.Text}
+		if c.args.boolean("strict") && res.Errors > 0 {
+			out.exit = ExitFailure
+		}
+
+		return out, nil
+	},
+}
