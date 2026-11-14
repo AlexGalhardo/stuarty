@@ -241,7 +241,7 @@ type ProjectCreateRequest struct {
 	Name   string `json:"name"`             // 1 to 120 characters
 	Preset string `json:"preset,omitempty"` // default: "9:16"; "1:1" | "16:9" | "4:5" (RF-002)
 	FPS    string `json:"fps,omitempty"`    // default: "30"; "<n>" or "<n>/1001", SDD-001 §3.1
-	ID     string `json:"id,omitempty"`     // optional caller-chosen id, pattern ^prj_[0-9a-hjkmnp-tv-z]{10}$; E_ID_EXISTS if taken
+	ID     string `json:"id,omitempty"`     // optional caller-chosen id, pattern ^prj_[0-9a-hjkmnp-tv-z]{10}$; E_ID_EXISTS if taken; in network mode the server chooses the id and a client id is E_VALIDATION (no existence oracle across users); a key limited to one project gets E_FORBIDDEN
 	DryRun bool   `json:"dry_run,omitempty"`
 }
 type ProjectCreateResult struct {

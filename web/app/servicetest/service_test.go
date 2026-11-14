@@ -2,10 +2,12 @@ package servicetest
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
@@ -330,5 +332,116 @@ func TestErrorStatusAndExitCode(t *testing.T) {
 
 	if (&service.Error{Retryable: true}).ExitCode() != 2 || (&service.Error{}).ExitCode() != 1 {
 		t.Error("exit code is 2 when retryable and 1 otherwise")
+	}
+}
+
+func network(actor, owner string) context.Context {
+	return service.WithCaller(context.Background(), service.Caller{Actor: actor, Scopes: service.AllScopes, OwnerUserID: owner})
+}
+
+func TestSecurity_T06_ProjectLimitedKeyConfined(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	owner := network("user:usr_a", "usr_a")
+
+	var ids []string
+
+	for _, n := range []string{"one", "two", "three"} {
+		res, err := e.svc.ProjectCreate(owner, service.ProjectCreateRequest{Name: n})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		ids = append(ids, res.ProjectID)
+	}
+
+	key := service.WithCaller(context.Background(), service.Caller{
+		Actor: "key:key_0000000001", Scopes: service.AllScopes, OwnerUserID: "usr_a", ProjectID: ids[1],
+	})
+
+	l, err := e.svc.ProjectList(key, service.ProjectListRequest{State: "all"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(l.Projects) != 1 || l.Projects[0].ID != ids[1] || !strings.Contains(l.Text, "(1 of 1") {
+		t.Errorf("a project-limited key lists %+v\n%s", l.Projects, l.Text)
+	}
+
+	if _, err := e.svc.ProjectCreate(key, service.ProjectCreateRequest{Name: "more"}); code(err) != service.CodeForbidden {
+		t.Errorf("a project-limited key creating a project = %v, want E_FORBIDDEN", err)
+	}
+
+	if _, err := e.svc.ProjectGet(key, service.ProjectGetRequest{ProjectID: ids[0]}); code(err) != service.CodeForbidden {
+		t.Errorf("a project-limited key reading another project = %v, want E_FORBIDDEN", err)
+	}
+}
+
+func TestSecurity_T06_ListAndCountAreScopedToTheOwner(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	alice, bob := network("user:usr_a", "usr_a"), network("user:usr_b", "usr_b")
+
+	for i := range 5 {
+		if _, err := e.svc.ProjectCreate(bob, service.ProjectCreateRequest{Name: fmt.Sprintf("bob %d", i)}); err != nil {
+			t.Fatal(err)
+		}
+
+		e.clock.advance(time.Second)
+	}
+
+	mine, err := e.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "alice"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Alice's project is the oldest of the ones created after Bob's; with a
+	// limit of 1 an in-memory filter would return an empty page with a cursor.
+	l, err := e.svc.ProjectList(alice, service.ProjectListRequest{Limit: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(l.Projects) != 1 || l.Projects[0].ID != mine.ProjectID || l.NextCursor != nil {
+		t.Errorf("alice's page = %+v, next %v", l.Projects, l.NextCursor)
+	}
+
+	if strings.Contains(l.Text, "of 6") || strings.Contains(l.Text, "bob") {
+		t.Errorf("the text leaks the total of other owners:\n%s", l.Text)
+	}
+
+	n, err := e.store.Projects().Count(context.Background(), service.ProjectQuery{OwnerUserID: "usr_a"})
+	if err != nil || n != 1 {
+		t.Errorf("Count for alice = %d, %v", n, err)
+	}
+}
+
+func TestSecurity_T06_ProjectIDIsNotAnExistenceOracle(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	alice, bob := network("user:usr_a", "usr_a"), network("user:usr_b", "usr_b")
+
+	theirs, err := e.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "alice"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, taken := e.svc.ProjectCreate(bob, service.ProjectCreateRequest{Name: "x", ID: theirs.ProjectID})
+	_, free := e.svc.ProjectCreate(bob, service.ProjectCreateRequest{Name: "x", ID: "prj_00000zzzzz"})
+
+	if code(taken) != command.CodeValidation || code(free) != command.CodeValidation {
+		t.Fatalf("taken = %v, free = %v: network mode must refuse a client id the same way", taken, free)
+	}
+
+	if serviceError(t, taken).Message != serviceError(t, free).Message {
+		t.Errorf("the answers differ: %q and %q", serviceError(t, taken).Message, serviceError(t, free).Message)
+	}
+
+	// Local mode keeps the client-chosen id (and E_ID_EXISTS), there is no other owner.
+	if _, err := e.svc.ProjectCreate(e.as(ui), service.ProjectCreateRequest{Name: "l", ID: "prj_00000aaaaa"}); err != nil {
+		t.Errorf("local create with an id: %v", err)
 	}
 }

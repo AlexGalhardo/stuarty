@@ -42,13 +42,9 @@ func scanProjectHead(sc scanner, extra ...any) (service.ProjectHead, error) {
 
 const defaultProjectLimit, maxProjectLimit = 50, 200
 
-func (r projectRepo) List(ctx context.Context, q service.ProjectQuery) ([]service.ProjectHead, string, error) {
-	limit := q.Limit
-	if limit <= 0 {
-		limit = defaultProjectLimit
-	}
-	limit = min(limit, maxProjectLimit)
-
+// projectFilter is the WHERE of a listing without its cursor: the state, the
+// owner and the single project, all in SQL so that pages and totals agree.
+func projectFilter(q service.ProjectQuery) ([]string, []any) {
 	var (
 		where []string
 		args  []any
@@ -60,6 +56,23 @@ func (r projectRepo) List(ctx context.Context, q service.ProjectQuery) ([]servic
 	default:
 		where = append(where, "state = 'active'")
 	}
+	if q.OwnerUserID != "" {
+		where, args = append(where, "owner_user_id = ?"), append(args, q.OwnerUserID)
+	}
+	if q.ProjectID != "" {
+		where, args = append(where, "id = ?"), append(args, q.ProjectID)
+	}
+	return where, args
+}
+
+func (r projectRepo) List(ctx context.Context, q service.ProjectQuery) ([]service.ProjectHead, string, error) {
+	limit := q.Limit
+	if limit <= 0 {
+		limit = defaultProjectLimit
+	}
+	limit = min(limit, maxProjectLimit)
+
+	where, args := projectFilter(q)
 	if q.After != "" {
 		ms, id, err := decodeCursor(q.After)
 		if err != nil {
@@ -107,14 +120,10 @@ var ErrBadCursor = service.ErrBadCursor
 
 // Count implements service.ProjectRepo.
 func (r projectRepo) Count(ctx context.Context, q service.ProjectQuery) (int, error) {
-	query, args := "SELECT count(*) FROM projects", []any(nil)
-
-	switch {
-	case q.IncludeTrashed:
-	case q.State != "":
-		query, args = query+" WHERE state = ?", append(args, string(q.State))
-	default:
-		query += " WHERE state = 'active'"
+	where, args := projectFilter(q)
+	query := "SELECT count(*) FROM projects"
+	if len(where) > 0 {
+		query += " WHERE " + strings.Join(where, " AND ")
 	}
 
 	var n int
