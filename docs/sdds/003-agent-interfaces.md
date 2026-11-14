@@ -2447,6 +2447,17 @@ $ echo $?
 
 See §6.8.
 
+### 5.7 What P1-AGT-001 has built, and where it differs from §5.1 to §5.6
+
+The package is `web/app/cli`. A `spec` per command holds its flags, help and handler; `Runtime.Execute(ctx, name, args)` returns the exit code, and `cli.Commands(rt)` returns the `vukem.Command` adapters (`NoBoot`, so no provider connects to the database). The binary's `main` still has to register them, insert `--` after the command name (§5.1 item 2) and map the `*vukem.ExitError`; that wiring is in `web/cmd/app`, not in this package.
+
+- **Built:** `project:list`, `project:create`, `project:show`, `project:trash`, `project:restore`, `edit` (both input forms of §5.5), `history`, `undo`, `redo`, `lint`; `--json`, `--dry-run`, `--project` and `VUKEM_VIDEO_PROJECT`, `--workspace`, `--actor` with its checks, the exit codes by retryable code, `--help` in at most 40 lines, the list with no arguments.
+- **Stubs that name their task, with no Service call:** `media:import`, `media:inspect`, `media:list` and `job:show`, `job:list` (P1-SRV-004), `view` (P1-RND-005), `export` (P1-RND-004), `events` (P1-SRV-006), `command:help` (no `Service` method yet). They fail with `E_INTERNAL` and a message that names the task; this is temporary, and no new error code is added for it. `serve`, `mcp` and `open` are not registered here.
+- **Finding the Service (§5.2).** `LocalResolver` implements step 3 (this process owns the workspace: `workspace.Open`, the SQLite store, `service.New`). Steps 1 and 2 need the remote client of P1-SRV-005: when `workspace.Open` reports a running server or `VUKEM_VIDEO_URL`, the command fails with a message that says so, instead of opening the database a second time.
+- **Edit text (§3.5).** `EditResult` has no frame rate and no before and after timeline end, so the text prints finding ranges in frames (`0f-60f`) and omits `timeline <before> -> <after>`. It lives in `web/app/cli/text.go` for now and belongs in `service/textview` with the MCP text when that adapter needs it.
+- **`view --to` against `TestSecurity_T10_NoOutboundCapability`.** The row of `view` in §5.4 has a flag `--to`, and the T10 test forbids a flag named `to`. The `view` stub declares no such flag; the architect must rename it (for example `--end`) before `view` is built.
+- **Not done yet:** sessions A and B end to end (they need media and export; the part that needs none runs in `session_test.go`) and `BenchmarkCLIRead` (it needs a running owner).
+
 ## 6. HTTP API contract
 
 One API under `/api/v1`, JSON in and out, one endpoint per `Service` method (ADR-0017). Handlers are vukem typed handlers (`api.Register`, `api.Op`; `api/typed.go` line 17): input struct from path, query and body, output struct, and the OpenAPI document is derived from the Go types.
