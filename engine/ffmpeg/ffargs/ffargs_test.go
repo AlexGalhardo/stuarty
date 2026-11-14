@@ -227,9 +227,6 @@ func TestSecurity_T15_ArgvPolicy(t *testing.T) {
 
 	t.Run("accepts every golden scenario", func(t *testing.T) {
 		for _, sc := range goldenScenarios() {
-			if sc.name == "vaapi test" || sc.name == "info" {
-				// built through the checker in must; the info listing is checked below
-			}
 			a := sc.argv(t, pol)
 			if len(a) == 0 {
 				t.Errorf("%s: empty argv", sc.name)

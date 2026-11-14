@@ -98,7 +98,7 @@ func (r *Runner) ReadCapabilities(ctx context.Context) (*Capabilities, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer dir.Remove()
+	defer func() { _ = dir.Remove() }()
 
 	c := &Capabilities{}
 	for _, l := range []struct {

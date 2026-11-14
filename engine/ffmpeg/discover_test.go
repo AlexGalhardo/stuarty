@@ -28,8 +28,8 @@ func install(t *testing.T, dir, version string) string {
 		if _, err := io.Copy(dst, src); err != nil {
 			t.Fatal(err)
 		}
-		src.Close()
-		dst.Close()
+		_ = src.Close()
+		_ = dst.Close()
 	}
 	if err := os.WriteFile(filepath.Join(dir, "version.txt"), []byte(version), 0o644); err != nil {
 		t.Fatal(err)
