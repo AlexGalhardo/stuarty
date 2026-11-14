@@ -1,10 +1,10 @@
 ---
 title: Getting started
-description: How Vukem Video will be run, and what you can do today while it is in the Prototype phase.
+description: How to install and run Vukem Video, and what you can do today while it is in the Prototype phase.
 ---
 
-<Callout type="warning" title="Nothing here works yet">
-Vukem Video is in the Prototype phase. The commands below describe the planned interface of the first release. They are not available today, and the first release is not published.
+<Callout type="warning" title="Early release">
+Vukem Video is in the Prototype phase. The first editor release, `v0.2.0`, ships the local server, its container image and installers, but the editor does not edit video yet. Parts of the commands below are specified and not working yet.
 </Callout>
 
 ## What you can do today
@@ -13,19 +13,33 @@ Vukem Video is in the Prototype phase. The commands below describe the planned i
 - Build the server skeleton from source. You need Go (the version in `go.mod`) and Bun for the front end. The server boots and answers a health check; it does not edit video yet.
 - Watch the [releases](https://github.com/AlexGalhardo/vukem-video/releases) page and the [changelog](/changelog).
 
-## How it will run
+## Install
 
-The product runs only on your machine. A release is planned to ship:
+The product runs only on your machine. Each [release](https://github.com/AlexGalhardo/vukem-video/releases) attaches:
 
-- a container image of the web version, started with a command of this shape (the image name is published with the release):
+- installers of the local server, which install `vukem-video` and a shortcut that starts the server and opens the editor in your browser; uninstalling removes the program and keeps your workspace:
+  - Windows 11: `vukem-video_<version>_windows_amd64_setup.exe`
+  - Debian and Ubuntu: `vukem-video_<version>_linux_<arch>.deb`
+  - any Linux: `vukem-video_<version>_linux_amd64.AppImage`
+  - macOS: `vukem-video_<version>_darwin_<arch>.pkg`
+- archives for six targets and `checksums.txt`, signed with cosign.
+
+The container image of the web version is started with a command of this shape, which publishes the port on your computer only:
 
 ```bash
-docker run -p 127.0.0.1:7878:7878 ghcr.io/alexgalhardo/vukem-video
+docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data ghcr.io/alexgalhardo/vukem-video:<version>
 ```
 
-- installers of the local server for Windows, Linux and macOS, attached to the GitHub release, that install `vukem-video` and a shortcut that opens the editor in your browser.
-
 The server listens on `127.0.0.1:7878` and is reachable from your computer only.
+
+### Windows SmartScreen and macOS Gatekeeper
+
+The installers are not signed with a paid code-signing certificate, so both systems warn before the first run.
+
+- **Windows.** SmartScreen shows "Windows protected your PC" for the `.exe`. Choose "More info", then "Run anyway".
+- **macOS.** Gatekeeper says the package cannot be opened because Apple cannot check it. Control-click the `.pkg` and choose Open, or allow it in System Settings, Privacy & Security.
+
+To check a download before you run it, verify `checksums.txt` with cosign and compare the SHA-256 of the file, as described in the [security policy](https://github.com/AlexGalhardo/vukem-video/blob/main/.github/SECURITY.md).
 
 ## For a person
 
@@ -40,7 +54,7 @@ Pick one of three routes to the same project:
 2. The CLI with `--json`, for example `vukem-video project:create --name "Launch teaser" --json`.
 3. The HTTP API of `vukem-video serve`, with Streamable HTTP MCP at `POST /mcp`.
 
-These routes are specified in the repository (SDD-003) and are not implemented yet.
+These routes are specified in the repository (SDD-003); parts of them are not implemented yet.
 
 ## Next steps
 
