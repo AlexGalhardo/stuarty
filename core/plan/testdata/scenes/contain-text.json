@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "prj_9x8y7z6w5v",
+  "name": "Contain with text",
+  "settings": {"width": 1080, "height": 1920, "fps": {"num": 30, "den": 1}, "background": "#102030"},
+  "assets": {
+    "ast_d4d4d4d4d4": {"id": "ast_d4d4d4d4d4", "hash": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "kind": "video", "name": "wide.mp4", "frame_rate": {"num": 30, "den": 1}, "frame_count": 300, "sample_count": 480000, "width": 1920, "height": 1080, "has_audio": false}
+  },
+  "tracks": {
+    "trk_t1t1t1t1t1": {"id": "trk_t1t1t1t1t1", "kind": "visual", "name": "Text", "order": "a0"},
+    "trk_v1v1v1v1v1": {"id": "trk_v1v1v1v1v1", "kind": "visual", "name": "Video", "order": "a1"}
+  },
+  "items": {
+    "itm_k1k1k1k1k1": {"id": "itm_k1k1k1k1k1", "type": "clip", "track": "trk_v1v1v1v1v1", "start": 0, "duration": 90, "asset": "ast_d4d4d4d4d4", "fit": "contain", "scale": 0.9,
+      "keyframes": {"scale": [{"t": 0, "value": 0.9, "easing": "ease_out"}, {"t": 60, "value": 1.0}]}},
+    "itm_x1x1x1x1x1": {"id": "itm_x1x1x1x1x1", "type": "text", "track": "trk_t1t1t1t1t1", "start": 10, "duration": 70, "text": "Big launch", "y": 300,
+      "style": {"size": 96, "stroke_width": 4, "color": "#FFE600"},
+      "transition_in": {"kind": "slide_up", "duration": 6}, "transition_out": {"kind": "fade", "duration": 6}}
+  }
+}

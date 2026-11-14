@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "prj_2a3b4c5d6e",
+  "name": "Two clips with a cut",
+  "settings": {"width": 1080, "height": 1920, "fps": {"num": 30000, "den": 1001}},
+  "assets": {
+    "ast_a1a1a1a1a1": {"id": "ast_a1a1a1a1a1", "hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "kind": "video", "name": "first.mp4", "frame_rate": {"num": 30000, "den": 1001}, "frame_count": 600, "sample_count": 960000, "width": 1080, "height": 1920, "has_audio": true},
+    "ast_b2b2b2b2b2": {"id": "ast_b2b2b2b2b2", "hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "kind": "video", "name": "second.mp4", "frame_rate": {"num": 25, "den": 1}, "frame_count": 500, "sample_count": 960000, "width": 1920, "height": 1080, "has_audio": true}
+  },
+  "tracks": {
+    "trk_v1v1v1v1v1": {"id": "trk_v1v1v1v1v1", "kind": "visual", "name": "Video", "order": "a0"}
+  },
+  "items": {
+    "itm_c1c1c1c1c1": {"id": "itm_c1c1c1c1c1", "type": "clip", "track": "trk_v1v1v1v1v1", "start": 0, "duration": 60, "asset": "ast_a1a1a1a1a1", "source_in": 30},
+    "itm_c2c2c2c2c2": {"id": "itm_c2c2c2c2c2", "type": "clip", "track": "trk_v1v1v1v1v1", "start": 60, "duration": 60, "asset": "ast_b2b2b2b2b2", "speed": {"num": 2, "den": 1},
+      "crop": {"left": 0.25, "right": 0.25}, "brightness": 0.1, "saturation": 1.2}
+  }
+}
