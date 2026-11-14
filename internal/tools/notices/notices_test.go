@@ -169,6 +169,7 @@ func newFakeRepo(t *testing.T) *fakeRepo {
 	put(t, r.root, "web/node_modules/@scope/beta/LICENSE.md", mitText)
 	put(t, r.root, "web/node_modules/@scope/beta/NOTICE", "notice text")
 	put(t, r.root, ".config/ffmpeg.env", "# comment\nFFMPEG_VERSION=\"n9.0.2\"\n")
+	put(t, r.root, ".config/whisper.env", "WHISPER_TAG=v9.9.9"+string(rune(10)))
 	put(
 		t,
 		r.root,
@@ -178,7 +179,7 @@ func newFakeRepo(t *testing.T) *fakeRepo {
 	put(t, r.root, "licenses/fonts/Inter-OFL.txt", ofl)
 	put(t, r.root, ".config/third-party.json", `[
 	 {"group":"programs","name":"FFmpeg","version":"env:FFMPEG_VERSION","spdx":"LGPL-3.0-or-later","copyright":"FFmpeg developers","files":["licenses/programs/ffmpeg/COPYING.LGPLv3"],"note":"separate process","shipped_in":["image"]},
-	 {"group":"programs","name":"whisper.cpp","version":"v1","spdx":"MIT","copyright":"ggml","files":["licenses/programs/ffmpeg/COPYING.LGPLv3"],"note":"","shipped_in":[]},
+	 {"group":"programs","name":"whisper.cpp","version":"env:WHISPER_TAG","spdx":"MIT","copyright":"ggml","files":["licenses/programs/ffmpeg/COPYING.LGPLv3"],"note":"","shipped_in":[]},
 	 {"group":"fonts","name":"Inter","version":"1","spdx":"OFL-1.1","copyright":"Inter","files":["licenses/fonts/Inter-OFL.txt"],"note":"","shipped_in":["archive"]}
 	]`)
 
@@ -269,7 +270,7 @@ func TestBuildCollectsEverythingAndIsDeterministic(t *testing.T) {
 	text := string(first[noticesFile])
 
 	for _, want := range []string{
-		"example.com/lib", "alpha", "@scope/beta", "gamma", "FFmpeg", "n9.0.2", "whisper.cpp", "Inter",
+		"example.com/lib", "alpha", "@scope/beta", "gamma", "FFmpeg", "n9.0.2", "whisper.cpp", "v9.9.9", "Inter",
 	} {
 		if !strings.Contains(text, want) {
 			t.Errorf("the notices must list %q:\n%s", want, text)

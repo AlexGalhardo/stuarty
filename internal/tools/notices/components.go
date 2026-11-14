@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
@@ -457,7 +458,7 @@ type InventoryEntry struct {
 }
 
 // inventory reads .config/third-party.json. A version "env:NAME" is read from
-// .config/ffmpeg.env. Each file must exist, and when its text matches a known
+// .config/ffmpeg.env or .config/whisper.env. Each file must exist, and when its text matches a known
 // licence the id must be one of the entry's SPDX ids.
 func inventory(root string) ([]Component, error) {
 	raw, err := os.ReadFile(filepath.Join(root, ".config", "third-party.json"))
@@ -474,9 +475,15 @@ func inventory(root string) ([]Component, error) {
 		return nil, fmt.Errorf(".config/third-party.json: %w", err)
 	}
 
-	env, err := readEnvFile(filepath.Join(root, ".config", "ffmpeg.env"))
-	if err != nil {
-		return nil, err
+	env := map[string]string{}
+
+	for _, name := range []string{"ffmpeg.env", "whisper.env"} {
+		part, err := readEnvFile(filepath.Join(root, ".config", name))
+		if err != nil {
+			return nil, err
+		}
+
+		maps.Copy(env, part)
 	}
 
 	out := make([]Component, 0, len(entries))
@@ -499,7 +506,11 @@ func inventoryComponent(root string, e InventoryEntry, env map[string]string) (C
 	if key, ok := strings.CutPrefix(version, "env:"); ok {
 		v, found := env[key]
 		if !found || v == "" {
-			return Component{}, fmt.Errorf("%s: %s is not set in .config/ffmpeg.env", e.Name, key)
+			return Component{}, fmt.Errorf(
+				"%s: %s is not set in .config/ffmpeg.env or .config/whisper.env",
+				e.Name,
+				key,
+			)
 		}
 
 		version = v
