@@ -66,3 +66,14 @@ condition = "AND"
 paths = ['''^core/.+_test\.go$''']
 regexTarget = "line"
 regexes = ['''\b(?:clip|cap|asset)Key\s*=|key:key_[a-z0-9]{10}''']
+
+# Actor ids such as key:key_h8v2n5q7w3 name an API key; they are public
+# identifiers (SDD-000 section 2), the secret is the token. Go tests and the
+# editor's comments and fixtures use them as examples. Only this exact shape,
+# only in Go test files and the editor sources.
+[[allowlists]]
+description = "example actor ids in Go tests and the editor"
+condition = "AND"
+paths = ['''(?:_test\.go|^web/resources/js/.+\.tsx?)$''']
+regexTarget = "match"
+regexes = ['''key:key_[a-z0-9]{10}''']
