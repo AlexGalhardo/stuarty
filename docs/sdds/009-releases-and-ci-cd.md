@@ -1550,6 +1550,18 @@ Copied from `vukem/.golangci.yml` (174 lines): `version: "2"`, formatters gofump
 
 Copied from `vukem/.markdownlint-cli2.jsonc` (lines 1-24 of that file) with `ignores` replaced by `["**/node_modules/**", "**/testdata/**", "site/out/**", "web/resources/public/**", "CREATE.md", ".claude/skills/**"]`. `MD013` off, `MD024` siblings only, `MD004` dash, `MD046` fenced, `MD033` allowed elements as vukem. `MD010` is `{ "code_blocks": false }` (vukem lists only Go and Makefile fences; ours also has tab-indented TOML, JSON and Dockerfile fences because the `.editorconfig` uses tabs for them). `docs/` is linted like everything else.
 
+### 15.5 What P1-REL-004 built, and where it differs from sections 14 and 15
+
+The files exist at the root: `.editorconfig`, `.golangci.yml`, `.markdownlint-cli2.jsonc`, `Taskfile.yml`, `.githooks/pre-commit` and an adapted `.githooks/pre-push`. This list is the contract where it differs from the text above.
+
+- **Biome keeps `indentWidth` 2 with `indentStyle` `tab`** (section 15.2 says 4). Biome uses `indentWidth` only to count columns for the 80-column line limit. With 4, the reformat re-wraps lines, so it is no longer whitespace only (`git show -w --stat` must be empty); with 2 the line breaks are identical to the old two-space output. Editors still show tabs at width 4 (`.editorconfig`). The linter uses `"preset": "recommended"` (Biome 2.6 deprecates `"recommended": true`), and `security/noDangerouslySetInnerHtml` is an error. `web/package.json` gains the script `format` (`biome format --write resources/js e2e`) that `task fmt` calls.
+- **`gosec` runs every rule.** Section 15.3 says it "keeps G201, G202, G204, G304 and G306 enabled"; an `includes` list would turn all the others off, so none is written and the five are part of the default set.
+- **`gci` has a fourth section**, `prefix(github.com/AlexGalhardo/vukem-video)`, after the vukem prefix, so product imports group last.
+- **`.markdownlint-cli2.jsonc` switches off four rules** that the existing documents break on purpose: `MD029` (a numbered list continues its numbers after a code block or table and the text cites items by number; 74 findings), `MD036` (bold labels such as `**Arguments**`; 68), `MD038` (significant spaces in code spans such as `` `### ` ``; 22) and `MD014` (a `$` prompt in examples; 3). Section 15.4 listed none of them. All other findings (688 in total before the fix) were repaired in the documents without changing wording: bare URLs wrapped in `<>`, blank lines around lists, headings and fences, `|` escaped inside table cells, two heading levels, one inline-HTML placeholder put in backticks, one merged table row split, `MD025` disabled by a comment in `docs/search/notes/engine-postmortems.md` (its Parts are level-one headings).
+- **`task lint:go`** is `golangci-lint run`, which in version 2 also reports unformatted files (`gofumpt`, `gci`, `golines`), so a space-indented line fails it. `task fmt` rewrites them.
+- **Hooks.** `task hooks` runs `git config core.hooksPath .githooks`. `pre-commit` only checks (formatting diff of staged Go files, `golangci-lint run --new-from-rev=HEAD`, `go mod tidy -diff` when `go.mod` or `go.sum` is staged, markdownlint on staged Markdown, Biome on staged web files). `pre-push` now runs `go vet ./...` and skips the `site/` date refresh while `site/` does not exist; `govulncheck` and `commit-msg` still come with `REL-CI`.
+- **`task ci`** is `lint`, `vet`, `test`, `tidy:check`; `notices:check` joins it with section 12's generator. Tools used: golangci-lint 2.15.0, go-task 3.54.0, markdownlint-cli2 0.24.1, Biome 2.6.6 (the pinned `@biomejs/biome` of `web/package.json`).
+
 ## 16. Repository protection, labels, secrets and Dependabot
 
 ### 16.1 Ruleset `protect-main`
