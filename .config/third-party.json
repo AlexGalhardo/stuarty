@@ -30,13 +30,13 @@
   {
     "group": "programs",
     "name": "whisper.cpp",
-    "version": "v1.9.2",
+    "version": "env:WHISPER_TAG",
     "spdx": "MIT",
     "copyright": "Copyright (c) 2023-2026 The ggml authors",
     "files": [
       "licenses/programs/whisper.cpp/LICENSE"
     ],
-    "note": "transcription helper, installed by the user on first use (ADR-0021)",
+    "note": "transcription helper, installed by the user on first use (ADR-0021); upstream ships linux-amd64, linux-arm64 and windows-amd64, the others are built by helpers.yml from the pinned source",
     "shipped_in": []
   },
   {
