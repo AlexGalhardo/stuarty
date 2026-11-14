@@ -86,6 +86,9 @@ linters:
           list-mode: lax
           files:
             - "**/core/**"
+          # The deny prefix of vukem also matches the module path vukem-video.
+          allow:
+            - github.com/AlexGalhardo/vukem-video/core
           deny:
             - pkg: github.com/AlexGalhardo/vukem-video/engine
               desc: core never imports engine (ADR-0001 rule 1)
