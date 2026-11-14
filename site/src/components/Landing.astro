@@ -1,0 +1,126 @@
+---
+import { dockerCommand, type LandingCopy } from "@/lib/landing";
+import { site, withBase } from "@/lib/site";
+
+interface Props {
+	copy: LandingCopy;
+}
+
+const { copy } = Astro.props;
+const isPt = copy.lang === "pt-BR";
+const copyLabel = isPt ? "Copiar o comando" : "Copy the command";
+const docsHref = withBase("/docs/introduction/");
+---
+
+<main id="content">
+	<section class="relative overflow-hidden border-b border-border">
+		<div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,var(--accent-soft),transparent_65%)]"></div>
+		<div class="mx-auto max-w-5xl px-4 pt-6 pb-20 sm:px-6 sm:pt-10">
+			<div class="flex flex-wrap items-center justify-between gap-3 text-sm">
+				<p class="inline-flex items-center gap-2 rounded-full border border-border-strong bg-subtle px-3 py-1 font-medium text-muted">
+					<span aria-hidden="true" class="size-2 rounded-full bg-brand"></span>
+					{copy.status}
+				</p>
+				<a href={withBase(copy.nav.other.href)} hreflang={isPt ? "en" : "pt-BR"} lang={isPt ? "en" : "pt-BR"} class="text-muted hover:text-fg">{copy.nav.other.label}</a>
+			</div>
+
+			<h1 class="mt-10 max-w-3xl text-4xl font-semibold tracking-tight text-fg sm:text-5xl">{copy.hero.title}</h1>
+			<p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">{copy.hero.lead}</p>
+
+			<div class="mt-8 flex flex-wrap gap-3">
+				<a href="#run" class="inline-flex h-11 items-center rounded-lg bg-[#6446f0] px-5 text-sm font-semibold text-white hover:bg-[#5a3be6]">{copy.hero.primary}</a>
+				<a href={docsHref} class="inline-flex h-11 items-center rounded-lg border border-border-strong px-5 text-sm font-semibold text-fg hover:bg-hover">{copy.hero.secondary}</a>
+				<a href={site.releases} class="inline-flex h-11 items-center rounded-lg border border-border-strong px-5 text-sm font-semibold text-fg hover:bg-hover">{copy.nav.releases}</a>
+			</div>
+
+			<div id="run" class="mt-10 max-w-3xl scroll-mt-24">
+				<p class="text-sm text-muted">{copy.hero.dockerLabel}</p>
+				<div class="mt-2 flex items-center gap-2 rounded-xl border border-border-strong bg-code-bg px-4 py-3">
+					<code class="min-w-0 flex-1 overflow-x-auto font-mono text-sm whitespace-nowrap text-fg">{dockerCommand}</code>
+					<button type="button" data-copy={dockerCommand} aria-label={copyLabel} class="shrink-0 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted hover:bg-hover hover:text-fg">
+						{isPt ? "Copiar" : "Copy"}
+					</button>
+				</div>
+				<p class="mt-2 text-sm text-faint">{copy.hero.dockerNote}</p>
+			</div>
+
+			<div aria-hidden="true" class="mt-14 rounded-2xl border border-border-strong bg-subtle p-4 shadow-2xl shadow-black/20">
+				<div class="grid gap-3 sm:grid-cols-[1fr_9rem]">
+					<div class="flex h-40 items-center justify-center rounded-lg bg-black sm:h-52">
+						<div class="flex aspect-[9/16] h-[85%] items-center justify-center rounded-md bg-gradient-to-b from-[#3b2a8f] to-[#111827]">
+							<span class="text-2xl text-white/90">&#9654;</span>
+						</div>
+					</div>
+					<div class="hidden space-y-2 rounded-lg border border-border bg-bg p-3 sm:block">
+						<div class="h-2 w-2/3 rounded bg-border-strong"></div>
+						<div class="h-2 w-full rounded bg-border"></div>
+						<div class="h-2 w-1/2 rounded bg-border"></div>
+					</div>
+				</div>
+				<div class="mt-3 space-y-2">
+					<div class="flex gap-2"><div class="h-6 w-[40%] rounded bg-brand/80"></div><div class="h-6 w-[25%] rounded bg-brand/50"></div><div class="h-6 w-[20%] rounded bg-brand/70"></div></div>
+					<div class="flex gap-2 pl-[10%]"><div class="h-6 w-[30%] rounded bg-amber-400/70"></div><div class="h-6 w-[35%] rounded bg-amber-400/50"></div></div>
+					<div class="flex gap-2"><div class="h-6 w-[70%] rounded bg-emerald-400/50"></div></div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section aria-labelledby="tour" class="border-b border-border">
+		<div class="mx-auto max-w-5xl px-4 py-20 sm:px-6">
+			<h2 id="tour" class="text-3xl font-semibold tracking-tight">{copy.tour.title}</h2>
+			<p class="mt-3 max-w-2xl text-muted">{copy.tour.lead}</p>
+			<ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				{copy.tour.items.map((item) => (
+					<li class="rounded-xl border border-border bg-subtle p-5">
+						<p class="text-xs font-semibold tracking-wide text-accent uppercase">{item.phase}</p>
+						<h3 class="mt-2 text-base font-semibold text-fg">{item.title}</h3>
+						<p class="mt-2 text-sm leading-relaxed text-muted">{item.text}</p>
+					</li>
+				))}
+			</ul>
+		</div>
+	</section>
+
+	<section aria-labelledby="agents" class="border-b border-border">
+		<div class="mx-auto max-w-5xl px-4 py-20 sm:px-6">
+			<h2 id="agents" class="text-3xl font-semibold tracking-tight">{copy.agents.title}</h2>
+			<p class="mt-3 max-w-2xl text-muted">{copy.agents.lead}</p>
+			<ul class="mt-10 grid gap-4 lg:grid-cols-3">
+				{copy.agents.routes.map((route) => (
+					<li class="rounded-xl border border-border bg-subtle p-5">
+						<h3 class="text-base font-semibold text-fg">{route.name}</h3>
+						<p class="mt-2 text-sm leading-relaxed text-muted">{route.text}</p>
+						<code class="mt-3 block rounded-md bg-code-bg px-3 py-2 font-mono text-xs break-words whitespace-pre-wrap text-fg">{route.command}</code>
+					</li>
+				))}
+			</ul>
+			<p class="mt-4 text-sm text-faint">{copy.agents.note}</p>
+		</div>
+	</section>
+
+	<section aria-labelledby="open" class="border-b border-border">
+		<div class="mx-auto max-w-5xl px-4 py-20 sm:px-6">
+			<h2 id="open" class="text-3xl font-semibold tracking-tight">{copy.open.title}</h2>
+			<dl class="mt-10 grid gap-x-8 gap-y-6 sm:grid-cols-2">
+				{copy.open.points.map((point) => (
+					<div>
+						<dt class="font-semibold text-fg">{point.title}</dt>
+						<dd class="mt-1 text-sm leading-relaxed text-muted">{point.text}</dd>
+					</div>
+				))}
+			</dl>
+		</div>
+	</section>
+</main>
+
+<footer class="mx-auto max-w-5xl px-4 py-10 text-sm text-muted sm:px-6">
+	<nav aria-label={isPt ? "Rodapé" : "Footer"} class="flex flex-wrap gap-x-6 gap-y-2">
+		<a class="hover:text-fg" href={docsHref}>{copy.footer.docs}</a>
+		<a class="hover:text-fg" href={withBase("/changelog/")}>{copy.footer.changelog}</a>
+		<a class="hover:text-fg" href={site.repo}>{copy.footer.repo}</a>
+		<a class="hover:text-fg" href={site.releases}>{copy.nav.releases}</a>
+	</nav>
+	<p class="mt-4 text-faint">{copy.footer.license}</p>
+	{copy.footer.docsNote ? <p class="mt-1 text-faint">{copy.footer.docsNote}</p> : null}
+</footer>
