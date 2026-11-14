@@ -1,0 +1,48 @@
+// The seam between the editor and the network. Everything above it (client,
+// edit queue, event stream, sync) is written against this interface, so the
+// real endpoints and the fixtures of the tests are interchangeable.
+
+export interface TransportRequest {
+	method: "GET" | "POST";
+	// Relative to the API base, starting with "/": "/projects/prj_x".
+	path: string;
+	body?: unknown;
+	timeoutMs: number;
+	signal?: AbortSignal;
+}
+
+export interface TransportResponse {
+	status: number;
+	// The decoded JSON body, or null when there is none or it is not JSON.
+	body: unknown;
+}
+
+// A failure with no HTTP response: the network is down or the timeout fired.
+export class TransportError extends Error {
+	readonly kind: "network" | "timeout";
+
+	constructor(kind: "network" | "timeout", message: string) {
+		super(message);
+		this.name = "TransportError";
+		this.kind = kind;
+	}
+}
+
+export interface StreamHandlers {
+	// The connection is (re)established.
+	onOpen(): void;
+	// `name` is null for the unnamed message (preamble and heartbeat).
+	onMessage(name: string | null, data: string): void;
+	// `closed` is true when the browser gave up (readyState CLOSED); otherwise it
+	// is retrying by itself.
+	onError(closed: boolean): void;
+}
+
+export interface StreamConnection {
+	close(): void;
+}
+
+export interface Transport {
+	send(request: TransportRequest): Promise<TransportResponse>;
+	openStream(path: string, handlers: StreamHandlers): StreamConnection;
+}
