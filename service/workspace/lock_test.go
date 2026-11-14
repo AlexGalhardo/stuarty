@@ -110,7 +110,9 @@ func TestWorkspaceUnderSpaceAndNonASCIIPath(t *testing.T) {
 	if _, err := d.TryLock(); !errors.Is(err, ErrLocked) {
 		t.Errorf("second TryLock = %v, want ErrLocked", err)
 	}
-	if err := d.WriteRuntime(Runtime{PID: os.Getpid(), Addr: "127.0.0.1:1", Mode: ModeLocal, StartedAt: time.Now(), Version: "0.0.0"}); err != nil {
+	if err := d.WriteRuntime(
+		Runtime{PID: os.Getpid(), Addr: "127.0.0.1:1", Mode: ModeLocal, StartedAt: time.Now(), Version: "0.0.0"},
+	); err != nil {
 		t.Fatalf("WriteRuntime: %v", err)
 	}
 	token, err := d.EnsureToken()

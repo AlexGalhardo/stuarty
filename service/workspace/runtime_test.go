@@ -18,7 +18,13 @@ func TestRuntimeRoundTripAndSixFields(t *testing.T) {
 		t.Fatalf("ReadRuntime on absent file = %v, want ErrNotExist", err)
 	}
 
-	want := Runtime{PID: 18344, Addr: "127.0.0.1:7878", Mode: ModeLocal, StartedAt: time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC), Version: "0.5.0"}
+	want := Runtime{
+		PID:       18344,
+		Addr:      "127.0.0.1:7878",
+		Mode:      ModeLocal,
+		StartedAt: time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC),
+		Version:   "0.5.0",
+	}
 	if err := d.WriteRuntime(want); err != nil {
 		t.Fatal(err)
 	}

@@ -41,7 +41,15 @@ func fakeOwner(t *testing.T, token string) *httptest.Server {
 
 func advertise(t *testing.T, d Dir, srv *httptest.Server, mode string) {
 	t.Helper()
-	err := d.WriteRuntime(Runtime{PID: os.Getpid(), Addr: srv.Listener.Addr().String(), Mode: mode, StartedAt: time.Now(), Version: "0.0.0"})
+	err := d.WriteRuntime(
+		Runtime{
+			PID:       os.Getpid(),
+			Addr:      srv.Listener.Addr().String(),
+			Mode:      mode,
+			StartedAt: time.Now(),
+			Version:   "0.0.0",
+		},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +73,9 @@ func TestOpenNoOwnerRunsInProcessAndRemovesStaleRuntime(t *testing.T) {
 	d := Dir(home)
 
 	// A runtime.json of an owner that is gone.
-	if err := d.WriteRuntime(Runtime{PID: deadPID(t), Addr: "127.0.0.1:1", Mode: ModeLocal, StartedAt: time.Now(), Version: "0"}); err != nil {
+	if err := d.WriteRuntime(
+		Runtime{PID: deadPID(t), Addr: "127.0.0.1:1", Mode: ModeLocal, StartedAt: time.Now(), Version: "0"},
+	); err != nil {
 		t.Fatal(err)
 	}
 
