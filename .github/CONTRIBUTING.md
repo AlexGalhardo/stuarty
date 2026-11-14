@@ -28,7 +28,7 @@ Conventional Commits 1.0 in English:
 
 - Types: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `style`, `revert`.
 - The description is imperative, starts with a lower-case letter, has no trailing period, and the header is at most 100 characters.
-- The scope is optional. When present it is one of `core`, `timeline`, `schema`, `command`, `plan`, `lint`, `engine`, `raster`, `ingest`, `export`, `transcribe`, `installers`, `service`, `web`, `api`, `mcp`, `cli`, `ui`, `site`, `docs`, `repo`, `ci`, `deps`, `deps-dev`, `release`, `adr`, `sdd`, `go`, `security`.
+- The scope is optional. When present it is one of `core`, `timeline`, `schema`, `command`, `plan`, `lint`, `engine`, `raster`, `ingest`, `export`, `transcribe`, `installers`, `service`, `workspace`, `web`, `api`, `mcp`, `cli`, `ui`, `site`, `docs`, `repo`, `ci`, `deps`, `deps-dev`, `release`, `adr`, `sdd`, `go`, `security`.
 - A breaking change has `!` after the type or scope and a `BREAKING CHANGE:` footer that describes the impact.
 - A security change on a `feat`, `fix`, `perf` or `refactor` has a `Security: <one line on the risk closed>` footer.
 - The task or the issue goes in the body: `Refs: P1-ENG-003` or `Fixes #123`.
