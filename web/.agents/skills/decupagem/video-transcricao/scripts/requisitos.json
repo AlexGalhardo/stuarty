@@ -1,3 +1,0 @@
-{"depende": [], "programas": ["ffmpeg", "ffprobe"],
- "python": {"numpy": "numpy"}, "whisper": true,
- "node": null, "chaves": []}
