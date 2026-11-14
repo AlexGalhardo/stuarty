@@ -70,7 +70,7 @@ ADR-0024 item 1: the site starts from the **current** vukem `site/`, not from th
 | `site/content/docs/**` | vukem's pages are about vukem |
 | `site/content/versions/0.20/**`, `lib/versions.ts`, `components/legacy-path-redirect.tsx`, `scripts/{legacy-path-redirect,current-equivalent}.test.ts` | versioned snapshots are out of scope until after 1.0 (PRD-003 section 6) |
 | `site/public/CNAME` | it names vukem.dev; the custom domain of this site, if any, is the author's decision (section 12.4) |
-| `site/src/pages/index.astro` content | the landing page is rewritten; its structure (hero, three cards, a command block) is kept |
+| `site/src/pages/index.astro` content | the landing page is rewritten with the structure of https://www.freecut.net/ (hero with a run/download call to action, feature tour, agents, open source and local-first, links to docs and repository) and only Vukem Video copy, mark and colours (D-028; it replaced the vukem structure of hero, three cards and a command block) |
 
 ### 1.4 Taken from neither the Studio fork nor FreeCut, and why
 
