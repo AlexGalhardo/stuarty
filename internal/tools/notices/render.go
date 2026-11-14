@@ -167,6 +167,10 @@ func notes(c Component) string {
 // bareURL finds URLs that markdownlint (MD034) wants in angle brackets.
 var bareURL = regexp.MustCompile(`https?://[^\s|)<>,]+`)
 
+// bareEmail finds an e-mail address not already inside angle brackets; MD034
+// flags it as a bare URL too. Group 1 is the character before it.
+var bareEmail = regexp.MustCompile(`(^|[^<\w.+-])([\w.+-]+@[\w-]+(?:\.[\w-]+)+)`)
+
 var cellReplacer = strings.NewReplacer("|", `\|`, "\n", " ")
 
 func cell(s string) string {
@@ -174,7 +178,9 @@ func cell(s string) string {
 		return "-"
 	}
 
-	return bareURL.ReplaceAllString(cellReplacer.Replace(s), "<$0>")
+	s = bareURL.ReplaceAllString(cellReplacer.Replace(s), "<$0>")
+
+	return bareEmail.ReplaceAllString(s, "$1<$2>")
 }
 
 func links(paths []string) string {

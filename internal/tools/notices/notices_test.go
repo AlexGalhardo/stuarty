@@ -678,6 +678,18 @@ func TestRenderNotesAndCells(t *testing.T) {
 		t.Error("cell")
 	}
 
+	for in, want := range map[string]string{
+		"Copyright (c) 2020 Vlad omgovich@ya.ru": "Copyright (c) 2020 Vlad <omgovich@ya.ru>",
+		"Jane Doe <jane.doe+x@example.co.uk>":    "Jane Doe <jane.doe+x@example.co.uk>",
+		"a@b.io":                                 "<a@b.io>",
+		"see https://x.dev/a and me@x.dev":       "see <https://x.dev/a> and <me@x.dev>",
+		"no address @ here":                      "no address @ here",
+	} {
+		if got := cell(in); got != want {
+			t.Errorf("cell(%q) = %q, want %q", in, got, want)
+		}
+	}
+
 	if copyrightLine("no notice here") != "" ||
 		copyrightLine("Copyright owner means the entity\n(c) 2020 Someone") != "(c) 2020 Someone" {
 		t.Error("copyrightLine")
