@@ -40,11 +40,19 @@ const (
 // when the file is absent. A parse error is retried for 200 ms because the
 // writer may be replacing the file (SDD-005 section 6.2).
 func (d Dir) ReadRuntime() (Runtime, error) {
+	return d.readRuntime(nil)
+}
+
+// readRuntime is ReadRuntime with a test seam: onRetry runs before each pause.
+func (d Dir) readRuntime(onRetry func()) (Runtime, error) {
 	deadline := time.Now().Add(readRetryFor)
 	for {
 		rt, err := d.readRuntimeOnce()
 		if err == nil || errors.Is(err, fs.ErrNotExist) || !time.Now().Before(deadline) {
 			return rt, err
+		}
+		if onRetry != nil {
+			onRetry()
 		}
 		time.Sleep(readRetryEvery)
 	}

@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -78,11 +79,15 @@ func TestReadRuntimeRetriesParseError(t *testing.T) {
 	if err := os.WriteFile(d.Path("runtime.json"), []byte("{"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	go func() {
-		time.Sleep(60 * time.Millisecond)
-		_ = d.WriteRuntime(Runtime{PID: 1, Addr: "127.0.0.1:1", Mode: ModeLocal, StartedAt: time.Now(), Version: "x"})
-	}()
-	if _, err := d.ReadRuntime(); err != nil {
+	// The writer replaces the file when the reader first retries: no sleeps, so
+	// a loaded machine cannot move the write outside the retry window.
+	var once sync.Once
+	write := func() {
+		once.Do(func() {
+			_ = d.WriteRuntime(Runtime{PID: 1, Addr: "127.0.0.1:1", Mode: ModeLocal, StartedAt: time.Now(), Version: "x"})
+		})
+	}
+	if _, err := d.readRuntime(write); err != nil {
 		t.Fatalf("ReadRuntime should have waited for the writer: %v", err)
 	}
 
@@ -90,11 +95,14 @@ func TestReadRuntimeRetriesParseError(t *testing.T) {
 		t.Fatal(err)
 	}
 	start := time.Now()
-	if _, err := d.ReadRuntime(); err == nil {
+	retries := 0
+	if _, err := d.readRuntime(func() { retries++ }); err == nil {
 		t.Fatal("a file that stays broken must be an error")
 	}
-	if el := time.Since(start); el < 150*time.Millisecond || el > 2*time.Second {
-		t.Errorf("retried for %v, want about 200 ms", el)
+	// The loop ends at the deadline; the upper bound is left out on purpose,
+	// a loaded machine only makes it longer.
+	if el := time.Since(start); el < readRetryFor || retries < 2 {
+		t.Errorf("retried %d times for %v, want at least 2 times and %v", retries, el, readRetryFor)
 	}
 }
 
