@@ -5,8 +5,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"image"
+	"math"
 	"math/rand/v2"
 	"testing"
+
+	xdraw "golang.org/x/image/draw"
+	"golang.org/x/image/math/f64"
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/engine/raster"
@@ -279,3 +283,93 @@ func TestResize(t *testing.T) {
 		t.Errorf("average = %d", got.Pix[0])
 	}
 }
+
+// gradient is a smooth opaque image, where two correct bilinear samplers agree to within rounding.
+func gradient(w, h int) Image {
+	pix := make([]byte, w*h*4)
+	for y := range h {
+		for x := range w {
+			o := (y*w + x) * 4
+			pix[o], pix[o+1], pix[o+2], pix[o+3] = byte(x*255/(w-1)), byte(y*255/(h-1)), byte((x+y)*255/(w+h-2)), 255
+		}
+	}
+	return Image{Pix: pix, W: w, H: h, Opaque: true}
+}
+
+// SDD-004 section 12 rule 2: the fixed-point sampler agrees with draw.BiLinear of x/image, which is the
+// reference for what a bilinear transform gives, to within rounding.
+func TestSamplerAgreesWithXImageBiLinear(t *testing.T) {
+	t.Parallel()
+	const (
+		sw, sh   = 120, 200
+		fw, fh   = 160, 240
+		cx, cy   = 80.0, 120.0
+		w, h     = 100.0, 150.0
+		rotation = 17.0
+	)
+	src := gradient(sw, sh)
+	c := newComp(1, map[string]Image{"a": src})
+	ours := image.NewRGBA(image.Rect(0, 0, fw, fh))
+	if err := c.Compose(
+		ours,
+		plan.FramePlan{Background: "#000000", Layers: []plan.Layer{media("a", cx, cy, w, h, rotation, 1)}},
+		1,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	sin, cos := math.Sincos(rotation * math.Pi / 180)
+	kx, ky := w/sw, h/sh
+	m := f64.Aff3{
+		cos * kx, -sin * ky, cx - cos*w/2 + sin*h/2,
+		sin * kx, cos * ky, cy - sin*w/2 - cos*h/2,
+	}
+	ref := image.NewRGBA(image.Rect(0, 0, fw, fh))
+	for i := 3; i < len(ref.Pix); i += 4 {
+		ref.Pix[i] = 255
+	}
+	srcImg := &image.RGBA{Pix: src.Pix, Stride: sw * 4, Rect: image.Rect(0, 0, sw, sh)}
+	xdraw.BiLinear.Transform(ref, m, srcImg, srcImg.Bounds(), xdraw.Over, nil)
+
+	var off, big int
+	for i := 0; i < len(ours.Pix); i += 4 {
+		d := 0
+		for k := range 3 {
+			d = max(d, int(math.Abs(float64(int(ours.Pix[i+k])-int(ref.Pix[i+k])))))
+		}
+		if d > 2 {
+			off++
+		}
+		if d > 40 {
+			big++
+		}
+	}
+	// Only the pixels on the border of the rotated rectangle may differ (each library decides its own
+	// edge pixels); the interior agrees to within one rounding step.
+	if share := float64(off) / float64(fw*fh); share > 0.01 {
+		t.Errorf("%.2f%% of the pixels differ by more than 2 from x/image's BiLinear", share*100)
+	}
+	t.Logf("%d pixels differ by more than 2, %d by more than 40 (border of the rectangle)", off, big)
+}
+
+func benchSample(b *testing.B, bands int, rot float64) {
+	b.Helper()
+	src := pattern(1080, 1920, 9)
+	c := newComp(bands, map[string]Image{"a": src})
+	dst := image.NewRGBA(image.Rect(0, 0, 1080, 1920))
+	fp := plan.FramePlan{Background: "#000000", Layers: []plan.Layer{media("a", 540, 960, 1080, 1920, rot, 1)}}
+	b.SetBytes(1080 * 1920 * 4)
+	b.ResetTimer()
+	for range b.N {
+		if err := c.Compose(dst, fp, 1); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// A full-frame layer with a rotation, the slow path of SDD-004 section 12 (target: a frame in under 33 ms with 8 bands).
+func BenchmarkSampleRotatedFullFrame1Band(b *testing.B)  { benchSample(b, 1, 3) }
+func BenchmarkSampleRotatedFullFrame8Bands(b *testing.B) { benchSample(b, 8, 3) }
+
+// The copy path: a full-frame layer at the same size.
+func BenchmarkCopyFullFrame(b *testing.B) { benchSample(b, 1, 0) }
