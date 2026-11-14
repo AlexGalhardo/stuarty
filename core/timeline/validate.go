@@ -47,6 +47,12 @@ func (v *validator) add(code, path, id, format string, args ...any) {
 	v.vs = append(v.vs, Violation{Code: code, Path: path, ID: id, Message: fmt.Sprintf(format, args...)})
 }
 
+// related records the other objects the last violation involves.
+func (v *validator) related(ids ...string) {
+	last := &v.vs[len(v.vs)-1]
+	last.Related = append(last.Related, ids...)
+}
+
 func finite(f float64) bool { return !math.IsNaN(f) && !math.IsInf(f, 0) }
 
 func inRange(f, lo, hi float64) bool { return finite(f) && f >= lo && f <= hi }
@@ -389,8 +395,10 @@ func (v *validator) item(key string, it Item) {
 		v.add(VID, path+".track", key, "%q is not a valid track identifier", it.Track)
 	} else if tr, ok := d.Tracks[it.Track]; !ok {
 		v.add(VItemTrack, path+".track", key, "track %s does not exist", it.Track)
+		v.related(it.Track)
 	} else if (it.Type == ItemAudio) != (tr.Kind == TrackAudio) {
 		v.add(VItemTrack, path+".track", key, "a %s track does not accept %s items", tr.Kind, it.Type)
+		v.related(it.Track)
 	}
 
 	// Range.
@@ -522,11 +530,13 @@ func (v *validator) media(path, key string, it Item) {
 	a, ok := v.doc.Assets[it.Asset]
 	if !ok {
 		v.add(VAssetRef, path+".asset", key, "asset %s does not exist", it.Asset)
+		v.related(it.Asset)
 		return
 	}
 	switch {
 	case it.Type == ItemClip && a.Kind == AssetAudio:
 		v.add(VAssetRef, path+".asset", key, "a clip needs a video or image asset, %s is audio", it.Asset)
+		v.related(it.Asset)
 		return
 	case it.Type == ItemAudio && (a.Kind == AssetImage || a.Kind == AssetVideo && !a.HasAudio):
 		v.add(
@@ -536,6 +546,7 @@ func (v *validator) media(path, key string, it Item) {
 			"an audio item needs an audio asset or a video with audio, %s is not",
 			it.Asset,
 		)
+		v.related(it.Asset)
 		return
 	}
 	if sp.Num < 1 || sp.Den < 1 || it.SourceIn < 0 || it.Duration < 1 {
@@ -557,6 +568,7 @@ func (v *validator) media(path, key string, it Item) {
 				it.Asset,
 				total,
 			)
+			v.related(it.Asset)
 		}
 	}
 }
@@ -825,6 +837,7 @@ func (v *validator) overlaps() {
 					blocker,
 					k,
 				)
+				v.related(blocker, it.Track)
 			}
 			if end := it.Start + it.Duration; blocker == "" || end > blockEnd {
 				blocker, blockEnd = k, end
