@@ -1,0 +1,3990 @@
+# SDD-002: Command catalogue of the core
+
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Frozen per phase: Prototype commands when ROADMAP task P1-CMD-001 merges, the rest when their ALPHA group starts.
+- Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
+- Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
+- Owner area: senior-a (command core and schema)
+
+## Part A: the model
+
+### A.1 Vocabulary
+
+| Term | Meaning |
+| --- | --- |
+| **Command** | A named kind of edit in the catalogue, for example `item.split`. Defined once in `core/command` |
+| **Operation** | One use of a command: `{"op": "<command>", "args": {...}}` |
+| **Batch** | An ordered list of operations applied atomically as one revision and one undo step |
+| **Service operation** | Something the product does that is not an edit of the document: create a project, import media, export, undo. Defined in SDD-003, not here |
+
+### A.2 The registry
+
+`core/command` exposes a registry. For each command it holds:
+
+| Field | Purpose |
+| --- | --- |
+| `name` | `namespace.action`, lower case, stable |
+| `summary` | one sentence, used as tool and help text |
+| `description` | a short paragraph for `command_help` |
+| `args_schema` | JSON Schema of `args`, generated from a Go struct; `additionalProperties: false` |
+| `example` | a valid `args` value |
+| `errors` | the error codes the command can return |
+| `scope` | `edit` or `media` (ADR-0019) |
+| `phase` | `prototype`, `alpha` or `beta`; a command is registered only in builds of its phase or later |
+| `internal` | true when only the service may issue it (see A.9) |
+| `apply` | the function of A.3 |
+
+`Registry.List()`, `Registry.Get(name)` and `Registry.Schema(name)` are what every surface uses. Nothing else describes a command.
+
+### A.3 Apply
+
+```go
+// Apply is pure: no clock, no randomness, no I/O.
+func (r *Registry) Apply(doc *timeline.Document, op Operation, env Env) (Result, error)
+
+type Env struct {
+    NewIDs func(prefix string) string // deterministic in tests; random in production
+}
+
+type Result struct {
+    Doc       *timeline.Document // new document; the input is not modified
+    Inverse   []Primitive        // undo, section A.6
+    Diff      []Change           // section A.5
+    Effective map[string]any     // values actually applied, section A.4
+}
+```
+
+Rules:
+
+1. `Apply` validates `args` against the schema first and returns `E_VALIDATION` with the path of the first invalid value.
+2. It then checks the command's preconditions against `doc` and returns the listed error if one fails. The document is unchanged on any error.
+3. On success the returned document satisfies every invariant of SDD-001 §4. `Apply` calls `timeline.Validate` on its result in tests and in debug builds; a violation there is a bug in the command, reported as `E_INTERNAL`.
+4. Identifiers of created objects come from `args` when the caller supplied them (the fields named `id` or `new_id`) and otherwise from `env.NewIDs`. The service fills them in before storing the operation, so a stored operation always carries the identifiers and replays identically. Two commands create a number of objects that is known only after they run (`clip.remove_silences`, `caption.from_transcript`): they report the identifiers they used in `effective.new_ids`, and the service stores the operation with `new_ids` equal to that list.
+5. A batch is applied by folding `Apply` over its operations. If any fails, the whole batch fails with that error and `op_index` set.
+
+### A.4 Time arguments
+
+Every argument that is a time or a duration is a string parsed by `core/timeval.Parse(s, fps)`:
+
+| Form | Example | Meaning |
+| --- | --- | --- |
+| seconds | `"12.5s"`, `"0.04s"` | decimal seconds |
+| frames | `"375f"` | integer frames at the project rate |
+| timecode | `"00:00:12.500"`, `"01:02.5"` | `HH:MM:SS.mmm` or `MM:SS.mmm` |
+
+A JSON number, an empty string or a string with no unit is rejected with `E_INVALID_TIME` and a hint showing the three accepted forms. Seconds and timecode are rounded to the nearest frame, half away from zero. Unless a command says otherwise, a time argument is an absolute timeline position.
+
+For every time argument the result's `effective` map has an entry with the frame applied and its seconds: `"start": {"frame": 374, "seconds": 12.467, "requested": "12.48s"}`.
+
+### A.5 Diff
+
+`Result.Diff` is the list of changes, in a fixed order (settings, assets, tracks, items; each by identifier):
+
+```json
+{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"start": [0, 30], "duration": [150, 120]}}
+```
+
+`kind` is one of `settings.updated`, `asset.added`, `asset.removed`, `track.added`, `track.updated`, `track.removed`, `item.added`, `item.updated`, `item.removed`, `font.added`, `font.removed`, `project.updated`. For `added` and `removed` the change carries the whole object under `object`. For `updated`, `changes` maps each changed top-level field of the object to `[before, after]`; an absent side is `null`.
+
+For `settings.updated` and `project.updated` the `id` is the project identifier. The diff of a batch is the net difference between the document before the batch and the document after it: an object created and removed inside the batch does not appear, and a field changed more than once appears once, with its first before-value and its last after-value.
+
+`core/command.DescribeDiff(doc, diff)` renders the diff as text, one line per change, with times in seconds and frames, for agents and for the history view. Its exact format is in SDD-003.
+
+### A.6 Undo
+
+The inverse of an operation is not another catalogue command. It is a list of three **primitives** computed from the before-state of the objects the operation touched:
+
+| Primitive | Effect |
+| --- | --- |
+| `patch {collection, id, set, unset}` | set the listed top-level fields to their previous values and remove the listed ones |
+| `put {collection, object}` | insert an object that was removed |
+| `remove {collection, id}` | remove an object that was created |
+
+`collection` is `settings`, `project`, `assets`, `tracks`, `items` or `fonts`. Applying the inverse primitives of a batch in reverse order to the document that the batch produced yields exactly the document before the batch (canonical bytes equal).
+
+Undo and redo are service operations (SDD-003). The rule from ADR-0006 that they implement: when an actor undoes its batch and a field in a `patch` was changed by a later batch of another actor, that field is skipped; when a `put` would overlap an item that another actor placed, or a `remove` targets an object another actor changed, that primitive is skipped. Skipped primitives are listed in the result. The undo is itself a batch in the log, with its own inverse, which is what redo applies.
+
+The primitives of one undo are applied together to a working copy, with no validation between them, and the result is validated once at the end. Intermediate states may therefore break an invariant (two items overlapping while a ripple is being reversed); only the final document must be valid. Their order matters in one way only: an object must exist before it is patched and must not exist before it is put. If the final document is invalid, the primitives that touch an object named in a violation are dropped and the application starts again from the document before the undo; this ends because each round drops at least one primitive (SDD-005 §12.2).
+
+### A.7 Concurrency and idempotency
+
+A batch request carries `base_revision`. The service decides:
+
+1. If `base_revision` equals the current revision: apply.
+2. If it is older: collect the diffs of the intervening batches issued by **other** actors. If any of them added, updated or removed an object that this batch refers to by identifier in its `args`, reject with `E_REVISION_CONFLICT`. Otherwise apply the batch to the current document; if an operation then fails (for example with `E_OVERLAP` because someone placed an item there), return that error.
+3. If it is newer than the current revision: `E_VALIDATION`.
+
+`E_REVISION_CONFLICT` carries the current revision and the text diff from `base_revision` to it, so the caller can re-plan.
+
+A batch whose `base_revision` is more than 1,000 revisions behind is rejected with `E_REVISION_CONFLICT` and the hint to read the project again, without reading the log.
+
+A batch may carry an `idempotency_key` (8 to 64 characters from `[A-Za-z0-9._~-]`). The service stores the result of a committed batch under `(project, actor, key)` for 24 hours. A second request with the same key returns the stored result with `"replayed": true` and changes nothing; if the second request's operations differ from the first's, the answer is `E_IDEMPOTENCY_MISMATCH`.
+
+`dry_run: true` runs steps 1 and 2 and returns the result that would be committed, with `"applied": false`, without writing.
+
+### A.8 Errors
+
+Every error has this shape on every surface:
+
+```json
+{
+  "code": "E_OVERLAP",
+  "message": "Item itm_m1n2p3q4r5 would occupy frames 100-149 on track trk_f6g7h8j9k0, where item itm_c3d4e5f6g7 already is (frames 90-179).",
+  "hint": "Use start \"180f\" (6.000s), the next free position on that track, or move to another track.",
+  "retryable": false,
+  "op_index": 1,
+  "path": "args.start",
+  "details": {"conflicting_item": "itm_c3d4e5f6g7", "next_free": 180}
+}
+```
+
+Rules for messages: state what was wrong with the actual values; `hint` states one concrete way to succeed; never include a stack trace, a file path of the server or SQL. `details` is machine-readable and specific to the code.
+
+Codes of the core (service codes are in SDD-003):
+
+| Code | Meaning | Retryable |
+| --- | --- | --- |
+| `E_UNKNOWN_COMMAND` | no such command; `details.known` lists the names | no |
+| `E_VALIDATION` | `args` does not match the schema; `path` points at the value | no |
+| `E_INVALID_TIME` | a time string is malformed or negative; a length is shorter than one frame where that is not allowed; an item would end after frame 108,000; or a time addresses a frame outside the item it refers to | no |
+| `E_NOT_FOUND` | an identifier or a word index in `args` does not exist; `details.kind` (`item`, `track`, `asset`, `word`, `keyframe`) and `details.id` | no |
+| `E_ID_EXISTS` | an identifier supplied for a new object is already used | no |
+| `E_TYPE_MISMATCH` | the item or track is not of a type the command accepts | no |
+| `E_OVERLAP` | the result would overlap another item on the track; `details.conflicting_item`, `details.next_free` | no |
+| `E_OUT_OF_SOURCE` | the item would read outside its asset; `details.available` gives the valid range | no |
+| `E_INVALID_STATE` | a precondition on the current document fails; the message says which | no |
+| `E_IN_USE` | the object is referenced by others; `details.used_by` | no |
+| `E_NOT_EMPTY` | a track has items and `with_items` was not set | no |
+| `E_LIMIT` | a limit of SDD-001 would be exceeded (tracks, items, assets, words in the document, words in one caption, keyframes of one property) | no |
+| `E_FONT_UNKNOWN` | the font family or weight is not available; `details.available` | no |
+| `E_SLOT` | a slot is missing, already filled, of another kind, or its name is used by another item; `details.reason` | no |
+| `E_REVISION_CONFLICT` | section A.7 | yes |
+| `E_IDEMPOTENCY_MISMATCH` | section A.7 | no |
+| `E_INTERNAL` | a bug; the batch was not applied | no |
+
+### A.9 Commands whose arguments come from analysis
+
+Three commands depend on data the core cannot compute because it needs media: silences, a transcript, an asset's probe. `Apply` stays pure by receiving that data in `args`. The caller writes the short public form; the service fills the `resolved` field from artifacts that ingest and transcription already produced (the audio envelope and the transcript, SDD-011) and stores the operation with it. An edit never starts a media job: when the artifact it needs is missing, the command fails with `E_INVALID_STATE` and a hint that names the job to run first (SDD-007 §5.4).
+
+| Public argument | Field filled by the service |
+| --- | --- |
+| `clip.remove_silences {min_silence, padding, threshold_db}` | `resolved.silences`: ranges in asset frames, taken from the set of the silence artifact measured at `threshold_db` (SDD-011 §9.1) |
+| `caption.from_transcript {...}`, `caption.retime_from_clip {...}` | `resolved.words`: words with times in asset frames |
+| `asset.add` | issued only by the import flow, with the facts measured on the verified normalized media, never copied from the probe (SDD-011 §4.9) (`internal: true`) |
+
+A caller may also supply `resolved` itself, which is how golden tests run without media.
+
+### A.10 Determinism and limits
+
+1. Maps are iterated in sorted key order wherever the order affects the result.
+2. Arithmetic on time is integer. Arithmetic on space uses `float64` with results rounded to 3 decimal places before they are stored, so documents are stable across platforms.
+3. A batch has at most 200 operations and its JSON is at most 512 KiB; beyond that the service returns `E_PAYLOAD_TOO_LARGE`.
+
+4. An argument has the phase of its command. There are no per-argument phases: a command that exists in a phase accepts all of its arguments in that phase. One documented exception concerns a value, not an argument: in a Prototype build `CaptionStyle.highlight` accepts only `"none"`, and any other value is `E_VALIDATION` with the hint that word highlight arrives in ALPHA (`track.set_caption_style` is the command concerned; `caption.add` takes no style).
+
+### A.11 Tests required for every command
+
+For each command, `core/command/testdata/<command>/` holds golden cases, each a directory as SDD-008 §3 defines it: `before.json`, `op.json`, and either `after.json` (the document after, canonical), `inverse.json`, `diff.json` and `effective.json`, or `error.json`. The suite runs every case and, for every success case, also applies the inverse and compares with `before.json` byte for byte. Each command has at least: one success case per optional argument, one case per error code it lists, and the boundary cases named in Part C.
+
+## Part B: the catalogue
+
+Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arguments parsed by A.4. Optional arguments are written with `?`.
+
+### B.1 Project and settings
+
+| Command | Phase | Arguments | Effect |
+| --- | --- | --- | --- |
+| `project.rename` | P | `name` | Sets the project name |
+| `settings.set` | P | `width?`, `height?`, `background?`, `loudness_target?` | Sets the given settings. When the size changes, every visual item's `x` and `y` are scaled by the ratio of new to old size on each axis; `scale` is untouched; items with default position stay centred |
+| `settings.set_fps` | A | `fps` (`"30"`, `"30000/1001"` or a rational object) | Rescales every time quantity `q` to `round(q × new / old)`, then restores invariants: a duration that became 0 becomes 1; an overlap created by rounding is removed by shortening the earlier item. `effective.adjusted` lists every item changed by a fix-up |
+
+### B.2 Assets
+
+| Command | Phase | Scope | Arguments | Effect |
+| --- | --- | --- | --- | --- |
+| `asset.add` | P | media, internal | `asset` (an Asset object of SDD-001 §3.2) | Adds the asset. Adding an asset whose `hash` is already present returns the existing identifier in `effective.asset_id` and changes nothing |
+| `asset.remove` | A | media | `asset_id` | Removes the asset from the project. Fails with `E_IN_USE` if an item uses it |
+
+### B.3 Tracks
+
+| Command | Phase | Arguments | Effect |
+| --- | --- | --- | --- |
+| `track.add` | P | `kind`, `name?`, `id?`, and one of `position?` (`"top"` default, `"bottom"`), `above?` (track id), `below?` (track id) | Adds a track at that place in the order |
+| `track.update` | P | `track_id`, `name?`, `hidden?`, `muted?` | Sets the given fields |
+| `track.move` | P | `track_id` and one of `position`, `above`, `below` | Changes the track's place in the order |
+| `track.remove` | P | `track_id`, `with_items?` (default false) | Removes the track. With items on it, fails with `E_NOT_EMPTY` unless `with_items` is true, in which case its items are removed too |
+| `track.set_caption_style` | P | `track_id`, `style` (partial CaptionStyle), `replace?` (default false) | Merges `style` into the track's caption style, or replaces it |
+
+### B.4 Items of any type
+
+| Command | Phase | Arguments | Effect |
+| --- | --- | --- | --- |
+| `item.move` | P | `item_id`, `start?` (time), `track_id?` | Moves the item in time, to another track of the same kind, or both. At least one is required |
+| `item.trim` | P | `item_id`, `edge` (`"start"` or `"end"`), `to` (time) | Moves that edge to `to`. Rules in B.10 |
+| `item.split` | P | `item_id`, `at` (time), `new_id?` | Splits the item into two at `at`. Rules in B.10 |
+| `item.delete` | P | `item_ids` (1 to 200), `ripple?` (`"none"` default, `"track"`, `"all"`) | Removes the items. With `ripple: "track"` every later item on each affected track moves earlier by the length freed on that track; with `"all"` every later item on every track moves by the length freed, which requires the deleted items to cover one contiguous range |
+| `item.duplicate` | A | `item_id`, `start` (time), `track_id?`, `new_id?` | Copies the item to the given place. A slot marking is not copied |
+| `item.rename` | A | `item_id`, `name` | Sets the label |
+| `item.set_transform` | A | `item_id`, `x?`, `y?`, `scale?`, `rotation?`, `opacity?` | Sets the given fields on a visual item. A property that has keyframes cannot be set this way: `E_INVALID_STATE` with the hint to use `keyframe.set` or `keyframe.clear` |
+| `item.set_transition` | A | `item_id`, `edge` (`"in"`, `"out"`), `kind` (a transition kind or `null` to remove), `duration?` (time, as a length; default `"0.5s"`) | Sets or removes the transition on a visual item |
+| `item.set_audio` | A | `item_id`, `volume?`, `fade_in?` (time, as a length), `fade_out?`, `audio_muted?` | Sets audio properties on a `clip` or `audio` item |
+| `item.crossfade` | A | `from_item_id`, `to_item_id`, `duration` (time, as a length) | Helper for RF-023. Requires two visual items on different tracks where `from` starts before `to` and the two overlap in time by at least `duration`. Sets `transition_out: fade` on `from` and `transition_in: fade` on `to`, both of that duration, and the matching audio fades |
+| `timeline.close_gap` | A | `track_id`, `at` (time), `ripple?` (`"track"` default, `"all"`) | Finds the empty range on the track that contains frame `at` and moves later items earlier by its length. Fails with `E_INVALID_STATE` when `at` is inside an item or after the last item |
+
+### B.5 Clips and audio
+
+| Command | Phase | Arguments | Effect |
+| --- | --- | --- | --- |
+| `clip.add` | P | `track_id`, `asset_id`, `start` (time), `source_in?` (time, offset into the asset; default 0), `duration?` (time, as a length; default: the rest of the asset from `source_in`, or `"5s"` for an image), `fit?`, `id?` | Places a video or image asset on a visual track |
+| `audio.add` | A | `track_id`, `asset_id`, `start`, `source_in?`, `duration?`, `id?` | Places an audio asset, or the audio of a video asset, on an audio track |
+| `clip.set_framing` | A | `item_id`, `fit?`, `crop?` | Sets fit and crop |
+| `clip.set_speed` | A | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs |
+| `clip.set_color` | A | `item_id`, `brightness?`, `contrast?`, `saturation?` | Sets colour adjustment |
+| `clip.remove_silences` | A | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip by one clip per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
+
+### B.6 Text and shapes
+
+| Command | Phase | Arguments | Effect |
+| --- | --- | --- | --- |
+| `text.add` | P | `track_id`, `start`, `duration` (length), `text`, `style?` (partial TextStyle), `x?`, `y?`, `id?` | Adds a text item |
+| `text.set` | P | `item_id`, `text?`, `style?` (partial, merged), `reset_style?` (default false) | Changes content or style |
+| `text.apply_preset` | A | `item_id`, `preset` (`"fade_up"`, `"fade_down"`, `"pop"`, `"zoom_in"`, `"slide_left"`, `"slide_right"`), `edge` (`"in"`, `"out"`), `duration?` (length, default `"0.4s"`) | Writes the keyframes or transition that implement the preset on that edge, replacing keyframes of the same properties inside that edge's range. Works on any visual item. The definitions are in Part C |
+| `shape.add` | A | `track_id`, `start`, `duration`, `shape`, `width`, `height`, `fill?`, `stroke_color?`, `stroke_width?`, `radius?`, `x?`, `y?`, `id?` | Adds a shape item |
+| `shape.set` | A | `item_id`, and any of the shape fields | Changes a shape |
+
+### B.7 Captions
+
+| Command | Phase | Arguments | Effect |
+| --- | --- | --- | --- |
+| `caption.add` | P | `track_id`, `start`, and either `words` (array of `{text, start, duration}` with times relative to the caption as lengths) or `text` with `duration` (length); `linked_item?`, `x?`, `y?`, `id?` | Adds a caption item. `x` and `y` (pixels, the centre of the item) are used when the track's caption style position is `custom`. With `text`, it is split on whitespace and the words share the duration in proportion to their character counts, each word getting at least one frame |
+| `caption.set_words` | A | `item_id`, `words` | Replaces the words; the item's duration becomes the end of the last word unless `duration?` is given |
+| `caption.edit_word` | A | `item_id`, `index`, `text` | Changes one word's text. An empty `text` removes the word; removing the only word of a caption is `E_INVALID_STATE` |
+| `caption.split` | A | `item_id`, `before_word` (index, 1 or more), `new_id?` | Splits a caption into two at a word boundary |
+| `caption.merge` | A | `item_ids` (exactly 2, on the same track, with no other item between them) | Joins two captions; the result keeps the first identifier and spans both |
+| `caption.set_breaks` | A | `item_id`, `breaks` (array of word indexes) | Sets forced line breaks |
+| `caption.set_style` | A | `item_id`, `style` (partial CaptionStyle, or `null` to clear the override) | Sets the per-item style override |
+| `caption.from_transcript` | A | `clip_item_id`, `track_id`, `max_words?` (default 5), `max_chars?` (default 28), `max_gap?` (length, default `"0.6s"`), `replace?` (default true), `new_ids?` | Creates caption items on the track for the speech in the clip's visible source range (A.9). A new caption starts when adding the next word would exceed `max_words` or `max_chars`, or when the gap to the next word exceeds `max_gap`. Each caption gets `linked_item`. With `replace`, existing captions linked to that clip on that track are removed first. Word times are mapped from the asset through the clip's `source_in`, `speed` and `start` |
+| `caption.retime_from_clip` | A | `clip_item_id` | Recomputes every caption linked to the clip from the transcript and the clip's current position, in-point and speed, keeping each caption's edited texts where the word count is unchanged |
+
+### B.8 Keyframes
+
+| Command | Phase | Arguments | Effect |
+| --- | --- | --- | --- |
+| `keyframe.set` | A | `item_id`, `property`, `at` (time, absolute timeline position inside the item), `value`, `easing?` | Adds a keyframe at that frame or replaces the one there. If the property had no keyframes and `at` is not the item's first frame, a keyframe with the property's current static value is also added at the item's first frame |
+| `keyframe.remove` | A | `item_id`, `property`, `at` (time) | Removes the keyframe at that frame. Removing the last keyframe of a property writes its value into the static field |
+| `keyframe.clear` | A | `item_id`, `property?` | Removes all keyframes of the property, or of every property. The value at the item's first frame becomes the static value |
+
+### B.9 Templates
+
+| Command | Phase | Arguments | Effect |
+| --- | --- | --- | --- |
+| `slot.mark` | A | `item_id`, `name`, `description?`, `required?`, `duration_policy?` | Marks an item as a slot; the slot kind follows from the item type |
+| `slot.unmark` | A | `item_id` | Removes the marking |
+| `slot.fill` | A | `name`, and one of `asset_id` with `source_in?`, `text`, `words` | Fills a slot. For media with `duration_policy: "fit"` the item keeps its duration and the asset must be at least that long from `source_in` (`E_OUT_OF_SOURCE`); with `"stretch_timeline"` the item takes the asset's remaining duration and later items on every track shift by the change |
+| `template.set_info` | A | `description?`, `colors?` (map of name to colour; a `null` value removes the name) | Sets template information. Removing a colour that a style refers to is `E_IN_USE` |
+
+### B.10 Rules shared by trim and split
+
+These rules are the part of the catalogue most likely to be implemented wrongly; Part C repeats them per command with golden cases.
+
+**Trim, edge `start`, to frame `T`.** Requires `T < start + duration`. Let `d = T - start` (negative when extending earlier).
+
+- `start` becomes `T`; `duration` becomes `duration - d`.
+- `clip` and `audio`: `source_in` becomes `source_in + floor(d × speed)` for positive `d` and `source_in - ceil(-d × speed)` for negative `d`; a negative result is `E_OUT_OF_SOURCE`. Images ignore this.
+- Keyframes: each `t` becomes `t - d`. If that removes keyframes before frame 0 of a property that still has later keyframes, a keyframe with the interpolated value is written at 0. Keyframes are never left outside the item.
+- Captions: each word's `start` becomes `start - d`. Words that end at or before 0 are removed; a word that crosses 0 is clamped to start at 0. No word left is `E_INVALID_STATE`.
+- `fade_in`, `transition_in`: unchanged in length. If transitions or fades no longer fit the new duration: `E_INVALID_STATE`, with the hint to shorten them first.
+- A resulting overlap is `E_OVERLAP`.
+
+**Trim, edge `end`, to frame `T`.** Requires `T > start`. `duration` becomes `T - start`. The source range check applies when the item grows. Keyframes after the new duration are removed, with an interpolated keyframe written at the new end (`t` equal to the new duration) when the property had keyframes on both sides. Words that start at or after the new duration are removed; a word that crosses it is clamped.
+
+**Split at frame `T`.** Requires `start < T < start + duration`. The original item keeps its identifier and becomes the left part with `duration = T - start`. A new item is the right part with `start = T`, `duration = end - T` and, for `clip` and `audio`, `source_in` advanced by `floor((T - start) × speed)`.
+
+- `transition_in` and `fade_in` stay on the left part; `transition_out` and `fade_out` go to the right part. A transition or fade longer than its part is shortened to the part's duration.
+- Keyframes are divided at `T`; for each animated property both parts get an interpolated keyframe at the cut, so the motion is unchanged.
+- Caption words go to the part that contains their first frame, clamped to that part. A part left with no word is not created, and the command then fails with `E_INVALID_STATE` (split a caption at a word boundary with `caption.split`).
+- A slot marking stays on the left part only.
+- Text and shape items are simply divided.
+
+## Part C: command details
+
+Part C gives, for every command of Part B: the argument table with types and defaults, preconditions, postconditions, the errors with an example message each, the inverse it produces, its idempotency, one example of input and output, and the list of golden cases required by A.11. It is written by the owner area from Parts A and B before implementation starts, and reviewed by the orchestrator; a contradiction between Part C and Parts A or B is resolved in favour of A and B and reported as a document revision.
+
+<!-- PART C IS APPENDED BELOW THIS LINE -->
+
+#### Shared rules used by the sections of Part C
+
+Each section refers to these rules by number. They add detail to Parts A and B and do not change them.
+
+- **R1. Order of checks.** Schema validation first (`E_VALIDATION`), then the preconditions in the order listed in the section; the first failure is returned. An identifier argument that names nothing gives `E_NOT_FOUND` with `details.kind` (`item`, `track`, `asset`, `word`, `keyframe`) and `details.id`.
+- **R2. No-op.** When the operation would leave the document unchanged it succeeds, with `diff` empty, `inverse` empty and `effective` filled as usual. The batch still counts as one revision. "Same result" in the idempotency paragraphs means this.
+- **R3. Stored form in diffs.** A diff and an inverse use the canonical stored form (SDD-001 §2.8). A field equal to its default is absent, so it appears as `null` on that side of a change (for example `"hidden": [null, true]`).
+- **R4. Settings and project diffs.** `settings.updated` and `project.updated` carry the project id as `id`. Their primitives use `collection` `settings` or `project` with `id` equal to the project id.
+- **R5. Inverse order.** The `Inverse` list is in the order in which the operation mutated the document. Undo applies it in reverse (A.6). Every `patch` carries `set` for fields that existed before and `unset` for fields that were absent before.
+- **R6. Identifiers.** A supplied `id` or `new_id` must match `^<prefix>_[0-9a-hjkmnp-tv-z]{10}$` (`E_VALIDATION` otherwise). If it is already used in that collection the result is `E_ID_EXISTS`. A missing one comes from `env.NewIDs`. `effective` always reports the identifier used.
+  - A slot name already used by another item is not an identifier clash: it is `E_SLOT` with `details.reason` `"name_in_use"`.
+  - `ast_placeholder` is a reserved literal, not an asset identifier. It is admitted only where `slot.fill`, `clip.add` and `audio.add` accept an asset reference, and it never matches a real asset. Every other command that takes an `asset_id` rejects it with `E_VALIDATION`, because it does not match the identifier pattern.
+- **R7. Times and lengths.** A time argument is parsed by A.4. A length is a time that is not a position and must be at least 1 frame, unless the argument is marked "may be 0"; otherwise `E_INVALID_TIME`. A resulting item with `start + duration` above 108,000 gives `E_INVALID_TIME` with `path` at the argument that caused it. `effective` reports each time argument as in A.4 and, for lengths, the same triple.
+- **R8. Free position.** `next_free(track, from, length, ignore)` is the smallest frame `f` at or after `from` such that `[f, f + length)` overlaps no item of the track except `ignore`; it is `null` when `f + length` would pass 108,000. In an `E_OVERLAP`, `details.conflicting_item` is the overlapping item with the lowest `start` and `details.next_free` is the value above. For `item.trim`, `next_free` is instead the nearest value of `to` that avoids the overlap.
+- **R9. Source range.** `A` is the asset duration in project frames (SDD-001 §3.2). For a `clip` or `audio` item with `source_in = si` and speed `num/den`, the range holds when `si + ceil(duration × num / den) <= A`. The longest duration for a given `si` is `maxdur(si) = floor((A - si) × den / num)`. Images are exempt. `E_OUT_OF_SOURCE` carries `details.available = {"asset_duration": A, "source_in": si, "max_duration": maxdur(si)}`.
+- **R10. Keyframe value.** `value_at(K, t)` is the interpolated value of a keyframe list at relative frame `t` (SDD-004). Before the first keyframe it is the first value, after the last it is the last value. Examples in this part use linear easing. A value written as a new keyframe or static field is rounded to 3 decimals (A.10). When a property has no keyframes its value is its static field, with these defaults when absent: `scale` 1, `rotation` 0, `opacity` 1, `volume` 1, `x` half the project width, `y` half the project height.
+- **R11. KShift(d).** The item loses its first `d` frames (`d` may be negative, meaning it gains `-d`). For each property with keyframes: let `v0 = value_at(K, d)` when `d > 0`; every `t` becomes `t - d`; keyframes with a negative `t` are dropped. If any was dropped and keyframes remain whose first `t` is above 0, a keyframe `{t: 0, value: v0}` is inserted, with the easing of the last dropped keyframe (omitted when linear). If every keyframe was dropped, the property's keyframes are removed and its static field becomes `v0`. An empty `keyframes` object is removed.
+- **R12. KCut(L).** The item is cut to `L` frames at the back. For each property: keyframes with `t > L` are dropped. If any was dropped and keyframes remain whose last `t` is below `L`, a keyframe `{t: L, value: value_at(K, L)}` is appended with no easing. If every keyframe was dropped, the keyframes are removed and the static field becomes `value_at(K, L)`.
+- **R13. KSplit(Tc).** Cut at relative frame `Tc`, `0 < Tc < duration`. For each property with keyframes `K`, let `B` be the keyframes with `t < Tc`, `E` the keyframe at exactly `Tc` if any, `A` the keyframes with `t > Tc`, and `v = value_at(K, Tc)`.
+  - Left part: `B`, then `E` if it exists. If `E` does not exist, and `A` is not empty and `B` is not empty, the cut keyframe `{t: Tc, value: v}` with no easing is appended. If `B` and `E` are both empty the left part has no keyframes for that property and its static field is `v`.
+  - Right part: `A` shifted by `-Tc`, preceded by `{t: 0, value: v}` only when `A` is not empty and (`B` is not empty or `E` exists). The easing of that keyframe is the easing of `E`, else of the last keyframe of `B` (omitted when linear). If `A` is empty the right part has no keyframes for that property and its static field is `v`.
+  - A part that lost at least one keyframe gains at most one, so the limit of 100 keyframes per property cannot be exceeded.
+  - For an eased (non-linear) segment that is cut, the two halves keep the segment's easing, so the curve is only approximately preserved; for linear and hold it is exact.
+- **R14. Fit.** The invariants `fade_in + fade_out <= duration` and `transition_in.duration + transition_out.duration <= duration` must hold after the command. A command that would break them returns `E_INVALID_STATE` with a hint that names the amount to shorten and the command to use (`item.set_audio`, `item.set_transition`). The commands `settings.set_fps`, `clip.set_speed` and `clip.remove_silences` instead apply the **fit fix**: reduce `fade_out` by the excess (minimum 0), then `fade_in`; reduce `transition_out.duration` by the excess, removing the transition if that leaves less than 1, then the same for `transition_in`.
+- **R15. Style arguments.** A style argument is an object whose keys are fields of TextStyle (CaptionStyle for captions); an unknown key is `E_VALIDATION`. Each value obeys the ranges of SDD-001 §3.6 and §3.7. A colour is a hex colour or `"$name"` with `name` in `template.colors`; anything else is `E_VALIDATION` with `path` at the field. After merging, `font_family` and `font_weight` must exist (bundled set or `fonts`), otherwise `E_FONT_UNKNOWN` with `details.available` listing the families, or the weights of the family when only the weight is wrong. A style object (a text item `style`, a caption item `style` override, a track `caption_style`) stores exactly the keys the caller set, whatever their values, even a value equal to the default. The rule of SDD-001 that omits defaults does not apply inside a style object, because an explicit key on an item overrides a different value on the track. A key leaves the object only when the caller passes `null` for it on a merge. An empty result is stored as absent. `null` values are rejected in commands that create items.
+- **R16. Word arguments.** `words` is an array of 1 to 60 objects `{text, start, duration}`; the schema accepts any length of at least 1 so that the count is reported as `E_LIMIT`. `text` has 1 to 80 characters (Unicode code points) and no whitespace. `start` and `duration` are lengths relative to the item (`start` may be 0, `duration` at least 1 frame). Words must be in order and must not overlap. A time that does not parse, or a `duration` below 1 frame like any length that parses but is too short, is `E_INVALID_TIME` with `path` at the value (`args.words[i].duration`). An empty `words` array is `E_VALIDATION`. Any other violation (text length, whitespace in text, order, overlap) is `E_VALIDATION` with `path` `args.words[i]`. More than 60 words in one caption is `E_LIMIT` in every command, and so is the document total of 5,000 words.
+- **R17. Split core S(X, Tc).** Used by `item.split` and `caption.split`. The right part is a copy of `X` with the new id. Left: `duration = Tc`. Right: `start = X.start + Tc`, `duration = X.duration - Tc`; for `clip` and `audio`, `source_in = X.source_in + floor(Tc × num / den)`. `transition_out` and `fade_out` move from the left to the right; `transition_in` and `fade_in` stay on the left and are removed from the right; `slot` stays on the left only. Each kept transition or fade longer than its part is shortened to the part's duration. Keyframes follow R13. Words are handled by the command.
+- **R18. Resizing at the back.** When a command changes an item's duration to `D'` and keeps its `start`: if `D' < D` keyframes follow R12; fades and transitions are checked by R14; growth is checked for overlap by R8 and for the 108,000 limit by R7; for `clip` and `audio` the source range is checked by R9.
+- **R19. Diff order.** Entries are sorted by kind group (settings, assets, tracks, items) and then by identifier, as in A.5.
+
+#### Decisions of Part C
+
+Part C makes choices that Parts A and B leave open or do not state. Each one is listed here so that it is visible and can be challenged in one place. The sections apply them.
+
+| # | Command | Decision | Why |
+| --- | --- | --- | --- |
+| 1 | `settings.set_fps` | The fix-ups run in the order a (rescale, a duration that became 0 becomes 1), b (source range), c (overlap, one pass per track over items sorted by start and id), d (keyframes), e (words, a caption keeps at least one word), f (fit fix of R14), each against the result of the previous one. An item whose end passes 108,000 after a or c is `E_INVALID_TIME` and nothing is applied. `effective.adjusted` lists every item changed by a `became_zero` correction or by b to f | A fix that runs before a step that still shortens items can leave an invariant broken |
+| 2 | R15, `track.set_caption_style`, `text.add`, `text.set`, `caption.set_style` | A style object (a text item `style`, a caption item `style`, a track `caption_style`) stores exactly the keys the caller set, even when a value equals the default. A key leaves only when the caller passes `null`. The rule of SDD-001 that omits defaults does not apply inside style objects | An explicit item key must override a different value on the track, so it cannot be dropped |
+| 3 | `clip.set_speed` | The new duration is `ceil(duration x old / new)`. If that fails R9 only by rounding, it is reduced to `maxdur(source_in)` and reported in `effective.clamped`; `E_OUT_OF_SOURCE` only when no frame fits | A speed change should succeed when it can, and the source range is exact |
+| 4 | `clip.set_speed` | The speed string has at most 3 decimals (`"0.333x"` is 333/1000) | A bounded decimal maps exactly to a rational |
+| 5 | `item.crossfade` | Requires `from.start < to.start` and `min(from.end, to.end) - to.start >= duration`, else `E_INVALID_STATE` | The two fades must lie inside the real overlap in the intended order |
+| 6 | `caption.merge` | The operation removes the second caption first, then extends the first. The inverse list is the put of the second, then the patch of the first | An object must not exist before it is put, and must exist before it is patched |
+| 7 | `caption.merge` | Refuses captions that have keyframes (`E_INVALID_STATE`). The first caption keeps `style`, `slot`, `transition_in`, `name`, position and `linked_item`; it takes the `transition_out` of the second; every other field of the second is dropped and listed in `effective.dropped`. The slot of the second is dropped | Keyframes of two captions cannot be joined without guessing; the rest follows the first caption |
+| 8 | Undo of commands that shift items (`item.delete`, `timeline.close_gap`, `clip.set_speed`, `clip.remove_silences`, `slot.fill`) | The primitives of one undo are applied to a working copy without validating in between, and the result is validated once at the end (A.6). Inverse lists are in mutation order (R5) | No per-command ordering of shifts is needed |
+| 9 | `caption.set_words`, `caption.retime_from_clip`, `item.split`, `caption.split`, `item.trim` | Inverse and diff carry every changed field, including the static fields written by R11, R12 or R13 | Undo must restore the static value that a keyframe cut wrote |
+| 10 | `item.split`, `caption.split` (R13) | For each property: the left part gets the keyframes before the cut and the keyframe at the cut if any; a cut keyframe is added only when both sides keep keyframes. The right part gets a keyframe at 0 only when it keeps keyframes and the cut had keyframes before it or on it. A part left with none gets the static value. An eased segment is preserved only approximately | A part that lost keyframes gains at most one, so the limit of 100 cannot be exceeded |
+| 11 | R16, `caption.add`, `caption.set_words`, `slot.fill` | A word `duration` below 1 frame is `E_INVALID_TIME` with `path` at the value. An empty `words` array is `E_VALIDATION` | A length that parses but is too short is a time error, like every other length |
+| 12 | All commands | An item end past frame 108,000 is `E_INVALID_TIME` in every command, `settings.set_fps` included. A time argument outside the item it addresses (`keyframe.set`, `keyframe.remove`, `item.split`) is `E_INVALID_TIME` with `path` at the argument and the inclusive range in the message | One condition gets one code in every command |
+| 12a | All commands | More than 60 words in one caption is `E_LIMIT` (R16, `caption.add`, `caption.set_words`, `caption.merge`, `slot.fill`). A word index that does not exist is `E_NOT_FOUND` with `details.kind` `word` (`caption.edit_word`, `caption.split`) | Same reason as row 12 |
+| 12b | `slot.mark` | A slot name used by another item is `E_SLOT` with `details.reason` `"name_in_use"` | A name clash is not an identifier clash |
+| 13 | `slot.fill` with `words` | Checks 60 words in the caption and 5,000 in the document (`E_LIMIT`) | The command writes words, so it must enforce the same limits as the others |
+| 14 | `clip.remove_silences`, `caption.from_transcript` | The caller may pass `new_ids`. A shorter list is completed from `env.NewIDs`; extra ids are ignored and listed in `effective.unused_ids`. `effective.new_ids` lists the ids used and the service stores the operation with that list. Duplicates in `new_ids` are `E_VALIDATION`. With `replace` true, ids are checked after the replaced captions are removed | A stored operation must replay identically (A.3 rule 4) |
+| 15 | `caption.retime_from_clip` | Transcript words go to the linked captions in `start` order by word count. A caption whose word count is unchanged keeps its edited texts; otherwise it takes the transcript texts and is listed in `effective.text_reset`. A caption that receives no word is removed and listed in `effective.removed`; the removal is in the diff and is undone by undo | Keeps the behaviour of Part B and makes the other cases explicit |
+| 16 | This table | Every extension of Part C beyond Parts A and B is listed here | Nothing is hidden in a section |
+| 17 | R12, `settings.set_fps`, `item.trim`, `caption.set_words` | A keyframe written by R12 is at `t` equal to the new duration. This is allowed because `t` ranges from 0 to `duration` | One rule for every cut at the back |
+| 18 | All commands with arguments | An argument has the phase of its command. `item.delete` with `ripple` is phase P like the command | Per-argument phases would make the registry ambiguous |
+| 19 | `caption.add` | With `text`, every word gets at least 1 frame and the rest is shared in proportion to character counts by largest remainder, lower index first on ties | A deterministic split with no zero-length word |
+| 20 | `item.set_transition` | A `duration` together with `kind: null` is `E_VALIDATION` | Removing a transition has no length |
+| 21 | `clip.add` | `source_in` on an image is `E_VALIDATION`. A default duration that would end after 108,000 is clamped to `108000 - start`; only an explicit duration is an error | An image has no source position; a default should not fail |
+| 22 | `clip.add`, `audio.add`, `slot.fill`, R6 | `ast_placeholder` is a reserved literal. `clip.add` and `audio.add` accept it, skip the asset checks and then require `duration`. `slot.fill` and every other command treat it as no real asset | It never matches a real asset |
+| 23 | `clip.set_framing` | A `crop` merges with the current crop side by side; a side not given keeps its value; the merged sums must stay below 1 on each axis | A partial crop must not be able to hide the whole image |
+| 24 | `shape.add`, `shape.set` | `radius` is valid only with `rounded_rect`; changing the shape to another one removes a stored `radius` | A radius on another shape has no meaning |
+| 25 | `caption.set_breaks` | `breaks` is strictly increasing and each entry is from 1 to the word count minus 1 | A break at 0 or after the last word does nothing |
+| 26 | `caption.from_transcript` | `max_words` is 1 to 60 and `max_chars` is 1 to 500 | Bounds the size of a caption |
+| 27 | `slot.unmark` | Refused (`E_INVALID_STATE`) for an unfilled media slot that holds the placeholder | The item would keep a placeholder asset with no slot, which is invalid |
+| 28 | `template.set_info` | `description` has 0 to 500 characters; colour names match `[a-z][a-z0-9_]{0,39}`; removing an absent name is ignored | Bounds the template data |
+| 29 | `item.delete` | Duplicate ids in `item_ids` are `E_VALIDATION` | A repeated id has no meaning |
+| 30 | `item.set_transform`, `shape.add`, `text.add` | `x` and `y` are stored once set, even at the frame centre | An explicit position must stay explicit after a size change |
+| 31 | `item.set_audio`, `clip.remove_silences`, `caption.from_transcript` | Lengths that may be 0: `fade_in`, `fade_out`, `padding`, `max_gap`. Every other length is at least 1 frame | A zero fade, padding or gap is meaningful |
+| 32 | `clip.remove_silences` | The first piece keeps the id, `transition_in`, `fade_in` and `slot`; the last keeps `transition_out` and `fade_out`; a single piece keeps all | One identity for the original clip |
+| 33 | `settings.set` | `scale` and text `size` are untouched when the frame size changes | Part B states it; the rule is repeated for the golden cases |
+| 34 | R2 | A no-op succeeds with an empty diff and an empty inverse and still counts as a revision | Retries are safe |
+| 35 | R4 | The diff `id` of `settings.updated` and `project.updated` is the project id | These objects have no id of their own |
+| 36 | `track.set_caption_style` (A.10) | In a Prototype build `CaptionStyle.highlight` accepts only `"none"`; any other value is `E_VALIDATION` with the hint that word highlight arrives in ALPHA. `caption.add` takes no style, so the rule has one place. This is a rule on a value, not a per-argument phase | Word timing is data, so `words` are accepted in the Prototype, but the highlight is not drawn before ALPHA (RF-032) |
+| 37 | `caption.add` | `x` and `y` are optional and are used when the position of the caption style is `custom`; they are stored on the item. `item.set_transform` stays in ALPHA | A custom position is reachable in the Prototype without the ALPHA command |
+
+### C.1 `project.rename` (phase P)
+
+Sets the project name.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `name` | string | yes | none | 1 to 120 characters, stored exactly as given (no trimming) |
+
+**Preconditions.**
+
+1. `name` is a string of 1 to 120 characters (`E_VALIDATION`).
+
+**Postconditions.**
+
+1. `name` of the document is the given string.
+2. `diff` has one `project.updated` entry with `changes.name`; empty when the name is unchanged.
+3. `effective` is `{"name": "<name>"}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `name` is empty or longer than 120 characters | `args.name must have 1 to 120 characters, got 121.` | `Send a name of at most 120 characters, for example "Launch teaser".` |
+
+**Inverse.** `patch {collection: "project", id: <project id>, set: {name: <old name>}}`.
+
+**Idempotency.** Same result (R2): the second application changes nothing.
+
+**Example.** Document: project `prj_7k2m9x4q1b` named "Launch teaser".
+
+```json
+{"op": "project.rename", "args": {"name": "Launch teaser v2"}}
+```
+
+```json
+[{"kind": "project.updated", "id": "prj_7k2m9x4q1b", "changes": {"name": ["Launch teaser", "Launch teaser v2"]}}]
+```
+
+**Golden cases.**
+
+- `ok_basic`
+- `ok_min_length_1`
+- `ok_max_length_120`
+- `ok_same_name_noop`
+- `err_validation_empty_name`
+- `err_validation_121_chars`
+
+### C.2 `settings.set` (phase P)
+
+Sets frame size, background colour or loudness target, rescaling the position of visual items when the size changes.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `width` | integer | no | unchanged | even, 16 to 4096 |
+| `height` | integer | no | unchanged | even, 16 to 4096 |
+| `background` | colour | no | unchanged | `#RRGGBB` or `#RRGGBBAA` or `"$name"`; stored upper case |
+| `loudness_target` | number | no | unchanged | -30 to -5 |
+
+At least one argument is required.
+
+**Preconditions.**
+
+1. At least one argument is present and each obeys its rule (`E_VALIDATION`).
+
+**Postconditions.**
+
+1. The given fields of `settings` are set; an omitted field is untouched.
+2. If `width` changes, for every visual item and every `x` keyframe value: `x' = round3(x × new_width / old_width)`. If `height` changes, the same for `y` with the heights. Only explicitly stored `x` and `y` are scaled; an item with no `x` or `y` stays centred. `scale`, text `size`, shape sizes and `max_width` are not touched (Part B).
+3. `diff` has `settings.updated` (field changes) followed by one `item.updated` per item whose `x`, `y` or `keyframes` changed.
+4. `effective` has the values applied for every given setting, plus `rescaled_items` (the number of items changed by point 2).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | no argument, odd or out-of-range size, bad colour, bad loudness, unknown `$name` | `args.width must be even and between 16 and 4096, got 1081.` | `Use width 1080 or 1082.` |
+
+**Inverse.** One `patch {collection: "settings", id: <project id>, set: <old values of the fields that existed>, unset: <given fields that were absent, because they held the default>}`, then one `patch {collection: "items", id, set: {x, y, keyframes as they were}, unset: [the fields that were absent before]}` for each rescaled item; a field that was absent (for example `x` on an item at the default position) is in `unset`, never in `set` (R5).
+
+**Idempotency.** Same result: the second application finds the values already set and rescales nothing.
+
+**Example.** A 1080x1920 project with one text item `itm_s6t7v8w9x0` at `x` 810, `y` 480 and an `x` keyframe list `[{t:0,value:810},{t:30,value:270}]`.
+
+```json
+{"op": "settings.set", "args": {"width": 720, "height": 1280}}
+```
+
+```json
+[
+  {"kind": "settings.updated", "id": "prj_7k2m9x4q1b", "changes": {"width": [null, 720], "height": [null, 1280]}},
+  {"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {
+    "x": [810, 540], "y": [480, 320],
+    "keyframes": [{"x": [{"t": 0, "value": 810}, {"t": 30, "value": 270}]}, {"x": [{"t": 0, "value": 540}, {"t": 30, "value": 180}]}]}}
+]
+```
+
+Width 1080 and height 1920 are the defaults, so they are absent before the change (R3).
+
+**Golden cases.**
+
+- `ok_width_only`
+- `ok_height_only`
+- `ok_both_sizes_rescale_items`
+- `ok_default_position_items_stay_centred`
+- `ok_keyframed_x_rescaled`
+- `ok_background`
+- `ok_background_with_alpha_uppercased`
+- `ok_loudness_boundaries_minus30_minus5`
+- `ok_size_boundaries_16_and_4096`
+- `ok_same_values_noop`
+- `err_validation_no_argument`
+- `err_validation_odd_width`
+- `err_validation_width_15`
+- `err_validation_width_4098`
+- `err_validation_loudness_minus31`
+- `err_validation_unknown_color_reference`
+
+### C.3 `settings.set_fps` (phase A)
+
+Changes the project frame rate, rescaling every time quantity and repairing the invariants that rounding can break.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `fps` | string or rational object | yes | none | `"30"` (means 30/1), `"30000/1001"`, or `{"num": int, "den": int}`; `den` is 1 or 1001; `num/den` from 1 to 120 |
+
+**Preconditions.**
+
+1. `fps` is one of the three forms with `den` 1 or 1001 and `num/den` from 1 to 120 (`E_VALIDATION`; a decimal such as `"29.97"` is rejected).
+2. After the rescale (step a below) and after the overlap repair (step c), every item ends at or before frame 108,000 (`E_INVALID_TIME`, R7, `path` `args.fps`). Nothing is applied.
+
+**Postconditions.**
+
+1. Let the ratio be `r = (new.num × old.den) / (new.den × old.num)`. The fix-ups run in the order a to f below, each against the result of the previous one. An earlier step never relies on a later one, so no invariant is checked before the last step has run.
+   - **a. Rescale.** Every time quantity `q` becomes `round(q × r)`, with halves rounded up, in integer arithmetic. The quantities are: item `start`, `duration`, `source_in`, `fade_in`, `fade_out`, `transition_in.duration`, `transition_out.duration`, keyframe `t` and caption word `start` and `duration`. Speeds, asset facts and `breaks` are not changed. An item `duration`, transition duration or word duration that became 0 becomes 1 (reason `became_zero`).
+   - **b. Source range.** Source range (R9, with `A` computed at the new rate): any `clip` or `audio` item whose range fails R9 gets `duration = maxdur(source_in)`. If that is below 1, `source_in` becomes `max(0, A - ceil(num / den))` and `duration` is recomputed the same way.
+   - **c. Overlap.** One pass per track over its items sorted by `(start, id)`. For an item X with previous item P (the item processed just before X, after its own fix): if `P.start + P.duration > X.start` then, when `X.start > P.start`, set `P.duration = X.start - P.start`; otherwise (`X.start <= P.start`, which is the equal-start case, or X lying before a P that was itself moved) set `s = P.start + 1 - X.start`, then `P.duration = 1`, `X.start = X.start + s` and `X.duration = max(1, X.duration - s)`. X then becomes P for the next item. Each fix only shortens P or moves X later, and never touches a pair already processed, so one pass is enough. For two items with equal starts, `s` is 1: X moves by one frame.
+   - **d. Keyframes.** Against the final duration: keyframes that now share a `t` are reduced to the last of them (reason `keyframe_collision`); then R12 is applied with `L = duration` when keyframes lie beyond it (reason `keyframe_cut`).
+   - **e. Words.** Against the final duration: words are processed in order, `start = max(start, previous end)` (reason `word_overlap`); a word whose end passes the duration is shortened to end there and a word with no frame left is removed (reason `word_clamp`). A caption always keeps at least one word: if none would survive, the first word is kept with `start` 0 and `duration` 1.
+   - **f. Fit.** The fit fix of R14 against the final duration (reason `fit`).
+2. An item whose end would pass 108,000 after step a, or after step c, is `E_INVALID_TIME` and nothing is applied.
+3. `settings.fps` is the new rational. A project already at that rate is unchanged (R2).
+4. `diff`: `settings.updated` with `fps`, then `item.updated` for every changed item.
+5. `effective` has `fps`, `ratio` as `{num, den}` and `adjusted`: a list of `{"id", "field", "reason", "rescaled", "final"}` for every item changed by a `became_zero` correction or by steps b to f, in order of step and then of id, where `reason` is one of `became_zero`, `source_range`, `overlap`, `keyframe_collision`, `keyframe_cut`, `word_overlap`, `word_clamp`, `fit`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `fps` is malformed or outside the allowed set | `args.fps "29.97" is not a valid frame rate; den must be 1 or 1001.` | `Use "30000/1001" for 29.97 fps.` |
+| `E_INVALID_TIME` | an item would end after frame 108,000 | `Item itm_m1n2p3q4r5 would end at frame 144000 at 60 fps; the limit is 108000.` | `Shorten the item so that it ends at or before frame 54000 at 30 fps first, or keep 30 fps.` |
+
+**Inverse.** `patch {collection: "settings", id, set: {fps: <old>}}` (or `unset` when it was the default), then one `patch {collection: "items", id, set: <every time field as before>, unset: [...]}` for each changed item.
+
+**Idempotency.** Same result: the second application finds the rate already set. Applying rate A, then B, then A again is not an identity (the rounding is lossy, ADR-0004).
+
+**Example.** A 30 fps project, one visual track `trk_f6g7h8j9k0` with three text items. The operation changes to 12 fps, so `r = 12/30 = 2/5`.
+
+| Item | Before (start, duration) | Rescaled | After fix-ups |
+| --- | --- | --- | --- |
+| `itm_a1b2c3d4e5` | 4, 4 | 2 (1.6), 2 (1.6) | start 2, duration 1 (overlaps the next item, which starts at 3) |
+| `itm_f6g7h8j9k0` | 8, 5 | 3 (3.2), 2 (2.0) | start 3, duration 2 |
+| `itm_p7q8r9s0t1` | 15, 1 | 6 (6.0), 0 (0.4) | start 6, duration 1 (became zero) |
+
+```json
+{"op": "settings.set_fps", "args": {"fps": "12"}}
+```
+
+```json
+[
+  {"kind": "settings.updated", "id": "prj_7k2m9x4q1b", "changes": {"fps": [null, {"num": 12, "den": 1}]}},
+  {"kind": "item.updated", "id": "itm_a1b2c3d4e5", "changes": {"start": [4, 2], "duration": [4, 1]}},
+  {"kind": "item.updated", "id": "itm_f6g7h8j9k0", "changes": {"start": [8, 3], "duration": [5, 2]}},
+  {"kind": "item.updated", "id": "itm_p7q8r9s0t1", "changes": {"start": [15, 6]}}
+]
+```
+
+`effective.adjusted` is `[{"id": "itm_a1b2c3d4e5", "field": "duration", "reason": "overlap", "rescaled": 2, "final": 1}, {"id": "itm_p7q8r9s0t1", "field": "duration", "reason": "became_zero", "rescaled": 0, "final": 1}]`.
+
+**Golden cases.**
+
+- `ok_30_to_24_string_form`
+- `ok_to_ntsc_30000_1001_string_form`
+- `ok_object_form`
+- `ok_same_rate_noop`
+- `ok_duration_became_zero`
+- `ok_overlap_shortens_earlier_item`
+- `ok_overlap_equal_starts_shifts_later_item`
+- `ok_equal_start_after_rescale`
+- `ok_overlap_after_source_range_shortening`
+- `ok_keyframes_rescaled_and_collision_reduced`
+- `ok_caption_words_rescaled_and_repaired`
+- `ok_caption_keeps_one_word`
+- `ok_fades_and_transitions_fit_fix`
+- `ok_source_range_repaired_at_asset_end`
+- `ok_boundary_120_fps`
+- `ok_boundary_1_fps`
+- `err_validation_decimal_string`
+- `err_validation_den_not_1_or_1001`
+- `err_validation_121_fps`
+- `err_invalid_time_item_passes_108000`
+
+### C.4 `asset.add` (phase P, scope media, internal)
+
+Adds an asset that the import flow has already ingested, or reports the existing asset with the same hash.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `asset` | Asset object (SDD-001 §3.2) | yes | none | `id` is an `ast_` identifier; `hash` is `sha256:` plus 64 hex characters; `video` requires `frame_rate`, `frame_count`, `width`, `height`; `audio` requires `sample_count`; `image` requires `width`, `height`; `sample_count` is required exactly when the asset has audio (kind `audio`, or kind `video` with `has_audio` true) |
+
+**Preconditions.**
+
+1. `asset` satisfies the shape rules above (`E_VALIDATION`).
+2. If an asset with the same `hash` is present, the command succeeds as a no-op (Postcondition 3) and the checks below are skipped.
+3. `asset.id` is not used by an asset with a different hash (`E_ID_EXISTS`).
+4. The document has fewer than 200 assets (`E_LIMIT`).
+
+**Postconditions.**
+
+1. `assets[asset.id]` is the given object, with `has_audio` omitted when false.
+2. `diff` has one `asset.added` with the whole object under `object`.
+3. When the hash is already present, nothing changes, `effective.asset_id` is the existing identifier (which may differ from `asset.id`) and `effective.existing` is true.
+4. Otherwise `effective` is `{"asset_id": "<id>", "existing": false}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | a required field of the kind is missing, or a field is malformed | `args.asset.frame_count is required for kind "video".` | `Send the facts measured on the normalized media: frame_rate, frame_count, width and height.` |
+| `E_ID_EXISTS` | the id is used by an asset with another hash | `Asset id ast_3c5v8n2w6d already exists with a different hash.` | `Send a new id, or omit it so the service generates one.` |
+| `E_LIMIT` | 200 assets already exist | `The document already has 200 assets; the limit is 200.` | `Remove an unused asset with asset.remove first.` |
+
+**Inverse.** `remove {collection: "assets", id: <asset.id>}`; nothing for the no-op.
+
+**Idempotency.** Same result: the second application finds the hash and returns the existing identifier without a change.
+
+**Example.** An empty project.
+
+```json
+{"op": "asset.add", "args": {"asset": {"id": "ast_3c5v8n2w6d", "hash": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", "kind": "video", "name": "IMG_0421.MOV", "frame_rate": {"num": 30, "den": 1}, "frame_count": 900, "sample_count": 1440000, "width": 1080, "height": 1920, "has_audio": true}}}
+```
+
+```json
+[{"kind": "asset.added", "id": "ast_3c5v8n2w6d", "object": {"id": "ast_3c5v8n2w6d", "hash": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", "kind": "video", "name": "IMG_0421.MOV", "frame_rate": {"num": 30, "den": 1}, "frame_count": 900, "sample_count": 1440000, "width": 1080, "height": 1920, "has_audio": true}}]
+```
+
+**Golden cases.**
+
+- `ok_video_with_audio`
+- `ok_video_without_audio`
+- `ok_audio`
+- `ok_image`
+- `ok_same_hash_returns_existing_id`
+- `ok_199_assets_then_add`
+- `err_validation_video_missing_frame_count`
+- `err_validation_sample_count_missing_with_audio`
+- `err_validation_bad_hash`
+- `err_id_exists_other_hash`
+- `err_limit_200_assets`
+
+### C.5 `asset.remove` (phase A, scope media)
+
+Removes an asset from the project when no item uses it.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `asset_id` | asset id | yes | none | `ast_` identifier |
+
+**Preconditions.**
+
+1. `asset_id` matches the `ast_` identifier pattern (`E_VALIDATION`). The reserved literal `ast_placeholder` does not match it here (R6).
+2. `asset_id` exists in `assets` (`E_NOT_FOUND`).
+3. No item has `asset` equal to `asset_id` (`E_IN_USE`, `details.used_by` lists the item ids sorted).
+
+**Postconditions.**
+
+1. `assets[asset_id]` is removed. Nothing else changes; the file stays in the content store (ADR-0006).
+2. `diff` has one `asset.removed` with the object.
+3. `effective` is `{"asset_id": "<id>"}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `asset_id` is not an identifier of an asset, including `ast_placeholder` | `args.asset_id "ast_placeholder" is not an asset identifier.` | `Use the id of an asset listed by project_get.` |
+| `E_NOT_FOUND` | no such asset | `Asset ast_3c5v8n2w6d does not exist.` | `List the project's assets with project_get and use one of their ids.` |
+| `E_IN_USE` | an item uses it | `Asset ast_3c5v8n2w6d is used by items itm_m1n2p3q4r5, itm_s6t7v8w9x0.` | `Delete those items with item.delete, then remove the asset.` |
+
+**Inverse.** `put {collection: "assets", object: <the asset>}`.
+
+**Idempotency.** Error: the second application returns `E_NOT_FOUND`.
+
+**Example.** A document with asset `ast_3c5v8n2w6d` used by no item.
+
+```json
+{"op": "asset.remove", "args": {"asset_id": "ast_3c5v8n2w6d"}}
+```
+
+```json
+[{"kind": "asset.removed", "id": "ast_3c5v8n2w6d", "object": {"id": "ast_3c5v8n2w6d", "hash": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", "kind": "video", "name": "IMG_0421.MOV", "frame_rate": {"num": 30, "den": 1}, "frame_count": 900, "sample_count": 1440000, "width": 1080, "height": 1920, "has_audio": true}}]
+```
+
+**Golden cases.**
+
+- `ok_unused_asset`
+- `ok_asset_used_only_by_deleted_item`
+- `err_not_found`
+- `err_validation_placeholder_id`
+- `err_in_use_one_item`
+- `err_in_use_several_items_sorted`
+
+### C.6 `track.add` (phase P)
+
+Adds an empty track at a place in the track order.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `kind` | `"visual"` or `"audio"` | yes | none | |
+| `name` | string | no | `""` | 0 to 60 characters |
+| `id` | track id | no | generated | R6 |
+| `position` | `"top"` or `"bottom"` | no | `"top"` when none of the three is given | at most one of `position`, `above`, `below` (`E_VALIDATION` if two are present) |
+| `above` | track id | no | none | the new track is placed directly over this track |
+| `below` | track id | no | none | the new track is placed directly under this track |
+
+**Preconditions.**
+
+1. Arguments match the schema, and at most one of `position`, `above`, `below` is present (`E_VALIDATION`).
+2. `above` or `below` names an existing track (`E_NOT_FOUND`, `details.kind` `track`).
+3. `id`, when given, is not used by a track (`E_ID_EXISTS`).
+4. The document has fewer than 50 tracks (`E_LIMIT`).
+
+**Postconditions.**
+
+1. A track `{id, kind, name, order}` is added; `hidden`, `muted` and `caption_style` are absent. The order is one global sequence for both kinds (SDD-001 §3.3.1).
+2. `order` is computed from the sorted list of existing orders: `top` is `OrderBetween("", first)`; `bottom` is `OrderBetween(last, "")`; `above X` is `OrderBetween(prev, X.order)` where `prev` is the order of the track just before `X` (or `""`); `below X` is `OrderBetween(X.order, next)` where `next` is the order of the track just after `X` (or `""`). With no tracks, `OrderBetween("", "")`. The `order` strings in this section are illustrative: the exact strings are fixed by the algorithm of SDD-001 section 3.3.1 and by the golden files.
+3. No other track is changed.
+4. `diff` has one `track.added`. `effective` is `{"track_id": "<id>", "order": "<order>"}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad `kind`, name over 60 characters, or two placement arguments | `args: position and above cannot be used together.` | `Send only one of position, above and below.` |
+| `E_NOT_FOUND` | `above` or `below` names no track | `Track trk_zzzzzzzzzz does not exist (args.above).` | `Use the id of a track listed by project_get.` |
+| `E_ID_EXISTS` | `id` is already a track | `Track id trk_f6g7h8j9k0 already exists.` | `Omit id to let the service generate one.` |
+| `E_LIMIT` | 50 tracks exist | `The document already has 50 tracks; the limit is 50.` | `Remove an unused track with track.remove first.` |
+
+**Inverse.** `remove {collection: "tracks", id: <new id>}`.
+
+**Idempotency.** With the same `id`: error `E_ID_EXISTS`. Without `id`: another track is added each time.
+
+**Example.** A document with one visual track `trk_f6g7h8j9k0` with `order` `a1`.
+
+```json
+{"op": "track.add", "args": {"kind": "visual", "name": "Captions", "id": "trk_a1b2c3d4e5"}}
+```
+
+```json
+[{"kind": "track.added", "id": "trk_a1b2c3d4e5", "object": {"id": "trk_a1b2c3d4e5", "kind": "visual", "name": "Captions", "order": "a0"}}]
+```
+
+**Golden cases.**
+
+- `ok_default_top_on_empty_document`
+- `ok_default_top`
+- `ok_position_bottom`
+- `ok_above`
+- `ok_below`
+- `ok_audio_kind`
+- `ok_name_60_chars`
+- `ok_supplied_id`
+- `ok_49_tracks_then_add`
+- `err_validation_two_placements`
+- `err_validation_name_61_chars`
+- `err_not_found_above`
+- `err_id_exists`
+- `err_limit_50_tracks`
+
+### C.7 `track.update` (phase P)
+
+Sets the name, hidden flag or muted flag of a track.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | |
+| `name` | string | no | unchanged | 0 to 60 characters; `""` clears it |
+| `hidden` | boolean | no | unchanged | visual tracks only |
+| `muted` | boolean | no | unchanged | both kinds |
+
+At least one of `name`, `hidden`, `muted` is required.
+
+**Preconditions.**
+
+1. At least one field is present and valid (`E_VALIDATION`).
+2. The track exists (`E_NOT_FOUND`).
+3. `hidden` is only given for a visual track (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. The given fields are set. A field set to its default (`""`, `false`) is removed from the stored track.
+2. `diff` has one `track.updated` with the changed fields (R3); empty when nothing changes.
+3. `effective` has the stored values of the given fields.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | nothing to set, or a value out of range | `args: give at least one of name, hidden, muted.` | `Send for example {"track_id": "trk_f6g7h8j9k0", "muted": true}.` |
+| `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
+| `E_TYPE_MISMATCH` | `hidden` on an audio track | `Track trk_m1n2p3q4r5 is an audio track; hidden applies to visual tracks only.` | `Use muted to silence an audio track.` |
+
+**Inverse.** `patch {collection: "tracks", id, set: <old values of the changed fields>, unset: <fields that were absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** A document with visual track `trk_f6g7h8j9k0` (not hidden).
+
+```json
+{"op": "track.update", "args": {"track_id": "trk_f6g7h8j9k0", "hidden": true}}
+```
+
+```json
+[{"kind": "track.updated", "id": "trk_f6g7h8j9k0", "changes": {"hidden": [null, true]}}]
+```
+
+**Golden cases.**
+
+- `ok_rename`
+- `ok_clear_name`
+- `ok_hide_visual`
+- `ok_unhide_removes_field`
+- `ok_mute_audio_track`
+- `ok_mute_visual_track`
+- `ok_same_values_noop`
+- `ok_name_60_chars`
+- `err_validation_no_field`
+- `err_validation_name_61_chars`
+- `err_not_found`
+- `err_type_mismatch_hidden_on_audio`
+
+### C.8 `track.move` (phase P)
+
+Changes the place of a track in the track order.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | |
+| `position` | `"top"` or `"bottom"` | one of the three | none | exactly one of `position`, `above`, `below` |
+| `above` | track id | one of the three | none | must differ from `track_id` |
+| `below` | track id | one of the three | none | must differ from `track_id` |
+
+**Preconditions.**
+
+1. Exactly one of `position`, `above`, `below` is present (`E_VALIDATION`).
+2. `track_id` and the reference track exist (`E_NOT_FOUND`).
+3. The reference track is not `track_id` itself (`E_INVALID_STATE`).
+
+**Postconditions.**
+
+1. The new `order` is computed as in C.6 over the sorted orders without the moved track.
+2. When the track already has that place (first for `top`, last for `bottom`, directly over or under the reference), nothing changes (R2).
+3. `diff` has one `track.updated` with `order`. Items are untouched.
+4. `effective` is `{"track_id": "<id>", "order": "<new order>"}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | none or more than one placement argument | `args: give exactly one of position, above, below.` | `Send {"track_id": "trk_f6g7h8j9k0", "position": "top"}.` |
+| `E_NOT_FOUND` | unknown track or reference | `Track trk_zzzzzzzzzz does not exist (args.above).` | `Use the id of a track listed by project_get.` |
+| `E_INVALID_STATE` | a track placed relative to itself | `Track trk_f6g7h8j9k0 cannot be placed above itself.` | `Name a different reference track, or use position.` |
+
+**Inverse.** `patch {collection: "tracks", id, set: {order: <old>}}`.
+
+**Idempotency.** Same result: after the move the track is already in place.
+
+**Example.** Tracks `trk_a1b2c3d4e5` (order `a0`), `trk_f6g7h8j9k0` (`a1`), `trk_m1n2p3q4r5` (`a2`).
+
+```json
+{"op": "track.move", "args": {"track_id": "trk_m1n2p3q4r5", "below": "trk_a1b2c3d4e5"}}
+```
+
+```json
+[{"kind": "track.updated", "id": "trk_m1n2p3q4r5", "changes": {"order": ["a2", "a0v"]}}]
+```
+
+`OrderBetween("a0", "a1")` is shown as `a0v` in this example. The string is illustrative: the exact strings are fixed by the algorithm of SDD-001 section 3.3.1 and by the golden files.
+
+**Golden cases.**
+
+- `ok_to_top`
+- `ok_to_bottom`
+- `ok_above`
+- `ok_below`
+- `ok_already_in_place_noop`
+- `err_validation_no_placement`
+- `err_validation_two_placements`
+- `err_not_found_track`
+- `err_not_found_reference`
+- `err_invalid_state_relative_to_itself`
+
+### C.9 `track.remove` (phase P)
+
+Removes a track, and its items when `with_items` is true.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | |
+| `with_items` | boolean | no | `false` | when true, the items of the track are removed too |
+
+**Preconditions.**
+
+1. The track exists (`E_NOT_FOUND`).
+2. The track has no items, or `with_items` is true (`E_NOT_EMPTY`, `details.items` lists the item ids sorted).
+
+**Postconditions.**
+
+1. Every item of the track (when `with_items`) is removed, then the track. Captions elsewhere that link to a removed item keep the dangling `linked_item` (allowed by SDD-001 §3.7).
+2. `diff`: `track.removed` first, then one `item.removed` per item, sorted by id (R19).
+3. `effective` is `{"track_id": "<id>", "removed_items": ["<ids sorted>"]}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
+| `E_NOT_EMPTY` | items on the track and `with_items` false | `Track trk_f6g7h8j9k0 has 2 items: itm_m1n2p3q4r5, itm_s6t7v8w9x0.` | `Send "with_items": true to remove the items with the track, or move them first.` |
+
+**Inverse.** `put {collection: "items", object}` for each removed item in the order they were removed, then `put {collection: "tracks", object}`. Undo applies them in reverse, so the track returns before its items.
+
+**Idempotency.** Error: the second application returns `E_NOT_FOUND`.
+
+**Example.** A track `trk_f6g7h8j9k0` holding one text item.
+
+```json
+{"op": "track.remove", "args": {"track_id": "trk_f6g7h8j9k0", "with_items": true}}
+```
+
+```json
+[
+  {"kind": "track.removed", "id": "trk_f6g7h8j9k0", "object": {"id": "trk_f6g7h8j9k0", "kind": "visual", "order": "a1"}},
+  {"kind": "item.removed", "id": "itm_s6t7v8w9x0", "object": {"id": "itm_s6t7v8w9x0", "type": "text", "track": "trk_f6g7h8j9k0", "start": 0, "duration": 60, "text": "Hello"}}
+]
+```
+
+**Golden cases.**
+
+- `ok_empty_track`
+- `ok_with_items_removes_items`
+- `ok_with_items_false_explicit_on_empty_track`
+- `ok_dangling_linked_item_left_alone`
+- `err_not_found`
+- `err_not_empty`
+
+### C.10 `track.set_caption_style` (phase P)
+
+Merges a partial caption style into a track's caption style, or replaces it.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | a visual track |
+| `style` | partial CaptionStyle | yes | none | R15; stored exactly as given, keys equal to a default included; `null` values remove keys when merging and are ignored when replacing |
+| `replace` | boolean | no | `false` | true: `caption_style` becomes exactly `style` |
+
+**Preconditions.**
+
+1. Arguments match the schema and R15 (`E_VALIDATION`).
+2. The track exists (`E_NOT_FOUND`).
+3. The track is visual (`E_TYPE_MISMATCH`).
+4. The resulting `font_family` and `font_weight` exist (`E_FONT_UNKNOWN`).
+
+**Postconditions.**
+
+1. Merge: each key of `style` is set (or removed for `null`) on `caption_style`, with the value given even when it equals the default (R15). Replace: `caption_style` is `style` without its `null` keys. An empty result removes `caption_style` from the track.
+2. Items of the track are not changed; their effective style follows SDD-001 §3.7.
+3. `diff` has one `track.updated` with `caption_style` as a whole object; empty when nothing changes.
+4. `effective` is `{"caption_style": <stored style after the command>}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | unknown key, value out of range, bad colour, unknown `$name` | `args.style.size must be between 8 and 1000, got 4.` | `Use size 64.` |
+| `E_VALIDATION` | in a Prototype build, `style.highlight` other than `"none"` (decision 36) | `args.style.highlight must be "none" in this build, got "word".` | `Word highlight arrives in ALPHA; use "none".` |
+| `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
+| `E_TYPE_MISMATCH` | audio track | `Track trk_m1n2p3q4r5 is an audio track and cannot hold captions.` | `Use a visual track.` |
+| `E_FONT_UNKNOWN` | family or weight not available | `Font "Comic" is not available; available families: Inter, Roboto.` | `Use font_family "Inter".` |
+
+**Inverse.** `patch {collection: "tracks", id, set: {caption_style: <old>}}` or `unset: ["caption_style"]` when there was none.
+
+**Idempotency.** Same result.
+
+**Example.** Track `trk_a1b2c3d4e5` has `caption_style {"highlight": "none"}`.
+
+```json
+{"op": "track.set_caption_style", "args": {"track_id": "trk_a1b2c3d4e5", "style": {"size": 72, "position": "middle"}}}
+```
+
+```json
+[{"kind": "track.updated", "id": "trk_a1b2c3d4e5", "changes": {"caption_style": [{"highlight": "none"}, {"highlight": "none", "position": "middle", "size": 72}]}}]
+```
+
+**Golden cases.**
+
+- `ok_merge_into_existing`
+- `ok_merge_into_none`
+- `ok_replace`
+- `ok_null_value_removes_key`
+- `ok_key_equal_to_default_is_kept`
+- `ok_replace_with_empty_style_removes_caption_style`
+- `ok_template_color_reference`
+- `ok_same_style_noop`
+- `err_validation_unknown_key`
+- `err_validation_size_below_8`
+- `err_validation_highlight_word_in_prototype`
+- `err_validation_unknown_color_reference`
+- `err_not_found_track`
+- `err_type_mismatch_audio_track`
+- `err_font_unknown_family`
+- `err_font_unknown_weight`
+
+### C.11 `item.move` (phase P)
+
+Moves an item in time, to another track of the same kind, or both.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | |
+| `start` | time | no | unchanged | absolute position of the item's first frame |
+| `track_id` | track id | no | unchanged | a track that accepts the item's type |
+
+At least one of `start` and `track_id` is required.
+
+**Preconditions.**
+
+1. At least one of `start`, `track_id` is present, and `start` parses (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The item exists, and `track_id` (when given) exists (`E_NOT_FOUND`).
+3. The target track accepts the item type: visual types on a visual track, `audio` on an audio track (`E_TYPE_MISMATCH`).
+4. The new end `start + duration` is at most 108,000 (`E_INVALID_TIME`, R7).
+5. The item does not overlap another item of the target track, ignoring itself (`E_OVERLAP`, R8).
+
+**Postconditions.**
+
+1. `start` and `track` of the item are set. Every other field is unchanged: `keyframes`, caption `words`, transitions, fades and `slot` are relative to the item and travel with it. When the item changes track, the effective caption style becomes that of the new track.
+2. `diff` has one `item.updated` with `start` and/or `track`; empty for a no-op (R2).
+3. `effective` has `start` (the A.4 triple) and `track_id`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | neither `start` nor `track_id` | `args: give at least one of start and track_id.` | `Send {"item_id": "itm_m1n2p3q4r5", "start": "5s"}.` |
+| `E_INVALID_TIME` | bad time string, or the item would end after 108,000 | `args.start "100000s" puts item itm_m1n2p3q4r5 at frames 3000000-3000149, past the limit 108000.` | `Use a start of at most "107850f" for this 150-frame item.` |
+| `E_NOT_FOUND` | unknown item or track | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | track does not accept the type | `Item itm_m1n2p3q4r5 is a clip; track trk_m1n2p3q4r5 is an audio track.` | `Move it to a visual track.` |
+| `E_OVERLAP` | overlap on the target | `Item itm_m1n2p3q4r5 would occupy frames 100-249 on track trk_f6g7h8j9k0, where item itm_c3d4e5f6g7 already is (frames 90-179).` | `Use start "180f" (6.000s), the next free position on that track, or move to another track.` |
+
+**Inverse.** `patch {collection: "items", id, set: {start: <old>, track: <old>}}` for the fields that changed.
+
+**Idempotency.** Same result: the item is already there.
+
+**Example.** A 30 fps document: clip `itm_m1n2p3q4r5` on `trk_f6g7h8j9k0`, `start` 0, `duration` 150, nothing else on the track.
+
+```json
+{"op": "item.move", "args": {"item_id": "itm_m1n2p3q4r5", "start": "5s"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"start": [0, 150]}}]
+```
+
+`effective.start` is `{"frame": 150, "seconds": 5, "requested": "5s"}`.
+
+**Golden cases.**
+
+- `ok_move_in_time`
+- `ok_move_to_other_track_same_kind`
+- `ok_move_time_and_track`
+- `ok_move_next_to_neighbour_touching`
+- `ok_move_to_frame_0`
+- `ok_move_ending_at_frame_108000`
+- `ok_keyframes_and_words_unchanged`
+- `ok_same_position_noop`
+- `err_validation_no_argument`
+- `err_invalid_time_malformed`
+- `err_invalid_time_ends_after_108000`
+- `err_not_found_item`
+- `err_not_found_track`
+- `err_type_mismatch_audio_track`
+- `err_overlap_in_time`
+- `err_overlap_on_other_track`
+
+### C.12 `item.trim` (phase P)
+
+Moves the start edge or the end edge of an item to a timeline position, keeping the source, keyframes and words consistent.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | any item type |
+| `edge` | `"start"` or `"end"` | yes | none | |
+| `to` | time | yes | none | absolute timeline position of the edge; `end` is exclusive (the first frame after the item) |
+
+**Preconditions.**
+
+1. Arguments match the schema and `to` parses (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The item exists (`E_NOT_FOUND`).
+3. Edge `start`: `to < start + duration`. Edge `end`: `to > start` (`E_INVALID_STATE`). Edge `end` with `to > 108000` is `E_INVALID_TIME`.
+4. Edge `start` moving earlier on a `clip` or `audio` item: the new `source_in` is not negative (`E_OUT_OF_SOURCE`). Edge `end` growing a `clip` or `audio` item: the source range holds (R9, `E_OUT_OF_SOURCE`). Images are exempt.
+5. A caption keeps at least one word (`E_INVALID_STATE`).
+6. Fades and transitions still fit the new duration (R14, `E_INVALID_STATE`).
+7. The item does not overlap another item of its track (`E_OVERLAP`, R8; `next_free` is the nearest valid `to`).
+
+**Postconditions.**
+
+1. Edge `start`, with `d = to - start` (negative when the item grows to the left): `start = to`, `duration = duration - d`. For `clip` and `audio` (not image clips), with speed `num/den`: for `d > 0`, `source_in = source_in + floor(d × num / den)`; for `d < 0`, `source_in = source_in - ceil(-d × num / den)`.
+2. Edge `start`, keyframes: R11 with that `d`. Caption words: each word `start` becomes `start - d`; a word whose new end is at or before 0 is removed; a word that crosses 0 starts at 0 and keeps its end. `breaks` follow the removed words: with `r` words removed, an entry `i` becomes `i - r` and is dropped when below 1 or at or beyond the new word count.
+3. Edge `end`: `duration = to - start`; `start` and `source_in` do not change. If the item shrinks, keyframes follow R12 with `L = to - start`. Words with `start >= duration` are removed and a word that crosses the new end gets `duration = new duration - start`; `breaks` drop entries at or beyond the new word count.
+4. `fade_in`, `fade_out`, `transition_in`, `transition_out` keep their lengths.
+5. `diff` has one `item.updated` with the changed fields (`start`, `duration`, `source_in`, `keyframes`, `words`, `breaks` and the static fields written by R11 or R12). No change when `to` is the current edge (R2).
+6. `effective` has `to` (the A.4 triple), `start`, `duration` and, for `clip` and `audio`, `source_in`, all as applied.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad `edge` or missing argument | `args.edge must be "start" or "end", got "left".` | `Use "start" or "end".` |
+| `E_INVALID_TIME` | malformed `to`, or `to` above 108,000 for edge `end` | `args.to "2000000f" is past the timeline limit of 108000 frames.` | `Use a value up to "108000f" (3600s).` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_INVALID_STATE` | edge past the other edge; caption left with no word; fades or transitions no longer fit | `Trimming the start of itm_m1n2p3q4r5 to frame 240 leaves no frame: the item ends at 240.` | `Use a start before "240f", or delete the item.` |
+| `E_OUT_OF_SOURCE` | the source would start before 0 or end after the asset | `Moving the start of itm_m1n2p3q4r5 from frame 90 to 40 needs source frame -15 at speed 3/2 (source_in 60); the asset begins at 0.` | `Use to "50f" (1.667s), the earliest start this clip allows at speed 3/2.` |
+| `E_OVERLAP` | the new range overlaps a neighbour | `Item itm_m1n2p3q4r5 would occupy frames 70-239 on track trk_f6g7h8j9k0, where item itm_c3d4e5f6g7 already is (frames 0-79).` | `Use to "80f" (2.667s), the nearest start that avoids the overlap.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old values of every changed field>, unset: <fields that were absent>}`. One primitive.
+
+**Idempotency.** Same result: the second application finds the edge already at `to` (`d = 0`).
+
+**Example.** 30 fps project; asset `ast_3c5v8n2w6d` has 900 frames at 30 fps. Clip `itm_m1n2p3q4r5` on `trk_f6g7h8j9k0`: `start` 90, `duration` 150, `source_in` 60, `speed` 3/2 (source range 60 + ceil(150 × 3/2) = 285), `fade_in` 10, `fade_out` 12, `transition_in` fade 15 frames, `keyframes.scale` = `[{t:0, value:1}, {t:30, value:1.3, easing:"ease_out"}, {t:100, value:1}]`. Trim the start edge to frame 97, so `d = 7`.
+
+| Field | Before | After | Why |
+| --- | --- | --- | --- |
+| `start` | 90 | 97 | `to` |
+| `duration` | 150 | 143 | 150 - 7 |
+| `source_in` | 60 | 70 | 60 + floor(7 × 3/2) = 60 + floor(10.5) |
+| keyframe `t` values | 0, 30, 100 | 23, 93, plus a new one at 0 | each `t - 7`; the one at 0 becomes -7 and is dropped |
+| new keyframe at 0 | none | value 1.07 | linear value at relative frame 7: 1 + 0.3 × 7/30 |
+
+```json
+{"op": "item.trim", "args": {"item_id": "itm_m1n2p3q4r5", "edge": "start", "to": "97f"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {
+  "start": [90, 97], "duration": [150, 143], "source_in": [60, 70],
+  "keyframes": [
+    {"scale": [{"t": 0, "value": 1}, {"t": 30, "value": 1.3, "easing": "ease_out"}, {"t": 100, "value": 1}]},
+    {"scale": [{"t": 0, "value": 1.07}, {"t": 23, "value": 1.3, "easing": "ease_out"}, {"t": 93, "value": 1}]}]}}]
+```
+
+`effective.to` is `{"frame": 97, "seconds": 3.233, "requested": "97f"}`.
+
+The same clip trimmed at the end with `{"edge": "end", "to": "150f"}` (and, for this variant only, a linear second keyframe) gets `duration` 60. The keyframe at 100 is dropped, and since the last remaining keyframe is at 30, a keyframe at 60 is appended with value `1.3 + (1 - 1.3) × 30/70 = 1.171`.
+
+**Golden cases.**
+
+- `ok_start_edge_shrink_clip_speed_1`
+- `ok_start_edge_shrink_clip_speed_3_2_floor`
+- `ok_start_edge_extend_clip_source_decreases`
+- `ok_start_edge_extend_to_source_in_exactly_0`
+- `ok_start_edge_keyframes_interpolated_at_0`
+- `ok_start_edge_all_keyframes_dropped_becomes_static`
+- `ok_start_edge_caption_words_removed_and_clamped`
+- `ok_start_edge_image_clip_source_in_untouched`
+- `ok_start_edge_text_item`
+- `ok_start_edge_to_frame_0`
+- `ok_end_edge_shrink_keyframes_cut`
+- `ok_end_edge_extend_within_source`
+- `ok_end_edge_extend_to_asset_end_exactly`
+- `ok_end_edge_extend_image_clip`
+- `ok_end_edge_caption_word_clamped`
+- `ok_end_edge_to_frame_108000`
+- `ok_edge_already_at_to_noop`
+- `err_validation_bad_edge`
+- `err_invalid_time_malformed`
+- `err_invalid_time_end_past_108000`
+- `err_not_found`
+- `err_invalid_state_start_edge_at_item_end`
+- `err_invalid_state_end_edge_at_item_start`
+- `err_invalid_state_caption_no_word_left`
+- `err_invalid_state_fade_no_longer_fits`
+- `err_invalid_state_transition_no_longer_fits`
+- `err_out_of_source_start_before_zero`
+- `err_out_of_source_end_past_asset`
+- `err_overlap_start_edge_extends_into_neighbour`
+- `err_overlap_end_edge_extends_into_neighbour`
+
+### C.13 `item.split` (phase P)
+
+Splits an item into two items at a timeline frame.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | any item type |
+| `at` | time | yes | none | absolute timeline position, strictly inside the item |
+| `new_id` | item id | no | generated | R6; the id of the right part |
+
+**Preconditions.**
+
+1. Arguments match the schema and `at` parses (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The item exists (`E_NOT_FOUND`).
+3. `start < at < start + duration`, that is, `at` lies in the inclusive range `start + 1` to `start + duration - 1` (`E_INVALID_TIME`, `path` `args.at`).
+4. `new_id`, when given, is not used by an item (`E_ID_EXISTS`).
+5. The document has fewer than 500 items (`E_LIMIT`).
+6. For a caption, both parts receive at least one word (`E_INVALID_STATE`).
+
+**Postconditions.** With `Tc = at - start`, R17 applies: the original keeps its id and becomes the left part with `duration = Tc`; the right part is a new item with `start = at`, `duration = old duration - Tc` and, for `clip` and `audio`, `source_in = old source_in + floor(Tc × num / den)`.
+
+1. `transition_in` and `fade_in` stay on the left; `transition_out` and `fade_out` go to the right; each is shortened to its part's duration if longer; `slot` stays on the left only.
+2. Keyframes follow R13: for each animated property, the keyframes before the cut stay on the left and those after it go to the right, shifted by `-Tc`; a keyframe at the cut goes to both parts; an interpolated keyframe at the cut is written only where R13 says so (a part that would otherwise lose all its motion gets the static value instead).
+3. Caption words: a word goes to the left part when `start + word.start < at`, else to the right. In the left part a word that crosses the cut gets `duration = Tc - word.start`. In the right part `word.start` becomes `word.start - Tc`. `breaks`: the left keeps entries `i` with `1 <= i <= left word count - 1`; the right keeps entries `i > left word count` as `i - left word count`. `linked_item` and `style` are copied to the right part.
+4. Every other field (name, position, scale, rotation, opacity, text, style, asset, speed, volume, framing, colour, shape fields) is copied to the right part unchanged.
+5. `diff`: `item.updated` for the left part and `item.added` for the right part, sorted by id.
+6. `effective` has `at` (the A.4 triple), `new_id`, `left` and `right`, each `{"id", "start", "duration"}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | missing argument or bad `new_id` form | `args.new_id "clip-2" is not an item id.` | `Use an id like "itm_s6t7v8w9x0" or omit it.` |
+| `E_INVALID_TIME` | malformed `at`, or `at` not strictly inside the item | `args.at "60f" is not inside item itm_m1n2p3q4r5 (frames 60-179); it must be between 61 and 179 inclusive.` | `Use at "61f" or later, up to "179f".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_INVALID_STATE` | a caption part would have no word | `Splitting caption itm_m1n2p3q4r5 at frame 70 leaves the left part with no word.` | `Split at a word boundary with caption.split.` |
+| `E_ID_EXISTS` | `new_id` already used | `Item id itm_s6t7v8w9x0 already exists.` | `Omit new_id or use an unused id.` |
+| `E_LIMIT` | 500 items exist | `The document already has 500 items; the limit is 500.` | `Delete unused items before splitting.` |
+
+**Inverse.** `patch {collection: "items", id: <left id>, set: <old values of every changed field, including static fields written by R13>, unset: <fields that were absent>}`, then `remove {collection: "items", id: <new id>}`, in the order of mutation (R5).
+
+**Idempotency.** Error: after the first split, `at` equals the left part's end, so the second application returns `E_INVALID_TIME`.
+
+**Example.** 30 fps project; asset `ast_3c5v8n2w6d` has 900 frames. Clip `itm_m1n2p3q4r5` on `trk_f6g7h8j9k0`: `start` 60, `duration` 120 (frames 60-179), `source_in` 30, `speed` 3/2, `fade_in` 12, `fade_out` 12, `transition_in` fade 40, `transition_out` slide_left 10, `keyframes.opacity` = `[{t:0, value:1}, {t:60, value:0.4}]` (linear). Split at frame 97, so `Tc = 37`.
+
+| Field | Left (`itm_m1n2p3q4r5`) | Right (`itm_s6t7v8w9x0`) |
+| --- | --- | --- |
+| `start`, `duration` | 60, 37 | 97, 83 |
+| `source_in` | 30 | 30 + floor(37 × 3/2) = 30 + floor(55.5) = 85 |
+| `fade_in`, `fade_out` | 12, none | none, 12 |
+| `transition_in`, `transition_out` | fade 37 (40 shortened to the part), none | none, slide_left 10 |
+| `opacity` keyframes | `t0: 1`, `t37: 0.63` | `t0: 0.63`, `t23: 0.4` |
+
+The cut value is the linear value at relative frame 37: `1 + (0.4 - 1) × 37/60 = 0.63`.
+
+```json
+{"op": "item.split", "args": {"item_id": "itm_m1n2p3q4r5", "at": "97f", "new_id": "itm_s6t7v8w9x0"}}
+```
+
+```json
+[
+  {"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {
+    "duration": [120, 37],
+    "fade_out": [12, null],
+    "transition_in": [{"kind": "fade", "duration": 40}, {"kind": "fade", "duration": 37}],
+    "transition_out": [{"kind": "slide_left", "duration": 10}, null],
+    "keyframes": [{"opacity": [{"t": 0, "value": 1}, {"t": 60, "value": 0.4}]}, {"opacity": [{"t": 0, "value": 1}, {"t": 37, "value": 0.63}]}]}},
+  {"kind": "item.added", "id": "itm_s6t7v8w9x0", "object": {
+    "id": "itm_s6t7v8w9x0", "type": "clip", "track": "trk_f6g7h8j9k0", "start": 97, "duration": 83,
+    "asset": "ast_3c5v8n2w6d", "source_in": 85, "speed": {"num": 3, "den": 2},
+    "fade_out": 12, "transition_out": {"kind": "slide_left", "duration": 10},
+    "keyframes": {"opacity": [{"t": 0, "value": 0.63}, {"t": 23, "value": 0.4}]}}}
+]
+```
+
+**Golden cases.**
+
+- `ok_clip_speed_1`
+- `ok_clip_speed_3_2_floor_source_in`
+- `ok_audio_item`
+- `ok_image_clip`
+- `ok_text_item`
+- `ok_shape_item`
+- `ok_at_first_frame_plus_1`
+- `ok_at_last_frame`
+- `ok_transition_longer_than_left_part_shortened`
+- `ok_fade_in_stays_left_fade_out_goes_right`
+- `ok_slot_stays_left`
+- `ok_keyframes_cut_between_two_keyframes`
+- `ok_keyframes_cut_exactly_on_a_keyframe`
+- `ok_keyframes_all_before_cut`
+- `ok_keyframes_all_after_cut`
+- `ok_keyframes_100_before_cut_limit_kept`
+- `ok_caption_words_split_by_first_frame`
+- `ok_caption_word_crossing_cut_clamped_left`
+- `ok_caption_breaks_divided`
+- `ok_new_id_supplied`
+- `err_validation_bad_new_id`
+- `err_invalid_time_no_unit`
+- `err_not_found`
+- `err_invalid_time_at_equals_start`
+- `err_invalid_time_at_equals_end`
+- `err_invalid_state_caption_right_part_no_word`
+- `err_invalid_state_caption_left_part_no_word`
+- `err_id_exists`
+- `err_limit_500_items`
+
+### C.14 `item.delete` (phase P)
+
+Removes items, and optionally closes the freed space on the same track or on all tracks.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_ids` | array of item ids | yes | none | 1 to 200 entries, no duplicates |
+| `ripple` | `"none"`, `"track"`, `"all"` | no | `"none"` | the argument has the phase of the command (P); all three values are accepted wherever the command is registered |
+
+**Preconditions.**
+
+1. Arguments match the schema (`E_VALIDATION`).
+2. Every id exists (`E_NOT_FOUND`; `details.id` is the first missing id in the given order, `details.missing` lists all).
+3. `ripple: "all"`: the deleted items together cover one contiguous range of frames, that is, their intervals, sorted by `start`, leave no uncovered frame between the lowest start and the highest end (`E_INVALID_STATE`, `details.gap` is the first uncovered range).
+4. After the shifts no two items overlap (`E_OVERLAP`; possible only with `"all"`, when an item that is not shifted straddles the range).
+
+**Postconditions.**
+
+1. All listed items are removed.
+2. `ripple: "track"`: for every item that stays, on a track that lost items, `start` decreases by the sum of the durations of the deleted items of that track whose end is at or before this item's `start`. Gaps are kept.
+3. `ripple: "all"`: let `[a, b)` be the covered range; every remaining item on every track with `start >= b` moves earlier by `b - a`.
+4. `diff`: `item.removed` for every deleted item and `item.updated` (`start`) for every shifted one, sorted by id.
+5. `effective` has `deleted` (ids sorted), `shifted` (`[{"id", "from", "to"}]` sorted by id) and `freed` (frames per track as an object, for `"track"`; one number for `"all"`).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | empty or over-long list, duplicates, bad `ripple` | `args.item_ids must have 1 to 200 entries, got 0.` | `Send at least one item id.` |
+| `E_NOT_FOUND` | an id does not exist | `Item itm_zzzzzzzzzz does not exist.` | `Use the ids of items listed by project_get.` |
+| `E_INVALID_STATE` | `"all"` over a non-contiguous range | `Deleted items cover frames 0-59 and 90-119; frames 60-89 are not covered.` | `Add the item covering frames 60-89 to item_ids, or use ripple "track".` |
+| `E_OVERLAP` | a shift creates an overlap | `Item itm_p7q8r9s0t1 would occupy frames 40-59 on track trk_m1n2p3q4r5, where item itm_c3d4e5f6g7 already is (frames 20-69).` | `Use ripple "track", or delete the straddling item too.` |
+
+**Inverse.** `put {collection: "items", object}` for each deleted item (sorted by id), then `patch {collection: "items", id, set: {start: <old>}}` for each shifted item, in the order of mutation (R5). Undo applies the primitives to a working copy without validating in between and validates once at the end (A.6).
+
+**Idempotency.** Error: the second application returns `E_NOT_FOUND`.
+
+**Example.** One visual track `trk_f6g7h8j9k0` with text items `itm_a1b2c3d4e5` (start 0, duration 60), `itm_f6g7h8j9k0` (start 60, duration 30) and `itm_p7q8r9s0t1` (start 100, duration 20).
+
+```json
+{"op": "item.delete", "args": {"item_ids": ["itm_a1b2c3d4e5"], "ripple": "track"}}
+```
+
+```json
+[
+  {"kind": "item.removed", "id": "itm_a1b2c3d4e5", "object": {"id": "itm_a1b2c3d4e5", "type": "text", "track": "trk_f6g7h8j9k0", "start": 0, "duration": 60, "text": "One"}},
+  {"kind": "item.updated", "id": "itm_f6g7h8j9k0", "changes": {"start": [60, 0]}},
+  {"kind": "item.updated", "id": "itm_p7q8r9s0t1", "changes": {"start": [100, 40]}}
+]
+```
+
+**Golden cases.**
+
+- `ok_one_item_ripple_none`
+- `ok_many_items_ripple_none`
+- `ok_200_items`
+- `ok_ripple_track_one_item`
+- `ok_ripple_track_two_items_between_shift_differs`
+- `ok_ripple_track_two_tracks_independent`
+- `ok_ripple_all_one_track_range`
+- `ok_ripple_all_range_covered_by_items_on_two_tracks`
+- `ok_ripple_track_keeps_gaps`
+- `err_validation_empty_list`
+- `err_validation_201_ids`
+- `err_validation_duplicate_ids`
+- `err_not_found_first_missing_reported`
+- `err_invalid_state_ripple_all_not_contiguous`
+- `err_overlap_ripple_all_straddling_item`
+
+### C.15 `item.duplicate` (phase A)
+
+Copies an item to another position, optionally on another track.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | the source |
+| `start` | time | yes | none | absolute start of the copy |
+| `track_id` | track id | no | the source's track | must accept the item type |
+| `new_id` | item id | no | generated | R6 |
+
+**Preconditions.**
+
+1. Arguments match the schema and `start` parses (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The item and `track_id` exist (`E_NOT_FOUND`).
+3. The target track accepts the item type (`E_TYPE_MISMATCH`).
+4. `new_id` is not used (`E_ID_EXISTS`).
+5. The document has fewer than 500 items (`E_LIMIT`), and a caption copy keeps the word total at or below 5,000 (`E_LIMIT`).
+6. The copy ends at or before 108,000 (`E_INVALID_TIME`) and overlaps no item of the target track, the source included (`E_OVERLAP`, R8).
+
+**Postconditions.**
+
+1. A new item is a copy of the source with the new id, `start` and `track`. Every other field is copied, including `keyframes`, `words`, `linked_item` and `name`. `slot` is not copied.
+2. The source is not changed.
+3. `diff` has one `item.added`. `effective` has `new_id`, `start` (the A.4 triple) and `track_id`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | missing `start`, bad id form | `args.start is required.` | `Send for example "start": "3s".` |
+| `E_INVALID_TIME` | malformed time, or the copy ends after 108,000 | `The copy of itm_m1n2p3q4r5 would end at frame 108030; the limit is 108000.` | `Use a start of at most "107940f".` |
+| `E_NOT_FOUND` | unknown item or track | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | track does not accept the type | `Item itm_m1n2p3q4r5 is a text item; track trk_m1n2p3q4r5 is an audio track.` | `Use a visual track.` |
+| `E_ID_EXISTS` | `new_id` used | `Item id itm_s6t7v8w9x0 already exists.` | `Omit new_id or use an unused id.` |
+| `E_LIMIT` | 500 items | `The document already has 500 items; the limit is 500.` | `Delete unused items first.` |
+| `E_OVERLAP` | the copy overlaps | `Item itm_s6t7v8w9x0 would occupy frames 30-89 on track trk_f6g7h8j9k0, where item itm_m1n2p3q4r5 already is (frames 0-59).` | `Use start "60f" (2.000s), the next free position on that track, or another track.` |
+
+**Inverse.** `remove {collection: "items", id: <new id>}`.
+
+**Idempotency.** Not idempotent: a second application with the same arguments and no `new_id` overlaps the first copy (`E_OVERLAP`); with the same `new_id` it returns `E_ID_EXISTS`.
+
+**Example.** 30 fps project (so `"3s"` is frame 90). Text item `itm_m1n2p3q4r5` on `trk_f6g7h8j9k0`, `start` 0, `duration` 60, `text` "Hello", marked as slot `title`.
+
+```json
+{"op": "item.duplicate", "args": {"item_id": "itm_m1n2p3q4r5", "start": "3s", "new_id": "itm_s6t7v8w9x0"}}
+```
+
+```json
+[{"kind": "item.added", "id": "itm_s6t7v8w9x0", "object": {"id": "itm_s6t7v8w9x0", "type": "text", "track": "trk_f6g7h8j9k0", "start": 90, "duration": 60, "text": "Hello"}}]
+```
+
+**Golden cases.**
+
+- `ok_same_track`
+- `ok_other_track`
+- `ok_slot_not_copied`
+- `ok_keyframes_copied`
+- `ok_caption_words_copied`
+- `ok_copy_touching_source`
+- `ok_copy_ending_at_108000`
+- `ok_new_id_supplied`
+- `err_validation_missing_start`
+- `err_invalid_time_end_past_108000`
+- `err_not_found_item`
+- `err_not_found_track`
+- `err_type_mismatch_track_kind`
+- `err_id_exists`
+- `err_limit_500_items`
+- `err_overlap_with_source`
+- `err_overlap_with_other_item`
+
+### C.16 `item.rename` (phase A)
+
+Sets the label of an item.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | |
+| `name` | string | yes | none | 0 to 120 characters; `""` clears the label |
+
+**Preconditions.**
+
+1. Arguments match the schema (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+
+**Postconditions.**
+
+1. `name` is set; `""` removes the field.
+2. `diff` has one `item.updated` with `name`; empty when unchanged. `effective` is `{"name": "<name>"}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | name over 120 characters | `args.name must have at most 120 characters, got 121.` | `Shorten the label.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+
+**Inverse.** `patch {collection: "items", id, set: {name: <old>}}` or `unset: ["name"]`.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5` without a name.
+
+```json
+{"op": "item.rename", "args": {"item_id": "itm_m1n2p3q4r5", "name": "Intro shot"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"name": [null, "Intro shot"]}}]
+```
+
+**Golden cases.**
+
+- `ok_set_name`
+- `ok_clear_name`
+- `ok_name_120_chars`
+- `ok_same_name_noop`
+- `err_validation_121_chars`
+- `err_not_found`
+
+### C.17 `item.set_transform` (phase A)
+
+Sets position, scale, rotation or opacity of a visual item.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a visual item |
+| `x`, `y` | number | no | unchanged | finite; position of the item's centre in pixels |
+| `scale` | number | no | unchanged | greater than 0, at most 20 |
+| `rotation` | number | no | unchanged | finite, degrees clockwise |
+| `opacity` | number | no | unchanged | 0 to 1 |
+
+At least one of `x`, `y`, `scale`, `rotation`, `opacity` is required.
+
+**Preconditions.**
+
+1. At least one property is present and valid (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is `clip`, `text`, `caption` or `shape` (`E_TYPE_MISMATCH`).
+4. None of the given properties has keyframes (`E_INVALID_STATE`, `details.properties` lists them).
+
+**Postconditions.**
+
+1. Each given property is set to its value rounded to 3 decimals. `x` and `y` are always stored once set. `scale` 1, `rotation` 0 and `opacity` 1 remove the field (they are the defaults).
+2. `diff` has one `item.updated`; empty when nothing changes. `effective` has the stored values.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | nothing to set, or a value out of range | `args.opacity must be between 0 and 1, got 1.5.` | `Use opacity 1.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | audio item | `Item itm_s6t7v8w9x0 is an audio item and has no transform.` | `Use item.set_audio for audio items.` |
+| `E_INVALID_STATE` | a property has keyframes | `Property scale of itm_m1n2p3q4r5 has 2 keyframes, which define its value.` | `Use keyframe.set to change a keyframe, or keyframe.clear to remove them first.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old values>, unset: <fields that were absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** Text item `itm_s6t7v8w9x0` with default transform.
+
+```json
+{"op": "item.set_transform", "args": {"item_id": "itm_s6t7v8w9x0", "x": 540, "scale": 1.5}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"x": [null, 540], "scale": [null, 1.5]}}]
+```
+
+**Golden cases.**
+
+- `ok_set_x_y`
+- `ok_set_scale`
+- `ok_set_rotation_negative`
+- `ok_set_opacity_0_and_1`
+- `ok_scale_1_removes_field`
+- `ok_value_rounded_to_3_decimals`
+- `ok_caption_item`
+- `ok_shape_item`
+- `ok_same_values_noop`
+- `err_validation_no_property`
+- `err_validation_scale_0`
+- `err_validation_scale_20_001`
+- `err_validation_opacity_above_1`
+- `err_not_found`
+- `err_type_mismatch_audio_item`
+- `err_invalid_state_property_has_keyframes`
+
+### C.18 `item.set_transition` (phase A)
+
+Sets or removes the transition on one edge of a visual item.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a visual item |
+| `edge` | `"in"` or `"out"` | yes | none | |
+| `kind` | `"fade"`, `"slide_left"`, `"slide_right"`, `"slide_up"`, `"slide_down"` or `null` | yes | none | `null` removes the transition |
+| `duration` | time, as a length | no | `"0.5s"` | at least 1 frame; rejected with `kind: null` (`E_VALIDATION`). The default applies whenever it is omitted, even when a transition already exists |
+
+**Preconditions.**
+
+1. Arguments match the schema; `duration` is not combined with `kind: null` (`E_VALIDATION`); `duration` parses and is at least 1 frame (`E_INVALID_TIME`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is `clip`, `text`, `caption` or `shape` (`E_TYPE_MISMATCH`).
+4. `transition_in.duration + transition_out.duration <= duration` after the change (R14, `E_INVALID_STATE`).
+
+**Postconditions.**
+
+1. `transition_in` or `transition_out` is `{kind, duration}`, or removed when `kind` is `null`. The other edge is untouched.
+2. `diff` has one `item.updated`; empty when nothing changes (including removing a transition that does not exist). `effective` has `edge`, `kind` and, when set, `duration` as the A.4 triple.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad `kind` or `edge`, or `duration` with `kind: null` | `args.kind "wipe" is not a transition kind.` | `Use fade, slide_left, slide_right, slide_up, slide_down or null.` |
+| `E_INVALID_TIME` | malformed or zero `duration` | `args.duration "0s" is 0 frames; a transition lasts at least 1 frame.` | `Use "0.5s" or "15f".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | audio item | `Item itm_s6t7v8w9x0 is an audio item; transitions apply to visual items.` | `Use item.set_audio fade_in and fade_out instead.` |
+| `E_INVALID_STATE` | the two transitions would not fit | `transition_in 60 frames plus transition_out 100 frames exceeds duration 150 of itm_m1n2p3q4r5.` | `Use a duration of at most "90f" (3.000s) or shorten transition_out first.` |
+
+**Inverse.** `patch {collection: "items", id, set: {transition_<edge>: <old>}}` or `unset` when there was none.
+
+**Idempotency.** Same result.
+
+**Example.** 30 fps; clip `itm_m1n2p3q4r5` with `duration` 150 and no transitions.
+
+```json
+{"op": "item.set_transition", "args": {"item_id": "itm_m1n2p3q4r5", "edge": "in", "kind": "fade"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"transition_in": [null, {"kind": "fade", "duration": 15}]}}]
+```
+
+`effective.duration` is `{"frame": 15, "seconds": 0.5, "requested": "0.5s"}`.
+
+**Golden cases.**
+
+- `ok_set_in_default_duration`
+- `ok_set_out_explicit_duration`
+- `ok_replace_existing_kind`
+- `ok_remove_existing`
+- `ok_remove_absent_noop`
+- `ok_each_kind`
+- `ok_duration_1_frame`
+- `ok_sum_equals_item_duration`
+- `ok_text_caption_shape_items`
+- `err_validation_unknown_kind`
+- `err_validation_duration_with_null_kind`
+- `err_invalid_time_zero_duration`
+- `err_not_found`
+- `err_type_mismatch_audio_item`
+- `err_invalid_state_sum_exceeds_duration`
+
+### C.19 `item.set_audio` (phase A)
+
+Sets volume, fades or the mute flag of a clip or audio item.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` or `audio` item |
+| `volume` | number | no | unchanged | 0 to 4 |
+| `fade_in` | time, as a length (may be 0) | no | unchanged | `"0s"` removes the fade |
+| `fade_out` | time, as a length (may be 0) | no | unchanged | |
+| `audio_muted` | boolean | no | unchanged | `clip` items only |
+
+At least one of the four is required.
+
+**Preconditions.**
+
+1. At least one argument is present and valid (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `clip` or `audio` item, and `audio_muted` is only given for a `clip` (`E_TYPE_MISMATCH`).
+4. When `volume` is given, `volume` has no keyframes (`E_INVALID_STATE`, hint to use `keyframe.set` or `keyframe.clear`). The check does not apply when only fades or `audio_muted` are given.
+5. `fade_in + fade_out <= duration` after the change (R14, `E_INVALID_STATE`).
+
+**Postconditions.**
+
+1. Given fields are set; `volume` 1, fades of 0 and `audio_muted` false remove the field.
+2. `diff` has one `item.updated`; empty when nothing changes. `effective` has the stored `volume`, `audio_muted` and each fade as an A.4 triple.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | nothing to set, or `volume` out of range | `args.volume must be between 0 and 4, got 5.` | `Use volume 4 for the loudest setting.` |
+| `E_INVALID_TIME` | malformed fade | `args.fade_in "2" has no unit.` | `Use "2s", "60f" or "00:00:02.000".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | text, shape or caption item; or `audio_muted` on an `audio` item | `Item itm_s6t7v8w9x0 is a text item and has no audio.` | `Use item.set_transform for visual properties.` |
+| `E_INVALID_STATE` | volume has keyframes; or the fades do not fit | `fade_in 100 frames plus fade_out 60 frames exceeds duration 150 of itm_m1n2p3q4r5.` | `Use fade_in of at most "90f" (3.000s) or shorten fade_out first.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old values>, unset: <fields that were absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** 30 fps; clip `itm_m1n2p3q4r5`, `duration` 150, default audio.
+
+```json
+{"op": "item.set_audio", "args": {"item_id": "itm_m1n2p3q4r5", "volume": 0.8, "fade_in": "1s", "fade_out": "0.5s"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"volume": [null, 0.8], "fade_in": [null, 30], "fade_out": [null, 15]}}]
+```
+
+**Golden cases.**
+
+- `ok_volume_only`
+- `ok_volume_0_and_4`
+- `ok_fades`
+- `ok_fade_0_removes_field`
+- `ok_fades_sum_equals_duration`
+- `ok_audio_muted_on_clip`
+- `ok_audio_item`
+- `ok_same_values_noop`
+- `ok_fades_only_when_volume_has_keyframes`
+- `err_validation_no_argument`
+- `err_validation_volume_4_001`
+- `err_invalid_time_no_unit`
+- `err_not_found`
+- `err_type_mismatch_text_item`
+- `err_type_mismatch_audio_muted_on_audio_item`
+- `err_invalid_state_volume_has_keyframes`
+- `err_invalid_state_fades_exceed_duration`
+
+### C.20 `item.crossfade` (phase A)
+
+Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `from_item_id` | item id | yes | none | the item that leaves |
+| `to_item_id` | item id | yes | none | the item that arrives |
+| `duration` | time, as a length | yes | none | at least 1 frame |
+
+**Preconditions.**
+
+1. Arguments match the schema and `duration` parses to at least 1 frame (`E_VALIDATION`, `E_INVALID_TIME`).
+2. Both items exist (`E_NOT_FOUND`).
+3. Both are visual items (`E_TYPE_MISMATCH`).
+4. They are on different tracks (`E_INVALID_STATE`).
+5. `from.start < to.start`, and the overlap `min(from.end, to.end) - to.start` is at least `duration`, where `end` is `start + duration` (`E_INVALID_STATE`, `details.overlap`). An item that starts at or before the start of `from`, or a `to` that ends inside the fade, fails here.
+6. After the change both items satisfy R14: for `from`, `duration + transition_in.duration <= from.duration`, and for a `clip` also `fade_in + duration <= from.duration`; for `to`, `duration + transition_out.duration <= to.duration`, and for a `clip` also `duration + fade_out <= to.duration` (`E_INVALID_STATE`).
+
+**Postconditions.**
+
+1. `from.transition_out = {fade, duration}` and `to.transition_in = {fade, duration}`, replacing any existing ones.
+2. For a `clip`, `from.fade_out = duration` and `to.fade_in = duration`. Other visual types have no audio fades.
+3. Positions, tracks and every other field are unchanged. The fade covers the last `duration` frames of `from` and the first `duration` frames of `to`; the two coincide exactly when the overlap equals `duration`.
+4. `diff` has one `item.updated` per item. `effective` has `duration` (the A.4 triple) and `overlap` (frames).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | missing argument | `args.duration is required.` | `Send for example "duration": "1s".` |
+| `E_INVALID_TIME` | malformed or zero `duration` | `args.duration "0f" is 0 frames.` | `Use "1s" or "30f".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the ids of items listed by project_get.` |
+| `E_TYPE_MISMATCH` | an audio item | `Item itm_s6t7v8w9x0 is an audio item; crossfade needs visual items.` | `Use item.set_audio fades for audio items.` |
+| `E_INVALID_STATE` | same track, `to` not starting after `from`, too little overlap, or no room | `Items overlap by 20 frames (120-139); a 30-frame crossfade needs 30.` | `Move itm_s6t7v8w9x0 to start at "110f" or earlier with item.move (from ends at 140), or use duration "20f".` |
+
+**Inverse.** One `patch {collection: "items", id, set: <old values>, unset: <fields that were absent>}` per item, `from` first.
+
+**Idempotency.** Same result.
+
+**Example.** 30 fps; clip `itm_m1n2p3q4r5` on `trk_f6g7h8j9k0` (start 0, duration 150) and clip `itm_s6t7v8w9x0` on `trk_m1n2p3q4r5` (start 120, duration 150); overlap is 30 frames.
+
+```json
+{"op": "item.crossfade", "args": {"from_item_id": "itm_m1n2p3q4r5", "to_item_id": "itm_s6t7v8w9x0", "duration": "1s"}}
+```
+
+```json
+[
+  {"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"transition_out": [null, {"kind": "fade", "duration": 30}], "fade_out": [null, 30]}},
+  {"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"transition_in": [null, {"kind": "fade", "duration": 30}], "fade_in": [null, 30]}}
+]
+```
+
+**Golden cases.**
+
+- `ok_overlap_equals_duration`
+- `ok_overlap_larger_than_duration`
+- `ok_replaces_existing_transitions_and_fades`
+- `ok_text_items_no_audio_fades`
+- `ok_to_shorter_than_from_overlap_equals_to_duration`
+- `ok_same_result_twice_noop`
+- `err_validation_missing_duration`
+- `err_invalid_time_zero_duration`
+- `err_not_found_from`
+- `err_not_found_to`
+- `err_type_mismatch_audio_item`
+- `err_invalid_state_same_track`
+- `err_invalid_state_overlap_too_small`
+- `err_invalid_state_from_starts_after_to_starts`
+- `err_invalid_state_from_and_to_start_together`
+- `err_invalid_state_to_ends_inside_the_fade`
+- `err_invalid_state_to_ends_before_from_starts`
+- `err_invalid_state_existing_transition_leaves_no_room`
+
+### C.21 `timeline.close_gap` (phase A)
+
+Closes the empty range that contains a given frame on a track.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | |
+| `at` | time | yes | none | absolute frame inside the gap |
+| `ripple` | `"track"` or `"all"` | no | `"track"` | `"all"` moves later items of every track |
+
+**Preconditions.**
+
+1. Arguments match the schema and `at` parses (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The track exists (`E_NOT_FOUND`).
+3. No item of the track contains frame `at`, and at least one item starts after `at` (`E_INVALID_STATE`).
+4. After the moves no two items overlap (`E_OVERLAP`; possible only with `"all"`).
+
+**Postconditions.**
+
+1. The gap is `[g0, g1)`: `g0` is the end of the last item that ends at or before `at` (0 when there is none) and `g1` is the start of the first item that starts after `at`. Its length is `L = g1 - g0`.
+2. `"track"`: every item of the track with `start >= g1` moves earlier by `L`. `"all"`: every item of every track with `start >= g1` moves earlier by `L`.
+3. `diff`: one `item.updated` (`start`) per moved item, sorted by id. `effective` has `at` (the A.4 triple), `gap` (`{"start", "end", "length"}`) and `moved` (`[{"id", "from", "to"}]`). In the example, `effective.at` is `{"frame": 70, "seconds": 2.333, "requested": "70f"}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad `ripple` or missing argument | `args.ripple must be "track" or "all", got "none".` | `Use "track" or "all".` |
+| `E_INVALID_TIME` | malformed `at` | `args.at "70" has no unit.` | `Use "70f" or "2.333s".` |
+| `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
+| `E_INVALID_STATE` | `at` inside an item, or no item after it | `Frame 40 is inside item itm_m1n2p3q4r5 (frames 0-59); there is no gap there.` | `Use an at between "60f" and "99f", the gap after that item.` |
+| `E_OVERLAP` | a shift on another track overlaps | `Item itm_p7q8r9s0t1 would occupy frames 60-89 on track trk_m1n2p3q4r5, where item itm_c3d4e5f6g7 already is (frames 30-79).` | `Use ripple "track" to move only this track.` |
+
+**Inverse.** `patch {collection: "items", id, set: {start: <old>}}` per moved item, in the order of mutation (R5). Undo applies them to a working copy and validates once at the end (A.6).
+
+**Idempotency.** Error in practice: after closing, frame `at` is inside the item that moved there (`E_INVALID_STATE`), unless it now falls in another gap, which is then closed.
+
+**Example.** One track `trk_f6g7h8j9k0`: items `itm_a1b2c3d4e5` (start 0, duration 60), `itm_f6g7h8j9k0` (start 100, duration 30), `itm_p7q8r9s0t1` (start 150, duration 20). The gap is `[60, 100)`, `L = 40`.
+
+```json
+{"op": "timeline.close_gap", "args": {"track_id": "trk_f6g7h8j9k0", "at": "70f"}}
+```
+
+```json
+[
+  {"kind": "item.updated", "id": "itm_f6g7h8j9k0", "changes": {"start": [100, 60]}},
+  {"kind": "item.updated", "id": "itm_p7q8r9s0t1", "changes": {"start": [150, 110]}}
+]
+```
+
+**Golden cases.**
+
+- `ok_gap_between_two_items`
+- `ok_gap_at_start_of_track`
+- `ok_gap_first_frame`
+- `ok_gap_last_frame`
+- `ok_ripple_all_moves_other_tracks`
+- `ok_ripple_track_leaves_other_tracks`
+- `err_validation_bad_ripple`
+- `err_invalid_time_no_unit`
+- `err_not_found_track`
+- `err_invalid_state_at_inside_item`
+- `err_invalid_state_at_after_last_item`
+- `err_invalid_state_item_touching_no_gap`
+- `err_overlap_ripple_all_other_track`
+
+### C.22 `clip.add` (phase P)
+
+Places a video or image asset on a visual track.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | a visual track |
+| `asset_id` | asset id | yes | none | an asset of kind `video` or `image`, or the reserved literal `ast_placeholder` (R6): the item is created with the placeholder, the asset checks of preconditions 2, 3 and 5 are skipped, and `duration` is then required (`E_VALIDATION`) |
+| `start` | time | yes | none | absolute |
+| `source_in` | time | no | `"0s"` | offset into the asset; for an image it must be omitted or 0 (`E_VALIDATION`) |
+| `duration` | time, as a length | no | rest of the asset from `source_in`; `"5s"` for an image | at least 1 frame |
+| `fit` | `"cover"`, `"contain"`, `"none"` | no | `"cover"` | |
+| `id` | item id | no | generated | R6 |
+
+**Preconditions.**
+
+1. Arguments match the schema and times parse (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The track and the asset exist (`E_NOT_FOUND`).
+3. The track is visual and the asset is `video` or `image` (`E_TYPE_MISMATCH`).
+4. `id` is not used (`E_ID_EXISTS`); the document has fewer than 500 items (`E_LIMIT`).
+5. For a video: `source_in < A` and the duration obeys R9 with speed 1 (`E_OUT_OF_SOURCE`).
+6. The item ends at or before 108,000 (`E_INVALID_TIME`) and does not overlap an item of the track (`E_OVERLAP`, R8).
+
+**Postconditions.**
+
+1. A `clip` item is added: `start`, `track`, `asset`, `duration`, plus `source_in` when above 0 and `fit` when not `"cover"`. Speed is 1 and every other field is absent (default).
+2. The default `duration` for a video is `A - source_in`; for an image it is the frames of `"5s"`. A default that would end after frame 108,000 is clamped to `108000 - start` (only an explicit duration is an error).
+3. `diff` has one `item.added`. `effective` has `id`, `start`, `source_in` and `duration` (A.4 triples; `requested` is `null` for a default).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad argument, or `source_in` on an image | `args.source_in must be omitted for image asset ast_9m8n7p6q5r.` | `Remove source_in; images have no source position.` |
+| `E_INVALID_TIME` | malformed time, zero duration, item ending after 108,000, or `start` at or after 108,000 | `The clip would end at frame 108100; the limit is 108000.` | `Use a duration of at most "900f" from this start.` |
+| `E_NOT_FOUND` | unknown track or asset | `Asset ast_zzzzzzzzzz does not exist.` | `Use the id of an asset listed by project_get.` |
+| `E_TYPE_MISMATCH` | audio track, or an audio asset | `Asset ast_4h6j8k2m3n is an audio asset; clip.add places video or images.` | `Use audio.add on an audio track.` |
+| `E_ID_EXISTS` | `id` used | `Item id itm_m1n2p3q4r5 already exists.` | `Omit id or use an unused id.` |
+| `E_LIMIT` | 500 items | `The document already has 500 items; the limit is 500.` | `Delete unused items first.` |
+| `E_OUT_OF_SOURCE` | the range leaves the asset | `Clip of 900 frames from source frame 60 would read to frame 960; asset ast_3c5v8n2w6d has 900 frames.` | `Use duration "840f" (28.000s), the most this asset allows from source_in 60.` |
+| `E_OVERLAP` | overlap on the track | `Item itm_m1n2p3q4r5 would occupy frames 100-249 on track trk_f6g7h8j9k0, where item itm_c3d4e5f6g7 already is (frames 90-179).` | `Use start "180f" (6.000s), the next free position on that track, or move to another track.` |
+
+**Inverse.** `remove {collection: "items", id: <new id>}`.
+
+**Idempotency.** With `id`: the second application returns `E_ID_EXISTS`. Without: the copy overlaps the first (`E_OVERLAP`).
+
+**Example.** 30 fps; empty track `trk_f6g7h8j9k0`; asset `ast_3c5v8n2w6d` (video, 900 frames).
+
+```json
+{"op": "clip.add", "args": {"track_id": "trk_f6g7h8j9k0", "asset_id": "ast_3c5v8n2w6d", "start": "0s", "source_in": "2s", "duration": "5s", "id": "itm_m1n2p3q4r5"}}
+```
+
+```json
+[{"kind": "item.added", "id": "itm_m1n2p3q4r5", "object": {"id": "itm_m1n2p3q4r5", "type": "clip", "track": "trk_f6g7h8j9k0", "start": 0, "duration": 150, "asset": "ast_3c5v8n2w6d", "source_in": 60}}]
+```
+
+**Golden cases.**
+
+- `ok_video_default_duration_rest_of_asset`
+- `ok_video_explicit_duration`
+- `ok_video_source_in`
+- `ok_video_ends_exactly_at_asset_end`
+- `ok_image_default_5s`
+- `ok_image_explicit_duration`
+- `ok_fit_contain`
+- `ok_fit_none`
+- `ok_start_frame_0_on_empty_track`
+- `ok_touching_neighbour`
+- `ok_ends_exactly_at_108000`
+- `ok_default_duration_clamped_to_108000`
+- `ok_supplied_id`
+- `ok_placeholder_asset_with_duration`
+- `err_validation_placeholder_asset_without_duration`
+- `err_validation_source_in_on_image`
+- `err_validation_bad_fit`
+- `err_invalid_time_malformed`
+- `err_invalid_time_zero_duration`
+- `err_invalid_time_ends_after_108000`
+- `err_not_found_track`
+- `err_not_found_asset`
+- `err_type_mismatch_audio_track`
+- `err_type_mismatch_audio_asset`
+- `err_id_exists`
+- `err_limit_500_items`
+- `err_out_of_source_one_frame_too_long`
+- `err_out_of_source_source_in_at_asset_end`
+- `err_overlap`
+
+### C.23 `audio.add` (phase A)
+
+Places an audio asset, or the audio of a video asset, on an audio track.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | an audio track |
+| `asset_id` | asset id | yes | none | kind `audio`, or kind `video` with `has_audio` true, or the reserved literal `ast_placeholder` (R6, as in C.22: the asset checks are skipped and `duration` is required) |
+| `start` | time | yes | none | absolute |
+| `source_in` | time | no | `"0s"` | offset into the asset |
+| `duration` | time, as a length | no | rest of the asset from `source_in` | at least 1 frame |
+| `id` | item id | no | generated | R6 |
+
+**Preconditions.** As C.22, with these differences: step 3 requires an audio track and an asset that is `audio` or a `video` with `has_audio` (`E_TYPE_MISMATCH`); there is no image case, so `source_in < A` always applies; there is no `fit`.
+
+1. Arguments match the schema and times parse (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The track and asset exist (`E_NOT_FOUND`).
+3. The track is audio and the asset has audio (`E_TYPE_MISMATCH`).
+4. `id` is not used (`E_ID_EXISTS`); fewer than 500 items (`E_LIMIT`).
+5. `source_in < A` and the duration obeys R9 (`E_OUT_OF_SOURCE`).
+6. The item ends at or before 108,000 (`E_INVALID_TIME`) and does not overlap (`E_OVERLAP`).
+
+**Postconditions.**
+
+1. An `audio` item is added: `start`, `track`, `asset`, `duration`, plus `source_in` when above 0. `A` for an audio asset is `floor(sample_count × fps.num / (48000 × fps.den))`. The default duration is `A - source_in`, clamped to `108000 - start`.
+2. `diff` has one `item.added`. `effective` as in C.22.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad argument | `args.asset_id "ast_" is not an asset id.` | `Use an id like "ast_4h6j8k2m3n".` |
+| `E_INVALID_TIME` | as C.22 | `The audio item would end at frame 108400; the limit is 108000.` | `Use a duration of at most "500f".` |
+| `E_NOT_FOUND` | unknown track or asset | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
+| `E_TYPE_MISMATCH` | visual track, image asset, or video without audio | `Asset ast_3c5v8n2w6d is a video without audio; audio.add needs audio.` | `Use clip.add on a visual track to show it.` |
+| `E_ID_EXISTS` | `id` used | `Item id itm_s6t7v8w9x0 already exists.` | `Omit id or use an unused id.` |
+| `E_LIMIT` | 500 items | `The document already has 500 items; the limit is 500.` | `Delete unused items first.` |
+| `E_OUT_OF_SOURCE` | the range leaves the asset | `Audio of 900 frames from source frame 30 would read to frame 930; asset ast_4h6j8k2m3n has 900 frames.` | `Use duration "870f" (29.000s).` |
+| `E_OVERLAP` | overlap on the track | `Item itm_s6t7v8w9x0 would occupy frames 30-929 on track trk_m1n2p3q4r5, where item itm_c3d4e5f6g7 already is (frames 0-99).` | `Use start "100f" (3.333s), the next free position on that track.` |
+
+**Inverse.** `remove {collection: "items", id: <new id>}`.
+
+**Idempotency.** As C.22.
+
+**Example.** 30 fps; empty audio track `trk_m1n2p3q4r5`; asset `ast_4h6j8k2m3n` (audio, 1,440,000 samples, so `A` = 900).
+
+```json
+{"op": "audio.add", "args": {"track_id": "trk_m1n2p3q4r5", "asset_id": "ast_4h6j8k2m3n", "start": "1s", "id": "itm_s6t7v8w9x0"}}
+```
+
+```json
+[{"kind": "item.added", "id": "itm_s6t7v8w9x0", "object": {"id": "itm_s6t7v8w9x0", "type": "audio", "track": "trk_m1n2p3q4r5", "start": 30, "duration": 900, "asset": "ast_4h6j8k2m3n"}}]
+```
+
+**Golden cases.**
+
+- `ok_audio_asset_default_duration`
+- `ok_audio_asset_explicit_duration_and_source_in`
+- `ok_video_with_audio_asset`
+- `ok_ends_exactly_at_asset_end`
+- `ok_supplied_id`
+- `ok_placeholder_asset_with_duration`
+- `err_validation_bad_asset_id`
+- `err_invalid_time_ends_after_108000`
+- `err_not_found_track`
+- `err_not_found_asset`
+- `err_type_mismatch_visual_track`
+- `err_type_mismatch_image_asset`
+- `err_type_mismatch_video_without_audio`
+- `err_id_exists`
+- `err_limit_500_items`
+- `err_out_of_source`
+- `err_overlap`
+
+### C.24 `clip.set_framing` (phase A)
+
+Sets how a clip's asset is fitted into the frame and how much of each side is cropped.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` |
+| `fit` | `"cover"`, `"contain"`, `"none"` | no | unchanged | |
+| `crop` | object with any of `left`, `top`, `right`, `bottom` | no | unchanged | each 0 to 1; sides not given keep their current value; the merged result needs `left + right < 1` and `top + bottom < 1` |
+
+At least one of `fit` and `crop` is required.
+
+**Preconditions.**
+
+1. At least one argument is present and valid; the merged crop obeys the sum rules (`E_VALIDATION`, `path` `args.crop`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `clip` (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. `fit` is set (`"cover"` removes the field). `crop` is the merged object holding only the sides above 0; an all-zero crop removes the field.
+2. `diff` has one `item.updated`; empty when unchanged. `effective` has `fit` and `crop` as stored.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | nothing to set, a side out of range, or sides summing to 1 or more | `args.crop: left 0.6 plus right 0.5 is 1.1; it must be below 1.` | `Use left 0.4 and right 0.5.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip | `Item itm_s6t7v8w9x0 is a text item; framing applies to clips.` | `Use item.set_transform to size other items.` |
+
+**Inverse.** `patch {collection: "items", id, set: {fit, crop: <old>}, unset: <fields that were absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5` with default framing.
+
+```json
+{"op": "clip.set_framing", "args": {"item_id": "itm_m1n2p3q4r5", "fit": "contain", "crop": {"left": 0.1, "right": 0.1}}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"fit": [null, "contain"], "crop": [null, {"left": 0.1, "right": 0.1}]}}]
+```
+
+**Golden cases.**
+
+- `ok_fit_only`
+- `ok_crop_only`
+- `ok_crop_merges_with_existing_sides`
+- `ok_crop_zero_removes_field`
+- `ok_fit_cover_removes_field`
+- `ok_crop_sides_sum_just_below_1`
+- `ok_image_clip`
+- `ok_same_values_noop`
+- `err_validation_no_argument`
+- `err_validation_side_above_1`
+- `err_validation_horizontal_sum_1`
+- `err_validation_merged_vertical_sum_1`
+- `err_not_found`
+- `err_type_mismatch_text_item`
+
+### C.25 `clip.set_speed` (phase A)
+
+Changes the speed of a clip or audio item while keeping the same source range.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` of a video asset, or an `audio` item |
+| `speed` | string or rational object | yes | none | `"<decimal>x"` with at most 3 decimals (`"1.5x"` is 3/2, `"0.5x"` is 1/2, `"0.333x"` is 333/1000), or `{"num","den"}`; stored reduced to lowest terms; from 1/4 to 4 inclusive |
+| `ripple` | `"none"` or `"track"` | no | `"none"` | `"track"` shifts later items of the track |
+
+**Preconditions.**
+
+1. Arguments match the schema; `speed` parses and is within 1/4 to 4 (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `clip` whose asset is a video, or an `audio` item (`E_TYPE_MISMATCH`).
+4. At least one frame fits in the source range at the new speed: `maxdur(source_in)` at the new speed is at least 1 (`E_OUT_OF_SOURCE`). A new duration that fails R9 only because of rounding is not an error: it is reduced (postcondition 1).
+5. Every item ends at or before 108,000 after the change (`E_INVALID_TIME`).
+6. Without ripple, a longer item does not overlap its neighbour (`E_OVERLAP`, R8).
+
+**Postconditions.**
+
+1. Let `old` and `new` be the speeds and `d` the duration. The new duration is `d' = ceil(d × old.num × new.den / (old.den × new.num))`. If `source_in + ceil(d' × new.num / new.den)` would pass `A`, `d'` becomes `maxdur(source_in)` computed at the new speed, and `effective.clamped` is `{"duration": {"from": <d'>, "to": <maxdur>}}` (it is `null` otherwise); if `maxdur(source_in)` is below 1, no frame fits and the result is `E_OUT_OF_SOURCE`.
+2. Let `r = old / new` as a rational. `transition_in.duration`, `transition_out.duration`, `fade_in`, `fade_out` and every keyframe `t` become `round(x × r)` (halves up). Then, in order: transitions below 1 become 1; fades may become 0 and are then removed; keyframe `t` above `d'` becomes `d'`; keyframes sharing a `t` keep the last; the fit fix of R14. Each fix-up is listed in `effective.adjusted` as in C.3.
+3. `speed` is the new value, absent when it is 1/1. `source_in` and the source range are unchanged (up to the ceiling).
+4. `ripple: "track"`: every item of the track with `start >= old end` moves by `d' - d` (earlier when the clip got shorter, later when longer). Otherwise nothing else moves.
+5. Captions whose `linked_item` is this item are not changed; `effective.linked_captions` lists their ids so the caller can run `caption.retime_from_clip`.
+6. `diff`: `item.updated` for the clip, then for every shifted item, sorted by id. `effective` has `speed` (`{num, den}`), `duration` (`{"before", "after"}`), `shift` and the lists above.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | unparsable speed, or outside 1/4 to 4 | `args.speed "5x" is above the maximum 4x.` | `Use a speed from "0.25x" to "4x".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | text, shape, caption or image clip | `Item itm_s6t7v8w9x0 is a text item and has no speed.` | `Change the duration with item.trim instead.` |
+| `E_OUT_OF_SOURCE` | not even one frame fits at the asset end | `At speed 4x the clip needs 4 source frames from frame 898; asset ast_3c5v8n2w6d has 900.` | `Use item.trim to move source_in earlier, or choose a lower speed.` |
+| `E_INVALID_TIME` | an item would end after 108,000 | `Item itm_s6t7v8w9x0 would end at frame 108040; the limit is 108000.` | `Use a higher speed, or shorten the clip first.` |
+| `E_OVERLAP` | longer item overlaps | `Item itm_m1n2p3q4r5 would occupy frames 30-209 on track trk_f6g7h8j9k0, where item itm_s6t7v8w9x0 already is (frames 120-149).` | `Use ripple "track" to shift later items, or move itm_s6t7v8w9x0 to "210f".` |
+
+**Inverse.** `patch {collection: "items", id, set: <old values of every changed field>, unset: <fields that were absent>}` for the clip, then `patch {... set: {start: <old>}}` per shifted item, in the order of mutation (R5).
+
+**Idempotency.** Same result: the second application finds the speed already set (the new duration equals the current one).
+
+**Example.** 30 fps; asset `ast_3c5v8n2w6d` has 900 frames. Clip `itm_m1n2p3q4r5` on `trk_f6g7h8j9k0`: `start` 30, `duration` 90, `source_in` 0, speed 1, `fade_in` 10, `fade_out` 8, `transition_in` fade 15, `keyframes.scale` = `[{t:0, value:1}, {t:7, value:1.2}, {t:90, value:1}]`. Text item `itm_s6t7v8w9x0` on the same track: `start` 120. New speed `"1.5x"` with `ripple: "track"`: `r = 1/(3/2) = 2/3`.
+
+| Quantity | Before | After | Why |
+| --- | --- | --- | --- |
+| `duration` | 90 | 60 | ceil(90 × 2/3) = 60 |
+| `fade_in` | 10 | 7 | round(6.667) |
+| `fade_out` | 8 | 5 | round(5.333) |
+| `transition_in.duration` | 15 | 10 | round(10.0) |
+| keyframe `t` | 0, 7, 90 | 0, 5, 60 | round(0), round(4.667), round(60.0) |
+| text `start` | 120 | 90 | shift by 60 - 90 = -30 |
+| source range | 90 frames | ceil(60 × 3/2) = 90 | unchanged |
+
+```json
+{"op": "clip.set_speed", "args": {"item_id": "itm_m1n2p3q4r5", "speed": "1.5x", "ripple": "track"}}
+```
+
+```json
+[
+  {"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {
+    "duration": [90, 60], "speed": [null, {"num": 3, "den": 2}],
+    "fade_in": [10, 7], "fade_out": [8, 5],
+    "transition_in": [{"kind": "fade", "duration": 15}, {"kind": "fade", "duration": 10}],
+    "keyframes": [{"scale": [{"t": 0, "value": 1}, {"t": 7, "value": 1.2}, {"t": 90, "value": 1}]}, {"scale": [{"t": 0, "value": 1}, {"t": 5, "value": 1.2}, {"t": 60, "value": 1}]}]}},
+  {"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"start": [120, 90]}}
+]
+```
+
+**Golden cases.**
+
+- `ok_speed_up_string_form`
+- `ok_slow_down_string_form`
+- `ok_object_form_reduced`
+- `ok_back_to_speed_1_removes_field`
+- `ok_ripple_track_shortening`
+- `ok_ripple_track_lengthening`
+- `ok_ripple_none_leaves_gap`
+- `ok_duration_ceiling`
+- `ok_keyframes_rescaled_and_collision_reduced`
+- `ok_fade_becomes_zero_removed`
+- `ok_transition_min_1_and_fit_fix`
+- `ok_clamped_at_asset_end`
+- `ok_audio_item`
+- `ok_boundary_speed_quarter_and_4`
+- `ok_linked_captions_listed_not_changed`
+- `ok_same_speed_noop`
+- `err_validation_speed_above_4`
+- `err_validation_speed_below_quarter`
+- `err_validation_speed_without_x`
+- `err_not_found`
+- `err_type_mismatch_text_item`
+- `err_type_mismatch_image_clip`
+- `err_out_of_source_no_frame_fits`
+- `err_invalid_time_ripple_pushes_item_past_108000`
+- `err_overlap_lengthening_without_ripple`
+
+### C.26 `clip.set_color` (phase A)
+
+Sets the colour adjustments of a clip.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` |
+| `brightness` | number | no | unchanged | -1 to 1 |
+| `contrast` | number | no | unchanged | 0 to 2 |
+| `saturation` | number | no | unchanged | 0 to 2 |
+
+At least one of the three is required.
+
+**Preconditions.**
+
+1. At least one is present and in range (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `clip` (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. Given values are set, rounded to 3 decimals; values equal to the default (0, 1, 1) remove the field.
+2. `diff` has one `item.updated`; empty when unchanged. `effective` has the stored values.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | nothing to set, or out of range | `args.contrast must be between 0 and 2, got 2.5.` | `Use contrast 2 for the strongest setting.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip | `Item itm_s6t7v8w9x0 is an audio item; colour applies to clips.` | `Use a clip item.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old values>, unset: <fields that were absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5` with default colour.
+
+```json
+{"op": "clip.set_color", "args": {"item_id": "itm_m1n2p3q4r5", "brightness": 0.1, "saturation": 1.2}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"brightness": [null, 0.1], "saturation": [null, 1.2]}}]
+```
+
+**Golden cases.**
+
+- `ok_brightness_only`
+- `ok_all_three`
+- `ok_boundaries_minus1_1_0_2`
+- `ok_default_values_remove_fields`
+- `ok_rounded_to_3_decimals`
+- `ok_same_values_noop`
+- `err_validation_no_argument`
+- `err_validation_brightness_above_1`
+- `err_validation_saturation_negative`
+- `err_not_found`
+- `err_type_mismatch_audio_item`
+
+### C.27 `clip.remove_silences` (phase A)
+
+Replaces a clip by one clip per non-silent stretch of its source range.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` of a video asset with audio |
+| `min_silence` | time, as a length | no | `"0.4s"` | at least 1 frame; shorter silences are ignored |
+| `padding` | time, as a length (may be 0) | no | `"0.1s"` | speech side kept around each cut |
+| `threshold_db` | integer | no | `-35` | one of `-30`, `-35`, `-40`, `-45` (`E_VALIDATION` otherwise): the noise level below which audio counts as silence. The core only validates it; the service uses it to choose the set of ranges it puts in `resolved.silences` (SDD-011 §9.1) |
+| `ripple` | `"track"` or `"none"` | no | `"track"` | |
+| `new_ids` | array of item ids | no | generated | ids for the second, third, ... pieces, in order. If the list is shorter than needed the rest comes from `env.NewIDs`; if it is longer the extra ids are ignored and listed in `effective.unused_ids`. Duplicates inside the list are `E_VALIDATION` |
+| `resolved` | `{"silences": [{"start", "end"}]}` | filled by the service (A.9) | none | integer frames on the asset's time axis, half-open `[start, end)`, sorted, not overlapping, `start < end`; required by `Apply` (`E_VALIDATION` when missing or malformed, `path` `args.resolved.silences[i]`) |
+
+**Preconditions.**
+
+1. Arguments match the schema, `new_ids` has no duplicate, and times parse (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `clip` whose asset is a video with `has_audio` (`E_TYPE_MISMATCH`).
+4. Each used new id is unused (`E_ID_EXISTS`); the ids in `unused_ids` are not checked.
+5. At least one piece remains (`E_INVALID_STATE`: the clip is all silence).
+6. The document has room for the pieces: at most 500 items (`E_LIMIT`).
+
+**Postconditions.** Let `si = source_in`, `num/den` the speed, `S = [si, si + ceil(duration × num / den))` the visible source range, `p` and `m` the padding and minimum in frames. Lengths here are measured on the asset's time axis, whatever the speed.
+
+1. Each silence is clipped to `S`; clipped silences shorter than `m` are dropped. For each remaining `[s, e)` the removed interval is `[s', e')` with `s' = s + p` unless `s = si` (then `s' = s`) and `e' = e - p` unless `e` is the end of `S` (then `e' = e`); it counts only if `e' - s' >= 1`.
+2. The pieces are the parts of `S` outside the removed intervals, each `[a, b)`. A piece becomes an item with `source_in = a` and `duration = floor((b - a) × den / num)`; a piece whose duration would be 0 is dropped. With no removed interval the document is unchanged (R2) and `effective.removed` is 0.
+3. Placement. `ripple: "track"`: pieces are back to back from the original `start`; items of the track with `start >=` the original end move earlier by `removed`. `ripple: "none"`: piece start is `start + ceil((a - si) × den / num)`, and nothing else moves; pieces never overlap each other or other items.
+4. Fields. The first piece keeps the id, `transition_in`, `fade_in` and `slot`; the last keeps `transition_out` and `fade_out` (a single piece keeps both). Pieces in between have none of them. All other fields are copied. Each kept transition or fade gets the fit fix of R14. Keyframes of each piece are the original ones after R11 with `d = ceil((a - si) × den / num)`, then R12 with the piece's duration.
+5. `removed` is `original duration - sum of piece durations`. Captions linked to the clip are not changed.
+6. `diff`: `item.updated` for the first piece, `item.added` for the others and `item.updated` for shifted items, all in one list sorted by id (R19), not grouped by kind. `effective` has `min_silence` and `padding` (A.4 triples; `requested` is `null` for a default), `threshold_db` (the value used), `removed` (`{"frames", "seconds"}`), `pieces` (`[{"id", "start", "duration", "source_in"}]`), `new_ids` (the identifiers used for the added pieces, in order) and `unused_ids` (the extra ids of the argument). The service stores the operation with `new_ids` equal to `effective.new_ids` (A.3, rule 4).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `resolved` missing or malformed, bad `ripple`, duplicate ids in `new_ids` | `args.resolved.silences[1] ends at 150 before it starts at 160.` | `Send silences as sorted, non-overlapping ranges.` |
+| `E_INVALID_TIME` | malformed length, or `min_silence` of 0 frames | `args.min_silence "0s" is 0 frames.` | `Use "0.4s" or "12f".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip, or the asset has no audio | `Asset ast_9m8n7p6q5r has no audio; there is nothing to analyse.` | `Choose a clip whose asset has audio.` |
+| `E_ID_EXISTS` | a new id is used | `Item id itm_s6t7v8w9x0 already exists.` | `Omit new_ids to generate ids.` |
+| `E_INVALID_STATE` | no speech left | `Clip itm_m1n2p3q4r5 is silent over its whole source range 60-359.` | `Delete the clip with item.delete, or use a larger min_silence.` |
+| `E_LIMIT` | too many items | `Splitting itm_m1n2p3q4r5 into 40 pieces would make 520 items; the limit is 500.` | `Use a larger min_silence to get fewer pieces.` |
+
+**Inverse.** `patch {collection: "items", id: <first piece id>, set: <old values of every changed field>, unset: <fields that were absent>}`, `remove` per added piece in order, then `patch {... set: {start: <old>}}` per shifted item.
+
+**Idempotency.** Same result with default values when the analysis is run again on the result: what remains of a silence beside speech is the padding, shorter than `min_silence`. With the same `resolved` and a `padding` of at least `min_silence` more can be removed.
+
+**Example.** 30 fps; asset `ast_3c5v8n2w6d` (900 frames, has audio). Clip `itm_m1n2p3q4r5` on `trk_f6g7h8j9k0`: `start` 30, `duration` 300, `source_in` 60, speed 1, `fade_in` 6, `fade_out` 9; so `S = [60, 360)`. Text item `itm_v2w3x4y5z6` on the same track: `start` 330, `duration` 40. Defaults: `m` = 12 frames, `p` = 3 frames. Resolved silences: `[100,160)`, `[200,215)`, `[250,256)`, `[340,360)`.
+
+| Silence | Length | Decision | Removed interval |
+| --- | --- | --- | --- |
+| `[100,160)` | 60 | kept, interior | `[103,157)` (54 frames) |
+| `[200,215)` | 15 | kept, interior | `[203,212)` (9 frames) |
+| `[250,256)` | 6 | below 12, ignored | none |
+| `[340,360)` | 20 | touches the end of `S` | `[343,360)` (17 frames) |
+
+Pieces: `[60,103)` 43 frames, `[157,203)` 46 frames, `[212,343)` 131 frames. Removed: 54 + 9 + 17 = 80 = 300 - 220. With ripple the pieces start at 30, 73 and 119 (ending at 250), and the text item moves from 330 to 250. Without ripple they would start at 30, 127 and 182.
+
+```json
+{"op": "clip.remove_silences", "args": {"item_id": "itm_m1n2p3q4r5", "new_ids": ["itm_s6t7v8w9x0", "itm_c3d4e5f6g7"],
+  "resolved": {"silences": [{"start": 100, "end": 160}, {"start": 200, "end": 215}, {"start": 250, "end": 256}, {"start": 340, "end": 360}]}}}
+```
+
+```json
+[
+  {"kind": "item.added", "id": "itm_c3d4e5f6g7", "object": {"id": "itm_c3d4e5f6g7", "type": "clip", "track": "trk_f6g7h8j9k0", "start": 119, "duration": 131, "asset": "ast_3c5v8n2w6d", "source_in": 212, "fade_out": 9}},
+  {"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"duration": [300, 43], "fade_out": [9, null]}},
+  {"kind": "item.added", "id": "itm_s6t7v8w9x0", "object": {"id": "itm_s6t7v8w9x0", "type": "clip", "track": "trk_f6g7h8j9k0", "start": 73, "duration": 46, "asset": "ast_3c5v8n2w6d", "source_in": 157}},
+  {"kind": "item.updated", "id": "itm_v2w3x4y5z6", "changes": {"start": [330, 250]}}
+]
+```
+
+`effective.removed` is `{"frames": 80, "seconds": 2.667}`, `effective.min_silence` is `{"frame": 12, "seconds": 0.4, "requested": null}`, `effective.padding` is `{"frame": 3, "seconds": 0.1, "requested": null}`, `effective.new_ids` is `["itm_s6t7v8w9x0", "itm_c3d4e5f6g7"]` and `effective.unused_ids` is `[]`.
+
+**Golden cases.**
+
+- `ok_three_pieces_ripple_track`
+- `ok_three_pieces_ripple_none`
+- `ok_short_silence_ignored`
+- `ok_silence_at_start_edge_no_padding_on_outer_side`
+- `ok_silence_at_end_edge_no_padding_on_outer_side`
+- `ok_padding_0`
+- `ok_padding_larger_than_half_silence_removes_nothing`
+- `ok_min_silence_custom`
+- `ok_speed_3_2_piece_durations_floor`
+- `ok_single_piece_keeps_both_fades_and_transitions`
+- `ok_keyframes_divided_among_pieces`
+- `ok_slot_stays_on_first_piece`
+- `ok_new_ids_partial_rest_generated`
+- `ok_new_ids_extra_ignored_and_reported`
+- `ok_no_silence_noop`
+- `err_validation_resolved_missing`
+- `err_validation_silences_overlap`
+- `err_validation_new_ids_duplicate`
+- `err_invalid_time_min_silence_zero`
+- `err_not_found`
+- `err_type_mismatch_not_a_clip`
+- `err_type_mismatch_asset_without_audio`
+- `err_id_exists`
+- `err_invalid_state_all_silence`
+- `err_limit_over_500_items`
+
+### C.28 `text.add` (phase P)
+
+Adds a text item to a visual track.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | a visual track |
+| `start` | time | yes | none | absolute |
+| `duration` | time, as a length | yes | none | at least 1 frame |
+| `text` | string | yes | none | 1 to 2,000 characters (Unicode code points); line breaks allowed |
+| `style` | partial TextStyle | no | none | R15; no `null` values |
+| `x`, `y` | number | no | frame centre | finite |
+| `id` | item id | no | generated | R6 |
+
+**Preconditions.**
+
+1. Arguments match the schema and R15, times parse (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The track exists (`E_NOT_FOUND`).
+3. The track is visual (`E_TYPE_MISMATCH`).
+4. `id` is not used (`E_ID_EXISTS`); fewer than 500 items (`E_LIMIT`).
+5. The font family and weight of `style` exist (`E_FONT_UNKNOWN`).
+6. The item ends at or before 108,000 (`E_INVALID_TIME`) and does not overlap (`E_OVERLAP`, R8).
+
+**Postconditions.**
+
+1. A `text` item is added with `start`, `duration`, `track`, `text`, and `style`, `x`, `y` only when given. The stored style holds exactly the keys given, including a key whose value equals the default (R15).
+2. `diff` has one `item.added`. `effective` has `id`, `start` and `duration` (A.4 triples) and `style` as stored.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | empty or over-long text, bad style value, bad id | `args.text must have 1 to 2000 characters, got 0.` | `Send the text to show, for example "Hello".` |
+| `E_INVALID_TIME` | malformed time, zero duration, item ending after 108,000 | `args.duration "0s" is 0 frames.` | `Use "2s" or "60f".` |
+| `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
+| `E_TYPE_MISMATCH` | audio track | `Track trk_m1n2p3q4r5 is an audio track; text needs a visual track.` | `Use a visual track.` |
+| `E_ID_EXISTS` | `id` used | `Item id itm_s6t7v8w9x0 already exists.` | `Omit id or use an unused id.` |
+| `E_LIMIT` | 500 items | `The document already has 500 items; the limit is 500.` | `Delete unused items first.` |
+| `E_FONT_UNKNOWN` | unknown family or weight | `Font "Comic" is not available; available families: Inter, Roboto.` | `Use font_family "Inter".` |
+| `E_OVERLAP` | overlap | `Item itm_s6t7v8w9x0 would occupy frames 30-89 on track trk_f6g7h8j9k0, where item itm_m1n2p3q4r5 already is (frames 0-59).` | `Use start "60f" (2.000s), the next free position on that track, or another track.` |
+
+**Inverse.** `remove {collection: "items", id: <new id>}`.
+
+**Idempotency.** With `id`: the second application returns `E_ID_EXISTS`. Without: it overlaps the first (`E_OVERLAP`).
+
+**Example.** 30 fps; empty visual track `trk_f6g7h8j9k0`.
+
+```json
+{"op": "text.add", "args": {"track_id": "trk_f6g7h8j9k0", "start": "0s", "duration": "2s", "text": "Hello", "style": {"size": 96}, "id": "itm_s6t7v8w9x0"}}
+```
+
+```json
+[{"kind": "item.added", "id": "itm_s6t7v8w9x0", "object": {"id": "itm_s6t7v8w9x0", "type": "text", "track": "trk_f6g7h8j9k0", "start": 0, "duration": 60, "text": "Hello", "style": {"size": 96}}}]
+```
+
+**Golden cases.**
+
+- `ok_minimal`
+- `ok_with_style`
+- `ok_style_value_equal_to_default_is_kept`
+- `ok_with_x_y`
+- `ok_multiline_text`
+- `ok_text_2000_chars`
+- `ok_template_color_reference`
+- `ok_supplied_id`
+- `ok_ends_exactly_at_108000`
+- `err_validation_empty_text`
+- `err_validation_text_2001_chars`
+- `err_validation_style_null_value`
+- `err_validation_unknown_style_key`
+- `err_invalid_time_zero_duration`
+- `err_invalid_time_ends_after_108000`
+- `err_not_found_track`
+- `err_type_mismatch_audio_track`
+- `err_id_exists`
+- `err_limit_500_items`
+- `err_font_unknown_family`
+- `err_font_unknown_weight`
+- `err_overlap`
+
+### C.29 `text.set` (phase P)
+
+Changes the content or the style of a text item.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `text` item |
+| `text` | string | no | unchanged | 1 to 2,000 characters |
+| `style` | partial TextStyle | no | unchanged | R15; the keys are stored as given, defaults included; `null` removes a key |
+| `reset_style` | boolean | no | `false` | true: the stored style is emptied first, then `style` is applied |
+
+At least one of `text`, `style`, `reset_style: true` is required.
+
+**Preconditions.**
+
+1. Arguments match the schema and R15, and something is requested (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `text` item (`E_TYPE_MISMATCH`).
+4. The resulting font family and weight exist (`E_FONT_UNKNOWN`).
+
+**Postconditions.**
+
+1. `text` is replaced when given. The stored style becomes: (empty if `reset_style`, else the current style) merged with `style` by R15. An empty result removes `style`.
+2. Timing, position and every other field are unchanged.
+3. `diff` has one `item.updated` (`text`, `style`); empty when unchanged. `effective` has `text` and the stored `style`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | nothing requested, bad text or style | `args: give at least one of text, style, reset_style.` | `Send for example {"item_id": "itm_s6t7v8w9x0", "text": "New text"}.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a text item | `Item itm_m1n2p3q4r5 is a caption; text.set changes text items.` | `Use caption.set_words or caption.edit_word for captions.` |
+| `E_FONT_UNKNOWN` | unknown family or weight | `Font weight 800 does not exist for family "Inter"; available weights: 400, 700.` | `Use font_weight 700.` |
+
+**Inverse.** `patch {collection: "items", id, set: {text, style: <old>}, unset: <fields that were absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** Text item `itm_s6t7v8w9x0`, `text` "Hello", style `{"size": 96}`.
+
+```json
+{"op": "text.set", "args": {"item_id": "itm_s6t7v8w9x0", "text": "Hello world", "style": {"color": "#FFE600"}}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"text": ["Hello", "Hello world"], "style": [{"size": 96}, {"color": "#FFE600", "size": 96}]}}]
+```
+
+**Golden cases.**
+
+- `ok_text_only`
+- `ok_style_merge`
+- `ok_style_null_removes_key`
+- `ok_item_key_equal_to_default_is_kept`
+- `ok_reset_style_only`
+- `ok_reset_style_then_style`
+- `ok_text_and_style`
+- `ok_same_values_noop`
+- `err_validation_nothing_requested`
+- `err_validation_empty_text`
+- `err_validation_reset_style_false_alone`
+- `err_not_found`
+- `err_type_mismatch_caption_item`
+- `err_font_unknown_family`
+- `err_font_unknown_weight`
+
+### C.30 `text.apply_preset` (phase A)
+
+Writes the keyframes or the transition of a named animation preset on one edge of a visual item.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip`, `text`, `caption` or `shape` item |
+| `preset` | `"fade_up"`, `"fade_down"`, `"pop"`, `"zoom_in"`, `"slide_left"`, `"slide_right"` | yes | none | definitions below |
+| `edge` | `"in"` or `"out"` | yes | none | |
+| `duration` | time, as a length | no | `"0.4s"` | at least 1 frame, at most the item's duration |
+
+**Preconditions.**
+
+1. Arguments match the schema and `duration` parses to at least 1 frame (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is visual (`E_TYPE_MISMATCH`).
+4. `n <= D`, where `n` is the preset length in frames and `D` the item duration (`E_INVALID_STATE`).
+5. For `slide_left` and `slide_right`: the two transitions still fit (R14, `E_INVALID_STATE`).
+6. No written property ends up with more than 100 keyframes (`E_LIMIT`).
+
+**Definitions.** `n` is the length in frames, `D` the item duration, `H = round3(0.05 × project height)` pixels. For each property `p` written, the **base** `b_p` is the value the item has where the preset meets the rest of the animation: `b_p = value_at(K_p, n)` for edge `in` and `value_at(K_p, D - n)` for edge `out`, taken before the command changes anything (R10: the static value when `p` has no keyframes). Keyframes are written as `(t, value, easing)`. Values are rounded to 3 decimals; `scale` is capped at 20.
+
+| Preset | Edge | Keyframes written |
+| --- | --- | --- |
+| `fade_up` | in | `y`: `(0, b_y + H, ease_out)`, `(n, b_y)`. `opacity`: `(0, 0, ease_out)`, `(n, b_o)` |
+| `fade_up` | out | `y`: `(D-n, b_y, ease_in)`, `(D, b_y - H)`. `opacity`: `(D-n, b_o, ease_in)`, `(D, 0)` |
+| `fade_down` | in | `y`: `(0, b_y - H, ease_out)`, `(n, b_y)`. `opacity`: `(0, 0, ease_out)`, `(n, b_o)` |
+| `fade_down` | out | `y`: `(D-n, b_y, ease_in)`, `(D, b_y + H)`. `opacity`: `(D-n, b_o, ease_in)`, `(D, 0)` |
+| `zoom_in` | in | `scale`: `(0, 0.8 × b_s, ease_out)`, `(n, b_s)`. `opacity`: `(0, 0, ease_out)`, `(n, b_o)` |
+| `zoom_in` | out | `scale`: `(D-n, b_s, ease_in)`, `(D, 1.2 × b_s)`. `opacity`: `(D-n, b_o, ease_in)`, `(D, 0)` |
+| `pop` | in | `scale`: `(0, 0.6 × b_s, ease_out)`, `(q, 1.1 × b_s, ease_in_out)`, `(n, b_s)`. `opacity`: `(0, 0, ease_out)`, `(n, b_o)` |
+| `pop` | out | `scale`: `(D-n, b_s, ease_in_out)`, `(D-q, 1.1 × b_s, ease_in)`, `(D, 0.6 × b_s)`. `opacity`: `(D-n, b_o, ease_in)`, `(D, 0)` |
+| `slide_left` | in or out | no keyframes: `transition_<edge> = {kind: "slide_left", duration: n}` |
+| `slide_right` | in or out | no keyframes: `transition_<edge> = {kind: "slide_right", duration: n}` |
+
+`q = round(0.7 × n)`; the middle `pop` keyframe is omitted when `n = 1`. "Up" means the item moves up the frame on both edges (`y` grows downward): `fade_up` in starts lower and rises into place, `fade_up` out rises away; `fade_down` is the opposite. `zoom_in` grows the item on both edges. `pop` out is the time mirror of `pop` in. The last keyframe of an `in` preset, `(n, b)`, carries the easing in force at frame `n` before the command (the easing of the last keyframe at or before `n`, linear when there is none); the last keyframe of an `out` preset has no easing. A keyframe whose easing is linear is stored without `easing`.
+
+**Postconditions.**
+
+1. For each property written: keyframes with `t` in `[0, n]` (edge `in`) or `[D-n, D]` (edge `out`) are removed, then the keyframes of the table are inserted. Keyframes of that property outside the range, and the static field, are untouched. Properties not in the table are untouched.
+2. For `slide_left` and `slide_right` the transition of that edge is replaced and no keyframe changes.
+3. `diff` has one `item.updated` with `keyframes` (or `transition_<edge>`). `effective` has `preset`, `edge`, `duration` (the A.4 triple), `written` (the property names) and `base` (the `b_p` used).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | unknown preset or edge | `args.preset "bounce" is not a preset.` | `Use fade_up, fade_down, pop, zoom_in, slide_left or slide_right.` |
+| `E_INVALID_TIME` | malformed or zero `duration` | `args.duration "0f" is 0 frames.` | `Use "0.4s" or "12f".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | audio item | `Item itm_s6t7v8w9x0 is an audio item; presets animate visual items.` | `Use item.set_audio fades for audio.` |
+| `E_INVALID_STATE` | `n` above the item duration; or the slide transitions do not fit | `Preset duration 120 frames is longer than item itm_s6t7v8w9x0 (90 frames).` | `Use duration "90f" or shorter.` |
+| `E_LIMIT` | more than 100 keyframes | `Property y of itm_s6t7v8w9x0 would have 101 keyframes; the limit is 100.` | `Remove keyframes with keyframe.clear first.` |
+
+**Inverse.** `patch {collection: "items", id, set: {keyframes: <old>}}` (or `unset: ["keyframes"]`), or for slides the transition field.
+
+**Idempotency.** Same result: the second application computes the same base and rewrites the same keyframes.
+
+**Example.** 1080x1920 project, 30 fps. Text item `itm_s6t7v8w9x0`, `start` 0, `duration` 90, no keyframes, `y` not set (so `b_y` = 960), opacity 1. `n = 12`, `H = round3(0.05 × 1920) = 96`.
+
+```json
+{"op": "text.apply_preset", "args": {"item_id": "itm_s6t7v8w9x0", "preset": "fade_up", "edge": "in"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"keyframes": [null, {
+  "opacity": [{"t": 0, "value": 0, "easing": "ease_out"}, {"t": 12, "value": 1}],
+  "y": [{"t": 0, "value": 1056, "easing": "ease_out"}, {"t": 12, "value": 960}]}]}}]
+```
+
+`effective.duration` is `{"frame": 12, "seconds": 0.4, "requested": "0.4s"}`.
+
+**Golden cases.**
+
+- `ok_fade_up_in_default_duration`
+- `ok_fade_up_out`
+- `ok_fade_down_in`
+- `ok_fade_down_out`
+- `ok_pop_in`
+- `ok_pop_out`
+- `ok_pop_n_1_no_overshoot_keyframe`
+- `ok_pop_n_2`
+- `ok_zoom_in_in`
+- `ok_zoom_in_out`
+- `ok_zoom_in_out_scale_capped_at_20`
+- `ok_slide_left_in`
+- `ok_slide_left_out`
+- `ok_slide_right_in`
+- `ok_slide_right_out_replaces_existing_transition`
+- `ok_explicit_duration`
+- `ok_duration_equals_item_duration`
+- `ok_base_from_static_non_default_scale_and_opacity`
+- `ok_base_from_existing_keyframes_outside_range`
+- `ok_replaces_keyframes_inside_range_keeps_outside`
+- `ok_last_keyframe_inherits_easing`
+- `ok_in_and_out_presets_combined`
+- `ok_clip_caption_shape_items`
+- `ok_same_preset_twice_noop`
+- `err_validation_unknown_preset`
+- `err_invalid_time_zero_duration`
+- `err_not_found`
+- `err_type_mismatch_audio_item`
+- `err_invalid_state_duration_longer_than_item`
+- `err_invalid_state_slide_transitions_do_not_fit`
+- `err_limit_101_keyframes`
+
+### C.31 `shape.add` (phase A)
+
+Adds a shape item to a visual track.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | a visual track |
+| `start` | time | yes | none | absolute |
+| `duration` | time, as a length | yes | none | at least 1 frame |
+| `shape` | `"rect"`, `"rounded_rect"`, `"ellipse"` | yes | none | |
+| `width`, `height` | number | yes | none | greater than 0, pixels before `scale` |
+| `fill` | colour | no | `#FFFFFF` | hex or `"$name"` |
+| `stroke_color` | colour | no | `#000000` | |
+| `stroke_width` | number | no | 0 | 0 or more |
+| `radius` | number | no | 0 | 0 or more; only with `"rounded_rect"` (`E_VALIDATION` otherwise) |
+| `x`, `y` | number | no | frame centre | finite |
+| `id` | item id | no | generated | R6 |
+
+**Preconditions.**
+
+1. Arguments match the schema; `radius` is only given for `"rounded_rect"`; colours are valid (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The track exists (`E_NOT_FOUND`).
+3. The track is visual (`E_TYPE_MISMATCH`).
+4. `id` is not used (`E_ID_EXISTS`); fewer than 500 items (`E_LIMIT`).
+5. The item ends at or before 108,000 (`E_INVALID_TIME`) and does not overlap (`E_OVERLAP`, R8).
+
+**Postconditions.**
+
+1. A `shape` item is added with `start`, `duration`, `track`, `shape`, `width`, `height` and the optional fields that differ from their defaults (`x` and `y` whenever given). Colours are stored upper case.
+2. `diff` has one `item.added`. `effective` has `id`, `start`, `duration` (A.4 triples).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | width or height not above 0, bad colour, `radius` on another shape | `args.radius is only valid for shape "rounded_rect", got "rect".` | `Remove radius, or use shape "rounded_rect".` |
+| `E_INVALID_TIME` | malformed time, zero duration, ends after 108,000 | `args.duration "0s" is 0 frames.` | `Use "2s" or "60f".` |
+| `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
+| `E_TYPE_MISMATCH` | audio track | `Track trk_m1n2p3q4r5 is an audio track; shapes need a visual track.` | `Use a visual track.` |
+| `E_ID_EXISTS` | `id` used | `Item id itm_s6t7v8w9x0 already exists.` | `Omit id or use an unused id.` |
+| `E_LIMIT` | 500 items | `The document already has 500 items; the limit is 500.` | `Delete unused items first.` |
+| `E_OVERLAP` | overlap | `Item itm_s6t7v8w9x0 would occupy frames 30-89 on track trk_f6g7h8j9k0, where item itm_m1n2p3q4r5 already is (frames 0-59).` | `Use start "60f" (2.000s), the next free position on that track, or another track.` |
+
+**Inverse.** `remove {collection: "items", id: <new id>}`.
+
+**Idempotency.** As C.28.
+
+**Example.** Empty visual track `trk_f6g7h8j9k0`; 30 fps.
+
+```json
+{"op": "shape.add", "args": {"track_id": "trk_f6g7h8j9k0", "start": "0s", "duration": "3s", "shape": "rect", "width": 400, "height": 200, "fill": "#ff0000", "x": 540, "y": 960, "id": "itm_s6t7v8w9x0"}}
+```
+
+```json
+[{"kind": "item.added", "id": "itm_s6t7v8w9x0", "object": {"id": "itm_s6t7v8w9x0", "type": "shape", "track": "trk_f6g7h8j9k0", "start": 0, "duration": 90, "shape": "rect", "width": 400, "height": 200, "fill": "#FF0000", "x": 540, "y": 960}}]
+```
+
+**Golden cases.**
+
+- `ok_rect_minimal`
+- `ok_ellipse`
+- `ok_rounded_rect_with_radius`
+- `ok_fill_lower_case_stored_upper_case`
+- `ok_fill_equal_to_default_not_stored`
+- `ok_stroke`
+- `ok_template_color_reference`
+- `ok_supplied_id`
+- `err_validation_width_0`
+- `err_validation_radius_on_rect`
+- `err_validation_bad_color`
+- `err_invalid_time_zero_duration`
+- `err_not_found_track`
+- `err_type_mismatch_audio_track`
+- `err_id_exists`
+- `err_limit_500_items`
+- `err_overlap`
+
+### C.32 `shape.set` (phase A)
+
+Changes fields of a shape item.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `shape` item |
+| `shape` | `"rect"`, `"rounded_rect"`, `"ellipse"` | no | unchanged | |
+| `width`, `height` | number | no | unchanged | greater than 0 |
+| `fill`, `stroke_color` | colour | no | unchanged | hex or `"$name"` |
+| `stroke_width` | number | no | unchanged | 0 or more |
+| `radius` | number | no | unchanged | 0 or more; valid only when the resulting shape is `"rounded_rect"` |
+
+At least one of the shape fields is required. Position and transform are changed with `item.set_transform`.
+
+**Preconditions.**
+
+1. At least one field is present and valid; `radius` is not given when the resulting shape is not `"rounded_rect"` (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `shape` (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. Given fields are set; values equal to a default remove the field. If `shape` changes to a value other than `"rounded_rect"`, a stored `radius` is removed.
+2. `diff` has one `item.updated`; empty when unchanged. `effective` has the stored values of the given fields.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | nothing to set, bad value, `radius` on a non-rounded shape | `args.height must be greater than 0, got 0.` | `Use a height of at least 1.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a shape | `Item itm_m1n2p3q4r5 is a clip; shape.set changes shapes.` | `Use the command for that item type.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old values>, unset: <fields that were absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** Shape `itm_s6t7v8w9x0`, `rect` 400x200, fill `#FF0000`.
+
+```json
+{"op": "shape.set", "args": {"item_id": "itm_s6t7v8w9x0", "shape": "rounded_rect", "radius": 24, "width": 600}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"shape": ["rect", "rounded_rect"], "radius": [null, 24], "width": [400, 600]}}]
+```
+
+**Golden cases.**
+
+- `ok_width_height`
+- `ok_fill_and_stroke`
+- `ok_to_rounded_rect_with_radius`
+- `ok_change_to_ellipse_removes_radius`
+- `ok_radius_on_rounded_rect`
+- `ok_default_value_removes_field`
+- `ok_same_values_noop`
+- `err_validation_no_field`
+- `err_validation_height_0`
+- `err_validation_radius_on_ellipse`
+- `err_not_found`
+- `err_type_mismatch_clip_item`
+
+### C.33 `caption.add` (phase P)
+
+Adds a caption item with timed words.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | a visual track |
+| `start` | time | yes | none | absolute |
+| `words` | array of `{text, start, duration}` | one of `words` or `text` | none | R16; the item `duration` is the end of the last word |
+| `text` | string | one of `words` or `text` | none | split on Unicode whitespace; at least 1 word (none is `E_VALIDATION`) and at most 60 (`E_LIMIT`), each 1 to 80 characters |
+| `duration` | time, as a length | with `text` only | none | at least 1 frame and at least the number of words; rejected with `words` (`E_VALIDATION`) |
+| `linked_item` | item id | no | none | the item need not exist |
+| `x`, `y` | number | no | absent | finite; the centre of the item in pixels, used when the track's caption style position is `custom`; stored on the item as SDD-001 §3 says |
+| `id` | item id | no | generated | R6 |
+
+**Preconditions.**
+
+1. Exactly one of `words` and `text` is present, `duration` accompanies `text` only, and the arguments obey R16 or the text rules (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The track exists (`E_NOT_FOUND`).
+3. The track is visual (`E_TYPE_MISMATCH`).
+4. `duration` is at least the word count of `text` (`E_INVALID_STATE`, `details.min_duration`).
+5. `id` is not used (`E_ID_EXISTS`); fewer than 500 items, at most 60 words in the caption and at most 5,000 words in the document after the command (`E_LIMIT`).
+6. The item ends at or before 108,000 (`E_INVALID_TIME`) and does not overlap (`E_OVERLAP`, R8).
+
+**Postconditions.**
+
+1. A `caption` item is added with `start`, `track`, `words` (frames, relative to the item), `duration`, and `linked_item`, `x` and `y` when given. `breaks`, `style`, position and the rest are absent.
+2. With `words`: `duration` is `last.start + last.duration`. With `text`: let `D` be the duration, `n` the word count, `c_i` the character count of word `i` and `W = sum of c_i`. Each word gets 1 frame, then the remaining `D - n` frames are shared in proportion to `c_i`: word `i` receives `floor((D - n) × c_i / W)`, and the frames still unassigned go one each to the words with the largest fractional remainder, lower index first on ties. Words follow one another with no gap from relative frame 0.
+3. `diff` has one `item.added`. `effective` has `id`, `start`, `duration` (A.4 triples) and `word_count`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | both or neither of `words` and `text`; `duration` with `words`; bad word; `x` or `y` not finite | `args.words[1] overlaps words[0]: starts at 5 but the previous word ends at 10.` | `Start each word at or after the end of the previous one.` |
+| `E_INVALID_TIME` | malformed time, zero word duration, item ending after 108,000 | `args.words[0].duration "0f" is 0 frames.` | `Use at least "1f".` |
+| `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
+| `E_TYPE_MISMATCH` | audio track | `Track trk_m1n2p3q4r5 is an audio track; captions need a visual track.` | `Use a visual track.` |
+| `E_INVALID_STATE` | `duration` shorter than the word count | `Duration 3 frames is too short for 4 words; each word needs 1 frame.` | `Use duration "4f" or longer.` |
+| `E_ID_EXISTS` | `id` used | `Item id itm_s6t7v8w9x0 already exists.` | `Omit id or use an unused id.` |
+| `E_LIMIT` | 500 items, 61 words in the caption, or 5,000 words in the document | `The document would have 5010 caption words; the limit is 5000.` | `Remove captions you no longer need.` |
+| `E_OVERLAP` | overlap | `Item itm_s6t7v8w9x0 would occupy frames 12-59 on track trk_a1b2c3d4e5, where item itm_c3d4e5f6g7 already is (frames 0-29).` | `Use start "30f" (1.000s), the next free position on that track.` |
+
+**Inverse.** `remove {collection: "items", id: <new id>}`.
+
+**Idempotency.** As C.28.
+
+**Example.** 30 fps; empty visual track `trk_a1b2c3d4e5`. Text "Meet the new editor." has words of 4, 3, 3 and 7 characters (`W` = 17) and `D` = 48, so 44 frames are shared: `44 × 4/17 = 10.35`, `44 × 3/17 = 7.76`, `7.76`, `44 × 7/17 = 18.12`. Floors give 10, 7, 7, 18 (42); the 2 left over go to the largest remainders, "the" and "new" (0.76 each). Durations are 1 + 10, 1 + 8, 1 + 8, 1 + 18 = 11, 9, 9, 19 (total 48); starts 0, 11, 20, 29.
+
+```json
+{"op": "caption.add", "args": {"track_id": "trk_a1b2c3d4e5", "start": "12f", "text": "Meet the new editor.", "duration": "48f", "linked_item": "itm_m1n2p3q4r5", "id": "itm_s6t7v8w9x0"}}
+```
+
+```json
+[{"kind": "item.added", "id": "itm_s6t7v8w9x0", "object": {"id": "itm_s6t7v8w9x0", "type": "caption", "track": "trk_a1b2c3d4e5", "start": 12, "duration": 48, "linked_item": "itm_m1n2p3q4r5",
+  "words": [{"text": "Meet", "start": 0, "duration": 11}, {"text": "the", "start": 11, "duration": 9}, {"text": "new", "start": 20, "duration": 9}, {"text": "editor.", "start": 29, "duration": 19}]}}]
+```
+
+**Golden cases.**
+
+- `ok_words_form`
+- `ok_words_with_gaps_duration_is_last_end`
+- `ok_text_form_proportional_largest_remainder`
+- `ok_text_form_tie_goes_to_lower_index`
+- `ok_text_form_duration_equals_word_count`
+- `ok_text_form_single_word`
+- `ok_text_form_collapses_runs_of_whitespace`
+- `ok_60_words`
+- `ok_linked_item_that_does_not_exist`
+- `ok_supplied_id`
+- `ok_custom_position_x_y`
+- `err_validation_both_words_and_text`
+- `err_validation_neither_words_nor_text`
+- `err_validation_duration_with_words`
+- `err_validation_empty_words`
+- `err_validation_word_with_whitespace`
+- `err_validation_word_81_chars`
+- `err_validation_words_overlap`
+- `err_invalid_time_zero_word_duration`
+- `err_invalid_time_ends_after_108000`
+- `err_not_found_track`
+- `err_type_mismatch_audio_track`
+- `err_invalid_state_duration_below_word_count`
+- `err_id_exists`
+- `err_limit_61_words`
+- `err_limit_5000_words`
+- `err_limit_500_items`
+- `err_overlap`
+
+### C.34 `caption.set_words` (phase A)
+
+Replaces the words of a caption.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `caption` |
+| `words` | array of `{text, start, duration}` | yes | none | R16 |
+| `duration` | time, as a length | no | end of the last word | at least the end of the last word |
+
+**Preconditions.**
+
+1. Arguments obey R16 (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The item exists (`E_NOT_FOUND`) and is a `caption` (`E_TYPE_MISMATCH`).
+3. `duration`, when given, is at least the end of the last word (`E_INVALID_STATE`).
+4. The caption has at most 60 words and the document keeps at most 5,000 words (`E_LIMIT`).
+5. R18 for the new duration: overlap (`E_OVERLAP`), end limit (`E_INVALID_TIME`), fades and transitions fit (`E_INVALID_STATE`).
+
+**Postconditions.**
+
+1. `words` are replaced (converted to frames). `breaks` is cleared, because its indexes referred to the old words. `duration` is the given one or the end of the last word.
+2. If the item got shorter, keyframes follow R12, which may also write static fields (`x`, `y`, `scale`, `rotation`, `opacity`). `start`, `linked_item`, `style` and every other field are unchanged.
+3. `diff` has one `item.updated` with every changed field, including the static fields written by R12 (`words`, `breaks`, `duration`, `keyframes` and those). `effective` has `duration` (A.4 triple) and `word_count`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad words (R16), including an empty array | `args.words must have at least 1 entry, got 0.` | `Send at least one word.` |
+| `E_INVALID_TIME` | malformed time or a word `duration` below 1 frame | `args.words[1].start "5" has no unit.` | `Use "5f" or "0.167s".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a caption | `Item itm_m1n2p3q4r5 is a text item; use text.set.` | `Use text.set for text items.` |
+| `E_INVALID_STATE` | `duration` before the last word ends, or fades do not fit | `args.duration 20 frames is before the last word ends at 24.` | `Use duration "24f" or longer, or omit it.` |
+| `E_LIMIT` | 61 words in the caption, or 5,000 words in the document | `The document would have 5003 caption words; the limit is 5000.` | `Remove captions you no longer need.` |
+| `E_OVERLAP` | a longer caption overlaps | `Item itm_s6t7v8w9x0 would occupy frames 12-95 on track trk_a1b2c3d4e5, where item itm_c3d4e5f6g7 already is (frames 60-119).` | `Use words that end by "48f", or move the next caption.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old values of every changed field, including the static fields written by R12>, unset: <fields that were absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** 30 fps; caption `itm_s6t7v8w9x0`, `start` 12, `duration` 48, four words, no keyframes.
+
+```json
+{"op": "caption.set_words", "args": {"item_id": "itm_s6t7v8w9x0", "words": [{"text": "Hello", "start": "0f", "duration": "12f"}, {"text": "world", "start": "12f", "duration": "12f"}]}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {
+  "duration": [48, 24],
+  "words": [[{"text": "Meet", "start": 0, "duration": 9}, {"text": "the", "start": 9, "duration": 6}, {"text": "new", "start": 15, "duration": 12}, {"text": "editor.", "start": 27, "duration": 21}],
+            [{"text": "Hello", "start": 0, "duration": 12}, {"text": "world", "start": 12, "duration": 12}]]}}]
+```
+
+**Golden cases.**
+
+- `ok_replace_shorter`
+- `ok_replace_longer_free_space`
+- `ok_explicit_duration_longer_than_last_word`
+- `ok_breaks_cleared`
+- `ok_keyframes_cut_when_shorter`
+- `ok_60_words`
+- `ok_keyframes_all_dropped_becomes_static_when_shorter`
+- `err_validation_empty_words`
+- `err_validation_words_overlap`
+- `err_validation_word_with_whitespace`
+- `err_invalid_time_no_unit`
+- `err_invalid_time_zero_word_duration`
+- `err_limit_61_words`
+- `err_not_found`
+- `err_type_mismatch_text_item`
+- `err_invalid_state_duration_before_last_word_end`
+- `err_invalid_state_fade_no_longer_fits`
+- `err_limit_5000_words`
+- `err_overlap_longer_caption`
+
+### C.35 `caption.edit_word` (phase A)
+
+Changes the text of one word, or removes the word.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `caption` |
+| `index` | integer | yes | none | 0-based, 0 or more |
+| `text` | string | yes | none | 0 to 80 characters, no whitespace; `""` removes the word |
+
+**Preconditions.**
+
+1. Arguments match the schema (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`, `details.kind` `item`).
+3. The item is a `caption` (`E_TYPE_MISMATCH`). This is checked before the word index.
+4. `index` is below the word count (`E_NOT_FOUND`, `details.kind` `word`, `details.id` the index).
+5. Removing the only word of a caption is `E_INVALID_STATE`; removing the last of several words is allowed.
+
+**Postconditions.**
+
+1. Replacing: `words[index].text` is the new text; timing is untouched.
+2. Removing: the word is removed and the others keep their own `start` and `duration`, so a gap is left; the item's `duration` does not change. `breaks`: an entry `i` becomes `i` if `i <= index`, else `i - 1`; entries below 1, at or beyond the new word count, or duplicated are dropped.
+3. `diff` has one `item.updated` (`words`, and `breaks` when it changed); empty when the text is unchanged. `effective` has `index`, `removed` (boolean) and `word_count`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | negative index, text with whitespace or over 80 characters | `args.text "new editor" contains whitespace; a word has none.` | `Use caption.set_words to replace one word by several.` |
+| `E_NOT_FOUND` | unknown item, or no word at `index` (`details.kind` `word`) | `Caption itm_s6t7v8w9x0 has 4 words; index 7 does not exist.` | `Use an index from 0 to 3.` |
+| `E_TYPE_MISMATCH` | not a caption | `Item itm_m1n2p3q4r5 is a text item; use text.set.` | `Use text.set for text items.` |
+| `E_INVALID_STATE` | removing the only word | `Removing word 0 would leave caption itm_s6t7v8w9x0 with no words.` | `Delete the caption with item.delete instead.` |
+
+**Inverse.** `patch {collection: "items", id, set: {words, breaks: <old>}, unset: <fields that were absent>}`.
+
+**Idempotency.** Replacing: same result. Removing: the second application removes the next word that moved into `index` (not idempotent), or fails with `E_NOT_FOUND` or `E_INVALID_STATE` when none is left.
+
+**Example.** Caption `itm_s6t7v8w9x0` with words "Meet", "the", "new", "editor.".
+
+```json
+{"op": "caption.edit_word", "args": {"item_id": "itm_s6t7v8w9x0", "index": 3, "text": "editor"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"words": [
+  [{"text": "Meet", "start": 0, "duration": 9}, {"text": "the", "start": 9, "duration": 6}, {"text": "new", "start": 15, "duration": 12}, {"text": "editor.", "start": 27, "duration": 21}],
+  [{"text": "Meet", "start": 0, "duration": 9}, {"text": "the", "start": 9, "duration": 6}, {"text": "new", "start": 15, "duration": 12}, {"text": "editor", "start": 27, "duration": 21}]]}}]
+```
+
+**Golden cases.**
+
+- `ok_replace_text`
+- `ok_replace_with_same_text_noop`
+- `ok_replace_80_chars`
+- `ok_remove_middle_word_leaves_gap`
+- `ok_remove_first_word`
+- `ok_remove_last_of_several_words`
+- `ok_remove_adjusts_breaks`
+- `err_validation_negative_index`
+- `err_validation_text_with_whitespace`
+- `err_validation_text_81_chars`
+- `err_not_found_item`
+- `err_not_found_index_out_of_range`
+- `err_type_mismatch_text_item`
+- `err_type_mismatch_checked_before_index`
+- `err_invalid_state_remove_only_word`
+
+### C.36 `caption.split` (phase A)
+
+Splits a caption into two at a word boundary.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `caption` |
+| `before_word` | integer | yes | none | 1 or more; the index of the first word of the right part |
+| `new_id` | item id | no | generated | R6 |
+
+**Preconditions.**
+
+1. Arguments match the schema (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`) and is a `caption` (`E_TYPE_MISMATCH`).
+3. A word exists at index `before_word`, that is, `before_word` is below the word count (`E_NOT_FOUND`, `details.kind` `word`, `details.id` the index, `details.word_count`).
+4. `new_id` is not used (`E_ID_EXISTS`); fewer than 500 items (`E_LIMIT`).
+
+**Postconditions.** Let `k = before_word` and `Tc = words[k].start` (relative to the item). The cut falls at the start of word `k`, so the two parts together cover exactly the original range. R17 applies with that `Tc`.
+
+1. Left part (the original id): `duration = Tc`, words `0` to `k - 1` unchanged. Right part: `start = start + Tc`, `duration = old duration - Tc`, words `k` onward with `start` reduced by `Tc`.
+2. `breaks`: the left keeps entries `i` with `1 <= i <= k - 1`; the right keeps entries `i > k` as `i - k`. `linked_item` and `style` are copied to the right part. Transitions, keyframes (R13) and `slot` follow R17 (captions have no fades or `source_in`). When a property has all its keyframes before the cut, or all after it, the part with none gets the static value (R13).
+3. `diff`: `item.updated` for the left part (every changed field, including static fields written by R13) and `item.added` for the right, sorted by id. `effective` has `new_id`, `left` and `right` (each `{"id", "start", "duration"}`).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `before_word` below 1 or bad id | `args.before_word must be 1 or more, got 0.` | `Use 1 to split after the first word.` |
+| `E_NOT_FOUND` | unknown item, or no word at `before_word` (`details.kind` `word`) | `Caption itm_s6t7v8w9x0 has 4 words; word 4 does not exist, so the right part would be empty.` | `Use a before_word from 1 to 3.` |
+| `E_TYPE_MISMATCH` | not a caption | `Item itm_m1n2p3q4r5 is a text item; use item.split.` | `Use item.split for other items.` |
+| `E_ID_EXISTS` | `new_id` used | `Item id itm_c3d4e5f6g7 already exists.` | `Omit new_id or use an unused id.` |
+| `E_LIMIT` | 500 items | `The document already has 500 items; the limit is 500.` | `Delete unused items first.` |
+
+**Inverse.** `patch {collection: "items", id: <left id>, set: <old values of every changed field, including static fields written by R13>, unset: <fields that were absent>}`, then `remove {collection: "items", id: <new id>}`, in the order of mutation (R5).
+
+**Idempotency.** Not idempotent: the second application splits the left part again; with the same `before_word` it fails with `E_NOT_FOUND` (kind `word`) when the left part has too few words, and with `E_ID_EXISTS` for the same `new_id`.
+
+**Example.** 30 fps; caption `itm_s6t7v8w9x0` on `trk_a1b2c3d4e5`: `start` 12, `duration` 48, words Meet (0, 9), the (9, 6), new (15, 12), editor. (27, 21), `linked_item` `itm_m1n2p3q4r5`. `before_word` 2, so `Tc = 15`.
+
+```json
+{"op": "caption.split", "args": {"item_id": "itm_s6t7v8w9x0", "before_word": 2, "new_id": "itm_c3d4e5f6g7"}}
+```
+
+```json
+[
+  {"kind": "item.added", "id": "itm_c3d4e5f6g7", "object": {"id": "itm_c3d4e5f6g7", "type": "caption", "track": "trk_a1b2c3d4e5", "start": 27, "duration": 33, "linked_item": "itm_m1n2p3q4r5",
+    "words": [{"text": "new", "start": 0, "duration": 12}, {"text": "editor.", "start": 12, "duration": 21}]}},
+  {"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"duration": [48, 15],
+    "words": [[{"text": "Meet", "start": 0, "duration": 9}, {"text": "the", "start": 9, "duration": 6}, {"text": "new", "start": 15, "duration": 12}, {"text": "editor.", "start": 27, "duration": 21}],
+              [{"text": "Meet", "start": 0, "duration": 9}, {"text": "the", "start": 9, "duration": 6}]]}}
+]
+```
+
+**Golden cases.**
+
+- `ok_split_in_the_middle`
+- `ok_before_word_1`
+- `ok_before_last_word`
+- `ok_gap_before_cut_word_stays_in_left_duration`
+- `ok_breaks_divided`
+- `ok_style_and_linked_item_copied_to_right`
+- `ok_transition_in_left_transition_out_right`
+- `ok_keyframes_divided`
+- `ok_keyframes_all_before_cut`
+- `ok_keyframes_all_after_cut`
+- `ok_slot_stays_left`
+- `err_validation_before_word_0`
+- `err_not_found`
+- `err_not_found_before_word_equals_word_count`
+- `err_type_mismatch_text_item`
+- `err_id_exists`
+- `err_limit_500_items`
+
+### C.37 `caption.merge` (phase A)
+
+Joins two captions of one track into one that spans both.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_ids` | array of item ids | yes | none | exactly 2 distinct ids, in any order; the one with the lower `start` is the "first" |
+
+**Preconditions.**
+
+1. Exactly two distinct ids (`E_VALIDATION`).
+2. Both items exist (`E_NOT_FOUND`) and are captions (`E_TYPE_MISMATCH`).
+3. They are on the same track, and no other item of the track starts between the end of the first and the start of the second (`E_INVALID_STATE`, `details.between` lists the ids).
+4. Neither has keyframes (`E_INVALID_STATE`, hint to use `keyframe.clear`).
+5. The merged caption has at most 60 words (`E_LIMIT`).
+
+**Postconditions.** The operation first removes the second caption, then extends the first.
+
+1. The first item gets `duration = second.start + second.duration - first.start` and `words` = its words followed by the second's words with `start` increased by `second.start - first.start`. `breaks`: the first's entries, then the second's entries increased by the first's word count. No break is added at the junction.
+2. The first item keeps its `style`, `slot`, `transition_in`, `name`, position and `linked_item` (the second's `linked_item` is used only when the first has none). It takes the second's `transition_out`. The second item is removed, with its other fields; `effective.dropped` lists the fields of the second that were present and not carried over.
+3. `diff`: `item.updated` (first) and `item.removed` (second), sorted by id. `effective` has `id` (the first's) and `word_count`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | not exactly two distinct ids | `args.item_ids must have exactly 2 entries, got 3.` | `Merge two captions at a time.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the ids of captions listed by project_get.` |
+| `E_TYPE_MISMATCH` | an item is not a caption | `Item itm_m1n2p3q4r5 is a text item; only captions can be merged.` | `Pass two caption items.` |
+| `E_INVALID_STATE` | different tracks, an item between, or keyframes | `Item itm_p7q8r9s0t1 (frames 40-59) lies between captions itm_s6t7v8w9x0 and itm_c3d4e5f6g7.` | `Move or delete itm_p7q8r9s0t1 first.` |
+| `E_LIMIT` | more than 60 words | `The merged caption would have 64 words; the limit is 60.` | `Remove words first, or keep the captions separate.` |
+
+**Inverse.** The operation first removes the second caption, then extends the first. The inverse list, in mutation order, is `[put {collection: "items", object: <second>}, patch {collection: "items", id: <first id>, set: <old values>, unset: <fields that were absent>}]`. Undo applies it in reverse: it shrinks the first caption, then restores the second, so the second never exists while the first still spans it.
+
+**Idempotency.** Error: the second application returns `E_NOT_FOUND` for the removed item.
+
+**Example.** The result of C.36 undone by hand: captions `itm_s6t7v8w9x0` (`start` 12, `duration` 15, words Meet, the) and `itm_c3d4e5f6g7` (`start` 27, `duration` 33, words new (0, 12), editor. (12, 21)), adjacent on `trk_a1b2c3d4e5`.
+
+```json
+{"op": "caption.merge", "args": {"item_ids": ["itm_c3d4e5f6g7", "itm_s6t7v8w9x0"]}}
+```
+
+```json
+[
+  {"kind": "item.removed", "id": "itm_c3d4e5f6g7", "object": {"id": "itm_c3d4e5f6g7", "type": "caption", "track": "trk_a1b2c3d4e5", "start": 27, "duration": 33, "linked_item": "itm_m1n2p3q4r5",
+    "words": [{"text": "new", "start": 0, "duration": 12}, {"text": "editor.", "start": 12, "duration": 21}]}},
+  {"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"duration": [15, 48],
+    "words": [[{"text": "Meet", "start": 0, "duration": 9}, {"text": "the", "start": 9, "duration": 6}],
+              [{"text": "Meet", "start": 0, "duration": 9}, {"text": "the", "start": 9, "duration": 6}, {"text": "new", "start": 15, "duration": 12}, {"text": "editor.", "start": 27, "duration": 21}]]}}
+]
+```
+
+**Golden cases.**
+
+- `ok_adjacent_captions`
+- `ok_ids_given_in_reverse_order`
+- `ok_gap_between_captions_spans_both`
+- `ok_breaks_combined`
+- `ok_style_of_second_dropped_and_reported`
+- `ok_linked_item_taken_from_second_when_first_has_none`
+- `ok_transition_out_taken_from_second`
+- `ok_merged_exactly_60_words`
+- `err_validation_three_ids`
+- `err_validation_same_id_twice`
+- `err_not_found`
+- `err_type_mismatch_text_item`
+- `err_invalid_state_different_tracks`
+- `err_invalid_state_item_between`
+- `err_invalid_state_keyframes_present`
+- `err_limit_61_words`
+
+### C.38 `caption.set_breaks` (phase A)
+
+Sets the forced line breaks of a caption.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `caption` |
+| `breaks` | array of integers | yes | none | strictly increasing, each from 1 to word count minus 1; `[]` clears |
+
+**Preconditions.**
+
+1. Arguments match the schema and the range and order rules (`E_VALIDATION`, `path` `args.breaks[i]`).
+2. The item exists (`E_NOT_FOUND`) and is a `caption` (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. `breaks` is the given array; `[]` removes the field.
+2. `diff` has one `item.updated`; empty when unchanged. `effective` is `{"breaks": [...]}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | entry out of range, not increasing | `args.breaks[1] is 4 but the caption has 4 words; the largest index is 3.` | `Use indexes from 1 to 3.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a caption | `Item itm_m1n2p3q4r5 is a text item; text breaks lines in its text.` | `Put a line break in the text with text.set.` |
+
+**Inverse.** `patch {collection: "items", id, set: {breaks: <old>}}` or `unset: ["breaks"]`.
+
+**Idempotency.** Same result.
+
+**Example.** Caption `itm_s6t7v8w9x0` with four words and no breaks.
+
+```json
+{"op": "caption.set_breaks", "args": {"item_id": "itm_s6t7v8w9x0", "breaks": [2]}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"breaks": [null, [2]]}}]
+```
+
+**Golden cases.**
+
+- `ok_one_break`
+- `ok_several_breaks`
+- `ok_break_at_last_allowed_index`
+- `ok_clear_with_empty_array`
+- `ok_same_breaks_noop`
+- `err_validation_index_0`
+- `err_validation_index_equals_word_count`
+- `err_validation_not_increasing`
+- `err_validation_duplicate`
+- `err_not_found`
+- `err_type_mismatch_text_item`
+
+### C.39 `caption.set_style` (phase A)
+
+Sets or clears the style override of one caption.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `caption` |
+| `style` | partial CaptionStyle or `null` | yes | none | R15 without `null` values inside; the object replaces the whole override and is stored exactly as given, keys equal to a default included; `null` and `{}` clear it |
+
+**Preconditions.**
+
+1. Arguments match the schema and R15 (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`) and is a `caption` (`E_TYPE_MISMATCH`).
+3. The resulting font family and weight exist (`E_FONT_UNKNOWN`).
+
+**Postconditions.**
+
+1. The item's `style` is the given object with every key kept, even a key equal to the default (R15), or absent for `null` or `{}`. Keeping the key matters: it overrides a different value on the track. The track's `caption_style` is not touched.
+2. `diff` has one `item.updated` (`style`); empty when unchanged. `effective` has the stored `style`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | unknown key, value out of range, bad colour | `args.style.highlight must be "none" or "word", got "all".` | `Use "word" to highlight the spoken word.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a caption | `Item itm_m1n2p3q4r5 is a text item; use text.set.` | `Use text.set for text items.` |
+| `E_FONT_UNKNOWN` | unknown family or weight | `Font "Comic" is not available; available families: Inter, Roboto.` | `Use font_family "Inter".` |
+
+**Inverse.** `patch {collection: "items", id, set: {style: <old>}}` or `unset: ["style"]`.
+
+**Idempotency.** Same result.
+
+**Example.** Caption `itm_s6t7v8w9x0` without override.
+
+```json
+{"op": "caption.set_style", "args": {"item_id": "itm_s6t7v8w9x0", "style": {"size": 80, "highlight": "word"}}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"style": [null, {"highlight": "word", "size": 80}]}}]
+```
+
+**Golden cases.**
+
+- `ok_set_override`
+- `ok_replace_existing_override`
+- `ok_key_equal_to_default_overrides_track_style`
+- `ok_clear_with_null`
+- `ok_clear_with_empty_object`
+- `ok_clear_when_none_noop`
+- `ok_template_color_reference`
+- `err_validation_bad_highlight`
+- `err_validation_null_value_inside`
+- `err_validation_unknown_color_reference`
+- `err_not_found`
+- `err_type_mismatch_text_item`
+- `err_font_unknown_family`
+
+### C.40 `caption.from_transcript` (phase A)
+
+Creates caption items for the speech in a clip's visible source range, from a transcript resolved by the service.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `clip_item_id` | item id | yes | none | a `clip` of a video asset with audio |
+| `track_id` | track id | yes | none | a visual track that receives the captions |
+| `max_words` | integer | no | 5 | 1 to 60 |
+| `max_chars` | integer | no | 28 | 1 to 500 |
+| `max_gap` | time, as a length (may be 0) | no | `"0.6s"` | a pause longer than this starts a new caption |
+| `replace` | boolean | no | `true` | remove the existing captions linked to this clip on this track first |
+| `new_ids` | array of item ids | no | generated | one per created caption, in order. If the list is shorter than needed the rest comes from `env.NewIDs`; if it is longer the extra ids are ignored and listed in `effective.unused_ids`. Duplicates inside the list are `E_VALIDATION` |
+| `resolved` | `{"words": [{"text", "start", "end"}]}` | filled by the service (A.9) | none | `start` and `end` are integer frames on the asset's time axis, half-open, in order, not overlapping; `text` has 1 to 80 characters and no whitespace; required by `Apply` (`E_VALIDATION`, `path` `args.resolved.words[i]`) |
+
+**Preconditions.**
+
+1. Arguments match the schema, `new_ids` has no duplicate, and `resolved` is well formed (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The clip and the track exist (`E_NOT_FOUND`).
+3. The item is a `clip` whose asset is a video with `has_audio`, and the track is visual (`E_TYPE_MISMATCH`).
+4. At least one word falls inside the visible range (`E_INVALID_STATE`; nothing is removed in that case).
+5. Each used new id is unused (`E_ID_EXISTS`). With `replace` true the ids are checked after the captions being replaced are removed, so a new id may reuse the id of a caption that is being replaced. The ids in `unused_ids` are not checked.
+6. At most 500 items and 5,000 words in the document after the command (`E_LIMIT`).
+7. The new captions do not overlap an item of the track that stays (`E_OVERLAP`, R8). Captions removed by `replace` do not count.
+
+**Postconditions.** Let `si = source_in`, speed `num/den`, `S = [si, S_end)` with `S_end = si + ceil(duration × num / den)`, and `t(p) = start + ceil((p - si) × den / num)` the first timeline frame that shows asset frame `p`. The clip's end is `start + duration`.
+
+1. **Word mapping.** A word is kept when `si <= word.start < S_end`. Its timeline range is `[t(word.start), t(min(word.end, S_end)))`. In order, each start becomes `max(start, previous end)`, each end becomes `max(end, start + 1)` and is capped at the clip's end; a word whose start reaches the clip's end is dropped.
+2. **Grouping.** Walking the mapped words in order, a word starts a new caption when adding it would give the current caption more than `max_words` words, or when the caption's text (words joined by single spaces) would exceed `max_chars` characters, or when its start minus the previous word's end is greater than `max_gap` frames. A first word longer than `max_chars` still forms its own caption.
+3. Each group becomes a `caption` item on `track_id`: `start` is its first word's start, `duration` the last word's end minus that start, `words` are relative to `start`, `linked_item` is `clip_item_id`. No style, breaks or position.
+4. With `replace` true, every caption item on `track_id` whose `linked_item` is `clip_item_id` is removed first, wherever it is. Captions on other tracks are not touched.
+5. `diff`: `item.removed` and `item.added` entries sorted by id. `effective` has `max_gap` (the A.4 triple; `requested` is `null` for the default), `created` (ids in order), `new_ids` (the identifiers used, in order; the same list as `created`), `unused_ids` (the extra ids of the argument), `removed` (ids), `words_used` and `words_skipped`. The service stores the operation with `new_ids` equal to `effective.new_ids` (A.3, rule 4).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `resolved` missing or malformed, `max_words` out of range, duplicate ids in `new_ids` | `args.resolved.words[2] starts at 90 before the previous word ends at 100.` | `Send words in order without overlap.` |
+| `E_INVALID_TIME` | malformed `max_gap` | `args.max_gap "0.6" has no unit.` | `Use "0.6s" or "18f".` |
+| `E_NOT_FOUND` | unknown clip or track | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of a clip listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip, asset without audio, or audio track | `Track trk_m1n2p3q4r5 is an audio track; captions need a visual track.` | `Use a visual track, for example the one from track.add.` |
+| `E_INVALID_STATE` | no word in the visible range | `The transcript has no word between source frames 60 and 179 of clip itm_m1n2p3q4r5.` | `Check that the clip contains speech, or widen the clip with item.trim.` |
+| `E_ID_EXISTS` | a new id used | `Item id itm_c3d4e5f6g7 already exists.` | `Omit new_ids to generate ids.` |
+| `E_LIMIT` | too many items or words | `The document would have 5010 caption words; the limit is 5000.` | `Remove captions you no longer need.` |
+| `E_OVERLAP` | overlap with a kept item | `Item itm_c3d4e5f6g7 would occupy frames 92-133 on track trk_a1b2c3d4e5, where item itm_p7q8r9s0t1 already is (frames 92-121).` | `Use replace true to remove the old captions, or pick another track.` |
+
+**Inverse.** `put {collection: "items", object}` for each removed caption, then `remove {collection: "items", id}` for each created one, in the order the operation produced them.
+
+**Idempotency.** Same result with `replace` true: the second application removes the captions it created and creates identical ones. Because identifiers are checked after the captions being replaced are removed (precondition 5), repeating the same `new_ids` is accepted and gives the same ids; without `new_ids`, new ids are generated. With `replace` false: `E_OVERLAP`.
+
+**Example.** 30 fps; asset `ast_3c5v8n2w6d` (video with audio). Clip `itm_m1n2p3q4r5` on `trk_f6g7h8j9k0`: `start` 90, `duration` 120, `source_in` 60, speed 1, so `S = [60, 180)` and `t(p) = 30 + p`. Caption track `trk_a1b2c3d4e5` has caption `itm_p7q8r9s0t1` (`start` 92, `duration` 30, one word "Old", `linked_item` the clip). Defaults: `max_words` 5, `max_chars` 28, `max_gap` 18 frames.
+
+| Transcript word (asset frames) | Kept | Timeline range |
+| --- | --- | --- |
+| Intro `[20,30)` | no, starts before 60 | none |
+| Hello `[62,70)` | yes | `[92,100)` |
+| everyone, `[72,86)` | yes | `[102,116)` |
+| welcome `[90,100)` | yes | `[120,130)` |
+| to `[100,104)` | yes | `[130,134)` |
+| the `[104,108)` | yes | `[134,138)` |
+| channel `[110,128)` | yes | `[140,158)` |
+| today `[170,182)` | yes, start inside `S` | `[200,210)` (end capped at the clip's end) |
+
+`effective.max_gap` is `{"frame": 18, "seconds": 0.6, "requested": null}`, `effective.new_ids` is `["itm_c3d4e5f6g7", "itm_s6t7v8w9x0", "itm_h2j3k4m5n6"]` and `effective.unused_ids` is `[]`.
+
+Grouping: "Hello everyone, welcome to" is 26 characters; adding "the" would make 30, above 28, so a new caption starts at "the". "the channel" is followed by a 42-frame pause (158 to 200), above 18, so "today" starts a third caption. The old caption is removed first.
+
+```json
+{"op": "caption.from_transcript", "args": {"clip_item_id": "itm_m1n2p3q4r5", "track_id": "trk_a1b2c3d4e5", "new_ids": ["itm_c3d4e5f6g7", "itm_s6t7v8w9x0", "itm_h2j3k4m5n6"],
+  "resolved": {"words": [
+    {"text": "Intro", "start": 20, "end": 30}, {"text": "Hello", "start": 62, "end": 70}, {"text": "everyone,", "start": 72, "end": 86},
+    {"text": "welcome", "start": 90, "end": 100}, {"text": "to", "start": 100, "end": 104}, {"text": "the", "start": 104, "end": 108},
+    {"text": "channel", "start": 110, "end": 128}, {"text": "today", "start": 170, "end": 182}]}}}
+```
+
+```json
+[
+  {"kind": "item.added", "id": "itm_c3d4e5f6g7", "object": {"id": "itm_c3d4e5f6g7", "type": "caption", "track": "trk_a1b2c3d4e5", "start": 92, "duration": 42, "linked_item": "itm_m1n2p3q4r5",
+    "words": [{"text": "Hello", "start": 0, "duration": 8}, {"text": "everyone,", "start": 10, "duration": 14}, {"text": "welcome", "start": 28, "duration": 10}, {"text": "to", "start": 38, "duration": 4}]}},
+  {"kind": "item.added", "id": "itm_h2j3k4m5n6", "object": {"id": "itm_h2j3k4m5n6", "type": "caption", "track": "trk_a1b2c3d4e5", "start": 200, "duration": 10, "linked_item": "itm_m1n2p3q4r5",
+    "words": [{"text": "today", "start": 0, "duration": 10}]}},
+  {"kind": "item.removed", "id": "itm_p7q8r9s0t1", "object": {"id": "itm_p7q8r9s0t1", "type": "caption", "track": "trk_a1b2c3d4e5", "start": 92, "duration": 30, "linked_item": "itm_m1n2p3q4r5",
+    "words": [{"text": "Old", "start": 0, "duration": 30}]}},
+  {"kind": "item.added", "id": "itm_s6t7v8w9x0", "object": {"id": "itm_s6t7v8w9x0", "type": "caption", "track": "trk_a1b2c3d4e5", "start": 134, "duration": 24, "linked_item": "itm_m1n2p3q4r5",
+    "words": [{"text": "the", "start": 0, "duration": 4}, {"text": "channel", "start": 6, "duration": 18}]}}
+]
+```
+
+**Golden cases.**
+
+- `ok_worked_example_replace_true`
+- `ok_replace_false_with_free_track`
+- `ok_replace_removes_only_captions_linked_to_this_clip_on_this_track`
+- `ok_max_words_split`
+- `ok_max_chars_split`
+- `ok_max_gap_split_strict_greater_than`
+- `ok_max_gap_0`
+- `ok_single_word_longer_than_max_chars`
+- `ok_clip_with_speed_3_2_mapping_uses_ceil`
+- `ok_word_before_in_point_dropped`
+- `ok_word_crossing_out_point_kept_and_capped`
+- `ok_word_starting_at_out_point_dropped`
+- `ok_clip_not_at_frame_0`
+- `ok_new_ids_partial_rest_generated`
+- `ok_new_ids_extra_ignored_and_reported`
+- `ok_replace_true_new_ids_reuse_replaced_ids`
+- `err_validation_resolved_missing`
+- `err_validation_words_overlap`
+- `err_validation_new_ids_duplicate`
+- `err_validation_max_words_61`
+- `err_invalid_time_max_gap_no_unit`
+- `err_not_found_clip`
+- `err_not_found_track`
+- `err_type_mismatch_not_a_clip`
+- `err_type_mismatch_asset_without_audio`
+- `err_type_mismatch_audio_track`
+- `err_invalid_state_no_word_in_range`
+- `err_id_exists`
+- `err_limit_5000_words`
+- `err_limit_500_items`
+- `err_overlap_replace_false`
+
+### C.41 `caption.retime_from_clip` (phase A)
+
+Recomputes the timing of every caption linked to a clip from the transcript and the clip's current position, in-point and speed.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `clip_item_id` | item id | yes | none | a `clip` of a video asset with audio |
+| `resolved` | `{"words": [...]}` | filled by the service (A.9) | none | as in C.40 |
+
+**Preconditions.**
+
+1. Arguments match the schema and `resolved` is well formed (`E_VALIDATION`).
+2. The clip exists (`E_NOT_FOUND`).
+3. The item is a `clip` whose asset is a video with `has_audio` (`E_TYPE_MISMATCH`).
+4. At least one caption has `linked_item` equal to the clip, and at least one transcript word is visible (`E_INVALID_STATE`).
+5. After retiming, fades and transitions of each caption fit its new duration (R14, `E_INVALID_STATE`).
+6. No caption overlaps another item of its track (`E_OVERLAP`, R8, checked on the final state of the track).
+
+**Postconditions.**
+
+1. The visible transcript words `W` are mapped to the timeline exactly as in C.40, Postcondition 1.
+2. Captions linked to the clip are handled per track, each track independently. On a track, the captions are taken in order of `start` (ties by id). Caption `i` has `n_i` words and takes the next `n_i` words of `W` in order. Captions are not matched by time, because after a trim or speed change the old positions say nothing about the transcript.
+3. A caption that receives `n_i` words, its own word count, keeps its own texts (edited ones included) and gets the new timings. A caption that receives fewer words, because `W` ran out, takes the transcript texts of the words it receives and its id is listed in `effective.text_reset`; one that receives none is removed and its id is listed in `effective.removed`. Transcript words left over are not added (`effective.unassigned` counts them); `caption.from_transcript` creates captions for them.
+4. For each retimed caption: `start` is the first word's mapped start, `duration` the last word's end minus `start`, word `start` and `duration` come from the mapping. `breaks` entries at or beyond the new word count are dropped. If the caption got shorter, keyframes follow R12, which may also write static fields.
+5. `linked_item`, `style`, position, transitions and every other field are unchanged.
+6. `diff`: `item.updated` per retimed caption (every changed field, including static fields written by R12) and `item.removed` per removed one, sorted by id. The removal is part of the diff and is undone by undo. `effective` has `retimed` (ids), `removed` (ids), `text_reset` (ids) and `unassigned`.
+
+**Decision.** Transcript words are assigned to the linked captions in `start` order by word count. A caption whose word count is unchanged keeps its edited texts; otherwise it takes the transcript texts and its id is listed in `effective.text_reset`. A caption that receives no word is removed and its id is listed in `effective.removed`. This keeps the behaviour of Part B ("keeping each caption's edited texts where the word count is unchanged") and makes the other cases explicit.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `resolved` missing or malformed | `args.resolved is required.` | `Run this through the service, which fills resolved from the transcript.` |
+| `E_NOT_FOUND` | unknown clip | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of a clip listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip, or no audio | `Asset ast_9m8n7p6q5r has no audio; there is no transcript to follow.` | `Pass the clip that carries the speech.` |
+| `E_INVALID_STATE` | no linked caption, no visible word, or fades do not fit | `No caption is linked to clip itm_m1n2p3q4r5.` | `Create captions with caption.from_transcript first.` |
+| `E_OVERLAP` | a retimed caption overlaps another item | `Item itm_s6t7v8w9x0 would occupy frames 120-135 on track trk_a1b2c3d4e5, where item itm_p7q8r9s0t1 already is (frames 130-149).` | `Move itm_p7q8r9s0t1 away, or put it on another track.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old values of every changed field: start, duration, words, breaks, keyframes and the static fields written by R12>, unset: <fields that were absent>}` per retimed caption, and `put {collection: "items", object}` per removed one, in the order of mutation (R5).
+
+**Idempotency.** Same result: with the same clip state and transcript the second application computes the same timings.
+
+**Example.** The result of C.40, then the clip was sped up to 1.5x with `clip.set_speed` (`start` 90, `duration` 80, `source_in` 60, speed 3/2; `S = [60, 180)`) and the caption `itm_c3d4e5f6g7` word "welcome" was edited to "Welcome". Mapping with `t(p) = 90 + ceil((p - 60) × 2/3)`:
+
+| Word | Asset frames | Timeline range |
+| --- | --- | --- |
+| Hello | `[62,70)` | `[92,97)` |
+| everyone, | `[72,86)` | `[98,108)` |
+| welcome | `[90,100)` | `[110,117)` |
+| to | `[100,104)` | `[117,120)` |
+| the | `[104,108)` | `[120,122)` |
+| channel | `[110,128)` | `[124,136)` |
+| today | `[170,182)` capped at 180 | `[164,170)` |
+
+The captions have 4, 2 and 1 words; `W` has 7 words, so each caption takes its own count and keeps its texts. `effective` is `{"retimed": ["itm_c3d4e5f6g7", "itm_h2j3k4m5n6", "itm_s6t7v8w9x0"], "removed": [], "text_reset": [], "unassigned": 0}`.
+
+```json
+{"op": "caption.retime_from_clip", "args": {"clip_item_id": "itm_m1n2p3q4r5", "resolved": {"words": [
+  {"text": "Hello", "start": 62, "end": 70}, {"text": "everyone,", "start": 72, "end": 86}, {"text": "welcome", "start": 90, "end": 100},
+  {"text": "to", "start": 100, "end": 104}, {"text": "the", "start": 104, "end": 108}, {"text": "channel", "start": 110, "end": 128}, {"text": "today", "start": 170, "end": 182}]}}}
+```
+
+```json
+[
+  {"kind": "item.updated", "id": "itm_c3d4e5f6g7", "changes": {"duration": [42, 28], "words": [
+    [{"text": "Hello", "start": 0, "duration": 8}, {"text": "everyone,", "start": 10, "duration": 14}, {"text": "Welcome", "start": 28, "duration": 10}, {"text": "to", "start": 38, "duration": 4}],
+    [{"text": "Hello", "start": 0, "duration": 5}, {"text": "everyone,", "start": 6, "duration": 10}, {"text": "Welcome", "start": 18, "duration": 7}, {"text": "to", "start": 25, "duration": 3}]]}},
+  {"kind": "item.updated", "id": "itm_h2j3k4m5n6", "changes": {"start": [200, 164], "duration": [10, 6], "words": [[{"text": "today", "start": 0, "duration": 10}], [{"text": "today", "start": 0, "duration": 6}]]}},
+  {"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"start": [134, 120], "duration": [24, 16], "words": [
+    [{"text": "the", "start": 0, "duration": 4}, {"text": "channel", "start": 6, "duration": 18}],
+    [{"text": "the", "start": 0, "duration": 2}, {"text": "channel", "start": 4, "duration": 12}]]}}
+]
+```
+
+**Golden cases.**
+
+- `ok_worked_example_speed_3_2`
+- `ok_clip_moved_captions_follow`
+- `ok_clip_trimmed_at_start_first_words_dropped_edited_texts_kept_when_counts_match`
+- `ok_edited_texts_kept_when_counts_match`
+- `ok_caption_receives_fewer_words_takes_transcript_texts_and_is_listed_in_text_reset`
+- `ok_caption_receiving_no_word_removed_and_listed_in_removed`
+- `ok_removed_caption_restored_by_undo`
+- `ok_leftover_transcript_words_counted_not_added`
+- `ok_captions_on_two_tracks_each_start_from_first_word`
+- `ok_breaks_beyond_new_word_count_dropped`
+- `ok_keyframes_cut_when_caption_shorter`
+- `ok_unchanged_clip_noop`
+- `err_validation_resolved_missing`
+- `err_not_found_clip`
+- `err_type_mismatch_not_a_clip`
+- `err_type_mismatch_asset_without_audio`
+- `err_invalid_state_no_linked_caption`
+- `err_invalid_state_no_visible_word`
+- `err_invalid_state_transition_no_longer_fits`
+- `err_overlap_with_other_item`
+
+### C.42 `keyframe.set` (phase A)
+
+Adds or replaces a keyframe of one property.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | |
+| `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"` | yes | none | `volume` for `clip` and `audio` items; the others for visual items |
+| `at` | time | yes | none | absolute; from the item's `start` to `start + duration` inclusive |
+| `value` | number | yes | none | valid for the property: `scale` above 0 and at most 20, `opacity` 0 to 1, `volume` 0 to 4, `x`, `y`, `rotation` finite |
+| `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"` | no | `"linear"` | applies from this keyframe to the next |
+
+**Preconditions.**
+
+1. Arguments match the schema and `at` parses (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The item exists (`E_NOT_FOUND`).
+3. The property applies to the item type (`E_TYPE_MISMATCH`).
+4. `at` lies in the inclusive range `start` to `start + duration` (`E_INVALID_TIME`, `path` `args.at`, `details.range`). A keyframe may sit at `start + duration`, because `t` ranges from 0 to `duration`.
+5. The property ends with at most 100 keyframes (`E_LIMIT`).
+
+**Postconditions.** Let `t = at - start`.
+
+1. If the property has a keyframe at `t`, it is replaced by `{t, value, easing}`; an omitted `easing` becomes linear (stored without the key). Otherwise `{t, value, easing}` is inserted in order.
+2. If the property had no keyframes and `t > 0`, a keyframe `{t: 0, value: <static value by R10>}` is also added first, linear.
+3. The static field is not changed. Other properties are untouched.
+4. `diff` has one `item.updated` with `keyframes` (whole object). `effective` has `at` (the A.4 triple), `t`, `auto_first_keyframe` and `replaced` (booleans).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad property, easing or value | `args.value must be above 0 and at most 20 for scale, got 0.` | `Use a scale such as 1.2.` |
+| `E_INVALID_TIME` | malformed `at`, or `at` outside the item | `args.at "300f" is outside item itm_s6t7v8w9x0; the allowed frames are 30 to 120 inclusive (a keyframe may sit at start + duration).` | `Use an at from "30f" to "120f".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | property does not apply | `Property opacity does not apply to audio item itm_s6t7v8w9x0.` | `Use property volume for audio items.` |
+| `E_LIMIT` | would pass 100 keyframes | `Property scale of itm_s6t7v8w9x0 would have 101 keyframes; the limit is 100.` | `Remove keyframes with keyframe.remove first.` |
+
+**Inverse.** `patch {collection: "items", id, set: {keyframes: <old>}}` or `unset: ["keyframes"]`.
+
+**Idempotency.** Same result.
+
+**Example.** 30 fps; text item `itm_s6t7v8w9x0`, `start` 30, `duration` 90, `scale` not set (static 1), no keyframes.
+
+```json
+{"op": "keyframe.set", "args": {"item_id": "itm_s6t7v8w9x0", "property": "scale", "at": "2s", "value": 1.2, "easing": "ease_out"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"keyframes": [null, {"scale": [{"t": 0, "value": 1}, {"t": 30, "value": 1.2, "easing": "ease_out"}]}]}}]
+```
+
+`effective` has `t` 30, `auto_first_keyframe` true, `replaced` false.
+
+**Golden cases.**
+
+- `ok_first_keyframe_at_item_start`
+- `ok_first_keyframe_later_adds_static_value_at_0`
+- `ok_insert_between_existing`
+- `ok_replace_existing_resets_easing_when_omitted`
+- `ok_replace_with_easing`
+- `ok_at_last_frame_of_item_t_equals_duration`
+- `ok_each_property`
+- `ok_volume_on_audio_item`
+- `ok_x_static_absent_uses_frame_centre`
+- `ok_99th_to_100th_keyframe`
+- `err_validation_bad_property`
+- `err_validation_bad_easing`
+- `err_validation_scale_0`
+- `err_validation_opacity_1_5`
+- `err_invalid_time_no_unit`
+- `err_not_found`
+- `err_type_mismatch_opacity_on_audio`
+- `err_type_mismatch_volume_on_text`
+- `err_invalid_time_at_before_item`
+- `err_invalid_time_at_after_item_end`
+- `err_invalid_time_at_one_past_start_plus_duration`
+- `err_limit_101_keyframes`
+
+### C.43 `keyframe.remove` (phase A)
+
+Removes the keyframe of a property at a frame.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | |
+| `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"` | yes | none | |
+| `at` | time | yes | none | absolute position of the keyframe |
+
+**Preconditions.**
+
+1. Arguments match the schema and `at` parses (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The item exists (`E_NOT_FOUND`).
+3. The property applies to the item type (`E_TYPE_MISMATCH`).
+4. `at` lies in the inclusive range `start` to `start + duration` (`E_INVALID_TIME`, `path` `args.at`).
+5. The property has a keyframe at `at - start` (`E_NOT_FOUND`, `details.kind` `keyframe`).
+
+**Postconditions.**
+
+1. The keyframe is removed. If keyframes remain, the static field is unchanged.
+2. If it was the last keyframe, the property's keyframe list is removed and the static field becomes the removed keyframe's value (`x` and `y` are stored explicitly; other defaults are omitted). An empty `keyframes` object is removed.
+3. `diff` has one `item.updated` with `keyframes` and, in the last-keyframe case, the static field. `effective` has `at` (the A.4 triple) and `remaining` (the number of keyframes left).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad property | `args.property "zoom" is not animatable.` | `Use x, y, scale, rotation, opacity or volume.` |
+| `E_INVALID_TIME` | malformed `at`, or `at` outside the item | `args.at "300f" is outside item itm_s6t7v8w9x0; the allowed frames are 30 to 120 inclusive.` | `Use an at from "30f" to "120f".` |
+| `E_NOT_FOUND` | unknown item, or no keyframe at that frame | `Property scale of itm_s6t7v8w9x0 has no keyframe at frame 90; keyframes are at frames 30, 60.` | `Use at "60f" (2.000s), or list the keyframes with project_get.` |
+| `E_TYPE_MISMATCH` | property does not apply | `Property volume does not apply to text item itm_s6t7v8w9x0.` | `Use opacity, scale, x, y or rotation.` |
+
+**Inverse.** `patch {collection: "items", id, set: {keyframes: <old>, <static field if it changed>: <old>}, unset: <fields that were absent>}`.
+
+**Idempotency.** Error: the second application returns `E_NOT_FOUND` (no keyframe at that frame).
+
+**Example.** 30 fps; text item `itm_s6t7v8w9x0`, `start` 30, `duration` 90, `keyframes.scale` = `[{t:0, value:1}, {t:30, value:1.2, easing:"ease_out"}]`.
+
+```json
+{"op": "keyframe.remove", "args": {"item_id": "itm_s6t7v8w9x0", "property": "scale", "at": "2s"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"keyframes": [
+  {"scale": [{"t": 0, "value": 1}, {"t": 30, "value": 1.2, "easing": "ease_out"}]},
+  {"scale": [{"t": 0, "value": 1}]}]}}]
+```
+
+**Golden cases.**
+
+- `ok_remove_middle_keyframe`
+- `ok_remove_first_keyframe_others_remain`
+- `ok_remove_last_remaining_keyframe_writes_static_scale`
+- `ok_remove_last_remaining_keyframe_writes_static_x`
+- `ok_remove_last_remaining_keyframe_value_equal_to_default_omits_field`
+- `ok_other_properties_keep_keyframes`
+- `err_validation_bad_property`
+- `err_invalid_time_no_unit`
+- `err_invalid_time_at_outside_item_message_states_inclusive_range`
+- `err_not_found_item`
+- `err_not_found_no_keyframe_at_frame`
+- `err_not_found_property_has_no_keyframes`
+- `err_type_mismatch_volume_on_text`
+
+### C.44 `keyframe.clear` (phase A)
+
+Removes all keyframes of one property, or of every property, keeping the value at the item's first frame.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | |
+| `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"` | no | every property | |
+
+**Preconditions.**
+
+1. Arguments match the schema (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+3. A given `property` applies to the item type (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. For each selected property with keyframes `K`: the list is removed and the static field becomes `value_at(K, 0)`, which is the first keyframe's value (R10); defaults are omitted, `x` and `y` are stored explicitly. A property with no keyframes is left alone. An empty `keyframes` object is removed.
+2. `diff` has one `item.updated` with `keyframes` and every static field that changed; empty when nothing was cleared (R2). `effective` has `cleared` (the property names).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad property | `args.property "zoom" is not animatable.` | `Use x, y, scale, rotation, opacity or volume.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | property does not apply | `Property volume does not apply to text item itm_s6t7v8w9x0.` | `Use opacity, scale, x, y or rotation.` |
+
+**Inverse.** `patch {collection: "items", id, set: {keyframes: <old>, <static fields>: <old>}, unset: <fields that were absent>}`.
+
+**Idempotency.** Same result: the second application finds nothing to clear.
+
+**Example.** 30 fps; text item `itm_s6t7v8w9x0` with `keyframes.opacity` = `[{t:0, value:0}, {t:12, value:1}]` and no static opacity (default 1).
+
+```json
+{"op": "keyframe.clear", "args": {"item_id": "itm_s6t7v8w9x0", "property": "opacity"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"keyframes": [{"opacity": [{"t": 0, "value": 0}, {"t": 12, "value": 1}]}, null], "opacity": [null, 0]}}]
+```
+
+**Golden cases.**
+
+- `ok_clear_one_property`
+- `ok_clear_all_properties`
+- `ok_first_keyframe_not_at_frame_0_its_value_still_used`
+- `ok_value_equal_to_default_omits_static_field`
+- `ok_x_written_explicitly`
+- `ok_property_without_keyframes_noop`
+- `ok_item_without_keyframes_noop`
+- `err_validation_bad_property`
+- `err_not_found`
+- `err_type_mismatch_volume_on_text`
+
+### C.45 `slot.mark` (phase A)
+
+Marks an item as a template slot; the slot kind follows from the item type.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip`, `audio`, `text` or `caption` item |
+| `name` | string | yes | none | matches `[a-z][a-z0-9_]{0,39}`; unique among the document's slots |
+| `description` | string | no | `""` | up to 200 characters |
+| `required` | boolean | no | `true` | |
+| `duration_policy` | `"fit"` or `"stretch_timeline"` | no | `"fit"` | media slots only (`E_VALIDATION` otherwise) |
+
+**Preconditions.**
+
+1. Arguments match the schema (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item type is `clip`, `audio`, `text` or `caption` (`E_TYPE_MISMATCH`).
+4. No other item has a slot with that `name` (`E_SLOT`, `details.reason` `"name_in_use"`, `details.item` the id of the other item).
+5. The item has no slot, or already has a slot with the same `name`: re-marking the same item with the same name updates the slot. An item that already has a slot with another name is `E_INVALID_STATE`, and the hint names `slot.unmark`.
+
+**Postconditions.**
+
+1. The item's `slot` is `{name, kind, description, required, duration_policy}` with `kind` `media` (for `clip` and `audio`), `text` or `caption`; defaults are omitted from the stored object (`kind` and `name` always stay). `filled` is false, or unchanged when updating an existing slot of the same name. The item's content, including its `asset`, is not changed.
+2. `diff` has one `item.updated` with `slot`; empty when unchanged. `effective` has the stored `slot`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad `name`, over-long description, `duration_policy` on a non-media slot | `args.name "Title" does not match [a-z][a-z0-9_]{0,39}.` | `Use "title".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | shape item | `Item itm_s6t7v8w9x0 is a shape; slots are for media, text and captions.` | `Mark a clip, audio, text or caption item.` |
+| `E_SLOT` | name used by another item's slot (`details.reason` `"name_in_use"`) | `Slot name "title" is already used by item itm_m1n2p3q4r5.` | `Use another name, or unmark the other slot first.` |
+| `E_INVALID_STATE` | the item already has a slot with another name | `Item itm_s6t7v8w9x0 is already slot "headline".` | `Use slot.unmark first, or reuse the name "headline" to update it.` |
+
+**Inverse.** `patch {collection: "items", id, set: {slot: <old>}}` or `unset: ["slot"]`.
+
+**Idempotency.** Same result: marking again with the same name and values changes nothing.
+
+**Example.** Text item `itm_s6t7v8w9x0`, not a slot.
+
+```json
+{"op": "slot.mark", "args": {"item_id": "itm_s6t7v8w9x0", "name": "title", "description": "Headline"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"slot": [null, {"name": "title", "kind": "text", "description": "Headline"}]}}]
+```
+
+**Golden cases.**
+
+- `ok_text_slot`
+- `ok_caption_slot`
+- `ok_clip_slot_kind_media`
+- `ok_audio_slot_kind_media`
+- `ok_media_slot_stretch_timeline`
+- `ok_required_false`
+- `ok_remark_same_name_updates_fields_keeps_filled`
+- `ok_name_40_chars`
+- `err_validation_uppercase_name`
+- `err_validation_name_41_chars`
+- `err_validation_description_201_chars`
+- `err_validation_duration_policy_on_text_slot`
+- `err_not_found`
+- `err_type_mismatch_shape_item`
+- `err_slot_name_used_by_other_item`
+- `err_invalid_state_item_already_has_other_slot`
+
+### C.46 `slot.unmark` (phase A)
+
+Removes the slot marking of an item.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | |
+
+**Preconditions.**
+
+1. The item exists (`E_NOT_FOUND`).
+2. The item has a slot (`E_SLOT`, `details.item`).
+3. The item is not an unfilled media slot still holding `"ast_placeholder"`, which would leave an invalid asset reference (`E_INVALID_STATE`).
+
+**Postconditions.**
+
+1. `slot` is removed. Nothing else changes.
+2. `diff` has one `item.updated` with `slot`. `effective` is `{"removed_slot": "<name>"}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_SLOT` | no slot on the item | `Item itm_s6t7v8w9x0 is not a slot.` | `Mark it with slot.mark, or pick an item that is a slot.` |
+| `E_INVALID_STATE` | unfilled media slot with the placeholder asset | `Slot "hero" on itm_m1n2p3q4r5 is unfilled and still uses ast_placeholder.` | `Fill it with slot.fill, or delete the item.` |
+
+**Inverse.** `patch {collection: "items", id, set: {slot: <old>}}`.
+
+**Idempotency.** Error: the second application returns `E_SLOT`.
+
+**Example.** Text item `itm_s6t7v8w9x0` marked as slot `title`.
+
+```json
+{"op": "slot.unmark", "args": {"item_id": "itm_s6t7v8w9x0"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"slot": [{"name": "title", "kind": "text"}, null]}}]
+```
+
+**Golden cases.**
+
+- `ok_unmark_text_slot`
+- `ok_unmark_filled_media_slot`
+- `ok_unmark_unfilled_text_slot`
+- `err_not_found`
+- `err_slot_item_is_not_a_slot`
+- `err_invalid_state_unfilled_media_slot_with_placeholder`
+
+### C.47 `slot.fill` (phase A)
+
+Fills a template slot with media, text or caption words.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `name` | string | yes | none | the slot name |
+| `asset_id` | asset id | one of three | none | for a `media` slot; the reserved literal `ast_placeholder` passes the schema (R6) and is then `E_NOT_FOUND`, because it never matches a real asset |
+| `source_in` | time | no | `"0s"` | with `asset_id` only (`E_VALIDATION` otherwise) |
+| `text` | string | one of three | none | for a `text` slot; 1 to 2,000 characters |
+| `words` | array of `{text, start, duration}` | one of three | none | for a `caption` slot; R16 |
+
+**Preconditions.**
+
+1. Exactly one of `asset_id`, `text`, `words`; `source_in` only with `asset_id`; values valid (`E_VALIDATION`, `E_INVALID_TIME`).
+2. A slot with that `name` exists (`E_SLOT`, `details.available` lists the names).
+3. The argument matches the slot kind (`asset_id` for `media`, `text` for `text`, `words` for `caption`) and the slot is not yet filled (`E_SLOT`).
+4. Media: the asset exists (`E_NOT_FOUND`) and suits the item: a `clip` takes a video or image asset, an `audio` item an audio asset or a video with audio (`E_TYPE_MISMATCH`).
+5. Media, `duration_policy` `fit`, not an image: the source range holds with the item's current duration (R9, `E_OUT_OF_SOURCE`). Policy `stretch_timeline`, not an image: `maxdur(source_in)` is at least 1 (`E_OUT_OF_SOURCE`).
+6. Caption words: the caption has at most 60 words, and the document has at most 5,000 caption words after the fill (`E_LIMIT`).
+7. Resizing checks of R18 (`E_OVERLAP`, `E_INVALID_TIME`, `E_INVALID_STATE`), for `stretch_timeline` and for caption words that change the duration.
+
+**Postconditions.**
+
+1. Media: `asset` is `asset_id` and `source_in` is the given value (stored when above 0, removed when 0). Policy `fit`: `duration` is unchanged. Policy `stretch_timeline`: `duration` becomes `maxdur(source_in) = floor((A - source_in) × den / num)` for video and audio, and stays the same for an image. With `delta = new duration - old duration` and `E` the old end, every item of every track with `start >= E` moves by `delta`, and the filled item follows R18 (keyframes cut by R12 when it shrinks).
+2. Text: `text` is replaced; nothing else changes.
+3. Caption words: `words` replace the item's words, `breaks` is cleared, and `duration` becomes the end of the last word, then R18.
+4. In every case `slot.filled` is true. Other slots are untouched.
+5. `diff`: `item.updated` for the filled item and for every shifted item, sorted by id. `effective` has `slot` (the name), `kind`, `source_in` (the A.4 triple, media slots only; `requested` is `null` when the default `"0s"` applies), `duration` (`{"before", "after"}`) and `shifted` (`[{"id", "from", "to"}]`).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | none or several of the three; `source_in` without `asset_id` | `args: give exactly one of asset_id, text, words.` | `For slot "hero" (media) send asset_id.` |
+| `E_INVALID_TIME` | malformed time; resize past 108,000 | `args.source_in "30" has no unit.` | `Use "30f" or "1s".` |
+| `E_SLOT` | unknown name, wrong kind, already filled | `Slot "hero" is a media slot; it needs asset_id, not text.` | `Send asset_id for slot "hero".` |
+| `E_NOT_FOUND` | unknown asset, including `ast_placeholder` | `Asset ast_zzzzzzzzzz does not exist.` | `Import the media first, then use its asset id.` |
+| `E_LIMIT` | 61 words in the caption, or more than 5,000 caption words in the document | `The document would have 5004 caption words; the limit is 5000.` | `Remove captions you no longer need, or send fewer words.` |
+| `E_TYPE_MISMATCH` | asset kind does not suit the item | `Asset ast_9m8n7p6q5r is an image; slot "voice" holds an audio item.` | `Use an audio asset.` |
+| `E_OUT_OF_SOURCE` | the asset is too short (`fit`) | `Slot "hero" needs 90 frames from source frame 20; asset ast_4h6j8k2m3n has 100 frames, so 80 are available.` | `Use an asset of at least 110 frames, a smaller source_in, or set duration_policy to stretch_timeline.` |
+| `E_OVERLAP` | a shift or growth overlaps | `Item itm_s6t7v8w9x0 would occupy frames 50-109 on track trk_a1b2c3d4e5, where item itm_c3d4e5f6g7 already is (frames 30-149).` | `Use duration_policy "fit", or move itm_c3d4e5f6g7.` |
+| `E_INVALID_STATE` | fades or transitions no longer fit | `fade_in 40 frames plus fade_out 40 frames exceeds the new duration 60 of itm_m1n2p3q4r5.` | `Shorten the fades with item.set_audio first.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old values of every changed field, including slot>, unset: <fields that were absent>}` for the filled item, then one `patch {... set: {start: <old>}}` per shifted item, in the order of mutation (R5). Undo applies them to a working copy and validates once at the end (A.6).
+
+**Idempotency.** Error: the second application returns `E_SLOT` because the slot is filled.
+
+**Example.** 30 fps template. Asset `ast_4h6j8k2m3n` is a video of 300 frames at 30 fps. Clip `itm_m1n2p3q4r5` on `trk_f6g7h8j9k0`: `start` 0, `duration` 90, `asset` `ast_placeholder`, speed 1, slot `{name: "hero", kind: "media", description: "Main footage", duration_policy: "stretch_timeline"}`. Text `itm_s6t7v8w9x0` on `trk_a1b2c3d4e5`: `start` 90, `duration` 60. Text `itm_c3d4e5f6g7` on `trk_m1n2p3q4r5`: `start` 30, `duration` 120.
+
+Fill with `source_in` `"1s"` (30 frames): `A = 300`, so the new duration is `300 - 30 = 270`; `delta = 270 - 90 = 180`; the old end `E` is 90. `itm_s6t7v8w9x0` starts at 90, which is at or after `E`, so it moves to 270. `itm_c3d4e5f6g7` starts at 30, before `E`, so it does not move. `effective.source_in` is `{"frame": 30, "seconds": 1, "requested": "1s"}`.
+
+```json
+{"op": "slot.fill", "args": {"name": "hero", "asset_id": "ast_4h6j8k2m3n", "source_in": "1s"}}
+```
+
+```json
+[
+  {"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {
+    "asset": ["ast_placeholder", "ast_4h6j8k2m3n"], "source_in": [null, 30], "duration": [90, 270],
+    "slot": [{"name": "hero", "kind": "media", "description": "Main footage", "duration_policy": "stretch_timeline"},
+             {"name": "hero", "kind": "media", "description": "Main footage", "duration_policy": "stretch_timeline", "filled": true}]}},
+  {"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"start": [90, 270]}}
+]
+```
+
+With `duration_policy` `fit` instead, an asset of 100 frames and the same `source_in` of 20 frames would fail: `20 + ceil(90 × 1) = 110 > 100`, so `E_OUT_OF_SOURCE` with `details.available.max_duration` 80.
+
+**Golden cases.**
+
+- `ok_media_fit_asset_long_enough`
+- `ok_media_fit_asset_exactly_long_enough`
+- `ok_media_fit_with_source_in`
+- `ok_media_fit_image_asset_no_source_check`
+- `ok_media_fit_speed_3_2`
+- `ok_media_stretch_longer_shifts_later_items_on_all_tracks`
+- `ok_media_stretch_shorter_shifts_earlier_and_cuts_keyframes`
+- `ok_media_stretch_image_keeps_duration`
+- `ok_media_audio_slot_with_video_asset_with_audio`
+- `ok_text_slot`
+- `ok_caption_slot_duration_follows_last_word`
+- `ok_other_slots_untouched`
+- `err_validation_none_of_three`
+- `err_validation_two_of_three`
+- `err_validation_source_in_without_asset_id`
+- `err_invalid_time_source_in_no_unit`
+- `err_invalid_time_stretch_past_108000`
+- `err_slot_unknown_name`
+- `err_slot_wrong_kind_text_for_media`
+- `err_slot_wrong_kind_asset_for_text`
+- `err_slot_already_filled`
+- `err_not_found_asset`
+- `err_not_found_placeholder_asset`
+- `err_type_mismatch_image_for_audio_slot`
+- `err_type_mismatch_audio_asset_for_clip_slot`
+- `err_out_of_source_fit_asset_too_short`
+- `err_out_of_source_stretch_source_in_at_asset_end`
+- `err_overlap_stretch_shorter_shift_collides`
+- `err_overlap_caption_words_longer_than_gap`
+- `err_limit_61_caption_words`
+- `err_limit_5000_caption_words`
+- `err_invalid_state_fades_no_longer_fit`
+
+### C.48 `template.set_info` (phase A)
+
+Sets the template description and its named colours.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `description` | string | no | unchanged | 0 to 500 characters |
+| `colors` | object: name to colour or `null` | no | unchanged | names match `[a-z][a-z0-9_]{0,39}`; a colour is `#RRGGBB` or `#RRGGBBAA`, stored upper case; `null` removes the name |
+
+At least one of `description` and `colors` is required.
+
+**Preconditions.**
+
+1. At least one argument is present and valid (`E_VALIDATION`).
+2. No removed colour is referenced by `"$name"` anywhere in the document: text and caption styles of items, track `caption_style`, shape `fill` and `stroke_color`, `settings.background` (`E_IN_USE`, `details.used_by` lists the item and track ids, and `"settings"`).
+
+**Postconditions.**
+
+1. If the document has no `template`, it gets `{"description": "", "colors": {}}` first. `description` is set when given. For each entry of `colors`: a colour sets or replaces the name; `null` removes it, and removing a name that does not exist is ignored.
+2. When the document had no `template` and the command changes nothing (only removals of absent names), nothing is added (R2).
+3. `diff` has one `project.updated` with `template` as a whole object (R4). `effective` is `{"template": <stored template>}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | nothing to set, bad name, bad colour, description over 500 characters | `args.colors "Brand" is not a valid name; it must match [a-z][a-z0-9_]{0,39}.` | `Use "brand".` |
+| `E_IN_USE` | a removed colour is referenced | `Colour "brand" is used by itm_s6t7v8w9x0 (style.color) and trk_a1b2c3d4e5 (caption_style.highlight_color).` | `Change those fields to a fixed colour with text.set and track.set_caption_style, then remove "brand".` |
+
+**Inverse.** `patch {collection: "project", id: <project id>, set: {template: <old>}}` or `unset: ["template"]` when there was none.
+
+**Idempotency.** Same result.
+
+**Example.** Template document with `template` `{"description": "", "colors": {"old": "#112233"}}`; no style refers to `old`.
+
+```json
+{"op": "template.set_info", "args": {"description": "Product teaser", "colors": {"brand": "#ff3366", "old": null}}}
+```
+
+```json
+[{"kind": "project.updated", "id": "prj_7k2m9x4q1b", "changes": {"template": [
+  {"description": "", "colors": {"old": "#112233"}},
+  {"description": "Product teaser", "colors": {"brand": "#FF3366"}}]}}]
+```
+
+**Golden cases.**
+
+- `ok_description_only`
+- `ok_add_colors_creates_template_object`
+- `ok_replace_colour_value`
+- `ok_colour_uppercased`
+- `ok_remove_unused_colour`
+- `ok_remove_absent_name_noop`
+- `ok_description_500_chars`
+- `ok_same_values_noop`
+- `err_validation_nothing_to_set`
+- `err_validation_bad_colour_name`
+- `err_validation_bad_colour_value`
+- `err_validation_description_501_chars`
+- `err_in_use_text_style`
+- `err_in_use_track_caption_style`
+- `err_in_use_settings_background`

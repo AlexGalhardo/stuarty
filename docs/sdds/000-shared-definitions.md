@@ -1,0 +1,207 @@
+# SDD-000: Shared definitions
+
+- Status: Authoritative (2026-11-14). Every SDD uses these names exactly. A name is changed here first, then everywhere.
+- Depends on: ADR-0001, ADR-0006, ADR-0008, ADR-0015 to ADR-0020
+- Last change: 2026-11-14, names added from the review of SDD-005, SDD-006 and SDD-007 (operations outside the agent surfaces, tables `document_backups`, `audit` and `api_keys`, `E_RATE_LIMITED`, workspace files, limit variables)
+- Purpose: one place for the names that several specifications share, so that documents written in parallel agree.
+
+## 1. Service operations
+
+`service.Service` is the single application boundary (ADR-0008). Each operation maps to exactly one MCP tool, one CLI command and one HTTP endpoint. Details of arguments and results are in SDD-003. Phase: `P` Prototype, `A` ALPHA, `B` BETA.
+
+| Service operation | MCP tool | CLI command | HTTP (under `/api/v1`) | Scope | Phase |
+| --- | --- | --- | --- | --- | --- |
+| `ProjectList` | `project_list` | `project:list` | `GET /projects` | read | P |
+| `ProjectCreate` | `project_create` | `project:create` | `POST /projects` | edit | P |
+| `ProjectGet` | `project_get` | `project:show` | `GET /projects/{id}` | read | P |
+| `ProjectTrash`, `ProjectRestore` | `project_trash` | `project:trash`, `project:restore` | `POST /projects/{id}/trash`, `POST /projects/{id}/restore` | edit | A |
+| `Edit` | `edit` | `edit` | `POST /projects/{id}/edit` | edit (or media, per command) | P |
+| `CommandHelp` | `command_help` | `command:help` | `GET /commands`, `GET /commands/{name}` | read | P |
+| `HistoryList`, `Undo`, `Redo` | `history` | `history`, `undo`, `redo` | `GET /projects/{id}/history`, `POST /projects/{id}/undo`, `POST /projects/{id}/redo` | read, edit | P |
+| `MediaImport` | `media_import` | `media:import` | `POST /projects/{id}/media` | media | P |
+| `MediaInspect` | `media_inspect` | `media:inspect` | `GET /projects/{id}/media/{asset_id}` | read | P |
+| `MediaTrash`, `MediaRestore` | none (CLI and HTTP only) | `media:trash`, `media:restore` | `POST /projects/{id}/media/{asset_id}/trash`, `.../restore` | media | A |
+| `ViewFrame`, `ViewSheet` | `view` | `view` | `GET /projects/{id}/frame`, `GET /projects/{id}/sheet` | read | P |
+| `Lint` | `lint` | `lint` | `GET /projects/{id}/lint` | read | P |
+| `JobStart` | `job_start` | `export`, `transcribe` | `POST /projects/{id}/jobs` | render (export), media (transcribe) | P (kind `export`), A (kind `transcribe`) |
+| `JobGet` | `job_get` | `job:show` | `GET /jobs/{job_id}` | read | P |
+| `JobCancel` | `job_cancel` | `job:cancel` | `POST /jobs/{job_id}/cancel` | render; media is enough for the caller's own `transcribe` or `ingest` job | A |
+| `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | `template` | `template:list`, `template:save`, `template:new`, `template:export`, `template:import` | `GET /templates`, `POST /templates`, `POST /templates/{id}/instantiate`, `GET /templates/{id}/file`, `POST /templates/import` | read, edit | A |
+| `Doctor` | none | `doctor` | `GET /system` | read | A |
+| event stream | none | `events` (prints the stream) | `GET /projects/{id}/events` | read | P |
+| `PlanWindow` | none | none | `GET /projects/{id}/plan` (SDD-004 §10) | read | P |
+| `MediaList` | `media_inspect` called without an asset | `media:list` | `GET /projects/{id}/media` (every asset of the project, including those still ingesting or failed, which are not in the document) | read | P |
+| `JobList` | `job_get` called with a project and no job | `job:list` | `GET /projects/{id}/jobs` | read | P |
+| `SnapPoints` | none | none | `GET /projects/{id}/snap-points` (SDD-012 §7.8) | read | A |
+| `FontList` | none | `fonts` | `GET /fonts` (families and weights available) | read | A |
+| `OpenFile` | none | none (the job result gives the path to local callers; with a remote server the CLI downloads the file) | `GET /jobs/{job_id}/file` and the byte-serving routes listed below | read | P |
+| `AuditList` | none | `audit` | `GET /audit` | admin | A |
+| `TrashEmpty` | none | none | `POST /trash/empty` | admin, and only from a browser session (local mode) or an `admin` key (network mode); the local token is refused (SDD-007 §5.3) | A |
+| `KeyCreate`, `KeyList`, `KeyRevoke` | none | none | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` | a logged-in browser session; a key cannot call them (network mode only) | A |
+| `ProjectBundleExport`, `ProjectBundleImport` | none | `bundle:export`, `bundle:import` | `POST /projects/{id}/bundle`, `POST /projects/import` | read and render; edit and media | B |
+
+Routes that are not service operations: `POST`, `GET` and `DELETE /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (phase A: the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, and `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key). What each returns is in SDD-011 and SDD-004.
+
+A build lists only the tools whose operations exist in its phase: 12 in the Prototype (`project_trash`, `job_cancel` and `template` arrive in ALPHA). The complete MCP catalogue is 15 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`.
+
+Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
+
+## 2. Identifiers
+
+| Prefix | Object | Defined in |
+| --- | --- | --- |
+| `prj_` | project | SDD-001 |
+| `ast_` | asset | SDD-001 |
+| `trk_` | track | SDD-001 |
+| `itm_` | item | SDD-001 |
+| `job_` | job | SDD-005 |
+| `tpl_` | template | SDD-005 |
+| `key_` | API key | SDD-007 |
+
+All have the form `<prefix>_<10 lower-case Crockford base32 characters>`.
+
+## 3. Actors
+
+An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>` is supplied by the client in local mode (for example `local:ui`, `local:cli`, `local:claude-code`), limited to `[a-z0-9-]{1,32}`, default `local:cli` for the CLI, `local:mcp` for the MCP server, `local:ui` for the browser and `local:api` for a raw HTTP client that sends no label. A client never obtains `local:ui` by asking for it: that label belongs to the browser session.
+
+## 4. Scopes
+
+`read`, `edit`, `media`, `render`, `admin`. In local mode the local token carries all five.
+
+## 5. Events on a project stream
+
+| Event name | When | Payload essentials |
+| --- | --- | --- |
+| `batch.committed` | a batch was committed | `revision`, `actor`, `diff`, `at` |
+| `project.updated` | project metadata outside the document changed (trash, restore) | `project_id`, `state` |
+| `asset.updated` | an asset's ingest state or progress changed | `asset_id`, `state`, `progress` |
+| `job.updated` | a job's state or progress changed | `job_id`, `kind`, `state`, `progress`, `message` |
+| `resync.required` | the client is too far behind to replay | `revision` |
+
+The event `id` of `batch.committed` is the revision. Details in SDD-006.
+
+## 6. Jobs
+
+Kinds: `ingest`, `transcribe`, `export`, `frame`. States: `queued`, `running`, `succeeded`, `failed`, `cancelled`. Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
+
+## 7. Database tables
+
+| Table | Holds | Defined in |
+| --- | --- | --- |
+| `projects` | one row per project: current document, revision, schema version, trash state | SDD-005 |
+| `operations` | the append-only log, one row per committed batch | SDD-005 |
+| `idempotency_keys` | stored batch results by key | SDD-005 |
+| `assets` | one row per file in the content store, by hash | SDD-005 |
+| `artifacts` | derived files of an asset (probe, normalized, proxy, thumbnails, peaks, silence, loudness, transcript), keyed by asset hash, kind, profile version, variant and extension | SDD-005, SDD-011 §6 |
+| `project_assets` | which project uses which asset, and trash state of that use | SDD-005 |
+| `jobs` | job state (ADR-0018) | SDD-005 |
+| `templates` | template documents | SDD-005 |
+| `document_backups` | the document as it was before a schema migration or an import | SDD-005 |
+| `audit` | append-only record of actions outside a document batch (trash, restore, emptying, imports, jobs, keys), with their actor | SDD-005 |
+| `api_keys` | network mode: maps a `key_` identifier to its vukem token, owner and optional project | SDD-005, SDD-007 |
+| `queue_jobs`, `queue_failed_jobs` | vukem's queue | vukem |
+| vukem's own tables for users, sessions and tokens | network mode | vukem |
+
+## 8. Error codes outside the core
+
+The core's codes are in SDD-002 §A.8. The service adds:
+
+| Code | Meaning | Retryable |
+| --- | --- | --- |
+| `E_UNAUTHORIZED` | missing or invalid token, key or session | no |
+| `E_FORBIDDEN` | the key lacks the scope or is limited to another project | no |
+| `E_WORKSPACE_LOCKED` | another process owns the workspace and cannot be reached | yes |
+| `E_PATH_NOT_ALLOWED` | a path is outside the allowed import roots or is not a regular file | no |
+| `E_FILE_NOT_FOUND` | the path does not exist or cannot be read | no |
+| `E_UNSUPPORTED_MEDIA` | the file is not media FFmpeg can decode, or has no usable stream | no |
+| `E_INGEST_FAILED` | ingest failed; `details.reason` | no |
+| `E_ASSET_NOT_READY` | the asset is still ingesting | yes |
+| `E_FFMPEG_MISSING` | no usable FFmpeg was found | no |
+| `E_NO_ENCODER` | no H.264 encoder works on this machine | no |
+| `E_EXPORT_FAILED` | the export process failed; `details.reason` | no |
+| `E_VERIFY_FAILED` | the exported file did not pass verification; `details.checks` | no |
+| `E_TRANSCRIBE_UNAVAILABLE` | no transcription provider is installed or configured; `details` names what is missing, its download size and the install command | no |
+| `E_TRANSCRIBE_FAILED` | a transcription ran and failed (no output, provider error, no word timings); `details.reason` | no |
+| `E_QUEUE_FULL` | a concurrency limit is reached; `details.running` lists the jobs, or `details.limit` names the limit (for example `streams`) | yes |
+| `E_RATE_LIMITED` | the caller sent too many requests; the answer carries `Retry-After` | yes |
+| `E_LIMIT_EXCEEDED` | a configured ceiling (file size, duration, resolution) is exceeded | no |
+| `E_CANCELLED` | the job was cancelled | no |
+| `E_NOTHING_TO_UNDO`, `E_NOTHING_TO_REDO` | the actor has no step to undo or redo | no |
+| `E_LINT_BLOCKING` | an export was refused because the lint has errors; `details.findings` | no |
+| `E_PAYLOAD_TOO_LARGE` | a request or batch is too large | no |
+| `E_NOT_FOUND` | also used by the service for unknown projects, jobs, templates | no |
+
+HTTP status mapping: `E_VALIDATION`, `E_INVALID_TIME`, `E_UNKNOWN_COMMAND` 400; `E_UNAUTHORIZED` 401; `E_FORBIDDEN`, `E_PATH_NOT_ALLOWED` 403; `E_NOT_FOUND`, `E_FILE_NOT_FOUND` 404; `E_REVISION_CONFLICT`, `E_IDEMPOTENCY_MISMATCH`, `E_OVERLAP`, `E_INVALID_STATE`, `E_IN_USE`, `E_NOT_EMPTY`, `E_ID_EXISTS`, `E_ASSET_NOT_READY` 409; `E_PAYLOAD_TOO_LARGE` 413; `E_LIMIT`, `E_LIMIT_EXCEEDED`, `E_UNSUPPORTED_MEDIA`, `E_TYPE_MISMATCH`, `E_OUT_OF_SOURCE`, `E_FONT_UNKNOWN`, `E_SLOT`, `E_LINT_BLOCKING` 422; `E_QUEUE_FULL`, `E_RATE_LIMITED` 429; `E_NOTHING_TO_UNDO`, `E_NOTHING_TO_REDO` 409; `E_WORKSPACE_LOCKED`, `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER` 503; `E_INTERNAL` and everything else 500. The job codes `E_INGEST_FAILED`, `E_EXPORT_FAILED`, `E_VERIFY_FAILED`, `E_TRANSCRIBE_FAILED` and `E_CANCELLED` normally travel inside a job object in a 200 answer; they are 500 only when a call itself raises them.
+
+CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the rest.
+
+## 9. Workspace layout
+
+```text
+<workspace>/                 default ~/.vukem-video, or $VUKEM_VIDEO_HOME
+├── db.sqlite                database
+├── lock                     empty file that carries the operating-system lock of the owner process (SDD-005 §6.2)
+├── runtime.json             owner process: schema, pid, addr, mode, started_at, version (present only while a server runs; no secret)
+├── token                    local token, file mode 0600 (local mode only)
+├── store/                   content-addressed originals: store/<first 2 hex>/<sha256>; store/.incoming/ holds copies in progress
+├── artifacts/               derived files: artifacts/<asset sha256>/<kind>-<profile version>[-<variant>].<ext> (SDD-011 §6.1)
+├── exports/                 exported files: exports/<project id>/<job id>.mp4
+├── frames/                  cache of rendered frames: frames/<project id>/<revision>/<frame>-<width>.jpg
+├── bitmaps/                 cache of rasterized text and shapes, by content hash
+├── fonts/                   user fonts, by hash (BETA)
+├── tools/                   installed helpers (whisper.cpp, models); tools/.download/ holds downloads in progress
+├── tmp/                     one directory per running child process: tmp/<job id>/ (SDD-007 §6.4)
+├── backups/                 copies of db.sqlite made before a migration (SDD-005 §7)
+├── logs/                    rotating log files
+└── trash/                   nothing lives here: trash is a database state, files are kept in place
+```
+
+## 10. Configuration
+
+Environment variables, all optional. Names are final. Ceilings that have no variable here are fixed constants of the code, listed in the SDD that owns them (for example the longest side of a source and the length of the ingest queue: SDD-011 §1.5); a constant becomes a variable only by adding it to this table first.
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `VUKEM_VIDEO_HOME` | `~/.vukem-video` | workspace directory |
+| `VUKEM_VIDEO_ADDR` | `127.0.0.1:7878` | bind address; a non-loopback address requires network mode |
+| `VUKEM_VIDEO_MODE` | `local` | `local` or `network` |
+| `VUKEM_VIDEO_FFMPEG`, `VUKEM_VIDEO_FFPROBE` | discovered | explicit binaries |
+| `VUKEM_VIDEO_ENCODER` | automatic | force an H.264 encoder by FFmpeg name |
+| `VUKEM_VIDEO_ALLOW_USER_X264` | `false` | allow `libx264` when the user's own FFmpeg has it |
+| `VUKEM_VIDEO_IMPORT_ROOTS` | none | in network mode, directories from which import by path is allowed |
+| `VUKEM_VIDEO_MAX_EXPORTS` | `2` | concurrent exports per workspace |
+| `VUKEM_VIDEO_MAX_IMPORT_BYTES` | `8589934592` (8 GiB) | largest file accepted by import |
+| `VUKEM_VIDEO_TRANSCRIBE_URL`, `VUKEM_VIDEO_TRANSCRIBE_KEY`, `VUKEM_VIDEO_TRANSCRIBE_MODEL` | none | OpenAI-compatible transcription API; when unset, the local provider is used |
+| `VUKEM_VIDEO_WHISPER_MODEL` | `small` | local model name: `tiny`, `base`, `small` or `large-v3-turbo` |
+| `VUKEM_VIDEO_MAX_EXPORTS_PER_KEY` | `1` | concurrent exports running per actor (two more may wait) |
+| `VUKEM_VIDEO_MAX_INGESTS` | `2` | concurrent ingests per workspace |
+| `VUKEM_VIDEO_MAX_TRANSCRIBES` | `1` | concurrent transcriptions per workspace |
+| `VUKEM_VIDEO_MAX_IMPORT_SECONDS` | `14400` | longest source accepted by import |
+| `VUKEM_VIDEO_MAX_IMPORT_PIXELS` | `33177600` | largest source frame (7680 x 4320); no side above 8192 |
+| `VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS` | `7200` | longest audio per transcription job |
+| `VUKEM_VIDEO_MAX_EXPORT_BYTES` | `4294967296` (4 GiB) | largest exported file |
+| `VUKEM_VIDEO_MIN_FREE_BYTES` | `2147483648` (2 GiB) | writes are refused below this free space on the workspace volume |
+| `VUKEM_VIDEO_CACHE_MAX_BYTES` | `2147483648` (2 GiB) | size of the frame and bitmap caches before eviction |
+| `VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE` | `300` | requests per minute per key or local token |
+| `VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE` | `1800` | requests per minute per browser session |
+| `VUKEM_VIDEO_SANDBOX` | `none` | `bwrap` runs FFmpeg and whisper.cpp in a sandbox on Linux |
+| `VUKEM_VIDEO_INSECURE_ALLOW_ROOT` | `false` | allow network mode as root |
+| `VUKEM_VIDEO_ADMIN_EMAIL`, `VUKEM_VIDEO_ADMIN_PASSWORD` | none | network mode: create the first administrator at start-up when no user exists |
+| `VUKEM_VIDEO_URL`, `VUKEM_VIDEO_KEY` | none | client side: make the CLI and the stdio MCP server talk to a remote server with an API key |
+| `VUKEM_VIDEO_PROJECT` | none | client side: the default project of CLI commands that take one |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | none | turns on OpenTelemetry (ADR-0026) |
+
+The limits and their errors are specified in SDD-007 §9. Variables read by vukem itself and used by the product (`APP_URL`, `APP_KEY`, `TLS_CERT_FILE`, `TLS_KEY_FILE`, `TRUSTED_PROXIES`, `TRUST_FORWARDED_PROTO`, `SHUTDOWN_TIMEOUT`, `DB_MAX_OPEN`) keep vukem's names.
+
+## 11. Headers and cookies
+
+| Name | Kind | Meaning | Defined in |
+| --- | --- | --- | --- |
+| `Authorization: Bearer <token>` | request header | the local token (`vvl_...`) or an API key (`vvk_...`) | SDD-007 §3.7, §4.2 |
+| `Vukem-Video-Client` | request header | the label of a bearer client in local mode (`[a-z0-9-]{1,32}`), which becomes the actor `local:<label>` | SDD-007 §3.7 |
+| `Idempotency-Key` | request header | the idempotency key of an edit over HTTP (8 to 64 characters of `[A-Za-z0-9._~-]`) | SDD-003 §6, SDD-005 §10 |
+| `X-Vukem-Revision` | response header | the revision a read or a byte response belongs to | SDD-003 §6 |
+| `X-Request-Id` | request and response header | the request identifier, repeated in the error envelope as `request_id` | SDD-003 §1.4 |
+| `Last-Event-ID` | request header | the last revision a stream client received (the `since` query parameter does the same) | SDD-006 §4 |
+| `vukem_video_session` | cookie | the browser session in local mode, and in network mode over plain HTTP on localhost | SDD-007 §3.5 |
+| `__Host-vukem_video_session` | cookie | the browser session in network mode over TLS | SDD-007 §4.1 |
