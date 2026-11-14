@@ -275,6 +275,7 @@ type IdempotencyRepo interface {
 	Get(ctx context.Context, projectID, actor, key string, nowMs int64) (IdempotencyRow, error)
 	Put(ctx context.Context, row IdempotencyRow) error // replaces an expired row with the same key
 	PurgeExpired(ctx context.Context, nowMs int64) (int64, error)
+	PurgeProjectExpired(ctx context.Context, projectID string, nowMs int64) (int64, error) // the commit's own purge, step 12 of section 9.2
 }
 ```
 

@@ -121,7 +121,7 @@ func (s *svc) commit(ctx context.Context, tx ProjectTx, b *batch) (int64, error)
 
 		crashpoint.Hit("commit.after_idempotency_put")
 
-		if _, err := tx.Idempotency().PurgeExpired(ctx, now); err != nil {
+		if _, err := tx.Idempotency().PurgeProjectExpired(ctx, row.ID, now); err != nil {
 			return 0, err
 		}
 	}
