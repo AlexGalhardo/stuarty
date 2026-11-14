@@ -4,11 +4,11 @@ import { renderToString } from "react-dom/server";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";
 import { devFixture } from "../boot/devFixture";
-import { EditorProvider } from "../state/EditorContext";
-import type { EditorRuntime } from "../state/runtime";
 import { fakeId } from "../fixtures/fixtureServer";
 import { startHarness } from "../fixtures/harness";
 import TopBar from "../layout/TopBar";
+import { EditorProvider } from "../state/EditorContext";
+import type { EditorRuntime } from "../state/runtime";
 import Timeline from "./Timeline";
 
 const messages = devFixture(1).bootstrap.messages;

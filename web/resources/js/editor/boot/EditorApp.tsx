@@ -3,9 +3,9 @@ import { type ReactNode, useEffect } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";
 import EditorShell from "../layout/EditorShell";
-import type { EditorBootstrap } from "./bootstrap";
 import { EditorProvider } from "../state/EditorContext";
 import type { EditorRuntime } from "../state/runtime";
+import type { EditorBootstrap } from "./bootstrap";
 
 // The root of the editor: the translation context from the bootstrap, the
 // runtime, and the boot sequence of SDD-012 section 5.6 (load the document,

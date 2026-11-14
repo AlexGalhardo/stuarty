@@ -7,10 +7,7 @@ import {
 	createActivityStore,
 } from "../state/activityStore";
 import type { ReadStore } from "./createStore";
-import {
-	createDocumentStore,
-	type DocumentState,
-} from "./documentStore";
+import { createDocumentStore, type DocumentState } from "./documentStore";
 import { createSync, type Sync } from "./sync";
 import { createUiStore, type UiState, type UiWriter } from "./uiStore";
 
