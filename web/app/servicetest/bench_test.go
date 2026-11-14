@@ -1,0 +1,108 @@
+package servicetest
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+)
+
+// nfr001P95 is the budget of a command round trip in process (NFR-001).
+const nfr001P95 = 50 * time.Millisecond
+
+// BenchmarkCommit200Items is SDD-005 section 18 check 12: a project of about
+// 200 items and 2,000 caption words, one item.move per iteration through
+// Service.Edit in process. It reports the p95 and fails above the budget of
+// the whole round trip (50 ms, NFR-001; the store's share is under 25 ms).
+func BenchmarkCommit200Items(b *testing.B) {
+	e := newEnv(b)
+	command.Default().Debug = false // the debug validation of every result is a test aid, not the product's cost
+
+	project, textTrack := e.seed200(b)
+	moved := "itm_00000000aa"
+
+	e.mustEditB(b, project, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"500s","duration":"1s","text":"mover","id":%q}`, textTrack, moved)))
+
+	rev := e.headB(b, project)
+	times := make([]time.Duration, 0, b.N)
+
+	b.ResetTimer()
+
+	for i := range b.N {
+		start := fmt.Sprintf("%ds", 500+(i%2)*2)
+
+		t0 := time.Now()
+		_, err := e.edit(ui, project, rev, op("item.move", fmt.Sprintf(`{"item_id":%q,"start":%q}`, moved, start)))
+		times = append(times, time.Since(t0))
+
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		rev++
+	}
+
+	b.StopTimer()
+
+	sort.Slice(times, func(i, j int) bool { return times[i] < times[j] })
+
+	p95 := times[min(len(times)-1, len(times)*95/100)]
+	b.ReportMetric(float64(p95.Microseconds())/1000, "p95-ms")
+	b.ReportMetric(float64(times[len(times)/2].Microseconds())/1000, "p50-ms")
+	b.ReportMetric(float64(times[0].Microseconds())/1000, "min-ms")
+	b.Logf("n=%d min %s p50 %s p95 %s max %s", len(times), times[0], times[len(times)/2], p95, times[len(times)-1])
+
+	// b.N is 1 on the first probe run, where the p95 is a single cold sample.
+	if b.N >= 100 && p95 > nfr001P95 {
+		b.Errorf("p95 of a commit round trip is %s, over the %s of NFR-001", p95, nfr001P95)
+	}
+}
+
+func (e *env) mustEditB(b *testing.B, project string, ops ...command.Operation) {
+	b.Helper()
+
+	if _, err := e.edit(ui, project, e.headB(b, project), ops...); err != nil {
+		b.Fatal(err)
+	}
+}
+
+func (e *env) headB(b *testing.B, project string) int64 {
+	b.Helper()
+
+	return e.head(project).Revision
+}
+
+// seed200 builds a project of 166 text items and 34 captions of 60 words
+// (2,040 words), in batches of at most 200 operations.
+func (e *env) seed200(b *testing.B) (project, textTrack string) {
+	b.Helper()
+
+	project = e.newProject("bench")
+	res, err := e.edit(ui, project, 0, op("track.add", `{"kind":"visual","name":"T"}`), op("track.add", `{"kind":"visual","name":"C"}`))
+
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	textTrack, capTrack := res.Created[0], res.Created[1]
+
+	words := strings.TrimSpace(strings.Repeat("word ", 60))
+
+	var ops []command.Operation
+
+	for i := range 166 {
+		ops = append(ops, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"%ds","duration":"1s","text":"t%d"}`, textTrack, i*2, i)))
+	}
+
+	for i := range 34 {
+		ops = append(ops, op("caption.add", fmt.Sprintf(`{"track_id":%q,"start":"%ds","duration":"3s","text":%q}`, capTrack, i*4, words)))
+	}
+
+	e.mustEditB(b, project, ops[:100]...)
+	e.mustEditB(b, project, ops[100:]...)
+
+	return project, textTrack
+}
