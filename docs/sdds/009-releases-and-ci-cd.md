@@ -994,6 +994,13 @@ The smoke test is the executable form of NFR-043 for the image: the FFmpeg insid
 | `scorecard.yml` | Copied from vukem (`scorecard.yml:1-41`): branch protection rule, push to `main`, cron `23 5 * * 1`, manual; `ossf/scorecard-action` with `publish_results: true`; upload SARIF with `actions/upload-artifact` and `github/codeql-action/upload-sarif`. The job must stay minimal (vukem's comment, lines 3-4 of the file) |
 | `ci-failure.yml` | Copied from vukem: on `workflow_run` completed with `failure` of `Vulnerabilities (weekly)`, `Scorecard`, `Secrets`, `CodeQL`, `Fuzz`, `FFmpeg freshness`; opens or comments on an issue labelled `ci-failure` and `priority:p1` with `gh`. `issues: write`. The labels exist (section 16.3). An open issue blocks the next release (R25) |
 
+What P1-REL-011 built, where it differs from the rows above and from sections 14 and 16:
+
+- `scorecard.yml` is vukem's unchanged. `ci-failure.yml` is vukem's with a different filter: it watches `CI`, `Site`, `Fuzz`, `Vulnerabilities (weekly)`, `Scorecard`, `Secrets` and `CodeQL`, and opens or updates its issue only for a failure of a scheduled or manual run, or of a push to `main`; a pull request run never opens one (vukem lists only scheduled workflows).
+- `fuzz.yml` has a matrix of the fuzz targets that exist (`./core/timeval` `FuzzParse`), 30 s each by default, weekly (cron `17 3 * * 0`) and on demand. The targets of SDD-007 section 12 join the matrix when their packages exist. The 30 s run on pull requests that change a target is not built yet.
+- `.github/labels.txt` is the list of section 16.3. `internal/tools/labelsync` is vukem's tool with its test rewritten without `go-cmp` (not a dependency of this module); a second test compares the `area:` labels with the scopes of `pr-title.yml` and with the table of section 6.2, so the three lists cannot drift. `task labels:sync` runs it.
+- `lint:site` (part of `task lint`) runs `npm ci`, `npm run lint`, `npm run build` and `npm run check:built` in `site/`, and is skipped while `site/package.json` does not exist.
+
 ## 10. GoReleaser
 
 `.config/goreleaser.yaml`, adapted from `vukem/.config/goreleaser.yaml` (lines 1-53). Changes: names; `main: ./web/cmd/app`; a `before` hook that installs and builds the web assets, because the binary embeds them (RF-200); the archive file list adds the notices (RF-215).
