@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "prj_7k2m9x4q1b",
+  "name": "A clip with a caption",
+  "settings": {"width": 1080, "height": 1920, "fps": {"num": 30, "den": 1}},
+  "assets": {
+    "ast_3c5v8n2w6d": {"id": "ast_3c5v8n2w6d", "hash": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+      "kind": "video", "name": "IMG_0421.MOV", "frame_rate": {"num": 30, "den": 1}, "frame_count": 900,
+      "sample_count": 1440000, "width": 1080, "height": 1920, "has_audio": true}
+  },
+  "tracks": {
+    "trk_a1b2c3d4e5": {"id": "trk_a1b2c3d4e5", "kind": "visual", "name": "Captions", "order": "a0", "caption_style": {"highlight": "word"}},
+    "trk_f6g7h8j9k0": {"id": "trk_f6g7h8j9k0", "kind": "visual", "name": "Video", "order": "a1"}
+  },
+  "items": {
+    "itm_m1n2p3q4r5": {"id": "itm_m1n2p3q4r5", "type": "clip", "track": "trk_f6g7h8j9k0", "start": 0, "duration": 90, "asset": "ast_3c5v8n2w6d", "source_in": 60, "fade_in": 6},
+    "itm_s6t7v8w9x0": {"id": "itm_s6t7v8w9x0", "type": "caption", "track": "trk_a1b2c3d4e5", "start": 12, "duration": 48, "linked_item": "itm_m1n2p3q4r5",
+      "transition_in": {"kind": "fade", "duration": 4},
+      "words": [{"text": "Meet", "start": 0, "duration": 9}, {"text": "the", "start": 9, "duration": 6}, {"text": "new", "start": 15, "duration": 12}, {"text": "editor.", "start": 27, "duration": 21}]}
+  }
+}
