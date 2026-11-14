@@ -1,0 +1,7 @@
+{
+  "op": "track.move",
+  "args": {
+    "track_id": "trk_a1b2c3d4e5",
+    "position": "bottom"
+  }
+}

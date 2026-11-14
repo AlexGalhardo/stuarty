@@ -1,0 +1,13 @@
+[
+  {
+    "type": "put",
+    "collection": "tracks",
+    "id": "trk_m1n2p3q4r5",
+    "object": {
+      "id": "trk_m1n2p3q4r5",
+      "kind": "audio",
+      "name": "Music",
+      "order": "a2"
+    }
+  }
+]

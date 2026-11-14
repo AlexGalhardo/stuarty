@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "track.updated",
+    "id": "trk_a1b2c3d4e5",
+    "changes": {
+      "caption_style": [
+        {
+          "size": 72
+        },
+        null
+      ]
+    }
+  }
+]

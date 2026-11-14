@@ -1,0 +1,9 @@
+{
+  "op": "track.set_caption_style",
+  "args": {
+    "track_id": "trk_zzzzzzzzzz",
+    "style": {
+      "size": 72
+    }
+  }
+}
