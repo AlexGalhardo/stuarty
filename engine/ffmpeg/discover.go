@@ -208,7 +208,7 @@ func openTool(ctx context.Context, cfg Config, name, path string, maxOutput int)
 	if err != nil {
 		return nil, VersionInfo{}, err
 	}
-	defer os.RemoveAll(dir)
+	defer func() { _ = os.RemoveAll(dir) }()
 	res, err := t.Run(vctx, dir, "-hide_banner", "-version")
 	if err != nil {
 		return nil, VersionInfo{}, err

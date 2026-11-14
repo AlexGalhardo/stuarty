@@ -148,7 +148,7 @@ func hasPrefixDir(path, root string) (string, bool) {
 		return "", false
 	}
 	head := path[:len(root)]
-	if head != root && !(runtime.GOOS == "windows" && strings.EqualFold(head, root)) {
+	if head != root && (runtime.GOOS != "windows" || !strings.EqualFold(head, root)) {
 		return "", false
 	}
 	return path[len(root)+1:], true

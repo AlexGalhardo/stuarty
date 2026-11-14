@@ -119,7 +119,7 @@ func (r *Runner) detectEncoder(ctx context.Context, caps *Capabilities, opt Dete
 	if err != nil {
 		return nil, err
 	}
-	defer dir.Remove()
+	defer func() { _ = dir.Remove() }()
 
 	for _, name := range names {
 		known := false
@@ -132,7 +132,7 @@ func (r *Runner) detectEncoder(ctx context.Context, caps *Capabilities, opt Dete
 			c.Status, c.StderrTail = EncoderFailed, "not an H.264 encoder the product knows"
 		case !platformOK(name):
 			c.Status, c.StderrTail = EncoderNotListed, "not available on "+runtime.GOOS
-		case name == "libx264" && !(r.In.UserBuild && opt.AllowUserX264):
+		case name == "libx264" && (!r.In.UserBuild || !opt.AllowUserX264):
 			c.Status, c.StderrTail = EncoderNotListed, "only a user's own FFmpeg with VUKEM_VIDEO_ALLOW_USER_X264=true may use it"
 		case !caps.Encoders[name]:
 			c.Status = EncoderNotListed
