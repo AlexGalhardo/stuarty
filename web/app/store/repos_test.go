@@ -25,7 +25,7 @@ func testStore(t *testing.T) *Store {
 func newProject(id string, updated int64) service.ProjectRow {
 	return service.ProjectRow{
 		ID: id, Name: "name " + id, State: service.ProjectActive, SchemaVersion: 1,
-		Summary:   service.ProjectSummary{Width: 1080, Height: 1920, FPSNum: 30, FPSDen: 1},
+		Summary:   service.DocSummary{Width: 1080, Height: 1920, FPSNum: 30, FPSDen: 1},
 		CreatedMs: updated, UpdatedMs: updated, CreatedBy: "local:ui",
 		Document: []byte(`{"name":"` + id + `"}`), DocSHA256: "sha-" + id,
 	}
@@ -69,7 +69,7 @@ func TestProjectsCreateGetCommit(t *testing.T) {
 		Document:      []byte(`{"v":2}`),
 		DocSHA256:     "sha2",
 		UpdatedMs:     200,
-		Summary: service.ProjectSummary{
+		Summary: service.DocSummary{
 			Width:          1,
 			Height:         2,
 			FPSNum:         24,
@@ -827,7 +827,7 @@ func TestTemplatesBackupsAudit(t *testing.T) {
 	for i := range 3 {
 		err := s.Templates().Create(ctx, service.TemplateRow{
 			ID: fmt.Sprintf("tpl_%d", i), Name: "t", SchemaVersion: 1, Document: []byte(`{"a":1}`), DocSHA256: "s",
-			Slots: json.RawMessage(`[]`), Summary: service.ProjectSummary{Width: 1, Height: 2, FPSNum: 30, FPSDen: 1},
+			Slots: json.RawMessage(`[]`), Summary: service.DocSummary{Width: 1, Height: 2, FPSNum: 30, FPSDen: 1},
 			CreatedMs: int64(i), CreatedBy: "local:ui",
 		})
 		if err != nil {
@@ -849,7 +849,7 @@ func TestTemplatesBackupsAudit(t *testing.T) {
 		t.Errorf("template paging: %v %v %q", page, rest, next2)
 	}
 	if err := s.Templates().
-		UpdateDocument(ctx, "tpl_1", 2, []byte(`{"b":2}`), "s2", json.RawMessage(`[{"name":"x"}]`), service.ProjectSummary{Width: 9}); err != nil {
+		UpdateDocument(ctx, "tpl_1", 2, []byte(`{"b":2}`), "s2", json.RawMessage(`[{"name":"x"}]`), service.DocSummary{Width: 9}); err != nil {
 		t.Fatal(err)
 	}
 	got, err := s.Templates().Get(ctx, "tpl_1")
@@ -859,7 +859,7 @@ func TestTemplatesBackupsAudit(t *testing.T) {
 		t.Errorf("Get = %+v, %v", got, err)
 	}
 	if err := s.Templates().
-		UpdateDocument(ctx, "tpl_none", 1, nil, "", json.RawMessage(`[]`), service.ProjectSummary{}); !errors.Is(
+		UpdateDocument(ctx, "tpl_none", 1, nil, "", json.RawMessage(`[]`), service.DocSummary{}); !errors.Is(
 		err,
 		service.ErrNotFound,
 	) {
