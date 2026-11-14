@@ -2,7 +2,7 @@ package servicetest
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -24,7 +24,14 @@ func BenchmarkCommit200Items(b *testing.B) {
 	project, textTrack := e.seed200(b)
 	moved := "itm_00000000aa"
 
-	e.mustEditB(b, project, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"500s","duration":"1s","text":"mover","id":%q}`, textTrack, moved)))
+	e.mustEditB(
+		b,
+		project,
+		op(
+			"text.add",
+			fmt.Sprintf(`{"track_id":%q,"start":"500s","duration":"1s","text":"mover","id":%q}`, textTrack, moved),
+		),
+	)
 
 	rev := e.headB(b, project)
 	times := make([]time.Duration, 0, b.N)
@@ -47,7 +54,7 @@ func BenchmarkCommit200Items(b *testing.B) {
 
 	b.StopTimer()
 
-	sort.Slice(times, func(i, j int) bool { return times[i] < times[j] })
+	slices.Sort(times)
 
 	p95 := times[min(len(times)-1, len(times)*95/100)]
 	b.ReportMetric(float64(p95.Microseconds())/1000, "p95-ms")
@@ -81,8 +88,13 @@ func (e *env) seed200(b *testing.B) (project, textTrack string) {
 	b.Helper()
 
 	project = e.newProject("bench")
-	res, err := e.edit(ui, project, 0, op("track.add", `{"kind":"visual","name":"T"}`), op("track.add", `{"kind":"visual","name":"C"}`))
-
+	res, err := e.edit(
+		ui,
+		project,
+		0,
+		op("track.add", `{"kind":"visual","name":"T"}`),
+		op("track.add", `{"kind":"visual","name":"C"}`),
+	)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -94,11 +106,23 @@ func (e *env) seed200(b *testing.B) (project, textTrack string) {
 	var ops []command.Operation
 
 	for i := range 166 {
-		ops = append(ops, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"%ds","duration":"1s","text":"t%d"}`, textTrack, i*2, i)))
+		ops = append(
+			ops,
+			op(
+				"text.add",
+				fmt.Sprintf(`{"track_id":%q,"start":"%ds","duration":"1s","text":"t%d"}`, textTrack, i*2, i),
+			),
+		)
 	}
 
 	for i := range 34 {
-		ops = append(ops, op("caption.add", fmt.Sprintf(`{"track_id":%q,"start":"%ds","duration":"3s","text":%q}`, capTrack, i*4, words)))
+		ops = append(
+			ops,
+			op(
+				"caption.add",
+				fmt.Sprintf(`{"track_id":%q,"start":"%ds","duration":"3s","text":%q}`, capTrack, i*4, words),
+			),
+		)
 	}
 
 	e.mustEditB(b, project, ops[:100]...)

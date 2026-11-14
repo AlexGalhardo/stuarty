@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"slices"
 	"strconv"
 
@@ -40,7 +41,8 @@ func (s *svc) HistoryList(ctx context.Context, req HistoryListRequest) (*History
 
 	limit := clampLimit(req.Limit, defaultHistoryLimit, maxHistoryLimit)
 
-	rows, more, err := s.store.Operations().Page(ctx, req.ProjectID, HistoryQuery{Before: before, Actor: req.Actor, Limit: limit})
+	rows, more, err := s.store.Operations().
+		Page(ctx, req.ProjectID, HistoryQuery{Before: before, Actor: req.Actor, Limit: limit})
 	if err != nil {
 		return nil, asError(err)
 	}
@@ -92,7 +94,13 @@ func historyEntry(row *OperationRow) (HistoryEntry, textview.HistoryLine) {
 	}
 
 	return e, textview.HistoryLine{
-		Revision: row.Revision, Kind: string(row.Kind), At: e.At, Actor: row.Actor, Ops: ops, UndoOf: e.UndoOf, UndoneBy: e.UndoneBy,
+		Revision: row.Revision,
+		Kind:     string(row.Kind),
+		At:       e.At,
+		Actor:    row.Actor,
+		Ops:      ops,
+		UndoOf:   e.UndoOf,
+		UndoneBy: e.UndoneBy,
 	}
 }
 
@@ -118,7 +126,7 @@ type revisionCursor struct {
 }
 
 func encodeRevisionCursor(project string, rev int64) string {
-	b, _ := json.Marshal(revisionCursor{V: 1, P: project, K: rev})
+	b := marshalOrNull(revisionCursor{V: 1, P: project, K: rev})
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
@@ -133,7 +141,11 @@ func decodeRevisionCursor(s, project string) (int64, error) {
 
 	var c revisionCursor
 	if err != nil || json.Unmarshal(raw, &c) != nil || c.V != 1 || c.P != project || c.K < 1 {
-		return 0, newError(command.CodeValidation, "the cursor is not valid.").withPath("cursor").withHint("repeat the call without cursor")
+		return 0, newError(
+			command.CodeValidation,
+			"the cursor is not valid.",
+		).withPath("cursor").
+			withHint("repeat the call without cursor")
 	}
 
 	return c.K, nil
@@ -166,7 +178,11 @@ func (s *svc) step(ctx context.Context, method string, req UndoRequest, redo boo
 		}
 
 		if row.State == ProjectTrashed {
-			return newError(command.CodeInvalidState, "the project %s is in the trash.", row.ID).withHint("%s", hintRestore)
+			return newError(
+				command.CodeInvalidState,
+				"the project %s is in the trash.",
+				row.ID,
+			).withHint("%s", hintRestore)
 		}
 
 		cand, err := candidate(ctx, tx, row.ID, c.Actor, redo)
@@ -194,7 +210,7 @@ func (s *svc) step(ctx context.Context, method string, req UndoRequest, redo boo
 			return nil
 		}
 
-		skippedJSON, _ := json.Marshal(skippedOps(skipped))
+		skippedJSON := marshalOrNull(skippedOps(skipped))
 		kind, target := OpUndo, cand.Revision
 
 		if redo {
@@ -248,7 +264,7 @@ func candidate(ctx context.Context, tx ProjectTx, project, actor string, redo bo
 		row, err = tx.Operations().UndoCandidate(ctx, project, actor)
 	}
 
-	if err == ErrNotFound {
+	if errors.Is(err, ErrNotFound) {
 		if redo {
 			return row, newError(CodeNothingToRedo, "the actor has no step to redo.").withHint("undo a step first")
 		}
@@ -261,7 +277,13 @@ func candidate(ctx context.Context, tx ProjectTx, project, actor string, redo bo
 
 // applyStep reverses the stored inverse of the candidate and applies it with
 // the guard built from what other actors did since (SDD-005 section 12.2).
-func (s *svc) applyStep(ctx context.Context, tx ProjectTx, doc *timeline.Document, cand *OperationRow, actor string) (command.Result, []command.Skipped, error) {
+func (s *svc) applyStep(
+	ctx context.Context,
+	tx ProjectTx,
+	doc *timeline.Document,
+	cand *OperationRow,
+	actor string,
+) (command.Result, []command.Skipped, error) {
 	var prims []command.Primitive
 	if err := json.Unmarshal(cand.Inverse, &prims); err != nil {
 		return command.Result{}, nil, internalError()
@@ -374,7 +396,7 @@ func skippedOps(in []command.Skipped) []SkippedOp {
 	out := make([]SkippedOp, 0, len(in))
 
 	for i := range in {
-		prim, _ := json.Marshal(in[i].Primitive)
+		prim := marshalOrNull(in[i].Primitive)
 		out = append(out, SkippedOp{
 			PrimitiveIndex: in[i].PrimitiveIndex, Primitive: prim, Fields: in[i].Fields, Reason: in[i].Reason,
 			ByRevision: in[i].ByRevision, ByActor: in[i].ByActor, Details: in[i].Details,
@@ -384,18 +406,32 @@ func skippedOps(in []command.Skipped) []SkippedOp {
 	return out
 }
 
-func (s *svc) undoResult(actor string, row *ProjectRow, cand *OperationRow, before *timeline.Document, out *command.Result, skipped []command.Skipped, redo bool) *UndoResult {
+func (s *svc) undoResult(
+	actor string,
+	row *ProjectRow,
+	cand *OperationRow,
+	before *timeline.Document,
+	out *command.Result,
+	skipped []command.Skipped,
+	redo bool,
+) *UndoResult {
 	findings, totals := s.findings(before, out.Doc)
 	ref := &HistoryRef{Revision: cand.Revision, Kind: string(cand.Kind), Actor: cand.Actor, At: msTime(cand.AtMs)}
 
 	r := &UndoResult{
-		EditResult: EditResult{
-			Envelope:  Envelope{UntrustedNotice: UntrustedNotice},
-			ProjectID: row.ID, Revision: row.Revision, BaseRevision: row.Revision, Applied: len(out.Diff) > 0, Actor: actor,
-			Created: createdIDs(out.Diff), Effective: []OpEffect{}, Diff: nonNilChanges(out.Diff),
-			Findings: findings, Lint: totals, Description: describe(out.Doc, out.Diff),
-		},
-		Kind: "undo", Skipped: skippedOps(skipped),
+		UntrustedNotice: UntrustedNotice,
+		ProjectID:       row.ID,
+		Revision:        row.Revision,
+		BaseRevision:    row.Revision,
+		Applied:         len(out.Diff) > 0,
+		Actor:           actor,
+		Created:         createdIDs(out.Diff),
+		Effective:       []OpEffect{},
+		Diff:            nonNilChanges(out.Diff),
+		Findings:        findings,
+		Lint:            totals,
+		Description:     describe(out.Doc, out.Diff),
+		Kind:            "undo", Skipped: skippedOps(skipped),
 	}
 
 	if redo {
@@ -433,7 +469,10 @@ func (s *svc) Lint(ctx context.Context, req LintRequest) (*LintResult, error) {
 
 	listed := all
 	if req.Severity == "error" {
-		listed = slices.DeleteFunc(slices.Clone(all), func(f lint.Finding) bool { return f.Severity != lint.SeverityError })
+		listed = slices.DeleteFunc(
+			slices.Clone(all),
+			func(f lint.Finding) bool { return f.Severity != lint.SeverityError },
+		)
 	}
 
 	from := 0
@@ -449,7 +488,11 @@ func (s *svc) Lint(ctx context.Context, req LintRequest) (*LintResult, error) {
 
 	fps := timeval.FPS{Num: int64(doc.Settings.FPS.Num), Den: int64(doc.Settings.FPS.Den)}
 	limit := clampLimit(req.Limit, defaultLintLimit, maxLintLimit)
-	text, next := lint.Report(lint.Header{Revision: row.Revision, ProjectID: row.ID, FPS: fps, Limit: limit}, listed, from)
+	text, next := lint.Report(
+		lint.Header{Revision: row.Revision, ProjectID: row.ID, FPS: fps, Limit: limit},
+		listed,
+		from,
+	)
 
 	end := len(listed)
 	if next >= 0 {
@@ -457,7 +500,12 @@ func (s *svc) Lint(ctx context.Context, req LintRequest) (*LintResult, error) {
 	}
 
 	res := &LintResult{
-		ProjectID: row.ID, Revision: row.Revision, Errors: errs, Warnings: warns, Findings: []lint.Finding{}, Text: text,
+		ProjectID: row.ID,
+		Revision:  row.Revision,
+		Errors:    errs,
+		Warnings:  warns,
+		Findings:  []lint.Finding{},
+		Text:      text,
 	}
 
 	if from < len(listed) {

@@ -59,32 +59,32 @@ func (c *clock) advance(d time.Duration) {
 	c.t = c.t.Add(d)
 }
 
-func newDir(t testing.TB) workspace.Dir {
-	t.Helper()
+func newDir(tb testing.TB) workspace.Dir {
+	tb.Helper()
 
-	d, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
+	d, err := workspace.Resolve(func(string) string { return filepath.Join(tb.TempDir(), "ws") })
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	if err := d.EnsureLayout(); err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	return d
 }
 
-func newEnv(t testing.TB) *env {
-	t.Helper()
+func newEnv(tb testing.TB) *env {
+	tb.Helper()
 
-	e := &env{t: t, dir: newDir(t), clock: &clock{t: time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)}}
+	e := &env{t: tb, dir: newDir(tb), clock: &clock{t: time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)}}
 
 	st, err := store.Open(context.Background(), e.dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
-	t.Cleanup(func() { _ = st.Close() })
+	tb.Cleanup(func() { _ = st.Close() })
 
 	e.store = st
 
@@ -99,7 +99,7 @@ func newEnv(t testing.TB) *env {
 		},
 	})
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	return e
@@ -164,8 +164,7 @@ func (e *env) addText(actor, project, track string, base int64, start, text stri
 }
 
 func code(err error) string {
-	var se *service.Error
-	if errors.As(err, &se) {
+	if se, ok := errors.AsType[*service.Error](err); ok {
 		return se.Code
 	}
 

@@ -31,7 +31,8 @@ func TestCommit(t *testing.T) {
 			t.Errorf("result = %+v", res)
 		}
 
-		if len(res.Created) != 1 || !strings.HasPrefix(res.Created[0], "itm_") || len(res.Effective) != 1 || res.Effective[0].Op != "text.add" {
+		if len(res.Created) != 1 || !strings.HasPrefix(res.Created[0], "itm_") || len(res.Effective) != 1 ||
+			res.Effective[0].Op != "text.add" {
 			t.Errorf("created %v effective %+v", res.Created, res.Effective)
 		}
 
@@ -39,17 +40,22 @@ func TestCommit(t *testing.T) {
 			t.Errorf("per-operation created = %v", res.Effective[0].Created)
 		}
 
-		if len(res.Diff) != 1 || res.Diff[0].Kind != command.KindItemAdded || !strings.Contains(res.Description, "item "+res.Created[0]) {
+		if len(res.Diff) != 1 || res.Diff[0].Kind != command.KindItemAdded ||
+			!strings.Contains(res.Description, "item "+res.Created[0]) {
 			t.Errorf("diff %+v description %q", res.Diff, res.Description)
 		}
 
-		if h := e.head(project); h.Revision != 2 || h.Summary.Items != 1 || h.Summary.Tracks != 1 || h.Summary.DurationFrames != 30 {
+		if h := e.head(
+			project,
+		); h.Revision != 2 || h.Summary.Items != 1 || h.Summary.Tracks != 1 ||
+			h.Summary.DurationFrames != 30 {
 			t.Errorf("head after commit = %+v", h)
 		}
 
 		// The stored operation carries the identifier the service generated.
 		row, err := e.store.Operations().Get(context.Background(), project, 2)
-		if err != nil || !strings.Contains(string(row.Ops), res.Created[0]) || row.Kind != service.OpEdit || row.BaseRevision != 1 {
+		if err != nil || !strings.Contains(string(row.Ops), res.Created[0]) || row.Kind != service.OpEdit ||
+			row.BaseRevision != 1 {
 			t.Errorf("log row = %+v, %v", row, err)
 		}
 	})
@@ -59,8 +65,24 @@ func TestCommit(t *testing.T) {
 
 		e := newEnv(t)
 		project, track := e.withTrack()
-		e.mustEdit(ui, project, 1, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":"itm_00000000aa"}`, track)))
-		e.mustEdit(ui, project, 2, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"2s","duration":"1s","text":"b","id":"itm_00000000bb"}`, track)))
+		e.mustEdit(
+			ui,
+			project,
+			1,
+			op(
+				"text.add",
+				fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":"itm_00000000aa"}`, track),
+			),
+		)
+		e.mustEdit(
+			ui,
+			project,
+			2,
+			op(
+				"text.add",
+				fmt.Sprintf(`{"track_id":%q,"start":"2s","duration":"1s","text":"b","id":"itm_00000000bb"}`, track),
+			),
+		)
 
 		// agent planned against r3, ui changed itm_aa in r4; the agent only touches itm_bb.
 		e.mustEdit(ui, project, 3, op("item.move", `{"item_id":"itm_00000000aa","start":"4s"}`))
@@ -76,7 +98,15 @@ func TestCommit(t *testing.T) {
 
 		e := newEnv(t)
 		project, track := e.withTrack()
-		e.mustEdit(ui, project, 1, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":"itm_00000000aa"}`, track)))
+		e.mustEdit(
+			ui,
+			project,
+			1,
+			op(
+				"text.add",
+				fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":"itm_00000000aa"}`, track),
+			),
+		)
 		e.mustEdit(ui, project, 2, op("item.move", `{"item_id":"itm_00000000aa","start":"4s"}`))
 
 		_, err := e.edit(agent, project, 2, op("item.move", `{"item_id":"itm_00000000aa","start":"6s"}`))
@@ -87,11 +117,14 @@ func TestCommit(t *testing.T) {
 		}
 
 		conflict, _ := se.Details["conflict"].(map[string]any)
-		if conflict["collection"] != "items" || conflict["id"] != "itm_00000000aa" || conflict["revision"] != int64(3) || conflict["actor"] != ui {
+		if conflict["collection"] != "items" || conflict["id"] != "itm_00000000aa" ||
+			conflict["revision"] != int64(3) ||
+			conflict["actor"] != ui {
 			t.Errorf("conflict = %v", conflict)
 		}
 
-		if se.Details["base_revision"] != int64(2) || se.Details["current_revision"] != int64(3) || se.Details["diff_truncated"] != false {
+		if se.Details["base_revision"] != int64(2) || se.Details["current_revision"] != int64(3) ||
+			se.Details["diff_truncated"] != false {
 			t.Errorf("details = %v", se.Details)
 		}
 
@@ -146,8 +179,12 @@ func TestCommit(t *testing.T) {
 		before, published := string(e.document(project)), len(e.events)
 
 		res, err := e.svc.Edit(e.as(ui), service.EditRequest{
-			ProjectID: project, BaseRevision: 1, DryRun: true,
-			Operations: []command.Operation{op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"x"}`, track))},
+			ProjectID:    project,
+			BaseRevision: 1,
+			DryRun:       true,
+			Operations: []command.Operation{
+				op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"x"}`, track)),
+			},
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -197,10 +234,20 @@ func TestCommit(t *testing.T) {
 		e := newEnv(t)
 		project, track := e.withTrack()
 		id := "itm_00000000aa"
-		e.mustEdit(ui, project, 1, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":%q}`, track, id)))
+		e.mustEdit(
+			ui,
+			project,
+			1,
+			op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":%q}`, track, id)),
+		)
 
 		for i := range 1002 {
-			e.mustEdit(ui, project, int64(2+i), op("item.move", fmt.Sprintf(`{"item_id":%q,"start":"%df"}`, id, 40+i%2*40)))
+			e.mustEdit(
+				ui,
+				project,
+				int64(2+i),
+				op("item.move", fmt.Sprintf(`{"item_id":%q,"start":"%df"}`, id, 40+i%2*40)),
+			)
 		}
 
 		_, err := e.edit(agent, project, 1, op("item.move", fmt.Sprintf(`{"item_id":%q,"start":"1s"}`, id)))
@@ -222,7 +269,10 @@ func TestSecurity_T24_IdempotencyScopedToActor(t *testing.T) {
 	add := op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"once"}`, track))
 
 	send := func(actor string, base int64, ops ...command.Operation) (*service.EditResult, error) {
-		return e.svc.Edit(e.as(actor), service.EditRequest{ProjectID: project, BaseRevision: base, Operations: ops, IdempotencyKey: key})
+		return e.svc.Edit(
+			e.as(actor),
+			service.EditRequest{ProjectID: project, BaseRevision: base, Operations: ops, IdempotencyKey: key},
+		)
 	}
 
 	first, err := send(ui, 1, add)
@@ -235,7 +285,8 @@ func TestSecurity_T24_IdempotencyScopedToActor(t *testing.T) {
 	// The same key and operations return the stored result and write nothing, even
 	// with a newer base revision (it is not part of the request hash).
 	again, err := send(ui, 2, add)
-	if err != nil || !again.Replayed || again.Revision != first.Revision || strings.Join(again.Created, ",") != strings.Join(first.Created, ",") {
+	if err != nil || !again.Replayed || again.Revision != first.Revision ||
+		strings.Join(again.Created, ",") != strings.Join(first.Created, ",") {
 		t.Fatalf("replay = %+v, %v", again, err)
 	}
 
@@ -362,7 +413,12 @@ func TestEditReportsNewLintFindings(t *testing.T) {
 	e := newEnv(t)
 	project, track := e.withTrack()
 
-	res := e.mustEdit(ui, project, 1, op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"hi"}`, track)))
+	res := e.mustEdit(
+		ui,
+		project,
+		1,
+		op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"hi"}`, track)),
+	)
 
 	if res.Lint.Errors != 0 || res.Lint.Warnings == 0 {
 		t.Errorf("totals = %+v", res.Lint)
@@ -390,7 +446,12 @@ func TestEditReportsNewLintFindings(t *testing.T) {
 		t.Errorf("lint = %+v, %v", full, err)
 	}
 
-	if _, err := e.svc.Lint(e.as(agent), service.LintRequest{ProjectID: project, Severity: "nope"}); code(err) != command.CodeValidation {
+	if _, err := e.svc.Lint(
+		e.as(agent),
+		service.LintRequest{ProjectID: project, Severity: "nope"},
+	); code(
+		err,
+	) != command.CodeValidation {
 		t.Errorf("bad severity = %v", err)
 	}
 

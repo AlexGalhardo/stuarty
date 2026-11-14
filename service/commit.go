@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strconv"
 	"strings"
 
@@ -156,8 +157,10 @@ func (s *svc) syncAssets(ctx context.Context, tx ProjectTx, projectID string, b 
 				return err
 			}
 		case command.KindAssetRemoved:
-			snap, _ := json.Marshal(ch.Object)
-			if err := tx.Assets().SetProjectAssetState(ctx, projectID, ch.ID, ProjectAssetTrashed, b.actor, now, snap); err != nil && !isNotFound(err) {
+			snap := marshalOrNull(ch.Object)
+			if err := tx.Assets().
+				SetProjectAssetState(ctx, projectID, ch.ID, ProjectAssetTrashed, b.actor, now, snap); err != nil &&
+				!isNotFound(err) {
 				return err
 			}
 		}
@@ -166,8 +169,15 @@ func (s *svc) syncAssets(ctx context.Context, tx ProjectTx, projectID string, b 
 	return nil
 }
 
-func (s *svc) assetAdded(ctx context.Context, tx ProjectTx, projectID string, ch command.Change, actor string, now int64) error {
-	snap, _ := json.Marshal(ch.Object)
+func (s *svc) assetAdded(
+	ctx context.Context,
+	tx ProjectTx,
+	projectID string,
+	ch command.Change,
+	actor string,
+	now int64,
+) error {
+	snap := marshalOrNull(ch.Object)
 
 	err := tx.Assets().SetProjectAssetState(ctx, projectID, ch.ID, ProjectAssetActive, actor, now, snap)
 	if err == nil || !isNotFound(err) {
@@ -183,7 +193,7 @@ func (s *svc) assetAdded(ctx context.Context, tx ProjectTx, projectID string, ch
 	})
 }
 
-func isNotFound(err error) bool { return err == ErrNotFound }
+func isNotFound(err error) bool { return errors.Is(err, ErrNotFound) }
 
 // findings runs the fast rules on both documents and returns the findings the
 // batch introduced (at most ten) with the totals after it (SDD-003 section 2.4

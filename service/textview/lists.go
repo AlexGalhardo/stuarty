@@ -63,7 +63,15 @@ func FitProjectList(lines []ProjectLine) int {
 
 // Created is the text of a created project (SDD-003 section 3.9).
 func Created(id, name string, width, height int, fps timeval.FPS) string {
-	return fmt.Sprintf("%s\ncreated %s %s r0 %dx%d %sfps; add tracks with edit op track.add", Note, id, Quote(name, 60), width, height, fps)
+	return fmt.Sprintf(
+		"%s\ncreated %s %s r0 %dx%d %sfps; add tracks with edit op track.add",
+		Note,
+		id,
+		Quote(name, 60),
+		width,
+		height,
+		fps,
+	)
 }
 
 // HistoryLine is one step of the history.
@@ -85,7 +93,15 @@ func History(projectID string, revision int64, lines []HistoryLine, total int64)
 	fmt.Fprintf(&b, "history %s rev %d (showing %d of %d, newest first)", projectID, revision, len(lines), total)
 
 	for _, l := range lines {
-		fmt.Fprintf(&b, "\nr%d %s %s ops=%d %s", l.Revision, l.At.UTC().Format("2006-01-02T15:04:05Z"), l.Actor, len(l.Ops), names(l.Kind, l.Ops))
+		fmt.Fprintf(
+			&b,
+			"\nr%d %s %s ops=%d %s",
+			l.Revision,
+			l.At.UTC().Format("2006-01-02T15:04:05Z"),
+			l.Actor,
+			len(l.Ops),
+			names(l.Kind, l.Ops),
+		)
 
 		if l.UndoOf != nil {
 			fmt.Fprintf(&b, " undo-of:r%d", *l.UndoOf)
@@ -105,7 +121,18 @@ func FitHistory(lines []HistoryLine) int {
 	n := 0
 
 	for _, l := range lines {
-		cost := runeLen(fmt.Sprintf("\nr%d %s %s ops=%d %s undo-of:r%d undone-by:r%d", l.Revision, "2006-01-02T15:04:05Z", l.Actor, len(l.Ops), names(l.Kind, l.Ops), l.Revision, l.Revision))
+		cost := runeLen(
+			fmt.Sprintf(
+				"\nr%d %s %s ops=%d %s undo-of:r%d undone-by:r%d",
+				l.Revision,
+				"2006-01-02T15:04:05Z",
+				l.Actor,
+				len(l.Ops),
+				names(l.Kind, l.Ops),
+				l.Revision,
+				l.Revision,
+			),
+		)
 		if n > 0 && used+cost > CapHistory {
 			break
 		}
