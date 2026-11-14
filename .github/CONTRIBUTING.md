@@ -40,10 +40,10 @@ Release notes have five sections only (D-027), so pick the commit type with that
 
 ## Pull requests and completion
 
-1. One pull request per task or issue, titled as a Conventional Commit.
+1. The maintainers gather a release in one pull request, `release/vX.Y.Z` to `main`, titled `chore(release): vX.Y.Z updates`, with about 90 microcommits (D-031). A contribution from outside is a branch whose commits the maintainer integrates into the open release branch; open your pull request against `release/vX.Y.Z` when one is open.
 2. Fill in the pull request template: the task or issue, the checks you ran, the thin-client rule and, if you found friction with the vukem framework, its record.
 3. A report that something works is a claim, not evidence. A change is done when its output exists and is tested, and every check of its task has been run and its result is visible in the pull request. A change that cannot meet a check is not silently changed: explain why in the pull request.
-4. The maintainer reviews, fixes the last defects, rebase-merges and pushes. Nobody else pushes to `main`.
+4. The maintainer reviews, fixes the last defects, integrates the commits into the release branch, refreshes the release pull request body with `task release:pr-body -- vX.Y.Z` (sections Added, Changed, Removed, Fixed, Security with linked commit hashes), rebase-merges it and pushes the tag. Nobody else pushes to `main`.
 
 ## Checks
 

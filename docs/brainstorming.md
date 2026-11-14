@@ -298,3 +298,11 @@ All twelve themes were covered by decisions D-001 to D-025. The working state is
 - Alternatives considered: (1) dot only, rejecting the comma; (2) one badge per actor; (3) Geist Mono from the start, or a system monospace stack; (4) native accelerators for every menu item; (5) samples rasterized by the core.
 - Reason: the open questions of the design system (`docs/design-system.md` section 10), answered by the author on 2026-11-14 with the designer's recommendations.
 - Impact: SDD-012 §5.8, §11.5, §12.2, §12.1 (font select), §13.1, §21.3; `docs/design-system.md` sections 2.4, 2.5, 2.10, 4.3.4, 4.3.6, 10.
+
+### D-031 — One pull request per release, titled after the version
+
+- Date: 2026-11-14
+- Decision: the work of a release is gathered in one pull request, from the branch `release/vX.Y.Z` to `main`, titled `chore(release): vX.Y.Z updates`, with about 90 microcommits (D-026). Task branches are integrated into the release branch by the orchestrator (cherry-pick or fast-forward, never a force push); the release pull request is rebase-merged so every microcommit reaches `main` (ADR-0028), then the tag `vX.Y.Z` is pushed with the author's yes. The pull request body follows a fixed structure: a short header, the commit count, and the five sections of D-027 (Added, Changed, Removed, Fixed, Security) with each entry linked to its commit hash, generated from the commits by `task release:pr-body -- vX.Y.Z` (the same git-cliff configuration as the changelog). The next release pull request is `release/v0.3.0`, then `v0.4.0`, and so on.
+- Alternatives considered: one pull request per task (the rule until 2026-11-14); a release branch merged with a merge commit.
+- Reason: asked by the author on 2026-11-14, so a release is easy to administer.
+- Impact: supersedes "one pull request per task" in the completion protocol of the ROADMAP and in `AGENTS.md`; `.github/pull_request_template.md`, `CONTRIBUTING.md`, `scripts/release-pr-body.sh`, the Taskfile; the release procedure of SDD-009 §7 (its `release/vX.Y.Z` branch is now the long-lived release pull request, and `release:prepare` runs on it before the merge). The open task pull requests #50, #53, #54, #55, #57 and #58 were folded into the release pull request #59.
