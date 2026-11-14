@@ -564,6 +564,8 @@ jobs:
           subjectPatternError: Description must start lowercase and must not end with a period.
 ```
 
+A second job of the same file, `Conventional commits` (**Decision of REL-CI**, because pull requests are rebase-merged and every commit reaches `main`, ADR-0028), checks out with `fetch-depth: 0` and tests every subject of `git log base..head` with the rules of section 6.1 and the 23 scopes of section 6.2 (merge commits and `Revert "..."` subjects are skipped; `fixup!` and `squash!` fail). Its header is at most 100 characters. It needs no tool, so it does not wait for `commitlint` of `REL-TOOLS`.
+
 Gate: merge. Secrets: none beyond `GITHUB_TOKEN`.
 
 ### 9.3 `release.yml` (full)
@@ -844,6 +846,8 @@ Known property inherited from vukem (`docs/tooling.md:178`): a `workflow_dispatc
 ### 9.4 `ci.yml`
 
 Adapted from `vukem/.github/workflows/ci.yml`. The header is vukem's (`ci.yml:3-14`): triggers `push` to `main`, `pull_request`, `workflow_dispatch`; `permissions: contents: read`; `concurrency` group `${{ github.workflow }}-${{ github.ref }}` with `cancel-in-progress: true`. Every job has `timeout-minutes: 20`. Every job starts with `actions/checkout` (SHA of table 9.0, `persist-credentials: false`, `fetch-depth: 0` only where noted) and, for Go jobs, `actions/setup-go` with `go-version-file: go.mod` and `cache-dependency-path: go.sum`.
+
+**What `REL-CI` wrote (the code differs from the table in these points, and this paragraph is the contract).** `ci.yml` holds jobs 1, 2, 3, 4, 8 and 10 now. The others are added by the tasks that create their tools, each with the display name below. Jobs 1 and 2 call the task runner (`task lint:go`, `task vet`, `task tidy:check`, `task lint:md`) after installing go-task `v3.54.0` with `go install` and golangci-lint `v2.15.0` with `golangci/golangci-lint-action` in `install-only` mode, so CI and a developer run the same commands; job 2 therefore runs `markdownlint-cli2` `0.24.1` through `bunx` and not the DavidAnson action. Job 3 has no `bun run test` step until a unit test runner is approved. Job 4 does not call `scripts/install-ffmpeg.sh` until a test needs FFmpeg, its covergate step is `continue-on-error: true` while the skeleton packages are below the floors of section 13.2 (the step prints them), and the `Test` job names are `Test (ubuntu-latest)`, `Test (windows-latest)` and `Test (macos-latest)` as the ruleset needs. Job 8 is named `Vulnerabilities`. Every job has `persist-credentials: false` and `timeout-minutes: 20`.
 
 The jobs below are listed by their display name, which is the string the ruleset requires (section 16). The vukem jobs for drivers, contrib modules, `apidiff` and `openapi golden` do not exist here (one module, one application); `apidiff` returns when a Go package is meant to be imported.
 
@@ -1345,10 +1349,10 @@ Inputs and algorithm:
 | OpenAPI validation | `openapi:export` then `bunx @redocly/cli@2.78.0 lint` (SDD-003 check 22) | `OpenAPI (Redocly)` |
 | Golden cases with the FFmpeg on the path | SDD-004 section 11, reported, not blocking | `Golden cases (PATH FFmpeg)` |
 
-`Workflow pins`: a small job in `ci.yml` (ubuntu, a checkout of the sources) that runs the block below and fails when any unpinned line is printed; `docker://` and local `./` actions are not used. This enforces R23 mechanically; vukem relies on review and Scorecard (`docs/tooling.md:151`, `scorecard.yml`). It is a required check. The check is an `if` block because a bare `grep ... | grep -v ...` pipeline exits 0 when it finds an unpinned line, which is the inverse of what a check needs:
+`Workflow pins`: a small job in `ci.yml` (ubuntu, a checkout of the sources) that runs the block below and fails when any unpinned line is printed; `docker://` and local `./` actions are not used. This enforces R23 mechanically; vukem relies on review and Scorecard (`docs/tooling.md:151`, `scorecard.yml`). It is a required check. The pattern is anchored at the start of the line, otherwise the job matches its own text in `ci.yml` and always fails. The check is an `if` block because a bare `grep ... | grep -v ...` pipeline exits 0 when it finds an unpinned line, which is the inverse of what a check needs:
 
 ```bash
-if grep -RnE "uses: [^@ ]+@" .github/workflows | grep -vE "@[0-9a-f]{40} # v[0-9]"; then
+if grep -RnE "^[[:space:]]*(- )?uses: [^@ ]+@" .github/workflows | grep -vE "@[0-9a-f]{40} # v[0-9]"; then
   echo "::error::an action is not pinned by a full commit SHA with a version comment"
   exit 1
 fi
@@ -1356,7 +1360,7 @@ fi
 
 ### 13.2 Coverage gate
 
-`internal/tools/covergate` is vukem's tool (`internal/tools/covergate/gate.go`) copied with the package table replaced. Decision of this SDD (ADR-0025 names the gate and no number): the default floor is 80 percent per package, the packages under `core/` have a floor of 90 percent (they are pure and cheap to cover, ADR-0001), and excluded from the gate are `web/cmd/...`, `internal/tools/...`, `spikes/...` and `desktop/...`. A package missing from the profile fails the gate, as in vukem, so a package without tests cannot hide. Floors may be raised by a pull request that raises them and lowered only by a revision of this SDD.
+`internal/tools/covergate` is vukem's tool (`internal/tools/covergate/gate.go`) copied with the package table replaced. Decision of this SDD (ADR-0025 names the gate and no number): the default floor is 80 percent per package, the packages under `core/` have a floor of 90 percent (they are pure and cheap to cover, ADR-0001), and excluded from the gate are `web/cmd/...`, `internal/tools/...`, `spikes/...` and `desktop/...`. A package missing from the profile fails the gate, as in vukem, so a package without tests cannot hide. The tool asks `go list ./...` for the packages and parses their non-test files: a package with no statement in any function body (the `doc.go` of a skeleton) does not appear in a profile and is not counted as missing. The tool depends on the standard library only (the vukem tests used `go-cmp`, which this module does not require). Floors may be raised by a pull request that raises them and lowered only by a revision of this SDD.
 
 ### 13.3 Operating systems
 
@@ -1603,6 +1607,7 @@ The files exist at the root: `.editorconfig`, `.golangci.yml`, `.markdownlint-cl
         "strict_required_status_checks_policy": true,
         "required_status_checks": [
           { "context": "Conventional title" },
+          { "context": "Conventional commits" },
           { "context": "Lint (Go)" },
           { "context": "Lint (Markdown)" },
           { "context": "Types and lint (web)" },
@@ -1705,7 +1710,7 @@ area:release|c5def5|release
 
 ### 16.4 Dependabot, templates and ownership
 
-`.github/dependabot.yml`, adapted from vukem's (`dependabot.yml`): weekly; `gomod` at `/` grouped as `go-deps`, prefix `build`, `include: scope`; `github-actions` at `/` grouped as `actions`, prefix `ci`; `docker` at `/.config/docker` prefix `build`; `npm` at `/site` grouped `site-deps`; and for `web/`, which has only `bun.lock` and no `package-lock.json` (an `npm` entry would not update the lockfile, and `bun install --frozen-lockfile` would then fail on every such pull request), the `bun` ecosystem grouped `web-deps` if GitHub supports `package-ecosystem: bun` at the time of `REL-REPO` (the task checks the Dependabot documentation and records the answer), else a weekly script `scripts/bump-web-deps.sh` run by the maintainer (`task deps:web`) that runs `bun update` in `web/`, `task notices` and opens the pull request. Both web and site entries use prefix `build` and `include: scope`. The commit messages are then valid Conventional Commits with the scope `deps` for runtime dependencies and `deps-dev` for development dependencies, both in the list of section 6.2.
+`.github/dependabot.yml`, adapted from vukem's (`dependabot.yml`): weekly; `gomod` at `/` grouped as `go-deps`, prefix `build`, `include: scope`; `github-actions` at `/` grouped as `actions`, prefix `ci`; `docker` at `/.config/docker` prefix `build`; `npm` at `/site` grouped `site-deps`; and for `web/`, which has only `bun.lock` and no `package-lock.json` (an `npm` entry would not update the lockfile, and `bun install --frozen-lockfile` would then fail on every such pull request), the `bun` ecosystem grouped `web-deps` if GitHub supports `package-ecosystem: bun` at the time of `REL-REPO` (the task checks the Dependabot documentation and records the answer; **answer of 2026-11-14: it does, for Bun 1.1.39 and later and for the text `bun.lock`, so `.github/dependabot.yml` uses the `bun` ecosystem and `scripts/bump-web-deps.sh` is not needed**), else a weekly script `scripts/bump-web-deps.sh` run by the maintainer (`task deps:web`) that runs `bun update` in `web/`, `task notices` and opens the pull request. Both web and site entries use prefix `build` and `include: scope`. `REL-CI` wrote the `gomod`, `github-actions` and `bun` entries; the `docker` and `npm` entries are added by the tasks that create `/.config/docker` and `/site`, because Dependabot fails on a path that does not exist. The commit messages are then valid Conventional Commits with the scope `deps` for runtime dependencies and `deps-dev` for development dependencies, both in the list of section 6.2.
 
 Dependabot's `docker` ecosystem does not see an image given through an `ARG` default, which is how the Dockerfile of section 11.3 names its three bases (`BUN_IMAGE`, `GO_IMAGE`, `RUNTIME_IMAGE`). A weekly script `scripts/bump-image-args.sh` (task `task deps:images`, same shape as vukem's `starterdeps` pinning of the toolchain image digest) reads the three `ARG` lines, finds the newest stable tag and digest of each, rewrites the lines and opens a pull request `build(deps): bump the image bases`, which must pass `Image build`. The BtbN FFmpeg pin in `.config/ffmpeg.env` is not seen by Dependabot; `REL-FFMPEG-PIN` documents the manual bump (a pull request that changes the file and passes the image smoke test) in `CONTRIBUTING.md`.
 
