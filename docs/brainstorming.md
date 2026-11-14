@@ -273,3 +273,20 @@ All twelve themes were covered by decisions D-001 to D-025. The working state is
 - Alternatives considered: the vukem mapping (`perf` and `refactor` under Changed, a Deprecated section).
 - Reason: asked by the author on 2026-11-14.
 - Impact: SDD-009 section 5.1 item 5 and the `commit_parsers` of section 5.2; `CONTRIBUTING.md`; the release step of the team workflow (`AGENTS.md`).
+
+### D-028 — The documentation site starts early: static Astro on GitHub Pages, landing page in the spirit of FreeCut
+
+- Date: 2026-11-14
+- Decision: the site of SDD-010 (Astro `7.4.7`, the vukem site shell that serves vukem.dev/docs, `output: "static"`, GitHub Pages, no paid service) is built from the start of the Prototype in a task of its own (P1-DOC-002) instead of waiting for the generated reference. Its landing page follows the structure of https://www.freecut.net/ (hero with the product promise and a run/download call to action, a feature tour, how agents drive the editor, the open source and local-first section, links to the docs and the repository), with the copy, mark and colours of Vukem Video only: no FreeCut text, logo, image or brand.
+- Alternatives considered: the vukem landing structure (hero, three cards, a command block) as SDD-010 section 1.3 planned; building the site only with P1-DOC-001.
+- Reason: asked by the author on 2026-11-14.
+- Impact: ROADMAP (new task P1-DOC-002, P1-DOC-001 builds on it); SDD-010 section 1.3 (landing page row).
+
+### D-029 — Local only: a Docker image for localhost and installers of the local server, from v0.2.0
+
+- Date: 2026-11-14
+- Decision: the product runs only on the user's machine, with no cloud deployment (the Railway services of the Studio were disconnected from the repository and the GitHub environment `studio / production` was deleted the same day). The release of the Prototype, `v0.2.0` (P1-REL-008), ships: (1) the container image of the web version, published to GHCR and Docker Hub and run with `docker run -p 127.0.0.1:7878:7878 ...`, reachable on localhost only; (2) installers of the local server attached to the release: a Windows 11 `.exe`, Linux `.deb` and AppImage, a macOS `.pkg`; each installs `vukem-video` and a shortcut that starts the local server and opens the UI in the default browser. The installers carry no paid code signing in `v0.2.0` (the SmartScreen and Gatekeeper warnings are documented); `checksums.txt` stays signed with cosign. Success: on each of the three systems, install, open the shortcut, edit and export an MP4 in the browser; and the same with the image.
+- Alternatives considered: the image in ALPHA and packaging in BETA (the earlier plan, ADR-0025 and SDD-009 section 4); a desktop application with its own window now; archives only.
+- Out of scope: a desktop application with its own window (still BETA, ADR-0023), paid signing, auto-update, any cloud deployment.
+- Reason: asked by the author on 2026-11-14, confirmed through an interview the same day.
+- Impact: ROADMAP (new tasks P1-REL-009 image and P1-REL-010 installers, dependencies of P1-REL-008; the Prototype exit criterion 8); SDD-009 sections 4, 10 and 11 (the image moves from ALPHA to the Prototype, installers are new); the installer build tools need the author's approval as dependencies when P1-REL-010 starts; Docker Hub credentials are needed before P1-REL-009 publishes.
