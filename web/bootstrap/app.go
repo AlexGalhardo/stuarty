@@ -4,30 +4,32 @@ package bootstrap
 
 import (
 	vukem "github.com/AlexGalhardo/vukem"
-	"github.com/AlexGalhardo/vukem/inertia"
 
-	"github.com/AlexGalhardo/vukem-studio/app/jobs"
-	"github.com/AlexGalhardo/vukem-studio/app/listeners"
-	"github.com/AlexGalhardo/vukem-studio/database/migrations"
-	"github.com/AlexGalhardo/vukem-studio/database/seeders"
-	"github.com/AlexGalhardo/vukem-studio/resources"
-	"github.com/AlexGalhardo/vukem-studio/routes"
+	"github.com/AlexGalhardo/vukem-video/web/app/listeners"
+	"github.com/AlexGalhardo/vukem-video/web/database/migrations"
+	"github.com/AlexGalhardo/vukem-video/web/database/seeders"
+	"github.com/AlexGalhardo/vukem-video/web/routes"
 )
 
+// defaultEnv is where the server listens until the workspace configuration
+// (SDD-000 section 10, VUKEM_VIDEO_ADDR) replaces it. vukem reads HOST and PORT.
+var defaultEnv = map[string]string{
+	"HOST": "127.0.0.1",
+	"PORT": "7878",
+}
+
 // New builds the application; cmd/app and the tests call it.
+//
+// The editor keeps its own jobs table (ADR-0018), so the vukem queue is not
+// enabled here: WithJobsFunc is deliberately absent.
 func New(opts ...vukem.Option) (*vukem.App, error) {
 	base := []vukem.Option{
-		vukem.WithName("Studio"),
+		vukem.WithName("Vukem Video"),
+		vukem.WithEnvDefaults(defaultEnv),
 		vukem.WithProviders(Providers()...),
 		vukem.WithMigrations(migrations.All()),
 		vukem.WithSeeders(seeders.All()...),
 		vukem.WithListeners(listeners.All()...),
-		vukem.WithJobsFunc(jobs.All),
-		vukem.WithSchedule(routes.Schedule),
-		vukem.WithViews(resources.Views()),
-		vukem.WithVite(resources.Public()),
-		vukem.WithInertia(inertia.Config{}),
-		vukem.WithTranslations(resources.Lang()),
 	}
 
 	for _, fn := range routes.All() {
