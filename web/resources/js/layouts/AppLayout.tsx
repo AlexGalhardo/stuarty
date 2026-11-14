@@ -29,7 +29,7 @@ function Shell({ children }: { children: ReactNode }) {
 		<TooltipProvider>
 			<header className="flex h-14 items-center gap-4 border-b px-4 md:px-6">
 				<Link href="/projects" className="flex items-center gap-2">
-					<span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+					<span className="flex size-8 items-center justify-center rounded-lg bg-brand text-brand-foreground">
 						<Video aria-hidden="true" className="size-4" />
 					</span>
 					<span className="text-lg font-semibold tracking-tight">

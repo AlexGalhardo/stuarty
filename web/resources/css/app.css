@@ -3,136 +3,284 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
-/* Inertia pages style themselves with Tailwind utilities. Dark mode follows
-   the "dark" class on <html>, set before paint in app.html: dark unless
-   localStorage.theme is "light", never the system preference (D-024). The
-   color-scheme property below makes scrollbars and form controls match. */
+/*
+ * The design tokens of docs/design-system.md section 2, for both themes.
+ * Dark mode follows the "dark" class on <html>, set before paint in app.html:
+ * dark unless localStorage.theme is "light", never the system preference
+ * (D-024). The color-scheme property in the base layer makes scrollbars and
+ * form controls match. Values are OKLCH. A change of a value is a change of
+ * the design system: run `bun run check:contrast` and keep section 2.6 true.
+ */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
-    --color-sidebar-ring: var(--sidebar-ring);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
-    --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+	--font-heading: var(--font-sans);
+	--font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+	/* shadcn base */
+	--color-sidebar-ring: var(--sidebar-ring);
+	--color-sidebar-border: var(--sidebar-border);
+	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+	--color-sidebar-accent: var(--sidebar-accent);
+	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-primary: var(--sidebar-primary);
+	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar: var(--sidebar);
+	--color-chart-5: var(--chart-5);
+	--color-chart-4: var(--chart-4);
+	--color-chart-3: var(--chart-3);
+	--color-chart-2: var(--chart-2);
+	--color-chart-1: var(--chart-1);
+	--color-ring: var(--ring);
+	--color-input: var(--input);
+	--color-border: var(--border);
+	--color-destructive: var(--destructive);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-accent: var(--accent);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-muted: var(--muted);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-secondary: var(--secondary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-primary: var(--primary);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-popover: var(--popover);
+	--color-card-foreground: var(--card-foreground);
+	--color-card: var(--card);
+	--color-foreground: var(--foreground);
+	--color-background: var(--background);
+
+	/* product semantic (design-system.md section 2.4) */
+	--color-success: var(--success);
+	--color-warning: var(--warning);
+	--color-info: var(--info);
+	--color-agent: var(--agent);
+	--color-brand: var(--brand);
+	--color-brand-foreground: var(--brand-foreground);
+
+	/* editor (design-system.md section 2.5): used under web/resources/js/editor only */
+	--color-ed-bg: var(--ed-bg);
+	--color-ed-panel: var(--ed-panel);
+	--color-ed-timeline: var(--ed-timeline);
+	--color-ed-track-line: var(--ed-track-line);
+	--color-ed-item-clip: var(--ed-item-clip);
+	--color-ed-item-clip-fg: var(--ed-item-clip-fg);
+	--color-ed-item-audio: var(--ed-item-audio);
+	--color-ed-item-audio-fg: var(--ed-item-audio-fg);
+	--color-ed-item-text: var(--ed-item-text);
+	--color-ed-item-text-fg: var(--ed-item-text-fg);
+	--color-ed-item-caption: var(--ed-item-caption);
+	--color-ed-item-caption-fg: var(--ed-item-caption-fg);
+	--color-ed-item-shape: var(--ed-item-shape);
+	--color-ed-item-shape-fg: var(--ed-item-shape-fg);
+	--color-ed-playhead: var(--ed-playhead);
+	--color-ed-selection: var(--ed-selection);
+	--color-ed-snap: var(--ed-snap);
+	--color-ed-ghost: var(--ed-ghost);
+	--color-ed-safe-area: var(--ed-safe-area);
+	--color-ed-error-flash: var(--ed-error-flash);
+	--color-ed-preview-surround: var(--ed-preview-surround);
+	--color-ed-handle: var(--ed-handle);
+
+	/* radii (section 2.9); xs is 4 px instead of Tailwind's 2 px */
+	--radius-xs: calc(var(--radius) * 0.4);
+	--radius-sm: calc(var(--radius) * 0.6);
+	--radius-md: calc(var(--radius) * 0.8);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) * 1.4);
+	--radius-2xl: calc(var(--radius) * 1.8);
+	--radius-3xl: calc(var(--radius) * 2.2);
+	--radius-4xl: calc(var(--radius) * 2.6);
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+	/* shadcn base (section 2.3). Changed against the shadcn defaults, for contrast:
+	   muted-foreground, destructive, input, ring, sidebar-ring. */
+	--background: oklch(1 0 0);
+	--foreground: oklch(0.145 0 0);
+	--card: oklch(1 0 0);
+	--card-foreground: oklch(0.145 0 0);
+	--popover: oklch(1 0 0);
+	--popover-foreground: oklch(0.145 0 0);
+	--primary: oklch(0.205 0 0);
+	--primary-foreground: oklch(0.985 0 0);
+	--secondary: oklch(0.97 0 0);
+	--secondary-foreground: oklch(0.205 0 0);
+	--muted: oklch(0.97 0 0);
+	--muted-foreground: oklch(0.5 0 0);
+	--accent: oklch(0.97 0 0);
+	--accent-foreground: oklch(0.205 0 0);
+	--destructive: oklch(0.55 0.22 27.325);
+	--border: oklch(0.922 0 0);
+	--input: oklch(0.62 0 0);
+	--ring: oklch(0.45 0.18 250);
+	--chart-1: oklch(0.87 0 0);
+	--chart-2: oklch(0.556 0 0);
+	--chart-3: oklch(0.439 0 0);
+	--chart-4: oklch(0.371 0 0);
+	--chart-5: oklch(0.269 0 0);
+	--radius: 0.625rem;
+	--sidebar: oklch(0.985 0 0);
+	--sidebar-foreground: oklch(0.145 0 0);
+	--sidebar-primary: oklch(0.205 0 0);
+	--sidebar-primary-foreground: oklch(0.985 0 0);
+	--sidebar-accent: oklch(0.97 0 0);
+	--sidebar-accent-foreground: oklch(0.205 0 0);
+	--sidebar-border: oklch(0.922 0 0);
+	--sidebar-ring: oklch(0.45 0.18 250);
+
+	/* semantic states, agent attribution and brand (section 2.4) */
+	--success: oklch(0.5 0.13 150);
+	--warning: oklch(0.52 0.12 70);
+	--info: oklch(0.5 0.15 250);
+	--agent: oklch(0.5 0.1 190);
+	--brand: oklch(0.511 0.262 276.966);
+	--brand-foreground: oklch(0.985 0 0);
+
+	/* editor (section 2.5) */
+	--ed-bg: oklch(0.97 0 0);
+	--ed-panel: oklch(1 0 0);
+	--ed-timeline: oklch(0.95 0 0);
+	--ed-track-line: oklch(0.62 0 0);
+	--ed-item-clip: oklch(0.8 0.08 250);
+	--ed-item-clip-fg: oklch(0.2 0 0);
+	--ed-item-audio: oklch(0.8 0.08 150);
+	--ed-item-audio-fg: oklch(0.2 0 0);
+	--ed-item-text: oklch(0.84 0.1 80);
+	--ed-item-text-fg: oklch(0.2 0 0);
+	--ed-item-caption: oklch(0.82 0.08 300);
+	--ed-item-caption-fg: oklch(0.2 0 0);
+	--ed-item-shape: oklch(0.82 0.08 350);
+	--ed-item-shape-fg: oklch(0.2 0 0);
+	--ed-playhead: oklch(0.55 0.22 25);
+	--ed-selection: oklch(0.45 0.18 250);
+	--ed-snap: oklch(0.5 0.15 90);
+	--ed-ghost: oklch(0.45 0.18 250 / 0.75);
+	--ed-safe-area: oklch(0.5 0.15 90);
+	--ed-error-flash: oklch(0.55 0.22 25);
+	--ed-preview-surround: oklch(0.2 0 0);
+	--ed-handle: oklch(0.85 0.12 230);
+
+	/* motion (section 2.13): no interface animation until BETA, so most of
+	   these are reserved */
+	--duration-none: 0ms;
+	--duration-fast: 100ms;
+	--duration-base: 150ms;
+	--duration-slow: 200ms;
+	--ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+	--background: oklch(0.145 0 0);
+	--foreground: oklch(0.985 0 0);
+	--card: oklch(0.205 0 0);
+	--card-foreground: oklch(0.985 0 0);
+	--popover: oklch(0.205 0 0);
+	--popover-foreground: oklch(0.985 0 0);
+	--primary: oklch(0.922 0 0);
+	--primary-foreground: oklch(0.205 0 0);
+	--secondary: oklch(0.269 0 0);
+	--secondary-foreground: oklch(0.985 0 0);
+	--muted: oklch(0.269 0 0);
+	--muted-foreground: oklch(0.708 0 0);
+	--accent: oklch(0.269 0 0);
+	--accent-foreground: oklch(0.985 0 0);
+	--destructive: oklch(0.704 0.191 22.216);
+	--border: oklch(1 0 0 / 10%);
+	--input: oklch(1 0 0 / 40%);
+	--ring: oklch(0.85 0.12 230);
+	--chart-1: oklch(0.87 0 0);
+	--chart-2: oklch(0.556 0 0);
+	--chart-3: oklch(0.439 0 0);
+	--chart-4: oklch(0.371 0 0);
+	--chart-5: oklch(0.269 0 0);
+	--sidebar: oklch(0.205 0 0);
+	--sidebar-foreground: oklch(0.985 0 0);
+	--sidebar-primary: oklch(0.488 0.243 264.376);
+	--sidebar-primary-foreground: oklch(0.985 0 0);
+	--sidebar-accent: oklch(0.269 0 0);
+	--sidebar-accent-foreground: oklch(0.985 0 0);
+	--sidebar-border: oklch(1 0 0 / 10%);
+	--sidebar-ring: oklch(0.85 0.12 230);
+
+	--success: oklch(0.75 0.15 150);
+	--warning: oklch(0.8 0.14 80);
+	--info: oklch(0.75 0.12 240);
+	--agent: oklch(0.78 0.11 190);
+	--brand: oklch(0.511 0.262 276.966);
+	--brand-foreground: oklch(0.985 0 0);
+
+	--ed-bg: oklch(0.16 0 0);
+	--ed-panel: oklch(0.2 0 0);
+	--ed-timeline: oklch(0.18 0 0);
+	--ed-track-line: oklch(0.5 0 0);
+	--ed-item-clip: oklch(0.42 0.12 250);
+	--ed-item-clip-fg: oklch(0.98 0 0);
+	--ed-item-audio: oklch(0.42 0.1 150);
+	--ed-item-audio-fg: oklch(0.98 0 0);
+	--ed-item-text: oklch(0.5 0.12 70);
+	--ed-item-text-fg: oklch(0.98 0 0);
+	--ed-item-caption: oklch(0.44 0.14 300);
+	--ed-item-caption-fg: oklch(0.98 0 0);
+	--ed-item-shape: oklch(0.46 0.13 350);
+	--ed-item-shape-fg: oklch(0.98 0 0);
+	--ed-playhead: oklch(0.7 0.2 25);
+	--ed-selection: oklch(0.85 0.12 230);
+	--ed-snap: oklch(0.85 0.15 90);
+	--ed-ghost: oklch(0.85 0.12 230 / 0.5);
+	--ed-safe-area: oklch(0.8 0.15 90);
+	--ed-error-flash: oklch(0.7 0.2 25);
+	--ed-preview-surround: oklch(0.2 0 0);
+	--ed-handle: oklch(0.85 0.12 230);
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-    }
-  body {
-    @apply bg-background text-foreground;
-    }
-  html {
-    @apply font-sans;
-    color-scheme: light;
-    }
-  html.dark {
-    color-scheme: dark;
-    }
+	* {
+		@apply border-border outline-ring/50;
+	}
+
+	body {
+		@apply bg-background text-foreground;
+	}
+
+	html {
+		@apply font-sans;
+		color-scheme: light;
+	}
+
+	html.dark {
+		color-scheme: dark;
+	}
+}
+
+/*
+ * Focus (design-system.md section 2.10). The kept shadcn components carry
+ * outline-none and a 50% ring, which no ring colour can bring to 3:1. This rule
+ * is outside every @layer, so it wins over Tailwind's utilities without
+ * touching the components: a solid 2 px outline in --ring on everything
+ * focusable. The shadcn halo stays as decoration. Narrow the selector if
+ * needed, never weaken the outline.
+ */
+:where(a, button, input, select, textarea, summary, [tabindex], [contenteditable="true"], [data-slot]):focus-visible {
+	outline: 2px solid var(--ring);
+	outline-offset: 2px;
+}
+
+/* Reduced motion (section 2.13): turns off what the shadcn components carry. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	::before,
+	::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}
+
+/* Forced colours (section 7.7): selection and focus use outline and border,
+   which survive the system palette; a box-shadow ring alone would not. */
+@media (forced-colors: active) {
+	:where([aria-selected="true"], [data-selected="true"]) {
+		outline: 2px solid Highlight;
+	}
 }
