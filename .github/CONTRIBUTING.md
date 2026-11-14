@@ -34,7 +34,9 @@ Conventional Commits 1.0 in English:
 - The task or the issue goes in the body: `Refs: P1-ENG-003` or `Fixes #123`.
 - One logical change per commit and per pull request.
 
-Pull requests are rebase-merged (ADR-0028): every commit of the branch reaches `main` as it is and is what the changelog reads, so each commit must be a small, self-contained Conventional Commit, and the footers above go in the commit that carries the change. Fold fixup commits before asking for the merge. `CHANGELOG.md` is generated from the commits by the release tool and is not edited by hand.
+Pull requests are rebase-merged (ADR-0028): every commit of the branch reaches `main` as it is and is what the changelog reads, so each commit must be a small, self-contained Conventional Commit, and the footers above go in the commit that carries the change. Fold fixup commits before asking for the merge.
+
+Release notes have five sections only (D-027), so pick the commit type with that in mind: `feat` goes to **Added**, a commit marked breaking (`!` or `BREAKING CHANGE:`) to **Changed**, `revert` or a `Removed:` footer to **Removed**, `fix` to **Fixed**, and a `Security:` footer or the scope `security` to **Security**. Every other type is left out of the notes. A release is cut about every 90 commits on `main` (ADR-0028). `CHANGELOG.md` is generated from the commits by the release tool and is not edited by hand.
 
 ## Pull requests and completion
 

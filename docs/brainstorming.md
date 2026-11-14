@@ -242,3 +242,11 @@ All twelve themes were covered by decisions D-001 to D-025. The working state is
 - Reason: asked by the author on 2026-11-14, after the layout pull requests were merged.
 - Impact: supersedes the version line of D-005 and items 1 and 2 of ADR-0025 (ADR-0028); SDD-009 sections 4 and 6.3; ROADMAP (completion protocol items 5 and 6, P1-REL-008, the Prototype exit criterion 8, the group audits that name a version); `CONTRIBUTING.md`. Done on the remote the same day: the tag `v0.1.0` was moved once (the only forced tag push) and the four other tags were deleted.
 
+### D-027 — Release notes have five sections only: Added, Changed, Removed, Fixed, Security
+
+- Date: 2026-11-14
+- Decision: a release note (and each `CHANGELOG.md` section) lists only **Added** (something new, `feat`), **Changed** (a breaking change of a public interface, a commit marked `!` or `BREAKING CHANGE:`), **Removed** (something taken out, `revert` or a `Removed:` footer), **Fixed** (a correction, `fix`) and **Security** (a `Security:` footer or the scope `security`). Nothing else: no introduction, no Deprecated section, no "formerly" lines; `perf`, non-breaking `refactor`, `docs`, `test`, `ci`, `build`, `chore` and `style` are left out. The legacy release `v0.1.0` was rewritten in this form the same day.
+- Alternatives considered: the vukem mapping (`perf` and `refactor` under Changed, a Deprecated section).
+- Reason: asked by the author on 2026-11-14.
+- Impact: SDD-009 section 5.1 item 5 and the `commit_parsers` of section 5.2; `CONTRIBUTING.md`; the release step of the team workflow (`AGENTS.md`).
+
