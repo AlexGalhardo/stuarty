@@ -208,3 +208,22 @@ func TestSweeps(t *testing.T) {
 		t.Errorf("SweepOrphans = %d, %v (keep %v drop %v)", n, err, s.Has(keep.Hash), s.Has(drop.Hash))
 	}
 }
+
+func TestErrorTextAndUnwrap(t *testing.T) {
+	t.Parallel()
+
+	cause := errors.New("disk full")
+	e := &Error{Code: CodeNotFound, Message: "the file is not in the store", Err: cause}
+
+	if got, want := e.Error(), CodeNotFound+": the file is not in the store: disk full"; got != want {
+		t.Errorf("Error() = %q, want %q", got, want)
+	}
+
+	if !errors.Is(e, cause) {
+		t.Error("Unwrap does not expose the cause")
+	}
+
+	if got := (&Error{Code: CodeNotFound, Message: "m"}).Error(); got != CodeNotFound+": m" {
+		t.Errorf("Error() without a cause = %q", got)
+	}
+}
