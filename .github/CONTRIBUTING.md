@@ -34,14 +34,14 @@ Conventional Commits 1.0 in English:
 - The task or the issue goes in the body: `Refs: P1-ENG-003` or `Fixes #123`.
 - One logical change per commit and per pull request.
 
-Pull requests are squash-merged: the pull request title becomes the commit subject and its body the commit message, so the title is what the changelog reads, and the footers above must be in the pull request body. `CHANGELOG.md` is generated from the commits by the release tool and is not edited by hand.
+Pull requests are rebase-merged (ADR-0028): every commit of the branch reaches `main` as it is and is what the changelog reads, so each commit must be a small, self-contained Conventional Commit, and the footers above go in the commit that carries the change. Fold fixup commits before asking for the merge. `CHANGELOG.md` is generated from the commits by the release tool and is not edited by hand.
 
 ## Pull requests and completion
 
 1. One pull request per task or issue, titled as a Conventional Commit.
 2. Fill in the pull request template: the task or issue, the checks you ran, the thin-client rule and, if you found friction with the vukem framework, its record.
 3. A report that something works is a claim, not evidence. A change is done when its output exists and is tested, and every check of its task has been run and its result is visible in the pull request. A change that cannot meet a check is not silently changed: explain why in the pull request.
-4. The maintainer reviews, fixes the last defects, squash-merges and pushes. Nobody else pushes to `main`.
+4. The maintainer reviews, fixes the last defects, rebase-merges and pushes. Nobody else pushes to `main`.
 
 ## Checks
 
