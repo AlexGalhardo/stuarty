@@ -76,6 +76,10 @@ type tx struct {
 
 func newTx(dtx *database.Tx) *tx { return &tx{ex: dtx, dtx: dtx} }
 
+// Executor is the transaction as vukem's executor, for the queue to insert its
+// message in the same transaction as the job row (SDD-005 section 14.1).
+func (t *tx) Executor() database.Executor { return t.dtx }
+
 func (t *tx) AfterCommit(fn func()) {
 	t.dtx.AfterCommit(func(context.Context) { fn() })
 }
@@ -95,6 +99,7 @@ func (p *projectTx) Backups() service.BackupRepo          { return p.tx.Backups(
 func (p *projectTx) Audit() service.AuditRepo             { return p.tx.Audit() }
 func (p *projectTx) AfterCommit(fn func())                { p.tx.AfterCommit(fn) }
 func (p *projectTx) Project() service.ProjectRow          { return p.row }
+func (p *projectTx) Executor() database.Executor          { return p.tx.Executor() }
 
 // projectLocks is a map projectID -> channel of capacity 1, acquired with a
 // select on the channel and ctx.Done(). An entry lives only while someone
