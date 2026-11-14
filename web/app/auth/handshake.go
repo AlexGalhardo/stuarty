@@ -36,10 +36,16 @@ func Proof(token, nonce string) string {
 // ErrImpostor means the server did not prove that it knows the token.
 var ErrImpostor = errors.New("the server did not prove that it knows the workspace token; the token was not sent")
 
+// Doer is what a client sends requests with: *http.Client, and the loopback
+// client of internal/outbound.
+type Doer interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 // Verify asks the server at base for the proof of a fresh nonce and compares
 // it in constant time. A client calls it before it sends Authorization; an
 // impostor that does not know the token cannot answer (SDD-007 section 3.8, T-30).
-func Verify(ctx context.Context, client *http.Client, base, token string) error {
+func Verify(ctx context.Context, client Doer, base, token string) error {
 	var raw [16]byte
 	if _, err := rand.Read(raw[:]); err != nil {
 		return err
@@ -47,7 +53,8 @@ func Verify(ctx context.Context, client *http.Client, base, token string) error 
 
 	nonce := hex.EncodeToString(raw[:])
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+HandshakePath+"?nonce="+url.QueryEscape(nonce), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+		base+HandshakePath+"?nonce="+url.QueryEscape(nonce), http.NoBody)
 	if err != nil {
 		return err
 	}
@@ -63,7 +70,8 @@ func Verify(ctx context.Context, client *http.Client, base, token string) error 
 		Proof string `json:"proof"`
 	}
 
-	if res.StatusCode != http.StatusOK || json.NewDecoder(io.LimitReader(res.Body, 1<<10)).Decode(&body) != nil ||
+	if res.StatusCode != http.StatusOK ||
+		json.NewDecoder(io.LimitReader(res.Body, 1<<10)).Decode(&body) != nil ||
 		!TokenMatches(Proof(token, nonce), body.Proof) {
 		return ErrImpostor
 	}
@@ -71,29 +79,24 @@ func Verify(ctx context.Context, client *http.Client, base, token string) error 
 	return nil
 }
 
-// Transport sends the token only after the server at Base proved that it
-// knows it; the proof is asked for before every request that carries the token.
-type Transport struct {
+// Client sends the token only after the server at Base proved that it knows
+// it; the proof is asked for before every request that carries the token.
+type Client struct {
 	Base  string
 	Token string
-	Next  http.RoundTripper
+	Next  Doer
 }
 
-// RoundTrip implements http.RoundTripper.
-func (t *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
-	next := t.Next
-	if next == nil {
-		next = http.DefaultTransport
-	}
-
+// Do implements Doer.
+func (c *Client) Do(r *http.Request) (*http.Response, error) {
 	if r.URL.Path != HandshakePath {
-		if err := Verify(r.Context(), &http.Client{Transport: next}, t.Base, t.Token); err != nil {
+		if err := Verify(r.Context(), c.Next, c.Base, c.Token); err != nil {
 			return nil, fmt.Errorf("auth: %w", err)
 		}
 
 		r = r.Clone(r.Context())
-		r.Header.Set("Authorization", "Bearer "+t.Token)
+		r.Header.Set("Authorization", "Bearer "+c.Token)
 	}
 
-	return next.RoundTrip(r)
+	return c.Next.Do(r)
 }

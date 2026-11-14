@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
+	"slices"
 	"sync"
 	"time"
 )
@@ -90,7 +91,7 @@ func (l *Launch) Redeem(code string) bool {
 		return false
 	}
 
-	l.codes = append(l.codes[:found], l.codes[found+1:]...)
+	l.codes = slices.Delete(l.codes, found, found+1)
 
 	return true
 }
@@ -113,7 +114,8 @@ func (l *Launch) fail() {
 		}
 	}
 
-	l.failures = append(kept, t)
+	kept = append(kept, t)
+	l.failures = kept
 
 	if len(l.failures) >= failuresToLock {
 		l.lockedTo, l.failures = t.Add(lockFor), nil
