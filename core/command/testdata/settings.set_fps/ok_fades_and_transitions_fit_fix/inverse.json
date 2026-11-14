@@ -1,0 +1,28 @@
+[
+  {
+    "type": "patch",
+    "collection": "settings",
+    "id": "prj_7k2m9x4q1b",
+    "unset": [
+      "fps"
+    ]
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "duration": 40,
+      "fade_in": 15,
+      "fade_out": 15,
+      "transition_in": {
+        "duration": 20,
+        "kind": "fade"
+      },
+      "transition_out": {
+        "duration": 15,
+        "kind": "fade"
+      }
+    }
+  }
+]

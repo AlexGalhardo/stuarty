@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.fps 121/1 is not a valid frame rate; den must be 1 or 1001 and the rate 1 to 120 fps.",
+  "hint": "Use \"30\", \"24\" or \"30000/1001\" for 29.97 fps.",
+  "retryable": false,
+  "path": "args.fps"
+}

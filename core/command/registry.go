@@ -269,10 +269,10 @@ var (
 	defaultReg  *Registry
 )
 
-// Default is the registry of the Prototype build, filled by the init functions of
-// the command files.
+// Default is the registry of the ALPHA build (the Prototype commands and those of
+// ALPHA), filled by the init functions of the command files.
 func Default() *Registry {
-	defaultOnce.Do(func() { defaultReg = NewRegistry(Prototype) })
+	defaultOnce.Do(func() { defaultReg = NewRegistry(Alpha) })
 	return defaultReg
 }
 

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": {
+      "description": "The id of the asset to remove.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "asset_id"
+  ],
+  "type": "object"
+}

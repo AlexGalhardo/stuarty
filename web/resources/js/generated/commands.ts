@@ -22,6 +22,13 @@ export interface AssetAddArgs {
   };
 }
 
+export interface AssetRemoveArgs {
+  /**
+   * The id of the asset to remove.
+   */
+  asset_id: string;
+}
+
 export interface CaptionAddArgs {
   /**
    * A length; with text only.
@@ -158,6 +165,15 @@ export interface SettingsSetArgs {
   width?: number;
 }
 
+export interface SettingsSetFpsArgs {
+  /**
+   * "30", "30000/1001" or {"num": 30000, "den": 1001}; den is 1 or 1001, 1 to 120 fps.
+   */
+  fps: {
+    [k: string]: unknown;
+  };
+}
+
 export interface TextAddArgs {
   /**
    * A length of at least 1 frame.
@@ -264,10 +280,11 @@ export interface TrackUpdateArgs {
   track_id: string;
 }
 
-export type CommandName = "asset.add" | "caption.add" | "clip.add" | "item.delete" | "item.move" | "item.split" | "item.trim" | "project.rename" | "settings.set" | "text.add" | "text.set" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "caption.add" | "clip.add" | "item.delete" | "item.move" | "item.split" | "item.trim" | "project.rename" | "settings.set" | "settings.set_fps" | "text.add" | "text.set" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
+	"asset.remove": AssetRemoveArgs;
 	"caption.add": CaptionAddArgs;
 	"clip.add": ClipAddArgs;
 	"item.delete": ItemDeleteArgs;
@@ -276,6 +293,7 @@ export interface CommandArgsMap {
 	"item.trim": ItemTrimArgs;
 	"project.rename": ProjectRenameArgs;
 	"settings.set": SettingsSetArgs;
+	"settings.set_fps": SettingsSetFpsArgs;
 	"text.add": TextAddArgs;
 	"text.set": TextSetArgs;
 	"track.add": TrackAddArgs;
@@ -289,6 +307,7 @@ export type Operation = { [K in CommandName]: { op: K; args: CommandArgsMap[K] }
 
 export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "media"; phase: "prototype" | "alpha" | "beta"; internal: boolean; errors: ErrorCode[] }> = {
 	"asset.add": { summary: "Adds an asset that the import flow has already ingested.", scope: "media", phase: "prototype", internal: true, errors: ["E_VALIDATION","E_ID_EXISTS","E_LIMIT"] },
+	"asset.remove": { summary: "Removes an asset that no item uses.", scope: "media", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_IN_USE"] },
 	"caption.add": { summary: "Adds a caption item with timed words.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
 	"clip.add": { summary: "Places a video or image asset on a visual track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"item.delete": { summary: "Removes items, and optionally closes the freed space.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE","E_OVERLAP"] },
@@ -297,6 +316,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"item.trim": { summary: "Moves the start edge or the end edge of an item to a timeline position.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"project.rename": { summary: "Sets the project name.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION"] },
 	"settings.set": { summary: "Sets the frame size, the background colour or the loudness target.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION"] },
+	"settings.set_fps": { summary: "Changes the project frame rate and rescales every time quantity.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME"] },
 	"text.add": { summary: "Adds a text item to a visual track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_FONT_UNKNOWN","E_OVERLAP"] },
 	"text.set": { summary: "Changes the content or the style of a text item.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_FONT_UNKNOWN"] },
 	"track.add": { summary: "Adds an empty track at a place in the track order.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_ID_EXISTS","E_LIMIT"] },
