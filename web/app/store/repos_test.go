@@ -446,6 +446,7 @@ func TestAssetsAndArtifacts(t *testing.T) {
 		t.Errorf("after SetIngest: %+v", got)
 	}
 	facts := service.AssetFacts{
+		Kind:              "video",
 		NormalizedVersion: new(1),
 		DurationMs:        new(int64(5000)),
 		Width:             new(1920),
@@ -460,7 +461,7 @@ func TestAssetsAndArtifacts(t *testing.T) {
 		t.Fatal(err)
 	}
 	got, _ = s.Assets().Get(ctx, hash)
-	if *got.Facts.DurationMs != 5000 || !got.Facts.HasAudio || *got.Facts.FrameRateDen != 1001 ||
+	if got.Kind != "video" || *got.Facts.DurationMs != 5000 || !got.Facts.HasAudio || *got.Facts.FrameRateDen != 1001 ||
 		*got.Facts.NormalizedVersion != 1 ||
 		got.UpdatedMs != 9 {
 		t.Errorf("after SetFacts: %+v", got.Facts)

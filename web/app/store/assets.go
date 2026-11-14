@@ -91,9 +91,9 @@ func (r assetRepo) SetIngest(
 
 func (r assetRepo) SetFacts(ctx context.Context, hash string, f service.AssetFacts, nowMs int64) error {
 	return notFoundIfNone(rowsAffected(r.ex.ExecContext(ctx, `UPDATE assets SET
- normalized_version = ?, duration_ms = ?, width = ?, height = ?, has_audio = ?,
+ kind = COALESCE(NULLIF(?, ''), kind), normalized_version = ?, duration_ms = ?, width = ?, height = ?, has_audio = ?,
  frame_rate_num = ?, frame_rate_den = ?, frame_count = ?, sample_count = ?, updated_ms = ? WHERE id = ?`,
-		f.NormalizedVersion, f.DurationMs, f.Width, f.Height, boolInt(f.HasAudio),
+		f.Kind, f.NormalizedVersion, f.DurationMs, f.Width, f.Height, boolInt(f.HasAudio),
 		f.FrameRateNum, f.FrameRateDen, f.FrameCount, f.SampleCount, nowMs, hash)))
 }
 
