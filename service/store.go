@@ -68,8 +68,10 @@ type ProjectTx interface {
 
 // Projects
 
+// ProjectState is the trash state of a project.
 type ProjectState string
 
+// The states of a project.
 const (
 	ProjectActive  ProjectState = "active"
 	ProjectTrashed ProjectState = "trashed"
@@ -84,6 +86,7 @@ type ProjectSummary struct {
 	Tracks, Items, Assets int
 }
 
+// ProjectHead is a project row without its document.
 type ProjectHead struct {
 	ID            string
 	Name          string
@@ -100,12 +103,14 @@ type ProjectHead struct {
 	ResyncFloor   int64
 }
 
+// ProjectRow is a project with its document.
 type ProjectRow struct {
 	ProjectHead
 	Document  []byte // canonical JSON as stored
 	DocSHA256 string // lower-case hex of sha256(Document)
 }
 
+// ProjectQuery selects a page of the project listing.
 type ProjectQuery struct {
 	State          ProjectState // "" means active only
 	IncludeTrashed bool         // both states; wins over State
@@ -113,6 +118,7 @@ type ProjectQuery struct {
 	Limit          int          // 1 to 200; 0 means 50
 }
 
+// ProjectUpdate is what a commit writes to the project row.
 type ProjectUpdate struct {
 	Name          string
 	SchemaVersion int
@@ -123,6 +129,7 @@ type ProjectUpdate struct {
 	ResyncFloor   *int64 // set only by migration and import
 }
 
+// ProjectRepo stores projects.
 type ProjectRepo interface {
 	List(ctx context.Context, q ProjectQuery) (items []ProjectHead, next string, err error)
 	Head(ctx context.Context, id string) (ProjectHead, error)
@@ -140,8 +147,10 @@ type ProjectRepo interface {
 
 // Operations
 
+// OperationKind is the kind of a committed batch.
 type OperationKind string
 
+// The kinds of operation rows.
 const (
 	OpEdit    OperationKind = "edit"
 	OpUndo    OperationKind = "undo"
@@ -150,6 +159,7 @@ const (
 	OpImport  OperationKind = "import"
 )
 
+// OperationRow is one row of the append-only operation log.
 type OperationRow struct {
 	ProjectID      string
 	Revision       int64
@@ -168,18 +178,21 @@ type OperationRow struct {
 	IdempotencyKey *string
 }
 
+// OperationFilter bounds OperationRepo.Since.
 type OperationFilter struct {
 	ExcludeActor string // when set, rows of this actor are left out
 	Limit        int    // maximum rows; 0 means 1000
 	MaxBytes     int    // stop after the row that makes the total of Ops+Inverse+Diff exceed this; 0 means no limit
 }
 
+// HistoryQuery selects a page of the history, newest first.
 type HistoryQuery struct {
 	Before int64  // revisions below this one; 0 means from the newest
 	Actor  string // optional filter
 	Limit  int    // 1 to 200
 }
 
+// OperationRepo stores the operation log.
 type OperationRepo interface {
 	Append(ctx context.Context, row OperationRow) error // ErrExists on a duplicate revision
 	Get(ctx context.Context, projectID string, revision int64) (OperationRow, error)
@@ -200,6 +213,7 @@ type OperationRepo interface {
 
 // Idempotency
 
+// IdempotencyRow is a stored result for an idempotency key.
 type IdempotencyRow struct {
 	ProjectID   string
 	Actor       string
@@ -211,6 +225,7 @@ type IdempotencyRow struct {
 	ExpiresMs   int64
 }
 
+// IdempotencyRepo stores idempotency keys.
 type IdempotencyRepo interface {
 	// Get returns ErrNotFound for a missing or expired row (expires_ms <= nowMs).
 	Get(ctx context.Context, projectID, actor, key string, nowMs int64) (IdempotencyRow, error)
@@ -221,8 +236,10 @@ type IdempotencyRepo interface {
 
 // Assets, project assets and artifacts
 
-type IngestState string // "pending", "ingesting", "ready", "failed"
+// IngestState is the ingest state of an asset: pending, ingesting, ready or failed.
+type IngestState string
 
+// The ingest states.
 const (
 	IngestPending   IngestState = "pending"
 	IngestIngesting IngestState = "ingesting"
@@ -230,6 +247,7 @@ const (
 	IngestFailed    IngestState = "failed"
 )
 
+// AssetRow is a catalogued original file, shared by every project.
 type AssetRow struct {
 	Hash         string // sha256:<64 hex>
 	Kind         string // video, audio, image; empty until the probe classified the file
@@ -243,7 +261,8 @@ type AssetRow struct {
 	UpdatedMs    int64
 }
 
-type AssetFacts struct { // all nil until ingest is ready
+// AssetFacts are the probe facts of an asset, all nil until ingest is ready.
+type AssetFacts struct {
 	NormalizedVersion          *int // profile version of the normalized file the facts were measured on
 	DurationMs                 *int64
 	Width, Height              *int
@@ -253,14 +272,17 @@ type AssetFacts struct { // all nil until ingest is ready
 	SampleCount                *int64
 }
 
-type ProjectAssetState string // "pending", "active", "trashed"
+// ProjectAssetState is the state of a project's use of an asset: pending, active or trashed.
+type ProjectAssetState string
 
+// The project asset states.
 const (
 	ProjectAssetPending ProjectAssetState = "pending"
 	ProjectAssetActive  ProjectAssetState = "active"
 	ProjectAssetTrashed ProjectAssetState = "trashed"
 )
 
+// ProjectAssetRow maps a project's asset identifier to a hash and its trash state.
 type ProjectAssetRow struct {
 	ProjectID  string
 	AssetID    string // ast_...
@@ -274,6 +296,7 @@ type ProjectAssetRow struct {
 	TrashedMs  *int64
 }
 
+// ArtifactRow lists a derived file of an asset.
 type ArtifactRow struct {
 	AssetHash string
 	Kind      string // probe, normalized, proxy, thumbnails, peaks, silence, loudness, transcript
@@ -287,6 +310,7 @@ type ArtifactRow struct {
 	CreatedMs int64
 }
 
+// AssetRepo stores assets, project assets and artifacts.
 type AssetRepo interface {
 	// Upsert inserts the row or returns the existing one; created reports which.
 	Upsert(ctx context.Context, row AssetRow) (existing AssetRow, created bool, err error)
@@ -329,6 +353,7 @@ type AssetRepo interface {
 
 // Jobs, templates, backups
 
+// JobRow is a job of the editor (ADR-0018), not a vukem queue row.
 type JobRow struct {
 	ID              string
 	Kind            string  // ingest, transcribe, export, frame
@@ -349,6 +374,7 @@ type JobRow struct {
 	FinishedMs      *int64
 }
 
+// JobLimit is the concurrency limit checked by CreateLimited.
 type JobLimit struct {
 	Kind        string
 	Max         int    // concurrent queued+running jobs of this kind
@@ -356,6 +382,8 @@ type JobLimit struct {
 	MaxPerActor int
 }
 
+// JobRepo stores jobs. Claim, Progress, Finish and Requeue are single
+// conditional updates; false means the row was not in the expected state.
 type JobRepo interface {
 	// CreateLimited inserts the job in state queued unless the limit is
 	// reached, in which case it returns *QueueFullError. Call it inside Write.
@@ -377,6 +405,7 @@ type JobRepo interface {
 	Running(ctx context.Context) ([]JobRow, error)
 }
 
+// TemplateRow is a saved template document.
 type TemplateRow struct {
 	ID              string
 	Name            string
@@ -391,6 +420,7 @@ type TemplateRow struct {
 	CreatedBy       string
 }
 
+// TemplateRepo stores templates.
 type TemplateRepo interface {
 	Create(ctx context.Context, row TemplateRow) error
 	Get(ctx context.Context, id string) (TemplateRow, error)
@@ -406,6 +436,7 @@ type TemplateRepo interface {
 	) error
 }
 
+// BackupRow is a document saved before a migration or import.
 type BackupRow struct {
 	ID            int64
 	OwnerKind     string // "project" or "template"
@@ -417,6 +448,7 @@ type BackupRow struct {
 	CreatedMs     int64
 }
 
+// BackupRepo stores document backups.
 type BackupRepo interface {
 	Put(ctx context.Context, b BackupRow) error
 	List(ctx context.Context, ownerKind, ownerID string) ([]BackupRow, error) // Document left empty
@@ -425,6 +457,7 @@ type BackupRepo interface {
 
 // Audit
 
+// AuditRow is one entry of the audit table.
 type AuditRow struct {
 	ID        int64
 	AtMs      int64
@@ -435,6 +468,7 @@ type AuditRow struct {
 	Details   json.RawMessage
 }
 
+// AuditRepo appends to and lists the audit table; it has no update or delete.
 type AuditRepo interface {
 	Append(ctx context.Context, row AuditRow) error
 	List(ctx context.Context, projectID string, beforeID int64, limit int) ([]AuditRow, error) // projectID "" means all
