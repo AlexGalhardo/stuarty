@@ -111,6 +111,11 @@ linters:
           list-mode: lax
           files:
             - "**/service/**"
+          # The deny prefix of vukem also matches the module path vukem-video.
+          allow:
+            - github.com/AlexGalhardo/vukem-video/core
+            - github.com/AlexGalhardo/vukem-video/service
+            - github.com/AlexGalhardo/vukem-video/internal
           deny:
             - pkg: github.com/AlexGalhardo/vukem-video/web
               desc: service defines interfaces that web implements (ADR-0001 rule 3)
