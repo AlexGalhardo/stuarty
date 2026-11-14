@@ -1,0 +1,7 @@
+{
+  "op": "item.set_audio",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "volume": 1
+  }
+}

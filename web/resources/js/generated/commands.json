@@ -389,6 +389,203 @@
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"additionalProperties": false,
 			"properties": {
+				"item_id": {
+					"description": "The item to label.",
+					"type": "string"
+				},
+				"name": {
+					"description": "The label, 0 to 120 characters; empty clears it.",
+					"maxLength": 120,
+					"minLength": 0,
+					"type": "string"
+				}
+			},
+			"required": [
+				"item_id",
+				"name"
+			],
+			"type": "object"
+		},
+		"description": "Sets the display name of the item; an empty name clears it.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND"
+		],
+		"example": {
+			"item_id": "itm_m1n2p3q4r5",
+			"name": "Intro shot"
+		},
+		"internal": false,
+		"name": "item.rename",
+		"phase": "alpha",
+		"scope": "edit",
+		"summary": "Sets the label of an item."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"audio_muted": {
+					"description": "Drop the audio of a clip.",
+					"type": "boolean"
+				},
+				"fade_in": {
+					"description": "Fade-in length; 0s removes it.",
+					"type": "string"
+				},
+				"fade_out": {
+					"description": "Fade-out length; 0s removes it.",
+					"type": "string"
+				},
+				"item_id": {
+					"description": "A clip or audio item.",
+					"type": "string"
+				},
+				"volume": {
+					"description": "Linear gain, 0 to 4.",
+					"maximum": 4,
+					"minimum": 0,
+					"type": "number"
+				}
+			},
+			"required": [
+				"item_id"
+			],
+			"type": "object"
+		},
+		"description": "Sets the given values. Volume 1, fades of 0 and audio_muted false clear the stored value. audio_muted applies to clip items only. The two fades together cannot be longer than the item.",
+		"errors": [
+			"E_VALIDATION",
+			"E_INVALID_TIME",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_INVALID_STATE"
+		],
+		"example": {
+			"fade_in": "1s",
+			"fade_out": "0.5s",
+			"item_id": "itm_m1n2p3q4r5",
+			"volume": 0.8
+		},
+		"internal": false,
+		"name": "item.set_audio",
+		"phase": "alpha",
+		"scope": "edit",
+		"summary": "Sets the volume, the fades or the mute flag of a clip or audio item."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"item_id": {
+					"description": "A clip, text, caption or shape item.",
+					"type": "string"
+				},
+				"opacity": {
+					"description": "0 to 1.",
+					"maximum": 1,
+					"minimum": 0,
+					"type": "number"
+				},
+				"rotation": {
+					"description": "Degrees clockwise.",
+					"type": "number"
+				},
+				"scale": {
+					"description": "Uniform scale, greater than 0 and at most 20.",
+					"maximum": 20,
+					"type": "number"
+				},
+				"x": {
+					"description": "Centre of the item in pixels.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Centre of the item in pixels.",
+					"type": "number"
+				}
+			},
+			"required": [
+				"item_id"
+			],
+			"type": "object"
+		},
+		"description": "Sets the given properties, rounded to 3 decimals. Scale 1, rotation 0 and opacity 1 clear the stored value. A property that has keyframes cannot be set; use keyframe.set or keyframe.clear.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_INVALID_STATE"
+		],
+		"example": {
+			"item_id": "itm_s6t7v8w9x0",
+			"scale": 1.5,
+			"x": 540
+		},
+		"internal": false,
+		"name": "item.set_transform",
+		"phase": "alpha",
+		"scope": "edit",
+		"summary": "Sets the position, scale, rotation or opacity of a visual item."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"duration": {
+					"description": "Length of the transition, at least 1 frame; default 0.5s.",
+					"type": "string"
+				},
+				"edge": {
+					"description": "The edge: in or out.",
+					"enum": [
+						"in",
+						"out"
+					],
+					"type": "string"
+				},
+				"item_id": {
+					"description": "A clip, text, caption or shape item.",
+					"type": "string"
+				},
+				"kind": {
+					"description": "fade, slide_left, slide_right, slide_up, slide_down, or null to remove."
+				}
+			},
+			"required": [
+				"item_id",
+				"edge",
+				"kind"
+			],
+			"type": "object"
+		},
+		"description": "Sets a fade or a slide on the in or out edge, 0.5 seconds long unless duration is given; kind null removes the transition. The two transitions together cannot be longer than the item.",
+		"errors": [
+			"E_VALIDATION",
+			"E_INVALID_TIME",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_INVALID_STATE"
+		],
+		"example": {
+			"edge": "in",
+			"item_id": "itm_m1n2p3q4r5",
+			"kind": "fade"
+		},
+		"internal": false,
+		"name": "item.set_transition",
+		"phase": "alpha",
+		"scope": "edit",
+		"summary": "Sets or removes the transition on one edge of a visual item."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
 				"at": {
 					"description": "Absolute position strictly inside the item.",
 					"type": "string"

@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "fade_in 100 frames plus fade_out 60 frames exceeds duration 150 of itm_m1n2p3q4r5.",
+  "hint": "Use fade_in of at most \"90f\" (3s) or shorten fade_out first.",
+  "retryable": false,
+  "path": "args.fade_in"
+}

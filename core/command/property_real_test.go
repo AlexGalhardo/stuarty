@@ -152,7 +152,7 @@ func TestPropertyRealCommands(t *testing.T) {
 	defer func() { r.Debug = false }()
 	fresh := func() *timeline.Document {
 		b := base().text("itm_x000000001", vidTr, 0, 120).clip("itm_x000000002", vidTr, 200, 150, 30).
-			caption("itm_x000000003", 10, 4).audio("itm_x000000004", audTr, 0, 300, 0)
+			caption("itm_x000000003", 10, 4).audio("itm_x000000004", 0, 300, 0)
 		return b.d
 	}
 	doc := fresh()

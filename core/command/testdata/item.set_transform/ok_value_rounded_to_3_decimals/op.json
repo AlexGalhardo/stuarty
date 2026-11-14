@@ -1,0 +1,8 @@
+{
+  "op": "item.set_transform",
+  "args": {
+    "item_id": "itm_s6t7v8w9x0",
+    "x": 10.12345,
+    "scale": 1.23456
+  }
+}

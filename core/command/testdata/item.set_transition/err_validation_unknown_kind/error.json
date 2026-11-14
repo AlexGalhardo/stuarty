@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.kind wipe is not a transition kind.",
+  "hint": "Use fade, slide_left, slide_right, slide_up, slide_down or null.",
+  "retryable": false,
+  "path": "args.kind"
+}
