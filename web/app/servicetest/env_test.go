@@ -77,6 +77,14 @@ func newDir(tb testing.TB) workspace.Dir {
 func newEnv(tb testing.TB) *env {
 	tb.Helper()
 
+	return newEnvWith(tb, nil)
+}
+
+// newEnvWith is newEnv with the chance to complete the options of the service
+// (the media and job machinery) before it is built; e.dir and e.store exist.
+func newEnvWith(tb testing.TB, with func(e *env, o *service.Options)) *env {
+	tb.Helper()
+
 	e := &env{t: tb, dir: newDir(tb), clock: &clock{t: time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)}}
 
 	st, err := store.Open(context.Background(), e.dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
@@ -90,14 +98,20 @@ func newEnv(tb testing.TB) *env {
 
 	debugOnce.Do(func() { command.Default().Debug = true })
 
-	e.svc, err = service.New(service.Options{
+	opts := service.Options{
 		Store: st, Registry: command.Default(), Now: e.clock.now, NewIDs: e.newID,
 		Publish: func(ev service.Event) {
 			e.mu.Lock()
 			e.events = append(e.events, ev)
 			e.mu.Unlock()
 		},
-	})
+	}
+
+	if with != nil {
+		with(e, &opts)
+	}
+
+	e.svc, err = service.New(opts)
 	if err != nil {
 		tb.Fatal(err)
 	}

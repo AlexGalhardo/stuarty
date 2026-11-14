@@ -53,6 +53,13 @@ var Scopes = map[string]string{
 	"Undo":           ScopeEdit,
 	"Redo":           ScopeEdit,
 	"Lint":           ScopeRead,
+	"MediaImport":    ScopeMedia,
+	"MediaInspect":   ScopeRead,
+	"MediaList":      ScopeRead,
+	"JobStart":       ScopeRender,
+	"JobGet":         ScopeRead,
+	"JobList":        ScopeRead,
+	"OpenFile":       ScopeRead,
 }
 
 // authorize checks the caller first, as every method does: a missing caller

@@ -1,0 +1,187 @@
+package httpapi
+
+import (
+	"encoding/json"
+	"net/http"
+	"os"
+	"strings"
+
+	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
+)
+
+type importFileIn struct {
+	Path    string `json:"path"               validate:"required" doc:"An absolute path on the machine that runs the server."`
+	AssetID string `json:"asset_id,omitempty"                     doc:"An id of your own; ignored for a duplicate."`
+}
+
+type mediaImportIn struct {
+	ID     string         `json:"id"                validate:"required"`
+	Files  []importFileIn `json:"files"             validate:"required,min=1,max=50"`
+	WaitMS int            `json:"wait_ms,omitempty"                                  doc:"0 to 25000: hold the call until the assets are ready."`
+	DryRun bool           `json:"dry_run,omitempty"`
+}
+
+type mediaListIn struct {
+	ID string `json:"id" validate:"required"`
+	pageIn
+}
+
+type mediaInspectIn struct {
+	ID         string `json:"id"                    validate:"required"`
+	AssetID    string `json:"asset_id"              validate:"required"`
+	Sections   string `json:"sections,omitempty"                        doc:"Comma separated: probe (default), transcript, silences, loudness."`
+	MinSilence string `json:"min_silence,omitempty"                     doc:"The shortest silence to list, as a time; default 0.4s."`
+	pageIn
+}
+
+type mediaFileIn struct {
+	ID      string `json:"id"       validate:"required"`
+	AssetID string `json:"asset_id" validate:"required"`
+}
+
+type thumbnailIn struct {
+	ID      string `json:"id"              validate:"required"`
+	AssetID string `json:"asset_id"        validate:"required"`
+	Width   string `json:"width,omitempty"                     doc:"160, 320 (default) or 640."`
+}
+
+type jobStartIn struct {
+	ID     string         `json:"id"                validate:"required"`
+	Kind   string         `json:"kind"              validate:"required" doc:"export."`
+	Args   map[string]any `json:"args,omitempty"                        doc:"The arguments of the kind: start and end for an export."`
+	WaitMS int            `json:"wait_ms,omitempty"                     doc:"0 to 25000: hold the call until the job is final."`
+	DryRun bool           `json:"dry_run,omitempty"`
+}
+
+type jobListIn struct {
+	ID    string `json:"id"              validate:"required"`
+	State string `json:"state,omitempty"                     doc:"queued, running, succeeded, failed, cancelled, active or all."`
+	pageIn
+}
+
+type jobGetIn struct {
+	JobID  string `json:"job_id"            validate:"required"`
+	WaitMS int    `json:"wait_ms,omitempty"                     doc:"0 to 25000: hold the call until the job is final."`
+}
+
+func (h *apiHandler) mediaImport(c *web.Ctx, in mediaImportIn) (service.MediaImportResult, error) {
+	files := make([]service.ImportFile, len(in.Files))
+	for i, f := range in.Files {
+		files[i] = service.ImportFile{Path: f.Path, AssetID: f.AssetID}
+	}
+
+	res, err := h.Service.MediaImport(c.Context(), service.MediaImportRequest{
+		ProjectID: in.ID, Files: files, WaitMS: in.WaitMS, DryRun: dry(c, in.DryRun),
+	})
+	if err != nil {
+		return service.MediaImportResult{}, err
+	}
+
+	// 202 when every file was accepted, 200 when some were refused (SDD-003
+	// section 2.6); the status depends on the answer, so the handler writes it.
+	status := http.StatusAccepted
+	if res.Failed > 0 {
+		status = http.StatusOK
+	}
+
+	return service.MediaImportResult{}, c.JSON(status, res)
+}
+
+func (h *apiHandler) mediaList(c *web.Ctx, in mediaListIn) (service.MediaListResult, error) {
+	res, err := h.Service.MediaList(c.Context(), service.MediaListRequest{ProjectID: in.ID, Page: page(in.pageIn)})
+
+	return deref(res), err
+}
+
+func (h *apiHandler) mediaInspect(c *web.Ctx, in mediaInspectIn) (service.MediaInspectResult, error) {
+	var sections []string
+
+	for s := range strings.SplitSeq(in.Sections, ",") {
+		if s = strings.TrimSpace(s); s != "" {
+			sections = append(sections, s)
+		}
+	}
+
+	res, err := h.Service.MediaInspect(c.Context(), service.MediaInspectRequest{
+		ProjectID: in.ID, AssetID: in.AssetID, Sections: sections, MinSilence: in.MinSilence, Page: page(in.pageIn),
+	})
+
+	return deref(res), err
+}
+
+func (h *apiHandler) jobStart(c *web.Ctx, in jobStartIn) (service.Job, error) {
+	var args []byte
+
+	if in.Args != nil {
+		var err error
+		if args, err = json.Marshal(in.Args); err != nil {
+			return service.Job{}, &service.Error{
+				Code:    command.CodeValidation,
+				Path:    "args",
+				Message: "the arguments are not valid JSON.",
+			}
+		}
+	}
+
+	res, err := h.Service.JobStart(c.Context(), service.JobStartRequest{
+		ProjectID: in.ID, Kind: in.Kind, Args: args, WaitMS: in.WaitMS, DryRun: dry(c, in.DryRun),
+	})
+	if err != nil {
+		return service.Job{}, err
+	}
+
+	status := http.StatusAccepted
+	if res.State == service.JobSucceeded || res.State == service.JobFailed || res.State == service.JobCancelled ||
+		in.DryRun {
+		status = http.StatusOK
+	}
+
+	return service.Job{}, c.JSON(status, res)
+}
+
+func (h *apiHandler) jobGet(c *web.Ctx, in jobGetIn) (service.Job, error) {
+	res, err := h.Service.JobGet(c.Context(), service.JobGetRequest{JobID: in.JobID, WaitMS: in.WaitMS})
+
+	return deref(res), err
+}
+
+func (h *apiHandler) jobList(c *web.Ctx, in jobListIn) (service.JobListResult, error) {
+	res, err := h.Service.JobList(c.Context(), service.JobListRequest{
+		ProjectID: in.ID, State: in.State, Page: page(in.pageIn),
+	})
+
+	return deref(res), err
+}
+
+// serveAsset is the byte-serving route of an artifact of an asset (SDD-003
+// section 6.5): the path comes from the database through OpenFile, never from the
+// request, and the file system handed to c.File is the workspace, so a path cannot leave it.
+func (h *apiHandler) serveAsset(c *web.Ctx, kind, projectID, assetID, variant string) (noIn, error) {
+	f, err := h.Service.OpenFile(
+		c.Context(),
+		service.FileRef{Kind: kind, ProjectID: projectID, ID: assetID, Variant: variant},
+	)
+	if err != nil {
+		return noIn{}, err
+	}
+
+	hd := c.Writer().Header()
+	hd.Set("Content-Type", f.ContentType)
+	hd.Set("ETag", f.ETag)
+
+	cache := "private, max-age=86400"
+	if f.Immutable {
+		cache += ", immutable"
+	}
+
+	hd.Set("Cache-Control", cache)
+
+	if err := c.File(os.DirFS(string(h.Workspace)), f.Path); err != nil {
+		return noIn{}, err
+	}
+
+	return noIn{}, nil
+}

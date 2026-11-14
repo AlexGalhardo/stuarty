@@ -1,0 +1,709 @@
+package service
+
+import (
+	"context"
+	"encoding/json"
+	"math"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+)
+
+const (
+	cancelPollInterval = 500 * time.Millisecond
+	progressInterval   = 250 * time.Millisecond
+	progressStep       = 0.01
+	finishTimeout      = 15 * time.Second
+	maxAttempts        = 3
+	staleQueuedAge     = time.Minute
+	msgShutdown        = "interrupted by shutdown"
+	msgRestarted       = "restarted after an interruption"
+)
+
+// emitJob publishes job.updated: on the stream of the project of the job, or,
+// for an ingest job, on the stream of every project that holds its file.
+func (s *svc) emitJob(ctx context.Context, j *JobRow) {
+	ev := Event{
+		Type: "job.updated", JobID: j.ID, Kind: j.Kind, State: j.State, Progress: j.Progress, Message: j.Message,
+		Error: parseError(j.Error), At: s.now(),
+	}
+
+	if j.Kind == JobExport && len(j.Result) > 0 {
+		var res JobResult
+		if json.Unmarshal(j.Result, &res) == nil {
+			ev.Result = &res
+		}
+	}
+
+	if j.ProjectID != nil {
+		ev.ProjectID = *j.ProjectID
+		s.emit(ev)
+
+		return
+	}
+
+	if j.AssetHash == nil {
+		return
+	}
+
+	refs := s.referrers(ctx, *j.AssetHash)
+	for i := range refs {
+		ev.ProjectID, ev.AssetID = refs[i].ProjectID, refs[i].AssetID
+		s.emit(ev)
+	}
+}
+
+// emitCurrent re-reads a job and publishes it.
+func (s *svc) emitCurrent(ctx context.Context, id string) {
+	if j, err := s.store.Jobs().Get(ctx, id); err == nil {
+		s.emitJob(ctx, &j)
+	}
+}
+
+// progress throttles the writes of a running job (SDD-005 section 14.6): at
+// most one every 250 ms, and only when the value moved by 0.01 or the message
+// changed. Throttling uses the wall clock, not the service clock, which the
+// tests hold still.
+type progress struct {
+	s    *svc
+	job  *JobRow
+	mu   sync.Mutex
+	last time.Time
+	val  float64
+	msg  string
+	seen bool
+}
+
+func (p *progress) report(ctx context.Context, v float64, msg string) {
+	v = min(max(v, 0), 0.99)
+
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	now := time.Now()
+	if p.seen && (now.Sub(p.last) < progressInterval || math.Abs(v-p.val) < progressStep && msg == p.msg) {
+		return
+	}
+
+	// A step back is never written: progress only grows.
+	if p.seen && v < p.val {
+		v = p.val
+	}
+
+	p.seen, p.last, p.val, p.msg = true, now, v, msg
+
+	updated, err := p.s.store.Jobs().Progress(ctx, p.job.ID, v, msg, p.s.nowMs())
+	if err != nil || !updated {
+		return
+	}
+
+	cur := *p.job
+	cur.State, cur.Progress, cur.Message = JobRunning, v, msg
+	p.s.emitJob(ctx, &cur)
+
+	if p.job.Kind == JobIngest && p.job.AssetHash != nil {
+		if p.s.store.Assets().SetIngest(ctx, *p.job.AssetHash, IngestIngesting, v, nil, p.s.nowMs()) == nil {
+			p.s.emitAsset(ctx, *p.job.AssetHash, IngestIngesting, v, nil)
+		}
+	}
+}
+
+// RunJob is the handler of the queue messages (SDD-005 section 14.3). It
+// claims the job, runs it with a context that a cancellation can end, and
+// finishes it. A job never ends because a handler returned an error: the
+// outcome is written here.
+func (s *svc) RunJob(ctx context.Context, jobID string) error {
+	job, err := s.store.Jobs().Get(ctx, jobID)
+	if err != nil {
+		if isNotFound(err) {
+			return nil
+		}
+
+		return err
+	}
+
+	if sem := s.sems[job.Kind]; sem != nil {
+		select {
+		case sem <- struct{}{}:
+			defer func() { <-sem }()
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+
+	claimed, err := s.store.Jobs().Claim(ctx, jobID, s.nowMs())
+	if err != nil {
+		return err
+	}
+
+	if !claimed {
+		s.settleUnclaimed(ctx, jobID)
+
+		return nil
+	}
+
+	if job, err = s.store.Jobs().Get(ctx, jobID); err != nil {
+		return err
+	}
+
+	jctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	s.running.add(jobID, cancel)
+	defer s.running.remove(jobID)
+
+	stop := make(chan struct{})
+	defer close(stop)
+
+	go s.watchCancel(jctx, cancel, jobID, stop)
+
+	s.emitJob(ctx, &job)
+
+	if job.Kind == JobIngest && job.AssetHash != nil {
+		if s.store.Assets().SetIngest(ctx, *job.AssetHash, IngestIngesting, 0, nil, s.nowMs()) == nil {
+			s.emitAsset(ctx, *job.AssetHash, IngestIngesting, 0, nil)
+		}
+	}
+
+	pw := &progress{s: s, job: &job}
+
+	var (
+		result json.RawMessage
+		herr   error
+	)
+
+	switch job.Kind {
+	case JobIngest:
+		result, herr = s.runIngest(jctx, &job, pw)
+	case JobExport:
+		result, herr = s.runExport(jctx, &job, pw)
+	default:
+		herr = newError(command.CodeInternal, "jobs of the kind %s are not available in this build.", job.Kind)
+	}
+
+	return s.settle(ctx, jctx, &job, result, herr)
+}
+
+// settleUnclaimed handles a delivery that found the job not queued: another
+// delivery owns it or it is final (nothing to do), or a queued job whose
+// cancellation was requested but not yet recorded (finish it).
+func (s *svc) settleUnclaimed(ctx context.Context, id string) {
+	row, err := s.store.Jobs().Get(ctx, id)
+	if err != nil || row.State != JobQueued || !row.CancelRequested {
+		return
+	}
+
+	if after, cerr := s.store.Jobs().RequestCancel(ctx, id, s.nowMs()); cerr == nil && after.State == JobCancelled {
+		s.afterQueuedCancel(ctx, &after)
+	}
+}
+
+// watchCancel reads cancel_requested every 500 ms, which covers a job that
+// was cancelled by another path than the in-process registry.
+func (s *svc) watchCancel(ctx context.Context, cancel context.CancelFunc, id string, stop <-chan struct{}) {
+	t := time.NewTicker(cancelPollInterval)
+	defer t.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-stop:
+			return
+		case <-t.C:
+			if row, err := s.store.Jobs().Get(ctx, id); err == nil && row.CancelRequested {
+				cancel()
+
+				return
+			}
+		}
+	}
+}
+
+// settle writes the outcome of a run: succeeded, cancelled, failed, or back to
+// queued when a shutdown interrupted it. Writes use a context that survives the
+// shutdown, so the outcome is recorded.
+func (s *svc) settle(parent, jctx context.Context, job *JobRow, result json.RawMessage, herr error) error {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(parent), finishTimeout)
+	defer cancel()
+
+	now := s.nowMs()
+
+	if herr == nil {
+		ok, err := s.store.Jobs().Finish(ctx, job.ID, JobSucceeded, result, nil, now)
+		if err == nil && ok {
+			s.emitCurrent(ctx, job.ID)
+		}
+
+		return err
+	}
+
+	if jctx.Err() != nil {
+		row, err := s.store.Jobs().Get(ctx, job.ID)
+		if err == nil && row.CancelRequested {
+			return s.finishFailed(ctx, job, JobCancelled, newError(CodeCancelled, "the job was cancelled."))
+		}
+
+		if parent.Err() != nil {
+			s.requeueInterrupted(ctx, job)
+
+			return parent.Err()
+		}
+	}
+
+	return s.finishFailed(ctx, job, JobFailed, fromEngine(herr))
+}
+
+// finishFailed records a failed or cancelled job and, for an ingest, the
+// failed asset with the same error (SDD-011 section 2.6).
+func (s *svc) finishFailed(ctx context.Context, job *JobRow, state string, e *Error) error {
+	ej := errorJSON(e)
+
+	ok, err := s.store.Jobs().Finish(ctx, job.ID, state, nil, ej, s.nowMs())
+	if err != nil {
+		return err
+	}
+
+	if job.Kind == JobIngest && job.AssetHash != nil {
+		if aerr := s.store.Assets().SetIngest(ctx, *job.AssetHash, IngestFailed, 0, ej, s.nowMs()); aerr == nil {
+			s.emitAsset(ctx, *job.AssetHash, IngestFailed, 0, e)
+		}
+	}
+
+	if ok {
+		s.emitCurrent(ctx, job.ID)
+	}
+
+	return nil
+}
+
+// requeueInterrupted puts a job a shutdown interrupted back in the queue; the
+// next start runs it from the beginning (SDD-005 section 14.5).
+func (s *svc) requeueInterrupted(ctx context.Context, job *JobRow) {
+	ok, err := s.store.Jobs().Requeue(ctx, job.ID, msgShutdown, s.nowMs())
+	if err != nil || !ok {
+		return
+	}
+
+	if job.Kind == JobIngest && job.AssetHash != nil {
+		if s.store.Assets().SetIngest(ctx, *job.AssetHash, IngestPending, 0, nil, s.nowMs()) == nil {
+			s.emitAsset(ctx, *job.AssetHash, IngestPending, 0, nil)
+		}
+	}
+
+	s.emitCurrent(ctx, job.ID)
+}
+
+// runIngest is steps 1 to 7 of SDD-011 section 7.1 for one file, then the
+// asset.add batches of section 2.5. A file whose asset is already ready (a
+// crash between the registration and the end of the job) skips straight to the
+// batches.
+func (s *svc) runIngest(ctx context.Context, job *JobRow, pw *progress) (json.RawMessage, error) {
+	if job.AssetHash == nil {
+		return nil, internalError()
+	}
+
+	hash := *job.AssetHash
+	hex := strings.TrimPrefix(hash, "sha256:")
+	timings := map[string]int64{}
+	var warnings []string
+
+	ar, err := s.store.Assets().Get(ctx, hash)
+	if err != nil {
+		return nil, err
+	}
+
+	if ar.IngestState != IngestReady {
+		if derr := s.checkDisk(0); derr != nil {
+			return nil, derr
+		}
+
+		in := ingest.Input{
+			Runner:       s.media.Runner,
+			Caps:         s.media.Caps,
+			Hash:         hex,
+			ArtifactsDir: filepath.Join(s.workspace, "artifacts"),
+			JobID:        job.ID,
+			Ceilings:     s.limits.Ceilings,
+			OnProgress:   func(p ingest.Progress) { pw.report(ctx, p.Fraction, p.Message) },
+		}
+
+		res, rerr := s.media.Ingest(ctx, in)
+		if rerr != nil {
+			return nil, rerr
+		}
+
+		if err := s.registerIngest(ctx, hash, res); err != nil {
+			return nil, err
+		}
+
+		timings, warnings = res.TimingsMS, res.Warnings
+		s.emitAsset(ctx, hash, IngestReady, 1, nil)
+	}
+
+	warnings = append(warnings, s.completePending(ctx, hash, job.ID)...)
+
+	return marshalOrNull(map[string]any{"timings_ms": timings, "warnings": warnings}), nil
+}
+
+// registerIngest records the artifacts and the facts and makes the asset
+// ready, in one transaction (SDD-005 section 5.5, Facts).
+func (s *svc) registerIngest(ctx context.Context, hash string, res *ingest.Result) error {
+	now := s.nowMs()
+
+	return s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		var version *int
+
+		for _, a := range res.Artifacts {
+			meta, _ := json.Marshal(a.Meta)
+			if a.Meta == nil {
+				meta = nil
+			}
+
+			if a.Kind == "normalized" {
+				v := a.Profile
+				version = &v
+			}
+
+			if err := tx.Assets().PutArtifact(ctx, ArtifactRow{
+				AssetHash: hash, Kind: a.Kind, Profile: a.Profile, Variant: a.Variant, Ext: a.Ext, RelPath: a.RelPath,
+				SizeBytes: a.Size, SHA256: a.SHA256, Meta: meta, CreatedMs: now,
+			}); err != nil {
+				return err
+			}
+		}
+
+		f := AssetFacts{Kind: string(res.Kind), NormalizedVersion: version, HasAudio: res.Facts.HasAudio}
+
+		if res.Facts.Width > 0 {
+			w, h := res.Facts.Width, res.Facts.Height
+			f.Width, f.Height = &w, &h
+		}
+
+		if res.Kind != ingest.KindImage && res.Summary != nil {
+			d := res.Summary.DurationMS
+			f.DurationMs = &d
+		}
+
+		if res.Facts.FrameRate.Num > 0 && res.Facts.FrameRate.Den > 0 {
+			n, d := int(res.Facts.FrameRate.Num), int(res.Facts.FrameRate.Den)
+			f.FrameRateNum, f.FrameRateDen = &n, &d
+		}
+
+		if res.Facts.FrameCount > 0 {
+			c := int64(res.Facts.FrameCount)
+			f.FrameCount = &c
+		}
+
+		if res.Facts.SampleCount > 0 {
+			c := res.Facts.SampleCount
+			f.SampleCount = &c
+		}
+
+		if err := tx.Assets().SetFacts(ctx, hash, f, now); err != nil {
+			return err
+		}
+
+		return tx.Assets().SetIngest(ctx, hash, IngestReady, 1, nil, now)
+	})
+}
+
+// completePending issues the asset.add of every project that waits for the
+// file. A refusal (the document is full, the project is in the trash) leaves
+// that row pending and is reported as a warning; the asset is ready anyway.
+func (s *svc) completePending(ctx context.Context, hash, jobID string) []string {
+	ar, err := s.store.Assets().Get(ctx, hash)
+	if err != nil {
+		return nil
+	}
+
+	pending, err := s.store.Assets().PendingForHash(ctx, hash)
+	if err != nil {
+		return nil
+	}
+
+	var warnings []string
+
+	for i := range pending {
+		pa := pending[i]
+		head, perr := s.store.Projects().Get(ctx, pa.ProjectID)
+		if perr != nil || head.State == ProjectTrashed {
+			continue
+		}
+
+		key := "ingest." + jobID + "." + pa.ProjectID
+		if !idempotencyKeyOK(key) {
+			key = ""
+		}
+
+		if aerr := s.addAsset(ctx, &head, pa, ar, key); aerr != nil {
+			warnings = append(warnings, pa.ProjectID+": "+aerr.Code+": "+aerr.Message)
+		}
+	}
+
+	return warnings
+}
+
+// checkDisk refuses work while the volume of the workspace is under the free
+// space floor (SDD-007 section 9.2 item 4).
+func (s *svc) checkDisk(need int64) *Error {
+	if s.limits.MinFreeBytes <= 0 || s.workspace == "" {
+		return nil
+	}
+
+	free, err := s.media.FreeBytes(s.workspace)
+	if err == nil && free < uint64(need)+uint64(s.limits.MinFreeBytes) { //nolint:gosec // both are positive
+		return newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space.").
+			withDetail("limit", "free_bytes").withDetail("reason", "disk_low").
+			withDetail("variable", "VUKEM_VIDEO_MIN_FREE_BYTES")
+	}
+
+	return nil
+}
+
+// runExport renders the project and finishes only after the output passed its
+// verification (ADR-0018 item 6): the exporter verifies, and the service checks
+// again that every check is ok and that the file on disk is the one reported.
+func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.RawMessage, error) {
+	if s.exporter == nil || job.ProjectID == nil {
+		return nil, internalError()
+	}
+
+	var in exportInput
+	if err := json.Unmarshal(job.Input, &in); err != nil {
+		return nil, internalError()
+	}
+
+	row, err := s.store.Projects().Get(ctx, *job.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	doc, derr := decodeRow(&row)
+	if derr != nil {
+		return nil, derr
+	}
+
+	if err := s.checkDisk(0); err != nil {
+		return nil, err
+	}
+
+	dir := filepath.Join(s.workspace, "exports", row.ID)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return nil, internalError()
+	}
+
+	out, aerr := filepath.Abs(filepath.Join(dir, job.ID+".mp4"))
+	if aerr != nil {
+		return nil, internalError()
+	}
+
+	res, err := s.exporter.Export(ctx, ExportInput{
+		JobID: job.ID, Doc: doc, OutPath: out, Start: in.Start, End: in.End,
+		OnProgress: func(done, total int) {
+			if total > 0 {
+				pw.report(ctx, float64(done)/float64(total), "Rendering ("+strconv.Itoa(done*100/total)+"%)")
+			}
+		},
+	})
+	if err != nil {
+		_ = os.Remove(out)
+
+		return nil, err
+	}
+
+	if verr := verifyOutput(out, res); verr != nil {
+		_ = os.Remove(out)
+
+		return nil, verr
+	}
+
+	fps := doc.Settings.FPS
+	frames := int64(res.Frames)
+
+	if frames == 0 {
+		frames = in.End - in.Start
+	}
+
+	export := ExportResult{
+		Revision: row.Revision, Path: out, DownloadURL: "/api/v1/jobs/" + job.ID + "/file", Bytes: res.Bytes,
+		SHA256: res.SHA256, Duration: timeValue(fps, frames), Width: doc.Settings.Width, Height: doc.Settings.Height,
+		FPS: fpsString(fps.Num, fps.Den), VideoCodec: res.VideoCodec, AudioCodec: res.AudioCodec,
+		LoudnessLUFS: res.LoudnessLUFS, Checks: res.Checks,
+	}
+
+	if export.Checks == nil {
+		export.Checks = []VerifyCheck{}
+	}
+
+	raw, merr := json.Marshal(JobResult{Export: &export})
+	if merr != nil {
+		_ = os.Remove(out)
+
+		return nil, internalError()
+	}
+
+	return raw, nil
+}
+
+// verifyOutput is the service side of the verification gate: every check ran
+// ok and the file is on disk with the size the exporter reported.
+func verifyOutput(path string, res *ExportOutput) *Error {
+	var failed []VerifyCheck
+
+	for _, c := range res.Checks {
+		if !c.OK {
+			failed = append(failed, c)
+		}
+	}
+
+	if len(failed) == 0 {
+		if st, err := os.Stat(path); err == nil && st.Mode().IsRegular() && st.Size() > 0 && st.Size() == res.Bytes {
+			return nil
+		}
+
+		failed = append(
+			failed,
+			VerifyCheck{Name: "file", OK: false, Detail: "the output is missing or is not the size reported"},
+		)
+	}
+
+	return newError(CodeVerifyFailed, "The exported file failed %d check(s) and was deleted.", len(failed)).
+		withHint("export again; if it keeps failing, report it with the output of doctor").
+		withDetail("checks", failed)
+}
+
+// Recover is the start-up recovery (SDD-005 section 14.5): every job found
+// running belongs to an owner that is gone. It is requeued with a new queue
+// message, or failed after three attempts; queued jobs older than a minute get
+// one more message, which the claim makes harmless when the old one survived.
+func (s *svc) Recover(ctx context.Context) error {
+	var changed []JobRow
+
+	err := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		now := s.nowMs()
+
+		var err error
+		if changed, err = s.recoverRunning(ctx, tx, now); err != nil {
+			return err
+		}
+
+		stale, err := tx.Jobs().QueuedBefore(ctx, now-staleQueuedAge.Milliseconds())
+		if err != nil {
+			return err
+		}
+
+		for i := range stale {
+			if err := s.enqueueKind(ctx, tx, &stale[i]); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	for i := range changed {
+		s.emitJob(ctx, &changed[i])
+	}
+
+	return nil
+}
+
+// recoverRunning requeues or fails every running job; it returns the rows it
+// changed, for their events.
+func (s *svc) recoverRunning(ctx context.Context, tx Tx, now int64) ([]JobRow, error) {
+	running, err := tx.Jobs().Running(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var changed []JobRow
+
+	for i := range running {
+		j := running[i]
+
+		if j.Attempts >= maxAttempts {
+			if err := s.failInterrupted(ctx, tx, &j, now); err != nil {
+				return nil, err
+			}
+
+			changed = append(changed, j)
+
+			continue
+		}
+
+		ok, err := tx.Jobs().Requeue(ctx, j.ID, msgRestarted, now)
+		if err != nil {
+			return nil, err
+		}
+
+		if !ok {
+			continue
+		}
+
+		j.State, j.Message = JobQueued, msgRestarted
+
+		if err := s.enqueueKind(ctx, tx, &j); err != nil {
+			return nil, err
+		}
+
+		changed = append(changed, j)
+	}
+
+	return changed, nil
+}
+
+func (s *svc) enqueueKind(ctx context.Context, tx Tx, j *JobRow) error {
+	if s.enqueue == nil {
+		return nil
+	}
+
+	kind := QueueKindFrame
+
+	switch j.Kind {
+	case JobIngest:
+		kind = QueueKindIngest
+	case JobExport:
+		kind = QueueKindExport
+	}
+
+	return s.enqueue.Enqueue(ctx, tx, kind, j.ID)
+}
+
+// failInterrupted ends a job interrupted three times (SDD-005 section 14.5).
+func (s *svc) failInterrupted(ctx context.Context, tx Tx, j *JobRow, now int64) error {
+	code := command.CodeInternal
+
+	switch j.Kind {
+	case JobExport:
+		code = CodeExportFailed
+	case JobIngest:
+		code = CodeIngestFailed
+	}
+
+	e := newError(code, "the job was interrupted %d times and given up.", j.Attempts).
+		withDetail("reason", "interrupted").withHint("run it again")
+	ej := errorJSON(e)
+
+	ok, err := tx.Jobs().Finish(ctx, j.ID, JobFailed, nil, ej, now)
+	if err != nil || !ok {
+		return err
+	}
+
+	j.State, j.Error = JobFailed, ej
+
+	if j.Kind == JobIngest && j.AssetHash != nil {
+		return tx.Assets().SetIngest(ctx, *j.AssetHash, IngestFailed, 0, ej, now)
+	}
+
+	return nil
+}

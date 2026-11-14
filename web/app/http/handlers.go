@@ -187,6 +187,24 @@ func (h *apiHandler) registerAll() {
 		}
 	}
 
+	register(h, "media.import", h.mediaImport)
+	register(h, "media.list", h.mediaList)
+	register(h, "media.inspect", h.mediaInspect)
+	register(h, "jobs.start", h.jobStart)
+	register(h, "jobs.list", h.jobList)
+	register(h, "jobs.get", h.jobGet)
+	register(h, "media.proxy", func(c *web.Ctx, in mediaFileIn) (noIn, error) {
+		return h.serveAsset(c, "proxy", in.ID, in.AssetID, "")
+	})
+	register(h, "media.thumbnail", func(c *web.Ctx, in thumbnailIn) (noIn, error) {
+		return h.serveAsset(c, "thumbnail", in.ID, in.AssetID, in.Width)
+	})
+	register(h, "media.strip", func(c *web.Ctx, in mediaFileIn) (noIn, error) {
+		return h.serveAsset(c, "strip", in.ID, in.AssetID, "")
+	})
+	register(h, "media.peaks", func(c *web.Ctx, in mediaFileIn) (noIn, error) {
+		return h.serveAsset(c, "peaks", in.ID, in.AssetID, "")
+	})
 	register(h, "jobs.file", h.jobsFile)
 	register(h, "system.launch", h.systemLaunch)
 	register(h, "handshake.get", func(_ *web.Ctx, in handshakeIn) (handshakeOut, error) {
