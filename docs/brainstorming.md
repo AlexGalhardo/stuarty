@@ -234,3 +234,11 @@ All twelve themes were covered by decisions D-001 to D-025. The working state is
 - Reason: the author moved `vukem-feedback.md`, `STATUS.md` and `ROADMAP.md` there during the session and, asked on 2026-11-14 which root `ROADMAP.md` belongs to, chose the workspace root. Working files of the agent team are not part of what is published.
 - Impact: the ROADMAP is not versioned or published with the product; RF-214 no longer lists it among the repository files. Paths inside ROADMAP tasks are relative to `video/`. This file refers to `STATUS.md` in the workspace root.
 
+### D-026 — One legacy release, then one minor release about every 90 commits; pull requests are rebase-merged
+
+- Date: 2026-11-14
+- Decision: (1) the five Studio releases `v0.1.0` to `v0.4.0` are folded into one release `v0.1.0`, whose annotated tag points to the last Studio release commit (`6a420b6`, formerly `v0.4.0`) and whose notes carry the notes of the five; the tags and releases `v0.2.0`, `v0.3.0`, `v0.3.1`, `v0.4.0` are deleted. (2) The editor releases continue the line with sequential minors: `v0.2.0`, `v0.3.0`, ... A new release is cut when `main` has gathered about 90 commits since the previous tag (an average, not a hard number), at a point where the release pipeline is green. (3) Task pull requests are rebase-merged, so their microcommits (Conventional Commits) reach `main` and are what is counted and what the changelog reads.
+- Alternatives considered: keep the five Studio releases and start the editor at `v0.5.0` (D-005, ADR-0025); one release per task group; squash-merge with one commit per task.
+- Reason: asked by the author on 2026-11-14, after the layout pull requests were merged.
+- Impact: supersedes the version line of D-005 and items 1 and 2 of ADR-0025 (ADR-0028); SDD-009 sections 4 and 6.3; ROADMAP (completion protocol items 5 and 6, P1-REL-008, the Prototype exit criterion 8, the group audits that name a version); `CONTRIBUTING.md`. Done on the remote the same day: the tag `v0.1.0` was moved once (the only forced tag push) and the four other tags were deleted.
+
