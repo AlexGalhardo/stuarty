@@ -31,19 +31,27 @@ RUN bun run build \
 FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS build
 ARG TARGETOS
 ARG TARGETARCH
+ARG VERSION=devel
 WORKDIR /src
 ENV CGO_ENABLED=0 GOWORK=off
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 COPY --from=assets /src/web/resources/public/build web/resources/public/build
-# The .git directory travels in the context so Go stamps the commit into the
-# binary. From a git worktree the .git file points outside the context and
-# git fails; the build then goes without VCS stamping instead of failing.
+# The .git directory travels in the context so Go stamps the tag at HEAD into
+# the binary, which `vukem-video version` prints. A release, or image.yml with a
+# local dummy tag, passes VERSION and the build fails when the stamped version is
+# not v$VERSION: that also catches a dirty build context (+dirty). From a git
+# worktree the .git file points outside the context and git fails; the build then
+# goes without VCS stamping and the check is skipped, as it is for VERSION=devel.
 RUN if git -c safe.directory=/src status --porcelain >/dev/null 2>&1; then \
 		git config --global --add safe.directory /src; stamp=true; \
 	else stamp=false; fi \
-	&& GOOS="$TARGETOS" GOARCH="$TARGETARCH" go build -buildvcs="$stamp" -trimpath -ldflags="-s -w" -o /out/vukem-video ./web/cmd/app
+	&& GOOS="$TARGETOS" GOARCH="$TARGETARCH" go build -buildvcs="$stamp" -trimpath -ldflags="-s -w" -o /out/vukem-video ./web/cmd/app \
+	&& if [ "$stamp" = true ] && [ "$VERSION" != devel ] && [ "$TARGETARCH" = "$(go env GOHOSTARCH)" ]; then \
+		got="$(/out/vukem-video version)"; \
+		[ "$got" = "vukem-video v$VERSION" ] || { echo "version stamp: got [$got], want [vukem-video v$VERSION]" >&2; exit 1; }; \
+	fi
 
 # The pinned FFmpeg, downloaded by exact URL and verified by SHA-256.
 FROM --platform=$BUILDPLATFORM ${RUNTIME_IMAGE} AS ffmpeg
@@ -78,9 +86,10 @@ LABEL org.opencontainers.image.title="vukem-video" \
 	org.opencontainers.image.revision="${REVISION}"
 
 # curl is the health check client; tzdata and ca-certificates are the runtime
-# data the binary needs. Debian slim keeps /usr/share/doc/<package>/copyright.
+# data the binary needs; util-linux provides prlimit, which the child process
+# limits of P2-RND-005 use. Debian slim keeps /usr/share/doc/<package>/copyright.
 RUN apt-get update \
-	&& apt-get install -y --no-install-recommends ca-certificates curl tzdata \
+	&& apt-get install -y --no-install-recommends ca-certificates curl tzdata util-linux \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& useradd --system --no-create-home --uid 10001 --user-group app \
 	&& mkdir -p /data /usr/share/doc/vukem-video/ffmpeg \
@@ -102,7 +111,8 @@ RUN . /tmp/ffmpeg.env \
 		"Corresponding FFmpeg source: ${FFMPEG_SOURCE_URL}" > /usr/share/doc/vukem-video/ffmpeg/SOURCE.txt \
 	&& rm /tmp/ffmpeg.env
 
-COPY LICENSE.md /usr/share/doc/vukem-video/
+COPY LICENSE.md THIRD_PARTY_NOTICES.md /usr/share/doc/vukem-video/
+COPY licenses/ /usr/share/doc/vukem-video/licenses/
 COPY --from=build /out/vukem-video /usr/local/bin/vukem-video
 
 # vukem reads HOST and PORT. A published port needs the server to listen on

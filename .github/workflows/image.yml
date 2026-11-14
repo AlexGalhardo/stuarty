@@ -13,9 +13,11 @@ on:
       - "go.mod"
       - "go.sum"
       - "web/**"
+      - "internal/**"
       - "engine/**"
       - "core/**"
       - "service/**"
+      - "LICENSE.md"
       - "THIRD_PARTY_NOTICES.md"
       - "licenses/**"
   workflow_dispatch:
@@ -33,9 +35,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      # Full history and a local tag: the Dockerfile stamps the version from the tag
+      # at HEAD and fails when it differs from VERSION. A dummy tag lets a pull
+      # request run the same check a release runs, so a dirty build context (+dirty)
+      # is caught here and not at the first tag. The tag is never pushed.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
+      - name: Create the local dummy tag
+        run: git tag v0.0.0-ci
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
@@ -43,5 +52,7 @@ jobs:
           file: .config/docker/vukem-video.Dockerfile
           load: true
           tags: vukem-video:ci
+          build-args: |
+            VERSION=0.0.0-ci
       - name: Smoke test
-        run: bash scripts/image-smoke.sh vukem-video:ci
+        run: bash scripts/image-smoke.sh vukem-video:ci 0.0.0-ci
