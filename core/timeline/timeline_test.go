@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -289,12 +290,12 @@ func TestDecodeErrors(t *testing.T) {
 		"zero schema": {
 			strings.Replace(good, `"schema_version":1`, `"schema_version":0`, 1),
 			VSchemaVersion,
-			"positive integer",
+			"no migration from schema_version 0",
 		},
 		"float schema": {
 			strings.Replace(good, `"schema_version":1`, `"schema_version":1.5`, 1),
 			VSchemaVersion,
-			"positive integer",
+			"non-negative integer",
 		},
 	}
 	for name, c := range cases {
@@ -336,56 +337,15 @@ func TestMigrateFixturesOfEveryVersion(t *testing.T) {
 	}
 }
 
-func TestMigrateChainWithFakeOlderVersion(t *testing.T) {
-	// A pretend schema 2 renamed "name" to "title": v1 documents migrate through v1to2.
-	v1to2 := func(d RawDoc) (RawDoc, error) {
-		d["title"] = d["name"]
-		delete(d, "name")
-		return d, nil
-	}
-	v2to3 := func(d RawDoc) (RawDoc, error) { d["step3"] = true; return d, nil }
-	steps := map[int]migration{1: v1to2, 2: v2to3}
-	raw, _ := DecodeRaw(readFile(t, "testdata/versions/v1/launch-teaser.json"))
-	out, err := migrateChain(raw, 3, steps)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if out["title"] != "Launch teaser" || out["name"] != nil || out["step3"] != true ||
-		out["schema_version"] != json.Number("3") {
-		t.Errorf("chain result: %v", out)
-	}
-
-	// A document already at the current version is untouched.
-	same, err := migrateChain(RawDoc{"schema_version": json.Number("3")}, 3, steps)
-	if err != nil || len(same) != 1 {
-		t.Errorf("current: %v %v", same, err)
-	}
-
-	// A missing step, a failing step, a newer document and a bad version.
-	if _, err := migrateChain(
-		RawDoc{"schema_version": json.Number("1")},
-		2,
-		nil,
-	); err == nil ||
-		!strings.Contains(err.Error(), "no migration from schema_version 1") {
-		t.Errorf("missing step: %v", err)
-	}
-	boom := errors.New("boom")
-	if _, err := migrateChain(
-		RawDoc{"schema_version": json.Number("1")},
-		2,
-		map[int]migration{1: func(RawDoc) (RawDoc, error) { return nil, boom }},
-	); !errors.Is(
-		err,
-		boom,
-	) {
-		t.Errorf("failing step: %v", err)
-	}
-	_, err = migrateChain(RawDoc{"schema_version": json.Number("4")}, 3, steps)
+func TestMigrateWrapsTheChainErrors(t *testing.T) {
+	_, err := Migrate(RawDoc{"schema_version": json.Number("4")})
 	var ve *ViolationsError
 	if !errors.As(err, &ve) || ve.Violations[0].Code != VSchemaVersion || !strings.Contains(ve.Error(), "4") ||
-		!strings.Contains(ve.Error(), "3") {
+		!strings.Contains(ve.Error(), strconv.Itoa(CurrentSchemaVersion)) {
 		t.Errorf("newer: %v", err)
+	}
+	if _, err := Migrate(RawDoc{}); !errors.As(err, &ve) || ve.Violations[0].Code != VShape {
+		t.Errorf("missing version: %v", err)
 	}
 }
 
@@ -543,7 +503,7 @@ func TestDefaultsConstructors(t *testing.T) {
 func TestEveryViolationCodeHasAnInvalidExample(t *testing.T) {
 	covered := map[string]bool{}
 	for _, f := range files(t, "testdata/invalid/*.codes.txt") {
-		for _, c := range strings.Fields(string(readFile(t, f))) {
+		for c := range strings.FieldsSeq(string(readFile(t, f))) {
 			covered[c] = true
 		}
 	}

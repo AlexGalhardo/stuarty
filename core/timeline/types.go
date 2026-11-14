@@ -1,5 +1,7 @@
 package timeline
 
+import "github.com/AlexGalhardo/vukem-video/core/timeline/migrate"
+
 // The Go types are the source of truth of the document (SDD-001 §7). Their tags
 // drive the decoder, the canonical encoder and, later, the generated JSON Schema:
 //
@@ -18,7 +20,7 @@ package timeline
 // item store exactly the keys that were set (SDD-001 §2 item 8).
 
 // CurrentSchemaVersion is the schema version this binary writes and supports.
-const CurrentSchemaVersion = 1
+const CurrentSchemaVersion = migrate.Current
 
 // Limits of the document (V_LIMITS, V_ITEM_RANGE).
 const (
