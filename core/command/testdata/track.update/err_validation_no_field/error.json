@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give at least one of name, hidden, muted.",
+  "hint": "Send for example {\"name\": ...}.",
+  "retryable": false,
+  "path": "args"
+}

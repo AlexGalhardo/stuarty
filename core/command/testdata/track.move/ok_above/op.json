@@ -1,0 +1,7 @@
+{
+  "op": "track.move",
+  "args": {
+    "track_id": "trk_m1n2p3q4r5",
+    "above": "trk_f6g7h8j9k0"
+  }
+}

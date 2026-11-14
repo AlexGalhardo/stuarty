@@ -1,0 +1,10 @@
+[
+  {
+    "type": "patch",
+    "collection": "tracks",
+    "id": "trk_f6g7h8j9k0",
+    "unset": [
+      "muted"
+    ]
+  }
+]

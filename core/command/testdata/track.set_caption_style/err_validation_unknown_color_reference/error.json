@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.style.color refers to colour \"$brand\", which is not in template.colors.",
+  "hint": "Use a hex colour, or add the name with template.set_info first.",
+  "retryable": false,
+  "path": "args.style.color"
+}

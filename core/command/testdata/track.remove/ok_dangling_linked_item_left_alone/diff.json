@@ -1,0 +1,24 @@
+[
+  {
+    "kind": "track.removed",
+    "id": "trk_f6g7h8j9k0",
+    "object": {
+      "id": "trk_f6g7h8j9k0",
+      "kind": "visual",
+      "name": "Video",
+      "order": "a1"
+    }
+  },
+  {
+    "kind": "item.removed",
+    "id": "itm_m1n2p3q4r5",
+    "object": {
+      "asset": "ast_3c5v8n2w6d",
+      "duration": 150,
+      "id": "itm_m1n2p3q4r5",
+      "start": 0,
+      "track": "trk_f6g7h8j9k0",
+      "type": "clip"
+    }
+  }
+]

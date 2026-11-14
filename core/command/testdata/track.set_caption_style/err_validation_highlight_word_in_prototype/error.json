@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.style.highlight must be \"none\" in this build, got \"word\".",
+  "hint": "Word highlight arrives in ALPHA; use \"none\".",
+  "retryable": false,
+  "path": "args.style.highlight"
+}

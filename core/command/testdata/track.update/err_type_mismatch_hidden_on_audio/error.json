@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Track trk_m1n2p3q4r5 is an audio track; hidden applies to visual tracks only.",
+  "hint": "Use muted to silence an audio track.",
+  "retryable": false,
+  "path": "args.hidden"
+}

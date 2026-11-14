@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Track trk_f6g7h8j9k0 cannot be placed above itself.",
+  "hint": "Name a different reference track, or use position.",
+  "retryable": false,
+  "path": "args.above"
+}
