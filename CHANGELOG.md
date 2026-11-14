@@ -7,25 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Local launch-film capture, composition, original synthesized soundtrack and dual-format rendering tools.
-
-- **ui:** Add shadcn/ui (radix-nova) with a collapsible sidebar, tooltips, cards and form controls, and a tips panel on the dashboard
-- **dashboard:** Show the brief form, recent videos and tips on `/`, with a tooltip on every brief field
-- **i18n:** English and Brazilian Portuguese for the login page, the sidebar and the dashboard (`resources/lang`, `inertia.I18n("ui.")`), picked from `?lang=`, the `lang` cookie or the browser; a language switcher in the header stores the choice through `POST /locale`
-- **dashboard:** Example placeholders in every free-text brief field
-
-### Changed
-
-- **ui:** Redesign `/login` as a two-column page with a single Google button
-- **ui:** The sidebar collapses to an icon rail (header button or Ctrl+B) and stays collapsed after a reload (`sidebar_state` cookie, shared with SSR)
-- **dashboard:** The dashboard lives only at `/`, which requires a session; `/dashboard` answers 301 to `/`, and sign-in lands on `/`
-
-### Security
-
-- **auth:** Only `aleexgvieira@gmail.com` and `aleexgalhardoo@gmail.com` may sign in; other or unverified Google accounts are refused before a user is created, and sessions of other users are ended
-
 ## [0.4.0] - 2026-11-07
 
 ### Fixed
