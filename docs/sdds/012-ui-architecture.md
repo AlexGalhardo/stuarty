@@ -248,7 +248,7 @@ export type ErrorCode = "E_VALIDATION" | "E_OVERLAP" | /* every code of SDD-000 
 export const ERROR_TABLE: Record<ErrorCode, { retryable: boolean; http: number }>;
 ```
 
-`bun run codegen:ts` regenerates them; CI fails if the working tree changes afterwards (ADR-0014 item 2).
+`task codegen` regenerates them (`go run ./internal/tools/contractgen`, then `bun run codegen:ts`); CI fails if the working tree changes afterwards (ADR-0014 item 2). `generated/commands.ts` also exports `COMMANDS`, a table of summary, scope, phase, internal flag and error codes per command, and `generated/limits.ts` exports `LIMITS`.
 
 ### 4.2 Endpoints and functions
 
