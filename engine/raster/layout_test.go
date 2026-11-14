@@ -4,9 +4,11 @@ import (
 	"math"
 	"slices"
 	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
-func layoutOf(t *testing.T, text string, st ResolvedStyle, scale float64) layout {
+func layoutOf(t *testing.T, text string, st plan.ResolvedStyle, scale float64) layout {
 	t.Helper()
 
 	face, err := Bundled().Lookup(st.FontFamily, st.FontWeight)
@@ -16,10 +18,10 @@ func layoutOf(t *testing.T, text string, st ResolvedStyle, scale float64) layout
 
 	runes := []rune(text)
 
-	return layoutText(runes, nil, face, st, scale)
+	return layoutText(runes, nil, face, mustStyle(t, st), scale)
 }
 
-func lineCount(lay layout, st ResolvedStyle) int {
+func lineCount(lay layout, st plan.ResolvedStyle) int {
 	return int(math.Round(lay.height / (st.Size * st.LineHeight)))
 }
 

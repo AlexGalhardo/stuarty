@@ -3,34 +3,40 @@ package raster
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
+// C is a colour in the form a plan style holds it.
+func C(r, g, b, a uint8) string { return fmt.Sprintf("#%02X%02X%02X%02X", r, g, b, a) }
+
 var (
-	white = Colour{255, 255, 255, 255}
-	black = Colour{0, 0, 0, 255}
+	white = C(255, 255, 255, 255)
+	black = C(0, 0, 0, 255)
 )
 
 // plainStyle is a style with no stroke, no shadow and no box: only the fill
 // shows, which keeps the assertions simple.
-func plainStyle() ResolvedStyle {
-	return ResolvedStyle{
+func plainStyle() plan.ResolvedStyle {
+	return plan.ResolvedStyle{
 		FontFamily: "Inter", FontWeight: 700, Size: 72, Color: white,
-		StrokeColor: black, ShadowColor: Colour{0, 0, 0, 128},
+		StrokeColor: black, ShadowColor: C(0, 0, 0, 128),
 		BackgroundPadding: 16, Align: AlignCenter, LineHeight: 1.2, MaxWidth: 900,
-		HighlightColor: Colour{255, 230, 0, 255},
+		HighlightColor: C(255, 230, 0, 255),
 	}
 }
 
-func textSpec(text string, st ResolvedStyle) BitmapSpec {
-	return BitmapSpec{Kind: KindText, Text: text, Style: st, PixelScale: 1, ActiveWord: -1}
+func textSpec(text string, st plan.ResolvedStyle) plan.BitmapSpec {
+	return plan.BitmapSpec{Kind: KindText, Text: text, Style: st, PixelScale: 1, ActiveWord: -1}
 }
 
-func captionSpec(words []string, active int, st ResolvedStyle) BitmapSpec {
-	return BitmapSpec{Kind: KindCaption, Words: words, ActiveWord: active, Style: st, PixelScale: 1}
+func captionSpec(words []string, active int, st plan.ResolvedStyle) plan.BitmapSpec {
+	return plan.BitmapSpec{Kind: KindCaption, Words: words, ActiveWord: active, Style: st, PixelScale: 1}
 }
 
-func render(t *testing.T, spec BitmapSpec) Bitmap {
+func render(t *testing.T, spec plan.BitmapSpec) Bitmap {
 	t.Helper()
 
 	b, err := Render(spec, Bundled())
@@ -61,4 +67,16 @@ func (b Bitmap) inked() int {
 	}
 
 	return n
+}
+
+// mustStyle resolves a plan style, for the tests that call the layout directly.
+func mustStyle(t *testing.T, st plan.ResolvedStyle) style {
+	t.Helper()
+
+	s, err := resolveStyle(st)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return s
 }

@@ -10,6 +10,8 @@ import (
 	"github.com/go-text/typesetting/language"
 	"github.com/go-text/typesetting/shaping"
 	"golang.org/x/image/math/fixed"
+
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // placedGlyph is a glyph with its origin on the baseline, in block pixels.
@@ -27,7 +29,7 @@ type layout struct {
 	width, height float64
 	// words holds the box of each word, in block pixels; a word with no glyph
 	// has an empty box. Empty for a text.
-	words []Rect
+	words []plan.Rect
 	// scale is pixels per font unit: size / units per em.
 	scale float64
 }
@@ -43,9 +45,9 @@ type textLine struct {
 // layoutText shapes the runes of the text, breaks them into lines no wider than
 // the maximum width and places the glyphs (SDD-004 section 5.1). spans are the
 // rune ranges of the words of a caption; their boxes come back in layout.words.
-func layoutText(runes []rune, spans [][2]int, face *font.Face, st ResolvedStyle, scale float64) layout {
-	size := mul(st.Size, scale)
-	lineH := mul(size, st.LineHeight)
+func layoutText(runes []rune, spans [][2]int, face *font.Face, st style, scale float64) layout {
+	size := mul(st.size, scale)
+	lineH := mul(size, st.lineHeight)
 	asc, desc := verticalExtents(face, size)
 	baseline := (lineH-(asc-desc))/2 + asc
 
@@ -54,10 +56,10 @@ func layoutText(runes []rune, spans [][2]int, face *font.Face, st ResolvedStyle,
 	var lines []textLine
 
 	for _, p := range splitParagraphs(runes) {
-		lines = append(lines, wrapParagraph(shaper, runes[p[0]:p[1]], p[0], face, size, st.MaxWidth*scale)...)
+		lines = append(lines, wrapParagraph(shaper, runes[p[0]:p[1]], p[0], face, size, st.maxWidth*scale)...)
 	}
 
-	lay := layout{scale: size / float64(face.Upem()), words: make([]Rect, len(spans))}
+	lay := layout{scale: size / float64(face.Upem()), words: make([]plan.Rect, len(spans))}
 
 	for _, l := range lines {
 		lay.width = math.Max(lay.width, l.width)
@@ -68,7 +70,7 @@ func layoutText(runes []rune, spans [][2]int, face *font.Face, st ResolvedStyle,
 	boxes := make([]wordBox, len(spans))
 
 	for i, l := range lines {
-		x := alignOffset(st.Align, lay.width-l.width)
+		x := alignOffset(st.align, lay.width-l.width)
 		top := mul(float64(i), lineH)
 		lay.place(l, x, top, top+baseline, lineH, spans, boxes)
 	}
@@ -244,12 +246,12 @@ func (b *wordBox) add(x0, x1, y0, y1 float64) {
 	b.y0, b.y1 = math.Min(b.y0, y0), math.Max(b.y1, y1)
 }
 
-func (b wordBox) rect() Rect {
+func (b wordBox) rect() plan.Rect {
 	if !b.set {
-		return Rect{}
+		return plan.Rect{}
 	}
 
-	return Rect{X: b.x0, Y: b.y0, W: b.x1 - b.x0, H: b.y1 - b.y0}
+	return plan.Rect{X: b.x0, Y: b.y0, W: b.x1 - b.x0, H: b.y1 - b.y0}
 }
 
 // place puts the glyphs of a line on the block. x is where the line starts,

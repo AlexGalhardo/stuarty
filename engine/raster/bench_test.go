@@ -3,18 +3,20 @@ package raster
 import (
 	"testing"
 	"time"
+
+	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
 // referenceCaption is the caption of the reference scene of SDD-004 section 11:
 // a 1080 wide vertical frame, six words on two lines, Inter 700 at 64 px with a
 // stroke and a soft shadow, one word highlighted.
-func referenceCaption() BitmapSpec {
+func referenceCaption() plan.BitmapSpec {
 	st := plainStyle()
 	st.Size, st.StrokeWidth = 64, 5
 	st.ShadowDX, st.ShadowDY, st.ShadowBlur = 0, 4, 6
 	st.MaxWidth = 0.8 * 1080
-	hb := Colour{255, 45, 110, 255}
-	st.HighlightBackground = &hb
+	hb := C(255, 45, 110, 255)
+	st.HighlightBackground = hb
 
 	spec := captionSpec([]string{"Never", "gonna", "give", "you", "up", "today"}, 2, st)
 	spec.Breaks = []int{3}

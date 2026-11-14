@@ -24,7 +24,7 @@ func TestEmojiDrawsTheNotdefGlyph(t *testing.T) {
 	}
 
 	runes := []rune("A\U0001F600B")
-	lay := layoutText(runes, nil, face, st, 1)
+	lay := layoutText(runes, nil, face, mustStyle(t, st), 1)
 
 	var notdef []int
 
@@ -64,7 +64,7 @@ func TestEmojiSequencesStayTogether(t *testing.T) {
 
 	// Family emoji: man, ZWJ, woman, ZWJ, girl.
 	text := "\U0001F468\u200d\U0001F469\u200d\U0001F467"
-	lay := layoutText([]rune(text), [][2]int{{0, 5}}, face, st, 1)
+	lay := layoutText([]rune(text), [][2]int{{0, 5}}, face, mustStyle(t, st), 1)
 
 	if len(lay.words) != 1 || lay.words[0].W <= 0 {
 		t.Fatalf("word box of the sequence = %+v", lay.words)
@@ -91,7 +91,7 @@ func TestRightToLeftScriptsAreOutsideTheBundledFonts(t *testing.T) {
 		}
 
 		for _, text := range []string{"שלום", "مرحبا"} {
-			for _, g := range layoutText([]rune(text), nil, face, st, 1).glyphs {
+			for _, g := range layoutText([]rune(text), nil, face, mustStyle(t, st), 1).glyphs {
 				if g.gid != 0 {
 					t.Errorf("%s has a glyph for %q: the documented scope is out of date", f.name, text)
 				}
