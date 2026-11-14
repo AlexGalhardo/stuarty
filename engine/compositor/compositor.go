@@ -12,6 +12,7 @@ import (
 	"image"
 	"math"
 	"runtime"
+	"strconv"
 	"sync"
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
@@ -146,11 +147,31 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, outScale float64) err
 	if !(p.w > 0 && p.h > 0) || src.W <= 0 || src.H <= 0 || len(src.Pix) < src.W*src.H*4 {
 		return nil
 	}
+	if l.Kind == plan.Bitmap {
+		src = c.shrunk(l.Bitmap.Key(), src, round(p.w), round(p.h))
+	}
 	if l.ColorMatrix != nil {
 		src = c.applyMatrix(src, l.ColorMatrix)
 	}
 	c.draw(dst, src, p, op)
 	return nil
+}
+
+// shrunk is src box-filtered down to w by h when it is at least twice as large in both directions, as a
+// bitmap is when a small frame (an agent's view) is composed from the full-size spec: bilinear alone
+// would point-sample the text and make it shimmer. The result is cached with the bitmap.
+func (c *Compositor) shrunk(key string, src Image, w, h int) Image {
+	if w < 1 || h < 1 || src.W < 2*w || src.H < 2*h {
+		return src
+	}
+	key += "@" + strconv.Itoa(w) + "x" + strconv.Itoa(h)
+	if img, ok := c.premul[key]; ok {
+		return img
+	}
+	img := Resize(src, w, h)
+	c.premul[key] = img
+	c.premulN += len(img.Pix)
+	return img
 }
 
 // round is round-half-up, which is what the copy path uses for offsets and sizes.

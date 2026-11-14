@@ -64,12 +64,16 @@ type Result struct {
 
 // state is what the parts of one export share.
 type state struct {
-	job       *Job
-	ctx       context.Context
-	dir       *ffmpeg.RunDir
-	frames    int
-	fonts     *raster.FontSet
-	opts      plan.Options
+	job    *Job
+	ctx    context.Context
+	dir    *ffmpeg.RunDir
+	frames int
+	fonts  *raster.FontSet
+	opts   plan.Options
+	// scale is the output scale of the frames; 1 is the project's size. single says one frame is
+	// asked for, so every unrotated layer is as good as constant and the decoder scales it.
+	scale     float64
+	single    bool
 	deadline  time.Duration
 	inputDirs []string
 	children  childDirs
@@ -83,7 +87,7 @@ func newState(ctx context.Context, job *Job, dir *ffmpeg.RunDir, frames int) *st
 	fps := job.Doc.Settings.FPS
 	secs := time.Duration(float64(frames) * float64(fps.Den) / float64(fps.Num) * float64(time.Second))
 	return &state{
-		job: job, ctx: ctx, dir: dir, frames: frames, fonts: fonts,
+		job: job, ctx: ctx, dir: dir, frames: frames, fonts: fonts, scale: 1,
 		opts:      plan.Options{Measure: raster.Measure(fonts)},
 		deadline:  ffmpeg.ExportDeadline(secs),
 		inputDirs: assetDirs(job),
@@ -99,14 +103,18 @@ type renderer struct {
 }
 
 func (s *state) newRenderer(bands int) *renderer {
-	fs := newFrameSource(s, s.scanLayers())
+	var infos map[string]*layerInfo
+	if !s.single {
+		infos = s.scanLayers()
+	}
+	fs := newFrameSource(s, infos)
 	cache := raster.NewCache(s.fonts, 0)
 	return &renderer{s: s, fs: fs, comp: &compositor.Compositor{Media: fs.media, Bitmaps: cache.Get, Bands: bands}}
 }
 
 // render composes frame t into dst, then stops the decoders of the clips that are no longer drawn.
 func (r *renderer) render(dst *image.RGBA, t int) error {
-	err := r.comp.Compose(dst, plan.FrameWith(r.s.job.Doc, t, r.s.opts), 1)
+	err := r.comp.Compose(dst, plan.FrameWith(r.s.job.Doc, t, r.s.opts), r.s.scale)
 	r.fs.endFrame()
 	return err
 }
