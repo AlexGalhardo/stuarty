@@ -36,17 +36,17 @@ func TestDescribeDiffAllKinds(t *testing.T) {
 	after.Name = "New"
 	after.Settings.Width = 1920
 	after.Settings.Height = 1080
-	delete(after.Assets, assetKey)
+	delete(after.Assets, assetID)
 	after.Assets["ast_k000000001"] = timeline.Asset{
 		ID:          "ast_k000000001",
-		Hash:        before.Assets[assetKey].Hash,
+		Hash:        before.Assets[assetID].Hash,
 		Kind:        timeline.AssetAudio,
 		Name:        "voice.wav",
 		SampleCount: 96000,
 	}
 	after.Assets["ast_k000000002"] = timeline.Asset{
 		ID:     "ast_k000000002",
-		Hash:   before.Assets[assetKey].Hash,
+		Hash:   before.Assets[assetID].Hash,
 		Kind:   timeline.AssetImage,
 		Name:   "logo",
 		Width:  64,
@@ -62,10 +62,10 @@ func TestDescribeDiffAllKinds(t *testing.T) {
 	tr := after.Tracks[vidTrack]
 	tr.Hidden, tr.Name = true, "Main"
 	after.Tracks[vidTrack] = tr
-	delete(after.Items, capKey)
-	clip := after.Items[clipKey]
+	delete(after.Items, capItemID)
+	clip := after.Items[clipID]
 	clip.Start, clip.Duration = 30, 60
-	after.Items[clipKey] = clip
+	after.Items[clipID] = clip
 	text := timeline.NewItem("itm_k000000001", timeline.ItemText, "trk_k000000001", 100, 10)
 	text.Text = "Hello <b> & more text"
 	after.Items[text.ID] = text
@@ -73,7 +73,7 @@ func TestDescribeDiffAllKinds(t *testing.T) {
 	shape.Shape, shape.Width, shape.Height = "rect", 10, 20
 	after.Items[shape.ID] = shape
 	after.Fonts = map[string]timeline.ProjectFont{
-		"Mine": {Files: []timeline.FontFile{{Weight: 400, Hash: before.Assets[assetKey].Hash}}},
+		"Mine": {Files: []timeline.FontFile{{Weight: 400, Hash: before.Assets[assetID].Hash}}},
 	}
 
 	want := strings.Join([]string{
@@ -112,7 +112,7 @@ func TestDescribeDiffAllKinds(t *testing.T) {
 	}
 	changed := timeline.Clone(after)
 	changed.Fonts["Mine"] = timeline.ProjectFont{
-		Files: []timeline.FontFile{{Weight: 700, Hash: before.Assets[assetKey].Hash}},
+		Files: []timeline.FontFile{{Weight: 700, Hash: before.Assets[assetID].Hash}},
 	}
 	if got := describe(t, after, changed); got != "- font \"Mine\"\n+ font \"Mine\"" {
 		t.Errorf("font update: %q", got)
@@ -123,13 +123,13 @@ func TestDescribeDiffItemDetails(t *testing.T) {
 	before := baseDoc(t)
 	after := timeline.Clone(before)
 	clip := timeline.NewItem("itm_k000000001", timeline.ItemClip, vidTrack, 200, 30)
-	clip.Asset, clip.SourceIn, clip.Fit = assetKey, 45, "contain"
+	clip.Asset, clip.SourceIn, clip.Fit = assetID, 45, "contain"
 	clip.Speed = timeline.Rational{Num: 3, Den: 2}
 	slow := timeline.NewItem("itm_k000000002", timeline.ItemClip, vidTrack, 300, 30)
-	slow.Asset = assetKey
+	slow.Asset = assetID
 	slow.Speed = timeline.Rational{Num: 1, Den: 3}
 	plain := timeline.NewItem("itm_k000000003", timeline.ItemClip, vidTrack, 400, 30)
-	plain.Asset = assetKey
+	plain.Asset = assetID
 	after.Items[clip.ID], after.Items[slow.ID], after.Items[plain.ID] = clip, slow, plain
 	got := describe(t, before, after)
 	for _, want := range []string{
@@ -238,7 +238,7 @@ func TestDescribeDiffCapsALineAtThreeHundredCharacters(t *testing.T) {
 	for i := range 30 {
 		changes["field_"+strings.Repeat("a", 3)+string(rune('a'+i%26))+string(rune('a'+i/26))] = Pair{jn("1"), jn("2")}
 	}
-	got := DescribeDiff(doc, []Change{{Kind: KindItemUpdated, ID: clipKey, Changes: changes}})
+	got := DescribeDiff(doc, []Change{{Kind: KindItemUpdated, ID: clipID, Changes: changes}})
 	if n := utf8.RuneCountInString(got); n != maxLine || !strings.HasSuffix(got, "…") {
 		t.Errorf("line has %d characters", n)
 	}
@@ -249,7 +249,7 @@ func TestDescribeDiffUnknownKindAndInvalidFPS(t *testing.T) {
 	doc.Settings.FPS = timeline.Rational{}
 	got := DescribeDiff(doc, []Change{
 		{Kind: "weird.kind", ID: "x"},
-		{Kind: KindItemUpdated, ID: clipKey, Changes: map[string]Pair{"start": {jn("30"), jn("60")}}},
+		{Kind: KindItemUpdated, ID: clipID, Changes: map[string]Pair{"start": {jn("30"), jn("60")}}},
 	})
 	if got != "? weird.kind x\n~ item itm_m1n2p3q4r5: start 1s/30f -> 2s/60f" {
 		t.Error(got)

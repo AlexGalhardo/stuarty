@@ -12,19 +12,19 @@ func TestConflicts(t *testing.T) {
 		wantID, kind string
 	}{
 		{
-			"no intervening change", []Operation{op(`{"item_id":"` + clipKey + `"}`)}, nil, "", "",
+			"no intervening change", []Operation{op(`{"item_id":"` + clipID + `"}`)}, nil, "", "",
 		},
 		{
 			"a different object does not conflict",
-			[]Operation{op(`{"item_id":"` + clipKey + `"}`)},
+			[]Operation{op(`{"item_id":"` + clipID + `"}`)},
 			[]Change{{Kind: KindItemUpdated, ID: other}},
 			"", "",
 		},
 		{
 			"the same object conflicts",
-			[]Operation{op(`{"item_id":"` + clipKey + `","start":"1s"}`)},
-			[]Change{{Kind: KindItemUpdated, ID: clipKey}},
-			clipKey, KindItemUpdated,
+			[]Operation{op(`{"item_id":"` + clipID + `","start":"1s"}`)},
+			[]Change{{Kind: KindItemUpdated, ID: clipID}},
+			clipID, KindItemUpdated,
 		},
 		{
 			"added, removed",
@@ -34,31 +34,31 @@ func TestConflicts(t *testing.T) {
 		},
 		{
 			"asset reference nested in an object",
-			[]Operation{op(`{"asset":{"id":"` + assetKey + `"}}`)},
-			[]Change{{Kind: KindAssetAdded, ID: assetKey}},
-			assetKey, KindAssetAdded,
+			[]Operation{op(`{"asset":{"id":"` + assetID + `"}}`)},
+			[]Change{{Kind: KindAssetAdded, ID: assetID}},
+			assetID, KindAssetAdded,
 		},
 		{
 			"ids in a list",
-			[]Operation{op(`{"item_ids":["` + other + `","` + clipKey + `"]}`)},
-			[]Change{{Kind: KindItemRemoved, ID: clipKey}},
-			clipKey, KindItemRemoved,
+			[]Operation{op(`{"item_ids":["` + other + `","` + clipID + `"]}`)},
+			[]Change{{Kind: KindItemRemoved, ID: clipID}},
+			clipID, KindItemRemoved,
 		},
 		{
 			"the first object of the first operation wins",
-			[]Operation{op(`{"a_item":"` + clipKey + `"}`), op(`{"z_item":"` + other + `"}`)},
-			[]Change{{Kind: KindItemUpdated, ID: other}, {Kind: KindItemUpdated, ID: clipKey}},
-			clipKey, KindItemUpdated,
+			[]Operation{op(`{"a_item":"` + clipID + `"}`), op(`{"z_item":"` + other + `"}`)},
+			[]Change{{Kind: KindItemUpdated, ID: other}, {Kind: KindItemUpdated, ID: clipID}},
+			clipID, KindItemUpdated,
 		},
 		{
 			"the id has the wrong collection prefix",
-			[]Operation{op(`{"item_id":"` + clipKey + `"}`)},
-			[]Change{{Kind: KindTrackUpdated, ID: clipKey}},
+			[]Operation{op(`{"item_id":"` + clipID + `"}`)},
+			[]Change{{Kind: KindTrackUpdated, ID: clipID}},
 			"", "",
 		},
 		{
 			"settings, project and fonts are not referenced by id",
-			[]Operation{op(`{"item_id":"` + clipKey + `","family":"Mine"}`)},
+			[]Operation{op(`{"item_id":"` + clipID + `","family":"Mine"}`)},
 			[]Change{
 				{Kind: KindSettingsUpdated, ID: "prj_7k2m9x4q1b"},
 				{Kind: KindProjectUpdated, ID: "prj_7k2m9x4q1b"},
@@ -76,7 +76,7 @@ func TestConflicts(t *testing.T) {
 		{
 			"no args and invalid args",
 			[]Operation{{Op: "x.y"}, {Op: "x.y", Args: []byte(`{`)}},
-			[]Change{{Kind: KindItemUpdated, ID: clipKey}},
+			[]Change{{Kind: KindItemUpdated, ID: clipID}},
 			"", "",
 		},
 	}
@@ -90,8 +90,8 @@ func TestConflicts(t *testing.T) {
 		}
 	}
 	got := Conflicts(
-		[]Operation{opJSON("x.y", `{"item_id":"`+clipKey+`"}`)},
-		[]Change{{Kind: KindItemUpdated, ID: clipKey}},
+		[]Operation{opJSON("x.y", `{"item_id":"`+clipID+`"}`)},
+		[]Change{{Kind: KindItemUpdated, ID: clipID}},
 	)
 	if got.Collection != "items" {
 		t.Errorf("%+v", got)

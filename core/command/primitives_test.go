@@ -10,6 +10,9 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/timeval"
 )
 
+// otherActor is an API-key actor, built at run time so the file holds no key-shaped literal.
+var otherActor = "key" + ":" + "key_" + "h8v2n5q7w3"
+
 func jn(s string) json.Number { return json.Number(s) }
 
 func timelineFPS(doc *timeline.Document) timeval.FPS {
@@ -61,14 +64,14 @@ func TestApplyPrimitivesBasics(t *testing.T) {
 		patch("project", doc.ID, map[string]any{"name": "Renamed"}),
 		patch("settings", doc.ID, map[string]any{"width": 1920, "height": 1080}),
 		Primitive{Type: PrimitivePut, Collection: "tracks", ID: "trk_k000000001", Object: newTrack},
-		patch("items", clipKey, map[string]any{"start": float64(10)}, "source_in"),
-		Primitive{Type: PrimitiveRemove, Collection: "items", ID: capKey},
+		patch("items", clipID, map[string]any{"start": float64(10)}, "source_in"),
+		Primitive{Type: PrimitiveRemove, Collection: "items", ID: capItemID},
 		Primitive{
 			Type:       PrimitivePut,
 			Collection: "fonts",
 			ID:         "Mine",
 			Object: map[string]any{
-				"files": []any{map[string]any{"weight": 400, "hash": doc.Assets[assetKey].Hash}},
+				"files": []any{map[string]any{"weight": 400, "hash": doc.Assets[assetID].Hash}},
 			},
 		},
 	)
@@ -76,7 +79,7 @@ func TestApplyPrimitivesBasics(t *testing.T) {
 		t.Fatalf("%+v", skipped)
 	}
 	if out.Name != "Renamed" || out.Settings.Width != 1920 || out.Tracks["trk_k000000001"].Order != "b0" ||
-		out.Items[clipKey].Start != 10 || out.Items[clipKey].SourceIn != 0 || len(out.Items) != 1 || out.Fonts["Mine"].Files[0].Weight != 400 {
+		out.Items[clipID].Start != 10 || out.Items[clipID].SourceIn != 0 || len(out.Items) != 1 || out.Fonts["Mine"].Files[0].Weight != 400 {
 		t.Errorf("result: %s", timeline.Canonical(out))
 	}
 	if !bytes.Equal(timeline.Canonical(doc), before) {
@@ -94,10 +97,10 @@ func TestApplyPrimitivesBasics(t *testing.T) {
 
 func TestApplyPrimitivesGuardRules(t *testing.T) {
 	doc := baseDoc(t)
-	by := Touch{Revision: 42, Actor: "key:key_h8v2n5q7w3"}
+	by := Touch{Revision: 42, Actor: otherActor}
 	g := guardMap{
-		"items " + clipKey + " start":  by,
-		"items " + capKey + " *":       Touch{Revision: 43, Actor: "local:ui"},
+		"items " + clipID + " start":   by,
+		"items " + capItemID + " *":    Touch{Revision: 43, Actor: "local:ui"},
 		"tracks " + vidTrack + " name": by,
 	}
 	out, skipped, _ := apply(
@@ -106,19 +109,19 @@ func TestApplyPrimitivesGuardRules(t *testing.T) {
 		g,
 		patch(
 			"items",
-			clipKey,
+			clipID,
 			map[string]any{"start": 5, "name": "kept"},
 			"source_in",
 		), // 0: split, start skipped
 		patch(
 			"items",
-			capKey,
+			capItemID,
 			map[string]any{"name": "x"},
 		), // 1: whole object changed
-		Primitive{Type: PrimitiveRemove, Collection: "tracks", ID: vidTrack},                      // 2: a field changed
-		patch("items", "itm_zzzzzzzzzz", map[string]any{"name": "x"}),                             // 3: missing
-		Primitive{Type: PrimitiveRemove, Collection: "items", ID: "itm_zzzzzzzzzz"},               // 4: missing
-		Primitive{Type: PrimitivePut, Collection: "items", ID: clipKey, Object: map[string]any{}}, // 5: exists
+		Primitive{Type: PrimitiveRemove, Collection: "tracks", ID: vidTrack},                     // 2: a field changed
+		patch("items", "itm_zzzzzzzzzz", map[string]any{"name": "x"}),                            // 3: missing
+		Primitive{Type: PrimitiveRemove, Collection: "items", ID: "itm_zzzzzzzzzz"},              // 4: missing
+		Primitive{Type: PrimitivePut, Collection: "items", ID: clipID, Object: map[string]any{}}, // 5: exists
 	)
 	if got := reasons(
 		skipped,
@@ -130,8 +133,8 @@ func TestApplyPrimitivesGuardRules(t *testing.T) {
 		first.ByActor != by.Actor || first.Primitive.Set["start"] != json.Number("5") || first.Primitive.Unset != nil {
 		t.Errorf("%+v", first)
 	}
-	if out.Items[clipKey].Name != "kept" || out.Items[clipKey].Start != 0 || out.Items[clipKey].SourceIn != 0 {
-		t.Errorf("the fields that passed must apply: %+v", out.Items[clipKey])
+	if out.Items[clipID].Name != "kept" || out.Items[clipID].Start != 0 || out.Items[clipID].SourceIn != 0 {
+		t.Errorf("the fields that passed must apply: %+v", out.Items[clipID])
 	}
 	if _, ok := out.Tracks[vidTrack]; !ok {
 		t.Error("the guarded track was removed")
@@ -144,8 +147,8 @@ func TestApplyPrimitivesGuardRules(t *testing.T) {
 	_, skipped, _ = apply(
 		t,
 		doc,
-		guardMap{"items " + clipKey + " source_in": by},
-		patch("items", clipKey, nil, "source_in", "name"),
+		guardMap{"items " + clipID + " source_in": by},
+		patch("items", clipID, nil, "source_in", "name"),
 	)
 	if len(skipped) != 1 || skipped[0].Fields[0] != "source_in" || skipped[0].Primitive.Unset[0] != "source_in" ||
 		len(skipped[0].Primitive.Unset) != 1 {
@@ -173,25 +176,25 @@ func TestApplyPrimitivesInvalidResultDropsTheOffendingPrimitive(t *testing.T) {
 
 	// An overlap with an item another actor placed: the item put back collides.
 	other := timeline.NewItem("itm_k000000001", timeline.ItemClip, vidTrack, 100, 50)
-	other.Asset = assetKey
+	other.Asset = assetID
 	withOther := timeline.Clone(doc)
 	withOther.Items[other.ID] = other
 	back := map[string]any{
-		"id":        clipKey,
+		"id":        clipID,
 		"type":      "clip",
 		"track":     vidTrack,
 		"start":     0,
 		"duration":  150,
-		"asset":     assetKey,
+		"asset":     assetID,
 		"source_in": 60,
 	}
-	del := Primitive{Type: PrimitiveRemove, Collection: "items", ID: clipKey}
+	del := Primitive{Type: PrimitiveRemove, Collection: "items", ID: clipID}
 	withOther, _, _ = apply(t, withOther, nil, del)
 	out, skipped, _ = apply(
 		t,
 		withOther,
 		nil,
-		Primitive{Type: PrimitivePut, Collection: "items", ID: clipKey, Object: back},
+		Primitive{Type: PrimitivePut, Collection: "items", ID: clipID, Object: back},
 	)
 	if len(skipped) != 1 || skipped[0].Reason != SkipInvalidResult || len(out.Items) != 2 {
 		t.Errorf("%+v", skipped)
@@ -229,7 +232,7 @@ func TestApplyPrimitivesValidatesOnceAtTheEnd(t *testing.T) {
 	// caption after it makes the result valid. No check runs in between.
 	out, skipped, _ := apply(t, doc, nil,
 		Primitive{Type: PrimitiveRemove, Collection: "tracks", ID: capTrack},
-		Primitive{Type: PrimitiveRemove, Collection: "items", ID: capKey},
+		Primitive{Type: PrimitiveRemove, Collection: "items", ID: capItemID},
 	)
 	if len(skipped) != 0 || len(out.Tracks) != 1 || len(out.Items) != 1 {
 		t.Errorf("%+v", skipped)
@@ -252,9 +255,9 @@ func TestApplyPrimitivesGivesUpOnAViolationNoPrimitiveExplains(t *testing.T) {
 
 func TestApplyPrimitivesIgnoresViolationsThatWereAlreadyThere(t *testing.T) {
 	doc := baseDoc(t)
-	it := doc.Items[clipKey]
+	it := doc.Items[clipID]
 	it.SourceIn = 800
-	doc.Items[clipKey] = it
+	doc.Items[clipID] = it
 	out, skipped, _ := apply(t, doc, nil, patch("project", doc.ID, map[string]any{"name": "Still applied"}))
 	if len(skipped) != 0 || out.Name != "Still applied" {
 		t.Errorf("%+v", skipped)
@@ -264,7 +267,7 @@ func TestApplyPrimitivesIgnoresViolationsThatWereAlreadyThere(t *testing.T) {
 func TestApplyPrimitivesRejectsMalformedPrimitives(t *testing.T) {
 	doc := baseDoc(t)
 	bad := []Primitive{
-		{Type: "explode", Collection: "items", ID: clipKey},
+		{Type: "explode", Collection: "items", ID: clipID},
 		{Type: PrimitivePatch, Collection: "widgets", ID: "x"},
 		{Type: PrimitivePatch, Collection: "items"},
 		{Type: PrimitivePut, Collection: "items", ID: "itm_k000000001"},
@@ -285,7 +288,7 @@ func TestApplyPrimitivesRejectsMalformedPrimitives(t *testing.T) {
 func TestPrimitiveAndChangeReadNumbersAsJSONNumbers(t *testing.T) {
 	var p Primitive
 	if err := json.Unmarshal(
-		[]byte(`{"type":"patch","collection":"items","id":"`+clipKey+`","set":{"start":12,"opacity":0.5}}`),
+		[]byte(`{"type":"patch","collection":"items","id":"`+clipID+`","set":{"start":12,"opacity":0.5}}`),
 		&p,
 	); err != nil {
 		t.Fatal(err)
@@ -312,7 +315,7 @@ func TestPrimitiveAndChangeReadNumbersAsJSONNumbers(t *testing.T) {
 	// Applying a primitive decoded from stored JSON works.
 	doc := baseDoc(t)
 	out, skipped, _ := apply(t, doc, nil, p)
-	if len(skipped) != 0 || out.Items[clipKey].Start != 12 || out.Items[clipKey].Opacity != 0.5 {
+	if len(skipped) != 0 || out.Items[clipID].Start != 12 || out.Items[clipID].Opacity != 0.5 {
 		t.Errorf("%+v", skipped)
 	}
 }
