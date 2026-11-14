@@ -499,7 +499,7 @@ The response to an edit and the event of the same revision both reach the UI (AD
 
 1. The read model is updated as above, so the timeline and the preview change at once (live view).
 2. `activityStore` records `{ actor, revision, at, summary }` and sets `active[actor] = now`. The summary is built from the diff kinds and counts, localized: for example "claude-code changed 3 items and added 1 track".
-3. The **activity indicator** in the top bar (§6.2) shows a dot and the actor's name while any `active[actor]` is younger than 3 s: "claude-code is editing". After 3 s it settles to "Last edit by claude-code, 12 s ago", updated every 10 s, and clears after 5 min. Clicking opens a popover with the 20 latest entries (actor, relative time, summary) in the History tab (§15). Prototype has the indicator and the popover.
+3. The **activity indicator** in the top bar (§6.2) shows a dot and the actor's name while any `active[actor]` is younger than 3 s: "claude-code is editing". After 3 s it settles to "Last edit by claude-code, 12 s ago", updated every 10 s, and clears after 5 min. Clicking opens a popover with the 20 latest entries (actor, relative time, summary) in the History tab (§15). Prototype has the indicator and the popover. **Several actors at once (D-030).** The indicator stays one badge: it names the actor of the latest remote batch and counts the other actors whose `active[actor]` is also younger than 3 s ("claude-code and 1 other are editing"; plural through `params.count`). The popover then starts with one row per active actor, each with its last action (the summary of its latest entry) and relative time, followed by the latest entries.
 4. Items named in the diff get a static 2 px highlight outline in `--agent` for 1.5 s (a CSS class removed by a timer; no animation, D-013). The colour is the agent attribution colour, not `--ed-selection`, so a remote edit is not mistaken for a selection (`docs/design-system.md` §2.4). With `prefers-reduced-motion` the behaviour is the same because nothing moves.
 5. A live-region announcement "claude-code changed 3 items" is made at most once every 2 s (§18).
 6. An actor string is shown as its label: `local:claude-code` becomes `claude-code`, `key:key_ab12cd34ef` becomes `key ab12`, `user:12` stays `user:12` (resolving user names in network mode is BETA).
@@ -940,7 +940,7 @@ The canvas has the project's intrinsic size `width × height` (CSS `aspect-ratio
 
 ### 11.5 Playback controls
 
-A transport row under the canvas: go to start, step back one frame, Play and Pause, step forward, go to end, timecode `current / total` (`Timecode` component writing text from the clock, §19), loop is not in scope. Timecodes are set in the UI font (Geist) with `font-variant-numeric: tabular-nums`, not in a monospace face: no monospace UI font is bundled, and a system monospace stack would differ between platforms and between browser and webview (`docs/design-system.md` §2.7). The six families of D-022 are rendering fonts of the core (ADR-0012) and are never loaded by the browser. A unit test of `Timecode` checks that the digits `0` and `1` have the same advance width in the bundled Geist file; if they do not, the fallback is a monospace UI font, which is a new dependency for the author to approve. The total is the project's end, read from `selectEndFrame()`, which is the `end_frame` of the last plan window (SDD-004 §10), not derived in the browser. `Space` toggles play (§18.2 gives the precedence by focus). Seeking while playing keeps playing from the new frame. Playback stops at `end_frame`. Volume and mute of the preview are in BETA.
+A transport row under the canvas: go to start, step back one frame, Play and Pause, step forward, go to end, timecode `current / total` (`Timecode` component writing text from the clock, §19), loop is not in scope. Timecodes are set in the UI font (Geist) with `font-variant-numeric: tabular-nums`, not in a monospace face: no monospace UI font is bundled, and a system monospace stack would differ between platforms and between browser and webview (`docs/design-system.md` §2.7). The six families of D-022 are rendering fonts of the core (ADR-0012) and are never loaded by the browser. A unit test of `Timecode` checks that the digits `0` and `1` have the same advance width in the bundled Geist file; if they do not, the fallback is `@fontsource-variable/geist-mono` at an exact version, approved in advance by the author for that case only (D-030). The total is the project's end, read from `selectEndFrame()`, which is the `end_frame` of the last plan window (SDD-004 §10), not derived in the browser. `Space` toggles play (§18.2 gives the precedence by focus). Seeking while playing keeps playing from the new frame. Playback stops at `end_frame`. Volume and mute of the preview are in BETA.
 
 ### 11.6 Overlays
 
@@ -986,7 +986,7 @@ The inspector panel shows one panel by selection: nothing selected, the project 
 | Track panel | name, hidden, muted, caption style (partial and "Replace") | `track.update`, `track.set_caption_style` | track |
 | Project panel | name, size preset (9:16, 1:1, 16:9, 4:5), width, height, background, loudness target, frame rate, template info | `project.rename`, `settings.set`, `settings.set_fps`, `template.set_info` | nothing selected |
 
-Fonts come from `getFonts()` (Appendix B); the select shows bundled families first. Colours use `ColorField` (hex text input plus the native colour input for the RGB part and a slider for alpha, sending `#RRGGBB` or `#RRGGBBAA`).
+Fonts come from `getFonts()` (Appendix B); the select shows bundled families first, as names in the UI font: the browser never loads the rendering fonts, and the MVP shows no rendered samples (D-030). Colours use `ColorField` (hex text input plus the native colour input for the RGB part and a slider for alpha, sending `#RRGGBB` or `#RRGGBBAA`).
 
 ### 12.2 Time inputs
 
@@ -998,9 +998,10 @@ Fonts come from `getFonts()` (Appendix B); the select shows bundled families fir
 | `375f` | the same string |
 | `00:12.500`, `01:02.5` | the same string |
 | a bare number such as `12.5` | the number with the user's default unit appended (`timeUnit`, default `s`): `"12.5s"` |
+| in the pt-BR locale, a decimal comma: `12,5`, `12,5s`, `00:12,500` (D-030) | the comma replaced by `.`: `"12.5s"`, `"12.5s"`, `"00:12.500"` |
 | empty, `abc`, `1:2:3:4`, a negative number, a decimal when the unit is `f` (`12.5` with `timeUnit` `f`) | not sent; the field shows the inline message `ui.editor.errors.E_INVALID_TIME` with the hint listing the three forms |
 
-`normalizeTimeInput(raw: string, defaultUnit: "s" | "f"): { ok: true; value: string } | { ok: false }` in `commands/units.ts` is a pure string function (trim, regex, append unit). It does not convert to frames; the core parses and rounds (A.4). The field never sends a number (T8). After a command the field shows the value of the read model, which is what the core applied; the `effective` frame and seconds also appear in the toast ("start set to frame 374, 12.467 s").
+`normalizeTimeInput(raw: string, defaultUnit: "s" | "f"): { ok: true; value: string } | { ok: false }` in `commands/units.ts` is a pure string function (trim, replace one decimal comma by `.` when the active locale is `pt-BR`, regex, append unit); the locale is read from the bootstrap by its caller, which in `en` passes the raw text unchanged, so `12,5` stays invalid there. `NumberField` applies the same comma rule before it parses its value. Times are always displayed with `.` (timecodes are not localized, §16.4); other displayed numbers follow the locale. It does not convert to frames; the core parses and rounds (A.4). The field never sends a number (T8). After a command the field shows the value of the read model, which is what the core applied; the `effective` frame and seconds also appear in the toast ("start set to frame 374, 12.467 s").
 
 Display formatting `formatTime(frame, fps, mode)` is a pure display function: `frames` gives `375f`, `seconds` gives `12.500s`, `timecode` gives `00:12.500`; `fps` is the project rational. A duration the core gives in seconds (an asset's `duration_seconds`) is formatted by `formatSeconds(seconds, mode)` of `units.ts`, which never converts through frames.
 
@@ -1039,7 +1040,7 @@ When `startJob {kind: "transcribe"}` answers `E_TRANSCRIBE_UNAVAILABLE`, the UI 
 The library has a single-line path input and an Import button (`Enter` submits). The input accepts a path as the user pastes it: surrounding double quotes (Windows "Copy as path") are stripped and leading and trailing spaces trimmed; nothing else is interpreted. Pasting several lines imports each line in order (one `importMedia` request each). The browser cannot learn the path of a dropped or chosen file, so:
 
 1. **Plain browser (local mode).** Drag and drop onto the library is accepted only to show a message: "A browser page cannot see the path of a file. Paste the path into the field." The picker `<input type="file">` is not used.
-2. **Desktop shell (BETA).** The shell exposes `window.vukemDesktop?.pickFiles(): Promise<string[]>` and delivers dropped paths through `window.vukemDesktop?.onDropPaths(cb)`. The library feature-detects them; when present it shows a "Choose files" button and accepts drops, and passes the returned absolute paths to the same `importMedia` function. The interface is the only coupling to the shell (§21).
+2. **Desktop shell (BETA).** The shell exposes `window.vukemDesktop?.pickFiles(): Promise<string[]>` and delivers dropped paths through `window.vukemDesktop?.onDropPaths(cb)`. The library feature-detects them; when present it shows a "Choose files" button and accepts drops, and passes the returned absolute paths to the same `importMedia` function. The interface is the only coupling to the shell (§21). Its two other optional members (D-030) are `onMenuAction(cb: (action: string) => void): Unsubscribe`, through which the native menu calls an action id of the action registry (`commands/actions.ts`), and `setTheme(theme: "dark" | "light"): void`, which the UI calls at boot and on every theme toggle so the shell's title bar follows the page. All three are feature-detected.
 3. **Network mode.** `VUKEM_VIDEO_IMPORT_ROOTS` bounds the paths; an `E_PATH_NOT_ALLOWED` answer shows the roots from `details` when present. Uploads are out of scope (PRD-001 §7).
 
 ### 13.2 Cards and progress
@@ -1312,7 +1313,7 @@ Only code that has logic is unit tested, next to the code:
 | Subject | Cases |
 | --- | --- |
 | `geometry.ts` | frame to pixel and back at every zoom level, clamping at 0 and 108,000, `zoomAround` keeps the anchor fixed, `rulerStep` never produces labels under 70 px, 29.97 and 30000/1001 rates |
-| `units.ts` | `normalizeTimeInput` for every form of A.4, bare numbers with each default unit, rejects of empty, negative and a decimal with unit `f`, `formatTime` in the three modes, `formatSeconds`, and the helpers `displayEnd`, `nudgeStart`, `keyframeAbsoluteAt` and `captionWordSegments` |
+| `units.ts` | `normalizeTimeInput` for every form of A.4, bare numbers with each default unit, the pt-BR decimal comma (accepted in pt-BR, rejected in en), rejects of empty, negative and a decimal with unit `f`, `formatTime` in the three modes, `formatSeconds`, and the helpers `displayEnd`, `nudgeStart`, `keyframeAbsoluteAt` and `captionWordSegments` |
 | `builders.ts` | each builder emits the right `op` and time strings (T8), omits optional fields that did not change, uses `start` as `"<n>f"` |
 | `applyDiff.ts` | every `kind` of A.5, identity preserved for untouched objects, `"unpatchable"` for missing ids and unknown kinds |
 | `sync.ts` | the reconciliation algorithm with scripted sequences: edit response before event, event before response, duplicates, gaps, reorder, `resync.required`, three failed resyncs |
@@ -1397,7 +1398,8 @@ The shell loads this UI with the same `app.css`, tokens, bundled fonts and compo
 1. **Size.** Minimum inner size 1280 by 640 CSS pixels: 1280 is the supported minimum width of §6.3, and 640 fits a 1366 by 768 laptop after the taskbar and title bar while staying above the 600 px height §6.3 allows. Default inner size 1600 by 900, or maximized when the screen is smaller. The shell remembers position and size. The tolerated and unsupported widths of §6.3 therefore never occur in the window.
 2. **Chrome.** Native title bar and decorations; no custom title bar and no draggable CSS region.
 3. **First paint.** The window background is `oklch(0.16 0 0)` (dark `--ed-bg`) before the page loads, so there is no white flash. The theme rule of §17 item 1 applies inside the webview unchanged.
-4. **Not yet decided.** The native menu bar, which keyboard accelerators it registers (an accelerator for `Mod+Z` or `Mod+A` would take the key from text fields, against the rule of §18.2), and how the native title bar follows the theme toggle are open questions for the author; any of them that needs a new member of `window.vukemDesktop` amends §13.1 and this section.
+4. **Menus (D-030).** A native menu bar: File (Import files, Export), Edit (Undo, Redo, Select all), View (toggle panels, zoom, theme, language), Help (documentation, version). Each item calls the same action as its in-page control through `window.vukemDesktop.onMenuAction` (§13.1). `Mod+Z`, `Mod+Shift+Z` and `Mod+A` are shown next to Undo, Redo and Select all but are **not registered as native accelerators**: the key reaches the webview, where §18.2 decides (native undo and select-all inside an editable field, project undo and select-all elsewhere). Other accelerators may be registered only for keys that mean the same in every focus context.
+5. **Theme of the chrome (D-030).** The UI calls `window.vukemDesktop.setTheme(theme)` at boot and on every toggle; the shell sets the native title bar to match.
 
 ## 22. Acceptance
 
@@ -1462,6 +1464,7 @@ The shell loads this UI with the same `app.css`, tokens, bundled fonts and compo
 | 21 | The shadcn components the editor needs are added from `radix-ui` without a new package; the palette does not use `cmdk` | 3.1, 9.2 |
 | 22 | Timecodes use Geist with tabular figures, not a monospace font | 11.5 |
 | 23 | The desktop window has a minimum inner size of 1280 by 640 and a dark pre-paint background | 21.3 |
+| 24 | Author decision D-030 recorded: pt-BR decimal comma, one badge for several agents, Geist Mono only if the digit test fails, menus without text-field accelerators, font names without samples | 5.8, 11.5, 12.1, 12.2, 13.1, 21.3 |
 
 ## Appendix B: Contract needs beyond SDD-000
 
