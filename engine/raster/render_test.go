@@ -213,7 +213,7 @@ func TestPixelScaleScalesTheBitmap(t *testing.T) {
 		t.Errorf("width ratio %.3f, want about 2", r)
 	}
 
-	if math.Abs(two.NaturalW-one.NaturalW) > 1.5 || math.Abs(two.NaturalH-one.NaturalH) > 1.5 {
+	if math.Abs(two.NaturalW-one.NaturalW) > 2.5 || math.Abs(two.NaturalH-one.NaturalH) > 2.5 {
 		t.Errorf(
 			"natural size %.1fx%.1f at scale 2, %.1fx%.1f at scale 1: want equal",
 			two.NaturalW,

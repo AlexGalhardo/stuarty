@@ -1,12 +1,10 @@
 package raster
 
 import (
-	"image"
-	"image/draw"
 	"math"
 	"slices"
 
-	"golang.org/x/image/vector"
+	"github.com/AlexGalhardo/vukem-video/engine/raster/internal/scan"
 )
 
 // point is a position in bitmap pixels, y down.
@@ -295,10 +293,12 @@ type mask struct {
 
 // painter rasterizes polygons into one reusable mask: a render fills many
 // masks in a row, and allocating each of them dominates the cost of a small
-// bitmap. The mask it returns is valid until the next call.
+// bitmap. The mask it returns is valid until the next call. It uses the
+// portable scanline rasterizer of internal/scan, never golang.org/x/image/vector,
+// whose amd64 accumulation rounds differently (see the package scan).
 type painter struct {
 	w, h int
-	rz   vector.Rasterizer
+	rz   scan.Rasterizer
 	m    mask
 }
 
@@ -322,14 +322,12 @@ func (p *painter) fill(off point, polys ...[]point) *mask {
 		addPolygon(&p.rz, poly, off)
 	}
 
-	img := &image.Alpha{Pix: p.m.pix, Stride: p.w, Rect: image.Rect(0, 0, p.w, p.h)}
-	p.rz.DrawOp = draw.Src
-	p.rz.Draw(img, img.Rect, image.Opaque, image.Point{})
+	p.rz.Coverage(p.m.pix)
 
 	return &p.m
 }
 
-func addPolygon(rz *vector.Rasterizer, poly []point, off point) {
+func addPolygon(rz *scan.Rasterizer, poly []point, off point) {
 	if len(poly) < 3 {
 		return
 	}
