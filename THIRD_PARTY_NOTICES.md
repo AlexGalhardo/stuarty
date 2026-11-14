@@ -105,7 +105,7 @@ The production dependency closure of `web/package.json` (`dependencies`, transit
 | aria-hidden | 1.2.6 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/aria-hidden@1.2.6/LICENSE>) | - |
 | class-variance-authority | 0.7.1 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/npm/class-variance-authority@0.7.1/LICENSE>) | - |
 | clsx | 2.1.1 | MIT | Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com) | [license](<licenses/npm/clsx@2.1.1/license>) | - |
-| colord | 2.13.0 | MIT | Copyright (c) 2020 Vlad Shilov omgovich@ya.ru | [LICENSE.md](<licenses/npm/colord@2.13.0/LICENSE.md>) | - |
+| colord | 2.13.0 | MIT | Copyright (c) 2020 Vlad Shilov <omgovich@ya.ru> | [LICENSE.md](<licenses/npm/colord@2.13.0/LICENSE.md>) | - |
 | detect-node-es | 1.1.0 | MIT | Copyright (c) 2017 Ilya Kantor | [LICENSE](<licenses/npm/detect-node-es@1.1.0/LICENSE>) | - |
 | earcut | 3.2.4 | ISC | Copyright (c) 2026, Mapbox | [LICENSE](<licenses/npm/earcut@3.2.4/LICENSE>) | - |
 | es-toolkit | 1.53.1 | MIT | Copyright (c) 2024 Viva Republica, Inc. | [LICENSE](<licenses/npm/es-toolkit@1.53.1/LICENSE>), [NOTICE](<licenses/npm/es-toolkit@1.53.1/NOTICE>) | - |
