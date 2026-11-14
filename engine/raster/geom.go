@@ -49,7 +49,7 @@ func curveSteps(secondDiff float64) int {
 
 // secondDiff is the length of p0 - 2*p1 + p2.
 func secondDiff(p0, p1, p2 point) float64 {
-	return math.Hypot(p0.x-2*p1.x+p2.x, p0.y-2*p1.y+p2.y)
+	return hypot(p0.x-2*p1.x+p2.x, p0.y-2*p1.y+p2.y)
 }
 
 func quadAt(p0, p1, p2 point, t float64) point {
@@ -90,7 +90,7 @@ func appendArc(pts []point, c point, r, a0, a1 float64) []point {
 	n := arcSteps(math.Abs(a1-a0), r)
 	for i := 1; i <= n; i++ {
 		a := lerp(a0, a1, float64(i)/float64(n))
-		s, co := math.Sincos(a)
+		s, co := sincos(a)
 		pts = append(pts, point{c.x + mul(r, co), c.y + mul(r, s)})
 	}
 
@@ -128,7 +128,7 @@ func ellipse(x, y, w, h float64) polyline {
 	pts := make([]point, 0, n)
 
 	for i := range n {
-		s, c := math.Sincos(float64(i) * 2 * math.Pi / float64(n))
+		s, c := sincos(float64(i) * twoPi / float64(n))
 		pts = append(pts, point{cx + mul(rx, c), cy + mul(ry, s)})
 	}
 
@@ -142,7 +142,8 @@ func arcSteps(angle, r float64) int {
 		return 2
 	}
 
-	step := 2 * math.Acos(1-flatTolerance/r)
+	// Sagitta of a chord: the arc strays r*(1-cos(step/2)), about r*step^2/8.
+	step := 2 * math.Sqrt(2*flatTolerance/r)
 
 	return min(max(int(math.Ceil(angle/step)), 2), 256)
 }
@@ -229,8 +230,8 @@ func orient(poly []point) []point {
 func appendJoin(out [][]point, a, b, c point, r float64) [][]point {
 	d0x, d0y := b.x-a.x, b.y-a.y
 	d1x, d1y := c.x-b.x, c.y-b.y
-	l0 := math.Hypot(d0x, d0y)
-	l1 := math.Hypot(d1x, d1y)
+	l0 := hypot(d0x, d0y)
+	l1 := hypot(d1x, d1y)
 
 	if l0 == 0 || l1 == 0 {
 		return out
@@ -238,7 +239,7 @@ func appendJoin(out [][]point, a, b, c point, r float64) [][]point {
 
 	cross := float64(d0x*d1y) - float64(d0y*d1x)
 	dot := float64(d0x*d1x) + float64(d0y*d1y)
-	angle := math.Atan2(cross, dot)
+	angle := atan2(cross, dot)
 
 	if math.Abs(angle) < 1e-6 {
 		return out
@@ -250,14 +251,14 @@ func appendJoin(out [][]point, a, b, c point, r float64) [][]point {
 		side = 1
 	}
 
-	a0 := math.Atan2(side*d0x, -side*d0y)
+	a0 := atan2(side*d0x, -side*d0y)
 
 	n := arcSteps(math.Abs(angle), r)
 	pie := make([]point, 0, n+2)
 	pie = append(pie, b)
 
 	for i := 0; i <= n; i++ {
-		s, co := math.Sincos(a0 + lerp(0, angle, float64(i)/float64(n)))
+		s, co := sincos(a0 + lerp(0, angle, float64(i)/float64(n)))
 		pie = append(pie, point{b.x + mul(r, co), b.y + mul(r, s)})
 	}
 
@@ -269,7 +270,7 @@ func circlePoints(c point, r float64) []point {
 	pts := make([]point, n)
 
 	for i := range n {
-		s, co := math.Sincos(float64(i) * 2 * math.Pi / float64(n))
+		s, co := sincos(float64(i) * twoPi / float64(n))
 		pts[i] = point{c.x + mul(r, co), c.y + mul(r, s)}
 	}
 
@@ -279,7 +280,7 @@ func circlePoints(c point, r float64) []point {
 // segmentQuad is the rectangle of half-width r around the segment a-b.
 func segmentQuad(a, b point, r float64) []point {
 	dx, dy := b.x-a.x, b.y-a.y
-	l := math.Hypot(dx, dy)
+	l := hypot(dx, dy)
 	// The normal, scaled to r.
 	nx, ny := mul(-dy/l, r), mul(dx/l, r)
 
