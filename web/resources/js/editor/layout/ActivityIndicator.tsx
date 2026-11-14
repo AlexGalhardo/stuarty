@@ -9,12 +9,12 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { type Translate, useLocale, useT } from "@/lib/i18n";
-import { useActivityState } from "../state/EditorContext";
 import {
 	ACTIVE_MS,
 	type ActivityEntry,
 	actorLabel,
 } from "../state/activityStore";
+import { useActivityState } from "../state/EditorContext";
 
 const SETTLED_MS = 5 * 60 * 1000;
 const ANNOUNCE_EVERY_MS = 2000;
