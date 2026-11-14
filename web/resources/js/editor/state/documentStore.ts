@@ -3,7 +3,7 @@ import type { ProjectDocument } from "@/generated/timeline";
 import type { ConnectionState } from "../api/events";
 import type { Change, ProjectState } from "../api/types";
 import { applyDiff, type DeepReadonly, deepEqual } from "./applyDiff";
-import { createStore, type ReadStore } from "./createStore";
+import { createStore, type ReadStore, readOnly } from "./createStore";
 
 export type SyncStatus =
 	| "loading"
@@ -130,7 +130,7 @@ export function createDocumentStore(options: DocumentStoreOptions): {
 	};
 
 	return {
-		store: { getState: store.getState, subscribe: store.subscribe },
+		store: readOnly(store),
 		writer,
 	};
 }
