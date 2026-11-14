@@ -12,6 +12,8 @@ var (
 	ErrNotFound = errors.New("service: not found")
 	ErrExists   = errors.New("service: already exists")
 	ErrStale    = errors.New("service: stale")
+	// ErrBadCursor is a page cursor the store did not produce.
+	ErrBadCursor = errors.New("service: invalid cursor")
 )
 
 // QueueFullError is returned by JobRepo.CreateLimited.
@@ -134,6 +136,8 @@ type ProjectUpdate struct {
 // ProjectRepo stores projects.
 type ProjectRepo interface {
 	List(ctx context.Context, q ProjectQuery) (items []ProjectHead, next string, err error)
+	// Count is the number of projects the query selects, ignoring its cursor and limit.
+	Count(ctx context.Context, q ProjectQuery) (int, error)
 	Head(ctx context.Context, id string) (ProjectHead, error)
 	Get(ctx context.Context, id string) (ProjectRow, error) // with the document
 	Create(ctx context.Context, row ProjectRow) error       // ErrExists
@@ -198,6 +202,8 @@ type HistoryQuery struct {
 type OperationRepo interface {
 	Append(ctx context.Context, row OperationRow) error // ErrExists on a duplicate revision
 	Get(ctx context.Context, projectID string, revision int64) (OperationRow, error)
+	// Count is the number of rows of the project, of one actor when actor is set.
+	Count(ctx context.Context, projectID, actor string) (int64, error)
 	// Since returns rows with revision > after in ascending order.
 	Since(ctx context.Context, projectID string, after int64, f OperationFilter) ([]OperationRow, error)
 	// Page returns rows in descending order and whether older rows exist.

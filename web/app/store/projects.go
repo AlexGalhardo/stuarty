@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/base64"
-	"errors"
 	"strconv"
 	"strings"
 
@@ -104,7 +103,25 @@ func (r projectRepo) List(ctx context.Context, q service.ProjectQuery) ([]servic
 }
 
 // ErrBadCursor is returned for a cursor the store did not produce.
-var ErrBadCursor = errors.New("store: invalid cursor")
+var ErrBadCursor = service.ErrBadCursor
+
+// Count implements service.ProjectRepo.
+func (r projectRepo) Count(ctx context.Context, q service.ProjectQuery) (int, error) {
+	query, args := "SELECT count(*) FROM projects", []any(nil)
+
+	switch {
+	case q.IncludeTrashed:
+	case q.State != "":
+		query, args = query+" WHERE state = ?", append(args, string(q.State))
+	default:
+		query += " WHERE state = 'active'"
+	}
+
+	var n int
+	err := r.ex.QueryRowContext(ctx, query, args...).Scan(&n)
+
+	return n, err
+}
 
 func encodeCursor(ms int64, id string) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(strconv.FormatInt(ms, 10) + ":" + id))
