@@ -3,13 +3,10 @@ package cli
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"slices"
 	"strings"
-
-	vukem "github.com/AlexGalhardo/vukem"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
@@ -331,33 +328,5 @@ func List(w io.Writer) {
 	fmt.Fprintln(w, "\nrun vukem-video <command> --help for the arguments of a command")
 }
 
-// adapter makes a spec a vukem.Command. vukem hands every argument to Run
-// untouched when the binary inserts "--" after the command name (SDD-003 5.1).
-type adapter struct {
-	rt *Runtime
-	s  *spec
-}
-
-func (a adapter) Name() string        { return a.s.name }
-func (a adapter) Description() string { return a.s.summary }
-func (a adapter) Flags(*flag.FlagSet) {}
-func (a adapter) NoBoot() bool        { return true }
-func (a adapter) Run(ctx context.Context, _ *vukem.App, args []string) error {
-	if code := a.rt.Execute(ctx, a.s.name, args); code != ExitOK {
-		return &vukem.ExitError{Code: code}
-	}
-
-	return nil
-}
-
-// Commands returns the product commands for app.AddCommand. They do not boot
-// the application: the Service comes from the Resolver.
-func Commands(rt *Runtime) []vukem.Command {
-	out := make([]vukem.Command, 0, len(registry()))
-
-	for _, s := range registry() {
-		out = append(out, adapter{rt: rt, s: s})
-	}
-
-	return out
-}
+// IsCommand reports whether name is a product command.
+func IsCommand(name string) bool { return lookup(name) != nil }
