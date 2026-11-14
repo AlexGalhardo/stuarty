@@ -84,7 +84,13 @@ func TestReadRuntimeRetriesParseError(t *testing.T) {
 	var once sync.Once
 	write := func() {
 		once.Do(func() {
-			_ = d.WriteRuntime(Runtime{PID: 1, Addr: "127.0.0.1:1", Mode: ModeLocal, StartedAt: time.Now(), Version: "x"})
+			_ = d.WriteRuntime(Runtime{
+				PID:       1,
+				Addr:      "127.0.0.1:1",
+				Mode:      ModeLocal,
+				StartedAt: time.Now(),
+				Version:   "x",
+			})
 		})
 	}
 	if _, err := d.readRuntime(write); err != nil {

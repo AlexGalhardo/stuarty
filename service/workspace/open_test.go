@@ -218,7 +218,8 @@ func TestOpenWaitsForOwnerStarting(t *testing.T) {
 	polls := 0
 	o := fast(home)
 	o.OnPoll = func() {
-		if polls++; polls == 3 {
+		polls++
+		if polls == 3 {
 			advertise(t, d, srv, ModeLocal)
 		}
 	}
