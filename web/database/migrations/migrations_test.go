@@ -71,6 +71,9 @@ func columns(t *testing.T, db *database.DB, table string) []string {
 		}
 		out = append(out, fmt.Sprintf("%s %s %d %s %d", name, typ, notNull, d, pk))
 	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
+	}
 	return out
 }
 

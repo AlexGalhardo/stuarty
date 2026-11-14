@@ -15,7 +15,7 @@ func TestWriteRollsBackAndRunsHooksAfterCommit(t *testing.T) {
 	boom := errors.New("boom")
 
 	var hooks []string
-	err := s.Write(ctx, func(ctx context.Context, tx service.Tx) error {
+	err := s.Write(ctx, func(_ context.Context, tx service.Tx) error {
 		mustCreate(t, tx, newProject("prj_rolled", 1))
 		tx.AfterCommit(func() { hooks = append(hooks, "rolled back") })
 		return boom
@@ -61,7 +61,7 @@ func TestWriteProjectLoadsRowAndMapsNotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err := s.WriteProject(ctx, "prj_a", func(ctx context.Context, tx service.ProjectTx) error {
+	err := s.WriteProject(ctx, "prj_a", func(_ context.Context, tx service.ProjectTx) error {
 		if p := tx.Project(); p.ID != "prj_a" || p.State != service.ProjectTrashed || len(p.Document) == 0 {
 			t.Errorf("Project() = %+v (a trashed project is passed to fn, with its document)", p)
 		}

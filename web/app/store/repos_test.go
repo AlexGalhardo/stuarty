@@ -17,23 +17,24 @@ import (
 
 var ctx = context.Background()
 
-func testStore(t *testing.T) *Store { return openStore(t, newDir(t), Options{}) }
+func testStore(t *testing.T) *Store {
+	t.Helper()
+	return openStore(t, newDir(t), Options{})
+}
 
 func newProject(id string, updated int64) service.ProjectRow {
 	return service.ProjectRow{
-		ProjectHead: service.ProjectHead{
-			ID: id, Name: "name " + id, State: service.ProjectActive, SchemaVersion: 1,
-			Summary:   service.ProjectSummary{Width: 1080, Height: 1920, FPSNum: 30, FPSDen: 1},
-			CreatedMs: updated, UpdatedMs: updated, CreatedBy: "local:ui",
-		},
+		ID: id, Name: "name " + id, State: service.ProjectActive, SchemaVersion: 1,
+		Summary:   service.ProjectSummary{Width: 1080, Height: 1920, FPSNum: 30, FPSDen: 1},
+		CreatedMs: updated, UpdatedMs: updated, CreatedBy: "local:ui",
 		Document: []byte(`{"name":"` + id + `"}`), DocSHA256: "sha-" + id,
 	}
 }
 
 func mustCreate(t *testing.T, s service.Repos, rows ...service.ProjectRow) {
 	t.Helper()
-	for _, r := range rows {
-		if err := s.Projects().Create(ctx, r); err != nil {
+	for i := range rows {
+		if err := s.Projects().Create(ctx, rows[i]); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -402,9 +403,6 @@ func TestIdempotency(t *testing.T) {
 	}
 }
 
-func i64(n int64) *int64 { return &n }
-func in(n int) *int      { return &n }
-
 func TestAssetsAndArtifacts(t *testing.T) {
 	s := testStore(t)
 	const hash = "sha256:" + "ab00000000000000000000000000000000000000000000000000000000000000"
@@ -431,8 +429,15 @@ func TestAssetsAndArtifacts(t *testing.T) {
 		t.Errorf("after SetIngest: %+v", got)
 	}
 	facts := service.AssetFacts{
-		NormalizedVersion: in(1), DurationMs: i64(5000), Width: in(1920), Height: in(1080),
-		HasAudio: true, FrameRateNum: in(30000), FrameRateDen: in(1001), FrameCount: i64(150), SampleCount: i64(240000),
+		NormalizedVersion: new(1),
+		DurationMs:        new(int64(5000)),
+		Width:             new(1920),
+		Height:            new(1080),
+		HasAudio:          true,
+		FrameRateNum:      new(30000),
+		FrameRateDen:      new(1001),
+		FrameCount:        new(int64(150)),
+		SampleCount:       new(int64(240000)),
 	}
 	if err := s.Assets().SetFacts(ctx, hash, facts, 9); err != nil {
 		t.Fatal(err)
@@ -575,7 +580,7 @@ func TestProjectDeleteCascades(t *testing.T) {
 	_ = s.Backups().
 		Put(ctx, service.BackupRow{OwnerKind: "project", OwnerID: "prj_a", Revision: 1, SchemaVersion: 1, Document: []byte("{}"), Reason: "r", CreatedMs: 1})
 	_ = s.Audit().
-		Append(ctx, service.AuditRow{AtMs: 1, Actor: "local:ui", Action: "project.create", ProjectID: strPtr("prj_a")})
+		Append(ctx, service.AuditRow{AtMs: 1, Actor: "local:ui", Action: "project.create", ProjectID: new("prj_a")})
 
 	if err := s.Projects().Delete(ctx, "prj_a"); err != nil {
 		t.Fatal(err)
@@ -590,8 +595,6 @@ func TestProjectDeleteCascades(t *testing.T) {
 	}
 }
 
-func strPtr(s string) *string { return &s }
-
 func newJob(id, kind, actor string, created int64) service.JobRow {
 	j := service.JobRow{
 		ID:        id,
@@ -602,14 +605,15 @@ func newJob(id, kind, actor string, created int64) service.JobRow {
 		UpdatedMs: created,
 	}
 	if kind == "ingest" {
-		j.AssetHash = strPtr("sha256:01")
+		j.AssetHash = new("sha256:01")
 	} else {
-		j.ProjectID = strPtr("prj_a")
+		j.ProjectID = new("prj_a")
 	}
 	return j
 }
 
 func jobsFixture(t *testing.T) *Store {
+	t.Helper()
 	s := testStore(t)
 	mustCreate(t, s, newProject("prj_a", 1))
 	if _, _, err := s.Assets().
@@ -732,8 +736,7 @@ func TestJobLimits(t *testing.T) {
 			if err == nil {
 				created.Add(1)
 			} else {
-				var qf *service.QueueFullError
-				if !errors.As(err, &qf) {
+				if _, ok := errors.AsType[*service.QueueFullError](err); !ok {
 					t.Error(err)
 				}
 			}
@@ -891,7 +894,7 @@ func TestTemplatesBackupsAudit(t *testing.T) {
 			Details: json.RawMessage(`{"n":1}`),
 		}
 		if i%2 == 0 {
-			a.ProjectID = strPtr("prj_a")
+			a.ProjectID = new("prj_a")
 		}
 		if err := s.Audit().Append(ctx, a); err != nil {
 			t.Fatal(err)
@@ -961,6 +964,29 @@ func TestSecurity_T28_OperationLogAppendOnly(t *testing.T) {
 	}
 }
 
+func queryPlan(t *testing.T, s *Store, query string) []string {
+	t.Helper()
+	rows, err := s.db.QueryContext(ctx, "EXPLAIN QUERY PLAN "+query, "a", "b", "c")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+
+	var plan []string
+	for rows.Next() {
+		var id, parent, notused int
+		var detail string
+		if err := rows.Scan(&id, &parent, &notused, &detail); err != nil {
+			t.Fatal(err)
+		}
+		plan = append(plan, detail)
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
+	}
+	return plan
+}
+
 // Check 10: the queries use the indexes the SDD names.
 func TestQueryPlans(t *testing.T) {
 	s := testStore(t)
@@ -995,20 +1021,7 @@ func TestQueryPlans(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		rows, err := s.db.QueryContext(ctx, "EXPLAIN QUERY PLAN "+c.query, "a", "b", "c")
-		if err != nil {
-			t.Fatalf("%s: %v", c.name, err)
-		}
-		var plan []string
-		for rows.Next() {
-			var id, parent, notused int
-			var detail string
-			if err := rows.Scan(&id, &parent, &notused, &detail); err != nil {
-				t.Fatal(err)
-			}
-			plan = append(plan, detail)
-		}
-		rows.Close()
+		plan := queryPlan(t, s, c.query)
 		if !strings.Contains(strings.Join(plan, "\n"), c.want) {
 			t.Errorf("%s: plan %q lacks %q", c.name, plan, c.want)
 		}
