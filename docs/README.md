@@ -16,6 +16,7 @@ Work is driven by `ROADMAP.md`, which lives in the workspace root next to `AGENT
 | understand why preview and export agree | `adrs/0003-render-one-plan-two-executors.md`, `sdds/004-render-pipeline.md` |
 | know why a decision was taken | `adrs/`, and `brainstorming.md` for the decisions of the author |
 | check that a requirement is covered | `traceability.md` |
+| design or review a screen of the web UI or the desktop shell (tokens, components, content style, accessibility) | `design-system.md`, then `sdds/012-ui-architecture.md` |
 
 ## Requirements (`prds/`)
 
