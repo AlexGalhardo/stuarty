@@ -142,6 +142,18 @@ tasks:
     cmds:
       - bash scripts/image-smoke.sh vukem-video:local
 
+  notices:
+    desc: Regenerate THIRD_PARTY_NOTICES.md and the licence texts under licenses/
+    cmds:
+      - bun install --frozen-lockfile --cwd web
+      - go run ./internal/tools/notices
+
+  notices:check:
+    desc: Fail with a diff when the third-party notices are stale or a licence is not allowed
+    cmds:
+      - bun install --frozen-lockfile --cwd web
+      - go run ./internal/tools/notices -check
+
   ci:
     desc: Everything the pull request pipeline runs locally
     cmds:
@@ -149,3 +161,4 @@ tasks:
       - task: vet
       - task: test
       - task: tidy:check
+      - task: notices:check

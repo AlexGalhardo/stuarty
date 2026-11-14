@@ -37,7 +37,7 @@ Release pull request for **vX.Y.Z**: every microcommit since the previous tag la
 - [ ] All required checks are green on the three runners
 - [ ] Thin-client rule: no editing rule or edit result is computed in `web/`, a handler or a tool
 - [ ] Changed contracts: `task codegen` run and the generated files committed
-- [ ] New dependencies: approved by the author, exact versions
+- [ ] New dependencies: approved by the author, exact versions; `task notices` run and `THIRD_PARTY_NOTICES.md` and `licenses/` committed (a Dependabot update that changes `go.mod`, `go.sum` or `web/bun.lock` fails `Notices` until a maintainer does this on its branch)
 - [ ] Every specification the code now differs from (SDD, ADR) is fixed in this release
 - [ ] Friction with the vukem framework is recorded in `vukem-feedback.md`
 - [ ] `CHANGELOG.md` untouched by hand (the release tool writes it on `release:prepare`)
