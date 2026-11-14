@@ -22,6 +22,7 @@ type fakeService struct {
 	undoReq    service.UndoRequest
 	historyReq service.HistoryListRequest
 	listReq    service.ProjectListRequest
+	helpReq    service.CommandHelpRequest
 
 	revision int64
 	err      error
@@ -91,6 +92,16 @@ func (f *fakeService) Edit(ctx context.Context, r service.EditRequest) (*service
 		DryRun: r.DryRun, Actor: f.caller.Actor, Created: []string{"itm_c3d4e5f6g7"},
 		Description: "+ item itm_c3d4e5f6g7 clip",
 	}, nil
+}
+
+func (f *fakeService) CommandHelp(_ context.Context, r service.CommandHelpRequest) (*service.CommandHelpResult, error) {
+	f.helpReq = r
+
+	if f.err != nil {
+		return nil, f.err
+	}
+
+	return &service.CommandHelpResult{Text: "help " + r.Name}, nil
 }
 
 func (f *fakeService) HistoryList(_ context.Context, r service.HistoryListRequest) (*service.HistoryListResult, error) {

@@ -249,3 +249,28 @@ var lintCmd = &spec{
 		return out, nil
 	},
 }
+
+var commandHelp = &spec{
+	name:       "command:help",
+	summary:    "list the editing commands, or describe one",
+	usage:      []string{"vukem-video command:help [<name>]"},
+	example:    "vukem-video command:help item.move",
+	positional: true,
+	run: func(ctx context.Context, c *call) (*output, error) {
+		if len(c.args.Positional) > 1 {
+			return nil, validation("", "command:help takes one command name, got %d.", len(c.args.Positional))
+		}
+
+		req := service.CommandHelpRequest{}
+		if len(c.args.Positional) == 1 {
+			req.Name = c.args.Positional[0]
+		}
+
+		res, err := c.svc.CommandHelp(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}

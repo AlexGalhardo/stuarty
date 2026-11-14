@@ -27,6 +27,4 @@ var (
 		"vukem-video job:list --project <id> [--state s] [--cursor c] [--limit n]")
 	events = pendingSpec("events", "print the events of a project as they arrive", "P1-SRV-006",
 		"vukem-video events --project <id> [--from-id n] [--since n] [--count n]")
-	commandHelp = pendingSpec("command:help", "list the editing commands or describe one", "P1-SRV-003",
-		"vukem-video command:help [<name>]")
 )
