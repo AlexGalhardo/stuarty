@@ -377,7 +377,11 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 			editItem(d, capItemID, func(i *Item) { i.Words = []Word{{Text: "a", Start: 0, Duration: 0}} })
 		}, VWords},
 		{"breaks range", func(d *Document) { editItem(d, capItemID, func(i *Item) { i.Breaks = []int{9} }) }, VWords},
-		{"breaks order", func(d *Document) { editItem(d, capItemID, func(i *Item) { i.Breaks = []int{2, 1} }) }, VWords},
+		{
+			"breaks order",
+			func(d *Document) { editItem(d, capItemID, func(i *Item) { i.Breaks = []int{2, 1} }) },
+			VWords,
+		},
 
 		// V_FONT and style fields.
 		{"font family", func(d *Document) {
