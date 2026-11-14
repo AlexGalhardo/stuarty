@@ -94,7 +94,7 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		}, VShape},
 		{"loudness", func(d *Document) { d.Settings.LoudnessTarget = 0 }, VShape},
 		{"background", func(d *Document) { d.Settings.Background = "red" }, VShape},
-		{"background ref", func(d *Document) { d.Settings.Background = "$accent" }, VShape},
+		{"background ref", func(d *Document) { d.Settings.Background = "$accent" }, VColorRef},
 		{"asset hash", func(d *Document) { editAsset(d, func(a *Asset) { a.Hash = "sha256:ABC" }) }, VShape},
 		{"asset kind", func(d *Document) { editAsset(d, func(a *Asset) { a.Kind = "gif" }) }, VShape},
 		{"video no rate", func(d *Document) { editAsset(d, func(a *Asset) { a.FrameRate = Rational{} }) }, VShape},
