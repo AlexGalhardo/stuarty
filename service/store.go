@@ -420,6 +420,9 @@ type JobRepo interface {
 	RequestCancel(ctx context.Context, id string, nowMs int64) (JobRow, error)
 	// Running returns every job in state running (used by recovery at start-up).
 	Running(ctx context.Context) ([]JobRow, error)
+	// QueuedBefore returns the jobs still queued that were created before
+	// the instant, oldest first (recovery dispatches them again).
+	QueuedBefore(ctx context.Context, createdBeforeMs int64) ([]JobRow, error)
 }
 
 // TemplateRow is a saved template document.

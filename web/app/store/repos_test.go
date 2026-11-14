@@ -718,6 +718,16 @@ func TestJobLifecycle(t *testing.T) {
 	if len(list) != 1 || len(empty) != 0 {
 		t.Errorf("List = %d, filtered = %d", len(list), len(empty))
 	}
+
+	if err := jobs.CreateLimited(ctx, newJob("job_2", "export", "local:ui", 20), nil); err != nil {
+		t.Fatal(err)
+	}
+	if q, _ := jobs.QueuedBefore(ctx, 21); len(q) != 1 || q[0].ID != "job_2" {
+		t.Errorf("QueuedBefore(21) = %+v", q)
+	}
+	if q, _ := jobs.QueuedBefore(ctx, 20); len(q) != 0 {
+		t.Errorf("QueuedBefore(20) = %+v, want none: the bound is exclusive", q)
+	}
 }
 
 // Check 30, the store half: the limit is checked and the row inserted together.
