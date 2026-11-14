@@ -35,6 +35,8 @@ type ThumbPlan struct {
 	TileW, TileH int
 	Letterbox    bool
 	IntervalS    int
+	// Planned is the most tiles the video pass may write: ceil(duration / interval) + 1, at most ThumbMaxCount.
+	Planned int
 }
 
 // VideoPlan is the plan of the video pass (SDD-011 4.1 and 4.3). It is stored in the job
@@ -93,7 +95,9 @@ func PlanThumbnails(durationMS int64, w, h int) ThumbPlan {
 		tw, letterbox = ThumbMaxTileWidth, true
 	}
 	secs := math.Ceil(float64(durationMS) / 1000 / ThumbMaxCount)
-	return ThumbPlan{TileW: tw, TileH: ThumbHeight, Letterbox: letterbox, IntervalS: max(1, int(secs))}
+	interval := max(1, int(secs))
+	planned := min(ThumbMaxCount, int(math.Ceil(float64(durationMS)/1000/float64(interval)))+1)
+	return ThumbPlan{TileW: tw, TileH: ThumbHeight, Letterbox: letterbox, IntervalS: interval, Planned: max(1, planned)}
 }
 
 // zscale names of the colour properties.
