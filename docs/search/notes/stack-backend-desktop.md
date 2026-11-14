@@ -17,9 +17,9 @@ Source convention: `gh api repos/<o>/<r>` and `gh release list -R <o>/<r>` (GitH
 
 ## Findings that most change the architecture
 
-1. FACT: the current MCP spec is `2026-07-28` and it is STATELESS: no `initialize`, no `Mcp-Session-Id`, no SSE resumability; tasks became an official extension; elicitation/sampling become "multi round-trip requests"; Roots/Sampling/Logging are deprecated. Source: https://modelcontextprotocol.io/specification/2026-07-28/changelog (accessed 2026-11-14). Implication: the editor's MCP server must be stateless, with explicit handles (project/timeline id) in the tool arguments; a long render is the `io.modelcontextprotocol/tasks` extension (polling `tasks/get`), not a session.
-2. FACT: Wails v3.0.0 became STABLE on 2026-10-26 (v3.1.0 on 2026-11-01), with "server mode" (the same app as an HTTP server without a window), a built-in updater, and bindings via static analysis. Mobile is experimental. Source: https://github.com/wailsapp/wails/releases/tag/v3.0.0. The data in your premise ("v3 alpha") is out of date.
-3. FACT: Tauri v3 is in alpha (alpha.6, 2026-11-06) and there is a `tauri-runtime-cef` crate release v3.0.0-alpha.7 (2026-11-06); `tauri-apps/cef-rs` is active (CEF 156). In other words, Tauri with embedded Chromium exists, but it is alpha. Sources: `gh release list -R tauri-apps/tauri`; https://github.com/tauri-apps/cef-rs. Tauri v2 stable is 2.12.5 (2026-10-21).
+1. FACT: the current MCP spec is `2026-07-28` and it is STATELESS: no `initialize`, no `Mcp-Session-Id`, no SSE resumability; tasks became an official extension; elicitation/sampling become "multi round-trip requests"; Roots/Sampling/Logging are deprecated. Source: <https://modelcontextprotocol.io/specification/2026-07-28/changelog> (accessed 2026-11-14). Implication: the editor's MCP server must be stateless, with explicit handles (project/timeline id) in the tool arguments; a long render is the `io.modelcontextprotocol/tasks` extension (polling `tasks/get`), not a session.
+2. FACT: Wails v3.0.0 became STABLE on 2026-10-26 (v3.1.0 on 2026-11-01), with "server mode" (the same app as an HTTP server without a window), a built-in updater, and bindings via static analysis. Mobile is experimental. Source: <https://github.com/wailsapp/wails/releases/tag/v3.0.0>. The data in your premise ("v3 alpha") is out of date.
+3. FACT: Tauri v3 is in alpha (alpha.6, 2026-11-06) and there is a `tauri-runtime-cef` crate release v3.0.0-alpha.7 (2026-11-06); `tauri-apps/cef-rs` is active (CEF 156). In other words, Tauri with embedded Chromium exists, but it is alpha. Sources: `gh release list -R tauri-apps/tauri`; <https://github.com/tauri-apps/cef-rs>. Tauri v2 stable is 2.12.5 (2026-10-21).
 4. FACT: River (transactional queue) has a `riversqlite` driver in the repo, so you can self-host WITHOUT Postgres/Redis using SQLite. Source: `gh api repos/riverqueue/river/contents/riverdriver` (lists `riversqlite`) and the README ("Postgres or SQLite"). Maturity of the SQLite driver: NOT VERIFIED (see Gaps).
 5. FACT: MLT (engine of Shotcut/Kdenlive) is active (v7.42.0, 2026-10-03), LGPL-2.1 in the core, has SWIG bindings (python, nodejs, java, csharp, lua, perl, php, ruby, tcl) and does NOT have Go; modules `plusgpl`, `movit`, `qt` etc. exist separately. Usable as a `melt` sidecar binary (INFERENCE).
 6. FACT (partial): system webviews for a video editor: WebView2 = Chromium; WebGPU is in Safari 26 (macOS/iOS 26, GA September 2025); WebKitGTK: the 2.50/2.52 notes do not mention WebCodecs/WebGPU (see B2). The client-side rendering decision (WebCodecs) is the number 1 risk for desktop with Wails/Tauri-wry.
@@ -35,14 +35,14 @@ Candidate table
 
 | Name | Function | Latest release | Last commit | License | Maturity | Risks | Verdict | Source + date |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| modelcontextprotocol/go-sdk | Official MCP SDK in Go | v1.8.0 (2026-09-14) | 2026-11-13 | NOASSERTION in the API (repo README/LICENSE to check; history: MIT→Apache-2.0 transition; NOT VERIFIED) | 5.3k stars, 82 open issues, v1.x (stable semver), negotiates up to `2026-07-28` | `MCPGODEBUG` flags removed in 1.9.0; license to be confirmed | ADOPT | https://github.com/modelcontextprotocol/go-sdk and release v1.8.0, 2026-11-14 |
-| mark3labs/mcp-go | Community SDK | v1.5.0 (2026-10-30) | 2026-11-13 | MIT | 9.2k stars, 54 issues | not the official one; alignment with spec 2026-07-28 NOT VERIFIED | EVALUATE (only if the official one lacks something) | https://github.com/mark3labs/mcp-go, 2026-11-14 |
+| modelcontextprotocol/go-sdk | Official MCP SDK in Go | v1.8.0 (2026-09-14) | 2026-11-13 | NOASSERTION in the API (repo README/LICENSE to check; history: MIT→Apache-2.0 transition; NOT VERIFIED) | 5.3k stars, 82 open issues, v1.x (stable semver), negotiates up to `2026-07-28` | `MCPGODEBUG` flags removed in 1.9.0; license to be confirmed | ADOPT | <https://github.com/modelcontextprotocol/go-sdk> and release v1.8.0, 2026-11-14 |
+| mark3labs/mcp-go | Community SDK | v1.5.0 (2026-10-30) | 2026-11-13 | MIT | 9.2k stars, 54 issues | not the official one; alignment with spec 2026-07-28 NOT VERIFIED | EVALUATE (only if the official one lacks something) | <https://github.com/mark3labs/mcp-go>, 2026-11-14 |
 
-FACT (release notes v1.8.0): supports `2026-07-28` as the newest negotiated version; added `ServerOptions.SetCacheable` (ttlMs/cacheScope in `server/discover`, list and `resources/read`), limits against exhaustion (JSON nesting 1000, `StdioTransport.MaxLineLength`), validated OAuth discovery, `ServerSession.NotifyElicitationComplete`. Source: https://github.com/modelcontextprotocol/go-sdk/releases/tag/v1.8.0 (2026-11-14). The release notes do NOT describe "tasks"; task support in the Go SDK: NOT VERIFIED.
+FACT (release notes v1.8.0): supports `2026-07-28` as the newest negotiated version; added `ServerOptions.SetCacheable` (ttlMs/cacheScope in `server/discover`, list and `resources/read`), limits against exhaustion (JSON nesting 1000, `StdioTransport.MaxLineLength`), validated OAuth discovery, `ServerSession.NotifyElicitationComplete`. Source: <https://github.com/modelcontextprotocol/go-sdk/releases/tag/v1.8.0> (2026-11-14). The release notes do NOT describe "tasks"; task support in the Go SDK: NOT VERIFIED.
 
 Support for transports (stdio, Streamable HTTP), resources, images in tool results, outputSchema/structuredContent, elicitation, and progress in go-sdk: NOT VERIFIED in the source this session (the spec requires them; the official SDK historically implements them). Check on pkg.go.dev before closing. See Gaps.
 
-MCP spec: current `2026-07-28`; previous `2025-11-25`; there is a draft with minor changes (OAuth Client ID Metadata Document -03; `_meta` restored). Sources: https://modelcontextprotocol.io/specification/versioning , https://modelcontextprotocol.io/specification/2026-07-28/changelog , https://modelcontextprotocol.io/specification/draft/changelog (2026-11-14).
+MCP spec: current `2026-07-28`; previous `2025-11-25`; there is a draft with minor changes (OAuth Client ID Metadata Document -03; `_meta` restored). Sources: <https://modelcontextprotocol.io/specification/versioning> , <https://modelcontextprotocol.io/specification/2026-07-28/changelog> , <https://modelcontextprotocol.io/specification/draft/changelog> (2026-11-14).
 
 What changed on 2026-07-28 (FACT, same source):
 
@@ -60,9 +60,9 @@ INFERENCE for the editor: model the MCP tools as a thin adapter over the command
 
 | Name | Function | Latest release | Last commit | License | Maturity | Risks | Verdict | Source + date |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| spf13/cobra | CLI | v1.10.2 (2025-12-04) | 2026-07-11 | Apache-2.0 | 44.8k stars | slow release cadence, but stable | ADOPT | https://github.com/spf13/cobra, 2026-11-14 |
-| urfave/cli | Alternative CLI | not checked this session | 2026-11-10 | MIT | 24.3k stars | v3 vs v2 (NOT VERIFIED) | EVALUATE | https://github.com/urfave/cli, 2026-11-14 |
-| romsar/gonertia | Inertia adapter for Go | v3.0.0 (2026-04-11) | 2026-04-11 | NOASSERTION in the API (check LICENSE) | 268 stars, 4 issues, zero deps | single-maintainer project; most recent commit 7 months ago | EVALUATE (writing our own adapter is small: `X-Inertia` header, page JSON, version) | https://github.com/romsar/gonertia, 2026-11-14 |
+| spf13/cobra | CLI | v1.10.2 (2025-12-04) | 2026-07-11 | Apache-2.0 | 44.8k stars | slow release cadence, but stable | ADOPT | <https://github.com/spf13/cobra>, 2026-11-14 |
+| urfave/cli | Alternative CLI | not checked this session | 2026-11-10 | MIT | 24.3k stars | v3 vs v2 (NOT VERIFIED) | EVALUATE | <https://github.com/urfave/cli>, 2026-11-14 |
+| romsar/gonertia | Inertia adapter for Go | v3.0.0 (2026-04-11) | 2026-04-11 | NOASSERTION in the API (check LICENSE) | 268 stars, 4 issues, zero deps | single-maintainer project; most recent commit 7 months ago | EVALUATE (writing our own adapter is small: `X-Inertia` header, page JSON, version) | <https://github.com/romsar/gonertia>, 2026-11-14 |
 
 FACT: the gonertia README lists "Inertia 3.0 compatibility" and the import `github.com/romsar/gonertia/v3`. INFERENCE: compatible with the existing app's `@inertiajs/react` 3.x; validate with an integration test (partial reloads, deferred props, SSR if used). The vukem framework itself (the author's) may already have an Inertia layer: check first.
 
@@ -134,10 +134,10 @@ OPINION, well-founded: the command core has a source of truth in JSON Schema (on
 
 Transcription prices (official pages, 2026-11-14):
 
-- FACT Deepgram pay-as-you-go pre-recorded: Nova-3 mono $0.0043/min; multilingual $0.0052/min; Whisper Large $0.0048/min. https://deepgram.com/pricing
-- FACT AssemblyAI: Universal-3.5 Pro $0.21/h; Universal-2 $0.15/h; diarization +$0.02/h. https://www.assemblyai.com/pricing
-- FACT Groq: whisper-large-v3-turbo $0.04/h; whisper-large-v3 $0.111/h; limits 25 MB (free) / 100 MB (dev); `timestamp_granularities` word/segment; minimum billing 10 s. https://console.groq.com/docs/speech-to-text
-- FACT OpenAI: the page lists transcription "from $0.0045/min (gpt-transcribe)" up to $0.034/min; details per model (whisper-1, gpt-4o-transcribe) could NOT be extracted. https://developers.openai.com/api/docs/pricing (note: the page summarized by the fetch cites "gpt-6-*" models; confirm on the raw page).
+- FACT Deepgram pay-as-you-go pre-recorded: Nova-3 mono $0.0043/min; multilingual $0.0052/min; Whisper Large $0.0048/min. <https://deepgram.com/pricing>
+- FACT AssemblyAI: Universal-3.5 Pro $0.21/h; Universal-2 $0.15/h; diarization +$0.02/h. <https://www.assemblyai.com/pricing>
+- FACT Groq: whisper-large-v3-turbo $0.04/h; whisper-large-v3 $0.111/h; limits 25 MB (free) / 100 MB (dev); `timestamp_granularities` word/segment; minimum billing 10 s. <https://console.groq.com/docs/speech-to-text>
+- FACT OpenAI: the page lists transcription "from $0.0045/min (gpt-transcribe)" up to $0.034/min; details per model (whisper-1, gpt-4o-transcribe) could NOT be extracted. <https://developers.openai.com/api/docs/pricing> (note: the page summarized by the fetch cites "gpt-6-*" models; confirm on the raw page).
 
 whisper.cpp: word-level timestamps and CPU performance by model size: NOT VERIFIED in this session (knowledge: it supports `--max-len 1 --split-on-word`/token timestamps; the quality of word timestamps is lower than WhisperX with wav2vec2 alignment). Current benchmarks require measurement.
 
@@ -147,7 +147,7 @@ ffprobe JSON: `ffprobe -v quiet -print_format json -show_format -show_streams` (
 
 FFmpeg sandbox and risks:
 
-- FACT (via aggregators, not an official advisory; the format "CVE-2026-107697" is unusual, verify in the NVD): FFmpeg before 8.1.3 would have a bypass in the HLS demuxer (`parse_playlist()` calling `io_open` directly, bypassing the protocol whitelist and the extension check), allowing reading of non-media local files or use of restricted protocols. Suggested mitigation: `-protocol_whitelist` and `-allowed_extensions`. Sources: https://www.wiz.io/vulnerability-database/cve/cve-2026-107697 , https://access.redhat.com/security/cve/CVE-2026-107697 (accessed 2026-11-14). Historical class: CVE-2016-1897/1898 (HLS reads a local file and exfiltrates it via HTTP), CVE-2023-6605 (SSRF in the DASH demuxer). Source: web search 2026-11-14.
+- FACT (via aggregators, not an official advisory; the format "CVE-2026-107697" is unusual, verify in the NVD): FFmpeg before 8.1.3 would have a bypass in the HLS demuxer (`parse_playlist()` calling `io_open` directly, bypassing the protocol whitelist and the extension check), allowing reading of non-media local files or use of restricted protocols. Suggested mitigation: `-protocol_whitelist` and `-allowed_extensions`. Sources: <https://www.wiz.io/vulnerability-database/cve/cve-2026-107697> , <https://access.redhat.com/security/cve/CVE-2026-107697> (accessed 2026-11-14). Historical class: CVE-2016-1897/1898 (HLS reads a local file and exfiltrates it via HTTP), CVE-2023-6605 (SSRF in the DASH demuxer). Source: web search 2026-11-14.
 - OPINION/INFERENCE (defense pattern): run FFmpeg in a separate process with `-protocol_whitelist file,pipe` (or `file` only), never accept user URLs/playlists/concat, generate the file list yourself from internal storage paths, run `ffprobe` first with limits, a timeout and CPU/memory limits (cgroups v2 / `ulimit` / Job Objects on Windows), a user with no network (empty netns), and a read-only FS. Tools: bubblewrap, nsjail, gVisor, seccomp: versions/state NOT VERIFIED in this session. Windows/macOS desktop: weak sandbox; for the user's local mode the risk is the user's own (their files), but projects imported from third parties (OTIO/XML with paths) must be sanitized.
 
 ---
@@ -158,12 +158,12 @@ FFmpeg sandbox and risks:
 
 | Name | Function | Latest release | Last commit | License | Maturity | Risks | Verdict | Source + date |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Wails v3 | Go desktop shell + system webview | v3.0.0 stable (2026-10-26); v3.1.0 (2026-11-01); nightlies v3.2.0 | 2026-11-13 | MIT | 37k stars (repo shared v2/v3); ~4 years of alpha/beta; Go >= 1.26 | experimental mobile; advisory GHSA-2p5f-2gx8-mh8m "partially fixed"; system webview; stable for 3 weeks | EVALUATE strongly (if the system webview is enough) | https://github.com/wailsapp/wails/releases/tag/v3.0.0 , 2026-11-14 |
+| Wails v3 | Go desktop shell + system webview | v3.0.0 stable (2026-10-26); v3.1.0 (2026-11-01); nightlies v3.2.0 | 2026-11-13 | MIT | 37k stars (repo shared v2/v3); ~4 years of alpha/beta; Go >= 1.26 | experimental mobile; advisory GHSA-2p5f-2gx8-mh8m "partially fixed"; system webview; stable for 3 weeks | EVALUATE strongly (if the system webview is enough) | <https://github.com/wailsapp/wails/releases/tag/v3.0.0> , 2026-11-14 |
 | Wails v2 | same, old API | v2.17.1 (2026-11-01) | same | MIT | receives critical fixes | legacy architecture | AVOID for a new project | gh, 2026-11-14 |
 | Tauri v2 | Rust shell + system webview (wry/tao) | 2.12.5 (2026-10-21) | 2026-11-13 | Apache-2.0 (+MIT, dual license NOT VERIFIED) | 112.9k stars; sidecar, updater, mobile (details NOT VERIFIED) | requires Rust; system webview | EVALUATE | gh, 2026-11-14 |
-| Tauri v3 + CEF | Tauri with embedded Chromium | v3.0.0-alpha.6 (2026-11-06); `tauri-runtime-cef` v3.0.0-alpha.7 (2026-11-06) | 2026-11-13 | Apache-2.0 | alpha; cef-rs (492 stars) on CEF 156 | alpha; larger bundle; branch `feat/cef` | EVALUATE (follow it; do not depend on it today) | `gh release list -R tauri-apps/tauri`, https://github.com/tauri-apps/cef-rs , 2026-11-14 |
+| Tauri v3 + CEF | Tauri with embedded Chromium | v3.0.0-alpha.6 (2026-11-06); `tauri-runtime-cef` v3.0.0-alpha.7 (2026-11-06) | 2026-11-13 | Apache-2.0 | alpha; cef-rs (492 stars) on CEF 156 | alpha; larger bundle; branch `feat/cef` | EVALUATE (follow it; do not depend on it today) | `gh release list -R tauri-apps/tauri`, <https://github.com/tauri-apps/cef-rs> , 2026-11-14 |
 | Electron | Node shell + embedded Chromium | v45.3.2 (2026-11-13); lines 43.x/44.x maintained | 2026-11-14 | MIT | 124k stars | binary ~100+ MB (current size NOT VERIFIED); Node/JS on the desktop | EVALUATE strongly (guaranteed Chromium) | gh, 2026-11-14 |
-| Electrobun | TS/Bun shell, CEF option | v2.0.7-beta.21 (2026-11-14) | 2026-11-14 | MIT | 13k stars | still beta; Bun/Zig ecosystem; README cites Go/Rust/Odin as native-side languages | EVALUATE (watch) | https://github.com/blackboardsh/electrobun , 2026-11-14 |
+| Electrobun | TS/Bun shell, CEF option | v2.0.7-beta.21 (2026-11-14) | 2026-11-14 | MIT | 13k stars | still beta; Bun/Zig ecosystem; README cites Go/Rust/Odin as native-side languages | EVALUATE (watch) | <https://github.com/blackboardsh/electrobun> , 2026-11-14 |
 | Neutralino | lightweight shell, system webview | not checked | 2026-11-05 | NOASSERTION | 8.7k stars | same webview limitation | AVOID | gh, 2026-11-14 |
 | CEF | Chromium Embedded Framework | not checked | 2026-11-12 | NOASSERTION (BSD-style) | 4.9k stars; base of cef-rs | heavy manual integration in Go (cgo) | AVOID directly | gh, 2026-11-14 |
 
@@ -174,8 +174,8 @@ go-app and the WebView2 wrapper (`wailsapp/go-webview2`, 53 stars): discarded fo
 ### B2. The decisive problem: system webview
 
 - FACT: Windows: WebView2 is Chromium (Edge), so WebCodecs/WebGPU behave as in Chrome (INFERENCE from "Chromium"; the evergreen version depends on the installed runtime).
-- FACT: macOS: WebGPU is enabled by default in Safari 26 (macOS/iOS/iPadOS/visionOS), GA in September 2025. Source: search "Safari 26 WebGPU" (aggregators; the primary source would be https://webkit.org/blog/, not opened). WebCodecs: Safari has supported `VideoDecoder/VideoEncoder` since 16.4 (NOT VERIFIED in this session), and the Safari 26.1 notes cite a WebCodecs fix and the WebGPU renderer. Whether WKWebView (embedded) exposes the same features as the Safari app: NOT VERIFIED.
-- FACT (negative): the WebKitGTK 2.52 notes (2026-03-18) do not mention WebCodecs/WebGPU/OPFS: https://webkitgtk.org/2026/03/18/webkitgtk-2.52-highlights.html . The Igalia blog (Aug 2026) lists WebCodecs among GStreamer work, without confirming `VideoEncoder`. INFERENCE: Linux/WebKitGTK is the weakest link for an editor that depends on WebCodecs/WebGPU on the client.
+- FACT: macOS: WebGPU is enabled by default in Safari 26 (macOS/iOS/iPadOS/visionOS), GA in September 2025. Source: search "Safari 26 WebGPU" (aggregators; the primary source would be <https://webkit.org/blog/>, not opened). WebCodecs: Safari has supported `VideoDecoder/VideoEncoder` since 16.4 (NOT VERIFIED in this session), and the Safari 26.1 notes cite a WebCodecs fix and the WebGPU renderer. Whether WKWebView (embedded) exposes the same features as the Safari app: NOT VERIFIED.
+- FACT (negative): the WebKitGTK 2.52 notes (2026-03-18) do not mention WebCodecs/WebGPU/OPFS: <https://webkitgtk.org/2026/03/18/webkitgtk-2.52-highlights.html> . The Igalia blog (Aug 2026) lists WebCodecs among GStreamer work, without confirming `VideoEncoder`. INFERENCE: Linux/WebKitGTK is the weakest link for an editor that depends on WebCodecs/WebGPU on the client.
 - INFERENCE: the common floor across WebView2, WKWebView and WebKitGTK is weak for client-side encoding. Two coherent options, which are "simpler": (1) client-side preview with `<video>` + canvas 2D/WebGL, with render/export ALWAYS via FFmpeg (a Go process), without requiring WebCodecs; (2) Electron (or Tauri v3 CEF once it stabilizes) for guaranteed Chromium.
 - Why editors use Electron/Chromium: INFERENCE (consistency of WebCodecs/WebGPU/OPFS across OSes). Test target: run a feature-detection matrix (WebCodecs, WebGPU, OPFS, SharedArrayBuffer, `requestVideoFrameCallback`) in WebView2/WKWebView/WebKitGTK 6.0 before deciding. See Gaps.
 
@@ -249,7 +249,7 @@ OPINION: approach 1 with a single contract in JSON Schema (one schema per comman
 
 ### D2. Desktop: "same Go binary as local server + webview on localhost"
 
-FACT (indirect): Wails v3 offers "server mode": the same app and services run as an HTTP server without a native window (release v3.0.0), which shows the server+UI-in-one-binary pattern is supported by the framework. Source: https://github.com/wailsapp/wails/releases/tag/v3.0.0 (2026-11-14).
+FACT (indirect): Wails v3 offers "server mode": the same app and services run as an HTTP server without a native window (release v3.0.0), which shows the server+UI-in-one-binary pattern is supported by the framework. Source: <https://github.com/wailsapp/wails/releases/tag/v3.0.0> (2026-11-14).
 INFERENCE/NOT VERIFIED (training knowledge) about broad use of the pattern (e.g., Jupyter, Syncthing, tools with a local UI, Electron with an internal server) and its risks:
 
 - Port: use an ephemeral port (`127.0.0.1:0`), chosen by the process and passed to the webview; never `0.0.0.0`.

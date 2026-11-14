@@ -6,7 +6,7 @@ Generated 2026-11-14. Detailed sources in the profiles `docs/search/projects/{ca
 
 Legend for the product columns: **S** = confirmed in an official source or press cited in the profile; **s?** = only a secondary source or an inference (INFERENCE); **?** = not verified; **-** = not observed/absent according to review (may be a gap); **ext** = standard in DaVinci/Premiere/Descript, not observed in the 3 products, marked "probably out of scope". Complexity column: P/M/G, OPINION. Value: high/medium/low with a reason.
 
-Frequent-use evidence: there is only weak data: CapCut says Text, Effects, Extract Audio and Overlay are the most used, and that auto captions are among the most used AI features (https://www.capcut.com/newsroom/revealing-the-creative-trends-on-capcut-in-2025, accessed 2026-11-14; the vendor's own data). A statistic of "88% of creators use AI captions" (voxbooster) has no accessible methodology: do NOT use it. There is no verified independent research (gap).
+Frequent-use evidence: there is only weak data: CapCut says Text, Effects, Extract Audio and Overlay are the most used, and that auto captions are among the most used AI features (<https://www.capcut.com/newsroom/revealing-the-creative-trends-on-capcut-in-2025>, accessed 2026-11-14; the vendor's own data). A statistic of "88% of creators use AI captions" (voxbooster) has no accessible methodology: do NOT use it. There is no verified independent research (gap).
 
 | Feature | Category | CapCut | Canva | Clipchamp | Frequent-use evidence | Value case 1 (short 9:16) | Value case 2 (commercial) | Complexity (OPINION) |
 |---|---|---|---|---|---|---|---|---|
@@ -73,25 +73,31 @@ Method note: where the table says "s?" and "?", the source was not opened (many 
 Only what is marked OFFICIAL was verified in an official source; the rest is secondary. Accessed 2026-11-14. Much official information about organic Instagram/TikTok was not found.
 
 ### Instagram Reels
-- OFFICIAL (Meta, Ads Guide, via search): design resolution 1440x2560, 9:16; recommended safe zone: ~14% top, ~35% bottom, ~6% on each side free of text/logo (this is for ads, not necessarily organic). https://www.facebook.com/business/ads-guide/update/image/instagram-reels
-- Secondary: 1080x1920 9:16; MP4/MOV, H.264 + AAC; 30 fps is safe; 4 GB (ads value); duration: sources diverge (90 s to 20 min); avoid HEVC. E.g.: https://argil.ai/blog/instagram-reel-size-e350f . Current maximum organic duration: NOT CONFIRMED.
-- Stories/Reels safe zone page: https://www.facebook.com/business/help/980593475366490/ (content not retrieved).
+
+- OFFICIAL (Meta, Ads Guide, via search): design resolution 1440x2560, 9:16; recommended safe zone: ~14% top, ~35% bottom, ~6% on each side free of text/logo (this is for ads, not necessarily organic). <https://www.facebook.com/business/ads-guide/update/image/instagram-reels>
+- Secondary: 1080x1920 9:16; MP4/MOV, H.264 + AAC; 30 fps is safe; 4 GB (ads value); duration: sources diverge (90 s to 20 min); avoid HEVC. E.g.: <https://argil.ai/blog/instagram-reel-size-e350f> . Current maximum organic duration: NOT CONFIRMED.
+- Stories/Reels safe zone page: <https://www.facebook.com/business/help/980593475366490/> (content not retrieved).
 
 ### TikTok
-- OFFICIAL (non-Spark ads): 9:16 minimum 540x960 (1080x1920 recommended by third parties), 16:9 and 1:1 also; .mp4/.mov/.mpeg/.3gp/.avi; up to 10 min; up to 500 MB; bitrate >= 516 kbps; the safe zone depends on the caption and is provided as a template file (no public percentages on the page). https://ads.tiktok.com/help/article/video-ads-specifications
-- OFFICIAL (Content Posting API): file up to 4 GB; all creators can post 3 min, some 5 or 10 min. https://developers.tiktok.com/docs/en/content-posting-api-media-transfer-guide (via search). Share Video API: <= 50 MB, 3-60 s, MP4.
+
+- OFFICIAL (non-Spark ads): 9:16 minimum 540x960 (1080x1920 recommended by third parties), 16:9 and 1:1 also; .mp4/.mov/.mpeg/.3gp/.avi; up to 10 min; up to 500 MB; bitrate >= 516 kbps; the safe zone depends on the caption and is provided as a template file (no public percentages on the page). <https://ads.tiktok.com/help/article/video-ads-specifications>
+- OFFICIAL (Content Posting API): file up to 4 GB; all creators can post 3 min, some 5 or 10 min. <https://developers.tiktok.com/docs/en/content-posting-api-media-transfer-guide> (via search). Share Video API: <= 50 MB, 3-60 s, MP4.
 - Organic in the app/web (current size/duration limit): not confirmed in an official source; guides cite 287 MB iOS/72 MB Android (probably outdated).
 
 ### Kwai
-- NO official source FOUND. There is only a third-party blog (2024) saying 9:16 for ads. https://vidquickly.blogspot.com/2024/10/kwai-video-specifications-for-ads.html . Duration, bitrate, size, safe zone: UNKNOWN. Suggested action: open the Kwai for Business panel or the creators app. Provisionally treat it as TikTok (INFERENCE, no basis).
+
+- NO official source FOUND. There is only a third-party blog (2024) saying 9:16 for ads. <https://vidquickly.blogspot.com/2024/10/kwai-video-specifications-for-ads.html> . Duration, bitrate, size, safe zone: UNKNOWN. Suggested action: open the Kwai for Business panel or the creators app. Provisionally treat it as TikTok (INFERENCE, no basis).
 
 ### X
-- OFFICIAL (docs.x.com): post: 0.5 s to 20 min and up to 8 GB (standard); Premium/verified up to 125 min and 16 GB; H.264 High Profile, 30 or 60 fps; recommended 720x1280 vertical (Premium: 1080p with 1080p playback, others 720p); video bitrate >= 5000 kbps, audio 128 kbps; AAC-LC; required: <= 60 fps, dimensions 32x32 to 1280x1024, aspect ratio 1:3 to 3:1, square pixels, YUV 4:2:0, no open GOP, progressive. The container is not specified on this page. https://docs.x.com/x-api/media/quickstart/best-practices
+
+- OFFICIAL (docs.x.com): post: 0.5 s to 20 min and up to 8 GB (standard); Premium/verified up to 125 min and 16 GB; H.264 High Profile, 30 or 60 fps; recommended 720x1280 vertical (Premium: 1080p with 1080p playback, others 720p); video bitrate >= 5000 kbps, audio 128 kbps; AAC-LC; required: <= 60 fps, dimensions 32x32 to 1280x1024, aspect ratio 1:3 to 3:1, square pixels, YUV 4:2:0, no open GOP, progressive. The container is not specified on this page. <https://docs.x.com/x-api/media/quickstart/best-practices>
 - Conflict: another version of the same documentation says 512 MB and 140 s; the version above is the one that opened. X's UI safe zone: not found.
 
 ### YouTube Shorts
-- OFFICIAL: up to 3 minutes; maximum resolution 1080p; vertical. https://support.google.com/youtube/answer/10059070
+
+- OFFICIAL: up to 3 minutes; maximum resolution 1080p; vertical. <https://support.google.com/youtube/answer/10059070>
 - Secondary: classification as a Short requires a square or vertical aspect ratio and <= 3 min; 1080x1920 recommended; size: sources diverge. Safe zone: not found in an official source. Music limits (60/90 s) not verified.
 
 ### Cautious synthesis (OPINION, for preset decisions)
+
 - Common preset: MP4, H.264 + AAC, 9:16, 1080x1920, 30 fps (60 optional), and conservative text margins based on the Meta template (top ~14%, bottom ~35%, sides ~6%) until the TikTok/Kwai/Shorts/X templates are obtained.

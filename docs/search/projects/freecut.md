@@ -10,7 +10,7 @@ Legend: FACT, INFERENCE (with reasoning), OPINION.
 
 - FACT: the official repo is `walterlow/freecut`. Confirmation: the `homepage` field of the GitHub API is `http://freecut.net` and the README opens with "[freecut.net](http://freecut.net/)" and points to `https://freecut.net/docs` as the user guide ([README.md:3, 23](https://github.com/walterlow/freecut/blob/5ceeeb388eef5423640b7db157706274bf1b8165/README.md); `gh api repos/walterlow/freecut`, accessed 2026-11-14).
 - FACT: other candidates with the same name are NOT the official one: `SUP3RMASS1VE/freecut` (12 stars, same description, copy), `Moh4696/freecut` (fork of `browser-use/video-use`, another product), `Watertube-bilibili/freecut-desktop` (2 stars, third-party desktop), `Arlet/Freecut` (Cricut firmware), `geri1701/freecut` (cutting optimizer). Source: `gh search repos freecut` (accessed 2026-11-14).
-- FACT: https://www.freecut.net/ and https://www.freecut.net/docs serve an SPA (1408-byte HTML with `<div id="root">` and `main-*.js`); `curl` does not get the rendered content. See section 14 on how the docs structure was surveyed.
+- FACT: <https://www.freecut.net/> and <https://www.freecut.net/docs> serve an SPA (1408-byte HTML with `<div id="root">` and `main-*.js`); `curl` does not get the rendered content. See section 14 on how the docs structure was surveyed.
 
 ## 1. Stack (versions read from `package.json`)
 
@@ -133,6 +133,7 @@ export interface ItemKeyframes {
 ```
 
   `AnimatableProperty` includes built-in properties (x, y, width, height, rotation, opacity, crop*, volume, fontSize, trimPath*...), `pathVertex:<n>:<component>` and `effect:<id>:<..>:<..>`. Keyframes are kept in a separate record keyed by `itemId`, not inside the item.
+
 - FACT: transition ([types/transition.ts:121-157](https://github.com/walterlow/freecut/blob/5ceeeb388eef5423640b7db157706274bf1b8165/src/types/transition.ts)): `{ id, type, presentation, timing: 'linear'|'ease-in'|'ease-out'|'ease-in-out'|'cubic-bezier', leftClipId, rightClipId, trackId, durationInFrames, direction?, alignment?: 0..1 (0.5 default), bezierPoints?, presetId?, properties? }`. It is a separate entity linking two adjacent clips on the same track, not a field of the clip.
 
 ### Versioning and migration
