@@ -2,17 +2,17 @@ import { createInertiaApp } from "@inertiajs/react";
 
 import AppLayout from "./layouts/AppLayout";
 
-// Dark mode follows the "dark" class on <html>: the saved choice
-// (localStorage.theme = "dark" | "light") or the system preference. A theme
-// toggle flips the class and saves it.
+// Dark by default (D-024, SDD-012 section 17): the "dark" class on <html> is
+// set before paint by the inline script of app.html, from localStorage.theme
+// ("light" turns it off). The system preference is deliberately ignored. This
+// repeats the rule for the case where the script did not run.
 try {
-	const theme = localStorage.getItem("theme");
-	const dark = theme
-		? theme === "dark"
-		: matchMedia("(prefers-color-scheme: dark)").matches;
-	document.documentElement.classList.toggle("dark", dark);
+	document.documentElement.classList.toggle(
+		"dark",
+		localStorage.getItem("theme") !== "light",
+	);
 } catch {
-	// Storage can be blocked (private mode): keep the default theme.
+	document.documentElement.classList.add("dark");
 }
 
 // The @inertiajs/vite plugin resolves pages from ./pages and mounts the app.
@@ -23,7 +23,7 @@ createInertiaApp({
 	layout: () => AppLayout,
 	nonce: document.querySelector<HTMLMetaElement>('meta[property="csp-nonce"]')
 		?.nonce,
-	progress: { color: "#4f46e5" },
+	progress: { color: "oklch(0.62 0.17 255)" },
 }).finally(() => {
 	// app.html sets data-hydrating; style it (button:disabled, a pending hint)
 	// for the gap before the app mounts.

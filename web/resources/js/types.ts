@@ -1,11 +1,29 @@
-// Shapes of the props the Go controllers send.
+// Shapes of the props the Go controllers send. Project data comes from
+// service.Service (SDD-003 section 2.3) and is only drawn here (SDD-012 T1).
 
-export interface Post {
-	id: number;
-	title: string;
-	body: string;
-	created_at: string;
+// ProjectSummary mirrors the Go type of the same name.
+export interface ProjectSummary {
+	id: string;
+	name: string;
+	revision: number;
+	state: "active" | "trashed";
+	width: number;
+	height: number;
+	fps: string;
+	duration: { frame: number; seconds: number };
+	tracks: number;
+	items: number;
+	assets: number;
 	updated_at: string;
+}
+
+// The size presets of RF-002; the core owns what each one means.
+export const SIZE_PRESETS = ["9:16", "1:1", "16:9", "4:5"] as const;
+export type SizePreset = (typeof SIZE_PRESETS)[number];
+
+export interface ProjectsIndexProps {
+	projects: ProjectSummary[];
+	[key: string]: unknown;
 }
 
 export interface User {
@@ -15,41 +33,10 @@ export interface User {
 	email_verified_at: string | null;
 }
 
-export interface JobListItem {
-	id: number;
-	subject: string;
-	status: string;
-	duration: number;
-	style_skill: string;
-	ratio: string;
-}
-
-export interface VideoJob extends JobListItem {
-	goal: string;
-	audience: string;
-	language: string;
-	facts: string;
-	links: string;
-	call_to_action: string;
-	voice: string;
-	music_license: string;
-	prompt: string;
-	model_id: string;
-	script: string;
-	failure: string;
-	sidecar_json: string;
-	pack_platform: string;
-	pack_title: string;
-	pack_description: string;
-	pack_hashtags: string;
-}
-
 export interface SharedProps {
 	appName: string;
-	// From the sidebar_state cookie (routes/web.go shareProps).
-	sidebarOpen?: boolean;
 	errors: Record<string, string>;
-	// Present after vukem install:auth.
+	// Present in network mode (ALPHA).
 	auth?: { user: User | null };
 	[key: string]: unknown;
 }

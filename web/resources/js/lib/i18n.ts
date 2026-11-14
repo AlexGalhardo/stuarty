@@ -1,6 +1,12 @@
-import { usePage } from "@inertiajs/react";
+import {
+	createContext,
+	createElement,
+	type ReactNode,
+	useContext,
+} from "react";
 
-// Props shared by inertia.I18n("ui.") in routes/web.go (vukem.dev/docs/frontend/inertia-i18n).
+// The catalog the server sends: inertia.I18n("ui.") for Inertia pages, the
+// bootstrap object for the editor (SDD-012 section 16.3).
 export type Message = string | Record<string, string>;
 
 export interface I18nProps {
@@ -35,7 +41,36 @@ export function translate(
 	);
 }
 
+export interface I18nContextValue {
+	messages: Record<string, Message>;
+	locale: string;
+}
+
+const I18nContext = createContext<I18nContextValue>({
+	messages: {},
+	locale: "en",
+});
+
+// I18nProvider feeds useT. Inertia pages get it from AppLayout (props of the
+// page); the editor gets it from its bootstrap, so shared components such as
+// ThemeToggle serve both without importing Inertia.
+export function I18nProvider({
+	messages,
+	locale,
+	children,
+}: I18nContextValue & { children?: ReactNode }): ReactNode {
+	return createElement(
+		I18nContext.Provider,
+		{ value: { messages, locale } },
+		children,
+	);
+}
+
 export function useT(): Translate {
-	const { messages = {}, locale = "en" } = usePage<I18nProps>().props;
+	const { messages, locale } = useContext(I18nContext);
 	return (key, params = {}) => translate(messages, locale, key, params);
+}
+
+export function useLocale(): string {
+	return useContext(I18nContext).locale;
 }

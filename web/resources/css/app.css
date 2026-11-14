@@ -4,8 +4,9 @@
 @import "@fontsource-variable/geist";
 
 /* Inertia pages style themselves with Tailwind utilities. Dark mode follows
-   the "dark" class on <html> (set before paint in app.html), so a theme
-   toggle can override the system preference. */
+   the "dark" class on <html>, set before paint in app.html: dark unless
+   localStorage.theme is "light", never the system preference (D-024). The
+   color-scheme property below makes scrollbars and form controls match. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
@@ -129,5 +130,9 @@
     }
   html {
     @apply font-sans;
+    color-scheme: light;
+    }
+  html.dark {
+    color-scheme: dark;
     }
 }
