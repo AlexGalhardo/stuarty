@@ -322,7 +322,7 @@ A project with no audio source exports a silent stereo track, so the file always
 1. **Check.** Run the lint; findings marked blocking stop the export with `E_LINT_BLOCKING`. An empty timeline is blocking. Total frames `N` is the end of the last item.
 2. **Encoder.** Pick the H.264 encoder from the detection result (ADR-0011 item 5), or the one forced by `VUKEM_VIDEO_ENCODER`. None available: `E_NO_ENCODER`.
 3. **Audio.** Mix as in section 7.
-4. **Video.** Start the encoder process and write `N` composed frames to its standard input:
+4. **Video.** Start the encoder process and write `N` composed frames to its standard input (the pinned `contrib/engine` v0.1.1 cannot feed a child's standard input, so `Runner.RunFFmpeg` refuses a `pipe:0` argv with `E_INTERNAL` `stdin_unsupported` until vukem releases `Config.Prepare`, see `vukem-feedback.md` VF-031):
 
 ```text
 ffmpeg -nostdin -protocol_whitelist file,pipe
