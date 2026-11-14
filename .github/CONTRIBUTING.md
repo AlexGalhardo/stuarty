@@ -47,7 +47,17 @@ Release notes have five sections only (D-027), so pick the commit type with that
 
 ## Checks
 
-The task runner (`task lint`, `task test`, `task ci`) and the pull request pipeline arrive with later tasks. Until then run what exists: `go build ./...`, `go vet ./...` and `go test ./...` at the root, and the scripts of `web/package.json` in `web/` (Bun, not npm). The same checks run on Linux, macOS and Windows.
+Run `task ci` before you push: `task lint`, `task vet`, `task test`, `task tidy:check` and `task notices:check`. The pull request pipeline (`ci.yml`) runs these jobs, each with `timeout-minutes: 20`; the ruleset requires them, so a name below is the name of the check:
+
+- `Lint (Go)`, `Lint (Markdown)`, `Types and lint (web)`
+- `Test (ubuntu-latest)`, `Test (windows-latest)`, `Test (macos-latest)`: `go test -race`, the coverage gate on Linux, and `BenchmarkExportCommonCase` with the floor of 1.5 x real time (`VUKEM_VIDEO_BENCH_MIN_RT`)
+- `Generated files`: `task codegen` leaves `core/schema/` and `web/resources/js/generated/` unchanged; after a change to a generator run `task codegen` and commit
+- `Release build (snapshot)`: GoReleaser dry run, six archives under 60,000,000 bytes
+- `Browser tests (Playwright)`: `bun run e2e` in `web/`
+- `Sandbox (bwrap)`: `TestSecurity_T16_` must pass, not skip
+- `Notices`, `Vulnerabilities`, `Workflow pins`
+
+`Golden cases (PATH FFmpeg)` is reported and does not block. `nightly.yml` runs once a day the long benchmarks, the 60 s export and the soak tests; a failure opens a `ci-failure` issue. `bash scripts/ci-time.sh` prints the median and the maximum of the last 10 pull request runs of `CI` (the budget is a median under 15 minutes and no run over 20, NFR-042). The same checks run on Linux, macOS and Windows. Work in `web/` uses Bun, not npm.
 
 ### Third-party notices
 

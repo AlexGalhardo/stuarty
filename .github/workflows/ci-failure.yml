@@ -9,7 +9,7 @@ name: CI failure issue
 # of runs from this repository, so it carries no Dangerous-Workflow risk.
 on:
   workflow_run:
-    workflows: [CI, Site, Fuzz, "Vulnerabilities (weekly)", Scorecard, Secrets, CodeQL]
+    workflows: [CI, Site, Fuzz, Nightly, "Vulnerabilities (weekly)", Scorecard, Secrets, CodeQL]
     types: [completed]
 
 permissions:

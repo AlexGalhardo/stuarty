@@ -1,0 +1,73 @@
+name: Nightly
+
+# What is too slow for a pull request: the long benchmarks, the 60 s export test
+# of NFR-006 and NFR-007, and the soak and 5-minute fixture tests (names matching
+# Soak and Fixture5Min, which run when they exist). Once a day and on demand.
+# A failure opens a ci-failure issue like the other scheduled workflows. The
+# numbers are in each job summary.
+on:
+  schedule:
+    - cron: "41 2 * * *" # every day 02:41 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  benchmarks:
+    name: Long benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Install FFmpeg
+        run: |
+          bin_dir="$(bash scripts/install-ffmpeg.sh)"
+          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+      - name: Benchmarks
+        env:
+          VUKEM_VIDEO_BENCH_MIN_RT: "1.5"
+        run: |
+          go test -run '^$' -bench . -benchtime=3x -benchmem -count=1 -timeout=15m ./core/... ./engine/... ./web/app/servicetest/... | tee bench.txt
+          { echo '### Benchmarks'; echo '```'; grep -E "^(Benchmark|ok|FAIL)" bench.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: The 60 s export (NFR-006, NFR-007)
+        run: |
+          go test -count=1 -v -run TestExportSixtySecondsStaysUnder500MB -timeout=10m ./engine/export/ | tee export60.txt
+          { echo '### 60 s export'; echo '```'; grep -E "x real time|^(ok|FAIL|--- )" export60.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+  soak:
+    name: Soak and 5-minute fixture
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Install FFmpeg
+        run: |
+          bin_dir="$(bash scripts/install-ffmpeg.sh)"
+          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+      - name: Soak and Fixture5Min tests
+        run: |
+          go test -count=1 -v -run 'Soak|Fixture5Min' -timeout=15m ./... | tee soak.txt
+          {
+            echo '### Soak and 5-minute fixture'
+            echo '```'
+            grep -E -- "^(--- |ok|FAIL)" soak.txt | grep -v "no test files" || true
+            echo '```'
+            if ! grep -q -- "--- PASS:" soak.txt; then echo "No soak or fixture test exists yet."; fi
+          } >> "$GITHUB_STEP_SUMMARY"
