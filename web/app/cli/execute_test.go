@@ -331,3 +331,26 @@ func TestHelpIsAtMost40Lines(t *testing.T) {
 		}
 	}
 }
+
+func TestCommandHelp(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+
+	if code := h.run(
+		"command:help",
+	); code != ExitOK || h.stdout.String() != "help "+string(rune(10)) ||
+		h.svc.helpReq.Name != "" {
+		t.Fatalf("list: exit %d, %q, %+v", code, h.stdout.String(), h.svc.helpReq)
+	}
+
+	if code := h.run("command:help", "item.move", "--json"); code != ExitOK || h.svc.helpReq.Name != "item.move" {
+		t.Fatalf("one command: exit %d, %+v", code, h.svc.helpReq)
+	}
+
+	oneJSONDocument(t, h.stdout.String())
+
+	if code := h.run("command:help", "a", "b"); code != ExitFailure {
+		t.Fatalf("two names must fail, exit %d", code)
+	}
+}

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -144,12 +145,18 @@ func truncate(s string, limit int) string {
 
 // writeJSON prints one JSON document and a newline.
 func writeJSON(w io.Writer, v any) error {
-	raw, err := json.Marshal(v)
-	if err != nil {
+	var buf bytes.Buffer
+
+	enc := json.NewEncoder(&buf)
+	// "<" and ">" stay as they are: the texts carry <untrusted_media_text> blocks and an
+	// escaped form costs an agent tokens (SDD-003 section 5.6 shows them unescaped).
+	enc.SetEscapeHTML(false)
+
+	if err := enc.Encode(v); err != nil {
 		return fmt.Errorf("encode the result: %w", err)
 	}
 
-	_, err = fmt.Fprintf(w, "%s\n", raw)
+	_, err := w.Write(buf.Bytes())
 
 	return err
 }

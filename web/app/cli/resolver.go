@@ -4,21 +4,22 @@ import (
 	"context"
 	"errors"
 	"os"
+	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/remote"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 	"github.com/AlexGalhardo/vukem-video/web/app/store"
 )
 
-// LocalResolver is the Resolver of the binary: it finds the workspace owner
-// with workspace.Open (SDD-005 section 6.4) and, when no server owns the
-// workspace, runs the Service in this process over the SQLite store.
-//
-// Until the remote client of P1-SRV-005 exists, a workspace owned by a running
-// server (or a remote server in VUKEM_VIDEO_URL) is reported as an error
-// that says so, instead of being opened a second time.
+// LocalResolver is the Resolver of the binary (SDD-003 section 5.2): it finds
+// the workspace owner with workspace.Open (SDD-005 section 6.4). A remote
+// server (VUKEM_VIDEO_URL) or a local owner becomes service/remote over HTTP;
+// when no server owns the workspace, the Service runs in this process over the
+// SQLite store.
 type LocalResolver struct {
 	// Getenv defaults to os.Getenv.
 	Getenv func(string) string
@@ -48,12 +49,8 @@ func (r LocalResolver) Resolve(ctx context.Context, t Target) (*Connection, erro
 		return nil, err
 	}
 
-	if sess.Mode != workspace.ModeInProcess {
-		return nil, &service.Error{
-			Code:    command.CodeInternal,
-			Message: "a server owns this workspace and the CLI client for a server is not available yet.",
-			Hint:    "stop the server, or wait for task P1-SRV-005",
-		}
+	if sess.Mode == workspace.ModeHTTP {
+		return httpConnection(sess), nil
 	}
 
 	conn, err := openInProcess(ctx, sess)
@@ -63,6 +60,21 @@ func (r LocalResolver) Resolve(ctx context.Context, t Target) (*Connection, erro
 	}
 
 	return conn, nil
+}
+
+// callTimeout bounds one HTTP call; a longer wait is the job of --wait.
+const callTimeout = 2 * time.Minute
+
+// httpConnection is steps 1 and 2 of SDD-003 section 5.2. Without a workspace
+// directory the address came from VUKEM_VIDEO_URL and any host is allowed; a
+// local owner is reached on loopback only.
+func httpConnection(sess *workspace.Session) *Connection {
+	hc := outbound.LocalServer(callTimeout)
+	if sess.Dir == "" {
+		hc = outbound.RemoteServer(callTimeout)
+	}
+
+	return &Connection{Service: remote.New(sess.BaseURL, sess.Token, hc), Workspace: string(sess.Dir)}
 }
 
 func openInProcess(ctx context.Context, sess *workspace.Session) (*Connection, error) {
