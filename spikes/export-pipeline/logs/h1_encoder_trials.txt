@@ -1,0 +1,93 @@
+== h264_mf
+OK exit=0 size=2575978
+== libopenh264
+OK exit=0 size=1956931
+== h264_nvenc
+OK exit=0 size=3023349
+== h264_qsv
+[h264_qsv @ 000001e2f3d401c0] Error creating a MFX session: -9.
+[h264_qsv @ 000001e2f3d401c0] The current mfx implementation is not supported, try next mfx implementation.
+[h264_qsv @ 000001e2f3d401c0] Error creating a MFX session: -9.
+[vost#0:0/h264_qsv @ 000001e2f39dfc00] [enc:h264_qsv @ 000001e2f1a7c480] Error while opening encoder - maybe incorrect parameters such as bit_rate, rate, width or height.
+[vf#0:0 @ 000001e2f1a8d840] Error sending frames to consumers: Unknown error occurred
+[vf#0:0 @ 000001e2f1a8d840] Task finished with error code: -1313558101 (Unknown error occurred)
+[vf#0:0 @ 000001e2f1a8d840] Terminating thread with return code -1313558101 (Unknown error occurred)
+[vost#0:0/h264_qsv @ 000001e2f39dfc00] [enc:h264_qsv @ 000001e2f1a7c480] Could not open encoder before EOF
+[vost#0:0/h264_qsv @ 000001e2f39dfc00] Task finished with error code: -22 (Invalid argument)
+[vost#0:0/h264_qsv @ 000001e2f39dfc00] Terminating thread with return code -22 (Invalid argument)
+[out#0/mp4 @ 000001e2f1a1afc0] Nothing was written into output file, because at least one of its streams received no packets.
+FAILED exit=171
+== h264_amf
+[AMF @ 000001e84e903080] AMFQueryVersion failed with error 1
+[h264_amf @ 000001e8506d0600] Failed to create  hardware device context (AMF) : Unknown error occurred
+[vost#0:0/h264_amf @ 000001e8506cff40] [enc:h264_amf @ 000001e84e8cd3c0] Error while opening encoder - maybe incorrect parameters such as bit_rate, rate, width or height.
+[vf#0:0 @ 000001e8506d0780] Error sending frames to consumers: Unknown error occurred
+[vf#0:0 @ 000001e8506d0780] Task finished with error code: -1313558101 (Unknown error occurred)
+[vf#0:0 @ 000001e8506d0780] Terminating thread with return code -1313558101 (Unknown error occurred)
+[vost#0:0/h264_amf @ 000001e8506cff40] [enc:h264_amf @ 000001e84e8cd3c0] Could not open encoder before EOF
+[vost#0:0/h264_amf @ 000001e8506cff40] Task finished with error code: -22 (Invalid argument)
+[vost#0:0/h264_amf @ 000001e8506cff40] Terminating thread with return code -22 (Invalid argument)
+[out#0/mp4 @ 000001e84e86b500] Nothing was written into output file, because at least one of its streams received no packets.
+FAILED exit=171
+== h264_d3d12va
+Impossible to convert between the formats supported by the filter 'Parsed_format_0' and the filter 'auto_scale_0'
+Link 'Parsed_format_0.default' -> 'auto_scale_0.default':
+  Pixel formats:
+    src: yuv420p
+    dst: yuv420p
+Link 'auto_scale_0.default' -> 'format.default':
+  Pixel formats:
+    src: yuv420p yuyv422 rgb24 bgr24 yuv422p yuv444p yuv410p yuv411p gray monow monob pal8 yuvj420p yuvj422p yuvj444p uyvy422 bgr8 bgr4 bgr4_byte rgb8 rgb4 rgb4_byte nv12 nv21 argb rgba abgr bgra gray16be gray16le yuv440p yuvj440p yuva420p rgb48be rgb48le rgb565be rgb565le rgb555be rgb555le bgr565be bgr565le bgr555be bgr555le yuv420p16le yuv420p16be yuv422p16le yuv422p16be yuv444p16le yuv444p16be rgb444le rgb444be bgr444le bgr444be ya8 bgr48be bgr48le yuv420p9be yuv420p9le yuv420p10be yuv420p10le yuv422p10be yuv422p10le yuv444p9be yuv444p9le yuv444p10be yuv444p10le yuv422p9be yuv422p9le gbrp gbrp9be gbrp9le gbrp10be gbrp10le gbrp16be gbrp16le yuva422p yuva444p yuva420p9be yuva420p9le yuva422p9be yuva422p9le yuva444p9be yuva444p9le yuva420p10be yuva420p10le yuva422p10be yuva422p10le yuva444p10be yuva444p10le yuva420p16be yuva420p16le yuva422p16be yuva422p16le yuva444p16be yuva444p16le xyz12le xyz12be nv16 nv20le nv20be rgba64be rgba64le bgra64be bgra64le yvyu422 ya16be ya16le gbrap gbrap16be gbrap16le 0rgb rgb0 0bgr bgr0 yuv420p12be yuv420p12le yuv420p14be yuv420p14le yuv422p12be yuv422p12le yuv422p14be yuv422p14le yuv444p12be yuv444p12le yuv444p14be yuv444p14le gbrp12be gbrp12le gbrp14be gbrp14le yuvj411p yuv440p10le yuv440p10be yuv440p12le yuv440p12be ayuv64le ayuv64be p010le p010be gbrap12be gbrap12le gbrap10be gbrap10le gray12be gray12le gray10be gray10le p016le p016be gray9be gray9le gbrpf32be gbrpf32le gbrapf32be gbrapf32le gray14be gray14le grayf32be grayf32le yuva422p12be yuva422p12le yuva444p12be yuva444p12le nv24 nv42 y210le x2rgb10le x2bgr10le p210be p210le p410be p410le p216be p216le p416be p416le vuya vuyx p012le p012be y212le xv30le xv36be xv36le p212be p212le p412be p412le gbrap14be gbrap14le ayuv uyva vyu444 v30xle y216le xv48be xv48le yuv444p10msbbe yuv444p10msble yuv444p12msbbe yuv444p12msble gbrp10msbbe gbrp10msble gbrp12msbbe gbrp12msble
+    dst: d3d12
+[vf#0:0 @ 0000022ac1bcee40] Error reinitializing filters!
+[vf#0:0 @ 0000022ac1bcee40] Task finished with error code: -40 (Function not implemented)
+[vf#0:0 @ 0000022ac1bcee40] Terminating thread with return code -40 (Function not implemented)
+[vost#0:0/h264_d3d12va @ 0000022ac3cc05c0] [enc:h264_d3d12va @ 0000022ac1bbd840] Could not open encoder before EOF
+[vost#0:0/h264_d3d12va @ 0000022ac3cc05c0] Task finished with error code: -22 (Invalid argument)
+[vost#0:0/h264_d3d12va @ 0000022ac3cc05c0] Terminating thread with return code -22 (Invalid argument)
+[out#0/mp4 @ 0000022ac1b5c1c0] Nothing was written into output file, because at least one of its streams received no packets.
+FAILED exit=127
+== h264_vulkan
+Impossible to convert between the formats supported by the filter 'Parsed_format_0' and the filter 'auto_scale_0'
+Link 'Parsed_format_0.default' -> 'auto_scale_0.default':
+  Pixel formats:
+    src: yuv420p
+    dst: yuv420p
+Link 'auto_scale_0.default' -> 'format.default':
+  Pixel formats:
+    src: yuv420p yuyv422 rgb24 bgr24 yuv422p yuv444p yuv410p yuv411p gray monow monob pal8 yuvj420p yuvj422p yuvj444p uyvy422 bgr8 bgr4 bgr4_byte rgb8 rgb4 rgb4_byte nv12 nv21 argb rgba abgr bgra gray16be gray16le yuv440p yuvj440p yuva420p rgb48be rgb48le rgb565be rgb565le rgb555be rgb555le bgr565be bgr565le bgr555be bgr555le yuv420p16le yuv420p16be yuv422p16le yuv422p16be yuv444p16le yuv444p16be rgb444le rgb444be bgr444le bgr444be ya8 bgr48be bgr48le yuv420p9be yuv420p9le yuv420p10be yuv420p10le yuv422p10be yuv422p10le yuv444p9be yuv444p9le yuv444p10be yuv444p10le yuv422p9be yuv422p9le gbrp gbrp9be gbrp9le gbrp10be gbrp10le gbrp16be gbrp16le yuva422p yuva444p yuva420p9be yuva420p9le yuva422p9be yuva422p9le yuva444p9be yuva444p9le yuva420p10be yuva420p10le yuva422p10be yuva422p10le yuva444p10be yuva444p10le yuva420p16be yuva420p16le yuva422p16be yuva422p16le yuva444p16be yuva444p16le xyz12le xyz12be nv16 nv20le nv20be rgba64be rgba64le bgra64be bgra64le yvyu422 ya16be ya16le gbrap gbrap16be gbrap16le 0rgb rgb0 0bgr bgr0 yuv420p12be yuv420p12le yuv420p14be yuv420p14le yuv422p12be yuv422p12le yuv422p14be yuv422p14le yuv444p12be yuv444p12le yuv444p14be yuv444p14le gbrp12be gbrp12le gbrp14be gbrp14le yuvj411p yuv440p10le yuv440p10be yuv440p12le yuv440p12be ayuv64le ayuv64be p010le p010be gbrap12be gbrap12le gbrap10be gbrap10le gray12be gray12le gray10be gray10le p016le p016be gray9be gray9le gbrpf32be gbrpf32le gbrapf32be gbrapf32le gray14be gray14le grayf32be grayf32le yuva422p12be yuva422p12le yuva444p12be yuva444p12le nv24 nv42 y210le x2rgb10le x2bgr10le p210be p210le p410be p410le p216be p216le p416be p416le vuya vuyx p012le p012be y212le xv30le xv36be xv36le p212be p212le p412be p412le gbrap14be gbrap14le ayuv uyva vyu444 v30xle y216le xv48be xv48le yuv444p10msbbe yuv444p10msble yuv444p12msbbe yuv444p12msble gbrp10msbbe gbrp10msble gbrp12msbbe gbrp12msble
+    dst: vulkan
+[vf#0:0 @ 00000153d9ce0600] Error reinitializing filters!
+[vf#0:0 @ 00000153d9ce0600] Task finished with error code: -40 (Function not implemented)
+[vf#0:0 @ 00000153d9ce0600] Terminating thread with return code -40 (Function not implemented)
+[vost#0:0/h264_vulkan @ 00000153d9ce0000] [enc:h264_vulkan @ 00000153d7f5ffc0] Could not open encoder before EOF
+[vost#0:0/h264_vulkan @ 00000153d9ce0000] Task finished with error code: -22 (Invalid argument)
+[vost#0:0/h264_vulkan @ 00000153d9ce0000] Terminating thread with return code -22 (Invalid argument)
+[out#0/mp4 @ 00000153d7efd740] Nothing was written into output file, because at least one of its streams received no packets.
+FAILED exit=127
+== h264_vaapi
+Impossible to convert between the formats supported by the filter 'Parsed_format_0' and the filter 'auto_scale_0'
+Link 'Parsed_format_0.default' -> 'auto_scale_0.default':
+  Pixel formats:
+    src: yuv420p
+    dst: yuv420p
+Link 'auto_scale_0.default' -> 'format.default':
+  Pixel formats:
+    src: yuv420p yuyv422 rgb24 bgr24 yuv422p yuv444p yuv410p yuv411p gray monow monob pal8 yuvj420p yuvj422p yuvj444p uyvy422 bgr8 bgr4 bgr4_byte rgb8 rgb4 rgb4_byte nv12 nv21 argb rgba abgr bgra gray16be gray16le yuv440p yuvj440p yuva420p rgb48be rgb48le rgb565be rgb565le rgb555be rgb555le bgr565be bgr565le bgr555be bgr555le yuv420p16le yuv420p16be yuv422p16le yuv422p16be yuv444p16le yuv444p16be rgb444le rgb444be bgr444le bgr444be ya8 bgr48be bgr48le yuv420p9be yuv420p9le yuv420p10be yuv420p10le yuv422p10be yuv422p10le yuv444p9be yuv444p9le yuv444p10be yuv444p10le yuv422p9be yuv422p9le gbrp gbrp9be gbrp9le gbrp10be gbrp10le gbrp16be gbrp16le yuva422p yuva444p yuva420p9be yuva420p9le yuva422p9be yuva422p9le yuva444p9be yuva444p9le yuva420p10be yuva420p10le yuva422p10be yuva422p10le yuva444p10be yuva444p10le yuva420p16be yuva420p16le yuva422p16be yuva422p16le yuva444p16be yuva444p16le xyz12le xyz12be nv16 nv20le nv20be rgba64be rgba64le bgra64be bgra64le yvyu422 ya16be ya16le gbrap gbrap16be gbrap16le 0rgb rgb0 0bgr bgr0 yuv420p12be yuv420p12le yuv420p14be yuv420p14le yuv422p12be yuv422p12le yuv422p14be yuv422p14le yuv444p12be yuv444p12le yuv444p14be yuv444p14le gbrp12be gbrp12le gbrp14be gbrp14le yuvj411p yuv440p10le yuv440p10be yuv440p12le yuv440p12be ayuv64le ayuv64be p010le p010be gbrap12be gbrap12le gbrap10be gbrap10le gray12be gray12le gray10be gray10le p016le p016be gray9be gray9le gbrpf32be gbrpf32le gbrapf32be gbrapf32le gray14be gray14le grayf32be grayf32le yuva422p12be yuva422p12le yuva444p12be yuva444p12le nv24 nv42 y210le x2rgb10le x2bgr10le p210be p210le p410be p410le p216be p216le p416be p416le vuya vuyx p012le p012be y212le xv30le xv36be xv36le p212be p212le p412be p412le gbrap14be gbrap14le ayuv uyva vyu444 v30xle y216le xv48be xv48le yuv444p10msbbe yuv444p10msble yuv444p12msbbe yuv444p12msble gbrp10msbbe gbrp10msble gbrp12msbbe gbrp12msble
+    dst: vaapi
+[vf#0:0 @ 0000022aa0550540] Error reinitializing filters!
+[vf#0:0 @ 0000022aa0550540] Task finished with error code: -40 (Function not implemented)
+[vf#0:0 @ 0000022aa0550540] Terminating thread with return code -40 (Function not implemented)
+[vost#0:0/h264_vaapi @ 0000022aa054ff40] [enc:h264_vaapi @ 0000022a9e381dc0] Could not open encoder before EOF
+[vost#0:0/h264_vaapi @ 0000022aa054ff40] Task finished with error code: -22 (Invalid argument)
+[vost#0:0/h264_vaapi @ 0000022aa054ff40] Terminating thread with return code -22 (Invalid argument)
+[out#0/mp4 @ 0000022a9e31fbc0] Nothing was written into output file, because at least one of its streams received no packets.
+FAILED exit=127
+== audio aac
+[out#0/ipod @ 00000279ef749ac0] video:0KiB audio:32KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 3.527906%
+size=      33KiB time=00:00:02.00 bitrate= 135.9kbits/s speed=18.5x elapsed=0:00:00.10    
+[aac @ 00000279ef7cdec0] Qavg: 61464.941
+== audio aac_mf
+      encoder         : Lavc63.1.102 aac_mf
+[out#0/ipod @ 0000018a3c0fe6c0] video:0KiB audio:47KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 2.354856%
+size=      49KiB time=00:00:02.02 bitrate= 196.7kbits/s speed=62.6x elapsed=0:00:00.03    

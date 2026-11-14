@@ -1,0 +1,5 @@
+$WORK/h_c1_1.txt vs $WORK/h_c1_2.txt: frames=900/900 differing=0
+$WORK/h_c4_1.txt vs $WORK/h_c4_2.txt: frames=900/900 differing=0
+$WORK/h_c4a_1.txt vs $WORK/h_c4a_2.txt: frames=900/900 differing=0
+$WORK/h_c1_1.txt vs $WORK/h_c1b_1.txt: frames=900/900 differing=0
+$WORK/h_c4_1.txt vs $WORK/h_c4b_1.txt: frames=900/900 differing=2

@@ -1,0 +1,8 @@
+{"model":"tiny","clip":"pt90","r":{"ref_words": 40, "errors": 12, "ops": ["S chronicas->cronicas", "S villa->vila", "S ltaguahy->taguai", "S vivera->viver", "S alli->ali", "S um->em", "I doutor", "S dr->se", "S simao->mao", "S bacamarte->macamarte", "S brazil->brasil", "S hespanhas->espanhas"]}}
+{"model":"tiny","clip":"en90","r":{"ref_words": 40, "errors": 4, "ops": ["D what", "S is->whats", "S thought->about", "S conversations->conversation"]}}
+{"model":"base","clip":"pt90","r":{"ref_words": 40, "errors": 11, "ops": ["S chronicas->cronicas", "S villa->vila", "S ltaguahy->taguai", "S vivera->viver", "S alli->ali", "I doutor", "S dr->se", "S simao->mao", "S bacamarte->macamarte", "S brazil->brasil", "S hespanhas->espanhas"]}}
+{"model":"base","clip":"en90","r":{"ref_words": 40, "errors": 3, "ops": ["D what", "S is->whats", "S conversations->conversation"]}}
+{"model":"small","clip":"pt90","r":{"ref_words": 40, "errors": 9, "ops": ["S chronicas->cronicas", "S villa->vila", "S ltaguahy->taguai", "S vivera->viveram", "S alli->ali", "S dr->doutor", "S brazil->brasil", "S hespanhas->espanhas", "S estudara->estudaram"]}}
+{"model":"small","clip":"en90","r":{"ref_words": 40, "errors": 3, "ops": ["D what", "S is->whats", "S conversations->conversation"]}}
+{"model":"large-v3-turbo","clip":"pt90","r":{"ref_words": 40, "errors": 7, "ops": ["S chronicas->cronicas", "S villa->vila", "S ltaguahy->itaguai", "S alli->ali", "S dr->doutor", "S brazil->brasil", "S hespanhas->espanhas"]}}
+{"model":"large-v3-turbo","clip":"en90","r":{"ref_words": 40, "errors": 3, "ops": ["D what", "S is->whats", "S conversations->conversation"]}}

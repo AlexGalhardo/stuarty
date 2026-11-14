@@ -1,0 +1,1 @@
+no --enable-gpl / --enable-nonfree in LGPL configure line
