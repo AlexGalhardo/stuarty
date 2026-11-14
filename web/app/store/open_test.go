@@ -107,8 +107,11 @@ func TestOpenUnderSpaceAndNonASCIIPath(t *testing.T) {
 func TestOpenRefusesUnknownMigration(t *testing.T) {
 	d := newDir(t)
 	s := openStore(t, d, Options{})
-	if _, err := s.db.ExecContext(context.Background(),
-		"INSERT INTO migrations (id, batch, checksum, ran_at) VALUES ('29990101000000_from_the_future', 9, 'x', ?)", time.Now().UTC()); err != nil {
+	if _, err := s.db.ExecContext(
+		context.Background(),
+		"INSERT INTO migrations (id, batch, checksum, ran_at) VALUES ('29990101000000_from_the_future', 9, 'x', ?)",
+		time.Now().UTC(),
+	); err != nil {
 		t.Fatal(err)
 	}
 	before := scalar[int](t, s, "SELECT count(*) FROM migrations")
@@ -148,7 +151,8 @@ func TestOpenRefusesNewerSchemaVersion(t *testing.T) {
 
 	_, err := Open(context.Background(), d, Options{SchemaVersion: 1})
 	var newer *NewerWorkspaceError
-	if !errors.As(err, &newer) || !strings.Contains(err.Error(), "schema version 2") || !strings.Contains(err.Error(), "knows 1") {
+	if !errors.As(err, &newer) || !strings.Contains(err.Error(), "schema version 2") ||
+		!strings.Contains(err.Error(), "knows 1") {
 		t.Fatalf("err = %v, want both numbers", err)
 	}
 	if s2, err := Open(context.Background(), d, Options{SchemaVersion: 2}); err != nil {

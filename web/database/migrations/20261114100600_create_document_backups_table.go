@@ -18,7 +18,9 @@ func m20261114100600CreateDocumentBackupsTable() schema.Migration {
 )`); err != nil {
 				return err
 			}
-			return s.Raw(`CREATE INDEX document_backups_owner_kind_owner_id_index ON document_backups (owner_kind, owner_id)`)
+			return s.Raw(
+				`CREATE INDEX document_backups_owner_kind_owner_id_index ON document_backups (owner_kind, owner_id)`,
+			)
 		},
 		Down: func(s *schema.Schema) error { return s.DropIfExists("document_backups") },
 	}

@@ -291,7 +291,14 @@ type AssetRepo interface {
 	// Upsert inserts the row or returns the existing one; created reports which.
 	Upsert(ctx context.Context, row AssetRow) (existing AssetRow, created bool, err error)
 	Get(ctx context.Context, hash string) (AssetRow, error)
-	SetIngest(ctx context.Context, hash string, st IngestState, progress float64, errJSON json.RawMessage, nowMs int64) error
+	SetIngest(
+		ctx context.Context,
+		hash string,
+		st IngestState,
+		progress float64,
+		errJSON json.RawMessage,
+		nowMs int64,
+	) error
 	SetFacts(ctx context.Context, hash string, f AssetFacts, nowMs int64) error
 	// PutArtifact replaces the same (hash, kind, profile, variant, ext).
 	PutArtifact(ctx context.Context, a ArtifactRow) error
@@ -303,7 +310,14 @@ type AssetRepo interface {
 	GetProjectAsset(ctx context.Context, projectID, assetID string) (ProjectAssetRow, error)
 	FindProjectAssetByHash(ctx context.Context, projectID, hash string) (ProjectAssetRow, error)
 	ListProjectAssets(ctx context.Context, projectID string, states ...ProjectAssetState) ([]ProjectAssetRow, error)
-	SetProjectAssetState(ctx context.Context, projectID, assetID string, st ProjectAssetState, by string, atMs int64, snapshot json.RawMessage) error
+	SetProjectAssetState(
+		ctx context.Context,
+		projectID, assetID string,
+		st ProjectAssetState,
+		by string,
+		atMs int64,
+		snapshot json.RawMessage,
+	) error
 	ProjectsReferencing(ctx context.Context, hash string) ([]string, error) // project ids, any state
 	PendingForHash(ctx context.Context, hash string) ([]ProjectAssetRow, error)
 
@@ -381,7 +395,15 @@ type TemplateRepo interface {
 	Create(ctx context.Context, row TemplateRow) error
 	Get(ctx context.Context, id string) (TemplateRow, error)
 	List(ctx context.Context, limit int, after string) ([]TemplateRow, string, error) // Document left empty
-	UpdateDocument(ctx context.Context, id string, schemaVersion int, doc []byte, sha string, slots json.RawMessage, sum ProjectSummary) error
+	UpdateDocument(
+		ctx context.Context,
+		id string,
+		schemaVersion int,
+		doc []byte,
+		sha string,
+		slots json.RawMessage,
+		sum ProjectSummary,
+	) error
 }
 
 type BackupRow struct {

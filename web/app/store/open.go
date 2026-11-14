@@ -69,8 +69,11 @@ func Open(ctx context.Context, dir workspace.Dir, o Options) (*Store, error) {
 
 	path := filepath.ToSlash(string(dir.Path("db.sqlite")))
 	if i := strings.IndexAny(path, "?#%"); i >= 0 {
-		return nil, fmt.Errorf("store: the workspace path holds %q, which breaks the database URL; choose another with %s",
-			path[i], workspace.EnvHome)
+		return nil, fmt.Errorf(
+			"store: the workspace path holds %q, which breaks the database URL; choose another with %s",
+			path[i],
+			workspace.EnvHome,
+		)
 	}
 	if err := touchPrivate(dir.Path("db.sqlite")); err != nil {
 		return nil, err
@@ -163,7 +166,8 @@ func (s *Store) checkSchemaVersions(ctx context.Context, known int) error {
 	}
 	for _, table := range []string{"projects", "templates"} {
 		var exists int
-		err := s.db.QueryRowContext(ctx, "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?", table).Scan(&exists)
+		err := s.db.QueryRowContext(ctx, "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?", table).
+			Scan(&exists)
 		if err != nil {
 			return err
 		}
@@ -175,7 +179,9 @@ func (s *Store) checkSchemaVersions(ctx context.Context, known int) error {
 			return err
 		}
 		if highest.Valid && highest.Int64 > int64(known) {
-			return &NewerWorkspaceError{Detail: fmt.Sprintf("%s hold schema version %d and this binary knows %d", table, highest.Int64, known)}
+			return &NewerWorkspaceError{
+				Detail: fmt.Sprintf("%s hold schema version %d and this binary knows %d", table, highest.Int64, known),
+			}
 		}
 	}
 	return nil
