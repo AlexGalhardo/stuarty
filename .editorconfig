@@ -1,0 +1,30 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = tab
+indent_size = 4
+tab_width = 4
+
+# Formats that forbid tabs or that tools rewrite with spaces.
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Lists in Markdown render inconsistently with tabs, and markdownlint MD007 and
+# MD010 (.markdownlint-cli2.jsonc) assume spaces.
+[*.{md,mdx}]
+indent_style = space
+indent_size = 2
+
+# JSON files that bun, npm and the shadcn CLI write with two spaces.
+# Hand-written JSON (biome.json, ruleset, glossary.json) and TOML use tabs.
+[{package.json,package-lock.json,bun.lock,tsconfig*.json,components.json}]
+indent_style = space
+indent_size = 2
+
+[*.{ps1,psm1,bat,cmd}]
+end_of_line = crlf
