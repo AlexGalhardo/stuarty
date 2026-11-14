@@ -39,11 +39,12 @@ tasks:
       - cd web && bun run format
 
   lint:
-    desc: Lint Go code, Markdown and the web front end
+    desc: Lint Go code, Markdown, the web front end and the site
     cmds:
       - task: lint:go
       - task: lint:md
       - task: lint:web
+      - task: lint:site
 
   lint:go:
     desc: Run golangci-lint (linters and formatters)
@@ -61,6 +62,21 @@ tasks:
     cmds:
       - bun run typecheck
       - bun run lint
+
+  lint:site:
+    desc: Lint the documentation site and check its build (skipped while site/ does not exist)
+    status:
+      - test ! -f site/package.json
+    cmds:
+      - cd site && npm ci
+      - cd site && npm run lint
+      - cd site && npm run build
+      - cd site && npm run check:built
+
+  labels:sync:
+    desc: Create or update the GitHub labels listed in .github/labels.txt (never deletes; needs gh auth)
+    cmds:
+      - go run ./internal/tools/labelsync .github/labels.txt
 
   test:
     desc: Run the Go tests
