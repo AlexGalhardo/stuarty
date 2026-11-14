@@ -26,10 +26,12 @@ type field struct {
 	omitempty bool
 	def       string
 	hasDef    bool
+	defVal    any // the parsed default, compared with == (every default kind is comparable)
 }
 
 type structInfo struct {
 	fields []field
+	sorted []*field // fields by name, the canonical order
 	extra  []int
 }
 
@@ -43,6 +45,11 @@ func infoOf(t reflect.Type) *structInfo {
 	}
 	si := &structInfo{}
 	collect(t, nil, si)
+	si.sorted = make([]*field, len(si.fields))
+	for i := range si.fields {
+		si.sorted[i] = &si.fields[i]
+	}
+	sort.Slice(si.sorted, func(i, j int) bool { return si.sorted[i].name < si.sorted[j].name })
 	infoCache.Store(t, si)
 	return si
 }
@@ -66,6 +73,9 @@ func collect(t reflect.Type, prefix []int, si *structInfo) {
 		name, opts, _ := strings.Cut(tag, ",")
 		f := field{name: name, index: idx, omitempty: opts == "omitempty" || opts == "omitzero"}
 		f.def, f.hasDef = sf.Tag.Lookup("default")
+		if f.hasDef {
+			f.defVal = parseDefault(sf.Type, f.def).Interface()
+		}
 		si.fields = append(si.fields, f)
 	}
 }
@@ -371,6 +381,21 @@ func Check(data []byte) []Violation {
 	return Validate(doc)
 }
 
+// RawValue returns one value of a document (an item, a track, an asset, a font) as
+// the decoded canonical tree Raw builds, so a caller that needs a single object does
+// not encode the whole document.
+func RawValue(v any) any {
+	var buf bytes.Buffer
+	writeValue(&buf, reflect.ValueOf(v))
+	dec := json.NewDecoder(&buf)
+	dec.UseNumber()
+	var out any
+	if err := dec.Decode(&out); err != nil {
+		panic("timeline: canonical encoding is not valid JSON: " + err.Error())
+	}
+	return out
+}
+
 // Canonical returns the canonical encoding of a document (SDD-001 §2 item 8): keys
 // sorted, no whitespace, shortest numbers, fields equal to their default omitted.
 // A non-finite number, which Validate rejects, is written as null.
@@ -380,8 +405,8 @@ func Canonical(doc *Document) []byte {
 	return buf.Bytes()
 }
 
-func equalsDefault(v reflect.Value, def string) bool {
-	return reflect.DeepEqual(v.Interface(), parseDefault(v.Type(), def).Interface())
+func equalsDefault(v reflect.Value, f *field) bool {
+	return v.Interface() == f.defVal
 }
 
 func isEmpty(v reflect.Value) bool {
@@ -440,13 +465,52 @@ func writeValue(buf *bytes.Buffer, v reflect.Value) {
 	}
 }
 
+// writeStruct writes the fields sorted by name. Fields are sorted once in infoOf, so
+// the common case, a struct with no unknown fields, writes straight into buf.
 func writeStruct(buf *bytes.Buffer, v reflect.Value) {
 	si := infoOf(v.Type())
-	entries := make(map[string][]byte, len(si.fields))
-	for _, f := range si.fields {
+	if si.extra != nil {
+		if extra, _ := reflect.TypeAssert[Extra](v.FieldByIndex(si.extra)); len(extra) > 0 {
+			writeStructExtra(buf, v, si)
+			return
+		}
+	}
+	buf.WriteByte('{')
+	first := true
+	for _, f := range si.sorted {
 		fv := v.FieldByIndex(f.index)
 		if f.hasDef {
-			if equalsDefault(fv, f.def) {
+			if equalsDefault(fv, f) {
+				continue
+			}
+		} else if f.omitempty && isEmpty(fv) {
+			continue
+		}
+		mark := buf.Len()
+		if !first {
+			buf.WriteByte(',')
+		}
+		writeString(buf, f.name)
+		buf.WriteByte(':')
+		valStart := buf.Len()
+		writeValue(buf, fv)
+		if f.omitempty && !f.hasDef && fv.Kind() == reflect.Pointer && buf.Len()-valStart == 2 &&
+			buf.Bytes()[valStart] == '{' {
+			buf.Truncate(mark)
+			continue
+		}
+		first = false
+	}
+	buf.WriteByte('}')
+}
+
+func writeStructExtra(buf *bytes.Buffer, v reflect.Value, si *structInfo) {
+	entries := make(map[string][]byte, len(si.fields))
+	for i := range si.fields {
+		f := &si.fields[i]
+		fv := v.FieldByIndex(f.index)
+		if f.hasDef {
+			if equalsDefault(fv, f) {
 				continue
 			}
 		} else if f.omitempty && isEmpty(fv) {
