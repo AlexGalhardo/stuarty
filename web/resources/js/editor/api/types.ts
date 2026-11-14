@@ -1,0 +1,191 @@
+// Wire types of the HTTP API the editor reads and the event stream. They
+// mirror SDD-003 section 2 (results), SDD-002 section A.5 (the diff), SDD-006
+// section 3 (events) and SDD-004 section 10 (the plan window). The document
+// types come from the generated contracts and are never rewritten here.
+// SDD-012 section 3.2 plans generated/api.ts and generated/events.ts for
+// these; until the OpenAPI and event schemas are generated they live here.
+
+import type { ProjectDocument } from "@/generated/timeline";
+
+export type ProjectState = "active" | "trashed";
+
+export interface TimeValue {
+	frame: number;
+	seconds: number;
+}
+
+export interface ProjectCounts {
+	tracks: number;
+	items: number;
+	assets: number;
+	caption_words: number;
+}
+
+// GET /projects/{id}?detail=document (SDD-003 section 2.3).
+export interface ProjectGetResult {
+	project_id: string;
+	name: string;
+	revision: number;
+	state: ProjectState;
+	width: number;
+	height: number;
+	fps: string;
+	duration_frames: number;
+	duration: TimeValue;
+	counts: ProjectCounts;
+	next_cursor: string | null;
+	document?: ProjectDocument;
+	text?: string;
+}
+
+export type JsonValue =
+	| null
+	| boolean
+	| number
+	| string
+	| JsonValue[]
+	| { [key: string]: JsonValue };
+
+// One entry of a diff (SDD-002 section A.5). `updated` maps each changed
+// top-level field to [before, after]; an absent side is null.
+export type Change =
+	| {
+			kind:
+				| "asset.added"
+				| "asset.removed"
+				| "track.added"
+				| "track.removed"
+				| "item.added"
+				| "item.removed"
+				| "font.added"
+				| "font.removed";
+			id: string;
+			object: { [key: string]: JsonValue };
+	  }
+	| {
+			kind:
+				| "settings.updated"
+				| "track.updated"
+				| "item.updated"
+				| "project.updated";
+			id: string;
+			changes: { [field: string]: [JsonValue, JsonValue] };
+	  };
+
+export interface OpEffect {
+	index: number;
+	op: string;
+	effective: { [key: string]: JsonValue };
+	created?: string[];
+}
+
+export interface LintFinding {
+	code: string;
+	severity: string;
+	message: string;
+	item?: string;
+	[key: string]: unknown;
+}
+
+// POST /projects/{id}/edit, undo and redo (SDD-003 sections 2.4 and 2.5).
+export interface EditResult {
+	project_id: string;
+	revision: number;
+	base_revision: number;
+	applied: boolean;
+	dry_run: boolean;
+	replayed: boolean;
+	actor: string;
+	created: string[];
+	effective: OpEffect[];
+	diff: Change[];
+	findings: LintFinding[];
+	lint: { errors: number; warnings: number };
+	description: string;
+	kind?: "undo" | "redo";
+	skipped?: unknown[];
+}
+
+export interface EditRequest {
+	operations: { op: string; args: { [key: string]: JsonValue } }[];
+	base_revision: number;
+	idempotency_key: string;
+	dry_run?: boolean;
+}
+
+// The five events of SDD-006 section 3. `changed` replaces `diff` when the
+// diff did not fit in one event.
+export type ProjectEvent =
+	| {
+			name: "batch.committed";
+			project_id: string;
+			revision: number;
+			base_revision: number;
+			kind: "edit" | "undo" | "redo" | "migrate" | "import";
+			actor: string;
+			at: string;
+			description: string;
+			diff?: Change[];
+			diff_truncated?: boolean;
+			changed?: { kind: string; id: string }[];
+			changed_more?: number;
+			target_revision?: number;
+			skipped_count?: number;
+	  }
+	| {
+			name: "project.updated";
+			project_id: string;
+			state: ProjectState;
+			at: string;
+	  }
+	| {
+			name: "asset.updated";
+			project_id: string;
+			asset_id: string;
+			state: "pending" | "ingesting" | "ready" | "failed";
+			progress: number;
+	  }
+	| {
+			name: "job.updated";
+			project_id: string;
+			job_id: string;
+			kind: string;
+			state: string;
+			progress: number;
+			message?: string;
+	  }
+	| {
+			name: "resync.required";
+			project_id: string;
+			revision: number;
+			reason: string;
+	  };
+
+export const EVENT_NAMES = [
+	"batch.committed",
+	"project.updated",
+	"asset.updated",
+	"job.updated",
+	"resync.required",
+] as const;
+
+// The part of PlanWindow (SDD-004 section 10) the timeline needs: the end of
+// the project as the core computed it.
+export interface PlanWindowHead {
+	revision: number;
+	from: number;
+	to: number;
+	end_frame: number;
+}
+
+// The envelope of SDD-002 section A.8, plus the HTTP status.
+export interface ApiErrorBody {
+	code: string;
+	message: string;
+	hint?: string;
+	retryable: boolean;
+	op_index?: number;
+	path?: string;
+	details?: { [key: string]: JsonValue };
+	request_id?: string;
+}
