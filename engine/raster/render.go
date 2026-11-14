@@ -3,6 +3,7 @@ package raster
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"unicode"
 
@@ -188,7 +189,17 @@ func glyphPolylines(o font.GlyphOutline, ox, oy, k float64) []polyline {
 
 	var cur []point
 
-	at := func(p font.SegmentPoint) point { return point{ox + mul(float64(p.X), k), oy - mul(float64(p.Y), k)} }
+	// Every outline point is rounded to a whole font unit, as the points of a
+	// static font are. The points of a variable font at a given weight come
+	// out of float32 arithmetic in the shaping library, whose last bit depends
+	// on whether the compiler fuses multiply-adds (arm64 does, amd64 does not):
+	// rounding absorbs that bit, so the outline is the same on every
+	// architecture. The error is at most half a font unit, 0.016 pixel at 64 px.
+	at := func(p font.SegmentPoint) point {
+		x, y := math.Round(float64(p.X)), math.Round(float64(p.Y))
+
+		return point{ox + mul(x, k), oy - mul(y, k)}
+	}
 
 	flush := func() {
 		if len(cur) > 1 {
