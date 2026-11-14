@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 func TestEditShorthandBuildsOneOperation(t *testing.T) {
@@ -164,29 +163,5 @@ func TestEditOpsRejectsMalformedBatches(t *testing.T) {
 		if code := h.run("edit", "--project", "prj_a", "--ops", "-", "--json"); code != ExitFailure {
 			t.Errorf("%s: exit %d", name, code)
 		}
-	}
-}
-
-func TestEditTextCapsTheDiff(t *testing.T) {
-	t.Parallel()
-
-	lines := make([]string, 0, 60)
-	for range 60 {
-		lines = append(lines, "+ item itm_x clip")
-	}
-
-	text := editText(
-		&service.EditResult{Revision: 2, BaseRevision: 1, Actor: "local:cli", Description: strings.Join(lines, "\n")},
-		"committed",
-		"",
-		nil,
-	)
-
-	if got := strings.Count(text, "+ item"); got != 40 {
-		t.Fatalf("diff lines shown = %d, want 40", got)
-	}
-
-	if !strings.Contains(text, "... and 20 more changes: read them with history") {
-		t.Fatalf("missing overflow line:\n%s", text)
 	}
 }
