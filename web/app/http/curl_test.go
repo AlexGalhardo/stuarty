@@ -58,7 +58,8 @@ func TestSessionCWithCurl(t *testing.T) {
 		ProjectID string `json:"project_id"`
 	}
 
-	if err := json.Unmarshal([]byte(created[strings.Index(created, "{"):]), &body); err != nil || body.ProjectID == "" {
+	_, payload, _ := strings.Cut(created, "\r\n\r\n")
+	if err := json.Unmarshal([]byte(payload), &body); err != nil || body.ProjectID == "" {
 		t.Fatalf("create body: %v\n%s", err, created)
 	}
 
