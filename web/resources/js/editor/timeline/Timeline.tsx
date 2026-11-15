@@ -297,7 +297,7 @@ export default function Timeline(): ReactNode {
 	return (
 		<section
 			aria-label={t("ui.editor.timeline.label")}
-			data-landmark=""
+			data-landmark="4"
 			className="flex h-full min-h-0 flex-col bg-ed-timeline"
 		>
 			<div className="flex h-10 shrink-0 items-center gap-2 border-b border-ed-track-line bg-ed-panel px-3">

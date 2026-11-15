@@ -21,7 +21,7 @@ export default function LeftPanel(): ReactNode {
 					? "ui.editor.panels.library"
 					: "ui.editor.history.tab",
 			)}
-			data-landmark=""
+			data-landmark="2"
 			className="flex min-h-0 min-w-0 flex-col bg-ed-panel"
 		>
 			<Tabs
