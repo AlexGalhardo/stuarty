@@ -394,6 +394,22 @@ Example:
 vukem-video job:show job_4h8k2m6p9t --wait
 ```
 
+## `job:cancel`
+
+Cancel a queued or running job
+
+```text
+vukem-video job:cancel <job id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+vukem-video job:cancel job_4h8k2m6p9t
+```
+
 ## `job:list`
 
 List the jobs of a project
