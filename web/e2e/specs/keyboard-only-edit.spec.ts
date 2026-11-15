@@ -83,7 +83,14 @@ test.describe("keyboard-only-edit", () => {
 		await page.keyboard.press("Enter");
 		const dialog = page.getByRole("dialog");
 		await expect(dialog).toBeVisible();
-		await dialog.getByRole("button", { name: "Start export" }).focus();
+		// The dialog lints the project first and keeps the button disabled until it
+		// answers; focus() on a disabled button does nothing and the Enter that
+		// follows would land on another control of the dialog (the close button),
+		// so wait for the button to be enabled.
+		const start = dialog.getByRole("button", { name: "Start export" });
+		await expect(start).toBeEnabled();
+		await start.focus();
+		await expect(start).toBeFocused();
 		await page.keyboard.press("Enter");
 		await expect(dialog.locator("[data-phase='succeeded']")).toBeVisible({
 			timeout: 120_000,
