@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import Preview from "../preview/Preview";
 import { useDocumentState } from "../state/EditorContext";
 import Timeline from "../timeline/Timeline";
 import TopBar from "./TopBar";
@@ -114,9 +115,7 @@ export default function EditorShell(): ReactNode {
 						{t("ui.editor.loading")}
 					</p>
 				) : (
-					<p className="text-sm text-muted-foreground">
-						{t("ui.editor.panels.soon")}
-					</p>
+					<Preview />
 				)}
 			</main>
 			<Panel label={t("ui.editor.panels.inspector")} />

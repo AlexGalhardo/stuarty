@@ -178,6 +178,59 @@ export interface PlanWindowHead {
 	end_frame: number;
 }
 
+// One value per frame from `first` to `last`, or a single number when the
+// value is constant over them (SDD-004 section 10).
+export type PerFrame = number | number[];
+
+interface PlanLayerBase {
+	item: string;
+	first: number;
+	last: number;
+	cx: PerFrame;
+	cy: PerFrame;
+	w: PerFrame;
+	h: PerFrame;
+	rotation: PerFrame;
+	opacity: PerFrame;
+}
+
+export interface PlanMediaLayer extends PlanLayerBase {
+	kind: "media";
+	asset: string;
+	asset_kind: "video" | "image";
+	source_seconds: number[];
+	crop: [number, number, number, number];
+	color_matrix: number[] | null;
+}
+
+export interface PlanBitmapLayer extends PlanLayerBase {
+	kind: "bitmap";
+	bitmaps: { keys: string[]; index: number[] };
+	natural: [number, number];
+}
+
+export type PlanLayer = PlanMediaLayer | PlanBitmapLayer;
+
+export interface PlanAudio {
+	item: string;
+	asset: string;
+	first: number;
+	last: number;
+	source_seconds: number;
+	speed: number;
+	gain: PerFrame;
+}
+
+// GET /projects/{id}/plan (SDD-004 section 10).
+export interface PlanWindow extends PlanWindowHead {
+	width: number;
+	height: number;
+	background: string;
+	safe_area: [number, number, number, number];
+	layers: PlanLayer[];
+	audio: PlanAudio[];
+}
+
 // The envelope of SDD-002 section A.8, plus the HTTP status.
 export interface ApiErrorBody {
 	code: string;
