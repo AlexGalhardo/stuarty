@@ -181,6 +181,7 @@ func (h *apiHandler) registerAll() {
 		return deref(res), err
 	})
 
+	register(h, "events.stream", h.eventsStream)
 	register(h, "projects.frame", h.projectsFrame)
 	register(h, "projects.sheet", h.projectsSheet)
 

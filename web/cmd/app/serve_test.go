@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 	"github.com/AlexGalhardo/vukem-video/web/app/cli"
@@ -98,7 +99,9 @@ func TestServeIsTheOwnerAndTheCLIUsesIt(t *testing.T) {
 		t.Fatalf("runtime.json = %+v, %v", rt, err)
 	}
 
-	if resp, err := http.Get("http://" + rt.Addr + "/up"); err != nil || resp.StatusCode != http.StatusOK {
+	if resp, err := outbound.LocalServer(5 * time.Second).
+		Get("http://" + rt.Addr + "/up"); err != nil ||
+		resp.StatusCode != http.StatusOK {
 		t.Fatalf("/up: %v", err)
 	} else {
 		_ = resp.Body.Close()
