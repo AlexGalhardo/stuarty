@@ -56,6 +56,10 @@ func wrapRun(err error, reason, msg, stderr string) error {
 		return exportErr(ReasonStalled, "The export stopped making progress and was ended.", err, stderr)
 	case errors.Is(err, ffmpeg.ErrDeadline):
 		return exportErr(ReasonTimeout, "The export took longer than its deadline and was ended.", err, stderr)
+	case errors.Is(err, ffmpeg.ErrOutputTooLarge):
+		text := "The exported file passed the size limit and the export was ended."
+
+		return exportErr(ReasonSizeLimit, text, err, stderr)
 	}
 	if ffErr, ok := errors.AsType[*ffmpeg.Error](err); ok {
 		return ffErr
@@ -89,4 +93,18 @@ func verifyError(checks []Check) *ffmpeg.Error {
 		Hint:    "Export again; if it keeps failing, report it with the output of \"vukem-video doctor\".",
 		Details: map[string]any{"checks": checks},
 	}
+}
+
+// ReasonSizeLimit is details.reason of an export whose file passed VUKEM_VIDEO_MAX_EXPORT_BYTES.
+const ReasonSizeLimit = "size_limit"
+
+func sizeLimitError(size, limit int64) *ffmpeg.Error {
+	e := exportErr(ReasonSizeLimit, "The exported file is larger than the limit and was deleted.", nil, "")
+	e.Hint = "Export a shorter project, or raise VUKEM_VIDEO_MAX_EXPORT_BYTES."
+	e.Details["limit"] = "export_bytes"
+	e.Details["value"] = size
+	e.Details["ceiling"] = limit
+	e.Details["variable"] = "VUKEM_VIDEO_MAX_EXPORT_BYTES"
+
+	return e
 }
