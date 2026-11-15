@@ -148,6 +148,7 @@ type docPick struct {
 	rng                                *rand.Rand
 	items, tracks, visual, audio, asts []string
 	captions, slots, clips, audios     []string
+	fonts                              []string
 	keys                               []keyAt
 }
 
@@ -199,7 +200,11 @@ func newDocPick(rng *rand.Rand, doc *timeline.Document) *docPick {
 		p.asts = append(p.asts, id)
 	}
 
-	for _, l := range [][]string{p.items, p.tracks, p.visual, p.audio, p.asts, p.captions, p.slots, p.clips, p.audios} {
+	for family := range doc.Fonts {
+		p.fonts = append(p.fonts, family)
+	}
+
+	for _, l := range [][]string{p.items, p.tracks, p.visual, p.audio, p.asts, p.captions, p.slots, p.clips, p.audios, p.fonts} {
 		slices.Sort(l)
 	}
 
@@ -216,6 +221,7 @@ func (p *docPick) of(list []string, missing string) string {
 
 func (p *docPick) item() string      { return p.of(p.items, "itm_zzzzzzzzzz") }
 func (p *docPick) clip() string      { return p.of(p.clips, "itm_zzzzzzzzzz") }
+func (p *docPick) family() string    { return p.of(p.fonts, "Fam 0") }
 func (p *docPick) audioItem() string { return p.of(p.audios, "itm_zzzzzzzzzz") }
 func (p *docPick) caption() string   { return p.of(p.captions, "itm_zzzzzzzzzz") }
 func (p *docPick) vtrack() string    { return p.of(p.visual, "trk_zzzzzzzzzz") }
@@ -344,6 +350,11 @@ var alphaOps = map[string]func(p *docPick) string{
 			p.audioItem(), clip, 1+p.n(30), clip, strings.Join(parts, ","),
 		)
 	},
+	"font.add": func(p *docPick) string {
+		return fmt.Sprintf(`{"family":"Fam %d","files":[{"weight":%d,"hash":"sha256:%s"}]}`,
+			p.n(4), 100*(1+p.n(9)), strings.Repeat(p.oneOf("ab", "cd", "ef"), 32))
+	},
+	"font.remove": func(p *docPick) string { return fmt.Sprintf(`{"family":%q}`, p.family()) },
 	"audio.mark_beats": func(p *docPick) string {
 		var parts []string
 		for at := p.n(20); at < 600 && len(parts) < 150; at += 3 + p.n(20) {

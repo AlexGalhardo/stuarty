@@ -1,0 +1,32 @@
+[
+  {
+    "kind": "item.added",
+    "id": "itm_s6t7v8w9x0",
+    "object": {
+      "contrast": 1,
+      "duration": 60,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "id": "itm_s6t7v8w9x0",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 0,
+      "stroke_color": "#000000",
+      "style": {
+        "font_family": "Brand Sans",
+        "font_weight": 700
+      },
+      "text": "Hello",
+      "track": "trk_f6g7h8j9k0",
+      "type": "text",
+      "volume": 1
+    }
+  }
+]

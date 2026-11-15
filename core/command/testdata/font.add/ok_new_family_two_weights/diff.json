@@ -1,0 +1,18 @@
+[
+  {
+    "kind": "font.added",
+    "id": "Brand Sans",
+    "object": {
+      "files": [
+        {
+          "hash": "sha256:abababababababababababababababababababababababababababababababab",
+          "weight": 400
+        },
+        {
+          "hash": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "weight": 700
+        }
+      ]
+    }
+  }
+]

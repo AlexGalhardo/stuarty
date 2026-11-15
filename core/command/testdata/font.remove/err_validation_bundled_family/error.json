@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "Font family \"Inter\" is bundled and cannot be removed.",
+  "hint": "Only the families added with font.add can be removed.",
+  "retryable": false,
+  "path": "args.family"
+}

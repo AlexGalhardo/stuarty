@@ -97,12 +97,17 @@ func checkDiffPatchesFetchedDocument(t *testing.T, before *timeline.Document, re
 }
 
 // normalizeEmpty makes a null collection and an empty one equal: the fetched
-// document of an empty project may use either.
+// document of an empty project may use either. The fonts map is optional, so an
+// empty one is the same as none.
 func normalizeEmpty(m map[string]any) map[string]any {
 	for _, k := range collections {
 		if v, ok := m[k]; ok && v == nil {
 			m[k] = map[string]any{}
 		}
+	}
+
+	if f, ok := m["fonts"].(map[string]any); ok && len(f) == 0 {
+		delete(m, "fonts")
 	}
 
 	return m

@@ -113,8 +113,8 @@ func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 		got[c.Name] = c.Phase
 	}
 
-	if len(want) != 52 {
-		t.Fatalf("Part C has %d sections, want 52", len(want))
+	if len(want) != 54 {
+		t.Fatalf("Part C has %d sections, want 54", len(want))
 	}
 
 	for name, phase := range want {

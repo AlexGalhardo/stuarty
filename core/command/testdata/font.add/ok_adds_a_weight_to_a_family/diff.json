@@ -1,0 +1,38 @@
+[
+  {
+    "kind": "font.removed",
+    "id": "Brand Sans",
+    "object": {
+      "files": [
+        {
+          "hash": "sha256:abababababababababababababababababababababababababababababababab",
+          "weight": 400
+        },
+        {
+          "hash": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "weight": 700
+        }
+      ]
+    }
+  },
+  {
+    "kind": "font.added",
+    "id": "Brand Sans",
+    "object": {
+      "files": [
+        {
+          "hash": "sha256:abababababababababababababababababababababababababababababababab",
+          "weight": 400
+        },
+        {
+          "hash": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "weight": 700
+        },
+        {
+          "hash": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
+          "weight": 900
+        }
+      ]
+    }
+  }
+]

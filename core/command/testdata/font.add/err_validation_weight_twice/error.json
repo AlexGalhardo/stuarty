@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.files[1].weight 400 is given twice.",
+  "hint": "Send one file per weight.",
+  "retryable": false,
+  "path": "args.files[1].weight"
+}

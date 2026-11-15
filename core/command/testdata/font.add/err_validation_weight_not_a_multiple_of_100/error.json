@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.files[0].weight is 450, which is not a multiple of 100.",
+  "hint": "Use 100, 200, ... 900.",
+  "retryable": false,
+  "path": "args.files[0].weight"
+}

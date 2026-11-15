@@ -1,0 +1,14 @@
+{
+  "op": "text.add",
+  "args": {
+    "track_id": "trk_f6g7h8j9k0",
+    "start": "0s",
+    "duration": "2s",
+    "text": "Hello",
+    "id": "itm_s6t7v8w9x0",
+    "style": {
+      "font_family": "Brand Sans",
+      "font_weight": 700
+    }
+  }
+}

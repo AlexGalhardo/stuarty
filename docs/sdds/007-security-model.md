@@ -403,14 +403,14 @@ Every command in the registry declares `scope` in `edit` or `media`. A batch nee
 | `caption.from_transcript`, `caption.retime_from_clip` | - | R | - | - | - |
 | `keyframe.set`, `keyframe.remove`, `keyframe.clear` | - | R | - | - | - |
 | `slot.mark`, `slot.unmark`, `slot.fill`, `template.set_info` | - | R | - | - | - |
-| `asset.remove` | - | - | R | - | - |
+| `asset.remove`, `font.add`, `font.remove` | - | - | R | - | - |
 | `asset.add` | not callable | not callable | not callable | not callable | not callable |
 
 Rules:
 
 1. `asset.add` is `internal` (SDD-002 B.2): the registry does not list it and a caller who sends it receives `E_UNKNOWN_COMMAND`, the same answer as for a name that does not exist. Only the import flow issues it, after the file passed section 7.
 2. The analysis behind `clip.remove_silences`, `audio.duck` (the speech map), `audio.mark_beats` (the beat grid), `caption.from_transcript` and `caption.retime_from_clip` (SDD-002 A.9) reads artifacts that already exist. If the transcript artifact is missing, the command fails with `E_INVALID_STATE` and the hint to run the `transcribe` job (scope `media`). An `edit` command never starts a `media` job. Silence analysis, when it must be computed, runs under the ingest concurrency limit of section 9. **Decision of this SDD.**
-3. The scope of a command is part of its registry entry, is shown by `command_help`, and is tested: `TestSecurity_T05_EveryOperationHasScope` fails for a command whose scope is empty or outside `{edit, media}`.
+3. `font.add` and `font.remove` have scope `media`: they name or unname a file of the workspace font store (section 7.7). The core checks only the form of the hash; the service refuses a hash the store does not hold before the command is applied. The scope of a command is part of its registry entry, is shown by `command_help`, and is tested: `TestSecurity_T05_EveryOperationHasScope` fails for a command whose scope is empty or outside `{edit, media}`.
 
 ## 6. Running external processes
 
