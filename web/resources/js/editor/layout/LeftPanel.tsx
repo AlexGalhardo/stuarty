@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useT } from "@/lib/i18n";
 import HistoryPanel from "../history/HistoryPanel";
 import Library from "../library/Library";
@@ -23,26 +23,31 @@ export default function LeftPanel(): ReactNode {
 						value === "history" ? "history" : "library",
 					)
 				}
-				className="px-3 pt-3"
+				className="min-h-0 flex-1 gap-0"
 			>
-				<TabsList>
-					<TabsTrigger value="library">
-						{t("ui.editor.panels.library")}
-					</TabsTrigger>
-					<TabsTrigger value="history">
-						{t("ui.editor.history.tab")}
-					</TabsTrigger>
-				</TabsList>
-			</Tabs>
-			{tab === "library" ? (
-				<div className="flex min-h-0 flex-1 flex-col *:flex-1">
+				<div className="px-3 pt-3">
+					<TabsList>
+						<TabsTrigger value="library">
+							{t("ui.editor.panels.library")}
+						</TabsTrigger>
+						<TabsTrigger value="history">
+							{t("ui.editor.history.tab")}
+						</TabsTrigger>
+					</TabsList>
+				</div>
+				<TabsContent
+					value="library"
+					className="flex min-h-0 flex-1 flex-col *:flex-1"
+				>
 					<Library onAssetDragStart={startAssetDrag} />
-				</div>
-			) : (
-				<div className="flex min-h-0 flex-1 flex-col overflow-auto p-3">
+				</TabsContent>
+				<TabsContent
+					value="history"
+					className="flex min-h-0 flex-1 flex-col overflow-auto p-3"
+				>
 					<HistoryPanel />
-				</div>
-			)}
+				</TabsContent>
+			</Tabs>
 		</div>
 	);
 }
