@@ -105,14 +105,12 @@ func parseDefault(t reflect.Type, def string) reflect.Value {
 			break
 		}
 		num, den, ok := strings.Cut(def, "/")
-		var n, d int64
-		var e1, e2 error
-		n, e1 = strconv.ParseInt(num, 10, 64)
-		d, e2 = strconv.ParseInt(den, 10, 64)
+		n, e1 := strconv.Atoi(num)
+		d, e2 := strconv.Atoi(den)
 		if !ok || e1 != nil || e2 != nil {
 			err = errors.New("bad rational default")
 		}
-		v.Set(reflect.ValueOf(Rational{Num: int(n), Den: int(d)}))
+		v.Set(reflect.ValueOf(Rational{Num: n, Den: d}))
 	default:
 		err = errors.New("unsupported default kind")
 	}
