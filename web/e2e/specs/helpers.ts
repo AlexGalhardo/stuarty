@@ -64,15 +64,13 @@ function ffmpegExe(): string {
 	return join(bin, `ffmpeg${exe}`);
 }
 
-let clipPath: string | undefined;
-
-// testClip makes, once per run, a 3 s 320x568 clip with a moving test pattern
-// and a tone, so a spec has real media to import and render.
-export function testClip(): string {
-	if (clipPath) return clipPath;
+// testClip makes, once per run, a 10 s 320x568 clip with a moving smooth gradient
+// and a tone, so a spec has real media to import and render. Each variant has
+// other pixels, so the core does not deduplicate two of them into one asset.
+export function testClip(variant = 0): string {
 	const dir = join(tmpdir(), "vukem-video-e2e-media");
 	mkdirSync(dir, { recursive: true });
-	const out = join(dir, "clip.mp4");
+	const out = join(dir, `gradient10-${variant}.mp4`);
 	if (!existsSync(out)) {
 		execFileSync(
 			ffmpegExe(),
@@ -81,11 +79,11 @@ export function testClip(): string {
 				"-f",
 				"lavfi",
 				"-i",
-				"testsrc2=size=320x568:rate=30:duration=3",
+				`gradients=size=320x568:rate=30:duration=10:seed=${variant + 1},hue=h=${variant * 40}`,
 				"-f",
 				"lavfi",
 				"-i",
-				"sine=frequency=440:duration=3",
+				`sine=frequency=${440 + variant * 60}:duration=10`,
 				"-c:v",
 				"libopenh264",
 				"-pix_fmt",
@@ -98,7 +96,6 @@ export function testClip(): string {
 			{ stdio: "ignore" },
 		);
 	}
-	clipPath = out;
 	return out;
 }
 
@@ -144,7 +141,13 @@ export async function caller(
 // `tracks` visual tracks and `perTrack` one-second clips on each, end to end.
 export async function seedProject(
 	request: APIRequestContext,
-	options: { name?: string; tracks?: number; perTrack?: number } = {},
+	options: {
+		name?: string;
+		tracks?: number;
+		perTrack?: number;
+		clipDuration?: string;
+		assets?: number;
+	} = {},
 ): Promise<Seeded> {
 	const call = await caller(request);
 	const created = await call("POST", "/projects", {
@@ -153,10 +156,13 @@ export async function seedProject(
 	const id = created.project_id as string;
 
 	const imported = (await call("POST", `/projects/${id}/media`, {
-		files: [{ path: testClip() }],
+		files: Array.from({ length: options.assets ?? 1 }, (_, v) => ({
+			path: testClip(v),
+		})),
 		wait_ms: 20000,
 	})) as { revision: number; assets: { asset_id: string }[] };
-	const assetId = imported.assets[0]?.asset_id;
+	const assetIds = imported.assets.map((a) => a.asset_id);
+	const assetId = assetIds[0];
 	if (!assetId) throw new Error(`no asset after import for ${id}`);
 
 	let revision = imported.revision;
@@ -184,15 +190,15 @@ export async function seedProject(
 
 	const perTrack = options.perTrack ?? 1;
 	const itemIds: string[] = [];
-	const clips = trackIds.flatMap((trackId) =>
+	const clips = trackIds.flatMap((trackId, t) =>
 		Array.from({ length: perTrack }, (_, i) => ({
 			op: "clip.add",
 			args: {
 				track_id: trackId,
-				asset_id: assetId,
+				asset_id: assetIds[t % assetIds.length],
 				start: `${i}s`,
 				source_in: "0s",
-				duration: "1s",
+				duration: options.clipDuration ?? "1s",
 			},
 		})),
 	);
