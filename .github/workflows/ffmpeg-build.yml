@@ -67,13 +67,13 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends nasm autoconf automake libtool zip xz-utils
+          sudo apt-get install -y --no-install-recommends nasm autoconf automake libtool cmake zip xz-utils
       - name: Build tools (Windows target, cross compiled)
         if: matrix.platform.os == 'windows'
         run: sudo apt-get install -y --no-install-recommends mingw-w64 g++-mingw-w64-x86-64-posix
       - name: Build tools (macOS)
         if: runner.os == 'macOS'
-        run: brew install nasm autoconf automake libtool gnu-tar xz
+        run: brew install nasm autoconf automake libtool cmake gnu-tar xz
       - name: Build FFmpeg
         id: build
         run: |
@@ -183,7 +183,7 @@ jobs:
             echo "FFmpeg ${FFMPEG_BUILD_VERSION}, own LGPL build ${tag} (D-017, ADR-0011)."
             echo
             echo "Source: ${FFMPEG_SRC_URL} (SHA-256 ${FFMPEG_SRC_SHA256})"
-            echo "Flags: .config/ffmpeg-build/configure-flags.txt at this tag. No GPL, no nonfree, OpenH264 not linked (loaded at run time by the patch ${FFMPEG_PATCH_FILE}, SHA-256 ${FFMPEG_PATCH_SHA256})."
+            echo "Flags: .config/ffmpeg-build/configure-flags.txt at this tag. No GPL, no nonfree, OpenH264 not linked (loaded at run time by the patch ${FFMPEG_PATCH_FILE}, SHA-256 ${FFMPEG_PATCH_SHA256}). Hardware encoders (D-034): NVENC, Quick Sync (libvpl, MIT) and AMF (MIT headers) on Windows and Linux x86_64, VideoToolbox on macOS; the vendor runtimes come with the GPU drivers."
             echo
             echo "SHA-256:"
             echo

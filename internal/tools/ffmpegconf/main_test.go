@@ -56,6 +56,30 @@ func TestRunOnTheFlagFileOfTheRepository(t *testing.T) {
 	}
 }
 
+// TestHardwareEncoderFlagsAreAllowed pins D-034: NVENC, Quick Sync (libvpl) and AMF pass the check of the
+// repository allowlist, while the nonfree NVIDIA libraries next to them are still refused.
+func TestHardwareEncoderFlagsAreAllowed(t *testing.T) {
+	t.Parallel()
+
+	raw, err := os.ReadFile(filepath.FromSlash("../../../.config/ffmpeg-build/configure-allowlist.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	allowed := allowedFlags(string(raw))
+	line := "--enable-zlib --enable-ffnvcodec --enable-libvpl --enable-amf --extra-version=vukem1"
+
+	if got := check(line, allowed); len(got) != 0 {
+		t.Fatalf("unexpected problems: %v", got)
+	}
+
+	for _, flag := range []string{"--enable-libnpp", "--enable-cuda-nvcc", "--enable-libmfx", "--enable-cuda-llvm"} {
+		if got := check(line+" "+flag, allowed); len(got) != 1 {
+			t.Errorf("%s: want one problem, got %v", flag, got)
+		}
+	}
+}
+
 func TestRunReadsALineFromStandardInput(t *testing.T) {
 	t.Parallel()
 

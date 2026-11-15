@@ -7,6 +7,9 @@
 # the Cisco OpenH264 binary is never linked. The libopenh264 encoder is switched on by the
 # patch of patches/ (pinned in sources.env), which loads the library at run time with
 # dlopen or LoadLibrary from VUKEM_VIDEO_OPENH264_DIR (D-017), so no flag is needed for it.
+# Hardware encoders (D-034): --enable-ffnvcodec (NVENC), --enable-libvpl (Intel Quick Sync through the
+# MIT oneVPL dispatcher) and --enable-amf (AMD AMF, MIT headers) on linux and windows; the vendor
+# runtimes are loaded from the GPU driver at run time, never shipped. macOS keeps VideoToolbox.
 [common]
 --disable-autodetect
 --disable-debug
@@ -27,6 +30,8 @@
 
 [linux]
 --enable-ffnvcodec
+--enable-libvpl
+--enable-amf
 
 [darwin]
 --enable-videotoolbox
@@ -34,4 +39,6 @@
 
 [windows]
 --enable-ffnvcodec
+--enable-libvpl
+--enable-amf
 --enable-mediafoundation

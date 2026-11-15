@@ -6,7 +6,7 @@
 #   bash scripts/ffmpeg-verify.sh signatures <dir>               cosign verify-blob and gh attestation verify for every asset
 # `binary` fails when: the configure line is not LGPL safe (internal/tools/ffmpegconf), -buildconf
 # or -version names --enable-gpl, --enable-nonfree, libx264, libx265, libfdk_aac, the linker
-# listing shows an OpenH264 library, the libopenh264 encoder (the dlopen patch) is missing, or a filter the engine references is missing (FILTERS_FILE,
+# listing shows an OpenH264 library, the libopenh264 encoder (the dlopen patch) is missing, the h264_qsv, hevc_qsv, h264_amf, hevc_amf, h264_nvenc or hevc_nvenc encoders (D-034) are missing on linux and windows x86_64, or a filter the engine references is missing (FILTERS_FILE,
 # default scripts/ffmpeg-filters.txt; eq and boxblur must be absent).
 # `signatures` needs cosign and gh, and REPO (owner/name) or GITHUB_REPOSITORY.
 set -euo pipefail
@@ -42,6 +42,30 @@ check_binary() {
 	else listing=""; fi
 	case "$(printf '%s' "$listing" | tr 'A-Z' 'a-z')" in *openh264*) die "an OpenH264 library is linked: $listing" ;; esac
 	"$ffmpeg" -hide_banner -encoders | grep -q libopenh264 || die "the libopenh264 encoder (the run time loader patch) is missing"
+
+	# Hardware encoders (D-034): the flags are on where the build is for linux or windows on x86 (the arm64 linux build keeps NVENC only),
+	# and every encoder a flag promises must be listed.
+	local encoders hw_flags="" want_hw="" need enc e
+	encoders="$("$ffmpeg" -hide_banner -encoders)"
+	case "$(uname -s)-$(uname -m)" in Linux-x86_64 | MINGW*-x86_64 | MSYS*-x86_64) want_hw=1 ;; esac
+	case "$version" in *--enable-libvpl*) hw_flags="$hw_flags qsv" ;; esac
+	case "$version" in *--enable-amf*) hw_flags="$hw_flags amf" ;; esac
+	case "$version" in *--enable-ffnvcodec*) hw_flags="$hw_flags nvenc" ;; esac
+	if [ -n "$want_hw" ]; then
+		for need in qsv amf nvenc; do
+			case "$hw_flags" in *" $need"*) ;; *) die "the configure line has no $need flag (--enable-libvpl, --enable-amf, --enable-ffnvcodec) on this platform (D-034)" ;; esac
+		done
+	fi
+	for need in $hw_flags; do
+		case "$need" in
+		qsv) enc="h264_qsv hevc_qsv" ;;
+		amf) enc="h264_amf hevc_amf" ;;
+		nvenc) enc="h264_nvenc hevc_nvenc" ;;
+		esac
+		for e in $enc; do
+			printf '%s\n' "$encoders" | awk '{print $2}' | grep -qx "$e" || die "the $e encoder is missing although its flag is on (D-034)"
+		done
+	done
 	grep -aq VUKEM_VIDEO_OPENH264_DIR "$ffmpeg" || die "the binary does not read VUKEM_VIDEO_OPENH264_DIR"
 
 	if [ -f "$filters_file" ]; then
