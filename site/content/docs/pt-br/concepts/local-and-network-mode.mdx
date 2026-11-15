@@ -1,0 +1,46 @@
+---
+title: "Modo local e modo de rede"
+description: "As duas formas de executar o servidor: no seu próprio computador com um token local, ou em uma rede com logins e chaves com escopo."
+---
+
+## A ideia
+
+O servidor roda em um de dois modos, e o endereço ao qual ele se vincula decide qual. Ambos os modos protegem os seus projetos; diferem em quem é confiável.
+
+## Modo local
+
+O servidor se vincula a `127.0.0.1` ou `::1`, então apenas o seu computador consegue alcançá-lo. Este é o padrão e o que o `vukem-video serve` faz.
+
+- Não há login. Na primeira inicialização, o servidor cria um token local aleatório no espaço de trabalho, em um arquivo legível apenas por você. A CLI e o servidor MCP stdio o leem de lá.
+- "Sem login" não é "sem proteção". Qualquer página web que você abre pode enviar requisições para `127.0.0.1`, então o servidor também confere o `Host` e o `Origin` de cada requisição e recusa o que não vem do editor ou de um cliente que tenha o token.
+- Toda operação registra um ator, como `local:claude-code` para um agente ou `local:ui` para o editor. O histórico mostra quem mudou o quê.
+- Esvaziar a lixeira só é aceito pelo editor no navegador, nunca pelo token que um agente tem.
+
+## Modo de rede
+
+O servidor se vincula a qualquer outro endereço, para compartilhá-lo com outras pessoas ou executá-lo em um servidor. Vincular a um endereço que não é de loopback sem a configuração do modo de rede é um erro de inicialização, nunca uma exposição silenciosa.
+
+- O login é obrigatório. Não há cadastro aberto: o operador cria os usuários pela linha de comando, e cada projeto pertence ao usuário que o criou.
+- O acesso programático usa chaves de API que um usuário autenticado cria. Uma chave tem escopos (`read`, `edit`, `media`, `render`, `admin`) e pode ser limitada a um projeto.
+- O TLS é obrigatório, diretamente ou por um proxy reverso. A única exceção é um contêiner na sua própria máquina com a porta publicada para o loopback.
+- A importação por caminho fica confinada às raízes de importação que o operador configura.
+
+O ator de uma operação é `user:<id>` ou `key:<id>`. Os limites são por espaço de trabalho e por chave.
+
+## De qual preciso?
+
+| Você quer | Use |
+| --- | --- |
+| Editar no seu próprio computador, com ou sem um agente | Modo local |
+| Executá-lo em um contêiner na sua própria máquina | Modo local, com a porta publicada em `127.0.0.1` |
+| Compartilhar um servidor com uma equipe | Modo de rede |
+
+## Erros comuns
+
+- Publicar a porta do contêiner em todas as interfaces sem o modo de rede. Publique-a apenas em `127.0.0.1`.
+- Colocar uma chave em uma URL. Um token ou uma chave só é aceito em um cabeçalho e nunca é registrado em log nem devolvido.
+
+## Próximos passos
+
+- [Segurança: desfazer, lixeira e limites](/docs/agents/safety)
+- [Espaço de trabalho e armazenamento](/docs/workspace)
