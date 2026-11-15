@@ -71,24 +71,28 @@ func fromFont(err error) *Error {
 	return fromEngine(err)
 }
 
+// maxFontFiles is the most files a font.add may name (SDD-002 C.53); a longer list is left to the
+// command to refuse, so the ownership check never works on an unvalidated list.
+const maxFontFiles = 9
+
 // checkFontAdd refuses a font.add that names a file the caller may not use (E_NOT_FOUND), as the
 // command assumes (SDD-002 C.53, SDD-007 section 5.4 item 3). The core checks only the form of the
 // hash. A malformed operation is left to the command. A file the store lacks and a file that
 // belongs to another user are refused with the same error, which names no hash, so the refusal
 // does not reveal that the file exists (SDD-007 T-21).
-func (s *svc) checkFontAdd(ctx context.Context, tx Tx, op *command.Operation, index int) *Error {
+func (s *svc) checkFontAdd(ctx context.Context, tx Tx, scope *fontScope, op *command.Operation, index int) *Error {
 	var a struct {
 		Files []struct {
 			Hash string `json:"hash"`
 		} `json:"files"`
 	}
 
-	if json.Unmarshal(op.Args, &a) != nil {
+	if json.Unmarshal(op.Args, &a) != nil || len(a.Files) == 0 || len(a.Files) > maxFontFiles {
 		return nil
 	}
 
 	for i, f := range a.Files {
-		if !isFontHash(f.Hash) || s.fontAllowed(ctx, tx, f.Hash) {
+		if !isFontHash(f.Hash) || scope.allowed(ctx, tx, s, f.Hash) {
 			continue
 		}
 
@@ -103,35 +107,55 @@ func (s *svc) checkFontAdd(ctx context.Context, tx Tx, op *command.Operation, in
 	return nil
 }
 
-// maxFontOwnerScan bounds the projects read to learn whether a user already uses a font.
+// maxFontOwnerScan bounds the projects read to learn which fonts a user already uses.
 const maxFontOwnerScan = 2000
 
-// fontAllowed tells whether the caller may name the font. In local mode the store is the caller's
-// own, so a stored file is enough. In network mode the store is shared: the file must already be
-// used by a project of the caller (a bundle import is how a font reaches the store, and it links
-// the font to the imported project).
-func (s *svc) fontAllowed(ctx context.Context, tx Tx, hash string) bool {
-	if !s.hasFont(hash) {
+// fontScope answers, for one request, which fonts the caller may name. In local mode the store is
+// the caller's own, so a stored file is enough. In network mode the store is shared: the file must
+// already be used by a project of the caller (a bundle import links the fonts it brings to the
+// imported project). The caller's fonts are read once for the whole batch, bounded, and the store
+// is asked only about a hash the caller owns, so a refusal costs the same whether the file exists
+// or not and does not touch the store.
+type fontScope struct {
+	built bool
+	owned map[string]bool
+}
+
+func (f *fontScope) allowed(ctx context.Context, tx Tx, s *svc, hash string) bool {
+	c, ok := CallerFrom(ctx)
+	if !ok {
 		return false
 	}
 
-	c, ok := CallerFrom(ctx)
-	if !ok || c.OwnerUserID == "" {
-		return ok
+	if c.OwnerUserID == "" {
+		return s.hasFont(hash)
 	}
+
+	if !f.built {
+		f.owned, f.built = userFontHashes(ctx, tx, c.OwnerUserID), true
+	}
+
+	return f.owned[hash] && s.hasFont(hash)
+}
+
+// userFontHashes is the set of font hashes that the projects of the user use, in any state.
+func userFontHashes(ctx context.Context, tx Tx, user string) map[string]bool {
+	out := map[string]bool{}
 
 	var after string
 
 	for scanned := 0; scanned < maxFontOwnerScan; {
 		items, next, err := tx.Projects().List(ctx, ProjectQuery{
-			IncludeTrashed: true, OwnerUserID: c.OwnerUserID, After: after, Limit: 200,
+			IncludeTrashed: true, OwnerUserID: user, After: after, Limit: 200,
 		})
 		if err != nil {
-			return false
+			return out
 		}
 
 		for i := range items {
-			scanned++
+			if scanned++; scanned > maxFontOwnerScan {
+				return out
+			}
 
 			row, err := tx.Projects().Get(ctx, items[i].ID)
 			if err != nil {
@@ -145,21 +169,19 @@ func (s *svc) fontAllowed(ctx context.Context, tx Tx, hash string) bool {
 
 			for _, fam := range doc.Fonts {
 				for _, f := range fam.Files {
-					if f.Hash == hash {
-						return true
-					}
+					out[f.Hash] = true
 				}
 			}
 		}
 
 		if next == "" {
-			return false
+			return out
 		}
 
 		after = next
 	}
 
-	return false
+	return out
 }
 
 func isFontHash(h string) bool {

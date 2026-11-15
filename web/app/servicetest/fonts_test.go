@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
@@ -279,5 +280,88 @@ func TestSecurity_T21_FontAddCannotNameAnotherUsersFont(t *testing.T) {
 	var e *service.Error
 	if errors.As(errBob, &e) && (e.Details["hash"] != nil || strings.Contains(e.Message+e.Hint, anton)) {
 		t.Errorf("the refusal names the hash: %+v", e)
+	}
+}
+
+// countStore counts the documents a write transaction reads.
+type countStore struct {
+	service.Store
+	gets *atomic.Int64
+}
+
+func (s countStore) WriteProject(
+	ctx context.Context, id string, fn func(context.Context, service.ProjectTx) error,
+) error {
+	return s.Store.WriteProject(ctx, id, func(ctx context.Context, tx service.ProjectTx) error {
+		return fn(ctx, countTx{ProjectTx: tx, gets: s.gets})
+	})
+}
+
+type countTx struct {
+	service.ProjectTx
+	gets *atomic.Int64
+}
+
+func (t countTx) Projects() service.ProjectRepo { return countRepo{t.ProjectTx.Projects(), t.gets} }
+
+type countRepo struct {
+	service.ProjectRepo
+	gets *atomic.Int64
+}
+
+func (r countRepo) Get(ctx context.Context, id string) (service.ProjectRow, error) {
+	r.gets.Add(1)
+
+	return r.ProjectRepo.Get(ctx, id)
+}
+
+// The ownership check of font.add reads the caller's documents once for the whole batch: many
+// entries do not multiply the work (SDD-007 section 9: bounded work per request).
+func TestSecurity_T21_FontAddOwnershipScanIsBoundedPerBatch(t *testing.T) {
+	var gets atomic.Int64
+
+	m := newMediaEnv(t, mediaCfg{beta: true, wrapStore: func(s service.Store) service.Store {
+		return countStore{Store: s, gets: &gets}
+	}})
+
+	if _, err := enginestore.NewFonts(m.ws).Put(bundledFontFile(t, "Anton-Regular.ttf")); err != nil {
+		t.Fatal(err)
+	}
+
+	bob := memberCtx("bob")
+	create := func() string {
+		res, err := m.svc.ProjectCreate(bob, service.ProjectCreateRequest{Name: "p"})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return res.ProjectID
+	}
+
+	project := create()
+
+	for range 3 {
+		create()
+	}
+
+	batch := func(n int) int64 {
+		ops := make([]command.Operation, n)
+		for i := range ops {
+			ops[i] = op("font.add", fmt.Sprintf(
+				`{"family":"F%d","files":[{"weight":400,"hash":"sha256:%064x"}]}`, i, i+1))
+		}
+
+		before := gets.Load()
+
+		if _, err := m.svc.Edit(bob, service.EditRequest{ProjectID: project, Operations: ops}); !isCode(err, command.CodeNotFound) {
+			t.Fatalf("batch of %d: %v, want E_NOT_FOUND", n, err)
+		}
+
+		return gets.Load() - before
+	}
+
+	one, many := batch(1), batch(100)
+	if many != one || one > 4+1 {
+		t.Errorf("document reads: %d for one entry and %d for 100; want the same and at most the caller's 4 projects", one, many)
 	}
 }
