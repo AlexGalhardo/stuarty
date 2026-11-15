@@ -66,6 +66,27 @@ await writeFile(
 		errors.map((e) => `\t${e.code}: { retryable: ${e.retryable}, http: ${e.http} },`).join("\n") +
 		"\n};\n",
 );
+// lint-rules.ts: the rule table of core/lint (SDD-003 section 3.6).
+const lintRules = await readJSON("lint-rules.json");
+await writeFile(
+	join(outDir, "lint-rules.ts"),
+	`${banner}
+export type LintCode = ${lintRules.map((r) => JSON.stringify(r.code)).join(" | ")};
+
+` +
+		`export interface LintRule {
+	code: LintCode;
+	severity: "error" | "warning";
+	phase: "P" | "A";
+	depth: ("doc" | "item" | "full")[];
+	blocking: boolean;
+	key: string;
+}
+
+` +
+		`export const LINT_RULES: LintRule[] = ${JSON.stringify(lintRules, null, "	")};
+`,
+);
 const limits = await readJSON("limits.json");
 await writeFile(
 	join(outDir, "limits.ts"),

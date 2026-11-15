@@ -11,8 +11,10 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
@@ -65,11 +67,32 @@ func run(out string) error {
 	if err := write(filepath.Join(out, "errors.json"), errs); err != nil {
 		return err
 	}
+	if err := write(filepath.Join(out, "lint-rules.json"), lintRules()); err != nil {
+		return err
+	}
 	return write(filepath.Join(out, "limits.json"), map[string]any{
 		"tracks": timeline.MaxTracks, "items": timeline.MaxItems, "assets": timeline.MaxAssets,
 		"caption_words": timeline.MaxCaptionWords, "words_per_caption": 60, "keyframes_per_property": 100,
 		"max_frames": timeline.MaxFrames, "batch_operations": 200, "batch_bytes": 512 * 1024,
 	})
+}
+
+// lintRules is the rule table of core/lint as data for the surfaces: the code, the
+// severity, the phase, the depths it runs at, whether it blocks an export and the key
+// of its title in the catalogue of texts.
+func lintRules() []map[string]any {
+	var rules []map[string]any
+	for _, r := range lint.Catalog() {
+		rules = append(rules, map[string]any{
+			"code":     r.Code,
+			"severity": r.Severity,
+			"phase":    r.Phase,
+			"depth":    strings.Split(strings.ReplaceAll(r.Run, " ", ""), ","),
+			"blocking": lint.Blocking(r.Code),
+			"key":      "lint.rule." + r.Code + ".title",
+		})
+	}
+	return rules
 }
 
 func writeCommands(out string) error {
