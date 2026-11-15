@@ -47,6 +47,9 @@ type Service interface {
 	ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult, error)
 	ViewSheet(ctx context.Context, req ViewSheetRequest) (*ViewResult, error)
 
+	// PlanWindow reads the render plan of a window of frames (SDD-004 section 10).
+	PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindowResult, error)
+
 	// OpenFile resolves a stored file of an asset for download; the caller
 	// serves the bytes.
 	OpenFile(ctx context.Context, ref FileRef) (*File, error)
@@ -122,6 +125,7 @@ type svc struct {
 	limits    Limits
 
 	running registry
+	bitmaps bitmaps
 	sems    map[string]chan struct{}
 }
 

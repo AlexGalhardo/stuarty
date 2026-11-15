@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/AlexGalhardo/vukem/web"
@@ -172,7 +173,12 @@ func (h *apiHandler) serveAsset(c *web.Ctx, kind, projectID, assetID, variant st
 	hd.Set("Content-Type", f.ContentType)
 	hd.Set("ETag", f.ETag)
 
-	cache := "private, max-age=86400"
+	maxAge := f.MaxAge
+	if maxAge <= 0 {
+		maxAge = 86400
+	}
+
+	cache := "private, max-age=" + strconv.Itoa(maxAge)
 	if f.Immutable {
 		cache += ", immutable"
 	}

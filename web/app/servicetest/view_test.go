@@ -3,6 +3,7 @@ package servicetest
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -90,5 +91,50 @@ func TestViewFrameAndSheetRenderTheCurrentRevision(t *testing.T) {
 		service.ViewSheetRequest{ProjectID: project, Times: []string{"0s", "1s"}, Count: 3},
 	); err == nil {
 		t.Error("times with count was accepted")
+	}
+}
+
+// The plan of a window hands out bitmap keys, and each key is served as a PNG.
+func TestPlanWindowAndBitmapKeys(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true})
+	project := m.exportable() // one text of 1 s at 30 fps, revision 2
+	ctx := m.as(ui)
+
+	w, err := m.svc.PlanWindow(ctx, service.PlanWindowRequest{ProjectID: project, From: 0, To: 30})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if w.Revision != 2 || w.EndFrame != 30 || w.Width != 1080 || len(w.Layers) != 1 || w.Layers[0].Bitmaps == nil ||
+		len(w.Layers[0].Bitmaps.Keys) == 0 || len(w.Layers[0].Bitmaps.Index) != 30 || len(w.Audio) != 0 {
+		t.Fatalf("window = %+v", w)
+	}
+
+	f, err := m.svc.OpenFile(ctx, service.FileRef{Kind: "bitmap", ProjectID: project, ID: w.Layers[0].Bitmaps.Keys[0]})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	raw, err := os.ReadFile(filepath.Join(m.ws, filepath.FromSlash(f.Path)))
+	if err != nil || !bytes.HasPrefix(raw, []byte("\x89PNG")) || f.ContentType != "image/png" || !f.Immutable ||
+		f.ETag != `"bmp-`+w.Layers[0].Bitmaps.Keys[0]+`"` || f.Size != int64(len(raw)) {
+		t.Errorf("file = %+v, %v", f, err)
+	}
+
+	for name, key := range map[string]string{"unknown": strings.Repeat("a", 64), "not a key": "../../db.sqlite"} {
+		if _, err := m.svc.OpenFile(ctx, service.FileRef{Kind: "bitmap", ProjectID: project, ID: key}); err == nil {
+			t.Errorf("%s: served", name)
+		}
+	}
+
+	for name, req := range map[string]service.PlanWindowRequest{
+		"empty":    {ProjectID: project, From: 5, To: 5},
+		"backward": {ProjectID: project, From: 9, To: 3},
+		"too long": {ProjectID: project, From: 0, To: 301},
+		"negative": {ProjectID: project, From: -1, To: 3},
+	} {
+		if _, err := m.svc.PlanWindow(ctx, req); err == nil {
+			t.Errorf("%s: accepted", name)
+		}
 	}
 }

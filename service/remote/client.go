@@ -345,6 +345,15 @@ func (c *Client) JobList(ctx context.Context, req service.JobListRequest) (*serv
 	return get[service.JobListResult](ctx, c, projectPath(req.ProjectID, "/jobs"), pageQuery(q, req.Page))
 }
 
+// PlanWindow implements service.Service.
+func (c *Client) PlanWindow(ctx context.Context, req service.PlanWindowRequest) (*service.PlanWindowResult, error) {
+	q := url.Values{}
+	q.Set("from", strconv.Itoa(req.From))
+	q.Set("to", strconv.Itoa(req.To))
+
+	return get[service.PlanWindowResult](ctx, c, projectPath(req.ProjectID, "/plan"), q)
+}
+
 // ViewFrame implements service.Service; the server answers the ViewResult as
 // JSON with the image in image_base64 (Accept: application/json).
 func (c *Client) ViewFrame(ctx context.Context, req service.ViewFrameRequest) (*service.ViewResult, error) {
