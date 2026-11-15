@@ -165,3 +165,12 @@ export function captionWordSegments(
 		width: Math.max(word.duration * ppf, 1),
 	}));
 }
+
+// The speed badge of a clip (SDD-012 section 7.4): "1.5x", nothing at 1.
+export function speedLabel(speed?: {
+	num: number;
+	den: number;
+}): string | null {
+	if (speed === undefined || speed.num === speed.den) return null;
+	return `${Number((speed.num / speed.den).toFixed(2))}x`;
+}

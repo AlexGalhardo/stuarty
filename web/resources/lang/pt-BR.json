@@ -108,7 +108,13 @@
         "audio": "Áudio",
         "text": "Texto",
         "caption": "Legenda",
-        "shape": "Forma"
+        "shape": "Forma",
+
+        "speed_badge": "Velocidade {speed}",
+
+        "slot_badge": "Espaço do modelo: {name}",
+
+        "asset_missing": "A mídia original deste item não está no projeto"
       },
       "loading": "Carregando o projeto",
       "unsupported_size": "O editor precisa de uma janela com pelo menos 1024 pixels de largura.",

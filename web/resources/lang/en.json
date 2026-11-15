@@ -108,7 +108,13 @@
         "audio": "Audio",
         "text": "Text",
         "caption": "Caption",
-        "shape": "Shape"
+        "shape": "Shape",
+
+        "speed_badge": "Speed {speed}",
+
+        "slot_badge": "Slot: {name}",
+
+        "asset_missing": "The media of this item is missing"
       },
       "loading": "Loading the project",
       "unsupported_size": "The editor needs a window at least 1024 pixels wide.",
