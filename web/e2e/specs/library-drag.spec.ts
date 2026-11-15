@@ -78,7 +78,7 @@ test.describe("library-drag", () => {
 			files: [audioClip(0)],
 		});
 		await page.goto(`/editor/${seeded.id}?debug=1`);
-		await expect(page.locator("[role=row]")).toHaveCount(2);
+		await expect(page.locator("[data-track-id]")).toHaveCount(2);
 		const card = `[data-asset-id="${seeded.assetId}"]`;
 		await expect(page.locator(card)).toHaveAttribute("data-draggable", "true");
 		const edits = recordEdits(page);
@@ -143,7 +143,7 @@ test.describe("library-drag", () => {
 		await expect(page.locator(card)).toHaveAttribute("data-draggable", "false");
 		const edits = recordEdits(page);
 
-		const row = await center(page, "[role=row]");
+		const row = await center(page, "[data-track-id]");
 		await dragCardTo(page, card, { x: row.box.x + 200, y: row.y });
 		await expect(page.getByTestId("ghost-layer")).toHaveCount(0);
 		await page.mouse.up();
