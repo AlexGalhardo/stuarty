@@ -3,6 +3,7 @@ package transcribe
 import (
 	"bytes"
 	"context"
+	"crypto/x509"
 	"errors"
 	"io"
 	"math"
@@ -386,4 +387,17 @@ func TestParseAPIClampsAndMapsLanguage(t *testing.T) {
 	if _, err := a.parseAPI([]byte(strings.Repeat("[", 40) + strings.Repeat("]", 40))); err == nil {
 		t.Error("a deeply nested response was accepted")
 	}
+}
+
+// tlsServer serves the handler over TLS on loopback and returns the options that trust it.
+func tlsServer(t *testing.T, h http.Handler) (*httptest.Server, *outbound.TestOptions) {
+	t.Helper()
+
+	srv := httptest.NewTLSServer(h)
+	t.Cleanup(srv.Close)
+
+	pool := x509.NewCertPool()
+	pool.AddCert(srv.Certificate())
+
+	return srv, &outbound.TestOptions{RootCAs: pool}
 }
