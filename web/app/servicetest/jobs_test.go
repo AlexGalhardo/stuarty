@@ -1056,3 +1056,58 @@ func TestJobCancelOfASharedIngestSparesTheOtherProjects(t *testing.T) {
 		t.Errorf("a cancel by the last waiter = %+v, %v", j, err)
 	}
 }
+
+// refsFailStore makes the read of the references of a hash fail.
+type refsFailStore struct{ service.Store }
+
+func (s refsFailStore) Write(ctx context.Context, fn func(context.Context, service.Tx) error) error {
+	return s.Store.Write(ctx, func(ctx context.Context, tx service.Tx) error { return fn(ctx, refsFailTx{tx}) })
+}
+
+type refsFailTx struct{ service.Tx }
+
+func (t refsFailTx) Assets() service.AssetRepo { return refsFailAssets{t.Tx.Assets()} }
+
+type refsFailAssets struct{ service.AssetRepo }
+
+func (refsFailAssets) ProjectsReferencing(context.Context, string) ([]string, error) {
+	return nil, errors.New("lookup failed")
+}
+
+// The decision of a cancellation of a shared ingest fails closed: when the
+// references cannot be read the job keeps running and the caller gets an error.
+func TestJobCancelOfAnIngestFailsClosedWhenTheReferencesCannotBeRead(t *testing.T) {
+	var failing atomic.Bool
+
+	m := newMediaEnv(t, mediaCfg{noQueue: true, wrapStore: func(s service.Store) service.Store {
+		return switchStore{Store: s, failing: &failing}
+	}})
+	project := m.newProject("p")
+	job := m.importOne(project, m.write("a.mp4", clipBytes)).Assets[0].JobID
+
+	failing.Store(true)
+
+	if _, err := m.svc.JobCancel(m.as(ui), service.JobCancelRequest{JobID: job}); err == nil {
+		t.Fatal("JobCancel succeeded although the references could not be read")
+	}
+
+	failing.Store(false)
+
+	if j := m.job(job); j.State != service.JobQueued {
+		t.Errorf("the job is %s after a failed decision; it must keep running", j.State)
+	}
+}
+
+// switchStore fails the reference lookup while failing is set.
+type switchStore struct {
+	service.Store
+	failing *atomic.Bool
+}
+
+func (s switchStore) Write(ctx context.Context, fn func(context.Context, service.Tx) error) error {
+	if s.failing.Load() {
+		return refsFailStore{s.Store}.Write(ctx, fn)
+	}
+
+	return s.Store.Write(ctx, fn)
+}

@@ -186,18 +186,14 @@ func (r *registry) remove(id string) {
 	delete(r.m, id)
 }
 
-func (r *registry) cancel(id string) bool {
+func (r *registry) cancel(id string) {
 	r.mu.Lock()
 	cancel := r.m[id]
 	r.mu.Unlock()
 
-	if cancel == nil {
-		return false
+	if cancel != nil {
+		cancel()
 	}
-
-	cancel()
-
-	return true
 }
 
 // errorJSON is the typed error object stored on a job or an asset.
