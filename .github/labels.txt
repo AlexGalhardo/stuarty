@@ -10,6 +10,7 @@ ffmpeg-freshness|B60205|The pinned FFmpeg is behind upstream or too old
 needs-triage|fbca04|Not yet reviewed by a maintainer
 needs-repro|fbca04|Waiting for a minimal reproduction
 blocked|000000|Cannot proceed until something else lands
+blocker|b60205|Blocks the release: fix it before the tag
 breaking|b60205|Changes or removes public behaviour
 # priority
 priority:p1|b60205|Fix before the next release

@@ -144,3 +144,17 @@ func TestAreaLabelsAreTheCommitScopes(t *testing.T) {
 		t.Errorf("area: labels = %v\nSDD-009 section 6.2 scopes = %v", areas, sddScopes)
 	}
 }
+
+// The 1.0 exit criterion "no open blocker" counts issues with this label, so it must exist.
+func TestBlockerLabelExists(t *testing.T) {
+	t.Parallel()
+
+	labels, err := parse(strings.NewReader(repoFile(t, ".github", "labels.txt")))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !slices.ContainsFunc(labels, func(l label) bool { return l.Name == "blocker" }) {
+		t.Error("labels.txt has no blocker label")
+	}
+}
