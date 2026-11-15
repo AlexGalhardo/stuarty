@@ -131,7 +131,9 @@ func (l *limits) release(actor string, route uncountedRoute) {
 	defer l.inFlightMu.Unlock()
 
 	key := actor + "|" + route.re.String()
-	if l.inFlight[key]--; l.inFlight[key] <= 0 {
+	l.inFlight[key]--
+
+	if l.inFlight[key] <= 0 {
 		delete(l.inFlight, key)
 	}
 }
