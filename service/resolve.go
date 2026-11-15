@@ -12,7 +12,8 @@ import (
 // resolveOps fills the `resolved` argument of the commands whose data comes
 // from media analysis (SDD-002 section A.9): the silences of
 // clip.remove_silences and the words of caption.from_transcript and
-// caption.retime_from_clip. It reads artifacts and starts nothing: when the
+// caption.retime_from_clip, the speech of audio.duck and the beats of
+// audio.mark_beats. It reads artifacts and starts nothing: when the
 // artifact is missing the batch fails with E_INVALID_STATE and a hint that
 // names the job to run. The stored operation carries `resolved`, so replaying
 // the log gives the same document. A caller may supply `resolved` itself, as
@@ -36,6 +37,10 @@ func (s *svc) resolveOps(
 			resolved, rerr = s.resolveSilences(ctx, tx, doc, &ops[i], i)
 		case "caption.from_transcript", "caption.retime_from_clip":
 			resolved, rerr = s.resolveWords(ctx, tx, doc, &ops[i], i)
+		case "audio.duck":
+			resolved, rerr = s.resolveSpeech(ctx, tx, doc, &ops[i], i)
+		case "audio.mark_beats":
+			resolved, rerr = s.resolveBeats(ctx, tx, doc, &ops[i], i)
 		}
 
 		if rerr != nil {

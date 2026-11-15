@@ -16,6 +16,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem/queue"
 
+	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/engine/cache"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/frame"
@@ -61,6 +62,8 @@ type mediaCfg struct {
 	onEvent func(service.Event)
 	// durable runs the jobs on the database queue with workers instead of inline.
 	durable bool
+	// beta serves the commands of the Beta phase.
+	beta bool
 	// tools is the install step of the helper.
 	tools *service.Tools
 	// transcriber is the provider of the transcribe job.
@@ -100,6 +103,11 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 
 	m.env = newEnvWith(tb, func(e *env, o *service.Options) {
 		m.ws = string(e.dir)
+
+		if cfg.beta {
+			o.Registry = command.BetaBuild()
+		}
+
 		gc := pathguard.Config{Workspace: m.ws}
 
 		if cfg.guard != nil {
@@ -275,12 +283,14 @@ func fakeResult(ws string, in ingest.Input) (*ingest.Result, error) {
 				kind, variant, ext, body string
 				profile                  int
 				meta                     any
-			}{"speech", "", "json", `{"version":1}`, 1, nil},
+			}{"speech", "", "json", `{"version":1,"sample_rate":48000,"sample_count":96000,"source":"envelope",` +
+				`"threshold_db":-35,"ranges":[{"start":0,"end":24000},{"start":48000,"end":96000}]}`, 1, nil},
 			struct {
 				kind, variant, ext, body string
 				profile                  int
 				meta                     any
-			}{"beats", "", "json", `{"version":1}`, 1, nil},
+			}{"beats", "", "json", `{"version":1,"sample_rate":48000,"sample_count":96000,"tempo_bpm":120,` +
+				`"confidence":1,"beats":[0,24000,48000,72000]}`, 1, nil},
 		)
 	}
 
