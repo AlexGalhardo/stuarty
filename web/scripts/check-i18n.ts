@@ -10,6 +10,7 @@
 //          en.json is used (a template such as `ui.editor.errors.${code}` uses
 //          the keys under its prefix)
 // I5       every code of the generated error table has ui.editor.errors.<CODE>
+// I7       (proposed) no key has the English text in pt-BR, outside SAME_IN_PORTUGUESE
 //
 // The syntax tree comes from the API inside the `typescript` package, as in
 // check-thin-client.ts. No new dependency.
@@ -20,7 +21,13 @@ import { fileURLToPath } from "node:url";
 import { SyntaxKind } from "typescript/unstable/ast";
 import { API } from "typescript/unstable/sync";
 
-import { type Catalog, compareCatalogs, flatten, type Leaf } from "./i18n-catalog.ts";
+import {
+	type Catalog,
+	compareCatalogs,
+	flatten,
+	type Leaf,
+	untranslated,
+} from "./i18n-catalog.ts";
 
 type Node = import("typescript/unstable/ast").Node;
 type SourceFile = import("typescript/unstable/ast").SourceFile;
@@ -275,6 +282,17 @@ function checkFixtures(catalog: Map<string, Leaf>): string[] {
 	return problems;
 }
 
+// Names, codes and formats that read the same in both languages.
+const SAME_IN_PORTUGUESE: ReadonlySet<string> = new Set([
+	"ui.nav.languages.en",
+	"ui.nav.languages.pt-BR",
+	"ui.projects.summary",
+	"ui.projects.presets.9:16",
+	"ui.editor.revision",
+	"ui.editor.activity.revision",
+	"ui.editor.timeline.item_summary",
+]);
+
 const en = flatten(loadCatalog("en.json"));
 const pt = flatten(loadCatalog("pt-BR.json"));
 
@@ -283,7 +301,10 @@ const tree = scan(webRoot, join(webRoot, "tsconfig.json"), en, usage, (file) =>
 	file.includes("/resources/js/"),
 );
 tree.push(...checkUsage(en, usage), ...unusedKeys(en, usage), ...errorHeadlines(en));
-for (const p of compareCatalogs(en, pt, "pt-BR")) {
+for (const p of [
+	...compareCatalogs(en, pt, "pt-BR"),
+	...untranslated(en, pt, "pt-BR", SAME_IN_PORTUGUESE),
+]) {
 	tree.push({ file: "resources/lang", line: 0, rule: p.rule, message: p.message });
 }
 for (const f of tree) console.error(format(f));

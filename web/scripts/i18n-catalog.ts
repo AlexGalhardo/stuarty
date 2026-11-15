@@ -99,3 +99,27 @@ export function compareCatalogs(
 	}
 	return problems;
 }
+
+// I7 (proposed, not yet in SDD-012 section 16.4): a key whose text is the same
+// in both locales is an untranslated placeholder unless it is on the
+// allowlist, which holds names, codes and formats that read the same in
+// Portuguese.
+export function untranslated(
+	en: Map<string, Leaf>,
+	other: Map<string, Leaf>,
+	otherName: string,
+	allowed: ReadonlySet<string>,
+): Problem[] {
+	const problems: Problem[] = [];
+	for (const [key, leaf] of en) {
+		const twin = other.get(key);
+		if (twin === undefined || allowed.has(key)) continue;
+		if (leaf.texts.join("\u0000") === twin.texts.join("\u0000")) {
+			problems.push({
+				rule: "I7",
+				message: `${key} has the English text in ${otherName}`,
+			});
+		}
+	}
+	return problems;
+}

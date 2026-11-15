@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest";
 
-import { compareCatalogs, flatten, placeholders } from "./i18n-catalog";
+import {
+	compareCatalogs,
+	flatten,
+	placeholders,
+	untranslated,
+} from "./i18n-catalog";
 
 describe("flatten", () => {
 	test("nests with dots and keeps a plural object as one leaf", () => {
@@ -42,5 +47,21 @@ describe("compareCatalogs", () => {
 	test("equal catalogues pass", () => {
 		const pt = flatten({ k: "Olá {name}", n: { one: "{count} tarefa", other: "{count} tarefas" } });
 		expect(compareCatalogs(en, pt, "pt-BR")).toEqual([]);
+	});
+});
+
+describe("untranslated (I7)", () => {
+	const en = flatten({ title: "Export", name: "Vukem", n: { one: "1 job", other: "{count} jobs" } });
+
+	test("fails a key whose text equals the English one", () => {
+		const pt = flatten({ title: "Export", name: "Vukem", n: { one: "1 tarefa", other: "{count} tarefas" } });
+		expect(untranslated(en, pt, "pt-BR", new Set(["name"])).map((p) => p.message)).toEqual([
+			"title has the English text in pt-BR",
+		]);
+	});
+
+	test("passes when the same text is on the allowlist or translated", () => {
+		const pt = flatten({ title: "Exportar", name: "Vukem", n: { one: "1 tarefa", other: "{count} tarefas" } });
+		expect(untranslated(en, pt, "pt-BR", new Set(["name"]))).toEqual([]);
 	});
 });
