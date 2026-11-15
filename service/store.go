@@ -54,6 +54,8 @@ type Repos interface {
 	Templates() TemplateRepo
 	Backups() BackupRepo
 	Audit() AuditRepo
+	Fonts() FontRepo
+	BrandKit() BrandKitRepo
 }
 
 // Tx is a write transaction.
@@ -498,4 +500,28 @@ type AuditRow struct {
 type AuditRepo interface {
 	Append(ctx context.Context, row AuditRow) error
 	List(ctx context.Context, projectID string, beforeID int64, limit int) ([]AuditRow, error) // projectID "" means all
+}
+
+// Fonts and the brand kit (SDD-005 section 5.11)
+
+// FontRepo records which user imported or brought each stored font file. A hash is in the form of
+// a document, "sha256:" and 64 hex digits.
+type FontRepo interface {
+	// Record adds owner to the owners of hash; recording twice changes nothing.
+	Record(ctx context.Context, owner, hash string, atMs int64) error
+	Owns(ctx context.Context, owner, hash string) (bool, error)
+}
+
+// BrandKitRow is the brand kit of one owner, "" in local mode.
+type BrandKitRow struct {
+	OwnerUserID string
+	Document    json.RawMessage
+	UpdatedMs   int64
+	UpdatedBy   string
+}
+
+// BrandKitRepo stores the brand kit.
+type BrandKitRepo interface {
+	Get(ctx context.Context, owner string) (BrandKitRow, error) // ErrNotFound when there is none
+	Put(ctx context.Context, row BrandKitRow) error
 }

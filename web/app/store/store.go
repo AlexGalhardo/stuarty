@@ -97,6 +97,8 @@ func (p *projectTx) Jobs() service.JobRepo                { return p.tx.Jobs() }
 func (p *projectTx) Templates() service.TemplateRepo      { return p.tx.Templates() }
 func (p *projectTx) Backups() service.BackupRepo          { return p.tx.Backups() }
 func (p *projectTx) Audit() service.AuditRepo             { return p.tx.Audit() }
+func (p *projectTx) Fonts() service.FontRepo              { return p.tx.Fonts() }
+func (p *projectTx) BrandKit() service.BrandKitRepo       { return p.tx.BrandKit() }
 func (p *projectTx) AfterCommit(fn func())                { p.tx.AfterCommit(fn) }
 func (p *projectTx) Project() service.ProjectRow          { return p.row }
 func (p *projectTx) Executor() database.Executor          { return p.tx.Executor() }

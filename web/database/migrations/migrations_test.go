@@ -145,6 +145,12 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 			"id TEXT 1 - 1", "token_id TEXT 1 - 0", "user_id TEXT 1 - 0", "project_id TEXT 0 - 0",
 			"name TEXT 1 - 0", "created_ms INTEGER 1 - 0",
 		},
+		"brand_kits": {
+			"owner_user_id TEXT 1 - 1", "document TEXT 1 - 0", "updated_ms INTEGER 1 - 0", "updated_by TEXT 1 - 0",
+		},
+		"font_owners": {
+			"hash TEXT 1 - 1", "owner_user_id TEXT 1 - 2", "created_ms INTEGER 1 - 0",
+		},
 	}
 	for table, w := range want {
 		if got := columns(t, db, table); !slices.Equal(got, w) {
@@ -284,6 +290,8 @@ func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
 		"document_backups",
 		"audit",
 		"api_keys",
+		"brand_kits",
+		"font_owners",
 	}
 	for _, table := range tables {
 		if len(columns(t, db, table)) == 0 {
