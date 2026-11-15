@@ -14,7 +14,7 @@ import (
 // Version is the version of the product the material describes, written into
 // the header of every file and the frontmatter of the skill. The release commit
 // bumps it and regenerates out/ (go run ./web/cmd/gen-agent-docs).
-const Version = "0.13.0"
+const Version = "0.14.0"
 
 // The three artifacts of SDD-003 section 8.1.
 const (
