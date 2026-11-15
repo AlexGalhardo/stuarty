@@ -1,0 +1,258 @@
+package main
+
+import (
+	"bytes"
+	"context"
+	"crypto/ed25519"
+	"crypto/x509"
+	"encoding/hex"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/desktop/update"
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
+)
+
+const (
+	seedFile     = "../../../desktop/update/testdata/test-key.seed"
+	pubFile      = "../../../desktop/update/testdata/test-key.pub"
+	winInstaller = "vukem-video-desktop_0.15.0_windows_amd64_setup.exe"
+	debInstaller = "vukem-video-desktop_0.15.0_linux_amd64.deb"
+)
+
+func useTestKey(t *testing.T) string {
+	t.Helper()
+
+	seed, err := os.ReadFile(seedFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv(defaultKeyEnv, strings.TrimSpace(string(seed)))
+
+	pub, err := os.ReadFile(pubFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return strings.TrimSpace(string(pub))
+}
+
+func writeInstallers(t *testing.T) (dir string, files []string) {
+	t.Helper()
+
+	dir = t.TempDir()
+
+	for name, body := range map[string]string{
+		winInstaller: strings.Repeat("windows installer ", 50),
+		debInstaller: strings.Repeat("debian package ", 50),
+	} {
+		p := filepath.Join(dir, name)
+		if err := os.WriteFile(p, []byte(body), 0o600); err != nil {
+			t.Fatal(err)
+		}
+
+		files = append(files, p)
+	}
+
+	return dir, files
+}
+
+func checksumsOf(t *testing.T, files []string) string {
+	t.Helper()
+
+	var b strings.Builder
+
+	for _, f := range files {
+		sum, _, err := digest(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		b.WriteString(sum + "  " + filepath.Base(f) + "\n")
+	}
+
+	p := filepath.Join(t.TempDir(), "checksums.txt")
+	if err := os.WriteFile(p, []byte(b.String()), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	return p
+}
+
+func TestPubkeyMatchesTheTestFixture(t *testing.T) {
+	want := useTestKey(t)
+
+	var out, errb bytes.Buffer
+	if code := run([]string{"pubkey"}, &out, &errb); code != 0 {
+		t.Fatalf("exit %d: %s", code, errb.String())
+	}
+
+	if strings.TrimSpace(out.String()) != want {
+		t.Fatalf("pubkey = %q, want %q", out.String(), want)
+	}
+}
+
+func TestSignThenVerifyAgainstChecksums(t *testing.T) {
+	pub := useTestKey(t)
+	_, files := writeInstallers(t)
+	feed := filepath.Join(t.TempDir(), "feed.json")
+
+	var out, errb bytes.Buffer
+
+	args := append(
+		[]string{"sign", "-version", "0.15.0", "-base-url", "https://host.example/updates/", "-out", feed},
+		files...)
+	if code := run(args, &out, &errb); code != 0 {
+		t.Fatalf("sign exit %d: %s", code, errb.String())
+	}
+
+	sums := checksumsOf(t, files)
+	if code := run([]string{"verify", "-pub", pub, "-checksums", sums, feed}, &out, &errb); code != 0 {
+		t.Fatalf("verify exit %d: %s", code, errb.String())
+	}
+
+	// A digest that differs from checksums.txt is refused.
+	bad := filepath.Join(t.TempDir(), "checksums.txt")
+	if err := os.WriteFile(
+		bad,
+		[]byte(strings.Repeat("0", 64)+"  "+winInstaller+"\n"+strings.Repeat("1", 64)+"  "+debInstaller+"\n"),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	errb.Reset()
+
+	if code := run(
+		[]string{"verify", "-pub", pub, "-checksums", bad, feed},
+		&out,
+		&errb,
+	); code != 1 ||
+		!strings.Contains(errb.String(), "differs from checksums.txt") {
+		t.Fatalf("a wrong digest must fail: exit %d, %q", code, errb.String())
+	}
+
+	// Another key does not verify the feed.
+	other := hex.EncodeToString(make([]byte, ed25519.PublicKeySize))
+	errb.Reset()
+
+	if code := run([]string{"verify", "-pub", other, "-checksums", sums, feed}, &out, &errb); code != 1 {
+		t.Fatalf("a wrong key must fail, exit %d", code)
+	}
+}
+
+func TestSignRefusesWhatTheFeedMustNeverHold(t *testing.T) {
+	useTestKey(t)
+	_, files := writeInstallers(t)
+
+	cases := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{"pre-release", []string{"-version", "0.15.0-rc.1", "-base-url", "https://h.example/u"}, "never in the feed"},
+		{"http", []string{"-version", "0.15.0", "-base-url", "http://h.example/u"}, "must be https"},
+		{
+			"another version",
+			[]string{"-version", "0.16.0", "-base-url", "https://h.example/u"},
+			"not a desktop installer of version 0.16.0",
+		},
+	}
+	for _, c := range cases {
+		var out, errb bytes.Buffer
+
+		args := append(append([]string{"sign", "-out", filepath.Join(t.TempDir(), "f.json")}, c.args...), files...)
+		if code := run(args, &out, &errb); code != 1 || !strings.Contains(errb.String(), c.want) {
+			t.Errorf("%s: exit %d, %q", c.name, code, errb.String())
+		}
+	}
+
+	t.Setenv(defaultKeyEnv, "")
+
+	var out, errb bytes.Buffer
+
+	args := append([]string{"sign", "-version", "0.15.0", "-base-url", "https://h.example/u"}, files...)
+	if code := run(args, &out, &errb); code != 1 || !strings.Contains(errb.String(), defaultKeyEnv) {
+		t.Errorf("a missing key must name the secret: exit %d, %q", code, errb.String())
+	}
+}
+
+// TestTheClientAcceptsTheFeed proves the format against desktop/update itself: the client checks the
+// feed this tool signed, downloads the installer from the same host and verifies both signatures.
+func TestTheClientAcceptsTheFeed(t *testing.T) {
+	pub := useTestKey(t)
+	dir, files := writeInstallers(t)
+	feed := filepath.Join(t.TempDir(), "feed.json")
+
+	var out, errb bytes.Buffer
+	var doc []byte
+
+	// The client allows one host, so the installers are served by the feed server itself.
+	mux := http.NewServeMux()
+	mux.Handle("/", http.FileServer(http.Dir(dir)))
+	mux.HandleFunc("/feed.json", func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write(doc) })
+
+	one := httptest.NewTLSServer(mux)
+	t.Cleanup(one.Close)
+
+	args := append([]string{"sign", "-version", "0.15.0", "-base-url", one.URL, "-out", feed}, files...)
+	if code := run(args, &out, &errb); code != 0 {
+		t.Fatalf("sign exit %d: %s", code, errb.String())
+	}
+
+	var err error
+
+	doc, err = os.ReadFile(feed)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key, err := hex.DecodeString(pub)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pool := x509.NewCertPool()
+	pool.AddCert(one.Certificate())
+
+	installed := &fakeInstaller{}
+
+	client, err := update.New(update.Config{
+		FeedURL: one.URL + "/feed.json", PublicKey: key, CurrentVersion: "0.14.0", Platform: "windows-amd64",
+		StagingDir: filepath.Join(t.TempDir(), "staging"), AutoCheck: true, Installer: installed,
+		Test: &outbound.TestOptions{RootCAs: pool},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	offer, err := client.CheckNow(context.Background())
+	if err != nil {
+		t.Fatalf("the client refused the feed: %v", err)
+	}
+
+	if offer.Version != "0.15.0" {
+		t.Fatalf("offer version = %q", offer.Version)
+	}
+
+	if err := client.Apply(context.Background(), offer); err != nil {
+		t.Fatalf("the client refused the installer: %v", err)
+	}
+
+	if len(installed.calls) != 1 {
+		t.Fatalf("the installer was called %d times", len(installed.calls))
+	}
+}
+
+type fakeInstaller struct{ calls []update.Artifact }
+
+func (f *fakeInstaller) Install(_ context.Context, a update.Artifact) error {
+	f.calls = append(f.calls, a)
+
+	return nil
+}
