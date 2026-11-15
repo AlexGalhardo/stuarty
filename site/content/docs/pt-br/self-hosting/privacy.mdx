@@ -1,0 +1,50 @@
+---
+title: "Privacidade: nada sai da sua máquina"
+description: "A lista completa das formas como o produto pode abrir uma conexão de rede, e como cada uma é ligada."
+---
+
+## O que você vai aprender
+
+- que uma execução padrão não faz nenhuma conexão de saída;
+- a lista completa de exceções, e quem controla cada uma;
+- o que o produto não tem.
+
+## A ideia
+
+Com as configurações padrão, o binário não abre **nenhuma conexão de rede de saída**. Não há telemetria, verificação de atualização, relatório de falhas, serviço de fontes ou ícones nem análises. Os recursos do editor são embutidos, e a sua política de segurança deixa a página alcançar apenas o servidor de onde veio. Um teste inicia o servidor com toda configuração indefinida, executa um ciclo completo de criar, importar, editar, exportar e verificar, e falha em qualquer conexão; um job de CI repete a execução com o binário e o FFmpeg reais e observa conexões no Linux.
+
+Uma conexão **com** o servidor, de um navegador ou de um cliente que você usa, é de entrada e não conta aqui.
+
+| Caminho | Abre uma conexão quando | Para | Padrão |
+| --- | --- | --- | --- |
+| API de transcrição | `VUKEM_VIDEO_TRANSCRIBE_URL` e `VUKEM_VIDEO_TRANSCRIBE_KEY` estão definidos e uma transcrição roda | o host que você configurou, com o áudio de uma mídia e a chave | desligado |
+| Download de auxiliares | uma pessoa executa `tools:install` ou pressiona Install no editor | os hosts do manifesto embutido | nunca em tempo de execução |
+| OpenTelemetry | `OTEL_EXPORTER_OTLP_ENDPOINT` está definido | esse endpoint | desligado |
+| CLI e MCP stdio como clientes | um servidor é dono do espaço de trabalho | o endereço de loopback desse servidor, ou `VUKEM_VIDEO_URL` quando você o define | apenas loopback |
+| Abertura do navegador | o `serve` abre o seu navegador | o seu navegador se conecta ao loopback; o produto não faz conexão | apenas loopback |
+
+Essa é a lista inteira. O provedor de transcrição recebe apenas o áudio normalizado da mídia e a chave. Ele não recebe projeto, nome de arquivo nem caminho, o certificado é sempre verificado, os redirecionamentos são recusados e a tarefa diz qual host recebe o áudio. O download dos auxiliares é anunciado com o seu tamanho e host antes de começar.
+
+Nenhuma ferramenta de um agente pode fazer o produto enviar dados para algum lugar: nenhum argumento é uma URL, host, webhook ou destino, e não há importação por URL, publicação nem envio. O FFmpeg, o ffprobe e o programa de transcrição nunca recebem um endereço de rede; no Linux, `VUKEM_VIDEO_SANDBOX=bwrap` faz o sistema operacional impor isso.
+
+## Início rápido
+
+Para verificar na sua própria máquina, execute o servidor e observe as suas conexões com a ferramenta do seu sistema. No Linux:
+
+```bash
+vukem-video serve &
+ss -tnp | grep vukem-video
+```
+
+Você deve ver apenas o socket em escuta e o seu próprio navegador. Pare o servidor com `kill %1` quando terminar.
+
+## Erros comuns
+
+- Definir uma URL de transcrição sem entender que o áudio vai para lá. Use um host que você controla, ou deixe-a indefinida e use a transcrição local.
+- Tratar o `OTEL_EXPORTER_OTLP_ENDPOINT` como inofensivo: ele envia traces de requisições para esse endpoint.
+- Executar `tools:install` sem ler o que ele imprime: ele nomeia o host e o tamanho do download antes de pedir que você continue.
+
+## Próximos passos
+
+- [Logs e OpenTelemetry](/docs/self-hosting/observability)
+- [Transcrição](/docs/guide/transcription)
