@@ -1,0 +1,68 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_s6t7v8w9x0",
+    "changes": {
+      "duration": [
+        48,
+        72
+      ],
+      "words": [
+        [
+          {
+            "duration": 9,
+            "start": 0,
+            "text": "Meet"
+          },
+          {
+            "duration": 6,
+            "start": 9,
+            "text": "the"
+          },
+          {
+            "duration": 12,
+            "start": 15,
+            "text": "new"
+          },
+          {
+            "duration": 21,
+            "start": 27,
+            "text": "editor."
+          }
+        ],
+        [
+          {
+            "duration": 12,
+            "start": 0,
+            "text": "w1"
+          },
+          {
+            "duration": 12,
+            "start": 12,
+            "text": "w2"
+          },
+          {
+            "duration": 12,
+            "start": 24,
+            "text": "w3"
+          },
+          {
+            "duration": 12,
+            "start": 36,
+            "text": "w4"
+          },
+          {
+            "duration": 12,
+            "start": 48,
+            "text": "w5"
+          },
+          {
+            "duration": 12,
+            "start": 60,
+            "text": "w6"
+          }
+        ]
+      ]
+    }
+  }
+]

@@ -1,0 +1,338 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_s6t7v8w9x0",
+    "changes": {
+      "duration": [
+        48,
+        60
+      ],
+      "words": [
+        [
+          {
+            "duration": 9,
+            "start": 0,
+            "text": "Meet"
+          },
+          {
+            "duration": 6,
+            "start": 9,
+            "text": "the"
+          },
+          {
+            "duration": 12,
+            "start": 15,
+            "text": "new"
+          },
+          {
+            "duration": 21,
+            "start": 27,
+            "text": "editor."
+          }
+        ],
+        [
+          {
+            "duration": 1,
+            "start": 0,
+            "text": "w1"
+          },
+          {
+            "duration": 1,
+            "start": 1,
+            "text": "w2"
+          },
+          {
+            "duration": 1,
+            "start": 2,
+            "text": "w3"
+          },
+          {
+            "duration": 1,
+            "start": 3,
+            "text": "w4"
+          },
+          {
+            "duration": 1,
+            "start": 4,
+            "text": "w5"
+          },
+          {
+            "duration": 1,
+            "start": 5,
+            "text": "w6"
+          },
+          {
+            "duration": 1,
+            "start": 6,
+            "text": "w7"
+          },
+          {
+            "duration": 1,
+            "start": 7,
+            "text": "w8"
+          },
+          {
+            "duration": 1,
+            "start": 8,
+            "text": "w9"
+          },
+          {
+            "duration": 1,
+            "start": 9,
+            "text": "w10"
+          },
+          {
+            "duration": 1,
+            "start": 10,
+            "text": "w11"
+          },
+          {
+            "duration": 1,
+            "start": 11,
+            "text": "w12"
+          },
+          {
+            "duration": 1,
+            "start": 12,
+            "text": "w13"
+          },
+          {
+            "duration": 1,
+            "start": 13,
+            "text": "w14"
+          },
+          {
+            "duration": 1,
+            "start": 14,
+            "text": "w15"
+          },
+          {
+            "duration": 1,
+            "start": 15,
+            "text": "w16"
+          },
+          {
+            "duration": 1,
+            "start": 16,
+            "text": "w17"
+          },
+          {
+            "duration": 1,
+            "start": 17,
+            "text": "w18"
+          },
+          {
+            "duration": 1,
+            "start": 18,
+            "text": "w19"
+          },
+          {
+            "duration": 1,
+            "start": 19,
+            "text": "w20"
+          },
+          {
+            "duration": 1,
+            "start": 20,
+            "text": "w21"
+          },
+          {
+            "duration": 1,
+            "start": 21,
+            "text": "w22"
+          },
+          {
+            "duration": 1,
+            "start": 22,
+            "text": "w23"
+          },
+          {
+            "duration": 1,
+            "start": 23,
+            "text": "w24"
+          },
+          {
+            "duration": 1,
+            "start": 24,
+            "text": "w25"
+          },
+          {
+            "duration": 1,
+            "start": 25,
+            "text": "w26"
+          },
+          {
+            "duration": 1,
+            "start": 26,
+            "text": "w27"
+          },
+          {
+            "duration": 1,
+            "start": 27,
+            "text": "w28"
+          },
+          {
+            "duration": 1,
+            "start": 28,
+            "text": "w29"
+          },
+          {
+            "duration": 1,
+            "start": 29,
+            "text": "w30"
+          },
+          {
+            "duration": 1,
+            "start": 30,
+            "text": "w31"
+          },
+          {
+            "duration": 1,
+            "start": 31,
+            "text": "w32"
+          },
+          {
+            "duration": 1,
+            "start": 32,
+            "text": "w33"
+          },
+          {
+            "duration": 1,
+            "start": 33,
+            "text": "w34"
+          },
+          {
+            "duration": 1,
+            "start": 34,
+            "text": "w35"
+          },
+          {
+            "duration": 1,
+            "start": 35,
+            "text": "w36"
+          },
+          {
+            "duration": 1,
+            "start": 36,
+            "text": "w37"
+          },
+          {
+            "duration": 1,
+            "start": 37,
+            "text": "w38"
+          },
+          {
+            "duration": 1,
+            "start": 38,
+            "text": "w39"
+          },
+          {
+            "duration": 1,
+            "start": 39,
+            "text": "w40"
+          },
+          {
+            "duration": 1,
+            "start": 40,
+            "text": "w41"
+          },
+          {
+            "duration": 1,
+            "start": 41,
+            "text": "w42"
+          },
+          {
+            "duration": 1,
+            "start": 42,
+            "text": "w43"
+          },
+          {
+            "duration": 1,
+            "start": 43,
+            "text": "w44"
+          },
+          {
+            "duration": 1,
+            "start": 44,
+            "text": "w45"
+          },
+          {
+            "duration": 1,
+            "start": 45,
+            "text": "w46"
+          },
+          {
+            "duration": 1,
+            "start": 46,
+            "text": "w47"
+          },
+          {
+            "duration": 1,
+            "start": 47,
+            "text": "w48"
+          },
+          {
+            "duration": 1,
+            "start": 48,
+            "text": "w49"
+          },
+          {
+            "duration": 1,
+            "start": 49,
+            "text": "w50"
+          },
+          {
+            "duration": 1,
+            "start": 50,
+            "text": "w51"
+          },
+          {
+            "duration": 1,
+            "start": 51,
+            "text": "w52"
+          },
+          {
+            "duration": 1,
+            "start": 52,
+            "text": "w53"
+          },
+          {
+            "duration": 1,
+            "start": 53,
+            "text": "w54"
+          },
+          {
+            "duration": 1,
+            "start": 54,
+            "text": "w55"
+          },
+          {
+            "duration": 1,
+            "start": 55,
+            "text": "w56"
+          },
+          {
+            "duration": 1,
+            "start": 56,
+            "text": "w57"
+          },
+          {
+            "duration": 1,
+            "start": 57,
+            "text": "w58"
+          },
+          {
+            "duration": 1,
+            "start": 58,
+            "text": "w59"
+          },
+          {
+            "duration": 1,
+            "start": 59,
+            "text": "w60"
+          }
+        ]
+      ]
+    }
+  }
+]

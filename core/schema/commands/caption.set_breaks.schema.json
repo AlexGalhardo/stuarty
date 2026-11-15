@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "breaks": {
+      "description": "Indexes of the words that start a new line, strictly increasing; [] clears.",
+      "items": {
+        "type": "integer"
+      },
+      "type": "array"
+    },
+    "item_id": {
+      "description": "A caption.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id",
+    "breaks"
+  ],
+  "type": "object"
+}

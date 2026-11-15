@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.style.size is null, which is not allowed here.",
+  "hint": "Remove the key, or give it a value.",
+  "retryable": false,
+  "path": "args.style.size"
+}

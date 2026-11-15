@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.index is -1, outside the accepted range.",
+  "hint": "Use a value of at least 0.",
+  "retryable": false,
+  "path": "args.index"
+}

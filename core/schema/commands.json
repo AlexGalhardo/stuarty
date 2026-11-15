@@ -292,6 +292,209 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "index": {
+          "description": "0-based index of the word.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "item_id": {
+          "description": "A caption.",
+          "type": "string"
+        },
+        "text": {
+          "description": "The new text, 0 to 80 characters, no whitespace; empty removes.",
+          "maxLength": 80,
+          "minLength": 0,
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "index",
+        "text"
+      ],
+      "type": "object"
+    },
+    "description": "Replaces the text of the word at index; timing is untouched. An empty text removes the word and leaves a gap. The only word of a caption cannot be removed.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "index": 3,
+      "item_id": "itm_s6t7v8w9x0",
+      "text": "editor"
+    },
+    "internal": false,
+    "name": "caption.edit_word",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Changes the text of one word of a caption, or removes the word."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "breaks": {
+          "description": "Indexes of the words that start a new line, strictly increasing; [] clears.",
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "item_id": {
+          "description": "A caption.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "breaks"
+      ],
+      "type": "object"
+    },
+    "description": "Each break is the index of the word that starts a new line, from 1 to the word count minus 1, strictly increasing. An empty array clears the breaks.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH"
+    ],
+    "example": {
+      "breaks": [
+        2
+      ],
+      "item_id": "itm_s6t7v8w9x0"
+    },
+    "internal": false,
+    "name": "caption.set_breaks",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Sets the forced line breaks of a caption."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "item_id": {
+          "description": "A caption.",
+          "type": "string"
+        },
+        "style": {
+          "description": "A partial CaptionStyle replacing the override, or null or {} to clear it."
+        }
+      },
+      "required": [
+        "item_id",
+        "style"
+      ],
+      "type": "object"
+    },
+    "description": "The given object replaces the whole override and is stored as given. null or {} clears it. The caption style of the track is not touched.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_FONT_UNKNOWN"
+    ],
+    "example": {
+      "item_id": "itm_s6t7v8w9x0",
+      "style": {
+        "highlight": "word",
+        "size": 80
+      }
+    },
+    "internal": false,
+    "name": "caption.set_style",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Sets or clears the style override of one caption."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "duration": {
+          "description": "A length, at least the end of the last word. Default: that end.",
+          "type": "string"
+        },
+        "item_id": {
+          "description": "A caption.",
+          "type": "string"
+        },
+        "words": {
+          "description": "1 to 60 words with times relative to the caption, as lengths.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "duration": {
+                "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+                "type": "string"
+              },
+              "start": {
+                "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "start",
+              "duration"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "item_id",
+        "words"
+      ],
+      "type": "object"
+    },
+    "description": "Replaces all words (1 to 60, times relative to the caption, as lengths). The caption lasts until the end of the last word unless duration is given. Line breaks are cleared; keyframes are cut when the caption gets shorter.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_LIMIT",
+      "E_OVERLAP"
+    ],
+    "example": {
+      "item_id": "itm_s6t7v8w9x0",
+      "words": [
+        {
+          "duration": "12f",
+          "start": "0f",
+          "text": "Hello"
+        },
+        {
+          "duration": "12f",
+          "start": "12f",
+          "text": "world"
+        }
+      ]
+    },
+    "internal": false,
+    "name": "caption.set_words",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Replaces the words of a caption."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "asset_id": {
           "description": "A video or image asset, or ast_placeholder in a template.",
           "type": "string"

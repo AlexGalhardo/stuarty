@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.style.highlight must be one of none, word, got all.",
+  "hint": "Use one of: none, word.",
+  "retryable": false,
+  "path": "args.style.highlight"
+}

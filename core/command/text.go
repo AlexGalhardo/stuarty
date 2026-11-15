@@ -80,7 +80,7 @@ func applyTextAdd(c *Context, a *textAddArgs) error {
 	if err != nil {
 		return err
 	}
-	if err := c.checkFont("args.style", style); err != nil {
+	if err := c.checkFont(style); err != nil {
 		return err
 	}
 	if err := c.checkEnd("args.duration", start, duration); err != nil {
@@ -144,7 +144,7 @@ func applyTextSet(c *Context, a *textSetArgs) error {
 	if err != nil {
 		return err
 	}
-	if err := c.checkFont("args.style", style); err != nil {
+	if err := c.checkFont(style); err != nil {
 		return err
 	}
 	if a.Text != nil {

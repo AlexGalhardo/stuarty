@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.breaks[1] is 2 but must be greater than the previous break 3.",
+  "hint": "Send the breaks in strictly increasing order.",
+  "retryable": false,
+  "path": "args.breaks[1]"
+}

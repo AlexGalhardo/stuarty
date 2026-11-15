@@ -1,0 +1,9 @@
+{
+  "op": "caption.set_style",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "style": {
+      "size": 80
+    }
+  }
+}

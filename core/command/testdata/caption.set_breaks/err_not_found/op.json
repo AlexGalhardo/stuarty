@@ -1,0 +1,9 @@
+{
+  "op": "caption.set_breaks",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "breaks": [
+      1
+    ]
+  }
+}

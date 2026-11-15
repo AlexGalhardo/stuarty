@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.text \"new editor\" contains whitespace; a word has none.",
+  "hint": "Use caption.set_words to replace one word by several.",
+  "retryable": false,
+  "path": "args.text"
+}

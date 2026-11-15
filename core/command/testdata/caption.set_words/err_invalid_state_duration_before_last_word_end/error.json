@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "args.duration 20 frames is before the last word ends at 24.",
+  "hint": "Use duration \"24f\" or longer, or omit it.",
+  "retryable": false,
+  "path": "args.duration"
+}

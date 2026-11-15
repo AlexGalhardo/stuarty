@@ -1,0 +1,6 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "The new words leaves transitions of 30 frames in total, longer than the duration 24 by 6 frames.",
+  "hint": "Shorten the transitions by 6 frames with item.set_transition first.",
+  "retryable": false
+}
