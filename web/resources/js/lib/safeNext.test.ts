@@ -7,6 +7,6 @@ test("a path of this site is kept, anything else goes to the projects", () => {
 	expect(safeNext(null)).toBe("/projects");
 	expect(safeNext("https://example.com/x")).toBe("/projects");
 	expect(safeNext("//example.com")).toBe("/projects");
-	expect(safeNext("/example.com")).toBe("/projects");
+	expect(safeNext("/\\example.com")).toBe("/projects");
 	expect(safeNext("editor")).toBe("/projects");
 });
