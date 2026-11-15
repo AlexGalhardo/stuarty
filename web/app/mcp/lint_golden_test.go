@@ -10,9 +10,9 @@ import (
 
 // TestLintReportGolden: the lint report of the rules the service evaluates from
 // the document alone matches its golden file. The rules that need a measured
-// box or an ingest artifact (L_OCCLUDED, L_SAFE_AREA, L_OFF_FRAME,
-// L_AUDIO_CLIP, L_LOUDNESS, L_CAPTION_DESYNC) are silent until the owner wires
-// lint.Env.Measurer and lint.Env.Artifacts; their reports are the
+// box or an ingest artifact (L_SAFE_AREA, L_OFF_FRAME,
+// L_AUDIO_CLIP, L_LOUDNESS, L_CAPTION_DESYNC) are silent here: testenv, unlike the owner, wires neither
+// lint.Env.Measurer nor a workspace artifact; their reports are the
 // golden files of core/lint.
 func TestLintReportGolden(t *testing.T) {
 	t.Parallel()
