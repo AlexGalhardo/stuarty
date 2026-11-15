@@ -7,6 +7,7 @@ import {
 	useUiState,
 } from "../../state/EditorContext";
 import { selectFps } from "../../state/selectors";
+import MarkerTicks from "./MarkerTicks";
 import { columnPeaks, loadPeaks, type Peaks } from "./waveform";
 
 // Columns drawn beyond each edge of the viewport, so a short scroll shows
@@ -145,6 +146,7 @@ export default function AudioItem({ id }: { id: string }): ReactNode {
 					/>
 				)}
 			</span>
+			<MarkerTicks id={id} />
 			{item.volume !== undefined && item.volume !== 1 && (
 				<span
 					data-badge="volume"

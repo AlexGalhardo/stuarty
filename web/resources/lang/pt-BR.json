@@ -358,6 +358,12 @@
         "audio": {
           "add": {
             "title": "Adicionar áudio"
+          },
+          "duck": {
+            "title": "Baixar a música sob a fala"
+          },
+          "mark_beats": {
+            "title": "Marcar batidas"
           }
         },
         "caption": {
@@ -393,17 +399,31 @@
           "add": {
             "title": "Adicionar clipe"
           },
+          "set_blur": {
+            "title": "Definir desfoque do clipe"
+          },
           "remove_silences": {
             "title": "Remover silêncios"
           },
           "set_color": {
             "title": "Definir cor do clipe"
           },
+          "set_filter": {
+            "title": "Definir filtro do clipe"
+          },
           "set_framing": {
             "title": "Definir enquadramento do clipe"
           },
           "set_speed": {
             "title": "Definir velocidade do clipe"
+          }
+        },
+        "font": {
+          "add": {
+            "title": "Adicionar fonte"
+          },
+          "remove": {
+            "title": "Remover fonte"
           }
         },
         "item": {
@@ -618,6 +638,32 @@
           "fit": "fades ou transições não cabem mais"
         }
       },
+      "audio": {
+        "duck_title": "Redução automática",
+        "duck_speech": "Itens de fala",
+        "duck_none": "Não há outro clipe ou item de áudio para usar como fala.",
+        "duck_gain": "Mudança de volume enquanto há fala",
+        "duck_attack": "Ataque",
+        "duck_release": "Liberação",
+        "duck_apply": "Baixar sob a fala",
+        "beats_title": "Marcadores de batida",
+        "beats_every": "Marcar a cada n batidas",
+        "beats_label": "Rótulo do marcador",
+        "beats_replace": "Substituir os marcadores do item",
+        "beats_count": {
+          "one": "1 marcador",
+          "other": "{count} marcadores"
+        },
+        "beats_apply": "Marcar batidas"
+      },
+      "fonts": {
+        "title": "Fontes",
+        "remove": "Remover a família de fontes {name}",
+        "family": "Nome da família",
+        "weight": "Peso",
+        "hash": "Hash do arquivo da fonte (sha256:...)",
+        "add": "Adicionar fonte"
+      },
       "clip": {
         "audio_title": "Áudio",
         "volume": "Volume",
@@ -640,6 +686,16 @@
         "brightness": "Brilho",
         "contrast": "Contraste",
         "saturation": "Saturação",
+        "filters_title": "Filtros",
+        "filter": "Filtro",
+        "filter_none": "Nenhum",
+        "filter_grayscale": "Tons de cinza",
+        "filter_sepia": "Sépia",
+        "filter_invert": "Inverter",
+        "filter_warm": "Quente",
+        "filter_cool": "Frio",
+        "filter_amount": "Intensidade do filtro",
+        "blur": "Desfoque",
         "silences_title": "Silêncios",
         "min_silence": "Silêncio mínimo",
         "padding": "Margem",
