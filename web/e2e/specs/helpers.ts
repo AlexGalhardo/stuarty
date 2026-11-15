@@ -224,7 +224,26 @@ export async function seedProject(
 	const assetId = assetIds[0];
 	if (!assetId) throw new Error(`no asset after import for ${id}`);
 
+	// The import answers before an ingest that another project shares has put the
+	// asset in this document (the three preview-vs-export cases import one file at
+	// once), and a clip.add on the missing asset is a 404. Wait for the document
+	// to hold every asset, and take the revision from it.
 	let revision = imported.revision;
+	const deadline = Date.now() + 60_000;
+	for (;;) {
+		const head = (await call("GET", `/projects/${id}?detail=document`)) as {
+			revision: number;
+			document?: { assets?: Record<string, unknown> };
+		};
+		if (assetIds.every((a) => head.document?.assets?.[a] !== undefined)) {
+			revision = head.revision;
+			break;
+		}
+		if (Date.now() > deadline) {
+			throw new Error(`assets of ${id} never reached the document`);
+		}
+		await new Promise((resolve) => setTimeout(resolve, 100));
+	}
 	const edit = async (operations: unknown[]): Promise<string[]> => {
 		const out = (await call("POST", `/projects/${id}/edit`, {
 			base_revision: revision,
