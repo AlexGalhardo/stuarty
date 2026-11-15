@@ -99,6 +99,44 @@ export function testClip(variant = 0): string {
 	return out;
 }
 
+// markerClip makes a 10 s clip of the given size on a smooth gradient with a red
+// and a blue solid box at fixed places: the markers of the displacement check
+// of preview-vs-export (SDD-012 section 20.3).
+export function markerClip(width: number, height: number): string {
+	const dir = join(tmpdir(), "vukem-video-e2e-media");
+	mkdirSync(dir, { recursive: true });
+	const out = join(dir, `markers3-${width}x${height}.mp4`);
+	if (!existsSync(out)) {
+		const box = Math.round(Math.min(width, height) / 5);
+		const red = `drawbox=x=${Math.round(width * 0.38)}:y=${Math.round(height * 0.2)}:w=${box}:h=${box}:color=red:t=fill`;
+		const blue = `drawbox=x=${Math.round(width * 0.53)}:y=${Math.round(height * 0.65)}:w=${box}:h=${box}:color=blue:t=fill`;
+		execFileSync(
+			ffmpegExe(),
+			[
+				"-y",
+				"-f",
+				"lavfi",
+				"-i",
+				`gradients=size=${width}x${height}:rate=30:duration=10:seed=9,hue=s=0,${red},${blue}`,
+				"-f",
+				"lavfi",
+				"-i",
+				"sine=frequency=330:duration=10",
+				"-c:v",
+				"libopenh264",
+				"-pix_fmt",
+				"yuv420p",
+				"-c:a",
+				"aac",
+				"-shortest",
+				out,
+			],
+			{ stdio: "ignore" },
+		);
+	}
+	return out;
+}
+
 export interface Seeded {
 	id: string;
 	assetId: string;
@@ -147,6 +185,8 @@ export async function seedProject(
 		perTrack?: number;
 		clipDuration?: string;
 		assets?: number;
+		// Files to import instead of the gradient clips.
+		files?: string[];
 	} = {},
 ): Promise<Seeded> {
 	const call = await caller(request);
@@ -156,9 +196,10 @@ export async function seedProject(
 	const id = created.project_id as string;
 
 	const imported = (await call("POST", `/projects/${id}/media`, {
-		files: Array.from({ length: options.assets ?? 1 }, (_, v) => ({
-			path: testClip(v),
-		})),
+		files: (
+			options.files ??
+			Array.from({ length: options.assets ?? 1 }, (_, v) => testClip(v))
+		).map((path) => ({ path })),
 		wait_ms: 20000,
 	})) as { revision: number; assets: { asset_id: string }[] };
 	const assetIds = imported.assets.map((a) => a.asset_id);
