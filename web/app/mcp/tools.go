@@ -3,6 +3,7 @@ package mcp
 import (
 	"context"
 	"encoding/json"
+	"slices"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
@@ -25,6 +26,7 @@ func (a *adapter) handlers() map[string]callFunc {
 		"job_start":      jobStart,
 		"job_get":        jobGet,
 		"job_cancel":     jobCancel,
+		"template":       template,
 		"view":           view,
 	}
 }
@@ -421,4 +423,98 @@ func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 	}
 
 	return &toolOutput{value: res, text: res.Text, image: res.Image, mime: res.MIME}, nil
+}
+
+// templateMembers are the members each action of the template tool uses
+// (SDD-003 section 4.2): the others are refused, and the required ones must be
+// there.
+var templateMembers = map[string]struct{ required, optional []string }{
+	"list": {nil, []string{"cursor", "limit"}},
+	"save": {[]string{"project_id", "name"}, []string{"description"}},
+	"new":  {[]string{"template_id", "name"}, []string{"fill", "id"}},
+}
+
+// checkTemplateMembers refuses a member the action does not use and names the
+// path of a missing one.
+func checkTemplateMembers(action string, raw json.RawMessage) error {
+	var given map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &given); err != nil {
+		return &service.Error{Code: command.CodeValidation, Message: "the arguments are not valid."}
+	}
+
+	want, known := templateMembers[action]
+	if !known {
+		return &service.Error{
+			Code: command.CodeValidation, Path: "action",
+			Message: "action " + action + " is not available in this build.", Hint: "use list, save or new",
+		}
+	}
+
+	for name := range given {
+		if name != "action" && !slices.Contains(want.required, name) && !slices.Contains(want.optional, name) {
+			return &service.Error{
+				Code: command.CodeValidation, Path: name,
+				Message: name + " is not used by the action " + action + ".",
+			}
+		}
+	}
+
+	for _, name := range want.required {
+		if _, ok := given[name]; !ok {
+			return &service.Error{
+				Code: command.CodeValidation, Path: name,
+				Message: name + " is required by the action " + action + ".",
+			}
+		}
+	}
+
+	return nil
+}
+
+func template(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
+	in, err := decode[struct {
+		Action      string                       `json:"action"`
+		TemplateID  string                       `json:"template_id"`
+		ProjectID   string                       `json:"project_id"`
+		ID          string                       `json:"id"`
+		Name        string                       `json:"name"`
+		Description string                       `json:"description"`
+		Fill        map[string]service.SlotValue `json:"fill"`
+		pageArgs
+	}](raw)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := checkTemplateMembers(in.Action, raw); err != nil {
+		return nil, err
+	}
+
+	switch in.Action {
+	case "list":
+		res, err := svc.TemplateList(ctx, service.TemplateListRequest{Page: in.page()})
+		if err != nil {
+			return nil, err
+		}
+
+		return &toolOutput{value: res, text: res.Text}, nil
+	case "save":
+		res, err := svc.TemplateSave(ctx, service.TemplateSaveRequest{
+			ProjectID: in.ProjectID, Name: in.Name, Description: in.Description,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &toolOutput{value: res, text: res.Text}, nil
+	}
+
+	res, err := svc.TemplateInstantiate(ctx, service.TemplateInstantiateRequest{
+		TemplateID: in.TemplateID, Name: in.Name, Fill: in.Fill, ID: in.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &toolOutput{value: res, text: res.Text}, nil
 }

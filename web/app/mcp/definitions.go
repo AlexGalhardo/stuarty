@@ -24,7 +24,7 @@ var definitionFiles embed.FS
 // caches hit. These are the tools whose Service operations exist in the build.
 var order = []string{
 	"project_list", "project_create", "project_get", "project_trash", "edit", "command_help", "history",
-	"media_import", "media_inspect", "view", "lint", "job_start", "job_get", "job_cancel",
+	"media_import", "media_inspect", "view", "lint", "job_start", "job_get", "job_cancel", "template",
 }
 
 // definition is a tool definition and its compiled input schema.
@@ -53,8 +53,11 @@ func loadDefinitions(reg *command.Registry) (map[string]*definition, error) {
 			return nil, fmt.Errorf("mcp: definitions/%s.json defines %q", name, t.Name)
 		}
 
-		if name == "edit" {
+		switch name {
+		case "edit":
 			filterOps(&t, reg)
+		case "template":
+			filterTemplateActions(&t)
 		}
 
 		compiled, err := compileInput(&t)
@@ -66,6 +69,21 @@ func loadDefinitions(reg *command.Registry) (map[string]*definition, error) {
 	}
 
 	return out, nil
+}
+
+// templateActions are the actions of the template tool whose Service operations
+// exist in the build (the phase filter of SDD-003 section 4.1): export and import
+// are absent, and so is the path member only they use.
+var templateActions = []any{"list", "save", "new"}
+
+func filterTemplateActions(t *sdk.Tool) {
+	schema, _ := t.InputSchema.(map[string]any)
+	props, _ := schema["properties"].(map[string]any)
+	action, _ := props["action"].(map[string]any)
+
+	action["enum"] = templateActions
+
+	delete(props, "path")
 }
 
 // filterOps keeps, in the order of the definition, the operations the build has.

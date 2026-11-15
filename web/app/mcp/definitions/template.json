@@ -1,0 +1,90 @@
+{
+ "name": "template",
+ "description": "Templates are projects with named slots. action=list; save (project_id, name) makes a template from a project; new (template_id, name, fill, id?) creates a project, fill maps slot name to {asset_id}, {text} or {words}; export returns a template file path; import (path) reads one. Unfilled required slots are lint errors.",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "action": {
+    "enum": [
+     "list",
+     "save",
+     "new",
+     "export",
+     "import"
+    ]
+   },
+   "template_id": {
+    "type": "string",
+    "pattern": "^tpl_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "project_id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "name": {
+    "type": "string"
+   },
+   "description": {
+    "type": "string"
+   },
+   "fill": {
+    "type": "object"
+   },
+   "path": {
+    "type": "string"
+   },
+   "cursor": {
+    "type": "string"
+   },
+   "limit": {
+    "type": "integer",
+    "minimum": 1,
+    "maximum": 100,
+    "default": 20
+   }
+  },
+  "required": [
+   "action"
+  ],
+  "additionalProperties": false
+ },
+ "outputSchema": {
+  "type": "object",
+  "properties": {
+   "templates": {
+    "type": "array",
+    "items": {
+     "type": "object"
+    },
+    "x-untrusted": true
+   },
+   "template": {
+    "type": "object",
+    "x-untrusted": true
+   },
+   "project_id": {
+    "type": "string"
+   },
+   "path": {
+    "type": "string"
+   },
+   "next_cursor": {
+    "type": [
+     "string",
+     "null"
+    ]
+   }
+  }
+ },
+ "annotations": {
+  "title": "Templates",
+  "readOnlyHint": false,
+  "destructiveHint": false,
+  "idempotentHint": false,
+  "openWorldHint": false
+ }
+}
