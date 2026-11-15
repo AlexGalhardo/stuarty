@@ -11,6 +11,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
@@ -125,21 +126,25 @@ type Options struct {
 	Limits Limits
 	// Version is the binary version written into the template files.
 	Version string
+	// Transcriber is the transcription provider of the transcribe job; without
+	// one JobStart for it answers E_TRANSCRIBE_UNAVAILABLE.
+	Transcriber transcribe.Provider
 }
 
 type svc struct {
-	store     Store
-	reg       *command.Registry
-	now       func() time.Time
-	newIDs    func(string) string
-	publish   func(Event)
-	lintEnv   lint.Env
-	workspace string
-	media     Media
-	exporter  Exporter
-	enqueue   Enqueuer
-	limits    Limits
-	version   string
+	store       Store
+	reg         *command.Registry
+	now         func() time.Time
+	newIDs      func(string) string
+	publish     func(Event)
+	lintEnv     lint.Env
+	workspace   string
+	media       Media
+	exporter    Exporter
+	enqueue     Enqueuer
+	limits      Limits
+	version     string
+	transcriber transcribe.Provider
 
 	storeMu sync.RWMutex
 
@@ -155,23 +160,25 @@ func New(o Options) (Service, error) {
 	}
 
 	s := &svc{
-		store:     o.Store,
-		reg:       o.Registry,
-		now:       o.Now,
-		newIDs:    o.NewIDs,
-		publish:   o.Publish,
-		lintEnv:   o.Lint,
-		workspace: o.Workspace,
-		media:     o.Media,
-		exporter:  o.Exporter,
-		enqueue:   o.Enqueue,
-		limits:    o.Limits.withDefaults(),
-		version:   o.Version,
+		store:       o.Store,
+		reg:         o.Registry,
+		now:         o.Now,
+		newIDs:      o.NewIDs,
+		publish:     o.Publish,
+		lintEnv:     o.Lint,
+		workspace:   o.Workspace,
+		media:       o.Media,
+		exporter:    o.Exporter,
+		enqueue:     o.Enqueue,
+		limits:      o.Limits.withDefaults(),
+		version:     o.Version,
+		transcriber: o.Transcriber,
 	}
 
 	s.sems = map[string]chan struct{}{
-		JobIngest: make(chan struct{}, s.limits.MaxIngests),
-		JobExport: make(chan struct{}, s.limits.MaxExports),
+		JobIngest:     make(chan struct{}, s.limits.MaxIngests),
+		JobExport:     make(chan struct{}, s.limits.MaxExports),
+		JobTranscribe: make(chan struct{}, s.limits.MaxTranscribes),
 	}
 
 	if s.media.Ingest == nil {

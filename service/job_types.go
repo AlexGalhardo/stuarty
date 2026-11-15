@@ -100,7 +100,8 @@ type ExportResult struct {
 
 // JobResult has exactly one member set.
 type JobResult struct {
-	Export *ExportResult `json:"export,omitempty"`
+	Export     *ExportResult     `json:"export,omitempty"`
+	Transcribe *TranscribeResult `json:"transcribe,omitempty"`
 }
 
 // Job is the job object of SDD-003 section 2.8.

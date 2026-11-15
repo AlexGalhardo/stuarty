@@ -82,14 +82,25 @@ var Scopes = map[string]string{
 // is E_UNAUTHORIZED, a missing scope or a key limited to another project is
 // E_FORBIDDEN. projectID is "" for operations that do not name a project.
 func authorize(ctx context.Context, method, projectID string) (Caller, error) {
+	scope, listed := Scopes[method]
+	if !listed {
+		scope = ""
+	}
+
+	return authorizeScope(ctx, scope, projectID)
+}
+
+// authorizeScope is authorize for a method whose scope depends on the request:
+// JobStart needs render for an export and media for a transcription. An empty
+// scope is one that no caller holds.
+func authorizeScope(ctx context.Context, scope, projectID string) (Caller, error) {
 	c, ok := CallerFrom(ctx)
 	if !ok {
 		return Caller{}, newError(CodeUnauthorized, "the request carries no credentials.").
 			withHint("send the local token or an API key")
 	}
 
-	scope, listed := Scopes[method]
-	if !listed || !slices.Contains(c.Scopes, scope) {
+	if scope == "" || !slices.Contains(c.Scopes, scope) {
 		return Caller{}, newError(CodeForbidden, "the caller lacks the %q scope.", scope).
 			withHint("use a key with the %s scope", scope)
 	}

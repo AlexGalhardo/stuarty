@@ -183,6 +183,8 @@ func (s *svc) RunJob(ctx context.Context, jobID string) error {
 		result, herr = s.runIngest(jctx, &job, pw)
 	case JobExport:
 		result, herr = s.runExport(jctx, &job, pw)
+	case JobTranscribe:
+		result, herr = s.runTranscribe(jctx, &job, pw)
 	default:
 		herr = newError(command.CodeInternal, "jobs of the kind %s are not available in this build.", job.Kind)
 	}
