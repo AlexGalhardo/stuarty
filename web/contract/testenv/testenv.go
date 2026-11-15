@@ -52,6 +52,8 @@ type Options struct {
 type Env struct {
 	Service service.Service
 	Dir     workspace.Dir
+	// Store is the SQLite store under the service.
+	Store *store.Store
 	// Files is a directory for the media files of the test.
 	Files string
 	// Ingests counts the calls of the fake ingest.
@@ -83,6 +85,8 @@ func New(tb testing.TB, o Options) *Env {
 	}
 
 	tb.Cleanup(func() { _ = st.Close() })
+
+	e.Store = st
 
 	guard, err := pathguard.New(pathguard.Config{Workspace: string(dir)})
 	if err != nil {
