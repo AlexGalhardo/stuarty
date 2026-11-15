@@ -12,9 +12,10 @@ import (
 	"testing"
 )
 
-// unpublishedHelpers are the helpers that wait for the first run of helpers.yml: their size and digest are
-// not known, and the install refuses them with reason not_published. Anything else must be published.
-var unpublishedHelpers = [][2]string{{"darwin", "amd64"}, {"darwin", "arm64"}, {"windows", "arm64"}}
+// unpublishedHelpers are the helpers that wait for a run of helpers.yml: their size and digest are not
+// known, and the install refuses them with reason not_published. Anything else must be published. Empty
+// since the helpers-v1.9.2 release (run 43729041820) published darwin/amd64, darwin/arm64 and windows/arm64.
+var unpublishedHelpers = [][2]string{}
 
 // ffmpegPinPlatforms are the platforms of .config/ffmpeg.env (FFMPEG_ASSET_* and FFMPEG_SHA256_*). The
 // other supported platforms have no pinned FFmpeg build and ship none.

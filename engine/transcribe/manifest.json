@@ -317,14 +317,25 @@
    "os": "darwin",
    "arch": "arm64",
    "url": "https://github.com/AlexGalhardo/vukem-video/releases/download/helpers-v1.9.2/whisper-cli-v1.9.2-darwin-arm64.tar.gz",
-   "bytes": 0,
-   "sha256": "",
+   "bytes": 1061153,
+   "sha256": "34c5545560f90b5aa758318e167d5de357c5e807c89762c661805dea355919a9",
    "file": "whisper-cli",
    "license": "MIT",
    "notice": "MIT License. Copyright (c) 2023-2026 The ggml authors. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
-   "published": false,
+   "published": true,
    "format": "tar.gz",
-   "members": [],
+   "members": [
+    {
+     "from": "whisper-cli-v1.9.2-darwin-arm64/LICENSE",
+     "to": "LICENSE",
+     "executable": false
+    },
+    {
+     "from": "whisper-cli-v1.9.2-darwin-arm64/whisper-cli",
+     "to": "whisper-cli",
+     "executable": true
+    }
+   ],
    "links": []
   },
   {
@@ -334,14 +345,25 @@
    "os": "darwin",
    "arch": "amd64",
    "url": "https://github.com/AlexGalhardo/vukem-video/releases/download/helpers-v1.9.2/whisper-cli-v1.9.2-darwin-amd64.tar.gz",
-   "bytes": 0,
-   "sha256": "",
+   "bytes": 1219575,
+   "sha256": "834ede61236a2185bbc7e0a8f48a67a5f31286e03210665535327e126b6afa43",
    "file": "whisper-cli",
    "license": "MIT",
    "notice": "MIT License. Copyright (c) 2023-2026 The ggml authors. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
-   "published": false,
+   "published": true,
    "format": "tar.gz",
-   "members": [],
+   "members": [
+    {
+     "from": "whisper-cli-v1.9.2-darwin-amd64/LICENSE",
+     "to": "LICENSE",
+     "executable": false
+    },
+    {
+     "from": "whisper-cli-v1.9.2-darwin-amd64/whisper-cli",
+     "to": "whisper-cli",
+     "executable": true
+    }
+   ],
    "links": []
   },
   {
@@ -351,14 +373,25 @@
    "os": "windows",
    "arch": "arm64",
    "url": "https://github.com/AlexGalhardo/vukem-video/releases/download/helpers-v1.9.2/whisper-cli-v1.9.2-windows-arm64.zip",
-   "bytes": 0,
-   "sha256": "",
+   "bytes": 828957,
+   "sha256": "e7909b29f22ab1cc4d690c56415601841221e2a0a000588fe24229bca0d8d1e1",
    "file": "whisper-cli.exe",
    "license": "MIT",
    "notice": "MIT License. Copyright (c) 2023-2026 The ggml authors. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
-   "published": false,
+   "published": true,
    "format": "zip",
-   "members": [],
+   "members": [
+    {
+     "from": "whisper-cli-v1.9.2-windows-arm64\\LICENSE",
+     "to": "LICENSE",
+     "executable": false
+    },
+    {
+     "from": "whisper-cli-v1.9.2-windows-arm64\\whisper-cli.exe",
+     "to": "whisper-cli.exe",
+     "executable": true
+    }
+   ],
    "links": []
   },
   {
