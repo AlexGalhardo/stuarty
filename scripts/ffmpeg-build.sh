@@ -9,7 +9,7 @@
 # Inputs: .config/ffmpeg-build/sources.env (pinned tarballs with SHA-256) and
 # .config/ffmpeg-build/configure-flags.txt (the flags, checked by internal/tools/ffmpegconf).
 # Windows is cross compiled from Linux with mingw-w64 (x86_64-w64-mingw32-gcc, posix threads).
-# Needs: curl, tar, make, autoconf, automake, libtool, a C and C++ compiler, nasm (x86), xz (zip on windows), GNU tar (gtar on macOS).
+# Needs: curl, tar, make, cmake (linux and windows, for libvpl), autoconf, automake, libtool, a C and C++ compiler, nasm (x86), xz (zip on windows), GNU tar (gtar on macOS).
 #
 # Reproducibility: SOURCE_DATE_EPOCH is the commit time of HEAD (or 0 outside git), paths
 # are remapped, no build time is embedded, and the archive has sorted entries, fixed owners and
@@ -116,7 +116,16 @@ fetch "$LIBVPX_SRC_URL" "$LIBVPX_SRC_SHA256" libvpx
 fetch "$OPUS_SRC_URL" "$OPUS_SRC_SHA256" opus
 fetch "$ZLIB_SRC_URL" "$ZLIB_SRC_SHA256" zlib
 fetch "$ZIMG_SRC_URL" "$ZIMG_SRC_SHA256" zimg
-case "$os" in linux | windows) fetch "$NVCODEC_SRC_URL" "$NVCODEC_SRC_SHA256" nvcodec ;; esac
+case "$os" in
+linux | windows)
+	fetch "$NVCODEC_SRC_URL" "$NVCODEC_SRC_SHA256" nvcodec
+	# Quick Sync and AMF are x86 GPU technologies: the linux arm64 build keeps NVENC only.
+	if [ "$arch" = amd64 ]; then
+		fetch "$LIBVPL_SRC_URL" "$LIBVPL_SRC_SHA256" libvpl
+		fetch "$AMF_SRC_URL" "$AMF_SRC_SHA256" amf
+	fi
+	;;
+esac
 
 fetch "$OPENH264_SRC_URL" "$OPENH264_SRC_SHA256" openh264
 
@@ -187,10 +196,35 @@ if [ -d "$work/src/nvcodec" ]; then
 	make -C "$work/src/nvcodec" PREFIX="$prefix" install >&2
 fi
 
+if [ -d "$work/src/libvpl" ]; then
+	# Only the dispatcher: it finds the Intel runtime of the GPU driver at run time (D-034).
+	log "ffmpeg-build: libvpl"
+	cmake_cross=()
+	if [ -n "$cross_prefix" ]; then
+		cmake_cross=(-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER="${cross_prefix}gcc"
+			-DCMAKE_CXX_COMPILER="${cross_prefix}g++-posix" -DCMAKE_RC_COMPILER="${cross_prefix}windres")
+	fi
+	cmake -S "$work/src/libvpl" -B "$work/libvpl-build" -DCMAKE_INSTALL_PREFIX="$prefix" -DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TOOLS=OFF \
+		-DBUILD_PREVIEW=OFF -DBUILD_EXPERIMENTAL=OFF -DINSTALL_EXAMPLE_CODE=OFF -DENABLE_WARNINGS_AS_ERRORS=OFF \
+		-DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CFLAGS" "${cmake_cross[@]}" >&2
+	cmake --build "$work/libvpl-build" -j "$jobs" >&2 && cmake --install "$work/libvpl-build" >&2
+fi
+
+if [ -d "$work/src/amf" ]; then
+	log "ffmpeg-build: AMF headers"
+	mkdir -p "$prefix/include/AMF"
+	cp -R "$work/src/amf/AMF/." "$prefix/include/AMF/"
+fi
+
 # --- FFmpeg ---
 name="ffmpeg-${FFMPEG_BUILD_VERSION}-${os}-${arch}"
 flags=()
-while IFS= read -r f; do flags+=("$f"); done < <({ flags_of common; flags_of "$os"; })
+while IFS= read -r f; do
+	# libvpl and AMF are fetched on x86 only (see above): without their inputs their flags are dropped.
+	case "$f" in --enable-libvpl | --enable-amf) [ -d "$work/src/libvpl" ] || continue ;; esac
+	flags+=("$f")
+done < <({ flags_of common; flags_of "$os"; })
 flags+=("--extra-version=vukem${FFMPEG_BUILD_TAG##*-}")
 
 # The configure flags are checked before the build: a licence mistake costs nothing then.
@@ -209,6 +243,9 @@ windows)
 		"--extra-ldflags=-static -Wl,--no-insert-timestamp")
 	;;
 esac
+
+# The libvpl dispatcher is C++: a static link needs the C++ runtime named explicitly.
+[ -d "$work/src/libvpl" ] && extra+=(--extra-libs=-lstdc++)
 
 log "ffmpeg-build: ffmpeg $FFMPEG_BUILD_VERSION for $os-$arch"
 (

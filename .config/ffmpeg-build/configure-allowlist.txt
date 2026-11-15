@@ -10,6 +10,8 @@
 --enable-libopus
 --enable-libzimg
 --enable-ffnvcodec
+--enable-libvpl
+--enable-amf
 --enable-videotoolbox
 --enable-audiotoolbox
 --enable-mediafoundation
