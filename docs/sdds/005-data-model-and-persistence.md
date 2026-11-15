@@ -842,6 +842,8 @@ CREATE TABLE templates (
 CREATE INDEX templates_created_ms_index ON templates (created_ms);
 ```
 
+In network mode a template belongs to the user who saved it, as a project does (section 5.10). Migration `20261115100000_add_templates_owner_user_id` adds `owner_user_id TEXT` (NULL in local mode) and `templates_owner_user_id_created_ms_index ON templates (owner_user_id, created_ms)`. `TemplateRepo.List` filters by owner, and every read path of the service checks `visible` and answers a template of another owner exactly as a missing one (`E_NOT_FOUND`).
+
 Section 15.
 
 ### 5.8 `document_backups`

@@ -18,5 +18,6 @@ func All() []schema.Migration {
 		m20261114100700CreateAuditTable(),
 		m20261114100800CreateAPIKeysTable(),
 		m20261114100900CreateAuditAppendOnlyTriggers(),
+		m20261115100000AddTemplatesOwnerUserID(),
 	}
 }

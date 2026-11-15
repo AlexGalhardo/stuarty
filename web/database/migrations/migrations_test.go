@@ -131,7 +131,7 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 			"document TEXT 1 - 0", "doc_sha256 TEXT 1 - 0", "slots TEXT 1 - 0", "width INTEGER 1 - 0",
 			"height INTEGER 1 - 0", "fps_num INTEGER 1 - 0", "fps_den INTEGER 1 - 0",
 			"duration_frames INTEGER 1 0 0", "source_project_id TEXT 0 - 0", "created_ms INTEGER 1 - 0",
-			"created_by TEXT 1 - 0",
+			"created_by TEXT 1 - 0", "owner_user_id TEXT 0 - 0",
 		},
 		"document_backups": {
 			"id INTEGER 0 - 1", "owner_kind TEXT 1 - 0", "owner_id TEXT 1 - 0", "revision INTEGER 1 - 0",
@@ -172,6 +172,7 @@ func TestIndexesAndTriggers(t *testing.T) {
 			"WHERE kind = 'ingest' AND state IN ('queued','running')",
 		},
 		"templates_created_ms_index":                 {"ON templates (created_ms)"},
+		"templates_owner_user_id_created_ms_index":   {"ON templates (owner_user_id, created_ms)"},
 		"document_backups_owner_kind_owner_id_index": {"ON document_backups (owner_kind, owner_id)"},
 		"audit_project_id_at_ms_index":               {"ON audit (project_id, at_ms)"},
 		"audit_at_ms_index":                          {"ON audit (at_ms)"},

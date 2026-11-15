@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
@@ -231,27 +232,34 @@ func TestTemplateFillRefusesAnotherOwnersAsset(t *testing.T) {
 		return res.ProjectID
 	}
 
-	edit := func(project string, base int64, ops ...command.Operation) *service.EditResult {
-		res, err := m.svc.Edit(alice, service.EditRequest{ProjectID: project, BaseRevision: base, Operations: ops})
+	// mkTemplate saves a one-slot template owned by c.
+	mkTemplate := func(c context.Context) string {
+		edit := func(project string, base int64, ops ...command.Operation) *service.EditResult {
+			res, err := m.svc.Edit(c, service.EditRequest{ProjectID: project, BaseRevision: base, Operations: ops})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			return res
+		}
+
+		source := mk(c, "tpl")
+		track := edit(source, 0, op("track.add", `{"kind":"visual","name":"V"}`)).Created[0]
+		edit(source, 1, op("template.set_info", `{"description":"t"}`))
+		clip := edit(source, 2, op(
+			"clip.add", fmt.Sprintf(`{"track_id":%q,"asset_id":"ast_placeholder","start":"0s","duration":"1s"}`, track),
+		))
+		edit(source, 3, op("slot.mark", fmt.Sprintf(`{"item_id":%q,"name":"hero"}`, clip.Created[0])))
+
+		tpl, err := m.svc.TemplateSave(c, service.TemplateSaveRequest{ProjectID: source, Name: "T"})
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		return res
+		return tpl.Template.TemplateID
 	}
 
-	source := mk(alice, "tpl")
-	track := edit(source, 0, op("track.add", `{"kind":"visual","name":"V"}`)).Created[0]
-	edit(source, 1, op("template.set_info", `{"description":"t"}`))
-	clip := edit(source, 2, op(
-		"clip.add", fmt.Sprintf(`{"track_id":%q,"asset_id":"ast_placeholder","start":"0s","duration":"1s"}`, track),
-	))
-	edit(source, 3, op("slot.mark", fmt.Sprintf(`{"item_id":%q,"name":"hero"}`, clip.Created[0])))
-
-	tpl, err := m.svc.TemplateSave(alice, service.TemplateSaveRequest{ProjectID: source, Name: "T"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	aliceTemplate, bobTemplate := mkTemplate(alice), mkTemplate(bob)
 
 	imp, err := m.svc.MediaImport(alice, service.MediaImportRequest{
 		ProjectID: mk(alice, "lib"), Files: []service.ImportFile{{Path: m.write("a.mp4", clipBytes)}},
@@ -263,20 +271,20 @@ func TestTemplateFillRefusesAnotherOwnersAsset(t *testing.T) {
 	fill := map[string]service.SlotValue{"hero": {AssetID: imp.Assets[0].AssetID}}
 
 	if _, err := m.svc.TemplateInstantiate(alice, service.TemplateInstantiateRequest{
-		TemplateID: tpl.Template.TemplateID, Name: "Mine", Fill: fill,
+		TemplateID: aliceTemplate, Name: "Mine", Fill: fill,
 	}); err != nil {
 		t.Fatalf("the owner of the asset: %v", err)
 	}
 
 	_, hidden := m.svc.TemplateInstantiate(bob, service.TemplateInstantiateRequest{
-		TemplateID: tpl.Template.TemplateID, Name: "Theirs", Fill: fill,
+		TemplateID: bobTemplate, Name: "Theirs", Fill: fill,
 	})
 	if code(hidden) != command.CodeNotFound {
 		t.Fatalf("another owner's asset = %v, want E_NOT_FOUND", hidden)
 	}
 
 	_, missing := m.svc.TemplateInstantiate(bob, service.TemplateInstantiateRequest{
-		TemplateID: tpl.Template.TemplateID, Name: "Theirs",
+		TemplateID: bobTemplate, Name: "Theirs",
 		Fill: map[string]service.SlotValue{"hero": {AssetID: "ast_0000000001"}},
 	})
 
@@ -345,5 +353,81 @@ func TestTemplateListPagesAndShowsSlots(t *testing.T) {
 
 	if s := first.Templates[0].Slots; len(s) != 2 || s[0].Kind != "media" || s[1].Kind != "text" {
 		t.Errorf("slots = %+v", s)
+	}
+}
+
+// A template belongs to the user who saved it: another owner cannot list it or
+// make a project from it, and the refusal is the one of a missing template.
+func TestTemplatesBelongToTheirOwner(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	alice := service.WithCaller(context.Background(), service.Caller{
+		Actor: "user:alice", OwnerUserID: "alice", Scopes: service.AllScopes,
+	})
+	bob := service.WithCaller(context.Background(), service.Caller{
+		Actor: "user:bob", OwnerUserID: "bob", Scopes: service.AllScopes,
+	})
+
+	res, err := m.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "src"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	saved, err := m.svc.TemplateSave(alice, service.TemplateSaveRequest{ProjectID: res.ProjectID, Name: "Mine"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id := saved.Template.TemplateID
+
+	if list, err := m.svc.TemplateList(alice, service.TemplateListRequest{}); err != nil || len(list.Templates) != 1 {
+		t.Errorf("the owner lists %+v, %v", list, err)
+	}
+
+	if list, err := m.svc.TemplateList(bob, service.TemplateListRequest{}); err != nil || len(list.Templates) != 0 {
+		t.Errorf("another owner lists %+v, %v; want none", list, err)
+	}
+
+	var page service.TemplateListRequest
+
+	page.Cursor = id
+	if list, err := m.svc.TemplateList(bob, page); err != nil || len(list.Templates) != 0 {
+		t.Errorf("a cursor on another owner's template: %+v, %v", list, err)
+	}
+
+	_, hidden := m.svc.TemplateInstantiate(bob, service.TemplateInstantiateRequest{TemplateID: id, Name: "x"})
+	_, missing := m.svc.TemplateInstantiate(
+		bob,
+		service.TemplateInstantiateRequest{TemplateID: "tpl_0000000000", Name: "x"},
+	)
+
+	h, mi := serviceErr(hidden), serviceErr(missing)
+	if h == nil || mi == nil || h.Code != command.CodeNotFound || h.Code != mi.Code || h.Hint != mi.Hint ||
+		h.Message != "there is no template "+id+"." || mi.Message != "there is no template tpl_0000000000." {
+		t.Errorf("a hidden template must look like a missing one: %+v / %+v", h, mi)
+	}
+
+	if _, err := m.svc.TemplateInstantiate(
+		alice,
+		service.TemplateInstantiateRequest{TemplateID: id, Name: "ok"},
+	); err != nil {
+		t.Errorf("the owner instantiates: %v", err)
+	}
+}
+
+func TestTemplateDescriptionLimit(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.templateProject()
+
+	long := strings.Repeat("é", 501)
+	if _, err := m.svc.TemplateSave(m.as(ui), service.TemplateSaveRequest{
+		ProjectID: project, Name: "x", Description: long,
+	}); code(err) != command.CodeValidation {
+		t.Errorf("a 501-character description = %v, want E_VALIDATION", err)
+	}
+
+	if _, err := m.svc.TemplateSave(m.as(ui), service.TemplateSaveRequest{
+		ProjectID: project, Name: "x", Description: long[:len(long)-2],
+	}); err != nil {
+		t.Errorf("a 500-character description: %v", err)
 	}
 }

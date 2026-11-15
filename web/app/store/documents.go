@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"strings"
 
 	"github.com/AlexGalhardo/vukem/database"
 
@@ -13,18 +14,19 @@ import (
 type templateRepo struct{ ex database.Executor }
 
 const templateListColumns = `id, name, description, schema_version, doc_sha256, slots, width, height, fps_num, fps_den,
- duration_frames, source_project_id, created_ms, created_by`
+ duration_frames, source_project_id, created_ms, created_by, owner_user_id`
 
 func scanTemplate(sc scanner, doc *string) (service.TemplateRow, error) {
 	var (
 		t      service.TemplateRow
 		slots  string
 		source sql.NullString
+		owner  sql.NullString
 	)
 	dest := []any{
 		&t.ID, &t.Name, &t.Description, &t.SchemaVersion, &t.DocSHA256, &slots,
 		&t.Summary.Width, &t.Summary.Height, &t.Summary.FPSNum, &t.Summary.FPSDen,
-		&t.Summary.DurationFrames, &source, &t.CreatedMs, &t.CreatedBy,
+		&t.Summary.DurationFrames, &source, &t.CreatedMs, &t.CreatedBy, &owner,
 	}
 	if doc != nil {
 		dest = append(dest, doc)
@@ -32,18 +34,35 @@ func scanTemplate(sc scanner, doc *string) (service.TemplateRow, error) {
 	if err := sc.Scan(dest...); err != nil {
 		return service.TemplateRow{}, err
 	}
-	t.Slots, t.SourceProjectID = json.RawMessage(slots), ptrString(source)
+	t.Slots, t.SourceProjectID, t.OwnerUserID = json.RawMessage(slots), ptrString(source), ptrString(owner)
 	return t, nil
 }
 
 func (r templateRepo) Create(ctx context.Context, t service.TemplateRow) error {
 	s := t.Summary
-	_, err := r.ex.ExecContext(ctx, `INSERT INTO templates
+	_, err := r.ex.ExecContext(
+		ctx,
+		`INSERT INTO templates
  (id, name, description, schema_version, document, doc_sha256, slots, width, height, fps_num, fps_den,
-  duration_frames, source_project_id, created_ms, created_by)
- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		t.ID, t.Name, t.Description, t.SchemaVersion, string(t.Document), t.DocSHA256, string(t.Slots),
-		s.Width, s.Height, s.FPSNum, s.FPSDen, s.DurationFrames, t.SourceProjectID, t.CreatedMs, t.CreatedBy)
+  duration_frames, source_project_id, created_ms, created_by, owner_user_id)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		t.ID,
+		t.Name,
+		t.Description,
+		t.SchemaVersion,
+		string(t.Document),
+		t.DocSHA256,
+		string(t.Slots),
+		s.Width,
+		s.Height,
+		s.FPSNum,
+		s.FPSDen,
+		s.DurationFrames,
+		t.SourceProjectID,
+		t.CreatedMs,
+		t.CreatedBy,
+		t.OwnerUserID,
+	)
 	if isUnique(r.ex, err) {
 		return service.ErrExists
 	}
@@ -65,15 +84,36 @@ const defaultTemplateLimit = 50
 
 // List pages by created_ms descending with the id as tie breaker. The cursor
 // is the id of the last row returned; the document is left empty.
-func (r templateRepo) List(ctx context.Context, limit int, after string) ([]service.TemplateRow, string, error) {
+func (r templateRepo) List(
+	ctx context.Context,
+	limit int,
+	after, ownerUserID string,
+) ([]service.TemplateRow, string, error) {
 	if limit <= 0 {
 		limit = defaultTemplateLimit
 	}
 	query := "SELECT " + templateListColumns + " FROM templates"
-	var args []any
+	var (
+		args  []any
+		where []string
+	)
+	if ownerUserID != "" {
+		where = append(where, "owner_user_id = ?")
+		args = append(args, ownerUserID)
+	}
 	if after != "" {
-		query += ` WHERE (created_ms, id) < (SELECT created_ms, id FROM templates WHERE id = ?)`
+		// The cursor row is looked up inside the same owner filter, so another
+		// owner's id is a cursor that matches nothing.
+		sub := "SELECT created_ms, id FROM templates WHERE id = ?"
 		args = append(args, after)
+		if ownerUserID != "" {
+			sub += " AND owner_user_id = ?"
+			args = append(args, ownerUserID)
+		}
+		where = append(where, "(created_ms, id) < ("+sub+")")
+	}
+	if len(where) > 0 {
+		query += " WHERE " + strings.Join(where, " AND ")
 	}
 	query += " ORDER BY created_ms DESC, id DESC LIMIT ?"
 	args = append(args, limit+1)

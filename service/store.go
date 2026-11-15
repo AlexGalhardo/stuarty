@@ -438,13 +438,16 @@ type TemplateRow struct {
 	SourceProjectID *string
 	CreatedMs       int64
 	CreatedBy       string
+	OwnerUserID     *string // network mode: the user who saved it; nil in local mode
 }
 
 // TemplateRepo stores templates.
 type TemplateRepo interface {
 	Create(ctx context.Context, row TemplateRow) error
 	Get(ctx context.Context, id string) (TemplateRow, error)
-	List(ctx context.Context, limit int, after string) ([]TemplateRow, string, error) // Document left empty
+	// List pages the templates of ownerUserID, or every template when it is
+	// empty (local mode); Document is left empty.
+	List(ctx context.Context, limit int, after, ownerUserID string) ([]TemplateRow, string, error)
 	UpdateDocument(
 		ctx context.Context,
 		id string,
