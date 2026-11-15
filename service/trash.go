@@ -43,6 +43,10 @@ func (s *svc) MediaTrash(ctx context.Context, req MediaTrashRequest) (*MediaStat
 			return nil, err
 		}
 
+		if aerr := s.auditAssetAction(ctx, c.Actor, "media.trash", project.ID, pa.AssetID, req.DryRun); aerr != nil {
+			return nil, aerr
+		}
+
 		return res, nil
 	case ProjectAssetPending:
 		// No document holds it yet: the row changes below, without a batch.
@@ -116,6 +120,10 @@ func (s *svc) MediaRestore(ctx context.Context, req MediaTrashRequest) (*MediaSt
 			return nil, err
 		}
 
+		if aerr := s.auditAssetAction(ctx, c.Actor, "media.restore", project.ID, pa.AssetID, req.DryRun); aerr != nil {
+			return nil, aerr
+		}
+
 		return res, nil
 	}
 
@@ -154,6 +162,22 @@ func (s *svc) MediaRestore(ctx context.Context, req MediaTrashRequest) (*MediaSt
 	}
 
 	return res, nil
+}
+
+// auditAssetAction records a trash or restore that went through a batch. The
+// batch commits in its own transaction (the commit of SDD-005 section 9), so
+// the row follows in a second one; the log row of the batch stays the record of
+// the edit itself.
+func (s *svc) auditAssetAction(ctx context.Context, actor, action, projectID, assetID string, dryRun bool) error {
+	if dryRun {
+		return nil
+	}
+
+	err := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		return appendAudit(ctx, tx, s.nowMs(), actor, action, projectID, assetID)
+	})
+
+	return asError(err)
 }
 
 func (s *svc) projectAsset(ctx context.Context, projectID, assetID string) (ProjectAssetRow, error) {

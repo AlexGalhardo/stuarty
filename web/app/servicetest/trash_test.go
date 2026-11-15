@@ -191,6 +191,24 @@ func TestTrashMediaOfAnActiveAsset(t *testing.T) {
 		t.Error("restore did not bring back the same asset")
 	}
 
+	rows, err := m.store.Audit().List(context.Background(), project, 0, 50)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	seen := map[string]bool{}
+	for _, r := range rows {
+		if r.SubjectID != nil && *r.SubjectID == id {
+			seen[r.Action+"/"+r.Actor] = true
+		}
+	}
+
+	for _, want := range []string{"media.trash/" + ui, "media.restore/" + ui} {
+		if !seen[want] {
+			t.Errorf("audit of the batch path lacks %s: %v", want, seen)
+		}
+	}
+
 	// Undo of the removal reaches the same state as restore.
 	if _, err := m.svc.MediaTrash(
 		m.as(ui),
