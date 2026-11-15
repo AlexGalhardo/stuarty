@@ -36,9 +36,10 @@ type AudioSource struct {
 }
 
 // audible reports whether the item is a source: a clip whose asset has audio
-// or an audio item, not muted itself or by its track (SDD-004 §7).
+// or an audio item, not muted itself or by its track, and not the placeholder of an
+// unfilled optional slot (SDD-004 §7).
 func audible(doc *timeline.Document, it *timeline.Item) bool {
-	if it.AudioMuted || doc.Tracks[it.Track].Muted {
+	if it.AudioMuted || doc.Tracks[it.Track].Muted || it.Asset == timeline.PlaceholderAsset {
 		return false
 	}
 
