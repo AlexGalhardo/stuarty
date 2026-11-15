@@ -68,6 +68,10 @@ var parity = []row{
 	{method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame"},
 	{method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet"},
 	{method: "TrashEmpty", route: "POST /trash/empty", httpOnly: true},
+	// The CLI command tools:install runs in process for the person at the
+	// terminal (SDD-007 section 6.8); its parity row arrives with it (P2-AGT).
+	{method: "ToolsInstall", route: "POST /system/tools/install", httpOnly: true},
+	{method: "ToolsStatus", route: "GET /system/tools", httpOnly: true},
 	{method: "Events", command: "events", route: "GET /projects/{}/events", noMethod: true},
 }
 

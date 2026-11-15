@@ -734,6 +734,29 @@
         },
         "type": "object"
       },
+      "InstalledTool": {
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Issue": {
         "properties": {
           "code": {
@@ -1098,6 +1121,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/ExportResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "transcribe": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TranscribeResult"
               },
               {
                 "type": "null"
@@ -2291,6 +2324,77 @@
         },
         "type": "object"
       },
+      "ToolFile": {
+        "properties": {
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "host": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ToolsInstallResult": {
+        "properties": {
+          "download_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ToolFile"
+            },
+            "type": "array"
+          },
+          "state": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ToolsStatusResult": {
+        "properties": {
+          "done_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "installed": {
+            "items": {
+              "$ref": "#/components/schemas/InstalledTool"
+            },
+            "type": "array"
+          },
+          "state": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "total_bytes": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Track": {
         "properties": {
           "caption_style": {
@@ -2324,6 +2428,20 @@
           },
           "order": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TranscribeResult": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "words": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -6165,6 +6283,91 @@
           }
         ],
         "summary": "Issue a one-time browser launch code"
+      }
+    },
+    "/api/v1/system/tools": {
+      "get": {
+        "operationId": "system.tools",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolsStatusResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the installed helpers and the install progress"
+      }
+    },
+    "/api/v1/system/tools/install": {
+      "post": {
+        "operationId": "system.tools.install",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "model": {
+                    "description": "The model, one the manifest of this build pins; default small.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The tool to install, for example whisper.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolsInstallResult"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Install the transcription helper"
       }
     },
     "/api/v1/templates": {

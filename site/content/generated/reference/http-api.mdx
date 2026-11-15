@@ -459,6 +459,25 @@ Issue a one-time browser launch code
 
 Responses: `200` OK, `401`, `default`.
 
+### `GET /system/tools`
+
+List the installed helpers and the install progress
+
+Responses: `200` OK, `401`, `default`.
+
+### `POST /system/tools/install`
+
+Install the transcription helper
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `model` | `string` | no | The model, one the manifest of this build pins; default small. |
+| `name` | `string` | yes | The tool to install, for example whisper. |
+
+Responses: `202` Accepted, `401`, `422`, `default`.
+
 ## templates
 
 ### `GET /templates`

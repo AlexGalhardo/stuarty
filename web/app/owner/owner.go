@@ -176,6 +176,20 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
+	model := cfg.Getenv("VUKEM_VIDEO_WHISPER_MODEL")
+	if model == "" {
+		model = "small"
+	}
+
+	tools, transcriber, err := o.tools(model)
+	if err != nil {
+		return err
+	}
+
+	if wp, ok := transcriber.(*whisperProvider); ok {
+		wp.ffmpeg = media.Runner
+	}
+
 	var driver queue.Driver = queue.Sync{}
 
 	if !cfg.Inline {
@@ -201,6 +215,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	o.Service, err = service.New(service.Options{
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
+		Transcriber: transcriber, Tools: tools,
 	})
 	if err != nil {
 		return err
@@ -401,6 +416,7 @@ func limitsFromEnv(getenv func(string) string) (service.Limits, error) {
 		{"VUKEM_VIDEO_MAX_EXPORTS", func(v int64) { l.MaxExports = int(v) }},
 		{"VUKEM_VIDEO_MAX_EXPORTS_PER_KEY", func(v int64) { l.MaxExportsPerActor = int(v) }},
 		{"VUKEM_VIDEO_MAX_TRANSCRIBES", func(v int64) { l.MaxTranscribes = int(v) }},
+		{"VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY", func(v int64) { l.MaxTranscribesPerActor = int(v) }},
 		{"VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS", func(v int64) { l.MaxTranscribeSeconds = v }},
 		{"VUKEM_VIDEO_MAX_EXPORT_BYTES", func(v int64) { l.MaxExportBytes = v }},
 		{"VUKEM_VIDEO_MAX_IMPORT_PIXELS", func(v int64) { l.Ceilings.MaxPixels = v }},

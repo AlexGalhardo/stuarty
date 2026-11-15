@@ -75,3 +75,29 @@ func TestRemoteServerFollowsNoRedirect(t *testing.T) {
 		t.Fatalf("status = %d, want the redirect itself", res.StatusCode)
 	}
 }
+
+// The install client speaks HTTPS to listed hosts only, whatever the URL.
+func TestHelperDownloadRefusesWhatIsNotListed(t *testing.T) {
+	t.Parallel()
+
+	client := outbound.HelperDownload([]string{"github.com"}, 2*time.Second)
+
+	for _, target := range []string{
+		"http://github.com/x",          // not HTTPS
+		"https://evil.example/x",       // not on the list
+		"https://127.0.0.1:1/x",        // an address, not a listed name
+		"https://github.com.evil.io/x", // a lookalike
+	} {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, target, http.NoBody)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if resp, err := client.Do(req); err == nil {
+			_ = resp.Body.Close()
+			t.Errorf("%s was fetched", target)
+		} else if !errors.Is(err, outbound.ErrHostNotAllowed) {
+			t.Errorf("%s: %v, want ErrHostNotAllowed", target, err)
+		}
+	}
+}

@@ -234,6 +234,8 @@ func (h *apiHandler) registerAll() {
 	register(h, "templates.save", h.templateSave)
 	register(h, "templates.instantiate", h.templateInstantiate)
 	register(h, "trash.empty", h.trashEmpty)
+	register(h, "system.tools.install", h.toolsInstall)
+	register(h, "system.tools", h.toolsStatus)
 	register(h, "templates.import", h.templateImport)
 	register(h, "templates.export", h.templateExport)
 	register(h, "templates.file", h.templateFile)

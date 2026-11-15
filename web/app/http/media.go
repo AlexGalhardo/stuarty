@@ -333,3 +333,27 @@ func (h *apiHandler) trashEmpty(c *web.Ctx, in trashEmptyIn) (service.TrashEmpty
 
 	return deref(res), err
 }
+
+type toolsInstallIn struct {
+	Name  string `json:"name"            validate:"required" doc:"The tool to install, for example whisper."`
+	Model string `json:"model,omitempty"                     doc:"The model, one the manifest of this build pins; default small."`
+}
+
+type toolsStatusIn struct{}
+
+// toolsInstall starts the download and answers 202 with what is coming. Only a
+// browser session or an admin key passes the Service check.
+func (h *apiHandler) toolsInstall(c *web.Ctx, in toolsInstallIn) (service.ToolsInstallResult, error) {
+	res, err := h.Service.ToolsInstall(c.Context(), service.ToolsInstallRequest{Name: in.Name, Model: in.Model})
+	if err != nil {
+		return service.ToolsInstallResult{}, err
+	}
+
+	return service.ToolsInstallResult{}, c.JSON(http.StatusAccepted, res)
+}
+
+func (h *apiHandler) toolsStatus(c *web.Ctx, _ toolsStatusIn) (service.ToolsStatusResult, error) {
+	res, err := h.Service.ToolsStatus(c.Context(), service.ToolsStatusRequest{})
+
+	return deref(res), err
+}
