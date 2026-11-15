@@ -109,7 +109,20 @@
         "shape": "Shape"
       },
       "loading": "Loading the project",
-      "unsupported_size": "The editor needs a window at least 1024 pixels wide."
+      "unsupported_size": "The editor needs a window at least 1024 pixels wide.",
+      "preview": {
+        "frame": "Exact frame at the playhead",
+        "unsupported": "Live preview needs WebGL2, which this browser does not offer. Paused frames are still exact.",
+        "transport": "Playback",
+        "play": "Play",
+        "pause": "Pause",
+        "to_start": "Go to start",
+        "to_end": "Go to end",
+        "step_back": "Step back one frame",
+        "step_forward": "Step forward one frame",
+        "current": "Current time",
+        "total": "Total duration"
+      }
     }
   }
 }

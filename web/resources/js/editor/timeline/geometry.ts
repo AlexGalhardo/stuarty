@@ -142,12 +142,7 @@ export function formatRulerLabel(
 	return `${Math.floor(whole / 60)}:${pad2(whole % 60)}`;
 }
 
-// mm:ss:ff, shown next to the ruler.
-export function formatTimecode(frame: number, fps: Fps): string {
-	const perSecond = framesPerSecond(fps);
-	const whole = Math.floor(frame / perSecond);
-	return `${pad2(Math.floor(whole / 60))}:${pad2(whole % 60)}:${pad2(frame % perSecond)}`;
-}
+export { formatTimecode } from "../ui/timecode";
 
 export interface Placed {
 	id: string;

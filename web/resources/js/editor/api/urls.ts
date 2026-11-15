@@ -30,3 +30,7 @@ export function proxyUrl(projectId: string, assetId: string): string {
 export function exportFileUrl(jobId: string): string {
 	return `${BASE}/jobs/${encodeURIComponent(jobId)}/file`;
 }
+
+export function bitmapUrl(projectId: string, key: string): string {
+	return `${project(projectId)}/bitmaps/${encodeURIComponent(key)}`;
+}

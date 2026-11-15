@@ -1,4 +1,4 @@
-import { createClient } from "../api/client";
+import { type ApiClient, createClient } from "../api/client";
 import { createEditQueue, type EditQueue } from "../api/edit";
 import { browserTimers, createEventStream, type Timers } from "../api/events";
 import type { Transport } from "../api/transport";
@@ -30,6 +30,7 @@ export interface RuntimeOptions {
 export interface EditorRuntime {
 	projectId: string;
 	ownActor: string;
+	client: ApiClient;
 	documents: ReadStore<DocumentState>;
 	ui: ReadStore<UiState>;
 	uiWriter: UiWriter;
@@ -112,6 +113,7 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 	return {
 		projectId,
 		ownActor: actor,
+		client,
 		documents,
 		ui,
 		uiWriter,
