@@ -18,6 +18,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
 )
 
 // Options configure the adapter.
@@ -59,7 +60,7 @@ func New(svc service.Service, o Options) (*sdk.Server, error) {
 	}
 
 	srv := sdk.NewServer(&sdk.Implementation{Name: "vukem-video", Version: o.Version}, &sdk.ServerOptions{
-		Instructions: strings.TrimSpace(instructionsText),
+		Instructions: agentdocs.Instructions(),
 		SetCacheable: func(_ context.Context, req sdk.Request, c *sdk.Cacheable) {
 			if req.GetParams() != nil && isToolsList(req) {
 				c.TTLMs, c.CacheScope = listTTLMs, "public"

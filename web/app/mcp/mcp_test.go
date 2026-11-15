@@ -11,6 +11,7 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
 )
 
 func TestToolListHasTheToolsWhoseOperationsExist(t *testing.T) {
@@ -434,7 +435,7 @@ func TestEditOpEnumIsTheRegistry(t *testing.T) {
 func TestInstructionsHead(t *testing.T) {
 	t.Parallel()
 
-	text := strings.TrimSpace(instructionsText)
+	text := agentdocs.Instructions()
 	first, _, _ := strings.Cut(text, "\n")
 
 	if !strings.HasPrefix(text, "Vukem Video is") || len(first) != 511 || len([]rune(text)) < 512 {

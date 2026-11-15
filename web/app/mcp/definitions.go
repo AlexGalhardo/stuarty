@@ -20,9 +20,6 @@ import (
 //go:embed definitions/*.json
 var definitionFiles embed.FS
 
-//go:embed instructions.txt
-var instructionsText string
-
 // order is the order of tools/list: the table of SDD-003 section 4.1, so prompt
 // caches hit. These are the tools whose Service operations exist in the build.
 var order = []string{
