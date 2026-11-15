@@ -26,6 +26,8 @@ install -m 0755 "$here/AppRun" "$appdir/AppRun"
 install -m 0644 "$here/vukem-video.desktop" "$appdir/vukem-video.desktop"
 install -m 0644 "$repo/.config/installers/assets/vukem-video.png" "$appdir/vukem-video.png"
 install -m 0644 "$repo/LICENSE.md" "$appdir/LICENSE.md"
+install -m 0644 "$repo/THIRD_PARTY_NOTICES.md" "$appdir/THIRD_PARTY_NOTICES.md"
+cp -R "$repo/licenses" "$appdir/licenses"
 
 # Runners have no FUSE: appimagetool is itself an AppImage, so it extracts itself and runs.
 ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 "$tool" --no-appstream "$appdir" "$out/vukem-video_${version}_linux_amd64.AppImage"

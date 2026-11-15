@@ -65,6 +65,8 @@ Source: "{#DesktopBinary}"; DestDir: "{app}"; DestName: "{#AppExe}"; Flags: igno
 Source: "{#ServerBinary}"; DestDir: "{app}"; DestName: "{#ServerExe}"; Flags: ignoreversion
 Source: "..\..\..\.config\installers\assets\vukem-video.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\..\LICENSE.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\..\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{app}\vukem-video.ico"; Comment: "Open the Vukem Video desktop application"

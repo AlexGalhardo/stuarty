@@ -58,6 +58,8 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 Source: "{#SourceBinary}"; DestDir: "{app}"; DestName: "{#AppExe}"; Flags: ignoreversion
 Source: "..\assets\vukem-video.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\..\LICENSE.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\..\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"; Parameters: "open"; IconFilename: "{app}\vukem-video.ico"; Comment: "Start the local server and open Vukem Video in your browser"; Flags: runminimized

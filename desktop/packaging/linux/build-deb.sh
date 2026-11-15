@@ -31,6 +31,8 @@ ln -s ../lib/vukem-video-desktop/vukem-video-desktop "$root/usr/bin/vukem-video-
 install -m 0644 "$here/vukem-video-desktop.desktop" "$root/usr/share/applications/vukem-video-desktop.desktop"
 install -m 0644 "$repo/.config/installers/assets/vukem-video.png" "$root/usr/share/icons/hicolor/256x256/apps/vukem-video-desktop.png"
 install -m 0644 "$repo/LICENSE.md" "$root/usr/share/doc/vukem-video-desktop/copyright"
+install -m 0644 "$repo/THIRD_PARTY_NOTICES.md" "$root/usr/share/doc/vukem-video-desktop/THIRD_PARTY_NOTICES.md"
+cp -R "$repo/licenses" "$root/usr/share/doc/vukem-video-desktop/licenses"
 
 size="$(du -sk "$root" | cut -f 1)"
 cat >"$root/DEBIAN/control" <<CONTROL
