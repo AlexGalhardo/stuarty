@@ -10,6 +10,8 @@ import (
 
 	"github.com/go-text/typesetting/font"
 	ot "github.com/go-text/typesetting/font/opentype"
+
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // The bundled fonts are embedded in the binary. System fonts are never read
@@ -30,9 +32,17 @@ type FontError struct {
 	// Weights lists the weights that exist for the family; nil when the family
 	// is unknown.
 	Weights []int
+	// Hash is set when the family exists in the document's fonts map but the
+	// file of that weight is not in the workspace.
+	Hash string
 }
 
 func (e *FontError) Error() string {
+	if e.Hash != "" {
+		return fmt.Sprintf("%s: the file of family %q weight %d (sha256 %s) is not in the workspace",
+			e.Code, e.Family, e.Weight, e.Hash)
+	}
+
 	if e.Weights == nil {
 		return fmt.Sprintf("%s: no font family %q", e.Code, e.Family)
 	}
@@ -82,11 +92,15 @@ func (f family) weights() []int {
 	return out
 }
 
-// FontSet gives the rasterizer its fonts. The zero value is not usable; use
-// Bundled.
+// FontSet gives the rasterizer its fonts: the bundled ones and, from BETA, the
+// user fonts of a document. The zero value is not usable; use Bundled or
+// NewFontSet.
 type FontSet struct {
-	mu     sync.Mutex
+	mu sync.Mutex
+	// parsed is keyed by bundled file name, or by the hex digest of a user font.
 	parsed map[string]*font.Font
+	user   map[string][]userFace
+	src    FontSource
 }
 
 var bundled = &FontSet{parsed: map[string]*font.Font{}}
@@ -94,6 +108,22 @@ var bundled = &FontSet{parsed: map[string]*font.Font{}}
 // Bundled returns the font set shipped inside the binary. It is safe for
 // concurrent use.
 func Bundled() *FontSet { return bundled }
+
+// NewFontSet returns the bundled set plus the families of a document's fonts
+// map (SDD-001 section 3.9), whose files src reads by hash. Bundled families
+// win: the document validation forbids a key that names one. src is never used
+// for anything but those hashes; system fonts are never read.
+func NewFontSet(docFonts map[string]timeline.ProjectFont, src FontSource) *FontSet {
+	user := make(map[string][]userFace, len(docFonts))
+
+	for name, pf := range docFonts {
+		for _, f := range pf.Files {
+			user[name] = append(user[name], userFace{weight: f.Weight, hash: trimHashPrefix(f.Hash)})
+		}
+	}
+
+	return &FontSet{parsed: map[string]*font.Font{}, user: user, src: src}
+}
 
 // Lookup returns a face of the family at the weight, or a *FontError with the
 // code E_FONT_UNKNOWN. Every call returns a new face, so callers may set
@@ -119,6 +149,10 @@ func (s *FontSet) Lookup(familyName string, weight int) (*font.Face, error) {
 		}
 
 		return face, nil
+	}
+
+	if faces, ok := s.user[familyName]; ok {
+		return s.lookupUser(familyName, weight, faces)
 	}
 
 	return nil, &FontError{Code: CodeFontUnknown, Family: familyName, Weight: weight}
