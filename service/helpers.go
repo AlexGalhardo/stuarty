@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"slices"
@@ -20,6 +21,16 @@ import (
 func decodeRow(row *ProjectRow) (*timeline.Document, error) {
 	doc, err := timeline.Decode(row.Document)
 	if err != nil {
+		if ve, ok := errors.AsType[*timeline.ViolationsError](err); ok {
+			for _, v := range ve.Violations {
+				if v.Code == timeline.VSchemaVersion {
+					return nil, newError(command.CodeValidation, "%s", v.Message).
+						withHint("update vukem-video, then open the project again").
+						withDetail("code", timeline.VSchemaVersion)
+				}
+			}
+		}
+
 		// The store holds what Canonical wrote; a document that no longer
 		// decodes is a bug or a damaged file, and says nothing useful to a caller.
 		return nil, internalError()
