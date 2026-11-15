@@ -47,9 +47,24 @@ export function changedItemIds(diff: readonly Change[] | undefined): string[] {
 		.map((c) => c.id);
 }
 
+// The names of the users of a network workspace, by user id, known once at
+// boot (SDD-012 section 5.8 item 6). A module value, not a store: it is filled
+// before the first render and never changes after.
+const userNames = new Map<string, string>();
+
+export function setUserNames(names: Readonly<Record<string, string>>): void {
+	userNames.clear();
+	for (const [id, name] of Object.entries(names)) {
+		if (name !== "") userNames.set(id, name);
+	}
+}
+
 // `local:claude-code` is shown as `claude-code`, `key:key_ab12cd34ef` as
-// `key ab12`; anything else stays as it is (SDD-012 section 5.8 item 6).
+// `key ab12`, `user:12` as the name of that user when it is known and as
+// `user:12` when it is not; anything else stays as it is (section 5.8 item 6).
 export function actorLabel(actor: string): string {
+	if (actor.startsWith("user:"))
+		return userNames.get(actor.slice("user:".length)) ?? actor;
 	if (actor.startsWith("local:")) return actor.slice("local:".length);
 	if (actor.startsWith("key:key_"))
 		return `key ${actor.slice("key:key_".length, "key:key_".length + 4)}`;

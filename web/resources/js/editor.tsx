@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 
 import "../css/app.css";
+import { createClient } from "./editor/api/client";
 import { HttpTransport } from "./editor/api/http";
 import {
 	type EditorBootstrap,
@@ -10,6 +11,7 @@ import {
 import { installDebugHooks } from "./editor/boot/debugHooks";
 import EditorApp from "./editor/boot/EditorApp";
 import { setBuildPhase } from "./editor/boot/phase";
+import { loadUserNames } from "./editor/boot/userNames";
 import { createRuntime } from "./editor/state/runtime";
 import { installStyleNonce } from "./lib/cspNonce";
 
@@ -60,11 +62,13 @@ async function main(): Promise<void> {
 		bootstrap = parseBootstrap(
 			document.getElementById("vv-bootstrap")?.textContent,
 		);
+		const transport = new HttpTransport(bootstrap.api_base);
 		runtime = createRuntime({
 			...base(bootstrap),
-			transport: new HttpTransport(bootstrap.api_base),
+			transport,
 			shareStream: true,
 		});
+		await loadUserNames(bootstrap, createClient(transport));
 	}
 	installStyleNonce();
 	if (debug) installDebugHooks(runtime, mismatches);
