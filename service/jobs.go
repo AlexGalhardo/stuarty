@@ -489,6 +489,23 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 			withHint("use a key that covers this project")
 	}
 
+	if row.Kind == JobIngest && row.AssetHash != nil && !isFinal(row.State) {
+		own, uerr := s.unlinkUnlessSoleWaiter(ctx, c, *row.AssetHash)
+		if uerr != nil {
+			return nil, asError(uerr)
+		}
+
+		if !own {
+			// Other projects wait on the same ingest: it keeps running.
+			after, gerr := s.store.Jobs().Get(ctx, row.ID)
+			if gerr != nil {
+				return nil, asError(gerr)
+			}
+
+			return s.jobView(c, after, false), nil
+		}
+	}
+
 	if err := s.cancelJob(ctx, row.ID); err != nil {
 		return nil, asError(err)
 	}
@@ -503,6 +520,69 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 	}
 
 	return s.jobView(c, after, false), nil
+}
+
+// unlinkUnlessSoleWaiter decides a cancellation of an ingest, which is shared
+// by content hash (SDD-005 section 5.6). When every project that holds the hash
+// is one the caller may see, the ingest may be cancelled and sole is true.
+// Otherwise cancelling would kill an ingest that a project the caller cannot
+// see waits on: the caller's own pending references are trashed instead and
+// the job runs on.
+func (s *svc) unlinkUnlessSoleWaiter(ctx context.Context, c Caller, hash string) (sole bool, err error) {
+	refs := s.referrers(ctx, hash)
+
+	var mine []ProjectAssetRow
+
+	// A trashed reference no longer waits on the ingest.
+	refs = slices.DeleteFunc(refs, func(r ProjectAssetRow) bool { return r.State == ProjectAssetTrashed })
+
+	for i := range refs {
+		owner, perr := s.store.Projects().Get(ctx, refs[i].ProjectID)
+		if perr != nil {
+			return false, perr
+		}
+
+		if !visible(c, owner.OwnerUserID) || c.ProjectID != "" && c.ProjectID != refs[i].ProjectID {
+			continue
+		}
+
+		mine = append(mine, refs[i])
+	}
+
+	if len(mine) == len(refs) {
+		return true, nil
+	}
+
+	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		now := s.nowMs()
+
+		for i := range mine {
+			if mine[i].State != ProjectAssetPending {
+				continue
+			}
+
+			if err := tx.Assets().
+				SetProjectAssetState(ctx, mine[i].ProjectID, mine[i].AssetID, ProjectAssetTrashed, c.Actor, now, nil); err != nil {
+				return err
+			}
+
+			if err := appendAudit(
+				ctx,
+				tx,
+				now,
+				c.Actor,
+				"media.trash",
+				mine[i].ProjectID,
+				mine[i].AssetID,
+			); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	return false, err
 }
 
 // Cancel is the cancellation of SDD-005 section 14.4 for the trash of a
