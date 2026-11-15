@@ -1,0 +1,349 @@
+package cli
+
+// The media and job commands of SDD-003 section 5.4. Each handler parses, calls
+// Service methods and formats; waiting is a loop over the wait_ms of the
+// Service, which is capped at 25 seconds per call.
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/textview"
+)
+
+// maxServiceWait is the longest wait_ms the Service accepts.
+const maxServiceWait = 25 * time.Second
+
+func isFinal(state string) bool {
+	return state == service.JobSucceeded || state == service.JobFailed || state == service.JobCancelled
+}
+
+// waitSlice is the wait_ms of the next call: what is left of the deadline,
+// at most what the Service accepts.
+func waitSlice(deadline time.Time) int {
+	left := min(time.Until(deadline), maxServiceWait)
+	if left <= 0 {
+		return 0
+	}
+
+	return int(left.Milliseconds())
+}
+
+var mediaImport = &spec{
+	name:    "media:import",
+	summary: "import media files into a project",
+	usage: []string{
+		"vukem-video media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
+	},
+	example:    "vukem-video media:import clip.mov --project prj_7k2m9x4q1b --json",
+	project:    true,
+	positional: true,
+	globals:    []string{"wait", "timeout"},
+	write:      true,
+	flags: []flagDef{
+		{Name: "asset-id", Kind: kindString, Repeat: true, Usage: "id to give the asset, once per path, in order"},
+	},
+	run: runMediaImport,
+}
+
+func runMediaImport(ctx context.Context, c *call) (*output, error) {
+	paths := c.args.Positional
+	if len(paths) == 0 {
+		return nil, validation("", "media:import needs at least one path.")
+	}
+
+	ids := c.args.all("asset-id")
+	if len(ids) > 0 && len(ids) != len(paths) {
+		return nil, validation(
+			"asset-id",
+			"--asset-id must be given once per path: %d paths, %d ids.",
+			len(paths),
+			len(ids),
+		)
+	}
+
+	files := make([]service.ImportFile, len(paths))
+
+	for i, p := range paths {
+		abs, err := c.rt.abs(p)
+		if err != nil {
+			return nil, err
+		}
+
+		files[i].Path = abs
+
+		if len(ids) > 0 {
+			files[i].AssetID = ids[i]
+		}
+	}
+
+	deadline := time.Now().Add(c.args.timeout())
+	wait := c.args.boolean("wait")
+
+	req := service.MediaImportRequest{ProjectID: c.projectID, Files: files}
+	if wait {
+		req.WaitMS = waitSlice(deadline)
+	}
+
+	first, err := c.svc.MediaImport(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := first
+
+	for wait && importPending(res) && time.Until(deadline) > 0 {
+		req.WaitMS = waitSlice(deadline)
+
+		// The same files again return the same assets (import is idempotent).
+		if res, err = c.svc.MediaImport(ctx, req); err != nil {
+			return nil, err
+		}
+	}
+
+	if res != first {
+		settleImport(res, first)
+	}
+
+	out := &output{value: res, text: res.Text}
+
+	switch {
+	case wait && importPending(res):
+		out.exit = ExitTransient
+		out.text += "\nstill running: run vukem-video media:list --project " + c.projectID
+	case res.Failed > 0:
+		out.exit = ExitFailure
+	}
+
+	return out, nil
+}
+
+func importPending(r *service.MediaImportResult) bool {
+	for i := range r.Assets {
+		a := &r.Assets[i]
+		if a.Error == nil && (a.State == "pending" || a.State == "ingesting") {
+			return true
+		}
+	}
+
+	return false
+}
+
+// settleImport makes the last answer of a wait loop read as the first call: the
+// assets were new then, and the text is drawn again.
+func settleImport(res, first *service.MediaImportResult) {
+	lines := make([]textview.ImportLine, len(res.Assets))
+
+	for i := range res.Assets {
+		a := &res.Assets[i]
+		a.Deduplicated = first.Assets[i].Deduplicated
+
+		lines[i] = textview.ImportLine{
+			ID: a.AssetID, Kind: a.Kind, State: a.State, Name: a.Name, Deduplicated: a.Deduplicated, JobID: a.JobID,
+		}
+
+		if a.Error != nil {
+			lines[i].ErrorCode, lines[i].ErrorMessage = a.Error.Code, a.Error.Message
+		}
+	}
+
+	res.Text = textview.Import(lines)
+}
+
+var mediaInspect = &spec{
+	name:    "media:inspect",
+	summary: "show what is known about an asset",
+	usage: []string{
+		"vukem-video media:inspect <asset id> --project <id> [--sections probe,transcript,silences,loudness]",
+	},
+	example:    "vukem-video media:inspect ast_3c5v8n2w6d --project prj_7k2m9x4q1b --sections probe,silences",
+	project:    true,
+	positional: true,
+	flags: append([]flagDef{
+		{Name: "sections", Kind: kindString, Default: "probe", Usage: "probe, transcript, silences, loudness"},
+		{Name: "min-silence", Kind: kindString, Default: "0.4s", Usage: "shortest silence to report"},
+	}, pageFlags("")...),
+	run: func(ctx context.Context, c *call) (*output, error) {
+		if len(c.args.Positional) != 1 {
+			return nil, validation("", "media:inspect takes one asset id, got %d.", len(c.args.Positional))
+		}
+
+		res, err := c.svc.MediaInspect(ctx, service.MediaInspectRequest{
+			ProjectID: c.projectID, AssetID: c.args.Positional[0], Sections: splitList(c.args.str("sections")),
+			MinSilence: c.args.str("min-silence"), Page: page(c.args),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
+
+func splitList(s string) []string {
+	var out []string
+
+	for part := range strings.SplitSeq(s, ",") {
+		if part = strings.TrimSpace(part); part != "" {
+			out = append(out, part)
+		}
+	}
+
+	return out
+}
+
+var mediaList = &spec{
+	name:    "media:list",
+	summary: "list the assets of a project",
+	usage:   []string{"vukem-video media:list --project <id> [--cursor c] [--limit n]"},
+	example: "vukem-video media:list --project prj_7k2m9x4q1b --json",
+	project: true,
+	flags:   pageFlags("50"),
+	run: func(ctx context.Context, c *call) (*output, error) {
+		res, err := c.svc.MediaList(ctx, service.MediaListRequest{ProjectID: c.projectID, Page: page(c.args)})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
+
+var export = &spec{
+	name:    "export",
+	summary: "export a project to a file",
+	usage:   []string{"vukem-video export --project <id> [--start t] [--end t] [--wait] [--timeout d]"},
+	example: "vukem-video export --project prj_7k2m9x4q1b --json",
+	project: true,
+	globals: []string{"wait", "timeout"},
+	write:   true,
+	flags: []flagDef{
+		{Name: "start", Kind: kindString, Usage: "first time to export (default: the start)"},
+		{Name: "end", Kind: kindString, Usage: "end of the export (default: the end of the timeline)"},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		req := service.JobStartRequest{ProjectID: c.projectID, Kind: service.JobExport}
+
+		if c.args.has("start") || c.args.has("end") {
+			raw, err := json.Marshal(service.ExportArgs{Start: c.args.str("start"), End: c.args.str("end")})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Args = raw
+		}
+
+		deadline := time.Now().Add(c.args.timeout())
+		wait := c.args.boolean("wait")
+
+		if wait {
+			req.WaitMS = waitSlice(deadline)
+		}
+
+		job, err := c.svc.JobStart(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		return jobOutput(ctx, c, job, wait, deadline)
+	},
+}
+
+// jobOutput waits for the job when asked and reports it. A job that failed or
+// was cancelled is exit 1; a wait that ran out is exit 2 (SDD-003 section 5.1).
+func jobOutput(ctx context.Context, c *call, job *service.Job, wait bool, deadline time.Time) (*output, error) {
+	for wait && !isFinal(job.State) && time.Until(deadline) > 0 {
+		var err error
+
+		job, err = c.svc.JobGet(ctx, service.JobGetRequest{JobID: job.JobID, WaitMS: waitSlice(deadline)})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	out := &output{value: job, text: job.Text}
+
+	switch {
+	case !isFinal(job.State) && wait:
+		out.exit = ExitTransient
+		out.text = strings.TrimRight(stripStill(job.Text), "\n") +
+			fmt.Sprintf("\nstill running: run vukem-video job:show %s --wait", job.JobID)
+	case job.State == service.JobFailed || job.State == service.JobCancelled:
+		out.exit = ExitFailure
+	}
+
+	return out, nil
+}
+
+// stripStill drops the "still <state>" line the Service adds after a wait; the
+// CLI has its own wording.
+func stripStill(text string) string {
+	head, _, found := strings.CutLast(text, "\nstill ")
+	if !found {
+		return text
+	}
+
+	return head
+}
+
+var jobShow = &spec{
+	name:       "job:show",
+	summary:    "show a job",
+	usage:      []string{"vukem-video job:show <job id> [--wait] [--timeout d]"},
+	example:    "vukem-video job:show job_4h8k2m6p9t --wait",
+	positional: true,
+	globals:    []string{"timeout"},
+	flags: []flagDef{
+		{
+			Name:    "wait",
+			Kind:    kindBool,
+			Default: "false",
+			Usage:   "block until the job is final (--no-wait to return at once)",
+		},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		if len(c.args.Positional) != 1 {
+			return nil, validation("", "job:show takes one job id, got %d.", len(c.args.Positional))
+		}
+
+		deadline := time.Now().Add(c.args.timeout())
+		wait := c.args.boolean("wait")
+
+		req := service.JobGetRequest{JobID: c.args.Positional[0]}
+		if wait {
+			req.WaitMS = waitSlice(deadline)
+		}
+
+		job, err := c.svc.JobGet(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		return jobOutput(ctx, c, job, wait, deadline)
+	},
+}
+
+var jobList = &spec{
+	name:    "job:list",
+	summary: "list the jobs of a project",
+	usage:   []string{"vukem-video job:list --project <id> [--state s] [--cursor c] [--limit n]"},
+	example: "vukem-video job:list --project prj_7k2m9x4q1b --state active",
+	project: true,
+	flags: append([]flagDef{
+		{Name: "state", Kind: kindString, Usage: "queued, running, succeeded, failed, cancelled, active or all"},
+	}, pageFlags("20")...),
+	run: func(ctx context.Context, c *call) (*output, error) {
+		res, err := c.svc.JobList(ctx, service.JobListRequest{
+			ProjectID: c.projectID, State: c.args.str("state"), Page: page(c.args),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
