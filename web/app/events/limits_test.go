@@ -41,3 +41,32 @@ func TestStreamsPerKeyAreLimited(t *testing.T) {
 		t.Errorf("a released stream did not free its place: %v", err)
 	}
 }
+
+// SDD-007 section 9.1: 32 streams for one project and 128 for the process; the next one is
+// E_QUEUE_FULL naming the limit, the streams open and the ceiling.
+func TestStreamsPerProjectAndPerProcessAreLimited(t *testing.T) {
+	e := New(nil, Options{})
+
+	for i := range MaxPerProject {
+		if err := e.acquire("prj_a", ""); err != nil {
+			t.Fatalf("stream %d of a project: %v", i+1, err)
+		}
+	}
+
+	se, ok := errors.AsType[*service.Error](e.acquire("prj_a", ""))
+	if !ok || se.Code != service.CodeQueueFull || se.Details["limit"] != "streams" ||
+		se.Details["value"] != MaxPerProject || se.Details["ceiling"] != MaxPerProject {
+		t.Fatalf("the 33rd stream of a project = %+v", se)
+	}
+
+	for i := MaxPerProject; i < MaxPerProcess; i++ {
+		if err := e.acquire("prj_"+string(rune('a'+i/MaxPerProject)), ""); err != nil {
+			t.Fatalf("stream %d of the process: %v", i+1, err)
+		}
+	}
+
+	se, ok = errors.AsType[*service.Error](e.acquire("prj_z", ""))
+	if !ok || se.Details["value"] != MaxPerProcess || se.Details["ceiling"] != MaxPerProcess {
+		t.Fatalf("the 129th stream of the process = %+v", se)
+	}
+}
