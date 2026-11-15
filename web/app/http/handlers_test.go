@@ -275,6 +275,31 @@ func TestViewRoutesPinTheRevision(t *testing.T) {
 	}
 }
 
+// to is a deprecated alias of until on /plan and /sheet until 1.0: it works
+// alone, may repeat until, and a different value is E_VALIDATION on to.
+func TestUntilAliasOnPlanAndSheet(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	id := h.newProject("alias")
+	base := "/api/v1/projects/" + id
+
+	if res := h.get(base + "/plan?from=0&to=30"); res.status != http.StatusOK {
+		t.Errorf("plan with to = %d %s", res.status, res.body)
+	}
+
+	if res := h.get(base + "/plan?from=0&until=30&to=30"); res.status != http.StatusOK {
+		t.Errorf("plan with equal until and to = %d %s", res.status, res.body)
+	}
+
+	for _, route := range []string{"/plan?from=0&until=30&to=40", "/sheet?until=1s&to=2s"} {
+		res := h.get(base + route)
+		if res.status != http.StatusBadRequest || res.json(t)["code"] != "E_VALIDATION" {
+			t.Errorf("%s = %d %s", route, res.status, res.body)
+		}
+	}
+}
+
 func TestPlanRouteAnswersTheWindowOfSDD004(t *testing.T) {
 	t.Parallel()
 

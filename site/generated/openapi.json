@@ -7027,10 +7027,17 @@
             }
           },
           {
-            "description": "The end of the window, not included; at most 300 frames after from.",
+            "description": "The end of the window, not included; at most 300 frames after from. Required.",
             "in": "query",
             "name": "until",
-            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Deprecated alias of until, removed at 1.0.",
+            "in": "query",
+            "name": "to",
             "schema": {
               "type": "integer"
             }
@@ -7221,6 +7228,14 @@
           {
             "in": "query",
             "name": "until",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Deprecated alias of until, removed at 1.0.",
+            "in": "query",
+            "name": "to",
             "schema": {
               "type": "string"
             }

@@ -28,6 +28,7 @@ type sheetIn struct {
 	Times     string `json:"times,omitempty"                          doc:"Comma-separated times, 2 to 16."`
 	From      string `json:"from,omitempty"`
 	Until     string `json:"until,omitempty"`
+	To        string `json:"to,omitempty"                             doc:"Deprecated alias of until, removed at 1.0."`
 	Count     int    `json:"count,omitempty"`
 	Cols      int    `json:"cols,omitempty"`
 	Rev       int64  `json:"rev,omitempty"                            doc:"Must be the current revision when given."`
@@ -58,6 +59,11 @@ func (h *apiHandler) projectsSheet(c *web.Ctx, in sheetIn) (noIn, error) {
 		return noIn{}, err
 	}
 
+	until, err := untilAlias(in.Until, in.To)
+	if err != nil {
+		return noIn{}, err
+	}
+
 	var times []string
 
 	if in.Times != "" {
@@ -65,7 +71,7 @@ func (h *apiHandler) projectsSheet(c *web.Ctx, in sheetIn) (noIn, error) {
 	}
 
 	res, err := h.Service.ViewSheet(c.Context(), service.ViewSheetRequest{
-		ProjectID: in.ID, Times: times, From: in.From, Until: in.Until, Count: in.Count, Cols: in.Cols,
+		ProjectID: in.ID, Times: times, From: in.From, Until: until, Count: in.Count, Cols: in.Cols,
 		AssetID: in.AssetID, MaxTokens: in.MaxTokens,
 	})
 	if err != nil {
@@ -152,10 +158,31 @@ type bitmapIn struct {
 	Key string `json:"key" validate:"required"`
 }
 
+// untilAlias resolves the deprecated query parameter to onto until. Both given
+// and different is a validation error; the alias goes at 1.0 (questions item 3).
+func untilAlias[T comparable](until, to T) (T, error) {
+	var zero T
+
+	switch {
+	case to == zero:
+		return until, nil
+	case until == zero || until == to:
+		return to, nil
+	default:
+		return zero, &service.Error{
+			Code:    "E_VALIDATION",
+			Message: "until and its deprecated alias to differ.",
+			Hint:    "send only until",
+			Path:    "to",
+		}
+	}
+}
+
 type planIn struct {
 	ID    string `json:"id"             validate:"required"`
 	From  int    `json:"from,omitempty"                     doc:"The first frame of the window; default 0."`
-	Until int    `json:"until"          validate:"required" doc:"The end of the window, not included; at most 300 frames after from."`
+	Until int    `json:"until,omitempty"                    doc:"The end of the window, not included; at most 300 frames after from. Required."`
+	To    int    `json:"to,omitempty"                       doc:"Deprecated alias of until, removed at 1.0."`
 	Rev   int64  `json:"rev,omitempty"                      doc:"Must be the current revision when given."`
 }
 
@@ -165,9 +192,14 @@ func (h *apiHandler) projectsPlan(c *web.Ctx, in planIn) (service.PlanWindowResu
 		return service.PlanWindowResult{}, err
 	}
 
+	until, err := untilAlias(in.Until, in.To)
+	if err != nil {
+		return service.PlanWindowResult{}, err
+	}
+
 	res, err := h.Service.PlanWindow(
 		c.Context(),
-		service.PlanWindowRequest{ProjectID: in.ID, From: in.From, Until: in.Until},
+		service.PlanWindowRequest{ProjectID: in.ID, From: in.From, Until: until},
 	)
 	if res != nil {
 		revisionHeader(c, res.Revision)
