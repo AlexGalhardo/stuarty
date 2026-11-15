@@ -1,6 +1,5 @@
 import { Bot } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +8,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { type Translate, useLocale, useT } from "@/lib/i18n";
+import { announce } from "../a11y/announce";
 import {
 	ACTIVE_MS,
 	type ActivityEntry,
@@ -59,8 +59,6 @@ export default function ActivityIndicator(): ReactNode {
 	const entries = useActivityState((s) => s.entries);
 	const active = useActivityState((s) => s.active);
 	const [now, setNow] = useState(nowMs);
-	const [announcement, setAnnouncement] = useState("");
-	const lastAnnounced = useRef(Number.NEGATIVE_INFINITY);
 	const announcedRevision = useRef<number | null>(null);
 	const latest = entries[0];
 
@@ -70,25 +68,21 @@ export default function ActivityIndicator(): ReactNode {
 		return () => clearInterval(timer);
 	}, [latest]);
 
-	// A live-region announcement at most once every 2 s (SDD-012 section 5.8).
+	// The live region (a11y/LiveRegion) announces a remote edit at most once
+	// every 2 s (SDD-012 section 5.8), also while this button is on screen.
 	useEffect(() => {
 		if (latest === undefined || latest.revision === announcedRevision.current)
 			return;
-		const at = nowMs();
-		if (at - lastAnnounced.current < ANNOUNCE_EVERY_MS) return;
-		lastAnnounced.current = at;
 		announcedRevision.current = latest.revision;
-		setAnnouncement(
-			t("ui.editor.activity.announce", { actor: actorLabel(latest.actor) }),
+		announce(
+			"ui.editor.activity.announce",
+			{ actor: actorLabel(latest.actor) },
+			{ minIntervalMs: ANNOUNCE_EVERY_MS },
 		);
-	}, [latest, t]);
+	}, [latest]);
 
 	if (latest === undefined || now - latest.at > SETTLED_MS) {
-		return (
-			<div role="status" className="sr-only">
-				{announcement}
-			</div>
-		);
+		return null;
 	}
 
 	const fresh = Object.entries(active).filter(([, at]) => now - at < ACTIVE_MS);
@@ -105,43 +99,38 @@ export default function ActivityIndicator(): ReactNode {
 			});
 
 	return (
-		<>
-			<Popover>
-				<PopoverTrigger asChild>
-					<Button type="button" variant="ghost" size="sm" className="gap-2">
-						<span
-							aria-hidden="true"
-							className={`size-2 rounded-full ${editing ? "bg-agent" : "bg-muted-foreground"}`}
-						/>
-						<Bot aria-hidden="true" />
-						<UntrustedText>{text}</UntrustedText>
-					</Button>
-				</PopoverTrigger>
-				<PopoverContent align="end" className="w-80">
-					<h2 className="text-sm font-medium">
-						{t("ui.editor.activity.recent")}
-					</h2>
-					<ul className="flex flex-col gap-2">
-						{entries.map((entry) => (
-							<li key={`${entry.revision}-${entry.at}`} className="text-xs">
-								<UntrustedText className="font-medium">
-									{actorLabel(entry.actor)}
-								</UntrustedText>{" "}
-								{summary(t, entry.counts)}
-								<span className="block text-muted-foreground">
-									{t("ui.editor.activity.revision", {
-										revision: entry.revision,
-									})}
-									, {relative(locale, now - entry.at)}
-								</span>
-							</li>
-						))}
-					</ul>
-				</PopoverContent>
-			</Popover>
-			<div role="status" className="sr-only">
-				{announcement}
-			</div>
-		</>
+		<Popover>
+			<PopoverTrigger asChild>
+				<Button type="button" variant="ghost" size="sm" className="gap-2">
+					<span
+						aria-hidden="true"
+						className={`size-2 rounded-full ${editing ? "bg-agent" : "bg-muted-foreground"}`}
+					/>
+					<Bot aria-hidden="true" />
+					<UntrustedText>{text}</UntrustedText>
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent align="end" className="w-80">
+				<h2 className="text-sm font-medium">
+					{t("ui.editor.activity.recent")}
+				</h2>
+				<ul className="flex flex-col gap-2">
+					{entries.map((entry) => (
+						<li key={`${entry.revision}-${entry.at}`} className="text-xs">
+							<UntrustedText className="font-medium">
+								{actorLabel(entry.actor)}
+							</UntrustedText>{" "}
+							{summary(t, entry.counts)}
+							<span className="block text-muted-foreground">
+								{t("ui.editor.activity.revision", {
+									revision: entry.revision,
+								})}
+								, {relative(locale, now - entry.at)}
+							</span>
+						</li>
+					))}
+				</ul>
+			</PopoverContent>
+		</Popover>
 	);
 }
