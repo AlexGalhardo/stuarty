@@ -152,6 +152,23 @@ var Endpoints = []Endpoint{
 		AlsoScope: service.ScopeMedia, Service: "JobCancel", Status: 200, Summary: "Cancel a job",
 	},
 	{
+		ID: "templates.list", Method: http.MethodGet, Path: "/templates", Scope: service.ScopeRead,
+		Service: "TemplateList", Status: 200, Summary: "List the templates",
+	},
+	{
+		ID: "templates.save", Method: http.MethodPost, Path: "/templates", Scope: service.ScopeEdit,
+		Service: "TemplateSave", Status: 201, Summary: "Save a project as a template",
+	},
+	{
+		ID:      "templates.instantiate",
+		Method:  http.MethodPost,
+		Path:    "/templates/{template_id}/instantiate",
+		Scope:   service.ScopeEdit,
+		Service: "TemplateInstantiate",
+		Status:  201,
+		Summary: "Make a project from a template",
+	},
+	{
 		ID: "projects.frame", Method: http.MethodGet, Path: "/projects/{id}/frame", Scope: service.ScopeRead,
 		Service: "ViewFrame", Status: 200, Summary: "Render one frame",
 	},

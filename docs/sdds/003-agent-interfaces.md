@@ -877,7 +877,7 @@ type PlanWindowResult = plan.WindowPlan
 
 **Audit (RF-134).** Actions that are not a document batch (trash and restore, emptying the trash, imports, jobs, key management) are recorded in the `audit` table with their actor (SDD-005 §5.9, §13.1); document batches are recorded in the append-only log read by `HistoryList`. `AuditList` (HTTP `GET /audit`, CLI `audit`, scope `admin`) reads that record; it has no MCP tool (§7.1, E-3).
 
-`command.CaptionWord` is the word object of `caption.add` (SDD-002 §B.7). A `TemplateInstantiate` that leaves required slots unfilled succeeds (the project is created) and reports them in `Unfilled` and as `L_SLOT_UNFILLED` findings, per RF-051.
+`command.CaptionWord` is the word object of `caption.add` (SDD-002 §B.7). A `TemplateInstantiate` that leaves required slots unfilled succeeds (the project is created) and reports them in `Unfilled` and as `L_SLOT_UNFILLED` findings, per RF-051. The `asset_id` of a media `SlotValue` is looked up among the active assets of the projects the caller can see (the owner, a key limited to one project sees only that one, trashed projects excluded); its snapshot is re-added to the new project in the same batch under the same `ast_` identifier. An asset that is not visible is `E_NOT_FOUND` with the message of an asset that does not exist, never a hint that it exists. Every template operation is refused to a key limited to one project.
 
 ## 3. Text formats
 

@@ -62,10 +62,14 @@ var Scopes = map[string]string{
 	"JobGet":         ScopeRead,
 	"JobList":        ScopeRead,
 	"JobCancel":      ScopeRender,
-	"PlanWindow":     ScopeRead,
-	"ViewFrame":      ScopeRead,
-	"ViewSheet":      ScopeRead,
-	"OpenFile":       ScopeRead,
+
+	"TemplateList":        ScopeRead,
+	"TemplateSave":        ScopeEdit,
+	"TemplateInstantiate": ScopeEdit,
+	"PlanWindow":          ScopeRead,
+	"ViewFrame":           ScopeRead,
+	"ViewSheet":           ScopeRead,
+	"OpenFile":            ScopeRead,
 }
 
 // authorize checks the caller first, as every method does: a missing caller

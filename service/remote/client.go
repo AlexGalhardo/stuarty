@@ -356,6 +356,36 @@ func (c *Client) JobCancel(ctx context.Context, req service.JobCancelRequest) (*
 	return post[service.Job](ctx, c, "/jobs/"+url.PathEscape(req.JobID)+"/cancel", struct{}{})
 }
 
+// TemplateList implements service.Service.
+func (c *Client) TemplateList(
+	ctx context.Context,
+	req service.TemplateListRequest,
+) (*service.TemplateListResult, error) {
+	return get[service.TemplateListResult](ctx, c, "/templates", pageQuery(url.Values{}, req.Page))
+}
+
+// TemplateSave implements service.Service.
+func (c *Client) TemplateSave(ctx context.Context, req service.TemplateSaveRequest) (*service.TemplateResult, error) {
+	return post[service.TemplateResult](ctx, c, "/templates", req)
+}
+
+// TemplateInstantiate implements service.Service.
+func (c *Client) TemplateInstantiate(
+	ctx context.Context,
+	req service.TemplateInstantiateRequest,
+) (*service.TemplateInstantiateResult, error) {
+	body := struct {
+		Name   string                       `json:"name"`
+		Fill   map[string]service.SlotValue `json:"fill,omitempty"`
+		ID     string                       `json:"id,omitempty"`
+		DryRun bool                         `json:"dry_run,omitempty"`
+	}{req.Name, req.Fill, req.ID, req.DryRun}
+
+	return post[service.TemplateInstantiateResult](
+		ctx, c, "/templates/"+url.PathEscape(req.TemplateID)+"/instantiate", body,
+	)
+}
+
 // JobList implements service.Service.
 func (c *Client) JobList(ctx context.Context, req service.JobListRequest) (*service.JobListResult, error) {
 	q := url.Values{}

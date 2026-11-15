@@ -3,6 +3,7 @@ package httpapi
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -200,4 +201,68 @@ func (h *apiHandler) serveAsset(c *web.Ctx, kind, projectID, assetID, variant st
 	}
 
 	return noIn{}, nil
+}
+
+type templateListIn struct{ pageIn }
+
+type templateSaveIn struct {
+	ProjectID   string `json:"project_id"            validate:"required"`
+	Name        string `json:"name"                  validate:"required"`
+	Description string `json:"description,omitempty"`
+	DryRun      bool   `json:"dry_run,omitempty"`
+}
+
+type templateInstantiateIn struct {
+	TemplateID string                       `json:"template_id"       validate:"required"`
+	Name       string                       `json:"name"              validate:"required"`
+	Fill       map[string]service.SlotValue `json:"fill,omitempty"                        doc:"Slot name to a value: one of asset_id, text or words."`
+	ID         string                       `json:"id,omitempty"                          doc:"Optional project id; local mode only."`
+	DryRun     bool                         `json:"dry_run,omitempty"`
+}
+
+func (h *apiHandler) templateList(c *web.Ctx, in templateListIn) (service.TemplateListResult, error) {
+	res, err := h.Service.TemplateList(c.Context(), service.TemplateListRequest{Page: page(in.pageIn)})
+
+	return deref(res), err
+}
+
+func (h *apiHandler) templateSave(c *web.Ctx, in templateSaveIn) (service.TemplateResult, error) {
+	dryRun := dry(c, in.DryRun)
+
+	res, err := h.Service.TemplateSave(c.Context(), service.TemplateSaveRequest{
+		ProjectID: in.ProjectID, Name: in.Name, Description: in.Description, DryRun: dryRun,
+	})
+	if err != nil {
+		return service.TemplateResult{}, err
+	}
+
+	if dryRun {
+		return service.TemplateResult{}, c.JSON(http.StatusOK, res)
+	}
+
+	c.SetHeader("Location", BasePath+"/templates")
+
+	return service.TemplateResult{}, c.JSON(http.StatusCreated, res)
+}
+
+func (h *apiHandler) templateInstantiate(
+	c *web.Ctx,
+	in templateInstantiateIn,
+) (service.TemplateInstantiateResult, error) {
+	dryRun := dry(c, in.DryRun)
+
+	res, err := h.Service.TemplateInstantiate(c.Context(), service.TemplateInstantiateRequest{
+		TemplateID: in.TemplateID, Name: in.Name, Fill: in.Fill, ID: in.ID, DryRun: dryRun,
+	})
+	if err != nil {
+		return service.TemplateInstantiateResult{}, err
+	}
+
+	if dryRun {
+		return service.TemplateInstantiateResult{}, c.JSON(http.StatusOK, res)
+	}
+
+	c.SetHeader("Location", BasePath+"/projects/"+url.PathEscape(res.ProjectID))
+
+	return service.TemplateInstantiateResult{}, c.JSON(http.StatusCreated, res)
 }
