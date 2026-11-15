@@ -19,6 +19,7 @@ type call struct {
 	svc       service.Service
 	args      *parsed
 	projectID string
+	events    EventOpener
 }
 
 type handler func(ctx context.Context, c *call) (*output, error)
@@ -167,6 +168,7 @@ func (rt *Runtime) Execute(ctx context.Context, name string, args []string) int 
 	}()
 
 	c.svc = conn.Service
+	c.events = conn.Events
 
 	if !s.stream {
 		label, _ := actorFrom(p.str("actor"))

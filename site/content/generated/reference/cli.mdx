@@ -418,13 +418,25 @@ vukem-video job:list --project prj_7k2m9x4q1b --state active
 
 ## `events`
 
-Print the events of a project as they arrive Not available yet: arrives with P1-SRV-006.
+Print the events of a project as they arrive
 
 ```text
 vukem-video events --project <id> [--from-id n] [--since n] [--count n]
 ```
 
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--from-id` | string |  | resume after this event id (the Last-Event-ID) |
+| `--since` | integer |  | replay the revisions after this one |
+| `--count` | integer | `0` | stop after n events (0: until interrupted) |
+
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+vukem-video events --project prj_7k2m9x4q1b --since 4 --count 3
+```
 
 ## `command:help`
 

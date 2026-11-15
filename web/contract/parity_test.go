@@ -24,6 +24,9 @@ type row struct {
 	command string // the CLI command
 	route   string // "METHOD /path" of the HTTP API
 	pending string
+	// noMethod marks an operation that is not a Service method (SDD-003 section
+	// 7.1, exception E-1: the event stream lives in the hub of the owner).
+	noMethod bool
 }
 
 var parity = []row{
@@ -46,7 +49,7 @@ var parity = []row{
 	{method: "JobList", tool: "job_get", command: "job:list", route: "GET /projects/{}/jobs"},
 	{method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame"},
 	{method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet"},
-	{method: "Events", command: "events", route: "GET /projects/{}/events", pending: "P1-SRV-006"},
+	{method: "Events", command: "events", route: "GET /projects/{}/events", noMethod: true},
 }
 
 // notOperations are Service methods that are not operations an agent calls
@@ -76,6 +79,14 @@ func TestParityTableCoversTheService(t *testing.T) {
 
 	for _, r := range parity {
 		_, has := svc.MethodByName(r.method)
+		if r.noMethod {
+			if has {
+				t.Errorf("%s is marked as no Service method but the Service has it", r.method)
+			}
+
+			continue
+		}
+
 		if has == (r.pending != "") {
 			t.Errorf("%s: pending=%q but the Service method exists=%v", r.method, r.pending, has)
 		}

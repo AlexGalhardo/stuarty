@@ -136,6 +136,7 @@ type fakeResolver struct {
 	err       error
 	target    Target
 	resolved  int
+	events    EventOpener
 }
 
 func (r *fakeResolver) Resolve(_ context.Context, t Target) (*Connection, error) {
@@ -146,7 +147,7 @@ func (r *fakeResolver) Resolve(_ context.Context, t Target) (*Connection, error)
 		return nil, r.err
 	}
 
-	return &Connection{Service: r.svc, InProcess: r.inProcess, Workspace: "/ws"}, nil
+	return &Connection{Service: r.svc, InProcess: r.inProcess, Workspace: "/ws", Events: r.events}, nil
 }
 
 type harness struct {
