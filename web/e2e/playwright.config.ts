@@ -31,8 +31,10 @@ const home =
 	process.env.VUKEM_VIDEO_E2E_HOME ?? join(tmpdir(), "vukem-video-e2e-home");
 
 // A second server whose encoder cannot work, for scenario 9 (export-failure).
+// Its workspace follows the main one, so two runs with their own homes (two
+// checkouts, two agents) never open the same workspace.
 const failPort = port + 1;
-const failHome = join(tmpdir(), "vukem-video-e2e-home-failing-encoder");
+const failHome = `${home}-failing-encoder`;
 
 export default defineConfig({
 	testDir: "./specs",
