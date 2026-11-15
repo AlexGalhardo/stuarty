@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-15
+
+### Added
+
+- **ui:** Add the tile arithmetic of the clip thumbnail strip ([14b5d95](https://github.com/AlexGalhardo/vukem-video/commit/14b5d95933ca63080ccea0589ff2fba18975ba44))
+- **ui:** Read the peaks file and turn it into waveform columns ([8c69126](https://github.com/AlexGalhardo/vukem-video/commit/8c69126b506125735e46705c89c2fd1e6d273518))
+- **ui:** Draw strip, waveform, shape and badges on timeline items ([4c2d514](https://github.com/AlexGalhardo/vukem-video/commit/4c2d514ee931fa835a83b68680abdf5fa16cbfa2))
+- **api:** Accept to as a deprecated alias of until on the sheet and plan routes ([d1c70e2](https://github.com/AlexGalhardo/vukem-video/commit/d1c70e2dc10c31fd6c33b7c406184fe02fe4e2d0))
+- **web:** Export traces and metrics through drivers/otel when the endpoint is set ([a7ad9a1](https://github.com/AlexGalhardo/vukem-video/commit/a7ad9a1e6fb678dc51a6f17564a353ad495c36b2))
+- **service:** Embed the pinned FFmpeg digests for doctor --verify ([6fa92df](https://github.com/AlexGalhardo/vukem-video/commit/6fa92df461391948b5b7b309d1f923fe98c6c516))
+- **ci:** Add the live agent harness for the release checklist ([b78bbee](https://github.com/AlexGalhardo/vukem-video/commit/b78bbee499be4e3962a7a2834429093fb53fbba0))
+- **ui:** Add the track commands to the builders, the actions and the coverage ([9745b2e](https://github.com/AlexGalhardo/vukem-video/commit/9745b2e29a92abe29ee47a798c99b913f71bd379))
+- **ui:** Add the reorder drag of a track header with a ghost row ([482e04a](https://github.com/AlexGalhardo/vukem-video/commit/482e04a67246e933d1c6afce786c3cd9d097c618))
+- **ui:** Edit tracks from the header and the track panel, confirm removal of a non-empty one ([1cfdd61](https://github.com/AlexGalhardo/vukem-video/commit/1cfdd619929a778b3839bc664f5da96a161c071e))
+- **ui:** Add the project builders, the rename and frame rate actions and their coverage ([5059990](https://github.com/AlexGalhardo/vukem-video/commit/5059990e3af6bac1a726b79c40807a243b2bf77a))
+- **ui:** Keep the default time unit in the preferences and use it in the time fields ([c259c0f](https://github.com/AlexGalhardo/vukem-video/commit/c259c0f991d07fb22e9761c1a1179e1f48f04ebd))
+- **ui:** Add the language select and the reload that keeps the playhead ([a1753c8](https://github.com/AlexGalhardo/vukem-video/commit/a1753c8f28048d457392cdb4c4aeb36cf3ac03f9))
+- **ui:** Add the project panel, the top bar rename and the settings page ([d26e0ef](https://github.com/AlexGalhardo/vukem-video/commit/d26e0effbcc5607c24af23ebb00c56240d7676f0))
+- **ui:** Add the audio, framing, speed, colour and silence builders and their coverage ([a0649f0](https://github.com/AlexGalhardo/vukem-video/commit/a0649f0d7b4fa826a54e8e6afa068789dc58ce8b))
+- **ui:** Add the audio, framing, speed, colour and silences sections of a clip ([3bb7d43](https://github.com/AlexGalhardo/vukem-video/commit/3bb7d43d2f493687b4f0c5e8ae756939439a799b))
+- **ui:** Serve the settings page and link it from the navigation ([41d0074](https://github.com/AlexGalhardo/vukem-video/commit/41d00749b160424214d9c2e404e472b6d503832e))
+- **site:** Check guide command mentions and the FFmpeg pin of the docs ([ecff358](https://github.com/AlexGalhardo/vukem-video/commit/ecff35882a4f05860a480f8cfcb20fad0f2c065f))
+- **raster:** Validate user fonts and resolve them by hash in the font set ([51d9c73](https://github.com/AlexGalhardo/vukem-video/commit/51d9c7363315123bb5e95c8946534a3fb5ccd6b0))
+- **engine:** Store validated user fonts by content hash under fonts/ ([f973a20](https://github.com/AlexGalhardo/vukem-video/commit/f973a20dc60182eea0cc0262db1b0a3ccd8baa78))
+- **ui:** Add the Add shape menu and the shape section of the inspector ([511abad](https://github.com/AlexGalhardo/vukem-video/commit/511abad5f12bc2561d7a67a07edf3f54ee9987c2))
+- **ui:** Add the slot and template info builders and their coverage ([265153e](https://github.com/AlexGalhardo/vukem-video/commit/265153e5c3f191338f4b4eaa7b796d75242ac89f))
+- **ui:** Add the template slot section, the slots panel and the template info ([d193949](https://github.com/AlexGalhardo/vukem-video/commit/d193949c472f507eafca83a9b37a9b11f602f989))
+- **ui:** Add the template entries of the projects page ([d239a75](https://github.com/AlexGalhardo/vukem-video/commit/d239a75292f3d1280c3178d1445958c4ee572214))
+- **ui:** Cancel an export, list the failed checks, name the findings and reopen a running export ([b342d3c](https://github.com/AlexGalhardo/vukem-video/commit/b342d3ced9135d421f7e2882c2230b87b5a9336d))
+- **ui:** Add trash and restore to the projects page ([03f4d1c](https://github.com/AlexGalhardo/vukem-video/commit/03f4d1cdac7a13500056fc9217500fdfb0ee7a1a))
+- **ui:** Add the login and API keys pages of network mode and the logout ([41da819](https://github.com/AlexGalhardo/vukem-video/commit/41da8192b28da69ec75e08af53bbca9a14c1e28e))
+- **service:** Export a project as a streamed .vvbundle through an export job ([8e55daa](https://github.com/AlexGalhardo/vukem-video/commit/8e55daadb2d7bc947656c74f027aa4d510242340))
+- **web:** Manage users as an administrator session and keep the last administrator ([db92a24](https://github.com/AlexGalhardo/vukem-video/commit/db92a2408c25df7cc9125c8f85bbd1b1902c2d08))
+- **ui:** Sign the desktop shell window in with the one-time launch address ([02d63e4](https://github.com/AlexGalhardo/vukem-video/commit/02d63e43a6a9efbf6328b50aeac63f0a3bf58665))
+
+### Fixed
+
+- **web:** Accept APP_ENV=test for the test transcriber, the value vukem allows ([db6f20e](https://github.com/AlexGalhardo/vukem-video/commit/db6f20e4b1ff29fc50a4daff936cd14abc1c02c0))
+- **deps:** Escape obfuscated e-mail addresses in the notices table ([25a49ec](https://github.com/AlexGalhardo/vukem-video/commit/25a49ec1e0d219699a5325a1b75258dcab9d9dbb))
+- **site:** Accept the example hosts of the self-hosting pages in check:built ([edbccde](https://github.com/AlexGalhardo/vukem-video/commit/edbccde6a46f742ada050bfc0a50cbae146c09b8))
+- **ui:** Spell the cancelled job state as the service does ([1a54865](https://github.com/AlexGalhardo/vukem-video/commit/1a54865fd292ad8bbfa2822ca687a1b1822c8e2c))
+- **ui:** Resolve the login next target as a URL and refuse control characters ([deec384](https://github.com/AlexGalhardo/vukem-video/commit/deec38407841255156af7548d33199909c288b42))
+- **site:** Say the HTTP API token applies to local mode only ([6b85c68](https://github.com/AlexGalhardo/vukem-video/commit/6b85c68ce3c0fbb9119781a9a5f9d332b804a849))
+- **web:** Serve the content security policy of SDD-007 8.5.5 exactly ([7dbfba3](https://github.com/AlexGalhardo/vukem-video/commit/7dbfba361cfb4ce58a4d57959fb910e743e6173a))
+- **ci:** Build the windows-arm64 whisper-cli with clang-cl ([1391432](https://github.com/AlexGalhardo/vukem-video/commit/13914329503cd75d714c2859b3a8610b6700501c))
+- **export:** Give each decoder process its own channels so a restart does not race the pipe closer ([7f5594c](https://github.com/AlexGalhardo/vukem-video/commit/7f5594c709d5e3d24f576ebe99b050d3259aabe4))
+- **ui:** Open the desktop window on the launch address so the session cookie is set ([3bd2e7e](https://github.com/AlexGalhardo/vukem-video/commit/3bd2e7e19eacc0d58eaa41065ca4eb75dc223cfe))
+
+### Security
+
+- **security:** Add threatcheck for the threat table of SDD-007 ([fff0569](https://github.com/AlexGalhardo/vukem-video/commit/fff0569ced63ae1d2ce1d34e46ef33d249b055fe))
+- **security:** Add the Threat coverage job ([9d904b9](https://github.com/AlexGalhardo/vukem-video/commit/9d904b9897adacd3fe4cd0e907d57952513e7030))
+- **security:** Assert the release workflow pins, signs, attests and verifies (T-27) ([2f73481](https://github.com/AlexGalhardo/vukem-video/commit/2f73481425f1a00b8e4f826e7cc9da0f1d2880c4))
+- **security:** Drop the no-release-yet wording from the security policy ([435fbc1](https://github.com/AlexGalhardo/vukem-video/commit/435fbc145257cf899ba173de65138dde9bb654b6))
+- **security:** Name the helper download refusals T-26 and add the wrong-digest case ([c751976](https://github.com/AlexGalhardo/vukem-video/commit/c75197690801f93c789a28ab53b513e700e87e24))
+- **security:** List GET /settings among the browser pages of T-05 ([315aeab](https://github.com/AlexGalhardo/vukem-video/commit/315aeab2c2268a6ef5e84d9b770183cad50101c0))
+- **security:** Name the T-10, T-13 and T-28 tests as SDD-007 section 2 does ([52a1760](https://github.com/AlexGalhardo/vukem-video/commit/52a17607e6b1d7aade7fff6ab3c1c4549e9903b9))
+- **security:** Allow the login labels and the self-hosting sample values in the secret scan ([5955907](https://github.com/AlexGalhardo/vukem-video/commit/595590703ca0e3b351e1043604022c982dc50792))
+
 ## [0.11.0] - 2026-11-15
 
 ### Added
@@ -492,7 +551,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.8.0...v0.9.0
