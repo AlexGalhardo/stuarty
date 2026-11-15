@@ -104,6 +104,35 @@ func (g Gen) Truncated(ctx context.Context) (string, error) {
 	return out, err
 }
 
+// AudioFile is a 2 s tone at 44.1 kHz in the container and codec the arguments name, for example
+// AudioFile(ctx, "tone.wav", "-c:a", "pcm_s16le", "-f", "wav").
+func (g Gen) AudioFile(ctx context.Context, name string, codec ...string) (string, error) {
+	return g.ff(ctx, name, append(tone(2), codec...)...)
+}
+
+// Speech3Pauses is a WAV of four 1 s tones separated by pauses of 0.5 s, 1.0 s and 0.2 s of
+// digital silence: the speech fixture of the silence tests.
+func (g Gen) Speech3Pauses(ctx context.Context) (string, error) {
+	return g.ff(ctx, "speech-3-pauses.wav",
+		"-f", "lavfi", "-i", "sine=f=300:r=48000:d=1",
+		"-f", "lavfi", "-i", "anullsrc=r=48000:cl=mono:d=0.5",
+		"-f", "lavfi", "-i", "sine=f=400:r=48000:d=1",
+		"-f", "lavfi", "-i", "anullsrc=r=48000:cl=mono:d=1",
+		"-f", "lavfi", "-i", "sine=f=500:r=48000:d=1",
+		"-f", "lavfi", "-i", "anullsrc=r=48000:cl=mono:d=0.2",
+		"-f", "lavfi", "-i", "sine=f=600:r=48000:d=1",
+		"-filter_complex", "[0:a][1:a][2:a][3:a][4:a][5:a][6:a]concat=n=7:v=0:a=1[a]",
+		"-map", "[a]", "-ar", "48000", "-ac", "1", "-c:a", "pcm_s16le", "-f", "wav")
+}
+
+// Tone23LUFS is a mono 1 kHz sine of 5 s whose integrated loudness is -23 LUFS (the lavfi sine peaks at
+// 0.125, so a volume of 0.8 gives a peak of 0.1, which is -23 LUFS for a 1 kHz sine).
+func (g Gen) Tone23LUFS(ctx context.Context) (string, error) {
+	return g.ff(ctx, "tone-23lufs.wav",
+		"-f", "lavfi", "-i", "sine=f=1000:r=48000:d=5", "-af", "volume=0.8",
+		"-ar", "48000", "-ac", "1", "-c:a", "pcm_s16le", "-f", "wav")
+}
+
 // Long is a 60 s 1080x1920 clip at 30 fps with sound: the NFR-005 fixture (SDD-011 11.2). The source
 // codec is MPEG-4 Part 2, which the LGPL build can encode; the original of a phone is HEVC.
 func (g Gen) Long(ctx context.Context) (string, error) {
