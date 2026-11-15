@@ -146,7 +146,7 @@ var Endpoints = []Endpoint{
 	},
 	{
 		ID: "projects.plan", Method: http.MethodGet, Path: "/projects/{id}/plan", Scope: service.ScopeRead,
-		Service: "PlanWindow", Status: 200, Summary: "Read the render plan of a window", Pending: "P1-RND-005",
+		Service: "PlanWindow", Status: 200, Summary: "Read the render plan of a window",
 	},
 	{
 		ID: "events.stream", Method: http.MethodGet, Path: "/projects/{id}/events", Scope: service.ScopeRead,
@@ -191,7 +191,7 @@ var Endpoints = []Endpoint{
 	},
 	{
 		ID: "bitmaps.get", Method: http.MethodGet, Path: "/projects/{id}/bitmaps/{key}", Scope: service.ScopeRead,
-		Status: 200, Summary: "Download a rasterized text or shape", Pending: "P1-RND-005",
+		Status: 200, Summary: "Download a rasterized text or shape",
 	},
 
 	{

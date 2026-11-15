@@ -57,7 +57,7 @@ var parity = []row{
 
 // notOperations are Service methods that are not operations an agent calls
 // (SDD-003 section 7.1, exception E-2).
-var notOperations = map[string]bool{"OpenFile": true}
+var notOperations = map[string]bool{"OpenFile": true, "PlanWindow": true}
 
 var braces = regexp.MustCompile(`\{[^}]*\}`)
 

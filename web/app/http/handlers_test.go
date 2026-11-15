@@ -269,3 +269,34 @@ func TestViewRoutesPinTheRevision(t *testing.T) {
 		t.Errorf("no renderer = %d, want 500", res.status)
 	}
 }
+
+func TestPlanRouteAnswersTheWindowOfSDD004(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	id := h.newProject("plan")
+
+	res := h.get("/api/v1/projects/" + id + "/plan?from=0&to=30")
+	body := res.json(t)
+
+	ok := res.status == http.StatusOK && body["revision"] == float64(0) && body["end_frame"] == float64(0)
+	ok = ok && body["layers"] != nil && res.header.Get("X-Vukem-Revision") == "0"
+
+	if !ok {
+		t.Errorf("plan = %d %s", res.status, res.body)
+	}
+
+	if res := h.get("/api/v1/projects/" + id + "/plan?from=0&to=30&rev=4"); res.status != http.StatusConflict {
+		t.Errorf("a stale rev = %d, want 409", res.status)
+	}
+
+	if res := h.get("/api/v1/projects/" + id + "/plan?from=0&to=900"); res.status != http.StatusBadRequest {
+		t.Errorf("a window of 900 frames = %d, want 400", res.status)
+	}
+
+	if res := h.get(
+		"/api/v1/projects/" + id + "/bitmaps/" + strings.Repeat("a", 64),
+	); res.status != http.StatusNotFound {
+		t.Errorf("an unknown bitmap = %d, want 404", res.status)
+	}
+}
