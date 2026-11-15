@@ -179,7 +179,12 @@ func (w *Whisper) Transcribe(
 		return Raw{}, err
 	}
 	if !filepath.IsAbs(w.Helper) || !filepath.IsAbs(w.ModelPath) {
-		return Raw{}, failure(ReasonPrepare, "The transcription helper is not configured with absolute paths.", errNotAbsolute, "")
+		return Raw{}, failure(
+			ReasonPrepare,
+			"The transcription helper is not configured with absolute paths.",
+			errNotAbsolute,
+			"",
+		)
 	}
 	if in.WorkDir == nil || w.FFmpeg == nil {
 		return Raw{}, failure(
