@@ -1,0 +1,9 @@
+{
+  "op": "item.duplicate",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "start": "3s",
+    "track_id": "trk_m1n2p3q4r5",
+    "new_id": "itm_s6t7v8w9x0"
+  }
+}

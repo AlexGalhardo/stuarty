@@ -1,0 +1,13 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.ripple is \"none\", which is not one of the accepted values.",
+  "hint": "Use one of: track, all.",
+  "retryable": false,
+  "path": "args.ripple",
+  "details": {
+    "allowed": [
+      "track",
+      "all"
+    ]
+  }
+}

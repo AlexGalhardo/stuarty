@@ -1,0 +1,8 @@
+{
+  "op": "timeline.close_gap",
+  "args": {
+    "track_id": "trk_f6g7h8j9k0",
+    "at": "70f",
+    "ripple": "none"
+  }
+}
