@@ -36,7 +36,7 @@ type ProbeSummary struct {
 // carries the directory of the path.
 type ImportedAsset struct {
 	AssetID      string        `json:"asset_id,omitempty"`
-	Name         string        `json:"name"` // base name only; untrusted
+	Name         string        `json:"name"               untrusted:"true"` // base name only; untrusted
 	Kind         string        `json:"kind,omitempty"`
 	State        string        `json:"state"`
 	Progress     float64       `json:"progress"`
@@ -74,7 +74,7 @@ type Strip struct {
 // MediaEntry is one asset of the list.
 type MediaEntry struct {
 	AssetID         string   `json:"asset_id"`
-	Name            string   `json:"name"` // base name; untrusted
+	Name            string   `json:"name"             untrusted:"true"` // base name; untrusted
 	Kind            string   `json:"kind"`
 	State           string   `json:"state"`
 	Progress        float64  `json:"progress"`
@@ -135,8 +135,10 @@ type TimeRange struct {
 
 // UntrustedData holds every string that came from the file (ADR-0020 item 5).
 type UntrustedData struct {
-	Name     string            `json:"name"`
-	Metadata map[string]string `json:"metadata,omitempty"`
+	Name     string            `json:"name"               untrusted:"true"`
+	Metadata map[string]string `json:"metadata,omitempty" untrusted:"true"`
+	// Transcript is one page of the transcript, when the section was asked for.
+	Transcript []TranscriptLine `json:"transcript,omitempty"`
 }
 
 // MediaInspectResult answers MediaInspect. An asset that is not ready answers
