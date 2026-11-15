@@ -210,6 +210,7 @@ func applySettingsSetFPS(c *Context, a *setFPSArgs) error {
 	}
 	run("keyframe_collision", c.fixKeyframeCollisions)
 	run("keyframe_cut", c.fixKeyframeCuts)
+	c.fixMarkers()
 	run("word_overlap", c.fixWordOverlaps)
 	run("word_clamp", c.fixWordClamps)
 	run("fit", c.fixFit)
@@ -235,6 +236,7 @@ func (c *Context) rescaleTimes(r rescaler, adjusted *[]adjustment) {
 		it.Start, it.Duration, it.SourceIn = r.of(it.Start), r.of(it.Duration), r.of(it.SourceIn)
 		it.FadeIn, it.FadeOut = r.of(it.FadeIn), r.of(it.FadeOut)
 		zero("duration", &it.Duration)
+		mRescale(&it, r.of)
 		for _, t := range []struct {
 			field string
 			p     **timeline.Transition
@@ -448,5 +450,17 @@ func (c *Context) fixFit() {
 		it := c.Doc.Items[id]
 		fitFix(&it)
 		c.Doc.Items[id] = it
+	}
+}
+
+// fixMarkers drops the markers that lie past the final duration of their item; like
+// the marker rescale it is not reported in adjusted (markers do not alter the
+// result, SDD-001 section 3.4).
+func (c *Context) fixMarkers() {
+	for _, id := range c.sortedItems() {
+		if it := c.Doc.Items[id]; len(it.Markers) > 0 {
+			mCut(&it, it.Duration)
+			c.Doc.Items[id] = it
+		}
 	}
 }

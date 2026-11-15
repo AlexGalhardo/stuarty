@@ -1,0 +1,6 @@
+{
+  "code": "E_LIMIT",
+  "message": "Ducking itm_c3d4e5f6g7 would need 160 volume keyframes; the limit is 100.",
+  "hint": "Duck a shorter item, split it, or use longer ramps so that nearby speech merges.",
+  "retryable": false
+}

@@ -1,0 +1,77 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        120,
+        60
+      ],
+      "markers": [
+        [
+          {
+            "frame": 0
+          },
+          {
+            "frame": 20
+          },
+          {
+            "frame": 59
+          },
+          {
+            "frame": 60
+          },
+          {
+            "frame": 119
+          }
+        ],
+        [
+          {
+            "frame": 0
+          },
+          {
+            "frame": 20
+          },
+          {
+            "frame": 59
+          }
+        ]
+      ]
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_s6t7v8w9x0",
+    "object": {
+      "asset": "ast_4h6j8k2m3n",
+      "contrast": 1,
+      "duration": 60,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "id": "itm_s6t7v8w9x0",
+      "markers": [
+        {
+          "frame": 0
+        },
+        {
+          "frame": 59
+        }
+      ],
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "source_in": 90,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 120,
+      "stroke_color": "#000000",
+      "track": "trk_m1n2p3q4r5",
+      "type": "audio",
+      "volume": 1
+    }
+  }
+]

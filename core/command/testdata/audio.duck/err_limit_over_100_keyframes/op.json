@@ -1,0 +1,180 @@
+{
+  "op": "audio.duck",
+  "args": {
+    "item_id": "itm_c3d4e5f6g7",
+    "speech_item_ids": [
+      "itm_m1n2p3q4r5"
+    ],
+    "attack": "0f",
+    "release": "0f",
+    "resolved": {
+      "speech": [
+        {
+          "item_id": "itm_m1n2p3q4r5",
+          "ranges": [
+            {
+              "start": 0,
+              "end": 4
+            },
+            {
+              "start": 20,
+              "end": 24
+            },
+            {
+              "start": 40,
+              "end": 44
+            },
+            {
+              "start": 60,
+              "end": 64
+            },
+            {
+              "start": 80,
+              "end": 84
+            },
+            {
+              "start": 100,
+              "end": 104
+            },
+            {
+              "start": 120,
+              "end": 124
+            },
+            {
+              "start": 140,
+              "end": 144
+            },
+            {
+              "start": 160,
+              "end": 164
+            },
+            {
+              "start": 180,
+              "end": 184
+            },
+            {
+              "start": 200,
+              "end": 204
+            },
+            {
+              "start": 220,
+              "end": 224
+            },
+            {
+              "start": 240,
+              "end": 244
+            },
+            {
+              "start": 260,
+              "end": 264
+            },
+            {
+              "start": 280,
+              "end": 284
+            },
+            {
+              "start": 300,
+              "end": 304
+            },
+            {
+              "start": 320,
+              "end": 324
+            },
+            {
+              "start": 340,
+              "end": 344
+            },
+            {
+              "start": 360,
+              "end": 364
+            },
+            {
+              "start": 380,
+              "end": 384
+            },
+            {
+              "start": 400,
+              "end": 404
+            },
+            {
+              "start": 420,
+              "end": 424
+            },
+            {
+              "start": 440,
+              "end": 444
+            },
+            {
+              "start": 460,
+              "end": 464
+            },
+            {
+              "start": 480,
+              "end": 484
+            },
+            {
+              "start": 500,
+              "end": 504
+            },
+            {
+              "start": 520,
+              "end": 524
+            },
+            {
+              "start": 540,
+              "end": 544
+            },
+            {
+              "start": 560,
+              "end": 564
+            },
+            {
+              "start": 580,
+              "end": 584
+            },
+            {
+              "start": 600,
+              "end": 604
+            },
+            {
+              "start": 620,
+              "end": 624
+            },
+            {
+              "start": 640,
+              "end": 644
+            },
+            {
+              "start": 660,
+              "end": 664
+            },
+            {
+              "start": 680,
+              "end": 684
+            },
+            {
+              "start": 700,
+              "end": 704
+            },
+            {
+              "start": 720,
+              "end": 724
+            },
+            {
+              "start": 740,
+              "end": 744
+            },
+            {
+              "start": 760,
+              "end": 764
+            },
+            {
+              "start": 780,
+              "end": 784
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

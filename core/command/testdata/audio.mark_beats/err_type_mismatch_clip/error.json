@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_m1n2p3q4r5 is a clip item, not an audio item; beats are marked on music.",
+  "hint": "Choose an audio item.",
+  "retryable": false,
+  "path": "args.item_id"
+}

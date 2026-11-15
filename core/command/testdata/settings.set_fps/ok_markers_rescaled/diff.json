@@ -1,0 +1,52 @@
+[
+  {
+    "kind": "settings.updated",
+    "id": "prj_7k2m9x4q1b",
+    "changes": {
+      "fps": [
+        {
+          "den": 1,
+          "num": 30
+        },
+        {
+          "den": 1,
+          "num": 24
+        }
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        60,
+        48
+      ],
+      "markers": [
+        [
+          {
+            "frame": 0
+          },
+          {
+            "frame": 30
+          },
+          {
+            "frame": 59
+          }
+        ],
+        [
+          {
+            "frame": 0
+          },
+          {
+            "frame": 24
+          },
+          {
+            "frame": 47
+          }
+        ]
+      ]
+    }
+  }
+]

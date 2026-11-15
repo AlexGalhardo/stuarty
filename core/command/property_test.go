@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -146,7 +147,7 @@ func TestPropertyApplyThenInverseIsTheIdentity(t *testing.T) {
 type docPick struct {
 	rng                                *rand.Rand
 	items, tracks, visual, audio, asts []string
-	captions, slots, clips             []string
+	captions, slots, clips, audios     []string
 	keys                               []keyAt
 }
 
@@ -168,6 +169,10 @@ func newDocPick(rng *rand.Rand, doc *timeline.Document) *docPick {
 
 		if it := doc.Items[id]; it.Type == timeline.ItemClip {
 			p.clips = append(p.clips, id)
+		}
+
+		if it := doc.Items[id]; it.Type == timeline.ItemAudio {
+			p.audios = append(p.audios, id)
 		}
 
 		for prop, ks := range doc.Items[id].Keyframes {
@@ -194,7 +199,7 @@ func newDocPick(rng *rand.Rand, doc *timeline.Document) *docPick {
 		p.asts = append(p.asts, id)
 	}
 
-	for _, l := range [][]string{p.items, p.tracks, p.visual, p.audio, p.asts, p.captions, p.slots, p.clips} {
+	for _, l := range [][]string{p.items, p.tracks, p.visual, p.audio, p.asts, p.captions, p.slots, p.clips, p.audios} {
 		slices.Sort(l)
 	}
 
@@ -209,14 +214,15 @@ func (p *docPick) of(list []string, missing string) string {
 	return list[p.rng.Intn(len(list))]
 }
 
-func (p *docPick) item() string    { return p.of(p.items, "itm_zzzzzzzzzz") }
-func (p *docPick) clip() string    { return p.of(p.clips, "itm_zzzzzzzzzz") }
-func (p *docPick) caption() string { return p.of(p.captions, "itm_zzzzzzzzzz") }
-func (p *docPick) vtrack() string  { return p.of(p.visual, "trk_zzzzzzzzzz") }
-func (p *docPick) atrack() string  { return p.of(p.audio, "trk_zzzzzzzzzz") }
-func (p *docPick) asset() string   { return p.of(p.asts, "ast_zzzzzzzzzz") }
-func (p *docPick) slot() string    { return p.of(p.slots, "nope") }
-func (p *docPick) n(k int) int     { return p.rng.Intn(k) }
+func (p *docPick) item() string      { return p.of(p.items, "itm_zzzzzzzzzz") }
+func (p *docPick) clip() string      { return p.of(p.clips, "itm_zzzzzzzzzz") }
+func (p *docPick) audioItem() string { return p.of(p.audios, "itm_zzzzzzzzzz") }
+func (p *docPick) caption() string   { return p.of(p.captions, "itm_zzzzzzzzzz") }
+func (p *docPick) vtrack() string    { return p.of(p.visual, "trk_zzzzzzzzzz") }
+func (p *docPick) atrack() string    { return p.of(p.audio, "trk_zzzzzzzzzz") }
+func (p *docPick) asset() string     { return p.of(p.asts, "ast_zzzzzzzzzz") }
+func (p *docPick) slot() string      { return p.of(p.slots, "nope") }
+func (p *docPick) n(k int) int       { return p.rng.Intn(k) }
 func (p *docPick) frames(k int) string {
 	return fmt.Sprintf("%df", p.rng.Intn(k))
 }
@@ -323,6 +329,29 @@ var alphaOps = map[string]func(p *docPick) string{
 	},
 	"clip.set_blur": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"radius":%d}`, p.clip(), p.n(101))
+	},
+	"audio.duck": func(p *docPick) string {
+		clip := p.clip()
+		var parts []string
+		for at := p.n(60); at < 800 && len(parts) < 6; {
+			end := at + 5 + p.n(80)
+			parts = append(parts, fmt.Sprintf(`{"start":%d,"end":%d}`, at, end))
+			at = end + 1 + p.n(70)
+		}
+
+		return fmt.Sprintf(
+			`{"item_id":%q,"speech_item_ids":[%q],"gain_db":-%d,"resolved":{"speech":[{"item_id":%q,"ranges":[%s]}]}}`,
+			p.audioItem(), clip, 1+p.n(30), clip, strings.Join(parts, ","),
+		)
+	},
+	"audio.mark_beats": func(p *docPick) string {
+		var parts []string
+		for at := p.n(20); at < 600 && len(parts) < 150; at += 3 + p.n(20) {
+			parts = append(parts, strconv.Itoa(at))
+		}
+
+		return fmt.Sprintf(`{"item_id":%q,"every":%d,"resolved":{"beats":[%s]}}`,
+			p.audioItem(), 1+p.n(3), strings.Join(parts, ","))
 	},
 	"clip.remove_silences": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"ripple":%q,"resolved":%s}`, p.clip(), p.oneOf("none", "track"), p.silences())

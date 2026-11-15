@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.resolved.beats[0] is -1, not a frame after -1.",
+  "hint": "Send beats as strictly increasing frames from 0.",
+  "retryable": false,
+  "path": "args.resolved.beats[0]"
+}

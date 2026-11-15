@@ -216,6 +216,7 @@ func (c *Context) speedDuration(it *timeline.Item, asset timeline.Asset, next ti
 func rescaleForSpeed(it *timeline.Item, r rescaler) []adjustment {
 	var adjusted []adjustment
 	it.FadeIn, it.FadeOut = r.of(it.FadeIn), r.of(it.FadeOut)
+	mRescale(it, r.of)
 	for _, t := range []struct {
 		field string
 		p     **timeline.Transition

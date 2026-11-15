@@ -1,0 +1,226 @@
+package command
+
+import (
+	"fmt"
+	"slices"
+
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+)
+
+func init() {
+	Register(Define(Spec{
+		Name:    "audio.mark_beats",
+		Summary: "Writes markers on a music item at the beats of its audio.",
+		Description: "Places a marker at each beat of the visible part of the item, or at every nth beat, so that " +
+			"cuts and transitions can be aligned to the music. Beats are frames of the asset and come from the beat " +
+			"grid of the asset, supplied by the service in resolved; the command never starts a job. Markers have " +
+			"no effect on the picture or the sound.",
+		Example: `{"item_id": "itm_s6t7v8w9x0", "every": 2, "label": "beat"}`,
+		Errors: []string{
+			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeLimit,
+		},
+		Scope: ScopeEdit,
+		Phase: Beta,
+	}, applyMarkBeats))
+}
+
+// maxBeats bounds the beat grid a caller may supply: one beat per frame of the
+// longest timeline.
+const maxBeats = timeline.MaxFrames
+
+// ResolvedBeats is the analysis result the service puts in `resolved` (A.9).
+type ResolvedBeats struct {
+	Beats []int `json:"beats" desc:"Strictly increasing beat positions in asset frames, from 0."`
+}
+
+type markBeatsArgs struct {
+	ItemID   string         `json:"item_id"            desc:"An audio item of an audio asset, or of a video asset with audio."`
+	Every    int            `json:"every,omitempty"    desc:"Mark every nth beat of the visible part, from the first; default 1."              min:"1" max:"64"`
+	Label    string         `json:"label,omitempty"    desc:"Label of every marker, up to 60 characters; default none."                                max:"60"`
+	Replace  *bool          `json:"replace,omitempty"  desc:"true (default) replaces the item's markers; false keeps them and adds the beats."`
+	Resolved *ResolvedBeats `json:"resolved,omitempty" desc:"Filled by the service from the beat grid of the asset; never sent by a caller."`
+}
+
+func checkBeats(r *ResolvedBeats) *Error {
+	if r == nil {
+		return Errorf(CodeValidation, "args.resolved is missing: the beats of the asset are not known.").
+			WithHint("The service fills it from the beat grid; run the beat analysis of the asset first, then retry.").
+			WithPath("args.resolved")
+	}
+	if len(r.Beats) > maxBeats {
+		return Errorf(CodeValidation, "args.resolved.beats has %d beats; the limit is %d.", len(r.Beats), maxBeats).
+			WithHint("Send the beats of one asset as a sorted list.").WithPath("args.resolved.beats")
+	}
+	prev := -1
+	for i, b := range r.Beats {
+		if b < 0 || b <= prev {
+			path := fmt.Sprintf("args.resolved.beats[%d]", i)
+			return Errorf(CodeValidation, "%s is %d, not a frame after %d.", path, b, prev).
+				WithHint("Send beats as strictly increasing frames from 0.").WithPath(path)
+		}
+		prev = b
+	}
+	return nil
+}
+
+// audioSource checks that an item is an audio item whose asset has audio, the
+// kind of item that carries music or speech for the analysis commands.
+func (c *Context) audioSource(it *timeline.Item, what string) *Error {
+	if it.Type != timeline.ItemAudio {
+		return Errorf(CodeTypeMismatch, "Item %s is %s item, not an audio item; %s", it.ID, article(it.Type), what).
+			WithHint("Choose an audio item.").WithPath("args.item_id")
+	}
+	if asset, ok := c.Doc.Assets[it.Asset]; !ok || !assetHasAudio(asset) {
+		return Errorf(CodeTypeMismatch, "Item %s has no asset with audio; %s", it.ID, what).
+			WithHint("Choose an audio item placed from an asset with audio.").WithPath("args.item_id")
+	}
+	return nil
+}
+
+func assetHasAudio(a timeline.Asset) bool {
+	return a.Kind == timeline.AssetAudio || (a.Kind == timeline.AssetVideo && a.HasAudio)
+}
+
+func applyMarkBeats(c *Context, a *markBeatsArgs) error {
+	if err := idForm("args.item_id", timeline.PrefixItem, a.ItemID); err != nil {
+		return err
+	}
+	if err := checkBeats(a.Resolved); err != nil {
+		return err
+	}
+	it, err := c.item(a.ItemID)
+	if err != nil {
+		return err
+	}
+	if err := c.audioSource(&it, "beats are marked on music."); err != nil {
+		return err
+	}
+	every := max(a.Every, 1)
+	sp := it.Speed
+
+	var frames []int
+	for _, b := range a.Resolved.Beats {
+		if b < it.SourceIn {
+			continue
+		}
+		f := ceilDiv((b-it.SourceIn)*sp.Den, sp.Num)
+		if f >= it.Duration {
+			break
+		}
+		if len(frames) == 0 || f > frames[len(frames)-1] {
+			frames = append(frames, f)
+		}
+	}
+	if len(frames) == 0 {
+		return Errorf(CodeInvalidState, "The beat grid has no beat inside the visible part of item %s.", a.ItemID).
+			WithHint("Check that the item holds music, or widen it with item.trim.")
+	}
+
+	marks := make([]timeline.Marker, 0, len(frames)/every+1)
+	for i := 0; i < len(frames); i += every {
+		marks = append(marks, timeline.Marker{Frame: frames[i], Label: a.Label})
+	}
+	added := len(marks)
+	if a.Replace != nil && !*a.Replace {
+		marks = mergeMarkers(it.Markers, marks)
+	}
+	if len(marks) > timeline.MaxMarkers {
+		return Errorf(
+			CodeLimit,
+			"Item %s would have %d markers; the limit is %d.",
+			a.ItemID,
+			len(marks),
+			timeline.MaxMarkers,
+		).
+			WithHint("Use a larger every, or trim the item first.")
+	}
+	it.Markers = marks
+	c.Doc.Items[a.ItemID] = it
+	c.SetEffective("beats", added)
+	c.SetEffective("markers", len(marks))
+	return nil
+}
+
+// mergeMarkers returns the markers of both lists in frame order; at a frame that
+// both have, the existing marker stays.
+func mergeMarkers(existing, added []timeline.Marker) []timeline.Marker {
+	out := slices.Clone(existing)
+	for _, m := range added {
+		if !slices.ContainsFunc(existing, func(e timeline.Marker) bool { return e.Frame == m.Frame }) {
+			out = append(out, m)
+		}
+	}
+	slices.SortFunc(out, func(x, y timeline.Marker) int { return x.Frame - y.Frame })
+	return out
+}
+
+// Marker rules M1 to M4 of SDD-002 (Part B, markers): they follow the item when
+// it is trimmed, split, sped up or retimed, as keyframes do.
+
+// mShift is M1: the item loses its first d frames (d < 0: it gains -d). Markers
+// that fall before the new start or past the new end are dropped.
+func mShift(it *timeline.Item, d int) {
+	if len(it.Markers) == 0 {
+		return
+	}
+	out := make([]timeline.Marker, 0, len(it.Markers))
+	for _, m := range it.Markers {
+		if m.Frame -= d; m.Frame >= 0 && m.Frame < it.Duration {
+			out = append(out, m)
+		}
+	}
+	it.Markers = nilIfEmpty(out)
+}
+
+// mCut is M2: the item is cut to l frames at the back.
+func mCut(it *timeline.Item, l int) {
+	if len(it.Markers) == 0 {
+		return
+	}
+	out := make([]timeline.Marker, 0, len(it.Markers))
+	for _, m := range it.Markers {
+		if m.Frame < l {
+			out = append(out, m)
+		}
+	}
+	it.Markers = nilIfEmpty(out)
+}
+
+// mSplit is M3: markers before tc stay on the left part, the others go to the
+// right part, counted from its start.
+func mSplit(left, right *timeline.Item, tc int) {
+	var l, r []timeline.Marker
+	for _, m := range left.Markers {
+		if m.Frame < tc {
+			l = append(l, m)
+			continue
+		}
+		m.Frame -= tc
+		r = append(r, m)
+	}
+	left.Markers, right.Markers = nilIfEmpty(l), nilIfEmpty(r)
+}
+
+// mRescale is M4: marker frames are scaled by of and rounded; a marker past the
+// end of the item is dropped, and of two on the same frame the first stays.
+func mRescale(it *timeline.Item, of func(int) int) {
+	if len(it.Markers) == 0 {
+		return
+	}
+	out := make([]timeline.Marker, 0, len(it.Markers))
+	for _, m := range it.Markers {
+		m.Frame = of(m.Frame)
+		if m.Frame >= it.Duration || (len(out) > 0 && m.Frame <= out[len(out)-1].Frame) {
+			continue
+		}
+		out = append(out, m)
+	}
+	it.Markers = nilIfEmpty(out)
+}
+
+func nilIfEmpty(m []timeline.Marker) []timeline.Marker {
+	if len(m) == 0 {
+		return nil
+	}
+	return m
+}

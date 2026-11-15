@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.resolved is missing: the beats of the asset are not known.",
+  "hint": "The service fills it from the beat grid; run the beat analysis of the asset first, then retry.",
+  "retryable": false,
+  "path": "args.resolved"
+}
