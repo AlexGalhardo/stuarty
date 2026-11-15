@@ -82,6 +82,9 @@ type Limits struct {
 	MaxExportsPerActor int   // VUKEM_VIDEO_MAX_EXPORTS_PER_KEY: running; two more may wait
 	// MaxTranscribes is VUKEM_VIDEO_MAX_TRANSCRIBES: transcriptions running at once.
 	MaxTranscribes int
+	// MaxTranscribesPerActor is VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY: the
+	// transcriptions of one actor that are queued or running.
+	MaxTranscribesPerActor int
 	// MaxTranscribeSeconds is VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS: the longest audio of one job.
 	MaxTranscribeSeconds int64
 	// MaxExportBytes is VUKEM_VIDEO_MAX_EXPORT_BYTES: the largest exported file.
@@ -134,6 +137,10 @@ func (l Limits) withDefaults() Limits {
 
 	if l.MaxTranscribes <= 0 {
 		l.MaxTranscribes = defaultMaxTranscribes
+	}
+
+	if l.MaxTranscribesPerActor <= 0 {
+		l.MaxTranscribesPerActor = 1
 	}
 
 	if l.MaxTranscribeSeconds <= 0 {

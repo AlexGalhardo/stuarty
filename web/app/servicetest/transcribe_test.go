@@ -210,3 +210,31 @@ func TestTranscribeConcurrencyIsBounded(t *testing.T) {
 		t.Errorf("second concurrent transcription = %v, want E_QUEUE_FULL", err)
 	}
 }
+
+// One actor cannot hold the transcription slots: with room for three, a key
+// that already has one queued gets E_QUEUE_FULL for a second, and another key
+// still gets its own.
+func TestTranscribeLimitPerActor(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{
+		transcriber: &stubProvider{}, limits: service.Limits{MaxTranscribes: 3, MaxTranscribesPerActor: 1},
+	})
+	project, _, _, hash := m.speechProject()
+	row, _ := m.store.Assets().FindProjectAssetByHash(context.Background(), project, hash)
+
+	keyA := service.WithCaller(context.Background(), service.Caller{Actor: "key:a", Scopes: service.AllScopes})
+	keyB := service.WithCaller(context.Background(), service.Caller{Actor: "key:b", Scopes: service.AllScopes})
+
+	m.hold.Store(true)
+
+	if _, err := m.startTranscribe(keyA, project, row.AssetID); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := m.startTranscribe(keyA, project, row.AssetID); code(err) != service.CodeQueueFull {
+		t.Errorf("a second transcription of the same key = %v, want E_QUEUE_FULL", err)
+	}
+
+	if _, err := m.startTranscribe(keyB, project, row.AssetID); err != nil {
+		t.Errorf("another key: %v", err)
+	}
+}

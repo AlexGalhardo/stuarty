@@ -179,6 +179,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `VUKEM_VIDEO_MAX_EXPORTS_PER_KEY` | `1` | concurrent exports running per actor (two more may wait) |
 | `VUKEM_VIDEO_MAX_INGESTS` | `2` | concurrent ingests per workspace |
 | `VUKEM_VIDEO_MAX_TRANSCRIBES` | `1` | concurrent transcriptions per workspace |
+| `VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY` | `1` | transcriptions of one actor (key or user) that are queued or running; the same rule as `MAX_EXPORTS_PER_KEY` |
 | `VUKEM_VIDEO_MAX_IMPORT_SECONDS` | `14400` | longest source accepted by import |
 | `VUKEM_VIDEO_MAX_IMPORT_PIXELS` | `33177600` | largest source frame (7680 x 4320); no side above 8192 |
 | `VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS` | `7200` | longest audio per transcription job |

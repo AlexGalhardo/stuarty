@@ -204,7 +204,9 @@ func (s *svc) startTranscribe(ctx context.Context, c Caller, req JobStartRequest
 		return s.jobView(c, s.stamp(job), false), nil
 	}
 
-	lim := &JobLimit{Kind: JobTranscribe, Max: s.limits.MaxTranscribes}
+	lim := &JobLimit{
+		Kind: JobTranscribe, Max: s.limits.MaxTranscribes, Actor: c.Actor, MaxPerActor: s.limits.MaxTranscribesPerActor,
+	}
 
 	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		now := s.nowMs()
@@ -249,10 +251,12 @@ func transcribeLimitError(err error, l Limits) error {
 	out := asError(err)
 
 	if e, ok := errors.AsType[*Error](out); ok && e.Code == CodeQueueFull {
-		return e.withHint("at most %d transcriptions run at the same time: wait for one to finish with job_get "+
-			"or stop it with job_cancel; the person running the server can raise VUKEM_VIDEO_MAX_TRANSCRIBES",
-			l.MaxTranscribes).
+		return e.withHint("at most %d transcriptions run at the same time and %d per key: wait for one to finish "+
+			"with job_get or stop it with job_cancel; the person running the server can raise "+
+			"VUKEM_VIDEO_MAX_TRANSCRIBES or VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY",
+			l.MaxTranscribes, l.MaxTranscribesPerActor).
 			withDetail("limit", "transcribes").withDetail("ceiling", l.MaxTranscribes).
+			withDetail("per_actor", l.MaxTranscribesPerActor).
 			withDetail("variable", "VUKEM_VIDEO_MAX_TRANSCRIBES")
 	}
 
