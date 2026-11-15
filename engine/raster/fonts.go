@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"slices"
 	"sync"
+	"unicode"
 
 	"github.com/go-text/typesetting/font"
 	ot "github.com/go-text/typesetting/font/opentype"
@@ -143,4 +145,29 @@ func (s *FontSet) load(f family) (*font.Font, error) {
 	s.parsed[f.file] = face.Font
 
 	return face.Font, nil
+}
+
+// Missing returns the runes of text that the family has no glyph for, in the
+// order they first appear, each once. Those runes are drawn as .notdef: there
+// is no fallback to another font (SDD-004 section 5.1 item 9). Control and
+// format characters (line breaks, joiners) are not glyphs and are skipped.
+func (s *FontSet) Missing(familyName string, weight int, text string) ([]rune, error) {
+	face, err := s.Lookup(familyName, weight)
+	if err != nil {
+		return nil, err
+	}
+
+	var out []rune
+
+	for _, r := range text {
+		if unicode.IsControl(r) || unicode.Is(unicode.Cf, r) || slices.Contains(out, r) {
+			continue
+		}
+
+		if _, ok := face.NominalGlyph(r); !ok {
+			out = append(out, r)
+		}
+	}
+
+	return out, nil
 }

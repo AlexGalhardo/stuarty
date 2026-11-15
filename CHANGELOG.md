@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **command:** Add `settings.set_fps` and `asset.remove`; the default registry now builds the ALPHA catalogue
 - **timeline:** Add one invalid example per violation code and valid examples for the ALPHA features (keyframes, transitions, shapes, slots, per-word highlight)
 - **timeline:** Add the `migrate` package with the migration chain, the frozen `versions/v1` fixtures and their manifest
+- **raster:** Add `FontSet.Missing`, golden bitmaps for each shape and for the word highlight at three words, and a licence column in `fonts/FONTS.md`
 
 ## [0.2.0] - 2026-11-14
 

@@ -22,6 +22,8 @@ type goldenCase struct {
 	spec plan.BitmapSpec
 }
 
+var neverWords = []string{"Never", "gonna", "give", "you", "up"}
+
 func goldenStyle(mod func(*plan.ResolvedStyle)) plan.ResolvedStyle {
 	st := plainStyle()
 	if mod != nil {
@@ -100,6 +102,20 @@ func goldenCases() []goldenCase {
 		{"missing-glyph-no-fallback", textSpec("Latin 你好 สวัสดี text", goldenStyle(func(s *plan.ResolvedStyle) {
 			s.Size, s.StrokeWidth, s.StrokeColor = 44, 3, C(0, 0, 0, 255)
 		}))},
+		{"caption-active-first", captionSpec(neverWords, 0, goldenStyle(func(s *plan.ResolvedStyle) {
+			s.Size, s.StrokeWidth = 64, 5
+		}))},
+		{"caption-active-last-with-box", captionSpec(neverWords, 4, goldenStyle(func(s *plan.ResolvedStyle) {
+			s.Size, s.StrokeWidth, s.HighlightBackground = 64, 5, pink
+		}))},
+		{"shape-rect", plan.BitmapSpec{Kind: KindShape, PixelScale: 1, Shape: &plan.ShapeSpec{
+			Shape: ShapeRect, Width: 240, Height: 90, Fill: C(255, 120, 0, 255),
+			StrokeColor: C(0, 0, 0, 255), StrokeWidth: 6,
+		}}},
+		{"shape-ellipse", plan.BitmapSpec{Kind: KindShape, PixelScale: 1, Shape: &plan.ShapeSpec{
+			Shape: ShapeEllipse, Width: 240, Height: 120, Fill: C(60, 200, 120, 200),
+			StrokeColor: C(255, 255, 255, 255), StrokeWidth: 10,
+		}}},
 		{"shape-rounded-rect", plan.BitmapSpec{Kind: KindShape, PixelScale: 1, Shape: &plan.ShapeSpec{
 			Shape: ShapeRoundedRect, Width: 300, Height: 120, Radius: 30,
 			Fill: C(30, 144, 255, 255), StrokeColor: C(255, 255, 255, 255), StrokeWidth: 8,
