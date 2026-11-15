@@ -34,3 +34,11 @@ export function exportFileUrl(jobId: string): string {
 export function bitmapUrl(projectId: string, key: string): string {
 	return `${project(projectId)}/bitmaps/${encodeURIComponent(key)}`;
 }
+
+export function stripUrl(projectId: string, assetId: string): string {
+	return `${project(projectId)}/media/${encodeURIComponent(assetId)}/strip`;
+}
+
+export function peaksUrl(projectId: string, assetId: string): string {
+	return `${project(projectId)}/media/${encodeURIComponent(assetId)}/peaks`;
+}
