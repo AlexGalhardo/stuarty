@@ -1133,6 +1133,65 @@ Inno Setup and appimagetool are downloaded by `scripts/fetch-installer-tool.sh`,
 
 **SmartScreen and Gatekeeper.** The installers are not signed with a paid certificate. Windows SmartScreen shows "Windows protected your PC" for the `.exe`: choose "More info" then "Run anyway". macOS Gatekeeper says the package cannot be opened because Apple cannot check it: control-click it and choose Open, or allow it in System Settings, Privacy & Security. To check a download first, verify `checksums.txt` with cosign (SECURITY.md) and compare the file's SHA-256. `README.md` and the site repeat this (P1-REL-007, P1-DOC-001).
 
+### 10.5 Desktop updates (P3-DSK-005, RF-213, ADR-0023)
+
+The packaged desktop application can replace itself with a newer release. This is the only update channel of the product: the server binary, the archives and the container image never check for a version (SDD-007 section 10). The client is the package `desktop/update`, which uses the standard library only. The shell implements the install step; the release workflow produces the feed (P3-REL-004).
+
+**Open decisions, not taken here.** The production feed host, the production signing key, and the platform code signing and notarization are set by P3-REL-003, which needs the author's paid choices. Until then the feed URL and the public key are build-time configuration with a placeholder (`https://updates.example.invalid/vukem-video/feed.json`, and no key), the client refuses to run while either is a placeholder (`ErrNotConfigured`), and the tests use a key that lives in `desktop/update/testdata/` only. This document invents no host.
+
+**The key.** One Ed25519 key pair signs the feed and every artifact it lists. The private key is a secret of the release workflow: never in the repository, never on a developer machine. The public key is embedded in the desktop binary at build time, together with the feed URL:
+
+```text
+-X github.com/AlexGalhardo/vukem-video/desktop/update.FeedURL=https://<host>/<path>/feed.json
+-X github.com/AlexGalhardo/vukem-video/desktop/update.PublicKeyHex=<64 hex characters>
+```
+
+Rotating the key needs a new desktop release signed by the old key; there is no remote key delivery. The feed and the artifact are signed over differently labelled messages (domain separation), so a signature of one is never valid for the other.
+
+**The feed** is one JSON document, `feed.json`, served over HTTPS from the single feed host:
+
+```json
+{
+  "payload": "<base64 (standard, padded) of the payload JSON below>",
+  "signature": "<base64 Ed25519 signature>"
+}
+```
+
+The signature is over the bytes `vukem-video-update-feed-v1\n` followed by the decoded payload bytes. Signing the bytes, not a re-serialized object, means no canonical JSON is needed. The payload:
+
+```json
+{
+  "schema": 1,
+  "version": "0.15.0",
+  "platforms": {
+    "windows-amd64": {
+      "url": "https://<feed host>/vukem-video/0.15.0/vukem-video_0.15.0_windows_amd64_setup.exe",
+      "sha256": "<64 lowercase hex>",
+      "size": 12345678,
+      "signature": "<base64 Ed25519 signature>"
+    }
+  }
+}
+```
+
+- `version` is `MAJOR.MINOR.PATCH`, a stable release; a pre-release suffix is never in the feed (P3-REL-004).
+- The platform keys are `<GOOS>-<GOARCH>` (`windows-amd64`, `darwin-arm64`, `darwin-amd64`, `linux-amd64`, `linux-arm64`).
+- `url` is `https` on the feed host; any other host is refused.
+- The artifact signature is over `vukem-video-update-artifact-v1\n<version>\n<platform>\n<sha256>` (UTF-8, `\n` separators, no trailing newline). It binds the digest to the version and the platform, so a valid older artifact, or the artifact of another platform, cannot be offered as the new one.
+- `size` is positive and at most 1 GiB, the ceiling of the client.
+
+**Client rules.**
+
+1. **Off by default.** The setting `update.check` is off. With it off the client makes no connection at all, at start-up or later. A check happens only when the person chooses "Check for updates" (one check, for that action), or, with the setting on, once at start-up. The agent surfaces (MCP, CLI, HTTP API) cannot trigger a check or an install: it is a desktop menu action only (SDD-007 T-10).
+2. **One GET to one host.** The check is one HTTPS `GET` of the feed URL, with the client built by `outbound.DesktopUpdate` (purpose `desktop_update`, SDD-007 section 10.1 path 6): `https` only, TLS verified, no proxy, no redirect followed, the single host of the feed URL for the feed and for the artifact, a response cap of 1 MiB for the feed. The request carries no cookie, identifier or body; the host learns the connection and the `User-Agent` `vukem-video-desktop/<version>` only.
+3. **Verify the feed first.** The envelope is verified against the embedded key before its content is parsed or used. A bad signature, bad base64, an unknown `schema`, a missing platform entry or a malformed field ends the check with an error and no download.
+4. **Newer only.** The offered `version` must be strictly greater than the running version in SemVer order, else `ErrNotNewer`: an equal version is "up to date", an older one is a rollback and is refused. A running version that is not `MAJOR.MINOR.PATCH` (a development build) does not check.
+5. **Download, then verify, then install.** After the person accepts the offer, the artifact is downloaded into a private staging directory (mode 0700, outside the workspace) with a hard cap at the declared `size`: fewer bytes (an interrupted download), more bytes or a failed read is an error. The SHA-256 is computed while writing and must equal the digest of the feed; then the artifact signature is verified with the embedded key. Only when both pass is the staged file made read-only and passed to the installer. On any failure the staged file is deleted and the installer is never called.
+6. **The install step is an interface**, `Installer.Install(ctx, Artifact) error`, which the shell implements with the platform mechanism (run the installer, restart). The client never executes an artifact itself, and a tampered artifact never reaches the interface (the tests assert it).
+7. **A failed install is safe.** If the installer returns an error the running version is untouched and usable; the client returns `ErrInstallFailed` with the reason, and the shell shows it. The update client never reads or writes the workspace (`VUKEM_VIDEO_HOME`), and the installers of section 10.4 never delete it.
+
+**Out of scope here.** Delta updates, release channels, silent installs, an update of the server binary or the container image, and the generation of the feed (P3-REL-004).
+
 ## 11. The container image
 
 ### 11.1 Decisions
