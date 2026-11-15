@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -65,6 +66,32 @@ func helper(mode string) {
 	case "long-line":
 		fmt.Println(strings.Repeat("x", 10000))
 		fmt.Println("frame=7\nout_time_us=7\nprogress=end")
+	case "grow":
+		f, err := os.Create("out.bin")
+		if err != nil {
+			os.Exit(3)
+		}
+		chunk := make([]byte, 1<<20)
+		for range 600 {
+			_, _ = f.Write(chunk)
+			_ = f.Sync()
+			time.Sleep(100 * time.Millisecond)
+		}
+	case "limits":
+		b, _ := os.ReadFile("/proc/self/limits")
+		fmt.Print(string(b))
+	case "dial":
+		if len(os.Args) < 3 {
+			os.Exit(2)
+		}
+		//nolint:forbidigo // test helper: proves the sandbox has no loopback
+		c, err := net.DialTimeout("tcp", os.Args[2], 2*time.Second)
+		if err != nil {
+			fmt.Println("dial failed")
+			os.Exit(4)
+		}
+		_ = c.Close()
+		fmt.Println("dial ok")
 	case "big":
 		fmt.Print(strings.Repeat("y", 5<<20))
 	case "fail":
@@ -361,5 +388,8 @@ func TestDeadlines(t *testing.T) {
 	}
 	if AudioExtractDeadline(60*time.Second) != 2*time.Minute || AudioExtractDeadline(5*time.Hour) != time.Hour {
 		t.Error("audio extraction")
+	}
+	if TranscribeDeadline(60*time.Second) != 5*time.Minute || TranscribeDeadline(10*time.Hour) != 6*time.Hour {
+		t.Error("transcription")
 	}
 }

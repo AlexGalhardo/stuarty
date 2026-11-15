@@ -39,11 +39,11 @@ func childEnv(dir string) []string {
 // runWithStdin runs the tool in dir with stdin, copying stdout to stdout when it is not nil.
 func runWithStdin(
 	ctx context.Context,
-	tool *engine.Tool,
+	name string,
+	args []string,
 	dir string,
 	stdin io.Reader,
 	stdout io.Writer,
-	argv []string,
 ) (engine.Result, error) {
 	info, err := os.Stat(dir)
 	if err != nil || !info.IsDir() {
@@ -51,8 +51,9 @@ func runWithStdin(
 	}
 
 	stderr := &tailWriter{max: maxStderrTail}
-	// The argv went through ffargs.Check in RunFFmpeg and the path is the discovered FFmpeg.
-	cmd := exec.CommandContext(ctx, tool.Path(), argv...) //nolint:gosec // G204: checked argv, discovered binary
+	// The argv went through ffargs.Check in RunFFmpeg and the program is the discovered FFmpeg,
+	// alone or inside the wrapper of Runner.command.
+	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = dir
 	cmd.Env = childEnv(dir)
 	cmd.Stdin = stdin
