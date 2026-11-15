@@ -847,6 +847,29 @@
       ]
     },
     {
+      "name": "bundle:import",
+      "summary": "create a project from a .vvbundle file",
+      "usage": [
+        "vukem-video bundle:import <path> [--as-new]"
+      ],
+      "example": "vukem-video bundle:import launch-teaser.vvbundle --as-new",
+      "flags": [
+        {
+          "name": "as-new",
+          "type": "boolean",
+          "default": "false",
+          "usage": "give the project a new id and leave the log out (required on a server with accounts)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "dry-run"
+      ]
+    },
+    {
       "name": "agent:docs",
       "summary": "print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions",
       "usage": [
