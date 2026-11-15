@@ -425,3 +425,79 @@ export interface MediaStateResult {
 	state: string;
 	text: string;
 }
+
+// GET /projects/{id}/snap-points (SDD-012 section 7.8).
+export interface SnapPoint {
+	frame: number;
+	kind: "timeline_start" | "item_start" | "item_end" | "caption_word";
+	item?: string;
+	track?: string;
+}
+
+export interface SnapPointsResult {
+	revision: number;
+	points: SnapPoint[];
+	// Per item id, in frames.
+	limits: Record<string, { trim_start_min: number; trim_end_max: number }>;
+}
+
+export interface SnapPointsQuery {
+	revision?: number;
+	words?: boolean;
+}
+
+// GET /fonts: the bundled families and their weights.
+export interface FontFamily {
+	family: string;
+	weights: number[];
+}
+
+export interface FontListResult {
+	fonts: FontFamily[];
+}
+
+// GET /system (Doctor).
+export interface DoctorCheck {
+	name: string;
+	ok: boolean;
+	detail: string;
+	hint?: string;
+}
+
+export interface SystemResult {
+	version: string;
+	api_version: string;
+	mode: string;
+	pid: number;
+	started_at: string;
+	workspace?: string;
+	checks?: DoctorCheck[];
+	text: string;
+}
+
+export interface SystemQuery {
+	full?: boolean;
+	verify?: boolean;
+}
+
+// GET /audit (admin scope).
+export interface AuditEntry {
+	id: number;
+	at: string;
+	actor: string;
+	action: string;
+	project_id?: string;
+	subject_id?: string;
+	details?: unknown;
+}
+
+export interface AuditListResult {
+	entries: AuditEntry[];
+	next_cursor: string | null;
+}
+
+export interface AuditQuery {
+	projectId?: string;
+	cursor?: string;
+	limit?: number;
+}

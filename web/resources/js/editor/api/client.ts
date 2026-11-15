@@ -2,9 +2,12 @@ import { fromResponse, networkError } from "./errors";
 import { type RetryDeps, withRetry } from "./retry";
 import { type Transport, TransportError } from "./transport";
 import type {
+	AuditListResult,
+	AuditQuery,
 	CommandHelpResult,
 	EditRequest,
 	EditResult,
+	FontListResult,
 	HistoryListResult,
 	HistoryQuery,
 	Job,
@@ -18,6 +21,10 @@ import type {
 	PlanWindow,
 	PlanWindowHead,
 	ProjectGetResult,
+	SnapPointsQuery,
+	SnapPointsResult,
+	SystemQuery,
+	SystemResult,
 } from "./types";
 
 // Timeouts of SDD-012 section 4.3 item 4.
@@ -66,6 +73,13 @@ export interface ApiClient {
 		to: number,
 		revision: number,
 	): Promise<PlanWindowHead>;
+	getSnapPoints(
+		projectId: string,
+		query?: SnapPointsQuery,
+	): Promise<SnapPointsResult>;
+	getFonts(): Promise<FontListResult>;
+	getSystem(query?: SystemQuery): Promise<SystemResult>;
+	listAudit(query?: AuditQuery): Promise<AuditListResult>;
 }
 
 // One typed function per endpoint the editor uses (SDD-012 section 4.2). The
@@ -177,6 +191,25 @@ export function createClient(
 			call(
 				"GET",
 				`${project(id)}/plan?from=${from}&until=${to}&rev=${revision}`,
+				READ_TIMEOUT_MS,
+			),
+		getSnapPoints: (id, q = {}) =>
+			call(
+				"GET",
+				`${project(id)}/snap-points${query({ rev: q.revision, words: q.words === undefined ? undefined : q.words ? 1 : 0 })}`,
+				READ_TIMEOUT_MS,
+			),
+		getFonts: () => call("GET", "/fonts", READ_TIMEOUT_MS),
+		getSystem: (q = {}) =>
+			call(
+				"GET",
+				`/system${query({ full: q.full ? 1 : undefined, verify: q.verify ? 1 : undefined })}`,
+				READ_TIMEOUT_MS,
+			),
+		listAudit: (q = {}) =>
+			call(
+				"GET",
+				`/audit${query({ project_id: q.projectId, cursor: q.cursor, limit: q.limit })}`,
 				READ_TIMEOUT_MS,
 			),
 	};

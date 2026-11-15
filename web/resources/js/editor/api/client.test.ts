@@ -105,6 +105,46 @@ describe("ALPHA reads and media state", () => {
 	});
 });
 
+describe("ALPHA snap points, fonts, system and audit", () => {
+	test("getSnapPoints sends rev and words only when given", async () => {
+		const { transport, requests } = fake(ok({ revision: 3, points: [] }));
+		const client = createClient(transport);
+		await client.getSnapPoints("prj_a");
+		await client.getSnapPoints("prj_a", { revision: 3, words: true });
+		await client.getSnapPoints("prj_a", { words: false });
+		expect(requests.map((r) => [r.method, r.path, r.timeoutMs])).toEqual([
+			["GET", "/projects/prj_a/snap-points", 10_000],
+			["GET", "/projects/prj_a/snap-points?rev=3&words=1", 10_000],
+			["GET", "/projects/prj_a/snap-points?words=0", 10_000],
+		]);
+	});
+
+	test("getFonts, getSystem and listAudit", async () => {
+		const { transport, requests } = fake(ok({}));
+		const client = createClient(transport);
+		await client.getFonts();
+		await client.getSystem();
+		await client.getSystem({ full: true, verify: true });
+		await client.listAudit({ projectId: "prj_a", cursor: "c1", limit: 20 });
+		expect(requests.map((r) => [r.method, r.path, r.timeoutMs])).toEqual([
+			["GET", "/fonts", 10_000],
+			["GET", "/system", 10_000],
+			["GET", "/system?full=1&verify=1", 10_000],
+			["GET", "/audit?project_id=prj_a&cursor=c1&limit=20", 10_000],
+		]);
+	});
+
+	test("a failure maps to ApiError", async () => {
+		const { transport } = fake({
+			status: 403,
+			body: { code: "E_FORBIDDEN", message: "no", retryable: false },
+		});
+		await expect(createClient(transport).listAudit()).rejects.toMatchObject({
+			code: "E_FORBIDDEN",
+		});
+	});
+});
+
 describe("binary URL builders", () => {
 	test("strip and peaks sit on the media prefix", () => {
 		expect(stripUrl("prj_a", "ast_a")).toBe(
