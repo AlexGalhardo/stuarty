@@ -1,0 +1,58 @@
+---
+title: "Cópias de segurança e atualizações"
+description: "O que copiar para fazer a cópia de segurança de um espaço de trabalho, como uma atualização o migra e como voltar atrás."
+---
+
+## O que você vai aprender
+
+- o que uma cópia de segurança completa contém e como fazê-la com segurança;
+- o que uma atualização faz com o espaço de trabalho;
+- como reverter.
+
+## A ideia
+
+Tudo está em um único diretório, o [espaço de trabalho](/docs/workspace) (`/data` no contêiner, `~/.vukem-video` nos demais casos). Uma cópia de segurança completa é esse diretório. As partes que importam:
+
+| Caminho | Guardar? |
+| --- | --- |
+| `db.sqlite` | sim: projetos, histórico, tarefas, usuários, chaves |
+| `store/` | sim: os seus originais importados, por hash de conteúdo |
+| `exports/` | sim: os arquivos que você fez |
+| `artifacts/`, `frames/` | não: são refeitos a partir dos originais |
+| `backups/` | as cópias do banco de dados que o servidor faz antes de uma migração |
+| `logs/` | opcional |
+
+Em um encerramento ordenado, o servidor faz o checkpoint do banco de dados, então o `db.sqlite` é autocontido quando copiado à mão. Nunca copie o espaço de trabalho enquanto o servidor roda: pare o contêiner ou o servidor antes, copie, depois inicie-o de novo.
+
+## Início rápido
+
+```bash
+docker stop vukem-video
+docker run --rm -v vukem-video:/data -v "$PWD":/backup debian:13.7-slim \
+  tar -czf /backup/vukem-video-data.tar.gz -C /data .
+docker start vukem-video
+```
+
+Para atualizar, baixe a nova tag e recrie o contêiner com o mesmo volume e o mesmo `APP_KEY`:
+
+```bash
+docker pull ghcr.io/alexgalhardo/vukem-video:X.Y.Z
+docker stop vukem-video && docker rm vukem-video
+# run the same docker run command as before, with the new tag
+```
+
+Ao iniciar, o servidor confere o banco de dados. Se há migrações pendentes e o espaço de trabalho não é novo, ele primeiro grava `backups/db-<UTC timestamp>-before-<migration>.sqlite` e mantém as cinco mais novas, depois migra. Um documento de projeto gravado por uma versão mais antiga é migrado quando é aberto, e o original é mantido no banco de dados. Leia o [changelog](/changelog) antes de uma atualização de versão menor: antes da `1.0.0`, uma versão menor pode mudar uma interface pública.
+
+Para reverter, pare o servidor, restaure a cópia de segurança (ou o arquivo `backups/db-*-before-*.sqlite` como `db.sqlite`) e inicie a tag mais antiga. Um espaço de trabalho migrado por uma versão mais nova pode não abrir em uma mais antiga, e é por isso que você faz a cópia de segurança antes.
+
+## Erros comuns
+
+- Fazer a cópia de segurança apenas do banco de dados. Sem o `store/`, a sua mídia importada se perde.
+- Usar a tag `latest` em um servidor que você mantém. Fixe `X.Y.Z` e mova-a de propósito.
+- Executar o contêiner novo e o antigo no mesmo volume ao mesmo tempo: o segundo falha com `E_WORKSPACE_LOCKED`.
+- Perder o `APP_KEY`: guarde-o com os seus outros segredos.
+
+## Próximos passos
+
+- [Verifique uma versão](/docs/self-hosting/verify-a-release)
+- [Solução de problemas: o pacote de diagnóstico](/docs/troubleshooting/diagnostic-bundle)

@@ -1,0 +1,88 @@
+---
+title: "Chaves de API e escopos"
+description: "Crie, use e revogue as chaves de API que permitem a agentes e scripts usar um servidor em modo de rede."
+---
+
+## O que você vai aprender
+
+- o que é uma chave e quais escopos ela pode ter;
+- como criar uma, usá-la pela CLI, pelo MCP e pelo HTTP, e revogá-la;
+- como os limites de taxa se aplicam.
+
+## A ideia
+
+No [modo de rede](/docs/self-hosting/network-mode), um agente ou um script usa uma **chave de API** que um usuário autenticado cria. A chave tem um segredo na forma `vvk_<id>.<secret>`; apenas um hash é armazenado, e o segredo é mostrado uma única vez, na criação. O seu ator na trilha de auditoria é `key:<key id>`.
+
+| Escopo | Permite |
+| --- | --- |
+| `read` | ler projetos, ver quadros, verificação (lint), ler tarefas |
+| `edit` | aplicar lotes de edição, desfazer e refazer, criar projetos |
+| `media` | importar mídia, remover mídias, iniciar a transcrição |
+| `render` | iniciar exportações |
+| `admin` | administrar usuários, chaves e a lixeira |
+
+Os escopos são independentes: nenhum implica outro, `admin` inclusive. Os escopos efetivos de uma requisição são os escopos da chave interseccionados com o papel atual do seu dono, então rebaixar um usuário estreita as suas chaves na hora. Uma chave pode ser limitada a um projeto (não com `admin`). Regras de criação:
+
+- `name` de 1 a 60 caracteres, e `scopes`, um subconjunto não vazio dos escopos de quem cria;
+- `expires_in_days` de 1 a 365, padrão 90 (1 a 30 quando a chave tem `admin`);
+- no máximo 10 criações por hora por usuário e 50 chaves não revogadas por usuário;
+- apenas uma sessão autenticada pode criar uma chave: uma chave nunca pode criar uma chave.
+
+<Callout type="warning" title="Sem página de chaves nesta versão">
+O editor ainda não tem uma página para chaves. Crie-as com as chamadas HTTP abaixo.
+</Callout>
+
+## Início rápido
+
+Entre para obter uma sessão, crie uma chave com ela e use a chave. O cabeçalho `Origin` é obrigatório em uma requisição não segura que usa o cookie de sessão; use o seu `APP_URL`.
+
+```bash
+APP=http://localhost:7878
+curl -fsS -c jar.txt -H "Content-Type: application/json" -H "Origin: $APP" \
+  -d '{"email": "admin@example.com", "password": "choose-a-long-password"}' "$APP/auth/login"
+curl -fsS -b jar.txt -H "Content-Type: application/json" -H "Origin: $APP" \
+  -d '{"name": "claude-code", "scopes": ["read", "edit", "media", "render"]}' "$APP/api/v1/keys"
+```
+
+A segunda resposta traz o segredo. Guarde-o em um arquivo que só você possa ler e aponte o cliente para o servidor:
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+export VUKEM_VIDEO_URL=https://video.example.com
+vukem-video project:list --key-file ~/.vukem-video-key
+```
+
+Ou defina `VUKEM_VIDEO_KEY` no ambiente. Não há opção `--key`, porque outros usuários podem ver os argumentos da linha de comando. As mesmas variáveis fazem o servidor MCP stdio (`vukem-video mcp`) conversar com o servidor remoto.
+
+</Tab>
+<Tab title="HTTP">
+
+```bash
+curl -fsS -H "Authorization: Bearer $(cat ~/.vukem-video-key)" "$APP/api/v1/projects"
+curl -fsS -b jar.txt -H "Origin: $APP" "$APP/api/v1/keys"
+curl -fsS -b jar.txt -X DELETE -H "Origin: $APP" "$APP/api/v1/keys/key_7k2m9x4q1b"
+```
+
+A chave vai apenas no cabeçalho `Authorization: Bearer`. O `GET /keys` lista as suas próprias chaves (id, nome, escopos, projeto, criação, último uso, expiração, revogada) e nunca o segredo. Uma chave revogada para de funcionar na requisição seguinte.
+
+</Tab>
+</Tabs>
+
+## Limites de taxa
+
+Uma chave é limitada a 300 requisições por minuto com um pico de 60 (`VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE`); uma sessão de navegador a 1.800 (`VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE`). Iniciar uma tarefa e importar mídia ou um modelo (`job_start`, `media_import`, `template:import`) são limitados a 10 por minuto por ator (`VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE`). Antes da autenticação, um endereço tem 600 requisições por minuto e 20 autenticações com falha por minuto, depois das quais é recusado antes de qualquer chave ou login ser conferido. Atrás de um proxy, defina `TRUSTED_PROXIES`, ou todos os clientes compartilham um único endereço.
+
+A resposta a um limite é HTTP 429 com `Retry-After` e `E_RATE_LIMITED`, que pode ser repetido.
+
+## Erros comuns
+
+- Colocar uma chave em uma URL, em um argumento de linha de comando ou em um repositório. O prefixo `vvk_` permite que verificadores de segredos encontrem vazamentos; se uma vazar, revogue-a.
+- Pedir um escopo que o seu próprio papel não tem: a criação é recusada.
+- Uma chave que expirou: crie uma nova antes da data.
+
+## Próximos passos
+
+- [Conecte um agente](/docs/agents/connect)
+- [Variáveis de configuração](/docs/reference/configuration)
