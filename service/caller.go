@@ -68,6 +68,8 @@ var Scopes = map[string]string{
 	"JobStart":            ScopeRender,
 	"ProjectBundleExport": ScopeRender,
 	"ProjectBundleImport": ScopeEdit,
+	"ProjectOtioExport":   ScopeRead,
+	"ProjectOtioImport":   ScopeEdit,
 	"FontImport":          ScopeMedia,
 	"BrandKitGet":         ScopeRead,
 	"BrandKitSet":         ScopeEdit,

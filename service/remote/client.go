@@ -610,3 +610,25 @@ func (c *Client) BrandKitSet(ctx context.Context, req service.BrandKitSetRequest
 
 	return out, nil
 }
+
+// ProjectOtioExport implements service.Service.
+func (c *Client) ProjectOtioExport(
+	ctx context.Context,
+	req service.ProjectOtioExportRequest,
+) (*service.ProjectOtioExportResult, error) {
+	return get[service.ProjectOtioExportResult](ctx, c, projectPath(req.ProjectID, "/otio"), url.Values{})
+}
+
+// ProjectOtioImport implements service.Service.
+func (c *Client) ProjectOtioImport(
+	ctx context.Context,
+	req service.ProjectOtioImportRequest,
+) (*service.ProjectOtioImportResult, error) {
+	body := struct {
+		BaseRevision int64  `json:"base_revision"`
+		Path         string `json:"path"`
+		DryRun       bool   `json:"dry_run,omitempty"`
+	}{req.BaseRevision, req.Path, req.DryRun}
+
+	return post[service.ProjectOtioImportResult](ctx, c, projectPath(req.ProjectID, "/otio"), body)
+}

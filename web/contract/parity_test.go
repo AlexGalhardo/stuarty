@@ -89,6 +89,10 @@ var parity = []row{
 	{method: "FontImport", command: "font:import", route: "POST /fonts"},
 	{method: "BrandKitGet", command: "brand:show", route: "GET /brand-kit"},
 	{method: "BrandKitSet", command: "brand:set", route: "PUT /brand-kit"},
+	// OpenTimelineIO moves a timeline as a file: no MCP tool (SDD-003 section 7.1, exception E-3).
+	// Until the CLI commands otio:export and otio:import exist (P3-AGT-002), only the HTTP route reaches them.
+	{method: "ProjectOtioExport", route: "GET /projects/{}/otio", httpOnly: true},
+	{method: "ProjectOtioImport", route: "POST /projects/{}/otio", httpOnly: true},
 }
 
 // notOperations are Service methods that are not operations an agent calls

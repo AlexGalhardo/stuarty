@@ -100,6 +100,14 @@ var Endpoints = []Endpoint{
 		Summary:   "Import a .vvbundle as a project",
 	},
 	{
+		ID: "projects.otio.export", Method: http.MethodGet, Path: "/projects/{id}/otio", Scope: service.ScopeRead,
+		Service: "ProjectOtioExport", Status: 200, Summary: "Export a project as OpenTimelineIO",
+	},
+	{
+		ID: "projects.otio.import", Method: http.MethodPost, Path: "/projects/{id}/otio", Scope: service.ScopeEdit,
+		Service: "ProjectOtioImport", Status: 200, Summary: "Import an OpenTimelineIO file into a project",
+	},
+	{
 		ID: "projects.trash", Method: http.MethodPost, Path: "/projects/{id}/trash", Scope: service.ScopeEdit,
 		Service: "ProjectTrash", Status: 200, Summary: "Move a project to the trash",
 	},
