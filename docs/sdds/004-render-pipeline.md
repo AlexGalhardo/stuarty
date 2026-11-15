@@ -263,7 +263,7 @@ As built (P1-RND-003, aligned with `core/plan` by the follow-up): `BitmapSpec`, 
 6. The bitmap is the block grown by the largest of padding, stroke and shadow extents, so nothing is clipped. `NaturalW` and `NaturalH` describe that grown size; the block is centred in it unless the shadow offset makes it asymmetric, in which case the item's centre is still the block's centre and the bitmap carries the offset.
 7. `uppercase` converts with Unicode upper-casing before shaping.
 8. Caption highlight: the active word is filled with `highlight_color`; with `highlight_background` a rounded box is drawn behind that word.
-9. A glyph missing from the font is drawn with the font's `.notdef` glyph. There is no fallback to another font. The lint reports text containing characters the font lacks.
+9. A glyph missing from the font is drawn with the font's `.notdef` glyph. There is no fallback to another font. The lint reports text containing characters the font lacks. `FontSet.Missing(family, weight, text)` returns the runes the family lacks (control and format characters excluded), for the lint and the UI.
 
 Details fixed by the implementation, where the items above leave room (P1-RND-003):
 
@@ -503,7 +503,9 @@ The measurements came from one Windows machine with other processes running. The
 | The 60 s export of the same project (`TestExportSixtySecondsStaysUnder500MB`) | 20.1 to 23.4 s, 2.56 to 2.98 times real time (two runs); the Go process peaked at 110 and 112 MB (`Sys` minus `HeapReleased`, sampled every 50 ms, after handing back what earlier tests left), under the 500 MB of NFR-007; the file is 57 MB. Under the race detector the process holds about 1 GB, so the test and the benchmark do not measure there |
 | A full 1080×1920 layer rotated by 3 degrees through the sampler (`BenchmarkSampleRotatedFullFrame*`) | 38 ms in 1 band (0.88 times real time at 30 fps, against 0.31 to 0.36 for `draw.BiLinear` in the spike), 8 ms in 8 bands (4 times real time) |
 | The same layer as a copy (`BenchmarkCopyFullFrame`) | 0.8 ms |
-| The rotated layer against `x/image/draw.BiLinear` (`TestSamplerAgreesWithXImageBiLinear`) | no pixel differs by more than 2 |
+| The rotated layer against `x/image/draw.BiLinear` (`TestSamplerAgreesWithXImageBiLinear`) | mean absolute error per channel 0.10, 0.11 and 0.07 levels over the whole frame (limit 0.5), border pixels included; only the border of the rotated rectangle differs by more than 2 |
+| A second 1080x1920 layer scaled and rotated every frame, over a full-frame copy (`go test -bench ComposeRotated ./engine/export`) | 7.9 ms per frame, 4.2 times real time at 30 fps (8 bands, Windows) |
+| The same layer with a colour matrix on every pixel (`-bench ComposeColorMatrix`) | 3.9 ms per frame, 8.6 times real time (8 bands, Windows) |
 
 `go run ./internal/tools/perfreport -write` measures NFR-001, NFR-005, NFR-006, NFR-007 and NFR-023 and writes the table `docs/perf/<date>-<goos>.md` (first one: `2026-11-14-windows.md`: commit round trip 15.1 ms p95, ingest of 60 s 1080p 8.5 s, 60 s export 23.9 s with `h264_nvenc` at 2.64 times real time, Go process 110 MB, agent frame 174 ms cold, nine-cell sheet 229 ms, every limit met). The Linux and macOS tables are added after the first CI run of the tool on those runners, and the three tables are the numbers of the three runners. The encoder this machine detects is `h264_nvenc`; the numbers above are with `libopenh264`, the encoder of the bundled build, because that is the one a clean machine has.
 
