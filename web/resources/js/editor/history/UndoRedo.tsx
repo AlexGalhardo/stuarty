@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
-import { useActions } from "../commands/useActions";
+import { useActions, useCanEdit } from "../commands/useActions";
 import { useDocumentState, useUiState } from "../state/EditorContext";
 
 // The Undo and Redo buttons of the top bar (SDD-012 section 15). Without a
@@ -13,9 +13,7 @@ export default function UndoRedo(): ReactNode {
 	const t = useT();
 	const actions = useActions();
 	const revision = useDocumentState((s) => s.revision);
-	const ready = useDocumentState(
-		(s) => s.status === "ready" || s.status === "offline",
-	);
+	const ready = useCanEdit();
 	const blocked = useUiState((s) => s.historyBlocked);
 	return (
 		<div className="flex items-center gap-1">

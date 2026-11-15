@@ -47,6 +47,7 @@
       },
       "banner": {
         "failed": "The editor lost sync with the project. Reload to continue.",
+        "trashed": "This project is in the trash. It is read-only until it is restored.",
         "reload": "Reload"
       },
       "undo": "Undo",

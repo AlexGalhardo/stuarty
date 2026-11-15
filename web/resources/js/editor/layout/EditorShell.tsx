@@ -10,6 +10,7 @@ import Notices from "../timeline/Notices";
 import Timeline from "../timeline/Timeline";
 import { useShortcuts } from "../timeline/useShortcuts";
 import TopBar from "./TopBar";
+import TrashedBanner from "./TrashedBanner";
 
 // Panel sizes by viewport width (SDD-012 section 6.3); below 1280 the drawers
 // of the later phases are not built yet, so the compact sizes apply.
@@ -94,6 +95,7 @@ export default function EditorShell(): ReactNode {
 		>
 			<div className="col-span-full">
 				<TopBar />
+				<TrashedBanner />
 				<div className="border-b border-ed-track-line bg-ed-panel px-3 py-1">
 					<EditToolbar
 						captionOpen={captionOpen}

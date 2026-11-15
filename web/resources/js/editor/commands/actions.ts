@@ -91,8 +91,10 @@ export function createActions(runtime: EditorRuntime): Actions {
 	// One gesture, one request. The base revision is the one at the moment of
 	// sending (SDD-012 section 4.5 item 1).
 	async function send(ops: Operations): Promise<EditOutcome | null> {
-		const revision = documents.getState().revision;
-		if (ops.length === 0 || revision === null) return null;
+		const { revision, state } = documents.getState();
+		// A trashed project is read-only (SDD-012 section 2.2): the keys too.
+		if (ops.length === 0 || revision === null || state === "trashed")
+			return null;
 		const outcome = await runtime.edits.edit(ops, revision);
 		if (!outcome.ok) report(outcome.error, ops);
 		return outcome;

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useLocale, useT } from "@/lib/i18n";
 import type { MediaEntry } from "../api/types";
 import { thumbnailUrl } from "../api/urls";
-import { useActions } from "../commands/useActions";
+import { useActions, useCanEdit } from "../commands/useActions";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 import { errorHeadline } from "../ui/errorHeadline";
 import { formatSeconds } from "../ui/format";
@@ -22,8 +22,9 @@ export default function AssetCard({ entry }: { entry: MediaEntry }): ReactNode {
 	const inDocument = useDocumentState(
 		(s) => s.document?.assets[entry.asset_id] !== undefined,
 	);
+	const canEdit = useCanEdit();
 	const canPlace =
-		entry.state === "ready" && inDocument && entry.kind !== "audio";
+		canEdit && entry.state === "ready" && inDocument && entry.kind !== "audio";
 	const path = runtime.library.getState().paths[entry.name];
 	const percent = Math.round(entry.progress * 100);
 
