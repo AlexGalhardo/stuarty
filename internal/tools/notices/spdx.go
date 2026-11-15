@@ -101,6 +101,8 @@ var (
 // detect returns the SPDX id of a licence text, or "" when it matches none.
 func detect(text string) string {
 	t := strings.ToLower(spaces.ReplaceAllString(quotes.Replace(text), " "))
+	// Some MIT texts (parse-svg-path) quote the disclaimer with single quotes.
+	t = strings.ReplaceAll(t, "'as is'", "\"as is\"")
 
 next:
 	for _, s := range signatures {

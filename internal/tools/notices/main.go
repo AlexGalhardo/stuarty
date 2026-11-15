@@ -48,8 +48,15 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, runner Ru
 	check := fs.Bool("check", false, "fail with a diff when the committed files differ from the generated ones")
 	root := fs.String("root", ".", "repository root")
 
+	auditSPDX := fs.Bool("audit-spdx", false, "print the denied and unknown SPDX expressions read on stdin")
+	auditDir := fs.String("audit-tree", "", "print the denied and unknown licence texts under DIR/licenses")
+
 	if err := fs.Parse(args); err != nil {
 		return 2
+	}
+
+	if *auditSPDX || *auditDir != "" {
+		return runAudit(*auditSPDX, *auditDir, os.Stdin, stdout, stderr)
 	}
 
 	want, err := build(ctx, runner, *root)
