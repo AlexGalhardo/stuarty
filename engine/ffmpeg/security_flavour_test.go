@@ -233,6 +233,9 @@ func TestSecurity_T14_InputWhitelistMatchesTheBuild(t *testing.T) {
 	forbidden := []string{
 		"hls", "applehttp", "dash", "concat", "ffconcat", "tee", "sdp", "rtsp", "rtp", "lavfi", "srt", "ass",
 		"webvtt", "subviewer", "microdvd", "image2pipe", "data", "tty", "ivf_pipe",
+		// Text and metadata demuxers of the pinned build that no feature reads (re-derived from -demuxers).
+		"mpegtsraw", "ffmetadata", "lrc", "jacosub", "svg_pipe", "pls", "sbg", "mpl2", "sami", "stl", "realtext",
+		"pjs", "vplayer", "subrip", "aqtitle", "mpsub", "dvbsub", "dvbtxt", "ttml", "smush", "bin", "libmodplug",
 	}
 	allowed := strings.Split(ffargs.InputFormats, ",")
 	for _, f := range forbidden {
@@ -256,6 +259,15 @@ func TestSecurity_T14_InputWhitelistMatchesTheBuild(t *testing.T) {
 	for _, n := range allowed {
 		if !have[n] {
 			t.Errorf("the allowed input format %s is not a demuxer of %s", n, r.In.Info.Version)
+		}
+		// Every other picture-in-a-pipe demuxer (svg, dpx, pam, ...) stays out: only PNG, JPEG and WebP are images.
+		if strings.HasSuffix(n, "_pipe") && n != "png_pipe" && n != "jpeg_pipe" && n != "webp_pipe" {
+			t.Errorf("%s is in the input allowlist", n)
+		}
+	}
+	for _, f := range forbidden {
+		if have[f] && slices.Contains(allowed, f) {
+			t.Errorf("%s is a demuxer of the build and is allowed", f)
 		}
 	}
 	if t.Failed() {

@@ -39,7 +39,7 @@ func TestArgvFixturesAreRejected(t *testing.T) {
 	t.Parallel()
 
 	files, err := filepath.Glob(filepath.Join("testdata", "argv", "*.json"))
-	if err != nil || len(files) < 10 {
+	if err != nil || len(files) < 38 {
 		t.Fatalf("%d fixtures, %v", len(files), err)
 	}
 
@@ -66,7 +66,7 @@ func TestSecurity_T14_SniffRejectsText(t *testing.T) {
 	t.Parallel()
 
 	files, err := filepath.Glob(filepath.Join("testdata", "hostile", "*"))
-	if err != nil || len(files) < 7 {
+	if err != nil || len(files) < 26 {
 		t.Fatalf("%d hostile files, %v", len(files), err)
 	}
 

@@ -1,0 +1,5 @@
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-KEY:METHOD=AES-128,URI="file:///etc/passwd"
+#EXTINF:5,
+file:///etc/passwd
