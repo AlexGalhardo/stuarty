@@ -29,6 +29,7 @@ const INERT_HOSTS = new Set([
 	"collector.example.com",
 	"www.conventionalcommits.org",
 	"caddyserver.com",
+	"opentimelineio.org",
 	"taskfile.dev",
 	// The OIDC issuer that the cosign commands of the verification page pin; it is text, never loaded.
 	"token.actions.githubusercontent.com",
