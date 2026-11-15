@@ -115,14 +115,14 @@ COPY LICENSE.md THIRD_PARTY_NOTICES.md /usr/share/doc/vukem-video/
 COPY licenses/ /usr/share/doc/vukem-video/licenses/
 COPY --from=build /out/vukem-video /usr/local/bin/vukem-video
 
-# vukem reads HOST and PORT. A published port needs the server to listen on
-# every interface of the container; docker run -p 127.0.0.1:7878:7878 keeps it
-# reachable from the host only. APP_ENV=development is explicit because vukem
-# refuses to boot without APP_KEY unless the environment is set and not
-# production (VF-030); P1-SRV-005 settles local mode and this line then goes.
+# A container binds every interface, so the image runs in network mode (SDD-007
+# 4.3 item 4). APP_URL is the loopback case, the only one served over plain
+# HTTP; any other use needs TLS. The operator supplies APP_KEY (32 bytes or
+# more, base64) at docker run: a key baked into the image would be public.
 ENV HOST=0.0.0.0 \
 	PORT=7878 \
-	APP_ENV=development \
+	VUKEM_VIDEO_MODE=network \
+	APP_URL=http://localhost:7878 \
 	VUKEM_VIDEO_HOME=/data \
 	VUKEM_VIDEO_FFMPEG=/opt/ffmpeg/bin/ffmpeg \
 	VUKEM_VIDEO_FFPROBE=/opt/ffmpeg/bin/ffprobe \

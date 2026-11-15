@@ -44,14 +44,19 @@ docker run "${net[@]}" "$img" edit --project "$id" --json track.add kind=visual 
 docker run "${net[@]}" "$img" lint --project "$id" --json | grep -q "\"project_id\":\"$id\""
 docker run "${net[@]}" "$img" history --project "$id" --json | grep -q "\"entries\""
 
-# The server boots and answers /up. Until network mode (P2-SRV-014, SDD-007
-# 4.3 item 4) the image serves in local mode, which refuses every peer that is
-# not loopback, and a published port reaches the server from the bridge
-# address; so /up is asked from inside the container, as the HEALTHCHECK does.
-docker run -d --name "$name" "$img" >/dev/null
+# The server boots in network mode (SDD-007 4.3 item 4) and answers /up, asked
+# from inside the container as the HEALTHCHECK does. With no user yet, the API
+# answers 401 to everyone.
+key="$(head -c 32 /dev/urandom | base64)"
+docker run -d --name "$name" -e APP_KEY="$key" "$img" >/dev/null
 for _ in $(seq 1 30); do
 	if docker exec "$name" curl -fsS http://127.0.0.1:7878/up >/dev/null 2>&1; then
 		echo "image-smoke: /up answered inside the container"
+		code="$(docker exec "$name" curl -s -o /dev/null -w "%{http_code}" -H "Host: localhost:7878" http://127.0.0.1:7878/api/v1/projects)"
+		if [ "$code" != "401" ]; then
+			echo "image-smoke: the API answered $code with no user; want 401" >&2
+			exit 1
+		fi
 		exit 0
 	fi
 	sleep 1

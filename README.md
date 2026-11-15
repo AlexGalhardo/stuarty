@@ -35,7 +35,8 @@ Each release on the [releases page](https://github.com/AlexGalhardo/vukem-video/
 The container image runs the web version on your machine only; the published port is bound to the loopback of the host:
 
 ```bash
-docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data ghcr.io/alexgalhardo/vukem-video:<version>
+docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data \
+  -e APP_KEY="$(openssl rand -base64 32)" ghcr.io/alexgalhardo/vukem-video:<version>
 ```
 
 **Windows SmartScreen and macOS Gatekeeper.** The installers are not signed with a paid code-signing certificate, so both systems warn before the first run. Windows SmartScreen shows "Windows protected your PC" for the `.exe`: choose "More info", then "Run anyway". macOS Gatekeeper says the package cannot be opened because Apple cannot check it: control-click the `.pkg` and choose Open, or allow it in System Settings, Privacy & Security. To check a download before you run it, verify `checksums.txt` with cosign and compare the SHA-256 of the file, as described in the [security policy](.github/SECURITY.md).
