@@ -1,0 +1,36 @@
+---
+title: "Editing tools: trim, split, move"
+description: "Change when a clip starts and ends, cut it in two, move it, or remove it."
+---
+
+## You will learn
+
+- how to move, trim, split and delete an item;
+- how to check a batch before it is saved.
+
+## Quick start
+
+Each is an operation in an `edit` batch. Use `command_help` (or `vukem-video command:help item.trim`) for the exact arguments.
+
+| To | Operation |
+| --- | --- |
+| move an item in time or to another track | `item.move` |
+| change its start or end | `item.trim` |
+| cut it in two | `item.split` |
+| remove it | `item.delete` |
+
+```json
+{ "op": "item.split", "args": { "item_id": "itm_m1n2p3q4r5", "at": "2s" } }
+```
+
+Pass `dry_run: true` to see the diff without saving.
+
+## Common mistakes
+
+- An unknown `item_id`: `E_NOT_FOUND`, with the path of the argument that failed.
+- A split point outside the item: `E_INVALID_TIME`.
+
+## Next steps
+
+- [Undo and history](/docs/guide/undo-and-history)
+- [Command catalogue](/docs/reference/commands)

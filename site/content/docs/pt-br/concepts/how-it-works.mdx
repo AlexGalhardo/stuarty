@@ -1,0 +1,30 @@
+---
+title: "Como o Vukem Video funciona"
+description: "Um núcleo de comandos, vários adaptadores finos e uma renderização que mostra exatamente o que a exportação produz."
+---
+
+## A ideia
+
+Toda a lógica de edição vive em um só lugar, o núcleo de comandos, escrito em Go e sem entrada e saída. Um projeto é um documento; uma edição é uma lista de operações que o núcleo valida e aplica como um único passo.
+
+Em volta do núcleo há um único serviço. O servidor MCP, a CLI, a API HTTP e o editor no navegador são adaptadores finos sobre ele. Eles interpretam um pedido, chamam um método do serviço e formatam a resposta. Nenhuma regra sobre a linha do tempo é escrita em um adaptador, então uma pessoa e um agente recebem o mesmo resultado e o mesmo histórico.
+
+## O que acontece em uma edição
+
+1. O adaptador envia um lote de operações e a revisão contra a qual ele foi planejado.
+2. O núcleo confere cada operação. Se uma falhar, nada muda.
+3. O lote é salvo como uma revisão, com o seu ator, como `local:claude-code` ou `local:ui`.
+4. O resultado lista o que foi criado e alterado, e o que as regras de verificação encontraram.
+
+## Pixels
+
+A pré-visualização e a exportação usam o mesmo plano de renderização. Os pixels são compostos em Go; o FFmpeg roda apenas como um processo separado, para decodificar a mídia e codificar em H.264. Um agente que pede um quadro vê o que a exportação vai conter.
+
+## Nada sai da sua máquina
+
+Não há conexão de rede de saída por padrão nem telemetria. O texto que vem de um arquivo de mídia é tratado como dado, nunca como instrução.
+
+## Próximos passos
+
+- [Tempo e quadros](/docs/concepts/time)
+- [Comandos, lotes e revisões](/docs/concepts/commands-and-revisions)

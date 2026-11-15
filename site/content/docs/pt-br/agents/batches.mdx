@@ -1,0 +1,26 @@
+---
+title: "Lotes, revisões e idempotência"
+description: "Como um agente planeja um lote, sobrevive a um conflito e repete sem fazer a mesma edição duas vezes."
+---
+
+## A ideia
+
+Um agente planeja contra uma revisão e envia o lote inteiro. O núcleo aplica tudo ou nada, como um único passo de desfazer.
+
+## Início rápido
+
+1. Leia a revisão com `project_get`.
+2. Planeje o lote. Dê os seus próprios ids ao que operações posteriores do mesmo lote usam.
+3. Envie com `base_revision`. Acrescente uma `idempotency_key` se a chamada puder ser repetida.
+4. Leia o resultado: `revision`, `created`, `diff` e `findings`.
+
+Quando a resposta é `E_REVISION_CONFLICT`, o erro traz as mudanças desde a sua revisão como um diff em texto. Leia-o, planeje de novo contra a revisão nova e envie um lote novo.
+
+## Erros comuns
+
+- Reutilizar uma `idempotency_key` para um lote diferente: `E_IDEMPOTENCY_MISMATCH`.
+- Repetir um erro cujo `retryable` é falso. Só repita quando for verdadeiro.
+
+## Próximos passos
+
+- [Comandos, lotes e revisões](/docs/concepts/commands-and-revisions)

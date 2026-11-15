@@ -1,0 +1,43 @@
+---
+title: "Biblioteca de mídia"
+description: "Importe vídeo, áudio e imagens, espere a ingestão e veja o que o programa descobriu sobre cada arquivo."
+---
+
+## O que você vai aprender
+
+- como importar arquivos e esperar até que possam ser usados;
+- como ler a análise, os silêncios e o volume de uma mídia.
+
+## A ideia
+
+Importar copia um arquivo para o espaço de trabalho e inicia uma tarefa de **ingestão**: o arquivo é analisado, normalizado e medido. Uma mídia só pode ser usada em uma edição quando o seu estado é `ready`. Importar o mesmo arquivo duas vezes devolve a mesma mídia (`deduplicated: true`).
+
+## Início rápido
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video media:import clip.mov --project prj_7k2m9x4q1b --json
+vukem-video media:inspect ast_3c5v8n2w6d --project prj_7k2m9x4q1b --sections probe,silences
+vukem-video media:list --project prj_7k2m9x4q1b
+```
+
+</Tab>
+<Tab title="MCP">
+
+`media_import` com `{"project_id": "prj_7k2m9x4q1b", "paths": ["/home/ana/clip.mov"], "wait_ms": 10000}`. O `media_inspect` com um `asset_id` descreve uma mídia; sem ele, lista todas as mídias, inclusive as pendentes e as que falharam.
+
+</Tab>
+</Tabs>
+
+Os caminhos são absolutos na máquina que roda o servidor; a CLI os torna absolutos para você. Os nomes de arquivo são dados vindos do arquivo, mostrados entre aspas, nunca instruções.
+
+## Erros comuns
+
+- Editar com uma mídia que ainda está em ingestão: `E_ASSET_NOT_READY`, que pode ser repetido.
+- Um arquivo que não é mídia: `E_UNSUPPORTED_MEDIA`. Um caminho que não existe: `E_FILE_NOT_FOUND`.
+
+## Próximos passos
+
+- [Edição básica da linha do tempo](/docs/guide/timeline)

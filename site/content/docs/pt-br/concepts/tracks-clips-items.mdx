@@ -1,0 +1,21 @@
+---
+title: "Faixas, clipes e itens"
+description: "A forma de um projeto: faixas listadas de cima para baixo e os itens que ficam nelas."
+---
+
+## A ideia
+
+Um projeto tem **faixas**. Uma faixa tem **itens**, e um item tem um início e uma duração em quadros. Um **clipe** é um item que reproduz uma mídia importada; há também itens de texto, de legenda e de áudio.
+
+As faixas são listadas de cima para baixo, e a faixa de cima é desenhada sobre as outras. Uma faixa aceita os tipos de item do seu tipo (visual ou áudio), então um `item.move` para uma faixa de outro tipo é `E_TYPE_MISMATCH`.
+
+Uma **mídia** (asset) é o conteúdo importado, guardado pelo hash do seu conteúdo. O projeto se refere a ela por um id `ast_`, então importar o mesmo arquivo duas vezes resulta na mesma mídia.
+
+## Identificadores
+
+Os ids têm um prefixo: `prj_` para um projeto, `ast_` para uma mídia, `trk_` para uma faixa, `itm_` para um item e `job_` para uma tarefa. Eles são estáveis, e você pode informar o seu próprio ao criar algo.
+
+## Próximos passos
+
+- [Biblioteca de mídia](/docs/guide/media-library)
+- [Esquema da linha do tempo](/docs/reference/timeline-schema)

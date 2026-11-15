@@ -1,0 +1,41 @@
+---
+title: "Espaço de trabalho e armazenamento"
+description: "O diretório onde o Vukem Video guarda seus projetos, mídias e exportações, e como ele é protegido."
+---
+
+## O que você vai aprender
+
+- o que é o espaço de trabalho e onde ele fica;
+- o que há dentro dele;
+- por que só um processo grava nele por vez.
+
+## A ideia
+
+Tudo o que o programa guarda fica em um único diretório, o espaço de trabalho. Ele é `~/.vukem-video`, a menos que `VUKEM_VIDEO_HOME` diga outra coisa. Sua mídia original é copiada para ele uma única vez e guardada por conteúdo, então importar o mesmo arquivo duas vezes não adiciona nada, e apagar um projeto nunca apaga de surpresa a sua única cópia de um arquivo.
+
+```text
+<workspace>/
+├── db.sqlite     projetos, histórico, tarefas
+├── store/        os originais importados, por hash de conteúdo
+├── artifacts/    arquivos derivados: proxies, miniaturas, picos de áudio
+├── exports/      vídeos exportados: exports/<project id>/<job id>.mp4
+├── frames/       cache de quadros renderizados
+├── backups/      cópias do banco feitas antes de uma migração
+└── logs/
+```
+
+O layout completo está na seção 9 do SDD-000, no repositório.
+
+## Um dono por vez
+
+Exatamente um processo é o dono do espaço de trabalho e grava nele: o `vukem-video serve`, ou uma sessão do `vukem-video mcp` quando nenhum servidor está rodando. Todos os outros comandos, o editor e os agentes falam com esse dono por HTTP na sua máquina. Um segundo processo que não consegue alcançar o dono falha com `E_WORKSPACE_LOCKED`, que pode ser repetido com segurança.
+
+## Erros comuns
+
+- Copiar o espaço de trabalho enquanto um servidor está rodando. Pare o servidor antes, ou copie apenas `exports/`.
+- Esperar que a lixeira seja uma pasta. A lixeira é um estado no banco de dados; os arquivos continuam onde estão.
+
+## Próximos passos
+
+- [Projetos](/docs/projects)
+- [Variáveis de configuração](/docs/reference/configuration)

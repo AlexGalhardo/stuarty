@@ -6,6 +6,8 @@ import "@fontsource/jetbrains-mono/latin-400.css";
 import "../../app/globals.css";
 import { Header } from "@/components/header";
 import { getNavGroups } from "@/lib/content";
+import { htmlLang, type Locale } from "@/lib/locale";
+import { ui } from "@/lib/ui-text";
 import { site, withBase } from "@/lib/site";
 import { withTrailingSlash } from "@/lib/trailing-slash";
 
@@ -17,8 +19,14 @@ interface Props {
 	progress?: boolean;
 	/** Keeps the page out of search indexes and omits the canonical link. */
 	noindex?: boolean;
-	/** HTML language of the page. */
-	lang?: "en" | "pt-BR";
+	/** The locale of the page; it decides `lang`, the chrome strings and the links of the header. */
+	locale?: Locale;
+	/** The same page in each locale, as served paths without the base path: the language switcher. */
+	switcher?: Record<Locale, string>;
+	/** Served paths of the versions of this page that are translations of each other: hreflang (SDD-010 section 4.3). */
+	alternates?: Partial<Record<Locale, string>>;
+	/** The path of the Markdown twin, when the page has one. */
+	twin?: string;
 }
 
 const {
@@ -27,14 +35,20 @@ const {
 	canonical,
 	progress = false,
 	noindex = false,
-	lang = "en",
+	locale = "en",
+	switcher = { en: "/", "pt-br": "/pt-br/" },
+	alternates = {},
+	twin,
 } = Astro.props;
+const lang = htmlLang[locale];
+const t = ui[locale];
+const url = (path: string) => new URL(withBase(withTrailingSlash(path)), site.origin).href;
 const fullTitle = title.includes(site.name) ? title : `${title} — ${site.name}`;
-const groups = getNavGroups();
+const groups = getNavGroups(locale);
 ---
 
 <!doctype html>
-<html lang={lang}>
+<html lang={lang} data-copied={t.copied}>
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -43,6 +57,9 @@ const groups = getNavGroups();
 		<meta name="application-name" content={site.name} />
 		<link rel="icon" href={withBase("/icon.svg")} type="image/svg+xml" />
 		{noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={new URL(canonical ? withBase(withTrailingSlash(canonical)) : Astro.url.pathname, site.origin).href} />}
+		{Object.entries(alternates).map(([l, path]) => <link rel="alternate" hreflang={htmlLang[l as Locale]} href={url(path)} />)}
+		{alternates.en ? <link rel="alternate" hreflang="x-default" href={url(alternates.en)} /> : null}
+		{twin ? <link rel="alternate" type="text/markdown" href={new URL(withBase(twin), site.origin).href} /> : null}
 		<meta property="og:site_name" content={site.name} />
 		<meta property="og:type" content="website" />
 		<meta property="og:title" content={title} />
@@ -73,14 +90,14 @@ const groups = getNavGroups();
 			href="#content"
 			class="sr-only z-50 rounded-md bg-bg px-3 py-2 text-sm focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
 		>
-			{lang === "pt-BR" ? "Ir para o conteúdo" : "Skip to content"}
+			{t.skipToContent}
 		</a>
 		{progress ? (
 			<div aria-hidden="true" class="pointer-events-none fixed inset-x-0 top-0 z-[60] h-1">
 				<div id="read-progress" class="h-full origin-left bg-brand" style="transform: scaleX(0)"></div>
 			</div>
 		) : null}
-		<Header client:load groups={groups} />
+		<Header client:load groups={groups} locale={locale} switcher={switcher} />
 		<slot />
 		<div id="toast" class="pointer-events-none fixed right-4 bottom-4 z-[100] hidden w-[min(20rem,calc(100vw-2rem))] items-center gap-2.5 rounded-xl border border-border bg-bg px-4 py-3 text-sm font-medium text-fg shadow-lg" role="status"></div>
 		<script>
@@ -105,7 +122,7 @@ const groups = getNavGroups();
 			});
 			clipboard.on("success", (event) => {
 				event.clearSelection();
-				notify("Copied to clipboard");
+				notify(document.documentElement.dataset.copied ?? "Copied");
 			});
 			clipboard.on("error", () => notify("Press Ctrl+C to copy"));
 

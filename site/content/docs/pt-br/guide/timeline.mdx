@@ -1,0 +1,40 @@
+---
+title: "Edição básica da linha do tempo"
+description: "Adicione faixas, posicione clipes e leia o projeto de volta."
+---
+
+## O que você vai aprender
+
+- como adicionar uma faixa e um clipe em um único lote;
+- como ler o projeto de forma econômica.
+
+## Início rápido
+
+Adicione duas faixas e um clipe. O clipe indica a mídia importada, onde ele começa na linha do tempo, onde começa na origem e quanto dura:
+
+```json
+{
+  "project_id": "prj_7k2m9x4q1b",
+  "base_revision": 1,
+  "operations": [
+    { "op": "track.add", "args": { "kind": "visual", "name": "Video", "id": "trk_f6g7h8j9k0" } },
+    { "op": "clip.add", "args": {
+      "track_id": "trk_f6g7h8j9k0", "asset_id": "ast_3c5v8n2w6d",
+      "start": "0s", "source_in": "2s", "duration": "5s", "id": "itm_m1n2p3q4r5"
+    } }
+  ]
+}
+```
+
+Envie com a ferramenta MCP `edit`, com `vukem-video edit --project prj_7k2m9x4q1b --ops -` (o lote na entrada padrão) ou com `POST /api/v1/projects/{id}/edit`. O resultado traz a nova `revision`, os ids criados e um `diff`.
+
+Leia o projeto de volta como texto com `project_get` (ou `project:show`). A visão concisa foi pensada para caber em duas páginas de alguns milhares de tokens, mesmo em um projeto longo; siga o `next_cursor` para a página seguinte.
+
+## Erros comuns
+
+- Um clipe mais longo que a mídia, ou um `source_in` depois do fim dela: `E_INVALID_TIME`.
+- Dois itens na mesma faixa ao mesmo tempo: `E_OVERLAP`.
+
+## Próximos passos
+
+- [Ferramentas de edição: aparar, dividir, mover](/docs/guide/editing-tools)

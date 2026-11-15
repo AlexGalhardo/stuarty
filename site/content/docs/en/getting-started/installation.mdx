@@ -1,0 +1,37 @@
+---
+title: "Installation"
+description: "Where to get Vukem Video, what each download is, and how to check it before you run it."
+---
+
+<Callout type="warning" title="Prototype phase">
+The first editor release is `v0.2.0`. Until it ships, the repository is the only place to get the program, and some of what is described here is specified and not working yet.
+</Callout>
+
+## You will learn
+
+- which file to download for your system;
+- how to start the server and where it listens;
+- how to check a download before you run it.
+
+## The idea
+
+Vukem Video runs only on your computer. You install one program, `vukem-video`. It serves the editor in your browser, the MCP server, the CLI and the HTTP API from the same process and the same workspace.
+
+## Quick start
+
+1. Open the [releases page](https://github.com/AlexGalhardo/vukem-video/releases) and download the installer for your system, or the archive for your platform.
+2. Install it. The installer adds `vukem-video` to your path.
+3. Run `vukem-video version`. It prints the version, which tells you the program is installed.
+4. Run `vukem-video serve`. It listens on `127.0.0.1:7878` and nowhere else.
+
+To build from source you need Go (the version in `go.mod`) and Bun for the front end.
+
+## Common mistakes
+
+- The system warns before the first run. The installers are not signed with a paid certificate; the [quick start](/docs/quick-start) shows the SmartScreen and Gatekeeper steps.
+- FFmpeg is not found. The editor uses your FFmpeg, and `VUKEM_VIDEO_FFMPEG` and `VUKEM_VIDEO_FFPROBE` name the binaries explicitly. See the [configuration variables](/docs/reference/configuration).
+
+## Next steps
+
+- [Quick start: your first export](/docs/quick-start)
+- [Workspace and storage](/docs/workspace)

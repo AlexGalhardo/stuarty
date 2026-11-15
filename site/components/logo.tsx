@@ -1,5 +1,5 @@
 import { Link } from "@/components/link";
-import { t } from "@/lib/ui-text";
+import { useT } from "@/lib/locale-context";
 
 /** The Vukem Video mark: a play triangle above two timeline clips. */
 export function LogoMark({ className = "size-6" }: { className?: string }) {
@@ -14,6 +14,7 @@ export function LogoMark({ className = "size-6" }: { className?: string }) {
 }
 
 export function Logo() {
+	const t = useT();
 	return (
 		<Link
 			href="/"

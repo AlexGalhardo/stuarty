@@ -1,0 +1,30 @@
+---
+title: "How Vukem Video works"
+description: "One command core, many thin adapters, and a render that shows exactly what the export produces."
+---
+
+## The idea
+
+All editing logic lives in one place, the command core, written in Go and free of input and output. A project is a document; an edit is a list of operations that the core validates and applies as one step.
+
+Around the core sits one service. The MCP server, the CLI, the HTTP API and the browser editor are thin adapters over it. They parse a request, call one service method and format the answer. No rule about timelines is written in an adapter, so a person and an agent get the same result and the same history.
+
+## What happens on an edit
+
+1. The adapter sends a batch of operations and the revision it was planned against.
+2. The core checks every operation. If one fails, nothing changes.
+3. The batch is saved as one revision with its actor, such as `local:claude-code` or `local:ui`.
+4. The result lists what was created and changed, and what the lint rules found.
+
+## Pixels
+
+The preview and the export use one render plan. Pixels are composed in Go; FFmpeg runs only as a separate process to decode media and to encode H.264. An agent that asks for a frame sees what the export will contain.
+
+## Nothing leaves your machine
+
+There is no outbound network connection by default and no telemetry. Text that comes from a media file is treated as data, never as an instruction.
+
+## Next steps
+
+- [Time and frames](/docs/concepts/time)
+- [Commands, batches and revisions](/docs/concepts/commands-and-revisions)

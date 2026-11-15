@@ -1,0 +1,46 @@
+---
+title: "Exporting"
+description: "Render a project to an H.264 MP4, wait for it, and find the verified file."
+---
+
+## You will learn
+
+- how to start an export and follow it;
+- what must be true before an export is accepted.
+
+## The idea
+
+An export is a **job**. It renders the current revision, encodes an MP4 with FFmpeg and verifies the file (streams, duration, dimensions, pixel format and fast start) before the job is marked `succeeded`. A file that fails verification is never reported as done.
+
+The export is refused while the lint finds an error, with `E_LINT_BLOCKING` and the first findings. Warnings never block.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video lint --project prj_7k2m9x4q1b
+vukem-video export --project prj_7k2m9x4q1b
+```
+
+The CLI waits for the job. Use `--no-wait` to return at once and `vukem-video job:show <job id> --wait` later.
+
+</Tab>
+<Tab title="MCP">
+
+`job_start` with `{"project_id": "prj_7k2m9x4q1b", "kind": "export", "wait_ms": 25000}`, then `job_get` with `wait_ms` until the state is final.
+
+</Tab>
+</Tabs>
+
+The result of a succeeded export has the file path under `<workspace>/exports/<project id>/<job id>.mp4`, its size and its duration.
+
+## Common mistakes
+
+- No H.264 encoder works on this machine: `E_NO_ENCODER`.
+- Too many exports at once: `E_QUEUE_FULL`, retryable. `VUKEM_VIDEO_MAX_EXPORTS` sets the limit.
+
+## Next steps
+
+- [How an agent verifies its work](/docs/agents/verify)

@@ -1,0 +1,32 @@
+---
+title: "Text and captions"
+description: "Put text on screen and style word-timed captions."
+---
+
+## You will learn
+
+- how to add a text item and edit it;
+- how a caption track is styled.
+
+## The idea
+
+A **text** item shows a string for a duration. A **caption** is word-timed text on a caption track, with a style set on the track. The lint rules check that text stays inside the safe area of the format.
+
+## Quick start
+
+```json
+{ "op": "text.add", "args": {
+  "track_id": "trk_a1b2c3d4e5", "start": "0s", "duration": "3s", "text": "Launch day"
+} }
+```
+
+Change the text later with `text.set`. Style a caption track with `track.set_caption_style`.
+
+## Common mistakes
+
+- Putting text on an audio track: `E_TYPE_MISMATCH`.
+- Text that leaves the safe area: a lint warning, not an error. Run `lint` before you export.
+
+## Next steps
+
+- [Exporting](/docs/guide/exporting)
