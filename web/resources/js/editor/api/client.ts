@@ -2,13 +2,19 @@ import { fromResponse, networkError } from "./errors";
 import { type RetryDeps, withRetry } from "./retry";
 import { type Transport, TransportError } from "./transport";
 import type {
+	CommandHelpResult,
 	EditRequest,
 	EditResult,
+	HistoryListResult,
+	HistoryQuery,
 	Job,
 	JobListResult,
 	LintResult,
 	MediaImportResult,
+	MediaInspectQuery,
+	MediaInspectResult,
 	MediaListResult,
+	MediaStateResult,
 	PlanWindow,
 	PlanWindowHead,
 	ProjectGetResult,
@@ -40,6 +46,19 @@ export interface ApiClient {
 		to: number,
 		revision: number,
 	): Promise<PlanWindow>;
+	getCommands(): Promise<CommandHelpResult>;
+	getCommand(name: string): Promise<CommandHelpResult>;
+	getHistory(
+		projectId: string,
+		query?: HistoryQuery,
+	): Promise<HistoryListResult>;
+	inspectMedia(
+		projectId: string,
+		assetId: string,
+		query?: MediaInspectQuery,
+	): Promise<MediaInspectResult>;
+	trashMedia(projectId: string, assetId: string): Promise<MediaStateResult>;
+	restoreMedia(projectId: string, assetId: string): Promise<MediaStateResult>;
 	getPlanHead(
 		projectId: string,
 		from: number,
@@ -77,6 +96,17 @@ export function createClient(
 
 	const project = (id: string): string => `/projects/${encodeURIComponent(id)}`;
 
+	const query = (
+		params: Record<string, string | number | undefined>,
+	): string => {
+		const search = new URLSearchParams();
+		for (const [key, value] of Object.entries(params)) {
+			if (value !== undefined && value !== "") search.set(key, String(value));
+		}
+		const text = search.toString();
+		return text === "" ? "" : `?${text}`;
+	};
+
 	return {
 		listMedia: (id) => call("GET", `${project(id)}/media`, READ_TIMEOUT_MS),
 		importMedia: (id, paths) =>
@@ -100,6 +130,40 @@ export function createClient(
 				"GET",
 				`${project(id)}/plan?from=${from}&to=${to}&rev=${revision}`,
 				READ_TIMEOUT_MS,
+			),
+		getCommands: () => call("GET", "/commands", READ_TIMEOUT_MS),
+		getCommand: (name) =>
+			call("GET", `/commands/${encodeURIComponent(name)}`, READ_TIMEOUT_MS),
+		getHistory: (id, q = {}) =>
+			call(
+				"GET",
+				`${project(id)}/history${query({ actor: q.actor, cursor: q.cursor, limit: q.limit })}`,
+				READ_TIMEOUT_MS,
+			),
+		inspectMedia: (id, asset, q = {}) =>
+			call(
+				"GET",
+				`${project(id)}/media/${encodeURIComponent(asset)}${query({
+					sections: q.sections?.join(","),
+					min_silence: q.minSilence,
+					cursor: q.cursor,
+					limit: q.limit,
+				})}`,
+				READ_TIMEOUT_MS,
+			),
+		trashMedia: (id, asset) =>
+			call(
+				"POST",
+				`${project(id)}/media/${encodeURIComponent(asset)}/trash`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		restoreMedia: (id, asset) =>
+			call(
+				"POST",
+				`${project(id)}/media/${encodeURIComponent(asset)}/restore`,
+				EDIT_TIMEOUT_MS,
+				{},
 			),
 		getPlanHead: (id, from, to, revision) =>
 			call(
