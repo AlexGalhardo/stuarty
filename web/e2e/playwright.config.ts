@@ -7,6 +7,7 @@ import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { defineConfig } from "@playwright/test";
+import { CHROMIUM_ONLY, NOT_IN_MATRIX } from "./support/browsers";
 
 const port = Number(process.env.VUKEM_VIDEO_E2E_PORT ?? 3101);
 // The pinned FFmpeg of the tests (scripts/install-ffmpeg.sh prints its folder):
@@ -50,14 +51,27 @@ export default defineConfig({
 	projects: [
 		{
 			name: "chromium",
-			testIgnore:
-				/(perf|video-layers|export-failure|desktop-detect|desktop-detect-webkit)\.spec\.ts/,
+			testIgnore: NOT_IN_MATRIX,
 			use: {
 				browserName: "chromium",
 				launchOptions: {
 					args: ["--disable-gpu-vsync", "--disable-frame-rate-limit"],
 				},
 			},
+		},
+		// Firefox and WebKit run every spec not tagged CHROMIUM_ONLY (ADR-0023
+		// item 5, SDD-012 section 21.1). Their CI jobs are P3-REL-005.
+		{
+			name: "firefox",
+			testIgnore: NOT_IN_MATRIX,
+			grepInvert: new RegExp(CHROMIUM_ONLY),
+			use: { browserName: "firefox" },
+		},
+		{
+			name: "webkit",
+			testIgnore: NOT_IN_MATRIX,
+			grepInvert: new RegExp(CHROMIUM_ONLY),
+			use: { browserName: "webkit" },
 		},
 		// The budgets of SDD-012 section 19 are those of the reference machine. They
 		// depend on the load and on a real GPU, so they run only when asked for
