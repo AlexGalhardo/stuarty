@@ -235,11 +235,36 @@ func finalDocument(t *testing.T, d driver, project string) []byte {
 var renderedByAdapter = map[string]bool{"Edit": true, "Undo": true, "Redo": true}
 
 func TestScenarioIsTheSameThroughEverySurface(t *testing.T) {
-	steps, fixtures := loadScenario(t, "prototype")
+	docs := sameThroughEverySurface(t, "prototype", "prj_7k2m9x4q1b")
+
+	checkRecordedHash(t, "prototype", docs["prj_7k2m9x4q1b"])
+}
+
+// TestTemplateScenarioIsTheSameThroughEverySurface (P2-AGT-006): a template is
+// saved from a project, instantiated with a slot left unfilled, refused by the
+// export gate until the slot is filled, then exported.
+func TestTemplateScenarioIsTheSameThroughEverySurface(t *testing.T) {
+	docs := sameThroughEverySurface(t, "template", "prj_7k2m9x4q1b", "prj_6t4y2w8j1m")
+
+	sum := sha256.Sum256(append(append([]byte{}, docs["prj_7k2m9x4q1b"]...), docs["prj_6t4y2w8j1m"]...))
+	checkRecordedSum(t, "template", hex.EncodeToString(sum[:]))
+}
+
+// sameThroughEverySurface runs the scenario through Direct, HTTP, CLI and MCP
+// and fails when a result, an error, a text or a final document of the projects
+// differs from the Direct one. It returns the documents Direct ended with.
+func sameThroughEverySurface(t *testing.T, scenario string, projects ...string) map[string][]byte {
+	t.Helper()
+
+	steps, fixtures := loadScenario(t, scenario)
 
 	oracle := newDirect(t)
 	want := run(t, oracle, steps, fixtures)
-	wantDoc := finalDocument(t, oracle, "prj_7k2m9x4q1b")
+	wantDocs := map[string][]byte{}
+
+	for _, p := range projects {
+		wantDocs[p] = finalDocument(t, oracle, p)
+	}
 
 	for _, mk := range []func(*testing.T) driver{newHTTP, newCLI, newMCP} {
 		d := mk(t)
@@ -264,22 +289,29 @@ func TestScenarioIsTheSameThroughEverySurface(t *testing.T) {
 			}
 		}
 
-		if doc := finalDocument(t, d, "prj_7k2m9x4q1b"); !bytes.Equal(doc, wantDoc) {
-			t.Errorf("%s: the final document differs\n got: %s\nwant: %s", d.name(), doc, wantDoc)
+		for _, p := range projects {
+			if doc := finalDocument(t, d, p); !bytes.Equal(doc, wantDocs[p]) {
+				t.Errorf("%s: the final document of %s differs\n got: %s\nwant: %s", d.name(), p, doc, wantDocs[p])
+			}
 		}
 	}
 
-	checkRecordedHash(t, wantDoc)
+	return wantDocs
 }
 
 // checkRecordedHash compares the document with the SHA-256 recorded next to the
 // scenario; UPDATE_CONTRACT=1 rewrites it after a deliberate change.
-func checkRecordedHash(t *testing.T, doc []byte) {
+func checkRecordedHash(t *testing.T, scenario string, doc []byte) {
 	t.Helper()
 
 	sum := sha256.Sum256(doc)
-	got := hex.EncodeToString(sum[:])
-	path := filepath.Join("scenarios", "prototype.sha256")
+	checkRecordedSum(t, scenario, hex.EncodeToString(sum[:]))
+}
+
+func checkRecordedSum(t *testing.T, scenario, got string) {
+	t.Helper()
+
+	path := filepath.Join("scenarios", scenario+".sha256")
 
 	if os.Getenv("UPDATE_CONTRACT") == "1" {
 		if err := os.WriteFile(path, []byte(got+"\n"), 0o600); err != nil {
