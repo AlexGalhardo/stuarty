@@ -3,10 +3,12 @@ import { describe, expect, test } from "vitest";
 import {
 	addClipOperations,
 	captionOperations,
+	keyframeFallbackOperations,
 	moveItems,
 	moveOperations,
 	nudgeOperations,
 	splitOperations,
+	transformOperations,
 	trimEdgeOperations,
 	trimOperations,
 	withNextFree,
@@ -106,6 +108,80 @@ describe("trim", () => {
 	test("the next free place of the core replaces `to`, the edge stays", () => {
 		expect(withNextFree(trimEdgeOperations("a", "start", 4), 12)).toEqual([
 			{ op: "item.trim", args: { item_id: "a", edge: "start", to: "12f" } },
+		]);
+	});
+});
+
+describe("transformOperations", () => {
+	test("static properties go in one item.set_transform", () => {
+		expect(
+			transformOperations([{ id: "itm_a", animated: [] }], { x: 10, y: 20 }, 5),
+		).toEqual([
+			{ op: "item.set_transform", args: { item_id: "itm_a", x: 10, y: 20 } },
+		]);
+	});
+
+	test("an animated property goes in a keyframe.set at the playhead (gating by key only)", () => {
+		expect(
+			transformOperations(
+				[{ id: "itm_a", animated: ["scale"] }],
+				{ scale: 1.5 },
+				12,
+			),
+		).toEqual([
+			{
+				op: "keyframe.set",
+				args: { item_id: "itm_a", property: "scale", at: "12f", value: 1.5 },
+			},
+		]);
+	});
+
+	test("a change of an animated and a static property sends both", () => {
+		const ops = transformOperations(
+			[{ id: "itm_a", animated: ["x"] }],
+			{ x: 1, y: 2 },
+			3,
+		);
+		expect(ops.map((o) => o.op)).toEqual([
+			"item.set_transform",
+			"keyframe.set",
+		]);
+		expect(ops[0]?.args).toEqual({ item_id: "itm_a", y: 2 });
+	});
+
+	test("a multi-selection gets one batch, each item by its own keys", () => {
+		const ops = transformOperations(
+			[
+				{ id: "itm_a", animated: [] },
+				{ id: "itm_b", animated: ["opacity"] },
+			],
+			{ opacity: 0.5 },
+			0,
+		);
+		expect(ops.map((o) => [o.op, o.args.item_id])).toEqual([
+			["item.set_transform", "itm_a"],
+			["keyframe.set", "itm_b"],
+		]);
+	});
+
+	test("the fallback of E_INVALID_STATE resends every field as keyframe.set", () => {
+		const ops = keyframeFallbackOperations(
+			transformOperations(
+				[{ id: "itm_a", animated: [] }],
+				{ x: 1, rotation: 30 },
+				7,
+			),
+			9,
+		);
+		expect(ops).toEqual([
+			{
+				op: "keyframe.set",
+				args: { item_id: "itm_a", property: "x", at: "9f", value: 1 },
+			},
+			{
+				op: "keyframe.set",
+				args: { item_id: "itm_a", property: "rotation", at: "9f", value: 30 },
+			},
 		]);
 	});
 });

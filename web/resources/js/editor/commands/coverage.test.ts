@@ -10,10 +10,12 @@ import {
 	deleteOperations,
 	dropAssetOperations,
 	duplicateOperations,
+	keyframeFallbackOperations,
 	moveOperations,
 	removeAssetOperations,
 	renameOperations,
 	splitOperations,
+	transformOperations,
 	trimEndOperations,
 	trimOperations,
 } from "./builders";
@@ -223,6 +225,20 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"timeline.close_gap": closeGapOperations("trk_a", 5).map((o) => o.op),
 			"inspector.move": moveOperations("itm_a", "1s").map((o) => o.op),
 			"inspector.trim_end": trimEndOperations("itm_a", "2s").map((o) => o.op),
+			"canvas.transform": transformOperations(
+				[{ id: "itm_a", animated: ["scale"] }],
+				{ x: 1, scale: 2 },
+				10,
+			).map((o) => o.op),
+			"inspector.transform": transformOperations(
+				[{ id: "itm_a", animated: ["opacity"] }],
+				{ opacity: 0.5 },
+				10,
+			).map((o) => o.op),
+			"notice.use_keyframes": keyframeFallbackOperations(
+				transformOperations([{ id: "itm_a", animated: [] }], { x: 1 }, 10),
+				10,
+			).map((o) => o.op),
 			"caption.add": captionOperations({
 				text: "a",
 				duration: "1s",
