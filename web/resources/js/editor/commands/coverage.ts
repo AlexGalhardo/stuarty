@@ -41,6 +41,9 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.keyframe_remove": ["keyframe.remove"],
 	"inspector.keyframe_clear": ["keyframe.clear"],
 	"timeline.delete_keyframe": ["keyframe.remove"],
+	"inspector.transition": ["item.set_transition"],
+	"timeline.crossfade": ["item.crossfade"],
+	"inspector.animation": ["text.apply_preset"],
 	"timeline.edit_word": ["caption.edit_word"],
 	"inspector.word_text": ["caption.edit_word"],
 	"timeline.word_boundary": ["caption.set_words"],
@@ -129,7 +132,10 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	"clip.set_color": [palette],
 	"clip.set_framing": [palette],
 	"clip.set_speed": [palette],
-	"item.crossfade": [palette],
+	"item.crossfade": [
+		{ kind: "menu", action: "timeline.crossfade", phase: "A" },
+		palette,
+	],
 	"item.delete": [
 		{ kind: "key", action: "timeline.delete", phase: "A" },
 		{ kind: "key", action: "timeline.ripple_delete", phase: "A" },
@@ -159,7 +165,10 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.transform", phase: "A" },
 		palette,
 	],
-	"item.set_transition": [palette],
+	"item.set_transition": [
+		{ kind: "inspector", action: "inspector.transition", phase: "A" },
+		palette,
+	],
 	"item.split": [
 		{ kind: "toolbar", action: "timeline.split", phase: "P" },
 		{ kind: "key", action: "timeline.split", phase: "P" },
@@ -205,7 +214,10 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "key", action: "text.add", phase: "A" },
 		palette,
 	],
-	"text.apply_preset": [palette],
+	"text.apply_preset": [
+		{ kind: "inspector", action: "inspector.animation", phase: "A" },
+		palette,
+	],
 	"text.set": [
 		{ kind: "gesture", action: "canvas.edit_text", phase: "A" },
 		{ kind: "inspector", action: "inspector.text", phase: "A" },

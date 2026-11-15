@@ -507,6 +507,87 @@ export function keyframeClearOperations(
 	];
 }
 
+// The spellings of the registry (`item.set_transition`, `text.apply_preset`).
+export const TRANSITION_KINDS = [
+	"fade",
+	"slide_left",
+	"slide_right",
+	"slide_up",
+	"slide_down",
+] as const;
+export type TransitionKind = (typeof TRANSITION_KINDS)[number];
+
+export const ANIMATION_PRESETS = [
+	"fade_up",
+	"fade_down",
+	"pop",
+	"zoom_in",
+	"slide_left",
+	"slide_right",
+] as const;
+export type AnimationPreset = (typeof ANIMATION_PRESETS)[number];
+
+export type Edge = "in" | "out";
+
+// The default length of a crossfade from the menu, which has no field for it.
+export const CROSSFADE_DURATION = "0.5s";
+
+// One transition control: the kind (null removes it) and, when the control has
+// one, the duration, which is a time with its unit. The core judges whether it fits.
+export function transitionOperations(input: {
+	itemId: string;
+	edge: Edge;
+	kind: TransitionKind | null;
+	duration?: string;
+}): Operations {
+	return [
+		{
+			op: "item.set_transition",
+			args: {
+				item_id: input.itemId,
+				edge: input.edge,
+				kind: input.kind,
+				...(input.duration === undefined ? {} : { duration: input.duration }),
+			},
+		},
+	];
+}
+
+export function presetOperations(input: {
+	itemId: string;
+	edge: Edge;
+	preset: AnimationPreset;
+	duration?: string;
+}): Operations {
+	return [
+		{
+			op: "text.apply_preset",
+			args: {
+				item_id: input.itemId,
+				edge: input.edge,
+				preset: input.preset,
+				...(input.duration === undefined ? {} : { duration: input.duration }),
+			},
+		},
+	];
+}
+
+// "Crossfade" with two items selected: `from` is the one whose stored start is
+// smaller. Only the two stored numbers are compared, to name the arguments.
+export function crossfadeOperations(
+	a: ItemRange,
+	b: ItemRange,
+	duration: string = CROSSFADE_DURATION,
+): Operations {
+	const [from, to] = a.start <= b.start ? [a, b] : [b, a];
+	return [
+		{
+			op: "item.crossfade",
+			args: { from_item_id: from.id, to_item_id: to.id, duration },
+		},
+	];
+}
+
 // Delete, Shift+Delete and the menu entries (SDD-012 section 8.2): one
 // `item.delete` for the whole selection; the ripple the person chose is only
 // passed on, the core moves what follows.

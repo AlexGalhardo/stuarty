@@ -15,6 +15,7 @@ import {
 	captionStyleOperations,
 	captionWordsOperations,
 	closeGapOperations,
+	crossfadeOperations,
 	deleteOperations,
 	dropAssetOperations,
 	duplicateOperations,
@@ -23,6 +24,7 @@ import {
 	keyframeRemoveOperations,
 	keyframeSetOperations,
 	moveOperations,
+	presetOperations,
 	removeAssetOperations,
 	renameOperations,
 	splitOperations,
@@ -30,6 +32,7 @@ import {
 	textSetOperations,
 	textStyleOperations,
 	transformOperations,
+	transitionOperations,
 	trimEndOperations,
 	trimOperations,
 } from "./builders";
@@ -307,6 +310,20 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"inspector.keyframe_clear": keyframeClearOperations("itm_a").map(
 				(o) => o.op,
 			),
+			"inspector.transition": transitionOperations({
+				itemId: "itm_a",
+				edge: "in",
+				kind: null,
+			}).map((o) => o.op),
+			"timeline.crossfade": crossfadeOperations(
+				{ id: "a", start: 0, duration: 10 },
+				{ id: "b", start: 10, duration: 10 },
+			).map((o) => o.op),
+			"inspector.animation": presetOperations({
+				itemId: "itm_a",
+				edge: "out",
+				preset: "pop",
+			}).map((o) => o.op),
 			"inspector.auto_captions": captionFromTranscriptOperations({
 				clipId: "itm_a",
 				trackId: null,

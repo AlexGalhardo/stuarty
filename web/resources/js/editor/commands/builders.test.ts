@@ -9,6 +9,7 @@ import {
 	captionRetimeOperations,
 	clampBoundary,
 	containsInclusive,
+	crossfadeOperations,
 	keyframeClearOperations,
 	keyframeFallbackOperations,
 	keyframeFrame,
@@ -17,12 +18,14 @@ import {
 	moveItems,
 	moveOperations,
 	nudgeOperations,
+	presetOperations,
 	splitOperations,
 	textAddOperations,
 	textSetOperations,
 	textStyleOperations,
 	toggleBreak,
 	transformOperations,
+	transitionOperations,
 	trimEdgeOperations,
 	trimOperations,
 	withNextFree,
@@ -395,5 +398,74 @@ describe("keyframe builders", () => {
 		expect(containsInclusive(item, 40)).toBe(true);
 		expect(containsInclusive(item, 9)).toBe(false);
 		expect(containsInclusive(item, 41)).toBe(false);
+	});
+});
+
+describe("transition, preset and crossfade builders", () => {
+	test("a kind with no duration leaves the length to the core", () => {
+		expect(
+			transitionOperations({ itemId: "itm_a", edge: "in", kind: "fade" }),
+		).toEqual([
+			{
+				op: "item.set_transition",
+				args: { item_id: "itm_a", edge: "in", kind: "fade" },
+			},
+		]);
+	});
+
+	test("none sends a null kind and a duration keeps its unit", () => {
+		expect(
+			transitionOperations({ itemId: "itm_a", edge: "out", kind: null })[0]
+				?.args.kind,
+		).toBeNull();
+		expect(
+			transitionOperations({
+				itemId: "itm_a",
+				edge: "out",
+				kind: "slide_up",
+				duration: "0.3s",
+			})[0]?.args.duration,
+		).toBe("0.3s");
+	});
+
+	test("a preset names the item, the edge and the preset", () => {
+		expect(
+			presetOperations({
+				itemId: "itm_a",
+				edge: "in",
+				preset: "zoom_in",
+				duration: "0.4s",
+			}),
+		).toEqual([
+			{
+				op: "text.apply_preset",
+				args: {
+					item_id: "itm_a",
+					edge: "in",
+					preset: "zoom_in",
+					duration: "0.4s",
+				},
+			},
+		]);
+	});
+
+	test("the crossfade leaves from the item whose stored start is smaller", () => {
+		const first = { id: "itm_a", start: 0, duration: 30 };
+		const second = { id: "itm_b", start: 30, duration: 30 };
+		for (const pair of [
+			[first, second],
+			[second, first],
+		] as const) {
+			expect(crossfadeOperations(pair[0], pair[1])).toEqual([
+				{
+					op: "item.crossfade",
+					args: {
+						from_item_id: "itm_a",
+						to_item_id: "itm_b",
+						duration: "0.5s",
+					},
+				},
+			]);
+		}
 	});
 });
