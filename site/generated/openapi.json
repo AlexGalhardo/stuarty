@@ -1,0 +1,4625 @@
+{
+  "components": {
+    "responses": {
+      "Problem": {
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        },
+        "description": "Error (RFC 9457 problem details)"
+      },
+      "ValidationError": {
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        },
+        "description": "Validation failed; errors maps each field to its messages and issues lists each problem with its code, key and params"
+      }
+    },
+    "schemas": {
+      "Asset": {
+        "properties": {
+          "frame_count": {
+            "type": "integer"
+          },
+          "frame_rate": {
+            "$ref": "#/components/schemas/Rational"
+          },
+          "has_audio": {
+            "type": "boolean"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "video",
+              "audio",
+              "image"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sample_count": {
+            "type": "integer"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "CaptionStyle": {
+        "properties": {
+          "align": {
+            "enum": [
+              "left",
+              "center",
+              "right",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "background_color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "background_padding": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "background_radius": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "font_family": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "font_weight": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "highlight": {
+            "enum": [
+              "none",
+              "word",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "highlight_background": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "highlight_color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "line_height": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "max_width": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "position": {
+            "enum": [
+              "bottom",
+              "middle",
+              "top",
+              "custom",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "shadow_blur": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "shadow_color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "shadow_dx": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "shadow_dy": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "size": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "stroke_color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stroke_width": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "uppercase": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "Change": {
+        "properties": {
+          "changes": {
+            "additionalProperties": {
+              "items": {},
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "object": {
+            "additionalProperties": {},
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "CommandDetail": {
+        "properties": {
+          "args_schema": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "description": {
+            "type": "string"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "example": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CommandHelpResult": {
+        "properties": {
+          "command": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CommandDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "commands": {
+            "items": {
+              "$ref": "#/components/schemas/CommandSummary"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CommandSummary": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Crop": {
+        "properties": {
+          "bottom": {
+            "format": "double",
+            "type": "number"
+          },
+          "left": {
+            "format": "double",
+            "type": "number"
+          },
+          "right": {
+            "format": "double",
+            "type": "number"
+          },
+          "top": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "Document": {
+        "properties": {
+          "assets": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Asset"
+            },
+            "type": "object"
+          },
+          "fonts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ProjectFont"
+            },
+            "type": "object"
+          },
+          "id": {
+            "type": "string"
+          },
+          "items": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Item"
+            },
+            "type": "object"
+          },
+          "name": {
+            "type": "string"
+          },
+          "schema_version": {
+            "type": "integer"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/Settings"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TemplateInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tracks": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Track"
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "EditResult": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "base_revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "type": "string"
+          },
+          "diff": {
+            "items": {
+              "$ref": "#/components/schemas/Change"
+            },
+            "type": "array"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "effective": {
+            "items": {
+              "$ref": "#/components/schemas/OpEffect"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Error": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "details": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "hint": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "op_index": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "retryable": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "ExportResult": {
+        "properties": {
+          "audio_codec": {
+            "type": "string"
+          },
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/VerifyCheck"
+            },
+            "type": "array"
+          },
+          "download_url": {
+            "type": "string"
+          },
+          "duration": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "fps": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "loudness_lufs": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "video_codec": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Finding": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
+          },
+          "item": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Range"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "severity": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "FontFile": {
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "HistoryEntry": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "changes": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "ops": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "undo_of": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "undone_by": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "HistoryListResult": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryEntry"
+            },
+            "type": "array"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "HistoryRef": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ImportedAsset": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "deduplicated": {
+            "type": "boolean"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "probe": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProbeSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "progress": {
+            "format": "double",
+            "type": "number"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Issue": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "on": {
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Item": {
+        "properties": {
+          "asset": {
+            "type": "string"
+          },
+          "audio_muted": {
+            "type": "boolean"
+          },
+          "breaks": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "brightness": {
+            "format": "double",
+            "type": "number"
+          },
+          "contrast": {
+            "format": "double",
+            "type": "number"
+          },
+          "crop": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Crop"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duration": {
+            "type": "integer"
+          },
+          "fade_in": {
+            "type": "integer"
+          },
+          "fade_out": {
+            "type": "integer"
+          },
+          "fill": {
+            "type": "string"
+          },
+          "fit": {
+            "enum": [
+              "cover",
+              "contain",
+              "none"
+            ],
+            "type": "string"
+          },
+          "height": {
+            "format": "double",
+            "type": "number"
+          },
+          "id": {
+            "type": "string"
+          },
+          "keyframes": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/Keyframe"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "linked_item": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "opacity": {
+            "format": "double",
+            "type": "number"
+          },
+          "radius": {
+            "format": "double",
+            "type": "number"
+          },
+          "rotation": {
+            "format": "double",
+            "type": "number"
+          },
+          "saturation": {
+            "format": "double",
+            "type": "number"
+          },
+          "scale": {
+            "format": "double",
+            "type": "number"
+          },
+          "shape": {
+            "enum": [
+              "rect",
+              "rounded_rect",
+              "ellipse"
+            ],
+            "type": "string"
+          },
+          "slot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Slot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_in": {
+            "type": "integer"
+          },
+          "speed": {
+            "$ref": "#/components/schemas/Rational"
+          },
+          "start": {
+            "type": "integer"
+          },
+          "stroke_color": {
+            "type": "string"
+          },
+          "stroke_width": {
+            "format": "double",
+            "type": "number"
+          },
+          "style": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaptionStyle"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "track": {
+            "type": "string"
+          },
+          "transition_in": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Transition"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "transition_out": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Transition"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": {
+            "enum": [
+              "clip",
+              "audio",
+              "text",
+              "caption",
+              "shape"
+            ],
+            "type": "string"
+          },
+          "volume": {
+            "format": "double",
+            "type": "number"
+          },
+          "width": {
+            "format": "double",
+            "type": "number"
+          },
+          "words": {
+            "items": {
+              "$ref": "#/components/schemas/Word"
+            },
+            "type": "array"
+          },
+          "x": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "y": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "Job": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "finished_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "lint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LintTotals"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "progress": {
+            "format": "double",
+            "type": "number"
+          },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "started_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "JobListResult": {
+        "properties": {
+          "jobs": {
+            "items": {
+              "$ref": "#/components/schemas/Job"
+            },
+            "type": "array"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "JobResult": {
+        "properties": {
+          "export": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExportResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "Keyframe": {
+        "properties": {
+          "easing": {
+            "enum": [
+              "linear",
+              "ease_in",
+              "ease_out",
+              "ease_in_out",
+              "hold"
+            ],
+            "type": "string"
+          },
+          "t": {
+            "type": "integer"
+          },
+          "value": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "LintResult": {
+        "properties": {
+          "errors": {
+            "type": "integer"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "warnings": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "LintTotals": {
+        "properties": {
+          "errors": {
+            "type": "integer"
+          },
+          "warnings": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Loudness": {
+        "properties": {
+          "integrated_lufs": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "range_lu": {
+            "format": "double",
+            "type": "number"
+          },
+          "true_peak_dbtp": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "MediaEntry": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "duration_frames": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "duration_seconds": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_audio": {
+            "type": "boolean"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "progress": {
+            "format": "double",
+            "type": "number"
+          },
+          "state": {
+            "type": "string"
+          },
+          "strip": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Strip"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trashed": {
+            "type": "boolean"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "MediaImportResult": {
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/ImportedAsset"
+            },
+            "type": "array"
+          },
+          "failed": {
+            "type": "integer"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MediaInspectResult": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "available": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "loudness": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Loudness"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "probe": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProbeSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "progress": {
+            "format": "double",
+            "type": "number"
+          },
+          "silences": {
+            "items": {
+              "$ref": "#/components/schemas/TimeRange"
+            },
+            "type": "array"
+          },
+          "state": {
+            "type": "string"
+          },
+          "strip": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Strip"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UntrustedData"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MediaListResult": {
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/MediaEntry"
+            },
+            "type": "array"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "OpEffect": {
+        "properties": {
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "effective": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "index": {
+            "type": "integer"
+          },
+          "op": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Operation": {
+        "properties": {
+          "args": {
+            "additionalProperties": {},
+            "description": "The arguments of the command.",
+            "type": "object"
+          },
+          "op": {
+            "description": "A command name, as listed by GET /commands.",
+            "enum": [
+              "asset.remove",
+              "audio.add",
+              "caption.add",
+              "clip.add",
+              "clip.set_color",
+              "clip.set_framing",
+              "clip.set_speed",
+              "item.crossfade",
+              "item.delete",
+              "item.duplicate",
+              "item.move",
+              "item.rename",
+              "item.set_audio",
+              "item.set_transform",
+              "item.set_transition",
+              "item.split",
+              "item.trim",
+              "project.rename",
+              "settings.set",
+              "settings.set_fps",
+              "text.add",
+              "text.set",
+              "timeline.close_gap",
+              "track.add",
+              "track.move",
+              "track.remove",
+              "track.set_caption_style",
+              "track.update"
+            ],
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "op"
+        ],
+        "type": "object",
+        "x-args-by-op": {
+          "asset.remove": {
+            "$ref": "#/components/schemas/args.asset.remove"
+          },
+          "audio.add": {
+            "$ref": "#/components/schemas/args.audio.add"
+          },
+          "caption.add": {
+            "$ref": "#/components/schemas/args.caption.add"
+          },
+          "clip.add": {
+            "$ref": "#/components/schemas/args.clip.add"
+          },
+          "clip.set_color": {
+            "$ref": "#/components/schemas/args.clip.set_color"
+          },
+          "clip.set_framing": {
+            "$ref": "#/components/schemas/args.clip.set_framing"
+          },
+          "clip.set_speed": {
+            "$ref": "#/components/schemas/args.clip.set_speed"
+          },
+          "item.crossfade": {
+            "$ref": "#/components/schemas/args.item.crossfade"
+          },
+          "item.delete": {
+            "$ref": "#/components/schemas/args.item.delete"
+          },
+          "item.duplicate": {
+            "$ref": "#/components/schemas/args.item.duplicate"
+          },
+          "item.move": {
+            "$ref": "#/components/schemas/args.item.move"
+          },
+          "item.rename": {
+            "$ref": "#/components/schemas/args.item.rename"
+          },
+          "item.set_audio": {
+            "$ref": "#/components/schemas/args.item.set_audio"
+          },
+          "item.set_transform": {
+            "$ref": "#/components/schemas/args.item.set_transform"
+          },
+          "item.set_transition": {
+            "$ref": "#/components/schemas/args.item.set_transition"
+          },
+          "item.split": {
+            "$ref": "#/components/schemas/args.item.split"
+          },
+          "item.trim": {
+            "$ref": "#/components/schemas/args.item.trim"
+          },
+          "project.rename": {
+            "$ref": "#/components/schemas/args.project.rename"
+          },
+          "settings.set": {
+            "$ref": "#/components/schemas/args.settings.set"
+          },
+          "settings.set_fps": {
+            "$ref": "#/components/schemas/args.settings.set_fps"
+          },
+          "text.add": {
+            "$ref": "#/components/schemas/args.text.add"
+          },
+          "text.set": {
+            "$ref": "#/components/schemas/args.text.set"
+          },
+          "timeline.close_gap": {
+            "$ref": "#/components/schemas/args.timeline.close_gap"
+          },
+          "track.add": {
+            "$ref": "#/components/schemas/args.track.add"
+          },
+          "track.move": {
+            "$ref": "#/components/schemas/args.track.move"
+          },
+          "track.remove": {
+            "$ref": "#/components/schemas/args.track.remove"
+          },
+          "track.set_caption_style": {
+            "$ref": "#/components/schemas/args.track.set_caption_style"
+          },
+          "track.update": {
+            "$ref": "#/components/schemas/args.track.update"
+          }
+        }
+      },
+      "ProbeSummary": {
+        "properties": {
+          "audio_codec": {
+            "type": "string"
+          },
+          "channels": {
+            "type": "integer"
+          },
+          "container": {
+            "type": "string"
+          },
+          "duration": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeValue"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "frame_rate": {
+            "type": "string"
+          },
+          "has_audio": {
+            "type": "boolean"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "sample_rate": {
+            "type": "integer"
+          },
+          "size_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "video_codec": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Problem": {
+        "properties": {
+          "code": {
+            "description": "A stable error code, for example E_OVERLAP.",
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "details": {
+            "description": "Data specific to the code.",
+            "type": "object"
+          },
+          "errors": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "hint": {
+            "description": "What to do next.",
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            },
+            "type": "array"
+          },
+          "message": {
+            "description": "What went wrong, in one or two sentences.",
+            "type": "string"
+          },
+          "op_index": {
+            "description": "The operation of the batch that failed.",
+            "type": "integer"
+          },
+          "path": {
+            "description": "The member or argument at fault.",
+            "type": "string"
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "retryable": {
+            "description": "Whether a later retry can succeed.",
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectCounts": {
+        "properties": {
+          "assets": {
+            "type": "integer"
+          },
+          "caption_words": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "integer"
+          },
+          "tracks": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectCreateResult": {
+        "properties": {
+          "created": {
+            "type": "boolean"
+          },
+          "fps": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectFont": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FontFile"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectGetResult": {
+        "properties": {
+          "counts": {
+            "$ref": "#/components/schemas/ProjectCounts"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duration": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "duration_frames": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "fps": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectListResult": {
+        "properties": {
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectSummary"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectStateResult": {
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectSummary": {
+        "properties": {
+          "assets": {
+            "type": "integer"
+          },
+          "duration": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "fps": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "items": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "tracks": {
+            "type": "integer"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Range": {
+        "properties": {
+          "end": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "start": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Rational": {
+        "properties": {
+          "den": {
+            "type": "integer"
+          },
+          "num": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Settings": {
+        "properties": {
+          "background": {
+            "type": "string"
+          },
+          "fps": {
+            "$ref": "#/components/schemas/Rational"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "loudness_target": {
+            "format": "double",
+            "type": "number"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SkippedOp": {
+        "properties": {
+          "by_actor": {
+            "type": "string"
+          },
+          "by_revision": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "details": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "primitive": {},
+          "primitive_index": {
+            "type": "integer"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Slot": {
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "duration_policy": {
+            "enum": [
+              "fit",
+              "stretch_timeline"
+            ],
+            "type": "string"
+          },
+          "filled": {
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "media",
+              "text",
+              "caption"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "Strip": {
+        "properties": {
+          "columns": {
+            "type": "integer"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "interval_ms": {
+            "type": "integer"
+          },
+          "tile_h": {
+            "type": "integer"
+          },
+          "tile_w": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "TemplateInfo": {
+        "properties": {
+          "colors": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TimeRange": {
+        "properties": {
+          "end": {
+            "$ref": "#/components/schemas/TimeValue"
+          },
+          "start": {
+            "$ref": "#/components/schemas/TimeValue"
+          }
+        },
+        "type": "object"
+      },
+      "TimeValue": {
+        "properties": {
+          "frame": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "seconds": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "Track": {
+        "properties": {
+          "caption_style": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaptionStyle"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "visual",
+              "audio"
+            ],
+            "type": "string"
+          },
+          "muted": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "order": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Transition": {
+        "properties": {
+          "duration": {
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "fade",
+              "slide_left",
+              "slide_right",
+              "slide_up",
+              "slide_down"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UndoResult": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "base_revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "type": "string"
+          },
+          "diff": {
+            "items": {
+              "$ref": "#/components/schemas/Change"
+            },
+            "type": "array"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "effective": {
+            "items": {
+              "$ref": "#/components/schemas/OpEffect"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "redone": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HistoryRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "skipped": {
+            "items": {
+              "$ref": "#/components/schemas/SkippedOp"
+            },
+            "type": "array"
+          },
+          "undone": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HistoryRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UntrustedData": {
+        "properties": {
+          "metadata": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "VerifyCheck": {
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "Word": {
+        "properties": {
+          "duration": {
+            "type": "integer"
+          },
+          "start": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "args.asset.remove": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "description": "The id of the asset to remove.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "asset_id"
+        ],
+        "type": "object"
+      },
+      "args.audio.add": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "description": "An audio asset, a video asset with audio, or ast_placeholder in a template.",
+            "type": "string"
+          },
+          "duration": {
+            "description": "A length; default the rest of the asset.",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "source_in": {
+            "description": "Offset into the asset; default 0s.",
+            "type": "string"
+          },
+          "start": {
+            "description": "Absolute position.",
+            "type": "string"
+          },
+          "track_id": {
+            "description": "An audio track.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "track_id",
+          "asset_id",
+          "start"
+        ],
+        "type": "object"
+      },
+      "args.caption.add": {
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "description": "A length; with text only.",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "linked_item": {
+            "description": "The clip whose speech this transcribes; it need not exist.",
+            "type": "string"
+          },
+          "start": {
+            "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+            "type": "string"
+          },
+          "text": {
+            "description": "Text to split on whitespace; needs duration.",
+            "type": "string"
+          },
+          "track_id": {
+            "description": "A visual track.",
+            "type": "string"
+          },
+          "words": {
+            "description": "Words with times relative to the caption, as lengths.",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "duration": {
+                  "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+                  "type": "string"
+                },
+                "start": {
+                  "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "start",
+                "duration"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "track_id",
+          "start"
+        ],
+        "type": "object"
+      },
+      "args.clip.add": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "description": "A video or image asset, or ast_placeholder in a template.",
+            "type": "string"
+          },
+          "duration": {
+            "description": "A length; default the rest of the asset, or 5s for an image.",
+            "type": "string"
+          },
+          "fit": {
+            "enum": [
+              "cover",
+              "contain",
+              "none"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "source_in": {
+            "description": "Offset into the asset; default 0s; omit for an image.",
+            "type": "string"
+          },
+          "start": {
+            "description": "Absolute position.",
+            "type": "string"
+          },
+          "track_id": {
+            "description": "A visual track.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "track_id",
+          "asset_id",
+          "start"
+        ],
+        "type": "object"
+      },
+      "args.clip.set_color": {
+        "additionalProperties": false,
+        "properties": {
+          "brightness": {
+            "description": "-1 to 1; default 0.",
+            "maximum": 1,
+            "minimum": -1,
+            "type": "number"
+          },
+          "contrast": {
+            "description": "0 to 2; default 1.",
+            "maximum": 2,
+            "minimum": 0,
+            "type": "number"
+          },
+          "item_id": {
+            "description": "A clip.",
+            "type": "string"
+          },
+          "saturation": {
+            "description": "0 to 2; default 1.",
+            "maximum": 2,
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.clip.set_framing": {
+        "additionalProperties": false,
+        "properties": {
+          "crop": {
+            "additionalProperties": false,
+            "description": "Sides to crop, fractions 0 to 1; sides not given keep their value.",
+            "properties": {
+              "bottom": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "left": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "right": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "top": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [],
+            "type": "object"
+          },
+          "fit": {
+            "description": "cover (default), contain or none.",
+            "enum": [
+              "cover",
+              "contain",
+              "none"
+            ],
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.clip.set_speed": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A clip of a video asset, or an audio item.",
+            "type": "string"
+          },
+          "ripple": {
+            "description": "none (default) or track: shift the later items of the track.",
+            "enum": [
+              "none",
+              "track"
+            ],
+            "type": "string"
+          },
+          "speed": {
+            "description": "\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4."
+          }
+        },
+        "required": [
+          "item_id",
+          "speed"
+        ],
+        "type": "object"
+      },
+      "args.item.crossfade": {
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "description": "Length of the crossfade, at least 1 frame.",
+            "type": "string"
+          },
+          "from_item_id": {
+            "description": "The item that leaves.",
+            "type": "string"
+          },
+          "to_item_id": {
+            "description": "The item that arrives.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_item_id",
+          "to_item_id",
+          "duration"
+        ],
+        "type": "object"
+      },
+      "args.item.delete": {
+        "additionalProperties": false,
+        "properties": {
+          "item_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "type": "array"
+          },
+          "ripple": {
+            "description": "none (default), track or all.",
+            "enum": [
+              "none",
+              "track",
+              "all"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_ids"
+        ],
+        "type": "object"
+      },
+      "args.item.duplicate": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "The item to copy.",
+            "type": "string"
+          },
+          "new_id": {
+            "description": "The id of the copy.",
+            "type": "string"
+          },
+          "start": {
+            "description": "Absolute start of the copy.",
+            "type": "string"
+          },
+          "track_id": {
+            "description": "The track of the copy; default the source's track.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "start"
+        ],
+        "type": "object"
+      },
+      "args.item.move": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "start": {
+            "description": "The new absolute position of the first frame.",
+            "type": "string"
+          },
+          "track_id": {
+            "description": "A track that accepts the item type.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.item.rename": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "The item to label.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The label, 0 to 120 characters; empty clears it.",
+            "maxLength": 120,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "name"
+        ],
+        "type": "object"
+      },
+      "args.item.set_audio": {
+        "additionalProperties": false,
+        "properties": {
+          "audio_muted": {
+            "description": "Drop the audio of a clip.",
+            "type": "boolean"
+          },
+          "fade_in": {
+            "description": "Fade-in length; 0s removes it.",
+            "type": "string"
+          },
+          "fade_out": {
+            "description": "Fade-out length; 0s removes it.",
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip or audio item.",
+            "type": "string"
+          },
+          "volume": {
+            "description": "Linear gain, 0 to 4.",
+            "maximum": 4,
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.item.set_transform": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A clip, text, caption or shape item.",
+            "type": "string"
+          },
+          "opacity": {
+            "description": "0 to 1.",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "rotation": {
+            "description": "Degrees clockwise.",
+            "type": "number"
+          },
+          "scale": {
+            "description": "Uniform scale, greater than 0 and at most 20.",
+            "maximum": 20,
+            "type": "number"
+          },
+          "x": {
+            "description": "Centre of the item in pixels.",
+            "type": "number"
+          },
+          "y": {
+            "description": "Centre of the item in pixels.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.item.set_transition": {
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "description": "Length of the transition, at least 1 frame; default 0.5s.",
+            "type": "string"
+          },
+          "edge": {
+            "description": "The edge: in or out.",
+            "enum": [
+              "in",
+              "out"
+            ],
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip, text, caption or shape item.",
+            "type": "string"
+          },
+          "kind": {
+            "description": "fade, slide_left, slide_right, slide_up, slide_down, or null to remove."
+          }
+        },
+        "required": [
+          "item_id",
+          "edge",
+          "kind"
+        ],
+        "type": "object"
+      },
+      "args.item.split": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "description": "Absolute position strictly inside the item.",
+            "type": "string"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "new_id": {
+            "description": "The id of the right part.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "at"
+        ],
+        "type": "object"
+      },
+      "args.item.trim": {
+        "additionalProperties": false,
+        "properties": {
+          "edge": {
+            "enum": [
+              "start",
+              "end"
+            ],
+            "type": "string"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "to": {
+            "description": "Absolute position of the edge; the end is exclusive.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "edge",
+          "to"
+        ],
+        "type": "object"
+      },
+      "args.project.rename": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "description": "The new name, 1 to 120 characters.",
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "args.settings.set": {
+        "additionalProperties": false,
+        "properties": {
+          "background": {
+            "description": "A hex colour, or $name from template.colors.",
+            "type": "string"
+          },
+          "height": {
+            "description": "Frame height in pixels; even.",
+            "maximum": 4096,
+            "minimum": 16,
+            "type": "integer"
+          },
+          "loudness_target": {
+            "description": "Integrated loudness target in LUFS.",
+            "maximum": -5,
+            "minimum": -30,
+            "type": "number"
+          },
+          "width": {
+            "description": "Frame width in pixels; even.",
+            "maximum": 4096,
+            "minimum": 16,
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "args.settings.set_fps": {
+        "additionalProperties": false,
+        "properties": {
+          "fps": {
+            "description": "\"30\", \"30000/1001\" or {\"num\": 30000, \"den\": 1001}; den is 1 or 1001, 1 to 120 fps."
+          }
+        },
+        "required": [
+          "fps"
+        ],
+        "type": "object"
+      },
+      "args.text.add": {
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "description": "A length of at least 1 frame.",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "start": {
+            "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+            "type": "string"
+          },
+          "style": {
+            "additionalProperties": {},
+            "description": "A partial TextStyle.",
+            "type": "object"
+          },
+          "text": {
+            "description": "The text; line breaks are allowed.",
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "track_id": {
+            "description": "A visual track.",
+            "type": "string"
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "track_id",
+          "start",
+          "duration",
+          "text"
+        ],
+        "type": "object"
+      },
+      "args.text.set": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A text item.",
+            "type": "string"
+          },
+          "reset_style": {
+            "description": "Empty the stored style before applying style.",
+            "type": "boolean"
+          },
+          "style": {
+            "additionalProperties": {},
+            "description": "A partial TextStyle, merged; null removes a key.",
+            "type": "object"
+          },
+          "text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.timeline.close_gap": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "description": "Absolute frame inside the gap.",
+            "type": "string"
+          },
+          "ripple": {
+            "description": "track (default) or all: all moves later items of every track.",
+            "enum": [
+              "track",
+              "all"
+            ],
+            "type": "string"
+          },
+          "track_id": {
+            "description": "The track with the gap.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "track_id",
+          "at"
+        ],
+        "type": "object"
+      },
+      "args.track.add": {
+        "additionalProperties": false,
+        "properties": {
+          "above": {
+            "description": "Place the track directly over this track.",
+            "type": "string"
+          },
+          "below": {
+            "description": "Place the track directly under this track.",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "visual",
+              "audio"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 60,
+            "type": "string"
+          },
+          "position": {
+            "description": "top (default) or bottom.",
+            "enum": [
+              "top",
+              "bottom"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "type": "object"
+      },
+      "args.track.move": {
+        "additionalProperties": false,
+        "properties": {
+          "above": {
+            "type": "string"
+          },
+          "below": {
+            "type": "string"
+          },
+          "position": {
+            "enum": [
+              "top",
+              "bottom"
+            ],
+            "type": "string"
+          },
+          "track_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "track_id"
+        ],
+        "type": "object"
+      },
+      "args.track.remove": {
+        "additionalProperties": false,
+        "properties": {
+          "track_id": {
+            "type": "string"
+          },
+          "with_items": {
+            "description": "Remove the items of the track too.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "track_id"
+        ],
+        "type": "object"
+      },
+      "args.track.set_caption_style": {
+        "additionalProperties": false,
+        "properties": {
+          "replace": {
+            "description": "Replace the whole style instead of merging.",
+            "type": "boolean"
+          },
+          "style": {
+            "additionalProperties": {},
+            "description": "A partial CaptionStyle; null removes a key when merging.",
+            "type": "object"
+          },
+          "track_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "track_id",
+          "style"
+        ],
+        "type": "object"
+      },
+      "args.track.update": {
+        "additionalProperties": false,
+        "properties": {
+          "hidden": {
+            "description": "Visual tracks only.",
+            "type": "boolean"
+          },
+          "muted": {
+            "type": "boolean"
+          },
+          "name": {
+            "description": "The track name; \"\" clears it.",
+            "maxLength": 60,
+            "type": "string"
+          },
+          "track_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "track_id"
+        ],
+        "type": "object"
+      },
+      "handshakeOut": {
+        "properties": {
+          "proof": {
+            "description": "HMAC-SHA256 keyed by the token over the nonce (SDD-007 section 3.8).",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "importFileIn": {
+        "properties": {
+          "asset_id": {
+            "description": "An id of your own; ignored for a duplicate.",
+            "type": "string"
+          },
+          "path": {
+            "description": "An absolute path on the machine that runs the server.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "launchOut": {
+        "properties": {
+          "code": {
+            "description": "A one-time code, valid for 120 seconds.",
+            "type": "string"
+          },
+          "url": {
+            "description": "The address that exchanges the code for a browser session.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "The HTTP API of Vukem Video. Every operation is the HTTP form of one service operation.",
+    "title": "Vukem Video",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/commands": {
+      "get": {
+        "operationId": "commands.list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandHelpResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the commands"
+      }
+    },
+    "/api/v1/commands/{name}": {
+      "get": {
+        "operationId": "commands.get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandHelpResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Explain one command"
+      }
+    },
+    "/api/v1/handshake": {
+      "get": {
+        "operationId": "handshake.get",
+        "parameters": [
+          {
+            "description": "32 lower-case hexadecimal characters.",
+            "in": "query",
+            "name": "nonce",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/handshakeOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Prove that the server knows the local token"
+      }
+    },
+    "/api/v1/jobs/{job_id}": {
+      "get": {
+        "operationId": "jobs.get",
+        "parameters": [
+          {
+            "description": "0 to 25000: hold the call until the job is final.",
+            "in": "query",
+            "name": "wait_ms",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read a job"
+      }
+    },
+    "/api/v1/jobs/{job_id}/file": {
+      "get": {
+        "operationId": "jobs.file",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download the file of a finished export"
+      }
+    },
+    "/api/v1/projects": {
+      "get": {
+        "operationId": "projects.list",
+        "parameters": [
+          {
+            "description": "active (default), trashed or all.",
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List projects"
+      },
+      "post": {
+        "operationId": "projects.create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "fps": {
+                    "description": "30 (default); n or n/1001.",
+                    "type": "string"
+                  },
+                  "id": {
+                    "description": "An id of your own; E_ID_EXISTS when taken.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "1 to 120 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "preset": {
+                    "description": "9:16 (default), 1:1, 16:9 or 4:5.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectCreateResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a project"
+      }
+    },
+    "/api/v1/projects/{id}": {
+      "get": {
+        "operationId": "projects.get",
+        "parameters": [
+          {
+            "description": "concise (default), full or document.",
+            "in": "query",
+            "name": "detail",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectGetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read a project"
+      }
+    },
+    "/api/v1/projects/{id}/bitmaps/{key}": {
+      "get": {
+        "description": "Not available in this build yet (P1-RND-005): the route answers E_INTERNAL.",
+        "operationId": "bitmaps.get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download a rasterized text or shape"
+      }
+    },
+    "/api/v1/projects/{id}/edit": {
+      "post": {
+        "operationId": "projects.edit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "base_revision": {
+                    "description": "The revision the batch was planned against.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "idempotency_key": {
+                    "description": "8 to 64 characters; the Idempotency-Key header is the same.",
+                    "type": "string"
+                  },
+                  "operations": {
+                    "items": {
+                      "$ref": "#/components/schemas/Operation"
+                    },
+                    "maxItems": 200,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "base_revision",
+                  "operations"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Apply a batch of operations"
+      }
+    },
+    "/api/v1/projects/{id}/events": {
+      "get": {
+        "description": "Not available in this build yet (P1-SRV-006): the route answers E_INTERNAL.",
+        "operationId": "events.stream",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream the events of a project"
+      }
+    },
+    "/api/v1/projects/{id}/frame": {
+      "get": {
+        "description": "Not available in this build yet (P1-RND-005): the route answers E_INTERNAL.",
+        "operationId": "projects.frame",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Render one frame"
+      }
+    },
+    "/api/v1/projects/{id}/history": {
+      "get": {
+        "operationId": "projects.history",
+        "parameters": [
+          {
+            "description": "Only the steps of this actor.",
+            "in": "query",
+            "name": "actor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the history of a project"
+      }
+    },
+    "/api/v1/projects/{id}/jobs": {
+      "get": {
+        "operationId": "jobs.list",
+        "parameters": [
+          {
+            "description": "queued, running, succeeded, failed, cancelled, active or all.",
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the jobs of a project"
+      },
+      "post": {
+        "operationId": "jobs.start",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "args": {
+                    "additionalProperties": {},
+                    "description": "The arguments of the kind: start and end for an export.",
+                    "type": "object"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "kind": {
+                    "description": "export.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "0 to 25000: hold the call until the job is final.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a job"
+      }
+    },
+    "/api/v1/projects/{id}/lint": {
+      "get": {
+        "operationId": "projects.lint",
+        "parameters": [
+          {
+            "description": "warning (default, everything) or error.",
+            "in": "query",
+            "name": "severity",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LintResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lint a project"
+      }
+    },
+    "/api/v1/projects/{id}/media": {
+      "get": {
+        "operationId": "media.list",
+        "parameters": [
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the assets of a project"
+      },
+      "post": {
+        "operationId": "media.import",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "files": {
+                    "items": {
+                      "$ref": "#/components/schemas/importFileIn"
+                    },
+                    "maxItems": 50,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "wait_ms": {
+                    "description": "0 to 25000: hold the call until the assets are ready.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "files"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaImportResult"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import media files"
+      }
+    },
+    "/api/v1/projects/{id}/media/{asset_id}": {
+      "get": {
+        "operationId": "media.inspect",
+        "parameters": [
+          {
+            "description": "Comma separated: probe (default), transcript, silences, loudness.",
+            "in": "query",
+            "name": "sections",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The shortest silence to list, as a time; default 0.4s.",
+            "in": "query",
+            "name": "min_silence",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaInspectResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Inspect an asset"
+      }
+    },
+    "/api/v1/projects/{id}/media/{asset_id}/peaks": {
+      "get": {
+        "operationId": "media.peaks",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download the audio peaks of an asset"
+      }
+    },
+    "/api/v1/projects/{id}/media/{asset_id}/proxy": {
+      "get": {
+        "operationId": "media.proxy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download the proxy of an asset"
+      }
+    },
+    "/api/v1/projects/{id}/media/{asset_id}/strip": {
+      "get": {
+        "operationId": "media.strip",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download the tile strip of an asset"
+      }
+    },
+    "/api/v1/projects/{id}/media/{asset_id}/thumbnail": {
+      "get": {
+        "operationId": "media.thumbnail",
+        "parameters": [
+          {
+            "description": "160, 320 (default) or 640.",
+            "in": "query",
+            "name": "width",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download a thumbnail of an asset"
+      }
+    },
+    "/api/v1/projects/{id}/plan": {
+      "get": {
+        "description": "Not available in this build yet (P1-RND-005): the route answers E_INTERNAL.",
+        "operationId": "projects.plan",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the render plan of a window"
+      }
+    },
+    "/api/v1/projects/{id}/redo": {
+      "post": {
+        "operationId": "projects.redo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UndoResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Redo the caller's latest undone step"
+      }
+    },
+    "/api/v1/projects/{id}/restore": {
+      "post": {
+        "operationId": "projects.restore",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectStateResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore a project from the trash"
+      }
+    },
+    "/api/v1/projects/{id}/sheet": {
+      "get": {
+        "description": "Not available in this build yet (P1-RND-005): the route answers E_INTERNAL.",
+        "operationId": "projects.sheet",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Render a contact sheet"
+      }
+    },
+    "/api/v1/projects/{id}/trash": {
+      "post": {
+        "operationId": "projects.trash",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectStateResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Move a project to the trash"
+      }
+    },
+    "/api/v1/projects/{id}/undo": {
+      "post": {
+        "operationId": "projects.undo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UndoResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Undo the caller's latest step"
+      }
+    },
+    "/api/v1/system/launch": {
+      "post": {
+        "operationId": "system.launch",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/launchOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Issue a one-time browser launch code"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ]
+}
