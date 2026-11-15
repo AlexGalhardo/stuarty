@@ -10,13 +10,16 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
 )
@@ -183,8 +186,16 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 
 	out := make([]outcome, len(steps))
 
+	// jobs are the identifiers the results of this driver have named so far, in
+	// order: a later step reads them as "$job:0", "$job:1" and so on.
+	var jobs []string
+
 	for i, s := range steps {
 		s = withFixtures(t, d, s, fixtures)
+
+		for n, id := range jobs {
+			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$job:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
+		}
 
 		if s.As != "" {
 			runAs(t, d, s)
@@ -206,6 +217,12 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 		o := outcome{text: normalizeText(d, text), fail: errorLine(fail)}
 		if raw != nil {
 			o.result = normalize(t, d, raw)
+
+			for _, id := range jobID.FindAllString(string(raw), -1) {
+				if !slices.Contains(jobs, id) {
+					jobs = append(jobs, id)
+				}
+			}
 		}
 
 		out[i] = o
@@ -403,6 +420,11 @@ func runEverywhere(
 				t.Errorf("%s step %d (%s): error differs\n got: %s\nwant: %s",
 					d.name(), i, steps[i].Call, got[i].fail, outcomes[i].fail)
 			}
+
+			if got[i].result != outcomes[i].result {
+				t.Errorf("%s step %d (%s): result differs\n got: %s\nwant: %s",
+					d.name(), i, steps[i].Call, got[i].result, outcomes[i].result)
+			}
 		}
 	}
 
@@ -457,8 +479,16 @@ func TestErrorsScenario(t *testing.T) {
 	}
 
 	_, outcomes := runEverywhere(t, steps, fixtures, testenv.Options{
-		Export: hold, Limits: service.Limits{MaxImportBytes: 100, MaxExports: 1},
+		Export: hold,
+		Limits: service.Limits{
+			MaxImportBytes: 100, MaxExports: 1, Ceilings: ffmpeg.Ceilings{MaxSeconds: 3, MaxPixels: 100_000},
+		},
 	})
+
+	// The duration and the resolution ceilings fire in the ingest job, not at the
+	// call: the import is accepted, and the failed job carries the error, read
+	// through the import result and through the job list of every surface.
+	checkIngestLimits(t, steps, outcomes)
 
 	retryable := map[string]bool{"E_REVISION_CONFLICT": true, "E_QUEUE_FULL": true, "E_WORKSPACE_LOCKED": true}
 
@@ -494,5 +524,128 @@ func TestErrorsScenario(t *testing.T) {
 		if limit := doc.Code == "E_LIMIT_EXCEEDED" || doc.Code == "E_QUEUE_FULL"; limit && doc.Hint == "" {
 			t.Errorf("step %d: %s has no hint", i, doc.Code)
 		}
+	}
+}
+
+// limitError is the error member of a failed asset or job.
+type limitError struct {
+	Code      string         `json:"code"`
+	Message   string         `json:"message"`
+	Hint      string         `json:"hint"`
+	Retryable bool           `json:"retryable"`
+	Details   map[string]any `json:"details"`
+}
+
+// checkIngestLimits reads the failed ingest jobs of the errors scenario: one for
+// the duration ceiling and one for the resolution ceiling, each stating the
+// limit, the value seen, the ceiling, the variable that raises it and what to
+// do, and not retryable (RF-132, RF-112, SDD-000 section 8).
+func checkIngestLimits(t *testing.T, steps []step, outcomes []outcome) {
+	t.Helper()
+
+	type expected struct {
+		value, ceiling float64
+		variable       string
+	}
+
+	want := map[string]expected{
+		"import_seconds": {6, 3, "VUKEM_VIDEO_MAX_IMPORT_SECONDS"},
+		"import_pixels":  {230_400, 100_000, "VUKEM_VIDEO_MAX_IMPORT_PIXELS"},
+	}
+
+	check := func(where string, e limitError, variable bool) {
+		t.Helper()
+
+		name, _ := e.Details["limit"].(string)
+
+		w, known := want[name]
+		if !known || e.Code != "E_LIMIT_EXCEEDED" || e.Retryable || e.Message == "" || e.Hint == "" {
+			t.Errorf("%s: the ingest limit error is %+v", where, e)
+
+			return
+		}
+
+		if e.Details["value"] != w.value || e.Details["ceiling"] != w.ceiling ||
+			(variable && e.Details["variable"] != w.variable) {
+			t.Errorf("%s: %s has details %+v, want value %v, ceiling %v, variable %s",
+				where, name, e.Details, w.value, w.ceiling, w.variable)
+		}
+	}
+
+	seen := 0
+
+	for i, s := range steps {
+		where := fmt.Sprintf("step %d (%s)", i, s.Call)
+
+		switch s.Call {
+		case "MediaImport":
+			var res struct {
+				Assets []struct {
+					State string      `json:"state"`
+					Error *limitError `json:"error"`
+				} `json:"assets"`
+			}
+
+			if json.Unmarshal([]byte(outcomes[i].result), &res) != nil || len(res.Assets) != 2 {
+				continue
+			}
+
+			for _, a := range res.Assets {
+				if a.State != "failed" || a.Error == nil {
+					t.Errorf("%s: an oversized import is %+v, want a failed asset with its error", where, a)
+
+					continue
+				}
+
+				check(where, *a.Error, true)
+
+				seen++
+			}
+		case "MediaList":
+			var res struct {
+				Assets []struct {
+					State string      `json:"state"`
+					Error *limitError `json:"error"`
+				} `json:"assets"`
+			}
+
+			if json.Unmarshal([]byte(outcomes[i].result), &res) != nil {
+				continue
+			}
+
+			for _, a := range res.Assets {
+				if a.State != "failed" || a.Error == nil {
+					t.Errorf("%s: an asset of the list is %+v", where, a)
+
+					continue
+				}
+
+				// The stored error of an asset keeps the limit, the value and the
+				// ceiling but not the variable that raises it (reported to the
+				// service owner).
+				check(where, *a.Error, false)
+
+				seen++
+			}
+		case "JobGet":
+			var res struct {
+				State string      `json:"state"`
+				Error *limitError `json:"error"`
+			}
+
+			if json.Unmarshal([]byte(outcomes[i].result), &res) != nil || res.State != "failed" || res.Error == nil {
+				t.Errorf("%s: the job is %s, want a failed job with its error", where, outcomes[i].result)
+
+				continue
+			}
+
+			check(where, *res.Error, true)
+
+			seen++
+		}
+	}
+
+	if seen != 6 {
+		t.Errorf("read %d ingest limit errors, want 2 each from the import result, the asset list and the failed jobs", seen)
 	}
 }

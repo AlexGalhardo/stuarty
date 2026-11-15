@@ -1,7 +1,11 @@
 {
 	"name": "errors",
 	"actor": "contract",
-	"fixtures": {"big": "more bytes than the import ceiling of the errors scenario allows: 0123456789012345678901234567890123456789"},
+	"fixtures": {
+		"big": "more bytes than the import ceiling of the errors scenario allows: 0123456789012345678901234567890123456789",
+		"long": "fake-media seconds=6 width=64 height=64\n",
+		"wide": "fake-media seconds=1 width=640 height=360\n"
+	},
 	"steps": [
 		{"call": "ProjectGet", "args": {"project_id": "prj_0000000000"}, "expect_error": {"code": "E_NOT_FOUND"}},
 		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Errors"}},
@@ -15,6 +19,10 @@
 			"expect_error": {"code": "E_INVALID_TIME"}},
 		{"call": "JobStart", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "export", "wait_ms": 20000}, "expect_error": {"code": "E_LINT_BLOCKING"}},
 		{"call": "MediaImport", "args": {"project_id": "prj_7k2m9x4q1b", "files": [{"path": "$big"}], "wait_ms": 20000}, "expect_error": {"code": "E_LIMIT_EXCEEDED"}},
+		{"call": "MediaImport", "args": {"project_id": "prj_7k2m9x4q1b", "files": [{"path": "$long", "asset_id": "ast_3c5v8n2w6d"}, {"path": "$wide", "asset_id": "ast_7k2m9x4q1b"}], "wait_ms": 20000}},
+		{"call": "MediaList", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "JobGet", "args": {"job_id": "$job:0"}},
+		{"call": "JobGet", "args": {"job_id": "$job:1"}},
 		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 0, "operations": [
 			{"op": "track.add", "args": {"kind": "visual", "name": "V", "id": "trk_f6g7h8j9k0"}},
 			{"op": "text.add", "args": {"track_id": "trk_f6g7h8j9k0", "start": "0s", "duration": "1s", "text": "x", "id": "itm_t1t2t3t4t5"}}]}},
