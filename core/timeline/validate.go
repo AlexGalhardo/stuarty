@@ -26,6 +26,7 @@ const (
 	VTransitions   = "V_TRANSITIONS"
 	VKeyframes     = "V_KEYFRAMES"
 	VWords         = "V_WORDS"
+	VMarkers       = "V_MARKERS"
 	VFont          = "V_FONT"
 	VSlot          = "V_SLOT"
 	VColorRef      = "V_COLOR_REF"
@@ -174,6 +175,7 @@ func (v *validator) color(path, id string, c Color, refs bool) {
 
 func (v *validator) asset(key string, a Asset) {
 	path := "assets." + key
+	v.animation(path, key, a)
 	switch {
 	case !ValidID(PrefixAsset, a.ID):
 		v.add(VID, path+".id", key, "%q is not a valid asset identifier", a.ID)
@@ -237,31 +239,6 @@ func (v *validator) tracks() {
 		}
 		if t.CaptionStyle != nil {
 			v.style(path+".caption_style", k, t.CaptionStyle, true)
-		}
-	}
-}
-
-func (v *validator) projectFont(family string, f ProjectFont) {
-	path := "fonts." + family
-	if len(f.Files) == 0 {
-		v.add(VShape, path+".files", family, "a font needs at least one file")
-	}
-	for i, ff := range f.Files {
-		if ff.Weight < 100 || ff.Weight > 900 || ff.Weight%100 != 0 {
-			v.add(
-				VShape,
-				fmt.Sprintf("%s.files[%d].weight", path, i),
-				family,
-				"weight must be 100 to 900 in steps of 100",
-			)
-		}
-		if !hashPattern.MatchString(ff.Hash) {
-			v.add(
-				VShape,
-				fmt.Sprintf("%s.files[%d].hash", path, i),
-				family,
-				"hash must be sha256: followed by 64 lower-case hex characters",
-			)
 		}
 	}
 }
@@ -412,7 +389,9 @@ func (v *validator) item(key string, it Item) {
 	v.itemFieldsForType(path, key, it)
 	if it.Type.IsVisual() {
 		v.visual(path, key, it)
+		v.filter(path, key, it)
 	}
+	v.markers(path, key, it)
 	if it.Type == ItemClip || it.Type == ItemAudio {
 		v.media(path, key, it)
 	}
@@ -460,6 +439,10 @@ func (v *validator) itemFieldsForType(path, key string, it Item) {
 	if it.Type != ItemShape &&
 		(it.Shape != "" || it.Width != 0 || it.Height != 0 || it.Radius != 0 || it.StrokeWidth != 0) {
 		bad("shape")
+	}
+	if it.Type == ItemAudio &&
+		(it.Blur != 0 || (it.Filter != "" && it.Filter != "none") || (it.FilterAmount != 0 && it.FilterAmount != 1)) {
+		bad("filter")
 	}
 	if it.Type == ItemAudio && (it.TransitionIn != nil || it.TransitionOut != nil || it.X != nil || it.Y != nil) {
 		bad("transition_in")

@@ -24,6 +24,11 @@ export interface ProjectDocument {
 }
 export interface Asset {
   frame_count?: number;
+  /**
+   * @minItems 2
+   * @maxItems 1000
+   */
+  frame_delays?: [number, number, ...number[]];
   frame_rate?: Rational;
   has_audio?: boolean;
   hash: string;
@@ -51,6 +56,7 @@ export interface FontFile {
 export interface Item {
   asset?: string;
   audio_muted?: boolean;
+  blur?: number;
   breaks?: number[];
   brightness?: number;
   contrast?: number;
@@ -59,6 +65,8 @@ export interface Item {
   fade_in?: number;
   fade_out?: number;
   fill?: string;
+  filter?: "none" | "grayscale" | "sepia" | "invert" | "warm" | "cool";
+  filter_amount?: number;
   fit?: "cover" | "contain" | "none";
   height?: number;
   id: string;
@@ -69,6 +77,10 @@ export interface Item {
     [k: string]: Keyframe[];
   };
   linked_item?: string;
+  /**
+   * @maxItems 200
+   */
+  markers?: Marker[];
   name?: string;
   opacity?: number;
   radius?: number;
@@ -108,6 +120,10 @@ export interface Keyframe {
   easing?: "linear" | "ease_in" | "ease_out" | "ease_in_out" | "hold";
   t: number;
   value: number;
+}
+export interface Marker {
+  frame: number;
+  label?: string;
 }
 export interface Slot {
   description?: string;

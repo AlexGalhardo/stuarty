@@ -118,7 +118,10 @@ type Asset struct {
 	Width       int       `json:"width,omitempty"                                                                        min:"1"`
 	Height      int       `json:"height,omitempty"                                                                       min:"1"`
 	HasAudio    bool      `json:"has_audio,omitempty"`
-	Extra       Extra     `json:"-"`
+	// FrameDelays makes an image asset animated (BETA, SDD-001 §3.2): the display
+	// time of each frame in milliseconds, one per FrameCount.
+	FrameDelays []int `json:"frame_delays,omitempty" minitems:"2" maxitems:"1000"`
+	Extra       Extra `json:"-"`
 }
 
 // Track is a layer or a lane (SDD-001 §3.3).
@@ -147,6 +150,7 @@ type Item struct {
 	TransitionOut *Transition `json:"transition_out,omitempty"`
 	Keyframes     Keyframes   `json:"keyframes,omitempty"`
 	Slot          *Slot       `json:"slot,omitempty"`
+	Markers       []Marker    `json:"markers,omitempty"                                                                                                         maxitems:"200"`
 
 	// Visual items.
 	X        *float64 `json:"x,omitempty"`
@@ -154,6 +158,11 @@ type Item struct {
 	Scale    float64  `json:"scale"              default:"1" gt:"0" max:"20"`
 	Rotation float64  `json:"rotation,omitempty"`
 	Opacity  float64  `json:"opacity"            default:"1"        max:"1"  min:"0"`
+
+	// Visual items, BETA (SDD-001 §3.4): blur radius and one fixed filter.
+	Blur         float64 `json:"blur,omitempty" min:"0" max:"100"`
+	Filter       string  `json:"filter"                           default:"none" enum:"none,grayscale,sepia,invert,warm,cool"`
+	FilterAmount float64 `json:"filter_amount"  min:"0" max:"1"   default:"1"`
 
 	// Clip and audio.
 	Asset      string   `json:"asset,omitempty"       pattern:"^ast_([0-9a-hjkmnp-tv-z]{10}|placeholder)$"`
