@@ -107,6 +107,15 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 
 		ids.gen = s.newIDs
 
+		// The analysis the commands need is read here and stored with the
+		// operation, so a replay of the log gives the same document.
+		resolvedOps, rerr := s.resolveOps(ctx, tx, doc, req.Operations)
+		if rerr != nil {
+			return rerr
+		}
+
+		req.Operations = resolvedOps
+
 		out, aerr := s.reg.ApplyBatch(doc, req.Operations, command.Env{NewIDs: ids.next})
 		if aerr != nil {
 			return fromCommand(aerr)
