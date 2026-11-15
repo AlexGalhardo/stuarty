@@ -1,0 +1,73 @@
+{
+	"name": "reference-2",
+	"actor": "contract",
+	"fixtures": {"talk": "a generated talking-head recording with pauses: the real driver renders it with FFmpeg from fixtures/reference-2/recording.json"},
+	"steps": [
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Reference 2 talking head"}},
+		{"call": "MediaImport", "args": {"project_id": "prj_7k2m9x4q1b", "files": [{"path": "$talk", "asset_id": "ast_3c5v8n2w6d"}], "wait_ms": 25000}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 1, "operations": [
+			{"op": "track.add", "args": {"kind": "visual", "name": "Video", "id": "trk_f6g7h8j9k0"}},
+			{"op": "track.add", "args": {"kind": "visual", "name": "Captions", "id": "trk_a1b2c3d4e5"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 2, "operations": [
+			{"op": "clip.add", "args": {"track_id": "trk_f6g7h8j9k0", "asset_id": "ast_3c5v8n2w6d", "start": "0s", "source_in": "0s", "duration": "6s", "id": "itm_m1n2p3q4r5"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 3, "operations": [
+			{"op": "item.split", "args": {"item_id": "itm_m1n2p3q4r5", "at": "5s", "new_id": "itm_c3d4e5f6g7"}},
+			{"op": "item.delete", "args": {"item_ids": ["itm_c3d4e5f6g7"]}}]}},
+		{"call": "JobStart", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "transcribe", "args": {"asset_id": "ast_3c5v8n2w6d", "language": "en"}, "wait_ms": 25000}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 4, "operations": [
+			{"op": "clip.remove_silences", "args": {"item_id": "itm_m1n2p3q4r5", "min_silence": "0.3s", "new_ids": ["itm_s1s2s3s4s5", "itm_s6s7s8s9s0"]}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 5, "operations": [
+			{"op": "caption.from_transcript", "args": {"clip_item_id": "itm_m1n2p3q4r5", "track_id": "trk_a1b2c3d4e5", "new_ids": ["itm_c1c2c3c4c5"]}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 6, "operations": [
+			{"op": "caption.from_transcript", "args": {"clip_item_id": "itm_s1s2s3s4s5", "track_id": "trk_a1b2c3d4e5", "new_ids": ["itm_c6c7c8c9c0"]}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 7, "operations": [
+			{"op": "caption.set_style", "args": {"item_id": "itm_c1c2c3c4c5", "style": {"size": 80, "highlight": "word"}}},
+			{"op": "caption.set_style", "args": {"item_id": "itm_c6c7c8c9c0", "style": {"size": 80, "highlight": "word"}}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 8, "operations": [
+			{"op": "item.split", "args": {"item_id": "itm_s6s7s8s9s0", "at": "3.5s", "new_id": "itm_c8d9e1f2g3"}},
+			{"op": "item.delete", "args": {"item_ids": ["itm_c8d9e1f2g3"]}}]}},
+		{"call": "ProjectGet", "args": {"project_id": "prj_7k2m9x4q1b", "detail": "concise"}},
+		{"call": "Lint", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "JobStart", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "export", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:2", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:2", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:2", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:2", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:2", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:2", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:2", "wait_ms": 25000}},
+		{"call": "TemplateList", "args": {}},
+		{"call": "TemplateInstantiate", "args": {"template_id": "$template:0", "name": "Quote card", "id": "prj_6t4y2w8j1m", "fill": {
+			"quote": {"text": "Edit with an agent."}, "author": {"text": "Vukem Video"}}}},
+		{"call": "JobStart", "args": {"project_id": "prj_6t4y2w8j1m", "kind": "export", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:3", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:3", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:3", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:3", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:3", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:3", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:3", "wait_ms": 25000}},
+		{"call": "TemplateInstantiate", "args": {"template_id": "$template:1", "name": "Product teaser", "id": "prj_3d5f7h9k2n", "fill": {
+			"shot_1": {"asset_id": "ast_3c5v8n2w6d"}, "music": {"asset_id": "ast_3c5v8n2w6d"}, "shot_2": {"asset_id": "ast_3c5v8n2w6d", "source_in": "5s"},
+			"headline": {"text": "Meet the new editor"}, "call_to_action": {"text": "Try it today"}}}},
+		{"call": "JobStart", "args": {"project_id": "prj_3d5f7h9k2n", "kind": "export", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:4", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:4", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:4", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:4", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:4", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:4", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:4", "wait_ms": 25000}},
+		{"call": "TemplateInstantiate", "args": {"template_id": "$template:2", "name": "Vertical cut", "id": "prj_8c4v6x2z5b", "fill": {
+			"clip": {"asset_id": "ast_3c5v8n2w6d"},
+			"subtitles": {"words": [{"text": "Hello", "start": "0.1s", "duration": "0.3s"}, {"text": "brave", "start": "0.4s", "duration": "0.3s"}, {"text": "new", "start": "1.1s", "duration": "0.3s"}, {"text": "world", "start": "1.4s", "duration": "0.5s"}]}}}},
+		{"call": "JobStart", "args": {"project_id": "prj_8c4v6x2z5b", "kind": "export", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:5", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:5", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:5", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:5", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:5", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:5", "wait_ms": 25000}, "settles": true},
+		{"call": "JobGet", "args": {"job_id": "$job:5", "wait_ms": 25000}}
+	]
+}

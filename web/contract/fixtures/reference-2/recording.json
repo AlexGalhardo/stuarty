@@ -1,0 +1,12 @@
+{
+	"note": "The text the talking-head recording of reference scenario 2 is generated from: no media file is committed. The test renders a 16 s clip whose audio is a tone with the pauses below, and the transcription provider of the test returns the words with these fixed timings.",
+	"size": "360x640",
+	"seconds": 16,
+	"pauses_ms": [[700, 1100], [3000, 3600]],
+	"words": [
+		{"text": "hello", "start_ms": 100, "end_ms": 400},
+		{"text": "brave", "start_ms": 400, "end_ms": 700},
+		{"text": "new", "start_ms": 1100, "end_ms": 1400},
+		{"text": "world", "start_ms": 1400, "end_ms": 1900}
+	]
+}

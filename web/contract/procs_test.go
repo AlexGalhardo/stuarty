@@ -299,6 +299,14 @@ func (p *procEnv) writeFixture(t *testing.T, name string) string {
 		acodec = "pcm_s16le"
 	}
 
+	var tail []string
+
+	if name == "talk" {
+		// The recording of reference scenario 2, rendered from the committed text.
+		size, seconds, audio = talkingHead(t)
+		tail = []string{"-movflags", "+faststart"}
+	}
+
 	args := []string{
 		"-v",
 		"error",
@@ -315,9 +323,9 @@ func (p *procEnv) writeFixture(t *testing.T, name string) string {
 		"-c:a",
 		acodec,
 		"-shortest",
-		"-y",
-		path,
 	}
+	args = append(args, tail...)
+	args = append(args, "-y", path)
 
 	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
 	defer cancel()
