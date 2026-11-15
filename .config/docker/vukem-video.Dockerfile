@@ -10,7 +10,7 @@
 #   docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data vukem-video
 #
 # No web server runs here: the Go binary serves HTTP. The product bundles and
-# links no GPL component: .config/ffmpeg.env pins the BtbN lgpl build (ADR-0011);
+# links no GPL component: .config/ffmpeg.env pins the FFmpeg, the BtbN lgpl build or the own one (ADR-0011);
 # the packages of the Debian base are listed with their licences.
 ARG BUN_IMAGE=oven/bun:1.4.4-alpine
 ARG GO_IMAGE=golang:1.27.4@sha256:5e8afd493a7124a8586e134d9b532731161d4b9becf9dee5a5956b107426f93d
@@ -53,24 +53,42 @@ RUN if git -c safe.directory=/src status --porcelain >/dev/null 2>&1; then \
 		[ "$got" = "vukem-video v$VERSION" ] || { echo "version stamp: got [$got], want [vukem-video v$VERSION]" >&2; exit 1; }; \
 	fi
 
-# The pinned FFmpeg, downloaded by exact URL and verified by SHA-256.
+# The pinned FFmpeg, downloaded by exact URL and verified by SHA-256. FFMPEG_SOURCE
+# chooses the pin: btbn (the BtbN lgpl build, through ALPHA) or own (the build of
+# .github/workflows/ffmpeg-build.yml, D-017); empty takes the value of .config/ffmpeg.env.
+# docker build --build-arg FFMPEG_SOURCE=own ...
 FROM --platform=$BUILDPLATFORM ${RUNTIME_IMAGE} AS ffmpeg
 ARG TARGETARCH
+ARG FFMPEG_SOURCE=
 COPY .config/ffmpeg.env /tmp/ffmpeg.env
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends ca-certificates curl xz-utils \
 	&& rm -rf /var/lib/apt/lists/* \
+	&& want="$FFMPEG_SOURCE" \
 	&& . /tmp/ffmpeg.env \
-	&& case "$TARGETARCH" in \
-		amd64) asset="$FFMPEG_ASSET_LINUX_AMD64"; sum="$FFMPEG_SHA256_LINUX_AMD64" ;; \
-		arm64) asset="$FFMPEG_ASSET_LINUX_ARM64"; sum="$FFMPEG_SHA256_LINUX_ARM64" ;; \
-		*) echo "unsupported architecture: $TARGETARCH" >&2; exit 1 ;; \
+	&& source="${want:-$FFMPEG_SOURCE}" \
+	&& case "$source-$TARGETARCH" in \
+		btbn-amd64) asset="$FFMPEG_ASSET_LINUX_AMD64"; sum="$FFMPEG_SHA256_LINUX_AMD64" ;; \
+		btbn-arm64) asset="$FFMPEG_ASSET_LINUX_ARM64"; sum="$FFMPEG_SHA256_LINUX_ARM64" ;; \
+		own-amd64) asset="$FFMPEG_OWN_ASSET_LINUX_AMD64"; sum="$FFMPEG_OWN_SHA256_LINUX_AMD64" ;; \
+		own-arm64) asset="$FFMPEG_OWN_ASSET_LINUX_ARM64"; sum="$FFMPEG_OWN_SHA256_LINUX_ARM64" ;; \
+		*) echo "unsupported FFMPEG_SOURCE-architecture: $source-$TARGETARCH" >&2; exit 1 ;; \
 	esac \
-	&& curl -fsSL -o /tmp/ffmpeg.tar.xz "https://github.com/BtbN/FFmpeg-Builds/releases/download/${FFMPEG_RELEASE_TAG}/${asset}" \
+	&& if [ "$source" = own ]; then \
+		[ -n "$FFMPEG_OWN_TAG" ] && [ -n "$asset" ] || { echo "no own FFmpeg build is pinned in .config/ffmpeg.env" >&2; exit 1; }; \
+		url="https://github.com/AlexGalhardo/vukem-video/releases/download/${FFMPEG_OWN_TAG}/${asset}"; \
+	else url="https://github.com/BtbN/FFmpeg-Builds/releases/download/${FFMPEG_RELEASE_TAG}/${asset}"; fi \
+	&& curl -fsSL -o /tmp/ffmpeg.tar.xz "$url" \
 	&& echo "${sum}  /tmp/ffmpeg.tar.xz" | sha256sum -c - \
 	&& mkdir -p /opt/ffmpeg \
 	&& tar -xJf /tmp/ffmpeg.tar.xz -C /opt/ffmpeg --strip-components=1 \
-	&& test -x /opt/ffmpeg/bin/ffmpeg && test -x /opt/ffmpeg/bin/ffprobe && test -s /opt/ffmpeg/LICENSE.txt
+	&& test -x /opt/ffmpeg/bin/ffmpeg && test -x /opt/ffmpeg/bin/ffprobe && test -s /opt/ffmpeg/LICENSE.txt \
+	&& echo "$source" > /opt/ffmpeg/pin-kind.txt \
+	&& if [ "$source" = own ]; then test -s /opt/ffmpeg/SOURCE.txt; \
+	else printf "%s\n%s\n%s\n" \
+		"FFmpeg ${FFMPEG_VERSION} (LGPL build) from https://github.com/BtbN/FFmpeg-Builds/releases/tag/${FFMPEG_RELEASE_TAG}" \
+		"Build scripts: https://github.com/BtbN/FFmpeg-Builds/tree/${FFMPEG_BUILDS_COMMIT}" \
+		"Corresponding FFmpeg source: ${FFMPEG_SOURCE_URL}" > /opt/ffmpeg/SOURCE.txt; fi
 
 FROM ${RUNTIME_IMAGE}
 ARG VERSION=devel
@@ -98,18 +116,19 @@ RUN apt-get update \
 
 COPY --from=ffmpeg /opt/ffmpeg/bin/ffmpeg /opt/ffmpeg/bin/ffprobe /opt/ffmpeg/bin/
 COPY --from=ffmpeg /opt/ffmpeg/LICENSE.txt /usr/share/doc/vukem-video/ffmpeg/LICENSE.txt
-COPY .config/ffmpeg.env /tmp/ffmpeg.env
+COPY --from=ffmpeg /opt/ffmpeg/SOURCE.txt /usr/share/doc/vukem-video/ffmpeg/SOURCE.txt
+COPY --from=ffmpeg /opt/ffmpeg/pin-kind.txt /tmp/ffmpeg-pin-kind.txt
 # The licence obligations of the LGPL build (ADR-0011 item 2): the licence text,
-# the configure line and where the corresponding source is.
-RUN . /tmp/ffmpeg.env \
-	&& /opt/ffmpeg/bin/ffmpeg -version | sed -n "s/^configuration: //p" > /usr/share/doc/vukem-video/ffmpeg/configure.txt \
+# the configure line and where the corresponding source is (SOURCE.txt, above).
+# The configure line is read from the binary that runs in this stage: it must be
+# LGPL, and the own build (D-017) must not have OpenH264 compiled in.
+RUN /opt/ffmpeg/bin/ffmpeg -version | sed -n "s/^configuration: //p" > /usr/share/doc/vukem-video/ffmpeg/configure.txt \
 	&& test -s /usr/share/doc/vukem-video/ffmpeg/configure.txt \
 	&& ! grep -q -e "--enable-gpl" -e "--enable-nonfree" /usr/share/doc/vukem-video/ffmpeg/configure.txt \
-	&& printf "%s\n%s\n%s\n" \
-		"FFmpeg ${FFMPEG_VERSION} (LGPL build) from https://github.com/BtbN/FFmpeg-Builds/releases/tag/${FFMPEG_RELEASE_TAG}" \
-		"Build scripts: https://github.com/BtbN/FFmpeg-Builds/tree/${FFMPEG_BUILDS_COMMIT}" \
-		"Corresponding FFmpeg source: ${FFMPEG_SOURCE_URL}" > /usr/share/doc/vukem-video/ffmpeg/SOURCE.txt \
-	&& rm /tmp/ffmpeg.env
+	&& if [ "$(cat /tmp/ffmpeg-pin-kind.txt)" = own ]; then \
+		! grep -q -e "--enable-libopenh264" /usr/share/doc/vukem-video/ffmpeg/configure.txt; \
+	fi \
+	&& rm /tmp/ffmpeg-pin-kind.txt
 
 COPY LICENSE.md THIRD_PARTY_NOTICES.md /usr/share/doc/vukem-video/
 COPY licenses/ /usr/share/doc/vukem-video/licenses/
