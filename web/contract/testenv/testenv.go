@@ -28,6 +28,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/engine/frame"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/pathguard"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
@@ -55,6 +56,12 @@ type Options struct {
 	Frames bool
 	// Limits are the ceilings of the service; zero fields keep the defaults.
 	Limits service.Limits
+	// Transcriber is the transcription provider of the transcribe job; nil
+	// leaves transcription unavailable. StubTranscriber needs no helper.
+	Transcriber transcribe.Provider
+	// DurationMS is the length of every imported file as the fake ingest
+	// reports it; default 2000.
+	DurationMS int64
 }
 
 // Env is a service with a worker running behind it.
@@ -64,7 +71,8 @@ type Env struct {
 	// Store is the SQLite store under the service.
 	Store *store.Store
 	// Files is a directory for the media files of the test.
-	Files string
+	Files      string
+	durationMS int64
 	// Ingests counts the calls of the fake ingest.
 	Ingests atomic.Int64
 
@@ -75,7 +83,10 @@ type Env struct {
 func New(tb testing.TB, o Options) *Env {
 	tb.Helper()
 
-	e := &Env{Files: tb.TempDir()}
+	e := &Env{Files: tb.TempDir(), durationMS: o.DurationMS}
+	if e.durationMS == 0 {
+		e.durationMS = 2000
+	}
 
 	dir, err := workspace.Resolve(func(string) string { return filepath.Join(tb.TempDir(), "ws") })
 	if err != nil {
@@ -130,11 +141,12 @@ func New(tb testing.TB, o Options) *Env {
 
 	svc, err := service.New(service.Options{
 		Store: st, Registry: command.Default(), Now: o.Clock, NewIDs: e.newID,
-		Workspace: string(dir),
-		Limits:    o.Limits,
-		Media:     media,
-		Exporter:  exporter,
-		Enqueue:   jobs.Dispatcher{Queue: q},
+		Workspace:   string(dir),
+		Limits:      o.Limits,
+		Transcriber: o.Transcriber,
+		Media:       media,
+		Exporter:    exporter,
+		Enqueue:     jobs.Dispatcher{Queue: q},
 	})
 	if err != nil {
 		tb.Fatal(err)
@@ -239,17 +251,17 @@ func (l *lazyRunner) Cancel(ctx context.Context, id string) error { return l.get
 func (e *Env) fakeIngest(_ context.Context, in ingest.Input) (*ingest.Result, error) {
 	e.Ingests.Add(1)
 
-	return fakeResult(string(e.Dir), in)
+	return fakeResult(string(e.Dir), in, e.durationMS)
 }
 
-func fakeResult(ws string, in ingest.Input) (*ingest.Result, error) {
+func fakeResult(ws string, in ingest.Input, durationMS int64) (*ingest.Result, error) {
 	dir := filepath.Join(ws, "artifacts", in.Hash)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}
 
 	sum := &ingest.Summary{
-		Version: 1, Kind: ingest.KindVideo, Container: "mov,mp4", SizeBytes: 1000, DurationMS: 2000,
+		Version: 1, Kind: ingest.KindVideo, Container: "mov,mp4", SizeBytes: 1000, DurationMS: durationMS,
 		Video: &ingest.VideoFacts{
 			Codec: "h264", DisplayWidth: 320, DisplayHeight: 240, NominalFPS: ingest.Rational{Num: 30, Den: 1},
 		},
@@ -261,9 +273,12 @@ func fakeResult(ws string, in ingest.Input) (*ingest.Result, error) {
 		return nil, err
 	}
 
-	silence := `{"version":1,"sample_rate":48000,"sample_count":96000,"min_duration_ms":150,"sets":[` +
+	samples := durationMS * 48
+
+	silence := fmt.Sprintf(`{"version":1,"sample_rate":48000,"sample_count":%d,"min_duration_ms":150,"sets":[`, samples) +
 		`{"threshold_db":-35,"ranges":[{"start":24000,"end":48000}]}]}`
-	loud := `{"version":1,"integrated_lufs":-17.2,"lra_lu":5.1,"true_peak_dbtp":-1.4,"silent":false,"sample_count":96000}`
+	loud := fmt.Sprintf(
+		`{"version":1,"integrated_lufs":-17.2,"lra_lu":5.1,"true_peak_dbtp":-1.4,"silent":false,"sample_count":%d}`, samples)
 
 	files := []struct {
 		kind, variant, ext, body string
@@ -286,7 +301,7 @@ func fakeResult(ws string, in ingest.Input) (*ingest.Result, error) {
 	res := &ingest.Result{
 		Kind: ingest.KindVideo, Summary: sum, TimingsMS: map[string]int64{"probe": 1},
 		Facts: ingest.Facts{
-			FrameRate: ingest.Rational{Num: 30, Den: 1}, FrameCount: 60, SampleCount: 96000, Width: 320, Height: 240,
+			FrameRate: ingest.Rational{Num: 30, Den: 1}, FrameCount: int(durationMS * 30 / 1000), SampleCount: samples, Width: 320, Height: 240,
 			HasAudio: true,
 		},
 	}
