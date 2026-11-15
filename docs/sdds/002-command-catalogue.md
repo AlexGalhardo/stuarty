@@ -175,6 +175,8 @@ Three commands depend on data the core cannot compute because it needs media: si
 
 A caller may also supply `resolved` itself, which is how golden tests run without media.
 
+**OpenTimelineIO import (BETA, RF-065).** `core/otio` import adds no command and no operation: it returns a batch of existing operations (`track.add`, `clip.add`, `audio.add`, `item.rename`, `item.set_transition`) that the caller applies like any other batch, so conflicts, limits and undo behave as everywhere else. The file is never opened by the core (SDD-001 section 9).
+
 ### A.10 Determinism and limits
 
 1. Maps are iterated in sorted key order wherever the order affects the result.

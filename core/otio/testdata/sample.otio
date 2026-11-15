@@ -1,0 +1,242 @@
+{
+  "OTIO_SCHEMA": "Timeline.1",
+  "metadata": {},
+  "name": "Demo",
+  "tracks": {
+    "OTIO_SCHEMA": "Stack.1",
+    "children": [
+      {
+        "OTIO_SCHEMA": "Track.1",
+        "children": [
+          {
+            "OTIO_SCHEMA": "Gap.1",
+            "name": "",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 15
+              },
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              }
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "effects": [],
+            "markers": [],
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "metadata": {},
+              "name": "",
+              "target_url": "music.wav"
+            },
+            "metadata": {},
+            "name": "",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 150
+              },
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              }
+            }
+          }
+        ],
+        "kind": "Audio",
+        "metadata": {},
+        "name": "Music"
+      },
+      {
+        "OTIO_SCHEMA": "Track.1",
+        "children": [
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "effects": [],
+            "markers": [
+              {
+                "OTIO_SCHEMA": "Marker.2",
+                "color": "GREEN",
+                "marked_range": {
+                  "OTIO_SCHEMA": "TimeRange.1",
+                  "duration": {
+                    "OTIO_SCHEMA": "RationalTime.1",
+                    "rate": 30,
+                    "value": 0
+                  },
+                  "start_time": {
+                    "OTIO_SCHEMA": "RationalTime.1",
+                    "rate": 30,
+                    "value": 40
+                  }
+                },
+                "metadata": {},
+                "name": "hit"
+              }
+            ],
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "metadata": {},
+              "name": "",
+              "target_url": "clips/a.mp4"
+            },
+            "metadata": {},
+            "name": "intro",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 90
+              },
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              }
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Transition.1",
+            "in_offset": {
+              "OTIO_SCHEMA": "RationalTime.1",
+              "rate": 30,
+              "value": 12
+            },
+            "metadata": {},
+            "name": "",
+            "out_offset": {
+              "OTIO_SCHEMA": "RationalTime.1",
+              "rate": 30,
+              "value": 0
+            },
+            "transition_type": "SMPTE_Dissolve"
+          },
+          {
+            "OTIO_SCHEMA": "Gap.1",
+            "name": "",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              },
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              }
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Transition.1",
+            "in_offset": {
+              "OTIO_SCHEMA": "RationalTime.1",
+              "rate": 30,
+              "value": 0
+            },
+            "metadata": {},
+            "name": "",
+            "out_offset": {
+              "OTIO_SCHEMA": "RationalTime.1",
+              "rate": 30,
+              "value": 8
+            },
+            "transition_type": "SMPTE_Dissolve"
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "effects": [],
+            "markers": [],
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "metadata": {},
+              "name": "",
+              "target_url": "clips/a.mp4"
+            },
+            "metadata": {},
+            "name": "",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 60
+              },
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 300
+              }
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Gap.1",
+            "name": "",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 20
+              },
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              }
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "effects": [],
+            "markers": [],
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "metadata": {},
+              "name": "",
+              "target_url": "logo.png"
+            },
+            "metadata": {},
+            "name": "",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              },
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              }
+            }
+          }
+        ],
+        "kind": "Video",
+        "metadata": {},
+        "name": "Video"
+      },
+      {
+        "OTIO_SCHEMA": "Track.1",
+        "children": [],
+        "kind": "Video",
+        "metadata": {},
+        "name": "Top"
+      }
+    ],
+    "metadata": {},
+    "name": "tracks"
+  }
+}

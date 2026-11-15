@@ -1,6 +1,6 @@
 # SDD-001: Timeline document schema
 
-- Status: Frozen (2026-11-14, ROADMAP task P1-SCH-003). Validators frozen for ALPHA (ROADMAP task P2-SCH-001): every code of section 4 has an invalid example under `core/timeline/testdata/invalid/`. BETA additions (ROADMAP task P3-SCH-001): filters and blur, markers, animated images; user fonts (P3-SCH-002). No `schema_version` bump.
+- Status: Frozen (2026-11-14, ROADMAP task P1-SCH-003). Validators frozen for ALPHA (ROADMAP task P2-SCH-001): every code of section 4 has an invalid example under `core/timeline/testdata/invalid/`. BETA additions (ROADMAP task P3-SCH-001): filters and blur, markers, animated images; user fonts (P3-SCH-002). No `schema_version` bump. Section 9 (P3-ENG-004) defines the OpenTimelineIO exchange.
 - Depends on: ADR-0004 (time), ADR-0005 (timeline model), ADR-0009 (persistence), ADR-0012 (text), ADR-0014 (JSON Schema), ADR-0022 (templates)
 - Implements: RF-002, RF-010 to RF-012, RF-015, RF-020 to RF-026, RF-030 to RF-032, RF-027, RF-028, RF-035, RF-040 to RF-044, RF-050, RF-053, NFR-012
 - Owner area: senior-a (command core and schema)
@@ -419,3 +419,24 @@ The implementation of this SDD is complete when:
 4. `OrderBetween` has a property test: for 10,000 random pairs `a < b` the result `c` satisfies `a < c < b`, and 1,000 successive insertions at the same position keep producing valid, distinct strings.
 5. The generated schema file exists, is valid JSON Schema 2020-12 and accepts and rejects the same examples as `Validate` for the `V_SHAPE` class.
 6. `go vet ./core/...` reports nothing and `core/` imports no package outside the standard library except those listed in ADR-0001.
+
+## 9. OpenTimelineIO exchange
+
+BETA (RF-065, ROADMAP task P3-ENG-004). `core/otio` converts between this document and an OpenTimelineIO (`.otio`) file. It is pure Go over bytes: it imports neither `os` nor `net`, so it cannot open a file or a connection.
+
+**Export** (`otio.Export(doc) (bytes, []Lost, error)`). The output is deterministic JSON (keys sorted, two-space indent):
+
+| Document | OTIO |
+| --- | --- |
+| project `name` | `Timeline.1` `name`; the tracks are one `Stack.1` |
+| track | `Track.1`, `kind` `Video` (visual) or `Audio`, `name`; the stack lists tracks bottom first (descending `order`) |
+| `clip`, `audio` item | `Clip.2` with `name`, `source_range` (`source_in` and `duration` in project frames at the project rate; an image starts at 0) and an `ExternalReference.1` whose `target_url` is the asset `name` (a relative name, never a URL) |
+| time between items | `Gap.1` with its `source_range` |
+| `fade` in or out | `Transition.1` of type `SMPTE_Dissolve` next to the clip: `in` writes `in_offset` 0 and `out_offset` the duration, `out` the reverse |
+| `markers` | `Marker.2` on the clip: `name` the label, `marked_range` start at `source_in + frame`, duration 0 |
+
+Ids, hashes and `order` strings are not written. Everything the file cannot carry is returned in `[]Lost` (`id`, `name`, `feature`) and never dropped silently: `text`, `caption` and `shape` items (their time stays as a gap), `keyframes`, `speed`, colour adjustment, filter and blur, framing (`fit`, `crop`), transform and opacity, audio settings (`volume`, `audio_muted`, fades), template slot, transitions other than `fade`, a hidden track, a muted track, a caption style, and a clip whose asset is the placeholder.
+
+**Import** (`otio.Parse(bytes)` then `Import.Operations(assets, newID)`). Import returns a batch of command operations, not a document, so it goes through `Apply` and its undo rules. `Parse` reads `Timeline.1` with a `Stack.1`; each `Track.1` of kind `Video` or `Audio` becomes `track.add` (bottom track first, each at `position: "top"`), each `Clip.2` with a `source_range` becomes `clip.add` or `audio.add` (and `item.rename` for its name), `Gap.1` advances the cursor, and a `SMPTE_Dissolve` becomes `item.set_transition` with `kind: "fade"` on the clip after it (`out_offset`) and on the clip before it (`in_offset`). Times convert to the file's frame rate, taken from the first `source_range`, which must be an integer rate or n/1001 (the caller creates the project at `Import.FPS`). Names are cut to 60 (track) and 120 (item) characters. What the batch cannot carry is listed in `Import.Lost`: nested stacks, tracks of another kind, effects, markers (no command writes markers until ROADMAP task P3-ENG-002), transitions of another type, clips with no usable `source_range`, and a clip whose reference has no asset in `assets`. Nesting deeper than 64 levels is an error (`ErrInvalid`).
+
+**Media references are never opened** (T-10, T-11, SDD-007 §7.2). Each distinct `target_url` is returned in `Import.Media` as `candidate` or `unresolved`. It is `unresolved`, with a reason, when it is empty, has a control character, begins with two backslashes, `//` or `\??\`, or has a URL scheme of two or more letters (`http:`, `file:`, `smb:`, `data:`, `concat:`); a single-letter drive (`C:\`) is not a scheme. A `candidate` is a local path returned to the caller, which must pass it through the path rules of `MediaImport` before importing the file and then supplies the asset id in `assets`. Nothing in `core/otio` fetches or opens either kind.
