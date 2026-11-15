@@ -209,6 +209,7 @@ export function createSync(deps: SyncDeps): Sync {
 			}
 			writer.replaceDocument(result.revision, result.document, result.state);
 			loadedOnce = true;
+			writer.setLoadError(null);
 			writer.setStatus("ready");
 			stream.open(result.revision);
 			refreshEndFrame(result.revision);
@@ -217,9 +218,15 @@ export function createSync(deps: SyncDeps): Sync {
 			if (error instanceof ApiError && error.code === "E_UNAUTHORIZED") {
 				deps.onUnauthorized?.();
 			}
-			writer.setStatus(
-				error instanceof ApiError && error.isNetwork ? "offline" : "failed",
-			);
+			const network = error instanceof ApiError && error.isNetwork;
+			if (error instanceof ApiError && !network) {
+				writer.setLoadError({
+					code: error.code,
+					message: error.message,
+					...(error.hint === undefined ? {} : { hint: error.hint }),
+				});
+			}
+			writer.setStatus(network ? "offline" : "failed");
 		}
 	}
 
