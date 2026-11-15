@@ -19,6 +19,9 @@ import {
 	moveOperations,
 	nudgeOperations,
 	presetOperations,
+	projectRenameOperations,
+	settingsFpsOperations,
+	settingsSetOperations,
 	splitOperations,
 	textAddOperations,
 	textSetOperations,
@@ -511,5 +514,25 @@ describe("track builders (SDD-002 C.6 to C.10)", () => {
 		expect(
 			trackCaptionStyleOperations("trk_a", { size: 90 }, true)[0]?.args,
 		).toEqual({ track_id: "trk_a", style: { size: 90 }, replace: true });
+	});
+});
+
+describe("project builders (SDD-002 C.1 to C.3)", () => {
+	test("settings.set sends only the fields given", () => {
+		expect(settingsSetOperations({ width: 1080, height: 1080 })).toEqual([
+			{ op: "settings.set", args: { width: 1080, height: 1080 } },
+		]);
+	});
+
+	test("the frame rate goes as a string", () => {
+		expect(settingsFpsOperations("30000/1001")).toEqual([
+			{ op: "settings.set_fps", args: { fps: "30000/1001" } },
+		]);
+	});
+
+	test("rename sends the name as typed", () => {
+		expect(projectRenameOperations(" A ")).toEqual([
+			{ op: "project.rename", args: { name: " A " } },
+		]);
 	});
 });

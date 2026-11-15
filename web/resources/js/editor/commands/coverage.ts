@@ -61,6 +61,9 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.text": ["text.set"],
 	// The palette runs any command of the registry with operations built from
 	// its schema form, so it has no builder to check (rule 2 of section 9.3).
+	"topbar.rename": ["project.rename"],
+	"inspector.settings": ["settings.set"],
+	"inspector.fps": ["settings.set_fps"],
 	"timeline.add_track": ["track.add"],
 	"timeline.track_update": ["track.update"],
 	"inspector.track_update": ["track.update"],
@@ -206,9 +209,18 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.keyframe_value", phase: "A" },
 		palette,
 	],
-	"project.rename": [palette],
-	"settings.set": [palette],
-	"settings.set_fps": [palette],
+	"project.rename": [
+		{ kind: "toolbar", action: "topbar.rename", phase: "A" },
+		palette,
+	],
+	"settings.set": [
+		{ kind: "inspector", action: "inspector.settings", phase: "A" },
+		palette,
+	],
+	"settings.set_fps": [
+		{ kind: "inspector", action: "inspector.fps", phase: "A" },
+		palette,
+	],
 	"shape.add": [palette],
 	"shape.set": [palette],
 	"slot.fill": [palette],
