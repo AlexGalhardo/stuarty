@@ -20,7 +20,16 @@ const INERT_HOSTS = new Set([
 	"keepachangelog.com",
 	"github.com",
 	"127.0.0.1",
+	"localhost",
+	// Example names of the self-hosting pages (a domain you would own); text, never loaded.
+	"video.example.com",
+	"collector.example.com",
+	"www.conventionalcommits.org",
+	"caddyserver.com",
+	// The OIDC issuer that the cosign commands of the verification page pin; it is text, never loaded.
+	"token.actions.githubusercontent.com",
 ]);
+
 
 /** Attributes whose value the browser fetches by itself when the page loads. */
 const LOADING =
