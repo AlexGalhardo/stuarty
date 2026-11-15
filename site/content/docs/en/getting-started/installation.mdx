@@ -3,13 +3,13 @@ title: "Installation"
 description: "Where to get Vukem Video, what each download is, and how to check it before you run it."
 ---
 
-<Callout type="warning" title="Prototype phase">
-The first editor release is `v0.2.0`. Until it ships, the repository is the only place to get the program, and some of what is described here is specified and not working yet.
+<Callout type="warning" title="ALPHA">
+Vukem Video is in its ALPHA phase: the editor, the CLI and the MCP server work, and new releases (`v0.N.0`) add features about every 90 commits. Check the [changelog](/changelog) for what a release changes.
 </Callout>
 
 ## You will learn
 
-- which file to download for your system;
+- which file to download for your system, or how to run the container image;
 - how to start the server and where it listens;
 - how to check a download before you run it.
 
@@ -23,6 +23,17 @@ Vukem Video runs only on your computer. You install one program, `vukem-video`. 
 2. Install it. The installer adds `vukem-video` to your path.
 3. Run `vukem-video version`. It prints the version, which tells you the program is installed.
 4. Run `vukem-video serve`. It listens on `127.0.0.1:7878` and nowhere else.
+
+### The container image
+
+Every stable release also publishes a multi-architecture image with the pinned LGPL FFmpeg inside, on two registries with the same digest: `ghcr.io/alexgalhardo/vukem-video` and `alexgalhardo/vukem-video` on Docker Hub. The tags are `X.Y.Z`, `X.Y` and `latest`. The workspace lives in the `/data` volume, so keep it in a named volume or a folder of your choice:
+
+```bash
+docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data \
+  ghcr.io/alexgalhardo/vukem-video:X.Y.Z
+```
+
+The container runs as the user `app` (uid 10001) and sends no data anywhere by default. `docker run --rm ghcr.io/alexgalhardo/vukem-video:X.Y.Z version` prints the version.
 
 To build from source you need Go (the version in `go.mod`) and Bun for the front end.
 
