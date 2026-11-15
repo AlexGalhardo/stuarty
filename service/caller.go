@@ -87,6 +87,9 @@ var Scopes = map[string]string{
 	"ViewFrame":           ScopeRead,
 	"ViewSheet":           ScopeRead,
 	"OpenFile":            ScopeRead,
+	"KeyCreate":           ScopeRead,
+	"KeyList":             ScopeRead,
+	"KeyRevoke":           ScopeRead,
 }
 
 // authorize checks the caller first, as every method does: a missing caller

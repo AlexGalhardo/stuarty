@@ -77,6 +77,11 @@ var parity = []row{
 	// no MCP tool (SDD-007 section 6.8, SDD-003 section 7.1).
 	{method: "ToolsInstall", command: "tools:install", route: "POST /system/tools/install"},
 	{method: "ToolsStatus", route: "GET /system/tools", httpOnly: true},
+	// Key management is for a person who logged in, in network mode: no MCP tool
+	// and no CLI command (SDD-000 section 1, SDD-007 section 4.2).
+	{method: "KeyCreate", route: "POST /keys", httpOnly: true},
+	{method: "KeyList", route: "GET /keys", httpOnly: true},
+	{method: "KeyRevoke", route: "DELETE /keys/{}", httpOnly: true},
 	{method: "Events", command: "events", route: "GET /projects/{}/events", noMethod: true},
 }
 

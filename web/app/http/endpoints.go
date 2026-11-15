@@ -310,6 +310,18 @@ var Endpoints = []Endpoint{
 		Summary: "Exchange a launch code for a browser session",
 	},
 	{
+		ID: "keys.create", Method: http.MethodPost, Path: "/keys", Scope: service.ScopeRead, Service: "KeyCreate",
+		Status: 201, Summary: "Create an API key (a logged-in session only; network mode)",
+	},
+	{
+		ID: "keys.list", Method: http.MethodGet, Path: "/keys", Scope: service.ScopeRead, Service: "KeyList",
+		Status: 200, Summary: "List your API keys (a logged-in session only; network mode)",
+	},
+	{
+		ID: "keys.revoke", Method: http.MethodDelete, Path: "/keys/{key_id}", Scope: service.ScopeRead,
+		Service: "KeyRevoke", Status: 200, Summary: "Revoke an API key (a logged-in session only; network mode)",
+	},
+	{
 		ID: "auth.login", Method: http.MethodPost, Path: "/auth/login", Root: true, Status: 200,
 		Summary: "Log in with an email and a password (network mode)",
 	},

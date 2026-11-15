@@ -545,3 +545,25 @@ func (*Client) OpenFile(context.Context, service.FileRef) (*service.File, error)
 		Hint:    "read the file from its URL, such as /projects/{id}/media/{asset_id}/proxy",
 	}
 }
+
+// KeyCreate implements service.Service. The server refuses it for a key, which
+// is the only credential a remote client holds; it is here so that the client
+// is a complete Service.
+func (c *Client) KeyCreate(ctx context.Context, req service.KeyCreateRequest) (*service.KeyCreateResult, error) {
+	return post[service.KeyCreateResult](ctx, c, "/keys", req)
+}
+
+// KeyList implements service.Service.
+func (c *Client) KeyList(ctx context.Context, _ service.KeyListRequest) (*service.KeyListResult, error) {
+	return get[service.KeyListResult](ctx, c, "/keys", url.Values{})
+}
+
+// KeyRevoke implements service.Service.
+func (c *Client) KeyRevoke(ctx context.Context, req service.KeyRevokeRequest) (*service.Key, error) {
+	out := new(service.Key)
+	if err := c.do(ctx, http.MethodDelete, "/keys/"+url.PathEscape(req.KeyID), nil, nil, out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}

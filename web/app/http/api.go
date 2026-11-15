@@ -34,7 +34,9 @@ type Deps struct {
 	// Auth is the credential side of network mode: users, the session guard and
 	// the keys. It is required with Network and unused without it.
 	Auth *auth.Network
-	Now  func() time.Time
+	// LoginLimits replaces the limits of the login route; nil is the defaults.
+	LoginLimits *LoginLimits
+	Now         func() time.Time
 	// MCP is the Streamable HTTP handler of the MCP server, mounted at POST /mcp
 	// behind the guard and the authentication; nil mounts nothing.
 	MCP http.Handler
@@ -85,7 +87,7 @@ func Routes(d *Deps) func(r *router.Router, app *vukem.App) error {
 			r.Use(d.Auth.Sessions.Middleware())
 		}
 
-		h := &apiHandler{Deps: *d, app: app, r: r, loginThrottle: newLoginThrottles()}
+		h := &apiHandler{Deps: *d, app: app, r: r, loginThrottle: newLoginThrottles(d.LoginLimits)}
 
 		r.Use(h.authenticate)
 		h.registerAll()
@@ -189,8 +191,24 @@ func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request,
 		})
 	}
 
-	if r.Header.Get("Authorization") != "" {
-		deny() // keys arrive with P2-SRV-013; a header that is not valid is never a fall back to the cookie
+	// A header that is not a valid key is never a fall back to the cookie (3.7).
+	if header := r.Header.Get("Authorization"); header != "" {
+		secret, ok := auth.Bearer(header)
+		if !ok {
+			deny()
+			return
+		}
+
+		caller, err := h.Auth.KeyCaller(r.Context(), secret)
+
+		switch {
+		case errors.Is(err, auth.ErrBadKey):
+			deny()
+		case err != nil:
+			web.Fail(w, r, &service.Error{Code: command.CodeInternal, Message: "the key could not be checked."})
+		default:
+			next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), caller)))
+		}
 
 		return
 	}

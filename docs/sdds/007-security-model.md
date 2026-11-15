@@ -375,7 +375,7 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | --- | --- | --- | --- |
 | Handshake | `GET /api/v1/handshake` | none, loopback only (3.8) | Local mode only |
 | Launch code | `GET /auth/launch`, `POST /api/v1/system/launch` | code; `admin` bearer | Local mode only (3.4) |
-| Key management | `POST`, `GET`, `DELETE /api/v1/keys` | session of a logged-in user | Network mode only; a key cannot call it |
+| Key management | `POST`, `GET`, `DELETE /api/v1/keys` (`KeyCreate`, `KeyList`, `KeyRevoke`) | session of a logged-in user | Network mode only; a key cannot call it. `service.Scopes` lists them as `read` (every user holds it) and the service requires `Caller.Browser`; in local mode they answer `E_NOT_FOUND`. No MCP tool and no CLI command |
 | User management | CLI `user:create`, `user:passwd`, `token:rotate` | in-process, workspace lock | Not exposed over HTTP or MCP |
 | `TrashEmpty` | `POST /api/v1/trash/empty` | `admin`, **and** a browser cookie session (local mode) or an `admin` key (network mode) | Irreversible. Refused for the local bearer token and absent from the CLI and MCP, so the agent surfaces cannot call it (ADR-0020 item 2). The UI asks the human to type the number of items to delete. Local mode: an agent with a shell can still delete files directly; section 14 |
 | Helper install | CLI `tools:install <name> [--model <model>] [--yes]`, UI button (the two routes of 5.2) | CLI in process; the routes accept a browser session or an `admin` key only | Section 6.8 |

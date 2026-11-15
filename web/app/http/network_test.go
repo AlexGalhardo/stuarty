@@ -14,6 +14,7 @@ import (
 
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/auth/hash"
+	"github.com/AlexGalhardo/vukem/ratelimit"
 	"github.com/AlexGalhardo/vukem/vukemtest"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
@@ -31,6 +32,7 @@ type networkHarness struct {
 	srv  *httptest.Server
 	log  *bytes.Buffer
 	auth *auth.Network
+	st   *store.Store
 	clk  *clock
 }
 
@@ -38,6 +40,20 @@ type networkHarness struct {
 // listener (the TLS one makes r.TLS non-nil, which is what a process that
 // terminates TLS sees).
 func newNetworkHarness(t *testing.T, res config.Resolved, useTLS bool) *networkHarness {
+	t.Helper()
+
+	// Tests log in many times in a few real seconds, which the clock they stub
+	// does not slow down; the throttle tests ask for the defaults.
+	loose := ratelimit.NewMemory(1_000_000, time.Minute)
+
+	return newNetworkHarnessLimits(t, res, useTLS, &httpapi.LoginLimits{
+		PerEmailAndAddress: loose, PerEmail: loose, PerAddress: loose,
+	})
+}
+
+func newNetworkHarnessLimits(
+	t *testing.T, res config.Resolved, useTLS bool, limits *httpapi.LoginLimits,
+) *networkHarness {
 	t.Helper()
 
 	dir, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
@@ -55,11 +71,6 @@ func newNetworkHarness(t *testing.T, res config.Resolved, useTLS bool) *networkH
 	}
 
 	t.Cleanup(func() { _ = st.Close() })
-
-	svc, err := service.New(service.Options{Store: st})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	logs := &bytes.Buffer{}
 
@@ -79,8 +90,13 @@ func newNetworkHarness(t *testing.T, res config.Resolved, useTLS bool) *networkH
 		t.Fatal(err)
 	}
 
+	svc, err := service.New(service.Options{Store: st, Now: now, Keys: netAuth.Keys()})
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	deps := &httpapi.Deps{
-		Service: svc, Registry: command.Default(), Workspace: dir, Network: netw, Auth: netAuth,
+		Service: svc, Registry: command.Default(), Workspace: dir, Network: netw, Auth: netAuth, LoginLimits: limits,
 		Sessions: auth.NewSessions(now), Launch: auth.NewLaunch(now), Now: now,
 	}
 
@@ -88,7 +104,7 @@ func newNetworkHarness(t *testing.T, res config.Resolved, useTLS bool) *networkH
 		return bootstrap.NewWith(deps, opts...)
 	})
 
-	h := &networkHarness{log: logs, auth: netAuth, clk: clk}
+	h := &networkHarness{log: logs, auth: netAuth, clk: clk, st: st}
 	if useTLS {
 		h.srv = httptest.NewTLSServer(app.Handler())
 	} else {
