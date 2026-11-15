@@ -13,6 +13,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **timeline:** Add one invalid example per violation code and valid examples for the ALPHA features (keyframes, transitions, shapes, slots, per-word highlight)
 - **timeline:** Add the `migrate` package with the migration chain, the frozen `versions/v1` fixtures and their manifest
 
+## [0.3.0] - 2026-11-15
+
+### Added
+
+- **ui:** Add the editor API client, edit queue and event stream ([113a1a9](https://github.com/AlexGalhardo/vukem-video/commit/113a1a9aba1eb9e7cca47401bf2c4188fbe1b59e))
+- **ui:** Add the editor read model and its synchronization state machine ([93f411a](https://github.com/AlexGalhardo/vukem-video/commit/93f411a0cbdda120326d1c6cb7092c550177e0b0))
+- **ui:** Add the editor entry, shell, top bar and timeline ([a905c27](https://github.com/AlexGalhardo/vukem-video/commit/a905c27ec7f98d2231f3c9ee9243d864d0caef82))
+- **ui:** Add check-thin-client with rules R1 to R8 and its fixtures ([047549b](https://github.com/AlexGalhardo/vukem-video/commit/047549bde76fe01d9a74e38769a4f2b79d2623e4))
+- **service:** Add the error, the caller and the request types ([e3561e1](https://github.com/AlexGalhardo/vukem-video/commit/e3561e198a2be7a3633314814aa80e64fc6f859f))
+- **service:** Render the project views, lists and history as text ([db831e6](https://github.com/AlexGalhardo/vukem-video/commit/db831e6e8db5adccf1bf410e0ab9b178a767f236))
+- **lint:** Page the report by a limit and leave room for the cursor line ([d016c05](https://github.com/AlexGalhardo/vukem-video/commit/d016c05efb12e858c2e63071ff51ce1e69b31cec))
+- **service:** Add the crash points of the commit path ([1128347](https://github.com/AlexGalhardo/vukem-video/commit/11283479673560aa8e55cdeb76565e4cf86fa633))
+- **service:** Add Service with projects, the commit transaction, history, undo, redo and lint ([86fe0ab](https://github.com/AlexGalhardo/vukem-video/commit/86fe0aba6619c5fffe44cb576da15270de8f3596))
+- **service:** Add EditInternal and test that project_assets and the summary follow the document ([2b2e752](https://github.com/AlexGalhardo/vukem-video/commit/2b2e752bc5de26a7b4fe622aa559fa7cdb475fec))
+- **service:** Add CommandHelp over the public commands of the registry ([4d3e6a2](https://github.com/AlexGalhardo/vukem-video/commit/4d3e6a2ee6b3a00d06807953ccb23d3a5f5064d5))
+- **web:** Add the local-mode credentials: launch codes, sessions, actor label and handshake ([1e892de](https://github.com/AlexGalhardo/vukem-video/commit/1e892def1c5e0a2fcaa488b66eccbdeaa7d7a441))
+- **web:** Add the loopback client and make the handshake client a Doer ([adea75f](https://github.com/AlexGalhardo/vukem-video/commit/adea75f476c49583712d4c7b6a924a8f78ec8b3e))
+- **api:** Add the HTTP adapter with the error envelope, local-mode trust and OpenAPI ([8bd3308](https://github.com/AlexGalhardo/vukem-video/commit/8bd3308e98d7bcf24af032feb19d6a9b0197c1ce))
+- **cli:** Add the command framework, the project, edit, history, undo, redo and lint commands ([b3d46b2](https://github.com/AlexGalhardo/vukem-video/commit/b3d46b290af78c579d62647ad31bc22430d1fff3))
+- **cli:** Resolve the Service in process over the workspace store ([a2d7062](https://github.com/AlexGalhardo/vukem-video/commit/a2d7062c65cfbcac033effe10464d301da943760))
+- **repo:** Add the third-party notices generator ([3f4bb3e](https://github.com/AlexGalhardo/vukem-video/commit/3f4bb3ef83cad96b084d3f91e32346b017442ee8))
+- **timeline:** Move the migration chain to its own package with frozen version fixtures ([66c12c5](https://github.com/AlexGalhardo/vukem-video/commit/66c12c5b8ead6318560d73a287d36feb2e8f1b9d))
+- **service:** Add the HTTP client of the Service ([7dbf3eb](https://github.com/AlexGalhardo/vukem-video/commit/7dbf3eb3f3dc3e63e243941d4f6ce239eb86d2fe))
+- **cli:** Reach a running owner over HTTP and add command:help ([5cb8842](https://github.com/AlexGalhardo/vukem-video/commit/5cb8842d2e15e5a5f24b298701c64d5971be7786))
+- **cli:** Run the product commands from the binary ([20b99aa](https://github.com/AlexGalhardo/vukem-video/commit/20b99aae4493ed407e85946c7c6eebba5d2f86a8))
+- **engine:** Feed standard input to FFmpeg and allow atempo ([ef1a3fd](https://github.com/AlexGalhardo/vukem-video/commit/ef1a3fdf9d753a5e08426c4acb5796fe5eafdf30))
+- **engine:** Add the Go compositor ([0d9cadd](https://github.com/AlexGalhardo/vukem-video/commit/0d9cadd8a7b15792f6c970463bbfa9cb1e019a95))
+- **engine:** Add the audio mixer and the loudness gain ([6bbbd4d](https://github.com/AlexGalhardo/vukem-video/commit/6bbbd4d93ed428d9378fcc660feed7e7a69e0593))
+- **engine:** Add a box-filtered resize to the compositor ([05ead60](https://github.com/AlexGalhardo/vukem-video/commit/05ead60b03ff1a15e57aa813cecd735962c7fe15))
+- **export:** Export a project to a verified MP4 ([391e9a9](https://github.com/AlexGalhardo/vukem-video/commit/391e9a9d8c57c9f043a2c4361e9ecb73f884bd80))
+- **cli:** Add the version command ([5d38271](https://github.com/AlexGalhardo/vukem-video/commit/5d38271f211a4057735a0d4d98905bb74ec84463))
+- **plan:** Add snap points and the output scale of the oversampling, pin the ALPHA plan asserts ([b9f7398](https://github.com/AlexGalhardo/vukem-video/commit/b9f7398d93c12d2fe279f1fb8ce9b7bde3ea890f))
+- **engine:** Add the byte-capped file cache for frames and bitmaps ([69d7b83](https://github.com/AlexGalhardo/vukem-video/commit/69d7b83d24848556bc0111f9a100c6a86ec32994))
+- **export:** Add frames and contact sheets from the export compositor ([778924f](https://github.com/AlexGalhardo/vukem-video/commit/778924f0fe87c3fd86b486e85268865a9ab0482f))
+- **repo:** Read the whisper.cpp version of the notices from its pin ([e91f5ab](https://github.com/AlexGalhardo/vukem-video/commit/e91f5ab693d0dc9815f37c9652733ee6f349fd1b))
+- **command:** Add settings.set_fps and asset.remove with their golden cases ([77f07fc](https://github.com/AlexGalhardo/vukem-video/commit/77f07fcd1027f7352baf4b58f5a0915aef23c86b))
+
+### Fixed
+
+- **ci:** Read the Docker Hub user from the repository variable ([70f60f5](https://github.com/AlexGalhardo/vukem-video/commit/70f60f5392c1eaa2da558ca786d958a39bc54f38))
+- **service:** Scope the project list, its total and creation to the caller ([4ae3ae7](https://github.com/AlexGalhardo/vukem-video/commit/4ae3ae7bab066bc4cedcb2149d130cdf20ac0554))
+- **service:** Purge only the committing project's expired idempotency keys ([6790828](https://github.com/AlexGalhardo/vukem-video/commit/6790828df01a558637f12a1853c83d2d90f9e21a))
+- **repo:** Put bare e-mail addresses of the notices in angle brackets ([4c512fe](https://github.com/AlexGalhardo/vukem-video/commit/4c512fef64aabefa79bf1b31ff669402355d1b3e))
+- **ui:** Start the e2e server with the serve command ([8f4cc9c](https://github.com/AlexGalhardo/vukem-video/commit/8f4cc9ce4b83ff9ca1fda08dc4acddbb906bb271))
+- **engine:** Fix the filter and encoder thread counts so frames do not depend on the CPU count ([600b71a](https://github.com/AlexGalhardo/vukem-video/commit/600b71a4593a12a1fb5a1cd752da7854abfd1817))
+- **engine:** Encode the normalized mpeg4 with the integer DCT so it does not depend on the CPU ([2c74861](https://github.com/AlexGalhardo/vukem-video/commit/2c74861054fdc3c688d0365b18c2910f0a7e2e44))
+
+### Security
+
+- **security:** Allow example actor ids in Go tests and the editor ([a9f25a0](https://github.com/AlexGalhardo/vukem-video/commit/a9f25a0827a75621ff2f2adfb0de94f89770c711))
+
 ## [0.2.0] - 2026-11-14
 
 ### Added
@@ -133,6 +184,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/AlexGalhardo/vukem-video/releases/tag/v0.1.0
