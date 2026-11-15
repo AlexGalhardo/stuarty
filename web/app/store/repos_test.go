@@ -1069,7 +1069,7 @@ func TestQueryPlans(t *testing.T) {
 	}
 }
 
-func TestIdempotencyTrimActorKeepsTheNewestOfOneActorAndProject(t *testing.T) {
+func TestIdempotencyCountLiveCountsOneActorAndProjectAndEvictsNothing(t *testing.T) {
 	s := testStore(t)
 	mustCreate(t, s, newProject("prj_a", 1))
 	mustCreate(t, s, newProject("prj_b", 1))
@@ -1081,7 +1081,7 @@ func TestIdempotencyTrimActorKeepsTheNewestOfOneActorAndProject(t *testing.T) {
 
 		row := service.IdempotencyRow{
 			ProjectID: project, Actor: actor, Key: key, RequestHash: "h", Revision: 1,
-			Result: json.RawMessage(`{}`), CreatedMs: at, ExpiresMs: at + 86400000,
+			Result: json.RawMessage(`{}`), CreatedMs: at, ExpiresMs: at + 1000,
 		}
 		if err := repo.Put(ctx, row); err != nil {
 			t.Fatal(err)
@@ -1095,30 +1095,22 @@ func TestIdempotencyTrimActorKeepsTheNewestOfOneActorAndProject(t *testing.T) {
 	put("prj_a", "key:two", "k0", 100)
 	put("prj_b", "key:one", "k0", 100)
 
-	if n, err := repo.TrimActor(ctx, "prj_a", "key:one", 3); err != nil || n != 2 {
-		t.Fatalf("TrimActor = %d, %v; want 2 evicted", n, err)
+	if n, first, err := repo.CountLive(ctx, "prj_a", "key:one", 200); err != nil || n != 5 || first != 1100 {
+		t.Errorf("CountLive = %d, first %d, %v; want 5 keys of one actor and project, the first ending at 1100", n, first, err)
 	}
 
-	now := int64(200)
+	if n, first, err := repo.CountLive(ctx, "prj_a", "key:one", 1102); err != nil || n != 2 || first != 1103 {
+		t.Errorf("CountLive after three expired = %d, first %d, %v; want 2 left", n, first, err)
+	}
 
-	for _, k := range []string{"k0", "k1"} {
-		if _, err := repo.Get(ctx, "prj_a", "key:one", k, now); !errors.Is(err, service.ErrNotFound) {
-			t.Errorf("%s survived: %v", k, err)
+	if n, first, err := repo.CountLive(ctx, "prj_a", "key:none", 200); err != nil || n != 0 || first != 0 {
+		t.Errorf("CountLive of nobody = %d, first %d, %v", n, first, err)
+	}
+
+	for i := range 5 {
+		if _, err := repo.Get(ctx, "prj_a", "key:one", "k"+strconv.Itoa(i), 200); err != nil {
+			t.Errorf("k%d is gone: %v", i, err)
 		}
-	}
-
-	for _, k := range []string{"k2", "k3", "k4"} {
-		if _, err := repo.Get(ctx, "prj_a", "key:one", k, now); err != nil {
-			t.Errorf("%s was evicted: %v", k, err)
-		}
-	}
-
-	if _, err := repo.Get(ctx, "prj_a", "key:two", "k0", now); err != nil {
-		t.Error("another actor's key was evicted")
-	}
-
-	if _, err := repo.Get(ctx, "prj_b", "key:one", "k0", now); err != nil {
-		t.Error("another project's key was evicted")
 	}
 }
 

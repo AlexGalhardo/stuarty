@@ -15,7 +15,8 @@ import (
 
 const (
 	idempotencyTTLMs = 24 * 60 * 60 * 1000
-	// maxIdempotencyKeys is kept per actor and project; the oldest are evicted.
+	// maxIdempotencyKeys is the most valid keys one actor holds in one project; a new key past it is
+	// refused and none is evicted.
 	maxIdempotencyKeys = 10000
 	maxFindings        = 10
 	maxDescription     = 4000
@@ -113,6 +114,14 @@ func (s *svc) commit(ctx context.Context, tx ProjectTx, b *batch) (int64, error)
 			return 0, internalError()
 		}
 
+		if _, err := tx.Idempotency().PurgeProjectExpired(ctx, row.ID, now); err != nil {
+			return 0, err
+		}
+
+		if err := checkIdempotencyRoom(ctx, tx, row.ID, b.actor, now); err != nil {
+			return 0, err
+		}
+
 		err = tx.Idempotency().Put(ctx, IdempotencyRow{
 			ProjectID: row.ID, Actor: b.actor, Key: b.key, RequestHash: b.requestHash, Revision: newRev,
 			Result: stored, CreatedMs: now, ExpiresMs: now + idempotencyTTLMs,
@@ -122,17 +131,30 @@ func (s *svc) commit(ctx context.Context, tx ProjectTx, b *batch) (int64, error)
 		}
 
 		crashpoint.Hit("commit.after_idempotency_put")
-
-		if _, err := tx.Idempotency().PurgeProjectExpired(ctx, row.ID, now); err != nil {
-			return 0, err
-		}
-
-		if _, err := tx.Idempotency().TrimActor(ctx, row.ID, b.actor, maxIdempotencyKeys); err != nil {
-			return 0, err
-		}
 	}
 
 	return newRev, nil
+}
+
+// checkIdempotencyRoom refuses a new keyed request when the actor already holds the most valid keys
+// of a project (SDD-005 section 10). Evicting one would let a retry with that key run twice.
+func checkIdempotencyRoom(ctx context.Context, tx Tx, projectID, actor string, nowMs int64) error {
+	n, first, err := tx.Idempotency().CountLive(ctx, projectID, actor, nowMs)
+	if err != nil {
+		return err
+	}
+
+	if n < maxIdempotencyKeys {
+		return nil
+	}
+
+	e := newError(CodeRateLimited, "%d idempotency keys are valid for this actor and project; the limit is %d.",
+		n, maxIdempotencyKeys).
+		withHint("send the request without a key, or wait for the oldest key to expire in 24 hours").
+		withPath("idempotency_key").withLimit("idempotency_keys", n, maxIdempotencyKeys)
+	e.Details["retry_after"] = max((first-nowMs)/1000, 1)
+
+	return e
 }
 
 func nonNilPrimitives(p []command.Primitive) []command.Primitive {
