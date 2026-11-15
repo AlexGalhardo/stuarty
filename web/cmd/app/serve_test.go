@@ -107,7 +107,7 @@ func TestServeIsTheOwnerAndTheCLIUsesIt(t *testing.T) {
 		_ = resp.Body.Close()
 	}
 
-	_, stderr, code := serveOnce(t, bin, home)
+	stderr, code := serveOnce(t, bin, home)
 	if code != exitLocked || !strings.Contains(stderr, "E_WORKSPACE_LOCKED") {
 		t.Errorf("a second serve: exit %d, %q", code, stderr)
 	}
@@ -162,7 +162,7 @@ func TestServeIsTheOwnerAndTheCLIUsesIt(t *testing.T) {
 	}
 }
 
-func serveOnce(t *testing.T, bin, home string) (stdout, stderr string, code int) {
+func serveOnce(t *testing.T, bin, home string) (stderr string, code int) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
@@ -171,9 +171,9 @@ func serveOnce(t *testing.T, bin, home string) (stdout, stderr string, code int)
 	cmd := exec.CommandContext(ctx, bin, "serve")
 	cmd.Env = append(os.Environ(), "VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "PORT="+freePort(t))
 
-	var out, errOut bytes.Buffer
+	var errOut bytes.Buffer
 
-	cmd.Stdout, cmd.Stderr = &out, &errOut
+	cmd.Stderr = &errOut
 
 	err := cmd.Run()
 	if ee, ok := err.(*exec.ExitError); ok { //nolint:errorlint // exact type from Run
@@ -182,5 +182,5 @@ func serveOnce(t *testing.T, bin, home string) (stdout, stderr string, code int)
 		t.Fatal(err)
 	}
 
-	return out.String(), errOut.String(), code
+	return errOut.String(), code
 }

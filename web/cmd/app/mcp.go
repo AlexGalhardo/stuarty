@@ -1,0 +1,109 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"log/slog"
+	"os"
+	"time"
+
+	vukem "github.com/AlexGalhardo/vukem"
+
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/web/app/cli"
+	"github.com/AlexGalhardo/vukem-video/web/app/owner"
+)
+
+// announceTimeout bounds the wait for the listener of a stdio MCP server that
+// became the owner.
+const announceTimeout = 30 * time.Second
+
+// runMCP is `vukem-video mcp`. With no owner running, this process becomes the
+// owner of the workspace (SDD-003 section 4.7, SDD-005 section 6.3): it serves
+// the HTTP API and the UI on a loopback port, runs the workers and writes
+// runtime.json, so the browser and the other commands reach the same project
+// the agent edits. With an owner running, the tools talk to it over HTTP.
+// Standard output carries only protocol messages: the server logs to standard
+// error.
+func runMCP(ctx context.Context, args []string, stderr io.Writer) int {
+	resolver := cli.LocalResolver{Become: becomeOwner(stderr)}
+
+	return cli.NewRuntime(resolver).Execute(ctx, "mcp", args)
+}
+
+// becomeOwner returns the Become hook of the resolver: it opens the owner on
+// the workspace the resolver already locked, starts serveOwner in the
+// background and waits until runtime.json names this process.
+func becomeOwner(
+	stderr io.Writer,
+) func(context.Context, *workspace.Session, func(string) string) (*cli.Connection, error) {
+	return func(ctx context.Context, sess *workspace.Session, getenv func(string) string) (*cli.Connection, error) {
+		log := slog.New(slog.NewTextHandler(stderr, nil))
+
+		ow, err := owner.Open(ctx, owner.Config{Getenv: getenv, Version: version, Log: log, Session: sess})
+		if err != nil {
+			return nil, err
+		}
+
+		serveCtx, cancel := context.WithCancel(ctx)
+		done := make(chan error, 1)
+
+		go func() {
+			done <- serveOwner(serveCtx, ow, nil, vukem.WithStdout(io.Discard), vukem.WithStderr(stderr), vukem.WithLogger(log))
+		}()
+
+		stop := func() error {
+			cancel()
+
+			serveErr := <-done
+
+			return errors.Join(serveErr, ow.Close())
+		}
+
+		if stopped, err := awaitAnnounce(ctx, ow, done); err != nil {
+			cancel()
+
+			if !stopped {
+				err = errors.Join(err, <-done)
+			}
+
+			_ = ow.Close()
+
+			return nil, err
+		}
+
+		return &cli.Connection{Service: ow.Service, InProcess: true, Workspace: string(ow.Dir), Close: stop}, nil
+	}
+}
+
+// awaitAnnounce waits for runtime.json to name this process, or for the server
+// to stop first; stopped says that done was already read.
+func awaitAnnounce(ctx context.Context, ow *owner.Owner, done <-chan error) (stopped bool, err error) {
+	deadline := time.NewTimer(announceTimeout)
+	defer deadline.Stop()
+
+	tick := time.NewTicker(25 * time.Millisecond)
+	defer tick.Stop()
+
+	for {
+		if rt, err := ow.Dir.ReadRuntime(); err == nil && rt.PID == os.Getpid() {
+			return false, nil
+		}
+
+		select {
+		case err := <-done:
+			if err == nil {
+				err = errors.New("the server stopped before it was ready")
+			}
+
+			return true, fmt.Errorf("serving the workspace: %w", err)
+		case <-ctx.Done():
+			return false, ctx.Err()
+		case <-deadline.C:
+			return false, errors.New("the server did not announce itself in time")
+		case <-tick.C:
+		}
+	}
+}
