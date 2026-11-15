@@ -1,0 +1,52 @@
+name: upgrade
+
+# Upgrade path test across released versions (P4-REL-002, RF-208, RF-209, ADR-0025 item 1). It runs
+# scripts/upgrade-test.sh: the script downloads the released archive of every version from v0.3.0 on,
+# checks it against checksums.txt, builds a workspace with each (service/testdata/upgrade), opens it with
+# the build of this ref, and checks that every older binary refuses a workspace the build wrote.
+#
+# It runs on pull requests labelled "release" (the release/vX.Y.Z pull request of D-031), on every tag, and
+# on demand. Adding the label to an open pull request starts it.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upgrade:
+    name: Upgrade (${{ matrix.os }})
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'release')
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Install FFmpeg
+        shell: bash
+        run: |
+          bin_dir="$(bash scripts/install-ffmpeg.sh)"
+          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+      - name: Upgrade test
+        shell: bash
+        run: bash scripts/upgrade-test.sh
