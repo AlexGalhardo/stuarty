@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.item_ids[1] repeats itm_s6t7v8w9x0.",
+  "hint": "Send two different captions.",
+  "retryable": false,
+  "path": "args.item_ids[1]"
+}

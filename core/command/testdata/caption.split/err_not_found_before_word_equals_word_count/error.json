@@ -1,0 +1,12 @@
+{
+  "code": "E_NOT_FOUND",
+  "message": "Caption itm_s6t7v8w9x0 has 4 words; word 4 does not exist, so the right part would be empty.",
+  "hint": "Use a before_word from 1 to 3.",
+  "retryable": false,
+  "path": "args.before_word",
+  "details": {
+    "id": 4,
+    "kind": "word",
+    "word_count": 4
+  }
+}

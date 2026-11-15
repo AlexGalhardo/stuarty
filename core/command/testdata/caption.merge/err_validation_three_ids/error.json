@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.item_ids must have exactly 2 entries, got 3.",
+  "hint": "Merge two captions at a time.",
+  "retryable": false,
+  "path": "args.item_ids"
+}

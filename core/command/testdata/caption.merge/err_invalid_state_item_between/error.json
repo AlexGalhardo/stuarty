@@ -1,0 +1,11 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Item itm_p7q8r9s0t1 (frames 40-59) lies between captions itm_s6t7v8w9x0 and itm_c3d4e5f6g7.",
+  "hint": "Move or delete itm_p7q8r9s0t1 first.",
+  "retryable": false,
+  "details": {
+    "between": [
+      "itm_p7q8r9s0t1"
+    ]
+  }
+}
