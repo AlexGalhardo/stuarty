@@ -4,3 +4,6 @@ v1/launch-teaser.json
 v1/template.json
 v1/template-filled-slot.json
 v1/unknown-fields.json
+v1/starter-product-teaser.json
+v1/starter-quote-card.json
+v1/starter-vertical-cut-captions.json
