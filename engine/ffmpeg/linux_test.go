@@ -176,3 +176,27 @@ func TestResolveSandboxRefusesAnUnknownMode(t *testing.T) {
 		t.Errorf("no mode: %q, %v", p, err)
 	}
 }
+
+// The own build's library directory is bound read-only inside bwrap and named in the child environment,
+// and only when the library passed verification.
+func TestSandboxCarriesTheOpenH264Library(t *testing.T) {
+	t.Parallel()
+
+	lib := t.TempDir()
+	own := fakeBuild(t, "own")
+	r := &Runner{In: &Installation{Info: own, OpenH264: OpenH264State{Installed: true, Dir: lib}}}
+
+	if env := r.libraryEnv(); len(env) != 1 || env[0] != EnvOpenH264Dir+"="+lib {
+		t.Errorf("env = %v", env)
+	}
+
+	r.In.OpenH264 = OpenH264State{Reason: ReasonOpenH264NotInstalled}
+	if env := r.libraryEnv(); env != nil {
+		t.Errorf("env without the library = %v", env)
+	}
+
+	args := strings.Join(BwrapArgs("/x/ffmpeg", t.TempDir(), t.TempDir(), []string{lib}, nil), " ")
+	if !strings.Contains(args, "--ro-bind "+lib+" "+lib) {
+		t.Errorf("the library directory is not read-only bound: %s", args)
+	}
+}

@@ -24,6 +24,13 @@ func fakeTool() bool {
 		}
 	}
 	if slices.Contains(os.Args[1:], "-version") {
+		// A full version output (testdata/builds) is printed as it is, with the library directory the
+		// runner passed, so a test can see the environment of the tool.
+		if strings.HasPrefix(version, "ffmpeg version ") {
+			fmt.Println(strings.Replace(version, "ffmpeg version ", base+" version ", 1))
+			fmt.Println("openh264dir:", os.Getenv("VUKEM_VIDEO_OPENH264_DIR"))
+			return true
+		}
 		fmt.Printf(
 			"%s version %s Copyright (c) the FFmpeg developers\nconfiguration: --enable-version3 --disable-libx264\n",
 			base,

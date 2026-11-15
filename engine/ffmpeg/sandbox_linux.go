@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"time"
 
@@ -109,7 +110,13 @@ func (r *Runner) command(s execSpec) (string, []string, error) {
 		return s.tool.Path(), s.argv, nil
 	}
 
-	name, args := r.Sandbox, BwrapArgs(s.tool.Path(), r.StoreDir, s.dir, s.inputDirs, s.argv)
+	name, args := r.Sandbox, BwrapArgs(
+		s.tool.Path(),
+		r.StoreDir,
+		s.dir,
+		append(slices.Clone(s.inputDirs), r.In.OpenH264.Dir),
+		s.argv,
+	)
 
 	if l := r.In.limits; l != (engine.Limits{}) {
 		pl, err := exec.LookPath("prlimit")

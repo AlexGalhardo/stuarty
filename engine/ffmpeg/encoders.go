@@ -5,6 +5,7 @@ import (
 	"errors"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -34,6 +35,9 @@ type Candidate struct {
 	Status     EncoderStatus
 	MS         int64
 	StderrTail string // at most 300 characters, paths removed
+	// Reason is a machine readable cause for a candidate that was not tried, such as
+	// ReasonOpenH264NotInstalled; empty otherwise.
+	Reason string
 	// Input is what the export must use with this encoder (SDD-011 8.4, DS-13).
 	Input ffargs.DetectInput
 }
@@ -89,6 +93,44 @@ func vaapiDevice() string {
 	return m[0]
 }
 
+// gate is the answer of encoderGate: skip is true when the candidate is not worth a test encode.
+type gate struct {
+	skip   bool
+	status EncoderStatus
+	why    string
+	reason string
+}
+
+// encoderGate decides, without starting anything, whether a candidate can be tried at all: the
+// encoder must be one the product knows, exist on this platform, be allowed and be in the build.
+// libopenh264 in the own build also needs the Cisco library installed (D-017); without it the
+// candidate fails with the install command, and no test encode is wasted on a certain failure.
+func (r *Runner) encoderGate(name string, caps *Capabilities, opt DetectOptions) gate {
+	switch {
+	case !slices.Contains(EncoderOrder, name):
+		return gate{true, EncoderFailed, "not an H.264 encoder the product knows", ""}
+	case !platformOK(name):
+		return gate{true, EncoderNotListed, "not available on " + runtime.GOOS, ""}
+	case name == "libx264" && (!r.In.UserBuild || !opt.AllowUserX264):
+		return gate{
+			true,
+			EncoderNotListed,
+			"only a user's own FFmpeg with VUKEM_VIDEO_ALLOW_USER_X264=true may use it",
+			"",
+		}
+	case !caps.Encoders[name]:
+		return gate{true, EncoderNotListed, "", ""}
+	case name == "libopenh264" && r.In.Flavour().Name == FlavourOwn && !r.In.OpenH264.Installed:
+		return gate{
+			true,
+			EncoderFailed,
+			"the Cisco OpenH264 library is not installed; run " + OpenH264InstallCommand,
+			openH264Reason(r.In.OpenH264),
+		}
+	}
+	return gate{}
+}
+
 // DetectEncoder runs a real test encode for each candidate, in the order of ADR-0011 item 5,
 // and caches the result for the life of the runner. No working encoder is E_NO_ENCODER and
 // the message says how to fix it.
@@ -123,24 +165,11 @@ func (r *Runner) detectEncoder(ctx context.Context, caps *Capabilities, opt Dete
 	defer func() { _ = dir.Remove() }()
 
 	for _, name := range names {
-		known := false
-		for _, k := range EncoderOrder {
-			known = known || k == name
-		}
 		c := Candidate{Name: name}
-		switch {
-		case !known:
-			c.Status, c.StderrTail = EncoderFailed, "not an H.264 encoder the product knows"
-		case !platformOK(name):
-			c.Status, c.StderrTail = EncoderNotListed, "not available on "+runtime.GOOS
-		case name == "libx264" && (!r.In.UserBuild || !opt.AllowUserX264):
-			c.Status, c.StderrTail = EncoderNotListed, "only a user's own FFmpeg with VUKEM_VIDEO_ALLOW_USER_X264=true may use it"
-		case !caps.Encoders[name]:
-			c.Status = EncoderNotListed
-		default:
-			if err := r.testEncoder(ctx, dir, &c); err != nil && ctx.Err() != nil {
-				return nil, err
-			}
+		if g := r.encoderGate(name, caps, opt); g.skip {
+			c.Status, c.StderrTail, c.Reason = g.status, g.why, g.reason
+		} else if err := r.testEncoder(ctx, dir, &c); err != nil && ctx.Err() != nil {
+			return nil, err
 		}
 		det.Candidates = append(det.Candidates, c)
 	}
@@ -249,11 +278,21 @@ func noEncoderError(det *EncoderDetection) *Error {
 	if len(parts) > 0 {
 		tried = strings.Join(parts, ", ")
 	}
-	return &Error{
+	e := &Error{
 		Code:    CodeNoEncoder,
 		Reason:  "no_encoder",
 		Message: "No H.264 encoder works on this machine. Tried: " + tried + ".",
 		Hint:    "Use the FFmpeg that ships with Vukem Video, which includes OpenH264, or point " + EnvFFmpeg + " at an FFmpeg that has libx264 and set VUKEM_VIDEO_ALLOW_USER_X264=true.",
 		Details: map[string]any{"candidates": details, "forced": det.Forced},
 	}
+	for _, c := range det.Candidates {
+		if c.Name == "libopenh264" && strings.HasPrefix(c.Reason, "openh264_") {
+			e.Hint = "Run \"" + OpenH264InstallCommand + "\" to install Cisco's OpenH264 library for this FFmpeg build " +
+				"(nothing downloads it automatically), or use the hardware encoder of this machine, or point " + EnvFFmpeg +
+				" at an FFmpeg that has libx264 and set VUKEM_VIDEO_ALLOW_USER_X264=true."
+			e.Details["reason"], e.Details["install_command"], e.Details["tool"] = c.Reason, OpenH264InstallCommand, OpenH264Tool
+			e.Details["missing"] = []string{OpenH264Tool}
+		}
+	}
+	return e
 }
