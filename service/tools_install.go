@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 )
 
@@ -40,6 +41,9 @@ type Tools struct {
 	Client Downloader
 	// GOOS and GOARCH select the helper; the runtime's when empty.
 	GOOS, GOARCH string
+	// OpenH264 pins the Cisco library of the own FFmpeg build; the embedded manifest when it has no
+	// entries. Its hosts are not those of Manifest: the client of the install is built over both.
+	OpenH264 ffmpeg.OpenH264Manifest
 }
 
 const installedFile = "installed.json"
@@ -140,6 +144,10 @@ func (s *svc) ToolsInstall(ctx context.Context, req ToolsInstallRequest) (*Tools
 		return nil, newError(codeTranscribeOff, "installing helpers is not available in this build.")
 	}
 
+	if req.Name == ffmpeg.OpenH264Tool {
+		return s.installOpenH264(ctx, c)
+	}
+
 	model := req.Model
 	if model == "" {
 		model = "small"
@@ -177,31 +185,13 @@ func (s *svc) ToolsInstall(ctx context.Context, req ToolsInstallRequest) (*Tools
 	res.Text = fmt.Sprintf("installing %s (%s): %d files, %s from %s",
 		req.Name, model, len(res.Files), sizesText(res.DownloadBytes), res.Files[0].Host)
 
-	s.toolsState.mu.Lock()
-	if s.toolsState.running {
-		s.toolsState.mu.Unlock()
-
-		return nil, newError(CodeQueueFull, "an install is already running.").
-			withHint("read its progress with GET /api/v1/system/tools")
+	if err := s.beginInstall(res.DownloadBytes); err != nil {
+		return nil, err
 	}
-
-	s.toolsState.running, s.toolsState.done, s.toolsState.total, s.toolsState.err = true, 0, res.DownloadBytes, nil
-	s.toolsState.mu.Unlock()
 
 	bg := context.WithoutCancel(ctx)
 
-	go func() {
-		ierr := s.installEntries(bg, entries)
-
-		s.toolsState.mu.Lock()
-		s.toolsState.running = false
-
-		if ierr != nil {
-			s.toolsState.err = ierr
-		}
-
-		s.toolsState.mu.Unlock()
-	}()
+	go func() { s.endInstall(s.installEntries(bg, entries)) }()
 
 	_ = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		return appendAudit(ctx, tx, s.nowMs(), c.Actor, "tools.install", "", req.Name)

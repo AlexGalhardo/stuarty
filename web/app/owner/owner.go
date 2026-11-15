@@ -384,6 +384,7 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 
 	fc := ffmpeg.Config{
 		FFmpegPath: cfg.Getenv("VUKEM_VIDEO_FFMPEG"), FFprobePath: cfg.Getenv("VUKEM_VIDEO_FFPROBE"), Log: cfg.Log,
+		ToolsDir: filepath.Join(string(o.Dir), "tools"),
 	}
 	if self, err := os.Executable(); err == nil {
 		fc.ExecDir = filepath.Dir(self)
