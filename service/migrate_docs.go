@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/service/crashpoint"
 )
 
 // migrateActor is the actor of the log row a document migration writes: a valid
@@ -232,8 +233,14 @@ func migrateProject(ctx context.Context, st Store, id string, o MigrateOptions) 
 
 		done = true
 
+		crashpoint.Hit("migrate.before_commit")
+
 		return nil
 	})
+	if err == nil {
+		crashpoint.Hit("migrate.after_commit")
+	}
+
 	if errors.Is(err, ErrNotFound) {
 		return false, nil // removed since the listing
 	}
