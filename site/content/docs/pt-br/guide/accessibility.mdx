@@ -1,0 +1,64 @@
+---
+title: "Acessibilidade e conformidade com a WCAG 2.2"
+description: "A meta de acessibilidade do editor, o estado de cada critério da WCAG 2.2 que as ferramentas não decidem e o que ainda está pendente."
+---
+
+## O que você vai aprender
+
+- a qual padrão o editor e suas páginas miram e como isso é verificado;
+- o estado de cada critério que uma ferramenta automática não decide, com a forma de verificação;
+- o que ainda está pendente: a passagem com leitores de tela.
+
+## A ideia
+
+A meta é a conformidade com a WCAG 2.2 nível AA para o editor e para as páginas ao redor dele (projetos, configurações, kit de marca). Dois tipos de verificação a sustentam. O primeiro é automático: a cada pull request, o axe-core roda no editor em cada um dos seus estados, nos temas escuro e claro, e falha diante de qualquer violação séria ou crítica; um script mede o contraste de cada par de cores; um teste edita um projeto só com o teclado. O segundo é um conjunto de medições para os critérios que o axe não decide, listados abaixo. Nada aqui é afirmado sem um comando que o verifique.
+
+## Tabela de conformidade
+
+A tabela lista os critérios da WCAG 2.2 que o axe-core não decide. Um estado é `met` (atendido), `met by exception` (atendido por exceção, e a exceção é nomeada), `not claimed` (não declarado) ou `n/a` (não se aplica). Todo critério que o axe-core decide, nos níveis A e AA, é coberto pela verificação do axe nos dois temas.
+
+| Critério | Estado | Como é verificado |
+| --- | --- | --- |
+| 1.4.10 Reflow | met | As páginas de projetos, configurações e kit de marca se reorganizam a 320 px CSS nos dois temas; o cabeçalho e as linhas de projeto quebram. O editor é um layout bidimensional (linha do tempo e canvas), que o critério isenta. |
+| 1.4.11 Non-text contrast | met | `bun run check:contrast` mede cada par de cores; um teste de navegador mede bordas de campos e contornos de foco a 3:1 nos dois temas. |
+| 1.4.12 Text spacing | met | Um teste de navegador aplica o espaçamento do critério às páginas e ao editor e confere que nenhum texto fica oculto. |
+| 2.4.11 Focus not obscured (minimum) | met | Um teste de navegador percorre cada página e o editor com Tab e confere que o elemento em foco nunca fica escondido atrás de outro conteúdo. |
+| 2.4.13 Focus appearance | not claimed | O critério é de nível AAA. O contorno de foco sólido de 2 px foi feito para atendê-lo. |
+| 2.5.7 Dragging movements | met | Todo arrastar tem uma alternativa de teclado ou de um clique: o botão "Adicionar à linha do tempo" para a biblioteca, o menu da faixa para reordenar, `[` e `]` para as alças de aparar, as seções Transformar e Quadros-chave do inspetor e as setas para o divisor. |
+| 2.5.8 Target size (minimum) | met by exception | Os alvos do ponteiro têm ao menos 24 por 24 px CSS ou espaçamento que o critério permite. A exceção: os losangos de quadro-chave de um bloco da linha do tempo têm 10 px, e a mesma função está na seção Quadros-chave do inspetor. |
+| 3.2.6 Consistent help | met | O botão de atalhos mantém seu lugar na barra superior de todo projeto. As páginas não oferecem mecanismo de ajuda, então não há nada a manter consistente ali. |
+| 3.3.7 Redundant entry | met | Uma importação de fonte recusada mantém o caminho e o nome da família que você digitou. |
+| 3.3.8 Accessible authentication (minimum) | met | Os campos de entrada têm rótulos, aceitam colar e preencher automaticamente, e não há quebra-cabeça nem captcha. O modo local não tem login. |
+| 3.3.9 Accessible authentication (enhanced) | not claimed | O critério é de nível AAA. |
+
+## O que as ferramentas verificam
+
+- **axe-core**: nos temas escuro e claro, no projeto vazio, em um projeto com itens, em cada tipo de item selecionado, na biblioteca com um cartão de erro, no diálogo de exportação em cada estado, na paleta e no histórico.
+- **Contraste**: texto a 4,5:1 ou mais, texto grande e componentes de interface a 3:1 ou mais, para cada par de cores do sistema de design.
+- **Só teclado**: dividir, aparar, mover, excluir, desfazer e exportar, feitos sem ponteiro.
+
+## Teclado, foco e leitores de tela no projeto
+
+- Elementos nativos vêm primeiro, e diálogos, menus e popovers prendem o foco, devolvem-no a quem os abriu e fecham com `Esc`.
+- Todo botão só com ícone tem um nome. A linha do tempo é uma grade com células nomeadas, e uma região viva oculta anuncia resultados como "Dividido, 2 itens", erros e o progresso da exportação.
+- As regiões são pontos de referência: `F6` salta para a próxima. Veja [Atalhos de teclado](/docs/guide/keyboard-shortcuts).
+- As animações respeitam `prefers-reduced-motion`.
+
+## Leitores de tela: pendente
+
+| Verificação | Estado | Notas |
+| --- | --- | --- |
+| NVDA no Windows | pendente | Uma passagem manual do autor (tarefa P3-QA-002). Nenhum resultado é afirmado antes dela. |
+| VoiceOver no macOS | pendente | Uma passagem manual do autor (tarefa P3-QA-002). Nenhum resultado é afirmado antes dela. |
+
+O canvas de pré-visualização é uma imagem com um rótulo de texto ("Preview, frame 375 at 00:12.500"). Toda ação sobre ele tem um equivalente de teclado no inspetor ou na barra de ferramentas.
+
+## Erros comuns
+
+- Ler esta tabela como uma certificação: é uma declaração do que é medido, não uma auditoria de terceiros.
+- Esperar que um atalho funcione dentro de um campo de texto: os atalhos são ignorados enquanto você digita, exceto `Mod+K`.
+
+## Próximos passos
+
+- [Atalhos de teclado](/docs/guide/keyboard-shortcuts)
+- [A área segura](/docs/guide/safe-area)

@@ -69,6 +69,7 @@ export const navigation: NavCategory[] = [
 			"jobs",
 			"encoders-and-presets",
 			"keyboard-shortcuts",
+			"accessibility",
 			"settings",
 		],
 	},

@@ -1,0 +1,64 @@
+---
+title: "Accessibility and WCAG 2.2 conformance"
+description: "The accessibility target of the editor, the state of each WCAG 2.2 criterion that tools cannot decide, and what is still pending."
+---
+
+## You will learn
+
+- which standard the editor and its pages aim at, and how that is checked;
+- the state of each criterion that an automatic tool cannot decide, with how it is verified;
+- what is still pending: the pass with screen readers.
+
+## The idea
+
+The goal is conformance with WCAG 2.2 level AA for the editor and for the pages around it (projects, settings, brand kit). Two kinds of checks back it. The first is automatic: on every pull request, axe-core runs against the editor in each of its states, in the dark and the light theme, and fails on any serious or critical violation; a script measures the contrast of every pair of colours; a test edits a project with the keyboard only. The second is a set of measurements for the criteria that axe cannot decide, listed below. Nothing here is claimed without a command that checks it.
+
+## Conformance table
+
+The table lists the criteria of WCAG 2.2 that axe-core cannot decide. A state is `met`, `met by exception` (the exception is named), `not claimed` or `n/a`. Every criterion that axe-core can decide, at levels A and AA, is covered by the axe check in both themes.
+
+| Criterion | State | How it is verified |
+| --- | --- | --- |
+| 1.4.10 Reflow | met | The projects, settings and brand kit pages reflow at 320 CSS px in both themes; the header and the project rows wrap. The editor is a two-dimensional layout (timeline and canvas), which the criterion exempts. |
+| 1.4.11 Non-text contrast | met | `bun run check:contrast` measures every pair of colours; a browser test measures field borders and focus outlines at 3:1 in both themes. |
+| 1.4.12 Text spacing | met | A browser test applies the spacing of the criterion to the pages and to the editor and checks that no text is hidden. |
+| 2.4.11 Focus not obscured (minimum) | met | A browser test tabs through each page and the editor and checks that the focused element is never hidden behind other content. |
+| 2.4.13 Focus appearance | not claimed | The criterion is level AAA. The 2 px solid focus outline is built to meet it. |
+| 2.5.7 Dragging movements | met | Every drag has a keyboard or single-click alternative: the "Add to timeline" button for the library, the track menu for reordering, `[` and `]` for trim handles, the Transform and Keyframes sections of the inspector, and the arrow keys for the splitter. |
+| 2.5.8 Target size (minimum) | met by exception | Pointer targets are at least 24 by 24 CSS px or spaced as the criterion allows. The exception: the keyframe diamonds of a timeline block are 10 px, and the same function is in the Keyframes section of the inspector. |
+| 3.2.6 Consistent help | met | The shortcuts button keeps its place in the top bar of every project. The pages offer no help mechanism, so there is nothing to keep consistent there. |
+| 3.3.7 Redundant entry | met | A refused font import keeps the path and the family name you typed. |
+| 3.3.8 Accessible authentication (minimum) | met | The sign-in fields have labels, allow paste and autofill, and there is no puzzle or captcha. Local mode has no sign-in. |
+| 3.3.9 Accessible authentication (enhanced) | not claimed | The criterion is level AAA. |
+
+## What the tools check
+
+- **axe-core**: in the dark and the light theme, on the empty project, a project with items, each type of selected item, the library with an error card, the export dialog in each state, the palette and the history.
+- **Contrast**: text at 4.5:1 or more, large text and interface components at 3:1 or more, for every pair of colours of the design system.
+- **Keyboard only**: split, trim, nudge, delete, undo and export, done without a pointer.
+
+## Keyboard, focus and screen reader support in the design
+
+- Native elements come first, and dialogs, menus and popovers trap focus, give it back to the opener and close with `Esc`.
+- Every icon-only button has a name. The timeline is a grid with named cells, and a hidden live region announces results such as "Split, 2 items", errors and export progress.
+- Regions are landmarks: `F6` jumps to the next one. See [Keyboard shortcuts](/docs/guide/keyboard-shortcuts).
+- Animations respect `prefers-reduced-motion`.
+
+## Screen readers: pending
+
+| Check | State | Notes |
+| --- | --- | --- |
+| NVDA on Windows | pending | A manual pass by the author (task P3-QA-002). No result is claimed before it. |
+| VoiceOver on macOS | pending | A manual pass by the author (task P3-QA-002). No result is claimed before it. |
+
+The preview canvas is an image with a text label ("Preview, frame 375 at 00:12.500"). Every action on it has a keyboard equivalent in the inspector or the toolbar.
+
+## Common mistakes
+
+- Reading this table as a certification: it is a statement of what is measured, not an audit by a third party.
+- Expecting a shortcut to work inside a text field: shortcuts are ignored while you type, except `Mod+K`.
+
+## Next steps
+
+- [Keyboard shortcuts](/docs/guide/keyboard-shortcuts)
+- [The safe area](/docs/guide/safe-area)
