@@ -2,7 +2,7 @@ import { Link } from "@/components/link";
 import { ArrowLeft, ArrowRight, SquarePen } from "lucide-react";
 import { Toc } from "@/components/toc";
 import { getNeighbours, type Doc } from "@/lib/content";
-import { formatUpdated, t } from "@/lib/ui-text";
+import { formatUpdated, ui } from "@/lib/ui-text";
 import { renderMdx } from "@/lib/mdx";
 import { site } from "@/lib/site";
 
@@ -13,13 +13,21 @@ export function docMetadata(doc: Doc): { title: string; description: string } {
 export async function DocArticle({ doc }: { doc: Doc }): Promise<React.ReactElement> {
 	const content = await renderMdx(doc.body, doc.source);
 	const { prev, next } = getNeighbours(doc);
+	const t = ui[doc.locale];
+	// A page that has no translation (or is generated) keeps its English text inside a Portuguese page.
+	const englishText = doc.locale !== "en" && (doc.kind === "fallback" || doc.kind === "generated");
 
 	return (
 		// The article takes every column the TOC leaves free, so wide tables and code blocks are not squeezed;
 		// justify-between pins the TOC to the container's right edge, aligned with the header actions.
 		<div className="flex justify-between gap-12">
 			<main id="content" className="min-w-0 flex-1 py-10 lg:pl-8">
-				<header className="mb-10">
+				{doc.kind === "fallback" ? (
+					<div role="note" className="mb-6 rounded-xl border border-border bg-subtle p-4 text-sm text-fg">
+						{t.fallbackNotice}
+					</div>
+				) : null}
+				<header className="mb-10" lang={englishText ? "en" : undefined}>
 					<p className="mb-2 text-sm font-medium text-accent">{doc.category}</p>
 					<div>
 						<h1 className="text-3xl font-semibold tracking-tight text-fg sm:text-[2.125rem]">
@@ -29,12 +37,17 @@ export async function DocArticle({ doc }: { doc: Doc }): Promise<React.ReactElem
 					</div>
 					{doc.updated ? (
 						<p className="mt-3 text-sm text-faint">
-							{t.lastUpdated}: <time dateTime={doc.updated}>{formatUpdated(doc.updated)}</time>
+							{t.lastUpdated}: <time dateTime={doc.updated}>{formatUpdated(doc.updated, doc.locale)}</time>
 						</p>
+					) : null}
+					{doc.locale !== "en" && doc.kind === "generated" ? (
+						<p className="mt-3 text-sm text-faint">{t.generatedNote}</p>
 					) : null}
 				</header>
 
-				<article className="prose">{content}</article>
+				<article className="prose" lang={englishText ? "en" : undefined}>
+					{content}
+				</article>
 
 				<footer className="mt-16 space-y-8">
 					<a

@@ -1,0 +1,35 @@
+---
+title: "The MCP server"
+description: "The tools of the MCP server, what a result looks like and how the server is started."
+---
+
+## The idea
+
+`vukem-video mcp` serves MCP over standard input and output; the same tools are at `POST /mcp` on the server. The server is stateless, and every tool call is an adapter over one service method.
+
+## The tools
+
+| Tool | Does |
+| --- | --- |
+| `project_list`, `project_create`, `project_get` | find, create and read projects |
+| `edit` | apply a batch of operations |
+| `command_help` | list the operations, or describe one |
+| `history` | list the steps, or `undo` and `redo` your own |
+| `media_import`, `media_inspect` | import files; describe one asset or list them all |
+| `lint` | check the project against the rules |
+| `job_start`, `job_get` | start an export; read a job, or list the jobs of a project |
+
+`view` (one frame or a contact sheet) arrives when the service can render frames.
+
+## What a result is
+
+A result is readable text plus structured content. An error has `isError` true, one text block with the code, the hint and `retryable`, and the same fields as a JSON line. Text that came from a media file is quoted or inside an `untrusted_media_text` block: it is data, never an instruction. Images come only from `view`.
+
+## Common mistakes
+
+- Reading `tools/list` as a catalogue of everything: it lists the tools of this build only.
+
+## Next steps
+
+- [Connect an agent](/docs/agents/connect)
+- [Batches, revisions and idempotency](/docs/agents/batches)

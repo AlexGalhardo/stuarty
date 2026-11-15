@@ -1,0 +1,40 @@
+---
+title: "Basic timeline editing"
+description: "Add tracks, place clips and read the project back."
+---
+
+## You will learn
+
+- how to add a track and a clip in one batch;
+- how to read the project cheaply.
+
+## Quick start
+
+Add two tracks and a clip. The clip names the imported asset, where it starts on the timeline, where it starts in the source and how long it runs:
+
+```json
+{
+  "project_id": "prj_7k2m9x4q1b",
+  "base_revision": 1,
+  "operations": [
+    { "op": "track.add", "args": { "kind": "visual", "name": "Video", "id": "trk_f6g7h8j9k0" } },
+    { "op": "clip.add", "args": {
+      "track_id": "trk_f6g7h8j9k0", "asset_id": "ast_3c5v8n2w6d",
+      "start": "0s", "source_in": "2s", "duration": "5s", "id": "itm_m1n2p3q4r5"
+    } }
+  ]
+}
+```
+
+Send it with the `edit` MCP tool, `vukem-video edit --project prj_7k2m9x4q1b --ops -` (the batch on standard input), or `POST /api/v1/projects/{id}/edit`. The result gives the new `revision`, the ids created and a `diff`.
+
+Read the project back as text with `project_get` (or `project:show`). The concise view is meant to fit in two pages of a few thousand tokens even for a long project; follow `next_cursor` for the next page.
+
+## Common mistakes
+
+- A clip longer than the asset, or a `source_in` past its end: `E_INVALID_TIME`.
+- Two items on one track at the same time: `E_OVERLAP`.
+
+## Next steps
+
+- [Editing tools: trim, split, move](/docs/guide/editing-tools)

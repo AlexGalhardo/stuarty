@@ -1,0 +1,13 @@
+---
+import DocPage from "@/src/components/DocPage.astro";
+import { getAllDocs, getDoc } from "@/lib/content";
+
+export function getStaticPaths() {
+	return getAllDocs("pt-br").map((doc) => ({ params: { slug: doc.slug.join("/") } }));
+}
+
+const doc = getDoc("pt-br", Astro.params.slug?.split("/") ?? []);
+if (!doc) throw new Error(`missing doc ${Astro.params.slug}`);
+---
+
+<DocPage doc={doc} />

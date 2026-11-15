@@ -1,0 +1,29 @@
+---
+title: "Commands, batches and revisions"
+description: "How an edit is a batch of named operations, how revisions protect against stale plans, and how to retry safely."
+---
+
+## The idea
+
+An edit is a **batch**: a list of **operations**, each one a named command such as `track.add` or `item.move`, with its arguments. The whole batch applies or none of it does, and it becomes one revision and one undo step.
+
+Every batch names the `base_revision` it was planned against. If the project moved on, the core tries to replay your batch on top of the newer revisions. When the changes overlap, it answers `E_REVISION_CONFLICT` with a text diff of what changed, so you can read it and plan again.
+
+## Quick start
+
+1. Read the revision: `project_get`, or the `revision` of your last edit result.
+2. Send the batch with that `base_revision`. Give a new track or item your own `id` when a later operation in the same batch refers to it.
+3. Use `dry_run: true` to check a batch without saving it.
+4. Use an `idempotency_key` when you may retry: the same key with the same batch returns the first result, with `replayed: true`. The same key with a different batch is `E_IDEMPOTENCY_MISMATCH`.
+
+The operations are in the [command catalogue](/docs/reference/commands).
+
+## Common mistakes
+
+- Sending a `base_revision` ahead of the project: `E_VALIDATION`.
+- Retrying a conflict unchanged. Read the diff first.
+
+## Next steps
+
+- [Tracks, clips and items](/docs/concepts/tracks-clips-items)
+- [Batches, revisions and idempotency for agents](/docs/agents/batches)

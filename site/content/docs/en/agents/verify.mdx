@@ -1,0 +1,29 @@
+---
+title: "How an agent verifies its work: view and lint"
+description: "Look cheaply first, then spend tokens: read the project, run lint, then look at a frame."
+---
+
+## The idea
+
+An agent should check its work the cheapest way that can answer the question. The order is: read the project as text, run the lint rules, then look at pixels.
+
+1. `project_get` (concise text): are the tracks and items what you planned?
+2. `lint`: does the project break a rule? Errors block an export; warnings do not.
+3. `view` with `mode` `frame`, then `sheet`: does it look right? Frames come from the export path, so they show what the export will contain.
+
+## Quick start
+
+```bash
+vukem-video lint --project prj_7k2m9x4q1b --severity error
+```
+
+`lint --strict` exits `1` when there is at least one error finding, which suits a script.
+
+## Common mistakes
+
+- Looking at frames first. An image costs many more tokens than the text view.
+- Treating the fast lint line of an edit result as complete: some rules run only in `lint` and at the export gate.
+
+## Next steps
+
+- [Exporting](/docs/guide/exporting)

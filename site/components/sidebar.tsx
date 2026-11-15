@@ -5,7 +5,7 @@ import { Collapsible } from "@base-ui/react/collapsible";
 import { Link } from "@/components/link";
 import { ChevronRight } from "lucide-react";
 import type { NavGroup } from "@/lib/content";
-import { t } from "@/lib/ui-text";
+import { useT } from "@/lib/locale-context";
 import { site } from "@/lib/site";
 
 function Item({
@@ -60,6 +60,7 @@ export function Sidebar({
 	collapsible?: boolean;
 	onNavigate?: () => void;
 }) {
+	const t = useT();
 	const live = useBrowserPath();
 	// trailingSlash adds a slash in the browser; nav hrefs have none.
 	const path = pathname ?? live;

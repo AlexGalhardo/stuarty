@@ -1,0 +1,46 @@
+---
+title: "Exportação"
+description: "Renderize um projeto em um MP4 H.264, espere por ele e encontre o arquivo verificado."
+---
+
+## O que você vai aprender
+
+- como iniciar uma exportação e acompanhá-la;
+- o que precisa ser verdade antes de uma exportação ser aceita.
+
+## A ideia
+
+Uma exportação é uma **tarefa**. Ela renderiza a revisão atual, codifica um MP4 com o FFmpeg e verifica o arquivo (streams, duração, dimensões, formato de pixel e faststart) antes de marcar a tarefa como `succeeded`. Um arquivo que falha na verificação nunca é informado como pronto.
+
+A exportação é recusada enquanto a verificação encontrar um erro, com `E_LINT_BLOCKING` e os primeiros achados. Avisos nunca bloqueiam.
+
+## Início rápido
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video lint --project prj_7k2m9x4q1b
+vukem-video export --project prj_7k2m9x4q1b
+```
+
+A CLI espera pela tarefa. Use `--no-wait` para voltar na hora e `vukem-video job:show <job id> --wait` depois.
+
+</Tab>
+<Tab title="MCP">
+
+`job_start` com `{"project_id": "prj_7k2m9x4q1b", "kind": "export", "wait_ms": 25000}`, depois `job_get` com `wait_ms` até o estado ser final.
+
+</Tab>
+</Tabs>
+
+O resultado de uma exportação concluída traz o caminho do arquivo em `<workspace>/exports/<project id>/<job id>.mp4`, o seu tamanho e a sua duração.
+
+## Erros comuns
+
+- Nenhum codificador H.264 funciona nesta máquina: `E_NO_ENCODER`.
+- Exportações demais ao mesmo tempo: `E_QUEUE_FULL`, que pode ser repetido. `VUKEM_VIDEO_MAX_EXPORTS` define o limite.
+
+## Próximos passos
+
+- [Como um agente verifica o próprio trabalho](/docs/agents/verify)

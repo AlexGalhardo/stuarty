@@ -1,8 +1,16 @@
 ---
 import Base from "../layouts/Base.astro";
 import { NotFoundView } from "@/components/not-found-view";
+import { ui } from "@/lib/ui-text";
 ---
 
-<Base title="Page not found" description="The page you are looking for does not exist or has moved." noindex>
+<Base title={`${ui.en.notFoundTitle} / ${ui["pt-br"].notFoundTitle}`} description={ui.en.notFoundBody} noindex>
 	<NotFoundView />
+	<script is:inline>
+		(function () {
+			var pt = location.pathname.indexOf("/pt-br/") !== -1;
+			var blocks = document.querySelectorAll("[data-lang]");
+			for (var i = 0; i < blocks.length; i++) blocks[i].hidden = (blocks[i].getAttribute("data-lang") === "pt-br") !== pt;
+		})();
+	</script>
 </Base>

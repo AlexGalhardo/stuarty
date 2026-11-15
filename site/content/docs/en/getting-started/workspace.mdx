@@ -1,0 +1,41 @@
+---
+title: "Workspace and storage"
+description: "The one directory where Vukem Video keeps your projects, media and exports, and how it is protected."
+---
+
+## You will learn
+
+- what the workspace is and where it lives;
+- what is inside it;
+- why only one process writes to it at a time.
+
+## The idea
+
+Everything the program stores is in one directory, the workspace. It is `~/.vukem-video` unless `VUKEM_VIDEO_HOME` says otherwise. Your original media is copied into it once and kept by content, so importing the same file twice adds nothing, and deleting a project never deletes your only copy of a file by surprise.
+
+```text
+<workspace>/
+├── db.sqlite     projects, history, jobs
+├── store/        the imported originals, by content hash
+├── artifacts/    files derived from them: proxies, thumbnails, audio peaks
+├── exports/      exported videos: exports/<project id>/<job id>.mp4
+├── frames/       cache of rendered frames
+├── backups/      copies of the database made before a migration
+└── logs/
+```
+
+The full layout is in SDD-000 section 9 of the repository.
+
+## One owner at a time
+
+Exactly one process owns the workspace and writes to it: `vukem-video serve`, or a `vukem-video mcp` session when no server is running. Every other command, the editor and the agents talk to that owner over HTTP on your machine. A second process that cannot reach the owner fails with `E_WORKSPACE_LOCKED`, which is safe to retry.
+
+## Common mistakes
+
+- Copying the workspace while a server runs. Stop the server first, or copy only `exports/`.
+- Expecting the trash to be a folder. Trash is a state in the database; the files stay where they are.
+
+## Next steps
+
+- [Projects](/docs/projects)
+- [Configuration variables](/docs/reference/configuration)
