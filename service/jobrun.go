@@ -344,6 +344,7 @@ func (s *svc) runIngest(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 			ArtifactsDir: filepath.Join(s.workspace, "artifacts"),
 			JobID:        job.ID,
 			Ceilings:     s.limits.Ceilings,
+			SoundMaps:    true,
 			OnProgress:   func(p ingest.Progress) { pw.report(ctx, p.Fraction, p.Message) },
 		}
 

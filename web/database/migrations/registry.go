@@ -22,5 +22,6 @@ func All() []schema.Migration {
 		m20261115110000CreateUsersTable(),
 		m20261115110100CreateAccessTokensTable(),
 		m20261115120000AddUsersDisabledMS(),
+		m20261115130000ArtifactsSpeechBeatsKinds(),
 	}
 }

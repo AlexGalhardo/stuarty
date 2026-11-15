@@ -268,6 +268,22 @@ func fakeResult(ws string, in ingest.Input) (*ingest.Result, error) {
 		{"loudness", "", "json", loud, 1, nil},
 	}
 
+	// The service asks for the sound maps (RF-043, RF-044); the real ingest then adds both.
+	if in.SoundMaps {
+		files = append(files,
+			struct {
+				kind, variant, ext, body string
+				profile                  int
+				meta                     any
+			}{"speech", "", "json", `{"version":1}`, 1, nil},
+			struct {
+				kind, variant, ext, body string
+				profile                  int
+				meta                     any
+			}{"beats", "", "json", `{"version":1}`, 1, nil},
+		)
+	}
+
 	res := &ingest.Result{
 		Kind: ingest.KindVideo, Summary: sum, TimingsMS: map[string]int64{"probe": 1},
 		Facts: ingest.Facts{
