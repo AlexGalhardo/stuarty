@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
 )
@@ -287,16 +286,7 @@ func TestTemplateScenarioIsTheSameThroughEverySurface(t *testing.T) {
 // the silences of the clip are removed, with the ids supplied by the scenario.
 // TestCaptionsScenarioOnSixRuns runs it through the real binary too.
 func TestCaptionsScenarioIsTheSameThroughEverySurface(t *testing.T) {
-	words := []transcribe.RawWord{
-		{Text: "hello", StartMS: 100, EndMS: 400},
-		{Text: "brave", StartMS: 400, EndMS: 700},
-		{Text: "new", StartMS: 1100, EndMS: 1400},
-		{Text: "world", StartMS: 1400, EndMS: 1900},
-	}
-
-	docs := sameThroughEverySurfaceWith(
-		t, "captions", testenv.Options{Transcriber: &testenv.StubTranscriber{Words: words}}, "prj_7k2m9x4q1b",
-	)
+	docs := sameThroughEverySurfaceWith(t, "captions", captionsOptions(), "prj_7k2m9x4q1b")
 
 	checkRecordedHash(t, "captions", docs["prj_7k2m9x4q1b"])
 }

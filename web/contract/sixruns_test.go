@@ -38,6 +38,13 @@ func stubWords() []transcribe.RawWord {
 	}
 }
 
+// captionsOptions are the in-process environments of the captions scenario: the
+// stub provider with the words of the binary, and the silence ranges of a real
+// analysis, so that Direct and the real binary cut the same frames.
+func captionsOptions() testenv.Options {
+	return testenv.Options{Transcriber: &testenv.StubTranscriber{Words: stubWords()}, SilenceBlocks: true}
+}
+
 // startLocal prepares the workspace of a CLI process that runs with no server:
 // every command opens the workspace, runs the Service in its own process and
 // leaves.
@@ -107,7 +114,7 @@ func sixRuns(t *testing.T, scenario string, projects ...string) {
 
 	ffmpeg, ffprobe := tools(t, false)
 	steps, fixtures := loadScenario(t, scenario)
-	opts := testenv.Options{Transcriber: &testenv.StubTranscriber{Words: stubWords()}}
+	opts := captionsOptions()
 
 	oracle := newDirectWith(t, opts)
 	want := run(t, oracle, steps, fixtures)
@@ -147,7 +154,10 @@ func sixRuns(t *testing.T, scenario string, projects ...string) {
 		{serving(mcpStdio), &processWant},
 		{serving(mcpHTTP), &processWant},
 		{serving(func(_ *testing.T, p *procEnv) driver { return &cliProc{p: p} }), &processWant},
-		{func(t *testing.T) driver { t.Helper(); return &cliProc{p: startLocal(t, ffmpeg, ffprobe), local: true} }, &processWant},
+		{
+			func(t *testing.T) driver { t.Helper(); return &cliProc{p: startLocal(t, ffmpeg, ffprobe), local: true} },
+			&processWant,
+		},
 	}
 
 	for _, r := range runs {
