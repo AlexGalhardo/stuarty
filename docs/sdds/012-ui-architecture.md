@@ -647,7 +647,7 @@ Every item is a `div.tl-item` with a type class (`tl-clip`, `tl-audio`, `tl-text
 
 The label and the caption words are rendered with `UntrustedText` (§1.2, untrusted text). Colours come from tokens (§17). A selected item has a 2 px selection ring (token `--ed-selection`). A locked or hidden track dims its row. An item whose asset is missing (`ast_placeholder` or unknown) shows a warning icon.
 
-Track header: name (inline rename sends `track.update`), a hide toggle (visual tracks) or a mute toggle (any track), a drag handle for reordering, a menu (add track above or below, remove, caption style). Row height: 64 px for visual tracks with thumbnails, 48 px for audio, 40 px for tracks of only text and captions; resizable in BETA.
+Track header: name (inline rename sends `track.update`), a hide toggle (visual tracks) or a mute toggle (any track), a drag handle for reordering, a menu (add track above or below, remove, caption style). Row height: 64 px for visual tracks with thumbnails, 48 px for audio, 40 px for tracks of only text and captions. In BETA a splitter (`role="separator"`, `ui/Splitter.tsx`) at the bottom edge of each header resizes the rows of that kind of track (visual or audio) between 32 and 160 px: drag, Up and Down by 4 px (16 with Shift), Home and End for the bounds, Enter or a double click for the default. The two heights are kept in `vv.layout` as `{"rows": {"visual": px, "audio": px}}` through `state/prefs.ts`; a stored value outside the bounds reads as the default. Items fill the row less 4 px above and below, so they follow the height. The heights are screen state and never reach the core.
 
 ### 7.5 Playhead
 

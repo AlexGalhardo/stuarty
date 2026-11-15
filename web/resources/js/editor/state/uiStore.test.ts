@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import { createUiStore } from "./uiStore";
 
@@ -42,5 +42,42 @@ describe("keyframe selection", () => {
 		writer.selectKeyframe(ref);
 		writer.dropSelection(() => true);
 		expect(store.getState().selection.keyframe).toEqual(ref);
+	});
+});
+
+describe("row heights", () => {
+	test("are clamped to the bounds and written to vv.layout", () => {
+		const saved = new Map<string, string>();
+		vi.stubGlobal("localStorage", {
+			getItem: (key: string) => saved.get(key) ?? null,
+			setItem: (key: string, value: string) => void saved.set(key, value),
+		});
+		const { store, writer } = createUiStore();
+		expect(store.getState().rowPx).toEqual({ visual: 64, audio: 48 });
+		writer.setRowPx("visual", 5000);
+		writer.setRowPx("audio", 1);
+		expect(store.getState().rowPx).toEqual({ visual: 160, audio: 32 });
+		expect(JSON.parse(saved.get("vv.layout") ?? "null")).toEqual({
+			rows: { visual: 160, audio: 32 },
+		});
+		expect(createUiStore().store.getState().rowPx).toEqual({
+			visual: 160,
+			audio: 32,
+		});
+		vi.unstubAllGlobals();
+	});
+});
+
+describe("preview audio and size", () => {
+	test("volume stays between 0 and 1 and mute toggles", () => {
+		const { store, writer } = createUiStore();
+		writer.setPreviewVolume(3);
+		expect(store.getState().previewVolume).toBe(1);
+		writer.setPreviewVolume(-1);
+		expect(store.getState().previewVolume).toBe(0);
+		writer.togglePreviewMuted();
+		expect(store.getState().previewMuted).toBe(true);
+		writer.setPreviewSize("50");
+		expect(store.getState().previewSize).toBe("50");
 	});
 });

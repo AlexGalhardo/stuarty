@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { readTimeUnit, writeTimeUnit } from "./prefs";
+import { readLayout, readTimeUnit, writeLayout, writeTimeUnit } from "./prefs";
 
 function storage(initial: Record<string, string> = {}) {
 	const data = new Map(Object.entries(initial));
@@ -37,5 +37,37 @@ describe("time unit preference", () => {
 		});
 		expect(readTimeUnit()).toBe("s");
 		expect(() => writeTimeUnit("f")).not.toThrow();
+	});
+});
+
+describe("layout preference", () => {
+	test("reads the defaults, then what was written", () => {
+		vi.stubGlobal("localStorage", storage());
+		expect(readLayout().rows).toEqual({ visual: 64, audio: 48 });
+		writeLayout({ rows: { visual: 96, audio: 40 } });
+		expect(readLayout().rows).toEqual({ visual: 96, audio: 40 });
+	});
+
+	test("a value outside the bounds or of another type reads as the default", () => {
+		vi.stubGlobal(
+			"localStorage",
+			storage({ "vv.layout": '{"rows":{"visual":9999,"audio":"x"}}' }),
+		);
+		expect(readLayout().rows).toEqual({ visual: 64, audio: 48 });
+	});
+
+	test("a blocked storage leaves the defaults and does not throw", () => {
+		vi.stubGlobal("localStorage", {
+			getItem: () => {
+				throw new Error("blocked");
+			},
+			setItem: () => {
+				throw new Error("blocked");
+			},
+		});
+		expect(readLayout().rows).toEqual({ visual: 64, audio: 48 });
+		expect(() =>
+			writeLayout({ rows: { visual: 70, audio: 50 } }),
+		).not.toThrow();
 	});
 });

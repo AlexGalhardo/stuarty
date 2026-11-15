@@ -145,6 +145,8 @@
         "show": "Show track",
         "mute": "Mute track",
         "unmute": "Unmute track",
+        "row_height_visual": "Height of video track rows",
+        "row_height_audio": "Height of audio track rows",
         "add_visual_above": "Add video track above",
         "add_visual_below": "Add video track below",
         "add_audio_above": "Add audio track above",

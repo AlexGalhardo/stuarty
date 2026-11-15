@@ -145,6 +145,8 @@
         "show": "Mostrar faixa",
         "mute": "Silenciar faixa",
         "unmute": "Reativar o som da faixa",
+        "row_height_visual": "Altura das linhas das faixas de vídeo",
+        "row_height_audio": "Altura das linhas das faixas de áudio",
         "add_visual_above": "Adicionar faixa de vídeo acima",
         "add_visual_below": "Adicionar faixa de vídeo abaixo",
         "add_audio_above": "Adicionar faixa de áudio acima",

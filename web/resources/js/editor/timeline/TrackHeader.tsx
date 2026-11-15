@@ -24,14 +24,16 @@ import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n";
 import { useActions, useCanEdit } from "../commands/useActions";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
+import { DEFAULT_ROWS, ROW_BOUNDS } from "../state/prefs";
 import {
 	selectOrderedTrackIds,
 	selectTrack,
 	selectTrackItemIds,
 } from "../state/selectors";
 import ConfirmTrackRemove from "../ui/ConfirmTrackRemove";
+import Splitter from "../ui/Splitter";
 import { beginReorder, type Ghost } from "./gestures/reorder";
-import { rowHeight } from "./TrackRow";
+import { useRowHeight } from "./TrackRow";
 
 // The inline editor of the name: Enter or leaving the field sends
 // `track.update`, Esc leaves it alone (SDD-012 section 7.4).
@@ -83,6 +85,8 @@ export default function TrackHeader({ id }: { id: string }): ReactNode {
 	const actions = useActions();
 	const canEdit = useCanEdit();
 	const track = useDocumentState((s) => selectTrack(s, id));
+	const kind = track?.kind === "audio" ? "audio" : "visual";
+	const rowPx = useRowHeight(kind);
 	const order = useDocumentState(selectOrderedTrackIds);
 	const itemCount = useDocumentState((s) => selectTrackItemIds(s, id).length);
 	const [renaming, setRenaming] = useState(false);
@@ -111,8 +115,8 @@ export default function TrackHeader({ id }: { id: string }): ReactNode {
 				event.preventDefault();
 				runtime.uiWriter.selectTrack(id);
 			}}
-			style={{ height: rowHeight(track.kind) }}
-			className="flex items-center gap-1 border-b border-ed-track-line px-1 text-xs"
+			style={{ height: rowPx }}
+			className="relative flex items-center gap-1 border-b border-ed-track-line px-1 text-xs"
 		>
 			<button
 				type="button"
@@ -278,6 +282,18 @@ export default function TrackHeader({ id }: { id: string }): ReactNode {
 				open={confirming}
 				onOpenChange={setConfirming}
 				onConfirm={() => void actions.removeTrack(id, true)}
+			/>
+			<Splitter
+				label={t(
+					kind === "audio"
+						? "ui.editor.track.row_height_audio"
+						: "ui.editor.track.row_height_visual",
+				)}
+				value={rowPx}
+				min={ROW_BOUNDS.min}
+				max={ROW_BOUNDS.max}
+				defaultValue={DEFAULT_ROWS[kind]}
+				onChange={(px) => runtime.uiWriter.setRowPx(kind, px)}
 			/>
 			{ghost !== null &&
 				createPortal(

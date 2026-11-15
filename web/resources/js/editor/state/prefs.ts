@@ -67,3 +67,52 @@ export function writeShortcutsSeen(): void {
 		// Storage can be blocked: the tips show again on the next load.
 	}
 }
+
+// The track row heights in pixels, one per kind of track (SDD-012 section 7.4),
+// kept under `vv.layout`. Anything that is not a pair of numbers inside the
+// bounds reads as the default of that kind.
+export interface LayoutPrefs {
+	rows: { visual: number; audio: number };
+}
+
+export const ROW_BOUNDS = { min: 32, max: 160 } as const;
+export const DEFAULT_ROWS = { visual: 64, audio: 48 } as const;
+
+function validRow(value: unknown, fallback: number): number {
+	return typeof value === "number" &&
+		Number.isFinite(value) &&
+		value >= ROW_BOUNDS.min &&
+		value <= ROW_BOUNDS.max
+		? Math.round(value)
+		: fallback;
+}
+
+export function readLayout(): LayoutPrefs {
+	const defaults = { rows: { ...DEFAULT_ROWS } };
+	try {
+		const parsed: unknown = JSON.parse(
+			localStorage.getItem("vv.layout") ?? "null",
+		);
+		if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
+			return defaults;
+		const rows = (parsed as { rows?: unknown }).rows;
+		if (typeof rows !== "object" || rows === null) return defaults;
+		const { visual, audio } = rows as { visual?: unknown; audio?: unknown };
+		return {
+			rows: {
+				visual: validRow(visual, DEFAULT_ROWS.visual),
+				audio: validRow(audio, DEFAULT_ROWS.audio),
+			},
+		};
+	} catch {
+		return defaults;
+	}
+}
+
+export function writeLayout(layout: LayoutPrefs): void {
+	try {
+		localStorage.setItem("vv.layout", JSON.stringify(layout));
+	} catch {
+		// Storage can be blocked: the heights last for this page only.
+	}
+}
