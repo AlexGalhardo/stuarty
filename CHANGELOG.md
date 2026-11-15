@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-15
+
+### Added
+
+- **command:** Add clip.remove_silences ([f696d5f](https://github.com/AlexGalhardo/vukem-video/commit/f696d5fdc571b1b89267242457c0e914e276c8e5))
+- **command:** Add text.apply_preset, shape.add and shape.set ([5b15f5d](https://github.com/AlexGalhardo/vukem-video/commit/5b15f5df3534969024e55edd84130a122ad1a691))
+- **command:** Add caption.set_words, edit_word, set_breaks and set_style ([282e6ea](https://github.com/AlexGalhardo/vukem-video/commit/282e6ea92f07111c6e672c35b55614c9aa9e871b))
+- **command:** Add caption.split and caption.merge ([67b3289](https://github.com/AlexGalhardo/vukem-video/commit/67b32894413d1a45a02ea39e8f6645920c7b65e2))
+- **command:** Add caption.from_transcript and caption.retime_from_clip ([1bea23d](https://github.com/AlexGalhardo/vukem-video/commit/1bea23dc43a490d310613838e28411f4425314f5))
+- **command:** Add keyframe.set, keyframe.remove and keyframe.clear ([d2188b0](https://github.com/AlexGalhardo/vukem-video/commit/d2188b0bb3371368d2cb56c3f9a2386846a3e0c2))
+- **command:** Add slot.mark, slot.unmark, slot.fill and template.set_info ([d9d921a](https://github.com/AlexGalhardo/vukem-video/commit/d9d921a56b49f1a32315528f9e00d7d8aa591e79))
+- **lint:** Add the ALPHA rules, the layout measurer and the artifact reader ([c0e5861](https://github.com/AlexGalhardo/vukem-video/commit/c0e5861590f423732bc743a39361cd9cd8225bc9))
+- **schema:** Write the lint rule snapshot for the surfaces ([5c4e36d](https://github.com/AlexGalhardo/vukem-video/commit/5c4e36da17e9065f85efc8cfe20fa756e9eacecc))
+- **web:** Add api_keys table and audit append-only triggers ([f7d96e5](https://github.com/AlexGalhardo/vukem-video/commit/f7d96e53007577317ad67e91ed52240c5a3b6ddd))
+- **service:** Trash and restore of media, pending reconcile on project restore ([5ce5afe](https://github.com/AlexGalhardo/vukem-video/commit/5ce5afe8a79ca5283780130944dca0f21247d1f0))
+- **mcp:** Add the project_trash tool over ProjectTrash and ProjectRestore ([742d63a](https://github.com/AlexGalhardo/vukem-video/commit/742d63af8bb254fc0249ba632a8f8e8b107521bd))
+- **timeline:** Add BETA filter, blur, markers and animated image fields ([52c57c1](https://github.com/AlexGalhardo/vukem-video/commit/52c57c1f7bbb221d17854bbbfe76be4a54a2d832))
+- **timeline:** Validate user fonts against bundled families and duplicate weights ([4f8955e](https://github.com/AlexGalhardo/vukem-video/commit/4f8955ebd09ef78264eab848ac10702a7e5f5380))
+- **command:** Add clip.set_filter and clip.set_blur with the plan fields ([f720279](https://github.com/AlexGalhardo/vukem-video/commit/f72027966b9733f95dec32e28e6aca1947b02a65))
+- **service:** Audit the media trash and restore that go through a batch ([a090a8c](https://github.com/AlexGalhardo/vukem-video/commit/a090a8c5532e97018d16cfb80c2e28566eb4b871))
+- **mcp:** Make the stdio server the owner of the workspace ([5395695](https://github.com/AlexGalhardo/vukem-video/commit/5395695a4aab56ebdf90d57b211b7877c3e71df4))
+- **ui:** Switch the build to ALPHA and cover every command in the coverage contract ([c114ee3](https://github.com/AlexGalhardo/vukem-video/commit/c114ee39c7b3215590a42c95c5f1379fee5ca63f))
+- **core:** Add OpenTimelineIO export and import ([f7fcbf5](https://github.com/AlexGalhardo/vukem-video/commit/f7fcbf55d2b6015e8ad769daf378154054cdc83d))
+- **cli:** Generate the agent skill, snippet and instructions and add agent:docs ([4f86158](https://github.com/AlexGalhardo/vukem-video/commit/4f861586e2aed617c778fc38a11508d278e89555))
+- **mcp:** Read the server instructions from the embedded agent docs ([ffee37b](https://github.com/AlexGalhardo/vukem-video/commit/ffee37bfc7e90c0fe462c912aca6adabe7cf0268))
+
+### Fixed
+
+- **lint:** Sweep sorted spans in the transition rule instead of every frame ([3d426a3](https://github.com/AlexGalhardo/vukem-video/commit/3d426a3d03eeda4165e65747a7043fcaa9d26583))
+- **ui:** Return a stable empty list from the track selectors ([9a0749d](https://github.com/AlexGalhardo/vukem-video/commit/9a0749dce617ad5181bdede3f93e5189d54f035d))
+- **ui:** Size the video texture from the element and redraw when its data arrives ([867f0c8](https://github.com/AlexGalhardo/vukem-video/commit/867f0c8fb50996f93607f94cb992e60b2edf11de))
+- **command:** Keep the default registry at the Alpha build ([a2f995c](https://github.com/AlexGalhardo/vukem-video/commit/a2f995c850a25531b16fb4f1373b1bfe8f4e517d))
+- **web:** Keep the Accept of image routes when the guard forces JSON errors ([343db33](https://github.com/AlexGalhardo/vukem-video/commit/343db33be004d0715b4ad2f1cfadaa844d71a7b9))
+- **web:** List the owner routes in route:list ([ab6bc8e](https://github.com/AlexGalhardo/vukem-video/commit/ab6bc8e65008ab757d08904a01c2a8b4b495fb8e))
+- **docs:** Drop the double blank line of the generated skill ([8f6c0a9](https://github.com/AlexGalhardo/vukem-video/commit/8f6c0a931d4e7064b5d27b03ba66b8709b507ea1))
+
 ## [0.4.0] - 2026-11-15
 
 ### Added
@@ -240,7 +276,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.1.0...v0.2.0
