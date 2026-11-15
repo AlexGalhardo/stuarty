@@ -12,7 +12,16 @@ An `edit` call is a list of operations; each operation is one of these commands.
 | [`asset.remove`](/docs/reference/commands/asset.remove) | Removes an asset that no item uses. | `media` | alpha |
 | [`audio.add`](/docs/reference/commands/audio.add) | Places an audio asset, or the audio of a video asset, on an audio track. | `edit` | alpha |
 | [`caption.add`](/docs/reference/commands/caption.add) | Adds a caption item with timed words. | `edit` | prototype |
+| [`caption.edit_word`](/docs/reference/commands/caption.edit_word) | Changes the text of one word of a caption, or removes the word. | `edit` | alpha |
+| [`caption.from_transcript`](/docs/reference/commands/caption.from_transcript) | Creates captions for the speech of a clip from its transcript. | `edit` | alpha |
+| [`caption.merge`](/docs/reference/commands/caption.merge) | Joins two captions of one track into one that spans both. | `edit` | alpha |
+| [`caption.retime_from_clip`](/docs/reference/commands/caption.retime_from_clip) | Retimes the captions linked to a clip after the clip was moved, trimmed or sped up. | `edit` | alpha |
+| [`caption.set_breaks`](/docs/reference/commands/caption.set_breaks) | Sets the forced line breaks of a caption. | `edit` | alpha |
+| [`caption.set_style`](/docs/reference/commands/caption.set_style) | Sets or clears the style override of one caption. | `edit` | alpha |
+| [`caption.set_words`](/docs/reference/commands/caption.set_words) | Replaces the words of a caption. | `edit` | alpha |
+| [`caption.split`](/docs/reference/commands/caption.split) | Splits a caption into two at a word boundary. | `edit` | alpha |
 | [`clip.add`](/docs/reference/commands/clip.add) | Places a video or image asset on a visual track. | `edit` | prototype |
+| [`clip.remove_silences`](/docs/reference/commands/clip.remove_silences) | Cuts the silent stretches out of a clip, leaving one clip per stretch of speech. | `edit` | alpha |
 | [`clip.set_color`](/docs/reference/commands/clip.set_color) | Sets the brightness, contrast and saturation of a clip. | `edit` | alpha |
 | [`clip.set_framing`](/docs/reference/commands/clip.set_framing) | Sets how the asset of a clip is fitted into the frame and how much of each side is cropped. | `edit` | alpha |
 | [`clip.set_speed`](/docs/reference/commands/clip.set_speed) | Changes the speed of a clip or audio item while keeping the same source range. | `edit` | alpha |
@@ -26,10 +35,20 @@ An `edit` call is a list of operations; each operation is one of these commands.
 | [`item.set_transition`](/docs/reference/commands/item.set_transition) | Sets or removes the transition on one edge of a visual item. | `edit` | alpha |
 | [`item.split`](/docs/reference/commands/item.split) | Splits an item into two at a timeline frame. | `edit` | prototype |
 | [`item.trim`](/docs/reference/commands/item.trim) | Moves the start edge or the end edge of an item to a timeline position. | `edit` | prototype |
+| [`keyframe.clear`](/docs/reference/commands/keyframe.clear) | Removes all keyframes of one property, or of every property. | `edit` | alpha |
+| [`keyframe.remove`](/docs/reference/commands/keyframe.remove) | Removes the keyframe of a property at a frame. | `edit` | alpha |
+| [`keyframe.set`](/docs/reference/commands/keyframe.set) | Adds or replaces a keyframe of one animated property of an item. | `edit` | alpha |
 | [`project.rename`](/docs/reference/commands/project.rename) | Sets the project name. | `edit` | prototype |
 | [`settings.set`](/docs/reference/commands/settings.set) | Sets the frame size, the background colour or the loudness target. | `edit` | prototype |
 | [`settings.set_fps`](/docs/reference/commands/settings.set_fps) | Changes the project frame rate and rescales every time quantity. | `edit` | alpha |
+| [`shape.add`](/docs/reference/commands/shape.add) | Adds a rectangle, rounded rectangle or ellipse to a visual track. | `edit` | alpha |
+| [`shape.set`](/docs/reference/commands/shape.set) | Changes the shape, size, colours, stroke or radius of a shape item. | `edit` | alpha |
+| [`slot.fill`](/docs/reference/commands/slot.fill) | Fills a template slot with media, text or caption words. | `edit` | alpha |
+| [`slot.mark`](/docs/reference/commands/slot.mark) | Marks an item as a template slot. | `edit` | alpha |
+| [`slot.unmark`](/docs/reference/commands/slot.unmark) | Removes the slot marking of an item. | `edit` | alpha |
+| [`template.set_info`](/docs/reference/commands/template.set_info) | Sets the description and the named colours of the template. | `edit` | alpha |
 | [`text.add`](/docs/reference/commands/text.add) | Adds a text item to a visual track. | `edit` | prototype |
+| [`text.apply_preset`](/docs/reference/commands/text.apply_preset) | Animates one edge of a visual item with a named preset. | `edit` | alpha |
 | [`text.set`](/docs/reference/commands/text.set) | Changes the content or the style of a text item. | `edit` | prototype |
 | [`timeline.close_gap`](/docs/reference/commands/timeline.close_gap) | Closes the empty range that contains a given frame on a track. | `edit` | alpha |
 | [`track.add`](/docs/reference/commands/track.add) | Adds an empty track at a place in the track order. | `edit` | prototype |

@@ -1393,7 +1393,16 @@
               "asset.remove",
               "audio.add",
               "caption.add",
+              "caption.edit_word",
+              "caption.from_transcript",
+              "caption.merge",
+              "caption.retime_from_clip",
+              "caption.set_breaks",
+              "caption.set_style",
+              "caption.set_words",
+              "caption.split",
               "clip.add",
+              "clip.remove_silences",
               "clip.set_color",
               "clip.set_framing",
               "clip.set_speed",
@@ -1407,10 +1416,20 @@
               "item.set_transition",
               "item.split",
               "item.trim",
+              "keyframe.clear",
+              "keyframe.remove",
+              "keyframe.set",
               "project.rename",
               "settings.set",
               "settings.set_fps",
+              "shape.add",
+              "shape.set",
+              "slot.fill",
+              "slot.mark",
+              "slot.unmark",
+              "template.set_info",
               "text.add",
+              "text.apply_preset",
               "text.set",
               "timeline.close_gap",
               "track.add",
@@ -1437,8 +1456,35 @@
           "caption.add": {
             "$ref": "#/components/schemas/args.caption.add"
           },
+          "caption.edit_word": {
+            "$ref": "#/components/schemas/args.caption.edit_word"
+          },
+          "caption.from_transcript": {
+            "$ref": "#/components/schemas/args.caption.from_transcript"
+          },
+          "caption.merge": {
+            "$ref": "#/components/schemas/args.caption.merge"
+          },
+          "caption.retime_from_clip": {
+            "$ref": "#/components/schemas/args.caption.retime_from_clip"
+          },
+          "caption.set_breaks": {
+            "$ref": "#/components/schemas/args.caption.set_breaks"
+          },
+          "caption.set_style": {
+            "$ref": "#/components/schemas/args.caption.set_style"
+          },
+          "caption.set_words": {
+            "$ref": "#/components/schemas/args.caption.set_words"
+          },
+          "caption.split": {
+            "$ref": "#/components/schemas/args.caption.split"
+          },
           "clip.add": {
             "$ref": "#/components/schemas/args.clip.add"
+          },
+          "clip.remove_silences": {
+            "$ref": "#/components/schemas/args.clip.remove_silences"
           },
           "clip.set_color": {
             "$ref": "#/components/schemas/args.clip.set_color"
@@ -1479,6 +1525,15 @@
           "item.trim": {
             "$ref": "#/components/schemas/args.item.trim"
           },
+          "keyframe.clear": {
+            "$ref": "#/components/schemas/args.keyframe.clear"
+          },
+          "keyframe.remove": {
+            "$ref": "#/components/schemas/args.keyframe.remove"
+          },
+          "keyframe.set": {
+            "$ref": "#/components/schemas/args.keyframe.set"
+          },
           "project.rename": {
             "$ref": "#/components/schemas/args.project.rename"
           },
@@ -1488,8 +1543,29 @@
           "settings.set_fps": {
             "$ref": "#/components/schemas/args.settings.set_fps"
           },
+          "shape.add": {
+            "$ref": "#/components/schemas/args.shape.add"
+          },
+          "shape.set": {
+            "$ref": "#/components/schemas/args.shape.set"
+          },
+          "slot.fill": {
+            "$ref": "#/components/schemas/args.slot.fill"
+          },
+          "slot.mark": {
+            "$ref": "#/components/schemas/args.slot.mark"
+          },
+          "slot.unmark": {
+            "$ref": "#/components/schemas/args.slot.unmark"
+          },
+          "template.set_info": {
+            "$ref": "#/components/schemas/args.template.set_info"
+          },
           "text.add": {
             "$ref": "#/components/schemas/args.text.add"
+          },
+          "text.apply_preset": {
+            "$ref": "#/components/schemas/args.text.apply_preset"
           },
           "text.set": {
             "$ref": "#/components/schemas/args.text.set"
@@ -2451,6 +2527,279 @@
         ],
         "type": "object"
       },
+      "args.caption.edit_word": {
+        "additionalProperties": false,
+        "properties": {
+          "index": {
+            "description": "0-based index of the word.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "item_id": {
+            "description": "A caption.",
+            "type": "string"
+          },
+          "text": {
+            "description": "The new text, 0 to 80 characters, no whitespace; empty removes.",
+            "maxLength": 80,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "index",
+          "text"
+        ],
+        "type": "object"
+      },
+      "args.caption.from_transcript": {
+        "additionalProperties": false,
+        "properties": {
+          "clip_item_id": {
+            "description": "A clip of a video asset with audio.",
+            "type": "string"
+          },
+          "max_chars": {
+            "description": "Characters per caption, default 28.",
+            "maximum": 500,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "max_gap": {
+            "description": "A length, may be 0; a longer pause starts a caption. Default \"0.6s\".",
+            "type": "string"
+          },
+          "max_words": {
+            "description": "Words per caption, default 5.",
+            "maximum": 60,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "new_ids": {
+            "description": "Ids for the created captions, in order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "replace": {
+            "description": "Remove the captions linked to this clip on this track first. Default true.",
+            "type": "boolean"
+          },
+          "resolved": {
+            "additionalProperties": false,
+            "description": "Filled by the service from the transcript of the asset; never sent by a caller.",
+            "properties": {
+              "words": {
+                "description": "Words in order, not overlapping, in asset frames, half-open.",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "end": {
+                      "type": "integer"
+                    },
+                    "start": {
+                      "type": "integer"
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "start",
+                    "end"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "words"
+            ],
+            "type": "object"
+          },
+          "track_id": {
+            "description": "A visual track that receives the captions.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clip_item_id",
+          "track_id"
+        ],
+        "type": "object"
+      },
+      "args.caption.merge": {
+        "additionalProperties": false,
+        "properties": {
+          "item_ids": {
+            "description": "Exactly two distinct captions of one track, in any order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "item_ids"
+        ],
+        "type": "object"
+      },
+      "args.caption.retime_from_clip": {
+        "additionalProperties": false,
+        "properties": {
+          "clip_item_id": {
+            "description": "A clip of a video asset with audio.",
+            "type": "string"
+          },
+          "resolved": {
+            "additionalProperties": false,
+            "description": "Filled by the service from the transcript of the asset; never sent by a caller.",
+            "properties": {
+              "words": {
+                "description": "Words in order, not overlapping, in asset frames, half-open.",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "end": {
+                      "type": "integer"
+                    },
+                    "start": {
+                      "type": "integer"
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "start",
+                    "end"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "words"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "clip_item_id"
+        ],
+        "type": "object"
+      },
+      "args.caption.set_breaks": {
+        "additionalProperties": false,
+        "properties": {
+          "breaks": {
+            "description": "Indexes of the words that start a new line, strictly increasing; [] clears.",
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "item_id": {
+            "description": "A caption.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "breaks"
+        ],
+        "type": "object"
+      },
+      "args.caption.set_style": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A caption.",
+            "type": "string"
+          },
+          "style": {
+            "description": "A partial CaptionStyle replacing the override, or null or {} to clear it."
+          }
+        },
+        "required": [
+          "item_id",
+          "style"
+        ],
+        "type": "object"
+      },
+      "args.caption.set_words": {
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "description": "A length, at least the end of the last word. Default: that end.",
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A caption.",
+            "type": "string"
+          },
+          "words": {
+            "description": "1 to 60 words with times relative to the caption, as lengths.",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "duration": {
+                  "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+                  "type": "string"
+                },
+                "start": {
+                  "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "start",
+                "duration"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "item_id",
+          "words"
+        ],
+        "type": "object"
+      },
+      "args.caption.split": {
+        "additionalProperties": false,
+        "properties": {
+          "before_word": {
+            "description": "Index of the first word of the right part.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "item_id": {
+            "description": "A caption.",
+            "type": "string"
+          },
+          "new_id": {
+            "description": "The id of the right part.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "before_word"
+        ],
+        "type": "object"
+      },
       "args.clip.add": {
         "additionalProperties": false,
         "properties": {
@@ -2490,6 +2839,76 @@
           "track_id",
           "asset_id",
           "start"
+        ],
+        "type": "object"
+      },
+      "args.clip.remove_silences": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A clip of a video asset with audio.",
+            "type": "string"
+          },
+          "min_silence": {
+            "description": "A length; shorter silences are ignored. Default \"0.4s\".",
+            "type": "string"
+          },
+          "new_ids": {
+            "description": "Ids for the second, third, ... pieces, in order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "padding": {
+            "description": "A length, may be 0; speech kept around each cut. Default \"0.1s\".",
+            "type": "string"
+          },
+          "resolved": {
+            "additionalProperties": false,
+            "description": "Filled by the service from the silence analysis of the asset; never sent by a caller.",
+            "properties": {
+              "silences": {
+                "description": "Sorted, non-overlapping ranges in asset frames, half-open.",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "end": {
+                      "type": "integer"
+                    },
+                    "start": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "start",
+                    "end"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "silences"
+            ],
+            "type": "object"
+          },
+          "ripple": {
+            "description": "track (default) or none.",
+            "enum": [
+              "track",
+              "none"
+            ],
+            "type": "string"
+          },
+          "threshold_db": {
+            "description": "Noise level of silence: -30, -35 (default), -40 or -45.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "item_id"
         ],
         "type": "object"
       },
@@ -2857,6 +3276,104 @@
         ],
         "type": "object"
       },
+      "args.keyframe.clear": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "property": {
+            "description": "One property; default every animated property.",
+            "enum": [
+              "x",
+              "y",
+              "scale",
+              "rotation",
+              "opacity",
+              "volume"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.keyframe.remove": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "description": "Absolute position of the keyframe.",
+            "type": "string"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "property": {
+            "enum": [
+              "x",
+              "y",
+              "scale",
+              "rotation",
+              "opacity",
+              "volume"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "property",
+          "at"
+        ],
+        "type": "object"
+      },
+      "args.keyframe.set": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "description": "Absolute position inside the item, inclusive of its end.",
+            "type": "string"
+          },
+          "easing": {
+            "description": "From this keyframe to the next. Default linear.",
+            "enum": [
+              "linear",
+              "ease_in",
+              "ease_out",
+              "ease_in_out",
+              "hold"
+            ],
+            "type": "string"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "property": {
+            "enum": [
+              "x",
+              "y",
+              "scale",
+              "rotation",
+              "opacity",
+              "volume"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "description": "Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "item_id",
+          "property",
+          "at",
+          "value"
+        ],
+        "type": "object"
+      },
       "args.project.rename": {
         "additionalProperties": false,
         "properties": {
@@ -2913,6 +3430,235 @@
         ],
         "type": "object"
       },
+      "args.shape.add": {
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "description": "A length of at least 1 frame.",
+            "type": "string"
+          },
+          "fill": {
+            "description": "A colour; default #FFFFFF.",
+            "type": "string"
+          },
+          "height": {
+            "description": "Pixels before scale, above 0.",
+            "type": "number"
+          },
+          "id": {
+            "type": "string"
+          },
+          "radius": {
+            "description": "Pixels, 0 or more; rounded_rect only.",
+            "type": "number"
+          },
+          "shape": {
+            "enum": [
+              "rect",
+              "rounded_rect",
+              "ellipse"
+            ],
+            "type": "string"
+          },
+          "start": {
+            "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+            "type": "string"
+          },
+          "stroke_color": {
+            "description": "A colour; default #000000.",
+            "type": "string"
+          },
+          "stroke_width": {
+            "description": "Pixels, 0 or more.",
+            "type": "number"
+          },
+          "track_id": {
+            "description": "A visual track.",
+            "type": "string"
+          },
+          "width": {
+            "description": "Pixels before scale, above 0.",
+            "type": "number"
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "track_id",
+          "start",
+          "duration",
+          "shape",
+          "width",
+          "height"
+        ],
+        "type": "object"
+      },
+      "args.shape.set": {
+        "additionalProperties": false,
+        "properties": {
+          "fill": {
+            "description": "A colour.",
+            "type": "string"
+          },
+          "height": {
+            "description": "Pixels before scale, above 0.",
+            "type": "number"
+          },
+          "item_id": {
+            "description": "A shape item.",
+            "type": "string"
+          },
+          "radius": {
+            "description": "Pixels, 0 or more; rounded_rect only.",
+            "type": "number"
+          },
+          "shape": {
+            "enum": [
+              "rect",
+              "rounded_rect",
+              "ellipse"
+            ],
+            "type": "string"
+          },
+          "stroke_color": {
+            "description": "A colour.",
+            "type": "string"
+          },
+          "stroke_width": {
+            "description": "Pixels, 0 or more.",
+            "type": "number"
+          },
+          "width": {
+            "description": "Pixels before scale, above 0.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.slot.fill": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "description": "For a media slot.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The slot name.",
+            "type": "string"
+          },
+          "source_in": {
+            "description": "With asset_id only. Default \"0s\".",
+            "type": "string"
+          },
+          "text": {
+            "description": "For a text slot.",
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "words": {
+            "description": "For a caption slot: words with times relative to the caption, as lengths.",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "duration": {
+                  "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+                  "type": "string"
+                },
+                "start": {
+                  "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "start",
+                "duration"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "args.slot.mark": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "description": "Up to 200 characters.",
+            "maxLength": 200,
+            "type": "string"
+          },
+          "duration_policy": {
+            "description": "Media slots only. Default fit.",
+            "enum": [
+              "fit",
+              "stretch_timeline"
+            ],
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip, audio, text or caption item.",
+            "type": "string"
+          },
+          "name": {
+            "description": "Matches [a-z][a-z0-9_]{0,39}; unique among the slots.",
+            "type": "string"
+          },
+          "required": {
+            "description": "Default true.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "item_id",
+          "name"
+        ],
+        "type": "object"
+      },
+      "args.slot.unmark": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.template.set_info": {
+        "additionalProperties": false,
+        "properties": {
+          "colors": {
+            "additionalProperties": {},
+            "description": "Name to #RRGGBB or #RRGGBBAA; null removes the name.",
+            "type": "object"
+          },
+          "description": {
+            "description": "0 to 500 characters.",
+            "maxLength": 500,
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
       "args.text.add": {
         "additionalProperties": false,
         "properties": {
@@ -2954,6 +3700,45 @@
           "start",
           "duration",
           "text"
+        ],
+        "type": "object"
+      },
+      "args.text.apply_preset": {
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "description": "A length, at most the item's duration. Default \"0.4s\".",
+            "type": "string"
+          },
+          "edge": {
+            "description": "in or out.",
+            "enum": [
+              "in",
+              "out"
+            ],
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip, text, caption or shape item.",
+            "type": "string"
+          },
+          "preset": {
+            "description": "The animation.",
+            "enum": [
+              "fade_up",
+              "fade_down",
+              "pop",
+              "zoom_in",
+              "slide_left",
+              "slide_right"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "preset",
+          "edge"
         ],
         "type": "object"
       },
