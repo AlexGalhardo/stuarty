@@ -9,6 +9,7 @@ import type {
 	LintResult,
 	MediaImportResult,
 	MediaListResult,
+	PlanWindow,
 	PlanWindowHead,
 	ProjectGetResult,
 } from "./types";
@@ -33,6 +34,12 @@ export interface ApiClient {
 	edit(projectId: string, request: EditRequest): Promise<EditResult>;
 	undo(projectId: string): Promise<EditResult>;
 	redo(projectId: string): Promise<EditResult>;
+	getPlan(
+		projectId: string,
+		from: number,
+		to: number,
+		revision: number,
+	): Promise<PlanWindow>;
 	getPlanHead(
 		projectId: string,
 		from: number,
@@ -88,6 +95,12 @@ export function createClient(
 			call("POST", `${project(id)}/edit`, EDIT_TIMEOUT_MS, request),
 		undo: (id) => call("POST", `${project(id)}/undo`, EDIT_TIMEOUT_MS, {}),
 		redo: (id) => call("POST", `${project(id)}/redo`, EDIT_TIMEOUT_MS, {}),
+		getPlan: (id, from, to, revision) =>
+			call(
+				"GET",
+				`${project(id)}/plan?from=${from}&to=${to}&rev=${revision}`,
+				READ_TIMEOUT_MS,
+			),
 		getPlanHead: (id, from, to, revision) =>
 			call(
 				"GET",
