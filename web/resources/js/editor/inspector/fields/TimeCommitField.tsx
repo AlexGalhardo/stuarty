@@ -1,11 +1,8 @@
 import type { ReactNode } from "react";
 
 import { useLocale } from "@/lib/i18n";
-import {
-	DEFAULT_TIME_UNIT,
-	localizeDecimalInput,
-	normalizeTimeInput,
-} from "../../commands/units";
+import { localizeDecimalInput, normalizeTimeInput } from "../../commands/units";
+import { readTimeUnit } from "../../state/prefs";
 import TimeField from "../../ui/TimeField";
 import type { CommitResult } from "./commitField";
 import { FieldRow } from "./FieldFrame";
@@ -30,7 +27,7 @@ export default function TimeCommitField({
 	const binding = useCommitField(stored, async (draft) => {
 		const result = normalizeTimeInput(
 			localizeDecimalInput(draft, locale),
-			DEFAULT_TIME_UNIT,
+			readTimeUnit(),
 		);
 		if (!result.ok) {
 			return {
