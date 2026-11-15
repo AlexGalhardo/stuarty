@@ -94,6 +94,18 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ProjectBundleImport(ctx, service.ProjectBundleImportRequest{Path: "/x"})
 			return err
 		},
+		"FontImport": func() error {
+			_, err := e.svc.FontImport(ctx, service.FontImportRequest{Path: "/x"})
+			return err
+		},
+		"BrandKitGet": func() error {
+			_, err := e.svc.BrandKitGet(ctx, service.BrandKitGetRequest{})
+			return err
+		},
+		"BrandKitSet": func() error {
+			_, err := e.svc.BrandKitSet(ctx, service.BrandKitSetRequest{})
+			return err
+		},
 		"TemplateImport": func() error {
 			_, err := e.svc.TemplateImport(ctx, service.TemplateImportRequest{Path: "/x"})
 			return err
