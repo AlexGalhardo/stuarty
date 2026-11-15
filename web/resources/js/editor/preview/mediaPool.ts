@@ -85,6 +85,9 @@ export class MediaPool {
 		element.preload = "auto";
 		if (element instanceof HTMLVideoElement) element.playsInline = true;
 		element.addEventListener("seeked", this.onSeeked);
+		// A paused element at its first frame never seeks: its data arriving is the
+		// moment to draw it.
+		element.addEventListener("loadeddata", this.onSeeked);
 		element.src = url;
 		return element;
 	}
@@ -104,6 +107,7 @@ export class MediaPool {
 		if (entry.release !== null) this.timers.clearTimeout(entry.release);
 		entry.element.pause();
 		entry.element.removeEventListener("seeked", this.onSeeked);
+		entry.element.removeEventListener("loadeddata", this.onSeeked);
 		entry.element.removeAttribute("src");
 		entry.element.load();
 		entry.gain?.disconnect();
