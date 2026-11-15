@@ -44,6 +44,12 @@ export interface PreviewExecutor {
 	// Sets the size of the pixel buffer; the caller decides the fit.
 	resize(bufferWidth: number, bufferHeight: number): void;
 	getLayerGeometry(frame: number): LayerGeometry[];
+	// The `safe_area` of the plan window of that frame, `[x, y, w, h]` in project
+	// pixels, once the window is held (SDD-012 section 11.6).
+	getSafeArea(frame: number): [number, number, number, number] | null;
+	// Resolves when the plan window of the frame is held, so a caller can ask for
+	// its geometry; never rejects.
+	whenPlan(frame: number): Promise<void>;
 	readonly stats: {
 		videoElements: number;
 		planWindows: number;

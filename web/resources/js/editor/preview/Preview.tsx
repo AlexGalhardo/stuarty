@@ -1,4 +1,5 @@
 import {
+	Frame,
 	Pause,
 	Play,
 	SkipBack,
@@ -18,6 +19,9 @@ import {
 } from "../state/EditorContext";
 import { selectEndFrame, selectFps } from "../state/selectors";
 import { bufferSize, fitScale, truthWidth } from "./fit";
+import { hitTest } from "./overlays/hitTest";
+import SafeArea from "./overlays/SafeArea";
+import SelectionBox from "./overlays/SelectionBox";
 import { PixiExecutor } from "./PixiExecutor";
 import { PausedFrame } from "./pausedFrame";
 import Timecode from "./Timecode";
@@ -63,6 +67,10 @@ export default function Preview(): ReactNode {
 	const [state, setState] = useState<PreviewState>("idle");
 	const [live, setLive] = useState(playhead);
 	const [box, setBox] = useState({ w: 0, h: 0 });
+	const selection = useUiState((s) => s.selection.items);
+	const safeVisible = useUiState((s) => s.safeAreaVisible);
+	// Bumped when a plan window arrives, so the overlays read its geometry.
+	const [, setPlanTick] = useState(0);
 
 	revisionRef.current = revision ?? 0;
 
@@ -167,6 +175,21 @@ export default function Preview(): ReactNode {
 		return () => observer.disconnect();
 	}, [width, height]);
 
+	// The overlays read the plan window of the frame once it is held; while
+	// playing the executor already keeps the windows and `live` re-renders.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: the dependencies are the triggers; the effect reads only the executor and `live`.
+	useEffect(() => {
+		const instance = executor.current;
+		if (instance === null || !ready || state === "playing") return;
+		let alive = true;
+		void instance.whenPlan(live).then(() => {
+			if (alive) setPlanTick((n) => n + 1);
+		});
+		return () => {
+			alive = false;
+		};
+	}, [live, revision, ready, state, selection, safeVisible]);
+
 	const togglePlay = (): void => {
 		const instance = executor.current;
 		if (instance === null) return;
@@ -189,6 +212,11 @@ export default function Preview(): ReactNode {
 		runtime.uiWriter.setPlayhead(Math.max(frame, 0));
 	};
 	const playing = state === "playing" || state === "buffering";
+	const scale = width > 0 ? box.w / width : 0;
+	const layers = executor.current?.getLayerGeometry(live) ?? [];
+	const safeArea = safeVisible
+		? (executor.current?.getSafeArea(live) ?? null)
+		: null;
 	const unsupported = state === "unsupported";
 
 	return (
@@ -208,6 +236,30 @@ export default function Preview(): ReactNode {
 						alt={t("ui.editor.preview.frame")}
 						className="absolute inset-0 size-full"
 					/>
+					{/* biome-ignore lint/a11y/noStaticElementInteractions lint/a11y/useKeyWithClickEvents: picking on the canvas is a pointer affordance; the keyboard selects in the timeline. */}
+					<div
+						data-testid="canvas-overlay"
+						className="absolute inset-0"
+						onClick={(event) => {
+							if (scale === 0) return;
+							const rect = event.currentTarget.getBoundingClientRect();
+							const hit = hitTest(layers, {
+								x: (event.clientX - rect.left) / scale,
+								y: (event.clientY - rect.top) / scale,
+							});
+							const known =
+								hit !== null &&
+								runtime.documents.getState().document?.items[hit] !== undefined;
+							runtime.uiWriter.select(known && hit !== null ? [hit] : []);
+						}}
+					>
+						{safeArea !== null && <SafeArea rect={safeArea} scale={scale} />}
+						{layers
+							.filter((layer) => selection.includes(layer.item))
+							.map((layer) => (
+								<SelectionBox key={layer.item} geometry={layer} scale={scale} />
+							))}
+					</div>
 				</div>
 			</div>
 			{unsupported && (
@@ -271,6 +323,16 @@ export default function Preview(): ReactNode {
 					onClick={() => seekTo(endFrame)}
 				>
 					<SkipForward aria-hidden="true" />
+				</Button>
+				<Button
+					type="button"
+					variant={safeVisible ? "secondary" : "ghost"}
+					size="icon-sm"
+					aria-pressed={safeVisible}
+					aria-label={t("ui.editor.preview.safe_area")}
+					onClick={runtime.uiWriter.toggleSafeArea}
+				>
+					<Frame aria-hidden="true" />
 				</Button>
 				<span className="ml-3 flex items-center gap-1 text-muted-foreground">
 					<Timecode

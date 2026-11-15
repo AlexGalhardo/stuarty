@@ -234,6 +234,17 @@ export class PixiExecutor implements PreviewExecutor {
 		return layersAt(plan, frame).map((layer) => geometryOf(layer, frame));
 	}
 
+	getSafeArea(frame: number): [number, number, number, number] | null {
+		return this.windows.peek(frame)?.safe_area ?? null;
+	}
+
+	whenPlan(frame: number): Promise<void> {
+		return this.windows.ensure(frame).then(
+			() => undefined,
+			() => undefined,
+		);
+	}
+
 	private setState(state: PreviewState): void {
 		if (state === this.state) return;
 		this.state = state;
