@@ -2,10 +2,13 @@ package servicetest
 
 import (
 	"context"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
@@ -96,6 +99,64 @@ func TestLimitErrorsHideTheVariableFromNonAdmins(t *testing.T) {
 			assertNamesNoVariable(t, se)
 		} else if se.Details["variable"] != "VUKEM_VIDEO_MAX_EXPORTS" {
 			t.Errorf("%s: the administrator lost the variable: %+v", name, se.Details)
+		}
+	}
+}
+
+// SDD-011 section 2.6: the error an ingest limit leaves on the asset is the
+// error of its job, with the same details and hint, redacted for the caller
+// the same way (a member of a network server never sees the variable).
+func TestFailedIngestLimitIsTheSameOnTheAssetAndTheJob(t *testing.T) {
+	limitErr := func(context.Context, ingest.Input) (*ingest.Result, error) {
+		return nil, &ffmpeg.Error{
+			Code: "E_LIMIT_EXCEEDED", Reason: "import_seconds", Message: "The media is 9000 seconds long.",
+			Hint: "Ask the operator to raise VUKEM_VIDEO_MAX_IMPORT_SECONDS, or cut the file first.",
+			Details: map[string]any{
+				"limit": "import_seconds", "value": int64(9000), "ceiling": int64(7200),
+				"variable": "VUKEM_VIDEO_MAX_IMPORT_SECONDS",
+			},
+		}
+	}
+
+	member := networkCaller("user:alice", "alice", []string{
+		service.ScopeRead, service.ScopeEdit, service.ScopeMedia, service.ScopeRender,
+	})
+	admin := networkCaller("user:root", "root", service.AllScopes)
+
+	for name, who := range map[string]context.Context{"member": member, "admin": admin} {
+		m := newMediaEnv(t, mediaCfg{ingest: limitErr})
+
+		created, err := m.svc.ProjectCreate(who, service.ProjectCreateRequest{Name: name})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		imported, err := m.svc.MediaImport(who, service.MediaImportRequest{
+			ProjectID: created.ProjectID, Files: []service.ImportFile{{Path: m.write(name+".mp4", clipBytes)}},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		job, err := m.svc.JobGet(who, service.JobGetRequest{JobID: imported.Assets[0].JobID})
+		if err != nil || job.Error == nil {
+			t.Fatalf("%s: job = %+v, %v", name, job, err)
+		}
+
+		list, err := m.svc.MediaList(who, service.MediaListRequest{ProjectID: created.ProjectID})
+		if err != nil || len(list.Assets) != 1 || list.Assets[0].Error == nil {
+			t.Fatalf("%s: list = %+v, %v", name, list, err)
+		}
+
+		got, want := list.Assets[0].Error, job.Error
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("%s: asset error %+v differs from job error %+v", name, got, want)
+		}
+
+		if name == "member" {
+			assertNamesNoVariable(t, got)
+		} else if got.Details["variable"] != "VUKEM_VIDEO_MAX_IMPORT_SECONDS" {
+			t.Errorf("admin lost the variable: %+v", got)
 		}
 	}
 }
