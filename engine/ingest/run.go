@@ -133,6 +133,13 @@ func mapRunErr(err error, step, stderr string) error {
 			map[string]any{"step": step, "cause": "stalled"},
 			err,
 		)
+	case errors.Is(err, ffmpeg.ErrOutputTooLarge):
+		return ingestErr(
+			ReasonVerificationFailed,
+			"The media decoded to more data than it declares.",
+			map[string]any{"step": step, "cause": "output_over_declared_size"},
+			err,
+		)
 	case errors.As(err, &fe):
 		return err
 	}
