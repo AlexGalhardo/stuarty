@@ -188,6 +188,7 @@ fi
 name="ffmpeg-${FFMPEG_BUILD_VERSION}-${os}-${arch}"
 flags=()
 while IFS= read -r f; do flags+=("$f"); done < <({ flags_of common; flags_of "$os"; })
+flags+=("--extra-version=vukem${FFMPEG_BUILD_TAG##*-}")
 
 # The configure flags are checked before the build: a licence mistake costs nothing then.
 (cd "$root" && go run ./internal/tools/ffmpegconf -allow .config/ffmpeg-build/configure-allowlist.txt \

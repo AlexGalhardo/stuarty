@@ -26,6 +26,8 @@ check_binary() {
 	version="$("$ffmpeg" -hide_banner -version)"
 	buildconf="$("$ffmpeg" -hide_banner -buildconf)"
 	printf '%s\n' "$version" | head -n 1
+	# engine/ffmpeg/flavour.go knows the own build by this flag (SDD-011 8.2).
+	case "$version" in *--extra-version=vukem*) ;; *) die "the configure line has no --extra-version=vukem<N>" ;; esac
 
 	for m in --enable-gpl --enable-nonfree --enable-libx264 --enable-libx265 --enable-libfdk-aac --enable-libopenh264; do
 		case "$version$buildconf" in *"$m"*) die "the build carries $m" ;; esac
