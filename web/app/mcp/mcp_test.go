@@ -13,7 +13,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/command"
 )
 
-func TestToolListHasThePrototypeToolsWhoseOperationsExist(t *testing.T) {
+func TestToolListHasTheToolsWhoseOperationsExist(t *testing.T) {
 	t.Parallel()
 
 	cs := connect(t, newService(t), Options{}, "claude-code")
@@ -35,7 +35,7 @@ func TestToolListHasThePrototypeToolsWhoseOperationsExist(t *testing.T) {
 	}
 
 	want := []string{
-		"project_list", "project_create", "project_get", "edit", "command_help", "history",
+		"project_list", "project_create", "project_get", "project_trash", "edit", "command_help", "history",
 		"media_import", "media_inspect", "view", "lint", "job_start", "job_get",
 	}
 	if strings.Join(names, ",") != strings.Join(want, ",") {
@@ -494,5 +494,40 @@ func TestDefinitionsMatchTheSDD(t *testing.T) {
 		if !bytes.Equal(want, got) {
 			t.Errorf("definitions/%s.json differs from SDD-003 section 4.2", name)
 		}
+	}
+}
+
+// TestMCPTrashRestore is RF-131: project_trash moves a project to the trash and
+// restore=true brings it back with its revision unchanged; nothing is deleted.
+func TestMCPTrashRestore(t *testing.T) {
+	t.Parallel()
+
+	cs := connect(t, newService(t), Options{}, "claude-code")
+	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "Gone"})))["project_id"].(string)
+
+	edited := structured(t, ok(t, call(t, cs, "edit", map[string]any{
+		"project_id": project, "base_revision": 0,
+		"operations": []any{map[string]any{"op": "track.add", "args": map[string]any{"kind": "visual"}}},
+	})))
+
+	trashed := ok(t, call(t, cs, "project_trash", map[string]any{"project_id": project}))
+	if sc := structured(t, trashed); sc["state"] != "trashed" || sc["project_id"] != project {
+		t.Fatalf("trash: %v %s", sc, textOf(t, trashed))
+	}
+
+	listed := structured(t, ok(t, call(t, cs, "project_list", map[string]any{})))
+	if projects, _ := listed["projects"].([]any); len(projects) != 0 {
+		t.Fatalf("a trashed project is still listed: %v", listed)
+	}
+
+	back := map[string]any{"project_id": project, "restore": true}
+	restored := structured(t, ok(t, call(t, cs, "project_trash", back)))
+	if restored["state"] != "active" {
+		t.Fatalf("restore: %v", restored)
+	}
+
+	got := structured(t, ok(t, call(t, cs, "project_get", map[string]any{"project_id": project})))
+	if got["revision"] != edited["revision"] {
+		t.Fatalf("the revision changed from %v to %v", edited["revision"], got["revision"])
 	}
 }

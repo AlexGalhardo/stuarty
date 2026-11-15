@@ -1,0 +1,46 @@
+{
+ "name": "project_trash",
+ "description": "Move a project to the trash, or restore it with restore=true. Nothing is deleted for good; the project and its history stay intact.",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "project_id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "restore": {
+    "type": "boolean",
+    "default": false
+   }
+  },
+  "required": [
+   "project_id"
+  ],
+  "additionalProperties": false
+ },
+ "outputSchema": {
+  "type": "object",
+  "properties": {
+   "project_id": {
+    "type": "string"
+   },
+   "state": {
+    "enum": [
+     "active",
+     "trashed"
+    ]
+   }
+  },
+  "required": [
+   "project_id",
+   "state"
+  ]
+ },
+ "annotations": {
+  "title": "Trash or restore project",
+  "readOnlyHint": false,
+  "destructiveHint": false,
+  "idempotentHint": true,
+  "openWorldHint": false
+ }
+}
