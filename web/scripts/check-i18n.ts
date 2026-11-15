@@ -342,6 +342,7 @@ const SAME_IN_PORTUGUESE: ReadonlySet<string> = new Set([
 	"ui.editor.keyframes.prop.x",
 	"ui.editor.keyframes.prop.y",
 	"ui.editor.keyframes.prop.volume",
+	"ui.editor.clip.volume",
 	"ui.editor.keyframes.easing_name.linear",
 ]);
 
