@@ -219,7 +219,7 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 	// (authenticate runs first) and call the Service, which checks the scope.
 	builtin := []string{
 		"GET /up", "GET /{$}", "GET /projects", "POST /projects", "GET /editor/{project_id}", "POST /locale",
-		"GET /settings",
+		"GET /settings", "GET /settings/brand-kit",
 	}
 
 	for _, r := range h.vapp.Router.Routes() {
