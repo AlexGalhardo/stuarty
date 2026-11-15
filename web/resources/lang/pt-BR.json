@@ -34,6 +34,22 @@
         "4:5": "Retrato: feeds"
       }
     },
+    "settings": {
+      "title": "Configurações",
+      "preferences": "Preferências",
+      "language": "Idioma",
+      "theme": "Tema",
+      "time_unit": "Unidade para números sem unidade nos campos de tempo",
+      "time_unit_seconds": "Segundos (s)",
+      "time_unit_frames": "Quadros (f)",
+      "time_unit_hint": "Um número digitado sem unidade num campo de tempo, como 12,5, recebe esta unidade.",
+      "about": "Sobre",
+      "loading": "Carregando…",
+      "unavailable": "O serviço não respondeu.",
+      "version": "Versão",
+      "workspace": "Pasta do espaço de trabalho",
+      "workspace_none": "Não informada"
+    },
     "editor": {
       "back": "Voltar aos projetos",
       "revision": "rev {revision}",
@@ -546,6 +562,40 @@
       "time": {
         "hint": "Use 12.5s, 375f ou 00:12.500."
       },
+      "project": {
+        "name_label": "Nome do projeto",
+        "rename": "Renomear o projeto {name}",
+        "preset": "Formato",
+        "custom": "Personalizado",
+        "width": "Largura",
+        "height": "Altura",
+        "background": "Fundo",
+        "loudness": "Volume alvo",
+        "fps": "Taxa de quadros",
+        "fps_confirm_title": "Mudar a taxa de quadros para {rate}?",
+        "fps_confirm_body": "Todos os tempos do projeto são reescalados para a nova taxa. Itens podem ser encurtados ou movidos para manter a linha do tempo válida.",
+        "fps_change": "Mudar taxa de quadros",
+        "fps_cancel": "Cancelar",
+        "fps_done_title": "A taxa de quadros agora é {rate}",
+        "fps_done_body": {
+          "zero": "Nenhum item precisou de ajuste.",
+          "one": "{count} item foi ajustado.",
+          "other": "{count} itens foram ajustados."
+        },
+        "fps_adjusted": "Itens ajustados",
+        "fps_adjusted_line": "{field} {from} para {to} ({reason})",
+        "fps_close": "Concluir",
+        "adjust_reason": {
+          "became_zero": "a duração virou zero",
+          "source_range": "o trecho da mídia original",
+          "overlap": "uma sobreposição",
+          "keyframe_collision": "dois quadros-chave se encontraram",
+          "keyframe_cut": "um quadro-chave foi cortado",
+          "word_overlap": "duas palavras se sobrepuseram",
+          "word_clamp": "uma palavra foi limitada",
+          "fit": "fades ou transições não cabem mais"
+        }
+      },
       "inspector": {
         "name": "Nome",
         "timing": "Tempo",
@@ -557,7 +607,6 @@
         "project": "Projeto",
         "track": "Faixa",
         "items": "{count} itens",
-        "project_hint": "Selecione um item na linha do tempo para editá-lo.",
         "multi_hint": "Selecione um único item para editar o nome e o tempo.",
         "changed_by": "Alterado por {actor}",
         "invalid_value": "Confira o valor e tente de novo.",

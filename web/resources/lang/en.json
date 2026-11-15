@@ -34,6 +34,22 @@
         "4:5": "Portrait: feeds"
       }
     },
+    "settings": {
+      "title": "Settings",
+      "preferences": "Preferences",
+      "language": "Language",
+      "theme": "Theme",
+      "time_unit": "Unit for bare numbers in time fields",
+      "time_unit_seconds": "Seconds (s)",
+      "time_unit_frames": "Frames (f)",
+      "time_unit_hint": "A number typed without a unit in a time field, such as 12.5, gets this unit.",
+      "about": "About",
+      "loading": "Loading…",
+      "unavailable": "The service did not answer.",
+      "version": "Version",
+      "workspace": "Workspace folder",
+      "workspace_none": "Not reported"
+    },
     "editor": {
       "back": "Back to projects",
       "revision": "rev {revision}",
@@ -546,6 +562,40 @@
       "time": {
         "hint": "Use 12.5s, 375f or 00:12.500."
       },
+      "project": {
+        "name_label": "Project name",
+        "rename": "Rename project {name}",
+        "preset": "Size preset",
+        "custom": "Custom",
+        "width": "Width",
+        "height": "Height",
+        "background": "Background",
+        "loudness": "Loudness target",
+        "fps": "Frame rate",
+        "fps_confirm_title": "Change the frame rate to {rate}?",
+        "fps_confirm_body": "Every time in the project is rescaled to the new rate. Items can be shortened or moved to keep the timeline valid.",
+        "fps_change": "Change frame rate",
+        "fps_cancel": "Cancel",
+        "fps_done_title": "The frame rate is now {rate}",
+        "fps_done_body": {
+          "zero": "No item needed an adjustment.",
+          "one": "{count} item was adjusted.",
+          "other": "{count} items were adjusted."
+        },
+        "fps_adjusted": "Adjusted items",
+        "fps_adjusted_line": "{field} {from} to {to} ({reason})",
+        "fps_close": "Done",
+        "adjust_reason": {
+          "became_zero": "the duration became zero",
+          "source_range": "the source range",
+          "overlap": "an overlap",
+          "keyframe_collision": "two keyframes met",
+          "keyframe_cut": "a keyframe was cut",
+          "word_overlap": "two words overlapped",
+          "word_clamp": "a word was clamped",
+          "fit": "fades or transitions no longer fit"
+        }
+      },
       "inspector": {
         "name": "Name",
         "timing": "Timing",
@@ -557,7 +607,6 @@
         "project": "Project",
         "track": "Track",
         "items": "{count} items",
-        "project_hint": "Select an item on the timeline to edit it.",
         "multi_hint": "Select a single item to edit its name and timing.",
         "changed_by": "Changed by {actor}",
         "invalid_value": "Check the value and try again.",

@@ -55,7 +55,7 @@ describe("Timeline", () => {
 describe("TopBar", () => {
 	test("shows the name, the revision and the connection as text", async () => {
 		const h = await startHarness();
-		const html = render(h.runtime, <TopBar />);
+		const html = render(h.runtime, <TopBar onLocaleChange={() => {}} />);
 		expect(html).toContain("Launch teaser");
 		expect(html).toContain("rev 0");
 		expect(html).toContain("Live");

@@ -45,7 +45,11 @@ function useViewportWidth(): number {
 // The grid of SDD-012 section 6.1: top bar, library, preview, inspector and
 // the timeline across the bottom. The library, the preview and the inspector
 // are filled by their own tasks; here they are labelled regions.
-export default function EditorShell(): ReactNode {
+export default function EditorShell({
+	onLocaleChange,
+}: {
+	onLocaleChange(locale: string): void;
+}): ReactNode {
 	const t = useT();
 	const canvasPort = useCanvasPort();
 	const status = useDocumentState((s) => s.status);
@@ -81,7 +85,7 @@ export default function EditorShell(): ReactNode {
 			}}
 		>
 			<div className="col-span-full">
-				<TopBar />
+				<TopBar onLocaleChange={onLocaleChange} />
 				<TrashedBanner />
 				<div className="border-b border-ed-track-line bg-ed-panel px-3 py-1">
 					<EditToolbar

@@ -1,12 +1,22 @@
-import { ArrowLeft, Loader, RefreshCw, Wifi, WifiOff } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+	ArrowLeft,
+	Loader,
+	Pencil,
+	RefreshCw,
+	Wifi,
+	WifiOff,
+} from "lucide-react";
+import { type ReactNode, useRef, useState } from "react";
 
+import LocaleSelect from "@/components/LocaleSelect";
 import ThemeToggle from "@/components/ThemeToggle";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
 import PaletteButton from "../commands/palette/PaletteButton";
+import { useActions, useCanEdit } from "../commands/useActions";
 import ExportButton from "../export/ExportButton";
 import UndoRedo from "../history/UndoRedo";
 import { useDocumentState } from "../state/EditorContext";
@@ -38,10 +48,70 @@ const ICON: Record<Shown, typeof Wifi> = {
 	failed: WifiOff,
 };
 
-// The top bar of SDD-012 section 6.2, Prototype subset: back link, project
-// name (read only), revision and connection state as text and icon, undo and
+// The name of the project: a click opens the field, Enter or leaving it sends
+// `project.rename`, Esc leaves it alone (SDD-012 section 6.2).
+function ProjectName({ name }: { name: string }): ReactNode {
+	const t = useT();
+	const actions = useActions();
+	const canEdit = useCanEdit();
+	const [editing, setEditing] = useState(false);
+	const finished = useRef(false);
+	const finish = (value: string | null): void => {
+		if (finished.current) return;
+		finished.current = true;
+		setEditing(false);
+		// An empty name is refused by the core, so it is not sent.
+		if (value !== null && value !== "" && value !== name)
+			void actions.renameProject(value);
+	};
+	if (editing) {
+		return (
+			<Input
+				autoFocus
+				aria-label={t("ui.editor.project.name_label")}
+				defaultValue={name}
+				maxLength={120}
+				className="h-7 w-64 text-sm font-semibold"
+				onFocus={(event) => event.currentTarget.select()}
+				onKeyDown={(event) => {
+					event.stopPropagation();
+					if (event.key === "Enter") finish(event.currentTarget.value);
+					else if (event.key === "Escape") finish(null);
+				}}
+				onBlur={(event) => finish(event.currentTarget.value)}
+			/>
+		);
+	}
+	return (
+		<>
+			<h1 className="max-w-64 truncate text-sm font-semibold">
+				<UntrustedText>{name}</UntrustedText>
+			</h1>
+			<Button
+				type="button"
+				variant="ghost"
+				size="icon-sm"
+				disabled={!canEdit}
+				aria-label={t("ui.editor.project.rename", { name })}
+				onClick={() => {
+					finished.current = false;
+					setEditing(true);
+				}}
+			>
+				<Pencil aria-hidden="true" />
+			</Button>
+		</>
+	);
+}
+
+// The top bar of SDD-012 section 6.2: back link, project
+// name (click to rename), revision and connection state as text and icon, undo and
 // redo, the activity indicator and the theme toggle.
-export default function TopBar(): ReactNode {
+export default function TopBar({
+	onLocaleChange,
+}: {
+	onLocaleChange(locale: string): void;
+}): ReactNode {
 	const t = useT();
 	const name = useDocumentState((s) => s.document?.name);
 	const revision = useDocumentState((s) => s.revision);
@@ -65,9 +135,7 @@ export default function TopBar(): ReactNode {
 					<ArrowLeft aria-hidden="true" />
 				</a>
 			</Button>
-			<h1 className="max-w-64 truncate text-sm font-semibold">
-				{name !== undefined && <UntrustedText>{name}</UntrustedText>}
-			</h1>
+			{name !== undefined && <ProjectName name={name} />}
 			<span
 				className={cn("flex items-center gap-1.5 text-xs", TONE[shown])}
 				data-connection={shown}
@@ -85,6 +153,7 @@ export default function TopBar(): ReactNode {
 				<PaletteButton />
 				<ExportButton />
 				<ActivityIndicator />
+				<LocaleSelect onChange={onLocaleChange} />
 				<ThemeToggle />
 			</div>
 		</header>
