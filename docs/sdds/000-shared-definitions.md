@@ -102,6 +102,8 @@ Kinds: `ingest`, `transcribe`, `export`, `frame`. States: `queued`, `running`, `
 | `queue_jobs`, `queue_failed_jobs` | vukem's queue | vukem |
 | vukem's own tables for users, sessions and tokens | network mode | vukem |
 
+A document with a `template` member is a template draft, or an instance when `template.instance` is true (SDD-001 section 3.10). `TemplateInstantiate` writes the flag; lint reads it (`L_SLOT_UNFILLED`, SDD-003).
+
 ## 8. Error codes outside the core
 
 The core's codes are in SDD-002 §A.8. The service adds:

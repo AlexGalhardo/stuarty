@@ -1,0 +1,16 @@
+[
+  {
+    "type": "patch",
+    "collection": "project",
+    "id": "prj_7k2m9x4q1b",
+    "set": {
+      "template": {
+        "colors": {
+          "accent": "#FF8800"
+        },
+        "description": "t",
+        "instance": true
+      }
+    }
+  }
+]

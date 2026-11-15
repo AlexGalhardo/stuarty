@@ -189,6 +189,10 @@ export interface TemplateInfo {
     [k: string]: string;
   };
   description: string;
+  /**
+   * True in a project made from a template: its open slots are lint errors.
+   */
+  instance?: boolean;
 }
 export interface Track {
   caption_style?: CaptionStyle;

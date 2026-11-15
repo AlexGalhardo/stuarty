@@ -291,10 +291,13 @@ type Slot struct {
 	Extra          Extra  `json:"-"`
 }
 
-// TemplateInfo is present only in a template document.
+// TemplateInfo is present in a template draft and in a project instantiated from a
+// template. Instance tells them apart (SDD-001 §3.10): a draft has open slots by
+// design, an instance must fill them before export.
 type TemplateInfo struct {
 	Description string           `json:"description"`
 	Colors      map[string]Color `json:"colors,omitempty"`
+	Instance    bool             `json:"instance,omitempty" desc:"True in a project made from a template: its open slots are lint errors."`
 	Extra       Extra            `json:"-"`
 }
 

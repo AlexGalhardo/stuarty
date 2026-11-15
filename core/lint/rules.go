@@ -111,10 +111,10 @@ func (c *check) media() {
 	}
 }
 
-// slots reports required slots that were never filled. A template document is
-// exempt: its slots are meant to be open.
+// slots reports required slots that were never filled. A template draft is exempt:
+// its slots are meant to be open. An instance (template.instance) is not.
 func (c *check) slots() {
-	if c.doc.Template != nil {
+	if c.doc.Template != nil && !c.doc.Template.Instance {
 		return
 	}
 

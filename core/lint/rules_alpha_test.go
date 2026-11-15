@@ -29,7 +29,8 @@ func TestDurationLimitBoundary(t *testing.T) {
 	}
 }
 
-// L_SLOT_UNFILLED is an error and is not reported on a template document.
+// L_SLOT_UNFILLED is an error. A template draft is exempt; an instance (template.instance)
+// reports its open slots and its placeholder, and the colours of the template still resolve.
 func TestTemplateExempt(t *testing.T) {
 	t.Parallel()
 
@@ -41,13 +42,41 @@ func TestTemplateExempt(t *testing.T) {
 
 	got := has(Lint(d, Env{}, Fast), CodeSlotUnfilled)
 	if len(got) != 1 || got[0].Severity != SeverityError || !Blocking(CodeSlotUnfilled) {
-		t.Fatalf("an instantiated template with an open slot: %+v", got)
+		t.Fatalf("a project with an open slot: %+v", got)
 	}
 
 	d.Template = &timeline.TemplateInfo{Description: "t"}
 
 	if got := has(Lint(d, Env{}, Fast), CodeSlotUnfilled); len(got) != 0 {
-		t.Errorf("a template document is exempt, got %+v", got)
+		t.Errorf("a template draft is exempt, got %+v", got)
+	}
+
+	d.Template.Instance = true
+
+	got = has(Lint(d, Env{}, Fast), CodeSlotUnfilled)
+	if len(got) != 1 || got[0].Item != "itm_hero" {
+		t.Errorf("an instance reports its open slot, got %+v", got)
+	}
+}
+
+func TestInstanceWithPlaceholderIsBlocked(t *testing.T) {
+	t.Parallel()
+
+	for _, instance := range []bool{false, true} {
+		d := newDoc()
+		d.Template = &timeline.TemplateInfo{Description: "t", Instance: instance}
+		it := clip("itm_ph", 0, 90)
+		it.Asset = timeline.PlaceholderAsset
+		put(d, it)
+
+		f := Lint(d, Env{}, Fast)
+		if got := has(f, CodeSlotUnfilled); (len(got) == 1) != instance {
+			t.Errorf("instance=%v: L_SLOT_UNFILLED findings %+v", instance, got)
+		}
+
+		if got := has(f, CodeMediaMissing); len(got) != 0 {
+			t.Errorf("instance=%v: the placeholder is not a missing file: %+v", instance, got)
+		}
 	}
 }
 

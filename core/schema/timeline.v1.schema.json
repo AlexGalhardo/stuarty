@@ -631,6 +631,10 @@
         },
         "description": {
           "type": "string"
+        },
+        "instance": {
+          "description": "True in a project made from a template: its open slots are lint errors.",
+          "type": "boolean"
         }
       },
       "required": [

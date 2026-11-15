@@ -1,0 +1,25 @@
+[
+  {
+    "kind": "project.updated",
+    "id": "prj_7k2m9x4q1b",
+    "changes": {
+      "template": [
+        {
+          "colors": {
+            "accent": "#FF8800"
+          },
+          "description": "t",
+          "instance": true
+        },
+        {
+          "colors": {
+            "accent": "#FF8800",
+            "brand": "#FF3366"
+          },
+          "description": "t",
+          "instance": true
+        }
+      ]
+    }
+  }
+]
