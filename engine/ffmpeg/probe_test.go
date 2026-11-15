@@ -274,7 +274,9 @@ func TestSecurity_T14_RealMediaPassesAndHostileFilesFail(t *testing.T) {
 		"truncated riff":     []byte("RIFF\x00\x00\x00\x00WAVEjunk" + strings.Repeat("\x01", 40)),
 		"matroska signature": append([]byte("\x1a\x45\xdf\xa3"), bytes.Repeat([]byte{0xff}, 64)...),
 		// The containers and the files the BETA features added: animated images and user fonts.
-		"gif with an empty screen": append([]byte("GIF89a\x00\x00\x00\x00\xf0\x00\x00"), bytes.Repeat([]byte{0x00, 0x2c}, 40)...),
+		"gif with an empty screen": append(
+			[]byte("GIF89a\x00\x00\x00\x00\xf0\x00\x00"),
+			bytes.Repeat([]byte{0x00, 0x2c}, 40)...),
 		"webp animation cut short": append(
 			[]byte("RIFF\x20\x00\x00\x00WEBPVP8X\x0a\x00\x00\x00\x12\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
 			bytes.Repeat([]byte{0xff, 0x01}, 40)...),
