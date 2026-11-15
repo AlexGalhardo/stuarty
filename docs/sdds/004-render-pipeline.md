@@ -447,7 +447,7 @@ The executor, in `web/resources/js/editor/preview/`:
 
 1. Keeps plan windows for the playhead and the next window.
 2. For each media layer keeps a `<video>` element on the asset's proxy (`GET /api/v1/projects/{id}/media/{asset_id}/proxy`, served with Range; SDD-000 §1). During playback it lets the element play and corrects its `currentTime` when it drifts more than 2 frames from `source_seconds`; when paused or scrubbing it seeks to the value.
-3. Draws each layer as a sprite on the canvas with exactly the plan's centre, size, rotation, opacity and colour matrix, in plan order. Bitmaps are fetched by key.
+3. Draws each layer as a sprite on the canvas with exactly the plan's centre, size, rotation, opacity and colour matrix, in plan order. Bitmaps are fetched by key with `GET /api/v1/projects/{id}/bitmaps/{key}`; the server serves only keys that a plan window of that same project handed out (another project's key, or one forgotten at a restart, is 404, and the client reads the plan again).
 4. Plays audio through the same video elements and, for audio items, audio elements on the proxy, with gain from the plan. The master clock during playback is the audio clock; the playhead frame is `floor(clock × fps)`.
 5. At most `MAX_VIDEO_LAYERS` video elements decode at once (initial value 4, confirmed by measurement); further media layers show their thumbnail still.
 6. **Truth on pause.** 150 ms after playback stops or a seek ends, it requests `ViewFrame` at the canvas width and draws that image over the canvas. Any change of playhead or revision removes the overlay.

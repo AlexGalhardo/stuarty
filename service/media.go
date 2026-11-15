@@ -1087,7 +1087,7 @@ func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {
 	}
 
 	if ref.Kind == "bitmap" {
-		return s.openBitmap(ref.ID)
+		return s.openBitmap(row.ID, ref.ID)
 	}
 
 	pa, err := s.store.Assets().GetProjectAsset(ctx, row.ID, ref.ID)
