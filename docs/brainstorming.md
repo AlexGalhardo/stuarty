@@ -314,3 +314,11 @@ All twelve themes were covered by decisions D-001 to D-025. The working state is
 - Alternatives considered: linking with `--enable-libopenh264` against the Cisco binary (contradicts D-017 and needs amending the ADR); no H.264 in the own build until 1.0 (postpones the problem).
 - Reason: asked of the author on 2026-11-15 as a blocker of P3-RND-001, P3-REL-001 and P3-REL-002; the author chose the dlopen patch, the model Fedora uses.
 - Impact: the FFmpeg build inputs and script (a patch pinned by SHA-256), the LGPL configure check, SDD-009 (FFmpeg build), SDD-011, ADR-0011 (note), `docs/release`.
+
+### D-033 — The BETA ships without paid code signing; the update feed lives on GitHub Pages
+
+- Date: 2026-11-15
+- Decision: (1) the BETA desktop and installer artifacts are not signed with a paid certificate: no Apple Developer ID or notarization, no Windows code signing. Integrity stays with the cosign keyless signatures and the SHA-256 checksums of every release, and the install pages document the SmartScreen and Gatekeeper warnings and how to verify a download. Paid signing is decided again before 1.0. (2) The desktop update feed (SDD-009 §10.5) is hosted on GitHub Pages of the product repository and signed with the release key of the update client. (3) The notices allowlist accepts the Zlib licence (zlib) and the WTFPL (zimg, the `zscale` filter) of the own FFmpeg build.
+- Alternatives considered: Windows signing only through Azure Trusted Signing (about US$10 a month); full signing with an Apple Developer ID (US$99 a year) and Azure Trusted Signing.
+- Reason: asked of the author on 2026-11-15 for P3-REL-003 and the own FFmpeg build; the author chose no cost in BETA and allowed both licences.
+- Impact: P3-REL-003 (signing subtasks become the documented warning; secrets for the update key only), P3-DSK-005 (feed host), SDD-009 §9.3 and §10.5, the install and verify-a-release pages of the site, `internal/tools/notices`.
