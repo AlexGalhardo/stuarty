@@ -238,3 +238,33 @@ func TestTranscribeLimitPerActor(t *testing.T) {
 		t.Errorf("another key: %v", err)
 	}
 }
+
+// SDD-003 section 3.8: the inspection says "none yet" only when a provider can
+// run; without one it says unavailable and how to install it.
+func TestInspectTranscriptSectionFollowsTheProvider(t *testing.T) {
+	missing := &transcribe.MissingError{
+		Items:         []transcribe.Item{{Name: "whisper.cpp", URLHost: "github.com", Bytes: 8_200_000}},
+		DownloadBytes: 8_200_000,
+	}
+
+	for name, tc := range map[string]struct {
+		prov *stubProvider
+		want string
+	}{
+		"ready":   {&stubProvider{}, "transcript: none yet (start a transcribe job for this asset)"},
+		"missing": {&stubProvider{missing: missing}, "transcript: unavailable (E_TRANSCRIBE_UNAVAILABLE): Run \"vukem-video tools:install whisper --model tiny\""},
+	} {
+		t.Run(name, func(t *testing.T) {
+			m := newMediaEnv(t, mediaCfg{transcriber: tc.prov})
+			project, _, _, hash := m.speechProject()
+			row, _ := m.store.Assets().FindProjectAssetByHash(context.Background(), project, hash)
+
+			res, err := m.svc.MediaInspect(m.as(ui), service.MediaInspectRequest{
+				ProjectID: project, AssetID: row.AssetID, Sections: []string{"transcript"},
+			})
+			if err != nil || !strings.Contains(res.Text, tc.want) {
+				t.Errorf("text = %q, %v; want it to contain %q", res.Text, err, tc.want)
+			}
+		})
+	}
+}

@@ -944,7 +944,7 @@ func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*Media
 		case "silences":
 			text.WriteString(s.silencesSection(arts, &row, req.MinSilence, res))
 		case "transcript":
-			section, terr := s.transcriptSection(arts, pa.AssetID, req.Cursor, res)
+			section, terr := s.transcriptSection(ctx, arts, pa.AssetID, req.Cursor, res)
 			if terr != nil {
 				return nil, terr
 			}

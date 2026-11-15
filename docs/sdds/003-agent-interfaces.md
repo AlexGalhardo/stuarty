@@ -1162,7 +1162,7 @@ next_cursor: ...
 - **List mode** (`media_inspect` without `asset_id`; HTTP `GET /projects/{id}/media`): the note line, `media <prj id> (showing <a> of <b>)`, then one line per asset in import order, `<ast id> <kind> <state> "<name>" <duration cell without +> <w>x<h>[ audio][ <percent>%][ FAILED <code>: <message>]` (`FAILED` and the percent only when they apply), then `next_cursor`. It lists every asset of the project, including those that are pending or failed and so are not in the document. The cap is 12,800 characters, the default `limit` 50.
 - The transcript line is a phrase: consecutive words up to 12, or fewer when the gap to the next word exceeds 0.6 s or the word ends a sentence. A line is `[<start>-<end>] <text>` with times as time cells (`[0.4s/12f-2s/60f] Meet the new editor.`). Page cap: 6,000 characters of block text; the cursor is the index of the next line.
 - Silences: the ranges are in project frames; at most 60 lines, then `... and <k> more`.
-- Without a transcript: `transcript: none yet (start a transcribe job for this asset)`. Without a provider: `transcript: unavailable (E_TRANSCRIBE_UNAVAILABLE)`.
+- Without a transcript: `transcript: none yet (start a transcribe job for this asset)`. Without a provider that can run now (none configured, or the helper or model not installed): `transcript: unavailable (E_TRANSCRIBE_UNAVAILABLE): <the install hint of the error>`; an existing transcript is still shown.
 - Metadata: at most 10 tags in the concise sections and 20 in full (SDD-007 §8.3), one `key: value` per line inside the block.
 - The cap of the whole text is 12,800 characters.
 

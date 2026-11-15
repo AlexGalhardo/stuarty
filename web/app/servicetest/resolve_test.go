@@ -247,7 +247,7 @@ func TestMediaInspectTranscriptIsDelimitedAndPaged(t *testing.T) {
 		return res
 	}
 
-	if res := inspect(""); !strings.Contains(res.Text, "transcript: none yet") {
+	if res := inspect(""); !strings.Contains(res.Text, "transcript: unavailable (E_TRANSCRIBE_UNAVAILABLE)") {
 		t.Errorf("without a transcript: %s", res.Text)
 	}
 

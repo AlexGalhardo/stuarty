@@ -216,7 +216,7 @@ func TestMediaInspectSections(t *testing.T) {
 		t.Errorf("silences = %+v", res.Silences)
 	}
 
-	for _, want := range []string{"probe: mov,mp4 | 320x240 | 30/1fps", "loudness: integrated -17.2 LUFS", "silences (min 400ms", "transcript: none yet"} {
+	for _, want := range []string{"probe: mov,mp4 | 320x240 | 30/1fps", "loudness: integrated -17.2 LUFS", "silences (min 400ms", "transcript: unavailable (E_TRANSCRIBE_UNAVAILABLE)"} {
 		if !strings.Contains(res.Text, want) {
 			t.Errorf("text lacks %q:\n%s", want, res.Text)
 		}
