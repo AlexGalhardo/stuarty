@@ -279,10 +279,7 @@ func (e *Env) fakeIngest(_ context.Context, in ingest.Input) (*ingest.Result, er
 		return nil, err
 	}
 
-	ms := e.durationMS
-	if seconds*1000 > ms {
-		ms = seconds * 1000
-	}
+	ms := max(e.durationMS, seconds*1000)
 
 	return fakeResult(string(e.Dir), in, ms)
 }
@@ -326,10 +323,15 @@ func fakeResult(ws string, in ingest.Input, durationMS int64) (*ingest.Result, e
 
 	samples := durationMS * 48
 
-	silence := fmt.Sprintf(`{"version":1,"sample_rate":48000,"sample_count":%d,"min_duration_ms":150,"sets":[`, samples) +
+	silence := fmt.Sprintf(
+		`{"version":1,"sample_rate":48000,"sample_count":%d,"min_duration_ms":150,"sets":[`,
+		samples,
+	) +
 		`{"threshold_db":-35,"ranges":[{"start":24000,"end":48000}]}]}`
 	loud := fmt.Sprintf(
-		`{"version":1,"integrated_lufs":-17.2,"lra_lu":5.1,"true_peak_dbtp":-1.4,"silent":false,"sample_count":%d}`, samples)
+		`{"version":1,"integrated_lufs":-17.2,"lra_lu":5.1,"true_peak_dbtp":-1.4,"silent":false,"sample_count":%d}`,
+		samples,
+	)
 
 	files := []struct {
 		kind, variant, ext, body string
@@ -352,8 +354,15 @@ func fakeResult(ws string, in ingest.Input, durationMS int64) (*ingest.Result, e
 	res := &ingest.Result{
 		Kind: ingest.KindVideo, Summary: sum, TimingsMS: map[string]int64{"probe": 1},
 		Facts: ingest.Facts{
-			FrameRate: ingest.Rational{Num: 30, Den: 1}, FrameCount: int(durationMS * 30 / 1000), SampleCount: samples, Width: 320, Height: 240,
-			HasAudio: true,
+			FrameRate: ingest.Rational{
+				Num: 30,
+				Den: 1,
+			},
+			FrameCount:  int(durationMS * 30 / 1000),
+			SampleCount: samples,
+			Width:       320,
+			Height:      240,
+			HasAudio:    true,
 		},
 	}
 

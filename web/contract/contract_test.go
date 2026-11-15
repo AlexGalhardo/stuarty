@@ -646,6 +646,9 @@ func checkIngestLimits(t *testing.T, steps []step, outcomes []outcome) {
 	}
 
 	if seen != 6 {
-		t.Errorf("read %d ingest limit errors, want 2 each from the import result, the asset list and the failed jobs", seen)
+		t.Errorf(
+			"read %d ingest limit errors, want 2 each from the import result, the asset list and the failed jobs",
+			seen,
+		)
 	}
 }
