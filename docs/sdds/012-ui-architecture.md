@@ -282,7 +282,7 @@ One typed function per endpoint of SDD-000 §1 that the UI uses, in `editor/api/
 | `getFonts()` | `GET /fonts` (gap) | `{ family, weights[], bundled }[]` | A |
 | `getSystem()` | `GET /system` | version, workspace, encoder | A |
 | `openEvents(id)` | `GET /projects/{id}/events` | `EventSource`, §5.5 | P |
-| `getTools()` | `GET /system/tools` | installed tools and, for a running install, `bytes_done` and `bytes_total`; polled every second while an install runs (§12.5) | A |
+| `getTools()` | `GET /system/tools` | installed tools and, for a running install, `done_bytes` and `total_bytes`; polled every second while an install runs (§12.5) | A |
 | `installTool(body)` | `POST /system/tools/install` with `{ name, model? }` | 202; allowed only to a browser session in local mode or an `admin` key in network mode (SDD-007 §6.8 item 1) | A |
 
 Binary URL builders (no function call, only strings, in `api/urls.ts`): `proxyUrl(project, asset)` = `/api/v1/projects/{id}/media/{asset_id}/proxy`, `thumbnailUrl(project, asset, width)` (`width` 160, 320 or 640), `stripUrl` and `peaksUrl` on the same prefix (`/thumbnail`, `/strip`, `/peaks`), `bitmapUrl(project, key)` = `/api/v1/projects/{id}/bitmaps/{key}`, `exportFileUrl(job)` = `/api/v1/jobs/{job_id}/file` (SDD-000 §1). All are served with HTTP Range and content-hash caching (ADR-0017 item 8).
@@ -1030,14 +1030,14 @@ A field keeps a local draft while it has focus. If the draft equals the stored v
 
 ### 12.4 Auto captions flow
 
-"Generate" on a clip: if `inspectMedia` reports no transcript, the UI starts `startJob {kind: "transcribe", asset_id}` (media scope), shows progress from `job.updated`, and on success sends `caption.from_transcript {clip_item_id, track_id, max_words, max_chars, max_gap, replace}` with the track chosen in a select (default the first track that has `caption_style`, else a new "Captions" track created in the same batch). `E_TRANSCRIBE_UNAVAILABLE` opens the install dialog of §12.5. The shape of the transcript state follows SDD-003 and SDD-011.
+"Generate" on a clip: if `inspectMedia` (section `transcript`) lists no transcript in `available`, the UI starts `startJob {kind: "transcribe", asset_id}` (media scope), shows progress from `job.updated`, and on success sends `caption.from_transcript {clip_item_id, track_id, max_words, max_chars, max_gap, replace}` with the track chosen in a select (default the first track that has `caption_style`, else a new "Captions" track created in the same batch). `E_TRANSCRIBE_UNAVAILABLE` opens the install dialog of §12.5. The shape of the transcript state follows SDD-003 and SDD-011.
 
 ### 12.5 Install dialog for local transcription (RF-205)
 
 When `startJob {kind: "transcribe"}` answers `E_TRANSCRIBE_UNAVAILABLE`, the UI shows a dialog with the message and hint of the core, the list `details.missing` (what is not installed), the size `details.download_bytes` (formatted for display) and the command `details.install_command` in a copyable field. There is no job for the install:
 
-1. In local mode with a browser session, or in network mode with an `admin` key, the dialog offers the button "Install". It calls `installTool({ name, model? })` (`POST /api/v1/system/tools/install`, answer 202), with `name` and `model` taken from `details.missing`. The route is allowed only to a browser session in local mode or an `admin` key in network mode (SDD-007 §6.8 item 1), like emptying the trash.
-2. While an install runs the dialog polls `getTools()` (`GET /api/v1/system/tools`) every second and shows a determinate progress bar from `bytes_done` and `bytes_total`. When the tool is listed as installed the dialog closes and the user presses Generate again; the UI does not restart the transcription by itself.
+1. In local mode with a browser session, or in network mode with an `admin` key, the dialog offers the button "Install". It calls `installTool({ name, model? })` (`POST /api/v1/system/tools/install`, answer 202), with `name` and `model` read from `details.install_command` (`vukem-video tools:install <name> [--model <model>]`; `details.missing` names files, not tools, and a command of another shape offers no button). The route is allowed only to a browser session in local mode or an `admin` key in network mode (SDD-007 §6.8 item 1), like emptying the trash.
+2. While an install runs the dialog polls `getTools()` (`GET /api/v1/system/tools`) every second and shows a determinate progress bar from `done_bytes` and `total_bytes`. When the install is no longer running and has not failed the dialog says so and the user presses Generate again; the UI does not restart the transcription by itself.
 3. With any other caller, or when the answer of `installTool` is `E_FORBIDDEN`, the dialog shows only the command `details.install_command` and no button.
 4. A failed install shows the code, message and hint of the core and "Copy details". Phase A, with the auto captions flow.
 
