@@ -10,7 +10,7 @@ import (
 // bytes and never an editing rule. The page sends a
 // JSON message through the webview, the shell answers by running ResolveScript.
 
-// The one operation the page may ask for.
+// OpPickFiles is the one operation the page may ask for.
 const OpPickFiles = "pickFiles"
 
 // BridgeRequest is one message from the page.
@@ -26,11 +26,10 @@ func ParseBridgeMessage(msg string) (BridgeRequest, bool) {
 	if len(msg) > 256 || json.Unmarshal([]byte(msg), &req) != nil {
 		return BridgeRequest{}, false
 	}
-	switch req.Op {
-	case OpPickFiles:
-		return req, true
+	if req.Op != OpPickFiles {
+		return BridgeRequest{}, false
 	}
-	return BridgeRequest{}, false
+	return req, true
 }
 
 // ResolveScript settles the promise of request id: with paths, or with an
