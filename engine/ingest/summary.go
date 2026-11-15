@@ -25,10 +25,11 @@ const (
 type Doc struct {
 	Streams []Stream `json:"streams"`
 	Format  struct {
-		Name      string `json:"format_name"`
-		Duration  string `json:"duration"`
-		Size      string `json:"size"`
-		NbStreams int    `json:"nb_streams"`
+		Name      string            `json:"format_name"`
+		Duration  string            `json:"duration"`
+		Size      string            `json:"size"`
+		NbStreams int               `json:"nb_streams"`
+		Tags      map[string]string `json:"tags"`
 	} `json:"format"`
 }
 
@@ -297,7 +298,10 @@ type Extras struct {
 	NbReadPackets int
 }
 
-var tagNames = []string{"title", "artist", "comment", "description", "creation_time", "location"}
+// tagNames is the closed set of kept tag keys (SDD-011 3.2): a hostile file cannot choose which keys reach the agent.
+var tagNames = []string{
+	"title", "artist", "comment", "description", "creation_time", "location", "encoder", "handler_name",
+}
 
 // cleanTag removes control characters and cuts to 200 characters.
 func cleanTag(s string) Tag {
@@ -403,19 +407,36 @@ func decoderMissing(codec string) *ffmpeg.Error {
 }
 
 func collectTags(d *Doc, s *Summary) {
-	// Tags of the container are not in the Doc; the video stream's tags carry the title in most files.
+	// The container first, then the streams in index order; the first value of a key wins.
+	sources := make([]map[string]string, 0, len(d.Streams)+1)
+	sources = append(sources, d.Format.Tags)
 	for i := range d.Streams {
-		for _, name := range tagNames {
-			if v, ok := d.Streams[i].Tags[name]; ok && v != "" {
-				if s.Tags == nil {
-					s.Tags = map[string]Tag{}
-				}
-				if _, seen := s.Tags[name]; !seen {
-					s.Tags[name] = cleanTag(v)
-				}
+		sources = append(sources, d.Streams[i].Tags)
+	}
+	for _, name := range tagNames {
+		for _, tags := range sources {
+			v := tagValue(tags, name)
+			if v == "" {
+				continue
 			}
+			if s.Tags == nil {
+				s.Tags = map[string]Tag{}
+			}
+			s.Tags[name] = cleanTag(v)
+			break
 		}
 	}
+}
+
+// tagValue finds a key ignoring case (Matroska writes upper case) and the smallest spelling wins, for a stable result.
+func tagValue(tags map[string]string, name string) string {
+	var best, val string
+	for k, v := range tags {
+		if v != "" && strings.EqualFold(k, name) && (best == "" || k < best) {
+			best, val = k, v
+		}
+	}
+	return val
 }
 
 func videoFacts(st *Stream, ex Extras, caps *ffmpeg.Capabilities) (*VideoFacts, error) {

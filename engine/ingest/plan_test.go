@@ -338,3 +338,43 @@ func TestDisplayMatrix(t *testing.T) {
 		t.Errorf("anamorphic: %dx%d", w, h)
 	}
 }
+
+func TestSummarizeKeepsContainerAndStreamTags(t *testing.T) {
+	d, err := ParseDoc([]byte(`{
+		"streams":[
+			{"index":0,"codec_type":"video","codec_name":"h264","width":1080,"height":1920,"coded_width":1080,"coded_height":1920,"pix_fmt":"yuv420p","r_frame_rate":"30/1","avg_frame_rate":"30/1",
+			 "tags":{"title":"stream title","handler_name":"VideoHandler","encoder":"stream encoder","unlisted":"x"}},
+			{"index":1,"codec_type":"audio","codec_name":"aac","channels":2,"sample_rate":"44100","start_time":"0.000000",
+			 "tags":{"HANDLER_NAME":"SoundHandler","artist":"stream artist"}}
+		],
+		"format":{"format_name":"mov,mp4,m4a,3gp,3g2,mj2","duration":"3.0","size":"1000",
+			"tags":{"title":"container title","encoder":"Lavf61.7.100","comment":"a\u0000b\u001b[31mred\nline","description":"` + strings.Repeat("é", 250) + `","major_brand":"isom"}}}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	sel, err := d.Select()
+	if err != nil {
+		t.Fatal(err)
+	}
+	caps := &ffmpeg.Capabilities{Decoders: map[string]bool{"h264": true, "aac": true}}
+	s, err := Summarize(d, sel, Extras{PacketTimes: regular(90, 1.0/30)}, caps, 1000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]Tag{
+		"title":        {Value: "container title"},
+		"encoder":      {Value: "Lavf61.7.100"},
+		"artist":       {Value: "stream artist"},
+		"handler_name": {Value: "VideoHandler"},
+		"comment":      {Value: "ab[31mredline"},
+		"description":  {Value: strings.Repeat("é", 200), Truncated: true},
+	}
+	if len(s.Tags) != len(want) {
+		t.Errorf("tags %v, want %v", s.Tags, want)
+	}
+	for k, w := range want {
+		if s.Tags[k] != w {
+			t.Errorf("tag %s = %+v, want %+v", k, s.Tags[k], w)
+		}
+	}
+}
