@@ -1,0 +1,48 @@
+---
+title: "The release process"
+description: "How a release is cut: the pull request, the changelog, the tag rule and the checks after publishing."
+---
+
+## You will learn
+
+- when a release is cut and how it is numbered;
+- the steps from a release branch to a verified release;
+- the rule that a published tag is never moved.
+
+## The idea
+
+Releases follow [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/). Before `1.0.0` a minor release (`v0.N.0`) adds features and may change a public interface, and a patch release (`v0.N.1`) fixes bugs only. A minor is cut about every 90 commits on `main`, and always at the end of a phase (Prototype, ALPHA, BETA).
+
+One pull request carries a release. Its branch, `release/vX.Y.Z`, collects the work of the release as small, self-contained commits, each a Conventional Commit with a header of at most 100 characters. The pull request is titled `chore(release): vX.Y.Z updates` and is **rebase-merged**, so every commit reaches `main` as it is and becomes one entry of the changelog. `main` is protected: nobody commits or pushes to it directly, and a change reaches it only through a pull request whose required checks are green and which is up to date with `main`.
+
+The changelog and the release notes are generated from the commits and have five sections only: **Added** (`feat`), **Changed** (a breaking change of a public interface), **Removed**, **Fixed** (`fix`) and **Security**. Footers (`BREAKING CHANGE:`, `Security:`, `Translation: not-needed`) go in the commit that carries the change.
+
+## The steps
+
+1. **Confirm the version.** The maintainer approves `vX.Y.Z`; the tag is the one step that needs a human yes.
+2. **Gate on the branch.** The required checks are green on the tip of `release/vX.Y.Z`, no issue labelled `ci-failure` is open, and the local gate `task release:preflight` passes.
+3. **Refresh the pull request body** with the commits: `task release:pr-body -- vX.Y.Z`. It lists the five sections with a linked hash per entry.
+4. **Prepare the changelog**: `task release:prepare -- vX.Y.Z` on the release branch writes the section of `CHANGELOG.md` from the commits and commits `chore(release): vX.Y.Z`.
+5. **Refresh the dates** of the documentation: `npm run last-updated` in `site/`, so every page shows its real date.
+6. **Merge** the pull request with rebase-merge once the checks are green.
+7. **Tag.** On `main`, fast-forwarded to the merged head, `task release:tag -- vX.Y.Z` checks that the head is the release commit, creates the annotated tag and pushes it: one tag per push.
+8. **Publish.** The tag starts `release.yml`. It creates the GitHub release with the changelog section as the body (an empty body fails), builds the six archives with their SBOMs, signs `checksums.txt` with cosign, attests the build provenance, and publishes the image to GHCR and Docker Hub with the tags `X.Y.Z`, `X.Y` and `latest`, signing and attesting its digests.
+9. **Verify** within 15 minutes with the commands of [Verify a release](/docs/self-hosting/verify-a-release), or `task release:verify -- vX.Y.Z`.
+
+If the push started no run: `gh workflow run release.yml -f version=vX.Y.Z`. If the workflow failed in the middle: `gh run rerun <id> --failed`. Every job is idempotent.
+
+## The tag rule
+
+**A published tag is never moved, deleted or reused.** If a release is wrong, the fix is the next patch release. A recovery run started by hand signs with the identity of a branch instead of a tag, which the verification rejects on purpose: do not relax it.
+
+## Common mistakes
+
+- A commit header over 100 characters, or a type or scope the commit lint does not know: the commit job fails and the header must be rewritten before the merge.
+- A release without a changelog section: the workflow refuses an empty body.
+- Pushing to `main`, or force pushing a shared branch.
+- Using a mutable tag for an image: publish and run the fixed `X.Y.Z`.
+
+## Next steps
+
+- [Verify a release](/docs/self-hosting/verify-a-release)
+- [Run the Docker image](/docs/self-hosting/docker)

@@ -1,0 +1,76 @@
+---
+title: "Network mode and login"
+description: "Run the server for other people: bind address, TLS, users, roles, sessions and the fail-closed start-up checks."
+---
+
+## You will learn
+
+- when the server is in network mode and what it requires;
+- how to create users and what a role may do;
+- which configuration errors stop the server, and the fix for each.
+
+## The idea
+
+[Network mode](/docs/concepts/local-and-network-mode) is any bind address that is not loopback, with `VUKEM_VIDEO_MODE=network`. A non-loopback address with the mode `local` is a start-up error, never a silent exposure. The local token is not accepted in this mode.
+
+- **Login is mandatory.** There is no open registration, no social login and no email. The operator creates the users.
+- **TLS is required.** Either the process terminates it (`TLS_CERT_FILE` and `TLS_KEY_FILE`, TLS 1.2 or newer) or a reverse proxy does, with `TRUSTED_PROXIES` and `TRUST_FORWARDED_PROTO=true` (see [Put Caddy in front](/docs/self-hosting/caddy)). `APP_URL` must be the public `https` address, and the server accepts only that host and origin. The one exception is a container used on its own machine: `APP_URL=http://localhost:<port>` or `http://127.0.0.1:<port>` is served over plain HTTP, and only to that name.
+- **`APP_KEY` is required**, 32 bytes or more in base64.
+- **Not as root.** Running as root or Administrator is refused unless `VUKEM_VIDEO_INSECURE_ALLOW_ROOT=true`.
+- **Import by path is confined** to the directories in `VUKEM_VIDEO_IMPORT_ROOTS` (absolute paths of existing directories, outside the workspace).
+
+## Users and roles
+
+An `admin` has the five scopes `read`, `edit`, `media`, `render` and `admin`. A `member` has `read`, `edit`, `media` and `render`. A user sees and changes only the projects they created; an administrator manages users, keys and the trash but does not gain access to other users' projects. A password has 12 to 1,024 characters.
+
+Create the first administrator at start-up, from the environment, when no user exists yet:
+
+```bash
+VUKEM_VIDEO_ADMIN_EMAIL=admin@example.com
+VUKEM_VIDEO_ADMIN_PASSWORD=@file:/run/secrets/admin_password
+```
+
+Create or change users with the commands below. They run in process and need the workspace lock, so **stop the server first**. The password is read from a terminal prompt (twice, without echo) or from the first line of standard input, never from an argument.
+
+```bash
+vukem-video user:create ana@example.com
+vukem-video user:create admin2@example.com --admin
+echo "a-new-long-password" | vukem-video user:passwd ana@example.com
+```
+
+A password change ends the sessions and revokes the API keys of that user. Managing users from the editor is planned for BETA.
+
+## Sessions and login
+
+The browser session cookie is `__Host-vukem_video_session` (the plain-HTTP container case uses the local cookie name). A session ends after 8 hours idle or 7 days in all. Login is `POST /auth/login` with `email` and `password`; a wrong email and a wrong password give the same `E_UNAUTHORIZED`. Failed logins are throttled per email and per address before the password is checked.
+
+<Callout type="warning" title="No login page in this release">
+The browser login page and the page to manage API keys are not built yet. Until they are, sign in with `POST /auth/login` as shown on [API keys and scopes](/docs/self-hosting/api-keys) and give agents an API key. A server with no users answers every API request with 401 and logs how to create one.
+</Callout>
+
+## Start-up errors
+
+The process exits with status 1 and a message that names the variable.
+
+| Condition | Fix |
+| --- | --- |
+| Non-loopback address in `local` mode | set `VUKEM_VIDEO_MODE=network` |
+| Network mode without an `https` `APP_URL` | set `APP_URL` to the public `https` address |
+| `https` without TLS files or a trusted proxy | set `TLS_CERT_FILE` and `TLS_KEY_FILE`, or `TRUSTED_PROXIES` and `TRUST_FORWARDED_PROTO=true` |
+| `APP_KEY` missing or short | `openssl rand -base64 32` |
+| Running as root | run as an ordinary user |
+| Invalid import root | an absolute, existing directory outside the workspace |
+| Unsafe transcription endpoint | `https`, or `http` to a loopback address, with no user name in the URL |
+| A limit set to zero or less | give a positive number |
+| `VUKEM_VIDEO_FFMPEG` not an absolute path to a file | give the full path |
+
+## Common mistakes
+
+- Setting `APP_URL` to one name and browsing by another: the host and the origin must match `APP_URL` exactly.
+- Running `user:create` while the server runs: `E_WORKSPACE_LOCKED`. Stop the server, or use the first-administrator variables.
+- Forgetting that every project belongs to its creator: an agent key sees only its owner's projects.
+
+## Next steps
+
+- [API keys and scopes](/docs/self-hosting/api-keys)
+- [Put Caddy in front](/docs/self-hosting/caddy)

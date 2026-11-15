@@ -82,6 +82,31 @@ export const navigation: NavCategory[] = [
 		pages: ["commands", "cli", "http-api", "timeline-schema", "error-codes", "configuration", "events", "glossary"],
 	},
 	{
+		dir: "self-hosting",
+		title: { en: "Self-hosting", "pt-br": "Hospedagem própria" },
+		pages: [
+			"docker",
+			"network-mode",
+			"api-keys",
+			"caddy",
+			"backups-and-upgrades",
+			"ffmpeg-and-licences",
+			"verify-a-release",
+			"observability",
+			"privacy",
+		],
+	},
+	{
+		dir: "troubleshooting",
+		title: { en: "Troubleshooting", "pt-br": "Solução de problemas" },
+		pages: ["import-fails", "slow-export", "diagnostic-bundle"],
+	},
+	{
+		dir: "contributing",
+		title: { en: "Contributing", "pt-br": "Contribuindo" },
+		pages: ["releases"],
+	},
+	{
 		dir: "reference/commands",
 		title: { en: "Commands", "pt-br": "Comandos" },
 		pages: commandPages(),
