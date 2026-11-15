@@ -1,0 +1,60 @@
+package mcp
+
+import (
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
+)
+
+// TestLintReportGolden: the lint report of the rules the service evaluates from
+// the document alone matches its golden file. The rules that need a measured
+// box or an ingest artifact (L_OCCLUDED, L_SAFE_AREA, L_OFF_FRAME,
+// L_AUDIO_CLIP, L_LOUDNESS, L_CAPTION_DESYNC) are silent until the owner wires
+// lint.Env.Measurer and lint.Env.Artifacts; their reports are the
+// golden files of core/lint.
+func TestLintReportGolden(t *testing.T) {
+	t.Parallel()
+
+	at := time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)
+	env := testenv.New(t, testenv.Options{Clock: func() time.Time { return at }, DurationMS: 300000})
+	cs := connect(t, env.Service, Options{}, "claude-code")
+	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{
+		"name": "Lint", "id": "prj_7k2m9x4q1b",
+	})))["project_id"].(string)
+	imported := ok(t, call(t, cs, "media_import", map[string]any{
+		"project_id": project, "paths": []any{env.WriteFile(t, "clip.mov", strings.Repeat("x", 64))},
+		"asset_ids": []any{"ast_3c5v8n2w6d"}, "wait_ms": 20000,
+	}))
+
+	if assets, _ := structured(t, imported)["assets"].([]any); len(assets) != 1 {
+		t.Fatalf("import: %s", textOf(t, imported))
+	}
+
+	clip := func(id, track, start, duration string) any {
+		return map[string]any{"op": "clip.add", "args": map[string]any{
+			"track_id": track, "asset_id": "ast_3c5v8n2w6d", "start": start, "duration": duration, "id": id,
+		}}
+	}
+
+	ok(t, call(t, cs, "edit", map[string]any{
+		"project_id": project, "base_revision": 1,
+		"operations": []any{
+			map[string]any{"op": "track.add", "args": map[string]any{"kind": "visual", "name": "Base", "id": "trk_f6g7h8j9k0"}},
+			map[string]any{"op": "track.add", "args": map[string]any{"kind": "visual", "name": "Top", "id": "trk_m1n2p3q4r5"}},
+			clip("itm_a1b2c3d4e5", "trk_f6g7h8j9k0", "0s", "190s"),
+			clip("itm_f6g7h8j9k0", "trk_m1n2p3q4r5", "10s", "5s"),
+		},
+	}))
+
+	report := textOf(t, ok(t, call(t, cs, "lint", map[string]any{"project_id": project})))
+
+	for _, code := range []string{"L_AUDIO_OVERLAP", "L_DURATION_LIMIT"} {
+		if !strings.Contains(report, code) {
+			t.Errorf("the report lacks %s:\n%s", code, report)
+		}
+	}
+
+	golden(t, "lint.golden", report)
+}
