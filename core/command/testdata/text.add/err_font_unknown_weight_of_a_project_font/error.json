@@ -1,0 +1,13 @@
+{
+  "code": "E_FONT_UNKNOWN",
+  "message": "Font weight 900 does not exist for family \"Brand Sans\"; available weights: 400, 700.",
+  "hint": "Use font_weight 700.",
+  "retryable": false,
+  "path": "args.style.font_weight",
+  "details": {
+    "available": [
+      400,
+      700
+    ]
+  }
+}

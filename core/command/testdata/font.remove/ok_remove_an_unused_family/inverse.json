@@ -1,0 +1,15 @@
+[
+  {
+    "type": "put",
+    "collection": "fonts",
+    "id": "Spare",
+    "object": {
+      "files": [
+        {
+          "hash": "sha256:efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+          "weight": 400
+        }
+      ]
+    }
+  }
+]

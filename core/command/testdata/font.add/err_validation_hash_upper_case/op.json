@@ -1,0 +1,12 @@
+{
+  "op": "font.add",
+  "args": {
+    "family": "Brand Sans",
+    "files": [
+      {
+        "weight": 400,
+        "hash": "sha256:ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+      }
+    ]
+  }
+}

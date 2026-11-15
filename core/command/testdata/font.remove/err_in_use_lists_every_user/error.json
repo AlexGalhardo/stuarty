@@ -1,0 +1,13 @@
+{
+  "code": "E_IN_USE",
+  "message": "Font family \"Brand Sans\" is used by itm_s6t7v8w9x0 (style.font_family), trk_a1b2c3d4e5 (caption_style.font_family).",
+  "hint": "Change those styles to another font_family with text.set, caption.set_style and track.set_caption_style, then remove \"Brand Sans\".",
+  "retryable": false,
+  "path": "args.family",
+  "details": {
+    "used_by": [
+      "itm_s6t7v8w9x0",
+      "trk_a1b2c3d4e5"
+    ]
+  }
+}

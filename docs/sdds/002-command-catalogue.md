@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), 52 in the BETA build.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -344,6 +344,17 @@ These rules are the part of the catalogue most likely to be implemented wrongly;
 - M3, split: as above.
 - M4, `clip.set_speed` and `settings.set_fps`: each `frame` is scaled by the same ratio as the keyframe times and rounded; a marker that lands at or after the duration, or on the frame of the marker before it, is removed (the first of two stays). The rescale is not listed in `effective.adjusted`.
 - `clip.remove_silences` applies M1 and M2 to each piece, so a marker stays with the piece that holds its frame.
+
+### B.11 Project fonts (BETA)
+
+Scope is `media` (SDD-007 section 5.4), phase `B`. A font is first stored by content hash in the workspace `fonts/` directory by the font import of the service (SDD-007 section 7.7); these commands only name it in the document.
+
+| Command | Phase | Arguments | Effect |
+| --- | --- | --- | --- |
+| `font.add` | B | `family`, `files` (1 to 9 of `{weight, hash}`) | BETA (RF-053). Adds a user family to the `fonts` map, or weights to a family that exists (a weight that exists gets the new file). The family is not a bundled one. Diff: `font.added`, or `font.removed` then `font.added` when a family changes |
+| `font.remove` | B | `family` | BETA (RF-053). Removes a user family. A family that a text or caption style or a track caption style uses is `E_IN_USE` with `details.used_by`. The files stay in the workspace |
+
+A style that names a family added earlier in the same batch validates, because operations apply in order (A.12 rule 4); the reverse order is `E_FONT_UNKNOWN`. Where `E_FONT_UNKNOWN` is raised and the project has user fonts, the message lists the bundled families and the project fonts separately.
 
 ## Part C: command details
 
@@ -2498,6 +2509,9 @@ Adds a text item to a visual track.
 - `err_font_unknown_family`
 - `err_font_unknown_weight`
 - `err_overlap`
+- `ok_style_with_a_project_font`
+- `err_font_unknown_family_lists_project_fonts`
+- `err_font_unknown_weight_of_a_project_font`
 
 ### C.29 `text.set` (phase P)
 
@@ -4323,3 +4337,110 @@ Markers at item frames 0, 30, 60 and 90.
 - `err_type_mismatch_asset_without_audio`
 - `err_invalid_state_no_beat_in_the_visible_part`
 - `err_limit_over_200_markers`
+
+### C.53 `font.add` (phase B, scope media)
+
+Names a font that is already stored by hash in the workspace as a family of the project (RF-053), so that styles can use it (SDD-001 section 3.9). The core never reads or stores a file: it checks the form of the arguments and edits the `fonts` map. The service refuses, before applying, a `hash` that the workspace font store does not hold (`E_NOT_FOUND`, hint to import the font first).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `family` | string | yes | none | 1 to 60 characters from letters, digits, space, dot, hyphen and underscore, starting with a letter or digit; not a bundled family |
+| `files` | array of `{weight, hash}` | yes | none | 1 to 9 entries; `weight` is 100 to 900 in steps of 100 and appears once; `hash` is `sha256:` and 64 lower-case hex characters |
+
+**Preconditions.**
+
+1. Every argument is valid (`E_VALIDATION` with the path, for example `args.files[1].weight`).
+
+**Postconditions.**
+
+1. A new family gets the given files, sorted by weight. For a family that exists, each given weight is added, and a weight that exists takes the new hash; the other weights stay.
+2. `diff` has `font.added`, or `font.removed` then `font.added` when the family existed and changed; it is empty when nothing changed. `effective` has `family` and `weights` (all of the family's weights, ascending).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad family name, a bundled family, no file, a bad or repeated weight, a bad hash | `args.family "Inter" is a bundled family.` | `Choose another name; the bundled families are: Anton, Bebas Neue, Inter, JetBrains Mono, Montserrat, Playfair Display.` |
+
+**Inverse.** `remove fonts <family>` for a new family; `put fonts <family>` with the old object otherwise.
+
+**Idempotency.** Same result.
+
+**Example.**
+
+```json
+{"op": "font.add", "args": {"family": "Brand Sans", "files": [{"weight": 400, "hash": "sha256:abababababababababababababababababababababababababababababababab"}, {"weight": 700, "hash": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"}]}}
+```
+
+**Golden cases.**
+
+- `ok_new_family_two_weights`
+- `ok_one_file`
+- `ok_family_name_with_space_dot_and_hyphen`
+- `ok_adds_a_weight_to_a_family`
+- `ok_replaces_the_file_of_a_weight`
+- `ok_same_file_again_changes_nothing`
+- `err_validation_bundled_family`
+- `err_validation_family_empty`
+- `err_validation_family_bad_characters`
+- `err_validation_family_starts_with_space`
+- `err_validation_family_over_60_characters`
+- `err_validation_no_files`
+- `err_validation_weight_not_a_multiple_of_100`
+- `err_validation_weight_above_900`
+- `err_validation_weight_twice`
+- `err_validation_hash_malformed`
+- `err_validation_hash_upper_case`
+
+Also tested outside the golden directories: `TestFontAddThenStyleInOneBatch` (a `text.add` whose style names a family added earlier in the same batch validates; the reverse order is `E_FONT_UNKNOWN`).
+
+### C.54 `font.remove` (phase B, scope media)
+
+Removes a user family from the `fonts` map. The files stay in the workspace store (nothing in the core deletes a file).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `family` | string | yes | none | a key of `fonts` |
+
+**Preconditions.**
+
+1. The family is not a bundled one (`E_VALIDATION`) and is a key of `fonts` (`E_NOT_FOUND`, the hint lists the project fonts).
+2. No text or caption item style and no track `caption_style` has this `font_family` (`E_IN_USE`, `details.used_by` lists the item and track ids, sorted).
+
+**Postconditions.**
+
+1. The family is removed; an empty `fonts` map is left out of the document.
+2. `diff` has one `font.removed`. `effective` has `family`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | the family is bundled | `Font family "Inter" is bundled and cannot be removed.` | `Only the families added with font.add can be removed.` |
+| `E_NOT_FOUND` | not a project font | `Font family "Nowhere" is not one of the project fonts.` | `Use one of: Brand Sans, Spare.` |
+| `E_IN_USE` | a style uses it | `Font family "Brand Sans" is used by itm_s6t7v8w9x0 (style.font_family).` | `Change those styles to another font_family with text.set, caption.set_style and track.set_caption_style, then remove "Brand Sans".` |
+
+**Inverse.** `put fonts <family>` with the old object.
+
+**Idempotency.** Not idempotent: the second call is `E_NOT_FOUND`.
+
+**Example.**
+
+```json
+{"op": "font.remove", "args": {"family": "Brand Sans"}}
+```
+
+**Golden cases.**
+
+- `ok_remove_an_unused_family`
+- `ok_remove_the_last_family`
+- `err_not_found_family`
+- `err_validation_bundled_family`
+- `err_in_use_text_style`
+- `err_in_use_caption_style`
+- `err_in_use_track_caption_style`
+- `err_in_use_lists_every_user`

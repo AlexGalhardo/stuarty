@@ -1,0 +1,12 @@
+{
+  "op": "font.add",
+  "args": {
+    "family": "Acme Co. Sans-2",
+    "files": [
+      {
+        "weight": 400,
+        "hash": "sha256:abababababababababababababababababababababababababababababababab"
+      }
+    ]
+  }
+}

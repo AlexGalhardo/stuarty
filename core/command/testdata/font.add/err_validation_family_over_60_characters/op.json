@@ -1,0 +1,12 @@
+{
+  "op": "font.add",
+  "args": {
+    "family": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "files": [
+      {
+        "weight": 400,
+        "hash": "sha256:abababababababababababababababababababababababababababababababab"
+      }
+    ]
+  }
+}

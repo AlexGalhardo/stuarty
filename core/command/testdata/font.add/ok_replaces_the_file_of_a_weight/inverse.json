@@ -1,0 +1,19 @@
+[
+  {
+    "type": "patch",
+    "collection": "fonts",
+    "id": "Brand Sans",
+    "set": {
+      "files": [
+        {
+          "hash": "sha256:abababababababababababababababababababababababababababababababab",
+          "weight": 400
+        },
+        {
+          "hash": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "weight": 700
+        }
+      ]
+    }
+  }
+]

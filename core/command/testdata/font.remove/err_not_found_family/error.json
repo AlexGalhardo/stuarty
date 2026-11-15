@@ -1,0 +1,7 @@
+{
+  "code": "E_NOT_FOUND",
+  "message": "Font family \"Nowhere\" is not one of the project fonts.",
+  "hint": "Use one of: Brand Sans, Spare.",
+  "retryable": false,
+  "path": "args.family"
+}

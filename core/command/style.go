@@ -248,16 +248,17 @@ func (c *Context) checkFont(s *timeline.CaptionStyle) *Error {
 	weights, ok := timeline.FontWeights(c.Doc, family)
 	if !ok {
 		avail := slices.Clone(timeline.BundledFamilies)
-		for f := range c.Doc.Fonts {
-			avail = append(avail, f)
-		}
+		project := slices.Sorted(maps.Keys(c.Doc.Fonts))
+		avail = append(avail, project...)
 		slices.Sort(avail)
-		return Errorf(
-			CodeFontUnknown,
-			"Font %q is not available; available families: %s.",
-			family,
-			strings.Join(avail, ", "),
-		).
+		message := fmt.Sprintf("Font %q is not available; available families: %s.", family, strings.Join(avail, ", "))
+		if len(project) > 0 {
+			bundled := slices.Clone(timeline.BundledFamilies)
+			slices.Sort(bundled)
+			message = fmt.Sprintf("Font %q is not available; bundled families: %s; project fonts: %s.",
+				family, strings.Join(bundled, ", "), strings.Join(project, ", "))
+		}
+		return Errorf(CodeFontUnknown, "%s", message).
 			WithHint("Use font_family %q.", "Inter").
 			WithDetail("available", avail).
 			WithPath(path + ".font_family")

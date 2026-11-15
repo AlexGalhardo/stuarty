@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.family \"Inter\" is a bundled family.",
+  "hint": "Choose another name; the bundled families are: Anton, Bebas Neue, Inter, JetBrains Mono, Montserrat, Playfair Display.",
+  "retryable": false,
+  "path": "args.family"
+}

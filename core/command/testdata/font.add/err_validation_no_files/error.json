@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The length of args.files is 0, outside the accepted range.",
+  "hint": "Use a length between 1 and 9.",
+  "retryable": false,
+  "path": "args.files"
+}

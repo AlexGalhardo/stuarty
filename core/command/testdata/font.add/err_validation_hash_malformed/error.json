@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.files[0].hash is not a sha256 hash.",
+  "hint": "Use \"sha256:\" and 64 lower-case hex characters.",
+  "retryable": false,
+  "path": "args.files[0].hash"
+}
