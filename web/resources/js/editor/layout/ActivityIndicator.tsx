@@ -15,6 +15,7 @@ import {
 	actorLabel,
 } from "../state/activityStore";
 import { useActivityState } from "../state/EditorContext";
+import { capitalizeFirst } from "../ui/format";
 
 const SETTLED_MS = 5 * 60 * 1000;
 const ANNOUNCE_EVERY_MS = 2000;
@@ -79,7 +80,9 @@ export default function ActivityIndicator(): ReactNode {
 		lastAnnounced.current = at;
 		announcedRevision.current = latest.revision;
 		setAnnouncement(
-			t("ui.editor.activity.announce", { actor: actorLabel(latest.actor) }),
+			capitalizeFirst(
+				t("ui.editor.activity.announce", { actor: actorLabel(latest.actor) }),
+			),
 		);
 	}, [latest, t]);
 
@@ -95,14 +98,16 @@ export default function ActivityIndicator(): ReactNode {
 	const editing = now - latest.at < ACTIVE_MS;
 	const others = fresh.filter(([actor]) => actor !== latest.actor).length;
 	const actor = actorLabel(latest.actor);
-	const text = editing
-		? others > 0
-			? t("ui.editor.activity.editing_others", { actor, count: others })
-			: t("ui.editor.activity.editing", { actor })
-		: t("ui.editor.activity.last", {
-				actor,
-				ago: relative(locale, now - latest.at),
-			});
+	const text = capitalizeFirst(
+		editing
+			? others > 0
+				? t("ui.editor.activity.editing_others", { actor, count: others })
+				: t("ui.editor.activity.editing", { actor })
+			: t("ui.editor.activity.last", {
+					actor,
+					ago: relative(locale, now - latest.at),
+				}),
+	);
 
 	return (
 		<>
