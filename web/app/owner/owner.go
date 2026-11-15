@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/queue"
 	"github.com/AlexGalhardo/vukem/ratelimit"
 
@@ -59,7 +60,7 @@ type Config struct {
 	// value is the mode named by VUKEM_VIDEO_MODE with no network facts (the
 	// commands, which never serve).
 	Resolved config.Resolved
-	// Telemetry builds the OpenTelemetry exporter; it is called only when
+	// Telemetry builds the OpenTelemetry provider; it is called only when
 	// OTEL_EXPORTER_OTLP_ENDPOINT is set. Nil builds none.
 	Telemetry Telemetry
 	// Inline runs the jobs inside the call that starts them (queue.Sync) and
@@ -93,7 +94,7 @@ type Owner struct {
 	network  *httpapi.Network
 	netAuth  *auth.Network
 
-	telemetry func(context.Context) error
+	telemetry vukem.Provider
 }
 
 // lateRunner lets the queue handlers exist before the Service that they call.
@@ -129,11 +130,7 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 		return nil, err
 	}
 
-	if err := o.startTelemetry(ctx, cfg); err != nil {
-		_ = o.Close()
-
-		return nil, err
-	}
+	o.startTelemetry(cfg)
 
 	if err := o.build(ctx, cfg); err != nil {
 		_ = o.Close()
@@ -475,10 +472,6 @@ func (o *Owner) Work(ctx context.Context) error {
 // database (checkpointed by its close) and the lock, in that order.
 func (o *Owner) Close() error {
 	var errs []error
-
-	if o.telemetry != nil {
-		errs = append(errs, o.telemetry(context.Background()))
-	}
 
 	if o.Events != nil {
 		o.Events.Close() // ends the open streams at once

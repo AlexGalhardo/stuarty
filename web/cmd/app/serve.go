@@ -40,7 +40,7 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 	log, closeLog := openLog(os.Getenv, stderr)
 	defer func() { _ = closeLog.Close() }()
 
-	ow, err := owner.Open(ctx, owner.Config{Version: version, Log: log, Resolved: resolved})
+	ow, err := owner.Open(ctx, owner.Config{Version: version, Log: log, Resolved: resolved, Telemetry: owner.OTelProvider})
 	if err != nil {
 		_, _ = fmt.Fprintln(stderr, "vukem-video serve:", err)
 
@@ -107,7 +107,13 @@ func serveOwner(ctx context.Context, ow *owner.Owner, args []string, extra ...vu
 	ready := make(chan string, 1)
 
 	build := func(opts ...vukem.Option) (*vukem.App, error) {
-		app, err := bootstrap.NewWith(ow.Deps(), append(opts, vukem.WithReady(ready))...)
+		opts = append(opts, vukem.WithReady(ready))
+		if p := ow.TelemetryProvider(); p != nil {
+			// First, so that its middleware wraps the whole stack (drivers/otel).
+			opts = append([]vukem.Option{vukem.WithProviders(p)}, opts...)
+		}
+
+		app, err := bootstrap.NewWith(ow.Deps(), opts...)
 		if err != nil {
 			return nil, err
 		}

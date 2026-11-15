@@ -5,6 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	vukem "github.com/AlexGalhardo/vukem"
+
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
@@ -33,18 +36,18 @@ func TestANewWorkspaceHoldsTheStarterTemplates(t *testing.T) {
 }
 
 // ADR-0026 item 4, T-10: a default start constructs no OpenTelemetry exporter;
-// the endpoint turns it on, and it is shut down with the owner.
+// the endpoint turns it on, and the application gets the provider to run.
 func TestTelemetryIsBuiltOnlyWhenTheEndpointIsSet(t *testing.T) {
-	var built, stopped int
+	var built int
 
-	hook := func(context.Context, func(string) string) (func(context.Context) error, error) {
+	hook := func(string) vukem.Provider {
 		built++
 
-		return func(context.Context) error { stopped++; return nil }, nil
+		return OTelProvider("test")
 	}
 
 	for name, endpoint := range map[string]string{"default": "", "endpoint": "http://collector.example:4318"} {
-		built, stopped = 0, 0
+		built = 0
 		env := map[string]string{workspace.EnvHome: filepath.Join(t.TempDir(), "ws")}
 
 		if endpoint != "" {
@@ -60,12 +63,36 @@ func TestTelemetryIsBuiltOnlyWhenTheEndpointIsSet(t *testing.T) {
 			t.Errorf("%s: %d exporter constructions, want %d", name, built, want)
 		}
 
+		if got := o.TelemetryProvider() != nil; got != (built == 1) {
+			t.Errorf("%s: provider present = %v with %d constructions", name, got, built)
+		}
+
 		if err := o.Close(); err != nil {
 			t.Fatal(err)
 		}
+	}
+}
 
-		if stopped != built {
-			t.Errorf("%s: %d shutdowns for %d exporters", name, stopped, built)
-		}
+// T-10: a default start with the real constructor builds no provider and opens
+// no connection of any purpose.
+func TestDefaultStartWithTheOTelConstructorDialsNothing(t *testing.T) {
+	var dials int
+
+	restore := outbound.SetDialRecorder(func(outbound.Purpose, string) error { dials++; return nil })
+	t.Cleanup(restore)
+
+	env := map[string]string{workspace.EnvHome: filepath.Join(t.TempDir(), "ws")}
+
+	o, err := Open(context.Background(), Config{Getenv: envOf(env), Inline: true, Telemetry: OTelProvider})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if o.TelemetryProvider() != nil || dials != 0 {
+		t.Errorf("provider = %v, dials = %d; want none", o.TelemetryProvider(), dials)
+	}
+
+	if err := o.Close(); err != nil {
+		t.Fatal(err)
 	}
 }

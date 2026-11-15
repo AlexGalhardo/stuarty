@@ -41,7 +41,7 @@ func becomeOwner(
 	return func(ctx context.Context, sess *workspace.Session, getenv func(string) string) (*cli.Connection, error) {
 		log, closeLog := openLog(getenv, stderr)
 
-		ow, err := owner.Open(ctx, owner.Config{Getenv: getenv, Version: version, Log: log, Session: sess})
+		ow, err := owner.Open(ctx, owner.Config{Getenv: getenv, Version: version, Log: log, Session: sess, Telemetry: owner.OTelProvider})
 		if err != nil {
 			_ = closeLog.Close()
 
