@@ -57,7 +57,10 @@ func zipNames(t *testing.T, data []byte) map[string]bool {
 func (m *mediaEnv) instantiate(name, template string) string {
 	m.t.Helper()
 
-	res, err := m.svc.TemplateInstantiate(m.as(ui), service.TemplateInstantiateRequest{TemplateID: template, Name: name})
+	res, err := m.svc.TemplateInstantiate(
+		m.as(ui),
+		service.TemplateInstantiateRequest{TemplateID: template, Name: name},
+	)
 	if err != nil {
 		m.t.Fatal(err)
 	}
@@ -127,7 +130,11 @@ func TestTemplateFontsImportRefusesBadFontEntries(t *testing.T) {
 		"a font the document does not use": {
 			"manifest.json": manifest, "template.json": doc, "font." + anton: font, craftedName: crafted,
 		},
-		"an uppercase name":                 {"manifest.json": manifest, "template.json": doc, "FONT." + strings.ToUpper(anton): font},
+		"an uppercase name": {
+			"manifest.json":                  manifest,
+			"template.json":                  doc,
+			"FONT." + strings.ToUpper(anton): font,
+		},
 		"a crafted file under its own hash": {"manifest.json": manifest, "template.json": doc, craftedName: crafted},
 	}
 

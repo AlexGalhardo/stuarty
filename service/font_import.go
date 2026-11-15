@@ -433,7 +433,11 @@ func (s *svc) FontImport(ctx context.Context, req FontImportRequest) (*FontImpor
 	}
 
 	if st.Size() > raster.MaxFontBytes {
-		return nil, newError(raster.CodeFontInvalid, "the font file is refused: it is over %d MiB.", raster.MaxFontBytes>>20).
+		return nil, newError(
+			raster.CodeFontInvalid,
+			"the font file is refused: it is over %d MiB.",
+			raster.MaxFontBytes>>20,
+		).
 			withHint("use a TrueType or OpenType font of at most %d MiB", raster.MaxFontBytes>>20).
 			withDetail("reason", "too_large")
 	}

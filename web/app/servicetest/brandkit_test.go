@@ -81,7 +81,13 @@ func TestBrandKitFontImportStoresOnceAndRefusesACraftedFont(t *testing.T) {
 
 	crafted := append([]byte{0, 1, 0, 0, 0, 64}, []byte(strings.Repeat("x", 200))...)
 
-	if _, err := m.importFont(m.as(ui), m.writeFont(m.files, "bad.ttf", crafted)); !isCode(err, command.CodeValidation) {
+	if _, err := m.importFont(
+		m.as(ui),
+		m.writeFont(m.files, "bad.ttf", crafted),
+	); !isCode(
+		err,
+		command.CodeValidation,
+	) {
 		t.Fatalf("crafted font: %v, want E_VALIDATION", err)
 	}
 
@@ -111,11 +117,19 @@ func TestBrandKitSetValidatesAndRoundTrips(t *testing.T) {
 	font := map[string]service.BrandFont{"Brand": {Files: []service.BrandFontFile{{Weight: 400, Hash: imp.Hash}}}}
 
 	bad := map[string]service.BrandKitSetRequest{
-		"name":      {Colors: map[string]string{"Accent": "#ffffff"}},
-		"colour":    {Colors: map[string]string{"accent": "red"}},
-		"bundled":   {Fonts: map[string]service.BrandFont{"Inter": font["Brand"]}},
-		"weight":    {Fonts: map[string]service.BrandFont{"Brand": {Files: []service.BrandFontFile{{Weight: 450, Hash: imp.Hash}}}}},
-		"twice":     {Fonts: map[string]service.BrandFont{"Brand": {Files: []service.BrandFontFile{{Weight: 400, Hash: imp.Hash}, {Weight: 400, Hash: imp.Hash}}}}},
+		"name":    {Colors: map[string]string{"Accent": "#ffffff"}},
+		"colour":  {Colors: map[string]string{"accent": "red"}},
+		"bundled": {Fonts: map[string]service.BrandFont{"Inter": font["Brand"]}},
+		"weight": {
+			Fonts: map[string]service.BrandFont{
+				"Brand": {Files: []service.BrandFontFile{{Weight: 450, Hash: imp.Hash}}},
+			},
+		},
+		"twice": {
+			Fonts: map[string]service.BrandFont{
+				"Brand": {Files: []service.BrandFontFile{{Weight: 400, Hash: imp.Hash}, {Weight: 400, Hash: imp.Hash}}},
+			},
+		},
 		"logo form": {Logo: "nope"},
 	}
 	for name, req := range bad {
@@ -183,7 +197,11 @@ func TestBrandKitTemplateTakesTheBrandColour(t *testing.T) {
 	}
 
 	ask.BrandColors = []string{"nothing"}
-	if _, err := m.svc.TemplateInstantiate(ctx, ask); serviceErr(err) == nil || serviceErr(err).Details["reason"] != "brand_color_unknown" {
+	if _, err := m.svc.TemplateInstantiate(
+		ctx,
+		ask,
+	); serviceErr(err) == nil ||
+		serviceErr(err).Details["reason"] != "brand_color_unknown" {
 		t.Errorf("a colour the template lacks: %v", err)
 	}
 
@@ -220,7 +238,10 @@ func TestSecurity_T21_BundleExportRefusesAFontTheCallerDoesNotOwn(t *testing.T) 
 	m.mustEdit(ui, project, 0, op("font.add", `{"family":"Brand","files":[{"weight":400,"hash":"sha256:`+hash+`"}]}`))
 
 	export := func(ctx context.Context) error {
-		_, err := m.svc.(bundleExporter).ProjectBundleExport(ctx, service.ProjectBundleExportRequest{ProjectID: project})
+		_, err := m.svc.(bundleExporter).ProjectBundleExport(
+			ctx,
+			service.ProjectBundleExportRequest{ProjectID: project},
+		)
 
 		return err
 	}

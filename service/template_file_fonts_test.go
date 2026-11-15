@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"strings"
@@ -17,7 +18,7 @@ func TestTemplateFontsAllowlistAcceptsOnlyAFontNamedByItsHash(t *testing.T) {
 	}
 
 	got, err := readTemplateArchive(zipOf(t, append(base, member{name: name, body: body})...))
-	if err != nil || len(got.Fonts) != 1 || string(got.Fonts["sha256:"+hex.EncodeToString(sum[:])]) != string(body) {
+	if err != nil || len(got.Fonts) != 1 || !bytes.Equal(got.Fonts["sha256:"+hex.EncodeToString(sum[:])], body) {
 		t.Fatalf("a font entry: %+v, %v", got, err)
 	}
 

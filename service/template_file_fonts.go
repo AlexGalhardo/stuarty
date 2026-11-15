@@ -20,8 +20,13 @@ func (s *svc) templateFontFiles(ctx context.Context, c Caller, doc *timeline.Doc
 
 	if c.OwnerUserID != "" {
 		if family, bad := s.unusableFont(ctx, s.store, doc, ""); bad {
-			return nil, newError(CodeForbidden, "the font family %q of the template is a file you did not import or bring.", family).
-				withHint("import the font file with font:import, then export again").withPath("fonts")
+			return nil, newError(
+				CodeForbidden,
+				"the font family %q of the template is a file you did not import or bring.",
+				family,
+			).
+				withHint("import the font file with font:import, then export again").
+				withPath("fonts")
 		}
 	}
 
@@ -34,8 +39,13 @@ func (s *svc) templateFontFiles(ctx context.Context, c Caller, doc *timeline.Doc
 			}
 
 			if s.fonts == nil || !s.hasFont(f.Hash) {
-				return nil, newError(command.CodeNotFound, "the font family %q of the template is not in the workspace.", family).
-					withHint("import the font file again, then export the template").withPath("fonts")
+				return nil, newError(
+					command.CodeNotFound,
+					"the font family %q of the template is not in the workspace.",
+					family,
+				).
+					withHint("import the font file again, then export the template").
+					withPath("fonts")
 			}
 
 			data, err := s.fonts.Read(f.Hash[len("sha256:"):])
