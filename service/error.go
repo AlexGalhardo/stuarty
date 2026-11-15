@@ -150,7 +150,9 @@ func asError(err error) error {
 	}
 
 	if full, ok := errors.AsType[*QueueFullError](err); ok {
-		return newError(CodeQueueFull, "a concurrency limit is reached.").withDetail("running", full.Running)
+		return newError(CodeQueueFull, "a concurrency limit is reached.").
+			withHint("wait for a running job to finish with job_get, or stop one with job_cancel, then try again").
+			withDetail("running", full.Running)
 	}
 
 	return internalError()

@@ -460,6 +460,8 @@ func (s *svc) checkDisk(need int64) *Error {
 	free, err := s.media.FreeBytes(s.workspace)
 	if err == nil && free < uint64(need)+uint64(s.limits.MinFreeBytes) { //nolint:gosec // both are positive
 		return newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space.").
+			withHint("free space on the disk of the workspace; the person running the server can lower "+
+				"VUKEM_VIDEO_MIN_FREE_BYTES").
 			withDetail("limit", "free_bytes").withDetail("reason", "disk_low").
 			withDetail("variable", "VUKEM_VIDEO_MIN_FREE_BYTES")
 	}
