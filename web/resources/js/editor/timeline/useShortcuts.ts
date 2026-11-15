@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { useT } from "@/lib/i18n";
 import { editShortcut, isSelectAllShortcut } from "../commands/keymap";
+import { bindingFor } from "../commands/keymapStore";
 import { useActions } from "../commands/useActions";
 import { useRuntime } from "../state/EditorContext";
 
@@ -22,9 +23,18 @@ function inOverlay(target: EventTarget | null): boolean {
 	);
 }
 
-// The keys of the Prototype (SDD-012 sections 8.2 and 15): S splits, [ and ]
-// trim to the playhead, C opens Add caption, T adds a text item, Ctrl+Z undoes, Ctrl+Shift+Z and
-// Ctrl+Y redo. Typing in a field never triggers them.
+const EDIT_BINDINGS = [
+	"split",
+	"trim_start",
+	"trim_end",
+	"add_caption",
+	"add_text",
+] as const;
+
+// The keys of the Prototype (SDD-012 sections 8.2 and 15): split, trim to the
+// playhead, Add caption and Add text have rebindable keys (S, [, ], C and T by
+// default, section 18.2); Ctrl+Z undoes, Ctrl+Shift+Z and Ctrl+Y redo. Typing
+// in a field never triggers them.
 export function useShortcuts(openCaption: () => void): void {
 	const actions = useActions();
 	const runtime = useRuntime();
@@ -53,22 +63,24 @@ export function useShortcuts(openCaption: () => void): void {
 				event.preventDefault();
 				return;
 			}
-			const mod = event.ctrlKey || event.metaKey;
-			const key = event.key.toLowerCase();
-			if (mod) {
-				if (key === "z" && !event.shiftKey) void actions.undo();
-				else if ((key === "z" && event.shiftKey) || key === "y") {
-					void actions.redo();
-				} else return;
+			const bound = inOverlay(event.target)
+				? null
+				: bindingFor(event, EDIT_BINDINGS);
+			if (bound !== null) {
+				if (bound === "split") void actions.splitAtPlayhead();
+				else if (bound === "trim_start") void actions.trimToPlayhead("start");
+				else if (bound === "trim_end") void actions.trimToPlayhead("end");
+				else if (bound === "add_caption") openCaption();
+				else void actions.addText(t("ui.editor.defaults.text"));
 				event.preventDefault();
 				return;
 			}
-			if (key === "s") void actions.splitAtPlayhead();
-			else if (key === "[") void actions.trimToPlayhead("start");
-			else if (key === "]") void actions.trimToPlayhead("end");
-			else if (key === "c") openCaption();
-			else if (key === "t") void actions.addText(t("ui.editor.defaults.text"));
-			else return;
+			if (!(event.ctrlKey || event.metaKey)) return;
+			const key = event.key.toLowerCase();
+			if (key === "z" && !event.shiftKey) void actions.undo();
+			else if ((key === "z" && event.shiftKey) || key === "y") {
+				void actions.redo();
+			} else return;
 			event.preventDefault();
 		};
 		window.addEventListener("keydown", onKey);
