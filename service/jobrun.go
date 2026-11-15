@@ -486,12 +486,16 @@ func (s *svc) checkDisk() *Error {
 // verification (ADR-0018 item 6): the exporter verifies, and the service checks
 // again that every check is ok and that the file on disk is the one reported.
 func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.RawMessage, error) {
-	if s.exporter == nil || job.ProjectID == nil {
+	var in exportInput
+	if err := json.Unmarshal(job.Input, &in); err != nil {
 		return nil, internalError()
 	}
 
-	var in exportInput
-	if err := json.Unmarshal(job.Input, &in); err != nil {
+	if in.Format == bundleExportFormat {
+		return s.runBundleExport(ctx, job, pw, in)
+	}
+
+	if s.exporter == nil || job.ProjectID == nil {
 		return nil, internalError()
 	}
 
