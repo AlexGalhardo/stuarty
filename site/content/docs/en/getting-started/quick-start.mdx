@@ -3,15 +3,16 @@ title: "Getting started"
 description: "How to install and run Vukem Video, and what you can do today while it is in the Prototype phase."
 ---
 
-<Callout type="warning" title="Early release">
-Vukem Video is in the Prototype phase. The first editor release, `v0.2.0`, ships the local server, its container image and installers, but the editor does not edit video yet. Parts of the commands below are specified and not working yet.
+<Callout type="warning" title="ALPHA">
+Vukem Video is in its ALPHA phase. You can import media, edit, caption and export from the editor, the CLI or an agent, and each release adds more. Read the [changelog](/changelog) for what the version you installed can do.
 </Callout>
 
 ## What you can do today
 
+- Import media, cut and arrange it on a timeline, add text and captions, and export a verified MP4.
+- Save a project as a template and start new projects from it.
+- Let an agent do the same through the MCP server or the CLI.
 - Read the planning documents in the [repository](https://github.com/AlexGalhardo/vukem-video/tree/main/docs): requirements, architecture decisions and specifications.
-- Build the server skeleton from source. You need Go (the version in `go.mod`) and Bun for the front end. The server boots and answers a health check; it does not edit video yet.
-- Watch the [releases](https://github.com/AlexGalhardo/vukem-video/releases) page and the [changelog](/changelog).
 
 ## Install
 
@@ -31,7 +32,7 @@ docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data \
   ghcr.io/alexgalhardo/vukem-video:<version>
 ```
 
-The server listens on `127.0.0.1:7878` and is reachable from your computer only.
+The server listens on `127.0.0.1:7878` and is reachable from your computer only. Open that address in a browser to reach the editor. Your projects and media stay in the `vukem-video` volume, so a new container with the same volume finds them again. The [installation page](/docs/installation) has the details of the image and its tags.
 
 ### Windows SmartScreen and macOS Gatekeeper
 
@@ -55,7 +56,7 @@ Pick one of three routes to the same project:
 2. The CLI with `--json`, for example `vukem-video project:create --name "Launch teaser" --json`.
 3. The HTTP API of `vukem-video serve`, with Streamable HTTP MCP at `POST /mcp`.
 
-These routes are specified in the repository (SDD-003); parts of them are not implemented yet.
+These routes share one set of operations, so an agent and a person see the same result. The [agents overview](/docs/agents/overview) shows how to connect one.
 
 ## Next steps
 
