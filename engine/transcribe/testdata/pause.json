@@ -1,0 +1,14 @@
+{
+  "systeminfo": "fake",
+  "result": {"language": "en"},
+  "transcription": [
+    {"offsets": {"from": 0, "to": 0}, "text": "[_BEG_]", "tokens": [{"text": "[_BEG_]", "offsets": {"from": 0, "to": 0}, "p": 0.9}]},
+    {"offsets": {"from": 0, "to": 2200}, "text": " Hello", "tokens": [{"text": " Hello", "offsets": {"from": 0, "to": 2200}, "p": 0.92}]},
+    {"offsets": {"from": 2200, "to": 3000}, "text": " world", "tokens": [{"text": " world", "offsets": {"from": 2200, "to": 3000}, "p": 0.8}, {"text": "[_TT_150]", "offsets": {"from": 3000, "to": 3000}, "p": 0.1}]},
+    {"offsets": {"from": 3000, "to": 3000}, "text": " so", "tokens": [{"text": " so", "offsets": {"from": 3000, "to": 3000}, "p": 0.7}]},
+    {"offsets": {"from": 3000, "to": 3400}, "text": " it", "tokens": [{"text": " it", "offsets": {"from": 3000, "to": 3400}, "p": 0.95}]},
+    {"offsets": {"from": 3400, "to": 3700}, "text": " work", "tokens": [{"text": " work", "offsets": {"from": 3400, "to": 3700}, "p": 0.9}]},
+    {"offsets": {"from": 3700, "to": 4000}, "text": "s.", "tokens": [{"text": "s", "offsets": {"from": 3700, "to": 3900}, "p": 0.6}, {"text": ".", "offsets": {"from": 3900, "to": 4000}, "p": 0.97}]},
+    {"offsets": {"from": 4000, "to": 4000}, "text": "", "tokens": []}
+  ]
+}
