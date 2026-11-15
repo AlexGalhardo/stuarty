@@ -284,13 +284,107 @@ func (s *svc) doctorChecks(ctx context.Context, privileged, verify bool) []Docto
 	return out
 }
 
+// ffmpegChecks are ffmpeg.binary, .license, .capabilities and .encoder, then ffmpeg.openh264 for the
+// own build (SDD-011 section 8.6).
 func (s *svc) ffmpegChecks(ctx context.Context, privileged bool) []DoctorCheck {
+	out, chosen := s.ffmpegCoreChecks(ctx, privileged)
+
+	r := s.media.Runner
+	if r == nil || r.In == nil {
+		return out
+	}
+
+	dir, manifest := "", ffmpeg.OpenH264Manifest{}
+	if s.tools != nil {
+		dir, manifest = s.tools.Dir, s.tools.openH264Manifest()
+	}
+
+	goos, goarch := "", ""
+	if s.tools != nil {
+		goos, goarch = s.tools.platform()
+	}
+
+	other := chosen != "" && chosen != "libopenh264"
+	if check, ok := openH264Check(r.In, dir, manifest, goos, goarch, other); ok {
+		out = append(out, check)
+	}
+
+	return out
+}
+
+// licenseCheck is ffmpeg.license: the classification of SDD-011 section 8.2, the build it is
+// (vukem, btbn or other) and the flags a build this project distributes must not carry.
+func licenseCheck(in *ffmpeg.Installation, privileged bool) DoctorCheck {
+	lic := in.Info.License
+	fl := in.Flavour()
+	problems := fl.Problems()
+	licOK := lic.Name != "nonfree" && len(problems) == 0
+
+	licHint := ""
+
+	switch {
+	case len(problems) > 0:
+		licHint = "this is a build the project distributes and it carries " + strings.Join(problems, ", ") +
+			"; use a build without it"
+	case lic.Name == "nonfree":
+		licHint = "this FFmpeg was built with --enable-nonfree and cannot be redistributed; use an LGPL build"
+	case lic.Name == "gpl":
+		licHint = "this FFmpeg is GPL: fine for your own use, not for anything this project ships"
+	}
+
+	parts := []string{lic.Name + versionSuffix(lic.Version3), "flavour " + string(fl.Name)}
+	if len(problems) > 0 {
+		parts = append(parts, "problems "+strings.Join(problems, ","))
+	}
+
+	if privileged {
+		parts = append(parts, strings.Join(in.Info.Flags, " "))
+	}
+
+	return DoctorCheck{Name: "ffmpeg.license", OK: licOK, Hint: licHint, Detail: strings.TrimSpace(strings.Join(parts, "; "))}
+}
+
+// openH264Check is ffmpeg.openh264 and exists for the own build only. It reads the library from disk
+// again, so an install made since the start shows. It is ok when the library is installed and
+// unchanged, or another H.264 encoder works (otherEncoder).
+func openH264Check(
+	in *ffmpeg.Installation, toolsDir string, m ffmpeg.OpenH264Manifest, goos, goarch string, otherEncoder bool,
+) (DoctorCheck, bool) {
+	if in.Flavour().Name != ffmpeg.FlavourOwn {
+		return DoctorCheck{}, false
+	}
+
+	st := ffmpeg.CheckOpenH264(toolsDir, m, goos, goarch)
+	check := DoctorCheck{Name: "ffmpeg.openh264", OK: st.Installed || otherEncoder}
+
+	if st.Installed {
+		check.Detail = "installed"
+
+		return check, true
+	}
+
+	reason := st.Reason
+	if reason == "" {
+		reason = ffmpeg.ReasonOpenH264NotInstalled
+	}
+
+	check.Detail = reason
+
+	if reason != ffmpeg.ReasonOpenH264Platform {
+		check.Detail += fmt.Sprintf(", %.1f MB to download", float64(st.Entry.Bytes)/1e6)
+		check.Hint = `Run "` + ffmpeg.OpenH264InstallCommand + `".`
+	}
+
+	return check, true
+}
+
+func (s *svc) ffmpegCoreChecks(ctx context.Context, privileged bool) (checks []DoctorCheck, chosen string) {
 	r := s.media.Runner
 	if r == nil || r.In == nil {
 		return []DoctorCheck{{
 			Name: "ffmpeg.binary", OK: false, Detail: "E_FFMPEG_MISSING: no usable FFmpeg was found",
 			Hint: "install FFmpeg 9 or set VUKEM_VIDEO_FFMPEG to its absolute path; import and export need it",
-		}}
+		}}, ""
 	}
 
 	in := r.In
@@ -304,34 +398,14 @@ func (s *svc) ffmpegChecks(ctx context.Context, privileged bool) []DoctorCheck {
 		Name: "ffmpeg.binary", OK: true, Detail: detail, Hint: strings.Join(in.Warnings(), ", "),
 	}}
 
-	lic := in.Info.License
-	licOK := lic.Name != "nonfree"
-
-	licHint := ""
-
-	switch lic.Name {
-	case "nonfree":
-		licHint = "this FFmpeg was built with --enable-nonfree and cannot be redistributed; use an LGPL build"
-	case "gpl":
-		licHint = "this FFmpeg is GPL: fine for your own use, not for anything this project ships"
-	}
-
-	flags := strings.Join(in.Info.Flags, " ")
-	if !privileged {
-		flags = ""
-	}
-
-	out = append(out, DoctorCheck{
-		Name: "ffmpeg.license", OK: licOK, Hint: licHint,
-		Detail: strings.TrimSpace(lic.Name + versionSuffix(lic.Version3) + " " + flags),
-	})
+	out = append(out, licenseCheck(in, privileged))
 
 	caps, cerr := s.capabilities(ctx, r)
 	if cerr != nil {
 		return append(out, DoctorCheck{
 			Name: "ffmpeg.capabilities", OK: false, Detail: "the capabilities could not be read",
 			Hint: "run doctor again; if it persists the FFmpeg build is damaged",
-		})
+		}), ""
 	}
 
 	out = append(out, DoctorCheck{
@@ -345,7 +419,7 @@ func (s *svc) ffmpegChecks(ctx context.Context, privileged bool) []DoctorCheck {
 		return append(out, DoctorCheck{
 			Name: "ffmpeg.encoder", OK: false, Detail: "E_NO_ENCODER: no H.264 encoder passed the test encode",
 			Hint: "install an FFmpeg with an H.264 encoder (openh264, a hardware encoder) or see doctor --full",
-		})
+		}), ""
 	}
 
 	parts := make([]string, 0, len(det.Candidates))
@@ -356,7 +430,7 @@ func (s *svc) ffmpegChecks(ctx context.Context, privileged bool) []DoctorCheck {
 	return append(out, DoctorCheck{
 		Name: "ffmpeg.encoder", OK: true,
 		Detail: fmt.Sprintf("%s (forced %t); %s", det.Chosen, det.Forced, strings.Join(parts, ", ")),
-	})
+	}), det.Chosen
 }
 
 // capabilities reads what FFmpeg can do once; the doctor lock serialises the callers.
