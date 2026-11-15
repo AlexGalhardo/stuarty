@@ -28,7 +28,9 @@ describe("Timeline", () => {
 		const h = await startHarness({ tracks: 3, itemsPerTrack: 4 });
 		const html = render(h.runtime, <Timeline />);
 		expect(html.match(/role="gridcell"/g)?.length).toBe(12);
-		expect(html.match(/role="row"/g)?.length).toBe(3);
+		// One row of cells and one header row per track, and the ruler row.
+		expect(html.match(/role="row"/g)?.length).toBe(7);
+		expect(html.match(/data-track-id=/g)?.length).toBe(3);
 		expect(html).toContain("Title 5");
 		expect(html).toContain("IMG_0421.MOV");
 		expect(html).toContain('aria-label="Timeline"');

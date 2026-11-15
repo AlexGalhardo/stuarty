@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { useT } from "@/lib/i18n";
-import { editShortcut } from "../commands/keymap";
+import { editShortcut, isSelectAllShortcut } from "../commands/keymap";
 import { useActions } from "../commands/useActions";
 import { useRuntime } from "../state/EditorContext";
 
@@ -45,6 +45,12 @@ export function useShortcuts(openCaption: () => void): void {
 					const id = only ?? focusedItem;
 					if (id !== null && id !== undefined) runtime.uiWriter.startRename(id);
 				}
+				return;
+			}
+			if (isSelectAllShortcut(event) && !inOverlay(event.target)) {
+				const doc = runtime.documents.getState().document;
+				if (doc !== null) runtime.uiWriter.select(Object.keys(doc.items));
+				event.preventDefault();
 				return;
 			}
 			const mod = event.ctrlKey || event.metaKey;

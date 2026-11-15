@@ -1,6 +1,14 @@
 import { describe, expect, test } from "vitest";
 
-import { editShortcut, panelShortcut } from "./keymap";
+import actionsSource from "./actions.ts?raw";
+import {
+	editShortcut,
+	isSelectAllShortcut,
+	landmarkShortcut,
+	panelShortcut,
+	SHORTCUTS,
+	UI_SHORTCUT_ACTIONS,
+} from "./keymap";
 
 const key = (init: Partial<Parameters<typeof panelShortcut>[0]>) =>
 	panelShortcut({
@@ -58,5 +66,75 @@ describe("editShortcut", () => {
 		expect(edit("F2")).toBe("rename");
 		expect(edit("d")).toBeNull();
 		expect(edit("Delete", { altKey: true })).toBeNull();
+	});
+});
+
+describe("the table of SDD-012 section 18.2", () => {
+	const body =
+		/export interface Actions \{([\s\S]*?)\n\}/.exec(actionsSource)?.[1] ?? "";
+	const methods = new Set(
+		[...body.matchAll(/^\t(\w+)[(<]/gm)].map((m) => m[1] as string),
+	);
+
+	test("every shortcut resolves to an action of actions.ts or a listed editor surface", () => {
+		expect(methods.size).toBeGreaterThan(20);
+		for (const row of SHORTCUTS) {
+			const known =
+				methods.has(row.action) ||
+				(UI_SHORTCUT_ACTIONS as readonly string[]).includes(row.action);
+			expect(known, `${row.keys} -> ${row.action}`).toBe(true);
+		}
+	});
+
+	test("the keys the section lists are all in the table", () => {
+		const keys = SHORTCUTS.map((row) => row.keys).join(" | ");
+		for (const key of [
+			"Space",
+			"S",
+			"Mod+Z",
+			"Ctrl+Y",
+			"Mod+D",
+			"C",
+			"T",
+			"F2",
+			"N",
+			"Mod+K",
+			"Alt+1",
+			"Mod+A",
+			"Esc",
+			"F6",
+		]) {
+			expect(keys, key).toContain(key);
+		}
+	});
+});
+
+describe("selectAll and landmark keys", () => {
+	const base = {
+		ctrlKey: false,
+		metaKey: false,
+		altKey: false,
+		shiftKey: false,
+	};
+
+	test("Mod+A selects, A and Mod+Shift+A do not", () => {
+		expect(isSelectAllShortcut({ ...base, key: "a", ctrlKey: true })).toBe(
+			true,
+		);
+		expect(isSelectAllShortcut({ ...base, key: "A", metaKey: true })).toBe(
+			true,
+		);
+		expect(isSelectAllShortcut({ ...base, key: "a" })).toBe(false);
+		expect(
+			isSelectAllShortcut({ ...base, key: "a", ctrlKey: true, shiftKey: true }),
+		).toBe(false);
+	});
+
+	test("F6 goes forward, Shift+F6 back, with Ctrl or Alt it is the browser's", () => {
+		expect(landmarkShortcut({ ...base, key: "F6" })).toBe(1);
+		expect(landmarkShortcut({ ...base, key: "F6", shiftKey: true })).toBe(-1);
+		expect(landmarkShortcut({ ...base, key: "F6", ctrlKey: true })).toBeNull();
+		expect(landmarkShortcut({ ...base, key: "F6", altKey: true })).toBeNull();
+		expect(landmarkShortcut({ ...base, key: "F5" })).toBeNull();
 	});
 });

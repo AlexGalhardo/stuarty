@@ -118,7 +118,7 @@ const FEATURES = ["timeline", "inspector", "library", "export", "history"];
 const MAY_IMPORT: Record<string, string[]> = {
 	api: [],
 	state: ["api"],
-	commands: ["state", "api", "ui"],
+	commands: ["state", "api", "ui", "a11y"],
 	preview: ["state", "api", "ui"],
 	ui: [],
 	a11y: [],

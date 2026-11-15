@@ -94,6 +94,7 @@ export default function Inspector(): ReactNode {
 		<aside
 			aria-label={t("ui.editor.panels.inspector")}
 			data-region="inspector"
+			data-landmark=""
 			tabIndex={-1}
 			className="flex min-h-0 min-w-0 flex-col gap-3 overflow-auto bg-ed-panel p-3"
 		>

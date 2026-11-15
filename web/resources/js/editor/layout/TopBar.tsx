@@ -129,7 +129,10 @@ export default function TopBar({
 	const Icon = ICON[shown];
 
 	return (
-		<header className="col-span-full flex h-12 items-center gap-3 border-b border-ed-track-line bg-ed-panel px-3">
+		<header
+			data-landmark=""
+			className="col-span-full flex h-12 items-center gap-3 border-b border-ed-track-line bg-ed-panel px-3"
+		>
 			<Button asChild variant="ghost" size="icon-sm">
 				<a href="/projects" aria-label={t("ui.editor.back")}>
 					<ArrowLeft aria-hidden="true" />
