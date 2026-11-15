@@ -55,7 +55,7 @@ func startOwner(tb testing.TB) workspace.Dir {
 	}
 
 	deps := &httpapi.Deps{
-		Service: svc, Registry: command.Default(), Jobs: st.Jobs(), Workspace: dir, Token: token,
+		Service: svc, Registry: command.Default(), Workspace: dir, Token: token,
 		Sessions: auth.NewSessions(time.Now), Launch: auth.NewLaunch(time.Now), Now: time.Now,
 	}
 

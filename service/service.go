@@ -53,6 +53,13 @@ type Service interface {
 	TemplateExport(ctx context.Context, req TemplateRef) (*FileResult, error)
 	TemplateImport(ctx context.Context, req TemplateImportRequest) (*TemplateResult, error)
 
+	// SnapPoints, FontList, ExportFile and AuditList are read operations of the
+	// editor and of the administrator (SDD-000 section 1).
+	SnapPoints(ctx context.Context, req SnapPointsRequest) (*SnapPointsResult, error)
+	FontList(ctx context.Context, req FontListRequest) (*FontListResult, error)
+	ExportFile(ctx context.Context, req ExportFileRequest) (*File, error)
+	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
+
 	// TrashEmpty deletes what is in the trash for good; HTTP only, for a
 	// browser session or an admin key (SDD-007 section 5.3).
 	TrashEmpty(ctx context.Context, req TrashEmptyRequest) (*TrashEmptyResult, error)
@@ -159,6 +166,7 @@ type svc struct {
 
 	running registry
 	bitmaps bitmaps
+	snaps   snapCache
 	sems    map[string]chan struct{}
 }
 

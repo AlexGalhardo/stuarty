@@ -469,6 +469,49 @@ func (c *Client) ViewSheet(ctx context.Context, req service.ViewSheetRequest) (*
 	return get[service.ViewResult](ctx, c, projectPath(req.ProjectID, "/sheet"), q)
 }
 
+// SnapPoints implements service.Service.
+func (c *Client) SnapPoints(ctx context.Context, req service.SnapPointsRequest) (*service.SnapPointsResult, error) {
+	q := url.Values{}
+
+	if req.Revision != 0 {
+		q.Set("rev", strconv.FormatInt(req.Revision, 10))
+	}
+
+	if req.Words {
+		q.Set("words", "1")
+	}
+
+	return get[service.SnapPointsResult](ctx, c, projectPath(req.ProjectID, "/snap-points"), q)
+}
+
+// FontList implements service.Service.
+func (c *Client) FontList(ctx context.Context, _ service.FontListRequest) (*service.FontListResult, error) {
+	return get[service.FontListResult](ctx, c, "/fonts", nil)
+}
+
+// AuditList implements service.Service.
+func (c *Client) AuditList(ctx context.Context, req service.AuditListRequest) (*service.AuditListResult, error) {
+	q := url.Values{}
+	setIf(q, "project_id", req.ProjectID)
+
+	return get[service.AuditListResult](
+		ctx,
+		c,
+		"/audit",
+		pageQuery(q, service.Page{Cursor: req.Cursor, Limit: req.Limit}),
+	)
+}
+
+// ExportFile implements service.Service. The file is a path in the workspace of
+// the server; a client reads the bytes from GET /jobs/{job_id}/file instead.
+func (*Client) ExportFile(context.Context, service.ExportFileRequest) (*service.File, error) {
+	return nil, &service.Error{
+		Code:    command.CodeInternal,
+		Message: "stored files are not opened over HTTP.",
+		Hint:    "read the file from /jobs/{job_id}/file",
+	}
+}
+
 // OpenFile implements service.Service. A stored file is a path inside the
 // workspace of the server; a client reads the bytes from its URL instead.
 func (*Client) OpenFile(context.Context, service.FileRef) (*service.File, error) {

@@ -175,3 +175,43 @@ func (h *apiHandler) projectsPlan(c *web.Ctx, in planIn) (service.PlanWindowResu
 
 	return deref(res), err
 }
+
+type snapPointsIn struct {
+	ID    string `json:"id"              validate:"required"`
+	Rev   int64  `json:"rev,omitempty"                       doc:"The revision the caller holds; 409 when the project has moved on."`
+	Words int    `json:"words,omitempty"                     doc:"1 adds the start and end of every caption word."`
+}
+
+// snapPoints is GET /projects/{id}/snap-points (SDD-012 section 7.8).
+func (h *apiHandler) snapPoints(c *web.Ctx, in snapPointsIn) (service.SnapPointsResult, error) {
+	res, err := h.Service.SnapPoints(
+		c.Context(),
+		service.SnapPointsRequest{ProjectID: in.ID, Revision: in.Rev, Words: in.Words == 1},
+	)
+	if res != nil {
+		revisionHeader(c, res.Revision)
+	}
+
+	return deref(res), err
+}
+
+// fontList is GET /fonts.
+func (h *apiHandler) fontList(c *web.Ctx, _ noIn) (service.FontListResult, error) {
+	res, err := h.Service.FontList(c.Context(), service.FontListRequest{})
+
+	return deref(res), err
+}
+
+type auditIn struct {
+	pageIn
+	ProjectID string `json:"project_id,omitempty" doc:"Keep the entries of one project."`
+}
+
+// auditList is GET /audit; the Service requires the admin scope.
+func (h *apiHandler) auditList(c *web.Ctx, in auditIn) (service.AuditListResult, error) {
+	res, err := h.Service.AuditList(c.Context(), service.AuditListRequest{
+		ProjectID: in.ProjectID, Cursor: in.Cursor, Limit: in.Limit,
+	})
+
+	return deref(res), err
+}
