@@ -58,14 +58,12 @@
         "soon": "Not available yet"
       },
       "activity": {
-        "label": "Activity",
         "editing": "{actor} is editing",
         "editing_others": {
           "one": "{actor} and {count} other are editing",
           "other": "{actor} and {count} others are editing"
         },
         "last": "Last edit by {actor}, {ago}",
-        "none": "No remote edits yet",
         "recent": "Recent edits",
         "revision": "rev {revision}",
         "summary": {
@@ -91,7 +89,6 @@
         "zoom_in": "Zoom in",
         "zoom_out": "Zoom out",
         "fit": "Fit",
-        "zoom": "Zoom {percent}%",
         "playhead": "Playhead",
         "ruler": "Seek",
         "tracks": "Tracks",
