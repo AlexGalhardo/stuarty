@@ -53,6 +53,10 @@ type WindowLayer struct {
 	Crop          *[4]float64     `json:"crop,omitempty"`
 	ColorMatrix   json.RawMessage `json:"color_matrix,omitempty"`
 
+	// Animated image layers (BETA, SDD-004 section 3.3): the frame of the image shown at
+	// each frame of the window. Absent for video and still images.
+	SourceFrames []int `json:"source_frames,omitempty"`
+
 	// Bitmap layers: the cache key of each frame's bitmap and its natural size.
 	Bitmaps *WindowBitmaps `json:"bitmaps,omitempty"`
 	Natural *[2]float64    `json:"natural,omitempty"`
@@ -167,6 +171,10 @@ func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
 	if first.Kind == Media {
 		a.asset = p.doc.Assets[first.AssetID]
 		a.wl.SourceSeconds = make([]float64, 0, room)
+
+		if a.asset.IsAnimated() {
+			a.wl.SourceFrames = make([]int, 0, room)
+		}
 		a.wl.Crop = &[4]float64{first.Crop.X, first.Crop.Y, first.Crop.W, first.Crop.H}
 		a.wl.ColorMatrix = json.RawMessage("null")
 
@@ -206,6 +214,10 @@ func (a *layerAcc) add(t int, l *Layer) {
 		}
 
 		wl.SourceSeconds = append(wl.SourceSeconds, round3(sec))
+
+		if wl.SourceFrames != nil {
+			wl.SourceFrames = append(wl.SourceFrames, l.SourceFrame)
+		}
 
 		return
 	}

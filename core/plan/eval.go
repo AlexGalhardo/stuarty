@@ -85,8 +85,13 @@ func (a *animated) transition(kind string, p, width, height float64) {
 }
 
 // sourceFrame is the frame of the normalized media to show at frame r of a
-// clip (SDD-004 §3.3), in integer arithmetic.
+// clip (SDD-004 §3.3), in integer arithmetic; an animated image loops through its
+// frames by their delays.
 func sourceFrame(it *timeline.Item, a *timeline.Asset, fps timeline.Rational, r int) int {
+	if a.IsAnimated() {
+		return AnimImageSourceFrame(a.FrameDelays, fps, r)
+	}
+
 	if a.Kind == timeline.AssetImage || a.FrameRate.Num == 0 || it.Speed.Den == 0 || fps.Num == 0 {
 		return 0
 	}
