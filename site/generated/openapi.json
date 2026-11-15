@@ -1486,20 +1486,6 @@
         },
         "type": "object"
       },
-      "Lost": {
-        "properties": {
-          "feature": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "Loudness": {
         "properties": {
           "integrated_lufs": {
@@ -1529,20 +1515,6 @@
             "type": "integer"
           },
           "label": {
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "Media": {
-        "properties": {
-          "reason": {
-            "type": "string"
-          },
-          "ref": {
-            "type": "string"
-          },
-          "status": {
             "type": "string"
           }
         },
@@ -2030,6 +2002,38 @@
           }
         }
       },
+      "OtioLost": {
+        "properties": {
+          "feature": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "OtioMedia": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "ref": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ProbeSummary": {
         "properties": {
           "audio_codec": {
@@ -2296,11 +2300,12 @@
             "type": "string"
           },
           "file_name": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "lost": {
             "items": {
-              "$ref": "#/components/schemas/Lost"
+              "$ref": "#/components/schemas/OtioLost"
             },
             "type": "array"
           },
@@ -2312,6 +2317,9 @@
             "type": "integer"
           },
           "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
             "type": "string"
           }
         },
@@ -2334,7 +2342,7 @@
           },
           "lost": {
             "items": {
-              "$ref": "#/components/schemas/Lost"
+              "$ref": "#/components/schemas/OtioLost"
             },
             "type": "array"
           },
@@ -2350,9 +2358,12 @@
           },
           "unresolved_media": {
             "items": {
-              "$ref": "#/components/schemas/Media"
+              "$ref": "#/components/schemas/OtioMedia"
             },
             "type": "array"
+          },
+          "untrusted_notice": {
+            "type": "string"
           }
         },
         "type": "object"
