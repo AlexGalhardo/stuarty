@@ -90,6 +90,14 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.TemplateImport(ctx, service.TemplateImportRequest{Path: "/x"})
 			return err
 		},
+		"ToolsInstall": func() error {
+			_, err := e.svc.ToolsInstall(ctx, service.ToolsInstallRequest{Name: "whisper"})
+			return err
+		},
+		"ToolsStatus": func() error {
+			_, err := e.svc.ToolsStatus(ctx, service.ToolsStatusRequest{})
+			return err
+		},
 		"TrashEmpty": func() error {
 			_, err := e.svc.TrashEmpty(ctx, service.TrashEmptyRequest{})
 			return err

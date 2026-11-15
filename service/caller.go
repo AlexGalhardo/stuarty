@@ -27,6 +27,10 @@ type Caller struct {
 	// Browser is true for a person at the editor, who proved it with the
 	// session cookie. The local token and the agent surfaces are not.
 	Browser bool
+	// Operator is true for the person at the terminal of the owner machine, set
+	// only by the CLI command tools:install after its confirmation. It is the
+	// third caller class that may start the install step.
+	Operator bool
 }
 
 type callerKey struct{}
@@ -72,6 +76,8 @@ var Scopes = map[string]string{
 	"TemplateExport":      ScopeRead,
 	"TemplateImport":      ScopeEdit,
 	"TrashEmpty":          ScopeAdmin,
+	"ToolsInstall":        ScopeAdmin,
+	"ToolsStatus":         ScopeAdmin,
 	"PlanWindow":          ScopeRead,
 	"ViewFrame":           ScopeRead,
 	"ViewSheet":           ScopeRead,

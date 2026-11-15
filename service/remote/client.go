@@ -404,6 +404,19 @@ func (c *Client) TrashEmpty(ctx context.Context, req service.TrashEmptyRequest) 
 	return post[service.TrashEmptyResult](ctx, c, "/trash/empty", req)
 }
 
+// ToolsInstall implements service.Service.
+func (c *Client) ToolsInstall(
+	ctx context.Context,
+	req service.ToolsInstallRequest,
+) (*service.ToolsInstallResult, error) {
+	return post[service.ToolsInstallResult](ctx, c, "/system/tools/install", req)
+}
+
+// ToolsStatus implements service.Service.
+func (c *Client) ToolsStatus(ctx context.Context, _ service.ToolsStatusRequest) (*service.ToolsStatusResult, error) {
+	return get[service.ToolsStatusResult](ctx, c, "/system/tools", url.Values{})
+}
+
 // JobList implements service.Service.
 func (c *Client) JobList(ctx context.Context, req service.JobListRequest) (*service.JobListResult, error) {
 	q := url.Values{}

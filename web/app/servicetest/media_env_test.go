@@ -60,6 +60,8 @@ type mediaCfg struct {
 	onEvent func(service.Event)
 	// durable runs the jobs on the database queue with workers instead of inline.
 	durable bool
+	// tools is the install step of the helper.
+	tools *service.Tools
 	// transcriber is the provider of the transcribe job.
 	transcriber transcribe.Provider
 	// wrapStore puts a decorator between the service and its store.
@@ -112,6 +114,7 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 		}
 
 		o.Transcriber = cfg.transcriber
+		o.Tools = cfg.tools
 		o.Workspace = m.ws
 		o.Media = service.Media{
 			Content: enginestore.New(m.ws), Guard: guard, Ingest: cfg.ingest,

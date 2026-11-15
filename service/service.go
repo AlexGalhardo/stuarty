@@ -57,6 +57,11 @@ type Service interface {
 	// browser session or an admin key (SDD-007 section 5.3).
 	TrashEmpty(ctx context.Context, req TrashEmptyRequest) (*TrashEmptyResult, error)
 
+	// ToolsInstall downloads the transcription helper and its model; it is the
+	// only operation that does, and only a person can call it (SDD-007 6.8).
+	ToolsInstall(ctx context.Context, req ToolsInstallRequest) (*ToolsInstallResult, error)
+	ToolsStatus(ctx context.Context, req ToolsStatusRequest) (*ToolsStatusResult, error)
+
 	// ViewFrame and ViewSheet render the current revision through the export
 	// executor (SDD-003 section 2.7).
 	ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult, error)
@@ -129,6 +134,8 @@ type Options struct {
 	// Transcriber is the transcription provider of the transcribe job; without
 	// one JobStart for it answers E_TRANSCRIBE_UNAVAILABLE.
 	Transcriber transcribe.Provider
+	// Tools is the install step of the helper; nil means it is not available.
+	Tools *Tools
 }
 
 type svc struct {
@@ -145,6 +152,8 @@ type svc struct {
 	limits      Limits
 	version     string
 	transcriber transcribe.Provider
+	tools       *Tools
+	toolsState  toolsState
 
 	storeMu sync.RWMutex
 
@@ -173,6 +182,7 @@ func New(o Options) (Service, error) {
 		limits:      o.Limits.withDefaults(),
 		version:     o.Version,
 		transcriber: o.Transcriber,
+		tools:       o.Tools,
 	}
 
 	s.sems = map[string]chan struct{}{

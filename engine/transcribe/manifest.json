@@ -1,0 +1,9 @@
+{
+	"hosts": [
+		"github.com",
+		"objects.githubusercontent.com",
+		"release-assets.githubusercontent.com",
+		"huggingface.co"
+	],
+	"entries": []
+}

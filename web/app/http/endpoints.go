@@ -185,6 +185,14 @@ var Endpoints = []Endpoint{
 		Service: "TrashEmpty", Status: 200, Summary: "Empty the trash for good",
 	},
 	{
+		ID: "system.tools.install", Method: http.MethodPost, Path: "/system/tools/install", Scope: service.ScopeAdmin,
+		Service: "ToolsInstall", Status: 202, Summary: "Install the transcription helper",
+	},
+	{
+		ID: "system.tools", Method: http.MethodGet, Path: "/system/tools", Scope: service.ScopeAdmin,
+		Service: "ToolsStatus", Status: 200, Summary: "List the installed helpers and the install progress",
+	},
+	{
 		ID: "projects.frame", Method: http.MethodGet, Path: "/projects/{id}/frame", Scope: service.ScopeRead,
 		Service: "ViewFrame", Status: 200, Summary: "Render one frame",
 	},
