@@ -77,6 +77,8 @@ const R5_ALLOWLIST = [
 	"timeline/geometry.ts",
 	"timeline/gestures/",
 	"timeline/snapping.ts",
+	"timeline/items/stripTiles.ts",
+	"timeline/items/waveform.ts",
 	"commands/builders.ts",
 	"commands/units.ts",
 	"preview/",
