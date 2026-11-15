@@ -14,13 +14,13 @@
 // The syntax tree comes from the API inside the `typescript` package, as in
 // check-thin-client.ts. No new dependency.
 
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SyntaxKind } from "typescript/unstable/ast";
 import { API } from "typescript/unstable/sync";
 
-import { type Catalog, compareCatalogs, flatten, type Leaf } from "./i18n-catalog";
+import { type Catalog, compareCatalogs, flatten, type Leaf } from "./i18n-catalog.ts";
 
 type Node = import("typescript/unstable/ast").Node;
 type SourceFile = import("typescript/unstable/ast").SourceFile;
@@ -259,7 +259,9 @@ function checkFixtures(catalog: Map<string, Leaf>): string[] {
 	const findings = scan(dir, join(dir, "tsconfig.json"), catalog, usage, () => true);
 	findings.push(...checkUsage(catalog, usage));
 	const problems: string[] = [];
-	const cases = [...new Bun.Glob("*-{fail,pass}").scanSync({ cwd: dir, onlyFiles: false })].sort();
+	const cases = readdirSync(dir)
+		.filter((n) => /-(fail|pass)$/.test(n))
+		.sort();
 	for (const name of cases) {
 		const [rule, kind] = name.split("-");
 		const mine = findings.filter((f) => f.file.split("/")[0] === name);
