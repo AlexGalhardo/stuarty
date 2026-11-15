@@ -9,7 +9,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/AlexGalhardo/vukem-video/core/otio"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
@@ -18,12 +17,12 @@ import (
 
 // otioExportDoc is what otio:export prints: the file it wrote, not the file itself.
 type otioExportDoc struct {
-	ProjectID string      `json:"project_id"`
-	Revision  int64       `json:"revision"`
-	File      string      `json:"file"`
-	Bytes     int         `json:"bytes"`
-	Lost      []otio.Lost `json:"lost"`
-	Text      string      `json:"text"`
+	ProjectID string             `json:"project_id"`
+	Revision  int64              `json:"revision"`
+	File      string             `json:"file"`
+	Bytes     int                `json:"bytes"`
+	Lost      []service.OtioLost `json:"lost"`
+	Text      string             `json:"text"`
 }
 
 var otioExport = &spec{
