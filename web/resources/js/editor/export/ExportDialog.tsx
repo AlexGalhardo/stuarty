@@ -30,6 +30,7 @@ import { useLocale, useT } from "@/lib/i18n";
 import { ApiError } from "../api/errors";
 import type { JsonValue, LintFinding } from "../api/types";
 import { exportFileUrl } from "../api/urls";
+import { useActions } from "../commands/useActions";
 import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 import { errorHeadline } from "../ui/errorHeadline";
@@ -51,11 +52,13 @@ function FindingList({
 	icon,
 	findings,
 	onGo,
+	onResync,
 }: {
 	title: string;
 	icon: ReactNode;
 	findings: readonly LintFinding[];
 	onGo(itemId: string): void;
+	onResync(captionId: string): void;
 }): ReactNode {
 	const t = useT();
 	if (findings.length === 0) return null;
@@ -90,6 +93,17 @@ function FindingList({
 								{t("ui.editor.export.go_to", { item: finding.item })}
 							</Button>
 						)}
+						{finding.code === "L_CAPTION_DESYNC" &&
+							finding.item !== undefined && (
+								<Button
+									type="button"
+									variant="link"
+									size="sm"
+									onClick={() => onResync(finding.item as string)}
+								>
+									{t("ui.editor.auto_captions.resync")}
+								</Button>
+							)}
 					</li>
 				))}
 			</ul>
@@ -111,6 +125,7 @@ export default function ExportDialog({
 	const t = useT();
 	const locale = useLocale();
 	const runtime = useRuntime();
+	const actions = useActions();
 	const revision = useDocumentState((s) => s.revision);
 	const jobId = useStore(runtime.jobs, (s) => s.exportJobId);
 	const job = useStore(runtime.jobs, (s) =>
@@ -191,6 +206,15 @@ export default function ExportDialog({
 		setFailure(null);
 	}
 
+	// The clip a caption is linked to comes from the read model; the core retimes.
+	async function resync(captionId: string): Promise<void> {
+		const clipId =
+			runtime.documents.getState().document?.items[captionId]?.linked_item;
+		if (clipId === undefined) return;
+		const outcome = await actions.resyncCaptions(clipId);
+		if (outcome?.ok) await check();
+	}
+
 	function goTo(itemId: string): void {
 		runtime.uiWriter.select([itemId]);
 		onOpenChange(false);
@@ -241,6 +265,7 @@ export default function ExportDialog({
 								}
 								findings={groups.errors}
 								onGo={goTo}
+								onResync={(id) => void resync(id)}
 							/>
 							<FindingList
 								title={t("ui.editor.export.warnings")}
@@ -252,12 +277,14 @@ export default function ExportDialog({
 								}
 								findings={groups.warnings}
 								onGo={goTo}
+								onResync={(id) => void resync(id)}
 							/>
 							<FindingList
 								title={t("ui.editor.export.notes")}
 								icon={<Info aria-hidden="true" className="size-4 text-info" />}
 								findings={groups.notes}
 								onGo={goTo}
+								onResync={(id) => void resync(id)}
 							/>
 							{phase === "blocked" && (
 								<p className="text-sm">{t("ui.editor.export.blocked")}</p>
