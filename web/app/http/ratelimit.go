@@ -119,26 +119,25 @@ func (h *apiHandler) preAuthLimit(next http.Handler) http.Handler {
 }
 
 // unauthorized answers a failed authentication: 401, counted against the address
-// of the client, which is refused instead once it has spent its failures.
+// of the client. An address that spent its failures is refused with 429 instead,
+// and that is the only thing the block does: a request that carries a valid
+// credential never gets here, so users behind one proxy, and every local
+// client, are not locked out by someone else's bad guesses.
 func (h *apiHandler) unauthorized(w http.ResponseWriter, r *http.Request, e *service.Error) {
-	if denied := h.limits.failed.Record(r, ratelimit.ByIP(r)); denied != nil {
+	ip := ratelimit.ByIP(r)
+
+	denied := h.limits.failed.Blocked(ip)
+	if denied == nil {
+		denied = h.limits.failed.Record(r, ip)
+	}
+
+	if denied != nil {
 		web.Fail(w, r, denied)
 		return
 	}
 
 	w.Header().Set("WWW-Authenticate", "Bearer")
 	web.Fail(w, r, e)
-}
-
-// blockedAddress refuses a request from an address that spent its failed
-// authentications, before any credential is looked at.
-func (h *apiHandler) blockedAddress(w http.ResponseWriter, r *http.Request) bool {
-	if e := h.limits.failed.Blocked(ratelimit.ByIP(r)); e != nil {
-		web.Fail(w, r, e)
-		return true
-	}
-
-	return false
 }
 
 // credentialLimit is the limiter after authentication: per bearer credential,
