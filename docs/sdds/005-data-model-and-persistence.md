@@ -325,7 +325,7 @@ type ProjectAssetRow struct {
 
 type ArtifactRow struct {
 	AssetHash string
-	Kind      string // probe, normalized, proxy, thumbnails, peaks, silence, loudness, speech, beats, transcript
+	Kind      string // probe, normalized, proxy, thumbnails, peaks, silence, loudness, speech, beats, frames, transcript
 	Profile   int    // profile version; part of the file name
 	Variant   string // transcripts: the 12 hex key of provider, model and language; empty otherwise
 	Ext       string // file extension without the dot
@@ -736,6 +736,7 @@ CREATE TABLE assets (
   frame_rate_num  INTEGER,
   frame_rate_den  INTEGER,
   frame_count     INTEGER,
+  frame_delays    TEXT,                   -- animated images: JSON array of the display time in ms of each frame, NULL for a still
   sample_count    INTEGER,
   created_ms      INTEGER NOT NULL,
   updated_ms      INTEGER NOT NULL,
@@ -760,7 +761,7 @@ CREATE INDEX project_assets_asset_hash_index ON project_assets (asset_hash);
 
 CREATE TABLE artifacts (
   asset_hash TEXT    NOT NULL REFERENCES assets (id) ON DELETE CASCADE,
-  kind       TEXT    NOT NULL CHECK (kind IN ('probe','normalized','proxy','thumbnails','peaks','silence','loudness','speech','beats','transcript')),
+  kind       TEXT    NOT NULL CHECK (kind IN ('probe','normalized','proxy','thumbnails','peaks','silence','loudness','speech','beats','frames','transcript')),
   profile    INTEGER NOT NULL,                      -- profile version; part of the file name (SDD-000 section 9)
   variant    TEXT    NOT NULL DEFAULT '',           -- transcripts: the 12 hex key of provider, model and language (SDD-011 section 6.1); empty otherwise
   ext        TEXT    NOT NULL,                      -- file extension without the dot; one kind may have more than one file

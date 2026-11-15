@@ -107,7 +107,7 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 			"normalized_version INTEGER 0 - 0", "duration_ms INTEGER 0 - 0", "width INTEGER 0 - 0",
 			"height INTEGER 0 - 0", "has_audio INTEGER 1 0 0", "frame_rate_num INTEGER 0 - 0",
 			"frame_rate_den INTEGER 0 - 0", "frame_count INTEGER 0 - 0", "sample_count INTEGER 0 - 0",
-			"created_ms INTEGER 1 - 0", "updated_ms INTEGER 1 - 0",
+			"created_ms INTEGER 1 - 0", "updated_ms INTEGER 1 - 0", "frame_delays TEXT 0 - 0",
 		},
 		"project_assets": {
 			"project_id TEXT 1 - 1", "asset_id TEXT 1 - 2", "asset_hash TEXT 1 - 0", "state TEXT 1 - 0",
@@ -396,7 +396,7 @@ func TestArtifactsAcceptSpeechAndBeats(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
-	for _, kind := range []string{"probe", "speech", "beats"} {
+	for _, kind := range []string{"probe", "speech", "beats", "frames"} {
 		if _, err := db.ExecContext(
 			ctx,
 			`INSERT INTO artifacts (asset_hash, kind, profile, ext, rel_path, size_bytes, sha256, created_ms) VALUES ('sha256:a', ?, 1, 'json', 'p', 1, 'x', 1)`,

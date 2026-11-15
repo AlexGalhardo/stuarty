@@ -292,6 +292,8 @@ type AssetFacts struct {
 	FrameRateNum, FrameRateDen *int
 	FrameCount                 *int64
 	SampleCount                *int64
+	// FrameDelays is the display time in milliseconds of each frame of an animated image; empty for a still.
+	FrameDelays []int
 }
 
 // ProjectAssetState is the state of a project's use of an asset: pending, active or trashed.

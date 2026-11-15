@@ -454,6 +454,11 @@ func (s *svc) addAsset(ctx context.Context, project *ProjectRow, pa ProjectAsset
 		asset.FrameCount = int(*f.FrameCount)
 	}
 
+	// An animated image has one delay per frame, and its frame count is the number of delays.
+	if asset.Kind == timeline.AssetImage && len(f.FrameDelays) > 1 {
+		asset.FrameCount, asset.FrameDelays = len(f.FrameDelays), f.FrameDelays
+	}
+
 	if f.SampleCount != nil {
 		asset.SampleCount = int(*f.SampleCount)
 	}
