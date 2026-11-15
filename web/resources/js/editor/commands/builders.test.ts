@@ -4,7 +4,9 @@ import {
 	addClipOperations,
 	boundaryWords,
 	bulkEditWords,
+	captionFromTranscriptOperations,
 	captionOperations,
+	captionRetimeOperations,
 	clampBoundary,
 	keyframeFallbackOperations,
 	moveItems,
@@ -285,5 +287,55 @@ describe("caption word builders", () => {
 			"z",
 		]);
 		expect(bulkEditWords(words, "x y")).toBeNull();
+	});
+});
+
+describe("auto caption builders", () => {
+	const input = {
+		clipId: "itm_clip",
+		newTrackId: () => "trk_new",
+		trackName: "Captions",
+		maxWords: 5,
+		maxChars: 28,
+		maxGap: "0.6s",
+		replace: true,
+	};
+
+	test("a chosen track gets only caption.from_transcript", () => {
+		expect(
+			captionFromTranscriptOperations({ ...input, trackId: "trk_a" }),
+		).toEqual([
+			{
+				op: "caption.from_transcript",
+				args: {
+					clip_item_id: "itm_clip",
+					track_id: "trk_a",
+					max_words: 5,
+					max_chars: 28,
+					max_gap: "0.6s",
+					replace: true,
+				},
+			},
+		]);
+	});
+
+	test("no track adds a Captions track in the same batch", () => {
+		const ops = captionFromTranscriptOperations({ ...input, trackId: null });
+		expect(ops.map((o) => o.op)).toEqual([
+			"track.add",
+			"caption.from_transcript",
+		]);
+		expect(ops[0]?.args).toEqual({
+			kind: "visual",
+			id: "trk_new",
+			name: "Captions",
+		});
+		expect(ops[1]?.args.track_id).toBe("trk_new");
+	});
+
+	test("re-sync names the clip only", () => {
+		expect(captionRetimeOperations("itm_clip")).toEqual([
+			{ op: "caption.retime_from_clip", args: { clip_item_id: "itm_clip" } },
+		]);
 	});
 });

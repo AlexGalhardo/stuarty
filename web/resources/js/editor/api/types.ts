@@ -329,7 +329,10 @@ export interface Job {
 	state: JobState;
 	progress: number;
 	message?: string;
-	result?: { export?: ExportResult };
+	result?: {
+		export?: ExportResult;
+		transcribe?: { asset_id: string; language: string; words: number };
+	};
 	error?: ApiErrorBody;
 	lint?: { errors: number; warnings: number };
 	actor: string;
