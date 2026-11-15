@@ -15,6 +15,7 @@ import (
 	"github.com/AlexGalhardo/vukem/database"
 	"github.com/AlexGalhardo/vukem/queue"
 	"github.com/AlexGalhardo/vukem/schema"
+	"github.com/AlexGalhardo/vukem/session"
 
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 	"github.com/AlexGalhardo/vukem-video/web/database/migrations"
@@ -30,7 +31,7 @@ const BackupsKept = 5
 // Migrations is every migration of the product: the vukem queue tables first,
 // then the editor tables.
 func Migrations() []schema.Migration {
-	return slices.Concat(queue.Migrations(QueueOptions), migrations.All())
+	return slices.Concat(queue.Migrations(QueueOptions), migrations.All(), session.Migrations(""))
 }
 
 // Options configures Open. The zero value is valid.

@@ -40,7 +40,7 @@
 | `KeyCreate`, `KeyList`, `KeyRevoke` | none | none | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` | a logged-in browser session; a key cannot call them (network mode only) | A |
 | `ProjectBundleExport`, `ProjectBundleImport` | none | `bundle:export`, `bundle:import` | `POST /projects/{id}/bundle`, `POST /projects/import` | read and render; edit and media | B |
 
-Routes that are not service operations: `POST /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; `GET` and `DELETE` on the path are not routes and answer 405 `E_METHOD_NOT_ALLOWED`, because the server is stateless; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (phase A: the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, and `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key). What each returns is in SDD-011 and SDD-004.
+Routes that are not service operations: `POST /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; `GET` and `DELETE` on the path are not routes and answer 405 `E_METHOD_NOT_ALLOWED`, because the server is stateless; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `POST /auth/login` and `POST /auth/logout` (network mode: the browser session of a user, SDD-007 §4.1; in local mode they answer 404 `E_NOT_FOUND`), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (phase A: the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, and `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key). What each returns is in SDD-011 and SDD-004.
 
 A build lists only the tools whose operations exist in its phase: 12 in the Prototype (`project_trash`, `job_cancel` and `template` arrive in ALPHA). The complete MCP catalogue is 15 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`.
 
@@ -57,6 +57,7 @@ Other CLI commands that are not service operations: `serve` (start the owner pro
 | `job_` | job | SDD-005 |
 | `tpl_` | template | SDD-005 |
 | `key_` | API key | SDD-007 |
+| `usr_` | user (network mode) | SDD-007 |
 
 All have the form `<prefix>_<10 lower-case Crockford base32 characters>`.
 
@@ -100,7 +101,8 @@ Kinds: `ingest`, `transcribe`, `export`, `frame`. States: `queued`, `running`, `
 | `audit` | append-only record of actions outside a document batch (trash, restore, emptying, imports, jobs, keys), with their actor | SDD-005 |
 | `api_keys` | network mode: maps a `key_` identifier to its vukem token, owner and optional project | SDD-005, SDD-007 |
 | `queue_jobs`, `queue_failed_jobs` | vukem's queue | vukem |
-| vukem's own tables for users, sessions and tokens | network mode | vukem |
+| `users` | network mode: email, argon2id password hash, role (`admin` or `member`), session version | SDD-007 |
+| vukem's own tables for sessions (`sessions`) and tokens (`access_tokens`) | network mode | vukem |
 
 A document with a `template` member is a template draft, or an instance when `template.instance` is true (SDD-001 section 3.10). `TemplateInstantiate` writes the flag; lint reads it (`L_SLOT_UNFILLED`, SDD-003).
 

@@ -84,6 +84,7 @@ type Owner struct {
 	announce bool
 	mode     string
 	network  *httpapi.Network
+	netAuth  *auth.Network
 }
 
 // lateRunner lets the queue handlers exist before the Service that they call.
@@ -172,7 +173,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 
 	o.Store = st
 
-	if err := o.authSetup(cfg); err != nil {
+	if err := o.authSetup(ctx, cfg); err != nil {
 		return err
 	}
 
@@ -252,7 +253,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	o.deps = &httpapi.Deps{
 		Service: o.Service, Registry: command.Default(), Workspace: o.Dir, Token: o.Token,
 		Sessions: auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
-		Events: o.Events, Version: o.version, Network: o.network,
+		Events: o.Events, Version: o.version, Network: o.network, Auth: o.netAuth,
 	}
 
 	if o.deps.MCP, err = mcp.Handler(o.Service, mcp.Options{Version: o.version}); err != nil {
@@ -285,7 +286,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 // authSetup is the credential side of the mode. Network mode has no local token
 // and creates no token file (SDD-007 section 4); a command that is not a server
 // builds no guard.
-func (o *Owner) authSetup(cfg Config) error {
+func (o *Owner) authSetup(ctx context.Context, cfg Config) error {
 	if o.mode != config.ModeNetwork {
 		var err error
 
@@ -305,9 +306,18 @@ func (o *Owner) authSetup(cfg Config) error {
 
 	var err error
 
-	o.network, err = httpapi.NewNetwork(cfg.Resolved, cfg.Log)
+	if o.network, err = httpapi.NewNetwork(cfg.Resolved, cfg.Log); err != nil {
+		return err
+	}
 
-	return err
+	o.netAuth, err = auth.NewNetwork(o.Store.DB(), auth.NetworkOptions{
+		PlainHTTP: cfg.Resolved.LoopbackHTTP, Now: cfg.Now, Log: cfg.Log,
+	})
+	if err != nil {
+		return err
+	}
+
+	return auth.BootstrapAdmin(ctx, o.netAuth.Users, cfg.Getenv, cfg.Log)
 }
 
 // media builds the media side of the Service. A missing FFmpeg is not a start

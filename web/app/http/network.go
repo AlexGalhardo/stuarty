@@ -52,11 +52,15 @@ func NewNetwork(res config.Resolved, log *slog.Logger) (*Network, error) {
 
 // logStartup writes the lines an operator needs: the container rule, and that
 // no user exists yet.
-func (n *Network) logStartup() {
+func (n *Network) logStartup(noUsers bool) {
 	if n.loopbackHTTP {
 		n.log.Info("network mode over plain HTTP: the server is reachable only as "+n.origin+
 			"; any other use needs TLS (set an https APP_URL and TLS_CERT_FILE and TLS_KEY_FILE, or a proxy)",
 			"app_url", n.origin)
+	}
+
+	if !noUsers {
+		return
 	}
 
 	n.log.Warn("network mode has no users yet: every API request is answered 401; " +

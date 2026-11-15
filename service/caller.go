@@ -123,3 +123,22 @@ func authorizeScope(ctx context.Context, scope, projectID string) (Caller, error
 
 	return c, nil
 }
+
+// Roles of network mode (SDD-007 section 4.1).
+const (
+	RoleAdmin  = "admin"
+	RoleMember = "member"
+)
+
+// RoleScopes is what a role may do: an administrator holds the five scopes, a
+// member the four that work on own projects. An unknown role holds none.
+func RoleScopes(role string) []string {
+	switch role {
+	case RoleAdmin:
+		return slices.Clone(AllScopes)
+	case RoleMember:
+		return []string{ScopeRead, ScopeEdit, ScopeMedia, ScopeRender}
+	}
+
+	return nil
+}

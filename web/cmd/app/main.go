@@ -30,6 +30,11 @@ func main() {
 		code := runServe(ctx, args[2:], os.Stderr)
 		stop()
 		os.Exit(code)
+	case isUserCommand(args[1]):
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		code := runUser(ctx, args[1], args[2:], processUserIO())
+		stop()
+		os.Exit(code)
 	case args[1] == "mcp":
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		code := runMCP(ctx, args[2:], os.Stderr)
