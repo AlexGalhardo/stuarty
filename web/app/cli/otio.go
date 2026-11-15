@@ -1,0 +1,143 @@
+package cli
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/AlexGalhardo/vukem-video/core/otio"
+	"github.com/AlexGalhardo/vukem-video/service"
+)
+
+// The OpenTimelineIO commands have no MCP tool: a timeline moves as a file, which is for the person
+// or the script at the terminal (SDD-003 section 7.1, exception E-3).
+
+// otioExportDoc is what otio:export prints: the file it wrote, not the file itself.
+type otioExportDoc struct {
+	ProjectID string      `json:"project_id"`
+	Revision  int64       `json:"revision"`
+	File      string      `json:"file"`
+	Bytes     int         `json:"bytes"`
+	Lost      []otio.Lost `json:"lost"`
+	Text      string      `json:"text"`
+}
+
+var otioExport = &spec{
+	name:    "otio:export",
+	summary: "write the timeline of a project as an OpenTimelineIO file",
+	usage:   []string{"vukem-video otio:export --project <id> [--out f] [--force]"},
+	example: "vukem-video otio:export --project prj_7k2m9x4q1b --out cut.otio",
+	project: true,
+	flags: []flagDef{
+		{Name: "out", Kind: kindString, Usage: "the file to write (default: the name of the project, in the current directory)"},
+		{Name: "force", Kind: kindBool, Default: "false", Usage: "replace the file when it exists"},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		res, err := c.svc.ProjectOtioExport(ctx, service.ProjectOtioExportRequest{ProjectID: c.projectID})
+		if err != nil {
+			return nil, err
+		}
+
+		name := c.args.str("out")
+		if name == "" {
+			name = res.FileName
+		}
+
+		path, err := c.rt.abs(name)
+		if err != nil {
+			return nil, err
+		}
+
+		mode := os.O_WRONLY | os.O_CREATE | os.O_EXCL
+		if c.args.boolean("force") {
+			mode = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+		}
+
+		if err := writeFile(path, []byte(res.Content), mode); err != nil {
+			if errors.Is(err, os.ErrExist) {
+				return nil, validation("out", "%s exists; give another --out or --force.", path)
+			}
+
+			return nil, err
+		}
+
+		text := fmt.Sprintf("wrote %s (%d bytes, revision %d)\n%s", path, len(res.Content), res.Revision, res.Text)
+
+		return &output{value: otioExportDoc{
+			ProjectID: res.ProjectID, Revision: res.Revision, File: path, Bytes: len(res.Content),
+			Lost: res.Lost, Text: text,
+		}, text: text}, nil
+	},
+}
+
+// writeFile writes a file the person asked for, with the flags the caller chose.
+func writeFile(path string, data []byte, mode int) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+		return fmt.Errorf("create the folder of %s: %w", path, err)
+	}
+
+	f, err := os.OpenFile(path, mode, 0o600) //nolint:gosec // the path is the one the person typed
+	if err != nil {
+		return fmt.Errorf("write %s: %w", path, err)
+	}
+
+	if _, err := f.Write(data); err != nil {
+		_ = f.Close()
+
+		return fmt.Errorf("write %s: %w", path, err)
+	}
+
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("write %s: %w", path, err)
+	}
+
+	return nil
+}
+
+var otioImport = &spec{
+	name:       "otio:import",
+	summary:    "apply an OpenTimelineIO file to a project as one undo step",
+	usage:      []string{"vukem-video otio:import <path> --project <id> [--base-revision n]"},
+	example:    "vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --dry-run",
+	project:    true,
+	positional: true,
+	globals:    []string{"dry-run"},
+	write:      true,
+	flags: []flagDef{
+		{Name: "base-revision", Kind: kindInt, Usage: "the revision the file is applied to (default: the current one)"},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		if len(c.args.Positional) != 1 {
+			return nil, validation("", "otio:import takes one path, got %d.", len(c.args.Positional))
+		}
+
+		path, err := c.rt.abs(c.args.Positional[0])
+		if err != nil {
+			return nil, err
+		}
+
+		req := service.ProjectOtioImportRequest{
+			ProjectID: c.projectID, Path: path, DryRun: c.args.boolean("dry-run"),
+		}
+
+		if c.args.has("base-revision") {
+			req.BaseRevision = int64(c.args.integer("base-revision"))
+		} else {
+			cur, gerr := c.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: c.projectID})
+			if gerr != nil {
+				return nil, gerr
+			}
+
+			req.BaseRevision = cur.Revision
+		}
+
+		res, err := c.svc.ProjectOtioImport(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
