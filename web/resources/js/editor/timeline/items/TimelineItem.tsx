@@ -117,11 +117,11 @@ export const TimelineItem = memo(function TimelineItem({
 			})}
 			data-item-id={id}
 			className={cn(
-				"group absolute top-1 bottom-1 flex min-w-px cursor-pointer items-center overflow-hidden rounded-md border border-ed-track-line px-2 text-xs whitespace-nowrap",
+				"ed-motion group absolute top-1 bottom-1 flex min-w-px cursor-pointer items-center overflow-hidden rounded-md border border-ed-track-line px-2 text-xs whitespace-nowrap",
 				TYPE_CLASS[item.type],
 				selected && "ring-2 ring-ed-selection",
-				remote && "outline-2 outline-agent",
-				conflicting && "outline-2 outline-destructive",
+				remote && "ed-highlight outline-2 outline-agent",
+				conflicting && "ed-highlight outline-2 outline-destructive",
 			)}
 			style={{
 				// The item is placed by two custom properties and the zoom variable of

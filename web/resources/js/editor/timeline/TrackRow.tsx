@@ -101,7 +101,7 @@ export const TrackRow = memo(function TrackRow({
 					data-track-id={id}
 					style={{ height: rowPx }}
 					className={cn(
-						"relative border-b border-ed-track-line",
+						"ed-motion relative border-b border-ed-track-line",
 						(track.hidden === true || track.muted === true) && "opacity-60",
 					)}
 					onContextMenu={onContextMenu}

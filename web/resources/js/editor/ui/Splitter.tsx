@@ -69,7 +69,7 @@ export default function Splitter({
 			aria-valuemax={max}
 			data-splitter=""
 			className={cn(
-				"absolute inset-x-0 bottom-0 z-10 h-2 cursor-row-resize touch-none hover:bg-ed-handle/60 focus-visible:bg-ed-handle/60",
+				"ed-motion absolute inset-x-0 bottom-0 z-10 h-2 cursor-row-resize touch-none hover:bg-ed-handle/60 focus-visible:bg-ed-handle/60",
 				className,
 			)}
 			onClick={stop}

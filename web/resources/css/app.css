@@ -161,8 +161,8 @@
 	--ed-preview-surround: oklch(0.2 0 0);
 	--ed-handle: oklch(0.85 0.12 230);
 
-	/* motion (section 2.13): no interface animation until BETA, so most of
-	   these are reserved */
+	/* motion (section 2.13): the editor animates from BETA, always through
+	   these tokens and never under prefers-reduced-motion */
 	--duration-none: 0ms;
 	--duration-fast: 100ms;
 	--duration-base: 150ms;
@@ -266,14 +266,40 @@
 	outline-offset: 2px;
 }
 
-/* Reduced motion (section 2.13): turns off what the shadcn components carry. */
+/* Interface motion (section 2.13, BETA): state changes of the editor fade in
+   150 ms; a highlight outline eases in over 200 ms. Position and size never
+   transition, so a drag, a zoom or a resize is never lagging behind the
+   pointer. */
+.ed-motion {
+	transition-property: background-color, border-color, box-shadow, opacity,
+		outline-color;
+	transition-duration: var(--duration-base);
+	transition-timing-function: var(--ease-standard);
+}
+
+@keyframes ed-highlight-in {
+	from {
+		outline-color: transparent;
+		outline-offset: 6px;
+	}
+}
+
+.ed-highlight {
+	animation: ed-highlight-in var(--duration-slow) var(--ease-standard);
+}
+
+/* Reduced motion (section 2.13): turns off the interface motion above and what
+   the shadcn components carry. A transition is off at 0s; an animation keeps a
+   0.01 ms duration, because the Radix presence logic waits for animationend
+   and an animation of exactly 0s does not fire it in every engine. */
 @media (prefers-reduced-motion: reduce) {
 	*,
 	::before,
 	::after {
 		animation-duration: 0.01ms !important;
 		animation-iteration-count: 1 !important;
-		transition-duration: 0.01ms !important;
+		transition-duration: 0s !important;
+		transition-delay: 0s !important;
 	}
 }
 
