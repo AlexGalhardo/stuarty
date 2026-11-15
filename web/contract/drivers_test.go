@@ -150,6 +150,10 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.AuditList)
 	case "ToolsInstall":
 		return invoke(ctx, s, svc.ToolsInstall)
+	case "ProjectBundleExport":
+		return invoke(ctx, s, svc.ProjectBundleExport)
+	case "ProjectBundleImport":
+		return invoke(ctx, s, svc.ProjectBundleImport)
 	}
 
 	return nil, fmt.Errorf("no mapping for %s", s.Call)
@@ -515,6 +519,9 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		Path        string          `json:"path"`
 		At          string          `json:"at"`
 		Until       string          `json:"until"`
+		IncludeLog  *bool           `json:"include_log"`
+		AsNew       bool            `json:"as_new"`
+		DryRun      bool            `json:"dry_run"`
 	}
 
 	if len(s.Args) > 0 {
@@ -600,6 +607,28 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		return "template:export", []string{a.TemplateID}, "", nil
 	case "TemplateImport":
 		return "template:import", []string{a.Path}, "", nil
+	case "ProjectBundleExport":
+		argv = slices.Clone(proj)
+		if a.IncludeLog != nil && !*a.IncludeLog {
+			argv = append(argv, "--no-log")
+		}
+
+		if a.WaitMS == 0 {
+			return "bundle:export", append(argv, "--no-wait"), "", nil
+		}
+
+		return "bundle:export", append(argv, "--wait"), "", nil
+	case "ProjectBundleImport":
+		argv = []string{a.Path}
+		if a.AsNew {
+			argv = append(argv, "--as-new")
+		}
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "bundle:import", argv, "", nil
 	case "ProjectTrash":
 		return "project:trash", []string{a.ProjectID}, "", nil
 	case "ProjectRestore":

@@ -1,0 +1,14 @@
+{
+	"name": "bundle",
+	"actor": "contract",
+	"steps": [
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Bundle base"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 0, "operations": [
+			{"op": "track.add", "args": {"kind": "visual", "name": "Text", "id": "trk_f6g7h8j9k0"}},
+			{"op": "text.add", "args": {"track_id": "trk_f6g7h8j9k0", "start": "0s", "duration": "1s", "text": "Headline", "id": "itm_t1t2t3t4t5"}}]}},
+		{"call": "ProjectBundleExport", "args": {"project_id": "prj_7k2m9x4q1b", "wait_ms": 20000}},
+		{"call": "ProjectBundleImport", "args": {"path": "$bundle:0"}, "expect_error": {"code": "E_ID_EXISTS"}},
+		{"call": "ProjectBundleImport", "args": {"path": "$bundle:0", "as_new": true}},
+		{"call": "ProjectGet", "args": {"project_id": "$project:0", "detail": "concise"}}
+	]
+}

@@ -192,7 +192,10 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 
 	// jobs are the identifiers the results of this driver have named so far, in
 	// order: a later step reads them as "$job:0", "$job:1" and so on.
-	var jobs, templates []string
+	// bundles are the paths of the bundles the exports wrote, read back as "$bundle:0"; imported are the
+	// ids the server gave to imported projects, read back as "$project:0" and masked in the results,
+	// because the server chooses them.
+	var jobs, templates, bundles, imported []string
 
 	for i, s := range steps {
 		s = withFixtures(t, d, s, fixtures)
@@ -203,6 +206,14 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 
 		for n, id := range templates {
 			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$template:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
+		}
+
+		for n, p := range bundles {
+			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$bundle:`+strconv.Itoa(n)+`"`, mustJSON(t, p)))
+		}
+
+		for n, id := range imported {
+			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$project:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
 		}
 
 		if s.As != "" {
@@ -222,6 +233,8 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 			t.Fatalf("%s step %d (%s): %s", d.name(), i, s.Call, errorLine(fail))
 		}
 
+		bundles, imported = learnBundleResults(t, d, s, raw, bundles, imported)
+
 		o := outcome{text: normalizeText(d, text), fail: errorLine(fail)}
 		if raw != nil {
 			o.result = normalize(t, d, raw)
@@ -237,6 +250,12 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 					templates = append(templates, id)
 				}
 			}
+		}
+
+		for _, id := range imported {
+			o.result = strings.ReplaceAll(o.result, id, "prj_I")
+			o.text = strings.ReplaceAll(o.text, id, "prj_I")
+			o.fail = strings.ReplaceAll(o.fail, id, "prj_I")
 		}
 
 		out[i] = o
@@ -685,4 +704,114 @@ func checkIngestLimits(t *testing.T, steps []step, outcomes []outcome) {
 			seen,
 		)
 	}
+}
+
+// learnBundleResults notes what a bundle step answered that a later step reads back: the file of an
+// export and the id of an imported project.
+func learnBundleResults(
+	t *testing.T, d driver, s step, raw json.RawMessage, bundles, imported []string) (newBundles, newImported []string) {
+	var res struct {
+		ProjectID string `json:"project_id"`
+		Result    struct {
+			Export struct {
+				Path string `json:"path"`
+			} `json:"export"`
+		} `json:"result"`
+	}
+
+	if raw == nil || json.Unmarshal(raw, &res) != nil {
+		return bundles, imported
+	}
+
+	switch {
+	case s.Call == "ProjectBundleExport" && res.Result.Export.Path != "":
+		// The import reads from the folders the workspace allows, not from where the export wrote.
+		data, err := os.ReadFile(res.Result.Export.Path)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		copyPath := filepath.Join(d.env().Files, "export.vvbundle")
+		if err := os.WriteFile(copyPath, data, 0o600); err != nil {
+			t.Fatal(err)
+		}
+
+		bundles = append(bundles, copyPath)
+	case s.Call == "ProjectBundleImport" && res.ProjectID != "" && !slices.Contains(imported, res.ProjectID):
+		imported = append(imported, res.ProjectID)
+	}
+
+	return bundles, imported
+}
+
+// TestBundleScenarioIsTheSameThroughDirectHTTPAndCLI (P3-AGT-002): a project is exported to a bundle
+// and imported as a new project. The bundle commands have no MCP tool (SDD-003 section 7.1, exception
+// E-3), so the scenario runs through the other three surfaces. The imported document is the exported
+// one with the id the server chose, byte for byte, and its canonical hash is recorded.
+func TestBundleScenarioIsTheSameThroughDirectHTTPAndCLI(t *testing.T) {
+	const original = "prj_7k2m9x4q1b"
+
+	steps, fixtures := loadScenario(t, "bundle")
+
+	oracle := newDirect(t)
+	want := run(t, oracle, steps, fixtures)
+
+	var wantDoc []byte
+
+	for _, mk := range []func(*testing.T) driver{newDirect, newHTTP, newCLI} {
+		d := mk(t)
+		if d.name() == oracle.name() {
+			d = oracle
+		}
+
+		got := want
+		if d != oracle {
+			got = run(t, d, steps, fixtures)
+		}
+
+		for i := range steps {
+			if got[i] != want[i] {
+				t.Errorf("%s step %d (%s): differs\n got: %+v\nwant: %+v", d.name(), i, steps[i].Call, got[i], want[i])
+			}
+		}
+
+		doc := importedDocument(t, d, original)
+		if wantDoc == nil {
+			wantDoc = doc
+		} else if !bytes.Equal(doc, wantDoc) {
+			t.Errorf("%s: the imported document differs from the Direct one", d.name())
+		}
+
+		if !bytes.Equal(doc, finalDocument(t, d, original)) {
+			t.Errorf("%s: the imported document is not the exported one\n got: %s\nwant: %s",
+				d.name(), doc, finalDocument(t, d, original))
+		}
+	}
+
+	checkRecordedHash(t, "bundle", wantDoc)
+}
+
+// importedDocument is the canonical document of the one project the workspace holds besides the
+// original, with the original id put back, so that it is comparable with the exported one.
+func importedDocument(t *testing.T, d driver, original string) []byte {
+	t.Helper()
+
+	list, err := d.service().ProjectList(callerCtx(), service.ProjectListRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var ids []string
+
+	for _, p := range list.Projects {
+		if p.ID != original {
+			ids = append(ids, p.ID)
+		}
+	}
+
+	if len(ids) != 1 {
+		t.Fatalf("%s: %d imported projects, want 1", d.name(), len(ids))
+	}
+
+	return bytes.ReplaceAll(finalDocument(t, d, ids[0]), []byte(ids[0]), []byte(original))
 }

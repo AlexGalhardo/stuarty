@@ -25,9 +25,6 @@ type row struct {
 	command string // the CLI command
 	route   string // "METHOD /path" of the HTTP API
 	pending string
-	// cliPending names the task that adds the CLI command and the MCP tool of an
-	// operation whose Service method and route already exist.
-	cliPending string
 	// httpOnly marks an operation with no MCP tool and no CLI command, by design
 	// (SDD-003 section 7.1, exception E-4): only the HTTP route reaches it.
 	httpOnly bool
@@ -84,9 +81,9 @@ var parity = []row{
 	{method: "KeyRevoke", route: "DELETE /keys/{}", httpOnly: true},
 	{method: "Events", command: "events", route: "GET /projects/{}/events", noMethod: true},
 	// Bundles move whole projects as files: no MCP tool (SDD-003 section 7.1,
-	// exception E-3). The import command arrives with the rest of P3-AGT-002.
+	// exception E-3).
 	{method: "ProjectBundleExport", command: "bundle:export", route: "POST /projects/{}/bundle"},
-	{method: "ProjectBundleImport", command: "bundle:import", route: "POST /projects/import", cliPending: "P3-AGT-002"},
+	{method: "ProjectBundleImport", command: "bundle:import", route: "POST /projects/import"},
 }
 
 // notOperations are Service methods that are not operations an agent calls
@@ -164,11 +161,11 @@ func TestEveryOperationIsReachableOnEverySurface(t *testing.T) {
 			continue
 		}
 
-		if r.tool != "" && r.cliPending == "" && !slices.Contains(tools, r.tool) {
+		if r.tool != "" && !slices.Contains(tools, r.tool) {
 			t.Errorf("%s: the MCP tool %s is not in tools/list", r.method, r.tool)
 		}
 
-		if r.cliPending == "" && (!slices.Contains(commands, r.command) || slices.Contains(stubs, r.command)) {
+		if !slices.Contains(commands, r.command) || slices.Contains(stubs, r.command) {
 			t.Errorf("%s: the CLI command %s is missing or still a stub", r.method, r.command)
 		}
 
