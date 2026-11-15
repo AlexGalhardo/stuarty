@@ -6,6 +6,7 @@ import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
+import PaletteButton from "../commands/palette/PaletteButton";
 import ExportButton from "../export/ExportButton";
 import UndoRedo from "../history/UndoRedo";
 import { useDocumentState } from "../state/EditorContext";
@@ -81,6 +82,7 @@ export default function TopBar(): ReactNode {
 			</span>
 			<UndoRedo />
 			<div className="ml-auto flex items-center gap-2">
+				<PaletteButton />
 				<ExportButton />
 				<ActivityIndicator />
 				<ThemeToggle />

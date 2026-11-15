@@ -431,6 +431,38 @@
         "L_AUDIO_CLIP": "Áudio estourado",
         "L_LOUDNESS": "Volume fora da meta",
         "L_DURATION_LIMIT": "Acima do limite de duração"
+      },
+      "palette": {
+        "open": "Paleta de comandos (Ctrl+K)",
+        "open_hint": "Comandos (Ctrl+K)",
+        "label": "Comandos",
+        "title": "Paleta de comandos",
+        "search": "Buscar comandos",
+        "count": "{count} comandos",
+        "hints": "Setas para mover, Enter para abrir, Esc para fechar",
+        "no_match": "Nenhum comando encontrado",
+        "no_match_hint": "Confira a grafia ou busque pelo nome do comando.",
+        "retry": "Tentar de novo",
+        "back": "Voltar para a lista",
+        "form": "Formulário do comando",
+        "how_to_fix": "Como resolver:",
+        "args_json": "Argumentos (JSON)",
+        "invalid_json": "Isto não é um objeto JSON válido.",
+        "fill_example": "Preencher exemplo",
+        "add_batch": "Adicionar ao lote",
+        "preview": "Pré-visualizar",
+        "run": "Executar",
+        "preview_result": "Resultado da pré-visualização",
+        "show_all": "Mostrar tudo",
+        "read_only": "Este projeto não pode ser editado agora.",
+        "batch": {
+          "label": "Lote",
+          "count": "Lote: {count}",
+          "remove": "Remover {name} do lote",
+          "clear": "Limpar",
+          "preview": "Pré-visualizar lote",
+          "run": "Executar lote"
+        }
       }
     }
   }

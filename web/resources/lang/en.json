@@ -431,6 +431,38 @@
         "L_AUDIO_CLIP": "Audio clipping",
         "L_LOUDNESS": "Loudness off target",
         "L_DURATION_LIMIT": "Over the duration limit"
+      },
+      "palette": {
+        "open": "Command palette (Ctrl+K)",
+        "open_hint": "Commands (Ctrl+K)",
+        "label": "Commands",
+        "title": "Command palette",
+        "search": "Search commands",
+        "count": "{count} commands",
+        "hints": "Up and Down to move, Enter to open, Esc to close",
+        "no_match": "No command matches",
+        "no_match_hint": "Check the spelling or search by command name.",
+        "retry": "Try again",
+        "back": "Back to the list",
+        "form": "Command form",
+        "how_to_fix": "How to fix:",
+        "args_json": "Arguments (JSON)",
+        "invalid_json": "This is not a valid JSON object.",
+        "fill_example": "Fill example",
+        "add_batch": "Add to batch",
+        "preview": "Preview",
+        "run": "Run",
+        "preview_result": "Preview result",
+        "show_all": "Show all",
+        "read_only": "This project cannot be edited now.",
+        "batch": {
+          "label": "Batch",
+          "count": "Batch: {count}",
+          "remove": "Remove {name} from the batch",
+          "clear": "Clear",
+          "preview": "Preview batch",
+          "run": "Run batch"
+        }
       }
     }
   }
