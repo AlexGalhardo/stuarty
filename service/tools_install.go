@@ -132,7 +132,7 @@ func (s *svc) ToolsInstall(ctx context.Context, req ToolsInstallRequest) (*Tools
 		return nil, err
 	}
 
-	if !humanForTools(c) {
+	if c.ProjectID != "" || !humanForTools(c) {
 		return nil, installDenied()
 	}
 
@@ -217,7 +217,7 @@ func (s *svc) ToolsStatus(ctx context.Context, _ ToolsStatusRequest) (*ToolsStat
 		return nil, err
 	}
 
-	if !humanForTools(c) {
+	if c.ProjectID != "" || !humanForTools(c) {
 		return nil, installDenied()
 	}
 

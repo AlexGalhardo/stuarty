@@ -261,3 +261,32 @@ func TestToolsInstallRefusesWhatTheManifestDoesNotPin(t *testing.T) {
 		t.Error("a refused install made a request")
 	}
 }
+
+// The install step is system-level: an admin key limited to one project is
+// refused like any other agent caller, for the install and for the status.
+func TestToolsInstallRefusesAProjectLimitedAdminKey(t *testing.T) {
+	ts := newToolsServer(t)
+	m := newMediaEnv(t, mediaCfg{tools: ts.tools(t.TempDir())})
+	project := m.newProject("p")
+
+	limited := service.WithCaller(context.Background(), service.Caller{
+		Actor: "key:limited", Scopes: service.AllScopes, ProjectID: project,
+	})
+
+	if _, err := m.svc.ToolsInstall(
+		limited,
+		service.ToolsInstallRequest{Name: "whisper", Model: "tiny"},
+	); code(
+		err,
+	) != service.CodeForbidden {
+		t.Errorf("install by a limited admin key = %v, want E_FORBIDDEN", err)
+	}
+
+	if _, err := m.svc.ToolsStatus(limited, service.ToolsStatusRequest{}); code(err) != service.CodeForbidden {
+		t.Errorf("status by a limited admin key = %v, want E_FORBIDDEN", err)
+	}
+
+	if ts.requests.Load() != 0 {
+		t.Error("a refused install made a request")
+	}
+}
