@@ -1,0 +1,118 @@
+import type { EditRequest } from "../api/types";
+
+// Builds the operations of the gestures of SDD-012 section 8.2 from values the
+// user chose. It requests; the core decides (rules T5 and T6). On the
+// allowlist of rule R5: gating compares the playhead with an item's range.
+
+export type Operations = EditRequest["operations"];
+
+export interface TrackRef {
+	id: string;
+	kind: "visual" | "audio";
+}
+
+export interface ItemRange {
+	id: string;
+	start: number;
+	duration: number;
+}
+
+// Rule T8: every time argument carries a unit.
+export const frames = (n: number): string => `${n}f`;
+
+// Whether the playhead lies strictly inside the item (SDD-012 section 8.3);
+// an affordance, never a prediction of success.
+export function containsStrictly(item: ItemRange, playhead: number): boolean {
+	return playhead > item.start && playhead < item.start + item.duration;
+}
+
+// "Add to timeline": on the first visual track by order; when there is none,
+// the same batch adds one first.
+export function addClipOperations(input: {
+	assetId: string;
+	playhead: number;
+	firstVisualTrack: string | null;
+	newTrackId: () => string;
+}): Operations {
+	const ops: Operations = [];
+	let track = input.firstVisualTrack;
+	if (track === null) {
+		track = input.newTrackId();
+		ops.push({ op: "track.add", args: { kind: "visual", id: track } });
+	}
+	ops.push({
+		op: "clip.add",
+		args: {
+			track_id: track,
+			asset_id: input.assetId,
+			start: frames(input.playhead),
+		},
+	});
+	return ops;
+}
+
+// One `item.split` per item whose range contains the playhead strictly.
+export function splitOperations(
+	items: readonly ItemRange[],
+	playhead: number,
+): Operations {
+	return items
+		.filter((item) => containsStrictly(item, playhead))
+		.map((item) => ({
+			op: "item.split",
+			args: { item_id: item.id, at: frames(playhead) },
+		}));
+}
+
+// One `item.trim` per item that the playhead lies strictly inside.
+export function trimOperations(
+	items: readonly ItemRange[],
+	edge: "start" | "end",
+	playhead: number,
+): Operations {
+	return items
+		.filter((item) => containsStrictly(item, playhead))
+		.map((item) => ({
+			op: "item.trim",
+			args: { item_id: item.id, edge, to: frames(playhead) },
+		}));
+}
+
+// The Add caption dialog: text and a duration the user typed with its unit.
+export function captionOperations(input: {
+	text: string;
+	duration: string;
+	playhead: number;
+	firstVisualTrack: string | null;
+	newTrackId: () => string;
+}): Operations {
+	const ops: Operations = [];
+	let track = input.firstVisualTrack;
+	if (track === null) {
+		track = input.newTrackId();
+		ops.push({ op: "track.add", args: { kind: "visual", id: track } });
+	}
+	ops.push({
+		op: "caption.add",
+		args: {
+			track_id: track,
+			start: frames(input.playhead),
+			text: input.text,
+			duration: input.duration,
+		},
+	});
+	return ops;
+}
+
+// The same operations with the `start` the core named as the next free slot
+// (`details.next_free`, a frame number as received).
+export function withNextFree(ops: Operations, nextFree: number): Operations {
+	return ops.map((operation) =>
+		operation.op === "clip.add" || operation.op === "caption.add"
+			? {
+					...operation,
+					args: { ...operation.args, start: frames(nextFree) },
+				}
+			: operation,
+	);
+}

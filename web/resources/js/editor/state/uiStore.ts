@@ -6,6 +6,9 @@ export interface UiState {
 	selection: { items: readonly string[] };
 	playheadFrame: number;
 	timeline: { pxPerFrame: number };
+	// The revision at which the core answered E_NOTHING_TO_UNDO or
+	// E_NOTHING_TO_REDO; the button stays disabled until the next batch.
+	historyBlocked: { undo: number | null; redo: number | null };
 }
 
 export interface UiWriter {
@@ -13,6 +16,7 @@ export interface UiWriter {
 	dropSelection(isKnown: (id: string) => boolean): void;
 	setPlayhead(frame: number): void;
 	setZoom(pxPerFrame: number): void;
+	blockHistory(kind: "undo" | "redo", revision: number): void;
 }
 
 export function createUiStore(initialZoom = 1): {
@@ -23,6 +27,7 @@ export function createUiStore(initialZoom = 1): {
 		selection: { items: [] },
 		playheadFrame: 0,
 		timeline: { pxPerFrame: initialZoom },
+		historyBlocked: { undo: null, redo: null },
 	});
 	return {
 		store: readOnly(store),
@@ -40,6 +45,11 @@ export function createUiStore(initialZoom = 1): {
 			},
 			setPlayhead: (playheadFrame) =>
 				store.setState((s) => ({ ...s, playheadFrame })),
+			blockHistory: (kind, revision) =>
+				store.setState((s) => ({
+					...s,
+					historyBlocked: { ...s.historyBlocked, [kind]: revision },
+				})),
 			setZoom: (pxPerFrame) =>
 				store.setState((s) => ({
 					...s,
