@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
@@ -63,14 +64,25 @@ type Runtime struct {
 	Getenv   func(string) string
 	Getwd    func() (string, error)
 	Resolver Resolver
+	// Interactive is true when Stdin is a terminal, so a command may ask a question.
+	Interactive bool
+	// Manifest returns the pins of the helpers this build may install; the one
+	// embedded in the binary when nil.
+	Manifest func() (transcribe.Manifest, error)
 }
 
 // NewRuntime is the Runtime of the real process.
 func NewRuntime(r Resolver) *Runtime {
 	return &Runtime{
 		Stdin: os.Stdin, Stdout: os.Stdout, Stderr: os.Stderr,
-		Getenv: os.Getenv, Getwd: os.Getwd, Resolver: r,
+		Getenv: os.Getenv, Getwd: os.Getwd, Resolver: r, Interactive: isTerminal(os.Stdin),
 	}
+}
+
+func isTerminal(f *os.File) bool {
+	info, err := f.Stat()
+
+	return err == nil && info.Mode()&os.ModeCharDevice != 0
 }
 
 var actorLabel = regexp.MustCompile(`^[a-z0-9-]{1,32}$`)
