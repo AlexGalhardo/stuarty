@@ -2,8 +2,8 @@ name: FFmpeg build
 
 # Builds the own LGPL FFmpeg of D-017 and ADR-0011 from the sources pinned in
 # .config/ffmpeg-build/sources.env, with the flags of
-# .config/ffmpeg-build/configure-flags.txt (no GPL, no nonfree, no OpenH264 compiled
-# in), for the platforms of the shipped artifacts. Every platform is built twice on
+# .config/ffmpeg-build/configure-flags.txt (no GPL, no nonfree, no OpenH264 linked; a pinned patch loads it at run time
+# with dlopen), for the platforms of the shipped artifacts. Every platform is built twice on
 # separate runners and the two SHA-256 are compared (the reproducibility assert of
 # P3-REL-001). Each build is verified by scripts/ffmpeg-verify.sh on its own platform
 # before it is published as an asset of the release ffmpeg-<version>-<n>, with a
@@ -183,7 +183,7 @@ jobs:
             echo "FFmpeg ${FFMPEG_BUILD_VERSION}, own LGPL build ${tag} (D-017, ADR-0011)."
             echo
             echo "Source: ${FFMPEG_SRC_URL} (SHA-256 ${FFMPEG_SRC_SHA256})"
-            echo "Flags: .config/ffmpeg-build/configure-flags.txt at this tag. No GPL, no nonfree, OpenH264 not compiled in."
+            echo "Flags: .config/ffmpeg-build/configure-flags.txt at this tag. No GPL, no nonfree, OpenH264 not linked (loaded at run time by the patch ${FFMPEG_PATCH_FILE}, SHA-256 ${FFMPEG_PATCH_SHA256})."
             echo
             echo "SHA-256:"
             echo

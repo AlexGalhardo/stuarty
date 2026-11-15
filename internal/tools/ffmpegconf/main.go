@@ -1,5 +1,5 @@
 // Command ffmpegconf checks that a FFmpeg configure line is LGPL safe (D-017, ADR-0011, NFR-043):
-// no --enable-gpl, no --enable-nonfree, none of the GPL or nonfree libraries, no OpenH264 compiled
+// no --enable-gpl, no --enable-nonfree, none of the GPL or nonfree libraries, no OpenH264 linked
 // in, and no --enable-* flag outside the allowlist. The line is the flag file of the build
 // (.config/ffmpeg-build/configure-flags.txt) or the `configuration:` line of a built binary.
 //
@@ -22,7 +22,7 @@ import (
 var forbidden = map[string]string{
 	"--enable-gpl":           "GPL build",
 	"--enable-nonfree":       "nonfree build",
-	"--enable-libopenh264":   "OpenH264 must be loaded at run time, never compiled in (D-017)",
+	"--enable-libopenh264":   "OpenH264 is never linked: the dlopen patch loads it at run time (D-017)",
 	"--enable-libx264":       "x264 is GPL",
 	"--enable-libx265":       "x265 is GPL",
 	"--enable-libxvid":       "Xvid is GPL",

@@ -4,7 +4,9 @@
 # `go run ./internal/tools/ffmpegconf -flags .config/ffmpeg-build/configure-flags.txt
 # -allow .config/ffmpeg-build/configure-allowlist.txt` fails the build when a flag is
 # not licence safe. No --enable-gpl, no --enable-nonfree, no --enable-libopenh264:
-# the Cisco OpenH264 binary is loaded at run time, never compiled in (D-017).
+# the Cisco OpenH264 binary is never linked. The libopenh264 encoder is switched on by the
+# patch of patches/ (pinned in sources.env), which loads the library at run time with
+# dlopen or LoadLibrary from VUKEM_VIDEO_OPENH264_DIR (D-017), so no flag is needed for it.
 [common]
 --disable-autodetect
 --disable-debug

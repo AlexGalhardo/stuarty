@@ -118,13 +118,16 @@ fetch "$ZLIB_SRC_URL" "$ZLIB_SRC_SHA256" zlib
 fetch "$ZIMG_SRC_URL" "$ZIMG_SRC_SHA256" zimg
 case "$os" in linux | windows) fetch "$NVCODEC_SRC_URL" "$NVCODEC_SRC_SHA256" nvcodec ;; esac
 
-for p in "$build_dir"/patches/*.patch; do
-	[ -e "$p" ] || continue
-	patch -p1 -d "$work/src/ffmpeg" <"$p" >&2 || die "patch $p does not apply"
-done
+fetch "$OPENH264_SRC_URL" "$OPENH264_SRC_SHA256" openh264
+
+patch_file="$build_dir/patches/$FFMPEG_PATCH_FILE"
+[ "$(sha256_of "$patch_file")" = "$FFMPEG_PATCH_SHA256" ] || die "SHA-256 mismatch for $patch_file"
+patch -p1 -d "$work/src/ffmpeg" <"$patch_file" >&2 || die "patch $patch_file does not apply"
 
 prefix="$work/prefix"
-mkdir -p "$prefix"
+mkdir -p "$prefix/include/wels"
+# Only the Cisco headers: libopenh264 is loaded at run time by the patched encoder, never linked.
+cp "$work"/src/openh264/codec/api/wels/*.h "$prefix/include/wels/"
 remap="-ffile-prefix-map=$work=. -ffile-prefix-map=$root=."
 export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
 export CFLAGS="-O2 $remap"
@@ -231,7 +234,9 @@ fi
 	printf 'FFmpeg %s, own LGPL build %s, built from the source tarball below by scripts/ffmpeg-build.sh.\n' "$FFMPEG_BUILD_VERSION" "$FFMPEG_BUILD_TAG"
 	printf 'Corresponding FFmpeg source: %s (SHA-256 %s)\n' "$FFMPEG_SRC_URL" "$FFMPEG_SRC_SHA256"
 	printf 'libvpx: %s\nopus: %s\nzlib: %s\n' "$LIBVPX_SRC_URL" "$OPUS_SRC_URL" "$ZLIB_SRC_URL"
-	printf 'Build scripts and flags: https://github.com/AlexGalhardo/vukem-video/tree/%s/.config/ffmpeg-build\n' "$FFMPEG_BUILD_TAG"
+	printf 'OpenH264 (headers only, BSD-2-Clause; the library is loaded at run time, not included): %s\n' "$OPENH264_SRC_URL"
+	printf 'Patch: .config/ffmpeg-build/patches/%s (SHA-256 %s)\n' "$FFMPEG_PATCH_FILE" "$FFMPEG_PATCH_SHA256"
+	printf 'Build scripts and flags:https://github.com/AlexGalhardo/vukem-video/tree/%s/.config/ffmpeg-build\n' "$FFMPEG_BUILD_TAG"
 } >"$pkg/SOURCE.txt"
 
 touch -d "@$SOURCE_DATE_EPOCH" "$pkg" "$pkg/bin" "$pkg"/* "$pkg"/bin/* 2>/dev/null \

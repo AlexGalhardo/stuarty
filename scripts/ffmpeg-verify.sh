@@ -6,7 +6,7 @@
 #   bash scripts/ffmpeg-verify.sh signatures <dir>               cosign verify-blob and gh attestation verify for every asset
 # `binary` fails when: the configure line is not LGPL safe (internal/tools/ffmpegconf), -buildconf
 # or -version names --enable-gpl, --enable-nonfree, libx264, libx265, libfdk_aac, the linker
-# listing shows an OpenH264 library, or a filter the engine references is missing (FILTERS_FILE,
+# listing shows an OpenH264 library, the libopenh264 encoder (the dlopen patch) is missing, or a filter the engine references is missing (FILTERS_FILE,
 # default scripts/ffmpeg-filters.txt; eq and boxblur must be absent).
 # `signatures` needs cosign and gh, and REPO (owner/name) or GITHUB_REPOSITORY.
 set -euo pipefail
@@ -35,13 +35,14 @@ check_binary() {
 	printf '%s\n' "$version" | (cd "$root" && go run ./internal/tools/ffmpegconf -allow "$allow" -line -) >&2 \
 		|| die "the configure line is not LGPL safe"
 
-	# No OpenH264 library linked: the dynamic dependencies and, for a static binary, the encoder list.
+	# No OpenH264 library linked (the dynamic dependencies); the patched encoder, which loads it at run time, must be there.
 	if command -v ldd >/dev/null 2>&1 && ldd "$ffmpeg" >/dev/null 2>&1; then listing="$(ldd "$ffmpeg")"
 	elif command -v otool >/dev/null 2>&1; then listing="$(otool -L "$ffmpeg")"
 	elif command -v objdump >/dev/null 2>&1; then listing="$(objdump -p "$ffmpeg" 2>/dev/null | grep -i 'DLL Name\|NEEDED' || true)"
 	else listing=""; fi
 	case "$(printf '%s' "$listing" | tr 'A-Z' 'a-z')" in *openh264*) die "an OpenH264 library is linked: $listing" ;; esac
-	if "$ffmpeg" -hide_banner -encoders | grep -q libopenh264; then die "the libopenh264 encoder is compiled in"; fi
+	"$ffmpeg" -hide_banner -encoders | grep -q libopenh264 || die "the libopenh264 encoder (the run time loader patch) is missing"
+	grep -aq VUKEM_VIDEO_OPENH264_DIR "$ffmpeg" || die "the binary does not read VUKEM_VIDEO_OPENH264_DIR"
 
 	if [ -f "$filters_file" ]; then
 		local have missing=""

@@ -1,0 +1,160 @@
+Vukem Video: load Cisco OpenH264 at run time (D-017, ADR-0011, SDD-011 section 8.4).
+
+FFmpeg 9.0.2. The libopenh264 encoder is built without --enable-libopenh264 and without
+linking the library: the Cisco headers (v2.6.0, BSD-2-Clause, copied into the prefix by
+scripts/ffmpeg-build.sh) give only the types, and WelsCreateSVCEncoder, WelsDestroySVCEncoder
+and WelsGetCodecVersionEx are resolved with dlopen or LoadLibrary from the one file
+OPENH264_LIBNAME inside $VUKEM_VIDEO_OPENH264_DIR (no system search path). A library whose
+version is not exactly the pinned one is refused. Without the library the encoder fails to
+open and the product reports E_NO_ENCODER. The decoder is not built.
+
+--- a/configure
++++ b/configure
+@@ -3855,7 +3855,7 @@
+ libopencore_amrwb_decoder_deps="libopencore_amrwb"
+ libopenh264_decoder_deps="libopenh264"
+ libopenh264_decoder_select="h264_mp4toannexb_bsf"
+-libopenh264_encoder_deps="libopenh264"
++libopenh264_encoder_deps_any="libdl LoadLibrary"
+ libopenjpeg_encoder_deps="libopenjpeg"
+ libopenmpt_demuxer_deps="libopenmpt"
+ libopus_decoder_deps="libopus"
+--- a/libavcodec/libopenh264.c
++++ b/libavcodec/libopenh264.c
+@@ -19,15 +19,104 @@
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+  */
+ 
++#include <stdio.h>
++#include <stdlib.h>
+ #include <string.h>
+ #include <wels/codec_api.h>
+ #include <wels/codec_ver.h>
+ 
++#include "config.h"
+ #include "libavutil/error.h"
+ #include "libavutil/log.h"
++#include "libavutil/thread.h"
+ 
+ #include "libopenh264.h"
+ 
++#if HAVE_LOADLIBRARY
++#include <windows.h>
++#define OPENH264_LIBNAME "openh264-8.dll"
++#else
++#include <dlfcn.h>
++#if defined(__APPLE__)
++#define OPENH264_LIBNAME "libopenh264.8.dylib"
++#else
++#define OPENH264_LIBNAME "libopenh264.so.8"
++#endif
++#endif
++
++// Vukem Video: the Cisco library is never linked. The headers only give the types; the three
++// functions are resolved from the file OPENH264_LIBNAME inside $VUKEM_VIDEO_OPENH264_DIR. There
++// is no fallback to a system search path, so no other copy can be picked up.
++static int (*load_create)(ISVCEncoder **);
++static void (*load_destroy)(ISVCEncoder *);
++static int load_result;
++
++static void load_library(void)
++{
++    const char *dir = getenv("VUKEM_VIDEO_OPENH264_DIR");
++    void (*version_fn)(OpenH264Version *) = NULL;
++    OpenH264Version v = { 0 };
++    char path[4096];
++    void *lib = NULL;
++
++    load_result = AVERROR_ENCODER_NOT_FOUND;
++    if (!dir || !*dir) {
++        av_log(NULL, AV_LOG_ERROR, "OpenH264 is not installed: VUKEM_VIDEO_OPENH264_DIR is not set\n");
++        return;
++    }
++    if (snprintf(path, sizeof(path), "%s/%s", dir, OPENH264_LIBNAME) >= (int)sizeof(path)) {
++        av_log(NULL, AV_LOG_ERROR, "OpenH264 path is too long\n");
++        return;
++    }
++#if HAVE_LOADLIBRARY
++    lib = (void *)LoadLibraryA(path);
++    if (lib) {
++        *(void **)&load_create  = (void *)GetProcAddress((HMODULE)lib, "WelsCreateSVCEncoder");
++        *(void **)&load_destroy = (void *)GetProcAddress((HMODULE)lib, "WelsDestroySVCEncoder");
++        *(void **)&version_fn   = (void *)GetProcAddress((HMODULE)lib, "WelsGetCodecVersionEx");
++    }
++#else
++    lib = dlopen(path, RTLD_NOW | RTLD_LOCAL);
++    if (lib) {
++        *(void **)&load_create  = dlsym(lib, "WelsCreateSVCEncoder");
++        *(void **)&load_destroy = dlsym(lib, "WelsDestroySVCEncoder");
++        *(void **)&version_fn   = dlsym(lib, "WelsGetCodecVersionEx");
++    }
++#endif
++    if (!lib || !load_create || !load_destroy || !version_fn) {
++        av_log(NULL, AV_LOG_ERROR, "Cannot load OpenH264 from %s\n", path);
++        load_create = NULL;
++        load_destroy = NULL;
++        return;
++    }
++    // The ABI of the library must be the one of the pinned headers (Cisco 2.6.0).
++    version_fn(&v);
++    if (v.uMajor != OPENH264_MAJOR || v.uMinor != OPENH264_MINOR || v.uRevision != OPENH264_REVISION) {
++        av_log(NULL, AV_LOG_ERROR, "OpenH264 %u.%u.%u does not match the pinned %d.%d.%d\n",
++               v.uMajor, v.uMinor, v.uRevision, OPENH264_MAJOR, OPENH264_MINOR, OPENH264_REVISION);
++        load_create = NULL;
++        load_destroy = NULL;
++        return;
++    }
++    load_result = 0;
++}
++
++int ff_libopenh264_create_encoder(ISVCEncoder **encoder)
++{
++    static AVOnce once = AV_ONCE_INIT;
++
++    ff_thread_once(&once, load_library);
++    if (load_result < 0)
++        return load_result;
++    return load_create(encoder);
++}
++
++void ff_libopenh264_destroy_encoder(ISVCEncoder *encoder)
++{
++    if (load_destroy)
++        load_destroy(encoder);
++}
++
+ // Convert libopenh264 log level to equivalent ffmpeg log level.
+ static int libopenh264_to_ffmpeg_log_level(int libopenh264_log_level)
+ {
+--- a/libavcodec/libopenh264.h
++++ b/libavcodec/libopenh264.h
+@@ -34,4 +34,9 @@
+ 
+ void ff_libopenh264_trace_callback(void *ctx, int level, const char *msg);
+ 
++// The library is not linked: it is loaded at run time from the directory named by
++// VUKEM_VIDEO_OPENH264_DIR. Both functions return 0 on success, like the Wels functions.
++int ff_libopenh264_create_encoder(ISVCEncoder **encoder);
++void ff_libopenh264_destroy_encoder(ISVCEncoder *encoder);
++
+ #endif /* AVCODEC_LIBOPENH264_H */
+--- a/libavcodec/libopenh264enc.c
++++ b/libavcodec/libopenh264enc.c
+@@ -100,7 +100,7 @@
+     SVCContext *s = avctx->priv_data;
+ 
+     if (s->encoder)
+-        WelsDestroySVCEncoder(s->encoder);
++        ff_libopenh264_destroy_encoder(s->encoder);
+     if (s->skipped > 0)
+         av_log(avctx, AV_LOG_WARNING, "%d frames skipped\n", s->skipped);
+     return 0;
+@@ -114,7 +114,7 @@
+     WelsTraceCallback callback_function;
+     AVCPBProperties *props;
+ 
+-    if (WelsCreateSVCEncoder(&s->encoder)) {
++    if (ff_libopenh264_create_encoder(&s->encoder)) {
+         av_log(avctx, AV_LOG_ERROR, "Unable to create encoder\n");
+         return AVERROR_UNKNOWN;
+     }
