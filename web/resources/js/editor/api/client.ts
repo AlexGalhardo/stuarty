@@ -31,6 +31,10 @@ import type {
 	SnapPointsResult,
 	SystemQuery,
 	SystemResult,
+	TemplateInstantiateRequest,
+	TemplateInstantiateResult,
+	TemplateListResult,
+	TemplateResult,
 	ToolsStatusResult,
 } from "./types";
 
@@ -95,6 +99,13 @@ export interface ApiClient {
 	createKey(request: KeyCreateRequest): Promise<KeyCreateResult>;
 	listKeys(): Promise<KeyListResult>;
 	revokeKey(keyId: string): Promise<KeyRevokeResult>;
+	listTemplates(): Promise<TemplateListResult>;
+	instantiateTemplate(
+		templateId: string,
+		request: TemplateInstantiateRequest,
+	): Promise<TemplateInstantiateResult>;
+	// `path` is an absolute path on the machine of the service (SDD-007 section 7.6).
+	importTemplate(path: string): Promise<TemplateResult>;
 }
 
 // One typed function per endpoint the editor uses (SDD-012 section 4.2). The
@@ -239,5 +250,15 @@ export function createClient(
 		listKeys: () => call("GET", "/keys", READ_TIMEOUT_MS),
 		revokeKey: (keyId) =>
 			call("DELETE", `/keys/${encodeURIComponent(keyId)}`, EDIT_TIMEOUT_MS),
+		listTemplates: () => call("GET", "/templates", READ_TIMEOUT_MS),
+		instantiateTemplate: (templateId, request) =>
+			call(
+				"POST",
+				`/templates/${encodeURIComponent(templateId)}/instantiate`,
+				EDIT_TIMEOUT_MS,
+				request,
+			),
+		importTemplate: (path) =>
+			call("POST", "/templates/import", EDIT_TIMEOUT_MS, { path }),
 	};
 }

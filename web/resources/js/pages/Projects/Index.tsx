@@ -13,6 +13,7 @@ import {
 	SIZE_PRESETS,
 	type SizePreset,
 } from "@/types";
+import Templates from "./Templates";
 
 const NAME_MAX = 120;
 
@@ -131,6 +132,7 @@ export default function ProjectsIndex() {
 						</ul>
 					)}
 				</section>
+				<Templates />
 			</div>
 		</>
 	);
