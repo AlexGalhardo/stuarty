@@ -7,7 +7,7 @@ import {
 	StepBack,
 	StepForward,
 } from "lucide-react";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
@@ -19,13 +19,14 @@ import {
 } from "../state/EditorContext";
 import { selectEndFrame, selectFps } from "../state/selectors";
 import { bufferSize, fitScale, truthWidth } from "./fit";
+import Handles from "./overlays/Handles";
 import { hitTest } from "./overlays/hitTest";
 import SafeArea from "./overlays/SafeArea";
 import SelectionBox from "./overlays/SelectionBox";
 import { PixiExecutor } from "./PixiExecutor";
 import { PausedFrame } from "./pausedFrame";
 import Timecode from "./Timecode";
-import type { PreviewState } from "./types";
+import type { LayerGeometry, PreviewState, TransformPort } from "./types";
 
 const DEFAULT_FPS = { num: 30, den: 1 } as const;
 // While playing the committed playhead follows at most every 250 ms, for the
@@ -42,7 +43,11 @@ function isEditable(target: EventTarget | null): boolean {
 
 // The preview of SDD-012 section 11: the executor draws the plan on a canvas,
 // and 150 ms after a pause the core's exact frame replaces it.
-export default function Preview(): ReactNode {
+export default function Preview({
+	transform,
+}: {
+	transform: TransformPort;
+}): ReactNode {
 	const t = useT();
 	const runtime = useRuntime();
 	const status = useDocumentState((s) => s.status);
@@ -71,6 +76,9 @@ export default function Preview(): ReactNode {
 	const safeVisible = useUiState((s) => s.safeAreaVisible);
 	// Bumped when a plan window arrives, so the overlays read its geometry.
 	const [, setPlanTick] = useState(0);
+	// The box a transform gesture shows under the pointer, until the plan window
+	// of the new revision arrives (SDD-012 section 11.6).
+	const [override, setOverride] = useState<LayerGeometry | null>(null);
 
 	revisionRef.current = revision ?? 0;
 
@@ -183,7 +191,9 @@ export default function Preview(): ReactNode {
 		if (instance === null || !ready || state === "playing") return;
 		let alive = true;
 		void instance.whenPlan(live).then(() => {
-			if (alive) setPlanTick((n) => n + 1);
+			if (!alive) return;
+			setPlanTick((n) => n + 1);
+			setOverride(null);
 		});
 		return () => {
 			alive = false;
@@ -225,23 +235,22 @@ export default function Preview(): ReactNode {
 				ref={region}
 				className="flex min-h-0 flex-1 items-center justify-center"
 			>
-				<div
-					className="relative overflow-hidden bg-black"
-					style={{ width: box.w, height: box.h }}
-				>
-					<div ref={host} className="absolute inset-0" />
-					<img
-						ref={truth}
-						hidden
-						alt={t("ui.editor.preview.frame")}
-						className="absolute inset-0 size-full"
-					/>
+				<div className="relative" style={{ width: box.w, height: box.h }}>
+					<div className="absolute inset-0 overflow-hidden bg-black">
+						<div ref={host} className="absolute inset-0" />
+						<img
+							ref={truth}
+							hidden
+							alt={t("ui.editor.preview.frame")}
+							className="absolute inset-0 size-full"
+						/>
+					</div>
 					{/* biome-ignore lint/a11y/noStaticElementInteractions lint/a11y/useKeyWithClickEvents: picking on the canvas is a pointer affordance; the keyboard selects in the timeline. */}
 					<div
 						data-testid="canvas-overlay"
 						className="absolute inset-0"
 						onClick={(event) => {
-							if (scale === 0) return;
+							if (scale === 0 || transform.consumeClick()) return;
 							const rect = event.currentTarget.getBoundingClientRect();
 							const hit = hitTest(layers, {
 								x: (event.clientX - rect.left) / scale,
@@ -256,9 +265,22 @@ export default function Preview(): ReactNode {
 						{safeArea !== null && <SafeArea rect={safeArea} scale={scale} />}
 						{layers
 							.filter((layer) => selection.includes(layer.item))
-							.map((layer) => (
-								<SelectionBox key={layer.item} geometry={layer} scale={scale} />
-							))}
+							.map((layer) => {
+								const shown = override?.item === layer.item ? override : layer;
+								return (
+									<Fragment key={layer.item}>
+										<SelectionBox geometry={shown} scale={scale} />
+										{selection.length === 1 && (
+											<Handles
+												geometry={shown}
+												scale={scale}
+												port={transform}
+												onPreview={setOverride}
+											/>
+										)}
+									</Fragment>
+								);
+							})}
 					</div>
 				</div>
 			</div>
