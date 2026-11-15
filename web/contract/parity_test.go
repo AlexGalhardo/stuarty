@@ -46,13 +46,8 @@ var parity = []row{
 	{method: "MediaImport", tool: "media_import", command: "media:import", route: "POST /projects/{}/media"},
 	{method: "MediaInspect", tool: "media_inspect", command: "media:inspect", route: "GET /projects/{}/media/{}"},
 	{method: "MediaList", tool: "media_inspect", command: "media:list", route: "GET /projects/{}/media"},
-	{method: "MediaTrash", command: "media:trash", route: "POST /projects/{}/media/{}/trash", cliPending: "P2-CLI"},
-	{
-		method:     "MediaRestore",
-		command:    "media:restore",
-		route:      "POST /projects/{}/media/{}/restore",
-		cliPending: "P2-CLI",
-	},
+	{method: "MediaTrash", command: "media:trash", route: "POST /projects/{}/media/{}/trash"},
+	{method: "MediaRestore", command: "media:restore", route: "POST /projects/{}/media/{}/restore"},
 	{method: "TemplateList", tool: "template", command: "template:list", route: "GET /templates"},
 	{method: "TemplateSave", tool: "template", command: "template:save", route: "POST /templates"},
 	{
