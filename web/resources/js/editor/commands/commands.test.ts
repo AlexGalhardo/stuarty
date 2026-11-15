@@ -9,7 +9,10 @@ import { createActions } from "./actions";
 import {
 	addClipOperations,
 	captionOperations,
+	moveOperations,
+	renameOperations,
 	splitOperations,
+	trimEndOperations,
 	trimOperations,
 	withNextFree,
 } from "./builders";
@@ -255,6 +258,59 @@ describe("gestures send one request and wait for the answer", () => {
 		expect(sent[1]?.request.idempotency_key).not.toBe(
 			sent[0]?.request.idempotency_key,
 		);
+	});
+
+	test("an inspector field leaves a validation error to the field and sends no notice", async () => {
+		const h = await startHarness();
+		const item = firstItem(h);
+		scripted(h, () => ({
+			status: 400,
+			body: {
+				code: "E_INVALID_TIME",
+				message: "not a time",
+				retryable: false,
+			},
+		}));
+		const outcome = await createActions(h.runtime).commitField(
+			moveOperations(item.id, "5s"),
+		);
+		expect(outcome?.ok).toBe(false);
+		expect(h.runtime.notices.getState().notices).toHaveLength(0);
+	});
+
+	test("an overlap from a timing field offers the next free start", async () => {
+		const h = await startHarness();
+		const item = firstItem(h);
+		const sent = scripted(h, (_body, all) =>
+			all.length === 1
+				? {
+						status: 409,
+						body: {
+							code: "E_OVERLAP",
+							message: "occupied",
+							retryable: false,
+							details: { next_free: 240 },
+						},
+					}
+				: { status: 200, body: h.server.commit([bump(h)]).result },
+		);
+		const actions = createActions(h.runtime);
+		await actions.commitField(moveOperations(item.id, "5s"));
+		const [notice] = h.runtime.notices.getState().notices;
+		expect(notice?.code).toBe("E_OVERLAP");
+		await actions.applyNotice(notice as NonNullable<typeof notice>);
+		expect(sent[1]?.request.operations).toEqual([
+			{ op: "item.move", args: { item_id: item.id, start: "240f" } },
+		]);
+	});
+
+	test("the field builders send the documented arguments", () => {
+		expect(renameOperations("itm_a", "")).toEqual([
+			{ op: "item.rename", args: { item_id: "itm_a", name: "" } },
+		]);
+		expect(trimEndOperations("itm_a", "3s")).toEqual([
+			{ op: "item.trim", args: { item_id: "itm_a", edge: "end", to: "3s" } },
+		]);
 	});
 
 	test("a revision conflict offers Apply again on the current revision", async () => {

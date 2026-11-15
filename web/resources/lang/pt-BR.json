@@ -55,8 +55,7 @@
       "panels": {
         "library": "Mídia",
         "preview": "Pré-visualização",
-        "inspector": "Inspetor",
-        "soon": "Ainda não disponível"
+        "inspector": "Inspetor"
       },
       "activity": {
         "editing": "{actor} está editando",
@@ -473,6 +472,28 @@
       },
       "time": {
         "hint": "Use 12,5s, 375f ou 00:12,500."
+      },
+      "inspector": {
+        "name": "Nome",
+        "timing": "Tempo",
+        "start": "Início",
+        "end": "Fim",
+        "duration": "Duração",
+        "in_point": "Ponto de entrada",
+        "kind": "Tipo",
+        "project": "Projeto",
+        "track": "Trilha",
+        "items": "{count} itens",
+        "project_hint": "Selecione um item na linha do tempo para editá-lo.",
+        "multi_hint": "Selecione um único item para editar o nome e o tempo.",
+        "changed_by": "Alterado por {actor}",
+        "invalid_value": "Confira o valor e tente de novo.",
+        "color_picker": "{label}, seletor de cor",
+        "alpha": "{label}, opacidade",
+        "track_kind": {
+          "visual": "Vídeo",
+          "audio": "Áudio"
+        }
       }
     }
   }

@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 
 import {
+	displayDuration,
+	displayEnd,
+	displayInPoint,
+	displayStart,
 	formatSeconds,
 	formatTime,
 	localizeDecimalInput,
@@ -82,5 +86,17 @@ describe("display", () => {
 		expect(formatSeconds(12.5, "seconds")).toBe("12.500s");
 		expect(formatSeconds(62.5, "timecode")).toBe("01:02.500");
 		expect(formatSeconds(12.5, "frames")).toBe("12.500s");
+	});
+});
+
+describe("item times", () => {
+	const fps = { num: 30, den: 1 };
+	const item = { start: 30, duration: 180, source_in: 36 };
+	test("start, end, duration and in point", () => {
+		expect(displayStart(item, fps, "timecode")).toBe("00:01.000");
+		expect(displayEnd(item, fps, "timecode")).toBe("00:07.000");
+		expect(displayDuration(item, fps, "seconds")).toBe("6.000s");
+		expect(displayInPoint(item, fps, "frames")).toBe("36f");
+		expect(displayInPoint({ start: 0, duration: 1 }, fps, "frames")).toBe("0f");
 	});
 });
