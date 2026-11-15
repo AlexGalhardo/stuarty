@@ -254,6 +254,8 @@ func (h *apiHandler) registerAll() {
 	register(h, "templates.import", h.templateImport)
 	register(h, "projects.bundle.export", h.projectBundleExport)
 	register(h, "projects.bundle.import", h.projectBundleImport)
+	register(h, "projects.otio.export", h.projectOtioExport)
+	register(h, "projects.otio.import", h.projectOtioImport)
 	register(h, "templates.export", h.templateExport)
 	register(h, "templates.file", h.templateFile)
 	register(h, "media.proxy", func(c *web.Ctx, in mediaFileIn) (noIn, error) {

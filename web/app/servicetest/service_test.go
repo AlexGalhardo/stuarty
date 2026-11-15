@@ -94,6 +94,14 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ProjectBundleImport(ctx, service.ProjectBundleImportRequest{Path: "/x"})
 			return err
 		},
+		"ProjectOtioExport": func() error {
+			_, err := e.svc.ProjectOtioExport(ctx, service.ProjectOtioExportRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectOtioImport": func() error {
+			_, err := e.svc.ProjectOtioImport(ctx, service.ProjectOtioImportRequest{ProjectID: "prj_0000000001", Path: "/x"})
+			return err
+		},
 		"FontImport": func() error {
 			_, err := e.svc.FontImport(ctx, service.FontImportRequest{Path: "/x"})
 			return err

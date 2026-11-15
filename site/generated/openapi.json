@@ -662,6 +662,9 @@
           "duration": {
             "$ref": "#/components/schemas/TimeValue"
           },
+          "format": {
+            "type": "string"
+          },
           "fps": {
             "type": "string"
           },
@@ -1483,6 +1486,20 @@
         },
         "type": "object"
       },
+      "Lost": {
+        "properties": {
+          "feature": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Loudness": {
         "properties": {
           "integrated_lufs": {
@@ -1512,6 +1529,20 @@
             "type": "integer"
           },
           "label": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Media": {
+        "properties": {
+          "reason": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "status": {
             "type": "string"
           }
         },
@@ -2255,6 +2286,73 @@
           },
           "untrusted_notice": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectOtioExportResult": {
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "file_name": {
+            "type": "string"
+          },
+          "lost": {
+            "items": {
+              "$ref": "#/components/schemas/Lost"
+            },
+            "type": "array"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectOtioImportResult": {
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "edit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EditResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lost": {
+            "items": {
+              "$ref": "#/components/schemas/Lost"
+            },
+            "type": "array"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "unresolved_media": {
+            "items": {
+              "$ref": "#/components/schemas/Media"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -6988,7 +7086,7 @@
                 "properties": {
                   "args": {
                     "additionalProperties": {},
-                    "description": "The arguments of the kind: start and end for an export.",
+                    "description": "The arguments of the kind: start, end and format (mp4, gif, wav or aac; default mp4) for an export.",
                     "type": "object"
                   },
                   "dry_run": {
@@ -7643,6 +7741,118 @@
           }
         ],
         "summary": "Move an asset to the trash"
+      }
+    },
+    "/api/v1/projects/{id}/otio": {
+      "get": {
+        "operationId": "projects.otio.export",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOtioExportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export a project as OpenTimelineIO"
+      },
+      "post": {
+        "operationId": "projects.otio.import",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "base_revision": {
+                    "description": "The revision the import is applied to.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "path": {
+                    "description": "An absolute path to an .otio file on the machine that runs the server.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOtioImportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import an OpenTimelineIO file into a project"
       }
     },
     "/api/v1/projects/{id}/plan": {

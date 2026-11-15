@@ -48,6 +48,8 @@ type Service interface {
 	JobStart(ctx context.Context, req JobStartRequest) (*Job, error)
 	ProjectBundleExport(ctx context.Context, req ProjectBundleExportRequest) (*Job, error)
 	ProjectBundleImport(ctx context.Context, req ProjectBundleImportRequest) (*ProjectCreateResult, error)
+	ProjectOtioExport(ctx context.Context, req ProjectOtioExportRequest) (*ProjectOtioExportResult, error)
+	ProjectOtioImport(ctx context.Context, req ProjectOtioImportRequest) (*ProjectOtioImportResult, error)
 
 	FontImport(ctx context.Context, req FontImportRequest) (*FontImportResult, error)
 	BrandKitGet(ctx context.Context, req BrandKitGetRequest) (*BrandKit, error)

@@ -318,7 +318,7 @@ Request body:
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `args` | `object` | no | The arguments of the kind: start and end for an export. |
+| `args` | `object` | no | The arguments of the kind: start, end and format (mp4, gif, wav or aac; default mp4) for an export. |
 | `dry_run` | `boolean` | no |  |
 | `kind` | `string` | yes | export. |
 | `wait_ms` | `integer` | no | 0 to 25000: hold the call until the job is final. |
@@ -459,6 +459,34 @@ Request body:
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
 | `dry_run` | `boolean` | no |  |
+
+Responses: `200` OK, `401`, `422`, `default`.
+
+### `GET /projects/{id}/otio`
+
+Export a project as OpenTimelineIO
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `id` | path | yes | `string` |
+
+Responses: `200` OK, `401`, `422`, `default`.
+
+### `POST /projects/{id}/otio`
+
+Import an OpenTimelineIO file into a project
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `id` | path | yes | `string` |
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `base_revision` | `integer` | no | The revision the import is applied to. |
+| `dry_run` | `boolean` | no |  |
+| `path` | `string` | yes | An absolute path to an .otio file on the machine that runs the server. |
 
 Responses: `200` OK, `401`, `422`, `default`.
 
