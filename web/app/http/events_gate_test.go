@@ -48,7 +48,11 @@ func TestEventsTwoStreamsGetEveryRevisionOnceInOrderUnderUndo(t *testing.T) {
 							_, err = h.svc.Edit(ctx, service.EditRequest{
 								ProjectID: id, BaseRevision: cur.Revision,
 								Operations: []command.Operation{{Op: "text.add", Args: json.RawMessage(fmt.Sprintf(
-									`{"track_id":%q,"start":"%ds","duration":"1s","text":"w%d"}`, h.track, g*each+i, g))}},
+									`{"track_id":%q,"start":"%ds","duration":"1s","text":"w%d"}`,
+									h.track,
+									g*each+i,
+									g,
+								))}},
 							})
 						}
 					}

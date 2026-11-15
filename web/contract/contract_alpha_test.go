@@ -22,7 +22,13 @@ func TestAlphaOperationsAreTheSameInProcessAndOverHTTP(t *testing.T) {
 
 	for i := range steps {
 		if have[i].result != want[i].result {
-			t.Errorf("step %d (%s): result differs\n got: %s\nwant: %s", i, steps[i].Call, have[i].result, want[i].result)
+			t.Errorf(
+				"step %d (%s): result differs\n got: %s\nwant: %s",
+				i,
+				steps[i].Call,
+				have[i].result,
+				want[i].result,
+			)
 		}
 
 		if have[i].fail != want[i].fail {
