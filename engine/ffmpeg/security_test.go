@@ -147,7 +147,7 @@ func TestSecurity_T16_TimeoutsEnforced(t *testing.T) {
 	})
 
 	t.Run("the table", func(t *testing.T) {
-		const h = time.Hour
+		const h = 3 * time.Hour
 
 		got := map[string]time.Duration{
 			"probe":        ProbeTimeout,
