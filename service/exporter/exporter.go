@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"sync"
 
@@ -24,6 +25,10 @@ import (
 // Config is what an export needs besides the project.
 type Config struct {
 	Runner *ffmpeg.Runner
+	// HardwareRunner is the runner for an export with a hardware encoder, whose child has no
+	// address space limit (SDD-007 section 6.5). Nil means Runner serves every encoder. The
+	// encoder is chosen after boot, so the choice is made here, per export.
+	HardwareRunner *ffmpeg.Runner
 	// Caps is ffmpeg's capability list; read from the runner on first use when nil.
 	Caps *ffmpeg.Capabilities
 	// Workspace is the workspace folder; the normalized media is under its artifacts folder.
@@ -73,7 +78,7 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 	}
 
 	res, err := export.Run(ctx, export.Job{
-		Runner:       a.cfg.Runner,
+		Runner:       a.runnerFor(ctx, caps),
 		Caps:         caps,
 		Doc:          in.Doc,
 		JobID:        in.JobID,
@@ -123,6 +128,36 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 	}
 
 	return out, nil
+}
+
+// runnerFor picks the runner by the encoder detection finds: a software encoder (or none) runs
+// under the address space limit, a hardware encoder does not. Detection runs on the hardware
+// runner, whose child has no such limit, so a driver that maps a large address range is not
+// mistaken for a missing encoder; a detection error leaves the stricter runner to report it.
+func (a *adapter) runnerFor(ctx context.Context, caps *ffmpeg.Capabilities) *ffmpeg.Runner {
+	hw := a.cfg.HardwareRunner
+	if hw == nil {
+		return a.cfg.Runner
+	}
+
+	det, err := hw.DetectEncoder(ctx, caps, a.cfg.Encoder)
+
+	return pickRunner(det, err, a.cfg.Runner, hw)
+}
+
+// pickRunner is the hardware runner only for a detected encoder that is known to be hardware:
+// anything else, an unknown name and a failed detection included, keeps the address space limit.
+func pickRunner(det *ffmpeg.EncoderDetection, err error, software, hardware *ffmpeg.Runner) *ffmpeg.Runner {
+	if err != nil || det == nil || !slices.Contains(hardwareEncoders, det.Chosen) {
+		return software
+	}
+
+	return hardware
+}
+
+// hardwareEncoders are the H.264 encoders whose drivers map very large address ranges.
+var hardwareEncoders = []string{
+	"h264_videotoolbox", "h264_nvenc", "h264_qsv", "h264_amf", "h264_mf", "h264_vaapi",
 }
 
 // capabilities reads what ffmpeg can do once, on the first export.

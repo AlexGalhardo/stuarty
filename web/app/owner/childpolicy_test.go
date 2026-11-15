@@ -13,14 +13,14 @@ func TestChildRunnersRefuseAnUnusableSandbox(t *testing.T) {
 	in := &ffmpeg.Installation{CPUCount: 2}
 
 	for _, mode := range []string{"docker", "chroot"} {
-		if _, err := newChildRunners(context.Background(), in, t.TempDir(), mode, "", 1<<30); err == nil ||
+		if _, err := newChildRunners(context.Background(), in, t.TempDir(), mode, 1<<30); err == nil ||
 			!strings.Contains(err.Error(), "sandbox requested but unavailable") {
 			t.Errorf("VUKEM_VIDEO_SANDBOX=%s: err = %v", mode, err)
 		}
 	}
 
 	if runtime.GOOS != "linux" {
-		if _, err := newChildRunners(context.Background(), in, t.TempDir(), "bwrap", "", 1<<30); err == nil {
+		if _, err := newChildRunners(context.Background(), in, t.TempDir(), "bwrap", 1<<30); err == nil {
 			t.Error("bwrap was accepted outside Linux")
 		}
 	}
@@ -34,7 +34,7 @@ func TestChildRunnersNeedPrlimitOnLinux(t *testing.T) {
 
 	t.Setenv("PATH", t.TempDir())
 
-	_, err := newChildRunners(context.Background(), &ffmpeg.Installation{CPUCount: 2}, t.TempDir(), "", "", 1<<30)
+	_, err := newChildRunners(context.Background(), &ffmpeg.Installation{CPUCount: 2}, t.TempDir(), "", 1<<30)
 	if err == nil || !strings.Contains(err.Error(), "util-linux") {
 		t.Errorf("err = %v, want a boot error naming util-linux", err)
 	}
@@ -46,7 +46,7 @@ func TestChildRunnersWithoutLimitsOutsideLinux(t *testing.T) {
 		t.Skip("covered by the Linux tests of engine/ffmpeg")
 	}
 
-	got, err := newChildRunners(context.Background(), &ffmpeg.Installation{CPUCount: 2}, t.TempDir(), "none", "", 1<<30)
+	got, err := newChildRunners(context.Background(), &ffmpeg.Installation{CPUCount: 2}, t.TempDir(), "none", 1<<30)
 	if err != nil {
 		t.Fatal(err)
 	}
