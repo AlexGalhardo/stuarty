@@ -39,7 +39,7 @@ func refs(v any, out *[]string) {
 	}
 }
 
-func TestOpenAPIDocumentListsEveryRouteOfTheRouter(t *testing.T) {
+func TestRoutesMatchOpenAPI(t *testing.T) {
 	t.Parallel()
 
 	h := newHarness(t)
