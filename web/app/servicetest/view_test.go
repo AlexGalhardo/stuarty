@@ -102,7 +102,7 @@ func TestPlanWindowAndBitmapKeys(t *testing.T) {
 	project := m.exportable() // one text of 1 s at 30 fps, revision 2
 	ctx := m.as(ui)
 
-	w, err := m.svc.PlanWindow(ctx, service.PlanWindowRequest{ProjectID: project, From: 0, To: 30})
+	w, err := m.svc.PlanWindow(ctx, service.PlanWindowRequest{ProjectID: project, From: 0, Until: 30})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,10 +130,10 @@ func TestPlanWindowAndBitmapKeys(t *testing.T) {
 	}
 
 	for name, req := range map[string]service.PlanWindowRequest{
-		"empty":    {ProjectID: project, From: 5, To: 5},
-		"backward": {ProjectID: project, From: 9, To: 3},
-		"too long": {ProjectID: project, From: 0, To: 301},
-		"negative": {ProjectID: project, From: -1, To: 3},
+		"empty":    {ProjectID: project, From: 5, Until: 5},
+		"backward": {ProjectID: project, From: 9, Until: 3},
+		"too long": {ProjectID: project, From: 0, Until: 301},
+		"negative": {ProjectID: project, From: -1, Until: 3},
 	} {
 		if _, err := m.svc.PlanWindow(ctx, req); err == nil {
 			t.Errorf("%s: accepted", name)
@@ -150,7 +150,7 @@ func TestSecurity_BitmapKeyIsScopedToItsProject(t *testing.T) {
 
 	ctx := m.as(ui)
 
-	w, err := m.svc.PlanWindow(ctx, service.PlanWindowRequest{ProjectID: a, From: 0, To: 30})
+	w, err := m.svc.PlanWindow(ctx, service.PlanWindowRequest{ProjectID: a, From: 0, Until: 30})
 	if err != nil {
 		t.Fatal(err)
 	}

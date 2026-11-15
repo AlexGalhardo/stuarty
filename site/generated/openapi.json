@@ -5736,7 +5736,7 @@
           {
             "description": "The end of the window, not included; at most 300 frames after from.",
             "in": "query",
-            "name": "to",
+            "name": "until",
             "required": true,
             "schema": {
               "type": "integer"
@@ -5927,7 +5927,7 @@
           },
           {
             "in": "query",
-            "name": "to",
+            "name": "until",
             "schema": {
               "type": "string"
             }

@@ -435,7 +435,7 @@ Both operations use the compositor, so they show what the export produces.
 
 The browser never evaluates the document. It asks for plan windows:
 
-`GET /api/v1/projects/{id}/plan?from=<frame>&to=<frame>&rev=<revision>` returns:
+`GET /api/v1/projects/{id}/plan?from=<frame>&until=<frame>&rev=<revision>` returns:
 
 ```json
 {

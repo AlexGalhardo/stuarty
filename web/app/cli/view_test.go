@@ -92,7 +92,7 @@ func TestViewSheetUsesUntilAndTimes(t *testing.T) {
 		t.Fatalf("exit %d: %s%s", code, h.stdout.String(), h.stderr.String())
 	}
 
-	if f.sheet.From != "1s" || f.sheet.To != "3s" || f.sheet.Count != 5 || f.sheet.Cols != 2 {
+	if f.sheet.From != "1s" || f.sheet.Until != "3s" || f.sheet.Count != 5 || f.sheet.Cols != 2 {
 		t.Errorf("request = %+v", f.sheet)
 	}
 

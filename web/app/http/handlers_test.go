@@ -281,7 +281,7 @@ func TestPlanRouteAnswersTheWindowOfSDD004(t *testing.T) {
 	h := newHarness(t)
 	id := h.newProject("plan")
 
-	res := h.get("/api/v1/projects/" + id + "/plan?from=0&to=30")
+	res := h.get("/api/v1/projects/" + id + "/plan?from=0&until=30")
 	body := res.json(t)
 
 	ok := res.status == http.StatusOK && body["revision"] == float64(0) && body["end_frame"] == float64(0)
@@ -291,11 +291,11 @@ func TestPlanRouteAnswersTheWindowOfSDD004(t *testing.T) {
 		t.Errorf("plan = %d %s", res.status, res.body)
 	}
 
-	if res := h.get("/api/v1/projects/" + id + "/plan?from=0&to=30&rev=4"); res.status != http.StatusConflict {
+	if res := h.get("/api/v1/projects/" + id + "/plan?from=0&until=30&rev=4"); res.status != http.StatusConflict {
 		t.Errorf("a stale rev = %d, want 409", res.status)
 	}
 
-	if res := h.get("/api/v1/projects/" + id + "/plan?from=0&to=900"); res.status != http.StatusBadRequest {
+	if res := h.get("/api/v1/projects/" + id + "/plan?from=0&until=900"); res.status != http.StatusBadRequest {
 		t.Errorf("a window of 900 frames = %d, want 400", res.status)
 	}
 

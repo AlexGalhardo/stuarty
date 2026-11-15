@@ -27,7 +27,7 @@ type sheetIn struct {
 	ID        string `json:"id"                   validate:"required"`
 	Times     string `json:"times,omitempty"                          doc:"Comma-separated times, 2 to 16."`
 	From      string `json:"from,omitempty"`
-	To        string `json:"to,omitempty"`
+	Until     string `json:"until,omitempty"`
 	Count     int    `json:"count,omitempty"`
 	Cols      int    `json:"cols,omitempty"`
 	Rev       int64  `json:"rev,omitempty"                            doc:"Must be the current revision when given."`
@@ -65,7 +65,7 @@ func (h *apiHandler) projectsSheet(c *web.Ctx, in sheetIn) (noIn, error) {
 	}
 
 	res, err := h.Service.ViewSheet(c.Context(), service.ViewSheetRequest{
-		ProjectID: in.ID, Times: times, From: in.From, To: in.To, Count: in.Count, Cols: in.Cols,
+		ProjectID: in.ID, Times: times, From: in.From, Until: in.Until, Count: in.Count, Cols: in.Cols,
 		AssetID: in.AssetID, MaxTokens: in.MaxTokens,
 	})
 	if err != nil {
@@ -153,10 +153,10 @@ type bitmapIn struct {
 }
 
 type planIn struct {
-	ID   string `json:"id"             validate:"required"`
-	From int    `json:"from,omitempty"                     doc:"The first frame of the window; default 0."`
-	To   int    `json:"to"             validate:"required" doc:"The end of the window, not included; at most 300 frames after from."`
-	Rev  int64  `json:"rev,omitempty"                      doc:"Must be the current revision when given."`
+	ID    string `json:"id"             validate:"required"`
+	From  int    `json:"from,omitempty"                     doc:"The first frame of the window; default 0."`
+	Until int    `json:"until"          validate:"required" doc:"The end of the window, not included; at most 300 frames after from."`
+	Rev   int64  `json:"rev,omitempty"                      doc:"Must be the current revision when given."`
 }
 
 // projectsPlan is GET /projects/{id}/plan (SDD-004 section 10).
@@ -165,7 +165,10 @@ func (h *apiHandler) projectsPlan(c *web.Ctx, in planIn) (service.PlanWindowResu
 		return service.PlanWindowResult{}, err
 	}
 
-	res, err := h.Service.PlanWindow(c.Context(), service.PlanWindowRequest{ProjectID: in.ID, From: in.From, To: in.To})
+	res, err := h.Service.PlanWindow(
+		c.Context(),
+		service.PlanWindowRequest{ProjectID: in.ID, From: in.From, Until: in.Until},
+	)
 	if res != nil {
 		revisionHeader(c, res.Revision)
 	}

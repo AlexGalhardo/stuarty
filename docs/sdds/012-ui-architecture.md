@@ -270,7 +270,7 @@ One typed function per endpoint of SDD-000 §1 that the UI uses, in `editor/api/
 | `listMedia(id)` | `GET /projects/{id}/media` (gap) | `MediaEntry[]` | P |
 | `inspectMedia(id, asset)` | `GET /projects/{id}/media/{asset_id}` | text and facts | A |
 | `trashMedia`, `restoreMedia` | `POST .../trash`, `.../restore` | | A |
-| `getPlan(id, from, to, rev)` | `GET /projects/{id}/plan?from=&to=&rev=` (SDD-004 §10) | `PlanWindow` | P |
+| `getPlan(id, from, until, rev)` | `GET /projects/{id}/plan?from=&until=&rev=` (SDD-004 §10) | `PlanWindow` | P |
 | `frameUrl(id, at, width, rev)` | `GET /projects/{id}/frame?at=<time string>&width=<px>&rev=<n>` (mirrors SDD-003) | JPEG, used as `<img src>` | P |
 | `getLint(id)` | `GET /projects/{id}/lint` | findings | P |
 | `getSnapPoints(id, rev, words)` | `GET /projects/{id}/snap-points?rev=&words=` (gap) | `SnapPoints` (§7.8) | A |
@@ -1494,7 +1494,7 @@ Each item is something the UI needed that SDD-000 did not list when this documen
 | B1 | `SnapPoints` operation | `GET /api/v1/projects/{id}/snap-points?rev=<n>&words=<0 or 1>`, scope `read`, phase A; response of §7.8; cached by revision; MCP not needed | 7.8 |
 | B2 | `MediaList` operation | `GET /api/v1/projects/{id}/media`, scope `read`, phase P; returns `MediaEntry[]` of §13.2 including assets still ingesting or failed (they are not in the document, SDD-001 §3.2), with `duration_frames` and `duration_seconds` | 13 |
 | B3 | `JobList` operation | `GET /api/v1/projects/{id}/jobs?state=<list>`, scope `read`, phase P; lets a reloaded UI find a running export | 14 |
-| B4 | Plan endpoint in SDD-000 | `GET /projects/{id}/plan?from=&to=&rev=` (defined in SDD-004 §10) is missing from the table of SDD-000 §1; add it | 11 |
+| B4 | Plan endpoint in SDD-000 | `GET /projects/{id}/plan?from=&until=&rev=` (defined in SDD-004 §10) is missing from the table of SDD-000 §1; add it | 11 |
 | B5 | `safe_area` in the plan window | top-level `"safe_area": [x, y, w, h]` in project pixels, computed by `SafeArea` (SDD-004 §4.1, §10) | 11.6 |
 | B6 | Binary endpoints | `GET /api/v1/projects/{id}/media/{asset_id}/thumbnail` (`width` 160, 320 or 640), `.../strip` (one sprite image; its layout `tile_w`, `tile_h`, `columns`, `count`, `interval_ms` comes in the media entry, SDD-011 §6.5, SDD-003 §2.6), `.../peaks` (the binary file of SDD-011 §4.6, read as an `ArrayBuffer`, not JSON), `.../proxy`, `GET /api/v1/projects/{id}/bitmaps/{key}` (SDD-000 §1), and `GET /api/v1/jobs/{job_id}/file` (export download, Range, Prototype); all content-hash cached (ADR-0017 item 8) | 4.2 |
 | B7 | `Fonts` operation | `GET /api/v1/fonts`: `[{family, weights[], bundled}]` for the font selects | 12 |

@@ -587,7 +587,7 @@ type ViewSheetRequest struct {
 	ProjectID string   `json:"project_id"`
 	Times     []string `json:"times,omitempty"`    // explicit times, 2 to 16; exclusive with From, To, Count
 	From      string   `json:"from,omitempty"`     // default "0s"
-	To        string   `json:"to,omitempty"`       // inclusive (both ends are shown); default: the last frame of the timeline (or asset)
+	Until     string   `json:"until,omitempty"`    // inclusive (both ends are shown); default: the last frame of the timeline (or asset)
 	Count     int      `json:"count,omitempty"`    // default 9; 2 to 16
 	Cols      int      `json:"cols,omitempty"`     // default ceil(sqrt(count)); CLI and HTTP only
 	AssetID   string   `json:"asset_id,omitempty"`
@@ -862,11 +862,11 @@ type File struct {
 ```
 
 ```go
-// PlanWindowRequest asks for the render plan of frames From up to, not including, To of the current revision (SDD-004 §10).
+// PlanWindowRequest asks for the render plan of frames From up to, not including, Until of the current revision (SDD-004 §10).
 type PlanWindowRequest struct {
 	ProjectID string `json:"project_id"`
 	From      int    `json:"from"` // frame, 0 or more
-	To        int    `json:"to"`   // frame; To > From and To-From <= plan.MaxWindow (300), else E_VALIDATION with path `to`
+	Until     int    `json:"until"` // frame; Until > From and Until-From <= plan.MaxWindow (300), else E_VALIDATION with path `until`
 }
 
 // PlanWindowResult is core/plan.WindowPlan; Revision is the revision it was read at.
@@ -2215,7 +2215,7 @@ The package is `web/app/mcp` (`mcp.New`, `mcp.Handler` for `POST /mcp`, `mcp.Run
 - **Built:** `project_list`, `project_create`, `project_get`, `edit`, `command_help`, `history` (list, undo and redo), `lint`. Arguments are validated against the `inputSchema` with the validator of ADR-0014 (`santhosh-tekuri/jsonschema/v6`); a failure is `E_VALIDATION` with the path and the constraint, never the value, and a bad `operations[].op` is `E_UNKNOWN_COMMAND`. A result is the text as the one content block and the result struct as structured content without `text` and without the document of `project_get`; an error is `isError` with the text of §3.9 (no details line) and the envelope on one line, `details.diff` cut first when it exceeds 4,000 characters. The edit and error texts are shared with the CLI (`service/render.go`).
 - **`project_trash`** (`ProjectTrash`, or `ProjectRestore` with `restore` true) is registered because both operations exist in the Service and the HTTP API, so `tools/list` holds 13 tools until `JobCancel` and the template operations land (P2-AGT-001 closes the list at 15). `TestMCPTrashRestore` shows the revision unchanged after a round trip.
 - **`job_cancel`** (`JobCancel`) and the command `job:cancel <job id>` are registered; `job:cancel` exits 0 for a job that ends cancelled (unlike `job:show`, where a cancelled job is exit 1), because the caller asked for it. `tools/list` holds 14 tools; `template` is the one still missing from the 15.
-- **`view` takes `until`, not `to`** on MCP, as the CLI does (`TestNoOutboundTools` forbids an argument named `to`, SDD-007 T10). The adapter maps it to `ViewSheetRequest.To`; the Service field and the HTTP query parameter `to` of `GET /projects/{id}/sheet` and `/plan` are still `to`, and the Service owner has to rename them for the T10 enumeration of HTTP routes to pass.
+- **`view` takes `until`, not `to`** on MCP, as the CLI does (`TestNoOutboundTools` forbids an argument named `to`, SDD-007 T10). The adapter maps it to `ViewSheetRequest.Until`; the Service field, the error `path` and the HTTP query parameter of `GET /projects/{id}/sheet` and `/plan` are `until` too, which the T10 enumeration of HTTP routes needs.
 - **`media:trash` and `media:restore`** (`MediaTrash`, `MediaRestore`) take `<asset id> --project <id>` and `--dry-run`; `TestCLITrashNeverDeletes` counts the files of the workspace before and after. `TestCLIJSONPurity` runs every command over 9 argument shapes against a service that succeeds and one that fails (about 450 invocations) and checks one JSON document on standard output and nothing on standard error. Not built, because the Service has no such operation yet: `template:export`, `template:import`, `transcribe`, `doctor`, `fonts`, `audit`, `tools:install` (P2-AGT-002).
 - **`template`** serves the actions whose Service operations exist: `list`, `save` and `new` (`TemplateList`, `TemplateSave`, `TemplateInstantiate`). The phase filter cuts `export` and `import` from the `action` enum and the `path` member from the schema of the build (`filterTemplateActions`); `TestDefinitionsMatchTheSDD` compares the file, which is the full §4.2 object. A member the action does not use, or a missing required one, is `E_VALIDATION` with the member as `path`. With it `tools/list` holds the 15 tools and `TestToolDefinitionBudget` passes. The commands are `template:list`, `template:save` and `template:new` (`--fill <file|->`, one JSON object of slot name to value).
 - **Thin adapters:** `view` (`ViewFrame` or `ViewSheet`, the only tool that returns an `image` block; `mcp.Pending` is empty). `media_import`, `media_inspect` (a list without `asset_id`), `job_start` and `job_get` (a job list with `project_id`) are thin adapters over `MediaImport`, `MediaInspect`/`MediaList`, `JobStart` and `JobGet`/`JobList`; `media_import` waits 10,000 ms when `wait_ms` is absent. The tests of `TestSecurity_T07_TranscriptDelimitedAndTruncated` (transcription is not in the Prototype build, `media_inspect` says `transcript: none yet`) is skipped with the reason named.
@@ -2544,8 +2544,8 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `media.trash` | `POST /projects/{id}/media/{asset_id}/trash` | `dry_run` | none | 200 `MediaStateResult` | media | none |
 | `media.restore` | `POST /projects/{id}/media/{asset_id}/restore` | `dry_run` | none | 200 `MediaStateResult` | media | none |
 | `projects.frame` | `GET /projects/{id}/frame` | `at`, `rev`, `asset_id`, `max_tokens`, `width` | none | 200 `image/jpeg` (§6.5) | read | 400 `E_INVALID_TIME`; 409 `E_INVALID_STATE` when `rev` is given and is not the current revision (`details.current_revision`); 422 `E_LIMIT_EXCEEDED` |
-| `projects.sheet` | `GET /projects/{id}/sheet` | `times`, `from`, `to`, `count`, `cols`, `rev`, `asset_id`, `max_tokens` | none | 200 `image/jpeg` | read | as frame |
-| `projects.plan` | `GET /projects/{id}/plan` | `from`, `to`, `rev` (SDD-004 §10) | none | 200 `PlanWindowResult` | read | 409 `E_INVALID_STATE` as frame |
+| `projects.sheet` | `GET /projects/{id}/sheet` | `times`, `from`, `until`, `count`, `cols`, `rev`, `asset_id`, `max_tokens` | none | 200 `image/jpeg` | read | as frame |
+| `projects.plan` | `GET /projects/{id}/plan` | `from`, `until`, `rev` (SDD-004 §10) | none | 200 `PlanWindowResult` | read | 409 `E_INVALID_STATE` as frame |
 | `projects.snap_points` | `GET /projects/{id}/snap-points` | `rev`, `words` (SDD-012 §7.8) | none | 200 `SnapPointsResult` | read | 409 `E_INVALID_STATE` as frame |
 | `projects.lint` | `GET /projects/{id}/lint` | `severity`, `cursor`, `limit` | none | 200 `LintResult` | read | none |
 | `jobs.start` | `POST /projects/{id}/jobs` | none | `{kind, args?, wait_ms?, dry_run?}` | 202 `Job` | render (export), media (transcribe) | 422 `E_LINT_BLOCKING`; 429 `E_QUEUE_FULL`; 503 `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER` |

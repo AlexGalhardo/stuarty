@@ -13,11 +13,11 @@ import (
 )
 
 // PlanWindowRequest asks for the render plan of frames From up to, not
-// including, To (SDD-004 section 10).
+// including, Until (SDD-004 section 10).
 type PlanWindowRequest struct {
 	ProjectID string `json:"project_id"`
 	From      int    `json:"from"`
-	To        int    `json:"to"`
+	Until     int    `json:"until"`
 }
 
 // PlanWindowResult is the compact plan of a window; Revision is the revision it
@@ -85,9 +85,9 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 		return nil, err
 	}
 
-	if req.From < 0 || req.To <= req.From || req.To-req.From > plan.MaxWindow {
+	if req.From < 0 || req.Until <= req.From || req.Until-req.From > plan.MaxWindow {
 		return nil, newError(command.CodeValidation, "the window %d to %d is not 1 to %d frames from frame 0.",
-			req.From, req.To, plan.MaxWindow).withPath("to")
+			req.From, req.Until, plan.MaxWindow).withPath("until")
 	}
 
 	row, lerr := s.loadProject(ctx, c, req.ProjectID)
@@ -102,11 +102,11 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 
 	opts := plan.Options{Measure: raster.Measure(raster.Bundled())}
 
-	w := plan.WindowWith(doc, req.From, req.To, opts)
+	w := plan.WindowWith(doc, req.From, req.Until, opts)
 	w.Revision = row.Revision
 
 	// The bitmaps of the window can be asked for by key from now on.
-	for t := req.From; t < req.To; t++ {
+	for t := req.From; t < req.Until; t++ {
 		layers := plan.FrameWith(doc, t, opts).Layers
 		for i := range layers {
 			if layers[i].Bitmap != nil {
