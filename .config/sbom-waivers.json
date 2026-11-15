@@ -1,0 +1,28 @@
+{
+	"waivers": [
+		{
+			"package": "modernc.org/libc",
+			"claimed": "GPL-2.0-only",
+			"shipped": "BSD-3-Clause",
+			"path": "licenses/go-modules/modernc.org/libc@v1.79.0/LICENSE",
+			"sha256": "95ff867eb55a56935fa7492406cfa953fb7c13ca73f4c0a86ae05756b4605600",
+			"reason": "The module licence is BSD-3-Clause (its LICENSE-3RD-PARTY.md lists only MIT and BSD parts); the scanner read GPL and GCC header comments of generated constant files in subpackages the product does not link."
+		},
+		{
+			"package": "github.com/AlexGalhardo/vukem-video",
+			"claimed": "LGPL-3.0-only",
+			"shipped": "MIT",
+			"path": "LICENSE.md",
+			"sha256": "6b9967fb7044a51f79741e1f04aa6852852344bf0a574f29d49ebf7646fe2ab7",
+			"reason": "The product is MIT; the scanner aggregated the whole licenses/ folder, which holds the LGPL-3.0 text of the separate FFmpeg program."
+		},
+		{
+			"package": "github.com/modelcontextprotocol/go-sdk",
+			"claimed": "CC-BY-4.0",
+			"shipped": "Apache-2.0 AND MIT",
+			"path": "licenses/go-modules/github.com/modelcontextprotocol/go-sdk@v1.8.0/LICENSE",
+			"sha256": "af679003d933f045393a6a029f43da113f9ae364eac651d9ae268392985580f5",
+			"reason": "The code is Apache-2.0 (new work) or MIT (older contributions); CC-BY-4.0 covers only the documentation, which is not shipped."
+		}
+	]
+}

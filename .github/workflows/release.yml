@@ -365,6 +365,37 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh workflow run site.yml --repo "$GITHUB_REPOSITORY" --ref main
 
+  # The supply-chain audit of what was published (SDD-009 section 20 item 20): licences, notices in every
+  # installer, archive size. It reads the release back from GitHub, so it also proves the uploaded files.
+  audit:
+    needs: [goreleaser, image]
+    if: ${{ !cancelled() && needs.goreleaser.result == 'success' && needs.image.result != 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      TAG: ${{ needs.goreleaser.outputs.tag }}
+      STABLE: ${{ needs.goreleaser.outputs.stable }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ needs.goreleaser.outputs.tag }}
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      # innoextract opens the Inno Setup installers, which 7z cannot; 7z is on the runner image.
+      - name: Install innoextract
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends innoextract
+      - name: Audit the release
+        run: |
+          flags=""
+          [ "$STABLE" = "true" ] || flags="--no-image"
+          bash scripts/release-audit.sh "$TAG" $flags
+
   image:
     needs: goreleaser
     if: needs.goreleaser.outputs.stable == 'true'

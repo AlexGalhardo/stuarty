@@ -36,7 +36,7 @@ func TestAuditExprs(t *testing.T) {
 
 	var out bytes.Buffer
 
-	n, err := auditExprs(strings.NewReader("a\tMIT\nb\tGPL-3.0-only\nISC\nc\tNOASSERTION\n"), &out)
+	n, err := auditExprs(strings.NewReader("a\tMIT\nb\tGPL-3.0-only\nISC\nc\tNOASSERTION\n"), &out, nil)
 	if err != nil || n != 2 {
 		t.Fatalf("n = %d, err = %v", n, err)
 	}
@@ -52,6 +52,7 @@ func TestAuditTree(t *testing.T) {
 	root := t.TempDir()
 	put(t, root, "licenses/go-modules/a@v1/LICENSE", mitText)
 	put(t, root, "licenses/go-modules/a@v1/NOTICE", "anything")
+	put(t, root, "licenses/README.md", "how this folder is laid out")
 	put(t, root, "licenses/fonts/Inter-OFL.txt", ofl)
 	put(t, root, "licenses/programs/ffmpeg/LICENSE.txt", "GNU Lesser General Public License\nVersion 3, 29 June 2007")
 	put(t, root, "licenses/go-modules/gpl@v1/COPYING", gplText)

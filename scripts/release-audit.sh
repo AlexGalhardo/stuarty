@@ -14,10 +14,15 @@
 # The container image is read with docker (REF defaults to ghcr.io/alexgalhardo/vukem-video:X.Y.Z); without a
 # docker daemon, or with --no-image, it is reported as not inspected.
 #
-# An artifact that cannot be opened here (the Inno Setup .exe needs innoextract) is reported as not inspected;
-# --strict turns every "not inspected" and every "unknown (scanner)" SBOM licence into a failure.
+# The Inno Setup .exe is opened with innoextract, a CLI like 7z (apt install innoextract). An artifact that cannot
+# be opened here is reported as not inspected; --strict turns every "not inspected" and every "unknown (scanner)"
+# SBOM licence (a LicenseRef-* or NOASSERTION) into a failure.
+#
+# A reviewed waiver (.config/sbom-waivers.json, SDD-009 section 20) turns a wrong SBOM scanner claim into a
+# "WAIVED" note while the text it names, inside the archive of that SBOM, still has the recorded sha256; when the
+# text changes the waiver expires and the line is a finding again.
 # Exit codes: 0 clean, 1 a finding, 2 usage or a missing tool.
-# Needs: go, jq, tar, unzip, 7z (or 7zz) for .deb/.pkg/.AppImage, and gh for a tag.
+# Needs: go, jq, tar, unzip, 7z (or 7zz) for .deb/.pkg/.AppImage, innoextract for the .exe (optional), and gh for a tag.
 set -euo pipefail
 
 repo="AlexGalhardo/vukem-video"
@@ -67,6 +72,10 @@ for c in 7z 7zz; do
 	fi
 done
 
+innoextract=""
+command -v innoextract >/dev/null 2>&1 && innoextract="innoextract"
+waivers="$root/.config/sbom-waivers.json"
+
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
@@ -112,6 +121,11 @@ unpack() {
 	case "$file" in
 	*.tar.gz) tar -xzf "$file" -C "$out" ;;
 	*.zip) unzip -q -o "$file" -d "$out" ;;
+	*.exe)
+		[ -n "$innoextract" ] || return 1
+		"$innoextract" --silent --output-dir "$out" "$file" >/dev/null 2>&1 || true
+		[ -n "$(find "$out" -type f -print -quit)" ] || return 1
+		;;
 	*)
 		[ -n "$sevenzip" ] || return 1
 		# 7z exits non-zero for a squashfs symlink it cannot create on Windows; what matters is that files came out.
@@ -132,8 +146,13 @@ unpack() {
 }
 
 audit_licenses() {
-	local label="$1" tree="$2" out
-	out="$("$notices" -audit-tree "$tree" || true)"
+	local label="$1" tree="$2" out rc=0
+	# Exit 1 means findings, listed on stdout; anything else means the tool itself failed.
+	out="$("$notices" -audit-tree "$tree" 2>"$work/notices.err")" || rc=$?
+	if [ "$rc" -gt 1 ]; then
+		finding "$label: the licence text audit failed: $(head -n 1 "$work/notices.err")"
+		return
+	fi
 	if [ -n "$out" ]; then
 		while IFS=$'\t' read -r verdict subject reason; do
 			finding "$label: licence text $verdict: $subject ($reason)"
@@ -160,15 +179,35 @@ audit_extracted() {
 }
 
 audit_sbom() {
-	local file="$1" label out
+	local file="$1" label out archive wflags="" rc=0
 	label="$(basename "$file")"
+	# A waiver is checked against the text inside the archive this SBOM describes.
+	archive="${file%.sbom.json}"
+	if [ -f "$waivers" ]; then
+		wflags="-waivers $waivers"
+		if [ -f "$archive" ] && unpack "$archive" "$work/waiver/$label"; then
+			wflags="$wflags -waiver-root $work/waiver/$label"
+		fi
+	fi
 	# One line per package: the concluded licence, or the declared one when nothing was concluded.
 	out="$(jq -r '
 		(.packages[]? | [.name, (if (.licenseConcluded // "NOASSERTION") != "NOASSERTION" then .licenseConcluded else (.licenseDeclared // "NOASSERTION") end)]),
 		(.components[]? | [.name, ([.licenses[]? | (.license.id // .license.name // .expression)] | join(" AND ") | if . == "" then "NOASSERTION" else . end)])
-		| .[0] + "\t" + .[1]' "$file" | "$notices" -audit-spdx || true)"
-	[ -n "$out" ] || return 0
+		| .[0] + "\t" + .[1]' "$file" | "$notices" -audit-spdx $wflags 2>"$work/notices.err")" || rc=$?
+	if [ "$rc" -gt 1 ]; then
+		finding "$label: the SBOM licence audit failed: $(head -n 1 "$work/notices.err")"
+		rm -rf "$work/waiver/$label"
+		return 0
+	fi
+	if [ -z "$out" ]; then
+		rm -rf "$work/waiver/$label"
+		return 0
+	fi
 	while IFS=$'\t' read -r verdict subject reason; do
+		if [ "$verdict" = "waived" ]; then
+			echo "WAIVED: $label: $subject: $reason"
+			continue
+		fi
 		if [ "$verdict" = "unknown" ] && [ "$strict" -eq 0 ]; then
 			# The scanner could not identify a text: the licences/ scan of the archive is the judge.
 			echo "NOTE: $label: $subject: $reason is not identified by the SBOM scanner"
@@ -176,6 +215,7 @@ audit_sbom() {
 		fi
 		finding "$label: SBOM licence $verdict: $subject ($reason)"
 	done <<<"$out"
+	rm -rf "$work/waiver/$label"
 }
 
 echo "release-audit: ${target:-$dir}"
