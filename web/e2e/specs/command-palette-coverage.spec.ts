@@ -54,21 +54,30 @@ interface Detail {
 }
 
 interface Schema {
-	type?: string;
+	type?: string | string[];
 	properties?: Record<string, Schema>;
 	additionalProperties?: unknown;
+	oneOf?: unknown;
+	anyOf?: unknown;
 }
 
 // A sub-schema the form cannot render as a control: no type, or an object with
 // no named properties. The registry has a few; the form shows a JSON textarea
-// for each (SDD-012 9.2) and the spec names them, so a new one is noticed.
+// for each (SDD-012 9.2) and the spec names them, so a new one is noticed. A
+// oneOf is a group of variants, and [T, "null"] is the control of T.
 function fallbackPaths(schema: Schema, path: string): string[] {
-	if (schema.type === "object" && schema.properties !== undefined) {
+	if (schema.oneOf !== undefined || schema.anyOf !== undefined) return [];
+	const types = Array.isArray(schema.type)
+		? schema.type.filter((t) => t !== "null")
+		: [schema.type];
+	if (types.length !== 1) return [path];
+	const [type] = types;
+	if (type === "object" && schema.properties !== undefined) {
 		return Object.entries(schema.properties).flatMap(([name, sub]) =>
 			fallbackPaths(sub, `${path}.${name}`),
 		);
 	}
-	return schema.type === undefined || schema.type === "object" ? [path] : [];
+	return type === undefined || type === "object" ? [path] : [];
 }
 
 test.describe("command-palette-coverage form", () => {
