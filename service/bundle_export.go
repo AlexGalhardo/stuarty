@@ -28,9 +28,7 @@ type ProjectBundleExportRequest struct {
 	WaitMS     int   `json:"wait_ms,omitempty"`
 }
 
-// ProjectBundleExport starts the export job with input.format "bundle". It is not on the Service
-// interface until SDD-000 section 1 routes the operation (P3-SRV-005); callers hold the concrete
-// service for now.
+// ProjectBundleExport starts the export job with input.format "bundle" (SDD-005 section 16).
 func (s *svc) ProjectBundleExport(ctx context.Context, req ProjectBundleExportRequest) (*Job, error) {
 	c, err := authorizeScope(ctx, ScopeRender, req.ProjectID)
 	if err != nil {

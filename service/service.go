@@ -46,6 +46,8 @@ type Service interface {
 	MediaRestore(ctx context.Context, req MediaTrashRequest) (*MediaStateResult, error)
 
 	JobStart(ctx context.Context, req JobStartRequest) (*Job, error)
+	ProjectBundleExport(ctx context.Context, req ProjectBundleExportRequest) (*Job, error)
+	ProjectBundleImport(ctx context.Context, req ProjectBundleImportRequest) (*ProjectCreateResult, error)
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
 	JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)

@@ -567,3 +567,21 @@ func (c *Client) KeyRevoke(ctx context.Context, req service.KeyRevokeRequest) (*
 
 	return out, nil
 }
+
+// ProjectBundleExport implements service.Service.
+func (c *Client) ProjectBundleExport(ctx context.Context, req service.ProjectBundleExportRequest) (*service.Job, error) {
+	body := struct {
+		IncludeLog *bool `json:"include_log,omitempty"`
+		WaitMS     int   `json:"wait_ms,omitempty"`
+	}{req.IncludeLog, req.WaitMS}
+
+	return post[service.Job](ctx, c, projectPath(req.ProjectID, "/bundle"), body)
+}
+
+// ProjectBundleImport implements service.Service.
+func (c *Client) ProjectBundleImport(
+	ctx context.Context,
+	req service.ProjectBundleImportRequest,
+) (*service.ProjectCreateResult, error) {
+	return post[service.ProjectCreateResult](ctx, c, "/projects/import", req)
+}

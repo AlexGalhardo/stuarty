@@ -5933,6 +5933,65 @@
         "summary": "Create a project"
       }
     },
+    "/api/v1/projects/import": {
+      "post": {
+        "operationId": "projects.bundle.import",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "as_new": {
+                    "description": "true makes a new project id and leaves the history out; false keeps the id.",
+                    "type": "boolean"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "path": {
+                    "description": "An absolute path to a .vvbundle on the machine that runs the server.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectCreateResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import a .vvbundle as a project"
+      }
+    },
     "/api/v1/projects/{id}": {
       "get": {
         "operationId": "projects.get",
@@ -6043,6 +6102,72 @@
           }
         ],
         "summary": "Download a rasterized text or shape"
+      }
+    },
+    "/api/v1/projects/{id}/bundle": {
+      "post": {
+        "operationId": "projects.bundle.export",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "include_log": {
+                    "description": "false leaves the history out, to share a project without it. Default true.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "wait_ms": {
+                    "description": "0 to 25000: hold the call until the job is final.",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export a project as a .vvbundle"
       }
     },
     "/api/v1/projects/{id}/edit": {

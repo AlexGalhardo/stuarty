@@ -81,6 +81,14 @@ var Endpoints = []Endpoint{
 		Summary: "Read a project",
 	},
 	{
+		ID: "projects.bundle.export", Method: http.MethodPost, Path: "/projects/{id}/bundle", Scope: service.ScopeRender,
+		Service: "ProjectBundleExport", Status: 202, Summary: "Export a project as a .vvbundle",
+	},
+	{
+		ID: "projects.bundle.import", Method: http.MethodPost, Path: "/projects/import", Scope: service.ScopeEdit,
+		AlsoScope: service.ScopeMedia, Service: "ProjectBundleImport", Status: 201, Summary: "Import a .vvbundle as a project",
+	},
+	{
 		ID: "projects.trash", Method: http.MethodPost, Path: "/projects/{id}/trash", Scope: service.ScopeEdit,
 		Service: "ProjectTrash", Status: 200, Summary: "Move a project to the trash",
 	},
