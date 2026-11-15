@@ -100,7 +100,14 @@ archive)
 	trap 'rm -rf "$tmp"' EXIT
 	case "$archive" in
 	*.tar.xz) tar -xJf "$archive" -C "$tmp" ;;
-	*.zip) unzip -q "$archive" -d "$tmp" ;;
+	*.zip)
+		if command -v unzip >/dev/null 2>&1; then unzip -q "$archive" -d "$tmp"
+		else
+			# Git Bash on Windows has no unzip.
+			powershell.exe -NoProfile -NonInteractive -Command \
+				"Expand-Archive -LiteralPath '$(cygpath -w "$archive")' -DestinationPath '$(cygpath -w "$tmp")' -Force" >&2
+		fi
+		;;
 	*) die "unknown archive type: $archive" ;;
 	esac
 	bin="$(find "$tmp" -type f \( -name ffmpeg -o -name ffmpeg.exe \) | head -n 1)"
