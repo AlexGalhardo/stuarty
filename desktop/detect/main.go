@@ -7,10 +7,14 @@ package main
 import (
 	"embed"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
+	"mime"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -38,8 +42,10 @@ const (
 
 var unsafeName = regexp.MustCompile(`[^a-z0-9._-]+`)
 
-// handler builds the routes; resultsDir is where POST /results writes.
-func handler(resultsDir string) http.Handler {
+// handler builds the routes; resultsDir is where POST /results writes and port
+// is the port the server listens on, which the Host header must name (a page
+// served under another name, as in DNS rebinding, is refused).
+func handler(resultsDir, port string) http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServerFS(site))
 	mux.HandleFunc("/events", serveEvents)
@@ -48,6 +54,11 @@ func handler(resultsDir string) http.Handler {
 	})
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !hostAllowed(r.Host, port) {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+
 		w.Header().Set("Content-Security-Policy", csp)
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		mux.ServeHTTP(w, r)
@@ -100,11 +111,44 @@ func serveEvents(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// saveResults writes the posted JSON to <platform>-<webview>-<date>.json.
+// hostAllowed accepts only the two names of the loopback server.
+func hostAllowed(host, port string) bool {
+	return host == "127.0.0.1:"+port || host == "localhost:"+port
+}
+
+// sameOrigin is true for a request that the page of this server made: the
+// Origin header names this server, or, when there is none, the browser says
+// Sec-Fetch-Site: same-origin. A request with a different Origin is refused
+// even when the other header says same-origin; one with neither is refused.
+func sameOrigin(r *http.Request) bool {
+	if origin := r.Header.Get("Origin"); origin != "" {
+		return origin == "http://"+r.Host
+	}
+
+	return r.Header.Get("Sec-Fetch-Site") == "same-origin"
+}
+
+// saveResults writes the posted JSON to <platform>-<webview>-<date>.json, or
+// to the same name with a counter when that file exists. Errors are generic.
 func saveResults(w http.ResponseWriter, r *http.Request, dir string) {
+	if !sameOrigin(r) {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	// application/json is not a type a form or a no-cors request can send, so
+	// a cross-site page needs a preflight, which this server never answers.
+	if mediaType, _, err := mime.ParseMediaType(
+		r.Header.Get("Content-Type"),
+	); err != nil ||
+		mediaType != "application/json" {
+		http.Error(w, "unsupported media type", http.StatusUnsupportedMediaType)
+		return
+	}
+
 	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxBody))
 	if err != nil {
-		http.Error(w, "body too large", http.StatusRequestEntityTooLarge)
+		http.Error(w, "bad request", http.StatusRequestEntityTooLarge)
 		return
 	}
 
@@ -114,30 +158,63 @@ func saveResults(w http.ResponseWriter, r *http.Request, dir string) {
 	}
 
 	if err := json.Unmarshal(body, &head); err != nil {
-		http.Error(w, "not JSON", http.StatusBadRequest)
+		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-
-	name := fmt.Sprintf("%s-%s-%s.json", clean(head.Platform), clean(head.Webview), time.Now().Format("2006-01-02"))
 
 	if err := os.MkdirAll(dir, 0o750); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	if err := os.WriteFile(filepath.Join(dir, name), body, 0o600); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	name, err := writeNew(dir, clean(head.Platform), clean(head.Webview), body)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
 	reply, err := json.Marshal(map[string]string{"file": name})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(reply)
+}
+
+// maxCopies is how many files of one name a day may have.
+const maxCopies = 1000
+
+// writeNew creates the file with O_EXCL, so an existing file is never
+// overwritten: the name gets -2, -3 and so on.
+func writeNew(dir, platform, webview string, body []byte) (string, error) {
+	base := fmt.Sprintf("%s-%s-%s", platform, webview, time.Now().Format("2006-01-02"))
+
+	for n := 1; n <= maxCopies; n++ {
+		name := base + ".json"
+		if n > 1 {
+			name = fmt.Sprintf("%s-%d.json", base, n)
+		}
+
+		f, err := os.OpenFile(filepath.Join(dir, name), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+		if errors.Is(err, fs.ErrExist) {
+			continue
+		}
+
+		if err != nil {
+			return "", err
+		}
+
+		_, werr := f.Write(body)
+		if cerr := f.Close(); werr == nil {
+			werr = cerr
+		}
+
+		return name, werr
+	}
+
+	return "", errors.New("too many files")
 }
 
 func clean(s string) string {
@@ -160,6 +237,11 @@ func main() {
 
 	log.Printf("detect: http://%s/", *addr)
 
-	srv := &http.Server{Addr: *addr, Handler: handler(*results), ReadHeaderTimeout: 5 * time.Second}
+	_, port, err := net.SplitHostPort(*addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	srv := &http.Server{Addr: *addr, Handler: handler(*results, port), ReadHeaderTimeout: 5 * time.Second}
 	log.Fatal(srv.ListenAndServe())
 }

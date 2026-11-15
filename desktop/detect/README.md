@@ -34,7 +34,7 @@ Flags: `-addr` (default `127.0.0.1:7979`, keep it on loopback) and `-results`
 - `/events` sends events numbered 1 to 100, 10 ms apart. A connection with no
   `Last-Event-ID` is cut after 40 events, so the browser reconnects with
   `Last-Event-ID: 40` and the test checks it;
-- `POST /results` stores the posted JSON.
+- `POST /results` stores the posted JSON, and only for the page of this server: the `Host` must be `127.0.0.1:<port>` or `localhost:<port>` (every route checks it, against DNS rebinding), the `Origin` must be the server itself, or `Sec-Fetch-Site` must be `same-origin` when there is none, and the `Content-Type` must be `application/json`, which a cross-site page can send only after a preflight that the server never answers. A file is created with `O_EXCL` and never overwritten: a second result of the same day gets `-2`, `-3` and so on. Errors say only `forbidden`, `unsupported media type`, `bad request` or `internal error`.
 
 ## The fixture
 
