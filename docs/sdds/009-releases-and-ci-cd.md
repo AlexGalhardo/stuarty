@@ -490,6 +490,7 @@ Tools pinned by version in workflows: `govulncheck@v1.9.0` (`ci.yml:166`), Bette
 | `ci.yml` | CI | push to `main`, pull request, manual | Merge (required checks) |
 | `pr-title.yml` | PR title | pull request opened, edited, synchronize, reopened | Merge (required) |
 | `release.yml` | release | tag `v*`, manual with `version` | The release itself |
+| `desktop.yml` | desktop | called by `release.yml`, pull request touching `desktop/**`, manual | The desktop installers of the release (section 10.6); not required on a pull request |
 | `image.yml` | image | pull request touching the image inputs, manual | Merge when the image inputs change (not required; path-filtered) |
 | `site.yml` | Site | push to `main` and pull request touching `site/**`, `CHANGELOG.md` or the workflow; manual | The site deploy |
 | `docs-last-updated.yml` | Docs last updated | every push to `main`, every pull request, manual | Merge (required) |
@@ -588,11 +589,12 @@ Adapted from `vukem/.github/workflows/release.yml` (R14 to R24). Changes, with r
 1. Step "Install and build the web assets" and `oven-sh/setup-bun`: the binary embeds the React build (RF-200); vukem's binary has no front end.
 2. Step "Notices are current": RF-215, NFR-043.
 3. Step "Publish the release notes": NFR-044, R6, R7. Placed before GoReleaser so `keep-existing` finds the release with its notes.
-4. Provenance bundle file name `vukem-video.intoto.jsonl`; a step that asserts the asset count (15).
+4. Provenance bundle file name `vukem-video.intoto.jsonl`; a step that asserts the asset count (15 at the Prototype; 26 with the installers and the desktop application, 27 with the feed, see section 10.6).
 5. The `image` job pushes to two registries and signs and attests both digests (R22); a first step fails early and clearly when the Docker Hub secrets are missing (ADR-0025 consequences).
 6. The image build context is the local checkout (`context: .`), exactly as vukem, so `.git` is in the context and the binary reports the tag (see section 11).
 7. The `image` job builds and smoke tests the amd64 image with `load: true` before the multi-architecture push, so a broken image never reaches `latest`. At `v0.43.0` vukem pushes directly; the build-then-test-then-push order is present on vukem main after v0.43.0 and is copied from there. The smoke test is the script `scripts/image-smoke.sh`, shared with `image.yml` and `task image:smoke` (section 9.5).
 8. The hook "assert the web build output" of `.config/goreleaser.yaml` (section 10) fails the release job when the web build produced no asset, so a binary without the UI is never published.
+9. The desktop application (D-033, section 10.6): the job `desktop` (reusable workflow `desktop.yml`) builds the installers, `goreleaser` attaches them with one SBOM to the same release and to `checksums.txt` (26 assets, not 21), there is no signing or notarization step and no code signing secret. For a stable tag the job `preflight` checks the secret `UPDATE_FEED_SIGNING_KEY` and the variable `UPDATE_FEED_PUBLIC_KEY` first, the job `feed` signs and attaches `feed.json` (27 assets), and the job `pages` starts `site.yml`, which publishes the feed and the installers on GitHub Pages.
 
 ```yaml
 name: release
@@ -1137,7 +1139,7 @@ Inno Setup and appimagetool are downloaded by `scripts/fetch-installer-tool.sh`,
 
 The packaged desktop application can replace itself with a newer release. This is the only update channel of the product: the server binary, the archives and the container image never check for a version (SDD-007 section 10). The client is the package `desktop/update`, which uses the standard library only. The shell implements the install step; the release workflow produces the feed (P3-REL-004).
 
-**Open decisions, not taken here.** The production feed host, the production signing key, and the platform code signing and notarization are set by P3-REL-003, which needs the author's paid choices. Until then the feed URL and the public key are build-time configuration with a placeholder (`https://updates.example.invalid/vukem-video/feed.json`, and no key), the client refuses to run while either is a placeholder (`ErrNotConfigured`), and the tests use a key that lives in `desktop/update/testdata/` only. This document invents no host.
+**Decisions (D-033, 2026-11-15).** The feed host is GitHub Pages of the product repository (`https://alexgalhardo.github.io/vukem-video/updates/feed.json` unless the repository variable `SITE_URL` says otherwise), and the BETA has no paid code signing, so the only key is the one below. The feed URL and the public key are still build-time configuration: a build without them (a local one, a pull request build, or a pre-release made while the repository variable `UPDATE_FEED_PUBLIC_KEY` is unset) has the placeholder (`https://updates.example.invalid/vukem-video/feed.json`, and no key), the client refuses to run while either is a placeholder (`ErrNotConfigured`), and the tests use a key that lives in `desktop/update/testdata/` only. Section 10.6 says how the release builds, signs and publishes all of it.
 
 **The key.** One Ed25519 key pair signs the feed and every artifact it lists. The private key is a secret of the release workflow: never in the repository, never on a developer machine. The public key is embedded in the desktop binary at build time, together with the feed URL:
 
@@ -1176,7 +1178,7 @@ The signature is over the bytes `vukem-video-update-feed-v1\n` followed by the d
 
 - `version` is `MAJOR.MINOR.PATCH`, a stable release; a pre-release suffix is never in the feed (P3-REL-004).
 - The platform keys are `<GOOS>-<GOARCH>` (`windows-amd64`, `darwin-arm64`, `darwin-amd64`, `linux-amd64`, `linux-arm64`).
-- `url` is `https` on the feed host; any other host is refused.
+- `url` is `https` on the feed host; any other host is refused. The installers are served by the same host as the feed (GitHub Pages, `<site>/updates/<file>`), never by the release page: a release asset URL answers a redirect to another host, and the client follows no redirect and talks to one host only. The client is therefore unchanged (section 10.6).
 - The artifact signature is over `vukem-video-update-artifact-v1\n<version>\n<platform>\n<sha256>` (UTF-8, `\n` separators, no trailing newline). It binds the digest to the version and the platform, so a valid older artifact, or the artifact of another platform, cannot be offered as the new one.
 - `size` is positive and at most 1 GiB, the ceiling of the client.
 
@@ -1192,7 +1194,27 @@ The signature is over the bytes `vukem-video-update-feed-v1\n` followed by the d
 
 **The shell wiring** (`desktop/shell`, `desktop/shell/app`). The setting `update.check` is stored in `desktop.json` of the user config directory (`os.UserConfigDir()/vukem-video/`), never in the workspace; a missing or damaged file means off. The Help menu has "Check for updates" (one `CheckNow`, then a dialog: up to date, a newer version with an install question, or why the check failed) and the checkbox "Check for updates at start-up", which takes effect at the next launch. A build without the feed URL and key has no client and the menu shows that message, with the release page, instead of failing. `shell.InstallerFor(goos, quit)` picks the install step: on Windows it starts the downloaded setup program (not silent: the wizard is shown) and quits the application; on macOS and Linux it returns `ErrInstallUnsupported`, which points to the release page. The shell has no string catalogue yet, so these texts are English only.
 
-**Out of scope here.** Delta updates, release channels, silent installs, an update of the server binary or the container image, and the generation of the feed (P3-REL-004).
+**Out of scope here.** Delta updates, release channels, silent installs, and an update of the server binary or the container image. The generation of the feed is section 10.6.
+
+### 10.6 Desktop installers and the feed in the release (P3-REL-003, P3-REL-004, D-033)
+
+**No paid signing.** The BETA desktop installers carry no Apple Developer ID, no notarization and no Windows certificate (D-033), so no workflow step signs or notarizes them and no secret for it exists. Their integrity is the SHA-256 in `checksums.txt`, which cosign signs keyless, and a provenance attestation of each file. Windows SmartScreen and macOS Gatekeeper warn at first open, as for the installers of section 10.4; `site/content/docs/en/self-hosting/verify-a-release.mdx` and the install page say how to open them and how to verify the download. Paid signing is decided again before 1.0.
+
+**The installers** are built by `desktop.yml`, a reusable workflow that `release.yml` calls after `installers.yml` (it reuses its `binaries` artifact, the server binaries of the release) and that also runs for a pull request that touches `desktop/**`. The application is `desktop/shell/app` (Wails v3), built with `-tags purego` and no cgo on Linux and macOS, so one runner builds both macOS architectures; the packaging is in `desktop/packaging/`:
+
+| System | File | Tool | Contents |
+| --- | --- | --- | --- |
+| Windows 11 | `vukem-video-desktop_X.Y.Z_windows_amd64_setup.exe` | Inno Setup (`tools.env`) | `vukem-video-desktop.exe` and `vukem-video.exe` in one folder, a Start menu shortcut; the uninstall keeps the workspace |
+| Debian and Ubuntu | `vukem-video-desktop_X.Y.Z_linux_amd64.deb` | `dpkg-deb` | both programs in `/usr/lib/vukem-video-desktop/`, a link in `/usr/bin`, a desktop entry; depends on `libgtk-3-0` and `libwebkit2gtk-4.1-0`; owns no `/usr/bin/vukem-video`, so it installs next to the server package |
+| macOS | `vukem-video-desktop_X.Y.Z_darwin_amd64.dmg`, `..._arm64.dmg` | `hdiutil` | `Vukem Video.app` with the server next to the application and a link to `/Applications`; first open: control-click and Open, or `xattr -d com.apple.quarantine` |
+
+The application finds the server next to its own executable (`desktop/shell`). Each installer is installed or mounted by a smoke test that checks the files, runs `vukem-video version` and, for Windows, the uninstall; none starts the window, because a runner has no screen (the window itself is the manual run of P3-DSK-003). The release attaches the four installers and one SBOM of the application (`vukem-video-desktop_X.Y.Z.sbom.json`, syft over `desktop/shell/app`) to the same release; `release.yml` lists them in `checksums.txt` and signs it again, and the attestation of `checksums.txt` covers them. A release has 26 assets, and a stable one has 27 with `feed.json`.
+
+**The feed** (`internal/tools/updatefeed`, `scripts/update-feed.sh`, job `feed` of `release.yml`). For a stable tag only (`vX.Y.Z`; a suffix such as `-rc.1` never reaches the feed, and the tool refuses it), the job signs `feed.json` over the desktop installers of the run with the Ed25519 seed of the repository secret `UPDATE_FEED_SIGNING_KEY` (64 hex characters), proves that the signature and each artifact signature verify and that every digest equals `checksums.txt`, and attaches `feed.json` to the release. The public key is the repository variable `UPDATE_FEED_PUBLIC_KEY` (not a secret): `desktop.yml` builds it, and the feed URL, into the application with `-X`. The job `preflight` of `release.yml` runs first for a stable tag and fails within minutes, naming the missing secret or variable, and when the variable is not the public half of the secret. A pre-release or a pull request build with the variable unset has no client, and its update menu says so.
+
+**Where the feed and the installers are served.** The feed client allows one host and follows no redirect (section 10.5), and a GitHub release asset URL redirects to `objects.githubusercontent.com`, so the release page cannot serve the installers. The decision is to keep the client as it is and serve both from GitHub Pages: `site.yml` runs `scripts/update-feed.sh pages`, which copies `feed.json` and the installers it lists from the latest stable release into `<site>/updates/` after checking each against the digest of the feed, then deploys the site. `release.yml` starts `site.yml` on `main` after it attaches the feed (job `pages`), and every later deploy of the docs repeats the copy, so a docs change never removes them. Only the latest version is on Pages, which is all the feed offers; a person on an older version finds it through the feed, and the older installers stay on the release page. The Pages copy of the four installers is about 200 MB, inside the 1 GB limit of a Pages site.
+
+**Verification.** `scripts/release-verify.sh vX.Y.Z` downloads the desktop installers and runs `gh attestation verify` for each, and for a stable release fetches `feed.json` and runs `scripts/update-feed.sh verify` (the signature, every artifact signature and each digest against `checksums.txt`), then compares the release feed with the one GitHub Pages serves (`--no-pages` skips that, because Pages is deployed minutes after the release). `scripts/desktop-verify.sh` (to be run by a person who downloaded an installer) checks the SHA-256 against `checksums.txt`, the cosign signature of `checksums.txt` and the attestation; it uses neither `codesign` nor `signtool`.
 
 ## 11. The container image
 
