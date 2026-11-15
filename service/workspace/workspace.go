@@ -46,7 +46,7 @@ func Resolve(getenv func(string) string) (Dir, error) {
 		return "", fmt.Errorf("workspace: %w", err)
 	}
 	if strings.ContainsAny(abs, "?#%") {
-		return "", fmt.Errorf("workspace: the path %q holds ?, # or %%; choose another with %s", abs, EnvHome)
+		return "", fmt.Errorf("%w: %q holds ?, # or %%; choose another with %s", ErrUnusablePath, abs, EnvHome)
 	}
 
 	if err := os.MkdirAll(abs, 0o700); err != nil {
@@ -93,6 +93,10 @@ func (e *Error) Error() string {
 }
 
 func (e *Error) Unwrap() error { return e.Err }
+
+// ErrUnusablePath is returned when the workspace path holds a character that breaks the database
+// URL (?, # or %). The wrapped text names the path; an answer to a person must not.
+var ErrUnusablePath = errors.New("workspace: the path breaks the database URL")
 
 // ErrLocked is returned by TryLock when another process holds the lock.
 var ErrLocked = errors.New("workspace: locked by another process")

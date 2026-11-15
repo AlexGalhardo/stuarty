@@ -23,6 +23,14 @@ func StartupError(err error) error {
 		}
 	}
 
+	if errors.Is(err, workspace.ErrUnusablePath) {
+		return &service.Error{
+			Code:    command.CodeInvalidState,
+			Message: "the workspace path holds a character that breaks the database URL: ?, # or %.",
+			Hint:    "Choose a workspace folder whose path has none of them, with " + workspace.EnvHome + ".",
+		}
+	}
+
 	if errors.Is(err, workspace.ErrTokenPermissions) {
 		return &service.Error{
 			Code:    command.CodeInvalidState,

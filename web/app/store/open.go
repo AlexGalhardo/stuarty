@@ -70,11 +70,7 @@ func Open(ctx context.Context, dir workspace.Dir, o Options) (*Store, error) {
 
 	path := filepath.ToSlash(dir.Path("db.sqlite"))
 	if i := strings.IndexAny(path, "?#%"); i >= 0 {
-		return nil, fmt.Errorf(
-			"store: the workspace path holds %q, which breaks the database URL; choose another with %s",
-			path[i],
-			workspace.EnvHome,
-		)
+		return nil, fmt.Errorf("%w: it holds %q", workspace.ErrUnusablePath, path[i])
 	}
 	if err := touchPrivate(dir.Path("db.sqlite")); err != nil {
 		return nil, err
