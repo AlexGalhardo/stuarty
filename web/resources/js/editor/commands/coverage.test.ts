@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 
 import registry from "@/generated/commands.json";
 import { type BuildPhase, isPhaseAtLeast } from "../boot/phase";
-import betaRegistry from "../fixtures/beta-commands.json";
 import {
 	addAudioOperations,
 	addClipOperations,
@@ -70,19 +69,11 @@ interface RegistryEntry {
 	phase: string;
 }
 
-// The committed snapshot is the ALPHA build (the default registry exposes up to
-// ALPHA), so the six BETA commands come from a fixture of the BETA registry,
-// until a BETA build regenerates the snapshot. A name in both is counted once.
-const alphaCommands = registry as RegistryEntry[];
-const alphaNames = new Set(alphaCommands.map((c) => c.name));
-const commands: RegistryEntry[] = [
-	...alphaCommands,
-	...(betaRegistry as RegistryEntry[]).filter((c) => !alphaNames.has(c.name)),
-];
+const commands = registry as RegistryEntry[];
 const byName = new Map(commands.map((c) => [c.name, c]));
 
-// The build phase this editor ships: ALPHA (SDD-012 section 9.3 rule 3).
-const BUILD: BuildPhase = "alpha";
+// The build phase this editor ships: BETA (SDD-012 section 9.3 rule 3).
+const BUILD: BuildPhase = "beta";
 
 const LETTER: Readonly<Record<string, BuildPhase>> = {
 	P: "prototype",
