@@ -4,7 +4,7 @@ Vukem Video handles people's footage and is driven by AI agents, so security rep
 
 ## Supported versions
 
-There is no release yet (the product is in the Prototype phase). Once releases exist, the supported version is the latest minor of the current major; during 0.x it is the latest 0.x minor. Older versions are not supported.
+The supported version is the latest minor of the current major; during 0.x it is the latest 0.x minor. Older versions are not supported.
 
 | Version | Supported |
 | --- | --- |
@@ -61,7 +61,7 @@ Good-faith research on your own installation is welcome. Do not access other peo
 
 ## Verifying releases
 
-Each release has `checksums.txt`, a keyless signature bundle `checksums.txt.sigstore.json`, an SPDX SBOM per archive and build provenance attestations. No long-lived signing key exists: the certificate is bound to the release workflow and the release tag. There is no release yet; these commands apply from the first one.
+Each release has `checksums.txt`, a keyless signature bundle `checksums.txt.sigstore.json`, an SPDX SBOM per archive and build provenance attestations. No long-lived signing key exists: the certificate is bound to the release workflow and the release tag.
 
 ```sh
 cosign verify-blob checksums.txt \
