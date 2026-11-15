@@ -1,0 +1,205 @@
+package mcp
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"reflect"
+	"strings"
+
+	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/santhosh-tekuri/jsonschema/v6"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
+)
+
+// callFunc is the body of a tool: it decodes its arguments, calls one Service
+// method and returns the result with its text.
+type callFunc func(ctx context.Context, svc service.Service, args json.RawMessage) (*toolOutput, error)
+
+// toolOutput is what a tool returns: the Service result (for structured
+// content) and the readable text (for content).
+type toolOutput struct {
+	value any
+	text  string
+}
+
+// parseArguments validates the arguments against the inputSchema of the tool
+// (SDD-003 section 4.1). A failure is E_VALIDATION with the path of the first
+// invalid value and the constraint that failed, never the value (SDD-003
+// section 1.2 rule 9); a bad operations[].op is E_UNKNOWN_COMMAND.
+func parseArguments(d *definition, raw json.RawMessage) (json.RawMessage, error) {
+	raw = rawOrEmpty(raw)
+
+	inst, err := jsonschema.UnmarshalJSON(strings.NewReader(string(raw)))
+	if err != nil {
+		return nil, &service.Error{Code: command.CodeValidation, Message: "the arguments are not a JSON object."}
+	}
+
+	if err := d.input.Validate(inst); err != nil {
+		return nil, validationFailure(err)
+	}
+
+	return raw, nil
+}
+
+func validationFailure(err error) error {
+	ve, ok := err.(*jsonschema.ValidationError) //nolint:errorlint // the validator returns it unwrapped
+	if !ok {
+		return &service.Error{Code: command.CodeValidation, Message: "the arguments are not valid."}
+	}
+
+	leaf := ve
+	for len(leaf.Causes) > 0 {
+		leaf = leaf.Causes[0]
+	}
+
+	path := formatPath(leaf.InstanceLocation)
+	constraint := "schema"
+
+	if kp := leaf.ErrorKind.KeywordPath(); len(kp) > 0 {
+		constraint = kp[len(kp)-1]
+	}
+
+	code := command.CodeValidation
+	if len(leaf.InstanceLocation) == 3 && leaf.InstanceLocation[0] == "operations" && leaf.InstanceLocation[2] == "op" {
+		code = command.CodeUnknownCommand
+	}
+
+	return &service.Error{
+		Code: code, Path: path,
+		Message: fmt.Sprintf("the argument %q breaks the constraint %q.", path, constraint),
+		Hint:    "check the tool definition; command_help lists the operations",
+	}
+}
+
+// formatPath writes an instance location as operations[2].op.
+func formatPath(loc []string) string {
+	var b strings.Builder
+
+	for i, p := range loc {
+		if isIndex(p) {
+			b.WriteString("[" + p + "]")
+
+			continue
+		}
+
+		if i > 0 {
+			b.WriteByte('.')
+		}
+
+		b.WriteString(p)
+	}
+
+	return b.String()
+}
+
+func isIndex(s string) bool {
+	if s == "" {
+		return false
+	}
+
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+
+	return true
+}
+
+// successResult is the CallToolResult of SDD-003 section 1.3: the text as the
+// content, and the result struct as structured content without its text and
+// without the bulk members.
+func successResult(out *toolOutput, bulk map[string]bool) (*sdk.CallToolResult, error) {
+	raw, err := json.Marshal(out.value)
+	if err != nil {
+		return errorResult(err), nil
+	}
+
+	var doc map[string]any
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		return errorResult(err), nil
+	}
+
+	delete(doc, "text")
+
+	for k := range bulk {
+		delete(doc, k)
+	}
+
+	return &sdk.CallToolResult{
+		Content:           []sdk.Content{&sdk.TextContent{Text: out.text}},
+		StructuredContent: doc,
+	}, nil
+}
+
+// Caps of SDD-003 section 1.3: an error block is at most 6,000 characters, 2,000
+// of text and 4,000 of envelope, whose details.diff is cut first.
+const (
+	envelopeCap = 4000
+)
+
+// errorResult is an execution error: isError true, no structured content, one
+// text block holding the text of section 3.9 without its details line, a
+// newline, and the envelope of section 1.4 as one line of JSON.
+func errorResult(err error) *sdk.CallToolResult {
+	se := asServiceError(err)
+	text := se.Text(false) + "\n" + envelopeLine(se)
+
+	return &sdk.CallToolResult{IsError: true, Content: []sdk.Content{&sdk.TextContent{Text: text}}}
+}
+
+func envelopeLine(se *service.Error) string {
+	doc := se.Document()
+
+	line := mustJSON(doc)
+	if len([]rune(line)) <= envelopeCap {
+		return line
+	}
+
+	if doc.Details != nil {
+		delete(doc.Details, "diff")
+		delete(doc.Details, "diff_truncated")
+	}
+
+	line = mustJSON(doc)
+	if len([]rune(line)) <= envelopeCap {
+		return line
+	}
+
+	doc.Details = nil
+
+	return mustJSON(doc)
+}
+
+func mustJSON(v any) string {
+	var b strings.Builder
+
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+
+	if err := enc.Encode(v); err != nil {
+		return "{}"
+	}
+
+	return strings.TrimRight(b.String(), "\n")
+}
+
+// bulkFields lists the json names of the members the Service marks bulk:"true"
+// (the whole document of project_get), which structured content leaves out.
+func (a *adapter) bulkFields() map[string]bool {
+	out := map[string]bool{}
+
+	for _, v := range []any{service.ProjectGetResult{}} {
+		t := reflect.TypeOf(v)
+		for f := range t.Fields() {
+			if f.Tag.Get("bulk") == "true" {
+				out[strings.Split(f.Tag.Get("json"), ",")[0]] = true
+			}
+		}
+	}
+
+	return out
+}

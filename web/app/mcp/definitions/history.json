@@ -1,0 +1,79 @@
+{
+ "name": "history",
+ "description": "Read the change log of a project (action=list, newest first, with actor; actor, cursor, limit are for list only), or undo or redo your own latest step (action=undo or redo, one step per call). Undo skips a change another actor made after yours and reports it. Undo is itself a step and can be redone.",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "project_id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "action": {
+    "enum": [
+     "list",
+     "undo",
+     "redo"
+    ],
+    "default": "list"
+   },
+   "actor": {
+    "type": "string"
+   },
+   "cursor": {
+    "type": "string"
+   },
+   "limit": {
+    "type": "integer",
+    "minimum": 1,
+    "maximum": 100,
+    "default": 20
+   }
+  },
+  "required": [
+   "project_id"
+  ],
+  "additionalProperties": false
+ },
+ "outputSchema": {
+  "type": "object",
+  "properties": {
+   "revision": {
+    "type": "integer"
+   },
+   "kind": {
+    "enum": [
+     "undo",
+     "redo"
+    ]
+   },
+   "entries": {
+    "type": "array",
+    "items": {
+     "type": "object"
+    }
+   },
+   "skipped": {
+    "type": "array",
+    "items": {
+     "type": "object"
+    }
+   },
+   "next_cursor": {
+    "type": [
+     "string",
+     "null"
+    ]
+   }
+  },
+  "required": [
+   "revision"
+  ]
+ },
+ "annotations": {
+  "title": "History, undo and redo",
+  "readOnlyHint": false,
+  "destructiveHint": false,
+  "idempotentHint": false,
+  "openWorldHint": false
+ }
+}
