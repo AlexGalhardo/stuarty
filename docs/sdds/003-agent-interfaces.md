@@ -2790,6 +2790,8 @@ A step names a `Service` operation and gives its request as JSON (the structs of
 | `CLIProcess` | runs `vukem-video <command> --json` as a subprocess without a server, then with a server |
 | `HTTP` | `net/http` against `vukem-video serve` |
 
+**Prototype build (P1-AGT-003).** The drivers run in one test process over `web/contract/testenv` (a real SQLite store, a worker on the durable queue, a fake ingest and exporter): `Direct` is the Service; `HTTP` is `service/remote` against the API on an `httptest` server (the routes are checked from its `openapi.json`); `CLI` runs `cli.Runtime.Execute` with `--json` over the Service; `MCP` is an in-memory client session of `mcp.New`. The subprocess drivers (`MCPStdio`, `MCPHTTP`, `CLIProcess`) wait for the owner startup. The parity table is `parity` in `web/contract/parity_test.go`; the maps are the functions `callService`, `toolCall` and `command2argv` of `drivers_test.go`. The scenario is `scenarios/prototype.json`, with the SHA-256 of its final document in `prototype.sha256` (`UPDATE_CONTRACT=1 go test ./web/contract/` rewrites it). The text of an edit, an undo and a redo is rendered by each adapter and is not compared.
+
 `web/contract/maps.go` holds, for each `Service` operation, how a driver encodes a step: the tool name and the argument mapping, the command line (flags, positional arguments, stdin), the method, path, query and body. `TestDriversCoverService` reflects over `service.Service` and fails when an operation has no mapping for a driver that supports it (the exceptions of §7.1 are skipped).
 
 **What is compared.** For each step and each driver, against `Direct`:
