@@ -233,6 +233,9 @@ func (h *apiHandler) registerAll() {
 	register(h, "templates.list", h.templateList)
 	register(h, "templates.save", h.templateSave)
 	register(h, "templates.instantiate", h.templateInstantiate)
+	register(h, "templates.import", h.templateImport)
+	register(h, "templates.export", h.templateExport)
+	register(h, "templates.file", h.templateFile)
 	register(h, "media.proxy", func(c *web.Ctx, in mediaFileIn) (noIn, error) {
 		return h.serveAsset(c, "proxy", in.ID, in.AssetID, "")
 	})

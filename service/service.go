@@ -48,6 +48,8 @@ type Service interface {
 	TemplateList(ctx context.Context, req TemplateListRequest) (*TemplateListResult, error)
 	TemplateSave(ctx context.Context, req TemplateSaveRequest) (*TemplateResult, error)
 	TemplateInstantiate(ctx context.Context, req TemplateInstantiateRequest) (*TemplateInstantiateResult, error)
+	TemplateExport(ctx context.Context, req TemplateRef) (*FileResult, error)
+	TemplateImport(ctx context.Context, req TemplateImportRequest) (*TemplateResult, error)
 
 	// ViewFrame and ViewSheet render the current revision through the export
 	// executor (SDD-003 section 2.7).
@@ -116,6 +118,8 @@ type Options struct {
 	Enqueue Enqueuer
 	// Limits are the ceilings of SDD-007 section 9.1.
 	Limits Limits
+	// Version is the binary version written into the template files.
+	Version string
 }
 
 type svc struct {
@@ -130,6 +134,7 @@ type svc struct {
 	exporter  Exporter
 	enqueue   Enqueuer
 	limits    Limits
+	version   string
 
 	running registry
 	bitmaps bitmaps
@@ -154,6 +159,7 @@ func New(o Options) (Service, error) {
 		exporter:  o.Exporter,
 		enqueue:   o.Enqueue,
 		limits:    o.Limits.withDefaults(),
+		version:   o.Version,
 	}
 
 	s.sems = map[string]chan struct{}{

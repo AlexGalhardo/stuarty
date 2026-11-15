@@ -386,6 +386,19 @@ func (c *Client) TemplateInstantiate(
 	)
 }
 
+// TemplateExport implements service.Service.
+func (c *Client) TemplateExport(ctx context.Context, req service.TemplateRef) (*service.FileResult, error) {
+	return post[service.FileResult](ctx, c, "/templates/"+url.PathEscape(req.TemplateID)+"/export", struct{}{})
+}
+
+// TemplateImport implements service.Service.
+func (c *Client) TemplateImport(
+	ctx context.Context,
+	req service.TemplateImportRequest,
+) (*service.TemplateResult, error) {
+	return post[service.TemplateResult](ctx, c, "/templates/import", req)
+}
+
 // JobList implements service.Service.
 func (c *Client) JobList(ctx context.Context, req service.JobListRequest) (*service.JobListResult, error) {
 	q := url.Values{}

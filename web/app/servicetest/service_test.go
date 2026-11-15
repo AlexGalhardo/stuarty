@@ -82,6 +82,14 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.TemplateInstantiate(ctx, service.TemplateInstantiateRequest{TemplateID: "tpl_0000000001"})
 			return err
 		},
+		"TemplateExport": func() error {
+			_, err := e.svc.TemplateExport(ctx, service.TemplateRef{TemplateID: "tpl_0000000001"})
+			return err
+		},
+		"TemplateImport": func() error {
+			_, err := e.svc.TemplateImport(ctx, service.TemplateImportRequest{Path: "/x"})
+			return err
+		},
 		"JobCancel": func() error {
 			_, err := e.svc.JobCancel(ctx, service.JobCancelRequest{JobID: "job_0000000001"})
 			return err

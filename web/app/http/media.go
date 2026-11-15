@@ -266,3 +266,55 @@ func (h *apiHandler) templateInstantiate(
 
 	return service.TemplateInstantiateResult{}, c.JSON(http.StatusCreated, res)
 }
+
+type templateImportIn struct {
+	Path   string `json:"path"              validate:"required" doc:"An absolute path to a template file on the machine that runs the server."`
+	DryRun bool   `json:"dry_run,omitempty"`
+}
+
+type templateRefIn struct {
+	TemplateID string `json:"template_id" validate:"required"`
+}
+
+func (h *apiHandler) templateImport(c *web.Ctx, in templateImportIn) (service.TemplateResult, error) {
+	dryRun := dry(c, in.DryRun)
+
+	res, err := h.Service.TemplateImport(c.Context(), service.TemplateImportRequest{Path: in.Path, DryRun: dryRun})
+	if err != nil {
+		return service.TemplateResult{}, err
+	}
+
+	if dryRun {
+		return service.TemplateResult{}, c.JSON(http.StatusOK, res)
+	}
+
+	return service.TemplateResult{}, c.JSON(http.StatusCreated, res)
+}
+
+func (h *apiHandler) templateExport(c *web.Ctx, in templateRefIn) (service.FileResult, error) {
+	res, err := h.Service.TemplateExport(c.Context(), service.TemplateRef{TemplateID: in.TemplateID})
+
+	return deref(res), err
+}
+
+// templateFile serves the template file of SDD-003 section 6.5: a zip, always
+// an attachment named after the template id (the template name is untrusted and
+// never reaches a header).
+func (h *apiHandler) templateFile(c *web.Ctx, in templateRefIn) (noIn, error) {
+	f, err := h.Service.OpenFile(c.Context(), service.FileRef{Kind: "template", ID: in.TemplateID})
+	if err != nil {
+		return noIn{}, err
+	}
+
+	hd := c.Writer().Header()
+	hd.Set("Content-Type", f.ContentType)
+	hd.Set("ETag", f.ETag)
+	hd.Set("Cache-Control", "private, no-cache")
+	hd.Set("Content-Disposition", `attachment; filename="`+in.TemplateID+`.vukem-template.zip"`)
+
+	if err := c.File(os.DirFS(string(h.Workspace)), f.Path); err != nil {
+		return noIn{}, err
+	}
+
+	return noIn{}, nil
+}

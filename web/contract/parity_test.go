@@ -65,6 +65,14 @@ var parity = []row{
 		method: "TemplateInstantiate", tool: "template", command: "template:new",
 		route: "POST /templates/{}/instantiate", cliPending: "P2-AGT",
 	},
+	{
+		method: "TemplateExport", tool: "template", command: "template:export",
+		route: "GET /templates/{}/file", cliPending: "P2-AGT",
+	},
+	{
+		method: "TemplateImport", tool: "template", command: "template:import",
+		route: "POST /templates/import", cliPending: "P2-AGT",
+	},
 	{method: "Lint", tool: "lint", command: "lint", route: "GET /projects/{}/lint"},
 	{method: "JobStart", tool: "job_start", command: "export", route: "POST /projects/{}/jobs"},
 	{method: "JobGet", tool: "job_get", command: "job:show", route: "GET /jobs/{}"},

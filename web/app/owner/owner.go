@@ -200,7 +200,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 
 	o.Service, err = service.New(service.Options{
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
-		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish,
+		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
 	})
 	if err != nil {
 		return err
