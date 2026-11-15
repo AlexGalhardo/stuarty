@@ -46,6 +46,8 @@ type User struct {
 	Role      string
 	Version   int64
 	CreatedMS int64
+	// Disabled users keep their row; login, sessions and keys treat them as not found.
+	Disabled bool
 }
 
 // AuthID implements auth.Authenticatable.
@@ -188,13 +190,23 @@ func (u *Users) ByEmail(ctx context.Context, email string) (User, error) {
 
 // ByID implements auth.UserProvider.
 func (u *Users) ByID(ctx context.Context, id string) (User, error) {
-	return u.one(ctx, `WHERE id = ?`, id)
+	user, err := u.one(ctx, `WHERE id = ?`, id)
+	if err == nil && user.Disabled {
+		return User{}, auth.ErrUserNotFound
+	}
+
+	return user, err
 }
 
 // ByCredentials implements auth.UserProvider: it looks the user up by the
 // "email" credential and never checks the password.
 func (u *Users) ByCredentials(ctx context.Context, creds map[string]string) (User, error) {
-	return u.ByEmail(ctx, creds["email"])
+	user, err := u.ByEmail(ctx, creds["email"])
+	if err == nil && user.Disabled {
+		return User{}, auth.ErrUserNotFound
+	}
+
+	return user, err
 }
 
 // UpdatePassword implements auth.PasswordUpdater: the guard stores a hash made
@@ -209,8 +221,9 @@ func (u *Users) one(ctx context.Context, where string, args ...any) (User, error
 	var user User
 
 	err := u.ex.QueryRowContext(ctx,
-		`SELECT id, email, password, role, session_version, created_ms FROM users `+where, args...).
-		Scan(&user.ID, &user.Email, &user.Password, &user.Role, &user.Version, &user.CreatedMS)
+		`SELECT id, email, password, role, session_version, created_ms, disabled_ms IS NOT NULL FROM users `+where,
+		args...).
+		Scan(&user.ID, &user.Email, &user.Password, &user.Role, &user.Version, &user.CreatedMS, &user.Disabled)
 	if errors.Is(err, sql.ErrNoRows) {
 		return User{}, auth.ErrUserNotFound
 	}
