@@ -3027,6 +3027,7 @@
           },
           "opacity": {},
           "rotation": {},
+          "scale": {},
           "source_seconds": {
             "items": {
               "format": "double",
