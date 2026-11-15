@@ -2336,8 +2336,8 @@ Every path argument (`media:import <path>`, `template:import <path>`) is made ab
 | `token:rotate` | `token:rotate` | none | none | none; takes the workspace lock, so no owner may be running (SDD-007 §5.3) | A |
 | `user:create`, `user:passwd` | `user:create <email> [--admin]`, `user:passwd <email>` | `--admin` bool false; the password is read from the terminal or standard input, never from an argument | none | none; network mode; takes the workspace lock (SDD-007 §5.3) | A |
 | `tools:install` | `tools:install <name> [--model <model>] [--yes] [--timeout d]` | `--model` string `small`, the model to download for a transcription helper; `--yes` bool false, skips the confirmation (without a terminal, or with `--json`, `--yes` is required); `--timeout` the longest wait for the download, exit 2 when it runs out | none | none; downloads a helper such as whisper.cpp after stating its size (SDD-007 §6.8) | A |
-| `bundle:export` | `bundle:export --project <id>` | `--wait`, `--timeout` | none | `Job` (SDD-005 §16) | B |
-| `bundle:import` | `bundle:import <path>` | none | none | `ProjectCreateResult` (SDD-005 §16) | B |
+| `bundle:export` | `bundle:export --project <id> [--no-log]` | `--no-log` (flag `--log`, bool true; false leaves `operations.ndjson` out), `--wait`, `--timeout` | none | `Job` (SDD-005 §16) | B |
+| `bundle:import` | `bundle:import <path> [--as-new]` | `--as-new` bool false, a new id and no log (required with accounts, SDD-005 §16.3); `--dry-run` | none | `ProjectCreateResult` (SDD-005 §16); the path is made absolute and read on the machine of the server | B |
 | `agent:docs` | `agent:docs [--print skill\|agents\|instructions] [--write <dir>]` | `--print` string `skill`; `--write` string | none | `{"files": [...]}` with `--write`; the text itself with `--print` | A |
 
 Notes on the table:

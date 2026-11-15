@@ -14,7 +14,7 @@ A video editor operated by commands. The CLI `vukem-video` is the main surface; 
 
 ## Setup check
 
-Run `vukem-video version`, then `vukem-video project:list`. The workspace is `~/.vukem-video` or `$VUKEM_VIDEO_HOME`. `vukem-video serve` (optional) shares the workspace with the browser editor.
+Run `vukem-video version`, then `project:list`. The workspace is `~/.vukem-video` or `$VUKEM_VIDEO_HOME`. `serve` shares the workspace with the browser.
 
 ## The loop
 
@@ -88,6 +88,7 @@ Every line starts with `vukem-video`.
 - `template:export <template id>`
 - `template:import <path>`
 - `bundle:export --project <id> [--no-log] [--wait]`
+- `bundle:import <path> [--as-new]`
 - `agent:docs --print skill|agents|instructions`
 - `transcribe --project <id> --asset <id> [--language auto] [--wait] [--timeout d]`
 - `doctor [--full] [--verify] [--bundle] [--gc]`
