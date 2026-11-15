@@ -17,6 +17,7 @@ import (
 	"sync"
 
 	"github.com/AlexGalhardo/vukem-video/core/lint"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/export"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/service"
@@ -84,6 +85,7 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 		JobID:        in.JobID,
 		ArtifactsDir: filepath.Join(a.cfg.Workspace, "artifacts"),
 		OutPath:      in.OutPath,
+		Format:       export.Format(in.Format),
 		MaxBytes:     in.MaxBytes,
 		Encoder:      a.cfg.Encoder,
 		Lint:         a.cfg.Lint,
@@ -105,23 +107,10 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 		return nil, internal("the exported file could not be read back")
 	}
 
-	st := in.Doc.Settings
-
 	out := &service.ExportOutput{
 		Bytes: res.Size, SHA256: sum, DurationMS: res.DurationMS, Frames: res.Frames,
-		VideoCodec: "h264", AudioCodec: "aac",
-		Checks: []service.VerifyCheck{
-			{Name: "streams", OK: true, Detail: "video and audio present"},
-			{
-				Name:   "duration",
-				OK:     true,
-				Detail: fmt.Sprintf("%.3f s, %d frames", float64(res.DurationMS)/1000, res.Frames),
-			},
-			{Name: "dimensions", OK: true, Detail: strconv.Itoa(st.Width) + "x" + strconv.Itoa(st.Height)},
-			{Name: "pixel_format", OK: true, Detail: "yuv420p"},
-			{Name: "faststart", OK: true, Detail: "moov before mdat"},
-		},
 	}
+	out.VideoCodec, out.AudioCodec, out.Checks = describe(res, in.Doc.Settings)
 
 	if l := res.Loudness.IntegratedLUFS; l != nil {
 		v := *l + res.Loudness.GainDB
@@ -129,6 +118,41 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 	}
 
 	return out, nil
+}
+
+// describe names the codecs of the verified file and the checks that the engine ran for its
+// format (SDD-004 section 8.1): the engine refuses a file that fails them, so a result means
+// they passed.
+func describe(res *export.Result, st timeline.Settings) (video, audio string, checks []service.VerifyCheck) {
+	dur := service.VerifyCheck{
+		Name: "duration", OK: true, Detail: fmt.Sprintf("%.3f s, %d frames", float64(res.DurationMS)/1000, res.Frames),
+	}
+	size := strconv.Itoa(st.Width) + "x" + strconv.Itoa(st.Height)
+
+	switch res.Format {
+	case export.FormatGIF:
+		return "gif", "", []service.VerifyCheck{
+			{Name: "streams", OK: true, Detail: "one video stream, no audio"}, dur,
+			{Name: "dimensions", OK: true, Detail: size},
+		}
+	case export.FormatWAV:
+		return "", "pcm_s16le", []service.VerifyCheck{
+			{Name: "streams", OK: true, Detail: "one audio stream, 48000 Hz stereo"}, dur,
+		}
+	case export.FormatAAC:
+		return "", "aac", []service.VerifyCheck{
+			{Name: "streams", OK: true, Detail: "one audio stream, 48000 Hz stereo"}, dur,
+			{Name: "faststart", OK: true, Detail: "moov before mdat"},
+		}
+	case export.FormatMP4:
+	}
+
+	return "h264", "aac", []service.VerifyCheck{
+		{Name: "streams", OK: true, Detail: "video and audio present"}, dur,
+		{Name: "dimensions", OK: true, Detail: size},
+		{Name: "pixel_format", OK: true, Detail: "yuv420p"},
+		{Name: "faststart", OK: true, Detail: "moov before mdat"},
+	}
 }
 
 // runnerFor picks the runner by the encoder detection finds: a software encoder (or none) runs

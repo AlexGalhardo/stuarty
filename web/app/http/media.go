@@ -53,7 +53,7 @@ type thumbnailIn struct {
 type jobStartIn struct {
 	ID     string         `json:"id"                validate:"required"`
 	Kind   string         `json:"kind"              validate:"required" doc:"export."`
-	Args   map[string]any `json:"args,omitempty"                        doc:"The arguments of the kind: start and end for an export."`
+	Args   map[string]any `json:"args,omitempty"                        doc:"The arguments of the kind: start, end and format (mp4, gif, wav or aac; default mp4) for an export."`
 	WaitMS int            `json:"wait_ms,omitempty"                     doc:"0 to 25000: hold the call until the job is final."`
 	DryRun bool           `json:"dry_run,omitempty"`
 }

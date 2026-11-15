@@ -43,6 +43,8 @@ type ExportInput struct {
 	// passed its verification, and leaves nothing there otherwise.
 	OutPath    string
 	Start, End int64 // frames; End 0 is the end of the timeline
+	// Format is mp4, gif, wav or aac; empty is mp4.
+	Format string
 	// MaxBytes is VUKEM_VIDEO_MAX_EXPORT_BYTES: the encoder stops at this size
 	// instead of filling the disk first; 0 means no ceiling.
 	MaxBytes int64

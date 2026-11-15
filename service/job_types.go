@@ -44,6 +44,8 @@ type JobStartRequest struct {
 type ExportArgs struct {
 	Start string `json:"start,omitempty"`
 	End   string `json:"end,omitempty"`
+	// Format is mp4 (the default), gif, wav or aac (SDD-004 section 8.1).
+	Format string `json:"format,omitempty"`
 }
 
 // JobGetRequest reads a job.
@@ -84,7 +86,8 @@ type VerifyCheck struct {
 // ExportResult is the result of a succeeded export (SDD-003 section 2.8).
 type ExportResult struct {
 	Revision     int64         `json:"revision"`
-	Path         string        `json:"path,omitempty"` // absolute; local callers only
+	Format       string        `json:"format,omitempty"` // mp4, gif, wav or aac; empty on a result stored before formats
+	Path         string        `json:"path,omitempty"`   // absolute; local callers only
 	DownloadURL  string        `json:"download_url"`
 	Bytes        int64         `json:"bytes"`
 	SHA256       string        `json:"sha256,omitempty"`

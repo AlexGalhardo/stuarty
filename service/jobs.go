@@ -107,8 +107,19 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, terr
 	}
 
+	format, ferr := checkExportFormat(args.Format)
+	if ferr != nil {
+		return nil, ferr
+	}
+
+	if lerr := checkExportSettings(&doc.Settings); lerr != nil {
+		return nil, lerr
+	}
+
 	input := marshalOrNull(
-		exportInput{Revision: row.Revision, Start: start, End: end, Lint: &totals, Document: row.Document},
+		exportInput{
+			Revision: row.Revision, Start: start, End: end, Lint: &totals, Document: row.Document, Format: format,
+		},
 	)
 	projectID := row.ID
 
@@ -201,14 +212,14 @@ func decodeExportArgs(raw json.RawMessage) (ExportArgs, *Error) {
 	}
 
 	for name := range probe {
-		if name != "start" && name != "end" {
+		if name != "start" && name != "end" && name != "format" {
 			return a, newError(command.CodeValidation, "the export does not take the argument %q.", name).
-				withPath("args." + name).withHint("use start and end, both optional times")
+				withPath("args." + name).withHint("use start, end and format, all optional")
 		}
 	}
 
 	if err := json.Unmarshal(raw, &a); err != nil {
-		return a, newError(command.CodeValidation, "start and end must be strings holding a time.").withPath("args")
+		return a, newError(command.CodeValidation, "start, end and format must be strings.").withPath("args")
 	}
 
 	return a, nil
