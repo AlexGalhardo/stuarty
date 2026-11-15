@@ -173,6 +173,29 @@ func FuzzTemplateArchive(f *testing.F) {
 		),
 	)
 	f.Add(zipOf(f, member{name: "../x", body: []byte("x")}))
+
+	// Seeds shaped like a project bundle (SDD-005 section 16.1): the template reader refuses them,
+	// and the mutations of their flat entry names reach the archive rules the two readers share.
+	hexName := strings.Repeat("ab", 32)
+	f.Add(zipOf(
+		f,
+		member{name: "manifest.json", body: []byte(`{"format":"vukem-video-bundle","bundle_version":1}`)},
+		member{name: "document.json", body: []byte(`{}`)},
+		member{name: "media." + hexName, body: []byte("media")},
+		member{name: "font." + hexName, body: []byte("\x00\x01\x00\x00")},
+	))
+	f.Add(zipOf(
+		f,
+		member{name: "manifest.json", body: goodManifest()},
+		member{name: "template.json", body: []byte(`{}`)},
+		member{name: "font." + hexName, body: []byte("../font"), mode: fs.ModeSymlink | 0o777},
+	))
+	f.Add(zipOf(
+		f,
+		member{name: "media." + hexName, body: make([]byte, 3<<20)},
+		member{name: "Media." + hexName, body: []byte("case duplicate")},
+	))
+
 	f.Add([]byte("PK\x03\x04"))
 	f.Add([]byte{})
 
