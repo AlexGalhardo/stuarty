@@ -10,7 +10,10 @@ import { EditorProvider } from "../state/EditorContext";
 import { PAGE_SIZE, REFETCH_DEBOUNCE_MS } from "../state/historyStore";
 import HistoryPanel from "./HistoryPanel";
 
-const entry = (revision: number, extra: Partial<HistoryEntry> = {}) => ({
+const entry = (
+	revision: number,
+	extra: Partial<HistoryEntry> = {},
+): HistoryEntry => ({
 	revision,
 	actor: "local:ui",
 	at: "2026-11-14T12:00:00Z",
@@ -19,6 +22,9 @@ const entry = (revision: number, extra: Partial<HistoryEntry> = {}) => ({
 	ops: ["item.move"],
 	undo_of: null,
 	undone_by: null,
+	description: `step ${revision}`,
+	undoable_by_me: false,
+	redoable_by_me: false,
 	...extra,
 });
 
@@ -124,10 +130,11 @@ describe("history controller", () => {
 		expect(state.redoable).toBe(false);
 	});
 
-	test("a page with no flag leaves the Prototype rule in place", async () => {
+	test("a page where no step is flagged disables Undo and Redo", async () => {
 		const { h } = await withHistory([page([entry(1)])]);
 		await h.runtime.historyControls.refresh();
-		expect(h.runtime.history.getState().undoable).toBeNull();
+		expect(h.runtime.history.getState().undoable).toBe(false);
+		expect(h.runtime.history.getState().redoable).toBe(false);
 	});
 
 	test("Load more appends the next page and a refetch keeps it", async () => {

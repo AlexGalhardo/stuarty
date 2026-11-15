@@ -12,8 +12,8 @@ import {
 } from "../state/EditorContext";
 
 // The Undo and Redo buttons of the top bar (SDD-012 section 15). They follow
-// `undoable_by_me` and `redoable_by_me` of the first page of the history; while
-// the history says nothing (the Prototype rule) they are enabled, except after
+// `undoable_by_me` and `redoable_by_me` of the first page of the history; until
+// the first page arrives they are enabled, except after
 // the core answered that there is nothing to undo or redo, until the next batch.
 export default function UndoRedo(): ReactNode {
 	const t = useT();

@@ -383,11 +383,10 @@ export interface HistoryEntry {
 	ops: string[];
 	undo_of: number | null;
 	undone_by: number | null;
-	// SDD-012 section 15 expects these three; the service does not send them
-	// yet, so the panel treats them as absent.
-	description?: string;
-	undoable_by_me?: boolean;
-	redoable_by_me?: boolean;
+	description: string;
+	// True on the one step Undo or Redo would take for the caller.
+	undoable_by_me: boolean;
+	redoable_by_me: boolean;
 }
 
 export interface HistoryListResult {
