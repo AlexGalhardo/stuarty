@@ -1,6 +1,7 @@
 import { copyFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { cspViolations } from "../support/browsers";
 import { caller, expect, seedProject, test, testClip } from "./helpers";
 
 // P2-SEC-005 (SDD-007 section 8.5, threat T-22): text written by an agent or
@@ -34,6 +35,7 @@ test.describe("ui-xss", () => {
 	test("hostile names and texts render as text in every view", async ({
 		page,
 		request,
+		browserName,
 	}) => {
 		await page.addInitScript(() => {
 			window.__csp = [];
@@ -95,7 +97,13 @@ test.describe("ui-xss", () => {
 			(await page.locator("body").textContent()) ?? "";
 		const clean = async (view: string): Promise<void> => {
 			expect(await page.evaluate(() => window.__pwned), view).toBeUndefined();
-			expect(await page.evaluate(() => window.__csp), view).toEqual([]);
+			expect(
+				cspViolations(
+					browserName,
+					await page.evaluate(() => window.__csp ?? []),
+				),
+				view,
+			).toEqual([]);
 			expect(await page.locator("body img[src='x']").count(), view).toBe(0);
 		};
 

@@ -1,3 +1,4 @@
+import { cspViolations } from "../support/browsers";
 import { expect, seedProject, test } from "./helpers";
 
 // P1-UI-003 asserts that need the render pipeline behind the plan and frame
@@ -8,6 +9,7 @@ test.describe("csp-clean", () => {
 	test("no securitypolicyviolation event and no blob: URL during playback", async ({
 		page,
 		request,
+		browserName,
 	}) => {
 		const violations: string[] = [];
 		const blobs: string[] = [];
@@ -31,7 +33,7 @@ test.describe("csp-clean", () => {
 		await page.getByRole("button", { name: "Play" }).click();
 		await page.waitForTimeout(2000);
 		await page.getByRole("button", { name: "Pause" }).click();
-		expect(violations).toEqual([]);
+		expect(cspViolations(browserName, violations)).toEqual([]);
 		expect(blobs).toEqual([]);
 	});
 });

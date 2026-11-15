@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { APIRequestContext, Page } from "@playwright/test";
+import { NO_VIDEO_DECODE_REASON, noVideoDecode } from "../support/browsers";
 import {
 	type Centroid,
 	centroid,
@@ -475,7 +476,10 @@ async function capture(
 			const b = await load(body.image_base64, "image/jpeg");
 			const pixels = (bitmap: ImageBitmap): string => {
 				// No resampling: the frame has the pixels of the canvas.
-				const c = new OffscreenCanvas(a.width, a.height);
+				// A DOM canvas: this WebKit has no OffscreenCanvas.
+				const c = document.createElement("canvas");
+				c.width = a.width;
+				c.height = a.height;
 				const g = c.getContext("2d");
 				if (!g) throw new Error("no 2d context");
 				g.drawImage(bitmap, 0, 0, a.width, a.height);
@@ -624,6 +628,9 @@ const KNOWN_DIVERGENCES: Record<string, string> = {
 test.describe("preview-vs-export", () => {
 	test.use({ viewport: { width: 1920, height: 1300 } });
 	test.describe.configure({ timeout: 300_000 });
+	test.beforeEach(({ browserName }) => {
+		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON);
+	});
 
 	// A frame that fails is reported by case and frame.
 	for (const name of goldenCases()) {
@@ -684,6 +691,9 @@ const PROTOTYPE: {
 test.describe("preview-vs-export prototype cases", () => {
 	test.use({ viewport: { width: 1920, height: 1300 } });
 	test.describe.configure({ timeout: 300_000 });
+	test.beforeEach(({ browserName }) => {
+		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON);
+	});
 
 	for (const scene of PROTOTYPE) {
 		test(`${scene.name}: SSIM of at least ${MIN_SSIM} on luma and markers within ${MAX_DISPLACEMENT} px`, async ({

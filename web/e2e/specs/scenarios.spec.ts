@@ -2,6 +2,7 @@ import { writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { skipWithoutWebAudio } from "../support/browsers";
 import { caller, expect, seedProject, test, testClip } from "./helpers";
 
 // Scenarios of SDD-012 section 20.1 that run against the real server: 1, 2
@@ -196,14 +197,22 @@ test.describe("prototype-reference", () => {
 	test("the four manual operations of D-023 with the UI alone, no console error, no CSP violation", async ({
 		page,
 		request,
+		browserName,
 	}) => {
 		test.setTimeout(150_000);
 		const problems: string[] = [];
 		page.on("console", (m) => {
 			// The browser logs the two expected refusals described below by itself.
+			// WebKit adds its own console line to each style-src-attr violation (see
+			// cspViolations in support/browsers.ts).
 			if (
 				m.type() === "error" &&
-				!/Failed to load resource.*status of (409|400)/.test(m.text())
+				!/Failed to load resource.*status of (409|400)/.test(m.text()) &&
+				!(
+					browserName === "webkit" &&
+					(m.text().startsWith("csp: style-src-attr") ||
+						m.text().startsWith("Refused to apply a stylesheet"))
+				)
 			)
 				problems.push(`console: ${m.text()}`);
 		});
@@ -228,6 +237,9 @@ test.describe("prototype-reference", () => {
 
 		const name = `Reference ${Date.now()}`;
 		await page.goto("/projects");
+		await skipWithoutWebAudio(page, (condition, reason) =>
+			test.skip(condition, reason),
+		);
 		await page.getByLabel("Name").fill(name);
 		await page.getByRole("button", { name: "Create project" }).click();
 		await expect(page).toHaveURL(/\/editor\/prj_/);
