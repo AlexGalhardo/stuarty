@@ -77,6 +77,34 @@ func TestInspectionTextGolden(t *testing.T) {
 	}))))
 }
 
+// metadataGoldenTags is the benign metadata of the metadata golden; the CLI test reads
+// the same golden through its own fixture.
+var metadataGoldenTags = map[string]string{
+	"artist": "Jane Roe", "comment": "shot on a phone", "creation_time": "2026-11-14T12:00:00Z",
+	"encoder": "Lavf61.7.100", "title": "Beach day",
+}
+
+// TestInspectionMetadataGolden: media_inspect of a file with metadata tags
+// matches its golden file, the count line and the untrusted block included.
+func TestInspectionMetadataGolden(t *testing.T) {
+	t.Parallel()
+
+	env := testenv.New(t, testenv.Options{})
+	cs := connect(t, env.Service, Options{}, "claude-code")
+	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{
+		"name": "Golden", "id": "prj_7k2m9x4q1b",
+	})))["project_id"].(string)
+
+	clip := env.WriteFile(t, "clip.mov", testenv.FakeMediaTags(2, 320, 240, metadataGoldenTags))
+	ok(t, call(t, cs, "media_import", map[string]any{
+		"project_id": project, "paths": []any{clip}, "asset_ids": []any{"ast_3c5v8n2w6d"}, "wait_ms": 20000,
+	}))
+
+	golden(t, "media_inspect_metadata.golden", textOf(t, ok(t, call(t, cs, "media_inspect", map[string]any{
+		"project_id": project, "asset_id": "ast_3c5v8n2w6d",
+	}))))
+}
+
 // TestMediaListPaging: the pages of a paged media list read in order are the
 // unpaged list (§9 check 7). A media cursor is an offset and has no revision to
 // go stale; the project view cursor is tested in TestProjectViewCursorGoesStale.
