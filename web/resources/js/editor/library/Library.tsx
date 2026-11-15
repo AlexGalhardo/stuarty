@@ -3,6 +3,7 @@ import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n";
+import { useCanEdit } from "../commands/useActions";
 import { useStore } from "../state/createStore";
 import { useRuntime } from "../state/EditorContext";
 import { errorHeadline } from "../ui/errorHeadline";
@@ -14,6 +15,7 @@ import { parsePastedPaths } from "./importPaths";
 // see the path of a dropped file, so a drop only explains that.
 export default function Library(): ReactNode {
 	const t = useT();
+	const canEdit = useCanEdit();
 	const runtime = useRuntime();
 	const entries = useStore(runtime.library, (s) => s.entries);
 	const dismissed = useStore(runtime.library, (s) => s.dismissed);
@@ -64,7 +66,11 @@ export default function Library(): ReactNode {
 					placeholder={t("ui.editor.library.path")}
 					aria-label={t("ui.editor.library.path")}
 				/>
-				<Button type="submit" size="sm" disabled={busy || text.trim() === ""}>
+				<Button
+					type="submit"
+					size="sm"
+					disabled={busy || !canEdit || text.trim() === ""}
+				>
 					{t("ui.editor.library.import")}
 				</Button>
 			</form>

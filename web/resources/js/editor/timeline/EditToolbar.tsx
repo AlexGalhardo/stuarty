@@ -13,8 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
-import { useActions, useCanCut } from "../commands/useActions";
-import { useDocumentState } from "../state/EditorContext";
+import { useActions, useCanCut, useCanEdit } from "../commands/useActions";
 
 const DEFAULT_CAPTION_DURATION = "3s";
 
@@ -100,9 +99,7 @@ export default function EditToolbar({
 	const t = useT();
 	const actions = useActions();
 	const canCut = useCanCut();
-	const ready = useDocumentState(
-		(s) => s.status === "ready" || s.status === "offline",
-	);
+	const ready = useCanEdit();
 	return (
 		<div
 			role="toolbar"

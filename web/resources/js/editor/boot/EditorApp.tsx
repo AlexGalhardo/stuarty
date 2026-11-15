@@ -6,6 +6,7 @@ import EditorShell from "../layout/EditorShell";
 import { EditorProvider } from "../state/EditorContext";
 import type { EditorRuntime } from "../state/runtime";
 import type { EditorBootstrap } from "./bootstrap";
+import { startDeepLink } from "./deepLink";
 
 // The root of the editor: the translation context from the bootstrap, the
 // runtime, and the boot sequence of SDD-012 section 5.6 (load the document,
@@ -19,6 +20,7 @@ export default function EditorApp({
 }): ReactNode {
 	useEffect(() => {
 		void runtime.start();
+		const stopDeepLink = startDeepLink(runtime);
 		const onVisible = (): void => {
 			if (document.visibilityState === "visible") runtime.checkStale();
 		};
@@ -28,6 +30,7 @@ export default function EditorApp({
 		return () => {
 			document.removeEventListener("visibilitychange", onVisible);
 			window.removeEventListener("online", onOnline);
+			stopDeepLink();
 			runtime.dispose();
 		};
 	}, [runtime]);

@@ -47,6 +47,7 @@
       },
       "banner": {
         "failed": "O editor perdeu a sincronia com o projeto. Recarregue para continuar.",
+        "trashed": "Este projeto está na lixeira. Ele fica somente leitura até ser restaurado.",
         "reload": "Recarregar"
       },
       "undo": "Desfazer",
