@@ -25,6 +25,8 @@ import {
 	removeAssetOperations,
 	renameOperations,
 	splitOperations,
+	textAddOperations,
+	textSetOperations,
 	trimOperations,
 	withNextFree,
 } from "./builders";
@@ -40,6 +42,11 @@ export interface Actions {
 	splitAtPlayhead(): Promise<EditOutcome | null>;
 	trimToPlayhead(edge: "start" | "end"): Promise<EditOutcome | null>;
 	addCaption(text: string, duration: string): Promise<EditOutcome | null>;
+	// Toolbar "Add text" and `T`: `text` is the localized default content.
+	addText(text: string): Promise<EditOutcome | null>;
+	// The inline editor of the canvas and the timeline: only a change of the
+	// content is sent, and the error is a notice, not a field message.
+	setText(itemId: string, text: string): Promise<EditOutcome | null>;
 	// A released gesture: the batch is sent against the revision the pointer went
 	// down on (SDD-012 section 4.5), not the one at release.
 	commitGesture(
@@ -78,6 +85,7 @@ export interface Actions {
 export const FIELD_ERRORS: ReadonlySet<string> = new Set([
 	"E_VALIDATION",
 	"E_INVALID_TIME",
+	"E_FONT_UNKNOWN",
 ]);
 
 // The longest length the source allows, in frames, from `details.available` of
@@ -343,6 +351,16 @@ export function createActions(runtime: EditorRuntime): Actions {
 					newTrackId: () => newId("trk"),
 				}),
 			),
+		addText: (text) =>
+			send(
+				textAddOperations({
+					text,
+					playhead: ui.getState().playheadFrame,
+					firstVisualTrack: firstVisualTrack(),
+					newTrackId: () => newId("trk"),
+				}),
+			),
+		setText: (itemId, text) => send(textSetOperations(itemId, text)),
 		nudge: (ids, frames) => send(nudgeOperations(rangesOf(ids), frames)),
 		moveToAdjacentTrack(ids, sign) {
 			const doc = documents.getState().document;

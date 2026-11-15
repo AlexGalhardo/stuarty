@@ -35,6 +35,9 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"canvas.transform": ["item.set_transform", "keyframe.set"],
 	"inspector.transform": ["item.set_transform", "keyframe.set"],
 	"notice.use_keyframes": ["keyframe.set"],
+	"text.add": ["text.add", "track.add"],
+	"canvas.edit_text": ["text.set"],
+	"inspector.text": ["text.set"],
 	// The palette runs any command of the registry with operations built from
 	// its schema form, so it has no builder to check (rule 2 of section 9.3).
 	"palette.run": [ANY_COMMAND],
@@ -141,9 +144,17 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	"slot.mark": [palette],
 	"slot.unmark": [palette],
 	"template.set_info": [palette],
-	"text.add": [palette],
+	"text.add": [
+		{ kind: "toolbar", action: "text.add", phase: "A" },
+		{ kind: "key", action: "text.add", phase: "A" },
+		palette,
+	],
 	"text.apply_preset": [palette],
-	"text.set": [palette],
+	"text.set": [
+		{ kind: "gesture", action: "canvas.edit_text", phase: "A" },
+		{ kind: "inspector", action: "inspector.text", phase: "A" },
+		palette,
+	],
 	"timeline.close_gap": [
 		{ kind: "menu", action: "timeline.close_gap", phase: "A" },
 		palette,

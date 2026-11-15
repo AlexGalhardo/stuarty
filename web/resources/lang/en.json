@@ -204,7 +204,8 @@
         "rename_label": "Name of the item",
         "close_gap": "Close gap",
         "item_menu": "Item actions",
-        "gap_menu": "Gap actions"
+        "gap_menu": "Gap actions",
+        "text": "Add text"
       },
       "caption": {
         "title": "Add caption",
@@ -534,6 +535,31 @@
         "track_kind": {
           "visual": "Visual",
           "audio": "Audio"
+        },
+        "text_title": "Text",
+        "text_content": "Content",
+        "style": {
+          "default": "Default",
+          "font_family": "Font",
+          "font_weight": "Weight",
+          "size": "Size",
+          "color": "Colour",
+          "stroke_color": "Stroke colour",
+          "stroke_width": "Stroke width",
+          "shadow_color": "Shadow colour",
+          "shadow_dx": "Shadow X",
+          "shadow_dy": "Shadow Y",
+          "shadow_blur": "Shadow blur",
+          "background_color": "Background colour",
+          "background_padding": "Background padding",
+          "background_radius": "Background radius",
+          "align": "Align",
+          "align_left": "Left",
+          "align_center": "Centre",
+          "align_right": "Right",
+          "line_height": "Line height",
+          "max_width": "Max width",
+          "uppercase": "Uppercase"
         }
       },
       "history": {
@@ -552,6 +578,12 @@
           "other": "{count} changes",
           "zero": "No changes"
         }
+      },
+      "defaults": {
+        "text": "Your text"
+      },
+      "text": {
+        "editor_label": "Edit text"
       }
     }
   }

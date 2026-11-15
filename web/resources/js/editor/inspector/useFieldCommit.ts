@@ -13,9 +13,9 @@ export function useFieldCommit(): (ops: Operations) => Promise<CommitResult> {
 		async (ops) => {
 			const outcome = await actions.commitField(ops);
 			if (outcome === null || outcome.ok) return { ok: true };
-			const { code, message, hint } = outcome.error;
+			const { code, message, hint, details } = outcome.error;
 			return FIELD_ERRORS.has(code)
-				? { ok: false, error: { code, message, hint } }
+				? { ok: false, error: { code, message, hint, details } }
 				: { ok: true };
 		},
 		[actions],

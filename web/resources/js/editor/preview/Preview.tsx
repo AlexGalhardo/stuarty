@@ -21,12 +21,13 @@ import { selectEndFrame, selectFps } from "../state/selectors";
 import { bufferSize, fitScale, truthWidth } from "./fit";
 import Handles from "./overlays/Handles";
 import { hitTest } from "./overlays/hitTest";
+import InlineTextEditor from "./overlays/InlineTextEditor";
 import SafeArea from "./overlays/SafeArea";
 import SelectionBox from "./overlays/SelectionBox";
 import { PixiExecutor } from "./PixiExecutor";
 import { PausedFrame } from "./pausedFrame";
 import Timecode from "./Timecode";
-import type { LayerGeometry, PreviewState, TransformPort } from "./types";
+import type { CanvasPort, LayerGeometry, PreviewState } from "./types";
 
 const DEFAULT_FPS = { num: 30, den: 1 } as const;
 // While playing the committed playhead follows at most every 250 ms, for the
@@ -43,11 +44,7 @@ function isEditable(target: EventTarget | null): boolean {
 
 // The preview of SDD-012 section 11: the executor draws the plan on a canvas,
 // and 150 ms after a pause the core's exact frame replaces it.
-export default function Preview({
-	transform,
-}: {
-	transform: TransformPort;
-}): ReactNode {
+export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 	const t = useT();
 	const runtime = useRuntime();
 	const status = useDocumentState((s) => s.status);
@@ -74,6 +71,10 @@ export default function Preview({
 	const [box, setBox] = useState({ w: 0, h: 0 });
 	const selection = useUiState((s) => s.selection.items);
 	const safeVisible = useUiState((s) => s.safeAreaVisible);
+	const editingText = useUiState((s) => s.editingText);
+	const editedText = useDocumentState((s) =>
+		editingText === null ? undefined : s.document?.items[editingText]?.text,
+	);
 	// Bumped when a plan window arrives, so the overlays read its geometry.
 	const [, setPlanTick] = useState(0);
 	// The box a transform gesture shows under the pointer, until the plan window
@@ -249,8 +250,25 @@ export default function Preview({
 					<div
 						data-testid="canvas-overlay"
 						className="absolute inset-0"
+						onDoubleClick={(event) => {
+							if (scale === 0) return;
+							const rect = event.currentTarget.getBoundingClientRect();
+							const hit = hitTest(layers, {
+								x: (event.clientX - rect.left) / scale,
+								y: (event.clientY - rect.top) / scale,
+							});
+							const state = runtime.documents.getState();
+							if (
+								hit === null ||
+								state.state === "trashed" ||
+								state.document?.items[hit]?.type !== "text"
+							)
+								return;
+							runtime.uiWriter.select([hit]);
+							runtime.uiWriter.startTextEdit(hit);
+						}}
 						onClick={(event) => {
-							if (scale === 0 || transform.consumeClick()) return;
+							if (scale === 0 || port.consumeClick()) return;
 							const rect = event.currentTarget.getBoundingClientRect();
 							const hit = hitTest(layers, {
 								x: (event.clientX - rect.left) / scale,
@@ -263,6 +281,20 @@ export default function Preview({
 						}}
 					>
 						{safeArea !== null && <SafeArea rect={safeArea} scale={scale} />}
+						{editingText !== null && editedText !== undefined && (
+							<InlineTextEditor
+								key={editingText}
+								itemId={editingText}
+								stored={editedText}
+								geometry={
+									layers.find((layer) => layer.item === editingText) ?? null
+								}
+								scale={scale}
+								size={box}
+								port={port}
+								onClose={() => runtime.uiWriter.startTextEdit(null)}
+							/>
+						)}
 						{layers
 							.filter((layer) => selection.includes(layer.item))
 							.map((layer) => {
@@ -274,7 +306,7 @@ export default function Preview({
 											<Handles
 												geometry={shown}
 												scale={scale}
-												port={transform}
+												port={port}
 												onPreview={setOverride}
 											/>
 										)}

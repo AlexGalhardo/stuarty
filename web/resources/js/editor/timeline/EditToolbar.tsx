@@ -4,6 +4,7 @@ import {
 	StepBack,
 	StepForward,
 	Trash2,
+	Type,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
@@ -167,6 +168,16 @@ export default function EditToolbar({
 			>
 				<Captions aria-hidden="true" />
 				{t("ui.editor.edit.caption")}
+			</Button>
+			<Button
+				type="button"
+				variant="ghost"
+				size="sm"
+				disabled={!ready}
+				onClick={() => void actions.addText(t("ui.editor.defaults.text"))}
+			>
+				<Type aria-hidden="true" />
+				{t("ui.editor.edit.text")}
 			</Button>
 			<AddCaptionDialog open={captionOpen} onOpenChange={onCaptionOpenChange} />
 		</div>

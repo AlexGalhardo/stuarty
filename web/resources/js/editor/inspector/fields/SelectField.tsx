@@ -9,7 +9,15 @@ export interface SelectOption {
 	label: string;
 }
 
-// A select commits at once on change (SDD-012 section 12.3).
+// The values the core listed as available in the error of the last commit
+// (`details.available` of E_FONT_UNKNOWN), as strings.
+function availableOf(details: { readonly [key: string]: unknown } | undefined) {
+	const available = details?.available;
+	return Array.isArray(available) ? available.map(String) : [];
+}
+
+// A select commits at once on change (SDD-012 section 12.3). After a refusal
+// that names the available values, those options are highlighted.
 export default function SelectField({
 	label,
 	stored,
@@ -24,6 +32,7 @@ export default function SelectField({
 	disabled?: boolean;
 }): ReactNode {
 	const binding = useCommitField(stored, commit);
+	const available = availableOf(binding.error?.details);
 	return (
 		<FieldRow label={label} state={binding}>
 			{(ids) => (
@@ -41,7 +50,14 @@ export default function SelectField({
 					}}
 				>
 					{options.map((option) => (
-						<option key={option.value} value={option.value}>
+						<option
+							key={option.value}
+							value={option.value}
+							data-available={available.includes(option.value) ? "" : undefined}
+							className={
+								available.includes(option.value) ? "font-bold" : undefined
+							}
+						>
 							{option.label}
 						</option>
 					))}

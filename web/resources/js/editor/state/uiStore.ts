@@ -15,6 +15,9 @@ export interface UiState {
 	focusedItem: string | null;
 	// The item whose name is being edited inline (F2, the menu), if any.
 	renamingItem: string | null;
+	// The text item whose content is edited inline over the canvas (SDD-012
+	// section 11.6), if any.
+	editingText: string | null;
 	// The safe-area guide over the preview, off by default (SDD-012 section 11.6).
 	safeAreaVisible: boolean;
 	// E_IN_USE of an asset.remove: the ids `details.used_by` named, shown by the
@@ -35,6 +38,7 @@ export interface UiWriter {
 	select(items: readonly string[], anchor?: string | null): void;
 	focusItem(id: string | null): void;
 	startRename(id: string | null): void;
+	startTextEdit(id: string | null): void;
 	toggleSafeArea(): void;
 	showInUse(inUse: UiState["inUse"]): void;
 	selectTrack(trackId: string | null): void;
@@ -58,6 +62,7 @@ export function createUiStore(initialZoom = 1): {
 		selection: { items: [], track: null, anchor: null },
 		focusedItem: null,
 		renamingItem: null,
+		editingText: null,
 		safeAreaVisible: false,
 		inUse: null,
 		playheadFrame: 0,
@@ -85,6 +90,10 @@ export function createUiStore(initialZoom = 1): {
 			startRename: (renamingItem) =>
 				store.setState((s) =>
 					s.renamingItem === renamingItem ? s : { ...s, renamingItem },
+				),
+			startTextEdit: (editingText) =>
+				store.setState((s) =>
+					s.editingText === editingText ? s : { ...s, editingText },
 				),
 			toggleSafeArea: () =>
 				store.setState((s) => ({ ...s, safeAreaVisible: !s.safeAreaVisible })),

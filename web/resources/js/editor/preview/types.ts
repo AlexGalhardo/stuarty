@@ -37,13 +37,14 @@ export interface TransformBegin {
 	onPreview(geometry: LayerGeometry | null): void;
 }
 
-// The seam to the gesture code of `timeline/gestures`, handed down by the
-// layout because `preview` must not import `commands` or `timeline` (SDD-012
-// section 3.3).
-export interface TransformPort {
+// The seam to the gesture and command code, handed down by the layout because
+// `preview` must not import `commands` or `timeline` (SDD-012 section 3.3).
+export interface CanvasPort {
 	begin(options: TransformBegin): void;
 	// Whether a click is the one that follows a drag, and so selects nothing.
 	consumeClick(): boolean;
+	// The inline text editor committed: sends `text.set {item_id, text}`.
+	commitText(itemId: string, text: string): void;
 }
 
 export interface ProjectInfo {

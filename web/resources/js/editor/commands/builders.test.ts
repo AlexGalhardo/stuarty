@@ -8,6 +8,9 @@ import {
 	moveOperations,
 	nudgeOperations,
 	splitOperations,
+	textAddOperations,
+	textSetOperations,
+	textStyleOperations,
 	transformOperations,
 	trimEdgeOperations,
 	trimOperations,
@@ -181,6 +184,52 @@ describe("transformOperations", () => {
 			{
 				op: "keyframe.set",
 				args: { item_id: "itm_a", property: "rotation", at: "9f", value: 30 },
+			},
+		]);
+	});
+});
+
+describe("text builders", () => {
+	test("Add text is 3 s at the playhead on the first visual track", () => {
+		expect(
+			textAddOperations({
+				text: "Your text",
+				playhead: 12,
+				firstVisualTrack: "trk_1",
+				newTrackId: () => "trk_n",
+			}),
+		).toEqual([
+			{
+				op: "text.add",
+				args: {
+					track_id: "trk_1",
+					start: "12f",
+					duration: "3s",
+					text: "Your text",
+				},
+			},
+		]);
+	});
+
+	test("Add text creates the visual track in the same batch when there is none", () => {
+		const ops = textAddOperations({
+			text: "t",
+			playhead: 0,
+			firstVisualTrack: null,
+			newTrackId: () => "trk_n",
+		});
+		expect(ops.map((o) => o.op)).toEqual(["track.add", "text.add"]);
+		expect(ops[1]?.args.track_id).toBe("trk_n");
+	});
+
+	test("the content and one style key are separate partial requests", () => {
+		expect(textSetOperations("itm_a", "x")).toEqual([
+			{ op: "text.set", args: { item_id: "itm_a", text: "x" } },
+		]);
+		expect(textStyleOperations("itm_a", { font_family: "Inter" })).toEqual([
+			{
+				op: "text.set",
+				args: { item_id: "itm_a", style: { font_family: "Inter" } },
 			},
 		]);
 	});

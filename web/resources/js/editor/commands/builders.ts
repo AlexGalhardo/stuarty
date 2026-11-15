@@ -162,6 +162,48 @@ export function captionOperations(input: {
 	return ops;
 }
 
+// Toolbar "Add text" and `T`: a text item of 3 s at the playhead on the first
+// visual track; when there is none, the same batch adds one first.
+export function textAddOperations(input: {
+	text: string;
+	playhead: number;
+	firstVisualTrack: string | null;
+	newTrackId: () => string;
+}): Operations {
+	const ops: Operations = [];
+	let track = input.firstVisualTrack;
+	if (track === null) {
+		track = input.newTrackId();
+		ops.push({ op: "track.add", args: { kind: "visual", id: track } });
+	}
+	ops.push({
+		op: "text.add",
+		args: {
+			track_id: track,
+			start: frames(input.playhead),
+			duration: "3s",
+			text: input.text,
+		},
+	});
+	return ops;
+}
+
+// The inline editor of a text item and the content field of the inspector.
+export function textSetOperations(itemId: string, text: string): Operations {
+	return [{ op: "text.set", args: { item_id: itemId, text } }];
+}
+
+export type StyleValue = string | number | boolean;
+export type StyleChanges = Record<string, StyleValue>;
+
+// One style field of a text item: the partial `style` holds only the changed key.
+export function textStyleOperations(
+	itemId: string,
+	style: StyleChanges,
+): Operations {
+	return [{ op: "text.set", args: { item_id: itemId, style } }];
+}
+
 // The inspector fields of section 12.1: the text of a time field is already
 // a string with a unit (rule T8), checked by `normalizeTimeInput`.
 export function renameOperations(itemId: string, name: string): Operations {

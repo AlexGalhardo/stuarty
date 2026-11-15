@@ -204,7 +204,8 @@
         "rename_label": "Nome do item",
         "close_gap": "Fechar o espaço",
         "item_menu": "Ações do item",
-        "gap_menu": "Ações do espaço"
+        "gap_menu": "Ações do espaço",
+        "text": "Adicionar texto"
       },
       "caption": {
         "title": "Adicionar legenda",
@@ -534,6 +535,31 @@
         "track_kind": {
           "visual": "Vídeo",
           "audio": "Áudio"
+        },
+        "text_title": "Texto",
+        "text_content": "Conteúdo",
+        "style": {
+          "default": "Padrão",
+          "font_family": "Fonte",
+          "font_weight": "Peso",
+          "size": "Tamanho",
+          "color": "Cor",
+          "stroke_color": "Cor do contorno",
+          "stroke_width": "Espessura do contorno",
+          "shadow_color": "Cor da sombra",
+          "shadow_dx": "Sombra X",
+          "shadow_dy": "Sombra Y",
+          "shadow_blur": "Desfoque da sombra",
+          "background_color": "Cor do fundo",
+          "background_padding": "Margem do fundo",
+          "background_radius": "Raio do fundo",
+          "align": "Alinhamento",
+          "align_left": "Esquerda",
+          "align_center": "Centro",
+          "align_right": "Direita",
+          "line_height": "Altura da linha",
+          "max_width": "Largura máxima",
+          "uppercase": "Maiúsculas"
         }
       },
       "history": {
@@ -552,6 +578,12 @@
           "other": "{count} alterações",
           "zero": "Nenhuma alteração"
         }
+      },
+      "defaults": {
+        "text": "Seu texto"
+      },
+      "text": {
+        "editor_label": "Editar texto"
       }
     }
   }
