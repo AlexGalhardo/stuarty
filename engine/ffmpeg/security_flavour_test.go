@@ -37,8 +37,10 @@ func TestSecurity_T27_OwnBuildConfigureLineRefused(t *testing.T) {
 		{"nonfree", "--enable-nonfree " + own, []string{"--enable-nonfree"}},
 		{"both", "--enable-nonfree --enable-gpl " + own, []string{"--enable-gpl", "--enable-nonfree"}},
 		{"openh264 compiled in", "--enable-libopenh264 " + own, []string{"--enable-libopenh264"}},
-		{"all three", "--enable-libopenh264 --enable-nonfree --enable-gpl " + own,
-			[]string{"--enable-gpl", "--enable-nonfree", "--enable-libopenh264"}},
+		{
+			"all three", "--enable-libopenh264 --enable-nonfree --enable-gpl " + own,
+			[]string{"--enable-gpl", "--enable-nonfree", "--enable-libopenh264"},
+		},
 		{"a later disable does not clear an enable", "--enable-gpl --disable-gpl " + own, []string{"--enable-gpl"}},
 		{"btbn with gpl", "--prefix=/ffbuild/prefix --enable-gpl", []string{"--enable-gpl"}},
 		{"btbn with nonfree", "--prefix=/ffbuild/prefix --enable-nonfree", []string{"--enable-nonfree"}},
@@ -111,7 +113,10 @@ func TestSecurity_T26_OpenH264DirOnlyForTheOwnBuild(t *testing.T) {
 	// The own build with no library, or with a changed one, sees the variable empty: the ambient value
 	// of the process never reaches it.
 	empty := t.TempDir()
-	in, err = Discover(ctx, Config{FFmpegPath: ownWithFake(t, "own"), CPUCount: 1, ToolsDir: empty, OpenH264Manifest: m})
+	in, err = Discover(
+		ctx,
+		Config{FFmpegPath: ownWithFake(t, "own"), CPUCount: 1, ToolsDir: empty, OpenH264Manifest: m},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,11 +134,12 @@ func TestSecurity_T26_OpenH264SwapAfterInstall(t *testing.T) {
 	lib := func(dir string) string { return OpenH264Path(dir, m.Entries[0]) }
 
 	swaps := map[string]func(t *testing.T, p string){
-		"same size, other bytes": func(t *testing.T, p string) { writeFile(t, p, flipByte(library)) },
-		"shorter":                func(t *testing.T, p string) { writeFile(t, p, library[:len(library)-1]) },
-		"longer":                 func(t *testing.T, p string) { writeFile(t, p, append(slices.Clone(library), 0)) },
-		"empty":                  func(t *testing.T, p string) { writeFile(t, p, nil) },
+		"same size, other bytes": func(t *testing.T, p string) { t.Helper(); writeFile(t, p, flipByte(library)) },
+		"shorter":                func(t *testing.T, p string) { t.Helper(); writeFile(t, p, library[:len(library)-1]) },
+		"longer":                 func(t *testing.T, p string) { t.Helper(); writeFile(t, p, append(slices.Clone(library), 0)) },
+		"empty":                  func(t *testing.T, p string) { t.Helper(); writeFile(t, p, nil) },
 		"a directory": func(t *testing.T, p string) {
+			t.Helper()
 			if err := os.Remove(p); err != nil {
 				t.Fatal(err)
 			}
@@ -142,6 +148,7 @@ func TestSecurity_T26_OpenH264SwapAfterInstall(t *testing.T) {
 			}
 		},
 		"a symlink to the right bytes": func(t *testing.T, p string) {
+			t.Helper()
 			elsewhere := filepath.Join(t.TempDir(), "copy")
 			writeFile(t, elsewhere, library)
 			if err := os.Remove(p); err != nil {
@@ -161,7 +168,13 @@ func TestSecurity_T26_OpenH264SwapAfterInstall(t *testing.T) {
 			}
 			swap(t, lib(tools))
 
-			if st := CheckOpenH264(tools, m, "", ""); st.Installed || st.Dir != "" || st.Reason != ReasonOpenH264Changed {
+			if st := CheckOpenH264(
+				tools,
+				m,
+				"",
+				"",
+			); st.Installed || st.Dir != "" ||
+				st.Reason != ReasonOpenH264Changed {
 				t.Fatalf("after the swap: %+v", st)
 			}
 			in, err := Discover(ctx, Config{
@@ -248,5 +261,11 @@ func TestSecurity_T14_InputWhitelistMatchesTheBuild(t *testing.T) {
 	if t.Failed() {
 		return
 	}
-	t.Logf("%d allowed names found in %d demuxer names of %s (%s)", len(allowed), len(have), r.In.Info.Version, r.In.Flavour().Name)
+	t.Logf(
+		"%d allowed names found in %d demuxer names of %s (%s)",
+		len(allowed),
+		len(have),
+		r.In.Info.Version,
+		r.In.Flavour().Name,
+	)
 }
