@@ -614,9 +614,9 @@ test.describe("preview-vs-export measures", () => {
 const KNOWN_DIVERGENCES: Record<string, string> = {
 	crop: "SSIM 0.979 but the picture is 4.5 px (about one source pixel) off: the export crops at an odd x of a 4:2:0 source, which FFmpeg crop aligns to an even one; the preview samples the exact rectangle of the plan. Cause in engine/export (ffargs.Crop), not in the preview.",
 	"text-style":
-		"SSIM 0.960, background box 2.6 px off: the preview draws the bitmap of the plan window (PixelScale 1) scaled 2.57 times, the export rasterizes the text at the output scale (PixelScale 2.75), and the layout rounds differently. The plan route takes no output width.",
+		"SSIM 0.958, background box 2.5 px off, with the plan asked for at the buffer width (width=463): the bitmap comes rasterized at PixelScale 2.75 (the plan rounds the scale up to a quarter, SDD-004 section 10) and the preview draws it at 463/180 = 2.57, so it is resampled by 0.935 while the export lays the text out and rounds at the output scale. The remaining gap is in the engine rounding, not in the width the preview asks for.",
 	"caption-highlight":
-		"SSIM 0.970, caption 1.4 px off: the same cause as text-style.",
+		"SSIM 0.958, caption 2.2 px off: the same cause as text-style.",
 	"filter-sepia":
 		"SSIM 0.9698 at frame 0 (0.9724 and 0.9741 at the others): 0.0002 under the gate; the sepia matrix lowers the contrast that SSIM weighs. Deterministic.",
 };
