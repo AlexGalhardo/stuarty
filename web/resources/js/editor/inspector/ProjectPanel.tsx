@@ -20,6 +20,7 @@ import { FieldRow } from "./fields/FieldFrame";
 import NumberField from "./fields/NumberField";
 import SelectField from "./fields/SelectField";
 import TextField from "./fields/TextField";
+import TemplateInfoSection from "./panels/TemplateInfoSection";
 import { useFieldCommit } from "./useFieldCommit";
 
 const CUSTOM = "custom";
@@ -194,6 +195,7 @@ export default function ProjectPanel(): ReactNode {
 					</select>
 				)}
 			</FieldRow>
+			<TemplateInfoSection />
 			<FpsConfirmDialog
 				open={pending !== null}
 				rate={pending ?? ""}
