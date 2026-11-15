@@ -1,6 +1,12 @@
 package service
 
-import "testing"
+import (
+	"context"
+	"encoding/json"
+	"strings"
+	"testing"
+	"time"
+)
 
 // SDD-007 section 9.1: the message carries both figures and the variable, and
 // the details name the limit.
@@ -58,5 +64,37 @@ func TestForCallerRemovesEveryVariableName(t *testing.T) {
 		if forCaller(c, e) != e {
 			t.Errorf("%s lost the variable", name)
 		}
+	}
+}
+
+// An event reaches every subscriber of the project, so a failed job's event
+// carries no variable name, while JobGet keeps it for an administrator.
+func TestEventErrorCarriesNoVariable(t *testing.T) {
+	stored := `{"code":"E_LIMIT_EXCEEDED","message":"The file is 9 GiB; the import limit is 8 GiB (VUKEM_VIDEO_MAX_IMPORT_BYTES).",` +
+		`"hint":"import a smaller file; the person running the server can raise VUKEM_VIDEO_MAX_IMPORT_BYTES",` +
+		`"details":{"limit":"import_bytes","variable":"VUKEM_VIDEO_MAX_IMPORT_BYTES"}}`
+
+	var got []Event
+
+	s := &svc{publish: func(e Event) { got = append(got, e) }, now: time.Now}
+	project := "prj_0000000001"
+
+	s.emitJob(context.Background(), &JobRow{
+		ID: "job_0000000001", Kind: JobExport, ProjectID: &project, State: "failed", Error: json.RawMessage(stored),
+	})
+
+	if len(got) != 1 || got[0].Error == nil {
+		t.Fatalf("events = %+v", got)
+	}
+
+	e := got[0].Error
+	if _, has := e.Details["variable"]; has || strings.Contains(e.Message+e.Hint, "VUKEM_VIDEO_") ||
+		e.Details["limit"] != "import_bytes" {
+		t.Errorf("the event error = %+v", e)
+	}
+
+	admin := Caller{Actor: "user:r", OwnerUserID: "r", Scopes: AllScopes}
+	if full := forCaller(admin, parseError(json.RawMessage(stored))); full.Details["variable"] == nil {
+		t.Error("an administrator lost the variable in JobGet")
 	}
 }

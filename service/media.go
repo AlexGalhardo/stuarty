@@ -817,7 +817,7 @@ func (s *svc) entryOf(ctx context.Context, pa *ProjectAssetRow, ar *AssetRow, fp
 	}
 
 	if ar.IngestState == IngestFailed {
-		e.Error = parseError(ar.IngestError)
+		e.Error = EventError(parseError(ar.IngestError))
 	}
 
 	if ar.IngestState != IngestReady {

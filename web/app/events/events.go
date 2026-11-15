@@ -561,5 +561,5 @@ func errorOf(raw json.RawMessage) *service.Error {
 		return nil //nolint:nilerr // see above
 	}
 
-	return &e
+	return service.EventError(&e)
 }
