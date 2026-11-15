@@ -47,7 +47,7 @@ var bundleExport = &spec{
 var bundleImport = &spec{
 	name:       "bundle:import",
 	summary:    "create a project from a .vvbundle file",
-	usage:      []string{"vukem-video bundle:import <path> [--as-new] [--dry-run]"},
+	usage:      []string{"vukem-video bundle:import <path> [--as-new]"},
 	example:    "vukem-video bundle:import launch-teaser.vvbundle --as-new",
 	positional: true,
 	globals:    []string{"dry-run"},
