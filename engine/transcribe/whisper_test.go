@@ -255,3 +255,35 @@ func TestArtifactKey(t *testing.T) {
 		}
 	}
 }
+
+// SDD-007 section 6.8: a helper is started only from an absolute path; a relative one would be looked
+// up on the PATH or in the working directory by the engine.
+func TestSecurity_T15_WhisperRefusesRelativePaths(t *testing.T) {
+	dir := t.TempDir()
+	helper := filepath.Join(dir, "whisper-cli")
+	model := filepath.Join(dir, "model.bin")
+	for _, p := range []string{helper, model} {
+		if err := os.WriteFile(p, []byte("x"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	relHelper, errH := filepath.Rel(wd, helper)
+	relModel, errM := filepath.Rel(wd, model)
+	if errH != nil || errM != nil {
+		t.Skip("the temp directory has no relative path from the working directory")
+	}
+
+	for name, w := range map[string]*Whisper{
+		"helper": {Helper: relHelper, ModelPath: model},
+		"model":  {Helper: helper, ModelPath: relModel},
+	} {
+		_, err := w.Transcribe(context.Background(), Input{Language: "auto"}, nil)
+		if got := failureReason(t, err); got != ReasonPrepare || !errors.Is(err, errNotAbsolute) {
+			t.Errorf("relative %s: reason %q, err %v; want %q and errNotAbsolute", name, got, err, ReasonPrepare)
+		}
+	}
+}

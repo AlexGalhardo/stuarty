@@ -9,6 +9,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"slices"
@@ -177,6 +178,9 @@ func (w *Whisper) Transcribe(
 	if err := w.Check(ctx); err != nil {
 		return Raw{}, err
 	}
+	if !filepath.IsAbs(w.Helper) || !filepath.IsAbs(w.ModelPath) {
+		return Raw{}, failure(ReasonPrepare, "The transcription helper is not configured with absolute paths.", errNotAbsolute, "")
+	}
 	if in.WorkDir == nil || w.FFmpeg == nil {
 		return Raw{}, failure(
 			ReasonPrepare,
@@ -304,6 +308,10 @@ func runHelper(
 func ffmpegTranscribeDeadline(audio time.Duration) time.Duration {
 	return ffmpeg.TranscribeDeadline(audio)
 }
+
+// errNotAbsolute: the engine resolves a relative program through the PATH or the working directory, which
+// SDD-007 section 6.8 forbids for a helper.
+var errNotAbsolute = errors.New("the helper and the model must be absolute paths")
 
 var errTooBig = errors.New("the output is over the cap")
 
