@@ -160,3 +160,19 @@ func (r *Runner) ReadCapabilities(ctx context.Context) (*Capabilities, error) {
 	}
 	return c, nil
 }
+
+// optionalFilters are accepted by the argv checker and used only when the build has them: HDR tone
+// mapping, the deinterlacers (yadif stands in for bwdif) and the VAAPI upload.
+var optionalFilters = map[string]bool{"zscale": true, "tonemap": true, "bwdif": true, "yadif": true, "hwupload": true}
+
+// MissingFilters lists the filters the argv checker accepts and the engine needs that a build does not
+// have. A build that lacks one fails here instead of in the middle of an export (SDD-004, SDD-011).
+func MissingFilters(filters map[string]bool) []string {
+	var missing []string
+	for _, n := range ffargs.FilterNames() {
+		if !optionalFilters[n] && !filters[n] {
+			missing = append(missing, n)
+		}
+	}
+	return missing
+}
