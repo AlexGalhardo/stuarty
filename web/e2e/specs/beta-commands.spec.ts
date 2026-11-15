@@ -37,50 +37,7 @@ function recordEdits(page: Page): Posted[] {
 	return edits;
 }
 
-// The default registry of this build stops at ALPHA, so the service neither
-// lists nor runs the BETA commands. The UI draws their controls only when the
-// registry it receives lists them: the spec adds the six commands to the list
-// and to the detail the page reads, and lets every edit reach the service. The
-// service then refuses the unknown command; what the spec checks is the request
-// the control sent: one command per change.
-async function exposeBeta(page: Page): Promise<void> {
-	await page.route(
-		(url) => /\/api\/v1\/commands(\/[^/]+)?$/.test(url.pathname),
-		async (route) => {
-			const url = new URL(route.request().url());
-			const name = url.pathname.split("/").pop() ?? "";
-			const own = BETA.find((c) => c.name === name);
-			if (own !== undefined) {
-				await route.fulfill({ json: { command: own } });
-				return;
-			}
-			if (name !== "commands") {
-				await route.fallback();
-				return;
-			}
-			const response = await route.fetch();
-			const body = (await response.json()) as { commands: unknown[] };
-			await route.fulfill({
-				response,
-				json: {
-					...body,
-					commands: [
-						...body.commands,
-						...BETA.map(({ name: n, summary, scope, phase }) => ({
-							name: n,
-							summary,
-							scope,
-							phase,
-						})),
-					],
-				},
-			});
-		},
-	);
-}
-
-// The service refuses the BETA commands in this build, so each edit leaves an
-// error notice that would cover the controls below it.
+// A notice that an edit leaves can cover the controls below it.
 async function dismissNotices(page: Page): Promise<void> {
 	const dismiss = page.getByRole("button", { name: "Dismiss", exact: true });
 	for (let i = 0; i < 10 && (await dismiss.count()) > 0; i++) {
@@ -132,7 +89,7 @@ async function seed(
 // P3-UI-007 (SDD-012 sections 9.3 and 12.1): the inspector entry points of the
 // BETA item commands.
 test.describe("beta-commands", () => {
-	test("an ALPHA registry draws none of the BETA controls", async ({
+	test("the BETA registry draws the BETA controls", async ({
 		page,
 		request,
 	}) => {
@@ -144,17 +101,17 @@ test.describe("beta-commands", () => {
 		).toBeVisible();
 		await expect(
 			page.getByRole("button", { name: "Filters", exact: true }),
-		).toHaveCount(0);
+		).toBeVisible();
 		await page.locator(`[data-item-id="${seeded.audio}"]`).click();
 		await expect(
 			page.getByRole("button", { name: "Audio", exact: true }),
 		).toBeVisible();
 		await expect(
 			page.getByRole("button", { name: "Ducking", exact: true }),
-		).toHaveCount(0);
+		).toBeVisible();
 		await expect(
 			page.getByRole("button", { name: "Beat markers", exact: true }),
-		).toHaveCount(0);
+		).toBeVisible();
 	});
 
 	test("filter, blur, ducking, beat markers and fonts each send one command", async ({
@@ -162,7 +119,6 @@ test.describe("beta-commands", () => {
 		request,
 	}) => {
 		const seeded = await seed(request);
-		await exposeBeta(page);
 		await page.goto(`/editor/${seeded.id}?debug=1`);
 		const edits = recordEdits(page);
 
@@ -265,7 +221,6 @@ test.describe("beta-commands", () => {
 		const created = await call("POST", "/projects", {
 			name: `Beta palette ${Date.now()}`,
 		});
-		await exposeBeta(page);
 		await page.goto(`/editor/${created.project_id as string}`);
 		await expect(
 			page.getByRole("button", { name: /Command palette/ }),
