@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -18,6 +19,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/exporter"
 	"github.com/AlexGalhardo/vukem-video/service/pathguard"
 	"github.com/AlexGalhardo/vukem-video/web/app/jobs"
 )
@@ -49,6 +51,8 @@ type mediaCfg struct {
 	// realIngest runs engine/ingest instead of the fake; with no FFmpeg installed it
 	// still refuses what is not media, which is decided by the first bytes.
 	realIngest bool
+	// realExport renders with engine/export and the pinned FFmpeg; the test skips without it.
+	realExport bool
 	// durable runs the jobs on the database queue with workers instead of inline.
 	durable bool
 }
@@ -106,6 +110,16 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 		}
 
 		o.Exporter = cfg.exporter
+
+		if cfg.realExport {
+			runner, rerr := ffmpeg.NewRunner(pinnedFFmpeg(tb), m.ws)
+			if rerr != nil {
+				tb.Fatal(rerr)
+			}
+
+			o.Media.Runner = runner
+			o.Exporter = exporter.New(exporter.Config{Runner: runner, Workspace: m.ws})
+		}
 		o.Limits = cfg.limits
 
 		if cfg.noQueue {
@@ -278,4 +292,45 @@ func (g gated) Enqueue(ctx context.Context, tx service.Tx, kind, jobID string) e
 	}
 
 	return g.inner.Enqueue(ctx, tx, kind, jobID)
+}
+
+// pinnedFFmpeg finds the pinned LGPL FFmpeg of scripts/install-ffmpeg.sh, or
+// skips the test; a test never downloads.
+func pinnedFFmpeg(tb testing.TB) *ffmpeg.Installation {
+	tb.Helper()
+
+	exe := "ffmpeg"
+	if runtime.GOOS == "windows" {
+		exe += ".exe"
+	}
+
+	dir := os.Getenv("VUKEM_VIDEO_TEST_FFMPEG_DIR")
+
+	if dir == "" {
+		for _, base := range []string{os.Getenv("RUNNER_TEMP"), os.Getenv("TEMP"), os.Getenv("TMPDIR")} {
+			if base == "" {
+				continue
+			}
+
+			if m, _ := filepath.Glob(filepath.Join(base, "ffmpeg", "*", "*", "bin", exe)); len(m) > 0 {
+				dir = filepath.Dir(m[len(m)-1])
+
+				break
+			}
+		}
+	}
+
+	if dir == "" {
+		tb.Skip("no pinned FFmpeg: run scripts/install-ffmpeg.sh and set VUKEM_VIDEO_TEST_FFMPEG_DIR")
+	}
+
+	in, err := ffmpeg.Discover(
+		context.Background(),
+		ffmpeg.Config{FFmpegPath: filepath.Join(dir, exe), CPUCount: runtime.NumCPU()},
+	)
+	if err != nil || in.Info.License.Name != "lgpl" {
+		tb.Skip("the FFmpeg in VUKEM_VIDEO_TEST_FFMPEG_DIR is not the pinned LGPL build")
+	}
+
+	return in
 }

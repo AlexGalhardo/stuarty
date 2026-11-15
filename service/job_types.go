@@ -122,4 +122,8 @@ type exportInput struct {
 	Start    int64       `json:"start_frame"`
 	End      int64       `json:"end_frame"`
 	Lint     *LintTotals `json:"lint,omitempty"`
+	// Document is the canonical document of Revision, kept with the job so
+	// that the export renders what was asked for even when edits land while
+	// the job waits (SDD-003 section 2.8 rule 9).
+	Document json.RawMessage `json:"document,omitempty"`
 }

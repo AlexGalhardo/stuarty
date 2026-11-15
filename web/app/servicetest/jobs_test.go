@@ -823,3 +823,82 @@ func TestIngestConcurrencyIsBounded(t *testing.T) {
 		}
 	}
 }
+
+// An export renders the document of the revision recorded at the start, even
+// when an edit lands before the job runs (SDD-003 section 2.8 rule 9).
+func TestExportRendersTheRevisionPinnedAtStart(t *testing.T) {
+	var rendered []int
+
+	m := newMediaEnv(t, mediaCfg{noQueue: true, exporter: exportFn(
+		func(_ context.Context, in service.ExportInput) (*service.ExportOutput, error) {
+			rendered = append(rendered, len(in.Doc.Items))
+
+			return writeOutput(in, okChecks)
+		},
+	)})
+	project, track := m.withTrack()
+	if _, err := m.addText(ui, project, track, 1, "0s", "hello"); err != nil {
+		t.Fatal(err)
+	}
+
+	job, err := m.startExport(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	head := m.job(job.JobID)
+	if head.State != service.JobQueued {
+		t.Fatalf("state = %s, want queued", head.State)
+	}
+
+	if _, err := m.addText(ui, project, track, 2, "1s", "later"); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := m.runner.RunJob(context.Background(), job.JobID); err != nil {
+		t.Fatal(err)
+	}
+
+	done := m.job(job.JobID)
+	if done.State != service.JobSucceeded || done.Result.Export.Revision != 2 {
+		t.Fatalf("job = %+v", done)
+	}
+
+	if len(rendered) != 1 || rendered[0] != 1 {
+		t.Errorf("the export rendered %v items, want the 1 of the pinned revision", rendered)
+	}
+}
+
+// The real engine renders the pinned revision: its file has the frames of the
+// document at the start, not of the document after the later edit.
+func TestRealExportHasTheFramesOfThePinnedRevision(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true})
+
+	project, track := m.withTrack()
+	if _, err := m.addText(ui, project, track, 1, "0s", "hello"); err != nil {
+		t.Fatal(err)
+	}
+
+	job, err := m.startExport(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := m.addText(ui, project, track, 2, "1s", "later"); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := m.runner.RunJob(context.Background(), job.JobID); err != nil {
+		t.Fatal(err)
+	}
+
+	done := m.job(job.JobID)
+	if done.State != service.JobSucceeded || done.Result == nil || done.Result.Export == nil {
+		t.Fatalf("job = %+v", done)
+	}
+
+	e := done.Result.Export
+	if e.Revision != 2 || e.Duration.Seconds != 1 || e.Bytes == 0 || len(e.SHA256) != 64 {
+		t.Errorf("result = %+v", e)
+	}
+}
