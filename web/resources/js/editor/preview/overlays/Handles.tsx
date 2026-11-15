@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import type { CanvasPort, HandleKind, LayerGeometry } from "../types";
+import { rotateHandleInside } from "./transformGestures";
 
 const CORNERS = [
 	"left-0 top-0 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize",
@@ -24,6 +25,7 @@ export default function Handles({
 	port: CanvasPort;
 	onPreview(geometry: LayerGeometry | null): void;
 }): ReactNode {
+	const inside = rotateHandleInside((geometry.cy - geometry.h / 2) * scale);
 	const begin =
 		(kind: HandleKind) =>
 		(event: React.PointerEvent<HTMLElement>): void => {
@@ -70,10 +72,13 @@ export default function Handles({
 					onPointerDown={begin("scale")}
 				/>
 			))}
-			<div className="pointer-events-none absolute left-1/2 top-0 h-6 w-px -translate-x-1/2 -translate-y-full bg-ed-handle" />
+			{!inside && (
+				<div className="pointer-events-none absolute left-1/2 top-0 h-6 w-px -translate-x-1/2 -translate-y-full bg-ed-handle" />
+			)}
 			<div
 				data-handle="rotate"
-				className="absolute left-1/2 top-0 size-3 -translate-x-1/2 -translate-y-[calc(100%+24px)] cursor-grab rounded-full border border-ed-handle bg-white"
+				data-inside={inside ? "true" : undefined}
+				className={`absolute left-1/2 top-0 size-3 -translate-x-1/2 cursor-grab rounded-full border border-ed-handle bg-white ${inside ? "translate-y-2" : "-translate-y-[calc(100%+24px)]"}`}
 				onPointerDown={begin("rotate")}
 			/>
 		</div>

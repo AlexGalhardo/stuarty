@@ -66,3 +66,12 @@ export function nextScale(base: number, factor: number): number {
 export function nextRotation(base: number, turn: number): number {
 	return round3(turnBetween(0, base + turn));
 }
+
+// The rotation handle hangs this many screen pixels above the box. A box whose
+// top edge is closer than that to the top of the canvas would put the handle
+// under the toolbar above the preview, where no pointer reaches it.
+export const ROTATE_HANDLE_REACH = 36;
+
+export function rotateHandleInside(boxTop: number): boolean {
+	return boxTop < ROTATE_HANDLE_REACH;
+}
