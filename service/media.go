@@ -474,8 +474,25 @@ func (s *svc) waitAssets(ctx context.Context, project *ProjectRow, assets []Impo
 			}
 
 			ar, err := s.store.Assets().Get(ctx, pa.AssetHash)
-			if err == nil && (ar.IngestState == IngestPending || ar.IngestState == IngestIngesting) {
+			if err != nil {
+				continue
+			}
+
+			if ar.IngestState == IngestPending || ar.IngestState == IngestIngesting {
 				done = false
+
+				continue
+			}
+
+			// A ready asset is in the document only once its asset.add has
+			// committed: until then the revision that the call returns would
+			// be stale for the caller's next edit. The ingest job is the one
+			// that commits it, so the wait ends with the job at the latest
+			// (a refused add leaves the row pending and is only a warning).
+			if ar.IngestState == IngestReady && pa.State == ProjectAssetPending {
+				if _, jerr := s.store.Jobs().ActiveIngestForHash(ctx, pa.AssetHash); jerr == nil {
+					done = false
+				}
 			}
 		}
 

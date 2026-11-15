@@ -4,9 +4,13 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
+	"time"
+
+	"github.com/AlexGalhardo/vukem/queue"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
@@ -462,5 +466,54 @@ func TestEveryQueuedJobIsRunExactlyOnceUnderConcurrentDeliveries(t *testing.T) {
 
 	if err := m.runner.RunJob(context.Background(), "job_0000009999"); err != nil {
 		t.Errorf("a message for a job that does not exist: %v", err)
+	}
+}
+
+// A waiting import returns only after the revision that adds the asset to the
+// document exists: an agent that edits with the returned revision must not get
+// a stale base (the ready state is written before the asset.add commits).
+func TestWaitingImportReturnsTheRevisionThatAddsTheAsset(t *testing.T) {
+	// The event of the ready state is published before the asset.add commits;
+	// holding it open the window that a fast machine leaves too narrow to hit.
+	m := newMediaEnv(t, mediaCfg{durable: true, onEvent: func(ev service.Event) {
+		if ev.Type == "asset.updated" && ev.State == "ready" {
+			time.Sleep(150 * time.Millisecond)
+		}
+	}})
+	project := m.newProject("p")
+
+	ctx, stop := context.WithCancel(context.Background())
+	worked := make(chan error, 1)
+
+	go func() {
+		worked <- m.queue.Work(ctx, queue.WorkOptions{
+			Queues: []string{"ingest", "export", "default"}, Concurrency: 2, Sleep: time.Millisecond,
+		})
+	}()
+
+	defer func() {
+		stop()
+		<-worked
+	}()
+
+	for i := range 3 {
+		clip := m.write("clip"+strconv.Itoa(i)+".mp4", clipBytes+strconv.Itoa(i))
+
+		res, err := m.svc.MediaImport(m.as(ui), service.MediaImportRequest{
+			ProjectID: project, Files: []service.ImportFile{{Path: clip}}, WaitMS: 10000,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if res.Assets[0].State != "ready" || res.Revision != int64(i+1) {
+			t.Fatalf(
+				"import %d: state %s, revision %d, want ready at revision %d",
+				i,
+				res.Assets[0].State,
+				res.Revision,
+				i+1,
+			)
+		}
 	}
 }
