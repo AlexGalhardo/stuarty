@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/web/app/events"
@@ -30,8 +31,9 @@ func TestSecurity_T18_RateLimitPerKey(t *testing.T) {
 	h, secret := rateHarness(t)
 
 	first := 0
+	start := time.Now()
 
-	for i := 1; i <= 400 && first == 0; i++ {
+	for i := 1; i <= 1000 && first == 0; i++ {
 		res := h.asKey(t, secret, http.MethodGet, "/api/v1/projects", "")
 
 		switch res.status {
@@ -48,8 +50,11 @@ func TestSecurity_T18_RateLimitPerKey(t *testing.T) {
 		}
 	}
 
-	if first < 361 || first > 380 {
-		t.Errorf("the first refusal was request %d, want from the 361st", first)
+	// 300 a minute refills 5 tokens a second, so a slow run (the race detector)
+	// is refused later by about that much, never earlier.
+	late := 361 + int(time.Since(start).Seconds()*5) + 1
+	if first < 361 || first > late {
+		t.Errorf("the first refusal was request %d, want from the 361st to the %dth", first, late)
 	}
 
 	// Another key is not slowed by it.
