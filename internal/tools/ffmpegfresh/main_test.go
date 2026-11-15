@@ -67,7 +67,8 @@ func TestNewerPatchIsBehindAndWritesBody(t *testing.T) {
 		t.Fatalf("exit %d: %s", code, errs)
 	}
 
-	if !strings.Contains(out, "behind=true") || !strings.Contains(out, "newest=n9.0.2") || !strings.Contains(out, "stale=true") {
+	if !strings.Contains(out, "behind=true") || !strings.Contains(out, "newest=n9.0.2") ||
+		!strings.Contains(out, "stale=true") {
 		t.Errorf("unexpected result:\n%s", out)
 	}
 
@@ -87,7 +88,8 @@ func TestPinOlderThanLimitIsTooOld(t *testing.T) {
 	tags := write(t, dir, "tags.txt", tagList)
 
 	_, out, _ := runTool(t, "-env", env, "-tags", tags, "-now", "2026-11-15")
-	if !strings.Contains(out, "too_old=true") || !strings.Contains(out, "behind=false") || !strings.Contains(out, "stale=true") {
+	if !strings.Contains(out, "too_old=true") || !strings.Contains(out, "behind=false") ||
+		!strings.Contains(out, "stale=true") {
 		t.Errorf("unexpected result:\n%s", out)
 	}
 }
@@ -122,8 +124,22 @@ func TestOwnBuildReadsSourcesEnv(t *testing.T) {
 	sources := write(t, dir, "sources.env", "FFMPEG_BUILD_VERSION=\"9.0.1\" # comment\n")
 	tags := write(t, dir, "tags.txt", tagList)
 
-	_, out, errs := runTool(t, "-env", env, "-sources", sources, "-tags", tags, "-now", "2026-11-15", "-sources-date", "2026-11-01")
-	if !strings.Contains(out, "source=own") || !strings.Contains(out, "pinned=n9.0.1") || !strings.Contains(out, "behind=true") || !strings.Contains(out, "age_days=14") {
+	_, out, errs := runTool(
+		t,
+		"-env",
+		env,
+		"-sources",
+		sources,
+		"-tags",
+		tags,
+		"-now",
+		"2026-11-15",
+		"-sources-date",
+		"2026-11-01",
+	)
+	if !strings.Contains(out, "source=own") || !strings.Contains(out, "pinned=n9.0.1") ||
+		!strings.Contains(out, "behind=true") ||
+		!strings.Contains(out, "age_days=14") {
 		t.Errorf("unexpected result (%s):\n%s", errs, out)
 	}
 }
@@ -166,7 +182,17 @@ func TestBadInputsExitTwo(t *testing.T) {
 func TestRealPinFileParses(t *testing.T) {
 	tags := write(t, t.TempDir(), "tags.txt", tagList)
 
-	code, _, errs := runTool(t, "-env", "../../../.config/ffmpeg.env", "-sources", "../../../.config/ffmpeg-build/sources.env", "-tags", tags, "-now", "2026-11-15")
+	code, _, errs := runTool(
+		t,
+		"-env",
+		"../../../.config/ffmpeg.env",
+		"-sources",
+		"../../../.config/ffmpeg-build/sources.env",
+		"-tags",
+		tags,
+		"-now",
+		"2026-11-15",
+	)
 	if code != 0 {
 		t.Fatalf("the repository pin does not parse: %s", errs)
 	}

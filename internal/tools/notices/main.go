@@ -52,7 +52,11 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, runner Ru
 	auditDir := fs.String("audit-tree", "", "print the denied and unknown licence texts under DIR/licenses")
 
 	waiverFile := fs.String("waivers", "", "with -audit-spdx: the reviewed waivers (.config/sbom-waivers.json)")
-	waiverRoot := fs.String("waiver-root", "", "with -waivers: the extracted archive the waiver checksums are read from")
+	waiverRoot := fs.String(
+		"waiver-root",
+		"",
+		"with -waivers: the extracted archive the waiver checksums are read from",
+	)
 
 	if err := fs.Parse(args); err != nil {
 		return 2
