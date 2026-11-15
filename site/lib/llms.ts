@@ -5,9 +5,9 @@ import { mdxToMarkdown } from "@/lib/text";
 import { withTrailingSlash } from "@/lib/trailing-slash";
 
 const SUMMARY: Record<Locale, string> = {
-	en: "Vukem Video is a minimalist, open source video editor operated by AI agents (MCP, CLI, HTTP API) and by people in a browser UI. It is in the Prototype phase.",
+	en: "Vukem Video is a minimalist, open source video editor operated by AI agents (MCP, CLI, HTTP API) and by people in a browser UI. It is in the BETA phase.",
 	"pt-br":
-		"O Vukem Video é um editor de vídeo minimalista e de código aberto, operado por agentes de IA (MCP, CLI, API HTTP) e por pessoas em uma interface no navegador. Está na fase de Protótipo.",
+		"O Vukem Video é um editor de vídeo minimalista e de código aberto, operado por agentes de IA (MCP, CLI, API HTTP) e por pessoas em uma interface no navegador. Está na fase BETA.",
 };
 
 const url = (path: string) => `${site.url}${withTrailingSlash(path)}`;
