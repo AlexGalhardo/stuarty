@@ -15,17 +15,17 @@ type assetRepo struct{ ex database.Executor }
 
 const assetColumns = `id, kind, size_bytes, original_name, ingest_state, ingest_progress, ingest_error,
  normalized_version, duration_ms, width, height, has_audio, frame_rate_num, frame_rate_den,
- frame_count, sample_count, created_ms, updated_ms`
+ frame_count, sample_count, created_ms, updated_ms, frame_delays`
 
 func scanAsset(sc scanner) (service.AssetRow, error) {
 	var (
 		a                                             service.AssetRow
-		kind, ingestErr                               sql.NullString
+		kind, ingestErr, delays                       sql.NullString
 		version, dur, w, h, frn, frd, frames, samples sql.NullInt64
 		hasAudio                                      int
 	)
 	err := sc.Scan(&a.Hash, &kind, &a.SizeBytes, &a.OriginalName, &a.IngestState, &a.Progress, &ingestErr,
-		&version, &dur, &w, &h, &hasAudio, &frn, &frd, &frames, &samples, &a.CreatedMs, &a.UpdatedMs)
+		&version, &dur, &w, &h, &hasAudio, &frn, &frd, &frames, &samples, &a.CreatedMs, &a.UpdatedMs, &delays)
 	if err != nil {
 		return service.AssetRow{}, err
 	}
@@ -35,6 +35,11 @@ func scanAsset(sc scanner) (service.AssetRow, error) {
 		NormalizedVersion: ptrInt(version), DurationMs: ptrInt64(dur), Width: ptrInt(w), Height: ptrInt(h),
 		HasAudio: hasAudio != 0, FrameRateNum: ptrInt(frn), FrameRateDen: ptrInt(frd),
 		FrameCount: ptrInt64(frames), SampleCount: ptrInt64(samples),
+	}
+	if delays.Valid {
+		if err := json.Unmarshal([]byte(delays.String), &a.Facts.FrameDelays); err != nil {
+			return service.AssetRow{}, err
+		}
 	}
 	return a, nil
 }
@@ -48,12 +53,12 @@ func (r assetRepo) Upsert(ctx context.Context, a service.AssetRow) (service.Asse
 	n, err := rowsAffected(r.ex.ExecContext(ctx, `INSERT INTO assets
  (id, kind, size_bytes, original_name, ingest_state, ingest_progress, ingest_error, normalized_version,
   duration_ms, width, height, has_audio, frame_rate_num, frame_rate_den, frame_count, sample_count,
-  created_ms, updated_ms)
- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  created_ms, updated_ms, frame_delays)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
  ON CONFLICT (id) DO NOTHING`,
 		a.Hash, nullString(a.Kind), a.SizeBytes, a.OriginalName, string(state), a.Progress, nullJSON(a.IngestError),
 		f.NormalizedVersion, f.DurationMs, f.Width, f.Height, boolInt(f.HasAudio), f.FrameRateNum, f.FrameRateDen,
-		f.FrameCount, f.SampleCount, a.CreatedMs, a.UpdatedMs))
+		f.FrameCount, f.SampleCount, a.CreatedMs, a.UpdatedMs, delaysJSON(f.FrameDelays)))
 	if err != nil {
 		return service.AssetRow{}, false, err
 	}
@@ -92,9 +97,24 @@ func (r assetRepo) SetIngest(
 func (r assetRepo) SetFacts(ctx context.Context, hash string, f service.AssetFacts, nowMs int64) error {
 	return notFoundIfNone(rowsAffected(r.ex.ExecContext(ctx, `UPDATE assets SET
  kind = COALESCE(NULLIF(?, ''), kind), normalized_version = ?, duration_ms = ?, width = ?, height = ?, has_audio = ?,
- frame_rate_num = ?, frame_rate_den = ?, frame_count = ?, sample_count = ?, updated_ms = ? WHERE id = ?`,
+ frame_rate_num = ?, frame_rate_den = ?, frame_count = ?, sample_count = ?, frame_delays = ?, updated_ms = ?
+ WHERE id = ?`,
 		f.Kind, f.NormalizedVersion, f.DurationMs, f.Width, f.Height, boolInt(f.HasAudio),
-		f.FrameRateNum, f.FrameRateDen, f.FrameCount, f.SampleCount, nowMs, hash)))
+		f.FrameRateNum, f.FrameRateDen, f.FrameCount, f.SampleCount, delaysJSON(f.FrameDelays), nowMs, hash)))
+}
+
+// delaysJSON stores the frame delays of an animated image as a JSON array, NULL for a still.
+func delaysJSON(d []int) any {
+	if len(d) == 0 {
+		return nil
+	}
+
+	b, err := json.Marshal(d)
+	if err != nil {
+		return nil
+	}
+
+	return string(b)
 }
 
 func (r assetRepo) PutArtifact(ctx context.Context, a service.ArtifactRow) error {

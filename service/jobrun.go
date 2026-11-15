@@ -415,6 +415,11 @@ func (s *svc) registerIngest(ctx context.Context, hash string, res *ingest.Resul
 			f.FrameCount = &c
 		}
 
+		// An animated image: the delays of its frames, one per frame (SDD-011 section 4.7).
+		if res.Kind == ingest.KindImage && len(res.Facts.FrameDelays) > 1 {
+			f.FrameDelays = res.Facts.FrameDelays
+		}
+
 		if res.Facts.SampleCount > 0 {
 			c := res.Facts.SampleCount
 			f.SampleCount = &c
