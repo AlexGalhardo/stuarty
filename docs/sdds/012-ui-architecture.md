@@ -957,7 +957,7 @@ All overlays are DOM elements in `preview/overlays/`, positioned over the canvas
 | Overlay | Source of geometry | Phase |
 | --- | --- | --- |
 | Safe-area guide | the `safe_area: [x, y, w, h]` field of the plan window, in project pixels (the core computes it with `SafeArea(width, height)` of SDD-004 §4.1; the UI never re-implements the percentages). Drawn as a dashed rectangle and a dimmed band outside it; toggled by the "Safe area" button, off by default | A (RF-036) |
-| Selection box | the plan layer of the selected item at the playhead frame, `getLayerGeometry(frame)`: `cx`, `cy`, `w`, `h`, `rotation` (indexed by `frame - first` when an array). When the playhead is outside the item no box is drawn | A |
+| Selection box | the plan layer of the selected item at the playhead frame, `getLayerGeometry(frame)`: `cx`, `cy`, `w`, `h`, `rotation`, `scale`, `opacity` (indexed by `frame - first` when an array). When the playhead is outside the item no box is drawn | A |
 | Transform handles | four corner handles (uniform scale), one rotation handle above the box, drag on the body to move; the gestures of §8.2. The box, the handles and any focus ring over the preview use `--ed-handle` (§17), because the surround is dark in both themes. The box moves under the pointer as the ephemeral preview; the picture does not | A |
 | Hit test | a click on the canvas selects the topmost layer (last in plan order) whose rotated rectangle contains the point; clicks that hit nothing clear the selection | A |
 | Inline text editor | a `<textarea>` over the item's box for `text.set` | A |
