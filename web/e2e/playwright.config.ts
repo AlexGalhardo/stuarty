@@ -41,6 +41,21 @@ export default defineConfig({
 	projects: [
 		{
 			name: "chromium",
+			testIgnore: /perf\.spec\.ts/,
+			use: {
+				browserName: "chromium",
+				launchOptions: {
+					args: ["--disable-gpu-vsync", "--disable-frame-rate-limit"],
+				},
+			},
+		},
+		// The budgets that depend on the load of the machine run alone, in one file
+		// and so one worker, after every other spec has finished.
+		{
+			name: "perf",
+			testMatch: /perf\.spec\.ts/,
+			dependencies: ["chromium"],
+			fullyParallel: false,
 			use: {
 				browserName: "chromium",
 				launchOptions: {
