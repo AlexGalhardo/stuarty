@@ -167,12 +167,54 @@ Code, HTTP status, usual fix; `retry` marks exit 2.
 Import, cut, caption and export:
 
 ```text
-vukem-video project:create --name "Teaser"
-vukem-video media:import clip.mp4 --project <id>
-vukem-video edit --project <id> --ops -
-vukem-video lint --project <id>
-vukem-video view --project <id> --at 1s
-vukem-video export --project <id>
+vukem-video project:create --name "Teaser" --id prj_7k2m9x4q1b
+vukem-video media:import clip.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d
+vukem-video edit --project prj_7k2m9x4q1b --ops - <<'EOF'
+[{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_f6g7h8j9k0"}},
+ {"op":"track.add","args":{"kind":"visual","name":"Captions","id":"trk_a1b2c3d4e5"}},
+ {"op":"clip.add","args":{"track_id":"trk_f6g7h8j9k0","asset_id":"ast_3c5v8n2w6d","start":"0s","duration":"2s","id":"itm_m1n2p3q4r5"}}]
+EOF
+vukem-video edit --project prj_7k2m9x4q1b --ops - <<'EOF'
+[{"op":"item.split","args":{"item_id":"itm_m1n2p3q4r5","at":"1s","new_id":"itm_c3d4e5f6g7"}},
+ {"op":"item.delete","args":{"item_ids":["itm_c3d4e5f6g7"]}}]
+EOF
+vukem-video edit --project prj_7k2m9x4q1b --ops - <<'EOF'
+[{"op":"caption.add","args":{"track_id":"trk_a1b2c3d4e5","start":"0.1s","linked_item":"itm_m1n2p3q4r5","id":"itm_s6t7v8w9x0","words":[{"text":"Meet","start":"0s","duration":"0.3s"},{"text":"us.","start":"0.3s","duration":"0.3s"}]}}]
+EOF
+vukem-video lint --project prj_7k2m9x4q1b
+vukem-video export --project prj_7k2m9x4q1b
+```
+
+Recover from a conflict:
+
+```text
+vukem-video project:create --name "Shared" --id prj_7k2m9x4q1b
+vukem-video edit --project prj_7k2m9x4q1b --ops - <<'EOF'
+[{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_f6g7h8j9k0"}}]
+EOF
+# another actor changes the track first
+vukem-video edit --project prj_7k2m9x4q1b --actor other track.update track_id=trk_f6g7h8j9k0 name=Theirs
+# a stale --base is a conflict, exit 2; read details.diff
+vukem-video edit --project prj_7k2m9x4q1b --base 1 track.update track_id=trk_f6g7h8j9k0 name=Mine
+vukem-video project:show prj_7k2m9x4q1b
+# send again from the new revision
+vukem-video edit --project prj_7k2m9x4q1b --base 2 track.update track_id=trk_f6g7h8j9k0 name=Mine
+```
+
+Fill a template:
+
+```text
+vukem-video project:create --name "Base" --id prj_7k2m9x4q1b
+vukem-video edit --project prj_7k2m9x4q1b --ops - <<'EOF'
+[{"op":"track.add","args":{"kind":"visual","name":"Text","id":"trk_f6g7h8j9k0"}},
+ {"op":"text.add","args":{"track_id":"trk_f6g7h8j9k0","start":"0s","duration":"1s","text":"Headline","id":"itm_t1t2t3t4t5"}}]
+EOF
+vukem-video edit --project prj_7k2m9x4q1b --base 1 slot.mark item_id=itm_t1t2t3t4t5 name=headline
+vukem-video template:save --project prj_7k2m9x4q1b --name "Spring sale"
+vukem-video template:new <template id> --name "Spring sale" --id prj_6t4y2w8j1m --fill - <<'EOF'
+{"headline":{"text":"Spring sale"}}
+EOF
+vukem-video export --project prj_6t4y2w8j1m
 ```
 
 ## Safety

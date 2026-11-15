@@ -49,10 +49,15 @@ type toolView struct {
 // view is the data the templates see.
 type view struct {
 	Inputs
-	Errors []errorView
-	Tools  []toolView
-	Rules  []ruleView
-	Ops    []opGroup
+	Errors  []errorView
+	Tools   []toolView
+	Rules   []ruleView
+	Ops     []opGroup
+	Recipes []recipeView
+}
+
+type recipeView struct {
+	Title, Text string
 }
 
 type ruleView struct {
@@ -64,8 +69,17 @@ type opGroup struct {
 	Namespace, Names string
 }
 
-func newView(in Inputs) view {
+func newView(in Inputs) (view, error) {
 	v := view{Inputs: in}
+
+	recipes, err := Recipes()
+	if err != nil {
+		return v, err
+	}
+
+	for i := range recipes {
+		v.Recipes = append(v.Recipes, recipeView{recipes[i].Title, recipes[i].Text()})
+	}
 
 	for _, c := range in.Commands {
 		if c.Internal {
@@ -110,7 +124,7 @@ func newView(in Inputs) view {
 		v.Tools = append(v.Tools, toolView{t.Tool, "`" + strings.Join(t.Commands, "`, `") + "`"})
 	}
 
-	return v
+	return v, nil
 }
 
 // Generate renders the three files from the inputs. It is a pure function: the
@@ -125,7 +139,10 @@ func Generate(in Inputs) (map[string][]byte, error) {
 		return nil, fmt.Errorf("agentdocs: parse the templates: %w", err)
 	}
 
-	v := newView(in)
+	v, err := newView(in)
+	if err != nil {
+		return nil, err
+	}
 	out := map[string][]byte{}
 
 	for file, name := range map[string]string{
