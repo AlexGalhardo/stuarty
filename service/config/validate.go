@@ -533,7 +533,11 @@ func bwrapAvailable() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := exec.CommandContext(ctx, path, "--unshare-user", "--ro-bind", "/", "/", "true").Run(); err != nil {
+	// Like every child (SDD-007 6.4): no application variable such as VUKEM_VIDEO_KEY reaches the probe.
+	probe := exec.CommandContext(ctx, path, "--unshare-user", "--ro-bind", "/", "/", "true")
+	probe.Dir = os.TempDir()
+	probe.Env = []string{"PATH=" + os.Getenv("PATH")}
+	if err := probe.Run(); err != nil {
 		return errors.New("bwrap cannot create a namespace")
 	}
 
