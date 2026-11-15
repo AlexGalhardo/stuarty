@@ -157,7 +157,7 @@ func TestCancelEndsTheHelper(t *testing.T) {
 }
 
 // SDD-007 section 6.6 item 2: the command line is the template, and no flag carries user text.
-func TestWhisperArgvPolicy(t *testing.T) {
+func TestSecurity_T15_WhisperArgvPolicy(t *testing.T) {
 	tests := []struct {
 		language string
 		flag     string

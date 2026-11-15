@@ -62,7 +62,7 @@ func TestArgvFixturesAreRejected(t *testing.T) {
 }
 
 // SDD-007 15 check 14: text formats are refused by the sniff alone, FFmpeg is never started.
-func TestHostileTextIsRefusedBySniff(t *testing.T) {
+func TestSecurity_T14_SniffRejectsText(t *testing.T) {
 	t.Parallel()
 
 	files, err := filepath.Glob(filepath.Join("testdata", "hostile", "*"))

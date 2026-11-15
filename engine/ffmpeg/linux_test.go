@@ -58,7 +58,7 @@ func runHelper(t *testing.T, r *Runner, dir *RunDir, mode string, extra ...strin
 	return out.String(), err
 }
 
-func TestLimitsAreAppliedToTheChild(t *testing.T) {
+func TestSecurity_T16_LinuxLimitsApplied(t *testing.T) {
 	r, dir := limitedRunner(t, LimitsFor(KindExportSoftware, 90*time.Second, 2, 1<<30))
 
 	out, err := runHelper(t, r, dir, "limits")
@@ -110,7 +110,7 @@ func TestBwrapArgsMakeTheRunDirTheOnlyWritablePlace(t *testing.T) {
 	}
 }
 
-func TestBwrapHasNoNetwork(t *testing.T) {
+func TestSecurity_T16_BwrapHasNoNetwork(t *testing.T) {
 	path, err := ResolveSandbox(context.Background(), SandboxBwrap)
 	if err != nil {
 		t.Skipf("no usable bwrap: %v", err)
