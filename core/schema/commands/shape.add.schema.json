@@ -4,7 +4,8 @@
   "properties": {
     "duration": {
       "description": "A length of at least 1 frame.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "fill": {
       "description": "A colour; default #FFFFFF.",
@@ -31,7 +32,8 @@
     },
     "start": {
       "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "stroke_color": {
       "description": "A colour; default #000000.",

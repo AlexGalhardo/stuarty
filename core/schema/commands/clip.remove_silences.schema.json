@@ -8,7 +8,8 @@
     },
     "min_silence": {
       "description": "A length; shorter silences are ignored. Default \"0.4s\".",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "new_ids": {
       "description": "Ids for the second, third, ... pieces, in order.",
@@ -19,7 +20,8 @@
     },
     "padding": {
       "description": "A length, may be 0; speech kept around each cut. Default \"0.1s\".",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "resolved": {
       "additionalProperties": false,

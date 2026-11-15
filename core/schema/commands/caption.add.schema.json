@@ -4,7 +4,8 @@
   "properties": {
     "duration": {
       "description": "A length; with text only.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "id": {
       "type": "string"
@@ -15,7 +16,8 @@
     },
     "start": {
       "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "text": {
       "description": "Text to split on whitespace; needs duration.",
@@ -32,11 +34,13 @@
         "properties": {
           "duration": {
             "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-            "type": "string"
+            "type": "string",
+            "x-vv-kind": "time"
           },
           "start": {
             "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-            "type": "string"
+            "type": "string",
+            "x-vv-kind": "time"
           },
           "text": {
             "type": "string"

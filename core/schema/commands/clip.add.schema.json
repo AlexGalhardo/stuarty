@@ -8,7 +8,8 @@
     },
     "duration": {
       "description": "A length; default the rest of the asset, or 5s for an image.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "fit": {
       "enum": [
@@ -23,11 +24,13 @@
     },
     "source_in": {
       "description": "Offset into the asset; default 0s; omit for an image.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "start": {
       "description": "Absolute position.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "track_id": {
       "description": "A visual track.",

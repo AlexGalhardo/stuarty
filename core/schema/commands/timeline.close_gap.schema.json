@@ -4,7 +4,8 @@
   "properties": {
     "at": {
       "description": "Absolute frame inside the gap.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "ripple": {
       "description": "track (default) or all: all moves later items of every track.",

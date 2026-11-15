@@ -12,7 +12,8 @@
     },
     "source_in": {
       "description": "With asset_id only. Default \"0s\".",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "text": {
       "description": "For a text slot.",
@@ -27,11 +28,13 @@
         "properties": {
           "duration": {
             "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-            "type": "string"
+            "type": "string",
+            "x-vv-kind": "time"
           },
           "start": {
             "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-            "type": "string"
+            "type": "string",
+            "x-vv-kind": "time"
           },
           "text": {
             "type": "string"

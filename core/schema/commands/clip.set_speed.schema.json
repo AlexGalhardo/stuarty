@@ -15,7 +15,34 @@
       "type": "string"
     },
     "speed": {
-      "description": "\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4."
+      "description": "\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4.",
+      "oneOf": [
+        {
+          "examples": [
+            "1.5x"
+          ],
+          "pattern": "^([0-9]+\\.?[0-9]{0,3}|\\.[0-9]{1,3})x$",
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "den": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "num": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "num",
+            "den"
+          ],
+          "type": "object"
+        }
+      ]
     }
   },
   "required": [

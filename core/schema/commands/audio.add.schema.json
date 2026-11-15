@@ -8,18 +8,21 @@
     },
     "duration": {
       "description": "A length; default the rest of the asset.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "id": {
       "type": "string"
     },
     "source_in": {
       "description": "Offset into the asset; default 0s.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "start": {
       "description": "Absolute position.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "track_id": {
       "description": "An audio track.",

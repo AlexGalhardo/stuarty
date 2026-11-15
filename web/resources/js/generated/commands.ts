@@ -200,8 +200,46 @@ export interface CaptionSetStyleArgs {
    * A partial CaptionStyle replacing the override, or null or {} to clear it.
    */
   style: {
-    [k: string]: unknown;
-  };
+    align?: "left" | "center" | "right";
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    background_color?: string;
+    background_padding?: number;
+    background_radius?: number;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    color?: string;
+    font_family?: string;
+    font_weight?: number;
+    highlight?: "none" | "word";
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    highlight_background?: string;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    highlight_color?: string;
+    line_height?: number;
+    max_width?: number;
+    position?: "bottom" | "middle" | "top" | "custom";
+    shadow_blur?: number;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    shadow_color?: string;
+    shadow_dx?: number;
+    shadow_dy?: number;
+    size?: number;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    stroke_color?: string;
+    stroke_width?: number;
+    uppercase?: boolean;
+  } | null;
 }
 
 export interface CaptionSetWordsArgs {
@@ -359,9 +397,12 @@ export interface ClipSetSpeedArgs {
   /**
    * "1.5x" (up to 3 decimals) or {"num": 3, "den": 2}; 1/4 to 4.
    */
-  speed: {
-    [k: string]: unknown;
-  };
+  speed:
+    | string
+    | {
+        den: number;
+        num: number;
+      };
 }
 
 export interface ItemCrossfadeArgs {
@@ -499,9 +540,7 @@ export interface ItemSetTransitionArgs {
   /**
    * fade, slide_left, slide_right, slide_up, slide_down, or null to remove.
    */
-  kind: {
-    [k: string]: unknown;
-  };
+  kind: "fade" | "slide_left" | "slide_right" | "slide_up" | "slide_down" | null;
 }
 
 export interface ItemSplitArgs {
@@ -589,9 +628,12 @@ export interface SettingsSetFpsArgs {
   /**
    * "30", "30000/1001" or {"num": 30000, "den": 1001}; den is 1 or 1001, 1 to 120 fps.
    */
-  fps: {
-    [k: string]: unknown;
-  };
+  fps:
+    | string
+    | {
+        den: 1 | 1001;
+        num: number;
+      };
 }
 
 export interface ShapeAddArgs {
@@ -734,7 +776,7 @@ export interface TemplateSetInfoArgs {
    * Name to #RRGGBB or #RRGGBBAA; null removes the name.
    */
   colors?: {
-    [k: string]: unknown;
+    [k: string]: string | null;
   };
   /**
    * 0 to 500 characters.
@@ -756,7 +798,35 @@ export interface TextAddArgs {
    * A partial TextStyle.
    */
   style?: {
-    [k: string]: unknown;
+    align?: "left" | "center" | "right";
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    background_color?: string;
+    background_padding?: number;
+    background_radius?: number;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    color?: string;
+    font_family?: string;
+    font_weight?: number;
+    line_height?: number;
+    max_width?: number;
+    shadow_blur?: number;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    shadow_color?: string;
+    shadow_dx?: number;
+    shadow_dy?: number;
+    size?: number;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    stroke_color?: string;
+    stroke_width?: number;
+    uppercase?: boolean;
   };
   /**
    * The text; line breaks are allowed.
@@ -802,7 +872,35 @@ export interface TextSetArgs {
    * A partial TextStyle, merged; null removes a key.
    */
   style?: {
-    [k: string]: unknown;
+    align?: "left" | "center" | "right" | null;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    background_color?: string | null;
+    background_padding?: number | null;
+    background_radius?: number | null;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    color?: string | null;
+    font_family?: string | null;
+    font_weight?: number | null;
+    line_height?: number | null;
+    max_width?: number | null;
+    shadow_blur?: number | null;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    shadow_color?: string | null;
+    shadow_dx?: number | null;
+    shadow_dy?: number | null;
+    size?: number | null;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    stroke_color?: string | null;
+    stroke_width?: number | null;
+    uppercase?: boolean | null;
   };
   text?: string;
 }
@@ -864,7 +962,45 @@ export interface TrackSetCaptionStyleArgs {
    * A partial CaptionStyle; null removes a key when merging.
    */
   style: {
-    [k: string]: unknown;
+    align?: "left" | "center" | "right" | null;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    background_color?: string | null;
+    background_padding?: number | null;
+    background_radius?: number | null;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    color?: string | null;
+    font_family?: string | null;
+    font_weight?: number | null;
+    highlight?: "none" | "word" | null;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    highlight_background?: string | null;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    highlight_color?: string | null;
+    line_height?: number | null;
+    max_width?: number | null;
+    position?: "bottom" | "middle" | "top" | "custom" | null;
+    shadow_blur?: number | null;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    shadow_color?: string | null;
+    shadow_dx?: number | null;
+    shadow_dy?: number | null;
+    size?: number | null;
+    /**
+     * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
+     */
+    stroke_color?: string | null;
+    stroke_width?: number | null;
+    uppercase?: boolean | null;
   };
   track_id: string;
 }
