@@ -1,6 +1,7 @@
 import type { EditOutcome } from "../api/edit";
 import type { ConnectionState } from "../api/events";
 import type { EditorRuntime } from "../state/runtime";
+import { type SnapResult, snapFrame } from "../timeline/snapping";
 
 // The test hooks of SDD-012 section 20.4. `?debug=1` installs window.__vv with
 // read-only getters: nothing here changes the project or a store, so it is
@@ -23,6 +24,16 @@ export interface DebugHooks {
 	onRevisionCommit(callback: (revision: number) => void): () => void;
 	// End-to-end build only: the same queue the UI uses, no pointer gesture.
 	dispatch?(operations: EditOperations): Promise<EditOutcome>;
+	// End-to-end build only: what a move gesture does at its first pointer move
+	// and at each later one (fetch the snap points of the revision, snap one
+	// frame, draw the snap line). The move and trim gestures call the same
+	// functions; this stands in for them until a spec can drag.
+	snapProbe?(options: {
+		frame: number;
+		exclude?: string[];
+		words?: boolean;
+		alt?: boolean;
+	}): Promise<SnapResult>;
 }
 
 declare global {
@@ -81,6 +92,29 @@ export function installDebugHooks(
 			const outcome = await runtime.edits.edit(operations, revision);
 			performance.measure("vv:edit", { start, end: performance.now() });
 			return outcome;
+		};
+	}
+
+	if (import.meta.env.VITE_E2E === "1") {
+		hooks.snapProbe = async ({
+			frame,
+			exclude = [],
+			words = false,
+			alt = false,
+		}) => {
+			await runtime.snap.begin(words);
+			const ui = runtime.ui.getState();
+			const result = snapFrame({
+				frame,
+				ppf: ui.timeline.pxPerFrame,
+				playhead: ui.playheadFrame,
+				points: runtime.snap.points(),
+				exclude: new Set(exclude),
+				enabled: ui.timeline.snapEnabled,
+				suspended: alt,
+			});
+			runtime.ghostWriter.setSnapLine(result.line);
+			return result;
 		};
 	}
 

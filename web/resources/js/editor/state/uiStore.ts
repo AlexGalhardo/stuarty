@@ -7,7 +7,7 @@ export interface UiState {
 	// selected (SDD-012 section 12.1).
 	selection: { items: readonly string[]; track: string | null };
 	playheadFrame: number;
-	timeline: { pxPerFrame: number };
+	timeline: { pxPerFrame: number; snapEnabled: boolean };
 	// The revision at which the core answered E_NOTHING_TO_UNDO or
 	// E_NOTHING_TO_REDO; the button stays disabled until the next batch.
 	historyBlocked: { undo: number | null; redo: number | null };
@@ -23,6 +23,7 @@ export interface UiWriter {
 	dropSelection(isKnown: (id: string) => boolean): void;
 	setPlayhead(frame: number): void;
 	setZoom(pxPerFrame: number): void;
+	toggleSnap(): void;
 	blockHistory(kind: "undo" | "redo", revision: number): void;
 	// Show a tab of the left panel; when it is already the shown one, hide the
 	// panel (a toggle).
@@ -38,7 +39,7 @@ export function createUiStore(initialZoom = 1): {
 	const store = createStore<UiState>({
 		selection: { items: [], track: null },
 		playheadFrame: 0,
-		timeline: { pxPerFrame: initialZoom },
+		timeline: { pxPerFrame: initialZoom, snapEnabled: true },
 		historyBlocked: { undo: null, redo: null },
 		activePanelTab: "library",
 		panels: { left: true, inspector: true },
@@ -89,6 +90,11 @@ export function createUiStore(initialZoom = 1): {
 				store.setState((s) => ({
 					...s,
 					panels: { ...s.panels, inspector: !s.panels.inspector },
+				})),
+			toggleSnap: () =>
+				store.setState((s) => ({
+					...s,
+					timeline: { ...s.timeline, snapEnabled: !s.timeline.snapEnabled },
 				})),
 			setZoom: (pxPerFrame) =>
 				store.setState((s) => ({

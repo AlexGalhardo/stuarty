@@ -1,4 +1,4 @@
-import { Maximize2, ZoomIn, ZoomOut } from "lucide-react";
+import { Magnet, Maximize2, ZoomIn, ZoomOut } from "lucide-react";
 import {
 	type ReactNode,
 	useCallback,
@@ -35,6 +35,7 @@ import {
 	zoomAround,
 } from "./geometry";
 import Ruler from "./Ruler";
+import SnapLine from "./SnapLine";
 import { TrackHeader, TrackRow } from "./TrackRow";
 
 function isEditable(target: EventTarget | null): boolean {
@@ -56,6 +57,7 @@ export default function Timeline(): ReactNode {
 	const fps: Fps = useDocumentState(selectFps) ?? DEFAULT_FPS;
 	const ppf = useUiState((s) => s.timeline.pxPerFrame);
 	const playhead = useUiState((s) => s.playheadFrame);
+	const snapEnabled = useUiState((s) => s.timeline.snapEnabled);
 
 	const scroller = useRef<HTMLDivElement>(null);
 	const headers = useRef<HTMLDivElement>(null);
@@ -137,7 +139,8 @@ export default function Timeline(): ReactNode {
 		return () => el.removeEventListener("wheel", onWheel);
 	}, [ppf, zoomTo]);
 
-	// The Prototype keys of SDD-012 section 10.1 for the timeline: + - and Shift+Z.
+	// The keys of SDD-012 section 10.1 for the timeline: + - and Shift+Z, and N
+	// for snapping.
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent): void => {
 			if (
@@ -152,6 +155,7 @@ export default function Timeline(): ReactNode {
 			else if (event.key === "+" || event.key === "=") zoomStep(1);
 			else if (event.key === "-") zoomStep(-1);
 			else if (event.shiftKey && event.key.toLowerCase() === "z") fitToView();
+			else if (event.key.toLowerCase() === "n") runtime.uiWriter.toggleSnap();
 			else return;
 			event.preventDefault();
 		};
@@ -189,6 +193,16 @@ export default function Timeline(): ReactNode {
 				<Button type="button" variant="ghost" size="sm" onClick={fitToView}>
 					<Maximize2 aria-hidden="true" />
 					{t("ui.editor.timeline.fit")}
+				</Button>
+				<Button
+					type="button"
+					variant={snapEnabled ? "secondary" : "ghost"}
+					size="sm"
+					aria-pressed={snapEnabled}
+					onClick={runtime.uiWriter.toggleSnap}
+				>
+					<Magnet aria-hidden="true" />
+					{t("ui.editor.timeline.snap")}
 				</Button>
 				<span className="ml-auto font-mono text-xs text-muted-foreground tabular-nums">
 					{formatTimecode(playhead, fps)}
@@ -246,6 +260,7 @@ export default function Timeline(): ReactNode {
 								{t("ui.editor.timeline.empty")}
 							</p>
 						)}
+						<SnapLine ppf={ppf} />
 						<div
 							aria-hidden="true"
 							className="pointer-events-none absolute top-0 bottom-0 left-0 w-0 border-l-2 border-ed-playhead"

@@ -96,7 +96,8 @@
         "track_audio": "Audio track",
         "hidden": "hidden",
         "muted": "muted",
-        "item_summary": "{type}, {name}"
+        "item_summary": "{type}, {name}",
+        "snap": "Snap"
       },
       "item": {
         "clip": "Clip",
