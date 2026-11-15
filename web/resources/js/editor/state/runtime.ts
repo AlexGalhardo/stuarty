@@ -12,6 +12,11 @@ import {
 import type { ReadStore } from "./createStore";
 import { createDocumentStore, type DocumentState } from "./documentStore";
 import {
+	createGhostStore,
+	type GhostState,
+	type GhostWriter,
+} from "./ghostStore";
+import {
 	createHistory,
 	type HistoryController,
 	type HistoryState,
@@ -27,6 +32,7 @@ import {
 	type NoticeState,
 	type NoticeWriter,
 } from "./noticeStore";
+import { createSnapStore, type SnapStore } from "./snapStore";
 import { createSync, type Sync } from "./sync";
 import { createUiStore, type UiState, type UiWriter } from "./uiStore";
 
@@ -58,6 +64,11 @@ export interface EditorRuntime {
 	documents: ReadStore<DocumentState>;
 	ui: ReadStore<UiState>;
 	uiWriter: UiWriter;
+	// Drag previews and the snap line; written by gestures only.
+	ghosts: ReadStore<GhostState>;
+	ghostWriter: GhostWriter;
+	// The snap points of the core, cached by revision.
+	snap: SnapStore;
 	activity: ReadStore<ActivityState>;
 	library: ReadStore<LibraryState>;
 	libraryWriter: LibraryWriter;
@@ -94,6 +105,7 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 	});
 	const { store: activity, writer: activityWriter } = createActivityStore();
 	const { store: ui, writer: uiWriter } = createUiStore();
+	const { store: ghosts, writer: ghostWriter } = createGhostStore();
 	const { store: library, writer: libraryWriter } = createLibraryStore();
 	const { store: jobs, writer: jobsWriter } = createJobsStore();
 	const { store: notices, writer: noticeWriter } = createNoticeStore();
@@ -228,6 +240,12 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		if (doc !== null) uiWriter.dropSelection((id) => id in doc.items);
 	});
 
+	const snap = createSnapStore({
+		client,
+		projectId,
+		getRevision: () => documents.getState().revision,
+	});
+
 	return {
 		projectId,
 		ownActor: actor,
@@ -235,6 +253,9 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		documents,
 		ui,
 		uiWriter,
+		ghosts,
+		ghostWriter,
+		snap,
 		activity,
 		library,
 		libraryWriter,

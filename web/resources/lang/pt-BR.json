@@ -96,7 +96,8 @@
         "track_audio": "Faixa de áudio",
         "hidden": "oculta",
         "muted": "sem som",
-        "item_summary": "{type}, {name}"
+        "item_summary": "{type}, {name}",
+        "snap": "Encaixe"
       },
       "item": {
         "clip": "Clipe",
