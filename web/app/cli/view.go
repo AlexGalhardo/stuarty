@@ -65,7 +65,7 @@ func runView(ctx context.Context, c *call) (*output, error) {
 		}
 
 		req := service.ViewSheetRequest{
-			ProjectID: c.projectID, From: p.str("from"), To: p.str("until"), Cols: p.integer("cols"),
+			ProjectID: c.projectID, From: p.str("from"), Until: p.str("until"), Cols: p.integer("cols"),
 			AssetID: p.str("asset"), MaxTokens: p.integer("max-tokens"),
 		}
 		if p.has("times") {

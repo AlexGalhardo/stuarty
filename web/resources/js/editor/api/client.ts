@@ -136,7 +136,7 @@ export function createClient(
 		getPlan: (id, from, to, revision) =>
 			call(
 				"GET",
-				`${project(id)}/plan?from=${from}&to=${to}&rev=${revision}`,
+				`${project(id)}/plan?from=${from}&until=${to}&rev=${revision}`,
 				READ_TIMEOUT_MS,
 			),
 		getCommands: () => call("GET", "/commands", READ_TIMEOUT_MS),
@@ -176,7 +176,7 @@ export function createClient(
 		getPlanHead: (id, from, to, revision) =>
 			call(
 				"GET",
-				`${project(id)}/plan?from=${from}&to=${to}&rev=${revision}`,
+				`${project(id)}/plan?from=${from}&until=${to}&rev=${revision}`,
 				READ_TIMEOUT_MS,
 			),
 	};

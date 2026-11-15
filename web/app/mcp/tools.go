@@ -409,7 +409,7 @@ func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 		}
 
 		res, err = svc.ViewSheet(ctx, service.ViewSheetRequest{
-			ProjectID: in.ProjectID, Times: in.Times, From: in.From, To: in.Until, Count: in.Count,
+			ProjectID: in.ProjectID, Times: in.Times, From: in.From, Until: in.Until, Count: in.Count,
 			AssetID: in.AssetID, MaxTokens: in.MaxTokens,
 		})
 	} else {

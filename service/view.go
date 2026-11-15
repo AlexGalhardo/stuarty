@@ -236,7 +236,7 @@ func (v *view) parseTime(field, raw string) (int64, error) {
 
 func (v *view) sheetTimes(req *ViewSheetRequest) ([]int, error) {
 	if len(req.Times) > 0 {
-		if req.From != "" || req.To != "" || req.Count != 0 {
+		if req.From != "" || req.Until != "" || req.Count != 0 {
 			return nil, newError(
 				command.CodeValidation,
 				"times cannot be used with from, to or count.",
@@ -287,14 +287,14 @@ func (v *view) sheetTimes(req *ViewSheetRequest) ([]int, error) {
 		}
 	}
 
-	if req.To != "" {
-		if to, err = v.parseTime("to", req.To); err != nil {
+	if req.Until != "" {
+		if to, err = v.parseTime("until", req.Until); err != nil {
 			return nil, err
 		}
 	}
 
 	if to < from {
-		return nil, newError(command.CodeValidation, "to is before from.").withPath("to")
+		return nil, newError(command.CodeValidation, "until is before from.").withPath("until")
 	}
 
 	return frame.SheetTimes(int(from), int(to), count), nil

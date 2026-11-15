@@ -411,7 +411,7 @@ func (c *Client) JobList(ctx context.Context, req service.JobListRequest) (*serv
 func (c *Client) PlanWindow(ctx context.Context, req service.PlanWindowRequest) (*service.PlanWindowResult, error) {
 	q := url.Values{}
 	q.Set("from", strconv.Itoa(req.From))
-	q.Set("to", strconv.Itoa(req.To))
+	q.Set("until", strconv.Itoa(req.Until))
 
 	return get[service.PlanWindowResult](ctx, c, projectPath(req.ProjectID, "/plan"), q)
 }
@@ -439,7 +439,7 @@ func (c *Client) ViewSheet(ctx context.Context, req service.ViewSheetRequest) (*
 	q := url.Values{}
 	setIf(q, "times", strings.Join(req.Times, ","))
 	setIf(q, "from", req.From)
-	setIf(q, "to", req.To)
+	setIf(q, "until", req.Until)
 	setIf(q, "asset_id", req.AssetID)
 
 	for k, v := range map[string]int{"count": req.Count, "cols": req.Cols, "max_tokens": req.MaxTokens} {

@@ -13,9 +13,9 @@ type ViewFrameRequest struct {
 // ViewSheetRequest asks for a contact sheet of the current revision.
 type ViewSheetRequest struct {
 	ProjectID string   `json:"project_id"`
-	Times     []string `json:"times,omitempty"`      // 2 to 16; exclusive with From, To and Count
+	Times     []string `json:"times,omitempty"`      // 2 to 16; exclusive with From, Until and Count
 	From      string   `json:"from,omitempty"`       // default "0s"
-	To        string   `json:"to,omitempty"`         // inclusive; default the last frame
+	Until     string   `json:"until,omitempty"`      // inclusive; default the last frame
 	Count     int      `json:"count,omitempty"`      // default 9; 2 to 16
 	Cols      int      `json:"cols,omitempty"`       // default ceil(sqrt(count))
 	AssetID   string   `json:"asset_id,omitempty"`   // not available in this build
