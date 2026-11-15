@@ -28,8 +28,8 @@ How to read it: an empty SDD cell or an empty task cell is a gap and is listed a
 | RF-024 | A | Keyframes over time for position, scale, rotation and opacity, with easing linear, ease-in, ease-out and ea... | SDD-001, SDD-002, SDD-004 | ADR-0002, ADR-0003, ADR-0005, ADR-0011 | P2-SCH-001, P2-ENG-001, P2-ENG-002, P2-ENG-016, P2-RND-002, P2-RND-004, P2-UI-016, P2-UI-020 |
 | RF-025 | A | Brightness, contrast and saturation per visual item | SDD-001, SDD-002, SDD-004 | ADR-0003, ADR-0005, ADR-0011, ADR-0022 | P2-SCH-001, P2-ENG-003, P2-ENG-009, P2-RND-002, P2-RND-004, P2-UI-025 |
 | RF-026 | A | Shape items: rectangle, rounded rectangle and ellipse, with fill and stroke, for backgrounds and lower thirds | SDD-001, SDD-002, SDD-004 | ADR-0005, ADR-0011, ADR-0012, ADR-0022 | P2-SCH-001, P2-ENG-003, P2-ENG-012, P2-RND-001, P2-RND-004, P2-UI-026 |
-| RF-027 | B | Blur and a short fixed list of filters | written in BETA, see Gaps | ADR-0011 | P3-SCH-001, P3-ENG-001, P3-RND-003, P3-UI-007 |
-| RF-028 | B | Animated images (GIF) and stickers as overlay items | written in BETA, see Gaps | ADR-0010 | P3-SCH-001, P3-ENG-003, P3-RND-004, P3-UI-007 |
+| RF-027 | B | Blur and a short fixed list of filters | SDD-001, SDD-002, SDD-004 | ADR-0011 | P3-SCH-001, P3-ENG-001, P3-RND-003, P3-UI-007 |
+| RF-028 | B | Animated images (GIF) and stickers as overlay items | SDD-001 | ADR-0010 | P3-SCH-001, P3-ENG-003, P3-RND-004, P3-UI-007 |
 | RF-030 | P | Text items with content, a font from the bundled set, size, colour, stroke, shadow, background box, alignme... | SDD-001, SDD-002, SDD-004 | ADR-0012 | P1-ENG-002, P1-RND-003, P2-RND-001, P2-UI-017 |
 | RF-031 | P | Caption items: timed text burned into the picture, with a style shared by all captions of a track | SDD-001, SDD-002, SDD-004 | ADR-0003, ADR-0012 | P1-ENG-002, P1-ENG-003, P1-RND-003, P1-UI-004, P2-UI-018, P2-UI-023 |
 | RF-032 | A | Captions with per-word timing and a highlight style for the word being spoken | SDD-001, SDD-002, SDD-004 | ADR-0005, ADR-0011, ADR-0012, ADR-0021 | P2-SCH-001, P2-ENG-004, P2-ENG-013, P2-ENG-015, P2-RND-001, P2-RND-004, P2-RND-011, P2-UI-018 |
@@ -40,8 +40,8 @@ How to read it: an empty SDD cell or an empty task cell is a gap and is listed a
 | RF-040 | P | A clip's own audio plays and exports with it | SDD-001, SDD-002, SDD-004 | ADR-0003, ADR-0010 | P1-RND-002, P1-RND-004, P2-ENG-005, P2-RND-003, P2-RND-007 |
 | RF-041 | A | Audio items on audio tracks (music, voice), with volume per item and fade in and fade out | SDD-001, SDD-002, SDD-004 | ADR-0005, ADR-0010, ADR-0011, ADR-0022 | P2-SCH-001, P2-ENG-005, P2-ENG-007, P2-ENG-009, P2-RND-003, P2-RND-004, P2-RND-007, P2-UI-014, P2-UI-022, P2-UI-025 |
 | RF-042 | A | Loudness of the exported mix is normalized to a project target, -14 LUFS integrated by default | SDD-001, SDD-004 | ADR-0011, ADR-0021 | P2-ENG-005, P2-ENG-021, P2-RND-003, P2-RND-004, P2-RND-008, P2-UI-024, P2-UI-028 |
-| RF-043 | B | Lower the music automatically under speech (ducking), as generated volume keyframes | written in BETA, see Gaps | ADR-0021 | P3-ENG-002, P3-RND-005, P3-UI-007 |
-| RF-044 | B | Markers on the beats of a music item, to cut on the rhythm | written in BETA, see Gaps | ADR-0021 | P3-SCH-001, P3-ENG-002, P3-RND-005, P3-UI-007 |
+| RF-043 | B | Lower the music automatically under speech (ducking), as generated volume keyframes | SDD-001 | ADR-0021 | P3-ENG-002, P3-RND-005, P3-UI-007 |
+| RF-044 | B | Markers on the beats of a music item, to cut on the rhythm | SDD-001 | ADR-0021 | P3-SCH-001, P3-ENG-002, P3-RND-005, P3-UI-007 |
 | RF-050 | A | Save a project as a template with named slots for media, text, captions and colours | SDD-001, SDD-002 | ADR-0005, ADR-0009, ADR-0022 | P2-SCH-001, P2-ENG-017, P2-SRV-008, P2-SRV-010, P2-SCH-004, P2-QA-005, P2-UI-027 |
 | RF-051 | A | Create a project from a template by filling its slots; unfilled required slots are reported | SDD-002, SDD-003 | ADR-0022 | P2-ENG-017, P2-ENG-019, P2-SRV-008, P2-SRV-010, P2-QA-005, P2-UI-027 |
 | RF-052 | A | Export and import a template as a file | SDD-005 | ADR-0022 | P2-SRV-009, P2-UI-027, P3-SRV-004 |
@@ -51,7 +51,7 @@ How to read it: an empty SDD cell or an empty task cell is a gap and is listed a
 | RF-062 | P | Export to MP4 with H.264 video and AAC audio at the project's size and rate | SDD-003, SDD-004 | ADR-0003, ADR-0011, ADR-0018 | P1-RND-004, P1-UI-004, P1-QA-001, P2-RND-009 |
 | RF-063 | P (an export runs as a job with real progress and is reported as successful only after the file passed verification), A (cancellation from every surface) | An export runs as a job with real progress and can be cancelled. It is reported as successful only after th... | SDD-003, SDD-004 | ADR-0003, ADR-0011, ADR-0018 | P1-RND-004, P1-SRV-004, P2-RND-009, P2-SRV-005, P2-QA-005, P2-UI-028 |
 | RF-064 | B | Verified export at 60 fps and at 4K where the machine's encoder supports it (the document format accepts th... | written in BETA, see Gaps | ADR-0011, ADR-0018 | P3-RND-002, P3-SRV-005, P3-UI-006 |
-| RF-065 | B | Export and import OpenTimelineIO | written in BETA, see Gaps | ADR-0018 | P3-ENG-004, P3-SRV-005, P3-UI-006 |
+| RF-065 | B | Export and import OpenTimelineIO | SDD-001, SDD-002 | ADR-0018 | P3-ENG-004, P3-SRV-005, P3-UI-006 |
 | RF-070 | P (library, preview, timeline, the four manual operations of D-023), A (inspector and the rest) | The UI has a media library, a preview, a multi-track timeline and an inspector for the selected item | SDD-012 | ADR-0007, ADR-0013 | P1-UI-002, P2-UI-005, P2-UI-009, P2-UI-010, P2-UI-013, P2-UI-015, P2-UI-030 |
 | RF-071 | A | Every command of the catalogue can be performed from the UI | SDD-012 | ADR-0007 | P2-SRV-018, P2-UI-001, P2-UI-002, P2-UI-003, P2-UI-004, P2-UI-005, P2-I18N-002, P2-UI-013, P2-UI-014, P2-UI-017, P2-UI-018, P2-UI-019, P2-UI-020, P2-UI-021, P2-UI-023, P2-UI-024, P2-UI-025, P2-UI-026, P2-UI-027, P2-QA-004, P3-UI-007 |
 | RF-072 | P | Changes made by any actor appear in an open UI without reloading | SDD-006, SDD-012 | ADR-0007, ADR-0013, ADR-0017 | P1-SRV-006, P1-UI-001, P1-QA-001, P2-UI-007 |
@@ -66,8 +66,8 @@ How to read it: an empty SDD cell or an empty task cell is a gap and is listed a
 | NFR-006 |  | Export of a 60 s 1080×1920 30 fps project with captions completes within 60 s with a hardware or operating... | SDD-004, SDD-008 | ADR-0003, ADR-0011, ADR-0018 | P1-RND-004, P1-QA-002, P2-RND-009, P2-RND-014, P4-RND-001 |
 | NFR-007 |  | The Go process stays under 500 MB of resident memory during an export | SDD-004, SDD-008 | ADR-0003, ADR-0011, ADR-0018 | P1-RND-004, P1-QA-002, P2-RND-005, P2-RND-009, P2-RND-014, P4-RND-001 |
 | NFR-008 |  | The browser tab stays under 1 GB with a 5 minute project open | SDD-008, SDD-012 | ADR-0003 | P2-QA-002, P2-QA-003, P2-QA-004, P4-UI-001 |
-| NFR-009 |  | A project of 5 minutes, 200 items and 2,000 caption words is fully supported at the numbers above | SDD-001, SDD-003, SDD-008 | ADR-0008 | P2-ENG-018, P2-RND-014, P2-SRV-022, P2-UI-032, P2-QA-001, P2-QA-002, P4-ENG-001, P4-RND-001, P4-UI-001 |
-| NFR-010 |  | The same project and media produce identical composed frames on two runs on the same machine | SDD-004, SDD-008 | ADR-0003, ADR-0009, ADR-0011, ADR-0014 | P1-ENG-003, P1-RND-004, P1-QA-002, P2-ENG-002, P2-ENG-005, P2-RND-002, P2-RND-003, P2-RND-004, P2-RND-014, P3-RND-002, P3-RND-003, P4-SCH-001, P4-ENG-001, P4-RND-001 |
+| NFR-009 |  | A project of 5 minutes, 200 items and 2,000 caption words is fully supported at the numbers above | SDD-001, SDD-003, SDD-004, SDD-008 | ADR-0008 | P2-ENG-018, P2-RND-014, P2-SRV-022, P2-UI-032, P2-QA-001, P2-QA-002, P4-ENG-001, P4-RND-001, P4-UI-001 |
+| NFR-010 |  | The same project and media produce identical composed frames on two runs on the same machine | SDD-004, SDD-008, SDD-011 | ADR-0003, ADR-0009, ADR-0011, ADR-0014 | P1-ENG-003, P1-RND-004, P1-QA-002, P2-ENG-002, P2-ENG-005, P2-RND-002, P2-RND-003, P2-RND-004, P2-RND-014, P3-RND-002, P3-RND-003, P4-SCH-001, P4-ENG-001, P4-RND-001 |
 | NFR-011 |  | During playback the preview differs from the export by at most the tolerance of ADR-0003 (SSIM of at least... | SDD-004, SDD-008, SDD-012 | ADR-0003, ADR-0011, ADR-0013 | P1-UI-003, P1-QA-002, P2-ENG-002, P2-RND-002, P2-RND-004, P2-QA-005, P2-QA-003, P2-QA-004, P3-RND-003, P4-UI-001 |
 | NFR-012 |  | A project saved by any released version opens in every later version | SDD-001, SDD-005, SDD-008 | ADR-0005, ADR-0009, ADR-0014, ADR-0022 | P1-SCH-002, P2-SCH-002, P2-SRV-004, P2-SCH-004, P3-SCH-001, P4-SCH-001, P4-SRV-001, P4-UI-002 |
 | NFR-013 |  | No committed change is lost by a crash of the process | SDD-005, SDD-008 | ADR-0006, ADR-0008, ADR-0009 | P1-SRV-002, P1-SRV-003, P2-SRV-022, P4-SRV-002 |
@@ -138,7 +138,7 @@ How to read it: an empty SDD cell or an empty task cell is a gap and is listed a
 ## Gaps
 
 - Requirements named by no SDD: none.
-- BETA requirements whose specification is written in BETA, by design: RF-027, RF-028, RF-043, RF-044, RF-064, RF-065. They have no command or SDD section yet. Each ROADMAP task that implements one starts with the amendment of the SDD it names (SDD-001, SDD-002, SDD-004, SDD-005 or SDD-012), accepted by the orchestrator before any code; until then the requirement text in the PRD is the only contract.
+- BETA requirements whose specification is written in BETA, by design: RF-064. They have no command or SDD section yet. Each ROADMAP task that implements one starts with the amendment of the SDD it names (SDD-001, SDD-002, SDD-004, SDD-005 or SDD-012), accepted by the orchestrator before any code; until then the requirement text in the PRD is the only contract.
 - Requirements named by no ROADMAP task: none.
 
 ## Counts
