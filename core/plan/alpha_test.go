@@ -274,3 +274,47 @@ func TestAudioFadesGolden(t *testing.T) {
 		t.Errorf("audio plan differs from %s (run with -update after reviewing)", path)
 	}
 }
+
+// The document of a clip.set_color golden case renders to the colour matrix of its
+// want file: command and plan agree on what the stored values mean.
+func TestColorGoldenRendersToItsMatrix(t *testing.T) {
+	t.Parallel()
+
+	data, err := os.ReadFile(filepath.Join("..", "command", "testdata", "clip.set_color", "ok_all_three", "after.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	doc, err := timeline.Decode(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	layers := Frame(doc, 0).Layers
+	if len(layers) != 1 {
+		t.Fatalf("layers = %+v", layers)
+	}
+
+	got, err := json.MarshalIndent(layers[0].ColorMatrix, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got = append(got, '\n')
+	path := filepath.Join("testdata", "color", "ok_all_three.want.json")
+
+	if *update {
+		if err := os.WriteFile(path, got, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	want, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(got, want) {
+		t.Errorf("matrix %s differs from %s", got, path)
+	}
+}

@@ -1,0 +1,10 @@
+{
+  "op": "clip.set_framing",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "crop": {
+      "left": 0.6,
+      "right": 0.4
+    }
+  }
+}

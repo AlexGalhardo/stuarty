@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "brightness": {
+      "description": "-1 to 1; default 0.",
+      "maximum": 1,
+      "minimum": -1,
+      "type": "number"
+    },
+    "contrast": {
+      "description": "0 to 2; default 1.",
+      "maximum": 2,
+      "minimum": 0,
+      "type": "number"
+    },
+    "item_id": {
+      "description": "A clip.",
+      "type": "string"
+    },
+    "saturation": {
+      "description": "0 to 2; default 1.",
+      "maximum": 2,
+      "minimum": 0,
+      "type": "number"
+    }
+  },
+  "required": [
+    "item_id"
+  ],
+  "type": "object"
+}

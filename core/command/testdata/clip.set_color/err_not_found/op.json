@@ -1,0 +1,7 @@
+{
+  "op": "clip.set_color",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "contrast": 1.2
+  }
+}

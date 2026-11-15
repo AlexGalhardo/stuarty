@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_s6t7v8w9x0 is a text item; framing applies to clips.",
+  "hint": "Use item.set_transform to size other items.",
+  "retryable": false,
+  "path": "args.item_id"
+}

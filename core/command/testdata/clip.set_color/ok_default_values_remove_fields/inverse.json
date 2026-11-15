@@ -1,0 +1,12 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "brightness": 0.3,
+      "contrast": 1.4,
+      "saturation": 0.6
+    }
+  }
+]

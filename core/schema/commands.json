@@ -141,6 +141,65 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "asset_id": {
+          "description": "An audio asset, a video asset with audio, or ast_placeholder in a template.",
+          "type": "string"
+        },
+        "duration": {
+          "description": "A length; default the rest of the asset.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "source_in": {
+          "description": "Offset into the asset; default 0s.",
+          "type": "string"
+        },
+        "start": {
+          "description": "Absolute position.",
+          "type": "string"
+        },
+        "track_id": {
+          "description": "An audio track.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "track_id",
+        "asset_id",
+        "start"
+      ],
+      "type": "object"
+    },
+    "description": "Adds an audio item. The default duration is the rest of the asset from source_in. The reserved asset ast_placeholder creates a template slot holder and needs an explicit duration.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_ID_EXISTS",
+      "E_LIMIT",
+      "E_OUT_OF_SOURCE",
+      "E_OVERLAP"
+    ],
+    "example": {
+      "asset_id": "ast_4h6j8k2m3n",
+      "id": "itm_s6t7v8w9x0",
+      "start": "1s",
+      "track_id": "trk_m1n2p3q4r5"
+    },
+    "internal": false,
+    "name": "audio.add",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Places an audio asset, or the audio of a video asset, on an audio track."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "duration": {
           "description": "A length; with text only.",
           "type": "string"
@@ -296,6 +355,128 @@
     "phase": "prototype",
     "scope": "edit",
     "summary": "Places a video or image asset on a visual track."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "brightness": {
+          "description": "-1 to 1; default 0.",
+          "maximum": 1,
+          "minimum": -1,
+          "type": "number"
+        },
+        "contrast": {
+          "description": "0 to 2; default 1.",
+          "maximum": 2,
+          "minimum": 0,
+          "type": "number"
+        },
+        "item_id": {
+          "description": "A clip.",
+          "type": "string"
+        },
+        "saturation": {
+          "description": "0 to 2; default 1.",
+          "maximum": 2,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "type": "object"
+    },
+    "description": "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, contrast 1, saturation 1) clears the stored one.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH"
+    ],
+    "example": {
+      "brightness": 0.1,
+      "item_id": "itm_m1n2p3q4r5",
+      "saturation": 1.2
+    },
+    "internal": false,
+    "name": "clip.set_color",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Sets the brightness, contrast and saturation of a clip."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "crop": {
+          "additionalProperties": false,
+          "description": "Sides to crop, fractions 0 to 1; sides not given keep their value.",
+          "properties": {
+            "bottom": {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            "left": {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            "right": {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            "top": {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            }
+          },
+          "required": [],
+          "type": "object"
+        },
+        "fit": {
+          "description": "cover (default), contain or none.",
+          "enum": [
+            "cover",
+            "contain",
+            "none"
+          ],
+          "type": "string"
+        },
+        "item_id": {
+          "description": "A clip.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "type": "object"
+    },
+    "description": "Sets fit (cover, contain or none) and merges the given crop sides with the current ones. Each side is a fraction of the asset from 0 to 1; left plus right and top plus bottom must stay below 1.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH"
+    ],
+    "example": {
+      "crop": {
+        "left": 0.1,
+        "right": 0.1
+      },
+      "fit": "contain",
+      "item_id": "itm_m1n2p3q4r5"
+    },
+    "internal": false,
+    "name": "clip.set_framing",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped."
   },
   {
     "args_schema": {
