@@ -263,8 +263,8 @@ func TestBuildCollectsEverythingAndIsDeterministic(t *testing.T) {
 		t.Fatal("two runs must produce the same files")
 	}
 
-	if r.runs != 2*len(buildTargets) {
-		t.Fatalf("go list must run once per release target: %d runs", r.runs)
+	if r.runs != 2*(len(buildTargets)+len(desktopTargets)) {
+		t.Fatalf("go list must run once per release target of each shipped binary: %d runs", r.runs)
 	}
 
 	text := string(first[noticesFile])
@@ -725,5 +725,47 @@ func TestExecRunner(t *testing.T) {
 
 	if _, err := execRunner(t.Context(), t.TempDir(), nil, "go", "definitely-not-a-subcommand"); err == nil {
 		t.Fatal("a failing command must return its error")
+	}
+}
+
+// TestDesktopShellModuleIsCollected: the nested module of the desktop shell is
+// listed too, for its three systems and with cgo on, and the product module that
+// it requires through a replace is not a third-party component.
+func TestDesktopShellModuleIsCollected(t *testing.T) {
+	t.Parallel()
+
+	r := newFakeRepo(t)
+	fixInventory(t, r)
+	r.modules["github.com/wailsapp/wails/v3\tv3.1.0"] = mitText
+	r.modules[productModule+"\tv0.0.0"] = mitText
+
+	base := r.run(t)
+
+	var shell []string
+
+	run := func(ctx context.Context, dir string, env []string, name string, args ...string) ([]byte, error) {
+		if filepath.Base(dir) == "app" && filepath.Base(filepath.Dir(dir)) == "shell" {
+			shell = append(shell, strings.Join(env, " ")+" "+args[len(args)-1])
+		}
+
+		return base(ctx, dir, env, name, args...)
+	}
+
+	files, err := build(t.Context(), run, r.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(shell) != len(desktopTargets) || !strings.Contains(shell[0], "CGO_ENABLED=1 .") {
+		t.Fatalf("the shell is listed once per desktop system with cgo on: %q", shell)
+	}
+
+	text := string(files[noticesFile])
+	if !strings.Contains(text, "github.com/wailsapp/wails/v3") {
+		t.Error("a module of the desktop shell is missing from the notices")
+	}
+
+	if strings.Contains(text, productModule+"@") {
+		t.Error("the product module is listed as a third-party component")
 	}
 }
