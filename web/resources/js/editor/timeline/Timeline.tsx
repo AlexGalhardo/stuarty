@@ -1,4 +1,4 @@
-import { Magnet, Maximize2, ZoomIn, ZoomOut } from "lucide-react";
+import { Clapperboard, Magnet, Maximize2, ZoomIn, ZoomOut } from "lucide-react";
 import {
 	type ReactNode,
 	useCallback,
@@ -24,6 +24,7 @@ import {
 	selectItemCount,
 	selectOrderedTrackIds,
 } from "../state/selectors";
+import EmptyState from "../ui/EmptyState";
 import GhostLayer from "./GhostLayer";
 import {
 	clampZoom,
@@ -457,9 +458,11 @@ export default function Timeline(): ReactNode {
 								<TrackRow key={id} id={id} />
 							))}
 							{trackIds.length === 0 && (
-								<p className="p-4 text-sm text-muted-foreground">
-									{t("ui.editor.timeline.empty")}
-								</p>
+								<EmptyState
+									icon={Clapperboard}
+									title={t("ui.editor.timeline.empty")}
+									hint={t("ui.editor.timeline.empty_hint")}
+								/>
 							)}
 							<div
 								ref={marqueeBox}

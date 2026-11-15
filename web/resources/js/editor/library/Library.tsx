@@ -1,3 +1,4 @@
+import { Film } from "lucide-react";
 import {
 	type ReactNode,
 	useEffect,
@@ -11,6 +12,7 @@ import { useT } from "@/lib/i18n";
 import { useCanEdit } from "../commands/useActions";
 import { useStore } from "../state/createStore";
 import { useRuntime } from "../state/EditorContext";
+import EmptyState from "../ui/EmptyState";
 import { errorHeadline } from "../ui/errorHeadline";
 import AssetCard, { type AssetDragStart } from "./AssetCard";
 import {
@@ -152,13 +154,15 @@ export default function Library({
 				</div>
 			)}
 			{visible.length === 0 ? (
-				<p className="text-sm text-muted-foreground">
-					{t(
+				<EmptyState
+					icon={Film}
+					title={t("ui.editor.library.empty")}
+					hint={t(
 						pick || drops
-							? "ui.editor.library.empty_desktop"
-							: "ui.editor.library.empty",
+							? "ui.editor.library.empty_hint_desktop"
+							: "ui.editor.library.empty_hint",
 					)}
-				</p>
+				/>
 			) : (
 				<ul className="flex flex-col gap-2">
 					{visible.map((entry) => (

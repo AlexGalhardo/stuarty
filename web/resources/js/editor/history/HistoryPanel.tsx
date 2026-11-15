@@ -1,4 +1,4 @@
-import { Redo2, Undo2 } from "lucide-react";
+import { History, Redo2, Undo2 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
@@ -10,6 +10,7 @@ import { actorLabel } from "../state/activityStore";
 import { useStore } from "../state/createStore";
 import { useRuntime } from "../state/EditorContext";
 import type { HistoryRow } from "../state/historyStore";
+import EmptyState from "../ui/EmptyState";
 import { errorHeadline } from "../ui/errorHeadline";
 import { formatRelative } from "../ui/format";
 
@@ -156,12 +157,11 @@ export default function HistoryPanel(): ReactNode {
 				</div>
 			)}
 			{state.status === "ready" && state.rows.length === 0 && (
-				<div className="text-sm">
-					<p className="font-medium">{t("ui.editor.history.empty")}</p>
-					<p className="text-muted-foreground">
-						{t("ui.editor.history.empty_hint")}
-					</p>
-				</div>
+				<EmptyState
+					icon={History}
+					title={t("ui.editor.history.empty")}
+					hint={t("ui.editor.history.empty_hint")}
+				/>
 			)}
 			{state.rows.length > 0 && (
 				<ul className="flex flex-col divide-y divide-border">
