@@ -73,7 +73,9 @@ case "$os" in
 		# A static runtime, so the helper needs no Visual C++ redistributable.
 		options+=(-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded)
 		case "$arch" in
-			arm64) options+=(-A ARM64) ;;
+			# ggml refuses MSVC for ARM (run 43711627058: "MSVC is not supported for ARM, use clang"), so
+			# the Visual Studio generator drives clang-cl, which still links the static MSVC runtime.
+			arm64) options+=(-A ARM64 -T ClangCL) ;;
 			amd64) options+=(-A x64) ;;
 			*) echo "unsupported architecture: $arch" >&2; exit 1 ;;
 		esac
