@@ -63,6 +63,7 @@ type Layer struct {
 	W        float64 `json:"w"` // drawn size before rotation
 	H        float64 `json:"h"`
 	Rotation float64 `json:"rotation"` // degrees clockwise
+	Scale    float64 `json:"scale"`    // effective scale: keyframes and static value, before W and H are derived
 	Opacity  float64 `json:"opacity"`
 }
 

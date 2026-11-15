@@ -1124,3 +1124,27 @@ func BenchmarkWindow300(b *testing.B) {
 		Window(d, 0, 300)
 	}
 }
+
+func TestLayerReportsInterpolatedScaleAndOpacity(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	it := clip("itm_a", trkBottom, 0, 40)
+	it.Keyframes = timeline.Keyframes{
+		"scale":   {{T: 10, Value: 1, Easing: "linear"}, {T: 20, Value: 2}},
+		"opacity": {{T: 10, Value: 0.2, Easing: "linear"}, {T: 20, Value: 0.6}},
+	}
+	put(d, it)
+
+	l := Frame(d, 15).Layers[0]
+	near(t, "scale", l.Scale, 1.5)
+	near(t, "opacity", l.Opacity, 0.4)
+
+	// The scale reported is the one that sizes the layer.
+	base := Frame(d, 10).Layers[0]
+	near(t, "width ratio", l.W/base.W, l.Scale)
+
+	w := Window(d, 10, 21).Layers[0]
+	near(t, "window scale", w.Scale[5], 1.5)
+	near(t, "window opacity", w.Opacity[5], 0.4)
+}

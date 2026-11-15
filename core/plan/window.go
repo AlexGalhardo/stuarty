@@ -66,6 +66,7 @@ type WindowLayer struct {
 	W        Series `json:"w"`
 	H        Series `json:"h"`
 	Rotation Series `json:"rotation"`
+	Scale    Series `json:"scale"`
 	Opacity  Series `json:"opacity"`
 }
 
@@ -159,7 +160,7 @@ func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
 	a.wl = WindowLayer{
 		Item: first.ItemID, Kind: first.Kind, Asset: first.AssetID, AssetKind: first.AssetKind, First: t, Last: t,
 		CX: make(Series, 0, room), CY: make(Series, 0, room), W: make(Series, 0, room), H: make(Series, 0, room),
-		Rotation: make(Series, 0, room), Opacity: make(Series, 0, room),
+		Rotation: make(Series, 0, room), Scale: make(Series, 0, room), Opacity: make(Series, 0, room),
 		Filter: first.Filter, Blur: first.Blur,
 	}
 
@@ -196,6 +197,7 @@ func (a *layerAcc) add(t int, l *Layer) {
 	wl.CX, wl.CY = append(wl.CX, l.CX), append(wl.CY, l.CY)
 	wl.W, wl.H = append(wl.W, l.W), append(wl.H, l.H)
 	wl.Rotation, wl.Opacity = append(wl.Rotation, l.Rotation), append(wl.Opacity, l.Opacity)
+	wl.Scale = append(wl.Scale, l.Scale)
 
 	if l.Kind == Media {
 		sec := 0.0

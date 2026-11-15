@@ -23,6 +23,7 @@
           "w": 1080,
           "h": 1920,
           "rotation": 0,
+          "scale": 1,
           "opacity": 1
         }
       ]
@@ -50,6 +51,7 @@
           "w": 1080,
           "h": 1920,
           "rotation": 0,
+          "scale": 1,
           "opacity": 1
         }
       ]
@@ -90,6 +92,7 @@
           "w": 1706.667,
           "h": 1920,
           "rotation": 0,
+          "scale": 1,
           "opacity": 1
         }
       ]
@@ -131,6 +134,7 @@
           "w": 1706.667,
           "h": 1920,
           "rotation": 0,
+          "scale": 1,
           "opacity": 1
         }
       ]
@@ -172,6 +176,7 @@
           "w": 1706.667,
           "h": 1920,
           "rotation": 0,
+          "scale": 1,
           "opacity": 1
         }
       ]
@@ -273,6 +278,7 @@
         "w": 1080,
         "h": 1920,
         "rotation": 0,
+        "scale": 1,
         "opacity": 1
       },
       {
@@ -369,6 +375,7 @@
         "w": 1706.667,
         "h": 1920,
         "rotation": 0,
+        "scale": 1,
         "opacity": 1
       }
     ],
