@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
@@ -57,8 +56,8 @@ func limitsDoc() *timeline.Document {
 	return b.d
 }
 
-// TestDocumentAtTheLimits runs a document at every limit of SDD-001 §4 through Apply,
-// plan.Window and lint: the time arithmetic holds at frame 108,000 and 120 fps, and one
+// TestDocumentAtTheLimits runs a document at every limit of SDD-001 §4 through Apply
+// and lint: the time arithmetic holds at frame 108,000 and 120 fps, and one
 // more of anything is refused.
 func TestDocumentAtTheLimits(t *testing.T) {
 	doc := limitsDoc()
@@ -87,17 +86,8 @@ func TestDocumentAtTheLimits(t *testing.T) {
 		t.Errorf("a move past frame %d returned %v, want %s", timeline.MaxFrames, err, CodeInvalidTime)
 	}
 
-	w := plan.Window(res.Doc, timeline.MaxFrames-plan.MaxWindow, timeline.MaxFrames)
-	if w.EndFrame != timeline.MaxFrames || len(w.Layers) == 0 {
-		t.Errorf("window at the end: EndFrame %d with %d layers", w.EndFrame, len(w.Layers))
-	}
-
-	for _, l := range w.Layers {
-		if l.First < timeline.MaxFrames-plan.MaxWindow || l.Last >= timeline.MaxFrames || l.Last < l.First {
-			t.Fatalf("layer %s spans %d to %d outside the window", l.Item, l.First, l.Last)
-		}
-	}
-
+	// The plan window at the limits belongs to core/plan's tests: core/command never
+	// imports core/plan (SDD-004 §1 rule 1, enforced by internal/tools/importcheck).
 	for _, mode := range []lint.Mode{lint.Fast, lint.Full} {
 		for _, f := range lint.Lint(res.Doc, lint.Env{}, mode) {
 			if f.Range != nil && (f.Range.Start < 0 || f.Range.End > timeline.MaxFrames) {
