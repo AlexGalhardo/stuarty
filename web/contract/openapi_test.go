@@ -15,7 +15,7 @@ import (
 // the Service, so the document is taken from the running API of the contract environment.
 const openAPIFile = "../../site/generated/openapi.json"
 
-func TestOpenAPIDocumentIsCommitted(t *testing.T) {
+func TestOpenAPISnapshot(t *testing.T) {
 	d, ok := newHTTP(t).(*httpDriver)
 	if !ok {
 		t.Fatal("newHTTP is not an httpDriver")

@@ -486,6 +486,35 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 		}
 	}
 
+	// Every operation of ALPHA in SDD-000 section 1 has a row, with the scope of the table.
+	for id, scope := range map[string]string{
+		"projects.trash": service.ScopeEdit, "projects.restore": service.ScopeEdit,
+		"media.trash": service.ScopeMedia, "media.restore": service.ScopeMedia,
+		"jobs.cancel":    service.ScopeRender,
+		"templates.list": service.ScopeRead, "templates.save": service.ScopeEdit,
+		"templates.instantiate": service.ScopeEdit, "templates.export": service.ScopeRead,
+		"templates.file": service.ScopeRead, "templates.import": service.ScopeEdit,
+		"system.get": service.ScopeRead, "projects.snap_points": service.ScopeRead, "fonts.list": service.ScopeRead,
+		"jobs.file": service.ScopeRead, "audit.list": service.ScopeAdmin, "trash.empty": service.ScopeAdmin,
+		"system.tools.install": service.ScopeAdmin, "system.tools": service.ScopeAdmin,
+	} {
+		i := slices.IndexFunc(httpapi.Endpoints, func(e httpapi.Endpoint) bool { return e.ID == id })
+		if i < 0 {
+			t.Errorf("the ALPHA operation %s has no row", id)
+			continue
+		}
+
+		if got := httpapi.Endpoints[i].Scope; got != scope {
+			t.Errorf("%s needs %q, SDD-000 section 1 says %q", id, got, scope)
+		}
+	}
+
+	for _, id := range []string{"keys.create", "keys.list", "keys.revoke"} {
+		if !slices.ContainsFunc(httpapi.Endpoints, func(e httpapi.Endpoint) bool { return e.ID == id }) {
+			t.Errorf("the key route %s has no row", id)
+		}
+	}
+
 	for _, c := range command.Default().List() {
 		if c.Scope != command.ScopeEdit && c.Scope != command.ScopeMedia {
 			t.Errorf("command %s has scope %q", c.Name, c.Scope)
@@ -562,5 +591,32 @@ func TestSecurity_T28_TrashEmptyNeedsHumanSession(t *testing.T) {
 
 	if res := h.get("/api/v1/projects/" + id); res.status != http.StatusNotFound {
 		t.Errorf("the emptied project = %d, want 404", res.status)
+	}
+}
+
+// The install step is a person's click: the local token and a key without
+// admin are refused before any download starts, and a route nobody listed is 404
+// (SDD-000 section 1, SDD-007 section 6.8, T-26).
+func TestInstallRouteRefusesTheLocalToken(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+
+	for _, r := range []req{
+		{method: http.MethodPost, path: "/api/v1/system/tools/install", body: `{"name":"whisper","model":"tiny"}`},
+		{method: http.MethodGet, path: "/api/v1/system/tools"},
+	} {
+		if res := h.do(r); res.status != http.StatusForbidden || res.json(t)["code"] != "E_FORBIDDEN" {
+			t.Errorf("%s %s with the local token = %d %s, want 403 E_FORBIDDEN", r.method, r.path, res.status, res.body)
+		}
+	}
+
+	if res := h.do(req{method: http.MethodPost, path: "/api/v1/system/tools/install", noAuth: true}); res.status !=
+		http.StatusUnauthorized {
+		t.Errorf("no credential = %d, want 401", res.status)
+	}
+
+	if res := h.get("/api/v1/unlisted"); res.status != http.StatusNotFound {
+		t.Errorf("an unlisted route = %d, want 404", res.status)
 	}
 }
