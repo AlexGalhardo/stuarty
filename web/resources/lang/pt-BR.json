@@ -236,6 +236,8 @@
         "path": "Caminho de um arquivo para importar",
         "import": "Importar",
         "empty": "Nenhuma mídia ainda. Cole acima o caminho de um arquivo.",
+        "empty_desktop": "Nenhuma mídia ainda. Escolha arquivos, solte-os aqui ou cole um caminho acima.",
+        "choose": "Escolher arquivos",
         "drop": "Uma página do navegador não vê o caminho de um arquivo. Cole o caminho no campo.",
         "add": "Adicionar à linha do tempo",
         "retry": "Tentar de novo",

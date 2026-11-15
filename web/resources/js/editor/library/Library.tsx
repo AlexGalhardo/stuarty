@@ -1,4 +1,9 @@
-import { type ReactNode, useState } from "react";
+import {
+	type ReactNode,
+	useEffect,
+	useState,
+	useSyncExternalStore,
+} from "react";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +13,21 @@ import { useStore } from "../state/createStore";
 import { useRuntime } from "../state/EditorContext";
 import { errorHeadline } from "../ui/errorHeadline";
 import AssetCard, { type AssetDragStart } from "./AssetCard";
+import {
+	canDropPaths,
+	canPickFiles,
+	cleanPaths,
+	getDesktopBridge,
+	subscribeDesktopBridge,
+} from "./desktopBridge";
 import { parsePastedPaths } from "./importPaths";
 import TrashGroup from "./TrashGroup";
 
 // The media library of SDD-012 section 13: import by path, cards with their
 // state and progress from events, and "Add to timeline". A browser page cannot
-// see the path of a dropped file, so a drop only explains that.
+// see the path of a dropped file, so a drop only explains that; the desktop
+// shell (window.vukemDesktop, feature-detected) adds "Choose files" and drops
+// that carry absolute paths, which go to the same importPaths.
 export default function Library({
 	onAssetDragStart,
 }: {
@@ -28,6 +42,13 @@ export default function Library({
 	const [text, setText] = useState("");
 	const [busy, setBusy] = useState(false);
 	const [dropped, setDropped] = useState(false);
+	const bridge = useSyncExternalStore(
+		subscribeDesktopBridge,
+		getDesktopBridge,
+		() => null,
+	);
+	const pick = canPickFiles(bridge);
+	const drops = canDropPaths(bridge);
 
 	async function submit(): Promise<void> {
 		const paths = parsePastedPaths(text);
@@ -41,6 +62,27 @@ export default function Library({
 		}
 	}
 
+	async function choose(): Promise<void> {
+		if (bridge?.pickFiles === undefined) return;
+		setBusy(true);
+		try {
+			const picked = cleanPaths(await bridge.pickFiles());
+			if (picked.length > 0) await runtime.importPaths(picked);
+		} catch {
+			// The dialog failed or the shell went away: nothing was picked.
+		} finally {
+			setBusy(false);
+		}
+	}
+
+	useEffect(() => {
+		if (!canEdit || bridge?.onDropPaths === undefined) return;
+		return bridge.onDropPaths((paths) => {
+			const clean = cleanPaths(paths);
+			if (clean.length > 0) void runtime.importPaths(clean);
+		});
+	}, [bridge, canEdit, runtime]);
+
 	const visible = entries.filter(
 		(entry) => !entry.trashed && !dismissed.includes(entry.asset_id),
 	);
@@ -53,7 +95,7 @@ export default function Library({
 			onDragOver={(event) => event.preventDefault()}
 			onDrop={(event) => {
 				event.preventDefault();
-				setDropped(true);
+				if (!drops) setDropped(true);
 			}}
 		>
 			<h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
@@ -80,7 +122,18 @@ export default function Library({
 					{t("ui.editor.library.import")}
 				</Button>
 			</form>
-			{dropped && (
+			{pick && (
+				<Button
+					type="button"
+					size="sm"
+					variant="outline"
+					disabled={busy || !canEdit}
+					onClick={() => void choose()}
+				>
+					{t("ui.editor.library.choose")}
+				</Button>
+			)}
+			{dropped && !drops && (
 				<p role="status" className="text-xs text-muted-foreground">
 					{t("ui.editor.library.drop")}
 				</p>
@@ -100,7 +153,11 @@ export default function Library({
 			)}
 			{visible.length === 0 ? (
 				<p className="text-sm text-muted-foreground">
-					{t("ui.editor.library.empty")}
+					{t(
+						pick || drops
+							? "ui.editor.library.empty_desktop"
+							: "ui.editor.library.empty",
+					)}
 				</p>
 			) : (
 				<ul className="flex flex-col gap-2">

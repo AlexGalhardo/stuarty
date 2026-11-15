@@ -236,6 +236,8 @@
         "path": "Path of a file to import",
         "import": "Import",
         "empty": "No media yet. Paste the path of a file above.",
+        "empty_desktop": "No media yet. Choose files, drop them here or paste a path above.",
+        "choose": "Choose files",
         "drop": "A browser page cannot see the path of a file. Paste the path into the field.",
         "add": "Add to timeline",
         "retry": "Try again",
