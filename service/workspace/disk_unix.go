@@ -12,5 +12,6 @@ func FreeBytes(dir string) (uint64, error) {
 		return 0, err
 	}
 
-	return uint64(st.Bavail) * uint64(st.Bsize), nil //nolint:gosec // block counts and sizes are never negative
+	// The field types differ between Linux and macOS, and neither is ever negative.
+	return uint64(st.Bavail) * uint64(st.Bsize), nil //nolint:gosec,unconvert // see above
 }
