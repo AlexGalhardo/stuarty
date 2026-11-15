@@ -72,6 +72,12 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, newError(command.CodeInternal, "exporting is not available in this build.")
 	}
 
+	// Starting an export writes a row and a file; below the free-space floor it
+	// is refused (SDD-007 section 9.2).
+	if derr := s.checkDisk(); derr != nil && !req.DryRun {
+		return nil, derr
+	}
+
 	doc, derr := decodeRow(&row)
 	if derr != nil {
 		return nil, derr
