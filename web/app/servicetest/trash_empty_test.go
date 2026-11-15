@@ -252,7 +252,9 @@ func TestSweepRemovesOrphansOlderThan24Hours(t *testing.T) {
 		}
 	}
 
-	longAgo := time.Now().Add(-48 * time.Hour)
+	// Aged by the clock of the service, not the wall clock: the env clock is
+	// fixed, so a wall-clock age shrinks below 24 hours as real days pass.
+	longAgo := m.clock.now().Add(-48 * time.Hour)
 	if err := os.Chtimes(old, longAgo, longAgo); err != nil {
 		t.Fatal(err)
 	}
