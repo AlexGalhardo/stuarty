@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -58,5 +60,27 @@ func TestSecretVariablesAreRecognisedByName(t *testing.T) {
 		if isSecretVar(n) {
 			t.Errorf("%s is treated as a secret", n)
 		}
+	}
+}
+
+// A second diagnostic run does not start while one is in progress: it is told
+// to wait (E_QUEUE_FULL) and hashes nothing.
+func TestDoctorRunsOneAtATime(t *testing.T) {
+	t.Parallel()
+
+	s := &svc{}
+	ctx := WithCaller(context.Background(), Caller{Actor: "local:cli", Scopes: AllScopes, Operator: true})
+
+	s.doctorMu.Lock()
+
+	_, err := s.Doctor(ctx, DoctorRequest{Verify: true})
+	if se, ok := errors.AsType[*Error](err); !ok || se.Code != CodeQueueFull {
+		t.Fatalf("a second run = %v, want E_QUEUE_FULL", err)
+	}
+
+	s.doctorMu.Unlock()
+
+	if _, err := s.Doctor(ctx, DoctorRequest{Verify: true}); err != nil {
+		t.Errorf("a run after the first ended = %v", err)
 	}
 }

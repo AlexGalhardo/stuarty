@@ -168,7 +168,7 @@ func TestDoctorHidesPathsForNonAdmin(t *testing.T) {
 		Actor: "key:r", OwnerUserID: "alice", Scopes: []string{service.ScopeRead},
 	})
 
-	res, err := e.svc.Doctor(reader, service.DoctorRequest{Full: true, Verify: true})
+	res, err := e.svc.Doctor(reader, service.DoctorRequest{Full: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -190,6 +190,10 @@ func TestDoctorHidesPathsForNonAdmin(t *testing.T) {
 
 	if _, err := e.svc.Doctor(reader, service.DoctorRequest{Bundle: true}); code(err) != service.CodeForbidden {
 		t.Errorf("a bundle for a non-admin = %v", err)
+	}
+
+	if _, err := e.svc.Doctor(reader, service.DoctorRequest{Verify: true}); code(err) != service.CodeForbidden {
+		t.Errorf("verify for a non-admin = %v", err)
 	}
 
 	admin := service.WithCaller(context.Background(), service.Caller{
@@ -273,5 +277,55 @@ func TestDoctorVerifyMismatch(t *testing.T) {
 
 	if ok, bad := digests(); ok != 1 || bad != 1 {
 		t.Errorf("tampered helper: %d ok, %d failed; want 1 and 1", ok, bad)
+	}
+}
+
+// A key limited to one project exists in local mode: it gets no workspace path,
+// no path in a check, no environment, and cannot verify or bundle.
+func TestDoctorRefusesAProjectLimitedKeyTheMachineDetails(t *testing.T) {
+	e := doctorEnv(t, service.ModeLocal)
+	project := e.newProject("p")
+
+	limited := service.WithCaller(context.Background(), service.Caller{
+		Actor: "key:limited", Scopes: service.AllScopes, ProjectID: project,
+	})
+
+	res, err := e.svc.Doctor(limited, service.DoctorRequest{Full: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	whole, jerr := json.Marshal(res)
+	if jerr != nil {
+		t.Fatal(jerr)
+	}
+
+	if res.Workspace != "" || strings.Contains(string(whole), string(e.dir)) ||
+		strings.Contains(string(whole), "environment") {
+		t.Errorf("a limited key sees machine details: %s", whole)
+	}
+
+	for _, req := range []service.DoctorRequest{{Verify: true}, {Bundle: true}, {GC: true}} {
+		if _, err := e.svc.Doctor(limited, req); code(err) != service.CodeForbidden {
+			t.Errorf("%+v by a limited key = %v, want E_FORBIDDEN", req, err)
+		}
+	}
+
+	// The local token of an agent surface is not a person either.
+	if _, err := e.svc.Doctor(e.as(agent), service.DoctorRequest{Verify: true}); code(err) != service.CodeForbidden {
+		t.Errorf("verify by the local token = %v", err)
+	}
+
+	// The operator sees plain values for the allowlist and "set" for the rest.
+	op, err := e.svc.Doctor(service.WithCaller(context.Background(), operator()), service.DoctorRequest{Full: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, c := range op.Checks {
+		if c.Name == "environment" && (!strings.Contains(c.Detail, "VUKEM_VIDEO_MAX_EXPORTS=3") ||
+			!strings.Contains(c.Detail, "VUKEM_VIDEO_HOME=set") || strings.Contains(c.Detail, string(e.dir))) {
+			t.Errorf("environment = %s", c.Detail)
+		}
 	}
 }
