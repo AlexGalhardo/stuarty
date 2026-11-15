@@ -50,7 +50,8 @@ import {
 } from "./keyboard";
 import Ruler from "./Ruler";
 import SnapLine from "./SnapLine";
-import { TrackHeader, TrackRow } from "./TrackRow";
+import TrackHeader from "./TrackHeader";
+import { TrackRow } from "./TrackRow";
 
 function isEditable(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) return false;

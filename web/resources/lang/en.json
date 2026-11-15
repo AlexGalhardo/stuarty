@@ -94,14 +94,41 @@
         "tracks": "Tracks",
         "track_visual": "Video track",
         "track_audio": "Audio track",
-        "hidden": "hidden",
-        "muted": "muted",
         "item_summary": "{type}, {name}",
         "snap": "Snap",
         "caption_words": {
           "one": "{count} word",
           "other": "{count} words"
         }
+      },
+      "track": {
+        "name_label": "Track name",
+        "menu": "Actions for track {name}",
+        "rename": "Rename",
+        "hide": "Hide track",
+        "show": "Show track",
+        "mute": "Mute track",
+        "unmute": "Unmute track",
+        "add_visual_above": "Add video track above",
+        "add_visual_below": "Add video track below",
+        "add_audio_above": "Add audio track above",
+        "add_audio_below": "Add audio track below",
+        "move_up": "Move up",
+        "move_down": "Move down",
+        "remove": "Remove track",
+        "drag": "Drag to reorder track {name}",
+        "hidden": "Hidden",
+        "muted": "Muted",
+        "caption_style_replace": "Replace the whole style",
+        "caption_style_clear": "Clear the style",
+        "no_caption_style": "An audio track has no caption style.",
+        "remove_title": "Remove this track?",
+        "remove_body": {
+          "one": "The track holds {count} item. Removing the track removes it too.",
+          "other": "The track holds {count} items. Removing the track removes them too."
+        },
+        "remove_confirm": "Remove track and items",
+        "remove_cancel": "Cancel"
       },
       "item": {
         "clip": "Clip",

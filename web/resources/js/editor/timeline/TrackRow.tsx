@@ -1,4 +1,3 @@
-import { AudioLines, Video } from "lucide-react";
 import { memo, type ReactNode, useRef, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
@@ -219,53 +218,6 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 		</div>
 	);
 });
-
-export function TrackHeader({ id }: { id: string }): ReactNode {
-	const t = useT();
-	const runtime = useRuntime();
-	const track = useDocumentState((s) => selectTrack(s, id));
-	if (track === undefined) return null;
-	const Icon = track.kind === "audio" ? AudioLines : Video;
-	return (
-		// biome-ignore lint/a11y/useSemanticElements: the header sits in a CSS-positioned grid (SDD-012 section 7.1).
-		<div
-			role="rowheader"
-			tabIndex={-1}
-			data-header-for={id}
-			onClick={() => runtime.uiWriter.selectTrack(id)}
-			onKeyDown={(event) => {
-				if (event.key !== "Enter") return;
-				event.preventDefault();
-				runtime.uiWriter.selectTrack(id);
-			}}
-			style={{ height: rowHeight(track.kind) }}
-			className="flex items-center gap-2 border-b border-ed-track-line px-3 text-xs"
-		>
-			<Icon
-				aria-hidden="true"
-				className="size-4 shrink-0 text-muted-foreground"
-			/>
-			<span className="sr-only">
-				{track.kind === "audio"
-					? t("ui.editor.timeline.track_audio")
-					: t("ui.editor.timeline.track_visual")}
-			</span>
-			<UntrustedText className="truncate font-medium">
-				{track.name ?? id}
-			</UntrustedText>
-			{track.hidden === true && (
-				<span className="text-muted-foreground">
-					({t("ui.editor.timeline.hidden")})
-				</span>
-			)}
-			{track.muted === true && (
-				<span className="text-muted-foreground">
-					({t("ui.editor.timeline.muted")})
-				</span>
-			)}
-		</div>
-	);
-}
 
 export const TrackRow = memo(function TrackRow({
 	id,
