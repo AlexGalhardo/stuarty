@@ -271,6 +271,10 @@ type execSpec struct {
 
 // exec is the one place a child is started. Tests call it with a helper binary.
 func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
+	if err := checkNotRoot(); err != nil {
+		return engine.Result{}, err
+	}
+
 	r.started.Add(1)
 	if s.deadline <= 0 {
 		return engine.Result{}, internalErr("a run needs a deadline", nil)
