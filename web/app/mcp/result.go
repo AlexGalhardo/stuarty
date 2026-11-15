@@ -23,6 +23,9 @@ type callFunc func(ctx context.Context, svc service.Service, args json.RawMessag
 type toolOutput struct {
 	value any
 	text  string
+	// image and mime are the picture of view, the only tool that returns one.
+	image []byte
+	mime  string
 }
 
 // parseArguments validates the arguments against the inputSchema of the tool
@@ -129,10 +132,12 @@ func successResult(out *toolOutput, bulk map[string]bool) (*sdk.CallToolResult, 
 		delete(doc, k)
 	}
 
-	return &sdk.CallToolResult{
-		Content:           []sdk.Content{&sdk.TextContent{Text: out.text}},
-		StructuredContent: doc,
-	}, nil
+	content := []sdk.Content{&sdk.TextContent{Text: out.text}}
+	if len(out.image) > 0 {
+		content = append(content, &sdk.ImageContent{Data: out.image, MIMEType: out.mime})
+	}
+
+	return &sdk.CallToolResult{Content: content, StructuredContent: doc}, nil
 }
 
 // Caps of SDD-003 section 1.3: an error block is at most 6,000 characters, 2,000
@@ -192,7 +197,7 @@ func mustJSON(v any) string {
 func (a *adapter) bulkFields() map[string]bool {
 	out := map[string]bool{}
 
-	for _, v := range []any{service.ProjectGetResult{}} {
+	for _, v := range []any{service.ProjectGetResult{}, service.ViewResult{}} {
 		t := reflect.TypeOf(v)
 		for f := range t.Fields() {
 			if f.Tag.Get("bulk") == "true" {

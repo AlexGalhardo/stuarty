@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -22,6 +23,9 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/cache"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/frame"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
 	"github.com/AlexGalhardo/vukem-video/service"
@@ -46,6 +50,9 @@ type Options struct {
 	Export ExportFunc
 	// Clock is the service clock; default time.Now.
 	Clock func() time.Time
+	// Frames wires the real frame renderer of view over the pinned FFmpeg; the
+	// test is skipped when that build is not installed.
+	Frames bool
 }
 
 // Env is a service with a worker running behind it.
@@ -110,15 +117,21 @@ func New(tb testing.TB, o Options) *Env {
 		exporter = GoodExport
 	}
 
+	media := service.Media{
+		Content: enginestore.New(string(dir)), Guard: guard, Ingest: e.fakeIngest,
+		FreeBytes: func(string) (uint64, error) { return 1 << 40, nil },
+	}
+
+	if o.Frames {
+		media.Frames = realFrames(tb, string(dir))
+	}
+
 	svc, err := service.New(service.Options{
 		Store: st, Registry: command.Default(), Now: o.Clock, NewIDs: e.newID,
 		Workspace: string(dir),
-		Media: service.Media{
-			Content: enginestore.New(string(dir)), Guard: guard, Ingest: e.fakeIngest,
-			FreeBytes: func(string) (uint64, error) { return 1 << 40, nil },
-		},
-		Exporter: exporter,
-		Enqueue:  jobs.Dispatcher{Queue: q},
+		Media:     media,
+		Exporter:  exporter,
+		Enqueue:   jobs.Dispatcher{Queue: q},
 	})
 	if err != nil {
 		tb.Fatal(err)
@@ -290,4 +303,56 @@ func fakeResult(ws string, in ingest.Input) (*ingest.Result, error) {
 	}
 
 	return res, nil
+}
+
+// realFrames is the frame renderer of view over the pinned LGPL FFmpeg: the
+// directory comes from VUKEM_VIDEO_TEST_FFMPEG_DIR or from the install of
+// scripts/install-ffmpeg.sh under the temporary directory.
+func realFrames(tb testing.TB, dir string) *frame.Frames {
+	tb.Helper()
+
+	exe := "ffmpeg"
+	if runtime.GOOS == "windows" {
+		exe += ".exe"
+	}
+
+	ffdir := os.Getenv("VUKEM_VIDEO_TEST_FFMPEG_DIR")
+
+	if ffdir == "" {
+		for _, base := range []string{os.Getenv("RUNNER_TEMP"), os.Getenv("TEMP"), os.Getenv("TMPDIR")} {
+			if base == "" {
+				continue
+			}
+
+			if m, _ := filepath.Glob(filepath.Join(base, "ffmpeg", "*", "*", "bin", exe)); len(m) > 0 {
+				ffdir = filepath.Dir(m[len(m)-1])
+
+				break
+			}
+		}
+	}
+
+	if ffdir == "" {
+		tb.Skip("no pinned FFmpeg: run scripts/install-ffmpeg.sh and set VUKEM_VIDEO_TEST_FFMPEG_DIR")
+	}
+
+	in, err := ffmpeg.Discover(
+		context.Background(),
+		ffmpeg.Config{FFmpegPath: filepath.Join(ffdir, exe), CPUCount: runtime.NumCPU()},
+	)
+	if err != nil || in.Info.License.Name != "lgpl" {
+		tb.Skip("the FFmpeg in VUKEM_VIDEO_TEST_FFMPEG_DIR is not the pinned LGPL build")
+	}
+
+	runner, err := ffmpeg.NewRunner(in, dir)
+	if err != nil {
+		tb.Fatal(err)
+	}
+
+	frames, err := cache.Open(dir, 0)
+	if err != nil {
+		tb.Fatal(err)
+	}
+
+	return &frame.Frames{Runner: runner, ArtifactsDir: filepath.Join(dir, "artifacts"), Cache: frames}
 }

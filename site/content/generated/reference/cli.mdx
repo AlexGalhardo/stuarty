@@ -325,13 +325,33 @@ vukem-video media:list --project prj_7k2m9x4q1b --json
 
 ## `view`
 
-Render a frame or a contact sheet of a project Not available yet: arrives with P1-RND-005.
+Render a frame or a contact sheet of a project
 
 ```text
-vukem-video view --project <id> [--mode frame|sheet] [--at t]
+vukem-video view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]
+    [--from t --until t --count n] [--cols n] [--asset <id>] [--max-tokens n] [--width px]
 ```
 
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--mode` | string | `frame` | frame (one image at --at) or sheet (a grid) |
+| `--at` | string |  | frame: the time to show |
+| `--times` | string |  | sheet: 2 to 16 times, comma separated |
+| `--from` | string |  | sheet: first time (default 0s) |
+| `--until` | string |  | sheet: last time, included (default the last frame) |
+| `--count` | integer | `9` | sheet: frames evenly spaced from --from to --until |
+| `--cols` | integer |  | sheet: columns (default ceil(sqrt(count))) |
+| `--asset` | string |  | view the media of a source asset instead of the timeline |
+| `--max-tokens` | integer |  | image token budget (default 800, a sheet 1,500; at most 1,568) |
+| `--width` | integer |  | image width in pixels, even; exclusive with --max-tokens |
+
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+vukem-video view --project prj_7k2m9x4q1b --at 1s --json
+```
 
 ## `export`
 

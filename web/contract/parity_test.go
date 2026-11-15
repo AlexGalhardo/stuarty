@@ -44,14 +44,8 @@ var parity = []row{
 	{method: "JobStart", tool: "job_start", command: "export", route: "POST /projects/{}/jobs"},
 	{method: "JobGet", tool: "job_get", command: "job:show", route: "GET /jobs/{}"},
 	{method: "JobList", tool: "job_get", command: "job:list", route: "GET /projects/{}/jobs"},
-	{
-		method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame",
-		pending: "P1-RND-005",
-	},
-	{
-		method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet",
-		pending: "P1-RND-005",
-	},
+	{method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame"},
+	{method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet"},
 	{method: "Events", command: "events", route: "GET /projects/{}/events", pending: "P1-SRV-006"},
 }
 

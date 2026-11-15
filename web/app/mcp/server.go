@@ -34,9 +34,7 @@ type Options struct {
 // Pending names the task that delivers each tool of the Prototype that has no
 // Service method yet. A pending tool is not in tools/list: the list shows the
 // tools whose operations exist in the build (SDD-003 section 4.1).
-var Pending = map[string]string{
-	"view": "P1-RND-005",
-}
+var Pending = map[string]string{}
 
 const (
 	defaultActor = "mcp"

@@ -9,9 +9,5 @@ func pendingSpec(name, summary, task string, usage ...string) *spec {
 	return &spec{name: name, summary: summary, usage: usage, pending: task, project: true}
 }
 
-var (
-	view = pendingSpec("view", "render a frame or a contact sheet of a project", "P1-RND-005",
-		"vukem-video view --project <id> [--mode frame|sheet] [--at t]")
-	events = pendingSpec("events", "print the events of a project as they arrive", "P1-SRV-006",
-		"vukem-video events --project <id> [--from-id n] [--since n] [--count n]")
-)
+var events = pendingSpec("events", "print the events of a project as they arrive", "P1-SRV-006",
+	"vukem-video events --project <id> [--from-id n] [--since n] [--count n]")
