@@ -13,7 +13,7 @@
 
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 type Theme = "light" | "dark";
 type Rgb = [number, number, number];
@@ -21,14 +21,14 @@ type Tokens = Map<string, string>;
 
 const TOLERANCE = 0.02;
 
-const css = readFileSync(
-	join(dirname(fileURLToPath(import.meta.url)), "../resources/css/app.css"),
-	"utf8",
+const cssPath = join(
+	dirname(fileURLToPath(import.meta.url)),
+	"../resources/css/app.css",
 );
 
 // block returns the declarations of the first rule whose selector is exactly
 // `selector`, outside any at-rule.
-function block(selector: string): Tokens {
+function block(css: string, selector: string): Tokens {
 	const start = css.indexOf(`\n${selector} {`);
 	if (start < 0) throw new Error(`app.css has no ${selector} block`);
 	const open = css.indexOf("{", start);
@@ -40,10 +40,8 @@ function block(selector: string): Tokens {
 	return tokens;
 }
 
-const themes: Record<Theme, Tokens> = {
-	light: block(":root"),
-	dark: new Map([...block(":root"), ...block(".dark")]),
-};
+// The tokens of the stylesheet being checked; evaluate() sets them.
+let themes: Record<Theme, Tokens>;
 
 interface Colour {
 	rgb: Rgb; // 0 to 255, not rounded
@@ -204,24 +202,52 @@ const pairs: Pair[] = [
 	plain("ed-selection", "ed-item-text", 3, 4.4, 3.93),
 ];
 
-let failures = 0;
+export interface Row {
+	theme: Theme;
+	name: string;
+	got: number;
+	want: number;
+	need: number;
+	problems: string[];
+}
 
-for (const p of pairs) {
-	for (const theme of ["light", "dark"] as const) {
-		const got = p.measure(theme);
-		const want = theme === "light" ? p.light : p.dark;
-		const problems: string[] = [];
-		if (got < p.need) problems.push(`below ${p.need}:1`);
-		if (Math.abs(got - want) > TOLERANCE) problems.push(`design-system.md says ${want.toFixed(2)}`);
-		const status = problems.length === 0 ? "ok  " : "FAIL";
-		if (problems.length > 0) failures++;
-		console.log(`${status} ${theme.padEnd(5)} ${got.toFixed(2).padStart(6)}  ${p.name}${problems.length ? `  (${problems.join(", ")})` : ""}`);
+// evaluate measures every pair in both themes for the given stylesheet text.
+export function evaluate(css: string): Row[] {
+	themes = {
+		light: block(css, ":root"),
+		dark: new Map([...block(css, ":root"), ...block(css, ".dark")]),
+	};
+	const rows: Row[] = [];
+	for (const p of pairs) {
+		for (const theme of ["light", "dark"] as const) {
+			const got = p.measure(theme);
+			const want = theme === "light" ? p.light : p.dark;
+			const problems: string[] = [];
+			if (got < p.need) problems.push(`below ${p.need}:1`);
+			if (Math.abs(got - want) > TOLERANCE)
+				problems.push(`design-system.md says ${want.toFixed(2)}`);
+			rows.push({ theme, name: p.name, got, want, need: p.need, problems });
+		}
 	}
+	return rows;
 }
 
-if (failures > 0) {
-	console.error(`check-contrast: ${failures} failing pair(s)`);
-	process.exit(1);
+function main(): void {
+	const rows = evaluate(readFileSync(cssPath, "utf8"));
+	let failures = 0;
+	for (const r of rows) {
+		if (r.problems.length > 0) failures++;
+		console.log(
+			`${r.problems.length === 0 ? "ok  " : "FAIL"} ${r.theme.padEnd(5)} ${r.got.toFixed(2).padStart(6)}  ${r.name}${r.problems.length ? `  (${r.problems.join(", ")})` : ""}`,
+		);
+	}
+	if (failures > 0) {
+		console.error(`check-contrast: ${failures} failing pair(s)`);
+		process.exit(1);
+	}
+	console.log(`check-contrast: ${rows.length} pairs pass in both themes`);
 }
 
-console.log(`check-contrast: ${pairs.length * 2} pairs pass in both themes`);
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+	main();
+}
