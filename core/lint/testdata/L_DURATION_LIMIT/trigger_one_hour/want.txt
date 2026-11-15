@@ -1,0 +1,4 @@
+lint r1 prj_7k2m9x4q1b: errors=0 warnings=1 (showing 1 of 1)
+warning L_DURATION_LIMIT - 180s/5400f-3600s/108000f
+  the timeline lasts 3600.000 s, longer than the 180 s limit of short video platforms.
+  hint: trim the timeline or accept it

@@ -26,6 +26,15 @@ const (
 	CodeSliver        = "L_SLIVER"
 	CodeSlotUnfilled  = "L_SLOT_UNFILLED"
 	CodeSafeArea      = "L_SAFE_AREA"
+
+	CodeOccluded        = "L_OCCLUDED"
+	CodeAudioOverlap    = "L_AUDIO_OVERLAP"
+	CodeTransitionEmpty = "L_TRANSITION_EMPTY"
+	CodeDurationLimit   = "L_DURATION_LIMIT"
+	CodeOffFrame        = "L_OFF_FRAME"
+	CodeCaptionDesync   = "L_CAPTION_DESYNC"
+	CodeAudioClip       = "L_AUDIO_CLIP"
+	CodeLoudness        = "L_LOUDNESS"
 )
 
 // Finding is one result of a rule (SDD-003 §3.6).
@@ -80,6 +89,12 @@ type Env struct {
 	// lays it out (its widest layout, before scale and rotation), in project
 	// pixels. ok is false when the item cannot be measured.
 	TextSize func(doc *timeline.Document, item *timeline.Item) (w, h float64, ok bool)
+	// Measurer gives the box of an item with its rotation applied; it enables
+	// L_OFF_FRAME and replaces TextSize for L_SAFE_AREA (layout.go).
+	Measurer Measurer
+	// Artifacts gives the rules that read peaks, loudness and transcripts what ingest
+	// stored (artifacts.go); without it those rules are silent.
+	Artifacts ArtifactReader
 	// MediaFrames is the frame count of the normalized media actually in the
 	// store, on the asset's own frame rate (Full only): L_SOURCE_RANGE.
 	MediaFrames func(assetID string) (frames int, ok bool)
@@ -98,9 +113,18 @@ func Lint(doc *timeline.Document, env Env, mode Mode) []Finding {
 	c.silent()
 	c.slivers()
 	c.safeArea()
+	c.offFrame()
+	c.occluded()
+	c.audioOverlap()
+	c.transitionEmpty()
+	c.durationLimit()
+
+	c.captionDesync(mode == Full)
 
 	if mode == Full {
 		c.sourceRange()
+		c.audioClip()
+		c.loudness()
 	}
 
 	Sort(c.out)

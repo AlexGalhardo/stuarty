@@ -1,0 +1,4 @@
+lint r1 prj_7k2m9x4q1b: errors=0 warnings=1 (showing 1 of 1)
+warning L_AUDIO_CLIP - 0s/0f-1s/30f
+  the estimated mix peaks above 0 dBFS in 1 range(s); the first is frames 0-29.
+  hint: lower volume with item.set_audio
