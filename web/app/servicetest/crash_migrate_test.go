@@ -30,7 +30,11 @@ func TestCrashMigrationChild(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = service.MigrateStoredDocuments(context.Background(), st, service.MigrateOptions{NowMs: 1, Migrate: migrateFrom0})
+	_, err = service.MigrateStoredDocuments(
+		context.Background(),
+		st,
+		service.MigrateOptions{NowMs: 1, Migrate: migrateFrom0},
+	)
 
 	t.Fatalf("the child finished (%v) without reaching %s", err, os.Getenv(crashpoint.CrashEnv))
 }
@@ -47,7 +51,19 @@ func TestCrashMigration(t *testing.T) {
 
 			e := newEnv(t)
 
-			raw, err := os.ReadFile(filepath.Join("..", "..", "..", "core", "timeline", "testdata", "versions", "v1", "all-item-types.json"))
+			raw, err := os.ReadFile(
+				filepath.Join(
+					"..",
+					"..",
+					"..",
+					"core",
+					"timeline",
+					"testdata",
+					"versions",
+					"v1",
+					"all-item-types.json",
+				),
+			)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -71,7 +87,11 @@ func TestCrashMigration(t *testing.T) {
 				t.Fatalf("child = %v, want exit 137 at %s\n%s", err, point, out.String())
 			}
 
-			st, err := store.Open(context.Background(), e.dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
+			st, err := store.Open(
+				context.Background(),
+				e.dir,
+				store.Options{SchemaVersion: timeline.CurrentSchemaVersion},
+			)
 			if err != nil {
 				t.Fatalf("reopen after the crash: %v", err)
 			}
@@ -79,7 +99,9 @@ func TestCrashMigration(t *testing.T) {
 			defer st.Close()
 
 			var integrity string
-			if err := st.DB().QueryRowContext(context.Background(), "PRAGMA integrity_check").Scan(&integrity); err != nil ||
+			if err := st.DB().
+				QueryRowContext(context.Background(), "PRAGMA integrity_check").
+				Scan(&integrity); err != nil ||
 				integrity != "ok" {
 				t.Errorf("integrity_check = %q, %v", integrity, err)
 			}
@@ -95,7 +117,8 @@ func TestCrashMigration(t *testing.T) {
 			}
 
 			if point == "migrate.before_commit" {
-				if row.Revision != 4 || row.SchemaVersion != stored || !bytes.Equal(row.Document, old) || len(backups) != 0 {
+				if row.Revision != 4 || row.SchemaVersion != stored || !bytes.Equal(row.Document, old) ||
+					len(backups) != 0 {
 					t.Errorf("after a crash before the commit: r%d v%d, %d backups; want the untouched r4 v%d",
 						row.Revision, row.SchemaVersion, len(backups), stored)
 				}
