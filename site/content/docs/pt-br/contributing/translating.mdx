@@ -39,7 +39,7 @@ Um commit que muda a página em inglês mas não o seu significado, como um erro
 Translation: not-needed
 ```
 
-Até a primeira versão BETA, a verificação apenas informa; a opção `strict` em `site/content/translations.config.json` transforma uma página desatualizada ou ausente em uma falha, e o `npm run check:translations -- --strict` faz o mesmo para uma execução.
+A opção `strict` em `site/content/translations.config.json` é `true`, então uma página desatualizada ou ausente é uma falha; o `npm run check:translations -- --strict` força o mesmo para uma execução.
 
 ## Erros comuns
 
