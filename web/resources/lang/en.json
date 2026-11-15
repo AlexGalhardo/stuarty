@@ -115,6 +115,7 @@
         "play": "Play",
         "pause": "Pause",
         "to_start": "Go to start",
+        "safe_area": "Safe area",
         "to_end": "Go to end",
         "step_back": "Step back one frame",
         "step_forward": "Step forward one frame",
