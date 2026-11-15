@@ -15,10 +15,12 @@ import (
 
 const (
 	idempotencyTTLMs = 24 * 60 * 60 * 1000
-	maxFindings      = 10
-	maxDescription   = 4000
-	maxDescLines     = 40
-	eventDescription = 500
+	// maxIdempotencyKeys is kept per actor and project; the oldest are evicted.
+	maxIdempotencyKeys = 10000
+	maxFindings        = 10
+	maxDescription     = 4000
+	maxDescLines       = 40
+	eventDescription   = 500
 )
 
 // batch is what the commit transaction writes: the log row, the document and
@@ -122,6 +124,10 @@ func (s *svc) commit(ctx context.Context, tx ProjectTx, b *batch) (int64, error)
 		crashpoint.Hit("commit.after_idempotency_put")
 
 		if _, err := tx.Idempotency().PurgeProjectExpired(ctx, row.ID, now); err != nil {
+			return 0, err
+		}
+
+		if _, err := tx.Idempotency().TrimActor(ctx, row.ID, b.actor, maxIdempotencyKeys); err != nil {
 			return 0, err
 		}
 	}

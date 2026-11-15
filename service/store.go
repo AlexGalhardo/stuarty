@@ -246,6 +246,9 @@ type IdempotencyRepo interface {
 	// does it in its own transaction (section 9.2 step 12) without touching
 	// another project's rows.
 	PurgeProjectExpired(ctx context.Context, projectID string, nowMs int64) (int64, error)
+	// TrimActor keeps the newest keep keys of one actor in one project and
+	// deletes the older ones (SDD-005 section 9: at most 10,000 per actor and project).
+	TrimActor(ctx context.Context, projectID, actor string, keep int) (int64, error)
 }
 
 // Assets, project assets and artifacts
