@@ -1252,6 +1252,17 @@ All measurements use `performance.mark` and `performance.measure` with the prefi
 | NFR-011 preview against export | SSIM and displacement | the test `preview-vs-export` of §20.3 | SSIM at least 0.97 on luma, 1 px |
 | `MAX_VIDEO_LAYERS` (§11.2 item 5) | `getVideoPlaybackQuality().droppedVideoFrames` and tab memory | scenario `video-layers-budget`: fixtures with 4, 6 and 8 simultaneous video layers, each played for 10 s | at most 2% dropped frames at the chosen `MAX_VIDEO_LAYERS`; tab memory within NFR-008 |
 
+**Measured on 2026-11-14** (the Prototype end-to-end specs, headless Chromium with software WebGL, Windows, FFmpeg n9.0.2 LGPL; the numbers move with the machine, rerun `bun run e2e`):
+
+| Budget | Result |
+| --- | --- |
+| Timeline, 200 items (5 tracks of 40), scroll plus zoom frames (`timeline-200-items-perf`) | p50 1.8 ms, p95 8.1 to 12.2 ms, max 16.4 ms (budget 16 ms at p95) |
+| Edit round trip, Split on the 200-item project, click to the new item in the DOM (`command-round-trip`) | p50 14.9 ms, p95 25.0 ms, one `/edit` request per gesture (25 gestures, 25 requests; budget 50 ms at p95) |
+| NFR-003 seek to a decoded proxy frame (`scrub-latency`) | p50 53 ms, p95 65 ms over 20 seeks (budget 100 ms) |
+| NFR-004 pause to exact frame | not measured: the guard of the API answers `/frame` as JSON to an `<img>` (server defect), so the overlay never shows |
+| NFR-011 preview against `ViewFrame` (`preview-vs-export`), gradient clip, luma at 108 x 192 | SSIM 0.96, below the 0.97 gate; mean absolute luma error 1.0 of 255. Geometry matches. The test gates at 0.95 until the reference scenes exist |
+| `MAX_VIDEO_LAYERS` (`video-layers-budget`), dropped frames over 10 s | 4 layers: 0 of 1200 (0%); 6 layers (4 decoding plus 2 stills): 125 of 1603 (7.8%); 8 layers: 79 of 1249 (6.3%); JS heap 11 to 13 MB. The 4 decoding elements are within budget, so `MAX_VIDEO_LAYERS = 4` stands; the layers beyond the cap cost frames on software WebGL, to be rechecked on the reference machine with a GPU |
+
 If a measurement misses its budget, the owner fixes the code or reports the measured number to the architect to correct the budget; the initial constants (`MAX_VIDEO_LAYERS = 4`, `VIRTUALIZE_ABOVE = 150`, `SNAP_PX = 8`, plan window prefetch 60 frames, bitmap cache 64) are corrected by these tests and recorded in this document.
 
 ### 19.2 Rules that keep the budgets
