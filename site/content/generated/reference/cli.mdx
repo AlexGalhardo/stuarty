@@ -390,13 +390,14 @@ vukem-video view --project prj_7k2m9x4q1b --at 1s --json
 Export a project to a file
 
 ```text
-vukem-video export --project <id> [--start t] [--end t] [--wait] [--timeout d]
+vukem-video export --project <id> [--start t] [--end t] [--format f] [--wait] [--timeout d]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--start` | string |  | first time to export (default: the start) |
 | `--end` | string |  | end of the export (default: the end of the timeline) |
+| `--format` | string |  | mp4 (default), gif, wav or aac |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
 
@@ -831,4 +832,45 @@ Example:
 
 ```bash
 vukem-video brand:set --kit brand.json
+```
+
+## `otio:export`
+
+Write the timeline of a project as an OpenTimelineIO file
+
+```text
+vukem-video otio:export --project <id> [--out f] [--force]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--out` | string |  | the file to write (default: the name of the project, in the current directory) |
+| `--force` | boolean | `false` | replace the file when it exists |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+vukem-video otio:export --project prj_7k2m9x4q1b --out cut.otio
+```
+
+## `otio:import`
+
+Apply an OpenTimelineIO file to a project as one undo step
+
+```text
+vukem-video otio:import <path> --project <id> [--base-revision n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--base-revision` | integer |  | the revision the file is applied to (default: the current one) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --dry-run
 ```

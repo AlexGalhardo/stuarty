@@ -1,6 +1,6 @@
 ---
 name: vukem-video
-description: Use when asked to edit or create short videos, captions, cuts or exports with the vukem-video CLI or MCP server. Covers the edit loop, the rules, the commands, the errors and recovery.
+description: Use when asked to edit or create short videos, captions, cuts or exports with the vukem-video CLI or MCP server.
 metadata:
   version: "0.13.0"
 ---
@@ -8,13 +8,9 @@ metadata:
 
 # vukem-video
 
-## What it is
+A video editor operated by commands: the CLI `vukem-video`, or the MCP server (`vukem-video mcp`) with the same operations as tools. Output is text; `--json` prints one JSON document.
 
-A video editor operated by commands. The CLI `vukem-video` is the main surface; the MCP server (`vukem-video mcp`) offers the same operations as tools. Output is text; `--json` prints one JSON document.
-
-## Setup check
-
-Run `vukem-video version`, then `project:list`. The workspace is `~/.vukem-video` or `$VUKEM_VIDEO_HOME`. `serve` shares the workspace with the browser.
+Check with `vukem-video version` and `project:list`. The workspace is `~/.vukem-video` or `$VUKEM_VIDEO_HOME`. `serve` shares the workspace with the browser.
 
 ## The loop
 
@@ -22,7 +18,7 @@ Run `vukem-video version`, then `project:list`. The workspace is `~/.vukem-video
 2. Plan one batch.
 3. Apply: `edit --project <id> --base <rev> ...`. Read the diff it prints.
 4. `lint --project <id>`. Fix errors; they block export.
-5. Look only if text cannot answer: `view --at 1s` (about 800 image tokens), then `view --mode sheet` (about 1,500).
+5. Look only if text cannot answer: `view --at 1s` (~800 image tokens), then `view --mode sheet` (~1,500).
 6. `export --project <id>`, then check `lint` and the `checks` of the job.
 
 ## Rules that prevent mistakes
@@ -55,7 +51,7 @@ Operations of `edit` (`namespace.action`); a star marks those added after the Pr
 
 ## CLI cheat sheet
 
-Every line starts with `vukem-video`.
+Prefix each with `vukem-video`.
 
 - `project:list [--state active|trashed|all] [--cursor c] [--limit n]`
 - `project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]`
@@ -75,7 +71,7 @@ Every line starts with `vukem-video`.
 - `media:trash <asset id> --project <id>`
 - `media:restore <asset id> --project <id>`
 - `view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]`
-- `export --project <id> [--start t] [--end t] [--wait] [--timeout d]`
+- `export --project <id> [--start t] [--end t] [--format f] [--wait] [--timeout d]`
 - `job:show <job id> [--wait] [--timeout d]`
 - `job:cancel <job id>`
 - `job:list --project <id> [--state s] [--cursor c] [--limit n]`
@@ -98,6 +94,8 @@ Every line starts with `vukem-video`.
 - `font:import <path>`
 - `brand:show`
 - `brand:set --kit <file|->`
+- `otio:export --project <id> [--out f] [--force]`
+- `otio:import <path> --project <id> [--base-revision n]`
 
 Batches: `--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` any JSON). `--dry-run` saves nothing; `--key <k>` makes a retry safe.
 

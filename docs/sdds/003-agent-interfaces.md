@@ -2324,7 +2324,7 @@ Every path argument (`media:import <path>`, `template:import <path>`) is made ab
 | `media:restore` | `media:restore <asset id> --project <id>` | none | none | `MediaStateResult` | A |
 | `view` | `view --project <id> [--mode frame\|sheet] [--at t] [--times t1,t2,...] [--from t --until t --count n] [--cols n] [--asset <id>] [--max-tokens n] [--width px]` | `--mode` string `frame`; `--at`; `--times`; `--from`; `--until`; `--count` int 9; `--cols` int; `--asset`; `--max-tokens` int 800 (sheet 1,500); `--width` int | none | `ViewResult` without `image_base64` (the image is the file in `path`; with a remote server the CLI downloads the image from the byte-serving route to a temporary file on the client and prints that path) | P |
 | `lint` | `lint --project <id> [--severity error\|warning] [--cursor c] [--limit n] [--strict]` | `--severity` string `warning`; `--cursor`; `--limit` int 25; `--strict` bool false | none | `LintResult` | P |
-| `export` | `export --project <id> [--start t] [--end t]` | `--start`; `--end`; `--wait`, `--timeout` | none | `Job` | P |
+| `export` | `export --project <id> [--start t] [--end t] [--format f]` | `--start`; `--end`; `--format` mp4 (default), gif, wav or aac; `--wait`, `--timeout` | none | `Job` | P |
 | `transcribe` | `transcribe --project <id> --asset <id> [--language auto]` | `--asset` string, required; `--language` string `auto`; `--wait`, `--timeout` | none | `Job` | A |
 | `job:show` | `job:show <job id> [--wait] [--timeout d]` | `--wait` false; `--timeout` | none | `Job` | P |
 | `job:list` | `job:list --project <id> [--state s] [--cursor c] [--limit n]` | `--state` string (empty: queued, running and the 10 most recent final jobs; `queued`, `running`, `succeeded`, `failed`, `cancelled`, `active`, `all`); `--cursor`; `--limit` int 20 | none | `JobListResult` | P |
@@ -2350,6 +2350,8 @@ Every path argument (`media:import <path>`, `template:import <path>`) is made ab
 | `tools:install` | `tools:install <name> [--model <model>] [--yes] [--timeout d]` | `--model` string `small`, the model to download for a transcription helper; `--yes` bool false, skips the confirmation (without a terminal, or with `--json`, `--yes` is required); `--timeout` the longest wait for the download, exit 2 when it runs out | none | none; downloads a helper such as whisper.cpp after stating its size (SDD-007 §6.8) | A |
 | `bundle:export` | `bundle:export --project <id> [--no-log]` | `--no-log` (flag `--log`, bool true; false leaves `operations.ndjson` out), `--wait`, `--timeout` | none | `Job` (SDD-005 §16) | B |
 | `bundle:import` | `bundle:import <path> [--as-new]` | `--as-new` bool false, a new id and no log (required with accounts, SDD-005 §16.3); `--dry-run` | none | `ProjectCreateResult` (SDD-005 §16); the path is made absolute and read on the machine of the server | B |
+| `otio:export` | `otio:export --project <id> [--out f] [--force]` | `--out` string, the file to write (default: `file_name` of the result, in the current directory); `--force` bool false, replaces an existing file | none | `OtioExportResult` without `content`, plus `file` (the absolute path written) and `bytes`; the file is written by the CLI on the machine that runs it | B |
+| `otio:import` | `otio:import <path> --project <id> [--base-revision n]` | `--base-revision` int, default the current revision; `--dry-run` | none | `OtioImportResult` (SDD-001 §9); the path is made absolute and read on the machine of the server | B |
 | `agent:docs` | `agent:docs [--print skill\|agents\|instructions] [--write <dir>]` | `--print` string `skill`; `--write` string | none | `{"files": [...]}` with `--write`; the text itself with `--print` | A |
 
 Notes on the table:
@@ -2782,8 +2784,8 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `BrandKitSet` | none (exception E-3) | `brand:set` (phase B) | `PUT /brand-kit` |
 | `ProjectBundleExport` | none (exception E-3) | `bundle:export` (phase B) | `POST /projects/{id}/bundle` |
 | `ProjectBundleImport` | none (exception E-3) | `bundle:import` (phase B) | `POST /projects/import` |
-| `ProjectOtioExport` | none (exception E-3) | none (`otio:export` is added by P3-AGT-002) | `GET /projects/{id}/otio` |
-| `ProjectOtioImport` | none (exception E-3) | none (`otio:import` is added by P3-AGT-002) | `POST /projects/{id}/otio` |
+| `ProjectOtioExport` | none (exception E-3) | `otio:export` (phase B) | `GET /projects/{id}/otio` |
+| `ProjectOtioImport` | none (exception E-3) | `otio:import` (phase B) | `POST /projects/{id}/otio` |
 
 **Exceptions**, each fixed by an authoritative document:
 
