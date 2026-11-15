@@ -228,6 +228,10 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		wp.ffmpeg = media.Runner
 	}
 
+	if transcriber, err = pickTranscriber(cfg.Getenv, o.mode, transcriber, media.Runner); err != nil {
+		return err
+	}
+
 	var driver queue.Driver = queue.Sync{}
 
 	if !cfg.Inline {
