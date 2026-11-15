@@ -361,7 +361,22 @@
         "go_to": "Go to {item}",
         "cancel": "Cancel export",
         "cancelling": "Cancelling",
-        "check_line": "expected {expected}, got {got}"
+        "check_line": "expected {expected}, got {got}",
+        "options": {
+          "title": "Export options",
+          "format": "Format",
+          "fps": "Frame rate",
+          "size": "Size",
+          "project_rate": "Project rate",
+          "project_size": "Project size",
+          "fps_value": "{fps} fps",
+          "formats": {
+            "mp4": "MP4 video",
+            "gif": "GIF animation",
+            "wav": "WAV audio only",
+            "aac": "AAC audio only"
+          }
+        }
       },
       "commands": {
         "asset": {

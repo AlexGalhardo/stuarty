@@ -27,14 +27,23 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { type Translate, useLocale, useT } from "@/lib/i18n";
+import { createClient } from "../api/client";
 import { ApiError } from "../api/errors";
-import type { JsonValue, LintFinding } from "../api/types";
+import { HttpTransport } from "../api/http";
+import type {
+	ExportCapabilities,
+	ExportOptions,
+	JsonValue,
+	LintFinding,
+} from "../api/types";
 import { exportFileUrl } from "../api/urls";
 import { useActions } from "../commands/useActions";
 import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 import { errorHeadline } from "../ui/errorHeadline";
 import { formatDecimal, formatSeconds } from "../ui/format";
+import ExportOptionsFields, { type Unsupported } from "./ExportOptions";
+import { exportCapabilities } from "./exportCapabilities";
 import { announcedPercent, exportPhase, groupFindings } from "./exportPhase";
 
 const POLL_AFTER_MS = 5000;
@@ -165,6 +174,11 @@ export default function ExportDialog({
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [cancelling, setCancelling] = useState(false);
 	const startedAt = useRef(0);
+	const [capabilities, setCapabilities] = useState<ExportCapabilities | null>(
+		null,
+	);
+	const [options, setOptions] = useState<ExportOptions>({});
+	const [unsupported, setUnsupported] = useState<Unsupported | null>(null);
 
 	const check = useCallback(async (): Promise<void> => {
 		setChecking(true);
@@ -187,6 +201,40 @@ export default function ExportDialog({
 	useEffect(() => {
 		if (open && jobId === null) void check();
 	}, [open, jobId, check]);
+
+	// What the server accepts as export arguments, read once from its schema; a
+	// server that does not expose them leaves the dialog as the plain export.
+	useEffect(() => {
+		if (!open || capabilities !== null) return;
+		createClient(new HttpTransport(""))
+			.getOpenApi()
+			.then(
+				(doc) => setCapabilities(exportCapabilities(doc)),
+				() => setCapabilities({ formats: [], fps: [], sizes: [] }),
+			);
+	}, [open, capabilities]);
+
+	// A choice the machine cannot encode is the core to say: a dry run of the
+	// start returns its error and hint without queuing anything.
+	useEffect(() => {
+		setUnsupported(null);
+		if (!open || jobId !== null || Object.keys(options).length === 0) return;
+		let live = true;
+		runtime.client
+			.startExport(runtime.projectId, options, true)
+			.catch((error: unknown) => {
+				if (!live || !(error instanceof ApiError)) return;
+				if (error.code === "E_LINT_BLOCKING") return;
+				setUnsupported({
+					code: error.code,
+					message: error.message,
+					hint: error.hint,
+				});
+			});
+		return () => {
+			live = false;
+		};
+	}, [open, jobId, options, runtime]);
 
 	// Without an event for the job for 5 s, poll every 2 s until one arrives.
 	const running = job?.state === "running" || job?.state === "queued";
@@ -227,7 +275,10 @@ export default function ExportDialog({
 	async function start(): Promise<void> {
 		setFailure(null);
 		try {
-			const started = await runtime.client.startExport(runtime.projectId);
+			const started = await runtime.client.startExport(
+				runtime.projectId,
+				options,
+			);
 			startedAt.current = Date.now();
 			runtime.jobsWriter.upsert(started);
 			runtime.jobsWriter.setExportJob(started.job_id);
@@ -301,6 +352,15 @@ export default function ExportDialog({
 
 					{(phase === "ready" || phase === "blocked") && (
 						<>
+							{capabilities !== null && (
+								<ExportOptionsFields
+									capabilities={capabilities}
+									value={options}
+									disabled={false}
+									unsupported={unsupported}
+									onChange={setOptions}
+								/>
+							)}
 							{findings.length === 0 && (
 								<p className="text-sm">{t("ui.editor.export.no_problems")}</p>
 							)}
@@ -476,7 +536,7 @@ export default function ExportDialog({
 							</Button>
 							<Button
 								type="button"
-								disabled={phase !== "ready"}
+								disabled={phase !== "ready" || unsupported !== null}
 								onClick={() => void start()}
 							>
 								{failure?.code === "E_QUEUE_FULL"
