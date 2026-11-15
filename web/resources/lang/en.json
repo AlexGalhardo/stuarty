@@ -33,6 +33,18 @@
         "1:1": "Square: feeds",
         "16:9": "Landscape: YouTube, web",
         "4:5": "Portrait: feeds"
+      },
+      "templates": {
+        "title": "Templates",
+        "loading": "Loading templates",
+        "failed": "The templates could not be loaded.",
+        "empty": "No templates yet.",
+        "summary": "{width} × {height} px, {slots} slots ({required} required)",
+        "new_from": "New from template",
+        "create": "Create project",
+        "export": "Export file",
+        "import_path": "Path of a template file on this computer",
+        "import": "Import template"
       }
     },
     "settings": {
@@ -153,11 +165,8 @@
         "text": "Text",
         "caption": "Caption",
         "shape": "Shape",
-
         "speed_badge": "Speed {speed}",
-
         "slot_badge": "Slot: {name}",
-
         "asset_missing": "The media of this item is missing"
       },
       "loading": "Loading the project",
@@ -842,6 +851,43 @@
           "zoom_in": "Zoom in",
           "slide_left": "Slide left",
           "slide_right": "Slide right"
+        }
+      },
+      "template": {
+        "title": "Template",
+        "slot": "Template slot",
+        "name": "Slot name",
+        "description": "Slot description",
+        "required": "Required",
+        "policy": "Duration policy",
+        "info_title": "Template",
+        "info_description": "Template description",
+        "color_name": "New colour name",
+        "color_value": "New colour",
+        "color_add": "Add colour",
+        "color_remove": "Remove colour {name}",
+        "policies": {
+          "fit": "Keep the item duration",
+          "stretch_timeline": "Stretch the timeline"
+        }
+      },
+      "slots": {
+        "title": "Template slots",
+        "required": "Required",
+        "filled": "Filled",
+        "asset": "Asset",
+        "text": "Text",
+        "choose": "Choose an asset",
+        "fill": "Fill",
+        "caption_hint": "Fill a caption slot with words from the CLI, MCP or API.",
+        "unfilled": {
+          "one": "{count} required slot is not filled",
+          "other": "{count} required slots are not filled"
+        },
+        "kinds": {
+          "media": "Media",
+          "text": "Text",
+          "caption": "Caption"
         }
       }
     }

@@ -8,6 +8,7 @@ import AudioPanel from "./panels/AudioPanel";
 import CaptionPanel from "./panels/CaptionPanel";
 import ClipPanel from "./panels/ClipPanel";
 import ShapePanel from "./panels/ShapePanel";
+import TemplateSection from "./panels/TemplateSection";
 import TextPanel from "./panels/TextPanel";
 import TransformSection from "./panels/TransformSection";
 import TrackPanel from "./TrackPanel";
@@ -75,7 +76,12 @@ export default function Inspector(): ReactNode {
 				)}
 			</>
 		);
-		body = <ItemPanel itemId={only} />;
+		body = (
+			<>
+				<ItemPanel itemId={only} />
+				{item.type !== "shape" && <TemplateSection key={only} itemId={only} />}
+			</>
+		);
 	} else if (trackId !== null && track !== undefined) {
 		title = t("ui.editor.inspector.track");
 		body = <TrackPanel trackId={trackId} />;

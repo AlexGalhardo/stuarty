@@ -33,6 +33,18 @@
         "1:1": "Quadrado: feeds",
         "16:9": "Horizontal: YouTube, web",
         "4:5": "Retrato: feeds"
+      },
+      "templates": {
+        "title": "Modelos",
+        "loading": "Carregando os modelos",
+        "failed": "Não foi possível carregar os modelos.",
+        "empty": "Nenhum modelo ainda.",
+        "summary": "{width} × {height} px, {slots} espaços ({required} obrigatórios)",
+        "new_from": "Novo a partir do modelo",
+        "create": "Criar projeto",
+        "export": "Exportar arquivo",
+        "import_path": "Caminho de um arquivo de modelo neste computador",
+        "import": "Importar modelo"
       }
     },
     "settings": {
@@ -153,11 +165,8 @@
         "text": "Texto",
         "caption": "Legenda",
         "shape": "Forma",
-
         "speed_badge": "Velocidade {speed}",
-
         "slot_badge": "Espaço do modelo: {name}",
-
         "asset_missing": "A mídia original deste item não está no projeto"
       },
       "loading": "Carregando o projeto",
@@ -842,6 +851,43 @@
           "zoom_in": "Aproximar",
           "slide_left": "Deslizar para a esquerda",
           "slide_right": "Deslizar para a direita"
+        }
+      },
+      "template": {
+        "title": "Modelo",
+        "slot": "Espaço do modelo",
+        "name": "Nome do espaço",
+        "description": "Descrição do espaço",
+        "required": "Obrigatório",
+        "policy": "Política de duração",
+        "info_title": "Modelo",
+        "info_description": "Descrição do modelo",
+        "color_name": "Nome da nova cor",
+        "color_value": "Nova cor",
+        "color_add": "Adicionar cor",
+        "color_remove": "Remover a cor {name}",
+        "policies": {
+          "fit": "Manter a duração do item",
+          "stretch_timeline": "Esticar a linha do tempo"
+        }
+      },
+      "slots": {
+        "title": "Espaços do modelo",
+        "required": "Obrigatório",
+        "filled": "Preenchido",
+        "asset": "Mídia",
+        "text": "Texto",
+        "choose": "Escolha uma mídia",
+        "fill": "Preencher",
+        "caption_hint": "Preencha um espaço de legenda com palavras pela CLI, MCP ou API.",
+        "unfilled": {
+          "one": "{count} espaço obrigatório não foi preenchido",
+          "other": "{count} espaços obrigatórios não foram preenchidos"
+        },
+        "kinds": {
+          "media": "Mídia",
+          "text": "Texto",
+          "caption": "Legenda"
         }
       }
     }
