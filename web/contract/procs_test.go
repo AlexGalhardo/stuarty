@@ -137,6 +137,8 @@ func tools(t *testing.T, pinnedOnly bool) (ffmpeg, ffprobe string) {
 
 		out, err := exec.CommandContext(t.Context(), ffmpeg, "-version").Output()
 		if err == nil && (!pinnedOnly || !strings.Contains(string(out), "--enable-gpl")) {
+			needZscale(t, ffmpeg)
+
 			return ffmpeg, ffprobe
 		}
 	}
@@ -151,13 +153,21 @@ func tools(t *testing.T, pinnedOnly bool) (ffmpeg, ffprobe string) {
 		}
 	}
 
-	// Homebrew's GPL build on the macOS runner has no zscale, which the ingest
-	// needs; the pinned LGPL build has it (risk R6).
-	out, err := exec.Command("ffmpeg", "-hide_banner", "-filters").Output()
-	if err != nil || !strings.Contains(string(out), "zscale") {
-		t.Skip("the FFmpeg on PATH has no zscale filter: the ingest needs the pinned LGPL build")
-	}
+	needZscale(t, "ffmpeg")
+
 	return "ffmpeg", "ffprobe"
+}
+
+// needZscale skips when the build has no zscale filter, which the ingest
+// needs: Homebrew's GPL build on the macOS runner has none, the pinned LGPL
+// build has it (risk R6). VUKEM_VIDEO_TEST_FFMPEG_DIR may name either.
+func needZscale(t *testing.T, ffmpeg string) {
+	t.Helper()
+
+	out, err := exec.CommandContext(t.Context(), ffmpeg, "-hide_banner", "-filters").Output()
+	if err != nil || !strings.Contains(string(out), "zscale") {
+		t.Skip("this FFmpeg has no zscale filter: the ingest needs the pinned LGPL build")
+	}
 }
 
 func exe(tool string) string {
