@@ -6,8 +6,10 @@
       "slot": [
         null,
         {
+          "duration_policy": "fit",
           "kind": "text",
-          "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "required": true
         }
       ]
     }

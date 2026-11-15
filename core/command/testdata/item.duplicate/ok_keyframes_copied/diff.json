@@ -3,11 +3,17 @@
     "kind": "item.added",
     "id": "itm_s6t7v8w9x0",
     "object": {
+      "contrast": 1,
       "duration": 60,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_s6t7v8w9x0",
       "keyframes": {
         "scale": [
           {
+            "easing": "linear",
             "t": 0,
             "value": 1
           },
@@ -19,10 +25,19 @@
         ]
       },
       "name": "Title",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 100,
+      "stroke_color": "#000000",
       "text": "Hello",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   }
 ]

@@ -7,8 +7,10 @@
         null,
         {
           "description": "Headline",
+          "duration_policy": "fit",
           "kind": "text",
-          "name": "title"
+          "name": "title",
+          "required": true
         }
       ]
     }

@@ -3,12 +3,26 @@
     "kind": "item.removed",
     "id": "itm_f6g7h8j9k0",
     "object": {
+      "contrast": 1,
       "duration": 30,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_f6g7h8j9k0",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 60,
+      "stroke_color": "#000000",
       "text": "Hello",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   }
 ]

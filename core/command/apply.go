@@ -123,7 +123,7 @@ func (r *Registry) Apply(doc *timeline.Document, op Operation, env Env) (Result,
 	return Result{
 		Doc:       work,
 		Inverse:   inverseOf(before, after),
-		Diff:      diffOf(before, after),
+		Diff:      diffOf(fullPair(doc, work)),
 		Effective: effective,
 	}, nil
 }
@@ -190,7 +190,7 @@ func (r *Registry) ApplyBatch(doc *timeline.Document, ops []Operation, env Env) 
 	return BatchResult{
 		Doc:       work,
 		Inverse:   inverseOf(before, after),
-		Diff:      diffOf(before, after),
+		Diff:      diffOf(fullPair(doc, work)),
 		Effective: effective,
 	}, nil
 }

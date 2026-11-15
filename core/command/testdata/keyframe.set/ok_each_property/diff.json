@@ -8,10 +8,12 @@
         {
           "rotation": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 0
             },
             {
+              "easing": "linear",
               "t": 30,
               "value": 45.5
             }

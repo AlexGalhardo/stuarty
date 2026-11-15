@@ -6,6 +6,7 @@
       "slot": [
         null,
         {
+          "duration_policy": "fit",
           "kind": "text",
           "name": "title",
           "required": false

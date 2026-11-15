@@ -106,11 +106,26 @@ func jsonEqual(a, b any) bool {
 // trees, which is what those functions would conclude from it anyway; only the
 // objects that differ pay for the encoding.
 func rawPair(before, after *timeline.Document) (timeline.RawDoc, timeline.RawDoc) {
-	rb, ra := timeline.Raw(withoutCollections(before)), timeline.Raw(withoutCollections(after))
-	addChanged(rb, ra, "assets", before.Assets, after.Assets)
-	addChanged(rb, ra, "tracks", before.Tracks, after.Tracks)
-	addChanged(rb, ra, "items", before.Items, after.Items)
-	addChanged(rb, ra, "fonts", before.Fonts, after.Fonts)
+	return pairWith(before, after, timeline.Raw, timeline.RawValue)
+}
+
+// fullPair is rawPair with every default written out, the form of a fetched
+// document: the diff is computed on it, so an added object and both sides of a
+// changed field read as the client stores them (SDD-002 §A.5).
+func fullPair(before, after *timeline.Document) (timeline.RawDoc, timeline.RawDoc) {
+	return pairWith(before, after, timeline.Full, timeline.FullValue)
+}
+
+func pairWith(
+	before, after *timeline.Document,
+	doc func(*timeline.Document) timeline.RawDoc,
+	value func(any) any,
+) (timeline.RawDoc, timeline.RawDoc) {
+	rb, ra := doc(withoutCollections(before)), doc(withoutCollections(after))
+	addChanged(rb, ra, "assets", before.Assets, after.Assets, value)
+	addChanged(rb, ra, "tracks", before.Tracks, after.Tracks, value)
+	addChanged(rb, ra, "items", before.Items, after.Items, value)
+	addChanged(rb, ra, "fonts", before.Fonts, after.Fonts, value)
 	return rb, ra
 }
 
@@ -122,19 +137,19 @@ func withoutCollections(doc *timeline.Document) *timeline.Document {
 	return &c
 }
 
-func addChanged[V any](rb, ra timeline.RawDoc, name string, before, after map[string]V) {
+func addChanged[V any](rb, ra timeline.RawDoc, name string, before, after map[string]V, value func(any) any) {
 	bm, am := map[string]any{}, map[string]any{}
 	for id, bv := range before {
 		if av, ok := after[id]; ok && reflect.DeepEqual(bv, av) {
 			continue
 		}
-		bm[id] = timeline.RawValue(bv)
+		bm[id] = value(bv)
 	}
 	for id, av := range after {
 		if bv, ok := before[id]; ok && reflect.DeepEqual(bv, av) {
 			continue
 		}
-		am[id] = timeline.RawValue(av)
+		am[id] = value(av)
 	}
 	rb[name], ra[name] = bm, am
 }

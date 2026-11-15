@@ -9,13 +9,17 @@
       ],
       "slot": [
         {
+          "duration_policy": "fit",
           "kind": "caption",
-          "name": "subs"
+          "name": "subs",
+          "required": true
         },
         {
+          "duration_policy": "fit",
           "filled": true,
           "kind": "caption",
-          "name": "subs"
+          "name": "subs",
+          "required": true
         }
       ],
       "words": [

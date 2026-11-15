@@ -5,11 +5,11 @@
     "changes": {
       "filter": [
         "sepia",
-        null
+        "none"
       ],
       "filter_amount": [
         0.3,
-        null
+        1
       ]
     }
   }

@@ -19,14 +19,17 @@
         {
           "scale": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 1
             },
             {
+              "easing": "linear",
               "t": 7,
               "value": 1.2
             },
             {
+              "easing": "linear",
               "t": 90,
               "value": 1
             }
@@ -35,14 +38,17 @@
         {
           "scale": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 1
             },
             {
+              "easing": "linear",
               "t": 5,
               "value": 1.2
             },
             {
+              "easing": "linear",
               "t": 60,
               "value": 1
             }
@@ -50,7 +56,10 @@
         }
       ],
       "speed": [
-        null,
+        {
+          "den": 1,
+          "num": 1
+        },
         {
           "den": 2,
           "num": 3

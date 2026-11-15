@@ -6,8 +6,10 @@
       "slot": [
         null,
         {
+          "duration_policy": "fit",
           "kind": "caption",
-          "name": "subtitles"
+          "name": "subtitles",
+          "required": true
         }
       ]
     }

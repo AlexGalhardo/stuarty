@@ -11,14 +11,17 @@
         {
           "opacity": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 1
             },
             {
+              "easing": "linear",
               "t": 10,
               "value": 0.5
             },
             {
+              "easing": "linear",
               "t": 40,
               "value": 0.2
             }
@@ -27,14 +30,17 @@
         {
           "opacity": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 1
             },
             {
+              "easing": "linear",
               "t": 10,
               "value": 0.5
             },
             {
+              "easing": "linear",
               "t": 24,
               "value": 0.36
             }

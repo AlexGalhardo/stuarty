@@ -6,8 +6,10 @@
       "slot": [
         null,
         {
+          "duration_policy": "fit",
           "kind": "media",
-          "name": "hero"
+          "name": "hero",
+          "required": true
         }
       ]
     }

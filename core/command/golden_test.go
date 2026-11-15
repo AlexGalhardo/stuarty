@@ -111,6 +111,9 @@ func runGoldenCase(t *testing.T, reg *Registry, dir string) {
 	}}
 	res, applyErr := reg.Apply(doc, op, env)
 	checkCaseName(t, filepath.Base(dir), applyErr)
+	if applyErr == nil {
+		checkDiffPatchesFetchedDocument(t, doc, res)
+	}
 	if applyErr != nil {
 		e := AsError(applyErr)
 		if cerr := CheckError(e); cerr != nil {

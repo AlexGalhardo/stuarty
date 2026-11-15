@@ -4,11 +4,11 @@
     "id": "itm_m1n2p3q4r5",
     "changes": {
       "filter": [
-        null,
+        "none",
         "grayscale"
       ],
       "filter_amount": [
-        null,
+        1,
         0.6
       ]
     }

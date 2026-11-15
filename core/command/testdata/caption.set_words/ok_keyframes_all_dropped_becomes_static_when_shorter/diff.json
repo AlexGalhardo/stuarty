@@ -11,10 +11,12 @@
         {
           "opacity": [
             {
+              "easing": "linear",
               "t": 30,
               "value": 0.5
             },
             {
+              "easing": "linear",
               "t": 47,
               "value": 0.2
             }
@@ -23,7 +25,7 @@
         null
       ],
       "opacity": [
-        null,
+        1,
         0.5
       ],
       "words": [

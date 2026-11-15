@@ -7,10 +7,12 @@
         {
           "scale": [
             {
+              "easing": "linear",
               "t": 10,
               "value": 1.5
             },
             {
+              "easing": "linear",
               "t": 40,
               "value": 2
             }
@@ -19,7 +21,7 @@
         null
       ],
       "scale": [
-        null,
+        1,
         1.5
       ]
     }

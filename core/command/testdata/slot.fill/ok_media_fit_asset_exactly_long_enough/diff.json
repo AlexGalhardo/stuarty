@@ -10,14 +10,18 @@
       "slot": [
         {
           "description": "Main footage",
+          "duration_policy": "fit",
           "kind": "media",
-          "name": "hero"
+          "name": "hero",
+          "required": true
         },
         {
           "description": "Main footage",
+          "duration_policy": "fit",
           "filled": true,
           "kind": "media",
-          "name": "hero"
+          "name": "hero",
+          "required": true
         }
       ],
       "source_in": [

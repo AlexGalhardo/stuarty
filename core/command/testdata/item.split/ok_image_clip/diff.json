@@ -14,12 +14,26 @@
     "id": "itm_s6t7v8w9x0",
     "object": {
       "asset": "ast_9m8n7p6q5r",
+      "contrast": 1,
       "duration": 83,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_s6t7v8w9x0",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
       "source_in": 30,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 97,
+      "stroke_color": "#000000",
       "track": "trk_f6g7h8j9k0",
-      "type": "clip"
+      "type": "clip",
+      "volume": 1
     }
   }
 ]

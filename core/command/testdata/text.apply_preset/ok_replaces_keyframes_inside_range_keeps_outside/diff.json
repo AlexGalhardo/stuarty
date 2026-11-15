@@ -7,14 +7,17 @@
         {
           "opacity": [
             {
+              "easing": "linear",
               "t": 5,
               "value": 0.5
             },
             {
+              "easing": "linear",
               "t": 40,
               "value": 0.9
             },
             {
+              "easing": "linear",
               "t": 80,
               "value": 1
             }
@@ -28,14 +31,17 @@
               "value": 0
             },
             {
+              "easing": "linear",
               "t": 12,
               "value": 0.58
             },
             {
+              "easing": "linear",
               "t": 40,
               "value": 0.9
             },
             {
+              "easing": "linear",
               "t": 80,
               "value": 1
             }
@@ -47,6 +53,7 @@
               "value": 1056
             },
             {
+              "easing": "linear",
               "t": 12,
               "value": 960
             }

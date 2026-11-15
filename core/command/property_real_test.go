@@ -188,7 +188,7 @@ func TestPropertyRealCommands(t *testing.T) {
 			t.Fatalf("seed %d, batch %d: invalid result %v\nops %v", seed, i, vs, ops)
 		}
 		fullBefore, fullAfter := timeline.Raw(doc), timeline.Raw(res.Doc)
-		if !reflect.DeepEqual(res.Diff, diffOf(fullBefore, fullAfter)) ||
+		if !reflect.DeepEqual(res.Diff, diffOf(timeline.Full(doc), timeline.Full(res.Doc))) ||
 			!reflect.DeepEqual(res.Inverse, inverseOf(fullBefore, fullAfter)) {
 			t.Fatalf("seed %d, batch %d: the lazy diff differs from the full diff; ops %v", seed, i, ops)
 		}

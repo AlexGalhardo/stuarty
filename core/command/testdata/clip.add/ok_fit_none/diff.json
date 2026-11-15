@@ -4,12 +4,25 @@
     "id": "itm_m1n2p3q4r5",
     "object": {
       "asset": "ast_3c5v8n2w6d",
+      "contrast": 1,
       "duration": 900,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
       "fit": "none",
       "id": "itm_m1n2p3q4r5",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 0,
+      "stroke_color": "#000000",
       "track": "trk_f6g7h8j9k0",
-      "type": "clip"
+      "type": "clip",
+      "volume": 1
     }
   }
 ]

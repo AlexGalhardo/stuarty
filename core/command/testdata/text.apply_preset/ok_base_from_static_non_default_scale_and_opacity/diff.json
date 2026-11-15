@@ -13,6 +13,7 @@
               "value": 0
             },
             {
+              "easing": "linear",
               "t": 12,
               "value": 0.8
             }
@@ -24,6 +25,7 @@
               "value": 1.2
             },
             {
+              "easing": "linear",
               "t": 12,
               "value": 1.5
             }

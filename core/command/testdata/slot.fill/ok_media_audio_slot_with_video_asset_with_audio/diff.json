@@ -9,13 +9,17 @@
       ],
       "slot": [
         {
+          "duration_policy": "fit",
           "kind": "media",
-          "name": "voice"
+          "name": "voice",
+          "required": true
         },
         {
+          "duration_policy": "fit",
           "filled": true,
           "kind": "media",
-          "name": "voice"
+          "name": "voice",
+          "required": true
         }
       ]
     }

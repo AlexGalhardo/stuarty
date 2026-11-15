@@ -12,6 +12,7 @@
               "value": 0.5
             },
             {
+              "easing": "linear",
               "t": 30,
               "value": 1
             }
@@ -30,6 +31,7 @@
               "value": 0.628
             },
             {
+              "easing": "linear",
               "t": 30,
               "value": 1
             }
@@ -41,6 +43,7 @@
               "value": 1056
             },
             {
+              "easing": "linear",
               "t": 12,
               "value": 960
             }

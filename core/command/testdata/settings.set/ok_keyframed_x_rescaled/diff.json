@@ -4,7 +4,7 @@
     "id": "prj_7k2m9x4q1b",
     "changes": {
       "width": [
-        null,
+        1080,
         720
       ]
     }
@@ -17,10 +17,12 @@
         {
           "x": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 810
             },
             {
+              "easing": "linear",
               "t": 30,
               "value": 270
             }
@@ -29,10 +31,12 @@
         {
           "x": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 540
             },
             {
+              "easing": "linear",
               "t": 30,
               "value": 180
             }

@@ -5,9 +5,11 @@
     "changes": {
       "slot": [
         {
+          "duration_policy": "fit",
           "filled": true,
           "kind": "media",
-          "name": "hero"
+          "name": "hero",
+          "required": true
         },
         null
       ]

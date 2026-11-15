@@ -3,12 +3,26 @@
     "kind": "item.removed",
     "id": "itm_a1b2c3d4e5",
     "object": {
+      "contrast": 1,
       "duration": 20,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_a1b2c3d4e5",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 0,
+      "stroke_color": "#000000",
       "text": "Hello",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
@@ -35,12 +49,26 @@
     "kind": "item.removed",
     "id": "itm_p7q8r9s0t1",
     "object": {
+      "contrast": 1,
       "duration": 20,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_p7q8r9s0t1",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 30,
+      "stroke_color": "#000000",
       "text": "Hello",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   }
 ]
