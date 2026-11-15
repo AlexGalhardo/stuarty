@@ -103,3 +103,13 @@ condition = "AND"
 paths = ['''^desktop/shell/navigate_test\.go$''']
 regexTarget = "match"
 regexes = ['''@evil\.com''']
+
+# The login form labels ("Password", "Senha") in the UI catalogues, and the
+# self-hosting pages that show the secret file reference and a sample password
+# to replace. None is a credential. Only these values, only in those files.
+[[allowlists]]
+description = "login labels in the UI catalogues and sample values in self-hosting docs"
+condition = "AND"
+paths = ['''^(?:web/resources/lang/[A-Za-z-]+\.json|site/content/docs/[a-z-]+/self-hosting/[a-z-]+\.mdx)$''']
+regexTarget = "secret"
+regexes = ['''^(?:Password|Senha|@file:/run/secrets/admin_password|choose-a-long-password)$''']
