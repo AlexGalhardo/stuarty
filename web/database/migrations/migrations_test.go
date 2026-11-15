@@ -141,6 +141,10 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 			"id INTEGER 0 - 1", "at_ms INTEGER 1 - 0", "actor TEXT 1 - 0", "action TEXT 1 - 0",
 			"project_id TEXT 0 - 0", "subject_id TEXT 0 - 0", "details TEXT 0 - 0",
 		},
+		"api_keys": {
+			"id TEXT 1 - 1", "token_id TEXT 1 - 0", "user_id TEXT 1 - 0", "project_id TEXT 0 - 0",
+			"name TEXT 1 - 0", "created_ms INTEGER 1 - 0",
+		},
 	}
 	for table, w := range want {
 		if got := columns(t, db, table); !slices.Equal(got, w) {
@@ -172,6 +176,10 @@ func TestIndexesAndTriggers(t *testing.T) {
 		"audit_project_id_at_ms_index":               {"ON audit (project_id, at_ms)"},
 		"audit_at_ms_index":                          {"ON audit (at_ms)"},
 		"operations_append_only":                     {"BEFORE UPDATE ON operations"},
+		"audit_no_update":                            {"BEFORE UPDATE ON audit"},
+		"audit_no_delete":                            {"BEFORE DELETE ON audit"},
+		"api_keys_token_id_unique":                   {"UNIQUE INDEX", "ON api_keys (token_id)"},
+		"api_keys_user_id_index":                     {"ON api_keys (user_id)"},
 	}
 	for name, fragments := range want {
 		var sqlText string
@@ -266,7 +274,15 @@ func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
 	}
 
 	tables := []string{
-		"projects", "operations", "idempotency_keys", "assets", "jobs", "templates", "document_backups", "audit",
+		"projects",
+		"operations",
+		"idempotency_keys",
+		"assets",
+		"jobs",
+		"templates",
+		"document_backups",
+		"audit",
+		"api_keys",
 	}
 	for _, table := range tables {
 		if len(columns(t, db, table)) == 0 {
@@ -291,5 +307,73 @@ func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
 	again, err := m.Up(ctx)
 	if err != nil || len(again) != 1+len(All()) {
 		t.Fatalf("Up after Reset = %v, %v; want all %d migrations", again, err, 1+len(All()))
+	}
+}
+
+func TestOperationsAppendOnly(t *testing.T) {
+	db := openMigrated(t)
+	ctx := context.Background()
+	for _, q := range []string{
+		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+ VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`,
+		`INSERT INTO operations VALUES ('prj_a', 1, 'edit', 'a', 0, NULL, 1, '[]', '[]', '[]', NULL, 1, 'x', NULL, NULL)`,
+	} {
+		if _, err := db.ExecContext(ctx, q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// SDD-005 section 5.3: DELETE is not guarded because the cascade of a hard
+	// project delete needs it; every UPDATE that rewrites the record is.
+	for _, q := range []string{
+		`UPDATE operations SET diff = '[1]'`,
+		`UPDATE operations SET actor = 'x', closed_by = 2`,
+		`UPDATE operations SET closed_by = NULL`,
+	} {
+		if _, err := db.ExecContext(ctx, q); err == nil || !strings.Contains(err.Error(), "operations is append-only") {
+			t.Errorf("%s: err = %v", q, err)
+		}
+	}
+}
+
+func TestAuditAppendOnly(t *testing.T) {
+	db := openMigrated(t)
+	ctx := context.Background()
+	if _, err := db.ExecContext(
+		ctx,
+		`INSERT INTO audit (at_ms, actor, action) VALUES (1, 'local:ui', 'project.trash')`,
+	); err != nil {
+		t.Fatal(err)
+	}
+	for _, q := range []string{`UPDATE audit SET actor = 'x'`, `DELETE FROM audit`} {
+		if _, err := db.ExecContext(ctx, q); err == nil || !strings.Contains(err.Error(), "audit is append-only") {
+			t.Errorf("%s: err = %v", q, err)
+		}
+	}
+}
+
+func TestAPIKeysCascadeWithProject(t *testing.T) {
+	db := openMigrated(t)
+	ctx := context.Background()
+	for _, q := range []string{
+		`INSERT INTO projects (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
+ VALUES ('prj_a', 'a', 1, '{}', 'x', 1, 1, 30, 1, 1, 1, 'u')`,
+		`INSERT INTO api_keys VALUES ('key_1', 'tok_1', 'usr_1', 'prj_a', 'k', 1)`,
+	} {
+		if _, err := db.ExecContext(ctx, q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := db.ExecContext(
+		ctx,
+		`INSERT INTO api_keys VALUES ('key_2', 'tok_1', 'usr_1', NULL, 'k', 1)`,
+	); err == nil {
+		t.Error("a second key with the same token_id was accepted")
+	}
+	if _, err := db.ExecContext(ctx, `DELETE FROM projects WHERE id = 'prj_a'`); err != nil {
+		t.Fatal(err)
+	}
+	var n int
+	if err := db.QueryRowContext(ctx, "SELECT count(*) FROM api_keys").Scan(&n); err != nil || n != 0 {
+		t.Errorf("api_keys after the cascade = %d, %v", n, err)
 	}
 }
