@@ -332,10 +332,13 @@ func TestSamplerAgreesWithXImageBiLinear(t *testing.T) {
 	xdraw.BiLinear.Transform(ref, m, srcImg, srcImg.Bounds(), xdraw.Over, nil)
 
 	var off, big int
+	var sum [3]int
 	for i := 0; i < len(ours.Pix); i += 4 {
 		d := 0
 		for k := range 3 {
-			d = max(d, int(math.Abs(float64(int(ours.Pix[i+k])-int(ref.Pix[i+k])))))
+			e := int(math.Abs(float64(int(ours.Pix[i+k]) - int(ref.Pix[i+k]))))
+			sum[k] += e
+			d = max(d, e)
 		}
 		if d > 2 {
 			off++
@@ -350,6 +353,15 @@ func TestSamplerAgreesWithXImageBiLinear(t *testing.T) {
 		t.Errorf("%.2f%% of the pixels differ by more than 2 from x/image's BiLinear", share*100)
 	}
 	t.Logf("%d pixels differ by more than 2, %d by more than 40 (border of the rectangle)", off, big)
+
+	// The mean absolute error per channel over the whole frame, recorded in SDD-004 section 12.
+	for k, name := range []string{"R", "G", "B"} {
+		mae := float64(sum[k]) / float64(fw*fh)
+		t.Logf("mean absolute error, channel %s: %.4f levels", name, mae)
+		if mae > 0.5 {
+			t.Errorf("mean absolute error of %s is %.4f levels, want at most 0.5", name, mae)
+		}
+	}
 }
 
 func benchSample(b *testing.B, bands int, rot float64) {
