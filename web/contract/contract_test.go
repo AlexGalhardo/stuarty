@@ -15,7 +15,6 @@ import (
 	"slices"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/AlexGalhardo/vukem-video/service"
 )
@@ -92,10 +91,6 @@ func normalize(t *testing.T, d driver, raw json.RawMessage) string {
 			delete(x, "text")
 			delete(x, "document")
 
-			if _, ok := x["assets"]; ok && x["project_id"] != nil && x["failed"] != nil {
-				delete(x, "revision") // the import race, see settleImport
-			}
-
 			for k, e := range x {
 				x[k] = walk(e)
 			}
@@ -153,35 +148,6 @@ type outcome struct {
 	result, text, fail string
 }
 
-// settleImport works around a race of the Service: MediaImport returns when the
-// asset is ready, but the asset.add that gives the project its revision is
-// committed a moment later (service/jobrun.go finishes the ingest, then calls
-// addAsset), so the revision of the answer and the base of the next edit are
-// racy. Reported to the owner of service/; remove this and the revision
-// exclusion in normalize when the call returns after the revision.
-func settleImport(t *testing.T, d driver, s step) {
-	t.Helper()
-
-	var a struct {
-		ProjectID string `json:"project_id"`
-	}
-
-	_ = json.Unmarshal(s.Args, &a)
-
-	deadline := time.Now().Add(5 * time.Second)
-
-	for time.Now().Before(deadline) {
-		res, err := d.service().ProjectGet(callerCtx(), service.ProjectGetRequest{ProjectID: a.ProjectID})
-		if err == nil && res.Revision >= 1 {
-			return
-		}
-
-		time.Sleep(10 * time.Millisecond)
-	}
-
-	t.Fatalf("%s: the asset was never added to the project", d.name())
-}
-
 func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []outcome {
 	t.Helper()
 
@@ -204,10 +170,6 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 		o := outcome{text: normalizeText(d, text), fail: errorLine(fail)}
 		if raw != nil {
 			o.result = normalize(t, d, raw)
-		}
-
-		if s.Call == "MediaImport" {
-			settleImport(t, d, s)
 		}
 
 		out[i] = o
