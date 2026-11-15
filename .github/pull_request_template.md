@@ -35,6 +35,7 @@ Release pull request for **vX.Y.Z**: every microcommit since the previous tag la
 - [ ] Title is `chore(release): vX.Y.Z updates`; every commit is a Conventional Commit with an allowed scope and a `Refs:` line
 - [ ] The body was refreshed with `task release:pr-body` after the last push
 - [ ] All required checks are green on the three runners
+- [ ] The asserts of every task named above were run, and the commands with their exit codes are in this description or in the ROADMAP `Audit` lines
 - [ ] Thin-client rule: no editing rule or edit result is computed in `web/`, a handler or a tool
 - [ ] Changed contracts: `task codegen` run and the generated files committed
 - [ ] New dependencies: approved by the author, exact versions; `task notices` run and `THIRD_PARTY_NOTICES.md` and `licenses/` committed (a Dependabot update that changes `go.mod`, `go.sum` or `web/bun.lock` fails `Notices` until a maintainer does this on its branch)
