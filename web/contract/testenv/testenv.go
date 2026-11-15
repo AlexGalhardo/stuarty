@@ -68,6 +68,11 @@ type Options struct {
 	// DurationMS is the length of every imported file as the fake ingest
 	// reports it; default 2000.
 	DurationMS int64
+	// SilenceBlocks makes the fake silence the ranges the real analysis reports for
+	// a silence from 0.5 s to 1 s (it works in blocks of 512 samples, so the range
+	// is 24576 to 48128 and not 24000 to 48000), for a run that must match the real
+	// binary on a real clip.
+	SilenceBlocks bool
 }
 
 // Env is a service with a worker running behind it.
@@ -79,6 +84,7 @@ type Env struct {
 	// Files is a directory for the media files of the test.
 	Files      string
 	durationMS int64
+	silence    string
 	// Ingests counts the calls of the fake ingest.
 	Ingests atomic.Int64
 
@@ -89,7 +95,11 @@ type Env struct {
 func New(tb testing.TB, o Options) *Env {
 	tb.Helper()
 
-	e := &Env{Files: tb.TempDir(), durationMS: o.DurationMS}
+	e := &Env{Files: tb.TempDir(), durationMS: o.DurationMS, silence: `{"start":24000,"end":48000}`}
+	if o.SilenceBlocks {
+		e.silence = `{"start":24576,"end":48128}`
+	}
+
 	if e.durationMS == 0 {
 		e.durationMS = 2000
 	}
@@ -333,7 +343,7 @@ func (e *Env) fakeIngest(_ context.Context, in ingest.Input) (*ingest.Result, er
 
 	ms := max(e.durationMS, seconds*1000)
 
-	return fakeResult(string(e.Dir), in, ms, tags)
+	return fakeResult(string(e.Dir), in, ms, tags, e.silence)
 }
 
 func readHead(path string, n int) (string, error) {
@@ -354,7 +364,9 @@ func readHead(path string, n int) (string, error) {
 	return string(buf[:got]), nil
 }
 
-func fakeResult(ws string, in ingest.Input, durationMS int64, tags map[string]ingest.Tag) (*ingest.Result, error) {
+func fakeResult(
+	ws string, in ingest.Input, durationMS int64, tags map[string]ingest.Tag, silentRange string,
+) (*ingest.Result, error) {
 	dir := filepath.Join(ws, "artifacts", in.Hash)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
@@ -376,14 +388,11 @@ func fakeResult(ws string, in ingest.Input, durationMS int64, tags map[string]in
 
 	samples := durationMS * 48
 
-	// The ranges are what the real analysis reports for a silence from 0.5 s to 1 s: it
-	// works in blocks of 512 samples, so the real binary and this fake agree.
-
 	silence := fmt.Sprintf(
 		`{"version":1,"sample_rate":48000,"sample_count":%d,"min_duration_ms":150,"sets":[`,
 		samples,
 	) +
-		`{"threshold_db":-35,"ranges":[{"start":24576,"end":48128}]}]}`
+		`{"threshold_db":-35,"ranges":[` + silentRange + `]}]}`
 	loud := fmt.Sprintf(
 		`{"version":1,"integrated_lufs":-17.2,"lra_lu":5.1,"true_peak_dbtp":-1.4,"silent":false,"sample_count":%d}`,
 		samples,
