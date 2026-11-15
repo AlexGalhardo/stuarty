@@ -10,9 +10,8 @@ import (
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/ratelimit"
 
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
-
 	"github.com/AlexGalhardo/vukem-video/service"
+	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 )
 
 func pagesNetworkHarness(t *testing.T) *networkHarness {

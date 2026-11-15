@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
-
 )
 
 type recordingWord struct {
@@ -54,5 +54,5 @@ func talkingHead(t *testing.T) (size, seconds, audio string) {
 	audio = fmt.Sprintf("sine=frequency=440:sample_rate=48000:duration=%d,volume=enable='%s':volume=0",
 		rec.Seconds, strings.Join(mute, "+"))
 
-	return rec.Size, fmt.Sprint(rec.Seconds), audio
+	return rec.Size, strconv.Itoa(rec.Seconds), audio
 }
