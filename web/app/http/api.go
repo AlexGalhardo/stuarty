@@ -17,6 +17,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 	"github.com/AlexGalhardo/vukem-video/web/app/auth"
+	"github.com/AlexGalhardo/vukem-video/web/app/events"
 )
 
 // Deps is what the adapter needs from the process that serves it.
@@ -33,6 +34,8 @@ type Deps struct {
 	// MCP is the Streamable HTTP handler of the MCP server, mounted at POST /mcp
 	// behind the guard and the authentication; nil mounts nothing.
 	MCP http.Handler
+	// Events carries the event stream of GET /projects/{id}/events.
+	Events *events.Events
 }
 
 type apiHandler struct {
