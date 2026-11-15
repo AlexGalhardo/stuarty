@@ -20,13 +20,22 @@ type RecipeStep struct {
 	Stdin string `json:"stdin,omitempty"`
 	Exit  int    `json:"exit,omitempty"`
 	Note  string `json:"note,omitempty"`
+
+	// Hidden marks a setup step the test runs but the skill does not show: the
+	// recipe says what it starts from in a note, to keep the skill short.
+	Hidden bool `json:"hidden,omitempty"`
 }
 
 // Recipe is a short sequence of commands that does one job. The skill renders
 // each recipe as commands and the contract tests run it (SDD-003 section 8.2
 // item 4), so a recipe that stops working breaks the build.
 type Recipe struct {
-	Title string       `json:"title"`
+	Title string `json:"title"`
+
+	// Scenario names the file of web/contract/scenarios that does the same job
+	// through the Service, and so through the six runs.
+	Scenario string `json:"scenario"`
+
 	Steps []RecipeStep `json:"steps"`
 }
 
@@ -50,8 +59,8 @@ func Recipes() ([]Recipe, error) {
 			return nil, fmt.Errorf("agentdocs: recipe %s: %w", e.Name(), err)
 		}
 
-		if r.Title == "" || len(r.Steps) == 0 {
-			return nil, fmt.Errorf("agentdocs: recipe %s has no title or no steps", e.Name())
+		if r.Title == "" || r.Scenario == "" || len(r.Steps) == 0 {
+			return nil, fmt.Errorf("agentdocs: recipe %s has no title, scenario or steps", e.Name())
 		}
 
 		out = append(out, r)
@@ -66,6 +75,10 @@ func (r Recipe) Text() string {
 	var b strings.Builder
 
 	for _, s := range r.Steps {
+		if s.Hidden {
+			continue
+		}
+
 		if s.Note != "" {
 			b.WriteString("# " + s.Note + "\n")
 		}

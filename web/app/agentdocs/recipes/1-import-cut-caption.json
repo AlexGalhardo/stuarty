@@ -1,5 +1,6 @@
 {
 	"title": "Import, cut, caption and export",
+	"scenario": "cut-caption",
 	"steps": [
 		{"cmd": "project:create --name \"Teaser\" --id prj_7k2m9x4q1b"},
 		{"cmd": "media:import clip.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d"},
