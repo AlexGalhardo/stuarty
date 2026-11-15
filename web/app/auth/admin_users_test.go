@@ -30,14 +30,28 @@ func codeOf(err error) string {
 func TestAdminUsersAreForAnAdministratorSession(t *testing.T) {
 	admin := auth.Admin{Users: newUsers(t)}
 
-	if _, err := admin.Create(sessionOf(service.RoleMember), "a@example.com", adminPassword, service.RoleMember); codeOf(err) != service.CodeForbidden {
+	if _, err := admin.Create(
+		sessionOf(service.RoleMember),
+		"a@example.com",
+		adminPassword,
+		service.RoleMember,
+	); codeOf(
+		err,
+	) != service.CodeForbidden {
 		t.Errorf("a member session: %v, want E_FORBIDDEN", err)
 	}
 
 	key := service.WithCaller(context.Background(), service.Caller{
 		Actor: "key:key_test", Scopes: service.AllScopes, OwnerUserID: "usr_test",
 	})
-	if _, err := admin.Create(key, "a@example.com", adminPassword, service.RoleMember); codeOf(err) != service.CodeForbidden {
+	if _, err := admin.Create(
+		key,
+		"a@example.com",
+		adminPassword,
+		service.RoleMember,
+	); codeOf(
+		err,
+	) != service.CodeForbidden {
 		t.Errorf("a key with every scope: %v, want it refused", err)
 	}
 
@@ -45,7 +59,12 @@ func TestAdminUsersAreForAnAdministratorSession(t *testing.T) {
 		t.Errorf("a key listing users: %v, want it refused", err)
 	}
 
-	if _, err := admin.Create(sessionOf(service.RoleAdmin), "a@example.com", adminPassword, service.RoleMember); err != nil {
+	if _, err := admin.Create(
+		sessionOf(service.RoleAdmin),
+		"a@example.com",
+		adminPassword,
+		service.RoleMember,
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -128,7 +147,13 @@ func TestAdminUsersRoleChangeAndDisableEndSessions(t *testing.T) {
 		t.Errorf("a disabled user by id (a session or a key): %v, want not found", err)
 	}
 
-	if _, err := users.ByCredentials(context.Background(), map[string]string{"email": "member@example.com"}); !errors.Is(err, vauth.ErrUserNotFound) {
+	if _, err := users.ByCredentials(
+		context.Background(),
+		map[string]string{"email": "member@example.com"},
+	); !errors.Is(
+		err,
+		vauth.ErrUserNotFound,
+	) {
 		t.Errorf("a disabled user logging in: %v, want not found", err)
 	}
 

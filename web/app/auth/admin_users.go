@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 
 	"github.com/AlexGalhardo/vukem/auth"
@@ -99,7 +100,12 @@ func (u *Users) SetDisabled(ctx context.Context, id string, disabled bool) (User
 }
 
 // changed turns the outcome of a guarded UPDATE into the user, ErrNoSuchUser or ErrLastAdmin.
-func (u *Users) changed(ctx context.Context, res interface{ RowsAffected() (int64, error) }, err error, id string) (User, error) {
+func (u *Users) changed(
+	ctx context.Context,
+	res interface{ RowsAffected() (int64, error) },
+	err error,
+	id string,
+) (User, error) {
 	if err != nil {
 		return User{}, err
 	}
@@ -129,18 +135,18 @@ func forbidden(message, hint string) *service.Error {
 func (a Admin) authorize(ctx context.Context) error {
 	c, ok := service.CallerFrom(ctx)
 	if !ok {
-		return &service.Error{Code: "E_UNAUTHORIZED", Message: "the request carries no credentials.",
-			Hint: "log in"}
+		return &service.Error{
+			Code: "E_UNAUTHORIZED", Message: "the request carries no credentials.",
+			Hint: "log in",
+		}
 	}
 
 	if strings.HasPrefix(c.Actor, "key:") || !c.Browser {
 		return forbidden("only a logged-in session can manage users.", "log in as an administrator in the browser")
 	}
 
-	for _, sc := range c.Scopes {
-		if sc == service.ScopeAdmin {
-			return nil
-		}
+	if slices.Contains(c.Scopes, service.ScopeAdmin) {
+		return nil
 	}
 
 	return forbidden("the caller lacks the \"admin\" scope.", "ask an administrator")
@@ -192,8 +198,10 @@ func (a Admin) Update(ctx context.Context, id string, p UserPatch) (UserView, er
 	}
 
 	if p.Role == nil && p.Disabled == nil {
-		return UserView{}, &service.Error{Code: command.CodeValidation, Message: "nothing to change.",
-			Hint: "send a role or disabled"}
+		return UserView{}, &service.Error{
+			Code: command.CodeValidation, Message: "nothing to change.",
+			Hint: "send a role or disabled",
+		}
 	}
 
 	var (
@@ -220,8 +228,10 @@ func (a Admin) Update(ctx context.Context, id string, p UserPatch) (UserView, er
 func userError(err error) error {
 	switch {
 	case errors.Is(err, ErrLastAdmin):
-		return &service.Error{Code: command.CodeInvalidState, Message: err.Error(),
-			Hint: "make another user an administrator first"}
+		return &service.Error{
+			Code: command.CodeInvalidState, Message: err.Error(),
+			Hint: "make another user an administrator first",
+		}
 	case errors.Is(err, ErrNoSuchUser):
 		return &service.Error{Code: command.CodeNotFound, Message: "there is no such user."}
 	case errors.Is(err, ErrEmailTaken), errors.Is(err, ErrBadEmail), errors.Is(err, ErrBadRole),
