@@ -145,6 +145,42 @@ describe("ALPHA snap points, fonts, system and audit", () => {
 	});
 });
 
+describe("ALPHA tools and keys", () => {
+	test("tools and keys use the documented routes, methods and timeouts", async () => {
+		const { transport, requests } = fake(ok({}));
+		const client = createClient(transport);
+		await client.getTools();
+		await client.installTool({ name: "whisper", model: "base" });
+		await client.createKey({ name: "ci", scopes: ["read"] });
+		await client.listKeys();
+		await client.revokeKey("key_a/b");
+		expect(
+			requests.map((r) => [r.method, r.path, r.timeoutMs, r.body]),
+		).toEqual([
+			["GET", "/system/tools", 10_000, undefined],
+			[
+				"POST",
+				"/system/tools/install",
+				30_000,
+				{ name: "whisper", model: "base" },
+			],
+			["POST", "/keys", 30_000, { name: "ci", scopes: ["read"] }],
+			["GET", "/keys", 10_000, undefined],
+			["DELETE", "/keys/key_a%2Fb", 30_000, undefined],
+		]);
+	});
+
+	test("a refused key call maps to ApiError", async () => {
+		const { transport } = fake({
+			status: 404,
+			body: { code: "E_NOT_FOUND", message: "no", retryable: false },
+		});
+		await expect(createClient(transport).listKeys()).rejects.toMatchObject({
+			code: "E_NOT_FOUND",
+		});
+	});
+});
+
 describe("binary URL builders", () => {
 	test("strip and peaks sit on the media prefix", () => {
 		expect(stripUrl("prj_a", "ast_a")).toBe(

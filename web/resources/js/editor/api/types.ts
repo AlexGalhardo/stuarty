@@ -501,3 +501,64 @@ export interface AuditQuery {
 	cursor?: string;
 	limit?: number;
 }
+
+// GET /system/tools and POST /system/tools/install (admin scope).
+export interface InstalledTool {
+	name: string;
+	kind: string;
+	model?: string;
+	version: string;
+	sha256: string;
+	path: string;
+}
+
+export interface ToolsStatusResult {
+	installed: InstalledTool[];
+	state: "idle" | "running" | "failed";
+	done_bytes: number;
+	total_bytes: number;
+	error?: ApiErrorBody;
+	text: string;
+}
+
+export interface InstallToolRequest {
+	name: string;
+	model?: string;
+}
+
+export interface InstallToolResult {
+	state: string;
+	files: { name: string; bytes: number; host: string }[];
+	download_bytes: number;
+	text: string;
+}
+
+// /keys: a browser session in network mode only.
+export interface ApiKey {
+	key_id: string;
+	name: string;
+	scopes: string[];
+	project_id: string | null;
+	created_at: string;
+	last_used_at: string | null;
+	expires_at: string | null;
+	revoked_at: string | null;
+}
+
+export interface KeyCreateRequest {
+	name: string;
+	scopes: string[];
+	project_id?: string;
+	expires_in_days?: number;
+}
+
+export interface KeyCreateResult {
+	key: ApiKey;
+	secret: string;
+}
+
+export interface KeyListResult {
+	keys: ApiKey[];
+}
+
+export type KeyRevokeResult = ApiKey;
