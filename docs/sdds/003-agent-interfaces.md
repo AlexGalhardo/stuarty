@@ -388,6 +388,9 @@ type HistoryEntry struct {
 	At       time.Time `json:"at"`
 	Ops      []string  `json:"ops"`      // command names in order
 	Changes  int       `json:"changes"`  // length of the net diff
+	Description  string `json:"description"`    // one line: the summaries of the distinct commands of an edit (SDD-002 A.2), "Undid r<n>." or "Redid r<n>."; never media text
+	UndoableByMe bool   `json:"undoable_by_me"` // true only for the step Undo would take for the calling actor now (SDD-005 §12.1)
+	RedoableByMe bool   `json:"redoable_by_me"` // true only for the step Redo would take for the calling actor now
 	UndoOf   *int64    `json:"undo_of,omitempty"`
 	UndoneBy *int64    `json:"undone_by,omitempty"`
 }

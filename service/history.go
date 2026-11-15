@@ -7,6 +7,7 @@ import (
 	"errors"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/lint"
@@ -21,6 +22,7 @@ const (
 	maxHistoryLimit     = 100
 	defaultLintLimit    = 25
 	maxLintLimit        = 100
+	historyDescription  = 300
 )
 
 func (s *svc) HistoryList(ctx context.Context, req HistoryListRequest) (*HistoryListResult, error) {
@@ -55,8 +57,12 @@ func (s *svc) HistoryList(ctx context.Context, req HistoryListRequest) (*History
 	entries := make([]HistoryEntry, 0, len(rows))
 	lines := make([]textview.HistoryLine, 0, len(rows))
 
+	undo, redo := s.stepCandidates(ctx, req.ProjectID, c.Actor)
+
 	for i := range rows {
-		e, l := historyEntry(&rows[i])
+		e, l := s.historyEntry(&rows[i])
+		e.UndoableByMe = undo == rows[i].Revision
+		e.RedoableByMe = redo == rows[i].Revision
 		entries, lines = append(entries, e), append(lines, l)
 	}
 
@@ -78,11 +84,11 @@ func (s *svc) HistoryList(ctx context.Context, req HistoryListRequest) (*History
 	return res, nil
 }
 
-func historyEntry(row *OperationRow) (HistoryEntry, textview.HistoryLine) {
+func (s *svc) historyEntry(row *OperationRow) (HistoryEntry, textview.HistoryLine) {
 	ops := opNames(row.Ops)
 	e := HistoryEntry{
 		Revision: row.Revision, Kind: string(row.Kind), Actor: row.Actor, At: msTime(row.AtMs),
-		Ops: ops, Changes: len(decodeDiff(row.Diff)),
+		Ops: ops, Changes: len(decodeDiff(row.Diff)), Description: s.stepDescription(row, ops),
 	}
 
 	if row.Kind == OpUndo {
@@ -519,4 +525,56 @@ func (s *svc) Lint(ctx context.Context, req LintRequest) (*LintResult, error) {
 	}
 
 	return res, nil
+}
+
+// stepCandidates are the revisions Undo and Redo would take for the actor now
+// (0 for none): the only steps flagged undoable_by_me and redoable_by_me, by
+// the per-actor rules of SDD-005 section 12.1.
+func (s *svc) stepCandidates(ctx context.Context, project, actor string) (undo, redo int64) {
+	if row, err := s.store.Operations().UndoCandidate(ctx, project, actor); err == nil {
+		undo = row.Revision
+	}
+
+	if row, err := s.store.Operations().RedoCandidate(ctx, project, actor); err == nil {
+		redo = row.Revision
+	}
+
+	return undo, redo
+}
+
+// stepDescription is one line for the history panel: the summaries of the
+// distinct commands of an edit, or what an undo, a redo, a migration or an
+// import did. Never media text (SDD-012 section 15).
+func (s *svc) stepDescription(row *OperationRow, ops []string) string {
+	switch row.Kind {
+	case OpUndo:
+		return "Undid r" + strconv.FormatInt(derefInt64(row.TargetRevision), 10) + "."
+	case OpRedo:
+		return "Redid r" + strconv.FormatInt(derefInt64(row.TargetRevision), 10) + "."
+	case OpMigrate:
+		return "Migrated the project to the current schema."
+	case OpImport:
+		return "Imported the project."
+	}
+
+	var parts []string
+
+	for _, name := range ops {
+		cmd, ok := s.reg.Get(name)
+		if !ok || slices.Contains(parts, cmd.Summary) {
+			continue
+		}
+
+		parts = append(parts, cmd.Summary)
+	}
+
+	return cutRunes(strings.Join(parts, " "), historyDescription)
+}
+
+func derefInt64(p *int64) int64 {
+	if p == nil {
+		return 0
+	}
+
+	return *p
 }

@@ -741,6 +741,9 @@
           "changes": {
             "type": "integer"
           },
+          "description": {
+            "type": "string"
+          },
           "kind": {
             "type": "string"
           },
@@ -749,6 +752,9 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "redoable_by_me": {
+            "type": "boolean"
           },
           "revision": {
             "format": "int64",
@@ -760,6 +766,9 @@
               "integer",
               "null"
             ]
+          },
+          "undoable_by_me": {
+            "type": "boolean"
           },
           "undone_by": {
             "format": "int64",
