@@ -1,6 +1,6 @@
 ---
 title: "Exporting"
-description: "Render a project to an H.264 MP4, wait for it, and find the verified file."
+description: "Render a project to an MP4, GIF, WAV or AAC file, wait for it, and find the verified file."
 ---
 
 ## You will learn
@@ -34,7 +34,36 @@ The CLI waits for the job. Use `--no-wait` to return at once and `vukem-video jo
 </Tab>
 </Tabs>
 
-The result of a succeeded export has the file path under `<workspace>/exports/<project id>/<job id>.mp4`, its size and its duration.
+The result of a succeeded export has the file path under `<workspace>/exports/<project id>/<job id>.<extension>`, its size and its duration.
+
+## Formats
+
+An export is an MP4 unless you choose another format with `--format` (CLI) or `args.format` (MCP and HTTP API).
+
+| Format | File | What it is |
+| --- | --- | --- |
+| `mp4` | `.mp4` | H.264 video and AAC audio (the default); needs an H.264 encoder |
+| `gif` | `.gif` | the composed frames, no audio; needs no encoder |
+| `wav` | `.wav` | the audio mix as 16-bit PCM, 48 kHz, stereo |
+| `aac` | `.m4a` | the same mix as AAC in an MP4 container |
+
+```bash
+vukem-video export --project prj_7k2m9x4q1b --format gif
+```
+
+With MCP: `job_start` with `{"project_id": "prj_7k2m9x4q1b", "kind": "export", "args": {"format": "wav"}}`.
+
+## Exchange a timeline with OpenTimelineIO
+
+`otio:export` writes the timeline of a project as an [OpenTimelineIO](https://opentimelineio.org) file, to open it in another editor. It writes the file on the machine that runs the command, in the current folder as `<project name>.otio`, or where `--out` says; it refuses to replace a file unless you add `--force`. The command lists what the format cannot carry (for example effects), so nothing is lost silently.
+
+```bash
+vukem-video otio:export --project prj_7k2m9x4q1b --out cut.otio
+vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --dry-run
+vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --base-revision 12
+```
+
+`otio:import` reads a file from the machine that runs the server and applies it to the project as one batch, so one `undo` reverts it. The frame rate of the file must be the project's. The media of the file are never opened: a reference is matched by name to an asset already in the project, and the ones that match nothing are listed as unresolved. `--dry-run` shows what would change; `--base-revision` defaults to the current revision. The HTTP API has `GET` and `POST /api/v1/projects/{id}/otio`. There is no MCP tool for OpenTimelineIO.
 
 ## Export a project bundle
 
@@ -63,7 +92,7 @@ There is no MCP tool for bundles and the editor has no bundle entry yet.
 
 ## Common mistakes
 
-- No H.264 encoder works on this machine: `E_NO_ENCODER`.
+- No H.264 encoder works on this machine: `E_NO_ENCODER`. `gif`, `wav` and `aac` still export.
 - Importing a bundle whose project id already exists: `E_ID_EXISTS`. Use `--as-new`.
 - Too many exports at once: `E_QUEUE_FULL`, retryable. `VUKEM_VIDEO_MAX_EXPORTS` sets the limit.
 
