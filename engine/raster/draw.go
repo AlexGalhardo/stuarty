@@ -281,10 +281,32 @@ func newTextJob(st style, s float64, face *font.Face, lay layout, spans [][2]int
 	// One clear pixel all around: the antialiased edge of the ink may touch the
 	// last pixel the bounding box reaches, and the bitmap must never clip it.
 	content = content.grow(1)
-	j.ox, j.oy = math.Floor(content.x0), math.Floor(content.y0)
-	j.w, j.h = int(math.Ceil(content.x1-j.ox)), int(math.Ceil(content.y1-j.oy))
+
+	// The plan places the centre of the text block and the browser draws a bitmap by its own centre, so
+	// the bitmap reaches as far on each side of the block's centre as it does on the farther one: a
+	// shadow no longer moves the bitmap's centre off the block's (CenterDX and CenterDY stay under half
+	// a pixel) and the preview and the compositor put the text in the same place.
+	cx, cy := (j.block.x0+j.block.x1)/2, (j.block.y0+j.block.y1)/2
+	j.ox, j.w = symmetricSpan(cx, content.x0, content.x1)
+	j.oy, j.h = symmetricSpan(cy, content.y0, content.y1)
 
 	return j
+}
+
+// symmetricSpan is the whole-pixel origin and length of a canvas that holds [lo, hi] and whose centre is
+// within half a pixel of c (lo <= c <= hi). The tight canvas is kept when it is already that close, so a
+// bitmap without a lopsided shadow keeps its size.
+func symmetricSpan(c, lo, hi float64) (origin float64, length int) {
+	origin = math.Floor(lo)
+	length = int(math.Ceil(hi - origin))
+
+	if math.Abs(origin+float64(length)/2-c) <= 0.5 {
+		return origin, length
+	}
+
+	origin = math.Floor(c - math.Max(c-lo, hi-c))
+
+	return origin, int(math.Ceil(2 * (c - origin)))
 }
 
 // naturalSize is the size of the bitmap at PixelScale 1.

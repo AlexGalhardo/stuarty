@@ -185,17 +185,21 @@ func TestShadowIsOffsetAndOnlyWhenAsked(t *testing.T) {
 		t.Error("a shadow with no offset and no blur changed the bitmap")
 	}
 
-	// The block centre stays put when the shadow reaches further on one side:
-	// the bitmap carries the offset.
+	// A shadow that reaches further on one side does not move the bitmap's centre off the block's: the
+	// browser draws a bitmap by its centre and the plan places the block (SDD-004 section 5.1 item 6).
 	st.ShadowDX, st.ShadowDY = 40, 0
 	moved := render(t, textSpec("S", st))
 
-	if moved.CenterDX >= 0 || math.Abs(moved.CenterDY) > 0.5 {
+	if math.Abs(moved.CenterDX) > 0.5 || math.Abs(moved.CenterDY) > 0.5 {
 		t.Errorf(
-			"centre offset (%.1f, %.1f): a shadow to the right puts the block centre left of the bitmap centre",
+			"centre offset (%.2f, %.2f), want within half a pixel of the block centre",
 			moved.CenterDX,
 			moved.CenterDY,
 		)
+	}
+
+	if moved.Width <= none.Width+40 {
+		t.Errorf("the bitmap is %d wide, the shadow reaches 40 pixels beyond %d", moved.Width, none.Width)
 	}
 }
 
