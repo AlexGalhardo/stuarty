@@ -1,11 +1,15 @@
 import {
 	Frame,
+	Maximize,
+	Minimize,
 	Pause,
 	Play,
 	SkipBack,
 	SkipForward,
 	StepBack,
 	StepForward,
+	Volume2,
+	VolumeX,
 } from "lucide-react";
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 
@@ -18,7 +22,7 @@ import {
 	useUiState,
 } from "../state/EditorContext";
 import { selectEndFrame, selectFps } from "../state/selectors";
-import { bufferSize, fitScale, truthWidth } from "./fit";
+import { bufferSize, fitScale, sizedScale, truthWidth } from "./fit";
 import Handles from "./overlays/Handles";
 import { hitTest } from "./overlays/hitTest";
 import InlineTextEditor from "./overlays/InlineTextEditor";
@@ -33,6 +37,22 @@ const DEFAULT_FPS = { num: 30, den: 1 } as const;
 // While playing the committed playhead follows at most every 250 ms, for the
 // timeline and the URL (SDD-012 section 19); the timecode is written live.
 const COMMIT_EVERY_MS = 250;
+
+const SIZES = [
+	["fit", "ui.editor.preview.size_fit"],
+	["50", "ui.editor.preview.size_50"],
+	["100", "ui.editor.preview.size_100"],
+] as const;
+
+// Full screen is offered only where the browser or webview has the API
+// (SDD-012 section 21.1: feature detection, no assumption).
+function canFullscreen(): boolean {
+	return (
+		typeof document !== "undefined" &&
+		document.fullscreenEnabled === true &&
+		typeof HTMLElement.prototype.requestFullscreen === "function"
+	);
+}
 
 function isEditable(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) return false;
@@ -57,6 +77,11 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 	const height = settings?.height ?? 1920;
 	const ready = status === "ready" || status === "offline";
 
+	const previewSize = useUiState((s) => s.previewSize);
+	const volume = useUiState((s) => s.previewVolume);
+	const muted = useUiState((s) => s.previewMuted);
+	const [fullscreen, setFullscreen] = useState(false);
+	const shell = useRef<HTMLDivElement>(null);
 	const region = useRef<HTMLDivElement>(null);
 	const host = useRef<HTMLDivElement>(null);
 	const truth = useRef<HTMLImageElement>(null);
@@ -164,13 +189,32 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 		executor.current?.seek(playhead);
 	}, [playhead]);
 
-	// Fit: the box is the available region minus 16 px of padding on each side.
+	// The executor is rebuilt with the runtime, so the level is pushed again.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: `runtime` is the trigger that rebuilds the executor.
+	useEffect(() => {
+		executor.current?.setVolume(volume, muted);
+	}, [runtime, volume, muted]);
+
+	useEffect(() => {
+		const onChange = (): void =>
+			setFullscreen(document.fullscreenElement === shell.current);
+		document.addEventListener("fullscreenchange", onChange);
+		return () => document.removeEventListener("fullscreenchange", onChange);
+	}, []);
+
+	// Fit: the box is the available region minus 16 px of padding on each side;
+	// 50% and 100% are shares of the pixel buffer and the region scrolls.
 	useEffect(() => {
 		const el = region.current;
 		if (el === null) return;
 		const observe = (): void => {
 			const rect = el.getBoundingClientRect();
-			const scale = fitScale(rect.width, rect.height, width, height);
+			const scale = sizedScale(
+				previewSize,
+				fitScale(rect.width, rect.height, width, height),
+				width,
+				height,
+			);
 			const w = width * scale;
 			const h = height * scale;
 			setBox({ w, h });
@@ -182,7 +226,7 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 		observer.observe(el);
 		observe();
 		return () => observer.disconnect();
-	}, [width, height]);
+	}, [width, height, previewSize]);
 
 	// The overlays read the plan window of the frame once it is held; while
 	// playing the executor already keeps the windows and `live` re-renders.
@@ -245,12 +289,15 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 	const unsupported = state === "unsupported";
 
 	return (
-		<div className="flex min-h-0 flex-1 flex-col gap-2">
-			<div
-				ref={region}
-				className="flex min-h-0 flex-1 items-center justify-center"
-			>
-				<div className="relative" style={{ width: box.w, height: box.h }}>
+		<div
+			ref={shell}
+			className="flex min-h-0 flex-1 flex-col gap-2 [&:fullscreen]:bg-ed-preview-surround [&:fullscreen]:p-4"
+		>
+			<div ref={region} className="flex min-h-0 flex-1 overflow-auto">
+				<div
+					className="relative m-auto shrink-0"
+					style={{ width: box.w, height: box.h }}
+				>
 					<div className="absolute inset-0 overflow-hidden bg-black">
 						<div ref={host} className="absolute inset-0" />
 						<img
@@ -338,7 +385,7 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 			<div
 				role="toolbar"
 				aria-label={t("ui.editor.preview.transport")}
-				className="flex items-center justify-center gap-1"
+				className="flex flex-wrap items-center justify-center gap-1"
 			>
 				<Button
 					type="button"
@@ -402,6 +449,82 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 				>
 					<Frame aria-hidden="true" />
 				</Button>
+				<Button
+					type="button"
+					variant="ghost"
+					size="icon-sm"
+					aria-pressed={muted}
+					aria-label={
+						muted ? t("ui.editor.preview.unmute") : t("ui.editor.preview.mute")
+					}
+					onClick={runtime.uiWriter.togglePreviewMuted}
+				>
+					{muted ? (
+						<VolumeX aria-hidden="true" />
+					) : (
+						<Volume2 aria-hidden="true" />
+					)}
+				</Button>
+				<input
+					type="range"
+					min={0}
+					max={1}
+					step={0.05}
+					value={muted ? 0 : volume}
+					aria-label={t("ui.editor.preview.volume")}
+					className="h-6 w-20 accent-primary"
+					onChange={(event) => {
+						runtime.uiWriter.setPreviewVolume(
+							Number(event.currentTarget.value),
+						);
+						if (muted) runtime.uiWriter.togglePreviewMuted();
+					}}
+				/>
+				{/* biome-ignore lint/a11y/useSemanticElements: a fieldset would draw a border and legend around buttons in a toolbar. */}
+				<div
+					role="group"
+					aria-label={t("ui.editor.preview.size")}
+					className="ml-2 flex items-center gap-0.5"
+				>
+					{SIZES.map(([value, key]) => (
+						<Button
+							key={value}
+							type="button"
+							variant={previewSize === value ? "secondary" : "ghost"}
+							size="sm"
+							aria-pressed={previewSize === value}
+							onClick={() => runtime.uiWriter.setPreviewSize(value)}
+						>
+							{t(key)}
+						</Button>
+					))}
+				</div>
+				{canFullscreen() && (
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						aria-pressed={fullscreen}
+						aria-label={
+							fullscreen
+								? t("ui.editor.preview.exit_fullscreen")
+								: t("ui.editor.preview.fullscreen")
+						}
+						onClick={() => {
+							if (document.fullscreenElement !== null) {
+								void document.exitFullscreen();
+							} else {
+								void shell.current?.requestFullscreen().catch(() => undefined);
+							}
+						}}
+					>
+						{fullscreen ? (
+							<Minimize aria-hidden="true" />
+						) : (
+							<Maximize aria-hidden="true" />
+						)}
+					</Button>
+				)}
 				<span className="ml-3 flex items-center gap-1 text-muted-foreground">
 					<Timecode
 						frame={live}

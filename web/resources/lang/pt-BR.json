@@ -192,7 +192,16 @@
         "step_back": "Voltar um quadro",
         "step_forward": "Avançar um quadro",
         "current": "Tempo atual",
-        "total": "Duração total"
+        "total": "Duração total",
+        "size": "Tamanho da prévia",
+        "size_fit": "Ajustar",
+        "size_50": "Metade (50%)",
+        "size_100": "Total (100%)",
+        "volume": "Volume da prévia",
+        "mute": "Silenciar a prévia",
+        "unmute": "Reativar o som da prévia",
+        "fullscreen": "Prévia em tela cheia",
+        "exit_fullscreen": "Sair da tela cheia"
       },
       "errors": {
         "E_FONT_UNKNOWN": "Fonte desconhecida",
