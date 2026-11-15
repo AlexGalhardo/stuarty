@@ -1,4 +1,9 @@
 import { createStore, type ReadStore, readOnly } from "./createStore";
+import { ROW_BOUNDS, readLayout, writeLayout } from "./prefs";
+
+// The size of the preview canvas (SDD-012 section 11.4): fitted to the region,
+// or half or all of the pixel buffer.
+export type PreviewSize = "fit" | "50" | "100";
 
 // A keyframe as the read model stores it: `t` is relative to the item start.
 export interface KeyframeRef {
@@ -38,6 +43,13 @@ export interface UiState {
 	inUse: { assetId: string; usedBy: readonly string[] } | null;
 	playheadFrame: number;
 	timeline: { pxPerFrame: number; snapEnabled: boolean };
+	// Track row heights in pixels by kind of track, persisted in `vv.layout`.
+	rowPx: { visual: number; audio: number };
+	// The preview size and the preview audio level. Both are UI state only:
+	// they never reach the core (SDD-012 sections 11.4 and 11.5).
+	previewSize: PreviewSize;
+	previewVolume: number;
+	previewMuted: boolean;
 	// The revision at which the core answered E_NOTHING_TO_UNDO or
 	// E_NOTHING_TO_REDO; the button stays disabled until the next batch.
 	historyBlocked: { undo: number | null; redo: number | null };
@@ -63,6 +75,10 @@ export interface UiWriter {
 	setPlayhead(frame: number): void;
 	setZoom(pxPerFrame: number): void;
 	toggleSnap(): void;
+	setRowPx(kind: "visual" | "audio", px: number): void;
+	setPreviewSize(size: PreviewSize): void;
+	setPreviewVolume(volume: number): void;
+	togglePreviewMuted(): void;
 	blockHistory(kind: "undo" | "redo", revision: number): void;
 	// Show a tab of the left panel; when it is already the shown one, hide the
 	// panel (a toggle).
@@ -86,6 +102,10 @@ export function createUiStore(initialZoom = 1): {
 		inUse: null,
 		playheadFrame: 0,
 		timeline: { pxPerFrame: initialZoom, snapEnabled: true },
+		rowPx: readLayout().rows,
+		previewSize: "fit",
+		previewVolume: 1,
+		previewMuted: false,
 		historyBlocked: { undo: null, redo: null },
 		activePanelTab: "library",
 		panels: { left: true, inspector: true },
@@ -200,6 +220,24 @@ export function createUiStore(initialZoom = 1): {
 					...s,
 					timeline: { ...s.timeline, snapEnabled: !s.timeline.snapEnabled },
 				})),
+			setRowPx: (kind, px) => {
+				const next = Math.round(
+					Math.min(Math.max(px, ROW_BOUNDS.min), ROW_BOUNDS.max),
+				);
+				if (store.getState().rowPx[kind] === next) return;
+				const rowPx = { ...store.getState().rowPx, [kind]: next };
+				store.setState((s) => ({ ...s, rowPx }));
+				writeLayout({ rows: rowPx });
+			},
+			setPreviewSize: (previewSize) =>
+				store.setState((s) => ({ ...s, previewSize })),
+			setPreviewVolume: (volume) =>
+				store.setState((s) => ({
+					...s,
+					previewVolume: Math.min(Math.max(volume, 0), 1),
+				})),
+			togglePreviewMuted: () =>
+				store.setState((s) => ({ ...s, previewMuted: !s.previewMuted })),
 			setZoom: (pxPerFrame) =>
 				store.setState((s) => ({
 					...s,

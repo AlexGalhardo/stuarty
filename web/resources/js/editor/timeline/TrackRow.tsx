@@ -16,15 +16,17 @@ import {
 } from "../state/EditorContext";
 import { selectTrack } from "../state/selectors";
 import GapContextMenuItems from "./GapContextMenu";
-import { AUDIO_ROW_PX, clientXToFrame, VISUAL_ROW_PX } from "./geometry";
+import { clientXToFrame } from "./geometry";
 import ItemContextMenuItems from "./ItemContextMenu";
 import { TimelineItem } from "./items/TimelineItem";
 import { selectTrackItems } from "./trackItems";
 import { mountedIds } from "./virtualize";
 import { TimelineWindowContext } from "./windowContext";
 
-export function rowHeight(kind: "visual" | "audio"): number {
-	return kind === "audio" ? AUDIO_ROW_PX : VISUAL_ROW_PX;
+// The height of the rows of one kind of track: the default or what the person
+// dragged the splitter to (SDD-012 section 7.4).
+export function useRowHeight(kind: "visual" | "audio"): number {
+	return useUiState((s) => s.rowPx[kind]);
 }
 
 export const TrackRow = memo(function TrackRow({
@@ -35,6 +37,7 @@ export const TrackRow = memo(function TrackRow({
 	const t = useT();
 	const runtime = useRuntime();
 	const track = useDocumentState((s) => selectTrack(s, id));
+	const rowPx = useRowHeight(track?.kind === "audio" ? "audio" : "visual");
 	const items = useDocumentState((s) => selectTrackItems(s, id));
 	const frames = useContext(TimelineWindowContext);
 	// Items that stay mounted outside the window: selected, focused, renamed,
@@ -96,7 +99,7 @@ export const TrackRow = memo(function TrackRow({
 					role="row"
 					tabIndex={-1}
 					data-track-id={id}
-					style={{ height: rowHeight(track.kind) }}
+					style={{ height: rowPx }}
 					className={cn(
 						"relative border-b border-ed-track-line",
 						(track.hidden === true || track.muted === true) && "opacity-60",
