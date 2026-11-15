@@ -31,3 +31,41 @@ func TestANewWorkspaceHoldsTheStarterTemplates(t *testing.T) {
 		}
 	}
 }
+
+// ADR-0026 item 4, T-10: a default start constructs no OpenTelemetry exporter;
+// the endpoint turns it on, and it is shut down with the owner.
+func TestTelemetryIsBuiltOnlyWhenTheEndpointIsSet(t *testing.T) {
+	var built, stopped int
+
+	hook := func(context.Context, func(string) string) (func(context.Context) error, error) {
+		built++
+
+		return func(context.Context) error { stopped++; return nil }, nil
+	}
+
+	for name, endpoint := range map[string]string{"default": "", "endpoint": "http://collector.example:4318"} {
+		built, stopped = 0, 0
+		env := map[string]string{workspace.EnvHome: filepath.Join(t.TempDir(), "ws")}
+
+		if endpoint != "" {
+			env[EnvOTLPEndpoint] = endpoint
+		}
+
+		o, err := Open(context.Background(), Config{Getenv: envOf(env), Inline: true, Telemetry: hook})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if want := map[string]int{"default": 0, "endpoint": 1}[name]; built != want {
+			t.Errorf("%s: %d exporter constructions, want %d", name, built, want)
+		}
+
+		if err := o.Close(); err != nil {
+			t.Fatal(err)
+		}
+
+		if stopped != built {
+			t.Errorf("%s: %d shutdowns for %d exporters", name, stopped, built)
+		}
+	}
+}

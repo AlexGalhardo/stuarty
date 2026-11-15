@@ -57,6 +57,9 @@ type Config struct {
 	// value is the mode named by VUKEM_VIDEO_MODE with no network facts (the
 	// commands, which never serve).
 	Resolved config.Resolved
+	// Telemetry builds the OpenTelemetry exporter; it is called only when
+	// OTEL_EXPORTER_OTLP_ENDPOINT is set. Nil builds none.
+	Telemetry Telemetry
 	// Inline runs the jobs inside the call that starts them (queue.Sync) and
 	// starts no start-up recovery: a command is not a server, and the next
 	// serve recovers what a dead owner left running.
@@ -87,6 +90,8 @@ type Owner struct {
 	mode     string
 	network  *httpapi.Network
 	netAuth  *auth.Network
+
+	telemetry func(context.Context) error
 }
 
 // lateRunner lets the queue handlers exist before the Service that they call.
@@ -119,6 +124,12 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 	o := &Owner{version: cfg.Version, now: cfg.Now, mode: cfg.Resolved.Mode}
 
 	if err := o.take(cfg); err != nil {
+		return nil, err
+	}
+
+	if err := o.startTelemetry(ctx, cfg); err != nil {
+		_ = o.Close()
+
 		return nil, err
 	}
 
@@ -446,6 +457,10 @@ func (o *Owner) Work(ctx context.Context) error {
 // database (checkpointed by its close) and the lock, in that order.
 func (o *Owner) Close() error {
 	var errs []error
+
+	if o.telemetry != nil {
+		errs = append(errs, o.telemetry(context.Background()))
+	}
 
 	if o.Events != nil {
 		o.Events.Close() // ends the open streams at once
