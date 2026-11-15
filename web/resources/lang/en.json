@@ -120,7 +120,7 @@
       },
       "timeline": {
         "label": "Timeline",
-        "empty": "The timeline is empty. Add a clip from the media panel.",
+        "empty": "The timeline is empty",
         "zoom_in": "Zoom in",
         "zoom_out": "Zoom out",
         "fit": "Fit",
@@ -134,7 +134,8 @@
         "caption_words": {
           "one": "{count} word",
           "other": "{count} words"
-        }
+        },
+        "empty_hint": "Add a clip from the media panel, or ask an agent to edit."
       },
       "track": {
         "name_label": "Track name",
@@ -235,8 +236,7 @@
       "library": {
         "path": "Path of a file to import",
         "import": "Import",
-        "empty": "No media yet. Paste the path of a file above.",
-        "empty_desktop": "No media yet. Choose files, drop them here or paste a path above.",
+        "empty": "No media yet",
         "choose": "Choose files",
         "drop": "A browser page cannot see the path of a file. Paste the path into the field.",
         "add": "Add to timeline",
@@ -259,7 +259,9 @@
           "ingesting": "Importing",
           "ready": "Ready",
           "failed": "Failed"
-        }
+        },
+        "empty_hint": "Paste the path of a video, audio or image file above and press Import.",
+        "empty_hint_desktop": "Choose files, drop them here or paste a path above, then press Import."
       },
       "edit": {
         "label": "Editing",
@@ -1013,6 +1015,16 @@
         },
         "undone": "Undone",
         "redone": "Redone"
+      },
+      "tips": {
+        "title": "First steps",
+        "items": {
+          "library": "Paste the path of a media file in the library and press Import.",
+          "palette": "Press Ctrl+K to search every command.",
+          "shortcuts": "Press ? to see and change the keyboard shortcuts."
+        },
+        "dismiss": "Got it",
+        "show_again": "Show tips again"
       }
     },
     "login": {
