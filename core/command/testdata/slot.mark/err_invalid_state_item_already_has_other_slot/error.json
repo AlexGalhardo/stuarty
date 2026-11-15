@@ -1,0 +1,6 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Item itm_s6t7v8w9x0 is already slot \"headline\".",
+  "hint": "Use slot.unmark first, or reuse the name \"headline\" to update it.",
+  "retryable": false
+}

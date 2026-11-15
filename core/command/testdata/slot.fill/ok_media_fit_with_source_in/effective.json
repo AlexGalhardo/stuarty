@@ -1,0 +1,14 @@
+{
+  "duration": {
+    "after": 90,
+    "before": 90
+  },
+  "kind": "media",
+  "shifted": [],
+  "slot": "hero",
+  "source_in": {
+    "frame": 60,
+    "requested": "2s",
+    "seconds": 2
+  }
+}

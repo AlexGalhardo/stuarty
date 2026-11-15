@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give only one of asset_id, text, words, not several.",
+  "hint": "Send only one of asset_id, text, words.",
+  "retryable": false,
+  "path": "args"
+}

@@ -1,0 +1,9 @@
+{
+  "op": "template.set_info",
+  "args": {
+    "description": "Same",
+    "colors": {
+      "old": "#112233"
+    }
+  }
+}

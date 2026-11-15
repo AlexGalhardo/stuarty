@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_TIME",
+  "message": "The item would occupy frames 107900-108799, past the limit 108000.",
+  "hint": "Use a start of at most \"107100f\" for this 900-frame item.",
+  "retryable": false,
+  "path": "args"
+}

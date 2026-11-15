@@ -1,0 +1,20 @@
+{
+  "duration": {
+    "after": 50,
+    "before": 90
+  },
+  "kind": "media",
+  "shifted": [
+    {
+      "from": 90,
+      "id": "itm_s6t7v8w9x0",
+      "to": 50
+    }
+  ],
+  "slot": "hero",
+  "source_in": {
+    "frame": 850,
+    "requested": "850f",
+    "seconds": 28.333
+  }
+}

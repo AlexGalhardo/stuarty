@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.source_in is only valid with asset_id.",
+  "hint": "Remove source_in, or fill a media slot with asset_id.",
+  "retryable": false,
+  "path": "args.source_in"
+}

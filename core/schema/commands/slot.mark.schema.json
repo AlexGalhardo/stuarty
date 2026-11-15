@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "description": "Up to 200 characters.",
+      "maxLength": 200,
+      "type": "string"
+    },
+    "duration_policy": {
+      "description": "Media slots only. Default fit.",
+      "enum": [
+        "fit",
+        "stretch_timeline"
+      ],
+      "type": "string"
+    },
+    "item_id": {
+      "description": "A clip, audio, text or caption item.",
+      "type": "string"
+    },
+    "name": {
+      "description": "Matches [a-z][a-z0-9_]{0,39}; unique among the slots.",
+      "type": "string"
+    },
+    "required": {
+      "description": "Default true.",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "item_id",
+    "name"
+  ],
+  "type": "object"
+}

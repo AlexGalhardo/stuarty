@@ -1,0 +1,14 @@
+{
+  "code": "E_OUT_OF_SOURCE",
+  "message": "Slot \"hero\": source_in 900 leaves no frame of asset ast_3c5v8n2w6d (900 frames).",
+  "hint": "Use a smaller source_in.",
+  "retryable": false,
+  "path": "args.source_in",
+  "details": {
+    "available": {
+      "asset_duration": 900,
+      "max_duration": 0,
+      "source_in": 900
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "code": "E_SLOT",
+  "message": "Slot \"hero\" is a media slot; it needs asset_id, not text.",
+  "hint": "Send asset_id for slot \"hero\".",
+  "retryable": false,
+  "path": "args.text"
+}

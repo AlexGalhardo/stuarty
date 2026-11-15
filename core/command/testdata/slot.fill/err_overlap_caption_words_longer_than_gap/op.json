@@ -1,0 +1,33 @@
+{
+  "op": "slot.fill",
+  "args": {
+    "name": "subs",
+    "words": [
+      {
+        "text": "w1",
+        "start": "0f",
+        "duration": "12f"
+      },
+      {
+        "text": "w2",
+        "start": "12f",
+        "duration": "12f"
+      },
+      {
+        "text": "w3",
+        "start": "24f",
+        "duration": "12f"
+      },
+      {
+        "text": "w4",
+        "start": "36f",
+        "duration": "12f"
+      },
+      {
+        "text": "w5",
+        "start": "48f",
+        "duration": "12f"
+      }
+    ]
+  }
+}

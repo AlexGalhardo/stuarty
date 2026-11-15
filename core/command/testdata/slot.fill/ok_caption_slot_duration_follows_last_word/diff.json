@@ -1,0 +1,44 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_s6t7v8w9x0",
+    "changes": {
+      "duration": [
+        30,
+        24
+      ],
+      "slot": [
+        {
+          "kind": "caption",
+          "name": "subs"
+        },
+        {
+          "filled": true,
+          "kind": "caption",
+          "name": "subs"
+        }
+      ],
+      "words": [
+        [
+          {
+            "duration": 30,
+            "start": 0,
+            "text": "Title"
+          }
+        ],
+        [
+          {
+            "duration": 12,
+            "start": 0,
+            "text": "w1"
+          },
+          {
+            "duration": 12,
+            "start": 12,
+            "text": "w2"
+          }
+        ]
+      ]
+    }
+  }
+]

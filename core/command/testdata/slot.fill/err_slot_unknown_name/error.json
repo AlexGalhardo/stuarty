@@ -1,0 +1,12 @@
+{
+  "code": "E_SLOT",
+  "message": "Slot \"nope\" does not exist.",
+  "hint": "Use one of the slots: hero.",
+  "retryable": false,
+  "path": "args.name",
+  "details": {
+    "available": [
+      "hero"
+    ]
+  }
+}

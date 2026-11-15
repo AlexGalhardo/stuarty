@@ -1,0 +1,7 @@
+{
+  "op": "slot.fill",
+  "args": {
+    "name": "nope",
+    "text": "x"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "code": "E_OUT_OF_SOURCE",
+  "message": "Slot \"hero\" needs 90 frames from source frame 850; asset ast_3c5v8n2w6d has 900 frames, so 50 are available.",
+  "hint": "Use an asset of at least 940 frames, a smaller source_in, or set duration_policy to stretch_timeline.",
+  "retryable": false,
+  "path": "args.asset_id",
+  "details": {
+    "available": {
+      "asset_duration": 900,
+      "max_duration": 50,
+      "source_in": 850
+    }
+  }
+}

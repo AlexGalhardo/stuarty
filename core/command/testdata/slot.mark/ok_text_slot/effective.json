@@ -1,0 +1,7 @@
+{
+  "slot": {
+    "description": "Headline",
+    "kind": "text",
+    "name": "title"
+  }
+}

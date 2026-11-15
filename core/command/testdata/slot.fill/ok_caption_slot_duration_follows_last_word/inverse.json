@@ -1,0 +1,21 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_s6t7v8w9x0",
+    "set": {
+      "duration": 30,
+      "slot": {
+        "kind": "caption",
+        "name": "subs"
+      },
+      "words": [
+        {
+          "duration": 30,
+          "start": 0,
+          "text": "Title"
+        }
+      ]
+    }
+  }
+]

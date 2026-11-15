@@ -1,0 +1,6 @@
+{
+  "op": "slot.fill",
+  "args": {
+    "name": "hero"
+  }
+}
