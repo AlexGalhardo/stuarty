@@ -2,6 +2,7 @@ package command
 
 import (
 	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"maps"
@@ -515,6 +516,13 @@ func randomStart(rng *rand.Rand) *timeline.Document {
 // failure is a well formed error and leaves the input alone, a success is a valid
 // document and the inverses applied in reverse give back the starting bytes.
 func checkStep(doc *timeline.Document, o Operation, ids *seqIDs) (next *timeline.Document, err error) {
+	return checkStepEchoing(doc, o, ids, false)
+}
+
+// checkStepEchoing is checkStep; with echoed set, what the caller typed in args (a key
+// such as "ts", which looks like a file name) is not held against the error text that
+// quotes it: the rule of A.8 is about what the server leaks, not about the caller's own words.
+func checkStepEchoing(doc *timeline.Document, o Operation, ids *seqIDs, echoed bool) (next *timeline.Document, err error) {
 	before := timeline.Canonical(doc)
 
 	res, applyErr := fullRegistry().Apply(doc, o, Env{NewIDs: ids.next})
@@ -524,6 +532,10 @@ func checkStep(doc *timeline.Document, o Operation, ids *seqIDs) (next *timeline
 
 	if applyErr != nil {
 		e := AsError(applyErr)
+		if echoed {
+			e = withoutEcho(e, o.Args)
+		}
+
 		if cerr := CheckError(e); cerr != nil {
 			return nil, fmt.Errorf("%s: malformed error %s %s: %w", o.Op, e.Code, e.Message, cerr)
 		}
@@ -673,4 +685,75 @@ func TestScaleProject(t *testing.T) {
 	if err := os.WriteFile(out, append(timeline.Canonical(doc), '\n'), 0o600); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// FuzzApplyArgs feeds raw bytes as the arguments of any command of the registry,
+// Beta included, on a document with items, captions and slots: the answer is a
+// well formed error or a valid, undoable document, never E_INTERNAL (SDD-002 A.3, A.8).
+func FuzzApplyArgs(f *testing.F) {
+	cmds := fullRegistry().List()
+
+	for i, c := range cmds {
+		f.Add(uint8(i), c.Example, int64(i))
+		f.Add(uint8(i), `{}`, int64(i))
+		f.Add(uint8(i), `{"item_id":"itm_m1n2p3q4r5","start":"-1f","duration":"0f","words":[null],"id":"itm_m1n2p3q4r5"}`, int64(i))
+	}
+
+	f.Fuzz(func(t *testing.T, which uint8, args string, seed int64) {
+		c := cmds[int(which)%len(cmds)]
+		if c.Internal {
+			return
+		}
+
+		doc := randomStart(rand.New(rand.NewSource(seed)))
+
+		if _, err := checkStepEchoing(doc, Operation{Op: c.Name, Args: []byte(args)}, &seqIDs{}, true); err != nil {
+			t.Fatalf("%s %s: %v", c.Name, args, err)
+		}
+	})
+}
+
+// withoutEcho returns a copy of e whose texts no longer hold the strings (keys and
+// values) found in the JSON args.
+func withoutEcho(e *Error, args []byte) *Error {
+	var parsed any
+	if json.Unmarshal(args, &parsed) != nil {
+		return e
+	}
+
+	var words []string
+
+	var walk func(v any)
+
+	walk = func(v any) {
+		switch x := v.(type) {
+		case string:
+			words = append(words, x)
+		case []any:
+			for _, e := range x {
+				walk(e)
+			}
+		case map[string]any:
+			for k, e := range x {
+				words = append(words, k)
+				walk(e)
+			}
+		}
+	}
+	walk(parsed)
+
+	slices.SortFunc(words, func(a, b string) int { return len(b) - len(a) })
+
+	cp := *e
+
+	for _, w := range words {
+		if w == "" {
+			continue
+		}
+
+		cp.Message = strings.ReplaceAll(cp.Message, w, "?")
+		cp.Hint = strings.ReplaceAll(cp.Hint, w, "?")
+	}
+
+	return &cp
 }
