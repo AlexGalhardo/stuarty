@@ -381,6 +381,8 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | Font import (BETA) | a dedicated operation defined with the brand kit (RF-053) | `media` | Section 7.7. Not part of the Prototype or ALPHA |
 | Export download | `GET /jobs/{job_id}/file` | `read`, project check | Served from `exports/<project>/<job>.mp4` by database lookup, `Content-Disposition: attachment`, fixed `video/mp4`, `nosniff` |
 
+**How the service tells the caller class.** `service.Caller` has a boolean `Browser`, set only by the HTTP adapter when the request authenticated with the session cookie (a person at the editor, after the launch code of 3.4). The local bearer token never sets it, whatever label the client sends in `Vukem-Video-Client`, and neither do the in-process CLI and the stdio MCP server. `TrashEmpty` and the helper install routes accept a caller that has `Browser` or whose actor is `key:<id>` with the `admin` scope; everything else is `E_FORBIDDEN`. A key limited to one project empties that project only: `project_id` is forced to it, and another project is `E_FORBIDDEN`.
+
 ### 5.4 Command scopes (SDD-002 Part B)
 
 Every command in the registry declares `scope` in `edit` or `media`. A batch needs the **union** of the scopes of its operations; a scope the caller lacks fails the whole batch with `E_FORBIDDEN` and `op_index` of the first offending operation, before any application.
