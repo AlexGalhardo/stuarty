@@ -2,7 +2,7 @@ import { writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { caller, expect, seedProject, test } from "./helpers";
+import { caller, expect, seedProject, test, testClip } from "./helpers";
 
 // Scenarios of SDD-012 section 20.1 that run against the real server: 1, 2
 // (the undo half), 4, 7, 8 and 11.
@@ -189,5 +189,97 @@ test.describe("event-gap-resync", () => {
 			.locator("[data-item-id]")
 			.evaluateAll((els) => els.map((e) => e.getAttribute("data-item-id")));
 		expect(new Set(ids).size).toBe(ids.length);
+	});
+});
+
+test.describe("prototype-reference", () => {
+	test("the four manual operations of D-023 with the UI alone, no console error, no CSP violation", async ({
+		page,
+		request,
+	}) => {
+		test.setTimeout(150_000);
+		const problems: string[] = [];
+		page.on("console", (m) => {
+			// The browser logs the two expected refusals described below by itself.
+			if (
+				m.type() === "error" &&
+				!/Failed to load resource.*status of (409|400)/.test(m.text())
+			)
+				problems.push(`console: ${m.text()}`);
+		});
+		page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
+		page.on("response", (r) => {
+			// The 409 of POST /projects is the Inertia redirect to the editor. A truth
+			// frame pinned to a revision that an edit has just replaced is refused with
+			// 400 and the canvas stays (truth on pause, SDD-012 section 11): both are by design.
+			const expected =
+				(r.status() === 409 && r.url().endsWith("/projects")) ||
+				(r.status() === 400 && r.url().includes("/frame?"));
+			if (r.status() >= 400 && !expected)
+				problems.push(
+					`response: ${r.status()} ${r.request().method()} ${r.url()}`,
+				);
+		});
+		await page.addInitScript(() => {
+			document.addEventListener("securitypolicyviolation", (e) =>
+				console.error(`csp: ${e.violatedDirective}`),
+			);
+		});
+
+		const name = `Reference ${Date.now()}`;
+		await page.goto("/projects");
+		await page.getByLabel("Name").fill(name);
+		await page.getByRole("button", { name: "Create project" }).click();
+		await expect(page).toHaveURL(/\/editor\/prj_/);
+		const id = page.url().split("/").pop() ?? "";
+
+		// 1. Import by path, see the card.
+		await page.getByLabel("Path of a file to import").fill(testClip(0));
+		await page.getByRole("button", { name: "Import" }).click();
+		const add = page.getByRole("button", { name: "Add to timeline" }).first();
+		await expect(add).toBeEnabled({ timeout: 30_000 });
+
+		// Place it, play, pause and see the exact frame.
+		await add.click();
+		await expect(page.locator("[data-item-id]")).toHaveCount(1);
+		await page.getByRole("button", { name: "Play" }).click();
+		await page.waitForTimeout(1000);
+		await page.getByRole("button", { name: "Pause" }).click();
+		await expect(
+			page.getByAltText("Exact frame at the playhead"),
+		).toBeVisible();
+
+		// 2. Split at the playhead, then trim an end.
+		await page.locator("[data-item-id]").first().click();
+		await page.getByRole("button", { name: "Split" }).click();
+		await expect(page.locator("[data-item-id]")).toHaveCount(2);
+		await page.locator("[data-item-id]").last().click();
+		await page.getByRole("button", { name: "Step forward one frame" }).click();
+		await page.getByRole("button", { name: "Step forward one frame" }).click();
+		await page.getByRole("button", { name: "Trim end" }).click();
+
+		// 3. Add a caption.
+		await page.getByRole("button", { name: "Add caption" }).click();
+		await page.getByLabel("Text").fill("Launch day");
+		await page
+			.getByRole("dialog")
+			.getByRole("button", { name: "Add caption" })
+			.click();
+		await expect(page.locator("[data-item-id]")).toHaveCount(3);
+
+		// 4. Export with progress to success; the file exists in the API result.
+		await page.getByRole("button", { name: "Export" }).click();
+		await page.getByRole("button", { name: "Start export" }).click();
+		await expect(page.getByRole("link", { name: "Download" })).toBeVisible({
+			timeout: 90_000,
+		});
+		const call = await caller(request);
+		const jobs = (await call("GET", `/projects/${id}/jobs`)) as {
+			jobs: { state: string; path?: string }[];
+		};
+		expect(
+			jobs.jobs.some((j) => j.state === "succeeded" || j.state === "done"),
+		).toBe(true);
+		expect(problems).toEqual([]);
 	});
 });
