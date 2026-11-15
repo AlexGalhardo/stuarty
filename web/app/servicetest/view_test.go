@@ -20,7 +20,8 @@ func TestViewFrameAndSheetRenderTheCurrentRevision(t *testing.T) {
 	}
 
 	if f.Mode != "frame" || f.Revision != 2 || f.MIME != "image/jpeg" || !bytes.HasPrefix(f.Image, []byte{0xff, 0xd8}) ||
-		f.ImageTokens > 800 || len(f.Cells) != 1 ||
+		f.ImageTokens > 800 ||
+		len(f.Cells) != 1 ||
 		f.Cells[0].At.Frame != 15 {
 		t.Fatalf("frame = %+v", f)
 	}
@@ -67,7 +68,8 @@ func TestViewFrameAndSheetRenderTheCurrentRevision(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if s.Mode != "sheet" || len(s.Cells) != 4 || s.ImageTokens > 1500 || !bytes.HasPrefix(s.Image, []byte{0xff, 0xd8}) ||
+	if s.Mode != "sheet" || len(s.Cells) != 4 || s.ImageTokens > 1500 ||
+		!bytes.HasPrefix(s.Image, []byte{0xff, 0xd8}) ||
 		s.Cells[3].At.Frame != 29 ||
 		!strings.HasPrefix(s.Text, "sheet 2x2 of "+project+" r2: ") ||
 		!strings.Contains(s.Text, "\ncells: 1=0s/0f") {

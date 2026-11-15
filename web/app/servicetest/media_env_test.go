@@ -55,6 +55,8 @@ type mediaCfg struct {
 	realIngest bool
 	// realExport renders with engine/export and the pinned FFmpeg; the test skips without it.
 	realExport bool
+	// onEvent runs after each published event, on the goroutine that published it.
+	onEvent func(service.Event)
 	// durable runs the jobs on the database queue with workers instead of inline.
 	durable bool
 }
@@ -112,6 +114,15 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 		}
 
 		o.Exporter = cfg.exporter
+
+		if cfg.onEvent != nil {
+			record := o.Publish
+
+			o.Publish = func(ev service.Event) {
+				record(ev)
+				cfg.onEvent(ev)
+			}
+		}
 
 		if cfg.realExport {
 			runner, rerr := ffmpeg.NewRunner(pinnedFFmpeg(tb), m.ws)
