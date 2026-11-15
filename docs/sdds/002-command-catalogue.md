@@ -165,7 +165,7 @@ Codes of the core (service codes are in SDD-003):
 
 ### A.9 Commands whose arguments come from analysis
 
-Three commands depend on data the core cannot compute because it needs media: silences, a transcript, an asset's probe. `Apply` stays pure by receiving that data in `args`. The caller writes the short public form; the service fills the `resolved` field from artifacts that ingest and transcription already produced (the audio envelope and the transcript, SDD-011) and stores the operation with it. An edit never starts a media job: when the artifact it needs is missing, the command fails with `E_INVALID_STATE` and a hint that names the job to run first (SDD-007 §5.4).
+Three commands depend on data the core cannot compute because it needs media: silences, a transcript, an asset's probe. `Apply` stays pure by receiving that data in `args`. The caller writes the short public form; the service fills the `resolved` field from artifacts that ingest and transcription already produced (the audio envelope and the transcript, SDD-011) and stores the operation with it. An edit never starts a media job: when the artifact it needs is missing, the command fails with `E_INVALID_STATE` and a hint that names the job to run first (SDD-007 §5.4). The core itself, given an operation with no `resolved` field (a caller that bypassed the service), refuses it with `E_VALIDATION` and the same hint (Part C §C.27, §C.40, §C.41).
 
 | Public argument | Field filled by the service |
 | --- | --- |
