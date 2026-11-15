@@ -4,9 +4,14 @@ import { type Transport, TransportError } from "./transport";
 import type {
 	AuditListResult,
 	AuditQuery,
+	BrandKit,
+	BrandKitBody,
+	BundleImportResult,
 	CommandHelpResult,
 	EditRequest,
 	EditResult,
+	ExportOptions,
+	FontImportResult,
 	FontListResult,
 	HistoryListResult,
 	HistoryQuery,
@@ -45,6 +50,9 @@ import type {
 // Timeouts of SDD-012 section 4.3 item 4.
 const READ_TIMEOUT_MS = 10_000;
 const EDIT_TIMEOUT_MS = 30_000;
+// A bundle call may hold for up to 25 s (wait_ms) before the job is returned.
+const BUNDLE_WAIT_MS = 20_000;
+const BUNDLE_TIMEOUT_MS = 60_000;
 
 const defaultDeps: RetryDeps = {
 	sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
@@ -55,7 +63,17 @@ export interface ApiClient {
 	listMedia(projectId: string): Promise<MediaListResult>;
 	importMedia(projectId: string, paths: string[]): Promise<MediaImportResult>;
 	getLint(projectId: string): Promise<LintResult>;
-	startExport(projectId: string): Promise<Job>;
+	// `options` are the export arguments the server schema exposes (format, fps,
+	// size); `dryRun` runs the lint gate and the limits and queues nothing.
+	startExport(
+		projectId: string,
+		options?: ExportOptions,
+		dryRun?: boolean,
+	): Promise<Job>;
+	// A .vvbundle of the project (SDD-005 section 16); the job is polled with getJob.
+	exportBundle(projectId: string, includeLog?: boolean): Promise<Job>;
+	// `path` is absolute on the machine of the service; `asNew` makes a new id.
+	importBundle(path: string, asNew: boolean): Promise<BundleImportResult>;
 	// A transcription of one asset (SDD-012 section 12.4); E_TRANSCRIBE_UNAVAILABLE
 	// answers at once when no provider can run.
 	startTranscribe(projectId: string, assetId: string): Promise<Job>;
@@ -96,6 +114,14 @@ export interface ApiClient {
 		query?: SnapPointsQuery,
 	): Promise<SnapPointsResult>;
 	getFonts(): Promise<FontListResult>;
+	// `path` is an absolute path to a font file on the machine of the service.
+	importFont(path: string): Promise<FontImportResult>;
+	getBrandKit(): Promise<BrandKit>;
+	// Replaces the whole kit (SDD-005 section 5.11).
+	setBrandKit(kit: BrandKitBody): Promise<BrandKit>;
+	// The OpenAPI document lives at the root, not under /api/v1: build the client
+	// on a transport with an empty base.
+	getOpenApi(): Promise<unknown>;
 	getSystem(query?: SystemQuery): Promise<SystemResult>;
 	listAudit(query?: AuditQuery): Promise<AuditListResult>;
 	getTools(): Promise<ToolsStatusResult>;
@@ -128,7 +154,7 @@ export function createClient(
 	deps: RetryDeps = defaultDeps,
 ): ApiClient {
 	async function call<T>(
-		method: "GET" | "POST" | "DELETE",
+		method: "GET" | "POST" | "PUT" | "DELETE",
 		path: string,
 		timeoutMs: number,
 		body?: unknown,
@@ -168,8 +194,26 @@ export function createClient(
 				files: paths.map((path) => ({ path })),
 			}),
 		getLint: (id) => call("GET", `${project(id)}/lint`, READ_TIMEOUT_MS),
-		startExport: (id) =>
-			call("POST", `${project(id)}/jobs`, READ_TIMEOUT_MS, { kind: "export" }),
+		startExport: (id, options = {}, dryRun = false) => {
+			const args = Object.fromEntries(
+				Object.entries(options).filter(([, value]) => value !== undefined),
+			);
+			return call("POST", `${project(id)}/jobs`, READ_TIMEOUT_MS, {
+				kind: "export",
+				...(Object.keys(args).length === 0 ? {} : { args }),
+				...(dryRun ? { dry_run: true } : {}),
+			});
+		},
+		exportBundle: (id, includeLog) =>
+			call("POST", `${project(id)}/bundle`, BUNDLE_TIMEOUT_MS, {
+				wait_ms: BUNDLE_WAIT_MS,
+				...(includeLog === undefined ? {} : { include_log: includeLog }),
+			}),
+		importBundle: (path, asNew) =>
+			call("POST", "/projects/import", BUNDLE_TIMEOUT_MS, {
+				path,
+				as_new: asNew,
+			}),
 		startTranscribe: (id, assetId) =>
 			call("POST", `${project(id)}/jobs`, READ_TIMEOUT_MS, {
 				kind: "transcribe",
@@ -244,6 +288,10 @@ export function createClient(
 				READ_TIMEOUT_MS,
 			),
 		getFonts: () => call("GET", "/fonts", READ_TIMEOUT_MS),
+		importFont: (path) => call("POST", "/fonts", EDIT_TIMEOUT_MS, { path }),
+		getBrandKit: () => call("GET", "/brand-kit", READ_TIMEOUT_MS),
+		setBrandKit: (kit) => call("PUT", "/brand-kit", EDIT_TIMEOUT_MS, kit),
+		getOpenApi: () => call("GET", "/openapi.json", READ_TIMEOUT_MS),
 		getSystem: (q = {}) =>
 			call(
 				"GET",

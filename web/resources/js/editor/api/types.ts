@@ -633,6 +633,10 @@ export interface TemplateResult {
 export interface TemplateInstantiateRequest {
 	name: string;
 	fill?: { [slot: string]: { asset_id: string } | { text: string } };
+	// Names of template colours that take the brand kit colour, and kit families
+	// added to the fonts of the project (SDD-005 section 5.11).
+	brand_colors?: string[];
+	brand_fonts?: string[];
 }
 
 export interface TemplateInstantiateResult {
@@ -662,4 +666,54 @@ export interface SessionResult {
 	email: string;
 	role: string;
 	scopes: string[];
+}
+
+// The brand kit and the font import (SDD-005 section 5.11, SDD-007 section 7.7).
+export interface BrandFontFile {
+	weight: number;
+	hash: string;
+}
+
+export interface BrandFont {
+	files: BrandFontFile[];
+}
+
+export interface BrandKitBody {
+	logo?: string;
+	colors?: { [name: string]: string };
+	fonts?: { [family: string]: BrandFont };
+}
+
+export interface BrandKit extends BrandKitBody {
+	updated_ms?: number;
+	text: string;
+}
+
+export interface FontImportResult {
+	hash: string;
+	bytes: number;
+	deduplicated: boolean;
+	text: string;
+}
+
+// The export options of JobStart (SDD-003 section 2.8, P3-SRV-005): which of
+// them the server accepts is read from its schema, never assumed.
+export interface ExportOptions {
+	format?: string;
+	fps?: number;
+	size?: string;
+}
+
+export interface ExportCapabilities {
+	formats: string[];
+	fps: number[];
+	sizes: string[];
+}
+
+// POST /projects/import answers 201 with the project it made.
+export interface BundleImportResult {
+	project_id: string;
+	name: string;
+	revision: number;
+	text: string;
 }
