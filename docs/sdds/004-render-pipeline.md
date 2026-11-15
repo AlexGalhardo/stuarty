@@ -167,6 +167,16 @@ SourceFrame = min(SourceFrame, frame_count - 1)
 
 All integer arithmetic, with 64-bit intermediates. This is the only place a source frame is chosen.
 
+**Animated image (BETA, RF-028).** A still image has source frame 0. An animated image (`image` asset with `frame_delays`, SDD-001 section 3.2) shows frame `AnimImageSourceFrame(frame_delays, fps, r)` at frame `r` of its item, where `r` counts from the item's start and `speed` and `source_in` do not apply:
+
+```text
+ms    = floor((2 x r x 1000 x fps.den + fps.num) / (2 x fps.num))     (the frame's time in ms, rounded to the nearest, halves up)
+pos   = ms mod sum(frame_delays)                                       (the animation loops for as long as the item lasts)
+frame = the first i with pos < frame_delays[0] + ... + frame_delays[i]
+```
+
+The delays are whole milliseconds, so the rounding to the nearest millisecond is what makes delays recorded as 67, 33 and 100 ms (2, 1 and 3 frames at 30 fps) select frames 0, 0, 1, 2, 2, 2, 0 for item frames 0 to 6 (`TestAnimImageSourceFrame`). There is no hold-at-the-last-frame mode: the animation always loops, and a shorter item is a trim. In the window format an animated image layer has `source_frames`, one image frame index per frame from `first` to `last` (absent for video and still images; `source_seconds` is 0 for an image). The compositor draws the named frame like any image layer, alpha included, so a sticker composes as any other image layer.
+
 ### 3.4 Size of a media layer
 
 Let `sw × sh` be the asset's size after removing the crop fractions (`sw = width × (1 - crop.left - crop.right)`, likewise `sh`), and `Fw × Fh` the frame.

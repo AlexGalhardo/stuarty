@@ -1917,7 +1917,7 @@ Closes the empty range that contains a given frame on a track.
 
 ### C.22 `clip.add` (phase P)
 
-Places a video or image asset on a visual track.
+Places a video or image asset on a visual track. An animated image (BETA, RF-028) is an image asset with `frame_delays` (SDD-001 section 3.2): it follows every image rule of this section, so the default duration is `"5s"`, `source_in` must be omitted and the animation loops for as long as the item lasts (SDD-004 section 3.3); there is no hold mode and the command has no argument for it. A **sticker** is not a type: it is an image or animated image placed with this command on a visual track above the picture (a smaller `order`), usually with `item.set_transform` to size and place it; the alpha channel of the image is kept by the compositor.
 
 **Arguments**
 
@@ -1981,6 +1981,10 @@ Places a video or image asset on a visual track.
 - `ok_video_ends_exactly_at_asset_end`
 - `ok_image_default_5s`
 - `ok_image_explicit_duration`
+- `ok_animated_image_default_5s_loops`
+- `ok_animated_image_explicit_duration`
+- `ok_sticker_on_an_upper_track`
+- `err_validation_source_in_on_animated_image`
 - `ok_fit_contain`
 - `ok_fit_none`
 - `ok_start_frame_0_on_empty_track`
