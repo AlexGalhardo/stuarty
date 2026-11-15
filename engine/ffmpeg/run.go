@@ -2,6 +2,7 @@ package ffmpeg
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -264,6 +265,8 @@ type execSpec struct {
 	// outPath and maxBytes arm the output size watchdog.
 	outPath  string
 	maxBytes int64
+	// pollEvery overrides OutputPollInterval; only tests set it.
+	pollEvery time.Duration
 }
 
 // exec is the one place a child is started. Tests call it with a helper binary.
@@ -295,7 +298,8 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 	}
 
 	if s.outPath != "" && s.maxBytes > 0 {
-		go watchSize(dctx, s.outPath, s.maxBytes, OutputPollInterval, func() { cancel(ErrOutputTooLarge) })
+		poll := cmp.Or(s.pollEvery, OutputPollInterval)
+		go watchSize(dctx, s.outPath, s.maxBytes, poll, func() { cancel(ErrOutputTooLarge) })
 	}
 
 	type outcome struct {
@@ -351,6 +355,8 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 	case errors.Is(cause, ErrDeadline):
 		return res, fmt.Errorf("%w after %s", ErrDeadline, s.deadline)
 	case errors.Is(cause, ErrOutputTooLarge):
+		_ = os.Remove(s.outPath)
+
 		return res, fmt.Errorf("%w (limit %d bytes)", ErrOutputTooLarge, s.maxBytes)
 	case errors.Is(cause, errOverflow):
 		return res, nil
