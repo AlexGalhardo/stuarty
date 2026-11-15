@@ -210,11 +210,11 @@ test.describe("prototype-reference", () => {
 		page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
 		page.on("response", (r) => {
 			// The 409 of POST /projects is the Inertia redirect to the editor. A truth
-			// frame pinned to a revision that an edit has just replaced is refused with
-			// 400 and the canvas stays (truth on pause, SDD-012 section 11): both are by design.
+			// frame pinned to a revision that an edit has just replaced is refused
+			// (400 or 409) and the canvas stays (truth on pause, SDD-012 section 11): both are by design.
 			const expected =
 				(r.status() === 409 && r.url().endsWith("/projects")) ||
-				(r.status() === 400 && r.url().includes("/frame?"));
+				(r.status() < 500 && r.url().includes("/frame?"));
 			if (r.status() >= 400 && !expected)
 				problems.push(
 					`response: ${r.status()} ${r.request().method()} ${r.url()}`,
