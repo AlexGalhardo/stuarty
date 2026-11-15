@@ -1,0 +1,73 @@
+---
+title: "Efeitos e cor"
+description: "Ajuste o brilho, o contraste e a saturação de um clipe e anime texto com predefinições."
+---
+
+## O que você vai aprender
+
+- como corrigir a cor de um clipe;
+- como dar a um texto uma entrada e uma saída com uma predefinição;
+- como aplicar um filtro de cor e um desfoque a um clipe;
+- o que o produto não faz.
+
+## A ideia
+
+A correção de cor são três números em um clipe: `brightness` (-1 a 1, padrão 0), `contrast` (0 a 2, padrão 1) e `saturation` (0 a 2, padrão 1). Um valor igual ao padrão apaga o armazenado, então um clipe que voltou aos padrões não tem correção alguma. Tanto a pré-visualização quanto a exportação aplicam a correção pelo mesmo [plano de renderização](/docs/concepts/render).
+
+Para texto, legendas, clipes e formas há seis **predefinições de animação**: `fade_up`, `fade_down`, `pop`, `zoom_in`, `slide_left` e `slide_right`. Uma predefinição grava quadros-chave (ou, nas deslizantes, uma transição) na borda `in` ou `out`, com 0,4 segundo de duração a menos que você indique outra. O inspetor tem uma seção Animação com a predefinição e a borda.
+
+O estilo do texto (fonte, peso, tamanho, cor, contorno, sombra e fundo) é descrito em [Texto e legendas](/docs/guide/text-and-captions). Esmaecimentos e deslizes entre itens estão em [Transições](/docs/guide/transitions).
+
+### Filtros e desfoque
+
+O `clip.set_filter` define um filtro de uma lista fixa, `grayscale`, `sepia`, `invert`, `warm` ou `cool` (`none` é o padrão), e `amount`, de 0 (o original) a 1 (o filtro completo). O `clip.set_blur` define um raio de desfoque gaussiano em pixels na resolução do projeto, de 0 a 100. Ambos são constantes ao longo do clipe: não podem receber quadros-chave. Um filtro `none` com amount 1, ou um desfoque 0, apaga o valor armazenado. O filtro é aplicado depois da correção de cor e antes do desfoque, tanto na pré-visualização quanto na exportação.
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b clip.set_filter item_id=itm_m1n2p3q4r5   filter=sepia amount:=0.6
+vukem-video edit --project prj_7k2m9x4q1b clip.set_blur item_id=itm_m1n2p3q4r5 radius:=12
+```
+
+Um agente MCP envia as mesmas operações por meio de `edit`. A correção de cor, o filtro e o desfoque ainda não têm uma seção no inspetor: use a paleta de comandos (`Ctrl+K`, `Cmd+K` no macOS), a CLI ou um agente. Não há LUTs.
+
+## Início rápido
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b clip.set_color item_id=itm_m1n2p3q4r5 \
+  brightness:=0.1 saturation:=1.2
+vukem-video edit --project prj_7k2m9x4q1b text.apply_preset item_id=itm_t1u2v3w4x5 \
+  preset=fade_up edge=in
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` com as operações:
+
+```json
+{ "op": "clip.set_color", "args": {
+  "item_id": "itm_m1n2p3q4r5", "brightness": 0.1, "saturation": 1.2
+} }
+{ "op": "text.apply_preset", "args": {
+  "item_id": "itm_t1u2v3w4x5", "preset": "pop", "edge": "in"
+} }
+```
+
+</Tab>
+</Tabs>
+
+Uma predefinição substitui os quadros-chave das mesmas propriedades dentro da sua borda e mantém o resto da animação.
+
+## Erros comuns
+
+- Definir um contraste acima de 2 ou um brilho fora de -1 a 1: `E_VALIDATION`.
+- Aplicar uma predefinição, um filtro ou um desfoque a um item de áudio: `E_TYPE_MISMATCH`.
+- Um raio de desfoque acima de 100 ou um amount de filtro fora de 0 a 1: `E_VALIDATION`.
+- Uma duração de predefinição maior que o item: o comando é recusado.
+
+## Próximos passos
+
+- [Anime com quadros-chave](/docs/guide/keyframes)
+- [Transições](/docs/guide/transitions)

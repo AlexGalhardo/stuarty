@@ -1,0 +1,84 @@
+---
+title: "Edição de áudio"
+description: "Adicione música e som, defina volume e esmaecimentos, silencie um clipe e mantenha a mixagem sem distorção."
+---
+
+## O que você vai aprender
+
+- como posicionar áudio em uma faixa de áudio;
+- como definir volume, esmaecimentos e silenciar;
+- como baixar a música sob a fala (ducking) e marcar as batidas de uma canção;
+- como a exportação mixa o áudio e do que a verificação (lint) avisa.
+
+## A ideia
+
+O som vem de dois lugares: o áudio de um clipe de vídeo e os **itens de áudio** em uma faixa de áudio. Um item de áudio aponta para uma mídia de áudio, ou para o áudio de uma mídia de vídeo, e toca a partir de `source_in` por uma duração. A exportação mixa todos os itens audíveis em uma única faixa estéreo de 48 kHz.
+
+Cada clipe ou item de áudio tem um `volume` (ganho linear de 0 a 4), um `fade_in`, um `fade_out`, e um clipe pode ser silenciado com `audio_muted`. O volume também pode ser animado com um [quadro-chave](/docs/guide/keyframes) na propriedade `volume`. O projeto tem um `loudness_target` em LUFS (de -30 a -5) que a exportação tenta atingir.
+
+Ainda não há um painel de áudio no inspetor: use a paleta de comandos (`Ctrl+K`, `Cmd+K` no macOS), a CLI ou um agente.
+
+## Início rápido
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b audio.add track_id=trk_m1n2p3q4r5 \
+  asset_id=ast_4h6j8k2m3n start=0s
+vukem-video edit --project prj_7k2m9x4q1b item.set_audio item_id=itm_s6t7v8w9x0 \
+  volume:=0.6 fade_in=1s fade_out=2s
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` com as operações:
+
+```json
+{ "op": "audio.add", "args": {
+  "track_id": "trk_m1n2p3q4r5", "asset_id": "ast_4h6j8k2m3n", "start": "0s"
+} }
+{ "op": "item.set_audio", "args": { "item_id": "itm_s6t7v8w9x0", "volume": 0.6, "fade_out": "2s" } }
+```
+
+</Tab>
+</Tabs>
+
+A duração padrão de um item de áudio é o restante da mídia a partir de `source_in`. Os dois esmaecimentos juntos não podem ser mais longos que o item. Um volume 1, esmaecimentos de `0s` e `audio_muted` falso apagam o valor armazenado.
+
+## Baixe a música sob a fala
+
+O `audio.duck` baixa um item de música enquanto há fala. Ele grava [quadros-chave de volume](/docs/guide/keyframes) na música: o volume cai em `gain_db` (-12 por padrão, de -40 a -1) ao longo de `attack` (0,2 s) antes de cada trecho de fala e volta ao longo de `release` (0,5 s) depois dele. Dois trechos de fala mais próximos que as rampas mantêm o volume baixo no intervalo. O `speech_item_ids` indica os clipes ou itens de áudio que carregam a fala (de 1 a 20).
+
+A fala é encontrada pela análise desses itens, que o serviço lê por você; nunca envie `resolved`. O item de música ainda não pode ter quadros-chave de volume. Para desfazer o ducking, apague-os com `keyframe.clear` em `volume`.
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b audio.duck item_id=itm_s6t7v8w9x0   speech_item_ids:=[itm_m1n2p3q4r5] gain_db:=-14
+```
+
+Se o item de fala ainda não tem análise, a edição falha com `E_INVALID_STATE` e a dica de esperar até a mídia ficar pronta.
+
+## Marque as batidas de uma canção
+
+O `audio.mark_beats` grava um marcador em um item de música a cada batida da sua parte visível, para você posicionar cortes e transições na música. O `every` marca uma a cada n batidas (de 1 a 64, padrão 1), o `label` dá nome aos marcadores (até 60 caracteres) e o `replace` (verdadeiro por padrão) substitui os marcadores que o item já tem. A grade de batidas vem da análise da mídia. Os marcadores não mudam nem a imagem nem o som.
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b audio.mark_beats item_id=itm_s6t7v8w9x0 every:=2 label=beat
+```
+
+Uma mídia sem áudio não tem grade de batidas e a edição falha com `E_INVALID_STATE`. As mesmas duas operações estão disponíveis a um agente MCP por meio de `edit`. O editor ainda não tem uma seção para ducking ou marcadores de batida.
+
+Execute `vukem-video lint` antes de exportar. Estas regras dizem respeito ao som: `L_AUDIO_OVERLAP` (itens de áudio que se sobrepõem), `L_AUDIO_CLIP` (a mixagem chega à distorção) e `L_SILENT_EXPORT` (a exportação ficaria sem som).
+
+## Erros comuns
+
+- Adicionar áudio a uma faixa visual: `E_TYPE_MISMATCH`.
+- Definir `audio_muted` em um item de áudio. Ele vale para clipes; defina `volume` como 0 em um item de áudio.
+- Um volume acima de 4: `E_VALIDATION`.
+- Aplicar ducking a um item de música que já tem quadros-chave de volume: a edição é recusada. Apague-os primeiro.
+
+## Próximos passos
+
+- [Remova o silêncio](/docs/guide/silence-removal)
+- [Anime com quadros-chave](/docs/guide/keyframes)

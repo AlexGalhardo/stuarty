@@ -1,0 +1,60 @@
+---
+title: "Propriedades do clipe"
+description: "Renomeie um item, mova-o e escale-o no quadro, corte e ajuste um clipe e mude a sua velocidade."
+---
+
+## O que você vai aprender
+
+- quais propriedades um item tem e onde mudá-las;
+- como posicionar, escalar, girar e esmaecer um item;
+- como cortar um clipe, escolher como ele se ajusta ao quadro e mudar a sua velocidade.
+
+## A ideia
+
+Selecione um item na linha do tempo e o inspetor mostra o seu **Nome**, a sua **Temporização** (início, fim, duração e o ponto de entrada dentro da origem) e a sua **Transformação**: a posição `x` e `y` (o centro do item, em pixels), `scale`, `rotation` em graus no sentido horário e `opacity`. Um campo que tem [quadros-chave](/docs/guide/keyframes) é marcado como animado e não pode receber um único valor estático até você apagá-los.
+
+Duas propriedades pertencem apenas aos clipes de vídeo. O **Enquadramento** diz como a imagem se ajusta ao quadro (`cover`, `contain` ou `none`) e quanto de cada lado é cortado, como uma fração de 0 a 1. A **Velocidade** executa o mesmo trecho da origem mais rápido ou mais devagar, de 0,25x a 4x, e reescala a duração, os esmaecimentos, as transições e os quadros-chave pela mesma razão.
+
+O inspetor edita o nome, a temporização e a transformação. O enquadramento e a velocidade ainda não têm uma seção no inspetor: use a paleta de comandos (`Ctrl+K`, `Cmd+K` no macOS), a CLI ou um agente.
+
+## Início rápido
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b item.rename item_id=itm_m1n2p3q4r5 name="Opening shot"
+vukem-video edit --project prj_7k2m9x4q1b item.set_transform item_id=itm_m1n2p3q4r5 scale:=1.2 \
+  opacity:=0.9
+vukem-video edit --project prj_7k2m9x4q1b clip.set_speed item_id=itm_m1n2p3q4r5 speed=1.5x \
+  ripple=track
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` com `{"project_id": "prj_7k2m9x4q1b", "operations": [...]}`, em que uma operação é uma destas:
+
+```json
+{ "op": "item.set_transform", "args": { "item_id": "itm_m1n2p3q4r5", "scale": 1.2, "x": 540 } }
+{ "op": "clip.set_framing", "args": { "item_id": "itm_m1n2p3q4r5", "fit": "contain" } }
+{ "op": "clip.set_speed", "args": {
+  "item_id": "itm_m1n2p3q4r5", "speed": "1.5x", "ripple": "track"
+} }
+```
+
+</Tab>
+</Tabs>
+
+O `item.set_transform` arredonda para 3 casas decimais, e `scale` 1, `rotation` 0 e `opacity` 1 apagam o valor armazenado. Com `ripple` em `track`, o `clip.set_speed` move os itens seguintes da faixa pela diferença de comprimento. As legendas ligadas ao clipe são listadas no resultado, não alteradas.
+
+## Erros comuns
+
+- Definir `x`, `scale` ou outra propriedade que tem quadros-chave: o comando é recusado. Use `keyframe.set`, ou antes `keyframe.clear`.
+- Um corte cuja soma de esquerda e direita, ou de cima e baixo, é 1 ou mais: `E_VALIDATION`.
+- Definir uma velocidade fora de 1/4 a 4: `E_VALIDATION`.
+
+## Próximos passos
+
+- [Anime com quadros-chave](/docs/guide/keyframes)
+- [Efeitos e cor](/docs/guide/effects-and-color)
