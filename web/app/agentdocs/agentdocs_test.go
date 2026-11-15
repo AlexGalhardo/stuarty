@@ -2,6 +2,7 @@ package agentdocs_test
 
 import (
 	"bytes"
+	"context"
 	"regexp"
 	"slices"
 	"strings"
@@ -279,5 +280,87 @@ func checkOperations(t *testing.T, skill string) {
 		if !want[name] {
 			t.Errorf("SKILL.md lists %s, which the registry does not have", name)
 		}
+	}
+}
+
+// fixedResolver hands every command the Service of a test environment.
+type fixedResolver struct{ svc service.Service }
+
+func (r fixedResolver) Resolve(context.Context, cli.Target) (*cli.Connection, error) {
+	return &cli.Connection{Service: r.svc, Workspace: "/ws"}, nil
+}
+
+// splitCommand splits a command line on spaces, keeping a double-quoted part
+// together without its quotes.
+func splitCommand(line string) []string {
+	var (
+		args   []string
+		cur    strings.Builder
+		quote  bool
+		quoted bool
+	)
+
+	for _, r := range line {
+		switch {
+		case r == '"':
+			quote, quoted = !quote, true
+		case r == ' ' && !quote:
+			if quoted {
+				args, cur, quoted = append(args, cur.String()), strings.Builder{}, false
+			}
+		default:
+			cur.WriteRune(r)
+
+			quoted = true
+		}
+	}
+
+	if quoted {
+		args = append(args, cur.String())
+	}
+
+	return args
+}
+
+// TestRecipesRun is SDD-003 section 8.2 item 4: every recipe of the skill is run
+// as written, command by command, through the CLI over a real Service, and ends
+// with the exit code it declares. A command that stops working breaks the build.
+func TestRecipesRun(t *testing.T) {
+	recipes, err := agentdocs.Recipes()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(recipes) < 3 {
+		t.Fatalf("%d recipes, want at least 3", len(recipes))
+	}
+
+	for _, r := range recipes {
+		t.Run(r.Title, func(t *testing.T) {
+			env := testenv.New(t, testenv.Options{})
+			env.WriteFile(t, "clip.mp4", strings.Repeat("v", 64))
+
+			for i, step := range r.Steps {
+				line := step.Cmd
+				if step.Run != "" {
+					line = step.Run
+				}
+
+				args := splitCommand(line)
+
+				var stdout, stderr bytes.Buffer
+
+				rt := &cli.Runtime{
+					Stdin: strings.NewReader(step.Stdin), Stdout: &stdout, Stderr: &stderr,
+					Getenv: func(string) string { return "" }, Getwd: func() (string, error) { return env.Files, nil },
+					Resolver: fixedResolver{svc: env.Service},
+				}
+
+				if code := rt.Execute(t.Context(), args[0], args[1:]); code != step.Exit {
+					t.Fatalf("step %d (%s): exit %d, want %d\n%s%s",
+						i, line, code, step.Exit, stdout.String(), stderr.String())
+				}
+			}
+		})
 	}
 }

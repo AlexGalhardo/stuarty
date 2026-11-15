@@ -1,0 +1,12 @@
+{
+	"title": "Import, cut, caption and export",
+	"steps": [
+		{"cmd": "project:create --name \"Teaser\" --id prj_7k2m9x4q1b"},
+		{"cmd": "media:import clip.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d"},
+		{"cmd": "edit --project prj_7k2m9x4q1b --ops -", "stdin": "[{\"op\":\"track.add\",\"args\":{\"kind\":\"visual\",\"name\":\"Video\",\"id\":\"trk_f6g7h8j9k0\"}},\n {\"op\":\"track.add\",\"args\":{\"kind\":\"visual\",\"name\":\"Captions\",\"id\":\"trk_a1b2c3d4e5\"}},\n {\"op\":\"clip.add\",\"args\":{\"track_id\":\"trk_f6g7h8j9k0\",\"asset_id\":\"ast_3c5v8n2w6d\",\"start\":\"0s\",\"duration\":\"2s\",\"id\":\"itm_m1n2p3q4r5\"}}]"},
+		{"cmd": "edit --project prj_7k2m9x4q1b --ops -", "stdin": "[{\"op\":\"item.split\",\"args\":{\"item_id\":\"itm_m1n2p3q4r5\",\"at\":\"1s\",\"new_id\":\"itm_c3d4e5f6g7\"}},\n {\"op\":\"item.delete\",\"args\":{\"item_ids\":[\"itm_c3d4e5f6g7\"]}}]"},
+		{"cmd": "edit --project prj_7k2m9x4q1b --ops -", "stdin": "[{\"op\":\"caption.add\",\"args\":{\"track_id\":\"trk_a1b2c3d4e5\",\"start\":\"0.1s\",\"linked_item\":\"itm_m1n2p3q4r5\",\"id\":\"itm_s6t7v8w9x0\",\"words\":[{\"text\":\"Meet\",\"start\":\"0s\",\"duration\":\"0.3s\"},{\"text\":\"us.\",\"start\":\"0.3s\",\"duration\":\"0.3s\"}]}}]"},
+		{"cmd": "lint --project prj_7k2m9x4q1b"},
+		{"cmd": "export --project prj_7k2m9x4q1b"}
+	]
+}
