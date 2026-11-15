@@ -474,6 +474,7 @@
         "unset": "Não definido",
         "range": "De {min} a {max}",
         "remove_value": "Remover valor {n}",
+        "remove_field": "Remover (enviar null)",
         "add_value": "Adicionar",
         "variant": "Opção {n}",
         "no_arguments": "Este comando não tem argumentos."

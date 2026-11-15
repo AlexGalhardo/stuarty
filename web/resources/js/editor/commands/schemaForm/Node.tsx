@@ -12,7 +12,7 @@ import { useT } from "@/lib/i18n";
 import type { JsonValue } from "../../api/types";
 import TimeField from "../../ui/TimeField";
 import { localizeDecimalInput, normalizeTimeInput } from "../units";
-import { type Construct, classify, type Schema } from "./classify";
+import { type Construct, classify, isNullable, type Schema } from "./classify";
 import { useForm } from "./context";
 import type { Draft } from "./draft";
 
@@ -25,6 +25,8 @@ export interface NodeProps {
 	required: boolean;
 	onChange(draft: Draft): void;
 }
+
+const NULL_LITERAL = JSON.stringify(null);
 
 const SELECT =
 	"h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive dark:bg-input/30";
@@ -497,6 +499,48 @@ function VariantsNode({
 // One renderer per construct of the table of SDD-012 section 9.2. An `inline`
 // object (a row of a list, a chosen variant) has no group of its own.
 export function FormNode(props: NodeProps & { inline?: boolean }): ReactNode {
+	const t = useT();
+	const { prefix } = useForm();
+	if (isNullable(props.schema)) {
+		const removed = props.draft === null;
+		const id = `${prefix}${props.path}-remove`;
+		return (
+			<div className="flex flex-col gap-1">
+				{removed ? (
+					<Row
+						id={id}
+						name={props.name}
+						required={props.required}
+						schema={props.schema}
+						path={props.path}
+					>
+						<p className="font-mono text-xs text-muted-foreground">
+							{NULL_LITERAL}
+						</p>
+					</Row>
+				) : (
+					<FormControl {...props} />
+				)}
+				<div className="flex items-center gap-2 pl-[140px]">
+					<Checkbox
+						id={id}
+						data-path={`${props.path}.remove`}
+						checked={removed}
+						onCheckedChange={(checked) =>
+							props.onChange(checked === true ? null : undefined)
+						}
+					/>
+					<Label htmlFor={id} className="text-xs">
+						{t("ui.editor.palette.remove_field")}
+					</Label>
+				</div>
+			</div>
+		);
+	}
+	return <FormControl {...props} />;
+}
+
+function FormControl(props: NodeProps & { inline?: boolean }): ReactNode {
 	const { inline, ...node } = props;
 	const construct = classify(node.schema, node.name);
 	switch (construct.kind) {
