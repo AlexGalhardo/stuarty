@@ -4,8 +4,8 @@ import { useLocale, useT } from "@/lib/i18n";
 import type { ApiError } from "../../api/errors";
 import type { CommandDetail } from "../../api/types";
 import { useDocumentState } from "../../state/EditorContext";
+import { readTimeUnit } from "../../state/prefs";
 import type { FormSlot, FormSlotProps } from "../palette/formSlot";
-import { DEFAULT_TIME_UNIT } from "../units";
 import { classify, type IdKind, type Schema } from "./classify";
 import { FormProvider, type IdOption } from "./context";
 import { type Draft, finalize, toDraft } from "./draft";
@@ -83,7 +83,7 @@ function Body({
 
 	const change = (next: Draft): void => {
 		setDraft(next);
-		const result = finalize(schema, next, { unit: DEFAULT_TIME_UNIT, locale });
+		const result = finalize(schema, next, { unit: readTimeUnit(), locale });
 		onChange(result.ok ? result.value : null);
 	};
 

@@ -12,7 +12,6 @@ import {
 	withWordField,
 } from "../../commands/builders";
 import {
-	DEFAULT_TIME_UNIT,
 	formatTime,
 	fpsOf,
 	localizeDecimalInput,
@@ -21,6 +20,7 @@ import {
 } from "../../commands/units";
 import { useActions, useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
+import { readTimeUnit } from "../../state/prefs";
 import type { CommitResult } from "../fields/commitField";
 import { FieldMessage } from "../fields/FieldFrame";
 import TextAreaField from "../fields/TextAreaField";
@@ -109,7 +109,7 @@ export default function CaptionWords({
 		async (draft: string): Promise<CommitResult> => {
 			const time = normalizeTimeInput(
 				localizeDecimalInput(draft, locale),
-				DEFAULT_TIME_UNIT,
+				readTimeUnit(),
 			);
 			if (!time.ok) {
 				return { ok: false, error: { code: "E_INVALID_TIME", message: "" } };
