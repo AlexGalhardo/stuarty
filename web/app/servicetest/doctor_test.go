@@ -243,7 +243,10 @@ func TestDoctorVerifyMismatch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	m.waitInstall(person)
+	// A failed install leaves one digest and would read as a doctor bug; say why.
+	if st := m.waitInstall(person); st.State != "idle" {
+		t.Fatalf("install ended %q: %v", st.State, st.Error)
+	}
 
 	digests := func() (ok, bad int) {
 		res, err := m.svc.Doctor(person, service.DoctorRequest{Verify: true})
