@@ -101,3 +101,41 @@ func TestHelperDownloadRefusesWhatIsNotListed(t *testing.T) {
 		}
 	}
 }
+
+func TestDesktopUpdateReachesItsFeedHostOverHTTPSOnly(t *testing.T) {
+	t.Parallel()
+
+	if _, err := outbound.DesktopUpdate(
+		"http://127.0.0.1:1/feed.json",
+		time.Second,
+		nil,
+	); !errors.Is(
+		err,
+		outbound.ErrScheme,
+	) {
+		t.Errorf("an http feed URL: got %v, want ErrScheme", err)
+	}
+
+	client, err := outbound.DesktopUpdate("https://feed.example.test/feed.json", time.Second, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "https://other.example.test/x", http.NoBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res, err := client.Do(
+		req,
+	); !errors.Is(
+		err,
+		outbound.ErrHost,
+	) {
+		if res != nil {
+			_ = res.Body.Close()
+		}
+
+		t.Errorf("another host: got %v, want ErrHost", err)
+	}
+}

@@ -23,6 +23,7 @@ type Purpose string
 const (
 	PurposeHelperDownload Purpose = "helper_download"
 	PurposeTranscribeAPI  Purpose = "transcribe_api"
+	PurposeDesktopUpdate  Purpose = "desktop_update"
 )
 
 // Errors of the purposes below.
@@ -82,6 +83,38 @@ func TranscribeAPI(endpoint string, timeout time.Duration, test *TestOptions) (*
 		Timeout: timeout,
 		Transport: &hostCheckedTransport{
 			rt: transport, allowed: func(r *url.URL) error { return checkHost(r, hosts, true) },
+		},
+		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+	}, nil
+}
+
+// DesktopUpdate is the client of the desktop update check (purpose desktop_update, SDD-009 section 10.5).
+// It reaches the host of the feed URL and no other, over https only (no loopback http exception), verifies
+// TLS, uses no proxy and follows no redirect. Only the desktop update client builds it, and only on a
+// request of the person or with the setting on.
+func DesktopUpdate(feedURL string, timeout time.Duration, test *TestOptions) (*http.Client, error) {
+	u, err := url.Parse(feedURL)
+	if err != nil || u.Host == "" || u.Hostname() == "" {
+		return nil, fmt.Errorf("%w: %q", ErrInvalidURL, "unreadable")
+	}
+
+	if err := checkHost(u, []string{u.Hostname()}, false); err != nil {
+		return nil, err
+	}
+
+	hosts := []string{u.Hostname()}
+	dialer := &net.Dialer{
+		Timeout: timeout,
+		Control: func(_, address string, _ syscall.RawConn) error { return record(PurposeDesktopUpdate, address) },
+	}
+	transport := &http.Transport{
+		Proxy: nil, DialContext: dialer.DialContext, DisableKeepAlives: true, TLSClientConfig: testTLS(test),
+	}
+
+	return &http.Client{
+		Timeout: timeout,
+		Transport: &hostCheckedTransport{
+			rt: transport, allowed: func(r *url.URL) error { return checkHost(r, hosts, false) },
 		},
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 	}, nil
