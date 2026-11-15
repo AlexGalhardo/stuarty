@@ -65,6 +65,11 @@ func (p *whisperProvider) current() *transcribe.Whisper {
 		switch e.Kind {
 		case transcribe.KindHelper:
 			w.Helper, w.HelperItem, w.HelperVersion = path, item, e.Version
+
+			// The shared libraries of the helper sit beside it.
+			if path != "" && runtime.GOOS == "linux" {
+				w.Env = map[string]string{"LD_LIBRARY_PATH": filepath.Dir(path)}
+			}
 		case transcribe.KindModel:
 			w.ModelPath, w.ModelItem, w.ModelSHA256 = path, item, e.SHA256
 		}
