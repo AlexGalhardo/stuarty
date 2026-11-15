@@ -41,7 +41,7 @@
   "docs/pt-br/guide/text-and-captions.mdx": "2026-11-14T21:46:17-03:00",
   "docs/pt-br/guide/timeline.mdx": "2026-11-14T21:46:17-03:00",
   "docs/pt-br/guide/undo-and-history.mdx": "2026-11-14T21:46:17-03:00",
-  "generated/reference/cli.mdx": "2026-11-14T23:08:50-03:00",
+  "generated/reference/cli.mdx": "2026-11-15T01:05:59-03:00",
   "generated/reference/commands.mdx": "2026-11-14T22:13:13-03:00",
   "generated/reference/commands/asset.remove.mdx": "2026-11-15T00:35:53-03:00",
   "generated/reference/commands/audio.add.mdx": "2026-11-15T00:35:53-03:00",
@@ -93,6 +93,6 @@
   "generated/reference/configuration.mdx": "2026-11-14T21:46:12-03:00",
   "generated/reference/error-codes.mdx": "2026-11-14T21:46:12-03:00",
   "generated/reference/glossary.mdx": "2026-11-14T21:46:17-03:00",
-  "generated/reference/http-api.mdx": "2026-11-14T23:08:50-03:00",
-  "generated/reference/timeline-schema.mdx": "2026-11-15T00:39:26-03:00"
+  "generated/reference/http-api.mdx": "2026-11-15T01:17:41-03:00",
+  "generated/reference/timeline-schema.mdx": "2026-11-15T00:40:53-03:00"
 }
