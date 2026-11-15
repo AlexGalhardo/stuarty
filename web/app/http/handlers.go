@@ -252,6 +252,8 @@ func (h *apiHandler) registerAll() {
 	register(h, "system.tools.install", h.toolsInstall)
 	register(h, "system.tools", h.toolsStatus)
 	register(h, "templates.import", h.templateImport)
+	register(h, "projects.bundle.export", h.projectBundleExport)
+	register(h, "projects.bundle.import", h.projectBundleImport)
 	register(h, "templates.export", h.templateExport)
 	register(h, "templates.file", h.templateFile)
 	register(h, "media.proxy", func(c *web.Ctx, in mediaFileIn) (noIn, error) {

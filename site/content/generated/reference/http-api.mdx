@@ -184,6 +184,23 @@ Download a rasterized text or shape
 
 Responses: `200` OK, `401`, `422`, `default`.
 
+### `POST /projects/{id}/bundle`
+
+Export a project as a .vvbundle
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `id` | path | yes | `string` |
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `include_log` | `boolean or null` | no | false leaves the history out, to share a project without it. Default true. |
+| `wait_ms` | `integer` | no | 0 to 25000: hold the call until the job is final. |
+
+Responses: `202` Accepted, `401`, `422`, `default`.
+
 ### `POST /projects/{id}/edit`
 
 Apply a batch of operations
@@ -519,6 +536,20 @@ Request body:
 | `dry_run` | `boolean` | no |  |
 
 Responses: `200` OK, `401`, `422`, `default`.
+
+### `POST /projects/import`
+
+Import a .vvbundle as a project
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `as_new` | `boolean` | no | true makes a new project id and leaves the history out; false keeps the id. |
+| `dry_run` | `boolean` | no |  |
+| `path` | `string` | yes | An absolute path to a .vvbundle on the machine that runs the server. |
+
+Responses: `201` Created, `401`, `422`, `default`.
 
 ## system
 

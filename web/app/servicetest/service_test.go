@@ -86,6 +86,14 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.TemplateExport(ctx, service.TemplateRef{TemplateID: "tpl_0000000001"})
 			return err
 		},
+		"ProjectBundleExport": func() error {
+			_, err := e.svc.ProjectBundleExport(ctx, service.ProjectBundleExportRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectBundleImport": func() error {
+			_, err := e.svc.ProjectBundleImport(ctx, service.ProjectBundleImportRequest{Path: "/x"})
+			return err
+		},
 		"TemplateImport": func() error {
 			_, err := e.svc.TemplateImport(ctx, service.TemplateImportRequest{Path: "/x"})
 			return err

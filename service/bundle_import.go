@@ -82,7 +82,6 @@ type bundleParts struct {
 }
 
 // ProjectBundleImport reads a bundle, checks all of it and then stores the project in one transaction.
-// It is not on the Service interface until SDD-000 section 1 routes the operation (P3-SRV-005).
 func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRequest) (*ProjectCreateResult, error) {
 	c, err := authorizeScope(ctx, ScopeEdit, "")
 	if err != nil {
