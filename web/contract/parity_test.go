@@ -84,12 +84,11 @@ var parity = []row{
 	// exception E-3).
 	{method: "ProjectBundleExport", command: "bundle:export", route: "POST /projects/{}/bundle"},
 	{method: "ProjectBundleImport", command: "bundle:import", route: "POST /projects/import"},
-	// The font import and the brand kit have no MCP tool (SDD-000 section 1). Until
-	// the CLI commands font:import, brand:show and brand:set exist, only the HTTP
-	// route reaches them.
-	{method: "FontImport", route: "POST /fonts", httpOnly: true},
-	{method: "BrandKitGet", route: "GET /brand-kit", httpOnly: true},
-	{method: "BrandKitSet", route: "PUT /brand-kit", httpOnly: true},
+	// The font import and the brand kit have no MCP tool (SDD-000 section 1,
+	// exception E-3).
+	{method: "FontImport", command: "font:import", route: "POST /fonts"},
+	{method: "BrandKitGet", command: "brand:show", route: "GET /brand-kit"},
+	{method: "BrandKitSet", command: "brand:set", route: "PUT /brand-kit"},
 }
 
 // notOperations are Service methods that are not operations an agent calls

@@ -146,6 +146,12 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.Doctor)
 	case "FontList":
 		return invoke(ctx, s, svc.FontList)
+	case "FontImport":
+		return invoke(ctx, s, svc.FontImport)
+	case "BrandKitGet":
+		return invoke(ctx, s, svc.BrandKitGet)
+	case "BrandKitSet":
+		return invoke(ctx, s, svc.BrandKitSet)
 	case "AuditList":
 		return invoke(ctx, s, svc.AuditList)
 	case "ToolsInstall":
@@ -522,6 +528,8 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		IncludeLog  *bool           `json:"include_log"`
 		AsNew       bool            `json:"as_new"`
 		DryRun      bool            `json:"dry_run"`
+		BrandColors []string        `json:"brand_colors"`
+		BrandFonts  []string        `json:"brand_fonts"`
 	}
 
 	if len(s.Args) > 0 {
@@ -651,6 +659,12 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		return "doctor", []string{"--full"}, "", nil
 	case "FontList":
 		return "fonts", nil, "", nil
+	case "FontImport":
+		return "font:import", []string{a.Path}, "", nil
+	case "BrandKitGet":
+		return "brand:show", nil, "", nil
+	case "BrandKitSet":
+		return "brand:set", []string{"--kit", "-"}, string(s.Args), nil
 	case "AuditList":
 		return "audit", flag("project", a.ProjectID), "", nil
 	case "ToolsInstall":
@@ -658,6 +672,14 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 	case "TemplateInstantiate":
 		argv = append([]string{a.TemplateID}, flag("name", a.Name)...)
 		argv = append(argv, flag("id", a.ID)...)
+
+		for _, c := range a.BrandColors {
+			argv = append(argv, "--brand-color", c)
+		}
+
+		for _, f := range a.BrandFonts {
+			argv = append(argv, "--brand-font", f)
+		}
 
 		if len(a.Fill) == 0 {
 			return "template:new", argv, "", nil
