@@ -12,14 +12,17 @@ O `vukem-video mcp` serve MCP pela entrada e saída padrão; as mesmas ferrament
 | Ferramenta | Faz |
 | --- | --- |
 | `project_list`, `project_create`, `project_get` | encontrar, criar e ler projetos |
+| `project_trash` | mover um projeto para a lixeira, ou restaurá-lo com `restore: true`; nada é apagado de vez |
 | `edit` | aplicar um lote de operações |
 | `command_help` | listar as operações, ou descrever uma |
 | `history` | listar os passos, ou `undo` e `redo` dos seus próprios |
 | `media_import`, `media_inspect` | importar arquivos; descrever uma mídia ou listar todas |
+| `view` | ver o resultado: `mode` `frame` devolve uma imagem em `at`, `mode` `sheet` devolve uma grade de quadros a partir de `times`, ou de `from`, `until` e `count`; `asset_id` vê uma mídia de origem |
 | `lint` | conferir o projeto contra as regras |
-| `job_start`, `job_get` | iniciar uma exportação; ler uma tarefa, ou listar as tarefas de um projeto |
+| `job_start`, `job_get`, `job_cancel` | iniciar uma exportação ou uma transcrição; ler uma tarefa, ou listar as tarefas de um projeto; cancelar uma tarefa na fila ou em execução |
+| `template` | `action` `list`, `save`, `new`, `export` ou `import`: modelos são projetos com campos nomeados |
 
-O `view` (um quadro ou uma folha de contato) chega quando o serviço puder renderizar quadros.
+O servidor lista 15 ferramentas, nesta ordem. O `view` renderiza pelo caminho da exportação, então o quadro é o que a exportação produz, e custa tokens de imagem: leia `project_get` e `lint` antes, e reduza `max_tokens` quando uma imagem pequena bastar. O `template` com `action` `new` recebe `fill`, um mapa do nome do campo para `{asset_id}`, `{text}` ou `{words}`; um membro que a ação não usa é recusado.
 
 ## Como é um resultado
 
