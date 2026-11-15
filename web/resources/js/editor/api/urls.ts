@@ -1,0 +1,32 @@
+// Binary URL builders: strings only, no call (SDD-012 section 4.2). All are
+// served with HTTP Range and content-hash caching.
+const BASE = "/api/v1";
+
+const project = (id: string): string =>
+	`${BASE}/projects/${encodeURIComponent(id)}`;
+
+// A time argument is a string with a unit (rule T8): the frame number and "f".
+export function frameUrl(
+	projectId: string,
+	frame: number,
+	width: number,
+	revision: number,
+): string {
+	return `${project(projectId)}/frame?at=${frame}f&width=${width}&rev=${revision}`;
+}
+
+export function thumbnailUrl(
+	projectId: string,
+	assetId: string,
+	width: 160 | 320 | 640,
+): string {
+	return `${project(projectId)}/media/${encodeURIComponent(assetId)}/thumbnail?width=${width}`;
+}
+
+export function proxyUrl(projectId: string, assetId: string): string {
+	return `${project(projectId)}/media/${encodeURIComponent(assetId)}/proxy`;
+}
+
+export function exportFileUrl(jobId: string): string {
+	return `${BASE}/jobs/${encodeURIComponent(jobId)}/file`;
+}

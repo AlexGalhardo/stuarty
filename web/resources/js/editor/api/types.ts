@@ -189,3 +189,102 @@ export interface ApiErrorBody {
 	details?: { [key: string]: JsonValue };
 	request_id?: string;
 }
+
+// Media, jobs and export (SDD-003 sections 2.6 and 2.8).
+export type AssetState = "pending" | "ingesting" | "ready" | "failed";
+
+export interface MediaEntry {
+	asset_id: string;
+	name: string;
+	kind: "video" | "audio" | "image";
+	state: AssetState;
+	progress: number;
+	duration_frames: number | null;
+	duration_seconds: number | null;
+	width?: number;
+	height?: number;
+	has_audio: boolean;
+	trashed: boolean;
+	strip?: {
+		tile_w: number;
+		tile_h: number;
+		columns: number;
+		count: number;
+		interval_ms: number;
+	};
+	error?: ApiErrorBody;
+}
+
+export interface MediaListResult {
+	project_id: string;
+	assets: MediaEntry[];
+	next_cursor: string | null;
+	text: string;
+}
+
+export interface ImportedAsset {
+	asset_id?: string;
+	name: string;
+	kind?: string;
+	state: AssetState;
+	progress: number;
+	job_id?: string;
+	deduplicated: boolean;
+	error?: ApiErrorBody;
+}
+
+export interface MediaImportResult {
+	project_id: string;
+	revision: number;
+	assets: ImportedAsset[];
+	failed: number;
+	text: string;
+}
+
+export type JobState =
+	| "queued"
+	| "running"
+	| "succeeded"
+	| "failed"
+	| "canceled";
+
+export interface ExportResult {
+	revision: number;
+	path?: string;
+	download_url: string;
+	bytes: number;
+	sha256?: string;
+	duration: TimeValue;
+	width: number;
+	height: number;
+}
+
+export interface Job {
+	job_id: string;
+	kind: string;
+	project_id: string | null;
+	state: JobState;
+	progress: number;
+	message?: string;
+	result?: { export?: ExportResult };
+	error?: ApiErrorBody;
+	lint?: { errors: number; warnings: number };
+	actor: string;
+	created_at: string;
+	text: string;
+}
+
+export interface JobListResult {
+	project_id: string;
+	jobs: Job[];
+	next_cursor: string | null;
+	text: string;
+}
+
+export interface LintResult {
+	project_id: string;
+	revision: number;
+	findings: LintFinding[];
+	text: string;
+	[key: string]: unknown;
+}
