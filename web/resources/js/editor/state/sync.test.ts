@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import type { Change } from "../api/types";
-import { fakeId, flush, seeded } from "../fixtures/fixtureServer";
+import { fakeId, flush, fullItem, seeded } from "../fixtures/fixtureServer";
 import { type Harness, itemMoved, startHarness } from "../fixtures/harness";
 
 // SDD-006 section 11 check 14: the reconciliation harness. In every case the
@@ -175,14 +175,14 @@ describe("the mechanical patch against the server", () => {
 				diff.push({
 					kind: "item.added",
 					id,
-					object: {
+					object: fullItem({
 						id,
 						type: "text",
 						track,
 						start: created,
 						duration: 30,
 						text: "x",
-					},
+					}),
 				});
 			} else if (pick < 0.85 && ids.length > 1) {
 				const id = ids[Math.floor(random() * ids.length)];

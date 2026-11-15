@@ -64,6 +64,29 @@ export interface DocumentSpec {
 	name?: string;
 }
 
+// Every field an item has once the core has filled its defaults: what a fetched
+// document holds and what the object of an item.added change carries since the
+// diff is written in the form of a fetched document.
+export const ITEM_DEFAULTS = {
+	scale: 1,
+	opacity: 1,
+	filter: "none",
+	filter_amount: 1,
+	speed: { num: 1, den: 1 },
+	volume: 1,
+	fit: "cover",
+	contrast: 1,
+	saturation: 1,
+	fill: "#FFFFFF",
+	stroke_color: "#000000",
+} as const;
+
+export function fullItem<T extends { id: string }>(
+	item: T,
+): T & typeof ITEM_DEFAULTS {
+	return { ...ITEM_DEFAULTS, ...item };
+}
+
 // A document that matches SDD-001: caption tracks and visual tracks with
 // clips and text, and an audio track.
 export function makeDocument(spec: DocumentSpec = {}): ProjectDocument {
@@ -101,7 +124,7 @@ export function makeDocument(spec: DocumentSpec = {}): ProjectDocument {
 			itemNo++;
 			const id = fakeId("itm", itemNo);
 			const type = audio ? "audio" : t % 3 === 1 ? "text" : "clip";
-			items[id] = {
+			items[id] = fullItem({
 				id,
 				type,
 				track: trackId,
@@ -111,14 +134,20 @@ export function makeDocument(spec: DocumentSpec = {}): ProjectDocument {
 				...(type === "clip" || type === "audio"
 					? { asset: fakeId("ast", 1), source_in: 0 }
 					: {}),
-			} as ProjectDocument["items"][string];
+			}) as ProjectDocument["items"][string];
 		}
 	}
 	return {
 		schema_version: 1,
 		id: spec.projectId ?? "prj_7k2m9x4q1b",
 		name: spec.name ?? "Launch teaser",
-		settings: { width: 1080, height: 1920, fps: { num: 30, den: 1 } },
+		settings: {
+			width: 1080,
+			height: 1920,
+			fps: { num: 30, den: 1 },
+			background: "#000000",
+			loudness_target: -14,
+		},
 		assets,
 		tracks,
 		items,

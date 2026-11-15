@@ -8,15 +8,6 @@ test.describe("diff-safety-net", () => {
 		page,
 		request,
 	}) => {
-		// Open defect of the core: the object of an item.added change carries only
-		// the fields that were set, while the fetched document has every default
-		// (scale, opacity, filter, speed, volume, fit, ...), so the patched
-		// document differs for every added item. Un-fixme when the event is whole.
-		test.fixme(
-			true,
-			"item.added diff omits the defaults the fetched document has",
-		);
-
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
 		await page.goto(`/editor/${seeded.id}?debug=1&verify=1`);
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);
