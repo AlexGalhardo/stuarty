@@ -188,6 +188,10 @@ func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
+	if h.blockedAddress(w, r) {
+		return
+	}
+
 	deny := func() {
 		h.unauthorized(w, r, &service.Error{
 			Code: service.CodeUnauthorized, Message: "the request carries no valid credentials.",

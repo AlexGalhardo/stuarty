@@ -36,6 +36,9 @@ type Endpoint struct {
 	// the byte-serving routes that the editor calls many times a second (SDD-007
 	// section 4.4).
 	Uncounted bool
+	// MaxInFlight caps the calls of one caller that run at once on a route that is
+	// Uncounted but does work on a cache miss (ViewFrame renders a frame).
+	MaxInFlight int
 }
 
 // FullPath is the path a client requests.
@@ -198,7 +201,7 @@ var Endpoints = []Endpoint{
 	},
 	{
 		ID: "projects.frame", Method: http.MethodGet, Path: "/projects/{id}/frame", Scope: service.ScopeRead,
-		Service: "ViewFrame", Uncounted: true, Status: 200, Summary: "Render one frame",
+		Service: "ViewFrame", Uncounted: true, MaxInFlight: 2, Status: 200, Summary: "Render one frame",
 	},
 	{
 		ID: "projects.sheet", Method: http.MethodGet, Path: "/projects/{id}/sheet", Scope: service.ScopeRead,

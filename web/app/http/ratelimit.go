@@ -44,7 +44,15 @@ type limits struct {
 	failed     *middleware.FailedAuth
 
 	uncountedOnce sync.Once
-	uncounted     []*regexp.Regexp
+	uncounted     []uncountedRoute
+
+	inFlightMu sync.Mutex
+	inFlight   map[string]int
+}
+
+type uncountedRoute struct {
+	re          *regexp.Regexp
+	maxInFlight int
 }
 
 func newLimits(r RateLimits, now func() time.Time) *limits {
@@ -61,37 +69,71 @@ func newLimits(r RateLimits, now func() time.Time) *limits {
 		credential: ratelimit.NewMemoryBurst(r.PerCredential, time.Minute, r.PerCredential+DefaultRateBurst),
 		session:    ratelimit.NewMemoryBurst(r.PerSession, time.Minute, r.PerSession+DefaultSessionRateBurst),
 		failed:     middleware.NewFailedAuth(ratelimit.NewMemory(failedAuthPerMinute, time.Minute), now),
+		inFlight:   map[string]int{},
 	}
 }
 
-// uncountedPath is true for what the limiters do not count (SDD-007 section
-// 4.4): the open event stream, the byte-serving routes the editor hits many
-// times a second while it plays or scrubs, and the plan windows. Static assets
-// and pages are outside /api/v1 and /mcp and are never counted per credential.
-func (l *limits) uncountedPath(method, path string) bool {
+// uncountedRoute finds the route, among those the limiters do not count (SDD-007
+// section 4.4), that a request is for: the open event stream, the byte-serving
+// routes the editor hits many times a second while it plays or scrubs, the
+// cached frames and the plan windows. Static assets and pages are outside
+// /api/v1 and /mcp and are never counted per credential.
+func (l *limits) uncountedRoute(method, path string) (uncountedRoute, bool) {
 	l.uncountedOnce.Do(func() {
 		for i := range Endpoints {
 			if !Endpoints[i].Uncounted {
 				continue
 			}
 
-			re := regexp.MustCompile("^" + regexp.MustCompile(`\\{[^}]*\\}`).
+			re := regexp.MustCompile("^" + regexp.MustCompile(`\\\{[^}]*\\\}`).
 				ReplaceAllString(regexp.QuoteMeta(Endpoints[i].FullPath()), `[^/]+`) + "$")
-			l.uncounted = append(l.uncounted, re)
+			l.uncounted = append(l.uncounted, uncountedRoute{re: re, maxInFlight: Endpoints[i].MaxInFlight})
 		}
 	})
 
 	if method != http.MethodGet && method != http.MethodHead {
-		return false
+		return uncountedRoute{}, false
 	}
 
-	for _, re := range l.uncounted {
-		if re.MatchString(path) {
-			return true
+	for _, u := range l.uncounted {
+		if u.re.MatchString(path) {
+			return u, true
 		}
 	}
 
-	return false
+	return uncountedRoute{}, false
+}
+
+func (l *limits) uncountedPath(method, path string) bool {
+	_, ok := l.uncountedRoute(method, path)
+
+	return ok
+}
+
+// acquire takes one of the in-flight places of an actor on a route; false when
+// the actor already has max calls running.
+func (l *limits) acquire(actor string, route uncountedRoute) bool {
+	l.inFlightMu.Lock()
+	defer l.inFlightMu.Unlock()
+
+	key := actor + "|" + route.re.String()
+	if l.inFlight[key] >= route.maxInFlight {
+		return false
+	}
+
+	l.inFlight[key]++
+
+	return true
+}
+
+func (l *limits) release(actor string, route uncountedRoute) {
+	l.inFlightMu.Lock()
+	defer l.inFlightMu.Unlock()
+
+	key := actor + "|" + route.re.String()
+	if l.inFlight[key]--; l.inFlight[key] <= 0 {
+		delete(l.inFlight, key)
+	}
 }
 
 func counted(path string) bool {
@@ -118,35 +160,76 @@ func (h *apiHandler) preAuthLimit(next http.Handler) http.Handler {
 	})
 }
 
-// unauthorized answers a failed authentication: 401, counted against the address
-// of the client. An address that spent its failures is refused with 429 instead,
-// and that is the only thing the block does: a request that carries a valid
-// credential never gets here, so users behind one proxy, and every local
-// client, are not locked out by someone else's bad guesses.
+// unauthorized answers a failed authentication with 401. In network mode it is
+// counted against the address of the client, which is refused with 429 instead
+// once it has spent its failures (SDD-007 section 4.4). Local mode does not
+// count: every client is the loopback address, and the local token has 256 bits.
 func (h *apiHandler) unauthorized(w http.ResponseWriter, r *http.Request, e *service.Error) {
-	ip := ratelimit.ByIP(r)
+	if h.Network != nil {
+		ip := ratelimit.ByIP(r)
 
-	denied := h.limits.failed.Blocked(ip)
-	if denied == nil {
-		denied = h.limits.failed.Record(r, ip)
-	}
+		denied := h.limits.failed.Blocked(ip)
+		if denied == nil {
+			denied = h.limits.failed.Record(r, ip)
+		}
 
-	if denied != nil {
-		web.Fail(w, r, denied)
-		return
+		if denied != nil {
+			web.Fail(w, r, denied)
+			return
+		}
 	}
 
 	w.Header().Set("WWW-Authenticate", "Bearer")
 	web.Fail(w, r, e)
 }
 
+// blockedAddress refuses, before any bearer key is verified, a request from an
+// address that spent its failed authentications: verifying it would tell a
+// guesser which guess was right. A request that carries only a session cookie
+// may go on, because the cookie is checked against the session store and the
+// session is already established; if it is not valid it fails like any other.
+func (h *apiHandler) blockedAddress(w http.ResponseWriter, r *http.Request) bool {
+	if r.Header.Get("Authorization") == "" {
+		return false
+	}
+
+	if e := h.limits.failed.Blocked(ratelimit.ByIP(r)); e != nil {
+		web.Fail(w, r, e)
+		return true
+	}
+
+	return false
+}
+
 // credentialLimit is the limiter after authentication: per bearer credential,
 // or per browser session, on the routes under /api/v1 and /mcp (4.4).
 func (h *apiHandler) credentialLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, ok := service.CallerFrom(r.Context()); !ok || !counted(r.URL.Path) ||
-			h.limits.uncountedPath(r.Method, r.URL.Path) {
+		caller, ok := service.CallerFrom(r.Context())
+		if !ok || !counted(r.URL.Path) {
 			next.ServeHTTP(w, r)
+			return
+		}
+
+		// A route that is not counted but renders on a miss (the cached frame) has
+		// a cap on what one caller runs at once instead.
+		if route, exempt := h.limits.uncountedRoute(r.Method, r.URL.Path); exempt {
+			if route.maxInFlight > 0 {
+				if !h.limits.acquire(caller.Actor, route) {
+					web.Fail(w, r, &service.Error{
+						Code: service.CodeQueueFull, Message: "this caller already has frames being rendered.",
+						Retryable: true, Hint: "wait for a frame to arrive before asking for another",
+						Details: map[string]any{"limit": "frames", "max": route.maxInFlight},
+					})
+
+					return
+				}
+
+				defer h.limits.release(caller.Actor, route)
+			}
+
+			next.ServeHTTP(w, r)
+
 			return
 		}
 
