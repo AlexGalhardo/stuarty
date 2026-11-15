@@ -1,0 +1,38 @@
+{
+  "op": "caption.set_words",
+  "args": {
+    "item_id": "itm_s6t7v8w9x0",
+    "words": [
+      {
+        "text": "w1",
+        "start": "0f",
+        "duration": "12f"
+      },
+      {
+        "text": "w2",
+        "start": "12f",
+        "duration": "12f"
+      },
+      {
+        "text": "w3",
+        "start": "24f",
+        "duration": "12f"
+      },
+      {
+        "text": "w4",
+        "start": "36f",
+        "duration": "12f"
+      },
+      {
+        "text": "w5",
+        "start": "48f",
+        "duration": "12f"
+      },
+      {
+        "text": "w6",
+        "start": "60f",
+        "duration": "12f"
+      }
+    ]
+  }
+}

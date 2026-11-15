@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.breaks[1] is 4 but the caption has 4 words; the allowed indexes are 1 to 3.",
+  "hint": "Use indexes from 1 to 3.",
+  "retryable": false,
+  "path": "args.breaks[1]"
+}

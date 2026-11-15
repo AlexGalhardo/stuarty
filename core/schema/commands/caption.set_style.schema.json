@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "item_id": {
+      "description": "A caption.",
+      "type": "string"
+    },
+    "style": {
+      "description": "A partial CaptionStyle replacing the override, or null or {} to clear it."
+    }
+  },
+  "required": [
+    "item_id",
+    "style"
+  ],
+  "type": "object"
+}

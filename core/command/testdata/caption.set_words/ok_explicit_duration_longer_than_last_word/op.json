@@ -1,0 +1,19 @@
+{
+  "op": "caption.set_words",
+  "args": {
+    "item_id": "itm_s6t7v8w9x0",
+    "words": [
+      {
+        "text": "Hello",
+        "start": "0f",
+        "duration": "12f"
+      },
+      {
+        "text": "world",
+        "start": "12f",
+        "duration": "12f"
+      }
+    ],
+    "duration": "40f"
+  }
+}

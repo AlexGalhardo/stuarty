@@ -1,0 +1,11 @@
+{
+  "code": "E_NOT_FOUND",
+  "message": "Caption itm_s6t7v8w9x0 has 4 words; index 7 does not exist.",
+  "hint": "Use an index from 0 to 3.",
+  "retryable": false,
+  "path": "args.index",
+  "details": {
+    "id": 7,
+    "kind": "word"
+  }
+}

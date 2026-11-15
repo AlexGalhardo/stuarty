@@ -1,0 +1,6 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Removing word 0 would leave caption itm_s6t7v8w9x0 with no words.",
+  "hint": "Delete the caption with item.delete instead.",
+  "retryable": false
+}

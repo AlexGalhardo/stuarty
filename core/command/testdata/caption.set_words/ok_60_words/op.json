@@ -1,0 +1,308 @@
+{
+  "op": "caption.set_words",
+  "args": {
+    "item_id": "itm_s6t7v8w9x0",
+    "words": [
+      {
+        "text": "w1",
+        "start": "0f",
+        "duration": "1f"
+      },
+      {
+        "text": "w2",
+        "start": "1f",
+        "duration": "1f"
+      },
+      {
+        "text": "w3",
+        "start": "2f",
+        "duration": "1f"
+      },
+      {
+        "text": "w4",
+        "start": "3f",
+        "duration": "1f"
+      },
+      {
+        "text": "w5",
+        "start": "4f",
+        "duration": "1f"
+      },
+      {
+        "text": "w6",
+        "start": "5f",
+        "duration": "1f"
+      },
+      {
+        "text": "w7",
+        "start": "6f",
+        "duration": "1f"
+      },
+      {
+        "text": "w8",
+        "start": "7f",
+        "duration": "1f"
+      },
+      {
+        "text": "w9",
+        "start": "8f",
+        "duration": "1f"
+      },
+      {
+        "text": "w10",
+        "start": "9f",
+        "duration": "1f"
+      },
+      {
+        "text": "w11",
+        "start": "10f",
+        "duration": "1f"
+      },
+      {
+        "text": "w12",
+        "start": "11f",
+        "duration": "1f"
+      },
+      {
+        "text": "w13",
+        "start": "12f",
+        "duration": "1f"
+      },
+      {
+        "text": "w14",
+        "start": "13f",
+        "duration": "1f"
+      },
+      {
+        "text": "w15",
+        "start": "14f",
+        "duration": "1f"
+      },
+      {
+        "text": "w16",
+        "start": "15f",
+        "duration": "1f"
+      },
+      {
+        "text": "w17",
+        "start": "16f",
+        "duration": "1f"
+      },
+      {
+        "text": "w18",
+        "start": "17f",
+        "duration": "1f"
+      },
+      {
+        "text": "w19",
+        "start": "18f",
+        "duration": "1f"
+      },
+      {
+        "text": "w20",
+        "start": "19f",
+        "duration": "1f"
+      },
+      {
+        "text": "w21",
+        "start": "20f",
+        "duration": "1f"
+      },
+      {
+        "text": "w22",
+        "start": "21f",
+        "duration": "1f"
+      },
+      {
+        "text": "w23",
+        "start": "22f",
+        "duration": "1f"
+      },
+      {
+        "text": "w24",
+        "start": "23f",
+        "duration": "1f"
+      },
+      {
+        "text": "w25",
+        "start": "24f",
+        "duration": "1f"
+      },
+      {
+        "text": "w26",
+        "start": "25f",
+        "duration": "1f"
+      },
+      {
+        "text": "w27",
+        "start": "26f",
+        "duration": "1f"
+      },
+      {
+        "text": "w28",
+        "start": "27f",
+        "duration": "1f"
+      },
+      {
+        "text": "w29",
+        "start": "28f",
+        "duration": "1f"
+      },
+      {
+        "text": "w30",
+        "start": "29f",
+        "duration": "1f"
+      },
+      {
+        "text": "w31",
+        "start": "30f",
+        "duration": "1f"
+      },
+      {
+        "text": "w32",
+        "start": "31f",
+        "duration": "1f"
+      },
+      {
+        "text": "w33",
+        "start": "32f",
+        "duration": "1f"
+      },
+      {
+        "text": "w34",
+        "start": "33f",
+        "duration": "1f"
+      },
+      {
+        "text": "w35",
+        "start": "34f",
+        "duration": "1f"
+      },
+      {
+        "text": "w36",
+        "start": "35f",
+        "duration": "1f"
+      },
+      {
+        "text": "w37",
+        "start": "36f",
+        "duration": "1f"
+      },
+      {
+        "text": "w38",
+        "start": "37f",
+        "duration": "1f"
+      },
+      {
+        "text": "w39",
+        "start": "38f",
+        "duration": "1f"
+      },
+      {
+        "text": "w40",
+        "start": "39f",
+        "duration": "1f"
+      },
+      {
+        "text": "w41",
+        "start": "40f",
+        "duration": "1f"
+      },
+      {
+        "text": "w42",
+        "start": "41f",
+        "duration": "1f"
+      },
+      {
+        "text": "w43",
+        "start": "42f",
+        "duration": "1f"
+      },
+      {
+        "text": "w44",
+        "start": "43f",
+        "duration": "1f"
+      },
+      {
+        "text": "w45",
+        "start": "44f",
+        "duration": "1f"
+      },
+      {
+        "text": "w46",
+        "start": "45f",
+        "duration": "1f"
+      },
+      {
+        "text": "w47",
+        "start": "46f",
+        "duration": "1f"
+      },
+      {
+        "text": "w48",
+        "start": "47f",
+        "duration": "1f"
+      },
+      {
+        "text": "w49",
+        "start": "48f",
+        "duration": "1f"
+      },
+      {
+        "text": "w50",
+        "start": "49f",
+        "duration": "1f"
+      },
+      {
+        "text": "w51",
+        "start": "50f",
+        "duration": "1f"
+      },
+      {
+        "text": "w52",
+        "start": "51f",
+        "duration": "1f"
+      },
+      {
+        "text": "w53",
+        "start": "52f",
+        "duration": "1f"
+      },
+      {
+        "text": "w54",
+        "start": "53f",
+        "duration": "1f"
+      },
+      {
+        "text": "w55",
+        "start": "54f",
+        "duration": "1f"
+      },
+      {
+        "text": "w56",
+        "start": "55f",
+        "duration": "1f"
+      },
+      {
+        "text": "w57",
+        "start": "56f",
+        "duration": "1f"
+      },
+      {
+        "text": "w58",
+        "start": "57f",
+        "duration": "1f"
+      },
+      {
+        "text": "w59",
+        "start": "58f",
+        "duration": "1f"
+      },
+      {
+        "text": "w60",
+        "start": "59f",
+        "duration": "1f"
+      }
+    ]
+  }
+}

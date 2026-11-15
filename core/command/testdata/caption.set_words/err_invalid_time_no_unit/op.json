@@ -1,0 +1,18 @@
+{
+  "op": "caption.set_words",
+  "args": {
+    "item_id": "itm_s6t7v8w9x0",
+    "words": [
+      {
+        "text": "a",
+        "start": "0f",
+        "duration": "5f"
+      },
+      {
+        "text": "b",
+        "start": "5",
+        "duration": "5f"
+      }
+    ]
+  }
+}

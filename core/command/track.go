@@ -321,7 +321,7 @@ func applyTrackSetCaptionStyle(c *Context, a *trackCaptionStyleArgs) error {
 	if err != nil {
 		return err
 	}
-	if err := c.checkFont("args.style", merged); err != nil {
+	if err := c.checkFont(merged); err != nil {
 		return err
 	}
 	t.CaptionStyle = merged

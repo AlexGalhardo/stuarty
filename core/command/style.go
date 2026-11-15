@@ -99,7 +99,7 @@ func (c *Context) checkStyleValue(path, key string, v any, rule styleRule) *Erro
 			return bad("%s must be one of %s, got %v.", path, strings.Join(rule.enum, ", "), v).
 				WithHint("Use one of: %s.", strings.Join(rule.enum, ", "))
 		}
-		if key == "highlight" && s != "none" {
+		if key == "highlight" && s != "none" && c.build.rank() < Alpha.rank() {
 			return bad(
 				"%s must be \"none\" in this build, got %q.",
 				path,
@@ -236,7 +236,8 @@ func mergeStyle(current *timeline.CaptionStyle, given map[string]any, replace bo
 
 // checkFont returns E_FONT_UNKNOWN when the family or the weight of a style does not
 // exist (R15).
-func (c *Context) checkFont(path string, s *timeline.CaptionStyle) *Error {
+func (c *Context) checkFont(s *timeline.CaptionStyle) *Error {
+	const path = "args.style"
 	if s == nil || s.FontFamily == nil && s.FontWeight == nil {
 		return nil
 	}

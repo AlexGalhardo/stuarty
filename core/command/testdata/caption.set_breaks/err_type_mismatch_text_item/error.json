@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_s6t7v8w9x0 is a text item; text breaks lines in its text.",
+  "hint": "Put a line break in the text with text.set.",
+  "retryable": false,
+  "path": "args.item_id"
+}
