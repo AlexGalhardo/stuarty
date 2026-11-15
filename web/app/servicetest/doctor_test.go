@@ -332,3 +332,46 @@ func TestDoctorRefusesAProjectLimitedKeyTheMachineDetails(t *testing.T) {
 		}
 	}
 }
+
+// SDD-007 sections 6.5 and 6.7: doctor says whether the limits and the sandbox are
+// available, and never prints the path of the sandbox.
+func TestDoctorReportsTheChildPolicy(t *testing.T) {
+	cases := map[string]struct {
+		policy             service.ChildPolicy
+		wantLimits, wantSB string
+	}{
+		"both": {
+			service.ChildPolicy{Limits: true, Sandbox: "/usr/bin/bwrap"}, "available: prlimit", "available: every FFmpeg run",
+		},
+		"neither": {
+			service.ChildPolicy{LimitsWhy: "resource limits are not available on this operating system"},
+			"unavailable: resource limits", "unavailable: not requested",
+		},
+	}
+
+	for name, tc := range cases {
+		e := newEnvWith(t, func(e *env, o *service.Options) {
+			o.Workspace = string(e.dir)
+			o.Doctor = service.DoctorOptions{Mode: service.ModeLocal, Child: tc.policy}
+		})
+
+		res, err := e.svc.Doctor(e.as(ui), service.DoctorRequest{Full: true})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		got := map[string]string{}
+
+		for _, c := range res.Checks {
+			got[c.Name] = c.Detail
+		}
+
+		if !strings.HasPrefix(got["child.limits"], tc.wantLimits) || !strings.HasPrefix(got["child.sandbox"], tc.wantSB) {
+			t.Errorf("%s: checks = %q", name, got)
+		}
+
+		if strings.Contains(res.Text, "/usr/bin/bwrap") {
+			t.Errorf("%s: the report prints the sandbox path", name)
+		}
+	}
+}
