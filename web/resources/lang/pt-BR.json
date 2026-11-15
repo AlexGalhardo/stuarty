@@ -8,7 +8,12 @@
         "pt-BR": "Português (Brasil)"
       },
       "projects": "Projetos",
-      "settings": "Configurações"
+      "settings": "Configurações",
+      "sidebar": {
+        "title": "Barra lateral",
+        "description": "Exibe a barra lateral no celular.",
+        "toggle": "Alternar barra lateral"
+      }
     },
     "theme": {
       "light": "Mudar para o tema claro",

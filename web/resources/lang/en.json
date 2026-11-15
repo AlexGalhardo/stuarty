@@ -8,7 +8,12 @@
         "pt-BR": "Português (Brasil)"
       },
       "projects": "Projects",
-      "settings": "Settings"
+      "settings": "Settings",
+      "sidebar": {
+        "title": "Sidebar",
+        "description": "Displays the mobile sidebar.",
+        "toggle": "Toggle sidebar"
+      }
     },
     "theme": {
       "light": "Switch to light theme",
