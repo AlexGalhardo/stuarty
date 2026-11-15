@@ -169,6 +169,19 @@ func loadImage(path string) (compositor.Image, error) {
 }
 
 func (f *frameSource) video(l *plan.Layer, a *timeline.Asset) (compositor.Image, error) {
+	d, err := f.decoder(l, a)
+	if err != nil {
+		return compositor.Image{}, err
+	}
+	pix, err := d.frame(l.SourceFrame)
+	if err != nil {
+		return compositor.Image{}, err
+	}
+	return compositor.Image{Pix: pix, W: d.w, H: d.h, Opaque: true}, nil
+}
+
+// decoder is the decoder of the clip of the layer, made on the first use.
+func (f *frameSource) decoder(l *plan.Layer, a *timeline.Asset) (*videoDecoder, error) {
 	f.used[l.ItemID] = true
 	d := f.vids[l.ItemID]
 	if d == nil {
@@ -176,7 +189,7 @@ func (f *frameSource) video(l *plan.Layer, a *timeline.Asset) (compositor.Image,
 		w, h, _ := f.target(l, cw, ch)
 		path, err := f.s.artifact(a, "mov")
 		if err != nil {
-			return compositor.Image{}, err
+			return nil, err
 		}
 		var vf []ffargs.Filter
 		if cx != 0 || cy != 0 || cw != a.Width || ch != a.Height {
@@ -186,11 +199,33 @@ func (f *frameSource) video(l *plan.Layer, a *timeline.Asset) (compositor.Image,
 		d = &videoDecoder{s: f.s, path: path, w: w, h: h, vf: ffargs.Chain1(vf...), rate: a.FrameRate, item: l.ItemID}
 		f.vids[l.ItemID] = d
 	}
-	pix, err := d.frame(l.SourceFrame)
-	if err != nil {
-		return compositor.Image{}, err
+	return d, nil
+}
+
+// prestart starts the decoders of every video layer of a single frame before the first one is read.
+// Starting an FFmpeg process costs tens of milliseconds before it delivers a byte, and the compositor
+// asks for the layers one after the other, so a frame of two clips (a picture in picture, a
+// transition) would wait for two starts in a row; with the processes started together the waits
+// overlap (NFR-004).
+func (f *frameSource) prestart(fp *plan.FramePlan) {
+	for i := range fp.Layers {
+		l := &fp.Layers[i]
+		if l.Kind != plan.Media || math.Round(min(max(l.Opacity, 0), 1)*255) == 0 {
+			continue
+		}
+
+		a, ok := f.s.job.Doc.Assets[l.AssetID]
+		if !ok || a.Kind == timeline.AssetImage {
+			continue
+		}
+
+		d, err := f.decoder(l, &a)
+		if err != nil || d.begun {
+			continue
+		}
+
+		d.pending = d.start(l.SourceFrame)
 	}
-	return compositor.Image{Pix: pix, W: d.w, H: d.h, Opaque: true}, nil
 }
 
 // endFrame stops the decoders of the clips that were not drawn in the frame that just ended.
@@ -236,6 +271,10 @@ type videoDecoder struct {
 
 	cur    []byte
 	curIdx int
+	// begun is true while a process is running or has been started for this decoder, and pending is
+	// the error of a start made ahead of the first frame (see prestart).
+	begun   bool
+	pending error
 }
 
 const decoderBuffers = 3
@@ -247,7 +286,12 @@ func (d *videoDecoder) frameBytes() int { return d.w * d.h * 4 }
 
 // frame returns the pixels of source frame sf. A frame past the end of the media repeats the last one.
 func (d *videoDecoder) frame(sf int) ([]byte, error) {
-	if d.cur == nil || sf < d.curIdx || sf-d.curIdx > restartGap {
+	if err := d.pending; err != nil {
+		d.pending = nil
+
+		return nil, err
+	}
+	if !d.begun || sf < d.curIdx || sf-d.curIdx > restartGap {
 		if err := d.start(sf); err != nil {
 			return nil, err
 		}
@@ -322,7 +366,7 @@ func (d *videoDecoder) start(sf int) error {
 	exited, read := make(chan struct{}), make(chan struct{})
 	d.out, d.free, d.exited, d.read = out, free, exited, read
 	d.runErr, d.stderr = nil, ""
-	d.cur, d.curIdx = nil, sf-1
+	d.cur, d.curIdx, d.begun = nil, sf-1, true
 	for range decoderBuffers {
 		free <- make([]byte, d.frameBytes())
 	}
@@ -382,7 +426,7 @@ func (d *videoDecoder) stop() {
 	<-d.exited
 	<-d.read
 	_ = d.dir.Remove()
-	d.cancel, d.dir, d.cur = nil, nil, nil
+	d.cancel, d.dir, d.cur, d.begun = nil, nil, nil, false
 }
 
 // childDirs hands out the run directories of the child processes of one export.

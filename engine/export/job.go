@@ -122,7 +122,11 @@ func (s *state) newRenderer(bands int) *renderer {
 
 // render composes frame t into dst, then stops the decoders of the clips that are no longer drawn.
 func (r *renderer) render(dst *image.RGBA, t int) error {
-	err := r.comp.Compose(dst, plan.FrameWith(r.s.job.Doc, t, r.s.opts), r.s.scale)
+	fp := plan.FrameWith(r.s.job.Doc, t, r.s.opts)
+	if r.s.single {
+		r.fs.prestart(&fp)
+	}
+	err := r.comp.Compose(dst, fp, r.s.scale)
 	r.fs.endFrame()
 	return err
 }

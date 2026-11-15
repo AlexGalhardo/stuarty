@@ -86,12 +86,26 @@ func (f *Frames) Frame(ctx context.Context, doc *timeline.Document, ref Ref, t, 
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = r.Close() }()
 	img, err := r.Render(ctx, t, float64(width)/float64(doc.Settings.Width))
 	if err != nil {
+		_ = r.Close()
+
 		return nil, err
 	}
+	// The renderer is not needed to encode the pixels: its work folder is removed while the JPEG is
+	// made, and the answer waits for both (NFR-004).
+	closed := make(chan struct{})
+
+	go func() {
+		_ = r.Close()
+
+		close(closed)
+	}()
+
 	out, err := encode(img)
+
+	<-closed
+
 	if err != nil {
 		return nil, err
 	}
