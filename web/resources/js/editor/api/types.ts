@@ -212,6 +212,10 @@ export interface PlanMediaLayer extends PlanLayerBase {
 	source_seconds: number[];
 	crop: [number, number, number, number];
 	color_matrix: number[] | null;
+	// The filter of SDD-004 section 3.6 as a 3x4 matrix, and the blur as the
+	// standard deviation in project pixels; both constant over the item.
+	filter?: number[] | null;
+	blur?: number;
 }
 
 export interface PlanBitmapLayer extends PlanLayerBase {

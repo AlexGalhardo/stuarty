@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import type { PlanLayer, PlanWindow } from "../api/types";
 import { bufferSize, fitScale, sizedScale, truthWidth } from "./fit";
+import { pixiColorMatrix } from "./layerFilters";
 import { Lru } from "./lru";
 import {
 	DRIFT_FRAMES,
@@ -306,5 +307,19 @@ describe("PausedFrame (truth on pause)", () => {
 		await Promise.resolve();
 		expect(failures).toHaveLength(1);
 		expect(frame.shown).toBe(false);
+	});
+});
+
+describe("plan matrices for PixiJS", () => {
+	test("a 3x4 plan matrix becomes 5x4 rows of r g b a offset that keep alpha", () => {
+		// The invert filter of SDD-004 section 3.6.
+		const invert = [-1, 0, 0, 1, 0, -1, 0, 1, 0, 0, -1, 1];
+		expect(pixiColorMatrix(invert)).toEqual([
+			-1, 0, 0, 0, 1, 0, -1, 0, 0, 1, 0, 0, -1, 0, 1, 0, 0, 0, 1, 0,
+		]);
+	});
+
+	test("a matrix of another size is refused", () => {
+		expect(() => pixiColorMatrix([1, 0, 0, 0])).toThrow("12 numbers");
 	});
 });

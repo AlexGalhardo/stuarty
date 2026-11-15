@@ -1,6 +1,7 @@
 import "pixi.js/unsafe-eval";
 import {
 	Application,
+	BlurFilter,
 	ColorMatrixFilter,
 	Container,
 	ImageSource,
@@ -15,6 +16,7 @@ import type { ApiClient } from "../api/client";
 import type { PlanLayer, PlanMediaLayer, PlanWindow } from "../api/types";
 import { proxyUrl, thumbnailUrl } from "../api/urls";
 import { AudioGraph } from "./audioGraph";
+import { pixiColorMatrix } from "./layerFilters";
 import { Lru } from "./lru";
 import { MediaPool, type PoolTimers } from "./mediaPool";
 import {
@@ -36,9 +38,14 @@ import type {
 
 const BITMAP_CACHE = 64;
 
+// The filters of a layer in the order of the compositor: colour matrix, filter
+// matrix, blur (SDD-004 section 6 step 2.2). Each runs in a pass of its own, so
+// the result of one is clamped to 0..1 before the next, as the export does.
 interface Drawn {
 	sprite: Sprite;
-	filter: ColorMatrixFilter | null;
+	color: ColorMatrixFilter | null;
+	look: ColorMatrixFilter | null;
+	blur: BlurFilter | null;
 }
 
 interface DrawMode {
@@ -339,7 +346,7 @@ export class PixiExecutor implements PreviewExecutor {
 			used.add(layer.item);
 			let entry = this.drawn.get(layer.item);
 			if (entry === undefined) {
-				entry = { sprite: new Sprite(), filter: null };
+				entry = { sprite: new Sprite(), color: null, look: null, blur: null };
 				entry.sprite.anchor.set(0.5);
 				this.drawn.set(layer.item, entry);
 			}
@@ -373,19 +380,36 @@ export class PixiExecutor implements PreviewExecutor {
 		sprite.height = g.h;
 		sprite.angle = g.rotation;
 		sprite.alpha = valueAt(layer.opacity, frame, layer.first);
-		const matrix = layer.kind === "media" ? layer.color_matrix : null;
-		if (matrix === null) {
-			if (entry.filter !== null) {
-				sprite.filters = [];
-				entry.filter = null;
-			}
-			return;
+		this.applyFilters(entry, layer);
+	}
+
+	private applyFilters(entry: Drawn, layer: PlanLayer): void {
+		const media = layer.kind === "media" ? layer : null;
+		const before = [entry.color, entry.look, entry.blur];
+		entry.color = this.matrixFilter(entry.color, media?.color_matrix ?? null);
+		entry.look = this.matrixFilter(entry.look, media?.filter ?? null);
+		// The blur is in project pixels; the stage scale is the output scale.
+		const sigma = (media?.blur ?? 0) * this.stage.scale.x;
+		if (sigma > 0) {
+			entry.blur ??= new BlurFilter();
+			entry.blur.strength = sigma;
+		} else {
+			entry.blur = null;
 		}
-		if (entry.filter === null) {
-			entry.filter = new ColorMatrixFilter();
-			sprite.filters = [entry.filter];
+		const now = [entry.color, entry.look, entry.blur];
+		if (now.some((f, i) => f !== before[i])) {
+			entry.sprite.filters = now.filter((f) => f !== null);
 		}
-		entry.filter.matrix = matrix as ColorMatrixFilter["matrix"];
+	}
+
+	private matrixFilter(
+		current: ColorMatrixFilter | null,
+		matrix: readonly number[] | null,
+	): ColorMatrixFilter | null {
+		if (matrix === null) return null;
+		const filter = current ?? new ColorMatrixFilter();
+		filter.matrix = pixiColorMatrix(matrix) as ColorMatrixFilter["matrix"];
+		return filter;
 	}
 
 	private textureFor(
