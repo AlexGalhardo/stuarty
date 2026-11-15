@@ -210,7 +210,7 @@ export default function ExportDialog({
 			.getOpenApi()
 			.then(
 				(doc) => setCapabilities(exportCapabilities(doc)),
-				() => setCapabilities({ formats: [], fps: [], sizes: [] }),
+				() => setCapabilities({ formats: [] }),
 			);
 	}, [open, capabilities]);
 

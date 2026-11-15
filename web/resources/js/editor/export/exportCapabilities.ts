@@ -2,7 +2,7 @@ import type { ExportCapabilities } from "../api/types";
 
 type Json = { [key: string]: unknown };
 
-const NONE: ExportCapabilities = { formats: [], fps: [], sizes: [] };
+const NONE: ExportCapabilities = { formats: [] };
 
 function asObject(value: unknown): Json | undefined {
 	return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -22,8 +22,8 @@ function resolve(doc: Json, schema: unknown): Json | undefined {
 }
 
 // The values a member lists as an enum; a member with no enum is offered with
-// the one non-default value the task names (60 fps, 4K), and the core refuses
-// it with its own hint when the encoder cannot.
+// every format the product knows, and the core refuses one with its own hint
+// when the encoder cannot.
 function choices(schema: Json | undefined, fallback: unknown[]): unknown[] {
 	if (schema === undefined) return [];
 	const values = schema.enum;
@@ -54,12 +54,6 @@ export function exportCapabilities(openapi: unknown): ExportCapabilities {
 	const member = (name: string): Json | undefined => resolve(doc, props[name]);
 	return {
 		formats: choices(member("format"), ["mp4", "gif", "wav", "aac"]).filter(
-			(value): value is string => typeof value === "string",
-		),
-		fps: choices(member("fps"), [60]).filter(
-			(value): value is number => typeof value === "number",
-		),
-		sizes: choices(member("size"), ["3840x2160"]).filter(
 			(value): value is string => typeof value === "string",
 		),
 	};

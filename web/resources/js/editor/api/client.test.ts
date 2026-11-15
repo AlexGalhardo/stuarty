@@ -214,12 +214,14 @@ describe("brand kit, fonts, export options and bundles", () => {
 		const { transport, requests } = fake(ok({}));
 		const client = createClient(transport);
 		await client.startExport("prj_x");
-		await client.startExport("prj_x", { format: "gif", fps: undefined });
-		await client.startExport("prj_x", { fps: 60 }, true);
+		await client.startExport("prj_x", { format: "gif" });
+		await client.startExport("prj_x", { format: "wav" }, true);
+		await client.startExport("prj_x", { format: undefined });
 		expect(requests.map((r) => r.body)).toEqual([
 			{ kind: "export" },
 			{ kind: "export", args: { format: "gif" } },
-			{ kind: "export", args: { fps: 60 }, dry_run: true },
+			{ kind: "export", args: { format: "wav" }, dry_run: true },
+			{ kind: "export" },
 		]);
 	});
 
