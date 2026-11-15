@@ -10,22 +10,26 @@ import { capitalizeFirst } from "./format";
 // also resolves the actor label and the item name from its stores.
 export default function ConflictNotice({
 	actor,
+	fallbackActor = false,
 	item,
 	revision,
 	diff,
 }: {
 	actor: string;
+	// The actor is the localized fallback ("alguém"): at the start of the
+	// sentence it takes a capital; a real actor id is written as it is.
+	fallbackActor?: boolean;
 	item: string;
 	revision: number;
 	diff: string;
 }): ReactNode {
 	const t = useT();
+	const lead = (text: string): string =>
+		fallbackActor ? capitalizeFirst(text) : text;
 	return (
 		<>
 			<p className="font-medium">
-				{capitalizeFirst(
-					t("ui.editor.conflict.message", { actor, item, revision }),
-				)}
+				{lead(t("ui.editor.conflict.message", { actor, item, revision }))}
 			</p>
 			{diff !== "" && (
 				<pre
