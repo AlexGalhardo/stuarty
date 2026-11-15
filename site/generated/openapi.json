@@ -3049,6 +3049,12 @@
           "opacity": {},
           "rotation": {},
           "scale": {},
+          "source_frames": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
           "source_seconds": {
             "items": {
               "format": "double",
