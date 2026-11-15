@@ -628,13 +628,8 @@ test.describe("preview-vs-export measures", () => {
 // listed here that starts to pass as a failure, so the entry is removed when the
 // cause is fixed. None of them is a defect of the preview geometry.
 const KNOWN_DIVERGENCES: Record<string, string> = {
-	crop: "SSIM 0.979 but the picture is 4.5 px (about one source pixel) off: the export crops at an odd x of a 4:2:0 source, which FFmpeg crop aligns to an even one; the preview samples the exact rectangle of the plan. Cause in engine/export (ffargs.Crop), not in the preview.",
-	"text-style":
-		"SSIM 0.958, background box 2.5 px off, with the plan asked for at the buffer width (width=463): the bitmap comes rasterized at PixelScale 2.75 (the plan rounds the scale up to a quarter, SDD-004 section 10) and the preview draws it at 463/180 = 2.57, so it is resampled by 0.935 while the export lays the text out and rounds at the output scale. The remaining gap is in the engine rounding, not in the width the preview asks for.",
-	"caption-highlight":
-		"SSIM 0.958, caption 2.2 px off: the same cause as text-style.",
 	"filter-sepia":
-		"SSIM 0.9698 at frame 0 (0.9724 and 0.9741 at the others): 0.0002 under the gate; the sepia matrix lowers the contrast that SSIM weighs. Deterministic.",
+		"SSIM 0.9698 at frame 0 (0.9724 and 0.9741 at the others): 0.0002 under the gate. The colours agree (channel means within 0.5 levels, equal contrast); what differs is the edge of the second clip, a pixel off on each side. The preview buffer is 463 x 823 (CSS width 462.94) while the element screenshot is 464 px wide, so ViewFrame is asked for at width 464 (2.578 per project pixel) and the preview was drawn at 463 (2.572): the two place the 0.6 scale clip at y 488.8 and 487.7. The harness, not the engine or the preview, sets that scale.",
 };
 
 // What Firefox alone misses. The cases above are expected failures everywhere.
