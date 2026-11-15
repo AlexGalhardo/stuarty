@@ -89,7 +89,7 @@ func newState(ctx context.Context, job *Job, dir *ffmpeg.RunDir, frames int) *st
 	return &state{
 		job: job, ctx: ctx, dir: dir, frames: frames, fonts: fonts, scale: 1,
 		opts:      plan.Options{Measure: raster.Measure(fonts)},
-		deadline:  ffmpeg.ExportDeadline(secs),
+		deadline:  exportDeadline(secs),
 		inputDirs: assetDirs(job),
 	}
 }
@@ -221,6 +221,9 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 }
 
 // endFrame is the end of the last item: the number of frames of the export.
+// exportDeadline is ffmpeg.ExportDeadline; only the tests under the race detector stretch it.
+var exportDeadline = ffmpeg.ExportDeadline
+
 func endFrame(doc *timeline.Document) int {
 	end := 0
 	for id := range doc.Items {
