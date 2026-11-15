@@ -434,6 +434,25 @@ For sizes other than 1080p the bitrate scales with the pixel count relative to 1
 
 Temporary files live in a per-job directory under the workspace and are removed in every outcome.
 
+### 8.1 Formats (P3-RND-002, RF-064)
+
+`Job.Format` selects what the export writes; the zero value is `mp4`. The steps above are those of `mp4`; the other formats take the steps that apply to them, and every one is verified before it is published.
+
+| Format | Extension | What it is | Needs an encoder |
+| --- | --- | --- | --- |
+| `mp4` | `.mp4` | H.264 and AAC as described above | yes (ADR-0011 item 5) |
+| `gif` | `.gif` | the composed frames, written by the engine | no |
+| `wav` | `.wav` | the mix of section 7 as 16-bit PCM, 48 kHz, stereo, the file the encoder reads | no |
+| `aac` | `.m4a` | the same mix, AAC 192k in an MP4 container with `+faststart` | no (the `aac` audio encoder is in every build, SDD-011 §8.3) |
+
+**60 fps and 4K.** They are project settings (SDD-001), not presets, so no name is added to SDD-000. The ceilings of SDD-007 §9.1 (4096 pixels per side, 120 fps) are checked again before any work (`reason = "unsupported_size"`). A project larger than 1080x1920 or faster than 30 fps gets one more test encode before the first frame is composed: the detection encode of SDD-011 §8.4 repeated at the project's size and rate on the encoder that was chosen (`Runner.TestEncoderAt`, 15 frames, the 15 packets are counted), cached for the life of the runner. When it fails the export ends `failed` with `E_EXPORT_FAILED`, `details.reason = "unsupported_size"`, message "The encoder <name> on this machine cannot encode <w>x<h> at <fps> fps." and the hint to lower the size or rate or to install a build with an encoder that supports it. The bitrate rule of the table above already covers both: the base rate above 30 fps, scaled by the pixel count with the 2M floor (3840x2160 at 60 fps with the hardware encoders: 12M x 4.32 = 51.8M). Verification adds `avg_frame_rate` equal to the project's rate (as fractions) to the checks of step 7.
+
+**GIF.** The engine writes it (the GIF muxer and the `palettegen` filter are not used; no FFmpeg process runs for this format apart from the decoders of the clips). The frame rate of a GIF is the project's, divided by the smallest whole number that brings it to 25 or less (30 fps gives 15, 60 fps gives 20, 24 fps stays 24), because a delay is in hundredths of a second and browsers show a delay under 2 as 10. GIF frame `j` is timeline frame `j x step` and its delay is `round(100 x end) - round(100 x start)` of its span, never below 2, so the total stays within one hundredth of the timeline. The palette is fixed and the same for every frame and every project: a 6x6x6 colour cube (216 of the 256 entries, the rest black and unused) with Floyd-Steinberg error diffusion in integer arithmetic, left to right, so the same frames give the same bytes (NFR-010) and a still area does not flicker. Frames are full frames without transparency, the loop is infinite (NETSCAPE 2.0 with count 0), and they are streamed through `compress/lzw`, so the memory is one frame, not the animation. The size cap is checked as the file grows, and a GIF over `VUKEM_VIDEO_MAX_EXPORT_BYTES` ends `size_limit` at once. Verification walks the blocks of the file without decoding the pixels: the project's width and height, one frame for each planned delay with that delay, the infinite loop, a total within one frame (at least 0.02 s) of `N / fps`, no local colour table, and the trailer as the last byte. A later quality step (an adaptive palette, frame differences) changes the bytes and needs a note here.
+
+**Audio only.** The mix, the loudness gain and the measurement are those of section 7; no frame is composed. `wav` is the mix file itself. `aac` is `ffmpeg -i mix.wav -vn -c:a aac -b:a 192k -ar 48000 -ac 2 -movflags +faststart -f mp4`, with the bit-exact flags of the video export. Verification requires exactly one stream, of codec `pcm_s16le` (`wav`) or `aac`, 48000 Hz and 2 channels, a container duration within one frame of `N / fps`, and a whole file: for `wav` the RIFF and data sizes of the 44 byte header equal the file's, for `aac` the box walk of step 7 (`moov` before `mdat`, boxes that fill the file). A project with no audio exports a silent file of the right length. `Result.Format` and `Result.Encoder` (`gif`, `pcm_s16le`, `aac`) say what was written.
+
+**What needs the own build (P3-RND-001).** Nothing in this section does: the formats are written by Go, or use the `aac` and `pcm_s16le` encoders and the `mp4` and `wav` muxers of the pinned build, all inside the output allowlist of SDD-007 FF-13 (no format is added). 4K and 60 fps depend on the encoder the machine has: the pinned build has `libopenh264` (software, passes the test encode at 3840x2160 and at 60 fps on the Windows runner), `h264_mf` and the hardware encoders where present. The own build changes which software encoder is there, not the rules here; re-run `TestFormat4K` and `TestFormat60FPS` against it.
+
 ## 9. Frames for people and agents
 
 Both operations use the compositor, so they show what the export produces.
