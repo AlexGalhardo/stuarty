@@ -10,7 +10,7 @@ const layer = (
 	w: number,
 	h: number,
 	rotation = 0,
-): LayerGeometry => ({ item, cx, cy, w, h, rotation });
+): LayerGeometry => ({ item, cx, cy, w, h, rotation, scale: 1, opacity: 1 });
 
 describe("hitTest", () => {
 	test("an unrotated rectangle contains its own area, edges included", () => {

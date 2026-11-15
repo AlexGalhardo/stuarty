@@ -2,6 +2,7 @@ import { createContext, type ReactNode, useContext } from "react";
 import type { ActivityState } from "./activityStore";
 import { useStore } from "./createStore";
 import type { DocumentState } from "./documentStore";
+import type { EffectiveState } from "./effectiveStore";
 import type { EditorRuntime } from "./runtime";
 import type { UiState } from "./uiStore";
 
@@ -31,6 +32,10 @@ export function useDocumentState<T>(select: (state: DocumentState) => T): T {
 
 export function useUiState<T>(select: (state: UiState) => T): T {
 	return useStore(useRuntime().ui, select);
+}
+
+export function useEffectiveState<T>(select: (state: EffectiveState) => T): T {
+	return useStore(useRuntime().effective, select);
 }
 
 export function useActivityState<T>(select: (state: ActivityState) => T): T {

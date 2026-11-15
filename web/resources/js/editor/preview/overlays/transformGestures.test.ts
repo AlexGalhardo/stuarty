@@ -17,6 +17,8 @@ const box: LayerGeometry = {
 	w: 40,
 	h: 20,
 	rotation: 10,
+	scale: 1,
+	opacity: 1,
 };
 
 describe("transform gestures (screen arithmetic)", () => {

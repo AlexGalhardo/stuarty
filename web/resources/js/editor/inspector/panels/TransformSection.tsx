@@ -7,7 +7,12 @@ import {
 } from "../../commands/builders";
 import { keyframeValueAt } from "../../commands/units";
 import { useCanEdit } from "../../commands/useActions";
-import { useDocumentState, useUiState } from "../../state/EditorContext";
+import {
+	useDocumentState,
+	useEffectiveState,
+	useUiState,
+} from "../../state/EditorContext";
+import type { EffectiveValues } from "../../state/effectiveStore";
 import NumberField from "../fields/NumberField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
@@ -49,9 +54,15 @@ function shown(
 	property: TransformProperty,
 	playhead: number,
 	size: { width: number; height: number },
+	effective: EffectiveValues | undefined,
 ): string {
 	const keys = item.keyframes?.[property];
 	if (keys !== undefined && keys.length > 0) {
+		// The plan reports the effective scale and opacity; until its window
+		// arrives the field shows nothing rather than a value worked out here.
+		if (property === "scale" || property === "opacity") {
+			return effective === undefined ? "" : round3(effective[property]);
+		}
 		return round3(keyframeValueAt(keys, item.start, playhead));
 	}
 	switch (property) {
@@ -85,6 +96,7 @@ export default function TransformSection({
 	const width = useDocumentState((s) => s.document?.settings.width);
 	const height = useDocumentState((s) => s.document?.settings.height);
 	const playhead = useUiState((s) => s.playheadFrame);
+	const effective = useEffectiveState((s) => s.items);
 	const targets = itemIds.flatMap((id) => {
 		const item = items?.[id];
 		return item === undefined ? [] : [item];
@@ -96,7 +108,13 @@ export default function TransformSection({
 		<Section title={t("ui.editor.inspector.transform_title")}>
 			{ROWS.map((row) => {
 				const values = targets.map((item) =>
-					shown(item, row.property, playhead, { width, height }),
+					shown(
+						item,
+						row.property,
+						playhead,
+						{ width, height },
+						effective[item.id],
+					),
 				);
 				const same = values.every((value) => value === values[0]);
 				const animated = targets.some(

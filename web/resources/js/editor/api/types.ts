@@ -199,6 +199,8 @@ interface PlanLayerBase {
 	w: PerFrame;
 	h: PerFrame;
 	rotation: PerFrame;
+	// The effective scale and opacity, keyframes and presets applied.
+	scale: PerFrame;
 	opacity: PerFrame;
 }
 
