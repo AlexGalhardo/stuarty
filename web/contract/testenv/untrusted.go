@@ -19,7 +19,9 @@ type HostileName struct {
 }
 
 // HostileNames reads the fixture at path and keeps the names this operating
-// system can create.
+// system can create and the import guard accepts: a control character in a
+// path is refused by the guard (SDD-007 section 7.1, tested in pathguard), so
+// such a name never reaches the text of a result.
 func HostileNames(tb testing.TB, path string) []HostileName {
 	tb.Helper()
 
@@ -34,6 +36,10 @@ func HostileNames(tb testing.TB, path string) []HostileName {
 	}
 
 	for _, n := range all {
+		if strings.IndexFunc(n.Name, unicode.IsControl) >= 0 {
+			continue
+		}
+
 		if n.Windows || runtime.GOOS != "windows" {
 			usable = append(usable, n)
 		}
