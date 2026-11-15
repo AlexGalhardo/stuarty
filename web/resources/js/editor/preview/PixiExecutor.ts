@@ -58,6 +58,9 @@ export class PixiExecutor implements PreviewExecutor {
 	private app: Application | null = null;
 	private readonly stage = new Container();
 	private info: ProjectInfo | null = null;
+	// The last size asked for: the first resize arrives before the renderer has
+	// finished its async init, and is applied when it has.
+	private buffer: { width: number; height: number } | null = null;
 	private revision = 0;
 	private frame = 0;
 	private state: PreviewState = "idle";
@@ -134,6 +137,7 @@ export class PixiExecutor implements PreviewExecutor {
 			}
 			app.stage.addChild(this.stage);
 			this.app = app;
+			this.applyBuffer();
 			this.context = new AudioContext();
 			this.audioGraph.attach(this.context);
 			this.redraw();
@@ -187,10 +191,15 @@ export class PixiExecutor implements PreviewExecutor {
 	}
 
 	resize(bufferWidth: number, bufferHeight: number): void {
-		if (this.app === null || this.info === null) return;
-		this.app.renderer.resize(bufferWidth, bufferHeight);
-		this.stage.scale.set(bufferWidth / this.info.width);
+		this.buffer = { width: bufferWidth, height: bufferHeight };
+		this.applyBuffer();
 		this.redraw();
+	}
+
+	private applyBuffer(): void {
+		if (this.app === null || this.info === null || this.buffer === null) return;
+		this.app.renderer.resize(this.buffer.width, this.buffer.height);
+		this.stage.scale.set(this.buffer.width / this.info.width);
 	}
 
 	seek(frame: number, options: { scrubbing?: boolean } = {}): void {
