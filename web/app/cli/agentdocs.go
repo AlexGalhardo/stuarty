@@ -19,13 +19,18 @@ import (
 func AgentDocsInputs() agentdocs.Inputs {
 	in := agentdocs.Inputs{Commands: command.Default().List(), Lint: lint.Catalog()}
 
-	for _, c := range Reference().Commands {
+	commands := Reference().Commands
+
+	for i := range commands {
+		c := &commands[i]
 		usage := ""
 		if len(c.Usage) > 0 {
 			usage = strings.TrimPrefix(c.Usage[0], "vukem-video ")
 		}
 
-		in.CLI = append(in.CLI, agentdocs.CLICommand{Name: c.Name, Summary: c.Summary, Usage: usage, Pending: c.Pending != ""})
+		in.CLI = append(in.CLI, agentdocs.CLICommand{
+			Name: c.Name, Summary: c.Summary, Usage: usage, Pending: c.Pending != "",
+		})
 	}
 
 	return in

@@ -37,7 +37,8 @@ func TestCheckFailsOnAHandEdit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if code := run([]string{"-check", "-dir", dir}, &out, &errOut); code != 1 || !bytes.Contains(out.Bytes(), []byte("SKILL.md")) {
+	code := run([]string{"-check", "-dir", dir}, &out, &errOut)
+	if code != 1 || !bytes.Contains(out.Bytes(), []byte("SKILL.md")) {
 		t.Fatalf("check after a hand edit: exit %d: %s", code, out.String())
 	}
 }

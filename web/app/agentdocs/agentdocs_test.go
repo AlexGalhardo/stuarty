@@ -63,7 +63,8 @@ func TestAgentDocsGenerated(t *testing.T) {
 	}
 
 	snippet := string(files[agentdocs.SnippetFile])
-	begin, end := strings.Index(snippet, "<!-- vukem-video:begin -->"), strings.Index(snippet, "<!-- vukem-video:end -->")
+	begin := strings.Index(snippet, "<!-- vukem-video:begin -->")
+	end := strings.Index(snippet, "<!-- vukem-video:end -->")
 
 	if begin < 0 || end < begin {
 		t.Fatal("the snippet has no begin and end markers")
@@ -200,9 +201,13 @@ func TestErrorTable(t *testing.T) {
 		}
 	}
 
+	// The failures of a job are 500 in service.Error: their reason is in details.
+	jobFailures := []string{
+		"E_INTERNAL", "E_INGEST_FAILED", "E_EXPORT_FAILED", "E_VERIFY_FAILED", "E_TRANSCRIBE_FAILED", "E_CANCELLED",
+	}
+
 	for _, r := range agentdocs.Errors {
-		if st := (&service.Error{Code: r.Code}).HTTPStatus(); st == 500 && r.Code != "E_INTERNAL" &&
-			!slices.Contains([]string{"E_INGEST_FAILED", "E_EXPORT_FAILED", "E_VERIFY_FAILED", "E_TRANSCRIBE_FAILED", "E_CANCELLED"}, r.Code) {
+		if st := (&service.Error{Code: r.Code}).HTTPStatus(); st == 500 && !slices.Contains(jobFailures, r.Code) {
 			t.Errorf("%s has no HTTP status in service.Error", r.Code)
 		}
 	}
