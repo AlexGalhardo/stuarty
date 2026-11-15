@@ -52,6 +52,15 @@ var requiredCases = []string{
 	"speed-double",
 	"fps-30000-1001",
 	"source-fps-24",
+	"filter-grayscale",
+	"filter-sepia",
+	"filter-invert",
+	"filter-warm",
+	"filter-cool",
+	"blur-2",
+	"blur-6",
+	"blur-16",
+	"blur-still",
 }
 
 const (
@@ -181,6 +190,34 @@ func speedCase(name string, speed timeline.Rational, dur int, frames ...int) alp
 	return b.build(frames...)
 }
 
+// filterCase draws the filter on a layer that stays (the portrait clip) and on one that moves (a
+// picture in picture sliding across it), both from the same clip, so a filter is checked on pixels
+// that change place and on pixels that do not (SDD-004 section 3.6, P3-RND-003).
+func filterCase(name string) alphaCase {
+	b := newCase("filter "+name, rate(30, 1))
+	b.clip(b.track(), b.video(portrait), 0, 30, func(it *timeline.Item) {
+		it.Filter, it.FilterAmount = name, 1
+	})
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale, it.Filter, it.FilterAmount = "contain", 0.6, name, 1
+		it.Y = new(220.0)
+		it.Keyframes = timeline.Keyframes{"x": {timeline.NewKeyframe(0, 60), timeline.NewKeyframe(29, 120)}}
+	})
+	return b.build(0, 15, 29)
+}
+
+// blurCase blurs a picture in picture that slides across the portrait clip.
+func blurCase(radius float64) alphaCase {
+	b := newCase("blur", rate(30, 1))
+	b.backdrop(30)
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale, it.Blur = "contain", 0.7, radius
+		it.Y = new(160.0)
+		it.Keyframes = timeline.Keyframes{"x": {timeline.NewKeyframe(0, 70), timeline.NewKeyframe(29, 110)}}
+	})
+	return b.build(0, 15, 29)
+}
+
 // alphaCases are the builders of the cases, by folder name.
 var alphaCases = map[string]func() alphaCase{
 	"contain-background": func() alphaCase {
@@ -286,6 +323,19 @@ var alphaCases = map[string]func() alphaCase{
 		b := newCase("a 30000/1001 project", rate(30000, 1001))
 		b.clip(b.track(), b.video(portrait), 0, 60, nil)
 		return b.build(0, 15, 30, 45, 59)
+	},
+	"filter-grayscale": func() alphaCase { return filterCase("grayscale") },
+	"filter-sepia":     func() alphaCase { return filterCase("sepia") },
+	"filter-invert":    func() alphaCase { return filterCase("invert") },
+	"filter-warm":      func() alphaCase { return filterCase("warm") },
+	"filter-cool":      func() alphaCase { return filterCase("cool") },
+	"blur-2":           func() alphaCase { return blurCase(2) },
+	"blur-6":           func() alphaCase { return blurCase(6) },
+	"blur-16":          func() alphaCase { return blurCase(16) },
+	"blur-still": func() alphaCase {
+		b := newCase("a blurred still layer", rate(30, 1))
+		b.clip(b.track(), b.video(portrait), 0, 30, func(it *timeline.Item) { it.Blur = 8 })
+		return b.build(0, 15, 29)
 	},
 	"source-fps-24": func() alphaCase {
 		b := newCase("a source at 24 fps in a 30 fps project", rate(30, 1))
@@ -437,6 +487,28 @@ func TestGoldenAlphaCases(t *testing.T) {
 				if got := sum(pix); got != sum(want) {
 					t.Errorf("frame %d: %s, reference %s", frames[i], got, sum(want))
 					saveMismatch(t, name, frames[i], doc.Settings.Width, doc.Settings.Height, pix)
+				}
+			}
+		})
+	}
+}
+
+// SDD-004 section 12 rule 3 on the blur and filter cases: 0 differing bytes between 1 and 8 bands.
+func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
+	setup(t)
+	for _, name := range requiredCases {
+		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") {
+			continue
+		}
+		t.Run(name, func(t *testing.T) {
+			dir := goldenDir(name)
+			doc := loadDir(t, dir)
+			frames := readFrames(t, dir)
+			one := renderDoc(t, doc, name, 1, frames)
+			eight := renderDoc(t, doc, name, 8, frames)
+			for i, f := range frames {
+				if !bytes.Equal(one[i], eight[i]) {
+					t.Fatalf("frame %d differs between 1 band and 8 bands", f)
 				}
 			}
 		})

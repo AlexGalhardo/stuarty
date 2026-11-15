@@ -67,3 +67,16 @@ func BenchmarkComposeColorMatrix(b *testing.B) {
 
 	benchCompose(b, func(_ int, l *plan.Layer) { l.ColorMatrix = &m })
 }
+
+// BenchmarkComposeBlur: the second 1080x1920 layer blurred with a standard deviation of 12 pixels
+// (SDD-004 section 12: at least 1.0 times real time).
+func BenchmarkComposeBlur(b *testing.B) {
+	benchCompose(b, func(_ int, l *plan.Layer) { l.Blur = 12 })
+}
+
+// BenchmarkComposeFilter: a filter matrix on every pixel of the second layer.
+func BenchmarkComposeFilter(b *testing.B) {
+	m := plan.FilterMatrix("sepia", 1)
+
+	benchCompose(b, func(_ int, l *plan.Layer) { l.Filter = m })
+}

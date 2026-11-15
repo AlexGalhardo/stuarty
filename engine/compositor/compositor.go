@@ -55,6 +55,9 @@ type Compositor struct {
 	Bands int
 
 	scratch []byte
+	// blurA and blurB are the two buffers a blur ping-pongs between; the result is in blurA.
+	blurA []byte
+	blurB []uint32
 	premul  map[string]Image
 	premulN int
 }
@@ -152,6 +155,12 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, outScale float64) err
 	}
 	if l.ColorMatrix != nil {
 		src = c.applyMatrix(src, l.ColorMatrix)
+	}
+	if l.Filter != nil {
+		src = c.applyMatrix(src, l.Filter)
+	}
+	if l.Blur > 0 {
+		src, p = c.blurred(src, p, mul(l.Blur, outScale))
 	}
 	c.draw(dst, src, p, op)
 	return nil
@@ -279,6 +288,10 @@ func (c *Compositor) blit(dst *image.RGBA, src Image, x0, y0 int, op uint32) {
 func overRow(d, s []byte, op uint32) {
 	for i := 0; i+3 < len(s); i += 4 {
 		a := uint32(s[i+3])
+		if op == 255 && a == 255 {
+			copy(d[i:i+4], s[i:i+4])
+			continue
+		}
 		if op != 255 {
 			a = div255(a * op)
 		}
