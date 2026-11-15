@@ -2876,6 +2876,16 @@ Frontmatter: `name: vukem-video`, `description:` one paragraph that states when 
 
 Between the markers `<!-- vukem-video:begin -->` and `<!-- vukem-video:end -->` (so a later run replaces the block and leaves the text around it, as vukem's `boost:install` does for its own block, `docs/cli.md`): what the tool is in one sentence, the five-line loop, the three rules (units on times, `--base`, top track), the pointer to the skill file and to `vukem-video command:help`, and the safety line. At most 40 lines.
 
+### 8.6 What P2-AGT-008 has built, and where it differs from §8.1 to §8.5
+
+The package is `web/app/agentdocs` (templates in `templates/`, committed output in `out/`, `go:embed` of `out/`), the generator is `web/cmd/gen-agent-docs` (`--check`, `--dir`) and `vukem-video agent:docs --print skill|agents|instructions` or `--write <dir>` prints or writes the embedded copy. The MCP server reads its `instructions` from `agentdocs.Instructions()`; `web/app/mcp/instructions.txt` is gone.
+
+- **Inputs are passed in, not imported.** The CLI imports `agentdocs`, so the CLI table cannot be imported back: `cli.AgentDocsInputs()` builds `agentdocs.Inputs` (the registry list, the lint catalogue, the first usage line of each command) and the generator and the tests call it. The tool table and the error table (code, retryable, usual fix; the HTTP status comes from `service.Error.HTTPStatus`) are Go data in `data.go`; `TestToolTable` compares the first with the server and `TestErrorTable` the second with the core codes.
+- **Version.** `agentdocs.Version` is the version written in the header and in `metadata.version`; the release commit bumps it and regenerates `out/`, so `--check` stays deterministic.
+- **Recipes.** §8.2 item 4 (recipes rendered from scenario files) belongs to P2-AGT-009; the skill carries one hand-written recipe whose commands `TestAgentDocsGenerated` checks against the CLI.
+- **Size.** To stay at 12,000 characters with 47 operations, the operation, rule, error and tool tables are bulleted lists, and the skill shows a phase letter instead of the scope column (`asset.remove` is the only operation that needs the media scope, said in the text). `TestAgentDocsGenerated` fails when a new operation pushes it over.
+- **`doctor`** is not in the Setup check yet: the command does not exist (P2-AGT-002), so the skill uses `version` and `project:list`.
+
 ## 9. Acceptance
 
 The implementation of this SDD is complete when every check below passes. "Test" names are Go tests under the packages named in §1.2 unless noted.
