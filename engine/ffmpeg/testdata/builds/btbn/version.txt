@@ -1,0 +1,4 @@
+ffmpeg version n9.0.2-39-g7adfbe40dc-20261031 Copyright (c) 2000-2026 the FFmpeg developers
+built with gcc 16.2.0 (crosstool-NG 1.29.0.7_b1a94f6)
+configuration: --prefix=/ffbuild/prefix --pkg-config-flags=--static --enable-version3 --disable-libx264 --disable-libx265 --enable-libopenh264 --extra-version=20261031
+libavutil      61.  1.102 / 61.  1.102
