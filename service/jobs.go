@@ -264,9 +264,19 @@ func exportRange(doc *timeline.Document, a ExportArgs) (start, end int64, err *E
 	return start, end, nil
 }
 
-// otherProject is true for a key limited to one project and a job of another.
-func otherProject(c Caller, j *JobRow) bool {
-	return c.ProjectID != "" && j.ProjectID != nil && *j.ProjectID != c.ProjectID
+// refuseJob is the answer for a job the caller cannot use. A key limited to one
+// project is told E_FORBIDDEN only when the job belongs to a project of its own
+// owner, which it may already know about; for any other job, including that of
+// another user, the answer is the one of a job that does not exist, so no job
+// is disclosed.
+func (s *svc) refuseJob(ctx context.Context, c Caller, j *JobRow, id string) *Error {
+	if c.ProjectID != "" && j != nil && j.ProjectID != nil && *j.ProjectID != c.ProjectID {
+		if h, err := s.store.Projects().Head(ctx, *j.ProjectID); err == nil && visible(c, h.OwnerUserID) {
+			return limitedElsewhere()
+		}
+	}
+
+	return jobNotFound(id)
 }
 
 func limitedElsewhere() *Error {
@@ -326,12 +336,12 @@ func (s *svc) JobGet(ctx context.Context, req JobGetRequest) (*Job, error) {
 	}
 
 	row, gerr := s.store.Jobs().Get(ctx, req.JobID)
-	if gerr == nil && otherProject(c, &row) {
-		return nil, limitedElsewhere()
+	if gerr != nil {
+		return nil, jobNotFound(req.JobID)
 	}
 
-	if gerr != nil || !s.canSee(ctx, c, &row) {
-		return nil, jobNotFound(req.JobID)
+	if !s.canSee(ctx, c, &row) {
+		return nil, s.refuseJob(ctx, c, &row, req.JobID)
 	}
 
 	if req.WaitMS > 0 {
@@ -490,18 +500,20 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 			withHint("send the local token or an API key")
 	}
 
-	row, err := s.store.Jobs().Get(ctx, req.JobID)
-	if err == nil && otherProject(c, &row) {
-		return nil, limitedElsewhere()
+	// The scope comes first: a caller with neither render nor media learns
+	// nothing about the job, whoever owns it.
+	if !slices.Contains(c.Scopes, ScopeRender) && !slices.Contains(c.Scopes, ScopeMedia) {
+		return nil, newError(CodeForbidden, "the caller lacks the %q scope.", ScopeRender).
+			withHint("use a key with the %s scope", ScopeRender)
 	}
 
-	if err != nil || !s.canSee(ctx, c, &row) {
-		if !slices.Contains(c.Scopes, ScopeRender) && !slices.Contains(c.Scopes, ScopeMedia) {
-			return nil, newError(CodeForbidden, "the caller lacks the %q scope.", ScopeRender).
-				withHint("use a key with the %s scope", ScopeRender)
-		}
-
+	row, err := s.store.Jobs().Get(ctx, req.JobID)
+	if err != nil {
 		return nil, jobNotFound(req.JobID)
+	}
+
+	if !s.canSee(ctx, c, &row) {
+		return nil, s.refuseJob(ctx, c, &row, req.JobID)
 	}
 
 	ownMediaJob := slices.Contains(c.Scopes, ScopeMedia) && row.Kind == JobIngest && row.Actor == c.Actor

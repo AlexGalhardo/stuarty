@@ -239,3 +239,73 @@ func TestAuthzInternalCommandIsUnknownToCallers(t *testing.T) {
 		t.Error("CommandHelp explains asset.add")
 	}
 }
+
+// A project-limited key is told E_FORBIDDEN only about jobs of its own owner's
+// projects; a job of another user answers like a job that does not exist.
+func TestAuthzLimitedKeyDoesNotLearnAboutAnotherUsersJob(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true, exporter: goodExporter()})
+	alice, bob := network("user:alice", "alice"), network("user:bob", "bob")
+
+	mk := func(c context.Context) (project string) {
+		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: "p"})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		first, err := m.svc.Edit(c, service.EditRequest{
+			ProjectID: res.ProjectID, Operations: []command.Operation{op("track.add", `{"kind":"visual"}`)},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if _, err := m.svc.Edit(c, service.EditRequest{
+			ProjectID: res.ProjectID, BaseRevision: 1,
+			Operations: []command.Operation{
+				op("text.add", `{"track_id":"`+first.Created[0]+`","start":"0s","duration":"1s","text":"x"}`),
+			},
+		}); err != nil {
+			t.Fatal(err)
+		}
+
+		return res.ProjectID
+	}
+
+	mine, other, theirs := mk(alice), mk(alice), mk(bob)
+
+	jobOf := func(c context.Context, p string) string {
+		j, err := m.svc.JobStart(c, service.JobStartRequest{ProjectID: p, Kind: service.JobExport})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return j.JobID
+	}
+
+	otherJob, theirJob := jobOf(alice, other), jobOf(bob, theirs)
+
+	limited := service.WithCaller(context.Background(), service.Caller{
+		Actor: "key:limited", Scopes: service.AllScopes, OwnerUserID: "alice", ProjectID: mine,
+	})
+
+	get := func(id string) error {
+		_, err := m.svc.JobGet(limited, service.JobGetRequest{JobID: id})
+		return err
+	}
+	cancel := func(id string) error {
+		_, err := m.svc.JobCancel(limited, service.JobCancelRequest{JobID: id})
+		return err
+	}
+
+	for name, call := range map[string]func(string) error{"JobGet": get, "JobCancel": cancel} {
+		if err := call(otherJob); code(err) != service.CodeForbidden {
+			t.Errorf("%s on a job of the owner's other project = %v, want E_FORBIDDEN", name, err)
+		}
+
+		hidden, missing := serviceErr(call(theirJob)), serviceErr(call("job_0000000000"))
+		if hidden == nil || missing == nil || hidden.Code != command.CodeNotFound || hidden.Code != missing.Code ||
+			hidden.Hint != missing.Hint {
+			t.Errorf("%s on another user's job = %+v, want the answer of a missing job (%+v)", name, hidden, missing)
+		}
+	}
+}
