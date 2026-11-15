@@ -89,6 +89,10 @@ async function seed(
 // P3-UI-007 (SDD-012 sections 9.3 and 12.1): the inspector entry points of the
 // BETA item commands.
 test.describe("beta-commands", () => {
+	// Each test seeds a project with a clip and an audio item through the real
+	// server and imports two files: well above the default 30 s on a busy machine.
+	test.describe.configure({ timeout: 120_000 });
+
 	test("the BETA registry draws the BETA controls", async ({
 		page,
 		request,
