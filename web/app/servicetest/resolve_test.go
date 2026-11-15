@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -99,14 +100,25 @@ func TestResolveSilencesFromTheArtifact(t *testing.T) {
 
 	clips := 0
 
+	var spans [][2]int
+
 	for _, it := range doc.Items {
 		if it.Type == timeline.ItemClip {
 			clips++
+
+			spans = append(spans, [2]int{it.Start, it.Duration})
 		}
 	}
 
+	slices.SortFunc(spans, func(a, b [2]int) int { return a[0] - b[0] })
+
 	if clips != 2 || res.Revision != rev+1 {
 		t.Errorf("clips = %d, revision %d; one clip becomes two in one revision", clips, res.Revision)
+	}
+
+	// The silence 15..30 leaves the pieces [0,15) and what follows it.
+	if len(spans) == 2 && spans[0] != [2]int{0, 15} {
+		t.Errorf("pieces = %v, want the first to be [0,15)", spans)
 	}
 
 	stored := storedOps(t, m, project, rev+1)
