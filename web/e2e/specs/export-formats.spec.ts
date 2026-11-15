@@ -10,17 +10,15 @@ test.describe.configure({ timeout: 120_000 });
 // What the server lists as export arguments in its OpenAPI document. The
 // dialog offers only these, so a spec about a format runs only when the server
 // has wired it (P3-SRV-005).
-async function exposes(
-	page: Page,
-	member: "formats" | "fps" | "sizes",
-): Promise<boolean> {
+async function exposes(page: Page): Promise<boolean> {
 	const response = await page.request.get("/openapi.json");
 	if (!response.ok()) return false;
-	return exportCapabilities(await response.json())[member].length > 0;
+	return exportCapabilities(await response.json()).formats.length > 0;
 }
 
 // P3-UI-006 (SDD-012 section 14): bundles from the projects page, and the
-// format, frame rate and size options of the export dialog.
+// format option of the export dialog (frame rate and size are project settings,
+// SDD-004 section 8.1).
 test.describe("export-formats", () => {
 	test("a bundle exported from a project imports back with the same name", async ({
 		page,
@@ -92,8 +90,6 @@ test.describe("export-formats", () => {
 										type: "object",
 										properties: {
 											format: { enum: ["mp4", "gif", "wav", "aac"] },
-											fps: { enum: [30, 60] },
-											size: { enum: ["3840x2160"] },
 										},
 									},
 								},
@@ -147,24 +143,23 @@ test.describe("export-formats", () => {
 		await page.getByRole("button", { name: "Export", exact: true }).click();
 		const dialog = page.getByRole("dialog");
 		await dialog.getByLabel("Format").selectOption({ label: "GIF animation" });
-		await dialog.getByLabel("Frame rate").selectOption({ label: "60 fps" });
-		await expect.poll(() => bodies.length).toBe(2);
+		await expect.poll(() => bodies.length).toBe(1);
 		expect(bodies.at(-1)).toMatchObject({
-			args: { format: "gif", fps: 60 },
+			args: { format: "gif" },
 			dry_run: true,
 		});
 		await dialog.getByRole("button", { name: "Start export" }).click();
 		await expect(dialog.locator("[data-phase='succeeded']")).toBeVisible();
 		expect(bodies.at(-1)).toEqual({
 			kind: "export",
-			args: { format: "gif", fps: 60 },
+			args: { format: "gif" },
 		});
 		await expect(
 			dialog.getByRole("link", { name: "Download" }),
 		).toHaveAttribute("href", "/api/v1/jobs/job_stubgif/file");
 	});
 
-	test("the dialog shows the E_NO_ENCODER hint of the core for 4K and blocks Start", async ({
+	test("the dialog shows the E_NO_ENCODER hint of the core for a format and blocks Start", async ({
 		page,
 		request,
 	}) => {
@@ -177,8 +172,8 @@ test.describe("export-formats", () => {
 				contentType: "application/json",
 				json: {
 					code: "E_NO_ENCODER",
-					message: "The encoder on this machine cannot encode 3840x2160.",
-					hint: "Lower the size or install a build with another encoder.",
+					message: "The encoder on this machine cannot encode a GIF.",
+					hint: "Choose another format or install a build with another encoder.",
 					retryable: false,
 				},
 			});
@@ -187,13 +182,15 @@ test.describe("export-formats", () => {
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);
 		await page.getByRole("button", { name: "Export", exact: true }).click();
 		const dialog = page.getByRole("dialog");
-		await dialog.getByLabel("Size").selectOption("3840x2160");
+		await dialog.getByLabel("Format").selectOption({ label: "GIF animation" });
 		await expect(dialog.getByRole("alert")).toContainText("E_NO_ENCODER");
-		await expect(dialog.getByRole("alert")).toContainText("Lower the size");
+		await expect(dialog.getByRole("alert")).toContainText(
+			"Choose another format",
+		);
 		await expect(
 			dialog.getByRole("button", { name: "Start export" }),
 		).toBeDisabled();
-		await dialog.getByLabel("Size").selectOption("");
+		await dialog.getByLabel("Format").selectOption({ label: "MP4 video" });
 		await expect(dialog.getByRole("alert")).toHaveCount(0);
 	});
 
@@ -205,7 +202,7 @@ test.describe("export-formats", () => {
 		await page.goto(`/editor/${seeded.id}`);
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);
 		test.skip(
-			!(await exposes(page, "formats")),
+			!(await exposes(page)),
 			"the server does not list the format argument of job_start yet",
 		);
 
@@ -226,29 +223,5 @@ test.describe("export-formats", () => {
 			await page.reload();
 			await expect(page.locator("[data-item-id]")).toHaveCount(1);
 		}
-	});
-
-	test("a 4K request the machine cannot encode shows the core hint and blocks Start", async ({
-		page,
-		request,
-	}) => {
-		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
-		await page.goto(`/editor/${seeded.id}`);
-		await expect(page.locator("[data-item-id]")).toHaveCount(1);
-		test.skip(
-			!(await exposes(page, "sizes")),
-			"the server does not list the size argument of job_start yet",
-		);
-		test.skip(
-			process.env.VUKEM_VIDEO_ENCODER === undefined,
-			"needs the server started with VUKEM_VIDEO_ENCODER forcing an encoder without 4K",
-		);
-		await page.getByRole("button", { name: "Export", exact: true }).click();
-		const dialog = page.getByRole("dialog");
-		await dialog.getByLabel("Size").selectOption({ index: 1 });
-		await expect(dialog.getByRole("alert")).toContainText("E_NO_ENCODER");
-		await expect(
-			dialog.getByRole("button", { name: "Start export" }),
-		).toBeDisabled();
 	});
 });

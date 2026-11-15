@@ -700,14 +700,10 @@ export interface FontImportResult {
 // them the server accepts is read from its schema, never assumed.
 export interface ExportOptions {
 	format?: string;
-	fps?: number;
-	size?: string;
 }
 
 export interface ExportCapabilities {
 	formats: string[];
-	fps: number[];
-	sizes: string[];
 }
 
 // POST /projects/import answers 201 with the project it made.

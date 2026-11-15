@@ -26,32 +26,28 @@ function render(
 
 describe("ExportOptionsFields", () => {
 	test("a server that exposes no option shows none", () => {
-		expect(render({ formats: [], fps: [], sizes: [] })).toBe("");
+		expect(render({ formats: [] })).toBe("");
 	});
 
-	test("only the members the server lists are offered", () => {
-		const html = render({ formats: ["mp4", "gif"], fps: [60], sizes: [] });
+	test("only the formats the server lists are offered", () => {
+		const html = render({ formats: ["mp4", "gif"] });
 		expect(html).toContain("GIF animation");
 		expect(html).not.toContain("WAV audio only");
-		expect(html).toContain("60 fps");
-		expect(html).not.toContain('id="export-size"');
-	});
-
-	test("audio only turns the rate and the size off", () => {
-		const html = render(
-			{ formats: ["wav"], fps: [60], sizes: ["3840x2160"] },
-			{ format: "wav" },
-		);
-		expect(html.match(/disabled=""/g)?.length).toBe(2);
+		expect(html).not.toContain("export-fps");
+		expect(html).not.toContain("export-size");
 	});
 
 	test("the core refusal is shown with its code and hint", () => {
 		const html = render(
-			{ formats: [], fps: [60], sizes: ["3840x2160"] },
-			{ size: "3840x2160" },
-			{ code: "E_NO_ENCODER", message: "no encoder", hint: "lower the size" },
+			{ formats: ["mp4", "gif"] },
+			{ format: "gif" },
+			{
+				code: "E_NO_ENCODER",
+				message: "no encoder",
+				hint: "use another format",
+			},
 		);
 		expect(html).toContain("E_NO_ENCODER");
-		expect(html).toContain("lower the size");
+		expect(html).toContain("use another format");
 	});
 });

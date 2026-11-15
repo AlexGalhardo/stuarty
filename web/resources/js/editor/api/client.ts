@@ -63,8 +63,8 @@ export interface ApiClient {
 	listMedia(projectId: string): Promise<MediaListResult>;
 	importMedia(projectId: string, paths: string[]): Promise<MediaImportResult>;
 	getLint(projectId: string): Promise<LintResult>;
-	// `options` are the export arguments the server schema exposes (format, fps,
-	// size); `dryRun` runs the lint gate and the limits and queues nothing.
+	// `options` are the export arguments the server schema exposes (format only: fps
+	// and size are project settings); `dryRun` runs the lint gate and the limits and queues nothing.
 	startExport(
 		projectId: string,
 		options?: ExportOptions,

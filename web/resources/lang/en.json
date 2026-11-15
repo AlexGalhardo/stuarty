@@ -376,11 +376,6 @@
         "options": {
           "title": "Export options",
           "format": "Format",
-          "fps": "Frame rate",
-          "size": "Size",
-          "project_rate": "Project rate",
-          "project_size": "Project size",
-          "fps_value": "{fps} fps",
           "formats": {
             "mp4": "MP4 video",
             "gif": "GIF animation",
