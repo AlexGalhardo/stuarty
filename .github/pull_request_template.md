@@ -9,6 +9,7 @@ Release pull request for **vX.Y.Z**: every microcommit since the previous tag la
 
 - Commits since the previous tag: N (target: about 90 per release, D-026)
 - Tasks: <!-- ROADMAP ids of the tasks this release closes -->
+- Docs page: <!-- path of the guide page under site/content/docs/ that a feat commit changes or adds; "none" with the reason when no page applies -->
 
 ### Added
 
