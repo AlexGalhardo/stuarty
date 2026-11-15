@@ -99,7 +99,7 @@ const MaxAlloc = 1 << 30
 // containers and image formats. HLS, DASH, concat, ffconcat, tee, sdp, rtsp, lavfi,
 // subtitle formats and playlists are absent. TestSecurity_T14 runs every supported
 // sample and every hostile one against this list on the pinned build.
-const InputFormats = "mov,mp4,m4a,3gp,3g2,mj2,matroska,webm,avi,mpegts,mpeg,flv,wav,mp3,ogg,flac,aac,image2,png_pipe,jpeg_pipe,webp_pipe,gif"
+const InputFormats = "mov,mp4,m4a,3gp,3g2,mj2,matroska,webm,avi,mpegts,mpeg,flv,wav,mp3,ogg,flac,aac,image2,png_pipe,jpeg_pipe,webp_pipe,gif,apng,webp_anim"
 
 // inputFormatSet is InputFormats as a set, for checking ffprobe's format_name.
 var inputFormatSet = func() map[string]bool {

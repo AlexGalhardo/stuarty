@@ -576,3 +576,24 @@ func HDRSmoke(pol Policy) ([]string, error) {
 		Outputs: []Output{{Format: "null", Maps: []string{"0:v:0"}, VF: Chain1(f...)}},
 	}.Argv(pol)
 }
+
+// MaxAnimProbePackets is how many packets ProbeAnimPackets reads: one more than the frames an
+// animated image may have, so a file with more is seen to be over the ceiling without reading all of it.
+const MaxAnimProbePackets = 1001
+
+// ProbeAnimPackets lists the start and the duration of the first MaxAnimProbePackets packets of an
+// image stream: the frame delays of an animated image (SDD-011 3.4 row 3), read without decoding.
+func ProbeAnimPackets(pol Policy, path string, stream int) ([]string, error) {
+	return probeArgv(
+		pol,
+		path,
+		"-select_streams",
+		strconv.Itoa(stream),
+		"-read_intervals",
+		"%+#1001",
+		"-show_entries",
+		"packet=pts_time,duration_time",
+		"-of",
+		"csv=p=0",
+	)
+}
