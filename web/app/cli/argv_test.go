@@ -52,8 +52,8 @@ func TestParseArgs(t *testing.T) {
 		t.Fatalf("a repeatable flag keeps its order: %v", p.all("asset-id"))
 	}
 
-	if p.duration("timeout").String() != "10m0s" {
-		t.Fatalf("the default must apply: %v", p.duration("timeout"))
+	if p.timeout().String() != "10m0s" {
+		t.Fatalf("the default must apply: %v", p.timeout())
 	}
 }
 
