@@ -65,6 +65,10 @@ type frameSource struct {
 	used   map[string]bool
 	images map[string]compositor.Image // decoded PNG by asset id
 	placed map[string]compositor.Image // an image cropped and scaled for its item
+
+	anims      map[string]*ingest.Anim      // open frame sequence of an animated image by asset id
+	animFrames map[animKey]compositor.Image // its frames cropped and scaled for their item
+	animBytes  int64
 }
 
 func newFrameSource(s *state, infos map[string]*layerInfo) *frameSource {
@@ -72,6 +76,7 @@ func newFrameSource(s *state, infos map[string]*layerInfo) *frameSource {
 		s: s, infos: infos,
 		vids: map[string]*videoDecoder{}, used: map[string]bool{},
 		images: map[string]compositor.Image{}, placed: map[string]compositor.Image{},
+		anims: map[string]*ingest.Anim{}, animFrames: map[animKey]compositor.Image{},
 	}
 }
 
@@ -80,6 +85,9 @@ func (f *frameSource) media(l *plan.Layer) (compositor.Image, error) {
 	a, ok := f.s.job.Doc.Assets[l.AssetID]
 	if !ok {
 		return compositor.Image{}, fmt.Errorf("the asset %s is not in the document", l.AssetID)
+	}
+	if a.IsAnimated() {
+		return f.animImage(l, &a)
 	}
 	if a.Kind == timeline.AssetImage {
 		return f.image(l, &a)
@@ -243,6 +251,10 @@ func (f *frameSource) close() {
 	for id, d := range f.vids {
 		d.stop()
 		delete(f.vids, id)
+	}
+	for id, seq := range f.anims {
+		_ = seq.Close()
+		delete(f.anims, id)
 	}
 }
 
@@ -450,11 +462,16 @@ func (s *state) childDir() (*ffmpeg.RunDir, error) {
 
 // artifact is the path of the normalized artifact of an asset with the given extension.
 func (s *state) artifact(a *timeline.Asset, ext string) (string, error) {
+	return s.artifactOf(a, "normalized", ext)
+}
+
+// artifactOf is the path of the artifact of an asset with the given kind and extension, at the normalized profile.
+func (s *state) artifactOf(a *timeline.Asset, kind, ext string) (string, error) {
 	hash := strings.TrimPrefix(a.Hash, "sha256:")
 	if !strings.HasPrefix(a.Hash, "sha256:") || len(hash) != 64 {
 		return "", fmt.Errorf("the asset %s has no content hash", a.ID)
 	}
-	p := filepath.Join(s.job.ArtifactsDir, hash, ingest.ArtifactName("normalized", ingest.ProfileNormalized, "", ext))
+	p := filepath.Join(s.job.ArtifactsDir, hash, ingest.ArtifactName(kind, ingest.ProfileNormalized, "", ext))
 	if _, err := os.Stat(p); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return "", exportErr(

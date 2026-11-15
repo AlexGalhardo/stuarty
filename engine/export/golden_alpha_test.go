@@ -61,6 +61,8 @@ var requiredCases = []string{
 	"blur-6",
 	"blur-16",
 	"blur-still",
+	"sticker-png",
+	"sticker-anim",
 }
 
 const (
@@ -118,6 +120,23 @@ func (b *caseBuilder) video(spec fixtureSpec) string {
 		FrameCount: spec.FPS * int(spec.Seconds), SampleCount: 44100 * int(spec.Seconds),
 		Width: spec.Width, Height: spec.Height, HasAudio: true,
 	}
+	b.fixtures[id] = spec
+	return id
+}
+
+// image adds an image asset for the fixture: an animated one when the spec has frame delays.
+func (b *caseBuilder) image(spec fixtureSpec) string {
+	b.assets++
+	id := fmt.Sprintf("ast_a%09d", b.assets)
+	a := timeline.Asset{
+		ID: id, Hash: "sha256:" + strings.Repeat("0", 64), Kind: timeline.AssetImage, Name: spec.Name,
+		Width: spec.Width, Height: spec.Height,
+	}
+	for _, cs := range spec.DelaysCS {
+		a.FrameDelays = append(a.FrameDelays, cs*10)
+	}
+	a.FrameCount = len(a.FrameDelays)
+	b.doc.Assets[id] = a
 	b.fixtures[id] = spec
 	return id
 }
@@ -337,6 +356,29 @@ var alphaCases = map[string]func() alphaCase{
 		b.clip(b.track(), b.video(portrait), 0, 30, func(it *timeline.Item) { it.Blur = 8 })
 		return b.build(0, 15, 29)
 	},
+	"sticker-png": func() alphaCase {
+		b := newCase("a PNG sticker with alpha over the portrait clip", rate(30, 1))
+		b.backdrop(30)
+		b.clip(b.track(), b.image(fixtureSpec{Name: "gold-sticker.png", Width: 120, Height: 120, Sticker: true}), 0, 30,
+			func(it *timeline.Item) {
+				it.Fit, it.Scale = "contain", 0.8
+				it.X, it.Y = new(90.0), new(200.0)
+			})
+		return b.build(0, 15, 29)
+	},
+	"sticker-anim": func() alphaCase {
+		b := newCase("an animated GIF sticker that grows, over the portrait clip", rate(30, 1))
+		b.backdrop(30)
+		spec := fixtureSpec{Name: "gold-sticker.gif", Width: 80, Height: 80, DelaysCS: []int{7, 3, 10}}
+		b.clip(b.track(), b.image(spec), 0, 30, func(it *timeline.Item) {
+			it.Fit = "contain"
+			it.X, it.Y = new(90.0), new(200.0)
+			it.Keyframes = timeline.Keyframes{"scale": {timeline.NewKeyframe(0, 0.6), timeline.NewKeyframe(29, 1.4)}}
+		})
+		// Item frames 0, 1, 2, 3, 5 and 6 choose the image frames 0, 0, 0, 2, 2, 0 of delays 70, 30 and 100 ms at 30 fps
+		// (core/plan, AnimImageSourceFrame); 8, 10 and 29 are in later loops and choose 0, 2 and 2.
+		return b.build(0, 1, 2, 3, 5, 6, 8, 10, 29)
+	},
 	"source-fps-24": func() alphaCase {
 		b := newCase("a source at 24 fps in a 30 fps project", rate(30, 1))
 		b.clip(b.track(), b.video(portrait24), 0, 60, nil)
@@ -497,7 +539,7 @@ func TestGoldenAlphaCases(t *testing.T) {
 func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 	setup(t)
 	for _, name := range requiredCases {
-		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") {
+		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") && !strings.HasPrefix(name, "sticker-") {
 			continue
 		}
 		t.Run(name, func(t *testing.T) {
