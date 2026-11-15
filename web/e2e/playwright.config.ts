@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { defineConfig } from "@playwright/test";
 import { CHROMIUM_ONLY, NOT_IN_MATRIX } from "./support/browsers";
+import { NETWORK_ADMIN, NETWORK_PORT, NETWORK_URL } from "./support/network";
 
 const port = Number(process.env.VUKEM_VIDEO_E2E_PORT ?? 3101);
 // The pinned FFmpeg of the tests (scripts/install-ffmpeg.sh prints its folder):
@@ -36,6 +37,10 @@ const home =
 // checkouts, two agents) never open the same workspace.
 const failPort = port + 1;
 const failHome = `${home}-failing-encoder`;
+
+// A third server in network mode, for the login and keys pages (P2-UI-029). It
+// starts with one administrator made from the environment (SDD-007 section 4.1).
+const networkHome = `${home}-network`;
 
 export default defineConfig({
 	testDir: "./specs",
@@ -173,6 +178,25 @@ export default defineConfig({
 				VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE: "100000",
 				// Only this encoder is tried and it is never replaced (ADR-0011).
 				VUKEM_VIDEO_ENCODER: "no_such_encoder",
+				...ffmpegEnv(),
+			},
+		},
+		{
+			command: "go run ./web/cmd/app serve",
+			cwd: "../..",
+			url: `${NETWORK_URL}/up`,
+			reuseExistingServer: !process.env.CI,
+			timeout: 180_000,
+			env: {
+				APP_KEY: `base64:${Buffer.alloc(32, "e2e").toString("base64")}`,
+				APP_URL: NETWORK_URL,
+				VUKEM_VIDEO_MODE: "network",
+				VUKEM_VIDEO_ADDR: `127.0.0.1:${NETWORK_PORT}`,
+				VUKEM_VIDEO_HOME: networkHome,
+				VUKEM_VIDEO_ADMIN_EMAIL: NETWORK_ADMIN.email,
+				VUKEM_VIDEO_ADMIN_PASSWORD: NETWORK_ADMIN.password,
+				// Only for a container running as root; harmless elsewhere.
+				VUKEM_VIDEO_INSECURE_ALLOW_ROOT: "true",
 				...ffmpegEnv(),
 			},
 		},
