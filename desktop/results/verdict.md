@@ -18,4 +18,4 @@ Notes on the runs:
 
 Options for the author (ADR-0023, item 5), not decided here: Wails v3 with the system webviews, or Electron on the platforms whose verdict is `fail`.
 
-Author decision: pending
+Author decision (2026-11-15): Wails v3 (v3.1.0, the last stable release) with the system webviews, recorded in ADR-0023 and in `docs/brainstorming.md`. The runs on macOS (WKWebView) and Linux (WebKitGTK 6.0) are still owed by P3-DSK-001 on real machines; a `fail` there reopens the Electron option for that platform.

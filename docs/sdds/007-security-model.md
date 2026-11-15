@@ -913,7 +913,7 @@ Stated plainly. None of these is claimed to be mitigated.
 12. **FFmpeg CVE timing.** Between an upstream security fix and our pin bump, released builds contain the known flaw. The weekly freshness check of section 12 bounds this to a visible, tracked window: `.github/workflows/ffmpeg-freshness.yml` runs `internal/tools/ffmpegfresh` every Monday and on demand, opens or updates one issue labelled `ffmpeg-freshness` when the pin is behind or older than 90 days, and fails the run in the second case. The age and the newest patch are also checked by hand at each release (on 2026-11-15 the pin `n9.0.2-39-g7adfbe40dc` was 15 days old and `n9.0.2` was still the newest patch tag of the 9.0 branch; `release/9.0` was 57 commits past it, the pin 39).
 13. **Output size watchdog overshoot** on Windows and macOS (up to about 2 seconds of writing); a Job Object has no file size limit, so Windows has no kernel backstop as Linux does.
 14. **The no-egress property is proven for child processes only on Linux CI** (10.2).
-15. **OpenH264 inside the pinned FFmpeg build** raises a licence question (ADR-0011 "Open"), not a security one; it is recorded there.
+15. **OpenH264 and the own FFmpeg build** is closed as a licence question by D-032 (2026-11-15): the own LGPL build never links OpenH264; a pinned dlopen patch loads the Cisco binary at run time from `VUKEM_VIDEO_OPENH264_DIR`, installed only on an explicit `tools:install openh264` (T-26, T-27). It stays a supply-chain item (the Cisco binary is verified by its pinned SHA-256), not an open licence one. Neither the author nor the architect is a lawyer (D-017).
 
 ## 15. Acceptance
 
