@@ -956,6 +956,22 @@
           "text": "Texto",
           "caption": "Legenda"
         }
+      },
+      "announce": {
+        "split": {
+          "one": "Dividido, {count} item",
+          "other": "Dividido, {count} itens"
+        },
+        "moved": {
+          "one": "Movido, {count} item",
+          "other": "Movido, {count} itens"
+        },
+        "deleted": {
+          "one": "Excluído, {count} item",
+          "other": "Excluídos, {count} itens"
+        },
+        "undone": "Desfeito",
+        "redone": "Refeito"
       }
     },
     "login": {

@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import LiveRegion from "../a11y/LiveRegion";
 import Inspector from "../inspector/Inspector";
 import Preview from "../preview/Preview";
 import { useDocumentState, useUiState } from "../state/EditorContext";
@@ -113,6 +114,7 @@ export default function EditorShell({
 			{panels.left ? <LeftPanel /> : <div />}
 			<main
 				aria-label={t("ui.editor.panels.preview")}
+				data-landmark=""
 				className="dark flex min-h-0 min-w-0 flex-col bg-ed-preview-surround p-3 text-foreground"
 			>
 				{status === "loading" ? (
@@ -128,6 +130,7 @@ export default function EditorShell({
 				<Timeline />
 			</div>
 			<Notices />
+			<LiveRegion />
 			<InUseHost />
 		</div>
 	);
