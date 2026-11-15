@@ -1,0 +1,590 @@
+{
+  "globals": [
+    {
+      "name": "json",
+      "type": "boolean",
+      "default": "false",
+      "usage": "print one JSON document"
+    },
+    {
+      "name": "project",
+      "type": "string",
+      "usage": "project id (default $VUKEM_VIDEO_PROJECT)"
+    },
+    {
+      "name": "workspace",
+      "type": "string",
+      "usage": "workspace directory (default $VUKEM_VIDEO_HOME, else ~/.vukem-video)"
+    },
+    {
+      "name": "actor",
+      "type": "string",
+      "default": "cli",
+      "usage": "label of the actor local:<label>"
+    },
+    {
+      "name": "key-file",
+      "type": "string",
+      "usage": "file holding an API key for a remote server"
+    },
+    {
+      "name": "dry-run",
+      "type": "boolean",
+      "default": "false",
+      "usage": "validate and report, change nothing"
+    },
+    {
+      "name": "wait",
+      "type": "boolean",
+      "default": "true",
+      "usage": "block until the job is final (--no-wait to return at once)"
+    },
+    {
+      "name": "timeout",
+      "type": "duration",
+      "default": "10m",
+      "usage": "longest --wait"
+    }
+  ],
+  "exit_codes": [
+    {
+      "code": 0,
+      "meaning": "success"
+    },
+    {
+      "code": 1,
+      "meaning": "a failure that retrying will not fix, a failed file of media:import, a failed job, or lint --strict with an error finding"
+    },
+    {
+      "code": 2,
+      "meaning": "a retryable error (E_REVISION_CONFLICT, E_WORKSPACE_LOCKED, E_QUEUE_FULL, E_RATE_LIMITED, E_ASSET_NOT_READY) or a --wait that timed out"
+    }
+  ],
+  "commands": [
+    {
+      "name": "project:list",
+      "summary": "list the projects of the workspace",
+      "usage": [
+        "vukem-video project:list [--state active|trashed|all] [--cursor c] [--limit n]"
+      ],
+      "example": "vukem-video project:list --json",
+      "flags": [
+        {
+          "name": "state",
+          "type": "string",
+          "default": "active",
+          "usage": "active, trashed or all"
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "20",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "project:create",
+      "summary": "create a project",
+      "usage": [
+        "vukem-video project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]"
+      ],
+      "example": "vukem-video project:create --name \"Launch teaser\" --json",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "project name (required)"
+        },
+        {
+          "name": "preset",
+          "type": "string",
+          "default": "9:16",
+          "usage": "9:16, 1:1, 16:9 or 4:5"
+        },
+        {
+          "name": "fps",
+          "type": "string",
+          "default": "30",
+          "usage": "frames per second, for example 30 or 30000/1001"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "usage": "identifier to give the project"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "project:show",
+      "summary": "show a project",
+      "usage": [
+        "vukem-video project:show [<project id>] [--detail concise|full|document] [--cursor c] [--limit n]"
+      ],
+      "example": "vukem-video project:show --project prj_7k2m9x4q1b",
+      "flags": [
+        {
+          "name": "detail",
+          "type": "string",
+          "default": "concise",
+          "usage": "concise, full or document"
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "project:trash",
+      "summary": "move a project to the trash",
+      "usage": [
+        "vukem-video project:trash <project id>"
+      ],
+      "example": "vukem-video project:trash prj_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "project:restore",
+      "summary": "restore a trashed project",
+      "usage": [
+        "vukem-video project:restore <project id>"
+      ],
+      "example": "vukem-video project:restore prj_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "edit",
+      "summary": "apply a batch of operations to a project",
+      "usage": [
+        "vukem-video edit --project <id> --ops <file|-> [--base n] [--key k]",
+        "vukem-video edit --project <id> <op> [k=v | k:=json]..."
+      ],
+      "example": "vukem-video edit --project prj_7k2m9x4q1b item.move item_id=itm_m1n2p3q4r5 start=2s",
+      "flags": [
+        {
+          "name": "ops",
+          "type": "string",
+          "usage": "a file with the batch, or - for standard input"
+        },
+        {
+          "name": "base",
+          "type": "integer",
+          "usage": "the revision the batch was planned against (default: the current one)"
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "usage": "idempotency key"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "history",
+      "summary": "list the steps of a project history",
+      "usage": [
+        "vukem-video history --project <id> [--by a] [--cursor c] [--limit n]"
+      ],
+      "example": "vukem-video history --project prj_7k2m9x4q1b --json",
+      "flags": [
+        {
+          "name": "by",
+          "type": "string",
+          "usage": "only the steps of this actor"
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "20",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "undo",
+      "summary": "undo the last step of the caller",
+      "usage": [
+        "vukem-video undo --project <id>"
+      ],
+      "example": "vukem-video undo --project prj_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "redo",
+      "summary": "redo the last undone step of the caller",
+      "usage": [
+        "vukem-video redo --project <id>"
+      ],
+      "example": "vukem-video redo --project prj_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "lint",
+      "summary": "check a project against the lint rules",
+      "usage": [
+        "vukem-video lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"
+      ],
+      "example": "vukem-video lint --project prj_7k2m9x4q1b --json",
+      "flags": [
+        {
+          "name": "severity",
+          "type": "string",
+          "default": "warning",
+          "usage": "error lists only errors; warning lists everything"
+        },
+        {
+          "name": "strict",
+          "type": "boolean",
+          "default": "false",
+          "usage": "exit 1 when there is at least one error finding"
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "25",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "version",
+      "summary": "print the version of this binary",
+      "usage": [
+        "vukem-video version [--json]"
+      ],
+      "example": "vukem-video version",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "mcp",
+      "summary": "serve the MCP tools on standard input and output",
+      "usage": [
+        "vukem-video mcp [--actor <label>]"
+      ],
+      "example": "claude mcp add vukem-video -- vukem-video mcp",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "media:import",
+      "summary": "import media files into a project",
+      "usage": [
+        "vukem-video media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]"
+      ],
+      "example": "vukem-video media:import clip.mov --project prj_7k2m9x4q1b --json",
+      "flags": [
+        {
+          "name": "asset-id",
+          "type": "string",
+          "usage": "id to give the asset, once per path, in order",
+          "repeat": true
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "wait",
+        "timeout"
+      ]
+    },
+    {
+      "name": "media:inspect",
+      "summary": "show what is known about an asset",
+      "usage": [
+        "vukem-video media:inspect <asset id> --project <id> [--sections probe,transcript,silences,loudness]"
+      ],
+      "example": "vukem-video media:inspect ast_3c5v8n2w6d --project prj_7k2m9x4q1b --sections probe,silences",
+      "flags": [
+        {
+          "name": "sections",
+          "type": "string",
+          "default": "probe",
+          "usage": "probe, transcript, silences, loudness"
+        },
+        {
+          "name": "min-silence",
+          "type": "string",
+          "default": "0.4s",
+          "usage": "shortest silence to report"
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "media:list",
+      "summary": "list the assets of a project",
+      "usage": [
+        "vukem-video media:list --project <id> [--cursor c] [--limit n]"
+      ],
+      "example": "vukem-video media:list --project prj_7k2m9x4q1b --json",
+      "flags": [
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "50",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "view",
+      "summary": "render a frame or a contact sheet of a project",
+      "usage": [
+        "vukem-video view --project <id> [--mode frame|sheet] [--at t]"
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ],
+      "pending": "P1-RND-005"
+    },
+    {
+      "name": "export",
+      "summary": "export a project to a file",
+      "usage": [
+        "vukem-video export --project <id> [--start t] [--end t] [--wait] [--timeout d]"
+      ],
+      "example": "vukem-video export --project prj_7k2m9x4q1b --json",
+      "flags": [
+        {
+          "name": "start",
+          "type": "string",
+          "usage": "first time to export (default: the start)"
+        },
+        {
+          "name": "end",
+          "type": "string",
+          "usage": "end of the export (default: the end of the timeline)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "wait",
+        "timeout"
+      ]
+    },
+    {
+      "name": "job:show",
+      "summary": "show a job",
+      "usage": [
+        "vukem-video job:show <job id> [--wait] [--timeout d]"
+      ],
+      "example": "vukem-video job:show job_4h8k2m6p9t --wait",
+      "flags": [
+        {
+          "name": "wait",
+          "type": "boolean",
+          "default": "false",
+          "usage": "block until the job is final (--no-wait to return at once)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "timeout"
+      ]
+    },
+    {
+      "name": "job:list",
+      "summary": "list the jobs of a project",
+      "usage": [
+        "vukem-video job:list --project <id> [--state s] [--cursor c] [--limit n]"
+      ],
+      "example": "vukem-video job:list --project prj_7k2m9x4q1b --state active",
+      "flags": [
+        {
+          "name": "state",
+          "type": "string",
+          "usage": "queued, running, succeeded, failed, cancelled, active or all"
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "20",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "events",
+      "summary": "print the events of a project as they arrive",
+      "usage": [
+        "vukem-video events --project <id> [--from-id n] [--since n] [--count n]"
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ],
+      "pending": "P1-SRV-006"
+    },
+    {
+      "name": "command:help",
+      "summary": "list the editing commands, or describe one",
+      "usage": [
+        "vukem-video command:help [<name>]"
+      ],
+      "example": "vukem-video command:help item.move",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    }
+  ]
+}

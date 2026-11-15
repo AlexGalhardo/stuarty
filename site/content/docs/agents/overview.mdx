@@ -1,0 +1,28 @@
+---
+title: Agents overview
+description: How an AI agent edits a video with Vukem Video, and which of the three ways in to use.
+---
+
+Vukem Video is built to be operated by an agent as much as by a person. There is one command core. The MCP server, the CLI, the HTTP API and the browser editor are thin adapters over it, so they all produce the same project document.
+
+## The three ways in
+
+| Way in | Use it when | Start with |
+| --- | --- | --- |
+| MCP server | the agent runs in a client such as Claude Code or Cursor | [Connect an agent](/docs/agents/connect) |
+| CLI | the agent has a shell | [CLI reference](/docs/reference/cli) |
+| HTTP API | you write your own client | the local server, on `127.0.0.1:7878` |
+
+The product sends nothing outside your computer, and an agent cannot make it. Nothing an agent can call deletes data for good, and every edit can be undone.
+
+## The loop
+
+1. `project_create` (or `project_list`), then `media_import` for the source files.
+2. `edit` with a batch of operations. A batch applies all or nothing, as one undo step, and needs the `base_revision` you read from `project_get` or from the previous edit.
+3. `lint`, then `job_start` with `kind=export`, then `job_get` until the job is final.
+
+Every time is a string with a unit: `12.5s`, `375f` or `00:00:12.500`. A bare number is rejected. Call `command_help` to list the operations, or with a name for its schema and an example; the same text is in the [command catalogue](/docs/reference/commands).
+
+## When a call fails
+
+A failed call returns `code`, `message`, `hint` and `retryable`. Retry only when `retryable` is true. An `E_REVISION_CONFLICT` carries the changes since your revision: read them and plan again. The codes are in the [error codes](/docs/reference/error-codes) page.
