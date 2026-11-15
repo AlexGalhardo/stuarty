@@ -30,10 +30,14 @@ func TestLimitsDefaults(t *testing.T) {
 }
 
 func TestForCallerRemovesEveryVariableName(t *testing.T) {
-	e := newError("E_LIMIT_EXCEEDED", "The audio is 9 seconds; the limit is 5 seconds (VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS).").
+	e := newError(
+		"E_LIMIT_EXCEEDED",
+		"The audio is 9 seconds; the limit is 5 seconds (VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS).",
+	).
 		withHint("transcribe a shorter file; the person running the server can raise "+
 			"VUKEM_VIDEO_MAX_TRANSCRIBES or VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY").
-		withDetail("variable", "VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS").withDetail("limit", "transcribe_seconds")
+		withDetail("variable", "VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS").
+		withDetail("limit", "transcribe_seconds")
 
 	member := Caller{Actor: "user:a", OwnerUserID: "a", Scopes: []string{ScopeRead}}
 
