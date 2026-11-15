@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -489,40 +490,70 @@ func TestOpenNetworkModeReadsTheKeyFile(t *testing.T) {
 	}
 }
 
-// The token never goes to a local owner that advertises a non-loopback address.
-func TestOpenRefusesALocalOwnerOnANonLoopbackAddress(t *testing.T) {
+// The token never goes to a local owner that advertises a non-loopback address
+// (T-30, SDD-007 section 3.8): the client refuses before the handshake.
+func TestSecurity_T30_RuntimeJSONNonLoopbackRefused(t *testing.T) {
 	t.Parallel()
 
-	home := t.TempDir()
-	d := Dir(home)
+	for _, addr := range []string{
+		"192.0.2.10:7878", "[2001:db8::1]:7878", "[::ffff:192.0.2.10]:7878", "owner.example:7878", "0.0.0.0:7878",
+	} {
+		t.Run(addr, func(t *testing.T) {
+			t.Parallel()
 
-	if _, err := d.EnsureToken(); err != nil {
-		t.Fatal(err)
-	}
+			home := t.TempDir()
+			d := Dir(home)
 
-	owner, _ := d.TryLock()
-	defer owner.Release()
+			if _, err := d.EnsureToken(); err != nil {
+				t.Fatal(err)
+			}
 
-	srv := fakeOwner(t, "token")
+			owner, _ := d.TryLock()
+			defer owner.Release()
 
-	err := d.WriteRuntime(Runtime{
-		PID: os.Getpid(), Addr: "192.0.2.10:7878", Mode: ModeLocal, StartedAt: time.Now(), Version: "0.0.0",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
+			var (
+				mu   sync.Mutex
+				seen []string
+			)
 
-	// Whatever address is dialled, the fake owner answers: only the refusal can stop the token.
-	o := fast(home)
-	o.Client = &http.Client{Transport: &http.Transport{
-		DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
-			return (&net.Dialer{}).DialContext(ctx, network, srv.Listener.Addr().String())
-		},
-	}}
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				mu.Lock()
+				seen = append(seen, r.URL.Path+"?"+r.URL.RawQuery+"|"+r.Header.Get("Authorization"))
+				mu.Unlock()
 
-	var we *Error
-	if _, err := Open(context.Background(), o); !errors.As(err, &we) || we.Code != CodeUnauthorized {
-		t.Fatalf("err = %v, want %s", err, CodeUnauthorized)
+				_, _ = w.Write([]byte(`{"status":"ok"}`))
+			}))
+			t.Cleanup(srv.Close)
+
+			err := d.WriteRuntime(Runtime{
+				PID: os.Getpid(), Addr: addr, Mode: ModeLocal, StartedAt: time.Now(), Version: "0.0.0",
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// Whatever address is dialled, the fake owner answers: only the refusal can stop the token.
+			o := fast(home)
+			o.Client = &http.Client{Transport: &http.Transport{
+				DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
+					return (&net.Dialer{}).DialContext(ctx, network, srv.Listener.Addr().String())
+				},
+			}}
+
+			var we *Error
+			if _, err := Open(context.Background(), o); !errors.As(err, &we) || we.Code != CodeUnauthorized {
+				t.Fatalf("err = %v, want %s", err, CodeUnauthorized)
+			}
+
+			mu.Lock()
+			defer mu.Unlock()
+
+			for _, s := range seen {
+				if strings.Contains(s, "Bearer") || strings.Contains(s, handshakePath) {
+					t.Errorf("a request reached the non-loopback owner: %q", s)
+				}
+			}
+		})
 	}
 }
 
