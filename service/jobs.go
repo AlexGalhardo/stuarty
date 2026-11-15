@@ -87,7 +87,9 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, terr
 	}
 
-	input := marshalOrNull(exportInput{Revision: row.Revision, Start: start, End: end, Lint: &totals})
+	input := marshalOrNull(
+		exportInput{Revision: row.Revision, Start: start, End: end, Lint: &totals, Document: row.Document},
+	)
 	projectID := row.ID
 
 	job := JobRow{
