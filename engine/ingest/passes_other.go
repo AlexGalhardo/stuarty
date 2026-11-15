@@ -159,8 +159,14 @@ func (j *job) image(ctx context.Context) error {
 	}); err != nil {
 		return err
 	}
-	j.prog.set(StepVideo, 1)
 	j.res.Facts = Facts{Width: plan.W, Height: plan.H}
+	if delays := sum.FrameDelays; len(delays) > 1 {
+		if err := j.timed(StepVideo, func() error { return j.animated(ctx, plan) }); err != nil {
+			return err
+		}
+		j.res.Facts.FrameCount, j.res.Facts.FrameDelays = len(delays), delays
+	}
+	j.prog.set(StepVideo, 1)
 	j.add(workFile{kind: "normalized", profile: ProfileNormalized, ext: "png", name: "normalized.png"})
 	j.add(workFile{kind: "proxy", profile: ProfileProxy, ext: proxyExt, name: proxyName})
 	if err := j.timed(StepMux, func() error { return j.posters(ctx, 0, false, proxyName, deadline) }); err != nil {
