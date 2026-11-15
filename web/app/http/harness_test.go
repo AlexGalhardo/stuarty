@@ -64,64 +64,64 @@ type harness struct {
 	port   string
 }
 
-func newHarness(t testing.TB) *harness {
-	t.Helper()
+func newHarness(tb testing.TB) *harness {
+	tb.Helper()
 
-	return newHarnessWith(t, events.Options{})
+	return newHarnessWith(tb, events.Options{})
 }
 
-func newHarnessWith(t testing.TB, eo events.Options, extra ...vukem.Option) *harness {
-	t.Helper()
+func newHarnessWith(tb testing.TB, eo events.Options, extra ...vukem.Option) *harness {
+	tb.Helper()
 
-	return newHarnessWrapped(t, eo, nil, extra...)
+	return newHarnessWrapped(tb, eo, nil, extra...)
 }
 
 // newHarnessWrapped serves the API over wrap(service), for tests that need a
 // method the plain service cannot answer, such as a renderer.
 func newHarnessWrapped(
-	t testing.TB,
+	tb testing.TB,
 	eo events.Options,
 	wrap func(service.Service) service.Service,
 	extra ...vukem.Option,
 ) *harness {
-	t.Helper()
+	tb.Helper()
 
-	return newHarnessLimited(t, eo, wrap, httpapi.RateLimits{}, extra...)
+	return newHarnessLimited(tb, eo, wrap, httpapi.RateLimits{}, extra...)
 }
 
 // newHarnessLimited is newHarnessWrapped with the rate limits of the API, for a
 // benchmark that sends more requests a minute than the defaults allow.
 func newHarnessLimited(
-	t testing.TB,
+	tb testing.TB,
 	eo events.Options,
 	wrap func(service.Service) service.Service,
 	rate httpapi.RateLimits,
 	extra ...vukem.Option,
 ) *harness {
-	t.Helper()
+	tb.Helper()
 
-	dir, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
+	dir, err := workspace.Resolve(func(string) string { return filepath.Join(tb.TempDir(), "ws") })
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	if err := dir.EnsureLayout(); err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	st, err := store.Open(context.Background(), dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
-	t.Cleanup(func() { _ = st.Close() })
+	tb.Cleanup(func() { _ = st.Close() })
 
 	hub := events.New(st, eo)
-	t.Cleanup(hub.Close)
+	tb.Cleanup(hub.Close)
 
 	svc, err := service.New(service.Options{Store: st, Publish: hub.Publish})
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	if wrap != nil {
@@ -129,7 +129,7 @@ func newHarnessLimited(
 	}
 
 	h := &harness{
-		t:      t,
+		t:      tb,
 		svc:    svc,
 		events: hub,
 		dir:    dir,
@@ -139,16 +139,25 @@ func newHarnessLimited(
 
 	mcpHandler, err := mcp.Handler(svc, mcp.Options{Version: "test"})
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	deps := &httpapi.Deps{
-		MCP: mcpHandler, Events: hub,
-		Service: svc, Registry: command.Default(), Workspace: dir, Token: canary,
-		Sessions: auth.NewSessions(h.clock.now), Launch: auth.NewLaunch(h.clock.now), Now: h.clock.now, RateLimits: rate,
+		MCP:       mcpHandler,
+		Events:    hub,
+		Service:   svc,
+		Registry:  command.Default(),
+		Workspace: dir,
+		Token:     canary,
+		Sessions: auth.NewSessions(
+			h.clock.now,
+		),
+		Launch:     auth.NewLaunch(h.clock.now),
+		Now:        h.clock.now,
+		RateLimits: rate,
 	}
 
-	h.app = vukemtest.New(t, func(opts ...vukem.Option) (*vukem.App, error) {
+	h.app = vukemtest.New(tb, func(opts ...vukem.Option) (*vukem.App, error) {
 		app, err := bootstrap.NewWith(deps, append(opts, extra...)...)
 		h.vapp = app
 
@@ -156,7 +165,7 @@ func newHarnessLimited(
 	})
 
 	h.srv = httptest.NewServer(h.app.Handler())
-	t.Cleanup(h.srv.Close)
+	tb.Cleanup(h.srv.Close)
 
 	h.port = h.srv.Listener.Addr().String()[strings.LastIndex(h.srv.Listener.Addr().String(), ":")+1:]
 
@@ -179,12 +188,12 @@ type resp struct {
 	body   []byte
 }
 
-func (r resp) json(t testing.TB) map[string]any {
-	t.Helper()
+func (r resp) json(tb testing.TB) map[string]any {
+	tb.Helper()
 
 	var m map[string]any
 	if err := json.Unmarshal(r.body, &m); err != nil {
-		t.Fatalf("body is not a JSON object: %v\n%s", err, r.body)
+		tb.Fatalf("body is not a JSON object: %v\n%s", err, r.body)
 	}
 
 	return m

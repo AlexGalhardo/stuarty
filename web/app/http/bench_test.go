@@ -42,12 +42,18 @@ func BenchmarkEditRoundTrip(b *testing.B) {
 
 	for i := range 166 {
 		ops = append(ops, fmt.Sprintf(
-			`{"op":"text.add","args":{"track_id":"trk_f6g7h8j9k0","start":"%ds","duration":"1s","text":"t%d"}}`, i*2, i))
+			`{"op":"text.add","args":{"track_id":"trk_f6g7h8j9k0","start":"%ds","duration":"1s","text":"t%d"}}`,
+			i*2,
+			i,
+		))
 	}
 
 	for i := range 34 {
 		ops = append(ops, fmt.Sprintf(
-			`{"op":"caption.add","args":{"track_id":"trk_a1b2c3d4e5","start":"%ds","duration":"3s","text":%q}}`, i*4, words))
+			`{"op":"caption.add","args":{"track_id":"trk_a1b2c3d4e5","start":"%ds","duration":"3s","text":%q}}`,
+			i*4,
+			words,
+		))
 	}
 
 	rev := int64(1)
@@ -64,7 +70,9 @@ func BenchmarkEditRoundTrip(b *testing.B) {
 	const moved = "itm_00000000aa"
 
 	res := edit(rev, fmt.Sprintf(
-		`[{"op":"text.add","args":{"track_id":"trk_f6g7h8j9k0","start":"500s","duration":"1s","text":"mover","id":%q}}]`, moved))
+		`[{"op":"text.add","args":{"track_id":"trk_f6g7h8j9k0","start":"500s","duration":"1s","text":"mover","id":%q}}]`,
+		moved,
+	))
 	if res.status != http.StatusOK {
 		b.Fatalf("mover = %d %s", res.status, res.body)
 	}
