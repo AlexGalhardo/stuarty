@@ -247,3 +247,25 @@ func TestErrorEnvelope(t *testing.T) {
 		})
 	}
 }
+
+// The view routes pin the revision: a rev that is not the current one is
+// E_INVALID_STATE with the current revision, before anything is rendered; a
+// build with no renderer answers E_INTERNAL.
+func TestViewRoutesPinTheRevision(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	id := h.newProject("view")
+
+	for _, route := range []string{"frame?at=0s&rev=9", "sheet?rev=9"} {
+		res := h.get("/api/v1/projects/" + id + "/" + route)
+		if res.status != http.StatusConflict || res.json(t)["code"] != "E_INVALID_STATE" ||
+			res.json(t)["details"].(map[string]any)["current_revision"] != float64(0) {
+			t.Errorf("%s = %d %s", route, res.status, res.body)
+		}
+	}
+
+	if res := h.get("/api/v1/projects/" + id + "/frame?at=0s"); res.status != http.StatusInternalServerError {
+		t.Errorf("no renderer = %d, want 500", res.status)
+	}
+}

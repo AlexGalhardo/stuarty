@@ -345,6 +345,41 @@ func (c *Client) JobList(ctx context.Context, req service.JobListRequest) (*serv
 	return get[service.JobListResult](ctx, c, projectPath(req.ProjectID, "/jobs"), pageQuery(q, req.Page))
 }
 
+// ViewFrame implements service.Service; the server answers the ViewResult as
+// JSON with the image in image_base64 (Accept: application/json).
+func (c *Client) ViewFrame(ctx context.Context, req service.ViewFrameRequest) (*service.ViewResult, error) {
+	q := url.Values{}
+	setIf(q, "at", req.At)
+	setIf(q, "asset_id", req.AssetID)
+
+	if req.MaxTokens > 0 {
+		q.Set("max_tokens", strconv.Itoa(req.MaxTokens))
+	}
+
+	if req.Width > 0 {
+		q.Set("width", strconv.Itoa(req.Width))
+	}
+
+	return get[service.ViewResult](ctx, c, projectPath(req.ProjectID, "/frame"), q)
+}
+
+// ViewSheet implements service.Service.
+func (c *Client) ViewSheet(ctx context.Context, req service.ViewSheetRequest) (*service.ViewResult, error) {
+	q := url.Values{}
+	setIf(q, "times", strings.Join(req.Times, ","))
+	setIf(q, "from", req.From)
+	setIf(q, "to", req.To)
+	setIf(q, "asset_id", req.AssetID)
+
+	for k, v := range map[string]int{"count": req.Count, "cols": req.Cols, "max_tokens": req.MaxTokens} {
+		if v > 0 {
+			q.Set(k, strconv.Itoa(v))
+		}
+	}
+
+	return get[service.ViewResult](ctx, c, projectPath(req.ProjectID, "/sheet"), q)
+}
+
 // OpenFile implements service.Service. A stored file is a path inside the
 // workspace of the server; a client reads the bytes from its URL instead.
 func (*Client) OpenFile(context.Context, service.FileRef) (*service.File, error) {
