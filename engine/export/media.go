@@ -201,7 +201,7 @@ func (f *frameSource) decoder(l *plan.Layer, a *timeline.Asset) (*videoDecoder, 
 		}
 		var vf []ffargs.Filter
 		if cx != 0 || cy != 0 || cw != a.Width || ch != a.Height {
-			vf = append(vf, ffargs.Crop(cw, ch, cx, cy))
+			vf = append(vf, ffargs.CropRect(cw, ch, cx, cy)...)
 		}
 		vf = append(vf, ffargs.ScaleFrameToRGBA(w, h), ffargs.Format("rgba"))
 		d = &videoDecoder{s: f.s, path: path, w: w, h: h, vf: ffargs.Chain1(vf...), rate: a.FrameRate, item: l.ItemID}
