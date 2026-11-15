@@ -314,29 +314,30 @@ Inside the preview box: canvas 0, truth-on-pause `<img>` 1, safe-area guide 2, s
 
 ### 2.13 Motion
 
-D-013 and SDD-012 §17 item 5: **no interface animations until BETA polish.** The tokens below exist so that the animations shadcn components already carry and any later BETA work use one set of values.
+D-013 and SDD-012 §17 item 5: no interface animations until BETA polish; **BETA polish (P3-UI-003) allows the two kinds below and nothing else.** The tokens below are the one set of values for them and for the animations shadcn components carry.
 
 | Token | Value | Use now |
 | --- | --- | --- |
 | `--duration-none` | `0ms` | every editor component |
 | `--duration-fast` | `100ms` | already carried by shadcn select and sheet close (`duration-100`) |
-| `--duration-base` | `150ms` | reserved (BETA) |
-| `--duration-slow` | `200ms` | already carried by shadcn sheet open and sidebar collapse (`duration-200`) |
-| `--ease-standard` | `cubic-bezier(0.2, 0, 0, 1)` | reserved (BETA); shadcn components keep their own easing |
+| `--duration-base` | `150ms` | `.ed-motion` state transitions (BETA) |
+| `--duration-slow` | `200ms` | `.ed-highlight` (BETA); already carried by shadcn sheet open and sidebar collapse (`duration-200`) |
+| `--ease-standard` | `cubic-bezier(0.2, 0, 0, 1)` | `.ed-motion` and `.ed-highlight` (BETA); shadcn components keep their own easing |
 
 Rules:
 
-1. Editor components add no `transition`, `animation` or `@keyframes`. Timed highlights (remote-edit outline 1.5 s, conflict outline 2 s, activity "is editing" 3 s) are class toggles with a timer.
+1. Editor components add no `transition`, `animation` or `@keyframes` of their own. Motion comes from two classes of `app.css`: `.ed-motion` (colour, border, shadow, opacity and outline colour fade in `--duration-base`; position and size never transition, so a drag, a zoom or a row resize never lags the pointer) on timeline items, rows, track headers and the row splitter, and `.ed-highlight` (the outline of a remote edit or a conflict eases in over `--duration-slow`). Timed highlights (remote-edit outline 1.5 s, conflict outline 2 s, activity "is editing" 3 s) stay class toggles with a timer; the class only adds the ease-in. A unit test (`editor/ui/motion.test.ts`) fails on any other `transition`, `animate-` or `duration-` class in an editor component.
 2. No spinner rotates. A running job shows a determinate bar; an unknown duration shows a static icon and text ("Waiting for the server").
 3. Scrolling is never smooth: page-follow of the playhead jumps (SDD-012 §7.5), `scroll-behavior` stays `auto`.
-4. `prefers-reduced-motion: reduce` turns off what shadcn carries, with this rule in `app.css`:
+4. `prefers-reduced-motion: reduce` turns off the two classes above and what shadcn carries, with this rule in `app.css`, after them. Transitions are off at `0s`; animations keep `0.01ms` because the Radix presence logic waits for `animationend`, which an animation of exactly `0s` does not fire in every engine:
 
 ```css
 @media (prefers-reduced-motion: reduce) {
 	*, ::before, ::after {
 		animation-duration: 0.01ms !important;
 		animation-iteration-count: 1 !important;
-		transition-duration: 0.01ms !important;
+		transition-duration: 0s !important;
+		transition-delay: 0s !important;
 	}
 }
 ```
@@ -747,7 +748,7 @@ Times inside names use the timecode form. Results of actions are announced throu
 
 ### 7.5 Motion
 
-No interface animation (section 2.13); `prefers-reduced-motion` turns off the transitions shadcn carries. Nothing flashes more than three times per second; the timed outlines appear once and disappear once.
+Interface motion is limited to `.ed-motion` and `.ed-highlight` (section 2.13); `prefers-reduced-motion` turns off those and the transitions shadcn carries. Nothing flashes more than three times per second; the timed outlines appear once and disappear once.
 
 ### 7.6 Contrast
 
@@ -832,7 +833,7 @@ Copy into the pull request description and tick each line that applies.
 - [ ] Every icon-only control has an `aria-label` from `t()` and a tooltip with its shortcut.
 - [ ] Targets are at least 24 by 24 CSS px.
 - [ ] Nothing is conveyed by colour alone.
-- [ ] No new `transition`, `animation` or `@keyframes` (D-013); reduced motion respected.
+- [ ] No `transition`, `animation` or `@keyframes` besides `.ed-motion` and `.ed-highlight` (D-013, BETA polish); reduced motion respected.
 - [ ] Every string through `t()`; no concatenated sentences; the layout holds in pt-BR at 1280 by 720.
 - [ ] User content rendered with `UntrustedText`.
 - [ ] Errors from the core shown with the error block: headline, message and hint as received, code.

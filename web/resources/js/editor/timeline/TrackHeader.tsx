@@ -116,7 +116,7 @@ export default function TrackHeader({ id }: { id: string }): ReactNode {
 				runtime.uiWriter.selectTrack(id);
 			}}
 			style={{ height: rowPx }}
-			className="relative flex items-center gap-1 border-b border-ed-track-line px-1 text-xs"
+			className="ed-motion relative flex items-center gap-1 border-b border-ed-track-line px-1 text-xs"
 		>
 			<button
 				type="button"
