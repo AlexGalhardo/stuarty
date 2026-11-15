@@ -7,16 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- **command:** Add `audio.add`, `clip.set_framing` and `clip.set_color`
-- **command:** Add `item.duplicate`, `item.crossfade` and `timeline.close_gap`
-- **command:** Add `item.rename`, `item.set_transform`, `item.set_transition` and `item.set_audio`
-- **command:** Add `settings.set_fps` and `asset.remove`; the default registry now builds the ALPHA catalogue
-- **timeline:** Add one invalid example per violation code and valid examples for the ALPHA features (keyframes, transitions, shapes, slots, per-word highlight)
-- **timeline:** Add the `migrate` package with the migration chain, the frozen `versions/v1` fixtures and their manifest
-- **raster:** Add `FontSet.Missing`, golden bitmaps for each shape and for the word highlight at three words, and a licence column in `fonts/FONTS.md`
-
 ## [0.3.0] - 2026-11-15
 
 ### Added
