@@ -140,6 +140,12 @@ func remoteSession(raw string, o Options) (*Session, error) {
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
 		return nil, fmt.Errorf("workspace: %s must be an http or https URL", EnvURL)
 	}
+	// A key never crosses the network in clear (SDD-007 section 4.3): plain HTTP
+	// is for the loopback name of a container on the user's own machine.
+	if u.Scheme == "http" && !loopbackName(u.Hostname()) {
+		return nil, fmt.Errorf("workspace: %s must be https (http is accepted only for localhost): "+
+			"the API key would cross the network in clear", EnvURL)
+	}
 	key := o.Getenv(EnvKey)
 	if o.KeyFile != "" {
 		data, err := os.ReadFile(o.KeyFile)
@@ -152,6 +158,14 @@ func remoteSession(raw string, o Options) (*Session, error) {
 		return nil, unauthorizedNoKey()
 	}
 	return &Session{Mode: ModeHTTP, BaseURL: strings.TrimRight(raw, "/"), Token: key}, nil
+}
+
+func loopbackName(host string) bool {
+	if strings.EqualFold(host, "localhost") {
+		return true
+	}
+	ip, err := netip.ParseAddr(host)
+	return err == nil && ip.Unmap().IsLoopback()
 }
 
 func unauthorizedNoKey() error {
