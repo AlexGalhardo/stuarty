@@ -496,6 +496,17 @@ vukem opens SQLite through `database.Open` and applies these settings to every c
 
 **Checkpoints.** SQLite's automatic checkpoint (1000 pages) is kept. On graceful shutdown the owner runs `PRAGMA wal_checkpoint(TRUNCATE)` so that `db.sqlite` is self-contained when copied by hand.
 
+**Measured on a log of 100,000 rows (P4-SRV-002).** The same benchmarks of section 18 check 12 run on the project of 200 items after 100,000 empty edits were appended to its log (`BenchmarkCommit200ItemsLog100k`, `BenchmarkRoundTrip200ItemsLog100k`; the rows come from `padLog`, one recursive `INSERT`). Windows, Ryzen 7 5700X3D (16 threads), `-benchtime=300x`, with four other agents compiling and testing on the same machine (the p95 values are inflated by that load):
+
+| Benchmark | p50 | p95 | Store share p95 | Limit |
+| --- | --- | --- | --- | --- |
+| `BenchmarkCommit200Items` (log of 2 rows) | 22.8 ms | 26.5 ms | 2.6 ms | 50 ms round trip, 25 ms store |
+| `BenchmarkCommit200ItemsLog100k` | 22.5 ms | 26.2 ms | 2.8 ms | the same |
+| `BenchmarkRoundTrip200Items` (HTTP) | 26.3 ms | 34.2 ms | | 50 ms |
+| `BenchmarkRoundTrip200ItemsLog100k` (HTTP) | 26.0 ms | 36.9 ms | | 50 ms |
+
+The log of 100,000 rows costs nothing measurable: the store reads the row of the project and appends one row, both by primary key. A `base_revision` of 0 on that log is refused from the two revision numbers alone in 0.5 ms (`TestConflictAnalysisIsBoundedOnALongLog`); one at the edge of the lookback (`current - 1000`) reads at most the 1,000 newest rows and commits in about 100 ms under load. The event from commit to a loopback client has p95 1.5 ms over 1,000 commits (NFR-002, limit 20 ms) and `BenchmarkCLIRead` has p95 7.7 ms against a server that owns the workspace (NFR-024, limit 300 ms).
+
 **One process.** No second process opens `db.sqlite` while a server runs: the workspace lock (section 6) is taken before the database is opened, by every command, including vukem's built-in `migrate`, `queue:*` and `db:*` commands. vukem API to be confirmed in task: a per-command hook so that built-in commands go through the workspace provider (`vukem.Provider` has `Register` and `Booter` but only `KindFilter` for scoping).
 
 ## 5. Tables
@@ -1457,6 +1468,12 @@ A handler writes progress at most every 250 ms and only when the value moved by 
 ### 14.7 In-process mode
 
 `queue.Sync{}` runs the handler inside `Dispatch`; the CLI call waits until the job is terminal (ADR-0008 item 6). There is no worker, so a command asking not to wait cannot be honoured: in this mode the call always waits and the CLI reports so (SDD-003). This mode exists only for one-shot CLI commands; the stdio MCP server is never in it (6.4). A command killed while its job runs leaves a `running` row, recovered by 14.5 at the next start of any process, including the next in-process command.
+
+### 14.8 Measured: crash, kill and soak (P4-SRV-002)
+
+- **Crash suite.** `go test -tags crashtest ./web/app/servicetest/ -run "^(TestCrash|TestKillMid)" -count=100` passes on Windows (355 s): the commit, undo, redo, trash-emptying, migration and bundle import points and, new in this task, the two bundle export points `bundle_export.after_write` (a kill before the rename leaves no bundle at a final name) and `bundle_export.after_rename` (a kill after it leaves a whole archive). After each kill every acknowledged revision is in the log and `PRAGMA integrity_check` is `ok`.
+- **Kill of a real `serve`.** `TestKillRealServeDuringConcurrentHTTPCommits` repeated 20 times (164 s), each time the process is killed with `Process.Kill` (`TerminateProcess` on Windows, `SIGKILL` elsewhere) in the middle of four clients committing.
+- **Soak.** `TestSoak` (build tag `soak`, `VUKEM_VIDEO_SOAK_DURATION`, one hour by default; the nightly job owned by REL runs `go test -tags soak -run TestSoak -timeout 90m ./web/app/servicetest/`): four workers in process and four over HTTP on loopback run edits (60%), undos (15%), reads (15%), exports (7%) and bundle exports (3%), the HTTP workers paced under the 600 requests a minute of the one local credential. The baseline is taken at rest after a 30 s warm-up; the end is taken after the workers stop and the server closes. Local run of 10 minutes: 93,842 calls (56,125 edits, 14,227 undos, 14,130 reads, 6,639 exports, 2,721 bundle exports), no 5xx; 1,837 calls were refused by a documented limit (`E_QUEUE_FULL` 300, `E_RATE_LIMITED` 1,537); goroutines 7 at the baseline and 6 at the end; resident memory 19.3 MiB at the baseline and 19.8 MiB at the end (the runtime's mapped memory less what it returned; 24 to 28 MiB while running); no `running` job after the shutdown. The full hour is left to the nightly job.
 
 ## 15. Templates
 
