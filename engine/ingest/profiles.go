@@ -10,6 +10,8 @@ const (
 	ProfilePeaks      = 1
 	ProfileSilence    = 1
 	ProfileLoudness   = 1
+	ProfileSpeech     = 1
+	ProfileBeats      = 1
 )
 
 // Tunable numbers of SDD-011 1.5. Changing one is a new profile version.

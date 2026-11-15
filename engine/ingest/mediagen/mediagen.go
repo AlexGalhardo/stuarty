@@ -125,6 +125,14 @@ func (g Gen) Speech3Pauses(ctx context.Context) (string, error) {
 		"-map", "[a]", "-ar", "48000", "-ac", "1", "-c:a", "pcm_s16le", "-f", "wav")
 }
 
+// Click120 is a mono WAV of 20 s with a decaying 1 kHz click on every beat of a 120 BPM grid, the
+// first at 0.25 s: the beat fixture of the beat grid tests.
+func (g Gen) Click120(ctx context.Context) (string, error) {
+	return g.ff(ctx, "click-120.wav",
+		"-f", "lavfi", "-i", "aevalsrc=exprs='0.8*sin(2*PI*1000*t)*exp(-50*mod(t+0.25,0.5))':s=48000:d=20",
+		"-ar", "48000", "-ac", "1", "-c:a", "pcm_s16le", "-f", "wav")
+}
+
 // Tone23LUFS is a mono 1 kHz sine of 5 s whose integrated loudness is -23 LUFS (the lavfi sine peaks at
 // 0.125, so a volume of 0.8 gives a peak of 0.1, which is -23 LUFS for a 1 kHz sine).
 func (g Gen) Tone23LUFS(ctx context.Context) (string, error) {

@@ -56,6 +56,9 @@ type Input struct {
 	ArtifactsDir string
 	JobID        string
 	Ceilings     ffmpeg.Ceilings
+	// SoundMaps asks for the speech map and the beat grid of the audio (RF-043, RF-044). They are
+	// artifacts of kinds the caller must be able to register, so a caller opts in.
+	SoundMaps bool
 	// OnProgress is called at most 4 times per second, and never with a smaller fraction.
 	OnProgress func(Progress)
 }

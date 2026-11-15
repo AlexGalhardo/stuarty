@@ -87,6 +87,8 @@ type env struct {
 	gen   mediagen.Gen
 	ws    string
 	n     int
+	// soundMaps asks Run for the speech map and the beat grid.
+	soundMaps bool
 }
 
 func newEnv(tb testing.TB) *env {
@@ -131,7 +133,7 @@ func (e *env) ingest(ctx context.Context, path string, progress func(Progress)) 
 	e.n++
 	res, err := Run(ctx, Input{
 		Runner: e.r, Caps: e.caps, Hash: hash, ArtifactsDir: e.artifacts(),
-		JobID: "job_" + itoa(e.n), OnProgress: progress,
+		JobID: "job_" + itoa(e.n), OnProgress: progress, SoundMaps: e.soundMaps,
 	})
 	return hash, res, err
 }
