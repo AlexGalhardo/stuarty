@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -439,7 +440,7 @@ func (s *svc) toolCheck(kind, goos, goarch string) DoctorCheck {
 
 func (s *svc) toolsModel() string {
 	if s.transcriber != nil {
-		if m := s.transcriber.Model(); m != "" {
+		if m := s.transcriber.Model(); slices.Contains(transcribe.Models, m) {
 			return m
 		}
 	}
