@@ -139,7 +139,7 @@ func TestAuthzProjectLimitedKeyIsForbiddenEverywhereElse(t *testing.T) {
 // SDD-007 section 15 check 9: in network mode user A gets E_NOT_FOUND for user
 // B's project, whatever the operation, with the answer of a project that does
 // not exist.
-func TestAuthzOtherUsersProjectIsNotFound(t *testing.T) {
+func TestSecurity_T06_CrossUserProjectIsNotFound(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{noQueue: true, exporter: goodExporter()})
 	alice, bob := network("user:alice", "alice"), network("user:bob", "bob")
 
@@ -184,7 +184,7 @@ func TestAuthzOtherUsersProjectIsNotFound(t *testing.T) {
 
 // A batch needs the union of the scopes of its commands: the first command the
 // key may not run fails the whole batch with its op_index and changes nothing.
-func TestAuthzBatchNeedsTheUnionOfScopes(t *testing.T) {
+func TestSecurity_T05_BatchNeedsUnionOfCommandScopes(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{})
 	project, _ := m.withTrack()
 	rev := m.head(project).Revision
