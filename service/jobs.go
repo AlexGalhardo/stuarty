@@ -490,12 +490,12 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 	}
 
 	if row.Kind == JobIngest && row.AssetHash != nil && !isFinal(row.State) {
-		own, uerr := s.unlinkUnlessSoleWaiter(ctx, c, *row.AssetHash)
-		if uerr != nil {
-			return nil, asError(uerr)
+		done, cerr := s.cancelSharedIngest(ctx, c, &row)
+		if cerr != nil {
+			return nil, asError(cerr)
 		}
 
-		if !own {
+		if !done {
 			// Other projects wait on the same ingest: it keeps running.
 			after, gerr := s.store.Jobs().Get(ctx, row.ID)
 			if gerr != nil {
@@ -504,9 +504,7 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 
 			return s.jobView(c, after, false), nil
 		}
-	}
-
-	if err := s.cancelJob(ctx, row.ID); err != nil {
+	} else if err := s.cancelJob(ctx, row.ID); err != nil {
 		return nil, asError(err)
 	}
 
@@ -522,67 +520,98 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 	return s.jobView(c, after, false), nil
 }
 
-// unlinkUnlessSoleWaiter decides a cancellation of an ingest, which is shared
-// by content hash (SDD-005 section 5.6). When every project that holds the hash
-// is one the caller may see, the ingest may be cancelled and sole is true.
+// cancelSharedIngest decides and applies the cancellation of an ingest, which
+// is shared by content hash (SDD-005 section 5.6). The references are read and
+// the cancellation recorded in one write transaction, so a project that
+// imports the same file meanwhile is counted. When every live reference is a
+// project the caller may see, the ingest is cancelled and cancelled is true.
 // Otherwise cancelling would kill an ingest that a project the caller cannot
 // see waits on: the caller's own pending references are trashed instead and
-// the job runs on.
-func (s *svc) unlinkUnlessSoleWaiter(ctx context.Context, c Caller, hash string) (sole bool, err error) {
-	refs := s.referrers(ctx, hash)
+// the job runs on. Any failure to read the references is an error, never a
+// yes.
+func (s *svc) cancelSharedIngest(ctx context.Context, c Caller, job *JobRow) (cancelled bool, err error) {
+	var after JobRow
+
+	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		var decided bool
+
+		after, decided, err = s.decideSharedIngest(ctx, tx, c, job)
+		cancelled = decided
+
+		return err
+	})
+	if err != nil || !cancelled {
+		return false, err
+	}
+
+	if after.State == JobRunning {
+		s.running.cancel(job.ID)
+	}
+
+	if job.State == JobQueued && after.State == JobCancelled {
+		s.afterQueuedCancel(ctx, &after)
+	}
+
+	return true, nil
+}
+
+// decideSharedIngest is the body of cancelSharedIngest, inside its transaction.
+func (s *svc) decideSharedIngest(ctx context.Context, tx Tx, c Caller, job *JobRow) (JobRow, bool, error) {
+	ids, err := tx.Assets().ProjectsReferencing(ctx, *job.AssetHash)
+	if err != nil {
+		return JobRow{}, false, err
+	}
 
 	var mine []ProjectAssetRow
 
-	// A trashed reference no longer waits on the ingest.
-	refs = slices.DeleteFunc(refs, func(r ProjectAssetRow) bool { return r.State == ProjectAssetTrashed })
+	live := 0
 
-	for i := range refs {
-		owner, perr := s.store.Projects().Get(ctx, refs[i].ProjectID)
-		if perr != nil {
-			return false, perr
+	for _, id := range ids {
+		ref, ferr := tx.Assets().FindProjectAssetByHash(ctx, id, *job.AssetHash)
+		if ferr != nil {
+			return JobRow{}, false, ferr
 		}
 
-		if !visible(c, owner.OwnerUserID) || c.ProjectID != "" && c.ProjectID != refs[i].ProjectID {
+		if ref.State == ProjectAssetTrashed {
+			continue // it no longer waits on the ingest
+		}
+
+		live++
+
+		owner, gerr := tx.Projects().Get(ctx, id)
+		if gerr != nil {
+			return JobRow{}, false, gerr
+		}
+
+		if visible(c, owner.OwnerUserID) && (c.ProjectID == "" || c.ProjectID == id) {
+			mine = append(mine, ref)
+		}
+	}
+
+	now := s.nowMs()
+
+	if len(mine) == live {
+		after, rerr := tx.Jobs().RequestCancel(ctx, job.ID, now)
+
+		return after, rerr == nil, rerr
+	}
+
+	for i := range mine {
+		if mine[i].State != ProjectAssetPending {
 			continue
 		}
 
-		mine = append(mine, refs[i])
-	}
-
-	if len(mine) == len(refs) {
-		return true, nil
-	}
-
-	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		now := s.nowMs()
-
-		for i := range mine {
-			if mine[i].State != ProjectAssetPending {
-				continue
-			}
-
-			if err := tx.Assets().
-				SetProjectAssetState(ctx, mine[i].ProjectID, mine[i].AssetID, ProjectAssetTrashed, c.Actor, now, nil); err != nil {
-				return err
-			}
-
-			if err := appendAudit(
-				ctx,
-				tx,
-				now,
-				c.Actor,
-				"media.trash",
-				mine[i].ProjectID,
-				mine[i].AssetID,
-			); err != nil {
-				return err
-			}
+		if err := tx.Assets().
+			SetProjectAssetState(ctx, mine[i].ProjectID, mine[i].AssetID, ProjectAssetTrashed, c.Actor, now, nil); err != nil {
+			return JobRow{}, false, err
 		}
 
-		return nil
-	})
+		if err := appendAudit(ctx, tx, now, c.Actor, "media.trash", mine[i].ProjectID, mine[i].AssetID); err != nil {
+			return JobRow{}, false, err
+		}
+	}
 
-	return false, err
+	return JobRow{}, false, nil
 }
 
 // Cancel is the cancellation of SDD-005 section 14.4 for the trash of a

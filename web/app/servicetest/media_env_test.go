@@ -59,6 +59,8 @@ type mediaCfg struct {
 	onEvent func(service.Event)
 	// durable runs the jobs on the database queue with workers instead of inline.
 	durable bool
+	// wrapStore puts a decorator between the service and its store.
+	wrapStore func(service.Store) service.Store
 }
 
 // mediaEnv is an env whose service has the media and job machinery, with a
@@ -97,6 +99,10 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 		guard, err := pathguard.New(gc)
 		if err != nil {
 			tb.Fatal(err)
+		}
+
+		if cfg.wrapStore != nil {
+			o.Store = cfg.wrapStore(o.Store)
 		}
 
 		o.Workspace = m.ws
