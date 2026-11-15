@@ -12,6 +12,12 @@
               "minimum": 1,
               "type": "integer"
             },
+            "frame_delays": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
             "frame_rate": {
               "additionalProperties": false,
               "properties": {

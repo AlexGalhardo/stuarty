@@ -7,6 +7,7 @@ export interface AssetAddArgs {
    */
   asset: {
     frame_count?: number;
+    frame_delays?: number[];
     frame_rate?: {
       den: number;
       num: number;

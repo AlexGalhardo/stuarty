@@ -509,7 +509,7 @@ func TestEveryViolationCodeHasAnInvalidExample(t *testing.T) {
 	}
 	for _, code := range []string{
 		VSchemaVersion, VShape, VID, VTrackOrder, VItemTrack, VItemRange, VOverlap, VAssetRef, VSourceRange,
-		VSpeed, VFades, VTransitions, VKeyframes, VWords, VFont, VSlot, VColorRef, VLimits,
+		VSpeed, VFades, VTransitions, VKeyframes, VWords, VMarkers, VFont, VSlot, VColorRef, VLimits,
 	} {
 		if !covered[code] {
 			t.Errorf("%s has no example in testdata/invalid", code)

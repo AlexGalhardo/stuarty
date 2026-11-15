@@ -28,6 +28,12 @@
           "frame_count": {
             "type": "integer"
           },
+          "frame_delays": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
           "frame_rate": {
             "$ref": "#/components/schemas/Rational"
           },
@@ -742,6 +748,10 @@
           "audio_muted": {
             "type": "boolean"
           },
+          "blur": {
+            "format": "double",
+            "type": "number"
+          },
           "breaks": {
             "items": {
               "type": "integer"
@@ -778,6 +788,21 @@
           "fill": {
             "type": "string"
           },
+          "filter": {
+            "enum": [
+              "none",
+              "grayscale",
+              "sepia",
+              "invert",
+              "warm",
+              "cool"
+            ],
+            "type": "string"
+          },
+          "filter_amount": {
+            "format": "double",
+            "type": "number"
+          },
           "fit": {
             "enum": [
               "cover",
@@ -804,6 +829,12 @@
           },
           "linked_item": {
             "type": "string"
+          },
+          "markers": {
+            "items": {
+              "$ref": "#/components/schemas/Marker"
+            },
+            "type": "array"
           },
           "name": {
             "type": "string"
@@ -1143,6 +1174,17 @@
               "number",
               "null"
             ]
+          }
+        },
+        "type": "object"
+      },
+      "Marker": {
+        "properties": {
+          "frame": {
+            "type": "integer"
+          },
+          "label": {
+            "type": "string"
           }
         },
         "type": "object"

@@ -1,8 +1,8 @@
 # SDD-001: Timeline document schema
 
-- Status: Frozen (2026-11-14, ROADMAP task P1-SCH-003). Validators frozen for ALPHA (ROADMAP task P2-SCH-001): every code of section 4 has an invalid example under `core/timeline/testdata/invalid/`.
+- Status: Frozen (2026-11-14, ROADMAP task P1-SCH-003). Validators frozen for ALPHA (ROADMAP task P2-SCH-001): every code of section 4 has an invalid example under `core/timeline/testdata/invalid/`. BETA additions (ROADMAP task P3-SCH-001): filters and blur, markers, animated images; user fonts (P3-SCH-002). No `schema_version` bump.
 - Depends on: ADR-0004 (time), ADR-0005 (timeline model), ADR-0009 (persistence), ADR-0012 (text), ADR-0014 (JSON Schema), ADR-0022 (templates)
-- Implements: RF-002, RF-010 to RF-012, RF-015, RF-020 to RF-026, RF-030 to RF-032, RF-035, RF-040 to RF-042, RF-050, NFR-012
+- Implements: RF-002, RF-010 to RF-012, RF-015, RF-020 to RF-026, RF-030 to RF-032, RF-027, RF-028, RF-035, RF-040 to RF-044, RF-050, RF-053, NFR-012
 - Owner area: senior-a (command core and schema)
 
 ## 1. Purpose
@@ -79,8 +79,11 @@ An asset is a reference to a file in the content store plus the facts the frame 
 | `sample_count` | integer | when it has audio | samples at 48,000 Hz of the normalized audio |
 | `width`, `height` | integer | video and image | pixels after the display matrix was applied |
 | `has_audio` | boolean | video only | default false |
+| `frame_delays` | array of integers, 2 to 1,000 | animated image only | BETA. Display time of each frame in milliseconds, 10 to 60,000 each, read from the file by ingest. Present only on an `image` asset, with `frame_count` equal to its length; its presence is what makes the image animated (`Asset.IsAnimated`). A still image has neither |
 
 An asset appears in the document only after its ingest produced the normalized media (ADR-0010).
+
+**Animated image (BETA, RF-028).** An animated GIF, WebP or APNG is an `image` asset with `frame_count` and `frame_delays`; there is no fourth asset kind, so every rule that treats an image (no duration limit, `speed` and `source_in` ignored, `fit`, `crop`) holds unchanged and a binary that does not know the fields keeps them. The animation plays from its first frame at the start of the item, loops for as long as the item lasts, and is shown frame by frame by the cumulative delays (the frame at item time `t` is chosen in SDD-004 §3.3 by `t` in milliseconds modulo the sum of the delays). `frame_delays` on a video or audio asset is `V_SHAPE`. Adding the fields does not change `schema_version` (section 6, rule 2).
 
 **Asset duration in project frames** is derived, never stored: for video, `floor(frame_count * fps.num * frame_rate.den / (fps.den * frame_rate.num))`; for audio, `floor(sample_count * fps.num / (48000 * fps.den))`; an image has no duration limit.
 
@@ -113,6 +116,7 @@ An asset appears in the document only after its ingest produced the normalized m
 | `transition_in`, `transition_out` | Transition | none | section 3.8; visual items only |
 | `keyframes` | Keyframes | none | section 3.8 |
 | `slot` | Slot | none | marks the item as a template slot, section 3.10 |
+| `markers` | array of Marker, up to 200 | `[]` | BETA. Labelled frames of the item, used by beat markers (RF-044); every item type. Marker: `{"frame": int, "label": string up to 60 characters, default ""}`; `frame` is relative to the item's `start`, from 0 to `duration - 1`, and frames are strictly increasing (`V_MARKERS`). Markers have no effect on the picture or the sound |
 
 The item occupies frames `start` to `start + duration - 1`. The end, `start + duration`, is exclusive.
 
@@ -124,6 +128,11 @@ Visual items (`clip`, `text`, `caption`, `shape`) also have:
 | `scale` | number, greater than 0, at most 20 | 1 | uniform scale factor |
 | `rotation` | number | 0 | degrees, clockwise |
 | `opacity` | number, 0 to 1 | 1 | |
+| `blur` | number, 0 to 100 | 0 | BETA (RF-027). Gaussian blur radius in pixels at project resolution, applied to the item's own pixels before it is composed. Not keyframeable |
+| `filter` | `"none"`, `"grayscale"`, `"sepia"`, `"invert"`, `"warm"`, `"cool"` | `"none"` | BETA (RF-027). The fixed list of colour filters; no other name is accepted and none depends on a GPL-only component (ADR-0011 item 6). Each is a per-pixel colour transform done by the compositor in Go |
+| `filter_amount` | number, 0 to 1 | 1 | BETA. How much of the filter is mixed in: 0 is the original, 1 the full filter. Ignored when `filter` is `none` |
+
+`blur`, `filter` and `filter_amount` apply to every visual item (`clip`, `text`, `caption`, `shape`); on an `audio` item a non-default value is `V_SHAPE`. The order is: colour adjustment of section 3.5, then the filter, then blur, then opacity. The exact formulas and the plan fields are in SDD-004 §3.6.
 
 ### 3.5 Clip and audio items
 
@@ -261,7 +270,14 @@ When a property has keyframes they define its value: before the first keyframe t
 | key | string | the family name used in styles |
 | `files` | array of `{"weight": int, "hash": "sha256:..."}` | font files, stored in the workspace `fonts/` directory by hash |
 
-The weights of the bundled families are those of `engine/raster/fonts/FONTS.md`: for example Anton ships 400 only, so a style with `font_family` Anton needs `font_weight` 400. User fonts are a BETA feature (RF-053, the brand kit). In the Prototype and ALPHA the map must be empty (`V_FONT` then accepts only the bundled families) and no command writes to it.
+The weights of the bundled families are those of `engine/raster/fonts/FONTS.md`: for example Anton ships 400 only, so a style with `font_family` Anton needs `font_weight` 400. User fonts are a BETA feature (RF-053, the brand kit). In the Prototype and ALPHA the map had to be empty; BETA relaxes exactly that rule. The rules of an entry:
+
+- the key must not be the name of a bundled family (`V_FONT`);
+- `files` has at least one entry, each `weight` is 100 to 900 in steps of 100, and no weight appears twice in one family (`V_FONT`);
+- each `hash` is `sha256:` and 64 lower-case hex characters (`V_SHAPE`);
+- the family and the weight a style uses come from this map and the `weight` of each file, never from the name table inside the font file; `V_FONT` accepts a style whose family is bundled or a key of this map, and whose weight is one the family has.
+
+A document that was valid with an empty map stays valid. Adding entries to the map does not change `schema_version`.
 
 ### 3.10 Template fields
 
@@ -300,7 +316,8 @@ TemplateInfo, at the top of a template document: `{"description": string, "color
 | `V_TRANSITIONS` | transition durations sum to at most `duration` |
 | `V_KEYFRAMES` | keyframe rules of section 3.8 hold |
 | `V_WORDS` | caption word rules of section 3.7 hold |
-| `V_FONT` | every `font_family` and weight exists in the bundled set or in `fonts`; the effective weight (the given one, else 700) must be one the family ships, as listed in `engine/raster/fonts/FONTS.md` and kept in `timeline.BundledWeights` by a test |
+| `V_MARKERS` | marker rules of section 3.4 hold: at most 200, each frame inside the item, frames strictly increasing |
+| `V_FONT` | every `font_family` and weight exists in the bundled set or in `fonts`; no key of `fonts` is a bundled family and no family repeats a weight (section 3.9); the effective weight (the given one, else 700) must be one the family ships, as listed in `engine/raster/fonts/FONTS.md` and kept in `timeline.BundledWeights` by a test |
 | `V_SLOT` | slot names are unique and each slot kind matches its item type |
 | `V_COLOR_REF` | every `"$name"` colour reference exists in `template.colors` |
 | `V_LIMITS` | at most 50 tracks, 500 items, 200 assets and 5,000 caption words in the document |
@@ -372,6 +389,7 @@ The caption track sorts first (`a0` before `a1`), so captions are drawn over the
 
 1. `schema_version` is an integer that increases by one for every incompatible change: a removed or renamed field, a changed meaning, a tightened constraint.
 2. Adding an optional field with a default that preserves the old behaviour does not change `schema_version`. Older binaries keep it through the unknown-field rule.
+   BETA added `blur`, `filter`, `filter_amount`, `markers`, `frame_delays` and the `fonts` entries under this rule: all are optional with a default that preserves the old behaviour, so `schema_version` stays 1 and no `v1to2` exists. A document saved by the ALPHA binary validates unchanged.
 3. The chain lives in the package `core/timeline/migrate` (standard library only, no document type, so `timeline` can call it before typing a document). For each version step there is one pure function `func v1to2(doc Doc) (Doc, error)` over the decoded JSON (`Doc` is `map[string]any`, numbers as `json.Number`), registered in the `registry` table of `migrate.go`; `migrate.Migrate` chains the steps from the document's version to `migrate.Current`, and `timeline.Decode` calls it first through `timeline.Migrate`, which turns its error into a `V_SCHEMA_VERSION` or `V_SHAPE` violation. An `init` check panics when a version between 1 and `Current` has no step.
 
    **To add a version:** raise `migrate.Current` (and nothing else in the constant: `timeline.CurrentSchemaVersion` follows it), write `vNtoN+1`, register it, copy the valid examples to `testdata/versions/vN+1/`, add every new fixture path to `testdata/versions/MANIFEST.txt`, and regenerate the schema.

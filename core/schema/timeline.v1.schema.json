@@ -6,6 +6,14 @@
           "minimum": 1,
           "type": "integer"
         },
+        "frame_delays": {
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 1000,
+          "minItems": 2,
+          "type": "array"
+        },
         "frame_rate": {
           "$ref": "#/$defs/Rational"
         },
@@ -208,6 +216,11 @@
         "audio_muted": {
           "type": "boolean"
         },
+        "blur": {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
         "breaks": {
           "items": {
             "type": "integer"
@@ -244,6 +257,24 @@
           "default": "#FFFFFF",
           "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
           "type": "string"
+        },
+        "filter": {
+          "default": "none",
+          "enum": [
+            "none",
+            "grayscale",
+            "sepia",
+            "invert",
+            "warm",
+            "cool"
+          ],
+          "type": "string"
+        },
+        "filter_amount": {
+          "default": 1,
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
         },
         "fit": {
           "default": "cover",
@@ -285,6 +316,13 @@
         "linked_item": {
           "pattern": "^itm_[0-9a-hjkmnp-tv-z]{10}$",
           "type": "string"
+        },
+        "markers": {
+          "items": {
+            "$ref": "#/$defs/Marker"
+          },
+          "maxItems": 200,
+          "type": "array"
         },
         "name": {
           "maxLength": 120,
@@ -436,6 +474,22 @@
       "required": [
         "t",
         "value"
+      ],
+      "type": "object"
+    },
+    "Marker": {
+      "properties": {
+        "frame": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "label": {
+          "maxLength": 60,
+          "type": "string"
+        }
+      },
+      "required": [
+        "frame"
       ],
       "type": "object"
     },
