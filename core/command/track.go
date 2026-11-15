@@ -299,7 +299,7 @@ func applyTrackRemove(c *Context, a *trackRemoveArgs) error {
 type trackCaptionStyleArgs struct {
 	TrackID string         `json:"track_id"`
 	Style   map[string]any `json:"style"             schema:"caption_style_merge" desc:"A partial CaptionStyle; null removes a key when merging."`
-	Replace bool           `json:"replace,omitempty" desc:"Replace the whole style instead of merging."`
+	Replace bool           `json:"replace,omitempty"                              desc:"Replace the whole style instead of merging."`
 }
 
 func applyTrackSetCaptionStyle(c *Context, a *trackCaptionStyleArgs) error {
