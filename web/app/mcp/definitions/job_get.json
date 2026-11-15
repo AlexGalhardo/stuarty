@@ -12,6 +12,17 @@
     "type": "string",
     "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
    },
+   "state": {
+    "enum": [
+     "queued",
+     "running",
+     "succeeded",
+     "failed",
+     "cancelled",
+     "active",
+     "all"
+    ]
+   },
    "wait_ms": {
     "type": "integer",
     "minimum": 0,

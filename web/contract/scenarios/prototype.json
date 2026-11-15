@@ -21,7 +21,7 @@
 		{"call": "MediaInspect", "args": {"project_id": "prj_7k2m9x4q1b", "asset_id": "ast_3c5v8n2w6d", "sections": ["probe", "silences", "loudness"]}},
 		{"call": "HistoryList", "args": {"project_id": "prj_7k2m9x4q1b"}},
 		{"call": "JobStart", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "export", "wait_ms": 25000}},
-		{"call": "JobList", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "JobList", "args": {"project_id": "prj_7k2m9x4q1b", "state": "all"}},
 		{"call": "Undo", "args": {"project_id": "prj_7k2m9x4q1b"}},
 		{"call": "ProjectGet", "args": {"project_id": "prj_7k2m9x4q1b", "detail": "concise"}},
 		{"call": "ProjectList", "args": {}}

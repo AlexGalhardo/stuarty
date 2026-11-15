@@ -307,6 +307,7 @@ func jobGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*too
 	in, err := decode[struct {
 		JobID     string `json:"job_id"`
 		ProjectID string `json:"project_id"`
+		State     string `json:"state"`
 		WaitMS    int    `json:"wait_ms"`
 	}](raw)
 	if err != nil {
@@ -322,7 +323,7 @@ func jobGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*too
 
 		return &toolOutput{value: res, text: res.Text}, nil
 	case in.ProjectID != "":
-		res, lerr := svc.JobList(ctx, service.JobListRequest{ProjectID: in.ProjectID})
+		res, lerr := svc.JobList(ctx, service.JobListRequest{ProjectID: in.ProjectID, State: in.State})
 		if lerr != nil {
 			return nil, lerr
 		}

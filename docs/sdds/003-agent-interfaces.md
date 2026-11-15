@@ -2020,6 +2020,7 @@ job_4h8k2m6p9t export succeeded 100% file=/home/ana/.vukem-video/exports/prj_7k2
     "properties":{
       "job_id":{"type":"string","pattern":"^job_[0-9a-hjkmnp-tv-z]{10}$"},
       "project_id":{"type":"string","pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"},
+      "state":{"enum":["queued","running","succeeded","failed","cancelled","active","all"]},
       "wait_ms":{"type":"integer","minimum":0,"maximum":25000,"default":0}
     },
     "additionalProperties":false
@@ -2062,7 +2063,7 @@ still running: call job_get again
 {"job_id": "job_4h8k2m6p9t", "kind": "export", "project_id": "prj_7k2m9x4q1b", "state": "running", "progress": 0.62, "message": "encoding frame 74/120", "actor": "local:claude-code", "created_at": "2026-11-14T10:25:10Z", "started_at": "2026-11-14T10:25:10Z"}
 ```
 
-Called with `project_id` and no `job_id`, the call is `JobList` (§2.8): `wait_ms` is not accepted with it, the text is the job list of §3.9 and `structuredContent` is `{"project_id", "jobs": [...], "next_cursor"}`. An agent that lost its context uses it to find a running export.
+Called with `project_id` and no `job_id`, the call is `JobList` (§2.8): `state` filters the list (the default is the queued and running jobs and the 10 most recent final ones; `active` and `all` as in `JobList`), `wait_ms` is not accepted with it, the text is the job list of §3.9 and `structuredContent` is `{"project_id", "jobs": [...], "next_cursor"}`. An agent that lost its context uses it to find a running export.
 
 #### `job_cancel`
 
@@ -2754,7 +2755,7 @@ The CLI commands of SDD-000 §1 that are not service operations (`serve`, `mcp`,
 | S-7 | `HistoryList` filters by `actor` on MCP and HTTP, by `--by` on the CLI | the CLI's `--actor` names the caller |
 | S-8 | MCP `media_import` takes `paths` (and optional `asset_ids`, the same length), the service `files[]` | shorter schema; the mapping is positional |
 | S-9 | `ViewResult.image_base64` and `MediaInspectResult.untrusted.transcript` are absent from MCP `structuredContent` (fields tagged `bulk`) | they duplicate the text block |
-| S-10 | `MediaList` is `media_inspect` without `asset_id` and `JobList` is `job_get` with `project_id` and no `job_id` | the catalogue stays at 15 tools (SDD-000 §1) |
+| S-10 | `MediaList` is `media_inspect` without `asset_id` and `JobList` is `job_get` with `project_id` and no `job_id` (its `state` filter is `state`; `cursor` and `limit` are CLI and HTTP only) | the catalogue stays at 15 tools (SDD-000 §1) |
 | S-11 | `history` with `action` `undo` or `redo` takes no `actor`, `cursor` or `limit`; `template` takes only the members of its `action` | the cross-field rules are in the tool descriptions and enforced by the adapter |
 
 ### 7.2 The contract test
