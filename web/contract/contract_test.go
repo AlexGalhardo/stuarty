@@ -209,7 +209,8 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 		}
 
 		for n, p := range bundles {
-			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$bundle:`+strconv.Itoa(n)+`"`, mustJSON(t, p)))
+			key := `"$bundle:` + strconv.Itoa(n) + `"`
+			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), key, mustJSON(t, p)))
 		}
 
 		for n, id := range imported {
@@ -709,7 +710,10 @@ func checkIngestLimits(t *testing.T, steps []step, outcomes []outcome) {
 // learnBundleResults notes what a bundle step answered that a later step reads back: the file of an
 // export and the id of an imported project.
 func learnBundleResults(
-	t *testing.T, d driver, s step, raw json.RawMessage, bundles, imported []string) (newBundles, newImported []string) {
+	t *testing.T, d driver, s step, raw json.RawMessage, bundles, imported []string,
+) (newBundles, newImported []string) {
+	t.Helper()
+
 	var res struct {
 		ProjectID string `json:"project_id"`
 		Result    struct {
@@ -803,9 +807,9 @@ func importedDocument(t *testing.T, d driver, original string) []byte {
 
 	var ids []string
 
-	for _, p := range list.Projects {
-		if p.ID != original {
-			ids = append(ids, p.ID)
+	for i := range list.Projects {
+		if id := list.Projects[i].ID; id != original {
+			ids = append(ids, id)
 		}
 	}
 
