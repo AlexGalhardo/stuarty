@@ -4,8 +4,15 @@ import { expect, seedProject, test } from "./helpers";
 // endpoints. The unit tests of resources/js/editor/preview cover the plan
 // windows, the sync rules, the audio clock and truth on pause.
 
+// The comparison runs at the resolution of ViewFrame (360 x 640), on a window
+// large enough for the canvas to have at least that many pixels. Compared at a
+// 172 x 303 canvas (the default 1280 x 720 window) both images are downscaled
+// and the SSIM of the same frame falls to 0.96: the gate measures the preview,
+// not the resampling of a thumbnail.
 test.describe("preview-vs-export", () => {
-	test("the canvas matches ViewFrame: SSIM on luma stays at or above 0.95 (SDD-012 asks 0.97)", async ({
+	test.use({ viewport: { width: 1920, height: 1300 } });
+
+	test("the canvas matches ViewFrame: SSIM of at least 0.97 on luma", async ({
 		page,
 		request,
 	}) => {
@@ -49,8 +56,8 @@ test.describe("preview-vs-export", () => {
 				};
 				const a = await load(shotBase64, "image/png");
 				const b = await load(body.image_base64, "image/jpeg");
-				const w = 108;
-				const h = 192;
+				const w = 360;
+				const h = 640;
 				const luma = (bitmap: ImageBitmap): Float64Array => {
 					const c = new OffscreenCanvas(w, h);
 					const g = c.getContext("2d");
@@ -110,11 +117,7 @@ test.describe("preview-vs-export", () => {
 			{ id: seeded.id, shotBase64: shot },
 		);
 		console.log(`preview vs ViewFrame: SSIM(luma) = ${ssim.toFixed(4)}`);
-		// SDD-012 section 20.1 asks for 0.97. The measured value on this smooth
-		// gradient is about 0.96 (the canvas carries one LSB of dither the JPEG
-		// does not), so the gate stays at 0.95 until the three reference scenes
-		// exist and the difference is understood; see the report of P1-UI-003.
-		expect(ssim).toBeGreaterThanOrEqual(0.95);
+		expect(ssim).toBeGreaterThanOrEqual(0.97);
 	});
 });
 
