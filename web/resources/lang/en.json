@@ -358,6 +358,12 @@
         "audio": {
           "add": {
             "title": "Add audio"
+          },
+          "duck": {
+            "title": "Duck music under speech"
+          },
+          "mark_beats": {
+            "title": "Mark beats"
           }
         },
         "caption": {
@@ -393,17 +399,31 @@
           "add": {
             "title": "Add clip"
           },
+          "set_blur": {
+            "title": "Set clip blur"
+          },
           "remove_silences": {
             "title": "Remove silences"
           },
           "set_color": {
             "title": "Set clip color"
           },
+          "set_filter": {
+            "title": "Set clip filter"
+          },
           "set_framing": {
             "title": "Set clip framing"
           },
           "set_speed": {
             "title": "Set clip speed"
+          }
+        },
+        "font": {
+          "add": {
+            "title": "Add font"
+          },
+          "remove": {
+            "title": "Remove font"
           }
         },
         "item": {
@@ -618,6 +638,32 @@
           "fit": "fades or transitions no longer fit"
         }
       },
+      "audio": {
+        "duck_title": "Ducking",
+        "duck_speech": "Speech items",
+        "duck_none": "No other clip or audio item to duck under.",
+        "duck_gain": "Volume change while speech sounds",
+        "duck_attack": "Attack",
+        "duck_release": "Release",
+        "duck_apply": "Duck under speech",
+        "beats_title": "Beat markers",
+        "beats_every": "Mark every nth beat",
+        "beats_label": "Marker label",
+        "beats_replace": "Replace the item markers",
+        "beats_count": {
+          "one": "1 marker",
+          "other": "{count} markers"
+        },
+        "beats_apply": "Mark beats"
+      },
+      "fonts": {
+        "title": "Fonts",
+        "remove": "Remove font family {name}",
+        "family": "Family name",
+        "weight": "Weight",
+        "hash": "Font file hash (sha256:...)",
+        "add": "Add font"
+      },
       "clip": {
         "audio_title": "Audio",
         "volume": "Volume",
@@ -640,6 +686,16 @@
         "brightness": "Brightness",
         "contrast": "Contrast",
         "saturation": "Saturation",
+        "filters_title": "Filters",
+        "filter": "Filter",
+        "filter_none": "None",
+        "filter_grayscale": "Grayscale",
+        "filter_sepia": "Sepia",
+        "filter_invert": "Invert",
+        "filter_warm": "Warm",
+        "filter_cool": "Cool",
+        "filter_amount": "Filter amount",
+        "blur": "Blur",
         "silences_title": "Silences",
         "min_silence": "Minimum silence",
         "padding": "Padding",
