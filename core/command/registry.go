@@ -267,11 +267,13 @@ func (r *Registry) unknown(name string) *Error {
 var (
 	defaultOnce sync.Once
 	defaultReg  *Registry
+	registered  []Command
 )
 
-// Build is the phase of this binary: Default holds the commands of that phase and
-// every earlier one. Raise it when the next phase starts to ship commands.
-const Build = Beta
+// Build is the phase this binary exposes: Default holds the commands of that phase
+// and every earlier one. Raise it at the phase switch of the roadmap; commands of
+// a later phase stay registered and are visible to BetaBuild only.
+const Build = Alpha
 
 // Default is the registry of this build (the commands up to Build), filled by the
 // init functions of the command files.
@@ -280,10 +282,25 @@ func Default() *Registry {
 	return defaultReg
 }
 
+// BetaBuild returns a registry of the Beta phase with every registered command,
+// exposed or not. Tests and the generators of later phases use it.
+func BetaBuild() *Registry {
+	r := NewRegistry(Beta)
+	for i := range registered {
+		if err := r.Register(registered[i]); err != nil {
+			panic(err)
+		}
+	}
+
+	return r
+}
+
 // Register adds a command to the Default registry and panics when it is incomplete;
 // command files call it from init.
 func Register(c Command) {
 	if err := Default().Register(c); err != nil {
 		panic(errors.Join(errors.New("command registry"), err))
 	}
+
+	registered = append(registered, c)
 }

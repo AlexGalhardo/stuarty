@@ -477,7 +477,7 @@ func randomStart(rng *rand.Rand) *timeline.Document {
 func checkStep(doc *timeline.Document, o Operation, ids *seqIDs) (next *timeline.Document, err error) {
 	before := timeline.Canonical(doc)
 
-	res, applyErr := Default().Apply(doc, o, Env{NewIDs: ids.next})
+	res, applyErr := fullRegistry().Apply(doc, o, Env{NewIDs: ids.next})
 	if !bytes.Equal(timeline.Canonical(doc), before) {
 		return nil, fmt.Errorf("%s changed its input", o.Op)
 	}
@@ -536,7 +536,7 @@ func TestRandomBatches(t *testing.T) {
 		}
 	}
 
-	for _, c := range Default().List() {
+	for _, c := range fullRegistry().List() {
 		if ok[c.Name] == 0 && !c.Internal {
 			t.Errorf("%s never succeeded in the random sequences", c.Name)
 		}

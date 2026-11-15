@@ -233,7 +233,7 @@ func partCCases(t *testing.T) map[string][]string {
 // directory has no name in Part C, for every command of the registry.
 func TestGoldenCasesComplete(t *testing.T) {
 	named := partCCases(t)
-	for _, cmd := range Default().List() {
+	for _, cmd := range fullRegistry().List() {
 		want := named[cmd.Name]
 		if len(want) == 0 {
 			t.Errorf("%s: Part C lists no golden case", cmd.Name)

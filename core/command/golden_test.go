@@ -185,7 +185,7 @@ func TestGoldenRunner(t *testing.T) {
 
 // The real catalogue: its cases arrive with the commands (P1-ENG-002).
 func TestGoldenCases(t *testing.T) {
-	runGolden(t, Default(), "testdata")
+	runGolden(t, fullRegistry(), "testdata")
 }
 
 // checkCaseName holds a case to its name: ok_ succeeds, err_<code> fails with that code.

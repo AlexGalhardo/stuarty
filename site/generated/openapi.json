@@ -1459,9 +1459,7 @@
               "caption.split",
               "clip.add",
               "clip.remove_silences",
-              "clip.set_blur",
               "clip.set_color",
-              "clip.set_filter",
               "clip.set_framing",
               "clip.set_speed",
               "item.crossfade",
@@ -1544,14 +1542,8 @@
           "clip.remove_silences": {
             "$ref": "#/components/schemas/args.clip.remove_silences"
           },
-          "clip.set_blur": {
-            "$ref": "#/components/schemas/args.clip.set_blur"
-          },
           "clip.set_color": {
             "$ref": "#/components/schemas/args.clip.set_color"
-          },
-          "clip.set_filter": {
-            "$ref": "#/components/schemas/args.clip.set_filter"
           },
           "clip.set_framing": {
             "$ref": "#/components/schemas/args.clip.set_framing"
@@ -2990,26 +2982,6 @@
         ],
         "type": "object"
       },
-      "args.clip.set_blur": {
-        "additionalProperties": false,
-        "properties": {
-          "item_id": {
-            "description": "A clip.",
-            "type": "string"
-          },
-          "radius": {
-            "description": "Blur radius in pixels, 0 to 100; 0 removes the blur.",
-            "maximum": 100,
-            "minimum": 0,
-            "type": "number"
-          }
-        },
-        "required": [
-          "item_id",
-          "radius"
-        ],
-        "type": "object"
-      },
       "args.clip.set_color": {
         "additionalProperties": false,
         "properties": {
@@ -3034,37 +3006,6 @@
             "maximum": 2,
             "minimum": 0,
             "type": "number"
-          }
-        },
-        "required": [
-          "item_id"
-        ],
-        "type": "object"
-      },
-      "args.clip.set_filter": {
-        "additionalProperties": false,
-        "properties": {
-          "amount": {
-            "description": "0 to 1; default 1.",
-            "maximum": 1,
-            "minimum": 0,
-            "type": "number"
-          },
-          "filter": {
-            "description": "none (default), grayscale, sepia, invert, warm or cool.",
-            "enum": [
-              "none",
-              "grayscale",
-              "sepia",
-              "invert",
-              "warm",
-              "cool"
-            ],
-            "type": "string"
-          },
-          "item_id": {
-            "description": "A clip.",
-            "type": "string"
           }
         },
         "required": [

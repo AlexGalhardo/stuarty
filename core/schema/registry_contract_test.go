@@ -56,8 +56,8 @@ func TestRegistrySnapshotShape(t *testing.T) {
 		}
 	}
 
-	if len(cmds) != 50 || phases["prototype"] != 16 || phases["alpha"] != 32 || phases["beta"] != 2 {
-		t.Errorf("%d commands (%v), want 50 with 16 prototype, 32 alpha and 2 beta", len(cmds), phases)
+	if len(cmds) != 48 || phases["prototype"] != 16 || phases["alpha"] != 32 {
+		t.Errorf("%d commands (%v), want 48 with 16 prototype and 32 alpha (the exposed build)", len(cmds), phases)
 	}
 }
 
@@ -118,6 +118,17 @@ func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 	}
 
 	for name, phase := range want {
+		if phase == "beta" {
+			// A Beta command is registered but not exposed until the BETA phase switch.
+			if _, exposed := got[name]; exposed {
+				t.Errorf("Part C says %s is beta but the exposed build lists it", name)
+			}
+
+			delete(want, name)
+
+			continue
+		}
+
 		if got[name] != phase {
 			t.Errorf("Part C says %s is %q, the registry has %q", name, phase, got[name])
 		}
