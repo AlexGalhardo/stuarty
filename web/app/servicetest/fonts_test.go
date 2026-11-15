@@ -3,6 +3,7 @@ package servicetest
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -209,5 +210,74 @@ func TestBundleCarriesUserFontsIntoTheFontStore(t *testing.T) {
 	// The imported project renders: its plan draws the text with the imported file.
 	if key, png := dst.bitmapOf(project); len(key) != 64 || !bytes.HasPrefix(png, []byte("\x89PNG")) {
 		t.Errorf("bitmap = %s, %d bytes", key, len(png))
+	}
+}
+
+func memberCtx(user string) context.Context {
+	return service.WithCaller(context.Background(), service.Caller{
+		Actor: "user:" + user, Scopes: service.RoleScopes(service.RoleMember), OwnerUserID: user,
+	})
+}
+
+// SDD-007 T-21: in network mode the font store is shared, so a user cannot name the font another
+// user brought; the refusal is the one a hash nobody stored gets, and names no hash.
+func TestSecurity_T21_FontAddCannotNameAnotherUsersFont(t *testing.T) {
+	src := newMediaEnv(t, mediaCfg{beta: true})
+
+	anton, err := enginestore.NewFonts(src.ws).Put(bundledFontFile(t, "Anton-Regular.ttf"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bundle := src.exportBundle(src.brandProject(anton), nil).Result.Export.Path
+
+	net := newMediaEnv(t, mediaCfg{beta: true})
+	alice, bob := memberCtx("alice"), memberCtx("bob")
+
+	// Alice brings the font with a bundle, which links it to her project.
+	if _, err := net.svc.(bundleImporter).ProjectBundleImport(
+		alice, service.ProjectBundleImportRequest{Path: bundle, AsNew: true},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	add := op("font.add", fmt.Sprintf(`{"family":"Mine","files":[{"weight":400,"hash":"sha256:%s"}]}`, anton))
+
+	newProject := func(ctx context.Context) string {
+		res, err := net.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "p"})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return res.ProjectID
+	}
+
+	if _, err := net.svc.Edit(alice, service.EditRequest{
+		ProjectID: newProject(alice), BaseRevision: 0, Operations: []command.Operation{add},
+	}); err != nil {
+		t.Fatalf("the owner of the font: %v", err)
+	}
+
+	_, errBob := net.svc.Edit(bob, service.EditRequest{
+		ProjectID: newProject(bob), BaseRevision: 0, Operations: []command.Operation{add},
+	})
+
+	unknown := newMediaEnv(t, mediaCfg{beta: true})
+	unknownProject := unknown.newProject("p")
+	_, errNever := unknown.svc.Edit(unknown.as(ui), service.EditRequest{
+		ProjectID: unknownProject, BaseRevision: 0, Operations: []command.Operation{add},
+	})
+
+	if !isCode(errBob, command.CodeNotFound) || !isCode(errNever, command.CodeNotFound) {
+		t.Fatalf("bob: %v; never stored: %v; want both E_NOT_FOUND", errBob, errNever)
+	}
+
+	if errBob.Error() != errNever.Error() {
+		t.Errorf("the refusals differ, which tells whether a font exists:\n%v\n%v", errBob, errNever)
+	}
+
+	var e *service.Error
+	if errors.As(errBob, &e) && (e.Details["hash"] != nil || strings.Contains(e.Message+e.Hint, anton)) {
+		t.Errorf("the refusal names the hash: %+v", e)
 	}
 }
