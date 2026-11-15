@@ -36,6 +36,21 @@ The CLI waits for the job. Use `--no-wait` to return at once and `vukem-video jo
 
 The result of a succeeded export has the file path under `<workspace>/exports/<project id>/<job id>.mp4`, its size and its duration.
 
+## Export a project bundle
+
+A bundle is one file, `<name>.vvbundle`, that holds a project and everything it needs, to back it up or hand it to someone else. It is a zip with the project document, the original media, the fonts the project uses and, unless you leave it out, the operation log with the history of edits. Proxies, thumbnails and transcripts are not included; they are made again when the bundle is opened.
+
+```bash
+vukem-video bundle:export --project prj_7k2m9x4q1b --wait
+vukem-video bundle:export --project prj_7k2m9x4q1b --no-log --wait
+```
+
+Like an export, a bundle is a job: `--wait` follows it, and the file is written under `<workspace>/exports/<project id>/` as `bundle-r<revision>-<job id>.vvbundle`. `--no-log` leaves the history out, which hides who edited and why. A project in the trash cannot be exported. The command runs on the machine that owns the workspace.
+
+<Callout type="warning" title="Import is planned for BETA">
+Opening a bundle is not available from the CLI or the HTTP API yet, and the editor has no bundle entry yet. Only the export above exists in this build.
+</Callout>
+
 ## Common mistakes
 
 - No H.264 encoder works on this machine: `E_NO_ENCODER`.
