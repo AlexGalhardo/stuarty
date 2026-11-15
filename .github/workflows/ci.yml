@@ -152,7 +152,7 @@ jobs:
           VUKEM_VIDEO_BENCH_MIN_RT: "1.5"
         run: |
           go test -run '^$' -bench BenchmarkExportCommonCase -benchtime=1x -count=1 -timeout=10m ./engine/export/ | tee bench.txt
-          { echo '### BenchmarkExportCommonCase (${{ matrix.os }})'; echo '```'; grep -E "^Benchmark|x real time" bench.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          { echo '### BenchmarkExportCommonCase (${{ matrix.os }})'; echo '```'; grep -E "^Benchmark|x real time" bench.txt || echo "skipped: no pinned LGPL FFmpeg on this runner"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Coverage gate
         if: matrix.os == 'ubuntu-latest'
         run: go run ./internal/tools/covergate -v coverage.out
