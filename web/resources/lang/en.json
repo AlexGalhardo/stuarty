@@ -259,6 +259,7 @@
         "close_gap": "Close gap",
         "item_menu": "Item actions",
         "gap_menu": "Gap actions",
+        "shape": "Add shape",
         "text": "Add text",
         "split_caption": "Split caption here",
         "merge_captions": "Merge captions",
@@ -708,6 +709,19 @@
           "other": "{count} changes",
           "zero": "No changes"
         }
+      },
+      "shape": {
+        "title": "Shape",
+        "kind": "Shape",
+        "rect": "Rectangle",
+        "rounded_rect": "Rounded rectangle",
+        "ellipse": "Ellipse",
+        "width": "Width",
+        "height": "Height",
+        "radius": "Corner radius",
+        "fill": "Fill",
+        "stroke_color": "Stroke colour",
+        "stroke_width": "Stroke width"
       },
       "defaults": {
         "text": "Your text"

@@ -25,6 +25,8 @@ import {
 	projectRenameOperations,
 	settingsFpsOperations,
 	settingsSetOperations,
+	shapeAddOperations,
+	shapeSetOperations,
 	silenceOperations,
 	speedOperations,
 	splitOperations,
@@ -592,5 +594,31 @@ describe("clip section builders (SDD-002 C.19, C.24 to C.27)", () => {
 			ripple: "none",
 		});
 		expect(args).not.toHaveProperty("resolved");
+	});
+});
+
+describe("shape builders", () => {
+	test("Add shape is 3 s at the playhead, and creates the track when there is none", () => {
+		const ops = shapeAddOperations({
+			shape: "rounded_rect",
+			playhead: 5,
+			firstVisualTrack: null,
+			newTrackId: () => "trk_n",
+		});
+		expect(ops.map((o) => o.op)).toEqual(["track.add", "shape.add"]);
+		expect(ops[1]?.args).toEqual({
+			track_id: "trk_n",
+			start: "5f",
+			duration: "3s",
+			shape: "rounded_rect",
+			width: 400,
+			height: 240,
+		});
+	});
+
+	test("a shape field is one partial request", () => {
+		expect(shapeSetOperations("itm_a", { fill: "#FF0000" })).toEqual([
+			{ op: "shape.set", args: { item_id: "itm_a", fill: "#FF0000" } },
+		]);
 	});
 });

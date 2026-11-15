@@ -1,6 +1,7 @@
 import {
 	Captions,
 	Scissors,
+	Shapes,
 	StepBack,
 	StepForward,
 	Trash2,
@@ -16,10 +17,17 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
+import { SHAPES } from "../commands/builders";
 import {
 	useActions,
 	useCanCut,
@@ -179,6 +187,24 @@ export default function EditToolbar({
 				<Type aria-hidden="true" />
 				{t("ui.editor.edit.text")}
 			</Button>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button type="button" variant="ghost" size="sm" disabled={!ready}>
+						<Shapes aria-hidden="true" />
+						{t("ui.editor.edit.shape")}
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="start">
+					{SHAPES.map((shape) => (
+						<DropdownMenuItem
+							key={shape}
+							onSelect={() => void actions.addShape(shape)}
+						>
+							{t(`ui.editor.shape.${shape}`)}
+						</DropdownMenuItem>
+					))}
+				</DropdownMenuContent>
+			</DropdownMenu>
 			<AddCaptionDialog open={captionOpen} onOpenChange={onCaptionOpenChange} />
 		</div>
 	);

@@ -33,6 +33,8 @@ import {
 	renameOperations,
 	settingsFpsOperations,
 	settingsSetOperations,
+	shapeAddOperations,
+	shapeSetOperations,
 	silenceOperations,
 	speedOperations,
 	splitOperations,
@@ -357,6 +359,15 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				firstVisualTrack: null,
 				newTrackId,
 			}).map((o) => o.op),
+			"shape.add": shapeAddOperations({
+				shape: "ellipse",
+				playhead: 0,
+				firstVisualTrack: null,
+				newTrackId,
+			}).map((o) => o.op),
+			"inspector.shape": shapeSetOperations("itm_a", { width: 10 }).map(
+				(o) => o.op,
+			),
 			"canvas.edit_text": textSetOperations("itm_a", "x").map((o) => o.op),
 			"inspector.text": textStyleOperations("itm_a", { size: 90 }).map(
 				(o) => o.op,
