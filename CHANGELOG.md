@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-15
+
+### Added
+
+- **service:** Add the tables and repositories of font owners and the brand kit ([cfd9af2](https://github.com/AlexGalhardo/vukem-video/commit/cfd9af2bb8ae4e1344192f3c3fc7062a91f71ac1))
+- **service:** Import fonts, keep a brand kit and record who owns each font ([d8bc15b](https://github.com/AlexGalhardo/vukem-video/commit/d8bc15b0c21a7798f35c62def6d0594da6ba05d7))
+- **web:** Route the font import and the brand kit ([178fa21](https://github.com/AlexGalhardo/vukem-video/commit/178fa21ea37b04ac7cd462836e6959679c7f4ece))
+- **service:** Carry user fonts in template files ([1e3f858](https://github.com/AlexGalhardo/vukem-video/commit/1e3f85852ee5a3d27def841e84b9534af11b6aa9))
+- **ingest:** Allow the animated image demuxers and probe frame delays within ceilings ([c6b7ef4](https://github.com/AlexGalhardo/vukem-video/commit/c6b7ef4cef13f1dbefbb1aba31827a8cb59acd8e))
+- **ingest:** Decode animated images to a frame sequence artifact with their delays ([613924a](https://github.com/AlexGalhardo/vukem-video/commit/613924a2d029911f4840027c7e48c025fa962817))
+- **export:** Draw the frame of an animated image that the plan names ([97474d5](https://github.com/AlexGalhardo/vukem-video/commit/97474d55b5e3ca5f367a860e5aa2096f19f33f99))
+- **service:** Keep the frame delays of an animated image and its frames artifact ([9c42e8d](https://github.com/AlexGalhardo/vukem-video/commit/9c42e8dad34bbf48f7556b926c26bc144e74f36d))
+- **engine:** Test the chosen encoder at the size and rate of the export ([13b20c1](https://github.com/AlexGalhardo/vukem-video/commit/13b20c1f4513d0c769965da558bb19f2b536a88e))
+- **export:** Gif, audio only, 60 fps and 4K exports with verification ([6fb9033](https://github.com/AlexGalhardo/vukem-video/commit/6fb90337ece16ebcb83a52fd1617a3954220e78f))
+- **ui:** Resize track rows with a splitter and keep the heights in vv.layout ([f5596fc](https://github.com/AlexGalhardo/vukem-video/commit/f5596fcbd6c23793690eab35e06aff6f4a6dbbfc))
+- **ui:** Add preview size, volume, mute and full screen to the transport row ([6070749](https://github.com/AlexGalhardo/vukem-video/commit/6070749318d846771be7631443bb619e05dcaa3f))
+- **ui:** Show the names of network users in the activity indicator and history ([8343a25](https://github.com/AlexGalhardo/vukem-video/commit/8343a253d2e3fa0e267bf30917a6f14f11a01908))
+- **ui:** Fade state changes and ease in highlights, off under reduced motion ([021ace5](https://github.com/AlexGalhardo/vukem-video/commit/021ace50cec7d901c6dc874c53f85a25058ac3ad))
+- **cli:** Add font:import, brand:show and brand:set and the template:new brand flags ([0dfbbb9](https://github.com/AlexGalhardo/vukem-video/commit/0dfbbb9a7d1166198d0a4bb0baef489097485a9c))
+- **ui:** Add brand kit, font import, bundle and export option calls to the API client ([fb5dc74](https://github.com/AlexGalhardo/vukem-video/commit/fb5dc744fd96d2e6166f9e4a8009c6a8e7d8bad7))
+- **ui:** Add the brand kit page with colours, fonts and font import by path ([5d747c8](https://github.com/AlexGalhardo/vukem-video/commit/5d747c839578d5d4c08df4f4051b87de9e75e6fb))
+- **ui:** Offer brand kit colours and fonts in the inspector and in new projects from a template ([98a5309](https://github.com/AlexGalhardo/vukem-video/commit/98a53094ad7c2437d9051efd0a4b99b924ed95f0))
+- **ui:** Add format, frame rate and size options to the export dialog from the server schema ([09af9aa](https://github.com/AlexGalhardo/vukem-video/commit/09af9aab7842f877442bb9211eb9af2c8e3e98b7))
+- **ui:** Export a project as a bundle and import a bundle by path from the projects page ([9744729](https://github.com/AlexGalhardo/vukem-video/commit/97447295215405724187b6d0cfa58b5f39743af0))
+- **service:** Export gif, wav and aac through JobStart with the format argument ([b64655a](https://github.com/AlexGalhardo/vukem-video/commit/b64655aad3a62373c0296bcd582f381b297ef324))
+- **service:** Export and import OpenTimelineIO through the service ([484494f](https://github.com/AlexGalhardo/vukem-video/commit/484494fff935c63d90534ff4c5d5d697fcf585fe))
+- **service:** Rasterize plan window bitmaps at the output width ([cfb4e59](https://github.com/AlexGalhardo/vukem-video/commit/cfb4e59c866af4c2e4c6d050808d368e721a74c1))
+- **web:** List the job start arguments with the export formats in the OpenAPI document ([1cc2e09](https://github.com/AlexGalhardo/vukem-video/commit/1cc2e091405fda10ff87df2bd85f89a9bed23570))
+- **engine:** Recognise the own LGPL build and the BtbN build from the configure line ([8bae736](https://github.com/AlexGalhardo/vukem-video/commit/8bae736dc268c517de2dfd8690352a8cd7e887b9))
+- **engine:** Pin and install the Cisco OpenH264 library for the own build with checksums ([2a47063](https://github.com/AlexGalhardo/vukem-video/commit/2a4706311dc1b18b7032c0a7c8559e3d0e7fe5d0))
+- **engine:** Gate libopenh264 on the installed Cisco library and hand it to the own build ([08e3170](https://github.com/AlexGalhardo/vukem-video/commit/08e3170bf030766db2c646f940562a3f0ac5e647))
+- **mcp:** List the export format in the job_start schema ([ee0bade](https://github.com/AlexGalhardo/vukem-video/commit/ee0bade7a0539c2b2c6529e75cbc375bb5bbbf21))
+- **cli:** Add the export format flag ([8d222c8](https://github.com/AlexGalhardo/vukem-video/commit/8d222c85486632e443772377a53edbb91e61397f))
+- **cli:** Add otio:export and otio:import ([be130d4](https://github.com/AlexGalhardo/vukem-video/commit/be130d4c630e637978a256bc613858d59970e80b))
+
+### Fixed
+
+- **ingest:** Cap the animated image decode at the probed frame count and its declared size ([125ad86](https://github.com/AlexGalhardo/vukem-video/commit/125ad867934c3a2b38e3b43fdbdaf695b21762dc))
+- **engine:** Remove an oversized partial output only inside the run directory ([de8e00a](https://github.com/AlexGalhardo/vukem-video/commit/de8e00a0f52aa4af5d84a945e2faa5e16dd22bf4))
+- **ui:** Size the preview renderer once its async init finishes ([77d986f](https://github.com/AlexGalhardo/vukem-video/commit/77d986f76d19ad82a72bf8f140f69e1e3d9aafc9))
+- **ui:** Draw the colour matrix as 5x4, the filter matrix and the blur in the preview ([7aee308](https://github.com/AlexGalhardo/vukem-video/commit/7aee308f5403c828f91d5facff5c6ad9d43de0f6))
+- **engine:** Crop video layers at the exact plan rectangle on subsampled sources ([58862dd](https://github.com/AlexGalhardo/vukem-video/commit/58862ddceae5a9a0c312968a3f0be077bc449a4d))
+- **ui:** Wrap the header and project rows at 320 px and add a projects h1 ([75399db](https://github.com/AlexGalhardo/vukem-video/commit/75399db295e7d21a4523918d8aeaa85eafe3767f))
+- **ui:** Offer only the export format, since frame rate and size are project settings ([f5f7c92](https://github.com/AlexGalhardo/vukem-video/commit/f5f7c929d94a8bbce6d4b8398aa32dfe85dc109a))
+
+### Security
+
+- **security:** Name the font ownership tests and the bundle operations in the scope matrix ([c2c7259](https://github.com/AlexGalhardo/vukem-video/commit/c2c7259b2894dd1a4c40aa8e735d774ab259099f))
+- **security:** Drop the BETA allowlist of threatcheck now that T-21 has its tests ([a1aaf04](https://github.com/AlexGalhardo/vukem-video/commit/a1aaf0428216be73458b86bdc9635197f5ee66fa))
+- **security:** Cover bundle declared sizes and crafted or unshipped fonts in a bundle ([173a67d](https://github.com/AlexGalhardo/vukem-video/commit/173a67d87e12ac7f6a54da5c9ec4de95397b6091))
+- **security:** Seed the archive fuzzer with bundle shaped archives ([2965089](https://github.com/AlexGalhardo/vukem-video/commit/29650892be06cceeabb86fa826edefb86d722833))
+- **security:** Fuzz the template and bundle archive readers weekly ([6af3b01](https://github.com/AlexGalhardo/vukem-video/commit/6af3b0139addcd655ccd34d3f9e411cbd46d6a14))
+- **security:** Revalidate the OpenH264 manifest entry and the answering host at install ([52f86aa](https://github.com/AlexGalhardo/vukem-video/commit/52f86aa45ebe33b43aae22ea38b87a89461585df))
+- **security:** Cover own build flags, library directory and swap after install ([d3fc737](https://github.com/AlexGalhardo/vukem-video/commit/d3fc737839e1ccc94aad3c51a43314b14da60773))
+- **security:** Satisfy the linters in the supply-chain tests ([c9a2aeb](https://github.com/AlexGalhardo/vukem-video/commit/c9a2aeb6617498be6849b2ffe22f1e79f8d0ba14))
+- **cli:** Never trust the file name the server returns for otio:export ([ad1ae4b](https://github.com/AlexGalhardo/vukem-video/commit/ad1ae4b042ad74d7d3886cd29b3a47ffddac02e4))
+- **security:** List the brand kit page and allow the password label ([204bfb5](https://github.com/AlexGalhardo/vukem-video/commit/204bfb592861d46b7a1ec2cc5cb68d7b419d557e))
+
 ## [0.13.0] - 2026-11-15
 
 ### Added
@@ -607,7 +665,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.10.0...v0.11.0
