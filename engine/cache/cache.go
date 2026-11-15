@@ -53,10 +53,11 @@ type Store struct {
 	root string
 	max  int64
 
-	mu    sync.Mutex
-	used  int64
-	order *list.List // front is the most recently used
-	items map[string]*list.Element
+	mu     sync.Mutex
+	leases map[string]int
+	used   int64
+	order  *list.List // front is the most recently used
+	items  map[string]*list.Element
 }
 
 // Open uses root as the cache directory, creating it, and indexes what is already there by
@@ -178,7 +179,6 @@ func (s *Store) Put(key string, data []byte) error {
 	}
 
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	if el, ok := s.items[key]; ok {
 		s.used -= sizeOf(el)
 		s.order.Remove(el)
@@ -186,6 +186,12 @@ func (s *Store) Put(key string, data []byte) error {
 	s.items[key] = s.order.PushFront(&entry{key, int64(len(data))})
 	s.used += int64(len(data))
 	s.evict()
+	s.mu.Unlock()
+
+	if project, _, ok := frameRevision(key); ok {
+		s.PruneRevisions(project, KeepRevisions)
+	}
+
 	return nil
 }
 
@@ -209,13 +215,20 @@ func (s *Store) forget(key string) {
 
 // evict removes least recently used files until the cache fits. The caller holds the lock.
 func (s *Store) evict() {
-	for s.used > s.max {
-		el := s.order.Back()
-		if el == nil {
-			return
-		}
+	for el := s.order.Back(); el != nil && s.used > s.max; {
+		prev := el.Prev()
 		e, ok := el.Value.(*entry)
+
+		// A leased file is being read by a running export: it stays, and the next one goes.
+		if ok && s.leases[e.key] > 0 {
+			el = prev
+
+			continue
+		}
+
 		s.order.Remove(el)
+		el = prev
+
 		if !ok {
 			continue
 		}
