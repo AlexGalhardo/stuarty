@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -17,7 +18,26 @@ type TranscriptLine struct {
 	Text    string `json:"text"     untrusted:"true"`
 }
 
-const noTranscript = "\ntranscript: none yet (start a transcribe job for this asset)"
+const noTranscriptYet = "\ntranscript: none yet (start a transcribe job for this asset)"
+
+// noTranscript is the section of an asset without a transcript: the phrase to start
+// a job, or, when no provider can run, E_TRANSCRIBE_UNAVAILABLE with its hint
+// (SDD-003 section 3.8).
+func (s *svc) noTranscript(ctx context.Context) string {
+	var err error
+	if s.transcriber != nil {
+		if err = s.transcriber.Check(ctx); err == nil {
+			return noTranscriptYet
+		}
+	}
+
+	model := ""
+	if s.transcriber != nil {
+		model = s.transcriber.Model()
+	}
+
+	return "\ntranscript: unavailable (" + codeTranscribeOff + "): " + unavailable(err, model).Hint
+}
 
 // transcriptSection is the transcript of media_inspect (SDD-003 section 2.6,
 // SDD-007 section 8): the lines of the newest transcript artifact, one page of
@@ -26,13 +46,14 @@ const noTranscript = "\ntranscript: none yet (start a transcribe job for this as
 // this artifact; it goes stale only when the transcript is replaced
 // (details.reason "stale").
 func (s *svc) transcriptSection(
+	ctx context.Context,
 	arts []ArtifactRow,
 	assetID, cursor string,
 	res *MediaInspectResult,
 ) (string, *Error) {
 	raw := s.newestTranscript(arts)
 	if raw == nil {
-		return noTranscript, nil
+		return s.noTranscript(ctx), nil
 	}
 
 	var doc struct {
@@ -49,7 +70,7 @@ func (s *svc) transcriptSection(
 	}
 
 	if !readable(raw, &doc) || len(doc.Segments) == 0 {
-		return noTranscript, nil
+		return s.noTranscript(ctx), nil
 	}
 
 	// The cursor names the transcript it was issued for: a replaced artifact is
