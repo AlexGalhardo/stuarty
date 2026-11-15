@@ -1,8 +1,9 @@
 package httpapi
 
 import (
-	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 type otioExportIn struct {
@@ -10,9 +11,9 @@ type otioExportIn struct {
 }
 
 type otioImportIn struct {
-	ID           string `json:"id"                    validate:"required"`
-	BaseRevision int64  `json:"base_revision"                             doc:"The revision the import is applied to."`
-	Path         string `json:"path"                  validate:"required" doc:"An absolute path to an .otio file on the machine that runs the server."`
+	ID           string `json:"id"                validate:"required"`
+	BaseRevision int64  `json:"base_revision"                         doc:"The revision the import is applied to."`
+	Path         string `json:"path"              validate:"required" doc:"An absolute path to an .otio file on the machine that runs the server."`
 	DryRun       bool   `json:"dry_run,omitempty"`
 }
 

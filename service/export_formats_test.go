@@ -38,7 +38,14 @@ func TestExportFormatsFilesAndContentTypes(t *testing.T) {
 	} {
 		f, _, ok := exportFormatOf(format)
 		if !ok || exportFileName("job_x", format) != want[0] || f.contentType != want[1] {
-			t.Errorf("%q: file %q, type %q, ok %v; want %v", format, exportFileName("job_x", format), f.contentType, ok, want)
+			t.Errorf(
+				"%q: file %q, type %q, ok %v; want %v",
+				format,
+				exportFileName("job_x", format),
+				f.contentType,
+				ok,
+				want,
+			)
 		}
 	}
 }
@@ -87,7 +94,8 @@ func TestOtioMediaIsMatchedByNameNeverOpened(t *testing.T) {
 		{Ref: "https://example.com/a.mp4", Status: otio.Unresolved, Reason: "a URL"},
 	})
 
-	if assets["clip.mp4"] != "ast_aaaaaaaaaa" || assets[`C:\footage\other.wav`] != "ast_cccccccccc" || len(assets) != 2 {
+	if assets["clip.mp4"] != "ast_aaaaaaaaaa" || assets[`C:\footage\other.wav`] != "ast_cccccccccc" ||
+		len(assets) != 2 {
 		t.Errorf("assets = %v", assets)
 	}
 

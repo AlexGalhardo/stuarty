@@ -99,7 +99,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			return err
 		},
 		"ProjectOtioImport": func() error {
-			_, err := e.svc.ProjectOtioImport(ctx, service.ProjectOtioImportRequest{ProjectID: "prj_0000000001", Path: "/x"})
+			_, err := e.svc.ProjectOtioImport(
+				ctx,
+				service.ProjectOtioImportRequest{ProjectID: "prj_0000000001", Path: "/x"},
+			)
 			return err
 		},
 		"FontImport": func() error {

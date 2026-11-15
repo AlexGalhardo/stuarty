@@ -578,10 +578,20 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 	}
 
 	export := ExportResult{
-		Revision: in.Revision, Format: formatName(in.Format), Path: out, DownloadURL: "/api/v1/jobs/" + job.ID + "/file", Bytes: res.Bytes,
-		SHA256: res.SHA256, Duration: timeValue(fps, frames), Width: doc.Settings.Width, Height: doc.Settings.Height,
-		FPS: fpsString(fps.Num, fps.Den), VideoCodec: res.VideoCodec, AudioCodec: res.AudioCodec,
-		LoudnessLUFS: res.LoudnessLUFS, Checks: res.Checks,
+		Revision:     in.Revision,
+		Format:       formatName(in.Format),
+		Path:         out,
+		DownloadURL:  "/api/v1/jobs/" + job.ID + "/file",
+		Bytes:        res.Bytes,
+		SHA256:       res.SHA256,
+		Duration:     timeValue(fps, frames),
+		Width:        doc.Settings.Width,
+		Height:       doc.Settings.Height,
+		FPS:          fpsString(fps.Num, fps.Den),
+		VideoCodec:   res.VideoCodec,
+		AudioCodec:   res.AudioCodec,
+		LoudnessLUFS: res.LoudnessLUFS,
+		Checks:       res.Checks,
 	}
 
 	if export.Checks == nil {

@@ -135,6 +135,26 @@ func (b *bitmaps) rasterCache(k *knownBitmap) *raster.Cache {
 	return c
 }
 
+// planOutputScale is width / project width; 0 is the project width, scale 0 meaning 1.
+func planOutputScale(width, projectWidth int) (float64, *Error) {
+	if width == 0 {
+		return 0, nil
+	}
+
+	if width < minPlanWidth || width > maxPlanWidth {
+		return 0, newError(
+			command.CodeValidation,
+			"the width %d is not %d to %d pixels.",
+			width,
+			minPlanWidth,
+			maxPlanWidth,
+		).
+			withPath("width")
+	}
+
+	return float64(width) / float64(projectWidth), nil
+}
+
 // PlanWindow reads the render plan of a window of the current revision. The
 // editor draws what it says and computes nothing (ADR-0007).
 func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindowResult, error) {
@@ -161,14 +181,12 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 	fonts := s.fontSet(doc)
 	opts := plan.Options{Measure: raster.Measure(fonts)}
 
-	if req.Width != 0 {
-		if req.Width < minPlanWidth || req.Width > maxPlanWidth {
-			return nil, newError(command.CodeValidation, "the width %d is not %d to %d pixels.",
-				req.Width, minPlanWidth, maxPlanWidth).withPath("width")
-		}
-
-		opts.OutputScale = float64(req.Width) / float64(doc.Settings.Width)
+	scale, werr := planOutputScale(req.Width, doc.Settings.Width)
+	if werr != nil {
+		return nil, werr
 	}
+
+	opts.OutputScale = scale
 
 	w := plan.WindowWith(doc, req.From, req.Until, opts)
 	w.Revision = row.Revision

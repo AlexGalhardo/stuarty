@@ -132,7 +132,8 @@ func describe(res *export.Result, st timeline.Settings) (video, audio string, ch
 	switch res.Format {
 	case export.FormatGIF:
 		return "gif", "", []service.VerifyCheck{
-			{Name: "streams", OK: true, Detail: "one video stream, no audio"}, dur,
+			{Name: "streams", OK: true, Detail: "one video stream, no audio"},
+			dur,
 			{Name: "dimensions", OK: true, Detail: size},
 		}
 	case export.FormatWAV:
@@ -141,14 +142,16 @@ func describe(res *export.Result, st timeline.Settings) (video, audio string, ch
 		}
 	case export.FormatAAC:
 		return "", "aac", []service.VerifyCheck{
-			{Name: "streams", OK: true, Detail: "one audio stream, 48000 Hz stereo"}, dur,
+			{Name: "streams", OK: true, Detail: "one audio stream, 48000 Hz stereo"},
+			dur,
 			{Name: "faststart", OK: true, Detail: "moov before mdat"},
 		}
 	case export.FormatMP4:
 	}
 
 	return "h264", "aac", []service.VerifyCheck{
-		{Name: "streams", OK: true, Detail: "video and audio present"}, dur,
+		{Name: "streams", OK: true, Detail: "video and audio present"},
+		dur,
 		{Name: "dimensions", OK: true, Detail: size},
 		{Name: "pixel_format", OK: true, Detail: "yuv420p"},
 		{Name: "faststart", OK: true, Detail: "moov before mdat"},

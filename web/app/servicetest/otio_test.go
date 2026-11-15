@@ -137,7 +137,8 @@ func TestOtioImportReportsUnresolvedMediaAndLostItems(t *testing.T) {
 		t.Fatalf("a file with tracks and no media imports the tracks: %v", err)
 	}
 
-	if len(res.UnresolvedMedia) != 1 || res.UnresolvedMedia[0].Ref != "clip.mp4" || res.UnresolvedMedia[0].Reason == "" {
+	if len(res.UnresolvedMedia) != 1 || res.UnresolvedMedia[0].Ref != "clip.mp4" ||
+		res.UnresolvedMedia[0].Reason == "" {
 		t.Errorf("unresolved = %+v", res.UnresolvedMedia)
 	}
 

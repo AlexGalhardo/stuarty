@@ -41,13 +41,16 @@ func TestExportFormatsEachSucceedsAndIsServed(t *testing.T) {
 		seen = map[string]string{}
 	)
 
-	m := newMediaEnv(t, mediaCfg{exporter: exportFn(func(_ context.Context, in service.ExportInput) (*service.ExportOutput, error) {
-		mu.Lock()
-		seen[in.OutPath] = in.Format
-		mu.Unlock()
+	m := newMediaEnv(
+		t,
+		mediaCfg{exporter: exportFn(func(_ context.Context, in service.ExportInput) (*service.ExportOutput, error) {
+			mu.Lock()
+			seen[in.OutPath] = in.Format
+			mu.Unlock()
 
-		return writeOutput(in, okChecks)
-	})})
+			return writeOutput(in, okChecks)
+		})},
+	)
 	project := m.exportable()
 
 	for _, c := range formatTable {
@@ -182,7 +185,5 @@ func TestExportFormatsRealEngine(t *testing.T) {
 }
 
 func jobSummary(j *service.Job) string {
-	raw, _ := json.Marshal(j)
-
-	return string(raw)
+	return fmt.Sprintf("%+v", *j)
 }
