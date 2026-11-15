@@ -30,7 +30,7 @@ func (s *svc) resolveSpeech(
 	}
 
 	if json.Unmarshal(op.Args, &ids) != nil || len(ids.SpeechItemIDs) == 0 {
-		return nil, nil //nolint:nilnil // the command answers E_VALIDATION
+		return nil, nil //nolint:nilnil,nilerr // the command answers E_VALIDATION
 	}
 
 	speech := make([]command.SpeechRanges, 0, len(ids.SpeechItemIDs))

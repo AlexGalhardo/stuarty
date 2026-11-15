@@ -14,7 +14,9 @@ func TestSpeechFramesRoundOutward(t *testing.T) {
 	fps := timeline.Rational{Num: 30, Den: 1}
 	// A frame is 1600 samples: [1000, 3300) touches frames 0 to 2; [3500, 3600) is frame 2 only
 	// and joins the previous range because they touch.
-	raw := []byte(`{"sample_rate":48000,"ranges":[{"start":1000,"end":3300},{"start":3500,"end":3600},{"start":96000,"end":96001}]}`)
+	raw := []byte(
+		`{"sample_rate":48000,"ranges":[{"start":1000,"end":3300},{"start":3500,"end":3600},{"start":96000,"end":96001}]}`,
+	)
 
 	got, ok := speechFrames(raw, fps)
 	want := []command.SilenceRange{{Start: 0, End: 3}, {Start: 60, End: 61}}

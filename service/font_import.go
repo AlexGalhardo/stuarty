@@ -88,7 +88,7 @@ func (s *svc) checkFontAdd(ctx context.Context, tx Tx, scope *fontScope, op *com
 	}
 
 	if json.Unmarshal(op.Args, &a) != nil || len(a.Files) == 0 || len(a.Files) > maxFontFiles {
-		return nil
+		return nil //nolint:nilerr // the command reports malformed arguments itself
 	}
 
 	for i, f := range a.Files {
@@ -153,7 +153,9 @@ func userFontHashes(ctx context.Context, tx Tx, user string) map[string]bool {
 		}
 
 		for i := range items {
-			if scanned++; scanned > maxFontOwnerScan {
+			scanned++
+
+			if scanned > maxFontOwnerScan {
 				return out
 			}
 

@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 type bundleExportIn struct {

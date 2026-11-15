@@ -40,7 +40,8 @@ func (m *mediaEnv) brandProject(hash string) string {
 	m.mustEdit(ui, project, m.head(project).Revision, op(
 		"text.add", fmt.Sprintf(
 			`{"track_id":%q,"start":"0s","duration":"1s","text":"Hamburgefonstiv","style":{"font_family":"Brand","font_weight":400}}`,
-			track),
+			track,
+		),
 	))
 
 	return project
@@ -353,7 +354,13 @@ func TestSecurity_T21_FontAddOwnershipScanIsBoundedPerBatch(t *testing.T) {
 
 		before := gets.Load()
 
-		if _, err := m.svc.Edit(bob, service.EditRequest{ProjectID: project, Operations: ops}); !isCode(err, command.CodeNotFound) {
+		if _, err := m.svc.Edit(
+			bob,
+			service.EditRequest{ProjectID: project, Operations: ops},
+		); !isCode(
+			err,
+			command.CodeNotFound,
+		) {
 			t.Fatalf("batch of %d: %v, want E_NOT_FOUND", n, err)
 		}
 
@@ -362,6 +369,10 @@ func TestSecurity_T21_FontAddOwnershipScanIsBoundedPerBatch(t *testing.T) {
 
 	one, many := batch(1), batch(100)
 	if many != one || one > 4+1 {
-		t.Errorf("document reads: %d for one entry and %d for 100; want the same and at most the caller's 4 projects", one, many)
+		t.Errorf(
+			"document reads: %d for one entry and %d for 100; want the same and at most the caller's 4 projects",
+			one,
+			many,
+		)
 	}
 }

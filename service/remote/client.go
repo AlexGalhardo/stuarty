@@ -569,7 +569,10 @@ func (c *Client) KeyRevoke(ctx context.Context, req service.KeyRevokeRequest) (*
 }
 
 // ProjectBundleExport implements service.Service.
-func (c *Client) ProjectBundleExport(ctx context.Context, req service.ProjectBundleExportRequest) (*service.Job, error) {
+func (c *Client) ProjectBundleExport(
+	ctx context.Context,
+	req service.ProjectBundleExportRequest,
+) (*service.Job, error) {
 	body := struct {
 		IncludeLog *bool `json:"include_log,omitempty"`
 		WaitMS     int   `json:"wait_ms,omitempty"`
