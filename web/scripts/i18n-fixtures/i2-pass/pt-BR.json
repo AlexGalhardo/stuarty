@@ -1,0 +1,1 @@
+{ "a": "Olá {name}", "n": { "one": "{count} tarefa", "other": "{count} tarefas" } }

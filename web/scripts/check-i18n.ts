@@ -12,12 +12,14 @@
 // I5       every code of the generated error table has ui.editor.errors.<CODE>,
 //          every non-internal command has ui.editor.commands.<name>.title and
 //          every lint rule has ui.editor.lint.<code>
+// I6       all of I1 to I5 and I7 run, and every rule has a failing and a passing
+//          fixture under i18n-fixtures (checked below)
 // I7       (proposed) no key has the English text in pt-BR, outside SAME_IN_PORTUGUESE
 //
 // The syntax tree comes from the API inside the `typescript` package, as in
 // check-thin-client.ts. No new dependency.
 
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SyntaxKind } from "typescript/unstable/ast";
@@ -25,9 +27,12 @@ import { API } from "typescript/unstable/sync";
 
 import {
 	type Catalog,
+	catalogFixtureProblems,
 	compareCatalogs,
 	flatten,
 	type Leaf,
+	missingKeys,
+	RULES,
 	untranslated,
 } from "./i18n-catalog.ts";
 
@@ -247,40 +252,34 @@ function unusedKeys(catalog: Map<string, Leaf>, usage: Usage): Finding[] {
 	return findings;
 }
 
-// I5: the headline of every error code.
-function errorHeadlines(catalog: Map<string, Leaf>): Finding[] {
+// I5: the headline of every error code, a title for every non-internal command
+// and every lint rule.
+function registryKeys(): string[] {
 	const source = readFileSync(join(webRoot, "resources/js/generated/errors.ts"), "utf8");
 	const table = source.slice(source.indexOf("ERROR_TABLE"));
 	const codes = [...table.matchAll(/^\s+(E_[A-Z_]+):/gm)].map((m) => m[1] as string);
 	const extra = ["E_NETWORK", "E_UNAUTHORIZED", "E_FORBIDDEN", "unknown"];
-	return [...codes, ...extra]
-		.filter((code) => !catalog.has(`ui.editor.errors.${code}`))
-		.map((code) => ({
-			file: "resources/lang/en.json",
-			line: 0,
-			rule: "I5",
-			message: `ui.editor.errors.${code} is missing`,
-		}));
-}
-
-// I5: a title for every non-internal command and every lint rule.
-function registryTitles(catalog: Map<string, Leaf>): Finding[] {
-	const findings: Finding[] = [];
-	const missing = (key: string): void => {
-		if (!catalog.has(key)) {
-			findings.push({ file: "resources/lang/en.json", line: 0, rule: "I5", message: `${key} is missing` });
-		}
-	};
 	const commands = JSON.parse(readFileSync(join(webRoot, "resources/js/generated/commands.json"), "utf8")) as {
 		name: string;
 		internal: boolean;
 	}[];
-	for (const c of commands) if (!c.internal) missing(`ui.editor.commands.${c.name}.title`);
 	const rules = JSON.parse(readFileSync(join(webRoot, "../core/schema/lint-rules.json"), "utf8")) as {
 		code: string;
 	}[];
-	for (const r of rules) missing(`ui.editor.lint.${r.code}`);
-	return findings;
+	return [
+		...[...codes, ...extra].map((code) => `ui.editor.errors.${code}`),
+		...commands.filter((c) => !c.internal).map((c) => `ui.editor.commands.${c.name}.title`),
+		...rules.map((r) => `ui.editor.lint.${r.code}`),
+	];
+}
+
+function registryTitles(catalog: Map<string, Leaf>): Finding[] {
+	return missingKeys(catalog, registryKeys()).map((p) => ({
+		file: "resources/lang/en.json",
+		line: 0,
+		rule: p.rule,
+		message: p.message,
+	}));
 }
 
 const format = (f: Finding): string => `${f.file}:${f.line}  ${f.rule}  ${f.message}`;
@@ -296,8 +295,25 @@ function checkFixtures(catalog: Map<string, Leaf>): string[] {
 	const cases = readdirSync(dir)
 		.filter((n) => /-(fail|pass)$/.test(n))
 		.sort();
+	for (const rule of RULES) {
+		for (const kind of ["fail", "pass"]) {
+			if (!cases.includes(`${rule.toLowerCase()}-${kind}`)) {
+				problems.push(`rule ${rule} has no ${kind} fixture`);
+			}
+		}
+	}
 	for (const name of cases) {
 		const [rule, kind] = name.split("-");
+		if (existsSync(join(dir, name, "en.json"))) {
+			const own = catalogFixtureProblems(join(dir, name), SAME_IN_PORTUGUESE_FIXTURE).map((p) => p.rule);
+			if (kind === "fail" && !own.includes(rule.toUpperCase())) {
+				problems.push(`fixture ${name} should fail ${rule.toUpperCase()} and did not`);
+			}
+			if (kind === "pass" && own.length > 0) {
+				problems.push(`fixture ${name} should pass but reports ${own.join(", ")}`);
+			}
+			continue;
+		}
 		const mine = findings.filter((f) => f.file.split("/")[0] === name);
 		if (kind === "fail" && !mine.some((f) => f.rule === rule.toUpperCase())) {
 			problems.push(`fixture ${name} should fail ${rule.toUpperCase()} and did not`);
@@ -308,6 +324,9 @@ function checkFixtures(catalog: Map<string, Leaf>): string[] {
 	}
 	return problems;
 }
+
+// The allowlist the catalogue fixtures run with.
+const SAME_IN_PORTUGUESE_FIXTURE: ReadonlySet<string> = new Set(["brand"]);
 
 // Names, codes and formats that read the same in both languages.
 const SAME_IN_PORTUGUESE: ReadonlySet<string> = new Set([
@@ -327,7 +346,7 @@ const usage: Usage = { keys: [], prefixes: [] };
 const tree = scan(webRoot, join(webRoot, "tsconfig.json"), en, usage, (file) =>
 	file.includes("/resources/js/"),
 );
-tree.push(...checkUsage(en, usage), ...unusedKeys(en, usage), ...errorHeadlines(en), ...registryTitles(en));
+tree.push(...checkUsage(en, usage), ...unusedKeys(en, usage), ...registryTitles(en));
 for (const p of [
 	...compareCatalogs(en, pt, "pt-BR"),
 	...untranslated(en, pt, "pt-BR", SAME_IN_PORTUGUESE),
