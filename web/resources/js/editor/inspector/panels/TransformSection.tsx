@@ -5,7 +5,6 @@ import {
 	type TransformProperty,
 	transformOperations,
 } from "../../commands/builders";
-import { keyframeValueAt } from "../../commands/units";
 import { useCanEdit } from "../../commands/useActions";
 import {
 	useDocumentState,
@@ -36,11 +35,10 @@ const round3 = (value: number): string =>
 	String(Math.round(value * 1000) / 1000);
 
 // The value the read model shows for a property of one item at the playhead:
-// the stored field (or its default) and, for an animated property, the last
-// keyframe at or before the playhead. A display of what the core holds; the
-// core owns the defaults and the interpolation.
+// the stored field (or its default) and, for an animated property, the value
+// the plan reports. A display of what the core holds; the core owns the
+// defaults and the interpolation.
 interface ItemView {
-	start: number;
 	x?: number;
 	y?: number;
 	scale?: number;
@@ -52,18 +50,14 @@ interface ItemView {
 function shown(
 	item: ItemView,
 	property: TransformProperty,
-	playhead: number,
 	size: { width: number; height: number },
 	effective: EffectiveValues | undefined,
 ): string {
 	const keys = item.keyframes?.[property];
 	if (keys !== undefined && keys.length > 0) {
-		// The plan reports the effective scale and opacity; until its window
-		// arrives the field shows nothing rather than a value worked out here.
-		if (property === "scale" || property === "opacity") {
-			return effective === undefined ? "" : round3(effective[property]);
-		}
-		return round3(keyframeValueAt(keys, item.start, playhead));
+		// Until the plan window arrives the field shows nothing rather than a
+		// value worked out here.
+		return effective === undefined ? "" : round3(effective[property]);
 	}
 	switch (property) {
 		case "x":
@@ -108,13 +102,7 @@ export default function TransformSection({
 		<Section title={t("ui.editor.inspector.transform_title")}>
 			{ROWS.map((row) => {
 				const values = targets.map((item) =>
-					shown(
-						item,
-						row.property,
-						playhead,
-						{ width, height },
-						effective[item.id],
-					),
+					shown(item, row.property, { width, height }, effective[item.id]),
 				);
 				const same = values.every((value) => value === values[0]);
 				const animated = targets.some(
