@@ -25,8 +25,11 @@ import {
 	keyframeSetOperations,
 	moveOperations,
 	presetOperations,
+	projectRenameOperations,
 	removeAssetOperations,
 	renameOperations,
+	settingsFpsOperations,
+	settingsSetOperations,
 	splitOperations,
 	textAddOperations,
 	textSetOperations,
@@ -353,6 +356,11 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"inspector.text": textStyleOperations("itm_a", { size: 90 }).map(
 				(o) => o.op,
 			),
+			"topbar.rename": projectRenameOperations("x").map((o) => o.op),
+			"inspector.settings": settingsSetOperations({ width: 720 }).map(
+				(o) => o.op,
+			),
+			"inspector.fps": settingsFpsOperations("30").map((o) => o.op),
 			"timeline.add_track": trackAddOperations("audio", { above: "trk_a" }).map(
 				(o) => o.op,
 			),

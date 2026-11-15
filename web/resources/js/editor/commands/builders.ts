@@ -890,3 +890,45 @@ export function trackCaptionStyleOperations(
 		},
 	];
 }
+
+// The size presets of RF-002 as the project panel offers them. The sizes are
+// the core's (service/projects.go); the panel sends them as `settings.set`.
+export const SIZE_PRESETS = [
+	{ id: "9:16", width: 1080, height: 1920 },
+	{ id: "1:1", width: 1080, height: 1080 },
+	{ id: "16:9", width: 1920, height: 1080 },
+	{ id: "4:5", width: 1080, height: 1350 },
+] as const;
+export type SizePresetId = (typeof SIZE_PRESETS)[number]["id"];
+
+export interface SettingsChanges {
+	width?: number;
+	height?: number;
+	background?: string;
+	loudness_target?: number;
+}
+
+export function settingsSetOperations(changes: SettingsChanges): Operations {
+	return [{ op: "settings.set", args: { ...changes } }];
+}
+
+// The frame rates of the select, as `settings.set_fps` takes them: an integer
+// or a rational with denominator 1001 (SDD-002 C.3).
+export const FRAME_RATES = [
+	"24",
+	"25",
+	"30",
+	"50",
+	"60",
+	"24000/1001",
+	"30000/1001",
+	"60000/1001",
+] as const;
+
+export function settingsFpsOperations(fps: string): Operations {
+	return [{ op: "settings.set_fps", args: { fps } }];
+}
+
+export function projectRenameOperations(name: string): Operations {
+	return [{ op: "project.rename", args: { name } }];
+}

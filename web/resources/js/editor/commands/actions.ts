@@ -29,9 +29,11 @@ import {
 	moveToTrackOperations,
 	nudgeOperations,
 	type Operations,
+	projectRenameOperations,
 	type Ripple,
 	removeAssetOperations,
 	renameOperations,
+	settingsFpsOperations,
 	splitOperations,
 	type TrackChanges,
 	type TrackPlacement,
@@ -120,6 +122,11 @@ export interface Actions {
 	// `E_NOT_EMPTY` is not a notice: the caller asks, then sends it again with
 	// `withItems` (SDD-012 section 4.4).
 	removeTrack(trackId: string, withItems: boolean): Promise<EditOutcome | null>;
+	// The top bar name: Enter or blur sends `project.rename`.
+	renameProject(name: string): Promise<EditOutcome | null>;
+	// The frame rate select, after the confirmation: the answer carries
+	// `effective.adjusted`, which the dialog lists.
+	setFps(fps: string): Promise<EditOutcome | null>;
 	// palette.run: the operations the palette built from a schema form.
 	runOperations(ops: Operations): Promise<EditOutcome | null>;
 	// An inspector field: like runOperations, but a validation or time error is
@@ -496,6 +503,8 @@ export function createActions(runtime: EditorRuntime): Actions {
 			send(trackMoveOperations(trackId, placement)),
 		removeTrack: (trackId, withItems) =>
 			send(trackRemoveOperations(trackId, withItems)),
+		renameProject: (name) => send(projectRenameOperations(name)),
+		setFps: (fps) => send(settingsFpsOperations(fps)),
 		commitGesture: (ops, baseRevision) => send(ops, false, baseRevision),
 		runOperations: (ops) => send(ops),
 		commitField: (ops) => send(ops, true),
