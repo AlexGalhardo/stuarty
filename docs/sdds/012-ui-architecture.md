@@ -1271,6 +1271,8 @@ All measurements use `performance.mark` and `performance.measure` with the prefi
 
 If a measurement misses its budget, the owner fixes the code or reports the measured number to the architect to correct the budget; the initial constants (`MAX_VIDEO_LAYERS = 4`, `VIRTUALIZE_ABOVE = 150`, `SNAP_PX = 8`, plan window prefetch 60 frames, bitmap cache 64) are corrected by these tests and recorded in this document.
 
+**Where they run.** The budgets above are those of the reference machine (SDD-008), with a real GPU and no other load. The shared CI runner has software WebGL and noisy neighbours, so the browser job does not gate on them: the specs that measure a time (`timeline-200-items-perf`, `command-round-trip`, `scrub-latency`, `play-pause-truth`, `video-layers-budget` and `perf-edit-200`, all in `e2e/specs/perf.spec.ts`) belong to the `perf` project of `e2e/playwright.config.ts`, which exists only when `VUKEM_VIDEO_PERF=1`. On the reference machine run `VUKEM_VIDEO_PERF=1 bun run e2e` in `web/`; the project runs after the functional ones, alone, on one worker. The numbers recorded above come from such runs.
+
 ### 19.2 Rules that keep the budgets
 
 1. **No re-render of the timeline on playhead move.** The playhead is not React state. During playback `clock.ts` (a module with a `frame` field and a subscriber list) is updated from the audio clock inside `requestAnimationFrame`; `Playhead.tsx` subscribes once and writes `style.transform` directly; `Timecode` writes `textContent` directly; the inspector's "at playhead" values read the clock on demand. `uiStore.playheadFrame` is updated only when playback stops, when the user seeks, and at most every 250 ms while playing for features that need a committed value (autosave of the URL).

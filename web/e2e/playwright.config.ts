@@ -53,20 +53,26 @@ export default defineConfig({
 				},
 			},
 		},
-		// The budgets that depend on the load of the machine run alone, in one file
-		// and so one worker, after every other spec has finished.
-		{
-			name: "perf",
-			testMatch: /perf\.spec\.ts/,
-			dependencies: ["chromium"],
-			fullyParallel: false,
-			use: {
-				browserName: "chromium",
-				launchOptions: {
-					args: ["--disable-gpu-vsync", "--disable-frame-rate-limit"],
-				},
-			},
-		},
+		// The budgets of SDD-012 section 19 are those of the reference machine. They
+		// depend on the load and on a real GPU, so they run only when asked for
+		// (VUKEM_VIDEO_PERF=1), alone, in one file and so one worker, after every other
+		// spec has finished. The shared CI runner does not ask.
+		...(process.env.VUKEM_VIDEO_PERF === "1"
+			? [
+					{
+						name: "perf",
+						testMatch: /perf\.spec\.ts/,
+						dependencies: ["chromium"],
+						fullyParallel: false,
+						use: {
+							browserName: "chromium" as const,
+							launchOptions: {
+								args: ["--disable-gpu-vsync", "--disable-frame-rate-limit"],
+							},
+						},
+					},
+				]
+			: []),
 		{
 			name: "failing-encoder",
 			testMatch: /export-failure\.spec\.ts/,
