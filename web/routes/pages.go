@@ -58,6 +58,11 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 
 		r.Get("/editor/{project_id}", func(c *web.Ctx) error { return editorPage(c, d, app) }).Name("editor.show")
 
+		// The page reads the version and the workspace from /api/v1/system itself.
+		r.Get("/settings", func(c *web.Ctx) error {
+			return inertia.Render(c, "Settings/Index", inertia.Props{})
+		}).Name("settings.index")
+
 		// The choice is kept in the lang cookie, which i18n.Middleware reads on
 		// every request; Input accepts the JSON body the client sends.
 		r.Post("/locale", func(c *web.Ctx) error {

@@ -44,6 +44,13 @@ function Shell({ children }: { children: ReactNode }) {
 					>
 						{t("ui.nav.projects")}
 					</Link>
+					<Link
+						href="/settings"
+						aria-current={page.url.startsWith("/settings") ? "page" : undefined}
+						className="rounded-md px-2 py-1 hover:bg-muted aria-[current=page]:font-medium"
+					>
+						{t("ui.nav.settings")}
+					</Link>
 				</nav>
 				<div className="ml-auto flex items-center gap-2">
 					<LocaleSwitcher />
