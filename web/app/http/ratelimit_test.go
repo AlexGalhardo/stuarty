@@ -2,6 +2,7 @@ package httpapi_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 	"sync"
@@ -61,6 +62,43 @@ func TestSecurity_T18_RateLimitPerKey(t *testing.T) {
 	other := h.makeKey(t, h.session(t, "ana@example.com"), `{"name":"other","scopes":["read"]}`)
 	if res := h.asKey(t, other.Secret, http.MethodGet, "/api/v1/projects", ""); res.status != http.StatusOK {
 		t.Errorf("another key = %d, want 200", res.status)
+	}
+}
+
+// P4-SRV-003, SDD-007 section 4.4: in network mode an address has 600 requests a minute before
+// authentication; the 601st is E_RATE_LIMITED naming the limit, whatever the route answers.
+func TestRateLimitPreAuthenticationPerAddress(t *testing.T) {
+	h := newNetworkHarness(t, resolved(), true)
+	h.user(t, "ana@example.com", service.RoleMember)
+	session := h.session(t, "ana@example.com")
+
+	first := 0
+	start := time.Now()
+
+	// A session is no failed authentication, so only the limiter by address can refuse.
+	for i := 1; i <= 800 && first == 0; i++ {
+		res := h.send(t, http.MethodGet, "/api/v1/projects", "", session, nil)
+		if res.status == http.StatusTooManyRequests {
+			first = i
+
+			var body struct {
+				Details map[string]any `json:"details"`
+			}
+
+			_ = json.Unmarshal(res.body, &body)
+
+			d := body.Details
+			if res.code() != service.CodeRateLimited || d["limit"] != "requests" || d["ceiling"] != 600.0 {
+				t.Errorf("the refusal = %s", res.body)
+			}
+		}
+	}
+
+	// 600 a minute refills 10 tokens a second, so a slow run is refused later by about that much.
+	// The login that made the session spent a few of the 600.
+	late := 601 + int(time.Since(start).Seconds()*10) + 1
+	if first < 590 || first > late {
+		t.Errorf("the first refusal was request %d, want from the 590th to the %dth", first, late)
 	}
 }
 

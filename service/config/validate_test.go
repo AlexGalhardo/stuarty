@@ -240,6 +240,44 @@ func TestOtherCasesOfTheRowsPass(t *testing.T) {
 	}
 }
 
+// P4-SRV-003: TLS ended at a reverse proxy needs both halves: the proxies that may speak for the
+// client and the trust in their forwarded scheme. Either one alone is the "network mode needs TLS"
+// refusal, and the same configuration with the TLS files passes.
+func TestReverseProxyNeedsBothTrustedProxiesAndForwardedProto(t *testing.T) {
+	for name, vars := range map[string]map[string]string{
+		"proxies without the forwarded scheme": {"TRUSTED_PROXIES": "10.0.0.0/8"},
+		"the forwarded scheme without proxies": {"TRUST_FORWARDED_PROTO": "true"},
+		"the forwarded scheme set to false":    {"TRUSTED_PROXIES": "10.0.0.0/8", "TRUST_FORWARDED_PROTO": "false"},
+	} {
+		cfg := override(network(), "TLS_CERT_FILE", "")
+		cfg["TLS_KEY_FILE"] = ""
+
+		for k, v := range vars {
+			cfg[k] = v
+		}
+
+		_, ps := run(cfg, nil)
+
+		found := false
+
+		for _, p := range ps {
+			found = found || p.Row == RowNoTLS
+		}
+
+		if !found {
+			t.Errorf("%s: no %s problem in %v", name, RowNoTLS, ps)
+		}
+	}
+
+	both := override(network(), "TLS_CERT_FILE", "")
+	both["TLS_KEY_FILE"] = ""
+	both["TRUSTED_PROXIES"], both["TRUST_FORWARDED_PROTO"] = "10.0.0.0/8", "true"
+
+	if res, ps := run(both, nil); len(ps) != 0 || !res.TrustForwardedProto || len(res.TrustedProxies) != 1 {
+		t.Errorf("proxied: %+v %v", res, ps)
+	}
+}
+
 func TestLimitsInLocalModeMeanTheDefault(t *testing.T) {
 	for _, raw := range []string{"0", "-3"} {
 		use, err := CheckLimit("VUKEM_VIDEO_MAX_EXPORTS", raw, false)
