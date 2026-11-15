@@ -1,0 +1,30 @@
+# The filters the engine references (engine/ffmpeg/ffargs/filter.go, SDD-004 section 1) that
+# the own FFmpeg build must provide. scripts/ffmpeg-verify.sh checks them with `ffmpeg -filters`;
+# eq and boxblur are GPL only and must be absent (ADR-0011 item 6).
+format
+setpts
+asetpts
+split
+asplit
+setsar
+crop
+pad
+fps
+scale
+bwdif
+yadif
+tonemap
+setparams
+zscale
+aresample
+aformat
+adelay
+apad
+atrim
+silencedetect
+ebur128
+atempo
+color
+nullsrc
+anullsrc
+testsrc2

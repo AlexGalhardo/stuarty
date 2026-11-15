@@ -18,6 +18,7 @@
 --enable-zlib
 --enable-libvpx
 --enable-libopus
+--enable-libzimg
 --disable-libopenh264
 --disable-libx264
 --disable-libx265

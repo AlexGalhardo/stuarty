@@ -8,6 +8,7 @@
 --enable-zlib
 --enable-libvpx
 --enable-libopus
+--enable-libzimg
 --enable-ffnvcodec
 --enable-videotoolbox
 --enable-audiotoolbox
