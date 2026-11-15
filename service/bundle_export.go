@@ -17,6 +17,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/service/crashpoint"
 )
 
 // ProjectBundleExportRequest asks for a .vvbundle of the current revision of a project
@@ -216,11 +217,15 @@ func (s *svc) runBundleExport(ctx context.Context, job *JobRow, pw *progress, in
 		return nil, werr
 	}
 
+	crashpoint.Hit("bundle_export.after_write")
+
 	if err := os.Rename(tmp, final); err != nil {
 		_ = os.Remove(tmp)
 
 		return nil, internalError()
 	}
+
+	crashpoint.Hit("bundle_export.after_rename")
 
 	abs, aerr := filepath.Abs(final)
 	if aerr != nil {
