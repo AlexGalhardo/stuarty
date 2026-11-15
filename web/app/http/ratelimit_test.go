@@ -24,10 +24,9 @@ func rateHarness(t *testing.T) (*networkHarness, string) {
 }
 
 // SDD-007 section 4.4: a key has a burst of 60 and 300 a minute, so the 361st
-// request within a minute is 429 with Retry-After and E_RATE_LIMITED (feeds
-// TestSecurity_T18_RateLimitPerKey). The limiter refills while the test runs, so
-// the first refusal may come a few requests after the 361st, never before.
-func TestRateLimitPerKey(t *testing.T) {
+// request within a minute is 429 with Retry-After and E_RATE_LIMITED. The
+// limiter refills while the test runs, so the first refusal may come a few requests after the 361st, never before.
+func TestSecurity_T18_RateLimitPerKey(t *testing.T) {
 	h, secret := rateHarness(t)
 
 	first := 0
