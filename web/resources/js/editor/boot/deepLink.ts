@@ -1,6 +1,7 @@
 import type { EditorRuntime } from "../state/runtime";
 import { selectFps } from "../state/selectors";
 import { DEFAULT_FPS } from "../timeline/geometry";
+import { revealItem } from "../timeline/revealItem";
 
 // Deep links of SDD-012 section 2.2: `?t=<time>` puts the playhead there and
 // `?item=itm_...` selects an item and scrolls it into view. The URL is kept in
@@ -75,9 +76,7 @@ export const browserDeepLinkDeps = (): DeepLinkDeps => ({
 			`${location.pathname}${query}${location.hash}`,
 		),
 	scrollIntoView: (itemId) =>
-		document
-			.querySelector(`[data-item-id="${itemId}"]`)
-			?.scrollIntoView({ block: "nearest", inline: "center" }),
+		revealItem(itemId, { block: "nearest", inline: "center" }),
 	setTimeout: (callback, ms) => setTimeout(callback, ms),
 	clearTimeout: (handle) => clearTimeout(handle as number),
 });

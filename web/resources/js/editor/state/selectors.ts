@@ -59,6 +59,20 @@ export function selectTrackItemIds(
 	return grouped.get(trackId) ?? NO_IDS;
 }
 
+const countCache = new WeakMap<object, number>();
+
+// How many items the project has, for the threshold of virtualization.
+export function selectItemCount(state: DocumentState): number {
+	if (state.document === null) return 0;
+	const items: Doc["items"] = state.document.items;
+	let count = countCache.get(items);
+	if (count === undefined) {
+		count = Object.keys(items).length;
+		countCache.set(items, count);
+	}
+	return count;
+}
+
 export function selectItem(
 	state: DocumentState,
 	id: string,
