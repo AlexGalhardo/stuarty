@@ -197,7 +197,13 @@ func writeNew(dir, platform, webview string, body []byte) (string, error) {
 			name = fmt.Sprintf("%s-%d.json", base, n)
 		}
 
-		f, err := os.OpenFile(filepath.Join(dir, name), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+		// The name is built from clean() parts, so it is one plain element; the
+		// check keeps a future change from turning it into a path.
+		if filepath.Base(name) != name || strings.Contains(name, "..") {
+			return "", errors.New("unsafe result name")
+		}
+
+		f, err := openInRoot(dir, name)
 		if errors.Is(err, fs.ErrExist) {
 			continue
 		}
@@ -244,4 +250,16 @@ func main() {
 
 	srv := &http.Server{Addr: *addr, Handler: handler(*results, port), ReadHeaderTimeout: 5 * time.Second}
 	log.Fatal(srv.ListenAndServe())
+}
+
+// openInRoot creates name inside dir through os.Root, so no name can leave it.
+func openInRoot(dir, name string) (*os.File, error) {
+	root, err := os.OpenRoot(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() { _ = root.Close() }()
+
+	return root.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 }
