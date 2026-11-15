@@ -132,4 +132,8 @@ type exportInput struct {
 	// that the export renders what was asked for even when edits land while
 	// the job waits (SDD-003 section 2.8 rule 9).
 	Document json.RawMessage `json:"document,omitempty"`
+	// Format is "bundle" for the export of a .vvbundle (SDD-005 section 16); empty is a video.
+	Format string `json:"format,omitempty"`
+	// IncludeLog false leaves the operation log out of a bundle; nil means true.
+	IncludeLog *bool `json:"include_log,omitempty"`
 }

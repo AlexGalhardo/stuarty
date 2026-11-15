@@ -43,6 +43,21 @@ func (s *svc) ExportFile(ctx context.Context, req ExportFileRequest) (*File, err
 		return nil, internalError()
 	}
 
+	if s.isBundle(&job) {
+		var res JobResult
+		if json.Unmarshal(job.Result, &res) != nil || res.Export == nil {
+			return nil, internalError()
+		}
+
+		return &File{
+			Path:        path.Join("exports", *job.ProjectID, bundleFileName(res.Export.Revision, job.ID)),
+			ContentType: "application/zip",
+			ETag:        exportETag(&job),
+			Immutable:   true,
+			MaxAge:      31536000,
+		}, nil
+	}
+
 	return &File{
 		Path:        path.Join("exports", *job.ProjectID, job.ID+".mp4"),
 		ContentType: "video/mp4",
@@ -66,4 +81,11 @@ func exportETag(job *JobRow) string {
 	}
 
 	return `"job-` + job.ID + `"`
+}
+
+// isBundle reports whether the export job wrote a .vvbundle.
+func (s *svc) isBundle(job *JobRow) bool {
+	var in exportInput
+
+	return json.Unmarshal(job.Input, &in) == nil && in.Format == bundleExportFormat
 }

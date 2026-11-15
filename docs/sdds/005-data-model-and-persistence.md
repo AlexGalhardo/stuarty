@@ -1446,7 +1446,7 @@ ADR-0009 item 7; RF-006. Service operations for export and import of a bundle ar
 
 ### 16.1 Container
 
-A zip file with extension `.vvbundle`, deflate-compressed, with **flat entry names** (no directories), because vukem's `archive.Zip` derives keys by dropping directories and refuses a name that is not a safe key.
+A zip file with extension `.vvbundle`, deflate-compressed (the `media.*` and `font.*` entries are stored without compression: they are already compressed), with **flat entry names** (no directories), because vukem's `archive.Zip` derives keys by dropping directories and refuses a name that is not a safe key.
 
 | Entry | Content |
 | --- | --- |
