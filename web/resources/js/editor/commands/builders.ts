@@ -317,3 +317,89 @@ export function withNextFree(ops: Operations, nextFree: number): Operations {
 				: operation,
 	);
 }
+
+export type TransformProperty = "x" | "y" | "scale" | "rotation" | "opacity";
+export type TransformChanges = Partial<Record<TransformProperty, number>>;
+
+const TRANSFORM_PROPERTIES: readonly TransformProperty[] = [
+	"x",
+	"y",
+	"scale",
+	"rotation",
+	"opacity",
+];
+
+export interface TransformTarget {
+	id: string;
+	// The properties whose key exists in the item's `keyframes` (gating of
+	// SDD-012 section 8.3: only whether the key exists).
+	animated: readonly string[];
+}
+
+// A transform released on the canvas or committed in the inspector: one
+// `item.set_transform` per item with the changed fields that have no keyframes,
+// and one `keyframe.set` at the playhead per changed field that has them. The
+// values are what the user chose; the core judges them.
+export function transformOperations(
+	targets: readonly TransformTarget[],
+	changes: TransformChanges,
+	playhead: number,
+): Operations {
+	const ops: Operations = [];
+	for (const target of targets) {
+		const stat: TransformChanges = {};
+		const keyed: [TransformProperty, number][] = [];
+		for (const property of TRANSFORM_PROPERTIES) {
+			const value = changes[property];
+			if (value === undefined) continue;
+			if (target.animated.includes(property)) keyed.push([property, value]);
+			else stat[property] = value;
+		}
+		if (Object.keys(stat).length > 0) {
+			ops.push({
+				op: "item.set_transform",
+				args: { item_id: target.id, ...stat },
+			});
+		}
+		for (const [property, value] of keyed) {
+			ops.push({
+				op: "keyframe.set",
+				args: {
+					item_id: target.id,
+					property,
+					at: frames(playhead),
+					value,
+				},
+			});
+		}
+	}
+	return ops;
+}
+
+// E_INVALID_STATE on a transform ("use keyframes"): the same gesture resent as
+// one `keyframe.set` per property at the playhead.
+export function keyframeFallbackOperations(
+	ops: Operations,
+	playhead: number,
+): Operations {
+	return ops.flatMap((operation) => {
+		if (operation.op !== "item.set_transform") return [operation];
+		const { item_id: itemId, ...values } = operation.args;
+		return TRANSFORM_PROPERTIES.flatMap((property) => {
+			const value = values[property];
+			return typeof value === "number"
+				? [
+						{
+							op: "keyframe.set",
+							args: {
+								item_id: itemId,
+								property,
+								at: frames(playhead),
+								value,
+							},
+						},
+					]
+				: [];
+		});
+	});
+}

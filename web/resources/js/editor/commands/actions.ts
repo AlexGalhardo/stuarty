@@ -17,6 +17,7 @@ import {
 	deleteOperations,
 	duplicateOperations,
 	type ItemRange,
+	keyframeFallbackOperations,
 	moveToTrackOperations,
 	nudgeOperations,
 	type Operations,
@@ -228,6 +229,22 @@ export function createActions(runtime: EditorRuntime): Actions {
 				action: {
 					labelKey: "ui.editor.notice.next_free",
 					operations: withNextFree(ops, free),
+				},
+			});
+			return;
+		}
+		if (
+			error.code === "E_INVALID_STATE" &&
+			ops.some((o) => o.op === "item.set_transform")
+		) {
+			noticeWriter.push({
+				...base,
+				action: {
+					labelKey: "ui.editor.notice.use_keyframes",
+					operations: keyframeFallbackOperations(
+						ops,
+						ui.getState().playheadFrame,
+					),
 				},
 			});
 			return;

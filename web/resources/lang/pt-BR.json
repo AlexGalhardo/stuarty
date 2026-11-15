@@ -217,6 +217,7 @@
         "dismiss": "Dispensar",
         "apply_again": "Aplicar de novo",
         "next_free": "Mover para a próxima posição livre",
+        "use_keyframes": "Definir como quadro-chave",
         "undo_skipped": {
           "one": "Desfeito. {count} alteração ficou como estava porque {actor} a alterou",
           "other": "Desfeito. {count} alterações ficaram como estavam porque {actor} as alterou"
@@ -518,6 +519,16 @@
         "multi_hint": "Selecione um único item para editar o nome e o tempo.",
         "changed_by": "Alterado por {actor}",
         "invalid_value": "Confira o valor e tente de novo.",
+        "transform_title": "Transformação",
+        "transform": {
+          "x": "X",
+          "y": "Y",
+          "scale": "Escala",
+          "rotation": "Rotação",
+          "opacity": "Opacidade"
+        },
+        "mixed": "Misto",
+        "keyframed": "Animado com quadros-chave",
         "color_picker": "{label}, seletor de cor",
         "alpha": "{label}, opacidade",
         "track_kind": {

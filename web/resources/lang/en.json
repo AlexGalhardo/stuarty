@@ -217,6 +217,7 @@
         "dismiss": "Dismiss",
         "apply_again": "Apply again",
         "next_free": "Move to next free position",
+        "use_keyframes": "Set as keyframe",
         "undo_skipped": {
           "one": "Undo applied, {count} change was left alone because {actor} changed it",
           "other": "Undo applied, {count} changes were left alone because {actor} changed them"
@@ -518,6 +519,16 @@
         "multi_hint": "Select a single item to edit its name and timing.",
         "changed_by": "Changed by {actor}",
         "invalid_value": "Check the value and try again.",
+        "transform_title": "Transform",
+        "transform": {
+          "x": "X",
+          "y": "Y",
+          "scale": "Scale",
+          "rotation": "Rotation",
+          "opacity": "Opacity"
+        },
+        "mixed": "Mixed",
+        "keyframed": "Animated with keyframes",
         "color_picker": "{label}, colour picker",
         "alpha": "{label}, opacity",
         "track_kind": {

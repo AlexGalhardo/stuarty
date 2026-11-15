@@ -136,3 +136,16 @@ export const displayInPoint = (
 	fps: Fps,
 	mode: TimeDisplay,
 ): string => formatTime(item.source_in ?? 0, fps, mode);
+
+// The value of an animated property at a playhead frame as a lookup: the last
+// keyframe at or before it (`t` is relative to the item start). The plan and
+// the core own the interpolation; this only names which keyframe is in force.
+export function keyframeValueAt(
+	keys: readonly { t: number; value: number }[],
+	itemStart: number,
+	playhead: number,
+): number {
+	let value = keys[0]?.value ?? 0;
+	for (const key of keys) if (key.t <= playhead - itemStart) value = key.value;
+	return value;
+}

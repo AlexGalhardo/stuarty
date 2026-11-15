@@ -32,6 +32,9 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"timeline.close_gap": ["timeline.close_gap"],
 	"inspector.move": ["item.move"],
 	"inspector.trim_end": ["item.trim"],
+	"canvas.transform": ["item.set_transform", "keyframe.set"],
+	"inspector.transform": ["item.set_transform", "keyframe.set"],
+	"notice.use_keyframes": ["keyframe.set"],
 	// The palette runs any command of the registry with operations built from
 	// its schema form, so it has no builder to check (rule 2 of section 9.3).
 	"palette.run": [ANY_COMMAND],
@@ -102,7 +105,11 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		palette,
 	],
 	"item.set_audio": [palette],
-	"item.set_transform": [palette],
+	"item.set_transform": [
+		{ kind: "gesture", action: "canvas.transform", phase: "A" },
+		{ kind: "inspector", action: "inspector.transform", phase: "A" },
+		palette,
+	],
 	"item.set_transition": [palette],
 	"item.split": [
 		{ kind: "toolbar", action: "timeline.split", phase: "P" },
@@ -119,7 +126,12 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	],
 	"keyframe.clear": [palette],
 	"keyframe.remove": [palette],
-	"keyframe.set": [palette],
+	"keyframe.set": [
+		{ kind: "gesture", action: "canvas.transform", phase: "A" },
+		{ kind: "inspector", action: "inspector.transform", phase: "A" },
+		{ kind: "menu", action: "notice.use_keyframes", phase: "A" },
+		palette,
+	],
 	"project.rename": [palette],
 	"settings.set": [palette],
 	"settings.set_fps": [palette],
