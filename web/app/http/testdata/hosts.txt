@@ -1,0 +1,35 @@
+# Host, Origin and Sec-Fetch-Site values of SDD-007 section 3.6 and section 15 checks 3 and 4.
+# Columns: kind, value, status. P is the port of the listener, O the port of another origin.
+# "empty" stands for a header that is present and empty.
+host	evil.example:P	403
+host	127.0.0.1	403
+host	127.1:P	403
+host	localhost.:P	403
+host	foo.localhost:P	403
+host	[::ffff:127.0.0.1]:P	403
+host	127.0.0.1:1	403
+host	2130706433:P	403
+host	0x7f.1:P	403
+host	0.0.0.0:P	403
+host	user@127.0.0.1:P	403
+host	127.0.0.1:P/x	403
+host	localhost	403
+host	[::1]	403
+host	127.0.0.1:P	200
+host	localhost:P	200
+host	LOCALHOST:P	200
+host	[::1]:P	200
+origin	https://evil.example	403
+origin	null	403
+origin	http://localhost:3000	403
+origin	http://127.0.0.1:1	403
+origin	http://LOCALHOST:P	403
+origin	https://localhost:P	403
+origin	http://127.0.0.1:P	200
+origin	http://localhost:P	200
+origin	http://[::1]:P	200
+fetch-site	cross-site	403
+fetch-site	same-site	403
+fetch-site	empty	403
+fetch-site	same-origin	200
+fetch-site	none	200
