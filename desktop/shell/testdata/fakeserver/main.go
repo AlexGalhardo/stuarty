@@ -1,10 +1,15 @@
 // Command fakeserver stands in for `vukem-video serve` in the shell tests. The
 // variable FAKE_MODE picks the behaviour: ok (default), never-ready (the
 // runtime file is written but /up answers 503), exit (fails with a message),
-// ignore-term (does not stop on SIGTERM).
+// ignore-term (does not stop on SIGTERM), impostor (answers the handshake with
+// a proof of another token).
 package main
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -46,6 +51,23 @@ func main() {
 			return
 		}
 		w.WriteHeader(http.StatusOK)
+	})
+	token, _ := dir.LoadToken()
+	mux.HandleFunc("/api/v1/handshake", func(w http.ResponseWriter, r *http.Request) {
+		key := token
+		if mode == "impostor" {
+			key = "not the token"
+		}
+		m := hmac.New(sha256.New, []byte(key))
+		m.Write([]byte("vukem-video-handshake-v1" + r.URL.Query().Get("nonce")))
+		_ = json.NewEncoder(w).Encode(map[string]string{"proof": hex.EncodeToString(m.Sum(nil))})
+	})
+	mux.HandleFunc("/api/v1/system/launch", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.Header.Get("Authorization") != "Bearer "+token {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(map[string]string{"url": "http://" + ln.Addr().String() + "/auth/launch?code=abc"})
 	})
 	srv := &http.Server{Handler: mux, ReadHeaderTimeout: time.Second}
 
