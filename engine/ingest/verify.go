@@ -579,6 +579,9 @@ func (j *job) verifyImage(plan ImagePlan, proxyName string) error {
 			"poster w"+itoa(pwid)+" width "+itoa(w),
 		)
 	}
+	if delays := j.res.Summary.FrameDelays; len(delays) > 1 {
+		j.verifyAnim(c, plan, delays)
+	}
 	j.prog.set(StepVerify, 1)
 	if e := c.err("image"); e != nil {
 		return e

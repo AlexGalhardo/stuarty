@@ -83,6 +83,9 @@ type Facts struct {
 	Width       int      `json:"width"`
 	Height      int      `json:"height"`
 	HasAudio    bool     `json:"has_audio"`
+	// FrameDelays is the display time in milliseconds of each frame of an animated image, whose
+	// FrameCount is its length (SDD-001 3.2). Empty for every other asset.
+	FrameDelays []int `json:"frame_delays,omitempty"`
 }
 
 // Result is the outcome of a successful ingest.
@@ -393,11 +396,12 @@ func (j *job) probe(ctx context.Context) error {
 		} else {
 			return err
 		}
-		out, err := j.runProbe(ctx, pq(ffargs.ProbeCountPackets(j.pol, j.original)))
+		out, err := j.runProbe(ctx, pq(ffargs.ProbeAnimPackets(j.pol, j.original, sel.Video.Index)))
 		if err != nil {
 			return err
 		}
-		ex.NbReadPackets = firstInt(string(out))
+		ex.FrameDelays = parseFrameDelays(string(out))
+		ex.NbReadPackets = len(ex.FrameDelays)
 	}
 	st, err := os.Stat(j.original)
 	if err != nil {
@@ -434,16 +438,6 @@ func parsePacketTimes(out string) []float64 {
 		}
 	}
 	return ts
-}
-
-// firstInt returns the first integer token of a csv answer.
-func firstInt(out string) int {
-	for _, tok := range strings.FieldsFunc(out, func(r rune) bool { return r == ',' || r == '\n' || r == '\r' || r == ' ' }) {
-		if n, err := strconv.Atoi(tok); err == nil {
-			return n
-		}
-	}
-	return 0
 }
 
 // writeProbeJSON stores the summary next to the raw ffprobe JSON with format.filename blanked:

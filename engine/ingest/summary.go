@@ -93,6 +93,7 @@ var imageFormats = []string{
 	"jpegxl_pipe",
 	"gif",
 	"apng",
+	"webp_anim",
 }
 
 // IsImageContainer reports whether the container is one of the still-image formats.
@@ -286,6 +287,8 @@ type Summary struct {
 	IgnoredStreams []Ignored      `json:"ignored_streams"`
 	Warnings       []string       `json:"warnings"`
 	Tags           map[string]Tag `json:"tags,omitempty"`
+	// FrameDelays is the display time of each frame of an animated image, in milliseconds (kind image only).
+	FrameDelays []int `json:"frame_delays,omitempty"`
 }
 
 // Extras are the answers of the further ffprobe runs of SDD-011 3.1.
@@ -294,8 +297,11 @@ type Extras struct {
 	PacketTimes []float64
 	// FrameSideData is the JSON of the first frame's side data, for images.
 	FrameSideData []byte
-	// NbReadPackets is the packet count of a still-image container (3.4 rows 2 and 3).
+	// NbReadPackets is the packet count of a still-image container (3.4 rows 2 and 3), at most
+	// ffargs.MaxAnimProbePackets.
 	NbReadPackets int
+	// FrameDelays is the display time in milliseconds of each packet of a still-image container.
+	FrameDelays []int
 }
 
 // tagNames is the closed set of kept tag keys (SDD-011 3.2): a hostile file cannot choose which keys reach the agent.
@@ -545,14 +551,13 @@ func displaySize(w, h int, sar Rational, swap bool) (int, int) {
 }
 
 func summarizeImage(sel Selection, ex Extras, caps *ffmpeg.Capabilities, s *Summary) (*Summary, error) {
-	if ex.NbReadPackets > 1 {
-		return nil, unsupportedErr(
-			"animated_image",
-			"The image is animated. Animated images are not supported yet.",
-			map[string]any{"frames": ex.NbReadPackets},
-		)
-	}
 	st := sel.Video
+	animated := ex.NbReadPackets > 1
+	if animated {
+		if err := ffmpeg.CheckAnimation(ex.NbReadPackets, st.Width, st.Height); err != nil {
+			return nil, err
+		}
+	}
 	if caps != nil && !caps.Decoders[st.CodecName] {
 		return nil, decoderMissing(st.CodecName)
 	}
@@ -593,6 +598,10 @@ func summarizeImage(sel Selection, ex Extras, caps *ffmpeg.Capabilities, s *Summ
 		v.DisplayWidth, v.DisplayHeight = v.CodedHeight, v.CodedWidth
 	}
 	v.PacketCount = 1
+	if animated {
+		v.PacketCount = ex.NbReadPackets
+		s.FrameDelays = ex.FrameDelays
+	}
 	s.Video = v
 	return s, nil
 }
