@@ -16,7 +16,7 @@ const hostile = "clip\nlevel=ERROR msg=forged actor=root \x1b[31mred\x1b[0m \u20
 
 // T-25: a name with a line feed, an ANSI escape and a bidirectional override
 // produces one line, the characters replaced.
-func TestSanitizedNameMakesOneLine(t *testing.T) {
+func TestSecurity_T25_ControlCharsNeverForgeLogLines(t *testing.T) {
 	var out bytes.Buffer
 
 	log, closer, err := logging.New(logging.Options{Stderr: &out, Level: slog.LevelDebug})
