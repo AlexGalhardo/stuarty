@@ -11,22 +11,22 @@ import (
 
 // textProject is a project with one text item of 1 s, so that a frame has
 // something to show.
-func textProject(t testing.TB, cs *sdk.ClientSession) string {
-	t.Helper()
+func textProject(tb testing.TB, cs *sdk.ClientSession) string {
+	tb.Helper()
 
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "V"})))["project_id"].(string)
+	project, _ := structured(tb, ok(tb, call(tb, cs, "project_create", map[string]any{"name": "V"})))["project_id"].(string)
 
-	tr := ok(t, call(t, cs, "edit", map[string]any{
+	tr := ok(tb, call(tb, cs, "edit", map[string]any{
 		"project_id": project, "base_revision": 0,
 		"operations": []any{map[string]any{"op": "track.add", "args": map[string]any{"kind": "visual", "name": "V"}}},
 	}))
 
-	created, _ := structured(t, tr)["created"].([]any)
+	created, _ := structured(tb, tr)["created"].([]any)
 	if len(created) != 1 {
-		t.Fatalf("created = %v", created)
+		tb.Fatalf("created = %v", created)
 	}
 
-	ok(t, call(t, cs, "edit", map[string]any{
+	ok(tb, call(tb, cs, "edit", map[string]any{
 		"project_id": project, "base_revision": 1,
 		"operations": []any{map[string]any{
 			"op":   "text.add",
