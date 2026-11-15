@@ -43,33 +43,36 @@ func checkLimits(st timeline.Settings) error {
 	return nil
 }
 
-// checkCapability runs the cached test encode at the size and the rate of the project on the chosen
-// encoder when the project is larger or faster than the detection test (RF-064). A machine whose
-// encoder cannot do it gets an error that says what to change.
-func (s *state) checkCapability(ctx context.Context, cand ffmpeg.Candidate) error {
+// checkCapability runs the cached test encode at the size and the rate of the project when the project is
+// larger or faster than the detection test (RF-064). An encoder that cannot do it is replaced by the next
+// working one (D-034, Runner.EncoderForSize); when none can, the error names the encoder that was chosen
+// and says what to change. The result is the encoder to use.
+func (s *state) checkCapability(ctx context.Context, det *ffmpeg.EncoderDetection) (ffmpeg.Candidate, error) {
+	chosen, _ := det.ChosenCandidate()
+
 	st := s.job.Doc.Settings
 	if !needsSizeTest(st) {
-		return nil
+		return chosen, nil
 	}
 
-	err := s.job.Runner.TestEncoderAt(ctx, cand, ffmpeg.SizeProbe{
+	cand, err := s.job.Runner.EncoderForSize(ctx, det, ffmpeg.SizeProbe{
 		Width: st.Width, Height: st.Height, FPSNum: st.FPS.Num, FPSDen: st.FPS.Den,
 	})
 	if err == nil {
-		return nil
+		return cand, nil
 	}
 
 	if ctx.Err() != nil || !errors.Is(err, ffmpeg.ErrEncoderSize) {
-		return wrapRun(err, ReasonEncoder, "The encoder could not be tested at the size of the project.", "")
+		return chosen, wrapRun(err, ReasonEncoder, "The encoder could not be tested at the size of the project.", "")
 	}
 
 	msg := fmt.Sprintf(
 		"The encoder %s on this machine cannot encode %dx%d at %.4g fps.",
-		cand.Name, st.Width, st.Height, float64(st.FPS.Num)/float64(st.FPS.Den),
+		chosen.Name, st.Width, st.Height, float64(st.FPS.Num)/float64(st.FPS.Den),
 	)
 	e := exportErr(ReasonUnsupportedSize, msg, err, "")
 	e.Hint = "Lower the project size or the frame rate, or install a build with an encoder that supports it " +
 		"(\"vukem-video doctor\" lists the encoders and why each one was or was not chosen)."
 
-	return e
+	return chosen, e
 }

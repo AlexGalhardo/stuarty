@@ -98,3 +98,42 @@ func (r *Runner) testEncoderAt(ctx context.Context, c Candidate, p SizeProbe) er
 
 	return nil
 }
+
+// EncoderForSize is the encoder an export at this size and rate uses (D-034, SDD-004 section 8): the one
+// detection chose when its test encode at that size passes, else the next working candidate of the same
+// order that passes it, down to the software encoder, so a GPU that cannot do 4K or 60 fps does not stop an
+// export that libopenh264 can do. A forced encoder (VUKEM_VIDEO_ENCODER) is never replaced. When none
+// passes, the error is the one of the chosen encoder and wraps ErrEncoderSize; a cancelled run or a failure
+// that is not about the size ends the search at once.
+func (r *Runner) EncoderForSize(ctx context.Context, det *EncoderDetection, p SizeProbe) (Candidate, error) {
+	chosen, ok := det.ChosenCandidate()
+	if !ok {
+		return Candidate{}, errors.New("ffmpeg: no encoder was chosen")
+	}
+
+	err := r.TestEncoderAt(ctx, chosen, p)
+	if err == nil {
+		return chosen, nil
+	}
+
+	if det.Forced || ctx.Err() != nil || !errors.Is(err, ErrEncoderSize) {
+		return chosen, err
+	}
+
+	for _, c := range det.Candidates {
+		if c.Status != EncoderOK || c.Name == chosen.Name {
+			continue
+		}
+
+		next := r.TestEncoderAt(ctx, c, p)
+		if next == nil {
+			return c, nil
+		}
+
+		if ctx.Err() != nil {
+			return chosen, next
+		}
+	}
+
+	return chosen, err
+}

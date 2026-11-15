@@ -394,7 +394,8 @@ func TestFormatCapabilityFailure(t *testing.T) {
 			Input:  ffargs.DetectInput{Filter: "format=yuv420p"},
 		}
 
-		err := s.checkCapability(context.Background(), cand)
+		det := &ffmpeg.EncoderDetection{Chosen: name, Candidates: []ffmpeg.Candidate{cand}}
+		_, err := s.checkCapability(context.Background(), det)
 		if err == nil {
 			continue
 		}
