@@ -180,24 +180,32 @@ func durationOf(t *timeline.Transition) int {
 }
 
 // coveredBeneath says whether every frame of [from, to) has another visible visual item
-// on a lower track.
+// on a lower track. It sorts the spans of those items once and sweeps them, so the cost
+// does not depend on how long the transition or the items are.
 func (c *check) coveredBeneath(it *timeline.Item, from, to int) bool {
-	for f := from; f < to; f++ {
-		found := false
+	var spans [][2]int
 
-		for _, o := range c.sorted() {
-			if o.ID != it.ID && o.Type != timeline.ItemAudio && c.visibleTrack(o.Track) &&
-				c.doc.Tracks[o.Track].Order > c.doc.Tracks[it.Track].Order && f >= o.Start && f < o.Start+o.Duration {
-				found = true
-
-				break
-			}
-		}
-
-		if !found {
-			return false
+	for _, o := range c.sorted() {
+		if o.ID != it.ID && o.Type != timeline.ItemAudio && c.visibleTrack(o.Track) &&
+			c.doc.Tracks[o.Track].Order > c.doc.Tracks[it.Track].Order {
+			spans = append(spans, [2]int{o.Start, o.Start + o.Duration})
 		}
 	}
 
-	return true
+	slices.SortFunc(spans, func(a, b [2]int) int { return a[0] - b[0] })
+
+	reach := from
+
+	for _, sp := range spans {
+		if sp[0] > reach {
+			break
+		}
+
+		reach = max(reach, sp[1])
+		if reach >= to {
+			return true
+		}
+	}
+
+	return reach >= to
 }
