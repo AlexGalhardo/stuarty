@@ -51,12 +51,26 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, runner Ru
 	auditSPDX := fs.Bool("audit-spdx", false, "print the denied and unknown SPDX expressions read on stdin")
 	auditDir := fs.String("audit-tree", "", "print the denied and unknown licence texts under DIR/licenses")
 
+	waiverFile := fs.String("waivers", "", "with -audit-spdx: the reviewed waivers (.config/sbom-waivers.json)")
+	waiverRoot := fs.String("waiver-root", "", "with -waivers: the extracted archive the waiver checksums are read from")
+
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
 
 	if *auditSPDX || *auditDir != "" {
-		return runAudit(*auditSPDX, *auditDir, os.Stdin, stdout, stderr)
+		var w *waiverSet
+
+		if *waiverFile != "" {
+			var err error
+			if w, err = loadWaivers(*waiverFile, *waiverRoot); err != nil {
+				fmt.Fprintln(stderr, "notices:", err)
+
+				return 2
+			}
+		}
+
+		return runAudit(*auditSPDX, *auditDir, w, os.Stdin, stdout, stderr)
 	}
 
 	want, err := build(ctx, runner, *root)

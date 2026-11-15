@@ -83,8 +83,10 @@ func auditAlternative(alt string) (verdict, reason string) {
 }
 
 // auditExprs reads one SPDX expression per line and prints a verdict line for
-// each one that is not clean. It returns the number of lines printed.
-func auditExprs(in io.Reader, out io.Writer) (int, error) {
+// each one that is not clean. A line that a waiver covers is printed as "waived" and not counted; one whose
+// waiver no longer matches the shipped text is printed as "expired" and counted. It returns the number of
+// lines to fail on.
+func auditExprs(in io.Reader, out io.Writer, w *waiverSet) (int, error) {
 	sc := bufio.NewScanner(in)
 	sc.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
 
@@ -96,11 +98,22 @@ func auditExprs(in io.Reader, out io.Writer) (int, error) {
 			subject, expr = "", subject
 		}
 
-		if v, id := auditExpr(expr); v != "" {
-			fmt.Fprintf(out, "%s\t%s\t%s\n", v, subject, id)
-
-			n++
+		v, id := auditExpr(expr)
+		if v == "" {
+			continue
 		}
+
+		if wv, detail := w.judge(subject, id); wv != "" {
+			fmt.Fprintf(out, "%s\t%s\t%s\n", wv, subject, detail)
+
+			if wv == verdictWaived {
+				continue
+			}
+		} else {
+			fmt.Fprintf(out, "%s\t%s\t%s\n", v, subject, id)
+		}
+
+		n++
 	}
 
 	return n, sc.Err()
@@ -132,6 +145,11 @@ func auditTree(root string, out io.Writer) (int, error) {
 		}
 
 		rel = filepath.ToSlash(rel)
+
+		// A file directly in licenses/ (its README) explains the folder; it is no component's text.
+		if !strings.Contains(rel, "/") {
+			return nil
+		}
 
 		raw, err := lic.ReadFile(rel)
 		if err != nil {
@@ -190,11 +208,11 @@ func auditGroup(rel string) (group, name string) {
 
 // runAudit is the audit entry of run. It exits 1 when a verdict line was
 // printed, so a caller can also use the exit code.
-func runAudit(exprs bool, dir string, stdin io.Reader, stdout, stderr io.Writer) int {
+func runAudit(exprs bool, dir string, w *waiverSet, stdin io.Reader, stdout, stderr io.Writer) int {
 	total := 0
 
 	if exprs {
-		n, err := auditExprs(stdin, stdout)
+		n, err := auditExprs(stdin, stdout, w)
 		if err != nil {
 			fmt.Fprintln(stderr, "notices:", err)
 
