@@ -5,6 +5,7 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { checkHeadings, reportHeadings } from "./check-headings.ts";
 
 export type Status = "ok" | "stale" | "missing";
 
@@ -99,7 +100,8 @@ function main(): number {
 
 	const bad = rows.filter((r) => r.status !== "ok").length;
 	console.log(`check:translations: ${rows.length} pages, ${bad} stale or missing${strict ? " (strict)" : ""}`);
-	return exitCode(rows, strict);
+	const headings = reportHeadings(checkHeadings(contentDir));
+	return exitCode(rows, strict) || headings;
 }
 
 if (import.meta.main) process.exit(main());

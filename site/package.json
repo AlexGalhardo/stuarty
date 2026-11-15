@@ -12,13 +12,14 @@
     "check:mdx": "node scripts/check-mdx.ts",
     "check:last-updated": "node scripts/check-last-updated.ts",
     "check:translations": "node scripts/check-translations.ts",
+    "check:headings": "node scripts/check-headings.ts",
     "check:command-mentions": "node scripts/check-command-mentions.ts",
     "check:ffmpeg-pin": "node scripts/check-ffmpeg-pin.ts",
     "reference": "node scripts/generate-reference.ts",
     "reference:check": "node scripts/generate-reference.ts && git diff --exit-code -- generated content/generated",
     "check:built": "node scripts/check-built.ts",
     "check:links-live": "node scripts/check-links-live.ts",
-    "test:scripts": "node --test scripts/check-last-updated.test.ts scripts/committed-dates.test.ts scripts/trailing-slash.test.ts scripts/check-built.test.ts scripts/check-translations.test.ts scripts/check-links-live.test.ts",
+    "test:scripts": "node --test scripts/check-last-updated.test.ts scripts/committed-dates.test.ts scripts/trailing-slash.test.ts scripts/check-built.test.ts scripts/check-translations.test.ts scripts/check-headings.test.ts scripts/check-links-live.test.ts",
     "test:site": "node --test scripts/link-anchors.test.ts scripts/markdown-twin.test.ts scripts/generate-reference.test.ts scripts/check-doc-claims.test.ts"
   },
   "dependencies": {
