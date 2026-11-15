@@ -20,6 +20,32 @@ export interface LayerGeometry {
 	rotation: number;
 }
 
+export type HandleKind = "body" | "scale" | "rotate";
+
+// What a transform gesture is started with (SDD-012 section 11.6).
+export interface TransformBegin {
+	event: React.PointerEvent<HTMLElement>;
+	kind: HandleKind;
+	itemId: string;
+	// The box at pointer down, from the plan.
+	start: LayerGeometry;
+	// Screen pixels per project pixel.
+	scale: number;
+	// The element the box is positioned in, for the centre on the screen.
+	overlay: HTMLElement;
+	// The box under the pointer; null drops it.
+	onPreview(geometry: LayerGeometry | null): void;
+}
+
+// The seam to the gesture code of `timeline/gestures`, handed down by the
+// layout because `preview` must not import `commands` or `timeline` (SDD-012
+// section 3.3).
+export interface TransformPort {
+	begin(options: TransformBegin): void;
+	// Whether a click is the one that follows a drag, and so selects nothing.
+	consumeClick(): boolean;
+}
+
 export interface ProjectInfo {
 	projectId: string;
 	width: number;
