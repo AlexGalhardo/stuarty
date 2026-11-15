@@ -284,3 +284,73 @@ func (c *Client) Lint(ctx context.Context, req service.LintRequest) (*service.Li
 
 	return get[service.LintResult](ctx, c, projectPath(req.ProjectID, "/lint"), pageQuery(q, req.Page))
 }
+
+// MediaImport implements service.Service.
+func (c *Client) MediaImport(ctx context.Context, req service.MediaImportRequest) (*service.MediaImportResult, error) {
+	body := struct {
+		Files  []service.ImportFile `json:"files"`
+		WaitMS int                  `json:"wait_ms,omitempty"`
+		DryRun bool                 `json:"dry_run,omitempty"`
+	}{req.Files, req.WaitMS, req.DryRun}
+
+	return post[service.MediaImportResult](ctx, c, projectPath(req.ProjectID, "/media"), body)
+}
+
+// MediaList implements service.Service.
+func (c *Client) MediaList(ctx context.Context, req service.MediaListRequest) (*service.MediaListResult, error) {
+	return get[service.MediaListResult](ctx, c, projectPath(req.ProjectID, "/media"), pageQuery(url.Values{}, req.Page))
+}
+
+// MediaInspect implements service.Service.
+func (c *Client) MediaInspect(
+	ctx context.Context,
+	req service.MediaInspectRequest,
+) (*service.MediaInspectResult, error) {
+	q := url.Values{}
+	setIf(q, "sections", strings.Join(req.Sections, ","))
+	setIf(q, "min_silence", req.MinSilence)
+
+	path := projectPath(req.ProjectID, "/media/"+url.PathEscape(req.AssetID))
+
+	return get[service.MediaInspectResult](ctx, c, path, pageQuery(q, req.Page))
+}
+
+// JobStart implements service.Service.
+func (c *Client) JobStart(ctx context.Context, req service.JobStartRequest) (*service.Job, error) {
+	body := struct {
+		Kind   string          `json:"kind"`
+		Args   json.RawMessage `json:"args,omitempty"`
+		WaitMS int             `json:"wait_ms,omitempty"`
+		DryRun bool            `json:"dry_run,omitempty"`
+	}{req.Kind, req.Args, req.WaitMS, req.DryRun}
+
+	return post[service.Job](ctx, c, projectPath(req.ProjectID, "/jobs"), body)
+}
+
+// JobGet implements service.Service.
+func (c *Client) JobGet(ctx context.Context, req service.JobGetRequest) (*service.Job, error) {
+	q := url.Values{}
+	if req.WaitMS > 0 {
+		q.Set("wait_ms", strconv.Itoa(req.WaitMS))
+	}
+
+	return get[service.Job](ctx, c, "/jobs/"+url.PathEscape(req.JobID), q)
+}
+
+// JobList implements service.Service.
+func (c *Client) JobList(ctx context.Context, req service.JobListRequest) (*service.JobListResult, error) {
+	q := url.Values{}
+	setIf(q, "state", req.State)
+
+	return get[service.JobListResult](ctx, c, projectPath(req.ProjectID, "/jobs"), pageQuery(q, req.Page))
+}
+
+// OpenFile implements service.Service. A stored file is a path inside the
+// workspace of the server; a client reads the bytes from its URL instead.
+func (*Client) OpenFile(context.Context, service.FileRef) (*service.File, error) {
+	return nil, &service.Error{
+		Code:    command.CodeInternal,
+		Message: "stored files are not opened over HTTP.",
+		Hint:    "read the file from its URL, such as /projects/{id}/media/{asset_id}/proxy",
+	}
+}
