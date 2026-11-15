@@ -991,6 +991,20 @@
         "key-file",
         "timeout"
       ]
+    },
+    {
+      "name": "token:rotate",
+      "summary": "replace the local token; clients that hold the old one must be set up again",
+      "usage": [
+        "vukem-video token:rotate"
+      ],
+      "example": "vukem-video token:rotate",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
     }
   ]
 }

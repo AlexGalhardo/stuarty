@@ -345,12 +345,27 @@ func (s *spec) help() string {
 	return b.String()
 }
 
+// processCommands are the commands the binary dispatches itself, before the
+// application is built, because they own the process or the workspace lock
+// (SDD-000 section 1, SDD-003 section 5.4): they are listed here and described
+// by their own usage line.
+var processCommands = []struct{ name, summary string }{
+	{"serve", "run the server that owns the workspace"},
+	{"open", "open the editor in the browser of the running server"},
+	{"user:create", "create a user of network mode (the password is asked, never an argument)"},
+	{"user:passwd", "change the password of a user of network mode"},
+}
+
 // List prints the short command list of "vukem-video" with no arguments.
 func List(w io.Writer) {
 	fmt.Fprintln(w, "vukem-video commands:")
 
 	for _, s := range registry() {
 		fmt.Fprintf(w, "  %-16s %s\n", s.name, s.summary)
+	}
+
+	for _, e := range processCommands {
+		fmt.Fprintf(w, "  %-16s %s\n", e.name, e.summary)
 	}
 
 	fmt.Fprintln(w, "\nrun vukem-video <command> --help for the arguments of a command")
