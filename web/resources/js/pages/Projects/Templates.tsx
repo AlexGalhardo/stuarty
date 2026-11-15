@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
-import type { TemplateSummary } from "../../editor/api/types";
+import type { BrandKit, TemplateSummary } from "../../editor/api/types";
 import { templateFileUrl } from "../../editor/api/urls";
 
 const NAME_MAX = 120;
@@ -25,15 +25,24 @@ type Loaded =
 
 function TemplateRow({
 	template,
+	kit,
 	onFailure,
 }: {
 	template: TemplateSummary;
+	kit: BrandKit | null;
 	onFailure(failure: Failure | null): void;
 }): ReactNode {
 	const t = useT();
 	const [open, setOpen] = useState(false);
 	const [name, setName] = useState("");
 	const [busy, setBusy] = useState(false);
+	const [useKit, setUseKit] = useState(false);
+	// The template colours the kit also names, and the kit families: the core
+	// takes both lists by name and refuses one the kit does not hold.
+	const brandColors = Object.keys(template.colors ?? {}).filter(
+		(name) => kit?.colors?.[name] !== undefined,
+	);
+	const brandFonts = Object.keys(kit?.fonts ?? {});
 	const required = template.slots.filter((slot) => slot.required).length;
 
 	async function create(event: FormEvent<HTMLFormElement>): Promise<void> {
@@ -43,7 +52,13 @@ function TemplateRow({
 		try {
 			const made = await createClient(
 				new HttpTransport("/api/v1"),
-			).instantiateTemplate(template.template_id, { name: name.trim() });
+			).instantiateTemplate(template.template_id, {
+				name: name.trim(),
+				...(useKit && brandColors.length > 0
+					? { brand_colors: brandColors }
+					: {}),
+				...(useKit && brandFonts.length > 0 ? { brand_fonts: brandFonts } : {}),
+			});
 			// The editor is another document, so this is a navigation, not an
 			// Inertia visit (SDD-012 section 2.2).
 			window.location.assign(`/editor/${made.project_id}`);
@@ -119,6 +134,17 @@ function TemplateRow({
 							onChange={(event) => setName(event.target.value)}
 						/>
 					</div>
+					{(brandColors.length > 0 || brandFonts.length > 0) && (
+						<label className="flex items-center gap-1.5 pb-2 text-sm">
+							<input
+								type="checkbox"
+								checked={useKit}
+								className="accent-primary"
+								onChange={(event) => setUseKit(event.target.checked)}
+							/>
+							{t("ui.projects.templates.use_brand")}
+						</label>
+					)}
 					<Button type="submit" disabled={busy || name.trim() === ""}>
 						{t("ui.projects.templates.create")}
 					</Button>
@@ -139,6 +165,13 @@ export default function Templates(): ReactNode {
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [path, setPath] = useState("");
 	const [importing, setImporting] = useState(false);
+	const [kit, setKit] = useState<BrandKit | null>(null);
+
+	useEffect(() => {
+		createClient(new HttpTransport("/api/v1"))
+			.getBrandKit()
+			.then(setKit, () => undefined);
+	}, []);
 
 	const load = useCallback(async (): Promise<void> => {
 		try {
@@ -199,6 +232,7 @@ export default function Templates(): ReactNode {
 							<TemplateRow
 								key={template.template_id}
 								template={template}
+								kit={kit}
 								onFailure={setFailure}
 							/>
 						))}

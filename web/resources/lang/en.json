@@ -44,7 +44,8 @@
         "create": "Create project",
         "export": "Export file",
         "import_path": "Path of a template file on this computer",
-        "import": "Import template"
+        "import": "Import template",
+        "use_brand": "Use the brand kit colours and fonts"
       },
       "trash": {
         "title": "Trash",
@@ -716,7 +717,10 @@
         "family": "Family name",
         "weight": "Weight",
         "hash": "Font file hash (sha256:...)",
-        "add": "Add font"
+        "add": "Add font",
+        "brand": "Brand kit fonts",
+        "brand_use": "Use in project",
+        "brand_add": "Add brand kit font family {name} to the project"
       },
       "clip": {
         "audio_title": "Audio",
@@ -821,7 +825,9 @@
           "highlight_background": "Highlight background"
         },
         "caption_style_title": "Caption style",
-        "use_track_style": "Use track style"
+        "use_track_style": "Use track style",
+        "brand_colors": "{label}, brand kit colours",
+        "brand_color_use": "Use brand colour {name}"
       },
       "history": {
         "tab": "History",

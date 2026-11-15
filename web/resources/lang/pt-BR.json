@@ -44,7 +44,8 @@
         "create": "Criar projeto",
         "export": "Exportar arquivo",
         "import_path": "Caminho de um arquivo de modelo neste computador",
-        "import": "Importar modelo"
+        "import": "Importar modelo",
+        "use_brand": "Usar as cores e fontes do kit de marca"
       },
       "trash": {
         "title": "Lixeira",
@@ -716,7 +717,10 @@
         "family": "Nome da família",
         "weight": "Peso",
         "hash": "Hash do arquivo da fonte (sha256:...)",
-        "add": "Adicionar fonte"
+        "add": "Adicionar fonte",
+        "brand": "Fontes do kit de marca",
+        "brand_use": "Usar no projeto",
+        "brand_add": "Adicionar ao projeto a família de fontes {name} do kit de marca"
       },
       "clip": {
         "audio_title": "Áudio",
@@ -821,7 +825,9 @@
           "highlight_background": "Fundo do destaque"
         },
         "caption_style_title": "Estilo da legenda",
-        "use_track_style": "Usar o estilo da faixa"
+        "use_track_style": "Usar o estilo da faixa",
+        "brand_colors": "{label}, cores do kit de marca",
+        "brand_color_use": "Usar a cor de marca {name}"
       },
       "history": {
         "tab": "Histórico",
