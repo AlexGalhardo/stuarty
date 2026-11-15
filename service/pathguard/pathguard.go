@@ -320,9 +320,12 @@ func openUnder(root, resolved string) (*os.File, error) {
 	}
 	defer r.Close()
 
-	rel, err := filepath.Rel(root, resolved)
-	if err != nil {
-		return nil, err
+	// within has matched root against resolved component by component (folding
+	// case where the volume does), so the rest is the path under root; filepath.Rel
+	// would compare the case and climb out with ".." on macOS.
+	rel := filepath.Join(splitParts(resolved)[len(splitParts(root)):]...)
+	if rel == "" {
+		rel = "."
 	}
 
 	return r.Open(rel)

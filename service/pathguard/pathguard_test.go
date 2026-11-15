@@ -243,7 +243,9 @@ func TestSecurity_T12_ImportConfinedToRoots(t *testing.T) {
 		_ = os.Remove(dirLink)
 	}
 
-	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+	// The case rule only applies on a case-insensitive volume. A macOS runner may
+	// mount a case-sensitive one, where the variant names another path.
+	if caseInsensitive(root, inside) && (runtime.GOOS == "windows" || runtime.GOOS == "darwin") {
 		g, err := New(Config{Roots: []string{strings.ToUpper(root)}})
 		if err != nil {
 			t.Fatal(err)
@@ -401,4 +403,13 @@ func makeDirLink(t *testing.T, link, target string) bool {
 	}
 
 	return os.Symlink(target, link) == nil
+}
+
+// caseInsensitive tells whether the volume of root resolves case variants of
+// both paths to the same files.
+func caseInsensitive(root, inside string) bool {
+	_, e1 := os.Stat(strings.ToUpper(root))
+	_, e2 := os.Stat(strings.ToLower(inside))
+
+	return e1 == nil && e2 == nil
 }
