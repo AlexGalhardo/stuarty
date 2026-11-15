@@ -114,6 +114,45 @@ export function moveOperations(itemId: string, start: string): Operations {
 	return [{ op: "item.move", args: { item_id: itemId, start } }];
 }
 
+// Alt+Left and Alt+Right: one `item.move` per selected item, `start` moved by
+// `delta` frames and never below frame 0. One batch, one revision. The core
+// applies the operations in order, so the item that leads the move goes first
+// (the last one when moving right, the first when moving left): neighbours that
+// move together never meet in the middle of the batch.
+export function nudgeOperations(
+	items: readonly ItemRange[],
+	delta: number,
+): Operations {
+	const ordered = [...items].sort((a, b) =>
+		delta > 0 ? b.start - a.start : a.start - b.start,
+	);
+	return ordered.map((item) => ({
+		op: "item.move",
+		args: { item_id: item.id, start: frames(Math.max(0, item.start + delta)) },
+	}));
+}
+
+// The track `sign` places away from `trackId` in display order, else null.
+export function adjacentTrack(
+	trackIds: readonly string[],
+	trackId: string,
+	sign: 1 | -1,
+): string | null {
+	const at = trackIds.indexOf(trackId);
+	if (at < 0) return null;
+	return trackIds[at + sign] ?? null;
+}
+
+// Alt+Up and Alt+Down: each item to the track the caller picked for it.
+export function moveToTrackOperations(
+	moves: readonly { itemId: string; trackId: string }[],
+): Operations {
+	return moves.map((move) => ({
+		op: "item.move",
+		args: { item_id: move.itemId, track_id: move.trackId },
+	}));
+}
+
 export function trimEndOperations(itemId: string, to: string): Operations {
 	return [{ op: "item.trim", args: { item_id: itemId, edge: "end", to } }];
 }

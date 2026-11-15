@@ -5,7 +5,14 @@ import { createStore, type ReadStore, readOnly } from "./createStore";
 export interface UiState {
 	// `track` is the track whose panel the inspector shows, when no item is
 	// selected (SDD-012 section 12.1).
-	selection: { items: readonly string[]; track: string | null };
+	// `anchor` is the item a Shift+click or Shift+arrow range starts from.
+	selection: {
+		items: readonly string[];
+		track: string | null;
+		anchor: string | null;
+	};
+	// The item that holds the roving tab stop of the timeline grid (SDD-012 7.10).
+	focusedItem: string | null;
 	playheadFrame: number;
 	timeline: { pxPerFrame: number; snapEnabled: boolean };
 	// The revision at which the core answered E_NOTHING_TO_UNDO or
@@ -18,7 +25,8 @@ export interface UiState {
 }
 
 export interface UiWriter {
-	select(items: readonly string[]): void;
+	select(items: readonly string[], anchor?: string | null): void;
+	focusItem(id: string | null): void;
 	selectTrack(trackId: string | null): void;
 	dropSelection(isKnown: (id: string) => boolean): void;
 	setPlayhead(frame: number): void;
@@ -37,7 +45,8 @@ export function createUiStore(initialZoom = 1): {
 	writer: UiWriter;
 } {
 	const store = createStore<UiState>({
-		selection: { items: [], track: null },
+		selection: { items: [], track: null, anchor: null },
+		focusedItem: null,
 		playheadFrame: 0,
 		timeline: { pxPerFrame: initialZoom, snapEnabled: true },
 		historyBlocked: { undo: null, redo: null },
@@ -47,20 +56,36 @@ export function createUiStore(initialZoom = 1): {
 	return {
 		store: readOnly(store),
 		writer: {
-			select: (items) =>
-				store.setState((s) => ({ ...s, selection: { items, track: null } })),
+			select: (items, anchor) =>
+				store.setState((s) => ({
+					...s,
+					selection: {
+						items,
+						track: null,
+						anchor: anchor === undefined ? (items.at(-1) ?? null) : anchor,
+					},
+				})),
+			focusItem: (focusedItem) =>
+				store.setState((s) =>
+					s.focusedItem === focusedItem ? s : { ...s, focusedItem },
+				),
 			selectTrack: (track) =>
 				store.setState((s) => ({
 					...s,
-					selection: { items: [], track },
+					selection: { items: [], track, anchor: null },
 				})),
 			// The read model removed an id: drop it from the selection (SDD-012 7.6).
 			dropSelection(isKnown) {
 				store.setState((s) => {
 					const kept = s.selection.items.filter(isKnown);
-					return kept.length === s.selection.items.length
+					const anchor =
+						s.selection.anchor !== null && isKnown(s.selection.anchor)
+							? s.selection.anchor
+							: (kept.at(-1) ?? null);
+					return kept.length === s.selection.items.length &&
+						anchor === s.selection.anchor
 						? s
-						: { ...s, selection: { ...s.selection, items: kept } };
+						: { ...s, selection: { ...s.selection, items: kept, anchor } };
 				});
 			},
 			setPlayhead: (playheadFrame) =>

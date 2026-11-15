@@ -10,6 +10,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import { useActions } from "../commands/useActions";
 import {
 	useDocumentState,
 	useRuntime,
@@ -28,12 +29,23 @@ import {
 	type Fps,
 	fitZoom,
 	formatTimecode,
+	framesPerSecond,
 	frameToContentX,
 	nextZoom,
 	RULER_HEIGHT_PX,
 	TRACK_HEADER_PX,
 	zoomAround,
 } from "./geometry";
+import { useMarquee } from "./gestures/marquee";
+import {
+	allItemIds,
+	extendSelection,
+	focusAfterRemoval,
+	focusTarget,
+	gridCommand,
+	gridLayout,
+	tabStop,
+} from "./keyboard";
 import Ruler from "./Ruler";
 import SnapLine from "./SnapLine";
 import { TrackHeader, TrackRow } from "./TrackRow";
@@ -59,6 +71,12 @@ export default function Timeline(): ReactNode {
 	const playhead = useUiState((s) => s.playheadFrame);
 	const snapEnabled = useUiState((s) => s.timeline.snapEnabled);
 
+	const actions = useActions();
+	const gridRef = useRef<HTMLDivElement>(null);
+	const marqueeBox = useRef<HTMLDivElement>(null);
+	// Whether keyboard focus is on an item: when that item leaves the read model
+	// the focus must land on another one instead of falling to the page.
+	const focusInGrid = useRef(false);
 	const scroller = useRef<HTMLDivElement>(null);
 	const headers = useRef<HTMLDivElement>(null);
 	const pendingScroll = useRef<number | null>(null);
@@ -84,6 +102,103 @@ export default function Timeline(): ReactNode {
 		pendingScroll.current = null;
 		setScrollLeft(el.scrollLeft);
 	}, [ppf]);
+
+	const marquee = useMarquee(scroller, marqueeBox, (ids) =>
+		runtime.uiWriter.select(ids),
+	);
+
+	const focusItem = useCallback(
+		(id: string): void => {
+			runtime.uiWriter.focusItem(id);
+			gridRef.current
+				?.querySelector<HTMLElement>(`[data-item-id="${CSS.escape(id)}"]`)
+				?.focus();
+		},
+		[runtime],
+	);
+
+	// The roving tab stop always names an item that exists, and keyboard focus
+	// never falls to the page when its item is removed (SDD-012 section 7.10).
+	useEffect(() => {
+		let previous = runtime.documents.getState();
+		const settle = (): void => {
+			const state = runtime.documents.getState();
+			const layout = gridLayout(state);
+			const focused = runtime.ui.getState().focusedItem;
+			const stop = tabStop(layout, focused);
+			if (stop !== focused) {
+				const next =
+					focused === null
+						? stop
+						: focusAfterRemoval(gridLayout(previous), focused, layout);
+				runtime.uiWriter.focusItem(next);
+				if (focusInGrid.current) {
+					if (next === null) gridRef.current?.focus();
+					else focusItem(next);
+				}
+			}
+			previous = state;
+		};
+		settle();
+		return runtime.documents.subscribe(settle);
+	}, [runtime, focusItem]);
+
+	const onGridKeyDown = (event: React.KeyboardEvent<HTMLElement>): void => {
+		const target = event.target;
+		if (!(target instanceof HTMLElement) || isEditable(target)) return;
+		const command = gridCommand(event.nativeEvent);
+		if (command === null) return;
+		const cell = target.closest<HTMLElement>("[data-item-id]");
+		// The playhead slider and the headers keep their own keys.
+		if (cell === null && command.kind !== "select-all") return;
+		if (cell === null && target.closest('[role="slider"]') !== null) return;
+		const state = runtime.documents.getState();
+		const layout = gridLayout(state);
+		const ui = runtime.ui.getState();
+		const focused = cell?.dataset.itemId ?? ui.focusedItem;
+		const acted =
+			ui.selection.items.length > 0
+				? ui.selection.items
+				: focused === null
+					? []
+					: [focused];
+		event.preventDefault();
+		switch (command.kind) {
+			case "select-all":
+				runtime.uiWriter.select(allItemIds(layout));
+				break;
+			case "focus": {
+				const next = focusTarget(layout, focused, command.direction);
+				if (next === null) break;
+				focusItem(next);
+				if (command.extend) {
+					const range = extendSelection(layout, ui.selection.anchor, next);
+					runtime.uiWriter.select(range.items, range.anchor);
+				}
+				break;
+			}
+			case "activate": {
+				if (focused === null) break;
+				const only = ui.selection.items;
+				if (only.length === 1 && only[0] === focused) {
+					document
+						.querySelector<HTMLElement>('[data-region="inspector"]')
+						?.focus();
+				} else {
+					runtime.uiWriter.select([focused], focused);
+				}
+				break;
+			}
+			case "nudge": {
+				const unit = command.unit === "second" ? framesPerSecond(fps) : 1;
+				void actions.nudge(acted, command.sign * unit);
+				break;
+			}
+			case "move-track":
+				void actions.moveToAdjacentTrack(acted, command.sign);
+				break;
+		}
+	};
 
 	const zoomTo = useCallback(
 		(next: number, anchorFrame: number, anchorViewportX: number) => {
@@ -212,9 +327,22 @@ export default function Timeline(): ReactNode {
 			{/* biome-ignore lint/a11y/useSemanticElements: SDD-012 section 7.1 specifies a CSS-positioned grid, which a table cannot express. */}
 			<div
 				id="timeline"
+				ref={gridRef}
 				role="grid"
 				aria-label={t("ui.editor.timeline.tracks")}
 				aria-rowcount={trackIds.length}
+				tabIndex={-1}
+				onKeyDown={onGridKeyDown}
+				onFocus={(event) => {
+					const id = (event.target as HTMLElement).closest<HTMLElement>(
+						"[data-item-id]",
+					)?.dataset.itemId;
+					focusInGrid.current = true;
+					if (id !== undefined) runtime.uiWriter.focusItem(id);
+				}}
+				onBlur={() => {
+					focusInGrid.current = false;
+				}}
 				className="grid min-h-0 flex-1"
 				style={{
 					["--ppf" as string]: ppf,
@@ -249,7 +377,10 @@ export default function Timeline(): ReactNode {
 						setScrollLeft(el.scrollLeft);
 						if (headers.current) headers.current.scrollTop = el.scrollTop;
 					}}
-					onClick={() => runtime.uiWriter.select([])}
+					onPointerDown={marquee.onPointerDown}
+					onClick={() => {
+						if (!marquee.consumeClick()) runtime.uiWriter.select([]);
+					}}
 				>
 					<div className="relative" style={{ width: axisPx }}>
 						{trackIds.map((id) => (
@@ -260,6 +391,12 @@ export default function Timeline(): ReactNode {
 								{t("ui.editor.timeline.empty")}
 							</p>
 						)}
+						<div
+							ref={marqueeBox}
+							aria-hidden="true"
+							className="pointer-events-none absolute border border-ed-selection bg-ed-selection/20"
+							style={{ display: "none" }}
+						/>
 						<SnapLine ppf={ppf} />
 						<div
 							aria-hidden="true"
