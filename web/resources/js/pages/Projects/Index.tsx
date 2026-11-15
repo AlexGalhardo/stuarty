@@ -16,6 +16,7 @@ import {
 } from "@/types";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
+import { BundleExport, BundleImport } from "./Bundles";
 import Templates from "./Templates";
 import Trash from "./Trash";
 
@@ -160,6 +161,7 @@ export default function ProjectsIndex() {
 					}}
 				/>
 				<Templates />
+				<BundleImport />
 			</div>
 		</>
 	);
@@ -194,7 +196,8 @@ function ProjectRow({
 				</p>
 			</div>
 			{/* The editor is another document, so this is a plain link, not an Inertia visit (SDD-012 section 2.2). */}
-			<div className="flex shrink-0 gap-2">
+			<div className="flex max-w-md shrink-0 flex-wrap justify-end gap-2">
+				<BundleExport projectId={project.id} />
 				<Button asChild variant="outline">
 					<a href={`/editor/${project.id}`}>
 						{t("ui.projects.open")}

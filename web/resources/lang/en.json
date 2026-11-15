@@ -52,6 +52,17 @@
         "move": "Move to trash",
         "restore": "Restore",
         "empty": "The trash is empty."
+      },
+      "bundle": {
+        "title": "Import a bundle",
+        "path": "Bundle file path on the machine of the service",
+        "import": "Import bundle",
+        "as_new": "Import as a new project (the history is left out)",
+        "imported": "Imported:",
+        "export": "Export bundle",
+        "exporting": "Exporting bundle…",
+        "ready": "Bundle ready:",
+        "download": "Download"
       }
     },
     "settings": {

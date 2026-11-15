@@ -52,6 +52,17 @@
         "move": "Mover para a lixeira",
         "restore": "Restaurar",
         "empty": "A lixeira está vazia."
+      },
+      "bundle": {
+        "title": "Importar um pacote",
+        "path": "Caminho do arquivo do pacote na máquina do serviço",
+        "import": "Importar pacote",
+        "as_new": "Importar como um novo projeto (o histórico fica de fora)",
+        "imported": "Importado:",
+        "export": "Exportar pacote",
+        "exporting": "Exportando o pacote…",
+        "ready": "Pacote pronto:",
+        "download": "Baixar"
       }
     },
     "settings": {
