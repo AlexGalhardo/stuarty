@@ -30,6 +30,9 @@ type Deps struct {
 	Sessions  *auth.Sessions
 	Launch    *auth.Launch
 	Now       func() time.Time
+	// MCP is the Streamable HTTP handler of the MCP server, mounted at POST /mcp
+	// behind the guard and the authentication; nil mounts nothing.
+	MCP http.Handler
 }
 
 type apiHandler struct {
@@ -62,6 +65,10 @@ func Routes(d *Deps) func(r *router.Router, app *vukem.App) error {
 
 		r.Use(h.authenticate)
 		h.registerAll()
+
+		if h.MCP != nil {
+			h.mountMCP()
+		}
 
 		return nil
 	}
@@ -194,4 +201,26 @@ func (h *apiHandler) registerDocs() {
 	h.r.Get(ep.Path, h.serveOpenAPI).Name(ep.ID).Doc(openapi.Skip{})
 
 	apidocs.Register(h.r, endpointOf("docs.get").Path, apidocs.Config{Name: "docs"})
+}
+
+// mountMCP serves the MCP handler at POST /mcp. The guard and authenticate run
+// before it, so the Caller is in the context that the tool handlers read; any
+// other method on the path answers 405 from the router.
+func (h *apiHandler) mountMCP() {
+	ep := endpointOf("mcp.post")
+
+	h.r.Handle(ep.Method+" "+ep.Path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		caller, ok := service.CallerFrom(r.Context())
+		if !ok || !slices.Contains(caller.Scopes, ep.Scope) {
+			web.Fail(
+				w,
+				r,
+				&service.Error{Code: service.CodeForbidden, Message: "the caller lacks the " + ep.Scope + " scope."},
+			)
+
+			return
+		}
+
+		h.MCP.ServeHTTP(w, r)
+	})).Name(ep.ID).Doc(openapi.Skip{})
 }

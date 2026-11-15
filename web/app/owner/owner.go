@@ -29,6 +29,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/web/app/auth"
 	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 	"github.com/AlexGalhardo/vukem-video/web/app/jobs"
+	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
 	"github.com/AlexGalhardo/vukem-video/web/app/store"
 )
 
@@ -169,6 +170,10 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	o.deps = &httpapi.Deps{
 		Service: o.Service, Registry: command.Default(), Jobs: st.Jobs(), Workspace: o.Dir, Token: o.Token,
 		Sessions: auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
+	}
+
+	if o.deps.MCP, err = mcp.Handler(o.Service, mcp.Options{Version: o.version}); err != nil {
+		return err
 	}
 
 	// Jobs found running belong to an owner that is gone (SDD-005 section 14.5).

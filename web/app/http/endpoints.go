@@ -225,6 +225,10 @@ var Endpoints = []Endpoint{
 		Status: 200, Summary: "The API reference page shim",
 	},
 	{
+		ID: "mcp.post", Method: http.MethodPost, Path: "/mcp", Root: true, Scope: service.ScopeRead, Status: 200,
+		Summary: "The MCP server (Streamable HTTP, stateless)",
+	},
+	{
 		ID: "auth.launch", Method: http.MethodGet, Path: "/auth/launch", Root: true, Status: 303,
 		Summary: "Exchange a launch code for a browser session",
 	},

@@ -21,6 +21,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 	"github.com/AlexGalhardo/vukem-video/web/app/auth"
 	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
+	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
 	"github.com/AlexGalhardo/vukem-video/web/app/store"
 	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
 )
@@ -85,7 +86,13 @@ func newHarness(t *testing.T) *harness {
 
 	h := &harness{t: t, dir: dir, store: st, clock: &clock{t: time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)}}
 
+	mcpHandler, err := mcp.Handler(svc, mcp.Options{Version: "test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	deps := &httpapi.Deps{
+		MCP:     mcpHandler,
 		Service: svc, Registry: command.Default(), Jobs: st.Jobs(), Workspace: dir, Token: canary,
 		Sessions: auth.NewSessions(h.clock.now), Launch: auth.NewLaunch(h.clock.now), Now: h.clock.now,
 	}
