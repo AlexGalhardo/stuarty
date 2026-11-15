@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { caller, expect, test } from "./helpers";
 
 interface Summary {
@@ -43,6 +45,73 @@ test.describe("command-palette-coverage", () => {
 		await expect(page.getByText("No command matches")).toBeVisible();
 		await page.keyboard.press("Escape");
 		await expect(page.getByRole("dialog")).toHaveCount(0);
+	});
+});
+
+// P2-I18N-002: in pt-BR every row of the palette shows the Portuguese title of
+// the catalogue (ui.editor.commands.<name>.title), never the English summary of
+// the registry, which the row marks with lang="en" when it falls back to it.
+test.describe("command-palette-coverage pt-BR", () => {
+	test("every row of the palette shows its Portuguese title", async ({
+		page,
+		request,
+		context,
+		baseURL,
+	}) => {
+		const catalogue = JSON.parse(
+			readFileSync(
+				join(process.cwd(), "resources", "lang", "pt-BR.json"),
+				"utf8",
+			),
+		) as Record<string, unknown>;
+		const titleOf = (name: string): string | undefined => {
+			let node: unknown = (
+				(catalogue.ui as Record<string, unknown>).editor as Record<
+					string,
+					unknown
+				>
+			).commands;
+			for (const part of name.split(".")) {
+				node = (node as Record<string, unknown> | undefined)?.[part];
+			}
+			const title = (node as { title?: unknown } | undefined)?.title;
+			return typeof title === "string" ? title : undefined;
+		};
+
+		const call = await caller(request);
+		const created = await call("POST", "/projects", {
+			name: `Paleta ${Date.now()}`,
+		});
+		const registry = (await call("GET", "/commands")) as {
+			commands: Summary[];
+		};
+		const names = registry.commands
+			.filter((c) => c.internal !== true)
+			.map((c) => c.name);
+		expect(names.length).toBeGreaterThan(40);
+
+		await context.addCookies([{ name: "lang", value: "pt-BR", url: baseURL }]);
+		await page.goto(`/editor/${created.project_id as string}`);
+		await expect(page.locator("html")).toHaveAttribute("lang", "pt-BR");
+		await expect(
+			page.getByRole("button", { name: /Paleta de comandos/ }),
+		).toBeEnabled();
+		await page.keyboard.press("Control+k");
+		const options = page.getByRole("option");
+		await expect(options).toHaveCount(names.length);
+
+		const rows = await options.evaluateAll((nodes) =>
+			nodes.map((n) => ({
+				name: (n as HTMLElement).dataset.command ?? "",
+				title: n.querySelector("span")?.textContent ?? "",
+				english: n.querySelector("span")?.getAttribute("lang") === "en",
+			})),
+		);
+		const wrong = rows.filter((row) => {
+			const want = titleOf(row.name);
+			return want === undefined || row.title !== want || row.english;
+		});
+		expect(wrong, "rows without their Portuguese title").toEqual([]);
 	});
 });
 
