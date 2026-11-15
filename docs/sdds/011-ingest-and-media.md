@@ -292,7 +292,7 @@ Rules:
 - `hdr`: `"hlg"` when `color_transfer` is `arib-std-b67`, `"pq"` when it is `smpte2084`, else `"none"`. `dolby_vision_profile` is read from the stream side data `DOVI configuration record` (`dv_profile`).
 - `interlaced` is true when `field_order` is `tt`, `bb`, `tb` or `bt`.
 - `bit_depth`: `bits_per_raw_sample` or the depth implied by `pix_fmt`.
-- `tags`: only `title`, `artist`, `comment`, `description`, `creation_time`, `location`, at most 200 characters each, control characters removed (section 10.7). They are untrusted text.
+- `tags`: only `title`, `artist`, `comment`, `description`, `creation_time`, `location`, `encoder`, `handler_name` (a closed set of 8 keys, so a file cannot choose them, inside the budget of SDD-007 §8.3), at most 200 characters each, control characters removed (section 10.7). Keys match ignoring case and are stored in lower case. The container tags (`format.tags`) are read first, then the streams in index order; the first non-empty value of a key wins. They are untrusted text.
 - `ignored_streams` records every stream not used and why (`data`, `subtitle`, `attachment`, `attached_picture`, `extra_video`, `extra_audio`), so `MediaInspect` can say "3 audio streams, using #1".
 
 ### 3.3 Nominal frame rate
