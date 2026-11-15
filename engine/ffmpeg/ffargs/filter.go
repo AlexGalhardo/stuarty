@@ -67,8 +67,10 @@ var filters = map[string]filterSpec{
 	"asplit":  {pos: []string{"outputs"}, opts: map[string]kind{"outputs": intRange(2, 8)}},
 	"setsar":  {pos: []string{"sar"}, opts: map[string]kind{"sar": enum("1")}},
 	"crop": {
-		pos:  []string{"w", "h", "x", "y"},
-		opts: map[string]kind{"w": kExprWords, "h": kExprWords, "x": kExprWords, "y": kExprWords},
+		pos: []string{"w", "h", "x", "y"},
+		opts: map[string]kind{
+			"w": kExprWords, "h": kExprWords, "x": kExprWords, "y": kExprWords, "exact": enum("1"),
+		},
 	},
 	"pad": {
 		pos:  []string{"w", "h", "x", "y", "color"},

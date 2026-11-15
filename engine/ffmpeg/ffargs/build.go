@@ -80,8 +80,9 @@ func Split(n int) Filter { return Filter("split=" + strconv.Itoa(n)) }
 // ASplit copies an audio link to n outputs.
 func ASplit(n int) Filter { return Filter("asplit=" + strconv.Itoa(n)) }
 
-// Crop cuts a w x h rectangle at x, y.
-func Crop(w, h, x, y int) Filter { return Filter(fmt.Sprintf("crop=%d:%d:%d:%d", w, h, x, y)) }
+// Crop cuts a w x h rectangle at x, y. exact=1 keeps x, y, w and h as given on a subsampled source:
+// without it FFmpeg rounds x and y down to the chroma grid (an odd x moves the picture one pixel).
+func Crop(w, h, x, y int) Filter { return Filter(fmt.Sprintf("crop=%d:%d:%d:%d:exact=1", w, h, x, y)) }
 
 // Bwdif deinterlaces into one frame per source frame.
 func Bwdif() Filter { return "bwdif=mode=send_frame:parity=auto:deint=interlaced" }
