@@ -269,9 +269,21 @@ func (p *procEnv) writeFixture(t *testing.T, name string) string {
 		return path
 	}
 
+	// The errors scenario needs a clip that is too long and one that is too big in
+	// pixels, whatever else the ceilings of the run allow; they match the
+	// fake-media fixtures of the scenario.
+	size, seconds := "320x568", "6"
+
+	switch name {
+	case "long":
+		size, seconds = "64x64", "6"
+	case "wide":
+		size, seconds = "640x360", "1"
+	}
+
 	args := []string{
-		"-v", "error", "-f", "lavfi", "-i", "testsrc=size=320x568:rate=30:duration=6",
-		"-f", "lavfi", "-i", "sine=frequency=440:duration=6", "-c:v", "mpeg4", "-c:a", "aac", "-shortest", "-y", path,
+		"-v", "error", "-f", "lavfi", "-i", "testsrc=size=" + size + ":rate=30:duration=" + seconds,
+		"-f", "lavfi", "-i", "sine=frequency=440:duration=" + seconds, "-c:v", "mpeg4", "-c:a", "aac", "-shortest", "-y", path,
 	}
 
 	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
@@ -492,9 +504,13 @@ func TestConflictScenarioThroughTheRealServer(t *testing.T) {
 
 // TestErrorsScenarioThroughTheRealServer: the errors scenario through the same
 // three drivers, with the ceilings of the scenario in the environment of
-// `serve`: an import over 100 bytes and one export at a time.
+// `serve`: an import over 200,000 bytes, one export at a time, and the duration and
+// resolution ceilings of the ingest job.
 func TestErrorsScenarioThroughTheRealServer(t *testing.T) {
-	env := []string{"VUKEM_VIDEO_MAX_IMPORT_BYTES=100", "VUKEM_VIDEO_MAX_EXPORTS=1"}
+	env := []string{
+		"VUKEM_VIDEO_MAX_IMPORT_BYTES=200000", "VUKEM_VIDEO_MAX_EXPORTS=1",
+		"VUKEM_VIDEO_MAX_IMPORT_SECONDS=3", "VUKEM_VIDEO_MAX_IMPORT_PIXELS=100000",
+	}
 
 	driveRealServerWith(t, "errors", "prj_7k2m9x4q1b", false, env, nil)
 }

@@ -671,6 +671,19 @@ func cliOutcome(
 		return raw, m.Text, nil
 	}
 
+	// A job that ended failed or cancelled is a result, not an error: the command
+	// prints the job and exits 1 (SDD-003 section 5.1).
+	var job struct {
+		Code  string `json:"code"`
+		State string `json:"state"`
+		Text  string `json:"text"`
+	}
+
+	if json.Unmarshal(stdout, &job) == nil && job.Code == "" && code == cli.ExitFailure &&
+		(job.State == service.JobFailed || job.State == service.JobCancelled) {
+		return bytes.TrimSpace(stdout), job.Text, nil
+	}
+
 	var doc service.ErrorDocument
 	if err := json.Unmarshal(stdout, &doc); err != nil || doc.Code == "" {
 		t.Fatalf("cli %s: exit %d with no error document: %q", name, code, stdout)
