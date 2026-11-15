@@ -50,6 +50,10 @@ function lead(text: string, fallback: boolean): string {
 	return fallback ? capitalizeFirst(text) : text;
 }
 
+// At most this many notices are drawn, the newest ones; the store keeps a few
+// more, so dismissing one brings the next back.
+export const MAX_NOTICES_SHOWN = 3;
+
 export default function Notices(): ReactNode {
 	const t = useT();
 	const runtime = useRuntime();
@@ -57,8 +61,10 @@ export default function Notices(): ReactNode {
 	const notices = useStore(runtime.notices, (s) => s.notices);
 	if (notices.length === 0) return null;
 	return (
-		<div className="fixed right-3 bottom-3 z-50 flex w-96 flex-col gap-2">
-			{notices.map((notice) => (
+		// The stack never takes a pointer from the editor under it (a run of
+		// failed edits stacks notices over the timeline); only the buttons do.
+		<div className="pointer-events-none fixed right-3 bottom-3 z-50 flex w-96 flex-col gap-2">
+			{notices.slice(-MAX_NOTICES_SHOWN).map((notice) => (
 				<div
 					key={notice.id}
 					role={notice.kind === "error" ? "alert" : "status"}
@@ -104,7 +110,7 @@ export default function Notices(): ReactNode {
 								type="button"
 								size="sm"
 								variant="outline"
-								className="mt-2"
+								className="pointer-events-auto mt-2"
 								onClick={() => void actions.applyNotice(notice)}
 							>
 								{t(notice.action.labelKey)}
@@ -115,6 +121,7 @@ export default function Notices(): ReactNode {
 						type="button"
 						size="icon-sm"
 						variant="ghost"
+						className="pointer-events-auto"
 						aria-label={t("ui.editor.notice.dismiss")}
 						onClick={() => runtime.noticeWriter.dismiss(notice.id)}
 					>
