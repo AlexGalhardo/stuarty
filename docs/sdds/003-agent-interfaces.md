@@ -2962,6 +2962,24 @@ The implementation of this SDD is complete when every check below passes. "Test"
 | 28 | NFR trace: NFR-020 by check 2, NFR-021 by 7, NFR-022 by 8, NFR-023 by 9, NFR-024 by 16, NFR-025 by 26 | the checks named |
 | 29 | Release checklist, not a CI gate: an agent given only `SKILL.md` and `command:help` completes the Prototype scenario with text feedback only in at least 9 of 10 runs (PRD-002 metric 2, PRD-001 metric 2); the 10 transcripts are attached to the release | the harness of SDD-008 |
 
+### 9.1 The frozen surface and the acceptance run of 2026-11-15 (P4-AGT-001)
+
+`TestSurfaceFrozen` (`web/contract/surface_test.go`) compares the MCP tools (15), the CLI commands (43, stubs included) and the HTTP routes (59) with `web/contract/testdata/surface.txt`. A removed or renamed name fails. A new name fails until `UPDATE_SURFACE=1 go test ./web/contract/ -run TestSurfaceFrozen` adds it in the same change; that command never drops a name, so a removal needs a deliberate edit of the snapshot and a major version. `TestSurfaceDiffRules` proves both directions on a synthetic surface.
+
+Numbers measured on the reference machine (AMD Ryzen 7 5700X3D, Windows 11, FFmpeg 9.0.2 LGPL), with `go test -race ./web/app/... ./web/contract/...` green:
+
+| Budget | Measured | Limit |
+| --- | --- | --- |
+| `tools/list` definitions, 15 tools | 17,323 bytes, about 5,413 tokens by the 3.2 characters per token estimate | at most 17,500 bytes (check 2) |
+| `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 6,000 tokens |
+| Concise view of the reference project | 1 page, 11,785 characters | at most 2 pages, cap 12,800 characters (check 7) |
+| Frame and sheet image tokens | `TestViewImageSizeTable` passes for the four presets | frame at most 800, sheet at most 1,500 (check 8) |
+| 9-cell sheet, median | 149 ms (`BenchmarkViewSheet9`) | under 2 s (check 9) |
+| Frame, median | 137 ms (`BenchmarkViewFrame`) | under 1 s (check 9) |
+| CLI read through a server, median | 69 ms (`BenchmarkCLIReadViaServer`) | under 300 ms (check 16) |
+
+Check 29 (ten runs of an agent with a real model) is not run by any local command: it needs a model provider and the harness of SDD-008.
+
 ## 10. Decisions of this SDD and issues in other documents
 
 ### 10.1 Decisions of this SDD
@@ -3015,11 +3033,11 @@ The implementation of this SDD is complete when every check below passes. "Test"
 | I-2 | PRD-002 RF-108, `search/agents-mcp.md` §D.5, SDD-001 §4 | "Overlap", "clip longer than its source" and "odd dimensions" cannot occur in a valid document (`V_OVERLAP`, `V_SOURCE_RANGE`, `V_SHAPE`); commands refuse them at write time | Resolved in review: RF-108 reworded in PRD-002 |
 | I-3 | PRD-002 RF-104 against SDD-000 §1 | RF-104 says every operation is on all surfaces; SDD-000 lists `MediaTrash`, `MediaRestore`, `Doctor`, `Events` with no MCP tool | Resolved in review: RF-104 names the exceptions of §7.1 |
 | I-7 | SDD-002 §A.5 | The diff is defined per operation; a batch diff (needed by `EditResult`, history and conflicts) has no merge rule, and the signature of `DescribeDiff` is not given | Resolved in review: SDD-002 Part A defines the diff of a batch as the net difference and `DescribeDiff` as in §3.4 |
-| I-8 | ADR-0016 consequence, vukem `command.go` | A command cannot opt out of `Boot` or take its arguments raw; only a hard-coded list of names runs in warmup mode | Use the option order trick of §5.2 now; file a vukem feedback entry (F-2, F-3) |
-| I-9 | ADR-0015 consequence | It is not verified that the HTTP request context reaches the tool handler in the SDK's stateless mode | `TestMCPCallerPropagation` before freezing; otherwise a shim |
-| I-10 | `search/agents-mcp.md` §3 and `search/notes/agents-mcp.md` A.2 | They say a tool with structured content MUST also return serialized JSON in a text block; the `2026-07-28` Tools page says SHOULD | Open: the quotation in the research note is checked against the specification page in the task that builds the MCP server; D-1 holds under either reading |
-| I-11 | MCP `2026-07-28` Tools | Silent on whether `outputSchema` applies when `isError` is true | D-2 avoids the question |
-| I-12 | ADR-0015 item 9 | The Go SDK v1.8.0 has no tasks extension (`ROADMAP.md` lists it as open) | Tasks stay deferred: the SDK cannot route `tasks/*` nor return a `CreateTaskResult` (§4.4, P3-AGT-001) |
+| I-8 | ADR-0016 consequence, vukem `command.go` | A command cannot opt out of `Boot` or take its arguments raw; only a hard-coded list of names runs in warmup mode | Use the option order trick of §5.2 now; file a vukem feedback entry (F-2, F-3). **Closed (P4-AGT-001, 2026-11-15):** the option order trick of §5.2 is the shipped workaround and the entries exist (VF-023, VF-024); the issue lives in vukem, not in this product, and nothing in the frozen surface depends on its fix |
+| I-9 | ADR-0015 consequence | It is not verified that the HTTP request context reaches the tool handler in the SDK's stateless mode | `TestMCPCallerPropagation` before freezing; otherwise a shim. **Closed (P4-AGT-001, 2026-11-15):** verified in P1-AGT-002, no shim (§4.7); `TestMCPCallerPropagation` passes |
+| I-10 | `search/agents-mcp.md` §3 and `search/notes/agents-mcp.md` A.2 | They say a tool with structured content MUST also return serialized JSON in a text block; the `2026-07-28` Tools page says SHOULD | Open: the quotation in the research note is checked against the specification page in the task that builds the MCP server; D-1 holds under either reading. **Closed (P4-AGT-001, 2026-11-15):** checked against the `2026-07-28` Tools page, section Structured Content: "a tool that returns structured content SHOULD also return the serialized JSON in a TextContent block". It is SHOULD, so D-1 (readable text in `content[0]`, result in `structuredContent`) conforms; the note in `search/notes/agents-mcp.md` A.2 that says MUST is the one that is wrong |
+| I-11 | MCP `2026-07-28` Tools | Silent on whether `outputSchema` applies when `isError` is true | D-2 avoids the question. **Closed (P4-AGT-001, 2026-11-15):** the same page is still silent (it shows an `isError` result with `content` only); D-2 stays and no surface returns `structuredContent` on an error |
+| I-12 | ADR-0015 item 9 | The Go SDK v1.8.0 has no tasks extension (`ROADMAP.md` lists it as open) | Tasks stay deferred: the SDK cannot route `tasks/*` nor return a `CreateTaskResult` (§4.4, P3-AGT-001). **Closed (P4-AGT-001, 2026-11-15):** decided by P3-AGT-001 (§4.4: polling `job_get` with `wait_ms` is the contract); `go.mod` still pins v1.8.0. Revisit only when a stable SDK release ships SEP-1686, as a minor that adds behaviour for clients that declare the extension and leaves the frozen tool list unchanged |
 | I-13 | SDD-005 (to be written) | New-project revision (0), the revision and actor of the `asset.add` batch committed by ingest, and where `actor` of an ingest job comes from | Resolved: SDD-005 defines them (revision 0 for a new project; the ingest batch carries the importing actor) |
 | I-14 | `search/agents-mcp.md` §9 item 7 | Lists a scope `import`; ADR-0019 and SDD-000 §4 use `media` | Resolved in review: the research file now says `media` |
 | I-16 | SDD-005 §6.4 and §14.7, ADR-0008 item 5 | They describe the in-process Service as `queue.Sync{}` for every process that finds no owner, and `Open` holds the lock until `Close` for a command only. The stdio MCP server is now an owner when none exists: listener, worker, hub, `runtime.json` and the lock for its lifetime | Resolved in review: SDD-005 §6.4 and §14.7 and ADR-0008 state that `mcp` becomes the owner and that `queue.Sync{}` serves one-shot CLI commands only |
