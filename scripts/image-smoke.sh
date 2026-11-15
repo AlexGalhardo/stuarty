@@ -24,8 +24,23 @@ case "$got" in "vukem-video "*) ;; *) echo "image-smoke: version printed [$got]"
 
 docker run --rm --entrypoint sh "$img" -c "id -u | grep -qx 10001"
 docker run --rm --entrypoint sh "$img" -c "ffmpeg -version | head -n 1"
-docker run --rm --entrypoint sh "$img" -c "ffmpeg -hide_banner -encoders | grep -q libopenh264"
-docker run --rm --entrypoint sh "$img" -c "ffmpeg -v error -hide_banner -f lavfi -i testsrc=duration=1:size=320x240:rate=25 -c:v libopenh264 -pix_fmt yuv420p /tmp/t.mp4 && ffprobe -v error -show_entries stream=codec_name -of csv=p=0 /tmp/t.mp4 | grep -qx h264"
+# The BtbN build (through ALPHA) has OpenH264 compiled in and encodes with it at once. The own
+# build (D-017) has none: libopenh264 is absent until the explicit install step, and the
+# image must not carry the Cisco binary. SMOKE_OPENH264_STEP=1 runs that step (it needs the
+# network and downloads from Cisco) and then encodes with the downloaded library.
+if docker run --rm --entrypoint sh "$img" -c "ffmpeg -hide_banner -encoders | grep -q libopenh264"; then
+	docker run --rm --entrypoint sh "$img" -c "ffmpeg -v error -hide_banner -f lavfi -i testsrc=duration=1:size=320x240:rate=25 -c:v libopenh264 -pix_fmt yuv420p /tmp/t.mp4 && ffprobe -v error -show_entries stream=codec_name -of csv=p=0 /tmp/t.mp4 | grep -qx h264"
+else
+	echo "image-smoke: the build has no libopenh264 encoder (own build)"
+	docker run --rm --entrypoint sh "$img" -c "! ffmpeg -hide_banner -version | grep -q -e --enable-libopenh264"
+	docker run --rm --entrypoint sh "$img" -c "! find / -xdev -name 'libopenh264*' 2>/dev/null | grep -q ."
+	docker run --rm --entrypoint sh "$img" -c "ffmpeg -hide_banner -encoders | grep -q libvpx-vp9"
+	if [ "${SMOKE_OPENH264_STEP:-}" = 1 ]; then
+		docker run --name "$name-step" -v "$vol:/data" "$img" tools:install openh264 --yes
+		docker run --rm -v "$vol:/data" --entrypoint sh "$img" -c 'lib="$(find /data -name "libopenh264*" | head -n 1)"; test -n "$lib" && LD_LIBRARY_PATH="$(dirname "$lib")" ffmpeg -v error -hide_banner -f lavfi -i testsrc=duration=1:size=320x240:rate=25 -c:v libopenh264 -pix_fmt yuv420p /tmp/t.mp4 && ffprobe -v error -show_entries stream=codec_name -of csv=p=0 /tmp/t.mp4 | grep -qx h264'
+		docker rm -f "$name-step" >/dev/null 2>&1 || true
+	fi
+fi
 docker run --rm --entrypoint sh "$img" -c "if ffmpeg -version | grep -q -e --enable-gpl -e --enable-nonfree; then exit 1; fi"
 docker run --rm --entrypoint sh "$img" -c "test -s /usr/share/doc/vukem-video/ffmpeg/LICENSE.txt && test -s /usr/share/doc/vukem-video/ffmpeg/configure.txt && test -s /usr/share/doc/vukem-video/ffmpeg/SOURCE.txt"
 docker image inspect --format "{{json .Config.Healthcheck.Test}}" "$img" | grep -q 7878
