@@ -166,7 +166,7 @@ type EditResult struct {
 	Diff         []command.Change `json:"diff"`
 	Findings     []lint.Finding   `json:"findings"`
 	Lint         LintTotals       `json:"lint"`
-	Description  string           `json:"description"`
+	Description  string           `json:"description"` // summaries of the commands, one line (SDD-012 section 15)
 }
 
 // HistoryListRequest pages the history, newest first.
@@ -178,14 +178,17 @@ type HistoryListRequest struct {
 
 // HistoryEntry is one step of the history.
 type HistoryEntry struct {
-	Revision int64     `json:"revision"`
-	Kind     string    `json:"kind"`
-	Actor    string    `json:"actor"`
-	At       time.Time `json:"at"`
-	Ops      []string  `json:"ops"`
-	Changes  int       `json:"changes"`
-	UndoOf   *int64    `json:"undo_of,omitempty"`
-	UndoneBy *int64    `json:"undone_by,omitempty"`
+	Revision     int64     `json:"revision"`
+	Kind         string    `json:"kind"`
+	Actor        string    `json:"actor"`
+	At           time.Time `json:"at"`
+	Ops          []string  `json:"ops"`
+	Changes      int       `json:"changes"`
+	Description  string    `json:"description"`    // summaries of the commands, one line (SDD-012 section 15)
+	UndoableByMe bool      `json:"undoable_by_me"` // the step Undo takes for the caller now
+	RedoableByMe bool      `json:"redoable_by_me"` // the step Redo takes for the caller now
+	UndoOf       *int64    `json:"undo_of,omitempty"`
+	UndoneBy     *int64    `json:"undone_by,omitempty"`
 }
 
 // HistoryListResult is a page of the history.

@@ -480,3 +480,53 @@ func TestEventsAreOnePerCommitInRevisionOrder(t *testing.T) {
 		t.Errorf("events = %s", got)
 	}
 }
+
+// SDD-012 section 15: the history says which step the caller can undo or redo.
+func TestHistoryEntriesCarryDescriptionAndPerActorUndoFlags(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	project, track := e.withTrack() // r1 by ui
+
+	if _, err := e.addText(agent, project, track, 1, "0s", "x"); err != nil { // r2 by agent
+		t.Fatal(err)
+	}
+
+	list := func(actor string) map[int64]service.HistoryEntry {
+		t.Helper()
+
+		res, err := e.svc.HistoryList(e.as(actor), service.HistoryListRequest{ProjectID: project})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		out := map[int64]service.HistoryEntry{}
+		for _, en := range res.Entries {
+			out[en.Revision] = en
+		}
+
+		return out
+	}
+
+	byUI := list(ui)
+	if !byUI[1].UndoableByMe || byUI[2].UndoableByMe || byUI[1].RedoableByMe {
+		t.Errorf("ui flags = %+v", byUI)
+	}
+
+	if !list(agent)[2].UndoableByMe || list(agent)[1].UndoableByMe {
+		t.Errorf("agent flags = %+v", list(agent))
+	}
+
+	if d := byUI[1].Description; d == "" || strings.Contains(d, "\n") {
+		t.Errorf("description = %q, want one non-empty line", d)
+	}
+
+	if _, err := e.undo(ui, project); err != nil { // r3
+		t.Fatal(err)
+	}
+
+	after := list(ui)
+	if after[1].UndoableByMe || !after[3].RedoableByMe || after[3].Description != "Undid r1." {
+		t.Errorf("after undo = %+v", after)
+	}
+}
