@@ -1,0 +1,59 @@
+---
+title: "The desktop application"
+description: "Run the editor in its own window on Windows: build it, start it, use the menu and the native file picker."
+---
+
+<Callout type="warning" title="BETA">
+The desktop application is in BETA and is not published as an installer yet. Today you build it from source. It has been run on Windows 11 only; macOS and Linux build in CI but have not been run, so this page does not describe them.
+</Callout>
+
+## You will learn
+
+- what the desktop application is and what it adds to `vukem-video serve`;
+- how to build and start it on Windows;
+- what the menu, the file picker and full screen do.
+
+## The idea
+
+The desktop application is a small shell around the same program. It starts `vukem-video serve` on a free port of `127.0.0.1`, waits until the server is up, and opens the editor in one native window. It has no editing logic of its own: the window shows the same editor you get in a browser, over the same [workspace](/docs/workspace), and no sign-in is needed because the server runs in local mode on your machine.
+
+Closing the window, choosing Quit, or a crash of the shell stops the server it started. The window cannot leave its own server: if a page ends at another address, the shell sends the window back to the editor.
+
+## Quick start
+
+You need Go, Bun and, on Windows 11, nothing else (WebView2 ships with the system). From the repository root:
+
+```bash
+cd web && bun install --frozen-lockfile && bun run build && cd ..
+go build -o dist/vukem-video.exe ./web/cmd/app
+cd desktop/shell/app && go build -ldflags "-H windowsgui" -o ../../../dist/vukem-video-desktop.exe .
+```
+
+Put the two files in one folder and double-click `vukem-video-desktop.exe`. To use a server program in another place, start it as `vukem-video-desktop -binary <path to vukem-video>`. The first start can take tens of seconds while the window component starts; later starts are faster.
+
+The workspace is `~/.vukem-video`, or the folder in `VUKEM_VIDEO_HOME` if you set it before you start the application. You can still run the same server with `vukem-video serve` and open it in a browser; the two are the same data.
+
+## The menu, the file picker and full screen
+
+| Menu | Entry | What it does |
+| --- | --- | --- |
+| File | Open workspace folder | opens the workspace folder in the file manager |
+| File | Quit | stops the server and closes the window |
+| View | Reload | reloads the editor |
+| View | Toggle full screen | full screen on and off; the key is `F11` |
+| Help | About | shows the version |
+
+In a browser you paste a file path to import media. In the desktop window the editor shows **Choose files**, which opens the native file dialog and imports the files you pick. Dropping files on the window imports them in the same way. The editor sends only the paths to the server, which copies the files into the workspace, so nothing is uploaded anywhere.
+
+## Common mistakes
+
+- The build is not signed with a paid certificate, so Windows SmartScreen warns before the first run. See [Quick start](/docs/quick-start) for the steps.
+- Every page answers with an error: the front end was not built. Run `bun run build` in `web/` before `go build`.
+- A second copy of the program on the same workspace: the workspace is locked and the second one cannot start. See [the workspace is locked](/docs/troubleshooting/workspace-locked).
+- Looking for macOS or Linux builds: they are not verified, so nothing here is promised for them.
+
+## Next steps
+
+- [Installation](/docs/installation)
+- [Verify a release](/docs/self-hosting/verify-a-release)
+- [Run the binary](/docs/self-hosting/binary)
