@@ -31,14 +31,14 @@ const ROWS: readonly Row[] = [
 	{ property: "opacity", step: 0.05, min: 0, max: 1 },
 ];
 
-const round3 = (value: number): string =>
+export const round3 = (value: number): string =>
 	String(Math.round(value * 1000) / 1000);
 
 // The value the read model shows for a property of one item at the playhead:
 // the stored field (or its default) and, for an animated property, the value
 // the plan reports. A display of what the core holds; the core owns the
 // defaults and the interpolation.
-interface ItemView {
+export interface ItemView {
 	x?: number;
 	y?: number;
 	scale?: number;
@@ -47,7 +47,7 @@ interface ItemView {
 	keyframes?: { readonly [k: string]: readonly { t: number; value: number }[] };
 }
 
-function shown(
+export function shown(
 	item: ItemView,
 	property: TransformProperty,
 	size: { width: number; height: number },

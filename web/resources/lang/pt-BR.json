@@ -654,6 +654,38 @@
           "forbidden": "Esta sessão não pode instalar arquivos. Rode o comando abaixo em um terminal.",
           "copy_details": "Copiar detalhes"
         }
+      },
+      "keyframes": {
+        "title": "Quadros-chave",
+        "property": "Propriedade",
+        "value": "Valor",
+        "easing": "Suavização",
+        "add": "Adicionar no cursor",
+        "outside": "O cursor está fora deste item.",
+        "clear": "Limpar",
+        "clear_all": "Limpar tudo",
+        "remove": "Remover",
+        "clear_of": "Limpar os quadros-chave de {property}",
+        "select_of": "Selecionar o quadro-chave de {property} em {time}",
+        "value_of": "Valor do quadro-chave de {property} em {time}",
+        "easing_of": "Suavização do quadro-chave de {property} em {time}",
+        "remove_of": "Remover o quadro-chave de {property} em {time}",
+        "diamond": "Quadro-chave de {property}",
+        "prop": {
+          "x": "X",
+          "y": "Y",
+          "scale": "Escala",
+          "rotation": "Rotação",
+          "opacity": "Opacidade",
+          "volume": "Volume"
+        },
+        "easing_name": {
+          "linear": "Linear",
+          "ease_in": "Entrada suave",
+          "ease_out": "Saída suave",
+          "ease_in_out": "Entrada e saída suaves",
+          "hold": "Manter"
+        }
       }
     }
   }

@@ -654,6 +654,38 @@
           "forbidden": "This session cannot install files. Run the command below in a terminal.",
           "copy_details": "Copy details"
         }
+      },
+      "keyframes": {
+        "title": "Keyframes",
+        "property": "Property",
+        "value": "Value",
+        "easing": "Easing",
+        "add": "Add at playhead",
+        "outside": "The playhead is outside this item.",
+        "clear": "Clear",
+        "clear_all": "Clear all",
+        "remove": "Remove",
+        "clear_of": "Clear the keyframes of {property}",
+        "select_of": "Select the {property} keyframe at {time}",
+        "value_of": "Value of the {property} keyframe at {time}",
+        "easing_of": "Easing of the {property} keyframe at {time}",
+        "remove_of": "Remove the {property} keyframe at {time}",
+        "diamond": "Keyframe of {property}",
+        "prop": {
+          "x": "X",
+          "y": "Y",
+          "scale": "Scale",
+          "rotation": "Rotation",
+          "opacity": "Opacity",
+          "volume": "Volume"
+        },
+        "easing_name": {
+          "linear": "Linear",
+          "ease_in": "Ease in",
+          "ease_out": "Ease out",
+          "ease_in_out": "Ease in and out",
+          "hold": "Hold"
+        }
       }
     }
   }
