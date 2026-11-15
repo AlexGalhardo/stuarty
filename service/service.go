@@ -160,6 +160,8 @@ type Options struct {
 	Keys KeyStore
 	// Heavy limits JobStart, MediaImport and TemplateImport per actor; nil counts nothing.
 	Heavy RateLimiter
+	// HeavyPerMinute is the limit Heavy enforces, for the error message; zero is HeavyPerMinute.
+	HeavyPerMinute int
 }
 
 type svc struct {
@@ -181,6 +183,7 @@ type svc struct {
 	doctor      DoctorOptions
 	keys        KeyStore
 	heavy       RateLimiter
+	heavyLimitN int
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
 
@@ -216,6 +219,7 @@ func New(o Options) (Service, error) {
 		doctor:      o.Doctor,
 		keys:        o.Keys,
 		heavy:       o.Heavy,
+		heavyLimitN: o.HeavyPerMinute,
 	}
 
 	s.sems = map[string]chan struct{}{

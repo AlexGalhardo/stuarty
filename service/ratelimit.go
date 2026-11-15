@@ -45,7 +45,12 @@ func (s *svc) heavyLimit(ctx context.Context, c Caller) error {
 
 	seconds := max(int(math.Ceil(wait.Seconds())), 1)
 
-	e := newError(CodeRateLimited, "more than %d heavy calls a minute.", heavyPerMinute).
+	limit := s.heavyLimitN
+	if limit <= 0 {
+		limit = heavyPerMinute
+	}
+
+	e := newError(CodeRateLimited, "more than %d heavy calls a minute.", limit).
 		withHint("wait %d seconds and try again", seconds)
 	e.Details = map[string]any{"retry_after": seconds}
 

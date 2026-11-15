@@ -191,6 +191,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `VUKEM_VIDEO_CACHE_MAX_BYTES` | `2147483648` (2 GiB) | size of the frame and bitmap caches before eviction |
 | `VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE` | `300` | requests per minute per key or local token |
 | `VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE` | `1800` | requests per minute per browser session |
+| `VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE` | `10` | calls of `JobStart`, `MediaImport` and `TemplateImport` per minute per actor |
 | `VUKEM_VIDEO_SANDBOX` | `none` | `bwrap` runs FFmpeg and whisper.cpp in a sandbox on Linux |
 | `VUKEM_VIDEO_INSECURE_ALLOW_ROOT` | `false` | allow network mode as root |
 | `VUKEM_VIDEO_ADMIN_EMAIL`, `VUKEM_VIDEO_ADMIN_PASSWORD` | none | network mode: create the first administrator at start-up when no user exists |

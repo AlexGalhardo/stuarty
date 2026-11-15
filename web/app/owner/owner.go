@@ -237,8 +237,14 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		keys = o.netAuth.Keys()
 	}
 
+	heavy := rates.Heavy
+	if heavy <= 0 {
+		heavy = service.HeavyPerMinute
+	}
+
 	o.Service, err = service.New(service.Options{
-		Keys: keys, Heavy: middleware.ServiceLimiter{L: ratelimit.NewMemory(service.HeavyPerMinute, time.Minute)},
+		Keys: keys, HeavyPerMinute: heavy,
+		Heavy: middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
 		Transcriber: transcriber, Tools: tools,
@@ -557,6 +563,7 @@ func rateLimitsFromEnv(getenv func(string) string, network bool) (httpapi.RateLi
 	}{
 		{"VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE", func(v int) { r.PerCredential = v }},
 		{"VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE", func(v int) { r.PerSession = v }},
+		{"VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE", func(v int) { r.Heavy = v }},
 	} {
 		raw := getenv(f.name)
 
