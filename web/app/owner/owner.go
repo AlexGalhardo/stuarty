@@ -20,7 +20,9 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/cache"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/frame"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/exporter"
@@ -251,6 +253,18 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 
 	media.Runner = runner
 
+	maxCache, err := cacheLimit(cfg.Getenv)
+	if err != nil {
+		return service.Media{}, nil, err
+	}
+
+	frames, err := cache.Open(string(o.Dir), maxCache)
+	if err != nil {
+		return service.Media{}, nil, err
+	}
+
+	media.Frames = &frame.Frames{Runner: runner, ArtifactsDir: filepath.Join(string(o.Dir), "artifacts"), Cache: frames}
+
 	allowX264, _ := strconv.ParseBool(cfg.Getenv("VUKEM_VIDEO_ALLOW_USER_X264"))
 
 	return media, exporter.New(exporter.Config{
@@ -309,6 +323,20 @@ func (o *Owner) Close() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func cacheLimit(getenv func(string) string) (int64, error) {
+	raw := getenv("VUKEM_VIDEO_CACHE_MAX_BYTES")
+	if raw == "" {
+		return 0, nil
+	}
+
+	v, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || v < 0 {
+		return 0, errors.New("owner: VUKEM_VIDEO_CACHE_MAX_BYTES must be a whole number of 0 or more")
+	}
+
+	return v, nil
 }
 
 func splitList(s string) []string {

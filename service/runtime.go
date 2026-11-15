@@ -10,6 +10,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/frame"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
 	"github.com/AlexGalhardo/vukem-video/service/pathguard"
@@ -131,6 +132,8 @@ type Media struct {
 	Runner  *ffmpeg.Runner
 	Caps    *ffmpeg.Capabilities
 	Ingest  Ingester
+	// Frames renders the frames and sheets of ViewFrame and ViewSheet.
+	Frames *frame.Frames
 	// FreeBytes reports the free space of the volume of a directory.
 	FreeBytes func(dir string) (uint64, error)
 }

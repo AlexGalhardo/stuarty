@@ -138,11 +138,11 @@ var Endpoints = []Endpoint{
 	},
 	{
 		ID: "projects.frame", Method: http.MethodGet, Path: "/projects/{id}/frame", Scope: service.ScopeRead,
-		Service: "ViewFrame", Status: 200, Summary: "Render one frame", Pending: "P1-RND-005",
+		Service: "ViewFrame", Status: 200, Summary: "Render one frame",
 	},
 	{
 		ID: "projects.sheet", Method: http.MethodGet, Path: "/projects/{id}/sheet", Scope: service.ScopeRead,
-		Service: "ViewSheet", Status: 200, Summary: "Render a contact sheet", Pending: "P1-RND-005",
+		Service: "ViewSheet", Status: 200, Summary: "Render a contact sheet",
 	},
 	{
 		ID: "projects.plan", Method: http.MethodGet, Path: "/projects/{id}/plan", Scope: service.ScopeRead,

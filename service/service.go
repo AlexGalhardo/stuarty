@@ -42,6 +42,11 @@ type Service interface {
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
 
+	// ViewFrame and ViewSheet render the current revision through the export
+	// executor (SDD-003 section 2.7).
+	ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult, error)
+	ViewSheet(ctx context.Context, req ViewSheetRequest) (*ViewResult, error)
+
 	// OpenFile resolves a stored file of an asset for download; the caller
 	// serves the bytes.
 	OpenFile(ctx context.Context, ref FileRef) (*File, error)
