@@ -20,7 +20,7 @@ Linked into the `vukem-video` binary, collected for the six release targets.
 | github.com/go-logr/stdr | v1.2.2 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/github.com/go-logr/stdr@v1.2.2/LICENSE>) | - |
 | github.com/go-ole/go-ole | v1.3.0 | MIT | Copyright © 2013-2017 Yasuhiro Matsumoto, <mattn.jp@gmail.com> | [LICENSE](<licenses/go-modules/github.com/go-ole/go-ole@v1.3.0/LICENSE>) | - |
 | github.com/go-text/typesetting | v0.3.5 | Unlicense | Copyright 2021 The go-text authors | [LICENSE](<licenses/go-modules/github.com/go-text/typesetting@v0.3.5/LICENSE>) | - |
-| github.com/godbus/dbus/v5 | v5.2.2 | BSD-2-Clause | Copyright (c) 2013, Georg Reinke (<guelfey at gmail dot com>), Google | [LICENSE](<licenses/go-modules/github.com/godbus/dbus/v5@v5.2.2/LICENSE>) | - |
+| github.com/godbus/dbus/v5 | v5.2.2 | BSD-2-Clause | Copyright (c) 2013, Georg Reinke (\<guelfey at gmail dot com\>), Google | [LICENSE](<licenses/go-modules/github.com/godbus/dbus/v5@v5.2.2/LICENSE>) | - |
 | github.com/google/jsonschema-go | v0.4.3 | MIT | Copyright (c) 2025 JSON Schema Go Project Authors | [LICENSE](<licenses/go-modules/github.com/google/jsonschema-go@v0.4.3/LICENSE>) | - |
 | github.com/google/uuid | v1.6.0 | BSD-3-Clause | Copyright (c) 2009,2014 Google Inc. All rights reserved. | [LICENSE](<licenses/go-modules/github.com/google/uuid@v1.6.0/LICENSE>) | - |
 | github.com/grpc-ecosystem/grpc-gateway/v2 | v2.30.0 | BSD-3-Clause | Copyright (c) 2015, Gengo, Inc. | [LICENSE](<licenses/go-modules/github.com/grpc-ecosystem/grpc-gateway/v2@v2.30.0/LICENSE>) | - |
