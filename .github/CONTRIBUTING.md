@@ -68,6 +68,14 @@ Run `task ci` before you push: `task lint`, `task vet`, `task test`, `task tidy:
 
 `task image:build` builds `.config/docker/vukem-video.Dockerfile` as `vukem-video:local`, and `task image:smoke` runs `scripts/image-smoke.sh` on it: user 10001, `VUKEM_VIDEO_HOME=/data` with a volume, FFmpeg without `--enable-gpl` or `--enable-nonfree` that encodes with `libopenh264`, `prlimit`, the licence files under `/usr/share/doc/vukem-video/`, `/up` on a loopback port, and the CLI scenario with `--network none`. Docker is required. Build from a clone: from a git worktree the `.git` file points outside the build context, so the image gets no version stamp and the version check is skipped. `image.yml` builds on pull requests that change what goes into the image and pushes nothing; `release.yml` publishes. To check a version by hand: `docker build --build-arg VERSION=0.3.0 ...` after `git tag v0.3.0` on a clean tree, then `bash scripts/image-smoke.sh <image> 0.3.0`.
 
+### Releases
+
+During ALPHA a release is one `v0.N.0` per group of `ROADMAP.md` (kept in the workspace root, outside this repository) that ships something runnable, plus the rule of ADR-0028: about one minor every 90 commits on `main`. Minors may carry breaking changes; a patch never does, and `release prepare` refuses a patch version when a commit in the range is marked `!`.
+
+- `task release:preflight` runs `task ci`, `task generate:check`, `task site:build`, `task site:translations` and `task image:smoke`; run it on the release branch before `release prepare`.
+- `task release:binaries SNAPSHOT=1` builds the six archives and their SBOMs in `dist/` without publishing or signing (GoReleaser and syft on `PATH`); each archive holds `LICENSE.md`, `README.md`, `CHANGELOG.md`, `THIRD_PARTY_NOTICES.md`, `licenses/` and the three files under `agent/`. `task release:snapshot` does the same without the SBOMs.
+- Pushing the tag is the only manual step: `release.yml` publishes the notes, the archives, the signed checksums, the provenance and the image. `task release:verify -- vX.Y.Z` (`scripts/release-verify.sh`) then checks the signature, the checksums, the attestation and the image digests; add `--no-image` for a release that publishes no image, and `--dispatched` for a run started by `workflow_dispatch`.
+
 ## Editor settings
 
 Indentation is tabs of width 4, except in files whose format needs spaces (YAML, Markdown lists and tables). Git expects LF endings in the repository.
