@@ -15,6 +15,8 @@ The briefing wants web and desktop, with "Go + possibly Rust + webview" and a na
 3. No Rust, no native renderer, no gRPC, no second UI.
 4. The first candidate is **Wails v3**, because it is Go and its server mode is this architecture. The preview needs only `<video>` playing VP9 in MP4 with AAC (the proxy of SDD-011 §4.2), a WebGL2 canvas, `EventSource` and Pointer Events (ADR-0013), which is the floor the system webviews must meet.
 5. The choice is confirmed only by a test: the detection page run inside WKWebView on macOS and WebKitGTK 6.0 on Linux, checking that floor and measuring proxy playback. If either fails, the shell is **Electron** on the failing platforms or everywhere.
+
+   **Author decision (2026-11-15): the shell is Wails v3, at exactly `github.com/wailsapp/wails/v3` v3.1.0, for performance.** The dependency is approved. The shell is the Go module `desktop/shell/app` (so the server binary and the root `go.mod` do not pull it); the code that needs no window (the child process and the navigation policy) is the package `desktop/shell`. The detection runs of P3-DSK-001 still confirm the webview floor; a `fail` verdict reopens this item for that platform. Wails v3.1.0 has no hook that vetoes a navigation before it happens, so the shell sends the window back to the local address after any navigation that ends elsewhere (`shell.GuardScript`); a native veto needs a Wails change.
 6. Signing, notarization and auto-update are part of the BETA work, with their costs decided by the author then.
 
 ## Alternatives
