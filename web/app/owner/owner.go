@@ -135,7 +135,7 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 	if err := o.build(ctx, cfg); err != nil {
 		_ = o.Close()
 
-		return nil, err
+		return nil, StartupError(err)
 	}
 
 	return o, nil
