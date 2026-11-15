@@ -3,7 +3,7 @@ import { existsSync, mkdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type APIRequestContext, test as base } from "@playwright/test";
+import { type APIRequestContext, test as base, expect } from "@playwright/test";
 
 // The workspace the server of playwright.config.ts runs on.
 export let home =
@@ -57,6 +57,15 @@ export const test = base.extend({
 		const { url } = (await launch.json()) as { url: string };
 		await page.goto(url);
 		await use(page);
+		// The end-to-end build verifies every applied diff against a fetched
+		// document (SDD-012 section 5.4): a diff that did not describe the whole
+		// change fails the test that made it.
+		const mismatches = await page
+			.evaluate(() => window.__vv?.mismatches ?? [])
+			.catch(() => []);
+		expect(mismatches, "patched document differs from the fetched one").toEqual(
+			[],
+		);
 	},
 });
 

@@ -324,3 +324,65 @@ test.describe("video-layers-budget", () => {
 		});
 	}
 });
+
+test.describe("perf-edit-200", () => {
+	test("200 sequential item.trim operations through __vv.dispatch: vv:edit p95 at most 50 ms, vv:edit-apply at most 8 ms (NFR-001)", async ({
+		page,
+		request,
+	}) => {
+		test.setTimeout(180_000);
+		// 5 tracks of 40 one-second clips: the 200-item project.
+		const seeded = await seedProject(request, { tracks: 5, perTrack: 40 });
+		await page.goto(`/editor/${seeded.id}`);
+		await expect(page.locator("[data-item-id]")).toHaveCount(200);
+		await page.waitForFunction(() => window.__vv?.dispatch !== undefined);
+
+		const failures = await page.evaluate(async (ids) => {
+			const vv = window.__vv;
+			if (!vv?.dispatch)
+				throw new Error("no dispatch: not the end-to-end build");
+			performance.clearMeasures("vv:edit");
+			performance.clearMeasures("vv:edit-apply");
+			let failed = 0;
+			let first = "";
+			for (let n = 0; n < ids.length; n++) {
+				// Each clip is 30 frames long, so its end moves to 20 frames after its
+				// start, read from the document the editor holds.
+				const doc = vv.document as {
+					items: Record<string, { start: number }>;
+				};
+				const start = doc.items[ids[n]].start;
+				const outcome = await vv.dispatch([
+					{
+						op: "item.trim",
+						args: { item_id: ids[n], edge: "end", to: `${start + 20}f` },
+					},
+				]);
+				if (!outcome.ok) {
+					failed++;
+					if (failed === 1) first = `${n}: ${JSON.stringify(outcome.error)}`;
+				}
+			}
+			return { failed, first };
+		}, seeded.itemIds);
+		expect(failures.first).toBe("");
+		expect(failures.failed).toBe(0);
+
+		const measures = await page.evaluate(() => window.__vv?.measures() ?? []);
+		const p95 = (name: string): number => {
+			const values = measures
+				.filter((m) => m.name === name)
+				.map((m) => m.duration)
+				.sort((a, b) => a - b);
+			expect(values.length, name).toBe(200);
+			return values[Math.floor(values.length * 0.95)];
+		};
+		const edit = p95("vv:edit");
+		const apply = p95("vv:edit-apply");
+		console.log(
+			`perf-edit-200: vv:edit p95 ${edit.toFixed(1)} ms, vv:edit-apply p95 ${apply.toFixed(2)} ms`,
+		);
+		expect(edit).toBeLessThanOrEqual(50);
+		expect(apply).toBeLessThanOrEqual(8);
+	});
+});

@@ -6,7 +6,11 @@ import { defineConfig } from "vite";
 
 import vukem from "./resources/vite/vukem.js";
 
-export default defineConfig({
+// `vite build --mode e2e` is the end-to-end build: it turns on the test hooks of
+// SDD-012 section 20.4 that change the project. A .env file would do it, but the
+// repository ignores .env.*.
+export default defineConfig(({ mode }) => ({
+  define: { "import.meta.env.VITE_E2E": JSON.stringify(mode === "e2e" ? "1" : "") },
   resolve: { alias: { "@": fileURLToPath(new URL("./resources/js", import.meta.url)) } },
   plugins: [
     tailwindcss(),
@@ -16,4 +20,4 @@ export default defineConfig({
       input: ["resources/css/app.css", "resources/js/app.tsx", "resources/js/editor.tsx"],
     }),
   ],
-});
+}));

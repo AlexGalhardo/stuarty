@@ -477,6 +477,8 @@ Boot and reconciliation algorithm (the same code serves boot and resync). It is 
 
 While the status is `offline` or `resyncing`, controls that send edits stay enabled but the top bar shows the state; an edit sent while offline fails with `E_NETWORK` after its retries and the ghost disappears.
 
+**Tabs.** The tab that holds the Web Lock `vv-events-<project id>` owns the `EventSource` and relays events and the connection state on a `BroadcastChannel` of the same name (`api/eventsLock.ts`); a tab that joins asks for the state with a `hello` message; when the owner closes, the lock passes to the next tab, which opens the stream with the revision it holds. A browser without Web Locks opens one stream per tab.
+
 ### 5.6 Boot sequence
 
 1. `editor.tsx` parses the bootstrap, applies the locale messages to the i18n context, mounts the shell with skeleton panels.
@@ -1346,6 +1348,8 @@ The Playwright test `preview-vs-export`: for each golden case of `engine/export/
 ### 20.4 Test hooks
 
 `?debug=1` installs `window.__vv`: read-only getters (`revision`, `document` as a frozen clone, `connection`, `ghosts`, `measures()`), `preview.drawFrameWithoutOverlay(frame)`, `preview.layerGeometry(frame)`, and `onRevisionCommit(cb)`. It has no function that changes the project or the stores, so it is safe in production builds. The one exception is the end-to-end build (`VITE_E2E=1` only, absent from production builds, checked by a test that greps the production bundle for `__vv.dispatch`), which also exposes `window.__vv.dispatch(ops)`: it calls the same `edit()` queue the UI uses, so `perf-edit-200` measures NFR-001 without a pointer gesture. The thin-client consistency check of §5.4 (fetch and compare after every diff) is switched on by `?debug=1&verify=1`, which the e2e config always adds.
+
+`?debug=1` and the end-to-end build (`vite build --mode e2e`, `bun run build:e2e`) install the hooks; `check:hooks` builds both bundles and fails when the production one contains the marker of `dispatch`. **Open:** `?verify=1` is not on by default in the end-to-end build. The object of an `item.added` change carries only the fields that were set, while the fetched document has every default (scale, opacity, filter, speed, volume, fit and others), so the patched document differs for every added item; the `diff-safety-net` spec is `fixme` until the event is whole. `preview.drawFrameWithoutOverlay` and `preview.layerGeometry` are not built.
 
 ### 20.5 Contract and static checks
 
