@@ -164,3 +164,34 @@ func TestOpenAnimRefusesHostileFiles(t *testing.T) {
 		}
 	}
 }
+
+// TestSecurity_T17_AnimatedDecodeStopsAtProbedCount: a file that really holds more frames than the probe counted
+// is decoded for the probed count only (-frames:v), so the raw output cannot pass the size the size watchdog
+// is armed with (frames x width x height x 4) and nothing past it is written or stored.
+func TestSecurity_T17_AnimatedDecodeStopsAtProbedCount(t *testing.T) {
+	e := newEnv(t)
+	p, err := e.gen.AnimatedGIF("big.gif", 64, 64, []int{5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5})
+	hash := e.put(mustGen(t, p, err))
+	wd, err := e.r.NewRunDir("job_cap")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = wd.Remove() }()
+	j := &job{
+		in: Input{Runner: e.r, Hash: hash}, r: e.r, wd: wd, pol: e.r.Policy(wd),
+		original: filepath.Join(e.r.StoreDir, hash[:2], hash),
+		res:      &Result{Summary: &Summary{FrameDelays: []int{50, 50}}},
+		files:    nil,
+	}
+	if err := j.animated(context.Background(), ImagePlan{StreamIndex: 0, W: 64, H: 64}); err != nil {
+		t.Fatal(err)
+	}
+	a, err := OpenAnim(j.path("frames.anim"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = a.Close() }()
+	if a.Frames() != 2 {
+		t.Fatalf("%d frames stored, 2 probed", a.Frames())
+	}
+}

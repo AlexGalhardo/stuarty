@@ -84,10 +84,10 @@ func (j *job) animated(ctx context.Context, plan ImagePlan) error {
 			Format: "rawvideo",
 			Pipe:   true,
 			Maps:   []string{"[n]"},
-			Opts:   cat([]ffargs.Opt{ffargs.Enum("-pix_fmt", "rgba"), ffargs.Enum("-fps_mode", "vfr")}, bitexact()),
+			Opts:   cat([]ffargs.Opt{ffargs.Enum("-pix_fmt", "rgba"), ffargs.Enum("-fps_mode", "vfr"), ffargs.Int("-frames:v", len(delays))}, bitexact()),
 		}},
 	}
-	if err := j.runToFile(ctx, cmd, j.path("frames.rgba")); err != nil {
+	if err := j.runToFile(ctx, cmd, j.path("frames.rgba"), min(int64(plan.W)*int64(plan.H)*4*int64(len(delays)), ffmpeg.MaxAnimPixels*4)); err != nil {
 		return err
 	}
 	frameBytes := int64(plan.W) * int64(plan.H) * 4
@@ -288,8 +288,9 @@ func (j *job) verifyAnim(c *checks, plan ImagePlan, delays []int) {
 	}
 }
 
-// runToFile runs an FFmpeg command whose only output is pipe:1 and keeps what it writes in the file at dst.
-func (j *job) runToFile(ctx context.Context, c ffargs.Cmd, dst string) error {
+// runToFile runs an FFmpeg command whose only output is pipe:1 and keeps what it writes in the file at dst. The size
+// watchdog kills the run once the file passes maxBytes, so a file with more frames than it declared cannot fill the disk (T-17).
+func (j *job) runToFile(ctx context.Context, c ffargs.Cmd, dst string, maxBytes int64) error {
 	argv, err := c.Argv(j.pol)
 	if err != nil {
 		return &ffmpeg.Error{
@@ -303,7 +304,9 @@ func (j *job) runToFile(ctx context.Context, c ffargs.Cmd, dst string) error {
 	if err != nil {
 		return ingestErr(ReasonDecodeFailed, "A work file could not be written.", map[string]any{"step": StepVideo}, err)
 	}
-	res, err := j.r.RunFFmpeg(ctx, ffmpeg.Request{Dir: j.wd, Argv: argv, Deadline: ffmpeg.IngestDeadline(0), Stdout: out})
+	res, err := j.r.RunFFmpeg(ctx, ffmpeg.Request{Dir: j.wd, Argv: argv, Deadline: ffmpeg.IngestDeadline(0), Stdout: out,
+		OutputPath: dst, MaxOutputBytes: maxBytes,
+	})
 	if cerr := out.Close(); err == nil && cerr != nil {
 		err = cerr
 	}
