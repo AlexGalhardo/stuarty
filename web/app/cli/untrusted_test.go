@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"os"
 	"strings"
 	"testing"
 
@@ -131,5 +132,59 @@ func TestUntrustedText(t *testing.T) {
 		if !stored[n.Name] && !stored[testenv.StoredName(n.Name)] {
 			t.Errorf("--json lost the name %q (have %v)", n.Name, stored)
 		}
+	}
+}
+
+// TestInspectMetadataThroughTheCLI: media:inspect prints the metadata of the file
+// as media_inspect does, byte for byte the MCP golden file but for the asset id.
+func TestInspectMetadataThroughTheCLI(t *testing.T) {
+	t.Parallel()
+
+	env := testenv.New(t, testenv.Options{})
+
+	var stdout, stderr bytes.Buffer
+
+	rt := &cli.Runtime{
+		Stdin: strings.NewReader(""), Stdout: &stdout, Stderr: &stderr,
+		Getenv: func(string) string { return "" }, Getwd: func() (string, error) { return t.TempDir(), nil },
+		Resolver: fixedResolver{svc: env.Service},
+	}
+
+	run := func(args ...string) string {
+		t.Helper()
+
+		stdout.Reset()
+		stderr.Reset()
+
+		if code := rt.Execute(t.Context(), args[0], args[1:]); code != cli.ExitOK || stderr.Len() != 0 {
+			t.Fatalf("%v: exit %d: %s%s", args, code, stdout.String(), stderr.String())
+		}
+
+		return stdout.String()
+	}
+
+	var made struct {
+		ProjectID string `json:"project_id"`
+	}
+
+	if err := json.Unmarshal([]byte(run("project:create", "--name", "Golden", "--json")), &made); err != nil {
+		t.Fatal(err)
+	}
+
+	tags := map[string]string{
+		"artist": "Jane Roe", "comment": "shot on a phone", "creation_time": "2026-11-14T12:00:00Z",
+		"encoder": "Lavf61.7.100", "title": "Beach day",
+	}
+	clip := env.WriteFile(t, "clip.mov", testenv.FakeMediaTags(2, 320, 240, tags))
+	run("media:import", clip, "--project", made.ProjectID, "--asset-id", "ast_3c5v8n2w6d")
+
+	want, err := os.ReadFile("../mcp/testdata/untrusted/media_inspect_metadata.golden")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := run("media:inspect", "ast_3c5v8n2w6d", "--project", made.ProjectID)
+	if strings.TrimRight(got, "\n") != strings.TrimRight(strings.ReplaceAll(string(want), "\r\n", "\n"), "\n") {
+		t.Errorf("media:inspect differs from the golden file:\n--- got\n%s\n--- want\n%s", got, want)
 	}
 }
