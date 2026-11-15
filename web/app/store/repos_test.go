@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -1065,5 +1066,58 @@ func TestQueryPlans(t *testing.T) {
 		if !strings.Contains(string(src), lit) {
 			t.Errorf("operations.go no longer holds the literal %q", lit)
 		}
+	}
+}
+
+func TestIdempotencyTrimActorKeepsTheNewestOfOneActorAndProject(t *testing.T) {
+	s := testStore(t)
+	mustCreate(t, s, newProject("prj_a", 1))
+	mustCreate(t, s, newProject("prj_b", 1))
+
+	repo := s.Idempotency()
+
+	put := func(project, actor, key string, at int64) {
+		t.Helper()
+
+		row := service.IdempotencyRow{
+			ProjectID: project, Actor: actor, Key: key, RequestHash: "h", Revision: 1,
+			Result: json.RawMessage(`{}`), CreatedMs: at, ExpiresMs: at + 86400000,
+		}
+		if err := repo.Put(ctx, row); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for i := range 5 {
+		put("prj_a", "key:one", "k"+strconv.Itoa(i), int64(100+i))
+	}
+
+	put("prj_a", "key:two", "k0", 100)
+	put("prj_b", "key:one", "k0", 100)
+
+	if n, err := repo.TrimActor(ctx, "prj_a", "key:one", 3); err != nil || n != 2 {
+		t.Fatalf("TrimActor = %d, %v; want 2 evicted", n, err)
+	}
+
+	now := int64(200)
+
+	for _, k := range []string{"k0", "k1"} {
+		if _, err := repo.Get(ctx, "prj_a", "key:one", k, now); !errors.Is(err, service.ErrNotFound) {
+			t.Errorf("%s survived: %v", k, err)
+		}
+	}
+
+	for _, k := range []string{"k2", "k3", "k4"} {
+		if _, err := repo.Get(ctx, "prj_a", "key:one", k, now); err != nil {
+			t.Errorf("%s was evicted: %v", k, err)
+		}
+	}
+
+	if _, err := repo.Get(ctx, "prj_a", "key:two", "k0", now); err != nil {
+		t.Error("another actor's key was evicted")
+	}
+
+	if _, err := repo.Get(ctx, "prj_b", "key:one", "k0", now); err != nil {
+		t.Error("another project's key was evicted")
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,6 +30,7 @@ const (
 	DefaultWriteTimeout = 10 * time.Second
 	MaxPerProject       = 32
 	MaxPerProcess       = 128
+	MaxPerKey           = 16
 	snapshotWindow      = 60 * time.Second
 )
 
@@ -45,8 +47,10 @@ type Store interface {
 type Options struct {
 	Heartbeat, Revalidate, WriteTimeout time.Duration
 	MaxPerProject, MaxPerProcess        int
-	Now                                 func() time.Time
-	Log                                 *slog.Logger
+	// MaxPerKey limits the streams of one API key, in every project (network mode).
+	MaxPerKey int
+	Now       func() time.Time
+	Log       *slog.Logger
 	// Drop, when it returns true for a revision, keeps that batch event off the
 	// hub: the gap-filling path of section 5.4 is tested with it.
 	Drop func(revision int64) bool
@@ -60,6 +64,7 @@ type Events struct {
 
 	mu      sync.Mutex
 	perProj map[string]int
+	perKey  map[string]int
 	total   int
 }
 
@@ -85,6 +90,10 @@ func New(store Store, o Options) *Events {
 		o.MaxPerProcess = MaxPerProcess
 	}
 
+	if o.MaxPerKey <= 0 {
+		o.MaxPerKey = MaxPerKey
+	}
+
 	if o.Now == nil {
 		o.Now = time.Now
 	}
@@ -93,7 +102,7 @@ func New(store Store, o Options) *Events {
 		o.Log = slog.Default()
 	}
 
-	return &Events{store: store, hub: sse.NewHub(nil), o: o, perProj: map[string]int{}}
+	return &Events{store: store, hub: sse.NewHub(nil), o: o, perProj: map[string]int{}, perKey: map[string]int{}}
 }
 
 // Close ends every subscription; the owner calls it on shutdown.
@@ -169,13 +178,26 @@ func ParseSince(header, query string) (*int64, error) {
 	return &n, nil
 }
 
-func (e *Events) acquire(project string) error {
+// keyOf is the actor whose streams are counted per key: an API key only.
+func keyOf(actor string) string {
+	if strings.HasPrefix(actor, "key:") {
+		return actor
+	}
+
+	return ""
+}
+
+func (e *Events) acquire(project, key string) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
 	limit, open := e.o.MaxPerProject, e.perProj[project]
 	if e.total >= e.o.MaxPerProcess {
 		limit, open = e.o.MaxPerProcess, e.total
+	}
+
+	if key != "" && e.perKey[key] >= e.o.MaxPerKey {
+		limit, open = e.o.MaxPerKey, e.perKey[key]
 	}
 
 	if open >= limit {
@@ -189,12 +211,24 @@ func (e *Events) acquire(project string) error {
 	e.perProj[project]++
 	e.total++
 
+	if key != "" {
+		e.perKey[key]++
+	}
+
 	return nil
 }
 
-func (e *Events) release(project string) {
+func (e *Events) release(project, key string) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+
+	if key != "" {
+		e.perKey[key]--
+
+		if e.perKey[key] <= 0 {
+			delete(e.perKey, key)
+		}
+	}
 
 	e.perProj[project]--
 
@@ -209,11 +243,16 @@ func (e *Events) release(project string) {
 // project is known to be theirs. since is nil when the client gave no revision.
 // authorized is asked every Revalidate; a false ends the stream.
 func (e *Events) Serve(c *web.Ctx, project string, since *int64, authorized func() bool) error {
-	if err := e.acquire(project); err != nil {
+	var key string
+	if caller, ok := service.CallerFrom(c.Context()); ok {
+		key = keyOf(caller.Actor)
+	}
+
+	if err := e.acquire(project, key); err != nil {
 		return err
 	}
 
-	defer e.release(project)
+	defer e.release(project, key)
 
 	// Subscribe before reading the head, so that no event falls between the
 	// replay and the live events.

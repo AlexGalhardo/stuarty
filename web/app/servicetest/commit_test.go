@@ -2,6 +2,7 @@ package servicetest
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -482,5 +483,45 @@ func TestEditReportsNewLintFindings(t *testing.T) {
 	onlyErrors, err := e.svc.Lint(e.as(agent), service.LintRequest{ProjectID: project, Severity: "error"})
 	if err != nil || len(onlyErrors.Findings) != 0 || onlyErrors.Warnings != full.Warnings {
 		t.Errorf("errors only = %+v, %v; totals still cover every finding", onlyErrors, err)
+	}
+}
+
+// SDD-007 section 9.1, T-24: a base more than 1,000 revisions behind is
+// refused from the head alone, whatever the size of the log, and says what the
+// current revision is.
+func TestSecurity_T24_RevisionLookbackBounded(t *testing.T) {
+	e := newEnv(t)
+	project, track := e.withTrack()
+
+	first := e.mustEdit(ui, project, e.head(project).Revision, op(
+		"text.add",
+		fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"mover"}`, track),
+	))
+	item := first.Created[0]
+
+	for i := range 1002 {
+		e.mustEdit(ui, project, e.head(project).Revision, op(
+			"item.move", fmt.Sprintf(`{"item_id":%q,"start":"%ds"}`, item, 1+i%2),
+		))
+	}
+
+	start := time.Now()
+	_, err := e.edit(agent, project, 0, op(
+		"text.add",
+		fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"late"}`, track),
+	))
+	took := time.Since(start)
+
+	se, ok := errors.AsType[*service.Error](err)
+	if !ok || se.Code != command.CodeRevisionConflict || se.Details["current_revision"] != e.head(project).Revision {
+		t.Fatalf("a base 1,000 behind = %v", err)
+	}
+
+	if _, has := se.Details["diff"]; has {
+		t.Error("the refusal read the log: it carries a diff")
+	}
+
+	if took > 250*time.Millisecond {
+		t.Errorf("the refusal took %v; it must not depend on the log", took)
 	}
 }
