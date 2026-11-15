@@ -1263,6 +1263,25 @@ Text against its background at least 4.5:1, large text and interface components 
 2. **Contrast script** `web/scripts/check-contrast.ts` (`bun run check:contrast`): reads the tokens of `app.css` for `:root` and `.dark`, converts OKLCH to sRGB with a small local function (no new dependency), computes WCAG contrast for every pair of §18.3 and fails below the thresholds. It runs in CI and is the authority that adjusts the initial values of §17.
 3. **Keyboard-only test** `keyboard-only-edit`: performs split, trim, nudge, delete, undo and an export using only the keyboard.
 4. A manual pass with a screen reader (NVDA on Windows, VoiceOver on macOS) is part of the BETA sign-off, not of CI.
+5. **WCAG 2.2 measurements** `wcag22.spec.ts`, with page-side helpers in `e2e/support/wcag.ts`: the criteria that axe does not decide (§18.6). The last test of the spec runs each helper on a page built to break its criterion, so a helper that stops detecting fails CI.
+
+### 18.6 Conformance of the criteria of WCAG 2.2 that axe cannot decide
+
+State is `met`, `met by exception` (the exception is named), `not claimed` or `n/a`. Evidence is a command; `a11y-axe-both-themes` covers every criterion axe can decide (the tags `wcag2a`, `wcag2aa`, `wcag21aa`, `wcag22aa`) in both themes. The NVDA and VoiceOver pass is P3-QA-002.
+
+| Criterion | State | Evidence and notes |
+| --- | --- | --- |
+| 1.4.10 Reflow | met for the Inertia pages (projects, settings, brand kit) | `wcag22 > the pages reflow at 320 CSS px`, at 320 by 256, both themes. The header and the project rows wrap. The editor is a two-dimensional layout (timeline, canvas), which the criterion exempts |
+| 1.4.11 Non-text contrast | met | `bun run check:contrast` (every pair of §18.3, `input` and `ring` against `background`) and `wcag22 > field borders and focus outlines reach 3:1` on the rendered field in both themes |
+| 1.4.12 Text spacing | met | `wcag22 > ... keeps its text when the spacing of the criterion is applied`: line height 1.5, letter spacing 0.12 em, word spacing 0.16 em, paragraph spacing 2 em, on the pages and on the editor with a clip selected; no element hides overflowing text (an ellipsis on a project name is not a clip) |
+| 2.4.11 Focus not obscured (minimum) | met | `wcag22 > no focused element is hidden behind other content`: 25 tab stops on each page and 60 in the editor; the centre or a corner of the focused element must resolve to the element |
+| 2.4.13 Focus appearance | not claimed | AAA; the 2 px solid outline of §18.1 item 6 is built to meet it |
+| 2.5.7 Dragging movements | met | every drag has a keyboard or single-click alternative: library drag, the "Add to timeline" button on the card; track reorder, the track menu; trim handles, `[` and `]`; transform handles, the Transform section fields; keyframe diamonds, the Keyframes section; splitter, the arrow keys (`wcag22 > dragging alternatives`, `keyboard-only-edit`) |
+| 2.5.8 Target size (minimum) | met by exception | `wcag22 > every pointer target ... is 24 by 24 CSS px or spaced`, on the pages and on the editor (project, item selected, export dialog, palette). The helper applies the spacing exception (a 24 px circle touches no other target). One equivalent exception: the keyframe diamonds of a timeline block (10 px, 9 px lanes) have the same function in the Keyframes section of the inspector |
+| 3.2.6 Consistent help | met | the shortcuts button keeps its place in the top bar of every project (`wcag22 > consistent help`). The Inertia pages offer no help mechanism, so there is nothing to keep consistent there |
+| 3.3.7 Redundant entry | met | a refused font import keeps the path and the family name (`wcag22 > redundant entry`) |
+| 3.3.8 Accessible authentication (minimum) | met | `resources/js/pages/Auth/Login.test.tsx`: e-mail and password carry `autoComplete` `username` and `current-password`, have labels, nothing blocks paste or turns autofill off, and there is no puzzle or captcha. Local mode has no login |
+| 3.3.9 Accessible authentication (enhanced) | not claimed | AAA |
 
 ## 19. Performance budgets
 
