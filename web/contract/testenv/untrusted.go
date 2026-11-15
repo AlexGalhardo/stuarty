@@ -84,9 +84,14 @@ func UntrustedTextProblems(text string) []string {
 		}
 	}
 
-	if strings.Count(body, "<untrusted_media_text>") != strings.Count(body, "</untrusted_media_text>") {
+	if openingBlocks(body) != strings.Count(body, "</untrusted_media_text>") {
 		problems = append(problems, "unbalanced untrusted blocks")
 	}
 
 	return problems
+}
+
+// openingBlocks counts the opening delimiters, with or without attributes.
+func openingBlocks(body string) int {
+	return strings.Count(body, "<untrusted_media_text>") + strings.Count(body, "<untrusted_media_text ")
 }
