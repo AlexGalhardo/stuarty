@@ -17,7 +17,9 @@ The inputs of both use cases are phone footage and screen recordings, which carr
    - `normalized`: constant frame rate equal to the source's nominal rate, display matrix applied, 8-bit 4:2:0 BT.709 limited range (tone-mapped when the source is HLG or PQ), short closed GOP, audio as 48 kHz PCM (never AAC here: its priming and padding break the exact `sample_count` of SDD-001; AAC is used only in the proxy);
    - `proxy`: the same at reduced resolution for the browser;
    - `thumbnails`: a strip of frames for the timeline;
-   - `peaks`: audio peaks at several zoom levels.
+   - `peaks`: audio peaks at several zoom levels;
+   - `silence`: the silence ranges of the normalized audio in samples, one set for each of four thresholds (-30, -35, -40 and -45 dB), minimum length 150 ms (SDD-011 section 9.1);
+   - `loudness`: integrated loudness, loudness range and true peak of the normalized audio, with `silent` for a file with no sound (SDD-011 section 9.2). The audio-only and video-with-audio paths both produce the last two, as ingest-queue work, never from an edit.
 4. Preview reads the proxy; export reads the normalized media. The original is kept and never modified.
 5. An artifact is never changed in place. A new ingest profile is a new profile version and therefore a new artifact.
 6. Whether a file can be used is established by actually decoding it during ingest, not by asking the container or a capability API. A file that fails ingest is reported with the FFmpeg error translated into an actionable message.
