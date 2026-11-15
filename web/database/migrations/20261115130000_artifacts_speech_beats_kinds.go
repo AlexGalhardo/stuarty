@@ -30,7 +30,7 @@ func rebuildArtifacts(s *schema.Schema, kinds string) error {
   created_ms INTEGER NOT NULL,
   PRIMARY KEY (asset_hash, kind, profile, variant, ext)
 )`, kinds),
-		fmt.Sprintf(`INSERT INTO artifacts_rebuild (asset_hash, kind, profile, variant, ext, rel_path, size_bytes, sha256, meta, created_ms)
+		fmt.Sprintf(`INSERT INTO artifacts_rebuild
 SELECT asset_hash, kind, profile, variant, ext, rel_path, size_bytes, sha256, meta, created_ms
 FROM artifacts WHERE kind IN (%s)`, strings.TrimSpace(kinds)),
 		`DROP TABLE artifacts`,

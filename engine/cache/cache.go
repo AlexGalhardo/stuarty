@@ -29,7 +29,9 @@ var ErrKey = errors.New("cache: invalid key")
 
 // FrameKeyHeight is the file of a frame whose height is not the one the width gives: <frame>-<width>x<height>.jpg.
 func FrameKeyHeight(project string, revision int64, frame, width, height int) string {
-	return path.Join("frames", project, strconv.FormatInt(revision, 10), fmt.Sprintf("%d-%dx%d.jpg", frame, width, height))
+	return path.Join(
+		"frames", project, strconv.FormatInt(revision, 10), fmt.Sprintf("%d-%dx%d.jpg", frame, width, height),
+	)
 }
 
 // FrameKey is the file of a frame: frames/<project>/<revision>/<frame>-<width>.jpg (SDD-000 section 9).

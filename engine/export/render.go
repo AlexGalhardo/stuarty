@@ -54,7 +54,9 @@ func NewRenderer(ctx context.Context, cfg RenderConfig) (*Renderer, error) {
 // round(width*outScale) by round(height*outScale) pixels.
 func (r *Renderer) Render(ctx context.Context, t int, outScale float64) (*image.RGBA, error) {
 	st := r.s.job.Doc.Settings
-	return r.render(ctx, t, outScale, max(round(float64(st.Width)*outScale), 1), max(round(float64(st.Height)*outScale), 1))
+	w, h := max(round(float64(st.Width)*outScale), 1), max(round(float64(st.Height)*outScale), 1)
+
+	return r.render(ctx, t, outScale, w, h)
 }
 
 // RenderSize composes frame t into exactly w by h pixels, scaled by w over the project width, for a

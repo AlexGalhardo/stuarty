@@ -76,7 +76,9 @@ func (f *Frames) Frame(ctx context.Context, doc *timeline.Document, ref Ref, t, 
 
 // FrameSized is Frame with the exact height of the picture, for a caller that took the size from
 // ImageSize; a height of zero is the one the width gives, round(width*H/W).
-func (f *Frames) FrameSized(ctx context.Context, doc *timeline.Document, ref Ref, t, width, height int) ([]byte, error) {
+func (f *Frames) FrameSized(
+	ctx context.Context, doc *timeline.Document, ref Ref, t, width, height int,
+) ([]byte, error) {
 	if t < 0 || width < 16 || width > MaxWidth {
 		return nil, fmt.Errorf("%w: frame %d at width %d", ErrRange, t, width)
 	}
