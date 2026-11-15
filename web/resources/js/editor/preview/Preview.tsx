@@ -193,6 +193,13 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 		let alive = true;
 		void instance.whenPlan(live).then(() => {
 			if (!alive) return;
+			runtime.effectiveWriter.set(
+				Object.fromEntries(
+					instance
+						.getLayerGeometry(live)
+						.map((g) => [g.item, { scale: g.scale, opacity: g.opacity }]),
+				),
+			);
 			setPlanTick((n) => n + 1);
 			setOverride(null);
 		});

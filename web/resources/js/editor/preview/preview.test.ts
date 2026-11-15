@@ -36,6 +36,7 @@ function media(item: string, first = 0, last = 59): PlanLayer {
 		w: 1080,
 		h: 1920,
 		rotation: 0,
+		scale: 1,
 		opacity: 1,
 		color_matrix: null,
 	};
@@ -82,6 +83,7 @@ describe("plan values", () => {
 			w: 1,
 			h: 1,
 			rotation: 0,
+			scale: 1,
 			opacity: 1,
 		};
 		expect(bitmapKeyAt(layer, 10)).toBe("k0");

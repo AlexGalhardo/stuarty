@@ -18,6 +18,9 @@ export interface LayerGeometry {
 	w: number;
 	h: number;
 	rotation: number;
+	// What the plan reports at the frame: keyframes and presets applied.
+	scale: number;
+	opacity: number;
 }
 
 export type HandleKind = "body" | "scale" | "rotate";

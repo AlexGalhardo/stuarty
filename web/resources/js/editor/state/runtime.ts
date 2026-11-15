@@ -12,6 +12,11 @@ import {
 import type { ReadStore } from "./createStore";
 import { createDocumentStore, type DocumentState } from "./documentStore";
 import {
+	createEffectiveStore,
+	type EffectiveState,
+	type EffectiveWriter,
+} from "./effectiveStore";
+import {
 	createGhostStore,
 	type GhostState,
 	type GhostWriter,
@@ -67,6 +72,9 @@ export interface EditorRuntime {
 	// Drag previews and the snap line; written by gestures only.
 	ghosts: ReadStore<GhostState>;
 	ghostWriter: GhostWriter;
+	// The scale and opacity of the plan layers, written by the preview.
+	effective: ReadStore<EffectiveState>;
+	effectiveWriter: EffectiveWriter;
 	// The snap points of the core, cached by revision.
 	snap: SnapStore;
 	activity: ReadStore<ActivityState>;
@@ -110,6 +118,7 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 	const { store: activity, writer: activityWriter } = createActivityStore();
 	const { store: ui, writer: uiWriter } = createUiStore();
 	const { store: ghosts, writer: ghostWriter } = createGhostStore();
+	const { store: effective, writer: effectiveWriter } = createEffectiveStore();
 	const { store: library, writer: libraryWriter } = createLibraryStore();
 	const { store: jobs, writer: jobsWriter } = createJobsStore();
 	const { store: notices, writer: noticeWriter } = createNoticeStore();
@@ -259,6 +268,8 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		uiWriter,
 		ghosts,
 		ghostWriter,
+		effective,
+		effectiveWriter,
 		snap,
 		activity,
 		library,

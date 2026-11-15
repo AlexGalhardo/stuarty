@@ -3,7 +3,6 @@ import {
 	type TransformChanges,
 	transformOperations,
 } from "../../commands/builders";
-import { keyframeValueAt } from "../../commands/units";
 import { useActions } from "../../commands/useActions";
 import {
 	distance,
@@ -52,13 +51,8 @@ function beginTransform(
 	const downDistance = Math.max(distance(centre, down), 1);
 	const downAngle = pointerAngle(centre, down);
 	const keyframes = item.keyframes ?? {};
-	// The scale at the playhead when it is animated: the last keyframe at or
-	// before it, a lookup (the plan carries geometry, not the scale).
-	const baseScale = ((): number => {
-		const list = keyframes.scale;
-		if (list === undefined) return item.scale ?? 1;
-		return keyframeValueAt(list, item.start, ui.getState().playheadFrame);
-	})();
+	// The scale the plan reports at the playhead, keyframes applied.
+	const baseScale = start.scale;
 
 	let changes: TransformChanges | null = null;
 	let stopWatching: () => void = () => {};

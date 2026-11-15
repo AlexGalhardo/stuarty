@@ -30,6 +30,8 @@ export function geometryOf(layer: PlanLayer, frame: number): LayerGeometry {
 		w: valueAt(layer.w, frame, first),
 		h: valueAt(layer.h, frame, first),
 		rotation: valueAt(layer.rotation, frame, first),
+		scale: valueAt(layer.scale, frame, first),
+		opacity: valueAt(layer.opacity, frame, first),
 	};
 }
 
