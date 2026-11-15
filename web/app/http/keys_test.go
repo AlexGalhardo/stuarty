@@ -49,9 +49,8 @@ func (h *networkHarness) asKey(t *testing.T, secret, method, path, body string) 
 	return h.send(t, method, path, body, "", bearer(secret))
 }
 
-// A key never creates a key, and a key holds a subset of its creator's scopes
-// (SDD-007 section 15 check 12; feeds TestSecurity_T33_*).
-func TestKeysCannotCreateKeysOrExceedTheirCreator(t *testing.T) {
+// A key never creates, lists or revokes keys (SDD-007 section 15 check 12).
+func TestSecurity_T33_KeyCannotCreateKeys(t *testing.T) {
 	h := newNetworkHarness(t, resolved(), true)
 	h.user(t, "ana@example.com", service.RoleMember)
 	ana := h.session(t, "ana@example.com")
@@ -68,16 +67,32 @@ func TestKeysCannotCreateKeysOrExceedTheirCreator(t *testing.T) {
 			t.Errorf("a key calling %s %s = %d %s, want 403", c.method, c.path, res.status, res.body)
 		}
 	}
+}
 
-	res := h.send(t, http.MethodPost, "/api/v1/keys", `{"name":"x","scopes":["read","admin"]}`, ana, nil)
-	if res.status != http.StatusForbidden {
-		t.Errorf("a member asking for admin = %d %s, want 403", res.status, res.body)
+// A key holds a subset of its creator's current scopes: a member cannot mint
+// an admin key (SDD-007 section 4.2).
+func TestSecurity_T33_KeyCannotExceedOwner(t *testing.T) {
+	h := newNetworkHarness(t, resolved(), true)
+	h.user(t, "ana@example.com", service.RoleMember)
+	ana := h.session(t, "ana@example.com")
+
+	for _, scopes := range []string{`["read","admin"]`, `["admin"]`, `["read","edit","media","render","admin"]`} {
+		res := h.send(t, http.MethodPost, "/api/v1/keys", `{"name":"x","scopes":`+scopes+`}`, ana, nil)
+		if res.status != http.StatusForbidden || res.code() != service.CodeForbidden {
+			t.Errorf("a member asking for %s = %d %s, want 403", scopes, res.status, res.body)
+		}
+	}
+
+	if res := h.send(
+		t, http.MethodPost, "/api/v1/keys", `{"name":"ok","scopes":["read","edit"]}`, ana, nil,
+	); res.status != http.StatusCreated {
+		t.Errorf("a member asking for read and edit = %d %s, want 201", res.status, res.body)
 	}
 }
 
 // Effective scopes are the key's intersected with the owner's present role, so
 // a demoted owner narrows the key at the next request.
-func TestKeysDemotedOwnerLosesTheScope(t *testing.T) {
+func TestSecurity_T33_DemotedOwnerNarrowsKey(t *testing.T) {
 	h := newNetworkHarness(t, resolved(), true)
 	admin := h.user(t, "root@example.com", service.RoleAdmin)
 	session := h.session(t, "root@example.com")

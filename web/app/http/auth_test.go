@@ -125,7 +125,7 @@ func (h *networkHarness) session(t *testing.T, email string) string {
 
 // SDD-007 section 15 check 12, T-32: the cookie has the __Host- prefix, Secure,
 // HttpOnly and SameSite=Lax, and the session id changes at login.
-func TestSessionCookieAttributes(t *testing.T) {
+func TestSecurity_T32_SessionCookieAttributes(t *testing.T) {
 	h := newNetworkHarness(t, resolved(), true)
 	h.user(t, "ana@example.com", service.RoleAdmin)
 
@@ -263,7 +263,7 @@ func TestLoginWrongPasswordAndUnknownEmailAreTheSameAnswer(t *testing.T) {
 
 // Repeated attempts are throttled by vukem's login keys (SDD-007 section 4.1
 // item 1): per email and address, per email, per address.
-func TestLoginThrottled(t *testing.T) {
+func TestSecurity_T32_LoginThrottled(t *testing.T) {
 	h := newNetworkHarnessLimits(t, resolved(), true, nil)
 	h.user(t, "ana@example.com", service.RoleMember)
 

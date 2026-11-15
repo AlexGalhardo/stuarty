@@ -95,7 +95,7 @@ func TestValidateAcceptsAGoodConfiguration(t *testing.T) {
 
 // SDD-007 section 4.5 and section 15 check 11: one case per row of the table;
 // each refuses with exit status 1 and names the variable.
-func TestUnsafeConfigurationRefusesBoot(t *testing.T) {
+func TestSecurity_T34_UnsafeConfigurationRefusesBoot(t *testing.T) {
 	cases := []struct {
 		name     string
 		row      Row

@@ -82,10 +82,9 @@ func TestRateLimitPerSessionFollowsTheVariable(t *testing.T) {
 	}
 }
 
-// 21 failed key checks from one address within a minute are throttled (feeds
-// TestSecurity_T32_FailedKeyAttemptsThrottled), and the address is refused
-// until the limiter lets it through, even with a valid key.
-func TestRateLimitFailedAuthenticationByAddress(t *testing.T) {
+// 21 failed key checks from one address within a minute are throttled,
+// and the address is refused until the limiter lets it through, even with a valid key.
+func TestSecurity_T32_FailedKeyAttemptsThrottled(t *testing.T) {
 	h, secret := rateHarness(t)
 	session := h.session(t, "ana@example.com")
 
