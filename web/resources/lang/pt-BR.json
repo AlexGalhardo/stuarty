@@ -1060,6 +1060,27 @@
       "revoke": "Revogar",
       "secret_once": "Copie este segredo agora. Ele é mostrado só uma vez.",
       "secret_dismiss": "Já copiei"
+    },
+    "brand": {
+      "title": "Kit de marca",
+      "intro": "Um logotipo, cores com nome e fontes que todos os projetos deste espaço de trabalho podem usar.",
+      "open": "Abrir o kit de marca",
+      "logo": "Logotipo",
+      "logo_hash": "Hash da imagem do logotipo",
+      "logo_hint": "O hash de uma imagem já importada em um projeto deste espaço de trabalho.",
+      "colors": "Cores",
+      "color_name": "Nome da cor {index}",
+      "color_value": "Valor da cor {index}",
+      "color_remove": "Remover a cor {name}",
+      "color_add": "Adicionar cor",
+      "fonts": "Fontes",
+      "font_path": "Caminho do arquivo da fonte na máquina do serviço",
+      "font_family": "Nome da família",
+      "font_weight": "Peso",
+      "font_import": "Importar fonte",
+      "font_remove": "Remover a família de fontes {name}",
+      "save": "Salvar kit de marca",
+      "saved": "Kit de marca salvo."
     }
   }
 }

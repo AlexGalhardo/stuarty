@@ -1060,6 +1060,27 @@
       "revoke": "Revoke",
       "secret_once": "Copy this secret now. It is shown only once.",
       "secret_dismiss": "I have copied it"
+    },
+    "brand": {
+      "title": "Brand kit",
+      "intro": "A logo, named colours and fonts that every project of this workspace can use.",
+      "open": "Open the brand kit",
+      "logo": "Logo",
+      "logo_hash": "Logo image hash",
+      "logo_hint": "The hash of an image already imported into a project of this workspace.",
+      "colors": "Colours",
+      "color_name": "Name of colour {index}",
+      "color_value": "Value of colour {index}",
+      "color_remove": "Remove colour {name}",
+      "color_add": "Add colour",
+      "fonts": "Fonts",
+      "font_path": "Font file path on the machine of the service",
+      "font_family": "Family name",
+      "font_weight": "Weight",
+      "font_import": "Import font",
+      "font_remove": "Remove font family {name}",
+      "save": "Save brand kit",
+      "saved": "Brand kit saved."
     }
   }
 }
