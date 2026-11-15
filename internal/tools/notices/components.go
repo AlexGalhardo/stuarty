@@ -53,6 +53,27 @@ var buildTargets = [][2]string{
 	{"windows", "arm64"},
 }
 
+// goRoot is a Go module whose binary is shipped: the directory to run `go list`
+// in, the package to list, the targets it is built for and CGO_ENABLED. The
+// desktop shell is a nested module (ADR-0030) that links Wails v3, which needs
+// cgo on macOS and Linux; `go list` does not compile, so it needs no C compiler.
+type goRoot struct {
+	dir, pkg, cgo string
+	targets       [][2]string
+}
+
+var goRoots = []goRoot{
+	{dir: ".", pkg: "./web/cmd/app", cgo: "0", targets: buildTargets},
+	{dir: "desktop/shell/app", pkg: ".", cgo: "1", targets: desktopTargets},
+}
+
+// desktopTargets are the systems the desktop shell is built for.
+var desktopTargets = [][2]string{{"linux", "amd64"}, {"darwin", "arm64"}, {"windows", "amd64"}}
+
+// productModule is the module of the repository; the shell requires it through a
+// replace directive, and it is not a third-party component.
+const productModule = "github.com/AlexGalhardo/vukem-video"
+
 var licenseName = regexp.MustCompile(`(?i)^(licen[sc]e|copying|notice)([-_.].*)?$`)
 
 // readLicenseFiles lists the licence files of a directory (not recursive) and
@@ -164,33 +185,35 @@ func truncate(s string, n int) string {
 func goModules(ctx context.Context, run Runner, root string) ([]Component, error) {
 	seen := map[string]Component{}
 
-	for _, tg := range buildTargets {
-		out, err := run(
-			ctx,
-			root,
-			[]string{"GOOS=" + tg[0], "GOARCH=" + tg[1], "CGO_ENABLED=0"},
-			"go",
-			"list",
-			"-deps",
-			"-f",
-			`{{with .Module}}{{if not .Main}}{{.Path}}{{"\t"}}{{.Version}}{{"\t"}}{{.Dir}}{{end}}{{end}}`,
-			"./web/cmd/app",
-		)
-		if err != nil {
-			return nil, fmt.Errorf("go list for %s/%s: %w", tg[0], tg[1], err)
-		}
-
-		for line := range strings.SplitSeq(string(out), "\n") {
-			parts := strings.Split(strings.TrimRight(line, "\r"), "\t")
-			if len(parts) != 3 || parts[0] == "" {
-				continue
+	for _, gr := range goRoots {
+		for _, tg := range gr.targets {
+			out, err := run(
+				ctx,
+				filepath.Join(root, filepath.FromSlash(gr.dir)),
+				[]string{"GOOS=" + tg[0], "GOARCH=" + tg[1], "CGO_ENABLED=" + gr.cgo},
+				"go",
+				"list",
+				"-deps",
+				"-f",
+				`{{with .Module}}{{if not .Main}}{{.Path}}{{"\t"}}{{.Version}}{{"\t"}}{{.Dir}}{{end}}{{end}}`,
+				gr.pkg,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("go list %s for %s/%s: %w", gr.pkg, tg[0], tg[1], err)
 			}
 
-			seen[parts[0]+"@"+parts[1]] = Component{
-				Group:   groupGo,
-				Name:    parts[0],
-				Version: parts[1],
-				Sources: []string{parts[2]},
+			for line := range strings.SplitSeq(string(out), "\n") {
+				parts := strings.Split(strings.TrimRight(line, "\r"), "\t")
+				if len(parts) != 3 || parts[0] == "" || parts[0] == productModule {
+					continue
+				}
+
+				seen[parts[0]+"@"+parts[1]] = Component{
+					Group:   groupGo,
+					Name:    parts[0],
+					Version: parts[1],
+					Sources: []string{parts[2]},
+				}
 			}
 		}
 	}

@@ -18,7 +18,9 @@ Linked into the `vukem-video` binary, collected for the six release targets.
 | github.com/dustin/go-humanize | v1.1.0 | MIT | Copyright (c) 2005-2008  Dustin Sallings <dustin@spy.net> | [LICENSE](<licenses/go-modules/github.com/dustin/go-humanize@v1.1.0/LICENSE>) | - |
 | github.com/go-logr/logr | v1.4.4 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/github.com/go-logr/logr@v1.4.4/LICENSE>) | - |
 | github.com/go-logr/stdr | v1.2.2 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/github.com/go-logr/stdr@v1.2.2/LICENSE>) | - |
+| github.com/go-ole/go-ole | v1.3.0 | MIT | Copyright © 2013-2017 Yasuhiro Matsumoto, <mattn.jp@gmail.com> | [LICENSE](<licenses/go-modules/github.com/go-ole/go-ole@v1.3.0/LICENSE>) | - |
 | github.com/go-text/typesetting | v0.3.5 | Unlicense | Copyright 2021 The go-text authors | [LICENSE](<licenses/go-modules/github.com/go-text/typesetting@v0.3.5/LICENSE>) | - |
+| github.com/godbus/dbus/v5 | v5.2.2 | BSD-2-Clause | Copyright (c) 2013, Georg Reinke (<guelfey at gmail dot com>), Google | [LICENSE](<licenses/go-modules/github.com/godbus/dbus/v5@v5.2.2/LICENSE>) | - |
 | github.com/google/jsonschema-go | v0.4.3 | MIT | Copyright (c) 2025 JSON Schema Go Project Authors | [LICENSE](<licenses/go-modules/github.com/google/jsonschema-go@v0.4.3/LICENSE>) | - |
 | github.com/google/uuid | v1.6.0 | BSD-3-Clause | Copyright (c) 2009,2014 Google Inc. All rights reserved. | [LICENSE](<licenses/go-modules/github.com/google/uuid@v1.6.0/LICENSE>) | - |
 | github.com/grpc-ecosystem/grpc-gateway/v2 | v2.30.0 | BSD-3-Clause | Copyright (c) 2015, Gengo, Inc. | [LICENSE](<licenses/go-modules/github.com/grpc-ecosystem/grpc-gateway/v2@v2.30.0/LICENSE>) | - |
@@ -29,6 +31,7 @@ Linked into the `vukem-video` binary, collected for the six release targets.
 | github.com/santhosh-tekuri/jsonschema/v6 | v6.0.3 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/github.com/santhosh-tekuri/jsonschema/v6@v6.0.3/LICENSE>) | - |
 | github.com/segmentio/asm | v1.1.3 | MIT | Copyright (c) 2021 Segment | [LICENSE](<licenses/go-modules/github.com/segmentio/asm@v1.1.3/LICENSE>) | - |
 | github.com/segmentio/encoding | v0.5.4 | MIT | Copyright (c) 2019 Segment.io, Inc. | [LICENSE](<licenses/go-modules/github.com/segmentio/encoding@v0.5.4/LICENSE>) | - |
+| github.com/wailsapp/wails/v3 | v3.1.0 | MIT | Copyright (c) 2018-Present Lea Anthony | [LICENSE](<licenses/go-modules/github.com/wailsapp/wails/v3@v3.1.0/LICENSE>) | - |
 | github.com/yosida95/uritemplate/v3 | v3.0.2 | BSD-3-Clause | Copyright (C) 2016, Kohei YOSHIDA <<https://yosida95.com/>>. All rights reserved. | [LICENSE](<licenses/go-modules/github.com/yosida95/uritemplate/v3@v3.0.2/LICENSE>) | - |
 | go.opentelemetry.io/auto/sdk | v1.2.1 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/go.opentelemetry.io/auto/sdk@v1.2.1/LICENSE>) | - |
 | go.opentelemetry.io/otel | v1.47.0 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/go.opentelemetry.io/otel@v1.47.0/LICENSE>) | - |
@@ -47,6 +50,7 @@ Linked into the `vukem-video` binary, collected for the six release targets.
 | golang.org/x/oauth2 | v0.36.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/oauth2@v0.36.0/LICENSE>) | - |
 | golang.org/x/sync | v0.25.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/sync@v0.25.0/LICENSE>) | - |
 | golang.org/x/sys | v0.50.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/sys@v0.50.0/LICENSE>) | - |
+| golang.org/x/term | v0.46.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/term@v0.46.0/LICENSE>) | - |
 | golang.org/x/text | v0.44.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/text@v0.44.0/LICENSE>) | - |
 | golang.org/x/time | v0.15.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/time@v0.15.0/LICENSE>) | - |
 | google.golang.org/genproto/googleapis/api | v0.0.0-20260928230214-8a89bd6388cc | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/google.golang.org/genproto/googleapis/api@v0.0.0-20260928230214-8a89bd6388cc/LICENSE>) | - |
