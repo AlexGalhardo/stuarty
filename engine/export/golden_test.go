@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"sync/atomic"
 	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // renders numbers the work folders of the tests that compose frames.
@@ -39,7 +41,12 @@ type goldenFrame struct {
 // renderFrames composes the frames of a scene in order and returns the pixels of each.
 func renderFrames(t *testing.T, name string, bands int, frames []int) [][]byte {
 	t.Helper()
-	doc := loadScene(t, name)
+	return renderDoc(t, loadScene(t, name), name, bands, frames)
+}
+
+// renderDoc is renderFrames for a document that is already loaded.
+func renderDoc(t *testing.T, doc *timeline.Document, name string, bands int, frames []int) [][]byte {
+	t.Helper()
 	job := newJob(t, doc, "golden-"+name+"-"+strconv.Itoa(int(renders.Add(1))), "unused.mp4")
 	s := testState(t, job, job.JobID)
 	rd := s.newRenderer(bands)
