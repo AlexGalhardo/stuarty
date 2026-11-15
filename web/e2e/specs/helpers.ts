@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { type APIRequestContext, test as base, expect } from "@playwright/test";
+import { cspViolations } from "../support/browsers";
 
 // The workspace the server of playwright.config.ts runs on.
 export let home =
@@ -50,7 +51,21 @@ export async function listProjects(
 // false.
 export const test = base.extend<{ tipsSeen: boolean }>({
 	tipsSeen: [true, { option: true }],
-	page: async ({ page, request, tipsSeen }, use, testInfo) => {
+	page: async ({ page, request, tipsSeen, browserName }, use, testInfo) => {
+		// Every spec doubles as a CSP check (SDD-012 section 2.2, P4-UI-003): the
+		// directives of every violation the page reports across navigations are
+		// collected on the Node side and asserted empty at the end.
+		const violations: string[] = [];
+		await page.exposeFunction("__vvCspReport", (directive: string) => {
+			violations.push(directive);
+		});
+		await page.addInitScript(() => {
+			document.addEventListener("securitypolicyviolation", (event) => {
+				(
+					window as unknown as { __vvCspReport(directive: string): void }
+				).__vvCspReport(event.violatedDirective);
+			});
+		});
 		if (tipsSeen) {
 			await page.addInitScript(() => {
 				try {
@@ -79,6 +94,10 @@ export const test = base.extend<{ tipsSeen: boolean }>({
 		expect(mismatches, "patched document differs from the fetched one").toEqual(
 			[],
 		);
+		expect(
+			cspViolations(browserName, violations),
+			"securitypolicyviolation events",
+		).toEqual([]);
 	},
 });
 
