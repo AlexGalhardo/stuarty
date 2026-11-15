@@ -24,8 +24,8 @@ type row struct {
 	command string // the CLI command
 	route   string // "METHOD /path" of the HTTP API
 	pending string
-	// cliPending names the task that adds the CLI command of an operation whose
-	// Service method and route already exist.
+	// cliPending names the task that adds the CLI command and the MCP tool of an
+	// operation whose Service method and route already exist.
 	cliPending string
 	// noMethod marks an operation that is not a Service method (SDD-003 section
 	// 7.1, exception E-1: the event stream lives in the hub of the owner).
@@ -56,6 +56,13 @@ var parity = []row{
 	{method: "Lint", tool: "lint", command: "lint", route: "GET /projects/{}/lint"},
 	{method: "JobStart", tool: "job_start", command: "export", route: "POST /projects/{}/jobs"},
 	{method: "JobGet", tool: "job_get", command: "job:show", route: "GET /jobs/{}"},
+	{
+		method:     "JobCancel",
+		tool:       "job_cancel",
+		command:    "job:cancel",
+		route:      "POST /jobs/{}/cancel",
+		cliPending: "P2-AGT",
+	},
 	{method: "JobList", tool: "job_get", command: "job:list", route: "GET /projects/{}/jobs"},
 	{method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame"},
 	{method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet"},
@@ -129,7 +136,7 @@ func TestEveryOperationIsReachableOnEverySurface(t *testing.T) {
 			continue
 		}
 
-		if r.tool != "" && !slices.Contains(tools, r.tool) {
+		if r.tool != "" && r.cliPending == "" && !slices.Contains(tools, r.tool) {
 			t.Errorf("%s: the MCP tool %s is not in tools/list", r.method, r.tool)
 		}
 

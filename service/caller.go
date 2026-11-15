@@ -61,6 +61,7 @@ var Scopes = map[string]string{
 	"JobStart":       ScopeRender,
 	"JobGet":         ScopeRead,
 	"JobList":        ScopeRead,
+	"JobCancel":      ScopeRender,
 	"PlanWindow":     ScopeRead,
 	"ViewFrame":      ScopeRead,
 	"ViewSheet":      ScopeRead,

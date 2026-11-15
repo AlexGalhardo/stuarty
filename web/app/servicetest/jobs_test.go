@@ -902,3 +902,90 @@ func TestRealExportHasTheFramesOfThePinnedRevision(t *testing.T) {
 		t.Errorf("result = %+v", e)
 	}
 }
+
+// SDD-005 section 18 check 32 through the operation: a queued export ends
+// cancelled, twice is the same, a final job comes back unchanged, and the scope
+// is render, or media for the caller's own ingest.
+func TestJobCancelOperation(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true, exporter: goodExporter()})
+	project := m.exportable()
+
+	queued, err := m.startExport(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	read := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "key:r", Scopes: []string{service.ScopeRead, service.ScopeEdit}},
+	)
+	if _, err := m.svc.JobCancel(
+		read,
+		service.JobCancelRequest{JobID: queued.JobID},
+	); code(
+		err,
+	) != service.CodeForbidden {
+		t.Errorf("cancel without render = %v", err)
+	}
+
+	for range 2 {
+		j, err := m.svc.JobCancel(m.as(ui), service.JobCancelRequest{JobID: queued.JobID})
+		if err != nil || j.State != service.JobCancelled || j.Error == nil || j.Error.Code != service.CodeCancelled {
+			t.Fatalf("JobCancel of a queued export = %+v, %v", j, err)
+		}
+	}
+
+	if _, err := m.svc.JobCancel(
+		m.as(ui),
+		service.JobCancelRequest{JobID: "job_0000000000"},
+	); code(
+		err,
+	) != "E_NOT_FOUND" {
+		t.Errorf("unknown job = %v", err)
+	}
+
+	// A job that already succeeded is reported as it is.
+	done := newMediaEnv(t, mediaCfg{exporter: goodExporter()})
+	finished, err := done.startExport(done.exportable())
+	if err != nil || finished.State != service.JobSucceeded {
+		t.Fatalf("export = %+v, %v", finished, err)
+	}
+
+	if j, err := done.svc.JobCancel(done.as(ui), service.JobCancelRequest{JobID: finished.JobID}); err != nil ||
+		j.State != service.JobSucceeded {
+		t.Errorf("cancel after completion = %+v, %v", j, err)
+	}
+
+	// Media is enough for the caller's own ingest, and for no one else's.
+	ing := newMediaEnv(t, mediaCfg{noQueue: true})
+	p := ing.newProject("p")
+	owner := service.Caller{Actor: "key:owner", Scopes: []string{service.ScopeMedia}}
+
+	res, err := ing.svc.MediaImport(service.WithCaller(context.Background(), owner), service.MediaImportRequest{
+		ProjectID: p, Files: []service.ImportFile{{Path: ing.write("a.mp4", clipBytes)}},
+	})
+	if err != nil || res.Assets[0].JobID == "" {
+		t.Fatalf("import = %+v, %v", res, err)
+	}
+
+	other := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "key:other", Scopes: []string{service.ScopeMedia}},
+	)
+	if _, err := ing.svc.JobCancel(
+		other,
+		service.JobCancelRequest{JobID: res.Assets[0].JobID},
+	); code(
+		err,
+	) != service.CodeForbidden {
+		t.Errorf("another actor's ingest = %v", err)
+	}
+
+	j, err := ing.svc.JobCancel(
+		service.WithCaller(context.Background(), owner),
+		service.JobCancelRequest{JobID: res.Assets[0].JobID},
+	)
+	if err != nil || j.State != service.JobCancelled {
+		t.Errorf("own ingest with media = %+v, %v", j, err)
+	}
+}

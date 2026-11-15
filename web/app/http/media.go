@@ -149,6 +149,16 @@ func (h *apiHandler) jobGet(c *web.Ctx, in jobGetIn) (service.Job, error) {
 	return deref(res), err
 }
 
+type jobCancelIn struct {
+	JobID string `json:"job_id" validate:"required"`
+}
+
+func (h *apiHandler) jobCancel(c *web.Ctx, in jobCancelIn) (service.Job, error) {
+	res, err := h.Service.JobCancel(c.Context(), service.JobCancelRequest{JobID: in.JobID})
+
+	return deref(res), err
+}
+
 func (h *apiHandler) jobList(c *web.Ctx, in jobListIn) (service.JobListResult, error) {
 	res, err := h.Service.JobList(c.Context(), service.JobListRequest{
 		ProjectID: in.ID, State: in.State, Page: page(in.pageIn),

@@ -177,27 +177,21 @@ func hasJSONContentType(r *http.Request) bool {
 
 // need is the scope check of a route; the Service checks again (ADR-0008), this
 // one covers the routes that are not service operations.
-func need(c *web.Ctx, scope string) (service.Caller, error) {
+func need(c *web.Ctx, scope string) error {
 	caller, ok := service.CallerFrom(c.Context())
 	if !ok && scope == "" {
-		return service.Caller{}, nil // handshake and launch: no credential by design
+		return nil // handshake and launch: no credential by design
 	}
 
 	if !ok {
-		return service.Caller{}, &service.Error{
-			Code:    service.CodeUnauthorized,
-			Message: "the request carries no credentials.",
-		}
+		return &service.Error{Code: service.CodeUnauthorized, Message: "the request carries no credentials."}
 	}
 
 	if scope != "" && !slices.Contains(caller.Scopes, scope) {
-		return service.Caller{}, &service.Error{
-			Code:    service.CodeForbidden,
-			Message: "the caller lacks the " + scope + " scope.",
-		}
+		return &service.Error{Code: service.CodeForbidden, Message: "the caller lacks the " + scope + " scope."}
 	}
 
-	return caller, nil
+	return nil
 }
 
 // registerDocs adds the OpenAPI document and the reference page.

@@ -351,6 +351,11 @@ func (c *Client) JobGet(ctx context.Context, req service.JobGetRequest) (*servic
 	return get[service.Job](ctx, c, "/jobs/"+url.PathEscape(req.JobID), q)
 }
 
+// JobCancel implements service.Service.
+func (c *Client) JobCancel(ctx context.Context, req service.JobCancelRequest) (*service.Job, error) {
+	return post[service.Job](ctx, c, "/jobs/"+url.PathEscape(req.JobID)+"/cancel", struct{}{})
+}
+
 // JobList implements service.Service.
 func (c *Client) JobList(ctx context.Context, req service.JobListRequest) (*service.JobListResult, error) {
 	q := url.Values{}
