@@ -15,6 +15,7 @@ func (a *adapter) handlers() map[string]callFunc {
 		"project_list":   projectList,
 		"project_create": projectCreate,
 		"project_get":    projectGet,
+		"project_trash":  projectTrash,
 		"edit":           edit,
 		"command_help":   commandHelp,
 		"history":        history,
@@ -98,6 +99,29 @@ func projectGet(ctx context.Context, svc service.Service, raw json.RawMessage) (
 		ctx,
 		service.ProjectGetRequest{ProjectID: in.ProjectID, Detail: in.Detail, Page: in.page()},
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &toolOutput{value: res, text: res.Text}, nil
+}
+
+// projectTrash is the one tool of two operations: trash, or restore when asked.
+func projectTrash(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
+	in, err := decode[struct {
+		ProjectID string `json:"project_id"`
+		Restore   bool   `json:"restore"`
+	}](raw)
+	if err != nil {
+		return nil, err
+	}
+
+	fn := svc.ProjectTrash
+	if in.Restore {
+		fn = svc.ProjectRestore
+	}
+
+	res, err := fn(ctx, service.ProjectTrashRequest{ProjectID: in.ProjectID})
 	if err != nil {
 		return nil, err
 	}

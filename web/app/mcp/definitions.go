@@ -24,9 +24,9 @@ var definitionFiles embed.FS
 var instructionsText string
 
 // order is the order of tools/list: the table of SDD-003 section 4.1, so prompt
-// caches hit. These are the tools of the Prototype phase.
+// caches hit. These are the tools whose Service operations exist in the build.
 var order = []string{
-	"project_list", "project_create", "project_get", "edit", "command_help", "history",
+	"project_list", "project_create", "project_get", "project_trash", "edit", "command_help", "history",
 	"media_import", "media_inspect", "view", "lint", "job_start", "job_get",
 }
 
