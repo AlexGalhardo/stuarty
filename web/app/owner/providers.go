@@ -15,10 +15,10 @@ import (
 const (
 	// EnvTestTranscriber selects the test-only provider; the only value is "stub".
 	EnvTestTranscriber = "VUKEM_VIDEO_TEST_TRANSCRIBER"
-	// envAppEnv is vukem's environment name; the stub needs it to be "testing".
+	// envAppEnv is vukem's environment name; the stub needs it to be "test".
 	envAppEnv = "APP_ENV"
 	// appEnvTesting is the only APP_ENV under which the stub runs.
-	appEnvTesting = "testing"
+	appEnvTesting = "test"
 	stubName      = "stub"
 )
 
@@ -26,7 +26,7 @@ const (
 var ErrTestTranscriber = errors.New("owner: test transcriber refused")
 
 // pickTranscriber chooses the transcription provider (SDD-011 section 10.1): the test stub when
-// VUKEM_VIDEO_TEST_TRANSCRIBER=stub under APP_ENV=testing in local mode; else the API provider when
+// VUKEM_VIDEO_TEST_TRANSCRIBER=stub under APP_ENV=test in local mode; else the API provider when
 // VUKEM_VIDEO_TRANSCRIBE_URL or _KEY is set; else the local helper (whisper may be nil). With
 // nothing configured no API client is built, so nothing can dial (D-016).
 func pickTranscriber(
@@ -54,7 +54,7 @@ func pickTranscriber(
 }
 
 // testTranscriber returns the stub provider, nil when the variable is unset, and an error when it is
-// set where it must not work: any value but "stub", an APP_ENV other than "testing", or network mode.
+// set where it must not work: any value but "stub", an APP_ENV other than "test", or network mode.
 func testTranscriber(getenv func(string) string, mode string) (transcribe.Provider, error) {
 	v := strings.TrimSpace(getenv(EnvTestTranscriber))
 	if v == "" {

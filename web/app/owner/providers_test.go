@@ -29,8 +29,8 @@ func TestTestTranscriberIsRefusedOutsideTheTestCondition(t *testing.T) {
 			map[string]string{EnvTestTranscriber: "stub", "APP_ENV": "development"},
 			config.ModeLocal,
 		},
-		"network mode":       {map[string]string{EnvTestTranscriber: "stub", "APP_ENV": "testing"}, config.ModeNetwork},
-		"unknown value":      {map[string]string{EnvTestTranscriber: "real", "APP_ENV": "testing"}, config.ModeLocal},
+		"network mode":       {map[string]string{EnvTestTranscriber: "stub", "APP_ENV": "test"}, config.ModeNetwork},
+		"unknown value":      {map[string]string{EnvTestTranscriber: "real", "APP_ENV": "test"}, config.ModeLocal},
 		"network, no APPENV": {map[string]string{EnvTestTranscriber: "stub"}, config.ModeNetwork},
 	}
 
@@ -43,7 +43,7 @@ func TestTestTranscriberIsRefusedOutsideTheTestCondition(t *testing.T) {
 }
 
 func TestTestTranscriberStubAnswersTheFixedTranscript(t *testing.T) {
-	env := envOf(map[string]string{EnvTestTranscriber: "stub", "APP_ENV": "testing"})
+	env := envOf(map[string]string{EnvTestTranscriber: "stub", "APP_ENV": "test"})
 
 	p, err := pickTranscriber(env, config.ModeLocal, nil, nil)
 	if err != nil || p == nil || p.Name() != "stub" {
@@ -102,7 +102,7 @@ func TestAPIVariablesHalfSetAreABootError(t *testing.T) {
 	}
 }
 
-func TestOpenRefusesTheTestTranscriberOutsideTesting(t *testing.T) {
+func TestOpenRefusesTheTestTranscriberOutsideTest(t *testing.T) {
 	ws := filepath.Join(t.TempDir(), "ws")
 	ctx := service.WithCaller(context.Background(), service.Caller{Actor: "local:cli", Scopes: service.AllScopes})
 
@@ -112,11 +112,11 @@ func TestOpenRefusesTheTestTranscriberOutsideTesting(t *testing.T) {
 		t.Fatalf("Open with the stub and no APP_ENV: %v, want ErrTestTranscriber", err)
 	}
 
-	env["APP_ENV"] = "testing"
+	env["APP_ENV"] = "test"
 
 	o, err := Open(ctx, Config{Getenv: envOf(env), Inline: true})
 	if err != nil {
-		t.Fatalf("Open with the stub under APP_ENV=testing: %v", err)
+		t.Fatalf("Open with the stub under APP_ENV=test: %v", err)
 	}
 
 	if err := o.Close(); err != nil {
