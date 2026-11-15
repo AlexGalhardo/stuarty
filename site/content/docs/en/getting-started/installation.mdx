@@ -38,9 +38,21 @@ The container runs as the user `app` (uid 10001) and sends no data anywhere by d
 
 To build from source you need Go (the version in `go.mod`) and Bun for the front end.
 
+### The desktop application
+
+A release that carries the desktop application lists one file per system next to the other installers: `vukem-video-desktop_X.Y.Z_windows_amd64_setup.exe` for Windows 11, `vukem-video-desktop_X.Y.Z_darwin_arm64.dmg` (Apple silicon) or `..._darwin_amd64.dmg` (Intel) for macOS, and `vukem-video-desktop_X.Y.Z_linux_amd64.deb` for Debian and Ubuntu. Each holds the window and the server it starts. The [desktop application](/docs/guide/desktop) page says what it does.
+
+### The BETA installers are not signed
+
+No installer is signed with a paid certificate: there is no Apple Developer ID, no notarization and no Windows code-signing certificate in the BETA. Windows and macOS therefore warn before the first run. This is expected; what proves the file is genuine is the checksum and the signature in the release, which you can [verify](/docs/self-hosting/verify-a-release).
+
+- **Windows.** SmartScreen shows "Windows protected your PC". Choose **More info**, then **Run anyway**.
+- **macOS.** Gatekeeper says the app cannot be opened because Apple cannot check it. Control-click (right-click) the app, choose **Open**, then **Open** again. Or remove the quarantine mark in a terminal: `xattr -d com.apple.quarantine "/Applications/Vukem Video.app"`.
+- **Debian and Ubuntu.** No warning. Install with `sudo apt install ./vukem-video-desktop_X.Y.Z_linux_amd64.deb`.
+
 ## Common mistakes
 
-- The system warns before the first run. The installers are not signed with a paid certificate; the [quick start](/docs/quick-start) shows the SmartScreen and Gatekeeper steps.
+- The system warns before the first run. The installers are not signed with a paid certificate; see [The BETA installers are not signed](#the-beta-installers-are-not-signed) above for the SmartScreen and Gatekeeper steps, and [verify the download](/docs/self-hosting/verify-a-release) first if you want proof.
 - FFmpeg is not found. The editor uses your FFmpeg, and `VUKEM_VIDEO_FFMPEG` and `VUKEM_VIDEO_FFPROBE` name the binaries explicitly. See the [configuration variables](/docs/reference/configuration).
 
 ## Next steps

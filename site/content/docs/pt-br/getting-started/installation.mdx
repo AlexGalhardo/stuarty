@@ -38,9 +38,21 @@ O contêiner roda como o usuário `app` (uid 10001) e, por padrão, não envia d
 
 Para compilar a partir do código-fonte, você precisa do Go (a versão do `go.mod`) e do Bun para o front-end.
 
+### O aplicativo desktop
+
+Uma versão que traz o aplicativo desktop lista um arquivo por sistema ao lado dos outros instaladores: `vukem-video-desktop_X.Y.Z_windows_amd64_setup.exe` para o Windows 11, `vukem-video-desktop_X.Y.Z_darwin_arm64.dmg` (Apple silicon) ou `..._darwin_amd64.dmg` (Intel) para o macOS e `vukem-video-desktop_X.Y.Z_linux_amd64.deb` para Debian e Ubuntu. Cada um contém a janela e o servidor que ela inicia. A página do [aplicativo desktop](/docs/guide/desktop) explica o que ele faz.
+
+### Os instaladores do BETA sem assinatura
+
+Nenhum instalador é assinado com um certificado pago: no BETA não há Apple Developer ID, nem notarização, nem certificado de assinatura de código do Windows. Por isso o Windows e o macOS avisam antes da primeira execução. Isso é esperado; o que prova que o arquivo é genuíno é o checksum e a assinatura da versão, que você pode [verificar](/docs/self-hosting/verify-a-release).
+
+- **Windows.** O SmartScreen mostra "O Windows protegeu seu PC". Escolha **Mais informações** e depois **Executar assim mesmo**.
+- **macOS.** O Gatekeeper diz que o app não pode ser aberto porque a Apple não consegue verificá-lo. Clique com o botão direito (ou com Control) no app, escolha **Abrir** e depois **Abrir** de novo. Ou remova a marca de quarentena em um terminal: `xattr -d com.apple.quarantine "/Applications/Vukem Video.app"`.
+- **Debian e Ubuntu.** Sem aviso. Instale com `sudo apt install ./vukem-video-desktop_X.Y.Z_linux_amd64.deb`.
+
 ## Erros comuns
 
-- O sistema avisa antes da primeira execução. Os instaladores não são assinados com um certificado pago; os [primeiros passos](/docs/quick-start) mostram as etapas do SmartScreen e do Gatekeeper.
+- O sistema avisa antes da primeira execução. Os instaladores não são assinados com um certificado pago; veja [Os instaladores do BETA sem assinatura](#os-instaladores-do-beta-sem-assinatura) acima para as etapas do SmartScreen e do Gatekeeper e, se quiser uma prova, [verifique o download](/docs/self-hosting/verify-a-release) antes.
 - O FFmpeg não é encontrado. O editor usa o seu FFmpeg, e `VUKEM_VIDEO_FFMPEG` e `VUKEM_VIDEO_FFPROBE` indicam os binários explicitamente. Veja as [variáveis de configuração](/docs/reference/configuration).
 
 ## Próximos passos

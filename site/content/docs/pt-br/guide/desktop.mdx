@@ -4,7 +4,7 @@ description: "Execute o editor em uma janela própria no Windows: compile-o, ini
 ---
 
 <Callout type="warning" title="BETA">
-O aplicativo de desktop está em BETA e ainda não é publicado como instalador. Hoje você o compila a partir do código-fonte. Ele foi executado apenas no Windows 11; o macOS e o Linux compilam no CI mas não foram executados, então esta página não os descreve.
+O aplicativo de desktop está em BETA. Uma versão lista um instalador para o Windows 11, uma imagem de disco para o macOS e um pacote para Debian e Ubuntu, nenhum assinado com um certificado pago (veja [Instalação](/docs/installation)); você também pode compilá-lo a partir do código-fonte. Ele foi executado à mão apenas no Windows 11; o macOS e o Linux são construídos e seus arquivos conferidos no CI, mas a janela não foi executada neles, então esta página não os descreve.
 </Callout>
 
 ## O que você vai aprender
@@ -45,9 +45,13 @@ O espaço de trabalho é `~/.vukem-video`, ou a pasta em `VUKEM_VIDEO_HOME` se v
 
 No navegador, você cola um caminho de arquivo para importar mídia. Na janela de desktop, o editor mostra **Choose files**, que abre o diálogo de arquivos nativo e importa os arquivos escolhidos. Soltar arquivos sobre a janela os importa do mesmo modo. O editor envia apenas os caminhos ao servidor, que copia os arquivos para o espaço de trabalho, então nada é enviado para lugar nenhum.
 
+## Atualizações
+
+O aplicativo pode procurar uma versão mais nova, e só quando você pede. A configuração **Check for updates at start-up** vem desligada; desligada, o aplicativo não abre nenhuma conexão. **Help**, **Check for updates** faz uma verificação para aquela ação. Uma verificação é uma requisição HTTPS de um arquivo assinado, `feed.json`, no site do projeto no GitHub Pages; o instalador oferecido é baixado do mesmo endereço, e o aplicativo confere o SHA-256 e a assinatura dele antes de executá-lo. Um arquivo que não bate é recusado e o aplicativo continua em execução. No Windows o instalador é iniciado para você e o aplicativo fecha; no macOS e no Linux o aplicativo mostra a página da versão. Uma compilação feita sem a chave de assinatura embutida (por exemplo, uma que você mesmo compilou) não tem verificação de atualização e diz isso no menu. Como o feed é assinado está na página [Verifique uma versão](/docs/self-hosting/verify-a-release).
+
 ## Erros comuns
 
-- A compilação não é assinada com um certificado pago, então o Windows SmartScreen avisa antes da primeira execução. Veja os [primeiros passos](/docs/quick-start) para as etapas.
+- A compilação não é assinada com um certificado pago, então o Windows SmartScreen avisa antes da primeira execução. Veja a [Instalação](/docs/installation) para as etapas no Windows e no macOS.
 - Toda página responde com um erro: o front-end não foi compilado. Execute `bun run build` em `web/` antes do `go build`.
 - Uma segunda cópia do programa no mesmo espaço de trabalho: o espaço de trabalho fica bloqueado e a segunda não consegue iniciar. Veja [o espaço de trabalho está bloqueado](/docs/troubleshooting/workspace-locked).
 - Procurar compilações para macOS ou Linux: elas não são verificadas, então nada aqui é prometido para elas.
