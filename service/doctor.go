@@ -35,6 +35,18 @@ type DoctorOptions struct {
 	FFmpegPins map[string]string
 	// Integrity runs PRAGMA integrity_check and returns what it printed ("ok" when sound).
 	Integrity func(ctx context.Context) (string, error)
+	// Child is the policy the owner applied to FFmpeg and whisper.cpp (SDD-007 sections 6.5 and 6.7).
+	Child ChildPolicy
+}
+
+// ChildPolicy says what bounds the child processes of this owner.
+type ChildPolicy struct {
+	// Limits is true when prlimit(1) bounds every child (Linux).
+	Limits bool
+	// LimitsWhy is why the limits are unavailable, when they are.
+	LimitsWhy string
+	// Sandbox is the path of bwrap when VUKEM_VIDEO_SANDBOX=bwrap wraps every child; empty is none.
+	Sandbox string
 }
 
 // DoctorRequest asks for the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).
@@ -252,6 +264,7 @@ func (s *svc) doctorChecks(ctx context.Context, privileged, verify bool) []Docto
 	var out []DoctorCheck
 
 	out = append(out, s.ffmpegChecks(ctx, privileged)...)
+	out = append(out, s.childPolicyChecks()...)
 	out = append(out, s.transcribeChecks()...)
 	out = append(out, s.workspaceChecks(ctx, privileged)...)
 	out = append(out, DoctorCheck{
@@ -608,4 +621,34 @@ func (s *svc) digestCheck(name, path string, userBuild bool) DoctorCheck {
 	}
 
 	return check
+}
+
+// childPolicyChecks reports the limits and the sandbox of the child processes as available or
+// unavailable (SDD-007 sections 6.5 and 6.7). Neither is a failure where the platform has none:
+// the section says what replaces them there.
+func (s *svc) childPolicyChecks() []DoctorCheck {
+	p := s.doctor.Child
+
+	limits := DoctorCheck{Name: "child.limits", OK: true, Detail: "unavailable: " + p.LimitsWhy}
+
+	switch {
+	case p.Limits:
+		limits.Detail = "available: prlimit(1) sets RLIMIT_CPU and RLIMIT_FSIZE on every child, and RLIMIT_AS " +
+			"on the software paths"
+	case p.LimitsWhy == "":
+		limits.Detail = "unavailable: no child process runs"
+	default:
+		limits.Hint = "the timeouts, the output size watchdog and the concurrency limits still apply"
+	}
+
+	sandbox := DoctorCheck{
+		Name: "child.sandbox", OK: true,
+		Detail: "unavailable: not requested (VUKEM_VIDEO_SANDBOX is unset); children run with the user's privileges",
+	}
+
+	if p.Sandbox != "" {
+		sandbox.Detail = "available: every FFmpeg run is wrapped by bwrap with no network"
+	}
+
+	return []DoctorCheck{limits, sandbox}
 }
