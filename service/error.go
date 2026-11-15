@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -19,6 +20,7 @@ const (
 	CodeRateLimited       = "E_RATE_LIMITED"
 	CodeWorkspaceLocked   = "E_WORKSPACE_LOCKED"
 	CodeLintBlocking      = "E_LINT_BLOCKING"
+	CodeClientClosed      = "E_CLIENT_CLOSED"
 	codeInternalMessage   = "the operation failed because of an internal error."
 	codeInternalHint      = "Report this as a bug with the operation that was sent."
 	hintRestoreProject    = "restore the project first"
@@ -38,6 +40,10 @@ type Error struct {
 }
 
 func (e *Error) Error() string { return e.Code + ": " + e.Message }
+
+// StatusClientClosed is the status for a request its caller gave up on (the
+// nginx convention); it is below 500, so it is not logged as a server fault.
+const StatusClientClosed = 499
 
 // HTTPStatus is the status of SDD-000 section 8; an unknown code is 500.
 func (e *Error) HTTPStatus() int {
@@ -66,6 +72,8 @@ func (e *Error) HTTPStatus() int {
 		return http.StatusUnprocessableEntity
 	case CodeQueueFull, CodeRateLimited:
 		return http.StatusTooManyRequests
+	case CodeClientClosed:
+		return StatusClientClosed
 	case CodeWorkspaceLocked, "E_TRANSCRIBE_UNAVAILABLE", "E_FFMPEG_MISSING", "E_NO_ENCODER":
 		return http.StatusServiceUnavailable
 	}
@@ -141,6 +149,8 @@ func asError(err error) error {
 	}
 
 	switch {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return newError(CodeClientClosed, "the caller closed the request before it finished.")
 	case errors.Is(err, ErrNotFound):
 		return newError(command.CodeNotFound, "the project or object does not exist.")
 	case errors.Is(err, ErrExists):
