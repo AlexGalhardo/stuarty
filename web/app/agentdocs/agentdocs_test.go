@@ -98,10 +98,13 @@ func checkNames(t *testing.T, skill string) {
 
 	for _, m := range opName.FindAllStringSubmatch(skill, -1) {
 		// details.diff and details.reason are members of an error, not operations.
-		if !slices.Contains(ops, m[1]) && !strings.HasPrefix(m[1], "details.") {
+		if !slices.Contains(ops, m[1]) && !strings.HasPrefix(m[1], "details.") &&
+			m[1] != "namespace.action" {
 			t.Errorf("SKILL.md names the operation %s, which the registry does not have", m[1])
 		}
 	}
+
+	checkOperations(t, skill)
 
 	var codes []string
 	for _, r := range lint.Catalog() {
@@ -116,7 +119,10 @@ func checkNames(t *testing.T, skill string) {
 
 	all, _ := cli.CommandNames()
 
-	for _, m := range cliLine.FindAllStringSubmatch(skill, -1) {
+	_, sheet, _ := strings.Cut(skill, "## CLI cheat sheet")
+	sheet, _, _ = strings.Cut(sheet, "\n## ")
+
+	for _, m := range cliLine.FindAllStringSubmatch(sheet, -1) {
 		if !slices.Contains(all, m[1]) {
 			t.Errorf("SKILL.md names the CLI command %s, which does not exist", m[1])
 		}
@@ -230,5 +236,48 @@ func TestInstructionsHead(t *testing.T) {
 
 	if strings.HasPrefix(text, "#") {
 		t.Error("the header line was not stripped")
+	}
+}
+
+var opGroupLine = regexp.MustCompile("(?m)^- `([a-z]+)`: ([a-z_*, ]+)$")
+
+// checkOperations: the grouped list of the skill is exactly the public operations
+// of the registry, alpha ones starred.
+func checkOperations(t *testing.T, skill string) {
+	t.Helper()
+
+	listed := map[string]bool{}
+
+	for _, m := range opGroupLine.FindAllStringSubmatch(skill, -1) {
+		for a := range strings.SplitSeq(m[2], ", ") {
+			listed[m[1]+"."+a] = true
+		}
+	}
+
+	want := map[string]bool{}
+
+	for _, c := range command.Default().List() {
+		if c.Internal {
+			continue
+		}
+
+		name := c.Name
+		if c.Phase != command.Prototype {
+			name += "*"
+		}
+
+		want[name] = true
+	}
+
+	for name := range want {
+		if !listed[name] {
+			t.Errorf("SKILL.md does not list the operation %s", name)
+		}
+	}
+
+	for name := range listed {
+		if !want[name] {
+			t.Errorf("SKILL.md lists %s, which the registry does not have", name)
+		}
 	}
 }

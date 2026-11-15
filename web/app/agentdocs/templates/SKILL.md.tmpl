@@ -36,9 +36,9 @@ Run `vukem-video version`, then `vukem-video project:list`. The workspace is `~/
 
 ## Command reference
 
-Operations of `edit` (`command_help <name>` prints arguments and an example). `P` Prototype build, `A` Alpha; `asset.remove` needs the media scope.
+Operations of `edit`, written `namespace.action`; a star marks the Alpha build, the others are in the Prototype. `command_help` lists them with a summary and `command_help <name>` prints arguments and an example. `asset.remove` needs the media scope.
 
-{{range .Ops}}- `{{.Name}}` {{.Phase}}: {{.Summary}}
+{{range .Ops}}- `{{.Namespace}}`: {{.Names}}
 {{end}}
 ## CLI cheat sheet
 

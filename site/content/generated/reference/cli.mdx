@@ -470,6 +470,70 @@ Example:
 vukem-video command:help item.move
 ```
 
+## `template:list`
+
+List the templates of the library
+
+```text
+vukem-video template:list [--cursor c] [--limit n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `20` | items per page |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+vukem-video template:list --json
+```
+
+## `template:save`
+
+Make a template from a project
+
+```text
+vukem-video template:save --project <id> --name <name> [--description d]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | template name (required) |
+| `--description` | string |  | what the template is for |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+vukem-video template:save --project prj_7k2m9x4q1b --name "Spring sale"
+```
+
+## `template:new`
+
+Create a project from a template
+
+```text
+vukem-video template:new <template id> --name <name> [--fill <file|->] [--id prj_...]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | project name (required) |
+| `--fill` | string |  | a JSON object of slot name to value, from a file or - for standard input |
+| `--id` | string |  | identifier to give the project |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+vukem-video template:new tpl_5n8b2v6c1x --name "Spring sale" --fill fill.json
+```
+
 ## `agent:docs`
 
 Print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions

@@ -674,6 +674,93 @@
       ]
     },
     {
+      "name": "template:list",
+      "summary": "list the templates of the library",
+      "usage": [
+        "vukem-video template:list [--cursor c] [--limit n]"
+      ],
+      "example": "vukem-video template:list --json",
+      "flags": [
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "20",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "template:save",
+      "summary": "make a template from a project",
+      "usage": [
+        "vukem-video template:save --project <id> --name <name> [--description d]"
+      ],
+      "example": "vukem-video template:save --project prj_7k2m9x4q1b --name \"Spring sale\"",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "template name (required)"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "usage": "what the template is for"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "template:new",
+      "summary": "create a project from a template",
+      "usage": [
+        "vukem-video template:new <template id> --name <name> [--fill <file|->] [--id prj_...]"
+      ],
+      "example": "vukem-video template:new tpl_5n8b2v6c1x --name \"Spring sale\" --fill fill.json",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "project name (required)"
+        },
+        {
+          "name": "fill",
+          "type": "string",
+          "usage": "a JSON object of slot name to value, from a file or - for standard input"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "usage": "identifier to give the project"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "dry-run"
+      ]
+    },
+    {
       "name": "agent:docs",
       "summary": "print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions",
       "usage": [

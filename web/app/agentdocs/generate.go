@@ -52,15 +52,16 @@ type view struct {
 	Errors []errorView
 	Tools  []toolView
 	Rules  []ruleView
-	Ops    []opView
+	Ops    []opGroup
 }
 
 type ruleView struct {
 	Code, Severity, Blocks, Fix string
 }
 
-type opView struct {
-	Name, Phase, Summary string
+// opGroup is the operations of one namespace, alpha ones marked with a star.
+type opGroup struct {
+	Namespace, Names string
 }
 
 func newView(in Inputs) view {
@@ -71,7 +72,18 @@ func newView(in Inputs) view {
 			continue
 		}
 
-		v.Ops = append(v.Ops, opView{c.Name, strings.ToUpper(string(c.Phase)[:1]), c.Summary})
+		ns, action, _ := strings.Cut(c.Name, ".")
+		if c.Phase != command.Prototype {
+			action += "*"
+		}
+
+		if n := len(v.Ops); n > 0 && v.Ops[n-1].Namespace == ns {
+			v.Ops[n-1].Names += ", " + action
+
+			continue
+		}
+
+		v.Ops = append(v.Ops, opGroup{ns, action})
 	}
 
 	for _, r := range in.Lint {
