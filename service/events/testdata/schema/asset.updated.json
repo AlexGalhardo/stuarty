@@ -1,0 +1,15 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["project_id", "asset_id", "state", "progress", "message", "error", "updated_at"],
+	"properties": {
+		"project_id": {"type": "string", "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"},
+		"asset_id": {"type": "string", "pattern": "^ast_[0-9a-hjkmnp-tv-z]{10}$"},
+		"state": {"enum": ["pending", "ingesting", "ready", "failed"]},
+		"progress": {"type": "number", "minimum": 0, "maximum": 1},
+		"message": {"type": "string", "maxLength": 200},
+		"error": {"type": ["object", "null"], "required": ["code", "message", "retryable", "details"]},
+		"updated_at": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z$"}
+	}
+}

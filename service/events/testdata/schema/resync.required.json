@@ -1,0 +1,11 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["project_id", "revision", "reason"],
+	"properties": {
+		"project_id": {"type": "string", "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"},
+		"revision": {"type": "integer", "minimum": 0},
+		"reason": {"enum": ["gap_too_large", "before_floor", "client_ahead"]}
+	}
+}
