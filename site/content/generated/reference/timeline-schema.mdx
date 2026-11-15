@@ -9,189 +9,189 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `assets` | `object` |  |  |
-| `fonts` | `object` |  |  |
-| `id` | `string` | pattern `^prj_[0-9a-hjkmnp-tv-z]\{10\}$` | pattern `^prj_[0-9a-hjkmnp-tv-z]\{10\}$` |
-| `items` | `object` |  |  |
-| `name` | `string` |  |  |
-| `schema_version` | `1` | Version of this schema. | Version of this schema. |
-| `settings` | `Settings` |  |  |
-| `template` | `TemplateInfo` |  |  |
-| `tracks` | `object` |  |  |
+| `assets` | `object` | yes |  |
+| `fonts` | `object` | no |  |
+| `id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]\{10\}$` |
+| `items` | `object` | yes |  |
+| `name` | `string` | yes |  |
+| `schema_version` | `1` | yes | Version of this schema. |
+| `settings` | `Settings` | yes |  |
+| `template` | `TemplateInfo` | no |  |
+| `tracks` | `object` | yes |  |
 
 ## Asset
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `frame_count` | `integer` | min 1 | min 1 |
-| `frame_rate` | `Rational` |  |  |
-| `has_audio` | `boolean` |  |  |
-| `hash` | `string` | pattern `^sha256:[0-9a-f]\{64\}$` | pattern `^sha256:[0-9a-f]\{64\}$` |
-| `height` | `integer` | min 1 | min 1 |
-| `id` | `string` | pattern `^ast_[0-9a-hjkmnp-tv-z]\{10\}$` | pattern `^ast_[0-9a-hjkmnp-tv-z]\{10\}$` |
-| `kind` | `video`, `audio`, `image` |  |  |
-| `name` | `string` |  |  |
-| `sample_count` | `integer` | min 1 | min 1 |
-| `width` | `integer` | min 1 | min 1 |
+| `frame_count` | `integer` | no | min 1 |
+| `frame_rate` | `Rational` | no |  |
+| `has_audio` | `boolean` | no |  |
+| `hash` | `string` | yes | pattern `^sha256:[0-9a-f]\{64\}$` |
+| `height` | `integer` | no | min 1 |
+| `id` | `string` | yes | pattern `^ast_[0-9a-hjkmnp-tv-z]\{10\}$` |
+| `kind` | `video`, `audio`, `image` | yes |  |
+| `name` | `string` | yes |  |
+| `sample_count` | `integer` | no | min 1 |
+| `width` | `integer` | no | min 1 |
 
 ## CaptionStyle
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `align` | `left`, `center`, `right` |  |  |
-| `background_color` | `string` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
-| `background_padding` | `number` | min 0 | min 0 |
-| `background_radius` | `number` | min 0 | min 0 |
-| `color` | `string` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
-| `font_family` | `string` |  |  |
-| `font_weight` | `integer` | min 100; max 900 | min 100; max 900 |
-| `highlight` | `none`, `word` |  |  |
-| `highlight_background` | `string` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
-| `highlight_color` | `string` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
-| `line_height` | `number` | min 0.8; max 3 | min 0.8; max 3 |
-| `max_width` | `number` |  |  |
-| `position` | `bottom`, `middle`, `top`, `custom` |  |  |
-| `shadow_blur` | `number` | min 0; max 100 | min 0; max 100 |
-| `shadow_color` | `string` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
-| `shadow_dx` | `number` |  |  |
-| `shadow_dy` | `number` |  |  |
-| `size` | `number` | min 8; max 1000 | min 8; max 1000 |
-| `stroke_color` | `string` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
-| `stroke_width` | `number` | min 0; max 40 | min 0; max 40 |
-| `uppercase` | `boolean` |  |  |
+| `align` | `left`, `center`, `right` | no |  |
+| `background_color` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
+| `background_padding` | `number` | no | min 0 |
+| `background_radius` | `number` | no | min 0 |
+| `color` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
+| `font_family` | `string` | no |  |
+| `font_weight` | `integer` | no | min 100; max 900 |
+| `highlight` | `none`, `word` | no |  |
+| `highlight_background` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
+| `highlight_color` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
+| `line_height` | `number` | no | min 0.8; max 3 |
+| `max_width` | `number` | no |  |
+| `position` | `bottom`, `middle`, `top`, `custom` | no |  |
+| `shadow_blur` | `number` | no | min 0; max 100 |
+| `shadow_color` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
+| `shadow_dx` | `number` | no |  |
+| `shadow_dy` | `number` | no |  |
+| `size` | `number` | no | min 8; max 1000 |
+| `stroke_color` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$` |
+| `stroke_width` | `number` | no | min 0; max 40 |
+| `uppercase` | `boolean` | no |  |
 
 ## Crop
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `bottom` | `number` | min 0; max 1 | min 0; max 1 |
-| `left` | `number` | min 0; max 1 | min 0; max 1 |
-| `right` | `number` | min 0; max 1 | min 0; max 1 |
-| `top` | `number` | min 0; max 1 | min 0; max 1 |
+| `bottom` | `number` | no | min 0; max 1 |
+| `left` | `number` | no | min 0; max 1 |
+| `right` | `number` | no | min 0; max 1 |
+| `top` | `number` | no | min 0; max 1 |
 
 ## FontFile
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `hash` | `string` | pattern `^sha256:[0-9a-f]\{64\}$` | pattern `^sha256:[0-9a-f]\{64\}$` |
-| `weight` | `integer` | min 100; max 900 | min 100; max 900 |
+| `hash` | `string` | yes | pattern `^sha256:[0-9a-f]\{64\}$` |
+| `weight` | `integer` | yes | min 100; max 900 |
 
 ## Item
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `asset` | `string` | pattern `^ast_([0-9a-hjkmnp-tv-z]\{10\}\\\|placeholder)$` | pattern `^ast_([0-9a-hjkmnp-tv-z]\{10\}\\\|placeholder)$` |
-| `audio_muted` | `boolean` |  |  |
-| `breaks` | array of `integer` |  |  |
-| `brightness` | `number` | min -1; max 1 | min -1; max 1 |
-| `contrast` | `number` | min 0; max 2; default `1` | min 0; max 2; default `1` |
-| `crop` | `Crop` |  |  |
-| `duration` | `integer` | min 1 | min 1 |
-| `fade_in` | `integer` | min 0 | min 0 |
-| `fade_out` | `integer` | min 0 | min 0 |
-| `fill` | `string` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$`; default `"#FFFFFF"` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$`; default `"#FFFFFF"` |
-| `fit` | `cover`, `contain`, `none` | default `"cover"` | default `"cover"` |
-| `height` | `number` |  |  |
-| `id` | `string` | pattern `^itm_[0-9a-hjkmnp-tv-z]\{10\}$` | pattern `^itm_[0-9a-hjkmnp-tv-z]\{10\}$` |
-| `keyframes` | `object` |  |  |
-| `linked_item` | `string` | pattern `^itm_[0-9a-hjkmnp-tv-z]\{10\}$` | pattern `^itm_[0-9a-hjkmnp-tv-z]\{10\}$` |
-| `name` | `string` |  |  |
-| `opacity` | `number` | min 0; max 1; default `1` | min 0; max 1; default `1` |
-| `radius` | `number` | min 0 | min 0 |
-| `rotation` | `number` |  |  |
-| `saturation` | `number` | min 0; max 2; default `1` | min 0; max 2; default `1` |
-| `scale` | `number` | max 20; default `1` | max 20; default `1` |
-| `shape` | `rect`, `rounded_rect`, `ellipse` |  |  |
-| `slot` | `Slot` |  |  |
-| `source_in` | `integer` | min 0 | min 0 |
-| `speed` | `Rational` | default `\{"den":1,"num":1\}` | default `\{"den":1,"num":1\}` |
-| `start` | `integer` | min 0 | min 0 |
-| `stroke_color` | `string` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$`; default `"#000000"` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$`; default `"#000000"` |
-| `stroke_width` | `number` | min 0 | min 0 |
-| `style` | `CaptionStyle` |  |  |
-| `text` | `string` |  |  |
-| `track` | `string` | pattern `^trk_[0-9a-hjkmnp-tv-z]\{10\}$` | pattern `^trk_[0-9a-hjkmnp-tv-z]\{10\}$` |
-| `transition_in` | `Transition` |  |  |
-| `transition_out` | `Transition` |  |  |
-| `type` | `clip`, `audio`, `text`, `caption`, `shape` |  |  |
-| `volume` | `number` | min 0; max 4; default `1` | min 0; max 4; default `1` |
-| `width` | `number` |  |  |
-| `words` | array of `Word` | at least 1 items; at most 60 items | at least 1 items; at most 60 items |
-| `x` | `number` |  |  |
-| `y` | `number` |  |  |
+| `asset` | `string` | no | pattern `^ast_([0-9a-hjkmnp-tv-z]\{10\}\\\|placeholder)$` |
+| `audio_muted` | `boolean` | no |  |
+| `breaks` | array of `integer` | no |  |
+| `brightness` | `number` | no | min -1; max 1 |
+| `contrast` | `number` | no | min 0; max 2; default `1` |
+| `crop` | `Crop` | no |  |
+| `duration` | `integer` | yes | min 1 |
+| `fade_in` | `integer` | no | min 0 |
+| `fade_out` | `integer` | no | min 0 |
+| `fill` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$`; default `"#FFFFFF"` |
+| `fit` | `cover`, `contain`, `none` | no | default `"cover"` |
+| `height` | `number` | no |  |
+| `id` | `string` | yes | pattern `^itm_[0-9a-hjkmnp-tv-z]\{10\}$` |
+| `keyframes` | `object` | no |  |
+| `linked_item` | `string` | no | pattern `^itm_[0-9a-hjkmnp-tv-z]\{10\}$` |
+| `name` | `string` | no |  |
+| `opacity` | `number` | no | min 0; max 1; default `1` |
+| `radius` | `number` | no | min 0 |
+| `rotation` | `number` | no |  |
+| `saturation` | `number` | no | min 0; max 2; default `1` |
+| `scale` | `number` | no | max 20; default `1` |
+| `shape` | `rect`, `rounded_rect`, `ellipse` | no |  |
+| `slot` | `Slot` | no |  |
+| `source_in` | `integer` | no | min 0 |
+| `speed` | `Rational` | no | default `\{"den":1,"num":1\}` |
+| `start` | `integer` | yes | min 0 |
+| `stroke_color` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$`; default `"#000000"` |
+| `stroke_width` | `number` | no | min 0 |
+| `style` | `CaptionStyle` | no |  |
+| `text` | `string` | no |  |
+| `track` | `string` | yes | pattern `^trk_[0-9a-hjkmnp-tv-z]\{10\}$` |
+| `transition_in` | `Transition` | no |  |
+| `transition_out` | `Transition` | no |  |
+| `type` | `clip`, `audio`, `text`, `caption`, `shape` | yes |  |
+| `volume` | `number` | no | min 0; max 4; default `1` |
+| `width` | `number` | no |  |
+| `words` | array of `Word` | no | at least 1 items; at most 60 items |
+| `x` | `number` | no |  |
+| `y` | `number` | no |  |
 
 ## Keyframe
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold` | default `"linear"` | default `"linear"` |
-| `t` | `integer` | min 0 | min 0 |
-| `value` | `number` |  |  |
+| `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold` | no | default `"linear"` |
+| `t` | `integer` | yes | min 0 |
+| `value` | `number` | yes |  |
 
 ## ProjectFont
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `files` | array of `FontFile` | at least 1 items | at least 1 items |
+| `files` | array of `FontFile` | yes | at least 1 items |
 
 ## Rational
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `den` | `integer` | min 1 | min 1 |
-| `num` | `integer` | min 1 | min 1 |
+| `den` | `integer` | yes | min 1 |
+| `num` | `integer` | yes | min 1 |
 
 ## Settings
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `background` | `string` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$`; default `"#000000"` | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$`; default `"#000000"` |
-| `fps` | `any` | den is 1 or 1001; num/den between 1 and 120. default `\{"den":1,"num":30\}` | den is 1 or 1001; num/den between 1 and 120. default `\{"den":1,"num":30\}` |
-| `height` | `integer` | min 16; max 4096; default `1920` | min 16; max 4096; default `1920` |
-| `loudness_target` | `number` | min -30; max -5; default `-14` | min -30; max -5; default `-14` |
-| `width` | `integer` | min 16; max 4096; default `1080` | min 16; max 4096; default `1080` |
+| `background` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$`; default `"#000000"` |
+| `fps` | `any` | no | den is 1 or 1001; num/den between 1 and 120. default `\{"den":1,"num":30\}` |
+| `height` | `integer` | no | min 16; max 4096; default `1920` |
+| `loudness_target` | `number` | no | min -30; max -5; default `-14` |
+| `width` | `integer` | no | min 16; max 4096; default `1080` |
 
 ## Slot
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `description` | `string` |  |  |
-| `duration_policy` | `fit`, `stretch_timeline` | default `"fit"` | default `"fit"` |
-| `filled` | `boolean` |  |  |
-| `kind` | `media`, `text`, `caption` |  |  |
-| `name` | `string` | pattern `^[a-z][a-z0-9_]\{0,39\}$` | pattern `^[a-z][a-z0-9_]\{0,39\}$` |
-| `required` | `boolean` | default `true` | default `true` |
+| `description` | `string` | no |  |
+| `duration_policy` | `fit`, `stretch_timeline` | no | default `"fit"` |
+| `filled` | `boolean` | no |  |
+| `kind` | `media`, `text`, `caption` | yes |  |
+| `name` | `string` | yes | pattern `^[a-z][a-z0-9_]\{0,39\}$` |
+| `required` | `boolean` | no | default `true` |
 
 ## TemplateInfo
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `colors` | `object` |  |  |
-| `description` | `string` |  |  |
+| `colors` | `object` | no |  |
+| `description` | `string` | yes |  |
 
 ## Track
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `caption_style` | `CaptionStyle` |  |  |
-| `hidden` | `boolean` |  |  |
-| `id` | `string` | pattern `^trk_[0-9a-hjkmnp-tv-z]\{10\}$` | pattern `^trk_[0-9a-hjkmnp-tv-z]\{10\}$` |
-| `kind` | `visual`, `audio` |  |  |
-| `muted` | `boolean` |  |  |
-| `name` | `string` |  |  |
-| `order` | `string` | pattern `^[0-9a-z]+$` | pattern `^[0-9a-z]+$` |
+| `caption_style` | `CaptionStyle` | no |  |
+| `hidden` | `boolean` | no |  |
+| `id` | `string` | yes | pattern `^trk_[0-9a-hjkmnp-tv-z]\{10\}$` |
+| `kind` | `visual`, `audio` | yes |  |
+| `muted` | `boolean` | no |  |
+| `name` | `string` | no |  |
+| `order` | `string` | yes | pattern `^[0-9a-z]+$` |
 
 ## Transition
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `duration` | `integer` | min 1 | min 1 |
-| `kind` | `fade`, `slide_left`, `slide_right`, `slide_up`, `slide_down` |  |  |
+| `duration` | `integer` | yes | min 1 |
+| `kind` | `fade`, `slide_left`, `slide_right`, `slide_up`, `slide_down` | yes |  |
 
 ## Word
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `duration` | `integer` | min 1 | min 1 |
-| `start` | `integer` | min 0 | min 0 |
-| `text` | `string` |  |  |
+| `duration` | `integer` | yes | min 1 |
+| `start` | `integer` | yes | min 0 |
+| `text` | `string` | yes |  |

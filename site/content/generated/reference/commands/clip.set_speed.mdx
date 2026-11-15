@@ -11,9 +11,9 @@ Sets the speed, from 0.25x to 4x, and rescales the duration, the fades, the tran
 
 | Argument | Type | Required | Description |
 | --- | --- | --- | --- |
-| `item_id` | `string` | A clip of a video asset, or an audio item. | A clip of a video asset, or an audio item. |
-| `ripple` | `none`, `track` | none (default) or track: shift the later items of the track. | none (default) or track: shift the later items of the track. |
-| `speed` | `any` | "1.5x" (up to 3 decimals) or \{"num": 3, "den": 2\}; 1/4 to 4. | "1.5x" (up to 3 decimals) or \{"num": 3, "den": 2\}; 1/4 to 4. |
+| `item_id` | `string` | yes | A clip of a video asset, or an audio item. |
+| `ripple` | `none`, `track` | no | none (default) or track: shift the later items of the track. |
+| `speed` | `any` | yes | "1.5x" (up to 3 decimals) or \{"num": 3, "den": 2\}; 1/4 to 4. |
 
 ## Example
 

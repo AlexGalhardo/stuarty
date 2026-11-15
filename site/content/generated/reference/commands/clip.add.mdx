@@ -11,13 +11,13 @@ Adds a clip. The default duration is the rest of the asset from source_in, or 5 
 
 | Argument | Type | Required | Description |
 | --- | --- | --- | --- |
-| `asset_id` | `string` | A video or image asset, or ast_placeholder in a template. | A video or image asset, or ast_placeholder in a template. |
-| `duration` | `string` | A length; default the rest of the asset, or 5s for an image. | A length; default the rest of the asset, or 5s for an image. |
-| `fit` | `cover`, `contain`, `none` |  |  |
-| `id` | `string` |  |  |
-| `source_in` | `string` | Offset into the asset; default 0s; omit for an image. | Offset into the asset; default 0s; omit for an image. |
-| `start` | `string` | Absolute position. | Absolute position. |
-| `track_id` | `string` | A visual track. | A visual track. |
+| `asset_id` | `string` | yes | A video or image asset, or ast_placeholder in a template. |
+| `duration` | `string` | no | A length; default the rest of the asset, or 5s for an image. |
+| `fit` | `cover`, `contain`, `none` | no |  |
+| `id` | `string` | no |  |
+| `source_in` | `string` | no | Offset into the asset; default 0s; omit for an image. |
+| `start` | `string` | yes | Absolute position. |
+| `track_id` | `string` | yes | A visual track. |
 
 ## Example
 

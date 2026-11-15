@@ -11,15 +11,15 @@ Adds a caption. Give either words (times relative to the caption, as lengths) or
 
 | Argument | Type | Required | Description |
 | --- | --- | --- | --- |
-| `duration` | `string` | A length; with text only. | A length; with text only. |
-| `id` | `string` |  |  |
-| `linked_item` | `string` | The clip whose speech this transcribes; it need not exist. | The clip whose speech this transcribes; it need not exist. |
-| `start` | `string` | a time with a unit: "12.5s", "375f" or "00:00:12.500" | a time with a unit: "12.5s", "375f" or "00:00:12.500" |
-| `text` | `string` | Text to split on whitespace; needs duration. | Text to split on whitespace; needs duration. |
-| `track_id` | `string` | A visual track. | A visual track. |
-| `words` | array of `object` | Words with times relative to the caption, as lengths. | Words with times relative to the caption, as lengths. |
-| `x` | `number` |  |  |
-| `y` | `number` |  |  |
+| `duration` | `string` | no | A length; with text only. |
+| `id` | `string` | no |  |
+| `linked_item` | `string` | no | The clip whose speech this transcribes; it need not exist. |
+| `start` | `string` | yes | a time with a unit: "12.5s", "375f" or "00:00:12.500" |
+| `text` | `string` | no | Text to split on whitespace; needs duration. |
+| `track_id` | `string` | yes | A visual track. |
+| `words` | array of `object` | no | Words with times relative to the caption, as lengths. |
+| `x` | `number` | no |  |
+| `y` | `number` | no |  |
 
 ## Example
 

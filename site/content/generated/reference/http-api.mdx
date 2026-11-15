@@ -82,11 +82,11 @@ Request body:
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `dry_run` | `boolean` |  |  |
-| `fps` | `string` | 30 (default); n or n/1001. | 30 (default); n or n/1001. |
-| `id` | `string` | An id of your own; E_ID_EXISTS when taken. | An id of your own; E_ID_EXISTS when taken. |
-| `name` | `string` | 1 to 120 characters. | 1 to 120 characters. |
-| `preset` | `string` | 9:16 (default), 1:1, 16:9 or 4:5. | 9:16 (default), 1:1, 16:9 or 4:5. |
+| `dry_run` | `boolean` | no |  |
+| `fps` | `string` | no | 30 (default); n or n/1001. |
+| `id` | `string` | no | An id of your own; E_ID_EXISTS when taken. |
+| `name` | `string` | yes | 1 to 120 characters. |
+| `preset` | `string` | no | 9:16 (default), 1:1, 16:9 or 4:5. |
 
 Responses: `201` Created, `401`, `422`, `default`.
 
@@ -126,10 +126,10 @@ Request body:
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `base_revision` | `integer` | The revision the batch was planned against. | The revision the batch was planned against. |
-| `dry_run` | `boolean` |  |  |
-| `idempotency_key` | `string` | 8 to 64 characters; the Idempotency-Key header is the same. | 8 to 64 characters; the Idempotency-Key header is the same. |
-| `operations` | array of `#/components/schemas/Operation` | at least 1 items; at most 200 items | at least 1 items; at most 200 items |
+| `base_revision` | `integer` | yes | The revision the batch was planned against. |
+| `dry_run` | `boolean` | no |  |
+| `idempotency_key` | `string` | no | 8 to 64 characters; the Idempotency-Key header is the same. |
+| `operations` | array of `#/components/schemas/Operation` | yes | at least 1 items; at most 200 items |
 
 Responses: `200` OK, `401`, `422`, `default`.
 
@@ -197,10 +197,10 @@ Request body:
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `args` | `object` | The arguments of the kind: start and end for an export. | The arguments of the kind: start and end for an export. |
-| `dry_run` | `boolean` |  |  |
-| `kind` | `string` | export. | export. |
-| `wait_ms` | `integer` | 0 to 25000: hold the call until the job is final. | 0 to 25000: hold the call until the job is final. |
+| `args` | `object` | no | The arguments of the kind: start and end for an export. |
+| `dry_run` | `boolean` | no |  |
+| `kind` | `string` | yes | export. |
+| `wait_ms` | `integer` | no | 0 to 25000: hold the call until the job is final. |
 
 Responses: `202` Accepted, `401`, `422`, `default`.
 
@@ -241,9 +241,9 @@ Request body:
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `dry_run` | `boolean` |  |  |
-| `files` | array of `#/components/schemas/importFileIn` | at least 1 items; at most 50 items | at least 1 items; at most 50 items |
-| `wait_ms` | `integer` | 0 to 25000: hold the call until the assets are ready. | 0 to 25000: hold the call until the assets are ready. |
+| `dry_run` | `boolean` | no |  |
+| `files` | array of `#/components/schemas/importFileIn` | yes | at least 1 items; at most 50 items |
+| `wait_ms` | `integer` | no | 0 to 25000: hold the call until the assets are ready. |
 
 Responses: `202` Accepted, `401`, `422`, `default`.
 
@@ -332,7 +332,7 @@ Request body:
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `dry_run` | `boolean` |  |  |
+| `dry_run` | `boolean` | no |  |
 
 Responses: `200` OK, `401`, `422`, `default`.
 
@@ -348,7 +348,7 @@ Request body:
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `dry_run` | `boolean` |  |  |
+| `dry_run` | `boolean` | no |  |
 
 Responses: `200` OK, `401`, `422`, `default`.
 
@@ -382,7 +382,7 @@ Request body:
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `dry_run` | `boolean` |  |  |
+| `dry_run` | `boolean` | no |  |
 
 Responses: `200` OK, `401`, `422`, `default`.
 
@@ -398,7 +398,7 @@ Request body:
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| `dry_run` | `boolean` |  |  |
+| `dry_run` | `boolean` | no |  |
 
 Responses: `200` OK, `401`, `422`, `default`.
 
