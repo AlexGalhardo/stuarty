@@ -121,6 +121,7 @@ var ffmpegOptions = map[string]optSpec{
 	"-g":                     {class: classOutput, value: intRange(1, 1200)},
 	"-keyint_min":            {class: classOutput, value: intRange(1, 1200)},
 	"-bf":                    {class: classOutput, value: intRange(0, 16)},
+	"-dct":                   {class: classOutput, value: enum("int")},
 	"-profile:v":             {class: classOutput, value: enum("high", "main", "baseline")},
 	"-preset":                {class: classOutput, value: enum("medium")},
 	"-deadline":              {class: classOutput, value: enum("realtime", "good")},
