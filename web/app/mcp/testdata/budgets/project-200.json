@@ -1,0 +1,9713 @@
+{
+	"schema_version": 1,
+	"id": "prj_7k2m9x4q1b",
+	"name": "Reference 200",
+	"settings": {
+		"width": 1080,
+		"height": 1920,
+		"fps": {
+			"num": 30,
+			"den": 1
+		},
+		"background": "#000000",
+		"loudness_target": -14
+	},
+	"assets": {
+		"ast_1a92jjjyb5": {
+			"id": "ast_1a92jjjyb5",
+			"hash": "sha256:e6da581b0a2dd048994228985349b122cec09bf4557acbd7b8cd603066a3b026",
+			"kind": "video",
+			"name": "source03.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_4dejtzbywf": {
+			"id": "ast_4dejtzbywf",
+			"hash": "sha256:0a84edfebdcdc7fb80b195f38b04ddb5c679ed28b0d27b153d511071441bdeb9",
+			"kind": "video",
+			"name": "source12.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_51hexy0t97": {
+			"id": "ast_51hexy0t97",
+			"hash": "sha256:4286ac9b6c3969cdc8da4ef94fb68637d695c8121c28a8d1efd11d2ea2a22df8",
+			"kind": "video",
+			"name": "source09.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_6ns9x1aj8q": {
+			"id": "ast_6ns9x1aj8q",
+			"hash": "sha256:964dfbafa6cfe88641136f12f2c6644aaef51166f5d77947ae56afdf8025d55f",
+			"kind": "video",
+			"name": "source02.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_85rtp92768": {
+			"id": "ast_85rtp92768",
+			"hash": "sha256:99020a51721521b25eee57c347e00cb4a3730c940c960e1109e3253d3648cbcd",
+			"kind": "video",
+			"name": "source17.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_atq76y6bcz": {
+			"id": "ast_atq76y6bcz",
+			"hash": "sha256:cfdb5b6e83f3be8491e283a817db33705d1c855da346649f8abf2372f21687ee",
+			"kind": "video",
+			"name": "source16.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_b0gxj1gvqh": {
+			"id": "ast_b0gxj1gvqh",
+			"hash": "sha256:efea88701f2a83aea9fc9a2c3ad287a01430426f2206ba3f912c17c49ff5b572",
+			"kind": "video",
+			"name": "source06.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_c8wgg6qy53": {
+			"id": "ast_c8wgg6qy53",
+			"hash": "sha256:e1e85441951615d5f550d0c0c64ad60d17c2a3768caab731fd5c431b6234478d",
+			"kind": "video",
+			"name": "source18.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_csk2zr5skx": {
+			"id": "ast_csk2zr5skx",
+			"hash": "sha256:c2f614e1f8cb1b5654a7ada730daa05c65404ca5a840c7c35ce213e0a69e270c",
+			"kind": "video",
+			"name": "source13.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_fqbqwbgmv1": {
+			"id": "ast_fqbqwbgmv1",
+			"hash": "sha256:63c404bdcc61aa7225cd79df9f63c5146d3e57ceda288e52d81def8c4b4dd4bf",
+			"kind": "video",
+			"name": "source15.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_gnjcc5q3r4": {
+			"id": "ast_gnjcc5q3r4",
+			"hash": "sha256:bdb732510837c0306265ea65a074cf3bba8aaad88e960c3a4ab9b95e558d1813",
+			"kind": "video",
+			"name": "source11.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_h220rhpkgj": {
+			"id": "ast_h220rhpkgj",
+			"hash": "sha256:9a2c4ad5c3d07e724a12c1ede37294fbc8b3ef5376876a2235957e98f429f4df",
+			"kind": "video",
+			"name": "source07.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_j3ftd7z15h": {
+			"id": "ast_j3ftd7z15h",
+			"hash": "sha256:7e15c03988d6d3d185f48722d550b765c4e505668e37726a6b7b88a1909bc421",
+			"kind": "video",
+			"name": "source04.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_jrjyg3btg9": {
+			"id": "ast_jrjyg3btg9",
+			"hash": "sha256:2abe09ca028ebfc2db24957b2f08d910c924702e01a4ec574a15a9fecf3c4558",
+			"kind": "video",
+			"name": "source10.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_mtwchw259e": {
+			"id": "ast_mtwchw259e",
+			"hash": "sha256:39d1a733b6bb803d8bc00ec3314baa44437859efcddc21defc90981daa7f7a1a",
+			"kind": "video",
+			"name": "source01.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_na6jwtw27w": {
+			"id": "ast_na6jwtw27w",
+			"hash": "sha256:fc56a2829d75976a1fce14a96d266ce2110e20dae1d38e493e7e36bf9c44a924",
+			"kind": "video",
+			"name": "source19.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_s2f5tx1ce7": {
+			"id": "ast_s2f5tx1ce7",
+			"hash": "sha256:cbb35b6badacaa6bf36f98ba27a49655d9a91c4db60aa111ec008236187c7076",
+			"kind": "video",
+			"name": "source05.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_tags5fnnn4": {
+			"id": "ast_tags5fnnn4",
+			"hash": "sha256:3ffd754a7d5f7206ede2ac0bc00ecf5aa0be3481275f08c721f1a731bcde5dc0",
+			"kind": "video",
+			"name": "source14.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_x9am6gej6d": {
+			"id": "ast_x9am6gej6d",
+			"hash": "sha256:e6e3e7c1160cf4686e68a5ade317cf25ca15efc9f50b7015a639dfb4d0dfc63d",
+			"kind": "video",
+			"name": "source08.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		},
+		"ast_zwa0644qhr": {
+			"id": "ast_zwa0644qhr",
+			"hash": "sha256:2d41482a8722037ff2f5f2c26f424a5a2bfdcb703936d28a7aded839bbc7c872",
+			"kind": "video",
+			"name": "source00.mov",
+			"frame_rate": {
+				"num": 30,
+				"den": 1
+			},
+			"frame_count": 1800,
+			"sample_count": 2880000,
+			"width": 320,
+			"height": 240,
+			"has_audio": true
+		}
+	},
+	"tracks": {
+		"trk_3dsvszme22": {
+			"id": "trk_3dsvszme22",
+			"kind": "visual",
+			"name": "Captions 1",
+			"order": "04"
+		},
+		"trk_3krtbb0vfn": {
+			"id": "trk_3krtbb0vfn",
+			"kind": "visual",
+			"name": "Video 1",
+			"order": "i"
+		},
+		"trk_4859404k96": {
+			"id": "trk_4859404k96",
+			"kind": "audio",
+			"name": "Audio 1",
+			"order": "01"
+		},
+		"trk_4ffbwxfre7": {
+			"id": "trk_4ffbwxfre7",
+			"kind": "visual",
+			"name": "Video 2",
+			"order": "9"
+		},
+		"trk_5hr5mmar9z": {
+			"id": "trk_5hr5mmar9z",
+			"kind": "audio",
+			"name": "Audio 2",
+			"order": "00i"
+		},
+		"trk_60cpg7k24t": {
+			"id": "trk_60cpg7k24t",
+			"kind": "visual",
+			"name": "Text 3",
+			"order": "09"
+		},
+		"trk_6xrnrq60df": {
+			"id": "trk_6xrnrq60df",
+			"kind": "audio",
+			"name": "Audio 3",
+			"order": "009"
+		},
+		"trk_ch333yqxng": {
+			"id": "trk_ch333yqxng",
+			"kind": "visual",
+			"name": "Text 2",
+			"order": "0i"
+		},
+		"trk_fs8rac8ey3": {
+			"id": "trk_fs8rac8ey3",
+			"kind": "visual",
+			"name": "Captions 2",
+			"order": "02"
+		},
+		"trk_mf3vz5tccj": {
+			"id": "trk_mf3vz5tccj",
+			"kind": "visual",
+			"name": "Video 3",
+			"order": "4"
+		},
+		"trk_pgnb2nbpf3": {
+			"id": "trk_pgnb2nbpf3",
+			"kind": "visual",
+			"name": "Video 4",
+			"order": "2"
+		},
+		"trk_zvpdk2pd2v": {
+			"id": "trk_zvpdk2pd2v",
+			"kind": "visual",
+			"name": "Text 1",
+			"order": "1"
+		}
+	},
+	"items": {
+		"itm_08qrkghgfn": {
+			"id": "itm_08qrkghgfn",
+			"type": "clip",
+			"track": "trk_3krtbb0vfn",
+			"start": 720,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_atq76y6bcz",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_0a6pxm51zr": {
+			"id": "itm_0a6pxm51zr",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 7650,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "with",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 4,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 6,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "some",
+					"start": 19,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 23,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 28,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_0bd39zva00": {
+			"id": "itm_0bd39zva00",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 7800,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "clip",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "some",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 11,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 24,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 27,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 30,
+					"duration": 6
+				},
+				{
+					"text": "long",
+					"start": 36,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_0dq91hw9eb": {
+			"id": "itm_0dq91hw9eb",
+			"type": "clip",
+			"track": "trk_4ffbwxfre7",
+			"start": 1440,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_csk2zr5skx",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_0pwe4b1az3": {
+			"id": "itm_0pwe4b1az3",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 5850,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "short",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 9,
+					"duration": 3
+				},
+				{
+					"text": "some",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 16,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 21,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 25,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 29,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 32,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 35,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_0rr5tkxt86": {
+			"id": "itm_0rr5tkxt86",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 4200,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "the",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 3,
+					"duration": 5
+				},
+				{
+					"text": "long",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 12,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 17,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 19,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 23,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 27,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_0w66vq7nne": {
+			"id": "itm_0w66vq7nne",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 2400,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "long",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 4,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 9,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 19,
+					"duration": 5
+				},
+				{
+					"text": "before",
+					"start": 24,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 29,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_0xcda3gky2": {
+			"id": "itm_0xcda3gky2",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 1800,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "starts",
+					"start": 0,
+					"duration": 6
+				},
+				{
+					"text": "again",
+					"start": 6,
+					"duration": 5
+				},
+				{
+					"text": "this",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 15,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 18,
+					"duration": 3
+				},
+				{
+					"text": "part",
+					"start": 21,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 25,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 30,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 33,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 37,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_15ed7dyxb7": {
+			"id": "itm_15ed7dyxb7",
+			"type": "audio",
+			"track": "trk_6xrnrq60df",
+			"start": 0,
+			"duration": 600,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_6ns9x1aj8q",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_18pm0pcdka": {
+			"id": "itm_18pm0pcdka",
+			"type": "clip",
+			"track": "trk_3krtbb0vfn",
+			"start": 1620,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_atq76y6bcz",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_1acz5as3vy": {
+			"id": "itm_1acz5as3vy",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 7050,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "enough",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 5,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 19,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_1avv1897bm": {
+			"id": "itm_1avv1897bm",
+			"type": "clip",
+			"track": "trk_4ffbwxfre7",
+			"start": 2160,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_51hexy0t97",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_1bgk3x8md6": {
+			"id": "itm_1bgk3x8md6",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 8100,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "read",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "them",
+					"start": 3,
+					"duration": 3
+				},
+				{
+					"text": "twice",
+					"start": 6,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 10,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 15,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 18,
+					"duration": 3
+				},
+				{
+					"text": "sentence",
+					"start": 21,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 27,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_1d9z0f05px": {
+			"id": "itm_1d9z0f05px",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 8250,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "this",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "is",
+					"start": 5,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "part",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 16,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 21,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 24,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_1dcncy0sjq": {
+			"id": "itm_1dcncy0sjq",
+			"type": "text",
+			"track": "trk_60cpg7k24t",
+			"start": 1260,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 12 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_1f30a9vgy9": {
+			"id": "itm_1f30a9vgy9",
+			"type": "audio",
+			"track": "trk_4859404k96",
+			"start": 2700,
+			"duration": 600,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_51hexy0t97",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_1jv56m4jvj": {
+			"id": "itm_1jv56m4jvj",
+			"type": "audio",
+			"track": "trk_4859404k96",
+			"start": 1800,
+			"duration": 600,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_b0gxj1gvqh",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_1mezwrqy79": {
+			"id": "itm_1mezwrqy79",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 8850,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "stay",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 7,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 10,
+					"duration": 6
+				},
+				{
+					"text": "long",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 20,
+					"duration": 6
+				},
+				{
+					"text": "to",
+					"start": 26,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 28,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_1qpfrh3tw3": {
+			"id": "itm_1qpfrh3tw3",
+			"type": "clip",
+			"track": "trk_4ffbwxfre7",
+			"start": 1980,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_s2f5tx1ce7",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_1sfpvkvwm5": {
+			"id": "itm_1sfpvkvwm5",
+			"type": "text",
+			"track": "trk_zvpdk2pd2v",
+			"start": 0,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 1 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_1xcejam3s5": {
+			"id": "itm_1xcejam3s5",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 1650,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "the",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "sentence",
+					"start": 7,
+					"duration": 7
+				},
+				{
+					"text": "starts",
+					"start": 14,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 19,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 23,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 27,
+					"duration": 2
+				},
+				{
+					"text": "the",
+					"start": 29,
+					"duration": 3
+				},
+				{
+					"text": "part",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_1y7asqth5r": {
+			"id": "itm_1y7asqth5r",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 1500,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "the",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 3,
+					"duration": 5
+				},
+				{
+					"text": "long",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 12,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 17,
+					"duration": 3
+				},
+				{
+					"text": "read",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_1y7nejkn9d": {
+			"id": "itm_1y7nejkn9d",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 6450,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "the",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "part",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 8,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 13,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 24,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 28,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_254tzv84bq": {
+			"id": "itm_254tzv84bq",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 3900,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "fast",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "new",
+					"start": 7,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 10,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 16,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 21,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 25,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 27,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_2994qc6qye": {
+			"id": "itm_2994qc6qye",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 1200,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "editor",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "works",
+					"start": 5,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 10,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 14,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 16,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 21,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 25,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_2b94x5m1cq": {
+			"id": "itm_2b94x5m1cq",
+			"type": "text",
+			"track": "trk_zvpdk2pd2v",
+			"start": 1260,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 10 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_2e1ecc8dnk": {
+			"id": "itm_2e1ecc8dnk",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 6150,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "to",
+					"start": 0,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 2,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 6,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 10,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 14,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 19,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 22,
+					"duration": 3
+				},
+				{
+					"text": "sentence",
+					"start": 25,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 31,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_2qa9sevx30": {
+			"id": "itm_2qa9sevx30",
+			"type": "text",
+			"track": "trk_60cpg7k24t",
+			"start": 840,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 9 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_2qqjzbxtd0": {
+			"id": "itm_2qqjzbxtd0",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 5250,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "long",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 4,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 9,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 19,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_2wtn9dcan0": {
+			"id": "itm_2wtn9dcan0",
+			"type": "clip",
+			"track": "trk_3krtbb0vfn",
+			"start": 2160,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_x9am6gej6d",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_34zn4d4rcg": {
+			"id": "itm_34zn4d4rcg",
+			"type": "clip",
+			"track": "trk_4ffbwxfre7",
+			"start": 1800,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_mtwchw259e",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_37eja6czp7": {
+			"id": "itm_37eja6czp7",
+			"type": "clip",
+			"track": "trk_3krtbb0vfn",
+			"start": 1260,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_x9am6gej6d",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_3acf7w2eq8": {
+			"id": "itm_3acf7w2eq8",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 4950,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "clip",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "some",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 12,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 17,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 21,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 25,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 28,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_3bzjvrxr5m": {
+			"id": "itm_3bzjvrxr5m",
+			"type": "clip",
+			"track": "trk_3krtbb0vfn",
+			"start": 1980,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_j3ftd7z15h",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_3ex179bkkd": {
+			"id": "itm_3ex179bkkd",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 5700,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "show",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "fast",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 11,
+					"duration": 3
+				},
+				{
+					"text": "new",
+					"start": 14,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 17,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 23,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_3g7cj8yrze": {
+			"id": "itm_3g7cj8yrze",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 2100,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "with",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "a",
+					"start": 5,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 7,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "some",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 24,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 29,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 33,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 37,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_3zyznbrj6q": {
+			"id": "itm_3zyznbrj6q",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 6750,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "editor",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "works",
+					"start": 5,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 10,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 14,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "clip",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_43x26h7d3s": {
+			"id": "itm_43x26h7d3s",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 6600,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "fast",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "new",
+					"start": 8,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 11,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 17,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 22,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 26,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 28,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 33,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 37,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_4ccktsw93x": {
+			"id": "itm_4ccktsw93x",
+			"type": "clip",
+			"track": "trk_mf3vz5tccj",
+			"start": 1260,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_jrjyg3btg9",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_4fsmjx4vej": {
+			"id": "itm_4fsmjx4vej",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 5400,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "before",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 5,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "sentence",
+					"start": 12,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 18,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 23,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 27,
+					"duration": 3
+				},
+				{
+					"text": "is",
+					"start": 30,
+					"duration": 2
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_4j98s2sksc": {
+			"id": "itm_4j98s2sksc",
+			"type": "clip",
+			"track": "trk_pgnb2nbpf3",
+			"start": 0,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_1a92jjjyb5",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_4z6az1qagk": {
+			"id": "itm_4z6az1qagk",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 7200,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "the",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "sentence",
+					"start": 7,
+					"duration": 7
+				},
+				{
+					"text": "starts",
+					"start": 14,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 19,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 23,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 27,
+					"duration": 2
+				},
+				{
+					"text": "the",
+					"start": 29,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_50ve38mnb9": {
+			"id": "itm_50ve38mnb9",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 5550,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "part",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 4,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 9,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_53rx28ckpt": {
+			"id": "itm_53rx28ckpt",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 4350,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "enough",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 5,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 19,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 24,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 27,
+					"duration": 3
+				},
+				{
+					"text": "sentence",
+					"start": 30,
+					"duration": 6
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_5bca0kary3": {
+			"id": "itm_5bca0kary3",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 8550,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "works",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 9,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 11,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_5cqhgavy6p": {
+			"id": "itm_5cqhgavy6p",
+			"type": "audio",
+			"track": "trk_6xrnrq60df",
+			"start": 1800,
+			"duration": 600,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_x9am6gej6d",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_5d0pw1ybbe": {
+			"id": "itm_5d0pw1ybbe",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 450,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "some",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 4,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 9,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 13,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 17,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 20,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 23,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_5g8mxr2wmv": {
+			"id": "itm_5g8mxr2wmv",
+			"type": "audio",
+			"track": "trk_5hr5mmar9z",
+			"start": 0,
+			"duration": 600,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_mtwchw259e",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_5htw9tw2sn": {
+			"id": "itm_5htw9tw2sn",
+			"type": "clip",
+			"track": "trk_pgnb2nbpf3",
+			"start": 180,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_h220rhpkgj",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_5r4gmrsznv": {
+			"id": "itm_5r4gmrsznv",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 7500,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "where",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 5,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_5vc9j8hkqs": {
+			"id": "itm_5vc9j8hkqs",
+			"type": "clip",
+			"track": "trk_mf3vz5tccj",
+			"start": 540,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_tags5fnnn4",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_5xbyshppcv": {
+			"id": "itm_5xbyshppcv",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 6600,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "we",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 15,
+					"duration": 3
+				},
+				{
+					"text": "new",
+					"start": 18,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 21,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 27,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_63fxbwdczx": {
+			"id": "itm_63fxbwdczx",
+			"type": "text",
+			"track": "trk_zvpdk2pd2v",
+			"start": 2520,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 19 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_6e4715kenz": {
+			"id": "itm_6e4715kenz",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 6150,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "screen",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "long",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 9,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 14,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 20,
+					"duration": 3
+				},
+				{
+					"text": "twice",
+					"start": 23,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 27,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_6ssfby7wnz": {
+			"id": "itm_6ssfby7wnz",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 3000,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "works",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 9,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 11,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "some",
+					"start": 24,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_72w94k6cfr": {
+			"id": "itm_72w94k6cfr",
+			"type": "clip",
+			"track": "trk_pgnb2nbpf3",
+			"start": 1440,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_fqbqwbgmv1",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_7a5tvbfrmj": {
+			"id": "itm_7a5tvbfrmj",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 6000,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "stay",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 7,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 10,
+					"duration": 6
+				},
+				{
+					"text": "long",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 20,
+					"duration": 6
+				},
+				{
+					"text": "to",
+					"start": 26,
+					"duration": 2
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_7nbz3d6n1e": {
+			"id": "itm_7nbz3d6n1e",
+			"type": "clip",
+			"track": "trk_4ffbwxfre7",
+			"start": 0,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_mtwchw259e",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_7vqakkz8xc": {
+			"id": "itm_7vqakkz8xc",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 7950,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "on",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 3,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 6,
+					"duration": 6
+				},
+				{
+					"text": "long",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 16,
+					"duration": 6
+				},
+				{
+					"text": "to",
+					"start": 22,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 24,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_7x5x621677": {
+			"id": "itm_7x5x621677",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 300,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "short",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 9,
+					"duration": 3
+				},
+				{
+					"text": "some",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "that",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_7xqpytw5fp": {
+			"id": "itm_7xqpytw5fp",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 4500,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "the",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 3,
+					"duration": 3
+				},
+				{
+					"text": "sentence",
+					"start": 6,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 12,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 17,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 21,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_7zhr8v4afd": {
+			"id": "itm_7zhr8v4afd",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 1650,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "them",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "twice",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 7,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 12,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 15,
+					"duration": 3
+				},
+				{
+					"text": "sentence",
+					"start": 18,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 24,
+					"duration": 4
+				},
+				{
+					"text": "again",
+					"start": 28,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_8gaqt6qn1x": {
+			"id": "itm_8gaqt6qn1x",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 5400,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "sentence",
+					"start": 0,
+					"duration": 7
+				},
+				{
+					"text": "starts",
+					"start": 7,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 12,
+					"duration": 5
+				},
+				{
+					"text": "this",
+					"start": 17,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 21,
+					"duration": 2
+				},
+				{
+					"text": "the",
+					"start": 23,
+					"duration": 3
+				},
+				{
+					"text": "part",
+					"start": 26,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 30,
+					"duration": 4
+				},
+				{
+					"text": "we",
+					"start": 34,
+					"duration": 2
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_957wfym1f9": {
+			"id": "itm_957wfym1f9",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 1050,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "we",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "new",
+					"start": 19,
+					"duration": 4
+				},
+				{
+					"text": "editor",
+					"start": 23,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 29,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 34,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 38,
+					"duration": 2
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_98pa86d3j4": {
+			"id": "itm_98pa86d3j4",
+			"type": "clip",
+			"track": "trk_3krtbb0vfn",
+			"start": 180,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_j3ftd7z15h",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_9n6f0x321w": {
+			"id": "itm_9n6f0x321w",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 2250,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "clip",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "some",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 11,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_9sv325rm4r": {
+			"id": "itm_9sv325rm4r",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 8400,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "part",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 4,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 9,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 24,
+					"duration": 4
+				},
+				{
+					"text": "new",
+					"start": 28,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_9syv4zycnn": {
+			"id": "itm_9syv4zycnn",
+			"type": "clip",
+			"track": "trk_4ffbwxfre7",
+			"start": 900,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_mtwchw259e",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_9ts37vv32p": {
+			"id": "itm_9ts37vv32p",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 300,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "works",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 9,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 11,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 20,
+					"duration": 3
+				},
+				{
+					"text": "some",
+					"start": 23,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 27,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 32,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 36,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_9vxhvrv26n": {
+			"id": "itm_9vxhvrv26n",
+			"type": "clip",
+			"track": "trk_pgnb2nbpf3",
+			"start": 1800,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_1a92jjjyb5",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_a1p7svwsx2": {
+			"id": "itm_a1p7svwsx2",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 0,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "part",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 4,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 9,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 24,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_a6kbamczk9": {
+			"id": "itm_a6kbamczk9",
+			"type": "text",
+			"track": "trk_60cpg7k24t",
+			"start": 420,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 6 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_adyqkha9hp": {
+			"id": "itm_adyqkha9hp",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 2850,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "part",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 4,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 9,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 24,
+					"duration": 3
+				},
+				{
+					"text": "new",
+					"start": 27,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 30,
+					"duration": 6
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_aj3vb5zrcg": {
+			"id": "itm_aj3vb5zrcg",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 1800,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "is",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "part",
+					"start": 7,
+					"duration": 5
+				},
+				{
+					"text": "where",
+					"start": 12,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 17,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_aqfts780jv": {
+			"id": "itm_aqfts780jv",
+			"type": "clip",
+			"track": "trk_pgnb2nbpf3",
+			"start": 1260,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_gnjcc5q3r4",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_arm50s7egt": {
+			"id": "itm_arm50s7egt",
+			"type": "text",
+			"track": "trk_ch333yqxng",
+			"start": 420,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 5 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_axzhgr8key": {
+			"id": "itm_axzhgr8key",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 3150,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "some",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 4,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 9,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 13,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 17,
+					"duration": 2
+				},
+				{
+					"text": "the",
+					"start": 19,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 22,
+					"duration": 5
+				},
+				{
+					"text": "long",
+					"start": 27,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 31,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_b7kp1vdyab": {
+			"id": "itm_b7kp1vdyab",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 3600,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "again",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "this",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 9,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "part",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 20,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 25,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 28,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 32,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 36,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_bj3zt03ye7": {
+			"id": "itm_bj3zt03ye7",
+			"type": "audio",
+			"track": "trk_5hr5mmar9z",
+			"start": 900,
+			"duration": 600,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_j3ftd7z15h",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_btbeebfeq7": {
+			"id": "itm_btbeebfeq7",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 7050,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "the",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 3,
+					"duration": 5
+				},
+				{
+					"text": "long",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 12,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 17,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 19,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 23,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 27,
+					"duration": 5
+				},
+				{
+					"text": "before",
+					"start": 32,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 37,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_cfqm2zjrs9": {
+			"id": "itm_cfqm2zjrs9",
+			"type": "text",
+			"track": "trk_ch333yqxng",
+			"start": 0,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 2 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_cnttka1spe": {
+			"id": "itm_cnttka1spe",
+			"type": "clip",
+			"track": "trk_pgnb2nbpf3",
+			"start": 540,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_fqbqwbgmv1",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_cv33bzkt5f": {
+			"id": "itm_cv33bzkt5f",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 3600,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "next",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "sentence",
+					"start": 4,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 10,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 19,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 23,
+					"duration": 2
+				},
+				{
+					"text": "the",
+					"start": 25,
+					"duration": 3
+				},
+				{
+					"text": "part",
+					"start": 28,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_cyds6fsh3p": {
+			"id": "itm_cyds6fsh3p",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 150,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "the",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "new",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 7,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 13,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 18,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 22,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 24,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 29,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 33,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_d2nbmkp5rc": {
+			"id": "itm_d2nbmkp5rc",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 4950,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "with",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 4,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 6,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "some",
+					"start": 19,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 23,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_d4xryt54y6": {
+			"id": "itm_d4xryt54y6",
+			"type": "clip",
+			"track": "trk_mf3vz5tccj",
+			"start": 1800,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_6ns9x1aj8q",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_dj9qdyatp4": {
+			"id": "itm_dj9qdyatp4",
+			"type": "audio",
+			"track": "trk_4859404k96",
+			"start": 900,
+			"duration": 600,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_1a92jjjyb5",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_dkm17jzwrr": {
+			"id": "itm_dkm17jzwrr",
+			"type": "clip",
+			"track": "trk_mf3vz5tccj",
+			"start": 1620,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_c8wgg6qy53",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_dprzzp3bw3": {
+			"id": "itm_dprzzp3bw3",
+			"type": "clip",
+			"track": "trk_mf3vz5tccj",
+			"start": 1080,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_b0gxj1gvqh",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_dqpppk5f2c": {
+			"id": "itm_dqpppk5f2c",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 1500,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "enough",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 5,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 15,
+					"duration": 5
+				},
+				{
+					"text": "before",
+					"start": 20,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 25,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_dv2ctbhqmy": {
+			"id": "itm_dv2ctbhqmy",
+			"type": "text",
+			"track": "trk_60cpg7k24t",
+			"start": 0,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 3 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_e31fj1e2x8": {
+			"id": "itm_e31fj1e2x8",
+			"type": "clip",
+			"track": "trk_4ffbwxfre7",
+			"start": 180,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_s2f5tx1ce7",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_e79kyhc07t": {
+			"id": "itm_e79kyhc07t",
+			"type": "clip",
+			"track": "trk_mf3vz5tccj",
+			"start": 720,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_c8wgg6qy53",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_eayve1c7w0": {
+			"id": "itm_eayve1c7w0",
+			"type": "text",
+			"track": "trk_ch333yqxng",
+			"start": 2100,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 17 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_ej56cz5zye": {
+			"id": "itm_ej56cz5zye",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 4800,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "new",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 3,
+					"duration": 5
+				},
+				{
+					"text": "works",
+					"start": 8,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 13,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 17,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 19,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_ejvrs73sxa": {
+			"id": "itm_ejvrs73sxa",
+			"type": "clip",
+			"track": "trk_3krtbb0vfn",
+			"start": 900,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_zwa0644qhr",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_ekd338dwfj": {
+			"id": "itm_ekd338dwfj",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 8700,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "some",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 4,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 9,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 13,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 17,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 20,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 23,
+					"duration": 5
+				},
+				{
+					"text": "long",
+					"start": 28,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_em2r43e0jt": {
+			"id": "itm_em2r43e0jt",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 4800,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "how",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 8,
+					"duration": 3
+				},
+				{
+					"text": "new",
+					"start": 11,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 14,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 20,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 25,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 29,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 31,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 36,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_em8xayr6s2": {
+			"id": "itm_em8xayr6s2",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 6300,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "next",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "sentence",
+					"start": 4,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 10,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 19,
+					"duration": 3
+				},
+				{
+					"text": "is",
+					"start": 22,
+					"duration": 2
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_es3x9zhfzd": {
+			"id": "itm_es3x9zhfzd",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 900,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "the",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "part",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 8,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 13,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 24,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 28,
+					"duration": 4
+				},
+				{
+					"text": "new",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_exkg6grec0": {
+			"id": "itm_exkg6grec0",
+			"type": "clip",
+			"track": "trk_mf3vz5tccj",
+			"start": 360,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_jrjyg3btg9",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_ey9jj1w7wv": {
+			"id": "itm_ey9jj1w7wv",
+			"type": "clip",
+			"track": "trk_pgnb2nbpf3",
+			"start": 1620,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_na6jwtw27w",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_f39rv05ry3": {
+			"id": "itm_f39rv05ry3",
+			"type": "audio",
+			"track": "trk_4859404k96",
+			"start": 0,
+			"duration": 600,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_zwa0644qhr",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_f5v586r5xz": {
+			"id": "itm_f5v586r5xz",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 4500,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "starts",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 5,
+					"duration": 5
+				},
+				{
+					"text": "this",
+					"start": 10,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 14,
+					"duration": 2
+				},
+				{
+					"text": "the",
+					"start": 16,
+					"duration": 3
+				},
+				{
+					"text": "part",
+					"start": 19,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 23,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_feh5e4c4qv": {
+			"id": "itm_feh5e4c4qv",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 3300,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "screen",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "long",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 9,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 14,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_fg1xxex5me": {
+			"id": "itm_fg1xxex5me",
+			"type": "text",
+			"track": "trk_60cpg7k24t",
+			"start": 1680,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 15 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_fhvcq8qmet": {
+			"id": "itm_fhvcq8qmet",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 2700,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "this",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "is",
+					"start": 5,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "part",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 16,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 21,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 24,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 28,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_fje830ygyc": {
+			"id": "itm_fje830ygyc",
+			"type": "audio",
+			"track": "trk_5hr5mmar9z",
+			"start": 1800,
+			"duration": 600,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_h220rhpkgj",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_g4msg0a7vy": {
+			"id": "itm_g4msg0a7vy",
+			"type": "clip",
+			"track": "trk_4ffbwxfre7",
+			"start": 540,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_csk2zr5skx",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_g7e95sywp6": {
+			"id": "itm_g7e95sywp6",
+			"type": "clip",
+			"track": "trk_4ffbwxfre7",
+			"start": 720,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_85rtp92768",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_gpk2dgqm1x": {
+			"id": "itm_gpk2dgqm1x",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 2850,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "show",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 12,
+					"duration": 3
+				},
+				{
+					"text": "new",
+					"start": 15,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 18,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 24,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 29,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 33,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 35,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_gqwkxz3nsp": {
+			"id": "itm_gqwkxz3nsp",
+			"type": "clip",
+			"track": "trk_3krtbb0vfn",
+			"start": 1440,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_4dejtzbywf",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_gy1f3a9qn5": {
+			"id": "itm_gy1f3a9qn5",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 6900,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "that",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 8,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 11,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 14,
+					"duration": 6
+				},
+				{
+					"text": "long",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 24,
+					"duration": 6
+				},
+				{
+					"text": "to",
+					"start": 30,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_gzrvr72ftt": {
+			"id": "itm_gzrvr72ftt",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 7350,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "starts",
+					"start": 0,
+					"duration": 6
+				},
+				{
+					"text": "again",
+					"start": 6,
+					"duration": 5
+				},
+				{
+					"text": "this",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 15,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 18,
+					"duration": 3
+				},
+				{
+					"text": "part",
+					"start": 21,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 25,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 30,
+					"duration": 2
+				},
+				{
+					"text": "show",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_h33sp24h56": {
+			"id": "itm_h33sp24h56",
+			"type": "clip",
+			"track": "trk_mf3vz5tccj",
+			"start": 1980,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_b0gxj1gvqh",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_h8g1eq26j2": {
+			"id": "itm_h8g1eq26j2",
+			"type": "text",
+			"track": "trk_zvpdk2pd2v",
+			"start": 2100,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 16 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_hcawga7tda": {
+			"id": "itm_hcawga7tda",
+			"type": "text",
+			"track": "trk_60cpg7k24t",
+			"start": 2100,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 18 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_hf8pfk689p": {
+			"id": "itm_hf8pfk689p",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 4200,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "that",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 8,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 11,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 14,
+					"duration": 5
+				},
+				{
+					"text": "long",
+					"start": 19,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 23,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_hh6q1hm81r": {
+			"id": "itm_hh6q1hm81r",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 8400,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "show",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "new",
+					"start": 16,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 19,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 25,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 30,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 34,
+					"duration": 2
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_j9ncxh5e5m": {
+			"id": "itm_j9ncxh5e5m",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 6450,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "again",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "this",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 9,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "part",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 20,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 25,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_jexhef21ct": {
+			"id": "itm_jexhef21ct",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 6900,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "and",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "some",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 7,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 20,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 23,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 26,
+					"duration": 6
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_jg2a4v5ksb": {
+			"id": "itm_jg2a4v5ksb",
+			"type": "audio",
+			"track": "trk_6xrnrq60df",
+			"start": 900,
+			"duration": 600,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_s2f5tx1ce7",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_jkr0hhemzd": {
+			"id": "itm_jkr0hhemzd",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 2550,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "before",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 7,
+					"duration": 3
+				},
+				{
+					"text": "sentence",
+					"start": 10,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "again",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_jt2krh7tdz": {
+			"id": "itm_jt2krh7tdz",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 8850,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "screen",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "long",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 9,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 14,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 24,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 28,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 33,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 36,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_jv78pesr5e": {
+			"id": "itm_jv78pesr5e",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 0,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "this",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "is",
+					"start": 5,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "part",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 16,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 21,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_jwdghx4vch": {
+			"id": "itm_jwdghx4vch",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 5100,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "on",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 3,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 6,
+					"duration": 5
+				},
+				{
+					"text": "long",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 15,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 20,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 22,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 26,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 30,
+					"duration": 5
+				},
+				{
+					"text": "before",
+					"start": 35,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_k0hjs2yby5": {
+			"id": "itm_k0hjs2yby5",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 2550,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "read",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "twice",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 11,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 16,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 19,
+					"duration": 3
+				},
+				{
+					"text": "sentence",
+					"start": 22,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 28,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 33,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 37,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_k31401g2rs": {
+			"id": "itm_k31401g2rs",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 8550,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "the",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "new",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 7,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 13,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 18,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 22,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 24,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 29,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 33,
+					"duration": 3
+				},
+				{
+					"text": "some",
+					"start": 36,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_k3qa3h1bzt": {
+			"id": "itm_k3qa3h1bzt",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 1950,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "how",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "new",
+					"start": 12,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 15,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 21,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 26,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 30,
+					"duration": 2
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_k4zaqwngm4": {
+			"id": "itm_k4zaqwngm4",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 3900,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "editor",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "works",
+					"start": 5,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 10,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 14,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 16,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 21,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 25,
+					"duration": 3
+				},
+				{
+					"text": "some",
+					"start": 28,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_k7nwdp580p": {
+			"id": "itm_k7nwdp580p",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 6000,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "some",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 4,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 9,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 13,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 17,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_k91nzk90th": {
+			"id": "itm_k91nzk90th",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 450,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "stay",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 7,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 10,
+					"duration": 6
+				},
+				{
+					"text": "long",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 20,
+					"duration": 6
+				},
+				{
+					"text": "to",
+					"start": 26,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 28,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_knn3cjnb0r": {
+			"id": "itm_knn3cjnb0r",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 900,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "again",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "this",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 9,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "part",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 20,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 25,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 28,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_kpzjkcxvqj": {
+			"id": "itm_kpzjkcxvqj",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 4050,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "a",
+					"start": 0,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 2,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 7,
+					"duration": 5
+				},
+				{
+					"text": "and",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "some",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 20,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 25,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 29,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 33,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 36,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_kx0f78c03v": {
+			"id": "itm_kx0f78c03v",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 4350,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "them",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 8,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 13,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "sentence",
+					"start": 20,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 26,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 31,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 35,
+					"duration": 3
+				},
+				{
+					"text": "is",
+					"start": 38,
+					"duration": 2
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_kxxmrn774k": {
+			"id": "itm_kxxmrn774k",
+			"type": "clip",
+			"track": "trk_mf3vz5tccj",
+			"start": 1440,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_tags5fnnn4",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_m1yfdqm7nb": {
+			"id": "itm_m1yfdqm7nb",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 600,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "to",
+					"start": 0,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 2,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 6,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 10,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 14,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 19,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 22,
+					"duration": 3
+				},
+				{
+					"text": "sentence",
+					"start": 25,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 31,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 36,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_m64p84x60t": {
+			"id": "itm_m64p84x60t",
+			"type": "text",
+			"track": "trk_zvpdk2pd2v",
+			"start": 1680,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 13 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_m7nkt5rwmj": {
+			"id": "itm_m7nkt5rwmj",
+			"type": "clip",
+			"track": "trk_3krtbb0vfn",
+			"start": 1800,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_zwa0644qhr",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_m8zh9y7sey": {
+			"id": "itm_m8zh9y7sey",
+			"type": "text",
+			"track": "trk_ch333yqxng",
+			"start": 1680,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 14 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_mcnv1fap7t": {
+			"id": "itm_mcnv1fap7t",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 1200,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "a",
+					"start": 0,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 2,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "some",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 19,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 24,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 28,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_mpqh0vsgnx": {
+			"id": "itm_mpqh0vsgnx",
+			"type": "clip",
+			"track": "trk_pgnb2nbpf3",
+			"start": 360,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_gnjcc5q3r4",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_mpzjvk1q4x": {
+			"id": "itm_mpzjvk1q4x",
+			"type": "clip",
+			"track": "trk_mf3vz5tccj",
+			"start": 0,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_6ns9x1aj8q",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_mrrpck7exp": {
+			"id": "itm_mrrpck7exp",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 5700,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "the",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "new",
+					"start": 3,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 6,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 12,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 17,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 21,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 23,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 28,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_mwhenxynwr": {
+			"id": "itm_mwhenxynwr",
+			"type": "clip",
+			"track": "trk_mf3vz5tccj",
+			"start": 180,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_b0gxj1gvqh",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_n32j22y2ye": {
+			"id": "itm_n32j22y2ye",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 750,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "twice",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 8,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 11,
+					"duration": 3
+				},
+				{
+					"text": "sentence",
+					"start": 14,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_ngy1h67ss3": {
+			"id": "itm_ngy1h67ss3",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 5550,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "this",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "is",
+					"start": 5,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "part",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 16,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 21,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 24,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 28,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 32,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 36,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_p0aa1mdxea": {
+			"id": "itm_p0aa1mdxea",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 7650,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "new",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 3,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 9,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 14,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 18,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 20,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 25,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 29,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_p0t7qphx7g": {
+			"id": "itm_p0t7qphx7g",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 3750,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "the",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "part",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "where",
+					"start": 8,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 13,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_p4f1s9d91m": {
+			"id": "itm_p4f1s9d91m",
+			"type": "clip",
+			"track": "trk_4ffbwxfre7",
+			"start": 1260,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_51hexy0t97",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_p4rc5d3j6z": {
+			"id": "itm_p4rc5d3j6z",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 7800,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "words",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 9,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 13,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 16,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 19,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_p6zhntr4sg": {
+			"id": "itm_p6zhntr4sg",
+			"type": "text",
+			"track": "trk_ch333yqxng",
+			"start": 840,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 8 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_pbvrmcnarg": {
+			"id": "itm_pbvrmcnarg",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 6300,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "twice",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 4,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 9,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "sentence",
+					"start": 16,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 22,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 27,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 31,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 35,
+					"duration": 2
+				},
+				{
+					"text": "the",
+					"start": 37,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_ph6rke7r99": {
+			"id": "itm_ph6rke7r99",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 2700,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "sentence",
+					"start": 0,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 6,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 19,
+					"duration": 2
+				},
+				{
+					"text": "the",
+					"start": 21,
+					"duration": 3
+				},
+				{
+					"text": "part",
+					"start": 24,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_px5w4vbffq": {
+			"id": "itm_px5w4vbffq",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 3750,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "we",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "new",
+					"start": 19,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 22,
+					"duration": 6
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_pxapemxv6j": {
+			"id": "itm_pxapemxv6j",
+			"type": "clip",
+			"track": "trk_pgnb2nbpf3",
+			"start": 1080,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_h220rhpkgj",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_q0b5kbgv3f": {
+			"id": "itm_q0b5kbgv3f",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 8250,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "sentence",
+					"start": 0,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 6,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 19,
+					"duration": 2
+				},
+				{
+					"text": "the",
+					"start": 21,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_q9yy0bh1zm": {
+			"id": "itm_q9yy0bh1zm",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 2100,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "new",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 3,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 9,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 14,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 18,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 20,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 25,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 29,
+					"duration": 3
+				},
+				{
+					"text": "some",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_q9yyzbjg8b": {
+			"id": "itm_q9yyzbjg8b",
+			"type": "clip",
+			"track": "trk_pgnb2nbpf3",
+			"start": 720,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_na6jwtw27w",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_qb6ert2mfs": {
+			"id": "itm_qb6ert2mfs",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 3450,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "twice",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 4,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 9,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 12,
+					"duration": 3
+				},
+				{
+					"text": "sentence",
+					"start": 15,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 21,
+					"duration": 4
+				},
+				{
+					"text": "again",
+					"start": 25,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 29,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_qd7zry2a93": {
+			"id": "itm_qd7zry2a93",
+			"type": "text",
+			"track": "trk_zvpdk2pd2v",
+			"start": 840,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 7 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_qpc35fk8hg": {
+			"id": "itm_qpc35fk8hg",
+			"type": "clip",
+			"track": "trk_4ffbwxfre7",
+			"start": 1080,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_s2f5tx1ce7",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_rap7swka24": {
+			"id": "itm_rap7swka24",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 1350,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "that",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 8,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 11,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 14,
+					"duration": 6
+				},
+				{
+					"text": "long",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 24,
+					"duration": 6
+				},
+				{
+					"text": "to",
+					"start": 30,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 32,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 36,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_rgmn9ydyv2": {
+			"id": "itm_rgmn9ydyv2",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 7350,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "is",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "part",
+					"start": 7,
+					"duration": 5
+				},
+				{
+					"text": "where",
+					"start": 12,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 17,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 24,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 28,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 32,
+					"duration": 4
+				},
+				{
+					"text": "new",
+					"start": 36,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_rkwkkhc0c8": {
+			"id": "itm_rkwkkhc0c8",
+			"type": "clip",
+			"track": "trk_4ffbwxfre7",
+			"start": 360,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_51hexy0t97",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_rqewk3jdes": {
+			"id": "itm_rqewk3jdes",
+			"type": "text",
+			"track": "trk_zvpdk2pd2v",
+			"start": 420,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 4 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_rt7e3pg0sf": {
+			"id": "itm_rt7e3pg0sf",
+			"type": "clip",
+			"track": "trk_3krtbb0vfn",
+			"start": 360,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_x9am6gej6d",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_s07e5zhnrj": {
+			"id": "itm_s07e5zhnrj",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 3000,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "the",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "new",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 7,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 13,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 18,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 22,
+					"duration": 2
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_sacxysxqmb": {
+			"id": "itm_sacxysxqmb",
+			"type": "text",
+			"track": "trk_ch333yqxng",
+			"start": 2520,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 20 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_sf9n1j7vpz": {
+			"id": "itm_sf9n1j7vpz",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 4650,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "is",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "part",
+					"start": 7,
+					"duration": 5
+				},
+				{
+					"text": "where",
+					"start": 12,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 17,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 24,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 28,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_t8mtrzx8k7": {
+			"id": "itm_t8mtrzx8k7",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 1050,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "fast",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "new",
+					"start": 7,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 10,
+					"duration": 5
+				},
+				{
+					"text": "works",
+					"start": 15,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 20,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_tf99ebpfn3": {
+			"id": "itm_tf99ebpfn3",
+			"type": "clip",
+			"track": "trk_pgnb2nbpf3",
+			"start": 900,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_1a92jjjyb5",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_tqrtmt9rcp": {
+			"id": "itm_tqrtmt9rcp",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 2400,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "on",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 3,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 6,
+					"duration": 6
+				},
+				{
+					"text": "long",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 16,
+					"duration": 6
+				},
+				{
+					"text": "to",
+					"start": 22,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 24,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 28,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_tr492pne8x": {
+			"id": "itm_tr492pne8x",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 600,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "screen",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "long",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 9,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 14,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 24,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 28,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 33,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_v9eg08bjd1": {
+			"id": "itm_v9eg08bjd1",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 750,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "next",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "sentence",
+					"start": 4,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 10,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 19,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 23,
+					"duration": 2
+				},
+				{
+					"text": "the",
+					"start": 25,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_vhy94qnfg4": {
+			"id": "itm_vhy94qnfg4",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 7950,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "long",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 4,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 9,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 19,
+					"duration": 5
+				},
+				{
+					"text": "before",
+					"start": 24,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 29,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_vmatypjn0j": {
+			"id": "itm_vmatypjn0j",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 7200,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "them",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "twice",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 7,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 12,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 15,
+					"duration": 3
+				},
+				{
+					"text": "sentence",
+					"start": 18,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 24,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_vvygzmba9s": {
+			"id": "itm_vvygzmba9s",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 3300,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "stay",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 7,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 10,
+					"duration": 6
+				},
+				{
+					"text": "long",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 20,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 25,
+					"duration": 2
+				},
+				{
+					"text": "read",
+					"start": 27,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 31,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 35,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_vwa6rr1zex": {
+			"id": "itm_vwa6rr1zex",
+			"type": "clip",
+			"track": "trk_3krtbb0vfn",
+			"start": 1080,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_j3ftd7z15h",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_vx7kzm03vc": {
+			"id": "itm_vx7kzm03vc",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 150,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "show",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "fast",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 11,
+					"duration": 3
+				},
+				{
+					"text": "new",
+					"start": 14,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 17,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 23,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 28,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_vzgke8myzt": {
+			"id": "itm_vzgke8myzt",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 2250,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "words",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 9,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 13,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 16,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 19,
+					"duration": 5
+				},
+				{
+					"text": "long",
+					"start": 24,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_w2nhm023zn": {
+			"id": "itm_w2nhm023zn",
+			"type": "clip",
+			"track": "trk_mf3vz5tccj",
+			"start": 900,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_6ns9x1aj8q",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_w9xre590ez": {
+			"id": "itm_w9xre590ez",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 1350,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "and",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "some",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 7,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 20,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 23,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 26,
+					"duration": 6
+				},
+				{
+					"text": "long",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_whsfyan2ps": {
+			"id": "itm_whsfyan2ps",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 5850,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "works",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "a",
+					"start": 9,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 11,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 20,
+					"duration": 3
+				},
+				{
+					"text": "some",
+					"start": 23,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 27,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 32,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_xd8h6s0dk6": {
+			"id": "itm_xd8h6s0dk6",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 3450,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "to",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "read",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "twice",
+					"start": 11,
+					"duration": 5
+				},
+				{
+					"text": "before",
+					"start": 16,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 21,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 24,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_xd8x2erbw3": {
+			"id": "itm_xd8x2erbw3",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 1950,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "where",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 5,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "fast",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "new",
+					"start": 24,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_xpt7nzq9vj": {
+			"id": "itm_xpt7nzq9vj",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 5250,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "read",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "them",
+					"start": 4,
+					"duration": 3
+				},
+				{
+					"text": "twice",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "before",
+					"start": 11,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 16,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 19,
+					"duration": 3
+				},
+				{
+					"text": "sentence",
+					"start": 22,
+					"duration": 6
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_xv5q2hbrdg": {
+			"id": "itm_xv5q2hbrdg",
+			"type": "clip",
+			"track": "trk_4ffbwxfre7",
+			"start": 1620,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_85rtp92768",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_xyn8zg3s0q": {
+			"id": "itm_xyn8zg3s0q",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 7500,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "how",
+					"start": 0,
+					"duration": 3
+				},
+				{
+					"text": "fast",
+					"start": 3,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 7,
+					"duration": 3
+				},
+				{
+					"text": "new",
+					"start": 10,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 13,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 19,
+					"duration": 5
+				},
+				{
+					"text": "with",
+					"start": 24,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_y2jmws8r1v": {
+			"id": "itm_y2jmws8r1v",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 4650,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "where",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "we",
+					"start": 5,
+					"duration": 3
+				},
+				{
+					"text": "show",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "how",
+					"start": 12,
+					"duration": 3
+				},
+				{
+					"text": "fast",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "the",
+					"start": 19,
+					"duration": 3
+				},
+				{
+					"text": "new",
+					"start": 22,
+					"duration": 3
+				},
+				{
+					"text": "editor",
+					"start": 25,
+					"duration": 6
+				},
+				{
+					"text": "works",
+					"start": 31,
+					"duration": 5
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_y8f76hyfmv": {
+			"id": "itm_y8f76hyfmv",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 4050,
+			"duration": 24,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "and",
+					"start": 0,
+					"duration": 4
+				},
+				{
+					"text": "some",
+					"start": 4,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 8,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 13,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 17,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 21,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_yhxryvvqdk": {
+			"id": "itm_yhxryvvqdk",
+			"type": "text",
+			"track": "trk_ch333yqxng",
+			"start": 1260,
+			"duration": 120,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"text": "Headline 11 of the reference project",
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_ymnc6qv3k8": {
+			"id": "itm_ymnc6qv3k8",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 5100,
+			"duration": 36,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "words",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 9,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 13,
+					"duration": 3
+				},
+				{
+					"text": "the",
+					"start": 16,
+					"duration": 3
+				},
+				{
+					"text": "screen",
+					"start": 19,
+					"duration": 6
+				},
+				{
+					"text": "long",
+					"start": 25,
+					"duration": 4
+				},
+				{
+					"text": "enough",
+					"start": 29,
+					"duration": 5
+				},
+				{
+					"text": "to",
+					"start": 34,
+					"duration": 2
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_yqc3cz6p4n": {
+			"id": "itm_yqc3cz6p4n",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 6750,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "a",
+					"start": 0,
+					"duration": 2
+				},
+				{
+					"text": "short",
+					"start": 2,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 7,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 11,
+					"duration": 4
+				},
+				{
+					"text": "some",
+					"start": 15,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 19,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 24,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_yt5n5ct61d": {
+			"id": "itm_yt5n5ct61d",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 8700,
+			"duration": 28,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "short",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 9,
+					"duration": 3
+				},
+				{
+					"text": "some",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 16,
+					"duration": 4
+				},
+				{
+					"text": "that",
+					"start": 20,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 24,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_z5qx562shh": {
+			"id": "itm_z5qx562shh",
+			"type": "caption",
+			"track": "trk_3dsvszme22",
+			"start": 3150,
+			"duration": 32,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "short",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "clip",
+					"start": 5,
+					"duration": 4
+				},
+				{
+					"text": "and",
+					"start": 9,
+					"duration": 3
+				},
+				{
+					"text": "some",
+					"start": 12,
+					"duration": 4
+				},
+				{
+					"text": "words",
+					"start": 16,
+					"duration": 5
+				},
+				{
+					"text": "that",
+					"start": 21,
+					"duration": 4
+				},
+				{
+					"text": "stay",
+					"start": 25,
+					"duration": 4
+				},
+				{
+					"text": "on",
+					"start": 29,
+					"duration": 3
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_zb9z2zgdm7": {
+			"id": "itm_zb9z2zgdm7",
+			"type": "caption",
+			"track": "trk_fs8rac8ey3",
+			"start": 8100,
+			"duration": 40,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"words": [
+				{
+					"text": "before",
+					"start": 0,
+					"duration": 5
+				},
+				{
+					"text": "the",
+					"start": 5,
+					"duration": 3
+				},
+				{
+					"text": "next",
+					"start": 8,
+					"duration": 4
+				},
+				{
+					"text": "sentence",
+					"start": 12,
+					"duration": 6
+				},
+				{
+					"text": "starts",
+					"start": 18,
+					"duration": 5
+				},
+				{
+					"text": "again",
+					"start": 23,
+					"duration": 4
+				},
+				{
+					"text": "this",
+					"start": 27,
+					"duration": 4
+				},
+				{
+					"text": "is",
+					"start": 31,
+					"duration": 2
+				},
+				{
+					"text": "the",
+					"start": 33,
+					"duration": 3
+				},
+				{
+					"text": "part",
+					"start": 36,
+					"duration": 4
+				}
+			],
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_zers58g57r": {
+			"id": "itm_zers58g57r",
+			"type": "clip",
+			"track": "trk_pgnb2nbpf3",
+			"start": 1980,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_h220rhpkgj",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_zm18s4rhsg": {
+			"id": "itm_zm18s4rhsg",
+			"type": "clip",
+			"track": "trk_3krtbb0vfn",
+			"start": 0,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_zwa0644qhr",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		},
+		"itm_ztwhh5g729": {
+			"id": "itm_ztwhh5g729",
+			"type": "clip",
+			"track": "trk_3krtbb0vfn",
+			"start": 540,
+			"duration": 150,
+			"scale": 1,
+			"opacity": 1,
+			"filter": "none",
+			"filter_amount": 1,
+			"asset": "ast_4dejtzbywf",
+			"speed": {
+				"num": 1,
+				"den": 1
+			},
+			"volume": 1,
+			"fit": "cover",
+			"contrast": 1,
+			"saturation": 1,
+			"fill": "#FFFFFF",
+			"stroke_color": "#000000"
+		}
+	}
+}
