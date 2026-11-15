@@ -170,6 +170,18 @@ func (s stub) ToolsInstall(context.Context, service.ToolsInstallRequest) (*servi
 	return reply[service.ToolsInstallResult](s.err)
 }
 
+func (s stub) ProjectOtioExport(
+	context.Context, service.ProjectOtioExportRequest,
+) (*service.ProjectOtioExportResult, error) {
+	return reply[service.ProjectOtioExportResult](s.err)
+}
+
+func (s stub) ProjectOtioImport(
+	context.Context, service.ProjectOtioImportRequest,
+) (*service.ProjectOtioImportResult, error) {
+	return reply[service.ProjectOtioImportResult](s.err)
+}
+
 func (s stub) ToolsStatus(context.Context, service.ToolsStatusRequest) (*service.ToolsStatusResult, error) {
 	return reply[service.ToolsStatusResult](s.err)
 }

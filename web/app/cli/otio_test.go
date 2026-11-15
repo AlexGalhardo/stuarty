@@ -113,3 +113,61 @@ func TestOtioImportDefaultsToTheCurrentRevision(t *testing.T) {
 		}
 	}
 }
+
+// otioNamed answers an export with the file name the test chose.
+type otioNamed struct {
+	otioService
+
+	name string
+}
+
+func (o *otioNamed) ProjectOtioExport(
+	ctx context.Context,
+	r service.ProjectOtioExportRequest,
+) (*service.ProjectOtioExportResult, error) {
+	res, err := o.otioService.ProjectOtioExport(ctx, r)
+	if res != nil {
+		res.FileName = o.name
+	}
+
+	return res, err
+}
+
+// TestSecurity_T13_OtioExportNeverTrustsTheServerFileName: the file name of an otio:export result comes
+// from the server, which in client mode may be hostile; without --out the CLI writes only a plain
+// ".otio" name in the current directory and refuses anything else, writing nothing (SDD-007 T-13).
+func TestSecurity_T13_OtioExportNeverTrustsTheServerFileName(t *testing.T) {
+	for _, name := range []string{
+		"../../evil.otio", "/etc/x.otio", `C:\x.otio`, "C:x.otio", "a/b.otio", `a\b.otio`, "", ".", "..",
+		"x.txt", ".otio", "bad\x00name.otio", "line\nbreak.otio", "x.otio:stream",
+	} {
+		h := newHarness(t)
+		h.res.svc = &otioNamed{name: name}
+		root := t.TempDir()
+		dir := filepath.Join(root, "cwd")
+
+		if err := os.Mkdir(dir, 0o750); err != nil {
+			t.Fatal(err)
+		}
+
+		h.rt.Getwd = func() (string, error) { return dir, nil }
+
+		if code := h.run("otio:export", "--project", "prj_7k2m9x4q1b"); code != ExitFailure {
+			t.Errorf("%q: exit %d, want 1", name, code)
+		}
+
+		var written []string
+
+		_ = filepath.WalkDir(root, func(p string, d os.DirEntry, _ error) error {
+			if !d.IsDir() {
+				written = append(written, p)
+			}
+
+			return nil
+		})
+
+		if len(written) != 0 {
+			t.Errorf("%q: wrote %v", name, written)
+		}
+	}
+}
