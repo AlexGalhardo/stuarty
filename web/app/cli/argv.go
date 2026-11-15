@@ -182,7 +182,8 @@ func (p *parsed) integer(name string) int {
 	return v
 }
 
-func (p *parsed) duration(name string) time.Duration {
-	v, _ := time.ParseDuration(p.str(name))
+// timeout is the --timeout flag.
+func (p *parsed) timeout() time.Duration {
+	v, _ := time.ParseDuration(p.str("timeout"))
 	return v
 }
