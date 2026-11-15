@@ -341,7 +341,12 @@ func licenseCheck(in *ffmpeg.Installation, privileged bool) DoctorCheck {
 		parts = append(parts, strings.Join(in.Info.Flags, " "))
 	}
 
-	return DoctorCheck{Name: "ffmpeg.license", OK: licOK, Hint: licHint, Detail: strings.TrimSpace(strings.Join(parts, "; "))}
+	return DoctorCheck{
+		Name:   "ffmpeg.license",
+		OK:     licOK,
+		Hint:   licHint,
+		Detail: strings.TrimSpace(strings.Join(parts, "; ")),
+	}
 }
 
 // openH264Check is ffmpeg.openh264 and exists for the own build only. It reads the library from disk

@@ -150,10 +150,10 @@ func queueFullError(full *QueueFullError) *Error {
 		name, index = name+"_per_key", 1
 	}
 
-	e.withLimit(name, len(full.Running), full.Ceiling)
+	_ = e.withLimit(name, len(full.Running), full.Ceiling)
 
 	if v, ok := queueVariables[full.Kind]; ok {
-		e.withDetail("variable", v[index])
+		_ = e.withDetail("variable", v[index])
 	}
 
 	return e
