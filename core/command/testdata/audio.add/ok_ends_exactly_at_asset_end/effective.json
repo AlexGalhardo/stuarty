@@ -1,0 +1,18 @@
+{
+  "duration": {
+    "frame": 870,
+    "requested": "870f",
+    "seconds": 29
+  },
+  "id": "itm_s6t7v8w9x0",
+  "source_in": {
+    "frame": 30,
+    "requested": "30f",
+    "seconds": 1
+  },
+  "start": {
+    "frame": 0,
+    "requested": "0s",
+    "seconds": 0
+  }
+}

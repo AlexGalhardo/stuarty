@@ -1,0 +1,19 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "crop": [
+        {
+          "left": 0.2,
+          "top": 0.1
+        },
+        {
+          "left": 0.2,
+          "right": 0.3,
+          "top": 0.1
+        }
+      ]
+    }
+  }
+]

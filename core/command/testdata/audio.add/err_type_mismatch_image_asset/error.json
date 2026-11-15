@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Asset ast_9m8n7p6q5r is an image; audio.add needs audio.",
+  "hint": "Use clip.add on a visual track to show it.",
+  "retryable": false,
+  "path": "args.asset_id"
+}

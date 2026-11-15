@@ -1,0 +1,9 @@
+{
+  "op": "audio.add",
+  "args": {
+    "track_id": "trk_m1n2p3q4r5",
+    "asset_id": "ast_4h6j8k2m3n",
+    "id": "itm_s6t7v8w9x0",
+    "start": "0s"
+  }
+}
