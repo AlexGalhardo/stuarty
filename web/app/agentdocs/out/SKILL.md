@@ -31,12 +31,11 @@ Run `vukem-video version`, then `project:list`. The workspace is `~/.vukem-video
 - Ids (`prj_`, `ast_`, `trk_`, `itm_`, `job_`) are never positions. List before you address.
 - The top track is drawn over the others; the views call the ends `top` and `bottom`.
 - `--base` is the `revision` of your last result. Omitted, the CLI uses the current one.
-- Give your own `id` to what a batch creates when later operations refer to it.
-- Retry only when `retryable` is true.
+- Give your own `id` to what a batch creates when later operations use it.
 
 ## Command reference
 
-Operations of `edit`, written `namespace.action`; a star marks those added after the Prototype. `command_help [name]` lists them or prints arguments and an example. `asset.remove` and `font.*` need the media scope.
+Operations of `edit` (`namespace.action`); a star marks those added after the Prototype. `command_help [name]` lists them or prints arguments and an example. `asset.remove` and `font.*` need the media scope.
 
 - `asset`: remove*
 - `audio`: add*, duck*, mark_beats*
@@ -96,6 +95,9 @@ Every line starts with `vukem-video`.
 - `audit [--project <id>] [--cursor c] [--limit n]`
 - `tools:install <name> [--model <model>] [--yes] [--timeout d]`
 - `token:rotate`
+- `font:import <path>`
+- `brand:show`
+- `brand:set --kit <file|->`
 
 Batches: `--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` any JSON). `--dry-run` saves nothing; `--key <k>` makes a retry safe.
 
