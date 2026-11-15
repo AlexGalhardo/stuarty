@@ -1,5 +1,11 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
+import {
+	existsSync,
+	mkdirSync,
+	readdirSync,
+	readFileSync,
+	writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -434,9 +440,14 @@ async function loadCase(
 interface Capture {
 	canvas: Pixels;
 	frame: Pixels;
+	// What each side looked like, attached to a failing frame so that a failure
+	// shows which side was wrong.
+	canvasPng: Buffer;
+	frameJpeg: Buffer;
 }
 
-// Waits until the canvas stops changing, then returns its pixels and those of
+// Waits until the canvas says it shows the frame, then until it stops changing,
+// and returns its pixels and those of
 // ViewFrame at the same width.
 async function capture(
 	page: Page,
@@ -447,7 +458,13 @@ async function capture(
 	let previous: Buffer | null = null;
 	let shot: Buffer = Buffer.alloc(0);
 	const deadline = Date.now() + 20_000;
-	await page.waitForTimeout(400);
+	// The executor marks the canvas with the frame it shows once every layer of
+	// that frame is on it (a loaded texture, a video that has decoded the frame).
+	// A capture before that is a blank or half-drawn canvas that would settle too.
+	await expect(
+		canvas,
+		`the canvas never showed frame ${frame} complete`,
+	).toHaveAttribute("data-drawn", String(frame), { timeout: 20_000 });
 	for (;;) {
 		// The exact frame is an <img> above the canvas: hide it, so the test
 		// compares the canvas itself (a style tag would break the CSP).
@@ -507,6 +524,7 @@ async function capture(
 				height: a.height,
 				canvas: pixels(a),
 				frame: pixels(b),
+				frameBase64: body.image_base64,
 			};
 		},
 		{ projectId: id, shotBase64: shot.toString("base64"), at: frame, w: width },
@@ -516,10 +534,30 @@ async function capture(
 		height: decoded.height,
 		data: new Uint8Array(Buffer.from(base64, "base64")),
 	});
-	return { canvas: toPixels(decoded.canvas), frame: toPixels(decoded.frame) };
+	return {
+		canvas: toPixels(decoded.canvas),
+		frame: toPixels(decoded.frame),
+		canvasPng: shot,
+		frameJpeg: Buffer.from(decoded.frameBase64, "base64"),
+	};
 }
 
 async function openCase(page: Page, id: string): Promise<void> {
+	// The preview keeps its video elements out of the document: remember them, so
+	// that a frame that misses the gate can say what each one was doing.
+	await page.addInitScript(() => {
+		const videos: HTMLVideoElement[] = [];
+		(window as unknown as { __videos: HTMLVideoElement[] }).__videos = videos;
+		const create = document.createElement.bind(document);
+		document.createElement = ((
+			tag: string,
+			options?: ElementCreationOptions,
+		) => {
+			const el = create(tag, options);
+			if (tag.toLowerCase() === "video") videos.push(el as HTMLVideoElement);
+			return el;
+		}) as typeof document.createElement;
+	});
 	await page.goto(`/editor/${id}`);
 	await expect(
 		page.getByRole("main", { name: "Preview" }).locator("canvas"),
@@ -665,12 +703,59 @@ test.describe("preview-vs-export", () => {
 			const loaded = await loadCase(request, name);
 			await openCase(page, loaded.id);
 			await stepThrough(page, loaded.frames, async (frame) => {
-				const { canvas, frame: exported } = await capture(
-					page,
-					loaded.id,
-					frame,
-				);
+				const {
+					canvas,
+					frame: exported,
+					canvasPng,
+					frameJpeg,
+				} = await capture(page, loaded.id, frame);
 				const ssim = lumaSsim(canvas, exported);
+				if (ssim < MIN_SSIM) {
+					const videos = await page.evaluate(() =>
+						(
+							(window as unknown as { __videos: HTMLVideoElement[] })
+								.__videos ?? []
+						).map((v) => {
+							// What the element itself shows, apart from the preview.
+							const probe = document.createElement("canvas");
+							probe.width = 16;
+							probe.height = 16;
+							const g = probe.getContext("2d");
+							g?.drawImage(v, 0, 0, 16, 16);
+							const px = g?.getImageData(0, 0, 16, 16).data ?? [];
+							let sum = 0;
+							for (let i = 0; i < px.length; i += 4) sum += px[i + 1] ?? 0;
+							const quality = v.getVideoPlaybackQuality();
+							return {
+								meanGreen: Math.round(sum / 256),
+								totalFrames: quality.totalVideoFrames,
+								corrupted: quality.corruptedVideoFrames,
+								src: v.currentSrc.split("/media/")[1],
+								readyState: v.readyState,
+								networkState: v.networkState,
+								seeking: v.seeking,
+								paused: v.paused,
+								currentTime: v.currentTime,
+								videoWidth: v.videoWidth,
+								error: v.error?.code ?? null,
+							};
+						}),
+					);
+					console.log(
+						`preview-vs-export ${name} frame ${frame} missed the gate; video elements: ${JSON.stringify(videos)}`,
+					);
+					for (const [suffix, body, contentType] of [
+						["canvas.png", canvasPng, "image/png"],
+						["viewframe.jpg", frameJpeg, "image/jpeg"],
+					] as const) {
+						const path = test.info().outputPath(`${name}-${frame}-${suffix}`);
+						writeFileSync(path, body);
+						await test.info().attach(`${name}-${frame}-${suffix}`, {
+							path,
+							contentType,
+						});
+					}
+				}
 				const edges = globalShift(exported, canvas);
 				const shift =
 					edges.texture < MIN_TEXTURE
