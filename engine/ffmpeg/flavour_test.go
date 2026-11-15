@@ -52,6 +52,8 @@ func TestFlavourRecognisesTheBuilds(t *testing.T) {
 // TestOwnBuildHasNoGPLFlags is NFR-043 over the fake of the own build: the configure line has neither
 // --enable-gpl, --enable-nonfree nor --enable-libopenh264, and a copy that does is flagged.
 func ownBuildHasNoGPLFlags(t *testing.T) {
+	t.Helper()
+
 	v := fakeBuild(t, "own")
 	for _, bad := range []string{"--enable-gpl", "--enable-nonfree", "--enable-libopenh264"} {
 		if slices.Contains(v.Flags, bad) {

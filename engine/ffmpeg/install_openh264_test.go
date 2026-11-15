@@ -84,6 +84,8 @@ func noLibraryLeft(t *testing.T, toolsDir string) {
 // TestInstallOpenH264Verified is T-26 for the Cisco library: a wrong digest or size is refused and leaves
 // no library; the right file installs and is verified again at each check.
 func installOpenH264Verified(t *testing.T) {
+	t.Helper()
+
 	m, archive, library := fakeLibrary(t)
 	flip := func(b []byte) []byte {
 		c := bytes.Clone(b)
@@ -201,6 +203,8 @@ func flipByte(b []byte) []byte {
 }
 
 func openH264ManifestPinsEveryPlatform(t *testing.T) {
+	t.Helper()
+
 	m, err := DefaultOpenH264Manifest()
 	if err != nil {
 		t.Fatal(err)
@@ -248,6 +252,8 @@ func TestOpenH264ManifestRefusesWhatItShould(t *testing.T) {
 // TestOpenH264NeverAutoDownloaded (RF-130, ADR-0020): the package builds no HTTP request anywhere but in
 // InstallOpenH264, which only the explicit install step calls, and checking the library creates nothing.
 func openH264NeverAutoDownloaded(t *testing.T) {
+	t.Helper()
+
 	files, err := filepath.Glob("*.go")
 	if err != nil {
 		t.Fatal(err)
