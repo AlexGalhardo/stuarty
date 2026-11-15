@@ -178,10 +178,7 @@ test.describe("project-settings", () => {
 			.context()
 			.addCookies([{ name: "lang", value: "pt-BR", url: baseURL }]);
 		const response = await page.goto("/settings");
-		test.skip(
-			response?.status() === 404,
-			"GET /settings has no route yet: the controller of the page is a server task",
-		);
+		expect(response?.status()).toBe(200);
 		await expect(
 			page.getByRole("heading", { name: "Configurações", level: 1 }),
 		).toBeVisible();
