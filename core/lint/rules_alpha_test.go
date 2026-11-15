@@ -1,9 +1,11 @@
 package lint
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
@@ -221,5 +223,31 @@ func TestThreeFindingsReport(t *testing.T) {
 
 	if text+"\n" != string(want) {
 		t.Errorf("report differs:\n--- got\n%s\n--- want\n%s", text, want)
+	}
+}
+
+// The transition rule costs the sort of the spans, not the length of the items: a
+// 2-hour item with a transition among 300 items lints well under 100 ms.
+func TestTransitionEmptyCostDoesNotGrowWithLength(t *testing.T) {
+	t.Parallel()
+
+	d := withVideoTrack(newDoc())
+
+	for i := range 300 {
+		it := onTrack(clip(fmt.Sprintf("itm_s%09d", i), i*10, 10), trkVideo2)
+		it.TransitionIn = &timeline.Transition{Kind: "fade", Duration: 5}
+		put(d, it)
+	}
+
+	long := clip("itm_long0001", 0, 216000)
+	long.TransitionIn = &timeline.Transition{Kind: "fade", Duration: 100000}
+	long.TransitionOut = &timeline.Transition{Kind: "fade", Duration: 100000}
+	put(d, long)
+
+	start := time.Now()
+	Lint(d, Env{}, Full)
+
+	if took := time.Since(start); took > 100*time.Millisecond {
+		t.Errorf("lint took %v", took)
 	}
 }
