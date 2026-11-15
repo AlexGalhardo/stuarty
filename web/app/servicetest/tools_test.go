@@ -403,14 +403,40 @@ func (g *hopGuard) Do(req *http.Request) (*http.Response, error) {
 	return nil, errors.New("the test does not follow allowed hops")
 }
 
-// The refusals of P2-RND-012, at the service: nothing is kept and nothing is
-// run when the bytes are not the pinned ones, the URL is not https, or a
-// redirect leaves the allowlist.
-func TestToolsInstallRefusals(t *testing.T) {
+// T-26 (SDD-007 section 6.8): nothing is kept and nothing is run when the
+// bytes are not the pinned ones (digest or size), the URL is not https, or a
+// redirect leaves the allowlist. The install lives in the service, so the test
+// is here and not beside the manifest.
+func TestSecurity_T26_HelperDownloadVerified(t *testing.T) {
 	person := service.WithCaller(context.Background(), service.Caller{
 		Actor: "local:ui", Scopes: service.AllScopes, Browser: true,
 	})
 	req := service.ToolsInstallRequest{Name: "whisper", Model: "tiny"}
+
+	t.Run("a wrong digest at the pinned size", func(t *testing.T) {
+		ts := newToolsServer(t)
+		dir := filepath.Join(t.TempDir(), "tools")
+		m := newMediaEnv(t, mediaCfg{tools: ts.tools(dir)})
+		other := bytes.Repeat([]byte{'x'}, len(ts.model))
+		ts.serveModel.Store(&other)
+
+		if _, err := m.svc.ToolsInstall(person, req); err != nil {
+			t.Fatal(err)
+		}
+
+		st := m.waitInstall(person)
+		if st.State != "failed" || st.Error == nil || st.Error.Details["reason"] != "checksum_mismatch" {
+			t.Errorf("status = %+v", st)
+		}
+
+		if _, ok := service.VerifiedTool(dir, "whisper", transcribe.KindModel, "tiny"); ok {
+			t.Error("the model was installed")
+		}
+
+		if entries, _ := os.ReadDir(filepath.Join(dir, ".download")); len(entries) != 0 {
+			t.Errorf("leftovers in .download: %v", entries)
+		}
+	})
 
 	t.Run("a body shorter than the pinned size", func(t *testing.T) {
 		ts := newToolsServer(t)
@@ -430,6 +456,10 @@ func TestToolsInstallRefusals(t *testing.T) {
 
 		if _, ok := service.VerifiedTool(dir, "whisper", transcribe.KindModel, "tiny"); ok {
 			t.Error("the model was installed")
+		}
+
+		if entries, _ := os.ReadDir(filepath.Join(dir, ".download")); len(entries) != 0 {
+			t.Errorf("leftovers in .download: %v", entries)
 		}
 	})
 
