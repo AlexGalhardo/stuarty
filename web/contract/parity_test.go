@@ -83,6 +83,10 @@ var parity = []row{
 	{method: "KeyList", route: "GET /keys", httpOnly: true},
 	{method: "KeyRevoke", route: "DELETE /keys/{}", httpOnly: true},
 	{method: "Events", command: "events", route: "GET /projects/{}/events", noMethod: true},
+	// Bundles move whole projects as files: no MCP tool (SDD-003 section 7.1,
+	// exception E-3). The import command arrives with the rest of P3-AGT-002.
+	{method: "ProjectBundleExport", command: "bundle:export", route: "POST /projects/{}/bundle"},
+	{method: "ProjectBundleImport", command: "bundle:import", route: "POST /projects/import", cliPending: "P3-AGT-002"},
 }
 
 // notOperations are Service methods that are not operations an agent calls
