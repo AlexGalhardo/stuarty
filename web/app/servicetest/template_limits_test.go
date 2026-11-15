@@ -37,10 +37,20 @@ func TestTemplateImportReadsUpTo64MiBFromDisk(t *testing.T) {
 		return p
 	}
 
-	for name, size := range map[string]int{"at.zip": limit, "over.zip": limit + 1} {
+	// Written one at a time and removed at once: a 64 MiB file is real disk on some systems.
+	for _, c := range []struct {
+		name string
+		size int
+	}{{"at.zip", limit}, {"over.zip", limit + 1}} {
+		name, size := c.name, c.size
+
 		_, err := m.svc.TemplateImport(m.as(ui), service.TemplateImportRequest{Path: write(name, size)})
 		if code(err) != command.CodeValidation {
 			t.Fatalf("%s: %v, want E_VALIDATION", name, err)
+		}
+
+		if err := os.Remove(filepath.Join(m.files, name)); err != nil {
+			t.Fatal(err)
 		}
 
 		over := strings.Contains(serviceError(t, err).Message, "over 64 MiB")
