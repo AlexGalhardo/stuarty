@@ -92,12 +92,31 @@ func helper(mode string) {
 		}
 		_ = c.Close()
 		fmt.Println("dial ok")
+	case "alloc":
+		allocate()
+	case "alloctree":
+		gc := exec.Command(os.Args[0], helperFlag+"sleep")
+		if err := gc.Start(); err != nil {
+			os.Exit(3)
+		}
+		_ = os.WriteFile("pids", []byte(fmt.Sprintf("%d %d", os.Getpid(), gc.Process.Pid)), 0o600)
+		allocate()
 	case "big":
 		fmt.Print(strings.Repeat("y", 5<<20))
 	case "fail":
 		fmt.Fprintln(os.Stderr, "boom")
 		os.Exit(3)
 	}
+}
+
+// allocate commits and touches 2 GiB in one block, then reports; under a memory limit the Go
+// runtime aborts before it reports (one block: a limit hit while the heap grows by steps stalls it).
+func allocate() {
+	buf := make([]byte, 2<<30)
+	for i := 0; i < len(buf); i += 4096 {
+		buf[i] = 1
+	}
+	fmt.Println("allocated", len(buf)>>20)
 }
 
 func helperRunner(t *testing.T) (*Runner, *RunDir, *engine.Tool) {

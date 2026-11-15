@@ -82,6 +82,7 @@ func (p *whisperProvider) current() *transcribe.Whisper {
 			}
 		case transcribe.KindModel:
 			w.ModelPath, w.ModelItem, w.ModelSHA256 = path, item, e.SHA256
+			w.Limits = ffmpeg.LimitsForWhisper(e.Bytes, runtime.NumCPU())
 		}
 	}
 

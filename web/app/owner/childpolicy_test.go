@@ -2,9 +2,12 @@ package owner
 
 import (
 	"context"
+	"os"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/AlexGalhardo/vukem/contrib/engine"
 
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 )
@@ -40,10 +43,10 @@ func TestChildRunnersNeedPrlimitOnLinux(t *testing.T) {
 	}
 }
 
-// Outside Linux no limits are passed and the policy says why (SDD-007 section 6.5).
-func TestChildRunnersWithoutLimitsOutsideLinux(t *testing.T) {
-	if runtime.GOOS == "linux" {
-		t.Skip("covered by the Linux tests of engine/ffmpeg")
+// On macOS no limits are passed and the policy says why (SDD-007 section 6.5).
+func TestChildRunnersWithoutLimitsOnMacOS(t *testing.T) {
+	if runtime.GOOS == "linux" || runtime.GOOS == "windows" {
+		t.Skip("Linux and Windows apply limits")
 	}
 
 	got, err := newChildRunners(context.Background(), &ffmpeg.Installation{CPUCount: 2}, t.TempDir(), "none", 1<<30)
@@ -57,5 +60,30 @@ func TestChildRunnersWithoutLimitsOutsideLinux(t *testing.T) {
 
 	if got.Ingest == nil || got.Frame == nil || got.Export == nil || got.Ingest == got.Export {
 		t.Errorf("runners = %+v", got)
+	}
+}
+
+// On Windows the limits are applied through a Job Object, so the policy reports them (SDD-007 section 6.5).
+func TestChildRunnersLimitedOnWindows(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("Job Objects exist on Windows only")
+	}
+
+	tool, err := engine.Find(context.Background(), engine.Config{
+		Name: "self", Path: os.Args[0], VersionArgs: []string{"-test.list=^$"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	in := &ffmpeg.Installation{FFmpeg: tool, FFprobe: tool, CPUCount: 2}
+
+	got, err := newChildRunners(context.Background(), in, t.TempDir(), "none", 1<<30)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !got.Policy.Limits || got.Policy.LimitsWhy != "" {
+		t.Errorf("policy = %+v, want limits available", got.Policy)
 	}
 }
