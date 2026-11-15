@@ -47,13 +47,24 @@ vukem-video bundle:export --project prj_7k2m9x4q1b --no-log --wait
 
 Like an export, a bundle is a job: `--wait` follows it, and the file is written under `<workspace>/exports/<project id>/` as `bundle-r<revision>-<job id>.vvbundle`. `--no-log` leaves the history out, which hides who edited and why. A project in the trash cannot be exported. The command runs on the machine that owns the workspace.
 
-<Callout type="warning" title="Import is planned for BETA">
-Opening a bundle is not available from the CLI or the HTTP API yet, and the editor has no bundle entry yet. Only the export above exists in this build.
-</Callout>
+## Import a project bundle
+
+`bundle:import` creates a project from a `.vvbundle` file. It reads the file on the machine that runs the server, checks it before it changes anything, and copies the media and the fonts it carries into the workspace. The project opens at once; its assets show as ingesting while the proxies, thumbnails and transcripts are made again.
+
+```bash
+vukem-video bundle:import launch-teaser.vvbundle
+vukem-video bundle:import launch-teaser.vvbundle --as-new
+vukem-video bundle:import launch-teaser.vvbundle --dry-run
+```
+
+Without `--as-new` the project keeps its id and its history of edits. If a project with that id exists, even in the trash, the import is refused with `E_ID_EXISTS`. With `--as-new` the project gets a new id and starts at revision 1 with no history, because the history of another project does not belong to a new one. A server with accounts requires `--as-new`. `--dry-run` checks the file and reports what would be created. A file that is damaged, too large, has a different format or comes from a newer version of the product is refused with `E_VALIDATION` and a reason, and nothing is imported. The HTTP API has the same operation as `POST /api/v1/projects/import`.
+
+There is no MCP tool for bundles and the editor has no bundle entry yet.
 
 ## Common mistakes
 
 - No H.264 encoder works on this machine: `E_NO_ENCODER`.
+- Importing a bundle whose project id already exists: `E_ID_EXISTS`. Use `--as-new`.
 - Too many exports at once: `E_QUEUE_FULL`, retryable. `VUKEM_VIDEO_MAX_EXPORTS` sets the limit.
 
 ## Next steps
