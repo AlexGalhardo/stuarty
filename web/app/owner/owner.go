@@ -152,7 +152,7 @@ func (o *Owner) take(cfg Config) error {
 
 	dir, err := workspace.Resolve(cfg.Getenv)
 	if err != nil {
-		return err
+		return StartupError(err)
 	}
 
 	if err := dir.EnsureLayout(); err != nil {

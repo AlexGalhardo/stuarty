@@ -97,3 +97,46 @@ func TestStartupErrorLeavesOtherErrorsAlone(t *testing.T) {
 		t.Errorf("got %v, want the same error", got)
 	}
 }
+
+// A workspace path with a character that breaks the database URL is refused as a state error with a
+// fixed reason: the raw error names the path, the answer does not.
+func TestStartupErrorShowsTheUnusablePathReasonWithoutThePath(t *testing.T) {
+	raw := fmt.Errorf("%w: C:/Users/someone/ws?x/db.sqlite", workspace.ErrUnusablePath)
+
+	se, ok := errors.AsType[*service.Error](StartupError(raw))
+	if !ok {
+		t.Fatal("want a *service.Error")
+	}
+
+	if se.Code != command.CodeInvalidState || se.Retryable {
+		t.Errorf("code = %s retryable = %v", se.Code, se.Retryable)
+	}
+
+	for _, s := range []string{se.Message, se.Hint} {
+		if strings.Contains(s, "someone") || strings.Contains(s, `\`) || strings.Contains(s, "C:") {
+			t.Errorf("%q shows a path", s)
+		}
+	}
+
+	if !strings.Contains(se.Hint, workspace.EnvHome) {
+		t.Errorf("hint = %q, want it to name %s", se.Hint, workspace.EnvHome)
+	}
+}
+
+func TestOpenRefusesAWorkspacePathThatBreaksTheDatabaseURL(t *testing.T) {
+	home := filepath.Join(t.TempDir(), "ws#1")
+
+	_, err := Open(context.Background(), Config{
+		Getenv: envOf(map[string]string{workspace.EnvHome: home}),
+		Inline: true,
+	})
+
+	se, ok := errors.AsType[*service.Error](err)
+	if !ok || se.Code != command.CodeInvalidState {
+		t.Fatalf("err = %v, want E_INVALID_STATE", err)
+	}
+
+	if strings.Contains(se.Message+se.Hint, "ws#1") {
+		t.Errorf("answer shows the path: %q %q", se.Message, se.Hint)
+	}
+}
