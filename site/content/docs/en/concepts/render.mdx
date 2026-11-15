@@ -1,0 +1,38 @@
+---
+title: "Render: one plan, two executors"
+description: "How the preview, the paused frame and the export share one decision about what every frame contains."
+---
+
+## The idea
+
+One function decides what every frame contains. Two executors only put pixels where it says. That is what "a single render path" means in Vukem Video.
+
+For a project revision and a frame number, the frame plan returns the ordered layers: which source media and which source frame, the crop, the transform, the opacity, and the bitmaps to draw and where. Keyframe interpolation, easing, transition timing and the choice of source frame exist only in that function. The plan is data, so it can be tested without pixels.
+
+## The two executors
+
+- **Export.** Go composes every frame. FFmpeg decodes the normalized media into raw frames, a Go compositor places the layers and the bitmaps exactly as the plan says, a Go mixer builds the audio, and FFmpeg encodes the result. FFmpeg places nothing, which keeps the output reproducible.
+- **Preview.** The browser plays lightweight proxies of your media and draws the same text and shape bitmaps on a canvas, following plan windows fetched from the server. It interpolates nothing.
+
+Text and shapes become bitmaps once, in the server, so both executors draw identical letters.
+
+## Truth on pause
+
+While you play, the preview may differ slightly from the export: scaling, colour conversion and blend rounding. When playback stops on a frame, the editor shows that frame rendered by the export executor. The `view` tool and the `view` command of an agent use the same path, so what you see when paused and what an agent sees is what will be exported.
+
+The accepted difference during playback is small and measured: SSIM of at least 0.97 on the luma plane for every reference frame at preview resolution, and no layer displaced by more than one pixel.
+
+## What this means for you
+
+- If the paused frame is right, the export is right. Check a frame before you export.
+- Effects are limited to what the plan and the rasterizer can express. That is the price of one source of truth.
+- A paused frame costs an FFmpeg run. The result is cached by project revision and frame number, so asking for the same frame again is cheap.
+
+## Common mistakes
+
+- Judging a transition or a text position from the playing preview. Pause on the frame.
+
+## Next steps
+
+- [How an agent verifies its work](/docs/agents/verify)
+- [Exporting](/docs/guide/exporting)

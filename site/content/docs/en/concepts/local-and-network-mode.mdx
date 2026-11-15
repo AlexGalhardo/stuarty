@@ -1,0 +1,46 @@
+---
+title: "Local mode and network mode"
+description: "The two ways to run the server: on your own computer with a local token, or on a network with logins and scoped keys."
+---
+
+## The idea
+
+The server runs in one of two modes, and the address it binds to decides which. Both modes protect your projects; they differ in who is trusted.
+
+## Local mode
+
+The server is bound to `127.0.0.1` or `::1`, so only your computer can reach it. This is the default and what `vukem-video serve` does.
+
+- There is no login. At the first start the server creates a random local token in the workspace, in a file readable only by you. The CLI and the stdio MCP server read it from there.
+- "No login" is not "no protection". Any web page you open can send requests to `127.0.0.1`, so the server also checks the `Host` and `Origin` of every request and refuses what does not come from the editor or from a client holding the token.
+- Every operation records an actor, such as `local:claude-code` for an agent or `local:ui` for the editor. The history shows who changed what.
+- Emptying the trash is accepted only from the browser editor, never from the token an agent holds.
+
+## Network mode
+
+The server is bound to any other address, to share it with other people or run it on a server. A bind to a non-loopback address without network-mode configuration is a start-up error, never a silent exposure.
+
+- Login is mandatory. There is no open registration: the operator creates users from the command line, and each project belongs to the user who created it.
+- Programmatic access uses API keys that a signed-in user creates. A key has scopes (`read`, `edit`, `media`, `render`, `admin`) and can be limited to one project.
+- TLS is required, directly or through a reverse proxy. The one exception is a container on your own machine with the port published to loopback.
+- Import by path is confined to the import roots the operator configures.
+
+The actor of an operation is `user:<id>` or `key:<id>`. Limits are per workspace and per key.
+
+## Which one do I need?
+
+| You want | Use |
+| --- | --- |
+| To edit on your own computer, with or without an agent | Local mode |
+| To run it in a container on your own machine | Local mode, with the port published to `127.0.0.1` |
+| To share one server with a team | Network mode |
+
+## Common mistakes
+
+- Publishing the container port on all interfaces without network mode. Publish it to `127.0.0.1` only.
+- Putting a key in a URL. A token or key is accepted only in a header and is never logged or returned.
+
+## Next steps
+
+- [Safety: undo, trash and limits](/docs/agents/safety)
+- [Workspace and storage](/docs/workspace)

@@ -39,7 +39,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "concepts",
 		title: { en: "Concepts", "pt-br": "Conceitos" },
-		pages: ["how-it-works", "time", "commands-and-revisions", "tracks-clips-items"],
+		pages: ["how-it-works", "time", "commands-and-revisions", "tracks-clips-items", "render", "local-and-network-mode"],
 	},
 	{
 		dir: "guide",
@@ -49,12 +49,12 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "agents",
 		title: { en: "Agents", "pt-br": "Agentes" },
-		pages: ["overview", "connect", "mcp", "cli", "verify", "batches"],
+		pages: ["overview", "connect", "mcp", "cli", "verify", "batches", "skill", "safety", "recipes"],
 	},
 	{
 		dir: "reference",
 		title: { en: "Reference", "pt-br": "Referência" },
-		pages: ["commands", "cli", "http-api", "timeline-schema", "error-codes", "configuration", "glossary"],
+		pages: ["commands", "cli", "http-api", "timeline-schema", "error-codes", "configuration", "events", "glossary"],
 	},
 	{
 		dir: "reference/commands",

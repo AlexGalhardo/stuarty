@@ -1,0 +1,61 @@
+---
+title: "Events stream"
+description: "The server-sent events of a project: names, payloads, ordering, replay and when to reload."
+---
+
+## The idea
+
+The editor and any client that wants to follow a project open one stream per project: `GET /api/v1/projects/{id}/events`, scope `read`. The stream is one way and text only. Commands do not travel on it; they are ordinary HTTP requests. MCP has no stream. The CLI command `vukem-video events --project <id>` prints it, one JSON object per line.
+
+## Connect
+
+| Part | Meaning |
+| --- | --- |
+| `since` (query) | A revision. Same as `Last-Event-ID`, for clients that cannot set a header on the first request. |
+| `Last-Event-ID` (header) | Set by `EventSource` on every reconnect. When both are present the header wins. |
+| Invalid value | A non-integer or negative value is `E_VALIDATION` (400) before the stream starts. |
+| Response | `200`, `text/event-stream`, no compression. |
+
+Authentication is checked before the response switches to a stream, so failures are normal JSON errors. `EventSource` does not retry any status other than 200; the client must. While the stream is open the server checks the credential again every 60 seconds and closes the stream when it is no longer valid.
+
+## Wire format
+
+```text
+id: 42
+event: batch.committed
+data: {"project_id":"prj_7k2m9x4q1b","revision":42, ...}
+```
+
+`data` is one JSON object on one line. Only `batch.committed` has an `id`, and it is the revision. Timestamps are RFC 3339 UTC with milliseconds. A client ignores fields it does not know.
+
+On connect the server sends `retry: 1000` and an unnamed event with empty data, and repeats that empty event every 15 seconds as a heartbeat. Register listeners only for the five names below and treat 40 seconds without any event as a dead connection.
+
+## Events
+
+| Event | When | Main fields |
+| --- | --- | --- |
+| `batch.committed` | An edit, undo, redo, migration or import was committed | `revision`, `base_revision`, `kind`, `actor`, `at`, `description`, `diff` |
+| `project.updated` | The project was trashed or restored | `state` (`active` or `trashed`), `at` |
+| `asset.updated` | The ingest state or progress of an asset changed | `asset_id`, `state`, `progress`, `error`, `updated_at` |
+| `job.updated` | A job changed state or progress | `job_id`, `kind`, `state`, `progress`, `error`, `result`, `updated_at` |
+| `resync.required` | The server cannot bring this client up to date by replay | `revision`, `reason` |
+
+A diff too large for one event is replaced by `diff_truncated: true` and a `changed` list of at most 500 entries. A terminal `job.updated` carries `result` or `error`, so a client does not need to fetch the job.
+
+## Ordering and replay
+
+- On one stream the `batch.committed` revisions are consecutive, each at most once. Across reconnects a client may see a revision it already has: ignore any revision less than or equal to the one you hold.
+- `asset.updated` and `job.updated` have no order guarantee and are not replayable. Keep the event with the newest `updated_at` for each asset or job. On connect the server sends the current state of what may have changed while you were away.
+- With a revision, the server replays what you missed from the log when the gap is at most 1,000 revisions.
+
+`resync.required` has the reasons `gap_too_large`, `before_floor` (a migration or import lies in between) and `client_ahead` (the server has a different or restored database). It has no `id`. After it the server closes the stream: reload the project with `GET /api/v1/projects/{id}` and open a new stream with `since` set to the revision you loaded.
+
+## Common mistakes
+
+- Reconnecting with a stale `since` after `resync.required`.
+- Expecting a response to an edit and its event to differ: both carry the same data for the same revision.
+
+## Next steps
+
+- [HTTP API](/docs/reference/http-api)
+- [Batches, revisions and idempotency](/docs/agents/batches)
