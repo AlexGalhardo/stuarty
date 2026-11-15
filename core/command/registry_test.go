@@ -297,7 +297,7 @@ func TestEveryCommandHasGoldenAndUndo(t *testing.T) {
 		}
 
 		for _, code := range c.Errors {
-			if code != CodeInternal &&
+			if !coveredElsewhere(c.Name, code) &&
 				!slices.ContainsFunc(failing, func(n string) bool { return caseHasCode(n, code) }) {
 				t.Errorf("%s lists %s but has no err_ case for it", c.Name, code)
 			}

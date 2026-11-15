@@ -267,7 +267,7 @@ func TestGoldenCasesComplete(t *testing.T) {
 		// Each error code a command lists has at least one err_ case (the codes that
 		// every command can return from the schema alone are checked by err_validation).
 		for _, code := range cmd.Errors {
-			if !slices.ContainsFunc(have, func(n string) bool { return caseHasCode(n, code) }) && code != CodeInternal {
+			if !slices.ContainsFunc(have, func(n string) bool { return caseHasCode(n, code) }) && !coveredElsewhere(cmd.Name, code) {
 				t.Errorf("%s lists %s but has no err_ case for it", cmd.Name, code)
 			}
 		}
@@ -279,4 +279,16 @@ func TestGoldenCasesComplete(t *testing.T) {
 func caseHasCode(name, code string) bool {
 	base := "err_" + strings.ToLower(strings.TrimPrefix(code, "E_"))
 	return name == base || strings.HasPrefix(name, base+"_")
+}
+
+// serviceOnlyCodes are codes a command lists because the service raises them before Apply runs,
+// so no golden case of the core can produce them (SDD-002 C.53: a font hash the workspace store
+// does not hold). The service tests cover them.
+var serviceOnlyCodes = map[string][]string{
+	"font.add": {CodeNotFound},
+}
+
+// coveredElsewhere reports whether code needs no err_ golden case for the command.
+func coveredElsewhere(command, code string) bool {
+	return code == CodeInternal || slices.Contains(serviceOnlyCodes[command], code)
 }

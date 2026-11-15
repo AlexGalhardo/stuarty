@@ -4363,6 +4363,7 @@ Names a font that is already stored by hash in the workspace as a family of the 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
 | `E_VALIDATION` | bad family name, a bundled family, no file, a bad or repeated weight, a bad hash | `args.family "Inter" is a bundled family.` | `Choose another name; the bundled families are: Anton, Bebas Neue, Inter, JetBrains Mono, Montserrat, Playfair Display.` |
+| `E_NOT_FOUND` | a `hash` the workspace font store does not hold (raised by the service before Apply, so no golden case; `web/app/servicetest/fonts_test.go` covers it) | `a font file of the operation is not in the workspace.` | `import the font file first, then add the family` |
 
 **Inverse.** `remove fonts <family>` for a new family; `put fonts <family>` with the old object otherwise.
 

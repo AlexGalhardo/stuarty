@@ -20,7 +20,7 @@ func init() {
 			"service refuses a hash that the workspace does not hold.",
 		Example: `{"family": "Brand Sans", "files": [{"weight": 400, "hash": "sha256:` + strings.Repeat("ab", 32) +
 			`"}, {"weight": 700, "hash": "sha256:` + strings.Repeat("cd", 32) + `"}]}`,
-		Errors: []string{CodeValidation},
+		Errors: []string{CodeValidation, CodeNotFound},
 		Scope:  ScopeMedia,
 		Phase:  Beta,
 	}, applyFontAdd))
