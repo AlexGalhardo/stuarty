@@ -187,8 +187,8 @@ func pipDoc(tb testing.TB, seconds float64) *timeline.Document {
 
 	var clip timeline.Item
 
-	for _, it := range doc.Items {
-		if it.Type == timeline.ItemClip {
+	for id := range doc.Items {
+		if it := doc.Items[id]; it.Type == timeline.ItemClip {
 			clip = it
 		}
 	}

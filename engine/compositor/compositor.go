@@ -55,9 +55,9 @@ type Compositor struct {
 	Bands int
 
 	scratch []byte
-	// blurA and blurB are the two buffers a blur ping-pongs between; the result is in blurA.
-	blurA []byte
-	blurB []uint32
+	// blurA holds the blurred pixels and blurB the rows between the two directions of a blur.
+	blurA   []byte
+	blurB   []uint32
 	premul  map[string]Image
 	premulN int
 }
