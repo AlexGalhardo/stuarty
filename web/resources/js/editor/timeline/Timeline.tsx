@@ -11,6 +11,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import { bindingFor } from "../commands/keymapStore";
 import { useActions } from "../commands/useActions";
 import {
 	useDocumentState,
@@ -56,6 +57,13 @@ import TrackHeader from "./TrackHeader";
 import { TrackRow } from "./TrackRow";
 import { type FrameWindow, frameWindow, VIRTUALIZE_ABOVE } from "./virtualize";
 import { TimelineWindowContext } from "./windowContext";
+
+const VIEW_BINDINGS = [
+	"zoom_in",
+	"zoom_out",
+	"zoom_fit",
+	"toggle_snap",
+] as const;
 
 // The same object while the window has the same edges.
 function useStableWindow(win: FrameWindow | null): FrameWindow | null {
@@ -291,23 +299,21 @@ export default function Timeline(): ReactNode {
 		return () => el.removeEventListener("wheel", onWheel);
 	}, [ppf, zoomTo]);
 
-	// The keys of SDD-012 section 10.1 for the timeline: + - and Shift+Z, and N
-	// for snapping.
+	// The keys of SDD-012 section 10.1 for the timeline: zoom in, out and fit and
+	// snapping, rebindable (section 18.2).
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent): void => {
-			if (
-				isEditable(event.target) ||
-				event.ctrlKey ||
-				event.metaKey ||
-				event.altKey
-			) {
-				return;
-			}
-			if (event.key === "Escape") runtime.uiWriter.select([]);
-			else if (event.key === "+" || event.key === "=") zoomStep(1);
-			else if (event.key === "-") zoomStep(-1);
-			else if (event.shiftKey && event.key.toLowerCase() === "z") fitToView();
-			else if (event.key.toLowerCase() === "n") runtime.uiWriter.toggleSnap();
+			if (isEditable(event.target)) return;
+			const bound = bindingFor(event, VIEW_BINDINGS);
+			if (bound === "zoom_in") zoomStep(1);
+			else if (bound === "zoom_out") zoomStep(-1);
+			else if (bound === "zoom_fit") fitToView();
+			else if (bound === "toggle_snap") runtime.uiWriter.toggleSnap();
+			else if (
+				event.key === "Escape" &&
+				!(event.ctrlKey || event.metaKey || event.altKey)
+			)
+				runtime.uiWriter.select([]);
 			else return;
 			event.preventDefault();
 		};
