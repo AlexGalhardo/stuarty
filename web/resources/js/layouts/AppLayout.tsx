@@ -4,9 +4,12 @@ import type { ReactNode } from "react";
 
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
+import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { type I18nProps, I18nProvider, useT } from "@/lib/i18n";
 import type { SharedProps } from "@/types";
+import { createClient } from "../editor/api/client";
+import { HttpTransport } from "../editor/api/http";
 
 // Every Inertia page renders inside this layout. It feeds the translation
 // context from the page props, so useT works the same here and in the editor
@@ -55,6 +58,7 @@ function Shell({ children }: { children: ReactNode }) {
 				<div className="ml-auto flex items-center gap-2">
 					<LocaleSwitcher />
 					<ThemeToggle />
+					{page.props.auth?.user != null && <Account />}
 				</div>
 			</header>
 			<main className="flex-1 p-4 md:p-6">
@@ -69,5 +73,39 @@ function Shell({ children }: { children: ReactNode }) {
 				{children}
 			</main>
 		</TooltipProvider>
+	);
+}
+
+// Network mode only (the shared prop `auth.user` is set): the keys page and the
+// end of the session. `POST /auth/logout` clears the cookie; the next page is
+// the login.
+function Account(): ReactNode {
+	const t = useT();
+	const page = usePage<SharedProps>();
+	return (
+		<>
+			<Link
+				href="/settings/keys"
+				aria-current={
+					page.url.startsWith("/settings/keys") ? "page" : undefined
+				}
+				className="rounded-md px-2 py-1 text-sm hover:bg-muted aria-[current=page]:font-medium"
+			>
+				{t("ui.keys.nav")}
+			</Link>
+			<Button
+				type="button"
+				variant="ghost"
+				size="sm"
+				onClick={() =>
+					void createClient(new HttpTransport(""))
+						.logout()
+						.catch(() => undefined)
+						.then(() => window.location.assign("/login"))
+				}
+			>
+				{t("ui.login.logout")}
+			</Button>
+		</>
 	);
 }
