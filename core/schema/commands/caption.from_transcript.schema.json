@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "clip_item_id": {
+      "description": "A clip of a video asset with audio.",
+      "type": "string"
+    },
+    "max_chars": {
+      "description": "Characters per caption, default 28.",
+      "maximum": 500,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "max_gap": {
+      "description": "A length, may be 0; a longer pause starts a caption. Default \"0.6s\".",
+      "type": "string"
+    },
+    "max_words": {
+      "description": "Words per caption, default 5.",
+      "maximum": 60,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "new_ids": {
+      "description": "Ids for the created captions, in order.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "replace": {
+      "description": "Remove the captions linked to this clip on this track first. Default true.",
+      "type": "boolean"
+    },
+    "resolved": {
+      "additionalProperties": false,
+      "description": "Filled by the service from the transcript of the asset; never sent by a caller.",
+      "properties": {
+        "words": {
+          "description": "Words in order, not overlapping, in asset frames, half-open.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "end": {
+                "type": "integer"
+              },
+              "start": {
+                "type": "integer"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "words"
+      ],
+      "type": "object"
+    },
+    "track_id": {
+      "description": "A visual track that receives the captions.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "clip_item_id",
+    "track_id"
+  ],
+  "type": "object"
+}

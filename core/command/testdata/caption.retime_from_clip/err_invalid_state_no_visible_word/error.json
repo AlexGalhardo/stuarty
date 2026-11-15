@@ -1,0 +1,6 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "The transcript has no word between source frames 60 and 139 of clip itm_m1n2p3q4r5.",
+  "hint": "Check that the clip contains speech, or widen the clip with item.trim.",
+  "retryable": false
+}

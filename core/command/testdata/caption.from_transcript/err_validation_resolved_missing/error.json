@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.resolved is required.",
+  "hint": "Run this through the service, which fills resolved from the transcript; run the transcribe job first if there is none.",
+  "retryable": false,
+  "path": "args.resolved"
+}

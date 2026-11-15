@@ -197,22 +197,28 @@ func parseSilenceArgs(c *Context, a *removeSilencesArgs) (silenceParams, *Error)
 	return sp, nil
 }
 
+// speechClip checks that an item is a clip of a video asset with audio (E_TYPE_MISMATCH).
+// notClip and noAudio finish the two messages.
+func (c *Context) speechClip(it *timeline.Item, notClip, noAudio string) *Error {
+	if it.Type != timeline.ItemClip {
+		return Errorf(CodeTypeMismatch, "Item %s is %s item, not a clip; %s", it.ID, article(it.Type), notClip).
+			WithHint("Choose a clip of a video asset with audio.").WithPath("args.item_id")
+	}
+	if asset, ok := c.Doc.Assets[it.Asset]; !ok || asset.Kind != timeline.AssetVideo || !asset.HasAudio {
+		return Errorf(CodeTypeMismatch, "Asset %s has no audio; %s", it.Asset, noAudio).
+			WithHint("Choose a clip whose asset has audio.").WithPath("args.item_id")
+	}
+	return nil
+}
+
 // silenceClip returns the clip of the command (precondition 2 and 3).
 func (c *Context) silenceClip(id string) (timeline.Item, *Error) {
 	it, err := c.item(id)
 	if err != nil {
 		return it, err
 	}
-	if it.Type != timeline.ItemClip {
-		return it, Errorf(CodeTypeMismatch, "Item %s is %s item, not a clip; only a clip can be cut by its silences.",
-			id, article(it.Type)).
-			WithHint("Choose a clip of a video asset with audio.").WithPath("args.item_id")
-	}
-	if asset, ok := c.Doc.Assets[it.Asset]; !ok || asset.Kind != timeline.AssetVideo || !asset.HasAudio {
-		return it, Errorf(CodeTypeMismatch, "Asset %s has no audio; there is nothing to analyse.", it.Asset).
-			WithHint("Choose a clip whose asset has audio.").WithPath("args.item_id")
-	}
-	return it, nil
+	err = c.speechClip(&it, "only a clip can be cut by its silences.", "there is nothing to analyse.")
+	return it, err
 }
 
 // silencePieces builds the items of postconditions 3 and 4 from the pieces of

@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_m1n2p3q4r5 is a text item, not a clip; captions follow the speech of a clip.",
+  "hint": "Choose a clip of a video asset with audio.",
+  "retryable": false,
+  "path": "args.clip_item_id"
+}

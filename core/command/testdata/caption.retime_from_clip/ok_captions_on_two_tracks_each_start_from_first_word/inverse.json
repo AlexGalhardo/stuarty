@@ -1,0 +1,10 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_k000000001",
+    "set": {
+      "start": 1000
+    }
+  }
+]

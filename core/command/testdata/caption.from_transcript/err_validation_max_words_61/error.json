@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.max_words is 61, outside the accepted range.",
+  "hint": "Use a value between 1 and 60.",
+  "retryable": false,
+  "path": "args.max_words"
+}

@@ -338,6 +338,109 @@
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"additionalProperties": false,
 			"properties": {
+				"clip_item_id": {
+					"description": "A clip of a video asset with audio.",
+					"type": "string"
+				},
+				"max_chars": {
+					"description": "Characters per caption, default 28.",
+					"maximum": 500,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"max_gap": {
+					"description": "A length, may be 0; a longer pause starts a caption. Default \"0.6s\".",
+					"type": "string"
+				},
+				"max_words": {
+					"description": "Words per caption, default 5.",
+					"maximum": 60,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"new_ids": {
+					"description": "Ids for the created captions, in order.",
+					"items": {
+						"type": "string"
+					},
+					"type": "array"
+				},
+				"replace": {
+					"description": "Remove the captions linked to this clip on this track first. Default true.",
+					"type": "boolean"
+				},
+				"resolved": {
+					"additionalProperties": false,
+					"description": "Filled by the service from the transcript of the asset; never sent by a caller.",
+					"properties": {
+						"words": {
+							"description": "Words in order, not overlapping, in asset frames, half-open.",
+							"items": {
+								"additionalProperties": false,
+								"properties": {
+									"end": {
+										"type": "integer"
+									},
+									"start": {
+										"type": "integer"
+									},
+									"text": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"text",
+									"start",
+									"end"
+								],
+								"type": "object"
+							},
+							"type": "array"
+						}
+					},
+					"required": [
+						"words"
+					],
+					"type": "object"
+				},
+				"track_id": {
+					"description": "A visual track that receives the captions.",
+					"type": "string"
+				}
+			},
+			"required": [
+				"clip_item_id",
+				"track_id"
+			],
+			"type": "object"
+		},
+		"description": "Groups the transcript words of the visible range of the clip into captions of at most max_words words and max_chars characters, split at pauses longer than max_gap, and links them to the clip. With replace (the default) the captions already linked to the clip on that track are removed first. The transcript is supplied by the service in resolved; the command never starts a job.",
+		"errors": [
+			"E_VALIDATION",
+			"E_INVALID_TIME",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_INVALID_STATE",
+			"E_ID_EXISTS",
+			"E_LIMIT",
+			"E_OVERLAP"
+		],
+		"example": {
+			"clip_item_id": "itm_m1n2p3q4r5",
+			"max_words": 5,
+			"track_id": "trk_a1b2c3d4e5"
+		},
+		"internal": false,
+		"name": "caption.from_transcript",
+		"phase": "alpha",
+		"scope": "edit",
+		"summary": "Creates captions for the speech of a clip from its transcript."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
 				"item_ids": {
 					"description": "Exactly two distinct captions of one track, in any order.",
 					"items": {
@@ -370,6 +473,72 @@
 		"phase": "alpha",
 		"scope": "edit",
 		"summary": "Joins two captions of one track into one that spans both."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"clip_item_id": {
+					"description": "A clip of a video asset with audio.",
+					"type": "string"
+				},
+				"resolved": {
+					"additionalProperties": false,
+					"description": "Filled by the service from the transcript of the asset; never sent by a caller.",
+					"properties": {
+						"words": {
+							"description": "Words in order, not overlapping, in asset frames, half-open.",
+							"items": {
+								"additionalProperties": false,
+								"properties": {
+									"end": {
+										"type": "integer"
+									},
+									"start": {
+										"type": "integer"
+									},
+									"text": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"text",
+									"start",
+									"end"
+								],
+								"type": "object"
+							},
+							"type": "array"
+						}
+					},
+					"required": [
+						"words"
+					],
+					"type": "object"
+				}
+			},
+			"required": [
+				"clip_item_id"
+			],
+			"type": "object"
+		},
+		"description": "Maps the transcript words of the visible range to the timeline again and gives them to the linked captions in order, each taking as many words as it has. Edited texts are kept when the word count is unchanged. The transcript is supplied by the service in resolved.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_INVALID_STATE",
+			"E_OVERLAP"
+		],
+		"example": {
+			"clip_item_id": "itm_m1n2p3q4r5"
+		},
+		"internal": false,
+		"name": "caption.retime_from_clip",
+		"phase": "alpha",
+		"scope": "edit",
+		"summary": "Retimes the captions linked to a clip after the clip was moved, trimmed or sped up."
 	},
 	{
 		"args_schema": {

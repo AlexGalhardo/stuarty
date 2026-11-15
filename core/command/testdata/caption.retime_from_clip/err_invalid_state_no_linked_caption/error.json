@@ -1,0 +1,6 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "No caption is linked to clip itm_m1n2p3q4r5.",
+  "hint": "Create captions with caption.from_transcript first.",
+  "retryable": false
+}

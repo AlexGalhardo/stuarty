@@ -1,0 +1,161 @@
+{
+  "op": "caption.from_transcript",
+  "args": {
+    "clip_item_id": "itm_m1n2p3q4r5",
+    "track_id": "trk_a1b2c3d4e5",
+    "resolved": {
+      "words": [
+        {
+          "text": "w0",
+          "start": 60,
+          "end": 62
+        },
+        {
+          "text": "w1",
+          "start": 63,
+          "end": 65
+        },
+        {
+          "text": "w2",
+          "start": 66,
+          "end": 68
+        },
+        {
+          "text": "w3",
+          "start": 69,
+          "end": 71
+        },
+        {
+          "text": "w4",
+          "start": 72,
+          "end": 74
+        },
+        {
+          "text": "w5",
+          "start": 75,
+          "end": 77
+        },
+        {
+          "text": "w6",
+          "start": 78,
+          "end": 80
+        },
+        {
+          "text": "w7",
+          "start": 81,
+          "end": 83
+        },
+        {
+          "text": "w8",
+          "start": 84,
+          "end": 86
+        },
+        {
+          "text": "w9",
+          "start": 87,
+          "end": 89
+        },
+        {
+          "text": "w10",
+          "start": 90,
+          "end": 92
+        },
+        {
+          "text": "w11",
+          "start": 93,
+          "end": 95
+        },
+        {
+          "text": "w12",
+          "start": 96,
+          "end": 98
+        },
+        {
+          "text": "w13",
+          "start": 99,
+          "end": 101
+        },
+        {
+          "text": "w14",
+          "start": 102,
+          "end": 104
+        },
+        {
+          "text": "w15",
+          "start": 105,
+          "end": 107
+        },
+        {
+          "text": "w16",
+          "start": 108,
+          "end": 110
+        },
+        {
+          "text": "w17",
+          "start": 111,
+          "end": 113
+        },
+        {
+          "text": "w18",
+          "start": 114,
+          "end": 116
+        },
+        {
+          "text": "w19",
+          "start": 117,
+          "end": 119
+        },
+        {
+          "text": "w20",
+          "start": 120,
+          "end": 122
+        },
+        {
+          "text": "w21",
+          "start": 123,
+          "end": 125
+        },
+        {
+          "text": "w22",
+          "start": 126,
+          "end": 128
+        },
+        {
+          "text": "w23",
+          "start": 129,
+          "end": 131
+        },
+        {
+          "text": "w24",
+          "start": 132,
+          "end": 134
+        },
+        {
+          "text": "w25",
+          "start": 135,
+          "end": 137
+        },
+        {
+          "text": "w26",
+          "start": 138,
+          "end": 140
+        },
+        {
+          "text": "w27",
+          "start": 141,
+          "end": 143
+        },
+        {
+          "text": "w28",
+          "start": 144,
+          "end": 146
+        },
+        {
+          "text": "w29",
+          "start": 147,
+          "end": 149
+        }
+      ]
+    }
+  }
+}
