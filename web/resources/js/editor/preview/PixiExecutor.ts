@@ -145,13 +145,24 @@ export class PixiExecutor implements PreviewExecutor {
 			app.stage.addChild(this.stage);
 			this.app = app;
 			this.applyBuffer();
-			this.context = new AudioContext();
-			this.audioGraph.attach(this.context);
+			this.openAudio();
 			this.redraw();
 		} catch {
 			// No WebGL2: the preview shows only paused frames (truth on pause).
 			canvas.remove();
 			this.setState("unsupported");
+		}
+	}
+
+	// A browser without Web Audio (the WebKit build of Playwright on Windows) still
+	// draws the canvas: the preview then plays without the audio graph.
+	private openAudio(): void {
+		if (typeof AudioContext !== "function") return;
+		try {
+			this.context = new AudioContext();
+			this.audioGraph.attach(this.context);
+		} catch {
+			this.context = null;
 		}
 	}
 
