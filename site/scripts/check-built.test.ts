@@ -26,6 +26,14 @@ test("own files, inert links and the SVG namespace are accepted", () => {
 	assert.deepEqual(foreignOriginProblems("index.html", html, own), []);
 });
 
+test("the example hosts of the self-hosting pages are text, other example hosts are not", () => {
+	const ok = "<p>https://video.example.com/up and http://localhost:7878 and https://caddyserver.com</p>";
+	assert.deepEqual(foreignOriginProblems("index.html", ok, own), []);
+	assert.deepEqual(foreignOriginProblems("index.html", "<p>https://other.example.com/x</p>", own), [
+		"index.html: refers to other.example.com",
+	]);
+});
+
 test("a remote @import or url() in CSS is refused", () => {
 	assert.ok(
 		foreignOriginProblems("a.css", '@import url("https://x.example/a.css");', own).some((p) =>
