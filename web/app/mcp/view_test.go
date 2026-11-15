@@ -11,7 +11,7 @@ import (
 
 // textProject is a project with one text item of 1 s, so that a frame has
 // something to show.
-func textProject(t *testing.T, cs *sdk.ClientSession) string {
+func textProject(t testing.TB, cs *sdk.ClientSession) string {
 	t.Helper()
 
 	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "V"})))["project_id"].(string)
