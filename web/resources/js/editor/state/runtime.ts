@@ -107,7 +107,10 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 				state: event.state,
 				progress: event.progress,
 			});
-			if (event.state === "ready") void loadLibrary();
+			// The event carries no error: a failed card needs the entry again for its
+			// code, message and hint (SDD-012 section 13).
+			if (event.state === "ready" || event.state === "failed")
+				void loadLibrary();
 		} else if (event.name === "job.updated") {
 			const known = jobs.getState().jobs[event.job_id];
 			if (known === undefined) {
