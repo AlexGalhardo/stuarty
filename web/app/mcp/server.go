@@ -35,11 +35,7 @@ type Options struct {
 // Service method yet. A pending tool is not in tools/list: the list shows the
 // tools whose operations exist in the build (SDD-003 section 4.1).
 var Pending = map[string]string{
-	"media_import":  "P1-SRV-004",
-	"media_inspect": "P1-SRV-004",
-	"view":          "P1-RND-005",
-	"job_start":     "P1-SRV-004",
-	"job_get":       "P1-SRV-004",
+	"view": "P1-RND-005",
 }
 
 const (
