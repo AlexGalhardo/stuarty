@@ -15,6 +15,31 @@ var (
 	linkLineRe = regexp.MustCompile(`(?m)^\[[^\]]+\]: \S+\n?`)
 )
 
+// isPatchRelease reports whether v is a patch bump: its patch number is not 0
+// (SDD-009 section 4 item 4: patches never carry a breaking change).
+func isPatchRelease(v string) bool {
+	m := versionRe.FindStringSubmatch(v)
+
+	return len(m) > 3 && m[3] != "0"
+}
+
+// breakingSubjectRe matches a Conventional Commits header marked with "!".
+var breakingSubjectRe = regexp.MustCompile(`^[a-z]+(\([^)]*\))?!:`)
+
+// breakingSubjects returns the commit subjects, one per line of log, that
+// carry the "!" marker.
+func breakingSubjects(log string) []string {
+	var out []string
+
+	for line := range strings.SplitSeq(log, "\n") {
+		if line = strings.TrimSpace(line); breakingSubjectRe.MatchString(line) {
+			out = append(out, line)
+		}
+	}
+
+	return out
+}
+
 // validVersion reports whether v is a SemVer tag with a leading "v".
 func validVersion(v string) bool { return versionRe.MatchString(v) }
 

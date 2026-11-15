@@ -324,6 +324,37 @@ func TestPrepareRefusals(t *testing.T) {
 	}
 }
 
+func TestPatchReleaseRefusesABreakingCommit(t *testing.T) {
+	t.Parallel()
+
+	if !isPatchRelease("v0.2.1") || isPatchRelease("v0.2.0") || isPatchRelease("v1.0.0") {
+		t.Fatal("isPatchRelease misreads the patch number")
+	}
+
+	f := happy()
+	f.answers["git describe"] = "v0.2.0\n"
+	f.answers["git rev-parse --abbrev-ref HEAD"] = "release/v0.2.1\n"
+	f.answers["git log"] = "fix(core): keep the order\nfeat(cli)!: rename a flag\n"
+	tl := newTool(t, f)
+
+	err := tl.prepare("v0.2.1")
+	if err == nil || !strings.Contains(err.Error(), "patch release") ||
+		!strings.Contains(err.Error(), "rename a flag") {
+		t.Fatalf("prepare() error = %v", err)
+	}
+
+	if f.ran("git commit") {
+		t.Error("a refused prepare committed")
+	}
+
+	// The same commits are fine in a minor.
+	f.answers["git rev-parse --abbrev-ref HEAD"] = "release/v0.2.0\n"
+	f.answers["git describe"] = "v0.1.0\n"
+	if err := newTool(t, f).prepare("v0.2.0"); err != nil {
+		t.Fatalf("a minor with a breaking commit: %v", err)
+	}
+}
+
 func TestPrepareRefusesAVersionAlreadyInTheChangelog(t *testing.T) {
 	t.Parallel()
 
