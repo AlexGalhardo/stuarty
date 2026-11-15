@@ -3,8 +3,8 @@ module github.com/AlexGalhardo/vukem-video
 go 1.27.4
 
 require (
-	github.com/AlexGalhardo/vukem v0.44.0
-	github.com/AlexGalhardo/vukem/contrib/engine v0.1.1
+	github.com/AlexGalhardo/vukem v0.45.0
+	github.com/AlexGalhardo/vukem/contrib/engine v0.2.0
 	github.com/AlexGalhardo/vukem/drivers/otel v0.4.5
 	github.com/go-text/typesetting v0.3.5
 	github.com/modelcontextprotocol/go-sdk v1.8.0
