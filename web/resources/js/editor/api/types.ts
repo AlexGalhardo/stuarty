@@ -6,6 +6,7 @@
 // these; until the OpenAPI and event schemas are generated they live here.
 
 import type { ProjectDocument } from "@/generated/timeline";
+import type { ProjectSummary } from "@/types";
 
 export type ProjectState = "active" | "trashed";
 
@@ -623,4 +624,25 @@ export interface TemplateInstantiateResult {
 	unfilled: string[];
 	findings: LintFinding[];
 	text: string;
+}
+
+// GET /projects?state=trashed and POST /projects/{id}/trash or /restore.
+export interface ProjectListResult {
+	projects: ProjectSummary[];
+	next_cursor: string | null;
+	text: string;
+}
+
+export interface ProjectStateResult {
+	project_id: string;
+	state: ProjectState;
+	text: string;
+}
+
+// POST /auth/login and /auth/logout (network mode, SDD-007 section 4.1).
+export interface SessionResult {
+	user_id: number;
+	email: string;
+	role: string;
+	scopes: string[];
 }

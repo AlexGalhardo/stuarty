@@ -45,6 +45,12 @@
         "export": "Export file",
         "import_path": "Path of a template file on this computer",
         "import": "Import template"
+      },
+      "trash": {
+        "title": "Trash",
+        "move": "Move to trash",
+        "restore": "Restore",
+        "empty": "The trash is empty."
       }
     },
     "settings": {
@@ -893,6 +899,29 @@
           "caption": "Caption"
         }
       }
+    },
+    "login": {
+      "title": "Log in",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Log in",
+      "logout": "Log out"
+    },
+    "keys": {
+      "title": "API keys",
+      "nav": "API keys",
+      "new": "New key",
+      "name": "Name",
+      "scopes": "Scopes",
+      "project": "Limit to a project (optional)",
+      "create": "Create key",
+      "list": "Your keys",
+      "empty": "No keys yet.",
+      "created": "Created {date}",
+      "revoked": "Revoked",
+      "revoke": "Revoke",
+      "secret_once": "Copy this secret now. It is shown only once.",
+      "secret_dismiss": "I have copied it"
     }
   }
 }

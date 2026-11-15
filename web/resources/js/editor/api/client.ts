@@ -27,6 +27,9 @@ import type {
 	PlanWindow,
 	PlanWindowHead,
 	ProjectGetResult,
+	ProjectListResult,
+	ProjectStateResult,
+	SessionResult,
 	SnapPointsQuery,
 	SnapPointsResult,
 	SystemQuery,
@@ -99,6 +102,13 @@ export interface ApiClient {
 	createKey(request: KeyCreateRequest): Promise<KeyCreateResult>;
 	listKeys(): Promise<KeyListResult>;
 	revokeKey(keyId: string): Promise<KeyRevokeResult>;
+	listTrashedProjects(): Promise<ProjectListResult>;
+	trashProject(projectId: string): Promise<ProjectStateResult>;
+	restoreProject(projectId: string): Promise<ProjectStateResult>;
+	// The two routes of network mode live at the root, not under /api/v1: a client
+	// for them is built on a transport with an empty base.
+	login(email: string, password: string): Promise<SessionResult>;
+	logout(): Promise<void>;
 	listTemplates(): Promise<TemplateListResult>;
 	instantiateTemplate(
 		templateId: string,
@@ -250,6 +260,17 @@ export function createClient(
 		listKeys: () => call("GET", "/keys", READ_TIMEOUT_MS),
 		revokeKey: (keyId) =>
 			call("DELETE", `/keys/${encodeURIComponent(keyId)}`, EDIT_TIMEOUT_MS),
+		listTrashedProjects: () =>
+			call("GET", "/projects?state=trashed", READ_TIMEOUT_MS),
+		trashProject: (id) =>
+			call("POST", `${project(id)}/trash`, EDIT_TIMEOUT_MS, {}),
+		restoreProject: (id) =>
+			call("POST", `${project(id)}/restore`, EDIT_TIMEOUT_MS, {}),
+		login: (email, password) =>
+			call("POST", "/auth/login", EDIT_TIMEOUT_MS, { email, password }),
+		logout: async () => {
+			await call("POST", "/auth/logout", EDIT_TIMEOUT_MS, {});
+		},
 		listTemplates: () => call("GET", "/templates", READ_TIMEOUT_MS),
 		instantiateTemplate: (templateId, request) =>
 			call(

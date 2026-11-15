@@ -5,18 +5,16 @@ import {
 	useEffect,
 	useState,
 } from "react";
-
+import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
-import { ApiError } from "../../editor/api/errors";
 import { HttpTransport } from "../../editor/api/http";
 import type { TemplateSummary } from "../../editor/api/types";
 import { templateFileUrl } from "../../editor/api/urls";
-import { errorHeadline } from "../../editor/ui/errorHeadline";
 
 const NAME_MAX = 120;
 
@@ -24,21 +22,6 @@ type Loaded =
 	| { state: "loading" }
 	| { state: "failed" }
 	| { state: "ready"; templates: TemplateSummary[] };
-
-// The error of an action as it came, so the person sees the core's message and
-// hint; the headline is localized.
-interface Failure {
-	code: string;
-	message: string;
-	hint?: string;
-}
-
-function failureOf(error: unknown): Failure {
-	if (error instanceof ApiError) {
-		return { code: error.code, message: error.message, hint: error.hint };
-	}
-	throw error;
-}
 
 function TemplateRow({
 	template,
@@ -194,20 +177,7 @@ export default function Templates(): ReactNode {
 			<h2 id="template-list" className="text-lg font-semibold">
 				{t("ui.projects.templates.title")}
 			</h2>
-			{failure !== null && (
-				<div role="alert" className="mt-2 text-sm text-destructive">
-					<p className="font-medium">{errorHeadline(t, failure.code)}</p>
-					<p lang="en">
-						<UntrustedText>{failure.message}</UntrustedText>
-						{failure.hint !== undefined && (
-							<>
-								{" "}
-								<UntrustedText>{failure.hint}</UntrustedText>
-							</>
-						)}
-					</p>
-				</div>
-			)}
+			<FailureNote failure={failure} />
 			{loaded.state === "loading" && (
 				<p className="mt-4 text-sm text-muted-foreground">
 					{t("ui.projects.templates.loading")}
