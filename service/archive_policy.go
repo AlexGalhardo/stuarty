@@ -12,8 +12,6 @@ import (
 
 	"golang.org/x/text/unicode/norm"
 
-	"github.com/AlexGalhardo/vukem/archive"
-
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
@@ -87,21 +85,26 @@ func readTemplateArchive(data []byte) (*templateContents, *Error) {
 		return nil, e
 	}
 
-	entries, err := archive.Zip(bytes.NewReader(data), int64(len(data)), archive.Policy{
-		MaxEntries: templateEntriesMax, MaxTotalSize: templateTotalMax, MaxEntrySize: templateEntryMax,
-		// The names are flat: no directory is dropped, so a nested name is a
-		// path and the key check refuses it.
-		Key: func(name string) string { return name },
-	})
-	if err != nil {
-		return nil, archiveRefused(archiveReason(err))
+	// The limits of SDD-007 section 7.6, checked on the declared sizes before
+	// anything is read; readEntry then holds every entry to its cap.
+	if len(zr.File) > templateEntriesMax {
+		return nil, archiveRefused("it holds too many entries")
+	}
+
+	var total uint64
+
+	for _, f := range zr.File {
+		total += f.UncompressedSize64
+		if f.UncompressedSize64 > templateEntryMax || total > templateTotalMax {
+			return nil, archiveRefused("an entry or the total is larger than allowed")
+		}
 	}
 
 	contents := &templateContents{}
 	got := map[string]bool{}
 
-	for _, en := range entries {
-		canon, ok := allowlisted(en.Key)
+	for _, en := range zr.File {
+		canon, ok := allowlisted(en.Name)
 		if !ok {
 			return nil, archiveRefused("it holds an entry that a template file may not hold")
 		}
@@ -140,22 +143,7 @@ func readTemplateArchive(data []byte) (*templateContents, *Error) {
 	return contents, nil
 }
 
-func archiveReason(err error) string {
-	switch {
-	case errors.Is(err, archive.ErrTooManyEntries):
-		return "it holds too many entries"
-	case errors.Is(err, archive.ErrTooLarge):
-		return "an entry or the total is larger than allowed"
-	case errors.Is(err, archive.ErrNameTooLong), errors.Is(err, archive.ErrUnsafeName):
-		return "an entry name is not allowed"
-	case errors.Is(err, archive.ErrDuplicateKey):
-		return "it holds the same entry twice"
-	}
-
-	return "it is not a readable zip"
-}
-
-// scanTemplateEntries refuses what the key policy of vukem cannot see: symlinks,
+// scanTemplateEntries refuses what the size checks cannot see: symlinks,
 // encrypted entries, an implausible compression ratio, and entries whose name
 // is not on the allowlist once folded (which also catches a duplicate that
 // differs only by case or normalisation).
@@ -205,8 +193,9 @@ func allowlisted(name string) (string, bool) {
 
 // readEntry reads an entry up to its cap; a header that lies about the size, a
 // checksum error and a stream longer than the cap all fail.
-func readEntry(en archive.Entry, limit int64) ([]byte, error) {
-	if en.Size > limit {
+func readEntry(en *zip.File, limit int64) ([]byte, error) {
+	size := int64(en.UncompressedSize64) //nolint:gosec // bounded by templateEntryMax above
+	if size > limit {
 		return nil, errors.New("over the cap")
 	}
 
@@ -222,7 +211,7 @@ func readEntry(en archive.Entry, limit int64) ([]byte, error) {
 		return nil, err
 	}
 
-	if int64(len(body)) > limit || int64(len(body)) != en.Size {
+	if int64(len(body)) > limit || int64(len(body)) != size {
 		return nil, errors.New("size mismatch")
 	}
 
