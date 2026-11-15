@@ -24,6 +24,9 @@ function ffmpegEnv(): Record<string, string> {
 	};
 }
 
+// The WebKit run of the detection page needs only the detection server.
+const detectOnly = process.env.VUKEM_VIDEO_DETECT_ONLY === "1";
+
 const home =
 	process.env.VUKEM_VIDEO_E2E_HOME ?? join(tmpdir(), "vukem-video-e2e-home");
 
@@ -45,7 +48,8 @@ export default defineConfig({
 	projects: [
 		{
 			name: "chromium",
-			testIgnore: /(perf|export-failure|desktop-detect)\.spec\.ts/,
+			testIgnore:
+				/(perf|export-failure|desktop-detect|desktop-detect-webkit)\.spec\.ts/,
 			use: {
 				browserName: "chromium",
 				launchOptions: {
@@ -88,6 +92,20 @@ export default defineConfig({
 			testMatch: /desktop-detect\.spec\.ts/,
 			use: { browserName: "chromium", baseURL: "http://127.0.0.1:7979" },
 		},
+		// The same page in WebKit, for the desktop shell choice (ADR-0023). It runs
+		// only with VUKEM_VIDEO_DETECT_ONLY=1 (workflow desktop-detect.yml).
+		...(detectOnly
+			? [
+					{
+						name: "desktop-detect-webkit",
+						testMatch: /desktop-detect-webkit\.spec\.ts/,
+						use: {
+							browserName: "webkit" as const,
+							baseURL: "http://127.0.0.1:7979",
+						},
+					},
+				]
+			: []),
 	],
 	webServer: [
 		{
@@ -136,5 +154,7 @@ export default defineConfig({
 			reuseExistingServer: !process.env.CI,
 			timeout: 180_000,
 		},
-	],
+	].filter(
+		(server) => !detectOnly || server.command.includes("desktop/detect"),
+	),
 });
