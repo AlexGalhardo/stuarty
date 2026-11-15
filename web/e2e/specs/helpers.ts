@@ -140,6 +140,40 @@ export function audioClip(variant = 0): string {
 	return out;
 }
 
+// silenceClip makes, once per run, a 10 s clip whose sound is a tone with true
+// silence from 3 s to 6 s, for the silence removal (SDD-002 C.27).
+export function silenceClip(): string {
+	const dir = join(tmpdir(), "vukem-video-e2e-media");
+	mkdirSync(dir, { recursive: true });
+	const out = join(dir, "gradient10-silence.mp4");
+	if (!existsSync(out)) {
+		execFileSync(
+			ffmpegExe(),
+			[
+				"-y",
+				"-f",
+				"lavfi",
+				"-i",
+				"gradients=size=320x568:rate=30:duration=10:seed=77",
+				"-f",
+				"lavfi",
+				"-i",
+				"sine=frequency=500:duration=10,volume=enable='between(t,3,6)':volume=0",
+				"-c:v",
+				"libopenh264",
+				"-pix_fmt",
+				"yuv420p",
+				"-c:a",
+				"aac",
+				"-shortest",
+				out,
+			],
+			{ stdio: "ignore" },
+		);
+	}
+	return out;
+}
+
 // markerClip makes a 10 s clip of the given size on a smooth gradient with a red
 // and a blue solid box at fixed places: the markers of the displacement check
 // of preview-vs-export (SDD-012 section 20.3).
