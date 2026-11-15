@@ -76,9 +76,9 @@ func Limit(l ratelimit.Limiter, key ratelimit.KeyFunc) func(http.Handler) http.H
 // FailedAuth counts the failed authentications of an address (SDD-007 section
 // 4.4): every 401 spends one of its tokens. vukem's Limiter only spends, it
 // cannot be asked without spending, so an address whose token ran out is
-// remembered until the limiter would let it through again, and its requests are
-// refused before any credential is checked; otherwise a flood of wrong guesses
-// would go on at full speed and only the answer would change.
+// remembered until the limiter would let it through again; the failures of that
+// address are then refused with E_RATE_LIMITED instead of 401. A request with a
+// valid credential is not a failure and is never refused by this.
 type FailedAuth struct {
 	l   ratelimit.Limiter
 	now func() time.Time

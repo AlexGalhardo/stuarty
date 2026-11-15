@@ -103,8 +103,31 @@ func TestRateLimitFailedAuthenticationByAddress(t *testing.T) {
 		t.Errorf("the 21st failed check = %d %s", res.status, res.body)
 	}
 
-	if res := h.asKey(t, secret, http.MethodGet, "/api/v1/projects", ""); res.status != http.StatusTooManyRequests {
-		t.Errorf("a valid key from a refused address = %d, want 429", res.status)
+	// The block touches the failures of the address and nothing else: a valid
+	// key or session behind the same address still works.
+	if res := h.asKey(t, secret, http.MethodGet, "/api/v1/projects", ""); res.status != http.StatusOK {
+		t.Errorf("a valid key from a refused address = %d, want 200", res.status)
+	}
+
+	if res := h.send(
+		t,
+		http.MethodGet,
+		"/api/v1/projects",
+		"",
+		h.session(t, "ana@example.com"),
+		nil,
+	); res.status != http.StatusOK {
+		t.Errorf("a valid session from a refused address = %d, want 200", res.status)
+	}
+
+	if res := h.asKey(
+		t,
+		"vvk_wrong.guess",
+		http.MethodGet,
+		"/api/v1/projects",
+		"",
+	); res.status != http.StatusTooManyRequests {
+		t.Errorf("a bad key from a refused address = %d, want 429", res.status)
 	}
 }
 
@@ -140,5 +163,10 @@ func TestRateLimitLocalMode(t *testing.T) {
 
 	if res := h.do(req{path: "/api/v1/projects", noAuth: true}); res.status != http.StatusTooManyRequests {
 		t.Errorf("the 21st unauthenticated request = %d, want 429", res.status)
+	}
+
+	// Every local client shares the address: the token still works.
+	if res := h.get("/api/v1/projects"); res.status != http.StatusOK {
+		t.Errorf("a valid token after the address was refused = %d, want 200", res.status)
 	}
 }

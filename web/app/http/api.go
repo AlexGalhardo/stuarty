@@ -136,10 +136,6 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		if h.blockedAddress(w, r) {
-			return
-		}
-
 		var caller service.Caller
 
 		if header := r.Header.Get("Authorization"); header != "" {
@@ -189,10 +185,6 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request, next http.Handler) {
 	if r.URL.Path == healthPath || r.URL.Path == "/auth/login" || r.URL.Path == "/auth/logout" {
 		next.ServeHTTP(w, r)
-		return
-	}
-
-	if h.blockedAddress(w, r) {
 		return
 	}
 
