@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "duration": {
+      "description": "Length of the crossfade, at least 1 frame.",
+      "type": "string"
+    },
+    "from_item_id": {
+      "description": "The item that leaves.",
+      "type": "string"
+    },
+    "to_item_id": {
+      "description": "The item that arrives.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "from_item_id",
+    "to_item_id",
+    "duration"
+  ],
+  "type": "object"
+}

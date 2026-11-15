@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "item_id": {
+      "description": "The item to copy.",
+      "type": "string"
+    },
+    "new_id": {
+      "description": "The id of the copy.",
+      "type": "string"
+    },
+    "start": {
+      "description": "Absolute start of the copy.",
+      "type": "string"
+    },
+    "track_id": {
+      "description": "The track of the copy; default the source's track.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id",
+    "start"
+  ],
+  "type": "object"
+}

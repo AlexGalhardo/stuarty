@@ -302,6 +302,50 @@
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"additionalProperties": false,
 			"properties": {
+				"duration": {
+					"description": "Length of the crossfade, at least 1 frame.",
+					"type": "string"
+				},
+				"from_item_id": {
+					"description": "The item that leaves.",
+					"type": "string"
+				},
+				"to_item_id": {
+					"description": "The item that arrives.",
+					"type": "string"
+				}
+			},
+			"required": [
+				"from_item_id",
+				"to_item_id",
+				"duration"
+			],
+			"type": "object"
+		},
+		"description": "The item that leaves gets a fade transition out and the item that arrives a fade transition in, both of the given length, plus the matching audio fades for clips. The two items must overlap by at least that length, and the arriving item must start after the leaving one.",
+		"errors": [
+			"E_VALIDATION",
+			"E_INVALID_TIME",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_INVALID_STATE"
+		],
+		"example": {
+			"duration": "1s",
+			"from_item_id": "itm_m1n2p3q4r5",
+			"to_item_id": "itm_s6t7v8w9x0"
+		},
+		"internal": false,
+		"name": "item.crossfade",
+		"phase": "alpha",
+		"scope": "edit",
+		"summary": "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
 				"item_ids": {
 					"items": {
 						"type": "string"
@@ -343,6 +387,55 @@
 		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Removes items, and optionally closes the freed space."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"item_id": {
+					"description": "The item to copy.",
+					"type": "string"
+				},
+				"new_id": {
+					"description": "The id of the copy.",
+					"type": "string"
+				},
+				"start": {
+					"description": "Absolute start of the copy.",
+					"type": "string"
+				},
+				"track_id": {
+					"description": "The track of the copy; default the source's track.",
+					"type": "string"
+				}
+			},
+			"required": [
+				"item_id",
+				"start"
+			],
+			"type": "object"
+		},
+		"description": "Adds a copy of the item at start, on the same track or another track of the same kind. Keyframes, words and the name are copied; the slot mark is not. It fails when the copy would overlap an item of the target track.",
+		"errors": [
+			"E_VALIDATION",
+			"E_INVALID_TIME",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_ID_EXISTS",
+			"E_LIMIT",
+			"E_OVERLAP"
+		],
+		"example": {
+			"item_id": "itm_m1n2p3q4r5",
+			"new_id": "itm_s6t7v8w9x0",
+			"start": "3s"
+		},
+		"internal": false,
+		"name": "item.duplicate",
+		"phase": "alpha",
+		"scope": "edit",
+		"summary": "Copies an item to another position, optionally on another track."
 	},
 	{
 		"args_schema": {
@@ -895,6 +988,52 @@
 		"phase": "prototype",
 		"scope": "edit",
 		"summary": "Changes the content or the style of a text item."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"at": {
+					"description": "Absolute frame inside the gap.",
+					"type": "string"
+				},
+				"ripple": {
+					"description": "track (default) or all: all moves later items of every track.",
+					"enum": [
+						"track",
+						"all"
+					],
+					"type": "string"
+				},
+				"track_id": {
+					"description": "The track with the gap.",
+					"type": "string"
+				}
+			},
+			"required": [
+				"track_id",
+				"at"
+			],
+			"type": "object"
+		},
+		"description": "Moves the items after the gap earlier by the length of the gap: those of the track (ripple track, the default) or those of every track (ripple all).",
+		"errors": [
+			"E_VALIDATION",
+			"E_INVALID_TIME",
+			"E_NOT_FOUND",
+			"E_INVALID_STATE",
+			"E_OVERLAP"
+		],
+		"example": {
+			"at": "70f",
+			"track_id": "trk_f6g7h8j9k0"
+		},
+		"internal": false,
+		"name": "timeline.close_gap",
+		"phase": "alpha",
+		"scope": "edit",
+		"summary": "Closes the empty range that contains a given frame on a track."
 	},
 	{
 		"args_schema": {

@@ -1,0 +1,8 @@
+{
+  "duration": {
+    "frame": 30,
+    "requested": "1s",
+    "seconds": 1
+  },
+  "overlap": 30
+}

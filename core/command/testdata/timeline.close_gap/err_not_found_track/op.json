@@ -1,0 +1,7 @@
+{
+  "op": "timeline.close_gap",
+  "args": {
+    "track_id": "trk_zzzzzzzzzz",
+    "at": "70f"
+  }
+}
