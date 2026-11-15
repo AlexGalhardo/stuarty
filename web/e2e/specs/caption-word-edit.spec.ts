@@ -1,4 +1,5 @@
 import type { APIRequestContext, Page } from "@playwright/test";
+import { cspViolations } from "../support/browsers";
 import { caller, expect, seedProject, test } from "./helpers";
 
 interface Posted {
@@ -222,6 +223,7 @@ test.describe("caption-word-edit", () => {
 	test("a word with markup renders literally and no policy violation is reported", async ({
 		page,
 		request,
+		browserName,
 	}) => {
 		await page.addInitScript(() => {
 			(window as unknown as { __violations: string[] }).__violations = [];
@@ -246,8 +248,11 @@ test.describe("caption-word-edit", () => {
 			),
 		).toBeUndefined();
 		expect(
-			await page.evaluate(
-				() => (window as unknown as { __violations: string[] }).__violations,
+			cspViolations(
+				browserName,
+				await page.evaluate(
+					() => (window as unknown as { __violations: string[] }).__violations,
+				),
 			),
 		).toEqual([]);
 	});

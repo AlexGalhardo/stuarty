@@ -140,6 +140,7 @@ test.describe("transitions-presets", () => {
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 2 });
 		await page.goto(`/editor/${seeded.id}?debug=1`);
+		await expect(page.locator("[data-item-id]")).toHaveCount(2);
 		// `created` is not in timeline order: read which item starts first.
 		const starts = await page.evaluate(() => {
 			const doc = window.__vv?.document as {
