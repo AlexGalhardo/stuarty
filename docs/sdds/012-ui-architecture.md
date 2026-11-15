@@ -252,6 +252,8 @@ export const ERROR_TABLE: Record<ErrorCode, { retryable: boolean; http: number }
 
 `task codegen` regenerates them (`go run ./internal/tools/contractgen`, then `bun run codegen:ts`); CI fails if the working tree changes afterwards (ADR-0014 item 2). `generated/commands.ts` also exports `COMMANDS`, a table of summary, scope, phase, internal flag and error codes per command, and `generated/limits.ts` exports `LIMITS`.
 
+**Open: the types of the HTTP endpoints are written by hand.** This section asks for `generated/api.ts` from the OpenAPI document with `openapi-typescript`. The pinned 7.13.0 uses the JavaScript API of TypeScript 5 (`ts.factory`), and the repository builds with TypeScript 7.0.2, which does not have it: the import fails at load. A second TypeScript version only for this script was refused (no new dependency), so the response types of the endpoints are interfaces in `editor/api/types.ts`, copied from `site/generated/openapi.json`. The step comes back when `openapi-typescript` supports TypeScript 7 or the project changes the generator.
+
 ### 4.2 Endpoints and functions
 
 One typed function per endpoint of SDD-000 §1 that the UI uses, in `editor/api/client.ts`. Rows marked "gap" are not in SDD-000 and are specified in Appendix B.
@@ -1261,7 +1263,7 @@ All measurements use `performance.mark` and `performance.measure` with the prefi
 | Timeline, 200 items (5 tracks of 40), scroll plus zoom frames (`timeline-200-items-perf`) | p50 1.8 ms, p95 8.1 to 12.2 ms, max 16.4 ms (budget 16 ms at p95) |
 | Edit round trip, Split on the 200-item project, click to the new item in the DOM (`command-round-trip`) | p50 14.9 ms, p95 25.0 ms, one `/edit` request per gesture (25 gestures, 25 requests; budget 50 ms at p95) |
 | NFR-003 seek to a decoded proxy frame (`scrub-latency`) | p50 53 ms, p95 65 ms over 20 seeks (budget 100 ms) |
-| NFR-004 pause to exact frame | not measured: the guard of the API answers `/frame` as JSON to an `<img>` (server defect), so the overlay never shows |
+| NFR-004 pause to exact frame (`play-pause-truth`, 20 pauses, `vv:truth`, which includes the 150 ms delay) | Warm (the frame was rendered once before): p50 151 ms, p95 153 ms, gated at 500 ms. Cold (first pause at a frame): p50 154 to 159 ms, p95 395, 409 and 524 ms over three runs. **Open: cold ViewFrame render**, the cold p95 straddles the budget because each new frame costs one decode of the source on the server |
 | NFR-011 preview against `ViewFrame` (`preview-vs-export`), gradient clip, frame 30, luma at 360 x 640 (the width of `ViewFrame`) | SSIM 0.983, at least 0.97. On a 172 x 303 canvas (1280 x 720 window) the same frame compared after downscaling both images scores 0.96: the loss is the resampling of the thumbnail, not the preview. Both the canvas and `ViewFrame` sit 3.7 luma levels above an FFmpeg bicubic reference (the same range conversion), so the matrix and the range agree. The gate is measured on a window where the canvas has at least the pixels of the frame |
 | `MAX_VIDEO_LAYERS` (`video-layers-budget`), dropped frames over 10 s | 4 layers: 0 of 1200 (0%); 6 layers (4 decoding plus 2 stills): 125 of 1603 (7.8%); 8 layers: 79 of 1249 (6.3%); JS heap 11 to 13 MB. The 4 decoding elements are within budget, so `MAX_VIDEO_LAYERS = 4` stands; the layers beyond the cap cost frames on software WebGL, to be rechecked on the reference machine with a GPU |
 
