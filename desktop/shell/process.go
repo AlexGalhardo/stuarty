@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -99,6 +100,10 @@ func (s *Server) Done() <-chan struct{} { return s.done }
 // Start runs the server and returns once /up answers 200, or fails when ctx,
 // the deadline or the child ends the wait.
 func Start(ctx context.Context, cfg Config) (*Server, error) {
+	// A bare name would be looked up on PATH, so another program could be started in its place.
+	if !filepath.IsAbs(cfg.Binary) {
+		return nil, &StartupError{Reason: ReasonSpawn, Message: "The server path is not absolute: " + cfg.Binary}
+	}
 	if cfg.ReadyTimeout <= 0 {
 		cfg.ReadyTimeout = defaultReadyTimeout
 	}

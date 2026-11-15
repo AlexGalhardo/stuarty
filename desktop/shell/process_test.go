@@ -129,6 +129,13 @@ func TestMissingBinary(t *testing.T) {
 	assertReason(t, err, ReasonSpawn)
 }
 
+func TestRelativeBinaryIsRefused(t *testing.T) {
+	cfg := newConfig(t, "ok")
+	cfg.Binary = "vukem-video"
+	_, err := Start(context.Background(), cfg)
+	assertReason(t, err, ReasonSpawn)
+}
+
 func TestPortInUseIsReported(t *testing.T) {
 	ln, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", "127.0.0.1:0")
 	if err != nil {
