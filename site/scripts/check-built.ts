@@ -2,7 +2,8 @@
 //   1. only static files: no server entry, no adapter output (D-015);
 //   2. no external script, font, stylesheet, image or analytics: nothing the page loads comes from another
 //      origin, and no other host appears in the built files except the inert ones listed below (D-015, D-016);
-//   3. every root-relative href and src starts with the base path (SDD-010 section 12.4).
+//   3. every root-relative href and src starts with the base path (SDD-010 section 12.4);
+//   4. every docs page has a clean Markdown twin and llms.txt lists them, and what it lists exists.
 // Node strips the types (no build step).
 import fs from "node:fs";
 import path from "node:path";
@@ -72,6 +73,41 @@ export function basePathProblems(file: string, html: string, base: string): stri
 	return problems;
 }
 
+/**
+ * Twins and llms.txt (SDD-010 section 9, properties 1 to 3): every docs page has a Markdown twin
+ * without JSX or imports, llms.txt lists every page and the twin of each, and every URL it lists
+ * resolves to a file. `files` are paths relative to out/ with forward slashes.
+ */
+export function twinProblems(
+	files: string[],
+	read: (rel: string) => string,
+	siteUrl: string,
+): string[] {
+	const problems: string[] = [];
+	const set = new Set(files);
+	const pages = files
+		.filter((f) => /^docs\/.+\/index\.html$/.test(f))
+		.map((f) => f.slice(0, -"/index.html".length));
+	if (!set.has("llms.txt")) return ["llms.txt is missing"];
+	const listed = new Set(
+		[...read("llms.txt").matchAll(/\]\((https?:\/\/[^)\s]+)\)/g)].map((m) => m[1].replace(siteUrl, "").replace(/^\//, "").replace(/\/$/, "")),
+	);
+
+	for (const page of pages) {
+		if (!set.has(`${page}.md`)) problems.push(`${page}: no Markdown twin (${page}.md)`);
+		else {
+			const md = read(`${page}.md`);
+			if (/^import\s/m.test(md) || /<[A-Z][A-Za-z]*[\s/>]/.test(md)) problems.push(`${page}.md: has JSX or an import`);
+		}
+		if (!listed.has(page)) problems.push(`llms.txt does not list ${page}`);
+	}
+	for (const url of listed) {
+		if (!set.has(`${url}/index.html`) && !set.has(url)) problems.push(`llms.txt lists ${url}, which is not in out/`);
+		if (!pages.includes(url) && url.startsWith("docs/")) problems.push(`llms.txt lists ${url}, which is not a page`);
+	}
+	return problems;
+}
+
 function walk(dir: string): string[] {
 	return fs
 		.readdirSync(dir, { withFileTypes: true })
@@ -101,6 +137,9 @@ function main(): number {
 		problems.push(...foreignOriginProblems(rel, text, siteUrl.hostname));
 		if (rel.endsWith(".html")) problems.push(...basePathProblems(rel, text, base));
 	}
+
+	const rels = files.map((f) => path.relative(outDir, f).split(path.sep).join("/"));
+	problems.push(...twinProblems(rels, (rel) => fs.readFileSync(path.join(outDir, rel), "utf8"), siteUrl.origin + base));
 
 	for (const p of problems) console.error(p);
 	console.log(`check:built: ${files.length} files, ${problems.length} problems`);
