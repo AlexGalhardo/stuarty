@@ -146,3 +146,29 @@ func writeView(c *web.Ctx, res *service.ViewResult, pinned bool, kind string, ha
 
 	return err
 }
+
+type bitmapIn struct {
+	ID  string `json:"id"  validate:"required"`
+	Key string `json:"key" validate:"required"`
+}
+
+type planIn struct {
+	ID   string `json:"id"             validate:"required"`
+	From int    `json:"from,omitempty"                     doc:"The first frame of the window; default 0."`
+	To   int    `json:"to"             validate:"required" doc:"The end of the window, not included; at most 300 frames after from."`
+	Rev  int64  `json:"rev,omitempty"                      doc:"Must be the current revision when given."`
+}
+
+// projectsPlan is GET /projects/{id}/plan (SDD-004 section 10).
+func (h *apiHandler) projectsPlan(c *web.Ctx, in planIn) (service.PlanWindowResult, error) {
+	if err := h.pinRevision(c, in.ID, in.Rev); err != nil {
+		return service.PlanWindowResult{}, err
+	}
+
+	res, err := h.Service.PlanWindow(c.Context(), service.PlanWindowRequest{ProjectID: in.ID, From: in.From, To: in.To})
+	if res != nil {
+		revisionHeader(c, res.Revision)
+	}
+
+	return deref(res), err
+}

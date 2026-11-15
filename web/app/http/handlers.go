@@ -182,6 +182,10 @@ func (h *apiHandler) registerAll() {
 	})
 
 	register(h, "events.stream", h.eventsStream)
+	register(h, "projects.plan", h.projectsPlan)
+	register(h, "bitmaps.get", func(c *web.Ctx, in bitmapIn) (noIn, error) {
+		return h.serveAsset(c, "bitmap", in.ID, in.Key, "")
+	})
 	register(h, "projects.frame", h.projectsFrame)
 	register(h, "projects.sheet", h.projectsSheet)
 
