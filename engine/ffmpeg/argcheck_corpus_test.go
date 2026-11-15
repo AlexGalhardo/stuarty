@@ -214,6 +214,7 @@ func FuzzSniffMedia(f *testing.F) {
 
 	f.Add(hugePNG(10, 10))
 	f.Add(externalDrefMP4())
+	f.Add(x264Style())
 	f.Add([]byte("\x00\x00\x00\x18ftypisom\x00\x00\x02\x00isomiso2"))
 
 	f.Fuzz(func(t *testing.T, head []byte) {
