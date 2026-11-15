@@ -1,0 +1,50 @@
+---
+title: "Privacy: nothing leaves your machine"
+description: "The complete list of the ways the product can open a network connection, and how each is switched on."
+---
+
+## You will learn
+
+- that a default run makes no outbound connection;
+- the full list of exceptions, and who controls each;
+- what the product does not have.
+
+## The idea
+
+With the default settings the binary opens **no outbound network connection**. There is no telemetry, no update check, no crash reporting, no font or icon service and no analytics. The editor's assets are embedded, and its security policy lets the page reach only the server it came from. A test starts the server with every setting unset, runs a full create, import, edit, export and verify, and fails on any connection; a CI job repeats the run with the real binary and FFmpeg and watches for connections on Linux.
+
+A connection **to** the server, from a browser or a client you use, is inbound and not counted here.
+
+| Path | Opens a connection when | To | Default |
+| --- | --- | --- | --- |
+| Transcription API | `VUKEM_VIDEO_TRANSCRIBE_URL` and `VUKEM_VIDEO_TRANSCRIBE_KEY` are set and a transcription runs | the host you configured, with the audio of one asset and the key | off |
+| Helper download | a person runs `tools:install` or presses Install in the editor | the hosts of the embedded manifest | never at run time |
+| OpenTelemetry | `OTEL_EXPORTER_OTLP_ENDPOINT` is set | that endpoint | off |
+| CLI and stdio MCP as clients | a server owns the workspace | the loopback address of that server, or `VUKEM_VIDEO_URL` when you set it | loopback only |
+| Browser launch | `serve` opens your browser | your browser connects to loopback; the product makes no connection | loopback only |
+
+That is the whole list. The transcription provider receives only the normalised audio of the asset and the key. It receives no project, no file name and no path, the certificate is always verified, redirects are refused and the job says which host receives the audio. The helper download is announced with its size and host before it starts.
+
+No tool of an agent can make the product send data anywhere: no argument is a URL, host, webhook or destination, and there is no import by URL, no publishing and no upload. FFmpeg, ffprobe and the transcription program are never given a network address; on Linux, `VUKEM_VIDEO_SANDBOX=bwrap` makes the operating system enforce it.
+
+## Quick start
+
+To verify it on your own machine, run the server and watch its connections with the tool of your system. On Linux:
+
+```bash
+vukem-video serve &
+ss -tnp | grep vukem-video
+```
+
+You should see only the listening socket and your own browser. Stop the server with `kill %1` when you finish.
+
+## Common mistakes
+
+- Setting a transcription URL without understanding that the audio goes there. Use a host you control, or leave it unset and use local transcription.
+- Treating `OTEL_EXPORTER_OTLP_ENDPOINT` as harmless: it sends request traces to that endpoint.
+- Running `tools:install` without reading what it prints: it names the host and the download size before it asks you to continue.
+
+## Next steps
+
+- [Logs and OpenTelemetry](/docs/self-hosting/observability)
+- [Transcription](/docs/guide/transcription)

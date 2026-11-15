@@ -1,0 +1,51 @@
+---
+title: "The diagnostic bundle"
+description: "Check the installation, and write a local archive you can attach to a bug report."
+---
+
+## You will learn
+
+- what `doctor` checks;
+- how to write the diagnostic bundle and what it holds;
+- what is never in it.
+
+## The idea
+
+`vukem-video doctor` checks the installation and the workspace and answers with the version, the mode, the process, the workspace and a list of checks, each with a result and, when it fails, what to do. Nothing in the answer is a key, a token or the contents of the environment.
+
+The **bundle** is a file for a bug report. It is written inside your workspace; the product never sends it anywhere, and you decide whether to attach it to an issue.
+
+## Quick start
+
+```bash
+vukem-video doctor
+vukem-video doctor --full
+vukem-video doctor --bundle
+```
+
+- `doctor` checks the identity of the installation. `--full` runs every check, including FFmpeg, its licence class and the H.264 encoder detection, and re-runs the detection.
+- `--verify` recomputes the digests of FFmpeg and the helpers.
+- `--bundle` writes `exports/diagnostics/doctor-<UTC timestamp>.zip` in the workspace, readable only by you.
+- `--gc` removes what no project refers to any more.
+
+The bundle holds the report with the paths removed, the versions, the FFmpeg configure line, the detected encoders and the tail of the recent logs. It holds the document of a project only when you ask for it explicitly. Every entry is cleaned of the values of the secret variables and of the local token before it is written.
+
+In the container:
+
+```bash
+docker exec vukem-video vukem-video doctor --bundle
+docker cp vukem-video:/data/exports/diagnostics .
+```
+
+Read the bundle before you attach it: it is your decision.
+
+## Common mistakes
+
+- Attaching the bundle to a public issue without reading it. Log lines carry project ids and actors.
+- Using `doctor --gc` before a backup: it deletes unreferenced files.
+- Running `doctor` with a server running and expecting the full check from the CLI alone: in network mode the command may need an admin key that is not limited to one project, or the terminal of the server machine.
+
+## Next steps
+
+- [Backups and upgrades](/docs/self-hosting/backups-and-upgrades)
+- [Logs and OpenTelemetry](/docs/self-hosting/observability)

@@ -1,0 +1,54 @@
+---
+title: "Logs and OpenTelemetry"
+description: "Where the server writes its logs, what is in them, and how to send traces and metrics to your own collector."
+---
+
+## You will learn
+
+- where the logs are and how they rotate;
+- what the audit table and the jobs table are for;
+- how to turn on OpenTelemetry.
+
+## The idea
+
+The server writes **structured logs** to standard error and to a rotating file, `<workspace>/logs/vukem-video.log`. The file rotates at 10 MiB and keeps the three newest old files as `vukem-video.log.1` to `.3`. A line carries the request or job identifier, the actor and the project. Media file names and transcript text are not logged above the debug level, and no secret is: the first administrator's password and every API key are kept out of the log. In a container, `docker logs vukem-video` shows standard error.
+
+Three records answer different questions, and none is copied into the others:
+
+| Record | Answers | Read it with |
+| --- | --- | --- |
+| Logs | what the server did and what went wrong | `docker logs`, or the file in `logs/` |
+| The audit table | who changed what, in which project | `vukem-video audit` |
+| The jobs table | long work: exports and transcriptions | `vukem-video job:list` |
+
+The product sends no telemetry and has no analytics or crash reporter. Observability is yours to switch on.
+
+## OpenTelemetry
+
+Set `OTEL_EXPORTER_OTLP_ENDPOINT` to your own collector and the server sends traces and metrics there. Without the variable no exporter is created and no connection is made. The collector sees request timings and identifiers, not your media.
+
+```bash
+# add this option to the docker run command of the Docker page
+-e OTEL_EXPORTER_OTLP_ENDPOINT=http://collector.example.com:4318
+```
+
+## Quick start
+
+```bash
+vukem-video doctor --full
+vukem-video audit --limit 20
+curl -fsS http://localhost:7878/up
+```
+
+`doctor --full` checks the installation and the workspace (see [the diagnostic bundle](/docs/troubleshooting/diagnostic-bundle)). `GET /up` is the health route the image uses.
+
+## Common mistakes
+
+- Looking for logs in the browser. The editor shows a banner and a connection state; the details are in the server log.
+- Pointing the endpoint at a service that is not yours. It receives the traces of every request.
+- Expecting the log to grow without limit. It does not: three old files at most.
+
+## Next steps
+
+- [Privacy: nothing leaves your machine](/docs/self-hosting/privacy)
+- [The diagnostic bundle](/docs/troubleshooting/diagnostic-bundle)

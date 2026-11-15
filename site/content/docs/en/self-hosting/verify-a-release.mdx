@@ -1,0 +1,62 @@
+---
+title: "Verify a release"
+description: "Check the signature, the checksums, the provenance and the image digests of a published release."
+---
+
+## You will learn
+
+- what is signed and attested in a release;
+- the commands that verify the archive and the image;
+- what a failure means.
+
+## The idea
+
+Every release is built by one workflow, `release.yml`, on GitHub. It signs `checksums.txt` with cosign (keyless, through Sigstore), attaches a build provenance attestation, and signs and attests the digests of the container image on both registries. You verify that the file you hold is the one that workflow built from a tag, without trusting the download.
+
+Install `cosign`, the GitHub CLI `gh` and, for the image, `docker`.
+
+## Quick start
+
+Set the version, then download and verify the archive of your platform:
+
+```bash
+VERSION=vX.Y.Z
+V="${VERSION#v}"
+REPO=AlexGalhardo/vukem-video
+ARCHIVE="vukem-video_${V}_linux_amd64.tar.gz"
+IDENTITY="^https://github[.]com/$REPO/[.]github/workflows/release[.]yml@refs/tags/v"
+ISSUER=https://token.actions.githubusercontent.com
+gh release download "$VERSION" -R "$REPO" -p checksums.txt -p checksums.txt.sigstore.json \
+  -p "$ARCHIVE" -p "$ARCHIVE.sbom.json"
+cosign verify-blob checksums.txt --bundle checksums.txt.sigstore.json \
+  --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+sha256sum --ignore-missing -c checksums.txt
+gh attestation verify "$ARCHIVE" -R "$REPO"
+```
+
+On macOS use `shasum -a 256 -c` for the check of the checksums. The release also attaches the provenance bundle, `vukem-video.intoto.jsonl`, and a software bill of materials (SBOM) for each archive.
+
+Verify the container image on both registries. The two digests printed must be equal, because one build is pushed to both:
+
+```bash
+for image in ghcr.io/alexgalhardo/vukem-video alexgalhardo/vukem-video; do
+  digest="$(docker buildx imagetools inspect "$image:$V" --format "{{.Manifest.Digest}}")"
+  cosign verify "$image@$digest" \
+    --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+  echo "$image $digest"
+done
+docker run --rm "ghcr.io/alexgalhardo/vukem-video:$V" version
+```
+
+The last command prints `vukem-video vX.Y.Z`. The Windows and macOS installers are not signed with a paid code-signing certificate; the signed `checksums.txt` is how you verify them.
+
+## Common mistakes
+
+- Skipping `cosign verify-blob` and running only `sha256sum`: a checksum file you did not verify proves nothing.
+- Changing the identity regexp to accept any workflow. Keep it exact: the identity is the proof of who built the file.
+- A recovery run signed from a branch instead of a tag has the identity `@refs/heads/<branch>`; the regexp above rejects it on purpose. Use the next tagged release.
+
+## Next steps
+
+- [Run the Docker image](/docs/self-hosting/docker)
+- [The release process](/docs/contributing/releases)

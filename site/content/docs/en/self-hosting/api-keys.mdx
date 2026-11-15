@@ -1,0 +1,88 @@
+---
+title: "API keys and scopes"
+description: "Create, use and revoke the API keys that let agents and scripts use a network-mode server."
+---
+
+## You will learn
+
+- what a key is, and which scopes it can have;
+- how to create one, use it from the CLI, MCP and HTTP, and revoke it;
+- how the rate limits apply.
+
+## The idea
+
+In [network mode](/docs/self-hosting/network-mode) an agent or a script uses an **API key** that a signed-in user creates. The key has a secret of the form `vvk_<id>.<secret>`; only a hash is stored, and the secret is shown once, at creation. Its actor in the audit trail is `key:<key id>`.
+
+| Scope | Allows |
+| --- | --- |
+| `read` | read projects, view frames, lint, read jobs |
+| `edit` | apply edit batches, undo and redo, create projects |
+| `media` | import media, remove assets, start transcription |
+| `render` | start exports |
+| `admin` | administer users, keys and the trash |
+
+Scopes are independent: none implies another, `admin` included. The effective scopes of a request are the scopes of the key intersected with the present role of its owner, so demoting a user narrows their keys at once. A key can be limited to one project (not with `admin`). Rules of creation:
+
+- `name` of 1 to 60 characters, and `scopes`, a non-empty subset of the creator's scopes;
+- `expires_in_days` from 1 to 365, default 90 (1 to 30 when the key has `admin`);
+- at most 10 creations per hour per user and 50 unrevoked keys per user;
+- only a signed-in session can create a key: a key can never create a key.
+
+<Callout type="warning" title="No keys page in this release">
+The editor has no page for keys yet. Create them with the HTTP calls below.
+</Callout>
+
+## Quick start
+
+Sign in to get a session, create a key with it and use the key. The `Origin` header is required on an unsafe request that uses the session cookie; use your `APP_URL`.
+
+```bash
+APP=http://localhost:7878
+curl -fsS -c jar.txt -H "Content-Type: application/json" -H "Origin: $APP" \
+  -d '{"email": "admin@example.com", "password": "choose-a-long-password"}' "$APP/auth/login"
+curl -fsS -b jar.txt -H "Content-Type: application/json" -H "Origin: $APP" \
+  -d '{"name": "claude-code", "scopes": ["read", "edit", "media", "render"]}' "$APP/api/v1/keys"
+```
+
+The second answer holds the secret. Store it in a file only you can read, and point the client at the server:
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+export VUKEM_VIDEO_URL=https://video.example.com
+vukem-video project:list --key-file ~/.vukem-video-key
+```
+
+Or set `VUKEM_VIDEO_KEY` in the environment. There is no `--key` flag, because other users can see command-line arguments. The same variables make the stdio MCP server (`vukem-video mcp`) talk to the remote server.
+
+</Tab>
+<Tab title="HTTP">
+
+```bash
+curl -fsS -H "Authorization: Bearer $(cat ~/.vukem-video-key)" "$APP/api/v1/projects"
+curl -fsS -b jar.txt -H "Origin: $APP" "$APP/api/v1/keys"
+curl -fsS -b jar.txt -X DELETE -H "Origin: $APP" "$APP/api/v1/keys/key_7k2m9x4q1b"
+```
+
+The key goes only in the `Authorization: Bearer` header. `GET /keys` lists your own keys (id, name, scopes, project, created, last used, expires, revoked) and never the secret. A revoked key stops working at the next request.
+
+</Tab>
+</Tabs>
+
+## Rate limits
+
+A key is limited to 300 requests per minute with a burst of 60 (`VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE`); a browser session to 1,800 (`VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE`). Starting a job and importing media or a template (`job_start`, `media_import`, `template:import`) are limited to 10 per minute per actor (`VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE`). Before authentication an address has 600 requests per minute, and 20 failed authentications per minute, after which it is refused before any key or login is checked. Behind a proxy, set `TRUSTED_PROXIES`, or every client shares one address.
+
+The answer to a limit is HTTP 429 with `Retry-After` and `E_RATE_LIMITED`, which is retryable.
+
+## Common mistakes
+
+- Putting a key in a URL, a command-line argument or a repository. The prefix `vvk_` lets secret scanners find leaks; if one leaks, revoke it.
+- Asking for a scope your own role lacks: the creation is refused.
+- A key that expired: create a new one before the date.
+
+## Next steps
+
+- [Connect an agent](/docs/agents/connect)
+- [Configuration variables](/docs/reference/configuration)
