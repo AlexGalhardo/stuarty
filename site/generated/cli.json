@@ -458,6 +458,38 @@
       ]
     },
     {
+      "name": "media:trash",
+      "summary": "move an asset to the trash",
+      "usage": [
+        "vukem-video media:trash <asset id> --project <id>"
+      ],
+      "example": "vukem-video media:trash ast_3c5v8n2w6d --project prj_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "media:restore",
+      "summary": "restore a trashed asset",
+      "usage": [
+        "vukem-video media:restore <asset id> --project <id>"
+      ],
+      "example": "vukem-video media:restore ast_3c5v8n2w6d --project prj_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
       "name": "view",
       "summary": "render a frame or a contact sheet of a project",
       "usage": [
@@ -744,7 +776,7 @@
         {
           "name": "fill",
           "type": "string",
-          "usage": "a JSON object of slot name to value, from a file or - for standard input"
+          "usage": "a JSON object of slot name to value: a file, or - for standard input"
         },
         {
           "name": "id",
