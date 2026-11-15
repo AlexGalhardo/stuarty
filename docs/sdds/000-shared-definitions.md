@@ -179,7 +179,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `VUKEM_VIDEO_MAX_IMPORT_BYTES` | `8589934592` (8 GiB) | largest file accepted by import |
 | `VUKEM_VIDEO_TRANSCRIBE_URL`, `VUKEM_VIDEO_TRANSCRIBE_KEY`, `VUKEM_VIDEO_TRANSCRIBE_MODEL` | none | OpenAI-compatible transcription API; when unset, the local provider is used |
 | `VUKEM_VIDEO_WHISPER_MODEL` | `small` | local model name: `tiny`, `base`, `small` or `large-v3-turbo` |
-| `VUKEM_VIDEO_TEST_TRANSCRIBER` | none | test only: `stub` selects a provider that answers every audio with four fixed words (`hello` 100-400 ms, `brave` 400-700, `new` 1100-1400, `world` 1400-1900, language `en`). Honoured only with `APP_ENV=testing` in local mode; with any other `APP_ENV`, in network mode, or with any other value the server refuses to start. Never set in production |
+| `VUKEM_VIDEO_TEST_TRANSCRIBER` | none | test only: `stub` selects a provider that answers every audio with four fixed words (`hello` 100-400 ms, `brave` 400-700, `new` 1100-1400, `world` 1400-1900, language `en`). Honoured only with `APP_ENV=test` in local mode; with any other `APP_ENV`, in network mode, or with any other value the server refuses to start. Never set in production |
 | `VUKEM_VIDEO_MAX_EXPORTS_PER_KEY` | `1` | concurrent exports running per actor (two more may wait) |
 | `VUKEM_VIDEO_MAX_INGESTS` | `2` | concurrent ingests per workspace |
 | `VUKEM_VIDEO_MAX_TRANSCRIBES` | `1` | concurrent transcriptions per workspace |
