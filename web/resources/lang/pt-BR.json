@@ -336,7 +336,10 @@
         "cancelled": "Exportação cancelada",
         "failed_checks": "Verificações com falha:",
         "queue_full": "Outra exportação está em andamento. Tente de novo quando ela terminar.",
-        "go_to": "Ir para {item}"
+        "go_to": "Ir para {item}",
+        "cancel": "Cancelar a exportação",
+        "cancelling": "Cancelando",
+        "check_line": "esperado {expected}, obtido {got}"
       },
       "commands": {
         "asset": {
