@@ -36,55 +36,22 @@ Run `vukem-video version`, then `vukem-video project:list`. The workspace is `~/
 
 ## Command reference
 
-Operations of `edit` (`command_help <name>` prints arguments and an example). `P` Prototype build, `A` Alpha; `asset.remove` needs the media scope.
+Operations of `edit`, written `namespace.action`; a star marks the Alpha build, the others are in the Prototype. `command_help` lists them with a summary and `command_help <name>` prints arguments and an example. `asset.remove` needs the media scope.
 
-- `asset.remove` A: Removes an asset that no item uses.
-- `audio.add` A: Places an audio asset, or the audio of a video asset, on an audio track.
-- `caption.add` P: Adds a caption item with timed words.
-- `caption.edit_word` A: Changes the text of one word of a caption, or removes the word.
-- `caption.from_transcript` A: Creates captions for the speech of a clip from its transcript.
-- `caption.merge` A: Joins two captions of one track into one that spans both.
-- `caption.retime_from_clip` A: Retimes the captions linked to a clip after the clip was moved, trimmed or sped up.
-- `caption.set_breaks` A: Sets the forced line breaks of a caption.
-- `caption.set_style` A: Sets or clears the style override of one caption.
-- `caption.set_words` A: Replaces the words of a caption.
-- `caption.split` A: Splits a caption into two at a word boundary.
-- `clip.add` P: Places a video or image asset on a visual track.
-- `clip.remove_silences` A: Cuts the silent stretches out of a clip, leaving one clip per stretch of speech.
-- `clip.set_color` A: Sets the brightness, contrast and saturation of a clip.
-- `clip.set_framing` A: Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.
-- `clip.set_speed` A: Changes the speed of a clip or audio item while keeping the same source range.
-- `item.crossfade` A: Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.
-- `item.delete` P: Removes items, and optionally closes the freed space.
-- `item.duplicate` A: Copies an item to another position, optionally on another track.
-- `item.move` P: Moves an item in time, to another track of the same kind, or both.
-- `item.rename` A: Sets the label of an item.
-- `item.set_audio` A: Sets the volume, the fades or the mute flag of a clip or audio item.
-- `item.set_transform` A: Sets the position, scale, rotation or opacity of a visual item.
-- `item.set_transition` A: Sets or removes the transition on one edge of a visual item.
-- `item.split` P: Splits an item into two at a timeline frame.
-- `item.trim` P: Moves the start edge or the end edge of an item to a timeline position.
-- `keyframe.clear` A: Removes all keyframes of one property, or of every property.
-- `keyframe.remove` A: Removes the keyframe of a property at a frame.
-- `keyframe.set` A: Adds or replaces a keyframe of one animated property of an item.
-- `project.rename` P: Sets the project name.
-- `settings.set` P: Sets the frame size, the background colour or the loudness target.
-- `settings.set_fps` A: Changes the project frame rate and rescales every time quantity.
-- `shape.add` A: Adds a rectangle, rounded rectangle or ellipse to a visual track.
-- `shape.set` A: Changes the shape, size, colours, stroke or radius of a shape item.
-- `slot.fill` A: Fills a template slot with media, text or caption words.
-- `slot.mark` A: Marks an item as a template slot.
-- `slot.unmark` A: Removes the slot marking of an item.
-- `template.set_info` A: Sets the description and the named colours of the template.
-- `text.add` P: Adds a text item to a visual track.
-- `text.apply_preset` A: Animates one edge of a visual item with a named preset.
-- `text.set` P: Changes the content or the style of a text item.
-- `timeline.close_gap` A: Closes the empty range that contains a given frame on a track.
-- `track.add` P: Adds an empty track at a place in the track order.
-- `track.move` P: Changes the place of a track in the track order.
-- `track.remove` P: Removes a track, and its items when with_items is true.
-- `track.set_caption_style` P: Merges a partial caption style into a track, or replaces it.
-- `track.update` P: Sets the name, the hidden flag or the muted flag of a track.
+- `asset`: remove*
+- `audio`: add*
+- `caption`: add, edit_word*, from_transcript*, merge*, retime_from_clip*, set_breaks*, set_style*, set_words*, split*
+- `clip`: add, remove_silences*, set_color*, set_framing*, set_speed*
+- `item`: crossfade*, delete, duplicate*, move, rename*, set_audio*, set_transform*, set_transition*, split, trim
+- `keyframe`: clear*, remove*, set*
+- `project`: rename
+- `settings`: set, set_fps*
+- `shape`: add*, set*
+- `slot`: fill*, mark*, unmark*
+- `template`: set_info*
+- `text`: add, apply_preset*, set
+- `timeline`: close_gap*
+- `track`: add, move, remove, set_caption_style, update
 
 ## CLI cheat sheet
 
@@ -112,6 +79,9 @@ Every line starts with `vukem-video`.
 - `job:list --project <id> [--state s] [--cursor c] [--limit n]`
 - `events --project <id> [--from-id n] [--since n] [--count n]`
 - `command:help [<name>]`
+- `template:list [--cursor c] [--limit n]`
+- `template:save --project <id> --name <name> [--description d]`
+- `template:new <template id> --name <name> [--fill <file|->] [--id prj_...]`
 - `agent:docs --print skill|agents|instructions`
 
 Batches: `--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` any JSON). `--dry-run` saves nothing; `--key <k>` makes a retry safe.
@@ -223,3 +193,4 @@ The tools return the same text as the commands.
 - `job_start`: `export`
 - `job_get`: `job:show`, `job:list`
 - `job_cancel`: `job:cancel`
+- `template`: `template:list`, `template:save`, `template:new`
