@@ -7,6 +7,7 @@ import (
 	"errors"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/AlexGalhardo/vukem/auth"
@@ -28,6 +29,10 @@ func (n *Network) Keys() service.KeyStore { return keyStore{n} }
 
 type keyStore struct{ n *Network }
 
+// keyMu makes the count of the limits and the insert one step. One process owns
+// the workspace (its lock), so a mutex serialises every creation.
+var keyMu sync.Mutex
+
 const keySelect = `SELECT k.id, k.name, k.user_id, k.project_id, k.created_ms, t.abilities,
   t.last_used_at, t.expires_at, t.revoked_at, k.token_id
 FROM api_keys k JOIN access_tokens t ON t.id = k.token_id `
@@ -35,6 +40,23 @@ FROM api_keys k JOIN access_tokens t ON t.id = k.token_id `
 // CreateKey issues the secret and records the key; a failure to record revokes
 // the token again, so no secret exists without its row.
 func (s keyStore) CreateKey(ctx context.Context, k service.NewKey) (string, service.Key, error) {
+	keyMu.Lock()
+	defer keyMu.Unlock()
+
+	counts, err := s.counts(ctx, k)
+	if err != nil {
+		return "", service.Key{}, err
+	}
+
+	if counts.Recent >= k.MaxRecent {
+		counts.Rate = true
+		return "", service.Key{}, counts
+	}
+
+	if counts.Active >= k.MaxActive {
+		return "", service.Key{}, counts
+	}
+
 	secret, tok, err := s.n.tokens.Create(ctx, k.UserID, k.Name, k.Scopes, k.TTL)
 	if err != nil {
 		return "", service.Key{}, err
@@ -87,27 +109,27 @@ func (s keyStore) RevokeKey(ctx context.Context, keyID, userID string) (service.
 	return key, err
 }
 
-func (s keyStore) Counts(ctx context.Context, userID string, since time.Time) (service.KeyCounts, error) {
-	keys, _, err := s.many(ctx, `WHERE k.user_id = ?`, userID)
+// counts are the numbers of the limits for the owner of k.
+func (s keyStore) counts(ctx context.Context, k service.NewKey) (*service.KeyLimitError, error) {
+	keys, _, err := s.many(ctx, `WHERE k.user_id = ?`, k.UserID)
 	if err != nil {
-		return service.KeyCounts{}, err
+		return nil, err
 	}
 
-	var c service.KeyCounts
-
-	now := s.n.now()
+	c := &service.KeyLimitError{}
+	since := k.Now.Add(-k.Window)
 
 	for i := range keys {
-		k := &keys[i]
-		if k.RevokedAt == nil && (k.ExpiresAt == nil || k.ExpiresAt.After(now)) {
+		key := &keys[i]
+		if key.RevokedAt == nil && (key.ExpiresAt == nil || key.ExpiresAt.After(k.Now)) {
 			c.Active++
 		}
 
-		if !k.CreatedAt.Before(since) {
+		if !key.CreatedAt.Before(since) {
 			c.Recent++
 
-			if c.Oldest.IsZero() || k.CreatedAt.Before(c.Oldest) {
-				c.Oldest = k.CreatedAt
+			if c.Oldest.IsZero() || key.CreatedAt.Before(c.Oldest) {
+				c.Oldest = key.CreatedAt
 			}
 		}
 	}

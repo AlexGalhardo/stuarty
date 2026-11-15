@@ -41,30 +41,36 @@ type NewKey struct {
 	Scopes    []string
 	ProjectID string
 	TTL       time.Duration
+	// The limits, checked by the store in the same step as the insert so that
+	// concurrent creations cannot all pass the check.
+	Now       time.Time
+	MaxActive int
+	MaxRecent int
+	Window    time.Duration
 }
 
-// KeyCounts are the numbers the limits of KeyCreate need.
-type KeyCounts struct {
+// KeyLimitError is what CreateKey returns when a limit stops the creation.
+type KeyLimitError struct {
+	Rate   bool // the creations of the last hour; otherwise the active keys
 	Active int
-	// Recent is how many keys the user created since the time asked for and
-	// Oldest the creation time of the earliest of them.
 	Recent int
-	Oldest time.Time
+	Oldest time.Time // the earliest creation of the window
 }
+
+func (e *KeyLimitError) Error() string { return "service: a key limit was reached" }
 
 // KeyStore is where the keys of network mode live (SDD-007 section 4.2). The
 // service validates and decides; the store holds the rows and issues the
 // secret, which only the web layer can do because the generator is vukem's.
 type KeyStore interface {
-	// CreateKey issues the secret and records the key.
+	// CreateKey checks the limits of k and, in the same step, issues the secret
+	// and records the key; it returns *KeyLimitError when a limit is reached.
 	CreateKey(ctx context.Context, k NewKey) (secret string, key Key, err error)
 	// ListKeys returns the keys of a user, newest first.
 	ListKeys(ctx context.Context, userID string) ([]Key, error)
 	// RevokeKey revokes a key at once and keeps its row. userID "" matches a
 	// key of any owner. A key that does not exist for that owner is ErrNotFound.
 	RevokeKey(ctx context.Context, keyID, userID string) (Key, error)
-	// Counts are the numbers of the limits; since bounds Recent.
-	Counts(ctx context.Context, userID string, since time.Time) (KeyCounts, error)
 }
 
 // KeyCreateRequest is SDD-007 section 4.2 "Creation".
@@ -135,32 +141,15 @@ func (s *svc) KeyCreate(ctx context.Context, req KeyCreateRequest) (*KeyCreateRe
 
 	now := s.now()
 
-	counts, cerr := s.keys.Counts(ctx, c.OwnerUserID, now.Add(-keyCreationsWindow))
-	if cerr != nil {
-		return nil, internalError()
-	}
-
-	if counts.Recent >= maxKeyCreations {
-		wait := max(counts.Oldest.Add(keyCreationsWindow).Sub(now), time.Second)
-		e := newError(CodeRateLimited, "%d keys were created in the last hour; the limit is %d.",
-			counts.Recent, maxKeyCreations).withHint("wait before creating another key")
-		e.Details = map[string]any{"retry_after": int(wait.Seconds()) + 1}
-
-		return nil, e
-	}
-
-	if counts.Active >= maxActiveKeys {
-		e := newError("E_LIMIT_EXCEEDED", "You have %d active keys; the limit is %d.", counts.Active, maxActiveKeys).
-			withHint("revoke a key you no longer use")
-		e.Details = map[string]any{"limit": "keys", "value": counts.Active, "ceiling": maxActiveKeys}
-
-		return nil, e
-	}
-
 	secret, key, kerr := s.keys.CreateKey(ctx, NewKey{
 		KeyID: s.newIDs("key"), UserID: c.OwnerUserID, Name: req.Name, Scopes: req.Scopes,
 		ProjectID: req.ProjectID, TTL: time.Duration(days) * 24 * time.Hour,
+		Now: now, MaxActive: maxActiveKeys, MaxRecent: maxKeyCreations, Window: keyCreationsWindow,
 	})
+	if limit, ok := errors.AsType[*KeyLimitError](kerr); ok {
+		return nil, keyLimitError(limit, now)
+	}
+
 	if kerr != nil {
 		return nil, internalError()
 	}
@@ -261,4 +250,21 @@ func (s *svc) KeyRevoke(ctx context.Context, req KeyRevokeRequest) (*Key, error)
 	}
 
 	return &key, nil
+}
+
+func keyLimitError(l *KeyLimitError, now time.Time) *Error {
+	if l.Rate {
+		wait := max(l.Oldest.Add(keyCreationsWindow).Sub(now), time.Second)
+		e := newError(CodeRateLimited, "%d keys were created in the last hour; the limit is %d.",
+			l.Recent, maxKeyCreations).withHint("wait before creating another key")
+		e.Details = map[string]any{"retry_after": int(wait.Seconds()) + 1}
+
+		return e
+	}
+
+	e := newError("E_LIMIT_EXCEEDED", "You have %d active keys; the limit is %d.", l.Active, maxActiveKeys).
+		withHint("revoke a key you no longer use")
+	e.Details = map[string]any{"limit": "keys", "value": l.Active, "ceiling": maxActiveKeys}
+
+	return e
 }
