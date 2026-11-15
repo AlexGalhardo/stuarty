@@ -211,7 +211,8 @@
         "gap_menu": "Ações do espaço",
         "text": "Adicionar texto",
         "split_caption": "Dividir a legenda aqui",
-        "merge_captions": "Mesclar legendas"
+        "merge_captions": "Mesclar legendas",
+        "crossfade": "Transição cruzada"
       },
       "caption": {
         "title": "Adicionar legenda",
@@ -685,6 +686,38 @@
           "ease_out": "Saída suave",
           "ease_in_out": "Entrada e saída suaves",
           "hold": "Manter"
+        }
+      },
+      "transitions": {
+        "title": "Transições",
+        "in": "Transição de entrada",
+        "out": "Transição de saída",
+        "in_duration": "Duração da entrada",
+        "out_duration": "Duração da saída",
+        "none": "Nenhuma",
+        "kind": {
+          "fade": "Esmaecer",
+          "slide_left": "Deslizar para a esquerda",
+          "slide_right": "Deslizar para a direita",
+          "slide_up": "Deslizar para cima",
+          "slide_down": "Deslizar para baixo"
+        }
+      },
+      "animation": {
+        "title": "Animação",
+        "preset": "Predefinição",
+        "edge": "Ponta",
+        "edge_in": "Entrada",
+        "edge_out": "Saída",
+        "duration": "Duração",
+        "apply": "Aplicar",
+        "preset_name": {
+          "fade_up": "Esmaecer para cima",
+          "fade_down": "Esmaecer para baixo",
+          "pop": "Estourar",
+          "zoom_in": "Aproximar",
+          "slide_left": "Deslizar para a esquerda",
+          "slide_right": "Deslizar para a direita"
         }
       }
     }

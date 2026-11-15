@@ -1,4 +1,12 @@
-import { CopyPlus, Merge, Pencil, Scissors, Split, Trash2 } from "lucide-react";
+import {
+	Blend,
+	CopyPlus,
+	Merge,
+	Pencil,
+	Scissors,
+	Split,
+	Trash2,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
 import {
@@ -38,6 +46,15 @@ export default function ItemContextMenuItems({
 			selection.length === 2 &&
 			selection.every((id) => s.document?.items[id]?.type === "caption"),
 	);
+	// Crossfade takes exactly two visual items; the core judges whether they touch.
+	const visualPair = useDocumentState(
+		(s) =>
+			selection.length === 2 &&
+			selection.every((id) => {
+				const type = s.document?.items[id]?.type;
+				return type !== undefined && type !== "audio";
+			}),
+	);
 	return (
 		<>
 			{isCaption && word !== null && (
@@ -62,6 +79,12 @@ export default function ItemContextMenuItems({
 				<Scissors aria-hidden="true" />
 				{t("ui.editor.edit.split")}
 			</ContextMenuItem>
+			{visualPair && (
+				<ContextMenuItem onSelect={() => void actions.crossfadeSelection()}>
+					<Blend aria-hidden="true" />
+					{t("ui.editor.edit.crossfade")}
+				</ContextMenuItem>
+			)}
 			<ContextMenuItem onSelect={() => void actions.duplicateSelection()}>
 				<CopyPlus aria-hidden="true" />
 				{t("ui.editor.edit.duplicate")}

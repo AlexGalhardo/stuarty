@@ -211,7 +211,8 @@
         "gap_menu": "Gap actions",
         "text": "Add text",
         "split_caption": "Split caption here",
-        "merge_captions": "Merge captions"
+        "merge_captions": "Merge captions",
+        "crossfade": "Crossfade"
       },
       "caption": {
         "title": "Add caption",
@@ -685,6 +686,38 @@
           "ease_out": "Ease out",
           "ease_in_out": "Ease in and out",
           "hold": "Hold"
+        }
+      },
+      "transitions": {
+        "title": "Transitions",
+        "in": "In transition",
+        "out": "Out transition",
+        "in_duration": "In duration",
+        "out_duration": "Out duration",
+        "none": "None",
+        "kind": {
+          "fade": "Fade",
+          "slide_left": "Slide left",
+          "slide_right": "Slide right",
+          "slide_up": "Slide up",
+          "slide_down": "Slide down"
+        }
+      },
+      "animation": {
+        "title": "Animation",
+        "preset": "Preset",
+        "edge": "Edge",
+        "edge_in": "In",
+        "edge_out": "Out",
+        "duration": "Duration",
+        "apply": "Apply",
+        "preset_name": {
+          "fade_up": "Fade up",
+          "fade_down": "Fade down",
+          "pop": "Pop",
+          "zoom_in": "Zoom in",
+          "slide_left": "Slide left",
+          "slide_right": "Slide right"
         }
       }
     }
