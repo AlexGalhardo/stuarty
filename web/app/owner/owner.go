@@ -43,6 +43,14 @@ type Config struct {
 	Log *slog.Logger
 	// Now defaults to time.Now.
 	Now func() time.Time
+	// Session is a workspace that workspace.Open already locked for this
+	// process (a command that became the owner); the owner then uses its
+	// directory and lock instead of taking them, and Close releases the lock.
+	Session *workspace.Session
+	// Inline runs the jobs inside the call that starts them (queue.Sync) and
+	// starts no start-up recovery: a command is not a server, and the next
+	// serve recovers what a dead owner left running.
+	Inline bool
 }
 
 // ShutdownTimeout is how long the workers wait for running jobs before they
@@ -84,25 +92,11 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 		cfg.Now = time.Now
 	}
 
-	dir, err := workspace.Resolve(cfg.Getenv)
-	if err != nil {
+	o := &Owner{version: cfg.Version, now: cfg.Now}
+
+	if err := o.take(cfg); err != nil {
 		return nil, err
 	}
-
-	if err := dir.EnsureLayout(); err != nil {
-		return nil, err
-	}
-
-	lock, err := dir.TryLock()
-	if errors.Is(err, workspace.ErrLocked) {
-		return nil, dir.LockedError()
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	o := &Owner{Dir: dir, lock: lock, version: cfg.Version, now: cfg.Now}
 
 	if err := o.build(ctx, cfg); err != nil {
 		_ = o.Close()
@@ -111,6 +105,38 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 	}
 
 	return o, nil
+}
+
+// take is steps 1 and 2 of SDD-005 section 6.3, or the session that a command
+// already holds.
+func (o *Owner) take(cfg Config) error {
+	if s := cfg.Session; s != nil {
+		o.Dir, o.lock = s.Dir, s.Lock
+
+		return o.Dir.EnsureLayout()
+	}
+
+	dir, err := workspace.Resolve(cfg.Getenv)
+	if err != nil {
+		return err
+	}
+
+	if err := dir.EnsureLayout(); err != nil {
+		return err
+	}
+
+	lock, err := dir.TryLock()
+	if errors.Is(err, workspace.ErrLocked) {
+		return dir.LockedError()
+	}
+
+	if err != nil {
+		return err
+	}
+
+	o.Dir, o.lock = dir, lock
+
+	return nil
 }
 
 func (o *Owner) build(ctx context.Context, cfg Config) error {
@@ -141,9 +167,12 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	driver, err := queue.NewDatabase(st.DB(), store.QueueOptions)
-	if err != nil {
-		return err
+	var driver queue.Driver = queue.Sync{}
+
+	if !cfg.Inline {
+		if driver, err = queue.NewDatabase(st.DB(), store.QueueOptions); err != nil {
+			return err
+		}
 	}
 
 	late := &lateRunner{}
@@ -174,6 +203,10 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 
 	if o.deps.MCP, err = mcp.Handler(o.Service, mcp.Options{Version: o.version}); err != nil {
 		return err
+	}
+
+	if cfg.Inline {
+		return nil
 	}
 
 	// Jobs found running belong to an owner that is gone (SDD-005 section 14.5).
