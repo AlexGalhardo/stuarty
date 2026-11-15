@@ -428,6 +428,37 @@ func goldenScenarios() []scenario {
 				Outputs: []Output{{Format: "null", Maps: []string{"0:v:0"}, VF: Chain1(f...)}},
 			}.Argv(pol))
 		}},
+		{"audio only aac", func(pol Policy) []string {
+			return must(Cmd{
+				Progress: true,
+				Inputs:   []Input{FileInput(run("mix.wav"))},
+				Outputs: []Output{{
+					Format: "mp4", Path: run("job.partial.m4a"), Maps: []string{"0:a:0"}, NoVideo: true,
+					Opts: cat(
+						[]Opt{
+							Enum("-c:a", "aac"), Bitrate("-b:a", "192k"), Int("-ar", 48000), Int("-ac", 2),
+							Enum("-movflags", "+faststart"),
+						},
+						hexOut,
+					),
+				}},
+			}.Argv(pol))
+		}},
+		{"4k 60 fps test encode", func(pol Policy) []string {
+			return must(
+				mustVal(
+					EncoderTestAt(
+						pol,
+						"libopenh264",
+						DetectInput{Filter: "format=yuv420p"},
+						run("probe-4k.mp4"),
+						3840,
+						2160,
+						Rate{60, 1},
+					),
+				),
+			)
+		}},
 		{"vaapi test", func(pol Policy) []string {
 			return must(
 				mustVal(
