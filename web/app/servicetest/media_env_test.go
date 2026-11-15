@@ -20,6 +20,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/engine/frame"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/exporter"
 	"github.com/AlexGalhardo/vukem-video/service/pathguard"
@@ -59,6 +60,8 @@ type mediaCfg struct {
 	onEvent func(service.Event)
 	// durable runs the jobs on the database queue with workers instead of inline.
 	durable bool
+	// transcriber is the provider of the transcribe job.
+	transcriber transcribe.Provider
 	// wrapStore puts a decorator between the service and its store.
 	wrapStore func(service.Store) service.Store
 }
@@ -108,6 +111,7 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 			o.Store = cfg.wrapStore(o.Store)
 		}
 
+		o.Transcriber = cfg.transcriber
 		o.Workspace = m.ws
 		o.Media = service.Media{
 			Content: enginestore.New(m.ws), Guard: guard, Ingest: cfg.ingest,

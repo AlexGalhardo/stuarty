@@ -137,7 +137,7 @@ var Endpoints = []Endpoint{
 	},
 	{
 		ID: "jobs.start", Method: http.MethodPost, Path: "/projects/{id}/jobs", Scope: service.ScopeRender,
-		Service: "JobStart", Status: 202, Summary: "Start a job",
+		AlsoScope: service.ScopeMedia, Service: "JobStart", Status: 202, Summary: "Start a job",
 	},
 	{
 		ID: "jobs.list", Method: http.MethodGet, Path: "/projects/{id}/jobs", Scope: service.ScopeRead,

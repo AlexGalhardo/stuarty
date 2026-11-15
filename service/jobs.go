@@ -34,7 +34,17 @@ func isFinal(state string) bool {
 }
 
 func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
-	c, err := authorize(ctx, "JobStart", req.ProjectID)
+	var (
+		c   Caller
+		err error
+	)
+
+	if req.Kind == JobTranscribe {
+		c, err = authorizeScope(ctx, ScopeMedia, req.ProjectID)
+	} else {
+		c, err = authorize(ctx, "JobStart", req.ProjectID)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -46,11 +56,11 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 
 	switch req.Kind {
 	case JobExport:
-	case "transcribe":
-		return nil, newError(codeTranscribeOff, "transcription is not available in this build.")
+	case JobTranscribe:
+		return s.startTranscribe(ctx, c, req)
 	default:
 		return nil, newError(command.CodeValidation, "the kind %q cannot be started.", req.Kind).
-			withPath("kind").withHint("use export")
+			withPath("kind").withHint("use export or transcribe")
 	}
 
 	args, aerr := decodeExportArgs(req.Args)
@@ -516,7 +526,8 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 		return nil, s.refuseJob(ctx, c, &row, req.JobID)
 	}
 
-	ownMediaJob := slices.Contains(c.Scopes, ScopeMedia) && row.Kind == JobIngest && row.Actor == c.Actor
+	ownMediaJob := slices.Contains(c.Scopes, ScopeMedia) && (row.Kind == JobIngest || row.Kind == JobTranscribe) &&
+		row.Actor == c.Actor
 	if !slices.Contains(c.Scopes, ScopeRender) && !ownMediaJob {
 		return nil, newError(CodeForbidden, "the caller lacks the %q scope.", ScopeRender).
 			withHint("use a key with the %s scope", ScopeRender)
@@ -742,6 +753,13 @@ func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 				res.Export.Path = ""
 			}
 
+			j.Result = &res
+		}
+	}
+
+	if r.Kind == JobTranscribe && len(r.Result) > 0 {
+		var res JobResult
+		if json.Unmarshal(r.Result, &res) == nil && res.Transcribe != nil {
 			j.Result = &res
 		}
 	}
