@@ -5,7 +5,7 @@ description: "Qual FFmpeg o produto inclui, como ele é encontrado e verificado,
 
 ## O que você vai aprender
 
-- qual compilação do FFmpeg a imagem e os instaladores trazem, e onde está o seu código-fonte;
+- qual compilação do FFmpeg a imagem traz (os arquivos de release e os instaladores não trazem nenhuma), e onde está o seu código-fonte;
 - como o produto encontra um FFmpeg e recusa um arriscado;
 - quais obrigações acompanham a compilação LGPL.
 
@@ -43,7 +43,7 @@ vukem-video doctor --full
 vukem-video doctor --verify
 ```
 
-O `doctor --full` executa todas as verificações e imprime a versão do FFmpeg, a sua classe de licença e os codificadores H.264 encontrados. O `--verify` recalcula os digests do FFmpeg e dos auxiliares baixados.
+O `doctor --full` executa todas as verificações e imprime a versão do FFmpeg, a sua classe de licença e os codificadores H.264 encontrados. O `--verify` recalcula os digests do FFmpeg e dos auxiliares baixados. Ele só informa "matches the release" para o FFmpeg fixado (o da imagem, ou o par fixado que você coloca ao lado do programa); qualquer outro FFmpeg aparece como "your own build, not compared".
 
 ## Erros comuns
 
