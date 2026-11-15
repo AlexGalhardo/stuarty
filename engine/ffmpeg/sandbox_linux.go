@@ -40,6 +40,9 @@ func ResolveSandbox(ctx context.Context, mode string) (string, error) {
 	defer cancel()
 
 	probe := exec.CommandContext(cctx, path, "--unshare-all", "--ro-bind", "/", "/", "true")
+	// Like every child: no application variable (SDD-007 6.4), and the probe has nothing to write to.
+	probe.Dir = os.TempDir()
+	probe.Env = childEnv(probe.Dir)
 	if out, err := probe.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("ffmpeg: bwrap cannot create its namespaces (%s): %w", scrub(string(out), 200), err)
 	}
