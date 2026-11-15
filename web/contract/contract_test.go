@@ -6,6 +6,7 @@ package contract
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -17,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
 )
 
 // loadScenario reads a scenario of web/contract/scenarios.
@@ -148,11 +150,32 @@ func errorLine(doc *service.ErrorDocument) string {
 		return err.Error()
 	}
 
-	return string(raw)
+	// Through a map the members come out in key order, whatever the surface that
+	// decoded them put them in.
+	var generic any
+	if err := json.Unmarshal(raw, &generic); err != nil {
+		return err.Error()
+	}
+
+	canonical, err := json.Marshal(generic)
+	if err != nil {
+		return err.Error()
+	}
+
+	return string(canonical)
 }
 
 type outcome struct {
 	result, text, fail string
+}
+
+// runAs sends a step of another actor straight to the Service of the workspace.
+func runAs(t *testing.T, d driver, s step) {
+	t.Helper()
+
+	if _, err := callService(testenv.Caller("local:"+s.As), d.service(), s); err != nil {
+		t.Fatalf("%s: step %s as %s: %v", d.name(), s.Call, s.As, err)
+	}
 }
 
 func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []outcome {
@@ -162,6 +185,12 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 
 	for i, s := range steps {
 		s = withFixtures(t, d, s, fixtures)
+
+		if s.As != "" {
+			runAs(t, d, s)
+
+			continue
+		}
 
 		raw, text, fail := d.do(t, s)
 
@@ -309,5 +338,124 @@ func TestErrorScenarioCarriesTheSameCodeEverywhere(t *testing.T) {
 
 	if !slices.ContainsFunc(first, func(o outcome) bool { return strings.Contains(o.fail, "E_VALIDATION") }) {
 		t.Errorf("the conflict scenario produced no E_VALIDATION: %v", first)
+	}
+}
+
+// failureDrivers are the four ways of reaching a Service in one process; the
+// subprocess drivers have their own tests.
+var failureDrivers = []func(*testing.T, testenv.Options) driver{newDirectWith, newHTTPWith, newCLIWith, newMCPWith}
+
+// runEverywhere drives the steps through the four drivers, each over its own
+// workspace made with the options, and fails when the outcome of any step, error
+// documents included, differs from the Direct one. It returns the drivers, so a
+// test can read what the workspaces ended up as.
+func runEverywhere(
+	t *testing.T, steps []step, fixtures map[string]string, o testenv.Options,
+) (drivers []driver, outcomes []outcome) {
+	t.Helper()
+
+	for _, mk := range failureDrivers {
+		d := mk(t, o)
+		got := run(t, d, steps, fixtures)
+
+		drivers = append(drivers, d)
+
+		if outcomes == nil {
+			outcomes = got
+
+			continue
+		}
+
+		for i := range steps {
+			if got[i].fail != outcomes[i].fail {
+				t.Errorf("%s step %d (%s): error differs\n got: %s\nwant: %s",
+					d.name(), i, steps[i].Call, got[i].fail, outcomes[i].fail)
+			}
+		}
+	}
+
+	return drivers, outcomes
+}
+
+// TestConflictScenario: two actors change the same track from the same revision;
+// the second gets E_REVISION_CONFLICT (409, retryable, exit 2) with the diff and a
+// hint to re-plan, and the document stays the first actor's, on every surface.
+func TestConflictScenario(t *testing.T) {
+	steps, fixtures := loadScenario(t, "conflict")
+	drivers, outcomes := runEverywhere(t, steps, fixtures, testenv.Options{})
+
+	var doc service.ErrorDocument
+	if err := json.Unmarshal([]byte(outcomes[3].fail), &doc); err != nil {
+		t.Fatal(err)
+	}
+
+	if doc.Code != "E_REVISION_CONFLICT" || doc.Status != 409 || !doc.Retryable {
+		t.Errorf("the conflict is %+v", doc)
+	}
+
+	if _, ok := doc.Details["diff"]; !ok {
+		t.Errorf("the conflict carries no details.diff: %+v", doc)
+	}
+
+	// The hint of the Service says to read the project again and plan against the
+	// current revision; SDD-003 and the ROADMAP want it to name details.diff too,
+	// which is for the Service to change (the hint is the same on every surface).
+	if !strings.Contains(doc.Hint, "plan") {
+		t.Errorf("the conflict hint does not tell the actor to re-plan: %q", doc.Hint)
+	}
+
+	for _, d := range drivers {
+		final := string(finalDocument(t, d, "prj_7k2m9x4q1b"))
+		if !strings.Contains(final, "Theirs") || strings.Contains(final, "Mine") {
+			t.Errorf("%s: the document is not the first actor's: %s", d.name(), final)
+		}
+	}
+}
+
+// TestErrorsScenario: one call for each error the public surface can provoke,
+// with the HTTP status of SDD-000 section 8 and retryable as it says, equal
+// through every surface.
+func TestErrorsScenario(t *testing.T) {
+	steps, fixtures := loadScenario(t, "errors")
+
+	hold := func(ctx context.Context, _ service.ExportInput) (*service.ExportOutput, error) {
+		<-ctx.Done()
+
+		return nil, ctx.Err()
+	}
+
+	_, outcomes := runEverywhere(t, steps, fixtures, testenv.Options{
+		Export: hold, Limits: service.Limits{MaxImportBytes: 100, MaxExports: 1},
+	})
+
+	retryable := map[string]bool{"E_REVISION_CONFLICT": true, "E_QUEUE_FULL": true, "E_WORKSPACE_LOCKED": true}
+
+	for i, s := range steps {
+		if s.ExpectError == nil {
+			continue
+		}
+
+		var doc service.ErrorDocument
+		if err := json.Unmarshal([]byte(outcomes[i].fail), &doc); err != nil {
+			t.Fatalf("step %d: %v", i, err)
+		}
+
+		if want := (&service.Error{Code: doc.Code}).HTTPStatus(); doc.Status != want || doc.Status == 500 {
+			t.Errorf("step %d: %s has status %d, SDD-000 section 8 says %d", i, doc.Code, doc.Status, want)
+		}
+
+		if doc.Retryable != retryable[doc.Code] {
+			t.Errorf("step %d: %s has retryable %v", i, doc.Code, doc.Retryable)
+		}
+
+		if doc.Message == "" {
+			t.Errorf("step %d: %s has no message", i, doc.Code)
+		}
+
+		// A limit says which ceiling it hit and the value it has (RF-132).
+		if limit := doc.Code == "E_LIMIT_EXCEEDED" || doc.Code == "E_QUEUE_FULL"; limit &&
+			(doc.Details["ceiling"] == nil || doc.Details["variable"] == nil) {
+			t.Errorf("step %d: %s does not name its ceiling and variable: %+v", i, doc.Code, doc.Details)
+		}
 	}
 }

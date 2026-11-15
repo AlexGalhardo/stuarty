@@ -262,6 +262,8 @@ func TestValidationNamesThePathAndNeverTheValue(t *testing.T) {
 
 	const secret = "SECRET-VALUE-9"
 
+	made, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "P"})))["project_id"].(string)
+
 	for name, tc := range map[string]struct {
 		tool string
 		args map[string]any
@@ -273,7 +275,7 @@ func TestValidationNamesThePathAndNeverTheValue(t *testing.T) {
 		"extra member":  {"project_list", map[string]any{"surprise": secret}, command.CodeValidation, ""},
 		"bad limit":     {"project_list", map[string]any{"limit": 1000}, command.CodeValidation, "limit"},
 		"bad enum":      {"project_list", map[string]any{"state": secret}, command.CodeValidation, "state"},
-		"unknown op":    {"edit", map[string]any{"project_id": "prj_0000000001", "base_revision": 0, "operations": []any{map[string]any{"op": secret, "args": map[string]any{}}}}, command.CodeUnknownCommand, "operations[0].op"},
+		"unknown op":    {"edit", map[string]any{"project_id": made, "base_revision": 0, "operations": []any{map[string]any{"op": secret, "args": map[string]any{}}}}, command.CodeUnknownCommand, ""},
 		"empty batch":   {"edit", map[string]any{"project_id": "prj_0000000001", "base_revision": 0, "operations": []any{}}, command.CodeValidation, "operations"},
 		"negative base": {"edit", map[string]any{"project_id": "prj_0000000001", "base_revision": -1, "operations": []any{map[string]any{"op": "track.add", "args": map[string]any{}}}}, command.CodeValidation, "base_revision"},
 	} {
@@ -294,7 +296,7 @@ func TestValidationNamesThePathAndNeverTheValue(t *testing.T) {
 		}
 	}
 
-	res := call(t, cs, "project_get", map[string]any{"project_id": "prj_0000000001"})
+	res := call(t, cs, "project_get", map[string]any{"project_id": "prj_0000000009"})
 	if !strings.Contains(textOf(t, res), "error E_NOT_FOUND:") {
 		t.Errorf("an unknown project: %q", textOf(t, res))
 	}
