@@ -2,24 +2,17 @@ package mcp
 
 import "testing"
 
-// The tests below belong to tools whose Service methods do not exist yet (see
-// Pending). Each names its task; replace the skip with the test when the tool
-// is added to handlers().
+// The tests below belong to tools or behaviour whose parts are not in the build
+// yet. Each names what it waits for; replace the skip with the test when it lands.
 
 func TestSecurity_T07_TranscriptDelimitedAndTruncated(t *testing.T) {
-	t.Skip("needs media_inspect and its transcript text: task P1-SRV-004 (SDD-007 section 8.2)")
-}
-
-func TestMediaImportWaitsAndReportsFailures(t *testing.T) {
-	t.Skip("needs media_import: task P1-SRV-004")
-}
-
-func TestJobGetWaitMsReturnsWhileAnExportRuns(t *testing.T) {
-	t.Skip("needs job_start and job_get over a running export: tasks P1-SRV-004 and P1-RND-004")
+	t.Skip(
+		"transcription is not in the Prototype build: media_inspect answers \"transcript: none yet\" (SDD-007 section 8.2, P2)",
+	)
 }
 
 func TestViewReturnsAnImageOnlyFromView(t *testing.T) {
-	t.Skip("needs view: task P1-RND-005")
+	t.Skip("service.Service has no frame method yet, so view is in Pending (engine/frame exists, P1-RND-005)")
 }
 
 func TestStdioOwnerIsReachedByTheCLIAndOpen(t *testing.T) {
