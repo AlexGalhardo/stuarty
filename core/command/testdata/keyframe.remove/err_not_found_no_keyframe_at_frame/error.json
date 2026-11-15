@@ -1,0 +1,11 @@
+{
+  "code": "E_NOT_FOUND",
+  "message": "Property scale of itm_s6t7v8w9x0 has no keyframe at frame 120; keyframes are at frames 30, 60.",
+  "hint": "Use at \"60f\" (2s), or list the keyframes with project_get.",
+  "retryable": false,
+  "path": "args.at",
+  "details": {
+    "id": "itm_s6t7v8w9x0",
+    "kind": "keyframe"
+  }
+}

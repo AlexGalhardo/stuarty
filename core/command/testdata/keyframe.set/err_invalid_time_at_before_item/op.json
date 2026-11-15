@@ -1,0 +1,9 @@
+{
+  "op": "keyframe.set",
+  "args": {
+    "item_id": "itm_s6t7v8w9x0",
+    "property": "scale",
+    "at": "10f",
+    "value": 1.2
+  }
+}

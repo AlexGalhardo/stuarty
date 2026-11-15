@@ -1,0 +1,27 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_s6t7v8w9x0",
+    "changes": {
+      "keyframes": [
+        {
+          "scale": [
+            {
+              "t": 10,
+              "value": 1.5
+            },
+            {
+              "t": 40,
+              "value": 2
+            }
+          ]
+        },
+        null
+      ],
+      "scale": [
+        null,
+        1.5
+      ]
+    }
+  }
+]

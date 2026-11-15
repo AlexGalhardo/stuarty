@@ -1,0 +1,46 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_s6t7v8w9x0",
+    "set": {
+      "keyframes": {
+        "opacity": [
+          {
+            "t": 0,
+            "value": 0
+          },
+          {
+            "t": 12,
+            "value": 1
+          }
+        ],
+        "scale": [
+          {
+            "t": 0,
+            "value": 1.5
+          },
+          {
+            "t": 30,
+            "value": 1
+          }
+        ],
+        "x": [
+          {
+            "t": 0,
+            "value": 300
+          },
+          {
+            "t": 30,
+            "value": 700
+          }
+        ]
+      }
+    },
+    "unset": [
+      "opacity",
+      "scale",
+      "x"
+    ]
+  }
+]

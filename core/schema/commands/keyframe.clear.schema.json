@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "item_id": {
+      "type": "string"
+    },
+    "property": {
+      "description": "One property; default every animated property.",
+      "enum": [
+        "x",
+        "y",
+        "scale",
+        "rotation",
+        "opacity",
+        "volume"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id"
+  ],
+  "type": "object"
+}

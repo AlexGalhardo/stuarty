@@ -524,6 +524,40 @@ export interface ItemTrimArgs {
   to: string;
 }
 
+export interface KeyframeClearArgs {
+  item_id: string;
+  /**
+   * One property; default every animated property.
+   */
+  property?: "x" | "y" | "scale" | "rotation" | "opacity" | "volume";
+}
+
+export interface KeyframeRemoveArgs {
+  /**
+   * Absolute position of the keyframe.
+   */
+  at: string;
+  item_id: string;
+  property: "x" | "y" | "scale" | "rotation" | "opacity" | "volume";
+}
+
+export interface KeyframeSetArgs {
+  /**
+   * Absolute position inside the item, inclusive of its end.
+   */
+  at: string;
+  /**
+   * From this keyframe to the next. Default linear.
+   */
+  easing?: "linear" | "ease_in" | "ease_out" | "ease_in_out" | "hold";
+  item_id: string;
+  property: "x" | "y" | "scale" | "rotation" | "opacity" | "volume";
+  /**
+   * Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4.
+   */
+  value: number;
+}
+
 export interface ProjectRenameArgs {
   /**
    * The new name, 1 to 120 characters.
@@ -774,7 +808,7 @@ export interface TrackUpdateArgs {
   track_id: string;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_color" | "clip.set_framing" | "clip.set_speed" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_color" | "clip.set_framing" | "clip.set_speed" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -804,6 +838,9 @@ export interface CommandArgsMap {
 	"item.set_transition": ItemSetTransitionArgs;
 	"item.split": ItemSplitArgs;
 	"item.trim": ItemTrimArgs;
+	"keyframe.clear": KeyframeClearArgs;
+	"keyframe.remove": KeyframeRemoveArgs;
+	"keyframe.set": KeyframeSetArgs;
 	"project.rename": ProjectRenameArgs;
 	"settings.set": SettingsSetArgs;
 	"settings.set_fps": SettingsSetFpsArgs;
@@ -850,6 +887,9 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"item.set_transition": { summary: "Sets or removes the transition on one edge of a visual item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.split": { summary: "Splits an item into two at a timeline frame.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT"] },
 	"item.trim": { summary: "Moves the start edge or the end edge of an item to a timeline position.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
+	"keyframe.clear": { summary: "Removes all keyframes of one property, or of every property.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"keyframe.remove": { summary: "Removes the keyframe of a property at a frame.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"keyframe.set": { summary: "Adds or replaces a keyframe of one animated property of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_LIMIT"] },
 	"project.rename": { summary: "Sets the project name.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION"] },
 	"settings.set": { summary: "Sets the frame size, the background colour or the loudness target.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION"] },
 	"settings.set_fps": { summary: "Changes the project frame rate and rescales every time quantity.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME"] },

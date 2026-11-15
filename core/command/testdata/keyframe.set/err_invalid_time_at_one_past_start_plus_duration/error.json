@@ -1,0 +1,13 @@
+{
+  "code": "E_INVALID_TIME",
+  "message": "args.at \"121f\" is outside item itm_s6t7v8w9x0; the allowed frames are 30 to 120 inclusive (a keyframe may sit at start + duration).",
+  "hint": "Use an at from \"30f\" to \"120f\".",
+  "retryable": false,
+  "path": "args.at",
+  "details": {
+    "range": [
+      30,
+      120
+    ]
+  }
+}

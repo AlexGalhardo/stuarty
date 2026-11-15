@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "at": {
+      "description": "Absolute position inside the item, inclusive of its end.",
+      "type": "string"
+    },
+    "easing": {
+      "description": "From this keyframe to the next. Default linear.",
+      "enum": [
+        "linear",
+        "ease_in",
+        "ease_out",
+        "ease_in_out",
+        "hold"
+      ],
+      "type": "string"
+    },
+    "item_id": {
+      "type": "string"
+    },
+    "property": {
+      "enum": [
+        "x",
+        "y",
+        "scale",
+        "rotation",
+        "opacity",
+        "volume"
+      ],
+      "type": "string"
+    },
+    "value": {
+      "description": "Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4.",
+      "type": "number"
+    }
+  },
+  "required": [
+    "item_id",
+    "property",
+    "at",
+    "value"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.value must be above 0 and at most 20 for scale, got 0.",
+  "hint": "Use a value in range.",
+  "retryable": false,
+  "path": "args.value"
+}
