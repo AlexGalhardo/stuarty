@@ -1,0 +1,15 @@
+# The only --enable-* flags a configure line of the own build may carry (D-017, NFR-043).
+# Each one is LGPL compatible, or a permissive library that is linked, or an operating system API.
+# Adding one needs the author: check the licence of the library first.
+--enable-static
+--enable-pic
+--enable-stripping
+--enable-cross-compile
+--enable-zlib
+--enable-libvpx
+--enable-libopus
+--enable-ffnvcodec
+--enable-videotoolbox
+--enable-audiotoolbox
+--enable-mediafoundation
+--enable-version3

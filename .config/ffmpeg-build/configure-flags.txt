@@ -1,0 +1,34 @@
+# The configure flags of the own LGPL FFmpeg build (D-017, ADR-0011), one per line,
+# in sections: [common] first, then the section of the target operating system.
+# This file is the only place that holds them: scripts/ffmpeg-build.sh reads it, and
+# `go run ./internal/tools/ffmpegconf -flags .config/ffmpeg-build/configure-flags.txt
+# -allow .config/ffmpeg-build/configure-allowlist.txt` fails the build when a flag is
+# not licence safe. No --enable-gpl, no --enable-nonfree, no --enable-libopenh264:
+# the Cisco OpenH264 binary is loaded at run time, never compiled in (D-017).
+[common]
+--disable-autodetect
+--disable-debug
+--disable-doc
+--disable-ffplay
+--disable-network
+--disable-shared
+--enable-static
+--enable-pic
+--enable-stripping
+--enable-zlib
+--enable-libvpx
+--enable-libopus
+--disable-libopenh264
+--disable-libx264
+--disable-libx265
+
+[linux]
+--enable-ffnvcodec
+
+[darwin]
+--enable-videotoolbox
+--enable-audiotoolbox
+
+[windows]
+--enable-ffnvcodec
+--enable-mediafoundation
