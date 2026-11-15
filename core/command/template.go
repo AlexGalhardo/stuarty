@@ -98,7 +98,9 @@ func applyTemplateSetInfo(c *Context, a *templateInfoArgs) error {
 
 	tpl := timeline.TemplateInfo{Colors: map[string]timeline.Color{}}
 	if t := c.Doc.Template; t != nil {
-		tpl = timeline.TemplateInfo{Description: t.Description, Colors: maps.Clone(t.Colors), Extra: t.Extra}
+		tpl = timeline.TemplateInfo{
+			Description: t.Description, Colors: maps.Clone(t.Colors), Instance: t.Instance, Extra: t.Extra,
+		}
 		if tpl.Colors == nil {
 			tpl.Colors = map[string]timeline.Color{}
 		}

@@ -4011,6 +4011,7 @@ At least one of `description` and `colors` is required.
 - `ok_remove_unused_colour`
 - `ok_remove_absent_name_noop`
 - `ok_description_500_chars`
+- `ok_instance_flag_kept`
 - `ok_same_values_noop`
 - `err_validation_nothing_to_set`
 - `err_validation_bad_colour_name`

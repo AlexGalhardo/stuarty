@@ -294,7 +294,9 @@ Slot, on an item:
 
 In a template document a `clip` or `audio` item with an unfilled media slot has `asset` equal to the reserved value `"ast_placeholder"`, which is the only case where `asset` may be missing from `assets`.
 
-TemplateInfo, at the top of a template document: `{"description": string, "colors": {"<name>": colour}}`. A colour slot is an entry of `colors`; styles refer to it with the string `"$<name>"` wherever a colour is accepted.
+TemplateInfo, at the top of a template document: `{"description": string, "colors": {"<name>": colour}, "instance": bool}`. A colour slot is an entry of `colors`; styles refer to it with the string `"$<name>"` wherever a colour is accepted.
+
+`instance` (boolean, default false, omitted when false) tells a **template draft** from an **instance**. A draft is a document being authored as a template: its slots are open by design. An instance is a project made from a template (`TemplateInstantiate`, SDD-003): the instantiate path writes `template.instance: true` and keeps the `template` member so that the placeholder and the `"$name"` colours stay valid. The placeholder is valid in both (`V_ASSET_REF` depends only on the `template` member being present). Lint tells them apart: `L_SLOT_UNFILLED` is exempt on a draft and an error on an instance, so export is blocked until every required slot is filled (SDD-003 section on lint). `template.set_info` keeps the flag. Adding the field is an optional addition with a default that preserves the old behaviour, so `schema_version` stays 1.
 
 ## 4. Invariants
 

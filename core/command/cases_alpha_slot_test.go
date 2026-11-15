@@ -208,6 +208,12 @@ func init() {
 	}
 	none := base
 
+	ti("ok_instance_flag_kept", `{"colors": {"brand": "#ff3366"}}`, func() *B {
+		b := base().template()
+		b.d.Template.Instance = true
+
+		return b
+	})
 	ti("ok_description_only", `{"description": "Product teaser"}`, withTpl(map[string]timeline.Color{"old": "#112233"}))
 	ti("ok_add_colors_creates_template_object", `{"colors": {"brand": "#ff3366"}}`, none)
 	ti(
