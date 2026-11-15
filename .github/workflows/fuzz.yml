@@ -31,6 +31,7 @@ jobs:
       matrix:
         include:
           - { pkg: ./core/timeval, target: FuzzParse }
+          - { pkg: ./engine/raster, target: FuzzFontHeader }
     env:
       FUZZTIME: ${{ inputs.fuzztime || '30s' }}
     defaults:
