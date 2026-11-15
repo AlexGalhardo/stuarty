@@ -46,6 +46,11 @@ type Config struct {
 	// CPUCount is the CPU budget of a run (vukem cpu.Count, read by the caller). Zero means the
 	// machine's logical CPU count.
 	CPUCount int
+	// ToolsDir is <workspace>/tools, where the explicit install step puts the Cisco OpenH264 library the
+	// own FFmpeg build loads (D-017). Empty means none is installed.
+	ToolsDir string
+	// OpenH264Manifest pins that library; the embedded manifest when it has no entries. Tests replace it.
+	OpenH264Manifest OpenH264Manifest
 	// Limits bound every run through prlimit(1). Linux only: the caller leaves it zero elsewhere.
 	Limits engine.Limits
 	// LookPath resolves ffmpeg on the PATH; exec.LookPath when nil. Tests replace it.
@@ -63,6 +68,9 @@ type Installation struct {
 	// UserBuild is true when the pair is the user's own: configured, or found on the PATH.
 	// A bundled build is never a user build (libx264 is not offered for it, SDD-011 8.4).
 	UserBuild bool
+	// OpenH264 is the state of the Cisco library, checked once at discovery and meaningful only for the own
+	// build (Flavour). Installed means the file passed its size and SHA-256 check.
+	OpenH264 OpenH264State
 
 	// limits are the limits the tools were opened with; the sandbox wrapper applies them itself.
 	limits engine.Limits
@@ -175,11 +183,15 @@ func tryPair(ctx context.Context, cfg Config, c candidate) (*Installation, error
 		return nil, errors.New("ffprobe path is not absolute")
 	}
 
-	ff, info, err := openTool(ctx, cfg, "ffmpeg", c.ffmpeg, ffmpegMaxOutput)
+	ff, info, err := openTool(ctx, cfg, "ffmpeg", c.ffmpeg, ffmpegMaxOutput, nil)
 	if err != nil {
 		return nil, err
 	}
-	fp, pinfo, err := openTool(ctx, cfg, "ffprobe", probePath, 0)
+	lib, ff, err := attachOpenH264(ctx, cfg, c.ffmpeg, info, ff)
+	if err != nil {
+		return nil, err
+	}
+	fp, pinfo, err := openTool(ctx, cfg, "ffprobe", probePath, 0, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +201,7 @@ func tryPair(ctx context.Context, cfg Config, c candidate) (*Installation, error
 	}
 	in := &Installation{
 		FFmpeg: ff, FFprobe: fp, Source: c.source, Info: info, ProbeInfo: pinfo, CPUCount: cfg.CPUCount,
-		UserBuild: c.source != SourceBundled, limits: cfg.Limits,
+		UserBuild: c.source != SourceBundled, OpenH264: lib, limits: cfg.Limits,
 	}
 	if cfg.Log != nil {
 		cfg.Log.InfoContext(
@@ -207,10 +219,12 @@ func tryPair(ctx context.Context, cfg Config, c candidate) (*Installation, error
 }
 
 // openTool resolves one binary through engine.Find and requires it to print "<name> version".
-func openTool(ctx context.Context, cfg Config, name, path string, maxOutput int) (*engine.Tool, VersionInfo, error) {
+func openTool(
+	ctx context.Context, cfg Config, name, path string, maxOutput int, env map[string]string,
+) (*engine.Tool, VersionInfo, error) {
 	t, err := engine.Find(ctx, engine.Config{
 		Name: name, Path: path, VersionArgs: []string{"-hide_banner", "-version"},
-		Limits: cfg.Limits, CPUCount: cfg.CPUCount, MaxOutput: maxOutput, Log: cfg.Log,
+		Limits: cfg.Limits, CPUCount: cfg.CPUCount, MaxOutput: maxOutput, Log: cfg.Log, Env: env,
 	})
 	if err != nil {
 		return nil, VersionInfo{}, err
@@ -231,4 +245,31 @@ func openTool(ctx context.Context, cfg Config, name, path string, maxOutput int)
 		return nil, VersionInfo{}, errors.New(strings.TrimSpace(name) + " did not print its version")
 	}
 	return t, info, nil
+}
+
+// attachOpenH264 checks the Cisco library for the own build and, when it is installed and unchanged,
+// reopens ffmpeg with EnvOpenH264Dir set so the build can load it. Any other build is left as it is:
+// it never sees the variable.
+func attachOpenH264(
+	ctx context.Context, cfg Config, path string, info VersionInfo, ff *engine.Tool,
+) (OpenH264State, *engine.Tool, error) {
+	if info.Flavour().Name != FlavourOwn {
+		return OpenH264State{}, ff, nil
+	}
+	m := cfg.OpenH264Manifest
+	if len(m.Entries) == 0 {
+		var err error
+		if m, err = DefaultOpenH264Manifest(); err != nil {
+			return OpenH264State{}, nil, err
+		}
+	}
+	st := CheckOpenH264(cfg.ToolsDir, m, "", "")
+	if !st.Installed {
+		return st, ff, nil
+	}
+	withLib, _, err := openTool(ctx, cfg, "ffmpeg", path, ffmpegMaxOutput, map[string]string{EnvOpenH264Dir: st.Dir})
+	if err != nil {
+		return OpenH264State{}, nil, err
+	}
+	return st, withLib, nil
 }

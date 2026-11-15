@@ -26,14 +26,14 @@ var inheritedEnv = []string{"PATH", "SystemRoot", "windir", "LANG", "LC_ALL"}
 
 // childEnv builds the environment of a run from nothing: HOME and the temp variables name the
 // run directory, so the child scratches inside the directory that is about to be deleted.
-func childEnv(dir string) []string {
-	env := make([]string, 0, len(inheritedEnv)+4)
+func childEnv(dir string, extra ...string) []string {
+	env := make([]string, 0, len(inheritedEnv)+5)
 	for _, k := range inheritedEnv {
 		if v, ok := os.LookupEnv(k); ok {
 			env = append(env, k+"="+v)
 		}
 	}
-	return append(env, "HOME="+dir, "TMPDIR="+dir, "TEMP="+dir, "TMP="+dir)
+	return append(append(env, "HOME="+dir, "TMPDIR="+dir, "TEMP="+dir, "TMP="+dir), extra...)
 }
 
 // runSandboxed runs the wrapped command of a run in its directory with its stdin, copying stdout to
@@ -44,7 +44,7 @@ func (r *Runner) runSandboxed(ctx context.Context, s execSpec, stdout io.Writer)
 		return engine.Result{}, err
 	}
 
-	return runWithStdin(ctx, name, args, s.dir, s.stdin, stdout)
+	return runWithStdin(ctx, name, args, s.dir, r.libraryEnv(), s.stdin, stdout)
 }
 
 func runWithStdin(
@@ -52,6 +52,7 @@ func runWithStdin(
 	name string,
 	args []string,
 	dir string,
+	extraEnv []string,
 	stdin io.Reader,
 	stdout io.Writer,
 ) (engine.Result, error) {
@@ -65,7 +66,7 @@ func runWithStdin(
 	// alone or inside the wrapper of Runner.command.
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = dir
-	cmd.Env = childEnv(dir)
+	cmd.Env = childEnv(dir, extraEnv...)
 	cmd.Stdin = stdin
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
@@ -114,4 +115,13 @@ func (w *tailWriter) String() string {
 		return "[earlier output dropped]\n" + string(w.buf)
 	}
 	return string(w.buf)
+}
+
+// libraryEnv is EnvOpenH264Dir for the own build whose Cisco library passed verification; the sandbox
+// builds the environment itself, so the variable that Tool.Env carries elsewhere is added here.
+func (r *Runner) libraryEnv() []string {
+	if r.In.OpenH264.Installed && r.In.Flavour().Name == FlavourOwn {
+		return []string{EnvOpenH264Dir + "=" + r.In.OpenH264.Dir}
+	}
+	return nil
 }
