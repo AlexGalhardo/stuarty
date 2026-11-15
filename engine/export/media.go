@@ -403,7 +403,7 @@ func (d *videoDecoder) start(sf int) error {
 			case <-ctx.Done():
 				return
 			}
-			if _, err := io.ReadFull(pr, buf); err != nil {
+			if err := readFrame(pr, buf); err != nil {
 				return
 			}
 			select {
@@ -418,6 +418,25 @@ func (d *videoDecoder) start(sf int) error {
 		<-exited
 		_ = pr.Close()
 	}()
+	return nil
+}
+
+// pipeReadChunk is the most one read asks of the decoder pipe. The pipe of os.Pipe holds 4 KiB on
+// Windows, and a read into a whole frame (33 MB at 4K, 105 MB when a portrait clip covers a landscape
+// canvas) is slow there: every 4 KiB that arrives costs a call that handles the entire buffer, so a
+// 3840x6827 frame took 1 s instead of 0.15 s. Reading the frame in pieces keeps each call small and
+// is as fast on the other systems.
+const pipeReadChunk = 64 << 10
+
+// readFrame fills buf from r, pipeReadChunk bytes at a time.
+func readFrame(r io.Reader, buf []byte) error {
+	for len(buf) > 0 {
+		n, err := io.ReadFull(r, buf[:min(len(buf), pipeReadChunk)])
+		buf = buf[n:]
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
