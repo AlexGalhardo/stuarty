@@ -32,8 +32,11 @@ func loadRegistry(t *testing.T) []registryEntry {
 	return cmds
 }
 
-// The registry snapshot has the 48 commands of SDD-002 Part C: 16 of the Prototype and
-// 32 of ALPHA, every scope is edit or media, and asset.add is the only internal command.
+// mediaCommands are the commands whose scope is media; every other command is edit.
+var mediaCommands = map[string]bool{"asset.add": true, "asset.remove": true, "font.add": true, "font.remove": true}
+
+// The registry snapshot has the 54 commands of SDD-002 Part C: 16 of the Prototype, 32 of ALPHA
+// and 6 of BETA; every scope is edit or media, and asset.add is the only internal command.
 func TestRegistrySnapshotShape(t *testing.T) {
 	t.Parallel()
 
@@ -47,8 +50,8 @@ func TestRegistrySnapshotShape(t *testing.T) {
 			t.Errorf("%s: scope %q is neither edit nor media", c.Name, c.Scope)
 		}
 
-		if (c.Scope == "media") != (c.Name == "asset.add" || c.Name == "asset.remove") {
-			t.Errorf("%s: scope %q is wrong; only asset.add and asset.remove are media", c.Name, c.Scope)
+		if (c.Scope == "media") != mediaCommands[c.Name] {
+			t.Errorf("%s: scope %q is wrong; only asset.add, asset.remove, font.add and font.remove are media", c.Name, c.Scope)
 		}
 
 		if c.Internal != (c.Name == "asset.add") {
@@ -56,8 +59,8 @@ func TestRegistrySnapshotShape(t *testing.T) {
 		}
 	}
 
-	if len(cmds) != 48 || phases["prototype"] != 16 || phases["alpha"] != 32 {
-		t.Errorf("%d commands (%v), want 48 with 16 prototype and 32 alpha (the exposed build)", len(cmds), phases)
+	if len(cmds) != 54 || phases["prototype"] != 16 || phases["alpha"] != 32 || phases["beta"] != 6 {
+		t.Errorf("%d commands (%v), want 54 with 16 prototype, 32 alpha and 6 beta (the exposed build)", len(cmds), phases)
 	}
 }
 
@@ -91,7 +94,7 @@ func TestCommandErrorCodesExist(t *testing.T) {
 	}
 }
 
-// Every section of Part C has a registry entry of the same phase, and the other way round.
+// Every section of Part C has a registry entry of the same phase, and the other way round (the exposed build is BETA).
 func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 	t.Parallel()
 
@@ -118,17 +121,6 @@ func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 	}
 
 	for name, phase := range want {
-		if phase == "beta" {
-			// A Beta command is registered but not exposed until the BETA phase switch.
-			if _, exposed := got[name]; exposed {
-				t.Errorf("Part C says %s is beta but the exposed build lists it", name)
-			}
-
-			delete(want, name)
-
-			continue
-		}
-
 		if got[name] != phase {
 			t.Errorf("Part C says %s is %q, the registry has %q", name, phase, got[name])
 		}

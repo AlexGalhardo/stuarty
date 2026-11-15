@@ -1710,6 +1710,8 @@
             "enum": [
               "asset.remove",
               "audio.add",
+              "audio.duck",
+              "audio.mark_beats",
               "caption.add",
               "caption.edit_word",
               "caption.from_transcript",
@@ -1721,9 +1723,13 @@
               "caption.split",
               "clip.add",
               "clip.remove_silences",
+              "clip.set_blur",
               "clip.set_color",
+              "clip.set_filter",
               "clip.set_framing",
               "clip.set_speed",
+              "font.add",
+              "font.remove",
               "item.crossfade",
               "item.delete",
               "item.duplicate",
@@ -1771,6 +1777,12 @@
           "audio.add": {
             "$ref": "#/components/schemas/args.audio.add"
           },
+          "audio.duck": {
+            "$ref": "#/components/schemas/args.audio.duck"
+          },
+          "audio.mark_beats": {
+            "$ref": "#/components/schemas/args.audio.mark_beats"
+          },
           "caption.add": {
             "$ref": "#/components/schemas/args.caption.add"
           },
@@ -1804,14 +1816,26 @@
           "clip.remove_silences": {
             "$ref": "#/components/schemas/args.clip.remove_silences"
           },
+          "clip.set_blur": {
+            "$ref": "#/components/schemas/args.clip.set_blur"
+          },
           "clip.set_color": {
             "$ref": "#/components/schemas/args.clip.set_color"
+          },
+          "clip.set_filter": {
+            "$ref": "#/components/schemas/args.clip.set_filter"
           },
           "clip.set_framing": {
             "$ref": "#/components/schemas/args.clip.set_framing"
           },
           "clip.set_speed": {
             "$ref": "#/components/schemas/args.clip.set_speed"
+          },
+          "font.add": {
+            "$ref": "#/components/schemas/args.font.add"
+          },
+          "font.remove": {
+            "$ref": "#/components/schemas/args.font.remove"
           },
           "item.crossfade": {
             "$ref": "#/components/schemas/args.item.crossfade"
@@ -3190,6 +3214,138 @@
         ],
         "type": "object"
       },
+      "args.audio.duck": {
+        "additionalProperties": false,
+        "properties": {
+          "attack": {
+            "description": "A length, may be 0; the ramp down before speech. Default \"0.2s\".",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "gain_db": {
+            "description": "Change of volume while speech sounds, -40 to -1; default -12.",
+            "maximum": -1,
+            "minimum": -40,
+            "type": "number"
+          },
+          "item_id": {
+            "description": "The music: an audio item with no volume keyframes.",
+            "type": "string"
+          },
+          "release": {
+            "description": "A length, may be 0; the ramp up after speech. Default \"0.5s\".",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "resolved": {
+            "additionalProperties": false,
+            "description": "Filled by the service from the speech of the items; never sent by a caller.",
+            "properties": {
+              "speech": {
+                "description": "One entry per speech item, in any order.",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "item_id": {
+                      "description": "One of the speech items.",
+                      "type": "string"
+                    },
+                    "ranges": {
+                      "description": "Sorted, non-overlapping ranges of speech in asset frames, half-open.",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "end": {
+                            "type": "integer"
+                          },
+                          "start": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "start",
+                          "end"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "item_id",
+                    "ranges"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "speech"
+            ],
+            "type": "object"
+          },
+          "speech_item_ids": {
+            "description": "Clips or audio items that carry the speech.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "item_id",
+          "speech_item_ids"
+        ],
+        "type": "object"
+      },
+      "args.audio.mark_beats": {
+        "additionalProperties": false,
+        "properties": {
+          "every": {
+            "description": "Mark every nth beat of the visible part, from the first; default 1.",
+            "maximum": 64,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "item_id": {
+            "description": "An audio item of an audio asset, or of a video asset with audio.",
+            "type": "string"
+          },
+          "label": {
+            "description": "Label of every marker, up to 60 characters; default none.",
+            "maxLength": 60,
+            "type": "string"
+          },
+          "replace": {
+            "description": "true (default) replaces the item's markers; false keeps them and adds the beats.",
+            "type": "boolean"
+          },
+          "resolved": {
+            "additionalProperties": false,
+            "description": "Filled by the service from the beat grid of the asset; never sent by a caller.",
+            "properties": {
+              "beats": {
+                "description": "Strictly increasing beat positions in asset frames, from 0.",
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "beats"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
       "args.caption.add": {
         "additionalProperties": false,
         "properties": {
@@ -3766,6 +3922,26 @@
         ],
         "type": "object"
       },
+      "args.clip.set_blur": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A clip.",
+            "type": "string"
+          },
+          "radius": {
+            "description": "Blur radius in pixels, 0 to 100; 0 removes the blur.",
+            "maximum": 100,
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "item_id",
+          "radius"
+        ],
+        "type": "object"
+      },
       "args.clip.set_color": {
         "additionalProperties": false,
         "properties": {
@@ -3790,6 +3966,37 @@
             "maximum": 2,
             "minimum": 0,
             "type": "number"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.clip.set_filter": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "description": "0 to 1; default 1.",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "filter": {
+            "description": "none (default), grayscale, sepia, invert, warm or cool.",
+            "enum": [
+              "none",
+              "grayscale",
+              "sepia",
+              "invert",
+              "warm",
+              "cool"
+            ],
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip.",
+            "type": "string"
           }
         },
         "required": [
@@ -3896,6 +4103,61 @@
         "required": [
           "item_id",
           "speed"
+        ],
+        "type": "object"
+      },
+      "args.font.add": {
+        "additionalProperties": false,
+        "properties": {
+          "family": {
+            "description": "1 to 60 characters: letters, digits, space, dot, hyphen, underscore; not a bundled family.",
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string"
+          },
+          "files": {
+            "description": "One file per weight, 1 to 9; a weight appears once.",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "hash": {
+                  "description": "sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.",
+                  "type": "string"
+                },
+                "weight": {
+                  "description": "100 to 900 in steps of 100.",
+                  "maximum": 900,
+                  "minimum": 100,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "weight",
+                "hash"
+              ],
+              "type": "object"
+            },
+            "maxItems": 9,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "family",
+          "files"
+        ],
+        "type": "object"
+      },
+      "args.font.remove": {
+        "additionalProperties": false,
+        "properties": {
+          "family": {
+            "description": "A user family of the project.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "family"
         ],
         "type": "object"
       },

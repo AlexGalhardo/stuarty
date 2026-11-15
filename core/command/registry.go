@@ -273,7 +273,7 @@ var (
 // Build is the phase this binary exposes: Default holds the commands of that phase
 // and every earlier one. Raise it at the phase switch of the roadmap; commands of
 // a later phase stay registered and are visible to BetaBuild only.
-const Build = Alpha
+const Build = Beta
 
 // Default is the registry of this build (the commands up to Build), filled by the
 // init functions of the command files.

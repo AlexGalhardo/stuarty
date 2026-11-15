@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "family": {
+      "description": "1 to 60 characters: letters, digits, space, dot, hyphen, underscore; not a bundled family.",
+      "maxLength": 60,
+      "minLength": 1,
+      "type": "string"
+    },
+    "files": {
+      "description": "One file per weight, 1 to 9; a weight appears once.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "hash": {
+            "description": "sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.",
+            "type": "string"
+          },
+          "weight": {
+            "description": "100 to 900 in steps of 100.",
+            "maximum": 900,
+            "minimum": 100,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weight",
+          "hash"
+        ],
+        "type": "object"
+      },
+      "maxItems": 9,
+      "minItems": 1,
+      "type": "array"
+    }
+  },
+  "required": [
+    "family",
+    "files"
+  ],
+  "type": "object"
+}

@@ -10,16 +10,16 @@ metadata:
 
 ## What it is
 
-A video editor operated by commands. The CLI `vukem-video` is the main surface; the MCP server (`vukem-video mcp`) offers the same operations as tools. Every change is undoable. Output is text; `--json` prints one JSON document.
+A video editor operated by commands. The CLI `vukem-video` is the main surface; the MCP server (`vukem-video mcp`) offers the same operations as tools. Output is text; `--json` prints one JSON document.
 
 ## Setup check
 
-Run `vukem-video version`, then `vukem-video project:list`. The workspace is `~/.vukem-video` or `$VUKEM_VIDEO_HOME`. `vukem-video serve` is optional: it shares the workspace with the browser editor.
+Run `vukem-video version`, then `vukem-video project:list`. The workspace is `~/.vukem-video` or `$VUKEM_VIDEO_HOME`. `vukem-video serve` (optional) shares the workspace with the browser editor.
 
 ## The loop
 
 1. Read: `project:show --project <id>` (text; note `rev`).
-2. Plan one batch of operations.
+2. Plan one batch.
 3. Apply: `edit --project <id> --base <rev> ...`. Read the diff it prints.
 4. `lint --project <id>`. Fix errors; they block export.
 5. Look only if text cannot answer: `view --at 1s` (about 800 image tokens), then `view --mode sheet` (about 1,500).
@@ -36,12 +36,13 @@ Run `vukem-video version`, then `vukem-video project:list`. The workspace is `~/
 
 ## Command reference
 
-Operations of `edit`, written `namespace.action`; a star marks the Alpha build, the others are in the Prototype. `command_help` lists them with a summary and `command_help <name>` prints arguments and an example. `asset.remove` needs the media scope.
+Operations of `edit`, written `namespace.action`; a star marks those added after the Prototype. `command_help [name]` lists them or prints arguments and an example. `asset.remove` and `font.*` need the media scope.
 
 - `asset`: remove*
-- `audio`: add*
+- `audio`: add*, duck*, mark_beats*
 - `caption`: add, edit_word*, from_transcript*, merge*, retime_from_clip*, set_breaks*, set_style*, set_words*, split*
-- `clip`: add, remove_silences*, set_color*, set_framing*, set_speed*
+- `clip`: add, remove_silences*, set_blur*, set_color*, set_filter*, set_framing*, set_speed*
+- `font`: add*, remove*
 - `item`: crossfade*, delete, duplicate*, move, rename*, set_audio*, set_transform*, set_transition*, split, trim
 - `keyframe`: clear*, remove*, set*
 - `project`: rename

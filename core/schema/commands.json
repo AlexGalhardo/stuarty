@@ -209,6 +209,183 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "attack": {
+          "description": "A length, may be 0; the ramp down before speech. Default \"0.2s\".",
+          "type": "string",
+          "x-vv-kind": "time"
+        },
+        "gain_db": {
+          "description": "Change of volume while speech sounds, -40 to -1; default -12.",
+          "maximum": -1,
+          "minimum": -40,
+          "type": "number"
+        },
+        "item_id": {
+          "description": "The music: an audio item with no volume keyframes.",
+          "type": "string"
+        },
+        "release": {
+          "description": "A length, may be 0; the ramp up after speech. Default \"0.5s\".",
+          "type": "string",
+          "x-vv-kind": "time"
+        },
+        "resolved": {
+          "additionalProperties": false,
+          "description": "Filled by the service from the speech of the items; never sent by a caller.",
+          "properties": {
+            "speech": {
+              "description": "One entry per speech item, in any order.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "item_id": {
+                    "description": "One of the speech items.",
+                    "type": "string"
+                  },
+                  "ranges": {
+                    "description": "Sorted, non-overlapping ranges of speech in asset frames, half-open.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "end": {
+                          "type": "integer"
+                        },
+                        "start": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "start",
+                        "end"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "item_id",
+                  "ranges"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "speech"
+          ],
+          "type": "object"
+        },
+        "speech_item_ids": {
+          "description": "Clips or audio items that carry the speech.",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "item_id",
+        "speech_item_ids"
+      ],
+      "type": "object"
+    },
+    "description": "Writes volume keyframes on the music item: its volume drops by gain_db over attack before each stretch of speech and returns over release after it. Speech stretches closer than the ramps are held low across the gap. The speech comes from the analysis of the speech items and is supplied by the service in resolved; the command never starts a job. The item must have no volume keyframes yet; keyframe.clear on volume undoes the ducking.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_LIMIT"
+    ],
+    "example": {
+      "gain_db": -12,
+      "item_id": "itm_s6t7v8w9x0",
+      "speech_item_ids": [
+        "itm_m1n2p3q4r5"
+      ]
+    },
+    "internal": false,
+    "name": "audio.duck",
+    "phase": "beta",
+    "scope": "edit",
+    "summary": "Lowers a music item while speech sounds, with a ramp down before and a ramp up after."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "every": {
+          "description": "Mark every nth beat of the visible part, from the first; default 1.",
+          "maximum": 64,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "item_id": {
+          "description": "An audio item of an audio asset, or of a video asset with audio.",
+          "type": "string"
+        },
+        "label": {
+          "description": "Label of every marker, up to 60 characters; default none.",
+          "maxLength": 60,
+          "type": "string"
+        },
+        "replace": {
+          "description": "true (default) replaces the item's markers; false keeps them and adds the beats.",
+          "type": "boolean"
+        },
+        "resolved": {
+          "additionalProperties": false,
+          "description": "Filled by the service from the beat grid of the asset; never sent by a caller.",
+          "properties": {
+            "beats": {
+              "description": "Strictly increasing beat positions in asset frames, from 0.",
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "beats"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "type": "object"
+    },
+    "description": "Places a marker at each beat of the visible part of the item, or at every nth beat, so that cuts and transitions can be aligned to the music. Beats are frames of the asset and come from the beat grid of the asset, supplied by the service in resolved; the command never starts a job. Markers have no effect on the picture or the sound.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_LIMIT"
+    ],
+    "example": {
+      "every": 2,
+      "item_id": "itm_s6t7v8w9x0",
+      "label": "beat"
+    },
+    "internal": false,
+    "name": "audio.mark_beats",
+    "phase": "beta",
+    "scope": "edit",
+    "summary": "Writes markers on a music item at the beats of its audio."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "duration": {
           "description": "A length; with text only.",
           "type": "string",
@@ -1044,6 +1221,44 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "item_id": {
+          "description": "A clip.",
+          "type": "string"
+        },
+        "radius": {
+          "description": "Blur radius in pixels, 0 to 100; 0 removes the blur.",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "item_id",
+        "radius"
+      ],
+      "type": "object"
+    },
+    "description": "Sets the Gaussian blur radius in pixels at project resolution, 0 to 100; 0 removes the blur.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH"
+    ],
+    "example": {
+      "item_id": "itm_m1n2p3q4r5",
+      "radius": 12.5
+    },
+    "internal": false,
+    "name": "clip.set_blur",
+    "phase": "beta",
+    "scope": "edit",
+    "summary": "Sets the blur radius of a clip."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "brightness": {
           "description": "-1 to 1; default 0.",
           "maximum": 1,
@@ -1088,6 +1303,56 @@
     "phase": "alpha",
     "scope": "edit",
     "summary": "Sets the brightness, contrast and saturation of a clip."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "0 to 1; default 1.",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "filter": {
+          "description": "none (default), grayscale, sepia, invert, warm or cool.",
+          "enum": [
+            "none",
+            "grayscale",
+            "sepia",
+            "invert",
+            "warm",
+            "cool"
+          ],
+          "type": "string"
+        },
+        "item_id": {
+          "description": "A clip.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "type": "object"
+    },
+    "description": "Sets one filter of the fixed list (none, grayscale, sepia, invert, warm, cool) and its amount, 0 (the original) to 1 (the full filter), rounded to 3 decimals; a value equal to the default (none, 1) clears the stored one.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH"
+    ],
+    "example": {
+      "amount": 0.6,
+      "filter": "sepia",
+      "item_id": "itm_m1n2p3q4r5"
+    },
+    "internal": false,
+    "name": "clip.set_filter",
+    "phase": "beta",
+    "scope": "edit",
+    "summary": "Sets the colour filter of a clip and how much of it is mixed in."
   },
   {
     "args_schema": {
@@ -1234,6 +1499,103 @@
     "phase": "alpha",
     "scope": "edit",
     "summary": "Changes the speed of a clip or audio item while keeping the same source range."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "description": "1 to 60 characters: letters, digits, space, dot, hyphen, underscore; not a bundled family.",
+          "maxLength": 60,
+          "minLength": 1,
+          "type": "string"
+        },
+        "files": {
+          "description": "One file per weight, 1 to 9; a weight appears once.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "hash": {
+                "description": "sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.",
+                "type": "string"
+              },
+              "weight": {
+                "description": "100 to 900 in steps of 100.",
+                "maximum": 900,
+                "minimum": 100,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "weight",
+              "hash"
+            ],
+            "type": "object"
+          },
+          "maxItems": 9,
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "family",
+        "files"
+      ],
+      "type": "object"
+    },
+    "description": "Names a font that is already stored by hash in the workspace as a family of the project, so that styles can use it. The family name must not be a bundled family. Adding to an existing family adds the weights and replaces the file of a weight it already has. The command never reads or stores a file; the service refuses a hash that the workspace does not hold.",
+    "errors": [
+      "E_VALIDATION"
+    ],
+    "example": {
+      "family": "Brand Sans",
+      "files": [
+        {
+          "hash": "sha256:abababababababababababababababababababababababababababababababab",
+          "weight": 400
+        },
+        {
+          "hash": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "weight": 700
+        }
+      ]
+    },
+    "internal": false,
+    "name": "font.add",
+    "phase": "beta",
+    "scope": "media",
+    "summary": "Adds a user font family to the project, or more weights to one it already has."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "description": "A user family of the project.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "family"
+      ],
+      "type": "object"
+    },
+    "description": "Removes the family from the fonts of the project. A family that a text style, a caption style or a track still uses cannot be removed. The font files stay in the workspace.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_IN_USE"
+    ],
+    "example": {
+      "family": "Brand Sans"
+    },
+    "internal": false,
+    "name": "font.remove",
+    "phase": "beta",
+    "scope": "media",
+    "summary": "Removes a user font family from the project."
   },
   {
     "args_schema": {
