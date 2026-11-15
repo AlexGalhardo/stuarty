@@ -154,6 +154,32 @@ func TestLimitExportEndedByTheWatchdogNamesTheLimit(t *testing.T) {
 	}
 }
 
+// SDD-007 section 9.1: with the ingests running and the queue behind them full, the next file of
+// a MediaImport is E_QUEUE_FULL for that file, naming the limit, the jobs and the ceiling.
+func TestLimitIngestQueueCarriesValueAndCeiling(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true, limits: service.Limits{MaxIngests: 1, MaxQueuedIngests: 1}})
+	project := m.newProject("p")
+
+	var files []service.ImportFile
+	for i := range 3 {
+		files = append(files, service.ImportFile{Path: m.write(fmt.Sprintf("clip%d.mp4", i), clipBytes+strings.Repeat("x", i+1))})
+	}
+
+	res, err := m.svc.MediaImport(m.as(ui), service.MediaImportRequest{ProjectID: project, Files: files})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Failed != 1 || res.Assets[0].Error != nil || res.Assets[1].Error != nil {
+		t.Fatalf("assets = %+v, want only the third refused", res.Assets)
+	}
+
+	requireLimit(t, "third file", res.Assets[2].Error, service.CodeQueueFull, "ingests")
+	if res.Assets[2].Error.Details["ceiling"] != 2 {
+		t.Errorf("details = %v, want ceiling 2", res.Assets[2].Error.Details)
+	}
+}
+
 func TestLimitViewWidthCarriesValueAndCeiling(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true})
 	project := m.exportable()
