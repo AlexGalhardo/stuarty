@@ -416,6 +416,41 @@ jobs:
           cache-dependency-path: go.sum
       - run: go run ./internal/tools/threatcheck
 
+  # P1-RND-003 (ADR-0012, risk R3): text is drawn from the bundled fonts only. The
+  # raster tests run as an unprivileged user with every font directory of the
+  # system unreadable and fontconfig pointed at nothing, so a test that reads a
+  # system font fails here on the runner that has most of them.
+  font-isolation:
+    name: Font isolation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Make the system fonts unreadable
+        run: |
+          set -euo pipefail
+          for dir in /usr/share/fonts /usr/local/share/fonts /usr/share/X11/fonts "$HOME/.fonts" "$HOME/.local/share/fonts"; do
+            if [ -d "$dir" ]; then
+              sudo chmod -R a-rwx "$dir"
+              if ls "$dir" >/dev/null 2>&1; then
+                echo "::error::$dir is still readable"
+                exit 1
+              fi
+            fi
+          done
+          mkdir -p "$RUNNER_TEMP/no-fontconfig"
+      - name: Raster tests do not read a system font
+        env:
+          FONTCONFIG_PATH: ${{ runner.temp }}/no-fontconfig
+          FONTCONFIG_FILE: ${{ runner.temp }}/no-fontconfig/none.conf
+        run: go test -count=1 ./engine/raster/...
+
   pins:
     name: Workflow pins
     runs-on: ubuntu-latest
