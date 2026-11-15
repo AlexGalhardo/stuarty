@@ -35,6 +35,7 @@ import { consumeDragClick } from "./gestures/lifecycle";
 import { beginMove } from "./gestures/move";
 import ItemContextMenuItems from "./ItemContextMenu";
 import CaptionItem from "./items/CaptionItem";
+import KeyframeDiamonds from "./items/KeyframeDiamonds";
 import TrimHandle from "./items/TrimHandle";
 import { clickSelection, gridLayout } from "./keyboard";
 
@@ -195,6 +196,7 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 			) : (
 				<UntrustedText className="truncate">{label}</UntrustedText>
 			)}
+			<KeyframeDiamonds id={id} />
 			<TrimHandle itemId={id} edge="end" />
 		</div>
 	);
