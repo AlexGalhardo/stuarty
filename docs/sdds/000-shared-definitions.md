@@ -93,7 +93,7 @@ Kinds: `ingest`, `transcribe`, `export`, `frame`. States: `queued`, `running`, `
 | `operations` | the append-only log, one row per committed batch | SDD-005 |
 | `idempotency_keys` | stored batch results by key | SDD-005 |
 | `assets` | one row per file in the content store, by hash | SDD-005 |
-| `artifacts` | derived files of an asset (probe, normalized, proxy, thumbnails, peaks, silence, loudness, transcript), keyed by asset hash, kind, profile version, variant and extension | SDD-005, SDD-011 §6 |
+| `artifacts` | derived files of an asset (probe, normalized, proxy, thumbnails, peaks, silence, loudness, speech, beats, transcript), keyed by asset hash, kind, profile version, variant and extension | SDD-005, SDD-011 §6 |
 | `project_assets` | which project uses which asset, and trash state of that use | SDD-005 |
 | `jobs` | job state (ADR-0018) | SDD-005 |
 | `templates` | template documents | SDD-005 |
