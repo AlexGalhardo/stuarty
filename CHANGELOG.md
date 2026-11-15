@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-15
+
+### Added
+
+- **service:** Add the import path guard of SDD-007 section 7.1 ([f18d317](https://github.com/AlexGalhardo/vukem-video/commit/f18d317a814b550e42b245d36a023e0e95614f40))
+- **service:** Report the free space of the workspace volume ([1352b3a](https://github.com/AlexGalhardo/vukem-video/commit/1352b3a9a7f9354ebffa078ffa4be1477b7f9824))
+- **service:** Let SetFacts record the kind the probe gave an asset ([aa13b59](https://github.com/AlexGalhardo/vukem-video/commit/aa13b59ed3c840e3dc7f7ba090076654725f6144))
+- **service:** Render the texts of media lists, imports and jobs ([0ee948a](https://github.com/AlexGalhardo/vukem-video/commit/0ee948ac4ce5ae1ae4ea4d09e936be0043dd71c5))
+- **service:** List the queued jobs older than an instant ([f86e3d9](https://github.com/AlexGalhardo/vukem-video/commit/f86e3d92d145e2c5f8a63ffb0813f8065cab7cdb))
+- **service:** Import media, run ingest and export jobs, serve asset files ([0b1c07f](https://github.com/AlexGalhardo/vukem-video/commit/0b1c07ff3b8e2a453db25b3cfa83d013e0816a6b))
+- **web:** Connect the job machinery to the vukem queue ([41eb6c4](https://github.com/AlexGalhardo/vukem-video/commit/41eb6c41ef624ce4f8bca788c68a049bfe5e62d6))
+- **service:** Reach media import, media and job reads over HTTP from the client ([ba5dcf4](https://github.com/AlexGalhardo/vukem-video/commit/ba5dcf4eb1958b9b6dcddb581826a9ceac1b45fe))
+- **repo:** Add perfreport, the performance table and its regression check ([c70ddfe](https://github.com/AlexGalhardo/vukem-video/commit/c70ddfeb7162d0110fa4e6bda7ba1907337f3d02))
+- **mcp:** Add the MCP server with the Prototype tools that have a Service method ([4506c72](https://github.com/AlexGalhardo/vukem-video/commit/4506c72c1c017f9025dc49f5878cd6bd1f001226))
+- **cli:** Add the mcp command ([715a025](https://github.com/AlexGalhardo/vukem-video/commit/715a0256a30541cb2fee0d48e45ccabbe602d2c9))
+- **command:** Add item.rename, item.set_transform, item.set_transition and item.set_audio ([392c262](https://github.com/AlexGalhardo/vukem-video/commit/392c2625ca4dad957d5965a785692fe74bb0826b))
+- **command:** Add item.duplicate, item.crossfade and timeline.close_gap ([5805586](https://github.com/AlexGalhardo/vukem-video/commit/580558615d14e90f0c36a0a402e4526da74b53dd))
+- **command:** Add audio.add, clip.set_framing and clip.set_color ([9d585bc](https://github.com/AlexGalhardo/vukem-video/commit/9d585bc6a2e03f05e283fb7876b6fb462a8b4152))
+- **raster:** Add FontSet.Missing, shape and highlight goldens and the font licence column ([a082e42](https://github.com/AlexGalhardo/vukem-video/commit/a082e42728d2b89f0d32d5ff51e38bedcb73784d))
+- **command:** Add clip.set_speed ([407d250](https://github.com/AlexGalhardo/vukem-video/commit/407d2507827f0b8a978f642fe918577b46e7060a))
+- **mcp:** Add media_import, media_inspect, job_start and job_get ([50d0d7c](https://github.com/AlexGalhardo/vukem-video/commit/50d0d7cbf65a8efc17384339b5fa174dbb3b700f))
+- **cli:** Add media:import, media:inspect, media:list, export, job:show and job:list ([2817a57](https://github.com/AlexGalhardo/vukem-video/commit/2817a57f8152e8aff2f66cb0ecdd87c107542000))
+- **mcp:** Add the state filter to job_get when listing by project ([3e18bd0](https://github.com/AlexGalhardo/vukem-video/commit/3e18bd0f54cdfa649ae824d79a2b7e7014a1fb67))
+- **ui:** Wire the editor client to the real HTTP API ([788a3df](https://github.com/AlexGalhardo/vukem-video/commit/788a3df0c3205557ba2cedda897270cbe8bd59bf))
+- **engine:** Add the size watchdog, cancel timeout, limits and bwrap sandbox of the child policy ([3baf0dc](https://github.com/AlexGalhardo/vukem-video/commit/3baf0dc1c90817d86fe77ca63faef079b9df0d92))
+- **cli:** Add the command reference for the documentation site ([92c4246](https://github.com/AlexGalhardo/vukem-video/commit/92c424656124e3396579ffd18ebc9fa77e2795ee))
+- **site:** Generate the reference pages and add the agents pages ([1e64562](https://github.com/AlexGalhardo/vukem-video/commit/1e64562c14b9b537d1cf5f4110421bc4f42a72aa))
+- **site:** Check twins and llms.txt against the built pages ([3c3f1f5](https://github.com/AlexGalhardo/vukem-video/commit/3c3f1f5a51c52ff7e02b6ab536a5c303b8fd8874))
+- **ui:** Add the PixiJS preview executor and truth on pause ([f927efd](https://github.com/AlexGalhardo/vukem-video/commit/f927efda89ef9459f7a737bd9da816228d5b3877))
+- **engine:** Refuse pictures with unreadable size and add the hostile corpus and fuzz tests ([2fcd1ba](https://github.com/AlexGalhardo/vukem-video/commit/2fcd1ba48d59e5b7303284f2c21f11ea88edfe19))
+- **ui:** Add the manual operations, library and export dialog ([bf6b110](https://github.com/AlexGalhardo/vukem-video/commit/bf6b1100387bd37656e4ad8224089d729f055da7))
+- **ingest:** Add MinSilence, FramesFromSamples and the audio, silence and loudness tests ([b5d5e8e](https://github.com/AlexGalhardo/vukem-video/commit/b5d5e8e08485bc8d2bdd003c35c45a1bfe6938da))
+- **export:** Adapt engine/export.Run to service.Exporter ([0a4062e](https://github.com/AlexGalhardo/vukem-video/commit/0a4062e8afd141ffeea01e3c1f87d48ad3e1b6b0))
+- **web:** Run serve as the owner of the workspace ([c92e09b](https://github.com/AlexGalhardo/vukem-video/commit/c92e09bb041ab14d1ca8794b374c3015ae189e83))
+- **api:** Mount the MCP handler at POST /mcp behind the guard ([5561de0](https://github.com/AlexGalhardo/vukem-video/commit/5561de0de18e4e5a1bea8ff60b0d68fe9cdf38b9))
+- **cli:** Build the in-process Service with the wiring of serve ([4b5f367](https://github.com/AlexGalhardo/vukem-video/commit/4b5f367751d2648d36fd733ed0809ae112279afc))
+- **engine:** Index only the cache folders and expose the sheet cache key ([e08bdbb](https://github.com/AlexGalhardo/vukem-video/commit/e08bdbb51eb6ed02da9eefc0ff3a4e84fa5b8f40))
+- **service:** Add ViewFrame and ViewSheet over engine/frame and their HTTP routes ([3a18eab](https://github.com/AlexGalhardo/vukem-video/commit/3a18eabb8765793f7e7591724d71d1984c08f4ee))
+- **api:** Stream project events with replay from the log and a state snapshot ([61963b8](https://github.com/AlexGalhardo/vukem-video/commit/61963b898d2ec1f3e01d2152ceeb2ece8ae0ce11))
+- **service:** Add PlanWindow and serve rasterized bitmaps by key ([20fea25](https://github.com/AlexGalhardo/vukem-video/commit/20fea25fbc346ba9ec9ba9c75669dfbb1bed882f))
+- **ui:** Add check:i18n, the pt-BR catalogue and the coverage declaration ([ee1d2d7](https://github.com/AlexGalhardo/vukem-video/commit/ee1d2d7689f9206ddafa6bd61858586f56132991))
+- **site:** Serve the docs in English and Brazilian Portuguese ([c635d09](https://github.com/AlexGalhardo/vukem-video/commit/c635d09e3c1169e49164a2895b2139578e1b4a87))
+- **site:** Check translations and the locale properties of the build ([9b7de37](https://github.com/AlexGalhardo/vukem-video/commit/9b7de37e302d90ceb6a4df94b6ef0d905e9c7b6f))
+- **engine:** Add cache leases and the pruning of old frame revisions ([da6ed3d](https://github.com/AlexGalhardo/vukem-video/commit/da6ed3dc49c1a27f594078cce2080984bf2a745c))
+- **mcp:** Serve the view tool and the view command over ViewFrame and ViewSheet ([ac5b716](https://github.com/AlexGalhardo/vukem-video/commit/ac5b7160d6ce262473afba745a0ea96dfb6d2f91))
+- **cli:** Add the events command over the server event stream ([b88b16c](https://github.com/AlexGalhardo/vukem-video/commit/b88b16ce7744191a88a0e5825724b24b96269493))
+- **web:** Serve the projects page, the editor page and the static files ([e58f98d](https://github.com/AlexGalhardo/vukem-video/commit/e58f98d36101b39f0228ec34d1d735246b45642f))
+
+### Fixed
+
+- **service:** Render the revision pinned when an export starts ([532f700](https://github.com/AlexGalhardo/vukem-video/commit/532f7000f0351400f1afdc3a2d2736dd603569f7))
+- **service:** Wait for the asset.add before a waiting import returns ([56a2d9e](https://github.com/AlexGalhardo/vukem-video/commit/56a2d9ee353af686c66f175e349beb893b206ff8))
+- **service:** Carry the new state in project.updated ([730cdbf](https://github.com/AlexGalhardo/vukem-video/commit/730cdbf35a92e534777a5daa00c1b07808174b42))
+- **ui:** Run check:i18n with Node, whose child pipes the TypeScript API needs ([e802e99](https://github.com/AlexGalhardo/vukem-video/commit/e802e99c7a1d3978a76ccc737c95154bc120ecb7))
+- **site:** Fill the Required column of the generated argument tables ([6c0d1c3](https://github.com/AlexGalhardo/vukem-video/commit/6c0d1c3d0027db0e695d3a3a221615f3a4cd0a18))
+- **repo:** Address the CodeQL and Linux lint findings of the v0.4.0 pull request ([c5ddfd2](https://github.com/AlexGalhardo/vukem-video/commit/c5ddfd2cf13f63b8ef78e6c69875ed1f9ee090c1))
+- **service:** Open imports by path components and read free space per OS ([b47ff27](https://github.com/AlexGalhardo/vukem-video/commit/b47ff27919189a7be9eaa23908902f33647e03ea))
+
+### Security
+
+- **security:** Scope remembered bitmap keys to the project that planned them ([3b7a631](https://github.com/AlexGalhardo/vukem-video/commit/3b7a631ac15747113d7bb6c6d12b87b06245f1d5))
+
 ## [0.3.0] - 2026-11-15
 
 ### Added
@@ -178,7 +240,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/AlexGalhardo/vukem-video/releases/tag/v0.1.0
