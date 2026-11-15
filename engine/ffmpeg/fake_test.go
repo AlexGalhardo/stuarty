@@ -38,6 +38,44 @@ func fakeTool() bool {
 		)
 		return true
 	}
+	if fakeEncode(base) {
+		return true
+	}
 	os.Exit(1)
+	return true
+}
+
+// fakeEncode answers the two commands of the encoder test (SDD-011 8.4) when a file named
+// works.txt sits next to the copy: ffmpeg writes its output for an encoder listed in it (one name per
+// line) and fails like a driver that cannot open otherwise; ffprobe reports 15 H.264 packets.
+func fakeEncode(base string) bool {
+	b, err := os.ReadFile(filepath.Join(filepath.Dir(os.Args[0]), "works.txt"))
+	if err != nil {
+		return false
+	}
+	if base == "ffprobe" {
+		fmt.Println("h264,15")
+		return true
+	}
+	args := os.Args[1:]
+	i := slices.Index(args, "-c:v")
+	if i < 0 || i+1 >= len(args) {
+		return false
+	}
+	enc := args[i+1]
+	if !slices.Contains(strings.Fields(string(b)), enc) {
+		fmt.Fprintf(os.Stderr, "[%s @ 0000] Error while opening encoder: no device for %s\nsecond line\n", enc, enc)
+		os.Exit(1)
+	}
+	// small.txt names the encoders that cannot do a 4K picture, like a GPU of an older generation.
+	if s, err := os.ReadFile(filepath.Join(filepath.Dir(os.Args[0]), "small.txt")); err == nil &&
+		slices.Contains(strings.Fields(string(s)), enc) &&
+		slices.ContainsFunc(args, func(a string) bool { return strings.Contains(a, "3840x2160") }) {
+		fmt.Fprintf(os.Stderr, "[%s @ 0000] Error while opening encoder: frame size too large\n", enc)
+		os.Exit(1)
+	}
+	if err := os.WriteFile(strings.TrimPrefix(args[len(args)-1], "file:"), []byte("fake"), 0o644); err != nil {
+		os.Exit(2)
+	}
 	return true
 }

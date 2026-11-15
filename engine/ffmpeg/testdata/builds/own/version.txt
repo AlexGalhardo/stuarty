@@ -1,4 +1,4 @@
 ffmpeg version n9.0.2-vukem1 Copyright (c) 2000-2026 the FFmpeg developers
 built with gcc 16.2.0
-configuration: --prefix=/ffbuild/prefix --enable-version3 --disable-gpl --disable-nonfree --disable-libx264 --disable-libx265 --enable-libvpx --extra-version=vukem1
+configuration: --prefix=/ffbuild/prefix --enable-version3 --disable-gpl --disable-nonfree --disable-libx264 --disable-libx265 --enable-libvpx --enable-ffnvcodec --enable-libvpl --enable-amf --extra-version=vukem1
 libavutil      61.  1.102 / 61.  1.102
