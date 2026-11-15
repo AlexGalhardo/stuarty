@@ -9,7 +9,7 @@
 # Inputs: .config/ffmpeg-build/sources.env (pinned tarballs with SHA-256) and
 # .config/ffmpeg-build/configure-flags.txt (the flags, checked by internal/tools/ffmpegconf).
 # Windows is cross compiled from Linux with mingw-w64 (x86_64-w64-mingw32-gcc, posix threads).
-# Needs: curl, tar, make, a C compiler, nasm (x86), xz (zip on windows), GNU tar (gtar on macOS).
+# Needs: curl, tar, make, autoconf, automake, libtool, a C and C++ compiler, nasm (x86), xz (zip on windows), GNU tar (gtar on macOS).
 #
 # Reproducibility: SOURCE_DATE_EPOCH is the commit time of HEAD (or 0 outside git), paths
 # are remapped, no build time is embedded, and the archive has sorted entries, fixed owners and
@@ -115,6 +115,7 @@ fetch "$FFMPEG_SRC_URL" "$FFMPEG_SRC_SHA256" ffmpeg
 fetch "$LIBVPX_SRC_URL" "$LIBVPX_SRC_SHA256" libvpx
 fetch "$OPUS_SRC_URL" "$OPUS_SRC_SHA256" opus
 fetch "$ZLIB_SRC_URL" "$ZLIB_SRC_SHA256" zlib
+fetch "$ZIMG_SRC_URL" "$ZIMG_SRC_SHA256" zimg
 case "$os" in linux | windows) fetch "$NVCODEC_SRC_URL" "$NVCODEC_SRC_SHA256" nvcodec ;; esac
 
 for p in "$build_dir"/patches/*.patch; do
@@ -165,6 +166,16 @@ log "ffmpeg-build: opus"
 	[ -n "$cross_prefix" ] && host_arg=(--host=x86_64-w64-mingw32)
 	./configure --prefix="$prefix" --disable-shared --enable-static --disable-doc --disable-extra-programs \
 		"${host_arg[@]}" >&2
+	make -j"$jobs" >&2 && make install >&2
+)
+
+log "ffmpeg-build: zimg"
+(
+	cd "$work/src/zimg"
+	host_arg=()
+	[ -n "$cross_prefix" ] && host_arg=(--host=x86_64-w64-mingw32)
+	./autogen.sh >&2
+	CXXFLAGS="-O2 $remap" ./configure --prefix="$prefix" --disable-shared --enable-static "${host_arg[@]}" >&2
 	make -j"$jobs" >&2 && make install >&2
 )
 
