@@ -18,7 +18,7 @@ export default function EditorApp({
 	runtime: EditorRuntime;
 }): ReactNode {
 	useEffect(() => {
-		void runtime.sync.start();
+		void runtime.start();
 		const onVisible = (): void => {
 			if (document.visibilityState === "visible") runtime.checkStale();
 		};

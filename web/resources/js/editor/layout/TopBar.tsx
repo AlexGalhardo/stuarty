@@ -1,12 +1,4 @@
-import {
-	ArrowLeft,
-	Loader,
-	Redo2,
-	RefreshCw,
-	Undo2,
-	Wifi,
-	WifiOff,
-} from "lucide-react";
+import { ArrowLeft, Loader, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import type { ReactNode } from "react";
 
 import ThemeToggle from "@/components/ThemeToggle";
@@ -14,7 +6,9 @@ import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
-import { useDocumentState, useRuntime } from "../state/EditorContext";
+import ExportButton from "../export/ExportButton";
+import UndoRedo from "../history/UndoRedo";
+import { useDocumentState } from "../state/EditorContext";
 import ActivityIndicator from "./ActivityIndicator";
 
 type Shown =
@@ -48,7 +42,6 @@ const ICON: Record<Shown, typeof Wifi> = {
 // redo, the activity indicator and the theme toggle.
 export default function TopBar(): ReactNode {
 	const t = useT();
-	const runtime = useRuntime();
 	const name = useDocumentState((s) => s.document?.name);
 	const revision = useDocumentState((s) => s.revision);
 	const status = useDocumentState((s) => s.status);
@@ -63,7 +56,6 @@ export default function TopBar(): ReactNode {
 					? "offline"
 					: connection;
 	const Icon = ICON[shown];
-	const ready = status === "ready" || status === "offline";
 
 	return (
 		<header className="col-span-full flex h-12 items-center gap-3 border-b border-ed-track-line bg-ed-panel px-3">
@@ -87,29 +79,9 @@ export default function TopBar(): ReactNode {
 				)}
 				<span>{t(`ui.editor.connection.${shown}`)}</span>
 			</span>
-			<div className="flex items-center gap-1">
-				<Button
-					type="button"
-					variant="ghost"
-					size="sm"
-					disabled={!ready}
-					onClick={() => void runtime.edits.undo()}
-				>
-					<Undo2 aria-hidden="true" />
-					{t("ui.editor.undo")}
-				</Button>
-				<Button
-					type="button"
-					variant="ghost"
-					size="sm"
-					disabled={!ready}
-					onClick={() => void runtime.edits.redo()}
-				>
-					<Redo2 aria-hidden="true" />
-					{t("ui.editor.redo")}
-				</Button>
-			</div>
+			<UndoRedo />
 			<div className="ml-auto flex items-center gap-2">
+				<ExportButton />
 				<ActivityIndicator />
 				<ThemeToggle />
 			</div>

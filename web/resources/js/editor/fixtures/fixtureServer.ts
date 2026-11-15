@@ -195,6 +195,12 @@ export class FixtureServer implements Transport {
 	readonly failures: { match: string; status: number; body: unknown }[] = [];
 	readonly openedWith: number[] = [];
 	private readonly streams = new Set<Stream>();
+	// Answers for the endpoints the fixture does not model (media, jobs, lint,
+	// undo), by "METHOD path-prefix".
+	readonly routes = new Map<
+		string,
+		(request: TransportRequest) => TransportResponse
+	>();
 	editHandler: ((request: TransportRequest) => TransportResponse) | null = null;
 	private dropNetwork = false;
 
@@ -339,6 +345,9 @@ export class FixtureServer implements Transport {
 		}
 		if (key === `POST /projects/${id}/edit` && this.editHandler) {
 			return this.editHandler(request);
+		}
+		for (const [match, handle] of this.routes) {
+			if (key.startsWith(match)) return handle(request);
 		}
 		return {
 			status: 404,
