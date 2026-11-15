@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Vukem Video: feature detection</title>
+	<link rel="stylesheet" href="detect.css">
+	<script src="detect.js" defer></script>
+</head>
+<body>
+	<main>
+		<h1>Feature detection</h1>
+		<p>Runs the tests of SDD-012 section 21.2 in this browser or webview.</p>
+
+		<p id="verdict" role="status" data-verdict="running">Running</p>
+
+		<div class="buttons">
+			<button type="button" id="run">Run again</button>
+			<button type="button" id="send">Send results</button>
+			<button type="button" id="download">Download results</button>
+		</div>
+		<p id="sent" role="status"></p>
+
+		<section aria-label="Pointer test">
+			<p>Pointer, manual step: drag the box.</p>
+			<div id="box" tabindex="0">Drag me</div>
+			<p id="box-moves">0 moves captured</p>
+		</section>
+
+		<table>
+			<thead>
+				<tr><th>Test</th><th>Required</th><th>Result</th><th>Detail</th><th>Measured</th></tr>
+			</thead>
+			<tbody id="rows"></tbody>
+		</table>
+
+		<video id="media" muted playsinline preload="auto" hidden></video>
+	</main>
+</body>
+</html>

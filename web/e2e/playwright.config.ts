@@ -45,7 +45,7 @@ export default defineConfig({
 	projects: [
 		{
 			name: "chromium",
-			testIgnore: /(perf|export-failure)\.spec\.ts/,
+			testIgnore: /(perf|export-failure|desktop-detect)\.spec\.ts/,
 			use: {
 				browserName: "chromium",
 				launchOptions: {
@@ -75,6 +75,12 @@ export default defineConfig({
 				browserName: "chromium",
 				baseURL: `http://127.0.0.1:${failPort}`,
 			},
+		},
+		// The feature-detection page of desktop/detect (SDD-012 section 21.2).
+		{
+			name: "desktop-detect",
+			testMatch: /desktop-detect\.spec\.ts/,
+			use: { browserName: "chromium", baseURL: "http://127.0.0.1:7979" },
 		},
 	],
 	webServer: [
@@ -108,6 +114,13 @@ export default defineConfig({
 				VUKEM_VIDEO_ENCODER: "no_such_encoder",
 				...ffmpegEnv(),
 			},
+		},
+		{
+			command: `go run ./desktop/detect -results ${join(tmpdir(), "vukem-video-e2e-detect-results")}`,
+			cwd: "../..",
+			url: "http://127.0.0.1:7979/",
+			reuseExistingServer: !process.env.CI,
+			timeout: 180_000,
 		},
 	],
 });

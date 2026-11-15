@@ -1,0 +1,75 @@
+:root {
+	color-scheme: dark light;
+	font-family: system-ui, sans-serif;
+}
+
+body {
+	margin: 0;
+	padding: 1.5rem;
+	background: #1a1a1a;
+	color: #f2f2f2;
+}
+
+main {
+	max-width: 64rem;
+	margin: 0 auto;
+}
+
+.buttons {
+	display: flex;
+	gap: 0.5rem;
+	margin: 1rem 0;
+}
+
+button {
+	padding: 0.4rem 0.9rem;
+	font: inherit;
+}
+
+#verdict {
+	display: inline-block;
+	padding: 0.3rem 0.8rem;
+	border-radius: 0.4rem;
+	font-weight: 600;
+	background: #444;
+}
+
+#verdict[data-verdict="pass"] {
+	background: #1d6b34;
+}
+
+#verdict[data-verdict="fail"] {
+	background: #8b2323;
+}
+
+#box {
+	width: 8rem;
+	height: 4rem;
+	display: grid;
+	place-items: center;
+	background: #2a4d8f;
+	touch-action: none;
+	user-select: none;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 1.5rem;
+}
+
+th,
+td {
+	text-align: left;
+	padding: 0.3rem 0.5rem;
+	border-bottom: 1px solid #444;
+	vertical-align: top;
+}
+
+td[data-pass="true"] {
+	color: #6fd08c;
+}
+
+td[data-pass="false"] {
+	color: #ff8a8a;
+}
