@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
 import PaletteButton from "../commands/palette/PaletteButton";
+import ShortcutsButton from "../commands/ShortcutsDialog";
 import { useActions, useCanEdit } from "../commands/useActions";
 import ExportButton from "../export/ExportButton";
 import UndoRedo from "../history/UndoRedo";
@@ -154,6 +155,7 @@ export default function TopBar({
 			<UndoRedo />
 			<div className="ml-auto flex items-center gap-2">
 				<PaletteButton />
+				<ShortcutsButton />
 				<ExportButton />
 				<ActivityIndicator />
 				<LocaleSelect onChange={onLocaleChange} />
