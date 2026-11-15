@@ -158,6 +158,12 @@ func CheckProbe(raw []byte, c Ceilings) (*ProbeResult, error) {
 		if s.CodecType != "video" || s.Disposition.AttachedPic == 1 {
 			continue
 		}
+		// A picture whose size ffprobe could not read (a PNG header with no data, say) cannot be
+		// checked against the ceilings, so it is not trusted.
+		if s.Width <= 0 || s.Height <= 0 {
+			return nil, unsupported("unreadable_dimensions", "The size of the picture could not be read.",
+				"Choose a file that is whole and not corrupt.", nil)
+		}
 		if edge := max(s.Width, s.Height); edge > MaxSourceEdge {
 			return nil, limit(
 				"source_edge",

@@ -1,0 +1,2 @@
+<?xml version="1.0"?>
+<MPD><Period><AdaptationSet><Representation><BaseURL>file:///etc/passwd</BaseURL></Representation></AdaptationSet></Period></MPD>
