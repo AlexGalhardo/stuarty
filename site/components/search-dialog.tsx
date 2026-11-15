@@ -6,41 +6,12 @@ import { CornerDownLeft, FileText, Hash, Search } from "lucide-react";
 import type { SearchEntry } from "@/lib/search";
 import { withBase } from "@/lib/site";
 import { fold } from "@/lib/fold";
+import { rankEntries } from "@/lib/search-rank";
 import { localizePath } from "@/lib/locale";
 import { useLocale, useT } from "@/lib/locale-context";
 import { withTrailingSlash } from "@/lib/trailing-slash";
 
 type Result = SearchEntry & { score: number };
-
-const MAX_RESULTS = 24;
-
-/** Characters of `needle` appear in order in `hay` (fuzzy fallback). */
-function subsequence(needle: string, hay: string): boolean {
-	let i = 0;
-	for (const ch of hay) if (ch === needle[i] && ++i === needle.length) return true;
-	return needle.length === 0;
-}
-
-function score(entry: SearchEntry, tokens: string[], raw: string, fuzzy: boolean): number {
-	const title = fold(entry.title);
-	const heading = fold(entry.heading ?? "");
-	const text = fold(entry.text);
-	let total = 0;
-
-	for (const t of tokens) {
-		let s = 0;
-		if (heading.startsWith(t) || title.startsWith(t)) s += 12;
-		if (heading.includes(t)) s += 8;
-		if (title.includes(t)) s += entry.heading ? 3 : 10;
-		if (text.includes(t)) s += 2;
-		if (s === 0 && fuzzy && t.length > 2 && subsequence(t, entry.heading ? heading : title)) s += 1;
-		if (s === 0) return 0;
-		total += s;
-	}
-
-	if (fold(entry.heading ?? entry.title) === raw) total += 20;
-	return total;
-}
 
 function snippet(text: string, tokens: string[]): string {
 	const lower = fold(text);
@@ -118,15 +89,7 @@ export function SearchDialog({
 		if (tokens.length === 0) {
 			return index.filter((e) => !e.heading).map((e) => ({ ...e, score: 0 }));
 		}
-		// Exact substring matches first; subsequence (fuzzy) matching only as a fallback.
-		const rank = (fuzzy: boolean) =>
-			index
-				.map((e) => ({ ...e, score: score(e, tokens, raw, fuzzy) }))
-				.filter((r) => r.score > 0)
-				.sort((a, b) => b.score - a.score)
-				.slice(0, MAX_RESULTS);
-		const exact = rank(false);
-		return exact.length > 0 ? exact : rank(true);
+		return rankEntries(index, tokens, raw);
 	}, [index, tokens, raw]);
 
 	// Group by category, keeping the best-ranked category first.

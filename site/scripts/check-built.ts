@@ -3,10 +3,13 @@
 //   2. no external script, font, stylesheet, image or analytics: nothing the page loads comes from another
 //      origin, and no other host appears in the built files except the inert ones listed below (D-015, D-016);
 //   3. every root-relative href and src starts with the base path (SDD-010 section 12.4);
-//   4. every docs page has a clean Markdown twin and llms.txt lists them, and what it lists exists.
+//   4. every docs page has a clean Markdown twin and llms.txt lists them, and what it lists exists;
+//   5. the search index answers the queries of SDD-010 section 14 check 8: `trim` finds the editing tools page
+//      and `keyframes` the keyframes page.
 // Node strips the types (no build step).
 import fs from "node:fs";
 import path from "node:path";
+import { search } from "../lib/search-rank.ts";
 
 const outDir = path.join(import.meta.dirname, "..", "out");
 
@@ -26,6 +29,7 @@ const INERT_HOSTS = new Set([
 	"collector.example.com",
 	"www.conventionalcommits.org",
 	"caddyserver.com",
+	"taskfile.dev",
 	// The OIDC issuer that the cosign commands of the verification page pin; it is text, never loaded.
 	"token.actions.githubusercontent.com",
 ]);
@@ -211,6 +215,31 @@ function walk(dir: string): string[] {
 		.flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));
 }
 
+/** The queries that must find a page: the first result of each is on that page (SDD-010 section 14 check 8). The index holds paths without the base path. */
+export const SEARCH_EXPECTATIONS: { query: string; page: string }[] = [
+	{ query: "trim", page: "/docs/guide/editing-tools" },
+	{ query: "keyframes", page: "/docs/guide/keyframes" },
+];
+
+type IndexEntry = { title: string; heading?: string; href: string; text: string };
+
+/** Runs the expected queries against the search index of the build, ranked as the search dialog ranks. */
+export function searchProblems(read: (rel: string) => string, expectations = SEARCH_EXPECTATIONS): string[] {
+	let index: IndexEntry[];
+	try {
+		index = JSON.parse(read("search-index.json")) as IndexEntry[];
+	} catch {
+		return ["search-index.json is missing or is not JSON"];
+	}
+	const problems: string[] = [];
+	for (const { query, page } of expectations) {
+		const top = search(index, query)[0];
+		const where = top ? top.href.split("#")[0] : undefined;
+		if (where !== page) problems.push(`search "${query}": the first result is ${where ?? "nothing"}, want ${page}`);
+	}
+	return problems;
+}
+
 function main(): number {
 	if (!fs.existsSync(outDir)) {
 		console.error("out/ does not exist: run `npm run build` first");
@@ -239,6 +268,7 @@ function main(): number {
 	const read = (rel: string) => fs.readFileSync(path.join(outDir, rel), "utf8");
 	problems.push(...twinProblems(rels, read, siteUrl.origin + base));
 	problems.push(...localeProblems(rels, read, siteUrl.origin + base));
+	problems.push(...searchProblems(read));
 
 	for (const p of problems) console.error(p);
 	console.log(`check:built: ${files.length} files, ${problems.length} problems`);
