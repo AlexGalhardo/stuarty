@@ -111,6 +111,34 @@ func TestRequestsMatchTheRoutes(t *testing.T) {
 			_, err := c.Lint(ctx, service.LintRequest{ProjectID: "prj_a", Severity: "error", Limit: 25})
 			return err
 		}, "GET", "/api/v1/projects/prj_a/lint", "limit=25&severity=error", "", `{"errors":0}`, true},
+		{"media import", func(c *Client) error {
+			_, err := c.MediaImport(ctx, service.MediaImportRequest{
+				ProjectID: "prj_a", Files: []service.ImportFile{{Path: "/m/a.mp4"}}, WaitMS: 100,
+			})
+			return err
+		}, "POST", "/api/v1/projects/prj_a/media", "", `{"files":[{"path":"/m/a.mp4"}],"wait_ms":100}`, `{"assets":[]}`, false},
+		{"media list", func(c *Client) error {
+			_, err := c.MediaList(ctx, service.MediaListRequest{ProjectID: "prj_a"})
+			return err
+		}, "GET", "/api/v1/projects/prj_a/media", "", "", `{"assets":[]}`, true},
+		{"media inspect", func(c *Client) error {
+			_, err := c.MediaInspect(ctx, service.MediaInspectRequest{
+				ProjectID: "prj_a", AssetID: "ast_1", Sections: []string{"probe", "silences"}, MinSilence: "0.5s",
+			})
+			return err
+		}, "GET", "/api/v1/projects/prj_a/media/ast_1", "min_silence=0.5s&sections=probe%2Csilences", "", `{}`, true},
+		{"job start", func(c *Client) error {
+			_, err := c.JobStart(ctx, service.JobStartRequest{ProjectID: "prj_a", Kind: "export", Args: []byte(`{"start":"0s"}`)})
+			return err
+		}, "POST", "/api/v1/projects/prj_a/jobs", "", `{"kind":"export","args":{"start":"0s"}}`, `{"job_id":"job_1"}`, false},
+		{"job get", func(c *Client) error {
+			_, err := c.JobGet(ctx, service.JobGetRequest{JobID: "job_1", WaitMS: 500})
+			return err
+		}, "GET", "/api/v1/jobs/job_1", "wait_ms=500", "", `{"job_id":"job_1"}`, true},
+		{"job list", func(c *Client) error {
+			_, err := c.JobList(ctx, service.JobListRequest{ProjectID: "prj_a", State: "all"})
+			return err
+		}, "GET", "/api/v1/projects/prj_a/jobs", "state=all", "", `{"jobs":[]}`, true},
 		{"escapes the id", func(c *Client) error {
 			_, err := c.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: "a/b c"})
 			return err
@@ -255,5 +283,20 @@ func TestBadBaseURLIsAnInternalError(t *testing.T) {
 
 	if _, err := c.ProjectList(asCLI("cli"), service.ProjectListRequest{}); err == nil {
 		t.Fatal("a malformed URL must fail")
+	}
+}
+
+func TestOpenFileIsNotAvailableOverHTTP(t *testing.T) {
+	t.Parallel()
+
+	var got seen
+
+	c := server(t, 200, `{}`, &got)
+
+	_, err := c.OpenFile(context.Background(), service.FileRef{Kind: "proxy", ID: "ast_1"})
+
+	var se *service.Error
+	if !errors.As(err, &se) || se.Code != command.CodeInternal || got.method != "" {
+		t.Fatalf("err = %v, request %+v; want E_INTERNAL and no request", err, got)
 	}
 }
