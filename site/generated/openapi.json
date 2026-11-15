@@ -2169,6 +2169,162 @@
         },
         "type": "object"
       },
+      "WindowAudio": {
+        "properties": {
+          "asset": {
+            "type": "string"
+          },
+          "first": {
+            "type": "integer"
+          },
+          "gain": {},
+          "item": {
+            "type": "string"
+          },
+          "last": {
+            "type": "integer"
+          },
+          "source_seconds": {
+            "format": "double",
+            "type": "number"
+          },
+          "speed": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "WindowBitmaps": {
+        "properties": {
+          "index": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "WindowLayer": {
+        "properties": {
+          "asset": {
+            "type": "string"
+          },
+          "asset_kind": {
+            "type": "string"
+          },
+          "bitmaps": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WindowBitmaps"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "color_matrix": {},
+          "crop": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "cx": {},
+          "cy": {},
+          "first": {
+            "type": "integer"
+          },
+          "h": {},
+          "item": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "last": {
+            "type": "integer"
+          },
+          "natural": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "opacity": {},
+          "rotation": {},
+          "source_seconds": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "w": {}
+        },
+        "type": "object"
+      },
+      "WindowPlan": {
+        "properties": {
+          "audio": {
+            "items": {
+              "$ref": "#/components/schemas/WindowAudio"
+            },
+            "type": "array"
+          },
+          "background": {
+            "type": "string"
+          },
+          "end_frame": {
+            "type": "integer"
+          },
+          "from": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/components/schemas/WindowLayer"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "safe_area": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "to": {
+            "type": "integer"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Word": {
         "properties": {
           "duration": {
@@ -3429,7 +3585,6 @@
     },
     "/api/v1/projects/{id}/bitmaps/{key}": {
       "get": {
-        "description": "Not available in this build yet (P1-RND-005): the route answers E_INTERNAL.",
         "operationId": "bitmaps.get",
         "parameters": [
           {
@@ -3437,6 +3592,7 @@
             "name": "id",
             "required": true,
             "schema": {
+              "minLength": 1,
               "type": "string"
             }
           },
@@ -3445,6 +3601,7 @@
             "name": "key",
             "required": true,
             "schema": {
+              "minLength": 1,
               "type": "string"
             }
           }
@@ -3455,6 +3612,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -3549,14 +3709,22 @@
     },
     "/api/v1/projects/{id}/events": {
       "get": {
-        "description": "Not available in this build yet (P1-SRV-006): the route answers E_INTERNAL.",
         "operationId": "events.stream",
         "parameters": [
+          {
+            "description": "The revision the client holds; Last-Event-ID wins.",
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "minLength": 1,
               "type": "string"
             }
           }
@@ -3567,6 +3735,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -3582,14 +3753,52 @@
     },
     "/api/v1/projects/{id}/frame": {
       "get": {
-        "description": "Not available in this build yet (P1-RND-005): the route answers E_INTERNAL.",
         "operationId": "projects.frame",
         "parameters": [
+          {
+            "description": "The time to render; required.",
+            "in": "query",
+            "name": "at",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Must be the current revision when given.",
+            "in": "query",
+            "name": "rev",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asset_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_tokens",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "width",
+            "schema": {
+              "type": "integer"
+            }
+          },
           {
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "minLength": 1,
               "type": "string"
             }
           }
@@ -3600,6 +3809,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -4291,24 +4503,60 @@
     },
     "/api/v1/projects/{id}/plan": {
       "get": {
-        "description": "Not available in this build yet (P1-RND-005): the route answers E_INTERNAL.",
         "operationId": "projects.plan",
         "parameters": [
+          {
+            "description": "The first frame of the window; default 0.",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The end of the window, not included; at most 300 frames after from.",
+            "in": "query",
+            "name": "to",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Must be the current revision when given.",
+            "in": "query",
+            "name": "rev",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
           {
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "minLength": 1,
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WindowPlan"
+                }
+              }
+            },
             "description": "OK"
           },
           "401": {
             "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
           },
           "default": {
             "$ref": "#/components/responses/Problem"
@@ -4440,14 +4688,73 @@
     },
     "/api/v1/projects/{id}/sheet": {
       "get": {
-        "description": "Not available in this build yet (P1-RND-005): the route answers E_INTERNAL.",
         "operationId": "projects.sheet",
         "parameters": [
+          {
+            "description": "Comma-separated times, 2 to 16.",
+            "in": "query",
+            "name": "times",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "count",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cols",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Must be the current revision when given.",
+            "in": "query",
+            "name": "rev",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asset_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_tokens",
+            "schema": {
+              "type": "integer"
+            }
+          },
           {
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "minLength": 1,
               "type": "string"
             }
           }
@@ -4458,6 +4765,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
           },
           "default": {
             "$ref": "#/components/responses/Problem"

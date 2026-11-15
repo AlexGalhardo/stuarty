@@ -107,14 +107,12 @@ Responses: `200` OK, `401`, `422`, `default`.
 
 Download a rasterized text or shape
 
-Not available in this build yet (P1-RND-005): the route answers E_INTERNAL.
-
 | Parameter | In | Required | Type |
 | --- | --- | --- | --- |
 | `id` | path | yes | `string` |
 | `key` | path | yes | `string` |
 
-Responses: `200` OK, `401`, `default`.
+Responses: `200` OK, `401`, `422`, `default`.
 
 ### `POST /projects/{id}/edit`
 
@@ -139,25 +137,27 @@ Responses: `200` OK, `401`, `422`, `default`.
 
 Stream the events of a project
 
-Not available in this build yet (P1-SRV-006): the route answers E_INTERNAL.
-
 | Parameter | In | Required | Type |
 | --- | --- | --- | --- |
+| `since` | query | no | `string` |
 | `id` | path | yes | `string` |
 
-Responses: `200` OK, `401`, `default`.
+Responses: `200` OK, `401`, `422`, `default`.
 
 ### `GET /projects/{id}/frame`
 
 Render one frame
 
-Not available in this build yet (P1-RND-005): the route answers E_INTERNAL.
-
 | Parameter | In | Required | Type |
 | --- | --- | --- | --- |
+| `at` | query | no | `string` |
+| `rev` | query | no | `integer` |
+| `asset_id` | query | no | `string` |
+| `max_tokens` | query | no | `integer` |
+| `width` | query | no | `integer` |
 | `id` | path | yes | `string` |
 
-Responses: `200` OK, `401`, `default`.
+Responses: `200` OK, `401`, `422`, `default`.
 
 ### `GET /projects/{id}/history`
 
@@ -311,13 +311,14 @@ Responses: `200` OK, `401`, `422`, `default`.
 
 Read the render plan of a window
 
-Not available in this build yet (P1-RND-005): the route answers E_INTERNAL.
-
 | Parameter | In | Required | Type |
 | --- | --- | --- | --- |
+| `from` | query | no | `integer` |
+| `to` | query | yes | `integer` |
+| `rev` | query | no | `integer` |
 | `id` | path | yes | `string` |
 
-Responses: `200` OK, `401`, `default`.
+Responses: `200` OK, `401`, `422`, `default`.
 
 ### `POST /projects/{id}/redo`
 
@@ -355,13 +356,19 @@ Responses: `200` OK, `401`, `422`, `default`.
 
 Render a contact sheet
 
-Not available in this build yet (P1-RND-005): the route answers E_INTERNAL.
-
 | Parameter | In | Required | Type |
 | --- | --- | --- | --- |
+| `times` | query | no | `string` |
+| `from` | query | no | `string` |
+| `to` | query | no | `string` |
+| `count` | query | no | `integer` |
+| `cols` | query | no | `integer` |
+| `rev` | query | no | `integer` |
+| `asset_id` | query | no | `string` |
+| `max_tokens` | query | no | `integer` |
 | `id` | path | yes | `string` |
 
-Responses: `200` OK, `401`, `default`.
+Responses: `200` OK, `401`, `422`, `default`.
 
 ### `POST /projects/{id}/trash`
 
