@@ -95,6 +95,7 @@ func TestReferenceScenesEqualTheirGoldenFrames(t *testing.T) {
 			for i := range got {
 				if got[i] != want[i] {
 					t.Errorf("frame %d: %s, golden %s", got[i].Frame, got[i].SHA256, want[i].SHA256)
+					saveMismatch(t, name, got[i].Frame, doc.Settings.Width, doc.Settings.Height, pix[i])
 				}
 			}
 		})
