@@ -290,6 +290,27 @@ func stripStill(text string) string {
 	return head
 }
 
+var jobCancel = &spec{
+	name:       "job:cancel",
+	summary:    "cancel a queued or running job",
+	usage:      []string{"vukem-video job:cancel <job id>"},
+	example:    "vukem-video job:cancel job_4h8k2m6p9t",
+	positional: true,
+	write:      true,
+	run: func(ctx context.Context, c *call) (*output, error) {
+		if len(c.args.Positional) != 1 {
+			return nil, validation("", "job:cancel takes one job id, got %d.", len(c.args.Positional))
+		}
+
+		job, err := c.svc.JobCancel(ctx, service.JobCancelRequest{JobID: c.args.Positional[0]})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: job, text: job.Text}, nil
+	},
+}
+
 var jobShow = &spec{
 	name:       "job:show",
 	summary:    "show a job",

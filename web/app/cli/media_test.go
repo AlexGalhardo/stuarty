@@ -23,6 +23,7 @@ type mediaFake struct {
 	gets      []service.JobGetRequest
 	getAns    []*service.Job
 	jobsReq   service.JobListRequest
+	cancelled []service.JobCancelRequest
 }
 
 func (f *mediaFake) MediaImport(_ context.Context, r service.MediaImportRequest) (*service.MediaImportResult, error) {
@@ -62,6 +63,12 @@ func (f *mediaFake) JobGet(_ context.Context, r service.JobGetRequest) (*service
 	i := min(len(f.gets)-1, len(f.getAns)-1)
 
 	return f.getAns[i], nil
+}
+
+func (f *mediaFake) JobCancel(_ context.Context, r service.JobCancelRequest) (*service.Job, error) {
+	f.cancelled = append(f.cancelled, r)
+
+	return job(r.JobID, service.JobCancelled, r.JobID+" export cancelled 62%"), nil
 }
 
 func (f *mediaFake) JobList(_ context.Context, r service.JobListRequest) (*service.JobListResult, error) {
@@ -260,6 +267,26 @@ func TestExportStartsWaitsAndReportsTheOutcome(t *testing.T) {
 
 	if code := h.run("export", projectFlag, "--no-wait"); code != ExitOK || f.jobStart.WaitMS != 0 {
 		t.Errorf("--no-wait: exit %d, wait_ms %d", code, f.jobStart.WaitMS)
+	}
+}
+
+func TestJobCancelCallsTheServiceAndExitsZero(t *testing.T) {
+	t.Parallel()
+
+	f := &mediaFake{}
+	h := mediaHarness(t, f)
+
+	code := h.run("job:cancel", "job_1")
+	if code != ExitOK || len(f.cancelled) != 1 || f.cancelled[0].JobID != "job_1" {
+		t.Errorf("job:cancel: exit %d, calls %+v", code, f.cancelled)
+	}
+
+	if !strings.Contains(h.stdout.String(), "export cancelled 62%") {
+		t.Errorf("text = %q", h.stdout.String())
+	}
+
+	if code := h.run("job:cancel"); code != ExitFailure {
+		t.Errorf("no job id: exit %d", code)
 	}
 }
 
