@@ -1,0 +1,22 @@
+{
+	"name": "alpha",
+	"actor": "contract",
+	"fixtures": {"clip": "not really a video, only bytes the fake ingest accepts"},
+	"steps": [
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Alpha"}},
+		{"call": "MediaImport", "args": {"project_id": "prj_7k2m9x4q1b", "files": [{"path": "$clip", "asset_id": "ast_3c5v8n2w6d"}], "wait_ms": 20000}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 1, "operations": [
+			{"op": "track.add", "args": {"kind": "visual", "name": "Text", "id": "trk_f6g7h8j9k0"}},
+			{"op": "text.add", "args": {"track_id": "trk_f6g7h8j9k0", "start": "0s", "duration": "1s", "text": "Headline", "id": "itm_t1t2t3t4t5"}}]}},
+		{"call": "JobList", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "MediaTrash", "args": {"project_id": "prj_7k2m9x4q1b", "asset_id": "ast_3c5v8n2w6d"}},
+		{"call": "MediaRestore", "args": {"project_id": "prj_7k2m9x4q1b", "asset_id": "ast_3c5v8n2w6d"}},
+		{"call": "TemplateSave", "args": {"project_id": "prj_7k2m9x4q1b", "name": "Alpha template", "description": "A template"}},
+		{"call": "TemplateList", "args": {}},
+		{"call": "ProjectTrash", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "ProjectList", "args": {}},
+		{"call": "ProjectRestore", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "Doctor", "args": {}},
+		{"call": "ProjectGet", "args": {"project_id": "prj_7k2m9x4q1b", "detail": "concise"}}
+	]
+}
