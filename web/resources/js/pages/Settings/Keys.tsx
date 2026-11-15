@@ -15,11 +15,26 @@ import { Label } from "@/components/ui/label";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
+import { ApiError } from "../../editor/api/errors";
 import { HttpTransport } from "../../editor/api/http";
 import type { ApiKey } from "../../editor/api/types";
 
 const SCOPES = ["read", "edit", "media", "render", "admin"] as const;
 const NAME_MAX = 120;
+
+// A session that ended goes to the login, which comes back here (SDD-012
+// section 4.4); any other failure is shown on the page.
+export function reportOrLogin(
+	error: unknown,
+	show: (failure: Failure) => void,
+	goTo: (url: string) => void = (url) => window.location.assign(url),
+): void {
+	if (error instanceof ApiError && error.code === "E_UNAUTHORIZED") {
+		goTo(`/login?next=${encodeURIComponent("/settings/keys")}`);
+		return;
+	}
+	show(failureOf(error));
+}
 
 export function KeyRow({
 	apiKey,
@@ -83,7 +98,7 @@ export default function SettingsKeys(): ReactNode {
 				(await createClient(new HttpTransport("/api/v1")).listKeys()).keys,
 			);
 		} catch (error) {
-			setFailure(failureOf(error));
+			reportOrLogin(error, setFailure);
 		}
 	}, []);
 
@@ -105,7 +120,7 @@ export default function SettingsKeys(): ReactNode {
 			setName("");
 			await load();
 		} catch (error) {
-			setFailure(failureOf(error));
+			reportOrLogin(error, setFailure);
 		} finally {
 			setBusy(false);
 		}
@@ -117,7 +132,7 @@ export default function SettingsKeys(): ReactNode {
 			await createClient(new HttpTransport("/api/v1")).revokeKey(keyId);
 			await load();
 		} catch (error) {
-			setFailure(failureOf(error));
+			reportOrLogin(error, setFailure);
 		}
 	}
 

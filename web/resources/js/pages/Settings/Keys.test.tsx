@@ -2,8 +2,9 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
 
 import { I18nProvider } from "@/lib/i18n";
+import { ApiError } from "../../editor/api/errors";
 import type { ApiKey } from "../../editor/api/types";
-import { KeyRow } from "./Keys";
+import { KeyRow, reportOrLogin } from "./Keys";
 
 vi.mock("@inertiajs/react", () => ({ Head: () => null }));
 
@@ -48,5 +49,28 @@ describe("keys page renders the key name as text", () => {
 		const html = markup(apiKey);
 		expect(html).toContain("&lt;img src=x onerror=window.__pwned=1&gt;");
 		expect(html).not.toContain("<img");
+	});
+});
+
+describe("a failed call of the keys page", () => {
+	test("E_UNAUTHORIZED goes to the login, back to this page", () => {
+		const show = vi.fn();
+		const goTo = vi.fn();
+		const error = new ApiError(401, { code: "E_UNAUTHORIZED", message: "no" });
+		reportOrLogin(error, show, goTo);
+		expect(goTo).toHaveBeenCalledWith("/login?next=%2Fsettings%2Fkeys");
+		expect(show).not.toHaveBeenCalled();
+	});
+
+	test("any other failure is shown on the page", () => {
+		const show = vi.fn();
+		const goTo = vi.fn();
+		reportOrLogin(
+			new ApiError(403, { code: "E_FORBIDDEN", message: "no" }),
+			show,
+			goTo,
+		);
+		expect(goTo).not.toHaveBeenCalled();
+		expect(show).toHaveBeenCalledTimes(1);
 	});
 });
