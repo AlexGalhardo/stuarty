@@ -187,7 +187,13 @@ func TestAdminUsersUpdateIsAtomic(t *testing.T) {
 	enabled, disabled, asMember, asAdmin := false, true, service.RoleMember, service.RoleAdmin
 
 	// Refused as a whole: the role does not change although the enable alone would be fine.
-	if _, err := admin.Update(ctx, only.ID, auth.UserPatch{Role: &asMember, Disabled: &enabled}); codeOf(err) != "E_INVALID_STATE" {
+	if _, err := admin.Update(
+		ctx,
+		only.ID,
+		auth.UserPatch{Role: &asMember, Disabled: &enabled},
+	); codeOf(
+		err,
+	) != "E_INVALID_STATE" {
 		t.Fatalf("demoting the only administrator in a two-field update: %v", err)
 	}
 

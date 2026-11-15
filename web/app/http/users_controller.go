@@ -7,9 +7,9 @@ import (
 )
 
 type userCreateIn struct {
-	Email    string `json:"email"              validate:"required" doc:"A plain mailbox; it is lower-cased and must be unused."`
-	Password string `json:"password"           validate:"required" doc:"12 to 1,024 characters."`
-	Role     string `json:"role,omitempty"                         doc:"admin or member; default member."`
+	Email    string `json:"email"          validate:"required" doc:"A plain mailbox; it is lower-cased and must be unused."`
+	Password string `json:"password"       validate:"required" doc:"12 to 1,024 characters."`
+	Role     string `json:"role,omitempty"                     doc:"admin or member; default member."`
 }
 
 type userUpdateIn struct {
