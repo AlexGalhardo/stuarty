@@ -695,7 +695,7 @@ Defaults are consistent with SDD-000 §10 (`VUKEM_VIDEO_MAX_EXPORTS` 2, `VUKEM_V
 | HTTP | vukem defaults: header size 64 KiB, header, read, write and idle timeouts | | vukem | 431, 408 |
 | Keys | 50 per user | per user | fixed | `E_LIMIT_EXCEEDED` |
 
-Every limit error carries `details`: `limit` (name), `value` (what was seen), `ceiling` and, where one exists, `variable`. The message states the number and the fix, for example "The file is 12.3 GiB; the import limit is 8 GiB (VUKEM_VIDEO_MAX_IMPORT_BYTES)." In network mode the `variable` name is omitted for non-admin callers.
+Every limit error carries `details`: `limit` (name), `value` (what was seen), `ceiling` and, where one exists, `variable`. The message states the number and the fix, for example "The file is 12.3 GiB; the import limit is 8 GiB (VUKEM_VIDEO_MAX_IMPORT_BYTES)." In network mode the `variable` name is omitted for non-admin callers. Events (job and asset updates) reach every subscriber of the project, so the error in an event never carries the variable name in any mode; an administrator reads the full error from `JobGet`.
 
 ### 9.2 Where each limit is enforced
 

@@ -31,7 +31,7 @@ const (
 func (s *svc) emitJob(ctx context.Context, j *JobRow) {
 	ev := Event{
 		Type: "job.updated", JobID: j.ID, Kind: j.Kind, State: j.State, Progress: j.Progress, Message: j.Message,
-		Error: parseError(j.Error), At: s.now(),
+		Error: EventError(parseError(j.Error)), At: s.now(),
 	}
 
 	if j.Kind == JobExport && len(j.Result) > 0 {

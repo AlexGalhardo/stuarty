@@ -51,3 +51,11 @@ func callerError(c Caller, err error) error {
 
 	return err
 }
+
+// EventError is the error of an event. An event reaches every subscriber of the
+// project, whoever they are, so it never carries the name of a configuration
+// variable (SDD-007 section 9.1): an administrator reads the full error from
+// JobGet and AuditList. It copies, like forCaller.
+func EventError(e *Error) *Error {
+	return forCaller(Caller{Actor: "event", OwnerUserID: "event"}, e)
+}
