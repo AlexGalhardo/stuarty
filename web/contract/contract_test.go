@@ -82,6 +82,10 @@ func mustJSON(t *testing.T, v any) string {
 
 var jobID = regexp.MustCompile(`job_[0-9a-hjkmnp-tv-z]{10}`)
 
+// templateID is the identifier a saved template is given: the Service makes it,
+// so a scenario reads it back as "$template:0", the first one a result named.
+var templateID = regexp.MustCompile(`tpl_[0-9a-hjkmnp-tv-z]{10}`)
+
 // normalize makes a result comparable across runs: job identifiers and
 // workspace paths are placeholders, and the text and the bulk members are
 // dropped (the text is compared on its own).
@@ -122,7 +126,7 @@ func normalize(t *testing.T, d driver, raw json.RawMessage) string {
 
 			x = strings.ReplaceAll(x, "\\", "/")
 
-			return jobID.ReplaceAllString(x, "job_X")
+			return templateID.ReplaceAllString(jobID.ReplaceAllString(x, "job_X"), "tpl_X")
 		}
 
 		return x
@@ -141,7 +145,7 @@ func normalizeText(d driver, text string) string {
 		text = strings.ReplaceAll(text, dir, "<dir>")
 	}
 
-	return jobID.ReplaceAllString(strings.ReplaceAll(text, "\\", "/"), "job_X")
+	return templateID.ReplaceAllString(jobID.ReplaceAllString(strings.ReplaceAll(text, "\\", "/"), "job_X"), "tpl_X")
 }
 
 func errorLine(doc *service.ErrorDocument) string {
@@ -189,13 +193,17 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 
 	// jobs are the identifiers the results of this driver have named so far, in
 	// order: a later step reads them as "$job:0", "$job:1" and so on.
-	var jobs []string
+	var jobs, templates []string
 
 	for i, s := range steps {
 		s = withFixtures(t, d, s, fixtures)
 
 		for n, id := range jobs {
 			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$job:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
+		}
+
+		for n, id := range templates {
+			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$template:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
 		}
 
 		if s.As != "" {
@@ -222,6 +230,12 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 			for _, id := range jobID.FindAllString(string(raw), -1) {
 				if !slices.Contains(jobs, id) {
 					jobs = append(jobs, id)
+				}
+			}
+
+			for _, id := range templateID.FindAllString(string(raw), -1) {
+				if !slices.Contains(templates, id) {
+					templates = append(templates, id)
 				}
 			}
 		}
@@ -271,7 +285,7 @@ func TestTemplateScenarioIsTheSameThroughEverySurface(t *testing.T) {
 // TestCaptionsScenarioIsTheSameThroughEverySurface (P2-AGT-006): a clip is
 // transcribed with the stub provider, captions are made from the transcript and
 // the silences of the clip are removed, with the ids supplied by the scenario.
-// The binary has no stub provider, so the real-server runs are not part of it.
+// TestCaptionsScenarioOnSixRuns runs it through the real binary too.
 func TestCaptionsScenarioIsTheSameThroughEverySurface(t *testing.T) {
 	words := []transcribe.RawWord{
 		{Text: "hello", StartMS: 100, EndMS: 400},

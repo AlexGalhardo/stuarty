@@ -376,11 +376,14 @@ func fakeResult(ws string, in ingest.Input, durationMS int64, tags map[string]in
 
 	samples := durationMS * 48
 
+	// The ranges are what the real analysis reports for a silence from 0.5 s to 1 s: it
+	// works in blocks of 512 samples, so the real binary and this fake agree.
+
 	silence := fmt.Sprintf(
 		`{"version":1,"sample_rate":48000,"sample_count":%d,"min_duration_ms":150,"sets":[`,
 		samples,
 	) +
-		`{"threshold_db":-35,"ranges":[{"start":24000,"end":48000}]}]}`
+		`{"threshold_db":-35,"ranges":[{"start":24576,"end":48128}]}]}`
 	loud := fmt.Sprintf(
 		`{"version":1,"integrated_lufs":-17.2,"lra_lu":5.1,"true_peak_dbtp":-1.4,"silent":false,"sample_count":%d}`,
 		samples,

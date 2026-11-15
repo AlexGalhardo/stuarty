@@ -264,7 +264,12 @@ func (p *procEnv) service() service.Service {
 func (p *procEnv) writeFixture(t *testing.T, name string) string {
 	t.Helper()
 
-	path := filepath.Join(p.files, name+".mp4")
+	ext := ".mp4"
+	if name == "speech" {
+		ext = ".mov"
+	}
+
+	path := filepath.Join(p.files, name+ext)
 	if _, err := os.Stat(path); err == nil {
 		return path
 	}
@@ -281,6 +286,19 @@ func (p *procEnv) writeFixture(t *testing.T, name string) string {
 		size, seconds = "640x360", "1"
 	}
 
+	audio, acodec := "sine=frequency=440:duration="+seconds, "aac"
+
+	if name == "speech" {
+		// The clip of the captions scenario: the fake ingest of the Direct run
+		// reports 320x240, two seconds and a silence from 0.5 s to 1 s, which the real
+		// analysis reads as samples 24576 to 48128 (it works in blocks of 512); the
+		// fake ingest reports the same ranges. PCM keeps the silence exact, where AAC
+		// would blur its edges.
+		size, seconds = "320x240", "2"
+		audio = "sine=frequency=440:sample_rate=48000:duration=2,volume=enable='between(t,0.5,1.0)':volume=0"
+		acodec = "pcm_s16le"
+	}
+
 	args := []string{
 		"-v",
 		"error",
@@ -291,11 +309,11 @@ func (p *procEnv) writeFixture(t *testing.T, name string) string {
 		"-f",
 		"lavfi",
 		"-i",
-		"sine=frequency=440:duration=" + seconds,
+		audio,
 		"-c:v",
 		"mpeg4",
 		"-c:a",
-		"aac",
+		acodec,
 		"-shortest",
 		"-y",
 		path,
@@ -317,7 +335,11 @@ type fixtureWriter interface {
 }
 
 // cliProc runs one command per process.
-type cliProc struct{ p *procEnv }
+type cliProc struct {
+	p *procEnv
+	// local is a process that owns its workspace for the length of one command, with no server.
+	local bool
+}
 
 func (d *cliProc) name() string             { return "cli-process" }
 func (d *cliProc) service() service.Service { return d.p.service() }
@@ -432,7 +454,7 @@ var (
 var progress = regexp.MustCompile(`\(\d+%\)`)
 
 func scrub(s string) string {
-	s = jobID.ReplaceAllString(s, "job_X")
+	s = templateID.ReplaceAllString(jobID.ReplaceAllString(s, "job_X"), "tpl_X")
 	s = actorName.ReplaceAllString(timestamp.ReplaceAllString(s, "<time>"), "<actor>")
 
 	return progress.ReplaceAllString(s, "(<n>%)")
