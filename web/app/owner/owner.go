@@ -186,6 +186,16 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 
 	o.Store = st
 
+	// Step 5 of the start-up order (SDD-005 section 7): documents below the current schema.
+	migrated, err := service.MigrateStoredDocuments(ctx, st, service.MigrateOptions{NowMs: cfg.Now().UnixMilli()})
+	if err != nil {
+		return err
+	}
+
+	if migrated != (service.MigrateResult{}) {
+		cfg.Log.InfoContext(ctx, "documents migrated", "projects", migrated.Projects, "templates", migrated.Templates)
+	}
+
 	if err := o.authSetup(ctx, cfg); err != nil {
 		return err
 	}
