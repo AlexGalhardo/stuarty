@@ -189,7 +189,7 @@ export function TrackHeader({ id }: { id: string }): ReactNode {
 		<div
 			role="rowheader"
 			tabIndex={-1}
-			data-track-id={id}
+			data-header-for={id}
 			onClick={() => runtime.uiWriter.selectTrack(id)}
 			onKeyDown={(event) => {
 				if (event.key !== "Enter") return;

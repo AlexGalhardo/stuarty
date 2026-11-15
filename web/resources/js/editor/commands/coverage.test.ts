@@ -3,12 +3,15 @@ import { describe, expect, test } from "vitest";
 import registry from "@/generated/commands.json";
 import { type BuildPhase, isPhaseAtLeast } from "../boot/phase";
 import {
+	addAudioOperations,
 	addClipOperations,
 	captionOperations,
 	closeGapOperations,
 	deleteOperations,
+	dropAssetOperations,
 	duplicateOperations,
 	moveOperations,
+	removeAssetOperations,
 	renameOperations,
 	splitOperations,
 	trimEndOperations,
@@ -187,7 +190,24 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				playhead: 0,
 				firstVisualTrack: null,
 				newTrackId,
+			})
+				.concat(
+					addAudioOperations({
+						assetId: "ast_a",
+						playhead: 0,
+						firstAudioTrack: null,
+						newTrackId,
+					}),
+				)
+				.map((o) => o.op),
+			"library.drag": dropAssetOperations({
+				assetId: "ast_a",
+				assetKind: "audio",
+				trackId: "trk_a",
+				trackKind: "audio",
+				start: 3,
 			}).map((o) => o.op),
+			"library.remove": removeAssetOperations("ast_a").map((o) => o.op),
 			"timeline.split": splitOperations(items, 10).map((o) => o.op),
 			"timeline.trim_start": trimOperations(items, "start", 10).map(
 				(o) => o.op,

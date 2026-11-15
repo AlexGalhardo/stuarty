@@ -84,6 +84,10 @@ export interface EditorRuntime {
 	start(): Promise<void>;
 	// Imports each path with one request and refreshes the list (SDD-012 13.1).
 	importPaths(paths: readonly string[]): Promise<void>;
+	// Reloads the media list (after a trash, a restore or an asset.remove).
+	reloadLibrary(): Promise<void>;
+	// "Move to trash" and "Restore" of a card (SDD-012 section 13.2).
+	setAssetTrashed(assetId: string, trashed: boolean): Promise<void>;
 	sync: Sync;
 	edits: EditQueue;
 	// Called on visibilitychange to visible and on online (SDD-012 5.5 step 7).
@@ -286,6 +290,24 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 						hint: error.hint,
 					});
 				}
+			}
+			await loadLibrary();
+		},
+		reloadLibrary: loadLibrary,
+		async setAssetTrashed(assetId, trashed) {
+			try {
+				await (trashed
+					? client.trashMedia(projectId, assetId)
+					: client.restoreMedia(projectId, assetId));
+			} catch (error) {
+				if (!(error instanceof ApiError)) throw error;
+				if (error.isAborted) return;
+				noticeWriter.push({
+					kind: "error",
+					code: error.code,
+					message: error.message,
+					hint: error.hint,
+				});
 			}
 			await loadLibrary();
 		},

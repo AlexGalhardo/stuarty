@@ -17,7 +17,9 @@ export const ANY_COMMAND = "*";
 // is internal (the service writes it when a file is imported), so it has no
 // entry here.
 export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
-	"library.add_to_timeline": ["clip.add", "track.add"],
+	"library.add_to_timeline": ["clip.add", "audio.add", "track.add"],
+	"library.drag": ["clip.add", "audio.add"],
+	"library.remove": ["asset.remove"],
 	"timeline.split": ["item.split"],
 	"timeline.trim_start": ["item.trim"],
 	"timeline.trim_end": ["item.trim"],
@@ -45,8 +47,15 @@ const palette: EntryPoint = {
 };
 
 export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
-	"asset.remove": [palette],
-	"audio.add": [palette],
+	"asset.remove": [
+		{ kind: "menu", action: "library.remove", phase: "A" },
+		palette,
+	],
+	"audio.add": [
+		{ kind: "gesture", action: "library.add_to_timeline", phase: "A" },
+		{ kind: "gesture", action: "library.drag", phase: "A" },
+		palette,
+	],
 	"caption.add": [
 		{ kind: "toolbar", action: "caption.add", phase: "P" },
 		palette,
@@ -61,6 +70,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	"caption.split": [palette],
 	"clip.add": [
 		{ kind: "gesture", action: "library.add_to_timeline", phase: "P" },
+		{ kind: "gesture", action: "library.drag", phase: "A" },
 		palette,
 	],
 	"clip.remove_silences": [palette],

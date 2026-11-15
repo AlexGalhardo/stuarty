@@ -142,7 +142,7 @@ export default function Timeline(): ReactNode {
 					if (header !== null) {
 						gridRef.current
 							?.querySelector<HTMLElement>(
-								`[role="rowheader"][data-track-id="${CSS.escape(header)}"]`,
+								`[data-header-for="${CSS.escape(header)}"]`,
 							)
 							?.focus();
 					} else if (next === null) gridRef.current?.focus();

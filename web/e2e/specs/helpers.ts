@@ -74,7 +74,8 @@ export { expect } from "@playwright/test";
 // ffmpegExe is the pinned FFmpeg of the tests (see playwright.config.ts).
 function ffmpegExe(): string {
 	const dir = process.env.VUKEM_VIDEO_TEST_FFMPEG_DIR;
-	if (!dir) throw new Error("VUKEM_VIDEO_TEST_FFMPEG_DIR is not set");
+	// Without the pinned folder the server uses the ffmpeg on PATH, so do we.
+	if (!dir) return "ffmpeg";
 	const exe = process.platform === "win32" ? ".exe" : "";
 	const bin = existsSync(join(dir, "bin", `ffmpeg${exe}`))
 		? join(dir, "bin")
@@ -109,6 +110,28 @@ export function testClip(variant = 0): string {
 				"-c:a",
 				"aac",
 				"-shortest",
+				out,
+			],
+			{ stdio: "ignore" },
+		);
+	}
+	return out;
+}
+
+// audioClip makes, once per run, a 4 s tone as an audio-only file.
+export function audioClip(variant = 0): string {
+	const dir = join(tmpdir(), "vukem-video-e2e-media");
+	mkdirSync(dir, { recursive: true });
+	const out = join(dir, `tone4-${variant}.wav`);
+	if (!existsSync(out)) {
+		execFileSync(
+			ffmpegExe(),
+			[
+				"-y",
+				"-f",
+				"lavfi",
+				"-i",
+				`sine=frequency=${220 + variant * 90}:duration=4`,
 				out,
 			],
 			{ stdio: "ignore" },
@@ -159,7 +182,11 @@ export interface Seeded {
 	id: string;
 	assetId: string;
 	trackIds: string[];
+	// The audio tracks asked for with `audioTracks`.
+	audioTrackIds: string[];
 	itemIds: string[];
+	// The assets of the import, in the order of `files`.
+	assetIds: string[];
 }
 
 // caller returns a function that talks to the HTTP API with the token and the
@@ -203,6 +230,7 @@ export async function seedProject(
 		perTrack?: number;
 		clipDuration?: string;
 		assets?: number;
+		audioTracks?: number;
 		// Files to import instead of the gradient clips.
 		files?: string[];
 	} = {},
@@ -266,6 +294,19 @@ export async function seedProject(
 		);
 	}
 
+	const audioTrackIds: string[] = [];
+	const audioTracks = options.audioTracks ?? 0;
+	if (audioTracks > 0) {
+		audioTrackIds.push(
+			...(await edit(
+				Array.from({ length: audioTracks }, (_, t) => ({
+					op: "track.add",
+					args: { kind: "audio", name: `Audio ${t + 1}` },
+				})),
+			)),
+		);
+	}
+
 	const perTrack = options.perTrack ?? 1;
 	const itemIds: string[] = [];
 	const clips = trackIds.flatMap((trackId, t) =>
@@ -283,5 +324,5 @@ export async function seedProject(
 	for (let i = 0; i < clips.length; i += 50) {
 		itemIds.push(...(await edit(clips.slice(i, i + 50))));
 	}
-	return { id, assetId, trackIds, itemIds };
+	return { id, assetId, assetIds, trackIds, audioTrackIds, itemIds };
 }

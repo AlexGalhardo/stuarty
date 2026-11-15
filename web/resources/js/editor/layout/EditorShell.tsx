@@ -9,6 +9,7 @@ import EditToolbar from "../timeline/EditToolbar";
 import Notices from "../timeline/Notices";
 import Timeline from "../timeline/Timeline";
 import { useShortcuts } from "../timeline/useShortcuts";
+import InUseHost from "./InUseHost";
 import LeftPanel from "./LeftPanel";
 import TopBar from "./TopBar";
 import TrashedBanner from "./TrashedBanner";
@@ -121,6 +122,7 @@ export default function EditorShell(): ReactNode {
 				<Timeline />
 			</div>
 			<Notices />
+			<InUseHost />
 		</div>
 	);
 }
