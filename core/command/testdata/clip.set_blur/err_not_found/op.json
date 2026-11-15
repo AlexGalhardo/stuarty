@@ -1,0 +1,7 @@
+{
+  "op": "clip.set_blur",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "radius": 4
+  }
+}

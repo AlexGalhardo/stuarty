@@ -57,6 +57,10 @@ type WindowLayer struct {
 	Bitmaps *WindowBitmaps `json:"bitmaps,omitempty"`
 	Natural *[2]float64    `json:"natural,omitempty"`
 
+	// Both kinds: constant over the item (filter and blur are not keyframed).
+	Filter *[12]float64 `json:"filter,omitempty"`
+	Blur   float64      `json:"blur,omitempty"`
+
 	CX       Series `json:"cx"`
 	CY       Series `json:"cy"`
 	W        Series `json:"w"`
@@ -156,6 +160,7 @@ func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
 		Item: first.ItemID, Kind: first.Kind, Asset: first.AssetID, AssetKind: first.AssetKind, First: t, Last: t,
 		CX: make(Series, 0, room), CY: make(Series, 0, room), W: make(Series, 0, room), H: make(Series, 0, room),
 		Rotation: make(Series, 0, room), Opacity: make(Series, 0, room),
+		Filter: first.Filter, Blur: first.Blur,
 	}
 
 	if first.Kind == Media {

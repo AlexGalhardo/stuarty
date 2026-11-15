@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018).
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), 50 in the BETA build.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -262,6 +262,8 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.set_framing` | A | `item_id`, `fit?`, `crop?` | Sets fit and crop |
 | `clip.set_speed` | A | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs |
 | `clip.set_color` | A | `item_id`, `brightness?`, `contrast?`, `saturation?` | Sets colour adjustment |
+| `clip.set_filter` | B | `item_id`, `filter?`, `amount?` | BETA (RF-027). Sets the colour filter of a clip and how much of it is mixed in |
+| `clip.set_blur` | B | `item_id`, `radius` | BETA (RF-027). Sets the blur radius of a clip in pixels; 0 removes it |
 | `clip.remove_silences` | A | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip by one clip per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
 
 ### B.6 Text and shapes
@@ -4015,3 +4017,127 @@ At least one of `description` and `colors` is required.
 - `err_in_use_text_style`
 - `err_in_use_track_caption_style`
 - `err_in_use_settings_background`
+
+### C.49 `clip.set_filter` (phase B)
+
+Sets the colour filter of a clip (RF-027, SDD-001 §3.4). The filters are a fixed list implemented in Go by the compositor (SDD-004 §3.6); there is no way to name another one.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` |
+| `filter` | string | no | unchanged | `none`, `grayscale`, `sepia`, `invert`, `warm` or `cool` |
+| `amount` | number | no | unchanged | 0 to 1; how much of the filter is mixed in |
+
+At least one of `filter` and `amount` is required.
+
+**Preconditions.**
+
+1. At least one is present, and each given value is valid (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `clip` (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. Given values are set, `amount` rounded to 3 decimals; values equal to the default (`none`, 1) remove the field. Setting `filter` to `none` keeps `filter_amount` as it was.
+2. `diff` has one `item.updated`; empty when unchanged. `effective` has `filter` and `amount` as stored.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | nothing to set, an unknown filter, or `amount` out of range | `args.filter is "sharpen", which is not one of the accepted values.` | `Use one of: none, grayscale, sepia, invert, warm, cool.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip | `Item itm_s6t7v8w9x0 is an audio item; filter applies to clips.` | `Use item.set_transform to size other items.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old values>, unset: <fields that were absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5` with no filter.
+
+```json
+{"op": "clip.set_filter", "args": {"item_id": "itm_m1n2p3q4r5", "filter": "sepia", "amount": 0.6}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"filter": [null, "sepia"], "filter_amount": [null, 0.6]}}]
+```
+
+**Golden cases.**
+
+- `ok_filter_only`
+- `ok_amount_only`
+- `ok_filter_and_amount`
+- `ok_each_filter`
+- `ok_boundaries_amount_0_1`
+- `ok_default_values_remove_fields`
+- `ok_none_keeps_amount`
+- `ok_rounded_to_3_decimals`
+- `ok_image_clip`
+- `ok_same_values_noop`
+- `err_validation_no_argument`
+- `err_validation_unknown_filter`
+- `err_validation_amount_above_1`
+- `err_validation_amount_negative`
+- `err_not_found`
+- `err_type_mismatch_audio_item`
+
+### C.50 `clip.set_blur` (phase B)
+
+Sets the blur of a clip (RF-027, SDD-001 §3.4).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` |
+| `radius` | number | yes | none | 0 to 100, pixels at project resolution |
+
+**Preconditions.**
+
+1. `radius` is present and in range (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `clip` (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. `blur` is `radius` rounded to 3 decimals; 0 removes the field.
+2. `diff` has one `item.updated`; empty when unchanged. `effective` has `blur`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `radius` missing or out of range | `The value of args.radius is 120, outside the accepted range.` | `Use a value between 0 and 100.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip | `Item itm_s6t7v8w9x0 is an audio item; blur applies to clips.` | `Use item.set_transform to size other items.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old value>, unset: <field if it was absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5` with no blur.
+
+```json
+{"op": "clip.set_blur", "args": {"item_id": "itm_m1n2p3q4r5", "radius": 12.5}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"blur": [null, 12.5]}}]
+```
+
+**Golden cases.**
+
+- `ok_radius`
+- `ok_boundaries_0_100`
+- `ok_zero_removes_field`
+- `ok_rounded_to_3_decimals`
+- `ok_image_clip`
+- `ok_same_value_noop`
+- `err_validation_no_argument`
+- `err_validation_radius_above_100`
+- `err_validation_radius_negative`
+- `err_not_found`
+- `err_type_mismatch_audio_item`

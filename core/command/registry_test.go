@@ -260,8 +260,8 @@ func goldenCaseDirs(t *testing.T, name string) (ok, failing []string) {
 // case carries the inverse that the runner applies to get the starting bytes back.
 func TestEveryCommandHasGoldenAndUndo(t *testing.T) {
 	cmds := Default().List()
-	if len(cmds) != 48 {
-		t.Errorf("the registry has %d commands, want 48", len(cmds))
+	if len(cmds) != 50 {
+		t.Errorf("the registry has %d commands, want 50", len(cmds))
 	}
 
 	for _, c := range cmds {

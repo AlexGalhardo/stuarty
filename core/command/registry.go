@@ -269,10 +269,14 @@ var (
 	defaultReg  *Registry
 )
 
-// Default is the registry of the ALPHA build (the Prototype commands and those of
-// ALPHA), filled by the init functions of the command files.
+// Build is the phase of this binary: Default holds the commands of that phase and
+// every earlier one. Raise it when the next phase starts to ship commands.
+const Build = Beta
+
+// Default is the registry of this build (the commands up to Build), filled by the
+// init functions of the command files.
 func Default() *Registry {
-	defaultOnce.Do(func() { defaultReg = NewRegistry(Alpha) })
+	defaultOnce.Do(func() { defaultReg = NewRegistry(Build) })
 	return defaultReg
 }
 

@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.radius is -1, outside the accepted range.",
+  "hint": "Use a value between 0 and 100.",
+  "retryable": false,
+  "path": "args.radius"
+}

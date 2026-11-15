@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give at least one of filter, amount.",
+  "hint": "Send for example {\"filter\": ...}.",
+  "retryable": false,
+  "path": "args"
+}

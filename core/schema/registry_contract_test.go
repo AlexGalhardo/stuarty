@@ -56,8 +56,8 @@ func TestRegistrySnapshotShape(t *testing.T) {
 		}
 	}
 
-	if len(cmds) != 48 || phases["prototype"] != 16 || phases["alpha"] != 32 {
-		t.Errorf("%d commands (%v), want 48 with 16 prototype and 32 alpha", len(cmds), phases)
+	if len(cmds) != 50 || phases["prototype"] != 16 || phases["alpha"] != 32 || phases["beta"] != 2 {
+		t.Errorf("%d commands (%v), want 50 with 16 prototype, 32 alpha and 2 beta", len(cmds), phases)
 	}
 }
 
@@ -100,12 +100,12 @@ func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sections := regexp.MustCompile(`(?m)^### C\.\d+ \x60([a-z_.]+)\x60 \(phase ([PA])\b`).
+	sections := regexp.MustCompile(`(?m)^### C\.\d+ \x60([a-z_.]+)\x60 \(phase ([PAB])\b`).
 		FindAllStringSubmatch(string(b), -1)
 	want := map[string]string{}
 
 	for _, s := range sections {
-		want[s[1]] = map[string]string{"P": "prototype", "A": "alpha"}[s[2]]
+		want[s[1]] = map[string]string{"P": "prototype", "A": "alpha", "B": "beta"}[s[2]]
 	}
 
 	got := map[string]string{}
@@ -113,8 +113,8 @@ func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 		got[c.Name] = c.Phase
 	}
 
-	if len(want) != 48 {
-		t.Fatalf("Part C has %d sections, want 48", len(want))
+	if len(want) != 50 {
+		t.Fatalf("Part C has %d sections, want 50", len(want))
 	}
 
 	for name, phase := range want {
