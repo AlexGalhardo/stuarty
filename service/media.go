@@ -197,7 +197,7 @@ func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f I
 	}
 
 	if lerr := s.checkImportSize(st.Size()); lerr != nil {
-		return refuse(lerr)
+		return refuse(forCaller(c, lerr))
 	}
 
 	if dryRun {

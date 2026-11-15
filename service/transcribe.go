@@ -190,7 +190,7 @@ func (s *svc) startTranscribe(ctx context.Context, c Caller, req JobStartRequest
 		}
 
 		if derr := s.checkDisk(); derr != nil && !req.DryRun {
-			return nil, derr
+			return nil, forCaller(c, derr)
 		}
 	}
 
@@ -232,7 +232,7 @@ func (s *svc) startTranscribe(ctx context.Context, c Caller, req JobStartRequest
 		return nil
 	})
 	if err != nil {
-		return nil, transcribeLimitError(err, s.limits)
+		return nil, callerError(c, transcribeLimitError(err, s.limits))
 	}
 
 	if req.WaitMS > 0 {

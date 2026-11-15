@@ -1,0 +1,98 @@
+package servicetest
+
+import (
+	"context"
+	"strings"
+	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
+)
+
+func networkCaller(actor, owner string, scopes []string) context.Context {
+	return service.WithCaller(context.Background(), service.Caller{Actor: actor, OwnerUserID: owner, Scopes: scopes})
+}
+
+func assertNamesNoVariable(t *testing.T, se *service.Error) {
+	t.Helper()
+
+	if _, has := se.Details["variable"]; has {
+		t.Errorf("details.variable is present: %+v", se.Details)
+	}
+
+	for _, text := range []string{se.Message, se.Hint} {
+		if strings.Contains(text, "VUKEM_VIDEO_") {
+			t.Errorf("the text names a variable: %q", text)
+		}
+	}
+
+	if se.Details["limit"] == nil || se.Details["ceiling"] == nil {
+		t.Errorf("the limit and the ceiling must stay: %+v", se.Details)
+	}
+}
+
+// SDD-007 section 9.1: in network mode a caller who is not an administrator
+// gets the limit and its figures but not the name of the variable; the
+// administrator and local mode get it (P2-SRV-006 subtask 3).
+func TestLimitErrorsHideTheVariableFromNonAdmins(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{limits: service.Limits{MaxImportBytes: 20, MaxExports: 1}, noQueue: true, exporter: goodExporter()})
+
+	member := networkCaller("user:alice", "alice", []string{
+		service.ScopeRead, service.ScopeEdit, service.ScopeMedia, service.ScopeRender,
+	})
+	admin := networkCaller("user:root", "root", service.AllScopes)
+
+	for name, who := range map[string]context.Context{"member": member, "admin": admin} {
+		created, err := m.svc.ProjectCreate(who, service.ProjectCreateRequest{Name: name})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		project := created.ProjectID
+		hidden := name == "member"
+
+		_, err = m.svc.MediaImport(who, service.MediaImportRequest{
+			ProjectID: project, Files: []service.ImportFile{{Path: m.write(name+".mp4", clipBytes)}},
+		})
+
+		se := serviceError(t, err)
+		if hidden {
+			assertNamesNoVariable(t, se)
+		} else if se.Details["variable"] != "VUKEM_VIDEO_MAX_IMPORT_BYTES" ||
+			!strings.Contains(se.Message, "(VUKEM_VIDEO_MAX_IMPORT_BYTES)") {
+			t.Errorf("%s: the administrator lost the variable: %+v", name, se)
+		}
+
+		track, err := m.svc.Edit(who, service.EditRequest{
+			ProjectID: project, Operations: []command.Operation{op("track.add", `{"kind":"visual","name":"V"}`)},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = m.svc.Edit(who, service.EditRequest{
+			ProjectID: project, BaseRevision: track.Revision, Operations: []command.Operation{op("text.add",
+				`{"track_id":"`+track.Created[0]+`","start":"0s","duration":"1s","text":"hi"}`)},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		var queueFull error
+
+		for range 2 {
+			_, queueFull = m.svc.JobStart(who, service.JobStartRequest{ProjectID: project, Kind: "export"})
+		}
+
+		se = serviceError(t, queueFull)
+		if se.Code != service.CodeQueueFull {
+			t.Fatalf("%s: code = %s, want a full queue", name, se.Code)
+		}
+
+		if hidden {
+			assertNamesNoVariable(t, se)
+		} else if se.Details["variable"] != "VUKEM_VIDEO_MAX_EXPORTS" {
+			t.Errorf("%s: the administrator lost the variable: %+v", name, se.Details)
+		}
+	}
+}
