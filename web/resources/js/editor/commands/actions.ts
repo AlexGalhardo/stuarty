@@ -26,6 +26,12 @@ export interface Actions {
 	splitAtPlayhead(): Promise<EditOutcome | null>;
 	trimToPlayhead(edge: "start" | "end"): Promise<EditOutcome | null>;
 	addCaption(text: string, duration: string): Promise<EditOutcome | null>;
+	// A released gesture: the batch is sent against the revision the pointer went
+	// down on (SDD-012 section 4.5), not the one at release.
+	commitGesture(
+		ops: Operations,
+		baseRevision: number,
+	): Promise<EditOutcome | null>;
 	// Alt+Left and Alt+Right: every item of `ids` by `frames` frames, one batch.
 	nudge(ids: readonly string[], frames: number): Promise<EditOutcome | null>;
 	// Alt+Up and Alt+Down: every item of `ids` to the track above or below its own.
@@ -121,12 +127,13 @@ export function createActions(runtime: EditorRuntime): Actions {
 	async function send(
 		ops: Operations,
 		inline = false,
+		baseRevision?: number,
 	): Promise<EditOutcome | null> {
 		const { revision, state } = documents.getState();
 		// A trashed project is read-only (SDD-012 section 2.2): the keys too.
 		if (ops.length === 0 || revision === null || state === "trashed")
 			return null;
-		const outcome = await runtime.edits.edit(ops, revision);
+		const outcome = await runtime.edits.edit(ops, baseRevision ?? revision);
 		if (!outcome.ok && !(inline && FIELD_ERRORS.has(outcome.error.code)))
 			report(outcome.error, ops);
 		return outcome;
@@ -209,6 +216,7 @@ export function createActions(runtime: EditorRuntime): Actions {
 			});
 			return send(moveToTrackOperations(moves));
 		},
+		commitGesture: (ops, baseRevision) => send(ops, false, baseRevision),
 		runOperations: (ops) => send(ops),
 		commitField: (ops) => send(ops, true),
 		undo: () => history("undo"),

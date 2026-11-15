@@ -21,6 +21,7 @@ import {
 	selectFps,
 	selectOrderedTrackIds,
 } from "../state/selectors";
+import GhostLayer from "./GhostLayer";
 import {
 	clampZoom,
 	clientXToFrame,
@@ -371,6 +372,7 @@ export default function Timeline(): ReactNode {
 				{/* biome-ignore lint/a11y/noStaticElementInteractions lint/a11y/useKeyWithClickEvents: clicking empty space clears the selection; the keyboard equivalent is Esc, handled on window. */}
 				<div
 					ref={scroller}
+					data-timeline-scroller=""
 					className="relative overflow-auto overscroll-contain"
 					onScroll={(event) => {
 						const el = event.currentTarget;
@@ -397,6 +399,7 @@ export default function Timeline(): ReactNode {
 							className="pointer-events-none absolute border border-ed-selection bg-ed-selection/20"
 							style={{ display: "none" }}
 						/>
+						<GhostLayer />
 						<SnapLine ppf={ppf} />
 						<div
 							aria-hidden="true"

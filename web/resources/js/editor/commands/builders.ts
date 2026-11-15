@@ -153,6 +153,39 @@ export function moveToTrackOperations(
 	}));
 }
 
+export interface MoveTarget {
+	id: string;
+	from: number;
+	to: number;
+	// Set when the item goes to another track.
+	trackId?: string;
+}
+
+// A drag release: one `item.move` per item that changed, `start` only when it
+// changed, `track_id` only when the track did (SDD-012 section 8.2). The
+// operations are requests built from the ghost; the core decides. They are
+// ordered so that items moving together never meet inside the batch: those
+// moving right go first, the last one first, then those moving left.
+export function moveItems(targets: readonly MoveTarget[]): Operations {
+	const changed = targets.filter(
+		(m) => m.to !== m.from || m.trackId !== undefined,
+	);
+	const right = changed
+		.filter((m) => m.to > m.from)
+		.sort((a, b) => b.from - a.from);
+	const rest = changed
+		.filter((m) => m.to <= m.from)
+		.sort((a, b) => a.from - b.from);
+	return [...right, ...rest].map((m) => ({
+		op: "item.move",
+		args: {
+			item_id: m.id,
+			...(m.trackId === undefined ? {} : { track_id: m.trackId }),
+			...(m.to === m.from ? {} : { start: frames(m.to) }),
+		},
+	}));
+}
+
 export function trimEndOperations(itemId: string, to: string): Operations {
 	return [{ op: "item.trim", args: { item_id: itemId, edge: "end", to } }];
 }

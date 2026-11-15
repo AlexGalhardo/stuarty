@@ -4,6 +4,8 @@ import { memo, type ReactNode } from "react";
 import UntrustedText from "@/components/UntrustedText";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
+import { useActions } from "../commands/useActions";
+import { useStore } from "../state/createStore";
 import {
 	useActivityState,
 	useDocumentState,
@@ -17,6 +19,8 @@ import {
 	selectTrackItemIds,
 } from "../state/selectors";
 import { AUDIO_ROW_PX, sortByStart, VISUAL_ROW_PX } from "./geometry";
+import { consumeDragClick } from "./gestures/lifecycle";
+import { beginMove } from "./gestures/move";
 import { clickSelection, gridLayout } from "./keyboard";
 
 const TYPE_CLASS: Record<string, string> = {
@@ -36,12 +40,15 @@ export function rowHeight(kind: "visual" | "audio"): number {
 const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 	const t = useT();
 	const runtime = useRuntime();
+	const actions = useActions();
 	const item = useDocumentState((s) => selectItem(s, id));
 	const asset = useDocumentState((s) =>
 		item?.asset === undefined ? undefined : selectAsset(s, item.asset),
 	);
 	const selected = useUiState((s) => s.selection.items.includes(id));
 	const tabStop = useUiState((s) => s.focusedItem === id);
+	// Outlined for a moment when it blocked a move (SDD-012 section 8.4).
+	const conflicting = useStore(runtime.ghosts, (s) => s.errorItem === id);
 	const remote = useActivityState((s) => s.highlighted.includes(id));
 	if (item === undefined) return null;
 
@@ -66,6 +73,7 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 				TYPE_CLASS[item.type],
 				selected && "ring-2 ring-ed-selection",
 				remote && "outline-2 outline-agent",
+				conflicting && "outline-2 outline-destructive",
 			)}
 			style={{
 				// The item is placed by two custom properties and the zoom variable of
@@ -75,8 +83,21 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 				left: "calc(var(--f) * var(--ppf) * 1px)",
 				width: "calc(var(--d) * var(--ppf) * 1px)",
 			}}
+			data-conflicting={conflicting ? "" : undefined}
+			onPointerDown={(event) => {
+				if (
+					event.button !== 0 ||
+					event.shiftKey ||
+					event.ctrlKey ||
+					event.metaKey
+				) {
+					return;
+				}
+				beginMove({ runtime, actions, event, itemId: id });
+			}}
 			onClick={(event) => {
 				event.stopPropagation();
+				if (consumeDragClick()) return;
 				const { selection } = runtime.ui.getState();
 				const next = clickSelection(
 					gridLayout(runtime.documents.getState()),

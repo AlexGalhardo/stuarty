@@ -1,0 +1,96 @@
+import { describe, expect, test } from "vitest";
+
+import {
+	addClipOperations,
+	captionOperations,
+	moveItems,
+	moveOperations,
+	nudgeOperations,
+	splitOperations,
+	trimOperations,
+	withNextFree,
+} from "./builders";
+
+// Rule T8: every time a builder emits is a string with a unit, never a bare number.
+function times(ops: ReturnType<typeof moveItems>): unknown[] {
+	return ops.flatMap((op) =>
+		Object.entries(op.args)
+			.filter(([key]) => ["start", "at", "to", "duration"].includes(key))
+			.map(([, value]) => value),
+	);
+}
+
+const range = (id: string, start: number) => ({ id, start, duration: 30 });
+
+describe("builders emit times as strings with a unit (T8)", () => {
+	test("moveItems", () => {
+		const ops = moveItems([
+			{ id: "a", from: 0, to: 162 },
+			{ id: "b", from: 30, to: 192, trackId: "trk_2" },
+		]);
+		for (const value of times(ops)) expect(value).toMatch(/^\d+f$/);
+		expect(ops.map((o) => o.args.item_id)).toEqual(["b", "a"]);
+	});
+
+	test("the other builders", () => {
+		const all = [
+			...nudgeOperations([range("a", 5)], -9),
+			...moveOperations("a", "12f"),
+			...splitOperations([range("a", 0)], 10),
+			...trimOperations([range("a", 0)], "end", 10),
+			...addClipOperations({
+				assetId: "ast_1",
+				playhead: 7,
+				firstVisualTrack: "trk_1",
+				newTrackId: () => "trk_n",
+			}),
+			...captionOperations({
+				text: "hi",
+				duration: "3s",
+				playhead: 4,
+				firstVisualTrack: "trk_1",
+				newTrackId: () => "trk_n",
+			}),
+			...withNextFree(moveItems([{ id: "a", from: 0, to: 5 }]), 40),
+		];
+		for (const value of times(all)) expect(typeof value).toBe("string");
+		for (const value of times(all)) expect(value).toMatch(/^\d+(\.\d+)?[fs]$/);
+	});
+});
+
+describe("moveItems", () => {
+	test("emits only what changed", () => {
+		expect(
+			moveItems([
+				{ id: "a", from: 10, to: 10 },
+				{ id: "b", from: 10, to: 20 },
+				{ id: "c", from: 10, to: 10, trackId: "trk_2" },
+				{ id: "d", from: 10, to: 3, trackId: "trk_2" },
+			]),
+		).toEqual([
+			{ op: "item.move", args: { item_id: "b", start: "20f" } },
+			{ op: "item.move", args: { item_id: "c", track_id: "trk_2" } },
+			{
+				op: "item.move",
+				args: { item_id: "d", track_id: "trk_2", start: "3f" },
+			},
+		]);
+	});
+
+	test("nothing changed sends nothing", () => {
+		expect(moveItems([{ id: "a", from: 4, to: 4 }])).toEqual([]);
+	});
+
+	test("moving right the last item goes first, moving left the first", () => {
+		const right = moveItems([
+			{ id: "a", from: 0, to: 5 },
+			{ id: "b", from: 30, to: 35 },
+		]);
+		expect(right.map((o) => o.args.item_id)).toEqual(["b", "a"]);
+		const left = moveItems([
+			{ id: "b", from: 30, to: 25 },
+			{ id: "a", from: 10, to: 5 },
+		]);
+		expect(left.map((o) => o.args.item_id)).toEqual(["a", "b"]);
+	});
+});
