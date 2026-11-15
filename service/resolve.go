@@ -26,6 +26,8 @@ func (s *svc) resolveOps(
 ) ([]command.Operation, error) {
 	var out []command.Operation
 
+	var fonts fontScope
+
 	for i := range ops {
 		var (
 			resolved json.RawMessage
@@ -43,7 +45,7 @@ func (s *svc) resolveOps(
 			resolved, rerr = s.resolveBeats(ctx, tx, doc, &ops[i], i)
 		case "font.add":
 			// Not analysis: the core cannot tell whether the font store holds the file.
-			if e := s.checkFontAdd(ctx, tx, &ops[i], i); e != nil {
+			if e := s.checkFontAdd(ctx, tx, &fonts, &ops[i], i); e != nil {
 				return nil, e
 			}
 		}
