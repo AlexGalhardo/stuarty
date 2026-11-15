@@ -51,7 +51,7 @@ func (c *clock) advance(d time.Duration) {
 }
 
 type harness struct {
-	t      *testing.T
+	t      testing.TB
 	app    *vukemtest.App
 	vapp   *vukem.App
 	srv    *httptest.Server
@@ -64,13 +64,13 @@ type harness struct {
 	port   string
 }
 
-func newHarness(t *testing.T) *harness {
+func newHarness(t testing.TB) *harness {
 	t.Helper()
 
 	return newHarnessWith(t, events.Options{})
 }
 
-func newHarnessWith(t *testing.T, eo events.Options, extra ...vukem.Option) *harness {
+func newHarnessWith(t testing.TB, eo events.Options, extra ...vukem.Option) *harness {
 	t.Helper()
 
 	return newHarnessWrapped(t, eo, nil, extra...)
@@ -79,9 +79,23 @@ func newHarnessWith(t *testing.T, eo events.Options, extra ...vukem.Option) *har
 // newHarnessWrapped serves the API over wrap(service), for tests that need a
 // method the plain service cannot answer, such as a renderer.
 func newHarnessWrapped(
-	t *testing.T,
+	t testing.TB,
 	eo events.Options,
 	wrap func(service.Service) service.Service,
+	extra ...vukem.Option,
+) *harness {
+	t.Helper()
+
+	return newHarnessLimited(t, eo, wrap, httpapi.RateLimits{}, extra...)
+}
+
+// newHarnessLimited is newHarnessWrapped with the rate limits of the API, for a
+// benchmark that sends more requests a minute than the defaults allow.
+func newHarnessLimited(
+	t testing.TB,
+	eo events.Options,
+	wrap func(service.Service) service.Service,
+	rate httpapi.RateLimits,
 	extra ...vukem.Option,
 ) *harness {
 	t.Helper()
@@ -131,7 +145,7 @@ func newHarnessWrapped(
 	deps := &httpapi.Deps{
 		MCP: mcpHandler, Events: hub,
 		Service: svc, Registry: command.Default(), Workspace: dir, Token: canary,
-		Sessions: auth.NewSessions(h.clock.now), Launch: auth.NewLaunch(h.clock.now), Now: h.clock.now,
+		Sessions: auth.NewSessions(h.clock.now), Launch: auth.NewLaunch(h.clock.now), Now: h.clock.now, RateLimits: rate,
 	}
 
 	h.app = vukemtest.New(t, func(opts ...vukem.Option) (*vukem.App, error) {
@@ -165,7 +179,7 @@ type resp struct {
 	body   []byte
 }
 
-func (r resp) json(t *testing.T) map[string]any {
+func (r resp) json(t testing.TB) map[string]any {
 	t.Helper()
 
 	var m map[string]any

@@ -25,7 +25,7 @@ type sseEvent struct {
 }
 
 type sseClient struct {
-	t      *testing.T
+	t      testing.TB
 	ch     chan sseEvent
 	status int
 	header http.Header
