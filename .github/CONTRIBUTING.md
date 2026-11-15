@@ -54,7 +54,7 @@ Run `task ci` before you push: `task lint`, `task vet`, `task test`, `task tidy:
 - `Generated files`: `task codegen` leaves `core/schema/` and `web/resources/js/generated/` unchanged; after a change to a generator run `task codegen` and commit
 - `Release build (snapshot)`: GoReleaser dry run, six archives under 60,000,000 bytes
 - `Reference scenario (ubuntu-latest)`, `(windows-latest)`, `(macos-latest)`: the reference scenario through the CLI process, MCP over stdio and MCP over HTTP against a real `serve`; each export is checked with ffprobe and the three documents are compared; skips where only a GPL FFmpeg exists (macOS)
-- `Browser tests (Playwright)`: `bun run e2e` in `web/`
+- `Browser tests (Playwright)`: `bun run e2e` in `web/`: the functional specs and nothing that measures a time budget. The budgets of SDD-012 section 19 (200-item timeline frames, edit round trip, scrub latency, pause to exact frame, video layers, `perf-edit-200`) belong to the reference machine and run only by hand: `VUKEM_VIDEO_PERF=1 bun run e2e` in `web/` adds the `perf` project, which runs alone after the others
 - `Sandbox (bwrap)`: `TestSecurity_T16_` must pass, not skip
 - `Notices`, `Vulnerabilities`, `Workflow pins`
 
