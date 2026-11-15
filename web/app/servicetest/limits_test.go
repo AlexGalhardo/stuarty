@@ -1,6 +1,8 @@
 package servicetest
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -101,5 +103,28 @@ func TestExportOverTheByteCeilingFails(t *testing.T) {
 	if job.State != service.JobFailed || job.Error == nil || job.Error.Code != "E_LIMIT_EXCEEDED" ||
 		job.Error.Details["limit"] != "export_bytes" || job.Result != nil {
 		t.Errorf("job = %+v", job)
+	}
+}
+
+// The ceiling reaches the exporter before the first byte is written, so the
+// encoder stops at it instead of filling the disk (SDD-007 section 9.1).
+func TestExportInputCarriesTheByteCeiling(t *testing.T) {
+	got := make(chan int64, 1)
+
+	m := newMediaEnv(t, mediaCfg{
+		exporter: exportFn(func(_ context.Context, in service.ExportInput) (*service.ExportOutput, error) {
+			got <- in.MaxBytes
+
+			return nil, errors.New("stop here")
+		}),
+		limits: service.Limits{MaxExportBytes: 123456},
+	})
+
+	if _, err := m.startExport(m.exportable()); err != nil {
+		t.Fatal(err)
+	}
+
+	if ceiling := <-got; ceiling != 123456 {
+		t.Errorf("ExportInput.MaxBytes = %d, want 123456", ceiling)
 	}
 }

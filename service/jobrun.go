@@ -508,7 +508,7 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 	}
 
 	res, err := s.exporter.Export(ctx, ExportInput{
-		JobID: job.ID, Doc: doc, OutPath: out, Start: in.Start, End: in.End,
+		JobID: job.ID, Doc: doc, OutPath: out, Start: in.Start, End: in.End, MaxBytes: s.limits.MaxExportBytes,
 		OnProgress: func(done, total int) {
 			if total > 0 {
 				pw.report(ctx, float64(done)/float64(total), "Rendering ("+strconv.Itoa(done*100/total)+"%)")

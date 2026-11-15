@@ -79,6 +79,7 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 		JobID:        in.JobID,
 		ArtifactsDir: filepath.Join(a.cfg.Workspace, "artifacts"),
 		OutPath:      in.OutPath,
+		MaxBytes:     in.MaxBytes,
 		Encoder:      a.cfg.Encoder,
 		Lint:         a.cfg.Lint,
 		OnProgress: func(p export.Progress) {

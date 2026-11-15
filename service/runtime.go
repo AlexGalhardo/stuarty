@@ -43,6 +43,9 @@ type ExportInput struct {
 	// passed its verification, and leaves nothing there otherwise.
 	OutPath    string
 	Start, End int64 // frames; End 0 is the end of the timeline
+	// MaxBytes is VUKEM_VIDEO_MAX_EXPORT_BYTES: the encoder stops at this size
+	// instead of filling the disk first; 0 means no ceiling.
+	MaxBytes int64
 	// OnProgress receives the frames written and the total.
 	OnProgress func(done, total int)
 }
