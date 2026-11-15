@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
 )
@@ -267,15 +268,44 @@ func TestTemplateScenarioIsTheSameThroughEverySurface(t *testing.T) {
 	checkRecordedSum(t, "template", hex.EncodeToString(sum[:]))
 }
 
+// TestCaptionsScenarioIsTheSameThroughEverySurface (P2-AGT-006): a clip is
+// transcribed with the stub provider, captions are made from the transcript and
+// the silences of the clip are removed, with the ids supplied by the scenario.
+// The binary has no stub provider, so the real-server runs are not part of it.
+func TestCaptionsScenarioIsTheSameThroughEverySurface(t *testing.T) {
+	words := []transcribe.RawWord{
+		{Text: "hello", StartMS: 100, EndMS: 400},
+		{Text: "brave", StartMS: 400, EndMS: 700},
+		{Text: "new", StartMS: 1100, EndMS: 1400},
+		{Text: "world", StartMS: 1400, EndMS: 1900},
+	}
+
+	docs := sameThroughEverySurfaceWith(
+		t, "captions", testenv.Options{Transcriber: &testenv.StubTranscriber{Words: words}}, "prj_7k2m9x4q1b",
+	)
+
+	checkRecordedHash(t, "captions", docs["prj_7k2m9x4q1b"])
+}
+
 // sameThroughEverySurface runs the scenario through Direct, HTTP, CLI and MCP
 // and fails when a result, an error, a text or a final document of the projects
 // differs from the Direct one. It returns the documents Direct ended with.
 func sameThroughEverySurface(t *testing.T, scenario string, projects ...string) map[string][]byte {
 	t.Helper()
 
+	return sameThroughEverySurfaceWith(t, scenario, testenv.Options{}, projects...)
+}
+
+// sameThroughEverySurfaceWith is sameThroughEverySurface over environments made
+// with the options.
+func sameThroughEverySurfaceWith(
+	t *testing.T, scenario string, o testenv.Options, projects ...string,
+) map[string][]byte {
+	t.Helper()
+
 	steps, fixtures := loadScenario(t, scenario)
 
-	oracle := newDirect(t)
+	oracle := newDirectWith(t, o)
 	want := run(t, oracle, steps, fixtures)
 	wantDocs := map[string][]byte{}
 
@@ -283,8 +313,8 @@ func sameThroughEverySurface(t *testing.T, scenario string, projects ...string) 
 		wantDocs[p] = finalDocument(t, oracle, p)
 	}
 
-	for _, mk := range []func(*testing.T) driver{newHTTP, newCLI, newMCP} {
-		d := mk(t)
+	for _, mk := range []func(*testing.T, testenv.Options) driver{newHTTPWith, newCLIWith, newMCPWith} {
+		d := mk(t, o)
 		got := run(t, d, steps, fixtures)
 
 		for i := range steps {
