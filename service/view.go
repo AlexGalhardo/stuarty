@@ -50,7 +50,7 @@ func (s *svc) ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult,
 
 	st := v.doc.Settings
 
-	var width int
+	var width, height int
 
 	if req.Width != 0 {
 		if req.Width < 16 || req.Width > frame.MaxWidth || req.Width%2 != 0 {
@@ -72,16 +72,19 @@ func (s *svc) ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult,
 			return nil, berr
 		}
 
-		width, _, _ = frame.ImageSize(st.Width, st.Height, budget)
+		width, height, _ = frame.ImageSize(st.Width, st.Height, budget)
 	}
 
-	jpeg, rerr := s.media.Frames.Frame(ctx, v.doc, v.ref(), int(at), width)
+	jpeg, rerr := s.media.Frames.FrameSized(ctx, v.doc, v.ref(), int(at), width, height)
 	if rerr != nil {
 		return nil, viewError(rerr)
 	}
 
 	w, h := jpegSize(jpeg, width, st.Width, st.Height)
 	key := cache.FrameKey(v.row.ID, v.row.Revision, int(at), width)
+	if height != 0 {
+		key = cache.FrameKeyHeight(v.row.ID, v.row.Revision, int(at), width, height)
+	}
 	path := s.viewPath(v.caller, key)
 
 	res := &ViewResult{

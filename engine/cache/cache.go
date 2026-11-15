@@ -27,6 +27,11 @@ var cacheDirs = []string{"frames", "bitmaps"}
 // ErrKey is returned for a key that is not a plain relative slash path inside the cache.
 var ErrKey = errors.New("cache: invalid key")
 
+// FrameKeyHeight is the file of a frame whose height is not the one the width gives: <frame>-<width>x<height>.jpg.
+func FrameKeyHeight(project string, revision int64, frame, width, height int) string {
+	return path.Join("frames", project, strconv.FormatInt(revision, 10), fmt.Sprintf("%d-%dx%d.jpg", frame, width, height))
+}
+
 // FrameKey is the file of a frame: frames/<project>/<revision>/<frame>-<width>.jpg (SDD-000 section 9).
 func FrameKey(project string, revision int64, frame, width int) string {
 	return path.Join("frames", project, strconv.FormatInt(revision, 10), fmt.Sprintf("%d-%d.jpg", frame, width))

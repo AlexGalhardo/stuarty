@@ -71,11 +71,25 @@ func encode(img image.Image) ([]byte, error) {
 // Frame is frame t of the document at the given width, as a JPEG of quality 80 (4:2:0), from the
 // cache when it is there. A time past the end is the last frame.
 func (f *Frames) Frame(ctx context.Context, doc *timeline.Document, ref Ref, t, width int) ([]byte, error) {
+	return f.FrameSized(ctx, doc, ref, t, width, 0)
+}
+
+// FrameSized is Frame with the exact height of the picture, for a caller that took the size from
+// ImageSize; a height of zero is the one the width gives, round(width*H/W).
+func (f *Frames) FrameSized(ctx context.Context, doc *timeline.Document, ref Ref, t, width, height int) ([]byte, error) {
 	if t < 0 || width < 16 || width > MaxWidth {
 		return nil, fmt.Errorf("%w: frame %d at width %d", ErrRange, t, width)
 	}
 	t = min(t, lastFrame(doc))
+	st := doc.Settings
+	derived := max(int(math.Round(float64(width)*float64(st.Height)/float64(st.Width))), 1)
 	key := cache.FrameKey(ref.Project, ref.Revision, t, width)
+	if height <= 0 {
+		height = derived
+	}
+	if height != derived {
+		key = cache.FrameKeyHeight(ref.Project, ref.Revision, t, width, height)
+	}
 	if f.Cache != nil {
 		if b, ok := f.Cache.Get(key); ok {
 			return b, nil
@@ -86,7 +100,7 @@ func (f *Frames) Frame(ctx context.Context, doc *timeline.Document, ref Ref, t, 
 	if err != nil {
 		return nil, err
 	}
-	img, err := r.Render(ctx, t, float64(width)/float64(doc.Settings.Width))
+	img, err := r.RenderSize(ctx, t, width, height)
 	if err != nil {
 		_ = r.Close()
 

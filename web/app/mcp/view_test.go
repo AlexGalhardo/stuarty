@@ -2,7 +2,6 @@ package mcp
 
 import (
 	"bytes"
-	"math"
 	"testing"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -141,12 +140,7 @@ func TestViewImageSizeTable(t *testing.T) {
 					want = p.sheet
 				}
 
-				// service.ViewFrame passes only the width of ImageSize to the renderer, which
-				// rounds the height itself: 1035 where the table says 1036 (reported, not
-				// fixed here: the service and the renderer are not in this folder).
-				height, _ := got["height"].(float64)
-				if name == "sheet" && height != want[1] || math.Abs(height-want[1]) > 1 ||
-					got["width"] != want[0] || got["image_tokens"] != want[2] {
+				if got["height"] != want[1] || got["width"] != want[0] || got["image_tokens"] != want[2] {
 					t.Errorf("%s of %s: %vx%v, %v tokens, want %vx%v, %v", name, p.name,
 						got["width"], got["height"], got["image_tokens"], want[0], want[1], want[2])
 				}
