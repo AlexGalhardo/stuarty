@@ -7,6 +7,7 @@ description: "Add music and sound, set volume and fades, mute a clip and keep th
 
 - how to place audio on an audio track;
 - how to set volume, fades and mute;
+- how to lower music under speech (ducking) and mark the beats of a song;
 - how the export mixes the audio and what the lint warns about.
 
 ## The idea
@@ -46,6 +47,28 @@ vukem-video edit --project prj_7k2m9x4q1b item.set_audio item_id=itm_s6t7v8w9x0 
 
 The default duration of an audio item is the rest of the asset from `source_in`. The two fades together cannot be longer than the item. A volume of 1, fades of `0s` and `audio_muted` false clear the stored value.
 
+## Duck music under speech
+
+`audio.duck` lowers a music item while speech sounds. It writes [volume keyframes](/docs/guide/keyframes) on the music: the volume drops by `gain_db` (-12 by default, from -40 to -1) over `attack` (0.2s) before each stretch of speech and comes back over `release` (0.5s) after it. Two stretches of speech closer than the ramps are held low across the gap. `speech_item_ids` names the clips or audio items that carry the speech (1 to 20).
+
+The speech is found by the analysis of those items, which the service reads for you; never send `resolved`. The music item must have no volume keyframes yet. To undo the ducking, clear them with `keyframe.clear` on `volume`.
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b audio.duck item_id=itm_s6t7v8w9x0   speech_item_ids:=[itm_m1n2p3q4r5] gain_db:=-14
+```
+
+If the speech item has no analysis yet the edit fails with `E_INVALID_STATE` and the hint to wait until the asset is ready.
+
+## Mark the beats of a song
+
+`audio.mark_beats` writes a marker on a music item at each beat of its visible part, so you can place cuts and transitions on the music. `every` marks every nth beat (1 to 64, default 1), `label` names the markers (up to 60 characters) and `replace` (true by default) replaces the markers the item already has. The beat grid comes from the analysis of the asset. Markers change neither the picture nor the sound.
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b audio.mark_beats item_id=itm_s6t7v8w9x0 every:=2 label=beat
+```
+
+An asset without audio has no beat grid and the edit fails with `E_INVALID_STATE`. The same two operations are available to an MCP agent through `edit`. The editor has no section for ducking or beat markers yet.
+
 Run `vukem-video lint` before you export. These rules concern sound: `L_AUDIO_OVERLAP` (audio items that overlap), `L_AUDIO_CLIP` (the mix reaches clipping) and `L_SILENT_EXPORT` (the export would have no sound).
 
 ## Common mistakes
@@ -53,6 +76,7 @@ Run `vukem-video lint` before you export. These rules concern sound: `L_AUDIO_OV
 - Adding audio to a visual track: `E_TYPE_MISMATCH`.
 - Setting `audio_muted` on an audio item. It applies to clips; set `volume` to 0 for an audio item.
 - A volume above 4: `E_VALIDATION`.
+- Ducking a music item that already has volume keyframes: the edit is refused. Clear them first.
 
 ## Next steps
 
