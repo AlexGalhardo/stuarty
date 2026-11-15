@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-15
+
+### Added
+
+- **ui:** Add the ALPHA reads and the media state calls to the API client ([d4bcfb1](https://github.com/AlexGalhardo/vukem-video/commit/d4bcfb1171b1ef1acdcdd7772d3441e43b4b7988))
+- **ui:** Add the proposed rule I7 against untranslated pt-BR keys ([67a4bf0](https://github.com/AlexGalhardo/vukem-video/commit/67a4bf0a81891567225c977f68f0c4ed26da4103))
+- **service:** Add JobCancel with its route and the media scope for own ingest jobs ([bf6502c](https://github.com/AlexGalhardo/vukem-video/commit/bf6502c445d668ff1e074cc1c222eb61329ae144))
+- **mcp:** Add the job_cancel tool over JobCancel ([426d8f6](https://github.com/AlexGalhardo/vukem-video/commit/426d8f6d51599a4da61518ff54aae341e62456a3))
+- **cli:** Add the job:cancel command and close its parity row ([f161cb1](https://github.com/AlexGalhardo/vukem-video/commit/f161cb1c4d6408e6c4cdc0c63ae2912c4b4c4023))
+- **service:** Add TemplateSave, TemplateList and TemplateInstantiate with their routes ([6b88fb0](https://github.com/AlexGalhardo/vukem-video/commit/6b88fb0e5dd5eb1e042a4d616138023caf167fdc))
+- **ui:** Add the __vv test hooks, the e2e build and a shared event stream per project ([7c5e3bf](https://github.com/AlexGalhardo/vukem-video/commit/7c5e3bf34b79b0e16e7872363520a5824b142dab))
+- **ui:** Add deep links and the read-only banner of a trashed project ([87ccb84](https://github.com/AlexGalhardo/vukem-video/commit/87ccb84158c1c4736242a44b99333d94845e4aba))
+- **export:** Generate the export path through os.Root and enforce the size limit ([e10f49a](https://github.com/AlexGalhardo/vukem-video/commit/e10f49abb2032950f2bcc4441613840aa261baca))
+- **ui:** Add cancelJob and the strip and peaks URL builders ([30df71b](https://github.com/AlexGalhardo/vukem-video/commit/30df71b3704dd6d31d68a98b2e5c4a12f5a6e890))
+- **ui:** Add the English and Portuguese titles of every command and lint rule ([a908fa7](https://github.com/AlexGalhardo/vukem-video/commit/a908fa7f0d80bc2c7d14c8a0416cdf12e6b1f2ee))
+- **service:** Export and import template files under the archive policy ([73a0526](https://github.com/AlexGalhardo/vukem-video/commit/73a0526f14e4e9ab472e6307f7098a3ad5ac4729))
+- **mcp:** Add the template tool for list, save and new ([5d811d3](https://github.com/AlexGalhardo/vukem-video/commit/5d811d39f59f8f521deeae0e8d858bc83e56cf13))
+- **cli:** Add template:list, template:save and template:new and close their parity rows ([498b04a](https://github.com/AlexGalhardo/vukem-video/commit/498b04a38dc4282d49bb04c2fd150f82a94f062e))
+- **cli:** Add media:trash and media:restore and close their parity rows ([1c6b63c](https://github.com/AlexGalhardo/vukem-video/commit/1c6b63cc26b5e01c1212aa22321c897d7021ac8d))
+- **ui:** Add the desktop feature-detection page, its server and the proxy fixture ([9a20e04](https://github.com/AlexGalhardo/vukem-video/commit/9a20e0412ec8a683c4969b684ec9d77939d5fe2c))
+- **service:** Add TrashEmpty, the store lock and the orphan sweep ([45e43d7](https://github.com/AlexGalhardo/vukem-video/commit/45e43d7845136514e281d46370c0b06c6eaeea1f))
+- **mcp:** Add export and import to the template tool and the template:export and import commands ([59cb634](https://github.com/AlexGalhardo/vukem-video/commit/59cb6349d6bc0485df24468fb06230c61391ad0c))
+- **service:** Guard writes on a full disk and add the transcribe and export ceilings ([076cb60](https://github.com/AlexGalhardo/vukem-video/commit/076cb60c8c45925a21096d6b1523113e9b9e346f))
+- **docs:** Render the skill recipes from files and run them through the CLI ([42754d1](https://github.com/AlexGalhardo/vukem-video/commit/42754d16649d076c10a50013b6d03c0bf1e6c29e))
+- **transcribe:** Add the provider interface and the word timing repair ([9fd108d](https://github.com/AlexGalhardo/vukem-video/commit/9fd108d86c832e7763d82f1a135484452a4537f0))
+- **transcribe:** Run whisper.cpp as a separate process and judge it by its output file ([b440a6b](https://github.com/AlexGalhardo/vukem-video/commit/b440a6b9ab279721f5d25a9d97f6f735dc4330c4))
+- **service:** Resolve the silences and transcript words of an edit from the artifacts ([34b5ed0](https://github.com/AlexGalhardo/vukem-video/commit/34b5ed0c5bfb3cd16ae4eb39c11e89d72fb58bc7))
+
+### Fixed
+
+- **service:** Cancel a shared ingest only when every waiting project is visible to the caller ([ed41906](https://github.com/AlexGalhardo/vukem-video/commit/ed41906d41e664087def1fc36205b7a594a4a63b))
+- **service:** Decide the cancel of a shared ingest in one transaction and fail closed ([977019a](https://github.com/AlexGalhardo/vukem-video/commit/977019ab1856ed3145f21d298a2c43c6c0635788))
+- **ui:** Refetch the library when an asset fails so the card shows code and hint ([056ad84](https://github.com/AlexGalhardo/vukem-video/commit/056ad845d3c9ff200a4e18998033d3d56a8a4ded))
+- **ui:** Give the style of the Radix scroll lock the CSP nonce ([4d915e6](https://github.com/AlexGalhardo/vukem-video/commit/4d915e6800dcbf5dfec55e78ca606677ddfecaa2))
+- **service:** Make templates belong to their owner ([d089e45](https://github.com/AlexGalhardo/vukem-video/commit/d089e45e9f7fbb65186b8091a695ac9ce2d7284c))
+- **core:** Tell a template draft from an instance with template.instance ([e67a259](https://github.com/AlexGalhardo/vukem-video/commit/e67a259ed4ef97efc42c07757af6a88c92c33ffa))
+- **service:** Mark an instantiated project as a template instance ([ad18df5](https://github.com/AlexGalhardo/vukem-video/commit/ad18df5d915d90da47f16d57f323624a6b8046b9))
+- **command:** Write the diff in the form of a fetched document ([06e77a6](https://github.com/AlexGalhardo/vukem-video/commit/06e77a6c78bec03ad608604794dacb947fd09791))
+- **mcp:** Name the sheet end of view until and test that no tool takes a destination ([9e60428](https://github.com/AlexGalhardo/vukem-video/commit/9e60428fc305a079173181dfcf15181e7cd103e4))
+- **service:** Rename the end of a view range from to to until ([22b4839](https://github.com/AlexGalhardo/vukem-video/commit/22b4839f25cd39bb39c9865b40f07fc81c914f9c))
+- **ui:** Refuse cross-origin writes to the results route of the detection server ([e1c20c2](https://github.com/AlexGalhardo/vukem-video/commit/e1c20c2f82a452023e4af561323246493b911e2b))
+- **service:** Keep TrashEmpty of a project-limited key inside its project ([e1609fa](https://github.com/AlexGalhardo/vukem-video/commit/e1609fa01f9af0f7358e6ac22f3fd06cb3e0589f))
+- **service:** Add the hints of conflict, limit and queue-full errors and keep sizes apart ([f280a69](https://github.com/AlexGalhardo/vukem-video/commit/f280a69e3bef6c96c7769f9f9efd0cd1d12bbf16))
+- **export:** Let the decoder of a single frame end by itself before it is killed ([1f2fa7b](https://github.com/AlexGalhardo/vukem-video/commit/1f2fa7bbe8d08caef807c0b60794099ad426eb51))
+- **service:** Read template archives with archive/zip, not the vukem package ([e949c9e](https://github.com/AlexGalhardo/vukem-video/commit/e949c9e0021a9b73b2f79976d0ad43ed4520bccd))
+- **service:** Stop the encoder at the export size ceiling instead of after the write ([a79fddf](https://github.com/AlexGalhardo/vukem-video/commit/a79fddf9f624d2b1576e0d34b4941bb71de9c0e2))
+- **ui:** Write detection results through os.Root and skip media scenarios without zscale ([88b8b54](https://github.com/AlexGalhardo/vukem-video/commit/88b8b54c4dbf7488508827c5debfc1a6d1e09c6b))
+
 ## [0.5.0] - 2026-11-15
 
 ### Added
@@ -276,7 +324,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.2.0...v0.3.0
