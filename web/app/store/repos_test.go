@@ -1121,3 +1121,45 @@ func TestIdempotencyTrimActorKeepsTheNewestOfOneActorAndProject(t *testing.T) {
 		t.Error("another project's key was evicted")
 	}
 }
+
+func TestFontOwnersAndBrandKit(t *testing.T) {
+	s := testStore(t)
+	hash := "sha256:" + strings.Repeat("ab", 32)
+
+	if owns, err := s.Fonts().Owns(ctx, "usr_1", hash); err != nil || owns {
+		t.Fatalf("Owns before Record = %v, %v", owns, err)
+	}
+
+	for range 2 {
+		if err := s.Fonts().Record(ctx, "usr_1", hash, 10); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if owns, err := s.Fonts().Owns(ctx, "usr_1", hash); err != nil || !owns {
+		t.Fatalf("Owns after Record = %v, %v", owns, err)
+	}
+
+	if owns, _ := s.Fonts().Owns(ctx, "usr_2", hash); owns {
+		t.Error("another user owns the font")
+	}
+
+	if _, err := s.BrandKit().Get(ctx, ""); !errors.Is(err, service.ErrNotFound) {
+		t.Fatalf("Get of no kit = %v, want ErrNotFound", err)
+	}
+
+	row := service.BrandKitRow{OwnerUserID: "", Document: []byte(`{"colors":{"a":"#FFFFFF"}}`), UpdatedMs: 5, UpdatedBy: "local:ui"}
+	if err := s.BrandKit().Put(ctx, row); err != nil {
+		t.Fatal(err)
+	}
+
+	row.Document, row.UpdatedMs = []byte(`{"colors":{"a":"#000000"}}`), 6
+	if err := s.BrandKit().Put(ctx, row); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := s.BrandKit().Get(ctx, "")
+	if err != nil || string(got.Document) != string(row.Document) || got.UpdatedMs != 6 {
+		t.Fatalf("Get = %+v, %v", got, err)
+	}
+}
