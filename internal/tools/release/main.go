@@ -318,6 +318,20 @@ func (t *tool) prepare(version string) error {
 		rangeArg = previous + "..HEAD"
 	}
 
+	if isPatchRelease(version) {
+		log, lerr := t.git("log", "--format=%s", rangeArg)
+		if lerr != nil {
+			return lerr
+		}
+
+		if breaking := breakingSubjects(log); len(breaking) > 0 {
+			return fmt.Errorf(
+				"%s is a patch release but %s carries a breaking change: %q; cut a minor instead",
+				version, rangeArg, breaking[0],
+			)
+		}
+	}
+
 	section, err := t.run(
 		t.dir,
 		"git",
