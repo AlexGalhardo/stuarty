@@ -180,7 +180,7 @@ var transitionKinds = []string{"fade", "slide_left", "slide_right", "slide_up", 
 type itemTransitionArgs struct {
 	ItemID   string `json:"item_id"            desc:"A clip, text, caption or shape item."`
 	Edge     string `json:"edge"               desc:"The edge: in or out."                                                    enum:"in,out"`
-	Kind     any    `json:"kind"               schema:"transition_kind" desc:"fade, slide_left, slide_right, slide_up, slide_down, or null to remove."`
+	Kind     any    `json:"kind"               desc:"fade, slide_left, slide_right, slide_up, slide_down, or null to remove."               schema:"transition_kind"`
 	Duration *Time  `json:"duration,omitempty" desc:"Length of the transition, at least 1 frame; default 0.5s."`
 }
 

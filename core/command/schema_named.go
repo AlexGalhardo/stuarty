@@ -1,6 +1,7 @@
 package command
 
 import (
+	"maps"
 	"slices"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
@@ -28,10 +29,7 @@ const (
 // nullable lets a schema accept null too: the type becomes [T, "null"] and an enum
 // gains null.
 func nullable(s map[string]any) map[string]any {
-	out := map[string]any{}
-	for k, v := range s {
-		out[k] = v
-	}
+	out := maps.Clone(s)
 	if t, ok := s["type"].(string); ok {
 		out["type"] = []string{t, "null"}
 	}
@@ -111,7 +109,11 @@ func rationalSchema(den any) map[string]any {
 
 func speedSchema() map[string]any {
 	return map[string]any{"oneOf": []any{
-		map[string]any{"type": "string", "pattern": `^([0-9]+\.?[0-9]{0,3}|\.[0-9]{1,3})x$`, "examples": []string{"1.5x"}},
+		map[string]any{
+			"type":     "string",
+			"pattern":  `^([0-9]+\.?[0-9]{0,3}|\.[0-9]{1,3})x$`,
+			"examples": []string{"1.5x"},
+		},
 		rationalSchema(map[string]any{"type": "integer", "minimum": 1}),
 	}}
 }

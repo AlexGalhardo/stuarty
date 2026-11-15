@@ -36,7 +36,7 @@ type textAddArgs struct {
 	Start    Time           `json:"start"`
 	Duration Time           `json:"duration"        desc:"A length of at least 1 frame."`
 	Text     string         `json:"text"            desc:"The text; line breaks are allowed." min:"1" max:"2000"`
-	Style    map[string]any `json:"style,omitempty" schema:"text_style" desc:"A partial TextStyle."`
+	Style    map[string]any `json:"style,omitempty" desc:"A partial TextStyle."                                  schema:"text_style"`
 	X        *float64       `json:"x,omitempty"`
 	Y        *float64       `json:"y,omitempty"`
 	ID       string         `json:"id,omitempty"`
@@ -109,7 +109,7 @@ func styleOrEmpty(s *timeline.CaptionStyle) map[string]any {
 type textSetArgs struct {
 	ItemID     string         `json:"item_id"               desc:"A text item."`
 	Text       *string        `json:"text,omitempty"                                                                min:"1" max:"2000"`
-	Style      map[string]any `json:"style,omitempty"       schema:"text_style_merge" desc:"A partial TextStyle, merged; null removes a key."`
+	Style      map[string]any `json:"style,omitempty"       desc:"A partial TextStyle, merged; null removes a key."                    schema:"text_style_merge"`
 	ResetStyle bool           `json:"reset_style,omitempty" desc:"Empty the stored style before applying style."`
 }
 
