@@ -1,0 +1,4 @@
+lint r1 prj_7k2m9x4q1b: errors=0 warnings=1 (showing 1 of 1)
+warning L_OCCLUDED itm_low000001 1s/30f-3s/90f
+  itm_low000001 is hidden for its whole range by itm_up0000001 on a higher track.
+  hint: move or delete one of the two

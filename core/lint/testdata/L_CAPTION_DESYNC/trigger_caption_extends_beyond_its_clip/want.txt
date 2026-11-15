@@ -1,0 +1,4 @@
+lint r1 prj_7k2m9x4q1b: errors=0 warnings=1 (showing 1 of 1)
+warning L_CAPTION_DESYNC itm_cap 9.333s/280f-10.667s/320f
+  the caption ends at frame 320, after its clip itm_clip ends at frame 300.
+  hint: run caption.retime_from_clip

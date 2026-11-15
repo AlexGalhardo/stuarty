@@ -9,8 +9,8 @@ warning L_BLACK_FRAMES - 6s/180f-6.667s/200f
   frames 180-199 have no visible item; they render as the background color #000000.
   hint: fill the range with a clip or a shape, close it with timeline.close_gap, or shorten the timeline
 warning L_SAFE_AREA itm_s6t7v8w9x0 3.333s/100f-6s/180f
-  the caption box spans x 140-940 and y 25-175; the safe area is x 65-1015 and y 269-1248.
-  hint: move the item inside the safe area or use caption position "middle"
+  caption text spans y 25-175 of 1920; the safe area starts at y 269 (14% top margin).
+  hint: set the caption track style position to "middle", or raise the item with item.set_transform y.
 warning L_SLIVER itm_k4s5l6i7v8 6.667s/200f-6.733s/202f
   the clip lasts 2 frame(s), which is usually the result of a trim or split at the wrong time.
   hint: delete it or trim the neighbour

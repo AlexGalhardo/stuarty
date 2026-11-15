@@ -1,0 +1,4 @@
+lint r1 prj_7k2m9x4q1b: errors=0 warnings=1 (showing 1 of 1)
+warning L_SAFE_AREA itm_s6t7v8w9x0 0.4s/12f-2s/60f
+  caption text spans y 1180-1330 of 1920; the safe area ends at y 1248 (35% bottom margin).
+  hint: set the caption track style position to "middle", or raise the item with item.set_transform y.

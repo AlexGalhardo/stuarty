@@ -1,0 +1,4 @@
+lint r1 prj_7k2m9x4q1b: errors=0 warnings=1 (showing 1 of 1)
+warning L_TRANSITION_EMPTY itm_top 1s/30f-1.333s/40f
+  the transition_in of itm_top covers frames 30-39, where nothing visible lies beneath it.
+  hint: place a clip under it or remove the transition

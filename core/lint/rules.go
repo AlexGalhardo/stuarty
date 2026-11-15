@@ -342,41 +342,6 @@ func (c *check) sourceRange() {
 // box is a rectangle in project pixels.
 type box struct{ x0, y0, x1, y1 float64 }
 
-// safeArea checks the box of every visible text and caption item against the
-// safe rectangle of SDD-004 §4.1. Static x and y are used; keyframes are not
-// followed, so the rule judges the item where it is placed.
-func (c *check) safeArea() {
-	if c.env.SafeArea == nil || c.env.TextSize == nil {
-		return
-	}
-
-	st := c.doc.Settings
-	sx, sy, sw, sh := c.env.SafeArea(st.Width, st.Height)
-	safe := box{float64(sx), float64(sy), float64(sx + sw), float64(sy + sh)}
-
-	for _, it := range c.sorted() {
-		if (it.Type != timeline.ItemText && it.Type != timeline.ItemCaption) || !c.visibleTrack(it.Track) {
-			continue
-		}
-
-		w, h, ok := c.env.TextSize(c.doc, it)
-		if !ok {
-			continue
-		}
-
-		b := c.itemBox(it, w*it.Scale, h*it.Scale, safe)
-		if b.x0 >= safe.x0-edgeSlack && b.y0 >= safe.y0-edgeSlack && b.x1 <= safe.x1+edgeSlack &&
-			b.y1 <= safe.y1+edgeSlack {
-			continue
-		}
-
-		c.add(CodeSafeArea, it.ID, itemRange(it),
-			fmt.Sprintf("the %s box spans x %.0f-%.0f and y %.0f-%.0f; the safe area is x %.0f-%.0f and y %.0f-%.0f.",
-				it.Type, b.x0, b.x1, b.y0, b.y1, safe.x0, safe.x1, safe.y0, safe.y1),
-			"move the item inside the safe area or use caption position \"middle\"")
-	}
-}
-
 // itemBox is the bounding box of the item after placement and rotation.
 func (c *check) itemBox(it *timeline.Item, w, h float64, safe box) box {
 	st := c.doc.Settings

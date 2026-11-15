@@ -1,0 +1,4 @@
+lint r1 prj_7k2m9x4q1b: errors=1 warnings=0 (showing 1 of 1)
+error L_SLOT_UNFILLED itm_hero 0s/0f-3s/90f
+  a required template slot is not filled.
+  hint: fill it with slot.fill
