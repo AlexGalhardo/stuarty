@@ -2,9 +2,14 @@ package command
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
+	"maps"
 	"math/rand"
+	"os"
+	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
@@ -133,5 +138,488 @@ func TestPropertyApplyThenInverseIsTheIdentity(t *testing.T) {
 	}
 	if succeeded < 400 || failed < 50 {
 		t.Errorf("the generator is not exercising both paths: %d succeeded, %d failed", succeeded, failed)
+	}
+}
+
+// docPick lets the generators name things that exist in a document, now and then
+// something that does not, so that the error paths run too.
+type docPick struct {
+	rng                                *rand.Rand
+	items, tracks, visual, audio, asts []string
+	captions, slots, clips             []string
+	keys                               []keyAt
+}
+
+// keyAt is a keyframe that exists: its item, property and absolute frame.
+type keyAt struct {
+	item, prop string
+	at         int
+}
+
+func newDocPick(rng *rand.Rand, doc *timeline.Document) *docPick {
+	p := &docPick{rng: rng}
+
+	for id := range doc.Items {
+		p.items = append(p.items, id)
+
+		if it := doc.Items[id]; it.Type == timeline.ItemCaption {
+			p.captions = append(p.captions, id)
+		}
+
+		if it := doc.Items[id]; it.Type == timeline.ItemClip {
+			p.clips = append(p.clips, id)
+		}
+
+		for prop, ks := range doc.Items[id].Keyframes {
+			for _, k := range ks {
+				p.keys = append(p.keys, keyAt{id, prop, doc.Items[id].Start + k.T})
+			}
+		}
+
+		if it := doc.Items[id]; it.Slot != nil {
+			p.slots = append(p.slots, it.Slot.Name)
+		}
+	}
+
+	for id, tr := range doc.Tracks {
+		p.tracks = append(p.tracks, id)
+		if tr.Kind == timeline.TrackVisual {
+			p.visual = append(p.visual, id)
+		} else {
+			p.audio = append(p.audio, id)
+		}
+	}
+
+	for id := range doc.Assets {
+		p.asts = append(p.asts, id)
+	}
+
+	for _, l := range [][]string{p.items, p.tracks, p.visual, p.audio, p.asts, p.captions, p.slots, p.clips} {
+		slices.Sort(l)
+	}
+
+	return p
+}
+
+func (p *docPick) of(list []string, missing string) string {
+	if len(list) == 0 || p.rng.Intn(20) == 0 {
+		return missing
+	}
+
+	return list[p.rng.Intn(len(list))]
+}
+
+func (p *docPick) item() string    { return p.of(p.items, "itm_zzzzzzzzzz") }
+func (p *docPick) clip() string    { return p.of(p.clips, "itm_zzzzzzzzzz") }
+func (p *docPick) caption() string { return p.of(p.captions, "itm_zzzzzzzzzz") }
+func (p *docPick) vtrack() string  { return p.of(p.visual, "trk_zzzzzzzzzz") }
+func (p *docPick) atrack() string  { return p.of(p.audio, "trk_zzzzzzzzzz") }
+func (p *docPick) asset() string   { return p.of(p.asts, "ast_zzzzzzzzzz") }
+func (p *docPick) slot() string    { return p.of(p.slots, "nope") }
+func (p *docPick) n(k int) int     { return p.rng.Intn(k) }
+func (p *docPick) frames(k int) string {
+	return fmt.Sprintf("%df", p.rng.Intn(k))
+}
+func (p *docPick) oneOf(opts ...string) string { return opts[p.rng.Intn(len(opts))] }
+
+func (p *docPick) words() string {
+	n := 1 + p.n(4)
+	parts := make([]string, n)
+
+	for i := range n {
+		parts[i] = fmt.Sprintf(`{"text":"w%d","start":"%df","duration":"%df"}`, i, i*12, 1+p.n(11))
+	}
+
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func (p *docPick) resolvedWords() string {
+	var parts []string
+
+	for at := p.n(80); at < 850 && len(parts) < 12; {
+		end := at + 1 + p.n(30)
+		parts = append(parts, fmt.Sprintf(`{"text":"r%d","start":%d,"end":%d}`, len(parts), at, end))
+		at = end + p.n(40)
+	}
+
+	return `{"words":[` + strings.Join(parts, ",") + `]}`
+}
+
+func (p *docPick) silences() string {
+	var parts []string
+
+	for at := p.n(60); at < 800 && len(parts) < 6; {
+		end := at + 5 + p.n(80)
+		parts = append(parts, fmt.Sprintf(`{"start":%d,"end":%d}`, at, end))
+		at = end + 1 + p.n(70)
+	}
+
+	return `{"silences":[` + strings.Join(parts, ",") + `]}`
+}
+
+// alphaOps are the generators of the ALPHA commands, one per command.
+var alphaOps = map[string]func(p *docPick) string{
+	"settings.set_fps": func(p *docPick) string {
+		return fmt.Sprintf(`{"fps":%q}`, p.oneOf("24", "25", "30", "60", "30000/1001"))
+	},
+	"asset.remove": func(p *docPick) string { return fmt.Sprintf(`{"asset_id":%q}`, p.asset()) },
+	"item.rename":  func(p *docPick) string { return fmt.Sprintf(`{"item_id":%q,"name":"n%d"}`, p.item(), p.n(9)) },
+	"item.set_transform": func(p *docPick) string {
+		return fmt.Sprintf(
+			`{"item_id":%q,"x":%d,"scale":%.2f,"opacity":%.2f}`,
+			p.item(),
+			p.n(1080),
+			0.5+float64(p.n(30))/10,
+			float64(p.n(11))/10,
+		)
+	},
+	"item.set_transition": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"edge":%q,"kind":%q,"duration":%q}`, p.item(), p.oneOf("in", "out"),
+			p.oneOf("fade", "slide_left", "slide_right"), p.frames(40))
+	},
+	"item.set_audio": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"volume":%.1f,"fade_in":%q}`, p.item(), float64(p.n(30))/10, p.frames(30))
+	},
+	"item.duplicate": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"start":%q}`, p.item(), p.frames(3000))
+	},
+	"item.crossfade": func(p *docPick) string {
+		return fmt.Sprintf(`{"from_item_id":%q,"to_item_id":%q,"duration":%q}`, p.item(), p.item(), p.frames(40))
+	},
+	"timeline.close_gap": func(p *docPick) string {
+		return fmt.Sprintf(`{"track_id":%q,"at":%q,"ripple":%q}`, p.vtrack(), p.frames(600), p.oneOf("track", "all"))
+	},
+	"audio.add": func(p *docPick) string {
+		return fmt.Sprintf(`{"track_id":%q,"asset_id":%q,"start":%q}`, p.atrack(), p.asset(), p.frames(2000))
+	},
+	"clip.set_framing": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"fit":%q,"crop":{"left":%.2f,"top":%.2f}}`, p.clip(),
+			p.oneOf("cover", "contain", "none"), float64(p.n(40))/100, float64(p.n(40))/100)
+	},
+	"clip.set_speed": func(p *docPick) string {
+		return fmt.Sprintf(
+			`{"item_id":%q,"speed":"%d.%dx","ripple":%q}`,
+			p.clip(),
+			p.n(3),
+			p.n(10),
+			p.oneOf("none", "track"),
+		)
+	},
+	"clip.set_color": func(p *docPick) string {
+		return fmt.Sprintf(
+			`{"item_id":%q,"brightness":%.2f,"saturation":%.2f}`,
+			p.clip(),
+			float64(p.n(200))/100-1,
+			float64(p.n(200))/100,
+		)
+	},
+	"clip.remove_silences": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"ripple":%q,"resolved":%s}`, p.clip(), p.oneOf("none", "track"), p.silences())
+	},
+	"text.apply_preset": func(p *docPick) string {
+		return fmt.Sprintf(
+			`{"item_id":%q,"preset":%q,"edge":%q,"duration":%q}`,
+			p.item(),
+			p.oneOf(
+				"fade_up",
+				"fade_down",
+				"pop",
+				"zoom_in",
+				"slide_left",
+				"slide_right",
+			),
+			p.oneOf("in", "out"),
+			p.frames(30),
+		)
+	},
+	"shape.add": func(p *docPick) string {
+		return fmt.Sprintf(`{"track_id":%q,"start":%q,"duration":"%df","shape":%q,"width":%d,"height":%d}`,
+			p.vtrack(), p.frames(2500), 1+p.n(120), p.oneOf("rect", "ellipse"), 10+p.n(500), 10+p.n(500))
+	},
+	"shape.set": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"width":%d,"fill":"#%06x"}`, p.item(), 10+p.n(500), p.n(0xffffff))
+	},
+	"caption.set_words": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"words":%s}`, p.caption(), p.words())
+	},
+	"caption.edit_word": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"index":%d,"text":%q}`, p.caption(), p.n(4), p.oneOf("", "edited", "x"))
+	},
+	"caption.set_breaks": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"breaks":[%d]}`, p.caption(), 1+p.n(3))
+	},
+	"caption.set_style": func(p *docPick) string {
+		return fmt.Sprintf(
+			`{"item_id":%q,"style":{"size":%d,"highlight":%q}}`,
+			p.caption(),
+			8+p.n(100),
+			p.oneOf("none", "word"),
+		)
+	},
+	"caption.split": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"before_word":%d}`, p.caption(), 1+p.n(3))
+	},
+	"caption.merge": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_ids":[%q,%q]}`, p.caption(), p.caption())
+	},
+	"caption.from_transcript": func(p *docPick) string {
+		return fmt.Sprintf(`{"clip_item_id":%q,"track_id":%q,"max_words":%d,"replace":%t,"resolved":%s}`,
+			p.clip(), p.vtrack(), 1+p.n(6), p.n(2) == 0, p.resolvedWords())
+	},
+	"caption.retime_from_clip": func(p *docPick) string {
+		return fmt.Sprintf(`{"clip_item_id":%q,"resolved":%s}`, p.clip(), p.resolvedWords())
+	},
+	"keyframe.set": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"property":%q,"at":%q,"value":%.2f,"easing":%q}`, p.item(),
+			p.oneOf("scale", "opacity", "x", "y", "rotation", "volume"), p.frames(500), float64(p.n(100))/100+0.1,
+			p.oneOf("linear", "ease_in", "ease_out", "ease_in_out", "hold"))
+	},
+	"keyframe.remove": func(p *docPick) string {
+		if len(p.keys) > 0 && p.n(4) != 0 {
+			k := p.keys[p.n(len(p.keys))]
+
+			return fmt.Sprintf(`{"item_id":%q,"property":%q,"at":"%df"}`, k.item, k.prop, k.at)
+		}
+
+		return fmt.Sprintf(
+			`{"item_id":%q,"property":%q,"at":%q}`,
+			p.item(),
+			p.oneOf("scale", "opacity", "x"),
+			p.frames(500),
+		)
+	},
+	"keyframe.clear": func(p *docPick) string {
+		if p.n(2) == 0 {
+			return fmt.Sprintf(`{"item_id":%q}`, p.item())
+		}
+
+		return fmt.Sprintf(`{"item_id":%q,"property":%q}`, p.item(), p.oneOf("scale", "opacity", "x"))
+	},
+	"slot.mark": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"name":"s%d"}`, p.item(), p.n(6))
+	},
+	"slot.unmark": func(p *docPick) string { return fmt.Sprintf(`{"item_id":%q}`, p.item()) },
+	"slot.fill": func(p *docPick) string {
+		switch p.n(3) {
+		case 0:
+			return fmt.Sprintf(`{"name":%q,"asset_id":%q,"source_in":%q}`, p.slot(), p.asset(), p.frames(300))
+		case 1:
+			return fmt.Sprintf(`{"name":%q,"text":"filled"}`, p.slot())
+		}
+
+		return fmt.Sprintf(`{"name":%q,"words":%s}`, p.slot(), p.words())
+	},
+	"template.set_info": func(p *docPick) string {
+		return fmt.Sprintf(
+			`{"description":"d%d","colors":{"c%d":"#%06x","c%d":null}}`,
+			p.n(9),
+			p.n(4),
+			p.n(0xffffff),
+			p.n(4),
+		)
+	},
+}
+
+// randomRegistryOp returns a random operation of the whole registry: the Prototype
+// commands of realOp and the ALPHA commands of alphaOps.
+func randomRegistryOp(rng *rand.Rand, doc *timeline.Document) Operation {
+	if rng.Intn(3) == 0 {
+		return realOp(rng, doc)
+	}
+
+	names := slices.Sorted(maps.Keys(alphaOps))
+	name := names[rng.Intn(len(names))]
+
+	return op2(name, alphaOps[name](newDocPick(rng, doc)))
+}
+
+// randomStart is a document with every kind of item, so that the generators of all
+// the commands have something to act on; half of them are templates with slots.
+func randomStart(rng *rand.Rand) *timeline.Document {
+	b := base().
+		clip(itemA, vidTr, 0, 150, 0).
+		text(itemC, vidTr, 200, 90).
+		shape("itm_x000000005", vidTr, 400, 60).
+		caption("itm_x000000003", 10, 4, func(it *timeline.Item) { it.LinkedItem = itemA }).
+		caption("itm_x000000006", 100, 3).
+		audio("itm_x000000004", 0, 300, 0)
+
+	if rng.Intn(2) == 0 {
+		b.template()
+
+		c := b.d.Items[itemA]
+		c.Asset = timeline.PlaceholderAsset
+		c.Slot = &timeline.Slot{Name: "hero", Kind: "media", Required: true, DurationPolicy: "stretch_timeline"}
+		b.d.Items[itemA] = c
+
+		tx := b.d.Items[itemC]
+		tx.Slot = &timeline.Slot{Name: "title", Kind: "text", Required: true, DurationPolicy: "fit"}
+		b.d.Items[itemC] = tx
+	}
+
+	return b.d
+}
+
+// checkStep applies one operation and checks what SDD-002 A.6 and A.8 promise: a
+// failure is a well formed error and leaves the input alone, a success is a valid
+// document and the inverses applied in reverse give back the starting bytes.
+func checkStep(doc *timeline.Document, o Operation, ids *seqIDs) (next *timeline.Document, err error) {
+	before := timeline.Canonical(doc)
+
+	res, applyErr := Default().Apply(doc, o, Env{NewIDs: ids.next})
+	if !bytes.Equal(timeline.Canonical(doc), before) {
+		return nil, fmt.Errorf("%s changed its input", o.Op)
+	}
+
+	if applyErr != nil {
+		e := AsError(applyErr)
+		if cerr := CheckError(e); cerr != nil {
+			return nil, fmt.Errorf("%s: malformed error %s %s: %w", o.Op, e.Code, e.Message, cerr)
+		}
+
+		if e.Code == CodeInternal {
+			return nil, fmt.Errorf("%s %s: an internal error: %s", o.Op, o.Args, e.Message)
+		}
+
+		return doc, nil
+	}
+
+	if vs := timeline.Validate(res.Doc); len(vs) != 0 {
+		return nil, fmt.Errorf("%s %s: invalid result %v", o.Op, o.Args, vs)
+	}
+
+	back, skipped := ApplyPrimitives(res.Doc, reversed(res.Inverse), nil)
+	if len(skipped) != 0 || !bytes.Equal(timeline.Canonical(back.Doc), before) {
+		return nil, fmt.Errorf("%s %s: the inverse did not restore the document (skipped %v)", o.Op, o.Args, skipped)
+	}
+
+	return res.Doc, nil
+}
+
+// TestRandomBatches runs random sequences of operations of the whole registry: after
+// every step the document is valid and the inverse restores the bytes before it
+// (SDD-002 A.6); every command succeeds at least once.
+func TestRandomBatches(t *testing.T) {
+	const seed = 20261116
+
+	rng := rand.New(rand.NewSource(seed))
+	ok := map[string]int{}
+	doc := randomStart(rng)
+	ids := &seqIDs{}
+
+	for i := range 6000 {
+		o := randomRegistryOp(rng, doc)
+
+		next, err := checkStep(doc, o, ids)
+		if err != nil {
+			t.Fatalf("seed %d, step %d: %v", seed, i, err)
+		}
+
+		if next != doc {
+			ok[o.Op]++
+		}
+
+		doc = next
+		if i%7 == 6 || len(doc.Items) > 80 {
+			doc = randomStart(rng)
+		}
+	}
+
+	for _, c := range Default().List() {
+		if ok[c.Name] == 0 && !c.Internal {
+			t.Errorf("%s never succeeded in the random sequences", c.Name)
+		}
+	}
+}
+
+// FuzzApplyBatch feeds the same generators with fuzzed seeds: any sequence it builds
+// keeps the document valid and undoable.
+func FuzzApplyBatch(f *testing.F) {
+	f.Add(int64(1), uint8(5))
+	f.Add(int64(20261116), uint8(9))
+
+	f.Fuzz(func(t *testing.T, seed int64, steps uint8) {
+		rng := rand.New(rand.NewSource(seed))
+		doc := randomStart(rng)
+		ids := &seqIDs{}
+
+		for i := range 1 + int(steps%12) {
+			next, err := checkStep(doc, randomRegistryOp(rng, doc), ids)
+			if err != nil {
+				t.Fatalf("seed %d, step %d: %v", seed, i, err)
+			}
+
+			doc = next
+		}
+	})
+}
+
+var genScale = flag.Bool("gen-scale", false, "write the 5 minute project of NFR-009 under testdata/scale")
+
+// scaleProject is the project of NFR-009 for the benchmarks of the ALPHA phase: 5
+// minutes at 30 fps, a clip, a music track, 164 text items and 34 captions of 60
+// words, 200 items and about 2,000 caption words.
+func scaleProject() *timeline.Document {
+	b := base().clip(itemA, vidTr, 0, 9000, 0)
+	b.d.Assets[vidAsset] = timeline.Asset{
+		ID: vidAsset, Hash: "sha256:" + strings.Repeat("9f", 32), Kind: timeline.AssetVideo, Name: "scale.mov",
+		FrameRate: timeline.Rational{Num: 30, Den: 1}, FrameCount: 9000, SampleCount: 14400000,
+		Width: 1080, Height: 1920, HasAudio: true,
+	}
+	b.d.Assets[audAsset] = timeline.Asset{
+		ID: audAsset, Hash: "sha256:" + strings.Repeat("b2", 32), Kind: timeline.AssetAudio, Name: "scale.wav",
+		SampleCount: 14400000,
+	}
+	b.audio(itemB, 0, 9000, 0)
+
+	for i := range 164 {
+		b.text(fmt.Sprintf("itm_t%09d", i), capTr, i*54, 30)
+	}
+
+	extra := timeline.Track{ID: "trk_p7q8r9s0t1", Kind: timeline.TrackVisual, Name: "Captions 2", Order: "a3"}
+	b.d.Tracks[extra.ID] = extra
+
+	for i := range 34 {
+		b.caption(fmt.Sprintf("itm_c%09d", i), i*260, 60, func(it *timeline.Item) {
+			it.Track = extra.ID
+			for j := range it.Words {
+				it.Words[j].Start, it.Words[j].Duration = j*2, 2
+			}
+			it.Duration = 120
+		})
+	}
+
+	return b.d
+}
+
+// TestScaleProject checks the generator: the project is valid and has the size of
+// NFR-009; with -gen-scale it writes testdata/scale/project.json (go generate, not
+// committed).
+func TestScaleProject(t *testing.T) {
+	doc := scaleProject()
+	if vs := timeline.Validate(doc); len(vs) != 0 {
+		t.Fatalf("the scale project is invalid: %v", vs)
+	}
+
+	words := 0
+	for id := range doc.Items {
+		words += len(doc.Items[id].Words)
+	}
+
+	if len(doc.Items) != 200 || words != 2040 {
+		t.Errorf("%d items and %d words, want 200 and 2040", len(doc.Items), words)
+	}
+
+	if !*genScale {
+		return
+	}
+
+	if err := os.MkdirAll(filepath.Join("testdata", "scale"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	out := filepath.Join("testdata", "scale", "project.json")
+	if err := os.WriteFile(out, append(timeline.Canonical(doc), '\n'), 0o600); err != nil {
+		t.Fatal(err)
 	}
 }

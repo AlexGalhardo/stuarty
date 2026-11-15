@@ -1,10 +1,17 @@
 package command
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"os"
+	"path/filepath"
+	"reflect"
+	"slices"
 	"strings"
 	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // ROADMAP P1-ENG-001: a command registered without a schema, an example or its error
@@ -172,5 +179,309 @@ func TestListNamesSchemaHelp(t *testing.T) {
 		if !ok || e.Code != CodeUnknownCommand || e.Details["known"] == nil || CheckError(e) != nil {
 			t.Errorf("unknown: %v", err)
 		}
+	}
+}
+
+// snapshotEntry is a command of core/schema/commands.json, the contract the surfaces read.
+type snapshotEntry struct {
+	Name     string `json:"name"`
+	Phase    string `json:"phase"`
+	Internal bool   `json:"internal"`
+}
+
+// TestRegistryMatchesSnapshot compares the registry, which the init function of every
+// command file fills, with the generated commands.json: a command that is registered
+// but absent from the snapshot, or listed there but not registered, fails.
+func TestRegistryMatchesSnapshot(t *testing.T) {
+	b, err := os.ReadFile("../schema/commands.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var snapshot []snapshotEntry
+	if err := json.Unmarshal(b, &snapshot); err != nil {
+		t.Fatal(err)
+	}
+
+	want := map[string]snapshotEntry{}
+	for _, e := range snapshot {
+		want[e.Name] = e
+	}
+
+	if len(want) != len(snapshot) {
+		t.Error("commands.json lists a command twice")
+	}
+
+	for _, c := range Default().List() {
+		e, ok := want[c.Name]
+
+		switch {
+		case !ok:
+			t.Errorf("%s is registered but absent from commands.json (run go run ./internal/tools/contractgen)", c.Name)
+		case e.Phase != string(c.Phase) || e.Internal != c.Internal:
+			t.Errorf("%s: the snapshot says phase %q internal %v, the registry %q %v",
+				c.Name, e.Phase, e.Internal, c.Phase, c.Internal)
+		}
+
+		delete(want, c.Name)
+	}
+
+	for name := range want {
+		t.Errorf("%s is in commands.json but not registered", name)
+	}
+}
+
+// goldenCaseDirs lists the case directories of a command, split by outcome.
+func goldenCaseDirs(t *testing.T, name string) (ok, failing []string) {
+	t.Helper()
+
+	entries, err := os.ReadDir(filepath.Join("testdata", name))
+	if err != nil {
+		t.Errorf("%s: no golden directory: %v", name, err)
+
+		return nil, nil
+	}
+
+	for _, e := range entries {
+		switch {
+		case !e.IsDir():
+		case strings.HasPrefix(e.Name(), "ok_"):
+			ok = append(ok, e.Name())
+		case strings.HasPrefix(e.Name(), "err_"):
+			failing = append(failing, e.Name())
+		}
+	}
+
+	return ok, failing
+}
+
+// PRD-001 metric 3: every command of the registry has a golden directory with at least
+// one success and one error case, one error case per code it lists, and every success
+// case carries the inverse that the runner applies to get the starting bytes back.
+func TestEveryCommandHasGoldenAndUndo(t *testing.T) {
+	cmds := Default().List()
+	if len(cmds) != 48 {
+		t.Errorf("the registry has %d commands, want 48", len(cmds))
+	}
+
+	for _, c := range cmds {
+		ok, failing := goldenCaseDirs(t, c.Name)
+		if len(ok) == 0 || len(failing) == 0 {
+			t.Errorf("%s: %d success and %d error cases; it needs at least one of each", c.Name, len(ok), len(failing))
+		}
+
+		for _, code := range c.Errors {
+			if code != CodeInternal &&
+				!slices.ContainsFunc(failing, func(n string) bool { return caseHasCode(n, code) }) {
+				t.Errorf("%s lists %s but has no err_ case for it", c.Name, code)
+			}
+		}
+
+		for _, n := range ok {
+			if _, err := os.Stat(filepath.Join("testdata", c.Name, n, "inverse.json")); err != nil {
+				t.Errorf("%s/%s has no inverse.json: %v", c.Name, n, err)
+			}
+		}
+	}
+}
+
+// timePaths collects the paths, inside args decoded from JSON, of the values that the
+// arguments struct types as Time.
+func timePaths(t reflect.Type, v any, path []any, out *[][]any) {
+	switch {
+	case t == timeType:
+		*out = append(*out, slices.Clone(path))
+	case t.Kind() == reflect.Pointer:
+		timePaths(t.Elem(), v, path, out)
+	case t.Kind() == reflect.Slice:
+		if list, ok := v.([]any); ok {
+			for i, e := range list {
+				timePaths(t.Elem(), e, append(slices.Clone(path), i), out)
+			}
+		}
+	case t.Kind() == reflect.Struct:
+		if m, ok := v.(map[string]any); ok {
+			for _, f := range argFields(t) {
+				if e, has := m[f.name]; has {
+					timePaths(f.fieldType, e, append(slices.Clone(path), f.name), out)
+				}
+			}
+		}
+	}
+}
+
+func setAt(root any, path []any, value any) {
+	cur := root
+
+	for _, p := range path[:len(path)-1] {
+		switch k := p.(type) {
+		case string:
+			cur = cur.(map[string]any)[k]
+		case int:
+			cur = cur.([]any)[k]
+		}
+	}
+
+	switch k := path[len(path)-1].(type) {
+	case string:
+		cur.(map[string]any)[k] = value
+	case int:
+		cur.([]any)[k] = value
+	}
+}
+
+func decodeJSON(t *testing.T, raw []byte) any {
+	t.Helper()
+
+	var v any
+
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	dec.UseNumber()
+
+	if err := dec.Decode(&v); err != nil {
+		t.Fatal(err)
+	}
+
+	return v
+}
+
+// RF-113: a time given as a JSON number or as a string without a unit is E_INVALID_TIME,
+// for every time argument of every command. The argument is changed in the operations of
+// the success cases, which reach the time check with every other precondition met.
+func TestNoBareNumberTimes(t *testing.T) {
+	checked := map[string]int{}
+
+	for _, c := range Default().List() {
+		ok, _ := goldenCaseDirs(t, c.Name)
+		for _, name := range ok {
+			dir := filepath.Join("testdata", c.Name, name)
+
+			before, err := os.ReadFile(filepath.Join(dir, "before.json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			opBytes, err := os.ReadFile(filepath.Join(dir, "op.json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			var probe Operation
+			if err := json.Unmarshal(opBytes, &probe); err != nil {
+				t.Fatal(err)
+			}
+
+			var paths [][]any
+			timePaths(c.argsType, decodeJSON(t, probe.Args), nil, &paths)
+
+			for _, p := range paths {
+				for _, bare := range []any{json.Number("5"), "5"} {
+					doc, err := timeline.Decode(before)
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					mutated := decodeJSON(t, probe.Args)
+					setAt(mutated, p, bare)
+
+					raw, err := json.Marshal(mutated)
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					_, err = Default().Apply(doc, Operation{Op: c.Name, Args: raw}, Env{NewIDs: (&seqIDs{}).next})
+					if e := AsError(err); err == nil || e.Code != CodeInvalidTime {
+						t.Errorf("%s/%s: %v given as %v gave %v, want E_INVALID_TIME", c.Name, name, p, bare, err)
+					}
+
+					checked[c.Name]++
+				}
+			}
+		}
+	}
+
+	for _, c := range Default().List() {
+		if hasTimeField(c.argsType) && checked[c.Name] == 0 {
+			t.Errorf("%s has a time argument that no success case sets", c.Name)
+		}
+	}
+}
+
+// hasTimeField says whether a struct type, or one nested in it, has a Time field.
+func hasTimeField(t reflect.Type) bool {
+	switch {
+	case t == timeType:
+		return true
+	case t.Kind() == reflect.Pointer || t.Kind() == reflect.Slice:
+		return hasTimeField(t.Elem())
+	case t.Kind() == reflect.Struct:
+		return slices.ContainsFunc(argFields(t), func(f argField) bool { return hasTimeField(f.fieldType) })
+	}
+	return false
+}
+
+// nameLikeValues returns the strings that a document stores under a key called name or
+// text: labels and content that a message must not repeat.
+func nameLikeValues(v any, out map[string]bool) {
+	switch x := v.(type) {
+	case map[string]any:
+		for k, e := range x {
+			if s, ok := e.(string); ok && (k == "name" || k == "text") && len(s) >= 4 {
+				out[s] = true
+			}
+
+			if k == "slot" {
+				continue // a slot name is an identifier, quoted like an id
+			}
+
+			nameLikeValues(e, out)
+		}
+	case []any:
+		for _, e := range x {
+			nameLikeValues(e, out)
+		}
+	}
+}
+
+// P2-SEC-005 (shared): the message and the hint of every golden error quote identifiers
+// and numbers, never a name or a text of the document the case runs on.
+func TestGoldenErrorsQuoteIdsNotNames(t *testing.T) {
+	n := 0
+
+	for _, c := range Default().List() {
+		_, failing := goldenCaseDirs(t, c.Name)
+		for _, name := range failing {
+			dir := filepath.Join("testdata", c.Name, name)
+
+			before, err := os.ReadFile(filepath.Join(dir, "before.json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			errBytes, err := os.ReadFile(filepath.Join(dir, "error.json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			var e Error
+			if err := json.Unmarshal(errBytes, &e); err != nil {
+				t.Fatal(err)
+			}
+
+			values := map[string]bool{}
+			nameLikeValues(decodeJSON(t, before), values)
+
+			for v := range values {
+				if strings.Contains(e.Message+" "+e.Hint, v) {
+					t.Errorf("%s/%s quotes %q of its document: %s %s", c.Name, name, v, e.Message, e.Hint)
+				}
+			}
+
+			n++
+		}
+	}
+
+	if n < 350 {
+		t.Errorf("only %d error cases were checked", n)
 	}
 }
