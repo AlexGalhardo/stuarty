@@ -282,8 +282,23 @@ func (p *procEnv) writeFixture(t *testing.T, name string) string {
 	}
 
 	args := []string{
-		"-v", "error", "-f", "lavfi", "-i", "testsrc=size=" + size + ":rate=30:duration=" + seconds,
-		"-f", "lavfi", "-i", "sine=frequency=440:duration=" + seconds, "-c:v", "mpeg4", "-c:a", "aac", "-shortest", "-y", path,
+		"-v",
+		"error",
+		"-f",
+		"lavfi",
+		"-i",
+		"testsrc=size=" + size + ":rate=30:duration=" + seconds,
+		"-f",
+		"lavfi",
+		"-i",
+		"sine=frequency=440:duration=" + seconds,
+		"-c:v",
+		"mpeg4",
+		"-c:a",
+		"aac",
+		"-shortest",
+		"-y",
+		path,
 	}
 
 	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)

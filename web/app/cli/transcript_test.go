@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -66,7 +67,10 @@ func TestInspectSectionsThroughTheCLI(t *testing.T) {
 	}
 
 	file := env.WriteFile(t, "talk.mov", strings.Repeat("x", 64))
-	if err := json.Unmarshal([]byte(run("media:import", file, "--project", project.ProjectID, "--json")), &imported); err != nil ||
+	if err := json.Unmarshal(
+		[]byte(run("media:import", file, "--project", project.ProjectID, "--json")),
+		&imported,
+	); err != nil ||
 		len(imported.Assets) != 1 {
 		t.Fatalf("import: %v %+v", err, imported)
 	}
@@ -107,7 +111,7 @@ func TestInspectSectionsThroughTheCLI(t *testing.T) {
 			} `json:"untrusted"`
 		}
 
-		if err := json.Unmarshal([]byte(run(append(base[:len(base):len(base)], "--json")...)), &page); err != nil {
+		if err := json.Unmarshal([]byte(run(append(slices.Clip(base), "--json")...)), &page); err != nil {
 			t.Fatal(err)
 		}
 

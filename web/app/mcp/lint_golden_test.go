@@ -41,8 +41,14 @@ func TestLintReportGolden(t *testing.T) {
 	ok(t, call(t, cs, "edit", map[string]any{
 		"project_id": project, "base_revision": 1,
 		"operations": []any{
-			map[string]any{"op": "track.add", "args": map[string]any{"kind": "visual", "name": "Base", "id": "trk_f6g7h8j9k0"}},
-			map[string]any{"op": "track.add", "args": map[string]any{"kind": "visual", "name": "Top", "id": "trk_m1n2p3q4r5"}},
+			map[string]any{
+				"op":   "track.add",
+				"args": map[string]any{"kind": "visual", "name": "Base", "id": "trk_f6g7h8j9k0"},
+			},
+			map[string]any{
+				"op":   "track.add",
+				"args": map[string]any{"kind": "visual", "name": "Top", "id": "trk_m1n2p3q4r5"},
+			},
 			clip("itm_a1b2c3d4e5", "trk_f6g7h8j9k0", "0s", "190s"),
 			clip("itm_f6g7h8j9k0", "trk_m1n2p3q4r5", "10s", "5s"),
 		},
