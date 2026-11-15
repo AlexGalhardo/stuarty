@@ -406,7 +406,11 @@ export class PixiExecutor implements PreviewExecutor {
 	private videoTexture(
 		video: HTMLVideoElement,
 		layer: PlanMediaLayer,
-	): Texture {
+	): Texture | null {
+		// Without autoLoad the source never learns the size of the video, and a
+		// frame rectangle on a 1x1 source samples one texel: a flat color. The
+		// element redraws when its metadata arrives (MediaPool).
+		if (video.videoWidth === 0) return null;
 		const key = `video:${layer.asset}:${layer.crop.join(",")}`;
 		let texture = this.stills.get(key);
 		if (texture === undefined) {
@@ -415,6 +419,7 @@ export class PixiExecutor implements PreviewExecutor {
 				autoPlay: false,
 				autoLoad: false,
 			});
+			source.resize(video.videoWidth, video.videoHeight);
 			const [x, y, w, h] = layer.crop;
 			texture = new Texture({ source, frame: new Rectangle(x, y, w, h) });
 			this.stills.set(key, texture);
