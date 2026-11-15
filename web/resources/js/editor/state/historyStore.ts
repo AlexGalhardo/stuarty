@@ -60,14 +60,12 @@ function fromEntry(entry: HistoryEntry): HistoryRow {
 	};
 }
 
-// A flag of the page that the server may not send yet: undefined everywhere
-// means the panel does not know, and the buttons keep the Prototype rule.
+// The flag is true on the one step Undo or Redo would take for the caller.
 function flag(
 	entries: readonly HistoryEntry[],
 	key: "undoable_by_me" | "redoable_by_me",
-): boolean | null {
-	if (!entries.some((entry) => entry[key] !== undefined)) return null;
-	return entries.some((entry) => entry[key] === true);
+): boolean {
+	return entries.some((entry) => entry[key]);
 }
 
 export function createHistory(deps: {
