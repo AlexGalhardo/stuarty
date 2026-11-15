@@ -309,7 +309,8 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 		if r.Sandbox != "" {
 			o.res, o.err = r.runSandboxed(dctx, s, stdout)
 		} else {
-			o.res, o.err = s.tool.RunWith(dctx, engine.RunOptions{Dir: s.dir, Stdin: s.stdin, Stdout: stdout}, s.argv...)
+			opts := engine.RunOptions{Dir: s.dir, Stdin: s.stdin, Stdout: stdout}
+			o.res, o.err = s.tool.RunWith(dctx, opts, s.argv...)
 		}
 		ended <- o
 	}()
