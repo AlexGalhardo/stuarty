@@ -82,6 +82,9 @@
       "workspace_none": "Not reported"
     },
     "editor": {
+      "dialog": {
+        "close": "Close"
+      },
       "back": "Back to projects",
       "revision": "rev {revision}",
       "connection": {
