@@ -1,0 +1,19 @@
+{
+  "adjusted": [],
+  "clamped": {
+    "duration": {
+      "from": 72,
+      "to": 71
+    }
+  },
+  "duration": {
+    "after": 71,
+    "before": 50
+  },
+  "linked_captions": [],
+  "shift": 0,
+  "speed": {
+    "den": 10,
+    "num": 7
+  }
+}

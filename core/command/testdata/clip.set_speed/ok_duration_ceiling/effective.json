@@ -1,0 +1,14 @@
+{
+  "adjusted": [],
+  "clamped": null,
+  "duration": {
+    "after": 7,
+    "before": 10
+  },
+  "linked_captions": [],
+  "shift": 0,
+  "speed": {
+    "den": 2,
+    "num": 3
+  }
+}

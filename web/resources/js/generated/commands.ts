@@ -157,6 +157,23 @@ export interface ClipSetFramingArgs {
   item_id: string;
 }
 
+export interface ClipSetSpeedArgs {
+  /**
+   * A clip of a video asset, or an audio item.
+   */
+  item_id: string;
+  /**
+   * none (default) or track: shift the later items of the track.
+   */
+  ripple?: "none" | "track";
+  /**
+   * "1.5x" (up to 3 decimals) or {"num": 3, "den": 2}; 1/4 to 4.
+   */
+  speed: {
+    [k: string]: unknown;
+  };
+}
+
 export interface ItemCrossfadeArgs {
   /**
    * Length of the crossfade, at least 1 frame.
@@ -474,7 +491,7 @@ export interface TrackUpdateArgs {
   track_id: string;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "caption.add" | "clip.add" | "clip.set_color" | "clip.set_framing" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "project.rename" | "settings.set" | "settings.set_fps" | "text.add" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "caption.add" | "clip.add" | "clip.set_color" | "clip.set_framing" | "clip.set_speed" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "project.rename" | "settings.set" | "settings.set_fps" | "text.add" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -484,6 +501,7 @@ export interface CommandArgsMap {
 	"clip.add": ClipAddArgs;
 	"clip.set_color": ClipSetColorArgs;
 	"clip.set_framing": ClipSetFramingArgs;
+	"clip.set_speed": ClipSetSpeedArgs;
 	"item.crossfade": ItemCrossfadeArgs;
 	"item.delete": ItemDeleteArgs;
 	"item.duplicate": ItemDuplicateArgs;
@@ -517,6 +535,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"clip.add": { summary: "Places a video or image asset on a visual track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"clip.set_color": { summary: "Sets the brightness, contrast and saturation of a clip.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_framing": { summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"clip.set_speed": { summary: "Changes the speed of a clip or audio item while keeping the same source range.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE","E_INVALID_TIME","E_OVERLAP"] },
 	"item.crossfade": { summary: "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.delete": { summary: "Removes items, and optionally closes the freed space.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE","E_OVERLAP"] },
 	"item.duplicate": { summary: "Copies an item to another position, optionally on another track.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },

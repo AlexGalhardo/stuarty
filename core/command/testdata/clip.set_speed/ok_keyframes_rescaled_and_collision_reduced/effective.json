@@ -1,0 +1,31 @@
+{
+  "adjusted": [
+    {
+      "id": "itm_m1n2p3q4r5",
+      "field": "keyframes.scale",
+      "reason": "keyframe_collision",
+      "rescaled": [
+        0,
+        1,
+        1,
+        23
+      ],
+      "final": [
+        0,
+        1,
+        23
+      ]
+    }
+  ],
+  "clamped": null,
+  "duration": {
+    "after": 23,
+    "before": 90
+  },
+  "linked_captions": [],
+  "shift": 0,
+  "speed": {
+    "den": 1,
+    "num": 4
+  }
+}
