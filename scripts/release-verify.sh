@@ -49,15 +49,26 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 cd "$work"
 
-# The release lists 6 archives, 6 SBOMs, 2 .deb, 4 installers, the 4 installers of the desktop
+# From v0.16.0 the release lists 6 archives, 6 SBOMs, 2 .deb, 4 installers, the 4 installers of the desktop
 # application and their SBOM, checksums.txt, its bundle and the provenance: 26 assets, and a
 # stable release adds feed.json: 27 (release.yml, steps "Check the release assets" and "Attach the feed").
+# Before v0.16.0 there is no desktop application and no feed: v0.15.0 lists 21 assets (the 26 minus the 5 of
+# the desktop application), and the desktop and feed checks below are skipped. Releases older than v0.15.0
+# have other counts and are not verified by this script.
+core="${v%%-*}"
+minor="${core#*.}"
+minor="${minor%%.*}"
+desktop=1
+if [ "${core%%.*}" = "0" ] && [ "$minor" -lt 16 ]; then
+	desktop=0
+fi
 want_assets=26
+[ "$desktop" -eq 1 ] || want_assets=21
 stable=0
 case "$v" in
 *-*) ;;
 *)
-	want_assets=27
+	[ "$desktop" -eq 0 ] || want_assets=27
 	stable=1
 	;;
 esac
@@ -66,9 +77,9 @@ read -r has_body assets < <(gh release view "$version" -R "$repo" --json body,as
 echo "release: body=$has_body assets=$assets (want $want_assets)"
 [ "$has_body" = "true" ] && [ "$assets" -eq "$want_assets" ]
 
-gh release download "$version" -R "$repo" \
-	-p checksums.txt -p checksums.txt.sigstore.json -p "$archive" -p "$archive.sbom.json" \
-	-p 'vukem-video-desktop_*'
+downloads=(-p checksums.txt -p checksums.txt.sigstore.json -p "$archive" -p "$archive.sbom.json")
+[ "$desktop" -eq 0 ] || downloads+=(-p 'vukem-video-desktop_*')
+gh release download "$version" -R "$repo" "${downloads[@]}"
 
 cosign verify-blob checksums.txt \
 	--bundle checksums.txt.sigstore.json \
@@ -80,6 +91,7 @@ cosign verify-blob checksums.txt \
 sha256sum --ignore-missing -c checksums.txt
 gh attestation verify "$archive" -R "$repo"
 for installer in vukem-video-desktop_"${v}"_*; do
+	[ -e "$installer" ] || continue
 	case "$installer" in *.sbom.json) continue ;; esac
 	gh attestation verify "$installer" -R "$repo"
 done
@@ -105,7 +117,7 @@ fi
 
 # The update feed of the desktop application (SDD-009 section 10.5): every digest in it is the one in
 # checksums.txt, and its signature and the signature of each artifact verify with the public key.
-if [ "$stable" -eq 1 ]; then
+if [ "$stable" -eq 1 ] && [ "$desktop" -eq 1 ]; then
 	public_key="${UPDATE_FEED_PUBLIC_KEY:-$(gh variable get UPDATE_FEED_PUBLIC_KEY -R "$repo")}"
 	gh release download "$version" -R "$repo" -p feed.json
 	bash "$script_dir/update-feed.sh" verify "$public_key" checksums.txt feed.json
