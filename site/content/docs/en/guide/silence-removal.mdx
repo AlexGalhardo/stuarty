@@ -1,0 +1,59 @@
+---
+title: "Remove silence"
+description: "Cut the silent stretches out of a talking clip and close the gaps."
+---
+
+## You will learn
+
+- how silences are found and how the cut is made;
+- which settings control it;
+- how to remove silences with a command.
+
+## The idea
+
+When a video asset is imported, the product analyses its audio and records where the sound falls below a noise level. **Silence removal** replaces one clip with one clip per stretch of speech and, by default, closes the gaps so the later items of the track move earlier. Speech is never cut hard: a little **padding** stays on each side of every cut.
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `threshold_db` | `-35` | Noise level of silence: -30, -35, -40 or -45 |
+| `min_silence` | `0.4s` | Silences shorter than this are kept |
+| `padding` | `0.1s` | Speech kept around each cut |
+| `ripple` | `track` | `track` closes the gaps, `none` leaves them |
+
+The command never starts an analysis itself: the service supplies the silences of the asset. Read them first with `media_inspect` and the section `silences`. Silence removal has no inspector section yet: use the command palette (`Ctrl+K`, `Cmd+K` on macOS), the CLI or an agent. The whole cut is one undo step.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video media:inspect ast_4h6j8k2m3n --project prj_7k2m9x4q1b --sections silences
+vukem-video edit --project prj_7k2m9x4q1b clip.remove_silences item_id=itm_m1n2p3q4r5 \
+  min_silence=0.5s threshold_db:=-40
+```
+
+</Tab>
+<Tab title="MCP">
+
+`media_inspect` with `{"project_id": "prj_7k2m9x4q1b", "asset_id": "ast_4h6j8k2m3n", "sections": ["silences"]}`, then `edit` with:
+
+```json
+{ "op": "clip.remove_silences", "args": { "item_id": "itm_m1n2p3q4r5", "min_silence": "0.5s" } }
+```
+
+</Tab>
+</Tabs>
+
+Use `dry_run` to see the pieces before you save, and `view` with a contact sheet to check the result.
+
+## Common mistakes
+
+- Using it on a clip of an asset with no audio: the command is refused.
+- A threshold that is not one of the four values: `E_VALIDATION`.
+- Expecting the captions of the clip to follow the cut. Re-sync them with `caption.retime_from_clip`.
+
+## Next steps
+
+- [Transcription](/docs/guide/transcription)
+- [Audio editing](/docs/guide/audio)

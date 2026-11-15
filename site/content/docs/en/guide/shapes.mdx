@@ -1,0 +1,57 @@
+---
+title: "Shapes"
+description: "Add rectangles, rounded rectangles and ellipses for backgrounds, cards and highlights."
+---
+
+## You will learn
+
+- what a shape item is and what it is for;
+- how to add a shape and change it later.
+
+## The idea
+
+A **shape** is an item on a visual track: a `rect`, a `rounded_rect` or an `ellipse`, with a fill colour and an optional stroke. It has a size in pixels before scale, and the same transform, transitions and keyframes as any visual item. Use it as a card behind text, a bar under a title or a highlight. A colour is a hex value, or a template colour such as `$accent`.
+
+The editor draws shapes in the preview and the timeline and edits their transform and animation in the inspector. There is no shape panel yet: create and restyle a shape from the command palette (`Ctrl+K`, `Cmd+K` on macOS), the CLI or an agent.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b shape.add track_id=trk_f6g7h8j9k0 \
+  shape=rounded_rect start=0s duration=3s width:=800 height:=240 radius:=32 fill=#101820
+vukem-video edit --project prj_7k2m9x4q1b shape.set item_id=itm_m1n2p3q4r5 fill=#ff3366
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` with the operation:
+
+```json
+{
+  "op": "shape.add",
+  "args": {
+    "track_id": "trk_f6g7h8j9k0", "shape": "rounded_rect", "start": "0s", "duration": "3s",
+    "width": 800, "height": 240, "radius": 32, "fill": "#101820"
+  }
+}
+```
+
+</Tab>
+</Tabs>
+
+`x` and `y` default to the centre of the frame. `radius` applies to `rounded_rect` only. The default fill is `#FFFFFF` and the default stroke colour is `#000000`.
+
+## Common mistakes
+
+- Adding a shape to an audio track: `E_TYPE_MISMATCH`. Use a visual track.
+- A width or height of 0 or less: `E_VALIDATION`.
+- Overlapping another item on the same track: `E_OVERLAP`. Put the shape on its own track, above the video.
+
+## Next steps
+
+- [Clip properties](/docs/guide/clip-properties)
+- [Templates](/docs/guide/templates)

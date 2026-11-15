@@ -1,0 +1,54 @@
+---
+title: "Keyboard shortcuts"
+description: "The basic shortcuts of the editor, and the command palette that reaches every command."
+---
+
+## You will learn
+
+- the shortcuts the editor has today;
+- how to reach any command without a shortcut.
+
+## The idea
+
+The editor has a basic set of shortcuts. `Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS. A shortcut never fires while you type in a field. Advanced and customizable shortcuts are not part of this release.
+
+| Keys | Does |
+| --- | --- |
+| `Space` | play or pause |
+| `Mod+K` | open or close the command palette, also inside a field |
+| `Mod+Z` | undo |
+| `Mod+Shift+Z` or `Mod+Y` | redo |
+| `S` | split the selected item at the playhead |
+| `[` and `]` | trim the start or the end of the selected item to the playhead |
+| `C` | add a caption |
+| `T` | add a text item |
+| `Delete` or `Backspace` | delete the selection |
+| `Shift+Delete` | delete and close the gap on the track |
+| `Mod+D` | duplicate the selection |
+| `F2` | rename the selected item |
+| `Mod+A` | select every item |
+| Arrow keys | move the focus between items; `Home` and `End` go to the first and last of the track |
+| `Enter` | activate the focused item |
+| `Alt+Left` and `Alt+Right` | nudge the selection by one frame; with `Shift`, by one second |
+| `Alt+Up` and `Alt+Down` | move the selection to the track above or below |
+| `+` and `-` | zoom the timeline in and out |
+| `Shift+Z` | fit the whole project in the timeline |
+| `N` | turn snapping on or off |
+| `Esc` | clear the selection |
+| `Alt+1`, `Alt+2`, `Alt+3` | show or hide the media, inspector and history panels |
+
+## Quick start
+
+Press `Mod+K`. The palette lists every command of the product with a form built from its arguments. Type part of a name, such as `crossfade`, choose a command, fill the form and press **Preview** to see the diff or **Run** to apply it. **Add to batch** collects several commands and runs them as one undo step. This is the same command set the CLI and the agents use, so any command without a shortcut or a panel is reachable here.
+
+An agent has no keyboard: it sends the same commands with `vukem-video edit` or the `edit` tool. See [Commands, batches and revisions](/docs/concepts/commands-and-revisions).
+
+## Common mistakes
+
+- Pressing `S` while a text field is focused: it types the letter. Click the timeline first.
+- Using `Alt+1` with `Ctrl` held: the browser owns that combination. Use `Alt` alone.
+
+## Next steps
+
+- [Editing tools: trim, split, move](/docs/guide/editing-tools)
+- [Undo and history](/docs/guide/undo-and-history)

@@ -1,0 +1,64 @@
+---
+title: "Transcription"
+description: "Turn the speech of a clip into word-timed text on your computer, and make captions from it."
+---
+
+## You will learn
+
+- how a clip becomes a transcript and the transcript becomes captions;
+- how to use Auto captions in the editor;
+- where the audio is processed, and how to use a transcription API instead.
+
+## The idea
+
+**Transcription** is a job. It reads the audio of an imported asset and stores the words with their start and end times. The transcript belongs to the asset, so a second clip of the same asset reuses it. **Auto captions** then groups the words of the visible range of a clip into captions on a caption track and links them to the clip.
+
+By default transcription runs on your computer with whisper.cpp and a model you install once: `tiny`, `base`, `small` (the default) or `large-v3-turbo`. The download is an explicit step, announced with its size and host before it starts, and nothing is downloaded at any other time. When the files are missing, the job fails with `E_TRANSCRIBE_UNAVAILABLE` and the editor offers to install them.
+
+An operator can point the server to an OpenAI-compatible transcription API with `VUKEM_VIDEO_TRANSCRIBE_URL`, `VUKEM_VIDEO_TRANSCRIBE_KEY` and `VUKEM_VIDEO_TRANSCRIBE_MODEL`. Then the audio of the asset (and nothing else) is sent to that host, and the job message says which host receives it. With no URL set, no audio leaves the machine. See [Privacy](/docs/self-hosting/privacy).
+
+## Quick start
+
+In the editor, select a clip that has audio and open **Auto captions** in the inspector:
+
+1. Choose the caption track, or a new one.
+2. Set the words per caption, the characters per caption and the pause that starts a new caption.
+3. Press **Generate captions**. If local transcription is not installed, the dialog offers to install it, or shows the command to run in a terminal.
+4. After you retime or edit the clip, press **Re-sync captions** to follow it.
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video tools:install whisper --model small
+vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en
+vukem-video edit --project prj_7k2m9x4q1b caption.from_transcript \
+  clip_item_id=itm_m1n2p3q4r5 track_id=trk_f6g7h8j9k0 max_words:=4
+```
+
+</Tab>
+<Tab title="MCP">
+
+`job_start` with `{"project_id": "prj_7k2m9x4q1b", "kind": "transcribe", "args": {"asset_id": "ast_3c5v8n2w6d"}, "wait_ms": 25000}`, then `media_inspect` with `"sections": ["transcript"]` to read the words, then `edit` with:
+
+```json
+{ "op": "caption.from_transcript", "args": {
+  "clip_item_id": "itm_m1n2p3q4r5", "track_id": "trk_f6g7h8j9k0"
+} }
+```
+
+</Tab>
+</Tabs>
+
+`caption.from_transcript` defaults to 5 words and 28 characters per caption and a pause of 0.6s. With `replace` (the default) the captions already linked to the clip on that track are removed first. `caption.retime_from_clip` moves the linked captions after the clip changed. Style captions with `track.set_caption_style` and fix a word with `caption.edit_word`.
+
+## Common mistakes
+
+- Running `caption.from_transcript` before the transcript exists. Start the transcription job and wait for it first.
+- Transcription is queued behind others: `VUKEM_VIDEO_MAX_TRANSCRIBES` and `VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY` limit how many run at once.
+- A source longer than `VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS` (2 hours by default) is refused.
+
+## Next steps
+
+- [Text and captions](/docs/guide/text-and-captions)
+- [Jobs and the queue](/docs/guide/jobs)

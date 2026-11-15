@@ -1,0 +1,60 @@
+---
+title: "Clip properties"
+description: "Rename an item, move and scale it on the frame, crop and fit a clip, and change its speed."
+---
+
+## You will learn
+
+- which properties an item has and where you change them;
+- how to place, scale, rotate and fade an item;
+- how to crop a clip, choose how it fits the frame and change its speed.
+
+## The idea
+
+Select an item on the timeline and the inspector shows its **Name**, its **Timing** (start, end, duration and the in point inside the source) and its **Transform**: position `x` and `y` (the centre of the item, in pixels), `scale`, `rotation` in degrees clockwise and `opacity`. A field that has [keyframes](/docs/guide/keyframes) is marked as animated and cannot be set to one static value until you clear them.
+
+Two properties belong to video clips only. **Framing** says how the picture fits the frame (`cover`, `contain` or `none`) and how much of each side is cropped, as a fraction from 0 to 1. **Speed** runs the same source range faster or slower, from 0.25x to 4x, and rescales the duration, fades, transitions and keyframes by the same ratio.
+
+The inspector edits the name, the timing and the transform. Framing and speed have no inspector section yet: use the command palette (`Ctrl+K`, `Cmd+K` on macOS), the CLI or an agent.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b item.rename item_id=itm_m1n2p3q4r5 name="Opening shot"
+vukem-video edit --project prj_7k2m9x4q1b item.set_transform item_id=itm_m1n2p3q4r5 scale:=1.2 \
+  opacity:=0.9
+vukem-video edit --project prj_7k2m9x4q1b clip.set_speed item_id=itm_m1n2p3q4r5 speed=1.5x \
+  ripple=track
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` with `{"project_id": "prj_7k2m9x4q1b", "operations": [...]}`, where an operation is one of:
+
+```json
+{ "op": "item.set_transform", "args": { "item_id": "itm_m1n2p3q4r5", "scale": 1.2, "x": 540 } }
+{ "op": "clip.set_framing", "args": { "item_id": "itm_m1n2p3q4r5", "fit": "contain" } }
+{ "op": "clip.set_speed", "args": {
+  "item_id": "itm_m1n2p3q4r5", "speed": "1.5x", "ripple": "track"
+} }
+```
+
+</Tab>
+</Tabs>
+
+`item.set_transform` rounds to 3 decimals, and `scale` 1, `rotation` 0 and `opacity` 1 clear the stored value. With `ripple` set to `track`, `clip.set_speed` moves the later items of the track by the change in length. Captions linked to the clip are listed in the result, not changed.
+
+## Common mistakes
+
+- Setting `x`, `scale` or another property that has keyframes: the command is refused. Use `keyframe.set`, or `keyframe.clear` first.
+- A crop whose left plus right, or top plus bottom, is 1 or more: `E_VALIDATION`.
+- Setting a speed outside 1/4 to 4: `E_VALIDATION`.
+
+## Next steps
+
+- [Animate with keyframes](/docs/guide/keyframes)
+- [Effects and color](/docs/guide/effects-and-color)

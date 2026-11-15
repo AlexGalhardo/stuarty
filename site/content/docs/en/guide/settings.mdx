@@ -1,0 +1,57 @@
+---
+title: "Settings"
+description: "Project settings (size, frame rate, background, loudness), the editor language and theme, and the server settings."
+---
+
+## You will learn
+
+- which settings belong to a project and how to change them;
+- which settings belong to you, in the editor;
+- where the settings of the server are.
+
+## The idea
+
+There are three levels of settings, and they are kept apart on purpose.
+
+**Project settings** are part of the project and its history, so every change can be undone: the frame `width` and `height` (even numbers, 16 to 4096), the frame rate, the `background` colour (a hex colour or a template colour such as `$paper`), and the `loudness_target` in LUFS (-30 to -5). Changing the frame rate rescales every time in the project and repairs what rounding breaks, such as a duration that became zero; the result lists every item it adjusted. The name of the project is changed with `project.rename`. New projects start from a preset: 9:16, 1:1, 16:9 or 4:5.
+
+**Editor preferences** are yours and live in the browser: the language (English or Brazilian Portuguese), chosen on the projects page, and the light or dark theme, which has a button on the projects page and in the top bar of the editor. The language switch changes only the editor; the CLI and MCP text stays English.
+
+**Server settings** are environment variables read at start-up, such as the encoder, the limits and the mode. They are listed in [Configuration variables](/docs/reference/configuration). Changing one needs a restart.
+
+There is no settings page in this release: project settings are changed with the command palette (`Ctrl+K`, `Cmd+K` on macOS), the CLI or an agent.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b settings.set background=#101820 width:=1080 height:=1920
+vukem-video edit --project prj_7k2m9x4q1b settings.set_fps fps=30000/1001
+vukem-video edit --project prj_7k2m9x4q1b project.rename name="Launch teaser v2"
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` with the operations:
+
+```json
+{ "op": "settings.set", "args": { "background": "#101820", "loudness_target": -16 } }
+{ "op": "settings.set_fps", "args": { "fps": "30" } }
+```
+
+</Tab>
+</Tabs>
+
+## Common mistakes
+
+- An odd frame size: `E_VALIDATION`. Widths and heights must be even.
+- Changing the frame rate late in the work. Every time is rescaled; check the `adjusted` list and run `lint`.
+- Looking in the editor for a server setting such as a limit. Those are environment variables.
+
+## Next steps
+
+- [Configuration variables](/docs/reference/configuration)
+- [Projects](/docs/projects)

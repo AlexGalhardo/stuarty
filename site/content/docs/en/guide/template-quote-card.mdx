@@ -1,0 +1,51 @@
+---
+title: "Template: quote card"
+description: "The starter for a square quote card with the quote and its author, on a paper background."
+---
+
+## You will learn
+
+- what the starter holds;
+- how to fill the quote and the author;
+- how to recolour it.
+
+## The idea
+
+**Quote card** is a 1080 x 1080 project of 6 seconds: a paper-coloured background, a short accent bar, the quote in a serif font and the author in upper case, both fading up. Its template colours are `paper` (`#F4EFE6`, the background), `ink` (`#1B1B1B`, the quote) and `accent` (`#B5452A`, the bar and the author).
+
+| Slot | Kind | What goes in it |
+| --- | --- | --- |
+| `quote` | text | the quote (default `A quote worth sharing goes here.`) |
+| `author` | text | who said it (default `Author Name`) |
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+cat > fill.json <<'EOF'
+{ "quote": { "text": "Make it work, then make it small." }, "author": { "text": "A. Writer" } }
+EOF
+vukem-video template:new tpl_5n8b2v6c1x --name "Quote 01" --fill fill.json
+```
+
+</Tab>
+<Tab title="MCP">
+
+`template` with `{"action": "new", "template_id": "tpl_5n8b2v6c1x", "name": "Quote 01", "fill": {"quote": {"text": "Make it work, then make it small."}, "author": {"text": "A. Writer"}}}`.
+
+</Tab>
+</Tabs>
+
+To recolour the card, change the named colours of the new project with `template.set_info`: `{"colors": {"paper": "#101820", "ink": "#FFFFFF"}}`. Every item that uses `$paper` or `$ink` follows.
+
+## Common mistakes
+
+- Long quotes: the text wraps at a maximum width, and a quote that grows outside the safe area is reported as `L_SAFE_AREA`. Shorten it or lower the size with `text.set`.
+- Removing a colour that an item still uses as `$name`: refused.
+
+## Next steps
+
+- [Text and captions](/docs/guide/text-and-captions)
+- [Exporting](/docs/guide/exporting)
