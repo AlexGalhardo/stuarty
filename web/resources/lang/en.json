@@ -956,6 +956,22 @@
           "text": "Text",
           "caption": "Caption"
         }
+      },
+      "announce": {
+        "split": {
+          "one": "Split, {count} item",
+          "other": "Split, {count} items"
+        },
+        "moved": {
+          "one": "Moved, {count} item",
+          "other": "Moved, {count} items"
+        },
+        "deleted": {
+          "one": "Deleted, {count} item",
+          "other": "Deleted, {count} items"
+        },
+        "undone": "Undone",
+        "redone": "Redone"
       }
     },
     "login": {

@@ -1,3 +1,4 @@
+import { announce } from "../a11y/announce";
 import type { EditOutcome } from "../api/edit";
 import type { ApiError } from "../api/errors";
 import type { Notice } from "../state/noticeStore";
@@ -242,6 +243,20 @@ export function createActions(runtime: EditorRuntime): Actions {
 		});
 	}
 
+	// The result of a key or a menu entry, read out by the live region
+	// (SDD-012 section 18.1 item 5). Field edits of the inspector are not.
+	function announceEdit(ops: Operations): void {
+		const count = (...names: string[]): number =>
+			ops.filter((o) => names.includes(o.op)).length;
+		const splits = count("item.split", "caption.split");
+		const moves = count("item.move");
+		const deletes = count("item.delete");
+		if (splits > 0) announce("ui.editor.announce.split", { count: splits });
+		else if (deletes > 0)
+			announce("ui.editor.announce.deleted", { count: deletes });
+		else if (moves > 0) announce("ui.editor.announce.moved", { count: moves });
+	}
+
 	function report(error: ApiError, ops: Operations): void {
 		// A request the browser itself gave up is not a failure to show.
 		if (error.isAborted) return;
@@ -358,8 +373,12 @@ export function createActions(runtime: EditorRuntime): Actions {
 		if (ops.length === 0 || revision === null || state === "trashed")
 			return null;
 		const outcome = await runtime.edits.edit(ops, baseRevision ?? revision);
-		if (!outcome.ok && !(inline && FIELD_ERRORS.has(outcome.error.code)))
+		if (outcome.ok) announceEdit(ops);
+		else if (!(inline && FIELD_ERRORS.has(outcome.error.code))) {
 			report(outcome.error, ops);
+			if (!outcome.error.isAborted)
+				announce(`ui.editor.errors.${outcome.error.code}`);
+		}
 		return outcome;
 	}
 
@@ -368,6 +387,7 @@ export function createActions(runtime: EditorRuntime): Actions {
 			? runtime.edits.undo()
 			: runtime.edits.redo());
 		if (outcome.ok) {
+			announce(`ui.editor.announce.${kind === "undo" ? "undone" : "redone"}`);
 			const skippedOps = outcome.result.skipped ?? [];
 			const skipped = skippedOps.length;
 			if (skipped > 0) {
