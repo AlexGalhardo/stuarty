@@ -26,6 +26,7 @@ const (
 	ReasonStalled   = "stalled"
 	ReasonPublish   = "publish_failed"
 	ReasonBadOutput = "bad_output_dir"
+	ReasonBadFormat = "bad_format"
 )
 
 // scrubLimit is how much of a tool's stderr an error keeps.

@@ -156,7 +156,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── token                    local token, file mode 0600 (local mode only)
 ├── store/                   content-addressed originals: store/<first 2 hex>/<sha256>; store/.incoming/ holds copies in progress
 ├── artifacts/               derived files: artifacts/<asset sha256>/<kind>-<profile version>[-<variant>].<ext> (SDD-011 §6.1)
-├── exports/                 exported files: exports/<project id>/<job id>.mp4
+├── exports/                 exported files: exports/<project id>/<job id>.mp4 (`.gif`, `.wav` or `.m4a` for the other formats of SDD-004 §8.1)
 ├── frames/                  cache of rendered frames: frames/<project id>/<revision>/<frame>-<width>.jpg
 ├── bitmaps/                 cache of rasterized text and shapes, by content hash
 ├── fonts/                   user fonts, by hash (BETA)

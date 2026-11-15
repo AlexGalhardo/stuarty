@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 // idRe is the shape of a project or job identifier: letters, digits, '_' and '-', never a separator
@@ -26,11 +27,12 @@ func exportPath(dir, projectID, jobID string) (string, error) {
 // publishUnder copies the verified file into <dir>/<project id>/ and renames it to <job id>.mp4, with
 // every step through os.Root so no name can leave dir, and the folder of the project is mode 0700.
 // The file appears under its final name only whole. It returns the path of the published file.
-func publishUnder(dir, projectID, jobID, partial string) (string, error) {
+func publishUnder(dir, projectID, jobID, ext, partial string) (string, error) {
 	final, err := exportPath(dir, projectID, jobID)
 	if err != nil {
 		return "", err
 	}
+	final = strings.TrimSuffix(final, ".mp4") + ext
 
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", err
@@ -47,7 +49,7 @@ func publishUnder(dir, projectID, jobID, partial string) (string, error) {
 	}
 
 	tmp := filepath.Join(projectID, "."+jobID+".part")
-	name := filepath.Join(projectID, jobID+".mp4")
+	name := filepath.Join(projectID, jobID+ext)
 
 	if err := copyInto(root, partial, tmp); err != nil {
 		_ = root.Remove(tmp)

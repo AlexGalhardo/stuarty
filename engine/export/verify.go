@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 )
 
@@ -23,6 +24,7 @@ type probedStream struct {
 	Height    int    `json:"height"`
 	PixFmt    string `json:"pix_fmt"`
 	Duration  string `json:"duration"`
+	AvgRate   string `json:"avg_frame_rate"`
 }
 
 type probedFile struct {
@@ -99,6 +101,9 @@ func (s *state) verify(ctx context.Context, partial string, frames int) (Verifie
 		if v.PixFmt != "yuv420p" {
 			fail("pixel_format", "yuv420p", v.PixFmt)
 		}
+		if !sameRate(v.AvgRate, fps) {
+			fail("frame_rate", fmt.Sprintf("%d/%d", fps.Num, fps.Den), v.AvgRate)
+		}
 		checkDuration(&failed, "video_duration", v.Duration, want, frameSec)
 		got := strings.TrimSpace(string(pkts))
 		if exp := "h264," + strconv.Itoa(frames); got != exp {
@@ -150,4 +155,13 @@ func checkDuration(failed *[]Check, name, got string, want, frameSec float64) {
 	if err != nil || math.Abs(d-want) > frameSec {
 		*failed = append(*failed, Check{Name: name, Expected: exp, Got: got})
 	}
+}
+
+// sameRate says whether ffprobe's avg_frame_rate ("60/1") is the project's frame rate, as fractions.
+func sameRate(got string, fps timeline.Rational) bool {
+	num, den, ok := strings.Cut(got, "/")
+	n, err1 := strconv.ParseInt(num, 10, 64)
+	d, err2 := strconv.ParseInt(den, 10, 64)
+
+	return ok && err1 == nil && err2 == nil && d > 0 && n*int64(fps.Den) == int64(fps.Num)*d
 }

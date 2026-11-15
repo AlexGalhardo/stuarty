@@ -42,6 +42,8 @@ type Job struct {
 	// OutPath is the old way to name the destination, used only when ExportsDir is empty; the service
 	// moves to ExportsDir and ProjectID and OutPath is then removed.
 	OutPath string
+	// Format is what the export writes; the zero value is FormatMP4.
+	Format Format
 	// MaxBytes is VUKEM_VIDEO_MAX_EXPORT_BYTES: a larger file ends the job with reason "size_limit".
 	// Zero is no limit.
 	MaxBytes int64
@@ -63,6 +65,7 @@ type Job struct {
 // Result is what a successful export produced.
 type Result struct {
 	Path       string
+	Format     Format
 	Size       int64
 	DurationMS int64
 	Frames     int
@@ -162,6 +165,15 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 			return nil, exportErr(ReasonBadOutput, "The export destination is not valid.", err, "")
 		}
 	}
+	if !job.Format.Valid() {
+		return nil, exportErr(
+			ReasonBadFormat,
+			"The export format is not one of mp4, gif, wav and aac.",
+			errors.New("unknown format"),
+			"",
+		)
+	}
+	format := job.Format.normal()
 	doc := job.Doc
 
 	// 1. Check.
@@ -175,15 +187,8 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 		return nil, lintError(blocking)
 	}
 	frames := endFrame(doc)
-
-	// 2. Encoder.
-	det, err := job.Runner.DetectEncoder(ctx, job.Caps, job.Encoder)
-	if err != nil {
+	if err := checkLimits(doc.Settings); err != nil {
 		return nil, err
-	}
-	cand, ok := det.ChosenCandidate()
-	if !ok {
-		return nil, exportErr(ReasonEncoder, "No encoder was chosen.", nil, "")
 	}
 
 	dir, err := job.Runner.NewRunDir(job.JobID)
@@ -194,35 +199,11 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 
 	s := newState(ctx, job, dir, frames)
 
-	// 3. Audio.
-	mix, loud, err := s.mixAudio(ctx)
+	b, err := s.build(ctx, format)
 	if err != nil {
 		return nil, err
 	}
-
-	// 4. Video.
-	rd := s.newRenderer(job.Bands)
-	defer rd.close()
-	partial, err := dir.Path(job.JobID + ".partial.mp4")
-	if err != nil {
-		return nil, err
-	}
-	if err := s.encode(ctx, cand, mix, partial, rd); err != nil {
-		return nil, err
-	}
-	rd.close()
-	if job.afterEncode != nil {
-		if err := job.afterEncode(partial); err != nil {
-			return nil, err
-		}
-	}
-
-	// 7. Verification.
-	ver, err := s.verify(ctx, partial, frames)
-	if err != nil {
-		_ = os.Remove(partial)
-		return nil, err
-	}
+	partial, ver := b.partial, b.ver
 
 	if job.MaxBytes > 0 && ver.Size > job.MaxBytes {
 		_ = os.Remove(partial)
@@ -233,7 +214,7 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 	// 8. Publish.
 	out := job.OutPath
 	if job.ExportsDir != "" {
-		out, err = publishUnder(job.ExportsDir, job.ProjectID, job.JobID, partial)
+		out, err = publishUnder(job.ExportsDir, job.ProjectID, job.JobID, format.Ext(), partial)
 	} else {
 		err = publish(partial, out)
 	}
@@ -245,8 +226,9 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 		Size:       ver.Size,
 		DurationMS: ver.DurationMS,
 		Frames:     frames,
-		Encoder:    cand.Name,
-		Loudness:   loud,
+		Format:     format,
+		Encoder:    b.encoder,
+		Loudness:   b.loud,
 	}, nil
 }
 
@@ -318,4 +300,84 @@ func copyFile(src, dst string) (err error) {
 		return err
 	}
 	return out.Sync()
+}
+
+// built is a verified partial file and what the build learned on the way.
+type built struct {
+	partial string
+	encoder string
+	loud    Loudness
+	ver     Verified
+}
+
+// build makes and verifies the partial file of the format (steps 2 to 7 of SDD-004 section 8).
+func (s *state) build(ctx context.Context, f Format) (built, error) {
+	switch f {
+	case FormatGIF:
+		rd := s.newRenderer(s.job.Bands)
+		defer rd.close()
+
+		return s.buildGIF(ctx, rd)
+	case FormatWAV, FormatAAC:
+		return s.buildAudio(ctx, f)
+	case FormatMP4:
+	}
+
+	return s.buildMP4(ctx)
+}
+
+func (s *state) buildMP4(ctx context.Context) (built, error) {
+	job := s.job
+
+	// 2. Encoder.
+	det, err := job.Runner.DetectEncoder(ctx, job.Caps, job.Encoder)
+	if err != nil {
+		return built{}, err
+	}
+
+	cand, ok := det.ChosenCandidate()
+	if !ok {
+		return built{}, exportErr(ReasonEncoder, "No encoder was chosen.", nil, "")
+	}
+
+	if err := s.checkCapability(ctx, cand); err != nil {
+		return built{}, err
+	}
+
+	// 3. Audio.
+	mix, loud, err := s.mixAudio(ctx)
+	if err != nil {
+		return built{}, err
+	}
+
+	// 4. Video.
+	rd := s.newRenderer(job.Bands)
+	defer rd.close()
+
+	partial, err := s.dir.Path(job.JobID + ".partial.mp4")
+	if err != nil {
+		return built{}, err
+	}
+
+	if err := s.encode(ctx, cand, mix, partial, rd); err != nil {
+		return built{}, err
+	}
+
+	rd.close()
+
+	if job.afterEncode != nil {
+		if err := job.afterEncode(partial); err != nil {
+			return built{}, err
+		}
+	}
+
+	// 7. Verification.
+	ver, err := s.verify(ctx, partial, s.frames)
+	if err != nil {
+		_ = os.Remove(partial)
+
+		return built{}, err
+	}
+
+	return built{partial: partial, encoder: cand.Name, loud: loud, ver: ver}, nil
 }
