@@ -1,0 +1,271 @@
+package contract
+
+import (
+	"encoding/json"
+	"io"
+	"net/http"
+	"reflect"
+	"regexp"
+	"slices"
+	"strings"
+	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/cli"
+	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
+)
+
+// row is one line of the parity table of SDD-003 section 7.1 for an operation of
+// the Prototype phase. Pending is the task that delivers the operation: until
+// then it has no Service method and its tool and command are stubs.
+type row struct {
+	method  string // the Service method
+	tool    string // the MCP tool, empty when the operation has none
+	command string // the CLI command
+	route   string // "METHOD /path" of the HTTP API
+	pending string
+}
+
+var parity = []row{
+	{method: "ProjectList", tool: "project_list", command: "project:list", route: "GET /projects"},
+	{method: "ProjectCreate", tool: "project_create", command: "project:create", route: "POST /projects"},
+	{method: "ProjectGet", tool: "project_get", command: "project:show", route: "GET /projects/{}"},
+	{method: "ProjectTrash", command: "project:trash", route: "POST /projects/{}/trash"},
+	{method: "ProjectRestore", command: "project:restore", route: "POST /projects/{}/restore"},
+	{method: "Edit", tool: "edit", command: "edit", route: "POST /projects/{}/edit"},
+	{method: "CommandHelp", tool: "command_help", command: "command:help", route: "GET /commands"},
+	{method: "HistoryList", tool: "history", command: "history", route: "GET /projects/{}/history"},
+	{method: "Undo", tool: "history", command: "undo", route: "POST /projects/{}/undo"},
+	{method: "Redo", tool: "history", command: "redo", route: "POST /projects/{}/redo"},
+	{method: "MediaImport", tool: "media_import", command: "media:import", route: "POST /projects/{}/media"},
+	{method: "MediaInspect", tool: "media_inspect", command: "media:inspect", route: "GET /projects/{}/media/{}"},
+	{method: "MediaList", tool: "media_inspect", command: "media:list", route: "GET /projects/{}/media"},
+	{method: "Lint", tool: "lint", command: "lint", route: "GET /projects/{}/lint"},
+	{method: "JobStart", tool: "job_start", command: "export", route: "POST /projects/{}/jobs"},
+	{method: "JobGet", tool: "job_get", command: "job:show", route: "GET /jobs/{}"},
+	{method: "JobList", tool: "job_get", command: "job:list", route: "GET /projects/{}/jobs"},
+	{
+		method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame",
+		pending: "P1-RND-005",
+	},
+	{
+		method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet",
+		pending: "P1-RND-005",
+	},
+	{method: "Events", command: "events", route: "GET /projects/{}/events", pending: "P1-SRV-006"},
+}
+
+// notOperations are Service methods that are not operations an agent calls
+// (SDD-003 section 7.1, exception E-2).
+var notOperations = map[string]bool{"OpenFile": true}
+
+var braces = regexp.MustCompile(`\{[^}]*\}`)
+
+func TestParityTableCoversTheService(t *testing.T) {
+	t.Parallel()
+
+	known := map[string]bool{}
+	for _, r := range parity {
+		known[r.method] = true
+	}
+
+	svc := reflect.TypeFor[service.Service]()
+
+	for m := range svc.Methods() {
+		if !known[m.Name] && !notOperations[m.Name] {
+			t.Errorf(
+				"Service.%s is in no row of the parity table: give it a tool, a command and a route, or an exception of SDD-003 section 7.1",
+				m.Name,
+			)
+		}
+	}
+
+	for _, r := range parity {
+		_, has := svc.MethodByName(r.method)
+		if has == (r.pending != "") {
+			t.Errorf("%s: pending=%q but the Service method exists=%v", r.method, r.pending, has)
+		}
+	}
+}
+
+func TestEveryOperationIsReachableOnEverySurface(t *testing.T) {
+	d := newHTTP(t).(*httpDriver)
+
+	tools := listedTools(t)
+	commands, stubs := cli.CommandNames()
+	routes := httpRoutes(t, d)
+
+	for _, r := range parity {
+		if r.pending != "" {
+			// A pending operation is a declared stub, never a listed tool.
+			if r.tool != "" && slices.Contains(tools, r.tool) {
+				t.Errorf("%s is pending (%s) but %s is already listed", r.method, r.pending, r.tool)
+			}
+
+			if !slices.Contains(stubs, r.command) {
+				t.Errorf(
+					"%s is pending (%s): the command %s must be a stub that names its task",
+					r.method,
+					r.pending,
+					r.command,
+				)
+			}
+
+			continue
+		}
+
+		if r.tool != "" && !slices.Contains(tools, r.tool) {
+			t.Errorf("%s: the MCP tool %s is not in tools/list", r.method, r.tool)
+		}
+
+		if !slices.Contains(commands, r.command) || slices.Contains(stubs, r.command) {
+			t.Errorf("%s: the CLI command %s is missing or still a stub", r.method, r.command)
+		}
+
+		if !slices.Contains(routes, r.route) {
+			t.Errorf("%s: the HTTP route %s is not served", r.method, r.route)
+		}
+	}
+
+	for _, name := range tools {
+		if !slices.ContainsFunc(parity, func(r row) bool { return r.tool == name }) {
+			t.Errorf("the tool %s is in no row of the parity table", name)
+		}
+	}
+}
+
+func listedTools(t *testing.T) []string {
+	t.Helper()
+
+	d := newMCP(t).(*mcpDriver)
+
+	list, err := d.cs.ListTools(t.Context(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	names := make([]string, 0, len(list.Tools))
+
+	for _, tool := range list.Tools {
+		names = append(names, tool.Name)
+	}
+
+	for name := range mcp.Pending {
+		if slices.Contains(names, name) {
+			t.Errorf("%s is pending and listed", name)
+		}
+	}
+
+	return names
+}
+
+// httpRoutes are the "METHOD /path" pairs of the OpenAPI document of the server,
+// without the base path and with every parameter as {}.
+func httpRoutes(t *testing.T, d *httpDriver) []string {
+	t.Helper()
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, d.url+"/openapi.json", http.NoBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+d.token)
+
+	res, err := d.send(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer res.Body.Close()
+
+	raw, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("openapi: %d %.200s", res.StatusCode, raw)
+	}
+
+	var doc struct {
+		Paths map[string]map[string]json.RawMessage `json:"paths"`
+	}
+
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatalf("openapi: %v", err)
+	}
+
+	var routes []string
+
+	for path, ops := range doc.Paths {
+		path = braces.ReplaceAllString(strings.TrimPrefix(path, "/api/v1"), "{}")
+
+		for method := range ops {
+			routes = append(routes, strings.ToUpper(method)+" "+path)
+		}
+	}
+
+	return routes
+}
+
+// TestDriversCoverTheOperationsOfTheScenarios fails when a scenario names an
+// operation that a driver cannot encode.
+func TestDriversCoverTheOperationsOfTheScenarios(t *testing.T) {
+	t.Parallel()
+
+	steps, _ := loadScenario(t, "prototype")
+
+	for _, s := range steps {
+		if _, _, err := toolCall(s); err != nil {
+			t.Errorf("mcp: %v", err)
+		}
+
+		if _, _, _, err := command2argv(s); err != nil {
+			t.Errorf("cli: %v", err)
+		}
+	}
+}
+
+// TestBudgetsOfTheSurfacesArePrinted measures NFR-020 on the tools/list the
+// client receives and prints it; the 200-item view of NFR-021 is measured in
+// web/app/mcp (TestConciseViewOfAnItemHeavyProjectFitsTwoPages) and the reads of
+// the scenario are printed here, so that a run shows the sizes.
+func TestBudgetsOfTheSurfacesArePrinted(t *testing.T) {
+	d := newMCP(t).(*mcpDriver)
+
+	list, err := d.cs.ListTools(t.Context(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	raw := encode(t, list)
+	tokens := len(raw) / 3 // the conservative 3 bytes per token of SDD-003 section 4.1
+
+	t.Logf("NFR-020: tools/list is %d bytes, about %d tokens (limit 6000)", len(raw), tokens)
+
+	if tokens > 6000 {
+		t.Errorf("tools/list is about %d tokens, over the 6000 of NFR-020", tokens)
+	}
+
+	steps, fixtures := loadScenario(t, "prototype")
+
+	for i, s := range steps {
+		s = withFixtures(t, d, s, fixtures)
+
+		_, text, fail := d.do(t, s)
+		if s.Call == "MediaImport" {
+			settleImport(t, d, s)
+		}
+
+		if fail != nil || s.Call != "ProjectGet" {
+			continue
+		}
+
+		t.Logf("NFR-021: step %d project_get concise is %d characters, about %d tokens (limit 4000 a page)",
+			i, len(text), len(text)/3)
+
+		if len(text)/3 > 4000 {
+			t.Errorf("project_get concise is about %d tokens", len(text)/3)
+		}
+	}
+}
