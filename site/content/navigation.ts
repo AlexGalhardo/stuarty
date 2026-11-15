@@ -70,8 +70,12 @@ export const navigation: NavCategory[] = [
 			"encoders-and-presets",
 			"keyboard-shortcuts",
 			"settings",
-			"desktop",
 		],
+	},
+	{
+		dir: "guide",
+		title: { en: "Tutorials", "pt-br": "Tutoriais" },
+		pages: ["tutorial-vertical-short", "tutorial-agent-edit", "desktop"],
 	},
 	{
 		dir: "agents",
