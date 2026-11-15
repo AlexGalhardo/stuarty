@@ -481,6 +481,7 @@ func TestSecurity_T15_ArgvPolicy(t *testing.T) {
 			"flags":     func() ([]string, error) { return ProbePacketFlags(pol, storeFile(), 0) },
 			"side data": func() ([]string, error) { return ProbeFirstFrameSideData(pol, storeFile(), 0) },
 			"count":     func() ([]string, error) { return ProbeCountPackets(pol, storeFile()) },
+			"anim":      func() ([]string, error) { return ProbeAnimPackets(pol, storeFile(), 0) },
 			"timing":    func() ([]string, error) { return ProbeStreamTiming(pol, run("normalized.mov")) },
 			"encoded":   func() ([]string, error) { return ProbeEncodedPackets(pol, run("probe-x.mp4")) },
 		}

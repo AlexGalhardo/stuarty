@@ -43,7 +43,7 @@ var (
 	kVaapiDev = match(`^/dev/dri/renderD[0-9]{1,3}$`)
 	kFFlags   = enum("+bitexact")
 	kMovflags = enum("+faststart")
-	kReadInt  = enum("%+#1")
+	kReadInt  = enum("%+#1", "%+#1001")
 )
 
 // Codecs of the fixed table of ADR-0011 item 5 and SDD-011 section 4.2.
