@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-15
+
+### Added
+
+- **ingest:** Speech map and beat grid artifacts computed in Go ([dbffd6b](https://github.com/AlexGalhardo/vukem-video/commit/dbffd6b2a295a254c753765d0f31dad9d6ce52d3))
+- **export:** Blur and filter matrices of a layer in Go ([a63a363](https://github.com/AlexGalhardo/vukem-video/commit/a63a363b928be5e92678936fe6c232cdb988e27d))
+- **ingest:** Store the speech map and the beat grid of every ingest job ([e1e06d5](https://github.com/AlexGalhardo/vukem-video/commit/e1e06d52f5d424014d8f10110827a80e0239f4de))
+- **cli:** Add the transcript and silence recipes and tie every recipe to a contract scenario ([b0d55da](https://github.com/AlexGalhardo/vukem-video/commit/b0d55daae5bff398f4f5f8741f52aee1e15e9dae))
+- **command:** Add audio.duck and audio.mark_beats and keep markers through edits ([7e51c13](https://github.com/AlexGalhardo/vukem-video/commit/7e51c134202da2ddb6aee060f767712050f5e172))
+- **plan:** Pick the frame of an animated image from its delays ([5001982](https://github.com/AlexGalhardo/vukem-video/commit/500198250acdfee4bbb5e053b79e4bcba004fe8e))
+- **command:** Add font.add and font.remove for project fonts ([bb9eccb](https://github.com/AlexGalhardo/vukem-video/commit/bb9eccbc80f98ff778f8c061409aacefb49855f9))
+- **ui:** Define window.vukemDesktop in the desktop shell and fix its menu ([9059459](https://github.com/AlexGalhardo/vukem-video/commit/9059459898a9f022e124f46c434673e9f2e3dc03))
+- **ui:** Choose files and drop paths in the library through the desktop bridge ([8afc8e7](https://github.com/AlexGalhardo/vukem-video/commit/8afc8e7b6dae21c8b8ddff74830c637087bf6b94))
+- **service:** Import a project bundle with the archive policy and the shared store rule ([06c7858](https://github.com/AlexGalhardo/vukem-video/commit/06c7858bb87fb5fd4eba25571c31288848b50644))
+- **web:** Route user management for an administrator session ([0e4f683](https://github.com/AlexGalhardo/vukem-video/commit/0e4f6837ee9b1946790f8cb3fb158cf34793137a))
+- **cli:** Add bundle:export to write a .vvbundle of a project ([69ef192](https://github.com/AlexGalhardo/vukem-video/commit/69ef19215fa162aefea1e23fa9adf124ee5dd448))
+- **ui:** Add builders and coverage entries for the BETA item commands ([21399bb](https://github.com/AlexGalhardo/vukem-video/commit/21399bbe8a549fda38c4732e467ed84a70ef29f1))
+- **ui:** Add inspector sections for filters, ducking, beat markers and fonts ([7df17b8](https://github.com/AlexGalhardo/vukem-video/commit/7df17b8a63a11f7bdd7d87f2a1e386d628bc9184))
+- **ui:** Announce edit results and errors in a live region ([6bef964](https://github.com/AlexGalhardo/vukem-video/commit/6bef964d00ac898b9cba442df59a8f20497f2115))
+- **ui:** Add F6 region jumps, select all and the shortcut table of the keyboard map ([0de84ab](https://github.com/AlexGalhardo/vukem-video/commit/0de84abab179e18947d46bbc9ceefc9380c3f03c))
+- **transcribe:** Pin the darwin and windows-arm64 whisper helpers of helpers-v1.9.2 ([14f638a](https://github.com/AlexGalhardo/vukem-video/commit/14f638a0add99e9ffd1e2107d19e8f05a5fef44e))
+- **service:** Resolve the speech of audio.duck and the beats of audio.mark_beats ([10dcc88](https://github.com/AlexGalhardo/vukem-video/commit/10dcc88410811fd6d9a6f4b167ce4c651e609e96))
+- **service:** Render documents with user fonts and refuse font.add of an unknown file ([657fe52](https://github.com/AlexGalhardo/vukem-video/commit/657fe5232b39e704a7e1b59f745e7133f36789d1))
+- **service:** Keep bundle fonts in the font store and validate them on import ([5114856](https://github.com/AlexGalhardo/vukem-video/commit/5114856ff5606a332257b81e61b0ed9b9cc06dea))
+- **web:** Route the project bundle export and import ([8cbd474](https://github.com/AlexGalhardo/vukem-video/commit/8cbd474a7e40ec07b1e67409e6833c542ac8c362))
+- **ui:** Add the window of mounted frames and the item selection for virtualization ([8473c6b](https://github.com/AlexGalhardo/vukem-video/commit/8473c6b0fca0323fc91e820e2a2789ed93189f59))
+- **ui:** Count timeline item renders through the debug hooks ([49416ae](https://github.com/AlexGalhardo/vukem-video/commit/49416ae4f96abb0dc8a87b7536abeb78d0f25b85))
+- **ui:** Mount only the window of items on large projects and keep the pinned ones ([5edc7f4](https://github.com/AlexGalhardo/vukem-video/commit/5edc7f452609776cab1b09f27e8e4850afd2cd09))
+- **command:** Expose the BETA build ([3d1941b](https://github.com/AlexGalhardo/vukem-video/commit/3d1941bd68ce8672a5b158ec0b3d4ac22e977644))
+- **ui:** Keep rebindable shortcuts in a keymap store with conflict detection ([a6aa063](https://github.com/AlexGalhardo/vukem-video/commit/a6aa063cbeb4458293a5fa5abab73548709529be))
+- **ui:** Read the editing and zoom keys from the keymap store ([18159b1](https://github.com/AlexGalhardo/vukem-video/commit/18159b13855e7888562a7e07678767566c987602))
+- **ui:** Add the shortcuts cheat sheet with rebinding and reset ([515f469](https://github.com/AlexGalhardo/vukem-video/commit/515f469150f436c87bb22b77a59cac49977a1771))
+- **ui:** Show empty states that name the next action ([ac96887](https://github.com/AlexGalhardo/vukem-video/commit/ac96887ac80bf2f695471d2ee054f1f0afbefa9e))
+- **ui:** Show first-run tips once and bring them back from the shortcuts dialog ([5dabc4e](https://github.com/AlexGalhardo/vukem-video/commit/5dabc4e9ca2dd3a100a100b4e04f779857bf81cd))
+- **cli:** Add bundle:import and call the bundle service methods directly ([dea98e7](https://github.com/AlexGalhardo/vukem-video/commit/dea98e78c65482227e97860f84cd6bbacf1f80ca))
+
+### Fixed
+
+- **export:** Satisfy the linters in the blur and cold-frame test code ([7743135](https://github.com/AlexGalhardo/vukem-video/commit/77431350cb180ab85846741f0213b4650c9aaa1b))
+- **service:** Render a frame at the exact height of the ImageSize table ([144bada](https://github.com/AlexGalhardo/vukem-video/commit/144bada8c97ab7b81f09d087b3c34c65d94bb9c8))
+- **mcp:** Name the sheet range from and until in the view description ([89be7f4](https://github.com/AlexGalhardo/vukem-video/commit/89be7f4d21ac9023af85db4eb7482c045fd220ec))
+- **web:** Change the role and the disabled state of a user in one statement ([2863562](https://github.com/AlexGalhardo/vukem-video/commit/28635622555d4493fe5edbde5050541afca20f9e))
+- **service:** Name the missing scope in details.scope of a 403 ([6633ae1](https://github.com/AlexGalhardo/vukem-video/commit/6633ae13ef84d2243b39d9c253a18d8bcf612790))
+- **ui:** Name the slider thumbs and give them a 24 px target ([71b43ca](https://github.com/AlexGalhardo/vukem-video/commit/71b43caec76754b43f0dfae20e6dc2f8d4f57220))
+- **ui:** Render the left panel tabs with their tab panels ([c8fe234](https://github.com/AlexGalhardo/vukem-video/commit/c8fe234a89c96839fac344348a6f092b4f8e4f07))
+- **ui:** Give the timeline grid rows for its ruler and track headers ([06c160e](https://github.com/AlexGalhardo/vukem-video/commit/06c160e37471125708ebbdce82dd3e3c5f4962a9))
+- **ui:** Keep the preview region on the dark tokens in the light theme ([4963847](https://github.com/AlexGalhardo/vukem-video/commit/4963847cfb61e51e1e2dad8e4e7f180e999d5555))
+- **ui:** Let pointers through the stacked error notices and show at most three ([f7fd288](https://github.com/AlexGalhardo/vukem-video/commit/f7fd288042e3076f2bff6c92d7a74532af7f71be))
+
+### Security
+
+- **security:** Check the scope row of every ALPHA operation of SDD-000 in T-05 ([da88490](https://github.com/AlexGalhardo/vukem-video/commit/da884909470f370307b11ea9e2e8b306f6d97930))
+- **security:** Font.add cannot name a font another user brought (T-21) ([1785578](https://github.com/AlexGalhardo/vukem-video/commit/17855787680dc512813964dc1ba9000ee4ca29cc))
+- **security:** Check font ownership once per batch and before the store ([8428e55](https://github.com/AlexGalhardo/vukem-video/commit/8428e551f556dbb80273d7e91f6db75c53f0b4d0))
+- **security:** Allow the sample password of the user management docs in the secret scan ([d1b0f25](https://github.com/AlexGalhardo/vukem-video/commit/d1b0f2512e6f5b9c12a5e44c7567ac52c40e2ed9))
+
 ## [0.12.0] - 2026-11-15
 
 ### Added
@@ -551,7 +607,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.9.0...v0.10.0
