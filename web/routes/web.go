@@ -13,8 +13,7 @@ const maxBody = 1 << 20
 // Web installs the default middleware without vukem sessions: the editor
 // authenticates with its own local token and in-memory browser sessions
 // (SDD-007 section 3, web/app/auth), which the API routes enforce.
-// GET /up is registered by vukem itself. The editor pages and the event stream
-// arrive with SDD-012 and SDD-006.
+// GET /up is registered by vukem itself. The browser pages are in pages.go.
 func Web(r *router.Router, app *vukem.App) error {
 	return vukem.DefaultMiddlewareWith(app, r, vukem.MiddlewareOptions{
 		Stateless: true,

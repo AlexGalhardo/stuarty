@@ -418,7 +418,11 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 		rows[key] = ep
 	}
 
-	builtin := []string{"GET /up"}
+	// The browser pages are not API operations: they authenticate like the API
+	// (authenticate runs first) and call the Service, which checks the scope.
+	builtin := []string{
+		"GET /up", "GET /{$}", "GET /projects", "POST /projects", "GET /editor/{project_id}", "POST /locale",
+	}
 
 	for _, r := range h.vapp.Router.Routes() {
 		key := r.Method + " " + r.Path
