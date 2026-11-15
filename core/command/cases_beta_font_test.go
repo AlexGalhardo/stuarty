@@ -16,8 +16,10 @@ func fontHash(pair string) string { return "sha256:" + strings.Repeat(pair, 32) 
 func withFonts(b *B) *B {
 	return b.with(func(d *timeline.Document) {
 		d.Fonts = map[string]timeline.ProjectFont{
-			"Brand Sans": {Files: []timeline.FontFile{{Weight: 400, Hash: fontHash("ab")}, {Weight: 700, Hash: fontHash("cd")}}},
-			"Spare":      {Files: []timeline.FontFile{{Weight: 400, Hash: fontHash("ef")}}},
+			"Brand Sans": {
+				Files: []timeline.FontFile{{Weight: 400, Hash: fontHash("ab")}, {Weight: 700, Hash: fontHash("cd")}},
+			},
+			"Spare": {Files: []timeline.FontFile{{Weight: 400, Hash: fontHash("ef")}}},
 		}
 	})
 }
@@ -53,13 +55,17 @@ func init() {
 	fr("ok_remove_an_unused_family", rm("Spare"), func() *B { return withFonts(base()) })
 	fr("ok_remove_the_last_family", rm("Spare"), func() *B {
 		return base().with(func(d *timeline.Document) {
-			d.Fonts = map[string]timeline.ProjectFont{"Spare": {Files: []timeline.FontFile{{Weight: 400, Hash: fontHash("ef")}}}}
+			d.Fonts = map[string]timeline.ProjectFont{
+				"Spare": {Files: []timeline.FontFile{{Weight: 400, Hash: fontHash("ef")}}},
+			}
 		})
 	})
 	fr("err_not_found_family", rm("Nowhere"), func() *B { return withFonts(base()) })
 	fr("err_validation_bundled_family", rm("Inter"), func() *B { return withFonts(base()) })
 	fr("err_in_use_text_style", rm("Brand Sans"), func() *B {
-		return withFonts(base()).text(itemC, vidTr, 0, 60, withStyle(`{"font_family": "Brand Sans", "font_weight": 700}`))
+		return withFonts(
+			base(),
+		).text(itemC, vidTr, 0, 60, withStyle(`{"font_family": "Brand Sans", "font_weight": 700}`))
 	})
 	fr("err_in_use_caption_style", rm("Brand Sans"), func() *B {
 		return withFonts(base()).caption(itemA, 0, 1, withStyle(`{"font_family": "Brand Sans"}`))
@@ -90,9 +96,15 @@ func init() {
 func TestFontAddThenStyleInOneBatch(t *testing.T) {
 	t.Parallel()
 
-	addOp := Operation{Op: "font.add", Args: []byte(`{"family": "Brand Sans", "files": [{"weight": 700, "hash": "` + fontHash("ab") + `"}]}`)}
-	textOp := Operation{Op: "text.add", Args: []byte(`{"track_id": "` + vidTr + `", "start": "0s", "duration": "2s", "text": "Hi", "id": "` +
-		itemC + `", "style": {"font_family": "Brand Sans", "font_weight": 700}}`)}
+	addOp := Operation{
+		Op:   "font.add",
+		Args: []byte(`{"family": "Brand Sans", "files": [{"weight": 700, "hash": "` + fontHash("ab") + `"}]}`),
+	}
+	textOp := Operation{
+		Op: "text.add",
+		Args: []byte(`{"track_id": "` + vidTr + `", "start": "0s", "duration": "2s", "text": "Hi", "id": "` +
+			itemC + `", "style": {"font_family": "Brand Sans", "font_weight": 700}}`),
+	}
 	env := Env{NewIDs: (&seqIDs{}).next}
 
 	res, err := BetaBuild().ApplyBatch(base().d, []Operation{addOp, textOp}, env)
