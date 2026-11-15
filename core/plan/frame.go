@@ -114,7 +114,7 @@ func (p *planner) layer(it *timeline.Item, r int) (Layer, bool) {
 	st := p.doc.Settings
 	w, h := float64(st.Width), float64(st.Height)
 	a := evaluate(it, r, w, h, w/2, h/2)
-	l := Layer{ItemID: it.ID, Rotation: round3(a.rotation), Opacity: round3(a.opacity)}
+	l := Layer{ItemID: it.ID, Rotation: round3(a.rotation), Scale: round3(a.scale), Opacity: round3(a.opacity)}
 	l.Filter, l.Blur = FilterMatrix(it.Filter, it.FilterAmount), round3(it.Blur)
 
 	switch it.Type {
