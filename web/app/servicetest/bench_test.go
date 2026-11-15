@@ -102,7 +102,14 @@ func (c *storeClock) WriteProject(
 // 200 items and 2,000 caption words, one item.move per iteration through
 // Service.Edit in process. It reports the p95 and fails above the budget of
 // the whole round trip (50 ms, NFR-001; the store's share is under 25 ms).
-func BenchmarkCommit200Items(b *testing.B) {
+func BenchmarkCommit200Items(b *testing.B) { benchCommit200Items(b, 0) }
+
+// BenchmarkCommit200ItemsLog100k is the same commit on a log of 100,000 rows (P4-SRV-002).
+func BenchmarkCommit200ItemsLog100k(b *testing.B) { benchCommit200Items(b, longLogRows) }
+
+func benchCommit200Items(b *testing.B, logRows int) {
+	b.Helper()
+
 	e := newEnv(b)
 	clock := &storeClock{Store: e.store}
 
@@ -128,6 +135,10 @@ func BenchmarkCommit200Items(b *testing.B) {
 			fmt.Sprintf(`{"track_id":%q,"start":"500s","duration":"1s","text":"mover","id":%q}`, textTrack, moved),
 		),
 	)
+
+	if logRows > 0 {
+		e.padLog(b, project, logRows)
+	}
 
 	rev := e.headB(b, project)
 	times := make([]time.Duration, 0, b.N)

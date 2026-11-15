@@ -23,7 +23,14 @@ import (
 // project of about 200 items and 2,000 caption words, one item.move per iteration through the
 // HTTP client of service/remote and the server on loopback. Its p95 must stay under the 50 ms of
 // NFR-001.
-func BenchmarkRoundTrip200Items(b *testing.B) {
+func BenchmarkRoundTrip200Items(b *testing.B) { benchRoundTrip200Items(b, 0) }
+
+// BenchmarkRoundTrip200ItemsLog100k is the same round trip on a log of 100,000 rows (P4-SRV-002).
+func BenchmarkRoundTrip200ItemsLog100k(b *testing.B) { benchRoundTrip200Items(b, longLogRows) }
+
+func benchRoundTrip200Items(b *testing.B, logRows int) {
+	b.Helper()
+
 	e := newEnv(b)
 	command.Default().Debug = false // a test aid, not the product's cost
 
@@ -32,6 +39,10 @@ func BenchmarkRoundTrip200Items(b *testing.B) {
 
 	e.mustEditB(b, project, op("text.add",
 		fmt.Sprintf(`{"track_id":%q,"start":"500s","duration":"1s","text":"mover","id":%q}`, textTrack, moved)))
+
+	if logRows > 0 {
+		e.padLog(b, project, logRows)
+	}
 
 	token, err := e.dir.EnsureToken()
 	if err != nil {
