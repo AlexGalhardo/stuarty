@@ -4,6 +4,7 @@ import (
 	"context"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"time"
 
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
@@ -24,10 +25,19 @@ func (o *Owner) tools(model string) (*service.Tools, transcribe.Provider, error)
 		return nil, nil, err
 	}
 
+	openh264, err := ffmpeg.DefaultOpenH264Manifest()
+	if err != nil {
+		return nil, nil, err
+	}
+
 	dir := filepath.Join(string(o.Dir), "tools")
 
+	// One client downloads for both manifests, over the union of their hosts; each manifest may
+	// name only its own (SDD-007 section 6.8).
+	hosts := slices.Concat(manifest.Hosts, openh264.Hosts)
+
 	t := &service.Tools{
-		Dir: dir, Manifest: manifest, Client: outbound.HelperDownload(manifest.Hosts, installTimeout),
+		Dir: dir, Manifest: manifest, OpenH264: openh264, Client: outbound.HelperDownload(hosts, installTimeout),
 	}
 
 	entries, ok := manifest.For("whisper", model, runtime.GOOS, runtime.GOARCH)
