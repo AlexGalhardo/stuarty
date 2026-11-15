@@ -36,8 +36,12 @@ func TestLimitIdempotencyKeysAreRefusedNotEvicted(t *testing.T) {
 	}
 
 	req := service.EditRequest{
-		ProjectID: project, BaseRevision: m.head(project).Revision, IdempotencyKey: "one-too-many",
-		Operations: []command.Operation{op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"x"}`, track))},
+		ProjectID:      project,
+		BaseRevision:   m.head(project).Revision,
+		IdempotencyKey: "one-too-many",
+		Operations: []command.Operation{
+			op("text.add", fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"x"}`, track)),
+		},
 	}
 
 	_, err = m.svc.Edit(m.as(ui), req)

@@ -1096,7 +1096,12 @@ func TestIdempotencyCountLiveCountsOneActorAndProjectAndEvictsNothing(t *testing
 	put("prj_b", "key:one", "k0", 100)
 
 	if n, first, err := repo.CountLive(ctx, "prj_a", "key:one", 200); err != nil || n != 5 || first != 1100 {
-		t.Errorf("CountLive = %d, first %d, %v; want 5 keys of one actor and project, the first ending at 1100", n, first, err)
+		t.Errorf(
+			"CountLive = %d, first %d, %v; want 5 keys of one actor and project, the first ending at 1100",
+			n,
+			first,
+			err,
+		)
 	}
 
 	if n, first, err := repo.CountLive(ctx, "prj_a", "key:one", 1102); err != nil || n != 2 || first != 1103 {

@@ -119,7 +119,10 @@ func TestLimitExportQueuesCarryValueAndCeiling(t *testing.T) {
 	project = per.exportable()
 
 	for range 3 { // one running and two queued
-		if _, err := per.svc.JobStart(per.as("local:a"), service.JobStartRequest{ProjectID: project, Kind: "export"}); err != nil {
+		if _, err := per.svc.JobStart(
+			per.as("local:a"),
+			service.JobStartRequest{ProjectID: project, Kind: "export"},
+		); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -137,7 +140,11 @@ func TestLimitExportQueuesCarryValueAndCeiling(t *testing.T) {
 func TestLimitExportEndedByTheWatchdogNamesTheLimit(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{
 		exporter: exportFn(func(context.Context, service.ExportInput) (*service.ExportOutput, error) {
-			return nil, &ffmpeg.Error{Code: "E_EXPORT_FAILED", Reason: "size_limit", Message: "The exported file passed the size limit."}
+			return nil, &ffmpeg.Error{
+				Code:    "E_EXPORT_FAILED",
+				Reason:  "size_limit",
+				Message: "The exported file passed the size limit.",
+			}
 		}),
 		limits: service.Limits{MaxExportBytes: 123456},
 	})
@@ -162,7 +169,10 @@ func TestLimitIngestQueueCarriesValueAndCeiling(t *testing.T) {
 
 	var files []service.ImportFile
 	for i := range 3 {
-		files = append(files, service.ImportFile{Path: m.write(fmt.Sprintf("clip%d.mp4", i), clipBytes+strings.Repeat("x", i+1))})
+		files = append(
+			files,
+			service.ImportFile{Path: m.write(fmt.Sprintf("clip%d.mp4", i), clipBytes+strings.Repeat("x", i+1))},
+		)
 	}
 
 	res, err := m.svc.MediaImport(m.as(ui), service.MediaImportRequest{ProjectID: project, Files: files})

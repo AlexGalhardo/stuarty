@@ -165,7 +165,12 @@ func TestSecurity_T26_OpenH264NeverTriggeredByAnAgentSurface(t *testing.T) {
 			Actor: "key:p", Scopes: service.AllScopes, ProjectID: "prj_0000000001",
 		},
 	} {
-		if _, err := m.svc.ToolsInstall(service.WithCaller(context.Background(), c), req); code(err) != service.CodeForbidden {
+		if _, err := m.svc.ToolsInstall(
+			service.WithCaller(context.Background(), c),
+			req,
+		); code(
+			err,
+		) != service.CodeForbidden {
 			t.Errorf("%s = %v, want E_FORBIDDEN", name, err)
 		}
 	}

@@ -68,8 +68,8 @@ type ProjectOtioExportResult struct {
 	Envelope
 	ProjectID string     `json:"project_id"`
 	Revision  int64      `json:"revision"`
-	FileName  string     `json:"file_name" untrusted:"true"` // a safe name, ending in .otio
-	Content   string     `json:"content"`                    // the file, deterministic JSON
+	FileName  string     `json:"file_name"  untrusted:"true"` // a safe name, ending in .otio
+	Content   string     `json:"content"`                     // the file, deterministic JSON
 	Lost      []OtioLost `json:"lost"`
 	Text      string     `json:"text"`
 }
@@ -121,8 +121,8 @@ func (s *svc) ProjectOtioExport(ctx context.Context, req ProjectOtioExportReques
 	}
 
 	return &ProjectOtioExportResult{
-		Envelope:  Envelope{UntrustedNotice: UntrustedNotice},
-		ProjectID: row.ID, Revision: row.Revision, FileName: untrusted.Value(otioFileName(doc.Name), otioText),
+		UntrustedNotice: UntrustedNotice,
+		ProjectID:       row.ID, Revision: row.Revision, FileName: untrusted.Value(otioFileName(doc.Name), otioText),
 		Content: string(data), Lost: otioLost(lost),
 		Text: "exported " + row.ID + " r" + strconv.FormatInt(row.Revision, 10) + " to OpenTimelineIO; " +
 			strconv.Itoa(len(lost)) + " lost item(s)",
@@ -196,8 +196,8 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 	}
 
 	return &ProjectOtioImportResult{
-		Envelope:  Envelope{UntrustedNotice: UntrustedNotice},
-		ProjectID: row.ID, Revision: edit.Revision, Applied: edit.Applied, Edit: edit,
+		UntrustedNotice: UntrustedNotice,
+		ProjectID:       row.ID, Revision: edit.Revision, Applied: edit.Applied, Edit: edit,
 		UnresolvedMedia: otioMedia(unresolved), Lost: otioLost(lost),
 		Text: "imported " + strconv.Itoa(len(ops)) + " operation(s) into " + row.ID + " r" +
 			strconv.FormatInt(edit.Revision, 10) + "; " + strconv.Itoa(len(unresolved)) + " unresolved media, " +

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -252,9 +253,7 @@ func TestReverseProxyNeedsBothTrustedProxiesAndForwardedProto(t *testing.T) {
 		cfg := override(network(), "TLS_CERT_FILE", "")
 		cfg["TLS_KEY_FILE"] = ""
 
-		for k, v := range vars {
-			cfg[k] = v
-		}
+		maps.Copy(cfg, vars)
 
 		_, ps := run(cfg, nil)
 
