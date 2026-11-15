@@ -85,7 +85,7 @@ export const test = base.extend<{ tipsSeen: boolean }>({
 export { expect } from "@playwright/test";
 
 // ffmpegExe is the pinned FFmpeg of the tests (see playwright.config.ts).
-function ffmpegExe(): string {
+export function ffmpegExe(): string {
 	const dir = process.env.VUKEM_VIDEO_TEST_FFMPEG_DIR;
 	// Without the pinned folder the server uses the ffmpeg on PATH, so do we.
 	if (!dir) return "ffmpeg";
