@@ -6,12 +6,12 @@ description: "Transforme a fala de um clipe em texto com tempo por palavra, no s
 ## O que você vai aprender
 
 - como um clipe vira uma transcrição e a transcrição vira legendas;
-- como usar as Auto captions no editor;
+- como usar as legendas automáticas no editor;
 - onde o áudio é processado e como usar uma API de transcrição no lugar.
 
 ## A ideia
 
-A **transcrição** é uma tarefa. Ela lê o áudio de uma mídia importada e armazena as palavras com os seus instantes de início e fim. A transcrição pertence à mídia, então um segundo clipe da mesma mídia a reaproveita. As **Auto captions** agrupam então as palavras do trecho visível de um clipe em legendas em uma faixa de legendas e as ligam ao clipe.
+A **transcrição** é uma tarefa. Ela lê o áudio de uma mídia importada e armazena as palavras com os seus instantes de início e fim. A transcrição pertence à mídia, então um segundo clipe da mesma mídia a reaproveita. As **Legendas automáticas** agrupam então as palavras do trecho visível de um clipe em legendas em uma faixa de legendas e as ligam ao clipe.
 
 Por padrão, a transcrição roda no seu computador com o whisper.cpp e um modelo que você instala uma única vez: `tiny`, `base`, `small` (o padrão) ou `large-v3-turbo`. O download é uma etapa explícita, anunciada com o seu tamanho e o servidor antes de começar, e nada é baixado em nenhum outro momento. Quando os arquivos estão ausentes, a tarefa falha com `E_TRANSCRIBE_UNAVAILABLE` e o editor oferece instalá-los.
 
@@ -19,12 +19,12 @@ Um operador pode apontar o servidor para uma API de transcrição compatível co
 
 ## Início rápido
 
-No editor, selecione um clipe que tenha áudio e abra **Auto captions** no inspetor:
+No editor, selecione um clipe que tenha áudio e abra **Legendas automáticas** no inspetor:
 
 1. Escolha a faixa de legendas, ou uma nova.
 2. Defina as palavras por legenda, os caracteres por legenda e a pausa que inicia uma nova legenda.
-3. Pressione **Generate captions**. Se a transcrição local não estiver instalada, o diálogo oferece instalá-la, ou mostra o comando a executar em um terminal.
-4. Depois de reposicionar ou editar o clipe, pressione **Re-sync captions** para acompanhá-lo.
+3. Pressione **Gerar legendas**. Se a transcrição local não estiver instalada, o diálogo oferece instalá-la, ou mostra o comando a executar em um terminal.
+4. Depois de reposicionar ou editar o clipe, pressione **Ressincronizar legendas** para acompanhá-lo.
 
 <Tabs>
 <Tab title="CLI">

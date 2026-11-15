@@ -11,7 +11,7 @@ description: "Por que um arquivo de mídia é recusado ou falha ao importar, e o
 
 ## A ideia
 
-Uma importação tem duas etapas. Primeiro o servidor confere o **caminho** e coloca o arquivo na fila: um caminho ruim é recusado na hora. Depois a tarefa de **ingestão** lê o arquivo com o ffprobe, gera o proxy, as miniaturas e os picos de áudio, e termina no estado `ready`, ou `failed` com um motivo. A biblioteca mostra o estado de cada mídia (`Waiting`, `Importing`, `Ready` ou `Failed`) e uma que falhou tem **Try again**.
+Uma importação tem duas etapas. Primeiro o servidor confere o **caminho** e coloca o arquivo na fila: um caminho ruim é recusado na hora. Depois a tarefa de **ingestão** lê o arquivo com o ffprobe, gera o proxy, as miniaturas e os picos de áudio, e termina no estado `ready`, ou `failed` com um motivo. A biblioteca mostra o estado de cada mídia (**Aguardando**, **Importando**, **Pronta** ou **Falhou**) e uma que falhou tem **Tentar de novo**.
 
 ## Início rápido
 
