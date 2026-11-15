@@ -473,7 +473,14 @@ func (s *svc) setProjectState(
 
 		res.Text = req.ProjectID + " " + verb
 
-		ev := Event{Type: "project.updated", ProjectID: id, Revision: row.Revision, Actor: c.Actor, At: msTime(now)}
+		ev := Event{
+			Type:      "project.updated",
+			ProjectID: id,
+			Revision:  row.Revision,
+			Actor:     c.Actor,
+			State:     string(to),
+			At:        msTime(now),
+		}
 		tx.AfterCommit(func() { s.emit(ev) })
 
 		return nil
