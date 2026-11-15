@@ -1,0 +1,15 @@
+{
+	"name": "conflict",
+	"actor": "contract",
+	"steps": [
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Conflict"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 0, "operations": [
+			{"op": "track.add", "args": {"kind": "visual", "name": "Video", "id": "trk_f6g7h8j9k0"}}]}},
+		{"call": "Edit", "as": "other", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 1, "operations": [
+			{"op": "track.update", "args": {"track_id": "trk_f6g7h8j9k0", "name": "Theirs"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 1, "operations": [
+			{"op": "track.update", "args": {"track_id": "trk_f6g7h8j9k0", "name": "Mine"}}]},
+			"expect_error": {"code": "E_REVISION_CONFLICT"}},
+		{"call": "ProjectGet", "args": {"project_id": "prj_7k2m9x4q1b", "detail": "concise"}}
+	]
+}

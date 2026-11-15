@@ -53,6 +53,8 @@ type Options struct {
 	// Frames wires the real frame renderer of view over the pinned FFmpeg; the
 	// test is skipped when that build is not installed.
 	Frames bool
+	// Limits are the ceilings of the service; zero fields keep the defaults.
+	Limits service.Limits
 }
 
 // Env is a service with a worker running behind it.
@@ -129,6 +131,7 @@ func New(tb testing.TB, o Options) *Env {
 	svc, err := service.New(service.Options{
 		Store: st, Registry: command.Default(), Now: o.Clock, NewIDs: e.newID,
 		Workspace: string(dir),
+		Limits:    o.Limits,
 		Media:     media,
 		Exporter:  exporter,
 		Enqueue:   jobs.Dispatcher{Queue: q},

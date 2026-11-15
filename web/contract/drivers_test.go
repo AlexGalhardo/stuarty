@@ -36,7 +36,11 @@ var fixedNow = time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)
 
 // step is one call of a scenario: a Service operation and its request.
 type step struct {
-	Call        string          `json:"call"`
+	Call string `json:"call"`
+	// As names another actor: the step goes straight to the Service of the
+	// workspace with that actor, whatever the driver, so a scenario can have a
+	// second writer (the conflict scenario).
+	As          string          `json:"as"`
 	Args        json.RawMessage `json:"args"`
 	ExpectError *struct {
 		Code string `json:"code"`
@@ -53,10 +57,12 @@ type driver interface {
 	env() *testenv.Env
 }
 
-func newEnv(t *testing.T) *testenv.Env {
+func newEnv(t *testing.T, o testenv.Options) *testenv.Env {
 	t.Helper()
 
-	return testenv.New(t, testenv.Options{Clock: func() time.Time { return fixedNow }})
+	o.Clock = func() time.Time { return fixedNow }
+
+	return testenv.New(t, o)
 }
 
 func callerCtx() context.Context { return testenv.Caller("local:" + actor) }
@@ -182,7 +188,13 @@ type httpDriver struct {
 func newDirect(t *testing.T) driver {
 	t.Helper()
 
-	e := newEnv(t)
+	return newDirectWith(t, testenv.Options{})
+}
+
+func newDirectWith(t *testing.T, o testenv.Options) driver {
+	t.Helper()
+
+	e := newEnv(t, o)
 
 	return &serviceDriver{label: "in-process", e: e, svc: e.Service}
 }
@@ -192,7 +204,13 @@ func newDirect(t *testing.T) driver {
 func newHTTP(t *testing.T) driver {
 	t.Helper()
 
-	e := newEnv(t)
+	return newHTTPWith(t, testenv.Options{})
+}
+
+func newHTTPWith(t *testing.T, o testenv.Options) driver {
+	t.Helper()
+
+	e := newEnv(t, o)
 
 	const token = "vvl_c0ntr4ct00000000000000000000000000000000000000000000000000000000"
 
@@ -226,7 +244,13 @@ func (d *mcpDriver) env() *testenv.Env        { return d.e }
 func newMCP(t *testing.T) driver {
 	t.Helper()
 
-	e := newEnv(t)
+	return newMCPWith(t, testenv.Options{})
+}
+
+func newMCPWith(t *testing.T, o testenv.Options) driver {
+	t.Helper()
+
+	e := newEnv(t, o)
 
 	srv, err := mcp.New(e.Service, mcp.Options{})
 	if err != nil {
@@ -367,7 +391,13 @@ func (d *cliDriver) env() *testenv.Env        { return d.e }
 func newCLI(t *testing.T) driver {
 	t.Helper()
 
-	return &cliDriver{e: newEnv(t)}
+	return newCLIWith(t, testenv.Options{})
+}
+
+func newCLIWith(t *testing.T, o testenv.Options) driver {
+	t.Helper()
+
+	return &cliDriver{e: newEnv(t, o)}
 }
 
 type fixedResolver struct{ svc service.Service }
@@ -448,6 +478,10 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 
 		return "media:inspect", append(argv, flag("sections", strings.Join(a.Sections, ","))...), "", nil
 	case "JobStart":
+		if a.WaitMS == 0 {
+			return "export", append(proj, "--no-wait"), "", nil
+		}
+
 		return "export", proj, "", nil
 	case "JobGet":
 		return "job:show", []string{a.JobID, "--wait"}, "", nil

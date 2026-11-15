@@ -31,7 +31,7 @@ type toolOutput struct {
 // parseArguments validates the arguments against the inputSchema of the tool
 // (SDD-003 section 4.1). A failure is E_VALIDATION with the path of the first
 // invalid value and the constraint that failed, never the value (SDD-003
-// section 1.2 rule 9); a bad operations[].op is E_UNKNOWN_COMMAND.
+// section 1.2 rule 9); a bad operations[].op goes on to the Service, which answers E_UNKNOWN_COMMAND.
 func parseArguments(d *definition, raw json.RawMessage) (json.RawMessage, error) {
 	raw = rawOrEmpty(raw)
 
@@ -41,7 +41,17 @@ func parseArguments(d *definition, raw json.RawMessage) (json.RawMessage, error)
 	}
 
 	if err := d.input.Validate(inst); err != nil {
-		return nil, validationFailure(err)
+		failure := validationFailure(err)
+
+		// An operation the build does not have is for the Service to refuse: its
+		// E_UNKNOWN_COMMAND names the operation by index and lists the known
+		// ones, the same text the CLI and HTTP give (SDD-003 section 9 check 12).
+		se, ok := failure.(*service.Error) //nolint:errorlint // built above
+		if ok && se.Code == command.CodeUnknownCommand {
+			return raw, nil
+		}
+
+		return nil, failure
 	}
 
 	return raw, nil
