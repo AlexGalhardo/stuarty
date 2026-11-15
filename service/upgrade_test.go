@@ -692,7 +692,7 @@ func TestUpgradeOlderBinaryRefusesCandidate(t *testing.T) {
 			}
 
 			known := migrationsIn(t, filepath.Join(root, version))
-			if unknown := slices.ContainsFunc(slices.Collect(mapKeys(ours)), func(id string) bool { return !known[id] }); !unknown {
+			if knowsAll(known, ours) {
 				t.Skipf("%s knows every migration of this build: it is not older for the database", version)
 			}
 
@@ -727,12 +727,13 @@ func TestUpgradeOlderBinaryRefusesCandidate(t *testing.T) {
 	}
 }
 
-func mapKeys(m map[string]bool) func(yield func(string) bool) {
-	return func(yield func(string) bool) {
-		for k := range m {
-			if !yield(k) {
-				return
-			}
+// knowsAll reports whether every migration of ours is in known.
+func knowsAll(known, ours map[string]bool) bool {
+	for id := range ours {
+		if !known[id] {
+			return false
 		}
 	}
+
+	return true
 }
