@@ -1,14 +1,19 @@
 package servicetest
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -24,6 +29,7 @@ type toolsServer struct {
 	requests atomic.Int64
 	helper   []byte
 	model    []byte
+	archive  []byte
 	// serve replaces the model body, for the refusal tests.
 	serveModel atomic.Pointer[[]byte]
 }
@@ -32,6 +38,7 @@ func newToolsServer(t *testing.T) *toolsServer {
 	t.Helper()
 
 	ts := &toolsServer{helper: []byte("#!helper\n"), model: []byte("model-bytes-0123456789")}
+	ts.archive = zipOf(t, map[string][]byte{"bin/whisper-cli": ts.helper, "bin/unlisted": []byte("never written")})
 
 	ts.srv = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ts.requests.Add(1)
@@ -39,6 +46,10 @@ func newToolsServer(t *testing.T) *toolsServer {
 		switch r.URL.Path {
 		case "/whisper-cli":
 			_, _ = w.Write(ts.helper)
+		case "/whisper.zip":
+			_, _ = w.Write(ts.archive)
+		case "/redirect":
+			http.Redirect(w, r, "https://elsewhere.invalid/model.bin", http.StatusFound)
 		case "/model.bin":
 			body := ts.model
 			if alt := ts.serveModel.Load(); alt != nil {
@@ -54,6 +65,31 @@ func newToolsServer(t *testing.T) *toolsServer {
 	t.Cleanup(ts.srv.Close)
 
 	return ts
+}
+
+func zipOf(t *testing.T, files map[string][]byte) []byte {
+	t.Helper()
+
+	var buf bytes.Buffer
+
+	zw := zip.NewWriter(&buf)
+
+	for name, body := range files {
+		w, err := zw.Create(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if _, err := w.Write(body); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	return buf.Bytes()
 }
 
 func sum(b []byte) string {
@@ -289,4 +325,159 @@ func TestToolsInstallRefusesAProjectLimitedAdminKey(t *testing.T) {
 	if ts.requests.Load() != 0 {
 		t.Error("a refused install made a request")
 	}
+}
+
+// A helper that comes in an archive is unpacked only after the archive digest
+// matched, only the members the manifest lists are written, and the digest
+// that installed.json keeps is the program's, not the archive's.
+func TestToolsInstallUnpacksAnArchiveAndRecordsTheProgramDigest(t *testing.T) {
+	ts := newToolsServer(t)
+	dir := filepath.Join(t.TempDir(), "tools")
+	tl := ts.tools(dir)
+	helper := &tl.Manifest.Entries[0]
+	helper.URL = ts.srv.URL + "/whisper.zip"
+	helper.Bytes = int64(len(ts.archive))
+	helper.SHA256 = sum(ts.archive)
+	helper.Format = "zip"
+	helper.Members = []transcribe.Member{{From: "bin/whisper-cli", To: "whisper-cli", Executable: true}}
+
+	m := newMediaEnv(t, mediaCfg{tools: tl})
+	person := service.WithCaller(context.Background(), service.Caller{
+		Actor: "local:ui", Scopes: service.AllScopes, Browser: true,
+	})
+
+	if _, err := m.svc.ToolsInstall(person, service.ToolsInstallRequest{Name: "whisper", Model: "tiny"}); err != nil {
+		t.Fatal(err)
+	}
+
+	if st := m.waitInstall(person); st.State != "idle" || len(st.Installed) != 2 {
+		t.Fatalf("status = %+v", st)
+	}
+
+	program, ok := service.VerifiedTool(dir, "whisper", transcribe.KindHelper, "")
+	if !ok {
+		t.Fatal("the unpacked helper does not verify")
+	}
+
+	if got, _ := os.ReadFile(program); !bytes.Equal(got, ts.helper) {
+		t.Errorf("program = %q", got)
+	}
+
+	if _, err := os.Stat(filepath.Join(filepath.Dir(program), "unlisted")); err == nil {
+		t.Error("a member the manifest does not list was written")
+	}
+
+	if entries, _ := os.ReadDir(filepath.Join(dir, ".download")); len(entries) != 0 {
+		t.Errorf("leftovers in .download: %v", entries)
+	}
+}
+
+// hopGuard does what outbound.HelperDownload does at every redirect hop (the
+// manifest hosts only), without its public-address dial rule, which a loopback
+// test server cannot meet. It does not follow a redirect that leaves the list.
+type hopGuard struct {
+	rt    http.RoundTripper
+	hosts []string
+	hops  []string
+}
+
+func (g *hopGuard) Do(req *http.Request) (*http.Response, error) {
+	resp, err := g.rt.RoundTrip(req)
+	if err != nil || resp.StatusCode < 300 || resp.StatusCode > 399 {
+		return resp, err
+	}
+
+	defer func() { _ = resp.Body.Close() }()
+
+	next, err := resp.Location()
+	if err != nil {
+		return nil, err
+	}
+
+	g.hops = append(g.hops, next.Hostname())
+
+	if !slices.Contains(g.hosts, next.Hostname()) {
+		return nil, errors.New("host not allowed")
+	}
+
+	return nil, errors.New("the test does not follow allowed hops")
+}
+
+// The refusals of P2-RND-012, at the service: nothing is kept and nothing is
+// run when the bytes are not the pinned ones, the URL is not https, or a
+// redirect leaves the allowlist.
+func TestToolsInstallRefusals(t *testing.T) {
+	person := service.WithCaller(context.Background(), service.Caller{
+		Actor: "local:ui", Scopes: service.AllScopes, Browser: true,
+	})
+	req := service.ToolsInstallRequest{Name: "whisper", Model: "tiny"}
+
+	t.Run("a body shorter than the pinned size", func(t *testing.T) {
+		ts := newToolsServer(t)
+		dir := filepath.Join(t.TempDir(), "tools")
+		m := newMediaEnv(t, mediaCfg{tools: ts.tools(dir)})
+		short := ts.model[:len(ts.model)-3]
+		ts.serveModel.Store(&short)
+
+		if _, err := m.svc.ToolsInstall(person, req); err != nil {
+			t.Fatal(err)
+		}
+
+		st := m.waitInstall(person)
+		if st.State != "failed" || st.Error == nil || st.Error.Details["reason"] != "checksum_mismatch" {
+			t.Errorf("status = %+v", st)
+		}
+
+		if _, ok := service.VerifiedTool(dir, "whisper", transcribe.KindModel, "tiny"); ok {
+			t.Error("the model was installed")
+		}
+	})
+
+	t.Run("a redirect outside the allowlist", func(t *testing.T) {
+		ts := newToolsServer(t)
+		dir := filepath.Join(t.TempDir(), "tools")
+		tl := ts.tools(dir)
+		tl.Manifest.Entries[1].URL = ts.srv.URL + "/redirect"
+
+		guard := &hopGuard{rt: ts.srv.Client().Transport, hosts: tl.Manifest.Hosts}
+		tl.Client = guard
+
+		m := newMediaEnv(t, mediaCfg{tools: tl})
+
+		if _, err := m.svc.ToolsInstall(person, req); err != nil {
+			t.Fatal(err)
+		}
+
+		st := m.waitInstall(person)
+		if st.State != "failed" || st.Error == nil || st.Error.Details["reason"] != "download_failed" {
+			t.Errorf("status = %+v", st)
+		}
+
+		if len(guard.hops) != 1 || guard.hops[0] != "elsewhere.invalid" {
+			t.Errorf("hops = %v", guard.hops)
+		}
+
+		if _, ok := service.VerifiedTool(dir, "whisper", transcribe.KindModel, "tiny"); ok {
+			t.Error("the model was installed")
+		}
+	})
+
+	t.Run("a plain http url", func(t *testing.T) {
+		ts := newToolsServer(t)
+		tl := ts.tools(t.TempDir())
+
+		u, _ := url.Parse(ts.srv.URL + "/model.bin")
+		u.Scheme = "http"
+		tl.Manifest.Entries[1].URL = u.String()
+
+		m := newMediaEnv(t, mediaCfg{tools: tl})
+
+		if _, err := m.svc.ToolsInstall(person, req); err == nil {
+			t.Error("an http url was accepted")
+		}
+
+		if ts.requests.Load() != 0 {
+			t.Errorf("an http url made %d requests", ts.requests.Load())
+		}
+	})
 }

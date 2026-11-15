@@ -277,6 +277,11 @@ func (s *svc) installOne(ctx context.Context, e *transcribe.ManifestEntry) *Erro
 	}
 
 	dir := filepath.Join(s.tools.Dir, e.Name, e.Version)
+
+	if e.Format != "" {
+		return s.installArchive(e, part, dir)
+	}
+
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return internalError()
 	}
@@ -294,6 +299,44 @@ func (s *svc) installOne(ctx context.Context, e *transcribe.ManifestEntry) *Erro
 
 	return s.recordInstalled(InstalledTool{
 		Name: e.Name, Kind: e.Kind, Model: e.Model, Version: e.Version, SHA256: strings.ToLower(e.SHA256),
+		Path: filepath.ToSlash(filepath.Join(e.Name, e.Version, e.File)),
+	})
+}
+
+// installArchive unpacks a helper archive whose digest has already matched.
+// It is unpacked into a new folder beside the download and moved into place
+// only whole, so a failed unpack leaves nothing in tools/<name>/<version>/.
+func (s *svc) installArchive(e *transcribe.ManifestEntry, archive, dir string) *Error {
+	staging := filepath.Join(s.tools.Dir, ".download", e.Name+"-"+e.Version+".unpack")
+
+	_ = os.RemoveAll(staging)
+	defer func() { _ = os.RemoveAll(staging) }()
+
+	if err := os.MkdirAll(staging, 0o700); err != nil {
+		return internalError()
+	}
+
+	program, err := transcribe.ExtractHelper(archive, staging, e)
+	if err != nil {
+		return newError(codeTranscribeOff, "the downloaded archive %s does not hold what the manifest lists.", e.File).
+			withDetail("reason", "bad_archive").
+			withHint("try the install again; if it keeps failing the mirror serves a different file")
+	}
+
+	if err := os.MkdirAll(filepath.Dir(dir), 0o700); err != nil {
+		return internalError()
+	}
+
+	if err := os.RemoveAll(dir); err != nil {
+		return internalError()
+	}
+
+	if err := os.Rename(staging, dir); err != nil {
+		return internalError()
+	}
+
+	return s.recordInstalled(InstalledTool{
+		Name: e.Name, Kind: e.Kind, Model: e.Model, Version: e.Version, SHA256: program,
 		Path: filepath.ToSlash(filepath.Join(e.Name, e.Version, e.File)),
 	})
 }
