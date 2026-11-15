@@ -5,7 +5,13 @@ import { type BuildPhase, isPhaseAtLeast } from "../boot/phase";
 import {
 	addAudioOperations,
 	addClipOperations,
+	captionBreaksOperations,
+	captionEditWordOperations,
+	captionMergeOperations,
 	captionOperations,
+	captionSplitOperations,
+	captionStyleOperations,
+	captionWordsOperations,
 	closeGapOperations,
 	deleteOperations,
 	dropAssetOperations,
@@ -242,6 +248,31 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				transformOperations([{ id: "itm_a", animated: [] }], { x: 1 }, 10),
 				10,
 			).map((o) => o.op),
+			"timeline.edit_word": captionEditWordOperations("itm_a", 0, "x").map(
+				(o) => o.op,
+			),
+			"inspector.word_text": captionEditWordOperations("itm_a", 1, "").map(
+				(o) => o.op,
+			),
+			"timeline.word_boundary": captionWordsOperations("itm_a", []).map(
+				(o) => o.op,
+			),
+			"inspector.words": captionWordsOperations("itm_a", []).map((o) => o.op),
+			"inspector.breaks": captionBreaksOperations("itm_a", [2]).map(
+				(o) => o.op,
+			),
+			"timeline.split_caption": captionSplitOperations("itm_a", 1).map(
+				(o) => o.op,
+			),
+			"inspector.split_word": captionSplitOperations("itm_a", 2).map(
+				(o) => o.op,
+			),
+			"timeline.merge_captions": captionMergeOperations(["a", "b"]).map(
+				(o) => o.op,
+			),
+			"inspector.caption_style": captionStyleOperations("itm_a", null).map(
+				(o) => o.op,
+			),
 			"text.add": textAddOperations({
 				text: "a",
 				playhead: 0,

@@ -24,11 +24,12 @@ export interface Notice {
 	};
 	// Values the catalogue text of `messageKey` names.
 	params?: Readonly<Record<string, string | number>>;
-	// An action the notice offers, as the operations to send. The values come
-	// from the core (`details.next_free`), never computed here.
+	// An action the notice offers: the operations to send (the values come from
+	// the core, `details.next_free`, never computed here), or an item to select.
 	action?: {
 		labelKey: string;
-		operations: EditRequest["operations"];
+		operations?: EditRequest["operations"];
+		select?: string;
 	};
 }
 

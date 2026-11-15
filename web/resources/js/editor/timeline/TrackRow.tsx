@@ -34,6 +34,7 @@ import {
 import { consumeDragClick } from "./gestures/lifecycle";
 import { beginMove } from "./gestures/move";
 import ItemContextMenuItems from "./ItemContextMenu";
+import CaptionItem from "./items/CaptionItem";
 import TrimHandle from "./items/TrimHandle";
 import { clickSelection, gridLayout } from "./keyboard";
 
@@ -153,12 +154,22 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 				}
 				beginMove({ runtime, actions, event, itemId: id });
 			}}
-			onDoubleClick={() => {
-				if (
-					item.type !== "text" ||
-					runtime.documents.getState().state === "trashed"
-				)
+			onDoubleClick={(event) => {
+				if (runtime.documents.getState().state === "trashed") return;
+				if (item.type === "caption") {
+					// The pointer is captured by the item while it is pressed, so the
+					// event no longer names the word under it.
+					const word = document
+						.elementsFromPoint(event.clientX, event.clientY)
+						.find((el) => el instanceof HTMLElement && el.dataset.wordIndex)
+						?.getAttribute("data-word-index");
+					if (word === null || word === undefined) return;
+					runtime.uiWriter.select([id], id);
+					runtime.uiWriter.selectWord({ item: id, index: Number(word) });
+					runtime.uiWriter.startWordEdit({ item: id, index: Number(word) });
 					return;
+				}
+				if (item.type !== "text") return;
 				runtime.uiWriter.select([id], id);
 				runtime.uiWriter.startTextEdit(id);
 			}}
@@ -179,6 +190,8 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 			<TrimHandle itemId={id} edge="start" />
 			{renaming ? (
 				<RenameField itemId={id} initial={item.name ?? ""} />
+			) : item.type === "caption" ? (
+				<CaptionItem id={id} />
 			) : (
 				<UntrustedText className="truncate">{label}</UntrustedText>
 			)}
@@ -247,7 +260,8 @@ export const TrackRow = memo(function TrackRow({
 	const canEdit = useCanEdit();
 	const ppf = useUiState((s) => s.timeline.pxPerFrame);
 	const [target, setTarget] = useState<
-		{ kind: "item"; id: string } | { kind: "gap"; frame: number }
+		| { kind: "item"; id: string; word: number | null }
+		| { kind: "gap"; frame: number }
 	>({ kind: "gap", frame: 0 });
 	if (track === undefined || items === undefined) return null;
 	const ordered = sortByStart(
@@ -267,7 +281,14 @@ export const TrackRow = memo(function TrackRow({
 		if (itemId !== undefined) {
 			if (!runtime.ui.getState().selection.items.includes(itemId))
 				runtime.uiWriter.select([itemId], itemId);
-			setTarget({ kind: "item", id: itemId });
+			const word = (event.target as HTMLElement).closest<HTMLElement>(
+				"[data-word-index]",
+			)?.dataset.wordIndex;
+			setTarget({
+				kind: "item",
+				id: itemId,
+				word: word === undefined ? null : Number(word),
+			});
 			return;
 		}
 		const left = event.currentTarget.getBoundingClientRect().left;
@@ -304,7 +325,7 @@ export const TrackRow = memo(function TrackRow({
 				)}
 			>
 				{target.kind === "item" ? (
-					<ItemContextMenuItems itemId={target.id} />
+					<ItemContextMenuItems itemId={target.id} word={target.word} />
 				) : (
 					<GapContextMenuItems trackId={id} frame={target.frame} />
 				)}

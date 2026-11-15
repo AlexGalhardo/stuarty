@@ -15,6 +15,10 @@ export interface UiState {
 	focusedItem: string | null;
 	// The item whose name is being edited inline (F2, the menu), if any.
 	renamingItem: string | null;
+	// The caption word that is selected and the one being edited inline; the
+	// item must also be selected for the word to show as selected.
+	selectedWord: { item: string; index: number } | null;
+	editingWord: { item: string; index: number } | null;
 	// The text item whose content is edited inline over the canvas (SDD-012
 	// section 11.6), if any.
 	editingText: string | null;
@@ -39,6 +43,8 @@ export interface UiWriter {
 	focusItem(id: string | null): void;
 	startRename(id: string | null): void;
 	startTextEdit(id: string | null): void;
+	selectWord(word: UiState["selectedWord"]): void;
+	startWordEdit(word: UiState["editingWord"]): void;
 	toggleSafeArea(): void;
 	showInUse(inUse: UiState["inUse"]): void;
 	selectTrack(trackId: string | null): void;
@@ -63,6 +69,8 @@ export function createUiStore(initialZoom = 1): {
 		focusedItem: null,
 		renamingItem: null,
 		editingText: null,
+		selectedWord: null,
+		editingWord: null,
 		safeAreaVisible: false,
 		inUse: null,
 		playheadFrame: 0,
@@ -91,6 +99,10 @@ export function createUiStore(initialZoom = 1): {
 				store.setState((s) =>
 					s.renamingItem === renamingItem ? s : { ...s, renamingItem },
 				),
+			selectWord: (selectedWord) =>
+				store.setState((s) => ({ ...s, selectedWord })),
+			startWordEdit: (editingWord) =>
+				store.setState((s) => ({ ...s, editingWord })),
 			startTextEdit: (editingText) =>
 				store.setState((s) =>
 					s.editingText === editingText ? s : { ...s, editingText },

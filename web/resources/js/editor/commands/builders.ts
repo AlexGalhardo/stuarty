@@ -1,3 +1,4 @@
+import type { CaptionStyle, Word } from "@/generated/timeline";
 import type { EditRequest } from "../api/types";
 
 // Builds the operations of the gestures of SDD-012 section 8.2 from values the
@@ -201,7 +202,176 @@ export function textStyleOperations(
 	itemId: string,
 	style: StyleChanges,
 ): Operations {
-	return [{ op: "text.set", args: { item_id: itemId, style } }];
+	return [
+		{
+			op: "text.set",
+			args: { item_id: itemId, style: style === null ? null : { ...style } },
+		},
+	];
+}
+
+// The caption word operations of SDD-012 section 8.2: the arguments are what the
+// person chose; the core judges them.
+export function captionEditWordOperations(
+	itemId: string,
+	index: number,
+	text: string,
+): Operations {
+	return [{ op: "caption.edit_word", args: { item_id: itemId, index, text } }];
+}
+
+export function captionSplitOperations(
+	itemId: string,
+	beforeWord: number,
+): Operations {
+	return [
+		{
+			op: "caption.split",
+			args: { item_id: itemId, before_word: beforeWord },
+		},
+	];
+}
+
+export function captionMergeOperations(itemIds: readonly string[]): Operations {
+	return [{ op: "caption.merge", args: { item_ids: [...itemIds] } }];
+}
+
+export function captionBreaksOperations(
+	itemId: string,
+	breaks: readonly number[],
+): Operations {
+	return [
+		{
+			op: "caption.set_breaks",
+			args: { item_id: itemId, breaks: [...breaks] },
+		},
+	];
+}
+
+// The breaks after the word at `index` starts or stops a line; the list stays
+// strictly increasing.
+export function toggleBreak(
+	breaks: readonly number[],
+	index: number,
+): number[] {
+	return breaks.includes(index)
+		? breaks.filter((b) => b !== index)
+		: [...breaks, index].sort((a, b) => a - b);
+}
+
+// `style: null` clears the override ("Use track style"); a style replaces it
+// whole, so the caller passes the stored style with the changed key.
+export function captionStyleOperations(
+	itemId: string,
+	style: CaptionStyle | null,
+): Operations {
+	return [
+		{
+			op: "caption.set_style",
+			args: { item_id: itemId, style: style === null ? null : { ...style } },
+		},
+	];
+}
+
+// A word as `caption.set_words` takes it: times are strings with a unit.
+export type WordArg = {
+	text: string;
+	start: string;
+	duration: string;
+};
+
+// The words of the read model as arguments, so a request copies the words it
+// does not change (request composition, SDD-012 section 8.2).
+export function wordArgs(words: readonly Word[]): WordArg[] {
+	return words.map((word) => ({
+		text: word.text,
+		start: frames(word.start),
+		duration: frames(word.duration),
+	}));
+}
+
+export function captionWordsOperations(
+	itemId: string,
+	words: readonly WordArg[],
+): Operations {
+	return [
+		{ op: "caption.set_words", args: { item_id: itemId, words: [...words] } },
+	];
+}
+
+// One field of one word replaced by what the person typed; the others are copied.
+export function withWordField(
+	words: readonly Word[],
+	index: number,
+	field: "start" | "duration",
+	value: string,
+): WordArg[] {
+	return wordArgs(words).map((word, i) =>
+		i === index ? { ...word, [field]: value } : word,
+	);
+}
+
+// The frame (relative to the caption) a boundary may reach: inside the two
+// words it separates, a frame from each far edge.
+export function clampBoundary(
+	words: readonly Word[],
+	index: number,
+	to: number,
+): number {
+	const before = words[index - 1];
+	const after = words[index];
+	if (before === undefined || after === undefined) return to;
+	return Math.min(
+		after.start + after.duration - 1,
+		Math.max(before.start + 1, to),
+	);
+}
+
+// Dragging the boundary in front of word `index` to frame `to` (relative to the
+// caption): the two neighbouring words are adjusted, the others copied. Where
+// the previous word ends at the boundary it follows it; where there is a gap it
+// only gives way when the boundary passes its end.
+export function boundaryWords(
+	words: readonly Word[],
+	index: number,
+	to: number,
+): WordArg[] {
+	const before = words[index - 1];
+	const after = words[index];
+	if (before === undefined || after === undefined) return wordArgs(words);
+	const afterEnd = after.start + after.duration;
+	const beforeEnd = before.start + before.duration;
+	const edge = clampBoundary(words, index, to);
+	const newBeforeEnd =
+		beforeEnd === after.start ? edge : Math.min(beforeEnd, edge);
+	return wordArgs(words).map((word, i) => {
+		if (i === index - 1) {
+			return { ...word, duration: frames(newBeforeEnd - before.start) };
+		}
+		if (i === index) {
+			return {
+				...word,
+				start: frames(edge),
+				duration: frames(afterEnd - edge),
+			};
+		}
+		return word;
+	});
+}
+
+// The bulk edit: the words typed, one per whitespace-separated token, over the
+// times of the stored words. Only the same count can keep the times, so a
+// different count answers null and nothing is sent.
+export function bulkEditWords(
+	words: readonly Word[],
+	text: string,
+): WordArg[] | null {
+	const typed = text.split(/\s+/).filter((token) => token !== "");
+	if (typed.length !== words.length) return null;
+	return wordArgs(words).map((word, i) => ({
+		...word,
+		text: typed[i] ?? word.text,
+	}));
 }
 
 // The inspector fields of section 12.1: the text of a time field is already

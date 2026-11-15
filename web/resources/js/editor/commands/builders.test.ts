@@ -2,7 +2,10 @@ import { describe, expect, test } from "vitest";
 
 import {
 	addClipOperations,
+	boundaryWords,
+	bulkEditWords,
 	captionOperations,
+	clampBoundary,
 	keyframeFallbackOperations,
 	moveItems,
 	moveOperations,
@@ -11,6 +14,7 @@ import {
 	textAddOperations,
 	textSetOperations,
 	textStyleOperations,
+	toggleBreak,
 	transformOperations,
 	trimEdgeOperations,
 	trimOperations,
@@ -232,5 +236,54 @@ describe("text builders", () => {
 				args: { item_id: "itm_a", style: { font_family: "Inter" } },
 			},
 		]);
+	});
+});
+
+describe("caption word builders", () => {
+	const words = [
+		{ text: "a", start: 0, duration: 10 },
+		{ text: "b", start: 10, duration: 10 },
+		{ text: "c", start: 25, duration: 5 },
+	];
+
+	test("a boundary between contiguous words moves both and copies the rest", () => {
+		expect(boundaryWords(words, 1, 14)).toEqual([
+			{ text: "a", start: "0f", duration: "14f" },
+			{ text: "b", start: "14f", duration: "6f" },
+			{ text: "c", start: "25f", duration: "5f" },
+		]);
+	});
+
+	test("with a gap before the word, the word before only gives way", () => {
+		expect(boundaryWords(words, 2, 27)[1]).toEqual({
+			text: "b",
+			start: "10f",
+			duration: "10f",
+		});
+		expect(boundaryWords(words, 2, 27)[2]).toEqual({
+			text: "c",
+			start: "27f",
+			duration: "3f",
+		});
+		expect(boundaryWords(words, 2, 15)[1]?.duration).toBe("5f");
+	});
+
+	test("the boundary stays a frame inside the two words", () => {
+		expect(clampBoundary(words, 1, -5)).toBe(1);
+		expect(clampBoundary(words, 1, 99)).toBe(19);
+	});
+
+	test("breaks stay strictly increasing and toggle off", () => {
+		expect(toggleBreak([4], 2)).toEqual([2, 4]);
+		expect(toggleBreak([2, 4], 2)).toEqual([4]);
+	});
+
+	test("the bulk edit needs the same word count", () => {
+		expect(bulkEditWords(words, "x  y\nz")?.map((w) => w.text)).toEqual([
+			"x",
+			"y",
+			"z",
+		]);
+		expect(bulkEditWords(words, "x y")).toBeNull();
 	});
 });

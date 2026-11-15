@@ -46,6 +46,20 @@ export const TEXT_STYLE_ROWS: readonly StyleRow[] = [
 	{ key: "uppercase", kind: "toggle" },
 ];
 
+// The caption style adds the position and the highlight of the spoken word
+// (RF-032) to the text style fields.
+export const CAPTION_STYLE_ROWS: readonly StyleRow[] = [
+	...TEXT_STYLE_ROWS,
+	{
+		key: "position",
+		kind: "choice",
+		options: ["bottom", "middle", "top", "custom"],
+	},
+	{ key: "highlight", kind: "choice", options: ["none", "word"] },
+	{ key: "highlight_color", kind: "color" },
+	{ key: "highlight_background", kind: "color" },
+];
+
 const text = (value: unknown): string =>
 	typeof value === "string" || typeof value === "number" ? String(value) : "";
 

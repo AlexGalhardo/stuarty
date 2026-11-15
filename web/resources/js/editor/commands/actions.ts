@@ -12,7 +12,10 @@ import {
 	addAudioOperations,
 	addClipOperations,
 	adjacentTrack,
+	captionEditWordOperations,
+	captionMergeOperations,
 	captionOperations,
+	captionSplitOperations,
 	closeGapOperations,
 	deleteOperations,
 	duplicateOperations,
@@ -44,6 +47,16 @@ export interface Actions {
 	addCaption(text: string, duration: string): Promise<EditOutcome | null>;
 	// Toolbar "Add text" and `T`: `text` is the localized default content.
 	addText(text: string): Promise<EditOutcome | null>;
+	// Double click on a caption word; empty text removes the word.
+	editWord(
+		itemId: string,
+		index: number,
+		text: string,
+	): Promise<EditOutcome | null>;
+	// "Split caption here": the word at `beforeWord` starts the right part.
+	splitCaption(itemId: string, beforeWord: number): Promise<EditOutcome | null>;
+	// "Merge" with two captions selected.
+	mergeCaptions(itemIds: readonly string[]): Promise<EditOutcome | null>;
 	// The inline editor of the canvas and the timeline: only a change of the
 	// content is sent, and the error is a notice, not a field message.
 	setText(itemId: string, text: string): Promise<EditOutcome | null>;
@@ -257,6 +270,24 @@ export function createActions(runtime: EditorRuntime): Actions {
 			});
 			return;
 		}
+		const failed = ops[error.opIndex ?? 0];
+		const splitId =
+			failed?.op === "caption.split" || failed?.op === "item.split"
+				? failed.args.item_id
+				: undefined;
+		if (
+			error.code === "E_INVALID_STATE" &&
+			typeof splitId === "string" &&
+			documents.getState().document?.items[splitId]?.type === "caption"
+		) {
+			// Split at a word boundary: the button selects the caption, whose
+			// panel lists the words (SDD-012 section 8.4).
+			noticeWriter.push({
+				...base,
+				action: { labelKey: "ui.editor.notice.open_words", select: splitId },
+			});
+			return;
+		}
 		noticeWriter.push(base);
 	}
 
@@ -360,6 +391,11 @@ export function createActions(runtime: EditorRuntime): Actions {
 					newTrackId: () => newId("trk"),
 				}),
 			),
+		editWord: (itemId, index, text) =>
+			send(captionEditWordOperations(itemId, index, text)),
+		splitCaption: (itemId, beforeWord) =>
+			send(captionSplitOperations(itemId, beforeWord)),
+		mergeCaptions: (itemIds) => send(captionMergeOperations(itemIds)),
 		setText: (itemId, text) => send(textSetOperations(itemId, text)),
 		nudge: (ids, frames) => send(nudgeOperations(rangesOf(ids), frames)),
 		moveToAdjacentTrack(ids, sign) {
@@ -391,6 +427,11 @@ export function createActions(runtime: EditorRuntime): Actions {
 		async applyNotice(notice) {
 			noticeWriter.dismiss(notice.id);
 			if (notice.action === undefined) return null;
+			if (notice.action.select !== undefined) {
+				uiWriter.select([notice.action.select]);
+				return null;
+			}
+			if (notice.action.operations === undefined) return null;
 			// A new logical edit on the current revision, the explicit decision of
 			// the user to act on top of the other change (SDD-012 section 4.5 item 3).
 			if (notice.conflict !== undefined)
