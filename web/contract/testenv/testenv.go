@@ -11,9 +11,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -259,7 +262,50 @@ func FakeMedia(seconds int64, width, height int) string {
 	return fmt.Sprintf("%s seconds=%d width=%d height=%d\n", fakeMediaMarker, seconds, width, height)
 }
 
+// FakeMediaTags is FakeMedia whose probe also reports the given metadata tags:
+// each one is a `tag.<key>=<quoted value>` line after the header line, the value
+// quoted as Go does so that control and bidirectional characters survive.
+func FakeMediaTags(seconds int64, width, height int, tags map[string]string) string {
+	var b strings.Builder
+
+	b.WriteString(FakeMedia(seconds, width, height))
+
+	for _, k := range slices.Sorted(maps.Keys(tags)) {
+		fmt.Fprintf(&b, "tag.%s=%s\n", k, strconv.Quote(tags[k]))
+	}
+
+	return b.String()
+}
+
 const fakeMediaMarker = "fake-media"
+
+// fakeTags reads the tag lines of a FakeMediaTags file; a line that does not
+// parse is ignored.
+func fakeTags(content string) map[string]ingest.Tag {
+	tags := map[string]ingest.Tag{}
+
+	for line := range strings.SplitSeq(content, "\n") {
+		rest, ok := strings.CutPrefix(line, "tag.")
+		if !ok {
+			continue
+		}
+
+		key, quoted, ok := strings.Cut(rest, "=")
+		if !ok {
+			continue
+		}
+
+		if value, err := strconv.Unquote(quoted); err == nil {
+			tags[key] = ingest.Tag{Value: value}
+		}
+	}
+
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return tags
+}
 
 func (e *Env) fakeIngest(_ context.Context, in ingest.Input) (*ingest.Result, error) {
 	e.Ingests.Add(1)
@@ -269,9 +315,12 @@ func (e *Env) fakeIngest(_ context.Context, in ingest.Input) (*ingest.Result, er
 		seconds++
 	}
 
+	var tags map[string]ingest.Tag
+
 	if path, err := enginestore.New(string(e.Dir)).Path(in.Hash); err == nil {
-		if head, rerr := readHead(path, 128); rerr == nil && strings.HasPrefix(head, fakeMediaMarker) {
+		if head, rerr := readHead(path, 64<<10); rerr == nil && strings.HasPrefix(head, fakeMediaMarker) {
 			_, _ = fmt.Sscanf(head, fakeMediaMarker+" seconds=%d width=%d height=%d", &seconds, &width, &height)
+			tags = fakeTags(head)
 		}
 	}
 
@@ -284,7 +333,7 @@ func (e *Env) fakeIngest(_ context.Context, in ingest.Input) (*ingest.Result, er
 
 	ms := max(e.durationMS, seconds*1000)
 
-	return fakeResult(string(e.Dir), in, ms)
+	return fakeResult(string(e.Dir), in, ms, tags)
 }
 
 func readHead(path string, n int) (string, error) {
@@ -305,7 +354,7 @@ func readHead(path string, n int) (string, error) {
 	return string(buf[:got]), nil
 }
 
-func fakeResult(ws string, in ingest.Input, durationMS int64) (*ingest.Result, error) {
+func fakeResult(ws string, in ingest.Input, durationMS int64, tags map[string]ingest.Tag) (*ingest.Result, error) {
 	dir := filepath.Join(ws, "artifacts", in.Hash)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
@@ -317,6 +366,7 @@ func fakeResult(ws string, in ingest.Input, durationMS int64) (*ingest.Result, e
 			Codec: "h264", DisplayWidth: 320, DisplayHeight: 240, NominalFPS: ingest.Rational{Num: 30, Den: 1},
 		},
 		Audio: &ingest.AudioFacts{Codec: "aac", SampleRate: 48000, Channels: 2},
+		Tags:  tags,
 	}
 
 	probe, err := json.Marshal(sum)
