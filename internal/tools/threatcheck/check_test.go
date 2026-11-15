@@ -1,0 +1,141 @@
+package main
+
+import (
+	"bytes"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+const sdd = "## 1. Intro\n\n## 2. Threat model\n\n" +
+	"| ID | Threat | How | Impact | Mitigation | Test |\n| --- | --- | --- | --- | --- | --- |\n" +
+	"| T-01 | a | b | c | a mitigation | `TestSecurity_T01_One`, `TestSecurity_T01_Two` |\n" +
+	"| T-02 | a | b | c | a mitigation | `TestSecurity_T02_Missing` |\n" +
+	"| T-21 | a | b | c | a mitigation | `TestSecurity_T21_Later`, `FuzzFontHeader` |\n" +
+	"\n## 3. Local mode\n\n## 5. Scope matrix\n\n| `ProjectGet` | x |\n\n## 6. Next\n"
+
+const serviceGo = "package service\n\ntype Service interface {\n" +
+	"\tProjectGet(ctx context.Context, req R) (*Res, error)\n" +
+	"\tExportFile(ctx context.Context, req R) (*Res, error)\n}\n"
+
+func repo(t *testing.T, tests string) string {
+	t.Helper()
+
+	root := t.TempDir()
+	put := func(rel, content string) {
+		full := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(full), 0o750); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := os.WriteFile(full, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	put("docs/sdds/007-security-model.md", sdd)
+	put("service/service.go", serviceGo)
+	put("pkg/sec_test.go", "package pkg\n\n"+tests)
+	put("web/node_modules/x/x_test.go", "package x\n\nfunc TestSecurity_T09_Ignored(t *testing.T) {}\n")
+
+	return root
+}
+
+func TestEveryProblemIsReported(t *testing.T) {
+	t.Parallel()
+
+	root := repo(t, "func TestSecurity_T01_One(t *testing.T) {}\nfunc TestSecurity_T01_Extra(t *testing.T) {}\n")
+
+	problems, err := check(root, "docs/sdds/007-security-model.md", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := strings.Join(problems, "\n")
+
+	for _, want := range []string{
+		"T-01: the test TestSecurity_T01_Two does not exist",
+		"T-02: the test TestSecurity_T02_Missing does not exist",
+		"T-02 has no test that exists",
+		"TestSecurity_T01_Extra is named by no threat row",
+		"the operation ExportFile is missing from the scope matrix",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("no problem %q in:\n%s", want, got)
+		}
+	}
+
+	// The later threat is allowlisted, and the test of node_modules is not read.
+	for _, unwanted := range []string{"T-21", "T09", "ProjectGet"} {
+		if strings.Contains(got, unwanted) {
+			t.Errorf("%q is reported:\n%s", unwanted, got)
+		}
+	}
+}
+
+func TestPhaseRunChecksOnlyItsThreats(t *testing.T) {
+	t.Parallel()
+
+	root := repo(t, "func TestSecurity_T01_One(t *testing.T) {}\nfunc TestSecurity_T01_Two(t *testing.T) {}\n")
+
+	problems, err := check(root, "docs/sdds/007-security-model.md", "P1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got := strings.Join(problems, "\n"); !strings.Contains(got, "T-02") {
+		t.Errorf("T-02 is a threat of phase P1: %q", got)
+	}
+}
+
+func TestCleanTreeExitsZero(t *testing.T) {
+	t.Parallel()
+
+	root := repo(t, "func TestSecurity_T01_One(t *testing.T) {}\nfunc TestSecurity_T01_Two(t *testing.T) {}\n"+
+		"func TestSecurity_T02_Missing(t *testing.T) {}\n")
+	put := filepath.Join(root, "service", "service.go")
+
+	if err := os.WriteFile(
+		put,
+		[]byte(strings.Replace(serviceGo, "\tExportFile(ctx context.Context, req R) (*Res, error)\n", "", 1)),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	if code := run([]string{"-root", root}, &stdout, &stderr); code != 0 {
+		t.Fatalf("exit %d: %s", code, stderr.String())
+	}
+}
+
+func TestMalformedTableIsAnError(t *testing.T) {
+	t.Parallel()
+
+	if _, err := parseThreats("## 2. Threat model\n\n| T-01 | only | three |\n\n## 3. x\n"); err == nil {
+		t.Error("a row with the wrong number of cells was accepted")
+	}
+
+	if _, err := parseThreats("no table here"); err == nil {
+		t.Error("a document with no threat section was accepted")
+	}
+}
+
+func TestTheRealModelParses(t *testing.T) {
+	t.Parallel()
+
+	raw, err := os.ReadFile("../../../docs/sdds/007-security-model.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	threats, err := parseThreats(strings.ReplaceAll(string(raw), "\r\n", "\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(threats) != 34 {
+		t.Errorf("the model has %d threats, want 34", len(threats))
+	}
+}
