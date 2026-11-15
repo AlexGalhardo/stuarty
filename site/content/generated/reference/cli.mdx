@@ -598,6 +598,26 @@ Example:
 vukem-video template:import spring-sale.vukem-template.zip
 ```
 
+## `bundle:export`
+
+Export a project as a .vvbundle to share or to back up
+
+```text
+vukem-video bundle:export --project <id> [--no-log] [--wait]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--log` | boolean | `true` | include the operation log (--no-log to share without history) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
+
+Example:
+
+```bash
+vukem-video bundle:export --project prj_7k2m9x4q1b --wait
+```
+
 ## `agent:docs`
 
 Print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions

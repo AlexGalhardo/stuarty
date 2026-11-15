@@ -822,6 +822,31 @@
       ]
     },
     {
+      "name": "bundle:export",
+      "summary": "export a project as a .vvbundle to share or to back up",
+      "usage": [
+        "vukem-video bundle:export --project <id> [--no-log] [--wait]"
+      ],
+      "example": "vukem-video bundle:export --project prj_7k2m9x4q1b --wait",
+      "flags": [
+        {
+          "name": "log",
+          "type": "boolean",
+          "default": "true",
+          "usage": "include the operation log (--no-log to share without history)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "wait",
+        "timeout"
+      ]
+    },
+    {
       "name": "agent:docs",
       "summary": "print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions",
       "usage": [
