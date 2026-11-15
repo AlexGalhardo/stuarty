@@ -1502,6 +1502,36 @@ The shell loads this UI with the same `app.css`, tokens, bundled fonts and compo
 13. `VIRTUALIZE_ABOVE`, `MAX_VIDEO_LAYERS`, `SNAP_PX` and the cache sizes in this document equal the values in code, or the document has been corrected to the measured values.
 14. The detection page of §21.2 exists, reports a `pass` verdict in Chromium, and `desktop/detect` runs in Chromium, WKWebView and WebKitGTK 6.0 with the results files committed (the verdict for the system webviews informs BETA, it does not block ALPHA).
 
+### 22.3 ALPHA acceptance status (2026-11-15, P2-QA-004)
+
+Run: headless Chromium on Windows 11, `bun run build:e2e`, `playwright test --project=chromium --workers=2` with `VUKEM_VIDEO_MIN_FREE_BYTES=1`: 194 passed, 6 failed, 1 skipped (7.9 min). Every failure was rerun alone. The projects `perf`, `failing-encoder` and `desktop-detect` are run apart from `chromium` (see `playwright.config.ts`).
+
+| Failure of the full run | Alone | Verdict |
+| --- | --- | --- |
+| `onboarding` tips | passes (4.6 s) | load flake: it failed in 2.9 s with two workers and the machine busy |
+| `transform-handles` rotation handle | fails 3 of 3 | product bug, fixed in this change: a box touching the top of the canvas put the handle 36 px above it, under the editing toolbar, so no pointer reached it; the handle now sits inside the box when the box top is nearer than `ROTATE_HANDLE_REACH` (36 px) to the canvas edge (`transformGestures.test.ts` and the spec) |
+| `command-palette-coverage` form, `font.add` | fails | contract bug, not fixed here (owner: core, senior-a): the service answers `E_NOT_FOUND` for a hash the workspace does not hold (§C.53 and `service/font_import.go`) but `font.add` lists only `E_VALIDATION` in `Errors`; add `CodeNotFound` to the spec in `core/command/font.go`, the C.53 error table and regenerate (`task codegen`, the site reference and the agent docs) |
+| `preview-vs-export` golden `caption-highlight`, `crop`, `filter-sepia`, `text-style`, `sticker-anim`, `sticker-png`, `shape`, `pip-opacity` | `caption-highlight`, `crop`, `filter-sepia`, `text-style` fail again (SSIM 0.9698 to 0.9706, shifts of 1.25 to 3.35 px); `shape` and `pip-opacity` swapped places between two runs (load); the two `sticker-*` cases failed to start `ffmpeg` while the disk was full (`ENOSPC`) | owner: senior-e (spec and preview code under review in the same release); not touched here |
+
+The `perf` project (budgets of the reference machine, §19.1) ran while other agents loaded the machine: scrub p95 35 ms (NFR-003, met), pause to exact frame cold p95 481 ms (NFR-004, met), `video-layers-budget` 0 of 1215, 1261 and 1216 frames dropped at 4, 6 and 8 layers, `vv:edit-apply` p95 0.10 ms; the round-trip budgets (NFR-001) missed under that load (edit p95 139 to 819 ms, timeline frames p95 83.5 ms) and must be read on the reference machine, where the earlier measures of §19.1 hold.
+
+| # | Item | Status | Evidence |
+| --- | --- | --- | --- |
+| 1 | 22.1 checks with the Portuguese catalog | met | `check:i18n` (rules I1 to I6, both locales), `typecheck`, `lint`, `check:thin-client`, `test`; `project-settings` (`/settings` in pt-BR, the language select) |
+| 2 | Palette lists every command, forms without JSON fallback, coverage | not met: `font.add` | `command-palette-coverage` lists all commands; the form test fails on the dry run of `font.add` (`E_NOT_FOUND` not in its `Errors`, owner core) |
+| 3 | Phase A entry points; scenarios 3, 14 to 26, 27 | not met | 3 `deep-link-reload`, 14 to 17, 19, 20, 22 to 26 pass (20 after this fix); 18 fails on item 2; 21 `i18n-switch` has no spec of that name (the locale switch is in `project-settings`; owner senior-e); 27 fails for four golden cases (above) |
+| 4 | Drag, trim, move, multi-select, snaps, one batch per gesture | met | `overlap-snapback`, `trim-handles`, `library-drag`, `snap-points`, `editor-ops`, `timeline-selection`, `thin-client-no-optimistic` |
+| 5 | `E_OVERLAP`, `E_OUT_OF_SOURCE`, `E_REVISION_CONFLICT` per §8.4, no resend | met | `overlap-snapback`, `trim-handles` (past the end of the source), `conflict-revision` (Apply again) |
+| 6 | Inspector binds every field; one change, one command | met | `inspector-debounce`, `clip-sections`, `text-edit`, `keyframes`, `shapes` |
+| 7 | Transform handles, plan-only picture, safe area | met | `transform-handles` (8 of 8 after the fix), `safe-area` |
+| 8 | History panel: actors, live, per-actor undo | met | `history-panel`, `scenarios` (`undo-redo-per-actor`) |
+| 9 | Export dialog Cancel and `E_VERIFY_FAILED`; install dialog | met | `export-dialog-alpha` (cancel, verification failure), `caption-word-edit` (install dialog); `export-formats` skips one case until the server lists the `format` argument of `job_start` |
+| 10 | Dark default; both themes pass `check:contrast` | met | `theme` (4 cases), `check:contrast` (68 pairs pass in both themes) |
+| 11 | Zero serious or critical axe violations; keyboard-only; live region | met | `a11y-axe-both-themes` (both themes), `keyboard-only-edit`, `wcag22` |
+| 12 | `perf-edit-200` and `timeline-200-items-perf` budgets; nightly `soak-5min` | not verified | the budgets are those of the reference machine and the run was loaded (see above); `soak-5min` is the nightly Go job and was not run |
+| 13 | Constants equal the code | met | `VIRTUALIZE_ABOVE` 150, `MAX_VIDEO_LAYERS` 4, `SNAP_PX` 8, plan windows 8 (`MAX_WINDOWS`), bitmap cache 64 (`BITMAP_CACHE`) |
+| 14 | Detection page, `pass` in Chromium; WKWebView and WebKitGTK results | partly met | `desktop-detect` passes in Chromium; the system webview results are P3-DSK-001 and do not block ALPHA |
+
 ## Appendix A: Decisions of this SDD
 
 | # | Decision | Section |
