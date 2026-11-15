@@ -134,7 +134,7 @@ func TestTheRealModelParses(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(threats) != 34 {
-		t.Errorf("the model has %d threats, want 34", len(threats))
+	if len(threats) != 35 {
+		t.Errorf("the model has %d threats, want 35 (T-35, the desktop update channel)", len(threats))
 	}
 }
