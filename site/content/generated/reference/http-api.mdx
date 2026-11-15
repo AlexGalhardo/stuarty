@@ -21,6 +21,28 @@ List the audit table
 
 Responses: `200` OK, `401`, `422`, `default`.
 
+## brand-kit
+
+### `GET /brand-kit`
+
+Read the brand kit
+
+Responses: `200` OK, `401`, `default`.
+
+### `PUT /brand-kit`
+
+Replace the brand kit
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `colors` | `object` | no | Name to #RRGGBB or #RRGGBBAA; at most 32. |
+| `fonts` | `object` | no | Family to its files; at most 16 families, each file already in the font store. |
+| `logo` | `string` | no | sha256: and 64 hex digits of an image asset of the workspace. |
+
+Responses: `200` OK, `401`, `422`, `default`.
+
 ## commands
 
 ### `GET /commands`
@@ -46,6 +68,18 @@ Responses: `200` OK, `401`, `422`, `default`.
 List the bundled font families and weights
 
 Responses: `200` OK, `401`, `default`.
+
+### `POST /fonts`
+
+Import a font file into the font store
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `path` | `string` | yes | An absolute path to a TrueType or OpenType file on the machine that runs the server. |
+
+Responses: `201` Created, `401`, `422`, `default`.
 
 ## handshake
 
@@ -654,6 +688,8 @@ Request body:
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
+| `brand_colors` | array of `string` | no | Names of template colours that take the colour of the brand kit. |
+| `brand_fonts` | array of `string` | no | Families of the brand kit added to the fonts of the project. |
 | `dry_run` | `boolean` | no |  |
 | `fill` | `object` | no | Slot name to a value: one of asset_id, text or words. |
 | `id` | `string` | no | Optional project id; local mode only. |

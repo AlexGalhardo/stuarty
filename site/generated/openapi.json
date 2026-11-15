@@ -111,6 +111,55 @@
         },
         "type": "object"
       },
+      "BrandFont": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/BrandFontFile"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "BrandFontFile": {
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "BrandKit": {
+        "properties": {
+          "colors": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "fonts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BrandFont"
+            },
+            "type": "object"
+          },
+          "logo": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "updated_ms": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "CaptionStyle": {
         "properties": {
           "align": {
@@ -714,6 +763,24 @@
           },
           "weight": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "FontImportResult": {
+        "properties": {
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "deduplicated": {
+            "type": "boolean"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -5648,6 +5715,95 @@
         "summary": "List the audit table"
       }
     },
+    "/api/v1/brand-kit": {
+      "get": {
+        "operationId": "brand.get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandKit"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the brand kit"
+      },
+      "put": {
+        "operationId": "brand.set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "colors": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Name to #RRGGBB or #RRGGBBAA; at most 32.",
+                    "type": "object"
+                  },
+                  "fonts": {
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/BrandFont"
+                    },
+                    "description": "Family to its files; at most 16 families, each file already in the font store.",
+                    "type": "object"
+                  },
+                  "logo": {
+                    "description": "sha256: and 64 hex digits of an image asset of the workspace.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandKit"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace the brand kit"
+      }
+    },
     "/api/v1/commands": {
       "get": {
         "operationId": "commands.list",
@@ -5747,6 +5903,56 @@
           }
         ],
         "summary": "List the bundled font families and weights"
+      },
+      "post": {
+        "operationId": "fonts.import",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "path": {
+                    "description": "An absolute path to a TrueType or OpenType file on the machine that runs the server.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FontImportResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import a font file into the font store"
       }
     },
     "/api/v1/handshake": {
@@ -8348,6 +8554,20 @@
             "application/json": {
               "schema": {
                 "properties": {
+                  "brand_colors": {
+                    "description": "Names of template colours that take the colour of the brand kit.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "brand_fonts": {
+                    "description": "Families of the brand kit added to the fonts of the project.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "dry_run": {
                     "type": "boolean"
                   },
