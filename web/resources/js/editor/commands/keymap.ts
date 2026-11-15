@@ -110,38 +110,121 @@ export const UI_SHORTCUT_ACTIONS = [
 	"surface.cancel",
 	"surface.next_landmark",
 	"surface.grid_keys",
+	"surface.cheat_sheet",
 ] as const;
 
 export type UiShortcutAction = (typeof UI_SHORTCUT_ACTIONS)[number];
 
+// The rows the person can rebind (SDD-012 section 18.2). Their `id` in the
+// table is one of these.
+export const BINDING_IDS = [
+	"split",
+	"trim_start",
+	"trim_end",
+	"add_caption",
+	"add_text",
+	"toggle_snap",
+	"zoom_in",
+	"zoom_out",
+	"zoom_fit",
+] as const;
+
+export type BindingId = (typeof BINDING_IDS)[number];
+
 export interface Shortcut {
+	// Names the row in the cheat sheet (ui.editor.shortcuts.rows.<id>).
+	id: string;
 	keys: string;
 	action: keyof Actions | UiShortcutAction;
 }
 
 export const SHORTCUTS: readonly Shortcut[] = [
-	{ keys: "Space", action: "surface.play_pause" },
-	{ keys: "Left, Right", action: "surface.step_frame" },
-	{ keys: "Shift+Left, Shift+Right", action: "surface.step_second" },
-	{ keys: "Home, End", action: "surface.go_to_edge" },
-	{ keys: "S", action: "splitAtPlayhead" },
-	{ keys: "[", action: "trimToPlayhead" },
-	{ keys: "]", action: "trimToPlayhead" },
-	{ keys: "Mod+Z", action: "undo" },
-	{ keys: "Mod+Shift+Z", action: "redo" },
-	{ keys: "Ctrl+Y", action: "redo" },
-	{ keys: "+, -, Shift+Z", action: "surface.zoom" },
-	{ keys: "Delete, Backspace", action: "deleteSelection" },
-	{ keys: "Shift+Delete", action: "deleteSelection" },
-	{ keys: "Mod+D", action: "duplicateSelection" },
-	{ keys: "C", action: "addCaption" },
-	{ keys: "T", action: "addText" },
-	{ keys: "F2", action: "renameItem" },
-	{ keys: "N", action: "surface.toggle_snap" },
-	{ keys: "Mod+K", action: "surface.palette" },
-	{ keys: "Alt+1, Alt+2, Alt+3", action: "surface.toggle_panel" },
-	{ keys: "Mod+A", action: "surface.select_all" },
-	{ keys: "Esc", action: "surface.cancel" },
-	{ keys: "F6", action: "surface.next_landmark" },
-	{ keys: "Timeline grid keys", action: "surface.grid_keys" },
+	{ id: "play_pause", keys: "Space", action: "surface.play_pause" },
+	{ id: "step_frame", keys: "Left, Right", action: "surface.step_frame" },
+	{
+		id: "step_second",
+		keys: "Shift+Left, Shift+Right",
+		action: "surface.step_second",
+	},
+	{ id: "go_to_edge", keys: "Home, End", action: "surface.go_to_edge" },
+	{ id: "split", keys: "S", action: "splitAtPlayhead" },
+	{ id: "trim_start", keys: "[", action: "trimToPlayhead" },
+	{ id: "trim_end", keys: "]", action: "trimToPlayhead" },
+	{ id: "undo", keys: "Mod+Z", action: "undo" },
+	{ id: "redo", keys: "Mod+Shift+Z", action: "redo" },
+	{ id: "redo_alt", keys: "Ctrl+Y", action: "redo" },
+	{ id: "zoom_in", keys: "+", action: "surface.zoom" },
+	{ id: "zoom_out", keys: "-", action: "surface.zoom" },
+	{ id: "zoom_fit", keys: "Shift+Z", action: "surface.zoom" },
+	{ id: "delete", keys: "Delete, Backspace", action: "deleteSelection" },
+	{ id: "ripple_delete", keys: "Shift+Delete", action: "deleteSelection" },
+	{ id: "duplicate", keys: "Mod+D", action: "duplicateSelection" },
+	{ id: "add_caption", keys: "C", action: "addCaption" },
+	{ id: "add_text", keys: "T", action: "addText" },
+	{ id: "rename", keys: "F2", action: "renameItem" },
+	{ id: "toggle_snap", keys: "N", action: "surface.toggle_snap" },
+	{ id: "palette", keys: "Mod+K", action: "surface.palette" },
+	{
+		id: "toggle_panel",
+		keys: "Alt+1, Alt+2, Alt+3",
+		action: "surface.toggle_panel",
+	},
+	{ id: "select_all", keys: "Mod+A", action: "surface.select_all" },
+	{ id: "cancel", keys: "Esc", action: "surface.cancel" },
+	{ id: "next_landmark", keys: "F6", action: "surface.next_landmark" },
+	{ id: "grid_keys", keys: "Timeline grid keys", action: "surface.grid_keys" },
+	{ id: "cheat_sheet", keys: "?", action: "surface.cheat_sheet" },
 ];
+
+export type Bindings = Readonly<Record<BindingId, string>>;
+
+export function isBindingId(id: string): id is BindingId {
+	return (BINDING_IDS as readonly string[]).includes(id);
+}
+
+export const DEFAULT_BINDINGS: Bindings = Object.fromEntries(
+	BINDING_IDS.map((id) => [
+		id,
+		SHORTCUTS.find((row) => row.id === id)?.keys ?? "",
+	]),
+) as Bindings;
+
+// Keys that no binding may take: Tab and Enter belong to focus and forms.
+export const RESERVED_KEYS: readonly string[] = ["Tab", "Shift+Tab", "Enter"];
+
+const KEY_NAMES: Readonly<Record<string, string>> = {
+	" ": "Space",
+	ArrowLeft: "Left",
+	ArrowRight: "Right",
+	ArrowUp: "Up",
+	ArrowDown: "Down",
+	Escape: "Esc",
+};
+
+const MODIFIER_KEYS = new Set(["Control", "Meta", "Alt", "Shift", "AltGraph"]);
+
+type ComboEvent = Pick<
+	KeyboardEvent,
+	"key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey"
+>;
+
+// The canonical text of a key press, in the form of the table: `Mod`, `Alt`,
+// `Shift` and the key. Shift is part of it for a letter or a named key only:
+// for `+` or `?` the character already says it. Null for a modifier alone.
+export function comboFromEvent(event: ComboEvent): string | null {
+	if (MODIFIER_KEYS.has(event.key)) return null;
+	const name = KEY_NAMES[event.key] ?? event.key;
+	const single = name.length === 1;
+	const letter = single && name.toLowerCase() !== name.toUpperCase();
+	const parts: string[] = [];
+	if (hasMod(event)) parts.push("Mod");
+	if (event.altKey) parts.push("Alt");
+	if (event.shiftKey && (letter || !single)) parts.push("Shift");
+	parts.push(letter ? name.toUpperCase() : name);
+	return parts.join("+");
+}
+
+// The text of a combo for the person: Mod is Ctrl or Cmd by platform.
+export function displayCombo(combo: string, mac: boolean): string {
+	return combo.replace(/\bMod\b/g, mac ? "Cmd" : "Ctrl");
+}
