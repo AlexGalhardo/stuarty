@@ -90,14 +90,14 @@
         "zoom_out": "Diminuir o zoom",
         "fit": "Ajustar",
         "playhead": "Indicador de reprodução",
-        "ruler": "Navegar",
+        "ruler": "Régua de tempo",
         "tracks": "Faixas",
         "track_visual": "Faixa de vídeo",
         "track_audio": "Faixa de áudio",
         "hidden": "oculta",
-        "muted": "sem som",
+        "muted": "silenciada",
         "item_summary": "{type}, {name}",
-        "snap": "Encaixe"
+        "snap": "Encaixar"
       },
       "item": {
         "clip": "Clipe",
@@ -124,7 +124,7 @@
       "errors": {
         "E_FONT_UNKNOWN": "Fonte desconhecida",
         "E_IDEMPOTENCY_MISMATCH": "Pedido repetido com conteúdo diferente",
-        "E_ID_EXISTS": "Este id já existe",
+        "E_ID_EXISTS": "Este ID já existe",
         "E_INTERNAL": "Erro interno",
         "E_INVALID_STATE": "Não é possível no estado atual",
         "E_INVALID_TIME": "Tempo inválido",
@@ -132,9 +132,9 @@
         "E_LIMIT": "Limite atingido",
         "E_NOT_EMPTY": "Não está vazio",
         "E_NOT_FOUND": "Não encontrado",
-        "E_OUT_OF_SOURCE": "Fora da mídia de origem",
+        "E_OUT_OF_SOURCE": "Fora da mídia original",
         "E_OVERLAP": "Sobrepõe outro item",
-        "E_REVISION_CONFLICT": "Outra pessoa alterou isto",
+        "E_REVISION_CONFLICT": "Alguém mais alterou isto",
         "E_SLOT": "Erro no espaço do modelo",
         "E_TYPE_MISMATCH": "Tipo de faixa incorreto",
         "E_UNKNOWN_COMMAND": "Comando desconhecido",
@@ -147,7 +147,7 @@
         "E_NOTHING_TO_REDO": "Nada para refazer",
         "E_PATH_NOT_ALLOWED": "Este caminho não é permitido",
         "E_FILE_NOT_FOUND": "Arquivo não encontrado",
-        "E_UNSUPPORTED_MEDIA": "Mídia não suportada",
+        "E_UNSUPPORTED_MEDIA": "Mídia não compatível",
         "E_INGEST_FAILED": "Falha na importação",
         "E_LIMIT_EXCEEDED": "Limite excedido",
         "E_FFMPEG_MISSING": "O FFmpeg não foi encontrado",
@@ -197,16 +197,16 @@
         "apply_again": "Aplicar de novo",
         "next_free": "Mover para a próxima posição livre",
         "undo_skipped": {
-          "one": "Desfeito; {count} alteração foi deixada como estava porque {actor} a alterou",
-          "other": "Desfeito; {count} alterações foram deixadas como estavam porque {actor} as alterou"
+          "one": "Desfeito. {count} alteração ficou como estava porque {actor} a alterou",
+          "other": "Desfeito. {count} alterações ficaram como estavam porque {actor} as alterou"
         },
         "redo_skipped": {
-          "one": "Refeito; {count} alteração foi deixada como estava porque {actor} a alterou",
-          "other": "Refeito; {count} alterações foram deixadas como estavam porque {actor} as alterou"
+          "one": "Refeito. {count} alteração ficou como estava porque {actor} a alterou",
+          "other": "Refeito. {count} alterações ficaram como estavam porque {actor} as alterou"
         },
-        "source_has_only": "A mídia de origem tem apenas {available}",
-        "gesture_cancelled": "{actor} alterou o que você estava arrastando, então o arrasto foi cancelado",
-        "another_actor": "outro ator"
+        "source_has_only": "A mídia original tem apenas {available}",
+        "gesture_cancelled": "{actor} alterou o item que você estava arrastando. O arrasto foi cancelado.",
+        "another_actor": "alguém"
       },
       "conflict": {
         "message": "{actor} alterou {item} enquanto você editava (revisão {revision}). Sua alteração não foi aplicada.",
@@ -295,7 +295,7 @@
             "title": "Remover silêncios"
           },
           "set_color": {
-            "title": "Ajustar cor do clipe"
+            "title": "Definir cor do clipe"
           },
           "set_framing": {
             "title": "Definir enquadramento do clipe"
@@ -321,7 +321,7 @@
             "title": "Renomear item"
           },
           "set_audio": {
-            "title": "Ajustar áudio do item"
+            "title": "Definir áudio do item"
           },
           "set_transform": {
             "title": "Definir transformação do item"
@@ -402,19 +402,19 @@
         },
         "track": {
           "add": {
-            "title": "Adicionar trilha"
+            "title": "Adicionar faixa"
           },
           "move": {
-            "title": "Mover trilha"
+            "title": "Mover faixa"
           },
           "remove": {
-            "title": "Remover trilha"
+            "title": "Remover faixa"
           },
           "set_caption_style": {
-            "title": "Definir estilo de legenda da trilha"
+            "title": "Definir estilo de legenda da faixa"
           },
           "update": {
-            "title": "Atualizar trilha"
+            "title": "Atualizar faixa"
           }
         }
       },
@@ -424,19 +424,19 @@
         "L_BLACK_FRAMES": "Quadros pretos",
         "L_MEDIA_MISSING": "Arquivo de mídia ausente",
         "L_MEDIA_UNREADY": "Mídia ainda não está pronta",
-        "L_SOURCE_RANGE": "Fora do intervalo da fonte",
+        "L_SOURCE_RANGE": "Fora do intervalo da mídia original",
         "L_ODD_DIMENSIONS": "Tamanho de imagem ímpar",
         "L_SILENT_EXPORT": "A exportação não tem som",
         "L_SLIVER": "Item muito curto",
-        "L_OCCLUDED": "Item oculto por outro",
+        "L_OCCLUDED": "Item coberto por outro",
         "L_AUDIO_OVERLAP": "Áudio sobreposto",
         "L_SAFE_AREA": "Fora da área segura",
         "L_OFF_FRAME": "Fora do quadro",
-        "L_TRANSITION_EMPTY": "Transição sem nada para mesclar",
+        "L_TRANSITION_EMPTY": "Transição sem conteúdo para mesclar",
         "L_CAPTION_DESYNC": "Legendas fora de sincronia",
         "L_SLOT_UNFILLED": "Espaço do modelo não preenchido",
-        "L_AUDIO_CLIP": "Áudio estourado",
-        "L_LOUDNESS": "Volume fora da meta",
+        "L_AUDIO_CLIP": "Áudio saturado",
+        "L_LOUDNESS": "Volume fora do alvo",
         "L_DURATION_LIMIT": "Acima do limite de duração"
       },
       "palette": {
@@ -446,7 +446,7 @@
         "title": "Paleta de comandos",
         "search": "Buscar comandos",
         "count": "{count} comandos",
-        "hints": "Setas para mover, Enter para abrir, Esc para fechar",
+        "hints": "Use as setas para mover, Enter para abrir e Esc para fechar",
         "no_match": "Nenhum comando encontrado",
         "no_match_hint": "Confira a grafia ou busque pelo nome do comando.",
         "retry": "Tentar de novo",
@@ -479,7 +479,7 @@
         "no_arguments": "Este comando não tem argumentos."
       },
       "time": {
-        "hint": "Use 12,5s, 375f ou 00:12,500."
+        "hint": "Use 12.5s, 375f ou 00:12.500."
       },
       "inspector": {
         "name": "Nome",
@@ -490,7 +490,7 @@
         "in_point": "Ponto de entrada",
         "kind": "Tipo",
         "project": "Projeto",
-        "track": "Trilha",
+        "track": "Faixa",
         "items": "{count} itens",
         "project_hint": "Selecione um item na linha do tempo para editá-lo.",
         "multi_hint": "Selecione um único item para editar o nome e o tempo.",
@@ -505,14 +505,14 @@
       },
       "history": {
         "tab": "Histórico",
-        "revision": "rev. {revision}",
+        "revision": "rev {revision}",
         "title": "Histórico",
         "you": "Você",
         "undone": "Desfeita",
         "load_more": "Carregar mais",
         "start": "Início do projeto",
         "empty": "Nenhuma alteração ainda",
-        "empty_hint": "Cada alteração sua ou de um agente aparece aqui.",
+        "empty_hint": "Cada alteração feita por você ou por um agente aparece aqui.",
         "retry": "Tentar de novo",
         "changes": {
           "one": "{count} alteração",
