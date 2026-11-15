@@ -114,7 +114,7 @@ export default function EditorShell({
 			{panels.left ? <LeftPanel /> : <div />}
 			<main
 				aria-label={t("ui.editor.panels.preview")}
-				data-landmark=""
+				data-landmark="3"
 				className="dark flex min-h-0 min-w-0 flex-col bg-ed-preview-surround p-3 text-foreground"
 			>
 				{status === "loading" ? (

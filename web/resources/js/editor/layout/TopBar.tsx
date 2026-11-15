@@ -130,7 +130,7 @@ export default function TopBar({
 
 	return (
 		<header
-			data-landmark=""
+			data-landmark="1"
 			className="col-span-full flex h-12 items-center gap-3 border-b border-ed-track-line bg-ed-panel px-3"
 		>
 			<Button asChild variant="ghost" size="icon-sm">
