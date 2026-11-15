@@ -1,6 +1,6 @@
 ---
 name: vukem-video
-description: Use when asked to edit or create short videos, captions, cuts or exports with the vukem-video CLI or MCP server. Covers the edit loop, the rules that prevent common mistakes, the commands, the errors and how to recover.
+description: Use when asked to edit or create short videos, captions, cuts or exports with the vukem-video CLI or MCP server. Covers the edit loop, the rules, the commands, the errors and recovery.
 metadata:
   version: "0.12.0"
 ---
@@ -86,6 +86,7 @@ Every line starts with `vukem-video`.
 - `template:new <template id> --name <name> [--fill <file|->] [--id prj_...]`
 - `template:export <template id>`
 - `template:import <path>`
+- `bundle:export --project <id> [--no-log] [--wait]`
 - `agent:docs --print skill|agents|instructions`
 - `transcribe --project <id> --asset <id> [--language auto] [--wait] [--timeout d]`
 - `doctor [--full] [--verify] [--bundle] [--gc]`
