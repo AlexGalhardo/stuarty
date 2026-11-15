@@ -239,6 +239,198 @@
         "failed_checks": "Failed checks:",
         "queue_full": "Another export is running. Try again when it finishes.",
         "go_to": "Go to {item}"
+      },
+      "commands": {
+        "asset": {
+          "remove": {
+            "title": "Remove media"
+          }
+        },
+        "audio": {
+          "add": {
+            "title": "Add audio"
+          }
+        },
+        "caption": {
+          "add": {
+            "title": "Add caption"
+          },
+          "edit_word": {
+            "title": "Edit caption word"
+          },
+          "from_transcript": {
+            "title": "Captions from transcript"
+          },
+          "merge": {
+            "title": "Merge captions"
+          },
+          "retime_from_clip": {
+            "title": "Re-sync captions to clip"
+          },
+          "set_breaks": {
+            "title": "Set caption line breaks"
+          },
+          "set_style": {
+            "title": "Set caption style"
+          },
+          "set_words": {
+            "title": "Set caption words"
+          },
+          "split": {
+            "title": "Split caption"
+          }
+        },
+        "clip": {
+          "add": {
+            "title": "Add clip"
+          },
+          "remove_silences": {
+            "title": "Remove silences"
+          },
+          "set_color": {
+            "title": "Set clip color"
+          },
+          "set_framing": {
+            "title": "Set clip framing"
+          },
+          "set_speed": {
+            "title": "Set clip speed"
+          }
+        },
+        "item": {
+          "crossfade": {
+            "title": "Crossfade items"
+          },
+          "delete": {
+            "title": "Delete item"
+          },
+          "duplicate": {
+            "title": "Duplicate item"
+          },
+          "move": {
+            "title": "Move item"
+          },
+          "rename": {
+            "title": "Rename item"
+          },
+          "set_audio": {
+            "title": "Set item audio"
+          },
+          "set_transform": {
+            "title": "Set item transform"
+          },
+          "set_transition": {
+            "title": "Set item transition"
+          },
+          "split": {
+            "title": "Split item"
+          },
+          "trim": {
+            "title": "Trim item"
+          }
+        },
+        "keyframe": {
+          "clear": {
+            "title": "Clear keyframes"
+          },
+          "remove": {
+            "title": "Remove keyframe"
+          },
+          "set": {
+            "title": "Set keyframe"
+          }
+        },
+        "project": {
+          "rename": {
+            "title": "Rename project"
+          }
+        },
+        "settings": {
+          "set": {
+            "title": "Project settings"
+          },
+          "set_fps": {
+            "title": "Set frame rate"
+          }
+        },
+        "shape": {
+          "add": {
+            "title": "Add shape"
+          },
+          "set": {
+            "title": "Set shape"
+          }
+        },
+        "slot": {
+          "fill": {
+            "title": "Fill template slot"
+          },
+          "mark": {
+            "title": "Mark template slot"
+          },
+          "unmark": {
+            "title": "Unmark template slot"
+          }
+        },
+        "template": {
+          "set_info": {
+            "title": "Template info"
+          }
+        },
+        "text": {
+          "add": {
+            "title": "Add text"
+          },
+          "apply_preset": {
+            "title": "Apply text preset"
+          },
+          "set": {
+            "title": "Set text"
+          }
+        },
+        "timeline": {
+          "close_gap": {
+            "title": "Close gap"
+          }
+        },
+        "track": {
+          "add": {
+            "title": "Add track"
+          },
+          "move": {
+            "title": "Move track"
+          },
+          "remove": {
+            "title": "Remove track"
+          },
+          "set_caption_style": {
+            "title": "Set track caption style"
+          },
+          "update": {
+            "title": "Update track"
+          }
+        }
+      },
+      "lint": {
+        "L_EMPTY_TIMELINE": "Nothing on the timeline",
+        "L_GAP": "Gap in the timeline",
+        "L_BLACK_FRAMES": "Black frames",
+        "L_MEDIA_MISSING": "Media file missing",
+        "L_MEDIA_UNREADY": "Media not ready",
+        "L_SOURCE_RANGE": "Outside the source range",
+        "L_ODD_DIMENSIONS": "Odd picture size",
+        "L_SILENT_EXPORT": "Export has no sound",
+        "L_SLIVER": "Very short item",
+        "L_OCCLUDED": "Item hidden by another",
+        "L_AUDIO_OVERLAP": "Overlapping audio",
+        "L_SAFE_AREA": "Outside the safe area",
+        "L_OFF_FRAME": "Outside the frame",
+        "L_TRANSITION_EMPTY": "Transition with nothing to blend",
+        "L_CAPTION_DESYNC": "Captions out of sync",
+        "L_SLOT_UNFILLED": "Template slot not filled",
+        "L_AUDIO_CLIP": "Audio clipping",
+        "L_LOUDNESS": "Loudness off target",
+        "L_DURATION_LIMIT": "Over the duration limit"
       }
     }
   }

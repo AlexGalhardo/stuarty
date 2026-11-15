@@ -9,7 +9,9 @@
 // I4       every key used in code exists in en.json, and every ui.editor key of
 //          en.json is used (a template such as `ui.editor.errors.${code}` uses
 //          the keys under its prefix)
-// I5       every code of the generated error table has ui.editor.errors.<CODE>
+// I5       every code of the generated error table has ui.editor.errors.<CODE>,
+//          every non-internal command has ui.editor.commands.<name>.title and
+//          every lint rule has ui.editor.lint.<code>
 // I7       (proposed) no key has the English text in pt-BR, outside SAME_IN_PORTUGUESE
 //
 // The syntax tree comes from the API inside the `typescript` package, as in
@@ -228,6 +230,8 @@ function checkUsage(catalog: Map<string, Leaf>, usage: Usage): Finding[] {
 	return findings;
 }
 
+const REGISTRY_PREFIXES = ["ui.editor.commands.", "ui.editor.lint."];
+
 function unusedKeys(catalog: Map<string, Leaf>, usage: Usage): Finding[] {
 	const used = new Set(usage.keys.map((k) => k.key));
 	const prefixes = usage.prefixes.map((p) => p.prefix);
@@ -235,6 +239,9 @@ function unusedKeys(catalog: Map<string, Leaf>, usage: Usage): Finding[] {
 	for (const key of catalog.keys()) {
 		if (!key.startsWith("ui.editor.")) continue;
 		if (used.has(key) || prefixes.some((p) => key.startsWith(p))) continue;
+		// Titles of the registry are read by name at run time (the palette and the
+		// lint list); rule I5 checks that none is missing.
+		if (REGISTRY_PREFIXES.some((p) => key.startsWith(p))) continue;
 		findings.push({ file: "resources/lang/en.json", line: 0, rule: "I4", message: `key ${key} is never used` });
 	}
 	return findings;
@@ -254,6 +261,26 @@ function errorHeadlines(catalog: Map<string, Leaf>): Finding[] {
 			rule: "I5",
 			message: `ui.editor.errors.${code} is missing`,
 		}));
+}
+
+// I5: a title for every non-internal command and every lint rule.
+function registryTitles(catalog: Map<string, Leaf>): Finding[] {
+	const findings: Finding[] = [];
+	const missing = (key: string): void => {
+		if (!catalog.has(key)) {
+			findings.push({ file: "resources/lang/en.json", line: 0, rule: "I5", message: `${key} is missing` });
+		}
+	};
+	const commands = JSON.parse(readFileSync(join(webRoot, "resources/js/generated/commands.json"), "utf8")) as {
+		name: string;
+		internal: boolean;
+	}[];
+	for (const c of commands) if (!c.internal) missing(`ui.editor.commands.${c.name}.title`);
+	const rules = JSON.parse(readFileSync(join(webRoot, "../core/schema/lint-rules.json"), "utf8")) as {
+		code: string;
+	}[];
+	for (const r of rules) missing(`ui.editor.lint.${r.code}`);
+	return findings;
 }
 
 const format = (f: Finding): string => `${f.file}:${f.line}  ${f.rule}  ${f.message}`;
@@ -300,7 +327,7 @@ const usage: Usage = { keys: [], prefixes: [] };
 const tree = scan(webRoot, join(webRoot, "tsconfig.json"), en, usage, (file) =>
 	file.includes("/resources/js/"),
 );
-tree.push(...checkUsage(en, usage), ...unusedKeys(en, usage), ...errorHeadlines(en));
+tree.push(...checkUsage(en, usage), ...unusedKeys(en, usage), ...errorHeadlines(en), ...registryTitles(en));
 for (const p of [
 	...compareCatalogs(en, pt, "pt-BR"),
 	...untranslated(en, pt, "pt-BR", SAME_IN_PORTUGUESE),
