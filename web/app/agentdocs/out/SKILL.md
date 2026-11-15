@@ -84,6 +84,8 @@ Every line starts with `vukem-video`.
 - `template:list [--cursor c] [--limit n]`
 - `template:save --project <id> --name <name> [--description d]`
 - `template:new <template id> --name <name> [--fill <file|->] [--id prj_...]`
+- `template:export <template id>`
+- `template:import <path>`
 - `agent:docs --print skill|agents|instructions`
 
 Batches: `--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` any JSON). `--dry-run` saves nothing; `--key <k>` makes a retry safe.
@@ -195,4 +197,4 @@ The tools return the same text as the commands.
 - `job_start`: `export`
 - `job_get`: `job:show`, `job:list`
 - `job_cancel`: `job:cancel`
-- `template`: `template:list`, `template:save`, `template:new`
+- `template`: `template:list`, `template:save`, `template:new`, `template:export`, `template:import`
