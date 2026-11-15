@@ -842,7 +842,8 @@
             "type": "string"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "probe": {
             "anyOf": [
@@ -1479,7 +1480,8 @@
             "type": "string"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "progress": {
             "format": "double",
@@ -2041,7 +2043,8 @@
             "type": "integer"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "project_id": {
             "type": "string"
@@ -2102,7 +2105,8 @@
             "type": "integer"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "next_cursor": {
             "type": [
@@ -2190,7 +2194,8 @@
             "type": "integer"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "revision": {
             "format": "int64",
@@ -2324,7 +2329,8 @@
       "SlotInfo": {
         "properties": {
           "description": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "duration_policy": {
             "type": "string"
@@ -2543,7 +2549,8 @@
             "type": "object"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "duration": {
             "$ref": "#/components/schemas/TimeValue"
@@ -2552,7 +2559,8 @@
             "type": "integer"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "slots": {
             "items": {
@@ -2726,7 +2734,8 @@
             "type": "integer"
           },
           "text": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           }
         },
         "type": "object"
@@ -2866,10 +2875,12 @@
             "additionalProperties": {
               "type": "string"
             },
-            "type": "object"
+            "type": "object",
+            "x-untrusted": true
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "transcript": {
             "items": {

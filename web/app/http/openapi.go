@@ -3,10 +3,15 @@ package httpapi
 import (
 	"encoding/json"
 	"net/http"
+	"reflect"
 	"slices"
+	"strings"
 
 	"github.com/AlexGalhardo/vukem/openapi"
 	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/untrusted"
 )
 
 // Info is the base of the OpenAPI document: the problem members of the error
@@ -77,6 +82,8 @@ func (h *apiHandler) completeOpenAPI(doc *openapi.Document) {
 
 	slices.Sort(names)
 
+	markUntrusted(doc)
+
 	op, ok := doc.Components.Schemas["Operation"]
 	if !ok {
 		return
@@ -89,4 +96,48 @@ func (h *apiHandler) completeOpenAPI(doc *openapi.Document) {
 	}
 
 	op["x-args-by-op"] = byOp
+}
+
+// markUntrusted sets the annotation x-untrusted on every property of a result
+// schema whose field carries text from media or from another actor (SDD-007
+// section 8.2). The Go field tag is the one source, the same one the
+// provenance test checks.
+func markUntrusted(doc *openapi.Document) {
+	seen := map[reflect.Type]bool{}
+
+	var walk func(t reflect.Type)
+
+	walk = func(t reflect.Type) {
+		for t.Kind() == reflect.Pointer || t.Kind() == reflect.Slice || t.Kind() == reflect.Map || t.Kind() == reflect.Array {
+			t = t.Elem()
+		}
+
+		if t.Kind() != reflect.Struct || seen[t] || t.PkgPath() == "" {
+			return
+		}
+
+		seen[t] = true
+
+		props, _ := doc.Components.Schemas[t.Name()]["properties"].(map[string]any)
+
+		for f := range t.Fields() {
+			if f.Tag.Get("untrusted") == "true" {
+				name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
+
+				if prop, ok := props[name].(map[string]any); ok {
+					prop[untrusted.Annotation] = true
+				}
+			}
+
+			if f.Anonymous || f.IsExported() {
+				walk(f.Type)
+			}
+		}
+	}
+
+	for m := range reflect.TypeFor[service.Service]().Methods() {
+		for out := range m.Type.Outs() {
+			walk(out)
+		}
+	}
 }

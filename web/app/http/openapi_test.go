@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/AlexGalhardo/vukem-video/service/untrusted"
 	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 )
 
@@ -192,5 +193,48 @@ func TestResponsesMatchTheDocument(t *testing.T) {
 
 	if _, err := json.Marshal(doc); err != nil {
 		t.Error(err)
+	}
+}
+
+// SDD-007 section 8.2: the document marks the path of every field that carries
+// text from media or from another actor with x-untrusted, one property per row
+// of the provenance table.
+func TestOpenAPIMarksUntrustedPaths(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	schemas := h.openapi()["components"].(map[string]any)["schemas"].(map[string]any)
+
+	for key := range untrusted.Provenance {
+		parts := strings.Split(key, ".") // service.Type.Field
+		schema, _ := schemas[parts[1]].(map[string]any)
+
+		props, _ := schema["properties"].(map[string]any)
+		if schema == nil || props == nil {
+			t.Errorf("%s: no schema %s", key, parts[1])
+			continue
+		}
+
+		marked := false
+
+		for _, p := range props {
+			if m, ok := p.(map[string]any); ok && m[untrusted.Annotation] == true {
+				marked = true
+			}
+		}
+
+		if !marked {
+			t.Errorf("%s: no property of %s carries %s", key, parts[1], untrusted.Annotation)
+		}
+	}
+
+	name := schemas["ProjectSummary"].(map[string]any)["properties"].(map[string]any)["name"].(map[string]any)
+	if name[untrusted.Annotation] != true {
+		t.Errorf("ProjectSummary.name = %v, want x-untrusted", name)
+	}
+
+	id := schemas["ProjectSummary"].(map[string]any)["properties"].(map[string]any)["id"].(map[string]any)
+	if _, has := id[untrusted.Annotation]; has {
+		t.Error("ProjectSummary.id is marked x-untrusted")
 	}
 }
