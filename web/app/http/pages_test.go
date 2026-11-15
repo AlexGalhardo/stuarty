@@ -1,6 +1,8 @@
 package httpapi_test
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -9,6 +11,7 @@ import (
 
 	vukem "github.com/AlexGalhardo/vukem"
 
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/web/app/events"
 )
 
@@ -115,5 +118,37 @@ func TestPages(t *testing.T) {
 	if create.status != http.StatusConflict ||
 		!strings.HasPrefix(create.header.Get("X-Inertia-Location"), "/editor/prj_") {
 		t.Errorf("create = %d, location %q\n%s", create.status, create.header.Get("X-Inertia-Location"), create.body)
+	}
+}
+
+// A project that the editor cannot open answers with the Inertia error page carrying the code, the
+// message and the hint of the service, never a bare "500 Internal Server Error".
+func TestEditorPageShowsWhyAProjectCannotOpen(t *testing.T) {
+	h := pagesHarness(t)
+	ck := cookie(h)
+	id := h.newProject("From the future")
+
+	_, err := h.store.DB().ExecContext(
+		context.Background(),
+		"UPDATE projects SET document = replace(document, ?, ?) WHERE id = ?",
+		fmt.Sprintf(`"schema_version":%d`, timeline.CurrentSchemaVersion),
+		fmt.Sprintf(`"schema_version":%d`, timeline.CurrentSchemaVersion+1),
+		id,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res := h.do(req{path: "/editor/" + id, noAuth: true, headers: map[string]string{"Cookie": ck}})
+
+	body := string(res.body)
+	if res.status == http.StatusInternalServerError || res.status < 400 {
+		t.Errorf("status = %d, want a client error", res.status)
+	}
+
+	for _, want := range []string{`data-page="app"`, `Error`, "V_SCHEMA_VERSION", "update vukem-video"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("body lacks %q\n%s", want, body)
+		}
 	}
 }

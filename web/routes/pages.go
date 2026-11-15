@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"errors"
 	"net/http"
 	"regexp"
 
@@ -135,7 +136,7 @@ func editorPage(c *web.Ctx, d *httpapi.Deps, app *vukem.App) error {
 
 	head, err := d.Service.ProjectGet(c.Context(), service.ProjectGetRequest{ProjectID: id})
 	if err != nil {
-		return err
+		return editorFailure(c, err)
 	}
 
 	// A trashed project opens read-only from ALPHA; in the Prototype it is gone.
@@ -161,4 +162,32 @@ func nonNil[T any](s []T) []T {
 	}
 
 	return s
+}
+
+// editorFailure answers a project that the editor cannot open with the Inertia error page, which shows
+// the code, the message and the hint of the service (SDD-012 section 4.4), instead of the framework's
+// bare status line. Any other error is returned to the framework.
+func editorFailure(c *web.Ctx, err error) error {
+	se, ok := errors.AsType[*service.Error](err)
+	if !ok {
+		return err
+	}
+
+	status := se.HTTPStatus()
+	// RenderStatus refuses 409, which the Inertia protocol keeps for version and location replies.
+	if status == http.StatusConflict {
+		status = http.StatusUnprocessableEntity
+	}
+
+	code := se.Code
+	if specific, ok := se.Details["code"].(string); ok {
+		code = specific
+	}
+
+	props := inertia.Props{"status": status, "message": se.Message, "code": code}
+	if se.Hint != "" {
+		props["hint"] = se.Hint
+	}
+
+	return inertia.RenderStatus(c, status, "Error", props)
 }

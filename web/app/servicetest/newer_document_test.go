@@ -3,6 +3,7 @@ package servicetest
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -65,7 +66,7 @@ func TestNewerDocumentIsRefusedByEveryLoad(t *testing.T) {
 				t.Errorf("details = %v, want code V_SCHEMA_VERSION", se.Details)
 			}
 
-			for _, want := range []string{fmt.Sprint(newer), fmt.Sprint(timeline.CurrentSchemaVersion)} {
+			for _, want := range []string{strconv.Itoa(newer), strconv.Itoa(timeline.CurrentSchemaVersion)} {
 				if !strings.Contains(se.Message, want) {
 					t.Errorf("message = %q, want the version %s", se.Message, want)
 				}
