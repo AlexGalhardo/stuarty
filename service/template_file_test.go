@@ -78,7 +78,7 @@ func TestTemplateFileAcceptsTheThreeMembers(t *testing.T) {
 
 // SDD-007 section 15 check 20 (T-20): every hostile archive is refused as
 // E_VALIDATION, and the refusal never carries an entry name.
-func TestTemplateFileRefusesHostileArchives(t *testing.T) {
+func TestSecurity_T20_TemplateArchiveRules(t *testing.T) {
 	doc := []byte(`{}`)
 	man := goodManifest()
 
