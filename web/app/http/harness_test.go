@@ -73,6 +73,19 @@ func newHarness(t *testing.T) *harness {
 func newHarnessWith(t *testing.T, eo events.Options, extra ...vukem.Option) *harness {
 	t.Helper()
 
+	return newHarnessWrapped(t, eo, nil, extra...)
+}
+
+// newHarnessWrapped serves the API over wrap(service), for tests that need a
+// method the plain service cannot answer, such as a renderer.
+func newHarnessWrapped(
+	t *testing.T,
+	eo events.Options,
+	wrap func(service.Service) service.Service,
+	extra ...vukem.Option,
+) *harness {
+	t.Helper()
+
 	dir, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
 	if err != nil {
 		t.Fatal(err)
@@ -95,6 +108,10 @@ func newHarnessWith(t *testing.T, eo events.Options, extra ...vukem.Option) *har
 	svc, err := service.New(service.Options{Store: st, Publish: hub.Publish})
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if wrap != nil {
+		svc = wrap(svc)
 	}
 
 	h := &harness{
