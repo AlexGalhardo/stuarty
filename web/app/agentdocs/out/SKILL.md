@@ -36,7 +36,7 @@ Run `vukem-video version`, then `vukem-video project:list`. The workspace is `~/
 
 ## Command reference
 
-Operations of `edit`; `command_help <name>` prints arguments and an example. `P` is in the Prototype build, `A` from the Alpha build; `asset.remove` needs the media scope.
+Operations of `edit` (`command_help <name>` prints arguments and an example). `P` Prototype build, `A` Alpha; `asset.remove` needs the media scope.
 
 - `asset.remove` A: Removes an asset that no item uses.
 - `audio.add` A: Places an audio asset, or the audio of a video asset, on an audio track.
@@ -108,6 +108,7 @@ Every line starts with `vukem-video`.
 - `view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]`
 - `export --project <id> [--start t] [--end t] [--wait] [--timeout d]`
 - `job:show <job id> [--wait] [--timeout d]`
+- `job:cancel <job id>`
 - `job:list --project <id> [--state s] [--cursor c] [--limit n]`
 - `events --project <id> [--from-id n] [--since n] [--count n]`
 - `command:help [<name>]`
@@ -147,7 +148,7 @@ Exit codes: 0 success; 1 a failure a retry will not fix; 2 a retryable error or 
 
 Code, HTTP status, usual fix; `retry` marks exit 2.
 
-- `E_VALIDATION` 400: fix the argument at path
+- `E_VALIDATION` 400: fix the argument
 - `E_INVALID_TIME` 400: add a unit: 2s, 60f
 - `E_UNKNOWN_COMMAND` 400: run command:help for the names
 - `E_NOT_FOUND` 404: list, then use the id
@@ -162,28 +163,28 @@ Code, HTTP status, usual fix; `retry` marks exit 2.
 - `E_FONT_UNKNOWN` 422: use a listed font
 - `E_SLOT` 422: fill every required slot
 - `E_REVISION_CONFLICT` 409 retry: read details.diff, re-plan, resend
-- `E_IDEMPOTENCY_MISMATCH` 409: key reused: use a new one
+- `E_IDEMPOTENCY_MISMATCH` 409: use a new key
 - `E_INTERNAL` 500: report it as a bug
 - `E_UNAUTHORIZED` 401: set the token or key
 - `E_FORBIDDEN` 403: use a key with that scope
 - `E_WORKSPACE_LOCKED` 503 retry: wait, then retry
-- `E_PATH_NOT_ALLOWED` 403: use a file in the import roots
+- `E_PATH_NOT_ALLOWED` 403: use an allowed path
 - `E_FILE_NOT_FOUND` 404: check the path
 - `E_UNSUPPORTED_MEDIA` 422: convert the file
 - `E_INGEST_FAILED` 500: see details.reason
 - `E_ASSET_NOT_READY` 409 retry: poll job:show until ready
 - `E_FFMPEG_MISSING` 503: install FFmpeg
-- `E_NO_ENCODER` 503: no H.264 encoder works here
+- `E_NO_ENCODER` 503: no H.264 encoder
 - `E_EXPORT_FAILED` 500: see details.reason
 - `E_VERIFY_FAILED` 500: see details.checks
 - `E_TRANSCRIBE_UNAVAILABLE` 503: install the helper
 - `E_TRANSCRIBE_FAILED` 500: see details.reason
 - `E_QUEUE_FULL` 429 retry: wait for a job, then retry
-- `E_RATE_LIMITED` 429 retry: wait for Retry-After seconds
-- `E_LIMIT_EXCEEDED` 422: over a configured ceiling
+- `E_RATE_LIMITED` 429 retry: wait Retry-After s
+- `E_LIMIT_EXCEEDED` 422: over a ceiling
 - `E_CANCELLED` 500: start the job again
-- `E_NOTHING_TO_UNDO` 409: nothing of yours to undo
-- `E_NOTHING_TO_REDO` 409: nothing of yours to redo
+- `E_NOTHING_TO_UNDO` 409: nothing to undo
+- `E_NOTHING_TO_REDO` 409: nothing to redo
 - `E_LINT_BLOCKING` 422: fix details.findings
 - `E_PAYLOAD_TOO_LARGE` 413: send a smaller batch
 
@@ -221,3 +222,4 @@ The tools return the same text as the commands.
 - `lint`: `lint`
 - `job_start`: `export`
 - `job_get`: `job:show`, `job:list`
+- `job_cancel`: `job:cancel`

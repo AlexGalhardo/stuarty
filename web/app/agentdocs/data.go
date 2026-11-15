@@ -23,6 +23,7 @@ var Tools = []ToolRow{
 	{"lint", []string{"lint"}},
 	{"job_start", []string{"export"}},
 	{"job_get", []string{"job:show", "job:list"}},
+	{"job_cancel", []string{"job:cancel"}},
 }
 
 // ErrorRow is one error code of SDD-000 section 8 and SDD-002 section A.8, with
@@ -36,7 +37,7 @@ type ErrorRow struct {
 // Errors lists the codes an agent can meet. A test checks that every code of
 // the core is here.
 var Errors = []ErrorRow{
-	{"E_VALIDATION", false, "fix the argument at path"},
+	{"E_VALIDATION", false, "fix the argument"},
 	{"E_INVALID_TIME", false, "add a unit: 2s, 60f"},
 	{"E_UNKNOWN_COMMAND", false, "run command:help for the names"},
 	{"E_NOT_FOUND", false, "list, then use the id"},
@@ -51,28 +52,28 @@ var Errors = []ErrorRow{
 	{"E_FONT_UNKNOWN", false, "use a listed font"},
 	{"E_SLOT", false, "fill every required slot"},
 	{"E_REVISION_CONFLICT", true, "read details.diff, re-plan, resend"},
-	{"E_IDEMPOTENCY_MISMATCH", false, "key reused: use a new one"},
+	{"E_IDEMPOTENCY_MISMATCH", false, "use a new key"},
 	{"E_INTERNAL", false, "report it as a bug"},
 	{"E_UNAUTHORIZED", false, "set the token or key"},
 	{"E_FORBIDDEN", false, "use a key with that scope"},
 	{"E_WORKSPACE_LOCKED", true, "wait, then retry"},
-	{"E_PATH_NOT_ALLOWED", false, "use a file in the import roots"},
+	{"E_PATH_NOT_ALLOWED", false, "use an allowed path"},
 	{"E_FILE_NOT_FOUND", false, "check the path"},
 	{"E_UNSUPPORTED_MEDIA", false, "convert the file"},
 	{"E_INGEST_FAILED", false, "see details.reason"},
 	{"E_ASSET_NOT_READY", true, "poll job:show until ready"},
 	{"E_FFMPEG_MISSING", false, "install FFmpeg"},
-	{"E_NO_ENCODER", false, "no H.264 encoder works here"},
+	{"E_NO_ENCODER", false, "no H.264 encoder"},
 	{"E_EXPORT_FAILED", false, "see details.reason"},
 	{"E_VERIFY_FAILED", false, "see details.checks"},
 	{"E_TRANSCRIBE_UNAVAILABLE", false, "install the helper"},
 	{"E_TRANSCRIBE_FAILED", false, "see details.reason"},
 	{"E_QUEUE_FULL", true, "wait for a job, then retry"},
-	{"E_RATE_LIMITED", true, "wait for Retry-After seconds"},
-	{"E_LIMIT_EXCEEDED", false, "over a configured ceiling"},
+	{"E_RATE_LIMITED", true, "wait Retry-After s"},
+	{"E_LIMIT_EXCEEDED", false, "over a ceiling"},
 	{"E_CANCELLED", false, "start the job again"},
-	{"E_NOTHING_TO_UNDO", false, "nothing of yours to undo"},
-	{"E_NOTHING_TO_REDO", false, "nothing of yours to redo"},
+	{"E_NOTHING_TO_UNDO", false, "nothing to undo"},
+	{"E_NOTHING_TO_REDO", false, "nothing to redo"},
 	{"E_LINT_BLOCKING", false, "fix details.findings"},
 	{"E_PAYLOAD_TOO_LARGE", false, "send a smaller batch"},
 }

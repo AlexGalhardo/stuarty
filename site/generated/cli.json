@@ -580,6 +580,20 @@
       ]
     },
     {
+      "name": "job:cancel",
+      "summary": "cancel a queued or running job",
+      "usage": [
+        "vukem-video job:cancel <job id>"
+      ],
+      "example": "vukem-video job:cancel job_4h8k2m6p9t",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
       "name": "job:list",
       "summary": "list the jobs of a project",
       "usage": [
