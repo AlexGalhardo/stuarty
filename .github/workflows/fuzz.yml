@@ -14,7 +14,7 @@ on:
         description: Duration per target (go test -fuzztime)
         default: 30s
       long_fuzztime:
-        description: Duration per target of the three-system campaign (FuzzApplyBatch, FuzzSniffMedia, FuzzFFArgsCheck)
+        description: Duration per target of the three-system campaign (FuzzApplyBatch, FuzzSniffMedia, FuzzFFArgsCheck, FuzzFontHeader)
         default: 30m
 
 permissions:
@@ -80,10 +80,15 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        # target is a dimension, so every target runs on every system; include only adds its
+        # package. An include entry with a key that is not a dimension would overwrite the one
+        # before it and leave a single target.
+        target: [FuzzApplyBatch, FuzzSniffMedia, FuzzFFArgsCheck, FuzzFontHeader]
         include:
           - { target: FuzzApplyBatch, pkg: ./core/command }
           - { target: FuzzSniffMedia, pkg: ./engine/ffmpeg }
           - { target: FuzzFFArgsCheck, pkg: ./engine/ffmpeg }
+          - { target: FuzzFontHeader, pkg: ./engine/raster }
     env:
       LONG_FUZZTIME: ${{ inputs.long_fuzztime || '30m' }}
     defaults:
