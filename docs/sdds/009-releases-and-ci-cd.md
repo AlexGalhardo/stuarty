@@ -505,7 +505,7 @@ Tools pinned by version in workflows: `govulncheck@v1.9.0` (`ci.yml:166`), Bette
 
 vukem's `bench.yml`, `downstream.yml` and `starter-deps.yml` are not copied: no benchmarks, downstream apps or scaffold pins exist here. `fuzz.yml` is vukem's (`fuzz.yml`, weekly, `fuzztime` input) with our targets from SDD-007 section 12 (`FuzzCanonicalizeImportPath`, `FuzzSniffMedia`, `FuzzUntrustedClean`, `FuzzHostCheck`, `FuzzFontHeader`, `FuzzTemplateArchive`, `FuzzFFArgsCheck`); the task that adds a fuzz target adds it to the matrix of `fuzz.yml` and of the `Fuzz (30 s)` job. `ci-failure.yml` lists `Vulnerabilities (weekly)`, `Scorecard`, `Secrets`, `CodeQL`, `Fuzz` and `FFmpeg freshness`.
 
-`ffmpeg-freshness.yml` is new (SDD-007 section 12): a weekly job that compares the FFmpeg release pinned in `.config/ffmpeg.env` with the newest patch release of its branch (`gh api` on the FFmpeg tags), opens an issue when a newer patch exists, and fails when the pin is older than 90 days.
+`ffmpeg-freshness.yml` is new (SDD-007 section 12): a weekly job that compares the FFmpeg release pinned in `.config/ffmpeg.env` with the newest patch release of its branch (`gh api` on the FFmpeg tags), opens or updates one issue labelled `ffmpeg-freshness` when a newer patch exists or the pin is older than 90 days, and fails the run in the second case. The decision is `internal/tools/ffmpegfresh`, which reads no network (the workflow passes the tags in).
 
 ### 9.2 `pr-title.yml`
 
