@@ -254,3 +254,57 @@ func TestSecurity_T17_ProbeCeilings(t *testing.T) {
 		t.Errorf("a file exactly at the ceilings was refused: %v", err)
 	}
 }
+
+// SDD-007 4.5, T-16: as uid 0 the runner starts nothing unless VUKEM_VIDEO_INSECURE_ALLOW_ROOT is true.
+// The uid comes through a seam so the test runs on every system; Windows has no uid 0, so the real
+// uid is never 0 there and only the seam is exercised.
+func TestSecurity_T16_RefusesRoot(t *testing.T) {
+	r, dir, tool := helperRunner(t)
+	spec := execSpec{
+		tool: tool, dir: dir.Dir(), argv: []string{helperFlag + "sleep"}, deadline: 400 * time.Millisecond,
+		stdout: &bytes.Buffer{},
+	}
+
+	old := geteuid
+	t.Cleanup(func() { geteuid = old })
+
+	geteuid = func() int { return 0 }
+
+	t.Setenv(EnvAllowRoot, "")
+
+	before := r.started.Load()
+
+	_, err := r.exec(context.Background(), spec)
+	if !errors.Is(err, ErrRefusedRoot) {
+		t.Fatalf("error = %v, want ErrRefusedRoot", err)
+	}
+
+	var fe *Error
+	if !errors.As(err, &fe) || fe.Reason != "refused_root" || !strings.Contains(fe.Hint, EnvAllowRoot) {
+		t.Errorf("error = %+v, want reason refused_root and a hint naming %s", fe, EnvAllowRoot)
+	}
+
+	if r.started.Load() != before {
+		t.Error("a child was started as root")
+	}
+
+	t.Setenv(EnvAllowRoot, "false")
+
+	if _, err := r.exec(context.Background(), spec); !errors.Is(err, ErrRefusedRoot) {
+		t.Errorf("with the variable false: error = %v, want ErrRefusedRoot", err)
+	}
+
+	t.Setenv(EnvAllowRoot, "true")
+
+	if _, err := r.exec(context.Background(), spec); errors.Is(err, ErrRefusedRoot) {
+		t.Errorf("with the variable true the runner still refused: %v", err)
+	}
+
+	geteuid = func() int { return 1000 }
+
+	t.Setenv(EnvAllowRoot, "")
+
+	if _, err := r.exec(context.Background(), spec); errors.Is(err, ErrRefusedRoot) {
+		t.Errorf("as a regular user the runner refused: %v", err)
+	}
+}
