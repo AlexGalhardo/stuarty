@@ -51,7 +51,7 @@ Fill the slots you have now and the rest later with `slot.fill`. Text slots keep
 
 ## Common mistakes
 
-- Skipping `lint` after `template:new`: a required slot you forgot shows as `L_SLOT_UNFILLED` and the project exports with the placeholder.
+- Skipping `lint` after `template:new`: a required slot you forgot shows as `L_SLOT_UNFILLED`, and the export refuses with `E_LINT_BLOCKING` until you fill it. An optional slot, such as `music`, can stay empty: it is left out of the export.
 - A shot shorter than its slot: `E_SLOT`.
 
 ## Next steps

@@ -51,7 +51,7 @@ Preencha os espaços que você tem agora e o resto depois com `slot.fill`. Os es
 
 ## Erros comuns
 
-- Pular o `lint` depois do `template:new`: um espaço obrigatório que você esqueceu aparece como `L_SLOT_UNFILLED` e o projeto é exportado com o texto provisório.
+- Pular o `lint` depois do `template:new`: um espaço obrigatório que você esqueceu aparece como `L_SLOT_UNFILLED`, e a exportação recusa com `E_LINT_BLOCKING` até você preenchê-lo. Um espaço opcional, como `music`, pode ficar vazio: ele fica fora da exportação.
 - Uma cena mais curta que o seu espaço: `E_SLOT`.
 
 ## Próximos passos
