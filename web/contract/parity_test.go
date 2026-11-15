@@ -253,9 +253,6 @@ func TestBudgetsOfTheSurfacesArePrinted(t *testing.T) {
 		s = withFixtures(t, d, s, fixtures)
 
 		_, text, fail := d.do(t, s)
-		if s.Call == "MediaImport" {
-			settleImport(t, d, s)
-		}
 
 		if fail != nil || s.Call != "ProjectGet" {
 			continue
