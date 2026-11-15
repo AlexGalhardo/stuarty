@@ -6,7 +6,7 @@ An agent edits through MCP, a CLI or an HTTP API. A person edits the same projec
 
 ## Status
 
-**Prototype phase: the product is planned but not built yet.** The repository holds the Go module and package skeleton, the planning documents and a server that boots. The editor, the MCP server, the CLI commands and the HTTP API described below are specified and being built. The first editor release is `v0.2.0`, with installers and a container image of the local server; it does not edit video yet. The documentation site is live at <https://alexgalhardo.github.io/vukem-video/>.
+**BETA: released and still before 1.0.** The editor in the browser, the MCP server, the CLI and the HTTP API work over one command core, and each release ships archives, installers for Windows, Linux and macOS, a desktop application and a container image of the local server (see the [releases](https://github.com/AlexGalhardo/vukem-video/releases) and the [changelog](CHANGELOG.md)). The documentation site is live at <https://alexgalhardo.github.io/vukem-video/>.
 
 Versions follow SemVer. Before 1.0 a minor release may break; from `v1.0.0` the MCP tools, the CLI, the HTTP API, the timeline document schema and the workspace layout only break in a major release (see [CONTRIBUTING](.github/CONTRIBUTING.md)).
 
