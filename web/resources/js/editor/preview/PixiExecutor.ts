@@ -183,10 +183,11 @@ export class PixiExecutor implements PreviewExecutor {
 			() => this.context?.currentTime ?? 0,
 			info.fps,
 		);
-		this.windows = new PlanWindows((from, to, rev) =>
-			this.client.getPlan(info.projectId, from, to, rev),
+		this.windows = new PlanWindows((from, to, rev, width) =>
+			this.client.getPlan(info.projectId, from, to, rev, width),
 		);
 		this.windows.setRevision(this.revision);
+		this.windows.setWidth(this.planWidth());
 		this.redraw();
 	}
 
@@ -199,8 +200,15 @@ export class PixiExecutor implements PreviewExecutor {
 
 	resize(bufferWidth: number, bufferHeight: number): void {
 		this.buffer = { width: bufferWidth, height: bufferHeight };
+		this.windows.setWidth(this.planWidth());
 		this.applyBuffer();
 		this.redraw();
+	}
+
+	// The plan takes a width of 16 to 4096 (SDD-004 section 10).
+	private planWidth(): number | undefined {
+		if (this.buffer === null) return undefined;
+		return Math.min(4096, Math.max(16, Math.round(this.buffer.width)));
 	}
 
 	private applyBuffer(): void {

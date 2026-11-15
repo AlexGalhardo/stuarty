@@ -84,11 +84,14 @@ export interface ApiClient {
 	edit(projectId: string, request: EditRequest): Promise<EditResult>;
 	undo(projectId: string): Promise<EditResult>;
 	redo(projectId: string): Promise<EditResult>;
+	// `width` is the pixel width the preview draws at (16 to 4096): the bitmaps
+	// of the plan come rasterized at that scale.
 	getPlan(
 		projectId: string,
 		from: number,
 		to: number,
 		revision: number,
+		width?: number,
 	): Promise<PlanWindow>;
 	getCommands(): Promise<CommandHelpResult>;
 	getCommand(name: string): Promise<CommandHelpResult>;
@@ -235,10 +238,12 @@ export function createClient(
 			call("POST", `${project(id)}/edit`, EDIT_TIMEOUT_MS, request),
 		undo: (id) => call("POST", `${project(id)}/undo`, EDIT_TIMEOUT_MS, {}),
 		redo: (id) => call("POST", `${project(id)}/redo`, EDIT_TIMEOUT_MS, {}),
-		getPlan: (id, from, to, revision) =>
+		getPlan: (id, from, to, revision, width) =>
 			call(
 				"GET",
-				`${project(id)}/plan?from=${from}&until=${to}&rev=${revision}`,
+				`${project(id)}/plan?from=${from}&until=${to}&rev=${revision}${
+					width === undefined ? "" : `&width=${width}`
+				}`,
 				READ_TIMEOUT_MS,
 			),
 		getCommands: () => call("GET", "/commands", READ_TIMEOUT_MS),
