@@ -178,6 +178,39 @@ jobs:
           name: coverage
           path: coverage.out
 
+  # P1-QA-001, Prototype exit criteria 1 and 2: the reference scenario driven by the
+  # CLI process, MCP over stdio and MCP over HTTP against a real `serve`, each
+  # export verified with ffprobe (SDD-004 section 8), the three documents compared
+  # (NFR-025). The browser driver is the `browser` job. Where only a GPL FFmpeg
+  # exists (macOS, risk R6) the tests skip with a message, so the job still
+  # passes there and the summary says what ran.
+  reference:
+    name: Reference scenario (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Install FFmpeg
+        shell: bash
+        run: |
+          bin_dir="$(bash scripts/install-ffmpeg.sh)"
+          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+      - name: Reference scenario through the CLI and MCP
+        shell: bash
+        run: |
+          go test -count=1 -timeout=12m -v -run 'TestReferenceScenarioThroughTheRealServer|TestScenarioThroughTheRealServer' ./web/contract/ | tee reference.txt
+          { echo '### Reference scenario (${{ matrix.os }})'; echo '```'; grep -E "^(--- |ok|FAIL|PASS)|SKIP" reference.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
   # ADR-0014 item 2 and ADR-0024: the committed contracts and generated
   # references are what the generators write. A generated folder edited by hand,
   # or a generator that was not run, fails here and passes after task codegen.

@@ -53,6 +53,7 @@ Run `task ci` before you push: `task lint`, `task vet`, `task test`, `task tidy:
 - `Test (ubuntu-latest)`, `Test (windows-latest)`, `Test (macos-latest)`: `go test -race`, the coverage gate on Linux, and `BenchmarkExportCommonCase` with the floor of 1.5 x real time (`VUKEM_VIDEO_BENCH_MIN_RT`)
 - `Generated files`: `task codegen` leaves `core/schema/` and `web/resources/js/generated/` unchanged; after a change to a generator run `task codegen` and commit
 - `Release build (snapshot)`: GoReleaser dry run, six archives under 60,000,000 bytes
+- `Reference scenario (ubuntu-latest)`, `(windows-latest)`, `(macos-latest)`: the reference scenario through the CLI process, MCP over stdio and MCP over HTTP against a real `serve`; each export is checked with ffprobe and the three documents are compared; skips where only a GPL FFmpeg exists (macOS)
 - `Browser tests (Playwright)`: `bun run e2e` in `web/`
 - `Sandbox (bwrap)`: `TestSecurity_T16_` must pass, not skip
 - `Notices`, `Vulnerabilities`, `Workflow pins`
