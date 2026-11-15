@@ -44,13 +44,14 @@ docker run "${net[@]}" "$img" edit --project "$id" --json track.add kind=visual 
 docker run "${net[@]}" "$img" lint --project "$id" --json | grep -q "\"project_id\":\"$id\""
 docker run "${net[@]}" "$img" history --project "$id" --json | grep -q "\"entries\""
 
-# The server boots and answers /up. A free host port is used so the script
-# does not clash with a server already running on 7878.
-docker run -d --name "$name" -p 127.0.0.1::7878 "$img" >/dev/null
-port="$(docker port "$name" 7878/tcp | head -n 1 | sed "s/.*://")"
+# The server boots and answers /up. Until network mode (P2-SRV-014, SDD-007
+# 4.3 item 4) the image serves in local mode, which refuses every peer that is
+# not loopback, and a published port reaches the server from the bridge
+# address; so /up is asked from inside the container, as the HEALTHCHECK does.
+docker run -d --name "$name" "$img" >/dev/null
 for _ in $(seq 1 30); do
-	if curl -fsS "http://127.0.0.1:${port}/up" >/dev/null 2>&1; then
-		echo "image-smoke: /up answered on 127.0.0.1:${port}"
+	if docker exec "$name" curl -fsS http://127.0.0.1:7878/up >/dev/null 2>&1; then
+		echo "image-smoke: /up answered inside the container"
 		exit 0
 	fi
 	sleep 1
