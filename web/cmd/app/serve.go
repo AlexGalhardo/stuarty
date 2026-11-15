@@ -44,14 +44,25 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 
 	defer func() { _ = ow.Close() }()
 
+	if err := serveOwner(ctx, ow, args, vukem.WithStderr(stderr)); err != nil {
+		_, _ = fmt.Fprintln(stderr, "vukem-video serve:", err)
+
+		return exitServeFailed
+	}
+
+	return 0
+}
+
+// serveOwner runs the listener, the queue worker and the announcement of an
+// owner until ctx ends. It is what `serve` and the stdio MCP server share, so
+// both become the owner the same way. extra are options for the application.
+func serveOwner(ctx context.Context, ow *owner.Owner, args []string, extra ...vukem.Option) error {
 	lookup := os.LookupEnv
 
 	if os.Getenv("APP_KEY") == "" && os.Getenv("APP_ENV") == "" {
-		key, kerr := ensureAppKey(ow.Dir)
-		if kerr != nil {
-			_, _ = fmt.Fprintln(stderr, "vukem-video serve:", kerr)
-
-			return exitServeFailed
+		key, err := ensureAppKey(ow.Dir)
+		if err != nil {
+			return err
 		}
 
 		lookup = func(k string) (string, bool) {
@@ -66,9 +77,9 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 	ready := make(chan string, 1)
 
 	build := func(opts ...vukem.Option) (*vukem.App, error) {
-		app, berr := bootstrap.NewWith(ow.Deps(), append(opts, vukem.WithReady(ready))...)
-		if berr != nil {
-			return nil, berr
+		app, err := bootstrap.NewWith(ow.Deps(), append(opts, vukem.WithReady(ready))...)
+		if err != nil {
+			return nil, err
 		}
 
 		app.AddRunner("queue", vukem.RunnerFunc(ow.Work))
@@ -84,13 +95,7 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 		return app, nil
 	}
 
-	if err := vukem.RunMain(ctx, append([]string{"vukem-video", "serve"}, args...), lookup, build); err != nil {
-		_, _ = fmt.Fprintln(stderr, "vukem-video serve:", err)
-
-		return exitServeFailed
-	}
-
-	return 0
+	return vukem.RunMain(ctx, append([]string{"vukem-video", "serve"}, args...), lookup, build, extra...)
 }
 
 func isLocked(err error) bool {

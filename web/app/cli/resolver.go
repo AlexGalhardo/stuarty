@@ -19,6 +19,12 @@ import (
 type LocalResolver struct {
 	// Getenv defaults to os.Getenv.
 	Getenv func(string) string
+	// Become, when set, replaces the in-process Service of a command that finds
+	// no owner: the process turns into the owner (listener, worker, runtime.json)
+	// so that the UI and other commands reach it. The stdio MCP server uses it
+	// (SDD-003 section 4.7). It receives the workspace that is already locked
+	// and must release it through Connection.Close.
+	Become func(ctx context.Context, sess *workspace.Session, getenv func(string) string) (*Connection, error)
 }
 
 // Resolve implements Resolver.
@@ -49,7 +55,12 @@ func (r LocalResolver) Resolve(ctx context.Context, t Target) (*Connection, erro
 		return httpConnection(sess), nil
 	}
 
-	conn, err := openInProcess(ctx, sess, getenv)
+	open := openInProcess
+	if r.Become != nil {
+		open = r.Become
+	}
+
+	conn, err := open(ctx, sess, getenv)
 	if err != nil {
 		_ = sess.Close()
 		return nil, err

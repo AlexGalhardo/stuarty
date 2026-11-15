@@ -1,0 +1,106 @@
+package main
+
+import (
+	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"testing"
+	"time"
+
+	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
+
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
+)
+
+// SDD-003 section 4.7: a stdio MCP server with no owner becomes the owner. It
+// serves the API on a loopback port and writes runtime.json, so the CLI and
+// the browser (open) reach the project the agent is editing, and the file goes
+// away when the client closes the pipe.
+func TestStdioOwnerIsReachedByTheCLIAndOpen(t *testing.T) {
+	bin := buildBinary(t)
+	home := filepath.Join(t.TempDir(), "ws")
+
+	cmd := exec.CommandContext(t.Context(), bin, "mcp")
+	cmd.Env = append(os.Environ(), "VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "APP_KEY=", "APP_ENV=",
+		"HOST=127.0.0.1", "PORT="+freePort(t), "VUKEM_VIDEO_MIN_FREE_BYTES=1")
+
+	client := sdk.NewClient(&sdk.Implementation{Name: "Claude Code", Version: "1"}, nil)
+
+	cs, err := client.Connect(t.Context(), &sdk.CommandTransport{Command: cmd}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	closed := false
+
+	defer func() {
+		if !closed {
+			_ = cs.Close()
+		}
+	}()
+
+	created, err := cs.CallTool(
+		t.Context(),
+		&sdk.CallToolParams{Name: "project_create", Arguments: map[string]any{"name": "Agent project"}},
+	)
+	if err != nil || created.IsError {
+		t.Fatalf("project_create: %v %+v", err, created)
+	}
+
+	sc, _ := created.StructuredContent.(map[string]any)
+	id, _ := sc["project_id"].(string)
+
+	dir := workspace.Dir(home)
+
+	rt, err := dir.ReadRuntime()
+	if err != nil || rt.PID != cmd.Process.Pid || rt.Mode != workspace.ModeLocal {
+		t.Fatalf("runtime.json = %+v, %v; want the pid %d of the MCP process", rt, err, cmd.Process.Pid)
+	}
+
+	resp, err := outbound.LocalServer(5 * time.Second).Get("http://" + rt.Addr + "/up")
+	if err != nil || resp.StatusCode != http.StatusOK {
+		t.Fatalf("/up on the stdio owner: %v", err)
+	}
+
+	_ = resp.Body.Close()
+
+	// The CLI finds the owner and reads, over HTTP, what the agent made.
+	conn := resolve(t, home)
+	if conn.InProcess {
+		t.Fatal("the CLI took the workspace from the stdio owner instead of using HTTP")
+	}
+
+	ctx := service.WithCaller(t.Context(), service.Caller{Actor: "cli", Scopes: service.AllScopes})
+
+	got, err := conn.Service.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: id})
+	if err != nil || got.Name != "Agent project" {
+		t.Errorf("the CLI does not see the project of the agent: %+v, %v", got, err)
+	}
+
+	if conn.Close != nil {
+		_ = conn.Close()
+	}
+
+	// A second owner is refused while the pipe is open.
+	if stderr, code := serveOnce(t, bin, home); code != exitLocked {
+		t.Errorf("serve next to the stdio owner: exit %d, %q", code, stderr)
+	}
+
+	closed = true
+
+	_ = cs.Close()
+
+	deadline := time.Now().Add(15 * time.Second)
+	for time.Now().Before(deadline) {
+		if _, err := dir.ReadRuntime(); err != nil {
+			return
+		}
+
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	t.Error("runtime.json survived the close of the pipe")
+}
