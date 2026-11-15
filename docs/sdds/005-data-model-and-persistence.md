@@ -882,7 +882,7 @@ CREATE INDEX audit_project_id_at_ms_index ON audit (project_id, at_ms);
 CREATE INDEX audit_at_ms_index ON audit (at_ms);
 ```
 
-Actions: `project.create`, `project.trash`, `project.restore`, `media.import`, `media.trash`, `media.restore`, `job.start`, `job.cancel`, `template.save`, `template.import`, `template.instantiate`, `trash.empty` (with the counts), `key.create`, `key.revoke`, `user.create`, `bundle.import`. The store interface has `Append` and a paged `List` and no update or delete; the table is never purged, including by `TrashEmpty`. `Repos` gains `Audit() AuditRepo`:
+Actions: `project.create`, `project.trash`, `project.restore`, `media.import`, `media.trash`, `media.restore`, `job.start`, `job.cancel`, `template.save`, `template.import`, `template.instantiate`, `trash.empty` (with the counts), `key.create`, `key.revoke`, `user.create`, `bundle.import`. The store interface has `Append` and a paged `List` and no update or delete; the table is never purged, including by `TrashEmpty`. The migration `create_audit_append_only_triggers` enforces it: `UPDATE` and `DELETE` on `audit` abort with `audit is append-only`. `Repos` gains `Audit() AuditRepo`:
 
 ```go
 type AuditRow struct {

@@ -5,7 +5,7 @@ import "github.com/AlexGalhardo/vukem/schema"
 
 // All lists the migrations in order; vukem make:migration appends here. The
 // vukem queue tables come from queue.Migrations and are joined by the caller
-// (SDD-005 section 5.1). api_keys arrives with network mode (ALPHA).
+// (SDD-005 section 5.1). api_keys is created here and used by network mode (ALPHA).
 func All() []schema.Migration {
 	return []schema.Migration{
 		m20261114100000CreateProjectsTable(),
@@ -16,5 +16,7 @@ func All() []schema.Migration {
 		m20261114100500CreateTemplatesTable(),
 		m20261114100600CreateDocumentBackupsTable(),
 		m20261114100700CreateAuditTable(),
+		m20261114100800CreateAPIKeysTable(),
+		m20261114100900CreateAuditAppendOnlyTriggers(),
 	}
 }
