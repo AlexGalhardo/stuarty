@@ -172,8 +172,14 @@ func ingestClip(tb testing.TB, spec fixtureSpec) *ingested {
 	}
 	_ = os.Remove(path)
 	res, err := ingest.Run(ctx, ingest.Input{
-		Runner: shared.runner, Caps: shared.caps, Hash: put.Hash, ArtifactsDir: artifactsDir(),
-		JobID: "ingest_" + strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(spec.Name, ".mp4"), ".gif"), ".png"),
+		Runner:       shared.runner,
+		Caps:         shared.caps,
+		Hash:         put.Hash,
+		ArtifactsDir: artifactsDir(),
+		JobID: "ingest_" + strings.TrimSuffix(
+			strings.TrimSuffix(strings.TrimSuffix(spec.Name, ".mp4"), ".gif"),
+			".png",
+		),
 	})
 	if err != nil {
 		tb.Fatalf("ingest of %s: %v", spec.Name, err)
