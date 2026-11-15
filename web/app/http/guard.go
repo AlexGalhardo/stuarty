@@ -31,8 +31,13 @@ func refused() *service.Error {
 
 // guard is the first thing every request meets in local mode (SDD-007 section
 // 3.6): peer, relay, Host, Sec-Fetch-Site and Origin, then the rules that hold
-// for every response (no CORS, OPTIONS is 405, no credential in a query).
-func guard(next http.Handler) http.Handler {
+// for every response (no CORS, OPTIONS is 405, no credential in a query). In
+// network mode n replaces the first three and the origin values (4.3).
+func guard(n *Network) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler { return guardWith(n, next) }
+}
+
+func guardWith(n *Network, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
 		h.Set("X-Content-Type-Options", "nosniff")
@@ -54,7 +59,7 @@ func guard(next http.Handler) http.Handler {
 
 		r = r.WithContext(context.WithValue(r.Context(), acceptKey{}, accept))
 
-		if !peerAllowed(r) || hasRelay(r) || !hostAllowed(r) || !fetchSiteAllowed(r) || !originAllowed(r) {
+		if !requestAllowed(n, r) {
 			web.Fail(w, r, refused())
 			return
 		}
@@ -82,6 +87,14 @@ func guard(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func requestAllowed(n *Network, r *http.Request) bool {
+	if n != nil {
+		return n.allowed(r)
+	}
+
+	return peerAllowed(r) && !hasRelay(r) && hostAllowed(r) && fetchSiteAllowed(r) && originAllowed(r)
 }
 
 type acceptKey struct{}

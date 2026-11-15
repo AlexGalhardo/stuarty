@@ -25,10 +25,12 @@ type Deps struct {
 	Service   service.Service
 	Registry  *command.Registry // the commands whose argument schemas the OpenAPI document carries
 	Workspace workspace.Dir
-	Token     string // the local token, as read from <workspace>/token
-	Sessions  *auth.Sessions
-	Launch    *auth.Launch
-	Now       func() time.Time
+	Token     string // the local token, as read from <workspace>/token; empty in network mode
+	// Network is the guard of network mode (SDD-007 section 4.3); nil is local mode.
+	Network  *Network
+	Sessions *auth.Sessions
+	Launch   *auth.Launch
+	Now      func() time.Time
 	// MCP is the Streamable HTTP handler of the MCP server, mounted at POST /mcp
 	// behind the guard and the authentication; nil mounts nothing.
 	MCP http.Handler
@@ -49,8 +51,8 @@ type apiHandler struct {
 // that the guard is the outermost layer (SDD-007 section 5.1 item 3).
 func Routes(d *Deps) func(r *router.Router, app *vukem.App) error {
 	return func(r *router.Router, app *vukem.App) error {
-		if d.Service == nil || d.Token == "" || d.Sessions == nil || d.Launch == nil {
-			return errors.New("httpapi: Service, Token, Sessions and Launch are required")
+		if d.Service == nil || (d.Token == "" && d.Network == nil) || d.Sessions == nil || d.Launch == nil {
+			return errors.New("httpapi: Service, Token (local mode), Sessions and Launch are required")
 		}
 
 		if d.Registry == nil {
@@ -62,7 +64,11 @@ func Routes(d *Deps) func(r *router.Router, app *vukem.App) error {
 		}
 
 		installErrors(r.Services())
-		r.UseServer(guard)
+		r.UseServer(guard(d.Network))
+
+		if d.Network != nil {
+			d.Network.logStartup()
+		}
 
 		h := &apiHandler{Deps: *d, app: app, r: r}
 
@@ -97,6 +103,11 @@ func (h *apiHandler) op(id string) api.Op {
 // when it is wrong, then the session cookie.
 func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if h.Network != nil {
+			h.authenticateNetwork(w, r, next)
+			return
+		}
+
 		if slices.Contains(openPaths, r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
@@ -142,6 +153,22 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), caller)))
+	})
+}
+
+// authenticateNetwork is the authentication of network mode. No user can exist
+// before P2-SRV-012 adds them, and the start-up log says so: with zero users
+// every request but the health probe is 401 (SDD-007 section 4.5). The local
+// token, the handshake and the launch code do not exist in this mode.
+func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request, next http.Handler) {
+	if r.URL.Path == healthPath {
+		next.ServeHTTP(w, r)
+		return
+	}
+
+	w.Header().Set("WWW-Authenticate", "Bearer")
+	web.Fail(w, r, &service.Error{
+		Code: service.CodeUnauthorized, Message: "the request carries no valid credentials.",
 	})
 }
 
