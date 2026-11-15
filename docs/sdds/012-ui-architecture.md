@@ -98,8 +98,10 @@ The script has its own unit tests (a fixture per rule that must fail and one tha
 | `GET /projects` | `pages/Projects/Index.tsx` | list projects (`ProjectList`), create (`ProjectCreate`: name and size preset, RF-002), open, in ALPHA trash and restore; the template entries (below the list): the templates with "New from template" (`TemplateList`, `TemplateInstantiate`; the project name, then the editor opens on the new project), "Export file" (a download of `GET /templates/{id}/file`) and the import of a template file by its absolute path on the machine of the service (`TemplateImport`; the operation takes a path, never bytes, SDD-007 §7.6). The page calls the HTTP API with the browser session, like the settings page | both | P |
 | `GET /settings` | `pages/Settings/Index.tsx` | language, theme, default time unit, version and workspace path (`Doctor`, `GET /system`) | both | A |
 | `GET /settings/keys` | `pages/Settings/Keys.tsx` | create and revoke API keys with scopes (SDD-007) | network only; 404 in local mode | A |
-| `GET /login`, `POST /logout` | `pages/Auth/Login.tsx` | login (vukem sessions) | network only | A |
+| `GET /login` | `pages/Auth/Login.tsx` | login (vukem sessions); the form posts JSON to `POST /auth/login` and the logout button to `POST /auth/logout` (SDD-007 §4.1 item 5 names those routes, so there is no `POST /logout` page route); the page gets the prop `next`, already a safe path of this server (default `/projects`); the only page that needs no session; 404 in local mode | network only | A |
 | any error | `pages/Error.tsx` | error page of Inertia visits | both | P |
+
+In network mode a browser that opens any other page with no session gets `303` to `/login?next=<path and query>` (a call of the API still gets 401); this is not counted as a failed authentication.
 
 These pages talk to the Go controllers through Inertia props and form posts, as the existing Studio does. A controller of these pages calls the same `service.Service` operations as the HTTP API (ADR-0008) and passes the result as props.
 

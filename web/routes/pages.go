@@ -3,7 +3,9 @@ package routes
 import (
 	"errors"
 	"net/http"
+	"net/url"
 	"regexp"
+	"strings"
 
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/errs"
@@ -70,6 +72,25 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Settings/BrandKit", inertia.Props{})
 		}).Name("settings.brand_kit")
 
+		// Network mode only (SDD-012 section 2.1): in local mode there are no users and
+		// no keys, so these answer 404. The pages post to /auth/login and /auth/logout
+		// and call /keys of the API, which SDD-007 section 4.1 names.
+		r.Get(httpapi.LoginPath, func(c *web.Ctx) error {
+			if d.Network == nil {
+				return errs.ErrNotFound
+			}
+
+			return inertia.Render(c, "Auth/Login", inertia.Props{"next": safeNext(c.Query("next"))})
+		}).Name("login")
+
+		r.Get("/settings/keys", func(c *web.Ctx) error {
+			if d.Network == nil {
+				return errs.ErrNotFound
+			}
+
+			return inertia.Render(c, "Settings/Keys", inertia.Props{})
+		}).Name("settings.keys")
+
 		// The choice is kept in the lang cookie, which i18n.Middleware reads on
 		// every request; Input accepts the JSON body the client sends.
 		r.Post("/locale", func(c *web.Ctx) error {
@@ -97,6 +118,37 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		return nil
 	}
 }
+
+// safeNext is the page the login goes back to: a path of this server, never a
+// scheme, a host or a protocol-relative address that would send a person away.
+//
+// Control characters and backslashes are refused first, since browsers drop or
+// rewrite them while resolving (`/<tab>/host` becomes `//host`), and the answer is the
+// parsed and re-encoded path, never the raw input. It matches resources/js/lib/safeNext.ts.
+func safeNext(next string) string {
+	const fallback = "/projects"
+
+	if !strings.HasPrefix(next, "/") || strings.ContainsFunc(next, isControlOrBackslash) {
+		return fallback
+	}
+
+	u, err := url.Parse(next)
+	if err != nil || u.Scheme != "" || u.Host != "" || u.User != nil || u.Opaque != "" ||
+		!strings.HasPrefix(u.Path, "/") || strings.HasPrefix(u.Path, "//") ||
+		strings.ContainsFunc(u.Path, isControlOrBackslash) ||
+		u.Path == httpapi.LoginPath || strings.HasPrefix(u.Path, httpapi.LoginPath+"/") {
+		return fallback
+	}
+
+	out := u.RequestURI()
+	if u.Fragment != "" {
+		out += "#" + u.EscapedFragment()
+	}
+
+	return out
+}
+
+func isControlOrBackslash(r rune) bool { return r < 0x20 || r == 0x7f || r == '\\' }
 
 func projectsPage(c *web.Ctx, d *httpapi.Deps) error {
 	list, err := d.Service.ProjectList(c.Context(), service.ProjectListRequest{})

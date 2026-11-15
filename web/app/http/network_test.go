@@ -61,6 +61,7 @@ func newNetworkHarnessLimits(
 
 func newNetworkHarnessRates(
 	t *testing.T, res config.Resolved, useTLS bool, limits *httpapi.LoginLimits, rates httpapi.RateLimits,
+	extra ...vukem.Option,
 ) *networkHarness {
 	t.Helper()
 
@@ -117,7 +118,7 @@ func newNetworkHarnessRates(
 	}
 
 	app := vukemtest.New(t, func(opts ...vukem.Option) (*vukem.App, error) {
-		return bootstrap.NewWith(deps, opts...)
+		return bootstrap.NewWith(deps, append(opts, extra...)...)
 	})
 
 	h := &networkHarness{log: logs, auth: netAuth, clk: clk, st: st}
