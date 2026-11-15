@@ -71,7 +71,11 @@ func run(argv []string, stdout, stderr io.Writer) int {
 
 	envPath := fs.String("env", ".config/ffmpeg.env", "the pin file")
 	sourcesPath := fs.String("sources", ".config/ffmpeg-build/sources.env", "the inputs of the own build")
-	sourcesDate := fs.String("sources-date", "", "date (YYYY-MM-DD) of the last change of the own-build inputs, which is the pin age of the own build")
+	sourcesDate := fs.String(
+		"sources-date",
+		"",
+		"date (YYYY-MM-DD) of the last change of the own-build inputs, which is the pin age of the own build",
+	)
 	tagsPath := fs.String("tags", "", "file with the upstream FFmpeg tags, one per line")
 	nowFlag := fs.String("now", "", "today as YYYY-MM-DD (default: the clock)")
 	maxAge := fs.Int("max-age", 90, "the oldest a pin may be, in days")
@@ -112,7 +116,7 @@ func run(argv []string, stdout, stderr io.Writer) int {
 
 	if *outPath != "" {
 		// The path comes from the command line of the workflow that runs the tool.
-		f, err := os.OpenFile(*outPath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o644)
+		f, err := os.OpenFile(*outPath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o600)
 		if err != nil {
 			fmt.Fprintf(stderr, "ffmpegfresh: %v\n", err)
 
@@ -127,7 +131,7 @@ func run(argv []string, stdout, stderr io.Writer) int {
 	fmt.Fprint(out, res.keys())
 
 	if *bodyPath != "" && (res.behind || res.tooOld) {
-		if err := os.WriteFile(*bodyPath, []byte(res.body(*maxAge)), 0o644); err != nil {
+		if err := os.WriteFile(*bodyPath, []byte(res.body(*maxAge)), 0o600); err != nil {
 			fmt.Fprintf(stderr, "ffmpegfresh: %v\n", err)
 
 			return 2
@@ -153,7 +157,11 @@ func evaluate(envPath, sourcesPath, sourcesDate, tagsPath string, now time.Time,
 	case "btbn":
 		m := btbnVersion.FindStringSubmatch(env["FFMPEG_VERSION"])
 		if m == nil {
-			return result{}, fmt.Errorf("%s: FFMPEG_VERSION %q is not like n9.0.2-39-g7adfbe40dc-20261031", envPath, env["FFMPEG_VERSION"])
+			return result{}, fmt.Errorf(
+				"%s: FFMPEG_VERSION %q is not like n9.0.2-39-g7adfbe40dc-20261031",
+				envPath,
+				env["FFMPEG_VERSION"],
+			)
 		}
 
 		res.pinned = release{atoi(m[1]), atoi(m[2]), atoi(m[3])}
@@ -172,7 +180,11 @@ func evaluate(envPath, sourcesPath, sourcesDate, tagsPath string, now time.Time,
 
 		m := ownVersion.FindStringSubmatch(sources["FFMPEG_BUILD_VERSION"])
 		if m == nil {
-			return result{}, fmt.Errorf("%s: FFMPEG_BUILD_VERSION %q is not like 9.0.2", sourcesPath, sources["FFMPEG_BUILD_VERSION"])
+			return result{}, fmt.Errorf(
+				"%s: FFMPEG_BUILD_VERSION %q is not like 9.0.2",
+				sourcesPath,
+				sources["FFMPEG_BUILD_VERSION"],
+			)
 		}
 
 		res.pinned = release{atoi(m[1]), atoi(m[2]), atoi(m[3])}
@@ -240,7 +252,12 @@ func newestPatch(path string, pinned release) (release, error) {
 	}
 
 	if !found {
-		return release{}, fmt.Errorf("%s: no release tag of branch %d.%d (is the list complete?)", path, pinned.major, pinned.minor)
+		return release{}, fmt.Errorf(
+			"%s: no release tag of branch %d.%d (is the list complete?)",
+			path,
+			pinned.major,
+			pinned.minor,
+		)
 	}
 
 	return newest, nil
@@ -255,7 +272,7 @@ func readAssignments(path string) (map[string]string, error) {
 
 	out := map[string]string{}
 
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		if m := assignment.FindStringSubmatch(strings.TrimSpace(line)); m != nil {
 			out[m[1]] = m[2]
 		}
@@ -292,7 +309,13 @@ func (r result) body(maxAge int) string {
 	var b strings.Builder
 
 	b.WriteString("The weekly FFmpeg freshness check found the distributed FFmpeg stale (SDD-007 section 12).\n\n")
-	fmt.Fprintf(&b, "- Source in use: `%s`\n- Pinned patch release: `%s`\n- Newest patch release of the branch upstream: `%s`\n", r.source, r.pinned, r.newest)
+	fmt.Fprintf(
+		&b,
+		"- Source in use: `%s`\n- Pinned patch release: `%s`\n- Newest patch release of the branch upstream: `%s`\n",
+		r.source,
+		r.pinned,
+		r.newest,
+	)
 
 	if r.ageKnown {
 		fmt.Fprintf(&b, "- Pin age: %d days (limit %d)\n", r.ageDays, maxAge)
@@ -308,7 +331,9 @@ func (r result) body(maxAge int) string {
 		b.WriteString("The pin is older than the limit.\n\n")
 	}
 
-	b.WriteString("Bump the pin in `.config/ffmpeg.env` (or the inputs of `.config/ffmpeg-build/sources.env` and a new own-build release), regenerate `internal/ffmpegpins`, and re-run the image smoke test. This issue is updated each week until the pin is fresh.\n")
+	b.WriteString(
+		"Bump the pin in `.config/ffmpeg.env` (or the inputs of `.config/ffmpeg-build/sources.env` and a new own-build release), regenerate `internal/ffmpegpins`, and re-run the image smoke test. This issue is updated each week until the pin is fresh.\n",
+	)
 
 	return b.String()
 }

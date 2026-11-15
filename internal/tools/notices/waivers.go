@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -94,7 +95,7 @@ func (w *waiverSet) judge(subject, claimed string) (verdict, detail string) {
 
 func (w *waiverSet) checksum(path string) (string, error) {
 	if w.root == nil {
-		return "", fmt.Errorf("no archive to read it from")
+		return "", errors.New("no archive to read it from")
 	}
 
 	raw, err := w.root.ReadFile(path)
