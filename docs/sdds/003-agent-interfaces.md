@@ -2582,6 +2582,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `keys.create`, `keys.list`, `keys.revoke` | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` | none | `KeyCreateRequest` for create | 201 `KeyCreateResult`, 200 `KeyListResult`, 200 `KeyRevokeResult` | a logged-in browser session; a key cannot call them (network mode only, SDD-007 §5.3) | 403 `E_FORBIDDEN` |
 | `projects.bundle` | `POST /projects/{id}/bundle` | none | `BundleExportRequest` | 202 `Job` (phase B, SDD-005 §16) | read and render | as `jobs.start` |
 | `projects.import` | `POST /projects/import` | none | `BundleImportRequest` | 201 `ProjectCreateResult` (phase B) | edit and media | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND` |
+| `users.list`, `users.create`, `users.update` | `GET /users`, `POST /users`, `PATCH /users/{user_id}` | none | `{email, password, role?}` for create; `{role?, disabled?}` for update | 200 `{users: [UserView]}`, 201 `UserView`, 200 `UserView` | an administrator's browser session; a key cannot call them (network mode only, SDD-007 §4.1) | 403 `E_FORBIDDEN`; 404 `E_NOT_FOUND`; 409 `E_INVALID_STATE` (last administrator) |
 | `openapi.get` | `GET /openapi.json` | none | none | 200 OpenAPI 3.1 (§6.7) | read | none |
 | `docs.get` | `GET /api/docs` (outside `/api/v1`) | none | none | 200 `text/html` (the Scalar reference page, §6.7) | read | none |
 
