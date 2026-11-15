@@ -1,0 +1,54 @@
+---
+title: "Atalhos de teclado"
+description: "Os atalhos básicos do editor e a paleta de comandos que alcança todos os comandos."
+---
+
+## O que você vai aprender
+
+- os atalhos que o editor tem hoje;
+- como alcançar qualquer comando sem um atalho.
+
+## A ideia
+
+O editor tem um conjunto básico de atalhos. `Mod` é `Ctrl` no Windows e no Linux e `Cmd` no macOS. Um atalho nunca dispara enquanto você digita em um campo. Atalhos avançados e personalizáveis não fazem parte desta versão.
+
+| Teclas | Faz |
+| --- | --- |
+| `Space` | reproduzir ou pausar |
+| `Mod+K` | abrir ou fechar a paleta de comandos, também dentro de um campo |
+| `Mod+Z` | desfazer |
+| `Mod+Shift+Z` ou `Mod+Y` | refazer |
+| `S` | dividir o item selecionado no cabeçote de reprodução |
+| `[` e `]` | aparar o início ou o fim do item selecionado até o cabeçote de reprodução |
+| `C` | adicionar uma legenda |
+| `T` | adicionar um item de texto |
+| `Delete` ou `Backspace` | excluir a seleção |
+| `Shift+Delete` | excluir e fechar o espaço na faixa |
+| `Mod+D` | duplicar a seleção |
+| `F2` | renomear o item selecionado |
+| `Mod+A` | selecionar todos os itens |
+| Setas | mover o foco entre itens; `Home` e `End` vão ao primeiro e ao último da faixa |
+| `Enter` | ativar o item em foco |
+| `Alt+Left` e `Alt+Right` | deslocar a seleção em um quadro; com `Shift`, em um segundo |
+| `Alt+Up` e `Alt+Down` | mover a seleção para a faixa acima ou abaixo |
+| `+` e `-` | aumentar e diminuir o zoom da linha do tempo |
+| `Shift+Z` | ajustar o projeto inteiro à linha do tempo |
+| `N` | ligar ou desligar o ajuste magnético |
+| `Esc` | limpar a seleção |
+| `Alt+1`, `Alt+2`, `Alt+3` | mostrar ou ocultar os painéis de mídia, inspetor e histórico |
+
+## Início rápido
+
+Pressione `Mod+K`. A paleta lista todos os comandos do produto com um formulário montado a partir dos seus argumentos. Digite parte de um nome, como `crossfade`, escolha um comando, preencha o formulário e pressione **Preview** para ver o diff ou **Run** para aplicá-lo. **Add to batch** reúne vários comandos e os executa como um único passo de desfazer. É o mesmo conjunto de comandos que a CLI e os agentes usam, então qualquer comando sem um atalho ou um painel pode ser alcançado aqui.
+
+Um agente não tem teclado: ele envia os mesmos comandos com `vukem-video edit` ou com a ferramenta `edit`. Veja [Comandos, lotes e revisões](/docs/concepts/commands-and-revisions).
+
+## Erros comuns
+
+- Pressionar `S` com um campo de texto em foco: ele digita a letra. Clique antes na linha do tempo.
+- Usar `Alt+1` com `Ctrl` pressionado: o navegador é dono dessa combinação. Use `Alt` sozinho.
+
+## Próximos passos
+
+- [Ferramentas de edição: aparar, dividir, mover](/docs/guide/editing-tools)
+- [Desfazer e histórico](/docs/guide/undo-and-history)

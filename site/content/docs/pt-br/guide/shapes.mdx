@@ -1,0 +1,57 @@
+---
+title: "Formas"
+description: "Adicione retângulos, retângulos arredondados e elipses para fundos, cartões e destaques."
+---
+
+## O que você vai aprender
+
+- o que é um item de forma e para que serve;
+- como adicionar uma forma e alterá-la depois.
+
+## A ideia
+
+Uma **forma** é um item em uma faixa visual: um `rect`, um `rounded_rect` ou uma `ellipse`, com uma cor de preenchimento e um contorno opcional. Ela tem um tamanho em pixels antes da escala, e a mesma transformação, as mesmas transições e os mesmos quadros-chave de qualquer item visual. Use-a como um cartão atrás de um texto, uma barra sob um título ou um destaque. Uma cor é um valor hexadecimal ou uma cor do modelo, como `$accent`.
+
+O editor desenha as formas na pré-visualização e na linha do tempo e edita a sua transformação e animação no inspetor. Ainda não há um painel de formas: crie e reestilize uma forma pela paleta de comandos (`Ctrl+K`, `Cmd+K` no macOS), pela CLI ou por um agente.
+
+## Início rápido
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b shape.add track_id=trk_f6g7h8j9k0 \
+  shape=rounded_rect start=0s duration=3s width:=800 height:=240 radius:=32 fill=#101820
+vukem-video edit --project prj_7k2m9x4q1b shape.set item_id=itm_m1n2p3q4r5 fill=#ff3366
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` com a operação:
+
+```json
+{
+  "op": "shape.add",
+  "args": {
+    "track_id": "trk_f6g7h8j9k0", "shape": "rounded_rect", "start": "0s", "duration": "3s",
+    "width": 800, "height": 240, "radius": 32, "fill": "#101820"
+  }
+}
+```
+
+</Tab>
+</Tabs>
+
+`x` e `y` assumem por padrão o centro do quadro. O `radius` vale apenas para `rounded_rect`. O preenchimento padrão é `#FFFFFF` e a cor de contorno padrão é `#000000`.
+
+## Erros comuns
+
+- Adicionar uma forma a uma faixa de áudio: `E_TYPE_MISMATCH`. Use uma faixa visual.
+- Uma largura ou altura 0 ou menor: `E_VALIDATION`.
+- Sobrepor outro item na mesma faixa: `E_OVERLAP`. Coloque a forma em uma faixa própria, acima do vídeo.
+
+## Próximos passos
+
+- [Propriedades do clipe](/docs/guide/clip-properties)
+- [Modelos](/docs/guide/templates)
