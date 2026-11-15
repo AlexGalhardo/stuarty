@@ -19,10 +19,11 @@ import (
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
-func loadScenario(t *testing.T, name string) (steps []step, fixtures map[string]string) {
+// loadScenario reads the scenario of the Prototype.
+func loadScenario(t *testing.T) (steps []step, fixtures map[string]string) {
 	t.Helper()
 
-	raw, err := os.ReadFile(filepath.Join("scenarios", name+".json"))
+	raw, err := os.ReadFile(filepath.Join("scenarios", "prototype.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +34,7 @@ func loadScenario(t *testing.T, name string) (steps []step, fixtures map[string]
 	}
 
 	if err := json.Unmarshal(raw, &sc); err != nil {
-		t.Fatalf("scenario %s: %v", name, err)
+		t.Fatalf("scenario prototype: %v", err)
 	}
 
 	return sc.Steps, sc.Fixtures
@@ -47,7 +48,13 @@ func withFixtures(t *testing.T, d driver, s step, fixtures map[string]string) st
 	args := string(s.Args)
 
 	for name, content := range fixtures {
-		path := d.env().WriteFile(t, name+".mov", content)
+		var path string
+		if fw, ok := d.(fixtureWriter); ok {
+			path = fw.writeFixture(t, name)
+		} else {
+			path = d.env().WriteFile(t, name+".mov", content)
+		}
+
 		args = strings.ReplaceAll(args, `"$`+name+`"`, mustJSON(t, path))
 	}
 
@@ -199,7 +206,7 @@ func finalDocument(t *testing.T, d driver, project string) []byte {
 var renderedByAdapter = map[string]bool{"Edit": true, "Undo": true, "Redo": true}
 
 func TestScenarioIsTheSameThroughEverySurface(t *testing.T) {
-	steps, fixtures := loadScenario(t, "prototype")
+	steps, fixtures := loadScenario(t)
 
 	oracle := newDirect(t)
 	want := run(t, oracle, steps, fixtures)
