@@ -289,8 +289,8 @@
       "edit": {
         "label": "Edição",
         "split": "Dividir",
-        "trim_start": "Cortar o início",
-        "trim_end": "Cortar o fim",
+        "trim_start": "Aparar o início",
+        "trim_end": "Aparar o fim",
         "caption": "Adicionar legenda",
         "delete": "Excluir",
         "ripple_delete": "Excluir e fechar o espaço",
@@ -490,7 +490,7 @@
             "title": "Dividir item"
           },
           "trim": {
-            "title": "Cortar item"
+            "title": "Aparar item"
           }
         },
         "keyframe": {
@@ -711,7 +711,7 @@
           "keyframe_cut": "um quadro-chave foi cortado",
           "word_overlap": "duas palavras se sobrepuseram",
           "word_clamp": "uma palavra foi limitada",
-          "fit": "fades ou transições não cabem mais"
+          "fit": "esmaecimentos ou transições não cabem mais"
         }
       },
       "audio": {
@@ -746,13 +746,13 @@
       "clip": {
         "audio_title": "Áudio",
         "volume": "Volume",
-        "fade_in": "Fade de entrada",
-        "fade_out": "Fade de saída",
+        "fade_in": "Esmaecimento de entrada",
+        "fade_out": "Esmaecimento de saída",
         "mute": "Silenciar o áudio",
         "framing_title": "Enquadramento",
         "fit": "Ajuste",
         "fit_cover": "Preencher",
-        "fit_contain": "Conter",
+        "fit_contain": "Encaixar",
         "fit_none": "Nenhum",
         "crop_left": "Corte à esquerda",
         "crop_top": "Corte em cima",
@@ -942,8 +942,8 @@
         "property": "Propriedade",
         "value": "Valor",
         "easing": "Suavização",
-        "add": "Adicionar no cursor",
-        "outside": "O cursor está fora deste item.",
+        "add": "Adicionar no indicador de reprodução",
+        "outside": "O indicador de reprodução está fora deste item.",
         "clear": "Limpar",
         "clear_all": "Limpar tudo",
         "remove": "Remover",
@@ -987,7 +987,7 @@
       "animation": {
         "title": "Animação",
         "preset": "Predefinição",
-        "edge": "Ponta",
+        "edge": "Extremidade",
         "edge_in": "Entrada",
         "edge_out": "Saída",
         "duration": "Duração",
@@ -995,7 +995,7 @@
         "preset_name": {
           "fade_up": "Esmaecer para cima",
           "fade_down": "Esmaecer para baixo",
-          "pop": "Estourar",
+          "pop": "Surgir",
           "zoom_in": "Aproximar",
           "slide_left": "Deslizar para a esquerda",
           "slide_right": "Deslizar para a direita"
