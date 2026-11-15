@@ -29,6 +29,30 @@
   },
   {
     "group": "programs",
+    "name": "libvpx",
+    "version": "v1.16.0 (inside the own FFmpeg build)",
+    "spdx": "BSD-3-Clause",
+    "copyright": "Copyright (c) 2010, The WebM Project authors",
+    "files": [
+      "licenses/programs/libvpx/LICENSE"
+    ],
+    "note": "linked statically into the own FFmpeg build of D-017 (.config/ffmpeg-build); listed as shipped when the pins of that build replace the BtbN pin",
+    "shipped_in": []
+  },
+  {
+    "group": "programs",
+    "name": "Opus",
+    "version": "1.6.1 (inside the own FFmpeg build)",
+    "spdx": "BSD-3-Clause",
+    "copyright": "Copyright 2001-2023 Xiph.Org, Skype Limited, Octasic, Jean-Marc Valin, Timothy B. Terriberry, CSIRO, Gregory Maxwell, Mark Borgerding, Erik de Castro Lopo, Mozilla, Amazon",
+    "files": [
+      "licenses/programs/opus/COPYING"
+    ],
+    "note": "linked statically into the own FFmpeg build of D-017 (.config/ffmpeg-build); listed as shipped when the pins of that build replace the BtbN pin",
+    "shipped_in": []
+  },
+  {
+    "group": "programs",
     "name": "whisper.cpp",
     "version": "env:WHISPER_TAG",
     "spdx": "MIT",
