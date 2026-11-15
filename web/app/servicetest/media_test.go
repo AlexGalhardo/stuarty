@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -531,5 +532,67 @@ func TestImportLimitMessageSeparatesTheFileFromTheCeiling(t *testing.T) {
 	if e == nil || e.Code != "E_LIMIT_EXCEEDED" || e.Hint == "" || !strings.Contains(e.Message, "1048579 bytes") ||
 		!strings.Contains(e.Message, "1048577 bytes") {
 		t.Errorf("error = %+v", e)
+	}
+}
+
+// readyOnRead makes a shared ingest end between the moment an import links its
+// asset and the moment it reads it back: the hash is ready, the job that adds
+// the asset to each document has not finished.
+type readyOnRead struct {
+	service.Store
+	armed *atomic.Bool
+}
+
+func (s readyOnRead) Assets() service.AssetRepo {
+	return readyOnReadAssets{AssetRepo: s.Store.Assets(), store: s.Store, armed: s.armed}
+}
+
+type readyOnReadAssets struct {
+	service.AssetRepo
+	store service.Store
+	armed *atomic.Bool
+}
+
+func (a readyOnReadAssets) Get(ctx context.Context, hash string) (service.AssetRow, error) {
+	if a.armed.CompareAndSwap(true, false) {
+		err := a.store.Write(ctx, func(ctx context.Context, tx service.Tx) error {
+			return tx.Assets().SetIngest(ctx, hash, service.IngestReady, 1, nil, 1)
+		})
+		if err != nil {
+			return service.AssetRow{}, err
+		}
+	}
+
+	return a.AssetRepo.Get(ctx, hash)
+}
+
+// While another project's ingest of the same file is finishing, an import
+// must not say "ready" for an asset that is not yet in this project's
+// document: the next clip.add would answer E_NOT_FOUND.
+func TestImportDoesNotSayReadyBeforeTheAssetIsInTheDocument(t *testing.T) {
+	var armed atomic.Bool
+
+	m := newMediaEnv(t, mediaCfg{noQueue: true, wrapStore: func(s service.Store) service.Store {
+		return readyOnRead{Store: s, armed: &armed}
+	}})
+	p1, p2 := m.newProject("one"), m.newProject("two")
+	clip := m.write("clip.mp4", clipBytes)
+
+	first := m.importOne(p1, clip).Assets[0]
+
+	armed.Store(true)
+
+	a := m.importOne(p2, clip).Assets[0]
+	if a.State == "ready" || a.JobID != first.JobID || a.Progress >= 1 {
+		t.Fatalf("import = %+v: it must still wait for the job %s", a, first.JobID)
+	}
+
+	if err := m.runner.RunJob(context.Background(), first.JobID); err != nil {
+		t.Fatal(err)
+	}
+
+	doc, _ := timeline.Decode(m.document(p2))
+	if _, ok := doc.Assets[a.AssetID]; !ok {
+		t.Error("the asset never reached the document of the second project")
 	}
 }
