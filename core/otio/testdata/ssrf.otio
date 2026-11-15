@@ -1,0 +1,267 @@
+{
+  "OTIO_SCHEMA": "Timeline.1",
+  "name": "hostile",
+  "tracks": {
+    "OTIO_SCHEMA": "Stack.1",
+    "children": [
+      {
+        "OTIO_SCHEMA": "Track.1",
+        "kind": "Video",
+        "children": [
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "name": "c0",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              },
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              }
+            },
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "target_url": "http://169.254.169.254/x.mp4"
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "name": "c1",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              },
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              }
+            },
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "target_url": "\\\\evil\\share\\a.mp4"
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "name": "c2",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              },
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              }
+            },
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "target_url": "//evil/share/a.mp4"
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "name": "c3",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              },
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              }
+            },
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "target_url": "\\\\?\\GLOBALROOT\\a.mp4"
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "name": "c4",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              },
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              }
+            },
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "target_url": "file:///etc/passwd"
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "name": "c5",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              },
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              }
+            },
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "target_url": "smb://host/a.mp4"
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "name": "c6",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              },
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              }
+            },
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "target_url": "data:video/mp4;base64,AAAA"
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "name": "c7",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              },
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              }
+            },
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "target_url": "concat:a.mp4|b.mp4"
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "name": "c8",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              },
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              }
+            },
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "target_url": ""
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "name": "c9",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              },
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              }
+            },
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "target_url": "bad\u0000name.mp4"
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "name": "c10",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              },
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              }
+            },
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "target_url": "C:\\media\\a.mp4"
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Clip.2",
+            "name": "c11",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              },
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 30
+              }
+            },
+            "media_reference": {
+              "OTIO_SCHEMA": "ExternalReference.1",
+              "target_url": "media/b.mp4"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
