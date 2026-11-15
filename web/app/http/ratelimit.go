@@ -34,6 +34,9 @@ const (
 type RateLimits struct {
 	PerCredential int
 	PerSession    int
+	// Heavy is the per-actor limit of JobStart, MediaImport and TemplateImport;
+	// zero is service.HeavyPerMinute.
+	Heavy int
 }
 
 // limits is the state of the limiters of one server.

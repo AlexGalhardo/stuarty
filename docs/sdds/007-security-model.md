@@ -290,7 +290,7 @@ Built on vukem's rate limiter. The product calls `Limiter.Allow` directly instea
 | Pre-authentication | `ratelimit.ByIP` | 600 requests per minute | every request, before authentication |
 | Failed authentication | `ratelimit.ByIP`, counted only on 401 | 20 per minute | every failed login or key check |
 | Per key or session | `ratelimit.ByToken` for bearer, session id for cookies | `VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE` (default 300) with burst 60, `NewMemoryBurst` | after authentication |
-| Heavy operations | the same key | 10 per minute for `JobStart`, `MediaImport`, `TemplateImport` | those operations |
+| Heavy operations | the same key | `VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE` (default 10) for `JobStart`, `MediaImport`, `TemplateImport` | those operations |
 
 What is counted. The per-credential limiter counts requests under `/api/v1` and `/mcp`. It does not count the event stream once open, static assets, or the byte-serving routes the editor hits many times per second while it plays or scrubs (proxies with `Range`, thumbnails, peaks, cached frames, the plan windows of SDD-004). A browser session has its own default, `VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE` (default 1,800, burst 300), because one person dragging a clip produces more requests than a well-behaved agent. In local mode the pre-authentication and failed-authentication limiters by address do not run (every client shares `127.0.0.1`, and the local token has 256 bits, so bad requests must not lock out the good token); only the per-credential limiter runs, with the same defaults.
 
@@ -683,7 +683,7 @@ Defaults are consistent with SDD-000 §10 (`VUKEM_VIDEO_MAX_EXPORTS` 2, `VUKEM_V
 | Transcription audio | 7,200 s per job | per job | `VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS` | `E_LIMIT_EXCEEDED` |
 | Export resolution and duration | 4096 on a side, frame 108,000 as the last frame, 120 frames per second at most | per project | fixed by SDD-001 | `E_LIMIT` (core) |
 | Export file size | 4 GiB | per job | `VUKEM_VIDEO_MAX_EXPORT_BYTES` | `E_EXPORT_FAILED` with `details.reason = "size_limit"` |
-| Requests | key or local token: 300 per minute, burst 60; browser session: 1,800 per minute, burst 300; heavy operations 10 per minute | per key or session | `VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE`, `VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE` | `E_RATE_LIMITED` (429, `Retry-After`) |
+| Requests | key or local token: 300 per minute, burst 60; browser session: 1,800 per minute, burst 300; heavy operations 10 per minute | per key or session | `VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE`, `VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE`, `VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE` | `E_RATE_LIMITED` (429, `Retry-After`) |
 | Free disk on the workspace volume | 2 GiB | workspace | `VUKEM_VIDEO_MIN_FREE_BYTES` | `E_LIMIT_EXCEEDED` (`details.reason = "disk_low"`) for import, ingest, export, edit; reads still work |
 | Cache size (`frames/` and `bitmaps/`) | 2 GiB, least recently used first | workspace | `VUKEM_VIDEO_CACHE_MAX_BYTES` | eviction, no error |
 | Batch | 200 operations, 512 KiB | per call | fixed by SDD-002 A.10 | `E_PAYLOAD_TOO_LARGE` |
