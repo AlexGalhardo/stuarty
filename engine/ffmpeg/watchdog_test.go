@@ -48,7 +48,7 @@ func TestWatchSizeKillsPastTheCap(t *testing.T) {
 	}
 }
 
-func TestOutputSizeWatchdogEndsTheRun(t *testing.T) {
+func TestSecurity_T17_OutputSizeWatchdog(t *testing.T) {
 	r, dir, tool := helperRunner(t)
 
 	_, err := r.exec(context.Background(), execSpec{

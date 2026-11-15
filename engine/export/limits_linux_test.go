@@ -13,7 +13,7 @@ import (
 )
 
 // SDD-007 T-16: the limits (RLIMIT_CPU, RLIMIT_FSIZE, RLIMIT_AS for a software encoder) do not break the golden export.
-func TestLimitsDoNotBreakGoldenExport(t *testing.T) {
+func TestSecurity_T16_LimitsDoNotBreakGoldenExport(t *testing.T) {
 	doc := loadScene(t, "clip-caption")
 	job := newJob(t, doc, "export-limits", filepath.Join("limits", "out.mp4"))
 
