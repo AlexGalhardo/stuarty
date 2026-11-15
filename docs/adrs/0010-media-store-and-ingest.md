@@ -26,6 +26,7 @@ The inputs of both use cases are phone footage and screen recordings, which carr
 5. An artifact is never changed in place. A new ingest profile is a new profile version and therefore a new artifact.
 6. Whether a file can be used is established by actually decoding it during ingest, not by asking the container or a capability API. A file that fails ingest is reported with the FFmpeg error translated into an actionable message.
 7. Images and audio-only files follow the same model with the artifacts that apply.
+8. **Animated images (BETA, RF-028)** are decoded once by FFmpeg (not Go's `image/gif`, so that GIF, WebP and APNG share one path and one demuxer allowlist) into a `frames` artifact: every frame at the normalized size with its alpha, and its delay in milliseconds, in one file read by frame index (SDD-011 section 4.7). The frame count, the pixels summed over all frames and the delays are checked from the packet list before any frame is decoded (SDD-007 section 9.1).
 
 ## Alternatives
 
