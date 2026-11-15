@@ -14,6 +14,7 @@ import { fetchBitmap } from "../api/bitmaps";
 import type { ApiClient } from "../api/client";
 import type { PlanLayer, PlanMediaLayer, PlanWindow } from "../api/types";
 import { proxyUrl, thumbnailUrl } from "../api/urls";
+import { AudioGraph } from "./audioGraph";
 import { Lru } from "./lru";
 import { MediaPool, type PoolTimers } from "./mediaPool";
 import {
@@ -65,6 +66,7 @@ export class PixiExecutor implements PreviewExecutor {
 	private generation = 0;
 	private disposed = false;
 	private context: AudioContext | null = null;
+	private readonly audioGraph = new AudioGraph();
 	private clock: PlaybackClock | null = null;
 	private windows: PlanWindows;
 	private readonly videos: MediaPool;
@@ -86,8 +88,20 @@ export class PixiExecutor implements PreviewExecutor {
 			Promise.reject(new Error("no project")),
 		);
 		const redraw = (): void => this.redraw();
-		this.videos = new MediaPool("video", () => this.context, timers, redraw);
-		this.sounds = new MediaPool("audio", () => this.context, timers, redraw);
+		this.videos = new MediaPool(
+			"video",
+			() => this.context,
+			() => this.audioGraph.input,
+			timers,
+			redraw,
+		);
+		this.sounds = new MediaPool(
+			"audio",
+			() => this.context,
+			() => this.audioGraph.input,
+			timers,
+			redraw,
+		);
 	}
 
 	get stats(): PreviewExecutor["stats"] {
@@ -121,6 +135,7 @@ export class PixiExecutor implements PreviewExecutor {
 			app.stage.addChild(this.stage);
 			this.app = app;
 			this.context = new AudioContext();
+			this.audioGraph.attach(this.context);
 			this.redraw();
 		} catch {
 			// No WebGL2: the preview shows only paused frames (truth on pause).
@@ -140,10 +155,15 @@ export class PixiExecutor implements PreviewExecutor {
 		this.stills.clear();
 		this.app?.destroy({ removeView: true }, { children: true });
 		this.app = null;
+		this.audioGraph.detach();
 		void this.context?.close();
 		this.context = null;
 		this.frameListeners.clear();
 		this.stateListeners.clear();
+	}
+
+	setVolume(volume: number, muted: boolean): void {
+		this.audioGraph.setLevel(volume, muted);
 	}
 
 	setProject(info: ProjectInfo): void {

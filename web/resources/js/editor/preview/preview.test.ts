@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import type { PlanLayer, PlanWindow } from "../api/types";
-import { bufferSize, fitScale, truthWidth } from "./fit";
+import { bufferSize, fitScale, sizedScale, truthWidth } from "./fit";
 import { Lru } from "./lru";
 import {
 	DRIFT_FRAMES,
@@ -126,6 +126,15 @@ describe("media sync", () => {
 });
 
 describe("fit and size", () => {
+	test("50% and 100% are shares of the buffer, capped at 1080 on the long edge", () => {
+		expect(sizedScale("fit", 0.5, 1080, 1920)).toBe(0.5);
+		expect(sizedScale("100", 0.5, 1080, 1920)).toBeCloseTo(1080 / 1920, 5);
+		expect(sizedScale("50", 0.5, 1080, 1920)).toBeCloseTo(1080 / 1920 / 2, 5);
+		expect(sizedScale("100", 0.5, 640, 360)).toBe(1);
+		expect(sizedScale("50", 0.5, 640, 360)).toBe(0.5);
+		expect(sizedScale("100", 0.5, 0, 0)).toBe(0);
+	});
+
 	test("the box keeps 16 px of padding and the aspect ratio", () => {
 		expect(fitScale(1032, 1832, 1080, 1920)).toBeCloseTo(1000 / 1080, 5);
 		expect(fitScale(0, 0, 1080, 1920)).toBe(0);

@@ -192,7 +192,16 @@
         "step_back": "Step back one frame",
         "step_forward": "Step forward one frame",
         "current": "Current time",
-        "total": "Total duration"
+        "total": "Total duration",
+        "size": "Preview size",
+        "size_fit": "Fit",
+        "size_50": "Half (50%)",
+        "size_100": "Full (100%)",
+        "volume": "Preview volume",
+        "mute": "Mute preview",
+        "unmute": "Unmute preview",
+        "fullscreen": "Full screen preview",
+        "exit_fullscreen": "Exit full screen"
       },
       "errors": {
         "E_FONT_UNKNOWN": "Unknown font",

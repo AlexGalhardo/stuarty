@@ -71,6 +71,8 @@ export interface PreviewExecutor {
 	pause(): void;
 	onFrame(cb: (frame: number) => void): Unsubscribe;
 	onState(cb: (state: PreviewState) => void): Unsubscribe;
+	// The level of the whole preview, 0 to 1, and the mute. Screen state only.
+	setVolume(volume: number, muted: boolean): void;
 	// Sets the size of the pixel buffer; the caller decides the fit.
 	resize(bufferWidth: number, bufferHeight: number): void;
 	getLayerGeometry(frame: number): LayerGeometry[];

@@ -25,6 +25,7 @@ export class MediaPool {
 	constructor(
 		private readonly kind: "video" | "audio",
 		private readonly context: () => AudioContext | null,
+		private readonly output: () => AudioNode | null,
 		private readonly timers: PoolTimers,
 		private readonly onSeeked: () => void,
 	) {}
@@ -97,7 +98,7 @@ export class MediaPool {
 		if (context === null) return;
 		const gain = context.createGain();
 		context.createMediaElementSource(entry.element).connect(gain);
-		gain.connect(context.destination);
+		gain.connect(this.output() ?? context.destination);
 		entry.gain = gain;
 	}
 
