@@ -534,6 +534,20 @@ The measurements came from one Windows machine with other processes running. The
 
 `go run ./internal/tools/perfreport -write` measures NFR-001, NFR-005, NFR-006, NFR-007 and NFR-023 and writes the table `docs/perf/<date>-<goos>.md` (first one: `2026-11-14-windows.md`: commit round trip 15.1 ms p95, ingest of 60 s 1080p 8.5 s, 60 s export 23.9 s with `h264_nvenc` at 2.64 times real time, Go process 110 MB, agent frame 174 ms cold, nine-cell sheet 229 ms, every limit met). The Linux and macOS tables are added after the first CI run of the tool on those runners, and the three tables are the numbers of the three runners. The encoder this machine detects is `h264_nvenc`; the numbers above are with `libopenh264`, the encoder of the bundled build, because that is the one a clean machine has.
 
+**ALPHA benchmarks on the project of NFR-009 (P2-RND-014).** `engine/export/bench_alpha_test.go` and `engine/frame/bench_scale_test.go` run on the 5 minute, 200 item, 2,040 word project that `go generate ./core/command` writes (the music item is dropped and the items are cut to the first minute, the length of the 60 s clip that is ingested for it). Windows 11, Ryzen 7 5700X3D, `h264_nvenc`, a machine that was also running other builds (CPU load 56 to 60 percent), one run each:
+
+| Benchmark | Measured | Limit |
+| --- | --- | --- |
+| `BenchmarkPlanWindow300Scale` (plan of 300 frames with measured text) | 183 ms | none (reported) |
+| `BenchmarkExportScale60s` (60 s of the project) | 38.5 s (1.56 times real time), resident peak 128 MB sampled every 250 ms | 60 s, 500 MB |
+| `BenchmarkViewFrameColdScale/UI540` | p50 89 ms, p95 102 ms (the gate test over 20 frames: p95 143 ms) | 500 ms (NFR-004) |
+| `BenchmarkViewFrameColdScale/Agent384` | p50 85 ms, p95 102 ms (gate test: p95 123 ms) | 2 s (NFR-023) |
+| `BenchmarkViewSheet9Scale` | 1.01 s, 1,479 tokens (an agent frame is 350 tokens) | 1,600 tokens (NFR-022) |
+
+`TestScaleProjectViewGates` fails above those limits; `TestScaleProjectComposesTheSameTwice` is NFR-010 on the big project. The Linux and macOS tables of `BenchmarkExportCommonCase` come from the first CI run on those runners and are not in this table.
+
+**Why `BenchmarkExport60s` gave 46.9 s on one run and 23.9 s in the first table.** It is the same benchmark; the export is bound by the Go compositor (1,800 frames of 1080x1920 compose in about 37 s on a machine at 56 percent load, measured with a 600 frame loop), and the encoder is not the limit. Run back to back on the same busy machine, the commit of the first table (`d342d2c`) gave 38.8 s and the current code gave 42.6 s: the difference with the table is the load of the other agents building and testing at the same time, and the difference between the two commits is within the noise of that load. Treat the 23.9 s as the number of an idle machine and re-measure there before reading a regression into any other number.
+
 ## 13. Acceptance
 
 1. `go test ./core/plan/...` passes with at least 90% statement coverage, including table tests for every formula of section 3 at the boundary frames (first, last, and the frames around each keyframe and transition edge).
