@@ -84,6 +84,12 @@ type Service interface {
 	// OpenFile resolves a stored file of an asset for download; the caller
 	// serves the bytes.
 	OpenFile(ctx context.Context, ref FileRef) (*File, error)
+
+	// KeyCreate, KeyList and KeyRevoke manage the API keys of network mode, for
+	// a person who logged in; a key cannot call them (SDD-007 section 4.2).
+	KeyCreate(ctx context.Context, req KeyCreateRequest) (*KeyCreateResult, error)
+	KeyList(ctx context.Context, req KeyListRequest) (*KeyListResult, error)
+	KeyRevoke(ctx context.Context, req KeyRevokeRequest) (*Key, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006
@@ -149,6 +155,9 @@ type Options struct {
 	Tools *Tools
 	// Doctor is what the diagnostic report learns from the process.
 	Doctor DoctorOptions
+	// Keys stores the API keys of network mode; without one the key operations
+	// answer E_NOT_FOUND, as in local mode.
+	Keys KeyStore
 }
 
 type svc struct {
@@ -168,6 +177,7 @@ type svc struct {
 	tools       *Tools
 	toolsState  toolsState
 	doctor      DoctorOptions
+	keys        KeyStore
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
 
@@ -201,6 +211,7 @@ func New(o Options) (Service, error) {
 		transcriber: o.Transcriber,
 		tools:       o.Tools,
 		doctor:      o.Doctor,
+		keys:        o.Keys,
 	}
 
 	s.sems = map[string]chan struct{}{

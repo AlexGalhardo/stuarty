@@ -38,30 +38,45 @@ func notInThisMode() error {
 	return &service.Error{Code: command.CodeNotFound, Message: "this route exists in network mode only."}
 }
 
-// loginThrottles are the three limits of the login route, on vukem's keys:
-// per email and address, per email, and per address (the shape that vukem's
-// authentication scaffold uses).
-type loginThrottles struct {
-	perEmailAndAddress, perEmail, perAddress ratelimit.Limiter
-	emailAndAddress, email                   ratelimit.KeyFunc
+// LoginLimits are the three limits of the login route, on vukem's keys: per
+// email and address, per email, and per address (the shape that vukem's
+// authentication scaffold uses). Deps.LoginLimits replaces them in tests.
+type LoginLimits struct {
+	PerEmailAndAddress, PerEmail, PerAddress ratelimit.Limiter
 }
 
-func newLoginThrottles() loginThrottles {
+// DefaultLoginLimits are 5 attempts a minute per email and address, 20 in 10
+// minutes per email and 30 a minute per address.
+func DefaultLoginLimits() *LoginLimits {
+	return &LoginLimits{
+		PerEmailAndAddress: ratelimit.NewMemory(5, time.Minute),
+		PerEmail:           ratelimit.NewMemory(20, 10*time.Minute),
+		PerAddress:         ratelimit.NewMemory(30, time.Minute),
+	}
+}
+
+type loginThrottles struct {
+	limits          *LoginLimits
+	emailAndAddress ratelimit.KeyFunc
+	email           ratelimit.KeyFunc
+}
+
+func newLoginThrottles(l *LoginLimits) loginThrottles {
+	if l == nil {
+		l = DefaultLoginLimits()
+	}
+
 	ip, account := vauth.ThrottleKeys("email")
 
-	return loginThrottles{
-		perEmailAndAddress: ratelimit.NewMemory(5, time.Minute), emailAndAddress: ip,
-		perEmail: ratelimit.NewMemory(20, 10*time.Minute), email: account,
-		perAddress: ratelimit.NewMemory(30, time.Minute),
-	}
+	return loginThrottles{limits: l, emailAndAddress: ip, email: account}
 }
 
 // middleware refuses the attempt before the password is hashed: hashing is the
 // expensive step an attacker would like to make us repeat.
 func (t loginThrottles) middleware(next http.Handler) http.Handler {
-	return middleware.Limit(t.perAddress, ratelimit.ByIP)(
-		middleware.Limit(t.perEmailAndAddress, t.emailAndAddress)(
-			middleware.Limit(t.perEmail, t.email)(next)))
+	return middleware.Limit(t.limits.PerAddress, ratelimit.ByIP)(
+		middleware.Limit(t.limits.PerEmailAndAddress, t.emailAndAddress)(
+			middleware.Limit(t.limits.PerEmail, t.email)(next)))
 }
 
 // login is POST /auth/login: the one route that turns a password into a session

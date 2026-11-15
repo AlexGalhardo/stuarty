@@ -142,6 +142,18 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.AuditList(ctx, service.AuditListRequest{})
 			return err
 		},
+		"KeyCreate": func() error {
+			_, err := e.svc.KeyCreate(ctx, service.KeyCreateRequest{Name: "k", Scopes: []string{"read"}})
+			return err
+		},
+		"KeyList": func() error {
+			_, err := e.svc.KeyList(ctx, service.KeyListRequest{})
+			return err
+		},
+		"KeyRevoke": func() error {
+			_, err := e.svc.KeyRevoke(ctx, service.KeyRevokeRequest{KeyID: "key_0000000001"})
+			return err
+		},
 		"OpenFile": func() error {
 			_, err := e.svc.OpenFile(
 				ctx,

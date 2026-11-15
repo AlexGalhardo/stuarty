@@ -140,6 +140,15 @@ func pending(h *apiHandler, id string) {
 func (h *apiHandler) registerAll() {
 	register(h, "auth.login", h.login).Use(h.loginThrottle.middleware)
 	register(h, "auth.logout", h.logout)
+	register(h, "keys.create", h.keysCreate)
+	register(h, "keys.list", func(c *web.Ctx, _ noIn) (service.KeyListResult, error) {
+		res, err := h.Service.KeyList(c.Context(), service.KeyListRequest{})
+		return deref(res), err
+	})
+	register(h, "keys.revoke", func(c *web.Ctx, in keyRevokeIn) (service.Key, error) {
+		res, err := h.Service.KeyRevoke(c.Context(), service.KeyRevokeRequest{KeyID: in.KeyID})
+		return deref(res), err
+	})
 	register(h, "projects.list", h.projectsList)
 	register(h, "projects.create", h.projectsCreate)
 	register(h, "projects.get", h.projectsGet)

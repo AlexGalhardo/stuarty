@@ -44,6 +44,7 @@ type Network struct {
 	Guard    *auth.SessionGuard[User]
 	Sessions *vsession.Manager
 
+	db     *database.DB
 	store  vsession.UserStore
 	tokens *auth.Tokens
 	now    func() time.Time
@@ -95,6 +96,7 @@ func NewNetwork(db *database.DB, o NetworkOptions) (*Network, error) {
 		Users:    users,
 		Guard:    auth.NewSessionGuard[User](GuardName, users, users.Hasher, nil),
 		Sessions: manager,
+		db:       db,
 		store:    store,
 		tokens:   tokens,
 		now:      o.Now,

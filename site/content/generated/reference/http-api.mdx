@@ -97,6 +97,39 @@ Download the file of a finished export
 
 Responses: `200` OK, `401`, `422`, `default`.
 
+## keys
+
+### `GET /keys`
+
+List your API keys (a logged-in session only; network mode)
+
+Responses: `200` OK, `401`, `default`.
+
+### `POST /keys`
+
+Create an API key (a logged-in session only; network mode)
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `expires_in_days` | `integer` | no | 1 to 365, default 90; 1 to 30 with admin. |
+| `name` | `string` | yes | 1 to 60 characters. |
+| `project_id` | `string` | no | Limits the key to one project; not with admin. |
+| `scopes` | array of `string` | yes | A non-empty subset of your scopes. |
+
+Responses: `201` Created, `401`, `422`, `default`.
+
+### `DELETE /keys/{key_id}`
+
+Revoke an API key (a logged-in session only; network mode)
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `key_id` | path | yes | `string` |
+
+Responses: `200` OK, `401`, `422`, `default`.
+
 ## projects
 
 ### `GET /projects`

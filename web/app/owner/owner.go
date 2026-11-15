@@ -225,7 +225,13 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		publish = o.Events.Publish
 	}
 
+	var keys service.KeyStore
+	if o.netAuth != nil {
+		keys = o.netAuth.Keys()
+	}
+
 	o.Service, err = service.New(service.Options{
+		Keys:  keys,
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
 		Transcriber: transcriber, Tools: tools,

@@ -61,7 +61,7 @@ func (h *networkHarness) send(t *testing.T, method, path, body, cookie string, h
 	hr.Host = netHost
 	hr.Header.Set("Origin", netOrigin)
 
-	if body != "" {
+	if body != "" || method != http.MethodGet {
 		hr.Header.Set("Content-Type", "application/json")
 	}
 
@@ -264,7 +264,7 @@ func TestLoginWrongPasswordAndUnknownEmailAreTheSameAnswer(t *testing.T) {
 // Repeated attempts are throttled by vukem's login keys (SDD-007 section 4.1
 // item 1): per email and address, per email, per address.
 func TestLoginThrottled(t *testing.T) {
-	h := newNetworkHarness(t, resolved(), true)
+	h := newNetworkHarnessLimits(t, resolved(), true, nil)
 	h.user(t, "ana@example.com", service.RoleMember)
 
 	for i := range 5 {
@@ -285,7 +285,7 @@ func TestLoginThrottled(t *testing.T) {
 }
 
 func TestLoginThrottledPerAddress(t *testing.T) {
-	h := newNetworkHarness(t, resolved(), true)
+	h := newNetworkHarnessLimits(t, resolved(), true, nil)
 
 	var last netResp
 
