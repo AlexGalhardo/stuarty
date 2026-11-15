@@ -153,18 +153,21 @@
         },
         "duration": {
           "description": "A length; default the rest of the asset.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "id": {
           "type": "string"
         },
         "source_in": {
           "description": "Offset into the asset; default 0s.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "start": {
           "description": "Absolute position.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "track_id": {
           "description": "An audio track.",
@@ -208,7 +211,8 @@
       "properties": {
         "duration": {
           "description": "A length; with text only.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "id": {
           "type": "string"
@@ -219,7 +223,8 @@
         },
         "start": {
           "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "text": {
           "description": "Text to split on whitespace; needs duration.",
@@ -236,11 +241,13 @@
             "properties": {
               "duration": {
                 "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-                "type": "string"
+                "type": "string",
+                "x-vv-kind": "time"
               },
               "start": {
                 "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-                "type": "string"
+                "type": "string",
+                "x-vv-kind": "time"
               },
               "text": {
                 "type": "string"
@@ -356,7 +363,8 @@
         },
         "max_gap": {
           "description": "A length, may be 0; a longer pause starts a caption. Default \"0.6s\".",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "max_words": {
           "description": "Words per caption, default 5.",
@@ -597,7 +605,120 @@
           "type": "string"
         },
         "style": {
-          "description": "A partial CaptionStyle replacing the override, or null or {} to clear it."
+          "additionalProperties": false,
+          "description": "A partial CaptionStyle replacing the override, or null or {} to clear it.",
+          "properties": {
+            "align": {
+              "enum": [
+                "left",
+                "center",
+                "right"
+              ],
+              "type": "string"
+            },
+            "background_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": "string"
+            },
+            "background_padding": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "background_radius": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": "string"
+            },
+            "font_family": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "font_weight": {
+              "maximum": 900,
+              "minimum": 100,
+              "multipleOf": 100,
+              "type": "integer"
+            },
+            "highlight": {
+              "enum": [
+                "none",
+                "word"
+              ],
+              "type": "string"
+            },
+            "highlight_background": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": "string"
+            },
+            "highlight_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": "string"
+            },
+            "line_height": {
+              "maximum": 3,
+              "minimum": 0.8,
+              "type": "number"
+            },
+            "max_width": {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            "position": {
+              "enum": [
+                "bottom",
+                "middle",
+                "top",
+                "custom"
+              ],
+              "type": "string"
+            },
+            "shadow_blur": {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            "shadow_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": "string"
+            },
+            "shadow_dx": {
+              "type": "number"
+            },
+            "shadow_dy": {
+              "type": "number"
+            },
+            "size": {
+              "maximum": 1000,
+              "minimum": 8,
+              "type": "number"
+            },
+            "stroke_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": "string"
+            },
+            "stroke_width": {
+              "maximum": 40,
+              "minimum": 0,
+              "type": "number"
+            },
+            "uppercase": {
+              "type": "boolean"
+            }
+          },
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "required": [
@@ -633,7 +754,8 @@
       "properties": {
         "duration": {
           "description": "A length, at least the end of the last word. Default: that end.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "item_id": {
           "description": "A caption.",
@@ -646,11 +768,13 @@
             "properties": {
               "duration": {
                 "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-                "type": "string"
+                "type": "string",
+                "x-vv-kind": "time"
               },
               "start": {
                 "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-                "type": "string"
+                "type": "string",
+                "x-vv-kind": "time"
               },
               "text": {
                 "type": "string"
@@ -758,7 +882,8 @@
         },
         "duration": {
           "description": "A length; default the rest of the asset, or 5s for an image.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "fit": {
           "enum": [
@@ -773,11 +898,13 @@
         },
         "source_in": {
           "description": "Offset into the asset; default 0s; omit for an image.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "start": {
           "description": "Absolute position.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "track_id": {
           "description": "A visual track.",
@@ -827,7 +954,8 @@
         },
         "min_silence": {
           "description": "A length; shorter silences are ignored. Default \"0.4s\".",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "new_ids": {
           "description": "Ids for the second, third, ... pieces, in order.",
@@ -838,7 +966,8 @@
         },
         "padding": {
           "description": "A length, may be 0; speech kept around each cut. Default \"0.1s\".",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "resolved": {
           "additionalProperties": false,
@@ -1050,7 +1179,34 @@
           "type": "string"
         },
         "speed": {
-          "description": "\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4."
+          "description": "\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4.",
+          "oneOf": [
+            {
+              "examples": [
+                "1.5x"
+              ],
+              "pattern": "^([0-9]+\\.?[0-9]{0,3}|\\.[0-9]{1,3})x$",
+              "type": "string"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "den": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "num": {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "num",
+                "den"
+              ],
+              "type": "object"
+            }
+          ]
         }
       },
       "required": [
@@ -1086,7 +1242,8 @@
       "properties": {
         "duration": {
           "description": "Length of the crossfade, at least 1 frame.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "from_item_id": {
           "description": "The item that leaves.",
@@ -1185,7 +1342,8 @@
         },
         "start": {
           "description": "Absolute start of the copy.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "track_id": {
           "description": "The track of the copy; default the source's track.",
@@ -1229,7 +1387,8 @@
         },
         "start": {
           "description": "The new absolute position of the first frame.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "track_id": {
           "description": "A track that accepts the item type.",
@@ -1307,11 +1466,13 @@
         },
         "fade_in": {
           "description": "Fade-in length; 0s removes it.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "fade_out": {
           "description": "Fade-out length; 0s removes it.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "item_id": {
           "description": "A clip or audio item.",
@@ -1412,7 +1573,8 @@
       "properties": {
         "duration": {
           "description": "Length of the transition, at least 1 frame; default 0.5s.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "edge": {
           "description": "The edge: in or out.",
@@ -1427,7 +1589,19 @@
           "type": "string"
         },
         "kind": {
-          "description": "fade, slide_left, slide_right, slide_up, slide_down, or null to remove."
+          "description": "fade, slide_left, slide_right, slide_up, slide_down, or null to remove.",
+          "enum": [
+            "fade",
+            "slide_left",
+            "slide_right",
+            "slide_up",
+            "slide_down",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -1463,7 +1637,8 @@
       "properties": {
         "at": {
           "description": "Absolute position strictly inside the item.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "item_id": {
           "type": "string"
@@ -1516,7 +1691,8 @@
         },
         "to": {
           "description": "Absolute position of the edge; the end is exclusive.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         }
       },
       "required": [
@@ -1595,7 +1771,8 @@
       "properties": {
         "at": {
           "description": "Absolute position of the keyframe.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "item_id": {
           "type": "string"
@@ -1644,7 +1821,8 @@
       "properties": {
         "at": {
           "description": "Absolute position inside the item, inclusive of its end.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "easing": {
           "description": "From this keyframe to the next. Default linear.",
@@ -1786,7 +1964,38 @@
       "additionalProperties": false,
       "properties": {
         "fps": {
-          "description": "\"30\", \"30000/1001\" or {\"num\": 30000, \"den\": 1001}; den is 1 or 1001, 1 to 120 fps."
+          "description": "\"30\", \"30000/1001\" or {\"num\": 30000, \"den\": 1001}; den is 1 or 1001, 1 to 120 fps.",
+          "oneOf": [
+            {
+              "examples": [
+                "30",
+                "30000/1001"
+              ],
+              "pattern": "^[0-9]+(/[0-9]+)?$",
+              "type": "string"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "den": {
+                  "enum": [
+                    1,
+                    1001
+                  ],
+                  "type": "integer"
+                },
+                "num": {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "num",
+                "den"
+              ],
+              "type": "object"
+            }
+          ]
         }
       },
       "required": [
@@ -1815,7 +2024,8 @@
       "properties": {
         "duration": {
           "description": "A length of at least 1 frame.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "fill": {
           "description": "A colour; default #FFFFFF.",
@@ -1842,7 +2052,8 @@
         },
         "start": {
           "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "stroke_color": {
           "description": "A colour; default #000000.",
@@ -1982,7 +2193,8 @@
         },
         "source_in": {
           "description": "With asset_id only. Default \"0s\".",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "text": {
           "description": "For a text slot.",
@@ -1997,11 +2209,13 @@
             "properties": {
               "duration": {
                 "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-                "type": "string"
+                "type": "string",
+                "x-vv-kind": "time"
               },
               "start": {
                 "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-                "type": "string"
+                "type": "string",
+                "x-vv-kind": "time"
               },
               "text": {
                 "type": "string"
@@ -2136,8 +2350,17 @@
       "additionalProperties": false,
       "properties": {
         "colors": {
-          "additionalProperties": {},
+          "additionalProperties": {
+            "pattern": "^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "description": "Name to #RRGGBB or #RRGGBBAA; null removes the name.",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_]{0,39}$"
+          },
           "type": "object"
         },
         "description": {
@@ -2174,18 +2397,102 @@
       "properties": {
         "duration": {
           "description": "A length of at least 1 frame.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "id": {
           "type": "string"
         },
         "start": {
           "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "style": {
-          "additionalProperties": {},
+          "additionalProperties": false,
           "description": "A partial TextStyle.",
+          "properties": {
+            "align": {
+              "enum": [
+                "left",
+                "center",
+                "right"
+              ],
+              "type": "string"
+            },
+            "background_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": "string"
+            },
+            "background_padding": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "background_radius": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": "string"
+            },
+            "font_family": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "font_weight": {
+              "maximum": 900,
+              "minimum": 100,
+              "multipleOf": 100,
+              "type": "integer"
+            },
+            "line_height": {
+              "maximum": 3,
+              "minimum": 0.8,
+              "type": "number"
+            },
+            "max_width": {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            "shadow_blur": {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            "shadow_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": "string"
+            },
+            "shadow_dx": {
+              "type": "number"
+            },
+            "shadow_dy": {
+              "type": "number"
+            },
+            "size": {
+              "maximum": 1000,
+              "minimum": 8,
+              "type": "number"
+            },
+            "stroke_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": "string"
+            },
+            "stroke_width": {
+              "maximum": 40,
+              "minimum": 0,
+              "type": "number"
+            },
+            "uppercase": {
+              "type": "boolean"
+            }
+          },
+          "required": [],
           "type": "object"
         },
         "text": {
@@ -2247,7 +2554,8 @@
       "properties": {
         "duration": {
           "description": "A length, at most the item's duration. Default \"0.4s\".",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "edge": {
           "description": "in or out.",
@@ -2315,8 +2623,142 @@
           "type": "boolean"
         },
         "style": {
-          "additionalProperties": {},
+          "additionalProperties": false,
           "description": "A partial TextStyle, merged; null removes a key.",
+          "properties": {
+            "align": {
+              "enum": [
+                "left",
+                "center",
+                "right",
+                null
+              ],
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "background_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "background_padding": {
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "background_radius": {
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "font_family": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "font_weight": {
+              "maximum": 900,
+              "minimum": 100,
+              "multipleOf": 100,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "line_height": {
+              "maximum": 3,
+              "minimum": 0.8,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "max_width": {
+              "exclusiveMinimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "shadow_blur": {
+              "maximum": 100,
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "shadow_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "shadow_dx": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "shadow_dy": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "size": {
+              "maximum": 1000,
+              "minimum": 8,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "stroke_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "stroke_width": {
+              "maximum": 40,
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "uppercase": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [],
           "type": "object"
         },
         "text": {
@@ -2357,7 +2799,8 @@
       "properties": {
         "at": {
           "description": "Absolute frame inside the gap.",
-          "type": "string"
+          "type": "string",
+          "x-vv-kind": "time"
         },
         "ripple": {
           "description": "track (default) or all: all moves later items of every track.",
@@ -2541,8 +2984,182 @@
           "type": "boolean"
         },
         "style": {
-          "additionalProperties": {},
+          "additionalProperties": false,
           "description": "A partial CaptionStyle; null removes a key when merging.",
+          "properties": {
+            "align": {
+              "enum": [
+                "left",
+                "center",
+                "right",
+                null
+              ],
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "background_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "background_padding": {
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "background_radius": {
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "font_family": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "font_weight": {
+              "maximum": 900,
+              "minimum": 100,
+              "multipleOf": 100,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "highlight": {
+              "enum": [
+                "none",
+                "word",
+                null
+              ],
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "highlight_background": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "highlight_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "line_height": {
+              "maximum": 3,
+              "minimum": 0.8,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "max_width": {
+              "exclusiveMinimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "position": {
+              "enum": [
+                "bottom",
+                "middle",
+                "top",
+                "custom",
+                null
+              ],
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "shadow_blur": {
+              "maximum": 100,
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "shadow_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "shadow_dx": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "shadow_dy": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "size": {
+              "maximum": 1000,
+              "minimum": 8,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "stroke_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "stroke_width": {
+              "maximum": 40,
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "uppercase": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [],
           "type": "object"
         },
         "track_id": {

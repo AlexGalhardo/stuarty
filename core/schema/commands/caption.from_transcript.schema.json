@@ -14,7 +14,8 @@
     },
     "max_gap": {
       "description": "A length, may be 0; a longer pause starts a caption. Default \"0.6s\".",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "max_words": {
       "description": "Words per caption, default 5.",

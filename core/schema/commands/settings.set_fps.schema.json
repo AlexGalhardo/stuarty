@@ -3,7 +3,38 @@
   "additionalProperties": false,
   "properties": {
     "fps": {
-      "description": "\"30\", \"30000/1001\" or {\"num\": 30000, \"den\": 1001}; den is 1 or 1001, 1 to 120 fps."
+      "description": "\"30\", \"30000/1001\" or {\"num\": 30000, \"den\": 1001}; den is 1 or 1001, 1 to 120 fps.",
+      "oneOf": [
+        {
+          "examples": [
+            "30",
+            "30000/1001"
+          ],
+          "pattern": "^[0-9]+(/[0-9]+)?$",
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "den": {
+              "enum": [
+                1,
+                1001
+              ],
+              "type": "integer"
+            },
+            "num": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "num",
+            "den"
+          ],
+          "type": "object"
+        }
+      ]
     }
   },
   "required": [

@@ -14,7 +14,8 @@
     },
     "to": {
       "description": "Absolute position of the edge; the end is exclusive.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     }
   },
   "required": [

@@ -3,8 +3,17 @@
   "additionalProperties": false,
   "properties": {
     "colors": {
-      "additionalProperties": {},
+      "additionalProperties": {
+        "pattern": "^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
       "description": "Name to #RRGGBB or #RRGGBBAA; null removes the name.",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]{0,39}$"
+      },
       "type": "object"
     },
     "description": {

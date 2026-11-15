@@ -8,11 +8,13 @@
     },
     "fade_in": {
       "description": "Fade-in length; 0s removes it.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "fade_out": {
       "description": "Fade-out length; 0s removes it.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "item_id": {
       "description": "A clip or audio item.",

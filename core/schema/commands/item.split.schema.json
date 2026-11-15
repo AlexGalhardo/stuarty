@@ -4,7 +4,8 @@
   "properties": {
     "at": {
       "description": "Absolute position strictly inside the item.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "item_id": {
       "type": "string"

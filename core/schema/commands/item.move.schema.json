@@ -7,7 +7,8 @@
     },
     "start": {
       "description": "The new absolute position of the first frame.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "track_id": {
       "description": "A track that accepts the item type.",

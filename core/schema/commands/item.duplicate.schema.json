@@ -12,7 +12,8 @@
     },
     "start": {
       "description": "Absolute start of the copy.",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "track_id": {
       "description": "The track of the copy; default the source's track.",

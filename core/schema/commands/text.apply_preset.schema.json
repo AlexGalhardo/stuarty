@@ -4,7 +4,8 @@
   "properties": {
     "duration": {
       "description": "A length, at most the item's duration. Default \"0.4s\".",
-      "type": "string"
+      "type": "string",
+      "x-vv-kind": "time"
     },
     "edge": {
       "description": "in or out.",
