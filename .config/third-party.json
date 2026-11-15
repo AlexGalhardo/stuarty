@@ -77,6 +77,30 @@
   },
   {
     "group": "programs",
+    "name": "libvpl",
+    "version": "2.17.0 (inside the own FFmpeg build)",
+    "spdx": "MIT",
+    "copyright": "Copyright (c) 2020 Intel Corporation",
+    "files": [
+      "licenses/programs/libvpl/LICENSE"
+    ],
+    "note": "the oneVPL dispatcher, linked statically into the own FFmpeg build on Windows and Linux x86_64 for the Quick Sync encoders (D-034); the Intel media runtime comes with the GPU driver and is not shipped; listed as shipped when the pins of that build replace the BtbN pin",
+    "shipped_in": []
+  },
+  {
+    "group": "programs",
+    "name": "AMD AMF headers",
+    "version": "1.5.3 (inside the own FFmpeg build)",
+    "spdx": "MIT",
+    "copyright": "Copyright (c) 2016 Advanced Micro Devices, Inc.",
+    "files": [
+      "licenses/programs/amf/LICENSE.txt"
+    ],
+    "note": "headers only, used to build the AMF encoders of the own FFmpeg build on Windows and Linux x86_64 (D-034); the AMF runtime comes with the AMD driver and is not shipped; AMD grants no licence to the video standards (see the notice at the top of the text); listed as shipped when the pins of that build replace the BtbN pin",
+    "shipped_in": []
+  },
+  {
+    "group": "programs",
     "name": "whisper.cpp",
     "version": "env:WHISPER_TAG",
     "spdx": "MIT",
