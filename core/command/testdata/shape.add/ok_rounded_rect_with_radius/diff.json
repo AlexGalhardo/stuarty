@@ -3,14 +3,28 @@
     "kind": "item.added",
     "id": "itm_s6t7v8w9x0",
     "object": {
+      "contrast": 1,
       "duration": 90,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "height": 200,
       "id": "itm_s6t7v8w9x0",
+      "opacity": 1,
       "radius": 24,
+      "saturation": 1,
+      "scale": 1,
       "shape": "rounded_rect",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 0,
+      "stroke_color": "#000000",
       "track": "trk_f6g7h8j9k0",
       "type": "shape",
+      "volume": 1,
       "width": 400
     }
   }

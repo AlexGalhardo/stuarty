@@ -5,7 +5,7 @@
     "changes": {
       "filter": [
         "sepia",
-        null
+        "none"
       ]
     }
   }

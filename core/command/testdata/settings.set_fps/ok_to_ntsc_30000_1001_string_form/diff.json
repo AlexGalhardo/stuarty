@@ -4,7 +4,10 @@
     "id": "prj_7k2m9x4q1b",
     "changes": {
       "fps": [
-        null,
+        {
+          "den": 1,
+          "num": 30
+        },
         {
           "den": 1001,
           "num": 30000

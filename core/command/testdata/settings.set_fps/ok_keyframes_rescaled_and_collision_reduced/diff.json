@@ -4,7 +4,10 @@
     "id": "prj_7k2m9x4q1b",
     "changes": {
       "fps": [
-        null,
+        {
+          "den": 1,
+          "num": 30
+        },
         {
           "den": 1,
           "num": 12
@@ -24,6 +27,7 @@
         {
           "scale": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 1
             },
@@ -33,10 +37,12 @@
               "value": 2
             },
             {
+              "easing": "linear",
               "t": 5,
               "value": 3
             },
             {
+              "easing": "linear",
               "t": 20,
               "value": 4
             }
@@ -45,14 +51,17 @@
         {
           "scale": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 1
             },
             {
+              "easing": "linear",
               "t": 2,
               "value": 3
             },
             {
+              "easing": "linear",
               "t": 8,
               "value": 4
             }

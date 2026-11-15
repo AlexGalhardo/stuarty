@@ -7,30 +7,36 @@
         {
           "opacity": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 0
             },
             {
+              "easing": "linear",
               "t": 12,
               "value": 1
             }
           ],
           "scale": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 1.5
             },
             {
+              "easing": "linear",
               "t": 30,
               "value": 1
             }
           ],
           "x": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 300
             },
             {
+              "easing": "linear",
               "t": 30,
               "value": 700
             }
@@ -39,11 +45,11 @@
         null
       ],
       "opacity": [
-        null,
+        1,
         0
       ],
       "scale": [
-        null,
+        1,
         1.5
       ],
       "x": [

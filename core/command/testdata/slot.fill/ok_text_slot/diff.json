@@ -5,13 +5,17 @@
     "changes": {
       "slot": [
         {
+          "duration_policy": "fit",
           "kind": "text",
-          "name": "title"
+          "name": "title",
+          "required": true
         },
         {
+          "duration_policy": "fit",
           "filled": true,
           "kind": "text",
-          "name": "title"
+          "name": "title",
+          "required": true
         }
       ]
     }

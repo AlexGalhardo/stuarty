@@ -85,7 +85,7 @@ For every time argument the result's `effective` map has an entry with the frame
 {"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"start": [0, 30], "duration": [150, 120]}}
 ```
 
-`kind` is one of `settings.updated`, `asset.added`, `asset.removed`, `track.added`, `track.updated`, `track.removed`, `item.added`, `item.updated`, `item.removed`, `font.added`, `font.removed`, `project.updated`. For `added` and `removed` the change carries the whole object under `object`. For `updated`, `changes` maps each changed top-level field of the object to `[before, after]`; an absent side is `null`.
+`kind` is one of `settings.updated`, `asset.added`, `asset.removed`, `track.added`, `track.updated`, `track.removed`, `item.added`, `item.updated`, `item.removed`, `font.added`, `font.removed`, `project.updated`. For `added` and `removed` the change carries the whole object under `object`. The diff is written in the form of a fetched document: an object and both sides of a changed field carry every default (`scale`, `opacity`, `filter`, `filter_amount`, `speed`, `volume`, `fit`, `contrast`, `saturation`, `fill`, `stroke_color`, `settings.width`, and so on), so that patching the fetched document before the edit with the diff gives the fetched document after it with no derivation (SDD-012 section 5.4; `TestGoldenCases` checks it for every golden case). Only a field with no default (`x`, `y`, `crop`, `blur`, `markers`, `source_in`, ...) reads as absent, that is `null`. Undo primitives (A.6) stay canonical: a field equal to its default is absent in them. For `updated`, `changes` maps each changed top-level field of the object to `[before, after]`; an absent side is `null`.
 
 For `settings.updated` and `project.updated` the `id` is the project identifier. The diff of a batch is the net difference between the document before the batch and the document after it: an object created and removed inside the batch does not appear, and a field changed more than once appears once, with its first before-value and its last after-value.
 
@@ -509,7 +509,7 @@ At least one argument is required.
 
 ```json
 [
-  {"kind": "settings.updated", "id": "prj_7k2m9x4q1b", "changes": {"width": [null, 720], "height": [null, 1280]}},
+  {"kind": "settings.updated", "id": "prj_7k2m9x4q1b", "changes": {"width": [1080, 720], "height": [1920, 1280]}},
   {"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {
     "x": [810, 540], "y": [480, 320],
     "keyframes": [{"x": [{"t": 0, "value": 810}, {"t": 30, "value": 270}]}, {"x": [{"t": 0, "value": 540}, {"t": 30, "value": 180}]}]}}
@@ -1589,7 +1589,7 @@ At least one of `x`, `y`, `scale`, `rotation`, `opacity` is required.
 ```
 
 ```json
-[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"x": [null, 540], "scale": [null, 1.5]}}]
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"x": [null, 540], "scale": [1, 1.5]}}]
 ```
 
 **Golden cases.**
@@ -1730,7 +1730,7 @@ At least one of the four is required.
 ```
 
 ```json
-[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"volume": [null, 0.8], "fade_in": [null, 30], "fade_out": [null, 15]}}]
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"volume": [1, 0.8], "fade_in": [null, 30], "fade_out": [null, 15]}}]
 ```
 
 **Golden cases.**
@@ -2107,7 +2107,7 @@ At least one of `fit` and `crop` is required.
 ```
 
 ```json
-[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"fit": [null, "contain"], "crop": [null, {"left": 0.1, "right": 0.1}]}}]
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"fit": ["cover", "contain"], "crop": [null, {"left": 0.1, "right": 0.1}]}}]
 ```
 
 **Golden cases.**
@@ -2191,7 +2191,7 @@ Changes the speed of a clip or audio item while keeping the same source range.
 ```json
 [
   {"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {
-    "duration": [90, 60], "speed": [null, {"num": 3, "den": 2}],
+    "duration": [90, 60], "speed": [{"num": 1, "den": 1}, {"num": 3, "den": 2}],
     "fade_in": [10, 7], "fade_out": [8, 5],
     "transition_in": [{"kind": "fade", "duration": 15}, {"kind": "fade", "duration": 10}],
     "keyframes": [{"scale": [{"t": 0, "value": 1}, {"t": 7, "value": 1.2}, {"t": 90, "value": 1}]}, {"scale": [{"t": 0, "value": 1}, {"t": 5, "value": 1.2}, {"t": 60, "value": 1}]}]}},
@@ -2272,7 +2272,7 @@ At least one of the three is required.
 ```
 
 ```json
-[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"brightness": [null, 0.1], "saturation": [null, 1.2]}}]
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"brightness": [null, 0.1], "saturation": [1, 1.2]}}]
 ```
 
 **Golden cases.**
@@ -3712,7 +3712,7 @@ Removes all keyframes of one property, or of every property, keeping the value a
 ```
 
 ```json
-[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"keyframes": [{"opacity": [{"t": 0, "value": 0}, {"t": 12, "value": 1}]}, null], "opacity": [null, 0]}}]
+[{"kind": "item.updated", "id": "itm_s6t7v8w9x0", "changes": {"keyframes": [{"opacity": [{"t": 0, "value": 0}, {"t": 12, "value": 1}]}, null], "opacity": [1, 0]}}]
 ```
 
 **Golden cases.**
@@ -4065,7 +4065,7 @@ At least one of `filter` and `amount` is required.
 ```
 
 ```json
-[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"filter": [null, "sepia"], "filter_amount": [null, 0.6]}}]
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"filter": ["none", "sepia"], "filter_amount": [1, 0.6]}}]
 ```
 
 **Golden cases.**

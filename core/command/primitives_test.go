@@ -329,7 +329,7 @@ func TestInverseOfFieldsThatWereAbsent(t *testing.T) {
 		t.Errorf("an absent (default) field is unset by the inverse: %+v", res.Inverse)
 	}
 	if len(res.Diff) != 1 || res.Diff[0].Kind != KindSettingsUpdated ||
-		res.Diff[0].Changes["width"] != (Pair{nil, jn("1920")}) {
+		res.Diff[0].Changes["width"] != (Pair{jn("1080"), jn("1920")}) {
 		t.Errorf("%+v", res.Diff)
 	}
 }

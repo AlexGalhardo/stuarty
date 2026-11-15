@@ -26,14 +26,16 @@
           "description": "Main footage",
           "duration_policy": "stretch_timeline",
           "kind": "media",
-          "name": "hero"
+          "name": "hero",
+          "required": true
         },
         {
           "description": "Main footage",
           "duration_policy": "stretch_timeline",
           "filled": true,
           "kind": "media",
-          "name": "hero"
+          "name": "hero",
+          "required": true
         }
       ],
       "source_in": [

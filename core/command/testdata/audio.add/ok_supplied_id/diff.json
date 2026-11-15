@@ -4,11 +4,25 @@
     "id": "itm_s6t7v8w9x0",
     "object": {
       "asset": "ast_4h6j8k2m3n",
+      "contrast": 1,
       "duration": 900,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_s6t7v8w9x0",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 150,
+      "stroke_color": "#000000",
       "track": "trk_m1n2p3q4r5",
-      "type": "audio"
+      "type": "audio",
+      "volume": 1
     }
   }
 ]

@@ -3,11 +3,25 @@
     "kind": "item.added",
     "id": "itm_s6t7v8w9x0",
     "object": {
+      "contrast": 1,
       "duration": 27,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_s6t7v8w9x0",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 12,
+      "stroke_color": "#000000",
       "track": "trk_a1b2c3d4e5",
       "type": "caption",
+      "volume": 1,
       "words": [
         {
           "duration": 9,

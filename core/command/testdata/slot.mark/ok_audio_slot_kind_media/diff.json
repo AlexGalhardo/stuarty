@@ -6,8 +6,10 @@
       "slot": [
         null,
         {
+          "duration_policy": "fit",
           "kind": "media",
-          "name": "music"
+          "name": "music",
+          "required": true
         }
       ]
     }

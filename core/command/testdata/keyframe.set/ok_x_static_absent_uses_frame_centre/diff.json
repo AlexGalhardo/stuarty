@@ -8,10 +8,12 @@
         {
           "x": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 540
             },
             {
+              "easing": "linear",
               "t": 30,
               "value": 700
             }

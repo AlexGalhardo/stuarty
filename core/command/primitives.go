@@ -119,7 +119,7 @@ func ApplyPrimitives(doc *timeline.Document, prims []Primitive, guard Guard) (Re
 	return Result{
 		Doc:     after,
 		Inverse: inverseOf(base, timeline.Raw(after)),
-		Diff:    diffOf(base, timeline.Raw(after)),
+		Diff:    diffOf(fullPair(doc, after)),
 	}, skipped
 }
 

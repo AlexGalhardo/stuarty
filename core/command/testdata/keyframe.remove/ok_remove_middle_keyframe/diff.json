@@ -7,6 +7,7 @@
         {
           "scale": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 1
             },
@@ -16,6 +17,7 @@
               "value": 1.2
             },
             {
+              "easing": "linear",
               "t": 60,
               "value": 1.5
             }
@@ -24,10 +26,12 @@
         {
           "scale": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 1
             },
             {
+              "easing": "linear",
               "t": 60,
               "value": 1.5
             }

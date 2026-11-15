@@ -6,6 +6,7 @@
       "slot": [
         {
           "description": "Old",
+          "duration_policy": "fit",
           "filled": true,
           "kind": "text",
           "name": "title",
@@ -13,9 +14,11 @@
         },
         {
           "description": "New",
+          "duration_policy": "fit",
           "filled": true,
           "kind": "text",
-          "name": "title"
+          "name": "title",
+          "required": true
         }
       ]
     }

@@ -3,2400 +3,5200 @@
     "kind": "item.removed",
     "id": "itm_x000000000",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000000",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1000,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000001",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000001",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1002,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000002",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000002",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1004,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000003",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000003",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1006,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000004",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000004",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1008,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000005",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000005",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1010,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000006",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000006",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1012,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000007",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000007",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1014,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000008",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000008",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1016,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000009",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000009",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1018,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000010",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000010",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1020,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000011",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000011",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1022,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000012",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000012",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1024,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000013",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000013",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1026,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000014",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000014",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1028,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000015",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000015",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1030,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000016",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000016",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1032,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000017",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000017",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1034,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000018",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000018",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1036,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000019",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000019",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1038,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000020",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000020",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1040,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000021",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000021",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1042,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000022",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000022",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1044,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000023",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000023",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1046,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000024",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000024",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1048,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000025",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000025",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1050,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000026",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000026",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1052,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000027",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000027",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1054,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000028",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000028",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1056,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000029",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000029",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1058,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000030",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000030",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1060,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000031",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000031",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1062,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000032",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000032",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1064,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000033",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000033",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1066,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000034",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000034",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1068,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000035",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000035",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1070,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000036",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000036",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1072,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000037",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000037",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1074,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000038",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000038",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1076,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000039",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000039",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1078,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000040",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000040",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1080,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000041",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000041",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1082,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000042",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000042",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1084,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000043",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000043",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1086,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000044",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000044",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1088,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000045",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000045",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1090,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000046",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000046",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1092,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000047",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000047",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1094,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000048",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000048",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1096,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000049",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000049",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1098,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000050",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000050",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1100,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000051",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000051",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1102,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000052",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000052",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1104,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000053",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000053",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1106,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000054",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000054",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1108,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000055",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000055",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1110,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000056",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000056",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1112,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000057",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000057",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1114,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000058",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000058",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1116,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000059",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000059",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1118,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000060",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000060",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1120,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000061",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000061",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1122,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000062",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000062",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1124,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000063",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000063",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1126,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000064",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000064",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1128,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000065",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000065",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1130,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000066",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000066",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1132,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000067",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000067",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1134,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000068",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000068",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1136,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000069",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000069",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1138,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000070",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000070",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1140,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000071",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000071",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1142,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000072",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000072",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1144,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000073",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000073",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1146,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000074",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000074",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1148,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000075",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000075",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1150,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000076",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000076",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1152,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000077",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000077",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1154,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000078",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000078",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1156,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000079",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000079",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1158,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000080",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000080",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1160,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000081",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000081",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1162,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000082",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000082",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1164,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000083",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000083",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1166,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000084",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000084",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1168,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000085",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000085",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1170,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000086",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000086",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1172,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000087",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000087",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1174,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000088",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000088",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1176,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000089",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000089",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1178,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000090",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000090",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1180,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000091",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000091",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1182,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000092",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000092",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1184,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000093",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000093",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1186,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000094",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000094",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1188,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000095",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000095",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1190,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000096",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000096",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1192,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000097",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000097",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1194,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000098",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000098",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1196,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000099",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000099",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1198,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000100",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000100",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1200,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000101",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000101",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1202,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000102",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000102",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1204,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000103",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000103",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1206,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000104",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000104",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1208,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000105",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000105",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1210,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000106",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000106",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1212,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000107",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000107",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1214,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000108",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000108",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1216,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000109",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000109",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1218,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000110",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000110",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1220,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000111",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000111",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1222,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000112",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000112",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1224,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000113",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000113",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1226,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000114",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000114",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1228,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000115",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000115",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1230,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000116",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000116",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1232,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000117",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000117",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1234,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000118",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000118",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1236,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000119",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000119",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1238,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000120",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000120",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1240,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000121",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000121",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1242,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000122",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000122",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1244,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000123",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000123",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1246,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000124",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000124",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1248,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000125",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000125",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1250,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000126",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000126",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1252,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000127",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000127",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1254,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000128",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000128",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1256,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000129",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000129",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1258,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000130",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000130",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1260,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000131",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000131",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1262,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000132",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000132",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1264,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000133",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000133",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1266,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000134",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000134",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1268,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000135",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000135",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1270,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000136",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000136",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1272,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000137",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000137",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1274,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000138",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000138",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1276,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000139",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000139",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1278,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000140",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000140",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1280,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000141",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000141",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1282,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000142",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000142",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1284,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000143",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000143",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1286,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000144",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000144",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1288,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000145",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000145",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1290,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000146",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000146",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1292,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000147",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000147",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1294,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000148",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000148",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1296,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000149",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000149",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1298,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000150",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000150",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1300,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000151",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000151",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1302,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000152",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000152",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1304,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000153",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000153",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1306,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000154",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000154",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1308,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000155",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000155",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1310,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000156",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000156",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1312,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000157",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000157",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1314,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000158",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000158",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1316,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000159",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000159",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1318,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000160",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000160",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1320,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000161",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000161",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1322,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000162",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000162",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1324,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000163",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000163",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1326,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000164",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000164",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1328,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000165",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000165",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1330,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000166",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000166",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1332,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000167",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000167",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1334,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000168",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000168",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1336,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000169",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000169",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1338,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000170",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000170",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1340,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000171",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000171",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1342,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000172",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000172",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1344,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000173",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000173",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1346,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000174",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000174",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1348,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000175",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000175",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1350,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000176",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000176",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1352,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000177",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000177",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1354,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000178",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000178",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1356,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000179",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000179",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1358,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000180",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000180",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1360,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000181",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000181",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1362,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000182",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000182",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1364,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000183",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000183",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1366,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000184",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000184",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1368,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000185",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000185",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1370,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000186",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000186",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1372,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000187",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000187",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1374,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000188",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000188",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1376,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000189",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000189",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1378,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000190",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000190",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1380,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000191",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000191",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1382,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000192",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000192",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1384,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000193",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000193",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1386,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000194",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000194",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1388,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000195",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000195",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1390,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000196",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000196",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1392,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000197",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000197",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1394,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000198",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000198",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1396,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   },
   {
     "kind": "item.removed",
     "id": "itm_x000000199",
     "object": {
+      "contrast": 1,
       "duration": 1,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
       "id": "itm_x000000199",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
       "start": 1398,
+      "stroke_color": "#000000",
       "text": "x",
       "track": "trk_f6g7h8j9k0",
-      "type": "text"
+      "type": "text",
+      "volume": 1
     }
   }
 ]

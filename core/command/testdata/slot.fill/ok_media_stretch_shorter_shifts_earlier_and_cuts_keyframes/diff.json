@@ -15,10 +15,12 @@
         {
           "opacity": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 1
             },
             {
+              "easing": "linear",
               "t": 80,
               "value": 0.5
             }
@@ -27,10 +29,12 @@
         {
           "opacity": [
             {
+              "easing": "linear",
               "t": 0,
               "value": 1
             },
             {
+              "easing": "linear",
               "t": 50,
               "value": 0.688
             }
@@ -42,14 +46,16 @@
           "description": "Main footage",
           "duration_policy": "stretch_timeline",
           "kind": "media",
-          "name": "hero"
+          "name": "hero",
+          "required": true
         },
         {
           "description": "Main footage",
           "duration_policy": "stretch_timeline",
           "filled": true,
           "kind": "media",
-          "name": "hero"
+          "name": "hero",
+          "required": true
         }
       ],
       "source_in": [
