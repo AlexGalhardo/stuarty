@@ -39,7 +39,7 @@ A commit that changes the English page but not its meaning, such as a typo, form
 Translation: not-needed
 ```
 
-Until the first BETA release the check only reports; the flag `strict` in `site/content/translations.config.json` turns a stale or missing page into a failure, and `npm run check:translations -- --strict` does the same for one run.
+The flag `strict` in `site/content/translations.config.json` is `true`, so a stale or missing page is a failure; `npm run check:translations -- --strict` forces the same for one run.
 
 ## Common mistakes
 
