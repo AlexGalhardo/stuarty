@@ -1,17 +1,18 @@
 ---
 title: "Primeiros passos"
-description: "Como instalar e executar o Vukem Video, e o que você pode fazer hoje enquanto ele está na fase de Protótipo."
+description: "Como instalar e executar o Vukem Video, e o que você pode fazer hoje enquanto ele está na fase BETA."
 ---
 
-<Callout type="warning" title="Versão inicial">
-O Vukem Video está na fase de Protótipo. A primeira versão do editor, a `v0.2.0`, traz o servidor local, a imagem de contêiner e os instaladores, mas o editor ainda não edita vídeo. Partes dos comandos abaixo estão especificadas e ainda não funcionam.
+<Callout type="warning" title="BETA">
+O Vukem Video está na fase BETA. Você pode importar mídia, editar, legendar e exportar pelo editor, pela CLI ou por um agente, e cada versão adiciona mais. Leia o [changelog](/changelog) para saber o que a versão que você instalou faz.
 </Callout>
 
 ## O que você pode fazer hoje
 
+- Importar mídia, cortá-la e organizá-la em uma linha do tempo, adicionar texto e legendas e exportar um MP4 verificado.
+- Salvar um projeto como modelo e iniciar novos projetos a partir dele.
+- Deixar um agente fazer o mesmo pelo servidor MCP ou pela CLI.
 - Ler os documentos de planejamento no [repositório](https://github.com/AlexGalhardo/vukem-video/tree/main/docs): requisitos, decisões de arquitetura e especificações.
-- Compilar o esqueleto do servidor a partir do código-fonte. Você precisa do Go (a versão do `go.mod`) e do Bun para o front-end. O servidor inicia e responde a uma verificação de saúde; ele ainda não edita vídeo.
-- Acompanhar a página de [versões](https://github.com/AlexGalhardo/vukem-video/releases) e o [changelog](/changelog).
 
 ## Instalar
 
@@ -32,7 +33,7 @@ docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data \
   ghcr.io/alexgalhardo/vukem-video:<version>
 ```
 
-O servidor escuta em `127.0.0.1:7878` e só pode ser acessado a partir do seu computador.
+O servidor escuta em `127.0.0.1:7878` e só pode ser acessado a partir do seu computador. Abra esse endereço no navegador para chegar ao editor. Seus projetos e mídias ficam no volume `vukem-video`, então um novo contêiner com o mesmo volume os encontra de novo. A [página de instalação](/docs/installation) traz os detalhes da imagem e das suas tags.
 
 ### Windows SmartScreen e macOS Gatekeeper
 
@@ -56,7 +57,7 @@ Escolha uma entre três rotas para o mesmo projeto:
 2. A CLI com `--json`, por exemplo `vukem-video project:create --name "Launch teaser" --json`.
 3. A API HTTP do `vukem-video serve`, com MCP por Streamable HTTP em `POST /mcp`.
 
-Essas rotas estão especificadas no repositório (SDD-003); partes delas ainda não foram implementadas.
+Essas rotas compartilham o mesmo conjunto de operações, então um agente e uma pessoa veem o mesmo resultado. A [visão geral para agentes](/docs/agents/overview) mostra como conectar um.
 
 ## Próximos passos
 

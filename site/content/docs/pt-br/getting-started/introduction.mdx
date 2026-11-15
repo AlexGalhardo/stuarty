@@ -1,12 +1,12 @@
 ---
 title: "Introdução"
-description: "O que é o Vukem Video, para quem ele serve e o que já existe hoje. Ele está na fase de Protótipo."
+description: "O que é o Vukem Video, para quem ele serve e o que já existe hoje. Ele está na fase BETA."
 ---
 
 O Vukem Video é um editor de vídeo minimalista e de código aberto (MIT), primeiro na web e depois no desktop, feito para que um agente de IA possa operá-lo como usuário de primeira classe. Uma pessoa edita o mesmo projeto no navegador.
 
-<Callout type="warning" title="Fase de Protótipo">
-O produto está planejado, mas ainda não está pronto. Não há versão publicada, instalador nem imagem de contêiner, e ainda não há um editor para abrir. Este site descreve o que está especificado. Quando uma página diz "vai", é um plano, não um recurso.
+<Callout type="warning" title="Fase BETA">
+O produto já tem versões publicadas e ainda está antes da 1.0: ele funciona, e uma versão menor ainda pode mudar uma interface pública. O [changelog](/changelog) lista o que cada versão adicionou e mudou.
 </Callout>
 
 ## A ideia
@@ -18,7 +18,7 @@ Dois casos de uso definem todas as prioridades:
 - vídeos verticais curtos com legendas para redes sociais (9:16 é o enquadramento padrão);
 - comerciais de produto com texto animado, música e modelos reutilizáveis.
 
-## O que ele não fará
+## O que ele não faz
 
 - Ele não envia sua mídia para lugar nenhum. Não há conexão de rede de saída por padrão nem telemetria.
 - Ele não precisa de conta nem de serviço na nuvem. Ele roda na sua máquina.
@@ -30,13 +30,14 @@ Dois casos de uso definem todas as prioridades:
 | --- | --- |
 | Requisitos, decisões de arquitetura e especificações | escritos, na pasta `docs/` do repositório |
 | Módulo Go, esqueleto de pacotes, um servidor que inicia | no repositório |
-| Núcleo de comandos, operações de edição, renderização, exportação | especificados, não implementados |
-| Servidor MCP, comandos da CLI, API HTTP | especificados, não implementados |
-| Editor no navegador | especificado, não implementado |
-| Referência gerada e o guia rápido para agentes | planejados para este site |
+| Núcleo de comandos, operações de edição, renderização, exportação | publicados |
+| Servidor MCP, comandos da CLI, API HTTP | publicados |
+| Editor no navegador | publicado |
+| Instaladores, imagem de contêiner e app desktop | publicados a cada versão |
+| Referência gerada e o guia rápido para agentes | neste site |
 
 O [changelog](/changelog) lista o que já foi publicado. Acompanhe o [repositório](https://github.com/AlexGalhardo/vukem-video) para ver o progresso.
 
 ## Próximos passos
 
-Leia [Primeiros passos](/docs/quick-start) para saber como você vai executá-lo e o que é verdade hoje.
+Leia [Primeiros passos](/docs/quick-start) para saber como executá-lo.
