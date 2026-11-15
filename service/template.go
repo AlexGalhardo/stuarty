@@ -462,6 +462,13 @@ func (s *svc) TemplateInstantiate(
 
 	doc.Name = req.Name
 
+	// An instance is no template draft: its open slots are lint errors.
+	if doc.Template == nil {
+		doc.Template = &timeline.TemplateInfo{}
+	}
+
+	doc.Template.Instance = true
+
 	ops, oerr := s.fillOps(ctx, c, req.Fill)
 	if oerr != nil {
 		return nil, oerr

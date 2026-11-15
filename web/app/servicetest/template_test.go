@@ -133,15 +133,34 @@ func TestTemplateSaveAndInstantiateUnfilled(t *testing.T) {
 
 	want := timeline.Clone(doc)
 	want.ID, want.Name = res.ProjectID, "Spring teaser"
+	want.Template.Instance = true
 
 	if got := m.document(res.ProjectID); !bytes.Equal(got, timeline.Canonical(want)) {
 		t.Errorf("the project is not the template document:\n got  %s\n want %s", got, timeline.Canonical(want))
 	}
 
-	// RF-051 asks for L_SLOT_UNFILLED errors that block an export. core/lint
-	// exempts every document that has a template member, and a project made from
-	// a template keeps it (the placeholder is valid only there), so the rule
-	// cannot fire yet: an open question for the architect, reported with P2-SRV-008.
+	// RF-051: the unfilled required slots are lint errors and block an export.
+	lint, err := m.svc.Lint(m.as(ui), service.LintRequest{ProjectID: res.ProjectID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	found := 0
+
+	for _, f := range lint.Findings {
+		if f.Code == "L_SLOT_UNFILLED" {
+			found++
+		}
+	}
+
+	if found != 2 || lint.Errors < 2 {
+		t.Errorf("lint = %+v", lint)
+	}
+
+	_, err = m.svc.JobStart(m.as(ui), service.JobStartRequest{ProjectID: res.ProjectID, Kind: "export"})
+	if code(err) != service.CodeLintBlocking {
+		t.Errorf("export with unfilled slots = %v, want E_LINT_BLOCKING", err)
+	}
 }
 
 func TestTemplateInstantiateFillsInOneRevision(t *testing.T) {
