@@ -1,0 +1,14 @@
+{
+  "op": "shape.add",
+  "args": {
+    "track_id": "trk_f6g7h8j9k0",
+    "start": "0s",
+    "duration": "3s",
+    "shape": "rect",
+    "width": 400,
+    "height": 200,
+    "fill": "#ff0000",
+    "x": 540,
+    "y": 960
+  }
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "kind": "item.added",
+    "id": "itm_s6t7v8w9x0",
+    "object": {
+      "duration": 90,
+      "height": 300,
+      "id": "itm_s6t7v8w9x0",
+      "shape": "ellipse",
+      "start": 0,
+      "track": "trk_f6g7h8j9k0",
+      "type": "shape",
+      "width": 300
+    }
+  }
+]

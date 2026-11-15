@@ -1198,6 +1198,165 @@
           "description": "A length of at least 1 frame.",
           "type": "string"
         },
+        "fill": {
+          "description": "A colour; default #FFFFFF.",
+          "type": "string"
+        },
+        "height": {
+          "description": "Pixels before scale, above 0.",
+          "type": "number"
+        },
+        "id": {
+          "type": "string"
+        },
+        "radius": {
+          "description": "Pixels, 0 or more; rounded_rect only.",
+          "type": "number"
+        },
+        "shape": {
+          "enum": [
+            "rect",
+            "rounded_rect",
+            "ellipse"
+          ],
+          "type": "string"
+        },
+        "start": {
+          "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+          "type": "string"
+        },
+        "stroke_color": {
+          "description": "A colour; default #000000.",
+          "type": "string"
+        },
+        "stroke_width": {
+          "description": "Pixels, 0 or more.",
+          "type": "number"
+        },
+        "track_id": {
+          "description": "A visual track.",
+          "type": "string"
+        },
+        "width": {
+          "description": "Pixels before scale, above 0.",
+          "type": "number"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "track_id",
+        "start",
+        "duration",
+        "shape",
+        "width",
+        "height"
+      ],
+      "type": "object"
+    },
+    "description": "Adds a shape item with the given size in pixels before scale. Colours are hex or a template colour name like \"$accent\"; radius is for rounded_rect only. x and y default to the frame centre.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_ID_EXISTS",
+      "E_LIMIT",
+      "E_OVERLAP"
+    ],
+    "example": {
+      "duration": "3s",
+      "fill": "#ff0000",
+      "height": 200,
+      "shape": "rect",
+      "start": "0s",
+      "track_id": "trk_f6g7h8j9k0",
+      "width": 400
+    },
+    "internal": false,
+    "name": "shape.add",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Adds a rectangle, rounded rectangle or ellipse to a visual track."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "fill": {
+          "description": "A colour.",
+          "type": "string"
+        },
+        "height": {
+          "description": "Pixels before scale, above 0.",
+          "type": "number"
+        },
+        "item_id": {
+          "description": "A shape item.",
+          "type": "string"
+        },
+        "radius": {
+          "description": "Pixels, 0 or more; rounded_rect only.",
+          "type": "number"
+        },
+        "shape": {
+          "enum": [
+            "rect",
+            "rounded_rect",
+            "ellipse"
+          ],
+          "type": "string"
+        },
+        "stroke_color": {
+          "description": "A colour.",
+          "type": "string"
+        },
+        "stroke_width": {
+          "description": "Pixels, 0 or more.",
+          "type": "number"
+        },
+        "width": {
+          "description": "Pixels before scale, above 0.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "type": "object"
+    },
+    "description": "Sets the given fields; a value equal to its default clears the stored field. Changing the shape to rect or ellipse removes a stored radius. Position and transform are set with item.set_transform.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH"
+    ],
+    "example": {
+      "item_id": "itm_s6t7v8w9x0",
+      "radius": 24,
+      "shape": "rounded_rect",
+      "width": 600
+    },
+    "internal": false,
+    "name": "shape.set",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Changes the shape, size, colours, stroke or radius of a shape item."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "duration": {
+          "description": "A length of at least 1 frame.",
+          "type": "string"
+        },
         "id": {
           "type": "string"
         },
@@ -1261,6 +1420,67 @@
     "phase": "prototype",
     "scope": "edit",
     "summary": "Adds a text item to a visual track."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "duration": {
+          "description": "A length, at most the item's duration. Default \"0.4s\".",
+          "type": "string"
+        },
+        "edge": {
+          "description": "in or out.",
+          "enum": [
+            "in",
+            "out"
+          ],
+          "type": "string"
+        },
+        "item_id": {
+          "description": "A clip, text, caption or shape item.",
+          "type": "string"
+        },
+        "preset": {
+          "description": "The animation.",
+          "enum": [
+            "fade_up",
+            "fade_down",
+            "pop",
+            "zoom_in",
+            "slide_left",
+            "slide_right"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "preset",
+        "edge"
+      ],
+      "type": "object"
+    },
+    "description": "Writes the keyframes (or, for slide_left and slide_right, the transition) of the preset on the in or out edge, 0.4 seconds long unless duration is given. Keyframes of the same properties inside that edge are replaced; the rest of the animation is kept.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_LIMIT"
+    ],
+    "example": {
+      "edge": "in",
+      "item_id": "itm_s6t7v8w9x0",
+      "preset": "fade_up"
+    },
+    "internal": false,
+    "name": "text.apply_preset",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Animates one edge of a visual item with a named preset."
   },
   {
     "args_schema": {

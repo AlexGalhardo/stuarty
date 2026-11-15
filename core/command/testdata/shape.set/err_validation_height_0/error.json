@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.height must be greater than 0, got 0.",
+  "hint": "Use a value of at least 1.",
+  "retryable": false,
+  "path": "args.height"
+}

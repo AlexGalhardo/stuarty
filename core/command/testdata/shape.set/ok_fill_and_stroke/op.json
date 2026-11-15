@@ -1,0 +1,9 @@
+{
+  "op": "shape.set",
+  "args": {
+    "item_id": "itm_s6t7v8w9x0",
+    "fill": "#00ff00",
+    "stroke_color": "#0000ff",
+    "stroke_width": 3
+  }
+}

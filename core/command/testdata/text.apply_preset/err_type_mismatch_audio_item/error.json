@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_c3d4e5f6g7 is an audio item; presets animate visual items.",
+  "hint": "Use item.set_audio fades for audio.",
+  "retryable": false,
+  "path": "args.item_id"
+}

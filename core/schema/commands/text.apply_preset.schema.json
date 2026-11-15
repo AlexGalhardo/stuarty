@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "duration": {
+      "description": "A length, at most the item's duration. Default \"0.4s\".",
+      "type": "string"
+    },
+    "edge": {
+      "description": "in or out.",
+      "enum": [
+        "in",
+        "out"
+      ],
+      "type": "string"
+    },
+    "item_id": {
+      "description": "A clip, text, caption or shape item.",
+      "type": "string"
+    },
+    "preset": {
+      "description": "The animation.",
+      "enum": [
+        "fade_up",
+        "fade_down",
+        "pop",
+        "zoom_in",
+        "slide_left",
+        "slide_right"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id",
+    "preset",
+    "edge"
+  ],
+  "type": "object"
+}

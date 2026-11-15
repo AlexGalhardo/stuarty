@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_s6t7v8w9x0",
+    "changes": {
+      "fill": [
+        "#FF0000",
+        "#00FF00"
+      ],
+      "stroke_color": [
+        null,
+        "#0000FF"
+      ],
+      "stroke_width": [
+        null,
+        3
+      ]
+    }
+  }
+]

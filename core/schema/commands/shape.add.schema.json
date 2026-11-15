@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "duration": {
+      "description": "A length of at least 1 frame.",
+      "type": "string"
+    },
+    "fill": {
+      "description": "A colour; default #FFFFFF.",
+      "type": "string"
+    },
+    "height": {
+      "description": "Pixels before scale, above 0.",
+      "type": "number"
+    },
+    "id": {
+      "type": "string"
+    },
+    "radius": {
+      "description": "Pixels, 0 or more; rounded_rect only.",
+      "type": "number"
+    },
+    "shape": {
+      "enum": [
+        "rect",
+        "rounded_rect",
+        "ellipse"
+      ],
+      "type": "string"
+    },
+    "start": {
+      "description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
+      "type": "string"
+    },
+    "stroke_color": {
+      "description": "A colour; default #000000.",
+      "type": "string"
+    },
+    "stroke_width": {
+      "description": "Pixels, 0 or more.",
+      "type": "number"
+    },
+    "track_id": {
+      "description": "A visual track.",
+      "type": "string"
+    },
+    "width": {
+      "description": "Pixels before scale, above 0.",
+      "type": "number"
+    },
+    "x": {
+      "type": "number"
+    },
+    "y": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "track_id",
+    "start",
+    "duration",
+    "shape",
+    "width",
+    "height"
+  ],
+  "type": "object"
+}

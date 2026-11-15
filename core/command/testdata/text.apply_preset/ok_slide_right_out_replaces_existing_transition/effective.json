@@ -1,0 +1,11 @@
+{
+  "base": {},
+  "duration": {
+    "frame": 12,
+    "requested": null,
+    "seconds": 0.4
+  },
+  "edge": "out",
+  "preset": "slide_right",
+  "written": []
+}
