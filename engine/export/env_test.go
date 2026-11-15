@@ -130,6 +130,21 @@ type fixtureSpec struct {
 	Height  int     `json:"height"`
 	FPS     int     `json:"fps"`
 	Seconds float64 `json:"seconds"`
+	// DelaysCS makes the fixture an animated GIF with these frame delays in hundredths of a second;
+	// Sticker makes it a PNG with a straight alpha. Both are images: FPS and Seconds are not used.
+	DelaysCS []int `json:"delays_cs,omitempty"`
+	Sticker  bool  `json:"sticker,omitempty"`
+}
+
+// generate writes the media file of the spec into the fixtures folder.
+func (spec fixtureSpec) generate(ctx context.Context) (string, error) {
+	switch {
+	case len(spec.DelaysCS) > 0:
+		return shared.gen.AnimatedGIF(spec.Name, spec.Width, spec.Height, spec.DelaysCS)
+	case spec.Sticker:
+		return shared.gen.StickerPNG(spec.Name, spec.Width, spec.Height)
+	}
+	return shared.gen.Clip(ctx, spec.Name, spec.Width, spec.Height, spec.FPS, spec.Seconds)
 }
 
 // ingestClip generates the clip, imports it and runs the ingest, once.
@@ -142,7 +157,7 @@ func ingestClip(tb testing.TB, spec fixtureSpec) *ingested {
 		return in
 	}
 	ctx := context.Background()
-	path, err := shared.gen.Clip(ctx, spec.Name, spec.Width, spec.Height, spec.FPS, spec.Seconds)
+	path, err := spec.generate(ctx)
 	if err != nil {
 		tb.Fatal(err)
 	}
@@ -158,7 +173,7 @@ func ingestClip(tb testing.TB, spec fixtureSpec) *ingested {
 	_ = os.Remove(path)
 	res, err := ingest.Run(ctx, ingest.Input{
 		Runner: shared.runner, Caps: shared.caps, Hash: put.Hash, ArtifactsDir: artifactsDir(),
-		JobID: "ingest_" + strings.TrimSuffix(spec.Name, ".mp4"),
+		JobID: "ingest_" + strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(spec.Name, ".mp4"), ".gif"), ".png"),
 	})
 	if err != nil {
 		tb.Fatalf("ingest of %s: %v", spec.Name, err)
@@ -175,6 +190,7 @@ func useAsset(doc *timeline.Document, id string, in *ingested) {
 	a.FrameRate = timeline.Rational{Num: int(in.facts.FrameRate.Num), Den: int(in.facts.FrameRate.Den)}
 	a.FrameCount, a.SampleCount = in.facts.FrameCount, int(in.facts.SampleCount)
 	a.Width, a.Height, a.HasAudio = in.facts.Width, in.facts.Height, in.facts.HasAudio
+	a.FrameDelays = in.facts.FrameDelays
 	doc.Assets[id] = a
 }
 

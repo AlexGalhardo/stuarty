@@ -1,0 +1,17 @@
+{
+  "ast_a000000001": {
+    "name": "gold-portrait.mp4",
+    "width": 180,
+    "height": 320,
+    "fps": 30,
+    "seconds": 3
+  },
+  "ast_a000000002": {
+    "name": "gold-sticker.png",
+    "width": 120,
+    "height": 120,
+    "fps": 0,
+    "seconds": 0,
+    "sticker": true
+  }
+}
