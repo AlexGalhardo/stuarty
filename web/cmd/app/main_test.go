@@ -12,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // buildBinary compiles the real binary once for the test.
@@ -103,5 +105,54 @@ func TestProductCommandsThroughTheBinary(t *testing.T) {
 	stdout, stderr, code = runBinary(t, bin, home, "project:list", "--nope")
 	if code != 1 || stdout != "" || !strings.Contains(stderr, "error E_VALIDATION") {
 		t.Fatalf("a bad flag in human mode: exit %d, %q, %q", code, stdout, stderr)
+	}
+}
+
+// TestMCPOverStdioThroughTheBinary runs vukem-video mcp as a client such as
+// Claude Code does: a process on standard input and output. The client name
+// becomes the actor, standard output carries only protocol messages, and the
+// server stops when the client closes the pipe.
+func TestMCPOverStdioThroughTheBinary(t *testing.T) {
+	bin := buildBinary(t)
+	home := filepath.Join(t.TempDir(), "ws")
+
+	cmd := exec.CommandContext(t.Context(), bin, "mcp")
+	cmd.Env = append(os.Environ(), "VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "APP_KEY=", "APP_ENV=")
+
+	client := sdk.NewClient(&sdk.Implementation{Name: "Claude Code", Version: "1"}, nil)
+
+	cs, err := client.Connect(t.Context(), &sdk.CommandTransport{Command: cmd}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = cs.Close() }()
+
+	list, err := cs.ListTools(t.Context(), nil)
+	if err != nil || len(list.Tools) == 0 || list.Tools[0].Name != "project_list" {
+		t.Fatalf("tools = %v, err = %v", list, err)
+	}
+
+	created, err := cs.CallTool(
+		t.Context(),
+		&sdk.CallToolParams{Name: "project_create", Arguments: map[string]any{"name": "Over stdio"}},
+	)
+	if err != nil || created.IsError {
+		t.Fatalf("project_create: %v %+v", err, created)
+	}
+
+	sc, _ := created.StructuredContent.(map[string]any)
+	id, _ := sc["project_id"].(string)
+
+	edited, err := cs.CallTool(t.Context(), &sdk.CallToolParams{Name: "edit", Arguments: map[string]any{
+		"project_id": id, "base_revision": 0,
+		"operations": []any{map[string]any{"op": "track.add", "args": map[string]any{"kind": "visual"}}},
+	}})
+	if err != nil || edited.IsError {
+		t.Fatalf("edit: %v %+v", err, edited)
+	}
+
+	if es, _ := edited.StructuredContent.(map[string]any); es["actor"] != "local:claude-code" {
+		t.Fatalf("actor = %v", es["actor"])
 	}
 }

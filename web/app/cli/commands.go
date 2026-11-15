@@ -9,13 +9,14 @@ import (
 	"runtime/debug"
 
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
 )
 
 // registry lists the commands in the order the short list prints them.
 func registry() []*spec {
 	return []*spec{
 		projectList, projectCreate, projectShow, projectTrash, projectRestore,
-		edit, history, undo, redo, lintCmd, version,
+		edit, history, undo, redo, lintCmd, version, mcpCmd,
 		mediaImport, mediaInspect, mediaList, view, export, jobShow, jobList, events, commandHelp,
 	}
 }
@@ -304,5 +305,31 @@ var version = &spec{
 		text := "vukem-video " + v
 
 		return &output{value: versionDoc{Version: v, Text: text}, text: text}, nil
+	},
+}
+
+// mcpCmd serves the MCP tools on standard input and output (SDD-003 section
+// 4.5). The Service is the one the resolver found: the owner of the workspace
+// over HTTP, or this process. It stops when the client closes standard input.
+// The listener, worker and runtime.json of the owner model (rule 3) arrive with
+// the owner startup of the server; until then a stdio server without an owner
+// runs the Service in process and the UI and CLI cannot reach it.
+var mcpCmd = &spec{
+	name:    "mcp",
+	summary: "serve the MCP tools on standard input and output",
+	usage:   []string{"vukem-video mcp [--actor <label>]"},
+	example: "claude mcp add vukem-video -- vukem-video mcp",
+	stream:  true,
+	run: func(ctx context.Context, c *call) (*output, error) {
+		o := mcp.Options{}
+		if c.args.has("actor") {
+			o.Actor = c.args.str("actor")
+		}
+
+		if err := mcp.RunStdio(ctx, c.svc, o); err != nil {
+			return nil, err
+		}
+
+		return &output{}, nil
 	},
 }
