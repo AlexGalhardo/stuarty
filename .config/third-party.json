@@ -22,7 +22,7 @@
     "files": [
       "licenses/programs/openh264/LICENSE"
     ],
-    "note": "linked into the FFmpeg build as the H.264 encoder; the Cisco binary distribution has its own patent terms (D-017)",
+    "note": "loaded at run time by the own FFmpeg build (dlopen patch) and compiled into the BtbN build as the H.264 encoder; the Cisco binary distribution has its own patent terms (D-017)",
     "shipped_in": [
       "image"
     ]
@@ -49,6 +49,30 @@
       "licenses/programs/opus/COPYING"
     ],
     "note": "linked statically into the own FFmpeg build of D-017 (.config/ffmpeg-build); listed as shipped when the pins of that build replace the BtbN pin",
+    "shipped_in": []
+  },
+  {
+    "group": "programs",
+    "name": "zlib",
+    "version": "1.3.2 (inside the own FFmpeg build)",
+    "spdx": "Zlib",
+    "copyright": "(C) 1995-2026 Jean-loup Gailly and Mark Adler",
+    "files": [
+      "licenses/programs/ffmpeg/ZLIB.LICENSE"
+    ],
+    "note": "linked statically into the own FFmpeg build of D-017 (.config/ffmpeg-build); listed as shipped when the pins of that build replace the BtbN pin",
+    "shipped_in": []
+  },
+  {
+    "group": "programs",
+    "name": "zimg",
+    "version": "3.0.6 (inside the own FFmpeg build)",
+    "spdx": "WTFPL",
+    "copyright": "Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>",
+    "files": [
+      "licenses/programs/ffmpeg/WTFPL.LICENSE"
+    ],
+    "note": "linked statically into the own FFmpeg build of D-017 (.config/ffmpeg-build) for the zscale filter; listed as shipped when the pins of that build replace the BtbN pin",
     "shipped_in": []
   },
   {
