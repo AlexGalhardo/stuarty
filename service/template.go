@@ -293,7 +293,7 @@ func (s *svc) visibleTemplate(ctx context.Context, c Caller, id string) (Templat
 		return TemplateRow{}, asError(err)
 	}
 
-	if err != nil || !visible(c, row.OwnerUserID) {
+	if err != nil || (!visible(c, row.OwnerUserID) && !sharedTemplate(&row)) {
 		return TemplateRow{}, newError(command.CodeNotFound, "there is no template %s.", id).
 			withHint("list the templates with template_list")
 	}

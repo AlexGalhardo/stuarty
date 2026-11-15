@@ -98,8 +98,9 @@ func (r templateRepo) List(
 		where []string
 	)
 	if ownerUserID != "" {
-		where = append(where, "owner_user_id = ?")
-		args = append(args, ownerUserID)
+		// The starter templates have no owner and belong to everyone.
+		where = append(where, "(owner_user_id = ? OR (owner_user_id IS NULL AND created_by = ?))")
+		args = append(args, ownerUserID, service.StarterActor)
 	}
 	if after != "" {
 		// The cursor row is looked up inside the same owner filter, so another
@@ -107,8 +108,8 @@ func (r templateRepo) List(
 		sub := "SELECT created_ms, id FROM templates WHERE id = ?"
 		args = append(args, after)
 		if ownerUserID != "" {
-			sub += " AND owner_user_id = ?"
-			args = append(args, ownerUserID)
+			sub += " AND (owner_user_id = ? OR (owner_user_id IS NULL AND created_by = ?))"
+			args = append(args, ownerUserID, service.StarterActor)
 		}
 		where = append(where, "(created_ms, id) < ("+sub+")")
 	}

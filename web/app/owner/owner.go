@@ -279,6 +279,11 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
+	// The library of a new workspace holds the starter templates; later starts add nothing.
+	if _, serr := service.SeedStarterTemplates(ctx, st, o.now().UnixMilli()); serr != nil {
+		return serr
+	}
+
 	if cfg.Inline {
 		return nil
 	}
