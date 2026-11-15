@@ -76,6 +76,7 @@ var Scopes = map[string]string{
 	"TemplateExport":      ScopeRead,
 	"TemplateImport":      ScopeEdit,
 	"TrashEmpty":          ScopeAdmin,
+	"Doctor":              ScopeRead,
 	"SnapPoints":          ScopeRead,
 	"FontList":            ScopeRead,
 	"ExportFile":          ScopeRead,

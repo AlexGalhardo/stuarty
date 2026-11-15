@@ -210,6 +210,10 @@ var Endpoints = []Endpoint{
 		Summary: "Read the snap points and trim limits",
 	},
 	{
+		ID: "system.get", Method: http.MethodGet, Path: "/system", Scope: service.ScopeRead,
+		Service: "Doctor", Status: 200, Summary: "Read the diagnostic report",
+	},
+	{
 		ID: "fonts.list", Method: http.MethodGet, Path: "/fonts", Scope: service.ScopeRead,
 		Service: "FontList", Status: 200, Summary: "List the bundled font families and weights",
 	},

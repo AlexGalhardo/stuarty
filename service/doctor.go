@@ -1,0 +1,572 @@
+package service
+
+import (
+	"context"
+	"crypto/subtle"
+	"errors"
+	"fmt"
+	"os"
+	"runtime"
+	"slices"
+	"sort"
+	"strings"
+	"time"
+
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
+)
+
+// Modes of the server a Doctor report describes.
+const (
+	ModeLocal   = "local"
+	ModeNetwork = "network"
+)
+
+// DoctorOptions is what the process adds to the report: facts only it knows.
+type DoctorOptions struct {
+	// Mode is ModeLocal or ModeNetwork; ModeLocal when empty.
+	Mode string
+	// StartedAt is when the process started.
+	StartedAt time.Time
+	// Environ lists the environment as KEY=value lines; os.Environ when nil.
+	Environ func() []string
+	// FFmpegPins maps "ffmpeg" and "ffprobe" to the SHA-256 the embedded manifest records for the
+	// bundled copy on this platform. Empty until the release embeds one.
+	FFmpegPins map[string]string
+	// Integrity runs PRAGMA integrity_check and returns what it printed ("ok" when sound).
+	Integrity func(ctx context.Context) (string, error)
+}
+
+// DoctorRequest asks for the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).
+type DoctorRequest struct {
+	// Full runs the checks; without it only the identity is answered.
+	Full bool `json:"full,omitempty"`
+	// Verify recomputes the SHA-256 of FFmpeg, ffprobe and the installed helpers.
+	Verify bool `json:"verify,omitempty"`
+	// GC runs the orphan sweep; only the owner of the machine may ask for it.
+	GC bool `json:"gc,omitempty"`
+	// Bundle writes exports/diagnostics/doctor-<UTC timestamp>.zip inside the workspace.
+	Bundle bool `json:"bundle,omitempty"`
+	// BundleProject adds the document of this project to the bundle: the explicit flag of RF-207.
+	BundleProject string `json:"bundle_project,omitempty"`
+}
+
+// DoctorCheck is one line of the report.
+type DoctorCheck struct {
+	Name   string `json:"name"`
+	OK     bool   `json:"ok"`
+	Detail string `json:"detail"`
+	Hint   string `json:"hint,omitempty"`
+}
+
+// DoctorResult is the report.
+type DoctorResult struct {
+	Version    string        `json:"version"`
+	APIVersion string        `json:"api_version"`
+	Mode       string        `json:"mode"`
+	PID        int           `json:"pid"`
+	StartedAt  time.Time     `json:"started_at"`
+	Workspace  string        `json:"workspace,omitempty"`
+	Checks     []DoctorCheck `json:"checks,omitempty"`
+	// GC is what the sweep removed, when it was asked for.
+	GC *SweepResult `json:"gc,omitempty"`
+	// Bundle is the slash path of the bundle inside the workspace, when it was asked for.
+	Bundle string `json:"bundle,omitempty"`
+	Text   string `json:"text"`
+}
+
+// bundleStamp is the UTC timestamp in the name of a bundle, from the service clock.
+func (s *svc) bundleStamp() string { return s.now().UTC().Format("20060102T150405Z") }
+
+// secretVars are the variables whose value is never printed, bundled or logged
+// (SDD-007 section 11). The check below is by name and by pattern, so a new
+// secret named like these is covered before it is listed.
+var secretVars = map[string]bool{
+	"APP_KEY":                      true,
+	"VUKEM_VIDEO_KEY":              true,
+	"VUKEM_VIDEO_TRANSCRIBE_KEY":   true,
+	"VUKEM_VIDEO_ADMIN_PASSWORD":   true,
+	"OTEL_EXPORTER_OTLP_HEADERS":   true,
+	"VUKEM_VIDEO_TRANSCRIBE_TOKEN": true,
+}
+
+func isSecretVar(name string) bool {
+	if secretVars[name] {
+		return true
+	}
+
+	u := strings.ToUpper(name)
+
+	return strings.Contains(u, "SECRET") || strings.Contains(u, "PASSWORD") || strings.Contains(u, "TOKEN") ||
+		strings.HasSuffix(u, "_KEY") || strings.HasSuffix(u, "_HEADERS")
+}
+
+// secretValues are the values of every secret variable that is set: what the
+// bundle must never contain.
+func (s *svc) secretValues() []string {
+	var out []string
+
+	for _, kv := range s.environ() {
+		name, value, ok := strings.Cut(kv, "=")
+		if ok && value != "" && isSecretVar(name) {
+			out = append(out, value)
+		}
+	}
+
+	return out
+}
+
+func (s *svc) environ() []string {
+	if s.doctor.Environ != nil {
+		return s.doctor.Environ()
+	}
+
+	return os.Environ()
+}
+
+func (s *svc) Doctor(ctx context.Context, req DoctorRequest) (*DoctorResult, error) {
+	c, err := authorize(ctx, "Doctor", "")
+	if err != nil {
+		return nil, err
+	}
+
+	mode := s.doctor.Mode
+	if mode == "" {
+		mode = ModeLocal
+	}
+
+	// Paths and environment details belong to the owner of the machine: local mode, or admin.
+	privileged := mode == ModeLocal || hasScope(c, ScopeAdmin)
+
+	if req.GC && !c.Browser && !c.Operator {
+		return nil, newError(CodeForbidden, "only the person running the server can run the sweep.").
+			withHint("run it from the terminal of the server machine: vukem-video doctor --gc")
+	}
+
+	res := &DoctorResult{
+		Version: s.version, APIVersion: "v1", Mode: mode, PID: os.Getpid(), StartedAt: s.doctor.StartedAt,
+	}
+	if mode == ModeLocal && s.workspace != "" {
+		res.Workspace = s.workspace
+	}
+
+	if req.Full || req.Verify || req.Bundle {
+		res.Checks = s.doctorChecks(ctx, privileged, req.Verify)
+	}
+
+	if req.GC {
+		sweep, serr := s.Sweep(ctx)
+		if serr != nil {
+			return nil, internalError()
+		}
+
+		res.GC = &sweep
+		res.Checks = append(res.Checks, DoctorCheck{Name: "workspace.sweep", OK: true, Detail: sweepText(sweep)})
+	}
+
+	res.Text = doctorText(res)
+
+	if req.Bundle {
+		if !privileged {
+			return nil, newError(CodeForbidden, "the diagnostic bundle is for the person running the server.").
+				withHint("use the local mode or an admin key")
+		}
+
+		name, berr := s.writeBundle(ctx, c, res, req.BundleProject)
+		if berr != nil {
+			return nil, berr
+		}
+
+		res.Bundle = name
+		res.Text = doctorText(res)
+	}
+
+	return res, nil
+}
+
+func hasScope(c Caller, scope string) bool { return slices.Contains(c.Scopes, scope) }
+
+func sweepText(r SweepResult) string {
+	return fmt.Sprintf(
+		"removed %d store files, %d artifact folders, %d export folders, %d frame folders, %d incoming files",
+		r.StoreFiles,
+		r.ArtifactDirs,
+		r.ExportDirs,
+		r.FrameDirs,
+		r.IncomingFiles,
+	)
+}
+
+func doctorText(r *DoctorResult) string {
+	var b strings.Builder
+
+	fmt.Fprintf(&b, "vukem-video %s (%s, pid %d)\n", r.Version, r.Mode, r.PID)
+
+	for _, c := range r.Checks {
+		state := "ok"
+		if !c.OK {
+			state = "FAIL"
+		}
+
+		fmt.Fprintf(&b, "%s %s: %s\n", state, c.Name, c.Detail)
+
+		if c.Hint != "" {
+			fmt.Fprintf(&b, "  hint: %s\n", c.Hint)
+		}
+	}
+
+	if r.Bundle != "" {
+		fmt.Fprintf(&b, "bundle: %s\n", r.Bundle)
+	}
+
+	return strings.TrimRight(b.String(), "\n")
+}
+
+// doctorChecks are the named checks of SDD-011 section 8.6 and the workspace ones of SDD-007.
+func (s *svc) doctorChecks(ctx context.Context, privileged, verify bool) []DoctorCheck {
+	var out []DoctorCheck
+
+	out = append(out, s.ffmpegChecks(ctx, privileged)...)
+	out = append(out, s.transcribeChecks()...)
+	out = append(out, s.workspaceChecks(ctx, privileged)...)
+	out = append(out, DoctorCheck{
+		Name: "system", OK: true,
+		Detail: fmt.Sprintf("%s %s, %d CPUs", runtime.GOOS, runtime.GOARCH, runtime.NumCPU()),
+	})
+
+	if privileged {
+		out = append(out, s.environmentCheck())
+	}
+
+	if verify {
+		out = append(out, s.verifyChecks()...)
+	}
+
+	return out
+}
+
+func (s *svc) ffmpegChecks(ctx context.Context, privileged bool) []DoctorCheck {
+	r := s.media.Runner
+	if r == nil || r.In == nil {
+		return []DoctorCheck{{
+			Name: "ffmpeg.binary", OK: false, Detail: "E_FFMPEG_MISSING: no usable FFmpeg was found",
+			Hint: "install FFmpeg 9 or set VUKEM_VIDEO_FFMPEG to its absolute path; import and export need it",
+		}}
+	}
+
+	in := r.In
+	detail := fmt.Sprintf("%s, %s, ffprobe %s", in.Source, in.Info.Version, in.ProbeInfo.Version)
+
+	if privileged {
+		detail += ", " + in.FFmpeg.Path()
+	}
+
+	out := []DoctorCheck{{
+		Name: "ffmpeg.binary", OK: true, Detail: detail, Hint: strings.Join(in.Warnings(), ", "),
+	}}
+
+	lic := in.Info.License
+	licOK := lic.Name != "nonfree"
+
+	licHint := ""
+
+	switch lic.Name {
+	case "nonfree":
+		licHint = "this FFmpeg was built with --enable-nonfree and cannot be redistributed; use an LGPL build"
+	case "gpl":
+		licHint = "this FFmpeg is GPL: fine for your own use, not for anything this project ships"
+	}
+
+	flags := strings.Join(in.Info.Flags, " ")
+	if !privileged {
+		flags = ""
+	}
+
+	out = append(out, DoctorCheck{
+		Name: "ffmpeg.license", OK: licOK, Hint: licHint,
+		Detail: strings.TrimSpace(lic.Name + versionSuffix(lic.Version3) + " " + flags),
+	})
+
+	caps, cerr := r.ReadCapabilities(ctx)
+	if cerr != nil {
+		return append(out, DoctorCheck{
+			Name: "ffmpeg.capabilities", OK: false, Detail: "the capabilities could not be read",
+			Hint: "run doctor again; if it persists the FFmpeg build is damaged",
+		})
+	}
+
+	out = append(out, DoctorCheck{
+		Name: "ffmpeg.capabilities", OK: true,
+		Detail: fmt.Sprintf("zscale=%t tonemap=%t bwdif=%t yadif=%t hdr_ok=%t",
+			caps.Zscale, caps.Tonemap, caps.Bwdif, caps.Yadif, caps.HDROK),
+	})
+
+	det, derr := r.DetectEncoder(ctx, caps, ffmpeg.DetectOptions{})
+	if derr != nil || det == nil || det.Chosen == "" {
+		return append(out, DoctorCheck{
+			Name: "ffmpeg.encoder", OK: false, Detail: "E_NO_ENCODER: no H.264 encoder passed the test encode",
+			Hint: "install an FFmpeg with an H.264 encoder (openh264, a hardware encoder) or see doctor --full",
+		})
+	}
+
+	parts := make([]string, 0, len(det.Candidates))
+	for _, cd := range det.Candidates {
+		parts = append(parts, fmt.Sprintf("%s %s %d ms", cd.Name, cd.Status, cd.MS))
+	}
+
+	return append(out, DoctorCheck{
+		Name: "ffmpeg.encoder", OK: true,
+		Detail: fmt.Sprintf("%s (forced %t); %s", det.Chosen, det.Forced, strings.Join(parts, ", ")),
+	})
+}
+
+func versionSuffix(v3 bool) string {
+	if v3 {
+		return ", version3"
+	}
+
+	return ""
+}
+
+func (s *svc) transcribeChecks() []DoctorCheck {
+	provider := "none"
+	if s.transcriber != nil {
+		provider = s.transcriber.Name()
+	}
+
+	out := []DoctorCheck{{Name: "transcribe.provider", OK: true, Detail: provider}}
+
+	if s.tools == nil {
+		return out
+	}
+
+	goos, goarch := s.tools.platform()
+
+	for _, kind := range []string{transcribe.KindHelper, transcribe.KindModel} {
+		out = append(out, s.toolCheck(kind, goos, goarch))
+	}
+
+	return out
+}
+
+// toolCheck reports whether the helper or the model is installed and verified.
+func (s *svc) toolCheck(kind, goos, goarch string) DoctorCheck {
+	check := DoctorCheck{Name: "transcribe." + kind}
+
+	entries, ok := s.tools.Manifest.For("whisper", s.toolsModel(), goos, goarch)
+	if !ok {
+		check.Detail = "this build pins no " + kind + " for " + goos + "/" + goarch
+
+		return check
+	}
+
+	for i := range entries {
+		e := &entries[i]
+		if e.Kind != kind {
+			continue
+		}
+
+		if _, found := VerifiedTool(s.tools.Dir, e.Name, e.Kind, e.Model); found {
+			check.OK, check.Detail = true, "installed, version "+e.Version
+
+			return check
+		}
+
+		check.Detail = fmt.Sprintf("not installed or changed since the install, %d bytes to download", e.Bytes)
+		check.Hint = `Run "vukem-video tools:install whisper".`
+
+		return check
+	}
+
+	check.Detail = "not in the manifest"
+
+	return check
+}
+
+func (s *svc) toolsModel() string {
+	if s.transcriber != nil {
+		if m := s.transcriber.Model(); m != "" {
+			return m
+		}
+	}
+
+	return "small"
+}
+
+func (s *svc) workspaceChecks(ctx context.Context, privileged bool) []DoctorCheck {
+	var out []DoctorCheck
+
+	integrity := "not checked"
+	healthy := true
+
+	if s.doctor.Integrity != nil {
+		msg, err := s.doctor.Integrity(ctx)
+		if err != nil || msg != "ok" {
+			healthy, integrity = false, "integrity_check failed"
+		} else {
+			integrity = "database ok"
+		}
+	}
+
+	free := "free space unknown"
+	hint := ""
+
+	if s.workspace != "" && s.media.FreeBytes != nil {
+		if n, err := s.media.FreeBytes(s.workspace); err == nil {
+			free = fmt.Sprintf("%d MiB free", n>>20)
+
+			if s.limits.MinFreeBytes > 0 && n < uint64(s.limits.MinFreeBytes) {
+				healthy = false
+				hint = "free space on the disk of the workspace or lower VUKEM_VIDEO_MIN_FREE_BYTES"
+			}
+		}
+	}
+
+	out = append(out, DoctorCheck{Name: "workspace.store", OK: healthy, Detail: integrity + ", " + free, Hint: hint})
+
+	if s.workspace == "" {
+		return out
+	}
+
+	if _, err := workspace.Dir(s.workspace).LoadToken(); errors.Is(err, workspace.ErrTokenPermissions) {
+		out = append(out, DoctorCheck{
+			Name: "workspace.token", OK: false, Detail: "the token file is readable by other users",
+			Hint: "restrict the token file to its owner (chmod 600) and rotate the token",
+		})
+	}
+
+	if privileged {
+		if name := cloudSyncFolder(s.workspace); name != "" {
+			out = append(out, DoctorCheck{
+				Name: "workspace.location", OK: true, Detail: "the workspace is inside " + name,
+				Hint: "a synchronised folder can corrupt the database and the lock; keep the workspace outside it",
+			})
+		}
+	}
+
+	return out
+}
+
+// cloudSyncFolder names the synchronisation service whose folder holds the path, or "".
+func cloudSyncFolder(p string) string {
+	slashed := strings.ToLower(strings.ReplaceAll(p, `\`, "/"))
+
+	for marker, name := range map[string]string{
+		"/onedrive": "OneDrive", "/dropbox": "Dropbox", "/google drive": "Google Drive", "/googledrive": "Google Drive",
+		"/mobile documents": "iCloud Drive", "/library/cloudstorage": "a cloud storage folder", "/icloud": "iCloud Drive",
+		"/box sync": "Box",
+	} {
+		if strings.Contains(slashed, marker) {
+			return name
+		}
+	}
+
+	return ""
+}
+
+// environmentCheck lists the VUKEM_VIDEO_* variables that are set: the value
+// of a plain one, `set` for a secret, and nothing for a path unless the caller
+// is privileged (the caller of this function is).
+func (s *svc) environmentCheck() DoctorCheck {
+	var parts []string
+
+	for _, kv := range s.environ() {
+		name, value, ok := strings.Cut(kv, "=")
+		if !ok || !strings.HasPrefix(name, "VUKEM_VIDEO_") || value == "" {
+			continue
+		}
+
+		switch {
+		case isSecretVar(name):
+			parts = append(parts, name+"=set")
+		default:
+			parts = append(parts, name+"="+sanitizeValue(value))
+		}
+	}
+
+	sort.Strings(parts)
+
+	detail := "no VUKEM_VIDEO_ variable is set"
+	if len(parts) > 0 {
+		detail = strings.Join(parts, " ")
+	}
+
+	return DoctorCheck{Name: "environment", OK: true, Detail: detail}
+}
+
+// sanitizeValue keeps a value on one line and short.
+func sanitizeValue(v string) string {
+	v = strings.Map(func(r rune) rune {
+		if r < 0x20 || r == 0x7f {
+			return '_'
+		}
+
+		return r
+	}, v)
+
+	if len(v) > 120 {
+		v = v[:120] + "..."
+	}
+
+	return v
+}
+
+// verifyChecks recomputes the digests of FFmpeg, ffprobe and the installed
+// helpers (SDD-007 section 6.8). A user's own FFmpeg is the user's choice and is
+// only fingerprinted; a bundled copy must match the pin of the build.
+func (s *svc) verifyChecks() []DoctorCheck {
+	var out []DoctorCheck
+
+	if r := s.media.Runner; r != nil && r.In != nil {
+		tools := map[string]string{"ffmpeg": r.In.FFmpeg.Path(), "ffprobe": r.In.FFprobe.Path()}
+
+		for _, name := range []string{"ffmpeg", "ffprobe"} {
+			out = append(out, s.digestCheck(name, tools[name], r.In.UserBuild))
+		}
+	}
+
+	if s.tools != nil {
+		for _, t := range readInstalled(s.tools.Dir) {
+			check := DoctorCheck{Name: "transcribe.digest", Detail: t.Name + " " + t.Kind}
+			if _, ok := VerifiedTool(s.tools.Dir, t.Name, t.Kind, t.Model); ok {
+				check.OK = true
+			} else {
+				check.Detail += ": the file differs from what was installed"
+				check.Hint = "install it again with vukem-video tools:install"
+			}
+
+			out = append(out, check)
+		}
+	}
+
+	return out
+}
+
+func (s *svc) digestCheck(name, path string, userBuild bool) DoctorCheck {
+	check := DoctorCheck{Name: "ffmpeg.digest", Detail: name}
+
+	got, err := fileSHA256(path)
+	if err != nil {
+		check.Detail += ": the file cannot be read"
+
+		return check
+	}
+
+	pin := strings.ToLower(s.doctor.FFmpegPins[name])
+
+	switch {
+	case userBuild:
+		check.OK, check.Detail = true, name+": your own build, not compared (sha256 "+got+")"
+	case pin == "":
+		check.Detail += ": this build embeds no digest to compare with (sha256 " + got + ")"
+		check.Hint = "compare it with checksums.txt of the release"
+	case len(pin) == len(got) && subtle.ConstantTimeCompare([]byte(pin), []byte(got)) == 1:
+		check.OK, check.Detail = true, name+": matches the release"
+	default:
+		check.Detail += ": MISMATCH with the release (sha256 " + got + ")"
+		check.Hint = "the bundled " + name + " was modified or damaged; install the release again"
+	}
+
+	return check
+}

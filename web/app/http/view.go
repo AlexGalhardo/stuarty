@@ -215,3 +215,16 @@ func (h *apiHandler) auditList(c *web.Ctx, in auditIn) (service.AuditListResult,
 
 	return deref(res), err
 }
+
+type systemIn struct {
+	Full   bool `json:"full,omitempty"   doc:"Run the checks."`
+	Verify bool `json:"verify,omitempty" doc:"Recompute the digests of FFmpeg, ffprobe and the installed helpers."`
+}
+
+// systemGet is GET /system. The sweep and the bundle are not reachable here: they act on
+// the machine of the server and run from its terminal.
+func (h *apiHandler) systemGet(c *web.Ctx, in systemIn) (service.DoctorResult, error) {
+	res, err := h.Service.Doctor(c.Context(), service.DoctorRequest{Full: in.Full, Verify: in.Verify})
+
+	return deref(res), err
+}

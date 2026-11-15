@@ -254,6 +254,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "jobs.file", h.jobsFile)
 	register(h, "projects.snap_points", h.snapPoints)
 	register(h, "fonts.list", h.fontList)
+	register(h, "system.get", h.systemGet)
 	register(h, "audit.list", h.auditList)
 	register(h, "system.launch", h.systemLaunch)
 	register(h, "handshake.get", func(_ *web.Ctx, in handshakeIn) (handshakeOut, error) {

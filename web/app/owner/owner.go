@@ -216,6 +216,15 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
 		Transcriber: transcriber, Tools: tools,
+		Doctor: service.DoctorOptions{
+			Mode: service.ModeLocal, StartedAt: o.now().UTC(),
+			Integrity: func(ctx context.Context) (string, error) {
+				var out string
+				err := st.DB().QueryRowContext(ctx, "PRAGMA integrity_check").Scan(&out)
+
+				return out, err
+			},
+		},
 	})
 	if err != nil {
 		return err

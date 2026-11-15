@@ -469,6 +469,30 @@ func (c *Client) ViewSheet(ctx context.Context, req service.ViewSheetRequest) (*
 	return get[service.ViewResult](ctx, c, projectPath(req.ProjectID, "/sheet"), q)
 }
 
+// Doctor implements service.Service. The sweep and the bundle act on the
+// machine of the server and run only there.
+func (c *Client) Doctor(ctx context.Context, req service.DoctorRequest) (*service.DoctorResult, error) {
+	if req.GC || req.Bundle {
+		return nil, &service.Error{
+			Code:    command.CodeValidation,
+			Message: "the sweep and the bundle run on the machine of the server.",
+			Hint:    "run doctor --gc or doctor --bundle there",
+		}
+	}
+
+	q := url.Values{}
+
+	if req.Full {
+		q.Set("full", "true")
+	}
+
+	if req.Verify {
+		q.Set("verify", "true")
+	}
+
+	return get[service.DoctorResult](ctx, c, "/system", q)
+}
+
 // SnapPoints implements service.Service.
 func (c *Client) SnapPoints(ctx context.Context, req service.SnapPointsRequest) (*service.SnapPointsResult, error) {
 	q := url.Values{}
