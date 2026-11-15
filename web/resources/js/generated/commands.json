@@ -483,6 +483,53 @@
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"additionalProperties": false,
 			"properties": {
+				"item_id": {
+					"description": "A clip of a video asset, or an audio item.",
+					"type": "string"
+				},
+				"ripple": {
+					"description": "none (default) or track: shift the later items of the track.",
+					"enum": [
+						"none",
+						"track"
+					],
+					"type": "string"
+				},
+				"speed": {
+					"description": "\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4."
+				}
+			},
+			"required": [
+				"item_id",
+				"speed"
+			],
+			"type": "object"
+		},
+		"description": "Sets the speed, from 0.25x to 4x, and rescales the duration, the fades, the transitions and the keyframes by the same ratio. With ripple track the later items of the track follow the change in length. Captions linked to the clip are listed, not changed.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_OUT_OF_SOURCE",
+			"E_INVALID_TIME",
+			"E_OVERLAP"
+		],
+		"example": {
+			"item_id": "itm_m1n2p3q4r5",
+			"ripple": "track",
+			"speed": "1.5x"
+		},
+		"internal": false,
+		"name": "clip.set_speed",
+		"phase": "alpha",
+		"scope": "edit",
+		"summary": "Changes the speed of a clip or audio item while keeping the same source range."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
 				"duration": {
 					"description": "Length of the crossfade, at least 1 frame.",
 					"type": "string"

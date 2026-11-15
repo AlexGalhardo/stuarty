@@ -1,0 +1,43 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "duration": 90,
+      "fade_in": 10,
+      "fade_out": 8,
+      "keyframes": {
+        "scale": [
+          {
+            "t": 0,
+            "value": 1
+          },
+          {
+            "t": 7,
+            "value": 1.2
+          },
+          {
+            "t": 90,
+            "value": 1
+          }
+        ]
+      },
+      "transition_in": {
+        "duration": 15,
+        "kind": "fade"
+      }
+    },
+    "unset": [
+      "speed"
+    ]
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_s6t7v8w9x0",
+    "set": {
+      "start": 120
+    }
+  }
+]

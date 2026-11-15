@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_m1n2p3q4r5 is a clip item and has no speed.",
+  "hint": "Change the duration with item.trim instead.",
+  "retryable": false,
+  "path": "args.item_id"
+}

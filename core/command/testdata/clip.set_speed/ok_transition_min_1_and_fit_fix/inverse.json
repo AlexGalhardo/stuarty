@@ -1,0 +1,23 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "duration": 4,
+      "fade_in": 2,
+      "fade_out": 2,
+      "transition_in": {
+        "duration": 2,
+        "kind": "fade"
+      },
+      "transition_out": {
+        "duration": 2,
+        "kind": "fade"
+      }
+    },
+    "unset": [
+      "speed"
+    ]
+  }
+]
