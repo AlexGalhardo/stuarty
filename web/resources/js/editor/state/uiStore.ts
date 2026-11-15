@@ -1,15 +1,24 @@
 import { createStore, type ReadStore, readOnly } from "./createStore";
 
+// A keyframe as the read model stores it: `t` is relative to the item start.
+export interface KeyframeRef {
+	item: string;
+	property: string;
+	t: number;
+}
+
 // UI state, never sent to the core (SDD-012 section 5.1): selection, playhead,
 // zoom and scroll. The Prototype subset.
 export interface UiState {
 	// `track` is the track whose panel the inspector shows, when no item is
 	// selected (SDD-012 section 12.1).
 	// `anchor` is the item a Shift+click or Shift+arrow range starts from.
+	// `keyframe` is the diamond or list row selected inside the selected item.
 	selection: {
 		items: readonly string[];
 		track: string | null;
 		anchor: string | null;
+		keyframe: KeyframeRef | null;
 	};
 	// The item that holds the roving tab stop of the timeline grid (SDD-012 7.10).
 	focusedItem: string | null;
@@ -40,6 +49,8 @@ export interface UiState {
 
 export interface UiWriter {
 	select(items: readonly string[], anchor?: string | null): void;
+	// Selects one keyframe, and so its item (SDD-012 section 12.1, Delete).
+	selectKeyframe(keyframe: KeyframeRef | null): void;
 	focusItem(id: string | null): void;
 	startRename(id: string | null): void;
 	startTextEdit(id: string | null): void;
@@ -65,7 +76,7 @@ export function createUiStore(initialZoom = 1): {
 	writer: UiWriter;
 } {
 	const store = createStore<UiState>({
-		selection: { items: [], track: null, anchor: null },
+		selection: { items: [], track: null, anchor: null, keyframe: null },
 		focusedItem: null,
 		renamingItem: null,
 		editingText: null,
@@ -89,8 +100,23 @@ export function createUiStore(initialZoom = 1): {
 						items,
 						track: null,
 						anchor: anchor === undefined ? (items.at(-1) ?? null) : anchor,
+						keyframe: null,
 					},
 				})),
+			selectKeyframe: (keyframe) =>
+				store.setState((s) =>
+					keyframe === null
+						? { ...s, selection: { ...s.selection, keyframe: null } }
+						: {
+								...s,
+								selection: {
+									items: [keyframe.item],
+									track: null,
+									anchor: keyframe.item,
+									keyframe,
+								},
+							},
+				),
 			focusItem: (focusedItem) =>
 				store.setState((s) =>
 					s.focusedItem === focusedItem ? s : { ...s, focusedItem },
@@ -113,7 +139,7 @@ export function createUiStore(initialZoom = 1): {
 			selectTrack: (track) =>
 				store.setState((s) => ({
 					...s,
-					selection: { items: [], track, anchor: null },
+					selection: { items: [], track, anchor: null, keyframe: null },
 				})),
 			// The read model removed an id: drop it from the selection (SDD-012 7.6).
 			dropSelection(isKnown) {
@@ -126,7 +152,19 @@ export function createUiStore(initialZoom = 1): {
 					return kept.length === s.selection.items.length &&
 						anchor === s.selection.anchor
 						? s
-						: { ...s, selection: { ...s.selection, items: kept, anchor } };
+						: {
+								...s,
+								selection: {
+									...s.selection,
+									items: kept,
+									anchor,
+									keyframe:
+										s.selection.keyframe !== null &&
+										kept.includes(s.selection.keyframe.item)
+											? s.selection.keyframe
+											: null,
+								},
+							};
 				});
 			},
 			setPlayhead: (playheadFrame) =>

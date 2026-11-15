@@ -8,7 +8,12 @@ import {
 	captionOperations,
 	captionRetimeOperations,
 	clampBoundary,
+	containsInclusive,
+	keyframeClearOperations,
 	keyframeFallbackOperations,
+	keyframeFrame,
+	keyframeRemoveOperations,
+	keyframeSetOperations,
 	moveItems,
 	moveOperations,
 	nudgeOperations,
@@ -337,5 +342,58 @@ describe("auto caption builders", () => {
 		expect(captionRetimeOperations("itm_clip")).toEqual([
 			{ op: "caption.retime_from_clip", args: { clip_item_id: "itm_clip" } },
 		]);
+	});
+});
+
+describe("keyframe builders", () => {
+	test("set names the position on the timeline and the easing as picked", () => {
+		expect(
+			keyframeSetOperations({
+				itemId: "itm_a",
+				property: "scale",
+				frame: 45,
+				value: 1.5,
+				easing: "ease_in_out",
+			}),
+		).toEqual([
+			{
+				op: "keyframe.set",
+				args: {
+					item_id: "itm_a",
+					property: "scale",
+					at: "45f",
+					value: 1.5,
+					easing: "ease_in_out",
+				},
+			},
+		]);
+	});
+
+	test("a stored keyframe is addressed by its position on the timeline", () => {
+		expect(keyframeFrame(100, 30)).toBe(130);
+		expect(keyframeRemoveOperations("itm_a", "x", 130)).toEqual([
+			{
+				op: "keyframe.remove",
+				args: { item_id: "itm_a", property: "x", at: "130f" },
+			},
+		]);
+	});
+
+	test("clear names one property or none", () => {
+		expect(keyframeClearOperations("itm_a", "opacity")[0]?.args).toEqual({
+			item_id: "itm_a",
+			property: "opacity",
+		});
+		expect(keyframeClearOperations("itm_a")[0]?.args).toEqual({
+			item_id: "itm_a",
+		});
+	});
+
+	test("the playhead may touch both ends of the item", () => {
+		const item = { id: "itm_a", start: 10, duration: 30 };
+		expect(containsInclusive(item, 10)).toBe(true);
+		expect(containsInclusive(item, 40)).toBe(true);
+		expect(containsInclusive(item, 9)).toBe(false);
+		expect(containsInclusive(item, 41)).toBe(false);
 	});
 });
