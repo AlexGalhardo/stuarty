@@ -2,6 +2,7 @@ package ffargs
 
 import (
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -271,4 +272,15 @@ func checkLavfi(argv []string, i int, src string) error {
 		)
 	}
 	return checkFilter(argv, i, src, lavfiSources)
+}
+
+// FilterNames lists the filters the checker accepts, sorted: the ones a build must have for the argv of
+// the engine to run (SDD-007 FF-10).
+func FilterNames() []string {
+	names := make([]string, 0, len(filters))
+	for n := range filters {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	return names
 }
