@@ -100,6 +100,14 @@ export function fieldsOf(schema: Schema): Field[] {
 const SCALARS = new Set(["string", "number", "integer", "boolean"]);
 
 export function classify(schema: Schema, name: string): Construct {
+	// The registry writes a value the core also accepts as null as
+	// type: [T, "null"] (SDD-012 §9.2); the field is the control of T.
+	if (Array.isArray(schema.type)) {
+		const types = schema.type.filter((t) => t !== "null");
+		if (types.length === 1)
+			return classify({ ...schema, type: types[0] }, name);
+		return { kind: "json" };
+	}
 	for (const keyword of ["oneOf", "anyOf"] as const) {
 		const variants = arrayOf(schema[keyword]).filter(isSchema);
 		if (variants.length > 0) return { kind: "variants", keyword, variants };

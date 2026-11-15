@@ -58,7 +58,7 @@ describe("classify", () => {
 		);
 	});
 
-	test("the registry has no oneOf or anyOf yet, and the fallback is rare", () => {
+	test("only a map keyed by names falls back to JSON", () => {
 		const fallbacks: string[] = [];
 		const walk = (schema: Schema, name: string, path: string): void => {
 			const construct = classify(schema, name);
@@ -74,16 +74,7 @@ describe("classify", () => {
 			for (const field of fieldsOf(command.args_schema))
 				walk(field.schema, field.name, `${command.name}.${field.name}`);
 		}
-		expect(fallbacks.sort()).toEqual([
-			"caption.set_style.style",
-			"clip.set_speed.speed",
-			"item.set_transition.kind",
-			"settings.set_fps.fps",
-			"template.set_info.colors",
-			"text.add.style",
-			"text.set.style",
-			"track.set_caption_style.style",
-		]);
+		expect(fallbacks.sort()).toEqual(["template.set_info.colors"]);
 	});
 });
 
