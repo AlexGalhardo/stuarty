@@ -11,10 +11,10 @@ Sets a fade or a slide on the in or out edge, 0.5 seconds long unless duration i
 
 | Argument | Type | Required | Description |
 | --- | --- | --- | --- |
-| `duration` | `string` | Length of the transition, at least 1 frame; default 0.5s. | Length of the transition, at least 1 frame; default 0.5s. |
-| `edge` | `in`, `out` | The edge: in or out. | The edge: in or out. |
-| `item_id` | `string` | A clip, text, caption or shape item. | A clip, text, caption or shape item. |
-| `kind` | `any` | fade, slide_left, slide_right, slide_up, slide_down, or null to remove. | fade, slide_left, slide_right, slide_up, slide_down, or null to remove. |
+| `duration` | `string` | no | Length of the transition, at least 1 frame; default 0.5s. |
+| `edge` | `in`, `out` | yes | The edge: in or out. |
+| `item_id` | `string` | yes | A clip, text, caption or shape item. |
+| `kind` | `any` | yes | fade, slide_left, slide_right, slide_up, slide_down, or null to remove. |
 
 ## Example
 

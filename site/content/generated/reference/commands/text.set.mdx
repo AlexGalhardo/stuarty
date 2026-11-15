@@ -11,10 +11,10 @@ Replaces the text, merges a partial style into the stored one (null removes a ke
 
 | Argument | Type | Required | Description |
 | --- | --- | --- | --- |
-| `item_id` | `string` | A text item. | A text item. |
-| `reset_style` | `boolean` | Empty the stored style before applying style. | Empty the stored style before applying style. |
-| `style` | `object` | A partial TextStyle, merged; null removes a key. | A partial TextStyle, merged; null removes a key. |
-| `text` | `string` |  |  |
+| `item_id` | `string` | yes | A text item. |
+| `reset_style` | `boolean` | no | Empty the stored style before applying style. |
+| `style` | `object` | no | A partial TextStyle, merged; null removes a key. |
+| `text` | `string` | no |  |
 
 ## Example
 
