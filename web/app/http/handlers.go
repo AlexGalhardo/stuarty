@@ -181,6 +181,9 @@ func (h *apiHandler) registerAll() {
 		return deref(res), err
 	})
 
+	register(h, "projects.frame", h.projectsFrame)
+	register(h, "projects.sheet", h.projectsSheet)
+
 	for i := range Endpoints {
 		if Endpoints[i].Pending != "" {
 			pending(h, Endpoints[i].ID)

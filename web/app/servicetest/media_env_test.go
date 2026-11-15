@@ -15,7 +15,9 @@ import (
 
 	"github.com/AlexGalhardo/vukem/queue"
 
+	"github.com/AlexGalhardo/vukem-video/engine/cache"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/frame"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
 	"github.com/AlexGalhardo/vukem-video/service"
@@ -118,6 +120,17 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 			}
 
 			o.Media.Runner = runner
+
+			frames, cerr := cache.Open(m.ws, 0)
+			if cerr != nil {
+				tb.Fatal(cerr)
+			}
+
+			o.Media.Frames = &frame.Frames{
+				Runner:       runner,
+				ArtifactsDir: filepath.Join(m.ws, "artifacts"),
+				Cache:        frames,
+			}
 			o.Exporter = exporter.New(exporter.Config{Runner: runner, Workspace: m.ws})
 		}
 		o.Limits = cfg.limits
