@@ -579,3 +579,48 @@ export interface KeyListResult {
 }
 
 export type KeyRevokeResult = ApiKey;
+
+// /templates (SDD-003 section 2.9). Every text of a template is untrusted: an
+// imported file can carry anything.
+export interface SlotInfo {
+	name: string;
+	kind: "media" | "text" | "caption";
+	required: boolean;
+	description: string;
+	duration_policy?: string;
+}
+
+export interface TemplateSummary {
+	template_id: string;
+	name: string;
+	description: string;
+	slots: SlotInfo[];
+	colors?: { [name: string]: string };
+	width: number;
+	height: number;
+	duration: TimeValue;
+}
+
+export interface TemplateListResult {
+	templates: TemplateSummary[];
+	next_cursor: string | null;
+	text: string;
+}
+
+export interface TemplateResult {
+	template: TemplateSummary;
+	text: string;
+}
+
+export interface TemplateInstantiateRequest {
+	name: string;
+	fill?: { [slot: string]: { asset_id: string } | { text: string } };
+}
+
+export interface TemplateInstantiateResult {
+	project_id: string;
+	revision: number;
+	unfilled: string[];
+	findings: LintFinding[];
+	text: string;
+}

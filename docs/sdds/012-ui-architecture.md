@@ -95,7 +95,7 @@ The script has its own unit tests (a fixture per rule that must fail and one tha
 | Route | Page component | Purpose | Mode | Phase |
 | --- | --- | --- | --- | --- |
 | `GET /` | redirect to `/projects` | | both | P |
-| `GET /projects` | `pages/Projects/Index.tsx` | list projects (`ProjectList`), create (`ProjectCreate`: name and size preset, RF-002), open, in ALPHA trash and restore | both | P |
+| `GET /projects` | `pages/Projects/Index.tsx` | list projects (`ProjectList`), create (`ProjectCreate`: name and size preset, RF-002), open, in ALPHA trash and restore; the template entries (below the list): the templates with "New from template" (`TemplateList`, `TemplateInstantiate`; the project name, then the editor opens on the new project), "Export file" (a download of `GET /templates/{id}/file`) and the import of a template file by its absolute path on the machine of the service (`TemplateImport`; the operation takes a path, never bytes, SDD-007 §7.6). The page calls the HTTP API with the browser session, like the settings page | both | P |
 | `GET /settings` | `pages/Settings/Index.tsx` | language, theme, default time unit, version and workspace path (`Doctor`, `GET /system`) | both | A |
 | `GET /settings/keys` | `pages/Settings/Keys.tsx` | create and revoke API keys with scopes (SDD-007) | network only; 404 in local mode | A |
 | `GET /login`, `POST /logout` | `pages/Auth/Login.tsx` | login (vukem sessions) | network only | A |
@@ -990,9 +990,10 @@ The inspector panel shows one panel by selection: nothing selected, the project 
 | Caption style | the CaptionStyle fields; "Use track style" | `caption.set_style {style}` (`null` to clear) | caption |
 | Auto captions | max words, max chars, max gap, replace toggle, button "Generate"; "Re-sync captions" | `caption.from_transcript`, `caption.retime_from_clip` | clip |
 | Keyframes | per animated property: list of keyframes (time, value, easing; the time field is item-relative and `keyframe.set` and `keyframe.remove` receive the absolute `at` from `keyframeAbsoluteAt(item, t)` of `units.ts`, rule R5), "Add at playhead", remove, "Clear" | `keyframe.set`, `keyframe.remove`, `keyframe.clear` | visual and audio items |
-| Template | "Template slot" toggle, name, description, required, duration policy | `slot.mark`, `slot.unmark` | any item |
+| Template | "Template slot" toggle, name (fixed once marked: the core refuses another name on a slot), description, required, duration policy (media slots only). Each change is one `slot.mark` with the whole slot; the toggle off is `slot.unmark` | `slot.mark`, `slot.unmark` | clip, audio, text, caption |
+| Template slots (in the project panel) | one row per slot with an asset picker (media) or a text field (text) and "Fill"; the required slots still open are read from the `L_SLOT_UNFILLED` findings of the lint, read again at each revision. A caption slot is filled from the CLI, MCP or API (its words carry times, which the browser does not compute) | `slot.fill` | nothing selected |
 | Track panel | name, hidden, muted, caption style (partial and "Replace") | `track.update`, `track.set_caption_style` | track |
-| Project panel | name, size preset (9:16, 1:1, 16:9, 4:5), width, height, background, loudness target, frame rate, template info | `project.rename`, `settings.set`, `settings.set_fps`, `template.set_info` | nothing selected |
+| Project panel | name, size preset (9:16, 1:1, 16:9, 4:5), width, height, background, loudness target, frame rate, template info (description and the named colours, added and removed one at a time) | `project.rename`, `settings.set`, `settings.set_fps`, `template.set_info` | nothing selected |
 
 Fonts come from `getFonts()` (Appendix B); the select shows bundled families first, as names in the UI font: the browser never loads the rendering fonts, and the MVP shows no rendered samples (D-030). Colours use `ColorField` (hex text input plus the native colour input for the RGB part and a slider for alpha, sending `#RRGGBB` or `#RRGGBBAA`).
 

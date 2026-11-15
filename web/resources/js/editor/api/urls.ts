@@ -31,6 +31,10 @@ export function exportFileUrl(jobId: string): string {
 	return `${BASE}/jobs/${encodeURIComponent(jobId)}/file`;
 }
 
+export function templateFileUrl(templateId: string): string {
+	return `${BASE}/templates/${encodeURIComponent(templateId)}/file`;
+}
+
 export function bitmapUrl(projectId: string, key: string): string {
 	return `${project(projectId)}/bitmaps/${encodeURIComponent(key)}`;
 }
