@@ -146,6 +146,13 @@ test.describe("clip-sections", () => {
 		const answered = page.waitForResponse(
 			(r) => r.url().endsWith("/edit") && r.status() === 200,
 		);
+		// The row carries the description of the event until the refetch of the page
+		// replaces it with the operation names (250 ms later): hold the refetch back,
+		// so that the check does not race it.
+		await page.route("**/history?*", async (route) => {
+			await new Promise((resolve) => setTimeout(resolve, 4000));
+			await route.continue();
+		});
 
 		await page.getByRole("button", { name: "Remove silences" }).click();
 		const body = (await (await answered).json()) as {
