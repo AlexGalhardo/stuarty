@@ -44,6 +44,8 @@ export function translate(
 export interface I18nContextValue {
 	messages: Record<string, Message>;
 	locale: string;
+	// The languages the server offers, for the language select.
+	locales?: readonly string[];
 }
 
 const I18nContext = createContext<I18nContextValue>({
@@ -57,11 +59,12 @@ const I18nContext = createContext<I18nContextValue>({
 export function I18nProvider({
 	messages,
 	locale,
+	locales,
 	children,
 }: I18nContextValue & { children?: ReactNode }): ReactNode {
 	return createElement(
 		I18nContext.Provider,
-		{ value: { messages, locale } },
+		{ value: { messages, locale, locales } },
 		children,
 	);
 }
@@ -73,4 +76,9 @@ export function useT(): Translate {
 
 export function useLocale(): string {
 	return useContext(I18nContext).locale;
+}
+
+export function useLocales(): readonly string[] {
+	const { locale, locales } = useContext(I18nContext);
+	return locales ?? [locale];
 }
