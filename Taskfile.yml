@@ -132,6 +132,49 @@ tasks:
     desc: Build the six archives locally with GoReleaser, signing and SBOMs skipped, publishing nothing
     cmds:
       - goreleaser release --snapshot --clean --skip=sign,sbom --config .config/goreleaser.yaml
+  release:binaries:
+    desc: "Build the six archives with GoReleaser; SNAPSHOT=1 builds without publishing or signing (needs syft on PATH)"
+    cmds:
+      - goreleaser release --clean --config .config/goreleaser.yaml {{if .SNAPSHOT}}--snapshot --skip=publish,sign{{end}}
+
+  release:verify:
+    desc: "Verify a published release: signature, checksums, provenance and the image digests (task release:verify -- vX.Y.Z)"
+    cmds:
+      - bash scripts/release-verify.sh {{.CLI_ARGS}}
+
+  release:preflight:
+    desc: Everything the CI-equivalent checks run, plus the notices, generated files, site, translations and image
+    cmds:
+      - task: ci
+      - task: generate:check
+      - task: site:build
+      - task: site:translations
+      - task: image:smoke
+
+  generate:check:
+    desc: Regenerate every generated folder and fail when one differs from what is committed
+    cmds:
+      - task: codegen
+      - cd site && npm run reference
+      - git diff --exit-code -- core/schema web/resources/js/generated site/generated site/content/generated
+
+  site:build:
+    desc: Build the documentation site and run its checks
+    dir: site
+    cmds:
+      - npm ci
+      - npm run check:mdx
+      - npm run build
+      - npm run check:built
+      - npm run reference:check
+      - npm run check:last-updated
+
+  site:translations:
+    desc: Report the pages whose Brazilian Portuguese twin is missing or stale (non-strict)
+    dir: site
+    cmds:
+      - npm run check:translations
+
   image:build:
     desc: Build the container image as vukem-video:local
     cmds:

@@ -35,6 +35,16 @@ archives:
       - LICENSE.md
       - README.md
       - CHANGELOG.md
+      - THIRD_PARTY_NOTICES.md
+      - licenses/**/*
+      # The three files of agent:docs, generated into web/app/agentdocs/out/; a CI check
+      # compares them with the output of agent:docs --print (SDD-003 section 9 check 27).
+      - src: web/app/agentdocs/out/SKILL.md
+        dst: agent/skills/vukem-video/SKILL.md
+      - src: web/app/agentdocs/out/AGENTS.snippet.md
+        dst: agent/AGENTS.snippet.md
+      - src: web/app/agentdocs/out/mcp-instructions.txt
+        dst: agent/mcp-instructions.txt
 
 # The Debian packages (SDD-009 section 10.4, P1-REL-010), made by nfpm inside GoReleaser: the
 # program in /usr/bin and the desktop entry that runs "vukem-video open". They are artifacts of
