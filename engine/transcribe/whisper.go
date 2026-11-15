@@ -104,7 +104,7 @@ type Whisper struct {
 	CPUCount int
 	// Env widens the environment of the helper, for example LD_LIBRARY_PATH on Linux.
 	Env map[string]string
-	// Limits bound the helper (Linux only).
+	// Limits bound the helper (Linux and Windows; macOS has no mechanism).
 	Limits engine.Limits
 	// HelperItem and ModelItem are what Check reports as missing: the manifest's name, host and size.
 	HelperItem, ModelItem Item

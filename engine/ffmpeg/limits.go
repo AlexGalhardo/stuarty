@@ -46,7 +46,7 @@ func limitsFor(kind RunKind, deadline time.Duration, cpus int, fileBytes int64) 
 
 // WithLimits returns a copy of the installation whose tools run under the limits. The pinned
 // contrib/engine applies limits per tool, so a run kind with other limits needs its own pair.
-// With no limits (the zero value, always the case outside Linux) the installation is returned as it is.
+// With no limits (the zero value, always the case on macOS) the installation is returned as it is.
 func (in *Installation) WithLimits(ctx context.Context, l engine.Limits) (*Installation, error) {
 	if l == (engine.Limits{}) {
 		return in, nil

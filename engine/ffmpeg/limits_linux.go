@@ -24,3 +24,8 @@ func LimitsAvailable() (bool, string) {
 
 	return true, ""
 }
+
+// LimitsForWhisper returns the limits of a whisper-cli run: the memory of its model.
+func LimitsForWhisper(modelBytes int64, cpus int) engine.Limits {
+	return limitsForWhisper(modelBytes, cpus)
+}
