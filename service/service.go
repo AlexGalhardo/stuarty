@@ -45,6 +45,10 @@ type Service interface {
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
 	JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 
+	TemplateList(ctx context.Context, req TemplateListRequest) (*TemplateListResult, error)
+	TemplateSave(ctx context.Context, req TemplateSaveRequest) (*TemplateResult, error)
+	TemplateInstantiate(ctx context.Context, req TemplateInstantiateRequest) (*TemplateInstantiateResult, error)
+
 	// ViewFrame and ViewSheet render the current revision through the export
 	// executor (SDD-003 section 2.7).
 	ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult, error)

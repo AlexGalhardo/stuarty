@@ -458,3 +458,50 @@ Responses: `200` OK, `401`, `422`, `default`.
 Issue a one-time browser launch code
 
 Responses: `200` OK, `401`, `default`.
+
+## templates
+
+### `GET /templates`
+
+List the templates
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `cursor` | query | no | `string` |
+| `limit` | query | no | `integer` |
+
+Responses: `200` OK, `401`, `422`, `default`.
+
+### `POST /templates`
+
+Save a project as a template
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `description` | `string` | no |  |
+| `dry_run` | `boolean` | no |  |
+| `name` | `string` | yes |  |
+| `project_id` | `string` | yes |  |
+
+Responses: `201` Created, `401`, `422`, `default`.
+
+### `POST /templates/{template_id}/instantiate`
+
+Make a project from a template
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `template_id` | path | yes | `string` |
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `dry_run` | `boolean` | no |  |
+| `fill` | `object` | no | Slot name to a value: one of asset_id, text or words. |
+| `id` | `string` | no | Optional project id; local mode only. |
+| `name` | `string` | yes |  |
+
+Responses: `201` Created, `401`, `422`, `default`.
