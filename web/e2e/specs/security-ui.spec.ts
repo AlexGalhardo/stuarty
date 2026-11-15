@@ -23,6 +23,17 @@ declare global {
 	}
 }
 
+function hostileFont(): string {
+	const dir = join(tmpdir(), "vukem-video-e2e-hostile");
+	mkdirSync(dir, { recursive: true });
+	const out = join(dir, `${ASSET_NAME}.ttf`);
+	copyFileSync(
+		join(process.cwd(), "..", "engine", "raster", "fonts", "Anton-Regular.ttf"),
+		out,
+	);
+	return out;
+}
+
 function hostileAsset(): string {
 	const dir = join(tmpdir(), "vukem-video-e2e-hostile");
 	mkdirSync(dir, { recursive: true });
@@ -31,7 +42,7 @@ function hostileAsset(): string {
 	return out;
 }
 
-test.describe("ui-xss", () => {
+test.describe("security-ui", () => {
 	test("hostile names and texts render as text in every view", async ({
 		page,
 		request,
@@ -150,5 +161,132 @@ test.describe("ui-xss", () => {
 		await expect(page.locator("[data-word-index]").first()).toBeVisible();
 		await expect(page.locator("[data-word-index]").first()).toHaveText(WORD);
 		await clean("editor: caption words");
+	});
+
+	test("hostile text renders as text in the palette, the forms, the slots, the brand kit, the settings and the project lists", async ({
+		page,
+		request,
+		browserName,
+	}) => {
+		test.setTimeout(120_000);
+		await page.addInitScript((payload) => {
+			window.__csp = [];
+			document.addEventListener("securitypolicyviolation", (event) => {
+				window.__csp?.push(event.violatedDirective);
+			});
+			// Preferences are read back from storage: hostile values must not run.
+			for (const key of ["vv.timeUnit", "vv.keymap", "vv.layout"]) {
+				if (localStorage.getItem(key) === null)
+					localStorage.setItem(key, payload);
+			}
+		}, PAYLOAD);
+		const blobs: string[] = [];
+		page.on("request", (r) => {
+			if (r.url().startsWith("blob:")) blobs.push(r.url());
+		});
+
+		const call = await caller(request);
+		await call("PUT", "/brand-kit", { colors: {}, fonts: {} });
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
+		const head = (await call("GET", `/projects/${seeded.id}`)) as {
+			revision: number;
+		};
+		const added = (await call("POST", `/projects/${seeded.id}/edit`, {
+			base_revision: head.revision,
+			operations: [
+				{
+					op: "text.add",
+					args: {
+						track_id: seeded.trackIds[0],
+						start: "0s",
+						duration: "3s",
+						text: PAYLOAD,
+					},
+				},
+			],
+		})) as { created: string[] };
+		const itemId = added.created[0] as string;
+		await call("POST", `/projects/${seeded.id}/edit`, {
+			base_revision: head.revision + 1,
+			operations: [
+				{
+					op: "slot.mark",
+					args: { item_id: itemId, name: "title", description: PAYLOAD },
+				},
+			],
+		});
+
+		const shown = async (): Promise<string> =>
+			(await page.locator("body").textContent()) ?? "";
+		const clean = async (view: string): Promise<void> => {
+			expect(await page.evaluate(() => window.__pwned), view).toBeUndefined();
+			expect(
+				cspViolations(
+					browserName,
+					await page.evaluate(() => window.__csp ?? []),
+				),
+				view,
+			).toEqual([]);
+			expect(await page.locator("body img[src=x]").count(), view).toBe(0);
+			expect(blobs, view).toEqual([]);
+		};
+
+		await page.goto("/settings");
+		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+		await clean("settings page");
+
+		await page.goto("/settings/brand-kit");
+		await expect(
+			page.getByRole("heading", { name: "Brand kit", level: 1 }),
+		).toBeVisible();
+		// The server restricts colour names, so the hostile text reaches this page
+		// through the file name of an imported font and through what is typed.
+		await page
+			.getByLabel("Font file path on the machine of the service")
+			.fill(hostileFont());
+		await page.getByLabel("Family name").fill("hostile");
+		await page.getByRole("button", { name: "Import font" }).click();
+		await expect(page.locator('[data-font-family="hostile"]')).toBeVisible();
+		expect(await shown()).toContain(ASSET_NAME);
+		await page.getByRole("button", { name: "Add colour" }).click();
+		await page.getByLabel("Name of colour 1").fill(PAYLOAD);
+		await clean("brand kit page");
+
+		const trashed = (await call("POST", "/projects", { name: PAYLOAD })) as {
+			project_id: string;
+		};
+		await call("POST", `/projects/${trashed.project_id}/trash`, {});
+		await page.goto("/projects");
+		await expect(page.getByText(PAYLOAD).first()).toBeVisible();
+		await clean("projects page: list, trash and templates");
+
+		await page.goto(`/editor/${seeded.id}`);
+		await expect(page.locator("[data-item-id]").first()).toBeVisible();
+		await clean("editor with hostile preferences");
+
+		// With nothing selected the project panel shows the slots panel.
+		await expect(page.locator("[data-slot-row]").first()).toBeVisible();
+		const row = page.locator("[data-slot-row]").first();
+		await row.getByLabel("Text", { exact: true }).fill(PAYLOAD);
+		await row.getByRole("button", { name: "Fill" }).click();
+		await page.waitForTimeout(500);
+		await clean("editor: template slots");
+
+		await page.keyboard.press("Control+k");
+		const search = page.getByRole("combobox", { name: "Search commands" });
+		await search.fill(PAYLOAD);
+		await clean("palette: hostile query");
+		await search.fill("text.add");
+		await page.locator(`[data-command="text.add"]`).click();
+		const form = page.locator(`[data-form="text.add"]`);
+		await expect(form).toBeVisible();
+		await form.locator(`[data-path="args.text"]`).fill(PAYLOAD);
+		await clean("palette: schema form with a hostile value");
+		await page.getByRole("button", { name: "Preview", exact: true }).click();
+		await page.waitForTimeout(500);
+		await clean("palette: dry run result");
+		await page.getByRole("button", { name: "Add to batch" }).click();
+		await expect(page.getByText(PAYLOAD).first()).toBeVisible();
+		await clean("palette: batch tray");
 	});
 });

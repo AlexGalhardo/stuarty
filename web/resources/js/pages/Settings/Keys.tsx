@@ -21,7 +21,7 @@ import type { ApiKey } from "../../editor/api/types";
 const SCOPES = ["read", "edit", "media", "render", "admin"] as const;
 const NAME_MAX = 120;
 
-function KeyRow({
+export function KeyRow({
 	apiKey,
 	onRevoke,
 }: {

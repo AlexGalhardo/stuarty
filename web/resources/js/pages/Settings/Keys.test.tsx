@@ -1,0 +1,52 @@
+import { renderToString } from "react-dom/server";
+import { describe, expect, test, vi } from "vitest";
+
+import { I18nProvider } from "@/lib/i18n";
+import type { ApiKey } from "../../editor/api/types";
+import { KeyRow } from "./Keys";
+
+vi.mock("@inertiajs/react", () => ({ Head: () => null }));
+
+const PAYLOAD = "<img src=x onerror=window.__pwned=1>";
+
+const messages = {
+	"ui.keys.created": "Created {date}",
+	"ui.keys.revoked": "Revoked",
+	"ui.keys.revoke": "Revoke",
+};
+
+const key = (extra: Partial<ApiKey> = {}): ApiKey => ({
+	key_id: "key_1",
+	name: PAYLOAD,
+	scopes: ["read"],
+	project_id: null,
+	created_at: "2026-11-15T12:00:00Z",
+	last_used_at: null,
+	expires_at: null,
+	revoked_at: null,
+	...extra,
+});
+
+function markup(apiKey: ApiKey): string {
+	return renderToString(
+		<I18nProvider messages={messages} locale="en" locales={["en"]}>
+			<ul>
+				<KeyRow apiKey={apiKey} onRevoke={() => undefined} />
+			</ul>
+		</I18nProvider>,
+	);
+}
+
+// SDD-007 section 8.5, threat T-22: the name of a key is written by whoever
+// created it and reaches this page as text, never as markup. The page cannot be
+// opened in the local-mode Playwright run (it answers 404 there).
+describe("keys page renders the key name as text", () => {
+	test.each([
+		["active", key()],
+		["revoked", key({ revoked_at: "2026-11-15T13:00:00Z" })],
+	])("%s key", (_label, apiKey) => {
+		const html = markup(apiKey);
+		expect(html).toContain("&lt;img src=x onerror=window.__pwned=1&gt;");
+		expect(html).not.toContain("<img");
+	});
+});
