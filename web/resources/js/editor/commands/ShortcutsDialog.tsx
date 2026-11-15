@@ -11,6 +11,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { useT } from "@/lib/i18n";
+import { showTipsAgain } from "../state/tipsStore";
 import {
 	type BindingId,
 	comboFromEvent,
@@ -171,6 +172,16 @@ export function ShortcutsDialog({
 						}}
 					>
 						{t("ui.editor.shortcuts.reset")}
+					</Button>
+					<Button
+						type="button"
+						variant="outline"
+						onClick={() => {
+							showTipsAgain();
+							onOpenChange(false);
+						}}
+					>
+						{t("ui.editor.tips.show_again")}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

@@ -11,6 +11,7 @@ import { useCanvasPort } from "../timeline/gestures/transformDrag";
 import Notices from "../timeline/Notices";
 import Timeline from "../timeline/Timeline";
 import { useShortcuts } from "../timeline/useShortcuts";
+import FirstRunTips from "./FirstRunTips";
 import InUseHost from "./InUseHost";
 import LeftPanel from "./LeftPanel";
 import TopBar from "./TopBar";
@@ -94,6 +95,7 @@ export default function EditorShell({
 						onCaptionOpenChange={setCaptionOpen}
 					/>
 				</div>
+				<FirstRunTips />
 				{status === "failed" && (
 					<div
 						role="alert"

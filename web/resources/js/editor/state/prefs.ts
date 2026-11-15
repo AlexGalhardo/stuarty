@@ -50,3 +50,20 @@ export function writeKeymap(overrides: Readonly<Record<string, string>>): void {
 		// Storage can be blocked: the bindings last for this page only.
 	}
 }
+
+// Whether the first-run tips were shown on this browser (SDD-012 section 18.5).
+export function readShortcutsSeen(): boolean {
+	try {
+		return localStorage.getItem("vv.shortcutsSeen") === "1";
+	} catch {
+		return false;
+	}
+}
+
+export function writeShortcutsSeen(): void {
+	try {
+		localStorage.setItem("vv.shortcutsSeen", "1");
+	} catch {
+		// Storage can be blocked: the tips show again on the next load.
+	}
+}
