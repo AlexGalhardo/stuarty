@@ -1,6 +1,7 @@
 import { createInertiaApp } from "@inertiajs/react";
 
 import AppLayout from "./layouts/AppLayout";
+import { installStyleNonce } from "./lib/cspNonce";
 
 // Dark by default (D-024, SDD-012 section 17): the "dark" class on <html> is
 // set before paint by the inline script of app.html, from localStorage.theme
@@ -14,6 +15,9 @@ try {
 } catch {
 	document.documentElement.classList.add("dark");
 }
+
+// The scroll lock of a Radix select or dialog writes a <style> element.
+installStyleNonce();
 
 // The @inertiajs/vite plugin resolves pages from ./pages and mounts the app.
 // The nonce lets the progress bar styles through the CSP.
