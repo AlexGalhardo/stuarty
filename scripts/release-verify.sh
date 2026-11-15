@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # Verify a published release (SDD-009 section 7 step 11, within 15 minutes of the tag):
-#   bash scripts/release-verify.sh vX.Y.Z [--no-image] [--dispatched]
+#   bash scripts/release-verify.sh vX.Y.Z [--no-image] [--no-pages] [--dispatched]
 # Needs gh (authenticated), cosign, sha256sum and, for the image, docker with buildx.
 # --no-image skips the image checks (a release before the first one that publishes the image,
-# or a pre-release). --dispatched accepts the signature identity of a workflow_dispatch
+# or a pre-release). --no-pages skips the comparison with the feed that GitHub Pages serves (it
+# is deployed a few minutes after the release). A stable release also has feed.json, which is
+# checked against checksums.txt and the public key UPDATE_FEED_PUBLIC_KEY (the repository
+# variable, read with gh when it is not in the environment). --dispatched accepts the signature
+# identity of a workflow_dispatch
 # recovery run, which signs as @refs/heads/main instead of @refs/tags/v (section 7).
 set -euo pipefail
 
@@ -11,11 +15,13 @@ version="${1:-}"
 shift || true
 
 check_image=1
+check_pages=1
 identity_ref='refs/tags/v'
 
 for flag in "$@"; do
 	case "$flag" in
 	--no-image) check_image=0 ;;
+	--no-pages) check_pages=0 ;;
 	--dispatched) identity_ref='refs/heads/main$' ;;
 	*)
 		echo "release-verify: unknown flag $flag" >&2
@@ -27,7 +33,7 @@ done
 case "$version" in
 v[0-9]*.[0-9]*.[0-9]*) ;;
 *)
-	echo "usage: release-verify.sh vX.Y.Z [--no-image] [--dispatched]" >&2
+	echo "usage: release-verify.sh vX.Y.Z [--no-image] [--no-pages] [--dispatched]" >&2
 	exit 2
 	;;
 esac
@@ -38,27 +44,61 @@ archive="vukem-video_${v}_linux_amd64.tar.gz"
 identity="^https://github\.com/AlexGalhardo/vukem-video/\.github/workflows/release\.yml@${identity_ref}"
 issuer="https://token.actions.githubusercontent.com"
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 cd "$work"
 
-# The release lists 6 archives, 6 SBOMs, 2 .deb, 4 installers, checksums.txt, its
-# bundle and the provenance (release.yml, step "Check the release assets").
+# The release lists 6 archives, 6 SBOMs, 2 .deb, 4 installers, the 4 installers of the desktop
+# application and their SBOM, checksums.txt, its bundle and the provenance: 26 assets, and a
+# stable release adds feed.json: 27 (release.yml, steps "Check the release assets" and "Attach the feed").
+want_assets=26
+stable=0
+case "$v" in
+*-*) ;;
+*)
+	want_assets=27
+	stable=1
+	;;
+esac
 read -r has_body assets < <(gh release view "$version" -R "$repo" --json body,assets \
 	--jq '"\(.body | length > 0) \(.assets | length)"')
-echo "release: body=$has_body assets=$assets"
-[ "$has_body" = "true" ] && [ "$assets" -eq 21 ]
+echo "release: body=$has_body assets=$assets (want $want_assets)"
+[ "$has_body" = "true" ] && [ "$assets" -eq "$want_assets" ]
 
 gh release download "$version" -R "$repo" \
-	-p checksums.txt -p checksums.txt.sigstore.json -p "$archive" -p "$archive.sbom.json"
+	-p checksums.txt -p checksums.txt.sigstore.json -p "$archive" -p "$archive.sbom.json" \
+	-p 'vukem-video-desktop_*'
 
 cosign verify-blob checksums.txt \
 	--bundle checksums.txt.sigstore.json \
 	--certificate-identity-regexp "$identity" \
 	--certificate-oidc-issuer "$issuer"
 
+# The desktop installers are not signed with a paid certificate (D-033): their integrity is checksums.txt,
+# which cosign signed above, and the provenance attestation of every file.
 sha256sum --ignore-missing -c checksums.txt
 gh attestation verify "$archive" -R "$repo"
+for installer in vukem-video-desktop_"${v}"_*; do
+	case "$installer" in *.sbom.json) continue ;; esac
+	gh attestation verify "$installer" -R "$repo"
+done
+
+# The update feed of the desktop application (SDD-009 section 10.5): every digest in it is the one in
+# checksums.txt, and its signature and the signature of each artifact verify with the public key.
+if [ "$stable" -eq 1 ]; then
+	public_key="${UPDATE_FEED_PUBLIC_KEY:-$(gh variable get UPDATE_FEED_PUBLIC_KEY -R "$repo")}"
+	gh release download "$version" -R "$repo" -p feed.json
+	bash "$script_dir/update-feed.sh" verify "$public_key" checksums.txt feed.json
+	if [ "$check_pages" -eq 1 ]; then
+		site="${SITE_URL:-https://alexgalhardo.github.io/vukem-video}"
+		curl -fsSL "${site%/}/updates/feed.json" -o pages-feed.json
+		cmp feed.json pages-feed.json || {
+			echo "release-verify: GitHub Pages serves another feed than the release (deploy not finished? use --no-pages to skip)" >&2
+			exit 1
+		}
+	fi
+fi
 
 if [ "$check_image" -eq 0 ]; then
 	echo "release-verify: ok (image checks skipped)"

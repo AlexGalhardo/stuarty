@@ -12,6 +12,15 @@ name: release
 # (SDD-009 sections 9.3 and 11, P1-REL-009) builds and smoke tests the image,
 # then publishes it to GHCR and Docker Hub for stable tags only.
 #
+# The desktop application (desktop.yml, P3-REL-003, D-033) is built into a Windows installer, a Debian
+# package and a macOS disk image per architecture, none signed with a paid certificate. They join the
+# release like the installers above, with one SBOM of the application's Go modules; checksums.txt lists
+# them, its cosign signature covers them and every file is attested. For a stable tag only, the feed of
+# the desktop auto-update (SDD-009 section 10.5, P3-REL-004) is signed with the secret
+# UPDATE_FEED_SIGNING_KEY and attached as feed.json, and site.yml is run to publish the feed and the
+# installers it lists on GitHub Pages. A stable tag without that secret or without the variable
+# UPDATE_FEED_PUBLIC_KEY fails in the first minutes, before anything is built.
+#
 # workflow_dispatch takes the version to build, because a tag push does not
 # always start a run: GitHub creates no push event when more than three tags
 # go up in a single push. Version tags are pushed one at a time, and a tag
@@ -35,6 +44,7 @@ jobs:
     outputs:
       ref: ${{ steps.tag.outputs.ref }}
       version: ${{ steps.tag.outputs.version }}
+      stable: ${{ steps.tag.outputs.stable }}
     steps:
       - name: Resolve the tag
         id: tag
@@ -52,16 +62,72 @@ jobs:
           esac
           echo "ref=refs/tags/$tag" >>"$GITHUB_OUTPUT"
           echo "version=${tag#v}" >>"$GITHUB_OUTPUT"
+          # Only vX.Y.Z feeds the desktop auto-update; vX.Y.Z-rc.1 and friends never do.
+          if [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "stable=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "stable=false" >>"$GITHUB_OUTPUT"
+          fi
+
+  # The only secret of the desktop release is the key that signs the update feed (D-033: no code signing
+  # certificates exist). A stable release without it, or with a variable that is not its public half, stops
+  # here, within minutes and before any build.
+  preflight:
+    needs: tag
+    if: needs.tag.outputs.stable == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the update feed key
+        env:
+          SIGNING_KEY: ${{ secrets.UPDATE_FEED_SIGNING_KEY }}
+          PUBLIC_KEY: ${{ vars.UPDATE_FEED_PUBLIC_KEY }}
+        run: |
+          if [ -z "$SIGNING_KEY" ]; then
+            echo "::error::add the repository secret UPDATE_FEED_SIGNING_KEY (the 64 hex characters of the Ed25519 seed that signs the desktop update feed; CONTRIBUTING.md)"
+            exit 1
+          fi
+          if [ -z "$PUBLIC_KEY" ]; then
+            echo "::error::add the repository variable UPDATE_FEED_PUBLIC_KEY (the public key of UPDATE_FEED_SIGNING_KEY; CONTRIBUTING.md)"
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.tag.outputs.ref }}
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: The variable is the public key of the secret
+        env:
+          UPDATE_FEED_SIGNING_KEY: ${{ secrets.UPDATE_FEED_SIGNING_KEY }}
+          PUBLIC_KEY: ${{ vars.UPDATE_FEED_PUBLIC_KEY }}
+        run: |
+          derived="$(go run ./internal/tools/updatefeed pubkey)"
+          if [ "$derived" != "$PUBLIC_KEY" ]; then
+            echo "::error::UPDATE_FEED_PUBLIC_KEY is not the public key of UPDATE_FEED_SIGNING_KEY (it should be $derived)"
+            exit 1
+          fi
 
   installers:
-    needs: tag
+    needs: [tag, preflight]
+    if: ${{ !cancelled() && !failure() }}
     uses: ./.github/workflows/installers.yml
     with:
       ref: ${{ needs.tag.outputs.ref }}
       version: ${{ needs.tag.outputs.version }}
 
+  desktop:
+    needs: [tag, preflight, installers]
+    if: ${{ !cancelled() && !failure() }}
+    uses: ./.github/workflows/desktop.yml
+    with:
+      ref: ${{ needs.tag.outputs.ref }}
+      version: ${{ needs.tag.outputs.version }}
+
   goreleaser:
-    needs: [tag, installers]
+    needs: [tag, installers, desktop]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -172,13 +238,30 @@ jobs:
           path: binaries
       - name: Check the installers carry the binaries of the release
         run: bash scripts/installer-binaries.sh check binaries/binaries.sha256 dist/artifacts.json
+      # The installers of the desktop application (desktop.yml) join the same directory: they are
+      # listed in checksums.txt, covered by its signature and attested with the rest. They are not
+      # signed with a paid certificate (D-033). The binaries inside were built by desktop.yml from the
+      # same tag; the SBOM lists the Go modules of the application (desktop/shell/app).
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: desktop-*
+          merge-multiple: true
+          path: dist-installers
+      - name: SBOM of the desktop application
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          syft scan dir:desktop/shell/app --source-name vukem-video-desktop --source-version "${TAG#v}" \
+            -o "spdx-json=dist-installers/vukem-video-desktop_${TAG#v}.sbom.json"
       - name: Attach the installers
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.tag.outputs.tag }}
         run: |
           set -euo pipefail
-          # The Debian packages are already in checksums.txt; the three other kinds are added here.
+          # The Debian packages of the server are already in checksums.txt; the other kinds, the desktop
+          # installers and the desktop SBOM are added here.
           ls -l dist-installers
           (cd dist-installers && sha256sum -- *) >>dist/checksums.txt
           cosign sign-blob --yes --bundle dist/checksums.txt.sigstore.json dist/checksums.txt
@@ -204,7 +287,8 @@ jobs:
           cp "$BUNDLE" vukem-video.intoto.jsonl
           gh release upload "$TAG" vukem-video.intoto.jsonl --clobber --repo "$GITHUB_REPOSITORY"
       # 6 archives + 6 SBOMs + 2 .deb + the Windows, AppImage and 2 macOS installers
-      # + checksums.txt + its bundle + the provenance.
+      # + the desktop Windows installer, .deb and 2 .dmg + the desktop SBOM
+      # + checksums.txt + its bundle + the provenance. A stable release adds feed.json (job feed).
       - name: Check the release assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -213,7 +297,73 @@ jobs:
           count="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq ".assets | length")"
           body="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq ".body | length")"
           echo "assets=$count body_length=$body"
-          [ "$count" -eq 21 ] && [ "$body" -gt 0 ]
+          [ "$count" -eq 26 ] && [ "$body" -gt 0 ]
+
+  # The feed of the desktop auto-update (SDD-009 section 10.5, P3-REL-004). Stable tags only: a pre-release
+  # never reaches it. The installers are the ones the release lists, so every digest of the feed is one
+  # of checksums.txt, which the next step proves before the feed is attached.
+  feed:
+    needs: [tag, goreleaser]
+    if: needs.goreleaser.outputs.stable == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # attach feed.json to the release
+    env:
+      TAG: ${{ needs.goreleaser.outputs.tag }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SITE_URL: ${{ vars.SITE_URL || 'https://alexgalhardo.github.io/vukem-video' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ needs.goreleaser.outputs.tag }}
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: desktop-*
+          merge-multiple: true
+          path: desktop-installers
+      # The installers are served from Pages, next to the feed, not from the release: a release asset
+      # URL redirects to another host, and the client follows no redirect and talks to one host only.
+      - name: Sign the feed
+        env:
+          UPDATE_FEED_SIGNING_KEY: ${{ secrets.UPDATE_FEED_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          ls -l desktop-installers
+          bash scripts/update-feed.sh sign "${TAG#v}" "${SITE_URL%/}/updates" desktop-installers feed.json
+      - name: The feed equals checksums.txt and verifies with the public key
+        env:
+          PUBLIC_KEY: ${{ vars.UPDATE_FEED_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" -p checksums.txt
+          bash scripts/update-feed.sh verify "$PUBLIC_KEY" checksums.txt feed.json
+      - name: Attach the feed
+        run: |
+          set -euo pipefail
+          gh release upload "$TAG" feed.json --clobber --repo "$GITHUB_REPOSITORY"
+          count="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq ".assets | length")"
+          echo "assets=$count"
+          [ "$count" -eq 27 ]
+
+  # Publishes the feed and the installers it lists on GitHub Pages: site.yml adds the latest stable
+  # release to the site it deploys (scripts/pages-updates.sh), so a docs-only deploy keeps them too.
+  pages:
+    needs: feed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write # start site.yml
+    steps:
+      - name: Run the site workflow on main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run site.yml --repo "$GITHUB_REPOSITORY" --ref main
 
   image:
     needs: goreleaser
