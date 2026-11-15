@@ -183,3 +183,57 @@ func TestJobGetWaitMsReturnsWhileAnExportRuns(t *testing.T) {
 		t.Errorf("the job list has %d jobs: %s", len(jobs), textOf(t, listed))
 	}
 }
+
+// TestJobCancelStopsARunningExport: job_cancel moves a running export to
+// cancelled, and cancelling a job that is already final returns it unchanged.
+func TestJobCancelStopsARunningExport(t *testing.T) {
+	t.Parallel()
+
+	started := make(chan struct{}, 1)
+
+	env := testenv.New(t, testenv.Options{
+		Export: func(ctx context.Context, _ service.ExportInput) (*service.ExportOutput, error) {
+			started <- struct{}{}
+
+			<-ctx.Done()
+
+			return nil, ctx.Err()
+		},
+	})
+	cs := connect(t, env.Service, Options{}, "claude-code")
+	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "M"})))["project_id"].(string)
+
+	added := structured(t, ok(t, call(t, cs, "edit", map[string]any{
+		"project_id": project, "base_revision": 0,
+		"operations": []any{map[string]any{"op": "track.add", "args": map[string]any{"kind": "visual", "name": "V"}}},
+	})))
+	created, _ := added["created"].([]any)
+	trackID, _ := created[0].(string)
+
+	ok(t, call(t, cs, "edit", map[string]any{
+		"project_id": project, "base_revision": 1,
+		"operations": []any{map[string]any{"op": "text.add", "args": map[string]any{
+			"track_id": trackID, "start": "0s", "duration": "1s", "text": "hello",
+		}}},
+	}))
+
+	job := ok(t, call(t, cs, "job_start", map[string]any{"project_id": project, "kind": "export"}))
+	jobID, _ := structured(t, job)["job_id"].(string)
+
+	<-started
+
+	cancelled := ok(t, call(t, cs, "job_cancel", map[string]any{"job_id": jobID}))
+	if state := structured(t, cancelled)["state"]; state != service.JobCancelled {
+		t.Fatalf("state after job_cancel = %v: %s", state, textOf(t, cancelled))
+	}
+
+	again := ok(t, call(t, cs, "job_cancel", map[string]any{"job_id": jobID}))
+	if structured(t, again)["state"] != service.JobCancelled {
+		t.Errorf("a second job_cancel changed the job: %s", textOf(t, again))
+	}
+
+	missing := call(t, cs, "job_cancel", map[string]any{"job_id": "job_0000000000"})
+	if !missing.IsError || !strings.Contains(textOf(t, missing), "E_NOT_FOUND") {
+		t.Errorf("an unknown job: %s", textOf(t, missing))
+	}
+}
