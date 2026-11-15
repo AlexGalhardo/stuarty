@@ -284,6 +284,10 @@ func fromEngine(err error) *Error {
 		return se
 	}
 
+	if full, ok := errors.AsType[*QueueFullError](err); ok {
+		return queueFullError(full)
+	}
+
 	if ce, ok := errors.AsType[*command.Error](err); ok {
 		return fromCommand(ce)
 	}
