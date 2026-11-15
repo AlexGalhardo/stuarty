@@ -102,8 +102,11 @@ export default defineConfig({
 				HOST: "127.0.0.1",
 				PORT: String(port),
 				VUKEM_VIDEO_HOME: home,
-				// The suite starts more exports a minute than one person would (SDD-007 4.4).
+				// One token drives the whole suite, faster and with more exports a minute
+				// than one person would (the limits of SDD-007 4.4 apply in local mode).
 				VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE: "1000",
+				VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE: "100000",
+				VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE: "100000",
 				...ffmpegEnv(),
 			},
 		},
@@ -119,6 +122,8 @@ export default defineConfig({
 				PORT: String(failPort),
 				VUKEM_VIDEO_HOME: failHome,
 				VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE: "1000",
+				VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE: "100000",
+				VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE: "100000",
 				// Only this encoder is tried and it is never replaced (ADR-0011).
 				VUKEM_VIDEO_ENCODER: "no_such_encoder",
 				...ffmpegEnv(),
