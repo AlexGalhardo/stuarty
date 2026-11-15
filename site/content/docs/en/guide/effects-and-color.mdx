@@ -7,6 +7,7 @@ description: "Adjust the brightness, contrast and saturation of a clip, and anim
 
 - how to correct the colour of a clip;
 - how to give text an entrance and an exit with a preset;
+- how to apply a colour filter and a blur to a clip;
 - what the product does not do.
 
 ## The idea
@@ -17,7 +18,16 @@ For text, captions, clips and shapes there are six **animation presets**: `fade_
 
 Text styling (font, weight, size, colour, stroke, shadow and background) is described in [Text and captions](/docs/guide/text-and-captions). Fades and slides between items are in [Transitions](/docs/guide/transitions).
 
-The colour correction has no inspector section yet: use the command palette (`Ctrl+K`, `Cmd+K` on macOS), the CLI or an agent. There are no filters, blurs or LUTs.
+### Filters and blur
+
+`clip.set_filter` sets one filter of a fixed list, `grayscale`, `sepia`, `invert`, `warm` or `cool` (`none` is the default), and `amount`, from 0 (the original) to 1 (the full filter). `clip.set_blur` sets a Gaussian blur radius in pixels at the project resolution, from 0 to 100. Both are constant over the clip: they cannot be keyframed. A filter set to `none` with amount 1, or a blur of 0, clears the stored value. The filter is applied after the colour correction and before the blur, in the preview and in the export alike.
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b clip.set_filter item_id=itm_m1n2p3q4r5   filter=sepia amount:=0.6
+vukem-video edit --project prj_7k2m9x4q1b clip.set_blur item_id=itm_m1n2p3q4r5 radius:=12
+```
+
+An MCP agent sends the same operations through `edit`. The colour correction, the filter and the blur have no inspector section yet: use the command palette (`Ctrl+K`, `Cmd+K` on macOS), the CLI or an agent. There are no LUTs.
 
 ## Quick start
 
@@ -53,7 +63,8 @@ A preset replaces the keyframes of the same properties inside its edge and keeps
 ## Common mistakes
 
 - Setting a contrast above 2 or a brightness outside -1 to 1: `E_VALIDATION`.
-- Applying a preset to an audio item: `E_TYPE_MISMATCH`.
+- Applying a preset, a filter or a blur to an audio item: `E_TYPE_MISMATCH`.
+- A blur radius above 100 or a filter amount outside 0 to 1: `E_VALIDATION`.
 - A preset duration longer than the item: the command is refused.
 
 ## Next steps
