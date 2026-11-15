@@ -1081,6 +1081,10 @@ func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {
 		return nil, err
 	}
 
+	if ref.Kind == "template" {
+		return s.openTemplateFile(ctx, c, ref.ID)
+	}
+
 	row, lerr := s.loadProject(ctx, c, ref.ProjectID)
 	if lerr != nil {
 		return nil, lerr

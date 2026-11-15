@@ -169,6 +169,18 @@ var Endpoints = []Endpoint{
 		Summary: "Make a project from a template",
 	},
 	{
+		ID: "templates.import", Method: http.MethodPost, Path: "/templates/import", Scope: service.ScopeEdit,
+		Service: "TemplateImport", Status: 201, Summary: "Import a template file",
+	},
+	{
+		ID: "templates.export", Method: http.MethodPost, Path: "/templates/{template_id}/export",
+		Scope: service.ScopeRead, Service: "TemplateExport", Status: 200, Summary: "Write the file of a template",
+	},
+	{
+		ID: "templates.file", Method: http.MethodGet, Path: "/templates/{template_id}/file", Scope: service.ScopeRead,
+		Service: "OpenFile", Status: 200, Summary: "Download the file of a template",
+	},
+	{
 		ID: "projects.frame", Method: http.MethodGet, Path: "/projects/{id}/frame", Scope: service.ScopeRead,
 		Service: "ViewFrame", Status: 200, Summary: "Render one frame",
 	},

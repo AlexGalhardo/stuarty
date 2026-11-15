@@ -66,6 +66,8 @@ var Scopes = map[string]string{
 	"TemplateList":        ScopeRead,
 	"TemplateSave":        ScopeEdit,
 	"TemplateInstantiate": ScopeEdit,
+	"TemplateExport":      ScopeRead,
+	"TemplateImport":      ScopeEdit,
 	"PlanWindow":          ScopeRead,
 	"ViewFrame":           ScopeRead,
 	"ViewSheet":           ScopeRead,
