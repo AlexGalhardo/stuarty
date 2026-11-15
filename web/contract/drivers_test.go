@@ -1,0 +1,534 @@
+package contract
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
+	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
+
+	vukem "github.com/AlexGalhardo/vukem"
+	"github.com/AlexGalhardo/vukem/vukemtest"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/remote"
+	"github.com/AlexGalhardo/vukem-video/web/app/auth"
+	"github.com/AlexGalhardo/vukem-video/web/app/cli"
+	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
+	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
+	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
+	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
+)
+
+const actor = "contract"
+
+// fixedNow keeps every timestamp of every run the same, so that the documents
+// can be compared byte for byte.
+var fixedNow = time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)
+
+// step is one call of a scenario: a Service operation and its request.
+type step struct {
+	Call        string          `json:"call"`
+	Args        json.RawMessage `json:"args"`
+	ExpectError *struct {
+		Code string `json:"code"`
+	} `json:"expect_error"`
+}
+
+// driver reaches the Service in one way. Do returns the result document (the
+// JSON of the result struct) and, for a failure, the error document.
+type driver interface {
+	name() string
+	do(t *testing.T, s step) (result json.RawMessage, text string, fail *service.ErrorDocument)
+	// service is the Service of the workspace this driver wrote, read directly.
+	service() service.Service
+	env() *testenv.Env
+}
+
+func newEnv(t *testing.T) *testenv.Env {
+	t.Helper()
+
+	return testenv.New(t, testenv.Options{Clock: func() time.Time { return fixedNow }})
+}
+
+func callerCtx() context.Context { return testenv.Caller("local:" + actor) }
+
+// invoke decodes the request of a step, calls the method and returns the result.
+func invoke[Req, Res any](ctx context.Context, s step, fn func(context.Context, Req) (*Res, error)) (any, error) {
+	var req Req
+	if err := json.Unmarshal(s.Args, &req); err != nil {
+		return nil, fmt.Errorf("step %s: %w", s.Call, err)
+	}
+
+	res, err := fn(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// callService is the table of the Service operations of the Prototype that the
+// scenarios use. TestDriversCoverService fails when the Service has one the
+// table does not.
+func callService(ctx context.Context, svc service.Service, s step) (any, error) {
+	switch s.Call {
+	case "ProjectList":
+		return invoke(ctx, s, svc.ProjectList)
+	case "ProjectCreate":
+		return invoke(ctx, s, svc.ProjectCreate)
+	case "ProjectGet":
+		return invoke(ctx, s, svc.ProjectGet)
+	case "Edit":
+		return invoke(ctx, s, svc.Edit)
+	case "HistoryList":
+		return invoke(ctx, s, svc.HistoryList)
+	case "Undo":
+		return invoke(ctx, s, svc.Undo)
+	case "Redo":
+		return invoke(ctx, s, svc.Redo)
+	case "Lint":
+		return invoke(ctx, s, svc.Lint)
+	case "MediaImport":
+		return invoke(ctx, s, svc.MediaImport)
+	case "MediaList":
+		return invoke(ctx, s, svc.MediaList)
+	case "MediaInspect":
+		return invoke(ctx, s, svc.MediaInspect)
+	case "JobStart":
+		return invoke(ctx, s, svc.JobStart)
+	case "JobGet":
+		return invoke(ctx, s, svc.JobGet)
+	case "JobList":
+		return invoke(ctx, s, svc.JobList)
+	}
+
+	return nil, fmt.Errorf("no mapping for %s", s.Call)
+}
+
+// serviceDriver runs the steps through a service.Service: the in-process one
+// (the oracle) or the HTTP client in front of a server.
+type serviceDriver struct {
+	label string
+	e     *testenv.Env
+	svc   service.Service
+}
+
+func (d *serviceDriver) name() string             { return d.label }
+func (d *serviceDriver) service() service.Service { return d.e.Service }
+func (d *serviceDriver) env() *testenv.Env        { return d.e }
+
+func (d *serviceDriver) do(t *testing.T, s step) (json.RawMessage, string, *service.ErrorDocument) {
+	t.Helper()
+
+	res, err := callService(callerCtx(), d.svc, s)
+	if err != nil {
+		if se, ok := errors.AsType[*service.Error](err); ok {
+			doc := se.Document()
+
+			return nil, "", &doc
+		}
+
+		t.Fatalf("%s %s: %v", d.label, s.Call, err)
+	}
+
+	return encode(t, res), textOf(res), nil
+}
+
+func encode(t *testing.T, v any) json.RawMessage {
+	t.Helper()
+
+	raw, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return raw
+}
+
+// textOf is the text member of a result, which every read result has.
+func textOf(res any) string {
+	raw, err := json.Marshal(res)
+	if err != nil {
+		return ""
+	}
+
+	var m struct {
+		Text string `json:"text"`
+	}
+
+	_ = json.Unmarshal(raw, &m)
+
+	return m.Text
+}
+
+// httpDriver is the HTTP client in front of a server, which also says which
+// routes the server has.
+type httpDriver struct {
+	serviceDriver
+	url   string
+	token string
+	send  func(*http.Request) (*http.Response, error)
+}
+
+func newDirect(t *testing.T) driver {
+	t.Helper()
+
+	e := newEnv(t)
+
+	return &serviceDriver{label: "in-process", e: e, svc: e.Service}
+}
+
+// newHTTP serves the API of the environment on a test server and returns the
+// driver that reaches it with the HTTP client of the CLI.
+func newHTTP(t *testing.T) driver {
+	t.Helper()
+
+	e := newEnv(t)
+
+	const token = "vvl_c0ntr4ct00000000000000000000000000000000000000000000000000000000"
+
+	now := func() time.Time { return fixedNow }
+
+	deps := &httpapi.Deps{
+		Service: e.Service, Registry: command.Default(), Jobs: e.Store.Jobs(), Workspace: e.Dir, Token: token,
+		Sessions: auth.NewSessions(now), Launch: auth.NewLaunch(now), Now: now,
+	}
+
+	app := vukemtest.New(t, func(opts ...vukem.Option) (*vukem.App, error) { return bootstrap.NewWith(deps, opts...) })
+
+	srv := httptest.NewServer(app.Handler())
+	t.Cleanup(srv.Close)
+
+	base := serviceDriver{label: "http", e: e, svc: remote.New(srv.URL+"/", token, srv.Client())}
+
+	return &httpDriver{serviceDriver: base, url: srv.URL, token: token, send: srv.Client().Do}
+}
+
+// mcpDriver calls the tools of the MCP server over an in-memory session.
+type mcpDriver struct {
+	e  *testenv.Env
+	cs *sdk.ClientSession
+}
+
+func (d *mcpDriver) name() string             { return "mcp" }
+func (d *mcpDriver) service() service.Service { return d.e.Service }
+func (d *mcpDriver) env() *testenv.Env        { return d.e }
+
+func newMCP(t *testing.T) driver {
+	t.Helper()
+
+	e := newEnv(t)
+
+	srv, err := mcp.New(e.Service, mcp.Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ct, st := sdk.NewInMemoryTransports()
+
+	ss, err := srv.Connect(t.Context(), st, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() { _ = ss.Close() })
+
+	cs, err := sdk.NewClient(&sdk.Implementation{Name: actor, Version: "1"}, nil).Connect(t.Context(), ct, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() { _ = cs.Close() })
+
+	return &mcpDriver{e: e, cs: cs}
+}
+
+// toolCall is how a Service operation is encoded as a tool call (SDD-003 7.1).
+func toolCall(s step) (tool string, args map[string]any, err error) {
+	args = map[string]any{}
+	if len(s.Args) > 0 {
+		if err := json.Unmarshal(s.Args, &args); err != nil {
+			return "", nil, err
+		}
+	}
+
+	switch s.Call {
+	case "ProjectList":
+		return "project_list", args, nil
+	case "ProjectCreate":
+		delete(args, "dry_run")
+
+		return "project_create", args, nil
+	case "ProjectGet":
+		return "project_get", args, nil
+	case "Edit":
+		return "edit", args, nil
+	case "HistoryList":
+		args["action"] = "list"
+
+		return "history", args, nil
+	case "Undo", "Redo":
+		args["action"] = strings.ToLower(s.Call)
+
+		return "history", args, nil
+	case "Lint":
+		return "lint", args, nil
+	case "MediaImport":
+		files, _ := args["files"].([]any)
+		paths, ids := make([]any, 0, len(files)), make([]any, 0, len(files))
+
+		for _, f := range files {
+			m, _ := f.(map[string]any)
+			paths = append(paths, m["path"])
+
+			if id, ok := m["asset_id"]; ok {
+				ids = append(ids, id)
+			}
+		}
+
+		delete(args, "files")
+		args["paths"] = paths
+
+		if len(ids) > 0 {
+			args["asset_ids"] = ids
+		}
+
+		return "media_import", args, nil
+	case "MediaList":
+		return "media_inspect", args, nil
+	case "MediaInspect":
+		return "media_inspect", args, nil
+	case "JobStart":
+		return "job_start", args, nil
+	case "JobGet", "JobList":
+		return "job_get", args, nil
+	}
+
+	return "", nil, fmt.Errorf("no tool for %s", s.Call)
+}
+
+func (d *mcpDriver) do(t *testing.T, s step) (json.RawMessage, string, *service.ErrorDocument) {
+	t.Helper()
+
+	tool, args, err := toolCall(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := d.cs.CallTool(t.Context(), &sdk.CallToolParams{Name: tool, Arguments: args})
+	if err != nil {
+		t.Fatalf("mcp %s: %v", tool, err)
+	}
+
+	if len(res.Content) != 1 {
+		t.Fatalf("mcp %s: %d content blocks", tool, len(res.Content))
+	}
+
+	tc, _ := res.Content[0].(*sdk.TextContent)
+	if tc == nil {
+		t.Fatalf("mcp %s: the content is %T, want text (images come only from view)", tool, res.Content[0])
+	}
+
+	if res.IsError {
+		// The last line of an error text is its envelope (SDD-003 section 1.3).
+		_, last, _ := strings.Cut(tc.Text, "\n")
+		last = last[strings.LastIndex(last, "\n")+1:]
+
+		var doc service.ErrorDocument
+		if err := json.Unmarshal([]byte(last), &doc); err != nil {
+			t.Fatalf("mcp %s: the error text has no envelope line: %q", tool, tc.Text)
+		}
+
+		return nil, "", &doc
+	}
+
+	return encode(t, res.StructuredContent), tc.Text, nil
+}
+
+// cliDriver runs the commands of the CLI with --json over the Service of an
+// environment.
+type cliDriver struct {
+	e *testenv.Env
+}
+
+func (d *cliDriver) name() string             { return "cli" }
+func (d *cliDriver) service() service.Service { return d.e.Service }
+func (d *cliDriver) env() *testenv.Env        { return d.e }
+
+func newCLI(t *testing.T) driver {
+	t.Helper()
+
+	return &cliDriver{e: newEnv(t)}
+}
+
+type fixedResolver struct{ svc service.Service }
+
+func (r fixedResolver) Resolve(context.Context, cli.Target) (*cli.Connection, error) {
+	return &cli.Connection{Service: r.svc, Workspace: "/ws"}, nil
+}
+
+// command is how a Service operation is encoded as a command line (SDD-003
+// 7.1): the name, the arguments and what goes on standard input.
+func command2argv(s step) (name string, argv []string, stdin string, err error) {
+	var a struct {
+		ProjectID string               `json:"project_id"`
+		AssetID   string               `json:"asset_id"`
+		JobID     string               `json:"job_id"`
+		ID        string               `json:"id"`
+		Name      string               `json:"name"`
+		Preset    string               `json:"preset"`
+		FPS       string               `json:"fps"`
+		Detail    string               `json:"detail"`
+		State     string               `json:"state"`
+		Sections  []string             `json:"sections"`
+		Kind      string               `json:"kind"`
+		Files     []service.ImportFile `json:"files"`
+		WaitMS    int                  `json:"wait_ms"`
+	}
+
+	if len(s.Args) > 0 {
+		if err := json.Unmarshal(s.Args, &a); err != nil {
+			return "", nil, "", err
+		}
+	}
+
+	proj := []string{"--project", a.ProjectID}
+	flag := func(k, v string) []string {
+		if v == "" {
+			return nil
+		}
+
+		return []string{"--" + k, v}
+	}
+
+	switch s.Call {
+	case "ProjectList":
+		return "project:list", nil, "", nil
+	case "ProjectCreate":
+		argv = append(argv, flag("name", a.Name)...)
+		argv = append(argv, flag("preset", a.Preset)...)
+		argv = append(argv, flag("fps", a.FPS)...)
+
+		return "project:create", append(argv, flag("id", a.ID)...), "", nil
+	case "ProjectGet":
+		return "project:show", append(proj, flag("detail", a.Detail)...), "", nil
+	case "Edit":
+		return "edit", proj, withoutProject(s.Args), nil
+	case "HistoryList":
+		return "history", proj, "", nil
+	case "Undo":
+		return "undo", proj, "", nil
+	case "Redo":
+		return "redo", proj, "", nil
+	case "Lint":
+		return "lint", proj, "", nil
+	case "MediaImport":
+		for _, f := range a.Files {
+			argv = append(argv, f.Path)
+		}
+
+		for _, f := range a.Files {
+			argv = append(argv, flag("asset-id", f.AssetID)...)
+		}
+
+		return "media:import", append(argv, proj...), "", nil
+	case "MediaList":
+		return "media:list", proj, "", nil
+	case "MediaInspect":
+		argv = append([]string{a.AssetID}, proj...)
+
+		return "media:inspect", append(argv, flag("sections", strings.Join(a.Sections, ","))...), "", nil
+	case "JobStart":
+		return "export", proj, "", nil
+	case "JobGet":
+		return "job:show", []string{a.JobID, "--wait"}, "", nil
+	case "JobList":
+		return "job:list", append(proj, flag("state", a.State)...), "", nil
+	}
+
+	return "", nil, "", fmt.Errorf("no command for %s", s.Call)
+}
+
+func (d *cliDriver) do(t *testing.T, s step) (json.RawMessage, string, *service.ErrorDocument) {
+	t.Helper()
+
+	name, argv, stdin, err := command2argv(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+
+	rt := &cli.Runtime{
+		Stdin: strings.NewReader(stdin), Stdout: &stdout, Stderr: &stderr,
+		Getenv: func(string) string { return "" }, Getwd: func() (string, error) { return t.TempDir(), nil },
+		Resolver: fixedResolver{svc: d.e.Service},
+	}
+
+	argv = append(argv, "--json", "--actor", actor)
+	if name == "edit" {
+		argv = append(argv, "--ops", "-")
+	}
+
+	code := rt.Execute(t.Context(), name, argv)
+
+	if stderr.Len() > 0 {
+		t.Fatalf("cli %s: standard error is not empty in --json mode: %q", name, stderr.String())
+	}
+
+	if code == cli.ExitOK {
+		raw := bytes.TrimSpace(stdout.Bytes())
+
+		var m struct {
+			Text string `json:"text"`
+		}
+
+		_ = json.Unmarshal(raw, &m)
+
+		return raw, m.Text, nil
+	}
+
+	var doc service.ErrorDocument
+	if err := json.Unmarshal(stdout.Bytes(), &doc); err != nil || doc.Code == "" {
+		t.Fatalf("cli %s: exit %d with no error document: %q", name, code, stdout.String())
+	}
+
+	if want := expectedExit(doc); code != want {
+		t.Errorf("cli %s: exit %d for %s, want %d", name, code, doc.Code, want)
+	}
+
+	return nil, "", &doc
+}
+
+func expectedExit(doc service.ErrorDocument) int {
+	if doc.Retryable {
+		return cli.ExitTransient
+	}
+
+	return cli.ExitFailure
+}
+
+// withoutProject is the batch object of the edit input form: the project is a
+// flag on the command line.
+func withoutProject(args json.RawMessage) string {
+	var m map[string]json.RawMessage
+
+	_ = json.Unmarshal(args, &m)
+	delete(m, "project_id")
+
+	raw, err := json.Marshal(m)
+	if err != nil {
+		return ""
+	}
+
+	return string(raw)
+}

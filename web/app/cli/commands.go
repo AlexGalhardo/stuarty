@@ -21,6 +21,21 @@ func registry() []*spec {
 	}
 }
 
+// CommandNames lists the commands the binary knows, and those among them that
+// still answer with the task that delivers them. The parity test of
+// web/contract reads it.
+func CommandNames() (all, pending []string) {
+	for _, s := range registry() {
+		all = append(all, s.name)
+
+		if s.pending != "" {
+			pending = append(pending, s.name)
+		}
+	}
+
+	return all, pending
+}
+
 func lookup(name string) *spec {
 	for _, s := range registry() {
 		if s.name == name {
