@@ -249,7 +249,8 @@ func audioErr(err error, codec string) error {
 // audioDerived writes the AAC proxy of a WAV and runs the peaks, the silence and the loudness, in parallel.
 func (j *job) audioDerived(ctx context.Context, wav, proxyName string, samples int64, deadline time.Duration) error {
 	var wg sync.WaitGroup
-	errs := make([]error, 4)
+	errs := make([]error, 5)
+	var silence *Silence
 	do := func(i int, f func() error) {
 		wg.Go(func() { errs[i] = f() })
 	}
@@ -328,6 +329,8 @@ func (j *job) audioDerived(ctx context.Context, wav, proxyName string, samples i
 				err,
 			)
 		}
+		silence = s
+
 		return j.writeJSON("silence.json", s)
 	})
 	do(3, func() error {
@@ -350,16 +353,47 @@ func (j *job) audioDerived(ctx context.Context, wav, proxyName string, samples i
 		}
 		return j.writeJSON("loudness.json", l)
 	})
+	do(4, func() error {
+		if !j.in.SoundMaps {
+			return nil
+		}
+
+		b, err := BeatsOfFile(ctx, j.path(wav))
+		if err != nil {
+			return ingestErr(
+				ReasonDecodeFailed,
+				"The beat grid could not be computed.",
+				map[string]any{"step": StepAudio},
+				err,
+			)
+		}
+
+		return j.writeJSON("beats.json", b)
+	})
 	wg.Wait()
 	for _, e := range errs {
 		if e != nil {
 			return e
 		}
 	}
+	if j.in.SoundMaps {
+		if err := j.writeSpeech(silence); err != nil {
+			return ingestErr(
+				ReasonDecodeFailed,
+				"The speech map could not be derived.",
+				map[string]any{"step": StepAudio},
+				err,
+			)
+		}
+	}
 	j.prog.set(StepAudio, 1)
 	j.add(workFile{kind: "peaks", profile: ProfilePeaks, ext: "bin", name: "peaks.bin"})
 	j.add(workFile{kind: "silence", profile: ProfileSilence, ext: "json", name: "silence.json"})
 	j.add(workFile{kind: "loudness", profile: ProfileLoudness, ext: "json", name: "loudness.json"})
+	if j.in.SoundMaps {
+		j.add(workFile{kind: "speech", profile: ProfileSpeech, ext: "json", name: "speech.json"})
+		j.add(workFile{kind: "beats", profile: ProfileBeats, ext: "json", name: "beats.json"})
+	}
 	return nil
 }
 
