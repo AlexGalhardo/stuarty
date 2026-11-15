@@ -20,9 +20,15 @@ func TestTestTranscriberIsRefusedOutsideTheTestCondition(t *testing.T) {
 		env  map[string]string
 		mode string
 	}{
-		"no APP_ENV":         {map[string]string{EnvTestTranscriber: "stub"}, config.ModeLocal},
-		"production":         {map[string]string{EnvTestTranscriber: "stub", "APP_ENV": "production"}, config.ModeLocal},
-		"development":        {map[string]string{EnvTestTranscriber: "stub", "APP_ENV": "development"}, config.ModeLocal},
+		"no APP_ENV": {map[string]string{EnvTestTranscriber: "stub"}, config.ModeLocal},
+		"production": {
+			map[string]string{EnvTestTranscriber: "stub", "APP_ENV": "production"},
+			config.ModeLocal,
+		},
+		"development": {
+			map[string]string{EnvTestTranscriber: "stub", "APP_ENV": "development"},
+			config.ModeLocal,
+		},
 		"network mode":       {map[string]string{EnvTestTranscriber: "stub", "APP_ENV": "testing"}, config.ModeNetwork},
 		"unknown value":      {map[string]string{EnvTestTranscriber: "real", "APP_ENV": "testing"}, config.ModeLocal},
 		"network, no APPENV": {map[string]string{EnvTestTranscriber: "stub"}, config.ModeNetwork},
