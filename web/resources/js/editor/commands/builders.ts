@@ -51,6 +51,64 @@ export function addClipOperations(input: {
 	return ops;
 }
 
+// "Add to timeline" on an audio card: `audio.add` on the first audio track by
+// order; when there is none, the same batch adds one first with an id the UI
+// supplies.
+export function addAudioOperations(input: {
+	assetId: string;
+	playhead: number;
+	firstAudioTrack: string | null;
+	newTrackId: () => string;
+}): Operations {
+	const ops: Operations = [];
+	let track = input.firstAudioTrack;
+	if (track === null) {
+		track = input.newTrackId();
+		ops.push({ op: "track.add", args: { kind: "audio", id: track } });
+	}
+	ops.push({
+		op: "audio.add",
+		args: {
+			track_id: track,
+			asset_id: input.assetId,
+			start: frames(input.playhead),
+		},
+	});
+	return ops;
+}
+
+// A library card released on a row: the operation follows the asset and the row
+// (audio assets and audio rows take `audio.add`), the track is the row under the
+// pointer and `start` the frame under it. The core judges the kind and the place.
+export function dropAssetOperations(input: {
+	assetId: string;
+	assetKind: "video" | "audio" | "image";
+	trackId: string;
+	trackKind: "visual" | "audio";
+	start: number;
+}): Operations {
+	const op =
+		input.assetKind === "audio" || input.trackKind === "audio"
+			? "audio.add"
+			: "clip.add";
+	return [
+		{
+			op,
+			args: {
+				track_id: input.trackId,
+				asset_id: input.assetId,
+				start: frames(input.start),
+			},
+		},
+	];
+}
+
+// "Remove from project" on a card; the core refuses with E_IN_USE while an item
+// still uses the asset.
+export function removeAssetOperations(assetId: string): Operations {
+	return [{ op: "asset.remove", args: { asset_id: assetId } }];
+}
+
 // One `item.split` per item whose range contains the playhead strictly.
 export function splitOperations(
 	items: readonly ItemRange[],
@@ -244,6 +302,7 @@ export function trimEndOperations(itemId: string, to: string): Operations {
 export function withNextFree(ops: Operations, nextFree: number): Operations {
 	return ops.map((operation) =>
 		operation.op === "clip.add" ||
+		operation.op === "audio.add" ||
 		operation.op === "caption.add" ||
 		operation.op === "item.move"
 			? {

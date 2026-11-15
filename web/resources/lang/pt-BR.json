@@ -170,6 +170,17 @@
         "add": "Adicionar à linha do tempo",
         "retry": "Tentar de novo",
         "dismiss": "Dispensar",
+        "menu": "Ações de {name}",
+        "inspect": "Inspecionar",
+        "inspect_loading": "Lendo a mídia.",
+        "remove": "Remover do projeto",
+        "trash": "Mover para a lixeira",
+        "restore": "Restaurar",
+        "trash_group": "Lixeira ({count})",
+        "in_use": {
+          "title": "A mídia ainda está em uso",
+          "body": "Estes itens a usam. Selecione um para vê-lo ou remova-os antes."
+        },
         "progress": "Progresso da importação",
         "state": {
           "pending": "Aguardando",

@@ -170,6 +170,17 @@
         "add": "Add to timeline",
         "retry": "Try again",
         "dismiss": "Dismiss",
+        "menu": "Actions for {name}",
+        "inspect": "Inspect",
+        "inspect_loading": "Reading the media.",
+        "remove": "Remove from project",
+        "trash": "Move to trash",
+        "restore": "Restore",
+        "trash_group": "Trash ({count})",
+        "in_use": {
+          "title": "The media is still in use",
+          "body": "These items use it. Select one to see it, or remove them first."
+        },
         "progress": "Import progress",
         "state": {
           "pending": "Waiting",

@@ -7,13 +7,18 @@ import { useCanEdit } from "../commands/useActions";
 import { useStore } from "../state/createStore";
 import { useRuntime } from "../state/EditorContext";
 import { errorHeadline } from "../ui/errorHeadline";
-import AssetCard from "./AssetCard";
+import AssetCard, { type AssetDragStart } from "./AssetCard";
 import { parsePastedPaths } from "./importPaths";
+import TrashGroup from "./TrashGroup";
 
 // The media library of SDD-012 section 13: import by path, cards with their
 // state and progress from events, and "Add to timeline". A browser page cannot
 // see the path of a dropped file, so a drop only explains that.
-export default function Library(): ReactNode {
+export default function Library({
+	onAssetDragStart,
+}: {
+	onAssetDragStart?: AssetDragStart;
+}): ReactNode {
 	const t = useT();
 	const canEdit = useCanEdit();
 	const runtime = useRuntime();
@@ -39,6 +44,7 @@ export default function Library(): ReactNode {
 	const visible = entries.filter(
 		(entry) => !entry.trashed && !dismissed.includes(entry.asset_id),
 	);
+	const trashed = entries.filter((entry) => entry.trashed);
 
 	return (
 		<section
@@ -99,10 +105,15 @@ export default function Library(): ReactNode {
 			) : (
 				<ul className="flex flex-col gap-2">
 					{visible.map((entry) => (
-						<AssetCard key={entry.asset_id} entry={entry} />
+						<AssetCard
+							key={entry.asset_id}
+							entry={entry}
+							onDragStart={onAssetDragStart}
+						/>
 					))}
 				</ul>
 			)}
+			<TrashGroup entries={trashed} />
 		</section>
 	);
 }

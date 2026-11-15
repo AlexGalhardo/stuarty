@@ -9,6 +9,7 @@ import {
 } from "../state/selectors";
 import { formatTimecode } from "../ui/timecode";
 import {
+	addAudioOperations,
 	addClipOperations,
 	adjacentTrack,
 	captionOperations,
@@ -20,6 +21,7 @@ import {
 	nudgeOperations,
 	type Operations,
 	type Ripple,
+	removeAssetOperations,
 	renameOperations,
 	splitOperations,
 	trimOperations,
@@ -56,6 +58,8 @@ export interface Actions {
 	duplicateSelection(): Promise<EditOutcome | null>;
 	// The gap menu: `at` is the frame under the pointer.
 	closeGap(trackId: string, at: number): Promise<EditOutcome | null>;
+	// "Remove from project" on a card; E_IN_USE opens the dialog of the items.
+	removeAsset(assetId: string): Promise<EditOutcome | null>;
 	// The inline rename (F2, the menu); an empty name clears it.
 	renameItem(itemId: string, name: string): Promise<EditOutcome | null>;
 	// palette.run: the operations the palette built from a schema form.
@@ -113,13 +117,15 @@ function nextFree(error: ApiError): number | null {
 export function createActions(runtime: EditorRuntime): Actions {
 	const { documents, ui, noticeWriter, uiWriter } = runtime;
 
-	function firstVisualTrack(): string | null {
+	function firstTrackOfKind(kind: "visual" | "audio"): string | null {
 		const state = documents.getState();
 		for (const id of selectOrderedTrackIds(state)) {
-			if (selectTrack(state, id)?.kind === "visual") return id;
+			if (selectTrack(state, id)?.kind === kind) return id;
 		}
 		return null;
 	}
+
+	const firstVisualTrack = (): string | null => firstTrackOfKind("visual");
 
 	function selectedRanges(): ItemRange[] {
 		return rangesOf(ui.getState().selection.items);
@@ -186,6 +192,17 @@ export function createActions(runtime: EditorRuntime): Actions {
 			// resends the batch on its own (SDD-012 section 4.5 item 4).
 			if (found !== null) void catchUp(found.revision);
 			return;
+		}
+		if (error.code === "E_IN_USE") {
+			const usedBy = error.details?.used_by;
+			if (Array.isArray(usedBy)) {
+				const removed = ops.find((o) => o.op === "asset.remove")?.args.asset_id;
+				uiWriter.showInUse({
+					assetId: typeof removed === "string" ? removed : "",
+					usedBy: usedBy.filter((id): id is string => typeof id === "string"),
+				});
+				return;
+			}
 		}
 		const trimmed = ops.find((o) => o.op === "item.trim");
 		const available = sourceAvailable(error);
@@ -276,6 +293,16 @@ export function createActions(runtime: EditorRuntime): Actions {
 			if (state.document?.assets[assetId] === undefined) {
 				return Promise.resolve(null);
 			}
+			if (state.document.assets[assetId]?.kind === "audio") {
+				return send(
+					addAudioOperations({
+						assetId,
+						playhead: ui.getState().playheadFrame,
+						firstAudioTrack: firstTrackOfKind("audio"),
+						newTrackId: () => newId("trk"),
+					}),
+				);
+			}
 			return send(
 				addClipOperations({
 					assetId,
@@ -315,6 +342,11 @@ export function createActions(runtime: EditorRuntime): Actions {
 		deleteSelection: (ripple) => send(deleteOperations(actedIds(), ripple)),
 		duplicateSelection: () => send(duplicateOperations(rangesOf(actedIds()))),
 		closeGap: (trackId, at) => send(closeGapOperations(trackId, at)),
+		async removeAsset(assetId) {
+			const outcome = await send(removeAssetOperations(assetId));
+			await runtime.reloadLibrary();
+			return outcome;
+		},
 		renameItem: (itemId, name) => send(renameOperations(itemId, name)),
 		commitGesture: (ops, baseRevision) => send(ops, false, baseRevision),
 		runOperations: (ops) => send(ops),
