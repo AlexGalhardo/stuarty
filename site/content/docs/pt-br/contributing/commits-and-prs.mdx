@@ -1,0 +1,49 @@
+---
+title: "Commits e pull requests"
+description: "Como escrever um commit e um pull request para que as verificações passem e o changelog seja bem lido."
+---
+
+## O que você vai aprender
+
+- o formato do cabeçalho de um commit, e os tipos e escopos aceitos;
+- como um commit vira uma entrada das notas da versão;
+- o que um pull request precisa mostrar antes de ser integrado.
+
+## A ideia
+
+Os commits seguem o [Conventional Commits](https://www.conventionalcommits.org/) 1.0 em inglês. Um pull request é integrado com **rebase**, então cada commit do branch chega ao `main` como está e é o que o changelog lê. É por isso que cada commit é pequeno, autocontido e escrito para quem lê as notas da versão. Uma mudança lógica vai em um commit e em um pull request.
+
+```text
+<type>(<scope>)!: <description>
+
+[body]
+
+[footer(s)]
+```
+
+- **Tipos:** `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `style`, `revert`.
+- **Descrição:** no imperativo, começa com letra minúscula, não tem ponto final, e o cabeçalho inteiro tem no máximo 100 caracteres.
+- **Escopo:** opcional; um entre `core`, `timeline`, `schema`, `command`, `plan`, `lint`, `engine`, `raster`, `ingest`, `export`, `image`, `transcribe`, `installers`, `service`, `workspace`, `web`, `api`, `mcp`, `cli`, `ui`, `site`, `docs`, `repo`, `ci`, `deps`, `deps-dev`, `release`, `adr`, `sdd`, `go` ou `security`.
+- **Rodapés:** `BREAKING CHANGE:` descreve o impacto de uma mudança incompatível (marque-a também com `!`); `Security:` dá uma linha sobre o risco que uma correção de segurança fecha; `Refs: P1-ENG-003` ou `Fixes #123` nomeia a tarefa ou a issue.
+
+## Início rápido
+
+1. Escreva o commit com um tipo que sirva às notas. As notas da versão têm cinco seções: `feat` vai para **Added**, um commit incompatível para **Changed**, `revert` ou um rodapé `Removed:` para **Removed**, `fix` para **Fixed**, e um rodapé `Security:` ou o escopo `security` para **Security**. Os outros tipos ficam de fora.
+2. Execute as verificações antes de enviar: `task ci`, e `task site:build` quando você mudou `site/`.
+3. Abra o pull request com o modelo preenchido: a tarefa ou a issue, as verificações que você executou, a regra do cliente fino e qualquer atrito com o framework.
+4. Junte os commits de correção antes de pedir a integração. Um pull request que corrige um bug tem o teste no mesmo commit da correção.
+
+Um commit que muda apenas a redação de uma página em inglês e não precisa de nova tradução leva uma linha `Translation: not-needed` na mensagem; veja [Traduzindo a documentação](/docs/contributing/translating).
+
+## Erros comuns
+
+- Um cabeçalho com mais de 100 caracteres, uma letra maiúscula depois dos dois pontos, um ponto final ou um escopo que não está na lista: a verificação de commits falha e o cabeçalho precisa ser reescrito.
+- Marcar uma mudança como `feat` quando ela corrige um bug: ela acaba em **Added** em vez de **Fixed**.
+- Editar o `CHANGELOG.md` à mão. Ele é gerado a partir dos commits quando uma versão é preparada.
+- Enviar para o `main` ou fazer um push forçado em um branch compartilhado. O `main` é protegido: uma mudança só chega a ele por um pull request com verificações verdes, e quem integra é o mantenedor.
+- Colocar um id de tarefa no cabeçalho em vez de no corpo.
+
+## Próximos passos
+
+- [O processo de versionamento](/docs/contributing/releases)
+- [Escrevendo documentação](/docs/contributing/writing-docs)

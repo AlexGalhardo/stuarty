@@ -1,0 +1,48 @@
+---
+title: "O processo de versionamento"
+description: "Como uma versão é publicada: o pull request, o changelog, a regra da tag e as verificações depois da publicação."
+---
+
+## O que você vai aprender
+
+- quando uma versão é publicada e como é numerada;
+- os passos de um branch de versão até uma versão verificada;
+- a regra de que uma tag publicada nunca é movida.
+
+## A ideia
+
+As versões seguem o [Versionamento Semântico](https://semver.org/) e o [Conventional Commits](https://www.conventionalcommits.org/). Antes da `1.0.0`, uma versão menor (`v0.N.0`) adiciona recursos e pode mudar uma interface pública, e uma versão de correção (`v0.N.1`) apenas corrige bugs. Uma versão menor é publicada a cada cerca de 90 commits no `main`, e sempre no fim de uma fase (Protótipo, ALPHA, BETA).
+
+Um pull request carrega uma versão. O seu branch, `release/vX.Y.Z`, reúne o trabalho da versão como commits pequenos e autocontidos, cada um um Conventional Commit com um cabeçalho de no máximo 100 caracteres. O pull request se chama `chore(release): vX.Y.Z updates` e é integrado com **rebase**, então cada commit chega ao `main` como está e vira uma entrada do changelog. O `main` é protegido: ninguém faz commit nem push direto nele, e uma mudança só chega a ele por um pull request cujas verificações obrigatórias estão verdes e que está atualizado com o `main`.
+
+O changelog e as notas da versão são gerados a partir dos commits e têm apenas cinco seções: **Added** (`feat`), **Changed** (uma mudança incompatível de uma interface pública), **Removed**, **Fixed** (`fix`) e **Security**. Os rodapés (`BREAKING CHANGE:`, `Security:`, `Translation: not-needed`) vão no commit que carrega a mudança.
+
+## Os passos
+
+1. **Confirme a versão.** O mantenedor aprova `vX.Y.Z`; a tag é o único passo que precisa de um sim humano.
+2. **Portão no branch.** As verificações obrigatórias estão verdes na ponta de `release/vX.Y.Z`, nenhuma issue com o rótulo `ci-failure` está aberta, e o portão local `task release:preflight` passa.
+3. **Atualize o corpo do pull request** com os commits: `task release:pr-body -- vX.Y.Z`. Ele lista as cinco seções com um hash com link por entrada.
+4. **Prepare o changelog**: `task release:prepare -- vX.Y.Z` no branch de versão grava a seção do `CHANGELOG.md` a partir dos commits e faz o commit `chore(release): vX.Y.Z`.
+5. **Atualize as datas** da documentação: `npm run last-updated` em `site/`, para que cada página mostre a sua data real.
+6. **Integre** o pull request com rebase quando as verificações estiverem verdes.
+7. **Tag.** No `main`, avançado até a ponta integrada, `task release:tag -- vX.Y.Z` confere que a ponta é o commit da versão, cria a tag anotada e a envia: uma tag por push.
+8. **Publique.** A tag inicia o `release.yml`. Ele cria a versão no GitHub com a seção do changelog como corpo (um corpo vazio falha), constrói os seis arquivos compactados com os seus SBOMs, assina o `checksums.txt` com o cosign, atesta a proveniência da construção e publica a imagem no GHCR e no Docker Hub com as tags `X.Y.Z`, `X.Y` e `latest`, assinando e atestando os seus digests.
+9. **Verifique** em até 15 minutos com os comandos de [Verifique uma versão](/docs/self-hosting/verify-a-release), ou `task release:verify -- vX.Y.Z`.
+
+Se o push não iniciou nenhuma execução: `gh workflow run release.yml -f version=vX.Y.Z`. Se o workflow falhou no meio: `gh run rerun <id> --failed`. Todo job é idempotente.
+
+## A regra da tag
+
+**Uma tag publicada nunca é movida, excluída nem reutilizada.** Se uma versão está errada, a correção é a próxima versão de correção. Uma execução de recuperação iniciada à mão assina com a identidade de um branch em vez de uma tag, o que a verificação rejeita de propósito: não a afrouxe.
+
+## Erros comuns
+
+- Um cabeçalho de commit com mais de 100 caracteres, ou um tipo ou escopo que a verificação de commits não conhece: o job de commits falha e o cabeçalho precisa ser reescrito antes da integração.
+- Uma versão sem uma seção do changelog: o workflow recusa um corpo vazio.
+- Enviar para o `main`, ou fazer um push forçado em um branch compartilhado.
+- Usar uma tag mutável para uma imagem: publique e execute o `X.Y.Z` fixo.
+
+## Próximos passos
+
+- [Verifique uma versão](/docs/self-hosting/verify-a-release)
+- [Execute a imagem Docker](/docs/self-hosting/docker)

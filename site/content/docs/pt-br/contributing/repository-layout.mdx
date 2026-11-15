@@ -1,0 +1,50 @@
+---
+title: "Estrutura do repositório"
+description: "O que cada pasta do repositório guarda, e em qual delas uma mudança pertence."
+---
+
+## O que você vai aprender
+
+- o que cada pasta de nível superior guarda;
+- onde pertence uma regra, um adaptador ou uma página;
+- quais pastas são geradas e nunca editadas à mão.
+
+## A ideia
+
+Há um repositório e um módulo Go. As pastas seguem uma regra: a lógica de edição vive em `core/`, todo o resto é um adaptador ou uma camada de apoio em volta dele. Uma mudança vai onde a sua regra vive, e os adaptadores continuam finos.
+
+| Pasta | Guarda |
+| --- | --- |
+| `core/` | o núcleo de comandos: o documento da linha do tempo, os comandos, as regras de verificação (lint), o plano de renderização, o tempo. Go puro, sem E/S |
+| `engine/` | o que toca a mídia: ingestão, o FFmpeg como processo separado, o rasterizador que compõe pixels, exportação, transcrição, o armazenamento endereçado por conteúdo |
+| `service/` | a única fronteira de serviço: projetos, tarefas, persistência, o bloqueio do espaço de trabalho, configuração, limites, o doctor |
+| `web/app/` | os adaptadores sobre o serviço: a API HTTP, o servidor MCP (`mcp/`), a CLI (`cli/`), autenticação, eventos |
+| `web/cmd/` | o programa: `serve`, `mcp`, `open`, `user:create` e o gerador do material para agentes |
+| `web/resources/` | o editor no navegador (TypeScript, um cliente fino) |
+| `web/contract/` | os testes de contrato que acionam as cinco superfícies e comparam os documentos que elas produzem |
+| `site/` | este site de documentação e a página de apresentação |
+| `desktop/` | a casca de desktop, que vem depois |
+| `docs/` | requisitos (`prds/`), decisões de arquitetura (`adrs/`), especificações (`sdds/`) e pesquisa |
+| `internal/` | ferramentas que rodam no repositório, como os geradores de código |
+| `scripts/` | scripts de shell da versão e da imagem |
+| `licenses/`, `THIRD_PARTY_NOTICES.md` | as licenças do que é distribuído; geradas ou mantidas à mão como o guia de contribuição diz |
+| `.github/`, `.config/` | workflows, modelos, a definição da imagem e a configuração das ferramentas |
+
+## Início rápido
+
+1. Encontre a regra. Uma nova operação de edição é um comando em `core/command/`, descrito no catálogo de comandos (`docs/sdds/002-command-catalogue.md`); o seu nome vem das definições compartilhadas.
+2. Alcance-a pelos adaptadores. A ferramenta MCP, o comando da CLI e a rota HTTP chamam o mesmo método do serviço; eles não acrescentam nenhuma regra.
+3. Mostre-a no editor em `web/resources/`, que apenas desenha e envia comandos.
+4. Regenere o que deriva dela com `task codegen`, e a referência do site com `npm run reference` em `site/`.
+
+## Erros comuns
+
+- Escrever uma regra em um handler, uma ferramenta ou em TypeScript. O `bun run check:thin-client` e a revisão a rejeitam.
+- Editar uma saída gerada: `core/schema/`, `web/resources/js/generated/`, `site/generated/`, `site/content/generated/` e `internal/ffmpegpins/` vêm do `task codegen` e dos geradores do site.
+- Colocar E/S em `core/`: ele precisa continuar puro para que a pré-visualização e a exportação concordem.
+- Tratar um spike como código do produto. Os experimentos em `spikes/` são descartáveis e nunca são promovidos.
+
+## Próximos passos
+
+- [Configuração de desenvolvimento](/docs/contributing/setup)
+- [Como funciona](/docs/concepts/how-it-works)
