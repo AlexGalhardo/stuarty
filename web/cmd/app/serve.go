@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net"
 	"os"
 
@@ -38,9 +37,10 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 		return config.ExitStatus
 	}
 
-	ow, err := owner.Open(ctx, owner.Config{
-		Version: version, Log: slog.New(slog.NewTextHandler(stderr, nil)), Resolved: resolved,
-	})
+	log, closeLog := openLog(os.Getenv, stderr)
+	defer func() { _ = closeLog.Close() }()
+
+	ow, err := owner.Open(ctx, owner.Config{Version: version, Log: log, Resolved: resolved})
 	if err != nil {
 		_, _ = fmt.Fprintln(stderr, "vukem-video serve:", err)
 
@@ -53,7 +53,7 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 
 	defer func() { _ = ow.Close() }()
 
-	if err := serveOwner(ctx, ow, args, vukem.WithStderr(stderr)); err != nil {
+	if err := serveOwner(ctx, ow, args, vukem.WithStderr(stderr), vukem.WithLogger(log)); err != nil {
 		_, _ = fmt.Fprintln(stderr, "vukem-video serve:", err)
 
 		return exitServeFailed

@@ -19,6 +19,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 	"github.com/AlexGalhardo/vukem-video/web/app/auth"
 	"github.com/AlexGalhardo/vukem-video/web/app/events"
+	"github.com/AlexGalhardo/vukem-video/web/app/http/middleware"
 )
 
 // Deps is what the adapter needs from the process that serves it.
@@ -95,7 +96,7 @@ func Routes(d *Deps) func(r *router.Router, app *vukem.App) error {
 			limits: newLimits(d.RateLimits, d.Now),
 		}
 
-		r.Use(h.preAuthLimit, h.authenticate, h.credentialLimit)
+		r.Use(h.preAuthLimit, h.authenticate, middleware.AccessLog, h.credentialLimit)
 		h.registerAll()
 
 		if h.MCP != nil {
