@@ -10,8 +10,8 @@ Linked into the `vukem-video` binary, collected for the six release targets.
 
 | Name | Version | Licence | Copyright | Licence text | Notes |
 | --- | --- | --- | --- | --- | --- |
-| github.com/AlexGalhardo/vukem | v0.44.0 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem@v0.44.0/LICENSE>) | - |
-| github.com/AlexGalhardo/vukem/contrib/engine | v0.1.1 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem/contrib/engine@v0.1.1/LICENSE>) | - |
+| github.com/AlexGalhardo/vukem | v0.45.0 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem@v0.45.0/LICENSE>) | - |
+| github.com/AlexGalhardo/vukem/contrib/engine | v0.2.0 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem/contrib/engine@v0.2.0/LICENSE>) | - |
 | github.com/AlexGalhardo/vukem/drivers/otel | v0.4.5 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem/drivers/otel@v0.4.5/LICENSE>) | - |
 | github.com/cenkalti/backoff/v5 | v5.0.3 | MIT | Copyright (c) 2014 Cenk Altı | [LICENSE](<licenses/go-modules/github.com/cenkalti/backoff/v5@v5.0.3/LICENSE>) | - |
 | github.com/cespare/xxhash/v2 | v2.3.0 | MIT | Copyright (c) 2016 Caleb Spare | [LICENSE.txt](<licenses/go-modules/github.com/cespare/xxhash/v2@v2.3.0/LICENSE.txt>) | - |
