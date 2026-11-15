@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 
+import { useT } from "@/lib/i18n";
 import { editShortcut } from "../commands/keymap";
 import { useActions } from "../commands/useActions";
 import { useRuntime } from "../state/EditorContext";
@@ -22,11 +23,12 @@ function inOverlay(target: EventTarget | null): boolean {
 }
 
 // The keys of the Prototype (SDD-012 sections 8.2 and 15): S splits, [ and ]
-// trim to the playhead, C opens Add caption, Ctrl+Z undoes, Ctrl+Shift+Z and
+// trim to the playhead, C opens Add caption, T adds a text item, Ctrl+Z undoes, Ctrl+Shift+Z and
 // Ctrl+Y redo. Typing in a field never triggers them.
 export function useShortcuts(openCaption: () => void): void {
 	const actions = useActions();
 	const runtime = useRuntime();
+	const t = useT();
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent): void => {
 			if (isEditable(event.target) || event.altKey) return;
@@ -59,10 +61,11 @@ export function useShortcuts(openCaption: () => void): void {
 			else if (key === "[") void actions.trimToPlayhead("start");
 			else if (key === "]") void actions.trimToPlayhead("end");
 			else if (key === "c") openCaption();
+			else if (key === "t") void actions.addText(t("ui.editor.defaults.text"));
 			else return;
 			event.preventDefault();
 		};
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
-	}, [actions, openCaption, runtime]);
+	}, [actions, openCaption, runtime, t]);
 }

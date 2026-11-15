@@ -14,7 +14,7 @@ import {
 	round3,
 	turnBetween,
 } from "../../preview/overlays/transformGestures";
-import type { TransformBegin, TransformPort } from "../../preview/types";
+import type { CanvasPort, TransformBegin } from "../../preview/types";
 import { useRuntime } from "../../state/EditorContext";
 import type { EditorRuntime } from "../../state/runtime";
 import { consumeDragClick, runGesture, watchRemoteEdit } from "./lifecycle";
@@ -129,12 +129,14 @@ function beginTransform(
 	});
 }
 
-// The port the layout gives the preview: the gesture and the click guard.
-export function useTransformPort(): TransformPort {
+// The port the layout gives the preview: the gesture, the click guard and the
+// commit of the inline text editor.
+export function useCanvasPort(): CanvasPort {
 	const runtime = useRuntime();
 	const actions = useActions();
 	return {
 		begin: (options) => beginTransform(runtime, actions, options),
 		consumeClick: consumeDragClick,
+		commitText: (itemId, text) => void actions.setText(itemId, text),
 	};
 }

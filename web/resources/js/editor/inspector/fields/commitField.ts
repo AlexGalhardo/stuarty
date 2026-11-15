@@ -6,6 +6,8 @@ export interface FieldError {
 	code: string;
 	message: string;
 	hint?: string;
+	// The `details` of the core's error, as received.
+	details?: { readonly [key: string]: unknown };
 }
 
 export type CommitResult = { ok: true } | { ok: false; error: FieldError };

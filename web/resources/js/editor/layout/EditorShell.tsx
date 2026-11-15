@@ -6,7 +6,7 @@ import Inspector from "../inspector/Inspector";
 import Preview from "../preview/Preview";
 import { useDocumentState, useUiState } from "../state/EditorContext";
 import EditToolbar from "../timeline/EditToolbar";
-import { useTransformPort } from "../timeline/gestures/transformDrag";
+import { useCanvasPort } from "../timeline/gestures/transformDrag";
 import Notices from "../timeline/Notices";
 import Timeline from "../timeline/Timeline";
 import { useShortcuts } from "../timeline/useShortcuts";
@@ -47,7 +47,7 @@ function useViewportWidth(): number {
 // are filled by their own tasks; here they are labelled regions.
 export default function EditorShell(): ReactNode {
 	const t = useT();
-	const transformPort = useTransformPort();
+	const canvasPort = useCanvasPort();
 	const status = useDocumentState((s) => s.status);
 	const viewport = useViewportWidth();
 	const panels = useUiState((s) => s.panels);
@@ -116,7 +116,7 @@ export default function EditorShell(): ReactNode {
 						{t("ui.editor.loading")}
 					</p>
 				) : (
-					<Preview transform={transformPort} />
+					<Preview port={canvasPort} />
 				)}
 			</main>
 			{panels.inspector ? <Inspector /> : <div />}

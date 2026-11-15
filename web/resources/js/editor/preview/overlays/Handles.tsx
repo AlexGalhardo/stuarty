@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import type { HandleKind, LayerGeometry, TransformPort } from "../types";
+import type { CanvasPort, HandleKind, LayerGeometry } from "../types";
 
 const CORNERS = [
 	"left-0 top-0 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize",
@@ -21,7 +21,7 @@ export default function Handles({
 }: {
 	geometry: LayerGeometry;
 	scale: number;
-	port: TransformPort;
+	port: CanvasPort;
 	onPreview(geometry: LayerGeometry | null): void;
 }): ReactNode {
 	const begin =

@@ -15,6 +15,9 @@ import {
 	removeAssetOperations,
 	renameOperations,
 	splitOperations,
+	textAddOperations,
+	textSetOperations,
+	textStyleOperations,
 	transformOperations,
 	trimEndOperations,
 	trimOperations,
@@ -239,6 +242,16 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				transformOperations([{ id: "itm_a", animated: [] }], { x: 1 }, 10),
 				10,
 			).map((o) => o.op),
+			"text.add": textAddOperations({
+				text: "a",
+				playhead: 0,
+				firstVisualTrack: null,
+				newTrackId,
+			}).map((o) => o.op),
+			"canvas.edit_text": textSetOperations("itm_a", "x").map((o) => o.op),
+			"inspector.text": textStyleOperations("itm_a", { size: 90 }).map(
+				(o) => o.op,
+			),
 			"caption.add": captionOperations({
 				text: "a",
 				duration: "1s",

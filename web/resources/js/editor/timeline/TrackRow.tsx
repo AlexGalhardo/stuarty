@@ -153,6 +153,15 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 				}
 				beginMove({ runtime, actions, event, itemId: id });
 			}}
+			onDoubleClick={() => {
+				if (
+					item.type !== "text" ||
+					runtime.documents.getState().state === "trashed"
+				)
+					return;
+				runtime.uiWriter.select([id], id);
+				runtime.uiWriter.startTextEdit(id);
+			}}
 			onClick={(event) => {
 				event.stopPropagation();
 				if (consumeDragClick()) return;
