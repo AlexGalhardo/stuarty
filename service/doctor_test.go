@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/internal/ffmpegpins"
 )
 
 // doctor --verify on a bundled FFmpeg that was modified prints a mismatch; a
@@ -82,5 +84,36 @@ func TestDoctorRunsOneAtATime(t *testing.T) {
 
 	if _, err := s.Doctor(ctx, DoctorRequest{Verify: true}); err != nil {
 		t.Errorf("a run after the first ended = %v", err)
+	}
+}
+
+// The pins the release embeds are real digests: a file that is not the pinned binary is reported
+// as a mismatch, and one whose digest equals the pin verifies.
+func TestDoctorVerifyAgainstTheEmbeddedPins(t *testing.T) {
+	t.Parallel()
+
+	pins := ffmpegpins.For("linux", "amd64")
+	if pins["ffmpeg"] == "" || pins["ffprobe"] == "" {
+		t.Fatalf("the release embeds no pin for linux/amd64: %v", pins)
+	}
+
+	path := filepath.Join(t.TempDir(), "ffprobe")
+	if err := os.WriteFile(path, []byte("not the pinned build"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	s := &svc{doctor: DoctorOptions{FFmpegPins: pins}}
+	if c := s.digestCheck("ffprobe", path, false); c.OK || c.Hint == "" {
+		t.Errorf("a file that is not the pinned build passed: %+v", c)
+	}
+
+	sum, err := fileSHA256(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s = &svc{doctor: DoctorOptions{FFmpegPins: map[string]string{"ffprobe": sum}}}
+	if c := s.digestCheck("ffprobe", path, false); !c.OK {
+		t.Errorf("a file equal to its pin did not verify: %+v", c)
 	}
 }

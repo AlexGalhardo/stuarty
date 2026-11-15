@@ -238,7 +238,7 @@ jobs:
       - name: The generated folders are unchanged
         run: |
           paths=()
-          for d in core/schema web/resources/js/generated site/generated site/content/generated; do
+          for d in core/schema web/resources/js/generated site/generated site/content/generated internal/ffmpegpins; do
             if [ -e "$d" ]; then paths+=("$d"); fi
           done
           git status --short -- "${paths[@]}"
