@@ -128,6 +128,14 @@ func (s stub) TemplateInstantiate(
 	return reply[service.TemplateInstantiateResult](s.err)
 }
 
+func (s stub) TemplateExport(context.Context, service.TemplateRef) (*service.FileResult, error) {
+	return reply[service.FileResult](s.err)
+}
+
+func (s stub) TemplateImport(context.Context, service.TemplateImportRequest) (*service.TemplateResult, error) {
+	return reply[service.TemplateResult](s.err)
+}
+
 func (s stub) ViewFrame(context.Context, service.ViewFrameRequest) (*service.ViewResult, error) {
 	return reply[service.ViewResult](s.err)
 }

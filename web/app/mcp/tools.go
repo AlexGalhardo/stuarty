@@ -429,9 +429,11 @@ func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 // (SDD-003 section 4.2): the others are refused, and the required ones must be
 // there.
 var templateMembers = map[string]struct{ required, optional []string }{
-	"list": {nil, []string{"cursor", "limit"}},
-	"save": {[]string{"project_id", "name"}, []string{"description"}},
-	"new":  {[]string{"template_id", "name"}, []string{"fill", "id"}},
+	"list":   {nil, []string{"cursor", "limit"}},
+	"save":   {[]string{"project_id", "name"}, []string{"description"}},
+	"new":    {[]string{"template_id", "name"}, []string{"fill", "id"}},
+	"export": {[]string{"template_id"}, nil},
+	"import": {[]string{"path"}, nil},
 }
 
 // checkTemplateMembers refuses a member the action does not use and names the
@@ -446,7 +448,7 @@ func checkTemplateMembers(action string, raw json.RawMessage) error {
 	if !known {
 		return &service.Error{
 			Code: command.CodeValidation, Path: "action",
-			Message: "action " + action + " is not available in this build.", Hint: "use list, save or new",
+			Message: "action " + action + " is not a template action.", Hint: "use list, save, new, export or import",
 		}
 	}
 
@@ -480,6 +482,7 @@ func template(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 		Name        string                       `json:"name"`
 		Description string                       `json:"description"`
 		Fill        map[string]service.SlotValue `json:"fill"`
+		Path        string                       `json:"path"`
 		pageArgs
 	}](raw)
 	if err != nil {
@@ -502,6 +505,20 @@ func template(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 		res, err := svc.TemplateSave(ctx, service.TemplateSaveRequest{
 			ProjectID: in.ProjectID, Name: in.Name, Description: in.Description,
 		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &toolOutput{value: res, text: res.Text}, nil
+	case "export":
+		res, err := svc.TemplateExport(ctx, service.TemplateRef{TemplateID: in.TemplateID})
+		if err != nil {
+			return nil, err
+		}
+
+		return &toolOutput{value: res, text: res.Text}, nil
+	case "import":
+		res, err := svc.TemplateImport(ctx, service.TemplateImportRequest{Path: in.Path})
 		if err != nil {
 			return nil, err
 		}
