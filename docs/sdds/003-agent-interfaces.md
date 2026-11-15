@@ -1976,13 +1976,13 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name":"job_start",
-  "description":"Start long work. kind=export renders the project to an MP4 in the workspace: args {start?, end?}. kind=transcribe transcribes an asset's speech: args {asset_id, language?}. Export is refused while lint has errors. Waits up to wait_ms, then returns the job; poll with job_get.",
+  "description":"Start long work. kind=export renders the project to a file in the workspace: args {start?, end?, format?}, format mp4 (default), gif, wav or aac. kind=transcribe transcribes an asset's speech: args {asset_id, language?}. Export is refused while lint has errors. Waits up to wait_ms, then returns the job; poll with job_get.",
   "inputSchema":{
     "type":"object",
     "properties":{
       "project_id":{"type":"string","pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"},
       "kind":{"enum":["export","transcribe"]},
-      "args":{"type":"object"},
+      "args":{"type":"object","properties":{"start":{"type":"string"},"end":{"type":"string"},"format":{"enum":["mp4","gif","wav","aac"]}}},
       "wait_ms":{"type":"integer","minimum":0,"maximum":25000,"default":0}
     },
     "required":["project_id","kind"],
