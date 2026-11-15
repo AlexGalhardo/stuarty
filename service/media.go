@@ -896,7 +896,6 @@ func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*Media
 		return nil, asError(err)
 	}
 
-	fps := projectFPS(&row)
 	res := &MediaInspectResult{
 		UntrustedNotice: UntrustedNotice, AssetID: pa.AssetID, Kind: ar.Kind, State: string(ar.IngestState),
 		Progress: ar.Progress, Available: []string{}, Untrusted: &UntrustedData{Name: pa.Name},
@@ -928,11 +927,7 @@ func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*Media
 	for _, sec := range sections {
 		switch sec {
 		case "probe":
-			if p := s.probeOf(ctx, &row, &ar); p != nil {
-				res.Probe = p
-				res.Available = append(res.Available, "probe")
-				text.WriteString("\nprobe: " + probeText(fps, p))
-			}
+			text.WriteString(s.probeSection(ctx, &row, &ar, pa.AssetID, res))
 		case "loudness":
 			if l := s.loudnessOf(arts); l != nil {
 				res.Loudness = l

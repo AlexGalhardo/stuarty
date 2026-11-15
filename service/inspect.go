@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	"github.com/AlexGalhardo/vukem-video/service/untrusted"
 )
 
@@ -157,3 +159,102 @@ func clockMS(ms int64) string {
 
 // readable decodes a stored artifact; one that cannot be read is no artifact.
 func readable(raw []byte, into any) bool { return json.Unmarshal(raw, into) == nil }
+
+// probeSection is the probe line of media_inspect followed by the metadata of
+// the file; empty when the asset has no readable probe.
+func (s *svc) probeSection(
+	ctx context.Context,
+	project *ProjectRow,
+	ar *AssetRow,
+	assetID string,
+	res *MediaInspectResult,
+) string {
+	p := s.probeOf(ctx, project, ar)
+	if p == nil {
+		return ""
+	}
+
+	res.Probe = p
+	res.Available = append(res.Available, "probe")
+	text := "\nprobe: " + probeText(projectFPS(project), p)
+
+	if sum := s.readSummary(ctx, ar.Hash); sum != nil {
+		text += metadataSection(sum.Tags, assetID, res)
+	}
+
+	return text
+}
+
+var metadataUnescape = strings.NewReplacer("&lt;", "<", "&amp;", "&")
+
+// metadataSection is the metadata of media_inspect (SDD-003 section 2.6, SDD-007
+// section 8.3): the tags the probe kept, keys sorted, one `key: value` per line
+// inside an untrusted block, at most the concise number of tags and characters.
+// It fills res.Untrusted.Metadata and returns the text; empty when there are no tags.
+func metadataSection(tags map[string]ingest.Tag, assetID string, res *MediaInspectResult) string {
+	if len(tags) == 0 {
+		return ""
+	}
+
+	keys := make([]string, 0, len(tags))
+	for k := range tags {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	all := make([]untrusted.Tag, 0, len(keys))
+
+	for _, k := range keys {
+		all = append(all, untrusted.Tag{
+			Key:   oneLine(k, untrusted.MetadataKeyConcise, false),
+			Value: oneLine(tags[k].Value, untrusted.MetadataValueConcise, tags[k].Truncated),
+		})
+	}
+
+	// Metadata escapes what it keeps; the block and the structured value escape
+	// on their own, so the raw text is recovered from the kept tags.
+	kept, dropped := untrusted.Metadata(all, false)
+	if len(kept) == 0 {
+		return ""
+	}
+
+	lines := make([]string, 0, len(kept))
+	structured := make(map[string]string, len(kept))
+
+	for _, t := range kept {
+		key, value := metadataUnescape.Replace(t.Key), metadataUnescape.Replace(t.Value)
+
+		lines = append(lines, key+": "+value)
+		structured[untrusted.Value(key, untrusted.MetadataKeyConcise)] = untrusted.Value(
+			value,
+			untrusted.MetadataValueConcise,
+		)
+	}
+
+	res.Untrusted.Metadata = structured
+
+	head := fmt.Sprintf("\nmetadata %d keys", len(kept))
+	if dropped > 0 {
+		head += fmt.Sprintf(" (%d more not shown)", dropped)
+	}
+
+	block := untrusted.Block(untrusted.SourceMetadata, untrusted.Attrs{"asset": assetID}, strings.Join(lines, "\n"), 0)
+
+	return head + "\n" + block
+}
+
+// oneLine cleans s onto a single line and cuts it to n characters, the last of
+// them an ellipsis when it was cut (or already cut by the probe).
+func oneLine(s string, n int, wasCut bool) string {
+	s = strings.Join(strings.Fields(untrusted.Clean(s)), " ")
+
+	kept, more := untrusted.Cut(s, n)
+	if more == 0 && !wasCut {
+		return kept
+	}
+
+	kept, _ = untrusted.Cut(kept, n-1)
+
+	return kept + "…"
+}
