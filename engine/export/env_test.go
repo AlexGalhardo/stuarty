@@ -181,7 +181,12 @@ func useAsset(doc *timeline.Document, id string, in *ingested) {
 // loadScene reads a reference scene of testdata/scenes and ingests the media its fixtures.json names.
 func loadScene(tb testing.TB, name string) *timeline.Document {
 	tb.Helper()
-	dir := filepath.Join("testdata", "scenes", name)
+	return loadDir(tb, filepath.Join("testdata", "scenes", name))
+}
+
+// loadDir reads project.json of a folder and ingests the media its fixtures.json names.
+func loadDir(tb testing.TB, dir string) *timeline.Document {
+	tb.Helper()
 	data, err := os.ReadFile(filepath.Join(dir, "project.json"))
 	if err != nil {
 		tb.Fatal(err)
