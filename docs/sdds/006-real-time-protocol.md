@@ -264,7 +264,7 @@ On connect the server decides from the client's revision `L` (the header, else `
 | `H - L > 1000` (`MaxReplayRevisions`) or the 16 MiB bound exceeded | `resync.required`, reason `gap_too_large` |
 | `L > H` | `resync.required`, reason `client_ahead` |
 
-A replayed event is built from the row with the same function as a live one (`EventFor(row)`), so the 64 KiB rule of section 9.3 applies equally. A row of kind `migrate` or `import` is never replayed: it sets `resync_floor` (SDD-005 §8, §16.3), so a client behind it gets `resync.required`.
+A replayed event is built from the row with the same function as a live one (`EventFor(row)`), so the 64 KiB rule of section 9.3 applies equally. The `description` of a replayed event is the exception to "a client cannot tell replayed from live": the log keeps the diff, not its text, so the server computes the description (`DescribeDiff`, SDD-003 §3.4) from the diff and the **head** document, not the document of that revision. The frame rate, the order of the tracks and the names it prints are those of the head, and an item that no longer exists is described by its id. Every other member of the event is identical. The `description` is for display and carries no state, so a client never reads it to rebuild the document. A row of kind `migrate` or `import` is never replayed: it sets `resync_floor` (SDD-005 §8, §16.3), so a client behind it gets `resync.required`.
 
 ### 4.4 State snapshot on connect
 
