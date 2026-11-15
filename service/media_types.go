@@ -97,6 +97,20 @@ type MediaListResult struct {
 	Text       string       `json:"text"`
 }
 
+// MediaTrashRequest trashes or restores an asset of a project.
+type MediaTrashRequest struct {
+	ProjectID string `json:"project_id"`
+	AssetID   string `json:"asset_id"`
+	DryRun    bool   `json:"dry_run,omitempty"`
+}
+
+// MediaStateResult is the state an asset ended in.
+type MediaStateResult struct {
+	AssetID string `json:"asset_id"`
+	State   string `json:"state"` // "pending" | "active" | "trashed"
+	Text    string `json:"text"`
+}
+
 // MediaInspectRequest reads one asset.
 type MediaInspectRequest struct {
 	ProjectID  string   `json:"project_id"`

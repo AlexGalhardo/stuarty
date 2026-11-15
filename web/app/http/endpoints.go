@@ -125,6 +125,14 @@ var Endpoints = []Endpoint{
 		Service: "MediaInspect", Status: 200, Summary: "Inspect an asset",
 	},
 	{
+		ID: "media.trash", Method: http.MethodPost, Path: "/projects/{id}/media/{asset_id}/trash",
+		Scope: service.ScopeMedia, Service: "MediaTrash", Status: 200, Summary: "Move an asset to the trash",
+	},
+	{
+		ID: "media.restore", Method: http.MethodPost, Path: "/projects/{id}/media/{asset_id}/restore",
+		Scope: service.ScopeMedia, Service: "MediaRestore", Status: 200, Summary: "Restore an asset from the trash",
+	},
+	{
 		ID: "jobs.start", Method: http.MethodPost, Path: "/projects/{id}/jobs", Scope: service.ScopeRender,
 		Service: "JobStart", Status: 202, Summary: "Start a job",
 	},

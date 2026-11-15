@@ -284,6 +284,23 @@ Download the proxy of an asset
 
 Responses: `200` OK, `401`, `422`, `default`.
 
+### `POST /projects/{id}/media/{asset_id}/restore`
+
+Restore an asset from the trash
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `id` | path | yes | `string` |
+| `asset_id` | path | yes | `string` |
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `dry_run` | `boolean` |  |  |
+
+Responses: `200` OK, `401`, `422`, `default`.
+
 ### `GET /projects/{id}/media/{asset_id}/strip`
 
 Download the tile strip of an asset
@@ -304,6 +321,23 @@ Download a thumbnail of an asset
 | `width` | query | no | `string` |
 | `id` | path | yes | `string` |
 | `asset_id` | path | yes | `string` |
+
+Responses: `200` OK, `401`, `422`, `default`.
+
+### `POST /projects/{id}/media/{asset_id}/trash`
+
+Move an asset to the trash
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `id` | path | yes | `string` |
+| `asset_id` | path | yes | `string` |
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `dry_run` | `boolean` |  |  |
 
 Responses: `200` OK, `401`, `422`, `default`.
 

@@ -56,6 +56,8 @@ var Scopes = map[string]string{
 	"MediaImport":    ScopeMedia,
 	"MediaInspect":   ScopeRead,
 	"MediaList":      ScopeRead,
+	"MediaTrash":     ScopeMedia,
+	"MediaRestore":   ScopeMedia,
 	"JobStart":       ScopeRender,
 	"JobGet":         ScopeRead,
 	"JobList":        ScopeRead,

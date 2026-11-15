@@ -315,6 +315,20 @@ func (c *Client) MediaInspect(
 	return get[service.MediaInspectResult](ctx, c, path, pageQuery(q, req.Page))
 }
 
+// MediaTrash implements service.Service.
+func (c *Client) MediaTrash(ctx context.Context, req service.MediaTrashRequest) (*service.MediaStateResult, error) {
+	return post[service.MediaStateResult](
+		ctx, c, projectPath(req.ProjectID, "/media/"+url.PathEscape(req.AssetID)+"/trash"), dryBody{req.DryRun},
+	)
+}
+
+// MediaRestore implements service.Service.
+func (c *Client) MediaRestore(ctx context.Context, req service.MediaTrashRequest) (*service.MediaStateResult, error) {
+	return post[service.MediaStateResult](
+		ctx, c, projectPath(req.ProjectID, "/media/"+url.PathEscape(req.AssetID)+"/restore"), dryBody{req.DryRun},
+	)
+}
+
 // JobStart implements service.Service.
 func (c *Client) JobStart(ctx context.Context, req service.JobStartRequest) (*service.Job, error) {
 	body := struct {

@@ -52,6 +52,12 @@ type stateIn struct {
 	DryRun bool   `json:"dry_run,omitempty"`
 }
 
+type mediaStateIn struct {
+	ID      string `json:"id"                validate:"required"`
+	AssetID string `json:"asset_id"          validate:"required"`
+	DryRun  bool   `json:"dry_run,omitempty"`
+}
+
 // Operation is one operation of a batch: the command name and its arguments.
 // The OpenAPI document replaces args by the schema of each command (ADR-0014).
 type Operation struct {
@@ -198,6 +204,22 @@ func (h *apiHandler) registerAll() {
 	register(h, "media.import", h.mediaImport)
 	register(h, "media.list", h.mediaList)
 	register(h, "media.inspect", h.mediaInspect)
+	register(h, "media.trash", func(c *web.Ctx, in mediaStateIn) (service.MediaStateResult, error) {
+		res, err := h.Service.MediaTrash(
+			c.Context(),
+			service.MediaTrashRequest{ProjectID: in.ID, AssetID: in.AssetID, DryRun: dry(c, in.DryRun)},
+		)
+
+		return deref(res), err
+	})
+	register(h, "media.restore", func(c *web.Ctx, in mediaStateIn) (service.MediaStateResult, error) {
+		res, err := h.Service.MediaRestore(
+			c.Context(),
+			service.MediaTrashRequest{ProjectID: in.ID, AssetID: in.AssetID, DryRun: dry(c, in.DryRun)},
+		)
+
+		return deref(res), err
+	})
 	register(h, "jobs.start", h.jobStart)
 	register(h, "jobs.list", h.jobList)
 	register(h, "jobs.get", h.jobGet)

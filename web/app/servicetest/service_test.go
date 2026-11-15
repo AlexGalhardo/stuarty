@@ -53,6 +53,14 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.MediaInspect(ctx, service.MediaInspectRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"MediaTrash": func() error {
+			_, err := e.svc.MediaTrash(ctx, service.MediaTrashRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"MediaRestore": func() error {
+			_, err := e.svc.MediaRestore(ctx, service.MediaTrashRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"MediaList": func() error {
 			_, err := e.svc.MediaList(ctx, service.MediaListRequest{ProjectID: "prj_0000000001"})
 			return err
