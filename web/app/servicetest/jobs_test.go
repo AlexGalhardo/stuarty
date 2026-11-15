@@ -257,10 +257,10 @@ func TestJobStartGates(t *testing.T) {
 
 	if _, err := m.svc.JobStart(
 		m.as(ui),
-		service.JobStartRequest{ProjectID: project, Kind: "transcribe"},
+		service.JobStartRequest{ProjectID: project, Kind: "transcribe", Args: []byte(`{"asset_id":"ast_0000000001"}`)},
 	); code(
 		err,
-	) != "E_TRANSCRIBE_UNAVAILABLE" {
+	) != "E_NOT_FOUND" {
 		t.Errorf("transcribe: %v", err)
 	}
 
