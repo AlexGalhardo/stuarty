@@ -343,3 +343,329 @@ test.describe("caption-word-edit", () => {
 		await expect(page.getByLabel("Text of word 1")).toBeVisible();
 	});
 });
+
+interface Recorded {
+	method: string;
+	path: string;
+}
+
+// Every request of the page to the API, in order, so a test can say which ones
+// were sent and which were not.
+function recordRequests(page: Page): Recorded[] {
+	const seen: Recorded[] = [];
+	page.on("request", (r) => {
+		const url = new URL(r.url());
+		if (url.pathname.startsWith("/api/v1/")) {
+			seen.push({ method: r.method(), path: url.pathname });
+		}
+	});
+	return seen;
+}
+
+// A project with one clip of the test video on one visual track, selected.
+async function openClip(
+	page: Page,
+	request: APIRequestContext,
+): Promise<{ id: string; clipId: string; assetId: string; trackId: string }> {
+	const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+	const clipId = seeded.itemIds[0] as string;
+	await page.goto(`/editor/${seeded.id}?debug=1`);
+	await page.locator(`[data-item-id="${clipId}"]`).click();
+	await expect(
+		page.getByRole("button", { name: "Generate captions" }),
+	).toBeVisible();
+	return {
+		id: seeded.id,
+		clipId,
+		assetId: seeded.assetId,
+		trackId: seeded.trackIds[0] as string,
+	};
+}
+
+const transcribeJob = (
+	state: "running" | "succeeded",
+	progress: number,
+): Record<string, unknown> => ({
+	job_id: "job_fake000001",
+	kind: "transcribe",
+	project_id: null,
+	state,
+	progress,
+	actor: "local:ui",
+	created_at: "2026-11-15T10:00:00Z",
+	text: "",
+});
+
+// The error the real service answers when the helper is not installed.
+const unavailableBody = {
+	code: "E_TRANSCRIBE_UNAVAILABLE",
+	message: "Local transcription needs whisper-cli, which is not installed.",
+	hint: "Run the install command, or configure an API provider.",
+	details: {
+		missing: [
+			{ name: "whisper-cli", url_host: "example.test", bytes: 4_200_000 },
+		],
+		download_bytes: 4_200_000,
+		install_command: "vukem-video tools:install whisper --model small",
+	},
+};
+
+// A caption linked to the clip, on a track of its own, added through the API.
+async function seedLinkedCaption(
+	request: APIRequestContext,
+): Promise<{ id: string; clipId: string; captionId: string }> {
+	const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+	const clipId = seeded.itemIds[0] as string;
+	const call = await caller(request);
+	const head = (await call("GET", `/projects/${seeded.id}`)) as {
+		revision: number;
+	};
+	const added = (await call("POST", `/projects/${seeded.id}/edit`, {
+		base_revision: head.revision,
+		operations: [
+			{ op: "track.add", args: { kind: "visual", id: "trk_caps000001" } },
+			{
+				op: "caption.add",
+				args: {
+					track_id: "trk_caps000001",
+					start: "0s",
+					duration: "1s",
+					text: "hello there",
+					linked_item: clipId,
+				},
+			},
+		],
+	})) as { created: string[] };
+	return {
+		id: seeded.id,
+		clipId,
+		captionId: added.created.at(-1) as string,
+	};
+}
+
+// P2-UI-019 (SDD-012 sections 12.4, 12.5 and 14.2): the transcription job is
+// faked at the HTTP layer, because the end-to-end server has no transcription
+// provider; the edit that follows goes to the real core.
+test.describe("auto captions", () => {
+	test("Generate starts one job, shows its progress and sends one caption.from_transcript", async ({
+		page,
+		request,
+	}) => {
+		const clip = await openClip(page, request);
+		let jobStarts = 0;
+		await page.route("**/api/v1/projects/*/jobs", async (route) => {
+			if (route.request().method() !== "POST") {
+				await route.continue();
+				return;
+			}
+			jobStarts++;
+			expect(route.request().postDataJSON()).toEqual({
+				kind: "transcribe",
+				args: { asset_id: clip.assetId },
+			});
+			await route.fulfill({
+				status: 202,
+				contentType: "application/json",
+				json: transcribeJob("running", 0.4),
+			});
+		});
+		await page.route("**/api/v1/jobs/job_fake000001", (route) =>
+			route.fulfill({
+				contentType: "application/json",
+				json: transcribeJob("succeeded", 1),
+			}),
+		);
+		const posted = recordEdits(page);
+
+		await page.getByRole("button", { name: "Generate captions" }).click();
+
+		await expect(page.getByRole("progressbar")).toBeVisible();
+		await expect(page.getByText("40%", { exact: true })).toBeVisible();
+		await expect.poll(() => posted.length, { timeout: 15_000 }).toBe(1);
+		expect(jobStarts).toBe(1);
+		const ops = posted[0]?.operations ?? [];
+		expect(ops.map((o) => o.op)).toEqual([
+			"track.add",
+			"caption.from_transcript",
+		]);
+		expect(ops[0]?.args).toMatchObject({ kind: "visual", name: "Captions" });
+		expect(ops[1]?.args).toMatchObject({
+			clip_item_id: clip.clipId,
+			track_id: ops[0]?.args.id,
+			max_words: 5,
+			max_chars: 28,
+			max_gap: "0.6s",
+			replace: true,
+		});
+	});
+
+	test("an unavailable provider shows the hint and the install dialog; nothing downloads until Install", async ({
+		page,
+		request,
+	}) => {
+		const clip = await openClip(page, request);
+		await page.route("**/api/v1/projects/*/jobs", (route) =>
+			route.request().method() === "POST"
+				? route.fulfill({
+						status: 422,
+						contentType: "application/json",
+						json: unavailableBody,
+					})
+				: route.continue(),
+		);
+		let polls = 0;
+		await page.route("**/api/v1/system/tools", (route) => {
+			polls++;
+			return route.fulfill({
+				contentType: "application/json",
+				json: {
+					installed: [],
+					state: polls < 2 ? "running" : "idle",
+					done_bytes: 2_100_000,
+					total_bytes: 4_200_000,
+					text: "",
+				},
+			});
+		});
+		await page.route("**/api/v1/system/tools/install", (route) =>
+			route.fulfill({
+				status: 202,
+				contentType: "application/json",
+				json: {
+					state: "running",
+					files: [],
+					download_bytes: 4_200_000,
+					text: "",
+				},
+			}),
+		);
+		const seen = recordRequests(page);
+		const touchedTools = (): boolean =>
+			seen.some((r) => r.path.startsWith("/api/v1/system/tools"));
+
+		await page.getByRole("button", { name: "Generate captions" }).click();
+
+		const panel = page.locator("[data-unavailable]");
+		await expect(panel).toContainText("Run the install command");
+		const dialog = page.getByRole("dialog");
+		await expect(dialog).toContainText("4.2 MB");
+		await expect(dialog).toContainText("example.test");
+		await expect(
+			dialog.getByLabel("Or run this command in a terminal"),
+		).toHaveValue("vukem-video tools:install whisper --model small");
+		expect(seen.filter((r) => r.method !== "GET")).toEqual([
+			{ method: "POST", path: `/api/v1/projects/${clip.id}/jobs` },
+		]);
+		expect(touchedTools()).toBe(false);
+
+		await dialog.getByRole("button", { name: "Cancel" }).click();
+		await expect(dialog).toBeHidden();
+		expect(touchedTools()).toBe(false);
+
+		await page
+			.getByRole("button", { name: "Install local transcription" })
+			.click();
+		await page
+			.getByRole("dialog")
+			.getByRole("button", { name: "Install", exact: true })
+			.click();
+		await expect(page.getByRole("dialog")).toContainText("Installed.");
+		const installs = seen.filter(
+			(r) => r.method === "POST" && r.path === "/api/v1/system/tools/install",
+		);
+		expect(installs).toHaveLength(1);
+		expect(seen.filter((r) => r.method === "POST")).toHaveLength(2);
+	});
+
+	test("a platform with no helper shows only the message and no Install button", async ({
+		page,
+		request,
+	}) => {
+		await openClip(page, request);
+		await page.route("**/api/v1/projects/*/jobs", (route) =>
+			route.request().method() === "POST"
+				? route.fulfill({
+						status: 422,
+						contentType: "application/json",
+						json: {
+							code: "E_TRANSCRIBE_UNAVAILABLE",
+							message: "no transcription provider is available.",
+							hint: "Configure an API provider.",
+						},
+					})
+				: route.continue(),
+		);
+
+		await page.getByRole("button", { name: "Generate captions" }).click();
+
+		const dialog = page.getByRole("dialog");
+		await expect(dialog).toContainText("Configure an API provider.");
+		await expect(
+			dialog.getByRole("button", { name: "Install", exact: true }),
+		).toHaveCount(0);
+	});
+
+	test("a clip with linked captions has Re-sync, which sends one caption.retime_from_clip", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedLinkedCaption(request);
+		await page.goto(`/editor/${seeded.id}?debug=1`);
+		await page.locator(`[data-item-id="${seeded.clipId}"]`).click();
+		const posted = recordEdits(page);
+
+		await page.getByRole("button", { name: "Re-sync captions" }).click();
+
+		await expect.poll(() => posted.length).toBe(1);
+		expect(posted[0]?.operations).toEqual([
+			{
+				op: "caption.retime_from_clip",
+				args: { clip_item_id: seeded.clipId },
+			},
+		]);
+	});
+
+	test("the out-of-sync lint finding offers Re-sync and sends the same command", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedLinkedCaption(request);
+		await page.route("**/api/v1/projects/*/lint", (route) =>
+			route.fulfill({
+				contentType: "application/json",
+				json: {
+					project_id: seeded.id,
+					revision: 1,
+					text: "",
+					findings: [
+						{
+							code: "L_CAPTION_DESYNC",
+							severity: "warning",
+							message: "The caption is out of sync with its clip.",
+							item: seeded.captionId,
+						},
+					],
+				},
+			}),
+		);
+		await page.goto(`/editor/${seeded.id}?debug=1`);
+		await expect(
+			page.locator(`[data-item-id="${seeded.clipId}"]`),
+		).toBeVisible();
+		const posted = recordEdits(page);
+
+		await page.getByRole("button", { name: "Export" }).click();
+		await page
+			.getByRole("dialog")
+			.getByRole("button", { name: "Re-sync captions" })
+			.click();
+
+		await expect.poll(() => posted.length).toBe(1);
+		expect(posted[0]?.operations).toEqual([
+			{
+				op: "caption.retime_from_clip",
+				args: { clip_item_id: seeded.clipId },
+			},
+		]);
+	});
+});
