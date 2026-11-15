@@ -52,6 +52,13 @@ func sessionFFmpeg(t *testing.T) (ffmpeg, ffprobe string) {
 		}
 	}
 
+	// Homebrew's GPL build on the macOS runner has no zscale, which the ingest
+	// needs; the pinned LGPL build has it (risk R6).
+	out, err := exec.Command(ffmpeg, "-hide_banner", "-filters").Output()
+	if err != nil || !strings.Contains(string(out), "zscale") {
+		t.Skip("this FFmpeg has no zscale filter: the ingest needs the pinned LGPL build")
+	}
+
 	return ffmpeg, ffprobe
 }
 
