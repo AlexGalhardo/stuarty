@@ -1,0 +1,57 @@
+---
+title: "Modelo: corte vertical com legendas"
+description: "O ponto de partida para um vídeo vertical curto: um clipe de filmagem e legendas com a palavra destacada."
+---
+
+## O que você vai aprender
+
+- o que o ponto de partida contém;
+- como preencher os seus dois espaços;
+- como adaptar o visual das legendas.
+
+## A ideia
+
+O **Corte vertical com legendas** é um projeto de 1080 x 1920 (9:16) com fundo preto, uma faixa `Video` com um espaço de clipe de 15 segundos e uma faixa `Captions` cujo estilo é em negrito, maiúsculas, centralizado na parte de baixo, com a palavra falada destacada. As cores do modelo são `ink` (`#FFFFFF`) e `highlight` (`#FFE600`).
+
+| Espaço | Tipo | O que vai nele |
+| --- | --- | --- |
+| `clip` | mídia, política de duração `fit` | a filmagem vertical a cortar |
+| `subtitles` | legenda | as palavras mostradas sobre o clipe |
+
+## Início rápido
+
+1. Liste os modelos e anote o id de `Vertical cut with captions`.
+2. Crie o projeto, preenchendo `clip` com a sua mídia.
+3. Transcreva a mídia e gere as legendas a partir dela.
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video template:list
+echo '{"clip": {"asset_id": "ast_4h6j8k2m3n"}}' > fill.json
+vukem-video template:new tpl_5n8b2v6c1x --name "Short 01" --fill fill.json
+vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_4h6j8k2m3n
+vukem-video edit --project prj_7k2m9x4q1b caption.from_transcript \
+  clip_item_id=itm_m1n2p3q4r5 track_id=trk_f6g7h8j9k0
+```
+
+</Tab>
+<Tab title="MCP">
+
+`template` com `{"action": "new", "template_id": "tpl_5n8b2v6c1x", "name": "Short 01", "fill": {"clip": {"asset_id": "ast_4h6j8k2m3n"}}}`, depois `job_start` com `"kind": "transcribe"` e `edit` com `caption.from_transcript`.
+
+</Tab>
+</Tabs>
+
+O modelo tem uma legenda provisória com o texto `Your words appear here as the clip speaks`; o `caption.from_transcript` com `replace` verdadeiro (o padrão) remove antes as legendas ligadas ao clipe. Mude o visual de todas as legendas com `track.set_caption_style` e use as cores do modelo como `$highlight` e `$ink`.
+
+## Erros comuns
+
+- Preencher `clip` com uma mídia mais curta que 15 segundos: `E_SLOT`. Use a política `stretch_timeline` em uma cópia do modelo, ou uma mídia mais longa.
+- Deixar as legendas descerem abaixo da área segura. O estilo as mantém na parte de baixo, dentro dela; confira com o guia da [área segura](/docs/guide/safe-area).
+
+## Próximos passos
+
+- [Transcrição](/docs/guide/transcription)
+- [Exportação](/docs/guide/exporting)

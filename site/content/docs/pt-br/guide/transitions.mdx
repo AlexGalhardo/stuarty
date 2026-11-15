@@ -1,0 +1,58 @@
+---
+title: "Transições"
+description: "Faça um item surgir ou sumir com esmaecimento ou deslize, e faça uma transição cruzada entre dois itens sobrepostos."
+---
+
+## O que você vai aprender
+
+- como adicionar um esmaecimento ou um deslize ao início ou ao fim de um item;
+- como fazer uma transição cruzada entre dois clipes sobrepostos;
+- o que a verificação (lint) diz sobre uma transição sem nada a mesclar.
+
+## A ideia
+
+Uma **transição** pertence a uma borda de um item. A borda `in` é o início e a borda `out` é o fim. Os tipos são `fade`, `slide_left`, `slide_right`, `slide_up` e `slide_down`, e a duração padrão é de 0,5 segundo. As duas transições de um item juntas não podem ser mais longas que o item. Uma transição se aplica a clipes, texto, legendas e formas.
+
+Uma **transição cruzada** são duas transições posicionadas para você: o item que sai recebe um `fade` de saída, o item que chega recebe um `fade` de entrada, e os clipes também recebem os esmaecimentos de áudio correspondentes. Os dois itens precisam se sobrepor em pelo menos a duração da transição cruzada, então coloque-os em duas faixas ou deixe a sobreposição de propósito. No editor, o menu da linha do tempo de um item tem **Crossfade**, e o inspetor tem uma seção Transições com o tipo e a duração de cada borda. As marcas de transição aparecem na linha do tempo.
+
+## Início rápido
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b item.set_transition item_id=itm_m1n2p3q4r5 \
+  edge=in kind=fade duration=0.5s
+vukem-video edit --project prj_7k2m9x4q1b item.crossfade from_item_id=itm_m1n2p3q4r5 \
+  to_item_id=itm_s6t7v8w9x0 duration=1s
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` com as operações:
+
+```json
+{ "op": "item.set_transition", "args": {
+  "item_id": "itm_m1n2p3q4r5", "edge": "out", "kind": "slide_left"
+} }
+{ "op": "item.crossfade", "args": {
+  "from_item_id": "itm_m1n2p3q4r5", "to_item_id": "itm_s6t7v8w9x0", "duration": "1s"
+} }
+```
+
+</Tab>
+</Tabs>
+
+Use `"kind": null` para remover uma transição.
+
+## Erros comuns
+
+- Uma transição cruzada entre itens que não se sobrepõem pela sua duração: o comando é recusado. Mova antes o segundo item para mais cedo.
+- Uma transição em um item de áudio. Use os esmaecimentos de áudio do `item.set_audio`.
+- Uma transição que não deixa nada a mesclar: a verificação informa `L_TRANSITION_EMPTY`.
+
+## Próximos passos
+
+- [Anime com quadros-chave](/docs/guide/keyframes)
+- [Edição de áudio](/docs/guide/audio)
