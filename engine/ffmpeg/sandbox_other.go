@@ -5,6 +5,9 @@ package ffmpeg
 import (
 	"context"
 	"errors"
+	"io"
+
+	"github.com/AlexGalhardo/vukem/contrib/engine"
 )
 
 // SandboxBwrap is the value of VUKEM_VIDEO_SANDBOX that wraps every tool in bubblewrap (Linux only).
@@ -20,7 +23,7 @@ func ResolveSandbox(_ context.Context, mode string) (string, error) {
 	return "", errors.New("ffmpeg: VUKEM_VIDEO_SANDBOX needs Linux with bubblewrap")
 }
 
-// command is the tool itself: there is no sandbox outside Linux.
-func (r *Runner) command(s execSpec) (string, []string, error) {
-	return s.tool.Path(), s.argv, nil
+// runSandboxed is never called: ResolveSandbox accepts no mode outside Linux, so Runner.Sandbox is empty.
+func (r *Runner) runSandboxed(context.Context, execSpec, io.Writer) (engine.Result, error) {
+	return engine.Result{}, errors.New("ffmpeg: there is no sandbox outside Linux")
 }
