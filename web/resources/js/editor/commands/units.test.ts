@@ -9,6 +9,7 @@ import {
 	formatTime,
 	localizeDecimalInput,
 	normalizeTimeInput,
+	speedText,
 } from "./units";
 
 const ok = (value: string) => ({ ok: true, value });
@@ -98,5 +99,14 @@ describe("item times", () => {
 		expect(displayDuration(item, fps, "seconds")).toBe("6.000s");
 		expect(displayInPoint(item, fps, "frames")).toBe("36f");
 		expect(displayInPoint({ start: 0, duration: 1 }, fps, "frames")).toBe("0f");
+	});
+});
+
+describe("speedText", () => {
+	test("shows the number of the field, one at normal speed", () => {
+		expect(speedText(undefined)).toBe("1");
+		expect(speedText({ num: 3, den: 2 })).toBe("1.5");
+		expect(speedText({ num: 1, den: 3 })).toBe("0.333");
+		expect(speedText({ num: 4, den: 1 })).toBe("4");
 	});
 });
