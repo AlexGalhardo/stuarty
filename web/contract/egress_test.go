@@ -14,14 +14,10 @@ import (
 // undo) makes no dial through any outbound purpose.
 func TestSecurity_T10_DefaultRunOpensNoOutboundConnection(t *testing.T) {
 	for _, kv := range os.Environ() {
-		name, value, _ := strings.Cut(kv, "=")
-		if !strings.HasPrefix(name, "VUKEM_VIDEO_") {
-			continue
+		name, _, _ := strings.Cut(kv, "=")
+		if strings.HasPrefix(name, "VUKEM_VIDEO_") {
+			t.Setenv(name, "") // restored when the test ends; empty is unset for the configuration
 		}
-
-		_ = os.Unsetenv(name)
-
-		t.Cleanup(func() { _ = os.Setenv(name, value) })
 	}
 
 	var dials atomic.Int32
