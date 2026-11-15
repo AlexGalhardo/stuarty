@@ -218,7 +218,8 @@ export default function ExportDialog({
 	// start returns its error and hint without queuing anything.
 	useEffect(() => {
 		setUnsupported(null);
-		if (!open || jobId !== null || Object.keys(options).length === 0) return;
+		const chosen = Object.values(options).some((value) => value !== undefined);
+		if (!open || jobId !== null || !chosen) return;
 		let live = true;
 		runtime.client
 			.startExport(runtime.projectId, options, true)
