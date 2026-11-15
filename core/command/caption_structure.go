@@ -152,7 +152,7 @@ func applyCaptionMerge(c *Context, a *captionMergeArgs) error {
 		first, second = second, first
 	}
 	if first.Track != second.Track {
-		return Errorf(CodeInvalidState, "Captions %s and %s are on different tracks (%s and %s).",
+		return Errorf(CodeInvalidState, "The captions %s and %s are on different tracks (%s and %s).",
 			first.ID, second.ID, first.Track, second.Track).
 			WithHint("Move one caption to the track of the other with item.move first.")
 	}

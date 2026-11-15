@@ -1,6 +1,6 @@
 {
   "code": "E_INVALID_STATE",
-  "message": "Captions itm_s6t7v8w9x0 and itm_c3d4e5f6g7 are on different tracks (trk_a1b2c3d4e5 and trk_f6g7h8j9k0).",
+  "message": "The captions itm_s6t7v8w9x0 and itm_c3d4e5f6g7 are on different tracks (trk_a1b2c3d4e5 and trk_f6g7h8j9k0).",
   "hint": "Move one caption to the track of the other with item.move first.",
   "retryable": false
 }

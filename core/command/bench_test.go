@@ -1,5 +1,7 @@
 package command
 
+//go:generate go test -run TestScaleProject -gen-scale .
+
 import (
 	"fmt"
 	"os"
