@@ -11,11 +11,11 @@ Sets the value of x, y, scale, rotation, opacity or (clips and audio) volume at 
 
 | Argument | Type | Required | Description |
 | --- | --- | --- | --- |
-| `at` | `string` | Absolute position inside the item, inclusive of its end. | Absolute position inside the item, inclusive of its end. |
-| `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold` | From this keyframe to the next. Default linear. | From this keyframe to the next. Default linear. |
-| `item_id` | `string` |  |  |
-| `property` | `x`, `y`, `scale`, `rotation`, `opacity`, `volume` |  |  |
-| `value` | `number` | Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4. | Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4. |
+| `at` | `string` | yes | Absolute position inside the item, inclusive of its end. |
+| `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold` | no | From this keyframe to the next. Default linear. |
+| `item_id` | `string` | yes |  |
+| `property` | `x`, `y`, `scale`, `rotation`, `opacity`, `volume` | yes |  |
+| `value` | `number` | yes | Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4. |
 
 ## Example
 

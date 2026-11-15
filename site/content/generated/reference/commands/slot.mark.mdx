@@ -11,11 +11,11 @@ Makes a clip, audio, text or caption item a slot named name; the slot kind follo
 
 | Argument | Type | Required | Description |
 | --- | --- | --- | --- |
-| `description` | `string` | Up to 200 characters. | Up to 200 characters. |
-| `duration_policy` | `fit`, `stretch_timeline` | Media slots only. Default fit. | Media slots only. Default fit. |
-| `item_id` | `string` | A clip, audio, text or caption item. | A clip, audio, text or caption item. |
-| `name` | `string` | Matches [a-z][a-z0-9_]\{0,39\}; unique among the slots. | Matches [a-z][a-z0-9_]\{0,39\}; unique among the slots. |
-| `required` | `boolean` | Default true. | Default true. |
+| `description` | `string` | no | Up to 200 characters. |
+| `duration_policy` | `fit`, `stretch_timeline` | no | Media slots only. Default fit. |
+| `item_id` | `string` | yes | A clip, audio, text or caption item. |
+| `name` | `string` | yes | Matches [a-z][a-z0-9_]\{0,39\}; unique among the slots. |
+| `required` | `boolean` | no | Default true. |
 
 ## Example
 

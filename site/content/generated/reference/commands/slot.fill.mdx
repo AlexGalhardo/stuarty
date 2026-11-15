@@ -11,11 +11,11 @@ Give exactly one of asset_id (media slot), text (text slot) or words (caption sl
 
 | Argument | Type | Required | Description |
 | --- | --- | --- | --- |
-| `asset_id` | `string` | For a media slot. | For a media slot. |
-| `name` | `string` | The slot name. | The slot name. |
-| `source_in` | `string` | With asset_id only. Default "0s". | With asset_id only. Default "0s". |
-| `text` | `string` | For a text slot. | For a text slot. |
-| `words` | array of `object` | For a caption slot: words with times relative to the caption, as lengths. | For a caption slot: words with times relative to the caption, as lengths. |
+| `asset_id` | `string` | no | For a media slot. |
+| `name` | `string` | yes | The slot name. |
+| `source_in` | `string` | no | With asset_id only. Default "0s". |
+| `text` | `string` | no | For a text slot. |
+| `words` | array of `object` | no | For a caption slot: words with times relative to the caption, as lengths. |
 
 ## Example
 

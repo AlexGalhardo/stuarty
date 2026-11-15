@@ -24,6 +24,7 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
 | `frame_count` | `integer` | no | min 1 |
+| `frame_delays` | array of `integer` | no | at least 2 items; at most 1000 items |
 | `frame_rate` | `Rational` | no |  |
 | `has_audio` | `boolean` | no |  |
 | `hash` | `string` | yes | pattern `^sha256:[0-9a-f]\{64\}$` |
@@ -82,6 +83,7 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | --- | --- | --- | --- |
 | `asset` | `string` | no | pattern `^ast_([0-9a-hjkmnp-tv-z]\{10\}\\\|placeholder)$` |
 | `audio_muted` | `boolean` | no |  |
+| `blur` | `number` | no | min 0; max 100 |
 | `breaks` | array of `integer` | no |  |
 | `brightness` | `number` | no | min -1; max 1 |
 | `contrast` | `number` | no | min 0; max 2; default `1` |
@@ -90,11 +92,14 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `fade_in` | `integer` | no | min 0 |
 | `fade_out` | `integer` | no | min 0 |
 | `fill` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$`; default `"#FFFFFF"` |
+| `filter` | `none`, `grayscale`, `sepia`, `invert`, `warm`, `cool` | no | default `"none"` |
+| `filter_amount` | `number` | no | min 0; max 1; default `1` |
 | `fit` | `cover`, `contain`, `none` | no | default `"cover"` |
 | `height` | `number` | no |  |
 | `id` | `string` | yes | pattern `^itm_[0-9a-hjkmnp-tv-z]\{10\}$` |
 | `keyframes` | `object` | no |  |
 | `linked_item` | `string` | no | pattern `^itm_[0-9a-hjkmnp-tv-z]\{10\}$` |
+| `markers` | array of `Marker` | no | at most 200 items |
 | `name` | `string` | no |  |
 | `opacity` | `number` | no | min 0; max 1; default `1` |
 | `radius` | `number` | no | min 0 |
@@ -127,6 +132,13 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold` | no | default `"linear"` |
 | `t` | `integer` | yes | min 0 |
 | `value` | `number` | yes |  |
+
+## Marker
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `frame` | `integer` | yes | min 0 |
+| `label` | `string` | no |  |
 
 ## ProjectFont
 
