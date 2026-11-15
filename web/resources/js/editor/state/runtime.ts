@@ -2,6 +2,7 @@ import { type ApiClient, createClient } from "../api/client";
 import { createEditQueue, type EditQueue } from "../api/edit";
 import { ApiError } from "../api/errors";
 import { browserTimers, createEventStream, type Timers } from "../api/events";
+import { createSharedEventStream } from "../api/eventsLock";
 import type { Transport } from "../api/transport";
 import type { Job, ProjectEvent } from "../api/types";
 import {
@@ -35,6 +36,11 @@ export interface RuntimeOptions {
 	// applied diff against a fetched document (SDD-012 sections 5.3 and 5.4).
 	checked?: boolean;
 	onMismatch?(revision: number): void;
+	// Report vv:edit-apply, the time the store takes to apply an edit answer.
+	measure?: boolean;
+	// Share one event stream per project among the tabs of the browser (Web
+	// Locks and BroadcastChannel). Off in tests and for the fixture server.
+	shareStream?: boolean;
 }
 
 // Everything the editor shares: the stores, the synchronization state machine
@@ -138,7 +144,7 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		}
 	}
 
-	const stream = createEventStream({
+	const ownStream = createEventStream({
 		transport,
 		projectId,
 		getRevision: () => documents.getState().revision ?? 0,
@@ -156,6 +162,17 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		},
 		timers,
 	});
+
+	const stream =
+		options.shareStream && typeof navigator.locks !== "undefined"
+			? createSharedEventStream({
+					projectId,
+					stream: ownStream,
+					getRevision: () => documents.getState().revision ?? 0,
+					locks: navigator.locks,
+					openChannel: (name) => new BroadcastChannel(name),
+				})
+			: ownStream;
 
 	const sync = createSync({
 		projectId,
@@ -182,7 +199,13 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		client,
 		projectId,
 		newKey: () => crypto.randomUUID(),
-		onResult: (result) => sync.receiveEdit(result),
+		onResult: (result) => {
+			const start = performance.now();
+			sync.receiveEdit(result);
+			if (options.measure) {
+				performance.measure("vv:edit-apply", { start, end: performance.now() });
+			}
+		},
 		onNetworkFailure: () => sync.markOffline(),
 	});
 
