@@ -485,7 +485,8 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		return nil, err
 	}
 
-	doc, derr := decodeRow(&row)
+	// The document of the revision recorded at the start, not the head.
+	doc, derr := decodeRow(&ProjectRow{Document: in.Document})
 	if derr != nil {
 		return nil, derr
 	}
@@ -532,7 +533,7 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 	}
 
 	export := ExportResult{
-		Revision: row.Revision, Path: out, DownloadURL: "/api/v1/jobs/" + job.ID + "/file", Bytes: res.Bytes,
+		Revision: in.Revision, Path: out, DownloadURL: "/api/v1/jobs/" + job.ID + "/file", Bytes: res.Bytes,
 		SHA256: res.SHA256, Duration: timeValue(fps, frames), Width: doc.Settings.Width, Height: doc.Settings.Height,
 		FPS: fpsString(fps.Num, fps.Den), VideoCodec: res.VideoCodec, AudioCodec: res.AudioCodec,
 		LoudnessLUFS: res.LoudnessLUFS, Checks: res.Checks,
