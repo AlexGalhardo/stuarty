@@ -194,6 +194,7 @@ describe("endpoints and URLs", () => {
 		await client.importMedia("prj_x", ["C:/a.mp4"]);
 		await client.getLint("prj_x");
 		await client.startExport("prj_x");
+		await client.startTranscribe("prj_x", "ast_1");
 		await client.listJobs("prj_x");
 		await client.getJob("job_1");
 		expect(calls).toEqual([
@@ -203,6 +204,7 @@ describe("endpoints and URLs", () => {
 			"GET /projects/prj_x/media",
 			"POST /projects/prj_x/media",
 			"GET /projects/prj_x/lint",
+			"POST /projects/prj_x/jobs",
 			"POST /projects/prj_x/jobs",
 			"GET /projects/prj_x/jobs",
 			"GET /jobs/job_1",

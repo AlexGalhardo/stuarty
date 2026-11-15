@@ -44,6 +44,9 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.split_word": ["caption.split"],
 	"timeline.merge_captions": ["caption.merge"],
 	"inspector.caption_style": ["caption.set_style"],
+	"inspector.auto_captions": ["caption.from_transcript", "track.add"],
+	"inspector.resync_captions": ["caption.retime_from_clip"],
+	"lint.resync_captions": ["caption.retime_from_clip"],
 	"text.add": ["text.add", "track.add"],
 	"canvas.edit_text": ["text.set"],
 	"inspector.text": ["text.set"],
@@ -80,12 +83,19 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.word_text", phase: "A" },
 		palette,
 	],
-	"caption.from_transcript": [palette],
+	"caption.from_transcript": [
+		{ kind: "inspector", action: "inspector.auto_captions", phase: "A" },
+		palette,
+	],
 	"caption.merge": [
 		{ kind: "menu", action: "timeline.merge_captions", phase: "A" },
 		palette,
 	],
-	"caption.retime_from_clip": [palette],
+	"caption.retime_from_clip": [
+		{ kind: "inspector", action: "inspector.resync_captions", phase: "A" },
+		{ kind: "menu", action: "lint.resync_captions", phase: "A" },
+		palette,
+	],
 	"caption.set_breaks": [
 		{ kind: "inspector", action: "inspector.breaks", phase: "A" },
 		palette,

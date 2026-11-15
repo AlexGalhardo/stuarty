@@ -15,6 +15,7 @@ import {
 	captionEditWordOperations,
 	captionMergeOperations,
 	captionOperations,
+	captionRetimeOperations,
 	captionSplitOperations,
 	closeGapOperations,
 	deleteOperations,
@@ -57,6 +58,11 @@ export interface Actions {
 	splitCaption(itemId: string, beforeWord: number): Promise<EditOutcome | null>;
 	// "Merge" with two captions selected.
 	mergeCaptions(itemIds: readonly string[]): Promise<EditOutcome | null>;
+	// "Generate" of the auto captions panel: the batch of
+	// `captionFromTranscriptOperations`, sent once the transcript exists.
+	generateCaptions(ops: Operations): Promise<EditOutcome | null>;
+	// "Re-sync captions" of a clip, in the panel and in the lint finding.
+	resyncCaptions(clipId: string): Promise<EditOutcome | null>;
 	// The inline editor of the canvas and the timeline: only a change of the
 	// content is sent, and the error is a notice, not a field message.
 	setText(itemId: string, text: string): Promise<EditOutcome | null>;
@@ -396,6 +402,8 @@ export function createActions(runtime: EditorRuntime): Actions {
 		splitCaption: (itemId, beforeWord) =>
 			send(captionSplitOperations(itemId, beforeWord)),
 		mergeCaptions: (itemIds) => send(captionMergeOperations(itemIds)),
+		generateCaptions: (ops) => send(ops),
+		resyncCaptions: (clipId) => send(captionRetimeOperations(clipId)),
 		setText: (itemId, text) => send(textSetOperations(itemId, text)),
 		nudge: (ids, frames) => send(nudgeOperations(rangesOf(ids), frames)),
 		moveToAdjacentTrack(ids, sign) {

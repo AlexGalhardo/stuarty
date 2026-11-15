@@ -236,6 +236,48 @@ export function captionMergeOperations(itemIds: readonly string[]): Operations {
 	return [{ op: "caption.merge", args: { item_ids: [...itemIds] } }];
 }
 
+// "Generate" of the auto captions panel (SDD-012 section 12.4): the captions of
+// the clip's transcript on `trackId`, or on a track named Captions that the same
+// batch adds first. The core fills the words from the transcript.
+export function captionFromTranscriptOperations(input: {
+	clipId: string;
+	trackId: string | null;
+	newTrackId: () => string;
+	trackName: string;
+	maxWords: number;
+	maxChars: number;
+	maxGap: string;
+	replace: boolean;
+}): Operations {
+	const ops: Operations = [];
+	let track = input.trackId;
+	if (track === null) {
+		track = input.newTrackId();
+		ops.push({
+			op: "track.add",
+			args: { kind: "visual", id: track, name: input.trackName },
+		});
+	}
+	ops.push({
+		op: "caption.from_transcript",
+		args: {
+			clip_item_id: input.clipId,
+			track_id: track,
+			max_words: input.maxWords,
+			max_chars: input.maxChars,
+			max_gap: input.maxGap,
+			replace: input.replace,
+		},
+	});
+	return ops;
+}
+
+// "Re-sync captions": the captions linked to the clip follow its current start,
+// in point and speed.
+export function captionRetimeOperations(clipId: string): Operations {
+	return [{ op: "caption.retime_from_clip", args: { clip_item_id: clipId } }];
+}
+
 export function captionBreaksOperations(
 	itemId: string,
 	breaks: readonly number[],

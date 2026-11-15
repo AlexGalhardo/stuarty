@@ -48,6 +48,9 @@ export interface ApiClient {
 	importMedia(projectId: string, paths: string[]): Promise<MediaImportResult>;
 	getLint(projectId: string): Promise<LintResult>;
 	startExport(projectId: string): Promise<Job>;
+	// A transcription of one asset (SDD-012 section 12.4); E_TRANSCRIBE_UNAVAILABLE
+	// answers at once when no provider can run.
+	startTranscribe(projectId: string, assetId: string): Promise<Job>;
 	getJob(jobId: string): Promise<Job>;
 	cancelJob(jobId: string): Promise<Job>;
 	listJobs(projectId: string): Promise<JobListResult>;
@@ -143,6 +146,11 @@ export function createClient(
 		getLint: (id) => call("GET", `${project(id)}/lint`, READ_TIMEOUT_MS),
 		startExport: (id) =>
 			call("POST", `${project(id)}/jobs`, READ_TIMEOUT_MS, { kind: "export" }),
+		startTranscribe: (id, assetId) =>
+			call("POST", `${project(id)}/jobs`, READ_TIMEOUT_MS, {
+				kind: "transcribe",
+				args: { asset_id: assetId },
+			}),
 		getJob: (jobId) =>
 			call("GET", `/jobs/${encodeURIComponent(jobId)}`, READ_TIMEOUT_MS),
 		cancelJob: (jobId) =>

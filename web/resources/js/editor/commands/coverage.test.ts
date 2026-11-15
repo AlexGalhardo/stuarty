@@ -7,8 +7,10 @@ import {
 	addClipOperations,
 	captionBreaksOperations,
 	captionEditWordOperations,
+	captionFromTranscriptOperations,
 	captionMergeOperations,
 	captionOperations,
+	captionRetimeOperations,
 	captionSplitOperations,
 	captionStyleOperations,
 	captionWordsOperations,
@@ -273,6 +275,20 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"inspector.caption_style": captionStyleOperations("itm_a", null).map(
 				(o) => o.op,
 			),
+			"inspector.auto_captions": captionFromTranscriptOperations({
+				clipId: "itm_a",
+				trackId: null,
+				newTrackId,
+				trackName: "Captions",
+				maxWords: 5,
+				maxChars: 28,
+				maxGap: "0.6s",
+				replace: true,
+			}).map((o) => o.op),
+			"inspector.resync_captions": captionRetimeOperations("itm_a").map(
+				(o) => o.op,
+			),
+			"lint.resync_captions": captionRetimeOperations("itm_a").map((o) => o.op),
 			"text.add": textAddOperations({
 				text: "a",
 				playhead: 0,
