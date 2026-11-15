@@ -586,6 +586,31 @@ The measurements came from one Windows machine with other processes running. The
 
 **Why `BenchmarkExport60s` gave 46.9 s on one run and 23.9 s in the first table.** It is the same benchmark; the export is bound by the Go compositor (1,800 frames of 1080x1920 compose in about 37 s on a machine at 56 percent load, measured with a 600 frame loop), and the encoder is not the limit. Run back to back on the same busy machine, the commit of the first table (`d342d2c`) gave 38.8 s and the current code gave 42.6 s: the difference with the table is the load of the other agents building and testing at the same time, and the difference between the two commits is within the noise of that load. Treat the 23.9 s as the number of an idle machine and re-measure there before reading a regression into any other number.
 
+**Release review on Windows (P4-RND-001, 2026-11-15; Linux and macOS are for the CI runners).** Code at commit `390a3409` of `feat/eng-hw-encoders` (the engine code is that of `6f7850ee`, later commits only touch tests), Windows 11, Ryzen 7 5700X3D (8 cores, 16 threads), Go 1.27.4, the pinned LGPL FFmpeg `n9.0.2-39-g7adfbe40dc`, detected encoder `h264_nvenc`. **These are not final numbers.** The machine was shared with other agents' builds and tests during the whole session: the CPU load measured with `Win32_Processor.LoadPercentage` before and after each run was 75 to 100 percent and never fell below 70 in 25 minutes of waiting, so every time-bound row is two to four times slower than the table of `2026-11-14-windows.md` (measured at 56 percent load) and the table of this date was not written to `docs/perf/` (it would become a wrong baseline for the 20 percent regression check). Rerun `go run ./internal/tools/perfreport -write` and the benchmarks below on a quiet machine before the release; the rows that do not depend on the load are final.
+
+| What | Measured at 75 to 100 percent load | Limit | Verdict |
+| --- | --- | --- | --- |
+| `BenchmarkCommit200Items` p95 | 36.2 ms | 50 ms (NFR-001) | pass, load bound |
+| `BenchmarkIngest60s` | 29.19 s | 30 s (NFR-005) | pass by 0.8 s, load bound: 8.5 s on 2026-11-14 |
+| `BenchmarkExport60s` | 102.5 s, resident peak 110 MB | 60 s, 500 MB (NFR-006, NFR-007) | time not valid under this load (23.9 s on 2026-11-14); memory final |
+| `BenchmarkExportCommonCase` | 0.61 times real time | 1.5 times | not valid under this load (2.64 on 2026-11-14) |
+| `BenchmarkExportScale60s` (NFR-009 project) | 86.0 s, resident peak 129 MB | 60 s, 500 MB | time not valid under this load (38.5 s at 56 to 60 percent); memory final |
+| `BenchmarkViewFrame` / `BenchmarkViewSheet9` | 501.5 ms / 652.4 ms | 1 s / 2 s | pass, load bound |
+| `BenchmarkViewFrameColdScale` UI width / agent width | p50 215 ms, p95 382 ms / p50 408 ms, p95 583 ms | 500 ms (NFR-004) / 2 s (NFR-023) | pass, load bound |
+| `BenchmarkViewSheet9Scale` | 1,479 tokens (3.5 s) | 1,600 tokens (NFR-022) | tokens final, pass |
+| `BenchmarkComposeRotated` / `ColorMatrix` / `Blur` / `Filter` | 14.2 / 9.3 / 26.7 / 7.6 ms per frame (2.35 / 3.59 / 1.25 / 4.36 times real time) | 1 time real time | pass |
+
+The BETA scenes are new benchmarks in `engine/export/bench_release_test.go` (`go test ./engine/export -run XXX -bench BenchmarkRelease -benchtime=3x`), each with the detected encoder; the range is over four runs (the first one includes the encoder detection) at 75 to 100 percent load:
+
+| Scene | Frames | Measured | Peak |
+| --- | --- | --- | --- |
+| `BenchmarkReleaseFPS60` (1080x1920 at 60 fps, 5 s) | 300 | 2.2 to 9.4 s (1.2 to 2.2 times real time at best) | 14 to 17 MB |
+| `BenchmarkReleaseFourK` (3840x2160 at 30 fps) | 15 | 15.6 to 35.5 s | 379 MB |
+| `BenchmarkReleaseGIF` (2 s, the GIF encoder of SDD-004 §8.1) | 60 | 0.2 to 3.9 s | 13 to 16 MB |
+| `BenchmarkReleaseAnimatedImage` (the animated sticker of the golden scenes) | 30 | 2.6 to 23.1 s | 16 to 19 MB |
+
+4K is the open point: 15 frames took 1 to 2 seconds each in every run, far more than the 8x pixel count over the 1080 rows explains, and a CPU profile at that load showed the Go side blocked on the pipe of the FFmpeg decoder, not computing. Whether it is the decoder (it scales the 1080x1920 fixture to 4K), the load or the pipe is not settled; the release must measure it on a quiet machine before it is accepted, and a 4K export of a minute is not an NFR (NFR-006 is the 1080x1920 project). The end-to-end wall time of metric 4 (import, `small` transcription, captions, export) was not run: it needs the model and a quiet machine. The regression guard of the CI is owned by the release track and is not part of this measurement. Blur at the project scale is `BenchmarkComposeBlur` above, which is 1.25 times real time at this load.
+
 ## 13. Acceptance
 
 1. `go test ./core/plan/...` passes with at least 90% statement coverage, including table tests for every formula of section 3 at the boundary frames (first, last, and the frames around each keyframe and transition edge).
