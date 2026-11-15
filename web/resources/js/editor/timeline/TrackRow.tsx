@@ -17,6 +17,7 @@ import {
 	selectTrackItemIds,
 } from "../state/selectors";
 import { AUDIO_ROW_PX, sortByStart, VISUAL_ROW_PX } from "./geometry";
+import { clickSelection, gridLayout } from "./keyboard";
 
 const TYPE_CLASS: Record<string, string> = {
 	clip: "bg-ed-item-clip text-ed-item-clip-fg",
@@ -40,6 +41,7 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 		item?.asset === undefined ? undefined : selectAsset(s, item.asset),
 	);
 	const selected = useUiState((s) => s.selection.items.includes(id));
+	const tabStop = useUiState((s) => s.focusedItem === id);
 	const remote = useActivityState((s) => s.highlighted.includes(id));
 	if (item === undefined) return null;
 
@@ -48,11 +50,11 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 		item.name ?? asset?.name ?? item.text?.split("\n")[0] ?? typeName;
 
 	return (
-		// biome-ignore lint/a11y/useKeyWithClickEvents: keyboard selection arrives with the grid keys of ALPHA (SDD-012 section 7.10).
+		// biome-ignore lint/a11y/useKeyWithClickEvents: the keyboard selects with Enter, handled by the grid (SDD-012 section 7.10).
 		// biome-ignore lint/a11y/useSemanticElements: the cell sits in a CSS-positioned grid (SDD-012 section 7.1).
 		<div
 			role="gridcell"
-			tabIndex={-1}
+			tabIndex={tabStop ? 0 : -1}
 			aria-selected={selected}
 			aria-label={t("ui.editor.timeline.item_summary", {
 				type: typeName,
@@ -75,7 +77,15 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 			}}
 			onClick={(event) => {
 				event.stopPropagation();
-				runtime.uiWriter.select([id]);
+				const { selection } = runtime.ui.getState();
+				const next = clickSelection(
+					gridLayout(runtime.documents.getState()),
+					selection.items,
+					selection.anchor,
+					id,
+					{ shift: event.shiftKey, toggle: event.ctrlKey || event.metaKey },
+				);
+				runtime.uiWriter.select(next.items, next.anchor);
 			}}
 		>
 			<UntrustedText className="truncate">{label}</UntrustedText>
@@ -85,6 +95,7 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 
 export function TrackHeader({ id }: { id: string }): ReactNode {
 	const t = useT();
+	const runtime = useRuntime();
 	const track = useDocumentState((s) => selectTrack(s, id));
 	if (track === undefined) return null;
 	const Icon = track.kind === "audio" ? AudioLines : Video;
@@ -93,6 +104,12 @@ export function TrackHeader({ id }: { id: string }): ReactNode {
 		<div
 			role="rowheader"
 			tabIndex={-1}
+			onClick={() => runtime.uiWriter.selectTrack(id)}
+			onKeyDown={(event) => {
+				if (event.key !== "Enter") return;
+				event.preventDefault();
+				runtime.uiWriter.selectTrack(id);
+			}}
 			style={{ height: rowHeight(track.kind) }}
 			className="flex items-center gap-2 border-b border-ed-track-line px-3 text-xs"
 		>

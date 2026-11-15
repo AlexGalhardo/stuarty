@@ -156,6 +156,24 @@ export function sortByStart<T extends Placed>(items: readonly T[]): T[] {
 	return [...items].sort((a, b) => a.start - b.start || (a.id < b.id ? -1 : 1));
 }
 
+// The id of the item whose start is nearest to `start`, the first one on a tie
+// (keyboard focus moving to the track above or below, SDD-012 section 7.10).
+export function nearestByStart(
+	items: readonly Placed[],
+	start: number,
+): string | null {
+	let best: Placed | null = null;
+	for (const item of items) {
+		if (
+			best === null ||
+			Math.abs(item.start - start) < Math.abs(best.start - start)
+		) {
+			best = item;
+		}
+	}
+	return best === null ? null : best.id;
+}
+
 export function clampPlayhead(frame: number): number {
 	return clamp(Math.round(frame), 0, TIMELINE_MAX_FRAME);
 }

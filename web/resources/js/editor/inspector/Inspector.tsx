@@ -77,6 +77,8 @@ export default function Inspector(): ReactNode {
 	return (
 		<aside
 			aria-label={t("ui.editor.panels.inspector")}
+			data-region="inspector"
+			tabIndex={-1}
 			className="flex min-h-0 min-w-0 flex-col gap-3 overflow-auto bg-ed-panel p-3"
 		>
 			<h2 className="truncate text-sm font-semibold">{title}</h2>

@@ -5,8 +5,11 @@ import type { EditorRuntime } from "../state/runtime";
 import { selectOrderedTrackIds, selectTrack } from "../state/selectors";
 import {
 	addClipOperations,
+	adjacentTrack,
 	captionOperations,
 	type ItemRange,
+	moveToTrackOperations,
+	nudgeOperations,
 	type Operations,
 	splitOperations,
 	trimOperations,
@@ -23,6 +26,13 @@ export interface Actions {
 	splitAtPlayhead(): Promise<EditOutcome | null>;
 	trimToPlayhead(edge: "start" | "end"): Promise<EditOutcome | null>;
 	addCaption(text: string, duration: string): Promise<EditOutcome | null>;
+	// Alt+Left and Alt+Right: every item of `ids` by `frames` frames, one batch.
+	nudge(ids: readonly string[], frames: number): Promise<EditOutcome | null>;
+	// Alt+Up and Alt+Down: every item of `ids` to the track above or below its own.
+	moveToAdjacentTrack(
+		ids: readonly string[],
+		sign: 1 | -1,
+	): Promise<EditOutcome | null>;
 	// palette.run: the operations the palette built from a schema form.
 	runOperations(ops: Operations): Promise<EditOutcome | null>;
 	// An inspector field: like runOperations, but a validation or time error is
@@ -57,10 +67,14 @@ export function createActions(runtime: EditorRuntime): Actions {
 	}
 
 	function selectedRanges(): ItemRange[] {
+		return rangesOf(ui.getState().selection.items);
+	}
+
+	function rangesOf(ids: readonly string[]): ItemRange[] {
 		const doc = documents.getState().document;
 		if (doc === null) return [];
 		const ranges: ItemRange[] = [];
-		for (const id of ui.getState().selection.items) {
+		for (const id of ids) {
 			const item = doc.items[id];
 			if (item !== undefined) {
 				ranges.push({ id, start: item.start, duration: item.duration });
@@ -182,6 +196,19 @@ export function createActions(runtime: EditorRuntime): Actions {
 					newTrackId: () => newId("trk"),
 				}),
 			),
+		nudge: (ids, frames) => send(nudgeOperations(rangesOf(ids), frames)),
+		moveToAdjacentTrack(ids, sign) {
+			const doc = documents.getState().document;
+			if (doc === null) return Promise.resolve(null);
+			const tracks = selectOrderedTrackIds(documents.getState());
+			const moves = ids.flatMap((itemId) => {
+				const item = doc.items[itemId];
+				const trackId =
+					item === undefined ? null : adjacentTrack(tracks, item.track, sign);
+				return trackId === null ? [] : [{ itemId, trackId }];
+			});
+			return send(moveToTrackOperations(moves));
+		},
 		runOperations: (ops) => send(ops),
 		commitField: (ops) => send(ops, true),
 		undo: () => history("undo"),
