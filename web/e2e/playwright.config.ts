@@ -93,6 +93,19 @@ export default defineConfig({
 					},
 				]
 			: []),
+		// The soak of NFR-008 (SDD-012 section 19.1): ten minutes of editing on the
+		// 5 minute project, alone, only when asked for (VUKEM_VIDEO_SOAK=1, the
+		// nightly job). It needs Chromium: CDP gives the process ids to read.
+		...(process.env.VUKEM_VIDEO_SOAK === "1"
+			? [
+					{
+						name: "soak",
+						testMatch: /soak-5min\.spec\.ts/,
+						fullyParallel: false,
+						use: { browserName: "chromium" as const },
+					},
+				]
+			: []),
 		{
 			name: "failing-encoder",
 			testMatch: /export-failure\.spec\.ts/,
