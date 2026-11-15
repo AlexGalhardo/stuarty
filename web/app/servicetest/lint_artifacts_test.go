@@ -78,7 +78,10 @@ func TestLintFiresFromStoredArtifacts(t *testing.T) {
 		}
 	}
 
-	m.mustEdit(ui, project, m.head(project).Revision, op("item.move", fmt.Sprintf(`{"item_id":%q,"start":"10f"}`, first)))
+	m.mustEdit(
+		ui, project, m.head(project).Revision,
+		op("item.move", fmt.Sprintf(`{"item_id":%q,"start":"10f"}`, first)),
+	)
 
 	out, lerr := m.svc.Lint(m.as(ui), service.LintRequest{ProjectID: project, Limit: 100})
 	if lerr != nil {

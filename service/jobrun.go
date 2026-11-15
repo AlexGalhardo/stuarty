@@ -284,7 +284,10 @@ func (s *svc) finishFailed(ctx context.Context, job *JobRow, state string, e *Er
 	}
 
 	if ok {
-		s.logJob(ctx, levelOf(state), "job "+state, job, slog.String("code", e.Code), slog.Any("reason", e.Details["reason"]))
+		s.logJob(
+			ctx, levelOf(state), "job "+state, job,
+			slog.String("code", e.Code), slog.Any("reason", e.Details["reason"]),
+		)
 		s.emitCurrent(ctx, job.ID)
 	}
 
