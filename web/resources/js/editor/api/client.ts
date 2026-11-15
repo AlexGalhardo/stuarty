@@ -10,8 +10,14 @@ import type {
 	FontListResult,
 	HistoryListResult,
 	HistoryQuery,
+	InstallToolRequest,
+	InstallToolResult,
 	Job,
 	JobListResult,
+	KeyCreateRequest,
+	KeyCreateResult,
+	KeyListResult,
+	KeyRevokeResult,
 	LintResult,
 	MediaImportResult,
 	MediaInspectQuery,
@@ -25,6 +31,7 @@ import type {
 	SnapPointsResult,
 	SystemQuery,
 	SystemResult,
+	ToolsStatusResult,
 } from "./types";
 
 // Timeouts of SDD-012 section 4.3 item 4.
@@ -80,6 +87,11 @@ export interface ApiClient {
 	getFonts(): Promise<FontListResult>;
 	getSystem(query?: SystemQuery): Promise<SystemResult>;
 	listAudit(query?: AuditQuery): Promise<AuditListResult>;
+	getTools(): Promise<ToolsStatusResult>;
+	installTool(request: InstallToolRequest): Promise<InstallToolResult>;
+	createKey(request: KeyCreateRequest): Promise<KeyCreateResult>;
+	listKeys(): Promise<KeyListResult>;
+	revokeKey(keyId: string): Promise<KeyRevokeResult>;
 }
 
 // One typed function per endpoint the editor uses (SDD-012 section 4.2). The
@@ -89,7 +101,7 @@ export function createClient(
 	deps: RetryDeps = defaultDeps,
 ): ApiClient {
 	async function call<T>(
-		method: "GET" | "POST",
+		method: "GET" | "POST" | "DELETE",
 		path: string,
 		timeoutMs: number,
 		body?: unknown,
@@ -212,5 +224,12 @@ export function createClient(
 				`/audit${query({ project_id: q.projectId, cursor: q.cursor, limit: q.limit })}`,
 				READ_TIMEOUT_MS,
 			),
+		getTools: () => call("GET", "/system/tools", READ_TIMEOUT_MS),
+		installTool: (request) =>
+			call("POST", "/system/tools/install", EDIT_TIMEOUT_MS, request),
+		createKey: (request) => call("POST", "/keys", EDIT_TIMEOUT_MS, request),
+		listKeys: () => call("GET", "/keys", READ_TIMEOUT_MS),
+		revokeKey: (keyId) =>
+			call("DELETE", `/keys/${encodeURIComponent(keyId)}`, EDIT_TIMEOUT_MS),
 	};
 }
