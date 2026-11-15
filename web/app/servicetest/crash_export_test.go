@@ -79,7 +79,10 @@ func TestCrashBundleExport(t *testing.T) {
 
 			m.hold.Store(true) // the job stays queued: the child runs it
 
-			job, err := m.svc.(bundleExporter).ProjectBundleExport(m.as(ui), service.ProjectBundleExportRequest{ProjectID: project})
+			job, err := m.svc.(bundleExporter).ProjectBundleExport(
+				m.as(ui),
+				service.ProjectBundleExportRequest{ProjectID: project},
+			)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -100,7 +103,11 @@ func TestCrashBundleExport(t *testing.T) {
 				t.Fatalf("child = %v, want exit 137 at %s\n%s", err, point, out.String())
 			}
 
-			st, err := store.Open(context.Background(), m.dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
+			st, err := store.Open(
+				context.Background(),
+				m.dir,
+				store.Options{SchemaVersion: timeline.CurrentSchemaVersion},
+			)
 			if err != nil {
 				t.Fatalf("reopen after the crash: %v", err)
 			}
@@ -108,7 +115,9 @@ func TestCrashBundleExport(t *testing.T) {
 			defer st.Close()
 
 			var integrity string
-			if err := st.DB().QueryRowContext(context.Background(), "PRAGMA integrity_check").Scan(&integrity); err != nil ||
+			if err := st.DB().
+				QueryRowContext(context.Background(), "PRAGMA integrity_check").
+				Scan(&integrity); err != nil ||
 				integrity != "ok" {
 				t.Errorf("integrity_check = %q, %v", integrity, err)
 			}

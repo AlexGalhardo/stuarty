@@ -51,7 +51,10 @@ func TestCrashBundleImportChild(t *testing.T) {
 	}
 
 	ctx := service.WithCaller(context.Background(), service.Caller{Actor: ui, Scopes: service.AllScopes})
-	_, err = svc.(bundleImporter).ProjectBundleImport(ctx, service.ProjectBundleImportRequest{Path: os.Getenv(bundleEnv)})
+	_, err = svc.(bundleImporter).ProjectBundleImport(
+		ctx,
+		service.ProjectBundleImportRequest{Path: os.Getenv(bundleEnv)},
+	)
 
 	t.Fatalf("the child finished (%v) without reaching %s", err, os.Getenv(crashpoint.CrashEnv))
 }
@@ -88,7 +91,11 @@ func TestCrashBundleImport(t *testing.T) {
 				t.Fatalf("child = %v, want exit 137 at %s\n%s", err, point, out.String())
 			}
 
-			st, err := store.Open(context.Background(), e.dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
+			st, err := store.Open(
+				context.Background(),
+				e.dir,
+				store.Options{SchemaVersion: timeline.CurrentSchemaVersion},
+			)
 			if err != nil {
 				t.Fatalf("reopen after the crash: %v", err)
 			}
@@ -96,7 +103,9 @@ func TestCrashBundleImport(t *testing.T) {
 			defer st.Close()
 
 			var integrity string
-			if err := st.DB().QueryRowContext(context.Background(), "PRAGMA integrity_check").Scan(&integrity); err != nil ||
+			if err := st.DB().
+				QueryRowContext(context.Background(), "PRAGMA integrity_check").
+				Scan(&integrity); err != nil ||
 				integrity != "ok" {
 				t.Errorf("integrity_check = %q, %v", integrity, err)
 			}
