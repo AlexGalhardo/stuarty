@@ -20,6 +20,9 @@ export interface DebugHooks {
 	// Revisions at which the document patched from events differed from the
 	// fetched one (?verify=1). A test asserts it is empty.
 	readonly mismatches: readonly number[];
+	// Renders per component name since the page loaded or the last reset.
+	readonly renderCounts: Record<string, number>;
+	resetRenderCounts(): void;
 	measures(): { name: string; duration: number }[];
 	onRevisionCommit(callback: (revision: number) => void): () => void;
 	// End-to-end build only: the same queue the UI uses, no pointer gesture.
@@ -68,6 +71,12 @@ export function installDebugHooks(
 		},
 		ghosts: [],
 		mismatches,
+		renderCounts: {},
+		resetRenderCounts() {
+			for (const key of Object.keys(hooks.renderCounts)) {
+				delete hooks.renderCounts[key];
+			}
+		},
 		measures: () =>
 			performance
 				.getEntriesByType("measure")
