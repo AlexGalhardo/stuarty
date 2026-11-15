@@ -601,7 +601,8 @@ func checkExport(t *testing.T, candidate, ws string) {
 	t.Helper()
 
 	var jobs []exportJob
-	if err := json.Unmarshal(jsonOf(t, candidate, ws, "job:list", "--project", mainProject)["jobs"], &jobs); err != nil {
+	listed := jsonOf(t, candidate, ws, "job:list", "--project", mainProject)
+	if err := json.Unmarshal(listed["jobs"], &jobs); err != nil {
 		t.Fatal(err)
 	}
 
