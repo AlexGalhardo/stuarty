@@ -11,6 +11,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem/api"
 	"github.com/AlexGalhardo/vukem/openapi"
+	"github.com/AlexGalhardo/vukem/router"
 	"github.com/AlexGalhardo/vukem/web"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
@@ -106,10 +107,10 @@ type launchOut struct {
 
 var zeroTime time.Time
 
-func register[In, Out any](h *apiHandler, id string, fn func(*web.Ctx, In) (Out, error)) {
+func register[In, Out any](h *apiHandler, id string, fn func(*web.Ctx, In) (Out, error)) *router.Route {
 	ep := endpointOf(id)
 
-	api.Register(h.r, ep.Method+" "+ep.FullPath(), h.op(id), func(c *web.Ctx, in In) (Out, error) {
+	return api.Register(h.r, ep.Method+" "+ep.FullPath(), h.op(id), func(c *web.Ctx, in In) (Out, error) {
 		var zero Out
 
 		if err := need(c, ep.Scope); err != nil {
@@ -137,6 +138,8 @@ func pending(h *apiHandler, id string) {
 }
 
 func (h *apiHandler) registerAll() {
+	register(h, "auth.login", h.login).Use(h.loginThrottle.middleware)
+	register(h, "auth.logout", h.logout)
 	register(h, "projects.list", h.projectsList)
 	register(h, "projects.create", h.projectsCreate)
 	register(h, "projects.get", h.projectsGet)

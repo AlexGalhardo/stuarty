@@ -13,6 +13,7 @@ import (
 	"time"
 
 	vukem "github.com/AlexGalhardo/vukem"
+	"github.com/AlexGalhardo/vukem/auth/hash"
 	"github.com/AlexGalhardo/vukem/vukemtest"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
@@ -27,8 +28,10 @@ import (
 )
 
 type networkHarness struct {
-	srv *httptest.Server
-	log *bytes.Buffer
+	srv  *httptest.Server
+	log  *bytes.Buffer
+	auth *auth.Network
+	clk  *clock
 }
 
 // newNetworkHarness serves the API in network mode over a plain or a TLS
@@ -65,9 +68,19 @@ func newNetworkHarness(t *testing.T, res config.Resolved, useTLS bool) *networkH
 		t.Fatal(err)
 	}
 
-	now := func() time.Time { return time.Date(2026, 11, 15, 12, 0, 0, 0, time.UTC) }
+	clk := &clock{t: time.Date(2026, 11, 15, 12, 0, 0, 0, time.UTC)}
+	now := clk.now
+
+	// The fake hasher keeps a test from paying for argon2id on every login.
+	netAuth, err := auth.NewNetwork(st.DB(), auth.NetworkOptions{
+		Now: now, Hasher: hash.Fake(), PlainHTTP: res.LoopbackHTTP,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	deps := &httpapi.Deps{
-		Service: svc, Registry: command.Default(), Workspace: dir, Network: netw,
+		Service: svc, Registry: command.Default(), Workspace: dir, Network: netw, Auth: netAuth,
 		Sessions: auth.NewSessions(now), Launch: auth.NewLaunch(now), Now: now,
 	}
 
@@ -75,7 +88,7 @@ func newNetworkHarness(t *testing.T, res config.Resolved, useTLS bool) *networkH
 		return bootstrap.NewWith(deps, opts...)
 	})
 
-	h := &networkHarness{log: logs}
+	h := &networkHarness{log: logs, auth: netAuth, clk: clk}
 	if useTLS {
 		h.srv = httptest.NewTLSServer(app.Handler())
 	} else {

@@ -1,0 +1,99 @@
+package httpapi
+
+import (
+	"errors"
+	"net/http"
+	"time"
+
+	vauth "github.com/AlexGalhardo/vukem/auth"
+	"github.com/AlexGalhardo/vukem/errs"
+	"github.com/AlexGalhardo/vukem/ratelimit"
+	"github.com/AlexGalhardo/vukem/web"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/auth"
+	"github.com/AlexGalhardo/vukem-video/web/app/http/middleware"
+)
+
+type loginIn struct {
+	Email    string `json:"email"    validate:"required" doc:"The address the user was created with."`
+	Password string `json:"password" validate:"required"`
+}
+
+type sessionOut struct {
+	UserID string   `json:"user_id"`
+	Email  string   `json:"email"`
+	Role   string   `json:"role"    doc:"admin or member."`
+	Scopes []string `json:"scopes"  doc:"What a browser session of this user may do."`
+}
+
+func sessionOf(u auth.User) sessionOut {
+	return sessionOut{UserID: u.ID, Email: u.Email, Role: u.Role, Scopes: u.Scopes()}
+}
+
+// notInThisMode answers the routes that exist in network mode only, the way a
+// route that does not exist would (SDD-012 section 4).
+func notInThisMode() error {
+	return &service.Error{Code: command.CodeNotFound, Message: "this route exists in network mode only."}
+}
+
+// loginThrottles are the three limits of the login route, on vukem's keys:
+// per email and address, per email, and per address (the shape that vukem's
+// authentication scaffold uses).
+type loginThrottles struct {
+	perEmailAndAddress, perEmail, perAddress ratelimit.Limiter
+	emailAndAddress, email                   ratelimit.KeyFunc
+}
+
+func newLoginThrottles() loginThrottles {
+	ip, account := vauth.ThrottleKeys("email")
+
+	return loginThrottles{
+		perEmailAndAddress: ratelimit.NewMemory(5, time.Minute), emailAndAddress: ip,
+		perEmail: ratelimit.NewMemory(20, 10*time.Minute), email: account,
+		perAddress: ratelimit.NewMemory(30, time.Minute),
+	}
+}
+
+// middleware refuses the attempt before the password is hashed: hashing is the
+// expensive step an attacker would like to make us repeat.
+func (t loginThrottles) middleware(next http.Handler) http.Handler {
+	return middleware.Limit(t.perAddress, ratelimit.ByIP)(
+		middleware.Limit(t.perEmailAndAddress, t.emailAndAddress)(
+			middleware.Limit(t.perEmail, t.email)(next)))
+}
+
+// login is POST /auth/login: the one route that turns a password into a session
+// (SDD-007 section 4.1). A wrong email and a wrong password are the same answer.
+func (h *apiHandler) login(c *web.Ctx, in loginIn) (sessionOut, error) {
+	if h.Network == nil {
+		return sessionOut{}, notInThisMode()
+	}
+
+	u, err := h.Auth.Guard.Attempt(c, map[string]string{"email": in.Email, "password": in.Password})
+	if err != nil {
+		if _, ok := errors.AsType[*errs.ValidationError](err); ok {
+			c.SetHeader("WWW-Authenticate", "Bearer")
+
+			return sessionOut{}, &service.Error{
+				Code: service.CodeUnauthorized, Message: "the email or the password is not right.",
+			}
+		}
+
+		return sessionOut{}, err
+	}
+
+	c.SetHeader("Cache-Control", "no-store")
+
+	return sessionOf(u), nil
+}
+
+// logout is POST /auth/logout: the session ends and its cookie is cleared.
+func (h *apiHandler) logout(c *web.Ctx, _ noIn) (noIn, error) {
+	if h.Network == nil {
+		return noIn{}, notInThisMode()
+	}
+
+	return noIn{}, h.Auth.Guard.Logout(c)
+}

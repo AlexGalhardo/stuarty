@@ -309,6 +309,14 @@ var Endpoints = []Endpoint{
 		ID: "auth.launch", Method: http.MethodGet, Path: "/auth/launch", Root: true, Status: 303,
 		Summary: "Exchange a launch code for a browser session",
 	},
+	{
+		ID: "auth.login", Method: http.MethodPost, Path: "/auth/login", Root: true, Status: 200,
+		Summary: "Log in with an email and a password (network mode)",
+	},
+	{
+		ID: "auth.logout", Method: http.MethodPost, Path: "/auth/logout", Root: true, Status: 200,
+		Summary: "End the browser session (network mode)",
+	},
 }
 
 // Endpoint returns the row of an operation id.

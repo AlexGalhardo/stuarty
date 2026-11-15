@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"slices"
@@ -30,7 +31,10 @@ type Deps struct {
 	Network  *Network
 	Sessions *auth.Sessions
 	Launch   *auth.Launch
-	Now      func() time.Time
+	// Auth is the credential side of network mode: users, the session guard and
+	// the keys. It is required with Network and unused without it.
+	Auth *auth.Network
+	Now  func() time.Time
 	// MCP is the Streamable HTTP handler of the MCP server, mounted at POST /mcp
 	// behind the guard and the authentication; nil mounts nothing.
 	MCP http.Handler
@@ -42,8 +46,9 @@ type Deps struct {
 
 type apiHandler struct {
 	Deps
-	app *vukem.App
-	r   *router.Router
+	app           *vukem.App
+	r             *router.Router
+	loginThrottle loginThrottles
 }
 
 // Routes installs the guard, the error envelope and every route of Endpoints.
@@ -53,6 +58,10 @@ func Routes(d *Deps) func(r *router.Router, app *vukem.App) error {
 	return func(r *router.Router, app *vukem.App) error {
 		if d.Service == nil || (d.Token == "" && d.Network == nil) || d.Sessions == nil || d.Launch == nil {
 			return errors.New("httpapi: Service, Token (local mode), Sessions and Launch are required")
+		}
+
+		if d.Network != nil && d.Auth == nil {
+			return errors.New("httpapi: Auth is required in network mode")
 		}
 
 		if d.Registry == nil {
@@ -67,10 +76,16 @@ func Routes(d *Deps) func(r *router.Router, app *vukem.App) error {
 		r.UseServer(guard(d.Network))
 
 		if d.Network != nil {
-			d.Network.logStartup()
+			users, err := d.Auth.Users.Count(context.Background())
+			if err != nil {
+				return err
+			}
+
+			d.Network.logStartup(users == 0)
+			r.Use(d.Auth.Sessions.Middleware())
 		}
 
-		h := &apiHandler{Deps: *d, app: app, r: r}
+		h := &apiHandler{Deps: *d, app: app, r: r, loginThrottle: newLoginThrottles()}
 
 		r.Use(h.authenticate)
 		h.registerAll()
@@ -156,20 +171,47 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 	})
 }
 
-// authenticateNetwork is the authentication of network mode. No user can exist
-// before P2-SRV-012 adds them, and the start-up log says so: with zero users
-// every request but the health probe is 401 (SDD-007 section 4.5). The local
-// token, the handshake and the launch code do not exist in this mode.
+// authenticateNetwork is the authentication of network mode (SDD-007 sections
+// 4.1 and 5.1 item 3): the session cookie of a user who logged in. The local
+// token, the handshake and the launch code do not exist in this mode. With no
+// user yet, nothing authenticates and every request but the health probe and
+// the login is 401, which the start-up log says.
 func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request, next http.Handler) {
-	if r.URL.Path == healthPath {
+	if r.URL.Path == healthPath || r.URL.Path == "/auth/login" || r.URL.Path == "/auth/logout" {
 		next.ServeHTTP(w, r)
 		return
 	}
 
-	w.Header().Set("WWW-Authenticate", "Bearer")
-	web.Fail(w, r, &service.Error{
-		Code: service.CodeUnauthorized, Message: "the request carries no valid credentials.",
-	})
+	deny := func() {
+		w.Header().Set("WWW-Authenticate", "Bearer")
+		web.Fail(w, r, &service.Error{
+			Code: service.CodeUnauthorized, Message: "the request carries no valid credentials.",
+		})
+	}
+
+	if r.Header.Get("Authorization") != "" {
+		deny() // keys arrive with P2-SRV-013; a header that is not valid is never a fall back to the cookie
+
+		return
+	}
+
+	user, ok, err := h.Auth.SessionUser(web.NewCtx(w, r, h.r.Services()))
+	if err != nil {
+		web.Fail(w, r, &service.Error{Code: command.CodeInternal, Message: "the session could not be checked."})
+		return
+	}
+
+	if !ok {
+		deny()
+		return
+	}
+
+	if !ambientAllowed(r) {
+		web.Fail(w, r, refused())
+		return
+	}
+
+	next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), user.Caller())))
 }
 
 // ambientAllowed is step 6 of SDD-007 section 3.6: a request that only the
