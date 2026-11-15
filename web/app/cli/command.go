@@ -42,6 +42,10 @@ type spec struct {
 	positional bool
 	// write is true for a command that writes or starts a job.
 	write bool
+	// stream is true for a command that owns standard output while it runs (mcp):
+	// it prints nothing of its own, and the actor is not fixed by --actor but by
+	// the protocol.
+	stream bool
 	// offline is true for a command that needs no Service: it never opens the
 	// workspace and c.svc is nil.
 	offline bool
@@ -164,12 +168,18 @@ func (rt *Runtime) Execute(ctx context.Context, name string, args []string) int 
 
 	c.svc = conn.Service
 
-	label, _ := actorFrom(p.str("actor"))
-	ctx = service.WithCaller(ctx, service.Caller{Actor: "local:" + label, Scopes: service.AllScopes})
+	if !s.stream {
+		label, _ := actorFrom(p.str("actor"))
+		ctx = service.WithCaller(ctx, service.Caller{Actor: "local:" + label, Scopes: service.AllScopes})
+	}
 
 	out, err := s.run(ctx, c)
 	if err != nil {
 		return writeError(rt, asJSON, err)
+	}
+
+	if s.stream {
+		return ExitOK
 	}
 
 	if s.write && conn.InProcess && !asJSON {
