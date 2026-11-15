@@ -325,7 +325,7 @@ type ProjectAssetRow struct {
 
 type ArtifactRow struct {
 	AssetHash string
-	Kind      string // probe, normalized, proxy, thumbnails, peaks, silence, loudness, transcript
+	Kind      string // probe, normalized, proxy, thumbnails, peaks, silence, loudness, speech, beats, transcript
 	Profile   int    // profile version; part of the file name
 	Variant   string // transcripts: the 12 hex key of provider, model and language; empty otherwise
 	Ext       string // file extension without the dot
@@ -760,7 +760,7 @@ CREATE INDEX project_assets_asset_hash_index ON project_assets (asset_hash);
 
 CREATE TABLE artifacts (
   asset_hash TEXT    NOT NULL REFERENCES assets (id) ON DELETE CASCADE,
-  kind       TEXT    NOT NULL CHECK (kind IN ('probe','normalized','proxy','thumbnails','peaks','silence','loudness','transcript')),
+  kind       TEXT    NOT NULL CHECK (kind IN ('probe','normalized','proxy','thumbnails','peaks','silence','loudness','speech','beats','transcript')),
   profile    INTEGER NOT NULL,                      -- profile version; part of the file name (SDD-000 section 9)
   variant    TEXT    NOT NULL DEFAULT '',           -- transcripts: the 12 hex key of provider, model and language (SDD-011 section 6.1); empty otherwise
   ext        TEXT    NOT NULL,                      -- file extension without the dot; one kind may have more than one file

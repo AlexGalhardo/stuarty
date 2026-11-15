@@ -15,7 +15,7 @@
 6. Artifact storage
 7. The ingest job
 8. FFmpeg discovery and encoder detection
-9. Analysis for commands: silences and loudness
+9. Analysis for commands: silences, loudness, speech and beats
 10. Transcription
 11. Test fixtures
 12. Acceptance
@@ -728,7 +728,7 @@ Per SDD-000 §9, `artifacts/<asset sha256 hex, without the "sha256:" prefix>/<ki
 | `proxy-1.mp4`, `proxy-1.jpg`, `proxy-1.png` | `proxy` |
 | `thumbnails-1.jpg` (the sheet), `thumbnails-1-w160.jpg`, `thumbnails-1-w320.jpg`, `thumbnails-1-w640.jpg` | `thumbnails`, one row per file: `variant` empty, `w160`, `w320`, `w640` |
 | `peaks-1.bin` | `peaks` |
-| `silence-1.json`, `loudness-1.json` | `silence`, `loudness` |
+| `silence-1.json`, `loudness-1.json`, `speech-1.json`, `beats-1.json` | `silence`, `loudness`, `speech`, `beats` |
 | `transcript-1-<key12>.json` | `transcript`, `variant = <key12>` |
 
 `<key12>` is the first 12 hex characters of SHA-256 of `provider + "\n" + model + "\n" + language_requested` (ADR-0021 item 4). **Decision of this SDD (DS-7):** `silence` and `loudness` are new artifact kinds, `thumbnails` has two files, and `artifacts` has a `variant` column (empty except for transcripts and the thumbnail posters) and an `ext` column in its key `(asset_hash, kind, profile, variant, ext)`, as SDD-005 defines (SDD-000 §7 lists the kinds).
@@ -931,7 +931,7 @@ CLI flags (SDD-003 §5): `doctor [--full] [--verify] [--bundle] [--gc]`.
 
 Binary paths: the path inside `ffmpeg.binary` (and any other path) is present only for the owner process and for `admin` scope; over HTTP in network mode without `admin` it is omitted from `detail` (ADR-0020 item 8, DS-17, and the rule against returning server paths). `workspace` is returned in local mode only, as SDD-003 says.
 
-## 9. Analysis for commands: silences and loudness
+## 9. Analysis for commands: silences, loudness, speech and beats
 
 Both are artifacts, computed during the audio step (4.3.3) from `audio.wav` and, when missing later, on first use from `normalized` (about 1 s per 60 s of audio, mostly reading the file). Both read the normalized audio, so their sample positions are positions in the asset's audio: sample 0 is the first sample of the asset.
 
@@ -986,6 +986,31 @@ ffmpeg -nostdin -hide_banner -nostats -protocol_whitelist file,pipe -i <work>/au
 ```
 
 A silent file printed `I: -70.0 LUFS` and `Peak: -inf dBFS`. Rule: `true_peak_dbtp = null` and `silent = true` when the peak is `-inf`; then `integrated_lufs` is `null` too (the -70.0 is a floor, not a measurement). The same filter measures the mix in SDD-004 §7, so numbers are comparable. `MediaInspect` returns `integrated_lufs`, `lra_lu` and `true_peak_dbtp`; the asset's loudness is only information: no command changes it (the export normalizes the mix, SDD-004 §7).
+
+### 9.3 Speech map (`speech-1.json`)
+
+Where the audio is spoken over, for ducking music under a voice (RF-043). The artifact is in samples at 48 kHz like `silence-1.json`, and is half-open:
+
+```json
+{"version": 1, "sample_rate": 48000, "sample_count": 2880000, "source": "envelope", "threshold_db": -35,
+ "ranges": [{"start": 0, "end": 47997}, {"start": 96004, "end": 2880000}]}
+```
+
+`source` says how the ranges were found. **`envelope`** (written by ingest): the exact inverse of the -35 dB set of `silence-1.json` (the default of `clip.remove_silences`, so the two commands agree on what a pause is); this is the ingest-time fallback because no transcript exists yet. **`transcript`**: `ingest.SpeechFromWords` joins the word spans of a transcript, bridging a gap shorter than `SpeechMergeGapMS` (300 ms, the pause of ADR-0021) and clamping to the audio; the service calls it when a transcript exists and stores the result under the same artifact name, since a transcript is a better witness than a loudness threshold. `ingest.SpeechFrames` converts ranges to asset frames rounding outward (a frame with any speech is in), unlike `FramesFromSamples` which keeps only whole silent frames, so ducking never starts late or ends early. Check: for the speech fixture of 4.1 (four 1 s tones, pauses of 0.5, 1.0 and 0.2 s) the ranges and the silences meet within one 20 ms window (`TestSpeechMatchesSilenceInverse`).
+
+### 9.4 Beat grid (`beats-1.json`)
+
+Beats of a music asset, so cuts and markers can follow the rhythm (RF-044). Computed in Go (`ingest.ComputeBeats`) from `audio.wav` in one streaming pass, no model and no third-party code:
+
+1. Onset signal at 100 Hz: for each 10 ms block, the rise of the log energy over the two blocks before it, summed over two bands: the first difference of the mono mix (clicks, hats; weight 0.6) and the mix after a one-pole low-pass at about 200 Hz (kicks, bass; weight 1).
+2. Tempo: the autocorrelation of the onset signal at lags of 60 to 200 BPM, weighted by a log-normal prior around 120 BPM (one octave wide) to settle the octave, refined by a parabola through the peak.
+3. Beats: the dynamic programme of Ellis (2007), which keeps one period between beats and lands on strong onsets; weak beats at the start and the end (a silent intro) are trimmed; each beat is placed on the sharpest attack of its block, so a click is found to the sample. `tempo_bpm` is the median gap of the beats.
+
+```json
+{"version": 1, "sample_rate": 48000, "sample_count": 960000, "tempo_bpm": 120.0, "confidence": 1.0, "beats": [12000, 36000]}
+```
+
+Audio with no steady pulse (speech, ambience, a tone, silence, one click) gets `beats: []` and `tempo_bpm: 0`: fewer than 8 attacks, or a tempo peak below `confidence` 0.12, is no rhythm. Audio longer than two hours gets an empty grid, so the job stays inside the ingest limit (SDD-007 9.1). The speed is one pass over the PCM (a 30 s fixture in about 60 ms). **Measurement** (synthetic fixtures with known beats, `TestBeatsClickTrack`; fixtures built in the test, so no binary is committed): click tracks at 90, 120 and 150 BPM and drum loops (kick, off-beat hat and a pad) at 100, 120 and 128 BPM all give every beat within 20 ms (a hit rate of 1.000 in each of the six) and the tempo within 0.1 BPM. The 90% within 40 ms of P3-RND-005 holds with margin on these; real music is not measured here, and a hand-labelled set is the next step before the 40 ms is tightened. The grid is not deterministic across CPU architectures to the last bit of the floating point; the beats are integers and the fixtures give the same grid on x86-64, but a track with two near-equal onset peaks could move a beat by one block on another architecture. The artifact is produced by the ingest queue only when the caller sets `Input.SoundMaps`; nothing in an edit starts it.
 
 ## 10. Transcription
 

@@ -20,6 +20,8 @@ The inputs of both use cases are phone footage and screen recordings, which carr
    - `peaks`: audio peaks at several zoom levels;
    - `silence`: the silence ranges of the normalized audio in samples, one set for each of four thresholds (-30, -35, -40 and -45 dB), minimum length 150 ms (SDD-011 section 9.1);
    - `loudness`: integrated loudness, loudness range and true peak of the normalized audio, with `silent` for a file with no sound (SDD-011 section 9.2). The audio-only and video-with-audio paths both produce the last two, as ingest-queue work, never from an edit.
+   - `speech`: the stretches of the audio that are spoken over, in samples at 48 kHz, from the transcript when one exists and else from the loudness envelope (the inverse of the silence set at -35 dB); the service uses it as `resolved` of ducking (RF-043, SDD-011 section 9.3);
+   - `beats`: the beat grid of the audio (tempo and beat positions in samples), computed in Go from the normalized audio with no model and no third-party code, only by the ingest queue and never from an edit (RF-044, SDD-011 section 9.4);
 4. Preview reads the proxy; export reads the normalized media. The original is kept and never modified.
 5. An artifact is never changed in place. A new ingest profile is a new profile version and therefore a new artifact.
 6. Whether a file can be used is established by actually decoding it during ingest, not by asking the container or a capability API. A file that fails ingest is reported with the FFmpeg error translated into an actionable message.
