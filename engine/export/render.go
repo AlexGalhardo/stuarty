@@ -54,10 +54,19 @@ func NewRenderer(ctx context.Context, cfg RenderConfig) (*Renderer, error) {
 // round(width*outScale) by round(height*outScale) pixels.
 func (r *Renderer) Render(ctx context.Context, t int, outScale float64) (*image.RGBA, error) {
 	st := r.s.job.Doc.Settings
+	return r.render(ctx, t, outScale, max(round(float64(st.Width)*outScale), 1), max(round(float64(st.Height)*outScale), 1))
+}
+
+// RenderSize composes frame t into exactly w by h pixels, scaled by w over the project width, for a
+// caller that owns the rounding of the height (the size table of SDD-003 section 3.11). The layers are
+// placed at the width scale, so the picture differs from Render only by the rounding of the last row.
+func (r *Renderer) RenderSize(ctx context.Context, t, w, h int) (*image.RGBA, error) {
+	return r.render(ctx, t, float64(w)/float64(r.s.job.Doc.Settings.Width), max(w, 1), max(h, 1))
+}
+
+func (r *Renderer) render(ctx context.Context, t int, outScale float64, w, h int) (*image.RGBA, error) {
 	r.s.ctx, r.s.scale = ctx, outScale
-	dst := image.NewRGBA(
-		image.Rect(0, 0, max(round(float64(st.Width)*outScale), 1), max(round(float64(st.Height)*outScale), 1)),
-	)
+	dst := image.NewRGBA(image.Rect(0, 0, w, h))
 	if err := r.rd.render(dst, t); err != nil {
 		if cerr := ctx.Err(); cerr != nil {
 			return nil, cerr
