@@ -89,6 +89,10 @@ func (h *apiHandler) login(c *web.Ctx, in loginIn) (sessionOut, error) {
 	u, err := h.Auth.Guard.Attempt(c, map[string]string{"email": in.Email, "password": in.Password})
 	if err != nil {
 		if _, ok := errors.AsType[*errs.ValidationError](err); ok {
+			if denied := h.limits.failed.Record(c.Request(), ratelimit.ByIP(c.Request())); denied != nil {
+				return sessionOut{}, denied
+			}
+
 			c.SetHeader("WWW-Authenticate", "Bearer")
 
 			return sessionOut{}, &service.Error{

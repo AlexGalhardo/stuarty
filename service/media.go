@@ -99,6 +99,10 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 		return nil, err
 	}
 
+	if err := s.heavyLimit(ctx, c); err != nil {
+		return nil, err
+	}
+
 	if n := len(req.Files); n < 1 || n > maxImportFiles {
 		return nil, newError(command.CodeValidation, "the call has %d files; it must have 1 to %d.", n, maxImportFiles).
 			withPath("files")

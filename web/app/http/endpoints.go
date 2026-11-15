@@ -32,6 +32,10 @@ type Endpoint struct {
 	// Pending marks an operation of the Prototype whose Service method arrives
 	// with a later task; its handler answers E_INTERNAL until then.
 	Pending string
+	// Uncounted marks a route the rate limiters never count: the event stream and
+	// the byte-serving routes that the editor calls many times a second (SDD-007
+	// section 4.4).
+	Uncounted bool
 }
 
 // FullPath is the path a client requests.
@@ -194,7 +198,7 @@ var Endpoints = []Endpoint{
 	},
 	{
 		ID: "projects.frame", Method: http.MethodGet, Path: "/projects/{id}/frame", Scope: service.ScopeRead,
-		Service: "ViewFrame", Status: 200, Summary: "Render one frame",
+		Service: "ViewFrame", Uncounted: true, Status: 200, Summary: "Render one frame",
 	},
 	{
 		ID: "projects.sheet", Method: http.MethodGet, Path: "/projects/{id}/sheet", Scope: service.ScopeRead,
@@ -223,11 +227,11 @@ var Endpoints = []Endpoint{
 	},
 	{
 		ID: "projects.plan", Method: http.MethodGet, Path: "/projects/{id}/plan", Scope: service.ScopeRead,
-		Service: "PlanWindow", Status: 200, Summary: "Read the render plan of a window",
+		Service: "PlanWindow", Uncounted: true, Status: 200, Summary: "Read the render plan of a window",
 	},
 	{
 		ID: "events.stream", Method: http.MethodGet, Path: "/projects/{id}/events", Scope: service.ScopeRead,
-		Status: 200, Summary: "Stream the events of a project",
+		Uncounted: true, Status: 200, Summary: "Stream the events of a project",
 	},
 
 	{
@@ -235,40 +239,40 @@ var Endpoints = []Endpoint{
 		Service: "ExportFile", Status: 200, Summary: "Download the file of a finished export",
 	},
 	{
-		ID:      "media.proxy",
-		Method:  http.MethodGet,
-		Path:    "/projects/{id}/media/{asset_id}/proxy",
-		Service: "OpenFile",
-		Scope:   service.ScopeRead,
-		Status:  200,
+		ID:        "media.proxy",
+		Method:    http.MethodGet,
+		Path:      "/projects/{id}/media/{asset_id}/proxy",
+		Service:   "OpenFile",
+		Scope:     service.ScopeRead,
+		Uncounted: true, Status: 200,
 		Summary: "Download the proxy of an asset",
 	},
 	{
 		ID: "media.thumbnail", Method: http.MethodGet, Path: "/projects/{id}/media/{asset_id}/thumbnail",
 		Service: "OpenFile",
-		Scope:   service.ScopeRead, Status: 200, Summary: "Download a thumbnail of an asset",
+		Scope:   service.ScopeRead, Uncounted: true, Status: 200, Summary: "Download a thumbnail of an asset",
 	},
 	{
-		ID:      "media.strip",
-		Method:  http.MethodGet,
-		Path:    "/projects/{id}/media/{asset_id}/strip",
-		Service: "OpenFile",
-		Scope:   service.ScopeRead,
-		Status:  200,
+		ID:        "media.strip",
+		Method:    http.MethodGet,
+		Path:      "/projects/{id}/media/{asset_id}/strip",
+		Service:   "OpenFile",
+		Scope:     service.ScopeRead,
+		Uncounted: true, Status: 200,
 		Summary: "Download the tile strip of an asset",
 	},
 	{
-		ID:      "media.peaks",
-		Method:  http.MethodGet,
-		Path:    "/projects/{id}/media/{asset_id}/peaks",
-		Service: "OpenFile",
-		Scope:   service.ScopeRead,
-		Status:  200,
+		ID:        "media.peaks",
+		Method:    http.MethodGet,
+		Path:      "/projects/{id}/media/{asset_id}/peaks",
+		Service:   "OpenFile",
+		Scope:     service.ScopeRead,
+		Uncounted: true, Status: 200,
 		Summary: "Download the audio peaks of an asset",
 	},
 	{
 		ID: "bitmaps.get", Method: http.MethodGet, Path: "/projects/{id}/bitmaps/{key}", Scope: service.ScopeRead,
-		Status: 200, Summary: "Download a rasterized text or shape",
+		Uncounted: true, Status: 200, Summary: "Download a rasterized text or shape",
 	},
 
 	{
