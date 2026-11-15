@@ -24,6 +24,8 @@ import (
 //	enum:"a,b"             the value is one of these strings
 //	min:"1" max:"200"      bounds of a number, or of the length of a string or array
 //	desc:"text"            one sentence for the help text
+//	schema:"name"          a field of type any, or a map of any, takes the named schema of
+//	                       namedSchemas (the shape the apply function checks)
 //
 // A field of type any accepts any JSON value.
 
@@ -34,6 +36,7 @@ type argField struct {
 	enum      []string
 	min, max  *float64
 	desc      string
+	schema    string
 	fieldType reflect.Type
 }
 
@@ -51,6 +54,7 @@ func argFields(t reflect.Type) []argField {
 			index:     i,
 			required:  opts != "omitempty" && opts != "omitzero",
 			desc:      sf.Tag.Get("desc"),
+			schema:    sf.Tag.Get("schema"),
 			fieldType: sf.Type,
 		}
 		if e, ok := sf.Tag.Lookup("enum"); ok {
@@ -377,6 +381,7 @@ func schemaOf(t reflect.Type) map[string]any {
 	if t == timeType {
 		return map[string]any{
 			"type":        "string",
+			"x-vv-kind":   "time",
 			"description": "a time with a unit: \"12.5s\", \"375f\" or \"00:00:12.500\"",
 		}
 	}
@@ -403,6 +408,13 @@ func schemaOf(t reflect.Type) map[string]any {
 	required := []string{}
 	for _, f := range argFields(t) {
 		p := schemaOf(f.fieldType)
+		if name := f.schema; name != "" {
+			build, ok := namedSchemas[name]
+			if !ok {
+				panic("command: unknown schema tag " + name)
+			}
+			p = build()
+		}
 		if f.desc != "" {
 			p["description"] = f.desc
 		}

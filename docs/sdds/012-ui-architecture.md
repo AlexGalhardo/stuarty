@@ -841,6 +841,7 @@ Build order inside ALPHA, so coverage grows in a useful order: (1) command palet
 | other `string` | text input; `enum` renders a select |
 | `number`, `integer` | number input with `minimum`, `maximum` |
 | `boolean` | checkbox |
+| `type: [T, "null"]` (a merge that removes a key, or a command that clears a value) | the control of `T` plus a "Remove" toggle that sends `null` |
 | `array` of scalars | list editor with add and remove |
 | `array` of objects, `object` | nested fieldset |
 | `oneOf`, `anyOf` | radio group choosing the variant, then its fields |
