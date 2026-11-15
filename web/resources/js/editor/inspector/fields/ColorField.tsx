@@ -3,6 +3,7 @@ import { type ReactNode, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { useT } from "@/lib/i18n";
+import { useBrandKit } from "../useBrandKit";
 import type { CommitResult } from "./commitField";
 import { FieldRow } from "./FieldFrame";
 import { useCommitField } from "./useCommitField";
@@ -38,6 +39,7 @@ export default function ColorField({
 	disabled?: boolean;
 }): ReactNode {
 	const t = useT();
+	const swatches = Object.entries(useBrandKit()?.colors ?? {});
 	const binding = useCommitField(stored, async (draft) => {
 		const parts = splitHex(draft);
 		if (parts === null) {
@@ -102,6 +104,28 @@ export default function ColorField({
 						}
 						onValueCommit={() => void field.commit()}
 					/>
+					{swatches.length > 0 && (
+						<fieldset className="flex flex-wrap gap-1">
+							<legend className="sr-only">
+								{t("ui.editor.inspector.brand_colors", { label })}
+							</legend>
+							{swatches.map(([name, hex]) => (
+								<button
+									key={name}
+									type="button"
+									disabled={disabled}
+									title={`${name} ${hex}`}
+									aria-label={t("ui.editor.inspector.brand_color_use", {
+										name,
+									})}
+									data-brand-color={name}
+									className="size-5 rounded-md border border-input disabled:opacity-50"
+									style={{ backgroundColor: hex }}
+									onClick={() => void commit(hex)}
+								/>
+							))}
+						</fieldset>
+					)}
 				</div>
 			)}
 		</FieldRow>

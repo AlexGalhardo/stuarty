@@ -14,6 +14,7 @@ import { useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
 import { useDocumentState } from "../../state/EditorContext";
 import Section from "../Section";
+import { useBrandKit } from "../useBrandKit";
 import { useFieldCommit } from "../useFieldCommit";
 
 const WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
@@ -30,6 +31,9 @@ export default function FontsSection(): ReactNode {
 	const send = useFieldCommit();
 	const exposed = useCommandsExposed("font.add", "font.remove");
 	const fonts = useDocumentState((s) => s.document?.fonts);
+	const brandFonts = Object.entries(useBrandKit()?.fonts ?? {})
+		.filter(([name]) => fonts?.[name] === undefined)
+		.sort(([a], [b]) => a.localeCompare(b));
 	const [family, setFamily] = useState("");
 	const [weight, setWeight] = useState("400");
 	const [hash, setHash] = useState("");
@@ -62,6 +66,30 @@ export default function FontsSection(): ReactNode {
 					</li>
 				))}
 			</ul>
+			{brandFonts.length > 0 && (
+				<div className="flex flex-col gap-1">
+					<p className="text-xs font-medium">{t("ui.editor.fonts.brand")}</p>
+					<ul className="flex flex-col gap-1" data-testid="brand-fonts">
+						{brandFonts.map(([name, font]) => (
+							<li key={name} className="flex items-center gap-1">
+								<span className="min-w-0 flex-1 text-sm">
+									<UntrustedText>{name}</UntrustedText>
+								</span>
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									disabled={!canEdit}
+									aria-label={t("ui.editor.fonts.brand_add", { name })}
+									onClick={() => void send(fontAddOperations(name, font.files))}
+								>
+									{t("ui.editor.fonts.brand_use")}
+								</Button>
+							</li>
+						))}
+					</ul>
+				</div>
+			)}
 			<div className="flex flex-col gap-1">
 				<Label htmlFor="font-family" className="text-xs">
 					{t("ui.editor.fonts.family")}
