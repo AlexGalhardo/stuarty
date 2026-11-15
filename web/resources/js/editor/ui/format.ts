@@ -1,3 +1,9 @@
+// A message that starts with {actor} starts with a lower-case word when the
+// actor is the localized fallback ("alguém"): the sentence gets its capital.
+export function capitalizeFirst(text: string): string {
+	return text.charAt(0).toLocaleUpperCase() + text.slice(1);
+}
+
 function decimalSeparator(locale: string): string {
 	return (
 		new Intl.NumberFormat(locale)

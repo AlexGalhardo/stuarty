@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { useT } from "@/lib/i18n";
+import { capitalizeFirst } from "./format";
 
 // The notice of an E_REVISION_CONFLICT (SDD-012 section 4.5, SDD-006 section
 // 7.3): who changed what while the user held it and the text the core made of
@@ -22,7 +23,9 @@ export default function ConflictNotice({
 	return (
 		<>
 			<p className="font-medium">
-				{t("ui.editor.conflict.message", { actor, item, revision })}
+				{capitalizeFirst(
+					t("ui.editor.conflict.message", { actor, item, revision }),
+				)}
 			</p>
 			{diff !== "" && (
 				<pre

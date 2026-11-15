@@ -10,6 +10,7 @@ import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 import type { Notice } from "../state/noticeStore";
 import { selectItem } from "../state/selectors";
+import { capitalizeFirst } from "../ui/format";
 import ConflictNotice from "../ui/ConflictNotice";
 import { errorHeadline } from "../ui/errorHeadline";
 
@@ -64,14 +65,16 @@ export default function Notices(): ReactNode {
 							<>
 								<p className="font-medium">
 									{notice.messageKey !== undefined
-										? t(notice.messageKey, {
-												...notice.params,
-												count: notice.count ?? 0,
-												actor:
-													notice.actor === undefined
-														? t("ui.editor.notice.another_actor")
-														: actorLabel(notice.actor),
-											})
+										? capitalizeFirst(
+												t(notice.messageKey, {
+													...notice.params,
+													count: notice.count ?? 0,
+													actor:
+														notice.actor === undefined
+															? t("ui.editor.notice.another_actor")
+															: actorLabel(notice.actor),
+												}),
+											)
 										: notice.code !== undefined
 											? errorHeadline(t, notice.code)
 											: null}
