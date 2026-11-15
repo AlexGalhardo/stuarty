@@ -203,6 +203,10 @@ type svc struct {
 
 	storeMu sync.RWMutex
 
+	// startedAt is when this service was made: a bundle temp file older than it belongs to a process
+	// that died (SDD-005 section 13.4). The wall clock, because file times are wall clock.
+	startedAt time.Time
+
 	running registry
 	bitmaps bitmaps
 	fonts   *enginestore.Fonts // user fonts of the workspace; nil without one
@@ -236,6 +240,7 @@ func New(o Options) (Service, error) {
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
+		startedAt:   time.Now(),
 	}
 
 	if s.workspace != "" {

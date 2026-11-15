@@ -134,6 +134,26 @@ func TestCrashBundleExport(t *testing.T) {
 					t.Errorf("crash before the rename left %v at a final name", bundles)
 				}
 
+				temps, _ := filepath.Glob(filepath.Join(m.ws, "exports", project, "bundle-r*.vvbundle.tmp"))
+				if len(temps) != 1 {
+					t.Fatalf("crash before the rename left %v, want one temp file", temps)
+				}
+
+				// A service made after the crash is the next start: its sweep removes the leftover.
+				next, err := service.New(service.Options{Store: st, Workspace: m.ws})
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				sweeper, _ := service.SweeperOf(next)
+				if _, err := sweeper.Sweep(context.Background()); err != nil {
+					t.Fatal(err)
+				}
+
+				if _, err := os.Stat(temps[0]); err == nil {
+					t.Error("the sweep of the next start left the temp file")
+				}
+
 				return
 			}
 
