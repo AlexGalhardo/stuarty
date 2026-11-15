@@ -1,0 +1,51 @@
+---
+title: "Tarefas e a fila"
+description: "Acompanhe, espere e cancele exportações e transcrições, e o que os limites significam."
+---
+
+## O que você vai aprender
+
+- o que é uma tarefa e quais tipos existem;
+- como acompanhar uma tarefa no editor, na CLI e no MCP;
+- por que uma tarefa pode ficar na fila ou ser recusada.
+
+## A ideia
+
+O trabalho longo roda como uma **tarefa**, para que nada bloqueie uma requisição. Dois tipos são públicos: `export` e `transcribe`. Uma tarefa fica `queued`, `running` e depois `succeeded`, `failed` ou `cancelled`, e informa o progresso e um resultado. As tarefas são armazenadas com o projeto, então uma tarefa sobrevive a uma aba do navegador fechada ou a um agente reiniciado. O fluxo de eventos (veja [Eventos](/docs/reference/events)) anuncia cada mudança.
+
+No editor, a barra superior mostra um **indicador de tarefas**, como `2 jobs · 40%`, enquanto algo roda. O diálogo de exportação continua rodando quando você o fecha. Uma tarefa iniciada por um agente aparece no mesmo indicador.
+
+Os limites protegem a máquina e, no modo de rede, os outros usuários: `VUKEM_VIDEO_MAX_EXPORTS` (2 ao mesmo tempo por espaço de trabalho), `VUKEM_VIDEO_MAX_EXPORTS_PER_KEY` (1 em execução por usuário ou chave, mais duas podem esperar), `VUKEM_VIDEO_MAX_TRANSCRIBES` e `VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY`. Além dos limites, a chamada falha com `E_QUEUE_FULL`, que pode ser repetida.
+
+## Início rápido
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video export --project prj_7k2m9x4q1b --no-wait
+vukem-video job:list --project prj_7k2m9x4q1b --state active
+vukem-video job:show job_4h8k2m6p9t --wait
+vukem-video job:cancel job_4h8k2m6p9t
+```
+
+</Tab>
+<Tab title="MCP">
+
+`job_start` com `{"project_id": "prj_7k2m9x4q1b", "kind": "export", "wait_ms": 25000}`. Se a tarefa não estiver em estado final após a espera, chame `job_get` com `{"job_id": "job_4h8k2m6p9t", "wait_ms": 25000}`; o `job_get` com um `project_id` e sem `job_id` lista as tarefas. O `job_cancel` cancela uma.
+
+</Tab>
+</Tabs>
+
+Por padrão, a CLI espera pela tarefa até `--timeout` (10 minutos). O código de saída 2 significa que a espera estourou o tempo ou que o erro pode ser repetido; o código de saída 1 significa que a tarefa falhou.
+
+## Erros comuns
+
+- Iniciar uma segunda exportação do mesmo projeto ao mesmo tempo: ela espera atrás da primeira ou falha com `E_QUEUE_FULL`. Espere pela primeira.
+- Tratar `E_RATE_LIMITED` como definitivo. As chamadas pesadas (`job_start`, `media_import`, `template:import`) têm o seu próprio limite por minuto; espere o `Retry-After`.
+- Cancelar uma tarefa concluída: o arquivo permanece; não há nada a cancelar.
+
+## Próximos passos
+
+- [Exportação](/docs/guide/exporting)
+- [Codificadores e predefinições de exportação](/docs/guide/encoders-and-presets)

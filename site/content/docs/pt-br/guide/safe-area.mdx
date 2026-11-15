@@ -1,0 +1,54 @@
+---
+title: "A área segura"
+description: "Mantenha o texto onde a interface da plataforma não o cobrirá, com a guia e a regra de verificação."
+---
+
+## O que você vai aprender
+
+- o que é a área segura e qual o seu tamanho para cada formato;
+- como mostrá-la sobre a pré-visualização;
+- como a regra de verificação encontra texto fora dela.
+
+## A ideia
+
+Os aplicativos sociais cobrem as bordas de um vídeo vertical com os próprios botões, nomes e legendas. A **área segura** é o retângulo onde o texto continua legível. O núcleo a calcula com uma única função, então a guia no editor e a regra de verificação sempre concordam.
+
+| Quadro | Esquerda e direita | Topo | Base |
+| --- | --- | --- | --- |
+| Vertical (largura dividida pela altura no máximo 0,6, como 9:16) | 6% da largura | 14% da altura | 35% da altura |
+| Qualquer outro tamanho | 5% | 5% | 5% |
+
+As margens verticais seguem a orientação do Meta Reels; as margens de nenhuma outra plataforma foram verificadas, então os outros tamanhos usam 5% em todos os lados.
+
+## Início rápido
+
+Pressione **Safe area** na barra de ferramentas da pré-visualização. O editor desenha o retângulo como um contorno tracejado e escurece a faixa fora dele. Os números vêm do núcleo; o editor não os calcula.
+
+Um agente encontra o mesmo problema com a verificação (lint):
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video lint --project prj_7k2m9x4q1b
+```
+
+</Tab>
+<Tab title="MCP">
+
+`lint` com `{"project_id": "prj_7k2m9x4q1b"}`.
+
+</Tab>
+</Tabs>
+
+O `L_SAFE_AREA` é um aviso em um item de texto ou legenda cuja caixa (todas as linhas do seu layout mais largo, com a rotação aplicada) sai do retângulo. Mova o item para dentro, ou dê à legenda a posição `middle` com `track.set_caption_style`.
+
+## Erros comuns
+
+- Tratar o aviso como um erro. Ele nunca bloqueia uma exportação; a decisão é sua.
+- Mover uma legenda com `item.set_transform` quando o estilo da faixa a posiciona. Mude o estilo da faixa.
+
+## Próximos passos
+
+- [Texto e legendas](/docs/guide/text-and-captions)
+- [Exportação](/docs/guide/exporting)

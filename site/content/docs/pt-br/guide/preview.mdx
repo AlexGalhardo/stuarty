@@ -1,0 +1,50 @@
+---
+title: "Pré-visualização e reprodução"
+description: "Reproduza a linha do tempo, avance quadro a quadro e veja o quadro exato que a exportação vai conter."
+---
+
+## O que você vai aprender
+
+- como reproduzir, pausar e mover o cabeçote de reprodução;
+- por que a imagem pausada e a imagem em reprodução podem diferir em velocidade, mas não em conteúdo;
+- como ligar a guia da área segura.
+
+## A ideia
+
+A pré-visualização desenha o que o [plano de renderização](/docs/concepts/render) diz que cada quadro contém. Enquanto a linha do tempo é reproduzida, o navegador desenha o plano com WebGL2. Ao pausar, o editor pede ao servidor o quadro exato no cabeçote de reprodução, composto pelo mesmo plano que a exportação usa. Assim, a imagem pausada é o quadro que você terá no arquivo.
+
+Um navegador sem WebGL2 não consegue reproduzir ao vivo. O editor avisa e continua mostrando o quadro exato pausado.
+
+## Início rápido
+
+1. Clique em **Play** sob a pré-visualização, ou use os controles para ir ao início ou ao fim, ou para voltar e avançar um quadro.
+2. Clique na régua da linha do tempo para mover o cabeçote de reprodução para um instante.
+3. Pause e leia o tempo atual e a duração total ao lado dos controles.
+
+Um agente vê os mesmos quadros com `view`.
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video view --project prj_7k2m9x4q1b --at 1s
+vukem-video view --project prj_7k2m9x4q1b --mode sheet --count 9
+```
+
+</Tab>
+<Tab title="MCP">
+
+`view` com `{"project_id": "prj_7k2m9x4q1b", "mode": "frame", "at": "1s"}`, ou `"mode": "sheet"` com `count` para uma folha de contato.
+
+</Tab>
+</Tabs>
+
+## Erros comuns
+
+- Julgar um corte por um único quadro pausado. Use uma folha de contato para ver a linha do tempo inteira de uma vez.
+- Esperar que a reprodução seja tão fluida em uma máquina fraca quanto a exportação é exata. A exportação nunca pula um quadro; a reprodução ao vivo pode pular.
+
+## Próximos passos
+
+- [A área segura](/docs/guide/safe-area)
+- [Edição básica da linha do tempo](/docs/guide/timeline)
