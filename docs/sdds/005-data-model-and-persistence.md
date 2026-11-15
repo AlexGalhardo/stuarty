@@ -842,7 +842,7 @@ CREATE TABLE templates (
 CREATE INDEX templates_created_ms_index ON templates (created_ms);
 ```
 
-In network mode a template belongs to the user who saved it, as a project does (section 5.10). Migration `20261115100000_add_templates_owner_user_id` adds `owner_user_id TEXT` (NULL in local mode) and `templates_owner_user_id_created_ms_index ON templates (owner_user_id, created_ms)`. `TemplateRepo.List` filters by owner, and every read path of the service checks `visible` and answers a template of another owner exactly as a missing one (`E_NOT_FOUND`).
+In network mode a template belongs to the user who saved it, as a project does (section 5.10). Migration `20261115100000_add_templates_owner_user_id` adds `owner_user_id TEXT` (NULL in local mode) and `templates_owner_user_id_created_ms_index ON templates (owner_user_id, created_ms)`. `TemplateRepo.List` filters by owner, and every read path of the service checks `visible` and answers a template of another owner exactly as a missing one (`E_NOT_FOUND`). The three starter templates (ADR-0022 item 8) are the one exception: rows with the fixed ids `tpl_5tar7c0001` to `tpl_5tar7c0003`, no owner and `created_by` `system:starter`, which start-up step 8 inserts when missing (never overwritten). `TemplateRepo.List` and `visible` treat a row with no owner and that creator as shared, so every user of network mode sees them; a row with no owner and another creator (a workspace that was local before) stays hidden from users.
 
 Section 15.
 
@@ -1061,7 +1061,7 @@ The same sequence runs for `serve` and for an in-process command, after the work
 | 5 | **Document migration** (section 8) of every project and template below the current `schema_version`. | exit 1 naming the project; its transaction was rolled back, its backup row was not written |
 | 6 | **Job recovery** (section 14.5). | log and continue |
 | 7 | **Pending asset reconciliation:** for each `project_assets` row in `pending` whose asset is `ready` and whose project is active, issue the internal `asset.add` batch (the same code path as ingest completion). | log and continue |
-| 8 | **Housekeeping:** `Idempotency.PurgeExpired(now)`; orphan sweep of section 13.4. | log and continue |
+| 8 | **Housekeeping:** `Idempotency.PurgeExpired(now)`; orphan sweep of section 13.4; the starter templates that the library lacks are inserted (`service.SeedStarterTemplates`). | log and continue |
 | 9 | An owner process only (`serve`, or `mcp` when it becomes the owner): bind, write `runtime.json`, start serving and the queue worker (section 6.3). | |
 
 Steps 2 to 4 run in a fresh in-process command in a few milliseconds (one `SELECT` on `migrations`, one `SELECT max(...)`, one `Pending` query). vukem creates its queue tables at boot **before** application migrations when `QUEUE_CONNECTION=database` and the driver is not supplied by `WithQueueDriverFunc` (VF-001); this SDD supplies the driver with `WithQueueDriverFunc` (section 14.1) and registers `queue.Migrations`, so the tables are created by migration 0 and the clash does not occur.
