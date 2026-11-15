@@ -18,7 +18,7 @@ func registry() []*spec {
 		projectList, projectCreate, projectShow, projectTrash, projectRestore,
 		edit, history, undo, redo, lintCmd, version, mcpCmd,
 		mediaImport, mediaInspect, mediaList, view, export, jobShow, jobCancel, jobList, eventsCmd, commandHelp,
-		agentDocs,
+		templateList, templateSave, templateNew, agentDocs,
 	}
 }
 
