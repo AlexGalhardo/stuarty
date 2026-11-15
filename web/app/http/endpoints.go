@@ -329,6 +329,18 @@ var Endpoints = []Endpoint{
 		Service: "KeyRevoke", Status: 200, Summary: "Revoke an API key (a logged-in session only; network mode)",
 	},
 	{
+		ID: "users.list", Method: http.MethodGet, Path: "/users", Scope: service.ScopeAdmin, Status: 200,
+		Summary: "List the users (an administrator session only; network mode)",
+	},
+	{
+		ID: "users.create", Method: http.MethodPost, Path: "/users", Scope: service.ScopeAdmin, Status: 201,
+		Summary: "Create a user (an administrator session only; network mode)",
+	},
+	{
+		ID: "users.update", Method: http.MethodPatch, Path: "/users/{user_id}", Scope: service.ScopeAdmin, Status: 200,
+		Summary: "Change the role of a user or disable or enable them (an administrator session only; network mode)",
+	},
+	{
 		ID: "auth.login", Method: http.MethodPost, Path: "/auth/login", Root: true, Status: 200,
 		Summary: "Log in with an email and a password (network mode)",
 	},

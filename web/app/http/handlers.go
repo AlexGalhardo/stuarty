@@ -149,6 +149,9 @@ func (h *apiHandler) registerAll() {
 		res, err := h.Service.KeyRevoke(c.Context(), service.KeyRevokeRequest{KeyID: in.KeyID})
 		return deref(res), err
 	})
+	register(h, "users.list", h.usersList)
+	register(h, "users.create", h.usersCreate)
+	register(h, "users.update", h.usersUpdate)
 	register(h, "projects.list", h.projectsList)
 	register(h, "projects.create", h.projectsCreate)
 	register(h, "projects.get", h.projectsGet)
