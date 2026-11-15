@@ -281,6 +281,11 @@ func opJSON(op, args string) Operation {
 	return Operation{Op: op, Args: []byte(args)}
 }
 
-// fullRegistry is every registered command, Beta included: what the golden cases and
-// the registry-wide gates run against.
-func fullRegistry() *Registry { return BetaBuild() }
+// fullRegistry is every registered command, Beta included, with validation of every
+// result on: what the golden cases and the registry-wide gates run against.
+func fullRegistry() *Registry {
+	r := BetaBuild()
+	r.Debug = true
+
+	return r
+}
