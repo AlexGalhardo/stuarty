@@ -204,6 +204,10 @@ func TestRateLimitFrameConcurrencyCap(t *testing.T) {
 		t.Errorf("the third frame in flight = %d %s, want 429 E_QUEUE_FULL", res.status, res.body)
 	}
 
+	if d, _ := res.json(t)["details"].(map[string]any); d["limit"] != "frames" || d["value"] != 2.0 || d["ceiling"] != 2.0 {
+		t.Errorf("details = %v, want limit frames, value 2, ceiling 2", d)
+	}
+
 	// Another route of the same caller is not affected.
 	if res := h.get("/api/v1/projects"); res.status != http.StatusOK {
 		t.Errorf("another route during the frames = %d", res.status)

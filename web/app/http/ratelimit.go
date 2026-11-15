@@ -224,7 +224,9 @@ func (h *apiHandler) credentialLimit(next http.Handler) http.Handler {
 					web.Fail(w, r, &service.Error{
 						Code: service.CodeQueueFull, Message: "this caller already has frames being rendered.",
 						Retryable: true, Hint: "wait for a frame to arrive before asking for another",
-						Details: map[string]any{"limit": "frames", "max": route.maxInFlight},
+						Details: map[string]any{
+							"limit": "frames", "value": route.maxInFlight, "ceiling": route.maxInFlight,
+						},
 					})
 
 					return

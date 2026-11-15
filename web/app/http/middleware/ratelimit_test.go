@@ -41,6 +41,41 @@ func TestLimiterFailsClosed(t *testing.T) {
 	}
 }
 
+// P4-SRV-003: a refusal names the limit, what was counted and the ceiling (SDD-007 section 9.1).
+func TestDeniedRequestsCarryTheLimitDetails(t *testing.T) {
+	t.Parallel()
+
+	r := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
+	l := ratelimit.NewMemory(2, time.Minute)
+
+	for range 2 {
+		if e := middleware.Allow(r, l, "k"); e != nil {
+			t.Fatalf("inside the budget: %v", e)
+		}
+	}
+
+	check := func(what string, e *service.Error, limit string) {
+		t.Helper()
+
+		if e == nil || e.Details["limit"] != limit || e.Details["value"] != 2 || e.Details["ceiling"] != 2 ||
+			e.Details["retry_after"] == nil {
+			t.Errorf("%s = %+v, want limit %s, value 2, ceiling 2 and retry_after", what, e, limit)
+		}
+	}
+
+	check("a request over the budget", middleware.Allow(r, l, "k"), "requests")
+
+	f := middleware.NewFailedAuth(ratelimit.NewMemory(2, time.Minute), nil)
+	for range 2 {
+		if f.Record(r, "ip:1") != nil {
+			t.Fatal("a failure inside the budget was refused")
+		}
+	}
+
+	check("the third failed authentication", f.Record(r, "ip:1"), "failed_authentications")
+	check("the address that was blocked", f.Blocked("ip:1"), "failed_authentications")
+}
+
 func TestFailedAuthRefusesUntilTheLimiterLetsGo(t *testing.T) {
 	t.Parallel()
 

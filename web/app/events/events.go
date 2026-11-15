@@ -204,7 +204,7 @@ func (e *Events) acquire(project, key string) error {
 		return &service.Error{
 			Code: service.CodeQueueFull, Message: "too many event streams are open.", Retryable: true,
 			Hint:    "close a stream and try again",
-			Details: map[string]any{"limit": "streams", "open": open, "max": limit},
+			Details: map[string]any{"limit": "streams", "value": open, "ceiling": limit},
 		}
 	}
 
