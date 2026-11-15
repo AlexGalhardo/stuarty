@@ -76,16 +76,17 @@ type optSpec struct {
 // ffmpegOptions is the whole option grammar of ffmpeg. An option that is not here is refused.
 var ffmpegOptions = map[string]optSpec{
 	// global
-	"-n":              {class: classGlobal, flag: true},
-	"-nostdin":        {class: classGlobal, flag: true},
-	"-hide_banner":    {class: classGlobal, flag: true},
-	"-nostats":        {class: classGlobal, flag: true},
-	"-max_alloc":      {class: classGlobal, value: enum(strconv.Itoa(MaxAlloc))},
-	"-v":              {class: classGlobal, value: kLogLevel},
-	"-progress":       {class: classGlobal, value: kProgress},
-	"-filter_threads": {class: classGlobal, value: intRange(1, 1024)},
-	"-vaapi_device":   {class: classGlobal, value: kVaapiDev},
-	"-filter_complex": {class: classGlobal, value: nil}, // graph, checked apart
+	"-n":                      {class: classGlobal, flag: true},
+	"-nostdin":                {class: classGlobal, flag: true},
+	"-hide_banner":            {class: classGlobal, flag: true},
+	"-nostats":                {class: classGlobal, flag: true},
+	"-max_alloc":              {class: classGlobal, value: enum(strconv.Itoa(MaxAlloc))},
+	"-v":                      {class: classGlobal, value: kLogLevel},
+	"-progress":               {class: classGlobal, value: kProgress},
+	"-filter_threads":         {class: classGlobal, value: intRange(1, 1024)},
+	"-filter_complex_threads": {class: classGlobal, value: intRange(1, 1024)},
+	"-vaapi_device":           {class: classGlobal, value: kVaapiDev},
+	"-filter_complex":         {class: classGlobal, value: nil}, // graph, checked apart
 
 	// input only
 	"-protocol_whitelist": {class: classInput, value: enum("file,pipe")},

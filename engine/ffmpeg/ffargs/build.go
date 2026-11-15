@@ -284,7 +284,7 @@ type Cmd struct {
 	Progress      bool // -progress pipe:1
 	LogErrorOnly  bool // -v error
 	Threads       int  // input decoder threads; zero leaves FFmpeg's default
-	FilterThreads int
+	FilterThreads int  // threads of the filter graph, simple or complex; zero leaves FFmpeg's default
 	VaapiDevice   string
 	Inputs        []Input
 	Graph         Graph
@@ -303,7 +303,12 @@ func (c Cmd) Argv(pol Policy) ([]string, error) {
 	}
 	a = append(a, "-n", "-max_alloc", strconv.Itoa(MaxAlloc))
 	if c.FilterThreads > 0 {
-		a = append(a, "-filter_threads", strconv.Itoa(c.FilterThreads))
+		// -filter_threads sizes the simple graphs (-vf); a -filter_complex graph takes its own option.
+		opt := "-filter_threads"
+		if len(c.Graph) > 0 {
+			opt = "-filter_complex_threads"
+		}
+		a = append(a, opt, strconv.Itoa(c.FilterThreads))
 	}
 	if c.VaapiDevice != "" {
 		a = append(a, "-vaapi_device", c.VaapiDevice)

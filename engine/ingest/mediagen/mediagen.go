@@ -21,8 +21,10 @@ type Gen struct {
 }
 
 func (g Gen) ff(ctx context.Context, out string, args ...string) (string, error) {
-	full := append([]string{"-hide_banner", "-v", "error", "-nostdin", "-y"}, args...)
-	full = append(full, out)
+	full := append([]string{"-hide_banner", "-v", "error", "-nostdin", "-y", "-filter_threads", "1"}, args...)
+	// One filter and one encoder thread: the slices of swscale and of mpeg4 follow the thread
+	// count, and the fixtures must be the same bytes on every runner.
+	full = append(full, "-threads", "1", out)
 	if stderr, err := g.Run(ctx, g.Dir, full...); err != nil {
 		return "", fmt.Errorf("mediagen %s: %w\n%s", out, err, stderr)
 	}

@@ -20,6 +20,11 @@ const (
 	MaxFPS = 60
 	// NormalizedQScale is the -q:v of the mpeg4 encoder.
 	NormalizedQScale = 2
+	// NormalizedThreads is the fixed -threads of the mpeg4 encoder: it encodes one slice per
+	// thread, so a count taken from the machine would make the normalized bytes, and every frame
+	// composed from them, depend on the CPU count (NFR-010). One is the only count every machine
+	// can run under the thread budget (FF-16).
+	NormalizedThreads = 1
 	// ProxyShortEdge is the short edge of the proxy.
 	ProxyShortEdge = 540
 	// ProxyCRF is the libvpx-vp9 constant quality of the proxy.

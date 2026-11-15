@@ -114,7 +114,7 @@ func (s *scanner) option(i int) (int, error) {
 			s.seenAlloc = true
 		case "-progress":
 			s.progress = true
-		case "-filter_threads":
+		case "-filter_threads", "-filter_complex_threads":
 			return i, checkThreads(s.argv, i, o.value, s.pol)
 		}
 		return i, nil
@@ -164,7 +164,7 @@ func ruleOf(opt string) string {
 		return "FF-02"
 	case "-f":
 		return "FF-13"
-	case "-threads", "-filter_threads":
+	case "-threads", "-filter_threads", "-filter_complex_threads":
 		return "FF-16"
 	case "-map", "-map_metadata", "-map_chapters":
 		return "FF-08"
