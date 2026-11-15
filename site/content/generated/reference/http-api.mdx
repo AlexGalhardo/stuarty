@@ -657,3 +657,42 @@ Request body:
 | `project_id` | `string` | no | Empty only this trashed project. |
 
 Responses: `200` OK, `401`, `422`, `default`.
+
+## users
+
+### `GET /users`
+
+List the users (an administrator session only; network mode)
+
+Responses: `200` OK, `401`, `default`.
+
+### `POST /users`
+
+Create a user (an administrator session only; network mode)
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `email` | `string` | yes | A plain mailbox; it is lower-cased and must be unused. |
+| `password` | `string` | yes | 12 to 1,024 characters. |
+| `role` | `string` | no | admin or member; default member. |
+
+Responses: `201` Created, `401`, `422`, `default`.
+
+### `PATCH /users/{user_id}`
+
+Change the role of a user or disable or enable them (an administrator session only; network mode)
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `user_id` | path | yes | `string` |
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean or null` | no | True disables the user; false enables them again. |
+| `role` | `string or null` | no | admin or member. |
+
+Responses: `200` OK, `401`, `422`, `default`.
