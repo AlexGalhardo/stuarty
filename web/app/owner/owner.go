@@ -400,6 +400,9 @@ func limitsFromEnv(getenv func(string) string) (service.Limits, error) {
 		{"VUKEM_VIDEO_MAX_INGESTS", func(v int64) { l.MaxIngests = int(v) }},
 		{"VUKEM_VIDEO_MAX_EXPORTS", func(v int64) { l.MaxExports = int(v) }},
 		{"VUKEM_VIDEO_MAX_EXPORTS_PER_KEY", func(v int64) { l.MaxExportsPerActor = int(v) }},
+		{"VUKEM_VIDEO_MAX_TRANSCRIBES", func(v int64) { l.MaxTranscribes = int(v) }},
+		{"VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS", func(v int64) { l.MaxTranscribeSeconds = v }},
+		{"VUKEM_VIDEO_MAX_EXPORT_BYTES", func(v int64) { l.MaxExportBytes = v }},
 		{"VUKEM_VIDEO_MAX_IMPORT_PIXELS", func(v int64) { l.Ceilings.MaxPixels = v }},
 	} {
 		raw := getenv(f.name)

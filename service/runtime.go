@@ -77,7 +77,13 @@ type Limits struct {
 	MaxQueuedIngests   int   // ingest jobs waiting
 	MaxExports         int   // VUKEM_VIDEO_MAX_EXPORTS: exports queued or running
 	MaxExportsPerActor int   // VUKEM_VIDEO_MAX_EXPORTS_PER_KEY: running; two more may wait
-	Ceilings           ffmpeg.Ceilings
+	// MaxTranscribes is VUKEM_VIDEO_MAX_TRANSCRIBES: transcriptions running at once.
+	MaxTranscribes int
+	// MaxTranscribeSeconds is VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS: the longest audio of one job.
+	MaxTranscribeSeconds int64
+	// MaxExportBytes is VUKEM_VIDEO_MAX_EXPORT_BYTES: the largest exported file.
+	MaxExportBytes int64
+	Ceilings       ffmpeg.Ceilings
 }
 
 const (
@@ -86,6 +92,9 @@ const (
 	defaultMaxIngests       = 2
 	defaultMaxQueuedIngests = 50
 	defaultMaxExports       = 2
+	defaultMaxTranscribes   = 1
+	defaultTranscribeSecs   = 7200
+	defaultMaxExportBytes   = 4 << 30
 	queuedPerActor          = 2
 )
 
@@ -118,6 +127,18 @@ func (l Limits) withDefaults() Limits {
 
 	if l.MaxExportsPerActor <= 0 {
 		l.MaxExportsPerActor = 1
+	}
+
+	if l.MaxTranscribes <= 0 {
+		l.MaxTranscribes = defaultMaxTranscribes
+	}
+
+	if l.MaxTranscribeSeconds <= 0 {
+		l.MaxTranscribeSeconds = defaultTranscribeSecs
+	}
+
+	if l.MaxExportBytes <= 0 {
+		l.MaxExportBytes = defaultMaxExportBytes
 	}
 
 	return l

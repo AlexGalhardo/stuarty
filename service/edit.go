@@ -57,6 +57,11 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 		return nil, cerr
 	}
 
+	// Reads still work on a full disk; a write is refused (SDD-007 section 9.2).
+	if derr := s.checkDisk(); derr != nil && !req.DryRun {
+		return nil, derr
+	}
+
 	var (
 		res      *EditResult
 		replayed *EditResult

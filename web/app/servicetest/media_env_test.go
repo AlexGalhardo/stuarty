@@ -71,6 +71,8 @@ type mediaEnv struct {
 	runner  service.JobRunner
 	queue   *queue.Queue
 	ingests atomic.Int64
+	// free is what the volume of the workspace reports as free, in bytes.
+	free atomic.Uint64
 	// hold makes the queue drop what is enqueued, as a crash between the commit
 	// and the delivery would.
 	hold  atomic.Bool
@@ -81,6 +83,7 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 	tb.Helper()
 
 	m := &mediaEnv{files: tb.TempDir()}
+	m.free.Store(1 << 40)
 	lazy := &lazyRunner{}
 
 	if cfg.ingest == nil {
@@ -108,7 +111,7 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 		o.Workspace = m.ws
 		o.Media = service.Media{
 			Content: enginestore.New(m.ws), Guard: guard, Ingest: cfg.ingest,
-			FreeBytes: func(string) (uint64, error) { return 1 << 40, nil },
+			FreeBytes: func(string) (uint64, error) { return m.free.Load(), nil },
 		}
 		if cfg.realIngest {
 			runner, rerr := ffmpeg.NewRunner(&ffmpeg.Installation{}, m.ws)

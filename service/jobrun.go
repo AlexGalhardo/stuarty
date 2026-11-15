@@ -320,7 +320,7 @@ func (s *svc) runIngest(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 	}
 
 	if ar.IngestState != IngestReady {
-		if derr := s.checkDisk(0); derr != nil {
+		if derr := s.checkDisk(); derr != nil {
 			return nil, derr
 		}
 
@@ -452,13 +452,13 @@ func (s *svc) completePending(ctx context.Context, hash, jobID string) []string 
 
 // checkDisk refuses work while the volume of the workspace is under the free
 // space floor (SDD-007 section 9.2 item 4).
-func (s *svc) checkDisk(need int64) *Error {
+func (s *svc) checkDisk() *Error {
 	if s.limits.MinFreeBytes <= 0 || s.workspace == "" {
 		return nil
 	}
 
 	free, err := s.media.FreeBytes(s.workspace)
-	if err == nil && free < uint64(need)+uint64(s.limits.MinFreeBytes) { //nolint:gosec // both are positive
+	if err == nil && free < uint64(s.limits.MinFreeBytes) {
 		return newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space.").
 			withHint("free space on the disk of the workspace; the person running the server can lower "+
 				"VUKEM_VIDEO_MIN_FREE_BYTES").
@@ -493,7 +493,7 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		return nil, derr
 	}
 
-	if err := s.checkDisk(0); err != nil {
+	if err := s.checkDisk(); err != nil {
 		return nil, err
 	}
 
@@ -525,6 +525,25 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		_ = os.Remove(out)
 
 		return nil, verr
+	}
+
+	if s.limits.MaxExportBytes > 0 && res.Bytes > s.limits.MaxExportBytes {
+		_ = os.Remove(out)
+
+		have, ceiling := sizesApart(res.Bytes, s.limits.MaxExportBytes)
+
+		return nil, newError(
+			"E_LIMIT_EXCEEDED",
+			"The export is %s; the export limit is %s (VUKEM_VIDEO_MAX_EXPORT_BYTES).",
+			have,
+			ceiling,
+		).
+			withHint("export a shorter range or a smaller frame size; the person running the server can raise "+
+				"VUKEM_VIDEO_MAX_EXPORT_BYTES").
+			withDetail("limit", "export_bytes").
+			withDetail("value", res.Bytes).
+			withDetail("ceiling", s.limits.MaxExportBytes).
+			withDetail("variable", "VUKEM_VIDEO_MAX_EXPORT_BYTES")
 	}
 
 	fps := doc.Settings.FPS

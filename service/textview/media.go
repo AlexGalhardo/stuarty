@@ -202,8 +202,13 @@ func JobList(projectID string, lines []string, total int) string {
 	return b.String()
 }
 
-// Size is a byte count in MiB or KiB with one decimal.
+// Size is a byte count in GiB, MiB or KiB with one decimal; a whole number of
+// GiB has no decimal ("8 GiB").
 func Size(n int64) string {
+	if n >= 1<<30 {
+		return strings.TrimSuffix(fmt.Sprintf("%.1f", float64(n)/(1<<30)), ".0") + " GiB"
+	}
+
 	if n >= 1<<20 {
 		return fmt.Sprintf("%.1f MiB", float64(n)/(1<<20))
 	}
