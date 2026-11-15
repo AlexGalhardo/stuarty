@@ -52,7 +52,7 @@ func newService(tb testing.TB) service.Service {
 }
 
 // connect runs the server and a client in memory and returns the client session.
-func connect(t *testing.T, svc service.Service, o Options, clientName string) *sdk.ClientSession {
+func connect(t testing.TB, svc service.Service, o Options, clientName string) *sdk.ClientSession {
 	t.Helper()
 
 	srv, err := New(svc, o)
@@ -84,7 +84,7 @@ func connect(t *testing.T, svc service.Service, o Options, clientName string) *s
 }
 
 // call runs a tool and returns the result.
-func call(t *testing.T, cs *sdk.ClientSession, name string, args any) *sdk.CallToolResult {
+func call(t testing.TB, cs *sdk.ClientSession, name string, args any) *sdk.CallToolResult {
 	t.Helper()
 
 	res, err := cs.CallTool(t.Context(), &sdk.CallToolParams{Name: name, Arguments: args})
@@ -96,7 +96,7 @@ func call(t *testing.T, cs *sdk.ClientSession, name string, args any) *sdk.CallT
 }
 
 // textOf is the text block of a result.
-func textOf(t *testing.T, res *sdk.CallToolResult) string {
+func textOf(t testing.TB, res *sdk.CallToolResult) string {
 	t.Helper()
 
 	if len(res.Content) != 1 {
@@ -112,7 +112,7 @@ func textOf(t *testing.T, res *sdk.CallToolResult) string {
 }
 
 // structured is the structured content as a map.
-func structured(t *testing.T, res *sdk.CallToolResult) map[string]any {
+func structured(t testing.TB, res *sdk.CallToolResult) map[string]any {
 	t.Helper()
 
 	m, ok := res.StructuredContent.(map[string]any)
@@ -124,7 +124,7 @@ func structured(t *testing.T, res *sdk.CallToolResult) map[string]any {
 	return m
 }
 
-func ok(t *testing.T, res *sdk.CallToolResult) *sdk.CallToolResult {
+func ok(t testing.TB, res *sdk.CallToolResult) *sdk.CallToolResult {
 	t.Helper()
 
 	if res.IsError {
