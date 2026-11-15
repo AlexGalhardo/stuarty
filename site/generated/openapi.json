@@ -7893,6 +7893,14 @@
             }
           },
           {
+            "description": "The width in pixels the preview draws at, 16 to 4096; bitmaps are rasterized at that scale. Default: the project width.",
+            "in": "query",
+            "name": "width",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
             "in": "path",
             "name": "id",
             "required": true,

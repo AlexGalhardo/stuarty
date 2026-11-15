@@ -433,6 +433,10 @@ func (c *Client) PlanWindow(ctx context.Context, req service.PlanWindowRequest) 
 	q.Set("from", strconv.Itoa(req.From))
 	q.Set("until", strconv.Itoa(req.Until))
 
+	if req.Width != 0 {
+		q.Set("width", strconv.Itoa(req.Width))
+	}
+
 	return get[service.PlanWindowResult](ctx, c, projectPath(req.ProjectID, "/plan"), q)
 }
 
