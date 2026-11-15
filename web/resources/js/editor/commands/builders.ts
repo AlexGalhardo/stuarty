@@ -821,3 +821,72 @@ export function keyframeFallbackOperations(
 		});
 	});
 }
+
+// Where a track goes in the order: directly over or under another track, or at
+// an end. The core computes the new `order` (SDD-002 C.6 and C.8).
+export type TrackPlacement =
+	| { above: string }
+	| { below: string }
+	| { position: "top" | "bottom" };
+
+// The header menu "Add track above or below": the new track sits next to the
+// track whose menu was used.
+export function trackAddOperations(
+	kind: "visual" | "audio",
+	placement: TrackPlacement,
+): Operations {
+	return [{ op: "track.add", args: { kind, ...placement } }];
+}
+
+export interface TrackChanges {
+	name?: string;
+	hidden?: boolean;
+	muted?: boolean;
+}
+
+export function trackUpdateOperations(
+	trackId: string,
+	changes: TrackChanges,
+): Operations {
+	return [{ op: "track.update", args: { track_id: trackId, ...changes } }];
+}
+
+export function trackMoveOperations(
+	trackId: string,
+	placement: TrackPlacement,
+): Operations {
+	return [{ op: "track.move", args: { track_id: trackId, ...placement } }];
+}
+
+// The first request of a removal has no `with_items`; after E_NOT_EMPTY and the
+// confirmation the same operation is sent with it.
+export function trackRemoveOperations(
+	trackId: string,
+	withItems: boolean,
+): Operations {
+	return [
+		{
+			op: "track.remove",
+			args: withItems
+				? { track_id: trackId, with_items: true }
+				: { track_id: trackId },
+		},
+	];
+}
+
+// A partial style merges into the track's style unless `replace` is set, in
+// which case it becomes the whole style (SDD-002 C.10).
+export function trackCaptionStyleOperations(
+	trackId: string,
+	style: StyleChanges,
+	replace: boolean,
+): Operations {
+	return [
+		{
+			op: "track.set_caption_style",
+			args: replace
+				? { track_id: trackId, style, replace: true }
+				: { track_id: trackId, style },
+		},
+	];
+}

@@ -33,8 +33,14 @@ import {
 	removeAssetOperations,
 	renameOperations,
 	splitOperations,
+	type TrackChanges,
+	type TrackPlacement,
 	textAddOperations,
 	textSetOperations,
+	trackAddOperations,
+	trackMoveOperations,
+	trackRemoveOperations,
+	trackUpdateOperations,
 	trimOperations,
 	withNextFree,
 } from "./builders";
@@ -96,6 +102,24 @@ export interface Actions {
 	removeAsset(assetId: string): Promise<EditOutcome | null>;
 	// The inline rename (F2, the menu); an empty name clears it.
 	renameItem(itemId: string, name: string): Promise<EditOutcome | null>;
+	// The track header menu "Add track" above or below `anchorId`.
+	addTrack(
+		kind: "visual" | "audio",
+		placement: TrackPlacement,
+	): Promise<EditOutcome | null>;
+	// Rename, hide and mute of a track header and of the track panel.
+	updateTrack(
+		trackId: string,
+		changes: TrackChanges,
+	): Promise<EditOutcome | null>;
+	// The reorder drag and "Move up" and "Move down".
+	moveTrack(
+		trackId: string,
+		placement: TrackPlacement,
+	): Promise<EditOutcome | null>;
+	// `E_NOT_EMPTY` is not a notice: the caller asks, then sends it again with
+	// `withItems` (SDD-012 section 4.4).
+	removeTrack(trackId: string, withItems: boolean): Promise<EditOutcome | null>;
 	// palette.run: the operations the palette built from a schema form.
 	runOperations(ops: Operations): Promise<EditOutcome | null>;
 	// An inspector field: like runOperations, but a validation or time error is
@@ -226,6 +250,13 @@ export function createActions(runtime: EditorRuntime): Actions {
 			// Bring the read model to the revision the core named; the UI never
 			// resends the batch on its own (SDD-012 section 4.5 item 4).
 			if (found !== null) void catchUp(found.revision);
+			return;
+		}
+		// The track removal dialog asks for the confirmation itself.
+		if (
+			error.code === "E_NOT_EMPTY" &&
+			ops.some((o) => o.op === "track.remove")
+		) {
 			return;
 		}
 		if (error.code === "E_IN_USE") {
@@ -458,6 +489,13 @@ export function createActions(runtime: EditorRuntime): Actions {
 			return outcome;
 		},
 		renameItem: (itemId, name) => send(renameOperations(itemId, name)),
+		addTrack: (kind, placement) => send(trackAddOperations(kind, placement)),
+		updateTrack: (trackId, changes) =>
+			send(trackUpdateOperations(trackId, changes)),
+		moveTrack: (trackId, placement) =>
+			send(trackMoveOperations(trackId, placement)),
+		removeTrack: (trackId, withItems) =>
+			send(trackRemoveOperations(trackId, withItems)),
 		commitGesture: (ops, baseRevision) => send(ops, false, baseRevision),
 		runOperations: (ops) => send(ops),
 		commitField: (ops) => send(ops, true),

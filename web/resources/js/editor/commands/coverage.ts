@@ -61,6 +61,12 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.text": ["text.set"],
 	// The palette runs any command of the registry with operations built from
 	// its schema form, so it has no builder to check (rule 2 of section 9.3).
+	"timeline.add_track": ["track.add"],
+	"timeline.track_update": ["track.update"],
+	"inspector.track_update": ["track.update"],
+	"timeline.track_move": ["track.move"],
+	"timeline.track_remove": ["track.remove"],
+	"inspector.track_caption_style": ["track.set_caption_style"],
 	"palette.run": [ANY_COMMAND],
 };
 
@@ -230,10 +236,25 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	"track.add": [
 		{ kind: "gesture", action: "library.add_to_timeline", phase: "P" },
 		{ kind: "toolbar", action: "caption.add", phase: "P" },
+		{ kind: "menu", action: "timeline.add_track", phase: "A" },
 		palette,
 	],
-	"track.move": [palette],
-	"track.remove": [palette],
-	"track.set_caption_style": [palette],
-	"track.update": [palette],
+	"track.move": [
+		{ kind: "gesture", action: "timeline.track_move", phase: "A" },
+		{ kind: "menu", action: "timeline.track_move", phase: "A" },
+		palette,
+	],
+	"track.remove": [
+		{ kind: "menu", action: "timeline.track_remove", phase: "A" },
+		palette,
+	],
+	"track.set_caption_style": [
+		{ kind: "inspector", action: "inspector.track_caption_style", phase: "A" },
+		palette,
+	],
+	"track.update": [
+		{ kind: "gesture", action: "timeline.track_update", phase: "A" },
+		{ kind: "inspector", action: "inspector.track_update", phase: "A" },
+		palette,
+	],
 };

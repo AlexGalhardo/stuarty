@@ -31,6 +31,11 @@ import {
 	textAddOperations,
 	textSetOperations,
 	textStyleOperations,
+	trackAddOperations,
+	trackCaptionStyleOperations,
+	trackMoveOperations,
+	trackRemoveOperations,
+	trackUpdateOperations,
 	transformOperations,
 	transitionOperations,
 	trimEndOperations,
@@ -348,6 +353,26 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"inspector.text": textStyleOperations("itm_a", { size: 90 }).map(
 				(o) => o.op,
 			),
+			"timeline.add_track": trackAddOperations("audio", { above: "trk_a" }).map(
+				(o) => o.op,
+			),
+			"timeline.track_update": trackUpdateOperations("trk_a", {
+				hidden: true,
+			}).map((o) => o.op),
+			"inspector.track_update": trackUpdateOperations("trk_a", {
+				name: "x",
+			}).map((o) => o.op),
+			"timeline.track_move": trackMoveOperations("trk_a", {
+				below: "trk_b",
+			}).map((o) => o.op),
+			"timeline.track_remove": trackRemoveOperations("trk_a", true).map(
+				(o) => o.op,
+			),
+			"inspector.track_caption_style": trackCaptionStyleOperations(
+				"trk_a",
+				{ size: 90 },
+				false,
+			).map((o) => o.op),
 			"caption.add": captionOperations({
 				text: "a",
 				duration: "1s",

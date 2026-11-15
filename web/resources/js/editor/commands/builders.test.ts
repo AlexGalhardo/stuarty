@@ -24,6 +24,11 @@ import {
 	textSetOperations,
 	textStyleOperations,
 	toggleBreak,
+	trackAddOperations,
+	trackCaptionStyleOperations,
+	trackMoveOperations,
+	trackRemoveOperations,
+	trackUpdateOperations,
 	transformOperations,
 	transitionOperations,
 	trimEdgeOperations,
@@ -467,5 +472,44 @@ describe("transition, preset and crossfade builders", () => {
 				},
 			]);
 		}
+	});
+});
+
+describe("track builders (SDD-002 C.6 to C.10)", () => {
+	test("add names exactly one placement", () => {
+		expect(trackAddOperations("audio", { above: "trk_a" })).toEqual([
+			{ op: "track.add", args: { kind: "audio", above: "trk_a" } },
+		]);
+	});
+
+	test("update sends only the changed fields", () => {
+		expect(trackUpdateOperations("trk_a", { muted: true })).toEqual([
+			{ op: "track.update", args: { track_id: "trk_a", muted: true } },
+		]);
+	});
+
+	test("move names exactly one placement", () => {
+		expect(trackMoveOperations("trk_a", { below: "trk_b" })).toEqual([
+			{ op: "track.move", args: { track_id: "trk_a", below: "trk_b" } },
+		]);
+	});
+
+	test("remove carries with_items only after the confirmation", () => {
+		expect(trackRemoveOperations("trk_a", false)[0]?.args).toEqual({
+			track_id: "trk_a",
+		});
+		expect(trackRemoveOperations("trk_a", true)[0]?.args).toEqual({
+			track_id: "trk_a",
+			with_items: true,
+		});
+	});
+
+	test("the caption style merges unless replace is set", () => {
+		expect(
+			trackCaptionStyleOperations("trk_a", { size: 90 }, false)[0]?.args,
+		).toEqual({ track_id: "trk_a", style: { size: 90 } });
+		expect(
+			trackCaptionStyleOperations("trk_a", { size: 90 }, true)[0]?.args,
+		).toEqual({ track_id: "trk_a", style: { size: 90 }, replace: true });
 	});
 });
