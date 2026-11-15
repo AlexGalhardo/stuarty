@@ -291,13 +291,13 @@ Built on vukem's rate limiter. The product calls `Limiter.Allow` directly instea
 | Pre-authentication | `ratelimit.ByIP` | 600 requests per minute | every request, before authentication |
 | Failed authentication | `ratelimit.ByIP`, counted only on 401 | 20 per minute | every failed login or key check |
 | Per key or session | `ratelimit.ByToken` for bearer, session id for cookies | `VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE` (default 300) with burst 60, `NewMemoryBurst` | after authentication |
-| Heavy operations | the same key | `VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE` (default 10) for `JobStart`, `MediaImport`, `TemplateImport` | those operations |
+| Heavy operations | the same key | `VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE` (default 10) for `JobStart`, `MediaImport`, `TemplateImport` and, from BETA, `ProjectBundleExport`, `ProjectBundleImport`, `FontImport` and `ProjectOtioImport` | those operations |
 
 What is counted. The per-credential limiter counts requests under `/api/v1` and `/mcp`. It does not count the event stream once open, static assets, or the byte-serving routes the editor hits many times per second while it plays or scrubs (proxies with `Range`, thumbnails, peaks, cached frames, the plan windows of SDD-004). A browser session has its own default, `VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE` (default 1,800, burst 300), because one person dragging a clip produces more requests than a well-behaved agent. In local mode the pre-authentication and failed-authentication limiters by address do not run (every client shares `127.0.0.1`, and the local token has 256 bits, so bad requests must not lock out the good token); only the per-credential limiter runs, with the same defaults.
 
 Burst is added to the rate: a key may send 300 requests at once, and 60 more over the minute, so the 361st request within a minute is the first one refused (the bucket of `NewMemoryBurst` holds rate plus burst); a browser session holds 1,800 plus 300. In network mode an address that spent its 20 failed authentications a minute is refused with `E_RATE_LIMITED` before a bearer key or a login is verified, valid or not, so the block is not a guessing oracle; a request with only an established session cookie (checked against the session store) may pass. `ViewFrame` is not counted (cached frames, above) but one caller may have 2 frames being rendered at once, then `E_QUEUE_FULL` (429), because a miss renders.
 
-Denial: `429` with `Retry-After`, error code `E_RATE_LIMITED` (retryable), body in the common error shape. A limiter store failure denies the request (vukem fails closed). `ratelimit.ByIP` groups IPv6 by `/64`; behind a proxy `TRUSTED_PROXIES` must be set or every client shares one bucket (vukem logs a warning).
+Denial: `429` with `Retry-After`, error code `E_RATE_LIMITED` (retryable), body in the common error shape. `details` carries `retry_after` and, as every limit error does (9.1), `limit`, `value` and `ceiling`: `limit` is `requests` (the pre-authentication, key and session limiters), `failed_authentications`, `heavy_per_minute`, `keys_created_per_hour` or `idempotency_keys`; for the limiters the bucket was empty, so `value` equals `ceiling`, the size of the bucket (rate plus burst). A limiter store failure denies the request (vukem fails closed). `ratelimit.ByIP` groups IPv6 by `/64`; behind a proxy `TRUSTED_PROXIES` must be set or every client shares one bucket (vukem logs a warning).
 
 ### 4.5 Start-up errors for unsafe configuration (fail closed)
 
@@ -729,20 +729,23 @@ Defaults are consistent with SDD-000 §10 (`VUKEM_VIDEO_MAX_EXPORTS` 2, `VUKEM_V
 | Animated image (BETA) | at most 1,000 frames and 134,217,728 pixels summed over all frames (frames times width times height), each frame within the source dimensions above | per asset | fixed | `E_LIMIT_EXCEEDED` (`details.limit = "anim_frames"` or `"anim_pixels"`), from the packet list and the stream size before any frame is decoded |
 | Transcription audio | 7,200 s per job | per job | `VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS` | `E_LIMIT_EXCEEDED` |
 | Export resolution and duration | 4096 on a side, frame 108,000 as the last frame, 120 frames per second at most | per project | fixed by SDD-001 | `E_LIMIT` (core) |
-| Export file size | 4 GiB | per job | `VUKEM_VIDEO_MAX_EXPORT_BYTES` | `E_EXPORT_FAILED` with `details.reason = "size_limit"` |
+| Export file size | 4 GiB | per job | `VUKEM_VIDEO_MAX_EXPORT_BYTES` | `E_EXPORT_FAILED` with `details.reason = "size_limit"`, `details.limit = "export_bytes"` and `ceiling`; `value` is the size of the file when the run ended, and absent when the size watchdog ended it mid-run |
 | Requests | key or local token: 300 per minute, burst 60; browser session: 1,800 per minute, burst 300; heavy operations 10 per minute | per key or session | `VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE`, `VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE`, `VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE` | `E_RATE_LIMITED` (429, `Retry-After`) |
-| Free disk on the workspace volume | 2 GiB | workspace | `VUKEM_VIDEO_MIN_FREE_BYTES` | `E_LIMIT_EXCEEDED` (`details.reason = "disk_low"`) for import, ingest, export, edit; reads still work |
+| Free disk on the workspace volume | 2 GiB | workspace | `VUKEM_VIDEO_MIN_FREE_BYTES` | `E_LIMIT_EXCEEDED` (`details.limit = "free_bytes"`, `details.reason = "disk_low"`, `value` the free bytes, `ceiling` the free bytes that were needed: the floor, plus the file or the bundle for an import) for import, ingest, export, bundle import, edit; reads still work |
 | Cache size (`frames/` and `bitmaps/`) | 2 GiB, least recently used first | workspace | `VUKEM_VIDEO_CACHE_MAX_BYTES` | eviction, no error |
-| Batch | 200 operations, 512 KiB | per call | fixed by SDD-002 A.10 | `E_PAYLOAD_TOO_LARGE` |
+| Batch | 200 operations, 512 KiB | per call | fixed by SDD-002 A.10 | `E_PAYLOAD_TOO_LARGE` (`details.limit = "batch_operations"` or `"batch_bytes"`) |
+| Bundle (BETA) | 1,024 entries; 32 GiB in all; an entry within its cap (manifest 1 MiB, document 64 MiB, operations 2 GiB, a media file the import limit, a font 16 MiB); a line of the log 64 MiB; a compression ratio of at most 1,000 above 64 KiB; free disk for the declared total plus 10% | per call | fixed | `E_LIMIT_EXCEEDED` (`details.limit` is `bundle_entries`, `bundle_total_bytes`, `bundle_entry_bytes`, `bundle_ratio` or `bundle_line_bytes`), judged from the central directory before any byte is read; the disk case is `free_bytes` |
+| OpenTimelineIO file (BETA) | 16 MiB; a batch of at most 200 operations | per call | fixed | `E_PAYLOAD_TOO_LARGE` (`details.limit = "otio_bytes"` or `"batch_operations"`) |
+| Cached frames in flight | 2 per caller | per caller | fixed | `E_QUEUE_FULL` (429, `details.limit = "frames"`) |
 | Document | 50 tracks, 500 items, 200 assets, 5,000 caption words | per project | fixed by SDD-001 §4 | `E_LIMIT` |
 | JSON request body | 1 MiB (edit: batch limit plus envelope); template import and import by path carry only a path | per request | fixed | `E_PAYLOAD_TOO_LARGE` |
-| Event streams | 32 per project, 128 per process, 16 per key in network mode | | fixed | `E_QUEUE_FULL` with `details.limit = "streams"` |
-| Idempotency keys stored | 10,000 valid keys per actor and project; 24 hours | | fixed | a new keyed request is refused with `E_RATE_LIMITED`; nothing is evicted (SDD-005 §10) |
+| Event streams | 32 per project, 128 per process, 16 per key in network mode | | fixed | `E_QUEUE_FULL` with `details.limit = "streams"`, `value` and `ceiling` |
+| Idempotency keys stored | 10,000 valid keys per actor and project; 24 hours | | fixed | a new keyed request is refused with `E_RATE_LIMITED` (`details.limit = "idempotency_keys"`, `retry_after` the seconds until the oldest key expires); nothing is evicted (SDD-005 §10) |
 | Revision lookback for conflict analysis | 1,000 revisions | per batch | fixed | `E_REVISION_CONFLICT` with a hint to re-read |
 | HTTP | vukem defaults: header size 64 KiB, header, read, write and idle timeouts | | vukem | 431, 408 |
 | Keys | 50 per user | per user | fixed | `E_LIMIT_EXCEEDED` |
 
-Every limit error carries `details`: `limit` (name), `value` (what was seen), `ceiling` and, where one exists, `variable`. The message states the number and the fix, for example "The file is 12.3 GiB; the import limit is 8 GiB (VUKEM_VIDEO_MAX_IMPORT_BYTES)." In network mode the `variable` name is omitted for non-admin callers. Events (job and asset updates) reach every subscriber of the project, so the error in an event never carries the variable name in any mode; an administrator reads the full error from `JobGet`.
+Every limit error carries `details`: `limit` (name), `value` (what was seen), `ceiling` and, where one exists, `variable`. A full job queue (`E_QUEUE_FULL`) also lists `running` and names the scope that is full: `limit` is `exports`, `ingests` or `transcribes` for the workspace and `exports_per_key` or `transcribes_per_key` for one actor, with the ceiling of that scope (an actor may hold its running export and two queued ones, so its ceiling is 3). The message states the number and the fix, for example "The file is 12.3 GiB; the import limit is 8 GiB (VUKEM_VIDEO_MAX_IMPORT_BYTES)." In network mode the `variable` name is omitted for non-admin callers. Events (job and asset updates) reach every subscriber of the project, so the error in an event never carries the variable name in any mode; an administrator reads the full error from `JobGet`.
 
 ### 9.2 Where each limit is enforced
 
@@ -751,6 +754,39 @@ Every limit error carries `details`: `limit` (name), `value` (what was seen), `c
 3. Concurrency: checked in `JobStart` before the job is queued (ADR-0018 item 7).
 4. Disk: a guard checks free space before import, before ingest and before an export starts, and `edit` is refused while the volume is under `MIN_FREE_BYTES` so that the log cannot fill the disk. The cache is trimmed by a background task after every write that grows it.
 5. Rate limits: 4.4. In local mode the per-credential limiter runs with the same defaults per session or token, so a looping local agent is also slowed; the limiters keyed by address do not (4.4).
+
+### 9.3 Review of the limits (P4-SRV-003)
+
+Reviewed against the code of `service/` and `web/app/` with the BETA operations (bundles, fonts, brand kit, OpenTimelineIO, export formats). The defaults of 9.1 and the deadlines of 6.5 are unchanged: no ALPHA or BETA measurement was attached to this review that argues for another number, so none was changed. `TestLimitDefaultsAreTheOnesOfSDD007` and `TestDeadlinesFollowTheMultipliersOfSDD007` (`web/app/owner`) pin every default and every deadline of the tables to the constant in the code, so a change to one edits this document and the test together.
+
+| Limit | SDD | Code | Test that triggers it | Result of the review |
+| --- | --- | --- | --- | --- |
+| Concurrent exports, per key | 2; 1 running and 2 queued | `defaultMaxExports`, `MaxExportsPerActor`, `queuedPerActor` | `TestSecurity_T18_ExportConcurrencyCeilings`, `TestLimitExportQueuesCarryValueAndCeiling` | details lacked `value`, and the per-key refusal named the workspace ceiling: fixed |
+| Concurrent ingests, queue | 2 (and the queue of SDD-011) | `MaxIngests`, `MaxQueuedIngests` | `TestLimitIngestQueueCarriesValueAndCeiling` | a full ingest queue answered `E_INTERNAL` for the file: fixed to `E_QUEUE_FULL` |
+| Concurrent transcriptions, per key | 1 | `MaxTranscribes`, `MaxTranscribesPerActor` | `TestTranscribeConcurrencyIsBounded`, `TestTranscribeLimitPerActor` | details now carry `value` and the scope |
+| Imported file size | 8 GiB | `defaultMaxImportBytes` | `TestLimitMessage`, `TestImportLimits` | matches |
+| Source duration, side, pixels, streams, frame rate | 14,400 s; 8,192; 33,177,600; 16; 240 | `ffmpeg.DefaultMaxSeconds`, `MaxSourceEdge`, `DefaultMaxPixels`, `MaxStreams`, `ingest.MaxFrameRateRefused` | `TestSecurity_T17_ProbeCeilings` (engine) | matches; owned by `engine/` |
+| Animated image | 1,000 frames; 134,217,728 pixels | `ffmpeg.MaxAnimFrames`, `MaxAnimPixels` | `TestSecurity_T17_AnimatedDecodeStopsAtProbedCount` | matches |
+| Transcription audio | 7,200 s | `defaultTranscribeSecs` | `TestTranscribeRefusals` | matches |
+| Export resolution and duration | 4096; frame 108,000; 120 fps | core (`E_LIMIT`) | `TestExportFormatsLimitsAreELimit` | matches; owned by `core/` |
+| Export file size | 4 GiB, `E_EXPORT_FAILED` `size_limit` | `defaultMaxExportBytes` | `TestExportOverTheByteCeilingFails`, `TestLimitExportEndedByTheWatchdogNamesTheLimit` | the service answered `E_LIMIT_EXCEEDED` after the run while the engine gives `E_EXPORT_FAILED`: the code follows this document now |
+| Requests | 300 + 60; 1,800 + 300; heavy 10; before authentication 600; failed 20 | `DefaultRatePerMinute` and the others, `preAuthPerMinute`, `failedAuthPerMinute` | `TestSecurity_T18_RateLimitPerKey`, `TestRateLimitPerSessionFollowsTheVariable`, `TestRateLimitPreAuthenticationPerAddress`, `TestSecurity_T32_FailedKeyAttemptsThrottled`, `TestRateLimitCoversTheBetaHeavyOperations` | the pre-authentication limit had no test; the BETA operations were heavy in the code and not in this document: both fixed |
+| Free disk | 2 GiB | `defaultMinFreeBytes` | `TestSecurity_T17_DiskLowRefusesWrites`, `TestLimitDiskLowCarriesValueAndCeiling` | details lacked `value` and `ceiling`: fixed |
+| Cache | 2 GiB | `cache.DefaultMaxBytes` | `TestSecurity_T19_CacheIsCapped` | matches |
+| Batch | 200 operations; 512 KiB | `maxOperationsPerBatch`, `maxBatchBytes` | `TestSecurity_T18_BatchLimits`, `TestLimitBatchCarriesValueAndCeiling` | details were empty: fixed |
+| Bundle | 9.1 | `bundle*Max` | `TestSecurity_T20_BundleDeclaredSizes`, `TestLimitBundleCarriesValueAndCeiling` | details had no `value` or `ceiling`: fixed |
+| OpenTimelineIO | 16 MiB; 200 operations | `otioFileMax` | `TestLimitOtioImportCarriesValueAndCeiling` | details were empty: fixed |
+| JSON request body | 1 MiB | `web/routes` `maxBody` | the 413 case of `web/app/http` (`template_limits_test.go`) | matches |
+| Event streams | 32; 128; 16 | `events.MaxPerProject`, `MaxPerProcess`, `MaxPerKey` | `TestStreamsPerProjectAndPerProcessAreLimited`, `TestStreamsPerKeyAreLimited` | details were `open` and `max`: now `value` and `ceiling` |
+| Cached frames in flight | 2 | `Endpoints[].MaxInFlight` | `TestRateLimitFrameConcurrencyCap` | same change |
+| Idempotency keys | 10,000, refuse | `maxIdempotencyKeys` | `TestLimitIdempotencyKeysAreRefusedNotEvicted` | the commit evicted the oldest key, so a retry with it would have run twice: fixed to refuse |
+| Revision lookback | 1,000 | `maxConflictLag` | `TestSecurity_T24_RevisionLookbackBounded` | matches |
+| Keys | 50 per user; 10 created an hour | `maxActiveKeys`, `maxKeyCreations` | `TestKeyLimitsPerUser` | matches |
+| HTTP | vukem defaults | vukem | none in this repository | not verified here |
+
+Start-up (4.5): one case per row in `TestSecurity_T34_UnsafeConfigurationRefusesBoot`, every limit variable at zero or below in network mode (`TestLimitsZeroOrNegativeByMode`), a reverse proxy that carries the scheme (`TestReverseProxyNeedsBothTrustedProxiesAndForwardedProto`: both `TRUSTED_PROXIES` and `TRUST_FORWARDED_PROTO` are needed) and the container on its own machine (`TestContainerOnOwnMachine`).
+
+Open: when the size watchdog ends an export mid-run the engine does not report how large the file had become, so that refusal has no `value` (`engine/export`, `engine/ffmpeg`).
 
 ## 10. The "no outbound traffic by default" property
 
