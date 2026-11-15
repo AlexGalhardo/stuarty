@@ -474,19 +474,26 @@ func (d *cliDriver) do(t *testing.T, s step) (json.RawMessage, string, *service.
 		Resolver: fixedResolver{svc: d.e.Service},
 	}
 
-	argv = append(argv, "--json", "--actor", actor)
-	if name == "edit" {
-		argv = append(argv, "--ops", "-")
-	}
+	argv = withJSONFlags(name, argv)
 
 	code := rt.Execute(t.Context(), name, argv)
 
-	if stderr.Len() > 0 {
-		t.Fatalf("cli %s: standard error is not empty in --json mode: %q", name, stderr.String())
+	return cliOutcome(t, name, code, stdout.Bytes(), stderr.String())
+}
+
+// cliOutcome reads what a command left behind: the exit code, standard output
+// (one JSON document) and standard error (empty in --json mode).
+func cliOutcome(
+	t *testing.T, name string, code int, stdout []byte, stderr string,
+) (json.RawMessage, string, *service.ErrorDocument) {
+	t.Helper()
+
+	if stderr != "" {
+		t.Fatalf("cli %s: standard error is not empty in --json mode: %q", name, stderr)
 	}
 
 	if code == cli.ExitOK {
-		raw := bytes.TrimSpace(stdout.Bytes())
+		raw := bytes.TrimSpace(stdout)
 
 		var m struct {
 			Text string `json:"text"`
@@ -498,8 +505,8 @@ func (d *cliDriver) do(t *testing.T, s step) (json.RawMessage, string, *service.
 	}
 
 	var doc service.ErrorDocument
-	if err := json.Unmarshal(stdout.Bytes(), &doc); err != nil || doc.Code == "" {
-		t.Fatalf("cli %s: exit %d with no error document: %q", name, code, stdout.String())
+	if err := json.Unmarshal(stdout, &doc); err != nil || doc.Code == "" {
+		t.Fatalf("cli %s: exit %d with no error document: %q", name, code, stdout)
 	}
 
 	if want := expectedExit(doc); code != want {
@@ -507,6 +514,16 @@ func (d *cliDriver) do(t *testing.T, s step) (json.RawMessage, string, *service.
 	}
 
 	return nil, "", &doc
+}
+
+// withJSONFlags is what every driver adds to a command line.
+func withJSONFlags(name string, argv []string) []string {
+	argv = append(argv, "--json", "--actor", actor)
+	if name == "edit" {
+		argv = append(argv, "--ops", "-")
+	}
+
+	return argv
 }
 
 func expectedExit(doc service.ErrorDocument) int {

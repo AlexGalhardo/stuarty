@@ -228,7 +228,7 @@ func httpRoutes(t *testing.T, d *httpDriver) []string {
 func TestDriversCoverTheOperationsOfTheScenarios(t *testing.T) {
 	t.Parallel()
 
-	steps, _ := loadScenario(t, "prototype")
+	steps, _ := loadScenario(t)
 
 	for _, s := range steps {
 		if _, _, err := toolCall(s); err != nil {
@@ -262,7 +262,7 @@ func TestBudgetsOfTheSurfacesArePrinted(t *testing.T) {
 		t.Errorf("tools/list is about %d tokens, over the 6000 of NFR-020", tokens)
 	}
 
-	steps, fixtures := loadScenario(t, "prototype")
+	steps, fixtures := loadScenario(t)
 
 	for i, s := range steps {
 		s = withFixtures(t, d, s, fixtures)
