@@ -78,9 +78,10 @@ tasks:
     cmds:
       - go run ./internal/tools/labelsync .github/labels.txt
   codegen:
-    desc: Regenerate the contracts (core/schema and web/resources/js/generated)
+    desc: Regenerate the contracts (core/schema and web/resources/js/generated) and the FFmpeg pins (internal/ffmpegpins)
     cmds:
       - go run ./internal/tools/contractgen
+      - go run ./internal/tools/ffmpegpins
       - cd web && bun run codegen:ts
 
   test:
@@ -156,7 +157,7 @@ tasks:
     cmds:
       - task: codegen
       - cd site && npm run reference
-      - git diff --exit-code -- core/schema web/resources/js/generated site/generated site/content/generated
+      - git diff --exit-code -- core/schema web/resources/js/generated site/generated site/content/generated internal/ffmpegpins
 
   site:build:
     desc: Build the documentation site and run its checks

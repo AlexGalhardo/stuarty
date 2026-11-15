@@ -28,6 +28,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/engine/frame"
 	"github.com/AlexGalhardo/vukem-video/engine/raster"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
+	"github.com/AlexGalhardo/vukem-video/internal/ffmpegpins"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/config"
 	"github.com/AlexGalhardo/vukem-video/service/exporter"
@@ -274,7 +275,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		Transcriber: transcriber, Tools: tools, Log: cfg.Log,
 		Lint: lint.Env{Measurer: lintMeasurer{fonts: raster.Bundled()}},
 		Doctor: service.DoctorOptions{
-			Mode: o.mode, StartedAt: o.now().UTC(), Child: o.child,
+			Mode: o.mode, StartedAt: o.now().UTC(), Child: o.child, FFmpegPins: ffmpegpins.Current(),
 			Integrity: func(ctx context.Context) (string, error) {
 				var out string
 				err := st.DB().QueryRowContext(ctx, "PRAGMA integrity_check").Scan(&out)

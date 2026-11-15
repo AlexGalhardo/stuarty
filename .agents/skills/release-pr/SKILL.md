@@ -22,6 +22,7 @@ After release N is merged, its commits get new hashes on `main`, and branch N+1,
 3. Conflicts in generated files (`site/content/last-updated.json`, `site/content/generated/**`, `web/app/agentdocs/out/**`, `site/generated/openapi.json`): take either side, then regenerate at the end (step 4). Any other conflict is resolved by hand.
 4. Regenerate everything derived and commit what changes:
    - `go run ./internal/tools/contractgen`
+   - `go run ./internal/tools/ffmpegpins`
    - `cd web && bun run codegen:ts`
    - `UPDATE_OPENAPI=1 go test ./web/contract/ -run OpenAPI`
    - `cd site && npm run reference && npm run last-updated`
