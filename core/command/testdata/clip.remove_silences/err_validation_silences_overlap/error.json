@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.resolved.silences[1] starts at 150 inside the previous silence, which ends at 160.",
+  "hint": "Send silences as sorted, non-overlapping ranges.",
+  "retryable": false,
+  "path": "args.resolved.silences[1]"
+}

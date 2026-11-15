@@ -144,12 +144,18 @@ type goldenCase struct {
 	cmd, name string
 	build     func() *B
 	op        string
+	generated []string // ids the generator returns, in order (newids.json)
 }
 
 var goldenCases []goldenCase
 
 func gc(cmd, name string, build func() *B, op string) {
-	goldenCases = append(goldenCases, goldenCase{cmd, name, build, op})
+	goldenCases = append(goldenCases, goldenCase{cmd, name, build, op, nil})
+}
+
+// gcIDs is gc for a case whose command draws these ids from the generator.
+func gcIDs(cmd, name string, build func() *B, op string, generated ...string) {
+	goldenCases = append(goldenCases, goldenCase{cmd, name, build, op, generated})
 }
 
 // op builds the operation JSON of a case.
@@ -182,6 +188,13 @@ func TestGenerateGoldenInputs(t *testing.T) {
 			t.Fatalf("%s/%s: %v", c.cmd, c.name, err)
 		}
 		write("op.json", pretty.Bytes())
+		if len(c.generated) > 0 {
+			ids, err := json.Marshal(c.generated)
+			if err != nil {
+				t.Fatal(err)
+			}
+			write("newids.json", ids)
+		}
 	}
 }
 

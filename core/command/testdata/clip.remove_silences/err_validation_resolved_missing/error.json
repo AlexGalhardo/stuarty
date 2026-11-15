@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.resolved is missing: the silences of the asset are not known.",
+  "hint": "The service fills it from the silence analysis; run the ingest job of the asset first, then retry.",
+  "retryable": false,
+  "path": "args.resolved"
+}

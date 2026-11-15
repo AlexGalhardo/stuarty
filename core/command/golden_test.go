@@ -89,9 +89,20 @@ func runGoldenCase(t *testing.T, reg *Registry, dir string) {
 		t.Fatal(err)
 	}
 	// Identifiers in cases are supplied, never generated, so files are stable.
+	// A case whose command draws ids from the generator lists them in newids.json.
+	var generated []string
+	if b, err := os.ReadFile(filepath.Join(dir, "newids.json")); err == nil {
+		if err := json.Unmarshal(b, &generated); err != nil {
+			t.Fatal(err)
+		}
+	}
 	env := Env{NewIDs: func(prefix string) string {
-		t.Fatalf("the case needs a generated %s id; supply it in op.json", prefix)
-		return ""
+		if len(generated) == 0 {
+			t.Fatalf("the case needs a generated %s id; supply it in op.json or newids.json", prefix)
+		}
+		id := generated[0]
+		generated = generated[1:]
+		return id
 	}}
 	res, applyErr := reg.Apply(doc, op, env)
 	checkCaseName(t, filepath.Base(dir), applyErr)

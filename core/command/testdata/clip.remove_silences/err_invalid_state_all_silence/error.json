@@ -1,0 +1,6 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Clip itm_m1n2p3q4r5 is silent over its whole source range 60-359.",
+  "hint": "Delete the clip with item.delete, or use a larger min_silence.",
+  "retryable": false
+}

@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Asset ast_3c5v8n2w6d has no audio; there is nothing to analyse.",
+  "hint": "Choose a clip whose asset has audio.",
+  "retryable": false,
+  "path": "args.item_id"
+}

@@ -1,0 +1,15 @@
+{
+  "op": "clip.remove_silences",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "padding": "10f",
+    "resolved": {
+      "silences": [
+        {
+          "start": 100,
+          "end": 116
+        }
+      ]
+    }
+  }
+}

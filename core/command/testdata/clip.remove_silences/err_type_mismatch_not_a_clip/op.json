@@ -1,0 +1,26 @@
+{
+  "op": "clip.remove_silences",
+  "args": {
+    "item_id": "itm_v2w3x4y5z6",
+    "resolved": {
+      "silences": [
+        {
+          "start": 100,
+          "end": 160
+        },
+        {
+          "start": 200,
+          "end": 215
+        },
+        {
+          "start": 250,
+          "end": 256
+        },
+        {
+          "start": 340,
+          "end": 360
+        }
+      ]
+    }
+  }
+}
