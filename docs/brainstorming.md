@@ -322,3 +322,11 @@ All twelve themes were covered by decisions D-001 to D-025. The working state is
 - Alternatives considered: Windows signing only through Azure Trusted Signing (about US$10 a month); full signing with an Apple Developer ID (US$99 a year) and Azure Trusted Signing.
 - Reason: asked of the author on 2026-11-15 for P3-REL-003 and the own FFmpeg build; the author chose no cost in BETA and allowed both licences.
 - Impact: P3-REL-003 (signing subtasks become the documented warning; secrets for the update key only), P3-DSK-005 (feed host), SDD-009 §9.3 and §10.5, the install and verify-a-release pages of the site, `internal/tools/notices`.
+
+### D-034 — Hardware encoders of the own FFmpeg build: NVENC, Quick Sync and AMF
+
+- Date: 2026-11-15
+- Decision: the own LGPL FFmpeg build enables NVIDIA NVENC (`nv-codec-headers`), Intel Quick Sync through oneVPL (`libvpl`, MIT) and AMD AMF (headers only, MIT) on Windows and Linux; macOS keeps VideoToolbox. Every export falls back to the software encoder when the hardware encoder is missing or fails to open.
+- Alternatives considered: NVENC only; software encoding only.
+- Reason: asked of the author on 2026-11-15; the author chose the three vendors to cover almost every GPU.
+- Impact: the FFmpeg build inputs and configure flags (with the LGPL check), the notices (`libvpl` and AMF headers), encoder detection in `engine/ffmpeg`, SDD-004 (encoder choice), SDD-011.
