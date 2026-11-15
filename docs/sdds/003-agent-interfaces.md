@@ -58,7 +58,7 @@ Fields that hold text from media or from other actors are tagged `untrusted:"tru
 
 | Surface | Success encoding |
 | --- | --- |
-| HTTP | status per §6, body the result struct as JSON, including `text` and `bulk` fields |
+| HTTP | status per §6, body the result struct as JSON, including `text` and `bulk` fields. `POST /mcp` is the only method of that path: `GET` and `DELETE` answer 405 `E_METHOD_NOT_ALLOWED` (the server is stateless, §4.3) |
 | CLI `--json` | the same JSON document, exactly one, on standard output |
 | CLI human | `Text` followed by a newline |
 | MCP | `content[0]` is a text block holding `Text`; images are further `image` blocks; `structuredContent` is the result struct with `text` and the `bulk` fields removed. **Decision of this SDD**: the MCP specification says a tool with structured content SHOULD also return the serialized JSON in a text block (revision `2026-07-28`, Tools, "Structured Content"); this server returns the readable view instead, because serialized JSON would double the tokens of every call. A client that wants the data uses `structuredContent` |
