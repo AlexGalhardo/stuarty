@@ -910,7 +910,7 @@ Stated plainly. None of these is claimed to be mitigated.
 9. **Font parsing in the owner process** can burn CPU for up to its deadline. The parser is Go, so a flaw is more likely a panic (recovered) or a hang than memory corruption, but a bug in it would affect the whole owner process.
 10. **Hostile text rendered by a vision model from frames** (T-09) is outside any filter.
 11. **Cloud sync and backup tools** can copy `token`, `db.sqlite` and footage. `doctor` warns for known sync folders but cannot detect all.
-12. **FFmpeg CVE timing.** Between an upstream security fix and our pin bump, released builds contain the known flaw. The weekly freshness check bounds this to a visible, tracked window.
+12. **FFmpeg CVE timing.** Between an upstream security fix and our pin bump, released builds contain the known flaw. The weekly freshness check of section 12 is meant to bound this to a visible, tracked window, but as of the review before 1.0 no workflow implements it (`.github/workflows/` has no such job): the age and the newest patch of the pin are checked by hand at each release (on 2026-11-15 the pin `n9.0.2-39-g7adfbe40dc` was 15 days old and `n9.0.2` was still the newest patch tag of the 9.0 branch; `release/9.0` was 57 commits past it, the pin 39).
 13. **Output size watchdog overshoot** on Windows and macOS (up to about 2 seconds of writing); a Job Object has no file size limit, so Windows has no kernel backstop as Linux does.
 14. **The no-egress property is proven for child processes only on Linux CI** (10.2).
 15. **OpenH264 inside the pinned FFmpeg build** raises a licence question (ADR-0011 "Open"), not a security one; it is recorded there.
