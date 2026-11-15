@@ -70,7 +70,18 @@ func httpConnection(sess *workspace.Session) *Connection {
 		hc = outbound.RemoteServer(callTimeout)
 	}
 
-	return &Connection{Service: remote.New(sess.BaseURL, sess.Token, hc), Workspace: string(sess.Dir)}
+	// A stream has no end, so it has no timeout either; the reconnect loop of
+	// events rides over a server that closes it.
+	sc := outbound.LocalServer(0)
+	if sess.Dir == "" {
+		sc = outbound.RemoteServer(0)
+	}
+
+	return &Connection{
+		Service:   remote.New(sess.BaseURL, sess.Token, hc),
+		Workspace: string(sess.Dir),
+		Events:    httpEvents(sess.BaseURL, sess.Token, sc),
+	}
 }
 
 // openInProcess builds the Service with the wiring of serve (media, exporter,

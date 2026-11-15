@@ -43,6 +43,9 @@ type Connection struct {
 	Workspace string
 	// Close releases the workspace lock of an in-process connection; may be nil.
 	Close func() error
+	// Events opens the event stream of a project on the server; nil when no
+	// server answers (the events live in the hub of the owner).
+	Events EventOpener
 }
 
 // Resolver finds the Service for a command: a remote server, the local owner,
