@@ -1,0 +1,58 @@
+---
+title: "Execute o binário"
+description: "Inicie o servidor local a partir do programa baixado, onde ele escuta, onde guarda os seus arquivos e como pará-lo."
+---
+
+## O que você vai aprender
+
+- como iniciar e parar o servidor sem um contêiner;
+- quais endereço, espaço de trabalho, chave e arquivos de log ele usa;
+- como conferir a instalação antes de depender dela.
+
+## A ideia
+
+O arquivo compactado da versão e os instaladores trazem um único programa, o `vukem-video`. O `vukem-video serve` é o processo dono do [espaço de trabalho](/docs/workspace): ele serve o editor, a API HTTP e o endpoint MCP, e executa as tarefas. Sem um contêiner, ele roda em **modo local**: escuta apenas em `127.0.0.1:7878`, e uma requisição precisa do token em `<workspace>/token`. Para servir outras máquinas, use o [modo de rede](/docs/self-hosting/network-mode), que tem login e chaves de API.
+
+O servidor não faz nenhuma conexão de saída por padrão e não envia telemetria; veja [Privacidade](/docs/self-hosting/privacy).
+
+## Início rápido
+
+1. [Baixe e verifique](/docs/self-hosting/verify-a-release) o arquivo compactado da sua plataforma e coloque o `vukem-video` no seu `PATH`.
+2. Confira a instalação: o `vukem-video doctor --full` executa todas as verificações e nomeia o que corrigir.
+3. Inicie o servidor: `vukem-video serve`. Ele fica em primeiro plano e grava logs no erro padrão.
+4. Abra o editor com `vukem-video open`, ou vá a `http://127.0.0.1:7878` em um navegador.
+
+```bash
+vukem-video version
+vukem-video doctor --full
+vukem-video serve
+```
+
+Pare o servidor com `Ctrl+C` ou enviando `SIGTERM`. Ele espera até 15 segundos para as tarefas em execução chegarem a um ponto seguro; uma tarefa que ainda esteja rodando então é interrompida e recolocada na fila, e a próxima inicialização a recupera.
+
+O `vukem-video open` inicia antes um servidor local quando nenhum roda, depois abre o navegador. Com `VUKEM_VIDEO_NO_BROWSER` definido, ele imprime o endereço em vez de iniciar um navegador.
+
+## O que ele usa
+
+| Item | Onde | Observações |
+| --- | --- | --- |
+| Espaço de trabalho | `~/.vukem-video`, ou `VUKEM_VIDEO_HOME` | um diretório; veja [Espaço de trabalho e armazenamento](/docs/workspace) |
+| Endereço | `127.0.0.1:7878`, ou `VUKEM_VIDEO_ADDR` | um endereço que não é de loopback é recusado no modo local |
+| Token local | `<workspace>/token` | legível apenas por você; `vukem-video token:rotate` cria um novo |
+| Chave da aplicação | `<workspace>/app.key` | criada na primeira inicialização no modo local quando `APP_KEY` não está definido; mantenha-a privada |
+| Logs | `<workspace>/logs/vukem-video.log` | rotacionado a 10 MiB, três arquivos antigos mantidos; `LOG_LEVEL` define o nível |
+| FFmpeg | a ordem de [FFmpeg, codecs e licenças](/docs/self-hosting/ffmpeg-and-licences) | `VUKEM_VIDEO_FFMPEG` e `VUKEM_VIDEO_FFPROBE` o nomeiam explicitamente |
+
+Toda variável está na [referência de configuração](/docs/reference/configuration).
+
+## Erros comuns
+
+- Iniciar um segundo `vukem-video serve` no mesmo espaço de trabalho: ele falha com `E_WORKSPACE_LOCKED`. Veja [O espaço de trabalho está bloqueado](/docs/troubleshooting/workspace-locked).
+- Vincular outro endereço no modo local. Defina antes `VUKEM_VIDEO_MODE=network`, um `APP_KEY` e o resto das configurações de rede.
+- Colocar o espaço de trabalho dentro de uma pasta que um cliente de sincronização na nuvem gerencia: ele pode corromper o banco de dados e o bloqueio. O `doctor --full` avisa quando reconhece uma pasta assim.
+- Excluir o `app.key` ou mudar o `APP_KEY` por acidente: guarde a chave com os seus outros segredos e faça cópia de segurança dela junto com o espaço de trabalho.
+
+## Próximos passos
+
+- [Execute a imagem Docker](/docs/self-hosting/docker)
+- [Cópias de segurança e atualizações](/docs/self-hosting/backups-and-upgrades)
