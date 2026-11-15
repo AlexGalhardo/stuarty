@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import type { Track } from "@/generated/timeline";
 import {
 	defaultCaptionTrack,
+	installRequest,
 	NEW_TRACK,
 	parseInstallCommand,
 	unavailableFrom,
@@ -33,6 +34,30 @@ describe("defaultCaptionTrack", () => {
 	test("an audio track never qualifies", () => {
 		const audio = track("a", { kind: "audio", caption_style: {} });
 		expect(defaultCaptionTrack(["a"], { a: audio })).toBe(NEW_TRACK);
+	});
+});
+
+describe("installRequest", () => {
+	test("prefers the tool and model the service names", () => {
+		const base = {
+			code: "E_TRANSCRIBE_UNAVAILABLE",
+			message: "m",
+			missing: [],
+		};
+		expect(
+			installRequest({
+				...base,
+				tool: "whisper",
+				model: "base",
+				installCommand: "vukem-video tools:install other --model x",
+			}),
+		).toEqual({ name: "whisper", model: "base" });
+		expect(
+			installRequest({
+				...base,
+				installCommand: "vukem-video tools:install whisper --model small",
+			}),
+		).toEqual({ name: "whisper", model: "small" });
 	});
 });
 

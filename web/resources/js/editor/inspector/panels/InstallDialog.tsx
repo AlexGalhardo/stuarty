@@ -17,7 +17,7 @@ import { ApiError } from "../../api/errors";
 import { useRuntime } from "../../state/EditorContext";
 import { errorHeadline } from "../../ui/errorHeadline";
 import { formatDecimal } from "../../ui/format";
-import { parseInstallCommand, type Unavailable } from "./transcriptModel";
+import { installRequest, type Unavailable } from "./transcriptModel";
 
 const POLL_EVERY_MS = 1000;
 
@@ -48,10 +48,7 @@ export default function InstallDialog({
 	const locale = useLocale();
 	const runtime = useRuntime();
 	const [phase, setPhase] = useState<Phase>({ name: "offer" });
-	const request =
-		unavailable === null
-			? null
-			: parseInstallCommand(unavailable.installCommand);
+	const request = unavailable === null ? null : installRequest(unavailable);
 
 	// A new answer of the service starts the dialog again.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: `unavailable` is the trigger.

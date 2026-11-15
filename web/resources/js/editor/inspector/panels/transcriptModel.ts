@@ -33,6 +33,10 @@ export interface Unavailable {
 	missing: { name: string; host?: string; bytes?: number }[];
 	downloadBytes?: number;
 	installCommand?: string;
+	// The tool and model the service names for the install (`details.tool`,
+	// `details.model`, SDD-012 §12.5).
+	tool?: string;
+	model?: string;
 	code: string;
 	details?: unknown;
 }
@@ -72,8 +76,23 @@ export function unavailableFrom(error: {
 			typeof details.install_command === "string"
 				? details.install_command
 				: undefined,
+		tool: typeof details.tool === "string" ? details.tool : undefined,
+		model: typeof details.model === "string" ? details.model : undefined,
 		details: error.details,
 	};
+}
+
+// The install request: the tool and model the service names, or, from an older
+// server that does not send them, the ones read from its command.
+export function installRequest(
+	unavailable: Unavailable,
+): { name: string; model?: string } | null {
+	if (unavailable.tool !== undefined && unavailable.tool !== "") {
+		return unavailable.model === undefined || unavailable.model === ""
+			? { name: unavailable.tool }
+			: { name: unavailable.tool, model: unavailable.model };
+	}
+	return parseInstallCommand(unavailable.installCommand);
 }
 
 const INSTALL_COMMAND = /^vukem-video tools:install (\S+)(?: --model (\S+))?$/;
