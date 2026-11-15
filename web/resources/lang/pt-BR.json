@@ -239,6 +239,198 @@
         "failed_checks": "Verificações com falha:",
         "queue_full": "Outra exportação está em andamento. Tente de novo quando ela terminar.",
         "go_to": "Ir para {item}"
+      },
+      "commands": {
+        "asset": {
+          "remove": {
+            "title": "Remover mídia"
+          }
+        },
+        "audio": {
+          "add": {
+            "title": "Adicionar áudio"
+          }
+        },
+        "caption": {
+          "add": {
+            "title": "Adicionar legenda"
+          },
+          "edit_word": {
+            "title": "Editar palavra da legenda"
+          },
+          "from_transcript": {
+            "title": "Legendas a partir da transcrição"
+          },
+          "merge": {
+            "title": "Mesclar legendas"
+          },
+          "retime_from_clip": {
+            "title": "Ressincronizar legendas com o clipe"
+          },
+          "set_breaks": {
+            "title": "Definir quebras de linha da legenda"
+          },
+          "set_style": {
+            "title": "Definir estilo da legenda"
+          },
+          "set_words": {
+            "title": "Definir palavras da legenda"
+          },
+          "split": {
+            "title": "Dividir legenda"
+          }
+        },
+        "clip": {
+          "add": {
+            "title": "Adicionar clipe"
+          },
+          "remove_silences": {
+            "title": "Remover silêncios"
+          },
+          "set_color": {
+            "title": "Ajustar cor do clipe"
+          },
+          "set_framing": {
+            "title": "Definir enquadramento do clipe"
+          },
+          "set_speed": {
+            "title": "Definir velocidade do clipe"
+          }
+        },
+        "item": {
+          "crossfade": {
+            "title": "Transição suave entre itens"
+          },
+          "delete": {
+            "title": "Excluir item"
+          },
+          "duplicate": {
+            "title": "Duplicar item"
+          },
+          "move": {
+            "title": "Mover item"
+          },
+          "rename": {
+            "title": "Renomear item"
+          },
+          "set_audio": {
+            "title": "Ajustar áudio do item"
+          },
+          "set_transform": {
+            "title": "Definir transformação do item"
+          },
+          "set_transition": {
+            "title": "Definir transição do item"
+          },
+          "split": {
+            "title": "Dividir item"
+          },
+          "trim": {
+            "title": "Cortar item"
+          }
+        },
+        "keyframe": {
+          "clear": {
+            "title": "Limpar quadros-chave"
+          },
+          "remove": {
+            "title": "Remover quadro-chave"
+          },
+          "set": {
+            "title": "Definir quadro-chave"
+          }
+        },
+        "project": {
+          "rename": {
+            "title": "Renomear projeto"
+          }
+        },
+        "settings": {
+          "set": {
+            "title": "Configurações do projeto"
+          },
+          "set_fps": {
+            "title": "Definir taxa de quadros"
+          }
+        },
+        "shape": {
+          "add": {
+            "title": "Adicionar forma"
+          },
+          "set": {
+            "title": "Definir forma"
+          }
+        },
+        "slot": {
+          "fill": {
+            "title": "Preencher espaço do modelo"
+          },
+          "mark": {
+            "title": "Marcar espaço do modelo"
+          },
+          "unmark": {
+            "title": "Desmarcar espaço do modelo"
+          }
+        },
+        "template": {
+          "set_info": {
+            "title": "Informações do modelo"
+          }
+        },
+        "text": {
+          "add": {
+            "title": "Adicionar texto"
+          },
+          "apply_preset": {
+            "title": "Aplicar predefinição de texto"
+          },
+          "set": {
+            "title": "Definir texto"
+          }
+        },
+        "timeline": {
+          "close_gap": {
+            "title": "Fechar espaço vazio"
+          }
+        },
+        "track": {
+          "add": {
+            "title": "Adicionar trilha"
+          },
+          "move": {
+            "title": "Mover trilha"
+          },
+          "remove": {
+            "title": "Remover trilha"
+          },
+          "set_caption_style": {
+            "title": "Definir estilo de legenda da trilha"
+          },
+          "update": {
+            "title": "Atualizar trilha"
+          }
+        }
+      },
+      "lint": {
+        "L_EMPTY_TIMELINE": "Nada na linha do tempo",
+        "L_GAP": "Espaço vazio na linha do tempo",
+        "L_BLACK_FRAMES": "Quadros pretos",
+        "L_MEDIA_MISSING": "Arquivo de mídia ausente",
+        "L_MEDIA_UNREADY": "Mídia ainda não está pronta",
+        "L_SOURCE_RANGE": "Fora do intervalo da fonte",
+        "L_ODD_DIMENSIONS": "Tamanho de imagem ímpar",
+        "L_SILENT_EXPORT": "A exportação não tem som",
+        "L_SLIVER": "Item muito curto",
+        "L_OCCLUDED": "Item oculto por outro",
+        "L_AUDIO_OVERLAP": "Áudio sobreposto",
+        "L_SAFE_AREA": "Fora da área segura",
+        "L_OFF_FRAME": "Fora do quadro",
+        "L_TRANSITION_EMPTY": "Transição sem nada para mesclar",
+        "L_CAPTION_DESYNC": "Legendas fora de sincronia",
+        "L_SLOT_UNFILLED": "Espaço do modelo não preenchido",
+        "L_AUDIO_CLIP": "Áudio estourado",
+        "L_LOUDNESS": "Volume fora da meta",
+        "L_DURATION_LIMIT": "Acima do limite de duração"
       }
     }
   }
