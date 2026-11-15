@@ -34,6 +34,8 @@ Decisions that follow:
 - The post-processing of item 7 is mandatory and has four steps, in this order (SDD-011 §10.4): move the start of a word that follows a pause to the audible onset found by silence detection on the same audio (and trim the tail of the word before the pause); repair zero-length words by splitting the time with their neighbour; enforce a minimum word duration; derive a word confidence from its token probabilities.
 - The runner uses 8 threads or the number of physical cores, whichever is smaller, and treats a missing or empty output as failure.
 
+Implementation note (P2-RND-011): the post-processing is `transcribe.Postprocess`. On the canned output whose first word after a pause starts 300 ms before the audible onset, the repaired start equals the onset (measured error 0 ms against the 100 ms limit); the minimum word length stays 100 ms. The measurement on real speech, where the onset comes from `silencedetect` and not from the fixture, belongs to the CI job with the real helper (P2-RND-012); this record is updated with that number.
+
 ## Alternatives
 
 - **Local only.** No way out when quality or speed is insufficient.
