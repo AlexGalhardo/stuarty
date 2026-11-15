@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-15
+
+### Added
+
+- **ui:** Add tools and key routes to the api client ([c464f01](https://github.com/AlexGalhardo/vukem-video/commit/c464f01f21396343eb7ad80f6a01b040de922be0))
+- **ui:** Add the command palette with the batch tray and a JSON form slot ([6efc640](https://github.com/AlexGalhardo/vukem-video/commit/6efc64031c6fc22a07ac76e59e58b0e0c574b811))
+- **ui:** Generate the palette form from args_schema with a time field ([40f8f9e](https://github.com/AlexGalhardo/vukem-video/commit/40f8f9e3af7c3e6f1b152d936960f58ead5dd4e1))
+- **ui:** Add the inspector shell with name and timing fields and the commit rules ([b2dfd06](https://github.com/AlexGalhardo/vukem-video/commit/b2dfd06d8b63e5ccc1ef287b75dfbe91bf940fbb))
+- **ui:** Add the history panel, the per-actor undo state and the panel toggles ([270c37f](https://github.com/AlexGalhardo/vukem-video/commit/270c37f0585bc0e9d36413cbbee0484080209b7b))
+- **cli:** Add token:rotate and list the commands the binary dispatches itself ([ff8155d](https://github.com/AlexGalhardo/vukem-video/commit/ff8155de0e67a5cce3dbccf0fb5f27dacbb12e7b))
+- **command:** Mark time args and type every command argument schema ([725ac9a](https://github.com/AlexGalhardo/vukem-video/commit/725ac9a254cdd3c4d2b253366e1be966413a3e55))
+- **ui:** Run rule I6 with a failing and a passing fixture for every i18n rule ([16c7105](https://github.com/AlexGalhardo/vukem-video/commit/16c71051602eca2e30a25e12dbf0c97ec18f9fc6))
+- **ui:** Snap points from the core, the snapping layer, the snap line and the N toggle ([d1edef9](https://github.com/AlexGalhardo/vukem-video/commit/d1edef9d619d3580392b4db9d6b63033b91e89d7))
+- **ui:** Add the selection model, the marquee and the keyboard grid with nudge ([de84ab0](https://github.com/AlexGalhardo/vukem-video/commit/de84ab021ba486e179b9993dc17e89083a5aeb00))
+- **ui:** Add the move gesture, the ghost layer and the overlap snap-back ([7df7be8](https://github.com/AlexGalhardo/vukem-video/commit/7df7be8c267d42dc4e6e3d2034648b39a578c914))
+- **ui:** Add trim handles with the core limits and the out-of-source notice ([8fc400c](https://github.com/AlexGalhardo/vukem-video/commit/8fc400cd2a74164edfa98758459d34444ddf85e6))
+- **ui:** Add the conflict notice, apply again and the drag cancel on a remote edit ([53bbde1](https://github.com/AlexGalhardo/vukem-video/commit/53bbde1d42cd849f4842f870983cb0190ee1b0e8))
+- **ui:** Complete and review the pt-BR catalogue ([8bab534](https://github.com/AlexGalhardo/vukem-video/commit/8bab5340f6a6cc5541b58aa41f6c3d97876c1483))
+- **ui:** Add a Remove toggle for nullable fields and read time from x-vv-kind ([b00aebc](https://github.com/AlexGalhardo/vukem-video/commit/b00aebcb5dda848dee6b67f6272fffd3d4b71a3c))
+- **ui:** Add delete, ripple delete, duplicate, close gap and rename with the item menu ([cac5da2](https://github.com/AlexGalhardo/vukem-video/commit/cac5da21be657a54657733c5b6c1118fd2c6d20a))
+- **ui:** Add the library drag, audio placement, card menu, trash group and in-use dialog ([dbb8064](https://github.com/AlexGalhardo/vukem-video/commit/dbb8064ea4cbf7307b379a1dc5251a232deff926))
+- **ui:** Add the canvas hit test, the selection box and the safe-area guide ([c2528e9](https://github.com/AlexGalhardo/vukem-video/commit/c2528e9e26b0e5cfc5cf8270e87b45e32e4d48f3))
+- **service:** Add description and per-actor undo flags to history entries ([cec33dd](https://github.com/AlexGalhardo/vukem-video/commit/cec33dd97e10c5384e370d7773a9d8caf14d3407))
+- **service:** Read stored peaks, loudness and transcripts in the full lint ([f457504](https://github.com/AlexGalhardo/vukem-video/commit/f457504a6180387b43f423cb8503a2b29662d902))
+- **service:** Give the lint the rasterizer measurer in the owner ([22d3482](https://github.com/AlexGalhardo/vukem-video/commit/22d3482048dd660364200031fa1c370dd5eabd8d))
+- **service:** Log job start, end and failure through a slog logger option ([8bb4a17](https://github.com/AlexGalhardo/vukem-video/commit/8bb4a174ec1f71bc636ff36a237a93e4c6aedb18))
+- **ui:** Build transform operations and the use-keyframes notice action ([68ae2f0](https://github.com/AlexGalhardo/vukem-video/commit/68ae2f0b51fb14696daa157fc106616878579199))
+- **ui:** Add the inspector Transform section with mixed values and keyframe markers ([6c16208](https://github.com/AlexGalhardo/vukem-video/commit/6c16208fe3344dc9ee5649eb4a5b6f8230f513c2))
+- **ui:** Add transform handles on the canvas with the outline box as preview ([b6f0e5f](https://github.com/AlexGalhardo/vukem-video/commit/b6f0e5f47fe115121660b64ec14e3354103f0f5c))
+- **plan:** Report the effective scale of each layer and window series ([99edb86](https://github.com/AlexGalhardo/vukem-video/commit/99edb864599169ff8d86ae155dcd760b5a00ac84))
+- **ui:** Add text items, the inline text editor and the Text inspector section ([c861429](https://github.com/AlexGalhardo/vukem-video/commit/c86142916ec4da77111b7197a2dcb36db1d044cf))
+- **ui:** Edit caption words, boundaries, splits, merges, breaks and styles ([f5c21ef](https://github.com/AlexGalhardo/vukem-video/commit/f5c21ef5ae948d2222c1e6868fb8057264a6ae02))
+- **service:** Show metadata tags in media_inspect inside the untrusted block ([8c9ca55](https://github.com/AlexGalhardo/vukem-video/commit/8c9ca55dd878e17a9b36e40ab512ee03d9a878f7))
+- **ingest:** Keep container tags, encoder and handler_name in the probe summary ([1aa2e1b](https://github.com/AlexGalhardo/vukem-video/commit/1aa2e1b1e73bb89d0435fd07cad29de0e7ea5ce2))
+
+### Fixed
+
+- **service:** List installed tools under the install lock so an idle status lists every file ([f5f8132](https://github.com/AlexGalhardo/vukem-video/commit/f5f8132752b0107e198c0000bfe43b2d613c5808))
+- **ui:** Let commands import ui and layout import commands in the thin-client check ([91298b4](https://github.com/AlexGalhardo/vukem-video/commit/91298b4a950968b60387d4535a86558c5faf113f))
+- **ui:** Render a nullable schema type as the control of its type ([b6530d7](https://github.com/AlexGalhardo/vukem-video/commit/b6530d7a628949c2f61f757f14230eb54c51214d))
+- **ui:** Keep the middle half of a narrow item free for the move drag ([0a8636e](https://github.com/AlexGalhardo/vukem-video/commit/0a8636e27a30197edc2e2fb255120cecc8985e0d))
+- **ui:** Capitalize a message that starts with the actor fallback ([b601562](https://github.com/AlexGalhardo/vukem-video/commit/b601562dbbb98701e85fb7e4d8bd5246da7da15d))
+- **ui:** Capitalize only the fallback actor at the start of a message ([8afc0b1](https://github.com/AlexGalhardo/vukem-video/commit/8afc0b12e3e7f117d9382104c105b7c8f06b89ed))
+- **service:** Report transcript unavailable in media inspection without a provider ([4b4344b](https://github.com/AlexGalhardo/vukem-video/commit/4b4344b40ad494b38d319d0b4ff8a873a22d821b))
+- **service:** Keep ingest error details and hint on assets, redacted per caller ([ff9f99b](https://github.com/AlexGalhardo/vukem-video/commit/ff9f99b4e36dca533d2dd02efba70c296bcaf1c6))
+- **ui:** Require the history description and undo flags the service now sends ([8ba810c](https://github.com/AlexGalhardo/vukem-video/commit/8ba810c478ca24c0240616dbc4fab42e9e361fb6))
+- **ui:** Keep the inspector heading from collapsing under a tall body ([d6a9746](https://github.com/AlexGalhardo/vukem-video/commit/d6a9746406de54ccbf12111af61dbdd276a22665))
+- **lint:** Name a text item once in the safe-area message ([2ff0160](https://github.com/AlexGalhardo/vukem-video/commit/2ff016013c314bbf95b37f6bed93f6554f974d46))
+- **ui:** Read the effective scale and opacity from the plan instead of the last keyframe ([31da1b1](https://github.com/AlexGalhardo/vukem-video/commit/31da1b1ba9b17be93b2adb5ee1a3ad43e85f0dd2))
+
+### Security
+
+- **security:** Name and widen the non-loopback runtime.json check as T-30 ([390fc3d](https://github.com/AlexGalhardo/vukem-video/commit/390fc3de82863e4ef4e379e2525b46727cd9b50c))
+- **security:** Drive Host and Origin checks from hosts.txt and widen T-04 on every route ([008bb8c](https://github.com/AlexGalhardo/vukem-video/commit/008bb8cee693afc28de5748a99c8aee831b46cdc))
+- **security:** Check that no secret variable reaches an error, the report or the bundle ([502257a](https://github.com/AlexGalhardo/vukem-video/commit/502257a1a891a7506d7380a33ea32bc6a92cbccf))
+- **security:** Give the existing T-05, T-06, T-32, T-33 and T-34 tests their threat names ([616ed0f](https://github.com/AlexGalhardo/vukem-video/commit/616ed0f8f785e7b6b9bd4f39383f965722d90707))
+- **security:** Cover idempotency mismatch (T-24) and asset access by membership (T-06) ([e176a9f](https://github.com/AlexGalhardo/vukem-video/commit/e176a9fe7e2f931f1833554e5789b70cfe012439))
+- **security:** Walk the network mode scenario through the real binary ([fb429bf](https://github.com/AlexGalhardo/vukem-video/commit/fb429bfc56c25940a25d7cecd0eae13b1d6d05a4))
+- **security:** Name the template archive test as T-20 ([12329ad](https://github.com/AlexGalhardo/vukem-video/commit/12329ad3c910db56e5b528cf0f717159eac4184f))
+- **security:** Drive SQL payloads through every free-text input (T-23) ([2dc9131](https://github.com/AlexGalhardo/vukem-video/commit/2dc9131fa742141af0c90838075f048c8458ae4c))
+- **security:** Check that errors leak nothing and give no existence oracle (T-29) ([d8e0b54](https://github.com/AlexGalhardo/vukem-video/commit/d8e0b541b7418a44b0d597918785e3616b5c01dc))
+- **security:** Name the rate limit test and add the export concurrency ceiling test (T-18) ([162f16f](https://github.com/AlexGalhardo/vukem-video/commit/162f16f32a43333d0d9467608ec167b85574934c))
+- **security:** Name the log line forgery test as T-25 ([019457e](https://github.com/AlexGalhardo/vukem-video/commit/019457e730815977be7471a6dac77c9b47d34161))
+- **security:** Check that names reach agents only quoted or marked x-untrusted (T-08) ([7da2c75](https://github.com/AlexGalhardo/vukem-video/commit/7da2c75b73d2ff4a35cc2d7b08140fda7b56b0f7))
+
 ## [0.8.0] - 2026-11-15
 
 ### Added
@@ -391,7 +456,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.5.0...v0.6.0
