@@ -54,5 +54,5 @@ func (s *svc) heavyLimit(ctx context.Context, c Caller) error {
 		withHint("wait %d seconds and try again", seconds)
 	e.Details = map[string]any{"retry_after": seconds}
 
-	return e
+	return e.withLimit("heavy_per_minute", limit, limit)
 }

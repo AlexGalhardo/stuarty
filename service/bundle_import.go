@@ -59,10 +59,10 @@ func bundleRefused(reason string) *Error {
 		withHint("export the project again with bundle:export").withDetail("reason", reason)
 }
 
-func bundleOverLimit(reason string) *Error {
+func bundleOverLimit(limit, reason string, value, ceiling uint64) *Error {
 	return newError("E_LIMIT_EXCEEDED", "the bundle is over a limit: %s.", reason).
 		withHint("export a smaller project, or ask the person running the server to raise the import limit").
-		withDetail("limit", "bundle").withDetail("reason", reason)
+		withLimit(limit, value, ceiling).withDetail("reason", reason)
 }
 
 // bundleParts is a bundle after the policy and the checks, still unwritten.
@@ -395,7 +395,7 @@ func (s *svc) entryCap(name string) int64 {
 // declared sizes, ratio and the free disk space.
 func (s *svc) scanBundleEntries(p *bundleParts) *Error {
 	if len(p.zr.File) > bundleEntriesMax {
-		return bundleOverLimit("it holds too many entries")
+		return bundleOverLimit("bundle_entries", "it holds too many entries", uint64(len(p.zr.File)), bundleEntriesMax)
 	}
 
 	var total uint64
@@ -420,16 +420,18 @@ func (s *svc) scanBundleEntries(p *bundleParts) *Error {
 		p.entries[f.Name] = f
 
 		if f.UncompressedSize64 > uint64(s.entryCap(f.Name)) { //nolint:gosec // the cap is positive
-			return bundleOverLimit("an entry is larger than allowed")
+			return bundleOverLimit("bundle_entry_bytes", "an entry is larger than allowed", f.UncompressedSize64,
+				uint64(s.entryCap(f.Name))) //nolint:gosec // the cap is positive
 		}
 
 		total += f.UncompressedSize64
 		if total > bundleTotalMax {
-			return bundleOverLimit("the total is larger than allowed")
+			return bundleOverLimit("bundle_total_bytes", "the total is larger than allowed", total, bundleTotalMax)
 		}
 
 		if f.UncompressedSize64 > bundleBombFloor && f.UncompressedSize64 > bundleBombRatio*max(f.CompressedSize64, 1) {
-			return bundleOverLimit("an entry has an implausible compression ratio")
+			return bundleOverLimit("bundle_ratio", "an entry has an implausible compression ratio",
+				f.UncompressedSize64/max(f.CompressedSize64, 1), bundleBombRatio)
 		}
 	}
 
@@ -453,7 +455,8 @@ func (s *svc) checkBundleDisk(total uint64) *Error {
 	if err == nil && free < need {
 		return newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space for this bundle.").
 			withHint("free space on the disk of the workspace").
-			withDetail("limit", "free_bytes").withDetail("reason", "disk_low")
+			withLimit("free_bytes", free, need).withDetail("reason", "disk_low").
+			withDetail("variable", "VUKEM_VIDEO_MIN_FREE_BYTES")
 	}
 
 	return nil
@@ -772,7 +775,8 @@ func (s *svc) streamLog(ctx context.Context, en *zip.File, visit func(*bundleOpe
 
 	if err := sc.Err(); err != nil {
 		if errors.Is(err, bufio.ErrTooLong) {
-			return bundleLog{}, bundleOverLimit("a line of the log is larger than allowed")
+			return bundleLog{}, bundleOverLimit("bundle_line_bytes", "a line of the log is larger than allowed",
+				bundleLineMax+1, bundleLineMax)
 		}
 
 		return bundleLog{}, err

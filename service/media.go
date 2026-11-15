@@ -322,12 +322,13 @@ func (s *svc) checkImportSize(size int64) *Error {
 	}
 
 	if s.limits.MinFreeBytes > 0 && s.workspace != "" {
-		if free, err := s.media.FreeBytes(s.workspace); err == nil &&
-			free < uint64(size)+uint64(s.limits.MinFreeBytes) { //nolint:gosec // both are positive
+		need := uint64(size) + uint64(s.limits.MinFreeBytes) //nolint:gosec // both are positive
+
+		if free, err := s.media.FreeBytes(s.workspace); err == nil && free < need {
 			return newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space for this file.").
 				withHint("free space on the disk of the workspace; the person running the server can lower "+
 					"VUKEM_VIDEO_MIN_FREE_BYTES").
-				withDetail("limit", "free_bytes").withDetail("reason", "disk_low").
+				withLimit("free_bytes", free, need).withDetail("reason", "disk_low").
 				withDetail("variable", "VUKEM_VIDEO_MIN_FREE_BYTES")
 		}
 	}

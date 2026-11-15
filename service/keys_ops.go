@@ -259,7 +259,7 @@ func keyLimitError(l *KeyLimitError, now time.Time) *Error {
 			l.Recent, maxKeyCreations).withHint("wait before creating another key")
 		e.Details = map[string]any{"retry_after": int(wait.Seconds()) + 1}
 
-		return e
+		return e.withLimit("keys_created_per_hour", l.Recent, maxKeyCreations)
 	}
 
 	e := newError("E_LIMIT_EXCEEDED", "You have %d active keys; the limit is %d.", l.Active, maxActiveKeys).
