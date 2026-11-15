@@ -236,7 +236,7 @@ function timelineSchema(): string {
 function configuration(): string {
 	const rows = sddTable("docs/sdds/000-shared-definitions.md", /^## 10\. /m).map(([name, def, meaning]) => [
 		(name ?? "").replace(/\|/g, "\\|"),
-		(def ?? "").replace(/\|/g, "\\|"),
+		esc(def ?? ""),
 		esc(meaning ?? ""),
 	]);
 	return page(
