@@ -211,6 +211,42 @@ test.describe("text-edit", () => {
 			.toBe(other);
 	});
 
+	test("a family without the current weight is sent with the nearest weight it has", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedText(request);
+		await page.goto(`/editor/${seeded.id}?debug=1`);
+		await page.locator("[data-item-id]").click();
+		const font = page.getByLabel("Font", { exact: true });
+		await expect(font.locator("option")).not.toHaveCount(1);
+		const call = await caller(request);
+		const listed = (await call("GET", "/fonts")) as {
+			fonts: { family: string; weights: number[] }[];
+		};
+		const anton = listed.fonts.find((f) => f.family === "Anton");
+		if (anton === undefined) throw new Error("Anton is not bundled");
+		expect(anton.weights).not.toContain(700);
+		const posted = recordEdits(page);
+
+		await font.selectOption({ label: "Anton" });
+
+		await expect.poll(() => posted.length).toBe(1);
+		expect(posted[0]?.operations).toEqual([
+			{
+				op: "text.set",
+				args: {
+					item_id: seeded.itemId,
+					style: { font_family: "Anton", font_weight: anton.weights[0] },
+				},
+			},
+		]);
+		await expect
+			.poll(async () => (await stored(page, seeded.itemId)).style?.font_family)
+			.toBe("Anton");
+		await expect(page.getByRole("alert")).toHaveCount(0);
+	});
+
 	test("E_FONT_UNKNOWN shows under the field and highlights the available families", async ({
 		page,
 		request,
