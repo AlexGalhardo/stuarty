@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -162,6 +163,8 @@ type Options struct {
 	Heavy RateLimiter
 	// HeavyPerMinute is the limit Heavy enforces, for the error message; zero is HeavyPerMinute.
 	HeavyPerMinute int
+	// Log receives the job lines (start, end, failure); nil discards them.
+	Log *slog.Logger
 }
 
 type svc struct {
@@ -184,6 +187,7 @@ type svc struct {
 	keys        KeyStore
 	heavy       RateLimiter
 	heavyLimitN int
+	log         *slog.Logger
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
 
@@ -220,6 +224,7 @@ func New(o Options) (Service, error) {
 		keys:        o.Keys,
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
+		log:         o.Log,
 	}
 
 	s.sems = map[string]chan struct{}{
@@ -242,6 +247,10 @@ func New(o Options) (Service, error) {
 
 	if s.now == nil {
 		s.now = time.Now
+	}
+
+	if s.log == nil {
+		s.log = slog.New(slog.DiscardHandler)
 	}
 
 	if s.newIDs == nil {

@@ -1,11 +1,13 @@
 package servicetest
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"os"
 	"strings"
 	"sync"
@@ -1110,4 +1112,38 @@ func (s switchStore) Write(ctx context.Context, fn func(context.Context, service
 	}
 
 	return s.Store.Write(ctx, fn)
+}
+
+// P2-SRV-020: a job writes a line when it starts and when it ends, with its id,
+// kind, actor and project, and never the text of the media (a failure names its
+// code and reason, not its message).
+func TestJobsWriteLogLines(t *testing.T) {
+	var buf bytes.Buffer
+
+	failing := func(context.Context, ingest.Input) (*ingest.Result, error) {
+		return nil, &ffmpeg.Error{
+			Code: "E_UNSUPPORTED_MEDIA", Reason: "undecodable", Message: "secret-title.mp4 is broken",
+		}
+	}
+	m := newMediaEnv(t, mediaCfg{
+		ingest: failing, log: slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})),
+	})
+	project := m.newProject("p")
+
+	imported := m.importOne(project, m.write("secret-title.mp4", clipBytes))
+	job := imported.Assets[0].JobID
+
+	out := buf.String()
+	for _, want := range []string{
+		"msg=\"job started\"", "msg=\"job failed\"", "job_id=" + job, "kind=ingest", "actor=" + ui,
+		"code=E_UNSUPPORTED_MEDIA", "reason=undecodable",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("the log lacks %q:\n%s", want, out)
+		}
+	}
+
+	if strings.Contains(out, "secret-title") {
+		t.Errorf("the log holds text from the media:\n%s", out)
+	}
 }
