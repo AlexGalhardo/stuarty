@@ -179,11 +179,11 @@ func untilAlias[T comparable](until, to T) (T, error) {
 }
 
 type planIn struct {
-	ID    string `json:"id"             validate:"required"`
-	From  int    `json:"from,omitempty"                     doc:"The first frame of the window; default 0."`
-	Until int    `json:"until,omitempty"                    doc:"The end of the window, not included; at most 300 frames after from. Required."`
-	To    int    `json:"to,omitempty"                       doc:"Deprecated alias of until, removed at 1.0."`
-	Rev   int64  `json:"rev,omitempty"                      doc:"Must be the current revision when given."`
+	ID    string `json:"id"              validate:"required"`
+	From  int    `json:"from,omitempty"                      doc:"The first frame of the window; default 0."`
+	Until int    `json:"until,omitempty"                     doc:"The end of the window, not included; at most 300 frames after from. Required."`
+	To    int    `json:"to,omitempty"                        doc:"Deprecated alias of until, removed at 1.0."`
+	Rev   int64  `json:"rev,omitempty"                       doc:"Must be the current revision when given."`
 }
 
 // projectsPlan is GET /projects/{id}/plan (SDD-004 section 10).
