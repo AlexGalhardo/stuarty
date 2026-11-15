@@ -68,6 +68,9 @@ func (r *Renderer) RenderSize(ctx context.Context, t, w, h int) (*image.RGBA, er
 
 func (r *Renderer) render(ctx context.Context, t int, outScale float64, w, h int) (*image.RGBA, error) {
 	r.s.ctx, r.s.scale = ctx, outScale
+	// The plan rasterizes text and captions for the size they are drawn at (SDD-004 section 5.3); at
+	// the project size the scale is 1, as in an export.
+	r.s.opts.OutputScale = outScale
 	dst := image.NewRGBA(image.Rect(0, 0, w, h))
 	if err := r.rd.render(dst, t); err != nil {
 		if cerr := ctx.Err(); cerr != nil {
