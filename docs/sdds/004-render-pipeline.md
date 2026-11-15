@@ -85,6 +85,7 @@ type Layer struct {
     CX, CY   float64 // centre in frame pixels
     W, H     float64 // drawn size before rotation, in frame pixels
     Rotation float64 // degrees clockwise
+    Scale    float64 // effective scale, evaluated as section 3.1 (keyframes or the static value, transitions do not change it); W and H already include it
     Opacity  float64 // 0..1
 }
 ```
@@ -447,7 +448,7 @@ The browser never evaluates the document. It asks for plan windows:
       "first": 0, "last": 59,
       "source_seconds": [2.0, 2.033, 2.067],
       "crop": [0, 0, 1080, 1920],
-      "cx": 540, "cy": 960, "w": 1080, "h": 1920, "rotation": 0, "opacity": 1,
+      "cx": 540, "cy": 960, "w": 1080, "h": 1920, "rotation": 0, "scale": 1, "opacity": 1,
       "color_matrix": null,
       "filter": [0.393, 0.769, 0.189, 0, 0.349, 0.686, 0.168, 0, 0.272, 0.534, 0.131, 0], "blur": 4
     },
@@ -455,14 +456,14 @@ The browser never evaluates the document. It asks for plan windows:
       "item": "itm_s6t7v8w9x0", "kind": "bitmap", "first": 12, "last": 59,
       "bitmaps": {"keys": ["9c1f...", "a7b2..."], "index": [0, 0, 0, 1, 1]},
       "natural": [640, 96],
-      "cx": 540, "cy": 1180, "w": 640, "h": 96, "rotation": 0, "opacity": [0.2, 0.4, 0.6, 0.8, 1]
+      "cx": 540, "cy": 1180, "w": 640, "h": 96, "rotation": 0, "scale": 1, "opacity": [0.2, 0.4, 0.6, 0.8, 1]
     }
   ],
   "audio": [{"item": "itm_m1n2p3q4r5", "asset": "ast_3c5v8n2w6d", "first": 0, "last": 59, "source_seconds": 2.0, "speed": 1, "gain": 1}]
 }
 ```
 
-Rules of the format: `end_frame` is the end of the project at that revision, the largest `start + duration` over all items (0 for an empty project), computed by the core; the UI shows it as the total and stops playback there, and never derives it itself. `first` and `last` are the frames of the window in which the layer is active. Each of `cx`, `cy`, `w`, `h`, `rotation`, `opacity`, `gain` is a single number when constant over those frames, or an array with one value per frame from `first` to `last`. `source_seconds` has one value per frame: the time in the proxy at which the frame to show starts. `bitmaps.index` has one entry per frame, selecting a key. `safe_area` is the rectangle `[x, y, w, h]` of §4.1 in project pixels, so the browser draws the guide without knowing the percentages. Windows are at most 300 frames. The response is cacheable by `(project, revision, from, to)`.
+Rules of the format: `end_frame` is the end of the project at that revision, the largest `start + duration` over all items (0 for an empty project), computed by the core; the UI shows it as the total and stops playback there, and never derives it itself. `first` and `last` are the frames of the window in which the layer is active. Each of `cx`, `cy`, `w`, `h`, `rotation`, `scale`, `opacity`, `gain` is a single number when constant over those frames, or an array with one value per frame from `first` to `last`. `source_seconds` has one value per frame: the time in the proxy at which the frame to show starts. `bitmaps.index` has one entry per frame, selecting a key. `safe_area` is the rectangle `[x, y, w, h]` of §4.1 in project pixels, so the browser draws the guide without knowing the percentages. Windows are at most 300 frames. The response is cacheable by `(project, revision, from, to)`.
 
 The executor, in `web/resources/js/editor/preview/`:
 
