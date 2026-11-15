@@ -78,6 +78,7 @@ type Owner struct {
 	deps     *httpapi.Deps
 	lock     *workspace.Lock
 	limits   service.Limits
+	child    service.ChildPolicy
 	version  string
 	now      func() time.Time
 	announce bool
@@ -228,7 +229,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
 		Transcriber: transcriber, Tools: tools,
 		Doctor: service.DoctorOptions{
-			Mode: o.mode, StartedAt: o.now().UTC(),
+			Mode: o.mode, StartedAt: o.now().UTC(), Child: o.child,
 			Integrity: func(ctx context.Context) (string, error) {
 				var out string
 				err := st.DB().QueryRowContext(ctx, "PRAGMA integrity_check").Scan(&out)
@@ -340,11 +341,16 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 		return media, nil, nil
 	}
 
-	runner, err := ffmpeg.NewRunner(in, string(o.Dir))
+	child, err := newChildRunners(
+		ctx, in, string(o.Dir), cfg.Getenv("VUKEM_VIDEO_SANDBOX"), cfg.Getenv("VUKEM_VIDEO_ENCODER"),
+		o.limits.MaxExportBytes,
+	)
 	if err != nil {
 		return service.Media{}, nil, err
 	}
 
+	o.child = child.Policy
+	runner := child.Ingest
 	media.Runner = runner
 
 	maxCache, err := cacheLimit(cfg.Getenv, o.mode == config.ModeNetwork)
@@ -357,12 +363,12 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 		return service.Media{}, nil, err
 	}
 
-	media.Frames = &frame.Frames{Runner: runner, ArtifactsDir: filepath.Join(string(o.Dir), "artifacts"), Cache: frames}
+	media.Frames = &frame.Frames{Runner: child.Frame, ArtifactsDir: filepath.Join(string(o.Dir), "artifacts"), Cache: frames}
 
 	allowX264, _ := strconv.ParseBool(cfg.Getenv("VUKEM_VIDEO_ALLOW_USER_X264"))
 
 	return media, exporter.New(exporter.Config{
-		Runner: runner, Workspace: string(o.Dir),
+		Runner: child.Export, Workspace: string(o.Dir),
 		Encoder: ffmpeg.DetectOptions{Forced: cfg.Getenv("VUKEM_VIDEO_ENCODER"), AllowUserX264: allowX264},
 	}), nil
 }
