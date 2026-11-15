@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), 50 in the BETA build.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), 52 in the BETA build.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -171,6 +171,8 @@ Three commands depend on data the core cannot compute because it needs media: si
 | --- | --- |
 | `clip.remove_silences {min_silence, padding, threshold_db}` | `resolved.silences`: ranges in asset frames, taken from the set of the silence artifact measured at `threshold_db` (SDD-011 §9.1) |
 | `caption.from_transcript {...}`, `caption.retime_from_clip {...}` | `resolved.words`: words with times in asset frames |
+| `audio.duck {speech_item_ids, ...}` | `resolved.speech`: one entry per speech item, `{item_id, ranges}`, with the speech ranges of that item's asset in asset frames, half-open, taken from the speech map of the asset (SDD-011) |
+| `audio.mark_beats {...}` | `resolved.beats`: the beats of the music asset as strictly increasing asset frames, taken from the beat grid of the asset (SDD-011); at most 108,000 |
 | `asset.add` | issued only by the import flow, with the facts measured on the verified normalized media, never copied from the probe (SDD-011 §4.9) (`internal: true`) |
 
 A caller may also supply `resolved` itself, which is how golden tests run without media.
@@ -267,6 +269,8 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.set_filter` | B | `item_id`, `filter?`, `amount?` | BETA (RF-027). Sets the colour filter of a clip and how much of it is mixed in |
 | `clip.set_blur` | B | `item_id`, `radius` | BETA (RF-027). Sets the blur radius of a clip in pixels; 0 removes it |
 | `clip.remove_silences` | A | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip by one clip per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
+| `audio.duck` | B | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | BETA (RF-043). Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
+| `audio.mark_beats` | B | `item_id`, `every?` (1 to 64, default 1), `label?`, `replace?` (default true) | BETA (RF-044). Writes markers on a music item at the beats of the visible part of its audio; the beats come through `resolved` (A.9) |
 
 ### B.6 Text and shapes
 
@@ -331,6 +335,15 @@ These rules are the part of the catalogue most likely to be implemented wrongly;
 - Caption words go to the part that contains their first frame, clamped to that part. A part left with no word is not created, and the command then fails with `E_INVALID_STATE` (split a caption at a word boundary with `caption.split`).
 - A slot marking stays on the left part only.
 - Text and shape items are simply divided.
+- Markers (M3): a marker before `T` stays on the left part; the others go to the right part with `frame` counted from its start.
+
+**Markers (BETA, SDD-001 section 3.4).** Markers follow the picture as keyframes do and never make a command fail:
+
+- M1, trim of the start by `d`: each `frame` becomes `frame - d`; a marker that falls before frame 0 is removed.
+- M2, trim of the end, or any cut of the item to a new `duration`: markers at or after the new duration are removed.
+- M3, split: as above.
+- M4, `clip.set_speed` and `settings.set_fps`: each `frame` is scaled by the same ratio as the keyframe times and rounded; a marker that lands at or after the duration, or on the frame of the marker before it, is removed (the first of two stays). The rescale is not listed in `effective.adjusted`.
+- `clip.remove_silences` applies M1 and M2 to each piece, so a marker stays with the piece that holds its frame.
 
 ## Part C: command details
 
@@ -624,6 +637,7 @@ As built, `field` is the name of the changed field (`start`, `duration`, `source
 - `err_validation_den_not_1_or_1001`
 - `err_validation_121_fps`
 - `err_invalid_time_item_passes_108000`
+- `ok_markers_rescaled`
 
 ### C.4 `asset.add` (phase P, scope media, internal)
 
@@ -1235,6 +1249,9 @@ The same clip trimmed at the end with `{"edge": "end", "to": "150f"}` (and, for 
 - `err_out_of_source_end_past_asset`
 - `err_overlap_start_edge_extends_into_neighbour`
 - `err_overlap_end_edge_extends_into_neighbour`
+- `ok_start_edge_shrink_drops_and_shifts_markers`
+- `ok_start_edge_extend_shifts_markers`
+- `ok_end_edge_shrink_drops_markers_past_the_end`
 
 ### C.13 `item.split` (phase P)
 
@@ -1344,6 +1361,7 @@ The cut value is the linear value at relative frame 37: `1 + (0.4 - 1) × 37/60 
 - `err_invalid_state_caption_left_part_no_word`
 - `err_id_exists`
 - `err_limit_500_items`
+- `ok_markers_divided_at_the_cut`
 
 ### C.14 `item.delete` (phase P)
 
@@ -2226,6 +2244,7 @@ Changes the speed of a clip or audio item while keeping the same source range.
 - `err_out_of_source_no_frame_fits`
 - `err_invalid_time_ripple_pushes_item_past_108000`
 - `err_overlap_lengthening_without_ripple`
+- `ok_markers_rescaled_and_collisions_dropped`
 
 ### C.26 `clip.set_color` (phase A)
 
@@ -4144,3 +4163,159 @@ Sets the blur of a clip (RF-027, SDD-001 §3.4).
 - `err_validation_radius_negative`
 - `err_not_found`
 - `err_type_mismatch_audio_item`
+
+### C.51 `audio.duck` (phase B)
+
+Lowers a music item while speech sounds (RF-043). The result is ordinary `volume` keyframes (SDD-001 section 3.8), so nothing about the item needs a new field and `keyframe.clear` on `volume` undoes the ducking. The speech comes from the speech map of the speech items' assets, supplied by the service in `resolved` (A.9); the command never starts a job.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | an `audio` item whose asset has audio, with no `volume` keyframes |
+| `speech_item_ids` | array of item ids | yes | none | 1 to 20 `clip` or `audio` items whose assets have audio, each once, none of them `item_id` |
+| `gain_db` | number | no | -12 | -40 to -1; the change of volume while speech sounds |
+| `attack` | time, as a length | no | `"0.2s"` | may be 0; the ramp down that ends where speech starts |
+| `release` | time, as a length | no | `"0.5s"` | may be 0; the ramp up that starts where speech ends |
+| `resolved` | object | filled by the service | none | `{"speech": [{"item_id", "ranges": [{"start", "end"}]}]}`: one entry for each id of `speech_item_ids`, with sorted, non-overlapping, half-open ranges in asset frames. Missing is `E_VALIDATION` |
+
+**Preconditions.**
+
+1. The arguments are valid and `resolved` holds one entry for each speech item (`E_VALIDATION`); `attack` and `release` are lengths (`E_INVALID_TIME`).
+2. The music item and every speech item exist (`E_NOT_FOUND`).
+3. The music item is an audio item with audio, and the speech items are clips or audio items with audio (`E_TYPE_MISMATCH`).
+4. The music item has no `volume` keyframes (`E_INVALID_STATE`, hint: run `keyframe.clear` on `volume` first).
+5. The keyframes fit the limit of 100 per property (`E_LIMIT`; the command never truncates).
+
+**Postconditions.**
+
+1. Each speech range `[s, e)` in asset frames of a speech item `P` becomes timeline frames `[P.start + floor((s - P.source_in) / speed), P.start + ceil((e - P.source_in) / speed))`, clipped to `P` and to the music item, then made relative to the music item's start. The ranges of all speech items are sorted, and ranges whose ramps would touch (the next ramp starts at or before the end of the previous one) are joined.
+2. `low = round3(volume x 10^(gain_db / 20))` where `volume` is the static volume of the music item. The `volume` keyframes are: frame 0 at `volume`; for each stretch `[s, e)`: `volume` at `max(s - attack, 0)`, `low` at `max(s, that + 1)` and, when `e` is before the end of the item, `low` at `e` and `volume` at `min(e + max(release, 1), duration)`. Two keyframes on one frame keep the later. Easing is `linear`.
+3. With no speech inside the music item the document is unchanged. The static `volume` field is never changed.
+4. `diff` has one `item.updated` (`keyframes`). `effective` has `gain_db`, `attack` and `release` (time form), `ducked`, `low_volume` and `keyframes` (their count).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `resolved` missing or with a missing, repeated or unknown entry or bad ranges, `gain_db` out of range, a speech item that is the music or repeated | `args.resolved is missing: the speech of the items is not known.` | `The service fills it from the speech analysis; run the analysis of the speech assets first, then retry.` |
+| `E_INVALID_TIME` | `attack` or `release` is not a time | `args.attack "later" is not a time.` | `Use "2s" or "60f".` |
+| `E_NOT_FOUND` | the music or a speech item does not exist | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | the music is not an audio item, or an item has no asset with audio | `Item itm_m1n2p3q4r5 is a clip item, not an audio item; only music can be ducked.` | `Choose an audio item.` |
+| `E_INVALID_STATE` | the music item already has `volume` keyframes | `Item itm_c3d4e5f6g7 already has 2 volume keyframes.` | `Run keyframe.clear on volume first, then duck again.` |
+| `E_LIMIT` | more than 100 keyframes needed | `Ducking itm_c3d4e5f6g7 would need 160 volume keyframes; the limit is 100.` | `Duck a shorter item, split it, or use longer ramps so that nearby speech merges.` |
+
+**Inverse.** `patch {collection: "items", id, unset: ["keyframes"]}` (or the old `keyframes` when the item had keyframes on other properties).
+
+**Idempotency.** Not idempotent: a second call is `E_INVALID_STATE` until `keyframe.clear` on `volume` runs. After it, the same call gives the same result.
+
+**Example.** Music `itm_c3d4e5f6g7` (300 frames), speech from 2 s to 4 s at 30 fps, defaults.
+
+```json
+{"op": "audio.duck", "args": {"item_id": "itm_c3d4e5f6g7", "speech_item_ids": ["itm_m1n2p3q4r5"]}}
+```
+
+The volume keyframes are `(0, 1)`, `(54, 1)`, `(60, 0.251)`, `(120, 0.251)`, `(135, 1)`: at 3 s (frame 90) the gain is 0.251 and at 0 s and 6 s it is 1.
+
+**Golden cases.**
+
+- `ok_one_stretch_defaults`
+- `ok_gain_attack_release_given`
+- `ok_zero_attack_and_release`
+- `ok_two_stretches_apart`
+- `ok_close_stretches_held_low`
+- `ok_speech_at_start`
+- `ok_speech_to_the_end`
+- `ok_music_volume_scaled`
+- `ok_no_speech_leaves_document`
+- `ok_speech_outside_the_music_ignored`
+- `ok_speech_item_trimmed_and_sped_up`
+- `ok_two_speech_items`
+- `ok_clip_with_audio_as_music_source`
+- `err_validation_resolved_missing`
+- `err_validation_speech_entry_missing`
+- `err_validation_speech_entry_for_other_item`
+- `err_validation_ranges_overlap`
+- `err_validation_gain_not_below_0`
+- `err_validation_speech_is_the_music`
+- `err_invalid_time_attack`
+- `err_not_found`
+- `err_not_found_speech_item`
+- `err_type_mismatch_music_is_a_clip`
+- `err_type_mismatch_speech_is_a_text`
+- `err_type_mismatch_speech_asset_without_audio`
+- `err_invalid_state_music_already_animated`
+- `err_limit_over_100_keyframes`
+
+Also tested outside the golden directories: `TestDuckThenClearRestoresTheDocument` (ducking and then `keyframe.clear` on `volume` gives the original document byte for byte) and `TestDuckGainAtFrames` (`timeline.ValueAt` at 0 s, 3 s and 6 s).
+
+### C.52 `audio.mark_beats` (phase B)
+
+Writes markers on a music item at the beats of its audio (RF-044), so that cuts and transitions can be aligned to them. The beats come from the beat grid of the asset, supplied by the service in `resolved` (A.9).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | an `audio` item whose asset has audio |
+| `every` | integer | no | 1 | 1 to 64; marks the 1st, the (1 + every)th, ... beat of the visible part |
+| `label` | string | no | none | up to 60 characters; the label of every marker |
+| `replace` | boolean | no | true | true replaces the markers of the item; false keeps them and adds the beats (at a frame that has a marker, the existing one stays) |
+| `resolved` | object | filled by the service | none | `{"beats": [frame, ...]}`: strictly increasing asset frames from 0, at most 108,000. Missing is `E_VALIDATION` |
+
+**Preconditions.**
+
+1. The arguments are valid and `resolved` is present with increasing beats (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`) and is an audio item with audio (`E_TYPE_MISMATCH`).
+3. At least one beat lies inside the visible part of the item (`E_INVALID_STATE`).
+4. The markers fit the limit of 200 per item (`E_LIMIT`; the command never truncates).
+
+**Postconditions.**
+
+1. A beat `b` of the asset at or after `source_in` is at item frame `ceil((b - source_in) / speed)`; it counts when that frame is before `duration`. Beats that fall on a frame already taken keep the first.
+2. Every `every`th of those frames, from the first, gets a marker `{frame, label}`.
+3. `diff` has one `item.updated` (`markers`). `effective` has `beats` (markers written by this call) and `markers` (the markers the item has now).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `resolved` missing, beats not increasing, `every` or `label` out of range | `args.resolved is missing: the beats of the asset are not known.` | `The service fills it from the beat grid; run the beat analysis of the asset first, then retry.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not an audio item, or the asset has no audio | `Item itm_m1n2p3q4r5 is a clip item, not an audio item; beats are marked on music.` | `Choose an audio item.` |
+| `E_INVALID_STATE` | no beat in the visible part | `The beat grid has no beat inside the visible part of item itm_c3d4e5f6g7.` | `Check that the item holds music, or widen it with item.trim.` |
+| `E_LIMIT` | more than 200 markers | `Item itm_c3d4e5f6g7 would have 220 markers; the limit is 200.` | `Use a larger every, or trim the item first.` |
+
+**Inverse.** `patch {collection: "items", id, set: {markers: <old>}}`, or `unset: ["markers"]` when there were none.
+
+**Idempotency.** Same result with the default `replace`; with `replace: false` a repeated call changes nothing (the frames are taken).
+
+**Example.** Music `itm_c3d4e5f6g7` at frame 30 for 120 frames from asset frame 60, a beat every 15 frames, `every` 2.
+
+```json
+{"op": "audio.mark_beats", "args": {"item_id": "itm_c3d4e5f6g7", "every": 2, "resolved": {"beats": [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210]}}}
+```
+
+Markers at item frames 0, 30, 60 and 90.
+
+**Golden cases.**
+
+- `ok_every_beat_of_the_visible_part`
+- `ok_every_second_beat`
+- `ok_label_given`
+- `ok_replaces_existing_markers`
+- `ok_keeps_existing_markers`
+- `ok_speed_2_beats_on_the_same_frame_once`
+- `ok_beat_on_the_last_visible_frame`
+- `ok_video_asset_audio`
+- `err_validation_resolved_missing`
+- `err_validation_beats_not_increasing`
+- `err_validation_beat_negative`
+- `err_validation_every_0`
+- `err_validation_every_65`
+- `err_validation_label_over_60_characters`
+- `err_not_found`
+- `err_type_mismatch_clip`
+- `err_type_mismatch_asset_without_audio`
+- `err_invalid_state_no_beat_in_the_visible_part`
+- `err_limit_over_200_markers`

@@ -1,0 +1,50 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        120,
+        80
+      ],
+      "markers": [
+        [
+          {
+            "frame": 0
+          },
+          {
+            "frame": 20
+          },
+          {
+            "frame": 59
+          },
+          {
+            "frame": 60
+          },
+          {
+            "frame": 119
+          }
+        ],
+        [
+          {
+            "frame": 19
+          },
+          {
+            "frame": 20
+          },
+          {
+            "frame": 79
+          }
+        ]
+      ],
+      "source_in": [
+        30,
+        70
+      ],
+      "start": [
+        60,
+        100
+      ]
+    }
+  }
+]

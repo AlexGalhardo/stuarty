@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.resolved is missing: the speech of the items is not known.",
+  "hint": "The service fills it from the speech analysis; run the analysis of the speech assets first, then retry.",
+  "retryable": false,
+  "path": "args.resolved"
+}

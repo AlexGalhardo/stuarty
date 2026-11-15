@@ -1,0 +1,18 @@
+{
+  "at": {
+    "frame": 120,
+    "requested": "120f",
+    "seconds": 4
+  },
+  "left": {
+    "duration": 60,
+    "id": "itm_m1n2p3q4r5",
+    "start": 60
+  },
+  "new_id": "itm_s6t7v8w9x0",
+  "right": {
+    "duration": 60,
+    "id": "itm_s6t7v8w9x0",
+    "start": 120
+  }
+}

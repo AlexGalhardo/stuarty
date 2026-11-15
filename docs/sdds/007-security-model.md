@@ -397,6 +397,7 @@ Every command in the registry declares `scope` in `edit` or `media`. A batch nee
 | `item.move`, `item.trim`, `item.split`, `item.delete`, `item.duplicate`, `item.rename`, `item.set_transform`, `item.set_transition`, `item.set_audio`, `item.crossfade`, `timeline.close_gap` | - | R | - | - | - |
 | `clip.add`, `audio.add`, `clip.set_framing`, `clip.set_speed`, `clip.set_color` | - | R | - | - | - |
 | `clip.remove_silences` | - | R | - | - | - |
+| `audio.duck`, `audio.mark_beats` | - | R | - | - | - |
 | `text.add`, `text.set`, `text.apply_preset`, `shape.add`, `shape.set` | - | R | - | - | - |
 | `caption.add`, `caption.set_words`, `caption.edit_word`, `caption.split`, `caption.merge`, `caption.set_breaks`, `caption.set_style` | - | R | - | - | - |
 | `caption.from_transcript`, `caption.retime_from_clip` | - | R | - | - | - |
@@ -408,7 +409,7 @@ Every command in the registry declares `scope` in `edit` or `media`. A batch nee
 Rules:
 
 1. `asset.add` is `internal` (SDD-002 B.2): the registry does not list it and a caller who sends it receives `E_UNKNOWN_COMMAND`, the same answer as for a name that does not exist. Only the import flow issues it, after the file passed section 7.
-2. The analysis behind `clip.remove_silences`, `caption.from_transcript` and `caption.retime_from_clip` (SDD-002 A.9) reads artifacts that already exist. If the transcript artifact is missing, the command fails with `E_INVALID_STATE` and the hint to run the `transcribe` job (scope `media`). An `edit` command never starts a `media` job. Silence analysis, when it must be computed, runs under the ingest concurrency limit of section 9. **Decision of this SDD.**
+2. The analysis behind `clip.remove_silences`, `audio.duck` (the speech map), `audio.mark_beats` (the beat grid), `caption.from_transcript` and `caption.retime_from_clip` (SDD-002 A.9) reads artifacts that already exist. If the transcript artifact is missing, the command fails with `E_INVALID_STATE` and the hint to run the `transcribe` job (scope `media`). An `edit` command never starts a `media` job. Silence analysis, when it must be computed, runs under the ingest concurrency limit of section 9. **Decision of this SDD.**
 3. The scope of a command is part of its registry entry, is shown by `command_help`, and is tested: `TestSecurity_T05_EveryOperationHasScope` fails for a command whose scope is empty or outside `{edit, media}`.
 
 ## 6. Running external processes

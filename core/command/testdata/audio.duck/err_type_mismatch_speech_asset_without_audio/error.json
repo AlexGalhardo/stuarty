@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_m1n2p3q4r5 has no asset with audio.",
+  "hint": "Choose items placed from an asset with audio.",
+  "retryable": false,
+  "path": "args.speech_item_ids"
+}

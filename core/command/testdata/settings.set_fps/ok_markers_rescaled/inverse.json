@@ -1,0 +1,29 @@
+[
+  {
+    "type": "patch",
+    "collection": "settings",
+    "id": "prj_7k2m9x4q1b",
+    "unset": [
+      "fps"
+    ]
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "duration": 60,
+      "markers": [
+        {
+          "frame": 0
+        },
+        {
+          "frame": 30
+        },
+        {
+          "frame": 59
+        }
+      ]
+    }
+  }
+]

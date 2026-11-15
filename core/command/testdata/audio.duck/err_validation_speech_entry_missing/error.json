@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.resolved.speech has no entry for args.speech_item_ids[0], itm_m1n2p3q4r5.",
+  "hint": "Send one entry for each id of speech_item_ids.",
+  "retryable": false,
+  "path": "args.resolved.speech"
+}

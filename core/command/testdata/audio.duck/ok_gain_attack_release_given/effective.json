@@ -1,0 +1,16 @@
+{
+  "attack": {
+    "frame": 15,
+    "requested": "0.5s",
+    "seconds": 0.5
+  },
+  "ducked": true,
+  "gain_db": -20,
+  "keyframes": 5,
+  "low_volume": 0.1,
+  "release": {
+    "frame": 30,
+    "requested": "1s",
+    "seconds": 1
+  }
+}

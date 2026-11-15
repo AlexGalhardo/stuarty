@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.every is 65, outside the accepted range.",
+  "hint": "Use a value between 1 and 64.",
+  "retryable": false,
+  "path": "args.every"
+}

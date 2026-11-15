@@ -46,6 +46,7 @@ func easingOrLinear(e string) string {
 
 // kShift is R11: the item loses its first d frames (d < 0: it gains -d).
 func kShift(it *timeline.Item, d int) {
+	mShift(it, d)
 	for _, prop := range sortedProps(it.Keyframes) {
 		old := it.Keyframes[prop]
 		v0 := 0.0
@@ -81,6 +82,7 @@ func kShift(it *timeline.Item, d int) {
 
 // kCut is R12: the item is cut to l frames at the back.
 func kCut(it *timeline.Item, l int) {
+	mCut(it, l)
 	for _, prop := range sortedProps(it.Keyframes) {
 		old := it.Keyframes[prop]
 		var kept []timeline.Keyframe
@@ -112,6 +114,7 @@ func kCut(it *timeline.Item, l int) {
 func kSplit(it *timeline.Item, tc int) (left, right timeline.Item) {
 	left, right = timeline.CloneItem(*it), timeline.CloneItem(*it)
 	left.Keyframes, right.Keyframes = timeline.Keyframes{}, timeline.Keyframes{}
+	mSplit(&left, &right, tc)
 	for _, prop := range sortedProps(it.Keyframes) {
 		kfs := it.Keyframes[prop]
 		var before, after []timeline.Keyframe

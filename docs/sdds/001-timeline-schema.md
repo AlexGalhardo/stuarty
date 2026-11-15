@@ -116,7 +116,7 @@ An asset appears in the document only after its ingest produced the normalized m
 | `transition_in`, `transition_out` | Transition | none | section 3.8; visual items only |
 | `keyframes` | Keyframes | none | section 3.8 |
 | `slot` | Slot | none | marks the item as a template slot, section 3.10 |
-| `markers` | array of Marker, up to 200 | `[]` | BETA. Labelled frames of the item, used by beat markers (RF-044); every item type. Marker: `{"frame": int, "label": string up to 60 characters, default ""}`; `frame` is relative to the item's `start`, from 0 to `duration - 1`, and frames are strictly increasing (`V_MARKERS`). Markers have no effect on the picture or the sound |
+| `markers` | array of Marker, up to 200 | `[]` | BETA. Labelled frames of the item, used by beat markers (RF-044); every item type. Marker: `{"frame": int, "label": string up to 60 characters, default ""}`; `frame` is relative to the item's `start`, from 0 to `duration - 1`, and frames are strictly increasing (`V_MARKERS`). Markers have no effect on the picture or the sound. `audio.mark_beats` writes them; trim, split, speed and frame rate changes keep them in step with the item (SDD-002 B.10, rules M1 to M4) |
 
 The item occupies frames `start` to `start + duration - 1`. The end, `start + duration`, is exclusive.
 

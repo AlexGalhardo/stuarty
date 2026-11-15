@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_m1n2p3q4r5 is a text item and carries no speech.",
+  "hint": "Choose clips or audio items.",
+  "retryable": false,
+  "path": "args.speech_item_ids"
+}

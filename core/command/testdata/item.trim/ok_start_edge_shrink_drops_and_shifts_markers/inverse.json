@@ -1,0 +1,29 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "duration": 120,
+      "markers": [
+        {
+          "frame": 0
+        },
+        {
+          "frame": 20
+        },
+        {
+          "frame": 59
+        },
+        {
+          "frame": 60
+        },
+        {
+          "frame": 119
+        }
+      ],
+      "source_in": 30,
+      "start": 60
+    }
+  }
+]
