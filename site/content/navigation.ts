@@ -60,6 +60,7 @@ export const navigation: NavCategory[] = [
 			"transcription",
 			"silence-removal",
 			"safe-area",
+			"brand-kit",
 			"templates",
 			"template-vertical-cut",
 			"template-product-teaser",

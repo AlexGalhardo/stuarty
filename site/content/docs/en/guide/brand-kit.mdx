@@ -1,0 +1,58 @@
+---
+title: "Fonts and the brand kit"
+description: "Import your own fonts, keep your colours, fonts and logo in one brand kit, and apply them when you start a project from a template."
+---
+
+## You will learn
+
+- how to import a font file and what the import returns;
+- how to read and replace the brand kit;
+- how a template takes its colours and fonts from the kit.
+
+## The idea
+
+The editor comes with bundled font families (`vukem-video fonts` lists them). To use another font, **import** the TrueType or OpenType file: it is checked and stored once by its content hash, so importing the same file twice stores one copy. The import returns the `hash` that `font.add` needs to add the font to a project.
+
+The **brand kit** is one small document with three optional members: a `logo` (the `sha256:` hash of an image asset), `colors` (names such as `accent` with a `#RRGGBB` or `#RRGGBBAA` value) and `fonts` (families you imported, with one file per weight). There is one kit per workspace, and one per user in network mode. Replacing the kit replaces all three members at once.
+
+A template that is started with `brand_colors` or `brand_fonts` takes values from the kit: each named colour of the template gets the kit's colour, so every style that says `$accent` draws the brand colour, and each named family is added to the fonts of the new project. A name the kit or the template lacks is `E_VALIDATION`, and nothing is created.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video font:import ./Brand-Regular.ttf
+cat > brand.json <<'JSON'
+{"colors": {"accent": "#FF3366"},
+ "fonts": {"Brand Sans": {"files": [{"weight": 400, "hash": "sha256:9f2c...e41a"}]}}}
+JSON
+vukem-video brand:set --kit brand.json
+vukem-video brand:show
+vukem-video template:new tpl_5n8b2v6c1x --name "Spring sale"   --brand-color accent --brand-font "Brand Sans"
+```
+
+`--brand-color` and `--brand-font` can be repeated or hold a comma list. `--kit -` reads the kit from standard input.
+
+</Tab>
+<Tab title="MCP">
+
+The font import and the brand kit have no MCP tool: they change what the whole workspace can use, so they are for the person at the terminal, the editor or the HTTP API. Starting a template with the kit (`brand_colors`, `brand_fonts`) is done with `template:new` or the HTTP API; the `template` tool does not take those members.
+
+</Tab>
+</Tabs>
+
+`font:import` needs the media scope and `brand:set` the edit scope; `brand:show` only reads. A key limited to one project can use none of them. The path of `font:import` is made absolute and read on the machine that runs the server.
+
+## Common mistakes
+
+- Importing a file that is not a usable TrueType or OpenType font: `E_VALIDATION`.
+- Naming a brand family like a bundled one: `E_VALIDATION`. Choose another name.
+- Passing a colour without the leading `#`, or in a form other than `#RRGGBB` or `#RRGGBBAA`: `E_VALIDATION`.
+- Starting a template with a `brand_colors` name that is not a colour of the template (`brand_color_unknown`) or that the kit lacks (`brand_color_missing`).
+
+## Next steps
+
+- [Templates](/docs/guide/templates)
+- [Text and captions](/docs/guide/text-and-captions)

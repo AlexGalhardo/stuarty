@@ -13,7 +13,7 @@ description: "Start a project from a template with open slots, fill the slots an
 
 A **template** is a project with named **slots**. A slot marks an item that you fill when you start a new project: a **media** slot takes an asset, a **text** slot takes a string and a **caption** slot takes words. A media slot has a duration policy: `fit` keeps the duration of the slot and needs an asset long enough, `stretch_timeline` takes the rest of the asset and moves the later items. A slot can be `required` (the default) or optional.
 
-A template can also hold named colours. A style, a shape or the background refers to one as `$name`, so one change recolours the whole template (`template.set_info`).
+A template can also hold named colours. A style, a shape or the background refers to one as `$name`, so one change recolours the whole template (`template.set_info`). A project can take those colours from your brand kit instead: see [Fonts and the brand kit](/docs/guide/brand-kit).
 
 Every workspace starts with three **starter templates**, which exist from the first start and are shared with every user in network mode:
 
@@ -38,6 +38,8 @@ echo '{"headline": {"text": "Spring sale"}, "shot_1": {"asset_id": "ast_4h6j8k2m
 vukem-video template:new tpl_5n8b2v6c1x --name "Spring sale" --fill fill.json
 vukem-video template:save --project prj_7k2m9x4q1b --name "My intro" --description "Logo and title"
 ```
+
+With a brand kit, add `--brand-color accent` (a colour of the template) and `--brand-font "Brand Sans"` (a family of the kit) to `template:new`.
 
 </Tab>
 <Tab title="MCP">

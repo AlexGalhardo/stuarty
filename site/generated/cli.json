@@ -782,6 +782,18 @@
           "name": "id",
           "type": "string",
           "usage": "identifier to give the project"
+        },
+        {
+          "name": "brand-color",
+          "type": "string",
+          "usage": "a colour of the template that takes its value from the brand kit",
+          "repeat": true
+        },
+        {
+          "name": "brand-font",
+          "type": "string",
+          "usage": "a family of the brand kit to add to the project's fonts",
+          "repeat": true
         }
       ],
       "globals": [
@@ -1047,6 +1059,55 @@
         "vukem-video token:rotate"
       ],
       "example": "vukem-video token:rotate",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "font:import",
+      "summary": "add a TrueType or OpenType font file to the font store",
+      "usage": [
+        "vukem-video font:import <path>"
+      ],
+      "example": "vukem-video font:import Brand-Regular.ttf",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "brand:show",
+      "summary": "show the brand kit: logo, colours and fonts",
+      "usage": [
+        "vukem-video brand:show"
+      ],
+      "example": "vukem-video brand:show --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "brand:set",
+      "summary": "replace the brand kit",
+      "usage": [
+        "vukem-video brand:set --kit <file|->"
+      ],
+      "example": "vukem-video brand:set --kit brand.json",
+      "flags": [
+        {
+          "name": "kit",
+          "type": "string",
+          "usage": "a JSON object with logo, colors and fonts, all optional: a file, or - for standard input (required)"
+        }
+      ],
       "globals": [
         "json",
         "workspace",
