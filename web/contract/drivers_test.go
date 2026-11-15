@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -115,6 +116,12 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.JobGet)
 	case "JobList":
 		return invoke(ctx, s, svc.JobList)
+	case "TemplateList":
+		return invoke(ctx, s, svc.TemplateList)
+	case "TemplateSave":
+		return invoke(ctx, s, svc.TemplateSave)
+	case "TemplateInstantiate":
+		return invoke(ctx, s, svc.TemplateInstantiate)
 	}
 
 	return nil, fmt.Errorf("no mapping for %s", s.Call)
@@ -335,6 +342,22 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return "job_start", args, nil
 	case "JobGet", "JobList":
 		return "job_get", args, nil
+	case "TemplateList":
+		args["action"] = "list"
+
+		return "template", args, nil
+	case "TemplateSave":
+		delete(args, "dry_run")
+
+		args["action"] = "save"
+
+		return "template", args, nil
+	case "TemplateInstantiate":
+		delete(args, "dry_run")
+
+		args["action"] = "new"
+
+		return "template", args, nil
 	}
 
 	return "", nil, fmt.Errorf("no tool for %s", s.Call)
@@ -423,6 +446,10 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		Kind      string               `json:"kind"`
 		Files     []service.ImportFile `json:"files"`
 		WaitMS    int                  `json:"wait_ms"`
+
+		TemplateID  string          `json:"template_id"`
+		Description string          `json:"description"`
+		Fill        json.RawMessage `json:"fill"`
 	}
 
 	if len(s.Args) > 0 {
@@ -487,6 +514,21 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		return "job:show", []string{a.JobID, "--wait"}, "", nil
 	case "JobList":
 		return "job:list", append(proj, flag("state", a.State)...), "", nil
+	case "TemplateList":
+		return "template:list", nil, "", nil
+	case "TemplateSave":
+		argv = append(slices.Clone(proj), flag("name", a.Name)...)
+
+		return "template:save", append(argv, flag("description", a.Description)...), "", nil
+	case "TemplateInstantiate":
+		argv = append([]string{a.TemplateID}, flag("name", a.Name)...)
+		argv = append(argv, flag("id", a.ID)...)
+
+		if len(a.Fill) == 0 {
+			return "template:new", argv, "", nil
+		}
+
+		return "template:new", append(argv, "--fill", "-"), string(a.Fill), nil
 	}
 
 	return "", nil, "", fmt.Errorf("no command for %s", s.Call)

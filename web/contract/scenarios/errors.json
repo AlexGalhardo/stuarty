@@ -17,7 +17,7 @@
 		{"call": "MediaImport", "args": {"project_id": "prj_7k2m9x4q1b", "files": [{"path": "$big"}], "wait_ms": 20000}, "expect_error": {"code": "E_LIMIT_EXCEEDED"}},
 		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 0, "operations": [
 			{"op": "track.add", "args": {"kind": "visual", "name": "V", "id": "trk_f6g7h8j9k0"}},
-			{"op": "text.add", "args": {"track_id": "trk_f6g7h8j9k0", "start": "0s", "duration": "1s", "text": "x"}}]}},
+			{"op": "text.add", "args": {"track_id": "trk_f6g7h8j9k0", "start": "0s", "duration": "1s", "text": "x", "id": "itm_t1t2t3t4t5"}}]}},
 		{"call": "JobStart", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "export"}},
 		{"call": "JobStart", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "export"}, "expect_error": {"code": "E_QUEUE_FULL"}}
 	]

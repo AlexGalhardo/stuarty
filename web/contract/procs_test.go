@@ -168,7 +168,7 @@ func exe(tool string) string {
 	return tool
 }
 
-func startProc(t *testing.T, ffmpeg, ffprobe string) *procEnv {
+func startProc(t *testing.T, ffmpeg, ffprobe string, extraEnv ...string) *procEnv {
 	t.Helper()
 
 	bin := binary(t)
@@ -189,7 +189,8 @@ func startProc(t *testing.T, ffmpeg, ffprobe string) *procEnv {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cmd := exec.CommandContext(ctx, bin, "serve")
-	cmd.Env = slices.Concat(clean, []string{"HOST=127.0.0.1", "PORT=" + freePort(t), "VUKEM_VIDEO_MIN_FREE_BYTES=1"})
+	serveEnv := []string{"HOST=127.0.0.1", "PORT=" + freePort(t), "VUKEM_VIDEO_MIN_FREE_BYTES=1"}
+	cmd.Env = slices.Concat(clean, serveEnv, extraEnv)
 
 	var out bytes.Buffer
 
@@ -394,6 +395,7 @@ var (
 var progress = regexp.MustCompile(`\(\d+%\)`)
 
 func scrub(s string) string {
+	s = jobID.ReplaceAllString(s, "job_X")
 	s = actorName.ReplaceAllString(timestamp.ReplaceAllString(s, "<time>"), "<actor>")
 
 	return progress.ReplaceAllString(s, "(<n>%)")
@@ -404,6 +406,16 @@ func scrub(s string) string {
 // first of them, and calls after for each driver once the scenario is done.
 func driveRealServer(
 	t *testing.T, scenario, project string, pinnedOnly bool, after func(*testing.T, driver, *procEnv),
+) {
+	t.Helper()
+
+	driveRealServerWith(t, scenario, project, pinnedOnly, nil, after)
+}
+
+// driveRealServerWith is driveRealServer with environment variables for each
+// `serve`, the limits of a scenario for instance.
+func driveRealServerWith(
+	t *testing.T, scenario, project string, pinnedOnly bool, env []string, after func(*testing.T, driver, *procEnv),
 ) {
 	t.Helper()
 
@@ -422,7 +434,7 @@ func driveRealServer(
 	)
 
 	for i, mk := range makers {
-		p := startProc(t, ffmpeg, ffprobe)
+		p := startProc(t, ffmpeg, ffprobe, env...)
 		d := mk(t, p)
 		got := run(t, d, steps, fixtures)
 		doc := scrub(normalize(t, d, finalDocument(t, d, project)))
@@ -459,4 +471,20 @@ func driveRealServer(
 // three subprocess drivers.
 func TestScenarioThroughTheRealServer(t *testing.T) {
 	driveRealServer(t, "prototype", "prj_7k2m9x4q1b", false, nil)
+}
+
+// TestConflictScenarioThroughTheRealServer: the conflict scenario through the CLI
+// process, MCP over stdio and MCP over HTTP; the second actor writes through the
+// HTTP API of the server.
+func TestConflictScenarioThroughTheRealServer(t *testing.T) {
+	driveRealServer(t, "conflict", "prj_7k2m9x4q1b", false, nil)
+}
+
+// TestErrorsScenarioThroughTheRealServer: the errors scenario through the same
+// three drivers, with the ceilings of the scenario in the environment of
+// `serve`: an import over 100 bytes and one export at a time.
+func TestErrorsScenarioThroughTheRealServer(t *testing.T) {
+	env := []string{"VUKEM_VIDEO_MAX_IMPORT_BYTES=100", "VUKEM_VIDEO_MAX_EXPORTS=1"}
+
+	driveRealServerWith(t, "errors", "prj_7k2m9x4q1b", false, env, nil)
 }
