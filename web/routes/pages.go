@@ -64,6 +64,11 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Settings/Index", inertia.Props{})
 		}).Name("settings.index")
 
+		// The brand kit is read and saved by the page through /api/v1/brand-kit.
+		r.Get("/settings/brand-kit", func(c *web.Ctx) error {
+			return inertia.Render(c, "Settings/BrandKit", inertia.Props{})
+		}).Name("settings.brand_kit")
+
 		// The choice is kept in the lang cookie, which i18n.Middleware reads on
 		// every request; Input accepts the JSON body the client sends.
 		r.Post("/locale", func(c *web.Ctx) error {

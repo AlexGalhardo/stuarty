@@ -1,8 +1,9 @@
-import { Head } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
@@ -89,6 +90,20 @@ export default function SettingsIndex() {
 						<p className="text-sm text-muted-foreground">
 							{t("ui.settings.time_unit_hint")}
 						</p>
+					</div>
+				</section>
+				<section
+					aria-labelledby="settings-brand"
+					className="flex flex-col gap-3"
+				>
+					<h2 id="settings-brand" className="text-lg font-semibold">
+						{t("ui.brand.title")}
+					</h2>
+					<p className="text-sm text-muted-foreground">{t("ui.brand.intro")}</p>
+					<div>
+						<Button asChild variant="outline">
+							<Link href="/settings/brand-kit">{t("ui.brand.open")}</Link>
+						</Button>
 					</div>
 				</section>
 				<section
