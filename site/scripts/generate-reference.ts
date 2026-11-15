@@ -93,7 +93,7 @@ function propertyRows(s: Schema): string[][] {
 	return Object.entries(s.properties ?? {}).map(([name, p]) => [
 		code(name),
 		typeOf(p),
-		required.has(name) ? "yes" : "no",
+		esc([p.description ?? "", constraints(p)].filter(Boolean).join(" ")) || "",
 		esc([p.description ?? "", constraints(p)].filter(Boolean).join(" ")).replace(/\\\|/g, "\\|") || "",
 	]);
 }
