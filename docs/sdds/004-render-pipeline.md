@@ -469,7 +469,7 @@ Both operations use the compositor, so they show what the export produces.
 
 The browser never evaluates the document. It asks for plan windows:
 
-`GET /api/v1/projects/{id}/plan?from=<frame>&until=<frame>&rev=<revision>` returns:
+`GET /api/v1/projects/{id}/plan?from=<frame>&until=<frame>&rev=<revision>&width=<pixels>` returns the plan below. The optional `width` is the width in pixels at which the preview draws the frame (16 to 4096; absent is the project width). The service passes `width / project width` as `Options.OutputScale`, so the `pixel_scale` of every bitmap, and therefore its key and its pixels, are those that `ViewFrame` at the same width produces (section 5.3, section 9): the preview scales a bitmap by 1 instead of by a factor and text lines up with the export. The scale is part of the bitmap spec, so it is part of the key, and one project can hold bitmaps of several widths side by side. Plans of one window at two widths hand out different keys for bitmap layers whose `pixel_scale` differs.
 
 ```json
 {

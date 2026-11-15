@@ -877,6 +877,7 @@ type PlanWindowRequest struct {
 	ProjectID string `json:"project_id"`
 	From      int    `json:"from"` // frame, 0 or more
 	Until     int    `json:"until"` // frame; Until > From and Until-From <= plan.MaxWindow (300), else E_VALIDATION with path `until`
+	Width     int    `json:"width,omitempty"` // output width in pixels the preview draws at; 0 is the project width; 16 to 4096, else E_VALIDATION with path `width`
 }
 
 // PlanWindowResult is core/plan.WindowPlan; Revision is the revision it was read at.
@@ -2566,7 +2567,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `media.restore` | `POST /projects/{id}/media/{asset_id}/restore` | `dry_run` | none | 200 `MediaStateResult` | media | none |
 | `projects.frame` | `GET /projects/{id}/frame` | `at`, `rev`, `asset_id`, `max_tokens`, `width` | none | 200 `image/jpeg` (§6.5) | read | 400 `E_INVALID_TIME`; 409 `E_INVALID_STATE` when `rev` is given and is not the current revision (`details.current_revision`); 422 `E_LIMIT_EXCEEDED` |
 | `projects.sheet` | `GET /projects/{id}/sheet` | `times`, `from`, `until` (`to` is a deprecated alias until 1.0), `count`, `cols`, `rev`, `asset_id`, `max_tokens` | none | 200 `image/jpeg` | read | as frame |
-| `projects.plan` | `GET /projects/{id}/plan` | `from`, `until` (`to` is a deprecated alias until 1.0), `rev` (SDD-004 §10) | none | 200 `PlanWindowResult` | read | 409 `E_INVALID_STATE` as frame |
+| `projects.plan` | `GET /projects/{id}/plan` | `from`, `until` (`to` is a deprecated alias until 1.0), `rev`, `width` (SDD-004 §10) | none | 200 `PlanWindowResult` | read | 409 `E_INVALID_STATE` as frame |
 | `projects.snap_points` | `GET /projects/{id}/snap-points` | `rev`, `words` (SDD-012 §7.8) | none | 200 `SnapPointsResult` | read | 409 `E_INVALID_STATE` as frame |
 | `projects.lint` | `GET /projects/{id}/lint` | `severity`, `cursor`, `limit` | none | 200 `LintResult` | read | none |
 | `jobs.start` | `POST /projects/{id}/jobs` | none | `{kind, args?, wait_ms?, dry_run?}` | 202 `Job` | render (export), media (transcribe) | 422 `E_LINT_BLOCKING`; 429 `E_QUEUE_FULL`; 503 `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER` |

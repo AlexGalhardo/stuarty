@@ -271,7 +271,7 @@ One typed function per endpoint of SDD-000 §1 that the UI uses, in `editor/api/
 | `listMedia(id)` | `GET /projects/{id}/media` (gap) | `MediaEntry[]` | P |
 | `inspectMedia(id, asset)` | `GET /projects/{id}/media/{asset_id}` | text and facts | A |
 | `trashMedia`, `restoreMedia` | `POST .../trash`, `.../restore` | | A |
-| `getPlan(id, from, until, rev)` | `GET /projects/{id}/plan?from=&until=&rev=` (SDD-004 §10) | `PlanWindow` | P |
+| `getPlan(id, from, until, rev, width?)` | `GET /projects/{id}/plan?from=&until=&rev=&width=` (SDD-004 §10; `width` is the pixel width the preview draws at, so bitmaps come at that scale) | `PlanWindow` | P |
 | `frameUrl(id, at, width, rev)` | `GET /projects/{id}/frame?at=<time string>&width=<px>&rev=<n>` (mirrors SDD-003) | JPEG, used as `<img src>` | P |
 | `getLint(id)` | `GET /projects/{id}/lint` | findings | P |
 | `getSnapPoints(id, rev, words)` | `GET /projects/{id}/snap-points?rev=&words=` (gap) | `SnapPoints` (§7.8) | A |
