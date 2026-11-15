@@ -1,6 +1,6 @@
 # SDD-001: Timeline document schema
 
-- Status: Frozen (2026-11-14, ROADMAP task P1-SCH-003). Validators frozen for ALPHA (ROADMAP task P2-SCH-001): every code of section 4 has an invalid example under `core/timeline/testdata/invalid/`. BETA additions (ROADMAP task P3-SCH-001): filters and blur, markers, animated images; user fonts (P3-SCH-002). No `schema_version` bump. Section 9 (P3-ENG-004) defines the OpenTimelineIO exchange.
+- Status: Frozen for 1.0 (2026-11-15, ROADMAP task P4-SCH-001: fixtures of every released version with committed canonical hashes). Frozen (2026-11-14, ROADMAP task P1-SCH-003). Validators frozen for ALPHA (ROADMAP task P2-SCH-001): every code of section 4 has an invalid example under `core/timeline/testdata/invalid/`. BETA additions (ROADMAP task P3-SCH-001): filters and blur, markers, animated images; user fonts (P3-SCH-002). No `schema_version` bump. Section 9 (P3-ENG-004) defines the OpenTimelineIO exchange.
 - Depends on: ADR-0004 (time), ADR-0005 (timeline model), ADR-0009 (persistence), ADR-0012 (text), ADR-0014 (JSON Schema), ADR-0022 (templates)
 - Implements: RF-002, RF-010 to RF-012, RF-015, RF-020 to RF-026, RF-030 to RF-032, RF-027, RF-028, RF-035, RF-040 to RF-044, RF-050, RF-053, NFR-012
 - Owner area: senior-a (command core and schema)
