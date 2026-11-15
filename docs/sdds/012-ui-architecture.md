@@ -83,7 +83,7 @@ A decoration may read `source_in`, `speed`, `start` and `duration` of an item. I
 | R4 | Imports of `editor/state/documentStore` write functions (`replaceDocument`, `applyRevisionDiff`) from any file except `editor/state/sync.ts` |
 | R5 | In files outside the allowlist (`editor/timeline/geometry.ts`, `editor/timeline/gestures/**`, `editor/timeline/snapping.ts`, `editor/timeline/items/stripTiles.ts`, `editor/timeline/items/waveform.ts` (the two decorations of §1.3), `editor/commands/builders.ts`, `editor/commands/units.ts`, `editor/preview/**`, `editor/ui/TimeField.tsx`): a binary expression that has a property access named `start`, `duration`, `source_in`, `speed`, `fps`, `fade_in`, `fade_out` or `words` as an operand with `+`, `-`, `*`, `/`, `%` or a comparison against another time quantity. Display and request code that must do this arithmetic calls a named helper of `units.ts` and writes none of its own: `displayDuration(item)` (the read-only duration), `displayEnd(item)` (the End field and the end shown in labels), `nudgeStart(item, delta)` (keyboard nudge), `keyframeAbsoluteAt(item, t)` (the item-relative time of a keyframe field to the absolute `at` of `keyframe.set` and `keyframe.remove`) `captionWordSegments(item, ppf)` (the start and width of each caption word segment) and `speedLabel(speed)` (the `1.5x` badge). `selectors.ts`, `virtualize.ts`, `timeline/keyboard.ts`, the inspector fields and `CaptionItem` call these helpers |
 | R6 | `fetch(`, `new EventSource(`, `XMLHttpRequest`, `navigator.sendBeacon` outside `editor/api/**` and `editor/boot/**` (boot posts `/locale`) |
-| R7 | `localStorage`, `sessionStorage`, `indexedDB`, `caches` outside `editor/state/prefs.ts`; in `prefs.ts` the keys must belong to the allowed list `theme`, `vv.layout`, `vv.timeDisplay`, `vv.timeUnit`, `vv.zoomByProject` (zoom and scroll only), `vv.keymap` (the shortcut overrides: a JSON object from binding id to key, UI preference, never project data) |
+| R7 | `localStorage`, `sessionStorage`, `indexedDB`, `caches` outside `editor/state/prefs.ts`; in `prefs.ts` the keys must belong to the allowed list `theme`, `vv.layout`, `vv.timeDisplay`, `vv.timeUnit`, `vv.zoomByProject` (zoom and scroll only), `vv.keymap` (the shortcut overrides: a JSON object from binding id to key, UI preference, never project data), `vv.shortcutsSeen` (the string `1` once the first-run tips were shown) |
 | R8 | The import rules of §3.3 |
 
 The script has its own unit tests (a fixture per rule that must fail and one that must pass), run by Vitest.
@@ -1246,6 +1246,12 @@ RF-075 (BETA in the PRD): this SDD builds the keyboard operation and automated c
 | Timeline grid keys | §7.10 | A |
 
 Regions are landmarks: `header` (top bar), `aside` with `aria-label` for library and inspector, `main` for the preview and timeline.
+
+### 18.5 First-run tips and empty states
+
+1. The first-run tips are a short list under the toolbar (`layout/FirstRunTips.tsx`): paste a path to import, `Ctrl+K` for the palette, `?` for the shortcuts. They show when the browser has no `vv.shortcutsSeen` and are closed with "Got it". Showing them writes the key (`1`, through `state/prefs.ts`, rule R7), so a reload does not show them again whether or not they were closed. A blocked storage shows them on every load.
+2. "Show tips again" is a button in the footer of the cheat sheet (§18.2 item 6); it shows the tips at once and closes the dialog. The editor has no settings page.
+3. Empty states use `ui/EmptyState.tsx` (icon, title, one sentence, as in `docs/design-system.md` §4.3.15) in the library, the timeline and the History tab; the sentence names the next action. All text comes from `t()`.
 
 ### 18.3 Contrast
 
