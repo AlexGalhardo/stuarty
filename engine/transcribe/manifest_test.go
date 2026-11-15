@@ -341,3 +341,25 @@ func TestAnnounceStatesSizeAndSource(t *testing.T) {
 		}
 	}
 }
+
+// NFR-043: every component of the manifest is under a permissive licence the product may redistribute,
+// and the text of that licence is in licenses/programs for the notices step.
+func TestManifestLicencesAreRedistributable(t *testing.T) {
+	m, err := DefaultManifest()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dirs := map[string]string{KindHelper: "whisper.cpp", KindModel: "whisper-model"}
+	for i := range m.Entries {
+		e := &m.Entries[i]
+		if e.License != "MIT" {
+			t.Errorf("%s: licence %q is not on the allowlist (MIT)", e.File, e.License)
+		}
+
+		text, err := os.ReadFile(filepath.Join("..", "..", "licenses", "programs", dirs[e.Kind], "LICENSE"))
+		if err != nil || !strings.HasPrefix(string(text), "MIT License") {
+			t.Errorf("%s: the licence text of %s is missing or not MIT: %v", e.File, dirs[e.Kind], err)
+		}
+	}
+}

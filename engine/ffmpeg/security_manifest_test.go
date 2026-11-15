@@ -407,3 +407,32 @@ func TestSecurity_T26_CiscoDownloadRefusals(t *testing.T) {
 type roundTripFunc func(*http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+// NFR-043: the Cisco library and the own build are under licences the product may redistribute or
+// download, and the text of each is in licenses/programs for the notices step.
+func TestSecurity_T27_ShippedComponentsHaveLicenceText(t *testing.T) {
+	m, err := DefaultOpenH264Manifest()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, e := range m.Entries {
+		if e.License != "BSD-2-Clause" {
+			t.Errorf("%s: licence %q is not on the allowlist (BSD-2-Clause)", e.File, e.License)
+		}
+	}
+
+	for dir, want := range map[string]string{
+		"openh264": "Cisco Systems",
+		"ffmpeg":   "GNU LESSER GENERAL PUBLIC LICENSE",
+	} {
+		files, err := filepath.Glob(filepath.Join("..", "..", "licenses", "programs", dir, "*"))
+		if err != nil || len(files) == 0 {
+			t.Errorf("licenses/programs/%s has no licence text", dir)
+			continue
+		}
+		text, err := os.ReadFile(files[0])
+		if err != nil || !strings.Contains(string(text), want) {
+			t.Errorf("licenses/programs/%s: the text does not name %q: %v", dir, want, err)
+		}
+	}
+}
