@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
@@ -239,6 +240,9 @@ type videoDecoder struct {
 
 const decoderBuffers = 3
 
+// singleExitGrace is how long the decoder of a single frame has to end by itself before it is killed.
+const singleExitGrace = 300 * time.Millisecond
+
 func (d *videoDecoder) frameBytes() int { return d.w * d.h * 4 }
 
 // frame returns the pixels of source frame sf. A frame past the end of the media repeats the last one.
@@ -287,13 +291,19 @@ func (d *videoDecoder) start(sf int) error {
 		return err
 	}
 	ms := int64(sf) * 1000 * int64(d.rate.Den) / int64(d.rate.Num)
+	opts := []ffargs.Opt{ffargs.Enum("-pix_fmt", "rgba")}
+	if d.s.single {
+		// A single frame is all that will be read: the process ends by itself after delivering it, so
+		// closing the renderer has no process to kill and the answer does not wait for one.
+		opts = append(opts, ffargs.Int("-frames:v", 1))
+	}
 	argv, err := ffargs.Cmd{
 		// One filter thread: the scaler slices a frame by thread count (NFR-010, same pixels everywhere).
 		Threads: r.In.ThreadLimit(), FilterThreads: 1,
 		Inputs: []ffargs.Input{ffargs.FileInput(d.path).At(ms)},
 		Outputs: []ffargs.Output{{
 			Format: "rawvideo", Pipe: true, Maps: []string{"0:v:0"}, NoAudio: true, VF: d.vf,
-			Opts: []ffargs.Opt{ffargs.Enum("-pix_fmt", "rgba")},
+			Opts: opts,
 		}},
 	}.Argv(r.Policy(dir, d.s.inputDirs...))
 	if err != nil {
@@ -356,6 +366,14 @@ func (d *videoDecoder) start(sf int) error {
 func (d *videoDecoder) stop() {
 	if d.cancel == nil {
 		return
+	}
+	if d.s.single {
+		// The decoder of a single frame was told to stop after it, so it is already ending: give it a
+		// moment before the kill, which on Windows starts taskkill and costs 150 ms of the answer.
+		select {
+		case <-d.exited:
+		case <-time.After(singleExitGrace):
+		}
 	}
 	d.cancel()
 	<-d.exited
