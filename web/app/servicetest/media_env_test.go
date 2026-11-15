@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -66,6 +67,8 @@ type mediaCfg struct {
 	transcriber transcribe.Provider
 	// wrapStore puts a decorator between the service and its store.
 	wrapStore func(service.Store) service.Store
+	// log receives the job lines of the service.
+	log *slog.Logger
 }
 
 // mediaEnv is an env whose service has the media and job machinery, with a
@@ -114,6 +117,7 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 		}
 
 		o.Transcriber = cfg.transcriber
+		o.Log = cfg.log
 		o.Tools = cfg.tools
 		o.Workspace = m.ws
 		o.Media = service.Media{

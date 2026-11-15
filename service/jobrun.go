@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"math"
 	"os"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/service/logging"
 )
 
 const (
@@ -165,6 +167,8 @@ func (s *svc) RunJob(ctx context.Context, jobID string) error {
 
 	s.emitJob(ctx, &job)
 
+	s.logJob(ctx, slog.LevelInfo, "job started", &job)
+
 	if job.Kind == JobIngest && job.AssetHash != nil {
 		if s.store.Assets().SetIngest(ctx, *job.AssetHash, IngestIngesting, 0, nil, s.nowMs()) == nil {
 			s.emitAsset(ctx, *job.AssetHash, IngestIngesting, 0, nil)
@@ -240,6 +244,7 @@ func (s *svc) settle(parent, jctx context.Context, job *JobRow, result json.RawM
 	if herr == nil {
 		ok, err := s.store.Jobs().Finish(ctx, job.ID, JobSucceeded, result, nil, now)
 		if err == nil && ok {
+			s.logJob(ctx, slog.LevelInfo, "job succeeded", job)
 			s.emitCurrent(ctx, job.ID)
 		}
 
@@ -279,6 +284,7 @@ func (s *svc) finishFailed(ctx context.Context, job *JobRow, state string, e *Er
 	}
 
 	if ok {
+		s.logJob(ctx, levelOf(state), "job "+state, job, slog.String("code", e.Code), slog.Any("reason", e.Details["reason"]))
 		s.emitCurrent(ctx, job.ID)
 	}
 
@@ -292,6 +298,8 @@ func (s *svc) requeueInterrupted(ctx context.Context, job *JobRow) {
 	if err != nil || !ok {
 		return
 	}
+
+	s.logJob(ctx, slog.LevelWarn, "job requeued", job)
 
 	if job.Kind == JobIngest && job.AssetHash != nil {
 		if s.store.Assets().SetIngest(ctx, *job.AssetHash, IngestPending, 0, nil, s.nowMs()) == nil {
@@ -724,10 +732,32 @@ func (s *svc) failInterrupted(ctx context.Context, tx Tx, j *JobRow, now int64) 
 	}
 
 	j.State, j.Error = JobFailed, ej
+	s.logJob(ctx, slog.LevelError, "job failed", j, slog.String("code", e.Code), slog.String("reason", "interrupted"))
 
 	if j.Kind == JobIngest && j.AssetHash != nil {
 		return tx.Assets().SetIngest(ctx, *j.AssetHash, IngestFailed, 0, ej, now)
 	}
 
 	return nil
+}
+
+// logJob writes one line about a job with its identifier, kind, actor and
+// project. It names codes and reasons only: a message or a file name may hold
+// text from the media, which stays out of the log (ADR-0020).
+func (s *svc) logJob(ctx context.Context, level slog.Level, msg string, job *JobRow, extra ...slog.Attr) {
+	project := ""
+	if job.ProjectID != nil {
+		project = *job.ProjectID
+	}
+
+	attrs := append(logging.Who("", job.ID, job.Actor, project), slog.String("kind", job.Kind))
+	s.log.LogAttrs(ctx, level, msg, append(attrs, extra...)...)
+}
+
+func levelOf(state string) slog.Level {
+	if state == JobFailed {
+		return slog.LevelError
+	}
+
+	return slog.LevelInfo
 }
