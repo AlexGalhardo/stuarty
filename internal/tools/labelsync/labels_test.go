@@ -117,7 +117,11 @@ func TestAreaLabelsAreTheCommitScopes(t *testing.T) {
 		t.Fatal("pr-title.yml: no scopes='...' line")
 	}
 
-	titleScopes := strings.Split(m[1], "|")
+	// A pattern entry such as sdd-[0-9]{3} is a spelling of another scope
+	// (SDD-009 section 6.2), not a scope with a label of its own.
+	titleScopes := slices.DeleteFunc(strings.Split(m[1], "|"), func(s string) bool {
+		return strings.ContainsAny(s, "[]{}")
+	})
 	slices.Sort(titleScopes)
 
 	if !slices.Equal(areas, titleScopes) {
