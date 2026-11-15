@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/cn"
+import { pageNonce } from "@/lib/cspNonce"
 import { Select as SelectPrimitive } from "radix-ui"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
@@ -73,6 +74,9 @@ function SelectContent({
       >
         <SelectScrollUpButton />
         <SelectPrimitive.Viewport
+          // Radix writes a <style> element for the viewport; the CSP lets it
+          // through only with the nonce of the page.
+          nonce={pageNonce()}
           data-position={position}
           className={cn(
             "data-[position=popper]:h-(--radix-select-trigger-height) data-[position=popper]:w-full data-[position=popper]:min-w-(--radix-select-trigger-width)",
