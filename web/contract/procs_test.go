@@ -118,6 +118,13 @@ func needFFmpeg(t *testing.T) {
 			t.Skipf("%s is not installed: the subprocess drivers import and export real media", tool)
 		}
 	}
+
+	// Homebrew's GPL build on the macOS runner has no zscale, which the ingest
+	// needs; the pinned LGPL build has it (risk R6).
+	out, err := exec.Command("ffmpeg", "-hide_banner", "-filters").Output()
+	if err != nil || !strings.Contains(string(out), "zscale") {
+		t.Skip("the FFmpeg on PATH has no zscale filter: the ingest needs the pinned LGPL build")
+	}
 }
 
 func startProc(t *testing.T) *procEnv {
