@@ -4,12 +4,13 @@ Vukem Video handles people's footage and is driven by AI agents, so security rep
 
 ## Supported versions
 
-The supported version is the latest minor of the current major; during 0.x it is the latest 0.x minor. Older versions are not supported.
+The supported version is the latest minor of the current major; during 0.x it is the latest 0.x minor. Older versions are not supported. From 1.0 a security fix is a patch release and never carries a breaking change (see the compatibility promise in [CONTRIBUTING](CONTRIBUTING.md)), so staying on the latest minor of your major is always possible.
 
 | Version | Supported |
 | --- | --- |
 | Latest minor of the current major (latest 0.x minor during 0.x) | yes |
-| Anything older | no |
+| Latest minor of the previous major, for 90 days after the next major is released (from 2.0 on) | security fixes only |
+| Any other minor, any older major, any pre-release tag | no |
 
 ## Reporting a vulnerability
 

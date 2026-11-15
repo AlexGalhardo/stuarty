@@ -76,6 +76,22 @@ Before 1.0 the project builds its own LGPL FFmpeg (D-017, ADR-0011) with no Open
 
 During ALPHA a release is one `v0.N.0` per group of `ROADMAP.md` (kept in the workspace root, outside this repository) that ships something runnable, plus the rule of ADR-0028: about one minor every 90 commits on `main`. Minors may carry breaking changes; a patch never does, and `release prepare` refuses a patch version when a commit in the range is marked `!`.
 
+`v1.0.0` is cut directly from the BETA exit: there is no `-rc` tag (ADR-0025 item 2, SDD-009 section 4). From then on `release prepare` also refuses a minor or a patch when a commit in the range carries a `!` header or a `BREAKING CHANGE:` footer; the next major (`v2.0.0`) is accepted.
+
+### What 1.0 promises under SemVer
+
+From `v1.0.0` a minor or a patch release keeps working for everything below. Breaking any of it is a major release, and the commit is marked `!`.
+
+- The MCP tool names, their input and output schemas and their annotations.
+- The CLI commands, their flags and their exit codes.
+- The HTTP API: routes, methods, request and response schemas, error codes and statuses.
+- The timeline document schema: a document written by an older 1.x opens in a newer 1.x, and unknown fields are preserved.
+- The workspace layout and its migrations: a newer 1.x opens the workspace of an older 1.x and migrates it forward without losing data.
+
+`web/contract/testdata/surface.txt` lists the MCP tools, CLI commands and HTTP routes, and `TestSurfaceFrozen` (`go test ./web/contract/ -run TestSurfaceFrozen`) fails when a name is removed or renamed. A new name needs `UPDATE_SURFACE=1` in the same change; a removal needs a deliberate edit of the file and a major version.
+
+Not promised, and free to change in any release: the wording of the text formats (concise and full views, edit and lint texts, error messages and hints; the codes are promised, the sentences are not), the golden text files that pin that wording, and every internal package (`core/`, `engine/`, `service/`, `internal/`; the module is an application and nobody imports it).
+
 - `task release:preflight` runs `task ci`, `task generate:check`, `task site:build`, `task site:translations` and `task image:smoke`; run it on the release branch before `release prepare`.
 - `task release:binaries SNAPSHOT=1` builds the six archives and their SBOMs in `dist/` without publishing or signing (GoReleaser and syft on `PATH`); each archive holds `LICENSE.md`, `README.md`, `CHANGELOG.md`, `THIRD_PARTY_NOTICES.md`, `licenses/` and the three files under `agent/`. `task release:snapshot` does the same without the SBOMs.
 - Pushing the tag is the only manual step: `release.yml` publishes the notes, the archives, the signed checksums, the provenance and the image. `task release:verify -- vX.Y.Z` (`scripts/release-verify.sh`) then checks the signature, the checksums, the attestation and the image digests; add `--no-image` for a release that publishes no image, `--no-pages` while GitHub Pages has not deployed the feed yet, and `--dispatched` for a run started by `workflow_dispatch`. The release also carries the installers of the desktop application (`desktop.yml`) and, for a stable tag, `feed.json`; `scripts/desktop-verify.sh vX.Y.Z <installer>` is how a person checks one download.
