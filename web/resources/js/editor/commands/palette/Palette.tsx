@@ -20,6 +20,7 @@ import type { CommandDetail, EditResult } from "../../api/types";
 import { useDocumentState, useRuntime } from "../../state/EditorContext";
 import { errorHeadline } from "../../ui/errorHeadline";
 import { hasMod } from "../keymap";
+import { SchemaForm } from "../schemaForm/SchemaForm";
 import { useCanEdit } from "../useActions";
 import BatchTray from "./BatchTray";
 import {
@@ -29,7 +30,7 @@ import {
 	removeFromBatch,
 	sendBatch,
 } from "./batch";
-import { type CommandArgs, type FormSlot, JsonArgsForm } from "./formSlot";
+import type { CommandArgs, FormSlot } from "./formSlot";
 import {
 	commandRow,
 	matchRange,
@@ -131,7 +132,7 @@ function titleOf(t: Translate, command: CommandDetail): string {
 export default function Palette({
 	open,
 	onOpenChange,
-	FormView = JsonArgsForm,
+	FormView = SchemaForm,
 }: {
 	open: boolean;
 	onOpenChange(open: boolean): void;
@@ -420,7 +421,10 @@ export default function Palette({
 								<p lang="en" className="text-sm text-muted-foreground">
 									{detail.command.summary}
 								</p>
-								{error !== null && <ErrorBlock error={error} />}
+								{error !== null &&
+									!FormView.resolvesPath?.(detail.command, error) && (
+										<ErrorBlock error={error} />
+									)}
 								<FormView
 									command={detail.command}
 									value={args ?? {}}
