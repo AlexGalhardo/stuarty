@@ -114,7 +114,7 @@ func TestEveryReleaseHasFixtures(t *testing.T) {
 			t.Errorf("%s has no fixture", dir)
 		}
 	}
-	for _, tag := range []string{"v0.3.0", "v0.5.0", "v0.11.0", "v0.12.0", "v0.13.0"} {
+	for _, tag := range []string{"v0.3.0", "v0.5.0", "v0.11.0", "v0.12.0", "v0.13.0", "v0.14.0"} {
 		files(t, "testdata/versions/v1/"+tag+"-*.json")
 	}
 }
