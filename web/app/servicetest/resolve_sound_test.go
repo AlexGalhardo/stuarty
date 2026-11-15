@@ -51,7 +51,10 @@ func TestResolveSpeechFromTheArtifact(t *testing.T) {
 	))
 
 	args := string(storedOps(t, m, project, m.head(project).Revision)[0].Args)
-	want := fmt.Sprintf(`"resolved":{"speech":[{"item_id":%q,"ranges":[{"end":15,"start":0},{"end":60,"start":30}]}]}`, clip)
+	want := fmt.Sprintf(
+		`"resolved":{"speech":[{"item_id":%q,"ranges":[{"end":15,"start":0},{"end":60,"start":30}]}]}`,
+		clip,
+	)
 
 	if !strings.Contains(args, want) {
 		t.Errorf("stored operation = %s, want it to hold %s", args, want)
