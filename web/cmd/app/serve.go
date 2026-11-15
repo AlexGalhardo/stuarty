@@ -40,7 +40,10 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 	log, closeLog := openLog(os.Getenv, stderr)
 	defer func() { _ = closeLog.Close() }()
 
-	ow, err := owner.Open(ctx, owner.Config{Version: version, Log: log, Resolved: resolved, Telemetry: owner.OTelProvider})
+	ow, err := owner.Open(
+		ctx,
+		owner.Config{Version: version, Log: log, Resolved: resolved, Telemetry: owner.OTelProvider},
+	)
 	if err != nil {
 		_, _ = fmt.Fprintln(stderr, "vukem-video serve:", err)
 
