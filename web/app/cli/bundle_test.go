@@ -70,5 +70,7 @@ func TestBundleExportNeedsAConnectionThatOffersIt(t *testing.T) {
 }
 
 func (b *bundleService) JobGet(context.Context, service.JobGetRequest) (*service.Job, error) {
-	return &service.Job{JobID: "job_9", Kind: service.JobExport, State: service.JobSucceeded, Text: "job_9 succeeded"}, nil
+	return &service.Job{
+		JobID: "job_9", Kind: service.JobExport, State: service.JobSucceeded, Text: "job_9 succeeded",
+	}, nil
 }
