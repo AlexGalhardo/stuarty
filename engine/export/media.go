@@ -318,29 +318,32 @@ func (d *videoDecoder) start(sf int) error {
 
 	ctx, cancel := context.WithCancel(d.s.ctx)
 	d.cancel, d.dir = cancel, dir
-	d.out, d.free = make(chan []byte, decoderBuffers), make(chan []byte, decoderBuffers)
-	d.exited, d.read = make(chan struct{}), make(chan struct{})
+	out, free := make(chan []byte, decoderBuffers), make(chan []byte, decoderBuffers)
+	exited, read := make(chan struct{}), make(chan struct{})
+	d.out, d.free, d.exited, d.read = out, free, exited, read
 	d.runErr, d.stderr = nil, ""
 	d.cur, d.curIdx = nil, sf-1
 	for range decoderBuffers {
-		d.free <- make([]byte, d.frameBytes())
+		free <- make([]byte, d.frameBytes())
 	}
 
+	// The goroutines use their own copies of the channels: the one that closes the pipe can outlive
+	// stop, and the next start replaces the fields.
 	go func() {
 		res, err := r.RunFFmpeg(ctx, ffmpeg.Request{
 			Dir: dir, Argv: argv, InputDirs: d.s.inputDirs, Deadline: d.s.deadline, Stdout: pw,
 		})
 		_ = pw.Close()
 		d.runErr, d.stderr = err, res.Stderr
-		close(d.exited)
+		close(exited)
 	}()
 	go func() {
-		defer close(d.read)
-		defer close(d.out)
+		defer close(read)
+		defer close(out)
 		for {
 			var buf []byte
 			select {
-			case buf = <-d.free:
+			case buf = <-free:
 			case <-ctx.Done():
 				return
 			}
@@ -348,15 +351,15 @@ func (d *videoDecoder) start(sf int) error {
 				return
 			}
 			select {
-			case d.out <- buf:
+			case out <- buf:
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
 	go func() {
-		<-d.read
-		<-d.exited
+		<-read
+		<-exited
 		_ = pr.Close()
 	}()
 	return nil
