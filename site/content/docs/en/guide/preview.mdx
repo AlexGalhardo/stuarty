@@ -1,0 +1,50 @@
+---
+title: "Preview and playback"
+description: "Play the timeline, step frame by frame and see the exact frame the export will contain."
+---
+
+## You will learn
+
+- how to play, pause and move the playhead;
+- why the paused picture and the playing picture can differ in speed but not in content;
+- how to turn the safe-area guide on.
+
+## The idea
+
+The preview draws what the [render plan](/docs/concepts/render) says every frame contains. While the timeline plays, the browser draws the plan with WebGL2. When you pause, the editor asks the server for the exact frame at the playhead, composed by the same plan the export uses. So the paused picture is the frame you will get in the file.
+
+A browser without WebGL2 cannot play live. The editor says so and keeps showing the exact paused frame.
+
+## Quick start
+
+1. Click **Play** under the preview, or use the controls to go to the start or the end, or to step back and forward one frame.
+2. Click the ruler of the timeline to move the playhead to a time.
+3. Pause and read the current time and the total duration next to the controls.
+
+An agent sees the same frames with `view`.
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video view --project prj_7k2m9x4q1b --at 1s
+vukem-video view --project prj_7k2m9x4q1b --mode sheet --count 9
+```
+
+</Tab>
+<Tab title="MCP">
+
+`view` with `{"project_id": "prj_7k2m9x4q1b", "mode": "frame", "at": "1s"}`, or `"mode": "sheet"` with `count` for a contact sheet.
+
+</Tab>
+</Tabs>
+
+## Common mistakes
+
+- Judging a cut by a single paused frame. Use a contact sheet to see the whole timeline at once.
+- Expecting playback to be as smooth on a weak machine as the export is exact. The export never skips a frame; live playback may.
+
+## Next steps
+
+- [The safe area](/docs/guide/safe-area)
+- [Basic timeline editing](/docs/guide/timeline)

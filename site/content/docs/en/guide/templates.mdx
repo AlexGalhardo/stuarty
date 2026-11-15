@@ -1,0 +1,61 @@
+---
+title: "Templates"
+description: "Start a project from a template with open slots, fill the slots and save your own templates."
+---
+
+## You will learn
+
+- what a template, a slot and a template colour are;
+- which starter templates every workspace has;
+- how to make a project from a template and how to save one.
+
+## The idea
+
+A **template** is a project with named **slots**. A slot marks an item that you fill when you start a new project: a **media** slot takes an asset, a **text** slot takes a string and a **caption** slot takes words. A media slot has a duration policy: `fit` keeps the duration of the slot and needs an asset long enough, `stretch_timeline` takes the rest of the asset and moves the later items. A slot can be `required` (the default) or optional.
+
+A template can also hold named colours. A style, a shape or the background refers to one as `$name`, so one change recolours the whole template (`template.set_info`).
+
+Every workspace starts with three **starter templates**, which exist from the first start and are shared with every user in network mode:
+
+| Template | Format | Slots |
+| --- | --- | --- |
+| [Vertical cut with captions](/docs/guide/template-vertical-cut) | 1080 x 1920 | `clip`, `subtitles` |
+| [Product teaser](/docs/guide/template-product-teaser) | 1920 x 1080, 10 s | `shot_1`, `shot_2`, `music`, `headline`, `call_to_action` |
+| [Quote card](/docs/guide/template-quote-card) | 1080 x 1080 | `quote`, `author` |
+
+Creating a project from a template succeeds even when a required slot is empty. The result lists the `unfilled` slots, and the lint reports `L_SLOT_UNFILLED` until you fill them.
+
+The editor has no template picker or slot form yet. Use the CLI, the `template` tool of MCP or an agent; slots are edited with the command palette (`Ctrl+K`) as well.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video template:list
+echo '{"headline": {"text": "Spring sale"}, "shot_1": {"asset_id": "ast_4h6j8k2m3n"}}' > fill.json
+vukem-video template:new tpl_5n8b2v6c1x --name "Spring sale" --fill fill.json
+vukem-video template:save --project prj_7k2m9x4q1b --name "My intro" --description "Logo and title"
+```
+
+</Tab>
+<Tab title="MCP">
+
+`template` with `{"action": "list"}`, then `{"action": "new", "template_id": "tpl_5n8b2v6c1x", "name": "Spring sale", "fill": {"headline": {"text": "Spring sale"}}}`. The other actions are `save`, `export` and `import`.
+
+</Tab>
+</Tabs>
+
+To turn your own project into a template, mark items with `slot.mark` (`name` is lower case letters, digits and underscores, up to 40 characters), then `template:save`. Fill a slot of an open project with `slot.fill` and remove a mark with `slot.unmark`. `template:export` writes a file the workspace keeps and `template:import` adds such a file to the library.
+
+## Common mistakes
+
+- Filling a slot with more than one of `asset_id`, `text` and `words`: exactly one is allowed.
+- Filling a `fit` slot with an asset shorter than the slot: `E_SLOT`.
+- Forgetting that a template is a copy: changing the project made from it never changes the template.
+
+## Next steps
+
+- [Vertical cut with captions](/docs/guide/template-vertical-cut)
+- [Exporting](/docs/guide/exporting)

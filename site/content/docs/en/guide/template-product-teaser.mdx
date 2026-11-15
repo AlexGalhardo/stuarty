@@ -1,0 +1,60 @@
+---
+title: "Template: product teaser"
+description: "The starter for a 10 second product commercial with two shots, a headline, a closing line and music."
+---
+
+## You will learn
+
+- what the starter holds;
+- which slots to fill;
+- which are optional.
+
+## The idea
+
+**Product teaser** is a 1920 x 1080 (16:9) project of 10 seconds: two shots on a `Video` track, a music bed on an audio track and a `Text` track with a headline and a closing line. The headline fades up and out, and the closing line pops in, with the animation presets. Its template colours are `ink` (`#FFFFFF`) and `brand` (`#FF3366`).
+
+| Slot | Kind | Required | What goes in it |
+| --- | --- | --- | --- |
+| `shot_1` | media | yes | the opening shot |
+| `shot_2` | media | yes | the closing shot |
+| `music` | media | no | the music bed |
+| `headline` | text | yes | the headline (default text `Meet the new product`) |
+| `call_to_action` | text | yes | the closing line (default text `Available now`) |
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+cat > fill.json <<'EOF'
+{
+  "shot_1": { "asset_id": "ast_4h6j8k2m3n" },
+  "shot_2": { "asset_id": "ast_3c5v8n2w6d" },
+  "headline": { "text": "Meet Aurora" },
+  "call_to_action": { "text": "Order today" }
+}
+EOF
+vukem-video template:new tpl_5n8b2v6c1x --name "Aurora teaser" --fill fill.json
+vukem-video lint --project prj_7k2m9x4q1b
+```
+
+</Tab>
+<Tab title="MCP">
+
+`template` with `{"action": "new", "template_id": "tpl_5n8b2v6c1x", "name": "Aurora teaser", "fill": {"headline": {"text": "Meet Aurora"}}}`, then `lint` to see which slots are still `unfilled`.
+
+</Tab>
+</Tabs>
+
+Fill the slots you have now and the rest later with `slot.fill`. Text slots keep the style of the template. The `music` slot is optional, so an unfilled music slot is not a lint finding.
+
+## Common mistakes
+
+- Skipping `lint` after `template:new`: a required slot you forgot shows as `L_SLOT_UNFILLED` and the project exports with the placeholder.
+- A shot shorter than its slot: `E_SLOT`.
+
+## Next steps
+
+- [Transitions](/docs/guide/transitions)
+- [Exporting](/docs/guide/exporting)

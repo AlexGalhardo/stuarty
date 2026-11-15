@@ -1,0 +1,51 @@
+---
+title: "Jobs and the queue"
+description: "Follow, wait for and cancel exports and transcriptions, and what the limits mean."
+---
+
+## You will learn
+
+- what a job is and which kinds there are;
+- how to follow a job in the editor, the CLI and MCP;
+- why a job can be queued or refused.
+
+## The idea
+
+Long work runs as a **job** so that nothing blocks a request. Two kinds are public: `export` and `transcribe`. A job is `queued`, `running` and then `succeeded`, `failed` or `cancelled`, and it reports progress and a result. Jobs are stored with the project, so a job survives a closed browser tab or a restarted agent. The events stream (see [Events](/docs/reference/events)) announces every change.
+
+In the editor, the top bar shows a **jobs chip**, such as `2 jobs · 40%`, while anything runs. The export dialog keeps running when you close it. A job started by an agent shows in the same chip.
+
+The limits protect the machine and, in network mode, the other users: `VUKEM_VIDEO_MAX_EXPORTS` (2 at once per workspace), `VUKEM_VIDEO_MAX_EXPORTS_PER_KEY` (1 running per user or key, two more may wait), `VUKEM_VIDEO_MAX_TRANSCRIBES` and `VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY`. Past the limits, the call fails with `E_QUEUE_FULL`, which is retryable.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video export --project prj_7k2m9x4q1b --no-wait
+vukem-video job:list --project prj_7k2m9x4q1b --state active
+vukem-video job:show job_4h8k2m6p9t --wait
+vukem-video job:cancel job_4h8k2m6p9t
+```
+
+</Tab>
+<Tab title="MCP">
+
+`job_start` with `{"project_id": "prj_7k2m9x4q1b", "kind": "export", "wait_ms": 25000}`. If the job is not final after the wait, call `job_get` with `{"job_id": "job_4h8k2m6p9t", "wait_ms": 25000}`; `job_get` with a `project_id` and no `job_id` lists the jobs. `job_cancel` cancels one.
+
+</Tab>
+</Tabs>
+
+By default the CLI waits for the job up to `--timeout` (10 minutes). Exit code 2 means the wait timed out or the error is retryable; exit code 1 means the job failed.
+
+## Common mistakes
+
+- Starting a second export of the same project at once: it waits behind the first or fails with `E_QUEUE_FULL`. Wait for the first.
+- Treating `E_RATE_LIMITED` as final. Heavy calls (`job_start`, `media_import`, `template:import`) have their own limit per minute; wait for `Retry-After`.
+- Cancelling a succeeded job: the file stays; there is nothing to cancel.
+
+## Next steps
+
+- [Exporting](/docs/guide/exporting)
+- [Encoders and export presets](/docs/guide/encoders-and-presets)

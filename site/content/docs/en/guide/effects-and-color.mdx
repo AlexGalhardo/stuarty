@@ -1,0 +1,62 @@
+---
+title: "Effects and color"
+description: "Adjust the brightness, contrast and saturation of a clip, and animate text with presets."
+---
+
+## You will learn
+
+- how to correct the colour of a clip;
+- how to give text an entrance and an exit with a preset;
+- what the product does not do.
+
+## The idea
+
+Colour correction is three numbers on a clip: `brightness` (-1 to 1, default 0), `contrast` (0 to 2, default 1) and `saturation` (0 to 2, default 1). A value equal to the default clears the stored one, so a clip that is back at the defaults has no correction at all. Both the preview and the export apply the correction through the same [render plan](/docs/concepts/render).
+
+For text, captions, clips and shapes there are six **animation presets**: `fade_up`, `fade_down`, `pop`, `zoom_in`, `slide_left` and `slide_right`. A preset writes keyframes (or, for the slides, a transition) on the `in` or the `out` edge, 0.4 seconds long unless you give a duration. The inspector has an Animation section with the preset and the edge.
+
+Text styling (font, weight, size, colour, stroke, shadow and background) is described in [Text and captions](/docs/guide/text-and-captions). Fades and slides between items are in [Transitions](/docs/guide/transitions).
+
+The colour correction has no inspector section yet: use the command palette (`Ctrl+K`, `Cmd+K` on macOS), the CLI or an agent. There are no filters, blurs or LUTs.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b clip.set_color item_id=itm_m1n2p3q4r5 \
+  brightness:=0.1 saturation:=1.2
+vukem-video edit --project prj_7k2m9x4q1b text.apply_preset item_id=itm_t1u2v3w4x5 \
+  preset=fade_up edge=in
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` with the operations:
+
+```json
+{ "op": "clip.set_color", "args": {
+  "item_id": "itm_m1n2p3q4r5", "brightness": 0.1, "saturation": 1.2
+} }
+{ "op": "text.apply_preset", "args": {
+  "item_id": "itm_t1u2v3w4x5", "preset": "pop", "edge": "in"
+} }
+```
+
+</Tab>
+</Tabs>
+
+A preset replaces the keyframes of the same properties inside its edge and keeps the rest of the animation.
+
+## Common mistakes
+
+- Setting a contrast above 2 or a brightness outside -1 to 1: `E_VALIDATION`.
+- Applying a preset to an audio item: `E_TYPE_MISMATCH`.
+- A preset duration longer than the item: the command is refused.
+
+## Next steps
+
+- [Animate with keyframes](/docs/guide/keyframes)
+- [Transitions](/docs/guide/transitions)

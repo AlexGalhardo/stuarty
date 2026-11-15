@@ -1,0 +1,58 @@
+---
+title: "Transitions"
+description: "Fade or slide an item in or out, and crossfade between two overlapping items."
+---
+
+## You will learn
+
+- how to add a fade or a slide to the start or the end of an item;
+- how to crossfade two overlapping clips;
+- what the lint says about a transition with nothing to blend.
+
+## The idea
+
+A **transition** belongs to one edge of one item. The `in` edge is the start and the `out` edge is the end. The kinds are `fade`, `slide_left`, `slide_right`, `slide_up` and `slide_down`, and the default length is 0.5 seconds. The two transitions of an item together cannot be longer than the item. A transition applies to clips, text, captions and shapes.
+
+A **crossfade** is two transitions placed for you: the item that leaves gets a `fade` out, the item that arrives gets a `fade` in, and clips also get the matching audio fades. The two items must overlap by at least the crossfade length, so put them on two tracks or leave the overlap on purpose. In the editor, the timeline menu of an item has **Crossfade**, and the inspector has a Transitions section with the kind and the duration of each edge. The transition marks show on the timeline.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b item.set_transition item_id=itm_m1n2p3q4r5 \
+  edge=in kind=fade duration=0.5s
+vukem-video edit --project prj_7k2m9x4q1b item.crossfade from_item_id=itm_m1n2p3q4r5 \
+  to_item_id=itm_s6t7v8w9x0 duration=1s
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` with the operations:
+
+```json
+{ "op": "item.set_transition", "args": {
+  "item_id": "itm_m1n2p3q4r5", "edge": "out", "kind": "slide_left"
+} }
+{ "op": "item.crossfade", "args": {
+  "from_item_id": "itm_m1n2p3q4r5", "to_item_id": "itm_s6t7v8w9x0", "duration": "1s"
+} }
+```
+
+</Tab>
+</Tabs>
+
+Use `"kind": null` to remove a transition.
+
+## Common mistakes
+
+- A crossfade between items that do not overlap by its length: the command is refused. Move the second item earlier first.
+- A transition on an audio item. Use the audio fades of `item.set_audio` instead.
+- A transition that leaves nothing to blend: the lint reports `L_TRANSITION_EMPTY`.
+
+## Next steps
+
+- [Animate with keyframes](/docs/guide/keyframes)
+- [Audio editing](/docs/guide/audio)

@@ -1,0 +1,54 @@
+---
+title: "The safe area"
+description: "Keep text where the platform interface will not cover it, with the guide and the lint rule."
+---
+
+## You will learn
+
+- what the safe area is and how big it is for each format;
+- how to show it over the preview;
+- how the lint rule finds text outside it.
+
+## The idea
+
+Social apps cover the edges of a vertical video with their own buttons, names and captions. The **safe area** is the rectangle where text stays readable. The core computes it with one function, so the guide in the editor and the lint rule always agree.
+
+| Frame | Left and right | Top | Bottom |
+| --- | --- | --- | --- |
+| Vertical (width divided by height at most 0.6, such as 9:16) | 6% of the width | 14% of the height | 35% of the height |
+| Any other size | 5% | 5% | 5% |
+
+The vertical margins follow the Meta Reels guidance; no other platform's margins are verified, so the other sizes use 5% on every side.
+
+## Quick start
+
+Press **Safe area** in the preview toolbar. The editor draws the rectangle as a dashed outline and dims the band outside it. The numbers come from the core; the editor does not compute them.
+
+An agent finds the same problem with the lint:
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video lint --project prj_7k2m9x4q1b
+```
+
+</Tab>
+<Tab title="MCP">
+
+`lint` with `{"project_id": "prj_7k2m9x4q1b"}`.
+
+</Tab>
+</Tabs>
+
+`L_SAFE_AREA` is a warning on a text or caption item whose box (every line of its widest layout, rotation applied) reaches outside the rectangle. Move the item inside, or give the caption the position `middle` with `track.set_caption_style`.
+
+## Common mistakes
+
+- Treating the warning as an error. It never blocks an export; you decide.
+- Moving a caption with `item.set_transform` when the track style positions it. Change the track style instead.
+
+## Next steps
+
+- [Text and captions](/docs/guide/text-and-captions)
+- [Exporting](/docs/guide/exporting)

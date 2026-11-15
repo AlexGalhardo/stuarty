@@ -1,0 +1,60 @@
+---
+title: "Audio editing"
+description: "Add music and sound, set volume and fades, mute a clip and keep the mix out of clipping."
+---
+
+## You will learn
+
+- how to place audio on an audio track;
+- how to set volume, fades and mute;
+- how the export mixes the audio and what the lint warns about.
+
+## The idea
+
+Sound comes from two places: the audio of a video clip, and **audio items** on an audio track. An audio item points to an audio asset, or to the audio of a video asset, and plays from `source_in` for a duration. The export mixes every audible item into one 48 kHz stereo track.
+
+Each clip or audio item has a `volume` (linear gain from 0 to 4), a `fade_in`, a `fade_out`, and a clip can be muted with `audio_muted`. Volume can also be animated with a [keyframe](/docs/guide/keyframes) on the property `volume`. The project has a `loudness_target` in LUFS (from -30 to -5) that the export aims for.
+
+There is no audio panel in the inspector yet: use the command palette (`Ctrl+K`, `Cmd+K` on macOS), the CLI or an agent.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b audio.add track_id=trk_m1n2p3q4r5 \
+  asset_id=ast_4h6j8k2m3n start=0s
+vukem-video edit --project prj_7k2m9x4q1b item.set_audio item_id=itm_s6t7v8w9x0 \
+  volume:=0.6 fade_in=1s fade_out=2s
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` with the operations:
+
+```json
+{ "op": "audio.add", "args": {
+  "track_id": "trk_m1n2p3q4r5", "asset_id": "ast_4h6j8k2m3n", "start": "0s"
+} }
+{ "op": "item.set_audio", "args": { "item_id": "itm_s6t7v8w9x0", "volume": 0.6, "fade_out": "2s" } }
+```
+
+</Tab>
+</Tabs>
+
+The default duration of an audio item is the rest of the asset from `source_in`. The two fades together cannot be longer than the item. A volume of 1, fades of `0s` and `audio_muted` false clear the stored value.
+
+Run `vukem-video lint` before you export. These rules concern sound: `L_AUDIO_OVERLAP` (audio items that overlap), `L_AUDIO_CLIP` (the mix reaches clipping) and `L_SILENT_EXPORT` (the export would have no sound).
+
+## Common mistakes
+
+- Adding audio to a visual track: `E_TYPE_MISMATCH`.
+- Setting `audio_muted` on an audio item. It applies to clips; set `volume` to 0 for an audio item.
+- A volume above 4: `E_VALIDATION`.
+
+## Next steps
+
+- [Remove silence](/docs/guide/silence-removal)
+- [Animate with keyframes](/docs/guide/keyframes)
