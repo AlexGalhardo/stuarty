@@ -1,11 +1,7 @@
-import { expect, test } from "@playwright/test";
-
-import { PENDING_SERVER } from "./helpers";
+import { expect, test } from "./helpers";
 
 // D-024 and SDD-012 section 17: dark by default, whatever the system says.
 test.describe("theme-default-dark-and-toggle", () => {
-	test.skip(true, PENDING_SERVER);
-
 	test.describe("operating system in light mode", () => {
 		test.use({ colorScheme: "light" });
 
