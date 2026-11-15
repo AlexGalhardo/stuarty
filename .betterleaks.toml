@@ -42,7 +42,7 @@ regexes = [
 	'''_FAKE_|(?i)placeholder|changeme|example''',
 	'''(?i)x{8,}|\.\.\.$''',
 	'''correct horse battery|another long password|a brand new password''',
-	'''^(wrong|guess|Show password|Hide password)$''',
+	'''^(wrong|guess|Show password|Hide password|Password)$''',
 ]
 
 # The specifications in docs/sdds/ show example actor ids (key:key_<10 characters>,
