@@ -21,6 +21,7 @@ import {
 import { AUDIO_ROW_PX, sortByStart, VISUAL_ROW_PX } from "./geometry";
 import { consumeDragClick } from "./gestures/lifecycle";
 import { beginMove } from "./gestures/move";
+import TrimHandle from "./items/TrimHandle";
 import { clickSelection, gridLayout } from "./keyboard";
 
 const TYPE_CLASS: Record<string, string> = {
@@ -69,7 +70,7 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 			})}
 			data-item-id={id}
 			className={cn(
-				"absolute top-1 bottom-1 flex min-w-px cursor-pointer items-center overflow-hidden rounded-md border border-ed-track-line px-2 text-xs whitespace-nowrap",
+				"group absolute top-1 bottom-1 flex min-w-px cursor-pointer items-center overflow-hidden rounded-md border border-ed-track-line px-2 text-xs whitespace-nowrap",
 				TYPE_CLASS[item.type],
 				selected && "ring-2 ring-ed-selection",
 				remote && "outline-2 outline-agent",
@@ -109,7 +110,9 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 				runtime.uiWriter.select(next.items, next.anchor);
 			}}
 		>
+			<TrimHandle itemId={id} edge="start" />
 			<UntrustedText className="truncate">{label}</UntrustedText>
+			<TrimHandle itemId={id} edge="end" />
 		</div>
 	);
 });

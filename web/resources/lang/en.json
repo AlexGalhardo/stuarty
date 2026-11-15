@@ -204,6 +204,7 @@
           "one": "Redo applied, {count} change was left alone because {actor} changed it",
           "other": "Redo applied, {count} changes were left alone because {actor} changed them"
         },
+        "source_has_only": "The source has only {available}",
         "another_actor": "another actor"
       },
       "jobs": {

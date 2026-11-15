@@ -14,6 +14,8 @@ export interface Notice {
 	count?: number;
 	// The actor a UI-worded notice names (undo skipped, section 15).
 	actor?: string;
+	// Values the catalogue text of `messageKey` names.
+	params?: Readonly<Record<string, string | number>>;
 	// An action the notice offers, as the operations to send. The values come
 	// from the core (`details.next_free`), never computed here.
 	action?: {

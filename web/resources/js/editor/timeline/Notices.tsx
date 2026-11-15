@@ -31,6 +31,7 @@ export default function Notices(): ReactNode {
 						<p className="font-medium">
 							{notice.messageKey !== undefined
 								? t(notice.messageKey, {
+										...notice.params,
 										count: notice.count ?? 0,
 										actor:
 											notice.actor === undefined

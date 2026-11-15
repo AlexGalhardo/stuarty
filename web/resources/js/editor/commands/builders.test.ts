@@ -7,6 +7,7 @@ import {
 	moveOperations,
 	nudgeOperations,
 	splitOperations,
+	trimEdgeOperations,
 	trimOperations,
 	withNextFree,
 } from "./builders";
@@ -92,5 +93,19 @@ describe("moveItems", () => {
 			{ id: "a", from: 10, to: 5 },
 		]);
 		expect(left.map((o) => o.args.item_id)).toEqual(["a", "b"]);
+	});
+});
+
+describe("trim", () => {
+	test("a released handle is one item.trim with a time unit", () => {
+		expect(trimEdgeOperations("a", "end", 88)).toEqual([
+			{ op: "item.trim", args: { item_id: "a", edge: "end", to: "88f" } },
+		]);
+	});
+
+	test("the next free place of the core replaces `to`, the edge stays", () => {
+		expect(withNextFree(trimEdgeOperations("a", "start", 4), 12)).toEqual([
+			{ op: "item.trim", args: { item_id: "a", edge: "start", to: "12f" } },
+		]);
 	});
 });

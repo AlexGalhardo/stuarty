@@ -2,7 +2,12 @@ import type { EditOutcome } from "../api/edit";
 import type { ApiError } from "../api/errors";
 import type { Notice } from "../state/noticeStore";
 import type { EditorRuntime } from "../state/runtime";
-import { selectOrderedTrackIds, selectTrack } from "../state/selectors";
+import {
+	selectFps,
+	selectOrderedTrackIds,
+	selectTrack,
+} from "../state/selectors";
+import { formatTimecode } from "../ui/timecode";
 import {
 	addClipOperations,
 	adjacentTrack,
@@ -16,6 +21,7 @@ import {
 	withNextFree,
 } from "./builders";
 import { newId } from "./ids";
+import { fpsOf } from "./units";
 
 // The action registry of the Prototype (SDD-012 sections 8.2, 9 and 15): every
 // gesture builds its operations from what the user chose and sends one batch
@@ -55,6 +61,15 @@ export const FIELD_ERRORS: ReadonlySet<string> = new Set([
 	"E_VALIDATION",
 	"E_INVALID_TIME",
 ]);
+
+// The longest length the source allows, in frames, from `details.available` of
+// a trim of the end edge (SDD-002 section 5, R9).
+function sourceAvailable(error: ApiError): number | null {
+	const available = error.details?.available;
+	if (typeof available !== "object" || available === null) return null;
+	const max = (available as { [key: string]: unknown }).max_duration;
+	return typeof max === "number" ? max : null;
+}
 
 function nextFree(error: ApiError): number | null {
 	const value = error.details?.next_free;
@@ -105,10 +120,24 @@ export function createActions(runtime: EditorRuntime): Actions {
 			});
 			return;
 		}
+		const trimmed = ops.find((o) => o.op === "item.trim");
+		const available = sourceAvailable(error);
+		if (error.code === "E_OUT_OF_SOURCE" && trimmed && available !== null) {
+			const fps = fpsOf(selectFps(documents.getState()));
+			noticeWriter.push({
+				...base,
+				messageKey: "ui.editor.notice.source_has_only",
+				params: { available: formatTimecode(available, fps) },
+			});
+			return;
+		}
 		const free = error.code === "E_OVERLAP" ? nextFree(error) : null;
 		if (
 			free !== null &&
-			ops.some((o) => o.op.endsWith(".add") || o.op === "item.move")
+			ops.some(
+				(o) =>
+					o.op.endsWith(".add") || o.op === "item.move" || o.op === "item.trim",
+			)
 		) {
 			noticeWriter.push({
 				...base,
