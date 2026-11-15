@@ -3,7 +3,8 @@
 //   bun run check:i18n     the tree, then the fixtures
 //
 // I1, I2   en.json and pt-BR.json have the same keys and the same placeholders
-// I3       no literal user-facing string in editor/**: JSX text with a letter, and
+// I3       no literal user-facing string in any source of resources/js (the editor,
+//          components, layouts and pages; generated code and tests excepted): JSX text with a letter, and
 //          the attributes aria-label, aria-description, title, placeholder, alt
 //          and label with a literal value, must go through t()
 // I4       every key used in code exists in en.json, and every ui.editor key of
@@ -63,20 +64,23 @@ const LITERAL_ATTRIBUTES = new Set([
 ]);
 const KEY = /^ui(\.[A-Za-z0-9_]+)+$/;
 const LETTER = /\p{L}/u;
-// Codes and names that are visible on purpose and not translated (rule T9):
-// none yet; add here with the reason when one is needed.
+// Literals that are not words of a language (rule T9): example values that show a
+// format. Add here with the reason when one is needed; nothing else is allowed.
+const TECHNICAL_LITERALS: ReadonlySet<string> = new Set([
+	"sha256:…", // a content hash, the placeholder of the brand kit logo field
+	"prj_...", // a project id, the placeholder of the API key project field
+]);
+const isWord = (text: string): boolean => LETTER.test(text) && !TECHNICAL_LITERALS.has(text);
 
 const here = dirname(fileURLToPath(import.meta.url));
 const webRoot = join(here, "..");
 
-function editorRelative(file: string): string | null {
-	const marker = "/editor/";
-	const at = file.lastIndexOf(marker);
-	return at < 0 ? null : file.slice(at + marker.length);
-}
-
-function isTestFile(rel: string): boolean {
-	return rel.startsWith("fixtures/") || /\.test\.tsx?$/.test(rel);
+// Sources whose literals are not user-facing: tests, generated code and the
+// editor's own test fixtures.
+function isExempt(file: string): boolean {
+	return (
+		/\.test\.tsx?$/.test(file) || file.includes("/generated/") || file.includes("/editor/fixtures/")
+	);
 }
 
 function loadCatalog(name: string): Catalog {
@@ -100,7 +104,6 @@ function isCallTo(n: Node, name: string): boolean {
 function scanFile(
 	sf: SourceFile,
 	fileLabel: string,
-	inEditor: boolean,
 	catalog: Map<string, Leaf>,
 	usage: Usage,
 ): Finding[] {
@@ -118,7 +121,7 @@ function scanFile(
 	const visit = (n: Node): void => {
 		switch (n.kind) {
 			case SyntaxKind.JsxText: {
-				if (inEditor && !n.containsOnlyTriviaWhiteSpaces && LETTER.test(n.text)) {
+				if (!n.containsOnlyTriviaWhiteSpaces && isWord(n.text)) {
 					report(n, "I3", `literal text "${n.text.trim()}" must go through t()`);
 				}
 				break;
@@ -126,13 +129,13 @@ function scanFile(
 			case SyntaxKind.JsxExpression: {
 				const text = n.expression ? literalText(n.expression) : null;
 				const parentIsAttribute = n.parent?.kind === SyntaxKind.JsxAttribute;
-				if (inEditor && !parentIsAttribute && text !== null && LETTER.test(text)) {
+				if (!parentIsAttribute && text !== null && isWord(text)) {
 					report(n, "I3", `literal text "${text}" must go through t()`);
 				}
 				break;
 			}
 			case SyntaxKind.JsxAttribute: {
-				if (!inEditor || n.name.kind !== SyntaxKind.Identifier) break;
+				if (n.name.kind !== SyntaxKind.Identifier) break;
 				const name = n.name.text;
 				if (!LITERAL_ATTRIBUTES.has(name) || n.initializer === undefined) break;
 				const init = n.initializer;
@@ -141,7 +144,7 @@ function scanFile(
 					(init.kind === SyntaxKind.JsxExpression && init.expression
 						? literalText(init.expression)
 						: null);
-				if (text !== null && LETTER.test(text)) {
+				if (text !== null && isWord(text)) {
 					report(n, "I3", `${name}="${text}" must go through t()`);
 				}
 				break;
@@ -196,13 +199,8 @@ function scan(
 			if (file.includes("/node_modules/") || !only(file)) continue;
 			const sf = project.program.getSourceFile(file);
 			if (sf === undefined) continue;
-			const rel = editorRelative(file);
-			const inEditor = rel !== null && !isTestFile(rel);
-			const isTest = /\.test\.tsx?$/.test(file) || file.includes("/generated/");
-			if (isTest) continue;
-			findings.push(
-				...scanFile(sf, relative(cwd, file).split("\\").join("/"), inEditor, catalog, usage),
-			);
+			if (isExempt(file)) continue;
+			findings.push(...scanFile(sf, relative(cwd, file).split("\\").join("/"), catalog, usage));
 		}
 		return findings;
 	} finally {
@@ -320,6 +318,10 @@ function checkFixtures(catalog: Map<string, Leaf>): string[] {
 		}
 		if (kind === "pass" && mine.length > 0) {
 			problems.push(`fixture ${name} should pass but reports: ${mine.map(format).join("; ")}`);
+		}
+		// I3 covers all of resources/js, not only editor/: a word outside editor/ must be reported.
+		if (name === "i3-fail" && !mine.some((f) => f.rule === "I3" && !f.file.startsWith("i3-fail/editor/"))) {
+			problems.push("fixture i3-fail should report a literal outside editor/ and did not");
 		}
 	}
 	return problems;
