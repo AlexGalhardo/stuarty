@@ -77,3 +77,19 @@ condition = "AND"
 paths = ['''(?:_test\.go|^web/resources/js/.+\.tsx?)$''']
 regexTarget = "match"
 regexes = ['''key:key_[a-z0-9]{10}''']
+
+# Network-mode login (P2-SRV-012): the name of the variable that carries the
+# first administrator's password, the deliberately weak "short" password of the
+# refusal test, and login bodies that Go tests build from a variable (the
+# literal next to "password" is the closing backtick, not a value). Only these
+# line shapes, only in web/app/auth and web/app/http.
+[[allowlists]]
+description = "network-mode login variable name and test login bodies"
+condition = "AND"
+paths = ['''^web/app/(?:auth|http)/[^/]+\.go$''']
+regexTarget = "line"
+regexes = [
+	'''EnvAdminPassword\s*=\s*"VUKEM_VIDEO_ADMIN_PASSWORD"''',
+	'''auth\.EnvAdminPassword:\s*"short"''',
+	'''"password":"`\s*\+\s*(?:password|goodPass)\s*\+\s*`"''',
+]
