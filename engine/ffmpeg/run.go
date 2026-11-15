@@ -42,6 +42,9 @@ type Runner struct {
 	encMu  sync.Mutex
 	enc    *EncoderDetection
 	encErr error
+
+	capMu    sync.Mutex
+	capCache map[sizeKey]error
 }
 
 // NewRunner returns a runner for the installation and the workspace root.
@@ -355,7 +358,7 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 	case errors.Is(cause, ErrDeadline):
 		return res, fmt.Errorf("%w after %s", ErrDeadline, s.deadline)
 	case errors.Is(cause, ErrOutputTooLarge):
-		_ = os.Remove(s.outPath)
+		removeInside(s.dir, s.outPath)
 
 		return res, fmt.Errorf("%w (limit %d bytes)", ErrOutputTooLarge, s.maxBytes)
 	case errors.Is(cause, errOverflow):
