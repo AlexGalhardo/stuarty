@@ -13,6 +13,7 @@ Linked into the `vukem-video` binary, collected for the six release targets.
 | github.com/AlexGalhardo/vukem | v0.44.0 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem@v0.44.0/LICENSE>) | - |
 | github.com/AlexGalhardo/vukem/contrib/engine | v0.1.1 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem/contrib/engine@v0.1.1/LICENSE>) | - |
 | github.com/dustin/go-humanize | v1.1.0 | MIT | Copyright (c) 2005-2008  Dustin Sallings <dustin@spy.net> | [LICENSE](<licenses/go-modules/github.com/dustin/go-humanize@v1.1.0/LICENSE>) | - |
+| github.com/go-text/typesetting | v0.3.5 | Unlicense | Copyright 2021 The go-text authors | [LICENSE](<licenses/go-modules/github.com/go-text/typesetting@v0.3.5/LICENSE>) | - |
 | github.com/google/jsonschema-go | v0.4.3 | MIT | Copyright (c) 2025 JSON Schema Go Project Authors | [LICENSE](<licenses/go-modules/github.com/google/jsonschema-go@v0.4.3/LICENSE>) | - |
 | github.com/google/uuid | v1.6.0 | BSD-3-Clause | Copyright (c) 2009,2014 Google Inc. All rights reserved. | [LICENSE](<licenses/go-modules/github.com/google/uuid@v1.6.0/LICENSE>) | - |
 | github.com/mattn/go-isatty | v0.0.24 | MIT | Copyright (c) Yasuhiro MATSUMOTO <mattn.jp@gmail.com> | [LICENSE](<licenses/go-modules/github.com/mattn/go-isatty@v0.0.24/LICENSE>) | - |
@@ -24,6 +25,7 @@ Linked into the `vukem-video` binary, collected for the six release targets.
 | github.com/segmentio/encoding | v0.5.4 | MIT | Copyright (c) 2019 Segment.io, Inc. | [LICENSE](<licenses/go-modules/github.com/segmentio/encoding@v0.5.4/LICENSE>) | - |
 | github.com/yosida95/uritemplate/v3 | v3.0.2 | BSD-3-Clause | Copyright (C) 2016, Kohei YOSHIDA <<https://yosida95.com/>>. All rights reserved. | [LICENSE](<licenses/go-modules/github.com/yosida95/uritemplate/v3@v3.0.2/LICENSE>) | - |
 | golang.org/x/crypto | v0.59.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/crypto@v0.59.0/LICENSE>) | - |
+| golang.org/x/image | v0.38.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/image@v0.38.0/LICENSE>) | - |
 | golang.org/x/oauth2 | v0.35.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/oauth2@v0.35.0/LICENSE>) | - |
 | golang.org/x/sync | v0.25.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/sync@v0.25.0/LICENSE>) | - |
 | golang.org/x/sys | v0.50.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/sys@v0.50.0/LICENSE>) | - |
