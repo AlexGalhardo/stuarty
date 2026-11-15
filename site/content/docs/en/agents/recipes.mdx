@@ -1,0 +1,66 @@
+---
+title: "Recipes: cut, caption, export"
+description: "Three complete command sequences an agent can copy: import, cut, caption and export; recover from a conflict; fill a template."
+---
+
+## The idea
+
+Each recipe is a sequence of CLI commands that works as written. The same operations exist as MCP tools; the batches are the same JSON. Replace the identifiers with the ones your commands print, or pass your own with `--id` and `--asset-id` as below.
+
+## Import, cut, caption and export
+
+```bash
+vukem-video project:create --name "Teaser" --id prj_7k2m9x4q1b
+vukem-video media:import clip.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d
+vukem-video edit --project prj_7k2m9x4q1b --ops - <<'EOF'
+[{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_f6g7h8j9k0"}},
+ {"op":"track.add","args":{"kind":"visual","name":"Captions","id":"trk_a1b2c3d4e5"}},
+ {"op":"clip.add","args":{"track_id":"trk_f6g7h8j9k0","asset_id":"ast_3c5v8n2w6d","start":"0s","duration":"2s","id":"itm_m1n2p3q4r5"}}]
+EOF
+vukem-video edit --project prj_7k2m9x4q1b --ops - <<'EOF'
+[{"op":"item.split","args":{"item_id":"itm_m1n2p3q4r5","at":"1s","new_id":"itm_c3d4e5f6g7"}},
+ {"op":"item.delete","args":{"item_ids":["itm_c3d4e5f6g7"]}}]
+EOF
+vukem-video lint --project prj_7k2m9x4q1b
+vukem-video export --project prj_7k2m9x4q1b
+```
+
+`lint` before `export` catches what would block the export. `export` waits for the job and prints the verified result.
+
+To caption speech instead of typing the words, run `vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d`. It needs the transcription helper, installed once by a person with `vukem-video tools:install whisper`.
+
+## Recover from a conflict
+
+When another actor changed the project after your plan, an edit with a stale `--base` fails with `E_REVISION_CONFLICT` and exit code `2`.
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b --base 1 track.update track_id=trk_f6g7h8j9k0 name=Mine
+# exit 2: E_REVISION_CONFLICT, details.diff lists what changed since revision 1
+vukem-video project:show prj_7k2m9x4q1b
+vukem-video edit --project prj_7k2m9x4q1b --base 2 track.update track_id=trk_f6g7h8j9k0 name=Mine
+```
+
+Read `details.diff`, plan again against the current revision and send the batch again. The batch that failed changed nothing.
+
+## Fill a template
+
+```bash
+vukem-video template:save --project prj_7k2m9x4q1b --name "Spring sale"
+vukem-video template:new <template id> --name "Spring sale" --id prj_6t4y2w8j1m --fill - <<'EOF'
+{"headline":{"text":"Spring sale"}}
+EOF
+vukem-video export --project prj_6t4y2w8j1m
+```
+
+A required slot that is missing returns an error that names the slot in `path`; fix the fill and run the command again.
+
+## Common mistakes
+
+- Planning from a stale revision. Read the project again after any conflict.
+- Skipping `lint`. The export gate refuses a project with lint errors.
+
+## Next steps
+
+- [Safety: undo, trash and limits](/docs/agents/safety)
+- [The agent skill](/docs/agents/skill)
+- [CLI reference](/docs/reference/cli)

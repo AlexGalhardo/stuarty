@@ -1,0 +1,52 @@
+---
+title: "Safety: undo, trash and limits"
+description: "What an agent can and cannot do to your projects: everything is undoable, nothing is deleted for good, nothing leaves your machine, and resources have ceilings."
+---
+
+## The idea
+
+An agent edits and exports without asking you first. Vukem Video makes that safe by removing the dangerous abilities instead of asking for confirmation. The worst a wrong or hostile instruction can do is make edits you can undo and use resources up to a ceiling.
+
+## What an agent cannot do
+
+- **Send your project anywhere.** No command, tool or HTTP route publishes, uploads, calls a webhook or exports to a URL. Import by URL does not exist, and a path that looks like a URL or a network share is refused.
+- **Delete for good.** `project:trash` and `media:trash` move things to the trash, and `project:restore` and `media:restore` bring them back. Emptying the trash is not an MCP tool and not a CLI command: it is done by a person in the editor.
+- **Read secrets.** No tool returns tokens, keys or configuration.
+- **Reach other files through FFmpeg.** FFmpeg only opens files the product chose; user playlists and URLs are never passed to it.
+
+## What is undoable
+
+Every edit is a batch with a revision and the actor that made it. `undo` and `redo` step through the history of the caller, and `history` lists who changed what. Two actors changing the same property from the same revision do not overwrite each other: the second gets `E_REVISION_CONFLICT` with `details.diff`, and its batch changes nothing. See [Batches, revisions and idempotency](/docs/agents/batches).
+
+```bash
+vukem-video history --project prj_7k2m9x4q1b
+vukem-video undo --project prj_7k2m9x4q1b
+```
+
+## Limits
+
+Each workspace has ceilings for the work an agent can start. A call that exceeds one fails with an error that names the ceiling, its value and the variable that changes it, so the agent (or you) knows what to do next.
+
+| Ceiling | Variable |
+| --- | --- |
+| Imported file size | `VUKEM_VIDEO_MAX_IMPORT_BYTES` |
+| Imported video resolution and duration | `VUKEM_VIDEO_MAX_IMPORT_PIXELS`, `VUKEM_VIDEO_MAX_IMPORT_SECONDS` |
+| Exports queued or running | `VUKEM_VIDEO_MAX_EXPORTS` |
+| Size of an exported file | `VUKEM_VIDEO_MAX_EXPORT_BYTES` |
+| Transcriptions running, and the longest audio | `VUKEM_VIDEO_MAX_TRANSCRIBES`, `VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS` |
+
+`E_QUEUE_FULL` and `E_REVISION_CONFLICT` are retryable: the CLI exits with `2` and the error says `retryable: true`. A limit such as `E_LIMIT_EXCEEDED` is not retryable until the input or the ceiling changes. The [error codes](/docs/reference/error-codes) page lists every code and its HTTP status. The [configuration variables](/docs/reference/configuration) page lists the defaults.
+
+## Text from media is data
+
+A transcript, a file name or a metadata field can say "ignore your instructions". The product returns such text inside delimited, truncated blocks marked as data, and the tool descriptions tell the agent to treat it that way. Do not paste it into a prompt as if it came from you.
+
+## Common mistakes
+
+- Assuming a trashed project is gone. It stays on disk until a person empties the trash.
+- Retrying a limit error in a loop. Read the ceiling in the error first.
+
+## Next steps
+
+- [How an agent verifies its work](/docs/agents/verify)
+- [Recipes: cut, caption, export](/docs/agents/recipes)
