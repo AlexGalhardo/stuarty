@@ -75,3 +75,34 @@ jobs:
           name: desktop-detect-${{ matrix.os }}
           path: ${{ runner.temp }}/detect-tmp/vukem-video-e2e-detect-results/*.json
           if-no-files-found: warn
+
+  # The shell (Wails v3, ADR-0023) is a module of its own, so no other job
+  # builds it. The purego tag lets Linux and macOS targets build with no cgo and
+  # no WebKitGTK headers; it needs no secret.
+  shell-build:
+    name: Shell build (${{ matrix.goos }})
+    strategy:
+      fail-fast: false
+      matrix:
+        goos: [linux, darwin, windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CGO_ENABLED: "0"
+      GOOS: ${{ matrix.goos }}
+      GOARCH: amd64
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            desktop/shell/app/go.sum
+      - name: go vet and go build
+        working-directory: desktop/shell/app
+        run: |
+          go vet -tags purego ./...
+          go build -tags purego -o /dev/null ./...
