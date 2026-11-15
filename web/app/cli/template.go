@@ -102,6 +102,55 @@ var templateNew = &spec{
 	},
 }
 
+var templateExport = &spec{
+	name:       "template:export",
+	summary:    "write a template to a file the workspace keeps",
+	usage:      []string{"vukem-video template:export <template id>"},
+	example:    "vukem-video template:export tpl_5n8b2v6c1x",
+	positional: true,
+	run: func(ctx context.Context, c *call) (*output, error) {
+		if len(c.args.Positional) != 1 {
+			return nil, validation("", "template:export takes one template id, got %d.", len(c.args.Positional))
+		}
+
+		res, err := c.svc.TemplateExport(ctx, service.TemplateRef{TemplateID: c.args.Positional[0]})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
+
+var templateImport = &spec{
+	name:       "template:import",
+	summary:    "add a template file to the library",
+	usage:      []string{"vukem-video template:import <path>"},
+	example:    "vukem-video template:import spring-sale.vukem-template.zip",
+	positional: true,
+	globals:    []string{"dry-run"},
+	write:      true,
+	run: func(ctx context.Context, c *call) (*output, error) {
+		if len(c.args.Positional) != 1 {
+			return nil, validation("", "template:import takes one path, got %d.", len(c.args.Positional))
+		}
+
+		path, err := c.rt.abs(c.args.Positional[0])
+		if err != nil {
+			return nil, err
+		}
+
+		req := service.TemplateImportRequest{Path: path, DryRun: c.args.boolean("dry-run")}
+
+		res, err := c.svc.TemplateImport(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
+
 // readFill reads the slot values from a file of the current directory or from
 // standard input.
 func (c *call) readFill(src string) (map[string]service.SlotValue, error) {

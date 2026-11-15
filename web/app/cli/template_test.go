@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -14,6 +15,8 @@ type templateFake struct {
 	list  service.TemplateListRequest
 	save  service.TemplateSaveRequest
 	newer service.TemplateInstantiateRequest
+	ref   service.TemplateRef
+	imp   service.TemplateImportRequest
 }
 
 func (f *templateFake) TemplateList(
@@ -28,6 +31,20 @@ func (f *templateFake) TemplateSave(_ context.Context, r service.TemplateSaveReq
 	f.save = r
 
 	return &service.TemplateResult{Text: "saved"}, nil
+}
+
+func (f *templateFake) TemplateExport(_ context.Context, r service.TemplateRef) (*service.FileResult, error) {
+	f.ref = r
+
+	return &service.FileResult{Text: "exported"}, nil
+}
+
+func (f *templateFake) TemplateImport(
+	_ context.Context, r service.TemplateImportRequest,
+) (*service.TemplateResult, error) {
+	f.imp = r
+
+	return &service.TemplateResult{Text: "imported"}, nil
 }
 
 func (f *templateFake) TemplateInstantiate(
@@ -66,6 +83,29 @@ func TestTemplateCommandsPassTheirFlags(t *testing.T) {
 
 	if code := h.run("template:new", "tpl_1", "--id", "prj_9"); code != ExitFailure {
 		t.Errorf("template:new without --name: exit %d", code)
+	}
+}
+
+func TestTemplateExportAndImport(t *testing.T) {
+	t.Parallel()
+
+	f := &templateFake{}
+	h := newHarness(t)
+	h.res.svc = f
+
+	if code := h.run("template:export", "tpl_1"); code != ExitOK || f.ref.TemplateID != "tpl_1" {
+		t.Errorf("template:export: exit %d, %+v", code, f.ref)
+	}
+
+	if code := h.run("template:import", "spring.zip", "--dry-run"); code != ExitOK || !f.imp.DryRun ||
+		!filepath.IsAbs(f.imp.Path) || filepath.Base(f.imp.Path) != "spring.zip" {
+		t.Errorf("template:import must send an absolute path: exit %d, %+v", code, f.imp)
+	}
+
+	for _, args := range [][]string{{"template:export"}, {"template:import"}, {"template:import", "a", "b"}} {
+		if code := h.run(args...); code != ExitFailure {
+			t.Errorf("%v: exit %d, want 1", args, code)
+		}
 	}
 }
 
