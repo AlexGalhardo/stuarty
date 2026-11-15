@@ -45,6 +45,12 @@
         "export": "Exportar arquivo",
         "import_path": "Caminho de um arquivo de modelo neste computador",
         "import": "Importar modelo"
+      },
+      "trash": {
+        "title": "Lixeira",
+        "move": "Mover para a lixeira",
+        "restore": "Restaurar",
+        "empty": "A lixeira está vazia."
       }
     },
     "settings": {
@@ -893,6 +899,29 @@
           "caption": "Legenda"
         }
       }
+    },
+    "login": {
+      "title": "Entrar",
+      "email": "E-mail",
+      "password": "Senha",
+      "submit": "Entrar",
+      "logout": "Sair"
+    },
+    "keys": {
+      "title": "Chaves de API",
+      "nav": "Chaves de API",
+      "new": "Nova chave",
+      "name": "Nome",
+      "scopes": "Escopos",
+      "project": "Limitar a um projeto (opcional)",
+      "create": "Criar chave",
+      "list": "Suas chaves",
+      "empty": "Nenhuma chave ainda.",
+      "created": "Criada em {date}",
+      "revoked": "Revogada",
+      "revoke": "Revogar",
+      "secret_once": "Copie este segredo agora. Ele é mostrado só uma vez.",
+      "secret_dismiss": "Já copiei"
     }
   }
 }

@@ -1,6 +1,7 @@
-import { Head, useForm, usePage } from "@inertiajs/react";
-import type { FormEvent } from "react";
+import { Head, router, useForm, usePage } from "@inertiajs/react";
+import { type FormEvent, useState } from "react";
 
+import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,10 @@ import {
 	SIZE_PRESETS,
 	type SizePreset,
 } from "@/types";
+import { createClient } from "../../editor/api/client";
+import { HttpTransport } from "../../editor/api/http";
 import Templates from "./Templates";
+import Trash from "./Trash";
 
 const NAME_MAX = 120;
 
@@ -24,10 +28,25 @@ export default function ProjectsIndex() {
 	const t = useT();
 	const locale = useLocale();
 	const { projects } = usePage<ProjectsIndexProps>().props;
+	// Changes when a project goes to the trash or comes back, so the trash list
+	// reads again; the list above is reloaded from the controller.
+	const [trashVersion, setTrashVersion] = useState(0);
+	const [failure, setFailure] = useState<Failure | null>(null);
 	const form = useForm<{ name: string; preset: SizePreset }>({
 		name: "",
 		preset: "9:16",
 	});
+
+	const moveToTrash = async (id: string): Promise<void> => {
+		setFailure(null);
+		try {
+			await createClient(new HttpTransport("/api/v1")).trashProject(id);
+			router.reload({ only: ["projects"] });
+			setTrashVersion((was) => was + 1);
+		} catch (error) {
+			setFailure(failureOf(error));
+		}
+	};
 
 	const submit = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -116,6 +135,7 @@ export default function ProjectsIndex() {
 					<h2 id="project-list" className="text-lg font-semibold">
 						{t("ui.projects.list")}
 					</h2>
+					<FailureNote failure={failure} />
 					{projects.length === 0 ? (
 						<p className="mt-4 text-sm text-muted-foreground">
 							{t("ui.projects.empty")}
@@ -127,11 +147,18 @@ export default function ProjectsIndex() {
 									key={project.id}
 									project={project}
 									locale={locale}
+									onTrash={() => void moveToTrash(project.id)}
 								/>
 							))}
 						</ul>
 					)}
 				</section>
+				<Trash
+					version={trashVersion}
+					onRestored={() => {
+						router.reload({ only: ["projects"] });
+					}}
+				/>
 				<Templates />
 			</div>
 		</>
@@ -141,9 +168,11 @@ export default function ProjectsIndex() {
 function ProjectRow({
 	project,
 	locale,
+	onTrash,
 }: {
 	project: ProjectSummary;
 	locale: string;
+	onTrash(): void;
 }) {
 	const t = useT();
 	return (
@@ -165,15 +194,24 @@ function ProjectRow({
 				</p>
 			</div>
 			{/* The editor is another document, so this is a plain link, not an Inertia visit (SDD-012 section 2.2). */}
-			<Button asChild variant="outline">
-				<a href={`/editor/${project.id}`}>
-					{t("ui.projects.open")}
+			<div className="flex shrink-0 gap-2">
+				<Button asChild variant="outline">
+					<a href={`/editor/${project.id}`}>
+						{t("ui.projects.open")}
+						<span className="sr-only">
+							{" "}
+							<UntrustedText>{project.name}</UntrustedText>
+						</span>
+					</a>
+				</Button>
+				<Button type="button" variant="ghost" onClick={onTrash}>
+					{t("ui.projects.trash.move")}
 					<span className="sr-only">
 						{" "}
 						<UntrustedText>{project.name}</UntrustedText>
 					</span>
-				</a>
-			</Button>
+				</Button>
+			</div>
 		</li>
 	);
 }
