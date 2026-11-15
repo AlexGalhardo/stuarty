@@ -45,7 +45,7 @@ test.describe("timeline-selection", () => {
 		await expect(items).toHaveCount(3);
 		const first = await items.nth(0).boundingBox();
 		const second = await items.nth(1).boundingBox();
-		const row = await page.getByRole("row").first().boundingBox();
+		const row = await page.locator("[data-track-id]").first().boundingBox();
 		if (first === null || second === null || row === null) {
 			throw new Error("items are not laid out");
 		}

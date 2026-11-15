@@ -588,11 +588,14 @@ At 1280 by 720 the preview region is 760 px wide and 392 px high after the top b
 ### 7.1 DOM structure
 
 ```text
-div#timeline  role="grid" aria-label  aria-rowcount  tabindex=-1  style="--ppf: 0.5"
-├── div.tl-corner                              top-left cell (empty; the zoom controls are in the timeline toolbar, §6.1)
-├── div.tl-ruler  (canvas, aria-hidden) + div role="slider" aria-label="Playhead" aria-valuetext
-├── div.tl-headers                             sticky column, one TrackHeader per track
-│   └── div role="rowheader"  [name][hide/mute][menu]
+div#timeline  role="grid" aria-label  aria-rowcount (2 x tracks + 1)  tabindex=-1  style="--ppf: 0.5"
+├── div role="row" (display: contents)         the ruler row
+│   ├── div.tl-corner  role="none"             top-left cell (empty; the zoom controls are in the timeline toolbar, §6.1)
+│   └── div role="columnheader"                holds the ruler
+│       └── div.tl-ruler  (canvas, aria-hidden) + div role="slider" aria-label="Playhead" aria-valuetext
+├── div.tl-headers  role="rowgroup"            sticky column, one row per track
+│   └── div role="row" (display: contents)
+│       └── div role="rowheader"  [name][hide/mute][menu]
 ├── div.tl-scroll  (the only scroll container, overflow auto)
 │   ├── div.tl-canvas  style="width: calc(var(--extent) * var(--ppf) * 1px)"
 │   │   ├── div.tl-row role="row"  one per track, height from trackHeights
@@ -602,6 +605,8 @@ div#timeline  role="grid" aria-label  aria-rowcount  tabindex=-1  style="--ppf: 
 │   │   └── div.tl-playhead                one element, transform driven by clock (§19)
 └── div role="status" aria-live="polite"           announcements
 ```
+
+The grid has two sets of rows because the header column and the scrolling canvas are separate boxes: ARIA allows a `rowheader` and a `slider` only inside a row, and axe (§18.4) rejects them as direct children of the grid. The headers rowgroup and the canvas rows are therefore both rows of the grid, and `aria-rowcount` is two per track plus the ruler row.
 
 Items are positioned by CSS custom properties: `left: calc(var(--f) * var(--ppf) * 1px); width: calc(var(--d) * var(--ppf) * 1px)`, where `--f` and `--d` are the item's `start` and `duration` set inline when the item changes and `--ppf` is the zoom set once on `#timeline`. A zoom change updates one variable and the browser relayouts; no React component re-renders (§19).
 
@@ -1185,7 +1190,7 @@ D-024: dark by default, light on a toggle.
 | `--ed-preview-surround` | `oklch(0.2 0 0)` | `oklch(0.2 0 0)` | the preview region around the canvas, the same in both themes |
 | `--ed-handle` | `oklch(0.85 0.12 230)` | `oklch(0.85 0.12 230)` | selection box, transform handles and focus rings drawn over the preview surround (§11.6) |
 
-4. **Surround.** The preview region uses `--ed-preview-surround` only (not `--ed-bg`) and is never white in the light theme: the canvas surround stays at `oklch(0.2 0 0)` in both themes so the picture is judged against a neutral dark surround (D-024 reason). It is the one token that is the same in both themes.
+4. **Surround.** The preview region uses `--ed-preview-surround` only (not `--ed-bg`) and is never white in the light theme: the canvas surround stays at `oklch(0.2 0 0)` in both themes so the picture is judged against a neutral dark surround (D-024 reason). It is the one token that is the same in both themes. The `main` element that holds it carries the `dark` class and `text-foreground`, so the transport row text and icons resolve to the dark tokens in both themes (the light `--muted-foreground` on the surround is 3.01:1).
 5. **Motion.** No interface animations (D-013): editor components add no CSS transition, keyframe animation or rotating spinner, and the 1.5 s highlights are class toggles. The transitions and `tw-animate-css` animations the kept shadcn components already carry (button press, select, sheet, tooltip, sidebar, 100 to 200 ms) stay, and `app.css` turns them off under `prefers-reduced-motion: reduce` with one global rule (animation and transition durations of 0.01 ms, one iteration). The motion tokens and that rule are in `docs/design-system.md` §2.13.
 6. **Tests.** Both themes are exercised: every Playwright scenario tagged `@themes` runs twice, and the axe job and the contrast script cover both (§18.4).
 

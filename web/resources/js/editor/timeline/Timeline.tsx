@@ -343,7 +343,7 @@ export default function Timeline(): ReactNode {
 				ref={gridRef}
 				role="grid"
 				aria-label={t("ui.editor.timeline.tracks")}
-				aria-rowcount={trackIds.length}
+				aria-rowcount={trackIds.length * 2 + 1}
 				tabIndex={-1}
 				onKeyDown={onGridKeyDown}
 				onFocus={(event) => {
@@ -363,22 +363,36 @@ export default function Timeline(): ReactNode {
 					gridTemplateRows: `${RULER_HEIGHT_PX}px minmax(0, 1fr)`,
 				}}
 			>
-				<div className="border-r border-b border-ed-track-line bg-ed-panel" />
-				<Ruler
-					ppf={ppf}
-					fps={fps}
-					scrollLeft={scrollLeft}
-					viewportWidth={viewportWidth}
-					playheadFrame={playhead}
-					endFrame={endFrame}
-					onSeek={runtime.uiWriter.setPlayhead}
-				/>
+				{/* biome-ignore lint/a11y/useSemanticElements: a grid needs rows of cells, and the ruler slider has to sit in one (SDD-012 section 7.1); the row adds no box. */}
+				<div role="row" tabIndex={-1} className="contents">
+					<div
+						role="none"
+						className="border-r border-b border-ed-track-line bg-ed-panel"
+					/>
+					{/* biome-ignore lint/a11y/useSemanticElements: see the row above. */}
+					<div role="columnheader" tabIndex={-1} className="min-h-0 min-w-0">
+						<Ruler
+							ppf={ppf}
+							fps={fps}
+							scrollLeft={scrollLeft}
+							viewportWidth={viewportWidth}
+							playheadFrame={playhead}
+							endFrame={endFrame}
+							onSeek={runtime.uiWriter.setPlayhead}
+						/>
+					</div>
+				</div>
+				{/* biome-ignore lint/a11y/useSemanticElements: the headers column is a rowgroup of the grid (SDD-012 section 7.1). */}
 				<div
 					ref={headers}
+					role="rowgroup"
 					className="overflow-hidden border-r border-ed-track-line bg-ed-panel"
 				>
 					{trackIds.map((id) => (
-						<TrackHeader key={id} id={id} />
+						// biome-ignore lint/a11y/useSemanticElements: a rowheader has to sit in a row; the row adds no box.
+						<div key={id} role="row" tabIndex={-1} className="contents">
+							<TrackHeader id={id} />
+						</div>
 					))}
 				</div>
 				{/* biome-ignore lint/a11y/noStaticElementInteractions lint/a11y/useKeyWithClickEvents: clicking empty space clears the selection; the keyboard equivalent is Esc, handled on window. */}
