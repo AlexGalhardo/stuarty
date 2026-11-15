@@ -61,6 +61,8 @@ export function createActions(runtime: EditorRuntime): Actions {
 	}
 
 	function report(error: ApiError, ops: Operations): void {
+		// A request the browser itself gave up is not a failure to show.
+		if (error.isAborted) return;
 		const base: Omit<Notice, "id"> = {
 			kind: "error",
 			code: error.code,
@@ -116,6 +118,7 @@ export function createActions(runtime: EditorRuntime): Actions {
 			}
 			return outcome;
 		}
+		if (outcome.error.isAborted) return outcome;
 		const code = outcome.error.code;
 		if (code === "E_NOTHING_TO_UNDO" || code === "E_NOTHING_TO_REDO") {
 			uiWriter.blockHistory(kind, documents.getState().revision ?? 0);
