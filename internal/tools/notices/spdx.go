@@ -22,6 +22,8 @@ var allowed = map[string]bool{
 	"MPL-2.0": true, "0BSD": true, "Unlicense": true, "OFL-1.1": true, "LGPL-3.0-or-later": true,
 	// SQLite's public-domain dedication (modernc.org/sqlite), SDD-009 section 12.2 item 4.
 	"blessing": true,
+	// zlib and zimg, statically linked into the own FFmpeg build (D-017); approved by the author on 2026-11-15.
+	"Zlib": true, "WTFPL": true,
 }
 
 // signature matches a licence text, already lower-cased with single spaces.
@@ -46,6 +48,14 @@ var signatures = []signature{
 	{id: "MPL-2.0", all: []string{"mozilla public license version 2.0"}},
 	{id: "OFL-1.1", all: []string{"sil open font license", "version 1.1"}},
 	{id: "blessing", all: []string{"sqlite is public domain", "dedicated to the public domain"}},
+	{id: "WTFPL", all: []string{"do what the fuck you want to public license", "you just do what the fuck you want to"}},
+	{
+		id: "Zlib",
+		all: []string{
+			"this software is provided 'as-is', without any express or implied warranty",
+			"altered source versions must be plainly marked as such",
+		},
+	},
 	{id: "Unlicense", all: []string{"this is free and unencumbered software released into the public domain"}},
 	{
 		id: "MIT",

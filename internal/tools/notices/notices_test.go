@@ -65,6 +65,8 @@ func TestDetect(t *testing.T) {
 		"ISC":               "Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above",
 		"0BSD":              "Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted.",
 		"blessing":          "SQLite Is Public Domain. The code has been dedicated to the public domain",
+		"Zlib":              "This software is provided 'as-is', without any express or implied warranty.\n2. Altered source versions must be plainly marked as such",
+		"WTFPL":             "DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE\n0. You just DO WHAT THE FUCK YOU WANT TO.",
 		"":                  "all rights reserved",
 	} {
 		if got := detect(text); got != want {
