@@ -153,6 +153,7 @@ describe("ALPHA tools and keys", () => {
 		await client.installTool({ name: "whisper", model: "base" });
 		await client.createKey({ name: "ci", scopes: ["read"] });
 		await client.listKeys();
+		await client.listUsers();
 		await client.revokeKey("key_a/b");
 		expect(
 			requests.map((r) => [r.method, r.path, r.timeoutMs, r.body]),
@@ -166,6 +167,7 @@ describe("ALPHA tools and keys", () => {
 			],
 			["POST", "/keys", 30_000, { name: "ci", scopes: ["read"] }],
 			["GET", "/keys", 10_000, undefined],
+			["GET", "/users", 10_000, undefined],
 			["DELETE", "/keys/key_a%2Fb", 30_000, undefined],
 		]);
 	});

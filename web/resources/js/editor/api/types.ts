@@ -581,6 +581,19 @@ export interface KeyListResult {
 
 export type KeyRevokeResult = ApiKey;
 
+// GET /users: an administrator session only (SDD-007 section 4.1 item 2). The
+// editor reads it once, to show the name of the actors `user:<id>`.
+export interface UserSummary {
+	user_id: string;
+	email: string;
+	role: string;
+	disabled: boolean;
+}
+
+export interface UserListResult {
+	users: UserSummary[];
+}
+
 // /templates (SDD-003 section 2.9). Every text of a template is untrusted: an
 // imported file can carry anything.
 export interface SlotInfo {

@@ -39,6 +39,7 @@ import type {
 	TemplateListResult,
 	TemplateResult,
 	ToolsStatusResult,
+	UserListResult,
 } from "./types";
 
 // Timeouts of SDD-012 section 4.3 item 4.
@@ -102,6 +103,8 @@ export interface ApiClient {
 	createKey(request: KeyCreateRequest): Promise<KeyCreateResult>;
 	listKeys(): Promise<KeyListResult>;
 	revokeKey(keyId: string): Promise<KeyRevokeResult>;
+	// An administrator session; any other caller gets E_FORBIDDEN.
+	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
 	trashProject(projectId: string): Promise<ProjectStateResult>;
 	restoreProject(projectId: string): Promise<ProjectStateResult>;
@@ -258,6 +261,7 @@ export function createClient(
 			call("POST", "/system/tools/install", EDIT_TIMEOUT_MS, request),
 		createKey: (request) => call("POST", "/keys", EDIT_TIMEOUT_MS, request),
 		listKeys: () => call("GET", "/keys", READ_TIMEOUT_MS),
+		listUsers: () => call("GET", "/users", READ_TIMEOUT_MS),
 		revokeKey: (keyId) =>
 			call("DELETE", `/keys/${encodeURIComponent(keyId)}`, EDIT_TIMEOUT_MS),
 		listTrashedProjects: () =>
