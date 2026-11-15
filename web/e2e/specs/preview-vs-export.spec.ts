@@ -90,6 +90,8 @@ interface GoldenDoc {
 
 interface Fixture {
 	name: string;
+	sticker?: boolean;
+	delays_cs?: number[];
 	width: number;
 	height: number;
 	fps: number;
@@ -351,6 +353,16 @@ function buildOperations(
 		}
 	}
 	return ops;
+}
+
+// The sticker cases need an alpha PNG and a GIF with a delay per frame, which
+// the Go suite writes itself (engine/export golden_alpha_test.go); this spec
+// makes only the marked-gradient clips.
+function needsImageFixtures(name: string): boolean {
+	const fixtures = JSON.parse(
+		readFileSync(join(GOLDEN, name, "fixtures.json"), "utf8"),
+	) as Record<string, Fixture>;
+	return Object.values(fixtures).some((f) => f.sticker || f.delays_cs);
 }
 
 // Loads a golden case into a new project and returns its id and listed frames.
@@ -638,6 +650,10 @@ test.describe("preview-vs-export", () => {
 			page,
 			request,
 		}) => {
+			test.skip(
+				needsImageFixtures(name),
+				"the fixtures are an alpha PNG or a GIF with delays that only the Go suite generates",
+			);
 			test.fail(name in KNOWN_DIVERGENCES, KNOWN_DIVERGENCES[name]);
 			const loaded = await loadCase(request, name);
 			await openCase(page, loaded.id);
