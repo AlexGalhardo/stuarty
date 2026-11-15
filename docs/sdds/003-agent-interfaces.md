@@ -1848,7 +1848,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 ```json
 {
   "name":"view",
-  "description":"See the result. mode=frame returns one image of the timeline at time at; mode=sheet returns a grid of frames with the time printed in each cell (count evenly spaced between from and to, or explicit times). Rendered by the export path: what you see is what export produces. Costs image tokens: read project_get and lint first. asset_id views a source asset instead. frame needs at; sheet takes times, or from, to and count (not both).",
+  "description":"See the result. mode=frame returns one image of the timeline at time at; mode=sheet returns a grid of frames with the time printed in each cell (count evenly spaced between from and until, or explicit times). Rendered by the export path: what you see is what export produces. Costs image tokens: read project_get and lint first. asset_id views a source asset instead. frame needs at; sheet takes times, or from, to and count (not both).",
   "inputSchema":{
     "type":"object",
     "properties":{
