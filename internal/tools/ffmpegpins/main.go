@@ -68,7 +68,7 @@ func run(argv []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 
-	if err := os.WriteFile(*outPath, want, 0o600); err != nil {
+	if err := os.WriteFile(*outPath, want, 0o600); err != nil { //nolint:gosec // the path is the operator's flag
 		fmt.Fprintf(stderr, "ffmpegpins: %v\n", err)
 
 		return 1
