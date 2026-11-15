@@ -306,3 +306,11 @@ All twelve themes were covered by decisions D-001 to D-025. The working state is
 - Alternatives considered: one pull request per task (the rule until 2026-11-14); a release branch merged with a merge commit.
 - Reason: asked by the author on 2026-11-14, so a release is easy to administer.
 - Impact: supersedes "one pull request per task" in the completion protocol of the ROADMAP and in `AGENTS.md`; `.github/pull_request_template.md`, `CONTRIBUTING.md`, `scripts/release-pr-body.sh`, the Taskfile; the release procedure of SDD-009 §7 (its `release/vX.Y.Z` branch is now the long-lived release pull request, and `release:prepare` runs on it before the merge). The open task pull requests #50, #53, #54, #55, #57 and #58 were folded into the release pull request #59.
+
+### D-032 — The own FFmpeg build loads Cisco OpenH264 at run time through a dlopen patch
+
+- Date: 2026-11-15
+- Decision: the own LGPL FFmpeg build (D-017, ADR-0011) carries a small pinned patch that makes the OpenH264 wrapper load `libopenh264` at run time (`dlopen` or `LoadLibrary`) from the directory of `VUKEM_VIDEO_OPENH264_DIR`, which `tools:install openh264` fills with the Cisco binary of the pinned version. FFmpeg is never linked against the library. Without the library, H.264 encoding is unavailable and the product answers `E_NO_ENCODER`.
+- Alternatives considered: linking with `--enable-libopenh264` against the Cisco binary (contradicts D-017 and needs amending the ADR); no H.264 in the own build until 1.0 (postpones the problem).
+- Reason: asked of the author on 2026-11-15 as a blocker of P3-RND-001, P3-REL-001 and P3-REL-002; the author chose the dlopen patch, the model Fedora uses.
+- Impact: the FFmpeg build inputs and script (a patch pinned by SHA-256), the LGPL configure check, SDD-009 (FFmpeg build), SDD-011, ADR-0011 (note), `docs/release`.
