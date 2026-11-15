@@ -44,7 +44,7 @@ curl -fsS -b jar.txt -H "Content-Type: application/json" -H "Origin: $APP" \
   -d '{"name": "claude-code", "scopes": ["read", "edit", "media", "render"]}' "$APP/api/v1/keys"
 ```
 
-A segunda resposta traz o segredo. Guarde-o em um arquivo que só você possa ler e aponte o cliente para o servidor:
+A segunda resposta traz o segredo. Guarde-o em um arquivo que só você possa ler e configure o cliente com o endereço do servidor:
 
 <Tabs>
 <Tab title="CLI">
