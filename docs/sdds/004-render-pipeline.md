@@ -505,7 +505,7 @@ The measurements came from one Windows machine with other processes running. The
 | The same layer as a copy (`BenchmarkCopyFullFrame`) | 0.8 ms |
 | The rotated layer against `x/image/draw.BiLinear` (`TestSamplerAgreesWithXImageBiLinear`) | no pixel differs by more than 2 |
 
-The Linux and macOS numbers are recorded here after the first CI run of the benchmark. The encoder this machine detects is `h264_nvenc`; the numbers above are with `libopenh264`, the encoder of the bundled build, because that is the one a clean machine has.
+`go run ./internal/tools/perfreport -write` measures NFR-001, NFR-005, NFR-006, NFR-007 and NFR-023 and writes the table `docs/perf/<date>-<goos>.md` (first one: `2026-11-14-windows.md`: commit round trip 15.1 ms p95, ingest of 60 s 1080p 8.5 s, 60 s export 23.9 s with `h264_nvenc` at 2.64 times real time, Go process 110 MB, agent frame 174 ms cold, nine-cell sheet 229 ms, every limit met). The Linux and macOS tables are added after the first CI run of the tool on those runners, and the three tables are the numbers of the three runners. The encoder this machine detects is `h264_nvenc`; the numbers above are with `libopenh264`, the encoder of the bundled build, because that is the one a clean machine has.
 
 ## 13. Acceptance
 
