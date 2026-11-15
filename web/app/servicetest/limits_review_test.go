@@ -1,6 +1,7 @@
 package servicetest
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
@@ -127,6 +129,28 @@ func TestLimitExportQueuesCarryValueAndCeiling(t *testing.T) {
 	se = requireLimit(t, "fourth export of one actor", err, service.CodeQueueFull, "exports_per_key")
 	if se.Details["ceiling"] != 3 {
 		t.Errorf("details = %v, want ceiling 3", se.Details)
+	}
+}
+
+// The size watchdog ends an export mid-run: the engine reports reason size_limit and the service
+// names the limit and the ceiling. The engine does not say how large the file had become.
+func TestLimitExportEndedByTheWatchdogNamesTheLimit(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{
+		exporter: exportFn(func(context.Context, service.ExportInput) (*service.ExportOutput, error) {
+			return nil, &ffmpeg.Error{Code: "E_EXPORT_FAILED", Reason: "size_limit", Message: "The exported file passed the size limit."}
+		}),
+		limits: service.Limits{MaxExportBytes: 123456},
+	})
+
+	job, err := m.startExport(m.exportable())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	d := job.Error.Details
+	if job.State != service.JobFailed || job.Error.Code != "E_EXPORT_FAILED" || d["reason"] != "size_limit" ||
+		d["limit"] != "export_bytes" || d["ceiling"] != 123456.0 {
+		t.Errorf("job = %+v, details %v", job, d)
 	}
 }
 

@@ -90,8 +90,8 @@ func TestSecurity_T18_BatchLimits(t *testing.T) {
 	}
 }
 
-// An export larger than the ceiling ends failed with E_LIMIT_EXCEEDED and
-// leaves no file.
+// An export larger than the ceiling ends failed with E_EXPORT_FAILED and
+// details.reason size_limit (SDD-007 section 9.1), and leaves no file.
 func TestExportOverTheByteCeilingFails(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{exporter: goodExporter(), limits: service.Limits{MaxExportBytes: 1}})
 
@@ -100,8 +100,9 @@ func TestExportOverTheByteCeilingFails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if job.State != service.JobFailed || job.Error == nil || job.Error.Code != "E_LIMIT_EXCEEDED" ||
-		job.Error.Details["limit"] != "export_bytes" || job.Result != nil {
+	if job.State != service.JobFailed || job.Error == nil || job.Error.Code != "E_EXPORT_FAILED" ||
+		job.Error.Details["reason"] != "size_limit" || job.Error.Details["limit"] != "export_bytes" ||
+		job.Error.Details["ceiling"] != 1.0 || job.Error.Details["value"] == nil || job.Result != nil {
 		t.Errorf("job = %+v", job)
 	}
 }

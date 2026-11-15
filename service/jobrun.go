@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"math"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	"github.com/AlexGalhardo/vukem-video/service/logging"
 )
@@ -471,6 +473,23 @@ func (s *svc) completePending(ctx context.Context, hash, jobID string) []string 
 
 // checkDisk refuses work while the volume of the workspace is under the free
 // space floor (SDD-007 section 9.2 item 4).
+// exportSizeLimitReason is details.reason of an export that passed VUKEM_VIDEO_MAX_EXPORT_BYTES, the
+// same one engine/export gives (SDD-007 section 9.1).
+const exportSizeLimitReason = "size_limit"
+
+// exportSizeDetails adds the limit and the ceiling to an export that the size watchdog ended
+// mid-run: the engine knows the run crossed the cap, not how far past it the file was.
+func (s *svc) exportSizeDetails(err error) error {
+	fe, ok := errors.AsType[*ffmpeg.Error](err)
+	if !ok || fe.Reason != exportSizeLimitReason || fe.Details["limit"] != nil {
+		return err
+	}
+
+	return fromEngine(err).
+		withDetail("limit", "export_bytes").withDetail("ceiling", s.limits.MaxExportBytes).
+		withDetail("variable", "VUKEM_VIDEO_MAX_EXPORT_BYTES")
+}
+
 func (s *svc) checkDisk() *Error {
 	if s.limits.MinFreeBytes <= 0 || s.workspace == "" {
 		return nil
@@ -542,7 +561,7 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 	if err != nil {
 		_ = os.Remove(out)
 
-		return nil, err
+		return nil, s.exportSizeDetails(err)
 	}
 
 	if verr := verifyOutput(out, res); verr != nil {
@@ -557,16 +576,15 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		have, ceiling := sizesApart(res.Bytes, s.limits.MaxExportBytes)
 
 		return nil, newError(
-			"E_LIMIT_EXCEEDED",
+			CodeExportFailed,
 			"The export is %s; the export limit is %s (VUKEM_VIDEO_MAX_EXPORT_BYTES).",
 			have,
 			ceiling,
 		).
 			withHint("export a shorter range or a smaller frame size; the person running the server can raise "+
 				"VUKEM_VIDEO_MAX_EXPORT_BYTES").
-			withDetail("limit", "export_bytes").
-			withDetail("value", res.Bytes).
-			withDetail("ceiling", s.limits.MaxExportBytes).
+			withDetail("reason", exportSizeLimitReason).
+			withLimit("export_bytes", res.Bytes, s.limits.MaxExportBytes).
 			withDetail("variable", "VUKEM_VIDEO_MAX_EXPORT_BYTES")
 	}
 
