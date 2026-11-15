@@ -12,6 +12,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/lint"
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
 	"github.com/AlexGalhardo/vukem-video/web/app/cli"
@@ -290,21 +291,24 @@ func (r fixedResolver) Resolve(context.Context, cli.Target) (*cli.Connection, er
 	return &cli.Connection{Service: r.svc, Workspace: "/ws"}, nil
 }
 
-// splitCommand splits a command line on spaces, keeping a double-quoted part
-// together without its quotes.
+// splitCommand splits a command line on spaces, keeping a quoted part together
+// without its quotes, as a shell does: a double quote and a single quote each
+// close only with their own kind.
 func splitCommand(line string) []string {
 	var (
 		args   []string
 		cur    strings.Builder
-		quote  bool
+		quote  rune
 		quoted bool
 	)
 
 	for _, r := range line {
 		switch {
-		case r == '"':
-			quote, quoted = !quote, true
-		case r == ' ' && !quote:
+		case quote == 0 && (r == '"' || r == '\''):
+			quote, quoted = r, true
+		case r == quote:
+			quote = 0
+		case r == ' ' && quote == 0:
 			if quoted {
 				args, cur, quoted = append(args, cur.String()), strings.Builder{}, false
 			}
@@ -331,13 +335,13 @@ func TestRecipesRun(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(recipes) < 3 {
-		t.Fatalf("%d recipes, want at least 3", len(recipes))
+	if len(recipes) < 5 {
+		t.Fatalf("%d recipes, want at least 5", len(recipes))
 	}
 
 	for _, r := range recipes {
 		t.Run(r.Title, func(t *testing.T) {
-			env := testenv.New(t, testenv.Options{})
+			env := testenv.New(t, testenv.Options{Transcriber: &testenv.StubTranscriber{Words: recipeWords}, SilenceBlocks: true})
 			env.WriteFile(t, "clip.mp4", strings.Repeat("v", 64))
 
 			for i, step := range r.Steps {
@@ -363,4 +367,13 @@ func TestRecipesRun(t *testing.T) {
 			}
 		})
 	}
+}
+
+// recipeWords are the words the stub transcriber returns to the recipes: two
+// caption lines, with a silence between them.
+var recipeWords = []transcribe.RawWord{
+	{Text: "hello", StartMS: 100, EndMS: 400},
+	{Text: "brave", StartMS: 400, EndMS: 700},
+	{Text: "new", StartMS: 1100, EndMS: 1400},
+	{Text: "world", StartMS: 1400, EndMS: 1900},
 }
