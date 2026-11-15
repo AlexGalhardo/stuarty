@@ -18,9 +18,9 @@ type Json = Record<string, unknown>;
 
 const readJson = <T = Json>(rel: string): T => JSON.parse(fs.readFileSync(path.join(root, rel), "utf8")) as T;
 
-/** Escapes text for an MDX body: braces and angle brackets are syntax, and a pipe ends a table cell. */
+/** Escapes text for an MDX body: backslash is an escape char, braces/angle brackets are syntax, and a pipe ends a table cell. */
 export function esc(text: string): string {
-	return text.replace(/[{}<>|]/g, (c) => ({ "{": "\\{", "}": "\\}", "<": "&lt;", ">": "&gt;", "|": "\\|" })[c] as string);
+	return text.replace(/[\\{}<>|]/g, (c) => ({ "\\": "\\\\", "{": "\\{", "}": "\\}", "<": "&lt;", ">": "&gt;", "|": "\\|" })[c] as string);
 }
 
 /** A line that starts with "import" or "export" is ESM to MDX, so a summary starts with a capital. */
