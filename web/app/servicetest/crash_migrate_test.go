@@ -78,6 +78,12 @@ func TestCrashMigration(t *testing.T) {
 
 			defer st.Close()
 
+			var integrity string
+			if err := st.DB().QueryRowContext(context.Background(), "PRAGMA integrity_check").Scan(&integrity); err != nil ||
+				integrity != "ok" {
+				t.Errorf("integrity_check = %q, %v", integrity, err)
+			}
+
 			row, err := st.Projects().Get(context.Background(), "prj_7k2m9x4q1b")
 			if err != nil {
 				t.Fatal(err)
