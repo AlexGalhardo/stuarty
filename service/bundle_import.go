@@ -283,6 +283,11 @@ func (s *svc) writeImportedProject(
 		return err
 	}
 
+	// The importer brought these bytes, and the hash was checked against the manifest, so they own them.
+	if err := recordFontOwner(ctx, tx, c, now, bundleFontHashes(p)...); err != nil {
+		return err
+	}
+
 	if err := appendAudit(ctx, tx, now, c.Actor, "project.import", id, ""); err != nil {
 		return err
 	}
@@ -575,16 +580,18 @@ func (s *svc) matchBundleFiles(ctx context.Context, c Caller, p *bundleParts) *E
 		h := p.doc.Assets[id].Hash
 		if media[h] {
 			needed[h] = bundleMediaEntry(h)
-		} else if !s.unshippedAllowed(ctx, c, h, false) {
+		} else if !s.unshippedAllowed(ctx, c, h) {
 			return bundleRefused("a file of the document is not in the bundle")
 		}
 	}
+
+	var owned fontScope
 
 	for _, family := range sortedKeys(p.doc.Fonts) {
 		for _, f := range p.doc.Fonts[family].Files {
 			if fonts[f.Hash] {
 				needed[f.Hash] = bundleFontEntry(f.Hash)
-			} else if !s.unshippedAllowed(ctx, c, f.Hash, true) {
+			} else if !owned.allowed(ctx, s.store, s, f.Hash) {
 				return bundleRefused("a file of the document is not in the bundle")
 			}
 		}
@@ -910,13 +917,10 @@ func (s *svc) copyBundleFiles(ctx context.Context, p *bundleParts) (map[string]i
 // unshippedAllowed tells whether a document may name a file the bundle does not carry. In local mode
 // the store is the caller's own, so a file there is enough. In network mode the store is shared by
 // every user: naming a hash must not link another user's media (nor reveal that it exists), so the
-// hash has to be linked already to a project the caller can see. Fonts have no such link and are
-// always refused. The refusal is the same for a hash that is stored and one that never was.
-func (s *svc) unshippedAllowed(ctx context.Context, c Caller, hash string, font bool) bool {
-	if font {
-		return c.OwnerUserID == "" && s.hasFont(hash)
-	}
-
+// hash has to be linked already to a project the caller can see. A font follows the rule of fontScope
+// (recorded owner, or used by a project of the caller). The refusal is the same for a hash that is
+// stored and one that never was.
+func (s *svc) unshippedAllowed(ctx context.Context, c Caller, hash string) bool {
 	if !s.media.Content.Has(strings.TrimPrefix(hash, "sha256:")) {
 		return false
 	}
@@ -937,4 +941,17 @@ func (s *svc) unshippedAllowed(ctx context.Context, c Caller, hash string, font 
 	}
 
 	return false
+}
+
+// bundleFontHashes are the hashes of the font entries the bundle carries.
+func bundleFontHashes(p *bundleParts) []string {
+	var out []string
+
+	for _, f := range p.files {
+		if f.isFont() {
+			out = append(out, f.hash)
+		}
+	}
+
+	return out
 }

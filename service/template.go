@@ -469,6 +469,15 @@ func (s *svc) TemplateInstantiate(
 
 	doc.Template.Instance = true
 
+	if berr := s.applyBrandKit(ctx, c, doc, &req); berr != nil {
+		return nil, berr
+	}
+
+	// The fonts of a template are named in the new project, so they follow the rule of font.add.
+	if _, bad := s.unusableFont(ctx, s.store, doc, ""); bad {
+		return nil, fontNotUsable("fonts")
+	}
+
 	ops, oerr := s.fillOps(ctx, c, req.Fill)
 	if oerr != nil {
 		return nil, oerr

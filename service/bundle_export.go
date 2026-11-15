@@ -58,6 +58,10 @@ func (s *svc) ProjectBundleExport(ctx context.Context, req ProjectBundleExportRe
 		return nil, newError(command.CodeInternal, "exporting is not available in this build.")
 	}
 
+	if ferr := s.checkExportFonts(ctx, c, &row); ferr != nil {
+		return nil, ferr
+	}
+
 	if derr := s.checkDisk(); derr != nil {
 		return nil, forCaller(c, derr)
 	}
@@ -516,3 +520,27 @@ func copyError(ctx context.Context, err error) error {
 // isFont tells a font entry of a bundle from a media one: fonts live in the font store, not in the
 // content store.
 func (f bundleFile) isFont() bool { return strings.HasPrefix(f.entry, "font.") }
+
+// checkExportFonts keeps a bundle from copying out a font file the caller may not use: the font
+// store is shared in network mode, and a document that names a hash does not prove the caller
+// holds the file. Each font must be one the caller owns or uses in another project (SDD-007
+// section 7.7 item 6). The message names the family, never the hash.
+func (s *svc) checkExportFonts(ctx context.Context, c Caller, row *ProjectRow) *Error {
+	if c.OwnerUserID == "" {
+		return nil
+	}
+
+	doc, err := decodeRow(row)
+	if err != nil {
+		return internalError()
+	}
+
+	family, bad := s.unusableFont(ctx, s.store, doc, row.ID)
+	if !bad {
+		return nil
+	}
+
+	return newError(CodeForbidden, "the font family %q of the project is a file you did not import or bring.", family).
+		withHint("import the font file with font:import, or remove the family with font.remove, then export again").
+		withPath("fonts")
+}
