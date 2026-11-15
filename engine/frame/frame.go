@@ -134,8 +134,10 @@ type Cell struct {
 type Sheet struct {
 	JPEG          []byte
 	Width, Height int
-	Tokens        int
-	Cells         []Cell
+	// Key is the cache key of the file, which a caller turns into a path.
+	Key    string
+	Tokens int
+	Cells  []Cell
 }
 
 func columns(count int) int {
@@ -185,6 +187,7 @@ func (f *Frames) Sheet(ctx context.Context, doc *timeline.Document, ref Ref, req
 
 	sum := sha256.Sum256([]byte(fmt.Sprint(times, cols, budget)))
 	key := cache.SheetKey(ref.Project, ref.Revision, hex.EncodeToString(sum[:]), cw)
+	out.Key = key
 	if f.Cache != nil {
 		if b, ok := f.Cache.Get(key); ok {
 			out.JPEG = b
