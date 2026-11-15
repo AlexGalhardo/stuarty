@@ -144,6 +144,26 @@ func (s stub) ViewSheet(context.Context, service.ViewSheetRequest) (*service.Vie
 	return reply[service.ViewResult](s.err)
 }
 
+func (s stub) Doctor(context.Context, service.DoctorRequest) (*service.DoctorResult, error) {
+	return reply[service.DoctorResult](s.err)
+}
+
+func (s stub) FontList(context.Context, service.FontListRequest) (*service.FontListResult, error) {
+	return reply[service.FontListResult](s.err)
+}
+
+func (s stub) AuditList(context.Context, service.AuditListRequest) (*service.AuditListResult, error) {
+	return reply[service.AuditListResult](s.err)
+}
+
+func (s stub) ToolsInstall(context.Context, service.ToolsInstallRequest) (*service.ToolsInstallResult, error) {
+	return reply[service.ToolsInstallResult](s.err)
+}
+
+func (s stub) ToolsStatus(context.Context, service.ToolsStatusRequest) (*service.ToolsStatusResult, error) {
+	return reply[service.ToolsStatusResult](s.err)
+}
+
 // TestCLIJSONPurity is SDD-003 section 9 check 13: with --json standard output
 // is exactly one JSON document and standard error is empty, for successes,
 // errors and flag errors, over at least 100 invocations of every command.

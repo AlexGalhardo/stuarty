@@ -87,6 +87,11 @@ Every line starts with `vukem-video`.
 - `template:export <template id>`
 - `template:import <path>`
 - `agent:docs --print skill|agents|instructions`
+- `transcribe --project <id> --asset <id> [--language auto] [--wait] [--timeout d]`
+- `doctor [--full] [--verify] [--bundle] [--gc]`
+- `fonts`
+- `audit [--project <id>] [--cursor c] [--limit n]`
+- `tools:install <name> [--model <model>] [--yes] [--timeout d]`
 
 Batches: `--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` any JSON). `--dry-run` saves nothing; `--key <k>` makes a retry safe.
 

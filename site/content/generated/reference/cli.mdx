@@ -619,3 +619,106 @@ Example:
 ```bash
 vukem-video agent:docs --write ~/.claude/skills/vukem-video
 ```
+
+## `transcribe`
+
+Transcribe the audio of an asset
+
+```text
+vukem-video transcribe --project <id> --asset <id> [--language auto] [--wait] [--timeout d]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--asset` | string |  | asset to transcribe (required) |
+| `--language` | string | `auto` | BCP 47 code, or auto |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
+
+Example:
+
+```bash
+vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en
+```
+
+## `doctor`
+
+Check the installation and the workspace
+
+```text
+vukem-video doctor [--full] [--verify] [--bundle] [--gc]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--full` | boolean | `false` | run every check, not only the identity |
+| `--verify` | boolean | `false` | recompute the digests of FFmpeg and the helpers |
+| `--bundle` | boolean | `false` | write a diagnostic bundle inside the workspace |
+| `--gc` | boolean | `false` | remove what no project refers to any more |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+vukem-video doctor --full
+```
+
+## `fonts`
+
+List the bundled font families
+
+```text
+vukem-video fonts
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+vukem-video fonts --json
+```
+
+## `audit`
+
+List the audit table
+
+```text
+vukem-video audit [--project <id>] [--cursor c] [--limit n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--project` | string |  | only the entries of this project |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `50` | items per page |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+vukem-video audit --limit 20 --json
+```
+
+## `tools:install`
+
+Download a helper such as the transcription program
+
+```text
+vukem-video tools:install <name> [--model <model>] [--yes] [--timeout d]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--model` | string |  | the model to download (default: small) |
+| `--yes` | boolean | `false` | do not ask for confirmation |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--timeout`.
+
+Example:
+
+```bash
+vukem-video tools:install whisper --model small
+```

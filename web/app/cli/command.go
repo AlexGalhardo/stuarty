@@ -20,6 +20,9 @@ type call struct {
 	args      *parsed
 	projectID string
 	events    EventOpener
+	// inProcess is true when this process owns the workspace: the person at the
+	// terminal of the owner machine, who may install helpers and sweep the workspace.
+	inProcess bool
 }
 
 type handler func(ctx context.Context, c *call) (*output, error)
@@ -169,6 +172,7 @@ func (rt *Runtime) Execute(ctx context.Context, name string, args []string) int 
 
 	c.svc = conn.Service
 	c.events = conn.Events
+	c.inProcess = conn.InProcess
 
 	if !s.stream {
 		label, _ := actorFrom(p.str("actor"))

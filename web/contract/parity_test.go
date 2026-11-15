@@ -68,14 +68,14 @@ var parity = []row{
 	{method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame"},
 	{method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet"},
 	{method: "TrashEmpty", route: "POST /trash/empty", httpOnly: true},
-	{method: "Doctor", route: "GET /system", httpOnly: true}, // P2-AGT-002 adds the command doctor
+	{method: "Doctor", command: "doctor", route: "GET /system"},
 	{method: "SnapPoints", route: "GET /projects/{}/snap-points", httpOnly: true},
-	{method: "FontList", route: "GET /fonts", httpOnly: true},  // P2-AGT-002 adds the command fonts,
-	{method: "AuditList", route: "GET /audit", httpOnly: true}, // P2-AGT-002 adds the command audit,
+	{method: "FontList", command: "fonts", route: "GET /fonts"},
+	{method: "AuditList", command: "audit", route: "GET /audit"},
 	{method: "ExportFile", route: "GET /jobs/{}/file", httpOnly: true},
-	// The CLI command tools:install runs in process for the person at the
-	// terminal (SDD-007 section 6.8); its parity row arrives with it (P2-AGT).
-	{method: "ToolsInstall", route: "POST /system/tools/install", httpOnly: true},
+	// The CLI command tools:install is for the person at the terminal and has
+	// no MCP tool (SDD-007 section 6.8, SDD-003 section 7.1).
+	{method: "ToolsInstall", command: "tools:install", route: "POST /system/tools/install"},
 	{method: "ToolsStatus", route: "GET /system/tools", httpOnly: true},
 	{method: "Events", command: "events", route: "GET /projects/{}/events", noMethod: true},
 }

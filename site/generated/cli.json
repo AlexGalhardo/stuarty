@@ -847,6 +847,150 @@
         "actor",
         "key-file"
       ]
+    },
+    {
+      "name": "transcribe",
+      "summary": "transcribe the audio of an asset",
+      "usage": [
+        "vukem-video transcribe --project <id> --asset <id> [--language auto] [--wait] [--timeout d]"
+      ],
+      "example": "vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en",
+      "flags": [
+        {
+          "name": "asset",
+          "type": "string",
+          "usage": "asset to transcribe (required)"
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "default": "auto",
+          "usage": "BCP 47 code, or auto"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "wait",
+        "timeout"
+      ]
+    },
+    {
+      "name": "doctor",
+      "summary": "check the installation and the workspace",
+      "usage": [
+        "vukem-video doctor [--full] [--verify] [--bundle] [--gc]"
+      ],
+      "example": "vukem-video doctor --full",
+      "flags": [
+        {
+          "name": "full",
+          "type": "boolean",
+          "default": "false",
+          "usage": "run every check, not only the identity"
+        },
+        {
+          "name": "verify",
+          "type": "boolean",
+          "default": "false",
+          "usage": "recompute the digests of FFmpeg and the helpers"
+        },
+        {
+          "name": "bundle",
+          "type": "boolean",
+          "default": "false",
+          "usage": "write a diagnostic bundle inside the workspace"
+        },
+        {
+          "name": "gc",
+          "type": "boolean",
+          "default": "false",
+          "usage": "remove what no project refers to any more"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "fonts",
+      "summary": "list the bundled font families",
+      "usage": [
+        "vukem-video fonts"
+      ],
+      "example": "vukem-video fonts --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "audit",
+      "summary": "list the audit table",
+      "usage": [
+        "vukem-video audit [--project <id>] [--cursor c] [--limit n]"
+      ],
+      "example": "vukem-video audit --limit 20 --json",
+      "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "only the entries of this project"
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "50",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "tools:install",
+      "summary": "download a helper such as the transcription program",
+      "usage": [
+        "vukem-video tools:install <name> [--model <model>] [--yes] [--timeout d]"
+      ],
+      "example": "vukem-video tools:install whisper --model small",
+      "flags": [
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model to download (default: small)"
+        },
+        {
+          "name": "yes",
+          "type": "boolean",
+          "default": "false",
+          "usage": "do not ask for confirmation"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "timeout"
+      ]
     }
   ]
 }

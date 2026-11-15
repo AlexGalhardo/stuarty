@@ -142,6 +142,14 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ViewFrame)
 	case "ViewSheet":
 		return invoke(ctx, s, svc.ViewSheet)
+	case "Doctor":
+		return invoke(ctx, s, svc.Doctor)
+	case "FontList":
+		return invoke(ctx, s, svc.FontList)
+	case "AuditList":
+		return invoke(ctx, s, svc.AuditList)
+	case "ToolsInstall":
+		return invoke(ctx, s, svc.ToolsInstall)
 	}
 
 	return nil, fmt.Errorf("no mapping for %s", s.Call)
@@ -595,6 +603,14 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		argv = append(slices.Clone(proj), "--mode", "sheet")
 
 		return "view", append(argv, flag("until", a.Until)...), "", nil
+	case "Doctor":
+		return "doctor", []string{"--full"}, "", nil
+	case "FontList":
+		return "fonts", nil, "", nil
+	case "AuditList":
+		return "audit", flag("project", a.ProjectID), "", nil
+	case "ToolsInstall":
+		return "tools:install", append([]string{a.Name}, "--yes"), "", nil
 	case "TemplateInstantiate":
 		argv = append([]string{a.TemplateID}, flag("name", a.Name)...)
 		argv = append(argv, flag("id", a.ID)...)

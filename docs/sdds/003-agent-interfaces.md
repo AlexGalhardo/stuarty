@@ -2323,7 +2323,7 @@ Every path argument (`media:import <path>`, `template:import <path>`) is made ab
 | `template:import` | `template:import <path>` | none | none | `TemplateResult` | A |
 | `doctor` | `doctor [--full] [--verify] [--bundle] [--gc]` | `--full` bool false; `--verify` bool false, checks the digests of FFmpeg and the helpers (SDD-007 §6.8); `--bundle` bool false, writes `exports/diagnostics/doctor-<UTC timestamp>.zip` inside the workspace and prints its path (no path argument: nothing is written outside the workspace; RF-207); `--gc` bool false, runs `store.GC` | none | `DoctorResult`; the named checks of `checks[]` are listed in SDD-011 §8.6 | A |
 | `fonts` | `fonts` | none | none | `FontListResult` | A |
-| `audit` | `audit [--cursor c] [--limit n]` | `--cursor`; `--limit` int 50. Scope `admin` | none | `AuditListResult` | A |
+| `audit` | `audit [--project <id>] [--cursor c] [--limit n]` | `--project` string, only the entries of one project; `--cursor`; `--limit` int 50. Scope `admin` | none | `AuditListResult` | A |
 | `events` | `events --project <id> [--from-id n] [--since n] [--count n]` | `--from-id` string, the `Last-Event-ID`; `--since` int, a revision (the `since` query); `--count` int 0 (until interrupted) | none | one JSON object per line (NDJSON), each `{"id","name","data"}`; the only command whose `--json` output is not one document | P |
 | `version` | `version` | none | none | `{"version","text"}`; prints `vukem-video <version>` and needs no workspace or server (the image build checks it against the tag) | P |
 | `serve` | `serve` | vukem's `serve` flags (address from `VUKEM_VIDEO_ADDR`) | none | none | P |
@@ -2331,7 +2331,7 @@ Every path argument (`media:import <path>`, `template:import <path>`) is made ab
 | `open` | `open` | none | none | none: opens the browser at the UI of the running owner with a fresh launch code (SDD-007 §3.4) | P |
 | `token:rotate` | `token:rotate` | none | none | none; takes the workspace lock, so no owner may be running (SDD-007 §5.3) | A |
 | `user:create`, `user:passwd` | `user:create <email> [--admin]`, `user:passwd <email>` | `--admin` bool false; the password is read from the terminal or standard input, never from an argument | none | none; network mode; takes the workspace lock (SDD-007 §5.3) | A |
-| `tools:install` | `tools:install <name> [--model <model>] [--yes]` | `--model` string, the model to download for a transcription helper; `--yes` bool false, skips the confirmation | none | none; downloads a helper such as whisper.cpp after stating its size (SDD-007 §6.8) | A |
+| `tools:install` | `tools:install <name> [--model <model>] [--yes] [--timeout d]` | `--model` string `small`, the model to download for a transcription helper; `--yes` bool false, skips the confirmation (without a terminal, or with `--json`, `--yes` is required); `--timeout` the longest wait for the download, exit 2 when it runs out | none | none; downloads a helper such as whisper.cpp after stating its size (SDD-007 §6.8) | A |
 | `bundle:export` | `bundle:export --project <id>` | `--wait`, `--timeout` | none | `Job` (SDD-005 §16) | B |
 | `bundle:import` | `bundle:import <path>` | none | none | `ProjectCreateResult` (SDD-005 §16) | B |
 | `agent:docs` | `agent:docs [--print skill\|agents\|instructions] [--write <dir>]` | `--print` string `skill`; `--write` string | none | `{"files": [...]}` with `--write`; the text itself with `--print` | A |
