@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -248,10 +249,60 @@ func (l *lazyRunner) RunJob(ctx context.Context, id string) error { return l.get
 func (l *lazyRunner) Recover(ctx context.Context) error           { return l.get().Recover(ctx) }
 func (l *lazyRunner) Cancel(ctx context.Context, id string) error { return l.get().Cancel(ctx, id) }
 
+// FakeMedia is the content of a test file that the fake ingest probes as a
+// video of the given length and size instead of the default one; the ceilings of
+// the service are then checked against it, as the probe of the real ingest does.
+func FakeMedia(seconds int64, width, height int) string {
+	return fmt.Sprintf("%s seconds=%d width=%d height=%d\n", fakeMediaMarker, seconds, width, height)
+}
+
+const fakeMediaMarker = "fake-media"
+
 func (e *Env) fakeIngest(_ context.Context, in ingest.Input) (*ingest.Result, error) {
 	e.Ingests.Add(1)
 
-	return fakeResult(string(e.Dir), in, e.durationMS)
+	seconds, width, height := e.durationMS/1000, 320, 240
+	if e.durationMS%1000 != 0 {
+		seconds++
+	}
+
+	if path, err := enginestore.New(string(e.Dir)).Path(in.Hash); err == nil {
+		if head, rerr := readHead(path, 128); rerr == nil && strings.HasPrefix(head, fakeMediaMarker) {
+			_, _ = fmt.Sscanf(head, fakeMediaMarker+" seconds=%d width=%d height=%d", &seconds, &width, &height)
+		}
+	}
+
+	probe := fmt.Sprintf(`{"format":{"format_name":"mov,mp4,m4a,3gp,3g2,mj2","nb_streams":2,"duration":"%d.0"},`+
+		`"streams":[{"index":0,"codec_type":"video","codec_name":"h264","width":%d,"height":%d},`+
+		`{"index":1,"codec_type":"audio","codec_name":"aac"}]}`, seconds, width, height)
+	if _, err := ffmpeg.CheckProbe([]byte(probe), in.Ceilings); err != nil {
+		return nil, err
+	}
+
+	ms := e.durationMS
+	if seconds*1000 > ms {
+		ms = seconds * 1000
+	}
+
+	return fakeResult(string(e.Dir), in, ms)
+}
+
+func readHead(path string, n int) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+
+	defer func() { _ = f.Close() }()
+
+	buf := make([]byte, n)
+	got, err := f.Read(buf)
+
+	if err != nil && got == 0 {
+		return "", err
+	}
+
+	return string(buf[:got]), nil
 }
 
 func fakeResult(ws string, in ingest.Input, durationMS int64) (*ingest.Result, error) {
