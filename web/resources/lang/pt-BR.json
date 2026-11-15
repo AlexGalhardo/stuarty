@@ -6,11 +6,239 @@
       "languages": {
         "en": "English",
         "pt-BR": "Português (Brasil)"
-      }
+      },
+      "projects": "Projetos"
     },
     "theme": {
       "light": "Mudar para o tema claro",
       "dark": "Mudar para o tema escuro"
+    },
+    "error": {
+      "back": "Voltar aos projetos"
+    },
+    "projects": {
+      "title": "Projetos",
+      "new": "Novo projeto",
+      "name": "Nome",
+      "size": "Tamanho",
+      "create": "Criar projeto",
+      "list": "Seus projetos",
+      "empty": "Nenhum projeto ainda. Crie o primeiro acima.",
+      "open": "Abrir",
+      "summary": "{width} × {height} px, {fps} fps",
+      "updated": "Atualizado em {date}",
+      "presets": {
+        "9:16": "Vertical: Reels, Shorts, TikTok",
+        "1:1": "Quadrado: feeds",
+        "16:9": "Horizontal: YouTube, web",
+        "4:5": "Retrato: feeds"
+      }
+    },
+    "editor": {
+      "back": "Voltar aos projetos",
+      "revision": "rev {revision}",
+      "connection": {
+        "connecting": "Conectando",
+        "live": "Ao vivo",
+        "reconnecting": "Reconectando",
+        "offline": "Sem conexão",
+        "resyncing": "Ressincronizando",
+        "failed": "Fora de sincronia"
+      },
+      "banner": {
+        "failed": "O editor perdeu a sincronia com o projeto. Recarregue para continuar.",
+        "reload": "Recarregar"
+      },
+      "undo": "Desfazer",
+      "redo": "Refazer",
+      "panels": {
+        "library": "Mídia",
+        "preview": "Pré-visualização",
+        "inspector": "Inspetor",
+        "soon": "Ainda não disponível"
+      },
+      "activity": {
+        "editing": "{actor} está editando",
+        "editing_others": {
+          "one": "{actor} e mais {count} pessoa estão editando",
+          "other": "{actor} e mais {count} pessoas estão editando"
+        },
+        "last": "Última edição de {actor}, {ago}",
+        "recent": "Edições recentes",
+        "revision": "rev {revision}",
+        "summary": {
+          "items": {
+            "one": "alterou {count} item",
+            "other": "alterou {count} itens"
+          },
+          "tracks": {
+            "one": "alterou {count} faixa",
+            "other": "alterou {count} faixas"
+          },
+          "assets": {
+            "one": "alterou {count} mídia",
+            "other": "alterou {count} mídias"
+          },
+          "other": "alterou o projeto"
+        },
+        "announce": "{actor} alterou o projeto"
+      },
+      "timeline": {
+        "label": "Linha do tempo",
+        "empty": "A linha do tempo está vazia. Adicione um clipe pelo painel de mídia.",
+        "zoom_in": "Aumentar o zoom",
+        "zoom_out": "Diminuir o zoom",
+        "fit": "Ajustar",
+        "playhead": "Indicador de reprodução",
+        "ruler": "Navegar",
+        "tracks": "Faixas",
+        "track_visual": "Faixa de vídeo",
+        "track_audio": "Faixa de áudio",
+        "hidden": "oculta",
+        "muted": "sem som",
+        "item_summary": "{type}, {name}"
+      },
+      "item": {
+        "clip": "Clipe",
+        "audio": "Áudio",
+        "text": "Texto",
+        "caption": "Legenda",
+        "shape": "Forma"
+      },
+      "loading": "Carregando o projeto",
+      "unsupported_size": "O editor precisa de uma janela com pelo menos 1024 pixels de largura.",
+      "preview": {
+        "frame": "Quadro exato no indicador de reprodução",
+        "unsupported": "A pré-visualização ao vivo precisa de WebGL2, que este navegador não oferece. Os quadros pausados continuam exatos.",
+        "transport": "Reprodução",
+        "play": "Reproduzir",
+        "pause": "Pausar",
+        "to_start": "Ir para o início",
+        "to_end": "Ir para o fim",
+        "step_back": "Voltar um quadro",
+        "step_forward": "Avançar um quadro",
+        "current": "Tempo atual",
+        "total": "Duração total"
+      },
+      "errors": {
+        "E_FONT_UNKNOWN": "Fonte desconhecida",
+        "E_IDEMPOTENCY_MISMATCH": "Pedido repetido com conteúdo diferente",
+        "E_ID_EXISTS": "Este id já existe",
+        "E_INTERNAL": "Erro interno",
+        "E_INVALID_STATE": "Não é possível no estado atual",
+        "E_INVALID_TIME": "Tempo inválido",
+        "E_IN_USE": "Ainda em uso",
+        "E_LIMIT": "Limite atingido",
+        "E_NOT_EMPTY": "Não está vazio",
+        "E_NOT_FOUND": "Não encontrado",
+        "E_OUT_OF_SOURCE": "Fora da mídia de origem",
+        "E_OVERLAP": "Sobrepõe outro item",
+        "E_REVISION_CONFLICT": "Outra pessoa alterou isto",
+        "E_SLOT": "Erro no espaço do modelo",
+        "E_TYPE_MISMATCH": "Tipo de faixa incorreto",
+        "E_UNKNOWN_COMMAND": "Comando desconhecido",
+        "E_VALIDATION": "Valores inválidos",
+        "E_NETWORK": "Erro de rede",
+        "E_UNAUTHORIZED": "Sessão encerrada",
+        "E_FORBIDDEN": "Não permitido",
+        "E_ASSET_NOT_READY": "A mídia ainda está sendo preparada",
+        "E_NOTHING_TO_UNDO": "Nada para desfazer",
+        "E_NOTHING_TO_REDO": "Nada para refazer",
+        "E_PATH_NOT_ALLOWED": "Este caminho não é permitido",
+        "E_FILE_NOT_FOUND": "Arquivo não encontrado",
+        "E_UNSUPPORTED_MEDIA": "Mídia não suportada",
+        "E_INGEST_FAILED": "Falha na importação",
+        "E_LIMIT_EXCEEDED": "Limite excedido",
+        "E_FFMPEG_MISSING": "O FFmpeg não foi encontrado",
+        "E_NO_ENCODER": "Nenhum codificador disponível",
+        "E_EXPORT_FAILED": "Falha na exportação",
+        "E_VERIFY_FAILED": "Falha na verificação",
+        "E_LINT_BLOCKING": "O projeto tem erros que bloqueiam a exportação",
+        "E_CANCELLED": "Cancelado",
+        "E_QUEUE_FULL": "Outra exportação está em andamento",
+        "E_WORKSPACE_LOCKED": "O espaço de trabalho está bloqueado",
+        "E_PAYLOAD_TOO_LARGE": "Pedido grande demais",
+        "E_TRANSCRIBE_UNAVAILABLE": "A transcrição não está disponível",
+        "unknown": "Algo deu errado"
+      },
+      "library": {
+        "path": "Caminho de um arquivo para importar",
+        "import": "Importar",
+        "empty": "Nenhuma mídia ainda. Cole acima o caminho de um arquivo.",
+        "drop": "Uma página do navegador não vê o caminho de um arquivo. Cole o caminho no campo.",
+        "add": "Adicionar à linha do tempo",
+        "retry": "Tentar de novo",
+        "dismiss": "Dispensar",
+        "progress": "Progresso da importação",
+        "state": {
+          "pending": "Aguardando",
+          "ingesting": "Importando",
+          "ready": "Pronta",
+          "failed": "Falhou"
+        }
+      },
+      "edit": {
+        "label": "Edição",
+        "split": "Dividir",
+        "trim_start": "Cortar o início",
+        "trim_end": "Cortar o fim",
+        "caption": "Adicionar legenda"
+      },
+      "caption": {
+        "title": "Adicionar legenda",
+        "text": "Texto",
+        "duration": "Duração (por exemplo, 3s)",
+        "cancel": "Cancelar",
+        "add": "Adicionar legenda"
+      },
+      "notice": {
+        "dismiss": "Dispensar",
+        "apply_again": "Aplicar de novo",
+        "next_free": "Mover para a próxima posição livre",
+        "undo_skipped": {
+          "one": "Desfeito; {count} alteração foi deixada como estava porque outro ator a alterou",
+          "other": "Desfeito; {count} alterações foram deixadas como estavam porque outro ator as alterou"
+        },
+        "redo_skipped": {
+          "one": "Refeito; {count} alteração foi deixada como estava porque outro ator a alterou",
+          "other": "Refeito; {count} alterações foram deixadas como estavam porque outro ator as alterou"
+        }
+      },
+      "jobs": {
+        "chip": {
+          "one": "{count} tarefa · {percent}%",
+          "other": "{count} tarefas · {percent}%"
+        }
+      },
+      "export": {
+        "open": "Exportar",
+        "title": "Exportar",
+        "revision": "Revisão {revision}",
+        "checking": "Verificando o projeto",
+        "no_problems": "Nenhum problema encontrado.",
+        "errors": "Erros",
+        "warnings": "Avisos",
+        "notes": "Observações",
+        "blocked": "Corrija os erros acima e verifique de novo.",
+        "recheck": "Verificar de novo",
+        "start": "Iniciar exportação",
+        "try_again": "Tentar de novo",
+        "again": "Exportar de novo",
+        "close": "Fechar",
+        "download": "Baixar",
+        "running": "Exportando",
+        "progress": "Progresso da exportação",
+        "keeps_running": "Você pode fechar esta janela; a exportação continua.",
+        "finished": "Exportação concluída",
+        "copy_path": "Copiar caminho",
+        "copy_details": "Copiar detalhes",
+        "size": "{megabytes} MB · {duration} · revisão {revision}",
+        "newer": "O projeto mudou depois desta exportação (agora na revisão {revision}).",
+        "cancelled": "Exportação cancelada",
+        "failed_checks": "Verificações com falha:",
+        "queue_full": "Outra exportação está em andamento. Tente de novo quando ela terminar.",
+        "go_to": "Ir para {item}"
+      }
     }
   }
 }

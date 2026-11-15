@@ -26,14 +26,14 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
 import { ApiError } from "../api/errors";
 import type { JsonValue, LintFinding } from "../api/types";
 import { exportFileUrl } from "../api/urls";
 import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 import { errorHeadline } from "../ui/errorHeadline";
-import { formatSeconds } from "../ui/format";
+import { formatDecimal, formatSeconds } from "../ui/format";
 import { announcedPercent, exportPhase, groupFindings } from "./exportPhase";
 
 const POLL_AFTER_MS = 5000;
@@ -109,6 +109,7 @@ export default function ExportDialog({
 	onOpenChange(open: boolean): void;
 }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	const runtime = useRuntime();
 	const revision = useDocumentState((s) => s.revision);
 	const jobId = useStore(runtime.jobs, (s) => s.exportJobId);
@@ -317,8 +318,8 @@ export default function ExportDialog({
 							)}
 							<p className="text-xs text-muted-foreground [font-variant-numeric:tabular-nums]">
 								{t("ui.editor.export.size", {
-									megabytes: (result.bytes / 1_000_000).toFixed(1),
-									duration: formatSeconds(result.duration.seconds),
+									megabytes: formatDecimal(result.bytes / 1_000_000, locale),
+									duration: formatSeconds(result.duration.seconds, locale),
 									revision: result.revision,
 								})}
 							</p>
