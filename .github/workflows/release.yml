@@ -141,6 +141,17 @@ jobs:
       - name: Install the web dependencies
         working-directory: web
         run: bun install --frozen-lockfile
+      - name: Notices are current
+        run: go run ./internal/tools/notices -check
+      # The archives carry the three files of web/app/agentdocs/out/ under agent/ (goreleaser.yaml);
+      # they must be what the binary of this tag prints (SDD-003 section 9 check 27).
+      - name: The agent material equals agent:docs
+        run: |
+          set -euo pipefail
+          go build -o "$RUNNER_TEMP/vukem-video" ./web/cmd/app
+          "$RUNNER_TEMP/vukem-video" agent:docs --print skill | cmp - web/app/agentdocs/out/SKILL.md
+          "$RUNNER_TEMP/vukem-video" agent:docs --print agents | cmp - web/app/agentdocs/out/AGENTS.snippet.md
+          "$RUNNER_TEMP/vukem-video" agent:docs --print instructions | cmp - web/app/agentdocs/out/mcp-instructions.txt
       - uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
         with:
           version: "v2.18.2"
