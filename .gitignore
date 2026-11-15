@@ -5,7 +5,8 @@ vukem-feedback.md
 # Dependencies, builds and caches
 node_modules/
 dist/
-coverage*
+/coverage*
+web/coverage*
 .cache/
 site/out/
 *.log

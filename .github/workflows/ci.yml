@@ -103,6 +103,7 @@ jobs:
       - run: bun run typecheck
       - run: bun run lint
       - run: bun run check:contrast
+      - run: bun run check:i18n
       # `bun run test` is added with the unit test runner, which needs the
       # author's approval (SDD-012 section 3.1).
 
