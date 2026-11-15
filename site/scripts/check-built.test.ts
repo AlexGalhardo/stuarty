@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { basePathProblems, foreignOriginProblems } from "./check-built.ts";
+import { basePathProblems, foreignOriginProblems, twinProblems } from "./check-built.ts";
 
 const own = "alexgalhardo.github.io";
 
@@ -41,4 +41,26 @@ test("a root-relative link without the base path is refused", () => {
 		["a.html: /icon.svg does not start with /vukem-video"],
 	);
 	assert.deepEqual(basePathProblems("a.html", '<a href="/docs/">x</a>', ""), []);
+});
+
+test("every page needs a clean twin and a line in llms.txt, and a listed URL must exist", () => {
+	const url = "https://example.org/base";
+	const llms = [`- [A](${url}/docs/a/): x`, `- [B](${url}/docs/b/): x`, `- [C](${url}/docs/c/): x`].join("\n");
+	const files = ["llms.txt", "docs/a/index.html", "docs/a.md", "docs/b/index.html", "docs/d/index.html", "docs/d.md"];
+	const read = (rel: string) => (rel === "llms.txt" ? llms : rel === "docs/a.md" ? "# A\n\n<Callout>x</Callout>" : "# D");
+
+	assert.deepEqual(twinProblems(files, read, url).sort(), [
+		"docs/a.md: has JSX or an import",
+		"docs/b: no Markdown twin (docs/b.md)",
+		"llms.txt does not list docs/d",
+		"llms.txt lists docs/c, which is not in out/",
+		"llms.txt lists docs/c, which is not a page",
+	].sort());
+});
+
+test("a complete site has no twin problems", () => {
+	const url = "https://example.org";
+	const files = ["llms.txt", "docs/a/index.html", "docs/a.md"];
+	const read = (rel: string) => (rel === "llms.txt" ? `- [A](${url}/docs/a/): x` : "# A");
+	assert.deepEqual(twinProblems(files, read, url), []);
 });
