@@ -43,13 +43,13 @@ var (
 )
 
 type fontFileArg struct {
-	Weight int    `json:"weight" desc:"100 to 900 in steps of 100." min:"100" max:"900"`
+	Weight int    `json:"weight" desc:"100 to 900 in steps of 100."                                                               min:"100" max:"900"`
 	Hash   string `json:"hash"   desc:"sha256: and 64 lower-case hex characters; a font stored by media import of the workspace."`
 }
 
 type fontAddArgs struct {
 	Family string        `json:"family" desc:"1 to 60 characters: letters, digits, space, dot, hyphen, underscore; not a bundled family." min:"1" max:"60"`
-	Files  []fontFileArg `json:"files"  desc:"One file per weight, 1 to 9; a weight appears once."                                       min:"1" max:"9"`
+	Files  []fontFileArg `json:"files"  desc:"One file per weight, 1 to 9; a weight appears once."                                        min:"1" max:"9"`
 }
 
 func applyFontAdd(c *Context, a *fontAddArgs) error {
