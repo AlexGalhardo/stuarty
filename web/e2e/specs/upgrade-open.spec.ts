@@ -258,16 +258,6 @@ async function openPage(
 	running: Running,
 	path: string,
 ): Promise<string[]> {
-	const errors: string[] = [];
-	page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
-	page.on("console", (m) => {
-		if (m.type() !== "error") return;
-		// The core refuses a frame of a revision the document has left (409): the
-		// preview asked for it before an edit and the browser logs every 4xx.
-		if (m.location().url.includes("/frame?") && m.text().includes("409"))
-			return;
-		errors.push(`console: ${m.text()}`);
-	});
 	await page.addInitScript(() => {
 		try {
 			localStorage.setItem("vv.shortcutsSeen", "1");
@@ -278,7 +268,28 @@ async function openPage(
 	const launch = await running.api.post("/api/v1/system/launch");
 	expect(launch.ok()).toBe(true);
 	const { url } = (await launch.json()) as { url: string };
-	await page.goto(url);
+	await page.goto(url, { waitUntil: "networkidle" });
+	// Listening starts once the launch page has settled: the next navigation
+	// aborts what it was still loading and Firefox logs each abort (a font, a
+	// dynamic import) as an error that is not the upgrade path's.
+	const browserName = page.context().browser()?.browserType().name();
+	const errors: string[] = [];
+	page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+	page.on("console", (m) => {
+		if (m.type() !== "error") return;
+		// The core refuses a frame of a revision the document has left (409): the
+		// preview asked for it before an edit and the browser logs every 4xx.
+		if (m.location().url.includes("/frame?") && m.text().includes("409"))
+			return;
+		// WebKit reports the style-src-attr violation of every element React
+		// mounts with a style prop although the styles apply (see cspViolations).
+		if (
+			browserName === "webkit" &&
+			m.text().includes("Refused to apply a stylesheet")
+		)
+			return;
+		errors.push(`console: ${m.text()}`);
+	});
 	await page.goto(`${running.baseURL}${path}`);
 	return errors;
 }
@@ -464,17 +475,18 @@ test.describe("upgrade-open", () => {
 		try {
 			// The editor page is served, then the document a newer version wrote is
 			// what the core is asked for: the real answer of the core, not a script.
+			// The bump goes between the page and the fetch of the document: a route
+			// on the page navigation (WebKit on Windows does not route the fetch
+			// the editor makes, though it reports it).
 			let bumped = false;
-			await page.route(
-				"**/api/v1/projects/prj_1000000001?detail=document",
-				async (route) => {
-					if (!bumped) {
-						bumped = true;
-						saveAsNewerVersion(running.home);
-					}
-					await route.continue();
-				},
-			);
+			await page.route(`**/editor/${MAIN}`, async (route) => {
+				const response = await route.fetch();
+				if (!bumped) {
+					bumped = true;
+					saveAsNewerVersion(running.home);
+				}
+				await route.fulfill({ response });
+			});
 			const errors = await openPage(page, running, `/editor/${MAIN}`);
 			const refusal = await running.api.get(
 				`/api/v1/projects/${MAIN}?detail=document`,
