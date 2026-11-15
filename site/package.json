@@ -11,9 +11,11 @@
     "last-updated": "node scripts/last-updated.ts",
     "check:mdx": "node scripts/check-mdx.ts",
     "check:last-updated": "node scripts/check-last-updated.ts",
+    "reference": "node scripts/generate-reference.ts",
+    "reference:check": "node scripts/generate-reference.ts && git diff --exit-code -- generated content/docs/reference",
     "check:built": "node scripts/check-built.ts",
     "test:scripts": "node --test scripts/check-last-updated.test.ts scripts/committed-dates.test.ts scripts/trailing-slash.test.ts scripts/check-built.test.ts",
-    "test:site": "node --test scripts/link-anchors.test.ts scripts/markdown-twin.test.ts"
+    "test:site": "node --test scripts/link-anchors.test.ts scripts/markdown-twin.test.ts scripts/generate-reference.test.ts"
   },
   "dependencies": {
     "@astrojs/react": "7.1.4",
