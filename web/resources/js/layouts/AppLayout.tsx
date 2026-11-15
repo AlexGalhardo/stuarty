@@ -30,7 +30,7 @@ function Shell({ children }: { children: ReactNode }) {
 
 	return (
 		<TooltipProvider>
-			<header className="flex h-14 items-center gap-4 border-b px-4 md:px-6">
+			<header className="flex min-h-14 flex-wrap items-center gap-x-4 gap-y-1 border-b px-4 py-2 md:px-6">
 				<Link href="/projects" className="flex items-center gap-2">
 					<span className="flex size-8 items-center justify-center rounded-lg bg-brand text-brand-foreground">
 						<Video aria-hidden="true" className="size-4" />
@@ -55,7 +55,7 @@ function Shell({ children }: { children: ReactNode }) {
 						{t("ui.nav.settings")}
 					</Link>
 				</nav>
-				<div className="ml-auto flex items-center gap-2">
+				<div className="ml-auto flex flex-wrap items-center gap-2">
 					<LocaleSwitcher />
 					<ThemeToggle />
 					{page.props.auth?.user != null && <Account />}
