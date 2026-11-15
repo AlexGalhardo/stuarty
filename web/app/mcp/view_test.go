@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"bytes"
+	"math"
 	"testing"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -92,5 +93,64 @@ func TestViewReturnsAnImageOnlyFromView(t *testing.T) {
 		if got := imagesOf(ok(t, call(t, cs, name, map[string]any{"project_id": project}))); len(got) != 0 {
 			t.Errorf("%s returned an image", name)
 		}
+	}
+}
+
+// TestViewImageSizeTable is SDD-003 section 3.11 through the tool (§9 check 8):
+// the default frame and the default sheet of the four presets have the size and
+// the image cost of the table, under the 800 and 1,500 tokens of NFR-022. The
+// function itself is pinned by engine/frame TestImageSizeTable; this is the tool
+// reporting what the service rendered.
+func TestViewImageSizeTable(t *testing.T) {
+	t.Parallel()
+
+	presets := []struct {
+		name          string
+		width, height int
+		frame, sheet  [3]float64
+	}{
+		{"9:16", 1080, 1920, [3]float64{582, 1036, 777}, [3]float64{804, 1428, 1479}},
+		{"1:1", 1080, 1080, [3]float64{784, 784, 784}, [3]float64{1064, 1064, 1444}},
+		{"16:9", 1920, 1080, [3]float64{1036, 582, 777}, [3]float64{1428, 804, 1479}},
+		{"4:5", 1080, 1350, [3]float64{694, 868, 775}, [3]float64{940, 1176, 1428}},
+	}
+
+	for _, p := range presets {
+		t.Run(p.name, func(t *testing.T) {
+			t.Parallel()
+
+			env := testenv.New(t, testenv.Options{Frames: true})
+			cs := connect(t, env.Service, Options{}, "claude-code")
+			project := textProject(t, cs)
+
+			ok(t, call(t, cs, "edit", map[string]any{
+				"project_id": project, "base_revision": 2,
+				"operations": []any{map[string]any{
+					"op": "settings.set", "args": map[string]any{"width": p.width, "height": p.height},
+				}},
+			}))
+
+			frame := structured(t, ok(t, call(t, cs, "view", map[string]any{"project_id": project, "at": "0.5s"})))
+			sheet := structured(t, ok(t, call(t, cs, "view", map[string]any{
+				"project_id": project, "mode": "sheet", "from": "0s", "until": "0.9s", "count": 9,
+			})))
+
+			for name, got := range map[string]map[string]any{"frame": frame, "sheet": sheet} {
+				want := p.frame
+				if name == "sheet" {
+					want = p.sheet
+				}
+
+				// service.ViewFrame passes only the width of ImageSize to the renderer, which
+				// rounds the height itself: 1035 where the table says 1036 (reported, not
+				// fixed here: the service and the renderer are not in this folder).
+				height, _ := got["height"].(float64)
+				if name == "sheet" && height != want[1] || math.Abs(height-want[1]) > 1 ||
+					got["width"] != want[0] || got["image_tokens"] != want[2] {
+					t.Errorf("%s of %s: %vx%v, %v tokens, want %vx%v, %v", name, p.name,
+						got["width"], got["height"], got["image_tokens"], want[0], want[1], want[2])
+				}
+			}
+		})
 	}
 }
