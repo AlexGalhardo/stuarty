@@ -33,7 +33,11 @@ var otioExport = &spec{
 	example: "vukem-video otio:export --project prj_7k2m9x4q1b --out cut.otio",
 	project: true,
 	flags: []flagDef{
-		{Name: "out", Kind: kindString, Usage: "the file to write (default: the name of the project, in the current directory)"},
+		{
+			Name:  "out",
+			Kind:  kindString,
+			Usage: "the file to write (default: the name of the project, in the current directory)",
+		},
 		{Name: "force", Kind: kindBool, Default: "false", Usage: "replace the file when it exists"},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
@@ -100,7 +104,7 @@ func writeFile(path string, data []byte, mode int, makeFolders bool) error {
 		}
 	}
 
-	f, err := os.OpenFile(path, mode, 0o600) //nolint:gosec // the path is the one the person typed
+	f, err := os.OpenFile(path, mode, 0o600)
 	if err != nil {
 		return fmt.Errorf("write %s: %w", path, err)
 	}
