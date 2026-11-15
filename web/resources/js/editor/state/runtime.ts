@@ -11,6 +11,11 @@ import {
 } from "../state/activityStore";
 import type { ReadStore } from "./createStore";
 import { createDocumentStore, type DocumentState } from "./documentStore";
+import {
+	createHistory,
+	type HistoryController,
+	type HistoryState,
+} from "./historyStore";
 import { createJobsStore, type JobsState, type JobsWriter } from "./jobsStore";
 import {
 	createLibraryStore,
@@ -58,6 +63,10 @@ export interface EditorRuntime {
 	libraryWriter: LibraryWriter;
 	jobs: ReadStore<JobsState>;
 	jobsWriter: JobsWriter;
+	// The history of the project: the rows of the panel and whether the
+	// current actor has a step to undo or redo (SDD-012 section 15).
+	history: ReadStore<HistoryState>;
+	historyControls: HistoryController;
 	notices: ReadStore<NoticeState>;
 	noticeWriter: NoticeWriter;
 	// Loads the document and opens the stream, then the media list and the jobs.
@@ -174,6 +183,8 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 				})
 			: ownStream;
 
+	const historyControls = createHistory({ client, projectId, timers });
+
 	const sync = createSync({
 		projectId,
 		client,
@@ -184,6 +195,8 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		ownActor: actor,
 		timers,
 		onSideEvent,
+		onBatch: (event) => historyControls.onBatch(event),
+		onGap: () => historyControls.onGap(),
 		verify: checked,
 		onMismatch: options.onMismatch,
 		// E_UNAUTHORIZED policy (SDD-012 section 4.4): network mode goes to
@@ -227,11 +240,13 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		libraryWriter,
 		jobs,
 		jobsWriter,
+		history: historyControls.store,
+		historyControls,
 		notices,
 		noticeWriter,
 		async start() {
 			await sync.start();
-			await Promise.all([loadLibrary(), loadJobs()]);
+			await Promise.all([loadLibrary(), loadJobs(), historyControls.refresh()]);
 		},
 		async importPaths(paths) {
 			libraryWriter.setImportError(null);
@@ -256,6 +271,9 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		sync,
 		edits,
 		checkStale: () => stream.checkStale(),
-		dispose: () => sync.stop(),
+		dispose: () => {
+			sync.stop();
+			historyControls.dispose();
+		},
 	};
 }

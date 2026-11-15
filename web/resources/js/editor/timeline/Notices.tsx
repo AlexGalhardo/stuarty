@@ -5,6 +5,7 @@ import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { useActions } from "../commands/useActions";
+import { actorLabel } from "../state/activityStore";
 import { useStore } from "../state/createStore";
 import { useRuntime } from "../state/EditorContext";
 import { errorHeadline } from "../ui/errorHeadline";
@@ -29,7 +30,13 @@ export default function Notices(): ReactNode {
 					<div className="min-w-0 flex-1">
 						<p className="font-medium">
 							{notice.messageKey !== undefined
-								? t(notice.messageKey, { count: notice.count ?? 0 })
+								? t(notice.messageKey, {
+										count: notice.count ?? 0,
+										actor:
+											notice.actor === undefined
+												? t("ui.editor.notice.another_actor")
+												: actorLabel(notice.actor),
+									})
 								: notice.code !== undefined
 									? errorHeadline(t, notice.code)
 									: null}

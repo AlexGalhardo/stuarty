@@ -12,6 +12,8 @@ export interface Notice {
 	// A catalogue key for the notices the UI itself words (undo skipped).
 	messageKey?: string;
 	count?: number;
+	// The actor a UI-worded notice names (undo skipped, section 15).
+	actor?: string;
 	// An action the notice offers, as the operations to send. The values come
 	// from the core (`details.next_free`), never computed here.
 	action?: {

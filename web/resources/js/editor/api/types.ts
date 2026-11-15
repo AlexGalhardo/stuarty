@@ -87,6 +87,14 @@ export interface LintFinding {
 	[key: string]: unknown;
 }
 
+// A primitive an undo or redo left alone (SDD-005 section 12.3).
+export interface SkippedOp {
+	reason: string;
+	fields?: string[];
+	by_revision?: number;
+	by_actor?: string;
+}
+
 // POST /projects/{id}/edit, undo and redo (SDD-003 sections 2.4 and 2.5).
 export interface EditResult {
 	project_id: string;
@@ -103,7 +111,7 @@ export interface EditResult {
 	lint: { errors: number; warnings: number };
 	description: string;
 	kind?: "undo" | "redo";
-	skipped?: unknown[];
+	skipped?: SkippedOp[];
 }
 
 export interface EditRequest {
@@ -375,6 +383,11 @@ export interface HistoryEntry {
 	ops: string[];
 	undo_of: number | null;
 	undone_by: number | null;
+	// SDD-012 section 15 expects these three; the service does not send them
+	// yet, so the panel treats them as absent.
+	description?: string;
+	undoable_by_me?: boolean;
+	redoable_by_me?: boolean;
 }
 
 export interface HistoryListResult {

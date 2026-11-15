@@ -196,13 +196,14 @@
         "apply_again": "Aplicar de novo",
         "next_free": "Mover para a próxima posição livre",
         "undo_skipped": {
-          "one": "Desfeito; {count} alteração foi deixada como estava porque outro ator a alterou",
-          "other": "Desfeito; {count} alterações foram deixadas como estavam porque outro ator as alterou"
+          "one": "Desfeito; {count} alteração foi deixada como estava porque {actor} a alterou",
+          "other": "Desfeito; {count} alterações foram deixadas como estavam porque {actor} as alterou"
         },
         "redo_skipped": {
-          "one": "Refeito; {count} alteração foi deixada como estava porque outro ator a alterou",
-          "other": "Refeito; {count} alterações foram deixadas como estavam porque outro ator as alterou"
-        }
+          "one": "Refeito; {count} alteração foi deixada como estava porque {actor} a alterou",
+          "other": "Refeito; {count} alterações foram deixadas como estavam porque {actor} as alterou"
+        },
+        "another_actor": "outro ator"
       },
       "jobs": {
         "chip": {
@@ -493,6 +494,23 @@
         "track_kind": {
           "visual": "Vídeo",
           "audio": "Áudio"
+        }
+      },
+      "history": {
+        "tab": "Histórico",
+        "revision": "rev. {revision}",
+        "title": "Histórico",
+        "you": "Você",
+        "undone": "Desfeita",
+        "load_more": "Carregar mais",
+        "start": "Início do projeto",
+        "empty": "Nenhuma alteração ainda",
+        "empty_hint": "Cada alteração sua ou de um agente aparece aqui.",
+        "retry": "Tentar de novo",
+        "changes": {
+          "one": "{count} alteração",
+          "other": "{count} alterações",
+          "zero": "Nenhuma alteração"
         }
       }
     }

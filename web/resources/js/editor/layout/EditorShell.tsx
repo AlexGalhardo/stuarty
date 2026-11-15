@@ -3,15 +3,16 @@ import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import Inspector from "../inspector/Inspector";
-import Library from "../library/Library";
 import Preview from "../preview/Preview";
-import { useDocumentState } from "../state/EditorContext";
+import { useDocumentState, useUiState } from "../state/EditorContext";
 import EditToolbar from "../timeline/EditToolbar";
 import Notices from "../timeline/Notices";
 import Timeline from "../timeline/Timeline";
 import { useShortcuts } from "../timeline/useShortcuts";
+import LeftPanel from "./LeftPanel";
 import TopBar from "./TopBar";
 import TrashedBanner from "./TrashedBanner";
+import { usePanelShortcuts } from "./usePanelShortcuts";
 
 // Panel sizes by viewport width (SDD-012 section 6.3); below 1280 the drawers
 // of the later phases are not built yet, so the compact sizes apply.
@@ -46,7 +47,14 @@ export default function EditorShell(): ReactNode {
 	const t = useT();
 	const status = useDocumentState((s) => s.status);
 	const viewport = useViewportWidth();
-	const sizes = panelSizes(viewport);
+	const panels = useUiState((s) => s.panels);
+	const full = panelSizes(viewport);
+	const sizes = {
+		...full,
+		library: panels.left ? full.library : 0,
+		inspector: panels.inspector ? full.inspector : 0,
+	};
+	usePanelShortcuts();
 	const [captionOpen, setCaptionOpen] = useState(false);
 	useShortcuts(() => setCaptionOpen(true));
 
@@ -95,7 +103,7 @@ export default function EditorShell(): ReactNode {
 					</div>
 				)}
 			</div>
-			<Library />
+			{panels.left ? <LeftPanel /> : <div />}
 			<main
 				aria-label={t("ui.editor.panels.preview")}
 				className="flex min-h-0 min-w-0 flex-col bg-ed-preview-surround p-3"
@@ -108,7 +116,7 @@ export default function EditorShell(): ReactNode {
 					<Preview />
 				)}
 			</main>
-			<Inspector />
+			{panels.inspector ? <Inspector /> : <div />}
 			<div className="col-span-full min-h-0 border-t border-ed-track-line">
 				<Timeline />
 			</div>
