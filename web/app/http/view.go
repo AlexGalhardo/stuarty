@@ -184,6 +184,7 @@ type planIn struct {
 	Until int    `json:"until,omitempty"                     doc:"The end of the window, not included; at most 300 frames after from. Required."`
 	To    int    `json:"to,omitempty"                        doc:"Deprecated alias of until, removed at 1.0."`
 	Rev   int64  `json:"rev,omitempty"                       doc:"Must be the current revision when given."`
+	Width int    `json:"width,omitempty"                     doc:"The width in pixels the preview draws at, 16 to 4096; bitmaps are rasterized at that scale. Default: the project width."`
 }
 
 // projectsPlan is GET /projects/{id}/plan (SDD-004 section 10).
@@ -199,7 +200,7 @@ func (h *apiHandler) projectsPlan(c *web.Ctx, in planIn) (service.PlanWindowResu
 
 	res, err := h.Service.PlanWindow(
 		c.Context(),
-		service.PlanWindowRequest{ProjectID: in.ID, From: in.From, Until: until},
+		service.PlanWindowRequest{ProjectID: in.ID, From: in.From, Until: until, Width: in.Width},
 	)
 	if res != nil {
 		revisionHeader(c, res.Revision)

@@ -21,11 +21,20 @@ type PlanWindowRequest struct {
 	ProjectID string `json:"project_id"`
 	From      int    `json:"from"`
 	Until     int    `json:"until"`
+	// Width is the output width in pixels the preview draws at; 0 is the project width. The
+	// bitmaps of the plan are rasterized at that scale, as ViewFrame does (SDD-004 section 10).
+	Width int `json:"width,omitempty"`
 }
 
 // PlanWindowResult is the compact plan of a window; Revision is the revision it
 // was read at.
 type PlanWindowResult = plan.WindowPlan
+
+// The widths a plan window may ask the bitmaps to be drawn for.
+const (
+	minPlanWidth = 16
+	maxPlanWidth = 4096
+)
 
 const (
 	// maxKnownBitmaps bounds the specs kept to answer the bitmap route.
@@ -151,6 +160,15 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 
 	fonts := s.fontSet(doc)
 	opts := plan.Options{Measure: raster.Measure(fonts)}
+
+	if req.Width != 0 {
+		if req.Width < minPlanWidth || req.Width > maxPlanWidth {
+			return nil, newError(command.CodeValidation, "the width %d is not %d to %d pixels.",
+				req.Width, minPlanWidth, maxPlanWidth).withPath("width")
+		}
+
+		opts.OutputScale = float64(req.Width) / float64(doc.Settings.Width)
+	}
 
 	w := plan.WindowWith(doc, req.From, req.Until, opts)
 	w.Revision = row.Revision
