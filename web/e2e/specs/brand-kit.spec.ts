@@ -35,6 +35,12 @@ test.describe("brand-kit", () => {
 		page,
 		request,
 	}) => {
+		// The kit belongs to the workspace: start empty, so that a second run on the
+		// same workspace (another browser project) finds no earlier colour row.
+		await (await caller(request))("PUT", "/brand-kit", {
+			colors: {},
+			fonts: {},
+		});
 		await page.goto("/settings/brand-kit");
 		await expect(
 			page.getByRole("heading", { name: "Brand kit", level: 1 }),
@@ -92,7 +98,7 @@ test.describe("brand-kit", () => {
 		// The family is not in the project yet: the Fonts section offers it.
 		await page
 			.getByRole("button", {
-				name: "Add brand kit font family Brand Anton to the project",
+				name: "Use in project: brand kit font family Brand Anton",
 			})
 			.click();
 		await expect

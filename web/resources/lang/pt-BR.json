@@ -749,7 +749,7 @@
         "add": "Adicionar fonte",
         "brand": "Fontes do kit de marca",
         "brand_use": "Usar no projeto",
-        "brand_add": "Adicionar ao projeto a família de fontes {name} do kit de marca"
+        "brand_add": "Usar no projeto: família de fontes {name} do kit de marca"
       },
       "clip": {
         "audio_title": "Áudio",
