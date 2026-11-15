@@ -2,17 +2,13 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"os"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/internal/outbound"
-	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/remote"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/store"
+	"github.com/AlexGalhardo/vukem-video/web/app/owner"
 )
 
 // LocalResolver is the Resolver of the binary (SDD-003 section 5.2): it finds
@@ -53,7 +49,7 @@ func (r LocalResolver) Resolve(ctx context.Context, t Target) (*Connection, erro
 		return httpConnection(sess), nil
 	}
 
-	conn, err := openInProcess(ctx, sess)
+	conn, err := openInProcess(ctx, sess, getenv)
 	if err != nil {
 		_ = sess.Close()
 		return nil, err
@@ -77,24 +73,13 @@ func httpConnection(sess *workspace.Session) *Connection {
 	return &Connection{Service: remote.New(sess.BaseURL, sess.Token, hc), Workspace: string(sess.Dir)}
 }
 
-func openInProcess(ctx context.Context, sess *workspace.Session) (*Connection, error) {
-	if err := sess.Dir.EnsureLayout(); err != nil {
-		return nil, err
-	}
-
-	st, err := store.Open(ctx, sess.Dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
+// openInProcess builds the Service with the wiring of serve (media, exporter,
+// jobs run inside the call), so import and export work with no server.
+func openInProcess(ctx context.Context, sess *workspace.Session, getenv func(string) string) (*Connection, error) {
+	ow, err := owner.Open(ctx, owner.Config{Getenv: getenv, Session: sess, Inline: true})
 	if err != nil {
 		return nil, err
 	}
 
-	svc, err := service.New(service.Options{Store: st, Registry: command.Default()})
-	if err != nil {
-		_ = st.Close()
-		return nil, err
-	}
-
-	return &Connection{
-		Service: svc, InProcess: true, Workspace: string(sess.Dir),
-		Close: func() error { return errors.Join(st.Close(), sess.Close()) },
-	}, nil
+	return &Connection{Service: ow.Service, InProcess: true, Workspace: string(sess.Dir), Close: ow.Close}, nil
 }
