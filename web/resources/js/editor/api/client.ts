@@ -4,6 +4,11 @@ import { type Transport, TransportError } from "./transport";
 import type {
 	EditRequest,
 	EditResult,
+	Job,
+	JobListResult,
+	LintResult,
+	MediaImportResult,
+	MediaListResult,
 	PlanWindowHead,
 	ProjectGetResult,
 } from "./types";
@@ -18,6 +23,12 @@ const defaultDeps: RetryDeps = {
 };
 
 export interface ApiClient {
+	listMedia(projectId: string): Promise<MediaListResult>;
+	importMedia(projectId: string, paths: string[]): Promise<MediaImportResult>;
+	getLint(projectId: string): Promise<LintResult>;
+	startExport(projectId: string): Promise<Job>;
+	getJob(jobId: string): Promise<Job>;
+	listJobs(projectId: string): Promise<JobListResult>;
 	getProject(projectId: string): Promise<ProjectGetResult>;
 	edit(projectId: string, request: EditRequest): Promise<EditResult>;
 	undo(projectId: string): Promise<EditResult>;
@@ -60,6 +71,17 @@ export function createClient(
 	const project = (id: string): string => `/projects/${encodeURIComponent(id)}`;
 
 	return {
+		listMedia: (id) => call("GET", `${project(id)}/media`, READ_TIMEOUT_MS),
+		importMedia: (id, paths) =>
+			call("POST", `${project(id)}/media`, READ_TIMEOUT_MS, {
+				files: paths.map((path) => ({ path })),
+			}),
+		getLint: (id) => call("GET", `${project(id)}/lint`, READ_TIMEOUT_MS),
+		startExport: (id) =>
+			call("POST", `${project(id)}/jobs`, READ_TIMEOUT_MS, { kind: "export" }),
+		getJob: (jobId) =>
+			call("GET", `/jobs/${encodeURIComponent(jobId)}`, READ_TIMEOUT_MS),
+		listJobs: (id) => call("GET", `${project(id)}/jobs`, READ_TIMEOUT_MS),
 		getProject: (id) =>
 			call("GET", `${project(id)}?detail=document`, READ_TIMEOUT_MS),
 		edit: (id, request) =>
