@@ -1,0 +1,4 @@
+id: 42
+event: batch.committed
+data: {"project_id":"prj_7k2m9x4q1b","revision":42,"base_revision":41,"kind":"edit","actor":"local:claude-code","at":"2026-11-14T12:03:10.204Z","description":"+ item itm_s6t7v8w9x0","diff":[{"kind":"item.added","id":"itm_s6t7v8w9x0"}]}
+

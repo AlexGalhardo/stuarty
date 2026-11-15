@@ -1,0 +1,17 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["project_id", "job_id", "kind", "state", "progress", "message", "error", "result", "updated_at"],
+	"properties": {
+		"project_id": {"type": ["string", "null"], "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"},
+		"job_id": {"type": "string", "pattern": "^job_[0-9a-hjkmnp-tv-z]{10}$"},
+		"kind": {"enum": ["ingest", "transcribe", "export", "frame"]},
+		"state": {"enum": ["queued", "running", "succeeded", "failed", "cancelled"]},
+		"progress": {"type": "number", "minimum": 0, "maximum": 1},
+		"message": {"type": "string", "maxLength": 200},
+		"error": {"type": ["object", "null"], "required": ["code", "message", "retryable", "details"]},
+		"result": {"type": ["object", "null"]},
+		"updated_at": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z$"}
+	}
+}
