@@ -1,0 +1,117 @@
+command agent:docs
+command audit
+command brand:set
+command brand:show
+command bundle:export
+command bundle:import
+command command:help
+command doctor
+command edit
+command events
+command export
+command font:import
+command fonts
+command history
+command job:cancel
+command job:list
+command job:show
+command lint
+command mcp
+command media:import
+command media:inspect
+command media:list
+command media:restore
+command media:trash
+command otio:export
+command otio:import
+command project:create
+command project:list
+command project:restore
+command project:show
+command project:trash
+command redo
+command template:export
+command template:import
+command template:list
+command template:new
+command template:save
+command token:rotate
+command tools:install
+command transcribe
+command undo
+command version
+command view
+route DELETE /keys/{}
+route GET /audit
+route GET /brand-kit
+route GET /commands
+route GET /commands/{}
+route GET /fonts
+route GET /handshake
+route GET /jobs/{}
+route GET /jobs/{}/file
+route GET /keys
+route GET /projects
+route GET /projects/{}
+route GET /projects/{}/bitmaps/{}
+route GET /projects/{}/events
+route GET /projects/{}/frame
+route GET /projects/{}/history
+route GET /projects/{}/jobs
+route GET /projects/{}/lint
+route GET /projects/{}/media
+route GET /projects/{}/media/{}
+route GET /projects/{}/media/{}/peaks
+route GET /projects/{}/media/{}/proxy
+route GET /projects/{}/media/{}/strip
+route GET /projects/{}/media/{}/thumbnail
+route GET /projects/{}/otio
+route GET /projects/{}/plan
+route GET /projects/{}/sheet
+route GET /projects/{}/snap-points
+route GET /system
+route GET /system/tools
+route GET /templates
+route GET /templates/{}/file
+route GET /users
+route PATCH /users/{}
+route POST /fonts
+route POST /jobs/{}/cancel
+route POST /keys
+route POST /projects
+route POST /projects/import
+route POST /projects/{}/bundle
+route POST /projects/{}/edit
+route POST /projects/{}/jobs
+route POST /projects/{}/media
+route POST /projects/{}/media/{}/restore
+route POST /projects/{}/media/{}/trash
+route POST /projects/{}/otio
+route POST /projects/{}/redo
+route POST /projects/{}/restore
+route POST /projects/{}/trash
+route POST /projects/{}/undo
+route POST /system/launch
+route POST /system/tools/install
+route POST /templates
+route POST /templates/import
+route POST /templates/{}/export
+route POST /templates/{}/instantiate
+route POST /trash/empty
+route POST /users
+route PUT /brand-kit
+tool command_help
+tool edit
+tool history
+tool job_cancel
+tool job_get
+tool job_start
+tool lint
+tool media_import
+tool media_inspect
+tool project_create
+tool project_get
+tool project_list
+tool project_trash
+tool template
+tool view
