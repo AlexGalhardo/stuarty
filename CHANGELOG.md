@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-15
+
+### Added
+
+- **ui:** Add the auto caption builders, the transcribe job start and the coverage ([056ae7d](https://github.com/AlexGalhardo/vukem-video/commit/056ae7da4560e403067721cbbf71ea35cabdd08a))
+- **ui:** Add the auto captions panel and the local transcription install dialog ([1d0a62b](https://github.com/AlexGalhardo/vukem-video/commit/1d0a62b4c12e8a4475be75c3e2733f95a7c1e801))
+- **ui:** Offer re-sync on the out-of-sync caption lint finding ([6372fdc](https://github.com/AlexGalhardo/vukem-video/commit/6372fdc831622cb490ebf5e7e063e5706fae537b))
+- **ui:** Add the keyframe builders, the keyframe selection and Delete on a keyframe ([74dc2b1](https://github.com/AlexGalhardo/vukem-video/commit/74dc2b12d7fbd52f5a71d9ad2ce649a9569fa2da))
+- **ui:** Add the Keyframes inspector section and the keyframe diamonds on the timeline ([93c946e](https://github.com/AlexGalhardo/vukem-video/commit/93c946ea1396b9948798504f661b2b09e7af1bd4))
+- **ui:** Add the transition, preset and crossfade builders, actions and coverage ([f4292c5](https://github.com/AlexGalhardo/vukem-video/commit/f4292c5bb72f4c46a5f0a6295d1f1fbd8766dcd7))
+- **ui:** Add the Transitions and Animation sections, transition marks and the Crossfade entry ([4b3985d](https://github.com/AlexGalhardo/vukem-video/commit/4b3985d9a28f77e675f48334a74068f24b8e6b75))
+- **service:** Add tool and model to E_TRANSCRIBE_UNAVAILABLE details ([eda6f54](https://github.com/AlexGalhardo/vukem-video/commit/eda6f54fab2d2706fe8b338187ea36e49d068805))
+- **service:** Wire the transcription API provider and a guarded test stub ([fff4bcd](https://github.com/AlexGalhardo/vukem-video/commit/fff4bcd2c26a9322b86f94a423dfd3253150cf17))
+
+### Fixed
+
+- **ui:** Send the nearest weight with a family that lacks the current one ([abff075](https://github.com/AlexGalhardo/vukem-video/commit/abff0759d180d403ca681553c6414e9883707761))
+- **ui:** Show the plan value of animated x, y and rotation instead of a keyframe lookup ([df3ac4f](https://github.com/AlexGalhardo/vukem-video/commit/df3ac4fdecf7ce5ae20ca44035239de8dedbd424))
+- **ui:** Take the install tool and model from the error details ([58157e3](https://github.com/AlexGalhardo/vukem-video/commit/58157e328a00023dacc74b8b8c23e865b77815d7))
+
 ## [0.9.0] - 2026-11-15
 
 ### Added
@@ -456,7 +476,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.6.0...v0.7.0
