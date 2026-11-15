@@ -223,12 +223,14 @@ func (s *svc) ToolsStatus(ctx context.Context, _ ToolsStatusRequest) (*ToolsStat
 
 	res := &ToolsStatusResult{State: "idle", Installed: []InstalledTool{}}
 
+	// The list is read under the lock: the install records each file before it
+	// clears running under the same lock, so an idle answer lists every file.
+	s.toolsState.mu.Lock()
+	defer s.toolsState.mu.Unlock()
+
 	if s.tools != nil {
 		res.Installed = readInstalled(s.tools.Dir)
 	}
-
-	s.toolsState.mu.Lock()
-	defer s.toolsState.mu.Unlock()
 
 	res.Done, res.Total = s.toolsState.done, s.toolsState.total
 
