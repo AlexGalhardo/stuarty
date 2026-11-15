@@ -749,7 +749,7 @@
         "add": "Add font",
         "brand": "Brand kit fonts",
         "brand_use": "Use in project",
-        "brand_add": "Add brand kit font family {name} to the project"
+        "brand_add": "Use in project: brand kit font family {name}"
       },
       "clip": {
         "audio_title": "Audio",

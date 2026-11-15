@@ -243,7 +243,7 @@ export async function caller(
 	label = "e2e",
 ): Promise<
 	(
-		method: "GET" | "POST",
+		method: "GET" | "POST" | "PUT",
 		path: string,
 		data?: unknown,
 	) => Promise<Record<string, unknown>>
