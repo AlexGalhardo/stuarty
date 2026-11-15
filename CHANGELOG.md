@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-15
+
+### Added
+
+- **service:** Unpack an archived helper after its digest matches and record the program digest ([5bee5dd](https://github.com/AlexGalhardo/vukem-video/commit/5bee5ddfa35a7ea59c5394269c28e43e702ae340))
+- **service:** Cap idempotency keys per actor and limit event streams per key ([1a8529b](https://github.com/AlexGalhardo/vukem-video/commit/1a8529be26272b784bd7800283fe104b0f74152d))
+- **service:** Add SnapPoints, FontList, ExportFile and AuditList with their routes ([ba19f23](https://github.com/AlexGalhardo/vukem-video/commit/ba19f23ff09abd2b014d1db6bfa0ff896377d2a5))
+- **service:** Add Doctor with the report, verify, sweep and the diagnostic bundle ([0e2ded6](https://github.com/AlexGalhardo/vukem-video/commit/0e2ded693ff6e1480ff811758e9dc5110cf32cd4))
+- **ui:** Add snap points, fonts, system and audit reads to the api client ([dd4fa14](https://github.com/AlexGalhardo/vukem-video/commit/dd4fa14a7a9494babe7012814a387687d89078c8))
+- **service:** Validate the boot configuration of both modes ([81b8bbb](https://github.com/AlexGalhardo/vukem-video/commit/81b8bbbc189a953960bfe8c1c0a65b1e12816db7))
+- **web:** Add the network-mode Host, Origin and scheme guard ([212c5c8](https://github.com/AlexGalhardo/vukem-video/commit/212c5c84f8e5b09c04e8067dad0457873e951ea4))
+- **web:** Boot network mode with its mode, address and limit rules ([8c4a6bb](https://github.com/AlexGalhardo/vukem-video/commit/8c4a6bb69736b50aa961cf45b6b0e032475125c1))
+- **workspace:** Refuse a plain-HTTP VUKEM_VIDEO_URL beyond localhost ([e3557cd](https://github.com/AlexGalhardo/vukem-video/commit/e3557cd81494f432d8b2fbfb9c2e84734b0dcc16))
+- **cli:** Add transcribe, doctor, fonts, audit and tools:install ([3237031](https://github.com/AlexGalhardo/vukem-video/commit/3237031ffa707265946e9124debbbb68a148899c))
+- **release:** Refuse a patch version when a commit in the range is breaking ([bbde553](https://github.com/AlexGalhardo/vukem-video/commit/bbde553f13fc480f6ffd59cc6896515619771cfb))
+- **service:** Report the child limits and the sandbox in doctor ([bddc108](https://github.com/AlexGalhardo/vukem-video/commit/bddc1083b50017ed127d38aca6407eba10792643))
+- **service:** Run FFmpeg under the child limits and the bwrap sandbox from the owner ([a457671](https://github.com/AlexGalhardo/vukem-video/commit/a457671b32e26e552e98e1c0164abb875052c622))
+- **web:** Add users, login, sessions and the first administrator for network mode ([0d4199f](https://github.com/AlexGalhardo/vukem-video/commit/0d4199fed1dfc60acae16e135926feb856a3857e))
+- **web:** Add API keys with create, list and revoke routes for network mode ([c90601a](https://github.com/AlexGalhardo/vukem-video/commit/c90601a2fff173a6916099dc1591ef7c662ca88c))
+- **web:** Add rate limits by address, credential, session and heavy operation ([2541bd3](https://github.com/AlexGalhardo/vukem-video/commit/2541bd3a89a962a0ce8ef615d1064815935ec8a9))
+- **service:** Read the heavy-operation limit from VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE ([e1c5ed3](https://github.com/AlexGalhardo/vukem-video/commit/e1c5ed3edeba41c343265302696f89a59914b487))
+- **api:** Mark untrusted text paths with x-untrusted in the OpenAPI document ([bd9da41](https://github.com/AlexGalhardo/vukem-video/commit/bd9da41ef676eafe92f12690db27d95741c3983c))
+- **service:** Add the three starter templates, built from commands and embedded ([e9481cc](https://github.com/AlexGalhardo/vukem-video/commit/e9481ccf9c46395ff8faf822463859331e7dbc2f))
+- **service:** Seed the starter templates at start-up and share them in network mode ([ae66f26](https://github.com/AlexGalhardo/vukem-video/commit/ae66f26e8a45a2b702b4bd8ef5ae806d2456a8a9))
+- **service:** Add structured logging with a rotating file and sanitized text ([446c51c](https://github.com/AlexGalhardo/vukem-video/commit/446c51c9c5f3ec84d4cf39897301104e24121bc2))
+- **web:** Log to the workspace file and add the actor and project to request lines ([742d80f](https://github.com/AlexGalhardo/vukem-video/commit/742d80fba2e1aa72b0a989849606cf97294fc86b))
+- **web:** Build the OpenTelemetry exporter only when the endpoint is set ([536875a](https://github.com/AlexGalhardo/vukem-video/commit/536875aff2d95c9cae0931c52b4050db795307a8))
+- **service:** Migrate stored projects and templates at start-up with backups and a log row ([ec44252](https://github.com/AlexGalhardo/vukem-video/commit/ec442528c31395f9539a6c09bd78e67e0202d337))
+
+### Fixed
+
+- **service:** Answer an aborted request as 499 instead of a server failure ([684f7ca](https://github.com/AlexGalhardo/vukem-video/commit/684f7ca1d35519a4f17aeeb66aa6e54907a8dea8))
+- **service:** Do not report an import ready before its asset is in the document ([d5bd30d](https://github.com/AlexGalhardo/vukem-video/commit/d5bd30d915ad2c5bf1dd0e206279b12e7d0d4fab))
+- **ui:** Treat a 499 answer as a silent abort ([0cfbc03](https://github.com/AlexGalhardo/vukem-video/commit/0cfbc03957091bfe277939e00096e6744870fa36))
+- **service:** Decide doctor privilege by caller, refuse verify and bundle, run one at a time ([02023f2](https://github.com/AlexGalhardo/vukem-video/commit/02023f23166ce1276d157fc57d1f149a20bc7b6b))
+- **ui:** Keep the reopen back-off when a refused event stream passes the probe ([de226dc](https://github.com/AlexGalhardo/vukem-video/commit/de226dc4d3744fe5a20d6b3a52bc8ed4ecbbe865))
+- **service:** Hide the variable name of a limit from non-admin callers in network mode ([1a1b92c](https://github.com/AlexGalhardo/vukem-video/commit/1a1b92c7272267c4c48fc5173ef8e9c52e46ffde))
+- **service:** Keep the address space limit unless the detected encoder is hardware ([e0faf5f](https://github.com/AlexGalhardo/vukem-video/commit/e0faf5f7eaea02bdd59ecc50e0e24dd72ac9cd3e))
+- **image:** Run the image in network mode on localhost and ask for APP_KEY ([13a8f2f](https://github.com/AlexGalhardo/vukem-video/commit/13a8f2ff6a2697a116f203e398fd491f41da46e1))
+- **service:** Answer 405 for E_METHOD_NOT_ALLOWED and test every row of the status table ([c0c8042](https://github.com/AlexGalhardo/vukem-video/commit/c0c8042617360278e661f9ec94fd43180ad14196))
+
+### Security
+
+- **security:** Check the key limits and insert the key in one serialized step ([6513d88](https://github.com/AlexGalhardo/vukem-video/commit/6513d88526902bd6680688df2ccb90d9a6240132))
+- **security:** Keep configuration variable names out of job and asset events ([590148c](https://github.com/AlexGalhardo/vukem-video/commit/590148cefcfaa93fb982c62286f0a3d187af6e07))
+- **security:** Refuse only failed attempts from an address that spent its failures ([27a40ea](https://github.com/AlexGalhardo/vukem-video/commit/27a40eabb7bd4ec3d9580563f5282ca68ccdee6c))
+- **security:** Refuse a blocked address before verifying a key and cap frames in flight ([3ecc10a](https://github.com/AlexGalhardo/vukem-video/commit/3ecc10a8253bde5a1f87d222575046b3dc11e04b))
+- **security:** Allow the login variable name and the test login bodies in the secret scan ([2381055](https://github.com/AlexGalhardo/vukem-video/commit/23810557754efa3493d6d4d7fb8e2fb62052c06d))
+
 ## [0.7.0] - 2026-11-15
 
 ### Added
@@ -342,7 +391,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.4.0...v0.5.0
