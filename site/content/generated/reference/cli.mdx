@@ -453,3 +453,25 @@ Example:
 ```bash
 vukem-video command:help item.move
 ```
+
+## `agent:docs`
+
+Print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions
+
+```text
+vukem-video agent:docs --print skill|agents|instructions
+vukem-video agent:docs --write <dir>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--print` | string |  | print one of skill, agents or instructions |
+| `--write` | string |  | write the three files into this directory |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+vukem-video agent:docs --write ~/.claude/skills/vukem-video
+```

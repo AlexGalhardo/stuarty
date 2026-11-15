@@ -658,6 +658,33 @@
         "actor",
         "key-file"
       ]
+    },
+    {
+      "name": "agent:docs",
+      "summary": "print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions",
+      "usage": [
+        "vukem-video agent:docs --print skill|agents|instructions",
+        "vukem-video agent:docs --write <dir>"
+      ],
+      "example": "vukem-video agent:docs --write ~/.claude/skills/vukem-video",
+      "flags": [
+        {
+          "name": "print",
+          "type": "string",
+          "usage": "print one of skill, agents or instructions"
+        },
+        {
+          "name": "write",
+          "type": "string",
+          "usage": "write the three files into this directory"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
     }
   ]
 }
