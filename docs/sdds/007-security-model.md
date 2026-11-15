@@ -599,6 +599,7 @@ BETA, with user fonts (7.4). A font from a user or a template is validated in Go
 3. Parsing runs with `recover` and a total deadline of 5 seconds; a panic or a timeout rejects the font. A font that fails is never stored.
 4. Stored by content hash with mode 0600; the family name and weight used in styles come from the project document, never from the font's name table.
 5. Fonts are used only by the in-process rasteriser. They are never given to FFmpeg or to whisper.cpp.
+6. **The font store is shared in network mode, so naming a font is not free.** `font.add` is refused with `E_NOT_FOUND` unless the font store holds the file and, when the caller has an owner (network mode), a project of the caller already uses it (a bundle import links the fonts it brings to the imported project). The refusal for a font that belongs to someone else is the same error as for a file never stored, with no hash in its message or details, so it does not tell whether the file exists. In local mode a stored file is enough. A future font import operation must record the importing user in the same way. Test: `TestSecurity_T21_FontAddCannotNameAnotherUsersFont`. Bundle fonts are validated by this section and stored in `fonts/`, never in `store/`; a font a bundle does not ship is refused in network mode.
 
 A hostile font can still exhaust CPU inside the owner process for up to the deadline. That is a residual risk (section 14); the alternative, a parser in a separate process, costs a new internal command and was not adopted for the MVP.
 

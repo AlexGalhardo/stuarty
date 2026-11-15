@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -70,10 +71,12 @@ func fromFont(err error) *Error {
 	return fromEngine(err)
 }
 
-// checkFontAdd refuses a font.add that names a file the font store does not hold (E_NOT_FOUND),
-// as the command assumes (SDD-002 C.53, SDD-007 section 5.4 item 3). The core checks only the
-// form of the hash. A malformed operation is left to the command.
-func (s *svc) checkFontAdd(op *command.Operation, index int) *Error {
+// checkFontAdd refuses a font.add that names a file the caller may not use (E_NOT_FOUND), as the
+// command assumes (SDD-002 C.53, SDD-007 section 5.4 item 3). The core checks only the form of the
+// hash. A malformed operation is left to the command. A file the store lacks and a file that
+// belongs to another user are refused with the same error, which names no hash, so the refusal
+// does not reveal that the file exists (SDD-007 T-21).
+func (s *svc) checkFontAdd(ctx context.Context, tx Tx, op *command.Operation, index int) *Error {
 	var a struct {
 		Files []struct {
 			Hash string `json:"hash"`
@@ -85,19 +88,78 @@ func (s *svc) checkFontAdd(op *command.Operation, index int) *Error {
 	}
 
 	for i, f := range a.Files {
-		if !isFontHash(f.Hash) || s.hasFont(f.Hash) {
+		if !isFontHash(f.Hash) || s.fontAllowed(ctx, tx, f.Hash) {
 			continue
 		}
 
-		e := newError(command.CodeNotFound, "the font file %s is not in the workspace.", f.Hash).
+		e := newError(command.CodeNotFound, "a font file of the operation is not in the workspace.").
 			withHint("import the font file first, then add the family").withPath("args.files").
-			withDetail("hash", f.Hash).withDetail("file_index", i)
+			withDetail("file_index", i)
 		e.OpIndex = &index
 
 		return e
 	}
 
 	return nil
+}
+
+// maxFontOwnerScan bounds the projects read to learn whether a user already uses a font.
+const maxFontOwnerScan = 2000
+
+// fontAllowed tells whether the caller may name the font. In local mode the store is the caller's
+// own, so a stored file is enough. In network mode the store is shared: the file must already be
+// used by a project of the caller (a bundle import is how a font reaches the store, and it links
+// the font to the imported project).
+func (s *svc) fontAllowed(ctx context.Context, tx Tx, hash string) bool {
+	if !s.hasFont(hash) {
+		return false
+	}
+
+	c, ok := CallerFrom(ctx)
+	if !ok || c.OwnerUserID == "" {
+		return ok
+	}
+
+	var after string
+
+	for scanned := 0; scanned < maxFontOwnerScan; {
+		items, next, err := tx.Projects().List(ctx, ProjectQuery{
+			IncludeTrashed: true, OwnerUserID: c.OwnerUserID, After: after, Limit: 200,
+		})
+		if err != nil {
+			return false
+		}
+
+		for i := range items {
+			scanned++
+
+			row, err := tx.Projects().Get(ctx, items[i].ID)
+			if err != nil {
+				continue
+			}
+
+			doc, err := decodeRow(&row)
+			if err != nil {
+				continue
+			}
+
+			for _, fam := range doc.Fonts {
+				for _, f := range fam.Files {
+					if f.Hash == hash {
+						return true
+					}
+				}
+			}
+		}
+
+		if next == "" {
+			return false
+		}
+
+		after = next
+	}
+
+	return false
 }
 
 func isFontHash(h string) bool {
