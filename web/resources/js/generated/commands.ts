@@ -308,6 +308,17 @@ export interface ClipRemoveSilencesArgs {
   threshold_db?: number;
 }
 
+export interface ClipSetBlurArgs {
+  /**
+   * A clip.
+   */
+  item_id: string;
+  /**
+   * Blur radius in pixels, 0 to 100; 0 removes the blur.
+   */
+  radius: number;
+}
+
 export interface ClipSetColorArgs {
   /**
    * -1 to 1; default 0.
@@ -325,6 +336,21 @@ export interface ClipSetColorArgs {
    * 0 to 2; default 1.
    */
   saturation?: number;
+}
+
+export interface ClipSetFilterArgs {
+  /**
+   * 0 to 1; default 1.
+   */
+  amount?: number;
+  /**
+   * none (default), grayscale, sepia, invert, warm or cool.
+   */
+  filter?: "none" | "grayscale" | "sepia" | "invert" | "warm" | "cool";
+  /**
+   * A clip.
+   */
+  item_id: string;
 }
 
 export interface ClipSetFramingArgs {
@@ -882,7 +908,7 @@ export interface TrackUpdateArgs {
   track_id: string;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_color" | "clip.set_framing" | "clip.set_speed" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blur" | "clip.set_color" | "clip.set_filter" | "clip.set_framing" | "clip.set_speed" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -899,7 +925,9 @@ export interface CommandArgsMap {
 	"caption.split": CaptionSplitArgs;
 	"clip.add": ClipAddArgs;
 	"clip.remove_silences": ClipRemoveSilencesArgs;
+	"clip.set_blur": ClipSetBlurArgs;
 	"clip.set_color": ClipSetColorArgs;
+	"clip.set_filter": ClipSetFilterArgs;
 	"clip.set_framing": ClipSetFramingArgs;
 	"clip.set_speed": ClipSetSpeedArgs;
 	"item.crossfade": ItemCrossfadeArgs;
@@ -952,7 +980,9 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"caption.split": { summary: "Splits a caption into two at a word boundary.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT"] },
 	"clip.add": { summary: "Places a video or image asset on a visual track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"clip.remove_silences": { summary: "Cuts the silent stretches out of a clip, leaving one clip per stretch of speech.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_INVALID_STATE","E_LIMIT"] },
+	"clip.set_blur": { summary: "Sets the blur radius of a clip.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_color": { summary: "Sets the brightness, contrast and saturation of a clip.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"clip.set_filter": { summary: "Sets the colour filter of a clip and how much of it is mixed in.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_framing": { summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_speed": { summary: "Changes the speed of a clip or audio item while keeping the same source range.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE","E_INVALID_TIME","E_OVERLAP"] },
 	"item.crossfade": { summary: "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },

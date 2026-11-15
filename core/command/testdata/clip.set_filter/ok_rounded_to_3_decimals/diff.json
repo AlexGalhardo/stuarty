@@ -1,0 +1,16 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "filter": [
+        null,
+        "sepia"
+      ],
+      "filter_amount": [
+        null,
+        0.123
+      ]
+    }
+  }
+]

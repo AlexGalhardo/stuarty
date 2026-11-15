@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "amount": {
+      "description": "0 to 1; default 1.",
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    },
+    "filter": {
+      "description": "none (default), grayscale, sepia, invert, warm or cool.",
+      "enum": [
+        "none",
+        "grayscale",
+        "sepia",
+        "invert",
+        "warm",
+        "cool"
+      ],
+      "type": "string"
+    },
+    "item_id": {
+      "description": "A clip.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id"
+  ],
+  "type": "object"
+}

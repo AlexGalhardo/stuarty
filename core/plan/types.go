@@ -52,6 +52,12 @@ type Layer struct {
 	// Bitmap layers (text, caption, shape items).
 	Bitmap *BitmapSpec `json:"bitmap,omitempty"`
 
+	// Both kinds (SDD-004 §3.6): the filter matrix, applied after ColorMatrix and
+	// before the blur, and the blur radius in frame pixels. Nil and 0 mean none;
+	// filters and blur are drawn in Go by the compositor, never by FFmpeg.
+	Filter *[12]float64 `json:"filter,omitempty"`
+	Blur   float64      `json:"blur,omitempty"`
+
 	CX       float64 `json:"cx"`
 	CY       float64 `json:"cy"`
 	W        float64 `json:"w"` // drawn size before rotation

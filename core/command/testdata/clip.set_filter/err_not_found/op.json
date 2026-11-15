@@ -1,0 +1,7 @@
+{
+  "op": "clip.set_filter",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "filter": "sepia"
+  }
+}

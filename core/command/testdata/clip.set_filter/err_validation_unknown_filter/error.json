@@ -1,0 +1,17 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.filter is \"sharpen\", which is not one of the accepted values.",
+  "hint": "Use one of: none, grayscale, sepia, invert, warm, cool.",
+  "retryable": false,
+  "path": "args.filter",
+  "details": {
+    "allowed": [
+      "none",
+      "grayscale",
+      "sepia",
+      "invert",
+      "warm",
+      "cool"
+    ]
+  }
+}

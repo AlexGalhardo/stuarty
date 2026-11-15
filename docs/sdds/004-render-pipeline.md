@@ -75,6 +75,8 @@ type Layer struct {
     SourceFrame int     // frame index in the normalized media; 0 for images
     Crop        Rect    // in source pixels after the item's crop fractions
     ColorMatrix *[12]float64 // nil when brightness, contrast and saturation are neutral
+    Filter      *[12]float64 // BETA, both kinds: the filter matrix of section 3.6; nil for none
+    Blur        float64      // BETA, both kinds: blur radius in frame pixels; 0 for none
 
     // Bitmap layers (text, caption, shape items)
     Bitmap BitmapSpec // what to rasterize; section 5
@@ -187,6 +189,24 @@ S: l  = 0.2126 r' + 0.7152 g' + 0.0722 b'
 ```
 
 expressed as one 3×4 matrix in `ColorMatrix`, results clamped to 0..1. Neutral values (`β = 0`, `κ = 1`, `σ = 1`) give `nil`.
+
+### 3.6 Filters and blur
+
+BETA (RF-027). An item carries `filter`, `filter_amount` and `blur` (SDD-001 §3.4). They are constant over the item (not keyframeable) and apply to every visual item.
+
+**Filter.** The filter is a 3×4 matrix `F` in the same form as section 3.5, applied to non-linear RGB values in 0..1 after the colour adjustment of section 3.5 (with the result of that step clamped to 0..1) and before the blur. The layer carries `FilterMatrix(filter, amount) = (1 - amount) × I + amount × F`, rounded to 3 decimals, where `I` is the identity; it is nil when `filter` is `none` or `amount` is 0. Results are clamped to 0..1. The matrices (rows are `r' g' b'`, columns `r g b offset`):
+
+| Filter | Matrix |
+| --- | --- |
+| `grayscale` | each row `0.2126 0.7152 0.0722 0` (the luma of section 3.5) |
+| `sepia` | `0.393 0.769 0.189 0` / `0.349 0.686 0.168 0` / `0.272 0.534 0.131 0` |
+| `invert` | `-1 0 0 1` / `0 -1 0 1` / `0 0 -1 1` |
+| `warm` | `1.1 0 0 0` / `0 1 0 0` / `0 0 0.9 0` |
+| `cool` | `0.9 0 0 0` / `0 1 0 0` / `0 0 1.1 0` |
+
+The alpha channel is not touched. The filters are implemented in Go by the compositor (`engine/export`, ROADMAP task P3-RND-003), never by an FFmpeg filter, so the preview executor and the export draw the same thing (ADR-0011 item 6: no GPL-only filter).
+
+**Blur.** `Blur` is the standard deviation of a Gaussian blur, in frame pixels at project resolution (multiplied by `outScale` like any size). It blurs the layer's own pixels, premultiplied, with the kernel cut at 3 standard deviations and pixels outside the layer counted as transparent, so the blurred layer grows softly past its edge; it is applied to the layer before the placement of section 6 step 2.3. Opacity and transitions are applied after it.
 
 ## 4. Layout of text, captions and shapes
 
@@ -313,7 +333,7 @@ Rules, applied in this order for each frame:
 1. Fill `dst` with the project background.
 2. For each layer, bottom first:
    1. Obtain the source pixels: a decoded video frame, a decoded image, or a bitmap from the rasterizer. A bitmap is premultiplied once per key, and drawn with its own centre at the layer's centre minus the rasterizer's `CenterDX`, `CenterDY` (scaled), because the plan places the centre of the text block and the bitmap reaches further on the side of a shadow.
-   2. If the layer has a colour matrix, apply it to the source pixels.
+   2. If the layer has a colour matrix, apply it to the source pixels. Then, if it has a filter matrix, apply that (section 3.6), then blur the layer by `Blur × outScale`.
    3. Draw the source into the quadrilateral given by `CX, CY, W, H, Rotation` (all multiplied by `outScale`) with opacity `Opacity`, using source-over blending on premultiplied alpha. A destination pixel is drawn when its centre is inside the quadrilateral: the edges of a rotated layer are not smoothed.
 3. Sampling: when `Rotation` is 0 and the source's pixel size equals the destination rectangle's rounded size, pixels are copied one to one at integer offsets (the rectangle's top-left corner rounded half up). Otherwise the source is sampled with bilinear interpolation through the inverse affine transform, in 32.32 fixed point with 8-bit weights: the transform is computed once per layer in floating point (every product rounded before it is added, with a sine and cosine that use only exactly rounded operations, because arm64 fuses `a*b+c` and its `math.Sin`), and every per-pixel step is integer arithmetic. The result is the same on every architecture and for every number of bands.
 4. Blending uses 8-bit channels with rounding to nearest. Blending is done on non-linear values (no gamma linearization), which is what browsers do by default and keeps the two executors close.
@@ -428,7 +448,8 @@ The browser never evaluates the document. It asks for plan windows:
       "source_seconds": [2.0, 2.033, 2.067],
       "crop": [0, 0, 1080, 1920],
       "cx": 540, "cy": 960, "w": 1080, "h": 1920, "rotation": 0, "opacity": 1,
-      "color_matrix": null
+      "color_matrix": null,
+      "filter": [0.393, 0.769, 0.189, 0, 0.349, 0.686, 0.168, 0, 0.272, 0.534, 0.131, 0], "blur": 4
     },
     {
       "item": "itm_s6t7v8w9x0", "kind": "bitmap", "first": 12, "last": 59,
@@ -447,7 +468,7 @@ The executor, in `web/resources/js/editor/preview/`:
 
 1. Keeps plan windows for the playhead and the next window.
 2. For each media layer keeps a `<video>` element on the asset's proxy (`GET /api/v1/projects/{id}/media/{asset_id}/proxy`, served with Range; SDD-000 §1). During playback it lets the element play and corrects its `currentTime` when it drifts more than 2 frames from `source_seconds`; when paused or scrubbing it seeks to the value.
-3. Draws each layer as a sprite on the canvas with exactly the plan's centre, size, rotation, opacity and colour matrix, in plan order. Bitmaps are fetched by key with `GET /api/v1/projects/{id}/bitmaps/{key}`; the server serves only keys that a plan window of that same project handed out (another project's key, or one forgotten at a restart, is 404, and the client reads the plan again).
+3. Draws each layer as a sprite on the canvas with exactly the plan's centre, size, rotation, opacity, colour matrix, filter matrix and blur, in plan order. Bitmaps are fetched by key with `GET /api/v1/projects/{id}/bitmaps/{key}`; the server serves only keys that a plan window of that same project handed out (another project's key, or one forgotten at a restart, is 404, and the client reads the plan again).
 4. Plays audio through the same video elements and, for audio items, audio elements on the proxy, with gain from the plan. The master clock during playback is the audio clock; the playhead frame is `floor(clock × fps)`.
 5. At most `MAX_VIDEO_LAYERS` video elements decode at once (initial value 4, confirmed by measurement); further media layers show their thumbnail still.
 6. **Truth on pause.** 150 ms after playback stops or a seek ends, it requests `ViewFrame` at the canvas width and draws that image over the canvas. Any change of playhead or revision removes the overlay.

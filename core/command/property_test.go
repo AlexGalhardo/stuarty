@@ -313,6 +313,17 @@ var alphaOps = map[string]func(p *docPick) string{
 			float64(p.n(200))/100,
 		)
 	},
+	"clip.set_filter": func(p *docPick) string {
+		return fmt.Sprintf(
+			`{"item_id":%q,"filter":%q,"amount":%.2f}`,
+			p.clip(),
+			p.oneOf("none", "grayscale", "sepia", "invert", "warm", "cool"),
+			float64(p.n(101))/100,
+		)
+	},
+	"clip.set_blur": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"radius":%d}`, p.clip(), p.n(101))
+	},
 	"clip.remove_silences": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"ripple":%q,"resolved":%s}`, p.clip(), p.oneOf("none", "track"), p.silences())
 	},

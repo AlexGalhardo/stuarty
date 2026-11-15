@@ -1,0 +1,11 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "filter": "sepia",
+      "filter_amount": 0.3
+    }
+  }
+]
