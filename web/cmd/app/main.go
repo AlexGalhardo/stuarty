@@ -25,6 +25,11 @@ func main() {
 		// SDD-003 section 5.1: no arguments lists the commands and starts nothing.
 		cli.List(os.Stdout)
 		os.Exit(cli.ExitOK)
+	case args[1] == "serve":
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		code := runServe(ctx, args[2:], os.Stderr)
+		stop()
+		os.Exit(code)
 	case cli.IsCommand(args[1]):
 		os.Exit(runProduct(args[1], args[2:]))
 	}
