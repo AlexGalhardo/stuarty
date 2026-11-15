@@ -20,7 +20,8 @@
       "dark": "Switch to dark theme"
     },
     "error": {
-      "back": "Back to projects"
+      "back": "Back to projects",
+      "how_to_fix": "How to fix:"
     },
     "projects": {
       "title": "Projects",

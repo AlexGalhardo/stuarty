@@ -20,7 +20,8 @@
       "dark": "Mudar para o tema escuro"
     },
     "error": {
-      "back": "Voltar aos projetos"
+      "back": "Voltar aos projetos",
+      "how_to_fix": "Como resolver:"
     },
     "projects": {
       "title": "Projetos",
