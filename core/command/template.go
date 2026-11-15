@@ -25,7 +25,7 @@ func init() {
 
 type templateInfoArgs struct {
 	Description *string        `json:"description,omitempty" desc:"0 to 500 characters."                                 max:"500"`
-	Colors      map[string]any `json:"colors,omitempty"      desc:"Name to #RRGGBB or #RRGGBBAA; null removes the name."`
+	Colors      map[string]any `json:"colors,omitempty"      schema:"template_colors" desc:"Name to #RRGGBB or #RRGGBBAA; null removes the name."`
 }
 
 // colourUses lists where the document refers to "$name", as "id (field)", sorted.

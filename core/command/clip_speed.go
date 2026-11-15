@@ -26,7 +26,7 @@ func init() {
 
 type clipSpeedArgs struct {
 	ItemID string `json:"item_id"          desc:"A clip of a video asset, or an audio item."`
-	Speed  any    `json:"speed"            desc:"\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4."`
+	Speed  any    `json:"speed"            schema:"speed" desc:"\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4."`
 	Ripple string `json:"ripple,omitempty" desc:"none (default) or track: shift the later items of the track."       enum:"none,track"`
 }
 

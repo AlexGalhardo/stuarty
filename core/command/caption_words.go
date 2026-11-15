@@ -233,7 +233,7 @@ func applyCaptionSetBreaks(c *Context, a *captionSetBreaksArgs) error {
 
 type captionSetStyleArgs struct {
 	ItemID string `json:"item_id" desc:"A caption."`
-	Style  any    `json:"style"   desc:"A partial CaptionStyle replacing the override, or null or {} to clear it."`
+	Style  any    `json:"style"   schema:"caption_style_or_nil" desc:"A partial CaptionStyle replacing the override, or null or {} to clear it."`
 }
 
 func applyCaptionSetStyle(c *Context, a *captionSetStyleArgs) error {

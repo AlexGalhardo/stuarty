@@ -27,7 +27,7 @@ func init() {
 }
 
 type setFPSArgs struct {
-	FPS any `json:"fps" desc:"\"30\", \"30000/1001\" or {\"num\": 30000, \"den\": 1001}; den is 1 or 1001, 1 to 120 fps."`
+	FPS any `json:"fps" schema:"fps" desc:"\"30\", \"30000/1001\" or {\"num\": 30000, \"den\": 1001}; den is 1 or 1001, 1 to 120 fps."`
 }
 
 // parseFPS reads the three forms of an fps argument.
