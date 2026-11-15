@@ -39,7 +39,14 @@ func main() {
 		os.Exit(runProduct(args[1], args[2:]))
 	}
 
-	os.Exit(vukem.Main(bootstrap.New))
+	build := bootstrap.New
+	if args[1] == "route:list" {
+		// The listing must show the routes of the owner, which only an app built
+		// over the API dependencies has.
+		build = bootstrap.Inspect
+	}
+
+	os.Exit(vukem.Main(build))
 }
 
 // runProduct runs a product command (SDD-003 section 5). It does not go through
