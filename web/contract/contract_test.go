@@ -19,11 +19,11 @@ import (
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
-// loadScenario reads the scenario of the Prototype.
-func loadScenario(t *testing.T) (steps []step, fixtures map[string]string) {
+// loadScenario reads a scenario of web/contract/scenarios.
+func loadScenario(t *testing.T, name string) (steps []step, fixtures map[string]string) {
 	t.Helper()
 
-	raw, err := os.ReadFile(filepath.Join("scenarios", "prototype.json"))
+	raw, err := os.ReadFile(filepath.Join("scenarios", name+".json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func loadScenario(t *testing.T) (steps []step, fixtures map[string]string) {
 	}
 
 	if err := json.Unmarshal(raw, &sc); err != nil {
-		t.Fatalf("scenario prototype: %v", err)
+		t.Fatalf("scenario %s: %v", name, err)
 	}
 
 	return sc.Steps, sc.Fixtures
@@ -206,7 +206,7 @@ func finalDocument(t *testing.T, d driver, project string) []byte {
 var renderedByAdapter = map[string]bool{"Edit": true, "Undo": true, "Redo": true}
 
 func TestScenarioIsTheSameThroughEverySurface(t *testing.T) {
-	steps, fixtures := loadScenario(t)
+	steps, fixtures := loadScenario(t, "prototype")
 
 	oracle := newDirect(t)
 	want := run(t, oracle, steps, fixtures)

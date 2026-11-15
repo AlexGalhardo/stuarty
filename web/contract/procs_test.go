@@ -87,12 +87,13 @@ func TestMain(m *testing.M) {
 
 // procEnv is a running `serve` and the ways to reach it.
 type procEnv struct {
-	bin   string
-	files string
-	base  string
-	token string
-	env   []string
-	e     *testenv.Env
+	ffmpeg, ffprobe string
+	bin             string
+	files           string
+	base            string
+	token           string
+	env             []string
+	e               *testenv.Env
 }
 
 func freePort(t *testing.T) string {
@@ -110,8 +111,39 @@ func freePort(t *testing.T) string {
 	return port
 }
 
-func needFFmpeg(t *testing.T) {
+// tools are the FFmpeg and ffprobe of a test: the pinned LGPL build when there is
+// one (VUKEM_VIDEO_TEST_FFMPEG_DIR, or the install of scripts/install-ffmpeg.sh
+// under the temporary directory), else the ones on the PATH. With pinnedOnly a
+// machine with no pinned LGPL build, macOS in CI, skips.
+func tools(t *testing.T, pinnedOnly bool) (ffmpeg, ffprobe string) {
 	t.Helper()
+
+	dir := os.Getenv("VUKEM_VIDEO_TEST_FFMPEG_DIR")
+
+	if dir == "" {
+		for _, base := range []string{os.Getenv("RUNNER_TEMP"), os.Getenv("TEMP"), os.Getenv("TMPDIR")} {
+			pattern := filepath.Join(base, "ffmpeg", "*", "*", "bin", exe("ffmpeg"))
+
+			if m, _ := filepath.Glob(pattern); base != "" && len(m) > 0 {
+				dir = filepath.Dir(m[len(m)-1])
+
+				break
+			}
+		}
+	}
+
+	if dir != "" {
+		ffmpeg, ffprobe = filepath.Join(dir, exe("ffmpeg")), filepath.Join(dir, exe("ffprobe"))
+
+		out, err := exec.CommandContext(t.Context(), ffmpeg, "-version").Output()
+		if err == nil && (!pinnedOnly || !strings.Contains(string(out), "--enable-gpl")) {
+			return ffmpeg, ffprobe
+		}
+	}
+
+	if pinnedOnly {
+		t.Skip("no pinned LGPL FFmpeg: run scripts/install-ffmpeg.sh and set VUKEM_VIDEO_TEST_FFMPEG_DIR")
+	}
 
 	for _, tool := range []string{"ffmpeg", "ffprobe"} {
 		if _, err := exec.LookPath(tool); err != nil {
@@ -125,9 +157,18 @@ func needFFmpeg(t *testing.T) {
 	if err != nil || !strings.Contains(string(out), "zscale") {
 		t.Skip("the FFmpeg on PATH has no zscale filter: the ingest needs the pinned LGPL build")
 	}
+	return "ffmpeg", "ffprobe"
 }
 
-func startProc(t *testing.T) *procEnv {
+func exe(tool string) string {
+	if runtime.GOOS == "windows" {
+		return tool + ".exe"
+	}
+
+	return tool
+}
+
+func startProc(t *testing.T, ffmpeg, ffprobe string) *procEnv {
 	t.Helper()
 
 	bin := binary(t)
@@ -139,7 +180,12 @@ func startProc(t *testing.T) *procEnv {
 		t.Fatal(err)
 	}
 
-	clean := append(os.Environ(), workspace.EnvHome+"="+home, workspace.EnvURL+"=", "APP_KEY=", "APP_ENV=")
+	clean := append(os.Environ(), workspace.EnvHome+"="+home, workspace.EnvURL+"=", "APP_KEY=", "APP_ENV=",
+		"VUKEM_VIDEO_FFMPEG="+ffmpeg, "VUKEM_VIDEO_FFPROBE="+ffprobe)
+	if !filepath.IsAbs(ffmpeg) {
+		// A tool found on the PATH is left for the server to discover.
+		clean = append(clean, "VUKEM_VIDEO_FFMPEG=", "VUKEM_VIDEO_FFPROBE=")
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cmd := exec.CommandContext(ctx, bin, "serve")
@@ -193,7 +239,7 @@ func startProc(t *testing.T) *procEnv {
 	}
 
 	return &procEnv{
-		bin: bin, files: files, base: sess.BaseURL, token: sess.Token, env: clean,
+		ffmpeg: ffmpeg, ffprobe: ffprobe, bin: bin, files: files, base: sess.BaseURL, token: sess.Token, env: clean,
 		e: &testenv.Env{Dir: workspace.Dir(home), Files: files},
 	}
 }
@@ -213,14 +259,14 @@ func (p *procEnv) writeFixture(t *testing.T, name string) string {
 	}
 
 	args := []string{
-		"-v", "error", "-f", "lavfi", "-i", "testsrc=size=320x568:rate=30:duration=2",
-		"-f", "lavfi", "-i", "sine=frequency=440:duration=2", "-c:v", "mpeg4", "-c:a", "aac", "-shortest", "-y", path,
+		"-v", "error", "-f", "lavfi", "-i", "testsrc=size=320x568:rate=30:duration=6",
+		"-f", "lavfi", "-i", "sine=frequency=440:duration=6", "-c:v", "mpeg4", "-c:a", "aac", "-shortest", "-y", path,
 	}
 
 	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
 	defer cancel()
 
-	if out, err := exec.CommandContext(ctx, "ffmpeg", args...).CombinedOutput(); err != nil {
+	if out, err := exec.CommandContext(ctx, p.ffmpeg, args...).CombinedOutput(); err != nil {
 		t.Fatalf("ffmpeg: %v\n%s", err, out)
 	}
 
@@ -353,13 +399,16 @@ func scrub(s string) string {
 	return progress.ReplaceAllString(s, "(<n>%)")
 }
 
-// TestScenarioThroughTheRealServer drives the scenario of the Prototype through
-// the CLI process, MCP over stdio and MCP over HTTP, each against its own
-// `serve`, and compares what they return with the first of them.
-func TestScenarioThroughTheRealServer(t *testing.T) {
-	needFFmpeg(t)
+// driveRealServer runs the scenario through the CLI process, MCP over stdio and
+// MCP over HTTP, each against its own `serve`, compares what they return with the
+// first of them, and calls after for each driver once the scenario is done.
+func driveRealServer(
+	t *testing.T, scenario, project string, pinnedOnly bool, after func(*testing.T, driver, *procEnv),
+) {
+	t.Helper()
 
-	steps, fixtures := loadScenario(t)
+	ffmpeg, ffprobe := tools(t, pinnedOnly)
+	steps, fixtures := loadScenario(t, scenario)
 
 	makers := []func(*testing.T, *procEnv) driver{
 		func(_ *testing.T, p *procEnv) driver { return &cliProc{p: p} },
@@ -373,10 +422,14 @@ func TestScenarioThroughTheRealServer(t *testing.T) {
 	)
 
 	for i, mk := range makers {
-		p := startProc(t)
+		p := startProc(t, ffmpeg, ffprobe)
 		d := mk(t, p)
 		got := run(t, d, steps, fixtures)
-		doc := scrub(normalize(t, d, finalDocument(t, d, "prj_7k2m9x4q1b")))
+		doc := scrub(normalize(t, d, finalDocument(t, d, project)))
+
+		if after != nil {
+			after(t, d, p)
+		}
 
 		if i == 0 {
 			want, wantDoc = got, doc
@@ -400,4 +453,10 @@ func TestScenarioThroughTheRealServer(t *testing.T) {
 			t.Errorf("%s: the final document differs\n got: %s\nwant: %s", d.name(), doc, wantDoc)
 		}
 	}
+}
+
+// TestScenarioThroughTheRealServer is the scenario of the Prototype through the
+// three subprocess drivers.
+func TestScenarioThroughTheRealServer(t *testing.T) {
+	driveRealServer(t, "prototype", "prj_7k2m9x4q1b", false, nil)
 }
