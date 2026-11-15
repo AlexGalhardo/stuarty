@@ -10,6 +10,7 @@ import (
 	"image/png"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 // animPalette is transparent, then red, green, blue, white.
@@ -25,7 +26,7 @@ var animPalette = color.Palette{
 // transparent 2x2 corner, so the alpha of every frame is checkable.
 func animFrame(w, h, i int) *image.Paletted {
 	img := image.NewPaletted(image.Rect(0, 0, w, h), animPalette)
-	c := uint8(1 + i%4)
+	c := uint8(1 + i%4) //nolint:gosec // i%4 is 0 to 3
 	for y := range h {
 		for x := range w {
 			if x < 2 && y < 2 {
@@ -82,14 +83,42 @@ func (g Gen) writeGIF(name string, a *gif.GIF) (string, error) {
 
 // AnimatedAPNG is an animated PNG of w x h with n frames at 15 frames per second, with alpha.
 func (g Gen) AnimatedAPNG(ctx context.Context, name string, w, h, n int) (string, error) {
-	return g.ff(ctx, name, append([]string{"-f", "lavfi", "-i", fmt.Sprintf("mandelbrot=s=%dx%d:r=15", w, h)}, "-vf", "format=rgba", "-frames:v", fmt.Sprint(n),
-		"-plays", "0", "-f", "apng")...)
+	return g.ff(
+		ctx,
+		name,
+		append(
+			[]string{"-f", "lavfi", "-i", fmt.Sprintf("mandelbrot=s=%dx%d:r=15", w, h)},
+			"-vf",
+			"format=rgba",
+			"-frames:v",
+			strconv.Itoa(n),
+			"-plays",
+			"0",
+			"-f",
+			"apng",
+		)...)
 }
 
 // AnimatedWebP is an animated WebP of w x h with n frames at 15 frames per second.
 func (g Gen) AnimatedWebP(ctx context.Context, name string, w, h, n int) (string, error) {
-	return g.ff(ctx, name, append([]string{"-f", "lavfi", "-i", fmt.Sprintf("mandelbrot=s=%dx%d:r=15", w, h)}, "-vf", "format=rgba", "-frames:v", fmt.Sprint(n),
-		"-c:v", "libwebp_anim", "-loop", "0", "-lossless", "1", "-f", "webp")...)
+	return g.ff(
+		ctx,
+		name,
+		append(
+			[]string{"-f", "lavfi", "-i", fmt.Sprintf("mandelbrot=s=%dx%d:r=15", w, h)},
+			"-vf",
+			"format=rgba",
+			"-frames:v",
+			strconv.Itoa(n),
+			"-c:v",
+			"libwebp_anim",
+			"-loop",
+			"0",
+			"-lossless",
+			"1",
+			"-f",
+			"webp",
+		)...)
 }
 
 // StickerPNG is a w x h PNG with a straight alpha: an opaque orange disc whose edge fades to transparent, on a

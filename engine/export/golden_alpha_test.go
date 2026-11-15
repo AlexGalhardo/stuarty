@@ -539,7 +539,8 @@ func TestGoldenAlphaCases(t *testing.T) {
 func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 	setup(t)
 	for _, name := range requiredCases {
-		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") && !strings.HasPrefix(name, "sticker-") {
+		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") &&
+			!strings.HasPrefix(name, "sticker-") {
 			continue
 		}
 		t.Run(name, func(t *testing.T) {

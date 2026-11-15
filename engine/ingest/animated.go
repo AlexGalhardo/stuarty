@@ -39,7 +39,7 @@ const (
 	animHeaderSize = 20
 	animEntrySize  = 8
 	// animMaxFrame is the most bytes of one stored frame a reader accepts: raw RGBA of the largest frame.
-	animMaxFrame = int64(ffmpeg.MaxAnimPixels) * 4
+	animMaxFrame = ffmpeg.MaxAnimPixels * 4
 )
 
 // minAnimDelay and maxAnimDelay are the delay bounds of SDD-001 3.2.
@@ -73,21 +73,40 @@ func parseFrameDelays(out string) []int {
 func (j *job) animated(ctx context.Context, plan ImagePlan) error {
 	sum := j.res.Summary
 	delays := sum.FrameDelays
-	g := ffargs.Graph{{
-		In:      []string{linkOf(plan.StreamIndex)},
-		Filters: []ffargs.Filter{ffargs.Scale(plan.W, plan.H, "bicubic+accurate_rnd+full_chroma_int"), ffargs.Format("rgba")},
-		Out:     []string{"n"},
-	}}
+	g := ffargs.Graph{
+		{
+			In: []string{linkOf(plan.StreamIndex)},
+			Filters: []ffargs.Filter{
+				ffargs.Scale(plan.W, plan.H, "bicubic+accurate_rnd+full_chroma_int"),
+				ffargs.Format("rgba"),
+			},
+			Out: []string{"n"},
+		},
+	}
 	cmd := ffargs.Cmd{
 		LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(j.original)}, Graph: g,
-		Outputs: []ffargs.Output{{
-			Format: "rawvideo",
-			Pipe:   true,
-			Maps:   []string{"[n]"},
-			Opts:   cat([]ffargs.Opt{ffargs.Enum("-pix_fmt", "rgba"), ffargs.Enum("-fps_mode", "vfr"), ffargs.Int("-frames:v", len(delays))}, bitexact()),
-		}},
+		Outputs: []ffargs.Output{
+			{
+				Format: "rawvideo",
+				Pipe:   true,
+				Maps:   []string{"[n]"},
+				Opts: cat(
+					[]ffargs.Opt{
+						ffargs.Enum("-pix_fmt", "rgba"),
+						ffargs.Enum("-fps_mode", "vfr"),
+						ffargs.Int("-frames:v", len(delays)),
+					},
+					bitexact(),
+				),
+			},
+		},
 	}
-	if err := j.runToFile(ctx, cmd, j.path("frames.rgba"), min(int64(plan.W)*int64(plan.H)*4*int64(len(delays)), ffmpeg.MaxAnimPixels*4)); err != nil {
+	if err := j.runToFile(
+		ctx,
+		cmd,
+		j.path("frames.rgba"),
+		min(int64(plan.W)*int64(plan.H)*4*int64(len(delays)), ffmpeg.MaxAnimPixels*4),
+	); err != nil {
 		return err
 	}
 	frameBytes := int64(plan.W) * int64(plan.H) * 4
@@ -97,8 +116,17 @@ func (j *job) animated(ctx context.Context, plan ImagePlan) error {
 			map[string]any{"step": StepVideo}, err)
 	}
 	if want := frameBytes * int64(len(delays)); st.Size() != want {
-		return ingestErr(ReasonVerificationFailed, "The animated image did not decode to the frames it declares.",
-			map[string]any{"step": StepVideo, "frames": len(delays), "expected_bytes": want, "actual_bytes": st.Size()}, nil)
+		return ingestErr(
+			ReasonVerificationFailed,
+			"The animated image did not decode to the frames it declares.",
+			map[string]any{
+				"step":           StepVideo,
+				"frames":         len(delays),
+				"expected_bytes": want,
+				"actual_bytes":   st.Size(),
+			},
+			nil,
+		)
 	}
 	if err := writeAnim(j.path("frames.rgba"), j.path("frames.anim"), plan.W, plan.H, delays); err != nil {
 		return ingestErr(ReasonDecodeFailed, "The frames of the animated image could not be packed.",
@@ -125,9 +153,9 @@ func writeAnim(rawPath, dst string, w, h int, delays []int) error {
 	head := make([]byte, animHeaderSize+animEntrySize*len(delays))
 	copy(head, animMagic)
 	binary.LittleEndian.PutUint32(head[4:], animVersion)
-	binary.LittleEndian.PutUint32(head[8:], uint32(len(delays)))
-	binary.LittleEndian.PutUint32(head[12:], uint32(w))
-	binary.LittleEndian.PutUint32(head[16:], uint32(h))
+	binary.LittleEndian.PutUint32(head[8:], uint32(len(delays))) //nolint:gosec // at most MaxAnimFrames
+	binary.LittleEndian.PutUint32(head[12:], uint32(w))          //nolint:gosec // at most MaxSourceEdge
+	binary.LittleEndian.PutUint32(head[16:], uint32(h))          //nolint:gosec // at most MaxSourceEdge
 	err = writeAnimFrames(raw, out, head, w, h, delays)
 	if cerr := out.Close(); err == nil {
 		err = cerr
@@ -151,8 +179,14 @@ func writeAnimFrames(raw io.Reader, out *os.File, head []byte, w, h int, delays 
 		if err := enc.Encode(cw, img); err != nil {
 			return err
 		}
-		binary.LittleEndian.PutUint32(head[animHeaderSize+animEntrySize*i:], uint32(d))
-		binary.LittleEndian.PutUint32(head[animHeaderSize+animEntrySize*i+4:], uint32(cw.n))
+		binary.LittleEndian.PutUint32(
+			head[animHeaderSize+animEntrySize*i:],
+			uint32(d), //nolint:gosec // 10 to 60000
+		)
+		binary.LittleEndian.PutUint32(
+			head[animHeaderSize+animEntrySize*i+4:],
+			uint32(cw.n), //nolint:gosec // one PNG of at most 4 bytes a pixel
+		)
 	}
 	if err := bw.Flush(); err != nil {
 		return err
@@ -246,7 +280,7 @@ func (a *Anim) Frame(i int) ([]byte, error) {
 	i = ((i % n) + n) % n
 	im, err := png.Decode(io.NewSectionReader(a.f, a.offsets[i], a.lengths[i]))
 	if err != nil {
-		return nil, fmt.Errorf("%w: frame %d: %v", ErrAnim, i, err)
+		return nil, fmt.Errorf("%w: frame %d: %w", ErrAnim, i, err)
 	}
 	if b := im.Bounds(); b.Dx() != a.W || b.Dy() != a.H {
 		return nil, fmt.Errorf("%w: frame %d is %dx%d, not %dx%d", ErrAnim, i, b.Dx(), b.Dy(), a.W, a.H)
@@ -302,9 +336,15 @@ func (j *job) runToFile(ctx context.Context, c ffargs.Cmd, dst string, maxBytes 
 	}
 	out, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
-		return ingestErr(ReasonDecodeFailed, "A work file could not be written.", map[string]any{"step": StepVideo}, err)
+		return ingestErr(
+			ReasonDecodeFailed,
+			"A work file could not be written.",
+			map[string]any{"step": StepVideo},
+			err,
+		)
 	}
-	res, err := j.r.RunFFmpeg(ctx, ffmpeg.Request{Dir: j.wd, Argv: argv, Deadline: ffmpeg.IngestDeadline(0), Stdout: out,
+	res, err := j.r.RunFFmpeg(ctx, ffmpeg.Request{
+		Dir: j.wd, Argv: argv, Deadline: ffmpeg.IngestDeadline(0), Stdout: out,
 		OutputPath: dst, MaxOutputBytes: maxBytes,
 	})
 	if cerr := out.Close(); err == nil && cerr != nil {
