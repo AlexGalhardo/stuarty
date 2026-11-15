@@ -3,17 +3,23 @@ package service
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"image/jpeg" // registers the decoder that validates preview.jpg
 	"io"
 	"io/fs"
+	"maps"
+	"regexp"
+	"slices"
 	"strings"
 
 	"golang.org/x/text/unicode/norm"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/raster"
 )
 
 // The limits of a template file (SDD-007 section 7.6 item 1 and 2).
@@ -35,12 +41,32 @@ const (
 	templatePreviewName  = "preview.jpg"
 )
 
-// templateEntryCaps is the cap of each allowlisted name; anything else is refused.
+// templateEntryCaps is the cap of each fixed allowlisted name; anything else is refused, except a
+// font entry (templateFontEntry).
 var templateEntryCaps = map[string]int64{
 	templateManifestName: templateManifestMax,
 	templateDocName:      templateDocumentMax,
 	templatePreviewName:  templatePreviewMax,
 }
+
+// templateFontEntry is the name of a user font in a template file: "font." and 64 lower-case hex
+// digits of the SHA-256 of the file (SDD-007 section 7.6 item 2). Each is at most one font file.
+var templateFontEntry = regexp.MustCompile(`^font\.[0-9a-f]{64}$`)
+
+// templateEntryCap is the cap of an allowlisted entry name.
+func templateEntryCap(name string) (int64, bool) {
+	if c, ok := templateEntryCaps[name]; ok {
+		return c, true
+	}
+
+	if templateFontEntry.MatchString(name) {
+		return raster.MaxFontBytes, true
+	}
+
+	return 0, false
+}
+
+func templateFontName(hash string) string { return "font." + strings.TrimPrefix(hash, "sha256:") }
 
 // templateManifest is manifest.json of a template file.
 type templateManifest struct {
@@ -56,6 +82,8 @@ type templateContents struct {
 	Manifest templateManifest
 	Document []byte
 	Preview  []byte
+	// Fonts are the font entries, by hash in the form of a document, each checked against its name.
+	Fonts map[string][]byte
 }
 
 // archiveRefused is the refusal of an archive: always E_VALIDATION, and never
@@ -100,7 +128,7 @@ func readTemplateArchive(data []byte) (*templateContents, *Error) {
 		}
 	}
 
-	contents := &templateContents{}
+	contents := &templateContents{Fonts: map[string][]byte{}}
 	got := map[string]bool{}
 
 	for _, en := range zr.File {
@@ -115,9 +143,22 @@ func readTemplateArchive(data []byte) (*templateContents, *Error) {
 
 		got[canon] = true
 
-		body, rerr := readEntry(en, templateEntryCaps[canon])
+		limit, _ := templateEntryCap(canon)
+
+		body, rerr := readEntry(en, limit)
 		if rerr != nil {
 			return nil, archiveRefused("an entry is larger than it declares or cannot be read")
+		}
+
+		if templateFontEntry.MatchString(canon) {
+			sum := sha256.Sum256(body)
+			if hex.EncodeToString(sum[:]) != strings.TrimPrefix(canon, "font.") {
+				return nil, archiveRefused("a font does not match its name")
+			}
+
+			contents.Fonts["sha256:"+strings.TrimPrefix(canon, "font.")] = body
+
+			continue
 		}
 
 		switch canon {
@@ -166,7 +207,7 @@ func scanTemplateEntries(zr *zip.Reader) *Error {
 		// Compared folded, so that "Manifest.json" next to "manifest.json" is a
 		// duplicate and not two different names.
 		folded := foldName(f.Name)
-		if _, ok := templateEntryCaps[folded]; !ok {
+		if _, ok := templateEntryCap(folded); !ok {
 			return archiveRefused("it holds an entry that a template file may not hold")
 		}
 
@@ -184,9 +225,9 @@ func scanTemplateEntries(zr *zip.Reader) *Error {
 	return nil
 }
 
-// allowlisted tells whether name is exactly one of the three allowed names.
+// allowlisted tells whether name is exactly one of the allowed names.
 func allowlisted(name string) (string, bool) {
-	_, ok := templateEntryCaps[name]
+	_, ok := templateEntryCap(name)
 
 	return name, ok
 }
@@ -277,8 +318,9 @@ func checkPreview(b []byte) error {
 }
 
 // buildTemplateArchive writes the template file: manifest.json, template.json
-// and, when there is one, preview.jpg, with flat names.
-func buildTemplateArchive(m templateManifest, doc, preview []byte) ([]byte, error) {
+// preview.jpg when there is one, and a font.<hex> entry per user font (by hash in the form of a
+// document), with flat names.
+func buildTemplateArchive(m templateManifest, doc, preview []byte, fonts map[string][]byte) ([]byte, error) {
 	var buf bytes.Buffer
 
 	zw := zip.NewWriter(&buf)
@@ -297,6 +339,13 @@ func buildTemplateArchive(m templateManifest, doc, preview []byte) ([]byte, erro
 			name string
 			body []byte
 		}{templatePreviewName, preview})
+	}
+
+	for _, hash := range slices.Sorted(maps.Keys(fonts)) {
+		members = append(members, struct {
+			name string
+			body []byte
+		}{templateFontName(hash), fonts[hash]})
 	}
 
 	for _, mem := range members {
@@ -353,8 +402,8 @@ func migrateTemplateDocument(data []byte) (*timeline.Document, *Error) {
 		return nil, newError(command.CodeValidation, "template.json has no template member.")
 	}
 
-	if len(doc.Assets) > 0 || len(doc.Fonts) > 0 {
-		return nil, newError(command.CodeValidation, "a template carries no media and no user fonts.").
+	if len(doc.Assets) > 0 {
+		return nil, newError(command.CodeValidation, "a template carries no media.").
 			withHint("save the template again from a project")
 	}
 

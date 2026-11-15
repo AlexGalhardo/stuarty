@@ -87,10 +87,20 @@ func (s *svc) writeTemplateFile(ctx context.Context, c Caller, id string) (strin
 		return "", 0, internalError()
 	}
 
+	tdoc, derr := timeline.Decode(row.Document)
+	if derr != nil {
+		return "", 0, internalError()
+	}
+
+	fonts, ferr := s.templateFontFiles(ctx, c, tdoc)
+	if ferr != nil {
+		return "", 0, ferr
+	}
+
 	data, berr := buildTemplateArchive(templateManifest{
 		Format: templateFormat, TemplateVersion: templateFileVersion, AppVersion: s.version,
 		SchemaVersion: row.SchemaVersion, Name: row.Name,
-	}, row.Document, nil)
+	}, row.Document, nil, fonts)
 	if berr != nil {
 		return "", 0, internalError()
 	}
@@ -199,6 +209,10 @@ func (s *svc) TemplateImport(ctx context.Context, req TemplateImportRequest) (*T
 		return nil, verr
 	}
 
+	if e := checkTemplateFontEntries(doc, contents.Fonts); e != nil {
+		return nil, e
+	}
+
 	name := contents.Manifest.Name
 	if n := utf8.RuneCountInString(name); n < 1 || n > maxProjectName {
 		name = doc.Name
@@ -232,12 +246,23 @@ func (s *svc) TemplateImport(ctx context.Context, req TemplateImportRequest) (*T
 	res.UntrustedNotice = UntrustedNotice
 	res.Text = "template " + row.ID + " imported: " + templateLine(&res.Template)
 
+	// Fonts go through the font pipeline before the row is written; a refused font ends the import.
+	fontHashes, fe := s.storeTemplateFonts(contents.Fonts, req.DryRun)
+	if fe != nil {
+		return nil, forCaller(c, fe)
+	}
+
 	if req.DryRun {
 		return res, nil
 	}
 
 	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		if err := tx.Templates().Create(ctx, row); err != nil {
+			return err
+		}
+
+		// The importer brought these bytes, and each hash matched its entry name, so they own them.
+		if err := recordFontOwner(ctx, tx, c, now, fontHashes...); err != nil {
 			return err
 		}
 
