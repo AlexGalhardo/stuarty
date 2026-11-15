@@ -130,7 +130,7 @@ func newHarnessWrapped(
 
 	deps := &httpapi.Deps{
 		MCP: mcpHandler, Events: hub,
-		Service: svc, Registry: command.Default(), Jobs: st.Jobs(), Workspace: dir, Token: canary,
+		Service: svc, Registry: command.Default(), Workspace: dir, Token: canary,
 		Sessions: auth.NewSessions(h.clock.now), Launch: auth.NewLaunch(h.clock.now), Now: h.clock.now,
 	}
 

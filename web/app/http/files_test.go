@@ -136,3 +136,33 @@ func TestExportFileRefusals(t *testing.T) {
 		}
 	}
 }
+
+func TestSnapPointsAndFontsRoutes(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	project := h.newProject("snap")
+
+	snap := h.get("/api/v1/projects/" + project + "/snap-points")
+	if snap.status != http.StatusOK {
+		t.Fatalf("snap-points = %d %s", snap.status, snap.body)
+	}
+
+	body := snap.json(t)
+	if _, ok := body["revision"]; !ok || body["points"] == nil || body["limits"] == nil {
+		t.Errorf("snap-points = %v", body)
+	}
+
+	if stale := h.get("/api/v1/projects/" + project + "/snap-points?rev=999"); stale.status != http.StatusConflict {
+		t.Errorf("a stale rev = %d %s", stale.status, stale.body)
+	}
+
+	fonts := h.get("/api/v1/fonts")
+	if fonts.status != http.StatusOK || !bytes.Contains(fonts.body, []byte(`"Inter"`)) {
+		t.Errorf("fonts = %d %s", fonts.status, fonts.body)
+	}
+
+	if audit := h.get("/api/v1/audit"); audit.status != http.StatusOK {
+		t.Errorf("audit = %d %s", audit.status, audit.body)
+	}
+}

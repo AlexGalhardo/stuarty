@@ -201,6 +201,23 @@ var Endpoints = []Endpoint{
 		Service: "ViewSheet", Status: 200, Summary: "Render a contact sheet",
 	},
 	{
+		ID:      "projects.snap_points",
+		Method:  http.MethodGet,
+		Path:    "/projects/{id}/snap-points",
+		Scope:   service.ScopeRead,
+		Service: "SnapPoints",
+		Status:  200,
+		Summary: "Read the snap points and trim limits",
+	},
+	{
+		ID: "fonts.list", Method: http.MethodGet, Path: "/fonts", Scope: service.ScopeRead,
+		Service: "FontList", Status: 200, Summary: "List the bundled font families and weights",
+	},
+	{
+		ID: "audit.list", Method: http.MethodGet, Path: "/audit", Scope: service.ScopeAdmin,
+		Service: "AuditList", Status: 200, Summary: "List the audit table",
+	},
+	{
 		ID: "projects.plan", Method: http.MethodGet, Path: "/projects/{id}/plan", Scope: service.ScopeRead,
 		Service: "PlanWindow", Status: 200, Summary: "Read the render plan of a window",
 	},
@@ -211,7 +228,7 @@ var Endpoints = []Endpoint{
 
 	{
 		ID: "jobs.file", Method: http.MethodGet, Path: "/jobs/{job_id}/file", Scope: service.ScopeRead,
-		Status: 200, Summary: "Download the file of a finished export",
+		Service: "ExportFile", Status: 200, Summary: "Download the file of a finished export",
 	},
 	{
 		ID:      "media.proxy",

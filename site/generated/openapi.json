@@ -69,6 +69,48 @@
         },
         "type": "object"
       },
+      "AuditEntry": {
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string"
+          },
+          "details": {},
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "subject_id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AuditListResult": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEntry"
+            },
+            "type": "array"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
       "CaptionStyle": {
         "properties": {
           "align": {
@@ -588,6 +630,20 @@
         },
         "type": "object"
       },
+      "FontFamily": {
+        "properties": {
+          "family": {
+            "type": "string"
+          },
+          "weights": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "FontFile": {
         "properties": {
           "hash": {
@@ -595,6 +651,17 @@
           },
           "weight": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "FontListResult": {
+        "properties": {
+          "fonts": {
+            "items": {
+              "$ref": "#/components/schemas/FontFamily"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -2160,6 +2227,55 @@
               "$ref": "#/components/schemas/WordArg"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "SnapLimit": {
+        "properties": {
+          "trim_end_max": {
+            "type": "integer"
+          },
+          "trim_start_min": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SnapPoint": {
+        "properties": {
+          "frame": {
+            "type": "integer"
+          },
+          "item": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "track": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SnapPointsResult": {
+        "properties": {
+          "limits": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SnapLimit"
+            },
+            "type": "object"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/SnapPoint"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -4383,6 +4499,64 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/audit": {
+      "get": {
+        "operationId": "audit.list",
+        "parameters": [
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Keep the entries of one project.",
+            "in": "query",
+            "name": "project_id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the audit table"
+      }
+    },
     "/api/v1/commands": {
       "get": {
         "operationId": "commands.list",
@@ -4453,6 +4627,35 @@
           }
         ],
         "summary": "Explain one command"
+      }
+    },
+    "/api/v1/fonts": {
+      "get": {
+        "operationId": "fonts.list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FontListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the bundled font families and weights"
       }
     },
     "/api/v1/handshake": {
@@ -6160,6 +6363,66 @@
           }
         ],
         "summary": "Render a contact sheet"
+      }
+    },
+    "/api/v1/projects/{id}/snap-points": {
+      "get": {
+        "operationId": "projects.snap_points",
+        "parameters": [
+          {
+            "description": "The revision the caller holds; 409 when the project has moved on.",
+            "in": "query",
+            "name": "rev",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "1 adds the start and end of every caption word.",
+            "in": "query",
+            "name": "words",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapPointsResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the snap points and trim limits"
       }
     },
     "/api/v1/projects/{id}/trash": {

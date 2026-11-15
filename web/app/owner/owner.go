@@ -229,7 +229,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	late.JobRunner = o.Runner
 
 	o.deps = &httpapi.Deps{
-		Service: o.Service, Registry: command.Default(), Jobs: st.Jobs(), Workspace: o.Dir, Token: o.Token,
+		Service: o.Service, Registry: command.Default(), Workspace: o.Dir, Token: o.Token,
 		Sessions: auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
 		Events: o.Events, Version: o.version,
 	}

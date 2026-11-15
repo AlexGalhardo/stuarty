@@ -122,6 +122,22 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ViewSheet(ctx, service.ViewSheetRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"SnapPoints": func() error {
+			_, err := e.svc.SnapPoints(ctx, service.SnapPointsRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"FontList": func() error {
+			_, err := e.svc.FontList(ctx, service.FontListRequest{})
+			return err
+		},
+		"ExportFile": func() error {
+			_, err := e.svc.ExportFile(ctx, service.ExportFileRequest{JobID: "job_0000000001"})
+			return err
+		},
+		"AuditList": func() error {
+			_, err := e.svc.AuditList(ctx, service.AuditListRequest{})
+			return err
+		},
 		"OpenFile": func() error {
 			_, err := e.svc.OpenFile(
 				ctx,

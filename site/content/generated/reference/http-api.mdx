@@ -7,6 +7,20 @@ description: "Every route of the local HTTP API, generated from its OpenAPI docu
 
 The API is served at `/api/v1` by `vukem-video serve`, on `127.0.0.1:7878`. Every route needs the bearer token from `<workspace>/token`. Errors are `application/problem+json` with `code`, `message`, `hint` and `retryable`. The OpenAPI document itself is at `/openapi.json` while the server runs.
 
+## audit
+
+### `GET /audit`
+
+List the audit table
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `cursor` | query | no | `string` |
+| `limit` | query | no | `integer` |
+| `project_id` | query | no | `string` |
+
+Responses: `200` OK, `401`, `422`, `default`.
+
 ## commands
 
 ### `GET /commands`
@@ -24,6 +38,14 @@ Explain one command
 | `name` | path | yes | `string` |
 
 Responses: `200` OK, `401`, `422`, `default`.
+
+## fonts
+
+### `GET /fonts`
+
+List the bundled font families and weights
+
+Responses: `200` OK, `401`, `default`.
 
 ## handshake
 
@@ -415,6 +437,18 @@ Render a contact sheet
 | `rev` | query | no | `integer` |
 | `asset_id` | query | no | `string` |
 | `max_tokens` | query | no | `integer` |
+| `id` | path | yes | `string` |
+
+Responses: `200` OK, `401`, `422`, `default`.
+
+### `GET /projects/{id}/snap-points`
+
+Read the snap points and trim limits
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `rev` | query | no | `integer` |
+| `words` | query | no | `integer` |
 | `id` | path | yes | `string` |
 
 Responses: `200` OK, `401`, `422`, `default`.

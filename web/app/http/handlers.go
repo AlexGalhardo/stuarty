@@ -252,6 +252,9 @@ func (h *apiHandler) registerAll() {
 		return h.serveAsset(c, "peaks", in.ID, in.AssetID, "")
 	})
 	register(h, "jobs.file", h.jobsFile)
+	register(h, "projects.snap_points", h.snapPoints)
+	register(h, "fonts.list", h.fontList)
+	register(h, "audit.list", h.auditList)
 	register(h, "system.launch", h.systemLaunch)
 	register(h, "handshake.get", func(_ *web.Ctx, in handshakeIn) (handshakeOut, error) {
 		if !auth.ValidNonce(in.Nonce) {

@@ -22,10 +22,8 @@ import (
 
 // Deps is what the adapter needs from the process that serves it.
 type Deps struct {
-	Service  service.Service
-	Registry *command.Registry // the commands whose argument schemas the OpenAPI document carries
-	// Jobs resolves the file of a finished export for GET /jobs/{job_id}/file.
-	Jobs      service.JobRepo
+	Service   service.Service
+	Registry  *command.Registry // the commands whose argument schemas the OpenAPI document carries
 	Workspace workspace.Dir
 	Token     string // the local token, as read from <workspace>/token
 	Sessions  *auth.Sessions

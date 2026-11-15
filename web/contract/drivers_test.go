@@ -244,7 +244,7 @@ func newHTTPWith(t *testing.T, o testenv.Options) driver {
 	now := func() time.Time { return fixedNow }
 
 	deps := &httpapi.Deps{
-		Service: e.Service, Registry: command.Default(), Jobs: e.Store.Jobs(), Workspace: e.Dir, Token: token,
+		Service: e.Service, Registry: command.Default(), Workspace: e.Dir, Token: token,
 		Sessions: auth.NewSessions(now), Launch: auth.NewLaunch(now), Now: now,
 	}
 
