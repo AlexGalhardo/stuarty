@@ -45,7 +45,7 @@ warning L_OFF_FRAME itm_b2c3d4e5f6 5s/150f-6s/180f
   the text box spans x -293-333 and y -24-64; the frame is 1080 by 1920.
   hint: reposition it with item.set_transform
 warning L_SAFE_AREA itm_b2c3d4e5f6 5s/150f-6s/180f
-  text text spans y -24-64 of 1920; the safe area starts at y 269 (14% top margin).
+  text spans y -24-64 of 1920; the safe area starts at y 269 (14% top margin).
   hint: move the item inside the safe area with item.set_transform.
 warning L_TRANSITION_EMPTY itm_c3d4e5f6g7 7s/210f-7.5s/225f
   the transition_in of itm_c3d4e5f6g7 covers frames 210-224, where nothing visible lies beneath it.

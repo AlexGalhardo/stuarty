@@ -88,17 +88,22 @@ func (c *check) safeAreaText(it *timeline.Item, b, safe box) (msg, hint string) 
 		vertical = "move the item inside the safe area with item.set_transform."
 	}
 
+	label := "caption text"
+	if it.Type != timeline.ItemCaption {
+		label = string(it.Type)
+	}
+
 	switch {
 	case b.y1 > safe.y1+edgeSlack:
-		return fmt.Sprintf("%s text spans y %.0f-%.0f of %d; the safe area ends at y %.0f (%d%% bottom margin).",
-			it.Type, b.y0, b.y1, st.Height, safe.y1, pct(h-safe.y1, h)), vertical
+		return fmt.Sprintf("%s spans y %.0f-%.0f of %d; the safe area ends at y %.0f (%d%% bottom margin).",
+			label, b.y0, b.y1, st.Height, safe.y1, pct(h-safe.y1, h)), vertical
 	case b.y0 < safe.y0-edgeSlack:
-		return fmt.Sprintf("%s text spans y %.0f-%.0f of %d; the safe area starts at y %.0f (%d%% top margin).",
-			it.Type, b.y0, b.y1, st.Height, safe.y0, pct(safe.y0, h)), vertical
+		return fmt.Sprintf("%s spans y %.0f-%.0f of %d; the safe area starts at y %.0f (%d%% top margin).",
+			label, b.y0, b.y1, st.Height, safe.y0, pct(safe.y0, h)), vertical
 	case b.x1 > safe.x1+edgeSlack:
 		return fmt.Sprintf(
-			"%s text spans x %.0f-%.0f of %d; the safe area ends at x %.0f (%d%% right margin).",
-			it.Type,
+			"%s spans x %.0f-%.0f of %d; the safe area ends at x %.0f (%d%% right margin).",
+			label,
 			b.x0,
 			b.x1,
 			st.Width,
@@ -108,8 +113,8 @@ func (c *check) safeAreaText(it *timeline.Item, b, safe box) (msg, hint string) 
 	}
 
 	return fmt.Sprintf(
-		"%s text spans x %.0f-%.0f of %d; the safe area starts at x %.0f (%d%% left margin).",
-		it.Type,
+		"%s spans x %.0f-%.0f of %d; the safe area starts at x %.0f (%d%% left margin).",
+		label,
 		b.x0,
 		b.x1,
 		st.Width,
