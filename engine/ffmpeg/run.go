@@ -164,10 +164,7 @@ type Result struct {
 }
 
 // ErrStdinUnsupported is returned for an argv that reads pipe:0 when the request has no Stdin.
-// The pinned contrib/engine (v0.1.1) cannot feed a child's standard input (vukem-feedback.md,
-// VF-031), so a run with a Stdin is started by this package (stdin.go) until a contrib/engine
-// tag carries Tool.RunWith.
-var ErrStdinUnsupported = errors.New("ffmpeg: contrib/engine cannot feed standard input")
+var ErrStdinUnsupported = errors.New("ffmpeg: an argv that reads pipe:0 needs a Stdin")
 
 // RunFFmpeg checks the argv, then runs ffmpeg in the run directory with the deadline and
 // the stall watchdog. A cancelled ctx kills the whole process tree and the error wraps ctx.Err().
@@ -308,17 +305,11 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 	ended := make(chan outcome, 1)
 	go func() {
 		var o outcome
-		name, args, werr := r.command(s)
 
-		switch {
-		case werr != nil:
-			o.err = werr
-		case s.stdin != nil || r.Sandbox != "":
-			o.res, o.err = runWithStdin(dctx, name, args, s.dir, s.stdin, stdout)
-		case stdout != nil:
-			o.res, o.err = s.tool.RunStream(dctx, s.dir, stdout, s.argv...)
-		default:
-			o.res, o.err = s.tool.Run(dctx, s.dir, s.argv...)
+		if r.Sandbox != "" {
+			o.res, o.err = r.runSandboxed(dctx, s, stdout)
+		} else {
+			o.res, o.err = s.tool.RunWith(dctx, engine.RunOptions{Dir: s.dir, Stdin: s.stdin, Stdout: stdout}, s.argv...)
 		}
 		ended <- o
 	}()

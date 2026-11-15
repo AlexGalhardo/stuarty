@@ -1,3 +1,5 @@
+//go:build linux
+
 package ffmpeg
 
 import (
@@ -14,12 +16,10 @@ import (
 // maxStderrTail is the tail of stderr a run keeps (the cap of Result.Stderr).
 const maxStderrTail = 4 << 20
 
-// The pinned contrib/engine (v0.1.1) cannot feed a child's standard input, which the export needs
-// to stream raw frames to the encoder (SDD-004 section 8, vukem-feedback.md VF-031, VF-036). The change
-// is merged in vukem as Tool.RunWith but has no contrib/engine tag yet, and the product does not
-// pin a pseudo-version. Until a tag exists, a run with a Stdin is started here, with the same
-// environment, process group, tree kill and pipe wait as contrib/engine. Switch to
-// Tool.RunWith when the tag comes and delete this file and proc_*.go.
+// A run inside bubblewrap starts the wrapper (bwrap, behind prlimit when there are limits), not the
+// tool, and contrib/engine's Tool.RunWith starts only the tool it resolved. The wrapped run is
+// started here, with the same environment, process group, tree kill and pipe wait as contrib/engine.
+// Every other run goes through Tool.RunWith.
 
 // inheritedEnv are the only host variables a run sees (the list of contrib/engine).
 var inheritedEnv = []string{"PATH", "SystemRoot", "windir", "LANG", "LC_ALL"}
@@ -36,7 +36,17 @@ func childEnv(dir string) []string {
 	return append(env, "HOME="+dir, "TMPDIR="+dir, "TEMP="+dir, "TMP="+dir)
 }
 
-// runWithStdin runs the tool in dir with stdin, copying stdout to stdout when it is not nil.
+// runSandboxed runs the wrapped command of a run in its directory with its stdin, copying stdout to
+// stdout when it is not nil.
+func (r *Runner) runSandboxed(ctx context.Context, s execSpec, stdout io.Writer) (engine.Result, error) {
+	name, args, err := r.command(s)
+	if err != nil {
+		return engine.Result{}, err
+	}
+
+	return runWithStdin(ctx, name, args, s.dir, s.stdin, stdout)
+}
+
 func runWithStdin(
 	ctx context.Context,
 	name string,
