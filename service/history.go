@@ -470,7 +470,7 @@ func (s *svc) Lint(ctx context.Context, req LintRequest) (*LintResult, error) {
 		return nil, derr
 	}
 
-	all := lint.Lint(doc, s.lintEnv, lint.Full)
+	all := lint.Lint(doc, s.lintEnvFor(ctx, doc), lint.Full)
 	errs, warns := lint.Totals(all)
 
 	listed := all

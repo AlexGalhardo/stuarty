@@ -97,7 +97,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, derr
 	}
 
-	totals, gerr := s.exportGate(doc)
+	totals, gerr := s.exportGate(ctx, doc)
 	if gerr != nil {
 		return nil, gerr
 	}
@@ -215,8 +215,8 @@ func decodeExportArgs(raw json.RawMessage) (ExportArgs, *Error) {
 }
 
 // exportGate is the lint of rule 1: an error finding refuses the start.
-func (s *svc) exportGate(doc *timeline.Document) (LintTotals, *Error) {
-	all := lint.Lint(doc, s.lintEnv, lint.Full)
+func (s *svc) exportGate(ctx context.Context, doc *timeline.Document) (LintTotals, *Error) {
+	all := lint.Lint(doc, s.lintEnvFor(ctx, doc), lint.Full)
 	errs, warns := lint.Totals(all)
 
 	if errs == 0 {
