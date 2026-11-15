@@ -197,6 +197,22 @@ describe("PlanWindows", () => {
 		expect(windows.peek(0)).toBeUndefined();
 	});
 
+	test("asks for the preview width and drops the windows when it changes", async () => {
+		const widths: (number | undefined)[] = [];
+		const windows = new PlanWindows(async (from, _to, rev, width) => {
+			widths.push(width);
+			return plan([], from, rev);
+		});
+		windows.setRevision(1);
+		await windows.ensure(0);
+		windows.setWidth(463);
+		expect(windows.peek(0)).toBeUndefined();
+		await windows.ensure(0);
+		windows.setWidth(463);
+		expect(windows.peek(0)).toBeDefined();
+		expect(widths).toEqual([undefined, 463]);
+	});
+
 	test("keeps at most eight windows and prefetches within 60 frames of the end", async () => {
 		const asked: number[] = [];
 		const windows = new PlanWindows(async (from) => {

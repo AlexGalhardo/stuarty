@@ -13,12 +13,16 @@ export type GetPlan = (
 	from: number,
 	to: number,
 	revision: number,
+	width: number | undefined,
 ) => Promise<PlanWindow>;
 
 // The plan windows of the playhead and the next one (SDD-012 section 11.2
 // item 1): at most 8, least recently used out, all dropped on a new revision.
 export class PlanWindows {
 	private revision = 0;
+	// The pixel width the preview draws at: the plan rasterizes its bitmaps at that
+	// scale (SDD-004 section 10). Undefined asks for the project width.
+	private width: number | undefined;
 	private readonly cache = new Lru<number, PlanWindow>(MAX_WINDOWS);
 	private readonly inFlight = new Map<number, Promise<PlanWindow>>();
 
@@ -35,6 +39,13 @@ export class PlanWindows {
 		this.inFlight.clear();
 	}
 
+	setWidth(width: number | undefined): void {
+		if (width === this.width) return;
+		this.width = width;
+		this.cache.clear();
+		this.inFlight.clear();
+	}
+
 	peek(frame: number): PlanWindow | undefined {
 		return this.cache.get(windowStart(frame));
 	}
@@ -46,13 +57,19 @@ export class PlanWindows {
 		const running = this.inFlight.get(from);
 		if (running) return running;
 		const revision = this.revision;
-		const request = this.getPlan(from, from + WINDOW_FRAMES, revision).then(
-			(plan) => {
-				// A revision change while waiting makes the answer stale.
-				if (revision === this.revision) this.cache.set(from, plan);
-				return plan;
-			},
-		);
+		const width = this.width;
+		const request = this.getPlan(
+			from,
+			from + WINDOW_FRAMES,
+			revision,
+			width,
+		).then((plan) => {
+			// A revision or width change while waiting makes the answer stale.
+			if (revision === this.revision && width === this.width) {
+				this.cache.set(from, plan);
+			}
+			return plan;
+		});
 		this.inFlight.set(from, request);
 		const forget = (): void => {
 			if (this.inFlight.get(from) === request) this.inFlight.delete(from);
