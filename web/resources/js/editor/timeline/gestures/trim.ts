@@ -3,7 +3,7 @@ import { trimEdgeOperations } from "../../commands/builders";
 import type { EditorRuntime } from "../../state/runtime";
 import { deltaPxToFrames } from "../geometry";
 import { snapFrame } from "../snapping";
-import { runGesture } from "./lifecycle";
+import { runGesture, watchRemoteEdit } from "./lifecycle";
 import { outlineConflict } from "./move";
 
 // Dragging a trim handle (SDD-012 section 8.2): one `item.trim` to the frame the
@@ -38,7 +38,8 @@ export function beginTrim(options: {
 	const exclude = new Set([itemId]);
 	let to = edgeFrame;
 
-	runGesture({
+	let stopWatching: () => void = () => {};
+	const running = runGesture({
 		event,
 		target: event.currentTarget,
 		scroller: event.currentTarget.closest<HTMLElement>(
@@ -108,5 +109,18 @@ export function beginTrim(options: {
 				ghostWriter.clear();
 			},
 		},
+		onFinish: () => stopWatching(),
+	});
+	stopWatching = watchRemoteEdit(runtime, [itemId], (actor) => {
+		// A press that has not started dragging yet is still the user's, and
+		// the core will judge its batch against the revision of the press.
+		if (!running.dragging()) return;
+		running.cancel();
+		runtime.noticeWriter.push({
+			kind: "info",
+			message: "",
+			messageKey: "ui.editor.notice.gesture_cancelled",
+			actor,
+		});
 	});
 }

@@ -205,7 +205,12 @@
           "other": "Refeito; {count} alterações foram deixadas como estavam porque {actor} as alterou"
         },
         "source_has_only": "A mídia de origem tem apenas {available}",
+        "gesture_cancelled": "{actor} alterou o que você estava arrastando, então o arrasto foi cancelado",
         "another_actor": "outro ator"
+      },
+      "conflict": {
+        "message": "{actor} alterou {item} enquanto você editava (revisão {revision}). Sua alteração não foi aplicada.",
+        "something": "o projeto"
       },
       "jobs": {
         "chip": {

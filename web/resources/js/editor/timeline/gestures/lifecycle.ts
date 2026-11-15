@@ -1,3 +1,5 @@
+import type { EditorRuntime } from "../../state/runtime";
+
 // The life cycle every pointer gesture of the timeline follows (SDD-012 section
 // 8.1). It owns the pointer, the threshold, the keys that cancel and the scroll
 // at the edges, and knows nothing about what a gesture edits.
@@ -38,6 +40,8 @@ export function consumeDragClick(): boolean {
 export interface Running {
 	// Cancel from outside, for example a remote edit of the dragged item.
 	cancel(): void;
+	// Whether the pointer has moved past the threshold: a click is not dragging.
+	dragging(): boolean;
 }
 
 export function runGesture(options: {
@@ -45,8 +49,10 @@ export function runGesture(options: {
 	target: Element;
 	scroller: HTMLElement | null;
 	gesture: Gesture;
+	// Called once when the pointer is released or the gesture is cancelled.
+	onFinish?: () => void;
 }): Running {
-	const { event, target, scroller, gesture } = options;
+	const { event, target, scroller, gesture, onFinish } = options;
 	const startScroll = scroller?.scrollLeft ?? 0;
 	let began = false;
 	let finished = false;
@@ -79,6 +85,7 @@ export function runGesture(options: {
 
 	const detach = (): void => {
 		finished = true;
+		onFinish?.();
 		cancelAnimationFrame(frame);
 		window.removeEventListener("pointermove", onMove);
 		window.removeEventListener("pointerup", onUp);
@@ -94,7 +101,10 @@ export function runGesture(options: {
 	const abort = (): void => {
 		if (finished) return;
 		detach();
-		if (began) gesture.cancel();
+		if (began) {
+			setTimeout(forgetDragClick, 0);
+			gesture.cancel();
+		}
 	};
 
 	function begin(): void {
@@ -166,11 +176,34 @@ export function runGesture(options: {
 	window.addEventListener("pointercancel", onCancel);
 	window.addEventListener("keydown", onKey, true);
 
-	return { cancel: abort };
+	return { cancel: abort, dragging: () => began && !finished };
 }
 
 // Forget a drag that ended without a click following it (released outside the
 // element, for example).
 export function forgetDragClick(): void {
 	swallow = false;
+}
+
+// The remote edits the gesture watches for (SDD-012 section 5.8 item 7): when
+// another actor's batch changes or removes an item being dragged, `onRemote` is
+// called with that actor and the gesture should cancel. Returns the stop
+// function. The items are compared by identity: the read model keeps the same
+// object for an item no batch touched.
+export function watchRemoteEdit(
+	runtime: Pick<EditorRuntime, "documents" | "activity">,
+	itemIds: readonly string[],
+	onRemote: (actor: string) => void,
+): () => void {
+	const items = runtime.documents.getState().document?.items;
+	const original = new Map(itemIds.map((id) => [id, items?.[id]]));
+	let lastEntry = runtime.activity.getState().entries[0];
+	return runtime.activity.subscribe((state) => {
+		const entry = state.entries[0];
+		if (entry === undefined || entry === lastEntry) return;
+		lastEntry = entry;
+		const now = runtime.documents.getState().document?.items;
+		const touched = itemIds.some((id) => now?.[id] !== original.get(id));
+		if (touched) onRemote(entry.actor);
+	});
 }

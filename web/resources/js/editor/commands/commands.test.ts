@@ -260,6 +260,54 @@ describe("gestures send one request and wait for the answer", () => {
 		);
 	});
 
+	test("a conflicted gesture is sent once with the pointer-down revision, names the actor and applies again on the user's action only", async () => {
+		const h = await startHarness();
+		const item = firstItem(h);
+		const down = h.runtime.documents.getState().revision ?? 0;
+		const sent = scripted(h, (_request, all) =>
+			all.length === 1
+				? {
+						status: 409,
+						body: {
+							code: "E_REVISION_CONFLICT",
+							message: "changed",
+							retryable: true,
+							details: {
+								base_revision: down,
+								current_revision: down,
+								conflict: {
+									collection: "items",
+									id: item.id,
+									revision: down,
+									actor: "local:claude-code",
+								},
+								diff: "r1 local:claude-code\n~ item",
+							},
+						},
+					}
+				: { status: 200, body: h.server.commit([bump(h)]).result },
+		);
+		const actions = createActions(h.runtime);
+		await actions.commitGesture(moveOperations(item.id, "5s"), down);
+		await flush();
+		expect(sent).toHaveLength(1);
+		expect(sent[0]?.request.base_revision).toBe(down);
+		const [notice] = h.runtime.notices.getState().notices;
+		expect(notice?.conflict).toMatchObject({
+			actor: "local:claude-code",
+			itemId: item.id,
+			diff: "r1 local:claude-code\n~ item",
+		});
+		expect(sent).toHaveLength(1);
+		const current = h.runtime.documents.getState().revision ?? 0;
+		await actions.applyNotice(notice as NonNullable<typeof notice>);
+		expect(sent).toHaveLength(2);
+		expect(sent[1]?.request.idempotency_key).not.toBe(
+			sent[0]?.request.idempotency_key,
+		);
+		expect(sent[1]?.request.base_revision).toBe(current);
+	});
+
 	test("an inspector field leaves a validation error to the field and sends no notice", async () => {
 		const h = await startHarness();
 		const item = firstItem(h);

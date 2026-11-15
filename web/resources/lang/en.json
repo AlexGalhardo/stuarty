@@ -205,7 +205,12 @@
           "other": "Redo applied, {count} changes were left alone because {actor} changed them"
         },
         "source_has_only": "The source has only {available}",
+        "gesture_cancelled": "{actor} changed what you were dragging, so the drag was cancelled",
         "another_actor": "another actor"
+      },
+      "conflict": {
+        "message": "{actor} changed {item} while you were editing it (revision {revision}). Your change was not applied.",
+        "something": "the project"
       },
       "jobs": {
         "chip": {

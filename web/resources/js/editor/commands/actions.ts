@@ -71,6 +71,27 @@ function sourceAvailable(error: ApiError): number | null {
 	return typeof max === "number" ? max : null;
 }
 
+const CATCH_UP_MS = 2000;
+
+// The facts of an E_REVISION_CONFLICT, as the core sent them (SDD-006 section 7.3).
+function conflictOf(error: ApiError): NonNullable<Notice["conflict"]> | null {
+	const details = error.details;
+	const current = details?.current_revision;
+	const conflict = details?.conflict;
+	if (typeof current !== "number") return null;
+	const who =
+		typeof conflict === "object" && conflict !== null
+			? (conflict as { [key: string]: unknown })
+			: {};
+	return {
+		actor: typeof who.actor === "string" ? who.actor : "",
+		itemId:
+			who.collection === "items" && typeof who.id === "string" ? who.id : null,
+		diff: typeof details?.diff === "string" ? details.diff : "",
+		revision: current,
+	};
+}
+
 function nextFree(error: ApiError): number | null {
 	const value = error.details?.next_free;
 	return typeof value === "number" ? value : null;
@@ -104,6 +125,26 @@ export function createActions(runtime: EditorRuntime): Actions {
 		return ranges;
 	}
 
+	// Wait for the read model to reach `revision`: the events normally are there
+	// already; after 2 s the editor resyncs (SDD-012 section 4.5 item 2).
+	function catchUp(revision: number): Promise<void> {
+		const reached = (): boolean =>
+			(documents.getState().revision ?? 0) >= revision;
+		if (reached()) return Promise.resolve();
+		return new Promise((resolve) => {
+			const stop = documents.subscribe(() => {
+				if (!reached()) return;
+				stop();
+				clearTimeout(timer);
+				resolve();
+			});
+			const timer = setTimeout(() => {
+				stop();
+				void runtime.sync.resync().finally(resolve);
+			}, CATCH_UP_MS);
+		});
+	}
+
 	function report(error: ApiError, ops: Operations): void {
 		// A request the browser itself gave up is not a failure to show.
 		if (error.isAborted) return;
@@ -114,10 +155,15 @@ export function createActions(runtime: EditorRuntime): Actions {
 			hint: error.hint,
 		};
 		if (error.code === "E_REVISION_CONFLICT") {
+			const found = conflictOf(error);
 			noticeWriter.push({
 				...base,
+				conflict: found === null ? undefined : found,
 				action: { labelKey: "ui.editor.notice.apply_again", operations: ops },
 			});
+			// Bring the read model to the revision the core named; the UI never
+			// resends the batch on its own (SDD-012 section 4.5 item 4).
+			if (found !== null) void catchUp(found.revision);
 			return;
 		}
 		const trimmed = ops.find((o) => o.op === "item.trim");
@@ -253,6 +299,10 @@ export function createActions(runtime: EditorRuntime): Actions {
 		async applyNotice(notice) {
 			noticeWriter.dismiss(notice.id);
 			if (notice.action === undefined) return null;
+			// A new logical edit on the current revision, the explicit decision of
+			// the user to act on top of the other change (SDD-012 section 4.5 item 3).
+			if (notice.conflict !== undefined)
+				await catchUp(notice.conflict.revision);
 			return send(notice.action.operations);
 		},
 	};

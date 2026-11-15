@@ -4,7 +4,7 @@ import type { Ghost } from "../../state/ghostStore";
 import type { EditorRuntime } from "../../state/runtime";
 import { deltaPxToFrames } from "../geometry";
 import { snapFrame } from "../snapping";
-import { runGesture } from "./lifecycle";
+import { runGesture, watchRemoteEdit } from "./lifecycle";
 
 // Dragging item bodies (SDD-012 section 8.2): horizontally, to another track,
 // or as a multi-selection with the same delta. Screen arithmetic and snapping
@@ -73,7 +73,8 @@ export function beginMove(options: {
 	let ghosts: Record<string, Ghost> = {};
 	let targets: MoveTarget[] = [];
 
-	runGesture({
+	let stopWatching: () => void = () => {};
+	const running = runGesture({
 		event,
 		target: event.currentTarget,
 		scroller: event.currentTarget.closest<HTMLElement>(
@@ -169,7 +170,24 @@ export function beginMove(options: {
 				ghostWriter.clear();
 			},
 		},
+		onFinish: () => stopWatching(),
 	});
+	stopWatching = watchRemoteEdit(
+		runtime,
+		dragged.map((d) => d.id),
+		(actor) => {
+			// A press that has not started dragging yet is still the user's, and
+			// the core will judge its batch against the revision of the press.
+			if (!running.dragging()) return;
+			running.cancel();
+			runtime.noticeWriter.push({
+				kind: "info",
+				message: "",
+				messageKey: "ui.editor.notice.gesture_cancelled",
+				actor,
+			});
+		},
+	);
 }
 
 // The item that blocked a move: a static outline for two seconds, scrolled into

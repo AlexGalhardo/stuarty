@@ -7,8 +7,38 @@ import { useT } from "@/lib/i18n";
 import { useActions } from "../commands/useActions";
 import { actorLabel } from "../state/activityStore";
 import { useStore } from "../state/createStore";
-import { useRuntime } from "../state/EditorContext";
+import { useDocumentState, useRuntime } from "../state/EditorContext";
+import type { Notice } from "../state/noticeStore";
+import { selectItem } from "../state/selectors";
+import ConflictNotice from "../ui/ConflictNotice";
 import { errorHeadline } from "../ui/errorHeadline";
+
+function ConflictBody({
+	conflict,
+}: {
+	conflict: NonNullable<Notice["conflict"]>;
+}): ReactNode {
+	const t = useT();
+	const item = useDocumentState((s) =>
+		conflict.itemId === null ? undefined : selectItem(s, conflict.itemId),
+	);
+	return (
+		<ConflictNotice
+			actor={
+				conflict.actor === ""
+					? t("ui.editor.notice.another_actor")
+					: actorLabel(conflict.actor)
+			}
+			item={
+				item === undefined
+					? t("ui.editor.conflict.something")
+					: (item.name ?? t(`ui.editor.item.${item.type}`))
+			}
+			revision={conflict.revision}
+			diff={conflict.diff}
+		/>
+	);
+}
 
 // The notices of SDD-012 section 8.4: the headline of the code, then the core's
 // message and hint as received, and the one action the core made possible.
@@ -28,29 +58,35 @@ export default function Notices(): ReactNode {
 					className="flex items-start gap-2 rounded-md border border-ed-track-line bg-ed-panel p-3 text-sm shadow-md"
 				>
 					<div className="min-w-0 flex-1">
-						<p className="font-medium">
-							{notice.messageKey !== undefined
-								? t(notice.messageKey, {
-										...notice.params,
-										count: notice.count ?? 0,
-										actor:
-											notice.actor === undefined
-												? t("ui.editor.notice.another_actor")
-												: actorLabel(notice.actor),
-									})
-								: notice.code !== undefined
-									? errorHeadline(t, notice.code)
-									: null}
-						</p>
-						{notice.message !== "" && (
-							<p lang="en" className="text-xs">
-								<UntrustedText>{notice.message}</UntrustedText>
-							</p>
-						)}
-						{notice.hint !== undefined && (
-							<p lang="en" className="text-xs text-muted-foreground">
-								<UntrustedText>{notice.hint}</UntrustedText>
-							</p>
+						{notice.conflict !== undefined ? (
+							<ConflictBody conflict={notice.conflict} />
+						) : (
+							<>
+								<p className="font-medium">
+									{notice.messageKey !== undefined
+										? t(notice.messageKey, {
+												...notice.params,
+												count: notice.count ?? 0,
+												actor:
+													notice.actor === undefined
+														? t("ui.editor.notice.another_actor")
+														: actorLabel(notice.actor),
+											})
+										: notice.code !== undefined
+											? errorHeadline(t, notice.code)
+											: null}
+								</p>
+								{notice.message !== "" && (
+									<p lang="en" className="text-xs">
+										<UntrustedText>{notice.message}</UntrustedText>
+									</p>
+								)}
+								{notice.hint !== undefined && (
+									<p lang="en" className="text-xs text-muted-foreground">
+										<UntrustedText>{notice.hint}</UntrustedText>
+									</p>
+								)}
+							</>
 						)}
 						{notice.action !== undefined && (
 							<Button
