@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
 	"time"
 
@@ -40,10 +39,12 @@ func becomeOwner(
 	stderr io.Writer,
 ) func(context.Context, *workspace.Session, func(string) string) (*cli.Connection, error) {
 	return func(ctx context.Context, sess *workspace.Session, getenv func(string) string) (*cli.Connection, error) {
-		log := slog.New(slog.NewTextHandler(stderr, nil))
+		log, closeLog := openLog(getenv, stderr)
 
 		ow, err := owner.Open(ctx, owner.Config{Getenv: getenv, Version: version, Log: log, Session: sess})
 		if err != nil {
+			_ = closeLog.Close()
+
 			return nil, err
 		}
 
@@ -59,7 +60,7 @@ func becomeOwner(
 
 			serveErr := <-done
 
-			return errors.Join(serveErr, ow.Close())
+			return errors.Join(serveErr, ow.Close(), closeLog.Close())
 		}
 
 		if stopped, err := awaitAnnounce(ctx, ow, done); err != nil {
@@ -70,6 +71,7 @@ func becomeOwner(
 			}
 
 			_ = ow.Close()
+			_ = closeLog.Close()
 
 			return nil, err
 		}
