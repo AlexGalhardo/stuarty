@@ -620,6 +620,40 @@
         "split": "Dividir",
         "split_before": "Dividir a legenda antes da palavra {n}",
         "edit_label": "Palavra {n}"
+      },
+      "auto_captions": {
+        "title": "Legendas automáticas",
+        "track": "Faixa",
+        "new_track": "Nova faixa de legendas",
+        "track_name": "Legendas",
+        "max_words": "Palavras por legenda",
+        "max_chars": "Caracteres por legenda",
+        "max_gap": "Pausa que inicia uma legenda",
+        "replace": "Substituir as legendas vinculadas",
+        "invalid": "Use números inteiros maiores que zero e uma duração como 0,6s.",
+        "generate": "Gerar legendas",
+        "resync": "Ressincronizar legendas",
+        "checking": "Procurando uma transcrição",
+        "transcribing": "Transcrevendo o áudio",
+        "progress": "Progresso da transcrição",
+        "open_install": "Instalar a transcrição local",
+        "install": {
+          "title": "Instalar a transcrição local",
+          "description": "A transcrição roda neste computador e precisa de arquivos que ainda não estão instalados.",
+          "missing": "Não instalado",
+          "source": "de {host}",
+          "size": "Tamanho do download: {megabytes} MB",
+          "command": "Ou rode este comando em um terminal",
+          "copy_command": "Copiar o comando",
+          "install": "Instalar",
+          "cancel": "Cancelar",
+          "close": "Fechar",
+          "progress": "Progresso da instalação",
+          "installing": "Instalando: {done} de {total} MB",
+          "done": "Instalado. Pressione Gerar legendas de novo.",
+          "forbidden": "Esta sessão não pode instalar arquivos. Rode o comando abaixo em um terminal.",
+          "copy_details": "Copiar detalhes"
+        }
       }
     }
   }
