@@ -1,0 +1,96 @@
+---
+title: "Modo de rede e login"
+description: "Execute o servidor para outras pessoas: endereço de vínculo, TLS, usuários, papéis, sessões e as verificações de inicialização que falham de forma segura."
+---
+
+## O que você vai aprender
+
+- quando o servidor está em modo de rede e o que ele exige;
+- como criar usuários e o que um papel pode fazer;
+- quais erros de configuração param o servidor, e a correção de cada um.
+
+## A ideia
+
+O [modo de rede](/docs/concepts/local-and-network-mode) é qualquer endereço de vínculo que não seja de loopback, com `VUKEM_VIDEO_MODE=network`. Um endereço que não é de loopback com o modo `local` é um erro de inicialização, nunca uma exposição silenciosa. O token local não é aceito neste modo.
+
+- **O login é obrigatório.** Não há cadastro aberto, login social nem e-mail. O operador cria os usuários.
+- **O TLS é obrigatório.** Ou o processo o termina (`TLS_CERT_FILE` e `TLS_KEY_FILE`, TLS 1.2 ou mais novo) ou um proxy reverso o faz, com `TRUSTED_PROXIES` e `TRUST_FORWARDED_PROTO=true` (veja [Coloque o Caddy na frente](/docs/self-hosting/caddy)). O `APP_URL` precisa ser o endereço `https` público, e o servidor aceita apenas esse host e origem. A única exceção é um contêiner usado na própria máquina: `APP_URL=http://localhost:<port>` ou `http://127.0.0.1:<port>` é servido por HTTP simples, e apenas para esse nome.
+- **O `APP_KEY` é obrigatório**, 32 bytes ou mais em base64.
+- **Não como root.** Executar como root ou Administrador é recusado, a menos que `VUKEM_VIDEO_INSECURE_ALLOW_ROOT=true`.
+- **A importação por caminho é confinada** aos diretórios em `VUKEM_VIDEO_IMPORT_ROOTS` (caminhos absolutos de diretórios existentes, fora do espaço de trabalho).
+
+## Usuários e papéis
+
+Um `admin` tem os cinco escopos `read`, `edit`, `media`, `render` e `admin`. Um `member` tem `read`, `edit`, `media` e `render`. Um usuário vê e altera apenas os projetos que criou; um administrador gerencia usuários, chaves e a lixeira, mas não ganha acesso aos projetos de outros usuários. Uma senha tem de 12 a 1.024 caracteres.
+
+Crie o primeiro administrador na inicialização, a partir do ambiente, quando ainda não existe nenhum usuário:
+
+```bash
+VUKEM_VIDEO_ADMIN_EMAIL=admin@example.com
+VUKEM_VIDEO_ADMIN_PASSWORD=@file:/run/secrets/admin_password
+```
+
+Crie ou altere usuários com os comandos abaixo. Eles rodam no processo e precisam do bloqueio do espaço de trabalho, então **pare o servidor antes**. A senha é lida de um prompt do terminal (duas vezes, sem eco) ou da primeira linha da entrada padrão, nunca de um argumento.
+
+```bash
+vukem-video user:create ana@example.com
+vukem-video user:create admin2@example.com --admin
+echo "a-new-long-password" | vukem-video user:passwd ana@example.com
+```
+
+Uma troca de senha encerra as sessões e revoga as chaves de API daquele usuário.
+
+### Gerencie usuários com o servidor rodando
+
+Um administrador autenticado no navegador pode gerenciar usuários pela API HTTP sem parar o servidor. As rotas existem apenas no modo de rede e precisam do escopo `admin` em uma **sessão de navegador**: uma chave de API é recusada aqui, quaisquer que sejam os seus escopos. Ainda não há uma página do editor para isso.
+
+| Rota | Faz |
+| --- | --- |
+| `GET /api/v1/users` | lista todos os usuários, do mais antigo ao mais novo, inclusive os desativados |
+| `POST /api/v1/users` | cria um usuário a partir de `email`, `password` e um `role` opcional (`admin` ou `member`, padrão `member`) |
+| `PATCH /api/v1/users/{user_id}` | define `role` e, ou, `disabled` em uma única instrução |
+
+```bash
+APP=https://video.example.com
+curl -fsS -b jar.txt -H "Content-Type: application/json" -H "Origin: $APP" \
+  -d '{"email": "ana@example.com", "password": "a-long-password-here"}' "$APP/api/v1/users"
+curl -fsS -b jar.txt -X PATCH -H "Content-Type: application/json" -H "Origin: $APP" \
+  -d '{"disabled": true}' "$APP/api/v1/users/<user_id>"
+```
+
+O `jar.txt` é o arquivo de cookies de um login, como em [Chaves de API e escopos](/docs/self-hosting/api-keys). Um usuário é mostrado com `user_id`, `email`, `role`, `disabled` e `created_ms`; a senha nunca aparece. Mudar um papel, ou desativar um usuário, encerra as sessões dele na requisição seguinte e estreita ou interrompe as suas chaves. O último administrador ativo não pode ser rebaixado nem desativado: a resposta é `E_INVALID_STATE` com a dica de criar antes outro administrador. Um e-mail já usado, um papel inválido e uma senha curta são `E_VALIDATION`.
+
+## Sessões e login
+
+O cookie de sessão do navegador é `__Host-vukem_video_session` (o caso do contêiner em HTTP simples usa o nome de cookie local). Uma sessão termina após 8 horas ociosa ou 7 dias no total. O login é `POST /auth/login` com `email` e `password`; um e-mail errado e uma senha errada dão o mesmo `E_UNAUTHORIZED`. Os logins com falha são limitados por e-mail e por endereço antes de a senha ser conferida.
+
+<Callout type="warning" title="Sem página de login nesta versão">
+A página de login do navegador e a página para gerenciar chaves de API ainda não foram construídas. Até que sejam, entre com `POST /auth/login` como mostrado em [Chaves de API e escopos](/docs/self-hosting/api-keys) e dê aos agentes uma chave de API. Um servidor sem usuários responde a toda requisição da API com 401 e registra como criar um.
+</Callout>
+
+## Erros de inicialização
+
+O processo sai com status 1 e uma mensagem que nomeia a variável.
+
+| Condição | Correção |
+| --- | --- |
+| Endereço que não é de loopback no modo `local` | defina `VUKEM_VIDEO_MODE=network` |
+| Modo de rede sem um `APP_URL` `https` | defina `APP_URL` como o endereço `https` público |
+| `https` sem arquivos TLS ou um proxy confiável | defina `TLS_CERT_FILE` e `TLS_KEY_FILE`, ou `TRUSTED_PROXIES` e `TRUST_FORWARDED_PROTO=true` |
+| `APP_KEY` ausente ou curto | `openssl rand -base64 32` |
+| Executando como root | execute como um usuário comum |
+| Raiz de importação inválida | um diretório absoluto e existente fora do espaço de trabalho |
+| Endpoint de transcrição inseguro | `https`, ou `http` para um endereço de loopback, sem nome de usuário na URL |
+| Um limite definido como zero ou menos | informe um número positivo |
+| `VUKEM_VIDEO_FFMPEG` que não é um caminho absoluto para um arquivo | informe o caminho completo |
+
+## Erros comuns
+
+- Definir `APP_URL` como um nome e navegar por outro: o host e a origem precisam ser iguais ao `APP_URL` exatamente.
+- Executar `user:create` com o servidor rodando: `E_WORKSPACE_LOCKED`. Pare o servidor, ou use as variáveis do primeiro administrador.
+- Esquecer que todo projeto pertence ao seu criador: uma chave de agente vê apenas os projetos do seu dono.
+
+## Próximos passos
+
+- [Chaves de API e escopos](/docs/self-hosting/api-keys)
+- [Coloque o Caddy na frente](/docs/self-hosting/caddy)

@@ -1,0 +1,62 @@
+---
+title: "Verifique uma versão"
+description: "Confira a assinatura, os checksums, a proveniência e os digests da imagem de uma versão publicada."
+---
+
+## O que você vai aprender
+
+- o que é assinado e atestado em uma versão;
+- os comandos que verificam o arquivo compactado e a imagem;
+- o que uma falha significa.
+
+## A ideia
+
+Toda versão é construída por um único workflow, `release.yml`, no GitHub. Ele assina o `checksums.txt` com o cosign (sem chave, pelo Sigstore), anexa uma atestação de proveniência da construção e assina e atesta os digests da imagem de contêiner nos dois registros. Você verifica que o arquivo que tem em mãos é o que aquele workflow construiu a partir de uma tag, sem confiar no download.
+
+Instale o `cosign`, a CLI do GitHub `gh` e, para a imagem, o `docker`.
+
+## Início rápido
+
+Defina a versão, depois baixe e verifique o arquivo compactado da sua plataforma:
+
+```bash
+VERSION=vX.Y.Z
+V="${VERSION#v}"
+REPO=AlexGalhardo/vukem-video
+ARCHIVE="vukem-video_${V}_linux_amd64.tar.gz"
+IDENTITY="^https://github[.]com/$REPO/[.]github/workflows/release[.]yml@refs/tags/v"
+ISSUER=https://token.actions.githubusercontent.com
+gh release download "$VERSION" -R "$REPO" -p checksums.txt -p checksums.txt.sigstore.json \
+  -p "$ARCHIVE" -p "$ARCHIVE.sbom.json"
+cosign verify-blob checksums.txt --bundle checksums.txt.sigstore.json \
+  --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+sha256sum --ignore-missing -c checksums.txt
+gh attestation verify "$ARCHIVE" -R "$REPO"
+```
+
+No macOS, use `shasum -a 256 -c` para a conferência dos checksums. A versão também anexa o pacote de proveniência, `vukem-video.intoto.jsonl`, e uma lista de materiais de software (SBOM) para cada arquivo compactado.
+
+Verifique a imagem de contêiner nos dois registros. Os dois digests impressos precisam ser iguais, porque uma única construção é enviada aos dois:
+
+```bash
+for image in ghcr.io/alexgalhardo/vukem-video alexgalhardo/vukem-video; do
+  digest="$(docker buildx imagetools inspect "$image:$V" --format "{{.Manifest.Digest}}")"
+  cosign verify "$image@$digest" \
+    --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+  echo "$image $digest"
+done
+docker run --rm "ghcr.io/alexgalhardo/vukem-video:$V" version
+```
+
+O último comando imprime `vukem-video vX.Y.Z`. Os instaladores de Windows e macOS não são assinados com um certificado pago de assinatura de código; o `checksums.txt` assinado é como você os verifica.
+
+## Erros comuns
+
+- Pular o `cosign verify-blob` e executar apenas o `sha256sum`: um arquivo de checksums que você não verificou não prova nada.
+- Mudar a regexp de identidade para aceitar qualquer workflow. Mantenha-a exata: a identidade é a prova de quem construiu o arquivo.
+- Uma execução de recuperação assinada a partir de um branch em vez de uma tag tem a identidade `@refs/heads/<branch>`; a regexp acima a rejeita de propósito. Use a próxima versão com tag.
+
+## Próximos passos
+
+- [Execute a imagem Docker](/docs/self-hosting/docker)
+- [O processo de versionamento](/docs/contributing/releases)
