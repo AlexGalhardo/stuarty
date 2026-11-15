@@ -2329,11 +2329,14 @@ Every path argument (`media:import <path>`, `template:import <path>`) is made ab
 | `job:cancel` | `job:cancel <job id>` | none | none | `Job` | A |
 | `template:list` | `template:list [--cursor c] [--limit n]` | `--cursor`; `--limit` int 20 | none | `TemplateListResult` | A |
 | `template:save` | `template:save --project <id> --name <name> [--description d]` | `--name` required; `--description` | none | `TemplateResult` | A |
-| `template:new` | `template:new <template id> --name <name> [--fill <file\|->] [--id prj_...]` | `--name` required; `--fill` a JSON object slot name to `SlotValue`; `--id` | the fill, with `--fill -` | `TemplateInstantiateResult` | A |
+| `template:new` | `template:new <template id> --name <name> [--fill <file\|->] [--id prj_...]` (the generated skill lists this form; `--brand-color` and `--brand-font` appear in `command:help` and the reference) | `--name` required; `--fill` a JSON object slot name to `SlotValue`; `--id`; `--brand-color` and `--brand-font` string, repeatable (a comma list also works), the `brand_colors` and `brand_fonts` of §4.2 (phase B) | the fill, with `--fill -` | `TemplateInstantiateResult` | A |
 | `template:export` | `template:export <template id>` | none | none | `FileResult` | A |
 | `template:import` | `template:import <path>` | none | none | `TemplateResult` | A |
 | `doctor` | `doctor [--full] [--verify] [--bundle] [--gc]` | `--full` bool false; `--verify` bool false, checks the digests of FFmpeg and the helpers (SDD-007 §6.8); `--bundle` bool false, writes `exports/diagnostics/doctor-<UTC timestamp>.zip` inside the workspace and prints its path (no path argument: nothing is written outside the workspace; RF-207); `--gc` bool false, runs `store.GC` | none | `DoctorResult`; the named checks of `checks[]` are listed in SDD-011 §8.6 | A |
 | `fonts` | `fonts` | none | none | `FontListResult` | A |
+| `font:import` | `font:import <path>` | none; the path is made absolute and read on the machine of the server (SDD-007 §7.7) | none | `FontImportResult` | B |
+| `brand:show` | `brand:show` | none | none | `BrandKit` (SDD-005 §5.11) | B |
+| `brand:set` | `brand:set --kit <file\|->` | `--kit` string, required: a JSON object `{logo?, colors?, fonts?}` that replaces the kit (an unknown member is `E_VALIDATION`) | the kit, with `--kit -` | `BrandKit` | B |
 | `audit` | `audit [--project <id>] [--cursor c] [--limit n]` | `--project` string, only the entries of one project; `--cursor`; `--limit` int 50. Scope `admin` | none | `AuditListResult` | A |
 | `events` | `events --project <id> [--from-id n] [--since n] [--count n]` | `--from-id` string, the `Last-Event-ID`; `--since` int, a revision (the `since` query); `--count` int 0 (until interrupted) | none | one JSON object per line (NDJSON), each `{"id","name","data"}`; the only command whose `--json` output is not one document | P |
 | `version` | `version` | none | none | `{"version","text"}`; prints `vukem-video <version>` and needs no workspace or server (the image build checks it against the tag) | P |
@@ -2770,6 +2773,9 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `AuditList` | none (exception E-3) | `audit` | `GET /audit` (scope `admin`) |
 | `TrashEmpty` | none (exception E-4) | none (exception E-4) | `POST /trash/empty` |
 | `KeyCreate`, `KeyList`, `KeyRevoke` | none (exception E-4) | none | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` |
+| `FontImport` | none (exception E-3) | `font:import` (phase B) | `POST /fonts` |
+| `BrandKitGet` | none (exception E-3) | `brand:show` (phase B) | `GET /brand-kit` |
+| `BrandKitSet` | none (exception E-3) | `brand:set` (phase B) | `PUT /brand-kit` |
 | `ProjectBundleExport` | none (exception E-3) | `bundle:export` (phase B) | `POST /projects/{id}/bundle` |
 | `ProjectBundleImport` | none (exception E-3) | `bundle:import` (phase B) | `POST /projects/import` |
 
