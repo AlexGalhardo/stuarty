@@ -10,10 +10,12 @@ import {
 } from "./editor/boot/bootstrap";
 import { installDebugHooks } from "./editor/boot/debugHooks";
 import EditorApp from "./editor/boot/EditorApp";
+import { FailurePage, failureOf } from "./editor/boot/ErrorBoundary";
 import { setBuildPhase } from "./editor/boot/phase";
 import { loadUserNames } from "./editor/boot/userNames";
 import { createRuntime } from "./editor/state/runtime";
 import { installStyleNonce } from "./lib/cspNonce";
+import { I18nProvider, type Message } from "./lib/i18n";
 
 // Entry of the editor (SDD-012 section 2.3). The view applies the theme before
 // paint; this file reads the bootstrap the route wrote into the page, builds
@@ -81,4 +83,29 @@ async function main(): Promise<void> {
 	document.documentElement.removeAttribute("data-hydrating");
 }
 
-void main();
+// A boot that throws before the app mounts (a bad bootstrap, a refused load of
+// the user names) shows the error, not a blank page.
+function bootFailure(error: unknown): void {
+	console.error(error);
+	const root = document.getElementById("editor");
+	if (root === null) return;
+	let messages: Record<string, Message> = {};
+	let locale = "en";
+	try {
+		const parsed = parseBootstrap(
+			document.getElementById("vv-bootstrap")?.textContent,
+		);
+		messages = parsed.messages;
+		locale = parsed.locale;
+	} catch {
+		// The bootstrap is what failed: the keys show as they are.
+	}
+	createRoot(root).render(
+		<I18nProvider messages={messages} locale={locale}>
+			<FailurePage failure={failureOf(error)} />
+		</I18nProvider>,
+	);
+	document.documentElement.removeAttribute("data-hydrating");
+}
+
+void main().catch(bootFailure);

@@ -90,6 +90,9 @@
       "dialog": {
         "close": "Fechar"
       },
+      "failure": {
+        "title": "O editor parou de funcionar"
+      },
       "back": "Voltar aos projetos",
       "revision": "rev {revision}",
       "connection": {
@@ -101,6 +104,7 @@
         "failed": "Fora de sincronia"
       },
       "banner": {
+        "load_failed": "O editor não conseguiu carregar o projeto.",
         "failed": "O editor perdeu a sincronia com o projeto. Recarregue para continuar.",
         "trashed": "Este projeto está na lixeira. Ele fica somente leitura até ser restaurado.",
         "reload": "Recarregar"

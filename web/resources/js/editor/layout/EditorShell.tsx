@@ -11,6 +11,7 @@ import { useCanvasPort } from "../timeline/gestures/transformDrag";
 import Notices from "../timeline/Notices";
 import Timeline from "../timeline/Timeline";
 import { useShortcuts } from "../timeline/useShortcuts";
+import { FailureView } from "../ui/FailureView";
 import FirstRunTips from "./FirstRunTips";
 import InUseHost from "./InUseHost";
 import LeftPanel from "./LeftPanel";
@@ -55,6 +56,7 @@ export default function EditorShell({
 	const t = useT();
 	const canvasPort = useCanvasPort();
 	const status = useDocumentState((s) => s.status);
+	const loadError = useDocumentState((s) => s.loadError);
 	const viewport = useViewportWidth();
 	const panels = useUiState((s) => s.panels);
 	const full = panelSizes(viewport);
@@ -101,7 +103,14 @@ export default function EditorShell({
 						role="alert"
 						className="col-span-full flex items-center gap-3 border-b border-destructive bg-ed-panel px-3 py-2 text-sm text-destructive"
 					>
-						{t("ui.editor.banner.failed")}
+						{loadError === null ? (
+							t("ui.editor.banner.failed")
+						) : (
+							<div className="flex flex-col">
+								<span>{t("ui.editor.banner.load_failed")}</span>
+								<FailureView failure={loadError} />
+							</div>
+						)}
 						<Button
 							type="button"
 							size="sm"

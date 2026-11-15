@@ -90,6 +90,9 @@
       "dialog": {
         "close": "Close"
       },
+      "failure": {
+        "title": "The editor stopped working"
+      },
       "back": "Back to projects",
       "revision": "rev {revision}",
       "connection": {
@@ -101,6 +104,7 @@
         "failed": "Out of sync"
       },
       "banner": {
+        "load_failed": "The editor could not load the project.",
         "failed": "The editor lost sync with the project. Reload to continue.",
         "trashed": "This project is in the trash. It is read-only until it is restored.",
         "reload": "Reload"

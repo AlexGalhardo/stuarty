@@ -1,8 +1,18 @@
 import { describe, expect, test } from "vitest";
 
 import type { Change } from "../api/types";
-import { fakeId, flush, fullItem, seeded } from "../fixtures/fixtureServer";
+import {
+	errorBody,
+	FixtureServer,
+	fakeId,
+	flush,
+	fullItem,
+	ManualTimers,
+	makeDocument,
+	seeded,
+} from "../fixtures/fixtureServer";
 import { type Harness, itemMoved, startHarness } from "../fixtures/harness";
+import { createRuntime } from "./runtime";
 
 // SDD-006 section 11 check 14: the reconciliation harness. In every case the
 // final document and revision equal the one of the server.
@@ -39,6 +49,45 @@ describe("boot", () => {
 		expect(h.server.openedWith).toEqual([0]);
 		expect(state.endFrame).toBe(h.server.endFrame);
 		await expectInSync(h);
+	});
+});
+
+describe("a load the core refuses", () => {
+	test("keeps the code, the message and the hint for the banner", async () => {
+		const server = new FixtureServer(makeDocument({}));
+		server.failures.push({
+			match: "GET /projects/",
+			status: 500,
+			body: {
+				...errorBody(
+					"E_VALIDATION",
+					"this project was saved by a newer version",
+				),
+				hint: "update vukem-video",
+			},
+		});
+		const runtime = createRuntime({
+			projectId: server.projectId,
+			actor: "local:ui",
+			mode: "local",
+			transport: server,
+			timers: new ManualTimers(),
+		});
+		await runtime.sync.start();
+		await flush();
+		await runtime.sync.settled();
+		const state = runtime.documents.getState();
+		expect(state.status).toBe("failed");
+		expect(state.loadError).toEqual({
+			code: "E_VALIDATION",
+			message: "this project was saved by a newer version",
+			hint: "update vukem-video",
+		});
+	});
+
+	test("a load that succeeds leaves no error", async () => {
+		const h = await startHarness();
+		expect(h.runtime.documents.getState().loadError).toBeNull();
 	});
 });
 

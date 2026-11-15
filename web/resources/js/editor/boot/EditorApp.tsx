@@ -7,6 +7,7 @@ import { EditorProvider } from "../state/EditorContext";
 import type { EditorRuntime } from "../state/runtime";
 import type { EditorBootstrap } from "./bootstrap";
 import { startDeepLink } from "./deepLink";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { switchLocale } from "./locale";
 
 // The root of the editor: the translation context from the bootstrap, the
@@ -42,19 +43,21 @@ export default function EditorApp({
 			locale={bootstrap.locale}
 			locales={bootstrap.locales}
 		>
-			<EditorProvider runtime={runtime}>
-				<TooltipProvider>
-					<EditorShell
-						onLocaleChange={(next) => {
-							const { playheadFrame, selection } = runtime.ui.getState();
-							void switchLocale(next, {
-								frame: playheadFrame,
-								item: selection.items[0] ?? null,
-							});
-						}}
-					/>
-				</TooltipProvider>
-			</EditorProvider>
+			<ErrorBoundary>
+				<EditorProvider runtime={runtime}>
+					<TooltipProvider>
+						<EditorShell
+							onLocaleChange={(next) => {
+								const { playheadFrame, selection } = runtime.ui.getState();
+								void switchLocale(next, {
+									frame: playheadFrame,
+									item: selection.items[0] ?? null,
+								});
+							}}
+						/>
+					</TooltipProvider>
+				</EditorProvider>
+			</ErrorBoundary>
 		</I18nProvider>
 	);
 }

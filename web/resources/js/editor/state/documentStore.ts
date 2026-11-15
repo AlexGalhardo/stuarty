@@ -15,9 +15,17 @@ export type SyncStatus =
 // The read model (rule T2): the document at a revision, and the state of the
 // synchronization that keeps it. Nothing else of the project lives in the
 // browser.
+// What the core said when the document could not be loaded (SDD-012 section 4.4).
+export interface LoadError {
+	code: string;
+	message: string;
+	hint?: string;
+}
+
 export interface DocumentState {
 	projectId: string;
 	status: SyncStatus;
+	loadError: LoadError | null;
 	connection: ConnectionState;
 	revision: number | null;
 	document: DeepReadonly<ProjectDocument> | null;
@@ -38,6 +46,7 @@ export interface DocumentWriter {
 	// Requires revision === current + 1; false when the diff is unpatchable.
 	applyRevisionDiff(revision: number, diff: readonly Change[]): boolean;
 	setStatus(status: SyncStatus): void;
+	setLoadError(error: LoadError | null): void;
 	setConnection(connection: ConnectionState): void;
 	setState(state: ProjectState): void;
 	setEndFrame(endFrame: number): void;
@@ -89,6 +98,7 @@ export function createDocumentStore(options: DocumentStoreOptions): {
 	const store = createStore<DocumentState>({
 		projectId: options.projectId,
 		status: "loading",
+		loadError: null,
 		connection: "connecting",
 		revision: null,
 		document: null,
@@ -123,6 +133,7 @@ export function createDocumentStore(options: DocumentStoreOptions): {
 			return true;
 		},
 		setStatus: (status) => store.setState((s) => ({ ...s, status })),
+		setLoadError: (loadError) => store.setState((s) => ({ ...s, loadError })),
 		setConnection: (connection) =>
 			store.setState((s) => ({ ...s, connection })),
 		setState: (state) => store.setState((s) => ({ ...s, state })),
