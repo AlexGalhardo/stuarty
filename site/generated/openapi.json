@@ -2900,6 +2900,27 @@
         },
         "type": "object"
       },
+      "UserView": {
+        "properties": {
+          "created_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "VerifyCheck": {
         "properties": {
           "detail": {
@@ -5271,6 +5292,17 @@
           "url": {
             "description": "The address that exchanges the code for a browser session.",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "userListOut": {
+        "properties": {
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/UserView"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -8030,6 +8062,164 @@
           }
         ],
         "summary": "Empty the trash for good"
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "operationId": "users.list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/userListOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the users (an administrator session only; network mode)"
+      },
+      "post": {
+        "operationId": "users.create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "description": "A plain mailbox; it is lower-cased and must be unused.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "password": {
+                    "description": "12 to 1,024 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "role": {
+                    "description": "admin or member; default member.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserView"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a user (an administrator session only; network mode)"
+      }
+    },
+    "/api/v1/users/{user_id}": {
+      "patch": {
+        "operationId": "users.update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "disabled": {
+                    "description": "True disables the user; false enables them again.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "role": {
+                    "description": "admin or member.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change the role of a user or disable or enable them (an administrator session only; network mode)"
       }
     }
   },
