@@ -13,6 +13,9 @@ on:
       fuzztime:
         description: Duration per target (go test -fuzztime)
         default: 30s
+      long_fuzztime:
+        description: Duration per target of the three-system campaign (FuzzApplyBatch, FuzzSniffMedia, FuzzFFArgsCheck)
+        default: 30m
 
 permissions:
   contents: read
@@ -65,4 +68,45 @@ jobs:
         with:
           name: crashers-${{ matrix.target }}
           path: ${{ steps.corpus.outputs.dir }}/
+          if-no-files-found: ignore
+
+  # The campaign of P4-ENG-001 and P4-RND-002: 30 minutes per target on each operating system, with the
+  # whole registry and the whole hostile corpus. The job budget is the fuzz time plus the build.
+  fuzz-long:
+    name: ${{ matrix.target }} (${{ matrix.os }}, long)
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - { target: FuzzApplyBatch, pkg: ./core/command }
+          - { target: FuzzSniffMedia, pkg: ./engine/ffmpeg }
+          - { target: FuzzFFArgsCheck, pkg: ./engine/ffmpeg }
+    env:
+      LONG_FUZZTIME: ${{ inputs.long_fuzztime || '30m' }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: go test -fuzz
+        env:
+          PKG: ${{ matrix.pkg }}
+          TARGET: ${{ matrix.target }}
+        run: go test "$PKG" -run '^$' -fuzz "^${TARGET}\$" -fuzztime "$LONG_FUZZTIME"
+      - name: Upload crashers
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: crashers-${{ matrix.target }}-${{ matrix.os }}
+          path: |
+            core/command/testdata/fuzz/${{ matrix.target }}/
+            engine/ffmpeg/testdata/fuzz/${{ matrix.target }}/
           if-no-files-found: ignore
