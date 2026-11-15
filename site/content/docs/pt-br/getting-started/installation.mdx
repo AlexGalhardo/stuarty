@@ -3,13 +3,13 @@ title: "Instalação"
 description: "Onde obter o Vukem Video, o que é cada download e como conferi-lo antes de executar."
 ---
 
-<Callout type="warning" title="Fase de Protótipo">
-A primeira versão do editor é a `v0.2.0`. Até que ela seja publicada, o repositório é o único lugar para obter o programa, e parte do que está descrito aqui está especificada e ainda não funciona.
+<Callout type="warning" title="ALPHA">
+O Vukem Video está na fase ALPHA: o editor, a CLI e o servidor MCP funcionam, e novas versões (`v0.N.0`) acrescentam recursos a cada cerca de 90 commits. Veja o [changelog](/changelog) para saber o que cada versão muda.
 </Callout>
 
 ## O que você vai aprender
 
-- qual arquivo baixar para o seu sistema;
+- qual arquivo baixar para o seu sistema, ou como executar a imagem de contêiner;
 - como iniciar o servidor e onde ele escuta;
 - como conferir um download antes de executá-lo.
 
@@ -23,6 +23,18 @@ O Vukem Video roda apenas no seu computador. Você instala um único programa, o
 2. Instale. O instalador adiciona o `vukem-video` ao seu path.
 3. Execute `vukem-video version`. Ele imprime a versão, o que mostra que o programa está instalado.
 4. Execute `vukem-video serve`. Ele escuta em `127.0.0.1:7878` e em nenhum outro lugar.
+
+### A imagem de contêiner
+
+Toda versão estável também publica uma imagem multiarquitetura com o FFmpeg LGPL fixado dentro, em dois registros com o mesmo digest: `ghcr.io/alexgalhardo/vukem-video` e `alexgalhardo/vukem-video` no Docker Hub. As tags são `X.Y.Z`, `X.Y` e `latest`. O espaço de trabalho fica no volume `/data`, então mantenha-o em um volume nomeado ou em uma pasta de sua escolha:
+
+```bash
+docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data \
+  -e APP_KEY="$(openssl rand -base64 32)" \
+  ghcr.io/alexgalhardo/vukem-video:X.Y.Z
+```
+
+O contêiner roda como o usuário `app` (uid 10001) e, por padrão, não envia dados para lugar nenhum. `docker run --rm ghcr.io/alexgalhardo/vukem-video:X.Y.Z version` imprime a versão.
 
 Para compilar a partir do código-fonte, você precisa do Go (a versão do `go.mod`) e do Bun para o front-end.
 

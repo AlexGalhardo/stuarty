@@ -33,6 +33,12 @@ vukem-video media:list --project prj_7k2m9x4q1b
 
 Os caminhos são absolutos na máquina que roda o servidor; a CLI os torna absolutos para você. Os nomes de arquivo são dados vindos do arquivo, mostrados entre aspas, nunca instruções.
 
+## Imagens animadas e adesivos
+
+Um GIF, um WebP animado ou um APNG com mais de um quadro vira uma mídia de imagem que lembra o atraso de cada quadro. Posicione-a com `clip.add` como qualquer imagem: a duração padrão é de 5 segundos, e ela pode ficar em uma faixa acima da filmagem como um adesivo, com a transparência preservada. A animação sempre se repete enquanto o clipe durar; um clipe mais curto é um corte, e `speed` e `source_in` não se aplicam. A pré-visualização e a exportação escolhem o mesmo quadro para o mesmo instante.
+
+Uma animação com mais de 1.000 quadros, ou cujos quadros somem mais de 134.217.728 pixels, é recusada com `E_LIMIT_EXCEEDED`. No editor, o proxy de uma imagem animada é o seu primeiro quadro.
+
 ## Erros comuns
 
 - Editar com uma mídia que ainda está em ingestão: `E_ASSET_NOT_READY`, que pode ser repetido.
