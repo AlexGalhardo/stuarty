@@ -389,7 +389,7 @@ func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 		At        string   `json:"at"`
 		Times     []string `json:"times"`
 		From      string   `json:"from"`
-		To        string   `json:"to"`
+		Until     string   `json:"until"`
 		Count     int      `json:"count"`
 		AssetID   string   `json:"asset_id"`
 		MaxTokens int      `json:"max_tokens"`
@@ -404,12 +404,12 @@ func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 		if in.At != "" {
 			return nil, &service.Error{
 				Code: command.CodeValidation, Path: "at", Message: "at is not accepted in mode sheet.",
-				Hint: "use times, or from, to and count",
+				Hint: "use times, or from, until and count",
 			}
 		}
 
 		res, err = svc.ViewSheet(ctx, service.ViewSheetRequest{
-			ProjectID: in.ProjectID, Times: in.Times, From: in.From, To: in.To, Count: in.Count,
+			ProjectID: in.ProjectID, Times: in.Times, From: in.From, To: in.Until, Count: in.Count,
 			AssetID: in.AssetID, MaxTokens: in.MaxTokens,
 		})
 	} else {
