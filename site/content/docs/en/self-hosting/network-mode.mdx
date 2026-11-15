@@ -38,7 +38,27 @@ vukem-video user:create admin2@example.com --admin
 echo "a-new-long-password" | vukem-video user:passwd ana@example.com
 ```
 
-A password change ends the sessions and revokes the API keys of that user. Managing users from the editor is planned for BETA.
+A password change ends the sessions and revokes the API keys of that user.
+
+### Manage users while the server runs
+
+An administrator who is signed in in the browser can manage users through the HTTP API without stopping the server. The routes exist in network mode only and need the `admin` scope on a **browser session**: an API key is refused here, whatever its scopes. There is no editor page for it yet.
+
+| Route | Does |
+| --- | --- |
+| `GET /api/v1/users` | lists every user, oldest first, disabled ones included |
+| `POST /api/v1/users` | creates a user from `email`, `password` and an optional `role` (`admin` or `member`, default `member`) |
+| `PATCH /api/v1/users/{user_id}` | sets `role` and, or, `disabled` in one statement |
+
+```bash
+APP=https://video.example.com
+curl -fsS -b jar.txt -H "Content-Type: application/json" -H "Origin: $APP" \
+  -d '{"email": "ana@example.com", "password": "a-long-password-here"}' "$APP/api/v1/users"
+curl -fsS -b jar.txt -X PATCH -H "Content-Type: application/json" -H "Origin: $APP" \
+  -d '{"disabled": true}' "$APP/api/v1/users/<user_id>"
+```
+
+`jar.txt` is the cookie file of a login, as in [API keys and scopes](/docs/self-hosting/api-keys). A user is shown with `user_id`, `email`, `role`, `disabled` and `created_ms`; the password never appears. Changing a role, or disabling a user, ends their sessions at the next request and narrows or stops their keys. The last enabled administrator cannot be demoted or disabled: the answer is `E_INVALID_STATE` with the hint to make another administrator first. A used email, a bad role and a short password are `E_VALIDATION`.
 
 ## Sessions and login
 
