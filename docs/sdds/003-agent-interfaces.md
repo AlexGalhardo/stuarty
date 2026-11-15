@@ -1852,7 +1852,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
       "at":{"type":"string","description":"Time: 12.5s, 375f or 00:00:12.500"},
       "times":{"type":"array","minItems":2,"maxItems":16,"items":{"type":"string"}},
       "from":{"type":"string"},
-      "to":{"type":"string"},
+      "until":{"type":"string"},
       "count":{"type":"integer","minimum":2,"maximum":16,"default":9},
       "asset_id":{"type":"string","pattern":"^ast_[0-9a-hjkmnp-tv-z]{10}$"},
       "max_tokens":{"type":"integer","minimum":100,"maximum":1568}
@@ -1888,8 +1888,8 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 | --- | --- |
 | `mode` | `frame` (default): one image at `at` (required; `E_VALIDATION` with `path: "at"` when missing). `sheet`: a grid; `at` is not accepted |
 | `at` | time of the frame; a time beyond the timeline is `E_INVALID_TIME` |
-| `times` | sheet: 2 to 16 explicit times; exclusive with `from`, `to`, `count` (`E_VALIDATION` with the `path` of the second member) |
-| `from`, `to`, `count` | sheet: `count` (default 9) frames evenly spaced from `from` (default `0s`) to `to` (default the last frame), both ends included |
+| `times` | sheet: 2 to 16 explicit times; exclusive with `from`, `until`, `count` (`E_VALIDATION` with the `path` of the second member) |
+| `from`, `until`, `count` | sheet: `count` (default 9) frames evenly spaced from `from` (default `0s`) to `until` (default the last frame), both ends included |
 | `asset_id` | view the source asset (its normalized media) instead of the timeline |
 | `max_tokens` | image token budget: default 800 for a frame and 1,500 for a sheet, maximum 1,568. The service derives the size with `ImageSize` (§3.11); there is no `width` and no `cols` on MCP. There is no `revision` either: only the current revision is rendered (§2.7) |
 
@@ -2215,6 +2215,7 @@ The package is `web/app/mcp` (`mcp.New`, `mcp.Handler` for `POST /mcp`, `mcp.Run
 - **Built:** `project_list`, `project_create`, `project_get`, `edit`, `command_help`, `history` (list, undo and redo), `lint`. Arguments are validated against the `inputSchema` with the validator of ADR-0014 (`santhosh-tekuri/jsonschema/v6`); a failure is `E_VALIDATION` with the path and the constraint, never the value, and a bad `operations[].op` is `E_UNKNOWN_COMMAND`. A result is the text as the one content block and the result struct as structured content without `text` and without the document of `project_get`; an error is `isError` with the text of §3.9 (no details line) and the envelope on one line, `details.diff` cut first when it exceeds 4,000 characters. The edit and error texts are shared with the CLI (`service/render.go`).
 - **`project_trash`** (`ProjectTrash`, or `ProjectRestore` with `restore` true) is registered because both operations exist in the Service and the HTTP API, so `tools/list` holds 13 tools until `JobCancel` and the template operations land (P2-AGT-001 closes the list at 15). `TestMCPTrashRestore` shows the revision unchanged after a round trip.
 - **`job_cancel`** (`JobCancel`) and the command `job:cancel <job id>` are registered; `job:cancel` exits 0 for a job that ends cancelled (unlike `job:show`, where a cancelled job is exit 1), because the caller asked for it. `tools/list` holds 14 tools; `template` is the one still missing from the 15.
+- **`view` takes `until`, not `to`** on MCP, as the CLI does (`TestNoOutboundTools` forbids an argument named `to`, SDD-007 T10). The adapter maps it to `ViewSheetRequest.To`; the Service field and the HTTP query parameter `to` of `GET /projects/{id}/sheet` and `/plan` are still `to`, and the Service owner has to rename them for the T10 enumeration of HTTP routes to pass.
 - **`template`** serves the actions whose Service operations exist: `list`, `save` and `new` (`TemplateList`, `TemplateSave`, `TemplateInstantiate`). The phase filter cuts `export` and `import` from the `action` enum and the `path` member from the schema of the build (`filterTemplateActions`); `TestDefinitionsMatchTheSDD` compares the file, which is the full §4.2 object. A member the action does not use, or a missing required one, is `E_VALIDATION` with the member as `path`. With it `tools/list` holds the 15 tools and `TestToolDefinitionBudget` passes. The commands are `template:list`, `template:save` and `template:new` (`--fill <file|->`, one JSON object of slot name to value).
 - **Thin adapters:** `view` (`ViewFrame` or `ViewSheet`, the only tool that returns an `image` block; `mcp.Pending` is empty). `media_import`, `media_inspect` (a list without `asset_id`), `job_start` and `job_get` (a job list with `project_id`) are thin adapters over `MediaImport`, `MediaInspect`/`MediaList`, `JobStart` and `JobGet`/`JobList`; `media_import` waits 10,000 ms when `wait_ms` is absent. The tests of `TestSecurity_T07_TranscriptDelimitedAndTruncated` (transcription is not in the Prototype build, `media_inspect` says `transcript: none yet`) is skipped with the reason named.
 - **Caller (rule 4, issue I-9).** The SDK hands the request context to the handler in stateless mode, so no shim is needed: the handler uses the `Caller` the HTTP guard put in the context, and `TestMCPCallerPropagation` shows two credentials giving two actors. A call over HTTP with no `Caller` is `E_UNAUTHORIZED`. Over stdio the actor is `local:` plus `SanitizeLabel(--actor or clientInfo.name)`.
