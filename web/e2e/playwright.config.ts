@@ -27,6 +27,10 @@ function ffmpegEnv(): Record<string, string> {
 const home =
 	process.env.VUKEM_VIDEO_E2E_HOME ?? join(tmpdir(), "vukem-video-e2e-home");
 
+// A second server whose encoder cannot work, for scenario 9 (export-failure).
+const failPort = port + 1;
+const failHome = join(tmpdir(), "vukem-video-e2e-home-failing-encoder");
+
 export default defineConfig({
 	testDir: "./specs",
 	fullyParallel: true,
@@ -41,7 +45,7 @@ export default defineConfig({
 	projects: [
 		{
 			name: "chromium",
-			testIgnore: /perf\.spec\.ts/,
+			testIgnore: /(perf|export-failure)\.spec\.ts/,
 			use: {
 				browserName: "chromium",
 				launchOptions: {
@@ -63,20 +67,47 @@ export default defineConfig({
 				},
 			},
 		},
-	],
-	webServer: {
-		command: "go run ./web/cmd/app serve",
-		cwd: "../..",
-		url: `http://127.0.0.1:${port}/up`,
-		reuseExistingServer: !process.env.CI,
-		timeout: 180_000,
-		env: {
-			// A throwaway key, computed so that no key-like literal is committed.
-			APP_KEY: `base64:${Buffer.alloc(32, "e2e").toString("base64")}`,
-			HOST: "127.0.0.1",
-			PORT: String(port),
-			VUKEM_VIDEO_HOME: home,
-			...ffmpegEnv(),
+		{
+			name: "failing-encoder",
+			testMatch: /export-failure\.spec\.ts/,
+			metadata: { home: failHome },
+			use: {
+				browserName: "chromium",
+				baseURL: `http://127.0.0.1:${failPort}`,
+			},
 		},
-	},
+	],
+	webServer: [
+		{
+			command: "go run ./web/cmd/app serve",
+			cwd: "../..",
+			url: `http://127.0.0.1:${port}/up`,
+			reuseExistingServer: !process.env.CI,
+			timeout: 180_000,
+			env: {
+				// A throwaway key, computed so that no key-like literal is committed.
+				APP_KEY: `base64:${Buffer.alloc(32, "e2e").toString("base64")}`,
+				HOST: "127.0.0.1",
+				PORT: String(port),
+				VUKEM_VIDEO_HOME: home,
+				...ffmpegEnv(),
+			},
+		},
+		{
+			command: "go run ./web/cmd/app serve",
+			cwd: "../..",
+			url: `http://127.0.0.1:${failPort}/up`,
+			reuseExistingServer: !process.env.CI,
+			timeout: 180_000,
+			env: {
+				APP_KEY: `base64:${Buffer.alloc(32, "e2e").toString("base64")}`,
+				HOST: "127.0.0.1",
+				PORT: String(failPort),
+				VUKEM_VIDEO_HOME: failHome,
+				// Only this encoder is tried and it is never replaced (ADR-0011).
+				VUKEM_VIDEO_ENCODER: "no_such_encoder",
+				...ffmpegEnv(),
+			},
+		},
+	],
 });

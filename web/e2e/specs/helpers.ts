@@ -6,8 +6,15 @@ import { join } from "node:path";
 import { type APIRequestContext, test as base } from "@playwright/test";
 
 // The workspace the server of playwright.config.ts runs on.
-export const home =
+export let home =
 	process.env.VUKEM_VIDEO_E2E_HOME ?? join(tmpdir(), "vukem-video-e2e-home");
+
+// A project that runs against another server (the failing encoder of
+// export-failure) names its workspace in its metadata; the worker of that
+// project only ever runs that project.
+export function pointAtServerHome(dir: string): void {
+	home = dir;
+}
 
 export interface ProjectSummary {
 	id: string;
@@ -39,7 +46,9 @@ export async function listProjects(
 // /auth/launch, which sets an HttpOnly session cookie (SDD-007 section 3.4).
 // Every page of a spec starts logged in, the way `vukem-video open` does it.
 export const test = base.extend({
-	page: async ({ page, request }, use) => {
+	page: async ({ page, request }, use, testInfo) => {
+		const other = testInfo.project.metadata.home;
+		if (typeof other === "string") pointAtServerHome(other);
 		const launch = await request.post("/api/v1/system/launch", {
 			headers: { Authorization: `Bearer ${await token()}` },
 		});
