@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { panelShortcut } from "./keymap";
+import { editShortcut, panelShortcut } from "./keymap";
 
 const key = (init: Partial<Parameters<typeof panelShortcut>[0]>) =>
 	panelShortcut({
@@ -30,5 +30,33 @@ describe("panelShortcut", () => {
 		expect(key({ metaKey: true })).toBeNull();
 		expect(key({ shiftKey: true })).toBeNull();
 		expect(key({ key: "4", code: "Digit4" })).toBeNull();
+	});
+});
+
+describe("editShortcut", () => {
+	const edit = (
+		name: string,
+		mods: Partial<
+			Record<"ctrlKey" | "metaKey" | "altKey" | "shiftKey", boolean>
+		> = {},
+	) =>
+		editShortcut({
+			key: name,
+			ctrlKey: false,
+			metaKey: false,
+			altKey: false,
+			shiftKey: false,
+			...mods,
+		});
+
+	test("the keys of the delete, duplicate and rename gestures", () => {
+		expect(edit("Delete")).toBe("delete");
+		expect(edit("Backspace")).toBe("delete");
+		expect(edit("Delete", { shiftKey: true })).toBe("ripple_delete");
+		expect(edit("d", { ctrlKey: true })).toBe("duplicate");
+		expect(edit("D", { metaKey: true })).toBe("duplicate");
+		expect(edit("F2")).toBe("rename");
+		expect(edit("d")).toBeNull();
+		expect(edit("Delete", { altKey: true })).toBeNull();
 	});
 });

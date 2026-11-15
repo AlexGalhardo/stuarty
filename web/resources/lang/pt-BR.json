@@ -183,7 +183,16 @@
         "split": "Dividir",
         "trim_start": "Cortar o início",
         "trim_end": "Cortar o fim",
-        "caption": "Adicionar legenda"
+        "caption": "Adicionar legenda",
+        "delete": "Excluir",
+        "ripple_delete": "Excluir e fechar o espaço",
+        "ripple_delete_all": "Excluir e fechar o espaço em todas as faixas",
+        "duplicate": "Duplicar",
+        "rename": "Renomear",
+        "rename_label": "Nome do item",
+        "close_gap": "Fechar o espaço",
+        "item_menu": "Ações do item",
+        "gap_menu": "Ações do espaço"
       },
       "caption": {
         "title": "Adicionar legenda",

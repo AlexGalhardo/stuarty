@@ -45,3 +45,26 @@ export function panelShortcut(
 	const digit = /^Digit([123])$/.exec(event.code)?.[1] ?? event.key;
 	return PANEL_KEYS[digit] ?? null;
 }
+
+export type EditKey = "delete" | "ripple_delete" | "duplicate" | "rename";
+
+type EditKeyEvent = Pick<
+	KeyboardEvent,
+	"key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey"
+>;
+
+// Delete and Backspace delete, Shift+Delete ripples on the track, Mod+D
+// duplicates and F2 renames (SDD-012 sections 7.10 and 18.2).
+export function editShortcut(event: EditKeyEvent): EditKey | null {
+	if (event.altKey) return null;
+	if (hasMod(event)) {
+		return event.key.toLowerCase() === "d" && !event.shiftKey
+			? "duplicate"
+			: null;
+	}
+	if (event.key === "Delete")
+		return event.shiftKey ? "ripple_delete" : "delete";
+	if (event.key === "Backspace" && !event.shiftKey) return "delete";
+	if (event.key === "F2" && !event.shiftKey) return "rename";
+	return null;
+}

@@ -12,10 +12,15 @@ import {
 	addClipOperations,
 	adjacentTrack,
 	captionOperations,
+	closeGapOperations,
+	deleteOperations,
+	duplicateOperations,
 	type ItemRange,
 	moveToTrackOperations,
 	nudgeOperations,
 	type Operations,
+	type Ripple,
+	renameOperations,
 	splitOperations,
 	trimOperations,
 	withNextFree,
@@ -45,6 +50,14 @@ export interface Actions {
 		ids: readonly string[],
 		sign: 1 | -1,
 	): Promise<EditOutcome | null>;
+	// Delete, Shift+Delete and the menu: the selection, else the focused item.
+	deleteSelection(ripple?: Ripple): Promise<EditOutcome | null>;
+	// Ctrl+D: a copy of each selected item right after its end.
+	duplicateSelection(): Promise<EditOutcome | null>;
+	// The gap menu: `at` is the frame under the pointer.
+	closeGap(trackId: string, at: number): Promise<EditOutcome | null>;
+	// The inline rename (F2, the menu); an empty name clears it.
+	renameItem(itemId: string, name: string): Promise<EditOutcome | null>;
 	// palette.run: the operations the palette built from a schema form.
 	runOperations(ops: Operations): Promise<EditOutcome | null>;
 	// An inspector field: like runOperations, but a validation or time error is
@@ -110,6 +123,14 @@ export function createActions(runtime: EditorRuntime): Actions {
 
 	function selectedRanges(): ItemRange[] {
 		return rangesOf(ui.getState().selection.items);
+	}
+
+	// The items a key or a menu entry acts on: the selection, else the item that
+	// holds the keyboard focus.
+	function actedIds(): string[] {
+		const { selection, focusedItem } = ui.getState();
+		if (selection.items.length > 0) return [...selection.items];
+		return focusedItem === null ? [] : [focusedItem];
 	}
 
 	function rangesOf(ids: readonly string[]): ItemRange[] {
@@ -291,6 +312,10 @@ export function createActions(runtime: EditorRuntime): Actions {
 			});
 			return send(moveToTrackOperations(moves));
 		},
+		deleteSelection: (ripple) => send(deleteOperations(actedIds(), ripple)),
+		duplicateSelection: () => send(duplicateOperations(rangesOf(actedIds()))),
+		closeGap: (trackId, at) => send(closeGapOperations(trackId, at)),
+		renameItem: (itemId, name) => send(renameOperations(itemId, name)),
 		commitGesture: (ops, baseRevision) => send(ops, false, baseRevision),
 		runOperations: (ops) => send(ops),
 		commitField: (ops) => send(ops, true),

@@ -5,6 +5,9 @@ import { type BuildPhase, isPhaseAtLeast } from "../boot/phase";
 import {
 	addClipOperations,
 	captionOperations,
+	closeGapOperations,
+	deleteOperations,
+	duplicateOperations,
 	moveOperations,
 	renameOperations,
 	splitOperations,
@@ -191,6 +194,13 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			),
 			"timeline.trim_end": trimOperations(items, "end", 10).map((o) => o.op),
 			"inspector.rename": renameOperations("itm_a", "x").map((o) => o.op),
+			"timeline.rename": renameOperations("itm_a", "x").map((o) => o.op),
+			"timeline.delete": deleteOperations(["itm_a"]).map((o) => o.op),
+			"timeline.ripple_delete": deleteOperations(["itm_a"], "all").map(
+				(o) => o.op,
+			),
+			"timeline.duplicate": duplicateOperations(items).map((o) => o.op),
+			"timeline.close_gap": closeGapOperations("trk_a", 5).map((o) => o.op),
 			"inspector.move": moveOperations("itm_a", "1s").map((o) => o.op),
 			"inspector.trim_end": trimEndOperations("itm_a", "2s").map((o) => o.op),
 			"caption.add": captionOperations({

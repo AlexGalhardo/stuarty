@@ -112,6 +112,21 @@ export function focusAfterRemoval(
 	return allItemIds(current)[0] ?? null;
 }
 
+// The track whose header takes the focus when the removed item was the last
+// one on its track and the track is still there (next on
+// the track, else previous, else the header); null when an item can take it.
+export function headerAfterRemoval(
+	previous: GridLayout,
+	removed: string,
+	current: GridLayout,
+): string | null {
+	const at = locate(previous, removed);
+	if (at === null) return null;
+	const trackId = previous[at.track]?.id;
+	const now = current.find((track) => track.id === trackId);
+	return now !== undefined && now.items.length === 0 ? now.id : null;
+}
+
 // The item that holds the tab stop: the focused one if it still exists, else
 // the first item of the first track that has one.
 export function tabStop(

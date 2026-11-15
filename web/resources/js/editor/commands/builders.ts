@@ -110,6 +110,46 @@ export function renameOperations(itemId: string, name: string): Operations {
 	return [{ op: "item.rename", args: { item_id: itemId, name } }];
 }
 
+export type Ripple = "track" | "all";
+
+// Delete, Shift+Delete and the menu entries (SDD-012 section 8.2): one
+// `item.delete` for the whole selection; the ripple the person chose is only
+// passed on, the core moves what follows.
+export function deleteOperations(
+	itemIds: readonly string[],
+	ripple?: Ripple,
+): Operations {
+	if (itemIds.length === 0) return [];
+	return [
+		{
+			op: "item.delete",
+			args: {
+				item_ids: [...itemIds],
+				...(ripple === undefined ? {} : { ripple }),
+			},
+		},
+	];
+}
+
+// Ctrl+D: a copy of each item right after its end, on its own track. The end
+// frame is read from the item for request composition only; the core judges
+// the overlap. The copies go in start order.
+export function duplicateOperations(items: readonly ItemRange[]): Operations {
+	return [...items]
+		.sort((a, b) => a.start - b.start)
+		.map((item) => ({
+			op: "item.duplicate",
+			args: { item_id: item.id, start: frames(item.start + item.duration) },
+		}));
+}
+
+// The gap menu: the frame under the pointer names the gap, the core measures it.
+export function closeGapOperations(trackId: string, at: number): Operations {
+	return [
+		{ op: "timeline.close_gap", args: { track_id: trackId, at: frames(at) } },
+	];
+}
+
 export function moveOperations(itemId: string, start: string): Operations {
 	return [{ op: "item.move", args: { item_id: itemId, start } }];
 }

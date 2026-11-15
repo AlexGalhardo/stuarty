@@ -1,4 +1,10 @@
-import { Captions, Scissors, StepBack, StepForward } from "lucide-react";
+import {
+	Captions,
+	Scissors,
+	StepBack,
+	StepForward,
+	Trash2,
+} from "lucide-react";
 import { type ReactNode, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +19,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
-import { useActions, useCanCut, useCanEdit } from "../commands/useActions";
+import {
+	useActions,
+	useCanCut,
+	useCanEdit,
+	useHasSelection,
+} from "../commands/useActions";
 
 const DEFAULT_CAPTION_DURATION = "3s";
 
@@ -100,6 +111,7 @@ export default function EditToolbar({
 	const actions = useActions();
 	const canCut = useCanCut();
 	const ready = useCanEdit();
+	const hasSelection = useHasSelection();
 	return (
 		<div
 			role="toolbar"
@@ -135,6 +147,16 @@ export default function EditToolbar({
 			>
 				<StepBack aria-hidden="true" />
 				{t("ui.editor.edit.trim_end")}
+			</Button>
+			<Button
+				type="button"
+				variant="ghost"
+				size="sm"
+				disabled={!hasSelection}
+				onClick={() => void actions.deleteSelection()}
+			>
+				<Trash2 aria-hidden="true" />
+				{t("ui.editor.edit.delete")}
 			</Button>
 			<Button
 				type="button"

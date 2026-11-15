@@ -22,6 +22,12 @@ export function useCanEdit(): boolean {
 	);
 }
 
+// Whether items are selected: the affordance of delete (SDD-012 section 8.3).
+export function useHasSelection(): boolean {
+	const canEdit = useCanEdit();
+	return useUiState((s) => s.selection.items.length > 0) && canEdit;
+}
+
 // Whether a selected item contains the playhead strictly: the affordance of
 // split and trim (SDD-012 section 8.3), never a prediction of success.
 export function useCanCut(): boolean {

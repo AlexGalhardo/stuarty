@@ -45,6 +45,7 @@ import {
 	focusTarget,
 	gridCommand,
 	gridLayout,
+	headerAfterRemoval,
 	tabStop,
 } from "./keyboard";
 import Ruler from "./Ruler";
@@ -133,8 +134,18 @@ export default function Timeline(): ReactNode {
 						? stop
 						: focusAfterRemoval(gridLayout(previous), focused, layout);
 				runtime.uiWriter.focusItem(next);
+				const header =
+					focused === null
+						? null
+						: headerAfterRemoval(gridLayout(previous), focused, layout);
 				if (focusInGrid.current) {
-					if (next === null) gridRef.current?.focus();
+					if (header !== null) {
+						gridRef.current
+							?.querySelector<HTMLElement>(
+								`[role="rowheader"][data-track-id="${CSS.escape(header)}"]`,
+							)
+							?.focus();
+					} else if (next === null) gridRef.current?.focus();
 					else focusItem(next);
 				}
 			}

@@ -13,6 +13,7 @@ import {
 	focusTarget,
 	type GridLayout,
 	gridCommand,
+	headerAfterRemoval,
 	tabStop,
 } from "./keyboard";
 
@@ -172,6 +173,19 @@ describe("focus is never lost when an item is removed", () => {
 			t.id === "v1" ? { ...t, items: t.items.filter((i) => i.id === "c") } : t,
 		);
 		expect(focusAfterRemoval(layout, "a", next)).toBe("c");
+	});
+
+	test("the header of the track takes the focus when its last item left", () => {
+		const next = layout.map((t) => (t.id === "v3" ? { ...t, items: [] } : t));
+		expect(headerAfterRemoval(layout, "f", next)).toBe("v3");
+		expect(headerAfterRemoval(layout, "b", without("b"))).toBeNull();
+		expect(
+			headerAfterRemoval(
+				layout,
+				"f",
+				layout.filter((t) => t.id !== "v3"),
+			),
+		).toBeNull();
 	});
 
 	test("an empty timeline leaves no target", () => {
