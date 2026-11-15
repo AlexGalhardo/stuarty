@@ -1,5 +1,3 @@
-//go:build !windows
-
 package workspace
 
 import "golang.org/x/sys/unix"
@@ -12,6 +10,5 @@ func FreeBytes(dir string) (uint64, error) {
 		return 0, err
 	}
 
-	// The field types differ between Linux and macOS, and neither is ever negative.
-	return uint64(st.Bavail) * uint64(st.Bsize), nil //nolint:gosec,unconvert // see above
+	return st.Bavail * uint64(st.Bsize), nil //nolint:gosec // Bsize is an int64 that is never negative
 }
