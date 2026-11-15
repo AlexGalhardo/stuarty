@@ -18,6 +18,7 @@ import {
 	captionRetimeOperations,
 	captionSplitOperations,
 	closeGapOperations,
+	crossfadeOperations,
 	deleteOperations,
 	duplicateOperations,
 	type ItemRange,
@@ -85,6 +86,8 @@ export interface Actions {
 	// Delete, Shift+Delete and the menu: the selected keyframe, else the
 	// selection, else the focused item.
 	deleteSelection(ripple?: Ripple): Promise<EditOutcome | null>;
+	// The menu entry "Crossfade" with exactly two items selected.
+	crossfadeSelection(): Promise<EditOutcome | null>;
 	// Ctrl+D: a copy of each selected item right after its end.
 	duplicateSelection(): Promise<EditOutcome | null>;
 	// The gap menu: `at` is the frame under the pointer.
@@ -441,6 +444,13 @@ export function createActions(runtime: EditorRuntime): Actions {
 			return send(deleteOperations(actedIds(), ripple));
 		},
 		duplicateSelection: () => send(duplicateOperations(rangesOf(actedIds()))),
+		crossfadeSelection() {
+			const [a, b, ...rest] = selectedRanges();
+			if (a === undefined || b === undefined || rest.length > 0) {
+				return Promise.resolve(null);
+			}
+			return send(crossfadeOperations(a, b));
+		},
 		closeGap: (trackId, at) => send(closeGapOperations(trackId, at)),
 		async removeAsset(assetId) {
 			const outcome = await send(removeAssetOperations(assetId));
