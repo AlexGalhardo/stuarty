@@ -7,6 +7,7 @@ import type {
 	TransportRequest,
 	TransportResponse,
 } from "./transport";
+import { peaksUrl, stripUrl } from "./urls";
 
 // A transport that records the requests and answers with a fixed response, so
 // each function is checked for its URL, method, timeout and error mapping.
@@ -91,5 +92,26 @@ describe("ALPHA reads and media state", () => {
 		await expect(client.trashMedia("prj_a", "ast_a")).rejects.toMatchObject({
 			code: "E_IN_USE",
 		});
+	});
+
+	test("cancelJob is a POST with a 30 s timeout", async () => {
+		const { transport, requests } = fake(
+			ok({ job_id: "job_a", state: "cancelled" }),
+		);
+		await createClient(transport).cancelJob("job_a");
+		expect(requests.map((r) => [r.method, r.path, r.timeoutMs])).toEqual([
+			["POST", "/jobs/job_a/cancel", 30_000],
+		]);
+	});
+});
+
+describe("binary URL builders", () => {
+	test("strip and peaks sit on the media prefix", () => {
+		expect(stripUrl("prj_a", "ast_a")).toBe(
+			"/api/v1/projects/prj_a/media/ast_a/strip",
+		);
+		expect(peaksUrl("prj_a", "ast_a")).toBe(
+			"/api/v1/projects/prj_a/media/ast_a/peaks",
+		);
 	});
 });

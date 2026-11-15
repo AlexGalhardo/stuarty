@@ -35,6 +35,7 @@ export interface ApiClient {
 	getLint(projectId: string): Promise<LintResult>;
 	startExport(projectId: string): Promise<Job>;
 	getJob(jobId: string): Promise<Job>;
+	cancelJob(jobId: string): Promise<Job>;
 	listJobs(projectId: string): Promise<JobListResult>;
 	getProject(projectId: string): Promise<ProjectGetResult>;
 	edit(projectId: string, request: EditRequest): Promise<EditResult>;
@@ -118,6 +119,13 @@ export function createClient(
 			call("POST", `${project(id)}/jobs`, READ_TIMEOUT_MS, { kind: "export" }),
 		getJob: (jobId) =>
 			call("GET", `/jobs/${encodeURIComponent(jobId)}`, READ_TIMEOUT_MS),
+		cancelJob: (jobId) =>
+			call(
+				"POST",
+				`/jobs/${encodeURIComponent(jobId)}/cancel`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
 		listJobs: (id) => call("GET", `${project(id)}/jobs`, READ_TIMEOUT_MS),
 		getProject: (id) =>
 			call("GET", `${project(id)}?detail=document`, READ_TIMEOUT_MS),
