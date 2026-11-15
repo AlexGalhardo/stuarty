@@ -85,7 +85,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 	// Starting an export writes a row and a file; below the free-space floor it
 	// is refused (SDD-007 section 9.2).
 	if derr := s.checkDisk(); derr != nil && !req.DryRun {
-		return nil, derr
+		return nil, forCaller(c, derr)
 	}
 
 	doc, derr := decodeRow(&row)
@@ -147,7 +147,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, limitError(err, s.limits)
+		return nil, callerError(c, limitError(err, s.limits))
 	}
 
 	if req.WaitMS > 0 {
@@ -728,7 +728,7 @@ func (s *svc) cancelProjectJobs(ctx context.Context, projectID string) {
 func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 	j := &Job{
 		JobID: r.ID, Kind: r.Kind, ProjectID: r.ProjectID, State: r.State, Progress: r.Progress, Message: r.Message,
-		Error: parseError(r.Error), Actor: r.Actor, CreatedAt: msTime(r.CreatedMs),
+		Error: forCaller(c, parseError(r.Error)), Actor: r.Actor, CreatedAt: msTime(r.CreatedMs),
 	}
 
 	if r.StartedMs != nil {

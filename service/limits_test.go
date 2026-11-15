@@ -28,3 +28,31 @@ func TestLimitsDefaults(t *testing.T) {
 		t.Errorf("defaults = %+v", l)
 	}
 }
+
+func TestForCallerRemovesEveryVariableName(t *testing.T) {
+	e := newError("E_LIMIT_EXCEEDED", "The audio is 9 seconds; the limit is 5 seconds (VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS).").
+		withHint("transcribe a shorter file; the person running the server can raise "+
+			"VUKEM_VIDEO_MAX_TRANSCRIBES or VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY").
+		withDetail("variable", "VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS").withDetail("limit", "transcribe_seconds")
+
+	member := Caller{Actor: "user:a", OwnerUserID: "a", Scopes: []string{ScopeRead}}
+
+	got := forCaller(member, e)
+	if got.Message != "The audio is 9 seconds; the limit is 5 seconds." || got.Hint != "transcribe a shorter file" ||
+		got.Details["variable"] != nil || got.Details["limit"] != "transcribe_seconds" {
+		t.Errorf("member sees %+v", got)
+	}
+
+	if e.Details["variable"] == nil || e.Message == got.Message {
+		t.Error("the shared error was modified")
+	}
+
+	for name, c := range map[string]Caller{
+		"admin": {Actor: "user:r", OwnerUserID: "r", Scopes: AllScopes},
+		"local": {Actor: "local:ui", Scopes: []string{ScopeRead}},
+	} {
+		if forCaller(c, e) != e {
+			t.Errorf("%s lost the variable", name)
+		}
+	}
+}
