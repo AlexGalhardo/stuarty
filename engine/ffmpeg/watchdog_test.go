@@ -205,3 +205,30 @@ func TestNoLimitsGiveTheSameInstallation(t *testing.T) {
 		t.Errorf("WithLimits(zero) = %p, %v, want the same installation", got, err)
 	}
 }
+
+// TestSecurity_T17_OutputSizeWatchdogRealFFmpeg runs the pinned FFmpeg with a raw output far over
+// the cap and no -frames:v, so only the watchdog can stop it: the run is killed and the partial
+// file is gone.
+func TestSecurity_T17_OutputSizeWatchdogRealFFmpeg(t *testing.T) {
+	r, dir := pinnedRunner(t)
+	out := filepath.Join(dir.Dir(), "big.raw")
+
+	start := time.Now()
+	_, err := r.exec(context.Background(), execSpec{
+		tool: r.In.FFmpeg, dir: dir.Dir(), deadline: time.Minute,
+		argv: []string{
+			"-hide_banner", "-v", "error", "-nostdin", "-f", "lavfi", "-i", "testsrc2=size=640x480:rate=30",
+			"-f", "rawvideo", "-pix_fmt", "rgb24", "big.raw",
+		},
+		outPath: out, maxBytes: 4 << 20, pollEvery: 20 * time.Millisecond,
+	})
+	if !errors.Is(err, ErrOutputTooLarge) {
+		t.Fatalf("error = %v, want ErrOutputTooLarge", err)
+	}
+	if time.Since(start) > 30*time.Second {
+		t.Fatalf("the kill took %s", time.Since(start))
+	}
+	if _, serr := os.Stat(out); !errors.Is(serr, os.ErrNotExist) {
+		t.Fatalf("the oversized output is still there: %v", serr)
+	}
+}
