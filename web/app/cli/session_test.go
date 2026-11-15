@@ -6,10 +6,13 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 // realRuntime runs the CLI over the real in-process Service: workspace.Open,
@@ -184,17 +187,62 @@ func TestHumanSessionPrintsTheInProcessNote(t *testing.T) {
 	}
 }
 
-// The tests below are the end-to-end sessions of SDD-003 section 5.6 and the
-// latency budget of NFR-024. They need Service methods that do not exist yet.
-
-func TestSessionAImportCutCaptionExport(t *testing.T) {
-	t.Skip("needs media:import, view and export: tasks P1-SRV-004, P1-RND-005 and P1-RND-004")
-}
-
-func TestSessionBBlockedExport(t *testing.T) {
-	t.Skip("needs export and its lint gate: task P1-RND-004")
-}
-
+// BenchmarkCLIRead measures a read command against a server that owns the
+// workspace (NFR-024): every iteration is a whole command, the resolution of
+// the owner included, and the 95th percentile must stay under 300 ms.
 func BenchmarkCLIRead(b *testing.B) {
-	b.Skip("needs the server and the CLI client of task P1-SRV-005 (NFR-024 is measured against a running owner)")
+	dir := startOwner(b)
+
+	home := func(k string) string {
+		if k == workspace.EnvHome {
+			return string(dir)
+		}
+
+		return ""
+	}
+
+	var stdout, stderr bytes.Buffer
+
+	rt := &Runtime{
+		Stdout: &stdout, Stderr: &stderr, Getenv: home, Getwd: os.Getwd, Resolver: LocalResolver{Getenv: home},
+		Stdin: strings.NewReader(""),
+	}
+
+	run := func(args ...string) int {
+		stdout.Reset()
+		stderr.Reset()
+
+		return rt.Execute(context.Background(), args[0], append(args[1:], "--json", "--actor", "bench"))
+	}
+
+	if run("project:create", "--name", "Bench") != 0 {
+		b.Fatalf("project:create: %s", stdout.String())
+	}
+
+	id, _ := oneJSONDocument(b, stdout.String())["project_id"].(string)
+
+	times := make([]time.Duration, 0, b.N)
+
+	b.ResetTimer()
+
+	for range b.N {
+		start := time.Now()
+
+		if code := run("project:show", id); code != 0 {
+			b.Fatalf("project:show: exit %d: %s", code, stdout.String())
+		}
+
+		times = append(times, time.Since(start))
+	}
+
+	b.StopTimer()
+
+	slices.Sort(times)
+
+	p95 := times[min(len(times)-1, len(times)*95/100)]
+	b.ReportMetric(float64(p95.Microseconds())/1000, "p95-ms")
+
+	if p95 > 300*time.Millisecond {
+		b.Errorf("p95 of a read command is %v, want at most 300ms (NFR-024)", p95)
+	}
 }

@@ -25,33 +25,33 @@ import (
 
 // startOwner runs the HTTP API over a real store, as a server that owns the
 // workspace would, and writes the runtime.json and the token a client reads.
-func startOwner(t *testing.T) workspace.Dir {
-	t.Helper()
+func startOwner(tb testing.TB) workspace.Dir {
+	tb.Helper()
 
-	dir, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
+	dir, err := workspace.Resolve(func(string) string { return filepath.Join(tb.TempDir(), "ws") })
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	if err := dir.EnsureLayout(); err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	token, err := dir.EnsureToken()
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	st, err := store.Open(context.Background(), dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
-	t.Cleanup(func() { _ = st.Close() })
+	tb.Cleanup(func() { _ = st.Close() })
 
 	svc, err := service.New(service.Options{Store: st})
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	deps := &httpapi.Deps{
@@ -59,17 +59,17 @@ func startOwner(t *testing.T) workspace.Dir {
 		Sessions: auth.NewSessions(time.Now), Launch: auth.NewLaunch(time.Now), Now: time.Now,
 	}
 
-	app := vukemtest.New(t, func(opts ...vukem.Option) (*vukem.App, error) { return bootstrap.NewWith(deps, opts...) })
+	app := vukemtest.New(tb, func(opts ...vukem.Option) (*vukem.App, error) { return bootstrap.NewWith(deps, opts...) })
 
 	srv := httptest.NewServer(app.Handler())
-	t.Cleanup(srv.Close)
+	tb.Cleanup(srv.Close)
 
 	err = dir.WriteRuntime(workspace.Runtime{
 		Schema: 1, PID: os.Getpid(), Addr: srv.Listener.Addr().String(), Mode: workspace.ModeLocal,
 		StartedAt: time.Now().UTC(), Version: "test",
 	})
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	return dir

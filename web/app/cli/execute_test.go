@@ -12,16 +12,16 @@ import (
 )
 
 // oneJSONDocument fails unless s is exactly one JSON document and a newline.
-func oneJSONDocument(t *testing.T, s string) map[string]any {
-	t.Helper()
+func oneJSONDocument(tb testing.TB, s string) map[string]any {
+	tb.Helper()
 
 	if !strings.HasSuffix(s, "\n") || strings.Count(s, "\n") != 1 {
-		t.Fatalf("stdout is not one line: %q", s)
+		tb.Fatalf("stdout is not one line: %q", s)
 	}
 
 	var doc map[string]any
 	if err := json.Unmarshal([]byte(s), &doc); err != nil {
-		t.Fatalf("stdout is not one JSON document: %v\n%s", err, s)
+		tb.Fatalf("stdout is not one JSON document: %v\n%s", err, s)
 	}
 
 	return doc
