@@ -104,11 +104,27 @@ export function captionOperations(input: {
 	return ops;
 }
 
+// The inspector fields of section 12.1: the text of a time field is already
+// a string with a unit (rule T8), checked by `normalizeTimeInput`.
+export function renameOperations(itemId: string, name: string): Operations {
+	return [{ op: "item.rename", args: { item_id: itemId, name } }];
+}
+
+export function moveOperations(itemId: string, start: string): Operations {
+	return [{ op: "item.move", args: { item_id: itemId, start } }];
+}
+
+export function trimEndOperations(itemId: string, to: string): Operations {
+	return [{ op: "item.trim", args: { item_id: itemId, edge: "end", to } }];
+}
+
 // The same operations with the `start` the core named as the next free slot
 // (`details.next_free`, a frame number as received).
 export function withNextFree(ops: Operations, nextFree: number): Operations {
 	return ops.map((operation) =>
-		operation.op === "clip.add" || operation.op === "caption.add"
+		operation.op === "clip.add" ||
+		operation.op === "caption.add" ||
+		operation.op === "item.move"
 			? {
 					...operation,
 					args: { ...operation.args, start: frames(nextFree) },

@@ -85,3 +85,54 @@ export function formatSeconds(seconds: number, mode: TimeDisplay): string {
 	const ms = Math.round(seconds * 1000);
 	return mode === "timecode" ? timecodeOf(ms) : `${(ms / 1000).toFixed(3)}s`;
 }
+
+export interface TimedItem {
+	start: number;
+	duration: number;
+	source_in?: number;
+}
+
+type Fps = { num: number; den: number };
+
+// The frame rate of the document as a rational; a project without `fps` runs
+// at 30 (SDD-001 settings defaults). The generated type of `num` is loose.
+export function fpsOf(rate: unknown): Fps {
+	if (typeof rate === "object" && rate !== null) {
+		const { num, den } = rate as { num?: unknown; den?: unknown };
+		if (
+			typeof num === "number" &&
+			typeof den === "number" &&
+			num > 0 &&
+			den > 0
+		)
+			return { num, den };
+	}
+	return { num: 30, den: 1 };
+}
+
+// The read-only and derived times of the inspector (SDD-012 section 12.1): the
+// panels call these and do no arithmetic of their own (rule R5). The end is
+// the first frame after the item.
+export const displayStart = (
+	item: TimedItem,
+	fps: Fps,
+	mode: TimeDisplay,
+): string => formatTime(item.start, fps, mode);
+
+export const displayEnd = (
+	item: TimedItem,
+	fps: Fps,
+	mode: TimeDisplay,
+): string => formatTime(item.start + item.duration, fps, mode);
+
+export const displayDuration = (
+	item: TimedItem,
+	fps: Fps,
+	mode: TimeDisplay,
+): string => formatTime(item.duration, fps, mode);
+
+export const displayInPoint = (
+	item: TimedItem,
+	fps: Fps,
+	mode: TimeDisplay,
+): string => formatTime(item.source_in ?? 0, fps, mode);

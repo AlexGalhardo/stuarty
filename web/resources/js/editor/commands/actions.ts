@@ -25,11 +25,20 @@ export interface Actions {
 	addCaption(text: string, duration: string): Promise<EditOutcome | null>;
 	// palette.run: the operations the palette built from a schema form.
 	runOperations(ops: Operations): Promise<EditOutcome | null>;
+	// An inspector field: like runOperations, but a validation or time error is
+	// left to the field, which shows it under itself (SDD-012 section 8.4).
+	commitField(ops: Operations): Promise<EditOutcome | null>;
 	undo(): Promise<EditOutcome>;
 	redo(): Promise<EditOutcome>;
 	// The action of a notice, as a new logical edit on the current revision.
 	applyNotice(notice: Notice): Promise<EditOutcome | null>;
 }
+
+// The codes an inspector field shows under itself instead of in a notice.
+export const FIELD_ERRORS: ReadonlySet<string> = new Set([
+	"E_VALIDATION",
+	"E_INVALID_TIME",
+]);
 
 function nextFree(error: ApiError): number | null {
 	const value = error.details?.next_free;
@@ -77,7 +86,10 @@ export function createActions(runtime: EditorRuntime): Actions {
 			return;
 		}
 		const free = error.code === "E_OVERLAP" ? nextFree(error) : null;
-		if (free !== null && ops.some((o) => o.op.endsWith(".add"))) {
+		if (
+			free !== null &&
+			ops.some((o) => o.op.endsWith(".add") || o.op === "item.move")
+		) {
 			noticeWriter.push({
 				...base,
 				action: {
@@ -92,13 +104,17 @@ export function createActions(runtime: EditorRuntime): Actions {
 
 	// One gesture, one request. The base revision is the one at the moment of
 	// sending (SDD-012 section 4.5 item 1).
-	async function send(ops: Operations): Promise<EditOutcome | null> {
+	async function send(
+		ops: Operations,
+		inline = false,
+	): Promise<EditOutcome | null> {
 		const { revision, state } = documents.getState();
 		// A trashed project is read-only (SDD-012 section 2.2): the keys too.
 		if (ops.length === 0 || revision === null || state === "trashed")
 			return null;
 		const outcome = await runtime.edits.edit(ops, revision);
-		if (!outcome.ok) report(outcome.error, ops);
+		if (!outcome.ok && !(inline && FIELD_ERRORS.has(outcome.error.code)))
+			report(outcome.error, ops);
 		return outcome;
 	}
 
@@ -165,6 +181,7 @@ export function createActions(runtime: EditorRuntime): Actions {
 				}),
 			),
 		runOperations: (ops) => send(ops),
+		commitField: (ops) => send(ops, true),
 		undo: () => history("undo"),
 		redo: () => history("redo"),
 		async applyNotice(notice) {

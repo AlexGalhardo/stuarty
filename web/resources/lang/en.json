@@ -55,8 +55,7 @@
       "panels": {
         "library": "Media",
         "preview": "Preview",
-        "inspector": "Inspector",
-        "soon": "Not available yet"
+        "inspector": "Inspector"
       },
       "activity": {
         "editing": "{actor} is editing",
@@ -473,6 +472,28 @@
       },
       "time": {
         "hint": "Use 12.5s, 375f or 00:12.500."
+      },
+      "inspector": {
+        "name": "Name",
+        "timing": "Timing",
+        "start": "Start",
+        "end": "End",
+        "duration": "Duration",
+        "in_point": "In point",
+        "kind": "Kind",
+        "project": "Project",
+        "track": "Track",
+        "items": "{count} items",
+        "project_hint": "Select an item on the timeline to edit it.",
+        "multi_hint": "Select a single item to edit its name and timing.",
+        "changed_by": "Changed by {actor}",
+        "invalid_value": "Check the value and try again.",
+        "color_picker": "{label}, colour picker",
+        "alpha": "{label}, opacity",
+        "track_kind": {
+          "visual": "Visual",
+          "audio": "Audio"
+        }
       }
     }
   }

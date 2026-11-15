@@ -22,6 +22,9 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"timeline.trim_start": ["item.trim"],
 	"timeline.trim_end": ["item.trim"],
 	"caption.add": ["caption.add", "track.add"],
+	"inspector.rename": ["item.rename"],
+	"inspector.move": ["item.move"],
+	"inspector.trim_end": ["item.trim"],
 	// The palette runs any command of the registry with operations built from
 	// its schema form, so it has no builder to check (rule 2 of section 9.3).
 	"palette.run": [ANY_COMMAND],
@@ -62,8 +65,14 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	"item.crossfade": [palette],
 	"item.delete": [palette],
 	"item.duplicate": [palette],
-	"item.move": [palette],
-	"item.rename": [palette],
+	"item.move": [
+		{ kind: "inspector", action: "inspector.move", phase: "A" },
+		palette,
+	],
+	"item.rename": [
+		{ kind: "inspector", action: "inspector.rename", phase: "A" },
+		palette,
+	],
 	"item.set_audio": [palette],
 	"item.set_transform": [palette],
 	"item.set_transition": [palette],
@@ -77,6 +86,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "toolbar", action: "timeline.trim_end", phase: "P" },
 		{ kind: "key", action: "timeline.trim_start", phase: "P" },
 		{ kind: "key", action: "timeline.trim_end", phase: "P" },
+		{ kind: "inspector", action: "inspector.trim_end", phase: "A" },
 		palette,
 	],
 	"keyframe.clear": [palette],

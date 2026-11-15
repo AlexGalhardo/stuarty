@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import Inspector from "../inspector/Inspector";
 import Library from "../library/Library";
 import Preview from "../preview/Preview";
 import { useDocumentState } from "../state/EditorContext";
@@ -36,31 +37,6 @@ function useViewportWidth(): number {
 		return () => window.removeEventListener("resize", onResize);
 	}, []);
 	return width;
-}
-
-function Panel({
-	label,
-	children,
-}: {
-	label: string;
-	children?: ReactNode;
-}): ReactNode {
-	const t = useT();
-	return (
-		<section
-			aria-label={label}
-			className="flex min-h-0 min-w-0 flex-col overflow-auto bg-ed-panel p-3"
-		>
-			<h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-				{label}
-			</h2>
-			{children ?? (
-				<p className="mt-2 text-sm text-muted-foreground">
-					{t("ui.editor.panels.soon")}
-				</p>
-			)}
-		</section>
-	);
 }
 
 // The grid of SDD-012 section 6.1: top bar, library, preview, inspector and
@@ -132,7 +108,7 @@ export default function EditorShell(): ReactNode {
 					<Preview />
 				)}
 			</main>
-			<Panel label={t("ui.editor.panels.inspector")} />
+			<Inspector />
 			<div className="col-span-full min-h-0 border-t border-ed-track-line">
 				<Timeline />
 			</div>

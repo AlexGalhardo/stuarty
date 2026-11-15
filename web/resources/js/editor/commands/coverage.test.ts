@@ -5,7 +5,10 @@ import { type BuildPhase, isPhaseAtLeast } from "../boot/phase";
 import {
 	addClipOperations,
 	captionOperations,
+	moveOperations,
+	renameOperations,
 	splitOperations,
+	trimEndOperations,
 	trimOperations,
 } from "./builders";
 import { ACTIONS, ANY_COMMAND, COVERAGE, type EntryPoint } from "./coverage";
@@ -187,6 +190,9 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				(o) => o.op,
 			),
 			"timeline.trim_end": trimOperations(items, "end", 10).map((o) => o.op),
+			"inspector.rename": renameOperations("itm_a", "x").map((o) => o.op),
+			"inspector.move": moveOperations("itm_a", "1s").map((o) => o.op),
+			"inspector.trim_end": trimEndOperations("itm_a", "2s").map((o) => o.op),
 			"caption.add": captionOperations({
 				text: "a",
 				duration: "1s",
