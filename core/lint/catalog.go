@@ -156,7 +156,7 @@ func Catalog() []Rule {
 			SeverityError,
 			"A",
 			"doc",
-			"a required slot of a non-template document is not filled",
+			"a required slot of a non-template document is not filled (an optional slot left on its placeholder is quiet)",
 			"fill it with slot.fill",
 			true,
 		},
