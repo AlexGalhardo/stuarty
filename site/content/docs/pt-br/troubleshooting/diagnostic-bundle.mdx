@@ -1,0 +1,51 @@
+---
+title: "O pacote de diagnóstico"
+description: "Verifique a instalação e grave um arquivo local que você pode anexar a um relatório de bug."
+---
+
+## O que você vai aprender
+
+- o que o `doctor` verifica;
+- como gravar o pacote de diagnóstico e o que ele guarda;
+- o que nunca está nele.
+
+## A ideia
+
+O `vukem-video doctor` verifica a instalação e o espaço de trabalho e responde com a versão, o modo, o processo, o espaço de trabalho e uma lista de verificações, cada uma com um resultado e, quando falha, o que fazer. Nada na resposta é uma chave, um token ou o conteúdo do ambiente.
+
+O **pacote** é um arquivo para um relatório de bug. Ele é gravado dentro do seu espaço de trabalho; o produto nunca o envia para lugar nenhum, e você decide se o anexa a uma issue.
+
+## Início rápido
+
+```bash
+vukem-video doctor
+vukem-video doctor --full
+vukem-video doctor --bundle
+```
+
+- O `doctor` verifica a identidade da instalação. O `--full` executa todas as verificações, incluindo o FFmpeg, a sua classe de licença e a detecção do codificador H.264, e executa a detecção de novo.
+- O `--verify` recalcula os digests do FFmpeg e dos auxiliares.
+- O `--bundle` grava `exports/diagnostics/doctor-<UTC timestamp>.zip` no espaço de trabalho, legível apenas por você.
+- O `--gc` remove o que nenhum projeto referencia mais.
+
+O pacote guarda o relatório sem os caminhos, as versões, a linha de configuração do FFmpeg, os codificadores detectados e o final dos logs recentes. Ele guarda o documento de um projeto apenas quando você pede explicitamente. Cada entrada é limpa dos valores das variáveis secretas e do token local antes de ser gravada.
+
+No contêiner:
+
+```bash
+docker exec vukem-video vukem-video doctor --bundle
+docker cp vukem-video:/data/exports/diagnostics .
+```
+
+Leia o pacote antes de anexá-lo: a decisão é sua.
+
+## Erros comuns
+
+- Anexar o pacote a uma issue pública sem lê-lo. As linhas de log trazem ids de projeto e atores.
+- Usar `doctor --gc` antes de uma cópia de segurança: ele exclui arquivos sem referência.
+- Executar o `doctor` com um servidor rodando e esperar a verificação completa só pela CLI: no modo de rede, o comando pode precisar de uma chave de administrador que não seja limitada a um projeto, ou do terminal da máquina do servidor.
+
+## Próximos passos
+
+- [Cópias de segurança e atualizações](/docs/self-hosting/backups-and-upgrades)
+- [Logs e OpenTelemetry](/docs/self-hosting/observability)

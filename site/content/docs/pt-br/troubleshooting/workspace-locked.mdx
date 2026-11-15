@@ -1,0 +1,42 @@
+---
+title: "O espaço de trabalho está bloqueado"
+description: "O que o E_WORKSPACE_LOCKED significa, por que um segundo processo não consegue gravar no espaço de trabalho e como se desbloquear."
+---
+
+## O que você vai aprender
+
+- por que um comando pode responder `E_WORKSPACE_LOCKED`;
+- como encontrar o processo que é dono do espaço de trabalho;
+- quais correções são seguras e quais evitar.
+
+## A ideia
+
+Um processo por vez é dono de um espaço de trabalho e grava nele: o `vukem-video serve`, ou uma sessão `vukem-video mcp` ou um comando quando nenhum servidor roda. O dono mantém um bloqueio exclusivo em `<workspace>/lock` e grava o seu id de processo e endereço em `<workspace>/runtime.json`. Um comando que encontra um dono vivo conversa com ele por HTTP. Quando não consegue alcançar o dono, ou o dono ainda está iniciando, ele tenta de novo por 10 segundos e então falha com `E_WORKSPACE_LOCKED`. O erro pode ser repetido, e o comando sai com o código `2`.
+
+O sistema operacional libera o bloqueio quando o processo morre, então uma falha nunca deixa um bloqueio que você precise remover à mão. Um `runtime.json` deixado por um processo morto é ignorado e excluído pelo próximo dono.
+
+## Início rápido
+
+1. Leia a mensagem. Ela nomeia o dono: `another process owns this workspace (pid 4120, 127.0.0.1:7878)`.
+2. Confira se o dono responde: abra `http://127.0.0.1:7878/up`, ou execute `vukem-video doctor`.
+3. Se o dono é seu e está bem, tente de novo em alguns segundos: ele pode estar iniciando ou encerrando.
+4. Se for um servidor que você esqueceu, pare-o com `Ctrl+C` no terminal dele ou encerrando o processo, depois execute o comando de novo.
+
+```bash
+vukem-video doctor
+vukem-video user:create admin@example.com --admin
+```
+
+O `user:create` e o `user:passwd` são os comandos que precisam rodar sozinhos: eles abrem o espaço de trabalho no processo e falham com `E_WORKSPACE_LOCKED` enquanto um servidor é dono dele. Pare o servidor, execute-os e inicie-o de novo.
+
+## Erros comuns
+
+- Iniciar dois servidores no mesmo espaço de trabalho, por exemplo o atalho do desktop e um terminal. O segundo é recusado.
+- Apontar dois programas para um espaço de trabalho por uma pasta sincronizada ou uma cópia do volume. Cada máquina precisa do seu próprio espaço de trabalho.
+- Excluir `lock` ou `runtime.json` enquanto o dono roda. Isso não faz o dono sair e esconde quem ele é; pare o dono.
+- Executar um comando contra o espaço de trabalho de um contêiner a partir do host sem `VUKEM_VIDEO_URL` e `VUKEM_VIDEO_KEY`. Use o endereço HTTP e uma chave, como em [Chaves de API e escopos](/docs/self-hosting/api-keys).
+
+## Próximos passos
+
+- [Espaço de trabalho e armazenamento](/docs/workspace)
+- [Problemas comuns](/docs/troubleshooting/common-problems)
