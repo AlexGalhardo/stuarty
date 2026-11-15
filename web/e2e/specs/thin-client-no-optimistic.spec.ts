@@ -102,4 +102,35 @@ test.describe("thin-client-no-optimistic", () => {
 		await page.mouse.up();
 		expect(edits).toHaveLength(0);
 	});
+
+	test("Delete with the answer held 1 s leaves the item in the read model until it arrives", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 2 });
+		await page.goto(`/editor/${seeded.id}?debug=1`);
+		const items = page.locator("[data-item-id]");
+		await expect(items).toHaveCount(2);
+		const count = () =>
+			page.evaluate(
+				() =>
+					Object.keys(
+						(
+							(window.__vv?.document ?? { items: {} }) as {
+								items: Record<string, unknown>;
+							}
+						).items,
+					).length,
+			);
+		await page.route("**/edit", async (route) => {
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+			await route.continue();
+		});
+		await items.first().click();
+		await page.keyboard.press("Delete");
+		await page.waitForTimeout(300);
+		expect(await count()).toBe(2);
+		await expect(items).toHaveCount(1);
+		expect(await count()).toBe(1);
+	});
 });

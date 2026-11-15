@@ -1,10 +1,16 @@
 import { AudioLines, Video } from "lucide-react";
-import { memo, type ReactNode } from "react";
+import { memo, type ReactNode, useRef, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
+import {
+	ContextMenu,
+	ContextMenuContent,
+	ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
-import { useActions } from "../commands/useActions";
+import { useActions, useCanEdit } from "../commands/useActions";
 import { useStore } from "../state/createStore";
 import {
 	useActivityState,
@@ -18,9 +24,16 @@ import {
 	selectTrack,
 	selectTrackItemIds,
 } from "../state/selectors";
-import { AUDIO_ROW_PX, sortByStart, VISUAL_ROW_PX } from "./geometry";
+import GapContextMenuItems from "./GapContextMenu";
+import {
+	AUDIO_ROW_PX,
+	clientXToFrame,
+	sortByStart,
+	VISUAL_ROW_PX,
+} from "./geometry";
 import { consumeDragClick } from "./gestures/lifecycle";
 import { beginMove } from "./gestures/move";
+import ItemContextMenuItems from "./ItemContextMenu";
 import TrimHandle from "./items/TrimHandle";
 import { clickSelection, gridLayout } from "./keyboard";
 
@@ -34,6 +47,49 @@ const TYPE_CLASS: Record<string, string> = {
 
 export function rowHeight(kind: "visual" | "audio"): number {
 	return kind === "audio" ? AUDIO_ROW_PX : VISUAL_ROW_PX;
+}
+
+// The inline editor of F2 and the menu entry "Rename": Enter or leaving the
+// field sends `item.rename` (an empty name clears it), Esc leaves it alone.
+function RenameField({
+	itemId,
+	initial,
+}: {
+	itemId: string;
+	initial: string;
+}): ReactNode {
+	const t = useT();
+	const runtime = useRuntime();
+	const actions = useActions();
+	const finished = useRef(false);
+	const finish = (value: string | null): void => {
+		if (finished.current) return;
+		finished.current = true;
+		runtime.uiWriter.startRename(null);
+		if (value !== null && value !== initial)
+			void actions.renameItem(itemId, value);
+		document
+			.querySelector<HTMLElement>(`[data-item-id="${CSS.escape(itemId)}"]`)
+			?.focus();
+	};
+	return (
+		<Input
+			autoFocus
+			aria-label={t("ui.editor.edit.rename_label")}
+			defaultValue={initial}
+			maxLength={120}
+			className="h-6 min-w-0 flex-1 px-1 text-xs text-foreground"
+			onFocus={(event) => event.currentTarget.select()}
+			onPointerDown={(event) => event.stopPropagation()}
+			onClick={(event) => event.stopPropagation()}
+			onKeyDown={(event) => {
+				event.stopPropagation();
+				if (event.key === "Enter") finish(event.currentTarget.value);
+				else if (event.key === "Escape") finish(null);
+			}}
+			onBlur={(event) => finish(event.currentTarget.value)}
+		/>
+	);
 }
 
 // The label: the item name, else the asset name, else the text, else the
@@ -51,6 +107,7 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 	// Outlined for a moment when it blocked a move (SDD-012 section 8.4).
 	const conflicting = useStore(runtime.ghosts, (s) => s.errorItem === id);
 	const remote = useActivityState((s) => s.highlighted.includes(id));
+	const renaming = useUiState((s) => s.renamingItem === id);
 	if (item === undefined) return null;
 
 	const typeName = t(`ui.editor.item.${item.type}`);
@@ -111,7 +168,11 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 			}}
 		>
 			<TrimHandle itemId={id} edge="start" />
-			<UntrustedText className="truncate">{label}</UntrustedText>
+			{renaming ? (
+				<RenameField itemId={id} initial={item.name ?? ""} />
+			) : (
+				<UntrustedText className="truncate">{label}</UntrustedText>
+			)}
 			<TrimHandle itemId={id} edge="end" />
 		</div>
 	);
@@ -128,6 +189,7 @@ export function TrackHeader({ id }: { id: string }): ReactNode {
 		<div
 			role="rowheader"
 			tabIndex={-1}
+			data-track-id={id}
 			onClick={() => runtime.uiWriter.selectTrack(id)}
 			onKeyDown={(event) => {
 				if (event.key !== "Enter") return;
@@ -171,6 +233,13 @@ export const TrackRow = memo(function TrackRow({
 	const track = useDocumentState((s) => selectTrack(s, id));
 	const ids = useDocumentState((s) => selectTrackItemIds(s, id));
 	const items = useDocumentState((s) => s.document?.items);
+	const t = useT();
+	const runtime = useRuntime();
+	const canEdit = useCanEdit();
+	const ppf = useUiState((s) => s.timeline.pxPerFrame);
+	const [target, setTarget] = useState<
+		{ kind: "item"; id: string } | { kind: "gap"; frame: number }
+	>({ kind: "gap", frame: 0 });
 	if (track === undefined || items === undefined) return null;
 	const ordered = sortByStart(
 		ids.map((itemId) => ({
@@ -179,21 +248,58 @@ export const TrackRow = memo(function TrackRow({
 			duration: items[itemId].duration,
 		})),
 	);
+	// A right-click picks the menu: an item (selected first when it was not
+	// part of the selection) or the empty place under the pointer.
+	const onContextMenu = (event: React.MouseEvent<HTMLElement>): void => {
+		const cell = (event.target as HTMLElement).closest<HTMLElement>(
+			"[data-item-id]",
+		);
+		const itemId = cell?.dataset.itemId;
+		if (itemId !== undefined) {
+			if (!runtime.ui.getState().selection.items.includes(itemId))
+				runtime.uiWriter.select([itemId], itemId);
+			setTarget({ kind: "item", id: itemId });
+			return;
+		}
+		const left = event.currentTarget.getBoundingClientRect().left;
+		setTarget({
+			kind: "gap",
+			frame: clientXToFrame(event.clientX, left, 0, ppf),
+		});
+	};
 	return (
-		// biome-ignore lint/a11y/useSemanticElements: the row sits in a CSS-positioned grid (SDD-012 section 7.1).
-		<div
-			role="row"
-			tabIndex={-1}
-			data-track-id={id}
-			style={{ height: rowHeight(track.kind) }}
-			className={cn(
-				"relative border-b border-ed-track-line",
-				(track.hidden === true || track.muted === true) && "opacity-60",
-			)}
-		>
-			{ordered.map((entry) => (
-				<ItemBlock key={entry.id} id={entry.id} />
-			))}
-		</div>
+		<ContextMenu>
+			<ContextMenuTrigger asChild disabled={!canEdit}>
+				{/* biome-ignore lint/a11y/useSemanticElements: the row sits in a CSS-positioned grid (SDD-012 section 7.1). */}
+				<div
+					role="row"
+					tabIndex={-1}
+					data-track-id={id}
+					style={{ height: rowHeight(track.kind) }}
+					className={cn(
+						"relative border-b border-ed-track-line",
+						(track.hidden === true || track.muted === true) && "opacity-60",
+					)}
+					onContextMenu={onContextMenu}
+				>
+					{ordered.map((entry) => (
+						<ItemBlock key={entry.id} id={entry.id} />
+					))}
+				</div>
+			</ContextMenuTrigger>
+			<ContextMenuContent
+				aria-label={t(
+					target.kind === "item"
+						? "ui.editor.edit.item_menu"
+						: "ui.editor.edit.gap_menu",
+				)}
+			>
+				{target.kind === "item" ? (
+					<ItemContextMenuItems itemId={target.id} />
+				) : (
+					<GapContextMenuItems trackId={id} frame={target.frame} />
+				)}
+			</ContextMenuContent>
+		</ContextMenu>
 	);
 });

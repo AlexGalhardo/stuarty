@@ -23,6 +23,11 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"timeline.trim_end": ["item.trim"],
 	"caption.add": ["caption.add", "track.add"],
 	"inspector.rename": ["item.rename"],
+	"timeline.rename": ["item.rename"],
+	"timeline.delete": ["item.delete"],
+	"timeline.ripple_delete": ["item.delete"],
+	"timeline.duplicate": ["item.duplicate"],
+	"timeline.close_gap": ["timeline.close_gap"],
 	"inspector.move": ["item.move"],
 	"inspector.trim_end": ["item.trim"],
 	// The palette runs any command of the registry with operations built from
@@ -63,14 +68,27 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	"clip.set_framing": [palette],
 	"clip.set_speed": [palette],
 	"item.crossfade": [palette],
-	"item.delete": [palette],
-	"item.duplicate": [palette],
+	"item.delete": [
+		{ kind: "key", action: "timeline.delete", phase: "A" },
+		{ kind: "key", action: "timeline.ripple_delete", phase: "A" },
+		{ kind: "toolbar", action: "timeline.delete", phase: "A" },
+		{ kind: "menu", action: "timeline.delete", phase: "A" },
+		{ kind: "menu", action: "timeline.ripple_delete", phase: "A" },
+		palette,
+	],
+	"item.duplicate": [
+		{ kind: "key", action: "timeline.duplicate", phase: "A" },
+		{ kind: "menu", action: "timeline.duplicate", phase: "A" },
+		palette,
+	],
 	"item.move": [
 		{ kind: "inspector", action: "inspector.move", phase: "A" },
 		palette,
 	],
 	"item.rename": [
 		{ kind: "inspector", action: "inspector.rename", phase: "A" },
+		{ kind: "key", action: "timeline.rename", phase: "A" },
+		{ kind: "menu", action: "timeline.rename", phase: "A" },
 		palette,
 	],
 	"item.set_audio": [palette],
@@ -104,7 +122,10 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	"text.add": [palette],
 	"text.apply_preset": [palette],
 	"text.set": [palette],
-	"timeline.close_gap": [palette],
+	"timeline.close_gap": [
+		{ kind: "menu", action: "timeline.close_gap", phase: "A" },
+		palette,
+	],
 	"track.add": [
 		{ kind: "gesture", action: "library.add_to_timeline", phase: "P" },
 		{ kind: "toolbar", action: "caption.add", phase: "P" },

@@ -183,7 +183,16 @@
         "split": "Split",
         "trim_start": "Trim start",
         "trim_end": "Trim end",
-        "caption": "Add caption"
+        "caption": "Add caption",
+        "delete": "Delete",
+        "ripple_delete": "Ripple delete",
+        "ripple_delete_all": "Ripple delete all tracks",
+        "duplicate": "Duplicate",
+        "rename": "Rename",
+        "rename_label": "Name of the item",
+        "close_gap": "Close gap",
+        "item_menu": "Item actions",
+        "gap_menu": "Gap actions"
       },
       "caption": {
         "title": "Add caption",

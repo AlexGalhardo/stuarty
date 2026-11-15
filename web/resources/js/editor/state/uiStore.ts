@@ -13,6 +13,8 @@ export interface UiState {
 	};
 	// The item that holds the roving tab stop of the timeline grid (SDD-012 7.10).
 	focusedItem: string | null;
+	// The item whose name is being edited inline (F2, the menu), if any.
+	renamingItem: string | null;
 	playheadFrame: number;
 	timeline: { pxPerFrame: number; snapEnabled: boolean };
 	// The revision at which the core answered E_NOTHING_TO_UNDO or
@@ -27,6 +29,7 @@ export interface UiState {
 export interface UiWriter {
 	select(items: readonly string[], anchor?: string | null): void;
 	focusItem(id: string | null): void;
+	startRename(id: string | null): void;
 	selectTrack(trackId: string | null): void;
 	dropSelection(isKnown: (id: string) => boolean): void;
 	setPlayhead(frame: number): void;
@@ -47,6 +50,7 @@ export function createUiStore(initialZoom = 1): {
 	const store = createStore<UiState>({
 		selection: { items: [], track: null, anchor: null },
 		focusedItem: null,
+		renamingItem: null,
 		playheadFrame: 0,
 		timeline: { pxPerFrame: initialZoom, snapEnabled: true },
 		historyBlocked: { undo: null, redo: null },
@@ -68,6 +72,10 @@ export function createUiStore(initialZoom = 1): {
 			focusItem: (focusedItem) =>
 				store.setState((s) =>
 					s.focusedItem === focusedItem ? s : { ...s, focusedItem },
+				),
+			startRename: (renamingItem) =>
+				store.setState((s) =>
+					s.renamingItem === renamingItem ? s : { ...s, renamingItem },
 				),
 			selectTrack: (track) =>
 				store.setState((s) => ({

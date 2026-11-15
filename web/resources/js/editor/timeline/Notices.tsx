@@ -10,9 +10,9 @@ import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 import type { Notice } from "../state/noticeStore";
 import { selectItem } from "../state/selectors";
-import { capitalizeFirst } from "../ui/format";
 import ConflictNotice from "../ui/ConflictNotice";
 import { errorHeadline } from "../ui/errorHeadline";
+import { capitalizeFirst } from "../ui/format";
 
 function ConflictBody({
 	conflict,
