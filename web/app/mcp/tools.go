@@ -8,9 +8,9 @@ import (
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
-// handlers are the tools whose Service methods exist. media_import,
-// media_inspect, view, job_start and job_get are in Pending until theirs do:
-// add the handler here and drop the name from Pending.
+// handlers are the tools whose Service methods exist. view is in Pending until
+// the Service has a frame method: add the handler here and drop the name from
+// Pending.
 func (a *adapter) handlers() map[string]callFunc {
 	return map[string]callFunc{
 		"project_list":   projectList,
@@ -20,6 +20,10 @@ func (a *adapter) handlers() map[string]callFunc {
 		"command_help":   commandHelp,
 		"history":        history,
 		"lint":           lintTool,
+		"media_import":   mediaImport,
+		"media_inspect":  mediaInspect,
+		"job_start":      jobStart,
+		"job_get":        jobGet,
 	}
 }
 
@@ -199,4 +203,135 @@ func lintTool(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 	}
 
 	return &toolOutput{value: res, text: res.Text}, nil
+}
+
+func mediaImport(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
+	in, err := decode[struct {
+		ProjectID string   `json:"project_id"`
+		Paths     []string `json:"paths"`
+		AssetIDs  []string `json:"asset_ids"`
+		WaitMS    *int     `json:"wait_ms"`
+	}](raw)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(in.AssetIDs) > 0 && len(in.AssetIDs) != len(in.Paths) {
+		return nil, &service.Error{
+			Code: command.CodeValidation, Path: "asset_ids",
+			Message: "asset_ids must have as many entries as paths.",
+		}
+	}
+
+	files := make([]service.ImportFile, len(in.Paths))
+	for i, p := range in.Paths {
+		files[i].Path = p
+
+		if len(in.AssetIDs) > 0 {
+			files[i].AssetID = in.AssetIDs[i]
+		}
+	}
+
+	wait := defaultImportWaitMS
+	if in.WaitMS != nil {
+		wait = *in.WaitMS
+	}
+
+	res, err := svc.MediaImport(ctx, service.MediaImportRequest{ProjectID: in.ProjectID, Files: files, WaitMS: wait})
+	if err != nil {
+		return nil, err
+	}
+
+	return &toolOutput{value: res, text: res.Text}, nil
+}
+
+// defaultImportWaitMS is the default of wait_ms in the media_import definition.
+const defaultImportWaitMS = 10000
+
+// mediaInspect is two operations behind one tool (SDD-003 section 4.1): with an
+// asset_id it describes the asset, without one it lists the assets.
+func mediaInspect(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
+	in, err := decode[struct {
+		ProjectID  string   `json:"project_id"`
+		AssetID    string   `json:"asset_id"`
+		Sections   []string `json:"sections"`
+		MinSilence string   `json:"min_silence"`
+		pageArgs
+	}](raw)
+	if err != nil {
+		return nil, err
+	}
+
+	if in.AssetID == "" {
+		res, lerr := svc.MediaList(ctx, service.MediaListRequest{ProjectID: in.ProjectID, Page: in.page()})
+		if lerr != nil {
+			return nil, lerr
+		}
+
+		return &toolOutput{value: res, text: res.Text}, nil
+	}
+
+	res, err := svc.MediaInspect(ctx, service.MediaInspectRequest{
+		ProjectID: in.ProjectID, AssetID: in.AssetID, Sections: in.Sections, MinSilence: in.MinSilence, Page: in.page(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &toolOutput{value: res, text: res.Text}, nil
+}
+
+func jobStart(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
+	in, err := decode[struct {
+		ProjectID string          `json:"project_id"`
+		Kind      string          `json:"kind"`
+		Args      json.RawMessage `json:"args"`
+		WaitMS    int             `json:"wait_ms"`
+	}](raw)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := svc.JobStart(ctx, service.JobStartRequest{
+		ProjectID: in.ProjectID, Kind: in.Kind, Args: in.Args, WaitMS: in.WaitMS,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &toolOutput{value: res, text: res.Text}, nil
+}
+
+// jobGet reads one job (job_id) or lists the jobs of a project (project_id).
+func jobGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
+	in, err := decode[struct {
+		JobID     string `json:"job_id"`
+		ProjectID string `json:"project_id"`
+		WaitMS    int    `json:"wait_ms"`
+	}](raw)
+	if err != nil {
+		return nil, err
+	}
+
+	switch {
+	case in.JobID != "":
+		res, gerr := svc.JobGet(ctx, service.JobGetRequest{JobID: in.JobID, WaitMS: in.WaitMS})
+		if gerr != nil {
+			return nil, gerr
+		}
+
+		return &toolOutput{value: res, text: res.Text}, nil
+	case in.ProjectID != "":
+		res, lerr := svc.JobList(ctx, service.JobListRequest{ProjectID: in.ProjectID})
+		if lerr != nil {
+			return nil, lerr
+		}
+
+		return &toolOutput{value: res, text: res.Text}, nil
+	default:
+		return nil, &service.Error{
+			Code: command.CodeValidation, Path: "job_id",
+			Message: "give job_id, or project_id to list its jobs.",
+		}
+	}
 }
