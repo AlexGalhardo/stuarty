@@ -23,11 +23,13 @@ import (
 	"github.com/AlexGalhardo/vukem/queue"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/cache"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/frame"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/engine/raster"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
 	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service"
@@ -147,6 +149,7 @@ func New(tb testing.TB, o Options) *Env {
 		Transcriber: o.Transcriber,
 		Media:       media,
 		Exporter:    exporter,
+		Lint:        lint.Env{Measurer: rasterMeasurer{fonts: raster.Bundled()}},
 		Enqueue:     jobs.Dispatcher{Queue: q},
 	})
 	if err != nil {
