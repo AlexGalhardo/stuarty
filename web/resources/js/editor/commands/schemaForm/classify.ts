@@ -35,31 +35,9 @@ const isSchema = (value: unknown): value is Schema =>
 const arrayOf = (value: unknown): readonly unknown[] =>
 	Array.isArray(value) ? value : [];
 
-// The registry does not mark time arguments yet (`x-vv-kind: "time"` is what
-// SDD-012 9.2 expects), so a string is also a time when its description says
-// so, in the words the registry uses for A.4 arguments, or when it has the
-// name of a time argument of the catalogue.
-const TIME_DESCRIPTION =
-	/\b(time with a unit|length|absolute (?:position|start|frame)|offset into)\b/i;
-const TIME_NAMES = new Set([
-	"start",
-	"duration",
-	"at",
-	"to",
-	"source_in",
-	"fade_in",
-	"fade_out",
-	"max_gap",
-	"min_silence",
-	"padding",
-]);
-
-export function isTimeSchema(schema: Schema, name: string): boolean {
-	if (schema["x-vv-kind"] === "time") return true;
-	if (schema.format === "time" || schema.format === "duration") return true;
-	const description =
-		typeof schema.description === "string" ? schema.description : "";
-	return TIME_DESCRIPTION.test(description) || TIME_NAMES.has(name);
+// The registry marks a time argument with `x-vv-kind: "time"` (SDD-012 9.2).
+export function isTimeSchema(schema: Schema): boolean {
+	return schema["x-vv-kind"] === "time";
 }
 
 const ID_NAME = /^(?:.*_)?(asset|track|item)(?:_ids?)?$/;
@@ -97,6 +75,12 @@ export function fieldsOf(schema: Schema): Field[] {
 		}));
 }
 
+// A value the core also accepts as null is `type: [T, "null"]`; sending null
+// removes it (SDD-012 9.2).
+export function isNullable(schema: Schema): boolean {
+	return Array.isArray(schema.type) && schema.type.includes("null");
+}
+
 const SCALARS = new Set(["string", "number", "integer", "boolean"]);
 
 export function classify(schema: Schema, name: string): Construct {
@@ -117,7 +101,7 @@ export function classify(schema: Schema, name: string): Construct {
 	}
 	switch (schema.type) {
 		case "string": {
-			if (isTimeSchema(schema, name)) return { kind: "time" };
+			if (isTimeSchema(schema)) return { kind: "time" };
 			const idKind = idKindOf(schema, name);
 			return idKind === null ? { kind: "text" } : { kind: "id", idKind };
 		}

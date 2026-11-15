@@ -4,7 +4,7 @@ import {
 	normalizeTimeInput,
 	type TimeUnit,
 } from "../units";
-import { classify, type Schema } from "./classify";
+import { classify, isNullable, type Schema } from "./classify";
 
 // What the form keeps while the person types: the text of a time field and of a
 // JSON textarea as typed, numbers and booleans as values, lists as arrays, and
@@ -15,6 +15,8 @@ export type Draft =
 	| number
 	| boolean
 	| undefined
+	// An explicit null, for a nullable field the person chose to remove.
+	| null
 	| Draft[]
 	| { [key: string]: Draft }
 	| { variant: number; value: Draft };
@@ -49,6 +51,7 @@ export function toDraft(
 	value: JsonValue | undefined,
 ): Draft {
 	if (value === undefined) return undefined;
+	if (value === null) return isNullable(schema) ? null : undefined;
 	const construct = classify(schema, name);
 	switch (construct.kind) {
 		case "json":
@@ -103,6 +106,7 @@ function walk(
 	required: boolean,
 	path: string,
 ): JsonValue | undefined {
+	if (draft === null) return isNullable(schema) ? null : undefined;
 	const construct = classify(schema, name);
 	switch (construct.kind) {
 		case "time": {

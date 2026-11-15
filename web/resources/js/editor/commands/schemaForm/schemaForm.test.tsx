@@ -29,10 +29,11 @@ describe("classify", () => {
 		expect(kind({ type: "string", pattern: "^trk_" }, "where")).toBe("id");
 		expect(kind({ type: "string" }, "new_id")).toBe("text");
 		expect(kind({ type: "string", "x-vv-kind": "time" }, "when")).toBe("time");
-		expect(kind({ type: "string", description: "A length; default 1s" })).toBe(
+		expect(kind({ type: "string", description: "A length" })).toBe("text");
+		expect(kind({ type: "string" }, "start")).toBe("text");
+		expect(kind({ type: ["string", "null"], "x-vv-kind": "time" }, "to")).toBe(
 			"time",
 		);
-		expect(kind({ type: "string" }, "start")).toBe("time");
 		expect(kind({ type: "string", enum: ["a", "b"] })).toBe("enum");
 		expect(kind({ type: "string" }, "name")).toBe("text");
 		expect(kind({ type: "number", minimum: 0, maximum: 1 })).toBe("number");
@@ -82,14 +83,17 @@ describe("finalize", () => {
 	const schema = obj(
 		{
 			item_id: { type: "string" },
-			start: { type: "string", description: "Absolute position." },
+			start: { type: "string", "x-vv-kind": "time" },
 			volume: { type: "number" },
 			mute: { type: "boolean" },
 			name: { type: "string" },
 			tags: { type: "array", items: { type: "string" } },
 			words: {
 				type: "array",
-				items: obj({ text: { type: "string" }, start: { type: "string" } }),
+				items: obj({
+					text: { type: "string" },
+					start: { type: "string", "x-vv-kind": "time" },
+				}),
 			},
 			extra: { type: "object", additionalProperties: {} },
 		},
@@ -121,6 +125,18 @@ describe("finalize", () => {
 		expect(
 			finalize(schema, { words: [{ start: "1:2:3:4" }], extra: "{" }, context),
 		).toEqual({ ok: false, invalid: ["args.words[0].start", "args.extra"] });
+	});
+
+	test("a removed nullable field is sent as null and a plain one is not", () => {
+		const nullable = obj({
+			item_id: { type: "string" },
+			to: { type: ["string", "null"], "x-vv-kind": "time" },
+			name: { type: "string" },
+		});
+		expect(
+			finalize(nullable, { item_id: "itm_a", to: null, name: null }, context),
+		).toEqual({ ok: true, value: { item_id: "itm_a", to: null } });
+		expect(toDraft(nullable, "", { to: null })).toEqual({ to: null });
 	});
 
 	test("lists drop empty rows and are omitted when empty and optional", () => {
@@ -221,5 +237,35 @@ describe("SchemaForm", () => {
 		expect(html).toMatch(/\(<!-- -->required<!-- -->\)/);
 		expect(html).not.toContain("data-fallback");
 		expect(html).toMatch(/<datalist/);
+	});
+
+	test("a nullable field has a Remove toggle that is checked for null", async () => {
+		const h = await startHarness();
+		const command = {
+			...(registry[0] as CommandDetail),
+			args_schema: obj({
+				to: { type: ["string", "null"], "x-vv-kind": "time" },
+			}),
+		} as CommandDetail;
+		const render = (value: Record<string, unknown>): string =>
+			renderToString(
+				<I18nProvider messages={devFixture(1).bootstrap.messages} locale="en">
+					<EditorProvider runtime={h.runtime}>
+						<SchemaForm
+							command={command}
+							value={value as never}
+							revision={0}
+							onChange={() => undefined}
+							error={null}
+						/>
+					</EditorProvider>
+				</I18nProvider>,
+			);
+		const open = render({});
+		expect(open).toContain('data-path="args.to.remove"');
+		expect(open).toContain('data-path="args.to"');
+		const removed = render({ to: null });
+		expect(removed).toContain('data-path="args.to.remove"');
+		expect(removed).not.toContain('data-path="args.to"');
 	});
 });
