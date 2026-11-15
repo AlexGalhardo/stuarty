@@ -1,10 +1,15 @@
 package httpapi_test
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/events"
 )
 
 // SDD-003 section 6.8, the part of session C that does not need media or jobs:
@@ -298,5 +303,44 @@ func TestPlanRouteAnswersTheWindowOfSDD004(t *testing.T) {
 		"/api/v1/projects/" + id + "/bitmaps/" + strings.Repeat("a", 64),
 	); res.status != http.StatusNotFound {
 		t.Errorf("an unknown bitmap = %d, want 404", res.status)
+	}
+}
+
+// frameService answers ViewFrame without a renderer.
+type frameService struct{ service.Service }
+
+func (frameService) ViewFrame(_ context.Context, req service.ViewFrameRequest) (*service.ViewResult, error) {
+	return &service.ViewResult{
+		ProjectID: req.ProjectID, Mode: "frame", Width: 2, Height: 2, MIME: "image/jpeg",
+		Image: []byte{0xff, 0xd8, 0xff, 0xd9}, Cells: []service.ViewCell{{}}, Text: "frame",
+	}, nil
+}
+
+// The editor's truth-on-pause <img> sends Accept: image/*; the guard must not
+// turn that into the JSON of the ViewResult.
+func TestFrameRouteAnswersTheJPEGToAnImageAccept(t *testing.T) {
+	t.Parallel()
+
+	h := newHarnessWrapped(t, events.Options{}, func(s service.Service) service.Service { return frameService{s} })
+	id := h.newProject("view")
+	path := "/api/v1/projects/" + id + "/frame?at=0s"
+
+	res := h.do(req{path: path, headers: map[string]string{"Accept": "image/*"}})
+	if res.status != http.StatusOK || res.header.Get("Content-Type") != "image/jpeg" ||
+		!bytes.HasPrefix(res.body, []byte{0xff, 0xd8}) {
+		t.Errorf("Accept image/*: %d %s %q", res.status, res.header.Get("Content-Type"), res.body)
+	}
+
+	res = h.do(req{path: path, headers: map[string]string{"Accept": "application/json"}})
+	if res.status != http.StatusOK || !strings.HasPrefix(res.header.Get("Content-Type"), "application/json") {
+		t.Errorf("Accept application/json: %d %s", res.status, res.header.Get("Content-Type"))
+	}
+
+	// An error stays problem+json whatever the client prefers.
+	bad := h.do(req{
+		path: "/api/v1/projects/" + id + "/frame?at=0s&rev=9", headers: map[string]string{"Accept": "image/*"},
+	})
+	if bad.status != http.StatusConflict || bad.json(t)["code"] != "E_INVALID_STATE" {
+		t.Errorf("an error to an image client = %d %s", bad.status, bad.body)
 	}
 }

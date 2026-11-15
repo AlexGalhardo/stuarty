@@ -129,7 +129,7 @@ func writeView(c *web.Ctx, res *service.ViewResult, pinned bool, kind string, ha
 
 	w := c.Writer()
 
-	if strings.Contains(c.Request().Header.Get("Accept"), "application/json") {
+	if strings.Contains(requestedAccept(c.Request()), "application/json") {
 		w.Header().Set("Content-Type", "application/json")
 
 		return json.NewEncoder(w).Encode(res)

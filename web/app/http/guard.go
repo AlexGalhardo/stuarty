@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"net"
 	"net/http"
 	"net/netip"
@@ -44,9 +45,14 @@ func guard(next http.Handler) http.Handler {
 		}
 
 		// Errors on the API are always problem+json, whatever the client prefers.
-		if jsonPath(r.URL.Path) && !strings.Contains(r.Header.Get("Accept"), "json") {
+		// The handlers that answer with an image read what the client asked for
+		// through requestedAccept, because the header below is rewritten for them.
+		accept := r.Header.Get("Accept")
+		if jsonPath(r.URL.Path) && !strings.Contains(accept, "json") {
 			r.Header.Set("Accept", "application/json")
 		}
+
+		r = r.WithContext(context.WithValue(r.Context(), acceptKey{}, accept))
 
 		if !peerAllowed(r) || hasRelay(r) || !hostAllowed(r) || !fetchSiteAllowed(r) || !originAllowed(r) {
 			web.Fail(w, r, refused())
@@ -76,6 +82,17 @@ func guard(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+type acceptKey struct{}
+
+// requestedAccept is the Accept header as the client sent it.
+func requestedAccept(r *http.Request) string {
+	if a, ok := r.Context().Value(acceptKey{}).(string); ok {
+		return a
+	}
+
+	return r.Header.Get("Accept")
 }
 
 // jsonPath tells the routes whose errors are always problem+json.
