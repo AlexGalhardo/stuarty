@@ -6,7 +6,12 @@ import { site } from "@/lib/site";
 export const prerender = true;
 
 function escapeXml(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+	return value
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&apos;");
 }
 
 type Entry = { path: string; lastmod?: string; priority: string; alternates: { lang: string; path: string }[] };
