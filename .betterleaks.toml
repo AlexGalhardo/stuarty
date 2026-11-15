@@ -93,3 +93,13 @@ regexes = [
 	'''auth\.EnvAdminPassword:\s*"short"''',
 	'''"password":"`\s*\+\s*(?:password|goodPass)\s*\+\s*`"''',
 ]
+
+# The navigation policy test of the desktop shell feeds URLs whose userinfo
+# tries to pass an outside host as the local one (http://127.0.0.1:x@evil.com/).
+# They hold no credential. Only that host, only in that test file.
+[[allowlists]]
+description = "userinfo tricks in the desktop navigation test"
+condition = "AND"
+paths = ['''^desktop/shell/navigate_test\.go$''']
+regexTarget = "match"
+regexes = ['''@evil\.com''']
