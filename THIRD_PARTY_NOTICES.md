@@ -11,6 +11,7 @@ Linked into the `vukem-video` binary, collected for the six release targets.
 | Name | Version | Licence | Copyright | Licence text | Notes |
 | --- | --- | --- | --- | --- | --- |
 | github.com/AlexGalhardo/vukem | v0.44.0 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem@v0.44.0/LICENSE>) | - |
+| github.com/AlexGalhardo/vukem/contrib/engine | v0.1.1 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem/contrib/engine@v0.1.1/LICENSE>) | - |
 | github.com/dustin/go-humanize | v1.1.0 | MIT | Copyright (c) 2005-2008  Dustin Sallings <dustin@spy.net> | [LICENSE](<licenses/go-modules/github.com/dustin/go-humanize@v1.1.0/LICENSE>) | - |
 | github.com/google/jsonschema-go | v0.4.3 | MIT | Copyright (c) 2025 JSON Schema Go Project Authors | [LICENSE](<licenses/go-modules/github.com/google/jsonschema-go@v0.4.3/LICENSE>) | - |
 | github.com/google/uuid | v1.6.0 | BSD-3-Clause | Copyright (c) 2009,2014 Google Inc. All rights reserved. | [LICENSE](<licenses/go-modules/github.com/google/uuid@v1.6.0/LICENSE>) | - |
