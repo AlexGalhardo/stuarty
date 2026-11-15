@@ -73,6 +73,11 @@ export class PixiExecutor implements PreviewExecutor {
 	private state: PreviewState = "idle";
 	private playing = false;
 	private raf = 0;
+	private canvas: HTMLCanvasElement | null = null;
+	// False while a layer of the frame being drawn lacks pixels: a texture that
+	// is still loading, or a video that has not yet decoded the frame it was
+	// told to show.
+	private complete = true;
 	private generation = 0;
 	private disposed = false;
 	private context: AudioContext | null = null;
@@ -126,6 +131,7 @@ export class PixiExecutor implements PreviewExecutor {
 		const canvas = document.createElement("canvas");
 		canvas.className = "block size-full";
 		host.append(canvas);
+		this.canvas = canvas;
 		try {
 			const app = new Application();
 			await app.init({
@@ -150,6 +156,7 @@ export class PixiExecutor implements PreviewExecutor {
 		} catch {
 			// No WebGL2: the preview shows only paused frames (truth on pause).
 			canvas.remove();
+			this.canvas = null;
 			this.setState("unsupported");
 		}
 	}
@@ -225,6 +232,8 @@ export class PixiExecutor implements PreviewExecutor {
 	private applyBuffer(): void {
 		if (this.app === null || this.info === null || this.buffer === null) return;
 		this.app.renderer.resize(this.buffer.width, this.buffer.height);
+		// Resizing clears the canvas: nothing is drawn until the next draw.
+		this.canvas?.removeAttribute("data-drawn");
 		this.stage.scale.set(this.buffer.width / this.info.width);
 	}
 
@@ -350,6 +359,7 @@ export class PixiExecutor implements PreviewExecutor {
 		const decoding = rankVideoLayers(layers, MAX_VIDEO_LAYERS);
 		const usedVideos = new Set<string>();
 		const used = new Set<string>();
+		this.complete = true;
 
 		let index = 0;
 		for (const layer of layers) {
@@ -361,7 +371,10 @@ export class PixiExecutor implements PreviewExecutor {
 				mode,
 				info,
 			);
-			if (texture === null) continue;
+			if (texture === null) {
+				this.complete = false;
+				continue;
+			}
 			used.add(layer.item);
 			let entry = this.drawn.get(layer.item);
 			if (entry === undefined) {
@@ -389,6 +402,23 @@ export class PixiExecutor implements PreviewExecutor {
 		this.videos.idle(usedVideos);
 		this.syncAudio(plan, frame, mode.playing);
 		app.render();
+		this.markDrawn(frame);
+	}
+
+	// The canvas says which frame it shows once every layer of that frame is on
+	// it, so a test (or a reader of the page) waits on that instead of a timer.
+	// While playing, frames come too fast to be worth an attribute write.
+	private markDrawn(frame: number): void {
+		const canvas = this.canvas;
+		if (canvas === null || this.playing) return;
+		if (!this.complete) {
+			canvas.removeAttribute("data-drawn");
+			return;
+		}
+		const value = String(frame);
+		if (canvas.getAttribute("data-drawn") !== value) {
+			canvas.setAttribute("data-drawn", value);
+		}
 	}
 
 	private place(entry: Drawn, layer: PlanLayer, frame: number): void {
@@ -457,6 +487,12 @@ export class PixiExecutor implements PreviewExecutor {
 		);
 		const video = element as HTMLVideoElement;
 		this.driveVideo(video, layer, frame, mode, info);
+		if (
+			video.seeking ||
+			video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA
+		) {
+			this.complete = false;
+		}
 		return this.videoTexture(video, layer);
 	}
 
