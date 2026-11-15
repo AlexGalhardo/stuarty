@@ -71,6 +71,8 @@ func TestOpenAPIDocumentIsCommitted(t *testing.T) {
 	}
 
 	if !bytes.Equal(bytes.ReplaceAll(want, []byte("\r\n"), []byte("\n")), out.Bytes()) {
-		t.Errorf("site/generated/openapi.json is out of date: run UPDATE_OPENAPI=1 go test ./web/contract/ -run OpenAPI")
+		t.Errorf(
+			"site/generated/openapi.json is out of date: run UPDATE_OPENAPI=1 go test ./web/contract/ -run OpenAPI",
+		)
 	}
 }
