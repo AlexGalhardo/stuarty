@@ -318,13 +318,21 @@ func (t *tool) prepare(version string) error {
 		rangeArg = previous + "..HEAD"
 	}
 
-	if isPatchRelease(version) {
-		log, lerr := t.git("log", "--format=%s", rangeArg)
+	needsMajor := previous != "" && stable(previous) && !isMajorBump(version, previous)
+	if isPatchRelease(version) || needsMajor {
+		log, lerr := t.git("log", "--format=%B", rangeArg)
 		if lerr != nil {
 			return lerr
 		}
 
 		if breaking := breakingSubjects(log); len(breaking) > 0 {
+			if needsMajor {
+				return fmt.Errorf(
+					"%s is not a major bump over %s but %s carries a breaking change: %q; after 1.0 cut the next major",
+					version, previous, rangeArg, breaking[0],
+				)
+			}
+
 			return fmt.Errorf(
 				"%s is a patch release but %s carries a breaking change: %q; cut a minor instead",
 				version, rangeArg, breaking[0],
