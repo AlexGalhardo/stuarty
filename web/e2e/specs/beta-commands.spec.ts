@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import beta from "../../resources/js/editor/fixtures/beta-commands.json" with {
+import registry from "../../resources/js/generated/commands.json" with {
 	type: "json",
 };
 import {
@@ -23,7 +23,9 @@ interface BetaCommand {
 	args_schema: { properties: Record<string, unknown> };
 }
 
-const BETA = beta as unknown as BetaCommand[];
+const BETA = (registry as unknown as BetaCommand[]).filter(
+	(c) => c.phase === "beta",
+);
 
 function recordEdits(page: Page): Posted[] {
 	const edits: Posted[] = [];
