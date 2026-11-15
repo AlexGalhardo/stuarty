@@ -195,9 +195,16 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 			if (!alive) return;
 			runtime.effectiveWriter.set(
 				Object.fromEntries(
-					instance
-						.getLayerGeometry(live)
-						.map((g) => [g.item, { scale: g.scale, opacity: g.opacity }]),
+					instance.getLayerGeometry(live).map((g) => [
+						g.item,
+						{
+							x: g.cx,
+							y: g.cy,
+							rotation: g.rotation,
+							scale: g.scale,
+							opacity: g.opacity,
+						},
+					]),
 				),
 			);
 			setPlanTick((n) => n + 1);

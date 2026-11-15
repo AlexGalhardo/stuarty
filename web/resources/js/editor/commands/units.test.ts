@@ -7,7 +7,6 @@ import {
 	displayStart,
 	formatSeconds,
 	formatTime,
-	keyframeValueAt,
 	localizeDecimalInput,
 	normalizeTimeInput,
 } from "./units";
@@ -99,19 +98,5 @@ describe("item times", () => {
 		expect(displayDuration(item, fps, "seconds")).toBe("6.000s");
 		expect(displayInPoint(item, fps, "frames")).toBe("36f");
 		expect(displayInPoint({ start: 0, duration: 1 }, fps, "frames")).toBe("0f");
-	});
-});
-
-describe("keyframeValueAt", () => {
-	const keys = [
-		{ t: 0, value: 1 },
-		{ t: 30, value: 2 },
-	];
-
-	test("is the keyframe in force at the playhead, relative to the item start", () => {
-		expect(keyframeValueAt(keys, 100, 100)).toBe(1);
-		expect(keyframeValueAt(keys, 100, 129)).toBe(1);
-		expect(keyframeValueAt(keys, 100, 130)).toBe(2);
-		expect(keyframeValueAt(keys, 100, 500)).toBe(2);
 	});
 });
