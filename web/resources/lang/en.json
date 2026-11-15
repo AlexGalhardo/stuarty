@@ -336,7 +336,10 @@
         "cancelled": "Export cancelled",
         "failed_checks": "Failed checks:",
         "queue_full": "Another export is running. Try again when it finishes.",
-        "go_to": "Go to {item}"
+        "go_to": "Go to {item}",
+        "cancel": "Cancel export",
+        "cancelling": "Cancelling",
+        "check_line": "expected {expected}, got {got}"
       },
       "commands": {
         "asset": {

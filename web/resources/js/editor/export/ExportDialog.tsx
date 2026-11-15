@@ -26,7 +26,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { useLocale, useT } from "@/lib/i18n";
+import { type Translate, useLocale, useT } from "@/lib/i18n";
 import { ApiError } from "../api/errors";
 import type { JsonValue, LintFinding } from "../api/types";
 import { exportFileUrl } from "../api/urls";
@@ -45,6 +45,33 @@ interface Failure {
 	message: string;
 	hint?: string;
 	details?: { [key: string]: JsonValue };
+}
+
+// The localized name of a lint rule (ui.editor.lint.<rule>); a rule the
+// catalogue does not know shows its code only.
+function lintName(t: Translate, code: string): string {
+	const key = `ui.editor.lint.${code}`;
+	const name = t(key);
+	return name === key ? code : name;
+}
+
+interface VerifyCheck {
+	name: string;
+	expected: string;
+	got: string;
+}
+
+// details.checks of E_VERIFY_FAILED: what the verification of the file found
+// (SDD-003 error table); an entry that is not that shape is left out.
+function verifyChecks(raw: unknown): VerifyCheck[] {
+	if (!Array.isArray(raw)) return [];
+	return raw.flatMap((entry) => {
+		if (typeof entry !== "object" || entry === null) return [];
+		const { name, expected, got } = entry as Record<string, unknown>;
+		return typeof name === "string"
+			? [{ name, expected: String(expected ?? ""), got: String(got ?? "") }]
+			: [];
+	});
 }
 
 function FindingList({
@@ -74,6 +101,7 @@ function FindingList({
 						key={`${finding.code}:${finding.item ?? ""}:${finding.message}`}
 						className="text-xs"
 					>
+						<span className="font-medium">{lintName(t, finding.code)}</span>{" "}
 						<span className="font-mono">{finding.code}</span>{" "}
 						<span lang="en">
 							<UntrustedText>{finding.message}</UntrustedText>
@@ -135,6 +163,7 @@ export default function ExportDialog({
 	const [checking, setChecking] = useState(false);
 	const [findings, setFindings] = useState<readonly LintFinding[]>([]);
 	const [failure, setFailure] = useState<Failure | null>(null);
+	const [cancelling, setCancelling] = useState(false);
 	const startedAt = useRef(0);
 
 	const check = useCallback(async (): Promise<void> => {
@@ -177,6 +206,23 @@ export default function ExportDialog({
 		}, POLL_EVERY_MS);
 		return () => clearInterval(timer);
 	}, [open, running, jobId, runtime, lastEventAt]);
+
+	async function cancel(): Promise<void> {
+		if (jobId === null) return;
+		setCancelling(true);
+		try {
+			runtime.jobsWriter.upsert(await runtime.client.cancelJob(jobId));
+		} catch (error) {
+			if (!(error instanceof ApiError)) throw error;
+			setFailure({
+				code: error.code,
+				message: error.message,
+				hint: error.hint,
+			});
+		} finally {
+			setCancelling(false);
+		}
+	}
 
 	async function start(): Promise<void> {
 		setFailure(null);
@@ -229,8 +275,11 @@ export default function ExportDialog({
 	const shown: Failure | null = job?.error ?? failure;
 	const noRetry =
 		shown?.code === "E_FFMPEG_MISSING" || shown?.code === "E_NO_ENCODER";
-	const checks = shown?.details?.checks;
-	const showFailure = shown !== null && phase !== "running";
+	const checks = verifyChecks(shown?.details?.checks);
+	// A cancelled job carries E_CANCELLED, which is the outcome asked for, not a
+	// failure to report (SDD-012 section 14.1).
+	const showFailure =
+		shown !== null && phase !== "running" && phase !== "cancelled";
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -384,10 +433,26 @@ export default function ExportDialog({
 								</p>
 							)}
 							<p className="font-mono text-xs">{shown.code}</p>
-							{Array.isArray(checks) && (
-								<p className="text-xs">
-									{t("ui.editor.export.failed_checks")} {checks.join(", ")}
-								</p>
+							{checks.length > 0 && (
+								<div className="text-xs">
+									<p>{t("ui.editor.export.failed_checks")}</p>
+									<ul className="list-disc pl-4" data-verify-checks="">
+										{checks.map((check) => (
+											<li key={check.name}>
+												<span className="font-mono">{check.name}</span>
+												{" · "}
+												<span lang="en">
+													<UntrustedText>
+														{t("ui.editor.export.check_line", {
+															expected: check.expected,
+															got: check.got,
+														})}
+													</UntrustedText>
+												</span>
+											</li>
+										))}
+									</ul>
+								</div>
 							)}
 							{Array.isArray(shown.details?.running) && (
 								<p className="text-xs">{t("ui.editor.export.queue_full")}</p>
@@ -421,13 +486,25 @@ export default function ExportDialog({
 						</>
 					)}
 					{phase === "running" && (
-						<Button
-							type="button"
-							variant="outline"
-							onClick={() => onOpenChange(false)}
-						>
-							{t("ui.editor.export.close")}
-						</Button>
+						<>
+							<Button
+								type="button"
+								variant="outline"
+								disabled={cancelling}
+								onClick={() => void cancel()}
+							>
+								{cancelling
+									? t("ui.editor.export.cancelling")
+									: t("ui.editor.export.cancel")}
+							</Button>
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => onOpenChange(false)}
+							>
+								{t("ui.editor.export.close")}
+							</Button>
+						</>
 					)}
 					{phase === "succeeded" && result !== undefined && jobId !== null && (
 						<>
@@ -454,7 +531,7 @@ export default function ExportDialog({
 							>
 								{t("ui.editor.export.close")}
 							</Button>
-							{shown !== null && (
+							{shown !== null && phase === "failed" && (
 								<Button
 									type="button"
 									variant="outline"
