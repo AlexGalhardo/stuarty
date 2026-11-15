@@ -129,7 +129,7 @@ func TestExportLoudness(t *testing.T) {
 }
 
 // An output that is not whole fails verification, leaves nothing under exports/ and no work folder.
-func TestExportTruncatedOutputFailsVerification(t *testing.T) {
+func TestVerifyTruncatedOutputFails(t *testing.T) {
 	doc := loadScene(t, "contain-text")
 	job := newJob(t, doc, "export-truncated", filepath.Join("trunc", "out.mp4"))
 	job.afterEncode = func(partial string) error {
@@ -162,7 +162,7 @@ func TestExportTruncatedOutputFailsVerification(t *testing.T) {
 
 // Cancelling ends the export at once: no FFmpeg process remains, no partial file, no work folder
 // (SDD-004 section 13 item 8).
-func TestExportCancelLeavesNothing(t *testing.T) {
+func TestCancelLeavesNothing(t *testing.T) {
 	doc := loadScene(t, "two-clips-cut")
 	job := newJob(t, doc, "export-cancel", filepath.Join("cancel", "out.mp4"))
 	ctx, cancel := context.WithCancel(context.Background())
@@ -187,7 +187,7 @@ func TestExportCancelLeavesNothing(t *testing.T) {
 	}
 }
 
-func TestExportRefusesALintError(t *testing.T) {
+func TestLintGateRefusesAnEmptyTimeline(t *testing.T) {
 	setup(t)
 	doc := loadScene(t, "contain-text")
 	doc.Items = map[string]timeline.Item{}
@@ -203,7 +203,7 @@ func TestExportRefusesALintError(t *testing.T) {
 	noLeftovers(t, job.JobID, job.OutPath)
 }
 
-func TestExportWithNoEncoderIsRefused(t *testing.T) {
+func TestLintGateNoEncoderIsRefused(t *testing.T) {
 	setup(t)
 	doc := loadScene(t, "contain-text")
 	r, err := ffmpeg.NewRunner(shared.runner.In, shared.dir)
