@@ -9,6 +9,10 @@ import type { DocumentState } from "./documentStore";
 
 type Doc = NonNullable<DocumentState["document"]>;
 
+// One shared empty list: a selector that returns a new [] on every call makes
+// useSyncExternalStore loop forever (React error 185).
+const NO_IDS: readonly string[] = [];
+
 const orderedCache = new WeakMap<object, readonly string[]>();
 const byTrackCache = new WeakMap<
 	object,
@@ -17,7 +21,7 @@ const byTrackCache = new WeakMap<
 
 // Tracks ordered by `order`, compared as byte strings (SDD-001 section 3.3.1).
 export function selectOrderedTrackIds(state: DocumentState): readonly string[] {
-	if (state.document === null) return [];
+	if (state.document === null) return NO_IDS;
 	const tracks: Doc["tracks"] = state.document.tracks;
 	let cached = orderedCache.get(tracks);
 	if (cached === undefined) {
@@ -38,7 +42,7 @@ export function selectTrackItemIds(
 	state: DocumentState,
 	trackId: string,
 ): readonly string[] {
-	if (state.document === null) return [];
+	if (state.document === null) return NO_IDS;
 	const items: Doc["items"] = state.document.items;
 	let grouped = byTrackCache.get(items);
 	if (grouped === undefined) {
@@ -52,7 +56,7 @@ export function selectTrackItemIds(
 		grouped = map;
 		byTrackCache.set(items, grouped);
 	}
-	return grouped.get(trackId) ?? [];
+	return grouped.get(trackId) ?? NO_IDS;
 }
 
 export function selectItem(
