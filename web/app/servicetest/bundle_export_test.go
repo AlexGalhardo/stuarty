@@ -64,8 +64,8 @@ func (m *mediaEnv) bundleProject() (project string, hashes []string) {
 		m.t.Fatal(err)
 	}
 
-	for _, a := range doc.Assets {
-		hashes = append(hashes, a.Hash)
+	for id := range doc.Assets {
+		hashes = append(hashes, doc.Assets[id].Hash)
 	}
 
 	return project, hashes
@@ -123,7 +123,12 @@ func TestBundleExport(t *testing.T) {
 
 	res := job.Result.Export
 
-	want := filepath.Join(m.ws, "exports", project, "bundle-r"+strconv.FormatInt(head.Revision, 10)+"-"+job.JobID+".vvbundle")
+	want := filepath.Join(
+		m.ws,
+		"exports",
+		project,
+		"bundle-r"+strconv.FormatInt(head.Revision, 10)+"-"+job.JobID+".vvbundle",
+	)
 	if got, _ := filepath.Abs(want); res.Path != got || res.Revision != head.Revision {
 		t.Fatalf("result = %+v, want path %s", res, want)
 	}
@@ -150,7 +155,8 @@ func TestBundleExport(t *testing.T) {
 		t.Errorf("manifest = %+v", man)
 	}
 
-	if man.Document.SHA256 != hexSum(files["document.json"]) || man.Document.Bytes != int64(len(files["document.json"])) {
+	if man.Document.SHA256 != hexSum(files["document.json"]) ||
+		man.Document.Bytes != int64(len(files["document.json"])) {
 		t.Errorf("the document entry does not match the manifest: %+v", man.Document)
 	}
 
@@ -281,7 +287,8 @@ func TestBundleExportCancel(t *testing.T) {
 	)
 
 	m = newMediaEnv(t, mediaCfg{onEvent: func(ev service.Event) {
-		if ev.Type == "job.updated" && ev.State == service.JobRunning && ev.Progress > 0 && cancelled.CompareAndSwap(false, true) {
+		if ev.Type == "job.updated" && ev.State == service.JobRunning && ev.Progress > 0 &&
+			cancelled.CompareAndSwap(false, true) {
 			if err := m.runner.Cancel(context.Background(), ev.JobID); err != nil {
 				t.Error(err)
 			}

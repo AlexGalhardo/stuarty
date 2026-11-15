@@ -96,6 +96,7 @@ type bundleOperation struct {
 func bundleMediaEntry(hash string) string {
 	return bundleMediaPrefix + strings.TrimPrefix(hash, "sha256:")
 }
+
 func bundleFontEntry(hash string) string {
 	return bundleFontPrefix + strings.TrimPrefix(hash, "sha256:")
 }
