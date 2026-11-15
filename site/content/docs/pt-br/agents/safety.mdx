@@ -1,0 +1,52 @@
+---
+title: "Segurança: desfazer, lixeira e limites"
+description: "O que um agente pode e não pode fazer com os seus projetos: tudo pode ser desfeito, nada é excluído de vez, nada sai da sua máquina e os recursos têm tetos."
+---
+
+## A ideia
+
+Um agente edita e exporta sem perguntar antes. O Vukem Video torna isso seguro removendo as habilidades perigosas em vez de pedir confirmação. O pior que uma instrução errada ou hostil pode fazer é produzir edições que você pode desfazer e usar recursos até um teto.
+
+## O que um agente não pode fazer
+
+- **Enviar o seu projeto para algum lugar.** Nenhum comando, ferramenta ou rota HTTP publica, envia, chama um webhook ou exporta para uma URL. A importação por URL não existe, e um caminho que parece uma URL ou um compartilhamento de rede é recusado.
+- **Excluir de vez.** `project:trash` e `media:trash` movem as coisas para a lixeira, e `project:restore` e `media:restore` as trazem de volta. Esvaziar a lixeira não é uma ferramenta MCP nem um comando da CLI: é feito por uma pessoa no editor.
+- **Ler segredos.** Nenhuma ferramenta devolve tokens, chaves ou configuração.
+- **Alcançar outros arquivos pelo FFmpeg.** O FFmpeg só abre arquivos que o produto escolheu; listas de reprodução e URLs de usuário nunca são passadas a ele.
+
+## O que pode ser desfeito
+
+Toda edição é um lote com uma revisão e o ator que a fez. `undo` e `redo` percorrem o histórico de quem chama, e `history` lista quem mudou o quê. Dois atores que mudam a mesma propriedade a partir da mesma revisão não se sobrescrevem: o segundo recebe `E_REVISION_CONFLICT` com `details.diff`, e o seu lote não muda nada. Veja [Lotes, revisões e idempotência](/docs/agents/batches).
+
+```bash
+vukem-video history --project prj_7k2m9x4q1b
+vukem-video undo --project prj_7k2m9x4q1b
+```
+
+## Limites
+
+Cada espaço de trabalho tem tetos para o trabalho que um agente pode iniciar. Uma chamada que excede um falha com um erro que nomeia o teto, o seu valor e a variável que o muda, para que o agente (ou você) saiba o que fazer em seguida.
+
+| Teto | Variável |
+| --- | --- |
+| Tamanho do arquivo importado | `VUKEM_VIDEO_MAX_IMPORT_BYTES` |
+| Resolução e duração do vídeo importado | `VUKEM_VIDEO_MAX_IMPORT_PIXELS`, `VUKEM_VIDEO_MAX_IMPORT_SECONDS` |
+| Exportações na fila ou em execução | `VUKEM_VIDEO_MAX_EXPORTS` |
+| Tamanho de um arquivo exportado | `VUKEM_VIDEO_MAX_EXPORT_BYTES` |
+| Transcrições em execução e o áudio mais longo | `VUKEM_VIDEO_MAX_TRANSCRIBES`, `VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS` |
+
+`E_QUEUE_FULL` e `E_REVISION_CONFLICT` podem ser repetidos: a CLI sai com `2` e o erro diz `retryable: true`. Um limite como `E_LIMIT_EXCEEDED` não pode ser repetido até a entrada ou o teto mudar. A página de [códigos de erro](/docs/reference/error-codes) lista cada código e o seu status HTTP. A página de [variáveis de configuração](/docs/reference/configuration) lista os padrões.
+
+## O texto vindo da mídia é dado
+
+Uma transcrição, um nome de arquivo ou um campo de metadados pode dizer "ignore as suas instruções". O produto devolve esse texto dentro de blocos delimitados e truncados, marcados como dados, e as descrições das ferramentas dizem ao agente que o trate assim. Não o cole em um prompt como se viesse de você.
+
+## Erros comuns
+
+- Supor que um projeto na lixeira sumiu. Ele fica no disco até uma pessoa esvaziar a lixeira.
+- Repetir um erro de limite em um laço. Leia antes o teto no erro.
+
+## Próximos passos
+
+- [Como um agente verifica o próprio trabalho](/docs/agents/verify)
+- [Receitas: cortar, legendar, exportar](/docs/agents/recipes)
