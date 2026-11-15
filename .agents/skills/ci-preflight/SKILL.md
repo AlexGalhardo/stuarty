@@ -19,7 +19,8 @@ GOOS=darwin  golangci-lint run ./...
 GOOS=windows golangci-lint run ./...
 ```
 
-- Run one lint at a time. A second run fails with "parallel golangci-lint is running". Wait and retry; that error does not mean the code is clean.
+- Run one lint at a time, or pass `--allow-serial-runners --timeout 25m` so a second run waits instead of failing with "parallel golangci-lint is running". That error does not mean the code is clean.
+- `golangci-lint fmt <packages>` rewrites what `golines` and `gofumpt` report; commit the result as `style(<scope>)`.
 - Lints that only one target shows:
   - `unconvert` when a field type differs between operating systems;
   - `nolintlint` when a `//nolint` is needed on one target only. Split the file by build tag instead, as `disk_linux.go` and `disk_other.go` do;
@@ -29,17 +30,27 @@ GOOS=windows golangci-lint run ./...
 
 - `go test -count=1` on the packages you touched.
 - `go test -race` on packages with concurrency.
-- Tests that need FFmpeg read `VUKEM_VIDEO_TEST_FFMPEG_DIR`. `bash scripts/install-ffmpeg.sh` prints the directory of the pinned LGPL build.
+- Tests that need FFmpeg read `VUKEM_VIDEO_TEST_FFMPEG_DIR`. `bash scripts/install-ffmpeg.sh` prints the directory of the pinned LGPL build. Point it at that `bin` folder: any other FFmpeg (a scoop or system one) makes those tests skip with "not the pinned LGPL build", and an export spec of the e2e suite fails for a reason that is not in the code. If `ffprobe` disappears from the folder, run the script again.
+- When the full suite runs while other agents build, three signatures are the machine, not the code: "paging file too small" (`O arquivo de paginação é muito pequeno`), "failed to create new OS thread", and `[build failed]` on a package that builds alone. Rerun the package alone before calling it a defect. Tests known to be sensitive to load: `TestViewFrameColdP95`, `TestScaleProjectViewGates`, `TestEventsSlowReaderIsDropped`, `TestEventsLatencyFromCommitToClient`, `TestClientModeAgainstARunningOwner`, `TestCancelTimeoutFailsTheJob`. A test that also fails alone is a defect.
+- A full disk fails builds in odd places and can corrupt the Go build cache. `go clean -cache` frees tens of gigabytes; check `df -h` first when errors make no sense.
+- Keep the gate as one script that runs each step, records its exit code and prints only the failing steps, so a truncated log never hides a failure (`TestDriversCoverService` was missed once by cutting a `grep` short).
 
 ## 4. Generated files
 
 Run the generators of `skills/release-pr/` step 2.4. After that, `git status` must be clean; commit whatever changed. The site's "Last updated" check compares `site/content/last-updated.json` with the date of the last commit of each page, so run `npm run last-updated` after the commits that touch the pages.
 
+Hand-kept lists that a new feature must update in the same change:
+
+- A new browser page route (an Inertia page such as `/settings/brand-kit`) goes into the `builtin` list of `TestSecurity_T05_EveryOperationHasScope` in `web/app/http/security_test.go`.
+- A new threat row in SDD-007 changes the count in `TestTheRealModelParses` (`internal/tools/threatcheck/check_test.go`).
+- An error code a command can return goes into its `Errors` in the registry, because agents read that list. When only the service raises it before `Apply` (a font hash missing from the store), the core has no golden case for it: add the command and code to `serviceOnlyCodes` in `core/command/cases_test.go`, cover it in a service test, and say so in the SDD-002 error table.
+- `core/command` never imports `core/plan` (`internal/tools/importcheck`). A test that needs both lives in `core/plan`.
+
 ## 5. Web and site
 
 - In `web/`: `bun install --frozen-lockfile`, then `bun run lint`, `bun run typecheck`, `bun run check:i18n`, `bun run check:thin-client`, `bun run test`.
 - `check:i18n` runs with Node: the TypeScript 7 API it uses (`typescript/unstable/sync`) reads a Node child-process internal that Bun does not have. Do not move it back to Bun, and do not use `Bun.*` APIs in it.
-- In `site/`, which uses npm: `npm run lint`, `npm run test:scripts`.
+- In `site/`, which uses npm: `npm run lint`, `npm run test:scripts`, `npm run check:translations` (strict). The strict check marks a pt-BR page stale whenever its English page changes, even for a blank line: change both pages in the same commit.
 - Markdown: `bunx markdownlint-cli2@0.24.1 "**/*.md"`.
 
 ## 6. Security and notices
