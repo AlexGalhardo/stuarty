@@ -72,6 +72,12 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.speed": ["clip.set_speed"],
 	"inspector.color": ["clip.set_color"],
 	"inspector.silences": ["clip.remove_silences"],
+	"inspector.filter": ["clip.set_filter"],
+	"inspector.blur": ["clip.set_blur"],
+	"inspector.duck": ["audio.duck"],
+	"inspector.mark_beats": ["audio.mark_beats"],
+	"inspector.font_add": ["font.add"],
+	"inspector.font_remove": ["font.remove"],
 	"topbar.rename": ["project.rename"],
 	"inspector.settings": ["settings.set"],
 	"inspector.fps": ["settings.set_fps"],
@@ -101,6 +107,14 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	"audio.add": [
 		{ kind: "gesture", action: "library.add_to_timeline", phase: "A" },
 		{ kind: "gesture", action: "library.drag", phase: "A" },
+		palette,
+	],
+	"audio.duck": [
+		{ kind: "inspector", action: "inspector.duck", phase: "B" },
+		palette,
+	],
+	"audio.mark_beats": [
+		{ kind: "inspector", action: "inspector.mark_beats", phase: "B" },
 		palette,
 	],
 	"caption.add": [
@@ -152,8 +166,16 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.silences", phase: "A" },
 		palette,
 	],
+	"clip.set_blur": [
+		{ kind: "inspector", action: "inspector.blur", phase: "B" },
+		palette,
+	],
 	"clip.set_color": [
 		{ kind: "inspector", action: "inspector.color", phase: "A" },
+		palette,
+	],
+	"clip.set_filter": [
+		{ kind: "inspector", action: "inspector.filter", phase: "B" },
 		palette,
 	],
 	"clip.set_framing": [
@@ -162,6 +184,14 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	],
 	"clip.set_speed": [
 		{ kind: "inspector", action: "inspector.speed", phase: "A" },
+		palette,
+	],
+	"font.add": [
+		{ kind: "inspector", action: "inspector.font_add", phase: "B" },
+		palette,
+	],
+	"font.remove": [
+		{ kind: "inspector", action: "inspector.font_remove", phase: "B" },
 		palette,
 	],
 	"item.crossfade": [
