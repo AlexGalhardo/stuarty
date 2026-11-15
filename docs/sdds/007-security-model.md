@@ -583,7 +583,7 @@ User fonts are a BETA feature (RF-053, the brand kit). In the Prototype and ALPH
 
 Template files hold a document plus user fonts (ADR-0022 item 5). A template file is a zip served and accepted as `application/zip` with the file name `<template id>.vukem-template.zip` (`Content-Disposition: attachment`, `nosniff`); its limits are those of item 1 below. An archive is read with vukem's `archive.Zip`, which takes no path, derives keys, refuses escaping names, control and direction-changing characters, colliding keys, and archives whose central directory declares more than the limits, and bounds `Entry.Open` by the declared size. On top of that:
 
-1. Compressed file at most 64 MiB; at most 64 entries; total declared size at most 256 MiB; each entry at most 32 MiB; the whole read is capped again by the actual bytes read (a lying header cannot exceed it). The HTTP body limit for `TemplateImport` is 64 MiB.
+1. Compressed file at most 64 MiB; at most 64 entries; total declared size at most 256 MiB; each entry at most 32 MiB; the whole read is capped again by the actual bytes read (a lying header cannot exceed it). The 64 MiB limit is on the file read from disk by path; the HTTP body of `TemplateImport` carries only the path and keeps the 1 MiB body limit.
 2. Entry allowlist, by exact name: `manifest.json` (required, at most 64 KiB), `template.json` (required, at most 4 MiB), `preview.jpg` (optional, at most 2 MiB, validated as a JPEG by decoding its header) and, from BETA, `font.<64 hex>` (each at most 16 MiB). Entry names are flat, with no directory, because `archive.Zip` of vukem derives keys by dropping directories (SDD-005 §15). Any other entry name fails the import with `E_VALIDATION`. Names are compared after Unicode NFC normalisation and case folding to catch duplicates.
 3. Symlink entries, encrypted entries, entries with a data descriptor mismatch and nested archives are refused.
 4. No entry is ever written to a path derived from its name. Fonts are copied through the font pipeline (7.7) and stored by hash; `template.json` is parsed in memory with a nesting depth of at most 64.
@@ -688,7 +688,7 @@ Defaults are consistent with SDD-000 §10 (`VUKEM_VIDEO_MAX_EXPORTS` 2, `VUKEM_V
 | Cache size (`frames/` and `bitmaps/`) | 2 GiB, least recently used first | workspace | `VUKEM_VIDEO_CACHE_MAX_BYTES` | eviction, no error |
 | Batch | 200 operations, 512 KiB | per call | fixed by SDD-002 A.10 | `E_PAYLOAD_TOO_LARGE` |
 | Document | 50 tracks, 500 items, 200 assets, 5,000 caption words | per project | fixed by SDD-001 §4 | `E_LIMIT` |
-| JSON request body | 1 MiB (edit: batch limit plus envelope); template import 64 MiB; import by path has no body to speak of | per request | fixed | `E_PAYLOAD_TOO_LARGE` |
+| JSON request body | 1 MiB (edit: batch limit plus envelope); template import and import by path carry only a path | per request | fixed | `E_PAYLOAD_TOO_LARGE` |
 | Event streams | 32 per project, 128 per process, 16 per key in network mode | | fixed | `E_QUEUE_FULL` with `details.limit = "streams"` |
 | Idempotency keys stored | 10,000 valid keys per actor and project; 24 hours | | fixed | a new keyed request is refused with `E_RATE_LIMITED`; nothing is evicted (SDD-005 §10) |
 | Revision lookback for conflict analysis | 1,000 revisions | per batch | fixed | `E_REVISION_CONFLICT` with a hint to re-read |
