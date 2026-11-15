@@ -171,6 +171,10 @@ var bareURL = regexp.MustCompile(`https?://[^\s|)<>,]+`)
 // flags it as a bare URL too. Group 1 is the character before it.
 var bareEmail = regexp.MustCompile(`(^|[^<\w.+-])([\w.+-]+@[\w-]+(?:\.[\w-]+)+)`)
 
+// obfuscated finds an angle-bracketed run with a space in it, such as
+// "<name at host dot com>", which Markdown reads as an HTML tag.
+var obfuscated = regexp.MustCompile(`<([^<>|]* [^<>|]*)>`)
+
 var cellReplacer = strings.NewReplacer("|", `\|`, "\n", " ")
 
 func cell(s string) string {
@@ -178,7 +182,8 @@ func cell(s string) string {
 		return "-"
 	}
 
-	s = bareURL.ReplaceAllString(cellReplacer.Replace(s), "<$0>")
+	s = obfuscated.ReplaceAllString(cellReplacer.Replace(s), `\<$1\>`)
+	s = bareURL.ReplaceAllString(s, "<$0>")
 
 	return bareEmail.ReplaceAllString(s, "$1<$2>")
 }

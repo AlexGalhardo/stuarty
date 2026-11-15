@@ -685,6 +685,7 @@ func TestRenderNotesAndCells(t *testing.T) {
 		"a@b.io":                                 "<a@b.io>",
 		"see https://x.dev/a and me@x.dev":       "see <https://x.dev/a> and <me@x.dev>",
 		"no address @ here":                      "no address @ here",
+		"Georg (<guelfey at gmail dot com>)":     `Georg (\<guelfey at gmail dot com\>)`,
 	} {
 		if got := cell(in); got != want {
 			t.Errorf("cell(%q) = %q, want %q", in, got, want)
