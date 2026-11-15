@@ -1,0 +1,69 @@
+{
+ "name": "job_get",
+ "description": "Get a job's state, progress and result (job_id). wait_ms waits for a final state (succeeded, failed, cancelled) for up to that many milliseconds. A succeeded export is verified; its result has the file path. Give project_id instead of job_id to list its queued, running and recent jobs.",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "job_id": {
+    "type": "string",
+    "pattern": "^job_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "project_id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "wait_ms": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 25000,
+    "default": 0
+   }
+  },
+  "additionalProperties": false
+ },
+ "outputSchema": {
+  "type": "object",
+  "properties": {
+   "job_id": {
+    "type": "string"
+   },
+   "kind": {
+    "type": "string"
+   },
+   "state": {
+    "enum": [
+     "queued",
+     "running",
+     "succeeded",
+     "failed",
+     "cancelled"
+    ]
+   },
+   "progress": {
+    "type": "number"
+   },
+   "message": {
+    "type": "string"
+   },
+   "result": {
+    "type": "object"
+   },
+   "error": {
+    "type": "object"
+   },
+   "jobs": {
+    "type": "array",
+    "items": {
+     "type": "object"
+    }
+   }
+  }
+ },
+ "annotations": {
+  "title": "Get job",
+  "readOnlyHint": true,
+  "destructiveHint": false,
+  "idempotentHint": true,
+  "openWorldHint": false
+ }
+}

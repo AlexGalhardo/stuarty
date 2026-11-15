@@ -1,0 +1,71 @@
+{
+ "name": "project_create",
+ "description": "Create an empty project (no tracks yet; add them with edit). Returns the project id and revision 0. preset is the frame size: 9:16 is 1080x1920 (default), 1:1, 16:9, 4:5.",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "name": {
+    "type": "string",
+    "minLength": 1,
+    "maxLength": 120
+   },
+   "preset": {
+    "enum": [
+     "9:16",
+     "1:1",
+     "16:9",
+     "4:5"
+    ],
+    "default": "9:16"
+   },
+   "fps": {
+    "type": "string",
+    "pattern": "^[0-9]+(/1001)?$",
+    "default": "30"
+   },
+   "id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   }
+  },
+  "required": [
+   "name"
+  ],
+  "additionalProperties": false
+ },
+ "outputSchema": {
+  "type": "object",
+  "properties": {
+   "project_id": {
+    "type": "string"
+   },
+   "name": {
+    "type": "string",
+    "x-untrusted": true
+   },
+   "revision": {
+    "type": "integer"
+   },
+   "width": {
+    "type": "integer"
+   },
+   "height": {
+    "type": "integer"
+   },
+   "fps": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "project_id",
+   "revision"
+  ]
+ },
+ "annotations": {
+  "title": "Create project",
+  "readOnlyHint": false,
+  "destructiveHint": false,
+  "idempotentHint": false,
+  "openWorldHint": false
+ }
+}
