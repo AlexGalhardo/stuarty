@@ -247,7 +247,9 @@ func TestTransitionEmptyCostDoesNotGrowWithLength(t *testing.T) {
 	start := time.Now()
 	Lint(d, Env{}, Full)
 
-	if took := time.Since(start); took > 100*time.Millisecond {
+	// The race detector slows this loop about tenfold; the limit holds for a
+	// normal build, which CI runs too.
+	if took := time.Since(start); took > 100*time.Millisecond && !raceEnabled {
 		t.Errorf("lint took %v", took)
 	}
 }
