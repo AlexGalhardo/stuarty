@@ -12,6 +12,7 @@ import (
 	"github.com/AlexGalhardo/vukem/router"
 	"github.com/AlexGalhardo/vukem/web"
 
+	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
 	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 	"github.com/AlexGalhardo/vukem-video/web/resources"
@@ -19,7 +20,7 @@ import (
 
 // phase is the build's feature gate that the editor reads from its bootstrap
 // (SDD-012 section 10).
-const phase = "prototype"
+var phase = string(command.Build)
 
 var projectID = regexp.MustCompile(`^prj_[0-9a-hjkmnp-tv-z]{10}$`)
 

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attack": {
+      "description": "A length, may be 0; the ramp down before speech. Default \"0.2s\".",
+      "type": "string",
+      "x-vv-kind": "time"
+    },
+    "gain_db": {
+      "description": "Change of volume while speech sounds, -40 to -1; default -12.",
+      "maximum": -1,
+      "minimum": -40,
+      "type": "number"
+    },
+    "item_id": {
+      "description": "The music: an audio item with no volume keyframes.",
+      "type": "string"
+    },
+    "release": {
+      "description": "A length, may be 0; the ramp up after speech. Default \"0.5s\".",
+      "type": "string",
+      "x-vv-kind": "time"
+    },
+    "resolved": {
+      "additionalProperties": false,
+      "description": "Filled by the service from the speech of the items; never sent by a caller.",
+      "properties": {
+        "speech": {
+          "description": "One entry per speech item, in any order.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "item_id": {
+                "description": "One of the speech items.",
+                "type": "string"
+              },
+              "ranges": {
+                "description": "Sorted, non-overlapping ranges of speech in asset frames, half-open.",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "end": {
+                      "type": "integer"
+                    },
+                    "start": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "start",
+                    "end"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "item_id",
+              "ranges"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "speech"
+      ],
+      "type": "object"
+    },
+    "speech_item_ids": {
+      "description": "Clips or audio items that carry the speech.",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "type": "array"
+    }
+  },
+  "required": [
+    "item_id",
+    "speech_item_ids"
+  ],
+  "type": "object"
+}

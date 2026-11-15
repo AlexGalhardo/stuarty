@@ -54,6 +54,212 @@ export interface AudioAddArgs {
   track_id: string;
 }
 
+export interface AudioDuckArgs {
+  /**
+   * A length, may be 0; the ramp down before speech. Default "0.2s".
+   */
+  attack?: string;
+  /**
+   * Change of volume while speech sounds, -40 to -1; default -12.
+   */
+  gain_db?: number;
+  /**
+   * The music: an audio item with no volume keyframes.
+   */
+  item_id: string;
+  /**
+   * A length, may be 0; the ramp up after speech. Default "0.5s".
+   */
+  release?: string;
+  /**
+   * Filled by the service from the speech of the items; never sent by a caller.
+   */
+  resolved?: {
+    /**
+     * One entry per speech item, in any order.
+     */
+    speech: {
+      /**
+       * One of the speech items.
+       */
+      item_id: string;
+      /**
+       * Sorted, non-overlapping ranges of speech in asset frames, half-open.
+       */
+      ranges: {
+        end: number;
+        start: number;
+      }[];
+    }[];
+  };
+  /**
+   * Clips or audio items that carry the speech.
+   *
+   * @minItems 1
+   * @maxItems 20
+   */
+  speech_item_ids:
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ];
+}
+
+export interface AudioMarkBeatsArgs {
+  /**
+   * Mark every nth beat of the visible part, from the first; default 1.
+   */
+  every?: number;
+  /**
+   * An audio item of an audio asset, or of a video asset with audio.
+   */
+  item_id: string;
+  /**
+   * Label of every marker, up to 60 characters; default none.
+   */
+  label?: string;
+  /**
+   * true (default) replaces the item's markers; false keeps them and adds the beats.
+   */
+  replace?: boolean;
+  /**
+   * Filled by the service from the beat grid of the asset; never sent by a caller.
+   */
+  resolved?: {
+    /**
+     * Strictly increasing beat positions in asset frames, from 0.
+     */
+    beats: number[];
+  };
+}
+
 export interface CaptionAddArgs {
   /**
    * A length; with text only.
@@ -346,6 +552,17 @@ export interface ClipRemoveSilencesArgs {
   threshold_db?: number;
 }
 
+export interface ClipSetBlurArgs {
+  /**
+   * A clip.
+   */
+  item_id: string;
+  /**
+   * Blur radius in pixels, 0 to 100; 0 removes the blur.
+   */
+  radius: number;
+}
+
 export interface ClipSetColorArgs {
   /**
    * -1 to 1; default 0.
@@ -363,6 +580,21 @@ export interface ClipSetColorArgs {
    * 0 to 2; default 1.
    */
   saturation?: number;
+}
+
+export interface ClipSetFilterArgs {
+  /**
+   * 0 to 1; default 1.
+   */
+  amount?: number;
+  /**
+   * none (default), grayscale, sepia, invert, warm or cool.
+   */
+  filter?: "none" | "grayscale" | "sepia" | "invert" | "warm" | "cool";
+  /**
+   * A clip.
+   */
+  item_id: string;
 }
 
 export interface ClipSetFramingArgs {
@@ -403,6 +635,495 @@ export interface ClipSetSpeedArgs {
         den: number;
         num: number;
       };
+}
+
+export interface FontAddArgs {
+  /**
+   * 1 to 60 characters: letters, digits, space, dot, hyphen, underscore; not a bundled family.
+   */
+  family: string;
+  /**
+   * One file per weight, 1 to 9; a weight appears once.
+   *
+   * @minItems 1
+   * @maxItems 9
+   */
+  files:
+    | [
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        }
+      ]
+    | [
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        }
+      ]
+    | [
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        }
+      ]
+    | [
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        }
+      ]
+    | [
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        }
+      ]
+    | [
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        }
+      ]
+    | [
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        }
+      ]
+    | [
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        }
+      ]
+    | [
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        },
+        {
+          /**
+           * sha256: and 64 lower-case hex characters; a font stored by media import of the workspace.
+           */
+          hash: string;
+          /**
+           * 100 to 900 in steps of 100.
+           */
+          weight: number;
+        }
+      ];
+}
+
+export interface FontRemoveArgs {
+  /**
+   * A user family of the project.
+   */
+  family: string;
 }
 
 export interface ItemCrossfadeArgs {
@@ -1018,12 +1739,14 @@ export interface TrackUpdateArgs {
   track_id: string;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_color" | "clip.set_framing" | "clip.set_speed" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blur" | "clip.set_color" | "clip.set_filter" | "clip.set_framing" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
 	"asset.remove": AssetRemoveArgs;
 	"audio.add": AudioAddArgs;
+	"audio.duck": AudioDuckArgs;
+	"audio.mark_beats": AudioMarkBeatsArgs;
 	"caption.add": CaptionAddArgs;
 	"caption.edit_word": CaptionEditWordArgs;
 	"caption.from_transcript": CaptionFromTranscriptArgs;
@@ -1035,9 +1758,13 @@ export interface CommandArgsMap {
 	"caption.split": CaptionSplitArgs;
 	"clip.add": ClipAddArgs;
 	"clip.remove_silences": ClipRemoveSilencesArgs;
+	"clip.set_blur": ClipSetBlurArgs;
 	"clip.set_color": ClipSetColorArgs;
+	"clip.set_filter": ClipSetFilterArgs;
 	"clip.set_framing": ClipSetFramingArgs;
 	"clip.set_speed": ClipSetSpeedArgs;
+	"font.add": FontAddArgs;
+	"font.remove": FontRemoveArgs;
 	"item.crossfade": ItemCrossfadeArgs;
 	"item.delete": ItemDeleteArgs;
 	"item.duplicate": ItemDuplicateArgs;
@@ -1077,6 +1804,8 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"asset.add": { summary: "Adds an asset that the import flow has already ingested.", scope: "media", phase: "prototype", internal: true, errors: ["E_VALIDATION","E_ID_EXISTS","E_LIMIT"] },
 	"asset.remove": { summary: "Removes an asset that no item uses.", scope: "media", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_IN_USE"] },
 	"audio.add": { summary: "Places an audio asset, or the audio of a video asset, on an audio track.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
+	"audio.duck": { summary: "Lowers a music item while speech sounds, with a ramp down before and a ramp up after.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
+	"audio.mark_beats": { summary: "Writes markers on a music item at the beats of its audio.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
 	"caption.add": { summary: "Adds a caption item with timed words.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
 	"caption.edit_word": { summary: "Changes the text of one word of a caption, or removes the word.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"caption.from_transcript": { summary: "Creates captions for the speech of a clip from its transcript.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
@@ -1088,9 +1817,13 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"caption.split": { summary: "Splits a caption into two at a word boundary.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT"] },
 	"clip.add": { summary: "Places a video or image asset on a visual track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"clip.remove_silences": { summary: "Cuts the silent stretches out of a clip, leaving one clip per stretch of speech.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_INVALID_STATE","E_LIMIT"] },
+	"clip.set_blur": { summary: "Sets the blur radius of a clip.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_color": { summary: "Sets the brightness, contrast and saturation of a clip.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"clip.set_filter": { summary: "Sets the colour filter of a clip and how much of it is mixed in.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_framing": { summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_speed": { summary: "Changes the speed of a clip or audio item while keeping the same source range.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE","E_INVALID_TIME","E_OVERLAP"] },
+	"font.add": { summary: "Adds a user font family to the project, or more weights to one it already has.", scope: "media", phase: "beta", internal: false, errors: ["E_VALIDATION"] },
+	"font.remove": { summary: "Removes a user font family from the project.", scope: "media", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_IN_USE"] },
 	"item.crossfade": { summary: "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.delete": { summary: "Removes items, and optionally closes the freed space.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE","E_OVERLAP"] },
 	"item.duplicate": { summary: "Copies an item to another position, optionally on another track.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },

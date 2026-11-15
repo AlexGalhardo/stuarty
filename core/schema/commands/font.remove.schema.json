@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "family": {
+      "description": "A user family of the project.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "family"
+  ],
+  "type": "object"
+}

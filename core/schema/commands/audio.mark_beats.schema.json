@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "every": {
+      "description": "Mark every nth beat of the visible part, from the first; default 1.",
+      "maximum": 64,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "item_id": {
+      "description": "An audio item of an audio asset, or of a video asset with audio.",
+      "type": "string"
+    },
+    "label": {
+      "description": "Label of every marker, up to 60 characters; default none.",
+      "maxLength": 60,
+      "type": "string"
+    },
+    "replace": {
+      "description": "true (default) replaces the item's markers; false keeps them and adds the beats.",
+      "type": "boolean"
+    },
+    "resolved": {
+      "additionalProperties": false,
+      "description": "Filled by the service from the beat grid of the asset; never sent by a caller.",
+      "properties": {
+        "beats": {
+          "description": "Strictly increasing beat positions in asset frames, from 0.",
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "beats"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "item_id"
+  ],
+  "type": "object"
+}
