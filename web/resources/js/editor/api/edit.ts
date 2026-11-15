@@ -10,6 +10,8 @@ export interface EditOptions {
 	// Reused across the retries of one logical edit; a new logical edit gets a
 	// new key (SDD-012 section 4.3 rule 2).
 	idempotencyKey?: string;
+	// Ask the core for the diff without applying it (SDD-003 section 2.4).
+	dryRun?: boolean;
 }
 
 export interface EditQueueDeps {
@@ -69,6 +71,7 @@ export function createEditQueue(deps: EditQueueDeps): EditQueue {
 				operations,
 				base_revision: baseRevision,
 				idempotency_key: options.idempotencyKey ?? deps.newKey(),
+				...(options.dryRun ? { dry_run: true } : {}),
 			};
 			return enqueue(() => deps.client.edit(deps.projectId, request));
 		},
