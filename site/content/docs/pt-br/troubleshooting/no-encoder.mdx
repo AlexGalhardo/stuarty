@@ -1,0 +1,42 @@
+---
+title: "Nenhum codificador H.264 funciona"
+description: "O que o E_NO_ENCODER significa, quais codificadores são testados e como fazer uma exportação funcionar."
+---
+
+## O que você vai aprender
+
+- o que o `E_NO_ENCODER` diz e o que foi testado;
+- como ler a verificação de codificador do doctor;
+- três saídas: o FFmpeg incluído, um codificador de hardware e a sua própria compilação com libx264.
+
+## A ideia
+
+Uma exportação precisa de um codificador H.264, e o produto só confia em um que passou em uma codificação de teste real na sua máquina. Ele testa, em ordem, `h264_videotoolbox`, `h264_nvenc`, `h264_qsv`, `h264_amf`, `h264_mf`, `h264_vaapi` e `libopenh264`; o `libx264` só entra quando o FFmpeg é o seu e `VUKEM_VIDEO_ALLOW_USER_X264` é `true`. Se nenhum passar, a exportação falha com `E_NO_ENCODER`; a mensagem lista cada candidato e por que falhou (não está nesta compilação do FFmpeg, ou a primeira linha do seu erro). A detecção fica em cache por 24 horas.
+
+## Início rápido
+
+1. Execute `vukem-video doctor --full`. A verificação `ffmpeg.encoder` imprime o codificador escolhido e cada candidato com o seu status e tempo, ou `E_NO_ENCODER`.
+2. Escolha a saída que serve:
+   - use o FFmpeg que acompanha o Vukem Video (a imagem de contêiner e os instaladores), que inclui o OpenH264;
+   - instale o driver da sua GPU, para que um codificador de hardware passe no teste;
+   - aponte `VUKEM_VIDEO_FFMPEG` para a sua própria compilação que tenha `libx264` e defina `VUKEM_VIDEO_ALLOW_USER_X264=true`. As consequências de licença são suas: não a redistribua.
+3. Execute o doctor de novo, depois exporte.
+
+```bash
+vukem-video doctor --full
+VUKEM_VIDEO_ALLOW_USER_X264=true vukem-video serve
+```
+
+Para testar apenas um codificador, defina `VUKEM_VIDEO_ENCODER` com o nome dele no FFmpeg. Então só esse é testado e o produto nunca o troca em silêncio.
+
+## Erros comuns
+
+- Forçar um codificador que a máquina não tem (`VUKEM_VIDEO_ENCODER=h264_nvenc` sem um driver NVIDIA).
+- Definir `VUKEM_VIDEO_ALLOW_USER_X264=true` enquanto o FFmpeg é o incluído: o `libx264` só é usado com o seu próprio FFmpeg.
+- Executar em um contêiner ou uma máquina virtual sem os nós de dispositivo de que um codificador de hardware precisa. O codificador OpenH264 do FFmpeg incluído não precisa de nenhum.
+- Ler `E_FFMPEG_MISSING` como a mesma coisa. Veja [O FFmpeg não é encontrado](/docs/troubleshooting/ffmpeg-missing).
+
+## Próximos passos
+
+- [Codificadores e predefinições de exportação](/docs/guide/encoders-and-presets)
+- [A exportação está lenta](/docs/troubleshooting/slow-export)
