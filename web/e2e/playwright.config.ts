@@ -36,7 +36,19 @@ export default defineConfig({
 		baseURL: `http://127.0.0.1:${port}`,
 		trace: "retain-on-failure",
 	},
-	projects: [{ name: "chromium", use: { browserName: "chromium" } }],
+	// Without a vsync, the interval between animation frames measures the work of
+	// a frame, not the 16.7 ms of the display (the performance specs read it).
+	projects: [
+		{
+			name: "chromium",
+			use: {
+				browserName: "chromium",
+				launchOptions: {
+					args: ["--disable-gpu-vsync", "--disable-frame-rate-limit"],
+				},
+			},
+		},
+	],
 	webServer: {
 		command: "go run ./web/cmd/app serve",
 		cwd: "../..",
