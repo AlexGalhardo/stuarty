@@ -94,14 +94,41 @@
         "tracks": "Faixas",
         "track_visual": "Faixa de vídeo",
         "track_audio": "Faixa de áudio",
-        "hidden": "oculta",
-        "muted": "silenciada",
         "item_summary": "{type}, {name}",
         "snap": "Encaixar",
         "caption_words": {
           "one": "{count} palavra",
           "other": "{count} palavras"
         }
+      },
+      "track": {
+        "name_label": "Nome da faixa",
+        "menu": "Ações da faixa {name}",
+        "rename": "Renomear",
+        "hide": "Ocultar faixa",
+        "show": "Mostrar faixa",
+        "mute": "Silenciar faixa",
+        "unmute": "Reativar o som da faixa",
+        "add_visual_above": "Adicionar faixa de vídeo acima",
+        "add_visual_below": "Adicionar faixa de vídeo abaixo",
+        "add_audio_above": "Adicionar faixa de áudio acima",
+        "add_audio_below": "Adicionar faixa de áudio abaixo",
+        "move_up": "Mover para cima",
+        "move_down": "Mover para baixo",
+        "remove": "Remover faixa",
+        "drag": "Arraste para reordenar a faixa {name}",
+        "hidden": "Oculta",
+        "muted": "Silenciada",
+        "caption_style_replace": "Substituir o estilo inteiro",
+        "caption_style_clear": "Limpar o estilo",
+        "no_caption_style": "Uma faixa de áudio não tem estilo de legenda.",
+        "remove_title": "Remover esta faixa?",
+        "remove_body": {
+          "one": "A faixa tem {count} item. Remover a faixa remove o item também.",
+          "other": "A faixa tem {count} itens. Remover a faixa remove os itens também."
+        },
+        "remove_confirm": "Remover faixa e itens",
+        "remove_cancel": "Cancelar"
       },
       "item": {
         "clip": "Clipe",
