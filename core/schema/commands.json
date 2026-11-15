@@ -1546,7 +1546,8 @@
     },
     "description": "Names a font that is already stored by hash in the workspace as a family of the project, so that styles can use it. The family name must not be a bundled family. Adding to an existing family adds the weights and replaces the file of a weight it already has. The command never reads or stores a file; the service refuses a hash that the workspace does not hold.",
     "errors": [
-      "E_VALIDATION"
+      "E_VALIDATION",
+      "E_NOT_FOUND"
     ],
     "example": {
       "family": "Brand Sans",
