@@ -253,6 +253,10 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 			}
 		}
 
+		if s.Settles {
+			o.result, o.text = "", ""
+		}
+
 		for _, id := range imported {
 			o.result = strings.ReplaceAll(o.result, id, "prj_I")
 			o.text = strings.ReplaceAll(o.text, id, "prj_I")

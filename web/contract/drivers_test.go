@@ -42,8 +42,13 @@ type step struct {
 	// As names another actor: the step goes straight to the Service of the
 	// workspace with that actor, whatever the driver, so a scenario can have a
 	// second writer (the conflict scenario).
-	As          string          `json:"as"`
-	Args        json.RawMessage `json:"args"`
+	As   string          `json:"as"`
+	Args json.RawMessage `json:"args"`
+	// Settles marks a call whose answer depends on how far a job got when it
+	// returned, a render on a slow machine: the call must succeed, its answer is
+	// not compared between drivers, and a later call of the scenario waits for the
+	// end of the job and is compared.
+	Settles     bool `json:"settles"`
 	ExpectError *struct {
 		Code string `json:"code"`
 	} `json:"expect_error"`
