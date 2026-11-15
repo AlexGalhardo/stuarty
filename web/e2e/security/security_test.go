@@ -18,6 +18,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/AlexGalhardo/vukem-video/internal/outbound"
 )
 
 // rawHTMLSinks are the ways to put a string into the DOM as markup.
@@ -142,7 +144,12 @@ func buildAndStart(t *testing.T) (base, token string) {
 	base = "http://" + addr
 
 	for deadline := time.Now().Add(60 * time.Second); ; time.Sleep(200 * time.Millisecond) {
-		resp, err := http.Get(base + "/up") //nolint:noctx // a readiness probe on loopback
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, base+"/up", http.NoBody)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		resp, err := outbound.LocalServer(5 * time.Second).Do(req)
 		if err == nil {
 			_ = resp.Body.Close()
 
@@ -170,7 +177,7 @@ func TestSecurity_T22_CSPNonceOnly(t *testing.T) {
 	base, token := buildAndStart(t)
 
 	get := func(path string, auth bool) (http.Header, string) {
-		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, base+path, nil)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, base+path, http.NoBody)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -179,7 +186,7 @@ func TestSecurity_T22_CSPNonceOnly(t *testing.T) {
 			req.Header.Set("Authorization", "Bearer "+token)
 		}
 
-		resp, err := http.DefaultClient.Do(req)
+		resp, err := outbound.LocalServer(10 * time.Second).Do(req)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -204,13 +211,13 @@ func TestSecurity_T22_CSPNonceOnly(t *testing.T) {
 			t.Fatalf("%s (auth %v) carries no Content-Security-Policy", c.path, c.auth)
 		}
 
-		for _, directive := range strings.Split(policy, ";") {
+		for directive := range strings.SplitSeq(policy, ";") {
 			name, value, _ := strings.Cut(strings.TrimSpace(directive), " ")
 			if name != "script-src" && name != "style-src" && name != "default-src" {
 				continue
 			}
 
-			for _, source := range strings.Fields(value) {
+			for source := range strings.FieldsSeq(value) {
 				if bannedSources[source] {
 					t.Errorf("%s: %s allows %s: %s", c.path, name, source, policy)
 				}
@@ -219,14 +226,14 @@ func TestSecurity_T22_CSPNonceOnly(t *testing.T) {
 
 		var script string
 
-		for _, directive := range strings.Split(policy, ";") {
+		for directive := range strings.SplitSeq(policy, ";") {
 			if strings.HasPrefix(strings.TrimSpace(directive), "script-src ") {
 				script = strings.TrimSpace(directive)
 			}
 		}
 
 		match := nonceOf.FindStringSubmatch(script)
-		if match == nil || script != "script-src 'self' 'nonce-"+match[1]+"'" {
+		if len(match) < 2 || script != "script-src 'self' 'nonce-"+match[1]+"'" {
 			t.Fatalf("%s: script-src is not 'self' plus one nonce: %q", c.path, script)
 		}
 
