@@ -453,9 +453,60 @@ func (s *svc) listJobs(ctx context.Context, projectID, state string, off, limit 
 	return all[off:min(off+limit, total)], total, nil
 }
 
-// Cancel is the cancellation of SDD-005 section 14.4. It is not an operation of
-// the Service interface (JobCancel arrives with ALPHA); the trash of a project
-// and the tests drive it through JobRunner.
+// cancelWait is how long JobCancel holds for a running job to reach its final
+// state; the cancellation itself is already requested when it starts waiting.
+const cancelWait = 2 * time.Second
+
+// JobCancel asks for the cancellation of a job and answers with the row as it
+// is afterwards (SDD-003 section 2.8 item 5): a job that finished first is
+// returned in its final state, and a second call changes nothing. The scope is
+// render; media is enough for the caller's own ingest job (SDD-007 section 5.2).
+func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error) {
+	c, ok := CallerFrom(ctx)
+	if !ok {
+		return nil, newError(CodeUnauthorized, "the request carries no credentials.").
+			withHint("send the local token or an API key")
+	}
+
+	row, err := s.store.Jobs().Get(ctx, req.JobID)
+	if err != nil || !s.canSee(ctx, c, &row) {
+		if !slices.Contains(c.Scopes, ScopeRender) && !slices.Contains(c.Scopes, ScopeMedia) {
+			return nil, newError(CodeForbidden, "the caller lacks the %q scope.", ScopeRender).
+				withHint("use a key with the %s scope", ScopeRender)
+		}
+
+		return nil, jobNotFound(req.JobID)
+	}
+
+	ownMediaJob := slices.Contains(c.Scopes, ScopeMedia) && row.Kind == JobIngest && row.Actor == c.Actor
+	if !slices.Contains(c.Scopes, ScopeRender) && !ownMediaJob {
+		return nil, newError(CodeForbidden, "the caller lacks the %q scope.", ScopeRender).
+			withHint("use a key with the %s scope", ScopeRender)
+	}
+
+	if c.ProjectID != "" && row.ProjectID != nil && c.ProjectID != *row.ProjectID {
+		return nil, newError(CodeForbidden, "the key is limited to another project.").
+			withHint("use a key that covers this project")
+	}
+
+	if err := s.cancelJob(ctx, row.ID); err != nil {
+		return nil, asError(err)
+	}
+
+	if !isFinal(row.State) {
+		s.waitJob(ctx, row.ID, cancelWait)
+	}
+
+	after, gerr := s.store.Jobs().Get(ctx, row.ID)
+	if gerr != nil {
+		return nil, asError(gerr)
+	}
+
+	return s.jobView(c, after, false), nil
+}
+
+// Cancel is the cancellation of SDD-005 section 14.4 for the trash of a
+// project and the tests, which drive it through JobRunner.
 func (s *svc) Cancel(ctx context.Context, jobID string) error {
 	return s.cancelJob(ctx, jobID)
 }

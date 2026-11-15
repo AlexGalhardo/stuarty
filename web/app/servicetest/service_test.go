@@ -70,6 +70,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			return err
 		},
 		"JobGet": func() error { _, err := e.svc.JobGet(ctx, service.JobGetRequest{JobID: "job_0000000001"}); return err },
+		"JobCancel": func() error {
+			_, err := e.svc.JobCancel(ctx, service.JobCancelRequest{JobID: "job_0000000001"})
+			return err
+		},
 		"JobList": func() error {
 			_, err := e.svc.JobList(ctx, service.JobListRequest{ProjectID: "prj_0000000001"})
 			return err

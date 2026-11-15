@@ -50,6 +50,21 @@ Read a job
 
 Responses: `200` OK, `401`, `422`, `default`.
 
+### `POST /jobs/{job_id}/cancel`
+
+Cancel a job
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `job_id` | path | yes | `string` |
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+
+Responses: `200` OK, `401`, `422`, `default`.
+
 ### `GET /jobs/{job_id}/file`
 
 Download the file of a finished export

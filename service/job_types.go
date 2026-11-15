@@ -52,6 +52,11 @@ type JobGetRequest struct {
 	WaitMS int    `json:"wait_ms,omitempty"`
 }
 
+// JobCancelRequest asks for the cancellation of a job.
+type JobCancelRequest struct {
+	JobID string `json:"job_id"`
+}
+
 // JobListRequest lists the jobs of a project. State empty is the queued and
 // running jobs plus the 10 most recent final ones; "active", "all" and each
 // state filter.

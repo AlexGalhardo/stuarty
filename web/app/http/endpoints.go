@@ -18,14 +18,17 @@ const BasePath = "/api/v1"
 // section 5.2). The table is data: a route that has no row is not registered,
 // and a test fails for a router route or a Service method without one.
 type Endpoint struct {
-	ID      string // the operation id and the route name
-	Method  string
-	Path    string // under BasePath, except Root
-	Root    bool   // Path is relative to the origin, not to BasePath
-	Scope   string // "" for the routes that carry no scope (handshake, launch)
-	Service string // the Service method that answers it, "" when it is not a service operation
-	Status  int
-	Summary string
+	ID     string // the operation id and the route name
+	Method string
+	Path   string // under BasePath, except Root
+	Root   bool   // Path is relative to the origin, not to BasePath
+	Scope  string // "" for the routes that carry no scope (handshake, launch)
+	// AlsoScope is a second scope that gets past the route; the Service decides
+	// whether it is enough (JobCancel with media, SDD-007 section 5.2).
+	AlsoScope string
+	Service   string // the Service method that answers it, "" when it is not a service operation
+	Status    int
+	Summary   string
 	// Pending marks an operation of the Prototype whose Service method arrives
 	// with a later task; its handler answers E_INTERNAL until then.
 	Pending string
@@ -143,6 +146,10 @@ var Endpoints = []Endpoint{
 	{
 		ID: "jobs.get", Method: http.MethodGet, Path: "/jobs/{job_id}", Scope: service.ScopeRead,
 		Service: "JobGet", Status: 200, Summary: "Read a job",
+	},
+	{
+		ID: "jobs.cancel", Method: http.MethodPost, Path: "/jobs/{job_id}/cancel", Scope: service.ScopeRender,
+		AlsoScope: service.ScopeMedia, Service: "JobCancel", Status: 200, Summary: "Cancel a job",
 	},
 	{
 		ID: "projects.frame", Method: http.MethodGet, Path: "/projects/{id}/frame", Scope: service.ScopeRead,

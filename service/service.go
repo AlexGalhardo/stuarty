@@ -43,6 +43,7 @@ type Service interface {
 	JobStart(ctx context.Context, req JobStartRequest) (*Job, error)
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
+	JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 
 	// ViewFrame and ViewSheet render the current revision through the export
 	// executor (SDD-003 section 2.7).
