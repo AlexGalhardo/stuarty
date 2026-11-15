@@ -513,7 +513,13 @@ type DetectInput struct {
 // EncoderTest is the test encode of SDD-011 8.4 for one candidate: 15 frames of
 // 1080x1920 at 30 fps to a file of the run directory.
 func EncoderTest(pol Policy, encoder string, di DetectInput, out string) ([]string, error) {
-	in := TestSrc2(1080, 1920, Rate{30, 1}, 500)
+	return EncoderTestAt(pol, encoder, di, out, 1080, 1920, Rate{30, 1})
+}
+
+// EncoderTestAt is EncoderTest at another size and rate, the capability test of an export at 4K or at
+// 60 fps (SDD-004 section 8): 15 frames of the synthetic picture, so the bitrate is the one of the export.
+func EncoderTestAt(pol Policy, encoder string, di DetectInput, out string, w, h int, rate Rate) ([]string, error) {
+	in := TestSrc2(w, h, rate, 500)
 	opts := []Opt{Enum("-c:v", encoder), Int("-frames:v", 15)}
 	switch encoder {
 	case "libx264":
