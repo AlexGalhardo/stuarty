@@ -504,6 +504,10 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		Kind      string               `json:"kind"`
 		Files     []service.ImportFile `json:"files"`
 		WaitMS    int                  `json:"wait_ms"`
+		Args      struct {
+			AssetID  string `json:"asset_id"`
+			Language string `json:"language"`
+		} `json:"args"`
 
 		TemplateID  string          `json:"template_id"`
 		Description string          `json:"description"`
@@ -566,6 +570,17 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 
 		return "media:inspect", append(argv, flag("sections", strings.Join(a.Sections, ","))...), "", nil
 	case "JobStart":
+		if a.Kind == service.JobTranscribe {
+			argv = append(slices.Clone(proj), "--asset", a.Args.AssetID)
+			argv = append(argv, flag("language", a.Args.Language)...)
+
+			if a.WaitMS == 0 {
+				return "transcribe", append(argv, "--no-wait"), "", nil
+			}
+
+			return "transcribe", append(argv, "--wait"), "", nil
+		}
+
 		if a.WaitMS == 0 {
 			return "export", append(proj, "--no-wait"), "", nil
 		}
