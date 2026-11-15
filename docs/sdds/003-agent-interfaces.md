@@ -667,6 +667,7 @@ type JobStartRequest struct {
 type ExportArgs struct { // the export renders the current revision, pinned at start; there is no revision member in the MVP
 	Start    string `json:"start,omitempty"`    // time; default "0s"
 	End      string `json:"end,omitempty"`      // time; default: the end of the timeline
+	Format   string `json:"format,omitempty"`   // "mp4" (default), "gif", "wav" or "aac" (SDD-004 section 8.1); anything else is E_VALIDATION with path args.format. There is no fps or size member: the frame rate and the size are project settings (SDD-001 section 3.1), and 60 fps or 4K is chosen by setting them
 }
 type TranscribeArgs struct {
 	AssetID  string `json:"asset_id"`
@@ -2017,7 +2018,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 | `export` | `{"start"?: time, "end"?: time, "format"?: "mp4" \| "gif" \| "wav" \| "aac"}` | renders the current revision, pinned when the job starts (there is no `revision` argument: old revisions are not rendered in the MVP), to `exports/<project id>/<job id>.<ext>`, where `<ext>` is `mp4`, `gif`, `wav` or `m4a` for the format (SDD-004 §8.1); `format` is `mp4` when absent and any other value is `E_VALIDATION` with the `path` `args.format`. The frame rate and the size are project settings (SDD-001 §3.1), not arguments: a project beyond 4096 pixels or 120 fps is refused at the start with `E_LIMIT`, and an encoder that cannot do 4K or 60 fps ends the job `failed` with `E_EXPORT_FAILED` and `details.reason` `unsupported_size`. Refused with `E_LINT_BLOCKING` while lint has errors (§2.8). The finished job is verified (ADR-0018 item 6) |
 | `transcribe` | `{"asset_id": string, "language"?: string}` | creates the transcript read by `media_inspect` and used by `caption.from_transcript`, `clip.remove_silences` |
 
-The adapter passes `args` as the one `Args` object of `JobStartRequest` and the service decodes it into `ExportArgs` or `TranscribeArgs` by `kind`; an unknown member is `E_VALIDATION` with the `path` `args.<name>`.
+The adapter passes `args` as the one `Args` object of `JobStartRequest` and the service decodes it into `ExportArgs` or `TranscribeArgs` by `kind`; an unknown member is `E_VALIDATION` with the `path` `args.<name>`. The OpenAPI document lists the members of `args` under the request body of `POST /projects/{id}/jobs` (`start`, `end`, `format` with its enum, `asset_id`, `language`), so a client can offer only what the build accepts; `fps` and `size` are deliberately not there.
 
 Example:
 

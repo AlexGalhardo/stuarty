@@ -83,6 +83,7 @@ func (h *apiHandler) completeOpenAPI(doc *openapi.Document) {
 	slices.Sort(names)
 
 	markUntrusted(doc)
+	describeJobStartArgs(doc)
 
 	op, ok := doc.Components.Schemas["Operation"]
 	if !ok {
@@ -96,6 +97,42 @@ func (h *apiHandler) completeOpenAPI(doc *openapi.Document) {
 	}
 
 	op["x-args-by-op"] = byOp
+}
+
+// describeJobStartArgs lists the members of args in the body of POST /projects/{id}/jobs, with the
+// values of an export format (SDD-003 section 2.8). The frame rate and the size of an export are
+// project settings, not arguments (SDD-004 section 8.1), so they are not listed. The service
+// refuses a member that is not here with E_VALIDATION.
+func describeJobStartArgs(doc *openapi.Document) {
+	for path, item := range doc.Paths {
+		post := item["post"]
+		if !strings.HasSuffix(path, "/projects/{id}/jobs") || post == nil || post.RequestBody == nil {
+			continue
+		}
+
+		media, ok := post.RequestBody.Content["application/json"]
+		if !ok {
+			continue
+		}
+
+		props, _ := media.Schema["properties"].(map[string]any)
+		args, _ := props["args"].(map[string]any)
+
+		if args == nil {
+			continue
+		}
+
+		delete(args, "additionalProperties")
+
+		args["properties"] = map[string]any{
+			"start":    map[string]any{"type": "string", "description": "export: the first time to render, such as 1.5s or 45f."},
+			"end":      map[string]any{"type": "string", "description": "export: the end time, not included."},
+			"format":   map[string]any{"type": "string", "enum": []string{"mp4", "gif", "wav", "aac"}, "default": "mp4", "description": "export: the file to write; wav and aac are audio only."},
+			"asset_id": map[string]any{"type": "string", "description": "transcribe: the asset to transcribe."},
+			"language": map[string]any{"type": "string", "description": "transcribe: the spoken language."},
+		}
+		args["additionalProperties"] = false
+	}
 }
 
 // markUntrusted sets the annotation x-untrusted on every property of a result

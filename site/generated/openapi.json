@@ -7085,8 +7085,37 @@
               "schema": {
                 "properties": {
                   "args": {
-                    "additionalProperties": {},
+                    "additionalProperties": false,
                     "description": "The arguments of the kind: start, end and format (mp4, gif, wav or aac; default mp4) for an export.",
+                    "properties": {
+                      "asset_id": {
+                        "description": "transcribe: the asset to transcribe.",
+                        "type": "string"
+                      },
+                      "end": {
+                        "description": "export: the end time, not included.",
+                        "type": "string"
+                      },
+                      "format": {
+                        "default": "mp4",
+                        "description": "export: the file to write; wav and aac are audio only.",
+                        "enum": [
+                          "mp4",
+                          "gif",
+                          "wav",
+                          "aac"
+                        ],
+                        "type": "string"
+                      },
+                      "language": {
+                        "description": "transcribe: the spoken language.",
+                        "type": "string"
+                      },
+                      "start": {
+                        "description": "export: the first time to render, such as 1.5s or 45f.",
+                        "type": "string"
+                      }
+                    },
                     "type": "object"
                   },
                   "dry_run": {
