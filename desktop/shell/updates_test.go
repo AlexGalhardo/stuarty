@@ -1,0 +1,144 @@
+package shell
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/desktop/update"
+)
+
+func TestSettingsDefaultToOff(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "sub", "desktop.json")
+
+	s, err := LoadSettings(path)
+	if err != nil || s.UpdateCheck {
+		t.Fatalf("missing file: %+v, %v", s, err)
+	}
+
+	if (Settings{}).UpdateCheck {
+		t.Error("the zero value of the setting must be off")
+	}
+}
+
+func TestSettingsRoundTrip(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "sub", "desktop.json")
+
+	if err := (Settings{UpdateCheck: true}).Save(path); err != nil {
+		t.Fatal(err)
+	}
+
+	s, err := LoadSettings(path)
+	if err != nil || !s.UpdateCheck {
+		t.Fatalf("after save: %+v, %v", s, err)
+	}
+
+	raw, _ := os.ReadFile(path)
+	if !strings.Contains(string(raw), `"update.check":true`) {
+		t.Errorf("file %q lacks the setting key update.check", raw)
+	}
+}
+
+func TestDamagedSettingsStayOff(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "desktop.json")
+	if err := os.WriteFile(path, []byte(`{"update.check": tru`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	s, err := LoadSettings(path)
+	if err == nil || s.UpdateCheck {
+		t.Errorf("damaged file: %+v, %v", s, err)
+	}
+}
+
+type fakeChecker struct {
+	offer *update.Offer
+	err   error
+	calls int
+}
+
+func (f *fakeChecker) CheckNow(context.Context) (*update.Offer, error) {
+	f.calls++
+
+	return f.offer, f.err
+}
+
+func TestCheckForUpdatesWithoutAClientSaysNotConfigured(t *testing.T) {
+	// update.New returns ErrNotConfigured for the placeholder feed; the menu shows it as text.
+	_, buildErr := update.New(update.Config{FeedURL: update.FeedURL})
+	if !errors.Is(buildErr, update.ErrNotConfigured) {
+		t.Fatalf("the placeholder build must be not configured, got %v", buildErr)
+	}
+
+	for _, err := range []error{buildErr, nil} {
+		out := CheckForUpdates(context.Background(), nil, err, "0.15.0")
+		if out.Offer != nil || !strings.Contains(out.Message, "no update feed or signing key") ||
+			!strings.Contains(out.Message, ReleasePageURL) {
+			t.Errorf("message %q", out.Message)
+		}
+	}
+}
+
+func TestCheckForUpdatesOutcomes(t *testing.T) {
+	offer := &update.Offer{Version: "0.16.0"}
+
+	cases := []struct {
+		name  string
+		check *fakeChecker
+		want  string
+		offer bool
+	}{
+		{"new version", &fakeChecker{offer: offer}, "Version 0.16.0 is available", true},
+		{"up to date", &fakeChecker{err: fmt.Errorf("%w: offered 0.15.0", update.ErrNotNewer)}, "is up to date", false},
+		{
+			"failure",
+			&fakeChecker{err: errors.New("update: feed: 503 Service Unavailable")},
+			"Could not check for updates: update: feed: 503",
+			false,
+		},
+	}
+	for _, c := range cases {
+		out := CheckForUpdates(context.Background(), c.check, nil, "0.15.0")
+		if !strings.Contains(out.Message, c.want) || (out.Offer != nil) != c.offer || c.check.calls != 1 {
+			t.Errorf("%s: %+v", c.name, out)
+		}
+	}
+}
+
+func TestInstallerIsChosenPerGOOS(t *testing.T) {
+	quit := func() {}
+
+	if _, ok := InstallerFor("windows", quit).(setupInstaller); !ok {
+		t.Error("windows must run the setup program")
+	}
+
+	for _, goos := range []string{"darwin", "linux", "freebsd"} {
+		inst := InstallerFor(goos, quit)
+
+		err := inst.Install(context.Background(), update.Artifact{Path: "x", Version: "0.16.0"})
+		if !errors.Is(err, ErrInstallUnsupported) || !strings.Contains(err.Error(), ReleasePageURL) {
+			t.Errorf("%s: %v", goos, err)
+		}
+	}
+}
+
+func TestSetupInstallerQuitsOnlyAfterTheSetupStarted(t *testing.T) {
+	quits := 0
+	art := update.Artifact{Path: "setup.exe"}
+
+	ok := setupInstaller{run: func(string) error { return nil }, quit: func() { quits++ }}
+	if err := ok.Install(context.Background(), art); err != nil || quits != 1 {
+		t.Errorf("started: %v, quits %d", err, quits)
+	}
+
+	boom := errors.New("access denied")
+	bad := setupInstaller{run: func(string) error { return boom }, quit: func() { quits++ }}
+
+	if err := bad.Install(context.Background(), art); !errors.Is(err, boom) || quits != 1 {
+		t.Errorf("failed: %v, quits %d", err, quits)
+	}
+}

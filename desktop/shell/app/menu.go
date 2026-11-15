@@ -10,7 +10,7 @@ import (
 // workspace folder (ROADMAP P3-DSK-002). The editor menus of SDD-012 section
 // 21.3 item 4 (onMenuAction) are a later task; View has the full screen toggle
 // that the bridge also offers.
-func buildMenu(app *application.App, win *application.WebviewWindow, ws workspace.Dir) *application.Menu {
+func buildMenu(app *application.App, win *application.WebviewWindow, ws workspace.Dir, up *updater) *application.Menu {
 	menu := app.NewMenu()
 
 	file := menu.AddSubmenu("File")
@@ -33,6 +33,10 @@ func buildMenu(app *application.App, win *application.WebviewWindow, ws workspac
 	view.Add("Toggle full screen\tF11").OnClick(func(*application.Context) { win.ToggleFullscreen() })
 
 	help := menu.AddSubmenu("Help")
+	help.Add("Check for updates").OnClick(func(*application.Context) { up.checkNow() })
+	help.AddCheckbox("Check for updates at start-up", up.settings.UpdateCheck).
+		OnClick(func(ctx *application.Context) { up.setCheckOnStartup(ctx.ClickedMenuItem().Checked()) })
+	help.AddSeparator()
 	help.Add("About").OnClick(func(*application.Context) {
 		app.Dialog.Info().SetTitle("About Vukem Video").SetMessage("Vukem Video " + version).Show()
 	})
