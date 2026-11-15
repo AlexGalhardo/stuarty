@@ -59,6 +59,10 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"text.add": ["text.add", "track.add"],
 	"shape.add": ["shape.add", "track.add"],
 	"inspector.shape": ["shape.set"],
+	"inspector.slot_mark": ["slot.mark"],
+	"inspector.slot_unmark": ["slot.unmark"],
+	"slots.fill": ["slot.fill"],
+	"inspector.template_info": ["template.set_info"],
 	"canvas.edit_text": ["text.set"],
 	"inspector.text": ["text.set"],
 	// The palette runs any command of the registry with operations built from
@@ -248,10 +252,22 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.shape", phase: "A" },
 		palette,
 	],
-	"slot.fill": [palette],
-	"slot.mark": [palette],
-	"slot.unmark": [palette],
-	"template.set_info": [palette],
+	"slot.fill": [
+		{ kind: "inspector", action: "slots.fill", phase: "A" },
+		palette,
+	],
+	"slot.mark": [
+		{ kind: "inspector", action: "inspector.slot_mark", phase: "A" },
+		palette,
+	],
+	"slot.unmark": [
+		{ kind: "inspector", action: "inspector.slot_unmark", phase: "A" },
+		palette,
+	],
+	"template.set_info": [
+		{ kind: "inspector", action: "inspector.template_info", phase: "A" },
+		palette,
+	],
 	"text.add": [
 		{ kind: "toolbar", action: "text.add", phase: "A" },
 		{ kind: "key", action: "text.add", phase: "A" },
