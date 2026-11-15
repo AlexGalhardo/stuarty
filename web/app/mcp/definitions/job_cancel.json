@@ -1,0 +1,45 @@
+{
+ "name": "job_cancel",
+ "description": "Cancel a queued or running job. A job already in a final state is returned unchanged. A cancelled export leaves no file.",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "job_id": {
+    "type": "string",
+    "pattern": "^job_[0-9a-hjkmnp-tv-z]{10}$"
+   }
+  },
+  "required": [
+   "job_id"
+  ],
+  "additionalProperties": false
+ },
+ "outputSchema": {
+  "type": "object",
+  "properties": {
+   "job_id": {
+    "type": "string"
+   },
+   "state": {
+    "enum": [
+     "queued",
+     "running",
+     "succeeded",
+     "failed",
+     "cancelled"
+    ]
+   }
+  },
+  "required": [
+   "job_id",
+   "state"
+  ]
+ },
+ "annotations": {
+  "title": "Cancel job",
+  "readOnlyHint": false,
+  "destructiveHint": false,
+  "idempotentHint": true,
+  "openWorldHint": false
+ }
+}

@@ -37,7 +37,7 @@ func TestToolListHasTheToolsWhoseOperationsExist(t *testing.T) {
 
 	want := []string{
 		"project_list", "project_create", "project_get", "project_trash", "edit", "command_help", "history",
-		"media_import", "media_inspect", "view", "lint", "job_start", "job_get",
+		"media_import", "media_inspect", "view", "lint", "job_start", "job_get", "job_cancel",
 	}
 	if strings.Join(names, ",") != strings.Join(want, ",") {
 		t.Fatalf("tools = %v, want %v (the others wait for their Service methods: %v)", names, want, Pending)

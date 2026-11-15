@@ -24,6 +24,7 @@ func (a *adapter) handlers() map[string]callFunc {
 		"media_inspect":  mediaInspect,
 		"job_start":      jobStart,
 		"job_get":        jobGet,
+		"job_cancel":     jobCancel,
 		"view":           view,
 	}
 }
@@ -327,6 +328,22 @@ func jobStart(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 }
 
 // jobGet reads one job (job_id) or lists the jobs of a project (project_id).
+func jobCancel(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
+	in, err := decode[struct {
+		JobID string `json:"job_id"`
+	}](raw)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := svc.JobCancel(ctx, service.JobCancelRequest{JobID: in.JobID})
+	if err != nil {
+		return nil, err
+	}
+
+	return &toolOutput{value: res, text: res.Text}, nil
+}
+
 func jobGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
 		JobID     string `json:"job_id"`

@@ -24,7 +24,7 @@ var definitionFiles embed.FS
 // caches hit. These are the tools whose Service operations exist in the build.
 var order = []string{
 	"project_list", "project_create", "project_get", "project_trash", "edit", "command_help", "history",
-	"media_import", "media_inspect", "view", "lint", "job_start", "job_get",
+	"media_import", "media_inspect", "view", "lint", "job_start", "job_get", "job_cancel",
 }
 
 // definition is a tool definition and its compiled input schema.
