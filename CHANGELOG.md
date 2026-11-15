@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-15
+
+### Added
+
+- **ui:** Extend i18n rule I3 to all of resources/js ([edb3955](https://github.com/AlexGalhardo/vukem-video/commit/edb39556493293b22c70950896cea0fcdc59be6e))
+- **service:** Tag the OpenTimelineIO result names as untrusted text ([814aaf0](https://github.com/AlexGalhardo/vukem-video/commit/814aaf023abb30d51bee83f2d37b6fe1c7af1071))
+- **service:** Install the Cisco OpenH264 library through the explicit install step ([0fcf602](https://github.com/AlexGalhardo/vukem-video/commit/0fcf60229fa4cca5ba089c5bb0d624b6e4bfb732))
+- **service:** Show the build flavour in doctor and check the OpenH264 library of the own build ([94ba796](https://github.com/AlexGalhardo/vukem-video/commit/94ba796b06eb5a547ff850a5b7b0b97b795b3984))
+- **ui:** Wire the update client into the desktop shell menu and settings ([bd92aed](https://github.com/AlexGalhardo/vukem-video/commit/bd92aed9d19e31394533421a262b68e4d46e1d7b))
+- **ui:** Ask the plan for the preview buffer width ([4fd14d7](https://github.com/AlexGalhardo/vukem-video/commit/4fd14d7b55af5e2a16f042b13dbf573b9018d023))
+- **engine:** Apply the Job Object limits to FFmpeg and whisper children on Windows ([e2f1fba](https://github.com/AlexGalhardo/vukem-video/commit/e2f1fbaad479d7f5dc0c1366c085499a2ced45a1))
+
+### Fixed
+
+- **transcribe:** Refuse a relative helper or model path ([afcb70f](https://github.com/AlexGalhardo/vukem-video/commit/afcb70ff752cf5d29fae669c17d7c1541ae014ed))
+- **engine:** Give the bwrap probe a minimal environment ([abaca59](https://github.com/AlexGalhardo/vukem-video/commit/abaca598e13c3e0bc3923fb55f88180f830e6b1c))
+- **site:** Treat opentimelineio.org as an inert link host ([4789e58](https://github.com/AlexGalhardo/vukem-video/commit/4789e58506c4f8a87226647f508197682c68bd56))
+- **ui:** Keep the rotation handle reachable under the toolbar ([e11d29d](https://github.com/AlexGalhardo/vukem-video/commit/e11d29d79a8821fea02b3f152db08a8d2092b4ba))
+- **ui:** Correct pt-BR terms to the glossary ([e4b2739](https://github.com/AlexGalhardo/vukem-video/commit/e4b27398c1fe3349931de4bd1e59bd229cfe9191))
+- **ui:** Translate the close button of dialogs and sheets ([7866708](https://github.com/AlexGalhardo/vukem-video/commit/7866708224ba9813aa38d0a96298260b4a4c8651))
+- **ui:** Use the glossary term for playhead in pt-BR ([644bb82](https://github.com/AlexGalhardo/vukem-video/commit/644bb8225c78aa2ad6e86a39377c0f7209fbd4ad))
+- **ui:** Translate the sidebar strings ([d59ec17](https://github.com/AlexGalhardo/vukem-video/commit/d59ec17c38cd07537464a3d96763fbc94453aaa5))
+- **service:** Carry the limit, the value and the ceiling in every limit error ([de4bf2b](https://github.com/AlexGalhardo/vukem-video/commit/de4bf2b31626214b41505dfca573ef493ef10dd1))
+- **web:** Carry the limit, the value and the ceiling in stream, frame and request refusals ([6845e20](https://github.com/AlexGalhardo/vukem-video/commit/6845e206089649137d87f11ae19d6cc0c51a29fa))
+- **service:** Refuse a new idempotency key at the ceiling instead of evicting the oldest ([2ec933e](https://github.com/AlexGalhardo/vukem-video/commit/2ec933e2d0689f9bb21a635eda3d6fdc34bbe35e))
+- **service:** End an export over the byte ceiling with E_EXPORT_FAILED and reason size_limit ([63b0b34](https://github.com/AlexGalhardo/vukem-video/commit/63b0b34ba7e0063da098eb27efb4ac1bddde0a0d))
+- **service:** Answer E_QUEUE_FULL for a file of an import that finds the ingest queue full ([48710fc](https://github.com/AlexGalhardo/vukem-video/commit/48710fc89118f834026ad12a41db345b214d6ca9))
+- **cli:** Print the cleaned names of the OpenTimelineIO export ([0d76a37](https://github.com/AlexGalhardo/vukem-video/commit/0d76a3703db3ebc85155a8f75b16e627c862621a))
+- **ui:** Keep the preview canvas when the browser has no Web Audio ([f7a217a](https://github.com/AlexGalhardo/vukem-video/commit/f7a217a7b3a5082aceef5825966a525623155586))
+- **ui:** Let the brand font button name contain its visible text ([f35ce72](https://github.com/AlexGalhardo/vukem-video/commit/f35ce72c9927df84f09c7e97c6c18f8d98f88ac4))
+- **command:** List E_NOT_FOUND for font.add, raised by the service before apply ([bb51260](https://github.com/AlexGalhardo/vukem-video/commit/bb512606f31a1569462aa037b2b068ca1d2e2def))
+
+### Security
+
+- **security:** Pin the licence allowlist and licence texts of shipped components ([7f9a510](https://github.com/AlexGalhardo/vukem-video/commit/7f9a5103a51ca930541884afb18a40ad4957e725))
+- **security:** Refuse a relative server path and strip the bwrap probe environment ([a469ff3](https://github.com/AlexGalhardo/vukem-video/commit/a469ff386986423980edeccd7c6ef2575a9c704b))
+- **security:** Add the desktop update outbound purpose ([243b376](https://github.com/AlexGalhardo/vukem-video/commit/243b376532d32070af7a6c830c5e3ebf6bbfa7c2))
+- **security:** Add the desktop update client with signed feed and artifact checks ([9b6fe6d](https://github.com/AlexGalhardo/vukem-video/commit/9b6fe6d00c08a19967ca976a16390bc08767d6f2))
+
 ## [0.14.0] - 2026-11-15
 
 ### Added
@@ -665,7 +704,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.11.0...v0.12.0
