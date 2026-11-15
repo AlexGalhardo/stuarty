@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
 import type { MediaEntry } from "../api/types";
 import { thumbnailUrl } from "../api/urls";
 import { useActions } from "../commands/useActions";
@@ -16,6 +16,7 @@ import { formatSeconds } from "../ui/format";
 // asset.updated event and the asset.add batch are not ordered.
 export default function AssetCard({ entry }: { entry: MediaEntry }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	const runtime = useRuntime();
 	const actions = useActions();
 	const inDocument = useDocumentState(
@@ -53,7 +54,7 @@ export default function AssetCard({ entry }: { entry: MediaEntry }): ReactNode {
 					</p>
 					<p className="text-muted-foreground [font-variant-numeric:tabular-nums]">
 						{entry.duration_seconds !== null &&
-							`${formatSeconds(entry.duration_seconds)} · `}
+							`${formatSeconds(entry.duration_seconds, locale)} · `}
 						{entry.width !== undefined &&
 							entry.height !== undefined &&
 							`${entry.width}×${entry.height} · `}

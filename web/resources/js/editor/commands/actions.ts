@@ -29,16 +29,6 @@ export interface Actions {
 	applyNotice(notice: Notice): Promise<EditOutcome | null>;
 }
 
-// The ids of the commands the Prototype UI can send, for the coverage
-// declaration of SDD-012 section 9.3.
-export const PROTOTYPE_COMMANDS = [
-	"clip.add",
-	"track.add",
-	"item.split",
-	"item.trim",
-	"caption.add",
-] as const;
-
 function nextFree(error: ApiError): number | null {
 	const value = error.details?.next_free;
 	return typeof value === "number" ? value : null;
