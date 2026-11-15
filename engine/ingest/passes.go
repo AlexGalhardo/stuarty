@@ -112,6 +112,8 @@ func (j *job) videoPass(ctx context.Context, plan VideoPlan, deadline time.Durat
 					),
 					ffargs.Int("-q:v", NormalizedQScale),
 					ffargs.Int("-threads", NormalizedThreads),
+					// The automatic DCT picks a SIMD version by CPU that is not bit-exact; int is.
+					ffargs.Enum("-dct", "int"),
 					ffargs.Int("-g", plan.GOP),
 					ffargs.Int("-bf", 0),
 					ffargs.Enum("-pix_fmt", "yuv420p"),

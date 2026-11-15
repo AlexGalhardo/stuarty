@@ -42,7 +42,7 @@ func tone(secs float64) []string {
 // Clip is a video with sound: size, frame rate and duration in seconds.
 func (g Gen) Clip(ctx context.Context, name string, w, h, fps int, secs float64) (string, error) {
 	return g.ff(ctx, name, append(append(src(w, h, fps, secs), tone(secs)...),
-		"-c:v", "mpeg4", "-q:v", "4", "-c:a", "aac", "-f", "mp4")...)
+		"-c:v", "mpeg4", "-dct", "int", "-q:v", "4", "-c:a", "aac", "-f", "mp4")...)
 }
 
 // Portrait is a 360x640 clip at 30 fps, 3 s, with sound.
@@ -68,7 +68,8 @@ func (g Gen) Rotated(ctx context.Context) (string, error) {
 // VFR is a 4 s video of a 60 fps capture with frames dropped in bursts, in Matroska, with no sound.
 func (g Gen) VFR(ctx context.Context) (string, error) {
 	return g.ff(ctx, "vfr.mkv", append(src(320, 240, 60, 4),
-		"-vf", "select='lt(mod(n,20),11)'", "-fps_mode", "vfr", "-c:v", "mpeg4", "-q:v", "4", "-f", "matroska")...)
+		"-vf", "select='lt(mod(n,20),11)'", "-fps_mode", "vfr",
+		"-c:v", "mpeg4", "-dct", "int", "-q:v", "4", "-f", "matroska")...)
 }
 
 // Audio is a 3 s MP3 of a tone, a second of silence and a tone again.
@@ -90,7 +91,7 @@ func (g Gen) Image(ctx context.Context) (string, error) {
 // declared length and the decoder can produce only part of it.
 func (g Gen) Truncated(ctx context.Context) (string, error) {
 	full, err := g.ff(ctx, "truncated-full.mp4", append(append(src(320, 240, 30, 6), tone(6)...),
-		"-c:v", "mpeg4", "-q:v", "6", "-c:a", "aac", "-movflags", "+faststart", "-f", "mp4")...)
+		"-c:v", "mpeg4", "-dct", "int", "-q:v", "6", "-c:a", "aac", "-movflags", "+faststart", "-f", "mp4")...)
 	if err != nil {
 		return "", err
 	}
@@ -107,5 +108,5 @@ func (g Gen) Truncated(ctx context.Context) (string, error) {
 // codec is MPEG-4 Part 2, which the LGPL build can encode; the original of a phone is HEVC.
 func (g Gen) Long(ctx context.Context) (string, error) {
 	return g.ff(ctx, "ingest-60s-1080p.mp4", append(append(src(1080, 1920, 30, 60), tone(60)...),
-		"-c:v", "mpeg4", "-q:v", "5", "-c:a", "aac", "-f", "mp4")...)
+		"-c:v", "mpeg4", "-dct", "int", "-q:v", "5", "-c:a", "aac", "-f", "mp4")...)
 }
