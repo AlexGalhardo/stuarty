@@ -35,7 +35,10 @@ func assertNamesNoVariable(t *testing.T, se *service.Error) {
 // gets the limit and its figures but not the name of the variable; the
 // administrator and local mode get it (P2-SRV-006 subtask 3).
 func TestLimitErrorsHideTheVariableFromNonAdmins(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{limits: service.Limits{MaxImportBytes: 20, MaxExports: 1}, noQueue: true, exporter: goodExporter()})
+	m := newMediaEnv(
+		t,
+		mediaCfg{limits: service.Limits{MaxImportBytes: 20, MaxExports: 1}, noQueue: true, exporter: goodExporter()},
+	)
 
 	member := networkCaller("user:alice", "alice", []string{
 		service.ScopeRead, service.ScopeEdit, service.ScopeMedia, service.ScopeRender,

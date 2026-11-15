@@ -341,7 +341,12 @@ func TestDoctorReportsTheChildPolicy(t *testing.T) {
 		wantLimits, wantSB string
 	}{
 		"both": {
-			service.ChildPolicy{Limits: true, Sandbox: "/usr/bin/bwrap"}, "available: prlimit", "available: every FFmpeg run",
+			service.ChildPolicy{
+				Limits:  true,
+				Sandbox: "/usr/bin/bwrap",
+			},
+			"available: prlimit",
+			"available: every FFmpeg run",
 		},
 		"neither": {
 			service.ChildPolicy{LimitsWhy: "resource limits are not available on this operating system"},
@@ -366,7 +371,8 @@ func TestDoctorReportsTheChildPolicy(t *testing.T) {
 			got[c.Name] = c.Detail
 		}
 
-		if !strings.HasPrefix(got["child.limits"], tc.wantLimits) || !strings.HasPrefix(got["child.sandbox"], tc.wantSB) {
+		if !strings.HasPrefix(got["child.limits"], tc.wantLimits) ||
+			!strings.HasPrefix(got["child.sandbox"], tc.wantSB) {
 			t.Errorf("%s: checks = %q", name, got)
 		}
 
