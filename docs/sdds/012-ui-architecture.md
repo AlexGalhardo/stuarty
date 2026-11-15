@@ -1368,6 +1368,17 @@ They live in `web/e2e/specs/`, use the existing Playwright setup (`web/e2e/playw
 | 29 | `perf-edit-200` | the 200-item, 2,000-word fixture; 200 sequential `item.trim` operations sent through `window.__vv.dispatch(ops)` (§20.4); p95 of `vv:edit` at most 50 ms and of `vv:edit-apply` at most 8 ms (NFR-001, §19.1) | P |
 | 30 | `video-layers-budget` | fixtures with 4, 6 and 8 simultaneous video layers played for 10 s each; `getVideoPlaybackQuality().droppedVideoFrames` at most 2% at the chosen `MAX_VIDEO_LAYERS`, and tab memory recorded (§11.2 item 5, §19.1) | P |
 
+**Browser matrix** (`web/e2e/playwright.config.ts`, `web/e2e/support/browsers.ts`). Three projects run the specs: `chromium`, `firefox` and `webkit` (ADR-0023 item 5). Firefox and WebKit skip a test whose title carries `@chromium-only`; each use has its reason in a comment (an engine limit, never a defect to hide). The specs in `NOT_IN_MATRIX` run in no project of the matrix: `perf`, `video-layers`, `export-failure` and the two `desktop-detect` specs, because they are load-sensitive budgets or need their own server (the performance specs run alone, with `VUKEM_VIDEO_PERF=1`; the detection page has its own `desktop-detect-webkit` project).
+
+Runtime skips, each with a stated reason:
+
+- WebKit on Windows (the WinCairo build of Playwright) cannot decode the VP9 MP4 proxy (`MEDIA_ERR_SRC_NOT_SUPPORTED`), so the specs that compare video pixels skip there (`noVideoDecode`). The WebKit builds of Linux and macOS decode it and run them.
+- The same build has no Web Audio, so the preview cannot play; a scenario that plays skips with `skipWithoutWebAudio`, because the playback clock is the `AudioContext` clock (§11.2).
+
+`FIREFOX_DIVERGENCES` (in `preview-vs-export.spec.ts`) lists the cases that miss the gate in Firefox alone, as expected failures with their measurements: today `scale-linear`, whose SSIM is 0.9665 at frame 15 only because Firefox seeks the paused video to a neighbouring source frame while the scale grows. Chromium and WebKit meet the gate. The cases of `KNOWN_DIVERGENCES` are expected failures in every browser.
+
+Open item: WebKit reports one `style-src-attr` CSP violation each time React mounts elements that carry a `style` prop, although the styles apply and Chromium and Firefox report nothing on the same pages. The CSP specs drop only that directive in WebKit (`cspViolations`). This is not yet explained: it needs a run on a real macOS WebKit (the CI job of P3-REL-005) to tell a Playwright WebKit build artefact from a real violation, and the filter must be removed if the macOS run is clean.
+
 ### 20.2 Component and unit tests (Vitest)
 
 Only code that has logic is unit tested, next to the code:
