@@ -256,7 +256,7 @@ var mediaList = &spec{
 var export = &spec{
 	name:    "export",
 	summary: "export a project to a file",
-	usage:   []string{"vukem-video export --project <id> [--start t] [--end t] [--wait] [--timeout d]"},
+	usage:   []string{"vukem-video export --project <id> [--start t] [--end t] [--format f] [--wait] [--timeout d]"},
 	example: "vukem-video export --project prj_7k2m9x4q1b --json",
 	project: true,
 	globals: []string{"wait", "timeout"},
@@ -264,12 +264,15 @@ var export = &spec{
 	flags: []flagDef{
 		{Name: "start", Kind: kindString, Usage: "first time to export (default: the start)"},
 		{Name: "end", Kind: kindString, Usage: "end of the export (default: the end of the timeline)"},
+		{Name: "format", Kind: kindString, Usage: "mp4 (default), gif, wav or aac"},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
 		req := service.JobStartRequest{ProjectID: c.projectID, Kind: service.JobExport}
 
-		if c.args.has("start") || c.args.has("end") {
-			raw, err := json.Marshal(service.ExportArgs{Start: c.args.str("start"), End: c.args.str("end")})
+		if c.args.has("start") || c.args.has("end") || c.args.has("format") {
+			raw, err := json.Marshal(service.ExportArgs{
+				Start: c.args.str("start"), End: c.args.str("end"), Format: c.args.str("format"),
+			})
 			if err != nil {
 				return nil, err
 			}

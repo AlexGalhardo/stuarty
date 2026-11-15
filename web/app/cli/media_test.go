@@ -312,3 +312,19 @@ func TestJobShowWaitsOnlyWhenAsked(t *testing.T) {
 		t.Errorf("job:list exit %d, request %+v", code, f.jobsReq)
 	}
 }
+
+func TestExportSendsTheFormat(t *testing.T) {
+	t.Parallel()
+
+	f := &mediaFake{startAns: job("job_1", "queued", "job_1 export queued")}
+	h := mediaHarness(t, f)
+
+	if code := h.run("export", projectFlag, "--format", "gif", "--no-wait"); code != ExitOK {
+		t.Fatalf("exit %d: %s", code, h.stderr.String())
+	}
+
+	var args service.ExportArgs
+	if err := json.Unmarshal(f.jobStart.Args, &args); err != nil || args.Format != "gif" {
+		t.Errorf("args = %s", f.jobStart.Args)
+	}
+}
