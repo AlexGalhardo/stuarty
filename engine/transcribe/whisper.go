@@ -222,26 +222,39 @@ func (w *Whisper) Transcribe(
 // prepareAudio is the FFmpeg run of SDD-011 section 10.2: mono 16 kHz signed 16-bit WAV. Whisper never
 // sees the original file, and never a corrupt one.
 func (w *Whisper) prepareAudio(ctx context.Context, in Input, wav string) error {
+	return extractWAV(ctx, w.FFmpeg, in, wav, 0, 0)
+}
+
+// extractWAV writes the audio of in, from startMS for lengthMS (the whole audio when lengthMS is zero), as
+// mono 16 kHz signed 16-bit WAV at the path wav in the run directory.
+func extractWAV(ctx context.Context, r *ffmpeg.Runner, in Input, wav string, startMS, lengthMS int64) error {
+	opts := []ffargs.Opt{ffargs.Int("-ac", 1), ffargs.Int("-ar", 16000), ffargs.Enum("-c:a", "pcm_s16le")}
+	if lengthMS > 0 {
+		opts = append(opts, ffargs.Enum("-t", strconv.FormatFloat(float64(lengthMS)/1000, 'f', 3, 64)))
+	}
+
 	argv, err := ffargs.Cmd{
 		LogErrorOnly: true,
-		Inputs:       []ffargs.Input{ffargs.FileInput(in.Audio)},
+		Inputs:       []ffargs.Input{ffargs.FileInput(in.Audio).At(startMS)},
 		Outputs: []ffargs.Output{{
-			Format: "wav", Path: wav, Maps: []string{"0:a:0"}, NoVideo: true, NoSubs: true, NoData: true,
-			Opts: []ffargs.Opt{ffargs.Int("-ac", 1), ffargs.Int("-ar", 16000), ffargs.Enum("-c:a", "pcm_s16le")},
+			Format: "wav", Path: wav, Maps: []string{"0:a:0"}, NoVideo: true, NoSubs: true, NoData: true, Opts: opts,
 		}},
-	}.Argv(w.FFmpeg.Policy(in.WorkDir, in.InputDirs...))
+	}.Argv(r.Policy(in.WorkDir, in.InputDirs...))
 	if err != nil {
 		return failure(ReasonPrepare, "The audio could not be prepared for transcription.", err, "")
 	}
-	res, err := w.FFmpeg.RunFFmpeg(ctx, ffmpeg.Request{
+
+	res, err := r.RunFFmpeg(ctx, ffmpeg.Request{
 		Dir: in.WorkDir, Argv: argv, InputDirs: in.InputDirs, Deadline: ffmpeg.AudioExtractDeadline(in.Duration),
 	})
 	if err != nil {
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+
 		return failure(ReasonPrepare, "The audio could not be prepared for transcription.", err, res.Stderr)
 	}
+
 	return nil
 }
 
