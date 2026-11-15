@@ -115,8 +115,11 @@ func authorizeScope(ctx context.Context, scope, projectID string) (Caller, error
 	}
 
 	if scope == "" || !slices.Contains(c.Scopes, scope) {
+		// details.scope names the missing scope (SDD-003 §6.2); the refusal about
+		// the project below carries none.
 		return Caller{}, newError(CodeForbidden, "the caller lacks the %q scope.", scope).
-			withHint("use a key with the %s scope", scope)
+			withHint("use a key with the %s scope", scope).
+			withDetail("scope", scope)
 	}
 
 	if c.ProjectID != "" && projectID != "" && c.ProjectID != projectID {
