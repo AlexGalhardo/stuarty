@@ -181,6 +181,10 @@ var Endpoints = []Endpoint{
 		Service: "OpenFile", Status: 200, Summary: "Download the file of a template",
 	},
 	{
+		ID: "trash.empty", Method: http.MethodPost, Path: "/trash/empty", Scope: service.ScopeAdmin,
+		Service: "TrashEmpty", Status: 200, Summary: "Empty the trash for good",
+	},
+	{
 		ID: "projects.frame", Method: http.MethodGet, Path: "/projects/{id}/frame", Scope: service.ScopeRead,
 		Service: "ViewFrame", Status: 200, Summary: "Render one frame",
 	},

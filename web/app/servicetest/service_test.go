@@ -90,6 +90,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.TemplateImport(ctx, service.TemplateImportRequest{Path: "/x"})
 			return err
 		},
+		"TrashEmpty": func() error {
+			_, err := e.svc.TrashEmpty(ctx, service.TrashEmptyRequest{})
+			return err
+		},
 		"JobCancel": func() error {
 			_, err := e.svc.JobCancel(ctx, service.JobCancelRequest{JobID: "job_0000000001"})
 			return err

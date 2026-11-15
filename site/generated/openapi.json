@@ -2346,6 +2346,27 @@
         },
         "type": "object"
       },
+      "TrashEmptyResult": {
+        "properties": {
+          "assets": {
+            "type": "integer"
+          },
+          "bytes_freed": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "project_assets": {
+            "type": "integer"
+          },
+          "projects": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "UndoResult": {
         "properties": {
           "actor": {
@@ -6475,6 +6496,58 @@
           }
         ],
         "summary": "Make a project from a template"
+      }
+    },
+    "/api/v1/trash/empty": {
+      "post": {
+        "operationId": "trash.empty",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "older_than_days": {
+                    "description": "Empty only what has been in the trash this many days.",
+                    "type": "integer"
+                  },
+                  "project_id": {
+                    "description": "Empty only this trashed project.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrashEmptyResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Empty the trash for good"
       }
     }
   },

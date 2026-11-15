@@ -318,3 +318,18 @@ func (h *apiHandler) templateFile(c *web.Ctx, in templateRefIn) (noIn, error) {
 
 	return noIn{}, nil
 }
+
+type trashEmptyIn struct {
+	ProjectID     string `json:"project_id,omitempty"      doc:"Empty only this trashed project."`
+	OlderThanDays int    `json:"older_than_days,omitempty" doc:"Empty only what has been in the trash this many days."`
+}
+
+// trashEmpty is the only route that deletes data; the Service checks that the
+// caller is a browser session or an admin key.
+func (h *apiHandler) trashEmpty(c *web.Ctx, in trashEmptyIn) (service.TrashEmptyResult, error) {
+	res, err := h.Service.TrashEmpty(c.Context(), service.TrashEmptyRequest{
+		ProjectID: in.ProjectID, OlderThanDays: in.OlderThanDays,
+	})
+
+	return deref(res), err
+}

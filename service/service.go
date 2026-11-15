@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
@@ -50,6 +51,10 @@ type Service interface {
 	TemplateInstantiate(ctx context.Context, req TemplateInstantiateRequest) (*TemplateInstantiateResult, error)
 	TemplateExport(ctx context.Context, req TemplateRef) (*FileResult, error)
 	TemplateImport(ctx context.Context, req TemplateImportRequest) (*TemplateResult, error)
+
+	// TrashEmpty deletes what is in the trash for good; HTTP only, for a
+	// browser session or an admin key (SDD-007 section 5.3).
+	TrashEmpty(ctx context.Context, req TrashEmptyRequest) (*TrashEmptyResult, error)
 
 	// ViewFrame and ViewSheet render the current revision through the export
 	// executor (SDD-003 section 2.7).
@@ -135,6 +140,8 @@ type svc struct {
 	enqueue   Enqueuer
 	limits    Limits
 	version   string
+
+	storeMu sync.RWMutex
 
 	running registry
 	bitmaps bitmaps
