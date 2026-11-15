@@ -22,8 +22,8 @@ export default function TrimHandle({
 			data-trim-handle={edge}
 			className={
 				edge === "start"
-					? "absolute inset-y-0 left-0 flex w-6 max-w-1/4 cursor-ew-resize items-center justify-start"
-					: "absolute inset-y-0 right-0 flex w-6 max-w-1/4 cursor-ew-resize items-center justify-end"
+					? "absolute inset-y-0 left-0 z-10 flex w-6 max-w-1/4 cursor-ew-resize items-center justify-start"
+					: "absolute inset-y-0 right-0 z-10 flex w-6 max-w-1/4 cursor-ew-resize items-center justify-end"
 			}
 			onPointerDown={(event) => {
 				if (event.button !== 0) return;

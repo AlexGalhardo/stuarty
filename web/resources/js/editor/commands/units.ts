@@ -3,6 +3,8 @@
 // core parses and rounds, the browser only checks the shape of what was typed
 // and appends the unit (rule T8: a bare number never leaves the browser).
 
+import type { Word as CaptionWord } from "@/generated/timeline";
+
 export type TimeUnit = "s" | "f";
 export type TimeDisplay = "timecode" | "frames" | "seconds";
 
@@ -148,4 +150,31 @@ export function keyframeValueAt(
 	let value = keys[0]?.value ?? 0;
 	for (const key of keys) if (key.t <= playhead - itemStart) value = key.value;
 	return value;
+}
+
+export interface WordSegment {
+	index: number;
+	text: string;
+	// Pixels from the left edge of the item, and the width in pixels.
+	left: number;
+	width: number;
+}
+
+// A caption shows one segment per word when it is wider than 120 px and the
+// zoom is at least 0.5 px per frame (SDD-012 section 7.4); otherwise none, and
+// the caller draws one block with the word count. `start` of a word is relative
+// to the caption. A display of the read model, decoration only (section 1.3).
+export function captionWordSegments(
+	item: { duration: number; words?: readonly CaptionWord[] },
+	ppf: number,
+): WordSegment[] {
+	if (item.words === undefined || ppf < 0.5 || item.duration * ppf <= 120) {
+		return [];
+	}
+	return item.words.map((word, index) => ({
+		index,
+		text: word.text,
+		left: word.start * ppf,
+		width: Math.max(word.duration * ppf, 1),
+	}));
 }
