@@ -4,15 +4,11 @@ package main
 // purpose: a test that lands is deleted from here, and the check then requires it.
 
 // laterThreats are the threats whose tests are not due yet, with the reason.
-var laterThreats = map[string]string{
-	"T-21": "BETA: user-supplied fonts arrive with templates in BETA (SDD-007 section 7.7)",
-}
+var laterThreats = map[string]string{}
 
 // laterTests are tests a row names that are not due yet, with the reason: the
 // half of a threat that belongs to a later phase.
-var laterTests = map[string]string{
-	"FuzzFontHeader": "BETA: the font header parser (T-21)",
-}
+var laterTests = map[string]string{}
 
 // phaseOne are the threats of the Prototype and ALPHA phases (ROADMAP P1-SEC-001,
 // SDD-007 section 2): the ones `-phase P1` checks.

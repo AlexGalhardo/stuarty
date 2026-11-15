@@ -12,7 +12,6 @@ const sdd = "## 1. Intro\n\n## 2. Threat model\n\n" +
 	"| ID | Threat | How | Impact | Mitigation | Test |\n| --- | --- | --- | --- | --- | --- |\n" +
 	"| T-01 | a | b | c | a mitigation | `TestSecurity_T01_One`, `TestSecurity_T01_Two` |\n" +
 	"| T-02 | a | b | c | a mitigation | `TestSecurity_T02_Missing` |\n" +
-	"| T-21 | a | b | c | a mitigation | `TestSecurity_T21_Later`, `FuzzFontHeader` |\n" +
 	"\n## 3. Local mode\n\n## 5. Scope matrix\n\n| `ProjectGet` | x |\n\n## 6. Next\n"
 
 const serviceGo = "package service\n\ntype Service interface {\n" +
@@ -66,8 +65,8 @@ func TestEveryProblemIsReported(t *testing.T) {
 		}
 	}
 
-	// The later threat is allowlisted, and the test of node_modules is not read.
-	for _, unwanted := range []string{"T-21", "T09", "ProjectGet"} {
+	// The test of node_modules is not read, and a documented operation is not reported.
+	for _, unwanted := range []string{"T09", "ProjectGet"} {
 		if strings.Contains(got, unwanted) {
 			t.Errorf("%q is reported:\n%s", unwanted, got)
 		}
