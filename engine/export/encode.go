@@ -116,6 +116,7 @@ func (s *state) encode(
 	go func() {
 		res, err := s.job.Runner.RunFFmpeg(ectx, ffmpeg.Request{
 			Dir: s.dir, Argv: argv, Deadline: s.deadline, Stdin: pr,
+			OutputPath: partial, MaxOutputBytes: s.job.MaxBytes,
 		})
 		_ = pr.Close()
 		done <- encoderResult{res, err}

@@ -34,9 +34,17 @@ type Job struct {
 	JobID string
 	// ArtifactsDir is <workspace>/artifacts, where the normalized media of the assets is.
 	ArtifactsDir string
-	// OutPath is the file the export publishes, normally exports/<project>/<job>.mp4. Nothing is
-	// written there unless the exported file passed its verification.
+	// ExportsDir and ProjectID make the destination: <ExportsDir>/<ProjectID>/<JobID>.mp4, from
+	// identifiers that are checked, written through os.Root (SDD-004 section 8 step 8). There is no
+	// way to name another destination. Nothing is written there unless the file passed its verification.
+	ExportsDir string
+	ProjectID  string
+	// OutPath is the old way to name the destination, used only when ExportsDir is empty; the service
+	// moves to ExportsDir and ProjectID and OutPath is then removed.
 	OutPath string
+	// MaxBytes is VUKEM_VIDEO_MAX_EXPORT_BYTES: a larger file ends the job with reason "size_limit".
+	// Zero is no limit.
+	MaxBytes int64
 	// Encoder is VUKEM_VIDEO_ENCODER and VUKEM_VIDEO_ALLOW_USER_X264 (ADR-0011 item 5).
 	Encoder ffmpeg.DetectOptions
 	// Lint is the environment of the lint that gates the export (unready media, text sizes).
@@ -136,13 +144,19 @@ func Run(ctx context.Context, job Job) (*Result, error) {
 }
 
 func run(ctx context.Context, job *Job) (*Result, error) {
-	if job.Runner == nil || job.Doc == nil || job.OutPath == "" || job.ArtifactsDir == "" {
+	if job.Runner == nil || job.Doc == nil || job.ArtifactsDir == "" || (job.OutPath == "") == (job.ExportsDir == "") {
 		return nil, exportErr(
 			ReasonRender,
 			"The export job is incomplete.",
-			errors.New("runner, document, artifacts and output path are required"),
+			errors.New("runner, document, artifacts and exactly one of ExportsDir and OutPath are required"),
 			"",
 		)
+	}
+
+	if job.ExportsDir != "" {
+		if _, err := exportPath(job.ExportsDir, job.ProjectID, job.JobID); err != nil {
+			return nil, exportErr(ReasonBadOutput, "The export destination is not valid.", err, "")
+		}
 	}
 	doc := job.Doc
 
@@ -206,12 +220,24 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 		return nil, err
 	}
 
+	if job.MaxBytes > 0 && ver.Size > job.MaxBytes {
+		_ = os.Remove(partial)
+
+		return nil, sizeLimitError(ver.Size, job.MaxBytes)
+	}
+
 	// 8. Publish.
-	if err := publish(partial, job.OutPath); err != nil {
+	out := job.OutPath
+	if job.ExportsDir != "" {
+		out, err = publishUnder(job.ExportsDir, job.ProjectID, job.JobID, partial)
+	} else {
+		err = publish(partial, out)
+	}
+	if err != nil {
 		return nil, exportErr(ReasonPublish, "The exported file could not be moved into place.", err, "")
 	}
 	return &Result{
-		Path:       job.OutPath,
+		Path:       out,
 		Size:       ver.Size,
 		DurationMS: ver.DurationMS,
 		Frames:     frames,
