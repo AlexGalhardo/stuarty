@@ -24,7 +24,10 @@ var bundleExport = &spec{
 	globals: []string{"wait", "timeout"},
 	write:   true,
 	flags: []flagDef{
-		{Name: "log", Kind: kindBool, Default: "true", Usage: "include the operation log (--no-log to share without history)"},
+		{
+			Name: "log", Kind: kindBool, Default: "true",
+			Usage: "include the operation log (--no-log to share without history)",
+		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
 		be, ok := c.svc.(bundleExporter)
