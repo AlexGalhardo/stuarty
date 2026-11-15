@@ -104,7 +104,7 @@ func loadResultSchemas(t *testing.T) map[string]*jsonschema.Schema {
 // TestCLIJSONValidatesAgainstTheResultSchemas runs the scenario through the CLI
 // with --json and validates every document it prints (P1-AGT-001).
 func TestCLIJSONValidatesAgainstTheResultSchemas(t *testing.T) {
-	steps, fixtures := loadScenario(t)
+	steps, fixtures := loadScenario(t, "prototype")
 	d := &schemaDriver{driver: newCLI(t), schemas: loadResultSchemas(t), checked: map[string]int{}}
 
 	run(t, d, steps, fixtures)
