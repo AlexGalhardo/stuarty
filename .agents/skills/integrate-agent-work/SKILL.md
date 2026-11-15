@@ -14,8 +14,10 @@ The integration line is the newest open release branch, for example `release/v0.
 3. Conflicts:
    - In generated files, take either side and regenerate.
    - An empty cherry-pick ("The previous cherry-pick is now empty") means the change is already there: `git cherry-pick --skip`.
+   - Two seniors can fix the same defect in parallel (the rotation handle of the preview was fixed twice). Keep the version already on the line when it has the test hooks other specs use (`data-inside`), and `git cherry-pick --skip` the other; check that no duplicate declaration survived the merge.
+   - A conflict in an SDD table row (the threat table of SDD-007) usually means both sides added a test name to the same row: keep the union, then run `go run ./internal/tools/threatcheck`. Restore a row from the original commit with `git show <sha>:<file> | grep '^| T-26 |'` rather than retyping it.
 4. Check the diff against the briefing with `git diff --stat`, and revert what is outside the agent's area unless it is a minimal compile fix the report names.
-5. Run `skills/ci-preflight/`, at least the package tests, the cross-target lint and the generators.
+5. Run `go build ./...` after every integrated series, not only at the end: a type one senior changes in its area breaks another senior's surface (the OpenTimelineIO result moved from `otio.Lost` to `service.OtioLost` and broke `web/app/cli`). Then run `skills/ci-preflight/`, at least the package tests, the cross-target lint and the generators.
 6. Push the line, mark the ROADMAP, and reply to the agent with the next task in the same message, so it never waits idle.
 
 ## Things that went wrong before
@@ -24,3 +26,6 @@ The integration line is the newest open release branch, for example `release/v0.
 - An agent's single report can be refused when it reports twice. If a notification says the report was refused, read the commits in its worktree (`git -C <worktree> log`).
 - A security review fires on pushed commits. Send each finding to the owner with the fix it needs (owner scoping, fail closed on lookup errors, one transaction for read-then-act), and integrate only the fixed version.
 - Timing tests flake when several agents build at once. A failure under load is re-run alone before it is called a defect, and is fixed only if it also fails alone.
+- Agents ran `python3 - <<'EOF'` despite the rule against it; an empty heredoc left a process waiting on stdin as a background task. Read each report for it, stop the leftover task through the session's task list (never by image name), and repeat the rule in the next briefing.
+- Read a report's "not verified" list as the real state. "Fails for a reason outside my area, probably the machine" is not a result: send it back with the exact rerun (pinned FFmpeg, private home and port) and ask for the job record's code and reason.
+- A briefing names the files an agent owns. When an agent edits a file outside them because a task assert names it (an SDD status line), accept it if the report says so; otherwise revert it.

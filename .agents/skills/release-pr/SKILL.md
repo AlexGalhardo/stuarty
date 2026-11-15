@@ -11,7 +11,8 @@ Read `rules/git-and-branches.md` first. The release tool is `go run ./internal/t
 
 - At most 97 commits per release pull request, the `chore(release)` commit included. GitHub refuses a rebase-merge of more than 100 commits.
 - Count with `git rev-list --count origin/main..HEAD` and compare with `gh pr view N --json commits --jq '.commits|length'`.
-- When a fix pushes the count over, move the newest feature commits to the next release. You can also squash your own fix commits of the same scope with `git reset --soft`.
+- Count the two commits the ritual adds (the agent-docs stamp and `chore(release)`) before you decide: close the line at 95 integrated commits at most.
+- When a fix pushes the count over, move the newest feature commits to the next release. On an unpushed line, split it without losing anything: `git branch release/v<next> HEAD`, then `git checkout -B release/vX.Y.Z <last commit to keep>`. Prefer a cut that also leaves out work which cannot release yet (in v0.15.0, the update feed that needed a repository secret). You can also squash your own fix commits of the same scope with `git reset --soft`.
 
 ## 2. Rebuild a stacked branch on main
 
@@ -34,13 +35,15 @@ After release N is merged, its commits get new hashes on `main`, and branch N+1,
 
 ## 3. Prepare and merge
 
-1. Name the local branch `release/vX.Y.Z` and set it to track the remote. `prepare` refuses any other name.
+1. Name the local branch `release/vX.Y.Z` and set it to track the remote. `prepare` refuses any other name. Before `prepare`, stamp the agent docs: set `Version` in `web/app/agentdocs/agentdocs.go`, run the generators of step 2.4 plus `UPDATE_GOLDEN=1 go test ./web/app/mcp/ -run TestSecurity_T31_ToolDefinitionsMatchTheirGolden`, and commit `docs(cli): stamp the agent docs with version X.Y.Z`.
 2. `go run ./internal/tools/release -skip-remote-checks prepare vX.Y.Z` writes the CHANGELOG section and commits `chore(release): vX.Y.Z`. Use `-skip-remote-checks` only when the tip was just rebuilt and CI will run on the push anyway.
 3. `prepare` refuses while an issue labelled `ci-failure` is open. Triage it: fix it, or close it with a comment that names the commits that fixed it.
 4. Push, then:
-   1. `bash scripts/release-pr-body.sh vX.Y.Z`
+   1. `bash scripts/release-pr-body.sh vX.Y.Z`. It edits the pull request itself; never pipe its output into `gh pr edit`.
    2. `gh pr ready N`
    3. `gh pr merge N --rebase --auto`
+   - Until the end of BETA the pull-request workflows are disabled by the author's decision (2026-11-15), so nothing would fire auto-merge: after the full local gate passes, merge with `gh pr merge N --rebase --admin`.
+   - "This branch can't be rebased" right after a push can be GitHub still computing mergeability. Check `gh pr view N --json mergeable,mergeStateStatus` and look for an empty commit (`git diff-tree --no-commit-id -r <sha>` prints nothing); if `mergeable` is `MERGEABLE` and no commit is empty, retry the merge once.
 5. If a fix is needed after `prepare`, branch from `HEAD~1`, commit the fix, move `release/vX.Y.Z` there, push with lease, and run `prepare` again. The CHANGELOG must be written last.
 6. Auto-merge sometimes does not fire on a clean pull request. When every check is green, run `gh pr merge N --rebase` yourself.
 
@@ -48,4 +51,5 @@ After release N is merged, its commits get new hashes on `main`, and branch N+1,
 
 1. `git switch main && git merge --ff-only origin/main`.
 2. `go run ./internal/tools/release tag vX.Y.Z`: it creates the annotated tag and pushes it, and `release.yml` publishes.
-3. Check the run: `gh run list --workflow release.yml --limit 2`.
+3. Check the run: `gh run list --workflow release.yml --limit 2`, and `gh release view vX.Y.Z --json assets` for the expected asset count (`scripts/release-verify.sh` knows it).
+4. From v0.16.0 a stable tag needs the repository secret `UPDATE_FEED_SIGNING_KEY` and the variable `UPDATE_FEED_PUBLIC_KEY` (the desktop update feed, SDD-009 §10.5); the `preflight` job fails early, naming the missing one.

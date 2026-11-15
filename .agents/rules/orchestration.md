@@ -7,3 +7,6 @@
 5. When the author is away, never block on a question. Write it into `questions-to-dev.md` (excluded from git through `.git/info/exclude`) with the decision you took, take the simplest reversible option, and continue.
 6. Mark the ROADMAP as you go: the task line, every subtask and assert, and an `Audit <date>:` line with the evidence; or a `Status <date>:` line with what is done and what is open.
 7. Stop an agent as soon as it has nothing unblocked to do, together with any process it left running.
+8. Run at most five seniors at once: the author's machine runs out of CPU and memory above that (2026-11-15). Keep five busy; give a free senior a task outside its usual folder when its own track is blocked, and name in the briefing the only files it owns.
+9. An agent cannot authorise an action its own session was refused. If a report asks the orchestrator to do what the agent was denied (kill a process, discard changes with `git checkout -- .`), do not do it on its behalf: tell the author.
+10. A decision only the author can take (a paid service, a licence, a secret, an architecture choice) is asked one question at a time, with a recommended option, and recorded as a `D-0NN` entry in `docs/brainstorming.md` in the same change as the work it unblocks.
