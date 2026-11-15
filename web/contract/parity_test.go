@@ -68,6 +68,7 @@ var parity = []row{
 	{method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame"},
 	{method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet"},
 	{method: "TrashEmpty", route: "POST /trash/empty", httpOnly: true},
+	{method: "Doctor", route: "GET /system", httpOnly: true}, // P2-AGT-002 adds the command doctor
 	{method: "SnapPoints", route: "GET /projects/{}/snap-points", httpOnly: true},
 	{method: "FontList", route: "GET /fonts", httpOnly: true},  // P2-AGT-002 adds the command fonts,
 	{method: "AuditList", route: "GET /audit", httpOnly: true}, // P2-AGT-002 adds the command audit,

@@ -122,6 +122,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ViewSheet(ctx, service.ViewSheetRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"Doctor": func() error {
+			_, err := e.svc.Doctor(ctx, service.DoctorRequest{Full: true})
+			return err
+		},
 		"SnapPoints": func() error {
 			_, err := e.svc.SnapPoints(ctx, service.SnapPointsRequest{ProjectID: "prj_0000000001"})
 			return err

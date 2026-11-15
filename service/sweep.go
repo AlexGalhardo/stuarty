@@ -17,11 +17,11 @@ const orphanAge = 24 * time.Hour
 
 // SweepResult counts what a sweep removed.
 type SweepResult struct {
-	StoreFiles    int
-	ArtifactDirs  int
-	ExportDirs    int
-	FrameDirs     int
-	IncomingFiles int
+	StoreFiles    int `json:"store_files"`
+	ArtifactDirs  int `json:"artifact_dirs"`
+	ExportDirs    int `json:"export_dirs"`
+	FrameDirs     int `json:"frame_dirs"`
+	IncomingFiles int `json:"incoming_files"`
 }
 
 // Sweeper removes the files that an interrupted emptying left behind. The

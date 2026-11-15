@@ -60,6 +60,9 @@ type Service interface {
 	ExportFile(ctx context.Context, req ExportFileRequest) (*File, error)
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
 
+	// Doctor is the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).
+	Doctor(ctx context.Context, req DoctorRequest) (*DoctorResult, error)
+
 	// TrashEmpty deletes what is in the trash for good; HTTP only, for a
 	// browser session or an admin key (SDD-007 section 5.3).
 	TrashEmpty(ctx context.Context, req TrashEmptyRequest) (*TrashEmptyResult, error)
@@ -143,6 +146,8 @@ type Options struct {
 	Transcriber transcribe.Provider
 	// Tools is the install step of the helper; nil means it is not available.
 	Tools *Tools
+	// Doctor is what the diagnostic report learns from the process.
+	Doctor DoctorOptions
 }
 
 type svc struct {
@@ -161,6 +166,7 @@ type svc struct {
 	transcriber transcribe.Provider
 	tools       *Tools
 	toolsState  toolsState
+	doctor      DoctorOptions
 
 	storeMu sync.RWMutex
 
@@ -191,6 +197,7 @@ func New(o Options) (Service, error) {
 		version:     o.Version,
 		transcriber: o.Transcriber,
 		tools:       o.Tools,
+		doctor:      o.Doctor,
 	}
 
 	s.sems = map[string]chan struct{}{

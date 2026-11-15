@@ -487,6 +487,17 @@ Responses: `200` OK, `401`, `422`, `default`.
 
 ## system
 
+### `GET /system`
+
+Read the diagnostic report
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `full` | query | no | `boolean` |
+| `verify` | query | no | `boolean` |
+
+Responses: `200` OK, `401`, `422`, `default`.
+
 ### `POST /system/launch`
 
 Issue a one-time browser launch code

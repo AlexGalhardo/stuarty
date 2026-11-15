@@ -387,6 +387,69 @@
         },
         "type": "object"
       },
+      "DoctorCheck": {
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "DoctorResult": {
+        "properties": {
+          "api_version": {
+            "type": "string"
+          },
+          "bundle": {
+            "type": "string"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/DoctorCheck"
+            },
+            "type": "array"
+          },
+          "gc": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SweepResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mode": {
+            "type": "string"
+          },
+          "pid": {
+            "type": "integer"
+          },
+          "started_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "workspace": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Document": {
         "properties": {
           "assets": {
@@ -2295,6 +2358,26 @@
             "type": "integer"
           },
           "tile_w": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SweepResult": {
+        "properties": {
+          "artifact_dirs": {
+            "type": "integer"
+          },
+          "export_dirs": {
+            "type": "integer"
+          },
+          "frame_dirs": {
+            "type": "integer"
+          },
+          "incoming_files": {
+            "type": "integer"
+          },
+          "store_files": {
             "type": "integer"
           }
         },
@@ -6539,6 +6622,56 @@
           }
         ],
         "summary": "Undo the caller's latest step"
+      }
+    },
+    "/api/v1/system": {
+      "get": {
+        "operationId": "system.get",
+        "parameters": [
+          {
+            "description": "Run the checks.",
+            "in": "query",
+            "name": "full",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Recompute the digests of FFmpeg, ffprobe and the installed helpers.",
+            "in": "query",
+            "name": "verify",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DoctorResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the diagnostic report"
       }
     },
     "/api/v1/system/launch": {
