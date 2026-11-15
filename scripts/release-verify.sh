@@ -84,6 +84,25 @@ for installer in vukem-video-desktop_"${v}"_*; do
 	gh attestation verify "$installer" -R "$repo"
 done
 
+# The archive bundles no FFmpeg (NFR-041), so the digests of "doctor --verify" read "your own build,
+# not compared" until the pinned FFmpeg of the release sits next to the binary. Put it there, from the
+# pin file at the tag, and require "matches the release" for ffmpeg and ffprobe. Linux amd64 only.
+if [ "$(uname -s)" = "Linux" ] && [ "$(uname -m)" = "x86_64" ]; then
+	mkdir -p extracted ffmpeg-pin
+	tar -xzf "$archive" -C extracted
+	gh api "repos/$repo/contents/.config/ffmpeg.env?ref=$version" -H "Accept: application/vnd.github.raw" >ffmpeg-pin/ffmpeg.env
+	ffmpeg_bin="$(FFMPEG_ENV_FILE="$work/ffmpeg-pin/ffmpeg.env" FFMPEG_INSTALL_DIR="$work/ffmpeg-pin/install" bash "$script_dir/install-ffmpeg.sh" | tail -n 1)"
+	cp "$ffmpeg_bin/ffmpeg" "$ffmpeg_bin/ffprobe" extracted/
+	verify_out="$(VUKEM_VIDEO_HOME="$work/doctor-home" ./extracted/vukem-video doctor --verify --json || true)"
+	matched="$(printf '%s' "$verify_out" | grep -o 'matches the release' | wc -l)"
+	if [ "$matched" -ne 2 ]; then
+		echo "release-verify: doctor --verify did not report 'matches the release' for ffmpeg and ffprobe ($matched of 2)" >&2
+		printf '%s\n' "$verify_out" >&2
+		exit 1
+	fi
+	echo "release-verify: doctor --verify matches the release for ffmpeg and ffprobe"
+fi
+
 # The update feed of the desktop application (SDD-009 section 10.5): every digest in it is the one in
 # checksums.txt, and its signature and the signature of each artifact verify with the public key.
 if [ "$stable" -eq 1 ]; then
