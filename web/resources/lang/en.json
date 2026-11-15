@@ -196,13 +196,14 @@
         "apply_again": "Apply again",
         "next_free": "Move to next free position",
         "undo_skipped": {
-          "one": "Undo applied, {count} change was left alone because another actor changed it",
-          "other": "Undo applied, {count} changes were left alone because another actor changed them"
+          "one": "Undo applied, {count} change was left alone because {actor} changed it",
+          "other": "Undo applied, {count} changes were left alone because {actor} changed them"
         },
         "redo_skipped": {
-          "one": "Redo applied, {count} change was left alone because another actor changed it",
-          "other": "Redo applied, {count} changes were left alone because another actor changed them"
-        }
+          "one": "Redo applied, {count} change was left alone because {actor} changed it",
+          "other": "Redo applied, {count} changes were left alone because {actor} changed them"
+        },
+        "another_actor": "another actor"
       },
       "jobs": {
         "chip": {
@@ -493,6 +494,23 @@
         "track_kind": {
           "visual": "Visual",
           "audio": "Audio"
+        }
+      },
+      "history": {
+        "tab": "History",
+        "revision": "r{revision}",
+        "title": "History",
+        "you": "You",
+        "undone": "Undone",
+        "load_more": "Load more",
+        "start": "Start of the project",
+        "empty": "No changes yet",
+        "empty_hint": "Every change by you or an agent is listed here.",
+        "retry": "Try again",
+        "changes": {
+          "one": "{count} change",
+          "other": "{count} changes",
+          "zero": "No changes"
         }
       }
     }

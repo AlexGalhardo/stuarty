@@ -44,6 +44,11 @@ export interface SyncDeps {
 	// asset.updated and job.updated carry no revision; the stores that use
 	// them subscribe here.
 	onSideEvent?(event: ProjectEvent): void;
+	// Every batch.committed event, before it is applied: the history panel
+	// prepends a row for it.
+	onBatch?(event: Extract<ProjectEvent, { name: "batch.committed" }>): void;
+	// The read model is being reloaded because events were lost.
+	onGap?(): void;
 	onUnauthorized?(): void;
 }
 
@@ -228,6 +233,7 @@ export function createSync(deps: SyncDeps): Sync {
 			return;
 		}
 		resyncsWithoutProgress++;
+		deps.onGap?.();
 		const promise = load();
 		track(promise);
 		await promise;
@@ -236,6 +242,7 @@ export function createSync(deps: SyncDeps): Sync {
 	function onEvent(event: ProjectEvent): void {
 		switch (event.name) {
 			case "batch.committed":
+				deps.onBatch?.(event);
 				receive({
 					revision: event.revision,
 					diff: event.diff,

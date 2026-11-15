@@ -11,6 +11,10 @@ export interface UiState {
 	// The revision at which the core answered E_NOTHING_TO_UNDO or
 	// E_NOTHING_TO_REDO; the button stays disabled until the next batch.
 	historyBlocked: { undo: number | null; redo: number | null };
+	// The tab of the left panel and which panels are shown (SDD-012 sections
+	// 6.1 and 18.2: Alt+1, Alt+2 and Alt+3).
+	activePanelTab: "library" | "history";
+	panels: { left: boolean; inspector: boolean };
 }
 
 export interface UiWriter {
@@ -20,6 +24,11 @@ export interface UiWriter {
 	setPlayhead(frame: number): void;
 	setZoom(pxPerFrame: number): void;
 	blockHistory(kind: "undo" | "redo", revision: number): void;
+	// Show a tab of the left panel; when it is already the shown one, hide the
+	// panel (a toggle).
+	toggleLeftTab(tab: "library" | "history"): void;
+	toggleInspector(): void;
+	showLeftTab(tab: "library" | "history"): void;
 }
 
 export function createUiStore(initialZoom = 1): {
@@ -31,6 +40,8 @@ export function createUiStore(initialZoom = 1): {
 		playheadFrame: 0,
 		timeline: { pxPerFrame: initialZoom },
 		historyBlocked: { undo: null, redo: null },
+		activePanelTab: "library",
+		panels: { left: true, inspector: true },
 	});
 	return {
 		store: readOnly(store),
@@ -57,6 +68,27 @@ export function createUiStore(initialZoom = 1): {
 				store.setState((s) => ({
 					...s,
 					historyBlocked: { ...s.historyBlocked, [kind]: revision },
+				})),
+			toggleLeftTab: (tab) =>
+				store.setState((s) =>
+					s.panels.left && s.activePanelTab === tab
+						? { ...s, panels: { ...s.panels, left: false } }
+						: {
+								...s,
+								activePanelTab: tab,
+								panels: { ...s.panels, left: true },
+							},
+				),
+			showLeftTab: (tab) =>
+				store.setState((s) => ({
+					...s,
+					activePanelTab: tab,
+					panels: { ...s.panels, left: true },
+				})),
+			toggleInspector: () =>
+				store.setState((s) => ({
+					...s,
+					panels: { ...s.panels, inspector: !s.panels.inspector },
 				})),
 			setZoom: (pxPerFrame) =>
 				store.setState((s) => ({

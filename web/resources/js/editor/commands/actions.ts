@@ -123,13 +123,15 @@ export function createActions(runtime: EditorRuntime): Actions {
 			? runtime.edits.undo()
 			: runtime.edits.redo());
 		if (outcome.ok) {
-			const skipped = outcome.result.skipped?.length ?? 0;
+			const skippedOps = outcome.result.skipped ?? [];
+			const skipped = skippedOps.length;
 			if (skipped > 0) {
 				noticeWriter.push({
 					kind: "info",
 					message: "",
 					messageKey: `ui.editor.notice.${kind}_skipped`,
 					count: skipped,
+					actor: skippedOps.find((op) => op.by_actor !== undefined)?.by_actor,
 				});
 			}
 			return outcome;
