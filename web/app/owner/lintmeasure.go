@@ -7,18 +7,19 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/service"
 )
 
 // lintMeasurer is lint.Measurer over the plan and the rasterizer: the box of an
 // item is the layer the plan draws at the item's first frame, sized by the
 // rasterizer's own layout, with its rotation applied (SDD-004 section 4.2). The
 // lint and the export therefore agree on where a text lands.
-type lintMeasurer struct{ fonts *raster.FontSet }
+type lintMeasurer struct{ workspace string }
 
 var _ lint.Measurer = lintMeasurer{}
 
 func (m lintMeasurer) Measure(doc *timeline.Document, it *timeline.Item) (lint.Rect, bool) {
-	fp := plan.FrameWith(doc, it.Start, plan.Options{Measure: raster.Measure(m.fonts)})
+	fp := plan.FrameWith(doc, it.Start, plan.Options{Measure: raster.Measure(service.FontSetFor(m.workspace, doc))})
 
 	for i := range fp.Layers {
 		l := &fp.Layers[i]

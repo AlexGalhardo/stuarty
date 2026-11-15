@@ -20,12 +20,12 @@ import (
 // box of an item is the layer the plan draws at its first frame, sized by the
 // rasterizer's layout, with its rotation applied. The owner's type is not
 // exported, so testenv keeps this copy; keep the two in step.
-type rasterMeasurer struct{ fonts *raster.FontSet }
+type rasterMeasurer struct{ workspace string }
 
 var _ lint.Measurer = rasterMeasurer{}
 
 func (m rasterMeasurer) Measure(doc *timeline.Document, it *timeline.Item) (lint.Rect, bool) {
-	fp := plan.FrameWith(doc, it.Start, plan.Options{Measure: raster.Measure(m.fonts)})
+	fp := plan.FrameWith(doc, it.Start, plan.Options{Measure: raster.Measure(service.FontSetFor(m.workspace, doc))})
 
 	for i := range fp.Layers {
 		l := &fp.Layers[i]

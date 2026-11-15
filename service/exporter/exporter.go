@@ -87,6 +87,7 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 		MaxBytes:     in.MaxBytes,
 		Encoder:      a.cfg.Encoder,
 		Lint:         a.cfg.Lint,
+		Fonts:        service.FontSetFor(a.cfg.Workspace, in.Doc),
 		OnProgress: func(p export.Progress) {
 			if in.OnProgress != nil {
 				in.OnProgress(p.Frame, p.Total)

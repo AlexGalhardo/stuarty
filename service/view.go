@@ -75,7 +75,7 @@ func (s *svc) ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult,
 		width, height, _ = frame.ImageSize(st.Width, st.Height, budget)
 	}
 
-	jpeg, rerr := s.media.Frames.FrameSized(ctx, v.doc, v.ref(), int(at), width, height)
+	jpeg, rerr := s.framesFor(v.doc).FrameSized(ctx, v.doc, v.ref(), int(at), width, height)
 	if rerr != nil {
 		return nil, viewError(rerr)
 	}
@@ -129,7 +129,7 @@ func (s *svc) ViewSheet(ctx context.Context, req ViewSheetRequest) (*ViewResult,
 			withPath("cols")
 	}
 
-	sheet, rerr := s.media.Frames.Sheet(
+	sheet, rerr := s.framesFor(v.doc).Sheet(
 		ctx,
 		v.doc,
 		v.ref(),
