@@ -10,6 +10,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/lint"
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
@@ -167,6 +168,8 @@ type svc struct {
 	tools       *Tools
 	toolsState  toolsState
 	doctor      DoctorOptions
+	doctorMu    sync.Mutex
+	doctorCaps  *ffmpeg.Capabilities
 
 	storeMu sync.RWMutex
 

@@ -217,6 +217,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
 		Transcriber: transcriber, Tools: tools,
 		Doctor: service.DoctorOptions{
+			// TODO(P2-SRV-011): wire the real mode when network mode boots.
 			Mode: service.ModeLocal, StartedAt: o.now().UTC(),
 			Integrity: func(ctx context.Context) (string, error) {
 				var out string

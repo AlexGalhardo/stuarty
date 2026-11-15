@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -91,6 +90,16 @@ var secretVars = map[string]bool{
 	"VUKEM_VIDEO_TRANSCRIBE_TOKEN": true,
 }
 
+// plainVars are the only variables whose value is printed: limits and switches that say nothing
+// about the machine. Every other VUKEM_VIDEO_ variable prints "set".
+var plainVars = map[string]bool{
+	"VUKEM_VIDEO_MAX_IMPORT_BYTES": true, "VUKEM_VIDEO_MAX_EXPORT_BYTES": true, "VUKEM_VIDEO_MIN_FREE_BYTES": true,
+	"VUKEM_VIDEO_MAX_INGESTS": true, "VUKEM_VIDEO_MAX_EXPORTS": true, "VUKEM_VIDEO_MAX_EXPORTS_PER_KEY": true,
+	"VUKEM_VIDEO_MAX_TRANSCRIBES": true, "VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY": true,
+	"VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS": true, "VUKEM_VIDEO_WHISPER_MODEL": true, "VUKEM_VIDEO_ENCODER": true,
+	"VUKEM_VIDEO_ALLOW_USER_X264": true,
+}
+
 func isSecretVar(name string) bool {
 	if secretVars[name] {
 		return true
@@ -136,8 +145,15 @@ func (s *svc) Doctor(ctx context.Context, req DoctorRequest) (*DoctorResult, err
 		mode = ModeLocal
 	}
 
-	// Paths and environment details belong to the owner of the machine: local mode, or admin.
-	privileged := mode == ModeLocal || hasScope(c, ScopeAdmin)
+	// Paths and environment details belong to the person running the machine: a browser session,
+	// the operator or an admin key that is not limited to one project. The mode does not decide it:
+	// a project-limited agent key exists in local mode too.
+	privileged := humanForTools(c) && c.ProjectID == ""
+
+	if (req.Verify || req.Bundle) && !privileged {
+		return nil, newError(CodeForbidden, "only the person running the server can verify digests or write a bundle.").
+			withHint("use the editor or the terminal of the server machine, or an admin key not limited to one project")
+	}
 
 	if req.GC && !c.Browser && !c.Operator {
 		return nil, newError(CodeForbidden, "only the person running the server can run the sweep.").
@@ -147,11 +163,21 @@ func (s *svc) Doctor(ctx context.Context, req DoctorRequest) (*DoctorResult, err
 	res := &DoctorResult{
 		Version: s.version, APIVersion: "v1", Mode: mode, PID: os.Getpid(), StartedAt: s.doctor.StartedAt,
 	}
-	if mode == ModeLocal && s.workspace != "" {
+	if privileged && mode == ModeLocal && s.workspace != "" {
 		res.Workspace = s.workspace
 	}
 
 	if req.Full || req.Verify || req.Bundle {
+		// The checks hash files, read capabilities and run test encodes: one at a time, and a
+		// second caller is told to wait instead of piling up work outside the FFmpeg limits.
+		if !s.doctorMu.TryLock() {
+			return nil, newError(CodeQueueFull, "a diagnostic run is already in progress.").
+				withDetail("limit", "doctor").
+				withHint("wait for it to finish and ask again")
+		}
+
+		defer s.doctorMu.Unlock()
+
 		res.Checks = s.doctorChecks(ctx, privileged, req.Verify)
 	}
 
@@ -184,8 +210,6 @@ func (s *svc) Doctor(ctx context.Context, req DoctorRequest) (*DoctorResult, err
 
 	return res, nil
 }
-
-func hasScope(c Caller, scope string) bool { return slices.Contains(c.Scopes, scope) }
 
 func sweepText(r SweepResult) string {
 	return fmt.Sprintf(
@@ -288,7 +312,7 @@ func (s *svc) ffmpegChecks(ctx context.Context, privileged bool) []DoctorCheck {
 		Detail: strings.TrimSpace(lic.Name + versionSuffix(lic.Version3) + " " + flags),
 	})
 
-	caps, cerr := r.ReadCapabilities(ctx)
+	caps, cerr := s.capabilities(ctx, r)
 	if cerr != nil {
 		return append(out, DoctorCheck{
 			Name: "ffmpeg.capabilities", OK: false, Detail: "the capabilities could not be read",
@@ -319,6 +343,22 @@ func (s *svc) ffmpegChecks(ctx context.Context, privileged bool) []DoctorCheck {
 		Name: "ffmpeg.encoder", OK: true,
 		Detail: fmt.Sprintf("%s (forced %t); %s", det.Chosen, det.Forced, strings.Join(parts, ", ")),
 	})
+}
+
+// capabilities reads what FFmpeg can do once; the doctor lock serialises the callers.
+func (s *svc) capabilities(ctx context.Context, r *ffmpeg.Runner) (*ffmpeg.Capabilities, error) {
+	if s.doctorCaps != nil {
+		return s.doctorCaps, nil
+	}
+
+	caps, err := r.ReadCapabilities(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	s.doctorCaps = caps
+
+	return caps, nil
 }
 
 func versionSuffix(v3 bool) string {
@@ -477,11 +517,10 @@ func (s *svc) environmentCheck() DoctorCheck {
 			continue
 		}
 
-		switch {
-		case isSecretVar(name):
-			parts = append(parts, name+"=set")
-		default:
+		if plainVars[name] && !isSecretVar(name) {
 			parts = append(parts, name+"="+sanitizeValue(value))
+		} else {
+			parts = append(parts, name+"=set")
 		}
 	}
 
