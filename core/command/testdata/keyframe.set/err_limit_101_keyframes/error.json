@@ -1,0 +1,6 @@
+{
+  "code": "E_LIMIT",
+  "message": "Property scale of itm_s6t7v8w9x0 would have 101 keyframes; the limit is 100.",
+  "hint": "Remove keyframes with keyframe.remove first.",
+  "retryable": false
+}

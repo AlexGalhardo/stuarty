@@ -1,0 +1,17 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.property is \"zoom\", which is not one of the accepted values.",
+  "hint": "Use one of: x, y, scale, rotation, opacity, volume.",
+  "retryable": false,
+  "path": "args.property",
+  "details": {
+    "allowed": [
+      "x",
+      "y",
+      "scale",
+      "rotation",
+      "opacity",
+      "volume"
+    ]
+  }
+}

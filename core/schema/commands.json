@@ -1545,6 +1545,165 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "property": {
+          "description": "One property; default every animated property.",
+          "enum": [
+            "x",
+            "y",
+            "scale",
+            "rotation",
+            "opacity",
+            "volume"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "type": "object"
+    },
+    "description": "The value at the first frame of the item becomes the static value. Without property, every animated property is cleared.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH"
+    ],
+    "example": {
+      "item_id": "itm_s6t7v8w9x0",
+      "property": "opacity"
+    },
+    "internal": false,
+    "name": "keyframe.clear",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Removes all keyframes of one property, or of every property."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "at": {
+          "description": "Absolute position of the keyframe.",
+          "type": "string"
+        },
+        "item_id": {
+          "type": "string"
+        },
+        "property": {
+          "enum": [
+            "x",
+            "y",
+            "scale",
+            "rotation",
+            "opacity",
+            "volume"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "property",
+        "at"
+      ],
+      "type": "object"
+    },
+    "description": "Removes the keyframe at the absolute position. The last keyframe of a property writes its value into the static field.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH"
+    ],
+    "example": {
+      "at": "2s",
+      "item_id": "itm_s6t7v8w9x0",
+      "property": "scale"
+    },
+    "internal": false,
+    "name": "keyframe.remove",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Removes the keyframe of a property at a frame."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "at": {
+          "description": "Absolute position inside the item, inclusive of its end.",
+          "type": "string"
+        },
+        "easing": {
+          "description": "From this keyframe to the next. Default linear.",
+          "enum": [
+            "linear",
+            "ease_in",
+            "ease_out",
+            "ease_in_out",
+            "hold"
+          ],
+          "type": "string"
+        },
+        "item_id": {
+          "type": "string"
+        },
+        "property": {
+          "enum": [
+            "x",
+            "y",
+            "scale",
+            "rotation",
+            "opacity",
+            "volume"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "description": "Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "item_id",
+        "property",
+        "at",
+        "value"
+      ],
+      "type": "object"
+    },
+    "description": "Sets the value of x, y, scale, rotation, opacity or (clips and audio) volume at an absolute position inside the item, from its start to its end inclusive. When the property had no keyframe and at is after the start, its current static value becomes the first keyframe. The easing applies from this keyframe to the next. At most 100 keyframes per property.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_LIMIT"
+    ],
+    "example": {
+      "at": "2s",
+      "easing": "ease_out",
+      "item_id": "itm_s6t7v8w9x0",
+      "property": "scale",
+      "value": 1.2
+    },
+    "internal": false,
+    "name": "keyframe.set",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Adds or replaces a keyframe of one animated property of an item."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "name": {
           "description": "The new name, 1 to 120 characters.",
           "maxLength": 120,

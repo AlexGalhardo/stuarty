@@ -1,0 +1,11 @@
+{
+  "code": "E_NOT_FOUND",
+  "message": "Property opacity of itm_s6t7v8w9x0 has no keyframes.",
+  "hint": "Add one with keyframe.set.",
+  "retryable": false,
+  "path": "args.property",
+  "details": {
+    "id": "itm_s6t7v8w9x0",
+    "kind": "keyframe"
+  }
+}

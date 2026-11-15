@@ -1,0 +1,26 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_s6t7v8w9x0",
+    "set": {
+      "keyframes": {
+        "scale": [
+          {
+            "t": 0,
+            "value": 1
+          },
+          {
+            "easing": "ease_out",
+            "t": 30,
+            "value": 1.2
+          },
+          {
+            "t": 60,
+            "value": 1.5
+          }
+        ]
+      }
+    }
+  }
+]

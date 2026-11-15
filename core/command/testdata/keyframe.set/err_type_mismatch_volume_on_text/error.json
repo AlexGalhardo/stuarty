@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Property volume does not apply to text item itm_s6t7v8w9x0.",
+  "hint": "Use opacity, scale, x, y or rotation.",
+  "retryable": false,
+  "path": "args.property"
+}
