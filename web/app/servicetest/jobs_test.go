@@ -989,3 +989,70 @@ func TestJobCancelOperation(t *testing.T) {
 		t.Errorf("own ingest with media = %+v, %v", j, err)
 	}
 }
+
+// An ingest is shared by content hash: a caller who cannot see every project
+// that waits on it unlinks its own reference and leaves the job running.
+func TestJobCancelOfASharedIngestSparesTheOtherProjects(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true})
+	alice := service.WithCaller(context.Background(), service.Caller{
+		Actor: "user:alice", OwnerUserID: "alice", Scopes: service.AllScopes,
+	})
+	bob := service.WithCaller(context.Background(), service.Caller{
+		Actor: "user:bob", OwnerUserID: "bob", Scopes: service.AllScopes,
+	})
+
+	var projects [2]string
+
+	for i, c := range []context.Context{alice, bob} {
+		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: "p"})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		projects[i] = res.ProjectID
+	}
+
+	clip := m.write("shared.mp4", clipBytes)
+
+	var assets [2]service.ImportedAsset
+
+	for i, c := range []context.Context{alice, bob} {
+		res, err := m.svc.MediaImport(c, service.MediaImportRequest{
+			ProjectID: projects[i], Files: []service.ImportFile{{Path: clip}},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assets[i] = res.Assets[0]
+	}
+
+	if assets[0].JobID == "" || assets[0].JobID != assets[1].JobID {
+		t.Fatalf("the two imports must share one ingest job: %+v", assets)
+	}
+
+	job := assets[0].JobID
+
+	// Alice cannot see Bob's project: her cancel unlinks her reference only.
+	j, err := m.svc.JobCancel(alice, service.JobCancelRequest{JobID: job})
+	if err != nil || j.State != service.JobQueued {
+		t.Fatalf("a cancel by one of two owners = %+v, %v; the job must keep running", j, err)
+	}
+
+	if m.assetRow(projects[0], assets[0].AssetID).State != service.ProjectAssetTrashed {
+		t.Error("the reference of the caller was not unlinked")
+	}
+
+	if m.assetRow(projects[1], assets[1].AssetID).State != service.ProjectAssetPending {
+		t.Error("the reference of the other project was touched")
+	}
+
+	// Bob is now the only one waiting: his cancel ends the job.
+	if j, err = m.svc.JobCancel(
+		bob,
+		service.JobCancelRequest{JobID: job},
+	); err != nil ||
+		j.State != service.JobCancelled {
+		t.Errorf("a cancel by the last waiter = %+v, %v", j, err)
+	}
+}
