@@ -108,7 +108,9 @@ test.describe("trim-handles", () => {
 		const from = await handle(page, "end");
 		await page.mouse.move(from.x, from.y);
 		await page.mouse.down();
-		await page.mouse.move(from.x + 3000, from.y, { steps: 8 });
+		// Firefox drops pointer positions outside the window: stay inside it.
+		const edge = (page.viewportSize()?.width ?? 1280) - 2;
+		await page.mouse.move(edge, from.y, { steps: 8 });
 		await page.mouse.up();
 
 		await expect(page.getByRole("alert")).toContainText("The source has only");

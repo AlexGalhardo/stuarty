@@ -47,7 +47,13 @@ test.describe("tracks", () => {
 		await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
 		await page.mouse.down();
 		await page.mouse.move(from.x + 4, from.y + 40, { steps: 4 });
-		await page.mouse.move(from.x + 4, to.y + to.height - 4, { steps: 8 });
+		// The last header can end below the window; Firefox drops pointer positions
+		// outside it, so the drag stops at the window edge, past the header middle.
+		const bottom = Math.min(
+			to.y + to.height - 4,
+			(page.viewportSize()?.height ?? 720) - 2,
+		);
+		await page.mouse.move(from.x + 4, bottom, { steps: 8 });
 		await expect(page.getByTestId("track-ghost")).toBeVisible();
 		await page.mouse.up();
 		await answered;
