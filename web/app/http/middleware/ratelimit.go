@@ -27,6 +27,18 @@ func Denied(retryAfter time.Duration) *service.Error {
 	}
 }
 
+// deniedLimit is Denied with the limit of SDD-007 section 9.1: the name, and the size of the bucket
+// as both the value counted and the ceiling, because a refused request found it empty. A limit of
+// zero (a store that failed) adds nothing.
+func deniedLimit(retryAfter time.Duration, name string, limit int) *service.Error {
+	e := Denied(retryAfter)
+	if limit > 0 {
+		e.Details["limit"], e.Details["value"], e.Details["ceiling"] = name, limit, limit
+	}
+
+	return e
+}
+
 // Allow asks l about key. A refusal, and a store that fails, both deny: the
 // limiter fails closed. It returns nil when the request may go on.
 func Allow(r *http.Request, l ratelimit.Limiter, key string) *service.Error {
@@ -36,7 +48,7 @@ func Allow(r *http.Request, l ratelimit.Limiter, key string) *service.Error {
 	}
 
 	if !res.Allowed {
-		return Denied(res.RetryAfter)
+		return deniedLimit(res.RetryAfter, "requests", res.Limit)
 	}
 
 	return nil
@@ -85,11 +97,15 @@ type FailedAuth struct {
 
 	mu      sync.Mutex
 	blocked map[string]time.Time
+	limit   int // the bucket of l, as the last answer of l gave it
 }
 
 // maxBlocked bounds the memory of refused addresses; at the bound the expired
 // ones go first.
 const maxBlocked = 10_000
+
+// failedAuthLimit names the limit of the failed authentications of an address.
+const failedAuthLimit = "failed_authentications"
 
 // NewFailedAuth counts on l; now may be nil.
 func NewFailedAuth(l ratelimit.Limiter, now func() time.Time) *FailedAuth {
@@ -111,7 +127,7 @@ func (f *FailedAuth) Blocked(key string) *service.Error {
 	}
 
 	if wait := until.Sub(f.now()); wait > 0 {
-		return Denied(wait)
+		return deniedLimit(wait, failedAuthLimit, f.limit)
 	}
 
 	delete(f.blocked, key)
@@ -135,6 +151,10 @@ func (f *FailedAuth) Record(r *http.Request, key string) *service.Error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
+	if err == nil {
+		f.limit = res.Limit
+	}
+
 	if len(f.blocked) >= maxBlocked {
 		for k, until := range f.blocked {
 			if !until.After(f.now()) {
@@ -147,7 +167,7 @@ func (f *FailedAuth) Record(r *http.Request, key string) *service.Error {
 		f.blocked[key] = f.now().Add(wait)
 	}
 
-	return Denied(wait)
+	return deniedLimit(wait, failedAuthLimit, res.Limit)
 }
 
 // ServiceLimiter adapts a vukem limiter to service.RateLimiter.
