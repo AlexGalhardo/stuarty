@@ -47,7 +47,7 @@ describe("export phase", () => {
 		expect(exportPhase({ ...base, job: job("running") })).toBe("running");
 		expect(exportPhase({ ...base, job: job("succeeded") })).toBe("succeeded");
 		expect(exportPhase({ ...base, job: job("failed") })).toBe("failed");
-		expect(exportPhase({ ...base, job: job("canceled") })).toBe("cancelled");
+		expect(exportPhase({ ...base, job: job("cancelled") })).toBe("cancelled");
 	});
 
 	test("findings group by severity and progress is announced every 10%", () => {
