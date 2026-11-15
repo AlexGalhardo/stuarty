@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -408,5 +409,48 @@ func TestKeyLimitedToAProject(t *testing.T) {
 		"",
 	); res.status != http.StatusForbidden {
 		t.Errorf("another project = %d, want 403", res.status)
+	}
+}
+
+// Concurrent creations by one user create at most the limit; the rest get the
+// limit error (the count and the insert are one step).
+func TestKeyCreationLimitHoldsUnderConcurrency(t *testing.T) {
+	h := newNetworkHarness(t, resolved(), true)
+	h.user(t, "ana@example.com", service.RoleMember)
+	ana := h.session(t, "ana@example.com")
+
+	const attempts = 40
+
+	statuses := make([]int, attempts)
+
+	var wg sync.WaitGroup
+
+	for i := range attempts {
+		wg.Go(func() {
+			statuses[i] = h.send(t, http.MethodPost, "/api/v1/keys", `{"name":"k","scopes":["read"]}`, ana, nil).status
+		})
+	}
+
+	wg.Wait()
+
+	created, limited := 0, 0
+
+	for _, s := range statuses {
+		switch s {
+		case http.StatusCreated:
+			created++
+		case http.StatusTooManyRequests:
+			limited++
+		}
+	}
+
+	if created != 10 || limited != attempts-10 {
+		t.Errorf(
+			"created %d, limited %d of %d concurrent creations; want 10 and %d",
+			created,
+			limited,
+			attempts,
+			attempts-10,
+		)
 	}
 }
