@@ -193,3 +193,48 @@ describe("binary URL builders", () => {
 		);
 	});
 });
+
+describe("brand kit, fonts, export options and bundles", () => {
+	test("brand kit and font import", async () => {
+		const { transport, requests } = fake(ok({}));
+		const client = createClient(transport);
+		await client.getBrandKit();
+		await client.setBrandKit({ colors: { accent: "#FF3366" } });
+		await client.importFont("C:/fonts/Brand.ttf");
+		expect(
+			requests.map((r) => [r.method, r.path, r.timeoutMs, r.body]),
+		).toEqual([
+			["GET", "/brand-kit", 10_000, undefined],
+			["PUT", "/brand-kit", 30_000, { colors: { accent: "#FF3366" } }],
+			["POST", "/fonts", 30_000, { path: "C:/fonts/Brand.ttf" }],
+		]);
+	});
+
+	test("startExport sends args only for the options that are set", async () => {
+		const { transport, requests } = fake(ok({}));
+		const client = createClient(transport);
+		await client.startExport("prj_x");
+		await client.startExport("prj_x", { format: "gif", fps: undefined });
+		await client.startExport("prj_x", { fps: 60 }, true);
+		expect(requests.map((r) => r.body)).toEqual([
+			{ kind: "export" },
+			{ kind: "export", args: { format: "gif" } },
+			{ kind: "export", args: { fps: 60 }, dry_run: true },
+		]);
+	});
+
+	test("bundle export and import", async () => {
+		const { transport, requests } = fake(ok({}));
+		const client = createClient(transport);
+		await client.exportBundle("prj_x", false);
+		await client.importBundle("C:/b.vvbundle", true);
+		expect(requests.map((r) => [r.method, r.path, r.body])).toEqual([
+			[
+				"POST",
+				"/projects/prj_x/bundle",
+				{ wait_ms: 20_000, include_log: false },
+			],
+			["POST", "/projects/import", { path: "C:/b.vvbundle", as_new: true }],
+		]);
+	});
+});
