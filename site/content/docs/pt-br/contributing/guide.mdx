@@ -1,0 +1,48 @@
+---
+title: "Guia de contribuição"
+description: "Como participar do Vukem Video: as regras que não se negociam, por onde começar e como uma mudança chega a uma versão."
+---
+
+## O que você vai aprender
+
+- as regras que toda mudança precisa respeitar;
+- por onde começar a ler, e qual página cobre cada passo;
+- como uma contribuição chega a uma versão.
+
+## A ideia
+
+O Vukem Video é um editor de vídeo pequeno e de código aberto (MIT) que pessoas e agentes de IA operam por meio de um único núcleo de comandos. O código, os documentos de planejamento e este site vivem em um único repositório, `AlexGalhardo/vukem-video`. As especificações em `docs/` são o contrato: quando o código e uma especificação discordam, um dos dois está errado e o pull request o corrige. Tudo no repositório é escrito em inglês; a documentação também tem uma tradução em português do Brasil.
+
+Ao participar, você concorda com o Código de Conduta. Relate uma vulnerabilidade em particular, como a política de segurança descreve, nunca em uma issue pública.
+
+## As regras que não se negociam
+
+1. **Um único núcleo de comandos.** Toda regra de edição vive em `core/` (Go, puro, sem E/S). A interface, o servidor MCP, a CLI e a API HTTP são adaptadores finos sobre um único serviço, então uma regra sobre linhas do tempo escrita em um handler ou em TypeScript é rejeitada.
+2. **A interface nunca calcula o resultado de uma edição.** Ela desenha o que o núcleo diz e envia comandos.
+3. **Os nomes vêm de um único lugar.** Operações, tabelas, códigos de erro e variáveis estão nas definições compartilhadas (`docs/sdds/000-shared-definitions.md`). Mude-as primeiro.
+4. **O FFmpeg é um processo LGPL separado.** Os pixels são compostos em Go, e nada GPL é distribuído.
+5. **Nenhuma conexão de rede de saída por padrão, nenhuma telemetria.**
+6. **Nenhuma dependência nova sem a aprovação do mantenedor**, e as versões são exatas.
+
+## Início rápido
+
+1. Prepare a sua máquina: [Configuração de desenvolvimento](/docs/contributing/setup).
+2. Oriente-se: [Estrutura do repositório](/docs/contributing/repository-layout).
+3. Leia o requisito e a especificação da área que você vai tocar (`docs/prds/` e `docs/sdds/`).
+4. Faça uma mudança pequena, com um teste, e execute as verificações.
+5. Escreva o commit como em [Commits e pull requests](/docs/contributing/commits-and-prs).
+6. Se você mudou um comportamento, atualize a sua página de documentação: [Escrevendo documentação](/docs/contributing/writing-docs).
+
+Uma contribuição é um branch cujos commits o mantenedor integra ao branch de versão aberto; abra o pull request contra `release/vX.Y.Z` quando houver um aberto. O mantenedor revisa, corrige os últimos defeitos e publica a versão; veja [O processo de versionamento](/docs/contributing/releases).
+
+## Erros comuns
+
+- Uma mudança sem teste. Uma correção precisa de um teste que falhe sem ela, e uma mudança em autenticação, tratamento de caminhos ou na invocação do FFmpeg também precisa de um rodapé `Security:`.
+- Relatar "funciona" sem a saída das verificações. Um relatório é uma alegação, não evidência.
+- Editar um arquivo gerado à mão, como `core/schema/`, `site/generated/` ou as páginas em `site/content/generated/`. Execute o gerador.
+- Adicionar uma dependência em um pull request que não a pedia.
+
+## Próximos passos
+
+- [Configuração de desenvolvimento](/docs/contributing/setup)
+- [Commits e pull requests](/docs/contributing/commits-and-prs)
