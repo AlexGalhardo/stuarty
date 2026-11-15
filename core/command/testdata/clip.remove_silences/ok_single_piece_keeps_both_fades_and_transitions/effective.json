@@ -1,0 +1,27 @@
+{
+  "min_silence": {
+    "frame": 12,
+    "requested": null,
+    "seconds": 0.4
+  },
+  "new_ids": [],
+  "padding": {
+    "frame": 3,
+    "requested": null,
+    "seconds": 0.1
+  },
+  "pieces": [
+    {
+      "duration": 263,
+      "id": "itm_m1n2p3q4r5",
+      "source_in": 97,
+      "start": 30
+    }
+  ],
+  "removed": {
+    "frames": 37,
+    "seconds": 1.233
+  },
+  "threshold_db": -35,
+  "unused_ids": []
+}

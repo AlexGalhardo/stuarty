@@ -361,6 +361,100 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "item_id": {
+          "description": "A clip of a video asset with audio.",
+          "type": "string"
+        },
+        "min_silence": {
+          "description": "A length; shorter silences are ignored. Default \"0.4s\".",
+          "type": "string"
+        },
+        "new_ids": {
+          "description": "Ids for the second, third, ... pieces, in order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "padding": {
+          "description": "A length, may be 0; speech kept around each cut. Default \"0.1s\".",
+          "type": "string"
+        },
+        "resolved": {
+          "additionalProperties": false,
+          "description": "Filled by the service from the silence analysis of the asset; never sent by a caller.",
+          "properties": {
+            "silences": {
+              "description": "Sorted, non-overlapping ranges in asset frames, half-open.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "end": {
+                    "type": "integer"
+                  },
+                  "start": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "start",
+                  "end"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "silences"
+          ],
+          "type": "object"
+        },
+        "ripple": {
+          "description": "track (default) or none.",
+          "enum": [
+            "track",
+            "none"
+          ],
+          "type": "string"
+        },
+        "threshold_db": {
+          "description": "Noise level of silence: -30, -35 (default), -40 or -45.",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "type": "object"
+    },
+    "description": "Replaces the clip by one clip per non-silent stretch of its source range. Silences shorter than min_silence are kept; padding of speech is kept on each side of a cut. With ripple track the pieces close up and the later items of the track follow. The silences come from the analysis of the asset and are supplied by the service in resolved; the command never starts a job.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_ID_EXISTS",
+      "E_INVALID_STATE",
+      "E_LIMIT"
+    ],
+    "example": {
+      "item_id": "itm_m1n2p3q4r5",
+      "min_silence": "0.4s",
+      "padding": "0.1s",
+      "ripple": "track"
+    },
+    "internal": false,
+    "name": "clip.remove_silences",
+    "phase": "alpha",
+    "scope": "edit",
+    "summary": "Cuts the silent stretches out of a clip, leaving one clip per stretch of speech."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "brightness": {
           "description": "-1 to 1; default 0.",
           "maximum": 1,

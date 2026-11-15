@@ -1,0 +1,42 @@
+{
+  "min_silence": {
+    "frame": 12,
+    "requested": null,
+    "seconds": 0.4
+  },
+  "new_ids": [
+    "itm_s6t7v8w9x0",
+    "itm_c3d4e5f6g7"
+  ],
+  "padding": {
+    "frame": 3,
+    "requested": null,
+    "seconds": 0.1
+  },
+  "pieces": [
+    {
+      "duration": 43,
+      "id": "itm_m1n2p3q4r5",
+      "source_in": 60,
+      "start": 30
+    },
+    {
+      "duration": 46,
+      "id": "itm_s6t7v8w9x0",
+      "source_in": 157,
+      "start": 73
+    },
+    {
+      "duration": 131,
+      "id": "itm_c3d4e5f6g7",
+      "source_in": 212,
+      "start": 119
+    }
+  ],
+  "removed": {
+    "frames": 80,
+    "seconds": 2.667
+  },
+  "threshold_db": -35,
+  "unused_ids": []
+}

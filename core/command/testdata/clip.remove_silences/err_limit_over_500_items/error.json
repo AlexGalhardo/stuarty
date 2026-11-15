@@ -1,0 +1,6 @@
+{
+  "code": "E_LIMIT",
+  "message": "Splitting itm_m1n2p3q4r5 into 3 pieces would make 502 items; the limit is 500.",
+  "hint": "Use a larger min_silence to get fewer pieces.",
+  "retryable": false
+}
