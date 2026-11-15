@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
 	"os"
@@ -25,8 +26,12 @@ const ciscoHost = "ciscobinary.openh264.org"
 // ciscoPlatforms are the platforms that ship the own build and so need the Cisco library. They equal
 // transcribe.SupportedPlatforms; the package cannot import it (transcribe imports this package).
 var ciscoPlatforms = [][2]string{
-	{"linux", "amd64"}, {"linux", "arm64"}, {"darwin", "amd64"}, {"darwin", "arm64"},
-	{"windows", "amd64"}, {"windows", "arm64"},
+	{"linux", "amd64"},
+	{"linux", "arm64"},
+	{"darwin", "amd64"},
+	{"darwin", "arm64"},
+	{"windows", "amd64"},
+	{"windows", "arm64"},
 }
 
 // ciscoPinProblems lists what is wrong with the pins of the Cisco library: every platform has an entry,
@@ -190,10 +195,7 @@ func TestSecurity_T27_OwnBuildPinned(t *testing.T) {
 		if k == "FFMPEG_SOURCE" {
 			continue
 		}
-		broken := map[string]string{}
-		for kk, v := range full {
-			broken[kk] = v
-		}
+		broken := maps.Clone(full)
 		broken[k] = ""
 		if len(ownPinProblems(broken)) == 0 {
 			t.Errorf("a blank %s passed", k)
@@ -313,7 +315,7 @@ func TestSecurity_T26_CiscoDownloadRefusals(t *testing.T) {
 		} {
 			client := outbound.HelperDownload(m.Hosts, 2*time.Second)
 			var hops atomic.Int32
-			real := client.Transport
+			base := client.Transport
 			// The Cisco host answers with a redirect without any network; every other request goes to the
 			// client's own checked transport, which refuses it before dialling.
 			client.Transport = roundTripFunc(func(r *http.Request) (*http.Response, error) {
@@ -323,7 +325,7 @@ func TestSecurity_T26_CiscoDownloadRefusals(t *testing.T) {
 						Body: http.NoBody, Request: r,
 					}, nil
 				}
-				return real.RoundTrip(r)
+				return base.RoundTrip(r)
 			})
 			dir, err := install(m, client)
 			wantReason(t, err, ReasonDownloadFailed)
@@ -378,12 +380,18 @@ func TestSecurity_T26_CiscoDownloadRefusals(t *testing.T) {
 	t.Run("a failed attempt keeps a good install intact", func(t *testing.T) {
 		m, archive, library := fakeLibrary(t)
 		dir := t.TempDir()
-		if _, err := InstallOpenH264(ctx, InstallOpenH264Options{ToolsDir: dir, Manifest: m, Client: &countingClient{body: archive}}); err != nil {
+		if _, err := InstallOpenH264(
+			ctx,
+			InstallOpenH264Options{ToolsDir: dir, Manifest: m, Client: &countingClient{body: archive}},
+		); err != nil {
 			t.Fatal(err)
 		}
 		bad := bytes.Clone(archive)
 		bad[len(bad)-1] ^= 0xff
-		if _, err := InstallOpenH264(ctx, InstallOpenH264Options{ToolsDir: dir, Manifest: m, Client: &countingClient{body: bad}}); err == nil {
+		if _, err := InstallOpenH264(
+			ctx,
+			InstallOpenH264Options{ToolsDir: dir, Manifest: m, Client: &countingClient{body: bad}},
+		); err == nil {
 			t.Fatal("a tampered archive installed")
 		}
 		got, err := os.ReadFile(OpenH264Path(dir, m.Entries[0]))
