@@ -328,7 +328,7 @@ func (s *svc) bundleManifest(row *ProjectRow, doc *timeline.Document) (*BundleMa
 
 	for _, family := range sortedKeys(doc.Fonts) {
 		for _, f := range doc.Fonts[family].Files {
-			size, err := s.storedSize(f.Hash)
+			size, err := s.fontSize(f.Hash)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -471,7 +471,7 @@ func (s *svc) writeBundleFile(
 
 // copyMedia copies one store file into the zip with io.Copy and checks the hash it saw.
 func (s *svc) copyMedia(ctx context.Context, zw *zip.Writer, f bundleFile, progress func(int64)) error {
-	src, err := s.media.Content.Open(strings.TrimPrefix(f.hash, "sha256:"))
+	src, err := s.openBundleSource(f)
 	if err != nil {
 		return bundleFailed("missing_media").withDetail("hash", f.hash)
 	}
@@ -514,3 +514,7 @@ func copyError(ctx context.Context, err error) error {
 
 	return bundleFailed("write_failed")
 }
+
+// isFont tells a font entry of a bundle from a media one: fonts live in the font store, not in the
+// content store.
+func (f bundleFile) isFont() bool { return strings.HasPrefix(f.entry, "font.") }

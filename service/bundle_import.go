@@ -808,7 +808,7 @@ func isHex64(s string) bool {
 // manifest, so that a bundle that lies is refused before anything is stored.
 func (s *svc) hashBundleFiles(ctx context.Context, p *bundleParts) *Error {
 	for _, f := range p.files {
-		sum, n, err := hashEntry(ctx, p.entries[f.entry], s.limits.MaxImportBytes)
+		sum, n, err := hashEntry(ctx, p.entries[f.entry], s.bundleFileLimit(f))
 		if err != nil {
 			if ctx.Err() != nil {
 				return asErr(ctx.Err())
@@ -847,16 +847,25 @@ func hashEntry(ctx context.Context, en *zip.File, limit int64) (string, int64, e
 	return hex.EncodeToString(h.Sum(nil)), n, nil
 }
 
-// copyBundleFiles puts each file into the store, unless it is there already. The caller holds the read
-// side of storeMu. A file copied before a failed transaction is a content-addressed orphan that the
-// sweep removes (SDD-005 section 16.3).
+// copyBundleFiles puts each file into its store, unless it is there already. Fonts go first and go
+// through the font pipeline (validation, then the font store), so a crafted font is refused before
+// any media is copied. The caller holds the read side of storeMu. A file copied before a failed
+// transaction is a content-addressed orphan that the sweep removes (SDD-005 section 16.3).
 func (s *svc) copyBundleFiles(ctx context.Context, p *bundleParts) (map[string]int64, *Error) {
 	sizes := map[string]int64{}
 
 	for _, f := range p.files {
+		if f.isFont() {
+			if e := s.copyBundleFont(p, f); e != nil {
+				return nil, e
+			}
+		}
+	}
+
+	for _, f := range p.files {
 		sizes[f.hash] = f.size
 
-		if s.media.Content.Has(strings.TrimPrefix(f.hash, "sha256:")) {
+		if f.isFont() || s.media.Content.Has(strings.TrimPrefix(f.hash, "sha256:")) {
 			continue
 		}
 
@@ -905,16 +914,16 @@ func (s *svc) copyBundleFiles(ctx context.Context, p *bundleParts) (map[string]i
 // hash has to be linked already to a project the caller can see. Fonts have no such link and are
 // always refused. The refusal is the same for a hash that is stored and one that never was.
 func (s *svc) unshippedAllowed(ctx context.Context, c Caller, hash string, font bool) bool {
+	if font {
+		return c.OwnerUserID == "" && s.hasFont(hash)
+	}
+
 	if !s.media.Content.Has(strings.TrimPrefix(hash, "sha256:")) {
 		return false
 	}
 
 	if c.OwnerUserID == "" {
 		return true
-	}
-
-	if font {
-		return false
 	}
 
 	ids, err := s.store.Assets().ProjectsReferencing(ctx, hash)
