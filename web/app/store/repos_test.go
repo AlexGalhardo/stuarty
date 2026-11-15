@@ -1148,7 +1148,12 @@ func TestFontOwnersAndBrandKit(t *testing.T) {
 		t.Fatalf("Get of no kit = %v, want ErrNotFound", err)
 	}
 
-	row := service.BrandKitRow{OwnerUserID: "", Document: []byte(`{"colors":{"a":"#FFFFFF"}}`), UpdatedMs: 5, UpdatedBy: "local:ui"}
+	row := service.BrandKitRow{
+		OwnerUserID: "",
+		Document:    []byte(`{"colors":{"a":"#FFFFFF"}}`),
+		UpdatedMs:   5,
+		UpdatedBy:   "local:ui",
+	}
 	if err := s.BrandKit().Put(ctx, row); err != nil {
 		t.Fatal(err)
 	}
