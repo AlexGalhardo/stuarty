@@ -37,6 +37,8 @@ type Service interface {
 	MediaImport(ctx context.Context, req MediaImportRequest) (*MediaImportResult, error)
 	MediaInspect(ctx context.Context, req MediaInspectRequest) (*MediaInspectResult, error)
 	MediaList(ctx context.Context, req MediaListRequest) (*MediaListResult, error)
+	MediaTrash(ctx context.Context, req MediaTrashRequest) (*MediaStateResult, error)
+	MediaRestore(ctx context.Context, req MediaTrashRequest) (*MediaStateResult, error)
 
 	JobStart(ctx context.Context, req JobStartRequest) (*Job, error)
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)

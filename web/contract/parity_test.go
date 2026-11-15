@@ -24,6 +24,9 @@ type row struct {
 	command string // the CLI command
 	route   string // "METHOD /path" of the HTTP API
 	pending string
+	// cliPending names the task that adds the CLI command of an operation whose
+	// Service method and route already exist.
+	cliPending string
 	// noMethod marks an operation that is not a Service method (SDD-003 section
 	// 7.1, exception E-1: the event stream lives in the hub of the owner).
 	noMethod bool
@@ -43,6 +46,13 @@ var parity = []row{
 	{method: "MediaImport", tool: "media_import", command: "media:import", route: "POST /projects/{}/media"},
 	{method: "MediaInspect", tool: "media_inspect", command: "media:inspect", route: "GET /projects/{}/media/{}"},
 	{method: "MediaList", tool: "media_inspect", command: "media:list", route: "GET /projects/{}/media"},
+	{method: "MediaTrash", command: "media:trash", route: "POST /projects/{}/media/{}/trash", cliPending: "P2-CLI"},
+	{
+		method:     "MediaRestore",
+		command:    "media:restore",
+		route:      "POST /projects/{}/media/{}/restore",
+		cliPending: "P2-CLI",
+	},
 	{method: "Lint", tool: "lint", command: "lint", route: "GET /projects/{}/lint"},
 	{method: "JobStart", tool: "job_start", command: "export", route: "POST /projects/{}/jobs"},
 	{method: "JobGet", tool: "job_get", command: "job:show", route: "GET /jobs/{}"},
@@ -123,7 +133,7 @@ func TestEveryOperationIsReachableOnEverySurface(t *testing.T) {
 			t.Errorf("%s: the MCP tool %s is not in tools/list", r.method, r.tool)
 		}
 
-		if !slices.Contains(commands, r.command) || slices.Contains(stubs, r.command) {
+		if r.cliPending == "" && (!slices.Contains(commands, r.command) || slices.Contains(stubs, r.command)) {
 			t.Errorf("%s: the CLI command %s is missing or still a stub", r.method, r.command)
 		}
 

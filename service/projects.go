@@ -466,8 +466,7 @@ func (s *svc) setProjectState(
 		}
 
 		id := req.ProjectID
-		if err := tx.Audit().
-			Append(ctx, AuditRow{AtMs: now, Actor: c.Actor, Action: action, ProjectID: &id}); err != nil {
+		if err := appendAudit(ctx, tx, now, c.Actor, action, id, ""); err != nil {
 			return err
 		}
 
@@ -489,8 +488,12 @@ func (s *svc) setProjectState(
 		return nil, projectNotFound(req.ProjectID, err)
 	}
 
-	if to == ProjectTrashed && !req.DryRun {
+	switch {
+	case req.DryRun:
+	case to == ProjectTrashed:
 		s.cancelProjectJobs(ctx, req.ProjectID)
+	default:
+		s.reconcilePending(ctx, req.ProjectID)
 	}
 
 	return res, nil
