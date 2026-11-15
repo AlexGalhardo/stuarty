@@ -1,3 +1,4 @@
+import { Diamond } from "lucide-react";
 import type { KeyboardEvent, ReactNode } from "react";
 
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,8 @@ export default function NumberField({
 	min,
 	max,
 	suffix,
+	placeholder,
+	marker,
 	disabled = false,
 }: {
 	label: string;
@@ -29,6 +32,10 @@ export default function NumberField({
 	min?: number;
 	max?: number;
 	suffix?: string;
+	// Shown while the field is empty, for a value the selected items do not share.
+	placeholder?: string;
+	// The accessible name of the keyframe marker of an animated property.
+	marker?: string;
 	disabled?: boolean;
 }): ReactNode {
 	const locale = useLocale();
@@ -79,12 +86,21 @@ export default function NumberField({
 						inputMode="decimal"
 						autoComplete="off"
 						disabled={disabled}
+						placeholder={placeholder}
 						aria-describedby={binding.error ? ids.message : undefined}
 						className="h-8"
 						onKeyDown={onKeyDown}
 					/>
 					{suffix !== undefined && (
 						<span className="text-xs text-muted-foreground">{suffix}</span>
+					)}
+					{marker !== undefined && (
+						<Diamond
+							role="img"
+							aria-label={marker}
+							data-keyframe-marker=""
+							className="size-3 shrink-0 fill-current text-ed-handle"
+						/>
 					)}
 				</div>
 			)}

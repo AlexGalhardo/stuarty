@@ -337,6 +337,8 @@ const SAME_IN_PORTUGUESE: ReadonlySet<string> = new Set([
 	"ui.editor.revision",
 	"ui.editor.activity.revision",
 	"ui.editor.timeline.item_summary",
+	"ui.editor.inspector.transform.x",
+	"ui.editor.inspector.transform.y",
 ]);
 
 const en = flatten(loadCatalog("en.json"));

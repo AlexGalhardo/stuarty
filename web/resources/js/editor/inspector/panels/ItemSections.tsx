@@ -20,6 +20,7 @@ import TextField from "../fields/TextField";
 import TimeCommitField from "../fields/TimeCommitField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
+import TransformSection from "./TransformSection";
 
 // The user preference of the display mode lives in prefs.ts (not built yet).
 const DISPLAY: TimeDisplay = "timecode";
@@ -97,6 +98,7 @@ export default function ItemSections({
 					/>
 				)}
 			</Section>
+			{item.type !== "audio" && <TransformSection itemIds={[itemId]} />}
 		</>
 	);
 }
