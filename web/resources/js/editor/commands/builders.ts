@@ -1076,3 +1076,56 @@ export function shapeSetOperations(
 ): Operations {
 	return [{ op: "shape.set", args: { item_id: itemId, ...changes } }];
 }
+
+export interface SlotMark {
+	name: string;
+	description: string;
+	required: boolean;
+	// Media slots only (SDD-002 C.45).
+	durationPolicy?: "fit" | "stretch_timeline";
+}
+
+// "Template slot" on. Re-marking with the same name updates the slot, so every
+// field of the section is sent each time: the core applies the defaults of the
+// ones that are left out.
+export function slotMarkOperations(itemId: string, mark: SlotMark): Operations {
+	return [
+		{
+			op: "slot.mark",
+			args: {
+				item_id: itemId,
+				name: mark.name,
+				description: mark.description,
+				required: mark.required,
+				...(mark.durationPolicy === undefined
+					? {}
+					: { duration_policy: mark.durationPolicy }),
+			},
+		},
+	];
+}
+
+// "Template slot" off.
+export function slotUnmarkOperations(itemId: string): Operations {
+	return [{ op: "slot.unmark", args: { item_id: itemId } }];
+}
+
+// "Fill" of a row of the slots panel: a media slot takes an asset, a text slot
+// its text (a caption slot takes words, filled from the CLI, MCP or API).
+export type SlotFill = { asset_id: string } | { text: string };
+
+export function slotFillOperations(name: string, value: SlotFill): Operations {
+	return [{ op: "slot.fill", args: { name, ...value } }];
+}
+
+export interface TemplateInfoChanges {
+	description?: string;
+	// A name to a colour, or null to remove the name.
+	colors?: Record<string, string | null>;
+}
+
+export function templateInfoOperations(
+	changes: TemplateInfoChanges,
+): Operations {
+	return [{ op: "template.set_info", args: { ...changes } }];
+}

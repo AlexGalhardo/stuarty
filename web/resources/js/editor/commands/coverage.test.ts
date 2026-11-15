@@ -36,8 +36,12 @@ import {
 	shapeAddOperations,
 	shapeSetOperations,
 	silenceOperations,
+	slotFillOperations,
+	slotMarkOperations,
+	slotUnmarkOperations,
 	speedOperations,
 	splitOperations,
+	templateInfoOperations,
 	textAddOperations,
 	textSetOperations,
 	textStyleOperations,
@@ -368,6 +372,16 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"inspector.shape": shapeSetOperations("itm_a", { width: 10 }).map(
 				(o) => o.op,
 			),
+			"inspector.slot_mark": slotMarkOperations("itm_a", {
+				name: "title",
+				description: "",
+				required: true,
+			}).map((o) => o.op),
+			"inspector.slot_unmark": slotUnmarkOperations("itm_a").map((o) => o.op),
+			"slots.fill": slotFillOperations("title", { text: "x" }).map((o) => o.op),
+			"inspector.template_info": templateInfoOperations({
+				description: "d",
+			}).map((o) => o.op),
 			"canvas.edit_text": textSetOperations("itm_a", "x").map((o) => o.op),
 			"inspector.text": textStyleOperations("itm_a", { size: 90 }).map(
 				(o) => o.op,

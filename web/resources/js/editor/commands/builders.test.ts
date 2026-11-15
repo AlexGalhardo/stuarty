@@ -28,8 +28,12 @@ import {
 	shapeAddOperations,
 	shapeSetOperations,
 	silenceOperations,
+	slotFillOperations,
+	slotMarkOperations,
+	slotUnmarkOperations,
 	speedOperations,
 	splitOperations,
+	templateInfoOperations,
 	textAddOperations,
 	textSetOperations,
 	textStyleOperations,
@@ -619,6 +623,51 @@ describe("shape builders", () => {
 	test("a shape field is one partial request", () => {
 		expect(shapeSetOperations("itm_a", { fill: "#FF0000" })).toEqual([
 			{ op: "shape.set", args: { item_id: "itm_a", fill: "#FF0000" } },
+		]);
+	});
+});
+
+describe("template builders", () => {
+	test("a slot mark carries the whole slot, with the policy for media only", () => {
+		expect(
+			slotMarkOperations("itm_a", {
+				name: "title",
+				description: "Headline",
+				required: false,
+			}),
+		).toEqual([
+			{
+				op: "slot.mark",
+				args: {
+					item_id: "itm_a",
+					name: "title",
+					description: "Headline",
+					required: false,
+				},
+			},
+		]);
+		expect(
+			slotMarkOperations("itm_a", {
+				name: "hero",
+				description: "",
+				required: true,
+				durationPolicy: "stretch_timeline",
+			})[0]?.args.duration_policy,
+		).toBe("stretch_timeline");
+	});
+
+	test("unmark, fill and template info are one command each", () => {
+		expect(slotUnmarkOperations("itm_a")).toEqual([
+			{ op: "slot.unmark", args: { item_id: "itm_a" } },
+		]);
+		expect(slotFillOperations("title", { text: "x" })).toEqual([
+			{ op: "slot.fill", args: { name: "title", text: "x" } },
+		]);
+		expect(slotFillOperations("hero", { asset_id: "ast_a" })).toEqual([
+			{ op: "slot.fill", args: { name: "hero", asset_id: "ast_a" } },
+		]);
+		expect(templateInfoOperations({ colors: { brand: null } })).toEqual([
+			{ op: "template.set_info", args: { colors: { brand: null } } },
 		]);
 	});
 });
