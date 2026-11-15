@@ -1,0 +1,96 @@
+{
+ "name": "view",
+ "description": "See the result. mode=frame returns one image of the timeline at time at; mode=sheet returns a grid of frames with the time printed in each cell (count evenly spaced between from and to, or explicit times). Rendered by the export path: what you see is what export produces. Costs image tokens: read project_get and lint first. asset_id views a source asset instead. frame needs at; sheet takes times, or from, to and count (not both).",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "project_id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "mode": {
+    "enum": [
+     "frame",
+     "sheet"
+    ],
+    "default": "frame"
+   },
+   "at": {
+    "type": "string",
+    "description": "Time: 12.5s, 375f or 00:00:12.500"
+   },
+   "times": {
+    "type": "array",
+    "minItems": 2,
+    "maxItems": 16,
+    "items": {
+     "type": "string"
+    }
+   },
+   "from": {
+    "type": "string"
+   },
+   "to": {
+    "type": "string"
+   },
+   "count": {
+    "type": "integer",
+    "minimum": 2,
+    "maximum": 16,
+    "default": 9
+   },
+   "asset_id": {
+    "type": "string",
+    "pattern": "^ast_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "max_tokens": {
+    "type": "integer",
+    "minimum": 100,
+    "maximum": 1568
+   }
+  },
+  "required": [
+   "project_id"
+  ],
+  "additionalProperties": false
+ },
+ "outputSchema": {
+  "type": "object",
+  "properties": {
+   "revision": {
+    "type": "integer"
+   },
+   "width": {
+    "type": "integer"
+   },
+   "height": {
+    "type": "integer"
+   },
+   "image_tokens": {
+    "type": "integer"
+   },
+   "cells": {
+    "type": "array",
+    "items": {
+     "type": "object"
+    }
+   },
+   "path": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "revision",
+   "width",
+   "height",
+   "image_tokens"
+  ]
+ },
+ "annotations": {
+  "title": "View frame or sheet",
+  "readOnlyHint": true,
+  "destructiveHint": false,
+  "idempotentHint": true,
+  "openWorldHint": false
+ }
+}

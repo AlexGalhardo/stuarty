@@ -1,0 +1,93 @@
+{
+ "name": "media_import",
+ "description": "Import local files into a project. paths are absolute paths to video, audio or image files. Starts an ingest job per file and waits up to wait_ms; an asset can be used in edit only when its state is ready. Importing the same file twice returns the same asset. Returns asset ids and job ids; a refused file has an error in its entry.",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "project_id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "paths": {
+    "type": "array",
+    "minItems": 1,
+    "maxItems": 50,
+    "items": {
+     "type": "string"
+    }
+   },
+   "asset_ids": {
+    "type": "array",
+    "maxItems": 50,
+    "items": {
+     "type": "string",
+     "pattern": "^ast_[0-9a-hjkmnp-tv-z]{10}$"
+    }
+   },
+   "wait_ms": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 25000,
+    "default": 10000
+   }
+  },
+  "required": [
+   "project_id",
+   "paths"
+  ],
+  "additionalProperties": false
+ },
+ "outputSchema": {
+  "type": "object",
+  "properties": {
+   "revision": {
+    "type": "integer"
+   },
+   "assets": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "asset_id": {
+       "type": "string"
+      },
+      "name": {
+       "type": "string",
+       "x-untrusted": true
+      },
+      "state": {
+       "enum": [
+        "pending",
+        "ingesting",
+        "ready",
+        "failed"
+       ]
+      },
+      "job_id": {
+       "type": "string"
+      },
+      "deduplicated": {
+       "type": "boolean"
+      },
+      "error": {
+       "type": "object"
+      }
+     }
+    }
+   },
+   "failed": {
+    "type": "integer"
+   }
+  },
+  "required": [
+   "assets"
+  ]
+ },
+ "annotations": {
+  "title": "Import media",
+  "readOnlyHint": false,
+  "destructiveHint": false,
+  "idempotentHint": true,
+  "openWorldHint": false
+ }
+}

@@ -1,0 +1,71 @@
+{
+ "name": "project_get",
+ "description": "Read a project as text: revision, settings, tracks listed top to bottom (the top track is drawn over the others), then items per track with times in seconds and frames. Use it first, and to get the revision for edit. detail=concise is one line per item; full adds every non-default field. Long projects return next_cursor.",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "project_id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "detail": {
+    "enum": [
+     "concise",
+     "full"
+    ],
+    "default": "concise"
+   },
+   "cursor": {
+    "type": "string"
+   },
+   "limit": {
+    "type": "integer",
+    "minimum": 1,
+    "maximum": 500
+   }
+  },
+  "required": [
+   "project_id"
+  ],
+  "additionalProperties": false
+ },
+ "outputSchema": {
+  "type": "object",
+  "properties": {
+   "project_id": {
+    "type": "string"
+   },
+   "name": {
+    "type": "string",
+    "x-untrusted": true
+   },
+   "revision": {
+    "type": "integer"
+   },
+   "duration_frames": {
+    "type": "integer"
+   },
+   "counts": {
+    "type": "object"
+   },
+   "next_cursor": {
+    "type": [
+     "string",
+     "null"
+    ]
+   }
+  },
+  "required": [
+   "project_id",
+   "revision",
+   "next_cursor"
+  ]
+ },
+ "annotations": {
+  "title": "Read project",
+  "readOnlyHint": true,
+  "destructiveHint": false,
+  "idempotentHint": true,
+  "openWorldHint": false
+ }
+}

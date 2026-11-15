@@ -1,0 +1,61 @@
+{
+ "name": "project_list",
+ "description": "List projects, newest first. Use it to find a project_id. Returns one line per project: id, name, revision, size, duration. Pass next_cursor as cursor for more.",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "state": {
+    "enum": [
+     "active",
+     "trashed",
+     "all"
+    ],
+    "default": "active"
+   },
+   "cursor": {
+    "type": "string"
+   },
+   "limit": {
+    "type": "integer",
+    "minimum": 1,
+    "maximum": 100,
+    "default": 20
+   }
+  },
+  "additionalProperties": false
+ },
+ "outputSchema": {
+  "type": "object",
+  "properties": {
+   "projects": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "name": {
+       "type": "string",
+       "x-untrusted": true
+      }
+     }
+    }
+   },
+   "next_cursor": {
+    "type": [
+     "string",
+     "null"
+    ]
+   }
+  },
+  "required": [
+   "projects",
+   "next_cursor"
+  ]
+ },
+ "annotations": {
+  "title": "List projects",
+  "readOnlyHint": true,
+  "destructiveHint": false,
+  "idempotentHint": true,
+  "openWorldHint": false
+ }
+}
