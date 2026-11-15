@@ -11,6 +11,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/otio"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/service/untrusted"
 )
 
 // otioFileMax is the size of the largest .otio file an import reads (SDD-001 section 9).
@@ -21,14 +22,56 @@ type ProjectOtioExportRequest struct {
 	ProjectID string `json:"project_id"`
 }
 
+// OtioLost is an item an OpenTimelineIO conversion could not carry. Its name and feature come from
+// a project or from an imported file, so they are untrusted (SDD-007 section 8.1).
+type OtioLost struct {
+	ID      string `json:"id,omitempty"`
+	Name    string `json:"name,omitempty" untrusted:"true"`
+	Feature string `json:"feature"        untrusted:"true"`
+}
+
+// OtioMedia is a media reference of an imported file. The reference and the reason come from the
+// file, so they are untrusted.
+type OtioMedia struct {
+	Ref    string `json:"ref"              untrusted:"true"`
+	Status string `json:"status"`
+	Reason string `json:"reason,omitempty" untrusted:"true"`
+}
+
+// otioText is the budget of a name, a feature or a reference of an OTIO result.
+const otioText = untrusted.AssetNameFull
+
+func otioLost(in []otio.Lost) []OtioLost {
+	out := make([]OtioLost, len(in))
+	for i, l := range in {
+		out[i] = OtioLost{
+			ID: l.ID, Name: untrusted.Value(l.Name, otioText), Feature: untrusted.Value(l.Feature, otioText),
+		}
+	}
+
+	return out
+}
+
+func otioMedia(in []otio.Media) []OtioMedia {
+	out := make([]OtioMedia, len(in))
+	for i, m := range in {
+		out[i] = OtioMedia{
+			Ref: untrusted.Value(m.Ref, otioText), Status: m.Status, Reason: untrusted.Value(m.Reason, otioText),
+		}
+	}
+
+	return out
+}
+
 // ProjectOtioExportResult is the .otio text and what it could not carry.
 type ProjectOtioExportResult struct {
-	ProjectID string      `json:"project_id"`
-	Revision  int64       `json:"revision"`
-	FileName  string      `json:"file_name"` // a safe name, ending in .otio
-	Content   string      `json:"content"`   // the file, deterministic JSON
-	Lost      []otio.Lost `json:"lost"`
-	Text      string      `json:"text"`
+	Envelope
+	ProjectID string     `json:"project_id"`
+	Revision  int64      `json:"revision"`
+	FileName  string     `json:"file_name" untrusted:"true"` // a safe name, ending in .otio
+	Content   string     `json:"content"`                    // the file, deterministic JSON
+	Lost      []OtioLost `json:"lost"`
+	Text      string     `json:"text"`
 }
 
 // ProjectOtioImportRequest reads an .otio file from the machine of the server and applies it to a
@@ -42,16 +85,17 @@ type ProjectOtioImportRequest struct {
 
 // ProjectOtioImportResult is the batch the file became and what it left out.
 type ProjectOtioImportResult struct {
+	Envelope
 	ProjectID string `json:"project_id"`
 	Revision  int64  `json:"revision"`
 	Applied   bool   `json:"applied"`
 	// Edit is the result of the batch applied through Edit: one undo step.
 	Edit *EditResult `json:"edit"`
 	// UnresolvedMedia is every reference of the file that no asset of the project answers.
-	UnresolvedMedia []otio.Media `json:"unresolved_media"`
+	UnresolvedMedia []OtioMedia `json:"unresolved_media"`
 	// Lost is what the batch cannot carry, and the clips it left out.
-	Lost []otio.Lost `json:"lost"`
-	Text string      `json:"text"`
+	Lost []OtioLost `json:"lost"`
+	Text string     `json:"text"`
 }
 
 // ProjectOtioExport converts the head revision of a project to OpenTimelineIO. It writes nothing.
@@ -76,12 +120,10 @@ func (s *svc) ProjectOtioExport(ctx context.Context, req ProjectOtioExportReques
 		return nil, internalError()
 	}
 
-	if lost == nil {
-		lost = []otio.Lost{}
-	}
-
 	return &ProjectOtioExportResult{
-		ProjectID: row.ID, Revision: row.Revision, FileName: otioFileName(doc.Name), Content: string(data), Lost: lost,
+		Envelope:  Envelope{UntrustedNotice: UntrustedNotice},
+		ProjectID: row.ID, Revision: row.Revision, FileName: untrusted.Value(otioFileName(doc.Name), otioText),
+		Content: string(data), Lost: otioLost(lost),
 		Text: "exported " + row.ID + " r" + strconv.FormatInt(row.Revision, 10) + " to OpenTimelineIO; " +
 			strconv.Itoa(len(lost)) + " lost item(s)",
 	}, nil
@@ -137,7 +179,7 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 
 	if len(ops) == 0 {
 		return nil, newError(command.CodeValidation, "the file has nothing this server can import.").
-			withPath("path").withDetail("lost", lost).withDetail("unresolved_media", unresolved)
+			withPath("path").withDetail("lost", otioLost(lost)).withDetail("unresolved_media", otioMedia(unresolved))
 	}
 
 	if len(ops) > maxOperationsPerBatch {
@@ -153,8 +195,9 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 	}
 
 	return &ProjectOtioImportResult{
-		ProjectID: row.ID, Revision: edit.Revision, Applied: edit.Applied, Edit: edit, UnresolvedMedia: unresolved,
-		Lost: lost,
+		Envelope:  Envelope{UntrustedNotice: UntrustedNotice},
+		ProjectID: row.ID, Revision: edit.Revision, Applied: edit.Applied, Edit: edit,
+		UnresolvedMedia: otioMedia(unresolved), Lost: otioLost(lost),
 		Text: "imported " + strconv.Itoa(len(ops)) + " operation(s) into " + row.ID + " r" +
 			strconv.FormatInt(edit.Revision, 10) + "; " + strconv.Itoa(len(unresolved)) + " unresolved media, " +
 			strconv.Itoa(len(lost)) + " lost item(s)",
