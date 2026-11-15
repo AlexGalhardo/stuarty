@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/AlexGalhardo/vukem-video/core/lint"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
@@ -114,5 +115,52 @@ func BenchmarkApplyBatch200ItemsEdits(b *testing.B) {
 			b.Fatal(err)
 		}
 		doc = res.Doc
+	}
+}
+
+// BenchmarkApplyAndLintFast200Items is Apply of one item.move plus the doc and item
+// rules (lint.Fast) on the project of NFR-009: the core's share of NFR-001 (at most 15 ms).
+func BenchmarkApplyAndLintFast200Items(b *testing.B) {
+	doc, moved := benchDoc200(b)
+	reg := Default()
+	reg.Debug = false
+	b.Cleanup(func() { reg.Debug = true })
+	env := Env{NewIDs: (&seqIDs{}).next}
+	ops := [2][]Operation{
+		{opJSON("item.move", fmt.Sprintf(`{"item_id":%q,"start":"3000s"}`, moved))},
+		{opJSON("item.move", fmt.Sprintf(`{"item_id":%q,"start":"3002s"}`, moved))},
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := range b.N {
+		res, err := reg.ApplyBatch(doc, ops[i%2], env)
+		if err != nil {
+			b.Fatal(err)
+		}
+		doc = res.Doc
+		_ = lint.Lint(doc, lint.Env{}, lint.Fast)
+	}
+}
+
+// BenchmarkApplyAtTheLimits is one item.move on the document at every limit of SDD-001 §4.
+func BenchmarkApplyAtTheLimits(b *testing.B) {
+	doc := limitsDoc()
+	reg := Default()
+	reg.Debug = false
+	b.Cleanup(func() { reg.Debug = true })
+	env := Env{NewIDs: (&seqIDs{}).next}
+	ops := [2][]Operation{
+		{opJSON("item.move", fmt.Sprintf(`{"item_id":%q,"start":"107000f"}`, lastItem))},
+		{opJSON("item.move", fmt.Sprintf(`{"item_id":%q,"start":"107900f"}`, lastItem))},
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := range b.N {
+		res, err := reg.ApplyBatch(doc, ops[i%2], env)
+		if err != nil {
+			b.Fatal(err)
+		}
+		doc = res.Doc
+		_ = lint.Lint(doc, lint.Env{}, lint.Fast)
 	}
 }
