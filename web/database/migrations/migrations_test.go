@@ -378,3 +378,36 @@ func TestAPIKeysCascadeWithProject(t *testing.T) {
 		t.Errorf("api_keys after the cascade = %d, %v", n, err)
 	}
 }
+
+func TestArtifactsAcceptSpeechAndBeats(t *testing.T) {
+	db := openMigrated(t)
+	ctx := context.Background()
+	if _, err := db.ExecContext(
+		ctx,
+		`INSERT INTO assets (id, size_bytes, original_name, created_ms, updated_ms) VALUES ('sha256:a', 1, 'n', 1, 1)`,
+	); err != nil {
+		t.Fatal(err)
+	}
+	for _, kind := range []string{"probe", "speech", "beats"} {
+		if _, err := db.ExecContext(
+			ctx,
+			`INSERT INTO artifacts (asset_hash, kind, profile, ext, rel_path, size_bytes, sha256, created_ms) VALUES ('sha256:a', ?, 1, 'json', 'p', 1, 'x', 1)`,
+			kind,
+		); err != nil {
+			t.Errorf("kind %q refused: %v", kind, err)
+		}
+	}
+	if _, err := db.ExecContext(
+		ctx,
+		`INSERT INTO artifacts (asset_hash, kind, profile, ext, rel_path, size_bytes, sha256, created_ms) VALUES ('sha256:a', 'other', 1, 'json', 'p', 1, 'x', 1)`,
+	); err == nil {
+		t.Error("an unknown artifact kind was accepted")
+	}
+	if _, err := db.ExecContext(ctx, `DELETE FROM assets WHERE id = 'sha256:a'`); err != nil {
+		t.Fatal(err)
+	}
+	var n int
+	if err := db.QueryRowContext(ctx, "SELECT count(*) FROM artifacts").Scan(&n); err != nil || n != 0 {
+		t.Errorf("artifacts after the cascade = %d, %v", n, err)
+	}
+}

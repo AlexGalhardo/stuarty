@@ -596,3 +596,30 @@ func TestImportDoesNotSayReadyBeforeTheAssetIsInTheDocument(t *testing.T) {
 		t.Error("the asset never reached the document of the second project")
 	}
 }
+
+// The ingest job asks for the speech map and the beat grid, and the artifacts table accepts both
+// kinds (SDD-005 section 5.2, RF-043, RF-044).
+func TestIngestJobStoresTheSoundMaps(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.newProject("p")
+	a := m.importOne(project, m.write("clip.mp4", clipBytes)).Assets[0]
+
+	doc, err := timeline.Decode(m.document(project))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	arts, err := m.store.Assets().Artifacts(context.Background(), doc.Assets[a.AssetID].Hash)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	found := map[string]bool{}
+	for _, r := range arts {
+		found[r.Kind] = true
+	}
+
+	if !found["speech"] || !found["beats"] {
+		t.Errorf("artifact kinds = %v, want speech and beats", found)
+	}
+}
