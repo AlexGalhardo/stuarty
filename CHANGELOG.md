@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-15
+
+### Added
+
+- **ui:** Add the shell process and navigation policy without a window toolkit ([4c40c96](https://github.com/AlexGalhardo/vukem-video/commit/4c40c96beaa0a636e131d064d0387b5497e334c4))
+- **ui:** Add the navigation guard script for the shell window ([a9a775a](https://github.com/AlexGalhardo/vukem-video/commit/a9a775add58c101114b8862d56799cecbf377b87))
+- **ui:** Add the Wails v3 desktop shell as a module of its own ([44481fb](https://github.com/AlexGalhardo/vukem-video/commit/44481fb170a5019c9ee0d3885548977817128891))
+
+### Fixed
+
+- **engine:** Refuse to start FFmpeg as root unless explicitly allowed ([cf87b11](https://github.com/AlexGalhardo/vukem-video/commit/cf87b1182b32cbbffbcec386a119727a839559f1))
+
+### Security
+
+- **security:** Allow the userinfo tricks of the desktop navigation test in the secret scan ([1feaefc](https://github.com/AlexGalhardo/vukem-video/commit/1feaefc550281867aaf90bb3b81412de285a18d6))
+
 ## [0.10.0] - 2026-11-15
 
 ### Added
@@ -476,7 +492,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.7.0...v0.8.0
