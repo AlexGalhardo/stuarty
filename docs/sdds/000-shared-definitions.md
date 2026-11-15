@@ -132,8 +132,8 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_VERIFY_FAILED` | the exported file did not pass verification; `details.checks` | no |
 | `E_TRANSCRIBE_UNAVAILABLE` | no transcription provider is installed or configured; `details` names what is missing, its download size, the install command and the `tool` and `model` it installs | no |
 | `E_TRANSCRIBE_FAILED` | a transcription ran and failed (no output, provider error, no word timings); `details.reason` | no |
-| `E_QUEUE_FULL` | a concurrency limit is reached; `details.running` lists the jobs, or `details.limit` names the limit (for example `streams`) | yes |
-| `E_RATE_LIMITED` | the caller sent too many requests; the answer carries `Retry-After` | yes |
+| `E_QUEUE_FULL` | a concurrency limit is reached; `details.limit` names it (`exports`, `exports_per_key`, `ingests`, `transcribes`, `streams`, `frames`) with `value` and `ceiling`, and `details.running` lists the jobs of a job queue | yes |
+| `E_RATE_LIMITED` | the caller sent too many requests; the answer carries `Retry-After`, and `details` has `retry_after`, `limit`, `value` and `ceiling` | yes |
 | `E_LIMIT_EXCEEDED` | a configured ceiling (file size, duration, resolution) is exceeded | no |
 | `E_CANCELLED` | the job was cancelled | no |
 | `E_CLIENT_CLOSED` | the caller closed the request (or its deadline passed) before the answer; status 499, logged below error level, never a server fault | no |
@@ -198,7 +198,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `VUKEM_VIDEO_CACHE_MAX_BYTES` | `2147483648` (2 GiB) | size of the frame and bitmap caches before eviction |
 | `VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE` | `300` | requests per minute per key or local token |
 | `VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE` | `1800` | requests per minute per browser session |
-| `VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE` | `10` | calls of `JobStart`, `MediaImport` and `TemplateImport` per minute per actor |
+| `VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE` | `10` | calls of `JobStart`, `MediaImport`, `TemplateImport`, `ProjectBundleExport`, `ProjectBundleImport`, `FontImport` and `ProjectOtioImport` per minute per actor |
 | `VUKEM_VIDEO_SANDBOX` | `none` | `bwrap` runs FFmpeg and whisper.cpp in a sandbox on Linux |
 | `VUKEM_VIDEO_INSECURE_ALLOW_ROOT` | `false` | allow network mode as root |
 | `VUKEM_VIDEO_ADMIN_EMAIL`, `VUKEM_VIDEO_ADMIN_PASSWORD` | none | network mode: create the first administrator at start-up when no user exists |

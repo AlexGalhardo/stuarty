@@ -607,7 +607,7 @@ A dropped subscriber is logged once at `info` with the project and actor of the 
 
 ### 9.4 Stream limits
 
-A browser holds one stream per project (section 4.6), but scripts and CLI instances can open more. The server allows at most **32 concurrent streams per project and 128 per process**, and in network mode 16 per key (SDD-007 §9.1). Beyond that the request fails before streaming with `E_QUEUE_FULL` (HTTP 429, retryable) and `details.limit = "streams"`, `details.open` and `details.max`. **Decision of this SDD**: no code of SDD-000 §8 names "too many streams", and `E_QUEUE_FULL` ("a concurrency limit is reached") is the nearest. Verified by a test that opens 33 streams.
+A browser holds one stream per project (section 4.6), but scripts and CLI instances can open more. The server allows at most **32 concurrent streams per project and 128 per process**, and in network mode 16 per key (SDD-007 §9.1). Beyond that the request fails before streaming with `E_QUEUE_FULL` (HTTP 429, retryable) and `details.limit = "streams"`, `details.value` (the streams open) and `details.ceiling` (the cap that was reached). **Decision of this SDD**: no code of SDD-000 §8 names "too many streams", and `E_QUEUE_FULL` ("a concurrency limit is reached") is the nearest. Verified by a test that opens 33 streams.
 
 ## 10. Out of scope: presence
 
