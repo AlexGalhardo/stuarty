@@ -270,8 +270,127 @@ jobs:
         working-directory: web
       - run: bunx playwright install --with-deps chromium
         working-directory: web
-      - run: bun run e2e
+      # The projects that need only Chromium; firefox and webkit have their own jobs below.
+      - run: bun run e2e -- --project=chromium --project=failing-encoder --project=desktop-detect
         working-directory: web
+      - name: Upload traces
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-traces-chromium
+          path: web/e2e/test-results/
+          if-no-files-found: ignore
+
+  # SDD-012 section 21.1, ADR-0023 item 5: every spec not tagged CHROMIUM_ONLY runs on Firefox and on
+  # WebKit, in parallel with the Chromium job (P3-REL-005). The browser is the one of the pinned
+  # @playwright/test version, installed from the lockfile.
+  browser-engines:
+    name: Browser tests (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Install FFmpeg
+        run: |
+          bin_dir="$(bash scripts/install-ffmpeg.sh)"
+          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+      - run: bun install --frozen-lockfile
+        working-directory: web
+      - run: bun run build:e2e
+        working-directory: web
+      - run: bunx playwright install --with-deps "$BROWSER"
+        working-directory: web
+        env:
+          BROWSER: ${{ matrix.browser }}
+      - run: bunx playwright test -c e2e/playwright.config.ts --project="$BROWSER"
+        working-directory: web
+        env:
+          BROWSER: ${{ matrix.browser }}
+      - name: Upload traces
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-traces-${{ matrix.browser }}
+          path: web/e2e/test-results/
+          if-no-files-found: ignore
+
+  # BETA exit criterion 5 (P3-REL-005): a project exported on one operating system opens on the other
+  # two with the same canonical document and the same media. The first job makes the bundle of the
+  # reference project on each system; the second imports the two made elsewhere (and the own) and
+  # compares the hashes, so six cross imports and three local ones.
+  bundle-export:
+    name: Bundle export (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      # The script adds the folder to GITHUB_PATH, so the next steps find ffmpeg and ffprobe.
+      - name: Install FFmpeg
+        shell: bash
+        run: bash scripts/install-ffmpeg.sh
+      - name: Export the reference project
+        shell: bash
+        run: bash scripts/bundle-matrix.sh export "$RUNNER_TEMP/bundle-${{ runner.os }}.vvbundle"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: bundle-${{ runner.os }}
+          path: ${{ runner.temp }}/bundle-${{ runner.os }}.vvbundle
+          if-no-files-found: error
+
+  bundle-matrix:
+    name: Bundle matrix (${{ matrix.os }})
+    needs: bundle-export
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Install FFmpeg
+        shell: bash
+        run: bash scripts/install-ffmpeg.sh
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: bundle-*
+          path: ${{ runner.temp }}/bundles
+          merge-multiple: true
+      - name: Import the bundles made on the three systems
+        shell: bash
+        run: |
+          ls -l "$RUNNER_TEMP/bundles"
+          test "$(ls "$RUNNER_TEMP"/bundles/*.vvbundle | wc -l)" -eq 3
+          bash scripts/bundle-matrix.sh verify "$RUNNER_TEMP"/bundles/*.vvbundle
 
   snapshot:
     name: Release build (snapshot)
