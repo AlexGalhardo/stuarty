@@ -7,8 +7,8 @@ editing logic or renderer code, and nothing imports `core/` or `engine/`.
 | --- | --- | --- |
 | `detect/` | The feature-detection page and its server (SDD-012 section 21.2) | built; see its README |
 | `results/` | One results file per tested webview | filled by P3-DSK-001 |
-| `shell/` | Package `shell`, with no window toolkit: starts and stops `vukem-video serve` on a free loopback port, reads `runtime.json` and the local token, waits for `/up`, reports a startup failure as a typed error (`process.go`), obtains the one-time launch address after a handshake (`launch.go`); the navigation policy `Allowed(url, port)` and `GuardScript` (`navigate.go`) | built, tested with a fake server |
-| `shell/app/` | The window: Wails v3 v3.1.0, one window on the local address, native menu (Quit, Reload, About, Open workspace folder), a dialog for a startup failure. A Go module of its own | builds on the three systems; run on Windows 11 (screenshot in `results/windows/`) |
+| `shell/` | Package `shell`, with no window toolkit: the bridge `window.vukemDesktop` (`bridge.go`: message parsing, the page script, the answer script), starts and stops `vukem-video serve` on a free loopback port, reads `runtime.json` and the local token, waits for `/up`, reports a startup failure as a typed error (`process.go`), obtains the one-time launch address after a handshake (`launch.go`); the navigation policy `Allowed(url, port)` and `GuardScript` (`navigate.go`) | built, tested with a fake server |
+| `shell/app/` | The window: Wails v3 v3.1.0, one window on the local address, native menu (Quit, Reload, About, Open workspace folder, Toggle full screen on F11), the native file dialog and file drops of the bridge, a dialog for a startup failure. A Go module of its own | builds on the three systems; run on Windows 11 (screenshot in `results/windows/`) |
 
 ## Decision
 
@@ -56,8 +56,18 @@ while WebView2 starts. The shell:
    the window gets its session cookie and never sees the token (ADR-0019);
 3. on Quit, closing the window or a crash of the shell, stops the server.
 
-Menu: File (Open workspace folder, Quit), View (Reload), Help (About, with the
+Menu: File (Open workspace folder, Quit), View (Reload, Toggle full screen), Help (About, with the
 version set by `-X main.version`).
+
+## The bridge
+
+After every page load the shell defines `window.vukemDesktop` on the editor page
+(SDD-012 section 13.1 item 2): `pickFiles()` opens the native file dialog and
+resolves with absolute paths, `onDropPaths(cb)` delivers the paths of dropped
+files. The editor sends them to the import API; it never reads the bytes. The
+shell accepts a message only from the main frame of its own server origin, and
+the only operation it knows is `pickFiles`. Without the object (a browser) the
+editor keeps the pasted-path behaviour.
 
 ## Known limit
 
