@@ -915,44 +915,6 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
-        "item_id": {
-          "description": "A clip.",
-          "type": "string"
-        },
-        "radius": {
-          "description": "Blur radius in pixels, 0 to 100; 0 removes the blur.",
-          "maximum": 100,
-          "minimum": 0,
-          "type": "number"
-        }
-      },
-      "required": [
-        "item_id",
-        "radius"
-      ],
-      "type": "object"
-    },
-    "description": "Sets the Gaussian blur radius in pixels at project resolution, 0 to 100; 0 removes the blur.",
-    "errors": [
-      "E_VALIDATION",
-      "E_NOT_FOUND",
-      "E_TYPE_MISMATCH"
-    ],
-    "example": {
-      "item_id": "itm_m1n2p3q4r5",
-      "radius": 12.5
-    },
-    "internal": false,
-    "name": "clip.set_blur",
-    "phase": "beta",
-    "scope": "edit",
-    "summary": "Sets the blur radius of a clip."
-  },
-  {
-    "args_schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "additionalProperties": false,
-      "properties": {
         "brightness": {
           "description": "-1 to 1; default 0.",
           "maximum": 1,
@@ -997,56 +959,6 @@
     "phase": "alpha",
     "scope": "edit",
     "summary": "Sets the brightness, contrast and saturation of a clip."
-  },
-  {
-    "args_schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "additionalProperties": false,
-      "properties": {
-        "amount": {
-          "description": "0 to 1; default 1.",
-          "maximum": 1,
-          "minimum": 0,
-          "type": "number"
-        },
-        "filter": {
-          "description": "none (default), grayscale, sepia, invert, warm or cool.",
-          "enum": [
-            "none",
-            "grayscale",
-            "sepia",
-            "invert",
-            "warm",
-            "cool"
-          ],
-          "type": "string"
-        },
-        "item_id": {
-          "description": "A clip.",
-          "type": "string"
-        }
-      },
-      "required": [
-        "item_id"
-      ],
-      "type": "object"
-    },
-    "description": "Sets one filter of the fixed list (none, grayscale, sepia, invert, warm, cool) and its amount, 0 (the original) to 1 (the full filter), rounded to 3 decimals; a value equal to the default (none, 1) clears the stored one.",
-    "errors": [
-      "E_VALIDATION",
-      "E_NOT_FOUND",
-      "E_TYPE_MISMATCH"
-    ],
-    "example": {
-      "amount": 0.6,
-      "filter": "sepia",
-      "item_id": "itm_m1n2p3q4r5"
-    },
-    "internal": false,
-    "name": "clip.set_filter",
-    "phase": "beta",
-    "scope": "edit",
-    "summary": "Sets the colour filter of a clip and how much of it is mixed in."
   },
   {
     "args_schema": {

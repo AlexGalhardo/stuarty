@@ -258,8 +258,34 @@ func goldenCaseDirs(t *testing.T, name string) (ok, failing []string) {
 // PRD-001 metric 3: every command of the registry has a golden directory with at least
 // one success and one error case, one error case per code it lists, and every success
 // case carries the inverse that the runner applies to get the starting bytes back.
+func TestBuildPhaseExposesAlphaOnly(t *testing.T) {
+	if Build != Alpha {
+		t.Skip("the build exposes a later phase")
+	}
+
+	if n := len(Default().List()); n != 48 {
+		t.Errorf("the build exposes %d commands, want 48", n)
+	}
+
+	beta := 0
+
+	for _, c := range BetaBuild().List() {
+		if c.Phase == Beta {
+			beta++
+
+			if _, ok := Default().Get(c.Name); ok {
+				t.Errorf("%s is a Beta command and must not be exposed in the Alpha build", c.Name)
+			}
+		}
+	}
+
+	if beta != 2 {
+		t.Errorf("the Beta build has %d Beta commands, want 2", beta)
+	}
+}
+
 func TestEveryCommandHasGoldenAndUndo(t *testing.T) {
-	cmds := Default().List()
+	cmds := fullRegistry().List()
 	if len(cmds) != 50 {
 		t.Errorf("the registry has %d commands, want 50", len(cmds))
 	}
@@ -351,7 +377,7 @@ func decodeJSON(t *testing.T, raw []byte) any {
 func TestNoBareNumberTimes(t *testing.T) {
 	checked := map[string]int{}
 
-	for _, c := range Default().List() {
+	for _, c := range fullRegistry().List() {
 		ok, _ := goldenCaseDirs(t, c.Name)
 		for _, name := range ok {
 			dir := filepath.Join("testdata", c.Name, name)
@@ -389,7 +415,7 @@ func TestNoBareNumberTimes(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					_, err = Default().Apply(doc, Operation{Op: c.Name, Args: raw}, Env{NewIDs: (&seqIDs{}).next})
+					_, err = fullRegistry().Apply(doc, Operation{Op: c.Name, Args: raw}, Env{NewIDs: (&seqIDs{}).next})
 					if e := AsError(err); err == nil || e.Code != CodeInvalidTime {
 						t.Errorf("%s/%s: %v given as %v gave %v, want E_INVALID_TIME", c.Name, name, p, bare, err)
 					}
@@ -400,7 +426,7 @@ func TestNoBareNumberTimes(t *testing.T) {
 		}
 	}
 
-	for _, c := range Default().List() {
+	for _, c := range fullRegistry().List() {
 		if hasTimeField(c.argsType) && checked[c.Name] == 0 {
 			t.Errorf("%s has a time argument that no success case sets", c.Name)
 		}
@@ -448,7 +474,7 @@ func nameLikeValues(v any, out map[string]bool) {
 func TestGoldenErrorsQuoteIdsNotNames(t *testing.T) {
 	n := 0
 
-	for _, c := range Default().List() {
+	for _, c := range fullRegistry().List() {
 		_, failing := goldenCaseDirs(t, c.Name)
 		for _, name := range failing {
 			dir := filepath.Join("testdata", c.Name, name)

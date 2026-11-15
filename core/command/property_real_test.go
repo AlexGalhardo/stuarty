@@ -147,7 +147,7 @@ func op2(name, args string) Operation { return Operation{Op: name, Args: []byte(
 func TestPropertyRealCommands(t *testing.T) {
 	const seed = 20261115
 	rng := rand.New(rand.NewSource(seed))
-	r := Default()
+	r := fullRegistry()
 	r.Debug = true
 	defer func() { r.Debug = false }()
 	fresh := func() *timeline.Document {
