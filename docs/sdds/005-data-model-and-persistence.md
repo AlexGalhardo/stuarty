@@ -1379,7 +1379,7 @@ ADR-0020 items 2 and 3; RF-005, RF-131.
 ### 13.4 Store lock and orphan sweep
 
 - `storeMu sync.RWMutex` in the service: import (`MediaImport`, bundle import) holds the read lock from "copy the file into `store/` or find it already there" through the insert of its `assets` row; `TrashEmpty` holds the write lock from its transaction through the file removal. This closes the race where an import finds a file that a concurrent empty is about to delete.
-- **Orphan sweep** (start-up step 8 and `doctor`): a file under `store/` whose hash has no `assets` row and whose modification time is more than 24 hours old; a directory under `artifacts/` with no `assets` row; a directory under `exports/` or `frames/` whose project does not exist. They are removed. The 24-hour age protects a file that an import copied before its row existed.
+- **Orphan sweep** (start-up step 8 and `doctor`): a file under `store/` whose hash has no `assets` row and whose modification time is more than 24 hours old; a directory under `artifacts/` with no `assets` row; a directory under `exports/` or `frames/` whose project does not exist. They are removed. The 24-hour age protects a file that an import copied before its row existed. It also removes, one level deep in `exports/<project id>/`, the files named `bundle-r*.vvbundle.tmp` that a killed bundle export left (section 16.2), but only those whose modification time is older than the start of the running service: an export that runs now writes a newer file. They are counted with `incoming_files`. Nothing else in `exports/` is touched. Crash test: `TestCrashBundleExport` kills the child at `bundle_export.after_write`, then the next start's sweep removes the temp file.
 
 ## 14. Jobs
 
@@ -1519,7 +1519,7 @@ A line of `operations.ndjson` is the `operations` row as JSON with the parsed co
 ### 16.2 Export
 
 1. Take the project lock only long enough to read the row and its `operations` (a consistent snapshot at revision R); then stream the zip from the snapshot.
-2. Write to `exports/<project id>/bundle-r<R>-<job id>.vvbundle.tmp`, rename on success; the path is inside the export folder (ADR-0020 item 6).
+2. Write to `exports/<project id>/bundle-r<R>-<job id>.vvbundle.tmp`, rename on success; the path is inside the export folder (ADR-0020 item 6). A kill between the write and the rename leaves the temp file; the sweep of 13.4 removes it at the next start.
 3. Run as a job of kind `export` with `input.format = "bundle"` (so it has progress and cancellation and counts toward the export limit); media is copied with `io.Copy` and its hash is recomputed while streaming; a mismatch with `assets.id` fails the job (`E_EXPORT_FAILED`, `details.reason = "store_corrupt"`).
 4. Missing store file: `E_EXPORT_FAILED`, `details.reason = "missing_media"`, `details.hash`.
 

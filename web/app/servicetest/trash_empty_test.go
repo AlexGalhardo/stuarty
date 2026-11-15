@@ -338,3 +338,56 @@ func TestTrashEmptyOfAProjectLimitedKeyStaysInItsProject(t *testing.T) {
 		t.Errorf("projects = %v; only %s may go", ids, mine)
 	}
 }
+
+// SDD-005 section 13.4: a kill during a bundle export leaves exports/<project>/bundle-r*.vvbundle.tmp.
+// The sweep removes that exact pattern when the file is older than the running process, and nothing
+// else in exports/: a temp file of an export that runs now, a final bundle and other names stay.
+func TestSweepRemovesStaleBundleTempFiles(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.newProject("p")
+	dir := filepath.Join(m.ws, "exports", project)
+
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	longAgo := time.Now().Add(-time.Hour)
+	stale := filepath.Join(dir, "bundle-r3-job_x.vvbundle.tmp")
+	running := filepath.Join(dir, "bundle-r4-job_y.vvbundle.tmp")
+	final := filepath.Join(dir, "bundle-r3-job_x.vvbundle")
+	other := filepath.Join(dir, "notes.tmp")
+	prefixOnly := filepath.Join(dir, "other-r3-job_x.vvbundle.tmp")
+
+	for _, p := range []string{stale, running, final, other, prefixOnly} {
+		if err := os.WriteFile(p, []byte("x"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for _, p := range []string{stale, final, other, prefixOnly} {
+		if err := os.Chtimes(p, longAgo, longAgo); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	sweeper, _ := service.SweeperOf(m.svc)
+
+	res, err := sweeper.Sweep(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.IncomingFiles != 1 {
+		t.Errorf("sweep = %+v, want one partial file removed", res)
+	}
+
+	if _, err := os.Stat(stale); err == nil {
+		t.Error("the stale temp file survived")
+	}
+
+	for _, p := range []string{running, final, other, prefixOnly} {
+		if _, err := os.Stat(p); err != nil {
+			t.Errorf("%s was removed: %v", filepath.Base(p), err)
+		}
+	}
+}

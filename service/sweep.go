@@ -76,6 +76,13 @@ func (s *svc) Sweep(ctx context.Context) (SweepResult, error) {
 		return res, err
 	}
 
+	n, err := s.sweepBundleTemps()
+	if err != nil {
+		return res, err
+	}
+
+	res.IncomingFiles += n
+
 	missing := func(name string) bool {
 		_, herr := s.store.Projects().Head(ctx, name)
 
@@ -121,6 +128,53 @@ func (s *svc) sweepDirs(dir string, drop func(name string) bool) (int, error) {
 
 		if os.RemoveAll(filepath.Join(root, e.Name())) == nil {
 			n++
+		}
+	}
+
+	return n, nil
+}
+
+// sweepBundleTemps removes exports/<project>/bundle-r*.vvbundle.tmp files that a killed export left
+// (SDD-005 section 13.4). Only that name, one level deep, and only files that predate this service:
+// an export that runs now writes a newer one. A temp file is counted with the incoming files, the
+// other partial writes.
+func (s *svc) sweepBundleTemps() (int, error) {
+	root := filepath.Join(s.workspace, "exports")
+
+	projects, err := os.ReadDir(root)
+	if errors.Is(err, os.ErrNotExist) {
+		return 0, nil
+	}
+
+	if err != nil {
+		return 0, err
+	}
+
+	n := 0
+
+	for _, p := range projects {
+		if !p.IsDir() {
+			continue
+		}
+
+		files, rerr := os.ReadDir(filepath.Join(root, p.Name()))
+		if rerr != nil {
+			continue
+		}
+
+		for _, f := range files {
+			if f.IsDir() || !strings.HasPrefix(f.Name(), "bundle-r") || !strings.HasSuffix(f.Name(), bundleExt+".tmp") {
+				continue
+			}
+
+			info, ierr := f.Info()
+			if ierr != nil || !info.ModTime().Before(s.startedAt) {
+				continue
+			}
+
+			if os.Remove(filepath.Join(root, p.Name(), f.Name())) == nil {
+				n++
+			}
 		}
 	}
 
