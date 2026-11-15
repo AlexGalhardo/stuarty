@@ -3,6 +3,7 @@ package owner
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -11,6 +12,13 @@ import (
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
+
+func shape(track string, size int, id string) string {
+	return fmt.Sprintf(
+		`{"track_id":%q,"start":"0s","duration":"2s","shape":"rect","width":%d,"height":%d,"id":%q}`,
+		track, size, size, id,
+	)
+}
 
 func op(name, args string) command.Operation {
 	return command.Operation{Op: name, Args: json.RawMessage(args)}
@@ -40,9 +48,13 @@ func TestServiceLintUsesTheRasterizerMeasurer(t *testing.T) {
 		Operations: []command.Operation{
 			op("track.add", `{"kind":"visual","name":"Base","id":"trk_f6g7h8j9k0"}`),
 			op("track.add", `{"kind":"visual","name":"Top","id":"trk_m1n2p3q4r5"}`),
-			op("shape.add", `{"track_id":"trk_f6g7h8j9k0","start":"0s","duration":"2s","shape":"rect","width":100,"height":100,"id":"itm_a1b2c3d4e5"}`),
-			op("shape.add", `{"track_id":"trk_m1n2p3q4r5","start":"0s","duration":"2s","shape":"rect","width":9999,"height":9999,"id":"itm_f6g7h8j9k0"}`),
-			op("text.add", `{"track_id":"trk_m1n2p3q4r5","start":"2s","duration":"1s","text":"Edge of the frame","x":20,"y":20,"id":"itm_b2c3d4e5f6"}`),
+			op("shape.add", shape("trk_f6g7h8j9k0", 100, "itm_a1b2c3d4e5")),
+			op("shape.add", shape("trk_m1n2p3q4r5", 9999, "itm_f6g7h8j9k0")),
+			op(
+				"text.add",
+				`{"track_id":"trk_m1n2p3q4r5","start":"2s","duration":"1s","text":"Edge of the frame",`+
+					`"x":20,"y":20,"id":"itm_b2c3d4e5f6"}`,
+			),
 		},
 	})
 	if serr != nil {

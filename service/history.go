@@ -555,6 +555,7 @@ func (s *svc) stepDescription(row *OperationRow, ops []string) string {
 		return "Migrated the project to the current schema."
 	case OpImport:
 		return "Imported the project."
+	case OpEdit:
 	}
 
 	var parts []string
