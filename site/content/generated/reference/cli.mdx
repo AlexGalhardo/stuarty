@@ -618,6 +618,26 @@ Example:
 vukem-video bundle:export --project prj_7k2m9x4q1b --wait
 ```
 
+## `bundle:import`
+
+Create a project from a .vvbundle file
+
+```text
+vukem-video bundle:import <path> [--as-new]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--as-new` | boolean | `false` | give the project a new id and leave the log out (required on a server with accounts) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+vukem-video bundle:import launch-teaser.vvbundle --as-new
+```
+
 ## `agent:docs`
 
 Print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions
