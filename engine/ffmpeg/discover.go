@@ -63,6 +63,9 @@ type Installation struct {
 	// UserBuild is true when the pair is the user's own: configured, or found on the PATH.
 	// A bundled build is never a user build (libx264 is not offered for it, SDD-011 8.4).
 	UserBuild bool
+
+	// limits are the limits the tools were opened with; the sandbox wrapper applies them itself.
+	limits engine.Limits
 }
 
 // Warnings lists the version warnings of SDD-011 8.2.
@@ -186,7 +189,7 @@ func tryPair(ctx context.Context, cfg Config, c candidate) (*Installation, error
 	}
 	in := &Installation{
 		FFmpeg: ff, FFprobe: fp, Source: c.source, Info: info, ProbeInfo: pinfo, CPUCount: cfg.CPUCount,
-		UserBuild: c.source != SourceBundled,
+		UserBuild: c.source != SourceBundled, limits: cfg.Limits,
 	}
 	if cfg.Log != nil {
 		cfg.Log.InfoContext(

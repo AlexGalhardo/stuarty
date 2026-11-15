@@ -21,39 +21,6 @@ import (
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
 )
 
-// Timeouts and limits of SDD-007 6.5 (defaults; the multipliers may change after the
-// ALPHA measurements).
-const (
-	ProbeTimeout     = 30 * time.Second
-	FrameTimeout     = 30 * time.Second
-	StallTimeout     = 120 * time.Second
-	MaxProbeJSON     = 4 << 20
-	maxProgressLine  = 4 << 10
-	detectionTimeout = 20 * time.Second
-)
-
-func capped(d, ceiling time.Duration) time.Duration {
-	if d > ceiling {
-		return ceiling
-	}
-	return d
-}
-
-// IngestDeadline is 60 s + 3 x media duration, at most 4 h.
-func IngestDeadline(media time.Duration) time.Duration {
-	return capped(60*time.Second+3*media, 4*time.Hour)
-}
-
-// ExportDeadline is 120 s + 6 x timeline duration, at most 2 h.
-func ExportDeadline(timeline time.Duration) time.Duration {
-	return capped(120*time.Second+6*timeline, 2*time.Hour)
-}
-
-// AudioExtractDeadline is 60 s + 1 x audio duration, at most 1 h.
-func AudioExtractDeadline(audio time.Duration) time.Duration {
-	return capped(60*time.Second+audio, time.Hour)
-}
-
 // Runner starts FFmpeg and ffprobe for one workspace. Every argv goes through
 // ffargs.Check first; a refused argv starts nothing.
 type Runner struct {
@@ -63,6 +30,12 @@ type Runner struct {
 	// StoreDir is the content store, Workspace/store unless it is a link elsewhere.
 	StoreDir string
 
+	// Sandbox is the path of bwrap (ResolveSandbox) or empty: the tools then run inside it (Linux).
+	Sandbox string
+	// Grace is how long a cancelled run may take to end; CancelGrace when zero.
+	Grace time.Duration
+
+	tmpDir  string
 	started atomic.Int64
 
 	encMu  sync.Mutex
@@ -76,7 +49,17 @@ func NewRunner(in *Installation, workspace string) (*Runner, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Runner{In: in, Workspace: abs, StoreDir: filepath.Join(abs, "store")}, nil
+	store, err := canonicalDir(filepath.Join(abs, "store"))
+	if err != nil {
+		return nil, err
+	}
+
+	tmp, err := canonicalDir(filepath.Join(abs, "tmp"))
+	if err != nil {
+		return nil, err
+	}
+
+	return &Runner{In: in, Workspace: abs, StoreDir: store, tmpDir: tmp}, nil
 }
 
 // RunDir is the directory of one job: the child's working directory, HOME and temp
@@ -90,7 +73,10 @@ func (r *Runner) NewRunDir(jobID string) (*RunDir, error) {
 	if !jobIDRe.MatchString(jobID) {
 		return nil, internalErr("a job id is letters, digits, '_' and '-'", nil)
 	}
-	tmp := filepath.Join(r.Workspace, "tmp")
+	tmp := r.tmpDir
+	if tmp == "" {
+		tmp = filepath.Join(r.Workspace, "tmp")
+	}
 	if err := os.MkdirAll(tmp, 0o700); err != nil {
 		return nil, internalErr("cannot create the tmp directory of the workspace", err)
 	}
@@ -163,6 +149,11 @@ type Request struct {
 	// Stdin feeds a run whose input is pipe:0 (raw frames to the encoder). An *os.File is
 	// handed to the child as it is. The runner never closes it: the caller owns both ends.
 	Stdin io.Reader
+	// OutputPath and MaxOutputBytes arm the size watchdog (VUKEM_VIDEO_MAX_EXPORT_BYTES): the file is
+	// polled every OutputPollInterval and a run that grows it past the cap is killed with
+	// ErrOutputTooLarge. The path must be inside the run directory.
+	OutputPath     string
+	MaxOutputBytes int64
 }
 
 // Result is what a run produced.
@@ -205,12 +196,15 @@ func (r *Runner) RunFFmpeg(ctx context.Context, req Request) (Result, error) {
 	}
 	s := execSpec{
 		tool:       r.In.FFmpeg,
+		inputDirs:  req.InputDirs,
 		dir:        req.Dir.path,
 		argv:       req.Argv,
 		deadline:   req.Deadline,
 		onProgress: req.OnProgress,
 		stdout:     req.Stdout,
 		stdin:      req.Stdin,
+		outPath:    req.OutputPath,
+		maxBytes:   req.MaxOutputBytes,
 	}
 	if progress {
 		s.stall = req.Stall
@@ -242,7 +236,10 @@ func (r *Runner) RunFFprobe(
 	w := &limitWriter{max: MaxProbeJSON}
 	res, err := r.exec(
 		ctx,
-		execSpec{tool: r.In.FFprobe, dir: dir.path, argv: argv, deadline: deadline, stdout: w, onOverflow: w},
+		execSpec{
+			tool: r.In.FFprobe, dir: dir.path, argv: argv, deadline: deadline, stdout: w, onOverflow: w,
+			inputDirs: inputDirs,
+		},
 	)
 	out := Result{Stderr: res.Stderr, ExitCode: res.ExitCode, Duration: res.Duration}
 	if w.over.Load() {
@@ -266,6 +263,10 @@ type execSpec struct {
 	stdout     io.Writer
 	stdin      io.Reader
 	onOverflow *limitWriter
+	inputDirs  []string
+	// outPath and maxBytes arm the output size watchdog.
+	outPath  string
+	maxBytes int64
 }
 
 // exec is the one place a child is started. Tests call it with a helper binary.
@@ -292,15 +293,55 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 		s.onOverflow.cancel = func() { cancel(errOverflow) }
 	}
 
+	if s.outPath != "" && s.maxBytes > 0 {
+		go watchSize(dctx, s.outPath, s.maxBytes, OutputPollInterval, func() { cancel(ErrOutputTooLarge) })
+	}
+
+	type outcome struct {
+		res engine.Result
+		err error
+	}
+	ended := make(chan outcome, 1)
+	go func() {
+		var o outcome
+		name, args, werr := r.command(s)
+
+		switch {
+		case werr != nil:
+			o.err = werr
+		case s.stdin != nil || r.Sandbox != "":
+			o.res, o.err = runWithStdin(dctx, name, args, s.dir, s.stdin, stdout)
+		case stdout != nil:
+			o.res, o.err = s.tool.RunStream(dctx, s.dir, stdout, s.argv...)
+		default:
+			o.res, o.err = s.tool.Run(dctx, s.dir, s.argv...)
+		}
+		ended <- o
+	}()
+
 	var res engine.Result
 	var err error
-	switch {
-	case s.stdin != nil:
-		res, err = runWithStdin(dctx, s.tool, s.dir, s.stdin, stdout, s.argv)
-	case stdout != nil:
-		res, err = s.tool.RunStream(dctx, s.dir, stdout, s.argv...)
-	default:
-		res, err = s.tool.Run(dctx, s.dir, s.argv...)
+	select {
+	case o := <-ended:
+		res, err = o.res, o.err
+	case <-dctx.Done():
+		grace := r.Grace
+		if grace <= 0 {
+			grace = CancelGrace
+		}
+		// contrib/engine kills the tree and waits at most 5 s for the pipes, so a run that is
+		// still here after the grace plus a margin cannot be killed (SDD-007 6.6).
+		select {
+		case o := <-ended:
+			res, err = o.res, o.err
+		case <-time.After(grace + cancelMargin):
+			return res, &Error{
+				Code: CodeInternal, Reason: ReasonCancelTimeout,
+				Message: "the process did not end after it was cancelled",
+				Details: map[string]any{"reason": ReasonCancelTimeout},
+				Err:     context.Cause(dctx),
+			}
+		}
 	}
 	if err == nil {
 		return res, nil
@@ -313,6 +354,8 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 		return res, fmt.Errorf("%w for %s", ErrStalled, s.stall)
 	case errors.Is(cause, ErrDeadline):
 		return res, fmt.Errorf("%w after %s", ErrDeadline, s.deadline)
+	case errors.Is(cause, ErrOutputTooLarge):
+		return res, fmt.Errorf("%w (limit %d bytes)", ErrOutputTooLarge, s.maxBytes)
 	case errors.Is(cause, errOverflow):
 		return res, nil
 	}
