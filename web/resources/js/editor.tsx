@@ -8,6 +8,7 @@ import {
 	parseBootstrap,
 } from "./editor/boot/bootstrap";
 import EditorApp from "./editor/boot/EditorApp";
+import { setBuildPhase } from "./editor/boot/phase";
 import { createRuntime } from "./editor/state/runtime";
 
 // Entry of the editor (SDD-012 section 2.3). The view applies the theme before
@@ -48,6 +49,7 @@ async function main(): Promise<void> {
 			transport: new HttpTransport(bootstrap.api_base),
 		});
 	}
+	setBuildPhase(bootstrap.phase);
 
 	document.documentElement.lang = bootstrap.locale;
 	createRoot(root).render(

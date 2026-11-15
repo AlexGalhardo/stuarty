@@ -23,6 +23,8 @@ export interface Actions {
 	splitAtPlayhead(): Promise<EditOutcome | null>;
 	trimToPlayhead(edge: "start" | "end"): Promise<EditOutcome | null>;
 	addCaption(text: string, duration: string): Promise<EditOutcome | null>;
+	// palette.run: the operations the palette built from a schema form.
+	runOperations(ops: Operations): Promise<EditOutcome | null>;
 	undo(): Promise<EditOutcome>;
 	redo(): Promise<EditOutcome>;
 	// The action of a notice, as a new logical edit on the current revision.
@@ -157,6 +159,7 @@ export function createActions(runtime: EditorRuntime): Actions {
 					newTrackId: () => newId("trk"),
 				}),
 			),
+		runOperations: (ops) => send(ops),
 		undo: () => history("undo"),
 		redo: () => history("redo"),
 		async applyNotice(notice) {
