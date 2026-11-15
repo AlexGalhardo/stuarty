@@ -1,0 +1,52 @@
+lint r4 prj_7k2m9x4q1b: errors=1 warnings=16 (showing 17 of 17)
+error L_SLOT_UNFILLED itm_c3d4e5f6g7 7s/210f-8s/240f
+  a required template slot is not filled.
+  hint: fill it with slot.fill
+warning L_AUDIO_CLIP - 0s/0f-2s/60f
+  the estimated mix peaks above 0 dBFS in 1 range(s); the first is frames 0-59.
+  hint: lower volume with item.set_audio
+warning L_AUDIO_OVERLAP itm_a1b2c3d4e5 0s/0f-2s/60f
+  itm_a1b2c3d4e5 and itm_f6g7h8j9k0 both play sound during frames 0-59.
+  hint: mute one with item.set_audio audio_muted or move one
+warning L_BLACK_FRAMES - 4s/120f-5s/150f
+  frames 120-149 have no visible item; they render as the background color #000000.
+  hint: fill the range with a clip or a shape, close it with timeline.close_gap, or shorten the timeline
+warning L_BLACK_FRAMES - 6s/180f-7s/210f
+  frames 180-209 have no visible item; they render as the background color #000000.
+  hint: fill the range with a clip or a shape, close it with timeline.close_gap, or shorten the timeline
+warning L_CAPTION_DESYNC itm_0000000002 0.333s/10f-1.833s/55f
+  the first word starts at frame 10; the transcript puts it at frame 0.
+  hint: run caption.retime_from_clip
+warning L_GAP - 5s/150f-6s/180f
+  frames 150-179 have no visible clip or shape; only text shows over the background color #000000.
+  hint: fill the range, or close it with timeline.close_gap
+warning L_GAP - 7s/210f-8s/240f
+  frames 210-239 have no visible clip or shape; only text shows over the background color #000000.
+  hint: fill the range, or close it with timeline.close_gap
+warning L_LOUDNESS - -
+  the estimated mix loudness is -20.2 LUFS; the target is -30.0 LUFS, so the export applies a gain of -9.8 dB.
+  hint: adjust volumes or accept the normalization
+warning L_OCCLUDED itm_a1b2c3d4e5 0s/0f-2s/60f
+  itm_a1b2c3d4e5 is hidden for its whole range by itm_f6g7h8j9k0 on a higher track.
+  hint: move or delete one of the two
+warning L_OCCLUDED itm_m1n2p3q4r5 2s/60f-4s/120f
+  itm_m1n2p3q4r5 is hidden for its whole range by itm_s6t7v8w9x0 on a higher track.
+  hint: move or delete one of the two
+warning L_OFF_FRAME itm_a1b2c3d4e5 0s/0f-2s/60f
+  the clip box spans x -740-1820 and y 0-1920; the frame is 1080 by 1920.
+  hint: reposition it with item.set_transform
+warning L_OFF_FRAME itm_f6g7h8j9k0 0s/0f-2s/60f
+  the clip box spans x -740-1820 and y 0-1920; the frame is 1080 by 1920.
+  hint: reposition it with item.set_transform
+warning L_OFF_FRAME itm_s6t7v8w9x0 2s/60f-4s/120f
+  the shape box spans x -4460-5540 and y -4040-5960; the frame is 1080 by 1920.
+  hint: reposition it with item.set_transform
+warning L_OFF_FRAME itm_b2c3d4e5f6 5s/150f-6s/180f
+  the text box spans x -293-333 and y -24-64; the frame is 1080 by 1920.
+  hint: reposition it with item.set_transform
+warning L_SAFE_AREA itm_b2c3d4e5f6 5s/150f-6s/180f
+  text text spans y -24-64 of 1920; the safe area starts at y 269 (14% top margin).
+  hint: move the item inside the safe area with item.set_transform.
+warning L_TRANSITION_EMPTY itm_c3d4e5f6g7 7s/210f-7.5s/225f
+  the transition_in of itm_c3d4e5f6g7 covers frames 210-224, where nothing visible lies beneath it.
+  hint: place a clip under it or remove the transition

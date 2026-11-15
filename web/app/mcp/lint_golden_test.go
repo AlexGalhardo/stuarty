@@ -8,12 +8,10 @@ import (
 	"github.com/AlexGalhardo/vukem-video/web/contract/testenv"
 )
 
-// TestLintReportGolden: the lint report of the rules the service evaluates from
-// the document alone matches its golden file. The rules that need a measured
-// box or an ingest artifact (L_SAFE_AREA, L_OFF_FRAME,
-// L_AUDIO_CLIP, L_LOUDNESS, L_CAPTION_DESYNC) are silent here: testenv, unlike the owner, wires neither
-// lint.Env.Measurer nor a workspace artifact; their reports are the
-// golden files of core/lint.
+// TestLintReportGolden: the lint report of a project with an overlap of sound
+// and a timeline longer than 180 s matches its golden file, with the measurer
+// of the owner (the 320x240 clips cover the frame, so L_OFF_FRAME fires). The
+// rules that read a stored artifact are in TestLintArtifactRulesGolden.
 func TestLintReportGolden(t *testing.T) {
 	t.Parallel()
 
