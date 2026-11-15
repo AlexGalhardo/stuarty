@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.crop: top 0.1 plus bottom 0.9 is 1; it must be below 1.",
+  "hint": "Reduce top or bottom so that together they stay below 1.",
+  "retryable": false,
+  "path": "args.crop"
+}

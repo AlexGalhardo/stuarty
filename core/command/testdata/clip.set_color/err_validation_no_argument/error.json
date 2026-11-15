@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give at least one of brightness, contrast, saturation.",
+  "hint": "Send for example {\"brightness\": ...}.",
+  "retryable": false,
+  "path": "args"
+}

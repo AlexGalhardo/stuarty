@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Asset ast_3c5v8n2w6d is a video without audio; audio.add needs audio.",
+  "hint": "Use clip.add on a visual track to show it.",
+  "retryable": false,
+  "path": "args.asset_id"
+}

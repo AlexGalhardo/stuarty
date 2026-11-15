@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "brightness": [
+        null,
+        -0.2
+      ],
+      "contrast": [
+        null,
+        1.5
+      ],
+      "saturation": [
+        null,
+        0.5
+      ]
+    }
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "crop": {
+    "left": 0.1,
+    "right": 0.1
+  },
+  "fit": "cover"
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "item.added",
+    "id": "itm_s6t7v8w9x0",
+    "object": {
+      "asset": "ast_placeholder",
+      "duration": 150,
+      "id": "itm_s6t7v8w9x0",
+      "start": 0,
+      "track": "trk_m1n2p3q4r5",
+      "type": "audio"
+    }
+  }
+]

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": {
+      "description": "An audio asset, a video asset with audio, or ast_placeholder in a template.",
+      "type": "string"
+    },
+    "duration": {
+      "description": "A length; default the rest of the asset.",
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "source_in": {
+      "description": "Offset into the asset; default 0s.",
+      "type": "string"
+    },
+    "start": {
+      "description": "Absolute position.",
+      "type": "string"
+    },
+    "track_id": {
+      "description": "An audio track.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "track_id",
+    "asset_id",
+    "start"
+  ],
+  "type": "object"
+}

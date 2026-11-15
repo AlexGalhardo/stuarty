@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "item.added",
+    "id": "itm_s6t7v8w9x0",
+    "object": {
+      "asset": "ast_4h6j8k2m3n",
+      "duration": 900,
+      "id": "itm_s6t7v8w9x0",
+      "start": 30,
+      "track": "trk_m1n2p3q4r5",
+      "type": "audio"
+    }
+  }
+]
