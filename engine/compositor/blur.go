@@ -183,7 +183,11 @@ var stripes = sync.Pool{New: func() any { return new([2][]uint32) }}
 // stripe of columns at a time on a copy of the stripe, so the three passes read memory that stays
 // cached and the rows of the image are walked once.
 func blurColumns3(src []uint32, dst []byte, w, h, x0, x1, r int, t *meanTable) {
-	buf := stripes.Get().(*[2][]uint32)
+	buf, ok := stripes.Get().(*[2][]uint32)
+	if !ok {
+		buf = new([2][]uint32)
+	}
+
 	defer stripes.Put(buf)
 
 	sums := make([]uint64, stripeWidth)
