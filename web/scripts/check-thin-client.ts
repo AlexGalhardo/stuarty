@@ -116,11 +116,11 @@ const FEATURES = ["timeline", "inspector", "library", "export", "history"];
 const MAY_IMPORT: Record<string, string[]> = {
 	api: [],
 	state: ["api"],
-	commands: ["state", "api"],
+	commands: ["state", "api", "ui"],
 	preview: ["state", "api", "ui"],
 	ui: [],
 	a11y: [],
-	layout: [...FEATURES, "preview", "state", "ui", "a11y"],
+	layout: [...FEATURES, "commands", "preview", "state", "ui", "a11y"],
 	boot: ["*"],
 	...Object.fromEntries(
 		FEATURES.map((f) => [f, ["state", "commands", "ui", "a11y", "preview", "api"]]),
