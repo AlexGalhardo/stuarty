@@ -59,7 +59,13 @@ func run() error {
 	defer srv.Stop()
 	app.OnShutdown(srv.Stop)
 
+	// The first load is the one-time launch address: the server answers it with
+	// the session cookie, so the window is signed in without seeing the token.
 	home := srv.URL() + "/projects"
+	launch, err := srv.LaunchURL(context.Background())
+	if err != nil {
+		return failStartup(app, err)
+	}
 	win := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:            "Vukem Video",
 		Width:            defaultWidth,
@@ -67,7 +73,7 @@ func run() error {
 		MinWidth:         minWidth,
 		MinHeight:        minHeight,
 		BackgroundColour: application.NewRGB(0x0b, 0x0b, 0x0b),
-		URL:              home,
+		URL:              launch,
 	})
 	guardNavigation(win, srv.Port, home)
 	app.Menu.SetApplicationMenu(buildMenu(app, win, ws))
