@@ -26,7 +26,7 @@ export function esc(text: string): string {
 /** A line that starts with "import" or "export" is ESM to MDX, so a summary starts with a capital. */
 const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
-const code = (text: string) => `\`${text.replace(/\|/g, "\\|")}\``;
+const code = (text: string) => `\`${text.replace(/\\/g, "\\\\").replace(/\|/g, "\\|")}\``;
 
 function page(title: string, description: string, body: string): string {
 	return `---\ntitle: ${JSON.stringify(title)}\ndescription: ${JSON.stringify(description)}\n---\n\n${GENERATED}\n\n${body.trim()}\n`;
