@@ -53,17 +53,11 @@ var parity = []row{
 		route:      "POST /projects/{}/media/{}/restore",
 		cliPending: "P2-CLI",
 	},
-	{method: "TemplateList", tool: "template", command: "template:list", route: "GET /templates", cliPending: "P2-AGT"},
-	{
-		method:     "TemplateSave",
-		tool:       "template",
-		command:    "template:save",
-		route:      "POST /templates",
-		cliPending: "P2-AGT",
-	},
+	{method: "TemplateList", tool: "template", command: "template:list", route: "GET /templates"},
+	{method: "TemplateSave", tool: "template", command: "template:save", route: "POST /templates"},
 	{
 		method: "TemplateInstantiate", tool: "template", command: "template:new",
-		route: "POST /templates/{}/instantiate", cliPending: "P2-AGT",
+		route: "POST /templates/{}/instantiate",
 	},
 	{
 		method: "TemplateExport", tool: "template", command: "template:export",
