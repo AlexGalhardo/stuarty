@@ -171,10 +171,10 @@ tasks:
       - npm run check:last-updated
 
   site:translations:
-    desc: Report the pages whose Brazilian Portuguese twin is missing or stale (non-strict)
+    desc: Fail when a page has a missing or stale Brazilian Portuguese twin (strict)
     dir: site
     cmds:
-      - npm run check:translations
+      - npm run check:translations -- --strict
 
   image:build:
     desc: Build the container image as vukem-video:local
