@@ -150,7 +150,7 @@ var Endpoints = []Endpoint{
 	},
 	{
 		ID: "events.stream", Method: http.MethodGet, Path: "/projects/{id}/events", Scope: service.ScopeRead,
-		Status: 200, Summary: "Stream the events of a project", Pending: "P1-SRV-006",
+		Status: 200, Summary: "Stream the events of a project",
 	},
 
 	{

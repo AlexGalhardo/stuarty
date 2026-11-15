@@ -29,6 +29,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/service/pathguard"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 	"github.com/AlexGalhardo/vukem-video/web/app/auth"
+	"github.com/AlexGalhardo/vukem-video/web/app/events"
 	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 	"github.com/AlexGalhardo/vukem-video/web/app/jobs"
 	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
@@ -67,6 +68,7 @@ type Owner struct {
 	Runner  service.JobRunner
 	Queue   *queue.Queue
 	Token   string
+	Events  *events.Events
 
 	deps     *httpapi.Deps
 	lock     *workspace.Lock
@@ -88,6 +90,11 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 
 	if cfg.Log == nil {
 		cfg.Log = slog.Default()
+
+		// A command prints what it was asked for and nothing else (SDD-003 section 5.1).
+		if cfg.Inline {
+			cfg.Log = slog.New(slog.DiscardHandler)
+		}
 	}
 
 	if cfg.Now == nil {
@@ -183,9 +190,17 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
+	// A command has no subscribers: nothing reads its events.
+	var publish func(service.Event)
+
+	if !cfg.Inline {
+		o.Events = events.New(st, events.Options{Log: cfg.Log})
+		publish = o.Events.Publish
+	}
+
 	o.Service, err = service.New(service.Options{
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
-		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits,
+		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish,
 	})
 	if err != nil {
 		return err
@@ -201,6 +216,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	o.deps = &httpapi.Deps{
 		Service: o.Service, Registry: command.Default(), Jobs: st.Jobs(), Workspace: o.Dir, Token: o.Token,
 		Sessions: auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
+		Events: o.Events,
 	}
 
 	if o.deps.MCP, err = mcp.Handler(o.Service, mcp.Options{Version: o.version}); err != nil {
@@ -241,7 +257,7 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 			return service.Media{}, nil, fmt.Errorf("owner: %w", err)
 		}
 
-		cfg.Log.Warn("FFmpeg was not found: import and export are unavailable", "error", err)
+		cfg.Log.WarnContext(ctx, "FFmpeg was not found: import and export are unavailable", "error", err)
 
 		return media, nil, nil
 	}
@@ -309,6 +325,10 @@ func (o *Owner) Work(ctx context.Context) error {
 // database (checkpointed by its close) and the lock, in that order.
 func (o *Owner) Close() error {
 	var errs []error
+
+	if o.Events != nil {
+		o.Events.Close() // ends the open streams at once
+	}
 
 	if o.announce {
 		errs = append(errs, o.Dir.RemoveRuntime())

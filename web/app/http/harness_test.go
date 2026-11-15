@@ -20,6 +20,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 	"github.com/AlexGalhardo/vukem-video/web/app/auth"
+	"github.com/AlexGalhardo/vukem-video/web/app/events"
 	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
 	"github.com/AlexGalhardo/vukem-video/web/app/store"
@@ -50,17 +51,26 @@ func (c *clock) advance(d time.Duration) {
 }
 
 type harness struct {
-	t     *testing.T
-	app   *vukemtest.App
-	vapp  *vukem.App
-	srv   *httptest.Server
-	dir   workspace.Dir
-	store *store.Store
-	clock *clock
-	port  string
+	t      *testing.T
+	app    *vukemtest.App
+	vapp   *vukem.App
+	srv    *httptest.Server
+	svc    service.Service
+	track  string
+	events *events.Events
+	dir    workspace.Dir
+	store  *store.Store
+	clock  *clock
+	port   string
 }
 
 func newHarness(t *testing.T) *harness {
+	t.Helper()
+
+	return newHarnessWith(t, events.Options{})
+}
+
+func newHarnessWith(t *testing.T, eo events.Options) *harness {
 	t.Helper()
 
 	dir, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
@@ -79,12 +89,22 @@ func newHarness(t *testing.T) *harness {
 
 	t.Cleanup(func() { _ = st.Close() })
 
-	svc, err := service.New(service.Options{Store: st})
+	hub := events.New(st, eo)
+	t.Cleanup(hub.Close)
+
+	svc, err := service.New(service.Options{Store: st, Publish: hub.Publish})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	h := &harness{t: t, dir: dir, store: st, clock: &clock{t: time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)}}
+	h := &harness{
+		t:      t,
+		svc:    svc,
+		events: hub,
+		dir:    dir,
+		store:  st,
+		clock:  &clock{t: time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)},
+	}
 
 	mcpHandler, err := mcp.Handler(svc, mcp.Options{Version: "test"})
 	if err != nil {
@@ -92,7 +112,7 @@ func newHarness(t *testing.T) *harness {
 	}
 
 	deps := &httpapi.Deps{
-		MCP:     mcpHandler,
+		MCP: mcpHandler, Events: hub,
 		Service: svc, Registry: command.Default(), Jobs: st.Jobs(), Workspace: dir, Token: canary,
 		Sessions: auth.NewSessions(h.clock.now), Launch: auth.NewLaunch(h.clock.now), Now: h.clock.now,
 	}
