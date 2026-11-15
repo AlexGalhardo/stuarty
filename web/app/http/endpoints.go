@@ -244,6 +244,18 @@ var Endpoints = []Endpoint{
 		Service: "FontList", Status: 200, Summary: "List the bundled font families and weights",
 	},
 	{
+		ID: "fonts.import", Method: http.MethodPost, Path: "/fonts", Scope: service.ScopeMedia,
+		Service: "FontImport", Status: 201, Summary: "Import a font file into the font store",
+	},
+	{
+		ID: "brand.get", Method: http.MethodGet, Path: "/brand-kit", Scope: service.ScopeRead,
+		Service: "BrandKitGet", Status: 200, Summary: "Read the brand kit",
+	},
+	{
+		ID: "brand.set", Method: http.MethodPut, Path: "/brand-kit", Scope: service.ScopeEdit,
+		Service: "BrandKitSet", Status: 200, Summary: "Replace the brand kit",
+	},
+	{
 		ID: "audit.list", Method: http.MethodGet, Path: "/audit", Scope: service.ScopeAdmin,
 		Service: "AuditList", Status: 200, Summary: "List the audit table",
 	},
