@@ -1,0 +1,50 @@
+---
+title: "Codificadores e predefinições de exportação"
+description: "Que arquivo uma exportação produz, qual codificador H.264 ela usa e como escolher um."
+---
+
+## O que você vai aprender
+
+- o que é o arquivo de exportação, e que há uma única predefinição;
+- como o codificador é detectado e como forçar um;
+- como conferir a escolha.
+
+## A ideia
+
+Há uma **predefinição de exportação**: um arquivo MP4 com vídeo H.264, áudio AAC estéreo de 48 kHz e o tamanho de quadro e a taxa de quadros do próprio projeto, com o índice na frente (faststart). O nome de um projeto nunca faz parte do caminho de saída: o arquivo é `<workspace>/exports/<project id>/<job id>.mp4`. Antes de a tarefa ser marcada como concluída, o arquivo é verificado (streams, duração, dimensões, formato de pixel e faststart). Você pode exportar uma parte da linha do tempo com um início e um fim.
+
+Um codificador H.264 só é necessário para a exportação. O produto testa os candidatos na sua máquina com uma codificação de teste real, nesta ordem: `h264_videotoolbox` (macOS), `h264_nvenc`, `h264_qsv`, `h264_amf`, `h264_mf` (Windows), `h264_vaapi` (Linux) e `libopenh264`, que o FFmpeg incluído tem. O `libx264` só é usado quando o FFmpeg é o seu e `VUKEM_VIDEO_ALLOW_USER_X264` é `true`. O primeiro que funciona é usado. O resultado fica em cache por 24 horas.
+
+Para forçar um codificador, defina `VUKEM_VIDEO_ENCODER` com o nome dele no FFmpeg. Só esse é testado; se falhar, a exportação falha com `E_NO_ENCODER` e o motivo, e o produto nunca o troca em silêncio.
+
+## Início rápido
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video doctor --full
+vukem-video export --project prj_7k2m9x4q1b --start 0s --end 10s
+VUKEM_VIDEO_ENCODER=libopenh264 vukem-video serve
+```
+
+</Tab>
+<Tab title="MCP">
+
+`job_start` com `{"project_id": "prj_7k2m9x4q1b", "kind": "export"}`. A tarefa concluída informa o codificador usado. Não há ferramenta MCP para o diagnóstico; peça ao operador que execute `vukem-video doctor --full`.
+
+</Tab>
+</Tabs>
+
+O resultado da tarefa traz o caminho, o tamanho, a duração e o codificador usado. A exportação é composta em Go e o codificador lê os quadros de um pipe, então um codificador mais rápido encurta apenas parte do tempo; veja [Solução de problemas: a exportação está lenta](/docs/troubleshooting/slow-export).
+
+## Erros comuns
+
+- `E_NO_ENCODER` em uma máquina sem codificador de hardware funcionando e com um FFmpeg sem OpenH264. Use o FFmpeg incluído, ou defina `VUKEM_VIDEO_FFMPEG` com uma compilação que tenha `libx264` e defina `VUKEM_VIDEO_ALLOW_USER_X264=true`.
+- Apontar `VUKEM_VIDEO_ENCODER` para um codificador que a máquina não tem.
+- Esperar outros contêineres ou codecs. Esta versão grava apenas MP4 com H.264.
+
+## Próximos passos
+
+- [Tarefas e a fila](/docs/guide/jobs)
+- [Solução de problemas: a exportação está lenta](/docs/troubleshooting/slow-export)

@@ -1,0 +1,58 @@
+---
+title: "Fontes e o kit de marca"
+description: "Importe suas próprias fontes, guarde suas cores, fontes e logotipo em um kit de marca e aplique-os ao iniciar um projeto a partir de um modelo."
+---
+
+## O que você vai aprender
+
+- como importar um arquivo de fonte e o que a importação devolve;
+- como ler e substituir o kit de marca;
+- como um modelo toma suas cores e fontes do kit.
+
+## A ideia
+
+O editor vem com famílias de fontes incluídas (`vukem-video fonts` as lista). Para usar outra fonte, **importe** o arquivo TrueType ou OpenType: ele é conferido e armazenado uma única vez pelo seu hash de conteúdo, então importar o mesmo arquivo duas vezes guarda uma só cópia. A importação devolve o `hash` de que o `font.add` precisa para adicionar a fonte a um projeto.
+
+O **kit de marca** é um documento pequeno com três membros opcionais: um `logo` (o hash `sha256:` de uma mídia de imagem), `colors` (nomes como `accent` com um valor `#RRGGBB` ou `#RRGGBBAA`) e `fonts` (famílias que você importou, com um arquivo por peso). Há um kit por espaço de trabalho e um por usuário no modo de rede. Substituir o kit substitui os três membros de uma vez.
+
+Um modelo iniciado com `brand_colors` ou `brand_fonts` toma valores do kit: cada cor nomeada do modelo recebe a cor do kit, então todo estilo que diz `$accent` desenha a cor da marca, e cada família nomeada é adicionada às fontes do novo projeto. Um nome que o kit ou o modelo não tem é `E_VALIDATION`, e nada é criado.
+
+## Início rápido
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video font:import ./Brand-Regular.ttf
+cat > brand.json <<'JSON'
+{"colors": {"accent": "#FF3366"},
+ "fonts": {"Brand Sans": {"files": [{"weight": 400, "hash": "sha256:9f2c...e41a"}]}}}
+JSON
+vukem-video brand:set --kit brand.json
+vukem-video brand:show
+vukem-video template:new tpl_5n8b2v6c1x --name "Spring sale"   --brand-color accent --brand-font "Brand Sans"
+```
+
+O `--brand-color` e o `--brand-font` podem ser repetidos ou receber uma lista separada por vírgulas. O `--kit -` lê o kit da entrada padrão.
+
+</Tab>
+<Tab title="MCP">
+
+A importação de fontes e o kit de marca não têm ferramenta MCP: eles mudam o que todo o espaço de trabalho pode usar, então são para quem está no terminal, no editor ou na API HTTP. Iniciar um modelo com o kit (`brand_colors`, `brand_fonts`) é feito com `template:new` ou com a API HTTP; a ferramenta `template` não aceita esses membros.
+
+</Tab>
+</Tabs>
+
+O `font:import` precisa do escopo de mídia e o `brand:set` do escopo de edição; o `brand:show` apenas lê. Uma chave limitada a um projeto não pode usar nenhum deles. O caminho do `font:import` é tornado absoluto e lido na máquina que roda o servidor.
+
+## Erros comuns
+
+- Importar um arquivo que não é uma fonte TrueType ou OpenType utilizável: `E_VALIDATION`.
+- Dar a uma família da marca o nome de uma fonte incluída: `E_VALIDATION`. Escolha outro nome.
+- Passar uma cor sem o `#` inicial, ou em uma forma diferente de `#RRGGBB` ou `#RRGGBBAA`: `E_VALIDATION`.
+- Iniciar um modelo com um nome de `brand_colors` que não é uma cor do modelo (`brand_color_unknown`) ou que o kit não tem (`brand_color_missing`).
+
+## Próximos passos
+
+- [Modelos](/docs/guide/templates)
+- [Texto e legendas](/docs/guide/text-and-captions)
