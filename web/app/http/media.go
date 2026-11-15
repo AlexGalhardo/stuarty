@@ -218,6 +218,9 @@ type templateInstantiateIn struct {
 	Fill       map[string]service.SlotValue `json:"fill,omitempty"                        doc:"Slot name to a value: one of asset_id, text or words."`
 	ID         string                       `json:"id,omitempty"                          doc:"Optional project id; local mode only."`
 	DryRun     bool                         `json:"dry_run,omitempty"`
+
+	BrandColors []string `json:"brand_colors,omitempty" doc:"Names of template colours that take the colour of the brand kit."`
+	BrandFonts  []string `json:"brand_fonts,omitempty"  doc:"Families of the brand kit added to the fonts of the project."`
 }
 
 func (h *apiHandler) templateList(c *web.Ctx, in templateListIn) (service.TemplateListResult, error) {
@@ -253,6 +256,7 @@ func (h *apiHandler) templateInstantiate(
 
 	res, err := h.Service.TemplateInstantiate(c.Context(), service.TemplateInstantiateRequest{
 		TemplateID: in.TemplateID, Name: in.Name, Fill: in.Fill, ID: in.ID, DryRun: dryRun,
+		BrandColors: in.BrandColors, BrandFonts: in.BrandFonts,
 	})
 	if err != nil {
 		return service.TemplateInstantiateResult{}, err
