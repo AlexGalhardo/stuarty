@@ -20,10 +20,12 @@ import (
 	"github.com/AlexGalhardo/vukem/ratelimit"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/lint"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/cache"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/frame"
+	"github.com/AlexGalhardo/vukem-video/engine/raster"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/config"
@@ -269,6 +271,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
 		Transcriber: transcriber, Tools: tools,
+		Lint: lint.Env{Measurer: lintMeasurer{fonts: raster.Bundled()}},
 		Doctor: service.DoctorOptions{
 			Mode: o.mode, StartedAt: o.now().UTC(), Child: o.child,
 			Integrity: func(ctx context.Context) (string, error) {
@@ -428,6 +431,7 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 	return media, exporter.New(exporter.Config{
 		Runner: child.Export, HardwareRunner: child.ExportHardware, Workspace: string(o.Dir),
 		Encoder: ffmpeg.DetectOptions{Forced: cfg.Getenv("VUKEM_VIDEO_ENCODER"), AllowUserX264: allowX264},
+		Lint:    lint.Env{Measurer: lintMeasurer{fonts: raster.Bundled()}},
 	}), nil
 }
 
