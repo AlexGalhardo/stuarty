@@ -20,7 +20,7 @@ export function exportPhase(input: {
 	if (job !== undefined) {
 		if (job.state === "queued" || job.state === "running") return "running";
 		if (job.state === "succeeded") return "succeeded";
-		if (job.state === "canceled") return "cancelled";
+		if (job.state === "cancelled") return "cancelled";
 		return "failed";
 	}
 	if (input.checking) return "checking";

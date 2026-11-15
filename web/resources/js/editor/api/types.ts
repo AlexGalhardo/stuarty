@@ -309,7 +309,7 @@ export type JobState =
 	| "running"
 	| "succeeded"
 	| "failed"
-	| "canceled";
+	| "cancelled";
 
 export interface ExportResult {
 	revision: number;

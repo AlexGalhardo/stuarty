@@ -97,7 +97,7 @@ export default function AutoCaptions({
 			pending.current = null;
 			setPhase({ name: "idle" });
 			if (ops !== null) void actions.generateCaptions(ops);
-		} else if (job.state === "failed" || job.state === "canceled") {
+		} else if (job.state === "failed" || job.state === "cancelled") {
 			pending.current = null;
 			if (job.error?.code === "E_TRANSCRIBE_UNAVAILABLE") {
 				setPhase({ name: "idle" });
