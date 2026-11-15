@@ -25,6 +25,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/engine/frame"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/config"
 	"github.com/AlexGalhardo/vukem-video/service/exporter"
 	"github.com/AlexGalhardo/vukem-video/service/pathguard"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
@@ -50,6 +51,10 @@ type Config struct {
 	// process (a command that became the owner); the owner then uses its
 	// directory and lock instead of taking them, and Close releases the lock.
 	Session *workspace.Session
+	// Resolved is the configuration that config.Validate accepted; its zero
+	// value is the mode named by VUKEM_VIDEO_MODE with no network facts (the
+	// commands, which never serve).
+	Resolved config.Resolved
 	// Inline runs the jobs inside the call that starts them (queue.Sync) and
 	// starts no start-up recovery: a command is not a server, and the next
 	// serve recovers what a dead owner left running.
@@ -76,6 +81,8 @@ type Owner struct {
 	version  string
 	now      func() time.Time
 	announce bool
+	mode     string
+	network  *httpapi.Network
 }
 
 // lateRunner lets the queue handlers exist before the Service that they call.
@@ -101,7 +108,11 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 		cfg.Now = time.Now
 	}
 
-	o := &Owner{version: cfg.Version, now: cfg.Now}
+	if cfg.Resolved.Mode == "" {
+		cfg.Resolved.Mode = config.ModeOf(cfg.Getenv)
+	}
+
+	o := &Owner{version: cfg.Version, now: cfg.Now, mode: cfg.Resolved.Mode}
 
 	if err := o.take(cfg); err != nil {
 		return nil, err
@@ -160,11 +171,11 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 
 	o.Store = st
 
-	if o.Token, err = o.Dir.EnsureToken(); err != nil {
+	if err := o.authSetup(cfg); err != nil {
 		return err
 	}
 
-	limits, err := limitsFromEnv(cfg.Getenv)
+	limits, err := limitsFromEnv(cfg.Getenv, o.mode == config.ModeNetwork)
 	if err != nil {
 		return err
 	}
@@ -217,8 +228,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
 		Transcriber: transcriber, Tools: tools,
 		Doctor: service.DoctorOptions{
-			// TODO(P2-SRV-011): wire the real mode when network mode boots.
-			Mode: service.ModeLocal, StartedAt: o.now().UTC(),
+			Mode: o.mode, StartedAt: o.now().UTC(),
 			Integrity: func(ctx context.Context) (string, error) {
 				var out string
 				err := st.DB().QueryRowContext(ctx, "PRAGMA integrity_check").Scan(&out)
@@ -241,7 +251,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	o.deps = &httpapi.Deps{
 		Service: o.Service, Registry: command.Default(), Workspace: o.Dir, Token: o.Token,
 		Sessions: auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
-		Events: o.Events, Version: o.version,
+		Events: o.Events, Version: o.version, Network: o.network,
 	}
 
 	if o.deps.MCP, err = mcp.Handler(o.Service, mcp.Options{Version: o.version}); err != nil {
@@ -269,6 +279,34 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	}
 
 	return nil
+}
+
+// authSetup is the credential side of the mode. Network mode has no local token
+// and creates no token file (SDD-007 section 4); a command that is not a server
+// builds no guard.
+func (o *Owner) authSetup(cfg Config) error {
+	if o.mode != config.ModeNetwork {
+		var err error
+
+		o.Token, err = o.Dir.EnsureToken()
+
+		return err
+	}
+
+	if cfg.Inline {
+		return nil
+	}
+
+	if cfg.Resolved.AppURL == "" {
+		return errors.New("owner: network mode runs only through `vukem-video serve`, which validates the " +
+			"configuration; unset VUKEM_VIDEO_MODE for any other command")
+	}
+
+	var err error
+
+	o.network, err = httpapi.NewNetwork(cfg.Resolved, cfg.Log)
+
+	return err
 }
 
 // media builds the media side of the Service. A missing FFmpeg is not a start
@@ -309,7 +347,7 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 
 	media.Runner = runner
 
-	maxCache, err := cacheLimit(cfg.Getenv)
+	maxCache, err := cacheLimit(cfg.Getenv, o.mode == config.ModeNetwork)
 	if err != nil {
 		return service.Media{}, nil, err
 	}
@@ -338,7 +376,7 @@ func (o *Owner) Announce(addr string) error {
 	o.announce = true
 
 	return o.Dir.WriteRuntime(workspace.Runtime{
-		Schema: 1, PID: os.Getpid(), Addr: addr, Mode: workspace.ModeLocal, StartedAt: o.now().UTC(),
+		Schema: 1, PID: os.Getpid(), Addr: addr, Mode: o.mode, StartedAt: o.now().UTC(),
 		Version: o.version,
 	})
 }
@@ -385,15 +423,23 @@ func (o *Owner) Close() error {
 	return errors.Join(errs...)
 }
 
-func cacheLimit(getenv func(string) string) (int64, error) {
-	raw := getenv("VUKEM_VIDEO_CACHE_MAX_BYTES")
-	if raw == "" {
+func cacheLimit(getenv func(string) string, network bool) (int64, error) {
+	const name = "VUKEM_VIDEO_CACHE_MAX_BYTES"
+
+	raw := getenv(name)
+
+	use, err := config.CheckLimit(name, raw, network)
+	if err != nil {
+		return 0, fmt.Errorf("owner: %w", err)
+	}
+
+	if !use {
 		return 0, nil
 	}
 
-	v, err := strconv.ParseInt(raw, 10, 64)
-	if err != nil || v < 0 {
-		return 0, errors.New("owner: VUKEM_VIDEO_CACHE_MAX_BYTES must be a whole number of 0 or more")
+	v, err := strconv.ParseInt(strings.TrimSpace(raw), 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("owner: invalid limit: %s=%q must be a whole number", name, raw)
 	}
 
 	return v, nil
@@ -411,9 +457,11 @@ func splitList(s string) []string {
 	return out
 }
 
-// limitsFromEnv reads the ceilings of SDD-007 section 9.1; a value that is
-// not a positive number refuses the start rather than being ignored.
-func limitsFromEnv(getenv func(string) string) (service.Limits, error) {
+// limitsFromEnv reads the ceilings of SDD-007 section 9.1. A value that is not
+// a number refuses the start rather than being ignored. Zero or a negative
+// number means the default in local mode and refuses the start in network mode
+// ("invalid limit", naming the variable).
+func limitsFromEnv(getenv func(string) string, network bool) (service.Limits, error) {
 	var l service.Limits
 
 	for _, f := range []struct {
@@ -432,25 +480,35 @@ func limitsFromEnv(getenv func(string) string) (service.Limits, error) {
 		{"VUKEM_VIDEO_MAX_IMPORT_PIXELS", func(v int64) { l.Ceilings.MaxPixels = v }},
 	} {
 		raw := getenv(f.name)
-		if raw == "" {
+
+		use, err := config.CheckLimit(f.name, raw, network)
+		if err != nil {
+			return service.Limits{}, fmt.Errorf("owner: %w", err)
+		}
+
+		if !use {
 			continue
 		}
 
-		v, err := strconv.ParseInt(raw, 10, 64)
-		if err != nil || v < 0 {
-			return service.Limits{}, fmt.Errorf("owner: %s must be a whole number of 0 or more", f.name)
+		v, err := strconv.ParseInt(strings.TrimSpace(raw), 10, 64)
+		if err != nil {
+			return service.Limits{}, fmt.Errorf("owner: invalid limit: %s=%q must be a whole number", f.name, raw)
 		}
 
 		f.set(v)
 	}
 
-	if raw := getenv("VUKEM_VIDEO_MAX_IMPORT_SECONDS"); raw != "" {
-		v, err := strconv.ParseFloat(raw, 64)
-		if err != nil || v < 0 {
-			return service.Limits{}, errors.New("owner: VUKEM_VIDEO_MAX_IMPORT_SECONDS must be a number of 0 or more")
-		}
+	const seconds = "VUKEM_VIDEO_MAX_IMPORT_SECONDS"
 
-		l.Ceilings.MaxSeconds = v
+	raw := getenv(seconds)
+
+	use, err := config.CheckLimit(seconds, raw, network)
+	if err != nil {
+		return service.Limits{}, fmt.Errorf("owner: %w", err)
+	}
+
+	if use {
+		l.Ceilings.MaxSeconds, _ = strconv.ParseFloat(strings.TrimSpace(raw), 64)
 	}
 
 	return l, nil

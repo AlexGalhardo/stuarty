@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"net/http"
 	"os"
 	"os/exec"
@@ -30,9 +31,16 @@ type serveProc struct {
 func startServe(t *testing.T, bin, home string) *serveProc {
 	t.Helper()
 
+	return startServeEnv(t, bin, home, "HOST=127.0.0.1", "PORT="+freePort(t))
+}
+
+// startServeEnv is startServe with its own environment on top of the defaults.
+func startServeEnv(t *testing.T, bin, home string, env ...string) *serveProc {
+	t.Helper()
+
 	cmd := exec.CommandContext(t.Context(), bin, "serve")
-	cmd.Env = append(os.Environ(), "VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "APP_KEY=", "APP_ENV=",
-		"HOST=127.0.0.1", "PORT="+freePort(t), "VUKEM_VIDEO_MIN_FREE_BYTES=1")
+	cmd.Env = append(append(os.Environ(), "VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "APP_KEY=", "APP_ENV=",
+		"VUKEM_VIDEO_MIN_FREE_BYTES=1"), env...)
 
 	p := &serveProc{cmd: cmd, out: &bytes.Buffer{}, done: make(chan struct{})}
 	cmd.Stdout, cmd.Stderr = p.out, p.out
@@ -183,4 +191,114 @@ func serveOnce(t *testing.T, bin, home string) (stderr string, code int) {
 	}
 
 	return errOut.String(), code
+}
+
+// SDD-007 section 4.5: an unsafe configuration exits 1 with a message that names
+// the variable, before anything is locked or written (feeds T-34).
+func TestServeRefusesAnUnsafeConfiguration(t *testing.T) {
+	bin := buildBinary(t)
+
+	for _, c := range []struct {
+		name string
+		env  []string
+		want string
+	}{
+		{"unknown mode", []string{"VUKEM_VIDEO_MODE=lan"}, "VUKEM_VIDEO_MODE"},
+		{"non-loopback address in local mode", []string{"VUKEM_VIDEO_ADDR=0.0.0.0:0"}, "VUKEM_VIDEO_ADDR"},
+		{"network mode without APP_URL", []string{"VUKEM_VIDEO_MODE=network", "APP_URL=", "PORT=0"}, "APP_URL"},
+		{"network mode with a short key", []string{
+			"VUKEM_VIDEO_MODE=network", "APP_URL=http://localhost:7878", "APP_KEY=short",
+		}, "APP_KEY"},
+		{"network mode with a zero limit", []string{
+			"VUKEM_VIDEO_MODE=network", "APP_URL=http://localhost:7878", "VUKEM_VIDEO_MAX_EXPORTS=0",
+		}, "invalid limit"},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			home := filepath.Join(t.TempDir(), "ws")
+
+			cmd := exec.CommandContext(t.Context(), bin, "serve")
+			cmd.Env = append(os.Environ(), "VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "APP_ENV=", "APP_KEY=")
+			cmd.Env = append(cmd.Env, c.env...)
+
+			var out bytes.Buffer
+
+			cmd.Stderr = &out
+
+			err := cmd.Run()
+
+			ee, ok := err.(*exec.ExitError) //nolint:errorlint // exact type from Run
+			if !ok || ee.ExitCode() != 1 || !strings.Contains(out.String(), c.want) {
+				t.Fatalf("err = %v, stderr = %q", err, out.String())
+			}
+
+			if _, err := workspace.Dir(home).ReadRuntime(); err == nil {
+				t.Error("a refused configuration announced itself")
+			}
+		})
+	}
+}
+
+// Network mode in the container-on-own-machine form: it announces itself as
+// network, creates no token file, and answers every API request 401 while there
+// is no user; a request for another Host is refused (SDD-007 sections 4.3, 4.5).
+func TestServeNetworkModeWithNoUsers(t *testing.T) {
+	bin := buildBinary(t)
+	home := filepath.Join(t.TempDir(), "ws")
+	port := freePort(t)
+
+	p := startServeEnv(
+		t,
+		bin,
+		home,
+		"VUKEM_VIDEO_MODE=network",
+		"VUKEM_VIDEO_ADDR=127.0.0.1:"+port,
+		"APP_URL=http://localhost:"+port,
+		"APP_KEY=base64:"+base64.StdEncoding.EncodeToString(
+			[]byte(strings.Repeat("k", 32)),
+		),
+		"VUKEM_VIDEO_INSECURE_ALLOW_ROOT=true",
+	)
+
+	rt, err := workspace.Dir(home).ReadRuntime()
+	if err != nil || rt.Mode != workspace.ModeNetwork || rt.Addr != "127.0.0.1:"+port {
+		t.Fatalf("runtime.json = %+v, %v", rt, err)
+	}
+
+	if _, err := os.Stat(filepath.Join(home, "token")); err == nil {
+		t.Error("network mode created the local token file")
+	}
+
+	get := func(path, host string) int {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://127.0.0.1:"+port+path, http.NoBody)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Host = host
+
+		resp, err := outbound.LocalServer(5 * time.Second).Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_ = resp.Body.Close()
+
+		return resp.StatusCode
+	}
+
+	if got := get("/api/v1/projects", "localhost:"+port); got != http.StatusUnauthorized {
+		t.Errorf("no users: status = %d, want 401", got)
+	}
+
+	if got := get("/api/v1/projects", "192.168.1.5:"+port); got != http.StatusForbidden {
+		t.Errorf("another host: status = %d, want 403", got)
+	}
+
+	if got := get("/up", "127.0.0.1:"+port); got != http.StatusOK {
+		t.Errorf("/up: status = %d, want 200", got)
+	}
+
+	if !strings.Contains(p.out.String(), "user:create") {
+		t.Errorf("the log does not say how to create a user: %s", p.out)
+	}
 }
