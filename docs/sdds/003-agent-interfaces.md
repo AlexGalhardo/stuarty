@@ -861,6 +861,20 @@ type File struct {
 }
 ```
 
+```go
+// PlanWindowRequest asks for the render plan of frames From up to, not including, To of the current revision (SDD-004 §10).
+type PlanWindowRequest struct {
+	ProjectID string `json:"project_id"`
+	From      int    `json:"from"` // frame, 0 or more
+	To        int    `json:"to"`   // frame; To > From and To-From <= plan.MaxWindow (300), else E_VALIDATION with path `to`
+}
+
+// PlanWindowResult is core/plan.WindowPlan; Revision is the revision it was read at.
+type PlanWindowResult = plan.WindowPlan
+```
+
+`PlanWindow` (scope `read`) also records, for the project, the bitmap keys of the window. The bitmap route serves only a key that the plan of that same project handed out: a key of another project, a key the server forgot at a restart and a malformed key all answer `E_NOT_FOUND` (404) with the same body, so the route is no oracle for the existence of a bitmap elsewhere. A key is a content hash, not a secret; the project in the path and the remembered (project, key) pair are the access check.
+
 **Audit (RF-134).** Actions that are not a document batch (trash and restore, emptying the trash, imports, jobs, key management) are recorded in the `audit` table with their actor (SDD-005 §5.9, §13.1); document batches are recorded in the append-only log read by `HistoryList`. `AuditList` (HTTP `GET /audit`, CLI `audit`, scope `admin`) reads that record; it has no MCP tool (§7.1, E-3).
 
 `command.CaptionWord` is the word object of `caption.add` (SDD-002 §B.7). A `TemplateInstantiate` that leaves required slots unfilled succeeds (the project is created) and reports them in `Unfilled` and as `L_SLOT_UNFILLED` findings, per RF-051.
@@ -2579,7 +2593,7 @@ The eight byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `thum
 | `GET /projects/{id}/media/{asset_id}/thumbnail` | `image/jpeg` | `"thumb-<asset hash first 16>-w<width>"` | `private, max-age=86400, immutable` | `width` is 160, 320 or 640 (a closed set keeps the cache to three variants per asset) |
 | `GET /projects/{id}/media/{asset_id}/strip` | `image/jpeg` | `"strip-<asset hash first 16>-<profile version>"` | `private, max-age=86400, immutable` | one sprite of timeline tiles (SDD-011); `Range` works |
 | `GET /projects/{id}/media/{asset_id}/peaks` | `application/octet-stream` | `"peaks-<asset hash first 16>-<profile version>"` | `private, max-age=86400, immutable` | the peaks file of SDD-011, read whole by the browser; `Range` works |
-| `GET /projects/{id}/bitmaps/{key}` | `image/png` | `"bmp-<key>"` | `private, max-age=31536000, immutable` (the key is the content hash) | rasterized text or shape (SDD-004); the project in the path is the access check |
+| `GET /projects/{id}/bitmaps/{key}` | `image/png` | `"bmp-<key>"` | `private, max-age=31536000, immutable` (the key is the content hash) | rasterized text or shape (SDD-004); the project in the path is the access check, and the key must come from a plan window of that project (else 404) |
 
 A frame or sheet is written to the cache (`frames/<project id>/<revision>/`) by the first request and served from it afterwards. In network mode a cached file is served only to a caller allowed to read that project.
 

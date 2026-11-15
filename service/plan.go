@@ -31,23 +31,28 @@ const (
 )
 
 // bitmaps remembers the spec behind each key that a plan window handed out: the
-// bitmap route receives only the key. A key the server does not know (it
-// restarted since the plan) is not found, and the client asks for the plan again.
+// bitmap route receives only the key. Each spec belongs to the project whose plan
+// handed it out: a key is content-addressed, so it is not a secret, and another
+// project's plan must not unlock it. A key the project's plan did not hand out
+// (or the server forgot at a restart) is not found, and the client asks for the
+// plan again.
 type bitmaps struct {
 	mu    sync.Mutex
-	specs map[string]plan.BitmapSpec
-	order []string
+	specs map[bitmapID]plan.BitmapSpec
+	order []bitmapID
 	cache *raster.Cache
 }
 
-func (b *bitmaps) remember(spec plan.BitmapSpec) {
-	key := spec.Key()
+type bitmapID struct{ project, key string }
+
+func (b *bitmaps) remember(project string, spec plan.BitmapSpec) {
+	key := bitmapID{project, spec.Key()}
 
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	if b.specs == nil {
-		b.specs = map[string]plan.BitmapSpec{}
+		b.specs = map[bitmapID]plan.BitmapSpec{}
 	}
 
 	if _, ok := b.specs[key]; ok {
@@ -63,11 +68,11 @@ func (b *bitmaps) remember(spec plan.BitmapSpec) {
 	b.order = append(b.order, key)
 }
 
-func (b *bitmaps) spec(key string) (plan.BitmapSpec, bool) {
+func (b *bitmaps) spec(project, key string) (plan.BitmapSpec, bool) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	s, ok := b.specs[key]
+	s, ok := b.specs[bitmapID{project, key}]
 
 	return s, ok
 }
@@ -105,7 +110,7 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 		layers := plan.FrameWith(doc, t, opts).Layers
 		for i := range layers {
 			if layers[i].Bitmap != nil {
-				s.bitmaps.remember(*layers[i].Bitmap)
+				s.bitmaps.remember(row.ID, *layers[i].Bitmap)
 			}
 		}
 	}
@@ -115,7 +120,7 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 
 // openBitmap serves a rasterized text or shape by its content key: the PNG is
 // written once under bitmaps/ in the cache and served from there.
-func (s *svc) openBitmap(key string) (*File, error) {
+func (s *svc) openBitmap(project, key string) (*File, error) {
 	notFound := func() error {
 		return newError(command.CodeNotFound, "there is no bitmap with that key.").
 			withHint("read the plan of the window again")
@@ -125,7 +130,7 @@ func (s *svc) openBitmap(key string) (*File, error) {
 		return nil, notFound()
 	}
 
-	spec, ok := s.bitmaps.spec(key)
+	spec, ok := s.bitmaps.spec(project, key)
 	if !ok {
 		return nil, notFound()
 	}

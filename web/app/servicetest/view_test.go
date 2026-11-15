@@ -2,6 +2,8 @@ package servicetest
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -136,5 +138,43 @@ func TestPlanWindowAndBitmapKeys(t *testing.T) {
 		if _, err := m.svc.PlanWindow(ctx, req); err == nil {
 			t.Errorf("%s: accepted", name)
 		}
+	}
+}
+
+// A bitmap key is content-addressed, not a secret: only the project whose plan
+// handed it out can read it (SDD-003 section 6.5).
+func TestSecurity_BitmapKeyIsScopedToItsProject(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true})
+	a := m.exportable()
+	b := m.exportable() // the same content, so the same key, but never planned
+
+	ctx := m.as(ui)
+
+	w, err := m.svc.PlanWindow(ctx, service.PlanWindowRequest{ProjectID: a, From: 0, To: 30})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key := w.Layers[0].Bitmaps.Keys[0]
+
+	if _, err := m.svc.OpenFile(ctx, service.FileRef{Kind: "bitmap", ProjectID: a, ID: key}); err != nil {
+		t.Fatalf("own project: %v", err)
+	}
+
+	_, err = m.svc.OpenFile(ctx, service.FileRef{Kind: "bitmap", ProjectID: b, ID: key})
+
+	var se *service.Error
+	if !errors.As(err, &se) || se.Code != "E_NOT_FOUND" {
+		t.Errorf("key of project A on project B = %v, want E_NOT_FOUND", err)
+	}
+
+	limited := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "key:k1", Scopes: service.AllScopes, ProjectID: b},
+	)
+
+	_, err = m.svc.OpenFile(limited, service.FileRef{Kind: "bitmap", ProjectID: a, ID: key})
+	if !errors.As(err, &se) || se.Code != service.CodeForbidden {
+		t.Errorf("key limited to B on project A = %v, want forbidden", err)
 	}
 }
