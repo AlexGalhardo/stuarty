@@ -932,3 +932,96 @@ export function settingsFpsOperations(fps: string): Operations {
 export function projectRenameOperations(name: string): Operations {
 	return [{ op: "project.rename", args: { name } }];
 }
+
+export interface AudioChanges {
+	volume?: number;
+	fade_in?: string;
+	fade_out?: string;
+	audio_muted?: boolean;
+}
+
+// Only the fields the person changed (SDD-002 C.19); the fades are lengths with
+// a unit, as the time field normalized them.
+export function audioOperations(
+	itemId: string,
+	changes: AudioChanges,
+): Operations {
+	return [{ op: "item.set_audio", args: { item_id: itemId, ...changes } }];
+}
+
+export const FITS = ["cover", "contain", "none"] as const;
+export type Fit = (typeof FITS)[number];
+
+export type CropSide = "left" | "top" | "right" | "bottom";
+export const CROP_SIDES: readonly CropSide[] = [
+	"left",
+	"top",
+	"right",
+	"bottom",
+];
+
+// A crop merges with the stored one side by side in the core (SDD-002 decision
+// 23), so a change names only the side that changed.
+export function framingOperations(
+	itemId: string,
+	changes: { fit?: Fit; crop?: Partial<Record<CropSide, number>> },
+): Operations {
+	return [{ op: "clip.set_framing", args: { item_id: itemId, ...changes } }];
+}
+
+// The speed goes as the text the person typed with the `x` suffix; the core
+// parses it, bounds it to 1/4 and 4 and limits it to three decimals.
+export function speedOperations(
+	itemId: string,
+	speed: number,
+	ripple: boolean,
+): Operations {
+	return [
+		{
+			op: "clip.set_speed",
+			args: {
+				item_id: itemId,
+				speed: `${speed}x`,
+				...(ripple ? { ripple: "track" } : {}),
+			},
+		},
+	];
+}
+
+export interface ColorChanges {
+	brightness?: number;
+	contrast?: number;
+	saturation?: number;
+}
+
+export function colorOperations(
+	itemId: string,
+	changes: ColorChanges,
+): Operations {
+	return [{ op: "clip.set_color", args: { item_id: itemId, ...changes } }];
+}
+
+export interface SilenceOptions {
+	minSilence: string;
+	padding: string;
+	ripple: boolean;
+}
+
+// The ranges to remove come from the service (it measures the asset); the
+// request carries only the person's choices (SDD-002 C.27).
+export function silenceOperations(
+	itemId: string,
+	options: SilenceOptions,
+): Operations {
+	return [
+		{
+			op: "clip.remove_silences",
+			args: {
+				item_id: itemId,
+				min_silence: options.minSilence,
+				padding: options.padding,
+				ripple: options.ripple ? "track" : "none",
+			},
+		},
+	];
+}

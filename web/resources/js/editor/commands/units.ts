@@ -166,6 +166,12 @@ export function captionWordSegments(
 	}));
 }
 
+// The speed as the number the field shows: "1.5", "1" at normal speed.
+export function speedText(speed?: { num: number; den: number }): string {
+	if (speed === undefined) return "1";
+	return String(Number((speed.num / speed.den).toFixed(3)));
+}
+
 // The speed badge of a clip (SDD-012 section 7.4): "1.5x", nothing at 1.
 export function speedLabel(speed?: {
 	num: number;

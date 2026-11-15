@@ -5,6 +5,7 @@ import { type BuildPhase, isPhaseAtLeast } from "../boot/phase";
 import {
 	addAudioOperations,
 	addClipOperations,
+	audioOperations,
 	captionBreaksOperations,
 	captionEditWordOperations,
 	captionFromTranscriptOperations,
@@ -15,10 +16,12 @@ import {
 	captionStyleOperations,
 	captionWordsOperations,
 	closeGapOperations,
+	colorOperations,
 	crossfadeOperations,
 	deleteOperations,
 	dropAssetOperations,
 	duplicateOperations,
+	framingOperations,
 	keyframeClearOperations,
 	keyframeFallbackOperations,
 	keyframeRemoveOperations,
@@ -30,6 +33,8 @@ import {
 	renameOperations,
 	settingsFpsOperations,
 	settingsSetOperations,
+	silenceOperations,
+	speedOperations,
 	splitOperations,
 	textAddOperations,
 	textSetOperations,
@@ -356,6 +361,21 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"inspector.text": textStyleOperations("itm_a", { size: 90 }).map(
 				(o) => o.op,
 			),
+			"inspector.audio": audioOperations("itm_a", { volume: 2 }).map(
+				(o) => o.op,
+			),
+			"inspector.framing": framingOperations("itm_a", { fit: "none" }).map(
+				(o) => o.op,
+			),
+			"inspector.speed": speedOperations("itm_a", 1.5, true).map((o) => o.op),
+			"inspector.color": colorOperations("itm_a", { contrast: 1.2 }).map(
+				(o) => o.op,
+			),
+			"inspector.silences": silenceOperations("itm_a", {
+				minSilence: "0.4s",
+				padding: "0.1s",
+				ripple: true,
+			}).map((o) => o.op),
 			"topbar.rename": projectRenameOperations("x").map((o) => o.op),
 			"inspector.settings": settingsSetOperations({ width: 720 }).map(
 				(o) => o.op,

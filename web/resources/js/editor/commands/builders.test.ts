@@ -2,14 +2,17 @@ import { describe, expect, test } from "vitest";
 
 import {
 	addClipOperations,
+	audioOperations,
 	boundaryWords,
 	bulkEditWords,
 	captionFromTranscriptOperations,
 	captionOperations,
 	captionRetimeOperations,
 	clampBoundary,
+	colorOperations,
 	containsInclusive,
 	crossfadeOperations,
+	framingOperations,
 	keyframeClearOperations,
 	keyframeFallbackOperations,
 	keyframeFrame,
@@ -22,6 +25,8 @@ import {
 	projectRenameOperations,
 	settingsFpsOperations,
 	settingsSetOperations,
+	silenceOperations,
+	speedOperations,
 	splitOperations,
 	textAddOperations,
 	textSetOperations,
@@ -534,5 +539,58 @@ describe("project builders (SDD-002 C.1 to C.3)", () => {
 		expect(projectRenameOperations(" A ")).toEqual([
 			{ op: "project.rename", args: { name: " A " } },
 		]);
+	});
+});
+
+describe("clip section builders (SDD-002 C.19, C.24 to C.27)", () => {
+	test("audio sends only the field that changed, fades with their unit", () => {
+		expect(audioOperations("itm_a", { fade_in: "0.5s" })[0]?.args).toEqual({
+			item_id: "itm_a",
+			fade_in: "0.5s",
+		});
+		expect(audioOperations("itm_a", { audio_muted: true })[0]?.args).toEqual({
+			item_id: "itm_a",
+			audio_muted: true,
+		});
+	});
+
+	test("framing names one crop side, the core merges the rest", () => {
+		expect(
+			framingOperations("itm_a", { crop: { left: 0.1 } })[0]?.args,
+		).toEqual({ item_id: "itm_a", crop: { left: 0.1 } });
+	});
+
+	test("speed carries the x suffix and the ripple only when asked", () => {
+		expect(speedOperations("itm_a", 1.5, false)[0]?.args).toEqual({
+			item_id: "itm_a",
+			speed: "1.5x",
+		});
+		expect(speedOperations("itm_a", 0.25, true)[0]?.args).toEqual({
+			item_id: "itm_a",
+			speed: "0.25x",
+			ripple: "track",
+		});
+	});
+
+	test("colour sends only the slider that was released", () => {
+		expect(colorOperations("itm_a", { saturation: 1.4 })[0]?.args).toEqual({
+			item_id: "itm_a",
+			saturation: 1.4,
+		});
+	});
+
+	test("silences send the choices and never the ranges", () => {
+		const args = silenceOperations("itm_a", {
+			minSilence: "0.4s",
+			padding: "0s",
+			ripple: false,
+		})[0]?.args;
+		expect(args).toEqual({
+			item_id: "itm_a",
+			min_silence: "0.4s",
+			padding: "0s",
+			ripple: "none",
+		});
+		expect(args).not.toHaveProperty("resolved");
 	});
 });

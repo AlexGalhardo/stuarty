@@ -61,6 +61,11 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.text": ["text.set"],
 	// The palette runs any command of the registry with operations built from
 	// its schema form, so it has no builder to check (rule 2 of section 9.3).
+	"inspector.audio": ["item.set_audio"],
+	"inspector.framing": ["clip.set_framing"],
+	"inspector.speed": ["clip.set_speed"],
+	"inspector.color": ["clip.set_color"],
+	"inspector.silences": ["clip.remove_silences"],
 	"topbar.rename": ["project.rename"],
 	"inspector.settings": ["settings.set"],
 	"inspector.fps": ["settings.set_fps"],
@@ -137,10 +142,22 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "gesture", action: "library.drag", phase: "A" },
 		palette,
 	],
-	"clip.remove_silences": [palette],
-	"clip.set_color": [palette],
-	"clip.set_framing": [palette],
-	"clip.set_speed": [palette],
+	"clip.remove_silences": [
+		{ kind: "inspector", action: "inspector.silences", phase: "A" },
+		palette,
+	],
+	"clip.set_color": [
+		{ kind: "inspector", action: "inspector.color", phase: "A" },
+		palette,
+	],
+	"clip.set_framing": [
+		{ kind: "inspector", action: "inspector.framing", phase: "A" },
+		palette,
+	],
+	"clip.set_speed": [
+		{ kind: "inspector", action: "inspector.speed", phase: "A" },
+		palette,
+	],
 	"item.crossfade": [
 		{ kind: "menu", action: "timeline.crossfade", phase: "A" },
 		palette,
@@ -168,7 +185,10 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "menu", action: "timeline.rename", phase: "A" },
 		palette,
 	],
-	"item.set_audio": [palette],
+	"item.set_audio": [
+		{ kind: "inspector", action: "inspector.audio", phase: "A" },
+		palette,
+	],
 	"item.set_transform": [
 		{ kind: "gesture", action: "canvas.transform", phase: "A" },
 		{ kind: "inspector", action: "inspector.transform", phase: "A" },
