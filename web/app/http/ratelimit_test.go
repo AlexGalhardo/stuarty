@@ -1,11 +1,14 @@
 package httpapi_test
 
 import (
+	"context"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/events"
 	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 )
 
@@ -84,6 +87,7 @@ func TestRateLimitPerSessionFollowsTheVariable(t *testing.T) {
 // until the limiter lets it through, even with a valid key.
 func TestRateLimitFailedAuthenticationByAddress(t *testing.T) {
 	h, secret := rateHarness(t)
+	session := h.session(t, "ana@example.com")
 
 	for i := 1; i <= 20; i++ {
 		if res := h.asKey(
@@ -103,31 +107,24 @@ func TestRateLimitFailedAuthenticationByAddress(t *testing.T) {
 		t.Errorf("the 21st failed check = %d %s", res.status, res.body)
 	}
 
-	// The block touches the failures of the address and nothing else: a valid
-	// key or session behind the same address still works.
-	if res := h.asKey(t, secret, http.MethodGet, "/api/v1/projects", ""); res.status != http.StatusOK {
-		t.Errorf("a valid key from a refused address = %d, want 200", res.status)
+	// A blocked address is refused before the key is verified: a valid key
+	// gets the very answer of a bad one, so the block is no guessing oracle.
+	good := h.asKey(t, secret, http.MethodGet, "/api/v1/projects", "")
+	bad := h.asKey(t, "vvk_wrong.guess", http.MethodGet, "/api/v1/projects", "")
+
+	if good.status != http.StatusTooManyRequests || bad.status != good.status ||
+		good.code() != bad.code() || good.message() != bad.message() {
+		t.Errorf("valid key %d %s, bad key %d %s: want the same refusal", good.status, good.body, bad.status, bad.body)
 	}
 
-	if res := h.send(
-		t,
-		http.MethodGet,
-		"/api/v1/projects",
-		"",
-		h.session(t, "ana@example.com"),
-		nil,
-	); res.status != http.StatusOK {
-		t.Errorf("a valid session from a refused address = %d, want 200", res.status)
+	// A session that is already established still works, and a login is refused
+	// unverified.
+	if res := h.send(t, http.MethodGet, "/api/v1/projects", "", session, nil); res.status != http.StatusOK {
+		t.Errorf("an established session from a refused address = %d, want 200", res.status)
 	}
 
-	if res := h.asKey(
-		t,
-		"vvk_wrong.guess",
-		http.MethodGet,
-		"/api/v1/projects",
-		"",
-	); res.status != http.StatusTooManyRequests {
-		t.Errorf("a bad key from a refused address = %d, want 429", res.status)
+	if res := h.login(t, "ana@example.com", goodPass); res.status != http.StatusTooManyRequests || res.cookie != nil {
+		t.Errorf("a login from a refused address = %d, want 429 and no cookie", res.status)
 	}
 }
 
@@ -148,25 +145,74 @@ func TestRateLimitDoesNotCountTheProxyRoute(t *testing.T) {
 	}
 }
 
-// Local mode: only failed authentication is throttled by address; the
-// per-token limiter runs with the same defaults.
+// Local mode: every client is the loopback address, so bad tokens never lock
+// out the good one.
 func TestRateLimitLocalMode(t *testing.T) {
 	t.Parallel()
 
 	h := newHarness(t)
 
-	for i := 1; i <= 20; i++ {
+	for i := 1; i <= 40; i++ {
 		if res := h.do(req{path: "/api/v1/projects", noAuth: true}); res.status != http.StatusUnauthorized {
 			t.Fatalf("unauthenticated request %d = %d, want 401", i, res.status)
 		}
 	}
 
-	if res := h.do(req{path: "/api/v1/projects", noAuth: true}); res.status != http.StatusTooManyRequests {
-		t.Errorf("the 21st unauthenticated request = %d, want 429", res.status)
+	if res := h.get("/api/v1/projects"); res.status != http.StatusOK {
+		t.Errorf("the local token after bad requests = %d, want 200", res.status)
+	}
+}
+
+// slowFrames holds every ViewFrame until release is closed.
+type slowFrames struct {
+	service.Service
+	started chan struct{}
+	release chan struct{}
+}
+
+func (s slowFrames) ViewFrame(_ context.Context, _ service.ViewFrameRequest) (*service.ViewResult, error) {
+	s.started <- struct{}{}
+	<-s.release
+
+	return nil, &service.Error{Code: "E_NOT_FOUND", Message: "no frame in this test."}
+}
+
+// ViewFrame is exempt from the request counter because the editor scrubs, but it
+// renders on a cache miss: one caller has at most 2 in flight, then E_QUEUE_FULL
+// (SDD-007 section 4.4 names the cached frames among the uncounted routes).
+func TestRateLimitFrameConcurrencyCap(t *testing.T) {
+	slow := slowFrames{started: make(chan struct{}, 8), release: make(chan struct{})}
+	h := newHarnessWrapped(t, events.Options{}, func(s service.Service) service.Service {
+		slow.Service = s
+		return slow
+	})
+
+	const path = "/api/v1/projects/prj_0000000001/frame?at=0s"
+
+	var wg sync.WaitGroup
+
+	for range 2 {
+		wg.Go(func() { h.get(path) })
+		<-slow.started
 	}
 
-	// Every local client shares the address: the token still works.
+	res := h.get(path)
+	if res.status != http.StatusTooManyRequests || res.json(t)["code"] != service.CodeQueueFull {
+		t.Errorf("the third frame in flight = %d %s, want 429 E_QUEUE_FULL", res.status, res.body)
+	}
+
+	// Another route of the same caller is not affected.
 	if res := h.get("/api/v1/projects"); res.status != http.StatusOK {
-		t.Errorf("a valid token after the address was refused = %d, want 200", res.status)
+		t.Errorf("another route during the frames = %d", res.status)
+	}
+
+	close(slow.release)
+	wg.Wait()
+
+	// The places came back.
+	go func() { <-slow.started }()
+
+	if res := h.get(path); res.status == http.StatusTooManyRequests {
+		t.Errorf("a frame after the others finished = %d", res.status)
 	}
 }

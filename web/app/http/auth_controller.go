@@ -86,6 +86,11 @@ func (h *apiHandler) login(c *web.Ctx, in loginIn) (sessionOut, error) {
 		return sessionOut{}, notInThisMode()
 	}
 
+	// An address that spent its failures is refused before the password is looked at.
+	if e := h.limits.failed.Blocked(ratelimit.ByIP(c.Request())); e != nil {
+		return sessionOut{}, e
+	}
+
 	u, err := h.Auth.Guard.Attempt(c, map[string]string{"email": in.Email, "password": in.Password})
 	if err != nil {
 		if _, ok := errors.AsType[*errs.ValidationError](err); ok {
