@@ -1,0 +1,6 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "A 60-frame fade plus transition_in 100 frames exceeds duration 150 of itm_m1n2p3q4r5.",
+  "hint": "Use duration \"50f\" or less, or shorten transition_in with item.set_transition first.",
+  "retryable": false
+}

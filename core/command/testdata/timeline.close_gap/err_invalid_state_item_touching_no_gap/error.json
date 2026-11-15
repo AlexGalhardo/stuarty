@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Frame 60 is inside item itm_c3d4e5f6g7 (frames 60-89); there is no gap there.",
+  "hint": "Use an at in an empty range of the track.",
+  "retryable": false,
+  "path": "args.at"
+}

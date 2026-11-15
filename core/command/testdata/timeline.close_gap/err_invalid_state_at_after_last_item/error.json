@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Frame 175 has no item after it on track trk_f6g7h8j9k0; there is no gap to close.",
+  "hint": "Use an at before the last item of the track.",
+  "retryable": false,
+  "path": "args.at"
+}

@@ -94,6 +94,21 @@ export interface ClipAddArgs {
   track_id: string;
 }
 
+export interface ItemCrossfadeArgs {
+  /**
+   * Length of the crossfade, at least 1 frame.
+   */
+  duration: string;
+  /**
+   * The item that leaves.
+   */
+  from_item_id: string;
+  /**
+   * The item that arrives.
+   */
+  to_item_id: string;
+}
+
 export interface ItemDeleteArgs {
   /**
    * @minItems 1
@@ -104,6 +119,25 @@ export interface ItemDeleteArgs {
    * none (default), track or all.
    */
   ripple?: "none" | "track" | "all";
+}
+
+export interface ItemDuplicateArgs {
+  /**
+   * The item to copy.
+   */
+  item_id: string;
+  /**
+   * The id of the copy.
+   */
+  new_id?: string;
+  /**
+   * Absolute start of the copy.
+   */
+  start: string;
+  /**
+   * The track of the copy; default the source's track.
+   */
+  track_id?: string;
 }
 
 export interface ItemMoveArgs {
@@ -302,6 +336,21 @@ export interface TextSetArgs {
   text?: string;
 }
 
+export interface TimelineCloseGapArgs {
+  /**
+   * Absolute frame inside the gap.
+   */
+  at: string;
+  /**
+   * track (default) or all: all moves later items of every track.
+   */
+  ripple?: "track" | "all";
+  /**
+   * The track with the gap.
+   */
+  track_id: string;
+}
+
 export interface TrackAddArgs {
   /**
    * Place the track directly over this track.
@@ -362,14 +411,16 @@ export interface TrackUpdateArgs {
   track_id: string;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "caption.add" | "clip.add" | "item.delete" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "project.rename" | "settings.set" | "settings.set_fps" | "text.add" | "text.set" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "caption.add" | "clip.add" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "project.rename" | "settings.set" | "settings.set_fps" | "text.add" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
 	"asset.remove": AssetRemoveArgs;
 	"caption.add": CaptionAddArgs;
 	"clip.add": ClipAddArgs;
+	"item.crossfade": ItemCrossfadeArgs;
 	"item.delete": ItemDeleteArgs;
+	"item.duplicate": ItemDuplicateArgs;
 	"item.move": ItemMoveArgs;
 	"item.rename": ItemRenameArgs;
 	"item.set_audio": ItemSetAudioArgs;
@@ -382,6 +433,7 @@ export interface CommandArgsMap {
 	"settings.set_fps": SettingsSetFpsArgs;
 	"text.add": TextAddArgs;
 	"text.set": TextSetArgs;
+	"timeline.close_gap": TimelineCloseGapArgs;
 	"track.add": TrackAddArgs;
 	"track.move": TrackMoveArgs;
 	"track.remove": TrackRemoveArgs;
@@ -396,7 +448,9 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"asset.remove": { summary: "Removes an asset that no item uses.", scope: "media", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_IN_USE"] },
 	"caption.add": { summary: "Adds a caption item with timed words.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
 	"clip.add": { summary: "Places a video or image asset on a visual track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
+	"item.crossfade": { summary: "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.delete": { summary: "Removes items, and optionally closes the freed space.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE","E_OVERLAP"] },
+	"item.duplicate": { summary: "Copies an item to another position, optionally on another track.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
 	"item.move": { summary: "Moves an item in time, to another track of the same kind, or both.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_OVERLAP"] },
 	"item.rename": { summary: "Sets the label of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
 	"item.set_audio": { summary: "Sets the volume, the fades or the mute flag of a clip or audio item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
@@ -409,6 +463,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"settings.set_fps": { summary: "Changes the project frame rate and rescales every time quantity.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME"] },
 	"text.add": { summary: "Adds a text item to a visual track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_FONT_UNKNOWN","E_OVERLAP"] },
 	"text.set": { summary: "Changes the content or the style of a text item.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_FONT_UNKNOWN"] },
+	"timeline.close_gap": { summary: "Closes the empty range that contains a given frame on a track.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_OVERLAP"] },
 	"track.add": { summary: "Adds an empty track at a place in the track order.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_ID_EXISTS","E_LIMIT"] },
 	"track.move": { summary: "Changes the place of a track in the track order.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE"] },
 	"track.remove": { summary: "Removes a track, and its items when with_items is true.", scope: "edit", phase: "prototype", internal: false, errors: ["E_NOT_FOUND","E_NOT_EMPTY"] },

@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Frame 40 is inside item itm_m1n2p3q4r5 (frames 0-59); there is no gap there.",
+  "hint": "Use an at between \"60f\" and \"99f\", the gap after that item.",
+  "retryable": false,
+  "path": "args.at"
+}

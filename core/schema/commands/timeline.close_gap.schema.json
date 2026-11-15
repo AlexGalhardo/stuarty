@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "at": {
+      "description": "Absolute frame inside the gap.",
+      "type": "string"
+    },
+    "ripple": {
+      "description": "track (default) or all: all moves later items of every track.",
+      "enum": [
+        "track",
+        "all"
+      ],
+      "type": "string"
+    },
+    "track_id": {
+      "description": "The track with the gap.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "track_id",
+    "at"
+  ],
+  "type": "object"
+}

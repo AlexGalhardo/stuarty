@@ -557,6 +557,11 @@ func (c *Context) rippleAll(removed []timeline.Item, gone map[string]bool) (map[
 
 // overlapAfterShift reports the first overlap that a ripple all left on any track.
 func (c *Context) overlapAfterShift(shifts map[string]int) *Error {
+	return c.overlapAfterShiftHint(shifts, "Use ripple \"track\", or delete the straddling item too.")
+}
+
+// overlapAfterShiftHint is overlapAfterShift with the hint of the calling command.
+func (c *Context) overlapAfterShiftHint(shifts map[string]int, hint string) *Error {
 	tracks := map[string]bool{}
 	for id := range shifts {
 		tracks[c.Doc.Items[id].Track] = true
@@ -582,7 +587,7 @@ func (c *Context) overlapAfterShift(shifts map[string]int) *Error {
 					prev.Start,
 					itemEnd(&prev)-1,
 				).
-					WithHint("Use ripple \"track\", or delete the straddling item too.").
+					WithHint("%s", hint).
 					WithDetail("conflicting_item", prev.ID).
 					WithDetail("next_free", itemEnd(&prev))
 			}

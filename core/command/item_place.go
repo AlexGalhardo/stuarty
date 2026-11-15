@@ -1,0 +1,292 @@
+package command
+
+import (
+	"slices"
+
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
+)
+
+func init() {
+	Register(Define(Spec{
+		Name:    "item.duplicate",
+		Summary: "Copies an item to another position, optionally on another track.",
+		Description: "Adds a copy of the item at start, on the same track or another track of the same kind. Keyframes, " +
+			"words and the name are copied; the slot mark is not. It fails when the copy would overlap an item " +
+			"of the target track.",
+		Example: `{"item_id": "itm_m1n2p3q4r5", "start": "3s", "new_id": "itm_s6t7v8w9x0"}`,
+		Errors: []string{
+			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeIDExists, CodeLimit, CodeOverlap,
+		},
+		Scope: ScopeEdit,
+		Phase: Alpha,
+	}, applyItemDuplicate))
+
+	Register(Define(Spec{
+		Name:    "item.crossfade",
+		Summary: "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.",
+		Description: "The item that leaves gets a fade transition out and the item that arrives a fade transition in, " +
+			"both of the given length, plus the matching audio fades for clips. The two items must overlap by at " +
+			"least that length, and the arriving item must start after the leaving one.",
+		Example: `{"from_item_id": "itm_m1n2p3q4r5", "to_item_id": "itm_s6t7v8w9x0", "duration": "1s"}`,
+		Errors: []string{
+			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState,
+		},
+		Scope: ScopeEdit,
+		Phase: Alpha,
+	}, applyItemCrossfade))
+
+	Register(Define(Spec{
+		Name:    "timeline.close_gap",
+		Summary: "Closes the empty range that contains a given frame on a track.",
+		Description: "Moves the items after the gap earlier by the length of the gap: those of the track (ripple " +
+			"track, the default) or those of every track (ripple all).",
+		Example: `{"track_id": "trk_f6g7h8j9k0", "at": "70f"}`,
+		Errors: []string{
+			CodeValidation, CodeInvalidTime, CodeNotFound, CodeInvalidState, CodeOverlap,
+		},
+		Scope: ScopeEdit,
+		Phase: Alpha,
+	}, applyCloseGap))
+}
+
+type itemDuplicateArgs struct {
+	ItemID  string `json:"item_id"            desc:"The item to copy."`
+	Start   Time   `json:"start"              desc:"Absolute start of the copy."`
+	TrackID string `json:"track_id,omitempty" desc:"The track of the copy; default the source's track."`
+	NewID   string `json:"new_id,omitempty"   desc:"The id of the copy."`
+}
+
+func applyItemDuplicate(c *Context, a *itemDuplicateArgs) error {
+	for _, f := range []struct{ path, prefix, id string }{
+		{"args.item_id", timeline.PrefixItem, a.ItemID},
+		{"args.track_id", timeline.PrefixTrack, a.TrackID},
+		{"args.new_id", timeline.PrefixItem, a.NewID},
+	} {
+		if err := idForm(f.path, f.prefix, f.id); err != nil {
+			return err
+		}
+	}
+	start, err := c.ParseTime("args.start", string(a.Start))
+	if err != nil {
+		return err
+	}
+	src, err := c.item(a.ItemID)
+	if err != nil {
+		return err
+	}
+	trackID := a.TrackID
+	if trackID == "" {
+		trackID = src.Track
+	}
+	track, err := c.track(trackID, "args.track_id")
+	if err != nil {
+		return err
+	}
+	if !acceptsType(track, src.Type) {
+		want, have := "a visual", "an audio"
+		if src.Type == timeline.ItemAudio {
+			want, have = "an audio", "a visual"
+		}
+		return Errorf(
+			CodeTypeMismatch,
+			"Item %s is a %s item; track %s is %s track.",
+			a.ItemID,
+			src.Type,
+			trackID,
+			have,
+		).
+			WithHint("Use %s track.", want).
+			WithPath("args.track_id")
+	}
+	id, err := c.newID("items", timeline.PrefixItem, a.NewID)
+	if err != nil {
+		return err
+	}
+	if err := c.limit("items", len(c.Doc.Items), timeline.MaxItems); err != nil {
+		return err
+	}
+	if src.Type == timeline.ItemCaption {
+		if err := c.checkWordLimits("", len(src.Words)); err != nil {
+			return err
+		}
+	}
+	if err := c.checkEnd("args.start", start, src.Duration); err != nil {
+		return err
+	}
+	if err := c.checkOverlap(id, trackID, start, src.Duration); err != nil {
+		return err
+	}
+	cp := timeline.CloneItem(src)
+	cp.ID, cp.Start, cp.Track, cp.Slot = id, start, trackID, nil
+	c.Doc.Items[id] = cp
+	c.SetEffective("new_id", id)
+	c.SetEffectiveTime("start", start, string(a.Start))
+	c.SetEffective("track_id", trackID)
+	return nil
+}
+
+type itemCrossfadeArgs struct {
+	From     string `json:"from_item_id" desc:"The item that leaves."`
+	To       string `json:"to_item_id"   desc:"The item that arrives."`
+	Duration Time   `json:"duration"     desc:"Length of the crossfade, at least 1 frame."`
+}
+
+func applyItemCrossfade(c *Context, a *itemCrossfadeArgs) error {
+	for _, f := range []struct{ path, id string }{{"args.from_item_id", a.From}, {"args.to_item_id", a.To}} {
+		if err := idForm(f.path, timeline.PrefixItem, f.id); err != nil {
+			return err
+		}
+	}
+	length, err := c.length("args.duration", string(a.Duration), false)
+	if err != nil {
+		return err
+	}
+	from, ok := c.Doc.Items[a.From]
+	if !ok {
+		return notFound("item", a.From, "args.from_item_id")
+	}
+	to, ok := c.Doc.Items[a.To]
+	if !ok {
+		return notFound("item", a.To, "args.to_item_id")
+	}
+	for _, it := range []*timeline.Item{&from, &to} {
+		if !isVisual(it.Type) {
+			return Errorf(CodeTypeMismatch, "Item %s is an audio item; crossfade needs visual items.", it.ID).
+				WithHint("Use item.set_audio fades for audio items.")
+		}
+	}
+	if from.Track == to.Track {
+		return Errorf(CodeInvalidState, "Items %s and %s are on the same track %s; a crossfade needs two tracks.",
+			from.ID, to.ID, from.Track).
+			WithHint("Move %s to another track with item.move first.", to.ID)
+	}
+	if from.Start >= to.Start {
+		return Errorf(CodeInvalidState, "Item %s starts at frame %d, not after %s at frame %d.",
+			to.ID, to.Start, from.ID, from.Start).
+			WithHint("Use the item that starts first as from_item_id.")
+	}
+	overlap := min(itemEnd(&from), itemEnd(&to)) - to.Start
+	if overlap < length {
+		e := Errorf(CodeInvalidState, "Items overlap by %d frames (%d-%d); a %d-frame crossfade needs %d.",
+			max(overlap, 0), to.Start, to.Start+max(overlap, 0)-1, length, length).
+			WithDetail("overlap", max(overlap, 0))
+		if overlap >= 1 {
+			return e.WithHint("Use duration \"%df\" or less, or move %s earlier with item.move.", overlap, to.ID)
+		}
+		return e.WithHint(
+			"Move %s to start before frame %d with item.move, so the items overlap.",
+			to.ID,
+			itemEnd(&from),
+		)
+	}
+	if err := crossfadeRoom(&from, from.TransitionIn, from.FadeIn, length, "transition_in", "fade_in"); err != nil {
+		return err
+	}
+	if err := crossfadeRoom(&to, to.TransitionOut, to.FadeOut, length, "transition_out", "fade_out"); err != nil {
+		return err
+	}
+	from.TransitionOut = &timeline.Transition{Kind: "fade", Duration: length}
+	to.TransitionIn = &timeline.Transition{Kind: "fade", Duration: length}
+	if from.Type == timeline.ItemClip {
+		from.FadeOut = length
+	}
+	if to.Type == timeline.ItemClip {
+		to.FadeIn = length
+	}
+	c.Doc.Items[from.ID], c.Doc.Items[to.ID] = from, to
+	c.SetEffectiveTime("duration", length, string(a.Duration))
+	c.SetEffective("overlap", overlap)
+	return nil
+}
+
+// crossfadeRoom is R14 for one side of a crossfade: the new fade of the given length
+// and the transition and audio fade of the other edge must fit in the item.
+func crossfadeRoom(it *timeline.Item, other *timeline.Transition, fade, length int, trName, fadeName string) *Error {
+	if other != nil && length+other.Duration > it.Duration {
+		return Errorf(CodeInvalidState, "A %d-frame fade plus %s %d frames exceeds duration %d of %s.",
+			length, trName, other.Duration, it.Duration, it.ID).
+			WithHint("Use duration \"%df\" or less, or shorten %s with item.set_transition first.",
+				max(it.Duration-other.Duration, 0), trName)
+	}
+	if it.Type == timeline.ItemClip && length+fade > it.Duration {
+		return Errorf(CodeInvalidState, "A %d-frame fade plus %s %d frames exceeds duration %d of %s.",
+			length, fadeName, fade, it.Duration, it.ID).
+			WithHint("Use duration \"%df\" or less, or shorten %s with item.set_audio first.",
+				max(it.Duration-fade, 0), fadeName)
+	}
+	return nil
+}
+
+type closeGapArgs struct {
+	TrackID string `json:"track_id"         desc:"The track with the gap."`
+	At      Time   `json:"at"               desc:"Absolute frame inside the gap."`
+	Ripple  string `json:"ripple,omitempty" desc:"track (default) or all: all moves later items of every track." enum:"track,all"`
+}
+
+func applyCloseGap(c *Context, a *closeGapArgs) error {
+	if err := idForm("args.track_id", timeline.PrefixTrack, a.TrackID); err != nil {
+		return err
+	}
+	at, err := c.ParseTime("args.at", string(a.At))
+	if err != nil {
+		return err
+	}
+	if _, err := c.track(a.TrackID, "args.track_id"); err != nil {
+		return err
+	}
+	g0, g1 := 0, -1
+	ids := c.trackItems(a.TrackID)
+	for _, id := range ids {
+		it := c.Doc.Items[id]
+		switch {
+		case it.Start <= at && at < itemEnd(&it):
+			e := Errorf(CodeInvalidState, "Frame %d is inside item %s (frames %d-%d); there is no gap there.",
+				at, id, it.Start, itemEnd(&it)-1).WithPath("args.at")
+			if next := c.itemAfter(ids, &it); next != nil && next.Start > itemEnd(&it) {
+				return e.WithHint("Use an at between \"%df\" and \"%df\", the gap after that item.",
+					itemEnd(&it), next.Start-1)
+			}
+			return e.WithHint("Use an at in an empty range of the track.")
+		case itemEnd(&it) <= at:
+			g0 = max(g0, itemEnd(&it))
+		case it.Start > at && (g1 < 0 || it.Start < g1):
+			g1 = it.Start
+		}
+	}
+	if g1 < 0 {
+		return Errorf(CodeInvalidState, "Frame %d has no item after it on track %s; there is no gap to close.",
+			at, a.TrackID).
+			WithHint("Use an at before the last item of the track.").WithPath("args.at")
+	}
+	gap := g1 - g0
+	shifts := map[string]int{}
+	var moved []map[string]any
+	for _, id := range c.sortedItemIDs() {
+		it := c.Doc.Items[id]
+		if it.Start >= g1 && (a.Ripple == "all" || it.Track == a.TrackID) {
+			shifts[id] = gap
+			moved = append(moved, map[string]any{"id": id, "from": it.Start, "to": it.Start - gap})
+			it.Start -= gap
+			c.Doc.Items[id] = it
+		}
+	}
+	if a.Ripple == "all" {
+		if err := c.overlapAfterShiftHint(shifts, "Use ripple \"track\" to move only this track."); err != nil {
+			return err
+		}
+	}
+	c.SetEffectiveTime("at", at, string(a.At))
+	c.SetEffective("gap", map[string]any{"start": g0, "end": g1, "length": gap})
+	c.SetEffective("moved", moved)
+	return nil
+}
+
+// itemAfter returns the item that follows it in ids (sorted by start), or nil.
+func (c *Context) itemAfter(ids []string, it *timeline.Item) *timeline.Item {
+	i := slices.Index(ids, it.ID)
+	if i < 0 || i+1 >= len(ids) {
+		return nil
+	}
+	next := c.Doc.Items[ids[i+1]]
+	return &next
+}
