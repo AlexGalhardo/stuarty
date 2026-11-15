@@ -361,7 +361,22 @@
         "go_to": "Ir para {item}",
         "cancel": "Cancelar a exportação",
         "cancelling": "Cancelando",
-        "check_line": "esperado {expected}, obtido {got}"
+        "check_line": "esperado {expected}, obtido {got}",
+        "options": {
+          "title": "Opções de exportação",
+          "format": "Formato",
+          "fps": "Taxa de quadros",
+          "size": "Tamanho",
+          "project_rate": "Taxa do projeto",
+          "project_size": "Tamanho do projeto",
+          "fps_value": "{fps} quadros/s",
+          "formats": {
+            "mp4": "Vídeo MP4",
+            "gif": "Animação GIF",
+            "wav": "Somente áudio WAV",
+            "aac": "Somente áudio AAC"
+          }
+        }
       },
       "commands": {
         "asset": {
