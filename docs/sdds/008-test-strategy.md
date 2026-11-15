@@ -34,7 +34,7 @@ Three rules shape everything:
 | Fuzzing | parsers do not panic or hang | `Fuzz*` functions | no crash | 30 s per changed target on pull requests; weekly long run |
 | Benchmarks | the non-functional requirements | `Benchmark*` functions and `internal/tools/perfreport/` | limits of section 7 | every pull request (regression), release (absolute) |
 | Soak | memory and stability over time | `web/e2e/specs/soak-5min.spec.ts` | limits of NFR-007 and NFR-008 | nightly |
-| Agent run | a real agent completes the reference tasks using only the shipped material | `scripts/agent-harness/` | exported file verified; number of tool calls recorded | by hand before each release (it costs money and is not deterministic) |
+| Agent run | a real agent completes the reference tasks using only the shipped material | `internal/tools/agentharness/`, run by `.github/workflows/agent-harness.yml` | exported file verified; number of tool calls recorded; transcripts saved | by hand before each release, `workflow_dispatch` only (it costs money, needs the secret `ANTHROPIC_API_KEY` and is not deterministic) |
 
 Naming: Go tests are `Test<Subject>_<Behaviour>`; security tests `TestSecurity_T<nn>_<Behaviour>`; benchmarks `Benchmark<Subject>`; Playwright specs are named after the scenario (`prototype-reference`, `overlap-snapback`). A test named in an SDD keeps that exact name, because the ROADMAP and the threat check refer to it.
 

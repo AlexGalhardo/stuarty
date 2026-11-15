@@ -1,0 +1,100 @@
+name: Agent harness
+
+# The live agent run of the release checklist (SDD-003 section 9 check 29, SDD-008 section 3). It calls
+# the Anthropic API, so it costs money: it runs by hand only, never on a schedule, a push or a pull
+# request, and it is not a required check.
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Scenario to run
+        type: choice
+        options: [all, prototype, template]
+        default: all
+      runs:
+        description: Runs per scenario
+        type: string
+        default: "10"
+      model:
+        description: Model id for the agent and for the tools/list token count
+        type: string
+        default: claude-sonnet-5-5
+
+permissions:
+  contents: read
+
+jobs:
+  harness:
+    name: Agent harness (${{ inputs.scenario }}, ${{ inputs.runs }} runs)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      ANTHROPIC_MODEL: ${{ inputs.model }}
+      SCENARIO: ${{ inputs.scenario }}
+      RUNS: ${{ inputs.runs }}
+      MODEL: ${{ inputs.model }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check the secret
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error title=Missing secret::The repository secret ANTHROPIC_API_KEY is not set. Add it in Settings > Secrets and variables > Actions, then run this workflow again."
+            exit 1
+          fi
+          case "$RUNS" in
+            ''|*[!0-9]*|0) echo "::error title=Bad input::runs must be a positive integer, got '$RUNS'"; exit 1 ;;
+          esac
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      # The script adds the folder to GITHUB_PATH, so the next steps find ffmpeg and ffprobe.
+      - name: Install FFmpeg
+        run: bash scripts/install-ffmpeg.sh
+      - name: Build the binary and make the sample clip
+        run: |
+          mkdir -p "$RUNNER_TEMP/harness"
+          go build -o "$RUNNER_TEMP/harness/vukem-video" ./web/cmd/app
+          ffmpeg -v error -f lavfi -i testsrc2=size=640x360:rate=30:duration=6 -f lavfi -i sine=frequency=220:duration=6 \
+            -c:v mpeg4 -c:a aac -shortest "$RUNNER_TEMP/harness/clip.mp4"
+      - name: Run the scenarios
+        env:
+          VUKEM_VIDEO_HARNESS: "1"
+        run: |
+          mkdir -p agent-harness-results
+          go run ./internal/tools/agentharness \
+            --runs "$RUNS" --scenario "$SCENARIO" --model "$MODEL" \
+            --bin "$RUNNER_TEMP/harness/vukem-video" --clip "$RUNNER_TEMP/harness/clip.mp4" \
+            --out agent-harness-results/transcripts | tee agent-harness-results/run.log
+      - name: Count the tokens of tools/list
+        if: ${{ !cancelled() }}
+        env:
+          VUKEM_VIDEO_BUDGET_RELEASE: "1"
+        run: |
+          mkdir -p agent-harness-results
+          go test ./web/app/mcp -run TestToolListVendorTokens -count=1 -v | tee agent-harness-results/tools-list-tokens.log
+      - name: Summary
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "### Agent harness: model ${MODEL}, ${RUNS} runs, scenario ${SCENARIO}"
+            echo
+            echo '```json'
+            cat agent-harness-results/transcripts/summary.json 2>/dev/null || echo '{}'
+            echo '```'
+            echo
+            grep -h "tokens" agent-harness-results/tools-list-tokens.log 2>/dev/null || true
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: agent-harness-results
+          path: agent-harness-results/
+          if-no-files-found: warn
+          retention-days: 90
