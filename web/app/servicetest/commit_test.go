@@ -138,6 +138,26 @@ func TestCommit(t *testing.T) {
 		}
 	})
 
+	t.Run("the same actor on an older base never conflicts with itself", func(t *testing.T) {
+		t.Parallel()
+
+		e := newEnv(t)
+		project, track := e.withTrack()
+		e.mustEdit(ui, project, 1, op("text.add",
+			fmt.Sprintf(`{"track_id":%q,"start":"0s","duration":"1s","text":"a","id":"itm_00000000aa"}`, track)))
+
+		// Two batches planned against r2 by one actor, both on the same item.
+		first, err := e.edit(agent, project, 2, op("item.move", `{"item_id":"itm_00000000aa","start":"4s"}`))
+		if err != nil || first.Revision != 3 {
+			t.Fatalf("first = %+v, %v", first, err)
+		}
+
+		second, err := e.edit(agent, project, 2, op("item.move", `{"item_id":"itm_00000000aa","start":"6s"}`))
+		if err != nil || second.Revision != 4 {
+			t.Fatalf("second = %+v, %v", second, err)
+		}
+	})
+
 	t.Run("base newer is a validation error", func(t *testing.T) {
 		t.Parallel()
 
