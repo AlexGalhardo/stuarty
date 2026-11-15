@@ -429,11 +429,11 @@ func TestConflictScenario(t *testing.T) {
 		t.Errorf("the conflict carries no details.diff: %+v", doc)
 	}
 
-	// The hint of the Service says to read the project again and plan against the
-	// current revision; SDD-003 and the ROADMAP want it to name details.diff too,
-	// which is for the Service to change (the hint is the same on every surface).
-	if !strings.Contains(doc.Hint, "plan") {
-		t.Errorf("the conflict hint does not tell the actor to re-plan: %q", doc.Hint)
+	// The hint is the same on every surface: read details.diff, re-plan, resend.
+	for _, want := range []string{"details.diff", "re-plan", "send it again"} {
+		if !strings.Contains(doc.Hint, want) {
+			t.Errorf("the conflict hint does not contain %q: %q", want, doc.Hint)
+		}
 	}
 
 	for _, d := range drivers {
@@ -488,6 +488,11 @@ func TestErrorsScenario(t *testing.T) {
 		if limit := doc.Code == "E_LIMIT_EXCEEDED" || doc.Code == "E_QUEUE_FULL"; limit &&
 			(doc.Details["ceiling"] == nil || doc.Details["variable"] == nil) {
 			t.Errorf("step %d: %s does not name its ceiling and variable: %+v", i, doc.Code, doc.Details)
+		}
+
+		// ...and tells the actor what would be accepted (RF-112).
+		if limit := doc.Code == "E_LIMIT_EXCEEDED" || doc.Code == "E_QUEUE_FULL"; limit && doc.Hint == "" {
+			t.Errorf("step %d: %s has no hint", i, doc.Code)
 		}
 	}
 }
