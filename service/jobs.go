@@ -159,7 +159,9 @@ func limitError(err error, l Limits) error {
 	out := asError(err)
 
 	if e, ok := errors.AsType[*Error](out); ok && e.Code == CodeQueueFull {
-		return e.withDetail("limit", "exports").withDetail("ceiling", l.MaxExports).
+		return e.withHint("at most %d exports run at the same time: wait for one to finish with job_get or stop one "+
+			"with job_cancel; the person running the server can raise VUKEM_VIDEO_MAX_EXPORTS", l.MaxExports).
+			withDetail("limit", "exports").withDetail("ceiling", l.MaxExports).
 			withDetail("variable", "VUKEM_VIDEO_MAX_EXPORTS")
 	}
 

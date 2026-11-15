@@ -21,6 +21,7 @@ const (
 	hintRestore       = "restore the project first"
 	hintReadAgain     = "read the project again with project_get and plan the batch against its current revision"
 	errReplayedMarker = "replayed"
+	hintConflict      = "details.diff lists what changed since your revision; re-plan the batch against current_revision and send it again"
 )
 
 // errReplay rolls the transaction back after an idempotent replay found its
@@ -367,7 +368,7 @@ func (s *svc) checkBase(
 		conflict.ID,
 		req.BaseRevision,
 	).
-		withHint("%s", hintReadAgain).
+		withHint("%s", hintConflict).
 		withDetail("base_revision", req.BaseRevision).
 		withDetail("current_revision", current).
 		withDetail("conflict", map[string]any{"collection": conflict.Collection, "id": conflict.ID, "revision": by.Revision, "actor": by.Actor}).

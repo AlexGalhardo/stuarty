@@ -517,3 +517,19 @@ func TestWaitingImportReturnsTheRevisionThatAddsTheAsset(t *testing.T) {
 		}
 	}
 }
+
+// The limit error says what to do, and the file and the ceiling never read the same.
+func TestImportLimitMessageSeparatesTheFileFromTheCeiling(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{limits: service.Limits{MaxImportBytes: 1<<20 + 1}})
+	project := m.newProject("p")
+
+	_, err := m.svc.MediaImport(m.as(ui), service.MediaImportRequest{
+		ProjectID: project, Files: []service.ImportFile{{Path: m.write("big.mp4", strings.Repeat("x", 1<<20+3))}},
+	})
+
+	e := serviceErr(err)
+	if e == nil || e.Code != "E_LIMIT_EXCEEDED" || e.Hint == "" || !strings.Contains(e.Message, "1048579 bytes") ||
+		!strings.Contains(e.Message, "1048577 bytes") {
+		t.Errorf("error = %+v", e)
+	}
+}

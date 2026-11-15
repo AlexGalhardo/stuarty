@@ -60,6 +60,7 @@ func (s *svc) ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult,
 				req.Width,
 				frame.MaxWidth,
 			).
+				withHint("ask for an even width of at most %d", frame.MaxWidth).
 				withDetail("limit", "width").
 				withPath("width")
 		}

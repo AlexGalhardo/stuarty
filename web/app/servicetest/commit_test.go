@@ -128,6 +128,10 @@ func TestCommit(t *testing.T) {
 			t.Errorf("details = %v", se.Details)
 		}
 
+		if !strings.Contains(se.Hint, "details.diff") {
+			t.Errorf("the hint does not name details.diff: %q", se.Hint)
+		}
+
 		diff, _ := se.Details["diff"].(string)
 		if !strings.HasPrefix(diff, "r3 "+ui+"\n") || !strings.Contains(diff, "itm_00000000aa") {
 			t.Errorf("diff text = %q", diff)

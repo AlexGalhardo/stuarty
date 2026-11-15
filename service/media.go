@@ -287,6 +287,17 @@ func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f I
 	return out
 }
 
+// sizesApart formats a size and the ceiling it exceeds so that they never read
+// the same: when the rounded figures match, both are given in exact bytes.
+func sizesApart(have, ceiling int64) (string, string) {
+	a, b := textview.Size(have), textview.Size(ceiling)
+	if a != b {
+		return a, b
+	}
+
+	return fmt.Sprintf("%d bytes", have), fmt.Sprintf("%d bytes", ceiling)
+}
+
 // checkImportSize is steps 3 of SDD-011 section 2.3 before a byte is copied.
 func (s *svc) checkImportSize(size int64) *Error {
 	if size == 0 {
@@ -296,8 +307,11 @@ func (s *svc) checkImportSize(size int64) *Error {
 	}
 
 	if size > s.limits.MaxImportBytes {
+		have, ceiling := sizesApart(size, s.limits.MaxImportBytes)
+
 		return newError("E_LIMIT_EXCEEDED", "The file is %s; the import limit is %s (VUKEM_VIDEO_MAX_IMPORT_BYTES).",
-			textview.Size(size), textview.Size(s.limits.MaxImportBytes)).
+			have, ceiling).
+			withHint("import a smaller file; the person running the server can raise VUKEM_VIDEO_MAX_IMPORT_BYTES").
 			withDetail("limit", "import_bytes").withDetail("value", size).
 			withDetail("ceiling", s.limits.MaxImportBytes).withDetail("variable", "VUKEM_VIDEO_MAX_IMPORT_BYTES")
 	}
@@ -306,6 +320,8 @@ func (s *svc) checkImportSize(size int64) *Error {
 		if free, err := s.media.FreeBytes(s.workspace); err == nil &&
 			free < uint64(size)+uint64(s.limits.MinFreeBytes) { //nolint:gosec // both are positive
 			return newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space for this file.").
+				withHint("free space on the disk of the workspace; the person running the server can lower "+
+					"VUKEM_VIDEO_MIN_FREE_BYTES").
 				withDetail("limit", "free_bytes").withDetail("reason", "disk_low").
 				withDetail("variable", "VUKEM_VIDEO_MIN_FREE_BYTES")
 		}
