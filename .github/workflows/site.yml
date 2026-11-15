@@ -6,9 +6,23 @@ name: Site
 on:
   push:
     branches: [main]
-    paths: ["site/**", "CHANGELOG.md", ".github/workflows/site.yml"]
+    paths:
+      - "site/**"
+      - "core/schema/**"
+      - "web/app/cli/**"
+      - "internal/tools/clidoc/**"
+      - "docs/sdds/000-shared-definitions.md"
+      - "CHANGELOG.md"
+      - ".github/workflows/site.yml"
   pull_request:
-    paths: ["site/**", "CHANGELOG.md", ".github/workflows/site.yml"]
+    paths:
+      - "site/**"
+      - "core/schema/**"
+      - "web/app/cli/**"
+      - "internal/tools/clidoc/**"
+      - "docs/sdds/000-shared-definitions.md"
+      - "CHANGELOG.md"
+      - ".github/workflows/site.yml"
   workflow_dispatch:
 
 permissions:
@@ -48,6 +62,12 @@ jobs:
       - run: npm run test:site
       - run: npm run lint
       - run: npm run check:mdx
+      # The reference is generated from the registry, the schemas and the CLI of the binary:
+      # a change that is not regenerated fails here (SDD-010 section 8).
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: npm run reference:check
       - run: npm run build
       - run: npm run check:built
       - name: Upload GitHub Pages artifact
