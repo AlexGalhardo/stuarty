@@ -2446,6 +2446,22 @@
         },
         "type": "object"
       },
+      "TranscriptLine": {
+        "properties": {
+          "end_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "start_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Transition": {
         "properties": {
           "duration": {
@@ -2585,6 +2601,12 @@
           },
           "name": {
             "type": "string"
+          },
+          "transcript": {
+            "items": {
+              "$ref": "#/components/schemas/TranscriptLine"
+            },
+            "type": "array"
           }
         },
         "type": "object"
