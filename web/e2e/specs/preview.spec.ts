@@ -126,11 +126,7 @@ test.describe("play-pause-truth", () => {
 		page,
 		request,
 	}) => {
-		test.setTimeout(90_000);
-		// The guard of the API forces Accept: application/json on every /api/v1
-		// path that does not ask for json, so /frame answers the ViewResult
-		// instead of the JPEG and the <img> cannot decode it (server defect).
-		test.fixme(true, "GET /frame returns JSON to an <img>: guard.go Accept");
+		test.setTimeout(120_000);
 		const seeded = await seedProject(request, {
 			tracks: 1,
 			perTrack: 1,
@@ -143,7 +139,10 @@ test.describe("play-pause-truth", () => {
 
 		const times: number[] = [];
 		const exact = page.getByAltText("Exact frame at the playhead");
-		for (let i = 0; i < 10; i++) {
+		for (let i = 0; i < 20; i++) {
+			// Back to the start each time: a pause past the end of the project has no
+			// frame to show.
+			await page.getByRole("button", { name: "Go to start" }).click();
 			await page.getByRole("button", { name: "Play" }).click();
 			await page.waitForTimeout(600);
 			await page.evaluate(() => performance.clearMeasures("vv:truth"));
@@ -157,8 +156,9 @@ test.describe("play-pause-truth", () => {
 		}
 		times.sort((a, b) => a - b);
 		const p95 = times[Math.floor(times.length * 0.95)];
+		console.log(`NFR-004 all: ${times.map((t) => t.toFixed(0)).join(" ")}`);
 		console.log(
-			`NFR-004 pause to exact frame: p50 ${times[5].toFixed(0)} ms, p95 ${p95.toFixed(0)} ms (vv:truth)`,
+			`NFR-004 pause to exact frame: p50 ${times[10].toFixed(0)} ms, p95 ${p95.toFixed(0)} ms (vv:truth)`,
 		);
 		expect(p95).toBeGreaterThan(0);
 		expect(p95).toBeLessThanOrEqual(500);
