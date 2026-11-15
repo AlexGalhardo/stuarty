@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
 	"slices"
+	"strings"
 	"time"
 
 	vukem "github.com/AlexGalhardo/vukem"
@@ -184,7 +186,8 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 // user yet, nothing authenticates and every request but the health probe and
 // the login is 401, which the start-up log says.
 func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request, next http.Handler) {
-	if r.URL.Path == healthPath || r.URL.Path == "/auth/login" || r.URL.Path == "/auth/logout" {
+	if r.URL.Path == healthPath || r.URL.Path == "/auth/login" || r.URL.Path == "/auth/logout" ||
+		(r.URL.Path == LoginPath && r.Method == http.MethodGet) {
 		next.ServeHTTP(w, r)
 		return
 	}
@@ -228,7 +231,15 @@ func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request,
 	}
 
 	if !ok {
+		// A browser that opens a page with no session is sent to the login page and
+		// back (SDD-012 section 2.1); it is not a failed authentication to count.
+		if isPageNavigation(r) {
+			http.Redirect(w, r, LoginPath+"?next="+url.QueryEscape(r.URL.RequestURI()), http.StatusSeeOther)
+			return
+		}
+
 		deny()
+
 		return
 	}
 
@@ -238,6 +249,17 @@ func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request,
 	}
 
 	next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), user.Caller())))
+}
+
+// LoginPath is the page of network mode that turns a password into a session; it is
+// the only page that needs no session.
+const LoginPath = "/login"
+
+// isPageNavigation tells a browser opening a page from a call of the API: a GET that
+// accepts HTML, outside the paths whose errors are always problem+json.
+func isPageNavigation(r *http.Request) bool {
+	return r.Method == http.MethodGet && !jsonPath(r.URL.Path) &&
+		strings.Contains(requestedAccept(r), "text/html")
 }
 
 // ambientAllowed is step 6 of SDD-007 section 3.6: a request that only the
