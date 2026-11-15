@@ -7,6 +7,8 @@ import {
 	nextScale,
 	pointerAngle,
 	previewGeometry,
+	ROTATE_HANDLE_REACH,
+	rotateHandleInside,
 	turnBetween,
 } from "./transformGestures";
 
@@ -61,5 +63,14 @@ describe("transform gestures (screen arithmetic)", () => {
 	test("the rotation is normalised to a half turn each way", () => {
 		expect(nextRotation(170, 30)).toBe(-160);
 		expect(nextRotation(0, 45.12345)).toBe(45.123);
+	});
+});
+
+describe("rotation handle placement", () => {
+	test("moves inside the box when its top is within the reach of the canvas edge", () => {
+		expect(rotateHandleInside(0)).toBe(true);
+		expect(rotateHandleInside(ROTATE_HANDLE_REACH - 1)).toBe(true);
+		expect(rotateHandleInside(ROTATE_HANDLE_REACH)).toBe(false);
+		expect(rotateHandleInside(200)).toBe(false);
 	});
 });
