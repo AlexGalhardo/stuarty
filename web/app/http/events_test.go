@@ -523,7 +523,9 @@ func TestEventsLatencyFromCommitToClient(t *testing.T) {
 	p95 := lat[len(lat)*95/100]
 	t.Logf("commit to event: p50 %v, p95 %v, max %v over %d commits", lat[len(lat)/2], p95, lat[len(lat)-1], len(lat))
 
-	if p95 > 20*time.Millisecond {
+	// The budget of SDD-006 check 5 is measured without the race detector, which
+	// slows every goroutine switch; under it the numbers are only logged.
+	if !raceEnabled && p95 > 20*time.Millisecond {
 		t.Errorf("p95 = %v, want at most 20ms", p95)
 	}
 }
