@@ -488,3 +488,39 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 		}
 	}
 }
+
+// POST /mcp is behind the guard and the authentication, and the Caller of the
+// bearer token reaches the tool handlers; GET and DELETE answer 405.
+func TestMCPEndpointIsGuardedAndAuthenticated(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+
+	const call = `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"project_list","arguments":{}}}`
+
+	headers := map[string]string{"Accept": "application/json, text/event-stream"}
+
+	res := h.do(req{method: http.MethodPost, path: "/mcp", body: call, headers: headers})
+	if res.status != http.StatusOK || !strings.Contains(string(res.body), `"result"`) ||
+		strings.Contains(string(res.body), "E_UNAUTHORIZED") {
+		t.Fatalf("an authenticated call = %d %s", res.status, res.body)
+	}
+
+	if res := h.do(
+		req{method: http.MethodPost, path: "/mcp", body: call, headers: headers, noAuth: true},
+	); res.status != http.StatusUnauthorized {
+		t.Errorf("no credential = %d, want 401", res.status)
+	}
+
+	if res := h.do(
+		req{method: http.MethodPost, path: "/mcp", body: call, headers: headers, host: "evil.example:" + h.port},
+	); res.status < 400 {
+		t.Errorf("a foreign Host = %d, want a refusal", res.status)
+	}
+
+	for _, m := range []string{http.MethodGet, http.MethodDelete} {
+		if res := h.do(req{method: m, path: "/mcp"}); res.status != http.StatusMethodNotAllowed {
+			t.Errorf("%s /mcp = %d, want 405", m, res.status)
+		}
+	}
+}
