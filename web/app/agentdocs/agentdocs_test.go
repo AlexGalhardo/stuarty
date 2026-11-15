@@ -341,7 +341,8 @@ func TestRecipesRun(t *testing.T) {
 
 	for _, r := range recipes {
 		t.Run(r.Title, func(t *testing.T) {
-			env := testenv.New(t, testenv.Options{Transcriber: &testenv.StubTranscriber{Words: recipeWords}, SilenceBlocks: true})
+			opts := testenv.Options{Transcriber: &testenv.StubTranscriber{Words: recipeWords}, SilenceBlocks: true}
+			env := testenv.New(t, opts)
 			env.WriteFile(t, "clip.mp4", strings.Repeat("v", 64))
 
 			for i, step := range r.Steps {
