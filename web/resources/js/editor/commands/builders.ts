@@ -1025,3 +1025,54 @@ export function silenceOperations(
 		},
 	];
 }
+
+export const SHAPES = ["rect", "rounded_rect", "ellipse"] as const;
+export type ShapeKind = (typeof SHAPES)[number];
+
+// The size of a shape added from the toolbar, in pixels before `scale`.
+export const DEFAULT_SHAPE_SIZE = { width: 400, height: 240 } as const;
+
+// Toolbar "Add shape": a shape of 3 s at the playhead on the first visual
+// track; when there is none, the same batch adds one first (SDD-002 C.31).
+export function shapeAddOperations(input: {
+	shape: ShapeKind;
+	playhead: number;
+	firstVisualTrack: string | null;
+	newTrackId: () => string;
+}): Operations {
+	const ops: Operations = [];
+	let track = input.firstVisualTrack;
+	if (track === null) {
+		track = input.newTrackId();
+		ops.push({ op: "track.add", args: { kind: "visual", id: track } });
+	}
+	ops.push({
+		op: "shape.add",
+		args: {
+			track_id: track,
+			start: frames(input.playhead),
+			duration: "3s",
+			shape: input.shape,
+			...DEFAULT_SHAPE_SIZE,
+		},
+	});
+	return ops;
+}
+
+export interface ShapeChanges {
+	shape?: ShapeKind;
+	width?: number;
+	height?: number;
+	radius?: number;
+	fill?: string;
+	stroke_color?: string;
+	stroke_width?: number;
+}
+
+// One field of the shape section: only the changed key is sent.
+export function shapeSetOperations(
+	itemId: string,
+	changes: ShapeChanges,
+): Operations {
+	return [{ op: "shape.set", args: { item_id: itemId, ...changes } }];
+}

@@ -57,6 +57,8 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.resync_captions": ["caption.retime_from_clip"],
 	"lint.resync_captions": ["caption.retime_from_clip"],
 	"text.add": ["text.add", "track.add"],
+	"shape.add": ["shape.add", "track.add"],
+	"inspector.shape": ["shape.set"],
 	"canvas.edit_text": ["text.set"],
 	"inspector.text": ["text.set"],
 	// The palette runs any command of the registry with operations built from
@@ -241,8 +243,11 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.fps", phase: "A" },
 		palette,
 	],
-	"shape.add": [palette],
-	"shape.set": [palette],
+	"shape.add": [{ kind: "toolbar", action: "shape.add", phase: "A" }, palette],
+	"shape.set": [
+		{ kind: "inspector", action: "inspector.shape", phase: "A" },
+		palette,
+	],
 	"slot.fill": [palette],
 	"slot.mark": [palette],
 	"slot.unmark": [palette],

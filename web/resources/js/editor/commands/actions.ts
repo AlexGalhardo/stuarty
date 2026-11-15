@@ -33,7 +33,9 @@ import {
 	type Ripple,
 	removeAssetOperations,
 	renameOperations,
+	type ShapeKind,
 	settingsFpsOperations,
+	shapeAddOperations,
 	splitOperations,
 	type TrackChanges,
 	type TrackPlacement,
@@ -60,6 +62,8 @@ export interface Actions {
 	addCaption(text: string, duration: string): Promise<EditOutcome | null>;
 	// Toolbar "Add text" and `T`: `text` is the localized default content.
 	addText(text: string): Promise<EditOutcome | null>;
+	// Toolbar "Add shape" menu.
+	addShape(shape: ShapeKind): Promise<EditOutcome | null>;
 	// Double click on a caption word; empty text removes the word.
 	editWord(
 		itemId: string,
@@ -437,6 +441,15 @@ export function createActions(runtime: EditorRuntime): Actions {
 			send(
 				textAddOperations({
 					text,
+					playhead: ui.getState().playheadFrame,
+					firstVisualTrack: firstVisualTrack(),
+					newTrackId: () => newId("trk"),
+				}),
+			),
+		addShape: (shape) =>
+			send(
+				shapeAddOperations({
+					shape,
 					playhead: ui.getState().playheadFrame,
 					firstVisualTrack: firstVisualTrack(),
 					newTrackId: () => newId("trk"),

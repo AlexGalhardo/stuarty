@@ -259,6 +259,7 @@
         "close_gap": "Fechar o espaço",
         "item_menu": "Ações do item",
         "gap_menu": "Ações do espaço",
+        "shape": "Adicionar forma",
         "text": "Adicionar texto",
         "split_caption": "Dividir a legenda aqui",
         "merge_captions": "Mesclar legendas",
@@ -708,6 +709,19 @@
           "other": "{count} alterações",
           "zero": "Nenhuma alteração"
         }
+      },
+      "shape": {
+        "title": "Forma",
+        "kind": "Forma",
+        "rect": "Retângulo",
+        "rounded_rect": "Retângulo arredondado",
+        "ellipse": "Elipse",
+        "width": "Largura",
+        "height": "Altura",
+        "radius": "Raio dos cantos",
+        "fill": "Preenchimento",
+        "stroke_color": "Cor do contorno",
+        "stroke_width": "Largura do contorno"
       },
       "defaults": {
         "text": "Seu texto"
