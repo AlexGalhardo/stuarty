@@ -8,6 +8,7 @@ import type { CommitResult } from "../fields/commitField";
 import NumberField from "../fields/NumberField";
 import SelectField from "../fields/SelectField";
 import ToggleField from "../fields/ToggleField";
+import { fontFamilyChanges } from "../fontWeight";
 import { useFonts } from "../useFonts";
 
 export type StyleRow =
@@ -104,7 +105,11 @@ export default function StyleRows({
 						]}
 						commit={async (value) => {
 							if (value === "") return OK;
-							const result = await send(row.key, value);
+							const weights =
+								families.find((f) => f.family === value)?.weights ?? [];
+							const result = await commit(
+								fontFamilyChanges(value, weights, stored.font_weight),
+							);
 							if (!result.ok && result.error.code === "E_FONT_UNKNOWN") {
 								reload();
 							}
