@@ -122,6 +122,26 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.TemplateSave)
 	case "TemplateInstantiate":
 		return invoke(ctx, s, svc.TemplateInstantiate)
+	case "TemplateExport":
+		return invoke(ctx, s, svc.TemplateExport)
+	case "TemplateImport":
+		return invoke(ctx, s, svc.TemplateImport)
+	case "ProjectTrash":
+		return invoke(ctx, s, svc.ProjectTrash)
+	case "ProjectRestore":
+		return invoke(ctx, s, svc.ProjectRestore)
+	case "CommandHelp":
+		return invoke(ctx, s, svc.CommandHelp)
+	case "MediaTrash":
+		return invoke(ctx, s, svc.MediaTrash)
+	case "MediaRestore":
+		return invoke(ctx, s, svc.MediaRestore)
+	case "JobCancel":
+		return invoke(ctx, s, svc.JobCancel)
+	case "ViewFrame":
+		return invoke(ctx, s, svc.ViewFrame)
+	case "ViewSheet":
+		return invoke(ctx, s, svc.ViewSheet)
 	}
 
 	return nil, fmt.Errorf("no mapping for %s", s.Call)
@@ -358,6 +378,36 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["action"] = "new"
 
 		return "template", args, nil
+	case "TemplateExport":
+		args["action"] = "export"
+
+		return "template", args, nil
+	case "TemplateImport":
+		delete(args, "dry_run")
+
+		args["action"] = "import"
+
+		return "template", args, nil
+	case "ProjectTrash", "ProjectRestore":
+		delete(args, "dry_run")
+
+		if s.Call == "ProjectRestore" {
+			args["restore"] = true
+		}
+
+		return "project_trash", args, nil
+	case "CommandHelp":
+		return "command_help", args, nil
+	case "JobCancel":
+		return "job_cancel", args, nil
+	case "ViewFrame":
+		args["mode"] = "frame"
+
+		return "view", args, nil
+	case "ViewSheet":
+		args["mode"] = "sheet"
+
+		return "view", args, nil
 	}
 
 	return "", nil, fmt.Errorf("no tool for %s", s.Call)
@@ -450,6 +500,9 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		TemplateID  string          `json:"template_id"`
 		Description string          `json:"description"`
 		Fill        json.RawMessage `json:"fill"`
+		Path        string          `json:"path"`
+		At          string          `json:"at"`
+		Until       string          `json:"until"`
 	}
 
 	if len(s.Args) > 0 {
@@ -520,6 +573,28 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		argv = append(slices.Clone(proj), flag("name", a.Name)...)
 
 		return "template:save", append(argv, flag("description", a.Description)...), "", nil
+	case "TemplateExport":
+		return "template:export", []string{a.TemplateID}, "", nil
+	case "TemplateImport":
+		return "template:import", []string{a.Path}, "", nil
+	case "ProjectTrash":
+		return "project:trash", []string{a.ProjectID}, "", nil
+	case "ProjectRestore":
+		return "project:restore", []string{a.ProjectID}, "", nil
+	case "CommandHelp":
+		return "command:help", []string{a.Name}, "", nil
+	case "MediaTrash":
+		return "media:trash", append([]string{a.AssetID}, proj...), "", nil
+	case "MediaRestore":
+		return "media:restore", append([]string{a.AssetID}, proj...), "", nil
+	case "JobCancel":
+		return "job:cancel", []string{a.JobID}, "", nil
+	case "ViewFrame":
+		return "view", append(slices.Clone(proj), flag("at", a.At)...), "", nil
+	case "ViewSheet":
+		argv = append(slices.Clone(proj), "--mode", "sheet")
+
+		return "view", append(argv, flag("until", a.Until)...), "", nil
 	case "TemplateInstantiate":
 		argv = append([]string{a.TemplateID}, flag("name", a.Name)...)
 		argv = append(argv, flag("id", a.ID)...)

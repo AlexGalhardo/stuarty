@@ -1,6 +1,7 @@
 package contract
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -241,6 +242,53 @@ func httpRoutes(t *testing.T, d *httpDriver) []string {
 
 // TestDriversCoverTheOperationsOfTheScenarios fails when a scenario names an
 // operation that a driver cannot encode.
+// TestDriversCoverService fails when an operation of the parity table has no
+// encoding in a driver that its row says reaches it: the Service table always, the
+// MCP tool table when the row has a tool, the CLI table when it has a command.
+// Operations without a Service method (the event stream) and the exceptions E-1
+// (no tool) are the only ones left out.
+func TestDriversCoverService(t *testing.T) {
+	t.Parallel()
+
+	for _, r := range parity {
+		// An operation only the HTTP route reaches (RF-131) has nothing to encode.
+		if r.noMethod || r.httpOnly {
+			continue
+		}
+
+		s := step{Call: r.method, Args: []byte(`{}`)}
+
+		if !coversService(t, s) {
+			t.Errorf("%s has no mapping in callService", r.method)
+		}
+
+		if _, _, err := toolCall(s); (err == nil) != (r.tool != "") {
+			t.Errorf("%s: the tool %q and the MCP mapping disagree: %v", r.method, r.tool, err)
+		}
+
+		if _, _, _, err := command2argv(s); err != nil {
+			t.Errorf("%s: no CLI mapping: %v", r.method, err)
+		}
+	}
+}
+
+// coversService reports whether callService knows the operation: an operation it
+// does not know returns the "no mapping" error, one it does know calls the nil
+// Service and panics.
+func coversService(t *testing.T, s step) (known bool) {
+	t.Helper()
+
+	defer func() {
+		if recover() != nil {
+			known = true
+		}
+	}()
+
+	_, err := callService(context.Background(), nil, s)
+
+	return err == nil || !strings.Contains(err.Error(), "no mapping")
+}
+
 func TestDriversCoverTheOperationsOfTheScenarios(t *testing.T) {
 	t.Parallel()
 
