@@ -36,7 +36,12 @@ func (o *otioService) ProjectOtioImport(
 	o.note(ctx)
 	o.imp = r
 
-	return &service.ProjectOtioImportResult{ProjectID: r.ProjectID, Revision: 5, Applied: !r.DryRun, Text: "imported"}, o.err
+	return &service.ProjectOtioImportResult{
+		ProjectID: r.ProjectID,
+		Revision:  5,
+		Applied:   !r.DryRun,
+		Text:      "imported",
+	}, o.err
 }
 
 func TestOtioExportWritesTheFileAndRefusesToReplaceIt(t *testing.T) {
@@ -100,10 +105,16 @@ func TestOtioImportSendsAnAbsolutePathAndTheBaseRevision(t *testing.T) {
 
 func TestOtioImportDefaultsToTheCurrentRevision(t *testing.T) {
 	h := newHarness(t)
-	svc := &otioService{fakeService: fakeService{revision: 7}}
+	svc := &otioService{revision: 7}
 	h.res.svc = svc
 
-	if code := h.run("otio:import", "cut.otio", "--project", "prj_7k2m9x4q1b"); code != ExitOK || svc.imp.BaseRevision != 7 {
+	if code := h.run(
+		"otio:import",
+		"cut.otio",
+		"--project",
+		"prj_7k2m9x4q1b",
+	); code != ExitOK ||
+		svc.imp.BaseRevision != 7 {
 		t.Fatalf("exit %d: %+v", code, svc.imp)
 	}
 
