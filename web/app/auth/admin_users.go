@@ -99,6 +99,42 @@ func (u *Users) SetDisabled(ctx context.Context, id string, disabled bool) (User
 	return u.changed(ctx, res, err, id)
 }
 
+// Update changes the role and the disabled state of a user in one statement, so a call that sets both
+// either applies both or neither, and the last-administrator guard sees the final state. A nil member
+// is left alone. Sessions end at the next request, as with SetRole and SetDisabled.
+func (u *Users) Update(ctx context.Context, id string, role *string, disabled *bool) (User, error) {
+	if role != nil && *role != service.RoleAdmin && *role != service.RoleMember {
+		return User{}, ErrBadRole
+	}
+
+	now := u.Now().UnixMilli()
+
+	setRole, roleValue := role != nil, ""
+	if role != nil {
+		roleValue = *role
+	}
+
+	setDisabled := disabled != nil
+
+	var disabledMS any
+	if disabled != nil && *disabled {
+		disabledMS = now
+	}
+
+	const newRole = `(CASE WHEN ? THEN ? ELSE role END)`
+	const newDisabled = `(CASE WHEN ? THEN ? ELSE disabled_ms END)`
+
+	res, err := u.ex.ExecContext(ctx,
+		`UPDATE users SET role = `+newRole+`, disabled_ms = `+newDisabled+`,
+		 session_version = session_version + 1, updated_ms = ?
+		 WHERE id = ? AND (NOT (role = 'admin' AND disabled_ms IS NULL)
+		  OR (`+newRole+` = 'admin' AND `+newDisabled+` IS NULL) OR `+otherAdmins+` > 0)`,
+		setRole, roleValue, setDisabled, disabledMS, now, id,
+		setRole, roleValue, setDisabled, disabledMS, id)
+
+	return u.changed(ctx, res, err, id)
+}
+
 // changed turns the outcome of a guarded UPDATE into the user, ErrNoSuchUser or ErrLastAdmin.
 func (u *Users) changed(
 	ctx context.Context,
@@ -204,21 +240,9 @@ func (a Admin) Update(ctx context.Context, id string, p UserPatch) (UserView, er
 		}
 	}
 
-	var (
-		u   User
-		err error
-	)
-
-	if p.Role != nil {
-		if u, err = a.Users.SetRole(ctx, id, *p.Role); err != nil {
-			return UserView{}, userError(err)
-		}
-	}
-
-	if p.Disabled != nil {
-		if u, err = a.Users.SetDisabled(ctx, id, *p.Disabled); err != nil {
-			return UserView{}, userError(err)
-		}
+	u, err := a.Users.Update(ctx, id, p.Role, p.Disabled)
+	if err != nil {
+		return UserView{}, userError(err)
 	}
 
 	return viewOf(u), nil
