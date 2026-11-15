@@ -145,7 +145,7 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 	}
 
 	for i := range res.Assets {
-		s.refreshImported(ctx, &row, &res.Assets[i])
+		s.refreshImported(ctx, c, &row, &res.Assets[i])
 	}
 
 	if head, herr := s.store.Projects().Get(ctx, row.ID); herr == nil {
@@ -539,7 +539,7 @@ func (s *svc) waitAssets(ctx context.Context, project *ProjectRow, assets []Impo
 
 // refreshImported fills an entry from the database: state, progress, kind,
 // the probe once ready and the error of a failed ingest.
-func (s *svc) refreshImported(ctx context.Context, project *ProjectRow, a *ImportedAsset) {
+func (s *svc) refreshImported(ctx context.Context, c Caller, project *ProjectRow, a *ImportedAsset) {
 	if a.AssetID == "" {
 		return
 	}
@@ -572,7 +572,7 @@ func (s *svc) refreshImported(ctx context.Context, project *ProjectRow, a *Impor
 	}
 
 	if ar.IngestState == IngestFailed && a.Error == nil {
-		a.Error = parseError(ar.IngestError)
+		a.Error = forCaller(c, parseError(ar.IngestError))
 	}
 
 	if ar.IngestState == IngestReady {
@@ -774,7 +774,7 @@ func (s *svc) MediaList(ctx context.Context, req MediaListRequest) (*MediaListRe
 			return nil, asError(gerr)
 		}
 
-		e := s.entryOf(ctx, &rows[i], &ar, fps)
+		e := s.entryOf(ctx, c, &rows[i], &ar, fps)
 		entries = append(entries, e)
 		lines = append(lines, mediaLineOf(&e))
 	}
@@ -810,14 +810,14 @@ func mediaLineOf(e *MediaEntry) textview.MediaLine {
 	return l
 }
 
-func (s *svc) entryOf(ctx context.Context, pa *ProjectAssetRow, ar *AssetRow, fps timeval.FPS) MediaEntry {
+func (s *svc) entryOf(ctx context.Context, c Caller, pa *ProjectAssetRow, ar *AssetRow, fps timeval.FPS) MediaEntry {
 	e := MediaEntry{
 		AssetID: pa.AssetID, Name: pa.Name, Kind: ar.Kind, State: string(ar.IngestState), Progress: ar.Progress,
 		HasAudio: ar.Facts.HasAudio, Trashed: pa.State == ProjectAssetTrashed,
 	}
 
 	if ar.IngestState == IngestFailed {
-		e.Error = EventError(parseError(ar.IngestError))
+		e.Error = forCaller(c, parseError(ar.IngestError))
 	}
 
 	if ar.IngestState != IngestReady {
@@ -909,7 +909,7 @@ func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*Media
 
 	if ar.IngestState != IngestReady {
 		if ar.IngestState == IngestFailed {
-			if res.Error = parseError(ar.IngestError); res.Error != nil {
+			if res.Error = forCaller(c, parseError(ar.IngestError)); res.Error != nil {
 				fmt.Fprintf(&text, "\nFAILED %s: %s", res.Error.Code, res.Error.Message)
 			}
 		} else {

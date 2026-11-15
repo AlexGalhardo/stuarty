@@ -462,7 +462,7 @@ type MediaImportResult struct {
 	ProjectID string          `json:"project_id"`
 	Revision  int64           `json:"revision"` // after any asset.add already committed
 	Assets    []ImportedAsset `json:"assets"`   // always one entry per file, in request order
-	Failed    int             `json:"failed"`   // entries with Error set
+	Failed    int             `json:"failed"`   // entries refused during the call (Error set when the call returns); an ingest that fails after the call, even within wait_ms, is not counted: read it from the entry's state and Error, or from the job
 	Text      string          `json:"text"`
 }
 ```
@@ -511,7 +511,7 @@ type MediaEntry struct { // SDD-012 §13.2 uses this shape
 	HasAudio        bool     `json:"has_audio"`
 	Trashed         bool     `json:"trashed"`               // in the trash of this project
 	Strip           *Strip   `json:"strip,omitempty"`       // video assets, when the strip artifact is ready (SDD-011)
-	Error           *Error   `json:"error,omitempty"`       // when State is "failed"
+	Error           *Error   `json:"error,omitempty"`       // when State is "failed": the error of the ingest job, with the same details and hint, redacted for the caller like the job's (SDD-007 §9.1)
 }
 type Strip struct { // one sprite of timeline tiles, served by media.strip (§6.3)
 	TileW      int `json:"tile_w"`
