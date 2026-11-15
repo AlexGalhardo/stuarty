@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { basePathProblems, foreignOriginProblems, localeProblems, twinProblems } from "./check-built.ts";
+import { basePathProblems, foreignOriginProblems, localeProblems, searchProblems, twinProblems } from "./check-built.ts";
 
 const own = "alexgalhardo.github.io";
 
@@ -128,4 +128,23 @@ test("an asymmetric hreflang, a fallback with alternates and a missing twin are 
 			? page({ lang: "pt-BR", canonical: "docs/a", alternates: [["pt-BR", "pt-br/docs/a"]] })
 			: chatty.read(rel);
 	assert.ok(localeProblems(chatty.files, readChatty, SITE).some((p) => p.includes("has hreflang alternates")));
+});
+
+test("the search index finds the editing tools page for trim and the keyframes page for keyframes", () => {
+	const index = [
+		{ title: "Editing tools: trim, split, move", href: "/docs/guide/editing-tools", text: "Cut a clip." },
+		{ title: "Editing tools: trim, split, move", heading: "Trim a clip", href: "/docs/guide/editing-tools#trim-a-clip", text: "item.trim" },
+		{ title: "Animate with keyframes", href: "/docs/guide/keyframes", text: "Animate a value." },
+		{ title: "Exporting", href: "/docs/guide/exporting", text: "Trim the range, then keyframes are rendered." },
+	];
+	assert.deepEqual(searchProblems(() => JSON.stringify(index)), []);
+});
+
+test("a query whose first result is on another page, or an unreadable index, is refused", () => {
+	const index = [{ title: "Exporting", href: "/docs/guide/exporting", text: "trim keyframes" }];
+	assert.deepEqual(searchProblems(() => JSON.stringify(index)), [
+		'search "trim": the first result is /docs/guide/exporting, want /docs/guide/editing-tools',
+		'search "keyframes": the first result is /docs/guide/exporting, want /docs/guide/keyframes',
+	]);
+	assert.deepEqual(searchProblems(() => "not json"), ["search-index.json is missing or is not JSON"]);
 });
