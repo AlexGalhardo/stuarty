@@ -133,7 +133,10 @@ export function createEventStream(deps: EventStreamDeps): EventStream {
 				return;
 			}
 			if (status >= 200 && status < 300) {
-				attempts = 0;
+				// attempts is not reset here: only an opened stream resets it, so a
+				// server that refuses the stream (E_QUEUE_FULL, SDD-006 section 4.6,
+				// which an EventSource reports as a plain error) is retried with the
+				// back-off instead of once a second.
 				recovers.emit();
 				return;
 			}

@@ -282,6 +282,34 @@ describe("event stream", () => {
 		expect(recovered).toBe(1);
 	});
 
+	test("a stream that is refused after a successful probe keeps backing off", async () => {
+		const server = new FixtureServer();
+		const timers = new ManualTimers();
+		const stream = createEventStream({
+			transport: server,
+			projectId: server.projectId,
+			getRevision: () => 0,
+			probe: async () => 200,
+			timers,
+		});
+		let recovered = 0;
+		stream.onRecover(() => {
+			recovered++;
+			// The boot algorithm reopens the stream, and the server refuses it again.
+			stream.open(0);
+			server.failStreams(true);
+		});
+		stream.open(0);
+		await flush();
+		server.failStreams(true);
+		await timers.advance(1000);
+		expect(recovered).toBe(1);
+		await timers.advance(1999);
+		expect(recovered).toBe(1);
+		await timers.advance(1);
+		expect(recovered).toBe(2);
+	});
+
 	test("the reopen delays back off to 15 seconds", async () => {
 		const server = new FixtureServer();
 		const timers = new ManualTimers();
