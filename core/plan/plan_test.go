@@ -1148,3 +1148,28 @@ func TestLayerReportsInterpolatedScaleAndOpacity(t *testing.T) {
 	near(t, "window scale", w.Scale[5], 1.5)
 	near(t, "window opacity", w.Opacity[5], 0.4)
 }
+
+// The placeholder of an unfilled optional slot is no audio source and no layer (SDD-004 §7):
+// the export skips it.
+func TestPlaceholderItemsAreSkipped(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	d.Template = &timeline.TemplateInfo{Description: "t", Instance: true}
+
+	m := timeline.NewItem("itm_m", timeline.ItemAudio, trkSound, 0, 60)
+	m.Asset = timeline.PlaceholderAsset
+	put(d, m)
+
+	v := clip("itm_v", trkBottom, 0, 60)
+	v.Asset = timeline.PlaceholderAsset
+	put(d, v)
+
+	if got := Audio(d, 0, 60); len(got) != 0 {
+		t.Errorf("sources = %+v", got)
+	}
+
+	if got := Window(d, 0, 10); len(got.Layers) != 0 {
+		t.Errorf("layers = %+v", got.Layers)
+	}
+}
