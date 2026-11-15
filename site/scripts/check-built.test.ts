@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { basePathProblems, foreignOriginProblems, twinProblems } from "./check-built.ts";
+import { basePathProblems, foreignOriginProblems, localeProblems, twinProblems } from "./check-built.ts";
 
 const own = "alexgalhardo.github.io";
 
@@ -63,4 +63,61 @@ test("a complete site has no twin problems", () => {
 	const files = ["llms.txt", "docs/a/index.html", "docs/a.md"];
 	const read = (rel: string) => (rel === "llms.txt" ? `- [A](${url}/docs/a/): x` : "# A");
 	assert.deepEqual(twinProblems(files, read, url), []);
+});
+
+const SITE = "https://example.org";
+
+function page(opts: { lang: string; canonical: string; alternates?: [string, string][] }): string {
+	const alt = (opts.alternates ?? []).map(([l, p]) => `<link rel="alternate" hreflang="${l}" href="${SITE}/${p}/">`).join("");
+	return `<html lang="${opts.lang}"><head><link rel="canonical" href="${SITE}/${opts.canonical}/">${alt}</head></html>`;
+}
+
+function site(translated: boolean): { files: string[]; read: (rel: string) => string } {
+	const pages: Record<string, string> = {
+		"docs/a/index.html": page({
+			lang: "en",
+			canonical: "docs/a",
+			alternates: translated
+				? [["en", "docs/a"], ["pt-BR", "pt-br/docs/a"], ["x-default", "docs/a"]]
+				: [["en", "docs/a"], ["x-default", "docs/a"]],
+		}),
+		"pt-br/docs/a/index.html": translated
+			? page({
+					lang: "pt-BR",
+					canonical: "pt-br/docs/a",
+					alternates: [["en", "docs/a"], ["pt-BR", "pt-br/docs/a"], ["x-default", "docs/a"]],
+				})
+			: page({ lang: "pt-BR", canonical: "docs/a" }),
+		"docs/a.md": "# A",
+		"pt-br/docs/a.md": translated ? "# A" : "> Not translated yet: this is the English text.\n\n# A",
+		"404.html": '<div data-lang="en"></div><div data-lang="pt-br"></div>',
+		"sitemap.xml": translated ? `<loc>${SITE}/docs/a/</loc><loc>${SITE}/pt-br/docs/a/</loc>` : `<loc>${SITE}/docs/a/</loc>`,
+	};
+	return { files: Object.keys(pages), read: (rel) => pages[rel] ?? "" };
+}
+
+test("a translated pair names each other and a fallback claims no alternate", () => {
+	const good = site(true);
+	assert.deepEqual(localeProblems(good.files, good.read, SITE), []);
+
+	const fallback = site(false);
+	assert.deepEqual(localeProblems(fallback.files, fallback.read, SITE), []);
+});
+
+test("an asymmetric hreflang, a fallback with alternates and a missing twin are refused", () => {
+	const broken = site(true);
+	const read = (rel: string) =>
+		rel === "pt-br/docs/a/index.html" ? page({ lang: "pt-BR", canonical: "pt-br/docs/a" }) : broken.read(rel);
+	assert.ok(localeProblems(broken.files, read, SITE).some((p) => p.includes("hreflang en should point to docs/a")));
+
+	const lost = site(true);
+	const files = lost.files.filter((f) => f !== "pt-br/docs/a.md");
+	assert.ok(localeProblems(files, lost.read, SITE).some((p) => p.includes("pt-br/docs/a.md is missing")));
+
+	const chatty = site(false);
+	const readChatty = (rel: string) =>
+		rel === "pt-br/docs/a/index.html"
+			? page({ lang: "pt-BR", canonical: "docs/a", alternates: [["pt-BR", "pt-br/docs/a"]] })
+			: chatty.read(rel);
+	assert.ok(localeProblems(chatty.files, readChatty, SITE).some((p) => p.includes("has hreflang alternates")));
 });

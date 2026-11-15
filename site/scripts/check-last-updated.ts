@@ -11,7 +11,7 @@ import { gitLastUpdated, pageDateExplainedBySquash } from "../lib/git-dates.ts";
 
 /** A current or snapshotted docs page, relative to content/. */
 export function isDocPage(file: string): boolean {
-	return file.endsWith(".mdx") && (file.startsWith("docs/") || file.includes("/docs/"));
+	return file.endsWith(".mdx") && (file.startsWith("docs/") || file.startsWith("generated/") || file.includes("/docs/"));
 }
 
 /**

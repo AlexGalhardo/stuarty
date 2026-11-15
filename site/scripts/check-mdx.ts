@@ -12,17 +12,12 @@ import { compile } from "@mdx-js/mdx";
 import matter from "gray-matter";
 import { rehypePlugins, remarkPlugins } from "../lib/mdx-plugins.ts";
 import { checkFragment, pageAnchors } from "./link-anchors.ts";
-import { navigation } from "../content/navigation.ts";
+import { englishFiles, navigation, pagePath, pageSource } from "../lib/page-files.ts";
+import { locales } from "../lib/locale.ts";
 
 const MAX_CODE_LINE = 100;
 const siteDir = path.join(import.meta.dirname, "..");
 const contentDir = path.join(siteDir, "content");
-
-type NavCategory = { dir: string; prefix?: string; pages: string[] };
-type Snapshot = { prefix: string; contentDir: string; nav: NavCategory[] };
-
-// One documentation tree: versioned snapshots are out of scope until after 1.0 (SDD-010 section 1.3).
-const VERSIONS: Snapshot[] = [{ prefix: "", contentDir: "docs", nav: navigation }];
 
 type Issue = { file: string; line: number; message: string };
 const errors: Issue[] = [];
@@ -41,23 +36,43 @@ function registeredComponents(): Set<string> {
 	return new Set(names.filter((n): n is string => Boolean(n)));
 }
 
-/** Every page URL of a version mapped to its file (undefined for the index), e.g. /docs/basics/routing. */
-function pageHrefs(v: Snapshot): Map<string, string | undefined> {
-	const hrefs = new Map<string, string | undefined>([[v.prefix ? `/docs/${v.prefix}` : "/docs", undefined]]);
-	for (const cat of v.nav) {
+/** Every page URL of the English tree mapped to the file that renders it, e.g. /docs/guide/timeline. */
+function pageHrefs(): Map<string, string | undefined> {
+	const hrefs = new Map<string, string | undefined>([["/docs", undefined]]);
+	for (const cat of navigation) {
 		for (const page of cat.pages) {
-			const pageFile = path.join(contentDir, v.contentDir, cat.dir, `${page}.mdx`);
-			if (!fs.existsSync(pageFile)) continue;
-			const segs = [v.prefix, cat.prefix ?? cat.dir, page].filter((s) => s !== "");
-			hrefs.set(`/docs/${segs.join("/")}`, pageFile);
+			const src = pageSource("en", cat.dir, page);
+			if (src) hrefs.set(pagePath(cat, page), path.join(contentDir, src.file));
 		}
 	}
 	return hrefs;
 }
 
-function versionOf(file: string): Snapshot {
-	const r = rel(file);
-	return VERSIONS.find((v) => v.prefix && r.startsWith(`content/${v.contentDir}/`)) ?? VERSIONS[0];
+/** Structure rules of SDD-010 sections 2.3 and 3: every page is listed, both locales are named, twins pair up. */
+function checkStructure(): void {
+	const listed = new Set<string>();
+	for (const cat of navigation) {
+		for (const l of locales) {
+			if (!cat.title[l]?.trim()) errors.push({ file: "content/navigation.ts", line: 0, message: `the title of ${cat.dir} is empty in ${l}` });
+		}
+		for (const page of cat.pages) {
+			if (!pageSource("en", cat.dir, page))
+				errors.push({ file: "content/navigation.ts", line: 0, message: `${cat.dir}/${page} is listed and has no English file` });
+			listed.add(`${cat.dir}/${page}`);
+		}
+	}
+	for (const file of englishFiles()) {
+		const id = file.replace(/^docs\/en\//, "").replace(/\.mdx$/, "");
+		if (!listed.has(id)) errors.push({ file: `content/${file}`, line: 0, message: "is not listed in content/navigation.ts" });
+	}
+	const ptRoot = path.join(contentDir, "docs", "pt-br");
+	if (fs.existsSync(ptRoot)) {
+		for (const file of mdxFiles(ptRoot)) {
+			const id = path.relative(ptRoot, file).split(path.sep).join("/").replace(/\.mdx$/, "");
+			if (!fs.existsSync(path.join(contentDir, "docs", "en", `${id}.mdx`)))
+				errors.push({ file: rel(file), line: 0, message: "has no English twin under content/docs/en" });
+		}
+	}
 }
 
 type Point = { line: number };
@@ -106,7 +121,8 @@ function collect(found: Found) {
 }
 
 function checkLink(href: string, valid: Map<string, string | undefined>): string | undefined {
-	const p = href.split(/[?#]/)[0].replace(/\/$/, "");
+	// A Portuguese page writes the same /docs/... link as the English one (SDD-010 section 5.1).
+	const p = href.split(/[?#]/)[0].replace(/\/$/, "").replace(/^\/pt-br(?=\/)/, "");
 	if (p !== "/docs" && !p.startsWith("/docs/")) return undefined;
 	if (!valid.has(p)) return `internal link ${href} has no page (see content/navigation.ts)`;
 	const target = valid.get(p);
@@ -116,7 +132,7 @@ function checkLink(href: string, valid: Map<string, string | undefined>): string
 async function checkFile(
 	file: string,
 	components: Set<string>,
-	hrefs: Map<Snapshot, Map<string, string | undefined>>,
+	hrefs: Map<string, string | undefined>,
 ): Promise<void> {
 	const raw = fs.readFileSync(file, "utf8");
 	const { content } = matter(raw);
@@ -160,9 +176,8 @@ async function checkFile(
 			});
 		}
 	}
-	const v = versionOf(file);
 	for (const l of found.links) {
-		const msg = checkLink(l.href, hrefs.get(v) ?? new Map());
+		const msg = checkLink(l.href, hrefs);
 		if (msg) errors.push({ file: name, line: l.line + offset, message: msg });
 	}
 	for (const block of found.code) {
@@ -194,7 +209,7 @@ function mdxFiles(target: string): string[] {
 }
 
 const args = process.argv.slice(2);
-const files = (args.length ? args : [contentDir]).flatMap((a) => {
+const files = (args.length ? args : [path.join(contentDir, "docs"), path.join(contentDir, "generated")]).flatMap((a) => {
 	const abs = path.resolve(a);
 	if (!fs.existsSync(abs)) {
 		errors.push({ file: a, line: 0, message: "file not found" });
@@ -204,7 +219,8 @@ const files = (args.length ? args : [contentDir]).flatMap((a) => {
 });
 
 const components = registeredComponents();
-const hrefs = new Map(VERSIONS.map((v) => [v, pageHrefs(v)]));
+const hrefs = pageHrefs();
+if (!args.length) checkStructure();
 for (const file of files) await checkFile(file, components, hrefs);
 
 for (const w of warnings) console.warn(`warning ${w.file}:${w.line}: ${w.message}`);
