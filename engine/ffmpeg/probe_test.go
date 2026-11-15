@@ -273,6 +273,18 @@ func TestSecurity_T14_RealMediaPassesAndHostileFilesFail(t *testing.T) {
 			bytes.Repeat([]byte{0x9a, 0x01, 0xfe}, 200)...),
 		"truncated riff":     []byte("RIFF\x00\x00\x00\x00WAVEjunk" + strings.Repeat("\x01", 40)),
 		"matroska signature": append([]byte("\x1a\x45\xdf\xa3"), bytes.Repeat([]byte{0xff}, 64)...),
+		// The containers and the files the BETA features added: animated images and user fonts.
+		"gif with an empty screen": append([]byte("GIF89a\x00\x00\x00\x00\xf0\x00\x00"), bytes.Repeat([]byte{0x00, 0x2c}, 40)...),
+		"webp animation cut short": append(
+			[]byte("RIFF\x20\x00\x00\x00WEBPVP8X\x0a\x00\x00\x00\x12\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
+			bytes.Repeat([]byte{0xff, 0x01}, 40)...),
+		"apng animation chunk without header": append(
+			append([]byte("\x89PNG\r\n\x1a\n"), chunk("acTL", []byte{0, 0, 0xff, 0xff, 0, 0, 0, 0})...),
+			chunk("fcTL", bytes.Repeat([]byte{0xff}, 26))...),
+		"truetype font": append(
+			[]byte("\x00\x01\x00\x00\x00\x0d\x00\x80\x00\x03\x00\x30OS/2"),
+			bytes.Repeat([]byte{0x00, 0x81}, 40)...),
+		"woff2 font": append([]byte("wOF2\x00\x01\x00\x00"), bytes.Repeat([]byte{0x00, 0x81}, 40)...),
 	}
 	for name, body := range hostile {
 		store := putStoreBytes(t, r, body)
