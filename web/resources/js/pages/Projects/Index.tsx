@@ -58,6 +58,7 @@ export default function ProjectsIndex() {
 		<>
 			<Head title={t("ui.projects.title")} />
 			<div className="mx-auto flex max-w-4xl flex-col gap-10">
+				<h1 className="text-2xl font-semibold">{t("ui.projects.title")}</h1>
 				<section aria-labelledby="new-project">
 					<h2 id="new-project" className="text-lg font-semibold">
 						{t("ui.projects.new")}
@@ -178,8 +179,8 @@ function ProjectRow({
 }) {
 	const t = useT();
 	return (
-		<li className="flex items-center justify-between gap-4 p-4">
-			<div className="min-w-0">
+		<li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 p-4">
+			<div className="min-w-0 flex-1 basis-48">
 				<p className="truncate font-medium">
 					<UntrustedText>{project.name}</UntrustedText>
 				</p>
@@ -196,7 +197,7 @@ function ProjectRow({
 				</p>
 			</div>
 			{/* The editor is another document, so this is a plain link, not an Inertia visit (SDD-012 section 2.2). */}
-			<div className="flex max-w-md shrink-0 flex-wrap justify-end gap-2">
+			<div className="flex max-w-md flex-wrap justify-end gap-2">
 				<BundleExport projectId={project.id} />
 				<Button asChild variant="outline">
 					<a href={`/editor/${project.id}`}>
