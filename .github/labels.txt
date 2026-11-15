@@ -5,6 +5,7 @@ documentation|0075ca|Docs are wrong, missing or unclear
 task|5319e7|Planned work with a done criterion
 tracking|0E8A16|Long-lived tracking issue
 ci-failure|B60205|A scheduled or main-branch workflow failed
+ffmpeg-freshness|B60205|The pinned FFmpeg is behind upstream or too old
 # state
 needs-triage|fbca04|Not yet reviewed by a maintainer
 needs-repro|fbca04|Waiting for a minimal reproduction
