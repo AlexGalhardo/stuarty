@@ -225,7 +225,7 @@ flowchart TD
 | --- | --- | --- |
 | `api` | `generated`, `lib` | `state`, `commands`, any UI |
 | `state` | `api`, `generated`, `lib` | `commands`, any UI |
-| `commands` | `state`, `api`, `ui`, `generated`, `lib` | any feature folder |
+| `commands` | `state`, `api`, `ui`, `a11y` (`announce`), `generated`, `lib` | any feature folder |
 | `preview` | `state` (read), `api/urls`, `api/client` (plan, frame, bitmaps), `ui` | `timeline`, `inspector`, `commands` write path (it sends no edits; the transform handles use `commands/actions`, so the overlay components live in `preview/overlays` and call actions through the `useAction` hook of `commands`) |
 | `timeline`, `inspector`, `library`, `export`, `history` | `state`, `commands`, `ui`, `a11y`, `preview/clock` (read only), `api/urls` | each other |
 | `ui`, `a11y` | `lib`, `components` | any other editor folder |

@@ -15,7 +15,15 @@ export default function LeftPanel(): ReactNode {
 	const startAssetDrag = useAssetDrag();
 	const tab = useUiState((s) => s.activePanelTab);
 	return (
-		<div className="flex min-h-0 min-w-0 flex-col bg-ed-panel">
+		<aside
+			aria-label={t(
+				tab === "library"
+					? "ui.editor.panels.library"
+					: "ui.editor.history.tab",
+			)}
+			data-landmark=""
+			className="flex min-h-0 min-w-0 flex-col bg-ed-panel"
+		>
 			<Tabs
 				value={tab}
 				onValueChange={(value) =>
@@ -48,6 +56,6 @@ export default function LeftPanel(): ReactNode {
 					<HistoryPanel />
 				</TabsContent>
 			</Tabs>
-		</div>
+		</aside>
 	);
 }
