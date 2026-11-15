@@ -257,7 +257,7 @@ func TestSecurity_T22_CSPNonceOnly(t *testing.T) {
 }
 
 // TestSecurity_T22_UIRendersTextNotHTML runs the Playwright spec
-// web/e2e/specs/ui-xss.spec.ts in headless Chromium. It skips, with the reason,
+// web/e2e/specs/security-ui.spec.ts in headless Chromium. It skips, with the reason,
 // where bun or the browser is not installed.
 func TestSecurity_T22_UIRendersTextNotHTML(t *testing.T) {
 	if testing.Short() {
@@ -266,18 +266,18 @@ func TestSecurity_T22_UIRendersTextNotHTML(t *testing.T) {
 
 	bun, err := exec.LookPath("bun")
 	if err != nil {
-		t.Skip("bun is not on PATH: the Playwright spec ui-xss.spec.ts did not run")
+		t.Skip("bun is not on PATH: the Playwright spec security-ui.spec.ts did not run")
 	}
 
 	dir := webDir(t)
 	if _, err := os.Stat(filepath.Join(dir, "node_modules", "@playwright", "test")); err != nil {
-		t.Skip("Playwright is not installed in web/node_modules (run bun install): the spec ui-xss.spec.ts did not run")
+		t.Skip("Playwright is not installed in web/node_modules (run bun install): the spec security-ui.spec.ts did not run")
 	}
 
 	ctx, cancel := context.WithTimeout(t.Context(), 8*time.Minute)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, bun, "run", "e2e", "--", "ui-xss")
+	cmd := exec.CommandContext(ctx, bun, "run", "e2e", "--", "security-ui")
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), "VUKEM_VIDEO_MIN_FREE_BYTES=1")
 
@@ -287,6 +287,6 @@ func TestSecurity_T22_UIRendersTextNotHTML(t *testing.T) {
 			t.Skip("the Playwright browser is not installed (bunx playwright install chromium): the spec did not run")
 		}
 
-		t.Fatalf("ui-xss.spec.ts failed: %v\n%s", err, out)
+		t.Fatalf("security-ui.spec.ts failed: %v\n%s", err, out)
 	}
 }
