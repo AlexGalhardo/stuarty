@@ -8,8 +8,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
-// handlers are the tools whose Service methods exist. view is in Pending until
-// the Service has a frame method: add the handler here and drop the name from
+// handlers are the tools whose Service methods exist; a tool without one is in
 // Pending.
 func (a *adapter) handlers() map[string]callFunc {
 	return map[string]callFunc{
@@ -24,6 +23,7 @@ func (a *adapter) handlers() map[string]callFunc {
 		"media_inspect":  mediaInspect,
 		"job_start":      jobStart,
 		"job_get":        jobGet,
+		"view":           view,
 	}
 }
 
@@ -335,4 +335,49 @@ func jobGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*too
 			Message: "give job_id, or project_id to list its jobs.",
 		}
 	}
+}
+
+// view is two operations behind one tool (SDD-003 section 4.2): a frame at "at"
+// or a contact sheet. It is the only tool that returns an image block.
+func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
+	in, err := decode[struct {
+		ProjectID string   `json:"project_id"`
+		Mode      string   `json:"mode"`
+		At        string   `json:"at"`
+		Times     []string `json:"times"`
+		From      string   `json:"from"`
+		To        string   `json:"to"`
+		Count     int      `json:"count"`
+		AssetID   string   `json:"asset_id"`
+		MaxTokens int      `json:"max_tokens"`
+	}](raw)
+	if err != nil {
+		return nil, err
+	}
+
+	var res *service.ViewResult
+
+	if in.Mode == "sheet" {
+		if in.At != "" {
+			return nil, &service.Error{
+				Code: command.CodeValidation, Path: "at", Message: "at is not accepted in mode sheet.",
+				Hint: "use times, or from, to and count",
+			}
+		}
+
+		res, err = svc.ViewSheet(ctx, service.ViewSheetRequest{
+			ProjectID: in.ProjectID, Times: in.Times, From: in.From, To: in.To, Count: in.Count,
+			AssetID: in.AssetID, MaxTokens: in.MaxTokens,
+		})
+	} else {
+		res, err = svc.ViewFrame(ctx, service.ViewFrameRequest{
+			ProjectID: in.ProjectID, At: in.At, AssetID: in.AssetID, MaxTokens: in.MaxTokens,
+		})
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &toolOutput{value: res, text: res.Text, image: res.Image, mime: res.MIME}, nil
 }

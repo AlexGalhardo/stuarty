@@ -11,10 +11,6 @@ func TestSecurity_T07_TranscriptDelimitedAndTruncated(t *testing.T) {
 	)
 }
 
-func TestViewReturnsAnImageOnlyFromView(t *testing.T) {
-	t.Skip("service.Service has no frame method yet, so view is in Pending (engine/frame exists, P1-RND-005)")
-}
-
 func TestStdioOwnerIsReachedByTheCLIAndOpen(t *testing.T) {
 	t.Skip("needs the owner startup (listener, worker, runtime.json) of the server: P1-SRV-005 follow-up")
 }
