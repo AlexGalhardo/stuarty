@@ -14,6 +14,14 @@ export interface Notice {
 	count?: number;
 	// The actor a UI-worded notice names (undo skipped, section 15).
 	actor?: string;
+	// An E_REVISION_CONFLICT: who changed what after the revision the batch was
+	// based on, and the text the core made of the changes (SDD-012 section 4.5).
+	conflict?: {
+		actor: string;
+		itemId: string | null;
+		diff: string;
+		revision: number;
+	};
 	// Values the catalogue text of `messageKey` names.
 	params?: Readonly<Record<string, string | number>>;
 	// An action the notice offers, as the operations to send. The values come
