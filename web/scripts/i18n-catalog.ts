@@ -1,6 +1,9 @@
-// The pure part of check-i18n (SDD-012 section 16.4): flattening a catalogue
-// and comparing two locales (rules I1 and I2). No syntax tree here, so Vitest
-// can test it.
+// The part of check-i18n (SDD-012 section 16.4) that needs no syntax tree, so
+// Vitest can test it: flattening a catalogue, comparing two locales (rules I1
+// and I2), the missing keys of the registries (I5) and untranslated texts (I7).
+
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
 export type Catalog = { [key: string]: unknown };
 
@@ -122,4 +125,30 @@ export function untranslated(
 		}
 	}
 	return problems;
+}
+
+// I5: every expected key must exist in the English catalogue.
+export function missingKeys(en: Map<string, Leaf>, expected: readonly string[]): Problem[] {
+	return expected
+		.filter((key) => !en.has(key))
+		.map((key) => ({ rule: "I5", message: `${key} is missing` }));
+}
+
+// Every rule of SDD-012 section 16.4 that the check runs (I6: all of them). Each
+// one needs a failing and a passing fixture directory named <rule>-fail and
+// <rule>-pass under i18n-fixtures.
+export const RULES: readonly string[] = ["I1", "I2", "I3", "I4", "I5", "I7"];
+
+// Fixtures of the catalogue rules hold en.json and pt-BR.json (I1, I2, I7) or
+// en.json and expected.json, the list of keys the registry must have (I5).
+export function catalogFixtureProblems(dir: string, allowed: ReadonlySet<string>): Problem[] {
+	const read = (name: string): Map<string, Leaf> =>
+		flatten(JSON.parse(readFileSync(join(dir, name), "utf8")) as Catalog);
+	const en = read("en.json");
+	if (existsSync(join(dir, "expected.json"))) {
+		const expected = JSON.parse(readFileSync(join(dir, "expected.json"), "utf8")) as string[];
+		return missingKeys(en, expected);
+	}
+	const pt = read("pt-BR.json");
+	return [...compareCatalogs(en, pt, "pt-BR"), ...untranslated(en, pt, "pt-BR", allowed)];
 }
