@@ -9,6 +9,7 @@ import CaptionPanel from "./panels/CaptionPanel";
 import ClipPanel from "./panels/ClipPanel";
 import ShapePanel from "./panels/ShapePanel";
 import TextPanel from "./panels/TextPanel";
+import TransformSection from "./panels/TransformSection";
 import TrackPanel from "./TrackPanel";
 
 function ItemPanel({ itemId }: { itemId: string }): ReactNode {
@@ -39,6 +40,12 @@ export default function Inspector(): ReactNode {
 	const track = useDocumentState((s) =>
 		trackId === null ? undefined : s.document?.tracks[trackId],
 	);
+	const allVisual = useDocumentState((s) =>
+		selected.every((id) => {
+			const type = s.document?.items[id]?.type;
+			return type !== undefined && type !== "audio";
+		}),
+	);
 	const only = selected.length === 1 ? selected[0] : undefined;
 	const item = useDocumentState((s) =>
 		only === undefined ? undefined : s.document?.items[only],
@@ -49,9 +56,12 @@ export default function Inspector(): ReactNode {
 	if (selected.length > 1) {
 		title = t("ui.editor.inspector.items", { count: selected.length });
 		body = (
-			<p className="text-sm text-muted-foreground">
-				{t("ui.editor.inspector.multi_hint")}
-			</p>
+			<>
+				<p className="text-sm text-muted-foreground">
+					{t("ui.editor.inspector.multi_hint")}
+				</p>
+				{allVisual && <TransformSection itemIds={selected} />}
+			</>
 		);
 	} else if (only !== undefined && item !== undefined) {
 		title = (
