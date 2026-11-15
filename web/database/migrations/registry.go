@@ -21,5 +21,6 @@ func All() []schema.Migration {
 		m20261115100000AddTemplatesOwnerUserID(),
 		m20261115110000CreateUsersTable(),
 		m20261115110100CreateAccessTokensTable(),
+		m20261115120000AddUsersDisabledMS(),
 	}
 }
