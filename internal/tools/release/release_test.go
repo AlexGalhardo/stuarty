@@ -490,3 +490,84 @@ func TestCLIRejectsBadInput(t *testing.T) {
 		}
 	}
 }
+
+// afterOne makes happy() answer as a repository whose last tag is v1.0.0 and
+// whose release branch is release/<version>.
+func afterOne(version, log string) *fake {
+	f := happy()
+	f.answers["git describe"] = "v1.0.0\n"
+	f.answers["git rev-parse --abbrev-ref HEAD"] = "release/" + version + "\n"
+	f.answers["git log"] = log
+	f.answers["git cliff"] = strings.ReplaceAll(cliffSection, "0.2.0", strings.TrimPrefix(version, "v"))
+
+	return f
+}
+
+func TestAfterOneABreakingCommitNeedsAMajor(t *testing.T) {
+	t.Parallel()
+
+	logs := map[string]string{
+		"bang":   "fix(core): keep the order\nfeat(cli)!: rename a flag\n",
+		"footer": "feat(cli): rename a flag\n\nBREAKING CHANGE: the flag is now --out\n",
+		"hyphen": "feat(cli): rename a flag\n\nBREAKING-CHANGE: the flag is now --out\n",
+	}
+
+	for name, log := range logs {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			for _, v := range []string{"v1.1.0", "v1.0.1"} {
+				f := afterOne(v, log)
+
+				err := newTool(t, f).prepare(v)
+				if err == nil || !strings.Contains(err.Error(), "major") {
+					t.Fatalf("prepare(%s) error = %v, want a major-bump refusal", v, err)
+				}
+
+				if f.ran("git commit") {
+					t.Error("a refused prepare committed")
+				}
+			}
+
+			f := afterOne("v2.0.0", log)
+			if err := newTool(t, f).prepare("v2.0.0"); err != nil {
+				t.Fatalf("prepare(v2.0.0) with a breaking commit: %v", err)
+			}
+
+			if !f.ran("git commit") {
+				t.Error("an accepted prepare did not commit")
+			}
+		})
+	}
+}
+
+func TestAfterOneWithoutABreakingCommitAMinorIsFine(t *testing.T) {
+	t.Parallel()
+
+	f := afterOne("v1.1.0", "feat(core): add a command\nfix(cli): trim the output\n")
+	if err := newTool(t, f).prepare("v1.1.0"); err != nil {
+		t.Fatalf("prepare(v1.1.0): %v", err)
+	}
+}
+
+func TestOneZeroIsCutFromTheZeroSeriesWithABreakingCommit(t *testing.T) {
+	t.Parallel()
+
+	f := afterOne("v1.0.0", "feat(core)!: freeze the surface\n")
+	f.answers["git describe"] = "v0.9.0\n"
+
+	if err := newTool(t, f).prepare("v1.0.0"); err != nil {
+		t.Fatalf("prepare(v1.0.0) from v0.9.0: %v", err)
+	}
+}
+
+func TestBeforeOneAMinorMayBreak(t *testing.T) {
+	t.Parallel()
+
+	f := happy()
+	f.answers["git log"] = "feat(cli)!: rename a flag\n"
+
+	if err := newTool(t, f).prepare("v0.2.0"); err != nil {
+		t.Fatalf("a v0 minor with a breaking commit: %v", err)
+	}
+}

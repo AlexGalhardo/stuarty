@@ -23,22 +23,36 @@ func isPatchRelease(v string) bool {
 	return len(m) > 3 && m[3] != "0"
 }
 
-// breakingSubjectRe matches a Conventional Commits header marked with "!".
-var breakingSubjectRe = regexp.MustCompile(`^[a-z]+(\([^)]*\))?!:`)
+// breakingSubjectRe matches a Conventional Commits header marked with "!", and
+// breakingFooterRe a "BREAKING CHANGE:" footer.
+var (
+	breakingSubjectRe = regexp.MustCompile(`^[a-z]+(\([^)]*\))?!:`)
+	breakingFooterRe  = regexp.MustCompile(`^BREAKING[ -]CHANGE:`)
+)
 
-// breakingSubjects returns the commit subjects, one per line of log, that
-// carry the "!" marker.
+// breakingSubjects returns the lines of log (full commit messages) that mark a
+// breaking change: a header with "!" or a "BREAKING CHANGE:" footer.
 func breakingSubjects(log string) []string {
 	var out []string
 
 	for line := range strings.SplitSeq(log, "\n") {
-		if line = strings.TrimSpace(line); breakingSubjectRe.MatchString(line) {
+		if line = strings.TrimSpace(line); breakingSubjectRe.MatchString(line) || breakingFooterRe.MatchString(line) {
 			out = append(out, line)
 		}
 	}
 
 	return out
 }
+
+// isMajorBump reports whether version raises the major number over previous.
+// An empty previous counts as one: there is nothing to break.
+func isMajorBump(version, previous string) bool {
+	return previous == "" || core(version)[0] > core(previous)[0]
+}
+
+// stable reports whether v is at 1.0 or later, where a breaking change
+// needs a major bump (SDD-009 section 4, ADR-0025 item 1).
+func stable(v string) bool { return core(v)[0] >= 1 }
 
 // validVersion reports whether v is a SemVer tag with a leading "v".
 func validVersion(v string) bool { return versionRe.MatchString(v) }
