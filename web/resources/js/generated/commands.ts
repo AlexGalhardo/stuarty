@@ -409,6 +409,81 @@ export interface SettingsSetFpsArgs {
   };
 }
 
+export interface ShapeAddArgs {
+  /**
+   * A length of at least 1 frame.
+   */
+  duration: string;
+  /**
+   * A colour; default #FFFFFF.
+   */
+  fill?: string;
+  /**
+   * Pixels before scale, above 0.
+   */
+  height: number;
+  id?: string;
+  /**
+   * Pixels, 0 or more; rounded_rect only.
+   */
+  radius?: number;
+  shape: "rect" | "rounded_rect" | "ellipse";
+  /**
+   * a time with a unit: "12.5s", "375f" or "00:00:12.500"
+   */
+  start: string;
+  /**
+   * A colour; default #000000.
+   */
+  stroke_color?: string;
+  /**
+   * Pixels, 0 or more.
+   */
+  stroke_width?: number;
+  /**
+   * A visual track.
+   */
+  track_id: string;
+  /**
+   * Pixels before scale, above 0.
+   */
+  width: number;
+  x?: number;
+  y?: number;
+}
+
+export interface ShapeSetArgs {
+  /**
+   * A colour.
+   */
+  fill?: string;
+  /**
+   * Pixels before scale, above 0.
+   */
+  height?: number;
+  /**
+   * A shape item.
+   */
+  item_id: string;
+  /**
+   * Pixels, 0 or more; rounded_rect only.
+   */
+  radius?: number;
+  shape?: "rect" | "rounded_rect" | "ellipse";
+  /**
+   * A colour.
+   */
+  stroke_color?: string;
+  /**
+   * Pixels, 0 or more.
+   */
+  stroke_width?: number;
+  /**
+   * Pixels before scale, above 0.
+   */
+  width?: number;
+}
+
 export interface TextAddArgs {
   /**
    * A length of at least 1 frame.
@@ -435,6 +510,25 @@ export interface TextAddArgs {
   track_id: string;
   x?: number;
   y?: number;
+}
+
+export interface TextApplyPresetArgs {
+  /**
+   * A length, at most the item's duration. Default "0.4s".
+   */
+  duration?: string;
+  /**
+   * in or out.
+   */
+  edge: "in" | "out";
+  /**
+   * A clip, text, caption or shape item.
+   */
+  item_id: string;
+  /**
+   * The animation.
+   */
+  preset: "fade_up" | "fade_down" | "pop" | "zoom_in" | "slide_left" | "slide_right";
 }
 
 export interface TextSetArgs {
@@ -530,7 +624,7 @@ export interface TrackUpdateArgs {
   track_id: string;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "caption.add" | "clip.add" | "clip.remove_silences" | "clip.set_color" | "clip.set_framing" | "clip.set_speed" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "project.rename" | "settings.set" | "settings.set_fps" | "text.add" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "caption.add" | "clip.add" | "clip.remove_silences" | "clip.set_color" | "clip.set_framing" | "clip.set_speed" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -555,7 +649,10 @@ export interface CommandArgsMap {
 	"project.rename": ProjectRenameArgs;
 	"settings.set": SettingsSetArgs;
 	"settings.set_fps": SettingsSetFpsArgs;
+	"shape.add": ShapeAddArgs;
+	"shape.set": ShapeSetArgs;
 	"text.add": TextAddArgs;
+	"text.apply_preset": TextApplyPresetArgs;
 	"text.set": TextSetArgs;
 	"timeline.close_gap": TimelineCloseGapArgs;
 	"track.add": TrackAddArgs;
@@ -590,7 +687,10 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"project.rename": { summary: "Sets the project name.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION"] },
 	"settings.set": { summary: "Sets the frame size, the background colour or the loudness target.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION"] },
 	"settings.set_fps": { summary: "Changes the project frame rate and rescales every time quantity.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME"] },
+	"shape.add": { summary: "Adds a rectangle, rounded rectangle or ellipse to a visual track.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
+	"shape.set": { summary: "Changes the shape, size, colours, stroke or radius of a shape item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"text.add": { summary: "Adds a text item to a visual track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_FONT_UNKNOWN","E_OVERLAP"] },
+	"text.apply_preset": { summary: "Animates one edge of a visual item with a named preset.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
 	"text.set": { summary: "Changes the content or the style of a text item.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_FONT_UNKNOWN"] },
 	"timeline.close_gap": { summary: "Closes the empty range that contains a given frame on a track.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_OVERLAP"] },
 	"track.add": { summary: "Adds an empty track at a place in the track order.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_ID_EXISTS","E_LIMIT"] },

@@ -1,0 +1,8 @@
+{
+  "op": "text.apply_preset",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "preset": "pop",
+    "edge": "in"
+  }
+}

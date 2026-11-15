@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "fill": {
+      "description": "A colour.",
+      "type": "string"
+    },
+    "height": {
+      "description": "Pixels before scale, above 0.",
+      "type": "number"
+    },
+    "item_id": {
+      "description": "A shape item.",
+      "type": "string"
+    },
+    "radius": {
+      "description": "Pixels, 0 or more; rounded_rect only.",
+      "type": "number"
+    },
+    "shape": {
+      "enum": [
+        "rect",
+        "rounded_rect",
+        "ellipse"
+      ],
+      "type": "string"
+    },
+    "stroke_color": {
+      "description": "A colour.",
+      "type": "string"
+    },
+    "stroke_width": {
+      "description": "Pixels, 0 or more.",
+      "type": "number"
+    },
+    "width": {
+      "description": "Pixels before scale, above 0.",
+      "type": "number"
+    }
+  },
+  "required": [
+    "item_id"
+  ],
+  "type": "object"
+}

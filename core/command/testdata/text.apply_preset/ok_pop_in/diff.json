@@ -1,0 +1,40 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_s6t7v8w9x0",
+    "changes": {
+      "keyframes": [
+        null,
+        {
+          "opacity": [
+            {
+              "easing": "ease_out",
+              "t": 0,
+              "value": 0
+            },
+            {
+              "t": 12,
+              "value": 1
+            }
+          ],
+          "scale": [
+            {
+              "easing": "ease_out",
+              "t": 0,
+              "value": 0.6
+            },
+            {
+              "easing": "ease_in_out",
+              "t": 8,
+              "value": 1.1
+            },
+            {
+              "t": 12,
+              "value": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

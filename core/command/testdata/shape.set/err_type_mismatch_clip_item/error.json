@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_m1n2p3q4r5 is a clip; shape.set changes shapes.",
+  "hint": "Use the command for that item type.",
+  "retryable": false,
+  "path": "args.item_id"
+}

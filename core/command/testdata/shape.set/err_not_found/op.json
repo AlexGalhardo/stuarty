@@ -1,0 +1,7 @@
+{
+  "op": "shape.set",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "width": 10
+  }
+}

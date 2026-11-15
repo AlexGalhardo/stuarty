@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give at least one of shape, width, height, fill, stroke_color, stroke_width, radius.",
+  "hint": "Send for example {\"shape\": ...}.",
+  "retryable": false,
+  "path": "args"
+}

@@ -1,0 +1,17 @@
+{
+  "base": {
+    "opacity": 1,
+    "scale": 1
+  },
+  "duration": {
+    "frame": 1,
+    "requested": "1f",
+    "seconds": 0.033
+  },
+  "edge": "in",
+  "preset": "pop",
+  "written": [
+    "opacity",
+    "scale"
+  ]
+}

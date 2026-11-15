@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.radius is only valid for shape \"rounded_rect\", got \"ellipse\".",
+  "hint": "Remove radius, or use shape \"rounded_rect\".",
+  "retryable": false,
+  "path": "args.radius"
+}

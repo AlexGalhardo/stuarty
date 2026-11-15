@@ -1,0 +1,17 @@
+{
+  "base": {
+    "opacity": 1,
+    "y": 960
+  },
+  "duration": {
+    "frame": 90,
+    "requested": "90f",
+    "seconds": 3
+  },
+  "edge": "in",
+  "preset": "fade_up",
+  "written": [
+    "opacity",
+    "y"
+  ]
+}

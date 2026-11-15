@@ -1,0 +1,17 @@
+{
+  "base": {
+    "opacity": 1,
+    "scale": 1
+  },
+  "duration": {
+    "frame": 12,
+    "requested": null,
+    "seconds": 0.4
+  },
+  "edge": "out",
+  "preset": "zoom_in",
+  "written": [
+    "opacity",
+    "scale"
+  ]
+}

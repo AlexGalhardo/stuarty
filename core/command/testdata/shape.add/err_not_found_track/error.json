@@ -1,0 +1,11 @@
+{
+  "code": "E_NOT_FOUND",
+  "message": "Track trk_zzzzzzzzzz does not exist.",
+  "hint": "Use the id of a track listed by project_get.",
+  "retryable": false,
+  "path": "args.track_id",
+  "details": {
+    "id": "trk_zzzzzzzzzz",
+    "kind": "track"
+  }
+}
