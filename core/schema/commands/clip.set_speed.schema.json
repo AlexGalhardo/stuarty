@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "item_id": {
+      "description": "A clip of a video asset, or an audio item.",
+      "type": "string"
+    },
+    "ripple": {
+      "description": "none (default) or track: shift the later items of the track.",
+      "enum": [
+        "none",
+        "track"
+      ],
+      "type": "string"
+    },
+    "speed": {
+      "description": "\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4."
+    }
+  },
+  "required": [
+    "item_id",
+    "speed"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,7 @@
+{
+  "op": "clip.set_speed",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "speed": "2x"
+  }
+}

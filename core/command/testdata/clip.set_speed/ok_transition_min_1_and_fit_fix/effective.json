@@ -1,0 +1,29 @@
+{
+  "adjusted": [
+    {
+      "id": "itm_m1n2p3q4r5",
+      "field": "fade_out",
+      "reason": "fit",
+      "rescaled": 1,
+      "final": 0
+    },
+    {
+      "id": "itm_m1n2p3q4r5",
+      "field": "transition_out.duration",
+      "reason": "fit",
+      "rescaled": 1,
+      "final": 0
+    }
+  ],
+  "clamped": null,
+  "duration": {
+    "after": 1,
+    "before": 4
+  },
+  "linked_captions": [],
+  "shift": 0,
+  "speed": {
+    "den": 1,
+    "num": 4
+  }
+}

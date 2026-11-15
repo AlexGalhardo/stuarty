@@ -1,0 +1,57 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        90,
+        23
+      ],
+      "keyframes": [
+        {
+          "scale": [
+            {
+              "t": 0,
+              "value": 1
+            },
+            {
+              "t": 4,
+              "value": 1.5
+            },
+            {
+              "t": 5,
+              "value": 2
+            },
+            {
+              "t": 90,
+              "value": 1
+            }
+          ]
+        },
+        {
+          "scale": [
+            {
+              "t": 0,
+              "value": 1
+            },
+            {
+              "t": 1,
+              "value": 2
+            },
+            {
+              "t": 23,
+              "value": 1
+            }
+          ]
+        }
+      ],
+      "speed": [
+        null,
+        {
+          "den": 1,
+          "num": 4
+        }
+      ]
+    }
+  }
+]

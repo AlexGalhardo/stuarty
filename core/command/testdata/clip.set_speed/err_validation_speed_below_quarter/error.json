@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.speed 0.249x is below the minimum 0.25x.",
+  "hint": "Use a speed from \"0.25x\" to \"4x\".",
+  "retryable": false,
+  "path": "args.speed"
+}

@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_TIME",
+  "message": "Item itm_s6t7v8w9x0 would end at frame 108100; the limit is 108000.",
+  "hint": "Use a higher speed, or shorten the clip first.",
+  "retryable": false,
+  "path": "args.speed"
+}
