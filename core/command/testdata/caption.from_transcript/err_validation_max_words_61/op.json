@@ -1,0 +1,52 @@
+{
+  "op": "caption.from_transcript",
+  "args": {
+    "clip_item_id": "itm_m1n2p3q4r5",
+    "track_id": "trk_a1b2c3d4e5",
+    "max_words": 61,
+    "resolved": {
+      "words": [
+        {
+          "text": "Intro",
+          "start": 20,
+          "end": 30
+        },
+        {
+          "text": "Hello",
+          "start": 62,
+          "end": 70
+        },
+        {
+          "text": "everyone,",
+          "start": 72,
+          "end": 86
+        },
+        {
+          "text": "welcome",
+          "start": 90,
+          "end": 100
+        },
+        {
+          "text": "to",
+          "start": 100,
+          "end": 104
+        },
+        {
+          "text": "the",
+          "start": 104,
+          "end": 108
+        },
+        {
+          "text": "channel",
+          "start": 110,
+          "end": 128
+        },
+        {
+          "text": "today",
+          "start": 170,
+          "end": 182
+        }
+      ]
+    }
+  }
+}

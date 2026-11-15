@@ -1,0 +1,57 @@
+[
+  {
+    "kind": "item.removed",
+    "id": "itm_h2j3k4m5n6",
+    "object": {
+      "duration": 10,
+      "id": "itm_h2j3k4m5n6",
+      "linked_item": "itm_m1n2p3q4r5",
+      "start": 200,
+      "track": "trk_a1b2c3d4e5",
+      "type": "caption",
+      "words": [
+        {
+          "duration": 10,
+          "start": 0,
+          "text": "today"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_s6t7v8w9x0",
+    "changes": {
+      "duration": [
+        24,
+        16
+      ],
+      "words": [
+        [
+          {
+            "duration": 4,
+            "start": 0,
+            "text": "the"
+          },
+          {
+            "duration": 18,
+            "start": 6,
+            "text": "channel"
+          }
+        ],
+        [
+          {
+            "duration": 4,
+            "start": 0,
+            "text": "the"
+          },
+          {
+            "duration": 10,
+            "start": 6,
+            "text": "channel"
+          }
+        ]
+      ]
+    }
+  }
+]

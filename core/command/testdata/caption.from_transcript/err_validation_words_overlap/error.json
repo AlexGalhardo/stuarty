@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.resolved.words[1] starts at 70 before the previous word ends at 80.",
+  "hint": "Send words in order without overlap.",
+  "retryable": false,
+  "path": "args.resolved.words[1]"
+}

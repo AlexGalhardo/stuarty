@@ -1,0 +1,23 @@
+{
+  "created": [
+    "itm_p7q8r9s0t1",
+    "itm_s6t7v8w9x0",
+    "itm_h2j3k4m5n6"
+  ],
+  "max_gap": {
+    "frame": 18,
+    "requested": null,
+    "seconds": 0.6
+  },
+  "new_ids": [
+    "itm_p7q8r9s0t1",
+    "itm_s6t7v8w9x0",
+    "itm_h2j3k4m5n6"
+  ],
+  "removed": [
+    "itm_p7q8r9s0t1"
+  ],
+  "unused_ids": [],
+  "words_skipped": 1,
+  "words_used": 7
+}

@@ -1,0 +1,27 @@
+[
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_h2j3k4m5n6"
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_p7q8r9s0t1",
+    "set": {
+      "duration": 30,
+      "words": [
+        {
+          "duration": 30,
+          "start": 0,
+          "text": "Old"
+        }
+      ]
+    }
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_s6t7v8w9x0"
+  }
+]

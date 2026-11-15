@@ -1,0 +1,21 @@
+{
+  "op": "caption.from_transcript",
+  "args": {
+    "clip_item_id": "itm_m1n2p3q4r5",
+    "track_id": "trk_a1b2c3d4e5",
+    "resolved": {
+      "words": [
+        {
+          "text": "Early",
+          "start": 10,
+          "end": 20
+        },
+        {
+          "text": "Late",
+          "start": 190,
+          "end": 200
+        }
+      ]
+    }
+  }
+}
