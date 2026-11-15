@@ -196,6 +196,46 @@ func splitList(s string) []string {
 	return out
 }
 
+func mediaStateCommand(
+	name, summary string,
+	fn func(service.Service, context.Context, service.MediaTrashRequest) (*service.MediaStateResult, error),
+) *spec {
+	return &spec{
+		name:       name,
+		summary:    summary,
+		usage:      []string{"vukem-video " + name + " <asset id> --project <id>"},
+		example:    "vukem-video " + name + " ast_3c5v8n2w6d --project prj_7k2m9x4q1b",
+		project:    true,
+		positional: true,
+		globals:    []string{"dry-run"},
+		write:      true,
+		run: func(ctx context.Context, c *call) (*output, error) {
+			if len(c.args.Positional) != 1 {
+				return nil, validation("", "%s takes one asset id, got %d.", name, len(c.args.Positional))
+			}
+
+			res, err := fn(c.svc, ctx, service.MediaTrashRequest{
+				ProjectID: c.projectID, AssetID: c.args.Positional[0], DryRun: c.args.boolean("dry-run"),
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			return &output{value: res, text: res.Text}, nil
+		},
+	}
+}
+
+var mediaTrash = mediaStateCommand("media:trash", "move an asset to the trash",
+	func(s service.Service, ctx context.Context, r service.MediaTrashRequest) (*service.MediaStateResult, error) {
+		return s.MediaTrash(ctx, r)
+	})
+
+var mediaRestore = mediaStateCommand("media:restore", "restore a trashed asset",
+	func(s service.Service, ctx context.Context, r service.MediaTrashRequest) (*service.MediaStateResult, error) {
+		return s.MediaRestore(ctx, r)
+	})
+
 var mediaList = &spec{
 	name:    "media:list",
 	summary: "list the assets of a project",
