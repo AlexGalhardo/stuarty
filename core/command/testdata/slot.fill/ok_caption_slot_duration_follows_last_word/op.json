@@ -1,0 +1,18 @@
+{
+  "op": "slot.fill",
+  "args": {
+    "name": "subs",
+    "words": [
+      {
+        "text": "w1",
+        "start": "0f",
+        "duration": "12f"
+      },
+      {
+        "text": "w2",
+        "start": "12f",
+        "duration": "12f"
+      }
+    ]
+  }
+}

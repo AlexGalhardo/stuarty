@@ -109,9 +109,12 @@ func (b *B) shape(id, track string, start, dur int) *B {
 	return b
 }
 
-func (b *B) audio(id string, start, dur, srcIn int) *B {
+func (b *B) audio(id string, start, dur, srcIn int, mods ...func(*timeline.Item)) *B {
 	it := timeline.NewItem(id, timeline.ItemAudio, audTr, start, dur)
 	it.Asset, it.SourceIn = audAsset, srcIn
+	for _, m := range mods {
+		m(&it)
+	}
 	b.d.Items[id] = it
 	return b
 }

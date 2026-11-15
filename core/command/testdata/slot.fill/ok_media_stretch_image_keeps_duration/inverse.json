@@ -1,0 +1,16 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "asset": "ast_placeholder",
+      "slot": {
+        "description": "Main footage",
+        "duration_policy": "stretch_timeline",
+        "kind": "media",
+        "name": "hero"
+      }
+    }
+  }
+]

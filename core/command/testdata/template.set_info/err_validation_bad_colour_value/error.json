@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.colors.brand must be #RRGGBB or #RRGGBBAA, got \"red\".",
+  "hint": "Send \"#RRGGBB\" or \"#RRGGBBAA\".",
+  "retryable": false,
+  "path": "args.colors.brand"
+}

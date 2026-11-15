@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give at least one of description, colors.",
+  "hint": "Send for example {\"description\": ...}.",
+  "retryable": false,
+  "path": "args"
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "kind": "project.updated",
+    "id": "prj_7k2m9x4q1b",
+    "changes": {
+      "template": [
+        {
+          "colors": {
+            "old": "#112233"
+          },
+          "description": ""
+        },
+        {
+          "colors": {
+            "old": "#445566"
+          },
+          "description": ""
+        }
+      ]
+    }
+  }
+]

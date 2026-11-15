@@ -1,0 +1,6 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Slot \"hero\" on itm_s6t7v8w9x0 is unfilled and still uses ast_placeholder.",
+  "hint": "Fill it with slot.fill, or delete the item.",
+  "retryable": false
+}

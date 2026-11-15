@@ -1,0 +1,7 @@
+{
+  "code": "E_SLOT",
+  "message": "Slot \"hero\" is already filled.",
+  "hint": "Delete the item and add a new one, or unmark and mark the slot again.",
+  "retryable": false,
+  "path": "args.name"
+}

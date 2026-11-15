@@ -1,0 +1,7 @@
+{
+  "code": "E_SLOT",
+  "message": "Slot \"title\" is a text slot; it needs text, not asset_id.",
+  "hint": "Send text for slot \"title\".",
+  "retryable": false,
+  "path": "args.asset_id"
+}

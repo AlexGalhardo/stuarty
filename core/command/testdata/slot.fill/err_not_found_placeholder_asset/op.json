@@ -1,0 +1,7 @@
+{
+  "op": "slot.fill",
+  "args": {
+    "name": "hero",
+    "asset_id": "ast_placeholder"
+  }
+}

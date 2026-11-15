@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.colors \"Brand\" is not a valid name; it must match [a-z][a-z0-9_]{0,39}.",
+  "hint": "Use lower case letters, digits and underscores, for example \"brand\".",
+  "retryable": false,
+  "path": "args.colors"
+}

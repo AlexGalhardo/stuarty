@@ -1,0 +1,12 @@
+{
+  "code": "E_IN_USE",
+  "message": "Colour \"brand\" is used by itm_s6t7v8w9x0 (style.color).",
+  "hint": "Change those fields to a fixed colour with text.set and track.set_caption_style, then remove \"brand\".",
+  "retryable": false,
+  "path": "args.colors.brand",
+  "details": {
+    "used_by": [
+      "itm_s6t7v8w9x0"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "code": "E_SLOT",
+  "message": "Item itm_s6t7v8w9x0 is not a slot.",
+  "hint": "Mark it with slot.mark, or pick an item that is a slot.",
+  "retryable": false,
+  "path": "args.item_id",
+  "details": {
+    "item": "itm_s6t7v8w9x0"
+  }
+}

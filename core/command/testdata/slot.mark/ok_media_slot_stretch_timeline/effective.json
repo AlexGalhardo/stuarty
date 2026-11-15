@@ -1,0 +1,7 @@
+{
+  "slot": {
+    "duration_policy": "stretch_timeline",
+    "kind": "media",
+    "name": "hero"
+  }
+}

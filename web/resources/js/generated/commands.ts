@@ -668,6 +668,79 @@ export interface ShapeSetArgs {
   width?: number;
 }
 
+export interface SlotFillArgs {
+  /**
+   * For a media slot.
+   */
+  asset_id?: string;
+  /**
+   * The slot name.
+   */
+  name: string;
+  /**
+   * With asset_id only. Default "0s".
+   */
+  source_in?: string;
+  /**
+   * For a text slot.
+   */
+  text?: string;
+  /**
+   * For a caption slot: words with times relative to the caption, as lengths.
+   */
+  words?: {
+    /**
+     * a time with a unit: "12.5s", "375f" or "00:00:12.500"
+     */
+    duration: string;
+    /**
+     * a time with a unit: "12.5s", "375f" or "00:00:12.500"
+     */
+    start: string;
+    text: string;
+  }[];
+}
+
+export interface SlotMarkArgs {
+  /**
+   * Up to 200 characters.
+   */
+  description?: string;
+  /**
+   * Media slots only. Default fit.
+   */
+  duration_policy?: "fit" | "stretch_timeline";
+  /**
+   * A clip, audio, text or caption item.
+   */
+  item_id: string;
+  /**
+   * Matches [a-z][a-z0-9_]{0,39}; unique among the slots.
+   */
+  name: string;
+  /**
+   * Default true.
+   */
+  required?: boolean;
+}
+
+export interface SlotUnmarkArgs {
+  item_id: string;
+}
+
+export interface TemplateSetInfoArgs {
+  /**
+   * Name to #RRGGBB or #RRGGBBAA; null removes the name.
+   */
+  colors?: {
+    [k: string]: unknown;
+  };
+  /**
+   * 0 to 500 characters.
+   */
+  description?: string;
+}
+
 export interface TextAddArgs {
   /**
    * A length of at least 1 frame.
@@ -808,7 +881,7 @@ export interface TrackUpdateArgs {
   track_id: string;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_color" | "clip.set_framing" | "clip.set_speed" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_color" | "clip.set_framing" | "clip.set_speed" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -846,6 +919,10 @@ export interface CommandArgsMap {
 	"settings.set_fps": SettingsSetFpsArgs;
 	"shape.add": ShapeAddArgs;
 	"shape.set": ShapeSetArgs;
+	"slot.fill": SlotFillArgs;
+	"slot.mark": SlotMarkArgs;
+	"slot.unmark": SlotUnmarkArgs;
+	"template.set_info": TemplateSetInfoArgs;
 	"text.add": TextAddArgs;
 	"text.apply_preset": TextApplyPresetArgs;
 	"text.set": TextSetArgs;
@@ -895,6 +972,10 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"settings.set_fps": { summary: "Changes the project frame rate and rescales every time quantity.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME"] },
 	"shape.add": { summary: "Adds a rectangle, rounded rectangle or ellipse to a visual track.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
 	"shape.set": { summary: "Changes the shape, size, colours, stroke or radius of a shape item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"slot.fill": { summary: "Fills a template slot with media, text or caption words.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_SLOT","E_OUT_OF_SOURCE","E_LIMIT","E_OVERLAP","E_INVALID_STATE"] },
+	"slot.mark": { summary: "Marks an item as a template slot.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_SLOT","E_INVALID_STATE"] },
+	"slot.unmark": { summary: "Removes the slot marking of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_NOT_FOUND","E_SLOT","E_INVALID_STATE"] },
+	"template.set_info": { summary: "Sets the description and the named colours of the template.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_IN_USE"] },
 	"text.add": { summary: "Adds a text item to a visual track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_FONT_UNKNOWN","E_OVERLAP"] },
 	"text.apply_preset": { summary: "Animates one edge of a visual item with a named preset.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
 	"text.set": { summary: "Changes the content or the style of a text item.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_FONT_UNKNOWN"] },

@@ -1,0 +1,11 @@
+{
+  "code": "E_NOT_FOUND",
+  "message": "Asset ast_placeholder does not exist.",
+  "hint": "Import the media first, then use its asset id.",
+  "retryable": false,
+  "path": "args.asset_id",
+  "details": {
+    "id": "ast_placeholder",
+    "kind": "asset"
+  }
+}

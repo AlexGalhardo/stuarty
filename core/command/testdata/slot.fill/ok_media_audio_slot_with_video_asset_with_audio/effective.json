@@ -1,0 +1,14 @@
+{
+  "duration": {
+    "after": 60,
+    "before": 60
+  },
+  "kind": "media",
+  "shifted": [],
+  "slot": "voice",
+  "source_in": {
+    "frame": 0,
+    "requested": null,
+    "seconds": 0
+  }
+}

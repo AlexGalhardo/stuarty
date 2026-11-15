@@ -1,0 +1,8 @@
+{
+  "op": "slot.fill",
+  "args": {
+    "name": "hero",
+    "asset_id": "ast_3c5v8n2w6d",
+    "source_in": "900f"
+  }
+}

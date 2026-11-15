@@ -1,0 +1,8 @@
+{
+  "slot": {
+    "description": "New",
+    "filled": true,
+    "kind": "text",
+    "name": "title"
+  }
+}

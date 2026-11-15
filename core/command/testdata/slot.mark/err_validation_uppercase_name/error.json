@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.name \"Title\" does not match [a-z][a-z0-9_]{0,39}.",
+  "hint": "Use lower case letters, digits and underscores, for example \"title\".",
+  "retryable": false,
+  "path": "args.name"
+}

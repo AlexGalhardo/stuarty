@@ -1,0 +1,25 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "asset": [
+        "ast_placeholder",
+        "ast_9m8n7p6q5r"
+      ],
+      "slot": [
+        {
+          "description": "Main footage",
+          "kind": "media",
+          "name": "hero"
+        },
+        {
+          "description": "Main footage",
+          "filled": true,
+          "kind": "media",
+          "name": "hero"
+        }
+      ]
+    }
+  }
+]

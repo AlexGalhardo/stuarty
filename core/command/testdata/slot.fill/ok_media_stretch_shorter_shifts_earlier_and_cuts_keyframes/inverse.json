@@ -1,0 +1,40 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "asset": "ast_placeholder",
+      "duration": 90,
+      "keyframes": {
+        "opacity": [
+          {
+            "t": 0,
+            "value": 1
+          },
+          {
+            "t": 80,
+            "value": 0.5
+          }
+        ]
+      },
+      "slot": {
+        "description": "Main footage",
+        "duration_policy": "stretch_timeline",
+        "kind": "media",
+        "name": "hero"
+      }
+    },
+    "unset": [
+      "source_in"
+    ]
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_s6t7v8w9x0",
+    "set": {
+      "start": 90
+    }
+  }
+]

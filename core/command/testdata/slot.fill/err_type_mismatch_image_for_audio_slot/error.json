@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Asset ast_9m8n7p6q5r is an image; slot \"voice\" holds an audio item.",
+  "hint": "Use an audio asset, or a video with audio.",
+  "retryable": false,
+  "path": "args.asset_id"
+}

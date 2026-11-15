@@ -1,0 +1,7 @@
+{
+  "slot": {
+    "kind": "text",
+    "name": "title",
+    "required": false
+  }
+}

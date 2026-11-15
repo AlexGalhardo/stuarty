@@ -1,0 +1,6 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Filling slot \"hero\" leaves fade_in 40 and fade_out 40 longer than the duration 50 by 30 frames.",
+  "hint": "Shorten the fades by 30 frames with item.set_audio first.",
+  "retryable": false
+}
