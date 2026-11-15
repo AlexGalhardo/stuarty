@@ -17,7 +17,9 @@ import (
 const (
 	defaultTemplateLimit = 20
 	maxTemplateLimit     = 100
-	maxTemplateText      = 500
+	// maxTemplateText is the 500 characters that template.set_info allows in the
+	// description of a template (core/command/template.go).
+	maxTemplateText = 500
 )
 
 // templateRefused is the refusal of a key limited to one project: a template
@@ -88,6 +90,11 @@ func (s *svc) TemplateSave(ctx context.Context, req TemplateSaveRequest) (*Templ
 		ID: s.newIDs("tpl"), Name: req.Name, Description: req.Description, SchemaVersion: tdoc.SchemaVersion,
 		Document: canon, DocSHA256: sha256Hex(canon), Slots: slotsJSON, Summary: summarize(tdoc),
 		SourceProjectID: &source, CreatedMs: now, CreatedBy: c.Actor,
+	}
+
+	if c.OwnerUserID != "" {
+		owner := c.OwnerUserID
+		row.OwnerUserID = &owner
 	}
 
 	res := &TemplateResult{Template: templateSummary(&row, tdoc)}
@@ -247,7 +254,7 @@ func (s *svc) TemplateList(ctx context.Context, req TemplateListRequest) (*Templ
 	}
 
 	rows, next, lerr := s.store.Templates().
-		List(ctx, clampLimit(req.Limit, defaultTemplateLimit, maxTemplateLimit), req.Cursor)
+		List(ctx, clampLimit(req.Limit, defaultTemplateLimit, maxTemplateLimit), req.Cursor, c.OwnerUserID)
 	if lerr != nil {
 		return nil, listError(lerr)
 	}
@@ -276,6 +283,22 @@ func (s *svc) TemplateList(ctx context.Context, req TemplateListRequest) (*Templ
 	res.Text = fmt.Sprintf("templates (%d)\n%s", len(res.Templates), text.String())
 
 	return res, nil
+}
+
+// visibleTemplate reads a template the caller may see. A template of another
+// owner answers exactly like one that does not exist.
+func (s *svc) visibleTemplate(ctx context.Context, c Caller, id string) (TemplateRow, error) {
+	row, err := s.store.Templates().Get(ctx, id)
+	if err != nil && !errors.Is(err, ErrNotFound) {
+		return TemplateRow{}, asError(err)
+	}
+
+	if err != nil || !visible(c, row.OwnerUserID) {
+		return TemplateRow{}, newError(command.CodeNotFound, "there is no template %s.", id).
+			withHint("list the templates with template_list")
+	}
+
+	return row, nil
 }
 
 // fillOps turns the fill of a request into one batch: the asset.add of every
@@ -419,10 +442,9 @@ func (s *svc) TemplateInstantiate(
 			withPath("name")
 	}
 
-	tpl, gerr := s.store.Templates().Get(ctx, req.TemplateID)
+	tpl, gerr := s.visibleTemplate(ctx, c, req.TemplateID)
 	if gerr != nil {
-		return nil, newError(command.CodeNotFound, "there is no template %s.", req.TemplateID).
-			withHint("list the templates with template_list")
+		return nil, gerr
 	}
 
 	doc, derr := timeline.Decode(tpl.Document)

@@ -869,8 +869,8 @@ func TestTemplatesBackupsAudit(t *testing.T) {
 	) {
 		t.Errorf("duplicate template = %v", err)
 	}
-	page, next, _ := s.Templates().List(ctx, 2, "")
-	rest, next2, _ := s.Templates().List(ctx, 2, next)
+	page, next, _ := s.Templates().List(ctx, 2, "", "")
+	rest, next2, _ := s.Templates().List(ctx, 2, next, "")
 	if len(page) != 2 || page[0].ID != "tpl_2" || len(page[0].Document) != 0 || len(rest) != 1 ||
 		rest[0].ID != "tpl_0" ||
 		next2 != "" {
