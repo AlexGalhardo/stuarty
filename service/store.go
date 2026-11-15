@@ -16,8 +16,14 @@ var (
 	ErrBadCursor = errors.New("service: invalid cursor")
 )
 
-// QueueFullError is returned by JobRepo.CreateLimited.
-type QueueFullError struct{ Running []string } // job ids
+// QueueFullError is returned by JobRepo.CreateLimited: the jobs that hold the slots (their ids), the
+// kind that is full, the ceiling that was reached and whether it is the one of a single actor.
+type QueueFullError struct {
+	Running  []string
+	Kind     string
+	Ceiling  int
+	PerActor bool
+}
 
 func (e *QueueFullError) Error() string { return "service: job limit reached" }
 

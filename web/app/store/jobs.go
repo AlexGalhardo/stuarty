@@ -51,7 +51,7 @@ func (r jobRepo) CreateLimited(ctx context.Context, j service.JobRow, lim *servi
 				return err
 			}
 			if len(ids) >= lim.Max {
-				return &service.QueueFullError{Running: ids}
+				return &service.QueueFullError{Running: ids, Kind: lim.Kind, Ceiling: lim.Max}
 			}
 		}
 		if lim.Actor != "" && lim.MaxPerActor > 0 {
@@ -65,7 +65,7 @@ func (r jobRepo) CreateLimited(ctx context.Context, j service.JobRow, lim *servi
 				return err
 			}
 			if len(ids) >= lim.MaxPerActor {
-				return &service.QueueFullError{Running: ids}
+				return &service.QueueFullError{Running: ids, Kind: lim.Kind, Ceiling: lim.MaxPerActor, PerActor: true}
 			}
 		}
 	}

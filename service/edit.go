@@ -205,7 +205,8 @@ func (s *svc) checkBatch(c Caller, req *EditRequest, allowInternal bool) (string
 			n,
 			maxOperationsPerBatch,
 		).
-			withHint("split it into batches of at most %d operations", maxOperationsPerBatch)
+			withHint("split it into batches of at most %d operations", maxOperationsPerBatch).
+			withLimit("batch_operations", n, maxOperationsPerBatch)
 	}
 
 	size := 0
@@ -215,7 +216,7 @@ func (s *svc) checkBatch(c Caller, req *EditRequest, allowInternal bool) (string
 
 	if size > maxBatchBytes {
 		return "", newError(CodePayloadTooLarge, "the batch is %d bytes; the limit is %d.", size, maxBatchBytes).
-			withHint("split it into smaller batches")
+			withHint("split it into smaller batches").withLimit("batch_bytes", size, maxBatchBytes)
 	}
 
 	if req.BaseRevision < 0 {

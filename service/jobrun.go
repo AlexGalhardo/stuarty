@@ -481,7 +481,7 @@ func (s *svc) checkDisk() *Error {
 		return newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space.").
 			withHint("free space on the disk of the workspace; the person running the server can lower "+
 				"VUKEM_VIDEO_MIN_FREE_BYTES").
-			withDetail("limit", "free_bytes").withDetail("reason", "disk_low").
+			withLimit("free_bytes", free, s.limits.MinFreeBytes).withDetail("reason", "disk_low").
 			withDetail("variable", "VUKEM_VIDEO_MIN_FREE_BYTES")
 	}
 

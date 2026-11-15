@@ -184,7 +184,8 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 
 	if len(ops) > maxOperationsPerBatch {
 		return nil, newError(CodePayloadTooLarge, "the file needs %d operations; a batch has at most %d.",
-			len(ops), maxOperationsPerBatch).withPath("path").withHint("split the timeline into smaller files")
+			len(ops), maxOperationsPerBatch).withPath("path").withHint("split the timeline into smaller files").
+			withLimit("batch_operations", len(ops), maxOperationsPerBatch)
 	}
 
 	edit, eerr := s.edit(ctx, EditRequest{
@@ -220,7 +221,7 @@ func (s *svc) readOtio(path string) (*otio.Import, error) {
 
 	if len(data) > otioFileMax {
 		return nil, newError(CodePayloadTooLarge, "the OpenTimelineIO file is over %d bytes.", otioFileMax).
-			withPath("path").withHint("export a smaller timeline")
+			withPath("path").withHint("export a smaller timeline").withLimit("otio_bytes", len(data), otioFileMax)
 	}
 
 	im, perr := otio.Parse(data)

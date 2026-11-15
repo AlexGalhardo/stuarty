@@ -121,6 +121,44 @@ func (e *Error) withDetail(key string, value any) *Error {
 	return e
 }
 
+// withLimit adds the three details every limit error carries (SDD-007 section 9.1): the name of the
+// limit, what was seen and the ceiling.
+func (e *Error) withLimit(name string, value, ceiling any) *Error {
+	return e.withDetail("limit", name).withDetail("value", value).withDetail("ceiling", ceiling)
+}
+
+// queueVariables names the variable that sets the ceiling of a job kind, for the workspace and for
+// one actor.
+var queueVariables = map[string][2]string{
+	JobExport:     {"VUKEM_VIDEO_MAX_EXPORTS", "VUKEM_VIDEO_MAX_EXPORTS_PER_KEY"},
+	JobIngest:     {"VUKEM_VIDEO_MAX_INGESTS", "VUKEM_VIDEO_MAX_INGESTS"},
+	JobTranscribe: {"VUKEM_VIDEO_MAX_TRANSCRIBES", "VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY"},
+}
+
+// queueFullError is E_QUEUE_FULL with the jobs that hold the slots and the limit that was reached.
+func queueFullError(full *QueueFullError) *Error {
+	e := newError(CodeQueueFull, "a concurrency limit is reached.").
+		withHint("wait for a running job to finish with job_get, or stop one with job_cancel, then try again").
+		withDetail("running", full.Running)
+
+	if full.Kind == "" {
+		return e
+	}
+
+	name, index := full.Kind+"s", 0
+	if full.PerActor {
+		name, index = name+"_per_key", 1
+	}
+
+	e.withLimit(name, len(full.Running), full.Ceiling)
+
+	if v, ok := queueVariables[full.Kind]; ok {
+		e.withDetail("variable", v[index])
+	}
+
+	return e
+}
+
 func internalError() *Error {
 	return newError(command.CodeInternal, "%s", codeInternalMessage).withHint("%s", codeInternalHint)
 }
@@ -163,9 +201,7 @@ func asError(err error) error {
 	}
 
 	if full, ok := errors.AsType[*QueueFullError](err); ok {
-		return newError(CodeQueueFull, "a concurrency limit is reached.").
-			withHint("wait for a running job to finish with job_get, or stop one with job_cancel, then try again").
-			withDetail("running", full.Running)
+		return queueFullError(full)
 	}
 
 	return internalError()

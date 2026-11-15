@@ -77,6 +77,40 @@ func TestRateLimitCoversTheThreeHeavyOperations(t *testing.T) {
 	}
 }
 
+// P4-SRV-003: the operations of the BETA phase that read or write a file or a long job are heavy
+// too, and the refusal names the limit, what was counted and the ceiling.
+func TestRateLimitCoversTheBetaHeavyOperations(t *testing.T) {
+	s := &svc{heavy: &perMinute{}, heavyLimitN: 7}
+	ctx := callerCtx()
+
+	calls := map[string]func() error{
+		"ProjectBundleExport": func() error {
+			_, err := s.ProjectBundleExport(ctx, ProjectBundleExportRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ProjectBundleImport": func() error {
+			_, err := s.ProjectBundleImport(ctx, ProjectBundleImportRequest{Path: "/x.vvbundle"})
+			return err
+		},
+		"FontImport": func() error {
+			_, err := s.FontImport(ctx, FontImportRequest{Path: "/x.ttf"})
+			return err
+		},
+		"ProjectOtioImport": func() error {
+			_, err := s.ProjectOtioImport(ctx, ProjectOtioImportRequest{ProjectID: "prj_0000000001", Path: "/x.otio"})
+			return err
+		},
+	}
+
+	for name, call := range calls {
+		var e *Error
+		if err := call(); !errors.As(err, &e) || e.Code != CodeRateLimited ||
+			e.Details["limit"] != "heavy_per_minute" || e.Details["value"] != 7 || e.Details["ceiling"] != 7 {
+			t.Errorf("%s over the limit = %v, want E_RATE_LIMITED with the limit details", name, err)
+		}
+	}
+}
+
 // A limiter whose store fails denies the call.
 func TestLimiterFailsClosed(t *testing.T) {
 	s := &svc{heavy: brokenLimiter{}}
