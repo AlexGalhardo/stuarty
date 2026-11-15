@@ -2,9 +2,13 @@ import { type ReactNode, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import Library from "../library/Library";
 import Preview from "../preview/Preview";
 import { useDocumentState } from "../state/EditorContext";
+import EditToolbar from "../timeline/EditToolbar";
+import Notices from "../timeline/Notices";
 import Timeline from "../timeline/Timeline";
+import { useShortcuts } from "../timeline/useShortcuts";
 import TopBar from "./TopBar";
 
 // Panel sizes by viewport width (SDD-012 section 6.3); below 1280 the drawers
@@ -66,6 +70,8 @@ export default function EditorShell(): ReactNode {
 	const status = useDocumentState((s) => s.status);
 	const viewport = useViewportWidth();
 	const sizes = panelSizes(viewport);
+	const [captionOpen, setCaptionOpen] = useState(false);
+	useShortcuts(() => setCaptionOpen(true));
 
 	if (viewport < MIN_SUPPORTED_WIDTH) {
 		return (
@@ -88,6 +94,12 @@ export default function EditorShell(): ReactNode {
 		>
 			<div className="col-span-full">
 				<TopBar />
+				<div className="border-b border-ed-track-line bg-ed-panel px-3 py-1">
+					<EditToolbar
+						captionOpen={captionOpen}
+						onCaptionOpenChange={setCaptionOpen}
+					/>
+				</div>
 				{status === "failed" && (
 					<div
 						role="alert"
@@ -105,7 +117,7 @@ export default function EditorShell(): ReactNode {
 					</div>
 				)}
 			</div>
-			<Panel label={t("ui.editor.panels.library")} />
+			<Library />
 			<main
 				aria-label={t("ui.editor.panels.preview")}
 				className="flex min-h-0 min-w-0 flex-col bg-ed-preview-surround p-3"
@@ -122,6 +134,7 @@ export default function EditorShell(): ReactNode {
 			<div className="col-span-full min-h-0 border-t border-ed-track-line">
 				<Timeline />
 			</div>
+			<Notices />
 		</div>
 	);
 }

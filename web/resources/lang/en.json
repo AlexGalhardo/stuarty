@@ -122,6 +122,125 @@
         "step_forward": "Step forward one frame",
         "current": "Current time",
         "total": "Total duration"
+      },
+      "errors": {
+        "E_FONT_UNKNOWN": "Unknown font",
+        "E_IDEMPOTENCY_MISMATCH": "Request repeated with different content",
+        "E_ID_EXISTS": "That id already exists",
+        "E_INTERNAL": "Internal error",
+        "E_INVALID_STATE": "Not possible in the current state",
+        "E_INVALID_TIME": "Invalid time",
+        "E_IN_USE": "Still in use",
+        "E_LIMIT": "Limit reached",
+        "E_NOT_EMPTY": "Not empty",
+        "E_NOT_FOUND": "Not found",
+        "E_OUT_OF_SOURCE": "Outside the source media",
+        "E_OVERLAP": "Overlaps another item",
+        "E_REVISION_CONFLICT": "Someone else changed this",
+        "E_SLOT": "Template slot error",
+        "E_TYPE_MISMATCH": "Wrong kind of track",
+        "E_UNKNOWN_COMMAND": "Unknown command",
+        "E_VALIDATION": "Invalid values",
+        "E_NETWORK": "Network error",
+        "E_UNAUTHORIZED": "Session ended",
+        "E_FORBIDDEN": "Not allowed",
+        "E_ASSET_NOT_READY": "The media is still being prepared",
+        "E_NOTHING_TO_UNDO": "Nothing to undo",
+        "E_NOTHING_TO_REDO": "Nothing to redo",
+        "E_PATH_NOT_ALLOWED": "That path is not allowed",
+        "E_FILE_NOT_FOUND": "File not found",
+        "E_UNSUPPORTED_MEDIA": "Unsupported media",
+        "E_INGEST_FAILED": "Import failed",
+        "E_LIMIT_EXCEEDED": "Limit exceeded",
+        "E_FFMPEG_MISSING": "FFmpeg is missing",
+        "E_NO_ENCODER": "No encoder available",
+        "E_EXPORT_FAILED": "Export failed",
+        "E_VERIFY_FAILED": "Verification failed",
+        "E_LINT_BLOCKING": "The project has errors that block export",
+        "E_CANCELLED": "Cancelled",
+        "E_QUEUE_FULL": "Another export is running",
+        "E_WORKSPACE_LOCKED": "The workspace is locked",
+        "E_PAYLOAD_TOO_LARGE": "Request too large",
+        "E_TRANSCRIBE_UNAVAILABLE": "Transcription is not available",
+        "unknown": "Something went wrong"
+      },
+      "library": {
+        "path": "Path of a file to import",
+        "import": "Import",
+        "empty": "No media yet. Paste the path of a file above.",
+        "drop": "A browser page cannot see the path of a file. Paste the path into the field.",
+        "add": "Add to timeline",
+        "retry": "Try again",
+        "dismiss": "Dismiss",
+        "progress": "Import progress",
+        "state": {
+          "pending": "Waiting",
+          "ingesting": "Importing",
+          "ready": "Ready",
+          "failed": "Failed"
+        }
+      },
+      "edit": {
+        "label": "Editing",
+        "split": "Split",
+        "trim_start": "Trim start",
+        "trim_end": "Trim end",
+        "caption": "Add caption"
+      },
+      "caption": {
+        "title": "Add caption",
+        "text": "Text",
+        "duration": "Duration (for example 3s)",
+        "cancel": "Cancel",
+        "add": "Add caption"
+      },
+      "notice": {
+        "dismiss": "Dismiss",
+        "apply_again": "Apply again",
+        "next_free": "Move to next free position",
+        "undo_skipped": {
+          "one": "Undo applied, {count} change was left alone because another actor changed it",
+          "other": "Undo applied, {count} changes were left alone because another actor changed them"
+        },
+        "redo_skipped": {
+          "one": "Redo applied, {count} change was left alone because another actor changed it",
+          "other": "Redo applied, {count} changes were left alone because another actor changed them"
+        }
+      },
+      "jobs": {
+        "chip": {
+          "one": "{count} job · {percent}%",
+          "other": "{count} jobs · {percent}%"
+        }
+      },
+      "export": {
+        "open": "Export",
+        "title": "Export",
+        "revision": "Revision {revision}",
+        "checking": "Checking the project",
+        "no_problems": "No problems found.",
+        "errors": "Errors",
+        "warnings": "Warnings",
+        "notes": "Notes",
+        "blocked": "Fix the errors above, then check again.",
+        "recheck": "Re-check",
+        "start": "Start export",
+        "try_again": "Try again",
+        "again": "Export again",
+        "close": "Close",
+        "download": "Download",
+        "running": "Exporting",
+        "progress": "Export progress",
+        "keeps_running": "You can close this dialog; the export keeps running.",
+        "finished": "Export finished",
+        "copy_path": "Copy path",
+        "copy_details": "Copy details",
+        "size": "{megabytes} MB · {duration} · revision {revision}",
+        "newer": "The project changed after this export (now revision {revision}).",
+        "cancelled": "Export cancelled",
+        "failed_checks": "Failed checks:",
+        "queue_full": "Another export is running. Try again when it finishes.",
+        "go_to": "Go to {item}"
       }
     }
   }
