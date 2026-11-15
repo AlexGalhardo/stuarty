@@ -1,0 +1,58 @@
+---
+title: "Development setup"
+description: "The tools you need to build, test and lint the repository, and how to run the checks."
+---
+
+## You will learn
+
+- which tools to install;
+- how to build and run the program from a clone;
+- the commands that check your change before you push.
+
+## The idea
+
+The repository is one Go module with a front end in `web/` and the documentation site in `site/`. [Task](https://taskfile.dev) is the single entry point: the commands you run on your machine are the ones the pull request pipeline runs. Indentation is a tab of width 4 (`.editorconfig`), except in files whose format needs spaces, and Git expects LF line endings.
+
+## Quick start
+
+Install these tools:
+
+| Tool | Used for |
+| --- | --- |
+| Go, the version in `go.mod` | the core, the engine, the service and the program |
+| Task | the commands below |
+| golangci-lint | `task lint` for Go |
+| Bun | `web/` (the project uses Bun there, not npm) |
+| Node.js 24 and npm | `site/` (the documentation site keeps npm) |
+| FFmpeg 9 | the tests that encode; the container image carries a pinned one |
+
+Then, from the root of the clone:
+
+```bash
+task setup
+task ci
+```
+
+`task setup` checks the tools and activates the hooks of `.githooks/`: the pre-commit hook checks staged Go and Markdown files, and the pre-push hook refreshes the "Last updated" dates of the site. `task ci` runs `task lint`, `task vet`, `task test`, `task tidy:check` and `task notices:check`.
+
+To run the program from the clone, build the front end with `bun install` and `bun run build` in `web/` (the program embeds the files that the build writes), then `go run ./web/cmd/app serve` from the root. It behaves as [the binary](/docs/self-hosting/binary).
+
+| Command | Does |
+| --- | --- |
+| `task lint` | Go, Markdown, the web front end and the site |
+| `task test` | the Go tests (`go test -short`) |
+| `task codegen` | regenerates the contracts, the TypeScript types and the FFmpeg pins |
+| `task site:build` | builds the site and runs its checks |
+| `bun run check:thin-client` (in `web/`) | the rules of the thin client |
+
+## Common mistakes
+
+- Running `npm install` in `web/`, or `bun` in `site/`. Each folder has one package manager and one lockfile.
+- Skipping `task codegen` after changing a registry or schema: the `Generated files` check fails with a diff. Run it and commit the result.
+- Changing `go.mod`, `web/package.json` or a lockfile without `task notices`: `task notices:check` fails until the notices are regenerated.
+- Building the site with a Node.js version other than the one the pipeline uses (24): a different major can change the output of the build checks.
+
+## Next steps
+
+- [Repository layout](/docs/contributing/repository-layout)
+- [Commits and pull requests](/docs/contributing/commits-and-prs)

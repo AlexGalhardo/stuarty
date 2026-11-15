@@ -85,6 +85,7 @@ export const navigation: NavCategory[] = [
 		dir: "self-hosting",
 		title: { en: "Self-hosting", "pt-br": "Hospedagem própria" },
 		pages: [
+			"binary",
 			"docker",
 			"network-mode",
 			"api-keys",
@@ -99,12 +100,12 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "troubleshooting",
 		title: { en: "Troubleshooting", "pt-br": "Solução de problemas" },
-		pages: ["import-fails", "slow-export", "diagnostic-bundle"],
+		pages: ["common-problems", "ffmpeg-missing", "no-encoder", "workspace-locked", "import-fails", "slow-export", "diagnostic-bundle"],
 	},
 	{
 		dir: "contributing",
 		title: { en: "Contributing", "pt-br": "Contribuindo" },
-		pages: ["releases"],
+		pages: ["guide", "setup", "repository-layout", "commits-and-prs", "writing-docs", "translating", "releases"],
 	},
 	{
 		dir: "reference/commands",
