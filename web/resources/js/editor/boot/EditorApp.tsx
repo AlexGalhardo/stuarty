@@ -7,6 +7,7 @@ import { EditorProvider } from "../state/EditorContext";
 import type { EditorRuntime } from "../state/runtime";
 import type { EditorBootstrap } from "./bootstrap";
 import { startDeepLink } from "./deepLink";
+import { switchLocale } from "./locale";
 
 // The root of the editor: the translation context from the bootstrap, the
 // runtime, and the boot sequence of SDD-012 section 5.6 (load the document,
@@ -36,10 +37,22 @@ export default function EditorApp({
 	}, [runtime]);
 
 	return (
-		<I18nProvider messages={bootstrap.messages} locale={bootstrap.locale}>
+		<I18nProvider
+			messages={bootstrap.messages}
+			locale={bootstrap.locale}
+			locales={bootstrap.locales}
+		>
 			<EditorProvider runtime={runtime}>
 				<TooltipProvider>
-					<EditorShell />
+					<EditorShell
+						onLocaleChange={(next) => {
+							const { playheadFrame, selection } = runtime.ui.getState();
+							void switchLocale(next, {
+								frame: playheadFrame,
+								item: selection.items[0] ?? null,
+							});
+						}}
+					/>
 				</TooltipProvider>
 			</EditorProvider>
 		</I18nProvider>
