@@ -84,6 +84,18 @@ func ASplit(n int) Filter { return Filter("asplit=" + strconv.Itoa(n)) }
 // without it FFmpeg rounds x and y down to the chroma grid (an odd x moves the picture one pixel).
 func Crop(w, h, x, y int) Filter { return Filter(fmt.Sprintf("crop=%d:%d:%d:%d:exact=1", w, h, x, y)) }
 
+// CropRect cuts a w x h rectangle at x, y so that every plane of a subsampled source is cut at that
+// corner. Crop with exact=1 keeps the luma at x, y but places the chroma of a 4:2:0 source on its own
+// grid (x/2, y/2 rounded down), which moves the colour one source pixel off the picture when x or y is
+// odd; such a corner converts to full-resolution chroma first.
+func CropRect(w, h, x, y int) []Filter {
+	if x%2 == 0 && y%2 == 0 {
+		return []Filter{Crop(w, h, x, y)}
+	}
+
+	return []Filter{Format("yuv444p"), Crop(w, h, x, y)}
+}
+
 // Bwdif deinterlaces into one frame per source frame.
 func Bwdif() Filter { return "bwdif=mode=send_frame:parity=auto:deint=interlaced" }
 
