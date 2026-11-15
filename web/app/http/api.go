@@ -36,6 +36,8 @@ type Deps struct {
 	MCP http.Handler
 	// Events carries the event stream of GET /projects/{id}/events.
 	Events *events.Events
+	// Version is the binary version the editor page shows in bug reports.
+	Version string
 }
 
 type apiHandler struct {

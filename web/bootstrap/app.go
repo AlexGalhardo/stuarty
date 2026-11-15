@@ -4,11 +4,13 @@ package bootstrap
 
 import (
 	vukem "github.com/AlexGalhardo/vukem"
+	"github.com/AlexGalhardo/vukem/inertia"
 
 	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 	"github.com/AlexGalhardo/vukem-video/web/app/listeners"
 	"github.com/AlexGalhardo/vukem-video/web/database/migrations"
 	"github.com/AlexGalhardo/vukem-video/web/database/seeders"
+	"github.com/AlexGalhardo/vukem-video/web/resources"
 	"github.com/AlexGalhardo/vukem-video/web/routes"
 )
 
@@ -39,11 +41,23 @@ func NewWith(api *httpapi.Deps, opts ...vukem.Option) (*vukem.App, error) {
 
 	if api != nil {
 		// First, so that the guard of the API is the outermost layer.
-		base = append(base, vukem.WithOpenAPI(httpapi.Info()), vukem.WithRoutes(httpapi.Routes(api)))
+		base = append(base,
+			vukem.WithOpenAPI(httpapi.Info()),
+			vukem.WithRoutes(httpapi.Routes(api)),
+			vukem.WithViews(resources.Views()),
+			vukem.WithVite(resources.Public()),
+			vukem.WithInertia(inertia.Config{}),
+			vukem.WithTranslations(resources.Lang()),
+		)
 	}
 
 	for _, fn := range routes.All() {
 		base = append(base, vukem.WithRoutes(fn))
+	}
+
+	if api != nil {
+		// After Web, whose default middleware the pages use.
+		base = append(base, vukem.WithRoutes(routes.Pages(api)))
 	}
 
 	app, err := vukem.New(append(base, opts...)...)

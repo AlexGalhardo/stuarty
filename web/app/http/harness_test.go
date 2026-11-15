@@ -70,7 +70,7 @@ func newHarness(t *testing.T) *harness {
 	return newHarnessWith(t, events.Options{})
 }
 
-func newHarnessWith(t *testing.T, eo events.Options) *harness {
+func newHarnessWith(t *testing.T, eo events.Options, extra ...vukem.Option) *harness {
 	t.Helper()
 
 	dir, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
@@ -118,7 +118,7 @@ func newHarnessWith(t *testing.T, eo events.Options) *harness {
 	}
 
 	h.app = vukemtest.New(t, func(opts ...vukem.Option) (*vukem.App, error) {
-		app, err := bootstrap.NewWith(deps, opts...)
+		app, err := bootstrap.NewWith(deps, append(opts, extra...)...)
 		h.vapp = app
 
 		return app, err
