@@ -156,3 +156,29 @@ func TestSecurity_T19_CacheIsCapped(t *testing.T) {
 		t.Error("a file larger than the cap was stored")
 	}
 }
+
+// The root may be the workspace: only frames/ and bitmaps/ are the cache's, so
+// the database next to them is never indexed and never evicted.
+func TestOpenIndexesOnlyTheCacheFolders(t *testing.T) {
+	root := t.TempDir()
+	for name, body := range map[string]string{"db.sqlite": "database", "frames/p/1/0-8.jpg": "jpeg", "bitmaps/k.png": "png"} {
+		p := filepath.Join(root, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	s, err := Open(root, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "db.sqlite")); err != nil {
+		t.Errorf("the database was evicted: %v", err)
+	}
+	if s.Size() != 0 {
+		t.Errorf("size = %d, want 0 after evicting both files under a 1-byte cap", s.Size())
+	}
+}

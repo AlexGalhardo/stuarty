@@ -21,6 +21,9 @@ import (
 // DefaultMaxBytes is the default of VUKEM_VIDEO_CACHE_MAX_BYTES: 2 GiB, shared by frames/ and bitmaps/.
 const DefaultMaxBytes int64 = 2 << 30
 
+// cacheDirs are the folders of the root that the cache owns.
+var cacheDirs = []string{"frames", "bitmaps"}
+
 // ErrKey is returned for a key that is not a plain relative slash path inside the cache.
 var ErrKey = errors.New("cache: invalid key")
 
@@ -73,23 +76,29 @@ func Open(root string, maxBytes int64) (*Store, error) {
 		mod time.Time
 	}
 	var all []found
-	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
-			return err
-		}
-		info, err := d.Info()
+	// Only the cache folders are indexed: the root may be the workspace, which holds the database too.
+	for _, sub := range cacheDirs {
+		err := filepath.WalkDir(filepath.Join(root, sub), func(p string, d fs.DirEntry, err error) error {
+			if errors.Is(err, fs.ErrNotExist) {
+				return nil
+			}
+			if err != nil || d.IsDir() {
+				return err
+			}
+			info, err := d.Info()
+			if err != nil {
+				return err
+			}
+			rel, err := filepath.Rel(root, p)
+			if err != nil {
+				return err
+			}
+			all = append(all, found{entry{filepath.ToSlash(rel), info.Size()}, info.ModTime()})
+			return nil
+		})
 		if err != nil {
-			return err
+			return nil, err
 		}
-		rel, err := filepath.Rel(root, p)
-		if err != nil {
-			return err
-		}
-		all = append(all, found{entry{filepath.ToSlash(rel), info.Size()}, info.ModTime()})
-		return nil
-	})
-	if err != nil {
-		return nil, err
 	}
 	sort.Slice(all, func(i, j int) bool { return all[i].mod.Before(all[j].mod) })
 	for _, f := range all {
