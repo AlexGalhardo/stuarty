@@ -304,3 +304,35 @@ func TestSweepRemovesOrphansOlderThan24Hours(t *testing.T) {
 		t.Error("the sweep touched the database")
 	}
 }
+
+// A key limited to one project empties that project and nothing else.
+func TestTrashEmptyOfAProjectLimitedKeyStaysInItsProject(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	mine, other := m.newProject("mine"), m.newProject("other")
+	m.importOne(other, m.write("a.mp4", clipBytes))
+	m.trash(mine)
+	m.trash(other)
+
+	limited := service.WithCaller(context.Background(), service.Caller{
+		Actor: "key:limited", Scopes: service.AllScopes, ProjectID: mine,
+	})
+
+	if _, err := m.svc.TrashEmpty(
+		limited,
+		service.TrashEmptyRequest{ProjectID: other},
+	); code(
+		err,
+	) != service.CodeForbidden {
+		t.Errorf("another project = %v, want E_FORBIDDEN", err)
+	}
+
+	res, err := m.svc.TrashEmpty(limited, service.TrashEmptyRequest{})
+	if err != nil || res.Projects != 1 || res.ProjectAssets != 0 || res.Assets != 0 {
+		t.Fatalf("empty = %+v, %v", res, err)
+	}
+
+	ids := m.projectIDs()
+	if len(ids) != 1 || ids[0] != other {
+		t.Errorf("projects = %v; only %s may go", ids, mine)
+	}
+}

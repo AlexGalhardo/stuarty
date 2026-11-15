@@ -64,6 +64,11 @@ func (s *svc) TrashEmpty(ctx context.Context, req TrashEmptyRequest) (*TrashEmpt
 			withPath("older_than_days")
 	}
 
+	// A key limited to one project empties that project and nothing else.
+	if c.ProjectID != "" && req.ProjectID == "" {
+		req.ProjectID = c.ProjectID
+	}
+
 	// Import holds the read side from the copy into store/ through the row of
 	// the asset; holding the write side keeps a concurrent import from finding
 	// a file that is about to go.
@@ -117,6 +122,7 @@ func (s *svc) trashTargets(ctx context.Context, c Caller, req *TrashEmptyRequest
 
 	matches := func(h *ProjectHead) bool {
 		return h.State == ProjectTrashed && visible(c, h.OwnerUserID) &&
+			(c.ProjectID == "" || h.ID == c.ProjectID) &&
 			(cutoff == 0 || h.TrashedMs != nil && *h.TrashedMs <= cutoff)
 	}
 
@@ -195,7 +201,7 @@ func (s *svc) deleteInTx(
 
 	// With neither filter the trashed assets of every visible active project go
 	// too; a filter limits the emptying to projects.
-	if req.ProjectID == "" && req.OlderThanDays == 0 {
+	if req.ProjectID == "" && req.OlderThanDays == 0 && c.ProjectID == "" {
 		if err := s.deleteTrashedAssetRows(ctx, tx, c, res); err != nil {
 			return err
 		}
@@ -232,7 +238,9 @@ func (s *svc) deleteTrashedAssetRows(ctx context.Context, tx Tx, c Caller, res *
 	after := ""
 
 	for {
-		heads, next, err := tx.Projects().List(ctx, ProjectQuery{OwnerUserID: c.OwnerUserID, After: after, Limit: 200})
+		heads, next, err := tx.Projects().List(ctx, ProjectQuery{
+			OwnerUserID: c.OwnerUserID, ProjectID: c.ProjectID, After: after, Limit: 200,
+		})
 		if err != nil {
 			return err
 		}
