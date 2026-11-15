@@ -1,6 +1,9 @@
 package shell
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestAllowed(t *testing.T) {
 	const port = 3101
@@ -46,5 +49,14 @@ func TestAllowed(t *testing.T) {
 func TestAllowedRefusesAnInvalidPort(t *testing.T) {
 	if Allowed("http://127.0.0.1:0/", 0) || Allowed("http://127.0.0.1:3101/", -1) {
 		t.Error("a non-positive server port must allow nothing")
+	}
+}
+
+func TestGuardScriptNamesThePortAndTheHome(t *testing.T) {
+	s := GuardScript(3101, "http://127.0.0.1:3101/projects")
+	for _, want := range []string{`l.port==="3101"`, `l.replace("http://127.0.0.1:3101/projects")`, `"127.0.0.1"`, `"localhost"`} {
+		if !strings.Contains(s, want) {
+			t.Errorf("the script lacks %s: %s", want, s)
+		}
 	}
 }
