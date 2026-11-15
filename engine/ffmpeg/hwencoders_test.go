@@ -14,6 +14,7 @@ import (
 // binary as ffmpeg and ffprobe. works names the encoders whose test encode succeeds; every other one fails
 // to open, as a driver that is not there does (D-034).
 func hwFixture(t *testing.T, works ...string) (*Runner, *Capabilities) {
+	t.Helper()
 	r, caps, _ := hwFixtureDir(t, works...)
 	return r, caps
 }
