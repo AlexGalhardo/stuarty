@@ -335,12 +335,12 @@ func (s *state) buildMP4(ctx context.Context) (built, error) {
 		return built{}, err
 	}
 
-	cand, ok := det.ChosenCandidate()
-	if !ok {
+	if _, ok := det.ChosenCandidate(); !ok {
 		return built{}, exportErr(ReasonEncoder, "No encoder was chosen.", nil, "")
 	}
 
-	if err := s.checkCapability(ctx, cand); err != nil {
+	cand, err := s.checkCapability(ctx, det)
+	if err != nil {
 		return built{}, err
 	}
 
