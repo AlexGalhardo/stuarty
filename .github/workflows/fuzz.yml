@@ -32,6 +32,8 @@ jobs:
         include:
           - { pkg: ./core/timeval, target: FuzzParse }
           - { pkg: ./engine/raster, target: FuzzFontHeader }
+          - { pkg: ./service, target: FuzzTemplateArchive }
+          - { pkg: ./web/app/servicetest, target: FuzzBundleArchive }
     env:
       FUZZTIME: ${{ inputs.fuzztime || '30s' }}
     defaults:
