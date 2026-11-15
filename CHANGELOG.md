@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-15
+
+### Added
+
+- **service:** Add the transcribe job with the provider gate, the artifact and the media scope ([d4c142b](https://github.com/AlexGalhardo/vukem-video/commit/d4c142bf193ab09bd330081f550f7390d4638ebc))
+- **service:** Limit the transcriptions of one actor like the exports of one key ([eb7f480](https://github.com/AlexGalhardo/vukem-video/commit/eb7f48085949853d42e6dfc261c581de0ce34fce))
+- **service:** Add the human-only helper install with a pinned manifest and SHA-256 check ([6d5d1b2](https://github.com/AlexGalhardo/vukem-video/commit/6d5d1b263a2d439f5833bbfb374fc63c322f75c6))
+- **transcribe:** Add the helper manifest and the explicit, verified install ([3a60d75](https://github.com/AlexGalhardo/vukem-video/commit/3a60d7595ff0e4b6b5ffdeb9303528ec50700010))
+- **transcribe:** Add the optional OpenAI-compatible provider through internal/outbound ([ee792b3](https://github.com/AlexGalhardo/vukem-video/commit/ee792b3632e0b1fc7db4285d465be8901d4662c6))
+- **service:** Add the untrusted text package with cleaning, blocks, budgets and provenance ([015f0a7](https://github.com/AlexGalhardo/vukem-video/commit/015f0a7b412cba2192c39272d9c70b143df7fc85))
+- **service:** Add the paged and delimited transcript section of media_inspect ([f01388f](https://github.com/AlexGalhardo/vukem-video/commit/f01388f07329d53314bded542670db58a08a2188))
+
+### Fixed
+
+- **service:** Forbid a limited key on other jobs, set op_index on a scope refusal, check first ([27ba82a](https://github.com/AlexGalhardo/vukem-video/commit/27ba82ab73f3a569cb73e6ee3cebc668a4bc3835))
+- **service:** Hide another user's job from a project-limited key behind E_NOT_FOUND ([98dc359](https://github.com/AlexGalhardo/vukem-video/commit/98dc359c9299b9199427aee26210484e5d9a7910))
+- **service:** Refuse a project-limited key for the helper install and its status ([668c177](https://github.com/AlexGalhardo/vukem-video/commit/668c177189a98e3232b8a284e481de57a1798daa))
+
 ## [0.6.0] - 2026-11-15
 
 ### Added
@@ -324,7 +342,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.3.0...v0.4.0
