@@ -323,9 +323,15 @@ test.describe("transform-handles", () => {
 		await rotation.press("Enter");
 
 		await expect.poll(() => posted.length).toBe(1);
-		expect(posted[0]?.operations).toEqual([
-			{ op: "item.set_transform", args: { item_id: first, rotation: 45 } },
-			{ op: "item.set_transform", args: { item_id: second, rotation: 45 } },
-		]);
+		// The batch follows the timeline order of the selection, which the seeding
+		// does not fix, so the order of the two operations is not asserted.
+		const byItem = (a: { args: { item_id?: unknown } }, b: typeof a) =>
+			String(a.args.item_id).localeCompare(String(b.args.item_id));
+		expect([...(posted[0]?.operations ?? [])].sort(byItem)).toEqual(
+			[
+				{ op: "item.set_transform", args: { item_id: first, rotation: 45 } },
+				{ op: "item.set_transform", args: { item_id: second, rotation: 45 } },
+			].sort(byItem),
+		);
 	});
 });
