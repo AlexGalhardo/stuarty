@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -160,6 +161,10 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ProjectBundleExport)
 	case "ProjectBundleImport":
 		return invoke(ctx, s, svc.ProjectBundleImport)
+	case "ProjectOtioExport":
+		return invoke(ctx, s, svc.ProjectOtioExport)
+	case "ProjectOtioImport":
+		return invoke(ctx, s, svc.ProjectOtioImport)
 	}
 
 	return nil, fmt.Errorf("no mapping for %s", s.Call)
@@ -517,7 +522,9 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		Args      struct {
 			AssetID  string `json:"asset_id"`
 			Language string `json:"language"`
+			Format   string `json:"format"`
 		} `json:"args"`
+		BaseRevision *int64 `json:"base_revision"`
 
 		TemplateID  string          `json:"template_id"`
 		Description string          `json:"description"`
@@ -596,11 +603,13 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 			return "transcribe", append(argv, "--wait"), "", nil
 		}
 
+		argv = append(slices.Clone(proj), flag("format", a.Args.Format)...)
+
 		if a.WaitMS == 0 {
-			return "export", append(proj, "--no-wait"), "", nil
+			return "export", append(argv, "--no-wait"), "", nil
 		}
 
-		return "export", proj, "", nil
+		return "export", argv, "", nil
 	case "JobGet":
 		return "job:show", []string{a.JobID, "--wait"}, "", nil
 	case "JobList":
@@ -637,6 +646,19 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 		}
 
 		return "bundle:import", argv, "", nil
+	case "ProjectOtioExport":
+		return "otio:export", append(slices.Clone(proj), flag("out", a.Path)...), "", nil
+	case "ProjectOtioImport":
+		argv = append([]string{a.Path}, proj...)
+		if a.BaseRevision != nil {
+			argv = append(argv, "--base-revision", strconv.FormatInt(*a.BaseRevision, 10))
+		}
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "otio:import", argv, "", nil
 	case "ProjectTrash":
 		return "project:trash", []string{a.ProjectID}, "", nil
 	case "ProjectRestore":
