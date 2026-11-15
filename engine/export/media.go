@@ -288,7 +288,8 @@ func (d *videoDecoder) start(sf int) error {
 	}
 	ms := int64(sf) * 1000 * int64(d.rate.Den) / int64(d.rate.Num)
 	argv, err := ffargs.Cmd{
-		Threads: r.In.ThreadLimit(), FilterThreads: r.In.ThreadLimit(),
+		// One filter thread: the scaler slices a frame by thread count (NFR-010, same pixels everywhere).
+		Threads: r.In.ThreadLimit(), FilterThreads: 1,
 		Inputs: []ffargs.Input{ffargs.FileInput(d.path).At(ms)},
 		Outputs: []ffargs.Output{{
 			Format: "rawvideo", Pipe: true, Maps: []string{"0:v:0"}, NoAudio: true, VF: d.vf,

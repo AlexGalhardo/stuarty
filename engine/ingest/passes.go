@@ -92,9 +92,10 @@ func (j *job) videoPass(ctx context.Context, plan VideoPlan, deadline time.Durat
 		{In: []string{"p0"}, Filters: append(plan.ProxyFilters(), ffargs.Split(2)), Out: []string{"q", "r"}},
 		{In: []string{"r"}, Filters: plan.ThumbFilters(), Out: []string{"s"}},
 	}
-	threads := j.r.In.ThreadLimit()
+	// One filter thread: swscale and zscale cut a frame in slices by thread count, and the
+	// normalized bytes must not depend on the machine (NFR-010).
 	cmd := ffargs.Cmd{
-		Progress: true, LogErrorOnly: true, Threads: threads, FilterThreads: threads,
+		Progress: true, LogErrorOnly: true, Threads: j.r.In.ThreadLimit(), FilterThreads: 1,
 		Inputs: []ffargs.Input{ffargs.FileInput(j.original)}, Graph: g,
 		Outputs: []ffargs.Output{
 			{
@@ -110,6 +111,7 @@ func (j *job) videoPass(ctx context.Context, plan VideoPlan, deadline time.Durat
 						"mpeg4",
 					),
 					ffargs.Int("-q:v", NormalizedQScale),
+					ffargs.Int("-threads", NormalizedThreads),
 					ffargs.Int("-g", plan.GOP),
 					ffargs.Int("-bf", 0),
 					ffargs.Enum("-pix_fmt", "yuv420p"),
