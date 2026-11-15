@@ -51,7 +51,7 @@ func TestRegistrySnapshotShape(t *testing.T) {
 		}
 
 		if (c.Scope == "media") != mediaCommands[c.Name] {
-			t.Errorf("%s: scope %q is wrong; only asset.add, asset.remove, font.add and font.remove are media", c.Name, c.Scope)
+			t.Errorf("%s: scope %q is wrong; only asset.* and font.* are media", c.Name, c.Scope)
 		}
 
 		if c.Internal != (c.Name == "asset.add") {
@@ -60,7 +60,11 @@ func TestRegistrySnapshotShape(t *testing.T) {
 	}
 
 	if len(cmds) != 54 || phases["prototype"] != 16 || phases["alpha"] != 32 || phases["beta"] != 6 {
-		t.Errorf("%d commands (%v), want 54 with 16 prototype, 32 alpha and 6 beta (the exposed build)", len(cmds), phases)
+		t.Errorf(
+			"%d commands (%v), want 54 with 16 prototype, 32 alpha and 6 beta (the exposed build)",
+			len(cmds),
+			phases,
+		)
 	}
 }
 
