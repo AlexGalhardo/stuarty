@@ -13,13 +13,19 @@ import (
 	"github.com/AlexGalhardo/vukem-video/web/app/cli"
 )
 
-func pinnedFFmpegPath(t *testing.T) string {
-	t.Helper()
-
-	exe := "ffmpeg"
+// exeName is the file name of a tool on this operating system.
+func exeName(tool string) string {
 	if runtime.GOOS == "windows" {
-		exe += ".exe"
+		return tool + ".exe"
 	}
+
+	return tool
+}
+
+// pinnedFFmpegDir is the directory of the pinned FFmpeg build, or "" when there
+// is none.
+func pinnedFFmpegDir() string {
+	exe := exeName("ffmpeg")
 
 	dir := os.Getenv("VUKEM_VIDEO_TEST_FFMPEG_DIR")
 
@@ -33,11 +39,18 @@ func pinnedFFmpegPath(t *testing.T) string {
 		}
 	}
 
+	return dir
+}
+
+func pinnedFFmpegPath(t *testing.T) string {
+	t.Helper()
+
+	dir := pinnedFFmpegDir()
 	if dir == "" {
 		t.Skip("no pinned FFmpeg: run scripts/install-ffmpeg.sh and set VUKEM_VIDEO_TEST_FFMPEG_DIR")
 	}
 
-	return filepath.Join(dir, exe)
+	return filepath.Join(dir, exeName("ffmpeg"))
 }
 
 // With no server the CLI owns the workspace and exports inside the call: the

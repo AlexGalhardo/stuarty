@@ -35,9 +35,9 @@ type sessionRun struct {
 func sessionFFmpeg(t *testing.T) (ffmpeg, ffprobe string) {
 	t.Helper()
 
-	if dir := os.Getenv("VUKEM_VIDEO_TEST_FFMPEG_DIR"); dir != "" {
-		ffmpeg = filepath.Join(dir, "ffmpeg")
-		ffprobe = filepath.Join(dir, "ffprobe")
+	if dir := pinnedFFmpegDir(); dir != "" {
+		ffmpeg = filepath.Join(dir, exeName("ffmpeg"))
+		ffprobe = filepath.Join(dir, exeName("ffprobe"))
 	}
 
 	if ffmpeg == "" {
