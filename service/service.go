@@ -158,6 +158,8 @@ type Options struct {
 	// Keys stores the API keys of network mode; without one the key operations
 	// answer E_NOT_FOUND, as in local mode.
 	Keys KeyStore
+	// Heavy limits JobStart, MediaImport and TemplateImport per actor; nil counts nothing.
+	Heavy RateLimiter
 }
 
 type svc struct {
@@ -178,6 +180,7 @@ type svc struct {
 	toolsState  toolsState
 	doctor      DoctorOptions
 	keys        KeyStore
+	heavy       RateLimiter
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
 
@@ -212,6 +215,7 @@ func New(o Options) (Service, error) {
 		tools:       o.Tools,
 		doctor:      o.Doctor,
 		keys:        o.Keys,
+		heavy:       o.Heavy,
 	}
 
 	s.sems = map[string]chan struct{}{

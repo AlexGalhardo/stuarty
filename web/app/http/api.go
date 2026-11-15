@@ -36,7 +36,9 @@ type Deps struct {
 	Auth *auth.Network
 	// LoginLimits replaces the limits of the login route; nil is the defaults.
 	LoginLimits *LoginLimits
-	Now         func() time.Time
+	// RateLimits are the per-credential limits of SDD-007 section 4.4.
+	RateLimits RateLimits
+	Now        func() time.Time
 	// MCP is the Streamable HTTP handler of the MCP server, mounted at POST /mcp
 	// behind the guard and the authentication; nil mounts nothing.
 	MCP http.Handler
@@ -51,6 +53,7 @@ type apiHandler struct {
 	app           *vukem.App
 	r             *router.Router
 	loginThrottle loginThrottles
+	limits        *limits
 }
 
 // Routes installs the guard, the error envelope and every route of Endpoints.
@@ -87,9 +90,12 @@ func Routes(d *Deps) func(r *router.Router, app *vukem.App) error {
 			r.Use(d.Auth.Sessions.Middleware())
 		}
 
-		h := &apiHandler{Deps: *d, app: app, r: r, loginThrottle: newLoginThrottles(d.LoginLimits)}
+		h := &apiHandler{
+			Deps: *d, app: app, r: r, loginThrottle: newLoginThrottles(d.LoginLimits),
+			limits: newLimits(d.RateLimits, d.Now),
+		}
 
-		r.Use(h.authenticate)
+		r.Use(h.preAuthLimit, h.authenticate, h.credentialLimit)
 		h.registerAll()
 
 		if h.MCP != nil {
@@ -130,13 +136,16 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
+		if h.blockedAddress(w, r) {
+			return
+		}
+
 		var caller service.Caller
 
 		if header := r.Header.Get("Authorization"); header != "" {
 			token, ok := auth.Bearer(header)
 			if !ok || !auth.TokenMatches(h.Token, token) {
-				w.Header().Set("WWW-Authenticate", "Bearer")
-				web.Fail(w, r, &service.Error{Code: service.CodeUnauthorized, Message: "the token is not valid."})
+				h.unauthorized(w, r, &service.Error{Code: service.CodeUnauthorized, Message: "the token is not valid."})
 
 				return
 			}
@@ -160,8 +169,7 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 
 			caller = service.Caller{Actor: "local:" + auth.UILabel, Scopes: service.AllScopes, Browser: true}
 		} else {
-			w.Header().Set("WWW-Authenticate", "Bearer")
-			web.Fail(w, r, &service.Error{
+			h.unauthorized(w, r, &service.Error{
 				Code: service.CodeUnauthorized, Message: "the request carries no credentials.",
 				Hint: "send the local token as Authorization: Bearer <token>",
 			})
@@ -184,9 +192,12 @@ func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
+	if h.blockedAddress(w, r) {
+		return
+	}
+
 	deny := func() {
-		w.Header().Set("WWW-Authenticate", "Bearer")
-		web.Fail(w, r, &service.Error{
+		h.unauthorized(w, r, &service.Error{
 			Code: service.CodeUnauthorized, Message: "the request carries no valid credentials.",
 		})
 	}

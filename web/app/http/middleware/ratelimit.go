@@ -2,9 +2,11 @@
 package middleware
 
 import (
+	"context"
 	"math"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/AlexGalhardo/vukem/ratelimit"
@@ -69,4 +71,91 @@ func Limit(l ratelimit.Limiter, key ratelimit.KeyFunc) func(http.Handler) http.H
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+// FailedAuth counts the failed authentications of an address (SDD-007 section
+// 4.4): every 401 spends one of its tokens. vukem's Limiter only spends, it
+// cannot be asked without spending, so an address whose token ran out is
+// remembered until the limiter would let it through again, and its requests are
+// refused before any credential is checked; otherwise a flood of wrong guesses
+// would go on at full speed and only the answer would change.
+type FailedAuth struct {
+	l   ratelimit.Limiter
+	now func() time.Time
+
+	mu      sync.Mutex
+	blocked map[string]time.Time
+}
+
+// maxBlocked bounds the memory of refused addresses; at the bound the expired
+// ones go first.
+const maxBlocked = 10_000
+
+// NewFailedAuth counts on l; now may be nil.
+func NewFailedAuth(l ratelimit.Limiter, now func() time.Time) *FailedAuth {
+	if now == nil {
+		now = time.Now
+	}
+
+	return &FailedAuth{l: l, now: now, blocked: map[string]time.Time{}}
+}
+
+// Blocked is the refusal owed to an address that spent its failures, or nil.
+func (f *FailedAuth) Blocked(key string) *service.Error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	until, ok := f.blocked[key]
+	if !ok {
+		return nil
+	}
+
+	if wait := until.Sub(f.now()); wait > 0 {
+		return Denied(wait)
+	}
+
+	delete(f.blocked, key)
+
+	return nil
+}
+
+// Record spends a token for a failed authentication. It returns the refusal to
+// give in place of the 401 when there is none left, or when the store fails.
+func (f *FailedAuth) Record(r *http.Request, key string) *service.Error {
+	res, err := f.l.Allow(r.Context(), key)
+	if err == nil && res.Allowed {
+		return nil
+	}
+
+	wait := time.Second
+	if err == nil {
+		wait = max(res.RetryAfter, time.Second)
+	}
+
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	if len(f.blocked) >= maxBlocked {
+		for k, until := range f.blocked {
+			if !until.After(f.now()) {
+				delete(f.blocked, k)
+			}
+		}
+	}
+
+	if len(f.blocked) < maxBlocked {
+		f.blocked[key] = f.now().Add(wait)
+	}
+
+	return Denied(wait)
+}
+
+// ServiceLimiter adapts a vukem limiter to service.RateLimiter.
+type ServiceLimiter struct{ L ratelimit.Limiter }
+
+// Allow implements service.RateLimiter.
+func (s ServiceLimiter) Allow(ctx context.Context, key string) (bool, time.Duration, error) {
+	res, err := s.L.Allow(ctx, key)
+
+	return res.Allowed, res.RetryAfter, err
 }

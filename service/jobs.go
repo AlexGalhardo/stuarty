@@ -49,6 +49,10 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, err
 	}
 
+	if err := s.heavyLimit(ctx, c); err != nil {
+		return nil, err
+	}
+
 	if req.WaitMS < 0 || req.WaitMS > maxWaitMS {
 		return nil, newError(command.CodeValidation, "wait_ms is %d; it must be 0 to %d.", req.WaitMS, maxWaitMS).
 			withPath("wait_ms")

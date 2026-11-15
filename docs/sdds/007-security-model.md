@@ -294,6 +294,8 @@ Built on vukem's rate limiter. The product calls `Limiter.Allow` directly instea
 
 What is counted. The per-credential limiter counts requests under `/api/v1` and `/mcp`. It does not count the event stream once open, static assets, or the byte-serving routes the editor hits many times per second while it plays or scrubs (proxies with `Range`, thumbnails, peaks, cached frames, the plan windows of SDD-004). A browser session has its own default, `VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE` (default 1,800, burst 300), because one person dragging a clip produces more requests than a well-behaved agent. In local mode the pre-authentication and failed-authentication limiters by address do not run for successful requests (every client shares `127.0.0.1`); only failed authentication is throttled there.
 
+Burst is added to the rate: a key may send 300 requests at once, and 60 more over the minute, so the 361st request within a minute is the first one refused (the bucket of `NewMemoryBurst` holds rate plus burst); a browser session holds 1,800 plus 300. Failed authentication by address is also checked before any credential: an address that spent its 20 failures a minute is refused with `E_RATE_LIMITED` until the limiter would let it through, valid credential or not.
+
 Denial: `429` with `Retry-After`, error code `E_RATE_LIMITED` (retryable), body in the common error shape. A limiter store failure denies the request (vukem fails closed). `ratelimit.ByIP` groups IPv6 by `/64`; behind a proxy `TRUSTED_PROXIES` must be set or every client shares one bucket (vukem logs a warning).
 
 ### 4.5 Start-up errors for unsafe configuration (fail closed)

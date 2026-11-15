@@ -56,6 +56,14 @@ func newNetworkHarnessLimits(
 ) *networkHarness {
 	t.Helper()
 
+	return newNetworkHarnessRates(t, res, useTLS, limits, httpapi.RateLimits{})
+}
+
+func newNetworkHarnessRates(
+	t *testing.T, res config.Resolved, useTLS bool, limits *httpapi.LoginLimits, rates httpapi.RateLimits,
+) *networkHarness {
+	t.Helper()
+
 	dir, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
 	if err != nil {
 		t.Fatal(err)
@@ -96,8 +104,16 @@ func newNetworkHarnessLimits(
 	}
 
 	deps := &httpapi.Deps{
-		Service: svc, Registry: command.Default(), Workspace: dir, Network: netw, Auth: netAuth, LoginLimits: limits,
-		Sessions: auth.NewSessions(now), Launch: auth.NewLaunch(now), Now: now,
+		Service:     svc,
+		Registry:    command.Default(),
+		Workspace:   dir,
+		Network:     netw,
+		Auth:        netAuth,
+		LoginLimits: limits,
+		RateLimits:  rates,
+		Sessions:    auth.NewSessions(now),
+		Launch:      auth.NewLaunch(now),
+		Now:         now,
 	}
 
 	app := vukemtest.New(t, func(opts ...vukem.Option) (*vukem.App, error) {

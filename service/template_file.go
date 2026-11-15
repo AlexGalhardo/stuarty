@@ -165,6 +165,10 @@ func (s *svc) TemplateImport(ctx context.Context, req TemplateImportRequest) (*T
 		return nil, err
 	}
 
+	if err := s.heavyLimit(ctx, c); err != nil {
+		return nil, err
+	}
+
 	if err := templateRefused(c); err != nil {
 		return nil, err
 	}

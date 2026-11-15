@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/vukem/queue"
+	"github.com/AlexGalhardo/vukem/ratelimit"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
@@ -32,6 +33,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/web/app/auth"
 	"github.com/AlexGalhardo/vukem-video/web/app/events"
 	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
+	"github.com/AlexGalhardo/vukem-video/web/app/http/middleware"
 	"github.com/AlexGalhardo/vukem-video/web/app/jobs"
 	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
 	"github.com/AlexGalhardo/vukem-video/web/app/store"
@@ -225,13 +227,18 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		publish = o.Events.Publish
 	}
 
+	rates, err := rateLimitsFromEnv(cfg.Getenv, o.mode == config.ModeNetwork)
+	if err != nil {
+		return err
+	}
+
 	var keys service.KeyStore
 	if o.netAuth != nil {
 		keys = o.netAuth.Keys()
 	}
 
 	o.Service, err = service.New(service.Options{
-		Keys:  keys,
+		Keys: keys, Heavy: middleware.ServiceLimiter{L: ratelimit.NewMemory(service.HeavyPerMinute, time.Minute)},
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
 		Transcriber: transcriber, Tools: tools,
@@ -259,7 +266,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	o.deps = &httpapi.Deps{
 		Service: o.Service, Registry: command.Default(), Workspace: o.Dir, Token: o.Token,
 		Sessions: auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
-		Events: o.Events, Version: o.version, Network: o.network, Auth: o.netAuth,
+		Events: o.Events, Version: o.version, Network: o.network, Auth: o.netAuth, RateLimits: rates,
 	}
 
 	if o.deps.MCP, err = mcp.Handler(o.Service, mcp.Options{Version: o.version}); err != nil {
@@ -537,4 +544,38 @@ func limitsFromEnv(getenv func(string) string, network bool) (service.Limits, er
 	}
 
 	return l, nil
+}
+
+// rateLimitsFromEnv reads the per-credential limits (SDD-007 section 4.4); an
+// unset value, or a non-positive one in local mode, is the default.
+func rateLimitsFromEnv(getenv func(string) string, network bool) (httpapi.RateLimits, error) {
+	var r httpapi.RateLimits
+
+	for _, f := range []struct {
+		name string
+		set  func(int)
+	}{
+		{"VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE", func(v int) { r.PerCredential = v }},
+		{"VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE", func(v int) { r.PerSession = v }},
+	} {
+		raw := getenv(f.name)
+
+		use, err := config.CheckLimit(f.name, raw, network)
+		if err != nil {
+			return httpapi.RateLimits{}, fmt.Errorf("owner: %w", err)
+		}
+
+		if !use {
+			continue
+		}
+
+		v, err := strconv.Atoi(strings.TrimSpace(raw))
+		if err != nil {
+			return httpapi.RateLimits{}, fmt.Errorf("owner: %s: %w", f.name, err)
+		}
+
+		f.set(v)
+	}
+
+	return r, nil
 }
