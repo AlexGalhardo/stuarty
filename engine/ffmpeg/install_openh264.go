@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 )
 
 // Downloader does one HTTP request. In the product it is the client of outbound.HelperDownload, the
@@ -52,6 +53,13 @@ func InstallOpenH264(ctx context.Context, opt InstallOpenH264Options) (OpenH264S
 			ReasonNotPublished,
 			e,
 			"the library for this platform is not published yet.",
+		)
+	}
+	// The manifest is validated when it is parsed; a value built in memory gets the same rules here, so
+	// an http:// or unlisted URL is never requested whoever made the manifest.
+	if err := e.validate(opt.Manifest.Hosts); err != nil {
+		return OpenH264State{}, installFailure(
+			ReasonDownloadFailed, e, "The manifest entry for this platform is not allowed.",
 		)
 	}
 	if opt.Client == nil || opt.ToolsDir == "" {
@@ -110,6 +118,13 @@ func download(ctx context.Context, opt InstallOpenH264Options, e OpenH264Entry, 
 		return installFailure(ReasonDownloadFailed, e, "The download of the OpenH264 library failed.")
 	}
 	defer func() { _ = resp.Body.Close() }()
+	// The client checks every hop; this is the second lock, on the hop that answered.
+	if final := resp.Request; final != nil && final.URL != nil &&
+		(final.URL.Scheme != "https" || !slices.Contains(opt.Manifest.Hosts, final.URL.Hostname())) {
+		return installFailure(
+			ReasonDownloadFailed, e, "The OpenH264 download was answered by a host the manifest does not list.",
+		)
+	}
 	if resp.StatusCode != http.StatusOK {
 		return installFailure(ReasonDownloadFailed, e, "The download of the OpenH264 library was refused by the host.")
 	}

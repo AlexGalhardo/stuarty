@@ -168,11 +168,12 @@ func CheckOpenH264(toolsDir string, m OpenH264Manifest, goos, goarch string) Ope
 	}
 	path := OpenH264Path(toolsDir, e)
 	info, err := os.Lstat(path)
-	if err != nil || !info.Mode().IsRegular() {
+	if err != nil {
 		return st
 	}
+	// Anything at the path that is not the regular file the install wrote (a directory, a link) was put there.
 	st.Reason = ReasonOpenH264Changed
-	if info.Size() != e.LibraryBytes {
+	if !info.Mode().IsRegular() || info.Size() != e.LibraryBytes {
 		return st
 	}
 	f, err := os.Open(path)
