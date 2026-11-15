@@ -41,10 +41,12 @@ func run() error {
 	binary := flag.String("binary", defaultBinary(), "path of the vukem-video server binary")
 	flag.Parse()
 
+	br := &bridge{}
 	app := application.New(application.Options{
-		Name:        "Vukem Video",
-		Description: "Vukem Video desktop",
-		Mac:         application.MacOptions{ApplicationShouldTerminateAfterLastWindowClosed: true},
+		Name:              "Vukem Video",
+		Description:       "Vukem Video desktop",
+		RawMessageHandler: br.handle,
+		Mac:               application.MacOptions{ApplicationShouldTerminateAfterLastWindowClosed: true},
 	})
 
 	ws, err := workspace.Resolve(os.Getenv)
@@ -73,10 +75,22 @@ func run() error {
 		MinWidth:         minWidth,
 		MinHeight:        minHeight,
 		BackgroundColour: application.NewRGB(0x0b, 0x0b, 0x0b),
-		URL:              launch,
+		EnableFileDrop:   true,
+		KeyBindings: map[string]func(application.Window){
+			"F11": func(w application.Window) { w.ToggleFullscreen() },
+		},
+		URL: launch,
 	})
 	guardNavigation(win, srv.Port, home)
-	app.Menu.SetApplicationMenu(buildMenu(app, win, ws))
+	br.app = app
+	br.port.Store(int64(srv.Port))
+	br.win.Store(win)
+	br.install(win)
+	// macOS shows the application menu; Windows and Linux show a menu per window,
+	// and without win.SetMenu the window has no menu bar.
+	menu := buildMenu(app, win, ws)
+	app.Menu.SetApplicationMenu(menu)
+	win.SetMenu(menu)
 
 	// The child ending on its own is a crash: tell the person, then leave.
 	go func() {

@@ -8,7 +8,8 @@ import (
 
 // buildMenu is the native menu: Quit, Reload, About with the version and Open
 // workspace folder (ROADMAP P3-DSK-002). The editor menus of SDD-012 section
-// 21.3 item 4 come with the UI bridge (P3-DSK-003).
+// 21.3 item 4 (onMenuAction) are a later task; View has the full screen toggle
+// that the bridge also offers.
 func buildMenu(app *application.App, win *application.WebviewWindow, ws workspace.Dir) *application.Menu {
 	menu := app.NewMenu()
 
@@ -22,7 +23,14 @@ func buildMenu(app *application.App, win *application.WebviewWindow, ws workspac
 	file.Add("Quit").SetAccelerator("CmdOrCtrl+Q").OnClick(func(*application.Context) { app.Quit() })
 
 	view := menu.AddSubmenu("View")
-	view.Add("Reload").SetAccelerator("CmdOrCtrl+R").OnClick(func(*application.Context) { win.Reload() })
+	// win.Reload() navigates to the first address again, the one-time launch URL, which
+	// the server refuses the second time; the page reloads the address it is at.
+	view.Add("Reload").SetAccelerator("CmdOrCtrl+R").OnClick(func(*application.Context) {
+		win.ExecJS("location.reload()")
+	})
+	// F11 is a window key binding (main.go), not a menu accelerator: Windows hides the
+	// menu bar in full screen and a menu accelerator would leave no way out.
+	view.Add("Toggle full screen\tF11").OnClick(func(*application.Context) { win.ToggleFullscreen() })
 
 	help := menu.AddSubmenu("Help")
 	help.Add("About").OnClick(func(*application.Context) {
