@@ -14,7 +14,7 @@ type ExportFileRequest struct {
 	JobID string `json:"job_id"`
 }
 
-// ExportFile resolves the file of a succeeded export: exports/<project>/<job>.mp4
+// ExportFile resolves the file of a succeeded export: exports/<project>/<job>.<ext>
 // under the workspace, built from the database row and never from the request
 // (SDD-003 section 6.5, SDD-007 section 5.3). A job of another user is not found
 // and a job of another project of a limited key is forbidden, exactly like JobGet.
@@ -58,9 +58,19 @@ func (s *svc) ExportFile(ctx context.Context, req ExportFileRequest) (*File, err
 		}, nil
 	}
 
+	// A job row with no readable input is a video, as it was before formats.
+	var in exportInput
+
+	_ = json.Unmarshal(job.Input, &in)
+
+	f, _, ok := exportFormatOf(in.Format)
+	if !ok {
+		return nil, internalError()
+	}
+
 	return &File{
-		Path:        path.Join("exports", *job.ProjectID, job.ID+".mp4"),
-		ContentType: "video/mp4",
+		Path:        path.Join("exports", *job.ProjectID, job.ID+f.ext),
+		ContentType: f.contentType,
 		ETag:        exportETag(&job),
 		Immutable:   true,
 		MaxAge:      31536000,

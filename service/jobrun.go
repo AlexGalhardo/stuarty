@@ -525,13 +525,14 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		return nil, internalError()
 	}
 
-	out, aerr := filepath.Abs(filepath.Join(dir, job.ID+".mp4"))
+	out, aerr := filepath.Abs(filepath.Join(dir, exportFileName(job.ID, in.Format)))
 	if aerr != nil {
 		return nil, internalError()
 	}
 
 	res, err := s.exporter.Export(ctx, ExportInput{
-		JobID: job.ID, Doc: doc, OutPath: out, Start: in.Start, End: in.End, MaxBytes: s.limits.MaxExportBytes,
+		JobID: job.ID, Doc: doc, OutPath: out, Start: in.Start, End: in.End, Format: in.Format,
+		MaxBytes: s.limits.MaxExportBytes,
 		OnProgress: func(done, total int) {
 			if total > 0 {
 				pw.report(ctx, float64(done)/float64(total), "Rendering ("+strconv.Itoa(done*100/total)+"%)")
@@ -577,7 +578,7 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 	}
 
 	export := ExportResult{
-		Revision: in.Revision, Path: out, DownloadURL: "/api/v1/jobs/" + job.ID + "/file", Bytes: res.Bytes,
+		Revision: in.Revision, Format: formatName(in.Format), Path: out, DownloadURL: "/api/v1/jobs/" + job.ID + "/file", Bytes: res.Bytes,
 		SHA256: res.SHA256, Duration: timeValue(fps, frames), Width: doc.Settings.Width, Height: doc.Settings.Height,
 		FPS: fpsString(fps.Num, fps.Den), VideoCodec: res.VideoCodec, AudioCodec: res.AudioCodec,
 		LoudnessLUFS: res.LoudnessLUFS, Checks: res.Checks,
