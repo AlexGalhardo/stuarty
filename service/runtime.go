@@ -88,6 +88,10 @@ const (
 	queuedPerActor          = 2
 )
 
+// WithDefaults is the limits with every unset field at its default; the
+// workers of the owner size themselves from it.
+func (l Limits) WithDefaults() Limits { return l.withDefaults() }
+
 func (l Limits) withDefaults() Limits {
 	if l.MaxImportBytes <= 0 {
 		l.MaxImportBytes = defaultMaxImportBytes
