@@ -4,7 +4,7 @@ description: "Run the editor in its own window on Windows: build it, start it, u
 ---
 
 <Callout type="warning" title="BETA">
-The desktop application is in BETA and is not published as an installer yet. Today you build it from source. It has been run on Windows 11 only; macOS and Linux build in CI but have not been run, so this page does not describe them.
+The desktop application is in BETA. A release lists an installer for Windows 11, a disk image for macOS and a package for Debian and Ubuntu, none signed with a paid certificate (see [Installation](/docs/installation)); you can also build it from source. It has been run by hand on Windows 11 only; macOS and Linux are built and their files are checked in CI, but the window has not been run there, so this page does not describe them.
 </Callout>
 
 ## You will learn
@@ -45,9 +45,13 @@ The workspace is `~/.vukem-video`, or the folder in `VUKEM_VIDEO_HOME` if you se
 
 In a browser you paste a file path to import media. In the desktop window the editor shows **Choose files**, which opens the native file dialog and imports the files you pick. Dropping files on the window imports them in the same way. The editor sends only the paths to the server, which copies the files into the workspace, so nothing is uploaded anywhere.
 
+## Updates
+
+The application can look for a newer version, and only when you ask. The setting **Check for updates at start-up** is off by default; with it off the application opens no connection at all. **Help**, **Check for updates** makes one check for that action. A check is one HTTPS request for a signed file, `feed.json`, on the GitHub Pages site of the project; the installer it offers is downloaded from the same address, and the application checks its SHA-256 and its signature before it runs it. A file that does not match is refused and the application keeps running. On Windows the installer is started for you and the application quits; on macOS and Linux the application shows the release page instead. A build made without the signing key built in (for example one you compiled yourself) has no update check and says so in the menu. How the feed is signed is on the page [Verify a release](/docs/self-hosting/verify-a-release).
+
 ## Common mistakes
 
-- The build is not signed with a paid certificate, so Windows SmartScreen warns before the first run. See [Quick start](/docs/quick-start) for the steps.
+- The build is not signed with a paid certificate, so Windows SmartScreen warns before the first run. See [Installation](/docs/installation) for the steps on Windows and macOS.
 - Every page answers with an error: the front end was not built. Run `bun run build` in `web/` before `go build`.
 - A second copy of the program on the same workspace: the workspace is locked and the second one cannot start. See [the workspace is locked](/docs/troubleshooting/workspace-locked).
 - Looking for macOS or Linux builds: they are not verified, so nothing here is promised for them.

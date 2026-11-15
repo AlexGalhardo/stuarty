@@ -50,6 +50,29 @@ docker run --rm "ghcr.io/alexgalhardo/vukem-video:$V" version
 
 O último comando imprime `vukem-video vX.Y.Z`. Os instaladores de Windows e macOS não são assinados com um certificado pago de assinatura de código; o `checksums.txt` assinado é como você os verifica.
 
+## Os instaladores do BETA não são assinados
+
+O BETA não tem assinatura de código paga: não há Apple Developer ID nem notarização, e não há certificado de assinatura de código do Windows. Isso vale para os instaladores do servidor local e para os instaladores do [aplicativo desktop](/docs/guide/desktop) (`vukem-video-desktop_X.Y.Z_windows_amd64_setup.exe`, `..._darwin_arm64.dmg`, `..._darwin_amd64.dmg` e `..._linux_amd64.deb`). A assinatura paga será decidida de novo antes da 1.0. Até lá, a prova de que um arquivo é o que o projeto construiu é a assinatura do `checksums.txt` e a atestação do arquivo, e o seu sistema avisa antes de executá-lo:
+
+- **O SmartScreen do Windows** mostra "O Windows protegeu seu PC". Escolha **Mais informações** e depois **Executar assim mesmo**. O publicador aparece como desconhecido porque não há certificado.
+- **O Gatekeeper do macOS** diz que o app ou o pacote não pode ser aberto porque a Apple não consegue verificá-lo. Clique com o botão direito (ou com Control), escolha **Abrir** e depois **Abrir** de novo; ou execute `xattr -d com.apple.quarantine <caminho do arquivo ou do app>`.
+
+Um aviso não é um veredito, e a ausência de aviso não é prova. Verifique o arquivo antes; as conferências abaixo não dependem do que o sistema diz.
+
+Baixe o instalador e execute, com a versão e o nome do arquivo do seu sistema:
+
+```bash
+FILE="vukem-video-desktop_${V}_windows_amd64_setup.exe"
+gh release download "$VERSION" -R "$REPO" -p "$FILE"
+bash scripts/desktop-verify.sh "$VERSION" "$FILE"
+```
+
+O `scripts/desktop-verify.sh` está no repositório (clone-o, ou baixe-o a partir da tag). Ele baixa o `checksums.txt` e a assinatura dele, verifica a assinatura com o cosign, confere que o SHA-256 do seu arquivo é igual à linha dele no `checksums.txt` e executa `gh attestation verify` no arquivo. Ele não usa `codesign` nem `signtool`, porque não há assinatura de código para conferir. Sem o script, faça o mesmo à mão com os comandos do início rápido, usando `$FILE` onde eles usam `$ARCHIVE`.
+
+### O feed de atualização
+
+O aplicativo desktop pode procurar uma versão mais nova, mas só quando você ativa: a configuração `update.check` vem desligada e, desligada, o aplicativo não abre nenhuma conexão. Ele lê um único arquivo assinado, `feed.json`, do site do projeto no GitHub Pages (`<site>/updates/feed.json`), e os instaladores que ele lista vêm do mesmo endereço. O feed e cada instalador são assinados com uma chave Ed25519 cuja metade pública está embutida no aplicativo; um arquivo que não bate com a assinatura ou com o digest é recusado. A versão também anexa o `feed.json`, e `bash scripts/release-verify.sh vX.Y.Z` confere que cada digest dele é igual ao do `checksums.txt`.
+
 ## Erros comuns
 
 - Pular o `cosign verify-blob` e executar apenas o `sha256sum`: um arquivo de checksums que você não verificou não prova nada.
