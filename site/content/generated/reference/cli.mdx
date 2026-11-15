@@ -323,6 +323,38 @@ Example:
 vukem-video media:list --project prj_7k2m9x4q1b --json
 ```
 
+## `media:trash`
+
+Move an asset to the trash
+
+```text
+vukem-video media:trash <asset id> --project <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+vukem-video media:trash ast_3c5v8n2w6d --project prj_7k2m9x4q1b
+```
+
+## `media:restore`
+
+Restore a trashed asset
+
+```text
+vukem-video media:restore <asset id> --project <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+vukem-video media:restore ast_3c5v8n2w6d --project prj_7k2m9x4q1b
+```
+
 ## `view`
 
 Render a frame or a contact sheet of a project
@@ -523,7 +555,7 @@ vukem-video template:new <template id> --name <name> [--fill <file|->] [--id prj
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--name` | string |  | project name (required) |
-| `--fill` | string |  | a JSON object of slot name to value, from a file or - for standard input |
+| `--fill` | string |  | a JSON object of slot name to value: a file, or - for standard input |
 | `--id` | string |  | identifier to give the project |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.

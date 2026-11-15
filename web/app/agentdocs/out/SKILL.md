@@ -72,6 +72,8 @@ Every line starts with `vukem-video`.
 - `media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]`
 - `media:inspect <asset id> --project <id> [--sections probe,transcript,silences,loudness]`
 - `media:list --project <id> [--cursor c] [--limit n]`
+- `media:trash <asset id> --project <id>`
+- `media:restore <asset id> --project <id>`
 - `view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]`
 - `export --project <id> [--start t] [--end t] [--wait] [--timeout d]`
 - `job:show <job id> [--wait] [--timeout d]`
