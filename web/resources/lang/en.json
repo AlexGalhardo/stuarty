@@ -462,7 +462,17 @@
           "clear": "Clear",
           "preview": "Preview batch",
           "run": "Run batch"
-        }
+        },
+        "required": "required",
+        "unset": "Not set",
+        "range": "From {min} to {max}",
+        "remove_value": "Remove value {n}",
+        "add_value": "Add",
+        "variant": "Option {n}",
+        "no_arguments": "This command takes no arguments."
+      },
+      "time": {
+        "hint": "Use 12.5s, 375f or 00:12.500."
       }
     }
   }

@@ -837,7 +837,7 @@ Build order inside ALPHA, so coverage grows in a useful order: (1) command palet
 | Schema construct | Control |
 | --- | --- |
 | `string` with an `ast_`, `trk_`, `itm_` pattern or a description mentioning the id kind | a select of the matching objects of the read model (label: name and id), with free text allowed |
-| string whose schema is a time (`format` or `x-vv-kind: "time"`; the generator marks every time argument of A.4) | `TimeField` (§12.2) |
+| string whose schema is a time (`format` or `x-vv-kind: "time"`; the generator marks every time argument of A.4; until it does, the form also treats a string as a time when its description says "a time with a unit", "a length", "absolute position", "absolute start", "absolute frame" or "offset into", or its name is one of `start`, `duration`, `at`, `to`, `source_in`, `fade_in`, `fade_out`, `max_gap`, `min_silence`, `padding`) | `TimeField` (§12.2) |
 | other `string` | text input; `enum` renders a select |
 | `number`, `integer` | number input with `minimum`, `maximum` |
 | `boolean` | checkbox |
@@ -997,7 +997,7 @@ Fonts come from `getFonts()` (Appendix B); the select shows bundled families fir
 
 ### 12.2 Time inputs
 
-`TimeField` (`ui/TimeField.tsx`, used by the inspector, the palette form and the dialogs) displays the stored value in the user's `timeDisplay` mode (§5.1) and accepts any of the three forms of SDD-002 A.4:
+`TimeField` (`ui/TimeField.tsx`, used by the inspector, the palette form and the dialogs) is a presentational text field (it shows the text it is given and reports what was typed; the owner of the value, the schema form or the commit rule of the inspector, calls `normalizeTimeInput` and `formatTime` of `commands/units.ts`, because `ui` imports no other editor folder, §3.3). The value is displayed in the user's `timeDisplay` mode (§5.1) and any of the three forms is accepted of SDD-002 A.4:
 
 | Typed | Sent as |
 | --- | --- |

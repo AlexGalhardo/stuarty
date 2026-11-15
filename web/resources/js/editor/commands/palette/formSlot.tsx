@@ -22,7 +22,11 @@ export interface FormSlotProps {
 	error: ApiError | null;
 }
 
-export type FormSlot = (props: FormSlotProps) => ReactNode;
+export type FormSlot = ((props: FormSlotProps) => ReactNode) & {
+	// Whether the form shows this error on one of its fields; when it does not,
+	// the palette shows the error block at the top of the form.
+	resolvesPath?(command: CommandDetail, error: ApiError): boolean;
+};
 
 function parse(text: string): CommandArgs | null {
 	try {

@@ -462,7 +462,17 @@
           "clear": "Limpar",
           "preview": "Pré-visualizar lote",
           "run": "Executar lote"
-        }
+        },
+        "required": "obrigatório",
+        "unset": "Não definido",
+        "range": "De {min} a {max}",
+        "remove_value": "Remover valor {n}",
+        "add_value": "Adicionar",
+        "variant": "Opção {n}",
+        "no_arguments": "Este comando não tem argumentos."
+      },
+      "time": {
+        "hint": "Use 12,5s, 375f ou 00:12,500."
       }
     }
   }
