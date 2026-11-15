@@ -793,6 +793,35 @@
       ]
     },
     {
+      "name": "template:export",
+      "summary": "write a template to a file the workspace keeps",
+      "usage": [
+        "vukem-video template:export <template id>"
+      ],
+      "example": "vukem-video template:export tpl_5n8b2v6c1x",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "template:import",
+      "summary": "add a template file to the library",
+      "usage": [
+        "vukem-video template:import <path>"
+      ],
+      "example": "vukem-video template:import spring-sale.vukem-template.zip",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "dry-run"
+      ]
+    },
+    {
       "name": "agent:docs",
       "summary": "print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions",
       "usage": [

@@ -566,6 +566,38 @@ Example:
 vukem-video template:new tpl_5n8b2v6c1x --name "Spring sale" --fill fill.json
 ```
 
+## `template:export`
+
+Write a template to a file the workspace keeps
+
+```text
+vukem-video template:export <template id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+vukem-video template:export tpl_5n8b2v6c1x
+```
+
+## `template:import`
+
+Add a template file to the library
+
+```text
+vukem-video template:import <path>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+vukem-video template:import spring-sale.vukem-template.zip
+```
+
 ## `agent:docs`
 
 Print or write the material for agents: the skill, the AGENTS.md snippet, the MCP instructions
