@@ -893,6 +893,8 @@ D-023: the Prototype UI shows the timeline and the preview updating live while a
 
 Dragging or resizing items; drag from the library to the timeline; snapping and the snap-points endpoint; the inspector and every field in it; transform handles and any canvas editing; multi-selection, marquee, copy, paste, duplicate, delete, ripple; text items, shapes, keyframes, transitions, speed, color, silence removal, templates; caption editing beyond adding; track operations (the track header shows name only); project settings and rename; the command palette and the schema form; the history panel; thumbnails strips and waveforms in the timeline; the safe-area guide; the keyboard map beyond the keys listed in §10.1; cancel of an export (`JobCancel` is A); the Portuguese catalog and the language switcher; the settings, API-keys and login pages; deep link parameters `?t` and `?item`; virtualization; the accessibility audit (semantic elements and labels are still used, §18). The coverage test runs in the Prototype but only for the commands marked `P` in §9.1.
 
+In the ALPHA build the gate of this list is lifted by one function: every control that exists only from a later phase asks `isPhaseAtLeast("alpha")` of `boot/phase.ts`, which reads the `phase` of the bootstrap. Nothing else compares the phase string, and `coverage.test.ts` runs the full rule of section 9.3 for the ALPHA build (47 keys, one `palette` entry each).
+
 ### 10.3 Decisions about the boundary
 
 **Decision of this SDD.** Undo and Redo buttons are in the Prototype although D-023 lists four operations. Manual split and trim without undo makes the Prototype unusable, the service operations are `P` in SDD-000, and a button costs nothing. They act for the current actor (`local:ui`).
