@@ -19,7 +19,8 @@ func TestViewFrameAndSheetRenderTheCurrentRevision(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if f.Mode != "frame" || f.Revision != 2 || f.MIME != "image/jpeg" || !bytes.HasPrefix(f.Image, []byte{0xff, 0xd8}) ||
+	if f.Mode != "frame" || f.Revision != 2 || f.MIME != "image/jpeg" ||
+		!bytes.HasPrefix(f.Image, []byte{0xff, 0xd8}) ||
 		f.ImageTokens > 800 ||
 		len(f.Cells) != 1 ||
 		f.Cells[0].At.Frame != 15 {
