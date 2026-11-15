@@ -66,6 +66,14 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.JobList(ctx, service.JobListRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"ViewFrame": func() error {
+			_, err := e.svc.ViewFrame(ctx, service.ViewFrameRequest{ProjectID: "prj_0000000001", At: "0s"})
+			return err
+		},
+		"ViewSheet": func() error {
+			_, err := e.svc.ViewSheet(ctx, service.ViewSheetRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"OpenFile": func() error {
 			_, err := e.svc.OpenFile(
 				ctx,
