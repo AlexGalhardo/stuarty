@@ -139,7 +139,7 @@ Every error has this shape on every surface:
 }
 ```
 
-Rules for messages: state what was wrong with the actual values; `hint` states one concrete way to succeed; never include a stack trace, a file path of the server or SQL. `details` is machine-readable and specific to the code.
+Rules for messages: state what was wrong with the actual values; `hint` states one concrete way to succeed; never include a stack trace, a file path of the server or SQL. The caller's own words may be quoted back even when they look like a file name (an unknown argument `ts` gives `args.ts is not an argument of this command.`); `CheckError` is for what the server adds, and the fuzz target `FuzzApplyArgs` removes the caller's strings before it checks. `details` is machine-readable and specific to the code.
 
 Codes of the core (service codes are in SDD-003):
 
