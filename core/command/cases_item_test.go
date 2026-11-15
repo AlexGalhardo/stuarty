@@ -196,7 +196,7 @@ func init() {
 	sp("ok_keyframes_100_before_cut_limit_kept", at("160f"), c(func(it *timeline.Item) {
 		kfs := make([]timeline.Keyframe, 100)
 		for i := range kfs {
-			kfs[i] = kf(i, float64(i)/100)
+			kfs[i] = kf(i, float64(i+1)/100)
 		}
 		keyframes("scale", kfs...)(it)
 	}))
