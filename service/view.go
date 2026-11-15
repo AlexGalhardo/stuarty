@@ -201,13 +201,15 @@ func (s *svc) beginView(ctx context.Context, method, projectID, assetID string) 
 			withPath("asset_id").withHint("view the project")
 	}
 
-	if s.media.Frames == nil {
-		return nil, newError(command.CodeInternal, "viewing is not available in this build.")
-	}
-
+	// The project is looked up first: a caller who may not see it learns nothing
+	// about what this build can render.
 	row, lerr := s.loadProject(ctx, c, projectID)
 	if lerr != nil {
 		return nil, lerr
+	}
+
+	if s.media.Frames == nil {
+		return nil, newError(command.CodeInternal, "viewing is not available in this build.")
 	}
 
 	doc, derr := decodeRow(&row)

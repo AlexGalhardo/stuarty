@@ -264,6 +264,16 @@ func exportRange(doc *timeline.Document, a ExportArgs) (start, end int64, err *E
 	return start, end, nil
 }
 
+// otherProject is true for a key limited to one project and a job of another.
+func otherProject(c Caller, j *JobRow) bool {
+	return c.ProjectID != "" && j.ProjectID != nil && *j.ProjectID != c.ProjectID
+}
+
+func limitedElsewhere() *Error {
+	return newError(CodeForbidden, "the key is limited to another project.").
+		withHint("use a key that covers this project")
+}
+
 // canSee reports whether the caller may read a job: a job of a project follows
 // the project; an ingest job follows any project that holds its file (SDD-003
 // section 2.8 rule 7).
@@ -316,6 +326,10 @@ func (s *svc) JobGet(ctx context.Context, req JobGetRequest) (*Job, error) {
 	}
 
 	row, gerr := s.store.Jobs().Get(ctx, req.JobID)
+	if gerr == nil && otherProject(c, &row) {
+		return nil, limitedElsewhere()
+	}
+
 	if gerr != nil || !s.canSee(ctx, c, &row) {
 		return nil, jobNotFound(req.JobID)
 	}
@@ -477,6 +491,10 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 	}
 
 	row, err := s.store.Jobs().Get(ctx, req.JobID)
+	if err == nil && otherProject(c, &row) {
+		return nil, limitedElsewhere()
+	}
+
 	if err != nil || !s.canSee(ctx, c, &row) {
 		if !slices.Contains(c.Scopes, ScopeRender) && !slices.Contains(c.Scopes, ScopeMedia) {
 			return nil, newError(CodeForbidden, "the caller lacks the %q scope.", ScopeRender).

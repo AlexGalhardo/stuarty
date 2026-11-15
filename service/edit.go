@@ -241,8 +241,13 @@ func (s *svc) checkBatch(c Caller, req *EditRequest, allowInternal bool) (string
 		}
 
 		if need := string(cmd.Scope); !slices.Contains(c.Scopes, need) {
-			return "", newError(CodeForbidden, "the caller lacks the %q scope that %s needs.", need, op.Op).
+			idx := i
+
+			ferr := newError(CodeForbidden, "the caller lacks the %q scope that %s needs.", need, op.Op).
 				withHint("use a key with the %s scope", need).withPath(fmt.Sprintf("operations[%d].op", i))
+			ferr.OpIndex = &idx
+
+			return "", ferr
 		}
 	}
 
