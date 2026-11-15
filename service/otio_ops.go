@@ -183,8 +183,12 @@ func (s *svc) readOtio(path string) (*otio.Import, error) {
 	im, perr := otio.Parse(data)
 	if perr != nil {
 		if errors.Is(perr, otio.ErrInvalid) {
-			return nil, newError(command.CodeValidation, "the file is not an OpenTimelineIO timeline this server reads.").
-				withPath("path").withHint("export a Timeline with one Stack of Tracks")
+			return nil, newError(
+				command.CodeValidation,
+				"the file is not an OpenTimelineIO timeline this server reads.",
+			).
+				withPath("path").
+				withHint("export a Timeline with one Stack of Tracks")
 		}
 
 		return nil, internalError()

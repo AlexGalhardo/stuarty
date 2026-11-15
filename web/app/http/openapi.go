@@ -125,9 +125,17 @@ func describeJobStartArgs(doc *openapi.Document) {
 		delete(args, "additionalProperties")
 
 		args["properties"] = map[string]any{
-			"start":    map[string]any{"type": "string", "description": "export: the first time to render, such as 1.5s or 45f."},
-			"end":      map[string]any{"type": "string", "description": "export: the end time, not included."},
-			"format":   map[string]any{"type": "string", "enum": []string{"mp4", "gif", "wav", "aac"}, "default": "mp4", "description": "export: the file to write; wav and aac are audio only."},
+			"start": map[string]any{
+				"type":        "string",
+				"description": "export: the first time to render, such as 1.5s or 45f.",
+			},
+			"end": map[string]any{"type": "string", "description": "export: the end time, not included."},
+			"format": map[string]any{
+				"type":        "string",
+				"enum":        []string{"mp4", "gif", "wav", "aac"},
+				"default":     "mp4",
+				"description": "export: the file to write; wav and aac are audio only.",
+			},
 			"asset_id": map[string]any{"type": "string", "description": "transcribe: the asset to transcribe."},
 			"language": map[string]any{"type": "string", "description": "transcribe: the spoken language."},
 		}
