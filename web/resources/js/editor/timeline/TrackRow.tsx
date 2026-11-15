@@ -34,8 +34,12 @@ import {
 import { consumeDragClick } from "./gestures/lifecycle";
 import { beginMove } from "./gestures/move";
 import ItemContextMenuItems from "./ItemContextMenu";
+import AudioItem from "./items/AudioItem";
+import Badges from "./items/Badges";
 import CaptionItem from "./items/CaptionItem";
+import ClipItem from "./items/ClipItem";
 import KeyframeDiamonds from "./items/KeyframeDiamonds";
+import ShapeItem from "./items/ShapeItem";
 import TransitionMarks from "./items/TransitionMarks";
 import TrimHandle from "./items/TrimHandle";
 import { clickSelection, gridLayout } from "./keyboard";
@@ -189,14 +193,26 @@ const ItemBlock = memo(function ItemBlock({ id }: { id: string }): ReactNode {
 				runtime.uiWriter.select(next.items, next.anchor);
 			}}
 		>
+			{item.type === "clip" && <ClipItem id={id} />}
+			{item.type === "audio" && <AudioItem id={id} />}
 			<TrimHandle itemId={id} edge="start" />
+			{item.type === "shape" && <ShapeItem id={id} />}
 			{renaming ? (
 				<RenameField itemId={id} initial={item.name ?? ""} />
 			) : item.type === "caption" ? (
 				<CaptionItem id={id} />
 			) : (
-				<UntrustedText className="truncate">{label}</UntrustedText>
+				<UntrustedText
+					className={cn(
+						"relative z-10 truncate",
+						(item.type === "clip" || item.type === "audio") &&
+							"rounded bg-background/70 px-1",
+					)}
+				>
+					{label}
+				</UntrustedText>
 			)}
+			<Badges id={id} />
 			<TransitionMarks id={id} />
 			<KeyframeDiamonds id={id} />
 			<TrimHandle itemId={id} edge="end" />
