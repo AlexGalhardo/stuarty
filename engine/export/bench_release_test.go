@@ -62,8 +62,8 @@ func benchRelease(b *testing.B, doc *timeline.Document, format Format) {
 		b.ReportMetric(elapsed.Seconds(), "s_export")
 		b.ReportMetric(secs/elapsed.Seconds(), "x_realtime")
 		b.ReportMetric(float64(peak>>20), "peak_MB")
-		b.Logf("%s: %.0f frames, %.1f s, peak %d MB", res.Encoder, secs*float64(doc.Settings.FPS.Num)/float64(doc.Settings.FPS.Den),
-			elapsed.Seconds(), peak>>20)
+		frames := secs * float64(doc.Settings.FPS.Num) / float64(doc.Settings.FPS.Den)
+		b.Logf("%s: %.0f frames, %.1f s, peak %d MB", res.Encoder, frames, elapsed.Seconds(), peak>>20)
 
 		_ = os.Remove(res.Path)
 	}

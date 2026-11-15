@@ -32,7 +32,7 @@ func TestEncoderForSizeFallsBackToTheNextWorkingEncoder(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			r, caps, dir := hwFixtureDir(t, all...)
-			if err := os.WriteFile(filepath.Join(dir, "small.txt"), []byte(strings.Join(c.small, "\n")), 0o644); err != nil {
+			if err := writeSmall(dir, c.small); err != nil {
 				t.Fatal(err)
 			}
 			ctx := context.Background()
@@ -49,7 +49,7 @@ func TestEncoderForSizeFallsBackToTheNextWorkingEncoder(t *testing.T) {
 
 	t.Run("nothing can", func(t *testing.T) {
 		r, caps, dir := hwFixtureDir(t, all...)
-		if err := os.WriteFile(filepath.Join(dir, "small.txt"), []byte(strings.Join(all, "\n")), 0o644); err != nil {
+		if err := writeSmall(dir, all); err != nil {
 			t.Fatal(err)
 		}
 		det, err := r.DetectEncoder(context.Background(), caps, DetectOptions{})
@@ -57,22 +57,29 @@ func TestEncoderForSizeFallsBackToTheNextWorkingEncoder(t *testing.T) {
 			t.Fatal(err)
 		}
 		got, err := r.EncoderForSize(context.Background(), det, big)
-		if !errors.Is(err, ErrEncoderSize) || got.Name != "h264_nvenc" || !strings.Contains(err.Error(), "frame size too large") {
+		if !errors.Is(err, ErrEncoderSize) || got.Name != "h264_nvenc" ||
+			!strings.Contains(err.Error(), "frame size too large") {
 			t.Fatalf("got %+v, %v", got, err)
 		}
 	})
 
 	t.Run("a forced encoder stays", func(t *testing.T) {
 		r, caps, dir := hwFixtureDir(t, all...)
-		if err := os.WriteFile(filepath.Join(dir, "small.txt"), []byte("h264_nvenc"), 0o644); err != nil {
+		if err := writeSmall(dir, []string{"h264_nvenc"}); err != nil {
 			t.Fatal(err)
 		}
 		det, err := r.DetectEncoder(context.Background(), caps, DetectOptions{Forced: "h264_nvenc"})
 		if err != nil {
 			t.Fatal(err)
 		}
-		if got, err := r.EncoderForSize(context.Background(), det, big); !errors.Is(err, ErrEncoderSize) || got.Name != "h264_nvenc" {
+		got, err := r.EncoderForSize(context.Background(), det, big)
+		if !errors.Is(err, ErrEncoderSize) || got.Name != "h264_nvenc" {
 			t.Fatalf("got %+v, %v", got, err)
 		}
 	})
+}
+
+// writeSmall tells the fake FFmpeg in dir which encoders cannot do a 4K picture.
+func writeSmall(dir string, names []string) error {
+	return os.WriteFile(filepath.Join(dir, "small.txt"), []byte(strings.Join(names, "\n")), 0o644)
 }
