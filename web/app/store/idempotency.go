@@ -67,11 +67,16 @@ func (r idempotencyRepo) PurgeProjectExpired(ctx context.Context, projectID stri
 		"DELETE FROM idempotency_keys WHERE project_id = ? AND expires_ms <= ?", projectID, nowMs))
 }
 
-func (r idempotencyRepo) TrimActor(ctx context.Context, projectID, actor string, keep int) (int64, error) {
-	return rowsAffected(r.ex.ExecContext(ctx,
-		`DELETE FROM idempotency_keys WHERE rowid IN (
- SELECT rowid FROM idempotency_keys WHERE project_id = ? AND actor = ?
- ORDER BY created_ms DESC, rowid DESC LIMIT -1 OFFSET ?)`, projectID, actor, keep))
+func (r idempotencyRepo) CountLive(
+	ctx context.Context,
+	projectID, actor string,
+	nowMs int64,
+) (n int, firstExpiresMs int64, err error) {
+	err = r.ex.QueryRowContext(ctx,
+		`SELECT COUNT(*), COALESCE(MIN(expires_ms), 0) FROM idempotency_keys
+ WHERE project_id = ? AND actor = ? AND expires_ms > ?`, projectID, actor, nowMs).Scan(&n, &firstExpiresMs)
+
+	return n, firstExpiresMs, err
 }
 
 func (r idempotencyRepo) PurgeExpired(ctx context.Context, nowMs int64) (int64, error) {
