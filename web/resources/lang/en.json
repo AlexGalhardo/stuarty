@@ -620,6 +620,40 @@
         "split": "Split",
         "split_before": "Split the caption before word {n}",
         "edit_label": "Word {n}"
+      },
+      "auto_captions": {
+        "title": "Auto captions",
+        "track": "Track",
+        "new_track": "New Captions track",
+        "track_name": "Captions",
+        "max_words": "Words per caption",
+        "max_chars": "Characters per caption",
+        "max_gap": "Pause that starts a caption",
+        "replace": "Replace linked captions",
+        "invalid": "Use whole numbers above zero and a length such as 0.6s.",
+        "generate": "Generate captions",
+        "resync": "Re-sync captions",
+        "checking": "Looking for a transcript",
+        "transcribing": "Transcribing the audio",
+        "progress": "Transcription progress",
+        "open_install": "Install local transcription",
+        "install": {
+          "title": "Install local transcription",
+          "description": "Transcription runs on this computer and needs files that are not installed yet.",
+          "missing": "Not installed",
+          "source": "from {host}",
+          "size": "Download size: {megabytes} MB",
+          "command": "Or run this command in a terminal",
+          "copy_command": "Copy the command",
+          "install": "Install",
+          "cancel": "Cancel",
+          "close": "Close",
+          "progress": "Installation progress",
+          "installing": "Installing: {done} of {total} MB",
+          "done": "Installed. Press Generate captions again.",
+          "forbidden": "This session cannot install files. Run the command below in a terminal.",
+          "copy_details": "Copy details"
+        }
       }
     }
   }
