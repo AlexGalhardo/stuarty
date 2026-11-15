@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"runtime"
-	"slices"
 	"strings"
 	"time"
 
@@ -12,17 +11,16 @@ import (
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
-// softwareEncoders are the H.264 encoders that run on the CPU: RLIMIT_AS applies to an
-// export with one of them and not to a hardware encoder (SDD-007 section 6.5).
-var softwareEncoders = []string{"libopenh264", "libx264"}
-
 // childRunners are the runners of the four kinds of FFmpeg run. The pinned contrib/engine applies
 // limits per tool, so a kind with other limits needs a pair of its own (ffmpeg.Installation.WithLimits).
 type childRunners struct {
 	// Ingest is the runner of the decoding runs: ingest, the audio extraction of a transcription,
 	// encoder detection and the doctor.
 	Ingest, Frame, Export *ffmpeg.Runner
-	Policy                service.ChildPolicy
+	// ExportHardware runs the export when detection chooses a hardware encoder: no RLIMIT_AS.
+	// Export, the default, has it.
+	ExportHardware *ffmpeg.Runner
+	Policy         service.ChildPolicy
 }
 
 // newChildRunners applies SDD-007 sections 6.5 and 6.7 to an installation: prlimit(1) limits where
@@ -31,7 +29,7 @@ type childRunners struct {
 func newChildRunners(
 	ctx context.Context,
 	in *ffmpeg.Installation,
-	workspace, sandboxMode, forcedEncoder string,
+	workspace, sandboxMode string,
 	maxExportBytes int64,
 ) (*childRunners, error) {
 	sandboxMode = strings.TrimSpace(sandboxMode)
@@ -46,12 +44,10 @@ func newChildRunners(
 
 	limitsOK, why := ffmpeg.LimitsAvailable()
 	if !limitsOK && runtime.GOOS == "linux" {
-		return nil, fmt.Errorf("owner: %s: the limits of SDD-007 section 6.5 need it, and children are never started unlimited", why)
-	}
-
-	exportKind := ffmpeg.KindExportHardware
-	if slices.Contains(softwareEncoders, forcedEncoder) {
-		exportKind = ffmpeg.KindExportSoftware
+		return nil, fmt.Errorf(
+			"owner: %s: the limits of SDD-007 section 6.5 need it, and children are never started unlimited",
+			why,
+		)
 	}
 
 	cpus := in.CPUCount
@@ -65,10 +61,11 @@ func newChildRunners(
 	}{
 		{ffmpeg.KindIngest, ffmpeg.IngestDeadline(24 * time.Hour), 0},
 		{ffmpeg.KindFrame, ffmpeg.FrameTimeout, 0},
-		{exportKind, ffmpeg.ExportDeadline(24 * time.Hour), maxExportBytes},
+		{ffmpeg.KindExportSoftware, ffmpeg.ExportDeadline(24 * time.Hour), maxExportBytes},
+		{ffmpeg.KindExportHardware, ffmpeg.ExportDeadline(24 * time.Hour), maxExportBytes},
 	}
 
-	var runners [3]*ffmpeg.Runner
+	var runners [4]*ffmpeg.Runner
 
 	for i, k := range kinds {
 		tooled, werr := in.WithLimits(ctx, ffmpeg.LimitsFor(k.kind, k.deadline, cpus, k.fileBytes))
@@ -86,7 +83,7 @@ func newChildRunners(
 	}
 
 	return &childRunners{
-		Ingest: runners[0], Frame: runners[1], Export: runners[2],
+		Ingest: runners[0], Frame: runners[1], Export: runners[2], ExportHardware: runners[3],
 		Policy: service.ChildPolicy{Limits: limitsOK, LimitsWhy: why, Sandbox: sandbox},
 	}, nil
 }

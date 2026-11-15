@@ -342,8 +342,7 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 	}
 
 	child, err := newChildRunners(
-		ctx, in, string(o.Dir), cfg.Getenv("VUKEM_VIDEO_SANDBOX"), cfg.Getenv("VUKEM_VIDEO_ENCODER"),
-		o.limits.MaxExportBytes,
+		ctx, in, string(o.Dir), cfg.Getenv("VUKEM_VIDEO_SANDBOX"), o.limits.MaxExportBytes,
 	)
 	if err != nil {
 		return service.Media{}, nil, err
@@ -363,12 +362,16 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 		return service.Media{}, nil, err
 	}
 
-	media.Frames = &frame.Frames{Runner: child.Frame, ArtifactsDir: filepath.Join(string(o.Dir), "artifacts"), Cache: frames}
+	media.Frames = &frame.Frames{
+		Runner:       child.Frame,
+		ArtifactsDir: filepath.Join(string(o.Dir), "artifacts"),
+		Cache:        frames,
+	}
 
 	allowX264, _ := strconv.ParseBool(cfg.Getenv("VUKEM_VIDEO_ALLOW_USER_X264"))
 
 	return media, exporter.New(exporter.Config{
-		Runner: child.Export, Workspace: string(o.Dir),
+		Runner: child.Export, HardwareRunner: child.ExportHardware, Workspace: string(o.Dir),
 		Encoder: ffmpeg.DetectOptions{Forced: cfg.Getenv("VUKEM_VIDEO_ENCODER"), AllowUserX264: allowX264},
 	}), nil
 }

@@ -37,3 +37,31 @@ func TestExportRefusesWhatItCannotDo(t *testing.T) {
 		}
 	}
 }
+
+// SDD-007 section 6.5: with no forced encoder, a detected software encoder keeps the address
+// space limit; only a detected hardware encoder takes the runner without it.
+func TestPickRunnerKeepsTheAddressSpaceLimitForSoftwareEncoders(t *testing.T) {
+	software, hardware := &ffmpeg.Runner{}, &ffmpeg.Runner{}
+
+	cases := map[string]struct {
+		det  *ffmpeg.EncoderDetection
+		err  error
+		want *ffmpeg.Runner
+	}{
+		"libx264":           {&ffmpeg.EncoderDetection{Chosen: "libx264"}, nil, software},
+		"libopenh264":       {&ffmpeg.EncoderDetection{Chosen: "libopenh264"}, nil, software},
+		"unknown":           {&ffmpeg.EncoderDetection{Chosen: "mpeg4"}, nil, software},
+		"none":              {&ffmpeg.EncoderDetection{}, nil, software},
+		"nil detection":     {nil, nil, software},
+		"failed":            {&ffmpeg.EncoderDetection{Chosen: "h264_nvenc"}, errors.New("boom"), software},
+		"h264_nvenc":        {&ffmpeg.EncoderDetection{Chosen: "h264_nvenc"}, nil, hardware},
+		"h264_vaapi":        {&ffmpeg.EncoderDetection{Chosen: "h264_vaapi"}, nil, hardware},
+		"h264_videotoolbox": {&ffmpeg.EncoderDetection{Chosen: "h264_videotoolbox"}, nil, hardware},
+	}
+
+	for name, tc := range cases {
+		if got := pickRunner(tc.det, tc.err, software, hardware); got != tc.want {
+			t.Errorf("%s: picked the wrong runner", name)
+		}
+	}
+}
