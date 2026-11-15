@@ -596,6 +596,33 @@
           "fit": "fades ou transições não cabem mais"
         }
       },
+      "clip": {
+        "audio_title": "Áudio",
+        "volume": "Volume",
+        "fade_in": "Fade de entrada",
+        "fade_out": "Fade de saída",
+        "mute": "Silenciar o áudio",
+        "framing_title": "Enquadramento",
+        "fit": "Ajuste",
+        "fit_cover": "Preencher",
+        "fit_contain": "Conter",
+        "fit_none": "Nenhum",
+        "crop_left": "Corte à esquerda",
+        "crop_top": "Corte em cima",
+        "crop_right": "Corte à direita",
+        "crop_bottom": "Corte embaixo",
+        "speed_title": "Velocidade",
+        "speed": "Velocidade",
+        "ripple": "Mover os itens seguintes",
+        "color_title": "Cor",
+        "brightness": "Brilho",
+        "contrast": "Contraste",
+        "saturation": "Saturação",
+        "silences_title": "Silêncios",
+        "min_silence": "Silêncio mínimo",
+        "padding": "Margem",
+        "remove_silences": "Remover silêncios"
+      },
       "inspector": {
         "name": "Nome",
         "timing": "Tempo",

@@ -12,10 +12,10 @@ import {
 	displayInPoint,
 	displayStart,
 	fpsOf,
-	type TimeDisplay,
 } from "../../commands/units";
 import { useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
+import { DISPLAY } from "../display";
 import TextField from "../fields/TextField";
 import TimeCommitField from "../fields/TimeCommitField";
 import Section from "../Section";
@@ -24,9 +24,6 @@ import AnimationSection from "./AnimationSection";
 import KeyframesSection from "./KeyframesSection";
 import TransformSection from "./TransformSection";
 import TransitionsSection from "./TransitionsSection";
-
-// The user preference of the display mode lives in prefs.ts (not built yet).
-const DISPLAY: TimeDisplay = "timecode";
 
 function ReadOnlyRow({
 	label,

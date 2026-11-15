@@ -596,6 +596,33 @@
           "fit": "fades or transitions no longer fit"
         }
       },
+      "clip": {
+        "audio_title": "Audio",
+        "volume": "Volume",
+        "fade_in": "Fade in",
+        "fade_out": "Fade out",
+        "mute": "Mute audio",
+        "framing_title": "Framing",
+        "fit": "Fit",
+        "fit_cover": "Cover",
+        "fit_contain": "Contain",
+        "fit_none": "None",
+        "crop_left": "Crop left",
+        "crop_top": "Crop top",
+        "crop_right": "Crop right",
+        "crop_bottom": "Crop bottom",
+        "speed_title": "Speed",
+        "speed": "Speed",
+        "ripple": "Ripple later items",
+        "color_title": "Colour",
+        "brightness": "Brightness",
+        "contrast": "Contrast",
+        "saturation": "Saturation",
+        "silences_title": "Silences",
+        "min_silence": "Minimum silence",
+        "padding": "Padding",
+        "remove_silences": "Remove silences"
+      },
       "inspector": {
         "name": "Name",
         "timing": "Timing",
