@@ -204,6 +204,7 @@
           "one": "Refeito; {count} alteração foi deixada como estava porque {actor} a alterou",
           "other": "Refeito; {count} alterações foram deixadas como estavam porque {actor} as alterou"
         },
+        "source_has_only": "A mídia de origem tem apenas {available}",
         "another_actor": "outro ator"
       },
       "jobs": {

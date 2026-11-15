@@ -186,6 +186,15 @@ export function moveItems(targets: readonly MoveTarget[]): Operations {
 	}));
 }
 
+// A trim handle released: one `item.trim` to the frame the ghost shows.
+export function trimEdgeOperations(
+	itemId: string,
+	edge: "start" | "end",
+	to: number,
+): Operations {
+	return [{ op: "item.trim", args: { item_id: itemId, edge, to: frames(to) } }];
+}
+
 export function trimEndOperations(itemId: string, to: string): Operations {
 	return [{ op: "item.trim", args: { item_id: itemId, edge: "end", to } }];
 }
@@ -201,6 +210,11 @@ export function withNextFree(ops: Operations, nextFree: number): Operations {
 					...operation,
 					args: { ...operation.args, start: frames(nextFree) },
 				}
-			: operation,
+			: operation.op === "item.trim"
+				? {
+						...operation,
+						args: { ...operation.args, to: frames(nextFree) },
+					}
+				: operation,
 	);
 }
