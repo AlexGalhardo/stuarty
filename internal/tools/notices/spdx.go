@@ -48,7 +48,10 @@ var signatures = []signature{
 	{id: "MPL-2.0", all: []string{"mozilla public license version 2.0"}},
 	{id: "OFL-1.1", all: []string{"sil open font license", "version 1.1"}},
 	{id: "blessing", all: []string{"sqlite is public domain", "dedicated to the public domain"}},
-	{id: "WTFPL", all: []string{"do what the fuck you want to public license", "you just do what the fuck you want to"}},
+	{
+		id:  "WTFPL",
+		all: []string{"do what the fuck you want to public license", "you just do what the fuck you want to"},
+	},
 	{
 		id: "Zlib",
 		all: []string{

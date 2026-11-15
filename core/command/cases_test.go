@@ -267,7 +267,8 @@ func TestGoldenCasesComplete(t *testing.T) {
 		// Each error code a command lists has at least one err_ case (the codes that
 		// every command can return from the schema alone are checked by err_validation).
 		for _, code := range cmd.Errors {
-			if !slices.ContainsFunc(have, func(n string) bool { return caseHasCode(n, code) }) && !coveredElsewhere(cmd.Name, code) {
+			if !slices.ContainsFunc(have, func(n string) bool { return caseHasCode(n, code) }) &&
+				!coveredElsewhere(cmd.Name, code) {
 				t.Errorf("%s lists %s but has no err_ case for it", cmd.Name, code)
 			}
 		}
