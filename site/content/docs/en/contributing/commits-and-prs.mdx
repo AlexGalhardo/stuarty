@@ -1,0 +1,49 @@
+---
+title: "Commits and pull requests"
+description: "How to write a commit and a pull request so that the checks pass and the changelog reads well."
+---
+
+## You will learn
+
+- the format of a commit header, and the types and scopes that are accepted;
+- how a commit becomes an entry of the release notes;
+- what a pull request must show before it is merged.
+
+## The idea
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/) 1.0 in English. A pull request is **rebase-merged**, so every commit of the branch reaches `main` as it is and is what the changelog reads. That is why each commit is small, self-contained and written for a reader of the release notes. One logical change goes in one commit and one pull request.
+
+```text
+<type>(<scope>)!: <description>
+
+[body]
+
+[footer(s)]
+```
+
+- **Types:** `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `style`, `revert`.
+- **Description:** imperative, starts with a lower-case letter, has no final period, and the whole header is at most 100 characters.
+- **Scope:** optional; one of `core`, `timeline`, `schema`, `command`, `plan`, `lint`, `engine`, `raster`, `ingest`, `export`, `image`, `transcribe`, `installers`, `service`, `workspace`, `web`, `api`, `mcp`, `cli`, `ui`, `site`, `docs`, `repo`, `ci`, `deps`, `deps-dev`, `release`, `adr`, `sdd`, `go` or `security`.
+- **Footers:** `BREAKING CHANGE:` describes the impact of a breaking change (also mark it with `!`); `Security:` gives one line on the risk a security fix closes; `Refs: P1-ENG-003` or `Fixes #123` names the task or issue.
+
+## Quick start
+
+1. Write the commit with a type that fits the notes. Release notes have five sections: `feat` goes to **Added**, a breaking commit to **Changed**, `revert` or a `Removed:` footer to **Removed**, `fix` to **Fixed**, and a `Security:` footer or the scope `security` to **Security**. Other types are left out.
+2. Run the checks before you push: `task ci`, and `task site:build` when you changed `site/`.
+3. Open the pull request with the template filled in: the task or issue, the checks you ran, the thin-client rule and any friction with the framework.
+4. Fold fixup commits before you ask for the merge. A pull request that fixes a bug has the test in the same commit as the fix.
+
+A commit that changes only the wording of an English page and needs no new translation carries a line `Translation: not-needed` in its message; see [Translating the documentation](/docs/contributing/translating).
+
+## Common mistakes
+
+- A header over 100 characters, a capital letter after the colon, a final period or a scope that is not in the list: the commit check fails and the header must be rewritten.
+- Marking a change `feat` when it fixes a bug: it ends up in **Added** instead of **Fixed**.
+- Editing `CHANGELOG.md` by hand. It is generated from the commits when a release is prepared.
+- Pushing to `main` or force pushing a shared branch. `main` is protected: a change reaches it only through a pull request with green checks, and the maintainer does the merging.
+- Putting a task id in the header instead of the body.
+
+## Next steps
+
+- [The release process](/docs/contributing/releases)
+- [Writing documentation](/docs/contributing/writing-docs)

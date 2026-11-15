@@ -1,0 +1,58 @@
+---
+title: "Run the binary"
+description: "Start the local server from the downloaded program, where it listens, where it keeps its files and how to stop it."
+---
+
+## You will learn
+
+- how to start and stop the server without a container;
+- which address, workspace, key and log files it uses;
+- how to check the installation before you rely on it.
+
+## The idea
+
+The release archive and the installers carry one program, `vukem-video`. `vukem-video serve` is the process that owns the [workspace](/docs/workspace): it serves the editor, the HTTP API and the MCP endpoint, and it runs the jobs. Without a container it runs in **local mode**: it listens on `127.0.0.1:7878` only, and a request needs the token in `<workspace>/token`. To serve other machines, use [network mode](/docs/self-hosting/network-mode), which has login and API keys.
+
+The server makes no outbound connection by default and sends no telemetry; see [Privacy](/docs/self-hosting/privacy).
+
+## Quick start
+
+1. [Download and verify](/docs/self-hosting/verify-a-release) the archive of your platform, and put `vukem-video` on your `PATH`.
+2. Check the installation: `vukem-video doctor --full` runs every check and names what to fix.
+3. Start the server: `vukem-video serve`. It stays in the foreground and logs to standard error.
+4. Open the editor with `vukem-video open`, or go to `http://127.0.0.1:7878` in a browser.
+
+```bash
+vukem-video version
+vukem-video doctor --full
+vukem-video serve
+```
+
+Stop the server with `Ctrl+C` or by sending `SIGTERM`. It waits up to 15 seconds for running jobs to reach a safe point; a job that is still running then is interrupted and requeued, and the next start recovers it.
+
+`vukem-video open` starts a local server first when none runs, then opens the browser. With `VUKEM_VIDEO_NO_BROWSER` set it prints the address instead of starting a browser.
+
+## What it uses
+
+| Item | Where | Notes |
+| --- | --- | --- |
+| Workspace | `~/.vukem-video`, or `VUKEM_VIDEO_HOME` | one directory; see [Workspace and storage](/docs/workspace) |
+| Address | `127.0.0.1:7878`, or `VUKEM_VIDEO_ADDR` | an address that is not loopback is refused in local mode |
+| Local token | `<workspace>/token` | readable only by you; `vukem-video token:rotate` makes a new one |
+| Application key | `<workspace>/app.key` | created on first start in local mode when `APP_KEY` is unset; keep it private |
+| Logs | `<workspace>/logs/vukem-video.log` | rotated at 10 MiB, three old files kept; `LOG_LEVEL` sets the level |
+| FFmpeg | the order of [FFmpeg, codecs and licences](/docs/self-hosting/ffmpeg-and-licences) | `VUKEM_VIDEO_FFMPEG` and `VUKEM_VIDEO_FFPROBE` name it explicitly |
+
+Every variable is in the [configuration reference](/docs/reference/configuration).
+
+## Common mistakes
+
+- Starting a second `vukem-video serve` on the same workspace: it fails with `E_WORKSPACE_LOCKED`. See [The workspace is locked](/docs/troubleshooting/workspace-locked).
+- Binding another address in local mode. Set `VUKEM_VIDEO_MODE=network`, an `APP_KEY` and the rest of the network settings first.
+- Putting the workspace inside a folder that a cloud-sync client manages: it can corrupt the database and the lock. `doctor --full` warns when it recognises such a folder.
+- Deleting `app.key` or changing `APP_KEY` by accident: keep the key with your other secrets and back it up with the workspace.
+
+## Next steps
+
+- [Run the Docker image](/docs/self-hosting/docker)
+- [Backups and upgrades](/docs/self-hosting/backups-and-upgrades)

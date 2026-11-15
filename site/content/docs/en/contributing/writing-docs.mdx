@@ -1,0 +1,52 @@
+---
+title: "Writing documentation"
+description: "How a docs page is structured, which checks it must pass and which pages are generated."
+---
+
+## You will learn
+
+- the structure every page follows;
+- how to add a page and where it appears;
+- the checks that run on the site, and the pages you must not edit.
+
+## The idea
+
+A feature is not finished until its page exists. Pages are MDX files in `site/content/docs/en/<dir>/<slug>.mdx`; the English file is the source of truth, and the Brazilian Portuguese file with the same path is its translation. The command reference, the CLI and HTTP references, the error codes and the configuration variables are generated from the code, so they cannot drift.
+
+## Quick start
+
+1. Create `site/content/docs/en/<dir>/<slug>.mdx` with a `title` and a `description` in the front matter.
+2. Write the sections in this order: `You will learn` (guide and getting-started pages), `The idea` (two to five sentences, in the words of the glossary), `Quick start` (numbered steps with the exact command and the result), `Common mistakes` (each with its error code when there is one) and `Next steps`.
+3. Show an action for each surface that has it: the UI, the CLI command, the MCP tool and arguments, and the HTTP call. Use the names of the shared definitions.
+4. Add the slug to `site/content/navigation.ts`, in the category of its folder.
+5. Run the checks from `site/`:
+
+```bash
+npm run check:mdx
+npm run build
+npm run check:built
+npm run lint
+npm run check:command-mentions
+npm run last-updated
+```
+
+## The rules of a page
+
+- Links are root-relative, like `/docs/guide/exporting`. `check:mdx` fails a link to a page that does not exist, and a link to a heading that does not exist.
+- No bare `{` or `<` in prose, no HTML outside the MDX components, code lines of at most 100 characters, and a language on every fenced block.
+- Code, command names, flags, error codes and identifiers are in English in both languages.
+- A guide page names the command that does what it teaches, and every command it names must exist (`check:command-mentions`).
+- No marketing text and no performance claim without a measurement and its source.
+- A feature that is not in the released version carries a warning callout, which the pull request that ships it removes.
+
+## Common mistakes
+
+- Editing a page under `site/content/generated/`: it is overwritten by `npm run reference`, and `reference:check` fails on a difference. Change the Go registry, the schema or `site/scripts/generate-reference.ts`, then regenerate.
+- Forgetting `npm run last-updated`: the "Last updated" check fails when a page is newer than its recorded date.
+- Linking the pt-BR page by its own path. Write the same `/docs/...` link in both languages; the site rewrites it for Portuguese.
+- Describing a feature from memory. Check the page against the code and the specification, and say what you could not verify.
+
+## Next steps
+
+- [Translating the documentation](/docs/contributing/translating)
+- [Commits and pull requests](/docs/contributing/commits-and-prs)

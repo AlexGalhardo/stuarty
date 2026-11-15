@@ -1,0 +1,50 @@
+---
+title: "Repository layout"
+description: "What each folder of the repository holds, and which one a change belongs in."
+---
+
+## You will learn
+
+- what each top-level folder holds;
+- where a rule, an adapter or a page belongs;
+- which folders are generated and never edited by hand.
+
+## The idea
+
+There is one repository and one Go module. The folders follow one rule: editing logic lives in `core/`, everything else is an adapter or a support layer around it. A change goes where its rule lives, and the adapters stay thin.
+
+| Folder | Holds |
+| --- | --- |
+| `core/` | the command core: the timeline document, the commands, the lint rules, the render plan, time. Pure Go, no I/O |
+| `engine/` | what touches media: ingest, FFmpeg as a separate process, the rasteriser that composes pixels, export, transcription, the content-addressed store |
+| `service/` | the one service boundary: projects, jobs, persistence, the workspace lock, configuration, limits, the doctor |
+| `web/app/` | the adapters over the service: the HTTP API, the MCP server (`mcp/`), the CLI (`cli/`), authentication, events |
+| `web/cmd/` | the program: `serve`, `mcp`, `open`, `user:create` and the generator of the agent material |
+| `web/resources/` | the editor in the browser (TypeScript, a thin client) |
+| `web/contract/` | the contract tests that drive the five surfaces and compare the documents they produce |
+| `site/` | this documentation site and the landing page |
+| `desktop/` | the desktop shell, which comes later |
+| `docs/` | requirements (`prds/`), architecture decisions (`adrs/`), specifications (`sdds/`) and research |
+| `internal/` | tools that run in the repository, such as the code generators |
+| `scripts/` | shell scripts of the release and the image |
+| `licenses/`, `THIRD_PARTY_NOTICES.md` | the licences of what ships; generated or kept by hand as the contributing guide says |
+| `.github/`, `.config/` | workflows, templates, the image definition and the tool configuration |
+
+## Quick start
+
+1. Find the rule. A new editing operation is a command in `core/command/`, described in the command catalogue (`docs/sdds/002-command-catalogue.md`); its name comes from the shared definitions.
+2. Reach it from the adapters. The MCP tool, the CLI command and the HTTP route call the same service method; they add no rule.
+3. Show it in the editor in `web/resources/`, which only draws and sends commands.
+4. Regenerate what derives from it with `task codegen`, and the site reference with `npm run reference` in `site/`.
+
+## Common mistakes
+
+- Writing a rule in a handler, a tool or in TypeScript. `bun run check:thin-client` and review reject it.
+- Editing generated output: `core/schema/`, `web/resources/js/generated/`, `site/generated/`, `site/content/generated/` and `internal/ffmpegpins/` come from `task codegen` and the site generators.
+- Putting I/O in `core/`: it must stay pure so that preview and export agree.
+- Treating a spike as product code. Experiments under `spikes/` are disposable and are never promoted.
+
+## Next steps
+
+- [Development setup](/docs/contributing/setup)
+- [How it works](/docs/concepts/how-it-works)

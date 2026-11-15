@@ -1,0 +1,48 @@
+---
+title: "Contributing guide"
+description: "How to take part in Vukem Video: the rules that are not traded, where to start and how a change reaches a release."
+---
+
+## You will learn
+
+- the rules that every change must respect;
+- where to start reading, and which page covers each step;
+- how a contribution reaches a release.
+
+## The idea
+
+Vukem Video is a small, open source (MIT) video editor that people and AI agents operate through one command core. The code, the planning documents and this site live in one repository, `AlexGalhardo/vukem-video`. The specifications in `docs/` are the contract: when code and a specification disagree, one of them is wrong and the pull request fixes it. Everything in the repository is written in English; the documentation also has a Brazilian Portuguese translation.
+
+By taking part you agree to the Code of Conduct. Report a vulnerability privately, as the security policy describes, never in a public issue.
+
+## The rules that are never traded
+
+1. **One command core.** Every editing rule lives in `core/` (Go, pure, no I/O). The UI, the MCP server, the CLI and the HTTP API are thin adapters over one service, so a rule about timelines written in a handler or in TypeScript is rejected.
+2. **The UI never computes the result of an edit.** It draws what the core says and sends commands.
+3. **Names come from one place.** Operations, tables, error codes and variables are in the shared definitions (`docs/sdds/000-shared-definitions.md`). Change it first.
+4. **FFmpeg is a separate LGPL process.** Pixels are composed in Go, and nothing GPL ships.
+5. **No outbound network connection by default, no telemetry.**
+6. **No new dependency without the maintainer's approval**, and versions are exact.
+
+## Quick start
+
+1. Set up your machine: [Development setup](/docs/contributing/setup).
+2. Find your way around: [Repository layout](/docs/contributing/repository-layout).
+3. Read the requirement and the specification of the area you will touch (`docs/prds/` and `docs/sdds/`).
+4. Make a small change, with a test, and run the checks.
+5. Write the commit as in [Commits and pull requests](/docs/contributing/commits-and-prs).
+6. If you changed behaviour, update its documentation page: [Writing documentation](/docs/contributing/writing-docs).
+
+A contribution is a branch whose commits the maintainer integrates into the open release branch; open the pull request against `release/vX.Y.Z` when one is open. The maintainer reviews, fixes the last defects and cuts the release; see [The release process](/docs/contributing/releases).
+
+## Common mistakes
+
+- A change with no test. A fix needs a test that fails without it, and a change to authentication, path handling or the FFmpeg invocation also needs a `Security:` footer.
+- Reporting "it works" without the output of the checks. A report is a claim, not evidence.
+- Editing a generated file by hand, such as `core/schema/`, `site/generated/` or the pages under `site/content/generated/`. Run the generator.
+- Adding a dependency in a pull request that did not ask for it.
+
+## Next steps
+
+- [Development setup](/docs/contributing/setup)
+- [Commits and pull requests](/docs/contributing/commits-and-prs)
