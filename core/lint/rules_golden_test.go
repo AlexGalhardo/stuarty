@@ -270,6 +270,10 @@ func init() {
 		"quiet_slot_not_required",
 		slotted(func(it *timeline.Item, _ *timeline.Document) { it.Slot.Required = false }),
 	)
+	rc(CodeSlotUnfilled, "quiet_optional_slot_on_placeholder", slotted(func(it *timeline.Item, _ *timeline.Document) {
+		it.Asset = timeline.PlaceholderAsset
+		it.Slot.Required = false
+	}))
 	rc(CodeSlotUnfilled, "quiet_template_document", slotted(func(_ *timeline.Item, d *timeline.Document) {
 		d.Template = &timeline.TemplateInfo{Description: "t"}
 	}))

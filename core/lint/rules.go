@@ -112,7 +112,8 @@ func (c *check) media() {
 }
 
 // slots reports required slots that were never filled. A template draft is exempt:
-// its slots are meant to be open. An instance (template.instance) is not.
+// its slots are meant to be open. An instance (template.instance) is not. An optional
+// slot (required: false) left on the placeholder is quiet: the plan skips its item.
 func (c *check) slots() {
 	if c.doc.Template != nil && !c.doc.Template.Instance {
 		return
@@ -120,7 +121,8 @@ func (c *check) slots() {
 
 	for _, it := range c.sorted() {
 		open := it.Slot != nil && it.Slot.Required && !it.Slot.Filled
-		if open || it.Asset == timeline.PlaceholderAsset {
+		optional := it.Slot != nil && !it.Slot.Required
+		if open || (it.Asset == timeline.PlaceholderAsset && !optional) {
 			c.add(
 				CodeSlotUnfilled,
 				it.ID,
