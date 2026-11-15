@@ -5,6 +5,9 @@ import { Dialog } from "@base-ui/react/dialog";
 import { CornerDownLeft, FileText, Hash, Search } from "lucide-react";
 import type { SearchEntry } from "@/lib/search";
 import { withBase } from "@/lib/site";
+import { fold } from "@/lib/fold";
+import { localizePath } from "@/lib/locale";
+import { useLocale, useT } from "@/lib/locale-context";
 import { withTrailingSlash } from "@/lib/trailing-slash";
 
 type Result = SearchEntry & { score: number };
@@ -19,9 +22,9 @@ function subsequence(needle: string, hay: string): boolean {
 }
 
 function score(entry: SearchEntry, tokens: string[], raw: string, fuzzy: boolean): number {
-	const title = entry.title.toLowerCase();
-	const heading = (entry.heading ?? "").toLowerCase();
-	const text = entry.text.toLowerCase();
+	const title = fold(entry.title);
+	const heading = fold(entry.heading ?? "");
+	const text = fold(entry.text);
 	let total = 0;
 
 	for (const t of tokens) {
@@ -35,12 +38,12 @@ function score(entry: SearchEntry, tokens: string[], raw: string, fuzzy: boolean
 		total += s;
 	}
 
-	if ((entry.heading ?? entry.title).toLowerCase() === raw) total += 20;
+	if (fold(entry.heading ?? entry.title) === raw) total += 20;
 	return total;
 }
 
 function snippet(text: string, tokens: string[]): string {
-	const lower = text.toLowerCase();
+	const lower = fold(text);
 	const at =
 		tokens
 			.map((t) => lower.indexOf(t))
@@ -75,6 +78,8 @@ export function SearchDialog({
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }) {
+	const t = useT();
+	const locale = useLocale();
 	const [query, setQuery] = useState("");
 	const [index, setIndex] = useState<SearchEntry[] | null>(null);
 	const [failed, setFailed] = useState(false);
@@ -84,11 +89,11 @@ export function SearchDialog({
 	const load = useCallback(() => {
 		if (index) return;
 		setFailed(false);
-		fetch(withBase("/search-index.json"))
+		fetch(withBase(localizePath(locale, "/search-index.json")))
 			.then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
 			.then((data: SearchEntry[]) => setIndex(data))
 			.catch(() => setFailed(true));
-	}, [index]);
+	}, [index, locale]);
 
 	const onOpenChange = useCallback(
 		(next: boolean) => {
@@ -105,7 +110,7 @@ export function SearchDialog({
 		if (open) load();
 	}, [open, load]);
 
-	const raw = query.trim().toLowerCase();
+	const raw = fold(query.trim());
 	const tokens = useMemo(() => raw.split(/\s+/).filter(Boolean), [raw]);
 
 	const results = useMemo<Result[]>(() => {
@@ -161,7 +166,7 @@ export function SearchDialog({
 					initialFocus={() => document.getElementById("docs-search-input")}
 					className="fixed top-[12vh] left-1/2 z-50 flex max-h-[70vh] w-[min(40rem,calc(100vw-2rem))] -translate-x-1/2 flex-col overflow-hidden rounded-2xl border border-border bg-bg shadow-2xl shadow-black/10 transition-all duration-150 data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0"
 				>
-					<Dialog.Title className="sr-only">Search documentation</Dialog.Title>
+					<Dialog.Title className="sr-only">{t.searchDocs}</Dialog.Title>
 					<div className="flex items-center gap-3 border-b border-border px-4">
 						<Search aria-hidden className="size-4 shrink-0 text-faint" />
 						<input
@@ -172,7 +177,7 @@ export function SearchDialog({
 								setActive(0);
 							}}
 							onKeyDown={onInputKey}
-							placeholder="Search the docs…"
+							placeholder={t.searchPlaceholder}
 							autoComplete="off"
 							spellCheck={false}
 							role="combobox"
@@ -195,12 +200,12 @@ export function SearchDialog({
 					>
 						{failed ? (
 							<p className="px-3 py-8 text-center text-sm text-muted">
-								Search index could not be loaded.
+								{t.searchFailed}
 							</p>
 						) : !index ? (
 							<p className="px-3 py-8 text-center text-sm text-muted">Loading…</p>
 						) : flat.length === 0 ? (
-							<p className="px-3 py-8 text-center text-sm text-muted">No results for “{query}”.</p>
+							<p className="px-3 py-8 text-center text-sm text-muted">{t.noResults} “{query}”.</p>
 						) : (
 							groups.map(([category, items]) => (
 								<div key={category} role="group" aria-label={category} className="mb-2 last:mb-0">

@@ -1,0 +1,21 @@
+---
+title: "Tracks, clips and items"
+description: "The shape of a project: tracks listed top to bottom, and the items that sit on them."
+---
+
+## The idea
+
+A project holds **tracks**. A track holds **items**, and an item has a start and a duration in frames. A **clip** is an item that plays an imported asset; there are also text, caption and audio items.
+
+Tracks are listed top to bottom, and the top track is drawn over the others. A track accepts the item types of its kind (visual or audio), so `item.move` to a track of another kind is `E_TYPE_MISMATCH`.
+
+An **asset** is imported media, kept by its content hash. The project refers to it by an `ast_` id, so importing the same file twice gives the same asset.
+
+## Identifiers
+
+Ids carry a prefix: `prj_` for a project, `ast_` for an asset, `trk_` for a track, `itm_` for an item and `job_` for a job. They are stable, and you may supply your own when you create something.
+
+## Next steps
+
+- [Media library](/docs/guide/media-library)
+- [Timeline schema](/docs/reference/timeline-schema)

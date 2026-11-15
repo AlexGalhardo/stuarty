@@ -31,5 +31,6 @@ export default defineConfig({
 	redirects: {
 		// The destination is not rewritten with the base path by Astro, so it is written in full.
 		"/docs": `${prefix}/docs/introduction/`,
+		"/pt-br/docs": `${prefix}/pt-br/docs/introduction/`,
 	},
 });

@@ -1,30 +1,7 @@
 import type { APIRoute } from "astro";
-import { getAllDocs, getNavGroups } from "@/lib/content";
-import { site } from "@/lib/site";
+import { llmsTxt } from "@/lib/llms";
 
 export const prerender = true;
 
-export const GET: APIRoute = () => {
-	const docs = new Map(getAllDocs().map((d) => [d.href, d]));
-	const lines = [
-		`# ${site.name}`,
-		"",
-		`> Vukem Video is a minimalist, open source video editor operated by AI agents (MCP, CLI, HTTP API) and by people in a browser UI. It is in the Prototype phase.`,
-		"",
-		`Full documentation in one file: ${site.url}/llms-full.txt`,
-		"",
-		`Every page is also available as Markdown: add ".md" to its URL (${site.url}/docs/introduction.md).`,
-		"",
-	];
-
-	for (const group of getNavGroups()) {
-		lines.push(`## ${group.title}`, "");
-		for (const item of group.items) {
-			const doc = docs.get(item.href);
-			lines.push(`- [${item.title}](${site.url}${item.href}/): ${doc?.description ?? ""}`);
-		}
-		lines.push("");
-	}
-
-	return new Response(lines.join("\n"), { headers: { "Content-Type": "text/plain; charset=utf-8" } });
-};
+export const GET: APIRoute = () =>
+	new Response(llmsTxt("en"), { headers: { "Content-Type": "text/plain; charset=utf-8" } });

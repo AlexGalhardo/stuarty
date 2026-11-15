@@ -1,15 +1,12 @@
 import { readChangelog, renderMarkdown } from "@/lib/changelog";
-import { t } from "@/lib/ui-text";
+import { ui } from "@/lib/ui-text";
+import type { Locale } from "@/lib/locale";
 import { site } from "@/lib/site";
 import { extractHeadings } from "@/lib/toc";
 import { Toc } from "@/components/toc";
 
-export const changelogMetadata = {
-	title: t.changelogTitle,
-	description: t.changelogDescription,
-};
-
-export async function ChangelogPage(): Promise<React.ReactElement> {
+export async function ChangelogPage({ locale }: { locale: Locale }): Promise<React.ReactElement> {
+	const t = ui[locale];
 	const { intro, body } = readChangelog();
 	// Same slugs as rehype-slug, so the links match the release headings; [Unreleased] is not a version.
 	const releases = extractHeadings(body)
@@ -36,6 +33,8 @@ export async function ChangelogPage(): Promise<React.ReactElement> {
 						>
 							CHANGELOG.md
 						</a>
+						{" "}
+						{t.changelogNote}
 					</p>
 				</header>
 				<article className="prose">

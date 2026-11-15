@@ -1,0 +1,36 @@
+---
+title: "Ferramentas de edição: aparar, dividir, mover"
+description: "Mude quando um clipe começa e termina, divida-o em dois, mova-o ou remova-o."
+---
+
+## O que você vai aprender
+
+- como mover, aparar, dividir e excluir um item;
+- como conferir um lote antes de salvá-lo.
+
+## Início rápido
+
+Cada uma é uma operação em um lote de `edit`. Use `command_help` (ou `vukem-video command:help item.trim`) para ver os argumentos exatos.
+
+| Para | Operação |
+| --- | --- |
+| mover um item no tempo ou para outra faixa | `item.move` |
+| mudar o início ou o fim | `item.trim` |
+| dividir em dois | `item.split` |
+| remover | `item.delete` |
+
+```json
+{ "op": "item.split", "args": { "item_id": "itm_m1n2p3q4r5", "at": "2s" } }
+```
+
+Passe `dry_run: true` para ver o diff sem salvar.
+
+## Erros comuns
+
+- Um `item_id` desconhecido: `E_NOT_FOUND`, com o caminho do argumento que falhou.
+- Um ponto de divisão fora do item: `E_INVALID_TIME`.
+
+## Próximos passos
+
+- [Desfazer e histórico](/docs/guide/undo-and-history)
+- [Catálogo de comandos](/docs/reference/commands)

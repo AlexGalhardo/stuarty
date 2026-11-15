@@ -1,0 +1,31 @@
+---
+title: "Time and frames"
+description: "Why every time is a string with a unit, and how the project frame rate decides where things land."
+---
+
+## The idea
+
+Inside a project, time is a whole number of frames at the project frame rate. A cut can never fall between two frames, so two edits at "the same time" are the same frame.
+
+On every input a time is a string with a unit: `12.5s`, `375f` or `00:00:12.500`. A bare number is rejected, because `5` could mean seconds, frames or milliseconds. The one exception is `wait_ms`, whose unit is in its name.
+
+Results show both: `{"frame": 150, "seconds": 5}`. When you ask for `1.01s` at 30 frames per second, the core rounds to a frame and tells you what it used in `effective`.
+
+## Quick start
+
+At 30 frames per second:
+
+| You write | Frame | Seconds |
+| --- | --- | --- |
+| `1s` | 30 | 1 |
+| `45f` | 45 | 1.5 |
+| `00:00:02.000` | 60 | 2 |
+
+## Common mistakes
+
+- Writing `5`. The error is `E_INVALID_TIME` and its hint names the units.
+- Asking for a frame past the end of the timeline. `view` answers `E_INVALID_TIME` with the last valid time in the hint.
+
+## Next steps
+
+- [Commands, batches and revisions](/docs/concepts/commands-and-revisions)

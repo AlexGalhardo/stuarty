@@ -1,0 +1,42 @@
+---
+title: "Conectar um agente"
+description: "Adicione o servidor MCP do Vukem Video ao Claude Code, ao Cursor ou a outro cliente MCP, ou use a CLI em um shell."
+---
+
+## Claude Code
+
+```bash
+claude mcp add vukem-video -- vukem-video mcp
+```
+
+O servidor fala MCP pela entrada e saída padrão. Quando nenhum outro processo é dono do seu espaço de trabalho, o `vukem-video mcp` passa a ser o dono enquanto estiver rodando; quando o servidor do editor já está rodando, ele fala com esse servidor, então o agente e o navegador veem o mesmo projeto.
+
+## Outros clientes MCP
+
+Qualquer cliente que inicie um servidor stdio aceita o mesmo comando. Em um arquivo de configuração JSON, fica assim:
+
+```json
+{
+  "mcpServers": {
+    "vukem-video": { "command": "vukem-video", "args": ["mcp"] }
+  }
+}
+```
+
+O servidor dá a cada edição um ator com o nome do cliente, como `local:<nome do cliente>`, então o histórico mostra quem fez o quê.
+
+## Um servidor remoto
+
+Defina `VUKEM_VIDEO_URL` e `VUKEM_VIDEO_KEY` e a CLI e o servidor stdio passam a falar com esse servidor usando a chave de API. Veja as [variáveis de configuração](/docs/reference/configuration).
+
+## A CLI
+
+Um agente com um shell pode usar a CLI. Adicione `--json` para um documento JSON por comando e `--actor <rótulo>` para se identificar:
+
+```bash
+vukem-video project:create --name "Launch teaser" --json --actor claude-code
+vukem-video media:import clip.mov --project prj_7k2m9x4q1b --json
+vukem-video export --project prj_7k2m9x4q1b --json
+```
+
+O código de saída `0` é sucesso, `2` é um erro que pode ser repetido ou um `--wait` que estourou o tempo, e `1` é qualquer outra falha. Todos os comandos estão na [referência da CLI](/docs/reference/cli).

@@ -1,6 +1,6 @@
 ---
-title: Getting started
-description: How to install and run Vukem Video, and what you can do today while it is in the Prototype phase.
+title: "Getting started"
+description: "How to install and run Vukem Video, and what you can do today while it is in the Prototype phase."
 ---
 
 <Callout type="warning" title="Early release">
@@ -27,7 +27,8 @@ The product runs only on your machine. Each [release](https://github.com/AlexGal
 The container image of the web version is started with a command of this shape, which publishes the port on your computer only:
 
 ```bash
-docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data ghcr.io/alexgalhardo/vukem-video:<version>
+docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data \
+  ghcr.io/alexgalhardo/vukem-video:<version>
 ```
 
 The server listens on `127.0.0.1:7878` and is reachable from your computer only.

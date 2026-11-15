@@ -6,6 +6,6 @@ import { landing } from "@/lib/landing";
 const copy = landing.en;
 ---
 
-<Base title={copy.title} description={copy.description} canonical="/" lang={copy.lang}>
+<Base title={copy.title} description={copy.description} canonical="/" locale="en" alternates={{ en: "/", "pt-br": "/pt-br/" }}>
 	<Landing copy={copy} />
 </Base>

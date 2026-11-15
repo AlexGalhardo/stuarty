@@ -1,0 +1,26 @@
+---
+title: "Batches, revisions and idempotency"
+description: "How an agent plans a batch, survives a conflict and retries without doing the same edit twice."
+---
+
+## The idea
+
+An agent plans against one revision and sends the whole batch. The core applies all of it or none of it, as one undo step.
+
+## Quick start
+
+1. Read the revision with `project_get`.
+2. Plan the batch. Give your own ids to what later operations in the same batch use.
+3. Send it with `base_revision`. Add an `idempotency_key` if the call may be retried.
+4. Read the result: `revision`, `created`, `diff` and `findings`.
+
+When the answer is `E_REVISION_CONFLICT`, the error carries the changes since your revision as a text diff. Read it, plan again against the new revision and send a new batch.
+
+## Common mistakes
+
+- Reusing an `idempotency_key` for a different batch: `E_IDEMPOTENCY_MISMATCH`.
+- Retrying an error whose `retryable` is false. Only retry when it is true.
+
+## Next steps
+
+- [Commands, batches and revisions](/docs/concepts/commands-and-revisions)

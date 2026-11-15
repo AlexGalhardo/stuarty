@@ -1,0 +1,28 @@
+---
+title: "Visão geral dos agentes"
+description: "Como um agente de IA edita um vídeo com o Vukem Video, e qual das três entradas usar."
+---
+
+O Vukem Video foi feito para ser operado por um agente tanto quanto por uma pessoa. Existe um único núcleo de comandos. O servidor MCP, a CLI, a API HTTP e o editor no navegador são adaptadores finos sobre ele, então todos produzem o mesmo documento de projeto.
+
+## As três entradas
+
+| Entrada | Use quando | Comece por |
+| --- | --- | --- |
+| Servidor MCP | o agente roda em um cliente como Claude Code ou Cursor | [Conectar um agente](/docs/agents/connect) |
+| CLI | o agente tem um shell | [Referência da CLI](/docs/reference/cli) |
+| API HTTP | você escreve o seu próprio cliente | o servidor local, em `127.0.0.1:7878` |
+
+O produto não envia nada para fora do seu computador, e um agente não consegue fazer com que ele envie. Nada que um agente possa chamar apaga dados de forma definitiva, e toda edição pode ser desfeita.
+
+## O ciclo
+
+1. `project_create` (ou `project_list`) e depois `media_import` para os arquivos de origem.
+2. `edit` com um lote de operações. Um lote é aplicado por inteiro ou nada é, como um único passo de desfazer, e precisa da `base_revision` lida em `project_get` ou na edição anterior.
+3. `lint`, depois `job_start` com `kind=export`, depois `job_get` até a tarefa terminar.
+
+Todo tempo é uma string com unidade: `12.5s`, `375f` ou `00:00:12.500`. Um número puro é recusado. Chame `command_help` para listar as operações, ou com um nome para ver o seu esquema e um exemplo; o mesmo texto está no [catálogo de comandos](/docs/reference/commands).
+
+## Quando uma chamada falha
+
+Uma chamada que falha devolve `code`, `message`, `hint` e `retryable`. Repita apenas quando `retryable` for verdadeiro. Um `E_REVISION_CONFLICT` traz as mudanças desde a sua revisão: leia-as e planeje de novo. Os códigos estão na página de [códigos de erro](/docs/reference/error-codes).

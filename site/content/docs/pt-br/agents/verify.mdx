@@ -1,0 +1,29 @@
+---
+title: "Como um agente verifica o próprio trabalho: view e lint"
+description: "Olhe primeiro do jeito barato, depois gaste tokens: leia o projeto, execute o lint e só então olhe um quadro."
+---
+
+## A ideia
+
+Um agente deve conferir o seu trabalho do jeito mais barato que responda à pergunta. A ordem é: ler o projeto como texto, executar as regras de verificação e só então olhar os pixels.
+
+1. `project_get` (texto conciso): as faixas e os itens são o que você planejou?
+2. `lint`: o projeto quebra alguma regra? Erros bloqueiam uma exportação; avisos não.
+3. `view` com `mode` `frame` e depois `sheet`: o resultado parece certo? Os quadros vêm do caminho da exportação, então mostram o que a exportação vai conter.
+
+## Início rápido
+
+```bash
+vukem-video lint --project prj_7k2m9x4q1b --severity error
+```
+
+O `lint --strict` sai com `1` quando há pelo menos um achado de erro, o que serve bem para um script.
+
+## Erros comuns
+
+- Olhar os quadros primeiro. Uma imagem custa muito mais tokens que a visão em texto.
+- Tratar a linha de verificação rápida do resultado de uma edição como completa: algumas regras rodam apenas no `lint` e na porta da exportação.
+
+## Próximos passos
+
+- [Exportação](/docs/guide/exporting)

@@ -1,0 +1,29 @@
+---
+title: "Comandos, lotes e revisões"
+description: "Como uma edição é um lote de operações nomeadas, como as revisões protegem contra planos desatualizados e como repetir com segurança."
+---
+
+## A ideia
+
+Uma edição é um **lote**: uma lista de **operações**, cada uma um comando nomeado, como `track.add` ou `item.move`, com seus argumentos. O lote inteiro é aplicado ou nada é, e ele vira uma revisão e um passo de desfazer.
+
+Todo lote informa a `base_revision` contra a qual foi planejado. Se o projeto avançou, o núcleo tenta reaplicar o seu lote sobre as revisões mais novas. Quando as mudanças se sobrepõem, ele responde `E_REVISION_CONFLICT` com um diff em texto do que mudou, para que você leia e planeje de novo.
+
+## Início rápido
+
+1. Leia a revisão: `project_get`, ou a `revision` do resultado da sua última edição.
+2. Envie o lote com essa `base_revision`. Dê o seu próprio `id` a uma faixa ou item novo quando uma operação posterior do mesmo lote se referir a ele.
+3. Use `dry_run: true` para conferir um lote sem salvá-lo.
+4. Use uma `idempotency_key` quando puder repetir: a mesma chave com o mesmo lote devolve o primeiro resultado, com `replayed: true`. A mesma chave com um lote diferente é `E_IDEMPOTENCY_MISMATCH`.
+
+As operações estão no [catálogo de comandos](/docs/reference/commands).
+
+## Erros comuns
+
+- Enviar uma `base_revision` à frente do projeto: `E_VALIDATION`.
+- Repetir um conflito sem mudar nada. Leia o diff antes.
+
+## Próximos passos
+
+- [Faixas, clipes e itens](/docs/concepts/tracks-clips-items)
+- [Lotes, revisões e idempotência para agentes](/docs/agents/batches)
