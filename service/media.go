@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"path"
 	"path/filepath"
@@ -550,6 +551,22 @@ func (s *svc) refreshImported(ctx context.Context, project *ProjectRow, a *Impor
 	}
 
 	a.State, a.Progress, a.Kind = string(ar.IngestState), ar.Progress, ar.Kind
+
+	// The file is ready for every project the moment the shared ingest ends, but
+	// it is in this project's document only when its asset.add has committed,
+	// which the ingest job does last. Until then the asset is not usable: an
+	// immediate clip.add would answer E_NOT_FOUND.
+	if ar.IngestState == IngestReady && pa.State == ProjectAssetPending {
+		if active, jerr := s.store.Jobs().ActiveIngestForHash(ctx, pa.AssetHash); jerr == nil {
+			a.State, a.Progress = string(IngestIngesting), math.Min(ar.Progress, 0.99)
+			if a.JobID == "" {
+				a.JobID = active.ID
+			}
+
+			return
+		}
+	}
+
 	if ar.IngestState == IngestFailed && a.Error == nil {
 		a.Error = parseError(ar.IngestError)
 	}
