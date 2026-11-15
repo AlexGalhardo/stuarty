@@ -27,6 +27,8 @@ mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" "$out"
 install -m 0755 "$desktop" "$app/Contents/MacOS/vukem-video-desktop"
 install -m 0755 "$server" "$app/Contents/MacOS/vukem-video"
 install -m 0644 "$repo/LICENSE.md" "$app/Contents/Resources/LICENSE.md"
+install -m 0644 "$repo/THIRD_PARTY_NOTICES.md" "$app/Contents/Resources/THIRD_PARTY_NOTICES.md"
+cp -R "$repo/licenses" "$app/Contents/Resources/licenses"
 sed "s/@VERSION@/${version}/g" "$here/Info.plist" >"$app/Contents/Info.plist"
 ln -s /Applications "$stage/Applications"
 

@@ -26,6 +26,8 @@ mkdir -p "$root/usr/local/bin" "$root/usr/local/share/vukem-video" "$app/Content
 install -m 0755 "$binary" "$root/usr/local/bin/vukem-video"
 install -m 0755 "$here/uninstall.sh" "$root/usr/local/share/vukem-video/uninstall.sh"
 install -m 0644 "$repo/LICENSE.md" "$root/usr/local/share/vukem-video/LICENSE.md"
+install -m 0644 "$repo/THIRD_PARTY_NOTICES.md" "$root/usr/local/share/vukem-video/THIRD_PARTY_NOTICES.md"
+cp -R "$repo/licenses" "$root/usr/local/share/vukem-video/licenses"
 install -m 0755 "$here/launcher.sh" "$app/Contents/MacOS/vukem-video-launcher"
 sed "s/@VERSION@/${version}/g" "$here/Info.plist" >"$app/Contents/Info.plist"
 

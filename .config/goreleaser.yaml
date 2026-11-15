@@ -76,6 +76,14 @@ nfpms:
         dst: /usr/share/doc/vukem-video/LICENSE.md
         file_info:
           mode: 0644
+      # RF-215: every installer carries the notices and the licence texts, like the archives.
+      - src: THIRD_PARTY_NOTICES.md
+        dst: /usr/share/doc/vukem-video/THIRD_PARTY_NOTICES.md
+        file_info:
+          mode: 0644
+      - src: licenses
+        dst: /usr/share/doc/vukem-video/licenses
+        type: tree
 
 checksum:
   name_template: checksums.txt
