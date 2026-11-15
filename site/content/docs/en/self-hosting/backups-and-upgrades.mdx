@@ -42,7 +42,17 @@ docker stop vukem-video && docker rm vukem-video
 
 On start the server checks the database. If migrations are pending and the workspace is not new, it first writes `backups/db-<UTC timestamp>-before-<migration>.sqlite` and keeps the five newest, then migrates. A project document written by an older version is migrated when it is opened, and the original is kept in the database. Read the [changelog](/changelog) before a minor upgrade: before `1.0.0` a minor release may change a public interface.
 
-To roll back, stop the server, restore the backup (or the `backups/db-*-before-*.sqlite` file as `db.sqlite`) and start the older tag. A workspace migrated by a newer version may not open in an older one, which is why you take the backup first.
+To roll back, stop the server, restore the backup (or the `backups/db-*-before-*.sqlite` file as `db.sqlite`) and start the older tag. A workspace migrated by a newer version may not open in an older one, which is why you take the backup first. The older version then refuses to start, changes no file and says `this workspace was written by a newer version`, followed by what it found; the fix is to install a version at least as new, or to restore the backup.
+
+### What is tested
+
+Every release candidate is opened against workspaces written by the published releases from `v0.3.0` on. The `upgrade` workflow runs on every pull request labelled `release` and on every tag, on Linux, Windows and macOS. It downloads the archive of each release, checks it against `checksums.txt`, lets that release create a workspace with a fixed project (captions, keyframes, a template, trash and restore, an export), and then checks that the new build opens each one, writes a backup before migrating, keeps the five newest backups, loses no project and changes no document. It also checks that each older binary refuses a workspace written by the new build. To run it yourself, from a checkout, with `go`, `ffmpeg`, `ffprobe`, `jq` and `gh` installed:
+
+```bash
+bash scripts/upgrade-test.sh v0.5.0 v0.14.0
+```
+
+Without arguments the script tests every published release from `v0.3.0` on.
 
 ## Common mistakes
 

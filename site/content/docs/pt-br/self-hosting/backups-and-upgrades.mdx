@@ -43,7 +43,17 @@ docker stop vukem-video && docker rm vukem-video
 
 Ao iniciar, o servidor confere o banco de dados. Se há migrações pendentes e o espaço de trabalho não é novo, ele primeiro grava `backups/db-<UTC timestamp>-before-<migration>.sqlite` e mantém as cinco mais novas, depois migra. Um documento de projeto gravado por uma versão mais antiga é migrado quando é aberto, e o original é mantido no banco de dados. Leia o [changelog](/changelog) antes de uma atualização de versão menor: antes da `1.0.0`, uma versão menor pode mudar uma interface pública.
 
-Para reverter, pare o servidor, restaure a cópia de segurança (ou o arquivo `backups/db-*-before-*.sqlite` como `db.sqlite`) e inicie a tag mais antiga. Um espaço de trabalho migrado por uma versão mais nova pode não abrir em uma mais antiga, e é por isso que você faz a cópia de segurança antes.
+Para reverter, pare o servidor, restaure a cópia de segurança (ou o arquivo `backups/db-*-before-*.sqlite` como `db.sqlite`) e inicie a tag mais antiga. Um espaço de trabalho migrado por uma versão mais nova pode não abrir em uma mais antiga, e é por isso que você faz a cópia de segurança antes. A versão mais antiga então se recusa a iniciar, não altera nenhum arquivo e diz `this workspace was written by a newer version`, seguido do que encontrou; a saída é instalar uma versão pelo menos tão nova, ou restaurar a cópia de segurança.
+
+### O que é testado
+
+Cada candidata a versão é aberta contra espaços de trabalho gravados pelas versões publicadas a partir da `v0.3.0`. O workflow `upgrade` roda em todo pull request com o rótulo `release` e em toda tag, no Linux, no Windows e no macOS. Ele baixa o arquivo de cada versão, confere com o `checksums.txt`, deixa essa versão criar um espaço de trabalho com um projeto fixo (legendas, quadros-chave, um modelo, lixeira e restauração, uma exportação) e então verifica que a nova build abre cada um, grava uma cópia de segurança antes de migrar, mantém as cinco cópias mais novas, não perde nenhum projeto e não altera nenhum documento. Ele também verifica que cada binário mais antigo se recusa a abrir um espaço de trabalho gravado pela nova build. Para rodar você mesmo, a partir de um checkout, com `go`, `ffmpeg`, `ffprobe`, `jq` e `gh` instalados:
+
+```bash
+bash scripts/upgrade-test.sh v0.5.0 v0.14.0
+```
+
+Sem argumentos, o script testa todas as versões publicadas a partir da `v0.3.0`.
 
 ## Erros comuns
 
