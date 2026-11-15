@@ -557,6 +557,8 @@ vukem-video template:new <template id> --name <name> [--fill <file|->] [--id prj
 | `--name` | string |  | project name (required) |
 | `--fill` | string |  | a JSON object of slot name to value: a file, or - for standard input |
 | `--id` | string |  | identifier to give the project |
+| `--brand-color` | string, repeatable |  | a colour of the template that takes its value from the brand kit |
+| `--brand-font` | string, repeatable |  | a family of the brand kit to add to the project's fonts |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
 
@@ -777,4 +779,56 @@ Example:
 
 ```bash
 vukem-video token:rotate
+```
+
+## `font:import`
+
+Add a TrueType or OpenType font file to the font store
+
+```text
+vukem-video font:import <path>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+vukem-video font:import Brand-Regular.ttf
+```
+
+## `brand:show`
+
+Show the brand kit: logo, colours and fonts
+
+```text
+vukem-video brand:show
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+vukem-video brand:show --json
+```
+
+## `brand:set`
+
+Replace the brand kit
+
+```text
+vukem-video brand:set --kit <file|->
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--kit` | string |  | a JSON object with logo, colors and fonts, all optional: a file, or - for standard input (required) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+vukem-video brand:set --kit brand.json
 ```
