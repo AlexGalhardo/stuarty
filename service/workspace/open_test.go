@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -411,6 +412,25 @@ func TestOpenRemoteURLRefusesWhatIsNotHTTP(t *testing.T) {
 		o := Options{Getenv: openEnv(t.TempDir(), map[string]string{EnvURL: raw, EnvKey: "k"})}
 		if _, err := Open(context.Background(), o); err == nil {
 			t.Errorf("Open(%q) = nil, want a refusal", raw)
+		}
+	}
+}
+
+// SDD-007 section 4.3: the key never crosses the network in clear.
+func TestOpenRemoteURLRefusesPlainHTTPBeyondLoopback(t *testing.T) {
+	t.Parallel()
+
+	for _, raw := range []string{"http://videos.example.org", "http://192.168.1.5:7878"} {
+		o := Options{Getenv: openEnv(t.TempDir(), map[string]string{EnvURL: raw, EnvKey: "k"})}
+		if _, err := Open(context.Background(), o); err == nil || !strings.Contains(err.Error(), EnvURL) {
+			t.Errorf("Open(%q) = %v, want a refusal naming %s", raw, err, EnvURL)
+		}
+	}
+
+	for _, raw := range []string{"http://localhost:7878", "http://127.0.0.1:7878", "https://videos.example.org"} {
+		o := Options{Getenv: openEnv(t.TempDir(), map[string]string{EnvURL: raw, EnvKey: "k"})}
+		if s, err := Open(context.Background(), o); err != nil || s.Token != "k" {
+			t.Errorf("Open(%q) = %+v, %v", raw, s, err)
 		}
 	}
 }
