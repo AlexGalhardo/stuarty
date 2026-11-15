@@ -360,6 +360,8 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `JobStart` (transcribe) | `POST /projects/{id}/jobs` | - | - | R | - | - | Refused with `E_TRANSCRIBE_UNAVAILABLE` when no provider is installed (6.8) |
 | `ProjectBundleExport` | `POST /projects/{id}/bundle` | - | - | - | R | - | Project and ownership check; runs as an export job |
 | `ProjectBundleImport` | `POST /projects/import` | - | R | R | - | - | Archive rules of 7.6 and SDD-005 §16.3; network mode cannot link media or fonts the caller does not already reach (T-20, T-21) |
+| `ProjectOtioExport` | `GET /projects/{id}/otio` | R | - | - | - | - | Project and ownership check; writes nothing, returns text |
+| `ProjectOtioImport` | `POST /projects/{id}/otio` | - | R | - | - | - | The path goes through the import path rules of 7.1; a media reference of the file is never opened, only matched by name to an asset the project already has (T-10, T-11); the batch goes through `Edit` |
 | `BrandKitGet` | `GET /brand-kit` | R | - | - | - | - | The caller's own kit (one per user in network mode, one per workspace in local mode) |
 | `BrandKitSet` | `PUT /brand-kit` | - | R | - | - | - | Replaces the caller's kit; every font of the kit passes the ownership rule of 7.7 item 6 |
 | `JobGet` | `GET /jobs/{job_id}` | R | - | - | - | - | The job's project must be allowed. Result carries no server path to remote callers |
