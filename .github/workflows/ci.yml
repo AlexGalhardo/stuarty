@@ -326,6 +326,12 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y bubblewrap
       # Ubuntu 24.04 restricts unprivileged user namespaces, which bwrap needs.
       - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      # TestSecurity_T16_LimitsDoNotBreakGoldenExport exports with the pinned build.
+      - name: Install FFmpeg
+        shell: bash
+        run: |
+          bin_dir="$(bash scripts/install-ffmpeg.sh)"
+          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       - name: TestSecurity_T16_
         run: |
           go test -count=1 -v -run 'TestSecurity_T16_' ./engine/... | tee t16.log
