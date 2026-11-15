@@ -16,7 +16,7 @@ const ProblemTypePrefix = "urn:vukem-video:error:"
 
 // CodeMethodNotAllowed is the code of a 405 (OPTIONS included). SDD-000 section 8
 // lists no code for it, so it falls under "everything else", status 405.
-const CodeMethodNotAllowed = "E_METHOD_NOT_ALLOWED"
+const CodeMethodNotAllowed = service.CodeMethodNotAllowed
 
 // installErrors makes every error of the app the envelope of SDD-003 section
 // 1.4: application/problem+json with the members of RFC 9457 and, next to

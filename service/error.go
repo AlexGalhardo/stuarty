@@ -21,6 +21,7 @@ const (
 	CodeWorkspaceLocked   = "E_WORKSPACE_LOCKED"
 	CodeLintBlocking      = "E_LINT_BLOCKING"
 	CodeClientClosed      = "E_CLIENT_CLOSED"
+	CodeMethodNotAllowed  = "E_METHOD_NOT_ALLOWED"
 	codeInternalMessage   = "the operation failed because of an internal error."
 	codeInternalHint      = "Report this as a bug with the operation that was sent."
 	hintRestoreProject    = "restore the project first"
@@ -59,6 +60,8 @@ func (e *Error) HTTPStatus() int {
 	case command.CodeRevisionConflict, command.CodeIdempotencyMismatch, command.CodeOverlap, command.CodeInvalidState,
 		command.CodeInUse, command.CodeNotEmpty, command.CodeIDExists, "E_ASSET_NOT_READY", CodeNothingToUndo, CodeNothingToRedo:
 		return http.StatusConflict
+	case CodeMethodNotAllowed:
+		return http.StatusMethodNotAllowed
 	case CodePayloadTooLarge:
 		return http.StatusRequestEntityTooLarge
 	case command.CodeLimit,
