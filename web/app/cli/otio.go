@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"unicode"
 
 	"github.com/AlexGalhardo/vukem-video/core/otio"
 	"github.com/AlexGalhardo/vukem-video/service"
@@ -40,8 +42,14 @@ var otioExport = &spec{
 			return nil, err
 		}
 
-		name := c.args.str("out")
-		if name == "" {
+		// A path the person typed may create folders; a name the server chose never leaves the
+		// current directory (SDD-007 T-13).
+		name, typed := c.args.str("out"), c.args.has("out")
+		if !typed {
+			if !safeOtioName(res.FileName) {
+				return nil, validation("out", "the server named the file in a way the CLI does not accept; give --out.")
+			}
+
 			name = res.FileName
 		}
 
@@ -55,7 +63,7 @@ var otioExport = &spec{
 			mode = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 		}
 
-		if err := writeFile(path, []byte(res.Content), mode); err != nil {
+		if err := writeFile(path, []byte(res.Content), mode, typed); err != nil {
 			if errors.Is(err, os.ErrExist) {
 				return nil, validation("out", "%s exists; give another --out or --force.", path)
 			}
@@ -72,10 +80,24 @@ var otioExport = &spec{
 	},
 }
 
-// writeFile writes a file the person asked for, with the flags the caller chose.
-func writeFile(path string, data []byte, mode int) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
-		return fmt.Errorf("create the folder of %s: %w", path, err)
+// safeOtioName reports whether a file name that came from the server is one plain ".otio" name: no
+// separator, drive or stream colon, no control character, not "." or "..", not only the extension.
+func safeOtioName(name string) bool {
+	if name == "" || name == "." || name == ".." || name == ".otio" || !strings.HasSuffix(name, ".otio") ||
+		name != filepath.Base(name) || strings.ContainsAny(name, `/\:`) {
+		return false
+	}
+
+	return !strings.ContainsFunc(name, unicode.IsControl)
+}
+
+// writeFile writes a file the person asked for, with the flags the caller chose. Folders are created
+// only for a path the person typed.
+func writeFile(path string, data []byte, mode int, makeFolders bool) error {
+	if makeFolders {
+		if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+			return fmt.Errorf("create the folder of %s: %w", path, err)
+		}
 	}
 
 	f, err := os.OpenFile(path, mode, 0o600) //nolint:gosec // the path is the one the person typed
