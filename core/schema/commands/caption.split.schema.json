@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "before_word": {
+      "description": "Index of the first word of the right part.",
+      "minimum": 1,
+      "type": "integer"
+    },
+    "item_id": {
+      "description": "A caption.",
+      "type": "string"
+    },
+    "new_id": {
+      "description": "The id of the right part.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id",
+    "before_word"
+  ],
+  "type": "object"
+}

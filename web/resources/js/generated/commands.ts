@@ -108,6 +108,13 @@ export interface CaptionEditWordArgs {
   text: string;
 }
 
+export interface CaptionMergeArgs {
+  /**
+   * Exactly two distinct captions of one track, in any order.
+   */
+  item_ids: string[];
+}
+
 export interface CaptionSetBreaksArgs {
   /**
    * Indexes of the words that start a new line, strictly increasing; [] clears.
@@ -155,6 +162,21 @@ export interface CaptionSetWordsArgs {
     start: string;
     text: string;
   }[];
+}
+
+export interface CaptionSplitArgs {
+  /**
+   * Index of the first word of the right part.
+   */
+  before_word: number;
+  /**
+   * A caption.
+   */
+  item_id: string;
+  /**
+   * The id of the right part.
+   */
+  new_id?: string;
 }
 
 export interface ClipAddArgs {
@@ -688,7 +710,7 @@ export interface TrackUpdateArgs {
   track_id: string;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "caption.add" | "caption.edit_word" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "clip.add" | "clip.remove_silences" | "clip.set_color" | "clip.set_framing" | "clip.set_speed" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "caption.add" | "caption.edit_word" | "caption.merge" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_color" | "clip.set_framing" | "clip.set_speed" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -696,9 +718,11 @@ export interface CommandArgsMap {
 	"audio.add": AudioAddArgs;
 	"caption.add": CaptionAddArgs;
 	"caption.edit_word": CaptionEditWordArgs;
+	"caption.merge": CaptionMergeArgs;
 	"caption.set_breaks": CaptionSetBreaksArgs;
 	"caption.set_style": CaptionSetStyleArgs;
 	"caption.set_words": CaptionSetWordsArgs;
+	"caption.split": CaptionSplitArgs;
 	"clip.add": ClipAddArgs;
 	"clip.remove_silences": ClipRemoveSilencesArgs;
 	"clip.set_color": ClipSetColorArgs;
@@ -738,9 +762,11 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"audio.add": { summary: "Places an audio asset, or the audio of a video asset, on an audio track.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"caption.add": { summary: "Adds a caption item with timed words.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
 	"caption.edit_word": { summary: "Changes the text of one word of a caption, or removes the word.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
+	"caption.merge": { summary: "Joins two captions of one track into one that spans both.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
 	"caption.set_breaks": { summary: "Sets the forced line breaks of a caption.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"caption.set_style": { summary: "Sets or clears the style override of one caption.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_FONT_UNKNOWN"] },
 	"caption.set_words": { summary: "Replaces the words of a caption.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT","E_OVERLAP"] },
+	"caption.split": { summary: "Splits a caption into two at a word boundary.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT"] },
 	"clip.add": { summary: "Places a video or image asset on a visual track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"clip.remove_silences": { summary: "Cuts the silent stretches out of a clip, leaving one clip per stretch of speech.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_INVALID_STATE","E_LIMIT"] },
 	"clip.set_color": { summary: "Sets the brightness, contrast and saturation of a clip.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },

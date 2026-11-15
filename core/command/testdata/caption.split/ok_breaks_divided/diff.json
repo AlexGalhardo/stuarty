@@ -1,0 +1,83 @@
+[
+  {
+    "kind": "item.added",
+    "id": "itm_c3d4e5f6g7",
+    "object": {
+      "breaks": [
+        1
+      ],
+      "duration": 33,
+      "id": "itm_c3d4e5f6g7",
+      "start": 27,
+      "track": "trk_a1b2c3d4e5",
+      "type": "caption",
+      "words": [
+        {
+          "duration": 12,
+          "start": 0,
+          "text": "new"
+        },
+        {
+          "duration": 21,
+          "start": 12,
+          "text": "editor."
+        }
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_s6t7v8w9x0",
+    "changes": {
+      "breaks": [
+        [
+          1,
+          3
+        ],
+        [
+          1
+        ]
+      ],
+      "duration": [
+        48,
+        15
+      ],
+      "words": [
+        [
+          {
+            "duration": 9,
+            "start": 0,
+            "text": "Meet"
+          },
+          {
+            "duration": 6,
+            "start": 9,
+            "text": "the"
+          },
+          {
+            "duration": 12,
+            "start": 15,
+            "text": "new"
+          },
+          {
+            "duration": 21,
+            "start": 27,
+            "text": "editor."
+          }
+        ],
+        [
+          {
+            "duration": 9,
+            "start": 0,
+            "text": "Meet"
+          },
+          {
+            "duration": 6,
+            "start": 9,
+            "text": "the"
+          }
+        ]
+      ]
+    }
+  }
+]

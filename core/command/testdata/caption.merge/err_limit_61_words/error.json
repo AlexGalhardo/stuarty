@@ -1,0 +1,6 @@
+{
+  "code": "E_LIMIT",
+  "message": "The merged caption would have 61 words; the limit is 60.",
+  "hint": "Remove words first, or keep the captions separate.",
+  "retryable": false
+}

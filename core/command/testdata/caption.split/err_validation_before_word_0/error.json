@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.before_word is 0, outside the accepted range.",
+  "hint": "Use a value of at least 1.",
+  "retryable": false,
+  "path": "args.before_word"
+}
