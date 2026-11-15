@@ -2,6 +2,7 @@ package ffmpeg
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"io"
 	"os"
@@ -32,7 +33,10 @@ func Sniff(head []byte) error {
 			return notMedia()
 		}
 	}
-	if mostlyPrintable(head) {
+	// An MP4 whose moov box is at the end starts its mdat with the encoder's text SEI (x264 writes
+	// about 500 characters), so the head of an ordinary file can read as text: the box structure
+	// decides, not the character count.
+	if !isoBaseHead(head) && mostlyPrintable(head) {
 		return notMedia()
 	}
 	if knownSignature(head) {
@@ -57,6 +61,17 @@ func mostlyPrintable(head []byte) bool {
 		}
 	}
 	return printable*10 >= len(head)*9
+}
+
+// isoBaseHead reports whether head starts with a well-formed ftyp box: a size of 16 to 1024 bytes in
+// four binary bytes (a text file has no NUL in them) followed by "ftyp".
+func isoBaseHead(h []byte) bool {
+	if len(h) < 16 || string(h[4:8]) != "ftyp" {
+		return false
+	}
+	size := binary.BigEndian.Uint32(h[:4])
+
+	return size >= 16 && size <= 1024 && size%4 == 0
 }
 
 func notMedia() *Error {
