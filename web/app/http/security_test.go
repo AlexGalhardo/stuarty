@@ -528,3 +528,39 @@ func TestMCPEndpointIsGuardedAndAuthenticated(t *testing.T) {
 		}
 	}
 }
+
+// T-28: the local bearer token cannot empty the trash, a browser session can,
+// and the operation is on no agent surface.
+func TestSecurity_T28_TrashEmptyNeedsHumanSession(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	id := h.newProject("trash")
+
+	if res := h.post("/api/v1/projects/"+id+"/trash", ""); res.status != http.StatusOK {
+		t.Fatalf("trash = %d %s", res.status, res.body)
+	}
+
+	if res := h.post("/api/v1/trash/empty", "{}"); res.status != http.StatusForbidden ||
+		res.json(t)["code"] != "E_FORBIDDEN" {
+		t.Errorf("the local token = %d %s, want 403 E_FORBIDDEN", res.status, res.body)
+	}
+
+	if res := h.get("/api/v1/projects/" + id); res.status != http.StatusOK {
+		t.Fatalf("a refused call deleted the project: %d", res.status)
+	}
+
+	cookie := h.session(t)
+
+	res := h.do(req{
+		method: http.MethodPost, path: "/api/v1/trash/empty", body: "{}", noAuth: true,
+		headers: map[string]string{"Cookie": cookie, "Sec-Fetch-Site": "same-origin", "Origin": h.srv.URL},
+	})
+	if res.status != http.StatusOK || res.json(t)["projects"] != float64(1) {
+		t.Errorf("a browser session = %d %s", res.status, res.body)
+	}
+
+	if res := h.get("/api/v1/projects/" + id); res.status != http.StatusNotFound {
+		t.Errorf("the emptied project = %d, want 404", res.status)
+	}
+}

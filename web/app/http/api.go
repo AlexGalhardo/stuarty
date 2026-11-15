@@ -132,7 +132,7 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 				return
 			}
 
-			caller = service.Caller{Actor: "local:" + auth.UILabel, Scopes: service.AllScopes}
+			caller = service.Caller{Actor: "local:" + auth.UILabel, Scopes: service.AllScopes, Browser: true}
 		} else {
 			w.Header().Set("WWW-Authenticate", "Bearer")
 			web.Fail(w, r, &service.Error{

@@ -27,6 +27,9 @@ type row struct {
 	// cliPending names the task that adds the CLI command and the MCP tool of an
 	// operation whose Service method and route already exist.
 	cliPending string
+	// httpOnly marks an operation with no MCP tool and no CLI command, by design
+	// (SDD-003 section 7.1, exception E-4): only the HTTP route reaches it.
+	httpOnly bool
 	// noMethod marks an operation that is not a Service method (SDD-003 section
 	// 7.1, exception E-1: the event stream lives in the hub of the owner).
 	noMethod bool
@@ -69,6 +72,7 @@ var parity = []row{
 	{method: "JobList", tool: "job_get", command: "job:list", route: "GET /projects/{}/jobs"},
 	{method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame"},
 	{method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet"},
+	{method: "TrashEmpty", route: "POST /trash/empty", httpOnly: true},
 	{method: "Events", command: "events", route: "GET /projects/{}/events", noMethod: true},
 }
 
@@ -134,6 +138,14 @@ func TestEveryOperationIsReachableOnEverySurface(t *testing.T) {
 					r.pending,
 					r.command,
 				)
+			}
+
+			continue
+		}
+
+		if r.httpOnly {
+			if !slices.Contains(routes, r.route) {
+				t.Errorf("%s: the HTTP route %s is not served", r.method, r.route)
 			}
 
 			continue

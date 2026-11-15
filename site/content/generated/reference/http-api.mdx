@@ -543,3 +543,18 @@ Request body:
 | `path` | `string` | yes | An absolute path to a template file on the machine that runs the server. |
 
 Responses: `201` Created, `401`, `422`, `default`.
+
+## trash
+
+### `POST /trash/empty`
+
+Empty the trash for good
+
+Request body:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `older_than_days` | `integer` | no | Empty only what has been in the trash this many days. |
+| `project_id` | `string` | no | Empty only this trashed project. |
+
+Responses: `200` OK, `401`, `422`, `default`.

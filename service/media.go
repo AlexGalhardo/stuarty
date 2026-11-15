@@ -203,8 +203,14 @@ func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f I
 		return out
 	}
 
+	// The read side of the store lock covers the copy into store/ and the row
+	// of the asset, so an emptying cannot delete a file this import found.
+	s.storeMu.RLock()
+
 	put, err := s.media.Content.Put(ctx, file, s.limits.MaxImportBytes)
 	if err != nil {
+		s.storeMu.RUnlock()
+
 		return refuse(err)
 	}
 
@@ -264,6 +270,8 @@ func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f I
 
 		return nil
 	})
+	s.storeMu.RUnlock()
+
 	if werr != nil {
 		return refuse(werr)
 	}

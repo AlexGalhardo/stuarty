@@ -65,6 +65,11 @@ func TestCrashChild(t *testing.T) {
 		_, err = svc.Undo(ctx, service.UndoRequest{ProjectID: project})
 	case "redo":
 		_, err = svc.Redo(ctx, service.UndoRequest{ProjectID: project})
+	case "trash_empty":
+		human := service.WithCaller(context.Background(), service.Caller{
+			Actor: "local:ui", Scopes: service.AllScopes, Browser: true,
+		})
+		_, err = svc.TrashEmpty(human, service.TrashEmptyRequest{})
 	}
 
 	// Reaching this line means the crash point was never hit.
@@ -180,4 +185,56 @@ func crashAt(t *testing.T, action, point string) {
 	}
 
 	invariants(t, st, project)
+}
+
+// SDD-005 section 18 check 21: a crash before the commit of an emptying changes
+// nothing; after it the project is gone and the database is consistent.
+func TestCrashTrashEmpty(t *testing.T) {
+	t.Parallel()
+
+	for _, point := range []string{"trash_empty.after_lock", "trash_empty.before_commit", "trash_empty.after_commit"} {
+		t.Run(point, func(t *testing.T) {
+			t.Parallel()
+
+			e := newEnv(t)
+			project, track := e.withTrack()
+
+			if _, err := e.svc.ProjectTrash(e.as(ui), service.ProjectTrashRequest{ProjectID: project}); err != nil {
+				t.Fatal(err)
+			}
+
+			if err := e.store.Close(); err != nil {
+				t.Fatal(err)
+			}
+
+			cmd := exec.Command(os.Args[0], "-test.run=^TestCrashChild$", "-test.v")
+			cmd.Env = append(os.Environ(),
+				roleEnv+"=child", workspace.EnvHome+"="+string(e.dir), projectEnv+"="+project, trackEnv+"="+track,
+				actionEnv+"=trash_empty", crashpoint.CrashEnv+"="+point)
+
+			var out bytes.Buffer
+			cmd.Stdout, cmd.Stderr = &out, &out
+
+			var exit *exec.ExitError
+			if err := cmd.Run(); !errors.As(err, &exit) || exit.ExitCode() != 137 {
+				t.Fatalf("child = %v, want exit 137 at %s: %s", err, point, out.String())
+			}
+
+			st, err := store.Open(
+				context.Background(),
+				e.dir,
+				store.Options{SchemaVersion: timeline.CurrentSchemaVersion},
+			)
+			if err != nil {
+				t.Fatalf("reopen after the crash: %v", err)
+			}
+
+			defer st.Close()
+
+			_, err = st.Projects().Get(context.Background(), project)
+			if gone := point == "trash_empty.after_commit"; gone != errors.Is(err, service.ErrNotFound) {
+				t.Errorf("crash at %s: project lookup = %v", point, err)
+			}
+		})
+	}
 }

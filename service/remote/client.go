@@ -399,6 +399,11 @@ func (c *Client) TemplateImport(
 	return post[service.TemplateResult](ctx, c, "/templates/import", req)
 }
 
+// TrashEmpty implements service.Service.
+func (c *Client) TrashEmpty(ctx context.Context, req service.TrashEmptyRequest) (*service.TrashEmptyResult, error) {
+	return post[service.TrashEmptyResult](ctx, c, "/trash/empty", req)
+}
+
 // JobList implements service.Service.
 func (c *Client) JobList(ctx context.Context, req service.JobListRequest) (*service.JobListResult, error) {
 	q := url.Values{}

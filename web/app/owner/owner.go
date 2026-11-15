@@ -228,7 +228,22 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	}
 
 	// Jobs found running belong to an owner that is gone (SDD-005 section 14.5).
-	return o.Runner.Recover(ctx)
+	if err := o.Runner.Recover(ctx); err != nil {
+		return err
+	}
+
+	// Step 8 of the start-up order: what an interrupted emptying left behind.
+	if sw, ok := service.SweeperOf(o.Service); ok {
+		res, serr := sw.Sweep(ctx)
+		if serr != nil {
+			cfg.Log.WarnContext(ctx, "orphan sweep failed", "error", serr)
+		} else if res != (service.SweepResult{}) {
+			cfg.Log.InfoContext(ctx, "orphan sweep", "store", res.StoreFiles, "artifacts", res.ArtifactDirs,
+				"exports", res.ExportDirs, "frames", res.FrameDirs, "incoming", res.IncomingFiles)
+		}
+	}
+
+	return nil
 }
 
 // media builds the media side of the Service. A missing FFmpeg is not a start
