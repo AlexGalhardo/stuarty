@@ -500,6 +500,7 @@ Tools pinned by version in workflows: `govulncheck@v1.9.0` (`ci.yml:166`), Bette
 | `vuln.yml` | Vulnerabilities (weekly) | weekly, manual | `ci-failure` issue |
 | `scorecard.yml` | Scorecard | branch protection rule, push to `main`, weekly, manual | `ci-failure` issue |
 | `fuzz.yml` | Fuzz | weekly (cron `17 3 * * 0`), manual with `fuzztime` | `ci-failure` issue (the long run; the 30 s pull request run is the `Fuzz (30 s)` job of `ci.yml`) |
+| `agent-harness.yml` | Agent harness | manual only, with `scenario`, `runs` (default 10) and `model` (default `claude-sonnet-5-5`); never on a schedule, a push or a pull request | The release checklist (live agent run and vendor token count of `tools/list`); not required; uploads the transcripts as an artifact; fails first, naming it, when the secret `ANTHROPIC_API_KEY` is missing |
 | `ffmpeg-freshness.yml` | FFmpeg freshness | weekly, manual | `ci-failure` issue |
 | `ci-failure.yml` | CI failure issue | `workflow_run` of the weekly workflows failing | Blocks the next release (R25) |
 
