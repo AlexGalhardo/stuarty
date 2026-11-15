@@ -234,3 +234,15 @@ func TestCLIJSONPurity(t *testing.T) {
 		t.Errorf("only %d invocations, want at least 100", runs)
 	}
 }
+
+func (s stub) FontImport(context.Context, service.FontImportRequest) (*service.FontImportResult, error) {
+	return reply[service.FontImportResult](s.err)
+}
+
+func (s stub) BrandKitGet(context.Context, service.BrandKitGetRequest) (*service.BrandKit, error) {
+	return reply[service.BrandKit](s.err)
+}
+
+func (s stub) BrandKitSet(context.Context, service.BrandKitSetRequest) (*service.BrandKit, error) {
+	return reply[service.BrandKit](s.err)
+}

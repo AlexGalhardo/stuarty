@@ -21,6 +21,7 @@ func registry() []*spec {
 		jobShow, jobCancel, jobList, eventsCmd, commandHelp,
 		templateList, templateSave, templateNew, templateExport, templateImport, bundleExport, bundleImport,
 		agentDocs, transcribeCmd, doctorCmd, fontsCmd, auditCmd, toolsInstallCmd, tokenRotate,
+		fontImportCmd, brandShowCmd, brandSetCmd,
 	}
 }
 

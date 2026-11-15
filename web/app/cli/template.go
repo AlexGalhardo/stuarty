@@ -69,6 +69,14 @@ var templateNew = &spec{
 		{Name: "name", Kind: kindString, Usage: "project name (required)"},
 		{Name: "fill", Kind: kindString, Usage: "a JSON object of slot name to value: a file, or - for standard input"},
 		{Name: "id", Kind: kindString, Usage: "identifier to give the project"},
+		{
+			Name: "brand-color", Kind: kindString, Repeat: true,
+			Usage: "a colour of the template that takes its value from the brand kit",
+		},
+		{
+			Name: "brand-font", Kind: kindString, Repeat: true,
+			Usage: "a family of the brand kit to add to the project's fonts",
+		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
 		if len(c.args.Positional) != 1 {
@@ -81,7 +89,8 @@ var templateNew = &spec{
 
 		req := service.TemplateInstantiateRequest{
 			TemplateID: c.args.Positional[0], Name: c.args.str("name"), ID: c.args.str("id"),
-			DryRun: c.args.boolean("dry-run"),
+			DryRun:      c.args.boolean("dry-run"),
+			BrandColors: splitAll(c.args.all("brand-color")), BrandFonts: splitAll(c.args.all("brand-font")),
 		}
 
 		if c.args.has("fill") {
