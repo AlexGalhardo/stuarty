@@ -1,6 +1,7 @@
 package migrate_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"os"
@@ -180,5 +181,41 @@ func TestEveryVersionHasAStep(t *testing.T) {
 	noop := func(d migrate.Doc) (migrate.Doc, error) { return d, nil }
 	if err := migrate.Check(3, migrate.Steps{1: nil, 2: noop}); err == nil {
 		t.Error("a missing step went unnoticed")
+	}
+}
+
+const starterDir = "../../../service/templates/starter"
+
+// TestStarterTemplatesFrozen fails when a starter template has no copy with the same
+// canonical bytes in the v1 fixtures, so every future version migrates it (P2-SCH-004).
+func TestStarterTemplatesFrozen(t *testing.T) {
+	starters, err := filepath.Glob(filepath.Join(starterDir, "*.template.json"))
+	if err != nil || len(starters) != 3 {
+		t.Fatalf("want 3 starter templates in %s, got %d: %v", starterDir, len(starters), err)
+	}
+	var fixtures [][]byte
+	files, _ := filepath.Glob(filepath.Join(versionsDir, "v1", "*.json"))
+	for _, f := range files {
+		data, err := os.ReadFile(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if doc, err := timeline.Decode(data); err == nil {
+			fixtures = append(fixtures, timeline.Canonical(doc))
+		}
+	}
+	for _, s := range starters {
+		data, err := os.ReadFile(s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		doc, err := timeline.Decode(data)
+		if err != nil {
+			t.Fatalf("%s: %v", s, err)
+		}
+		want := timeline.Canonical(doc)
+		if !slices.ContainsFunc(fixtures, func(b []byte) bool { return bytes.Equal(b, want) }) {
+			t.Errorf("%s has no copy with the same canonical bytes in testdata/versions/v1/", filepath.Base(s))
+		}
 	}
 }
