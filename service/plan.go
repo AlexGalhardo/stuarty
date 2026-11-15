@@ -2,12 +2,15 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/cache"
 	"github.com/AlexGalhardo/vukem-video/engine/raster"
 )
@@ -36,26 +39,44 @@ const (
 // project's plan must not unlock it. A key the project's plan did not hand out
 // (or the server forgot at a restart) is not found, and the client asks for the
 // plan again.
+//
+// The key of a spec names the font family, never the font file. The plan therefore hands out a
+// bitmap drawn with a user font under a key that also names the files of that family (PlanWindow
+// renames it), and the bitmap is drawn by a cache that holds only documents with the same font
+// files: two projects that name a family alike never share a bitmap, on disk or in memory, and a
+// browser that caches a key for a year never shows a stale font after the family changes files.
 type bitmaps struct {
-	mu    sync.Mutex
-	specs map[bitmapID]plan.BitmapSpec
-	order []bitmapID
-	cache *raster.Cache
+	mu     sync.Mutex
+	specs  map[bitmapID]knownBitmap
+	order  []bitmapID
+	cache  *raster.Cache
+	caches map[string]*raster.Cache // by font fingerprint, user fonts only
 }
 
 type bitmapID struct{ project, key string }
 
-func (b *bitmaps) remember(project string, spec plan.BitmapSpec) {
-	key := bitmapID{project, spec.Key()}
+type knownBitmap struct {
+	spec        plan.BitmapSpec
+	fonts       *raster.FontSet
+	fingerprint string // of every user font of the document; empty with none
+}
+
+const (
+	maxFontCaches   = 4
+	fontCacheBudget = 16 << 20
+)
+
+func (b *bitmaps) remember(project, key string, spec plan.BitmapSpec, doc *timeline.Document, fonts *raster.FontSet) {
+	id := bitmapID{project, key}
 
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	if b.specs == nil {
-		b.specs = map[bitmapID]plan.BitmapSpec{}
+		b.specs = map[bitmapID]knownBitmap{}
 	}
 
-	if _, ok := b.specs[key]; ok {
+	if _, ok := b.specs[id]; ok {
 		return
 	}
 
@@ -64,17 +85,45 @@ func (b *bitmaps) remember(project string, spec plan.BitmapSpec) {
 		b.order = b.order[1:]
 	}
 
-	b.specs[key] = spec
-	b.order = append(b.order, key)
+	b.specs[id] = knownBitmap{spec: spec, fonts: fonts, fingerprint: fontFingerprint(doc)}
+	b.order = append(b.order, id)
 }
 
-func (b *bitmaps) spec(project, key string) (plan.BitmapSpec, bool) {
+func (b *bitmaps) known(project, key string) (knownBitmap, bool) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	s, ok := b.specs[bitmapID{project, key}]
+	k, ok := b.specs[bitmapID{project, key}]
 
-	return s, ok
+	return k, ok
+}
+
+// rasterCache returns the in-process cache that draws bitmaps of documents with the same user
+// font files as k.
+func (b *bitmaps) rasterCache(k *knownBitmap) *raster.Cache {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if k.fingerprint == "" {
+		if b.cache == nil {
+			b.cache = raster.NewCache(raster.Bundled(), 0)
+		}
+
+		return b.cache
+	}
+
+	if c, ok := b.caches[k.fingerprint]; ok {
+		return c
+	}
+
+	if b.caches == nil || len(b.caches) >= maxFontCaches {
+		b.caches = map[string]*raster.Cache{}
+	}
+
+	c := raster.NewCache(k.fonts, fontCacheBudget)
+	b.caches[k.fingerprint] = c
+
+	return c
 }
 
 // PlanWindow reads the render plan of a window of the current revision. The
@@ -100,17 +149,46 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 		return nil, derr
 	}
 
-	opts := plan.Options{Measure: raster.Measure(raster.Bundled())}
+	fonts := s.fontSet(doc)
+	opts := plan.Options{Measure: raster.Measure(fonts)}
 
 	w := plan.WindowWith(doc, req.From, req.Until, opts)
 	w.Revision = row.Revision
 
-	// The bitmaps of the window can be asked for by key from now on.
+	// The bitmaps of the window can be asked for by key from now on. A bitmap drawn with a user
+	// font is handed out under a key that also names the font files (see bitmaps).
+	renamed := map[string]string{}
+
 	for t := req.From; t < req.Until; t++ {
 		layers := plan.FrameWith(doc, t, opts).Layers
 		for i := range layers {
-			if layers[i].Bitmap != nil {
-				s.bitmaps.remember(row.ID, *layers[i].Bitmap)
+			if layers[i].Bitmap == nil {
+				continue
+			}
+
+			spec := *layers[i].Bitmap
+			key := spec.Key()
+
+			if salt := userFontKey(doc, &spec); salt != "" {
+				sum := sha256.Sum256([]byte(key + ":" + salt))
+				key = hex.EncodeToString(sum[:])
+				renamed[spec.Key()] = key
+			}
+
+			s.bitmaps.remember(row.ID, key, spec, doc, fonts)
+		}
+	}
+
+	if len(renamed) > 0 {
+		for i := range w.Layers {
+			if w.Layers[i].Bitmaps == nil {
+				continue
+			}
+
+			for j, k := range w.Layers[i].Bitmaps.Keys {
+				if r, ok := renamed[k]; ok {
+					w.Layers[i].Bitmaps.Keys[j] = r
+				}
 			}
 		}
 	}
@@ -130,7 +208,7 @@ func (s *svc) openBitmap(project, key string) (*File, error) {
 		return nil, notFound()
 	}
 
-	spec, ok := s.bitmaps.spec(project, key)
+	known, ok := s.bitmaps.known(project, key)
 	if !ok {
 		return nil, notFound()
 	}
@@ -143,14 +221,7 @@ func (s *svc) openBitmap(project, key string) (*File, error) {
 
 	body, found := store.Get(name)
 	if !found {
-		s.bitmaps.mu.Lock()
-		if s.bitmaps.cache == nil {
-			s.bitmaps.cache = raster.NewCache(raster.Bundled(), 0)
-		}
-		rc := s.bitmaps.cache
-		s.bitmaps.mu.Unlock()
-
-		bm, err := rc.Get(spec)
+		bm, err := s.bitmaps.rasterCache(&known).Get(known.spec)
 		if err != nil {
 			return nil, newError(command.CodeValidation, "the bitmap cannot be drawn.")
 		}

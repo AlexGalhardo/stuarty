@@ -13,6 +13,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
 	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
@@ -195,6 +196,7 @@ type svc struct {
 
 	running registry
 	bitmaps bitmaps
+	fonts   *enginestore.Fonts // user fonts of the workspace; nil without one
 	snaps   snapCache
 	sems    map[string]chan struct{}
 }
@@ -225,6 +227,10 @@ func New(o Options) (Service, error) {
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
+	}
+
+	if s.workspace != "" {
+		s.fonts = enginestore.NewFonts(s.workspace)
 	}
 
 	s.sems = map[string]chan struct{}{

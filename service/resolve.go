@@ -41,6 +41,11 @@ func (s *svc) resolveOps(
 			resolved, rerr = s.resolveSpeech(ctx, tx, doc, &ops[i], i)
 		case "audio.mark_beats":
 			resolved, rerr = s.resolveBeats(ctx, tx, doc, &ops[i], i)
+		case "font.add":
+			// Not analysis: the core cannot tell whether the font store holds the file.
+			if e := s.checkFontAdd(&ops[i], i); e != nil {
+				return nil, e
+			}
 		}
 
 		if rerr != nil {

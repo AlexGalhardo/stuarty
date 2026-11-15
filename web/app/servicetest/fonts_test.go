@@ -1,0 +1,213 @@
+package servicetest
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/AlexGalhardo/vukem-video/core/command"
+	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
+	"github.com/AlexGalhardo/vukem-video/service"
+)
+
+func bundledFontFile(t *testing.T, name string) []byte {
+	t.Helper()
+
+	data, err := os.ReadFile(filepath.Join("..", "..", "..", "engine", "raster", "fonts", name))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return data
+}
+
+// brandProject is a project with a text in the family "Brand" whose regular weight is the file
+// with the hash.
+func (m *mediaEnv) brandProject(hash string) string {
+	m.t.Helper()
+
+	project, track := m.withTrack()
+
+	m.mustEdit(ui, project, m.head(project).Revision, op(
+		"font.add", fmt.Sprintf(`{"family":"Brand","files":[{"weight":400,"hash":"sha256:%s"}]}`, hash),
+	))
+	m.mustEdit(ui, project, m.head(project).Revision, op(
+		"text.add", fmt.Sprintf(
+			`{"track_id":%q,"start":"0s","duration":"1s","text":"Hamburgefonstiv","style":{"font_family":"Brand","font_weight":400}}`,
+			track),
+	))
+
+	return project
+}
+
+func (m *mediaEnv) bitmapOf(project string) (key string, png []byte) {
+	m.t.Helper()
+
+	ctx := m.as(ui)
+
+	w, err := m.svc.PlanWindow(ctx, service.PlanWindowRequest{ProjectID: project, From: 0, Until: 30})
+	if err != nil {
+		m.t.Fatal(err)
+	}
+
+	if len(w.Layers) != 1 || w.Layers[0].Bitmaps == nil {
+		m.t.Fatalf("window = %+v", w)
+	}
+
+	key = w.Layers[0].Bitmaps.Keys[0]
+
+	f, err := m.svc.OpenFile(ctx, service.FileRef{Kind: "bitmap", ProjectID: project, ID: key})
+	if err != nil {
+		m.t.Fatal(err)
+	}
+
+	png, err = os.ReadFile(filepath.Join(m.ws, filepath.FromSlash(f.Path)))
+	if err != nil {
+		m.t.Fatal(err)
+	}
+
+	return key, png
+}
+
+// SDD-007 section 5.4 item 3: font.add of a file the font store lacks is E_NOT_FOUND, and the same
+// operation succeeds once the file is stored.
+func TestFontAddRefusesAHashTheStoreLacks(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{beta: true})
+	project := m.newProject("p")
+	hash := strings.Repeat("ab", 32)
+	args := fmt.Sprintf(`{"family":"Brand","files":[{"weight":400,"hash":"sha256:%s"}]}`, hash)
+
+	_, err := m.edit(ui, project, 0, op("font.add", args))
+
+	se := serviceErr(err)
+	if se == nil || se.Code != command.CodeNotFound || se.OpIndex == nil || *se.OpIndex != 0 {
+		t.Fatalf("error = %+v", err)
+	}
+
+	if m.head(project).Revision != 0 {
+		t.Error("a refused font.add changed the project")
+	}
+
+	stored, err := enginestore.NewFonts(m.ws).Put(bundledFontFile(t, "Anton-Regular.ttf"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	m.mustEdit(ui, project, 0, op("font.add", strings.ReplaceAll(args, hash, stored)))
+}
+
+// RF-053: two projects that name a family alike and ship different files never share a bitmap, a
+// document with a user font renders (no E_FONT_UNKNOWN) and the bundled families are untouched.
+func TestUserFontBitmapsAreNotSharedBetweenProjects(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true, beta: true})
+	fonts := enginestore.NewFonts(m.ws)
+
+	anton, err := fonts.Put(bundledFontFile(t, "Anton-Regular.ttf"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bebas, err := fonts.Put(bundledFontFile(t, "BebasNeue-Regular.ttf"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	a, b := m.brandProject(anton), m.brandProject(bebas)
+
+	keyA, pngA := m.bitmapOf(a)
+	keyB, pngB := m.bitmapOf(b)
+
+	if keyA == keyB || bytes.Equal(pngA, pngB) {
+		t.Fatalf("two files under one family name share a bitmap: keys %s and %s", keyA, keyB)
+	}
+
+	// The same file under another project name is the same bitmap: the key follows the files.
+	keyC, _ := m.bitmapOf(m.brandProject(anton))
+	if keyC != keyA {
+		t.Errorf("the same font file gave another key: %s and %s", keyC, keyA)
+	}
+
+	// A project with the same text in a bundled family keeps the key of the plan.
+	plain := m.exportable()
+	keyPlain, _ := m.bitmapOf(plain)
+
+	if keyPlain == keyA || len(keyPlain) != 64 {
+		t.Errorf("bundled key = %s", keyPlain)
+	}
+}
+
+// The export renders a document that uses a user font through the workspace font store.
+func TestExportRendersAUserFont(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true, beta: true})
+
+	anton, err := enginestore.NewFonts(m.ws).Put(bundledFontFile(t, "Anton-Regular.ttf"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	project := m.brandProject(anton)
+
+	job, err := m.startExport(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := m.runner.RunJob(context.Background(), job.JobID); err != nil {
+		t.Fatal(err)
+	}
+
+	if done := m.job(job.JobID); done.State != service.JobSucceeded {
+		t.Fatalf("job = %+v", done)
+	}
+}
+
+// A bundle carries the user fonts of the document; the import validates them and stores them in the
+// font store of the new workspace, not in the media store.
+func TestBundleCarriesUserFontsIntoTheFontStore(t *testing.T) {
+	src := newMediaEnv(t, mediaCfg{beta: true})
+
+	anton, err := enginestore.NewFonts(src.ws).Put(bundledFontFile(t, "Anton-Regular.ttf"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	project := src.brandProject(anton)
+
+	job := src.exportBundle(project, nil)
+	if job.State != service.JobSucceeded {
+		t.Fatalf("export = %+v", job)
+	}
+
+	_, entries := readZip(t, job.Result.Export.Path)
+	if _, ok := entries["font."+anton]; !ok {
+		t.Fatalf("the bundle has no font entry: %v", entries)
+	}
+
+	dst := newMediaEnv(t, mediaCfg{beta: true, realExport: true})
+
+	res, err := dst.importBundle(job.Result.Export.Path, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !res.Created || !bytes.Equal(dst.document(project), src.document(project)) {
+		t.Fatalf("result = %+v", res)
+	}
+
+	if !enginestore.NewFonts(dst.ws).Has(anton) {
+		t.Error("the font is not in the font store of the new workspace")
+	}
+
+	if dst.mediaHas("sha256:" + anton) {
+		t.Error("the font was put in the media store")
+	}
+
+	// The imported project renders: its plan draws the text with the imported file.
+	if key, png := dst.bitmapOf(project); len(key) != 64 || !bytes.HasPrefix(png, []byte("\x89PNG")) {
+		t.Errorf("bitmap = %s, %d bytes", key, len(png))
+	}
+}
