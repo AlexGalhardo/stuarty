@@ -424,6 +424,89 @@ export function renameOperations(itemId: string, name: string): Operations {
 
 export type Ripple = "track" | "all";
 
+export const KEYFRAME_PROPERTIES = [
+	"x",
+	"y",
+	"scale",
+	"rotation",
+	"opacity",
+	"volume",
+] as const;
+export type KeyframeProperty = (typeof KEYFRAME_PROPERTIES)[number];
+
+// The spellings of the registry (`keyframe.set` easing).
+export const KEYFRAME_EASINGS = [
+	"linear",
+	"ease_in",
+	"ease_out",
+	"ease_in_out",
+	"hold",
+] as const;
+export type KeyframeEasing = (typeof KEYFRAME_EASINGS)[number];
+
+// Whether the playhead lies inside the item, its end included: the one gate of
+// "Add at playhead" (SDD-012 section 8.3), never a prediction of success.
+export function containsInclusive(item: ItemRange, playhead: number): boolean {
+	return playhead >= item.start && playhead <= item.start + item.duration;
+}
+
+// A keyframe is stored with `t` relative to the item start; the commands name it
+// by its position on the timeline.
+export const keyframeFrame = (itemStart: number, t: number): number =>
+	itemStart + t;
+
+// "Add at playhead" and the easing select of a row: the value and the easing are
+// what the person chose; the core judges them.
+export function keyframeSetOperations(input: {
+	itemId: string;
+	property: KeyframeProperty;
+	frame: number;
+	value: number;
+	easing: KeyframeEasing;
+}): Operations {
+	return [
+		{
+			op: "keyframe.set",
+			args: {
+				item_id: input.itemId,
+				property: input.property,
+				at: frames(input.frame),
+				value: input.value,
+				easing: input.easing,
+			},
+		},
+	];
+}
+
+export function keyframeRemoveOperations(
+	itemId: string,
+	property: KeyframeProperty,
+	frame: number,
+): Operations {
+	return [
+		{
+			op: "keyframe.remove",
+			args: { item_id: itemId, property, at: frames(frame) },
+		},
+	];
+}
+
+// One property, or every animated property of the item when none is named.
+export function keyframeClearOperations(
+	itemId: string,
+	property?: KeyframeProperty,
+): Operations {
+	return [
+		{
+			op: "keyframe.clear",
+			args:
+				property === undefined
+					? { item_id: itemId }
+					: { item_id: itemId, property },
+		},
+	];
+}
+
 // Delete, Shift+Delete and the menu entries (SDD-012 section 8.2): one
 // `item.delete` for the whole selection; the ripple the person chose is only
 // passed on, the core moves what follows.

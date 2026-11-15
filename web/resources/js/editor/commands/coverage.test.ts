@@ -18,7 +18,10 @@ import {
 	deleteOperations,
 	dropAssetOperations,
 	duplicateOperations,
+	keyframeClearOperations,
 	keyframeFallbackOperations,
+	keyframeRemoveOperations,
+	keyframeSetOperations,
 	moveOperations,
 	removeAssetOperations,
 	renameOperations,
@@ -197,6 +200,13 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 	test("the builders emit the operations the actions declare", () => {
 		const items = [{ id: "itm_a", start: 0, duration: 100 }];
 		const newTrackId = (): string => "trk_a";
+		const setInput = {
+			itemId: "itm_a",
+			property: "scale" as const,
+			frame: 10,
+			value: 1.5,
+			easing: "ease_in" as const,
+		};
 		const emitted: Record<string, string[]> = {
 			"library.add_to_timeline": addClipOperations({
 				assetId: "ast_a",
@@ -273,6 +283,28 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				(o) => o.op,
 			),
 			"inspector.caption_style": captionStyleOperations("itm_a", null).map(
+				(o) => o.op,
+			),
+			"inspector.keyframe_add": keyframeSetOperations(setInput).map(
+				(o) => o.op,
+			),
+			"inspector.keyframe_easing": keyframeSetOperations(setInput).map(
+				(o) => o.op,
+			),
+			"inspector.keyframe_value": keyframeSetOperations(setInput).map(
+				(o) => o.op,
+			),
+			"inspector.keyframe_remove": keyframeRemoveOperations(
+				"itm_a",
+				"scale",
+				10,
+			).map((o) => o.op),
+			"timeline.delete_keyframe": keyframeRemoveOperations(
+				"itm_a",
+				"x",
+				10,
+			).map((o) => o.op),
+			"inspector.keyframe_clear": keyframeClearOperations("itm_a").map(
 				(o) => o.op,
 			),
 			"inspector.auto_captions": captionFromTranscriptOperations({

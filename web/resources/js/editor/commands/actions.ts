@@ -21,7 +21,10 @@ import {
 	deleteOperations,
 	duplicateOperations,
 	type ItemRange,
+	type KeyframeProperty,
 	keyframeFallbackOperations,
+	keyframeFrame,
+	keyframeRemoveOperations,
 	moveToTrackOperations,
 	nudgeOperations,
 	type Operations,
@@ -79,7 +82,8 @@ export interface Actions {
 		ids: readonly string[],
 		sign: 1 | -1,
 	): Promise<EditOutcome | null>;
-	// Delete, Shift+Delete and the menu: the selection, else the focused item.
+	// Delete, Shift+Delete and the menu: the selected keyframe, else the
+	// selection, else the focused item.
 	deleteSelection(ripple?: Ripple): Promise<EditOutcome | null>;
 	// Ctrl+D: a copy of each selected item right after its end.
 	duplicateSelection(): Promise<EditOutcome | null>;
@@ -418,7 +422,24 @@ export function createActions(runtime: EditorRuntime): Actions {
 			});
 			return send(moveToTrackOperations(moves));
 		},
-		deleteSelection: (ripple) => send(deleteOperations(actedIds(), ripple)),
+		deleteSelection(ripple) {
+			// A selected keyframe is what Delete removes, before any item.
+			const keyframe = ui.getState().selection.keyframe;
+			const item =
+				keyframe === null
+					? undefined
+					: documents.getState().document?.items[keyframe.item];
+			if (keyframe !== null && item !== undefined) {
+				return send(
+					keyframeRemoveOperations(
+						keyframe.item,
+						keyframe.property as KeyframeProperty,
+						keyframeFrame(item.start, keyframe.t),
+					),
+				);
+			}
+			return send(deleteOperations(actedIds(), ripple));
+		},
 		duplicateSelection: () => send(duplicateOperations(rangesOf(actedIds()))),
 		closeGap: (trackId, at) => send(closeGapOperations(trackId, at)),
 		async removeAsset(assetId) {
