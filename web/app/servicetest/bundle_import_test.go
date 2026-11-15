@@ -19,7 +19,10 @@ import (
 )
 
 type bundleImporter interface {
-	ProjectBundleImport(ctx context.Context, req service.ProjectBundleImportRequest) (*service.ProjectCreateResult, error)
+	ProjectBundleImport(
+		ctx context.Context,
+		req service.ProjectBundleImportRequest,
+	) (*service.ProjectCreateResult, error)
 }
 
 func (m *mediaEnv) importBundle(path string, asNew bool) (*service.ProjectCreateResult, error) {
@@ -401,7 +404,10 @@ func TestSecurity_T20_BundleArchiveRules(t *testing.T) {
 			return append(e, testEntry{name: "media/", body: nil, mode: fs.ModeDir | 0o755})
 		}},
 		{"symlink entry", "E_VALIDATION", func(_ *testing.T, e []testEntry) []testEntry {
-			return append(e, testEntry{name: "media." + hex64, body: []byte("/etc/passwd"), mode: fs.ModeSymlink | 0o777})
+			return append(
+				e,
+				testEntry{name: "media." + hex64, body: []byte("/etc/passwd"), mode: fs.ModeSymlink | 0o777},
+			)
 		}},
 		{"encrypted entry", "E_VALIDATION", func(_ *testing.T, e []testEntry) []testEntry {
 			e[entryIndex(e, "document.json")].flags = 0x1
@@ -427,7 +433,7 @@ func TestSecurity_T20_BundleArchiveRules(t *testing.T) {
 		}},
 		{"zip bomb over the ratio", "E_LIMIT_EXCEEDED", func(_ *testing.T, e []testEntry) []testEntry {
 			e[entryIndex(e, mediaName)] = testEntry{
-				name: mediaName, body: bytes.Repeat([]byte{0}, 8<<20), method: zip.Deflate,
+				name: mediaName, body: make([]byte, 8<<20), method: zip.Deflate,
 			}
 
 			return e
@@ -455,11 +461,15 @@ func TestSecurity_T20_BundleArchiveRules(t *testing.T) {
 			return append(e[:i:i], e[i+1:]...)
 		}},
 		{"document that does not match its hash", "E_VALIDATION", func(t *testing.T, e []testEntry) []testEntry {
+			t.Helper()
+
 			withManifest(t, e, func(m *service.BundleManifest) { m.Document.SHA256 = hex64 })
 
 			return e
 		}},
 		{"document that is not a document", "E_VALIDATION", func(t *testing.T, e []testEntry) []testEntry {
+			t.Helper()
+
 			body := []byte(`{"schema_version":1}`)
 			e[entryIndex(e, "document.json")].body = body
 			withManifest(t, e, func(m *service.BundleManifest) {
@@ -469,16 +479,22 @@ func TestSecurity_T20_BundleArchiveRules(t *testing.T) {
 			return e
 		}},
 		{"newer bundle version", "E_VALIDATION", func(t *testing.T, e []testEntry) []testEntry {
+			t.Helper()
+
 			withManifest(t, e, func(m *service.BundleManifest) { m.BundleVersion = service.BundleVersion + 1 })
 
 			return e
 		}},
 		{"another format", "E_VALIDATION", func(t *testing.T, e []testEntry) []testEntry {
+			t.Helper()
+
 			withManifest(t, e, func(m *service.BundleManifest) { m.Format = "something-else" })
 
 			return e
 		}},
 		{"log with a gap", "E_VALIDATION", func(t *testing.T, e []testEntry) []testEntry {
+			t.Helper()
+
 			i := entryIndex(e, "operations.ndjson")
 			lines := strings.SplitAfter(string(e[i].body), "\n")
 			e[i].body = []byte(lines[0] + strings.Join(lines[2:], ""))
@@ -489,33 +505,43 @@ func TestSecurity_T20_BundleArchiveRules(t *testing.T) {
 			return e
 		}},
 		{"log that disagrees with the manifest hash", "E_VALIDATION", func(t *testing.T, e []testEntry) []testEntry {
+			t.Helper()
+
 			withManifest(t, e, func(m *service.BundleManifest) { m.Operations.SHA256 = hex64 })
 
 			return e
 		}},
-		{"log whose last document hash is not the document", "E_VALIDATION", func(t *testing.T, e []testEntry) []testEntry {
-			i := entryIndex(e, "operations.ndjson")
-			lines := strings.SplitAfter(strings.TrimSuffix(string(e[i].body), "\n"), "\n")
+		{
+			"log whose last document hash is not the document",
+			"E_VALIDATION",
+			func(t *testing.T, e []testEntry) []testEntry {
+				t.Helper()
 
-			var op map[string]any
-			if err := json.Unmarshal([]byte(strings.TrimSpace(lines[len(lines)-1])), &op); err != nil {
-				t.Fatal(err)
-			}
+				i := entryIndex(e, "operations.ndjson")
+				lines := strings.SplitAfter(strings.TrimSuffix(string(e[i].body), "\n"), "\n")
 
-			op["doc_sha256"] = hex64
+				var op map[string]any
+				if err := json.Unmarshal([]byte(strings.TrimSpace(lines[len(lines)-1])), &op); err != nil {
+					t.Fatal(err)
+				}
 
-			b, err := json.Marshal(op)
-			if err != nil {
-				t.Fatal(err)
-			}
+				op["doc_sha256"] = hex64
 
-			lines[len(lines)-1] = string(b)
-			e[i].body = []byte(strings.Join(lines[:len(lines)-1], "") + string(b) + "\n")
-			withManifest(t, e, func(m *service.BundleManifest) { m.Operations.SHA256 = hexSum(e[i].body) })
+				b, err := json.Marshal(op)
+				if err != nil {
+					t.Fatal(err)
+				}
 
-			return e
-		}},
+				lines[len(lines)-1] = string(b)
+				e[i].body = []byte(strings.Join(lines[:len(lines)-1], "") + string(b) + "\n")
+				withManifest(t, e, func(m *service.BundleManifest) { m.Operations.SHA256 = hexSum(e[i].body) })
+
+				return e
+			},
+		},
 		{"manifest of another project", "E_VALIDATION", func(t *testing.T, e []testEntry) []testEntry {
+			t.Helper()
+
 			withManifest(t, e, func(m *service.BundleManifest) { m.Project.ID = "prj_0000000000" })
 
 			return e
@@ -596,7 +622,12 @@ func TestBundleImportCallers(t *testing.T) {
 		t.Errorf("edit without media = %v, want E_FORBIDDEN", err)
 	}
 
-	if err := as(service.Caller{Actor: "key:one", Scopes: service.AllScopes, ProjectID: project}); !isCode(err, "E_FORBIDDEN") {
+	if err := as(
+		service.Caller{Actor: "key:one", Scopes: service.AllScopes, ProjectID: project},
+	); !isCode(
+		err,
+		"E_FORBIDDEN",
+	) {
 		t.Errorf("project-limited key = %v, want E_FORBIDDEN", err)
 	}
 

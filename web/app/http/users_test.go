@@ -62,7 +62,11 @@ func TestUsersAreManagedByAnAdministratorSession(t *testing.T) {
 	res = h.send(t, http.MethodPatch, "/api/v1/users/"+ana.UserID, `{"role":"admin","disabled":true}`, root, nil)
 
 	var upd userBody
-	if err := json.Unmarshal(res.body, &upd); err != nil || res.status != http.StatusOK || upd.Role != service.RoleAdmin ||
+	if err := json.Unmarshal(
+		res.body,
+		&upd,
+	); err != nil || res.status != http.StatusOK ||
+		upd.Role != service.RoleAdmin ||
 		!upd.Disabled {
 		t.Fatalf("PATCH /users = %d %s", res.status, res.body)
 	}

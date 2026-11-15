@@ -39,7 +39,9 @@ const (
 
 // bundleEntryName is every name a bundle may hold. The names are flat and lower case, so an entry
 // with a path, a drive, a dot segment, a control character or a differently cased twin is not in it.
-var bundleEntryName = regexp.MustCompile(`^(manifest\.json|document\.json|operations\.ndjson|(media|font)\.[0-9a-f]{64})$`)
+var bundleEntryName = regexp.MustCompile(
+	`^(manifest\.json|document\.json|operations\.ndjson|(media|font)\.[0-9a-f]{64})$`,
+)
 
 var bundleHashRe = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 
@@ -101,7 +103,7 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 			withPath("as_new").withHint("set as_new to true")
 	}
 
-	if err = s.heavyLimit(ctx, c); err != nil {
+	if err := s.heavyLimit(ctx, c); err != nil {
 		return nil, err
 	}
 
@@ -155,8 +157,8 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 	}
 
 	res := &ProjectCreateResult{
-		Envelope:  Envelope{UntrustedNotice: UntrustedNotice},
-		ProjectID: projectID, Name: doc.Name, Revision: revision, Width: doc.Settings.Width,
+		UntrustedNotice: UntrustedNotice,
+		ProjectID:       projectID, Name: doc.Name, Revision: revision, Width: doc.Settings.Width,
 		Height: doc.Settings.Height, FPS: fpsString(doc.Settings.FPS.Num, doc.Settings.FPS.Den),
 		Text: textview.Created(projectID, doc.Name, doc.Settings.Width, doc.Settings.Height,
 			timeval.FPS{Num: int64(doc.Settings.FPS.Num), Den: int64(doc.Settings.FPS.Den)}),
@@ -180,10 +182,8 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 
 	now := s.nowMs()
 	row := ProjectRow{
-		ProjectHead: ProjectHead{
-			ID: projectID, Name: doc.Name, State: ProjectActive, Revision: revision, SchemaVersion: doc.SchemaVersion,
-			Summary: summarize(doc), CreatedMs: now, UpdatedMs: now, CreatedBy: c.Actor, ResyncFloor: revision,
-		},
+		ID: projectID, Name: doc.Name, State: ProjectActive, Revision: revision, SchemaVersion: doc.SchemaVersion,
+		Summary: summarize(doc), CreatedMs: now, UpdatedMs: now, CreatedBy: c.Actor, ResyncFloor: revision,
 		Document: canon, DocSHA256: sha256Hex(canon),
 	}
 
@@ -201,8 +201,7 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 				withHint("import it with as_new to get a new id")
 		}
 
-		var e *Error
-		if errors.As(err, &e) {
+		if e, ok := errors.AsType[*Error](err); ok {
 			return nil, forCaller(c, e)
 		}
 
@@ -296,7 +295,14 @@ func (s *svc) writeImportedProject(
 
 // linkBundleAssets inserts the assets rows of new hashes as pending, the project_assets rows as
 // active (the document already holds them) and an ingest job for each hash without artifacts.
-func (s *svc) linkBundleAssets(ctx context.Context, tx Tx, c Caller, p *bundleParts, sizes map[string]int64, now int64) error {
+func (s *svc) linkBundleAssets(
+	ctx context.Context,
+	tx Tx,
+	c Caller,
+	p *bundleParts,
+	sizes map[string]int64,
+	now int64,
+) error {
 	id := p.doc.ID
 
 	for _, assetID := range sortedKeys(p.doc.Assets) {
@@ -437,12 +443,10 @@ func (s *svc) checkBundleDisk(total uint64) *Error {
 	}
 
 	free, err := s.media.FreeBytes(s.workspace)
-	if err != nil {
-		return nil
-	}
-
-	need := total + total/100*bundleDiskMarginPerc + uint64(max(s.limits.MinFreeBytes, 0)) //nolint:gosec // non-negative
-	if free < need {
+	need := total + total/100*bundleDiskMarginPerc + uint64(
+		max(s.limits.MinFreeBytes, 0),
+	)
+	if err == nil && free < need {
 		return newError("E_LIMIT_EXCEEDED", "The disk of the workspace has too little free space for this bundle.").
 			withHint("free space on the disk of the workspace").
 			withDetail("limit", "free_bytes").withDetail("reason", "disk_low")
@@ -561,8 +565,40 @@ func migrateBundleDocument(data []byte) (*timeline.Document, int, *Error) {
 // matchBundleFiles pairs the media and fonts of the document with the manifest and the entries, and
 // decides which hashes come from the zip and which are already in the store (step 4).
 func (s *svc) matchBundleFiles(ctx context.Context, c Caller, p *bundleParts) *Error {
-	m := &p.manifest
-	listed := map[string]int64{} // hash to declared size, media and fonts together
+	listed, media, fonts, e := listManifestFiles(&p.manifest)
+	if e != nil {
+		return e
+	}
+
+	needed := map[string]string{} // hash to entry name
+
+	for _, id := range sortedKeys(p.doc.Assets) {
+		h := p.doc.Assets[id].Hash
+		if media[h] {
+			needed[h] = bundleMediaEntry(h)
+		} else if !s.unshippedAllowed(ctx, c, h, false) {
+			return bundleRefused("a file of the document is not in the bundle")
+		}
+	}
+
+	for _, family := range sortedKeys(p.doc.Fonts) {
+		for _, f := range p.doc.Fonts[family].Files {
+			if fonts[f.Hash] {
+				needed[f.Hash] = bundleFontEntry(f.Hash)
+			} else if !s.unshippedAllowed(ctx, c, f.Hash, true) {
+				return bundleRefused("a file of the document is not in the bundle")
+			}
+		}
+	}
+
+	return pairBundleEntries(p, needed, listed)
+}
+
+// listManifestFiles reads the media and fonts the manifest lists: their declared sizes by hash and
+// the set of hashes of each kind.
+func listManifestFiles(m *BundleManifest) (map[string]int64, map[string]bool, map[string]bool, *Error) {
+	listed := map[string]int64{}
+	media, fonts := map[string]bool{}, map[string]bool{}
 
 	add := func(hash string, size int64) *Error {
 		if !bundleHashRe.MatchString(hash) || size < 0 {
@@ -578,72 +614,39 @@ func (s *svc) matchBundleFiles(ctx context.Context, c Caller, p *bundleParts) *E
 		return nil
 	}
 
-	mediaHashes := map[string]bool{}
-
 	for i := range m.Media {
 		if e := add(m.Media[i].Hash, m.Media[i].Bytes); e != nil {
-			return e
+			return nil, nil, nil, e
 		}
 
-		mediaHashes[m.Media[i].Hash] = true
+		media[m.Media[i].Hash] = true
 	}
-
-	fontHashes := map[string]bool{}
 
 	for i := range m.Fonts {
 		if e := add(m.Fonts[i].Hash, m.Fonts[i].Bytes); e != nil {
-			return e
+			return nil, nil, nil, e
 		}
 
-		fontHashes[m.Fonts[i].Hash] = true
+		fonts[m.Fonts[i].Hash] = true
 	}
 
-	needed := map[string]string{} // hash to entry name
+	return listed, media, fonts, nil
+}
 
-	for _, id := range sortedKeys(p.doc.Assets) {
-		h := p.doc.Assets[id].Hash
-		if !mediaHashes[h] {
-			if !s.unshippedAllowed(ctx, c, h, false) {
-				return bundleRefused("a file of the document is not in the bundle")
-			}
-
-			continue
-		}
-
-		needed[h] = bundleMediaEntry(h)
+// pairBundleEntries checks that every file entry of the zip is needed by the document, so that
+// nothing rides along, and that each needed one is present with the size the manifest declares.
+func pairBundleEntries(p *bundleParts, needed map[string]string, listed map[string]int64) *Error {
+	used := map[string]bool{}
+	for _, entry := range needed {
+		used[entry] = true
 	}
 
-	for _, family := range sortedKeys(p.doc.Fonts) {
-		for _, f := range p.doc.Fonts[family].Files {
-			if !fontHashes[f.Hash] {
-				if !s.unshippedAllowed(ctx, c, f.Hash, true) {
-					return bundleRefused("a file of the document is not in the bundle")
-				}
-
-				continue
-			}
-
-			needed[f.Hash] = bundleFontEntry(f.Hash)
-		}
-	}
-
-	// Every entry of the zip is listed in the manifest and used by the document: nothing rides along.
 	for name := range p.entries {
 		if name == bundleManifestEntry || name == bundleDocumentEntry || name == bundleOperationsName {
 			continue
 		}
 
-		matched := false
-
-		for _, entry := range needed {
-			if entry == name {
-				matched = true
-
-				break
-			}
-		}
-
-		if !matched {
+		if !used[name] {
 			return bundleRefused("it holds a file that the manifest does not list or the document does not use")
 		}
 	}
@@ -662,7 +665,9 @@ func (s *svc) matchBundleFiles(ctx context.Context, c Caller, p *bundleParts) *E
 
 		if listed[h] < enginestore.MinFileSize {
 			return fromEngine(&enginestore.Error{
-				Code: enginestore.CodeUnsupportedMedia, Reason: "too_small", Message: "A file of the bundle is too small.",
+				Code:    enginestore.CodeUnsupportedMedia,
+				Reason:  "too_small",
+				Message: "A file of the bundle is too small.",
 			})
 		}
 
@@ -694,8 +699,7 @@ func (s *svc) checkBundleLog(ctx context.Context, p *bundleParts) *Error {
 		return nil
 	})
 	if err != nil {
-		var e *Error
-		if errors.As(err, &e) {
+		if e, ok := errors.AsType[*Error](err); ok {
 			return e
 		}
 
