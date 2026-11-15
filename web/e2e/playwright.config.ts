@@ -51,7 +51,7 @@ export default defineConfig({
 		{
 			name: "chromium",
 			testIgnore:
-				/(perf|export-failure|desktop-detect|desktop-detect-webkit)\.spec\.ts/,
+				/(perf|video-layers|export-failure|desktop-detect|desktop-detect-webkit)\.spec\.ts/,
 			use: {
 				browserName: "chromium",
 				launchOptions: {
@@ -67,7 +67,7 @@ export default defineConfig({
 			? [
 					{
 						name: "perf",
-						testMatch: /perf\.spec\.ts/,
+						testMatch: /(perf|video-layers)\.spec\.ts/,
 						dependencies: ["chromium"],
 						fullyParallel: false,
 						use: {
