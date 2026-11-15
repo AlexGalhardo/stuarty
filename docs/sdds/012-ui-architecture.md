@@ -83,7 +83,7 @@ A decoration may read `source_in`, `speed`, `start` and `duration` of an item. I
 | R4 | Imports of `editor/state/documentStore` write functions (`replaceDocument`, `applyRevisionDiff`) from any file except `editor/state/sync.ts` |
 | R5 | In files outside the allowlist (`editor/timeline/geometry.ts`, `editor/timeline/gestures/**`, `editor/timeline/snapping.ts`, `editor/timeline/items/stripTiles.ts`, `editor/timeline/items/waveform.ts` (the two decorations of §1.3), `editor/commands/builders.ts`, `editor/commands/units.ts`, `editor/preview/**`, `editor/ui/TimeField.tsx`): a binary expression that has a property access named `start`, `duration`, `source_in`, `speed`, `fps`, `fade_in`, `fade_out` or `words` as an operand with `+`, `-`, `*`, `/`, `%` or a comparison against another time quantity. Display and request code that must do this arithmetic calls a named helper of `units.ts` and writes none of its own: `displayDuration(item)` (the read-only duration), `displayEnd(item)` (the End field and the end shown in labels), `nudgeStart(item, delta)` (keyboard nudge), `keyframeAbsoluteAt(item, t)` (the item-relative time of a keyframe field to the absolute `at` of `keyframe.set` and `keyframe.remove`) `captionWordSegments(item, ppf)` (the start and width of each caption word segment) and `speedLabel(speed)` (the `1.5x` badge). `selectors.ts`, `virtualize.ts`, `timeline/keyboard.ts`, the inspector fields and `CaptionItem` call these helpers |
 | R6 | `fetch(`, `new EventSource(`, `XMLHttpRequest`, `navigator.sendBeacon` outside `editor/api/**` and `editor/boot/**` (boot posts `/locale`) |
-| R7 | `localStorage`, `sessionStorage`, `indexedDB`, `caches` outside `editor/state/prefs.ts`; in `prefs.ts` the keys must belong to the allowed list `theme`, `vv.layout`, `vv.timeDisplay`, `vv.timeUnit`, `vv.zoomByProject` (zoom and scroll only) |
+| R7 | `localStorage`, `sessionStorage`, `indexedDB`, `caches` outside `editor/state/prefs.ts`; in `prefs.ts` the keys must belong to the allowed list `theme`, `vv.layout`, `vv.timeDisplay`, `vv.timeUnit`, `vv.zoomByProject` (zoom and scroll only), `vv.keymap` (the shortcut overrides: a JSON object from binding id to key, UI preference, never project data) |
 | R8 | The import rules of §3.3 |
 
 The script has its own unit tests (a fixture per rule that must fail and one that must pass), run by Vitest.
@@ -418,7 +418,7 @@ export interface GhostState { ghosts: Record<ItemId, { start: number; track: Tra
 export interface ActivityState { recent: ActivityEntry[]; active: Record<string, number>; self: string }  // active: actor to last event time
 ```
 
-Persisted preferences (`theme`, panel sizes, `timeDisplay`, `timeUnit`, zoom per project) go through `editor/state/prefs.ts`, the only file allowed to touch `localStorage` (rule R7), wrapped in `try/catch` so a blocked storage degrades to defaults.
+Persisted preferences (`theme`, panel sizes, `timeDisplay`, `timeUnit`, zoom per project, shortcut overrides) go through `editor/state/prefs.ts`, the only file allowed to touch `localStorage` (rule R7), wrapped in `try/catch` so a blocked storage degrades to defaults.
 
 ### 5.2 Selectors
 
@@ -1211,7 +1211,14 @@ RF-075 (BETA in the PRD): this SDD builds the keyboard operation and automated c
 
 ### 18.2 Keyboard map outside the canvas
 
-`Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS. Shortcuts are ignored while focus is in an editable field (text input, text area, select, a field with `contenteditable`), with two exceptions: `Mod+K` (the palette) and `Mod+Enter` where a form uses it to commit. Project undo, redo and select-all (`Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y`, `Mod+A`) act only outside an editable field, so the native undo and select-all of the input work there. The precedence by focus between this map and the grid keys is in §7.10. Defined in `commands/keymap.ts`; every shortcut calls an action of the action registry, so the map and the coverage table agree. Shortcut customization and the cheat sheet dialog (`?`) are BETA (RF-074).
+`Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS. Shortcuts are ignored while focus is in an editable field (text input, text area, select, a field with `contenteditable`), with two exceptions: `Mod+K` (the palette) and `Mod+Enter` where a form uses it to commit. Project undo, redo and select-all (`Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y`, `Mod+A`) act only outside an editable field, so the native undo and select-all of the input work there. The precedence by focus between this map and the grid keys is in §7.10. Defined in `commands/keymap.ts`; every shortcut calls an action of the action registry, so the map and the coverage table agree. Shortcut customization and the cheat sheet dialog (`?`) are BETA (RF-074):
+
+1. The table is `SHORTCUTS` in `commands/keymap.ts`, one row per shortcut with an `id`, its default keys and its action. The cheat sheet (dialog opened by `?` outside an editable field, or by the keyboard button of the top bar) is generated from that table and shows the current key of each row, never a second list.
+2. Rebindable rows are the single-key editing shortcuts: `split` (S), `trim_start` (`[`), `trim_end` (`]`), `add_caption` (C), `add_text` (T), `toggle_snap` (N), `zoom_in` (`+`), `zoom_out` (`-`) and `zoom_fit` (Shift+Z). The others (transport, undo and redo, delete, palette, panels, landmarks, grid keys) are fixed.
+3. A rebinding is refused, with the name of the row in conflict, when the key is already another row's key (fixed or rebindable) or is `Tab`, `Shift+Tab` or `Enter`. There is no swap. `Esc` leaves the capture.
+4. Only the overrides are stored, as a JSON object from row id to key, in `localStorage` under `vv.keymap` through `state/prefs.ts` (rule R7; it is a UI preference, not project data, so T1 holds). A blocked storage keeps the choice for the page. "Reset to defaults" removes the key.
+5. The handlers read the current key when a key is pressed, so a rebinding takes effect at once and a reload keeps it. The old key then does nothing.
+6. The "Show tips again" action of the first-run tips (§18.5) is in the footer of the same dialog; the editor has no separate settings page.
 
 | Key | Action | Phase |
 | --- | --- | --- |
@@ -1235,6 +1242,7 @@ RF-075 (BETA in the PRD): this SDD builds the keyboard operation and automated c
 | `Esc` | cancel gesture, close dialog or palette, clear selection | P |
 | `Tab`, `Shift+Tab` | move through regions in the order top bar, library, preview, timeline, inspector | P |
 | `F6` | jump to the next region (landmark) | A |
+| `?` | open the cheat sheet | B |
 | Timeline grid keys | §7.10 | A |
 
 Regions are landmarks: `header` (top bar), `aside` with `aria-label` for library and inspector, `main` for the preview and timeline.
