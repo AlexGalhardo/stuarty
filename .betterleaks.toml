@@ -112,4 +112,4 @@ description = "login labels in the UI catalogues and sample values in self-hosti
 condition = "AND"
 paths = ['''^(?:web/resources/lang/[A-Za-z-]+\.json|site/content/docs/[a-z-]+/self-hosting/[a-z-]+\.mdx)$''']
 regexTarget = "secret"
-regexes = ['''^(?:Password|Senha|@file:/run/secrets/admin_password|choose-a-long-password)$''']
+regexes = ['''^(?:Password|Senha|@file:/run/secrets/admin_password|choose-a-long-password|a-long-password-here)$''']
