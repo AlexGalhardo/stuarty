@@ -25,6 +25,7 @@ function ConflictBody({
 	);
 	return (
 		<ConflictNotice
+			fallbackActor={conflict.actor === ""}
 			actor={
 				conflict.actor === ""
 					? t("ui.editor.notice.another_actor")
@@ -43,6 +44,12 @@ function ConflictBody({
 
 // The notices of SDD-012 section 8.4: the headline of the code, then the core's
 // message and hint as received, and the one action the core made possible.
+// Only the localized fallback actor can start a sentence in lower case; the id
+// of a real actor is written as it is.
+function lead(text: string, fallback: boolean): string {
+	return fallback ? capitalizeFirst(text) : text;
+}
+
 export default function Notices(): ReactNode {
 	const t = useT();
 	const runtime = useRuntime();
@@ -65,7 +72,7 @@ export default function Notices(): ReactNode {
 							<>
 								<p className="font-medium">
 									{notice.messageKey !== undefined
-										? capitalizeFirst(
+										? lead(
 												t(notice.messageKey, {
 													...notice.params,
 													count: notice.count ?? 0,
@@ -74,6 +81,7 @@ export default function Notices(): ReactNode {
 															? t("ui.editor.notice.another_actor")
 															: actorLabel(notice.actor),
 												}),
+												notice.actor === undefined,
 											)
 										: notice.code !== undefined
 											? errorHeadline(t, notice.code)
