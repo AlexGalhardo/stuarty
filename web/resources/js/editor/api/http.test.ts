@@ -62,6 +62,20 @@ describe("HttpTransport.send", () => {
 		});
 	});
 
+	test("a DELETE with no body still says it is JSON, which a cookie session needs", async () => {
+		const fetchMock = stubFetch(200, {});
+		await new HttpTransport("/api/v1").send({
+			method: "DELETE",
+			path: "/keys/key_x",
+			timeoutMs: 1000,
+		});
+		const init = fetchMock.mock.calls[0][1] as RequestInit;
+		expect((init.headers as Record<string, string>)["Content-Type"]).toBe(
+			"application/json",
+		);
+		expect(init.body).toBeUndefined();
+	});
+
 	test("a problem+json body comes back as the response", async () => {
 		stubFetch(409, {
 			type: "urn:vukem-video:error:E_OVERLAP",

@@ -35,7 +35,9 @@ export class HttpTransport implements Transport {
 				credentials: "same-origin",
 				headers: {
 					Accept: "application/json",
-					...(request.body === undefined
+					// A call that changes state says it is JSON even with no body (a DELETE):
+					// the server refuses a cookie session that does not (SDD-007 section 3.6).
+					...(request.body === undefined && request.method === "GET"
 						? {}
 						: { "Content-Type": "application/json" }),
 				},
