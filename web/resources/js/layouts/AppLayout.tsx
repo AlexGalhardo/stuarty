@@ -12,9 +12,9 @@ import type { SharedProps } from "@/types";
 // context from the page props, so useT works the same here and in the editor
 // (SDD-012 section 16.3).
 export default function AppLayout({ children }: { children: ReactNode }) {
-	const { messages = {}, locale = "en" } = usePage<I18nProps>().props;
+	const { messages = {}, locale = "en", locales } = usePage<I18nProps>().props;
 	return (
-		<I18nProvider messages={messages} locale={locale}>
+		<I18nProvider messages={messages} locale={locale} locales={locales}>
 			<Shell>{children}</Shell>
 		</I18nProvider>
 	);
