@@ -105,7 +105,8 @@ func unavailable(err error, model string) *Error {
 		strings.Join(parts, " and "), sizesText(missing.DownloadBytes)).
 		withHint("Run %q (or use the install dialog of the editor), or configure an API provider.", install).
 		withDetail("missing", items).withDetail("download_bytes", missing.DownloadBytes).
-		withDetail("install_command", install)
+		withDetail("install_command", install).
+		withDetail("tool", transcribe.HelperName).withDetail("model", model)
 }
 
 func sizesText(n int64) string {

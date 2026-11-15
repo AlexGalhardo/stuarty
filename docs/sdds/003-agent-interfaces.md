@@ -741,7 +741,7 @@ Rules:
 
 1. `JobStart` for `export` first runs the full lint (§3.6) on the current revision, which the job then pins. Any `error` finding refuses the start with `E_LINT_BLOCKING`, `details: {"findings": [<first 20 findings>], "total": n}`. There is no override: an error finding means the export would fail or be wrong. Warnings never block; their totals are in `Job.Lint`.
 2. Concurrency limits (SDD-007, `VUKEM_VIDEO_MAX_EXPORTS`) answer `E_QUEUE_FULL` with `details.running` listing job ids. Every limit error (`E_LIMIT_EXCEEDED`, `E_QUEUE_FULL`, `E_PAYLOAD_TOO_LARGE`) carries `details.limit` (what was exceeded), `value` (what the request had), `ceiling` (the permitted maximum) and `variable` (the environment variable that raises it, when there is one), as SDD-007 §9.1 says (RF-132).
-3. `JobStart` of `transcribe` with no provider answers `E_TRANSCRIBE_UNAVAILABLE`; of an asset that is not `ready`, `E_ASSET_NOT_READY` (retryable).
+3. `JobStart` of `transcribe` with no provider answers `E_TRANSCRIBE_UNAVAILABLE` with `details` `{missing, download_bytes, install_command, tool, model}` (SDD-007 §6.8); of an asset that is not `ready`, `E_ASSET_NOT_READY` (retryable).
 4. `WaitMS` > 0 makes `JobStart` and `JobGet` hold the call until the job reaches a final state or the time passes, whichever is first; they then return the job as it is. Waiting never fails the call.
 5. `JobCancel` of a final job returns it unchanged. A job that is cancelled leaves no export file. The scope is `render`; `media` is enough for the caller's own `transcribe` or `ingest` job (SDD-000 §1, SDD-007 §5.2).
 6. A job's `Text` is the line of §3.9.

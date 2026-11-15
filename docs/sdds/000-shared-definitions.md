@@ -124,7 +124,7 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_NO_ENCODER` | no H.264 encoder works on this machine | no |
 | `E_EXPORT_FAILED` | the export process failed; `details.reason` | no |
 | `E_VERIFY_FAILED` | the exported file did not pass verification; `details.checks` | no |
-| `E_TRANSCRIBE_UNAVAILABLE` | no transcription provider is installed or configured; `details` names what is missing, its download size and the install command | no |
+| `E_TRANSCRIBE_UNAVAILABLE` | no transcription provider is installed or configured; `details` names what is missing, its download size, the install command and the `tool` and `model` it installs | no |
 | `E_TRANSCRIBE_FAILED` | a transcription ran and failed (no output, provider error, no word timings); `details.reason` | no |
 | `E_QUEUE_FULL` | a concurrency limit is reached; `details.running` lists the jobs, or `details.limit` names the limit (for example `streams`) | yes |
 | `E_RATE_LIMITED` | the caller sent too many requests; the answer carries `Retry-After` | yes |
