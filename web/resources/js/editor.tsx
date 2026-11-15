@@ -18,13 +18,11 @@ import { installStyleNonce } from "./lib/cspNonce";
 // the runtime and mounts the app.
 // ?debug=1 installs the test hooks and the measures; &verify=1 freezes the
 // documents and checks every applied diff against a fetched document (SDD-012
-// sections 5.4 and 20.4). The end-to-end build (VITE_E2E=1) turns debug on; verify
-// stays an explicit parameter until the diff of the core is whole (see the
-// diff-safety-net spec).
+// sections 5.4 and 20.4). The end-to-end build (VITE_E2E=1) has both on.
 const e2e = import.meta.env.VITE_E2E === "1";
 const query = new URLSearchParams(location.search);
 const debug = e2e || query.get("debug") === "1";
-const verify = debug && query.get("verify") === "1";
+const verify = e2e || (debug && query.get("verify") === "1");
 const mismatches: number[] = [];
 
 function base(bootstrap: EditorBootstrap) {
