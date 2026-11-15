@@ -1,0 +1,93 @@
+---
+title: "Faça um short vertical com legendas"
+description: "De um clipe de celular a um vídeo 9:16 com legendas de palavra destacada, um filtro de cor e música que baixa sob a sua voz, com a CLI."
+---
+
+## O que você vai aprender
+
+- como configurar um projeto 9:16 e posicionar um clipe;
+- como legendar a fala e estilizar as legendas;
+- como adicionar música que baixa sob a voz;
+- como conferir o resultado e exportá-lo.
+
+## O que você precisa
+
+Um arquivo de vídeo com fala, `talk.mp4`, e um arquivo de música, `song.mp3`. A transcrição roda no seu computador com um modelo que você instala uma única vez (veja [Transcrição](/docs/guide/transcription)). Os identificadores abaixo são exemplos: passe os seus com `--id` e `--asset-id` como aqui, ou use os que os comandos imprimem.
+
+## Passos
+
+1. Crie o projeto. A predefinição padrão é 9:16 a 30 quadros por segundo, que é o formato de um short.
+
+   ```bash
+   vukem-video project:create --name "Short 01" --id prj_7k2m9x4q1b
+   ```
+
+2. Importe os dois arquivos e espere até ficarem prontos.
+
+   ```bash
+   vukem-video media:import talk.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d
+   vukem-video media:import song.mp3 --project prj_7k2m9x4q1b --asset-id ast_4h6j8k2m3n
+   ```
+
+3. Adicione três faixas (filmagem, legendas, música) e coloque o clipe e a canção nelas. Uma faixa tem um tipo, `visual` ou `audio`.
+
+   ```bash
+   vukem-video edit --project prj_7k2m9x4q1b --ops - <<'JSON'
+   [{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_f6g7h8j9k0"}},
+    {"op":"track.add","args":{"kind":"visual","name":"Captions","id":"trk_a1b2c3d4e5"}},
+    {"op":"track.add","args":{"kind":"audio","name":"Music","id":"trk_m1n2p3q4r5"}},
+    {"op":"clip.add","args":{"track_id":"trk_f6g7h8j9k0","asset_id":"ast_3c5v8n2w6d","start":"0s","id":"itm_m1n2p3q4r5"}},
+    {"op":"audio.add","args":{"track_id":"trk_m1n2p3q4r5","asset_id":"ast_4h6j8k2m3n","start":"0s","id":"itm_s6t7v8w9x0"}}]
+   JSON
+   ```
+
+4. Transcreva a fala e gere as legendas a partir dela. O primeiro comando baixa o modelo uma única vez e pergunta antes de fazê-lo.
+
+   ```bash
+   vukem-video tools:install whisper --model small
+   vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en --wait
+   vukem-video edit --project prj_7k2m9x4q1b caption.from_transcript \
+     clip_item_id=itm_m1n2p3q4r5 track_id=trk_a1b2c3d4e5 max_words:=4
+   ```
+
+5. Estilize as legendas: grandes, em maiúsculas, com a palavra falada destacada.
+
+   ```bash
+   vukem-video edit --project prj_7k2m9x4q1b track.set_caption_style track_id=trk_a1b2c3d4e5 \
+     style:='{"uppercase":true,"size":84,"highlight":"word","highlight_color":"#FFE600","position":"bottom"}'
+   ```
+
+6. Dê à filmagem um visual mais quente.
+
+   ```bash
+   vukem-video edit --project prj_7k2m9x4q1b clip.set_filter item_id=itm_m1n2p3q4r5 filter=warm amount:=0.5
+   ```
+
+7. Baixe a música enquanto você fala. Espere antes até a canção ficar pronta; o ducking precisa da análise da fala no clipe.
+
+   ```bash
+   vukem-video edit --project prj_7k2m9x4q1b audio.duck item_id=itm_s6t7v8w9x0 \
+     speech_item_ids:='["itm_m1n2p3q4r5"]' gain_db:=-14
+   ```
+
+8. Olhe um quadro, execute a verificação (lint) e exporte.
+
+   ```bash
+   vukem-video view --project prj_7k2m9x4q1b --at 2s
+   vukem-video lint --project prj_7k2m9x4q1b
+   vukem-video export --project prj_7k2m9x4q1b
+   ```
+
+A exportação imprime o arquivo verificado em `<workspace>/exports/prj_7k2m9x4q1b/`.
+
+## Erros comuns
+
+- Legendas dentro da margem insegura de um aplicativo social: leia [A área segura](/docs/guide/safe-area) e execute a verificação.
+- Aplicar o ducking antes de o clipe ser analisado: `E_INVALID_STATE`; espere pela mídia e envie de novo.
+- Executar `caption.from_transcript` antes de a transcrição existir. Espere pela tarefa `transcribe`.
+
+## Próximos passos
+
+- [Transcrição](/docs/guide/transcription)
+- [Edição de áudio](/docs/guide/audio)
+- [Modelo: corte vertical com legendas](/docs/guide/template-vertical-cut)
