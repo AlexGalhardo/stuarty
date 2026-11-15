@@ -341,3 +341,87 @@ export interface LintResult {
 	text: string;
 	[key: string]: unknown;
 }
+
+// GET /commands and GET /commands/{name} (SDD-000 CommandHelp). The list has
+// the summaries, one command has its schema, example and error codes.
+export interface CommandSummary {
+	name: string;
+	phase: "prototype" | "alpha" | "beta";
+	scope: string;
+	summary: string;
+	internal?: boolean;
+}
+
+export interface CommandDetail extends CommandSummary {
+	args_schema: Record<string, unknown>;
+	description: string;
+	errors: string[];
+	example: Record<string, unknown>;
+}
+
+export interface CommandHelpResult {
+	commands?: CommandSummary[];
+	command?: CommandDetail;
+	text: string;
+}
+
+// GET /projects/{id}/history (SDD-003 section 2.4).
+export interface HistoryEntry {
+	revision: number;
+	actor: string;
+	at: string;
+	kind: string;
+	changes: number;
+	ops: string[];
+	undo_of: number | null;
+	undone_by: number | null;
+}
+
+export interface HistoryListResult {
+	project_id: string;
+	revision: number;
+	entries: HistoryEntry[];
+	next_cursor: string | null;
+	text: string;
+}
+
+export interface HistoryQuery {
+	actor?: string;
+	cursor?: string;
+	limit?: number;
+}
+
+// GET /projects/{id}/media/{asset_id}: the facts and the text of one asset.
+export interface MediaInspectResult {
+	asset_id: string;
+	kind: string;
+	state: AssetState;
+	progress: number;
+	available: string[];
+	probe?: Record<string, unknown>;
+	loudness?: Record<string, unknown>;
+	silences?: { start: TimeValue; end: TimeValue }[];
+	strip?: {
+		tile_w: number;
+		tile_h: number;
+		columns: number;
+		count: number;
+		interval_ms: number;
+	};
+	next_cursor: string | null;
+	text: string;
+}
+
+export interface MediaInspectQuery {
+	sections?: string[];
+	minSilence?: string;
+	cursor?: string;
+	limit?: number;
+}
+
+// POST .../trash and .../restore.
+export interface MediaStateResult {
+	asset_id: string;
+	state: string;
+	text: string;
+}
