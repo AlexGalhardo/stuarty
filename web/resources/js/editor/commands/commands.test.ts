@@ -206,6 +206,22 @@ describe("gestures send one request and wait for the answer", () => {
 		expect(sent).toHaveLength(0);
 	});
 
+	test("an aborted request (499) shows no notice", async () => {
+		const h = await startHarness();
+		const assetId = Object.keys(h.server.document.assets)[0] as string;
+		scripted(h, () => ({
+			status: 499,
+			body: {
+				code: "E_CLIENT_CLOSED",
+				message: "the request was closed",
+				retryable: false,
+			},
+		}));
+		const actions = createActions(h.runtime);
+		await actions.addToTimeline(assetId);
+		expect(h.runtime.notices.getState().notices).toHaveLength(0);
+	});
+
 	test("an overlap leaves the read model alone and offers the next free position", async () => {
 		const h = await startHarness();
 		const assetId = Object.keys(h.server.document.assets)[0] as string;

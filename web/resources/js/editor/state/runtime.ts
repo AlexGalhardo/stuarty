@@ -243,6 +243,7 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 					}
 				} catch (error) {
 					if (!(error instanceof ApiError)) throw error;
+					if (error.isAborted) continue;
 					libraryWriter.setImportError({
 						code: error.code,
 						message: error.message,

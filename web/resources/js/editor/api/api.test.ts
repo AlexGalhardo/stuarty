@@ -27,6 +27,20 @@ function fastDeps() {
 }
 
 describe("errors", () => {
+	test("499 and E_CLIENT_CLOSED are an aborted request", () => {
+		expect(
+			fromResponse(499, {
+				code: "E_CLIENT_CLOSED",
+				message: "closed",
+				retryable: false,
+			}).isAborted,
+		).toBe(true);
+		expect(fromResponse(499, "").isAborted).toBe(true);
+		expect(
+			fromResponse(409, { code: "E_OVERLAP", message: "x" }).isAborted,
+		).toBe(false);
+	});
+
 	test("the envelope becomes an ApiError with its members", () => {
 		const error = fromResponse(409, {
 			code: "E_OVERLAP",

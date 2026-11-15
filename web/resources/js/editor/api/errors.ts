@@ -38,6 +38,12 @@ export class ApiError extends Error {
 	get isNetwork(): boolean {
 		return this.code === "E_NETWORK";
 	}
+
+	// The caller closed the request, or its deadline passed (E_CLIENT_CLOSED,
+	// HTTP 499): the answer nobody waits for. It is never shown to a person.
+	get isAborted(): boolean {
+		return this.status === 499 || this.code === "E_CLIENT_CLOSED";
+	}
 }
 
 export function networkError(message: string): ApiError {
