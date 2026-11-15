@@ -72,6 +72,10 @@ type TemplateInstantiateRequest struct {
 	Fill       map[string]SlotValue `json:"fill,omitempty"`
 	ID         string               `json:"id,omitempty"`
 	DryRun     bool                 `json:"dry_run,omitempty"`
+	// BrandColors are names of template.colors that take the colour of the brand kit, and BrandFonts
+	// are families of the kit added to the fonts of the project (SDD-005 section 5.11).
+	BrandColors []string `json:"brand_colors,omitempty"`
+	BrandFonts  []string `json:"brand_fonts,omitempty"`
 }
 
 // TemplateInstantiateResult is the new project and what is still to fill.

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"maps"
 	"os"
@@ -111,17 +112,20 @@ func (s *svc) checkFontAdd(ctx context.Context, tx Tx, scope *fontScope, op *com
 const maxFontOwnerScan = 2000
 
 // fontScope answers, for one request, which fonts the caller may name. In local mode the store is
-// the caller's own, so a stored file is enough. In network mode the store is shared: the file must
-// already be used by a project of the caller (a bundle import links the fonts it brings to the
-// imported project). The caller's fonts are read once for the whole batch, bounded, and the store
-// is asked only about a hash the caller owns, so a refusal costs the same whether the file exists
-// or not and does not touch the store.
+// the caller's own, so a stored file is enough. In network mode the store is shared: the caller
+// must be a recorded owner of the file (the user who imported it or brought it) or already use it
+// in a project (SDD-007 section 7.7 item 6). The caller's fonts are read once for the whole batch,
+// bounded, the recorded owners by one indexed lookup of the caller's own pair, and the store is
+// asked only about a hash the caller may use, so a refusal costs the same whether the file exists
+// or not and does not touch the store. except is a project left out of the scan, for an export
+// that must not count the document it is about to name.
 type fontScope struct {
-	built bool
-	owned map[string]bool
+	built  bool
+	owned  map[string]bool
+	except string
 }
 
-func (f *fontScope) allowed(ctx context.Context, tx Tx, s *svc, hash string) bool {
+func (f *fontScope) allowed(ctx context.Context, repos Repos, s *svc, hash string) bool {
 	c, ok := CallerFrom(ctx)
 	if !ok {
 		return false
@@ -131,21 +135,47 @@ func (f *fontScope) allowed(ctx context.Context, tx Tx, s *svc, hash string) boo
 		return s.hasFont(hash)
 	}
 
-	if !f.built {
-		f.owned, f.built = userFontHashes(ctx, tx, c.OwnerUserID), true
+	recorded, err := repos.Fonts().Owns(ctx, c.OwnerUserID, hash)
+	if err != nil {
+		recorded = false
 	}
 
-	return f.owned[hash] && s.hasFont(hash)
+	if !recorded {
+		if !f.built {
+			f.owned, f.built = userFontHashes(ctx, repos, c.OwnerUserID, f.except), true
+		}
+
+		recorded = f.owned[hash]
+	}
+
+	return recorded && s.hasFont(hash)
 }
 
-// userFontHashes is the set of font hashes that the projects of the user use, in any state.
-func userFontHashes(ctx context.Context, tx Tx, user string) map[string]bool {
+// recordFontOwner makes the caller an owner of the fonts of hashes, in network mode: the caller
+// imported the file or brought its bytes, which proves they hold it. Local mode records nothing.
+func recordFontOwner(ctx context.Context, tx Tx, c Caller, now int64, hashes ...string) error {
+	if c.OwnerUserID == "" {
+		return nil
+	}
+
+	for _, h := range hashes {
+		if err := tx.Fonts().Record(ctx, c.OwnerUserID, h, now); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// userFontHashes is the set of font hashes that the projects of the user use, in any state, except
+// the project named skip.
+func userFontHashes(ctx context.Context, repos Repos, user, skip string) map[string]bool {
 	out := map[string]bool{}
 
 	var after string
 
 	for scanned := 0; scanned < maxFontOwnerScan; {
-		items, next, err := tx.Projects().List(ctx, ProjectQuery{
+		items, next, err := repos.Projects().List(ctx, ProjectQuery{
 			IncludeTrashed: true, OwnerUserID: user, After: after, Limit: 200,
 		})
 		if err != nil {
@@ -159,7 +189,11 @@ func userFontHashes(ctx context.Context, tx Tx, user string) map[string]bool {
 				return out
 			}
 
-			row, err := tx.Projects().Get(ctx, items[i].ID)
+			if items[i].ID == skip {
+				continue
+			}
+
+			row, err := repos.Projects().Get(ctx, items[i].ID)
 			if err != nil {
 				continue
 			}
@@ -323,4 +357,119 @@ func (s *svc) bundleFileLimit(f bundleFile) int64 {
 	}
 
 	return s.limits.MaxImportBytes
+}
+
+// unusableFont is the first family of doc that has a file the caller may not use, or "" when the
+// caller may use all of them. except is a project the ownership scan leaves out.
+func (s *svc) unusableFont(ctx context.Context, repos Repos, doc *timeline.Document, except string) (string, bool) {
+	if len(doc.Fonts) == 0 {
+		return "", false
+	}
+
+	scope := fontScope{except: except}
+
+	for _, family := range sortedKeys(doc.Fonts) {
+		for _, f := range doc.Fonts[family].Files {
+			if !scope.allowed(ctx, repos, s, f.Hash) {
+				return family, true
+			}
+		}
+	}
+
+	return "", false
+}
+
+// fontNotUsable is the refusal of a font file the caller may not name: the one of a file that was
+// never stored, with no hash in it (SDD-007 T-21).
+func fontNotUsable(path string) *Error {
+	return newError(command.CodeNotFound, "a font file is not in the workspace.").
+		withHint("import the font file first, then use the family").withPath(path)
+}
+
+// FontImportRequest reads a font file from the machine of the server (SDD-007 section 7.7).
+type FontImportRequest struct {
+	Path string `json:"path"` // absolute
+}
+
+// FontImportResult is the stored font. Hash is in the form of a document, so a font.add can name it.
+type FontImportResult struct {
+	Hash         string `json:"hash"`
+	Bytes        int64  `json:"bytes"`
+	Deduplicated bool   `json:"deduplicated"`
+	Text         string `json:"text"`
+}
+
+// FontImport validates a font file and stores it by content hash in the font store. The same bytes
+// twice store one file; in network mode the caller is recorded as an owner either way.
+func (s *svc) FontImport(ctx context.Context, req FontImportRequest) (*FontImportResult, error) {
+	c, err := authorizeScope(ctx, ScopeMedia, "")
+	if err != nil {
+		return nil, err
+	}
+
+	if c.ProjectID != "" {
+		return nil, newError(CodeForbidden, "the key is limited to one project and cannot import fonts.").
+			withHint("use a key without a project limit")
+	}
+
+	if err := s.heavyLimit(ctx, c); err != nil {
+		return nil, err
+	}
+
+	if s.media.Guard == nil || s.fonts == nil {
+		return nil, internalError()
+	}
+
+	file, gerr := s.media.Guard.OpenImport(req.Path)
+	if gerr != nil {
+		return nil, fromEngine(gerr)
+	}
+
+	defer func() { _ = file.Close() }()
+
+	st, serr := file.Stat()
+	if serr != nil || !st.Mode().IsRegular() {
+		return nil, newError("E_FILE_NOT_FOUND", "the file cannot be read.").withPath("path")
+	}
+
+	if st.Size() > raster.MaxFontBytes {
+		return nil, newError(raster.CodeFontInvalid, "the font file is refused: it is over %d MiB.", raster.MaxFontBytes>>20).
+			withHint("use a TrueType or OpenType font of at most %d MiB", raster.MaxFontBytes>>20).
+			withDetail("reason", "too_large")
+	}
+
+	data, rerr := io.ReadAll(io.LimitReader(file, raster.MaxFontBytes+1))
+	if rerr != nil {
+		return nil, newError("E_FILE_NOT_FOUND", "the file cannot be read.").withPath("path")
+	}
+
+	sum := sha256.Sum256(data)
+	existed := s.hasFont("sha256:" + hex.EncodeToString(sum[:]))
+
+	hash, perr := s.putFont(data)
+	if perr != nil {
+		return nil, forCaller(c, perr)
+	}
+
+	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		now := s.nowMs()
+
+		if err := recordFontOwner(ctx, tx, c, now, hash); err != nil {
+			return err
+		}
+
+		return appendAudit(ctx, tx, now, c.Actor, "font.import", "", hash)
+	})
+	if werr != nil {
+		return nil, asError(werr)
+	}
+
+	res := &FontImportResult{Hash: hash, Bytes: int64(len(data)), Deduplicated: existed}
+	res.Text = fmt.Sprintf("font %s, %d bytes", hash, res.Bytes)
+
+	if existed {
+		res.Text += ", already stored"
+	}
+
+	return res, nil
 }

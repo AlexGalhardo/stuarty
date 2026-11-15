@@ -375,11 +375,13 @@ func (c *Client) TemplateInstantiate(
 	req service.TemplateInstantiateRequest,
 ) (*service.TemplateInstantiateResult, error) {
 	body := struct {
-		Name   string                       `json:"name"`
-		Fill   map[string]service.SlotValue `json:"fill,omitempty"`
-		ID     string                       `json:"id,omitempty"`
-		DryRun bool                         `json:"dry_run,omitempty"`
-	}{req.Name, req.Fill, req.ID, req.DryRun}
+		Name        string                       `json:"name"`
+		Fill        map[string]service.SlotValue `json:"fill,omitempty"`
+		ID          string                       `json:"id,omitempty"`
+		DryRun      bool                         `json:"dry_run,omitempty"`
+		BrandColors []string                     `json:"brand_colors,omitempty"`
+		BrandFonts  []string                     `json:"brand_fonts,omitempty"`
+	}{req.Name, req.Fill, req.ID, req.DryRun, req.BrandColors, req.BrandFonts}
 
 	return post[service.TemplateInstantiateResult](
 		ctx, c, "/templates/"+url.PathEscape(req.TemplateID)+"/instantiate", body,
@@ -587,4 +589,24 @@ func (c *Client) ProjectBundleImport(
 	req service.ProjectBundleImportRequest,
 ) (*service.ProjectCreateResult, error) {
 	return post[service.ProjectCreateResult](ctx, c, "/projects/import", req)
+}
+
+// FontImport implements service.Service.
+func (c *Client) FontImport(ctx context.Context, req service.FontImportRequest) (*service.FontImportResult, error) {
+	return post[service.FontImportResult](ctx, c, "/fonts", req)
+}
+
+// BrandKitGet implements service.Service.
+func (c *Client) BrandKitGet(ctx context.Context, _ service.BrandKitGetRequest) (*service.BrandKit, error) {
+	return get[service.BrandKit](ctx, c, "/brand-kit", nil)
+}
+
+// BrandKitSet implements service.Service.
+func (c *Client) BrandKitSet(ctx context.Context, req service.BrandKitSetRequest) (*service.BrandKit, error) {
+	out := new(service.BrandKit)
+	if err := c.do(ctx, http.MethodPut, "/brand-kit", nil, req, out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
 }
