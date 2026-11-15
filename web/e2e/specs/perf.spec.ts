@@ -15,6 +15,14 @@ test.describe("timeline-200-items-perf", () => {
 		await page.goto(`/editor/${seeded.id}`);
 		await expect(page.locator("[data-item-id]").first()).toBeVisible();
 
+		await page.evaluate(() => {
+			const longTasks: number[] = [];
+			new PerformanceObserver((list) => {
+				for (const entry of list.getEntries()) longTasks.push(entry.duration);
+			}).observe({ type: "longtask", buffered: false });
+			(window as unknown as { __longTasks: number[] }).__longTasks = longTasks;
+		});
+
 		const stats = await page.evaluate(async () => {
 			const scroller = document.querySelector<HTMLElement>(
 				"#timeline .overflow-auto",
@@ -58,7 +66,72 @@ test.describe("timeline-200-items-perf", () => {
 		console.log(
 			`timeline 200 items: frame p50 ${p50.toFixed(1)} ms, p95 ${p95.toFixed(1)} ms, max ${max.toFixed(1)} ms`,
 		);
-		expect(p95).toBeLessThan(16);
+		// Soft: the 16 ms budget is that of the reference machine, and the long-task
+		// guard below must report on a loaded one too.
+		expect.soft(p95).toBeLessThan(16);
+
+		// A drag of one item at the zoom the loop ended on (SDD-012 section 19.2
+		// item 9: scroll, zoom and drag are covered by the same guard).
+		const item = page.locator("[data-item-id]").first();
+		const box = await item.boundingBox();
+		if (!box) throw new Error("no item layout");
+		await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+		await page.mouse.down();
+		for (let i = 1; i <= 20; i++) {
+			await page.mouse.move(box.x + box.width / 2 + i * 4, box.y + 10);
+		}
+		await page.mouse.up();
+
+		const longTasks = await page.evaluate(
+			() => (window as unknown as { __longTasks: number[] }).__longTasks,
+		);
+		console.log(
+			`timeline 200 items: ${longTasks.length} long tasks (>= 50 ms) over scroll, zoom and drag${longTasks.length > 0 ? `: ${longTasks.map((d) => d.toFixed(0)).join(", ")} ms` : ""}`,
+		);
+		expect(longTasks).toEqual([]);
+	});
+
+	test("moving one item re-renders at most 3 timeline items (SDD-012 section 19.2 item 2)", async ({
+		page,
+		request,
+	}) => {
+		test.setTimeout(120_000);
+		const seeded = await seedProject(request, { tracks: 5, perTrack: 40 });
+		await page.goto(`/editor/${seeded.id}?debug=1`);
+		await expect(page.locator("[data-item-id]").first()).toBeVisible();
+		await page.waitForFunction(() => window.__vv?.dispatch !== undefined);
+
+		const result = await page.evaluate(async (id) => {
+			const vv = window.__vv;
+			if (!vv?.dispatch) throw new Error("no dispatch");
+			const doc = vv.document as {
+				items: Record<string, { start: number }>;
+			};
+			const target = id;
+			const start = doc.items[target].start;
+			// The clips are back to back: shorten this one so it can move 10 frames.
+			const trimmed = await vv.dispatch([
+				{
+					op: "item.trim",
+					args: { item_id: target, edge: "end", to: `${start + 20}f` },
+				},
+			]);
+			if (!trimmed.ok) throw new Error("trim failed");
+			// Let the page settle, then count only what the move renders.
+			await new Promise((r) => setTimeout(r, 500));
+			vv.resetRenderCounts();
+			const outcome = await vv.dispatch([
+				{
+					op: "item.move",
+					args: { item_id: target, start: `${start + 10}f` },
+				},
+			]);
+			await new Promise((r) => setTimeout(r, 500));
+			return { ok: outcome.ok, renders: vv.renderCounts.TimelineItem ?? 0 };
+		}, seeded.itemIds[0]);
+		console.log(`moving one item rendered ${result.renders} timeline items`);
+		expect(result.ok).toBe(true);
+		expect(result.renders).toBeLessThanOrEqual(3);
 	});
 });
 test.describe("command-round-trip", () => {
@@ -73,7 +146,8 @@ test.describe("command-round-trip", () => {
 			if (r.url().endsWith("/edit")) edits.push(r.url());
 		});
 		await page.goto(`/editor/${seeded.id}`);
-		await expect(page.locator("[data-item-id]")).toHaveCount(200);
+		// The 200 items are windowed (SDD-012 section 7.9): the first ones mount.
+		await expect(page.locator("[data-item-id]").first()).toBeVisible();
 
 		const samples = 25;
 		const times: number[] = [];
@@ -334,8 +408,9 @@ test.describe("perf-edit-200", () => {
 		// 5 tracks of 40 one-second clips: the 200-item project.
 		const seeded = await seedProject(request, { tracks: 5, perTrack: 40 });
 		await page.goto(`/editor/${seeded.id}`);
-		await expect(page.locator("[data-item-id]")).toHaveCount(200);
+		await expect(page.locator("[data-item-id]").first()).toBeVisible();
 		await page.waitForFunction(() => window.__vv?.dispatch !== undefined);
+		expect(seeded.itemIds).toHaveLength(200);
 
 		const failures = await page.evaluate(async (ids) => {
 			const vv = window.__vv;
