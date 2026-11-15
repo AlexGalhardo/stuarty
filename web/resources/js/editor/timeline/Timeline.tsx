@@ -4,6 +4,7 @@ import {
 	useCallback,
 	useEffect,
 	useLayoutEffect,
+	useMemo,
 	useRef,
 	useState,
 } from "react";
@@ -19,6 +20,7 @@ import {
 import {
 	selectEndFrame,
 	selectFps,
+	selectItemCount,
 	selectOrderedTrackIds,
 } from "../state/selectors";
 import GhostLayer from "./GhostLayer";
@@ -52,6 +54,21 @@ import Ruler from "./Ruler";
 import SnapLine from "./SnapLine";
 import TrackHeader from "./TrackHeader";
 import { TrackRow } from "./TrackRow";
+import { type FrameWindow, frameWindow, VIRTUALIZE_ABOVE } from "./virtualize";
+import { TimelineWindowContext } from "./windowContext";
+
+// The same object while the window has the same edges.
+function useStableWindow(win: FrameWindow | null): FrameWindow | null {
+	const last = useRef(win);
+	if (
+		win?.from !== last.current?.from ||
+		win?.to !== last.current?.to ||
+		(win === null) !== (last.current === null)
+	) {
+		last.current = win;
+	}
+	return last.current;
+}
 
 function isEditable(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) return false;
@@ -74,6 +91,7 @@ export default function Timeline(): ReactNode {
 	const playhead = useUiState((s) => s.playheadFrame);
 	const snapEnabled = useUiState((s) => s.timeline.snapEnabled);
 
+	const itemCount = useDocumentState(selectItemCount);
 	const actions = useActions();
 	const gridRef = useRef<HTMLDivElement>(null);
 	const marqueeBox = useRef<HTMLDivElement>(null);
@@ -113,9 +131,15 @@ export default function Timeline(): ReactNode {
 	const focusItem = useCallback(
 		(id: string): void => {
 			runtime.uiWriter.focusItem(id);
-			gridRef.current
-				?.querySelector<HTMLElement>(`[data-item-id="${CSS.escape(id)}"]`)
-				?.focus();
+			const focus = (): HTMLElement | null | undefined => {
+				const cell = gridRef.current?.querySelector<HTMLElement>(
+					`[data-item-id="${CSS.escape(id)}"]`,
+				);
+				cell?.focus();
+				return cell;
+			};
+			// An item outside the window is mounted by the render this call causes.
+			if (!focus()) requestAnimationFrame(focus);
 		},
 		[runtime],
 	);
@@ -291,6 +315,16 @@ export default function Timeline(): ReactNode {
 		return () => window.removeEventListener("keydown", onKeyDown);
 	}, [zoomStep, fitToView, runtime]);
 
+	// The window of mounted frames: null (everything) up to VIRTUALIZE_ABOVE
+	// items. It changes only when the scroll crosses an eighth of a viewport, so the
+	// rows do not render at every scroll event.
+	const virtualized = itemCount > VIRTUALIZE_ABOVE;
+	const win = useMemo(
+		() => (virtualized ? frameWindow(scrollLeft, viewportWidth, ppf) : null),
+		[virtualized, scrollLeft, viewportWidth, ppf],
+	);
+	const stableWindow = useStableWindow(win);
+
 	const axisPx = extentPx(viewportWidth, endFrame, ppf);
 	const playheadX = frameToContentX(playhead, ppf);
 
@@ -411,29 +445,31 @@ export default function Timeline(): ReactNode {
 						if (!marquee.consumeClick()) runtime.uiWriter.select([]);
 					}}
 				>
-					<div className="relative" style={{ width: axisPx }}>
-						{trackIds.map((id) => (
-							<TrackRow key={id} id={id} />
-						))}
-						{trackIds.length === 0 && (
-							<p className="p-4 text-sm text-muted-foreground">
-								{t("ui.editor.timeline.empty")}
-							</p>
-						)}
-						<div
-							ref={marqueeBox}
-							aria-hidden="true"
-							className="pointer-events-none absolute border border-ed-selection bg-ed-selection/20"
-							style={{ display: "none" }}
-						/>
-						<GhostLayer />
-						<SnapLine ppf={ppf} />
-						<div
-							aria-hidden="true"
-							className="pointer-events-none absolute top-0 bottom-0 left-0 w-0 border-l-2 border-ed-playhead"
-							style={{ transform: `translateX(${playheadX}px)` }}
-						/>
-					</div>
+					<TimelineWindowContext.Provider value={stableWindow}>
+						<div className="relative" style={{ width: axisPx }}>
+							{trackIds.map((id) => (
+								<TrackRow key={id} id={id} />
+							))}
+							{trackIds.length === 0 && (
+								<p className="p-4 text-sm text-muted-foreground">
+									{t("ui.editor.timeline.empty")}
+								</p>
+							)}
+							<div
+								ref={marqueeBox}
+								aria-hidden="true"
+								className="pointer-events-none absolute border border-ed-selection bg-ed-selection/20"
+								style={{ display: "none" }}
+							/>
+							<GhostLayer />
+							<SnapLine ppf={ppf} />
+							<div
+								aria-hidden="true"
+								className="pointer-events-none absolute top-0 bottom-0 left-0 w-0 border-l-2 border-ed-playhead"
+								style={{ transform: `translateX(${playheadX}px)` }}
+							/>
+						</div>
+					</TimelineWindowContext.Provider>
 				</div>
 			</div>
 		</section>

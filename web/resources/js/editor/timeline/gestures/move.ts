@@ -3,6 +3,7 @@ import { type MoveTarget, moveItems } from "../../commands/builders";
 import type { Ghost } from "../../state/ghostStore";
 import type { EditorRuntime } from "../../state/runtime";
 import { deltaPxToFrames } from "../geometry";
+import { revealItem } from "../revealItem";
 import { snapFrame } from "../snapping";
 import { runGesture, watchRemoteEdit } from "./lifecycle";
 
@@ -194,9 +195,7 @@ export function beginMove(options: {
 // view (SDD-012 section 8.4).
 export function outlineConflict(runtime: EditorRuntime, itemId: string): void {
 	runtime.ghostWriter.setErrorItem(itemId);
-	document
-		.querySelector<HTMLElement>(`[data-item-id="${CSS.escape(itemId)}"]`)
-		?.scrollIntoView({ block: "nearest", inline: "nearest" });
+	revealItem(itemId);
 	setTimeout(() => {
 		if (runtime.ghosts.getState().errorItem === itemId) {
 			runtime.ghostWriter.setErrorItem(null);

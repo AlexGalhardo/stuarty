@@ -6,6 +6,7 @@ import {
 	useRuntime,
 	useUiState,
 } from "../state/EditorContext";
+import { revealItem } from "../timeline/revealItem";
 import InUseDialog from "../ui/InUseDialog";
 
 // Connects the dialog of E_IN_USE to the stores: it names the items from the
@@ -35,9 +36,7 @@ export default function InUseHost(): ReactNode {
 			onSelect={(id) => {
 				runtime.uiWriter.select([id], id);
 				runtime.uiWriter.focusItem(id);
-				document
-					.querySelector<HTMLElement>(`[data-item-id="${CSS.escape(id)}"]`)
-					?.scrollIntoView({ block: "nearest", inline: "nearest" });
+				revealItem(id);
 				close();
 			}}
 		/>
