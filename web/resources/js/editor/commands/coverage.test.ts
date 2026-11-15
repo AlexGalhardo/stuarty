@@ -2,10 +2,12 @@ import { describe, expect, test } from "vitest";
 
 import registry from "@/generated/commands.json";
 import { type BuildPhase, isPhaseAtLeast } from "../boot/phase";
+import betaRegistry from "../fixtures/beta-commands.json";
 import {
 	addAudioOperations,
 	addClipOperations,
 	audioOperations,
+	blurOperations,
 	captionBreaksOperations,
 	captionEditWordOperations,
 	captionFromTranscriptOperations,
@@ -20,12 +22,17 @@ import {
 	crossfadeOperations,
 	deleteOperations,
 	dropAssetOperations,
+	duckOperations,
 	duplicateOperations,
+	filterOperations,
+	fontAddOperations,
+	fontRemoveOperations,
 	framingOperations,
 	keyframeClearOperations,
 	keyframeFallbackOperations,
 	keyframeRemoveOperations,
 	keyframeSetOperations,
+	markBeatsOperations,
 	moveOperations,
 	presetOperations,
 	projectRenameOperations,
@@ -63,7 +70,15 @@ interface RegistryEntry {
 	phase: string;
 }
 
-const commands = registry as RegistryEntry[];
+// The committed snapshot is the ALPHA build (the default registry exposes up to
+// ALPHA), so the six BETA commands come from a fixture of the BETA registry,
+// until a BETA build regenerates the snapshot. A name in both is counted once.
+const alphaCommands = registry as RegistryEntry[];
+const alphaNames = new Set(alphaCommands.map((c) => c.name));
+const commands: RegistryEntry[] = [
+	...alphaCommands,
+	...(betaRegistry as RegistryEntry[]).filter((c) => !alphaNames.has(c.name)),
+];
 const byName = new Map(commands.map((c) => [c.name, c]));
 
 // The build phase this editor ships: ALPHA (SDD-012 section 9.3 rule 3).
@@ -129,10 +144,28 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 		expect(coverageProblems(commands, COVERAGE, BUILD)).toEqual([]);
 	});
 
-	test("every non-internal command has a key: 47 of 48", () => {
+	test("every non-internal command has a key: 47 of ALPHA and the 6 of BETA", () => {
 		const keys = commands.filter((c) => !c.internal).map((c) => c.name);
 		expect(Object.keys(COVERAGE).sort()).toEqual(keys.sort());
-		expect(keys).toHaveLength(47);
+		expect(keys).toHaveLength(53);
+	});
+
+	test("the full BETA phase rule holds: every command has a BETA entry point and a palette entry", () => {
+		expect(coverageProblems(commands, COVERAGE, "beta")).toEqual([]);
+		for (const name of [
+			"audio.duck",
+			"audio.mark_beats",
+			"clip.set_filter",
+			"clip.set_blur",
+			"font.add",
+			"font.remove",
+		]) {
+			expect(byName.get(name)?.phase, name).toBe("beta");
+			expect(
+				COVERAGE[name]?.some((e) => e.kind === "inspector" && e.phase === "B"),
+				name,
+			).toBe(true);
+		}
 	});
 
 	test("every key of COVERAGE is a non-internal command of the registry", () => {
@@ -401,6 +434,27 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				padding: "0.1s",
 				ripple: true,
 			}).map((o) => o.op),
+			"inspector.filter": filterOperations("itm_a", { filter: "sepia" }).map(
+				(o) => o.op,
+			),
+			"inspector.blur": blurOperations("itm_a", 12).map((o) => o.op),
+			"inspector.duck": duckOperations("itm_a", {
+				speechItemIds: ["itm_b"],
+				gainDb: -12,
+				attack: "0.2s",
+				release: "0.5s",
+			}).map((o) => o.op),
+			"inspector.mark_beats": markBeatsOperations("itm_a", {
+				every: 2,
+				label: "",
+				replace: true,
+			}).map((o) => o.op),
+			"inspector.font_add": fontAddOperations("Brand Sans", [
+				{ weight: 400, hash: `sha256:${"a".repeat(64)}` },
+			]).map((o) => o.op),
+			"inspector.font_remove": fontRemoveOperations("Brand Sans").map(
+				(o) => o.op,
+			),
 			"topbar.rename": projectRenameOperations("x").map((o) => o.op),
 			"inspector.settings": settingsSetOperations({ width: 720 }).map(
 				(o) => o.op,

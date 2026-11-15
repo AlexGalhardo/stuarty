@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
 	addClipOperations,
 	audioOperations,
+	blurOperations,
 	boundaryWords,
 	bulkEditWords,
 	captionFromTranscriptOperations,
@@ -12,12 +13,17 @@ import {
 	colorOperations,
 	containsInclusive,
 	crossfadeOperations,
+	duckOperations,
+	filterOperations,
+	fontAddOperations,
+	fontRemoveOperations,
 	framingOperations,
 	keyframeClearOperations,
 	keyframeFallbackOperations,
 	keyframeFrame,
 	keyframeRemoveOperations,
 	keyframeSetOperations,
+	markBeatsOperations,
 	moveItems,
 	moveOperations,
 	nudgeOperations,
@@ -583,6 +589,65 @@ describe("clip section builders (SDD-002 C.19, C.24 to C.27)", () => {
 			item_id: "itm_a",
 			saturation: 1.4,
 		});
+	});
+
+	test("filter and blur send one field each", () => {
+		expect(filterOperations("itm_a", { filter: "sepia" })).toEqual([
+			{ op: "clip.set_filter", args: { item_id: "itm_a", filter: "sepia" } },
+		]);
+		expect(filterOperations("itm_a", { amount: 0.4 })[0]?.args).toEqual({
+			item_id: "itm_a",
+			amount: 0.4,
+		});
+		expect(blurOperations("itm_a", 12.5)).toEqual([
+			{ op: "clip.set_blur", args: { item_id: "itm_a", radius: 12.5 } },
+		]);
+	});
+
+	test("ducking sends the choices and never the speech ranges", () => {
+		const args = duckOperations("itm_m", {
+			speechItemIds: ["itm_s"],
+			gainDb: -12,
+			attack: "0.2s",
+			release: "0.5s",
+		})[0]?.args;
+		expect(args).toEqual({
+			item_id: "itm_m",
+			speech_item_ids: ["itm_s"],
+			gain_db: -12,
+			attack: "0.2s",
+			release: "0.5s",
+		});
+		expect(args).not.toHaveProperty("resolved");
+	});
+
+	test("beat markers send the choices, leave an empty label out and never the beats", () => {
+		const args = markBeatsOperations("itm_m", {
+			every: 2,
+			label: "",
+			replace: false,
+		})[0]?.args;
+		expect(args).toEqual({ item_id: "itm_m", every: 2, replace: false });
+		expect(
+			markBeatsOperations("itm_m", {
+				every: 1,
+				label: "beat",
+				replace: true,
+			})[0]?.args,
+		).toEqual({ item_id: "itm_m", every: 1, replace: true, label: "beat" });
+	});
+
+	test("font add names the family and its files; remove names the family", () => {
+		const hash = `sha256:${"ab".repeat(32)}`;
+		expect(fontAddOperations("Brand Sans", [{ weight: 700, hash }])).toEqual([
+			{
+				op: "font.add",
+				args: { family: "Brand Sans", files: [{ weight: 700, hash }] },
+			},
+		]);
+		expect(fontRemoveOperations("Brand Sans")).toEqual([
+			{ op: "font.remove", args: { family: "Brand Sans" } },
+		]);
 	});
 
 	test("silences send the choices and never the ranges", () => {

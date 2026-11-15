@@ -1129,3 +1129,99 @@ export function templateInfoOperations(
 ): Operations {
 	return [{ op: "template.set_info", args: { ...changes } }];
 }
+
+export const FILTERS = [
+	"none",
+	"grayscale",
+	"sepia",
+	"invert",
+	"warm",
+	"cool",
+] as const;
+export type Filter = (typeof FILTERS)[number];
+
+export interface FilterChanges {
+	filter?: Filter;
+	amount?: number;
+}
+
+// Only the field the person changed (SDD-002 C.49); the core clears a filter
+// that returns to its default.
+export function filterOperations(
+	itemId: string,
+	changes: FilterChanges,
+): Operations {
+	return [{ op: "clip.set_filter", args: { item_id: itemId, ...changes } }];
+}
+
+export function blurOperations(itemId: string, radius: number): Operations {
+	return [{ op: "clip.set_blur", args: { item_id: itemId, radius } }];
+}
+
+export interface DuckOptions {
+	speechItemIds: readonly string[];
+	gainDb: number;
+	attack: string;
+	release: string;
+}
+
+// The speech stretches come from the service (it analyses the speech items and
+// fills `resolved`); the request carries only the person's choices.
+export function duckOperations(
+	itemId: string,
+	options: DuckOptions,
+): Operations {
+	return [
+		{
+			op: "audio.duck",
+			args: {
+				item_id: itemId,
+				speech_item_ids: [...options.speechItemIds],
+				gain_db: options.gainDb,
+				attack: options.attack,
+				release: options.release,
+			},
+		},
+	];
+}
+
+export interface BeatOptions {
+	every: number;
+	label: string;
+	replace: boolean;
+}
+
+// The beats come from the beat grid of the asset, filled by the service; an
+// empty label is left out.
+export function markBeatsOperations(
+	itemId: string,
+	options: BeatOptions,
+): Operations {
+	return [
+		{
+			op: "audio.mark_beats",
+			args: {
+				item_id: itemId,
+				every: options.every,
+				replace: options.replace,
+				...(options.label === "" ? {} : { label: options.label }),
+			},
+		},
+	];
+}
+
+export type FontFileInput = {
+	weight: number;
+	hash: string;
+};
+
+export function fontAddOperations(
+	family: string,
+	files: readonly FontFileInput[],
+): Operations {
+	return [{ op: "font.add", args: { family, files: [...files] } }];
+}
+
+export function fontRemoveOperations(family: string): Operations {
+	return [{ op: "font.remove", args: { family } }];
+}
