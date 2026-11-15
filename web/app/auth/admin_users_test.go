@@ -167,3 +167,48 @@ func TestAdminUsersRoleChangeAndDisableEndSessions(t *testing.T) {
 		t.Errorf("an enabled user again: %v", err)
 	}
 }
+
+// A call that sets the role and the disabled state is one statement: both apply or neither.
+func TestAdminUsersUpdateIsAtomic(t *testing.T) {
+	users := newUsers(t)
+	admin := auth.Admin{Users: users}
+	ctx := sessionOf(service.RoleAdmin)
+
+	only, err := users.Create(ctx, "root@example.com", adminPassword, service.RoleAdmin)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	member, err := users.Create(ctx, "m@example.com", adminPassword, service.RoleMember)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	enabled, disabled, asMember, asAdmin := false, true, service.RoleMember, service.RoleAdmin
+
+	// Refused as a whole: the role does not change although the enable alone would be fine.
+	if _, err := admin.Update(ctx, only.ID, auth.UserPatch{Role: &asMember, Disabled: &enabled}); codeOf(err) != "E_INVALID_STATE" {
+		t.Fatalf("demoting the only administrator in a two-field update: %v", err)
+	}
+
+	got, err := users.List(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, u := range got {
+		if u.ID == only.ID && (u.Role != service.RoleAdmin || u.Disabled) {
+			t.Errorf("the refused update changed the administrator: %+v", u)
+		}
+	}
+
+	// Applied as a whole: promoted and disabled together; a disabled administrator does not count.
+	v, err := admin.Update(ctx, member.ID, auth.UserPatch{Role: &asAdmin, Disabled: &disabled})
+	if err != nil || v.Role != service.RoleAdmin || !v.Disabled {
+		t.Fatalf("promote and disable = %+v, %v", v, err)
+	}
+
+	if _, err := admin.Update(ctx, only.ID, auth.UserPatch{Disabled: &disabled}); codeOf(err) != "E_INVALID_STATE" {
+		t.Errorf("a disabled administrator counted as one: %v", err)
+	}
+}
