@@ -1,9 +1,465 @@
 {
-	"hosts": [
-		"github.com",
-		"objects.githubusercontent.com",
-		"release-assets.githubusercontent.com",
-		"huggingface.co"
-	],
-	"entries": []
+ "version": 1,
+ "entries": [
+  {
+   "kind": "helper",
+   "name": "whisper",
+   "version": "v1.9.2",
+   "os": "windows",
+   "arch": "amd64",
+   "url": "https://github.com/ggml-org/whisper.cpp/releases/download/v1.9.2/whisper-bin-x64.zip",
+   "size": 8194445,
+   "sha256": "49dcc16de826f20bd53d44f947a1ae49dfa81f86cad67a64d80820cb192d674a",
+   "format": "zip",
+   "published": true,
+   "licence": "MIT",
+   "notice": "MIT License. Copyright (c) 2023-2026 The ggml authors. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+   "hosts": [
+    "github.com",
+    "objects.githubusercontent.com",
+    "release-assets.githubusercontent.com"
+   ],
+   "members": [
+    {
+     "from": "Release/ggml-base.dll",
+     "to": "ggml-base.dll",
+     "executable": false
+    },
+    {
+     "from": "Release/ggml-cpu-alderlake.dll",
+     "to": "ggml-cpu-alderlake.dll",
+     "executable": false
+    },
+    {
+     "from": "Release/ggml-cpu-cannonlake.dll",
+     "to": "ggml-cpu-cannonlake.dll",
+     "executable": false
+    },
+    {
+     "from": "Release/ggml-cpu-cascadelake.dll",
+     "to": "ggml-cpu-cascadelake.dll",
+     "executable": false
+    },
+    {
+     "from": "Release/ggml-cpu-haswell.dll",
+     "to": "ggml-cpu-haswell.dll",
+     "executable": false
+    },
+    {
+     "from": "Release/ggml-cpu-icelake.dll",
+     "to": "ggml-cpu-icelake.dll",
+     "executable": false
+    },
+    {
+     "from": "Release/ggml-cpu-sandybridge.dll",
+     "to": "ggml-cpu-sandybridge.dll",
+     "executable": false
+    },
+    {
+     "from": "Release/ggml-cpu-skylakex.dll",
+     "to": "ggml-cpu-skylakex.dll",
+     "executable": false
+    },
+    {
+     "from": "Release/ggml-cpu-sse42.dll",
+     "to": "ggml-cpu-sse42.dll",
+     "executable": false
+    },
+    {
+     "from": "Release/ggml-cpu-x64.dll",
+     "to": "ggml-cpu-x64.dll",
+     "executable": false
+    },
+    {
+     "from": "Release/ggml.dll",
+     "to": "ggml.dll",
+     "executable": false
+    },
+    {
+     "from": "Release/SDL2.dll",
+     "to": "SDL2.dll",
+     "executable": false
+    },
+    {
+     "from": "Release/whisper-cli.exe",
+     "to": "whisper-cli.exe",
+     "executable": true
+    },
+    {
+     "from": "Release/whisper.dll",
+     "to": "whisper.dll",
+     "executable": false
+    }
+   ],
+   "links": [],
+   "executable": "whisper-cli.exe"
+  },
+  {
+   "kind": "helper",
+   "name": "whisper",
+   "version": "v1.9.2",
+   "os": "linux",
+   "arch": "amd64",
+   "url": "https://github.com/ggml-org/whisper.cpp/releases/download/v1.9.2/whisper-bin-ubuntu-x64.tar.gz",
+   "size": 9497583,
+   "sha256": "46811a3ecf584307480a220b9ef5ff81b7b22dc41577cbc274ce3afc61f753b1",
+   "format": "tar.gz",
+   "published": true,
+   "licence": "MIT",
+   "notice": "MIT License. Copyright (c) 2023-2026 The ggml authors. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+   "hosts": [
+    "github.com",
+    "objects.githubusercontent.com",
+    "release-assets.githubusercontent.com"
+   ],
+   "members": [
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-cascadelake.so",
+     "to": "libggml-cpu-cascadelake.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-sse42.so",
+     "to": "libggml-cpu-sse42.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-alderlake.so",
+     "to": "libggml-cpu-alderlake.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-icelake.so",
+     "to": "libggml-cpu-icelake.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-sapphirerapids.so",
+     "to": "libggml-cpu-sapphirerapids.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml.so.0.18.1",
+     "to": "libggml.so.0.18.1",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-cannonlake.so",
+     "to": "libggml-cpu-cannonlake.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/whisper-cli",
+     "to": "whisper-cli",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-skylakex.so",
+     "to": "libggml-cpu-skylakex.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-piledriver.so",
+     "to": "libggml-cpu-piledriver.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/LICENSE",
+     "to": "LICENSE",
+     "executable": false
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-haswell.so",
+     "to": "libggml-cpu-haswell.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-ivybridge.so",
+     "to": "libggml-cpu-ivybridge.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-x64.so",
+     "to": "libggml-cpu-x64.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-cooperlake.so",
+     "to": "libggml-cpu-cooperlake.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-zen4.so",
+     "to": "libggml-cpu-zen4.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libwhisper.so.1.9.2",
+     "to": "libwhisper.so.1.9.2",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-cpu-sandybridge.so",
+     "to": "libggml-cpu-sandybridge.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-x64/libggml-base.so.0.18.1",
+     "to": "libggml-base.so.0.18.1",
+     "executable": true
+    }
+   ],
+   "links": [
+    {
+     "name": "libwhisper.so",
+     "target": "libwhisper.so.1"
+    },
+    {
+     "name": "libggml.so",
+     "target": "libggml.so.0"
+    },
+    {
+     "name": "libggml-base.so.0",
+     "target": "libggml-base.so.0.18.1"
+    },
+    {
+     "name": "libwhisper.so.1",
+     "target": "libwhisper.so.1.9.2"
+    },
+    {
+     "name": "libggml-base.so",
+     "target": "libggml-base.so.0"
+    },
+    {
+     "name": "libggml.so.0",
+     "target": "libggml.so.0.18.1"
+    }
+   ],
+   "executable": "whisper-cli"
+  },
+  {
+   "kind": "helper",
+   "name": "whisper",
+   "version": "v1.9.2",
+   "os": "linux",
+   "arch": "arm64",
+   "url": "https://github.com/ggml-org/whisper.cpp/releases/download/v1.9.2/whisper-bin-ubuntu-arm64.tar.gz",
+   "size": 4572842,
+   "sha256": "7e26fa6a36d9174d5c0bf033ccbc026c3b5e569e2ee787058241346ef5392719",
+   "format": "tar.gz",
+   "published": true,
+   "licence": "MIT",
+   "notice": "MIT License. Copyright (c) 2023-2026 The ggml authors. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+   "hosts": [
+    "github.com",
+    "objects.githubusercontent.com",
+    "release-assets.githubusercontent.com"
+   ],
+   "members": [
+    {
+     "from": "whisper-bin-ubuntu-arm64/LICENSE",
+     "to": "LICENSE",
+     "executable": false
+    },
+    {
+     "from": "whisper-bin-ubuntu-arm64/libggml-base.so.0.18.1",
+     "to": "libggml-base.so.0.18.1",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-arm64/libggml-cpu.so",
+     "to": "libggml-cpu.so",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-arm64/whisper-cli",
+     "to": "whisper-cli",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-arm64/libwhisper.so.1.9.2",
+     "to": "libwhisper.so.1.9.2",
+     "executable": true
+    },
+    {
+     "from": "whisper-bin-ubuntu-arm64/libggml.so.0.18.1",
+     "to": "libggml.so.0.18.1",
+     "executable": true
+    }
+   ],
+   "links": [
+    {
+     "name": "libggml-base.so",
+     "target": "libggml-base.so.0"
+    },
+    {
+     "name": "libwhisper.so.1",
+     "target": "libwhisper.so.1.9.2"
+    },
+    {
+     "name": "libggml.so",
+     "target": "libggml.so.0"
+    },
+    {
+     "name": "libggml.so.0",
+     "target": "libggml.so.0.18.1"
+    },
+    {
+     "name": "libwhisper.so",
+     "target": "libwhisper.so.1"
+    },
+    {
+     "name": "libggml-base.so.0",
+     "target": "libggml-base.so.0.18.1"
+    }
+   ],
+   "executable": "whisper-cli"
+  },
+  {
+   "kind": "helper",
+   "name": "whisper",
+   "version": "v1.9.2",
+   "os": "darwin",
+   "arch": "arm64",
+   "url": "https://github.com/AlexGalhardo/vukem-video/releases/download/helpers-v1.9.2/whisper-cli-v1.9.2-darwin-arm64.tar.gz",
+   "size": 0,
+   "sha256": "",
+   "format": "tar.gz",
+   "published": false,
+   "licence": "MIT",
+   "notice": "MIT License. Copyright (c) 2023-2026 The ggml authors. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+   "hosts": [
+    "github.com",
+    "objects.githubusercontent.com",
+    "release-assets.githubusercontent.com"
+   ],
+   "members": [],
+   "links": [],
+   "executable": "whisper-cli"
+  },
+  {
+   "kind": "helper",
+   "name": "whisper",
+   "version": "v1.9.2",
+   "os": "darwin",
+   "arch": "amd64",
+   "url": "https://github.com/AlexGalhardo/vukem-video/releases/download/helpers-v1.9.2/whisper-cli-v1.9.2-darwin-amd64.tar.gz",
+   "size": 0,
+   "sha256": "",
+   "format": "tar.gz",
+   "published": false,
+   "licence": "MIT",
+   "notice": "MIT License. Copyright (c) 2023-2026 The ggml authors. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+   "hosts": [
+    "github.com",
+    "objects.githubusercontent.com",
+    "release-assets.githubusercontent.com"
+   ],
+   "members": [],
+   "links": [],
+   "executable": "whisper-cli"
+  },
+  {
+   "kind": "helper",
+   "name": "whisper",
+   "version": "v1.9.2",
+   "os": "windows",
+   "arch": "arm64",
+   "url": "https://github.com/AlexGalhardo/vukem-video/releases/download/helpers-v1.9.2/whisper-cli-v1.9.2-windows-arm64.zip",
+   "size": 0,
+   "sha256": "",
+   "format": "zip",
+   "published": false,
+   "licence": "MIT",
+   "notice": "MIT License. Copyright (c) 2023-2026 The ggml authors. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+   "hosts": [
+    "github.com",
+    "objects.githubusercontent.com",
+    "release-assets.githubusercontent.com"
+   ],
+   "members": [],
+   "links": [],
+   "executable": "whisper-cli.exe"
+  },
+  {
+   "kind": "model",
+   "name": "tiny",
+   "version": "5359861c739e955e79d9a303bcbc70fb988958b1",
+   "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-tiny.bin",
+   "size": 77691713,
+   "sha256": "be07e048e1e599ad46341c8d2a135645097a538221678b7acdd1b1919c6e1b21",
+   "published": true,
+   "licence": "MIT",
+   "notice": "MIT License. Copyright (c) 2022 OpenAI. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+   "hosts": [
+    "huggingface.co",
+    "cdn-lfs.huggingface.co",
+    "cdn-lfs.hf.co",
+    "cdn-lfs-us-1.hf.co",
+    "us.aws.cdn.hf.co",
+    "cas-bridge.xethub.hf.co"
+   ],
+   "file": "ggml-tiny.bin"
+  },
+  {
+   "kind": "model",
+   "name": "base",
+   "version": "5359861c739e955e79d9a303bcbc70fb988958b1",
+   "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-base.bin",
+   "size": 147951465,
+   "sha256": "60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe",
+   "published": true,
+   "licence": "MIT",
+   "notice": "MIT License. Copyright (c) 2022 OpenAI. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+   "hosts": [
+    "huggingface.co",
+    "cdn-lfs.huggingface.co",
+    "cdn-lfs.hf.co",
+    "cdn-lfs-us-1.hf.co",
+    "us.aws.cdn.hf.co",
+    "cas-bridge.xethub.hf.co"
+   ],
+   "file": "ggml-base.bin"
+  },
+  {
+   "kind": "model",
+   "name": "small",
+   "version": "5359861c739e955e79d9a303bcbc70fb988958b1",
+   "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-small.bin",
+   "size": 487601967,
+   "sha256": "1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b",
+   "published": true,
+   "licence": "MIT",
+   "notice": "MIT License. Copyright (c) 2022 OpenAI. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+   "hosts": [
+    "huggingface.co",
+    "cdn-lfs.huggingface.co",
+    "cdn-lfs.hf.co",
+    "cdn-lfs-us-1.hf.co",
+    "us.aws.cdn.hf.co",
+    "cas-bridge.xethub.hf.co"
+   ],
+   "file": "ggml-small.bin"
+  },
+  {
+   "kind": "model",
+   "name": "large-v3-turbo",
+   "version": "5359861c739e955e79d9a303bcbc70fb988958b1",
+   "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo.bin",
+   "size": 1624555275,
+   "sha256": "1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69",
+   "published": true,
+   "licence": "MIT",
+   "notice": "MIT License. Copyright (c) 2022 OpenAI. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+   "hosts": [
+    "huggingface.co",
+    "cdn-lfs.huggingface.co",
+    "cdn-lfs.hf.co",
+    "cdn-lfs-us-1.hf.co",
+    "us.aws.cdn.hf.co",
+    "cas-bridge.xethub.hf.co"
+   ],
+   "file": "ggml-large-v3-turbo.bin"
+  }
+ ]
 }

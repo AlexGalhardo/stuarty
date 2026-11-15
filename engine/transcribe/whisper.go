@@ -173,6 +173,10 @@ func (w *Whisper) Transcribe(
 	if err != nil {
 		return Raw{}, err
 	}
+	// First: a helper that is not installed is reported before anything else, and nothing is downloaded.
+	if err := w.Check(ctx); err != nil {
+		return Raw{}, err
+	}
 	if in.WorkDir == nil || w.FFmpeg == nil {
 		return Raw{}, failure(
 			ReasonPrepare,
@@ -180,9 +184,6 @@ func (w *Whisper) Transcribe(
 			errors.New("run directory and FFmpeg are required"),
 			"",
 		)
-	}
-	if err := w.Check(ctx); err != nil {
-		return Raw{}, err
 	}
 	tool, err := w.helper(ctx)
 	if err != nil {
