@@ -94,6 +94,14 @@ export interface TimedItem {
 	source_in?: number;
 }
 
+// Whether the item ends after `frame` (its end is the first frame after it) and
+// whether it starts at or after `frame`: the tests of the timeline window,
+// which compares and displays nothing else.
+export const endsAfter = (item: TimedItem, frame: number): boolean =>
+	item.start + item.duration > frame;
+export const startsAtOrAfter = (item: TimedItem, frame: number): boolean =>
+	item.start >= frame;
+
 type Fps = { num: number; den: number };
 
 // The frame rate of the document as a rational; a project without `fps` runs
