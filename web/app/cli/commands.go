@@ -19,7 +19,7 @@ func registry() []*spec {
 		edit, history, undo, redo, lintCmd, version, mcpCmd,
 		mediaImport, mediaInspect, mediaList, mediaTrash, mediaRestore, view, export,
 		jobShow, jobCancel, jobList, eventsCmd, commandHelp,
-		templateList, templateSave, templateNew, templateExport, templateImport, bundleExport,
+		templateList, templateSave, templateNew, templateExport, templateImport, bundleExport, bundleImport,
 		agentDocs, transcribeCmd, doctorCmd, fontsCmd, auditCmd, toolsInstallCmd, tokenRotate,
 	}
 }

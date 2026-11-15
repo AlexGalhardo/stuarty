@@ -4,16 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
-// bundleExporter is the part of the Service the bundle:export command calls. SDD-000 section 1
-// routes the operation outside the 15 MCP tools (exception E-3); until it is on service.Service
-// the command reaches it through the connection when the connection offers it.
-type bundleExporter interface {
-	ProjectBundleExport(ctx context.Context, req service.ProjectBundleExportRequest) (*service.Job, error)
-}
+// The bundle commands have no MCP tool: a bundle moves a whole project as a file, which is for the
+// person or the script at the terminal (SDD-003 section 7.1, exception E-3).
 
 var bundleExport = &spec{
 	name:    "bundle:export",
@@ -30,14 +25,6 @@ var bundleExport = &spec{
 		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
-		be, ok := c.svc.(bundleExporter)
-		if !ok {
-			return nil, &service.Error{
-				Code: command.CodeInvalidState, Message: "this connection cannot export a bundle.",
-				Hint: "run the command on the machine that owns the workspace",
-			}
-		}
-
 		includeLog := c.args.boolean("log")
 		req := service.ProjectBundleExportRequest{ProjectID: c.projectID, IncludeLog: &includeLog}
 
@@ -48,11 +35,46 @@ var bundleExport = &spec{
 			req.WaitMS = waitSlice(deadline)
 		}
 
-		job, err := be.ProjectBundleExport(ctx, req)
+		job, err := c.svc.ProjectBundleExport(ctx, req)
 		if err != nil {
 			return nil, err
 		}
 
 		return jobOutput(ctx, c, job, wait, deadline)
+	},
+}
+
+var bundleImport = &spec{
+	name:       "bundle:import",
+	summary:    "create a project from a .vvbundle file",
+	usage:      []string{"vukem-video bundle:import <path> [--as-new] [--dry-run]"},
+	example:    "vukem-video bundle:import launch-teaser.vvbundle --as-new",
+	positional: true,
+	globals:    []string{"dry-run"},
+	write:      true,
+	flags: []flagDef{
+		{
+			Name: "as-new", Kind: kindBool, Default: "false",
+			Usage: "give the project a new id and leave the log out (required on a server with accounts)",
+		},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		if len(c.args.Positional) != 1 {
+			return nil, validation("", "bundle:import takes one path, got %d.", len(c.args.Positional))
+		}
+
+		path, err := c.rt.abs(c.args.Positional[0])
+		if err != nil {
+			return nil, err
+		}
+
+		res, err := c.svc.ProjectBundleImport(ctx, service.ProjectBundleImportRequest{
+			Path: path, AsNew: c.args.boolean("as-new"), DryRun: c.args.boolean("dry-run"),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
 	},
 }

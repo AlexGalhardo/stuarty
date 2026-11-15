@@ -136,6 +136,16 @@ func (s stub) TemplateImport(context.Context, service.TemplateImportRequest) (*s
 	return reply[service.TemplateResult](s.err)
 }
 
+func (s stub) ProjectBundleExport(context.Context, service.ProjectBundleExportRequest) (*service.Job, error) {
+	return reply[service.Job](s.err)
+}
+
+func (s stub) ProjectBundleImport(
+	context.Context, service.ProjectBundleImportRequest,
+) (*service.ProjectCreateResult, error) {
+	return reply[service.ProjectCreateResult](s.err)
+}
+
 func (s stub) ViewFrame(context.Context, service.ViewFrameRequest) (*service.ViewResult, error) {
 	return reply[service.ViewResult](s.err)
 }

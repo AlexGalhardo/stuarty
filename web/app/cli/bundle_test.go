@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -13,6 +14,7 @@ type bundleService struct {
 	fakeService
 
 	req service.ProjectBundleExportRequest
+	imp service.ProjectBundleImportRequest
 }
 
 func (b *bundleService) ProjectBundleExport(
@@ -57,20 +59,53 @@ func TestBundleExportKeepsTheLogByDefault(t *testing.T) {
 	}
 }
 
-func TestBundleExportNeedsAConnectionThatOffersIt(t *testing.T) {
-	h := newHarness(t)
-
-	if code := h.run("bundle:export", "--project", "prj_7k2m9x4q1b"); code == 0 {
-		t.Fatalf("expected a failure: %s", h.stdout.String())
-	}
-
-	if !strings.Contains(h.stderr.String()+h.stdout.String(), "cannot export a bundle") {
-		t.Fatalf("output: %s %s", h.stdout.String(), h.stderr.String())
-	}
-}
-
 func (b *bundleService) JobGet(context.Context, service.JobGetRequest) (*service.Job, error) {
 	return &service.Job{
 		JobID: "job_9", Kind: service.JobExport, State: service.JobSucceeded, Text: "job_9 succeeded",
 	}, nil
+}
+
+func (b *bundleService) ProjectBundleImport(
+	ctx context.Context,
+	r service.ProjectBundleImportRequest,
+) (*service.ProjectCreateResult, error) {
+	b.note(ctx)
+	b.imp = r
+
+	return &service.ProjectCreateResult{ProjectID: "prj_9", Text: "prj_9 created"}, b.err
+}
+
+func TestBundleImportSendsAnAbsolutePathAndTheFlags(t *testing.T) {
+	h := newHarness(t)
+	svc := &bundleService{}
+	h.res.svc = svc
+
+	if code := h.run("bundle:import", "teaser.vvbundle", "--as-new", "--dry-run"); code != 0 {
+		t.Fatalf("exit %d: %s", code, h.stderr.String())
+	}
+
+	if !filepath.IsAbs(svc.imp.Path) || filepath.Base(svc.imp.Path) != "teaser.vvbundle" ||
+		!svc.imp.AsNew || !svc.imp.DryRun {
+		t.Fatalf("request: %+v", svc.imp)
+	}
+
+	if !strings.Contains(h.stdout.String(), "prj_9") {
+		t.Fatalf("output: %s", h.stdout.String())
+	}
+}
+
+func TestBundleImportKeepsTheIdByDefault(t *testing.T) {
+	h := newHarness(t)
+	svc := &bundleService{}
+	h.res.svc = svc
+
+	if code := h.run("bundle:import", "teaser.vvbundle"); code != 0 || svc.imp.AsNew || svc.imp.DryRun {
+		t.Fatalf("exit %d: %+v", code, svc.imp)
+	}
+
+	for _, args := range [][]string{{"bundle:import"}, {"bundle:import", "a", "b"}} {
+		if code := h.run(args...); code != ExitFailure {
+			t.Errorf("%v: exit %d, want 1", args, code)
+		}
+	}
 }
