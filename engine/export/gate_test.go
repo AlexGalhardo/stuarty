@@ -12,7 +12,7 @@ import (
 )
 
 // A project named "../../x" exports to exports/<project id>/<job id>.mp4 and nowhere else (T-13).
-func TestExportPathsAreGenerated(t *testing.T) {
+func TestSecurity_T13_ExportPathsAreGenerated(t *testing.T) {
 	doc := loadScene(t, "contain-text")
 	doc.Name = "../../x"
 

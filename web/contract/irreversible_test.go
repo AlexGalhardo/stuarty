@@ -9,7 +9,7 @@ import (
 
 // RF-131, T-28: no MCP tool and no CLI command can delete data for good. The
 // only operation that does, TrashEmpty, has an HTTP route and nothing else.
-func TestNoIrreversibleOperationOnAgentSurfaces(t *testing.T) {
+func TestSecurity_T28_NoIrreversibleOperationOnAgentSurfaces(t *testing.T) {
 	t.Parallel()
 
 	tools := listedTools(t)
