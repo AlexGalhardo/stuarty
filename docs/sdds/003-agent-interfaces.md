@@ -166,6 +166,9 @@ type Service interface {
 	KeyRevoke(ctx context.Context, req KeyRevokeRequest) (*KeyRevokeResult, error)           // SDD-007 §4.2, HTTP only
 	ProjectBundleExport(ctx context.Context, req BundleExportRequest) (*Job, error)         // SDD-005 §16, phase B
 	ProjectBundleImport(ctx context.Context, req BundleImportRequest) (*ProjectCreateResult, error) // SDD-005 §16, phase B
+	FontImport(ctx context.Context, req FontImportRequest) (*FontImportResult, error)        // SDD-007 §7.7, phase B
+	BrandKitGet(ctx context.Context, req BrandKitGetRequest) (*BrandKit, error)              // SDD-005 §5.11, phase B
+	BrandKitSet(ctx context.Context, req BrandKitSetRequest) (*BrandKit, error)               // SDD-005 §5.11, phase B
 }
 ```
 
@@ -800,6 +803,10 @@ type TemplateInstantiateRequest struct {
 	Fill       map[string]SlotValue `json:"fill,omitempty"` // slot name to value
 	ID         string               `json:"id,omitempty"`   // optional project id (pattern of SDD-000 §2); MCP: the `id` member of action "new"
 	DryRun     bool                 `json:"dry_run,omitempty"`
+	// Phase B (SDD-005 §5.11): names of template.colors that take the brand kit's colour, and families
+	// of the kit added to the project's fonts.
+	BrandColors []string `json:"brand_colors,omitempty"`
+	BrandFonts  []string `json:"brand_fonts,omitempty"`
 }
 type TemplateInstantiateResult struct {
 	ProjectID string       `json:"project_id"`
@@ -2582,6 +2589,8 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `keys.create`, `keys.list`, `keys.revoke` | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` | none | `KeyCreateRequest` for create | 201 `KeyCreateResult`, 200 `KeyListResult`, 200 `KeyRevokeResult` | a logged-in browser session; a key cannot call them (network mode only, SDD-007 §5.3) | 403 `E_FORBIDDEN` |
 | `projects.bundle` | `POST /projects/{id}/bundle` | none | `BundleExportRequest` | 202 `Job` (phase B, SDD-005 §16) | read and render | as `jobs.start` |
 | `projects.import` | `POST /projects/import` | none | `BundleImportRequest` | 201 `ProjectCreateResult` (phase B) | edit and media | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND` |
+| `fonts.import` | `POST /fonts` | none | `{path}`, an absolute path to a TrueType or OpenType file on the machine of the server (SDD-007 §7.7) | 201 `FontImportResult` `{hash, bytes, deduplicated}` (phase B) | media | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND`; 422 `E_VALIDATION` (a refused font) |
+| `brand.get`, `brand.set` | `GET /brand-kit`, `PUT /brand-kit` | none | `{logo?, colors?, fonts?}` for set (replaces the kit, SDD-005 §5.11) | 200 `BrandKit` (phase B) | read; edit | 422 `E_VALIDATION`; 404 `E_NOT_FOUND` |
 | `users.list`, `users.create`, `users.update` | `GET /users`, `POST /users`, `PATCH /users/{user_id}` | none | `{email, password, role?}` for create; `{role?, disabled?}` for update | 200 `{users: [UserView]}`, 201 `UserView`, 200 `UserView` | an administrator's browser session; a key cannot call them (network mode only, SDD-007 §4.1) | 403 `E_FORBIDDEN`; 404 `E_NOT_FOUND`; 409 `E_INVALID_STATE` (last administrator) |
 | `openapi.get` | `GET /openapi.json` | none | none | 200 OpenAPI 3.1 (§6.7) | read | none |
 | `docs.get` | `GET /api/docs` (outside `/api/v1`) | none | none | 200 `text/html` (the Scalar reference page, §6.7) | read | none |

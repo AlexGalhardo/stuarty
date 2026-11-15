@@ -928,6 +928,32 @@ CREATE INDEX api_keys_user_id_index ON api_keys (user_id);
 
 Scopes, expiry, last use and revocation live in vukem's token row (SDD-007 §4.2); this table adds only what vukem's token cannot hold. `Repos` gains `Keys() KeyRepo` with `Create`, `Get`, `GetByTokenID`, `ListByUser`. vukem's own user, session and token tables are created by vukem's migrations and are not described here.
 
+### 5.11 `brand_kits` and `font_owners` (BETA, RF-053)
+
+Migration `20261115140000_create_brand_kits_and_font_owners`. Both tables are small and never joined to the document.
+
+```sql
+CREATE TABLE brand_kits (
+  owner_user_id TEXT    NOT NULL,                  -- '' in local mode: one kit per workspace
+  document      TEXT    NOT NULL,                  -- the kit as JSON, below
+  updated_ms    INTEGER NOT NULL,
+  updated_by    TEXT    NOT NULL,                  -- actor
+  PRIMARY KEY (owner_user_id)
+);
+CREATE TABLE font_owners (
+  hash          TEXT    NOT NULL,                  -- 64 hex digits of the file in fonts/
+  owner_user_id TEXT    NOT NULL,                  -- the user who imported or brought the file
+  created_ms    INTEGER NOT NULL,
+  PRIMARY KEY (hash, owner_user_id)
+);
+```
+
+**The brand kit** is one JSON object per workspace (per user in network mode, so that one user never sees another's kit): `{"logo": "sha256:...", "colors": {"accent": "#FF3366"}, "fonts": {"Brand Sans": {"files": [{"weight": 400, "hash": "sha256:..."}]}}}`. All three members are optional; an empty kit is the same as no row. `logo` names a media asset already in the content store (an image the caller can see: in network mode one linked to a project of the caller). `colors` has at most 32 entries; a name matches `[a-z][a-z0-9_]{0,39}` and a value is `#RRGGBB` or `#RRGGBBAA`, stored upper case. `fonts` has at most 16 families with the rules of SDD-001 §3.9 (not a bundled family, 1 to 9 files, one per weight, 100 to 900 in steps of 100), and every file must be in the font store and usable by the caller (SDD-007 §7.7 item 6). `BrandKitSet` replaces the whole kit in one transaction and `BrandKitGet` returns it (an empty kit when there is none). A bad name, colour, weight or family is `E_VALIDATION` with the `path` of the member; a font the caller may not use is `E_NOT_FOUND`, the refusal of `font.add`.
+
+**Templates and the brand kit.** `TemplateInstantiateRequest` has two optional lists: `brand_colors`, names of the template's own `template.colors` that take their value from the kit, and `brand_fonts`, families of the kit that are added to the new project's `fonts`. The template keeps `"$name"` references: instantiation sets `template.colors.<name>` of the new project to the kit's colour, so every style that says `"$accent"` draws the brand colour. A name that is not a colour of the template, a colour the kit lacks, or a family the kit lacks is `E_VALIDATION` with `details.reason` `brand_color_missing`, `brand_color_unknown` or `brand_font_missing` and the `path` `brand_colors[i]` or `brand_fonts[i]`; nothing is created. A template that is instantiated without these lists keeps its own colours.
+
+**`font_owners`** records, per stored font file, each user who imported it (`FontImport`) or brought it (a bundle or a template file that ships it). It exists in network mode only: in local mode the store is the caller's own and a stored file is enough. `font.add`, a bundle export, a bundle import that names a font it does not ship and an instantiation of a template with fonts all ask the same question, "may this caller use this hash": the caller is a recorded owner of it, or a project of the caller already uses it (SDD-007 §7.7 item 6). `Repos` gains `Fonts() FontRepo` with `Record(ctx, owner, hash, ms)` (idempotent) and `Owns(ctx, owner, hash)`, and `BrandKit() BrandKitRepo` with `Get(ctx, owner)` and `Put(ctx, row)`.
+
 ## 6. Workspace ownership
 
 ADR-0008 decides that one process owns a workspace. This section fixes how.
