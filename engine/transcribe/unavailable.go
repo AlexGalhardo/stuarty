@@ -88,7 +88,8 @@ func UnavailableError(m *MissingError, model string) *ffmpeg.Error {
 
 	e := unavailable(ReasonNotInstalled,
 		"Local transcription needs "+strings.Join(names, " and ")+", which is not installed.", m,
-		map[string]any{"missing": names, "download_bytes": m.DownloadBytes, "install_command": cmd})
+		map[string]any{"missing": names, "download_bytes": m.DownloadBytes, "install_command": cmd,
+			"tool": HelperName, "model": model})
 	e.Hint = fmt.Sprintf(
 		"Run %q, choose a smaller model with VUKEM_VIDEO_WHISPER_MODEL, or configure an API provider.",
 		cmd,

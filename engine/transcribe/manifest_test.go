@@ -309,7 +309,8 @@ func TestJobNeverDownloads(t *testing.T) {
 
 	fe := UnavailableError(missing, w.ModelName)
 	if fe.Code != CodeUnavailable ||
-		fe.Details["install_command"] != "vukem-video tools:install whisper --model small" {
+		fe.Details["install_command"] != "vukem-video tools:install whisper --model small" ||
+		fe.Details["tool"] != "whisper" || fe.Details["model"] != "small" {
 		t.Errorf("error %+v", fe)
 	}
 

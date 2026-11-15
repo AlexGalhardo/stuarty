@@ -128,6 +128,7 @@ func TestTranscribeWithoutTheHelperIsUnavailable(t *testing.T) {
 	if se == nil || se.Code != "E_TRANSCRIBE_UNAVAILABLE" ||
 		se.Details["install_command"] != "vukem-video tools:install whisper --model tiny" ||
 		se.Details["download_bytes"] != int64(8_200_000) ||
+		se.Details["tool"] != "whisper" || se.Details["model"] != "tiny" ||
 		se.Details["missing"] == nil ||
 		se.Hint == "" {
 		t.Fatalf("error = %+v", err)
