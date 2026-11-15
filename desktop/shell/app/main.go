@@ -88,9 +88,11 @@ func run() error {
 	br.install(win)
 	// macOS shows the application menu; Windows and Linux show a menu per window,
 	// and without win.SetMenu the window has no menu bar.
-	menu := buildMenu(app, win, ws)
+	up := newUpdater(app)
+	menu := buildMenu(app, win, ws, up)
 	app.Menu.SetApplicationMenu(menu)
 	win.SetMenu(menu)
+	up.checkOnStartup()
 
 	// The child ending on its own is a crash: tell the person, then leave.
 	go func() {

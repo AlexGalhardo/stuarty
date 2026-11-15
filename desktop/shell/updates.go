@@ -1,0 +1,138 @@
+package shell
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/AlexGalhardo/vukem-video/desktop/update"
+)
+
+// ReleasePageURL is where a person downloads a version the shell cannot install by itself.
+const ReleasePageURL = "https://github.com/AlexGalhardo/vukem-video/releases"
+
+// Settings are the preferences of the desktop shell. They are not workspace data: the update client
+// never touches the workspace (SDD-009 section 10.5 item 7), so they live in the user config directory.
+type Settings struct {
+	// UpdateCheck is the setting update.check: check once at start-up. Off by default.
+	UpdateCheck bool `json:"update.check"`
+}
+
+// SettingsPath is the settings file of the shell, in the user config directory.
+func SettingsPath() (string, error) {
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		return "", fmt.Errorf("shell settings: %w", err)
+	}
+
+	return filepath.Join(dir, "vukem-video", "desktop.json"), nil
+}
+
+// LoadSettings reads the settings file. A missing file gives the defaults, with the check off. A file
+// that cannot be read or parsed also gives the defaults, together with the error, so that a damaged
+// file never turns the network on.
+func LoadSettings(path string) (Settings, error) {
+	data, err := os.ReadFile(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return Settings{}, nil
+	}
+
+	if err != nil {
+		return Settings{}, fmt.Errorf("shell settings: %w", err)
+	}
+
+	var s Settings
+	if err := json.Unmarshal(data, &s); err != nil {
+		return Settings{}, fmt.Errorf("shell settings: %s: %w", path, err)
+	}
+
+	return s, nil
+}
+
+// Save writes the settings file, creating its directory.
+func (s Settings) Save(path string) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		return fmt.Errorf("shell settings: %w", err)
+	}
+
+	data, err := json.Marshal(s)
+	if err != nil {
+		return fmt.Errorf("shell settings: %w", err)
+	}
+
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, append(data, '\n'), 0o600); err != nil {
+		return fmt.Errorf("shell settings: %w", err)
+	}
+
+	if err := os.Rename(tmp, path); err != nil {
+		_ = os.Remove(tmp)
+
+		return fmt.Errorf("shell settings: %w", err)
+	}
+
+	return nil
+}
+
+// UpdateChecker is the part of update.Client the menu action uses.
+type UpdateChecker interface {
+	CheckNow(ctx context.Context) (*update.Offer, error)
+}
+
+// UpdateOutcome is what the "Check for updates" action shows. Offer is set only when a newer, verified
+// version is ready: the shell then asks whether to install it.
+type UpdateOutcome struct {
+	Title   string
+	Message string
+	Offer   *update.Offer
+}
+
+const updateTitle = "Check for updates"
+
+// CheckForUpdates runs the check the person asked for and turns every result into text for a dialog.
+// client is nil when the build could not create one; buildErr says why. It never fails: a missing
+// feed, a network error and a bad signature each become a message.
+func CheckForUpdates(ctx context.Context, client UpdateChecker, buildErr error, current string) UpdateOutcome {
+	if client == nil {
+		return failedOutcome(buildErr)
+	}
+
+	offer, err := client.CheckNow(ctx)
+
+	switch {
+	case err == nil:
+		return UpdateOutcome{
+			Title: updateTitle,
+			Message: fmt.Sprintf(
+				"Version %s is available (this is %s). Download and install it?",
+				offer.Version,
+				current,
+			),
+			Offer: offer,
+		}
+	case errors.Is(err, update.ErrNotNewer):
+		return UpdateOutcome{Title: updateTitle, Message: fmt.Sprintf("Vukem Video %s is up to date.", current)}
+	default:
+		return failedOutcome(err)
+	}
+}
+
+func failedOutcome(err error) UpdateOutcome {
+	if err == nil || errors.Is(err, update.ErrNotConfigured) {
+		return UpdateOutcome{
+			Title: updateTitle,
+			Message: "This build has no update feed or signing key, so it cannot check for updates. " +
+				"Download new versions from " + ReleasePageURL,
+		}
+	}
+
+	return UpdateOutcome{Title: updateTitle, Message: "Could not check for updates: " + err.Error()}
+}
+
+// InstallFailedMessage is the text of the dialog shown when an accepted update could not be applied.
+func InstallFailedMessage(err error) string {
+	return "The update was not installed and this version is unchanged: " + err.Error()
+}
