@@ -23,7 +23,9 @@ func limitsDoc() *timeline.Document {
 
 	for i := range timeline.MaxAssets {
 		id := fmt.Sprintf("ast_z%09d", i)
-		b.d.Assets[id] = timeline.Asset{ID: id, Hash: hashN(i), Kind: timeline.AssetImage, Name: "i", Width: 10, Height: 10}
+		b.d.Assets[id] = timeline.Asset{
+			ID: id, Hash: hashN(i), Kind: timeline.AssetImage, Name: "i", Width: 10, Height: 10,
+		}
 	}
 
 	for i := range timeline.MaxTracks {
@@ -79,8 +81,9 @@ func TestDocumentAtTheLimits(t *testing.T) {
 		t.Errorf("the last item ends at %d, want %d", end, timeline.MaxFrames)
 	}
 
-	_, err = reg.Apply(res.Doc, opJSON("item.move", fmt.Sprintf(`{"item_id":%q,"start":"%df"}`, lastItem, timeline.MaxFrames-99)), env)
-	if e, ok := err.(*Error); !ok || e.Code != CodeInvalidTime {
+	past := opJSON("item.move", fmt.Sprintf(`{"item_id":%q,"start":"%df"}`, lastItem, timeline.MaxFrames-99))
+	_, err = reg.Apply(res.Doc, past, env)
+	if e := AsError(err); err == nil || e.Code != CodeInvalidTime {
 		t.Errorf("a move past frame %d returned %v, want %s", timeline.MaxFrames, err, CodeInvalidTime)
 	}
 
@@ -109,7 +112,7 @@ func TestDocumentAtTheLimits(t *testing.T) {
 	}
 	for name, args := range over {
 		_, err = reg.Apply(res.Doc, opJSON(name, args), env)
-		if e, ok := err.(*Error); !ok || e.Code != CodeLimit {
+		if e := AsError(err); err == nil || e.Code != CodeLimit {
 			t.Errorf("%s over the limit returned %v, want %s", name, err, CodeLimit)
 		}
 	}

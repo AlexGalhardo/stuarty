@@ -522,7 +522,12 @@ func checkStep(doc *timeline.Document, o Operation, ids *seqIDs) (next *timeline
 // checkStepEchoing is checkStep; with echoed set, what the caller typed in args (a key
 // such as "ts", which looks like a file name) is not held against the error text that
 // quotes it: the rule of A.8 is about what the server leaks, not about the caller's own words.
-func checkStepEchoing(doc *timeline.Document, o Operation, ids *seqIDs, echoed bool) (next *timeline.Document, err error) {
+func checkStepEchoing(
+	doc *timeline.Document,
+	o Operation,
+	ids *seqIDs,
+	echoed bool,
+) (next *timeline.Document, err error) {
 	before := timeline.Canonical(doc)
 
 	res, applyErr := fullRegistry().Apply(doc, o, Env{NewIDs: ids.next})
@@ -693,10 +698,12 @@ func TestScaleProject(t *testing.T) {
 func FuzzApplyArgs(f *testing.F) {
 	cmds := fullRegistry().List()
 
+	hostile := `{"item_id":"itm_m1n2p3q4r5","start":"-1f","duration":"0f","words":[null],"id":"itm_m1n2p3q4r5"}`
+
 	for i, c := range cmds {
 		f.Add(uint8(i), c.Example, int64(i))
 		f.Add(uint8(i), `{}`, int64(i))
-		f.Add(uint8(i), `{"item_id":"itm_m1n2p3q4r5","start":"-1f","duration":"0f","words":[null],"id":"itm_m1n2p3q4r5"}`, int64(i))
+		f.Add(uint8(i), hostile, int64(i))
 	}
 
 	f.Fuzz(func(t *testing.T, which uint8, args string, seed int64) {
