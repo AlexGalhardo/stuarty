@@ -8,7 +8,10 @@ const root = path.join(import.meta.dirname, "..", "..");
 test("every row of the editor keymap is on the page, with Mod spelled out per platform", async () => {
 	const { keymap, labels } = await readKeymap(root);
 	const page = shortcutsPage(keymap, labels);
-	for (const row of shortcutRows(keymap, labels)) assert.ok(page.includes(row.label.replace(/\|/g, "\\|")), `the page lacks "${row.label}"`);
+	for (const row of shortcutRows(keymap, labels)) {
+		const escapedLabel = row.label.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
+		assert.ok(page.includes(escapedLabel), `the page lacks "${row.label}"`);
+	}
 	assert.match(page, /`Ctrl\+B`.*`Cmd\+B`/);
 	const cells = page
 		.split("\n")
