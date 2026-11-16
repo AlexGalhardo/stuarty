@@ -35,7 +35,7 @@ After release N is merged, its commits get new hashes on `main`, and branch N+1,
 
 ## 3. Prepare and merge
 
-1. Name the local branch `release/vX.Y.Z` and set it to track the remote. `prepare` refuses any other name. Before `prepare`, stamp the agent docs: set `Version` in `web/app/agentdocs/agentdocs.go`, run the generators of step 2.4 plus `UPDATE_GOLDEN=1 go test ./web/app/mcp/ -run TestSecurity_T31_ToolDefinitionsMatchTheirGolden`, and commit `docs(cli): stamp the agent docs with version X.Y.Z`.
+1. Name the local branch `release/vX.Y.Z` and set it to track the remote. `prepare` refuses any other name. Before `prepare`, stamp the agent docs: set `Version` in `web/app/agentdocs/agentdocs.go` (the one version of the binary: `version`, `doctor` and the agent docs read it, and every release build also stamps it with `-X .../agentdocs.Version`), run the generators of step 2.4 plus `UPDATE_GOLDEN=1 go test ./web/app/mcp/ -run TestSecurity_T31_ToolDefinitionsMatchTheirGolden`, and commit `docs(cli): stamp the agent docs with version X.Y.Z`.
 2. `go run ./internal/tools/release -skip-remote-checks prepare vX.Y.Z` writes the CHANGELOG section and commits `chore(release): vX.Y.Z`. Use `-skip-remote-checks` only when the tip was just rebuilt and CI will run on the push anyway.
 3. `prepare` refuses while an issue labelled `ci-failure` is open. Triage it: fix it, or close it with a comment that names the commits that fixed it.
 4. Push, then:

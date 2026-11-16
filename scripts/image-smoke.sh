@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Smoke test of a built image: bash scripts/image-smoke.sh <image> [<version>]
-# With a version (no leading v), `version` must print exactly vukem-video v<version>.
+# With a version (no leading v), `version` must print exactly vukem-video <version>.
 # It starts the container the way the documentation says (published on the
 # loopback of the host) and removes it and its volume at the end.
 set -euo pipefail
@@ -16,8 +16,8 @@ cleanup() {
 trap cleanup EXIT
 
 got="$(docker run --rm "$img" version)"
-if [ -n "$want" ] && [ "$got" != "vukem-video v$want" ]; then
-	echo "image-smoke: version printed [$got], want [vukem-video v$want]" >&2
+if [ -n "$want" ] && [ "$got" != "vukem-video $want" ]; then
+	echo "image-smoke: version printed [$got], want [vukem-video $want]" >&2
 	exit 1
 fi
 case "$got" in "vukem-video "*) ;; *) echo "image-smoke: version printed [$got]" >&2; exit 1 ;; esac

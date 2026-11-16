@@ -33,6 +33,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/service/exporter"
 	"github.com/AlexGalhardo/vukem-video/service/pathguard"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
 	"github.com/AlexGalhardo/vukem-video/web/app/auth"
 	"github.com/AlexGalhardo/vukem-video/web/app/events"
 	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
@@ -122,6 +123,10 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 
 	if cfg.Resolved.Mode == "" {
 		cfg.Resolved.Mode = config.ModeOf(cfg.Getenv)
+	}
+
+	if cfg.Version == "" {
+		cfg.Version = agentdocs.Version
 	}
 
 	o := &Owner{version: cfg.Version, now: cfg.Now, mode: cfg.Resolved.Mode}

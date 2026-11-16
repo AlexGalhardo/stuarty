@@ -12,12 +12,10 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/service/config"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
 	"github.com/AlexGalhardo/vukem-video/web/app/owner"
 	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
 )
-
-// version is set at build time with -X main.version.
-var version = "dev"
 
 // exitServe is the exit code of a server that could not start or that failed
 // (SDD-005 section 6.3 step 2 uses 2 for a locked workspace).
@@ -42,7 +40,7 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 
 	ow, err := owner.Open(
 		ctx,
-		owner.Config{Version: version, Log: log, Resolved: resolved, Telemetry: owner.OTelProvider},
+		owner.Config{Version: agentdocs.Version, Log: log, Resolved: resolved, Telemetry: owner.OTelProvider},
 	)
 	if err != nil {
 		_, _ = fmt.Fprintln(stderr, "vukem-video serve:", err)

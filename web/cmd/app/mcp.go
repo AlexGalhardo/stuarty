@@ -12,6 +12,7 @@ import (
 	vukem "github.com/AlexGalhardo/vukem"
 
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
 	"github.com/AlexGalhardo/vukem-video/web/app/cli"
 	"github.com/AlexGalhardo/vukem-video/web/app/owner"
 )
@@ -54,7 +55,13 @@ func becomeOwner(
 
 		ow, err := owner.Open(
 			ctx,
-			owner.Config{Getenv: getenv, Version: version, Log: log, Session: sess, Telemetry: owner.OTelProvider},
+			owner.Config{
+				Getenv:    getenv,
+				Version:   agentdocs.Version,
+				Log:       log,
+				Session:   sess,
+				Telemetry: owner.OTelProvider,
+			},
 		)
 		if err != nil {
 			_ = closeLog.Close()

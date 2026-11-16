@@ -9,6 +9,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/lint"
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
 )
 
 // oneJSONDocument fails unless s is exactly one JSON document and a newline.
@@ -371,7 +372,7 @@ func TestVersionNeedsNoService(t *testing.T) {
 	}
 
 	doc := oneJSONDocument(t, h.stdout.String())
-	if doc["version"] == "" || doc["text"] != "vukem-video "+buildVersion() {
+	if doc["version"] == "" || doc["text"] != "vukem-video "+agentdocs.Version {
 		t.Fatalf("doc = %v", doc)
 	}
 

@@ -38,19 +38,17 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 COPY --from=assets /src/web/resources/public/build web/resources/public/build
-# The .git directory travels in the context so Go stamps the tag at HEAD into
-# the binary, which `vukem-video version` prints. A release, or image.yml with a
-# local dummy tag, passes VERSION and the build fails when the stamped version is
-# not v$VERSION: that also catches a dirty build context (+dirty). From a git
-# worktree the .git file points outside the context and git fails; the build then
-# goes without VCS stamping and the check is skipped, as it is for VERSION=devel.
-RUN if git -c safe.directory=/src status --porcelain >/dev/null 2>&1; then \
-		git config --global --add safe.directory /src; stamp=true; \
-	else stamp=false; fi \
-	&& GOOS="$TARGETOS" GOARCH="$TARGETARCH" go build -buildvcs="$stamp" -trimpath -ldflags="-s -w" -o /out/vukem-video ./web/cmd/app \
-	&& if [ "$stamp" = true ] && [ "$VERSION" != devel ] && [ "$TARGETARCH" = "$(go env GOHOSTARCH)" ]; then \
+# The version of the binary is the one source of every command that prints it
+# (`version`, `doctor`, the agent docs): agentdocs.Version, set here with -X from
+# VERSION. A release, or image.yml with a local dummy tag, passes VERSION and the
+# build fails when `vukem-video version` prints anything else; VERSION=devel keeps
+# the version written in the source and skips the check.
+RUN stamp=""; \
+	if [ "$VERSION" != devel ]; then stamp="-X github.com/AlexGalhardo/vukem-video/web/app/agentdocs.Version=$VERSION"; fi \
+	&& GOOS="$TARGETOS" GOARCH="$TARGETARCH" go build -buildvcs=false -trimpath -ldflags="-s -w $stamp" -o /out/vukem-video ./web/cmd/app \
+	&& if [ "$VERSION" != devel ] && [ "$TARGETARCH" = "$(go env GOHOSTARCH)" ]; then \
 		got="$(/out/vukem-video version)"; \
-		[ "$got" = "vukem-video v$VERSION" ] || { echo "version stamp: got [$got], want [vukem-video v$VERSION]" >&2; exit 1; }; \
+		[ "$got" = "vukem-video $VERSION" ] || { echo "version stamp: got [$got], want [vukem-video $VERSION]" >&2; exit 1; }; \
 	fi
 
 # The pinned FFmpeg, downloaded by exact URL and verified by SHA-256. FFMPEG_SOURCE
