@@ -934,6 +934,21 @@ Stated plainly. None of these is claimed to be mitigated.
 14. **The no-egress property is proven for child processes only on Linux CI** (10.2). The `no-egress` job of `ci.yml` runs `scripts/no-egress.sh`: the server, a CLI session (create, import, edit, export, view) and an MCP stdio session, each under `strace -f`, so FFmpeg is traced as a child of the owner. The desktop binary has no headless mode and is not run by it.
 15. **OpenH264 and the own FFmpeg build** is closed as a licence question by D-032 (2026-11-15): the own LGPL build never links OpenH264; a pinned dlopen patch loads the Cisco binary at run time from `VUKEM_VIDEO_OPENH264_DIR`, installed only on an explicit `tools:install openh264` (T-26, T-27). It stays a supply-chain item (the Cisco binary is verified by its pinned SHA-256), not an open licence one. Neither the author nor the architect is a lawyer (D-017).
 
+### 14.1 Dependency checks of the release candidate `release/v0.22.0` (P4-SEC-001, 2026-11-16, Windows 11 amd64, at `2893cfdb`, pull request 86)
+
+Run locally with the commands CI uses; "reads" means the result comes from GitHub, not from a local run.
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Go vulnerabilities | `go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...` | exit 0, no reachable vulnerability. Eight advisories (GO-2026-4961, 4962, 5031, 5032, 5061, 5062, 5066, 6222) hit `golang.org/x/image@v0.38.0` in code that is imported but not called; the fix is `v0.45.0` (a version bump of an existing module, left to the owner of `go.mod`) |
+| UI vulnerabilities | `bun audit --audit-level=high` in `web/` | exit 0, 440 packages, none at high or critical |
+| Site vulnerabilities | `npm audit --omit=dev --audit-level=high` in `site/` | exit 0, 0 vulnerabilities |
+| Rust | `cargo deny check` in `renderer/` | exit 0: advisories, bans, licenses, sources ok |
+| Secrets | `betterleaks git . --config .betterleaks.toml --no-banner --redact --log-opts="origin/main..HEAD"` | no leaks found (121 commits) |
+| CodeQL | reads `gh api "repos/AlexGalhardo/vukem-video/code-scanning/alerts?state=open&tool_name=CodeQL"` and the analyses of `refs/pull/86/merge` | 0 open alerts; the analyses of `e143e20b` (Go) report 0 results |
+
+Open alerts of the OpenSSF Scorecard tool (tracked, not blocking, section 12): `BinaryArtifacts` (the committed `engine/renderhost/renderer.wasm`), `Vulnerabilities` (the `x/image` advisories above and two GHSA ids), `CodeReview`, `Maintained`, `BranchProtection`, `SAST`, `CITests` and `CIIBestPractices`. None is a CodeQL alert.
+
 ## 15. Acceptance
 
 The implementation of this SDD is complete when every item holds. Each is verifiable by a command or a named test.
