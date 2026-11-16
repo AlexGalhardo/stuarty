@@ -5,13 +5,16 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/AlexGalhardo/vukem-video/desktop/update"
 	"github.com/AlexGalhardo/vukem-video/internal/outbound"
@@ -144,6 +147,106 @@ func TestSignThenVerifyAgainstChecksums(t *testing.T) {
 	if code := run([]string{"verify", "-pub", other, "-checksums", sums, feed}, &out, &errb); code != 1 {
 		t.Fatalf("a wrong key must fail, exit %d", code)
 	}
+}
+
+func TestSignedFeedCarriesAFreshnessWindowAndVerifyRequiresIt(t *testing.T) {
+	pub := useTestKey(t)
+	_, files := writeInstallers(t)
+	feed := filepath.Join(t.TempDir(), "feed.json")
+
+	var out, errb bytes.Buffer
+
+	args := append(
+		[]string{
+			"sign", "-version", "0.15.0", "-base-url", "https://host.example/u", "-valid-for", "48h", "-out", feed,
+		},
+		files...)
+	if code := run(args, &out, &errb); code != 0 {
+		t.Fatalf("sign exit %d: %s", code, errb.String())
+	}
+
+	raw, err := os.ReadFile(feed)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var env envelope
+	if err := json.Unmarshal(raw, &env); err != nil {
+		t.Fatal(err)
+	}
+
+	body, _ := base64.StdEncoding.DecodeString(env.Payload)
+
+	var p payload
+	if err := json.Unmarshal(body, &p); err != nil {
+		t.Fatal(err)
+	}
+
+	published, err1 := time.Parse(time.RFC3339, p.PublishedAt)
+
+	expires, err2 := time.Parse(time.RFC3339, p.Expires)
+	if err1 != nil || err2 != nil || expires.Sub(published) != 48*time.Hour {
+		t.Fatalf("published_at %q, expires %q: want a 48h window", p.PublishedAt, p.Expires)
+	}
+
+	// A feed signed without the fields (an old tool) does not verify.
+	p.PublishedAt, p.Expires = "", ""
+	legacy, err := json.Marshal(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	priv := ed25519.NewKeyFromSeed(mustSeed(t))
+	legacyDoc, err := json.Marshal(envelope{
+		Payload:   base64.StdEncoding.EncodeToString(legacy),
+		Signature: base64.StdEncoding.EncodeToString(ed25519.Sign(priv, update.FeedMessage(legacy))),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	legacyFile := filepath.Join(t.TempDir(), "legacy.json")
+	if err := os.WriteFile(legacyFile, legacyDoc, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	errb.Reset()
+
+	if code := run(
+		[]string{"verify", "-pub", pub, "-checksums", checksumsOf(t, files), legacyFile}, &out, &errb,
+	); code != 1 || !strings.Contains(errb.String(), "published_at and expires") {
+		t.Fatalf("a feed without the window must fail: exit %d, %q", code, errb.String())
+	}
+
+	for _, bad := range []string{"0s", "-1h", "20000h"} {
+		errb.Reset()
+
+		if code := run(
+			append(
+				[]string{"sign", "-valid-for", bad, "-version", "0.15.0", "-base-url", "https://h.example/u"},
+				files...),
+			&out,
+			&errb,
+		); code != 1 {
+			t.Errorf("-valid-for %s must fail, exit %d", bad, code)
+		}
+	}
+}
+
+func mustSeed(t *testing.T) []byte {
+	t.Helper()
+
+	raw, err := os.ReadFile(seedFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	seed, err := hex.DecodeString(strings.TrimSpace(string(raw)))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return seed
 }
 
 func TestSignRefusesWhatTheFeedMustNeverHold(t *testing.T) {

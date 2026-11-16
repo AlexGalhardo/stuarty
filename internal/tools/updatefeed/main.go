@@ -25,6 +25,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/AlexGalhardo/vukem-video/desktop/update"
 )
@@ -51,9 +52,11 @@ type envelope struct {
 }
 
 type payload struct {
-	Schema    int              `json:"schema"`
-	Version   string           `json:"version"`
-	Platforms map[string]entry `json:"platforms"`
+	Schema      int              `json:"schema"`
+	Version     string           `json:"version"`
+	PublishedAt string           `json:"published_at"`
+	Expires     string           `json:"expires"`
+	Platforms   map[string]entry `json:"platforms"`
 }
 
 type entry struct {
@@ -141,9 +144,14 @@ func runSign(argv []string, stdout io.Writer) error {
 	baseURL := fs.String("base-url", "", "https URL of the directory that serves the installers")
 	out := fs.String("out", "feed.json", "the feed file to write")
 	keyEnv := fs.String("key-env", defaultKeyEnv, "environment variable that holds the signing seed")
+	validFor := fs.Duration("valid-for", update.DefaultFeedValidity, "how long the signed feed stays fresh")
 
 	if err := fs.Parse(argv); err != nil {
 		return err
+	}
+
+	if *validFor <= 0 || *validFor > update.MaxFeedValidity {
+		return fmt.Errorf("-valid-for must be positive and at most %s", update.MaxFeedValidity)
 	}
 
 	if !stableVersion.MatchString(*version) {
@@ -165,7 +173,7 @@ func runSign(argv []string, stdout io.Writer) error {
 		return err
 	}
 
-	body, err := buildPayload(*version, base, files, priv)
+	body, err := buildPayload(*version, base, files, priv, time.Now().UTC(), *validFor)
 	if err != nil {
 		return err
 	}
@@ -189,8 +197,13 @@ func runSign(argv []string, stdout io.Writer) error {
 	return err
 }
 
-func buildPayload(version, base string, files []string, priv ed25519.PrivateKey) ([]byte, error) {
-	p := payload{Schema: feedSchema, Version: version, Platforms: map[string]entry{}}
+func buildPayload(
+	version, base string, files []string, priv ed25519.PrivateKey, now time.Time, validFor time.Duration,
+) ([]byte, error) {
+	p := payload{
+		Schema: feedSchema, Version: version, Platforms: map[string]entry{},
+		PublishedAt: now.Format(time.RFC3339), Expires: now.Add(validFor).Format(time.RFC3339),
+	}
 
 	for _, file := range files {
 		name := filepath.Base(file)
@@ -332,6 +345,10 @@ func verifyFeed(raw []byte, pub ed25519.PublicKey, sums map[string]string) (*pay
 	var p payload
 	if err := json.Unmarshal(body, &p); err != nil {
 		return nil, err
+	}
+
+	if p.PublishedAt == "" || p.Expires == "" {
+		return nil, errors.New("the feed does not sign published_at and expires")
 	}
 
 	if p.Schema != feedSchema || !stableVersion.MatchString(p.Version) || len(p.Platforms) == 0 {
