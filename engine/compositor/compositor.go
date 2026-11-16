@@ -92,7 +92,7 @@ func (c *Compositor) Compose(dst *image.RGBA, fp plan.FramePlan, outScale float6
 
 	for i := range fp.Layers {
 		l := &fp.Layers[i]
-		if err := c.layer(dst, l, outScale); err != nil {
+		if err := c.layer(dst, l, &fp, outScale); err != nil {
 			return fmt.Errorf("layer %s: %w", l.ItemID, err)
 		}
 	}
@@ -105,7 +105,7 @@ type placement struct {
 	cx, cy, w, h, rot float64
 }
 
-func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, outScale float64) error {
+func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, fp *plan.FramePlan, outScale float64) error {
 	op := uint32(math.Round(min(max(l.Opacity, 0), 1) * 255))
 	if op == 0 {
 		return nil
@@ -164,16 +164,30 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, outScale float64) err
 	if l.Filter != nil {
 		src = c.applyMatrix(src, l.Filter)
 	}
-	// The mask keeps the frame of the layer before the blur grows it (SDD-004 section 3.9).
+	// The mask keeps the frame of the layer before the blur grows it (SDD-004 section 3.9). A wipe is a
+	// coverage of the same kind, multiplied with it (section 3.2).
+	wipe := wipeOf(l.Transition)
+
 	var mask *maskState
-	if l.Mask != nil {
-		mask = newMask(l.Mask, p, outScale)
+	if l.Mask != nil || wipe != nil {
+		mask = newMask(l.Mask, wipe, p, outScale)
 	}
+
+	pre := effectGeom{
+		sw: src.W,
+		sh: src.H,
+		wq: clamped(mul(p.w, 256), maskLimit),
+		hq: clamped(mul(p.h, 256), maskLimit),
+	}
+
 	if l.Blur > 0 {
 		src, p = c.blurred(src, p, mul(l.Blur, outScale))
 	}
 	// The flip mirrors the layer's own pixels; the mask above keeps the item's frame (SDD-004 section 3.10).
 	src = c.flipped(src, l.FlipX, l.FlipY)
+	// The effects and the pixels of a transition come after the flip, so a direction is a direction on the
+	// screen, and before the mask (section 3.13).
+	src, p = c.applyEffects(src, p, pre, l, fp, outScale)
 	c.draw(dst, src, p, op, blendOf(l.Blend), mask)
 	return nil
 }
