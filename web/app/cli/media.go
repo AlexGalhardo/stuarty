@@ -264,7 +264,11 @@ var export = &spec{
 	flags: []flagDef{
 		{Name: "start", Kind: kindString, Usage: "first time to export (default: the start)"},
 		{Name: "end", Kind: kindString, Usage: "end of the export (default: the end of the timeline)"},
-		{Name: "format", Kind: kindString, Usage: "mp4 (default), gif, wav or aac"},
+		{
+			Name:  "format",
+			Kind:  kindString,
+			Usage: service.ExportFormats[0] + " (default), " + service.JoinOr(service.ExportFormats[1:]),
+		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
 		req := service.JobStartRequest{ProjectID: c.projectID, Kind: service.JobExport}

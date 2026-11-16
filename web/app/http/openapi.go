@@ -132,7 +132,7 @@ func describeJobStartArgs(doc *openapi.Document) {
 			"end": map[string]any{"type": "string", "description": "export: the end time, not included."},
 			"format": map[string]any{
 				"type":        "string",
-				"enum":        []string{"mp4", "gif", "wav", "aac"},
+				"enum":        service.ExportFormats,
 				"default":     "mp4",
 				"description": "export: the file to write; wav and aac are audio only.",
 			},

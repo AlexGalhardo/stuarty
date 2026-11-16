@@ -1,6 +1,8 @@
 package service
 
 import (
+	"strings"
+
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
@@ -13,6 +15,19 @@ const (
 	FormatWAV = "wav"
 	FormatAAC = "aac"
 )
+
+// ExportFormats are the export formats in the order the help lists them; the default
+// (mp4) comes first. The MCP definition of job_start must list the same values.
+var ExportFormats = []string{FormatMP4, FormatGIF, FormatWAV, FormatAAC}
+
+// JoinOr writes names as "a, b or c", the way the hints and the help list choices.
+func JoinOr(names []string) string {
+	if len(names) < 2 {
+		return strings.Join(names, "")
+	}
+
+	return strings.Join(names[:len(names)-1], ", ") + " or " + names[len(names)-1]
+}
 
 // The ceilings of an exported project (SDD-007 section 9.1). The document schema already
 // holds them; the export checks them again before any work.
@@ -50,7 +65,7 @@ func checkExportFormat(name string) (string, *Error) {
 	_, norm, ok := exportFormatOf(name)
 	if !ok {
 		return "", newError(command.CodeValidation, "the export format %q is not supported.", name).
-			withPath("args.format").withHint("use mp4, gif, wav or aac")
+			withPath("args.format").withHint("use %s", JoinOr(ExportFormats))
 	}
 
 	return norm, nil
