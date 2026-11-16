@@ -152,6 +152,14 @@ type problem struct {
 func decodeError(status int, raw []byte) error {
 	var p problem
 	if json.Unmarshal(raw, &p) != nil || p.Code == "" {
+		// The HTTP server itself answers an oversized header (431) or body (413) before the app runs.
+		if status == http.StatusRequestHeaderFieldsTooLarge || status == http.StatusRequestEntityTooLarge {
+			return &service.Error{
+				Code: service.CodePayloadTooLarge, Message: "the request is too large for the server.",
+				Hint: "send a shorter cursor, actor or body",
+			}
+		}
+
 		return &service.Error{
 			Code:    command.CodeInternal,
 			Message: fmt.Sprintf("the server answered %d without an error envelope.", status),

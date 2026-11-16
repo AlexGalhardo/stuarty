@@ -336,3 +336,20 @@ func TestOpenFileIsNotAvailableOverHTTP(t *testing.T) {
 		t.Fatalf("err = %v, request %+v; want E_INTERNAL and no request", err, got)
 	}
 }
+
+// VV-049: the server answers an oversized header or body itself, without the envelope.
+func TestOversizedRequestsAreE_PAYLOAD_TOO_LARGE(t *testing.T) {
+	t.Parallel()
+
+	for _, status := range []int{http.StatusRequestEntityTooLarge, http.StatusRequestHeaderFieldsTooLarge} {
+		var got seen
+
+		c := server(t, status, "Request Header Fields Too Large", &got)
+		_, err := c.ProjectList(asCLI("cli"), service.ProjectListRequest{})
+
+		var se *service.Error
+		if !errors.As(err, &se) || se.Code != service.CodePayloadTooLarge {
+			t.Errorf("status %d: err = %#v", status, err)
+		}
+	}
+}
