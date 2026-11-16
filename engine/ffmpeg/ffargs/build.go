@@ -217,14 +217,15 @@ func Chain1(f ...Filter) string { return Graph{{Filters: f}}.String() }
 
 // Input is one -i.
 type Input struct {
-	path   string // absolute path, for a file input
-	pipe   string // "rawvideo" or "s16le" for pipe:0
-	lavfi  string // source for -f lavfi
-	pixFmt string
-	size   string
-	rate   string
-	ar, ac int
-	seekMS int64
+	path    string // absolute path, for a file input
+	pipe    string // "rawvideo" or "s16le" for pipe:0
+	lavfi   string // source for -f lavfi
+	pixFmt  string
+	size    string
+	rate    string
+	ar, ac  int
+	seekMS  int64
+	decoder string // forces the decoder of a file input (-c:v before -i)
 }
 
 // FileInput reads the file at an absolute path (a store file or a file of the run).
@@ -257,6 +258,10 @@ func AnullSrc(sampleRate, durMS int) Input {
 
 // At starts the input at ms (an input option, so the seek is accurate and fast).
 func (in Input) At(ms int64) Input { in.seekMS = ms; return in }
+
+// Decoder forces the video decoder of a file input. The only one the grammar accepts is libvpx-vp9,
+// which is what reads the alpha plane of a VP9 stream in WebM; the native decoder drops it.
+func (in Input) Decoder(name string) Input { in.decoder = name; return in }
 
 func seconds(ms int64) string {
 	return fmt.Sprintf("%d.%03d", ms/1000, ms%1000)
@@ -352,6 +357,9 @@ func (in *Input) appendTo(a []string, threads int) []string {
 	}
 	if in.seekMS > 0 {
 		a = append(a, "-ss", seconds(in.seekMS))
+	}
+	if in.decoder != "" {
+		a = append(a, "-c:v", in.decoder)
 	}
 	switch {
 	case in.lavfi != "":

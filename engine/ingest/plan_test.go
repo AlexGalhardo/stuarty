@@ -394,3 +394,44 @@ func TestPlanVideoKeepsAlpha(t *testing.T) {
 		t.Errorf("opaque source: alpha=%v %s", p.Alpha, chain(p))
 	}
 }
+
+// A VP9 stream in WebM with an alpha plane is probed as yuv420p plus an alpha_mode tag: the summary
+// says yuva420p and the plan forces libvpx-vp9, the decoder that keeps the plane (VV-013).
+func TestPlanVideoKeepsVP9Alpha(t *testing.T) {
+	caps := &ffmpeg.Capabilities{Zscale: true, Tonemap: true, Bwdif: true, Yadif: true}
+	st := func(codec, tag string) *VideoFacts {
+		v, err := videoFacts(&Stream{
+			CodecName: codec, PixFmt: "yuv420p", Width: 64, Height: 64, CodedWidth: 64, CodedHeight: 64,
+			Tags: map[string]string{"alpha_mode": tag},
+		}, Extras{}, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return v
+	}
+
+	v := st("vp9", "1")
+	if v.PixFmt != "yuva420p" {
+		t.Fatalf("pix_fmt = %q, want yuva420p", v.PixFmt)
+	}
+
+	if p := PlanVideo(videoSummary(*v, 3000), caps); !p.Alpha || p.Decoder != "libvpx-vp9" {
+		t.Errorf("vp9 alpha: alpha=%v decoder=%q", p.Alpha, p.Decoder)
+	}
+
+	if v := st("vp9", "0"); v.PixFmt != "yuv420p" {
+		t.Errorf("alpha_mode 0 changed pix_fmt to %q", v.PixFmt)
+	}
+
+	if v := st("h264", "1"); v.PixFmt != "yuv420p" {
+		t.Errorf("a non-vp9 stream changed pix_fmt to %q", v.PixFmt)
+	}
+
+	prores := VideoFacts{Codec: "prores", CodedWidth: 64, CodedHeight: 64, PixFmt: "yuva444p10le"}
+
+	p := PlanVideo(videoSummary(prores, 3000), caps)
+	if p.Decoder != "" {
+		t.Errorf("prores alpha forced the decoder %q", p.Decoder)
+	}
+}

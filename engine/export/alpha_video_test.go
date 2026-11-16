@@ -7,10 +7,18 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
-// A video with an alpha channel (ProRes 4444) is composed over the layers below: where it is
-// transparent the clip underneath shows, where it is opaque its own colour does (VV-013).
+// A video with an alpha channel (ProRes 4444, or VP9 in WebM) is composed over the layers below: where
+// it is transparent the clip underneath shows, where it is opaque its own colour does (VV-013).
 func TestVideoAlphaIsComposedOverTheLayersBelow(t *testing.T) {
-	doc := loadScene(t, "alpha-overlay")
+	for _, scene := range []string{"alpha-overlay", "alpha-overlay-vp9"} {
+		t.Run(scene, func(t *testing.T) { videoAlphaIsComposed(t, scene) })
+	}
+}
+
+func videoAlphaIsComposed(t *testing.T, scene string) {
+	t.Helper()
+
+	doc := loadScene(t, scene)
 
 	if !doc.Assets["ast_p7v3r1a9c2"].HasAlpha {
 		t.Fatal("the ingest of a ProRes 4444 clip with alpha did not report has_alpha")
@@ -28,9 +36,9 @@ func TestVideoAlphaIsComposedOverTheLayersBelow(t *testing.T) {
 			c := *doc
 			c.Items = map[string]timeline.Item{}
 
-			for k, it := range doc.Items {
-				if it.Asset != "ast_p7v3r1a9c2" {
-					c.Items[k] = it
+			for k := range doc.Items {
+				if doc.Items[k].Asset != "ast_p7v3r1a9c2" {
+					c.Items[k] = doc.Items[k]
 				}
 			}
 

@@ -186,9 +186,12 @@ func has(opts []option, name string) bool {
 	return slices.ContainsFunc(opts, func(o option) bool { return o.name == name })
 }
 
+// inputDecoder is the one decoder an input may force: it carries the alpha plane of VP9 in WebM.
+const inputDecoder = "libvpx-vp9"
+
 var inputOptions = []string{
 	"-protocol_whitelist", "-format_whitelist", "-sn", "-dn", "-ss", "-t", "-threads",
-	"-pix_fmt", "-s", "-framerate", "-ar", "-ac", "-pattern_type",
+	"-pix_fmt", "-s", "-framerate", "-ar", "-ac", "-pattern_type", "-c:v",
 }
 
 // inputFormat checks the options before an -i and returns the format they force, if any.
@@ -206,9 +209,15 @@ func inputFormat(argv []string, i int, opts []option) (string, error) {
 			forced = o.value
 			continue
 		}
+		if o.name == "-c:v" && o.value != inputDecoder {
+			return "", violate("FF-15", argv, o.idx, "the only input decoder is %s", inputDecoder)
+		}
 		if !slices.Contains(inputOptions, o.name) {
 			return "", violate("FF-07", argv, o.idx, "option %s is not an input option", o.name)
 		}
+	}
+	if forced != "" && has(opts, "-c:v") {
+		return "", violate("FF-15", argv, i, "a forced decoder is for a file input")
 	}
 	return forced, nil
 }

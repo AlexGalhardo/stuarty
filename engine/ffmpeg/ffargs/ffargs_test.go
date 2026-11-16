@@ -801,3 +801,38 @@ func insertBeforeLast(a []string, name, value string) []string {
 	}
 	return append(out, a[len(a)-1])
 }
+
+// An input may force one decoder, libvpx-vp9, which reads the alpha plane of VP9 in WebM (VV-013);
+// no other decoder and no forced decoder on a synthetic input is accepted.
+func TestSecurity_ForcedInputDecoder(t *testing.T) {
+	pol := testPolicy()
+	build := func(in Input) ([]string, error) {
+		return Cmd{
+			LogErrorOnly: true, Inputs: []Input{in},
+			Outputs: []Output{{
+				Format: "mov", Path: run("normalized.mov"), Maps: []string{"0:v:0"}, NoAudio: true,
+				Opts: append([]Opt{Enum("-c:v", "prores_ks")}, Enum("-pix_fmt", "yuva444p10le")),
+			}},
+		}.Argv(pol)
+	}
+
+	argv, err := build(FileInput(storeFile()).Decoder("libvpx-vp9"))
+	if err != nil {
+		t.Fatalf("libvpx-vp9 on a file input: %v", err)
+	}
+
+	joined := strings.Join(argv, " ")
+	if !strings.Contains(joined, "-c:v libvpx-vp9 -i file:") {
+		t.Errorf("the decoder is not an input option before -i: %s", joined)
+	}
+
+	for _, name := range []string{"h264", "vp9", "prores_ks", "../x"} {
+		if _, err := build(FileInput(storeFile()).Decoder(name)); err == nil {
+			t.Errorf("decoder %q was accepted", name)
+		}
+	}
+
+	if _, err := build(TestSrc2(64, 64, Rate{Num: 30, Den: 1}, 1000).Decoder("libvpx-vp9")); err == nil {
+		t.Error("a forced decoder on a synthetic input was accepted")
+	}
+}

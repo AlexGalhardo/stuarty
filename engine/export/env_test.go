@@ -136,6 +136,8 @@ type fixtureSpec struct {
 	Sticker  bool  `json:"sticker,omitempty"`
 	// Alpha makes the fixture a ProRes 4444 video with an alpha channel.
 	Alpha bool `json:"alpha,omitempty"`
+	// AlphaVP9 makes the fixture a VP9 video in WebM with an alpha plane.
+	AlphaVP9 bool `json:"alpha_vp9,omitempty"`
 }
 
 // generate writes the media file of the spec into the fixtures folder.
@@ -145,6 +147,8 @@ func (spec fixtureSpec) generate(ctx context.Context) (string, error) {
 		return shared.gen.AnimatedGIF(spec.Name, spec.Width, spec.Height, spec.DelaysCS)
 	case spec.Sticker:
 		return shared.gen.StickerPNG(spec.Name, spec.Width, spec.Height)
+	case spec.AlphaVP9:
+		return shared.gen.AlphaWebM(ctx, spec.Name, spec.Width, spec.Height, spec.FPS, spec.Seconds)
 	case spec.Alpha:
 		return shared.gen.AlphaClip(ctx, spec.Name, spec.Width, spec.Height, spec.FPS, spec.Seconds)
 	}
@@ -180,10 +184,7 @@ func ingestClip(tb testing.TB, spec fixtureSpec) *ingested {
 		Caps:         shared.caps,
 		Hash:         put.Hash,
 		ArtifactsDir: artifactsDir(),
-		JobID: "ingest_" + strings.TrimSuffix(
-			strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(spec.Name, ".mp4"), ".gif"), ".mov"),
-			".png",
-		),
+		JobID:        "ingest_" + strings.ReplaceAll(spec.Name, ".", "_"),
 	})
 	if err != nil {
 		tb.Fatalf("ingest of %s: %v", spec.Name, err)

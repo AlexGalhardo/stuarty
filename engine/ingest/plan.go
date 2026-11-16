@@ -59,6 +59,9 @@ type VideoPlan struct {
 	// yuva444p10le instead of mpeg4 with yuv420p (SDD-011 4.3.5).
 	Alpha  bool
 	Thumbs ThumbPlan
+	// Decoder forces the decoder of the source: libvpx-vp9 for a VP9 stream with alpha, because the
+	// native decoder drops the alpha plane. Empty means the default.
+	Decoder string
 }
 
 // GOPFor is ceil(num / (2 * den)): a keyframe every half second.
@@ -159,6 +162,9 @@ func PlanVideo(s *Summary, caps *ffmpeg.Capabilities) VideoPlan {
 	}
 	p.Scale = p.W != rw || p.H != rh
 	p.Alpha = pixFmtHasAlpha(v.PixFmt) && v.HDR == "none"
+	if p.Alpha && v.Codec == "vp9" {
+		p.Decoder = "libvpx-vp9"
+	}
 
 	// Assumed values for what the stream does not say (4.3.1).
 	assumed := "smpte170m"
