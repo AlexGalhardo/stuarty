@@ -1,0 +1,57 @@
+---
+title: "Working on the renderer"
+description: "The Rust toolchain, the build script, the parity gates and the licence gate for changes under renderer/."
+---
+
+## You will learn
+
+- how to set up the Rust toolchain and build the renderer;
+- what a reproducible build means here and how to check it;
+- which gates a change of the renderer must pass.
+
+## The idea
+
+The pixel renderer is the only Rust in the repository. It lives in `renderer/`, draws the frame plan that the Go core decides, and is built to WebAssembly for the two hosts described in [One renderer, two hosts](/docs/concepts/one-renderer). The renderer decides nothing: a rule about layers, timing or keyframes belongs in `core/plan`, in Go. Everything outside `renderer/` stays in Go and TypeScript.
+
+## Quick start
+
+1. Install rustup, the Rust toolchain installer. The first `cargo` call in the repository installs the toolchain pinned in `rust-toolchain.toml`: an exact stable version with `rustfmt`, `clippy` and the `wasm32-unknown-unknown` target.
+2. Install the two tools at the versions the pipeline uses: `cargo install --locked cargo-deny --version 0.20.2`, and `cargo install --locked wasm-bindgen-cli --version <the wasm-bindgen version in renderer/Cargo.lock>`. The build script refuses a command line tool that differs from the lock file.
+3. Build from the root of the clone:
+
+```bash
+bash scripts/build-renderer.sh          # the native crate and the WebAssembly module
+bash scripts/build-renderer.sh wasm     # only the module
+bash scripts/build-renderer.sh verify   # the module twice from clean; the digests must match
+```
+
+The module, its glue and its SHA-256 are written to `renderer/dist/`, which is not committed.
+
+## The gates
+
+Before every commit that touches `renderer/`, run in `renderer/`:
+
+```bash
+cargo fmt --check
+cargo clippy --locked --all-targets -- -D warnings
+cargo test --locked
+cargo deny check
+```
+
+`bash scripts/gate.sh` runs the same steps, plus the reproducible build, when `cargo` is installed, and the `Renderer` jobs of the pull request pipeline run them on Linux, macOS and Windows.
+
+- **Reproducible build.** The script fixes the build path, sets `SOURCE_DATE_EPOCH`, hides machine paths with `--remap-path-prefix` and builds with `--locked`, so two clean builds give the same digest. The digest is what the hosts check before they load the module.
+- **Licence gate.** `renderer/deny.toml` allows only licences that `internal/tools/notices` allows, and a test keeps the two lists consistent. The crates compiled into the module are listed in `THIRD_PARTY_NOTICES.md`; run `task notices` after changing the lock file.
+- **Exact versions.** Crates are at exact versions (`=x.y.z`) and `Cargo.lock` is committed. Only `wgpu`, `wasm-bindgen`, `bytemuck` and `cargo-deny` are approved; any other crate needs the maintainer's approval first.
+- **Parity.** A change of the renderer's output is proven by the parity gates, never by eye: the processor path must be byte equal to the reference frames, the graphics path must stay within SSIM 0.99 and half a pixel of it, and the preview must match the export in the three browsers. The parity harness arrives with the stage that adds the composition; the procedure is in `.agents/skills/renderer-parity/`.
+
+## Common mistakes
+
+- Using floating point in the processor path. Every value that reaches a pixel is an integer or fixed point there; floating point is allowed only in the graphics path.
+- Adding an import to the module. It imports nothing from its host except memory; a new import is a security change.
+- Regenerating golden frames to make a parity test pass. Goldens change only with an intended, reviewed change of output.
+
+## Next steps
+
+- [One renderer, two hosts](/docs/concepts/one-renderer)
+- [Development setup](/docs/contributing/setup)
