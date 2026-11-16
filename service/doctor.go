@@ -504,7 +504,7 @@ func (s *svc) toolCheck(kind, goos, goarch string) DoctorCheck {
 			check.OK, check.Detail = true, "installed, version "+e.Version
 
 			if kind == transcribe.KindModel {
-				check.Detail += ", model " + e.Model
+				check.Detail += ", model " + e.Model + s.modelOrigin(e.Model)
 			}
 
 			return check
@@ -519,6 +519,15 @@ func (s *svc) toolCheck(kind, goos, goarch string) DoctorCheck {
 	check.Detail = "not in the manifest"
 
 	return check
+}
+
+// modelOrigin says whether the effective model is the one the install recorded as the default.
+func (s *svc) modelOrigin(model string) string {
+	if def, ok := DefaultModel(s.tools.Dir, "whisper"); ok && def == model {
+		return " (workspace default)"
+	}
+
+	return ""
 }
 
 func (s *svc) toolsModel() string {

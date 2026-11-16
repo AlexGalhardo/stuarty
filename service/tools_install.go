@@ -191,7 +191,14 @@ func (s *svc) ToolsInstall(ctx context.Context, req ToolsInstallRequest) (*Tools
 
 	bg := context.WithoutCancel(ctx)
 
-	go func() { s.endInstall(s.installEntries(bg, entries)) }()
+	go func() {
+		ierr := s.installEntries(bg, entries)
+		if ierr == nil {
+			ierr = s.recordDefaultModel(req.Name, entries)
+		}
+
+		s.endInstall(ierr)
+	}()
 
 	_ = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		return appendAudit(ctx, tx, s.nowMs(), c.Actor, "tools.install", "", req.Name)
@@ -435,6 +442,64 @@ func (s *svc) recordInstalled(t InstalledTool) *Error {
 	}
 
 	return nil
+}
+
+const defaultsFile = "defaults.json"
+
+// recordDefaultModel makes the model of a finished install the workspace default of that tool, so
+// a job that names no model uses it (VV-007). An install without a model file records nothing.
+func (s *svc) recordDefaultModel(name string, entries []transcribe.ManifestEntry) *Error {
+	model := ""
+
+	for i := range entries {
+		if entries[i].Kind == transcribe.KindModel {
+			model = entries[i].Model
+		}
+	}
+
+	if model == "" {
+		return nil
+	}
+
+	s.toolsState.mu.Lock()
+	defer s.toolsState.mu.Unlock()
+
+	all := readDefaults(s.tools.Dir)
+	all[name] = model
+
+	body, err := json.Marshal(all)
+	if err != nil || writeFileAtomic(filepath.Join(s.tools.Dir, defaultsFile), body) != nil {
+		return internalError()
+	}
+
+	return nil
+}
+
+func readDefaults(dir string) map[string]string {
+	out := map[string]string{}
+
+	if raw, err := os.ReadFile(filepath.Join(dir, defaultsFile)); err == nil {
+		if json.Unmarshal(raw, &out) != nil || out == nil {
+			out = map[string]string{}
+		}
+	}
+
+	return out
+}
+
+// DefaultModel is the model the last install of the tool recorded as the workspace default. ok is
+// false when none is recorded or the recorded model is no longer installed and verified.
+func DefaultModel(dir, name string) (model string, ok bool) {
+	model = readDefaults(dir)[name]
+	if model == "" {
+		return "", false
+	}
+
+	if _, found := VerifiedTool(dir, name, transcribe.KindModel, model); !found {
+		return "", false
+	}
+
+	return model, true
 }
 
 // VerifiedTool returns the absolute path of an installed file after checking

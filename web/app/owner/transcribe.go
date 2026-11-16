@@ -69,14 +69,20 @@ type whisperProvider struct {
 }
 
 // resolve is the model and manifest entries in force now. Without the variable it is the
-// installed model (`tools:install whisper --model base`), found again on every call like the
-// files themselves, and the default only when none is installed (VV-007).
+// model the last install recorded as the workspace default, else the first installed one in
+// modelPreference, found again on every call like the files themselves, and the built-in
+// default only when none is installed (VV-007).
 func (p *whisperProvider) resolve() (string, []transcribe.ManifestEntry) {
 	if p.explicit {
 		return p.model, p.entries
 	}
 
-	for _, m := range modelPreference {
+	order := modelPreference
+	if def, ok := service.DefaultModel(p.dir, "whisper"); ok {
+		order = slices.Concat([]string{def}, modelPreference)
+	}
+
+	for _, m := range order {
 		entries, ok := p.manifest.For("whisper", m, runtime.GOOS, runtime.GOARCH)
 		if !ok {
 			continue
