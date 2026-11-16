@@ -38,7 +38,7 @@ D-001 to D-025, each with date, alternatives, reason and impact. They are the in
 | --- | --- |
 | 0001 | one repository, one Go module: `core/`, `engine/`, `service/`, `web/`, `site/`, `desktop/` |
 | 0002 | the command core is Go, pure, the only place editing logic lives |
-| 0003 | render: one plan, two executors, truth on pause; pixels composed in Go |
+| 0003 | render: one plan, two executors, truth on pause; pixels composed in Go (items 3 and 4 amended by ADR-0029) |
 | 0004 | time is integer frames at a rational rate; times cross the boundary as strings with a unit |
 | 0005 | timeline data model: tracks, items with absolute position, captions with words, keyframes |
 | 0006 | operation log, revisions, conflicts per object, undo per actor by compensating batch |
@@ -63,6 +63,8 @@ D-001 to D-025, each with date, alternatives, reason and impact. They are the in
 | 0025 | releases and CI in the vukem pattern |
 | 0026 | observability without telemetry |
 | 0027 | items of the stack draft that were cut or deferred, each with its reason |
+| 0028 | one legacy release, a minor about every 90 commits, rebase-merged release pull requests |
+| 0029 | one frame plan (Go), one renderer (Rust in WebAssembly), two hosts; WebCodecs and WebGPU in the preview (Phase 5) |
 
 ## Specifications (`sdds/`)
 
