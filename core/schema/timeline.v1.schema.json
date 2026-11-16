@@ -287,6 +287,9 @@
         "crop": {
           "$ref": "#/$defs/Crop"
         },
+        "disabled": {
+          "type": "boolean"
+        },
         "duration": {
           "minimum": 1,
           "type": "integer"

@@ -108,6 +108,8 @@ type Layer struct {
 
 ## 3. Evaluating an item at a frame
 
+An item with `disabled` (SDD-001 §3.4) is not planned at all: `Frame` and `Window` give it no layer and `Audio` gives it no source, as if it were not on its track. The project length (`endFrame`) still counts it.
+
 Let `r = t - start` (0-based frame inside the item) and `D = duration`.
 
 ### 3.1 Animated properties
@@ -432,7 +434,7 @@ ffmpeg -nostdin -protocol_whitelist file,pipe -ss <time of first needed frame> -
 
 ## 7. Audio
 
-`plan.Audio(doc, from, to)` returns, for every `clip` with audio that is not `audio_muted` and every `audio` item, on tracks that are not `muted` and, when any track is `solo`, are soloed (`Document.TrackSounds`), and with the gain times the `volume` of the track, except an item whose `asset` is `ast_placeholder` (the unfilled optional slot of a template instance, SDD-001 section 3.10), which is skipped like a missing media layer:
+`plan.Audio(doc, from, to)` returns, for every `clip` with audio that is not `audio_muted` and every enabled (not `disabled`) `audio` item, on tracks that are not `muted` and, when any track is `solo`, are soloed (`Document.TrackSounds`), and with the gain times the `volume` of the track, except an item whose `asset` is `ast_placeholder` (the unfilled optional slot of a template instance, SDD-001 section 3.10), which is skipped like a missing media layer:
 
 ```go
 type AudioSource struct {

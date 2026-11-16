@@ -36,7 +36,7 @@ func newPlanner(doc *timeline.Document, opts Options) *planner {
 
 	for id := range doc.Items {
 		it := doc.Items[id]
-		if ti, ok := byTrack[it.Track]; ok && it.Type != timeline.ItemAudio {
+		if ti, ok := byTrack[it.Track]; ok && it.Type != timeline.ItemAudio && !it.Disabled {
 			ti.items = append(ti.items, &it)
 		}
 	}

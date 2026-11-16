@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "enabled": {
+      "description": "false turns the item off, true turns it on.",
+      "type": "boolean"
+    },
+    "item_id": {
+      "description": "Any item.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id",
+    "enabled"
+  ],
+  "type": "object"
+}

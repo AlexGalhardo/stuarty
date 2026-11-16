@@ -1532,7 +1532,7 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
                 "item.trim", "item.slip", "item.split", "item.delete", "item.duplicate", "item.rename",
                 "item.set_transform", "item.set_transition", "item.set_audio", "item.crossfade",
                 "timeline.close_gap", "clip.add", "audio.add", "audio.duck", "audio.mark_beats", "clip.set_framing",
-                "clip.set_speed", "clip.set_color", "clip.set_blur", "clip.set_chroma_key", "clip.set_blend", "clip.set_mask", "clip.set_flip", "marker.add", "marker.set", "marker.remove", "clip.set_filter", "clip.remove_silences", "text.add", "text.set", "text.apply_preset",
+                "clip.set_speed", "clip.set_color", "clip.set_blur", "clip.set_chroma_key", "clip.set_blend", "clip.set_mask", "clip.set_flip", "item.set_enabled", "marker.add", "marker.set", "marker.remove", "clip.set_filter", "clip.remove_silences", "text.add", "text.set", "text.apply_preset",
                 "shape.add", "shape.set", "caption.add", "caption.set_words", "caption.edit_word",
                 "caption.split", "caption.merge", "caption.set_breaks", "caption.set_style",
                 "caption.from_transcript", "caption.retime_from_clip", "keyframe.set", "keyframe.remove",

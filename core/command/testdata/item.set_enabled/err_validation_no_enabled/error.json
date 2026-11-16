@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The required argument args.enabled is missing.",
+  "hint": "Add \"enabled\" (a boolean) to the arguments.",
+  "retryable": false,
+  "path": "args.enabled"
+}

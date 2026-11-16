@@ -123,6 +123,10 @@ func itemOps(props map[string]any, mode itemMode, start, dur int, used map[strin
 
 	var spec itemSpec
 
+	if d, _ := props["disabled"].(bool); d {
+		spec.ops = append(spec.ops, propOp{op: "item.set_enabled", args: map[string]any{"enabled": false}})
+	}
+
 	add := func(op string, args map[string]any) {
 		if len(args) > 0 {
 			spec.ops = append(spec.ops, propOp{op: op, args: args})

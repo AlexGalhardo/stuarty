@@ -381,6 +381,14 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 
 	clip.FlipX = false
 
+	clip.Disabled = true
+
+	if got := itemLine(fps, &clip); !strings.Contains(got, "disabled") {
+		t.Errorf("a disabled item is not flagged: %s", got)
+	}
+
+	clip.Disabled = false
+
 	clip.Mask = &timeline.Mask{Shape: "ellipse", X: 0.1, Y: 0.1, Width: 0.5, Height: 0.5, Feather: 8}
 
 	if m := extraFields(fps, &clip)["mask"]; !strings.Contains(m, `"shape":"ellipse"`) ||

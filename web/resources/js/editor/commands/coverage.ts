@@ -179,6 +179,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	"clip.set_blend": [palette],
 	"clip.set_mask": [palette],
 	"clip.set_flip": [palette],
+	"item.set_enabled": [palette],
 	"marker.add": [
 		{ kind: "key", action: "timeline.marker", phase: "B" },
 		palette,

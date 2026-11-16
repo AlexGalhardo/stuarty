@@ -515,6 +515,9 @@
           "set_transform": {
             "title": "Definir transformação do item"
           },
+          "set_enabled": {
+            "title": "Ligar ou desligar item"
+          },
           "set_transition": {
             "title": "Definir transição do item"
           },
