@@ -20,7 +20,10 @@ const CookieName = "vukem_video_session"
 // SessionMaxAge is the Max-Age of the cookie in seconds.
 const SessionMaxAge = int(sessionMax / time.Second)
 
-type session struct{ created, seen time.Time }
+type session struct {
+	created, seen time.Time
+	privileged    bool
+}
 
 // Sessions are the browser sessions of local mode: in memory, keyed by the
 // SHA-256 of the identifier, so a memory dump alone does not hold a usable
@@ -40,8 +43,9 @@ func NewSessions(now func() time.Time) *Sessions {
 	return &Sessions{now: now, m: map[[32]byte]*session{}}
 }
 
-// Create starts a session and returns the cookie value.
-func (s *Sessions) Create() (string, error) {
+// Create starts a session and returns the cookie value. A privileged session
+// carries the browser-only privileges (SDD-007 section 5.3).
+func (s *Sessions) Create(privileged bool) (string, error) {
 	var raw [32]byte
 	if _, err := rand.Read(raw[:]); err != nil {
 		return "", err
@@ -53,14 +57,14 @@ func (s *Sessions) Create() (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.m[sha256.Sum256([]byte(id))] = &session{created: t, seen: t}
+	s.m[sha256.Sum256([]byte(id))] = &session{created: t, seen: t, privileged: privileged}
 
 	return id, nil
 }
 
-// Valid reports whether the cookie value is a live session, and renews its
-// idle time.
-func (s *Sessions) Valid(id string) bool {
+// Lookup reports whether the cookie value is a live session, and whether that
+// session is privileged. It renews the idle time.
+func (s *Sessions) Lookup(id string) (valid, privileged bool) {
 	key := sha256.Sum256([]byte(id))
 	t := s.now()
 
@@ -69,17 +73,17 @@ func (s *Sessions) Valid(id string) bool {
 
 	sess, ok := s.m[key]
 	if !ok {
-		return false
+		return false, false
 	}
 
 	if t.Sub(sess.seen) > sessionIdle || t.Sub(sess.created) > sessionMax {
 		delete(s.m, key)
-		return false
+		return false, false
 	}
 
 	sess.seen = t
 
-	return true
+	return true, sess.privileged
 }
 
 // Clear ends every session (token rotation).

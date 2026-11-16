@@ -34,7 +34,7 @@ func pagesHarness(t *testing.T) *harness {
 func cookie(h *harness) string {
 	h.t.Helper()
 
-	code := h.post("/api/v1/system/launch", "")
+	code := h.do(req{method: http.MethodPost, path: "/api/v1/system/launch", headers: launcherHeaders(launcherSecret)})
 	if code.status != http.StatusOK {
 		h.t.Fatalf("launch = %d %s", code.status, code.body)
 	}

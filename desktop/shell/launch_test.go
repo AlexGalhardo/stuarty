@@ -22,6 +22,17 @@ func TestLaunchURL(t *testing.T) {
 	}
 }
 
+func TestLauncherSecretIsRandomPerStart(t *testing.T) {
+	a, err := newLauncherSecret()
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := newLauncherSecret()
+	if len(a) != 64 || a == b {
+		t.Errorf("secrets %q and %q: want 64 hex characters and different", a, b)
+	}
+}
+
 func TestLaunchURLRefusesAnImpostor(t *testing.T) {
 	s, err := Start(context.Background(), newConfig(t, "impostor"))
 	if err != nil {

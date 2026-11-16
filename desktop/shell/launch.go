@@ -21,7 +21,18 @@ const (
 	launchPath     = "/api/v1/system/launch"
 	handshakeLabel = "vukem-video-handshake-v1"
 	launchTimeout  = 10 * time.Second
+	launcherHeader = "Vukem-Video-Launcher"
 )
+
+// newLauncherSecret is 32 random bytes as hexadecimal: the proof that a launch request comes from
+// the shell that started the server (SDD-007 section 5.3).
+func newLauncherSecret() (string, error) {
+	var raw [32]byte
+	if _, err := rand.Read(raw[:]); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(raw[:]), nil
+}
 
 // ErrImpostor means the server did not prove that it knows the workspace token.
 var ErrImpostor = errors.New("the server did not prove that it knows the workspace token; the token was not sent")
@@ -43,6 +54,7 @@ func (s *Server) LaunchURL(ctx context.Context) (string, error) {
 		return "", err
 	}
 	req.Header.Set("Authorization", "Bearer "+s.Token)
+	req.Header.Set(launcherHeader, s.launcher)
 	req.Header.Set("Accept", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {

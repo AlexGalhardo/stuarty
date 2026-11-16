@@ -36,7 +36,11 @@ type Deps struct {
 	// Network is the guard of network mode (SDD-007 section 4.3); nil is local mode.
 	Network  *Network
 	Sessions *auth.Sessions
-	Launch   *auth.Launch
+	// LauncherSecret is the per-process secret the desktop shell passed in the environment; only a
+	// launch request that proves it yields a session with the browser-only privileges (SDD-007
+	// section 5.3). Empty when no launcher started the server.
+	LauncherSecret string
+	Launch         *auth.Launch
 	// Auth is the credential side of network mode: users, the session guard and
 	// the keys. It is required with Network and unused without it.
 	Auth *auth.Network
@@ -144,7 +148,15 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		var caller service.Caller
+		var (
+			caller     service.Caller
+			valid      bool
+			privileged bool
+		)
+
+		if ck, err := r.Cookie(auth.CookieName); err == nil && r.Header.Get("Authorization") == "" {
+			valid, privileged = h.Sessions.Lookup(ck.Value)
+		}
 
 		if header := r.Header.Get("Authorization"); header != "" {
 			token, ok := auth.Bearer(header)
@@ -165,13 +177,13 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 			}
 
 			caller = service.Caller{Actor: actor, Scopes: service.AllScopes}
-		} else if ck, err := r.Cookie(auth.CookieName); err == nil && h.Sessions.Valid(ck.Value) {
+		} else if valid {
 			if !ambientAllowed(r) {
 				web.Fail(w, r, refused())
 				return
 			}
 
-			caller = service.Caller{Actor: "local:" + auth.UILabel, Scopes: service.AllScopes, Browser: true}
+			caller = service.Caller{Actor: "local:" + auth.UILabel, Scopes: service.AllScopes, Browser: privileged}
 		} else {
 			h.unauthorized(w, r, &service.Error{
 				Code: service.CodeUnauthorized, Message: "the request carries no credentials.",

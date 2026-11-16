@@ -152,9 +152,11 @@ func newHarnessLimited(
 		Sessions: auth.NewSessions(
 			h.clock.now,
 		),
-		Launch:     auth.NewLaunch(h.clock.now),
-		Now:        h.clock.now,
-		RateLimits: rate,
+		Launch: auth.NewLaunch(h.clock.now),
+		// The desktop shell's secret: a launch request that sends it gets a browser session.
+		LauncherSecret: launcherSecret,
+		Now:            h.clock.now,
+		RateLimits:     rate,
 	}
 
 	h.app = vukemtest.New(tb, func(opts ...vukem.Option) (*vukem.App, error) {

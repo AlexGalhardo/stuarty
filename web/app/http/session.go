@@ -20,14 +20,15 @@ func (h *apiHandler) launch(c *web.Ctx) error {
 		}
 	}
 
-	if !h.Launch.Redeem(c.Query("code")) {
+	privileged, ok := h.Launch.Redeem(c.Query("code"))
+	if !ok {
 		return &service.Error{
 			Code: service.CodeUnauthorized, Message: "the launch code is not valid.",
 			Hint: "run vukem-video open for a new one",
 		}
 	}
 
-	id, err := h.Sessions.Create()
+	id, err := h.Sessions.Create(privileged)
 	if err != nil {
 		return err
 	}
@@ -43,10 +44,14 @@ func (h *apiHandler) launch(c *web.Ctx) error {
 	return c.RedirectStatus(http.StatusSeeOther, "/")
 }
 
-// systemLaunch is POST /api/v1/system/launch: a new launch code for `vukem-video
-// open` (SDD-007 section 3.4 item 3).
+// systemLaunch is POST /api/v1/system/launch: a new launch code (SDD-007 section 3.4 item 3). The
+// bearer token alone cannot tell the desktop shell from an agent, so only a request that also
+// proves the launcher secret gets a code whose session has the browser-only privileges (section
+// 5.3); `vukem-video open` and any other bearer caller get a session without them.
 func (h *apiHandler) systemLaunch(c *web.Ctx, _ noIn) (launchOut, error) {
-	code, err := h.Launch.Issue()
+	privileged := auth.IsLauncher(h.LauncherSecret, c.Request().Header.Get(auth.LauncherHeader))
+
+	code, err := h.Launch.Issue(privileged)
 	if err != nil {
 		return launchOut{}, err
 	}
