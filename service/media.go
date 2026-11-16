@@ -23,6 +23,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/timeval"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	"github.com/AlexGalhardo/vukem-video/service/textview"
+	"github.com/AlexGalhardo/vukem-video/service/untrusted"
 )
 
 const (
@@ -60,7 +61,7 @@ func projectFPS(row *ProjectRow) timeval.FPS {
 }
 
 // displayName is the name of an asset: the base name of the path, normalised,
-// with control, bidirectional and separator characters replaced by "_" and cut
+// with control, bidirectional, invisible and separator characters replaced by "_" and cut
 // to 200 characters (SDD-007 section 7.1 step 14). The directory is never kept.
 func displayName(p string) string {
 	if i := strings.LastIndexAny(p, `/\`); i >= 0 {
@@ -77,7 +78,7 @@ func displayName(p string) string {
 		}
 
 		switch {
-		case unicode.IsControl(r), isBidi(r), r == '/', r == '\\':
+		case unicode.IsControl(r), untrusted.Removed(r), r == '/', r == '\\':
 			r = '_'
 		}
 
@@ -87,10 +88,6 @@ func displayName(p string) string {
 	}
 
 	return b.String()
-}
-
-func isBidi(r rune) bool {
-	return r >= 0x202A && r <= 0x202E || r >= 0x2066 && r <= 0x2069 || r == 0x200E || r == 0x200F || r == 0x061C
 }
 
 func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaImportResult, error) {

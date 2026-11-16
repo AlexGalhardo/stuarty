@@ -120,6 +120,7 @@ func TestQuoteNeverPrintsBareAndNeverBreaksOut(t *testing.T) {
 		{`<b>&amp;`, `"&lt;b>&amp;amp;"`},
 		{"line\nbreak\x1b[31m", `"linebreak[31m"`},
 		{"rtl\u202eoverride", `"rtloverride"`},
+		{"zero\u200bwidth\U000E0041tag\ufeff", `"zerowidthtag"`},
 		{"", `""`},
 	}
 

@@ -54,6 +54,26 @@ func TestCleanRemovesTheClassesAndCollapsesBlankLines(t *testing.T) {
 	}
 }
 
+func TestSecurity_T07_InvisibleCharactersRemoved(t *testing.T) {
+	in := "a\u200Bb\u2060c\uFEFFd\U000E0041\U000E0042e\U000E0100f\u180Eg\uFFF9h"
+	if got, want := untrusted.Clean(in), "abcdefgh"; got != want {
+		t.Errorf("Clean = %q, want %q", got, want)
+	}
+}
+
+func TestCleanCollapsesJoinerRuns(t *testing.T) {
+	for in, want := range map[string]string{
+		"x\u200D\u200D\u200Dy": "x\u200Dy",
+		"\u0645\u200C\u06CC":   "\u0645\u200C\u06CC",
+		"a\uFE0F\uFE0F":        "a\uFE0F",
+		"x\u200C\u200Dy":       "x\u200Cy",
+	} {
+		if got := untrusted.Clean(in); got != want {
+			t.Errorf("Clean(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
 func TestBudgetTranscript(t *testing.T) {
 	text := strings.Repeat("x", untrusted.TranscriptConcise+1)
 
