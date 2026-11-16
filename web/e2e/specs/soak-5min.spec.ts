@@ -20,6 +20,7 @@ import { caller, expect, ffmpegExe, seedProject, test } from "./helpers";
 // the edits are always ten a minute.
 const MINUTES = Number(process.env.VUKEM_VIDEO_SOAK_MINUTES ?? 10);
 const ROUND_MS = 6_000;
+const EDIT_EVERY_MS = 6_000;
 const HEAP_LIMIT = 300 * MB;
 const TAB_LIMIT = 1024 * MB;
 // A reading is compared with the first after the warm-up: the timeline draws
@@ -166,6 +167,7 @@ test.describe("soak-5min", () => {
 		const session = await page.context().newCDPSession(page);
 
 		let nextEdit = 0;
+		const soakStart = Date.now();
 		const round = async (n: number): Promise<void> => {
 			// Scroll the whole axis out and back.
 			await page.evaluate(async () => {
@@ -205,7 +207,14 @@ test.describe("soak-5min", () => {
 			await page.waitForTimeout(2000);
 			await page.getByRole("button", { name: "Pause" }).click();
 
-			// One edit a round, of three kinds that touch different parts of the core.
+			// Ten edits a minute whatever the rounds cost: more than one when a round
+			// ran long. Three kinds, touching different parts of the core.
+			const due = Math.floor((Date.now() - soakStart) / EDIT_EVERY_MS) + 1;
+			do {
+				await editOnce(n);
+			} while (nextEdit < due);
+		};
+		const editOnce = async (n: number): Promise<void> => {
 			const id = textIds[nextEdit % textIds.length] as string;
 			const kind = nextEdit % 3;
 			nextEdit++;
@@ -230,9 +239,12 @@ test.describe("soak-5min", () => {
 			expect(outcome, `edit ${n}`).toBe(true);
 		};
 
-		// The first round opens the project and plays it: NFR-009 is that no task
-		// runs longer than 50 ms (a `longtask` is one) while it does.
-		await round(0);
+		// Opening the project and playing it: NFR-009 is that no task runs longer
+		// than 50 ms (a `longtask` is one) while it does. Only the open and one play
+		// count here; the rounds that follow scroll and zoom as hard as they can.
+		await page.getByRole("button", { name: "Play" }).click();
+		await page.waitForTimeout(3000);
+		await page.getByRole("button", { name: "Pause" }).click();
 		const opening = await page.evaluate(
 			() =>
 				(
@@ -244,7 +256,10 @@ test.describe("soak-5min", () => {
 		console.log(
 			`soak: open and first play: ${opening.length} long tasks${opening.length > 0 ? ` (${opening.map((t) => t.duration.toFixed(0)).join(", ")} ms)` : ""}`,
 		);
-		expect(opening, "long tasks while opening and playing").toEqual([]);
+		// Soft: a task over 50 ms is a budget of the reference machine, and this
+		// spec must go on to its memory numbers on a loaded one.
+		expect.soft(opening, "long tasks while opening and playing").toEqual([]);
+		await round(0);
 
 		const readings: { minute: number; sample: MemorySample }[] = [];
 		const take = async (minute: number): Promise<MemorySample> => {
