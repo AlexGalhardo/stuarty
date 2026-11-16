@@ -39,7 +39,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "concepts",
 		title: { en: "Concepts", "pt-br": "Conceitos" },
-		pages: ["how-it-works", "time", "commands-and-revisions", "tracks-clips-items", "render", "local-and-network-mode"],
+		pages: ["how-it-works", "time", "commands-and-revisions", "tracks-clips-items", "render", "one-renderer", "local-and-network-mode"],
 	},
 	{
 		dir: "guide",
