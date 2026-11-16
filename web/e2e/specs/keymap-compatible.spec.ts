@@ -280,7 +280,13 @@ test.describe("compatible keymap", () => {
 		await expect(
 			dialog.locator('[data-shortcut-row="split_all"]'),
 		).toBeVisible();
-		for (const absent of ["group", "marker_add", "enable", "link"]) {
+		// Link and extract audio have their commands since TASK-0277.
+		for (const present of ["link", "extract_audio"]) {
+			await expect(
+				dialog.locator(`[data-shortcut-row="${present}"]`),
+			).toBeVisible();
+		}
+		for (const absent of ["group", "marker_add", "enable"]) {
 			await expect(
 				dialog.locator(`[data-shortcut-row="${absent}"]`),
 			).toHaveCount(0);
