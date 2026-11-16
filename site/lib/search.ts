@@ -1,6 +1,5 @@
 import GithubSlugger from "github-slugger";
 import { getAllDocs } from "@/lib/content";
-import type { Locale } from "@/lib/locale";
 import { markdownToPlain, mdxToMarkdown } from "@/lib/text";
 import { plainInline } from "@/lib/toc";
 
@@ -12,19 +11,15 @@ export type SearchEntry = {
 	href: string;
 	category: string;
 	text: string;
-	/** An untranslated page, indexed in English so that a search still finds it. */
-	fallback?: boolean;
 };
 
 const MAX_TEXT = 700;
 
-const fallback = (doc: { kind: string }) => (doc.kind === "fallback" ? { fallback: true } : {});
-
 /** One entry per page plus one per h2/h3 section. */
-export function buildSearchIndex(locale: Locale): SearchEntry[] {
+export function buildSearchIndex(): SearchEntry[] {
 	const entries: SearchEntry[] = [];
 
-	for (const doc of getAllDocs(locale)) {
+	for (const doc of getAllDocs()) {
 		const md = mdxToMarkdown(doc.body);
 		const slugger = new GithubSlugger();
 		let heading: string | undefined;
@@ -35,14 +30,13 @@ export function buildSearchIndex(locale: Locale): SearchEntry[] {
 		const flush = () => {
 			const text = markdownToPlain(buf.join("\n")).slice(0, MAX_TEXT);
 			if (heading) {
-				entries.push({ title: doc.title, heading, href: `${doc.href}#${id}`, category: doc.category, text, ...fallback(doc) });
+				entries.push({ title: doc.title, heading, href: `${doc.href}#${id}`, category: doc.category, text });
 			} else {
 				entries.push({
 					title: doc.title,
 					href: doc.href,
 					category: doc.category,
 					text: `${doc.description} ${text}`.trim(),
-					...fallback(doc),
 				});
 			}
 			buf = [];

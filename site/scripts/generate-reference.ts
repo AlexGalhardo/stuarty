@@ -303,16 +303,16 @@ function httpApi(): string {
 	);
 }
 
-type Term = { id: string; en: string; "pt-br": string; note: string };
+type Term = { id: string; en: string; note: string };
 
 function glossary(): string {
 	const terms = JSON.parse(fs.readFileSync(path.join(siteDir, "content", "glossary.json"), "utf8")) as Term[];
 	return page(
 		"Glossary",
-		"The product terms in English and Brazilian Portuguese, shared by the documentation and the editor.",
+		"The product terms the documentation and the editor use.",
 		[
-			"Command, field and error code names are never translated. This table is for prose and labels.",
-			table(["English", "Português (Brasil)", "Note"], terms.map((t) => [esc(t.en), esc(t["pt-br"]), esc(t.note)])),
+			"Command, field and error code names are written exactly as the program prints them. This table is for prose and labels.",
+			table(["Term", "Note"], terms.map((t) => [esc(t.en), esc(t.note)])),
 		].join("\n\n"),
 	);
 }

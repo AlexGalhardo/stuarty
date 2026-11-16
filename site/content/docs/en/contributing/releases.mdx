@@ -15,7 +15,7 @@ Releases follow [Semantic Versioning](https://semver.org/) and [Conventional Com
 
 One pull request carries a release. Its branch, `release/vX.Y.Z`, collects the work of the release as small, self-contained commits, each a Conventional Commit with a header of at most 100 characters. The pull request is titled `chore(release): vX.Y.Z updates` and is **rebase-merged**, so every commit reaches `main` as it is and becomes one entry of the changelog. `main` is protected: nobody commits or pushes to it directly, and a change reaches it only through a pull request whose required checks are green and which is up to date with `main`.
 
-The changelog and the release notes are generated from the commits and have five sections only: **Added** (`feat`), **Changed** (a breaking change of a public interface), **Removed**, **Fixed** (`fix`) and **Security**. Footers (`BREAKING CHANGE:`, `Security:`, `Translation: not-needed`) go in the commit that carries the change.
+The changelog and the release notes are generated from the commits and have five sections only: **Added** (`feat`), **Changed** (a breaking change of a public interface), **Removed**, **Fixed** (`fix`) and **Security**. Footers (`BREAKING CHANGE:`, `Security:`) go in the commit that carries the change.
 
 ## The steps
 

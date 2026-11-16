@@ -1,18 +1,16 @@
 ---
 import Base from "../layouts/Base.astro";
-import { changelogMetadataOf } from "@/lib/ui-text";
+import { changelogMetadata } from "@/lib/ui-text";
 import { renderChangelog } from "../prerender";
 
-const meta = changelogMetadataOf("en");
-const html = await renderChangelog("en");
+const meta = changelogMetadata();
+const html = await renderChangelog();
 ---
 
 <Base
 	title={meta.title}
 	description={meta.description}
 	canonical="/changelog"
-	switcher={{ en: "/changelog", "pt-br": "/pt-br/changelog" }}
-	alternates={{ en: "/changelog", "pt-br": "/pt-br/changelog" }}
 	progress
 >
 	<Fragment set:html={html} />

@@ -38,11 +38,6 @@ test("the English page lists the criteria and the states of SDD-012 section 18.6
 	assert.deepEqual(rows(page, /^## Conformance table/, (c) => c), expected);
 });
 
-test("the Portuguese page lists the same criteria and states", () => {
-	const page = fs.readFileSync(path.join(root, "site", "content", "docs", "pt-br", "guide", "accessibility.mdx"), "utf8");
-	assert.deepEqual(rows(page, /^## Tabela de conformidade/, (c) => c), expected);
-});
-
 test("the screen reader rows stay pending until the manual pass of P3-QA-002", () => {
 	const page = fs.readFileSync(path.join(root, "site", "content", "docs", "en", "guide", "accessibility.mdx"), "utf8");
 	assert.match(page, /\| NVDA on Windows \| pending \|/);

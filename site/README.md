@@ -1,6 +1,6 @@
 # Vukem Video site
 
-The public site of Vukem Video: a landing page at `/` (and `/pt-br/`) and the documentation under `/docs/`. It is static HTML built with Astro (`output: "static"`, directory `out/`) and published to GitHub Pages by `.github/workflows/site.yml`. No server, no external script, font or analytics.
+The public site of Vukem Video: a landing page at `/` and the documentation under `/docs/`. It is static HTML built with Astro (`output: "static"`, directory `out/`) and published to GitHub Pages by `.github/workflows/site.yml`. No server, no external script, font or analytics.
 
 The shell is copied from the vukem documentation site (`vukem/site/`, the template of vukem.dev/docs) as SDD-010 section 1 describes. It was copied from vukem commit `c9a3fcca` (the last commit that touched `site/` in the vukem clone at `c4949ed0`, the head of its pull request 222).
 
@@ -34,4 +34,4 @@ The site is served under the base path of its address. `SITE_URL` (default `http
 
 ## Status
 
-Only English documentation exists, with an introduction and a getting-started page. The landing page has an English and a Brazilian Portuguese version. The generated reference, the language switcher for the docs and the translated docs come with P1-DOC-001.
+The site is in English only: there is no language switcher and no translation check. The old `/pt-br/...` addresses redirect to the English pages (`redirects` in `astro.config.mjs`). The generated reference is written by `npm run reference`.

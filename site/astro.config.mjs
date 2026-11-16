@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
+import { navigation, pagePath } from "./lib/page-files.ts";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 
@@ -12,6 +13,17 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 const siteUrl = new URL(process.env.SITE_URL || "https://video.vukem.dev");
 const prefix = siteUrl.pathname.replace(/\/$/, "");
 const base = prefix || "/";
+
+// The Portuguese docs were removed (English only): every old /pt-br/docs/... address sends to the English page.
+// A dynamic redirect cannot carry the base path, so each page is listed.
+const legacyPortuguese = Object.fromEntries(
+	navigation.flatMap((cat) =>
+		cat.pages.map((page) => {
+			const href = pagePath(cat, page);
+			return [`/pt-br${href}`, `${prefix}${href}/`];
+		}),
+	),
+);
 
 // Static HTML for GitHub Pages. The docs root opens the introduction.
 export default defineConfig({
@@ -32,8 +44,9 @@ export default defineConfig({
 	redirects: {
 		// The destination is not rewritten with the base path by Astro, so it is written in full.
 		"/docs": `${prefix}/docs/introduction/`,
-		"/pt-br/docs": `${prefix}/pt-br/docs/introduction/`,
-		// The landing page is English only; the Portuguese address sends to it.
 		"/pt-br": `${prefix}/`,
+		"/pt-br/docs": `${prefix}/docs/introduction/`,
+		"/pt-br/changelog": `${prefix}/changelog/`,
+		...legacyPortuguese,
 	},
 });

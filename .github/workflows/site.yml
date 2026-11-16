@@ -109,9 +109,6 @@ jobs:
           node-version: 24
       - run: npm run test:scripts
       - run: npm run check:last-updated
-      # Reports the pages whose English text is newer than the Portuguese one; it fails only when
-      # content/translations.config.json has strict true (SDD-010 section 6).
-      - run: npm run check:translations
 
   deploy:
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')

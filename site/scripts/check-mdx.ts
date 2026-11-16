@@ -13,7 +13,6 @@ import matter from "gray-matter";
 import { rehypePlugins, remarkPlugins } from "../lib/mdx-plugins.ts";
 import { checkFragment, pageAnchors } from "./link-anchors.ts";
 import { englishFiles, navigation, pagePath, pageSource } from "../lib/page-files.ts";
-import { locales } from "../lib/locale.ts";
 
 const MAX_CODE_LINE = 100;
 const siteDir = path.join(import.meta.dirname, "..");
@@ -41,22 +40,20 @@ function pageHrefs(): Map<string, string | undefined> {
 	const hrefs = new Map<string, string | undefined>([["/docs", undefined]]);
 	for (const cat of navigation) {
 		for (const page of cat.pages) {
-			const src = pageSource("en", cat.dir, page);
+			const src = pageSource(cat.dir, page);
 			if (src) hrefs.set(pagePath(cat, page), path.join(contentDir, src.file));
 		}
 	}
 	return hrefs;
 }
 
-/** Structure rules of SDD-010 sections 2.3 and 3: every page is listed, both locales are named, twins pair up. */
+/** Structure rules of SDD-010 sections 2.3 and 3: every category is titled and every page is listed and has a file. */
 function checkStructure(): void {
 	const listed = new Set<string>();
 	for (const cat of navigation) {
-		for (const l of locales) {
-			if (!cat.title[l]?.trim()) errors.push({ file: "content/navigation.ts", line: 0, message: `the title of ${cat.dir} is empty in ${l}` });
-		}
+		if (!cat.title.trim()) errors.push({ file: "content/navigation.ts", line: 0, message: `the title of ${cat.dir} is empty` });
 		for (const page of cat.pages) {
-			if (!pageSource("en", cat.dir, page))
+			if (!pageSource(cat.dir, page))
 				errors.push({ file: "content/navigation.ts", line: 0, message: `${cat.dir}/${page} is listed and has no English file` });
 			listed.add(`${cat.dir}/${page}`);
 		}
@@ -64,14 +61,6 @@ function checkStructure(): void {
 	for (const file of englishFiles()) {
 		const id = file.replace(/^docs\/en\//, "").replace(/\.mdx$/, "");
 		if (!listed.has(id)) errors.push({ file: `content/${file}`, line: 0, message: "is not listed in content/navigation.ts" });
-	}
-	const ptRoot = path.join(contentDir, "docs", "pt-br");
-	if (fs.existsSync(ptRoot)) {
-		for (const file of mdxFiles(ptRoot)) {
-			const id = path.relative(ptRoot, file).split(path.sep).join("/").replace(/\.mdx$/, "");
-			if (!fs.existsSync(path.join(contentDir, "docs", "en", `${id}.mdx`)))
-				errors.push({ file: rel(file), line: 0, message: "has no English twin under content/docs/en" });
-		}
 	}
 }
 
@@ -121,8 +110,7 @@ function collect(found: Found) {
 }
 
 function checkLink(href: string, valid: Map<string, string | undefined>): string | undefined {
-	// A Portuguese page writes the same /docs/... link as the English one (SDD-010 section 5.1).
-	const p = href.split(/[?#]/)[0].replace(/\/$/, "").replace(/^\/pt-br(?=\/)/, "");
+	const p = href.split(/[?#]/)[0].replace(/\/$/, "");
 	if (p !== "/docs" && !p.startsWith("/docs/")) return undefined;
 	if (!valid.has(p)) return `internal link ${href} has no page (see content/navigation.ts)`;
 	const target = valid.get(p);

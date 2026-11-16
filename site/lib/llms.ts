@@ -1,54 +1,42 @@
-import { getAllDocs, getNavGroups, isTranslated } from "@/lib/content";
-import { localizePath, type Locale } from "@/lib/locale";
+import { getAllDocs, getNavGroups } from "@/lib/content";
 import { site } from "@/lib/site";
 import { mdxToMarkdown } from "@/lib/text";
 import { withTrailingSlash } from "@/lib/trailing-slash";
 
-const SUMMARY: Record<Locale, string> = {
-	en: "Vukem Video is a minimalist, open source video editor operated by AI agents (MCP, CLI, HTTP API) and by people in a browser UI. It is in the BETA phase.",
-	"pt-br":
-		"O Vukem Video é um editor de vídeo minimalista e de código aberto, operado por agentes de IA (MCP, CLI, API HTTP) e por pessoas em uma interface no navegador. Está na fase BETA.",
-};
+const SUMMARY =
+	"Vukem Video is a minimalist, open source video editor operated by AI agents (MCP, CLI, HTTP API) and by people in a browser UI. It is in the BETA phase.";
 
 const url = (path: string) => `${site.url}${withTrailingSlash(path)}`;
 
-/** `llms.txt` of a locale (SDD-010 section 9). The Portuguese file lists untranslated pages by their English URL. */
-export function llmsTxt(locale: Locale): string {
-	const docs = new Map(getAllDocs(locale).map((d) => [d.href, d]));
+/** `llms.txt` (SDD-010 section 9). */
+export function llmsTxt(): string {
+	const docs = new Map(getAllDocs().map((d) => [d.href, d]));
 	const lines = [
 		`# ${site.name}`,
 		"",
-		`> ${SUMMARY[locale]}`,
+		`> ${SUMMARY}`,
 		"",
-		`Full documentation in one file: ${site.url}${localizePath(locale, "/llms-full.txt")}`,
+		`Full documentation in one file: ${site.url}/llms-full.txt`,
 		"",
-		`Every page is also available as Markdown: add ".md" to its URL (${site.url}${localizePath(locale, "/docs/introduction")}.md).`,
+		`Every page is also available as Markdown: add ".md" to its URL (${site.url}/docs/introduction.md).`,
 		"",
 	];
-	const untranslated: string[] = [];
 
-	for (const group of getNavGroups(locale)) {
-		const own = group.items.filter((i) => docs.get(i.href) && isTranslated(docs.get(i.href)!));
-		if (own.length > 0) lines.push(`## ${group.title}`, "");
-		for (const item of own) lines.push(`- [${item.title}](${url(item.href)}): ${docs.get(item.href)?.description ?? ""}`);
-		if (own.length > 0) lines.push("");
-		for (const item of group.items) {
-			const doc = docs.get(item.href);
-			if (doc && !isTranslated(doc)) untranslated.push(`- [${item.title}](${url(doc.englishHref)}): ${doc.description}`);
-		}
+	for (const group of getNavGroups()) {
+		if (group.items.length === 0) continue;
+		lines.push(`## ${group.title}`, "");
+		for (const item of group.items) lines.push(`- [${item.title}](${url(item.href)}): ${docs.get(item.href)?.description ?? ""}`);
+		lines.push("");
 	}
 
-	if (untranslated.length > 0) lines.push("## Untranslated", "", ...untranslated, "");
 	return lines.join("\n");
 }
 
-/** `llms-full.txt`: every page of the locale that has text of its own, in sidebar order. */
-export function llmsFull(locale: Locale): string {
+/** `llms-full.txt`: every page, in sidebar order. */
+export function llmsFull(): string {
 	const parts = [`# ${site.name} documentation`, ""];
-	if (locale !== "en") parts.push(`Pages not translated yet are in ${site.url}/llms-full.txt.`, "");
 
-	for (const doc of getAllDocs(locale)) {
-		if (!isTranslated(doc)) continue;
+	for (const doc of getAllDocs()) {
 		parts.push("---", "", `# ${doc.title}`, "", `Source: ${url(doc.href)}`, "", `> ${doc.description}`, "", mdxToMarkdown(doc.body), "");
 	}
 	return parts.join("\n");

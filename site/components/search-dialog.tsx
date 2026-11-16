@@ -7,8 +7,7 @@ import type { SearchEntry } from "@/lib/search";
 import { withBase } from "@/lib/site";
 import { fold } from "@/lib/fold";
 import { rankEntries } from "@/lib/search-rank";
-import { localizePath } from "@/lib/locale";
-import { useLocale, useT } from "@/lib/locale-context";
+import { ui } from "@/lib/ui-text";
 import { withTrailingSlash } from "@/lib/trailing-slash";
 
 type Result = SearchEntry & { score: number };
@@ -49,8 +48,7 @@ export function SearchDialog({
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }) {
-	const t = useT();
-	const locale = useLocale();
+	const t = ui;
 	const [query, setQuery] = useState("");
 	const [index, setIndex] = useState<SearchEntry[] | null>(null);
 	const [failed, setFailed] = useState(false);
@@ -60,11 +58,11 @@ export function SearchDialog({
 	const load = useCallback(() => {
 		if (index) return;
 		setFailed(false);
-		fetch(withBase(localizePath(locale, "/search-index.json")))
+		fetch(withBase("/search-index.json"))
 			.then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
 			.then((data: SearchEntry[]) => setIndex(data))
 			.catch(() => setFailed(true));
-	}, [index, locale]);
+	}, [index]);
 
 	const onOpenChange = useCallback(
 		(next: boolean) => {

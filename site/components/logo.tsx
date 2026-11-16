@@ -1,5 +1,5 @@
 import { Link } from "@/components/link";
-import { useT } from "@/lib/locale-context";
+import { ui as t } from "@/lib/ui-text";
 
 /** The Vukem Video mark: the corners of a viewfinder around a play triangle. */
 export function LogoMark({ className = "size-6" }: { className?: string }) {
@@ -18,7 +18,6 @@ export function LogoMark({ className = "size-6" }: { className?: string }) {
 }
 
 export function Logo() {
-	const t = useT();
 	return (
 		<Link
 			href="/"

@@ -1,8 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
-import { getDoc, isTranslated, type Doc } from "@/lib/content";
+import type { Doc } from "@/lib/content";
 import { docMetadata } from "@/components/doc-article";
-import { localizePath, otherLocale } from "@/lib/locale";
 import { renderDoc } from "../prerender";
 
 interface Props {
@@ -12,28 +11,8 @@ interface Props {
 const { doc } = Astro.props;
 const meta = docMetadata(doc);
 const html = await renderDoc(doc);
-
-// The versions that translate each other (SDD-010 section 4.3). An untranslated Portuguese page is the English
-// text under a Portuguese URL: it names the English page as canonical and claims no alternate.
-const other = getDoc(otherLocale(doc.locale), doc.slug);
-const translated = isTranslated(doc) && other !== undefined && isTranslated(other);
-const alternates = translated
-	? { en: doc.englishHref, "pt-br": localizePath("pt-br", doc.englishHref) }
-	: doc.locale === "en"
-		? { en: doc.href }
-		: {};
-const canonical = doc.kind === "fallback" ? doc.englishHref : doc.href;
 ---
 
-<Base
-	title={meta.title}
-	description={meta.description}
-	canonical={canonical}
-	locale={doc.locale}
-	switcher={{ en: doc.englishHref, "pt-br": localizePath("pt-br", doc.englishHref) }}
-	alternates={alternates}
-	twin={`${doc.href}.md`}
-	progress
->
+<Base title={meta.title} description={meta.description} canonical={doc.href} twin={`${doc.href}.md`} progress>
 	<Fragment set:html={html} />
 </Base>

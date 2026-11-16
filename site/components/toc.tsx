@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useT } from "@/lib/locale-context";
+import { ui as t } from "@/lib/ui-text";
 import type { Heading } from "@/lib/toc";
 
 /** "On this page" (or another label) with scroll-spy over the page's h2/h3 headings. */
 export function Toc({ headings, label }: { headings: Heading[]; label?: string }) {
-	const t = useT();
 	label ??= t.onThisPage;
 	const [active, setActive] = useState<string | null>(null);
 
