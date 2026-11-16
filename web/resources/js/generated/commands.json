@@ -2205,6 +2205,41 @@
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"additionalProperties": false,
 			"properties": {
+				"enabled": {
+					"description": "false turns the item off, true turns it on.",
+					"type": "boolean"
+				},
+				"item_id": {
+					"description": "Any item.",
+					"type": "string"
+				}
+			},
+			"required": [
+				"item_id",
+				"enabled"
+			],
+			"type": "object"
+		},
+		"description": "enabled false keeps the item, its place and its settings, and makes the preview, the export and the audio mix ignore it; true turns it back on. Works on every item type.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND"
+		],
+		"example": {
+			"enabled": false,
+			"item_id": "itm_m1n2p3q4r5"
+		},
+		"internal": false,
+		"name": "item.set_enabled",
+		"phase": "beta",
+		"scope": "edit",
+		"summary": "Turns an item off or on without removing it from the timeline."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
 				"item_id": {
 					"description": "A clip, text, caption or shape item.",
 					"type": "string"

@@ -149,9 +149,9 @@
   "docs/pt-br/troubleshooting/no-encoder.mdx": "2026-11-15T15:46:25-03:00",
   "docs/pt-br/troubleshooting/slow-export.mdx": "2026-11-16T05:56:03-03:00",
   "docs/pt-br/troubleshooting/workspace-locked.mdx": "2026-11-15T15:46:25-03:00",
-  "generated/agents/skill.mdx": "2026-11-16T10:22:39-03:00",
+  "generated/agents/skill.mdx": "2026-11-16T10:40:15-03:00",
   "generated/reference/cli.mdx": "2026-11-16T08:02:49-03:00",
-  "generated/reference/commands.mdx": "2026-11-16T10:22:39-03:00",
+  "generated/reference/commands.mdx": "2026-11-16T10:40:15-03:00",
   "generated/reference/commands/asset.remove.mdx": "2026-11-15T00:35:53-03:00",
   "generated/reference/commands/audio.add.mdx": "2026-11-15T00:35:53-03:00",
   "generated/reference/commands/audio.duck.mdx": "2026-11-15T12:29:14-03:00",
@@ -184,6 +184,7 @@
   "generated/reference/commands/item.move.mdx": "2026-11-16T07:07:52-03:00",
   "generated/reference/commands/item.rename.mdx": "2026-11-15T00:35:53-03:00",
   "generated/reference/commands/item.set_audio.mdx": "2026-11-15T00:35:53-03:00",
+  "generated/reference/commands/item.set_enabled.mdx": "2026-11-16T10:40:15-03:00",
   "generated/reference/commands/item.set_transform.mdx": "2026-11-15T00:35:53-03:00",
   "generated/reference/commands/item.set_transition.mdx": "2026-11-15T06:33:52-03:00",
   "generated/reference/commands/item.slip.mdx": "2026-11-16T07:07:52-03:00",
@@ -218,5 +219,5 @@
   "generated/reference/error-codes.mdx": "2026-11-14T21:46:12-03:00",
   "generated/reference/glossary.mdx": "2026-11-14T21:46:17-03:00",
   "generated/reference/http-api.mdx": "2026-11-16T07:07:52-03:00",
-  "generated/reference/timeline-schema.mdx": "2026-11-16T10:22:39-03:00"
+  "generated/reference/timeline-schema.mdx": "2026-11-16T10:40:15-03:00"
 }

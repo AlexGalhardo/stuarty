@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 63 commands, 62 public, of which 16 are Prototype, 32 ALPHA and 15 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 64 commands, 63 public, of which 16 are Prototype, 32 ALPHA and 16 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -275,6 +275,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.set_blend` | B | `item_id`, `mode` (`normal`, `multiply`, `screen`, `overlay`, `add`) | Sets how a visual item is mixed with what is below it. See C.61 |
 | `clip.set_mask` | B | `item_id`, `mask` (`{shape, x, y, width, height, feather?, invert?}` or null) | Limits where a visual item is drawn to a rectangle or an ellipse in the item's own frame; null removes it. See C.62 |
 | `clip.set_flip` | B | `item_id`, `horizontal?`, `vertical?` (booleans) | Mirrors a visual item left to right and or top to bottom; a side not given keeps its value. See C.63 |
+| `item.set_enabled` | B | `item_id`, `enabled` (boolean) | Turns any item off or on without removing it: a disabled item stays on the timeline and is ignored by preview, export and audio. See C.64 |
 | `clip.remove_silences` | A | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip by one clip per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
 | `audio.duck` | B | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | BETA (RF-043). Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
 | `marker.add` | B | `at`, `label?` | Puts a marker (of the timeline, not of an item) at a frame; see C.56 |
@@ -5057,3 +5058,56 @@ Mirrors a visual item (TASK-0233, SDD-001 §3.4): `horizontal` flips it left to 
 - `err_validation_no_argument`
 - `err_not_found`
 - `err_type_mismatch_audio_item`
+
+### C.64 `item.set_enabled` (phase B)
+
+Turns an item off or on (TASK-0233, SDD-001 §3.4): a disabled item keeps its place, its settings and its markers, and is not planned (SDD-004 §3).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | any item |
+| `enabled` | boolean | yes | none | false turns the item off; true turns it on |
+
+**Preconditions.**
+
+1. `enabled` is present (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+
+**Postconditions.**
+
+1. `disabled` is true when `enabled` is false; true `enabled` removes the field.
+2. `diff` has one `item.updated`; empty when unchanged. `effective.enabled` is the given value.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `enabled` missing | `args.enabled is required.` | `Send true or false.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old value>, unset: <field if it was absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5`, enabled.
+
+```json
+{"op": "item.set_enabled", "args": {"item_id": "itm_m1n2p3q4r5", "enabled": false}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"disabled": [null, true]}}]
+```
+
+**Golden cases.**
+
+- `ok_disable_clip`
+- `ok_enable_clip`
+- `ok_disable_audio_item`
+- `ok_disable_text_item`
+- `ok_enable_without_field_noop`
+- `ok_disable_twice_noop`
+- `err_validation_no_enabled`
+- `err_not_found`

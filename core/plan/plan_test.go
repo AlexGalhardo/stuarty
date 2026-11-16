@@ -917,6 +917,38 @@ func TestMutedProducesNothing(t *testing.T) {
 	}
 }
 
+func TestDisabledItemsLeaveThePlan(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	c := clip("itm_v", trkBottom, 0, 30)
+	put(d, c)
+
+	m := timeline.NewItem("itm_m", timeline.ItemAudio, trkSound, 0, 60)
+	m.Asset = astSound
+	put(d, m)
+
+	if len(Frame(d, 5).Layers) != 1 || len(Window(d, 0, 10).Layers) != 1 || len(Audio(d, 0, 60)) != 2 {
+		t.Fatal("the enabled items must be planned")
+	}
+
+	c.Disabled, m.Disabled = true, true
+	put(d, c)
+	put(d, m)
+
+	if l := Frame(d, 5).Layers; len(l) != 0 {
+		t.Errorf("a disabled clip is drawn: %+v", l)
+	}
+
+	if l := Window(d, 0, 10).Layers; len(l) != 0 {
+		t.Errorf("a disabled clip is in the window: %+v", l)
+	}
+
+	if a := Audio(d, 0, 60); len(a) != 0 {
+		t.Errorf("a disabled item sounds: %+v", a)
+	}
+}
+
 func TestAudioEnvelopeFadesAndKeyframes(t *testing.T) {
 	t.Parallel()
 

@@ -55,6 +55,7 @@
         "clip.set_blend",
         "clip.set_mask",
         "clip.set_flip",
+        "item.set_enabled",
         "marker.add",
         "marker.set",
         "marker.remove",

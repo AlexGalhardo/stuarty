@@ -39,7 +39,7 @@ type AudioSource struct {
 // or an audio item, not muted itself or by its track, and not the placeholder of an
 // unfilled optional slot (SDD-004 §7).
 func audible(doc *timeline.Document, it *timeline.Item) bool {
-	if it.AudioMuted || !doc.TrackSounds(it.Track) || it.Asset == timeline.PlaceholderAsset {
+	if it.AudioMuted || it.Disabled || !doc.TrackSounds(it.Track) || it.Asset == timeline.PlaceholderAsset {
 		return false
 	}
 

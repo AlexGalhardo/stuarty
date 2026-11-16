@@ -347,6 +347,10 @@ func maskProps(it *timeline.Item, props object) {
 
 // sharedProps writes the properties that clips and text items keep: keyframes and the slot.
 func sharedProps(it *timeline.Item, props object) {
+	if it.Disabled {
+		props["disabled"] = true
+	}
+
 	if len(it.Keyframes) > 0 {
 		kfs := object{}
 

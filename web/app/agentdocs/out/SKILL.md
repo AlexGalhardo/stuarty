@@ -38,7 +38,7 @@ Operations of `edit`; a star marks those added after the Prototype. `command_hel
 - `caption`: add, edit_word*, from_transcript*, merge*, retime_from_clip*, set_breaks*, set_style*, set_words*, split*
 - `clip`: add, remove_silences*, set_blend*, set_blur*, set_chroma_key*, set_color*, set_filter*, set_flip*, set_framing*, set_mask*, set_speed*
 - `font`: add*, remove*
-- `item`: crossfade*, delete, duplicate*, move, rename*, set_audio*, set_transform*, set_transition*, slip*, split, trim
+- `item`: crossfade*, delete, duplicate*, move, rename*, set_audio*, set_enabled*, set_transform*, set_transition*, slip*, split, trim
 - `keyframe`: clear*, remove*, set*
 - `marker`: add*, remove*, set*
 - `project`: rename

@@ -178,6 +178,10 @@ type Item struct {
 	// Absent means "normal".
 	Blend string `json:"blend,omitempty" enum:"normal,multiply,screen,overlay,add"`
 
+	// Every item type, optional and additive (SDD-001 §3.4): the item stays on the timeline and
+	// the plan, the preview and the export ignore it. Absent means enabled.
+	Disabled bool `json:"disabled,omitempty"`
+
 	// Visual items, optional and additive (SDD-001 §3.4): mirror the item across its own vertical
 	// (FlipX) or horizontal (FlipY) axis. Absent means not mirrored.
 	FlipX bool `json:"flip_x,omitempty"`

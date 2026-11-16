@@ -1,0 +1,7 @@
+{
+  "op": "item.set_enabled",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "enabled": false
+  }
+}

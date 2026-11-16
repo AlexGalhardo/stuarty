@@ -515,6 +515,9 @@
           "set_transform": {
             "title": "Set item transform"
           },
+          "set_enabled": {
+            "title": "Turn item on or off"
+          },
           "set_transition": {
             "title": "Set item transition"
           },

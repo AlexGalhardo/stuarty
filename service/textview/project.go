@@ -343,6 +343,10 @@ func itemFlags(it *timeline.Item) []string {
 		f = append(f, "muted")
 	}
 
+	if it.Disabled {
+		f = append(f, "disabled")
+	}
+
 	if it.Slot != nil {
 		f = append(f, "slot:"+it.Slot.Name)
 

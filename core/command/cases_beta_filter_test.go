@@ -75,6 +75,20 @@ func init() {
 	ck("err_not_found", `{"item_id": "itm_zzzzzzzzzz", "color": "#00FF00"}`, plain())
 	ck("err_type_mismatch_audio_item", fmt.Sprintf(`{"item_id": %q, "color": "#00FF00"}`, itemB), audioItem)
 
+	en := func(name, args string, b func() *B) {
+		gc("item.set_enabled", name, b, op("item.set_enabled", args))
+	}
+	off := func(it *timeline.Item) { it.Disabled = true }
+	en("ok_disable_clip", fa(`"enabled": false`), plain())
+	en("ok_enable_clip", fa(`"enabled": true`), plain(off))
+	en("ok_disable_audio_item", fmt.Sprintf(`{"item_id": %q, "enabled": false}`, itemB), audioItem)
+	en("ok_disable_text_item", fmt.Sprintf(`{"item_id": %q, "enabled": false}`, itemC),
+		func() *B { return base().text(itemC, vidTr, 0, 60) })
+	en("ok_enable_without_field_noop", fa(`"enabled": true`), plain())
+	en("ok_disable_twice_noop", fa(`"enabled": false`), plain(off))
+	en("err_validation_no_enabled", fmt.Sprintf(`{"item_id": %q}`, itemA), plain())
+	en("err_not_found", `{"item_id": "itm_zzzzzzzzzz", "enabled": false}`, plain())
+
 	fl := func(name, args string, b func() *B) {
 		gc("clip.set_flip", name, b, op("clip.set_flip", args))
 	}

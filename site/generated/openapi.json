@@ -1096,6 +1096,9 @@
               }
             ]
           },
+          "disabled": {
+            "type": "boolean"
+          },
           "duration": {
             "type": "integer"
           },
@@ -1965,6 +1968,7 @@
               "item.move",
               "item.rename",
               "item.set_audio",
+              "item.set_enabled",
               "item.set_transform",
               "item.set_transition",
               "item.slip",
@@ -2100,6 +2104,9 @@
           },
           "item.set_audio": {
             "$ref": "#/components/schemas/args.item.set_audio"
+          },
+          "item.set_enabled": {
+            "$ref": "#/components/schemas/args.item.set_enabled"
           },
           "item.set_transform": {
             "$ref": "#/components/schemas/args.item.set_transform"
@@ -4956,6 +4963,24 @@
         },
         "required": [
           "item_id"
+        ],
+        "type": "object"
+      },
+      "args.item.set_enabled": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "description": "false turns the item off, true turns it on.",
+            "type": "boolean"
+          },
+          "item_id": {
+            "description": "Any item.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "enabled"
         ],
         "type": "object"
       },
