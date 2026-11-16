@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Domain separation labels of the two signed messages (SDD-009 section 10.5).
@@ -22,12 +23,22 @@ const (
 	feedSchema       = 1
 	maxFeedBytes     = 1 << 20
 	maxArtifactBytes = 1 << 30
+
+	// DefaultFeedValidity is how long the feed tool signs a feed for, and MaxFeedValidity the longest
+	// window a client accepts: a feed that claims more is refused as mis-signed (SDD-009 section 10.5).
+	DefaultFeedValidity = 180 * 24 * time.Hour
+	// MaxFeedValidity is documented with DefaultFeedValidity above.
+	MaxFeedValidity = 400 * 24 * time.Hour
+
+	// feedClockSkew is how far in the future published_at may be before the feed is refused.
+	feedClockSkew = 10 * time.Minute
 )
 
 // Errors of the feed and of the artifact checks.
 var (
 	ErrBadFeed              = errors.New("update: the feed is not valid")
 	ErrBadFeedSignature     = errors.New("update: the signature of the feed does not verify")
+	ErrStaleFeed            = errors.New("update: the feed has expired; the update server has not been refreshed")
 	ErrNoPlatform           = errors.New("update: the feed has no build for this system")
 	ErrNotNewer             = errors.New("update: the offered version is not newer than the running one")
 	ErrDigestMismatch       = errors.New("update: the SHA-256 of the download is not the one of the feed")
@@ -41,9 +52,14 @@ type envelope struct {
 }
 
 type payload struct {
-	Schema    int              `json:"schema"`
-	Version   string           `json:"version"`
-	Platforms map[string]entry `json:"platforms"`
+	Schema  int    `json:"schema"`
+	Version string `json:"version"`
+	// PublishedAt and Expires are RFC 3339 UTC instants inside the signed payload. They are what makes a
+	// replayed or frozen feed detectable; the schema stays 1 so a client without them still reads the
+	// feed and ignores both.
+	PublishedAt string           `json:"published_at"`
+	Expires     string           `json:"expires"`
+	Platforms   map[string]entry `json:"platforms"`
 }
 
 type entry struct {
@@ -65,7 +81,7 @@ func ArtifactMessage(version, platform, sha256Hex string) []byte {
 }
 
 // parseFeed verifies the envelope against key and only then reads the payload for platform.
-func parseFeed(raw []byte, key ed25519.PublicKey, platform string) (*Offer, error) {
+func parseFeed(raw []byte, key ed25519.PublicKey, platform string, now time.Time) (*Offer, error) {
 	var env envelope
 	if err := json.Unmarshal(raw, &env); err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrBadFeed, err)
@@ -95,12 +111,50 @@ func parseFeed(raw []byte, key ed25519.PublicKey, platform string) (*Offer, erro
 		return nil, fmt.Errorf("%w: version %q", ErrBadFeed, p.Version)
 	}
 
+	if err := checkFreshness(p.PublishedAt, p.Expires, now); err != nil {
+		return nil, err
+	}
+
 	e, ok := p.Platforms[platform]
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrNoPlatform, platform)
 	}
 
 	return offerOf(p.Version, platform, e)
+}
+
+// checkFreshness enforces the signed published_at and expires. A feed without them is refused: the
+// client that reads them ships in the same release as the tool that writes them, and the feed holds
+// only the latest release, so no feed such a client meets lacks them, while an old signed feed
+// replayed by an attacker does. Clients already installed ignore both fields and keep working.
+func checkFreshness(publishedAt, expires string, now time.Time) error {
+	if publishedAt == "" || expires == "" {
+		return fmt.Errorf("%w: published_at and expires are not signed", ErrBadFeed)
+	}
+
+	pub, err := time.Parse(time.RFC3339, publishedAt)
+	if err != nil {
+		return fmt.Errorf("%w: published_at", ErrBadFeed)
+	}
+
+	exp, err := time.Parse(time.RFC3339, expires)
+	if err != nil {
+		return fmt.Errorf("%w: expires", ErrBadFeed)
+	}
+
+	if !exp.After(pub) || exp.Sub(pub) > MaxFeedValidity {
+		return fmt.Errorf("%w: expires is not within %s after published_at", ErrBadFeed, MaxFeedValidity)
+	}
+
+	if pub.After(now.Add(feedClockSkew)) {
+		return fmt.Errorf("%w: published_at is in the future", ErrBadFeed)
+	}
+
+	if !now.Before(exp) {
+		return fmt.Errorf("%w: expired at %s", ErrStaleFeed, expires)
+	}
+
+	return nil
 }
 
 func offerOf(version, platform string, e entry) (*Offer, error) {

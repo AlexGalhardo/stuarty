@@ -17,6 +17,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/AlexGalhardo/vukem-video/desktop/update"
 	"github.com/AlexGalhardo/vukem-video/internal/outbound"
@@ -24,9 +25,13 @@ import (
 
 const (
 	running  = "0.14.0"
+	rfc3339  = time.RFC3339
 	platform = "windows-amd64"
 	fileName = "vukem-video_0.15.0_windows_amd64_setup.exe"
 )
+
+// clock is the fixed "now" of every test, so the freshness window is deterministic.
+var clock = time.Date(2026, 11, 16, 12, 0, 0, 0, time.UTC)
 
 // None of these tests runs in parallel: the dial recorder of internal/outbound is global.
 
@@ -90,6 +95,8 @@ type scenario struct {
 	truncateAt     int                // when > 0 the server promises the full length and sends this many bytes
 	artifactHost   string             // host for the artifact URL, default the server
 	feedRedirectTo string             // when set, the feed answers a redirect there
+	publishedAt    string             // default clock-1h; "-" leaves the field out of the signed payload
+	expires        string             // default clock+30d; "-" leaves the field out of the signed payload
 }
 
 type env struct {
@@ -140,6 +147,7 @@ func newEnv(t *testing.T, sc scenario) *env {
 		StagingDir:     filepath.Join(t.TempDir(), "staging"),
 		AutoCheck:      true,
 		Installer:      e.installer,
+		Now:            func() time.Time { return clock },
 		Test:           &outbound.TestOptions{RootCAs: pool},
 	}
 
@@ -191,7 +199,7 @@ func (e *env) feedJSON(t *testing.T, sc scenario) []byte {
 		host = sc.artifactHost
 	}
 
-	body, err := json.Marshal(map[string]any{
+	fields := map[string]any{
 		"schema":  1,
 		"version": sc.feedVersion,
 		"platforms": map[string]any{
@@ -204,7 +212,17 @@ func (e *env) feedJSON(t *testing.T, sc scenario) []byte {
 				),
 			},
 		},
-	})
+	}
+
+	if sc.publishedAt != "-" {
+		fields["published_at"] = orDefault(sc.publishedAt, clock.Add(-time.Hour).Format(rfc3339))
+	}
+
+	if sc.expires != "-" {
+		fields["expires"] = orDefault(sc.expires, clock.Add(30*24*time.Hour).Format(rfc3339))
+	}
+
+	body, err := json.Marshal(fields)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,6 +236,14 @@ func (e *env) feedJSON(t *testing.T, sc scenario) []byte {
 	}
 
 	return out
+}
+
+func orDefault(v, def string) string {
+	if v == "" {
+		return def
+	}
+
+	return v
 }
 
 func serve(w http.ResponseWriter, sc scenario) {
@@ -337,6 +363,62 @@ func TestUpdate_WrongSignature(t *testing.T) {
 	}
 
 	assertNeverInstalled(t, e)
+}
+
+func TestUpdate_FeedFreshness(t *testing.T) {
+	day := 24 * time.Hour
+	at := func(d time.Duration) string { return clock.Add(d).Format(rfc3339) }
+
+	cases := []struct {
+		name string
+		sc   scenario
+		want error // nil means the update is offered
+	}{
+		{"fresh feed", scenario{}, nil},
+		{"expired feed", scenario{expires: at(-time.Minute)}, update.ErrStaleFeed},
+		{"expires exactly now", scenario{expires: at(0)}, update.ErrStaleFeed},
+		{
+			"replay of an old signed feed",
+			scenario{publishedAt: at(-200 * day), expires: at(-20 * day)},
+			update.ErrStaleFeed,
+		},
+		{"no published_at", scenario{publishedAt: "-"}, update.ErrBadFeed},
+		{"no expires", scenario{expires: "-"}, update.ErrBadFeed},
+		{"legacy feed without both", scenario{publishedAt: "-", expires: "-"}, update.ErrBadFeed},
+		{"unparseable expires", scenario{expires: "next week"}, update.ErrBadFeed},
+		{
+			"expires before published_at",
+			scenario{publishedAt: at(-time.Hour), expires: at(-2 * time.Hour)},
+			update.ErrBadFeed,
+		},
+		{
+			"window beyond the maximum",
+			scenario{publishedAt: at(-time.Hour), expires: at(2000 * day)},
+			update.ErrBadFeed,
+		},
+		{"published in the future", scenario{publishedAt: at(time.Hour), expires: at(30 * day)}, update.ErrBadFeed},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			e := newEnv(t, c.sc)
+			offer, err := e.client(t).CheckNow(context.Background())
+
+			if c.want == nil {
+				if err != nil || offer == nil {
+					t.Fatalf("a fresh feed was refused: %v", err)
+				}
+
+				return
+			}
+
+			if !errors.Is(err, c.want) {
+				t.Fatalf("err = %v, want %v", err, c.want)
+			}
+
+			assertNeverInstalled(t, e)
+		})
+	}
 }
 
 func TestUpdate_OlderVersion(t *testing.T) {

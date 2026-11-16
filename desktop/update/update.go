@@ -87,6 +87,8 @@ type Config struct {
 	// CheckTimeout bounds the feed request (default 30 s); DownloadTimeout the artifact (default 30 min).
 	CheckTimeout    time.Duration
 	DownloadTimeout time.Duration
+	// Now is the clock the feed expiry is checked against; default time.Now.
+	Now func() time.Time
 	// Test lets a test trust a local server; production code never sets it.
 	Test *outbound.TestOptions
 }
@@ -133,6 +135,10 @@ func New(cfg Config) (*Client, error) {
 		cfg.Platform = runtime.GOOS + "-" + runtime.GOARCH
 	}
 
+	if cfg.Now == nil {
+		cfg.Now = time.Now
+	}
+
 	if cfg.CheckTimeout == 0 {
 		cfg.CheckTimeout = 30 * time.Second
 	}
@@ -172,7 +178,7 @@ func (c *Client) CheckNow(ctx context.Context) (*Offer, error) {
 		return nil, err
 	}
 
-	offer, err := parseFeed(raw, c.cfg.PublicKey, c.cfg.Platform)
+	offer, err := parseFeed(raw, c.cfg.PublicKey, c.cfg.Platform, c.cfg.Now())
 	if err != nil {
 		return nil, err
 	}
