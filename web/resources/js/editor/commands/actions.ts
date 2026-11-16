@@ -25,11 +25,13 @@ import {
 	deleteOperations,
 	duplicateOperations,
 	enabledOperations,
+	extractAudioOperations,
 	type ItemRange,
 	type KeyframeProperty,
 	keyframeFallbackOperations,
 	keyframeFrame,
 	keyframeRemoveOperations,
+	linkOperations,
 	markerAddOperations,
 	markerRemoveOperations,
 	moveToTrackOperations,
@@ -56,6 +58,7 @@ import {
 	trackRemoveOperations,
 	trackUpdateOperations,
 	trimOperations,
+	unlinkOperations,
 	volumeStepOperations,
 	withNextFree,
 } from "./builders";
@@ -135,6 +138,14 @@ export interface Actions {
 	duplicateSelection(): Promise<EditOutcome | null>;
 	// V and the menu: every selected item off when any is on, else all on.
 	toggleEnabled(): Promise<EditOutcome | null>;
+	// `~` and the menu: the selected items are unlinked when any is in a link
+	// group, else linked into one.
+	toggleLink(): Promise<EditOutcome | null>;
+	linkSelection(): Promise<EditOutcome | null>;
+	unlinkSelection(): Promise<EditOutcome | null>;
+	// Mod+Shift+S and the menu: the audio of each selected clip goes to an audio
+	// track as a linked item and the clip is muted (`item.extract_audio`).
+	extractAudio(): Promise<EditOutcome | null>;
 	// Paste (Mod+V): the clipboard items at the playhead frame `at`; a cut
 	// clipboard moves them, a copy duplicates them (`pasteOperations`).
 	pasteItems(
@@ -612,6 +623,48 @@ export function createActions(runtime: EditorRuntime): Actions {
 			});
 			const enable = items.length > 0 && items.every((item) => item.off);
 			return send(items.flatMap((item) => enabledOperations(item.id, enable)));
+		},
+		linkSelection: () => send(linkOperations(actedIds())),
+		unlinkSelection: () => send(unlinkOperations(actedIds())),
+		toggleLink() {
+			const doc = documents.getState().document;
+			if (doc === null) return Promise.resolve(null);
+			const ids = actedIds();
+			const linked = ids.filter((id) => doc.items[id]?.link !== undefined);
+			return linked.length > 0
+				? send(unlinkOperations(linked))
+				: send(linkOperations(ids));
+		},
+		extractAudio() {
+			const doc = documents.getState().document;
+			if (doc === null) return Promise.resolve(null);
+			const clips = actedIds().filter((id) => doc.items[id]?.type === "clip");
+			const [first, ...rest] = clips;
+			if (first === undefined) return Promise.resolve(null);
+			// One audio track for the batch: an empty one, else one added first.
+			const state = documents.getState();
+			const track =
+				selectOrderedTrackIds(state).find(
+					(id) =>
+						selectTrack(state, id)?.kind === "audio" &&
+						selectTrackItemIds(state, id).length === 0,
+				) ?? null;
+			const newTrack = newId("trk");
+			const ops = extractAudioOperations({
+				itemId: first,
+				audioTrack: track,
+				newTrackId: () => newTrack,
+			});
+			for (const id of rest) {
+				ops.push(
+					...extractAudioOperations({
+						itemId: id,
+						audioTrack: track ?? newTrack,
+						newTrackId: () => newTrack,
+					}).filter((op) => op.op === "item.extract_audio"),
+				);
+			}
+			return send(ops);
 		},
 		pasteItems: (ids, at, cut) => send(pasteOperations(rangesOf(ids), at, cut)),
 		adjustVolume(db) {

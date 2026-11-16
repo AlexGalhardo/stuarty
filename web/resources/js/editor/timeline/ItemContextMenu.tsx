@@ -3,7 +3,10 @@ import {
 	CopyPlus,
 	Eye,
 	EyeOff,
+	Link2,
+	Link2Off,
 	Merge,
+	Music,
 	Pencil,
 	Scissors,
 	Split,
@@ -60,6 +63,34 @@ export default function ItemContextMenuItems({
 				return type !== undefined && type !== "audio";
 			}),
 	);
+	// Link takes two or more unlinked items; unlink acts on any linked one. The
+	// core judges the rest (captions follow a clip with `linked_item`).
+	const anyLinked = useDocumentState((s) =>
+		selection.some((id) => s.document?.items[id]?.link !== undefined),
+	);
+	const linkable = useDocumentState(
+		(s) =>
+			selection.length >= 2 &&
+			selection.every((id) => {
+				const item = s.document?.items[id];
+				return (
+					item !== undefined &&
+					item.link === undefined &&
+					item.type !== "caption"
+				);
+			}),
+	);
+	// Extract audio is for a clip of a video asset whose sound is still on it.
+	const extractable = useDocumentState((s) => {
+		const item = s.document?.items[itemId];
+		const asset = item?.asset;
+		return (
+			item?.type === "clip" &&
+			item.audio_muted !== true &&
+			asset !== undefined &&
+			s.document?.assets[asset]?.kind === "video"
+		);
+	});
 	return (
 		<>
 			{isCaption && word !== null && (
@@ -88,6 +119,24 @@ export default function ItemContextMenuItems({
 				<ContextMenuItem onSelect={() => void actions.crossfadeSelection()}>
 					<Blend aria-hidden="true" />
 					{t("ui.editor.edit.crossfade")}
+				</ContextMenuItem>
+			)}
+			{linkable && (
+				<ContextMenuItem onSelect={() => void actions.linkSelection()}>
+					<Link2 aria-hidden="true" />
+					{t("ui.editor.edit.link")}
+				</ContextMenuItem>
+			)}
+			{anyLinked && (
+				<ContextMenuItem onSelect={() => void actions.unlinkSelection()}>
+					<Link2Off aria-hidden="true" />
+					{t("ui.editor.edit.unlink")}
+				</ContextMenuItem>
+			)}
+			{extractable && (
+				<ContextMenuItem onSelect={() => void actions.extractAudio()}>
+					<Music aria-hidden="true" />
+					{t("ui.editor.edit.extract_audio")}
 				</ContextMenuItem>
 			)}
 			<ContextMenuItem onSelect={() => void actions.duplicateSelection()}>

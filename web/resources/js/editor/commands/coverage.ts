@@ -77,6 +77,13 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.audio": ["item.set_audio"],
 	"inspector.framing": ["clip.set_framing"],
 	"inspector.speed": ["clip.set_speed"],
+	"inspector.speed_curve": ["clip.set_speed"],
+	"inspector.reverse": ["clip.set_speed"],
+	"inspector.effects": ["clip.set_effects"],
+	"timeline.toggle_link": ["item.link", "item.unlink"],
+	"timeline.link": ["item.link"],
+	"timeline.unlink": ["item.unlink"],
+	"timeline.extract_audio": ["item.extract_audio", "track.add"],
 	"inspector.color": ["clip.set_color"],
 	"inspector.silences": ["clip.remove_silences"],
 	"inspector.filter": ["clip.set_filter"],
@@ -185,16 +192,31 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.flip", phase: "B" },
 		palette,
 	],
-	"clip.set_effects": [palette],
+	"clip.set_effects": [
+		{ kind: "inspector", action: "inspector.effects", phase: "B" },
+		palette,
+	],
 	"item.set_enabled": [
 		{ kind: "key", action: "timeline.toggle_enabled", phase: "B" },
 		{ kind: "menu", action: "timeline.toggle_enabled", phase: "B" },
 		{ kind: "inspector", action: "inspector.enabled", phase: "B" },
 		palette,
 	],
-	"item.link": [palette],
-	"item.unlink": [palette],
-	"item.extract_audio": [palette],
+	"item.link": [
+		{ kind: "key", action: "timeline.toggle_link", phase: "B" },
+		{ kind: "menu", action: "timeline.link", phase: "B" },
+		palette,
+	],
+	"item.unlink": [
+		{ kind: "key", action: "timeline.toggle_link", phase: "B" },
+		{ kind: "menu", action: "timeline.unlink", phase: "B" },
+		palette,
+	],
+	"item.extract_audio": [
+		{ kind: "key", action: "timeline.extract_audio", phase: "B" },
+		{ kind: "menu", action: "timeline.extract_audio", phase: "B" },
+		palette,
+	],
 	"marker.add": [
 		{ kind: "key", action: "timeline.marker", phase: "B" },
 		palette,
@@ -218,6 +240,8 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	],
 	"clip.set_speed": [
 		{ kind: "inspector", action: "inspector.speed", phase: "A" },
+		{ kind: "inspector", action: "inspector.speed_curve", phase: "B" },
+		{ kind: "inspector", action: "inspector.reverse", phase: "B" },
 		palette,
 	],
 	"font.add": [

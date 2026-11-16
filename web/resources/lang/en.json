@@ -207,6 +207,7 @@
         "speed_badge": "Speed {speed}",
         "slot_badge": "Slot: {name}",
         "asset_missing": "The media of this item is missing",
+        "link_badge": "Linked: moves and trims with its group",
         "disabled_badge": "Turned off"
       },
       "loading": "Loading the project",
@@ -326,6 +327,9 @@
         "split_caption": "Split caption here",
         "merge_captions": "Merge captions",
         "crossfade": "Crossfade",
+        "link": "Link items",
+        "unlink": "Unlink items",
+        "extract_audio": "Extract audio",
         "enable": "Turn on",
         "disable": "Turn off"
       },
@@ -716,6 +720,8 @@
           "add_text": "Add text",
           "rename": "Rename",
           "toggle_enabled": "Turn the selected items on or off",
+          "link": "Link or unlink the selected items",
+          "extract_audio": "Extract the audio of the selected clips",
           "toggle_snap": "Toggle snapping",
           "keyframe_panel": "Show or hide the keyframes of the selected item",
           "preview_zoom": "Fit the preview, zoom it in, zoom it out",

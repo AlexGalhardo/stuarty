@@ -23,7 +23,9 @@ import {
 	dropAssetOperations,
 	duckOperations,
 	duplicateOperations,
+	effectsOperations,
 	enabledOperations,
+	extractAudioOperations,
 	filterOperations,
 	flipOperations,
 	fontAddOperations,
@@ -33,6 +35,7 @@ import {
 	keyframeFallbackOperations,
 	keyframeRemoveOperations,
 	keyframeSetOperations,
+	linkOperations,
 	markBeatsOperations,
 	markerAddOperations,
 	markerRemoveOperations,
@@ -42,6 +45,7 @@ import {
 	reframeOperations,
 	removeAssetOperations,
 	renameOperations,
+	reverseOperations,
 	rollOperations,
 	settingsFpsOperations,
 	settingsSetOperations,
@@ -53,6 +57,7 @@ import {
 	slotFillOperations,
 	slotMarkOperations,
 	slotUnmarkOperations,
+	speedCurveOperations,
 	speedOperations,
 	splitOperations,
 	templateInfoOperations,
@@ -68,6 +73,7 @@ import {
 	transitionOperations,
 	trimEndOperations,
 	trimOperations,
+	unlinkOperations,
 } from "./builders";
 import { ACTIONS, ANY_COMMAND, COVERAGE, type EntryPoint } from "./coverage";
 
@@ -436,6 +442,26 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				(o) => o.op,
 			),
 			"inspector.speed": speedOperations("itm_a", 1.5, true).map((o) => o.op),
+			"inspector.speed_curve": speedCurveOperations(
+				"itm_a",
+				[
+					{ t: 0, speed: 1 },
+					{ t: 1, speed: 2 },
+				],
+				false,
+			).map((o) => o.op),
+			"inspector.reverse": reverseOperations("itm_a", true).map((o) => o.op),
+			"inspector.effects": effectsOperations("itm_a", []).map((o) => o.op),
+			"timeline.toggle_link": linkOperations(["itm_a", "itm_b"])
+				.concat(unlinkOperations(["itm_a"]))
+				.map((o) => o.op),
+			"timeline.link": linkOperations(["itm_a", "itm_b"]).map((o) => o.op),
+			"timeline.unlink": unlinkOperations(["itm_a"]).map((o) => o.op),
+			"timeline.extract_audio": extractAudioOperations({
+				itemId: "itm_a",
+				audioTrack: null,
+				newTrackId: () => "trk_new",
+			}).map((o) => o.op),
 			"inspector.color": colorOperations("itm_a", { contrast: 1.2 }).map(
 				(o) => o.op,
 			),
