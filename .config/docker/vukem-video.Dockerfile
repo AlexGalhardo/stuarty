@@ -105,9 +105,11 @@ LABEL org.opencontainers.image.title="vukem-video" \
 
 # curl is the health check client; tzdata and ca-certificates are the runtime
 # data the binary needs; util-linux provides prlimit, which the child process
-# limits of P2-RND-005 use. Debian slim keeps /usr/share/doc/<package>/copyright.
+# limits of P2-RND-005 use; libgomp1 is the OpenMP runtime the whisper.cpp helper
+# (installed later by tools:install) links against (GCC runtime library exception,
+# so it adds no copyleft to the image). Debian slim keeps /usr/share/doc/<package>/copyright.
 RUN apt-get update \
-	&& apt-get install -y --no-install-recommends ca-certificates curl tzdata util-linux \
+	&& apt-get install -y --no-install-recommends ca-certificates curl libgomp1 tzdata util-linux \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& useradd --system --no-create-home --uid 10001 --user-group app \
 	&& mkdir -p /data /usr/share/doc/vukem-video/ffmpeg \
