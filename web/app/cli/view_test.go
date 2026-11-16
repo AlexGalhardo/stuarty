@@ -148,3 +148,21 @@ func TestViewFromARemoteServerSavesTheImageLocally(t *testing.T) {
 		t.Errorf("saved file: %v %v", b, err)
 	}
 }
+
+// The service refuses to view an asset (VV-019), so the command does not offer
+// --asset in its help; when the service can view one, the flag comes back.
+func TestViewDoesNotOfferAnAsset(t *testing.T) {
+	t.Parallel()
+
+	for _, u := range view.usage {
+		if strings.Contains(u, "--asset") {
+			t.Errorf("usage line %q names --asset", u)
+		}
+	}
+
+	for _, f := range view.flags {
+		if f.Name == "asset" {
+			t.Error("flag asset is still declared")
+		}
+	}
+}
