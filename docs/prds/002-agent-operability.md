@@ -64,7 +64,7 @@ Phase: `P` Prototype, `A` ALPHA, `B` BETA.
 
 | ID | Requirement |
 | --- | --- |
-| NFR-020 | The MCP tool definitions total at most 6,000 tokens |
+| NFR-020 | The MCP tool definitions total at most 6,500 tokens |
 | NFR-021 | The concise timeline view is returned in pages of at most 4,000 tokens; a project of 100 items fits in one page and a project of 200 items in two |
 | NFR-022 | A single frame returned to an agent costs at most 800 image tokens by default; a contact sheet at most 1,600 |
 | NFR-023 | A frame is returned within 1 s and a contact sheet within 2 s (median) |
