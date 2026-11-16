@@ -177,7 +177,11 @@ func inline[T any](
 
 	res, err = run(runCtx)
 
-	return res, fired.Load() && ctx.Err() == nil, err
+	// Without stop the context deadline and the timer are two clocks: the call can return on the
+	// context a moment before the timer has set fired, so the context itself tells it expired.
+	expired = fired.Load() || (stop == nil && runCtx.Err() != nil)
+
+	return res, expired && ctx.Err() == nil, err
 }
 
 // cancelStarted cancels the jobs of the project that this command created, so a
