@@ -9,6 +9,7 @@ import {
 	captionFromTranscriptOperations,
 	captionOperations,
 	captionRetimeOperations,
+	captionTextOperations,
 	clampBoundary,
 	colorOperations,
 	containsInclusive,
@@ -320,6 +321,9 @@ describe("caption word builders", () => {
 			"z",
 		]);
 		expect(bulkEditWords(words, "x y")).toBeNull();
+		expect(captionTextOperations("itm_a", "x y")).toEqual([
+			{ op: "caption.set_words", args: { item_id: "itm_a", text: "x y" } },
+		]);
 	});
 });
 

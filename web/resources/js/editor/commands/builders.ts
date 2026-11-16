@@ -385,9 +385,18 @@ export function boundaryWords(
 	});
 }
 
+// A different word count: the core splits the text and spreads the words over
+// the caption's duration (`caption.set_words` with `text`).
+export function captionTextOperations(
+	itemId: string,
+	text: string,
+): Operations {
+	return [{ op: "caption.set_words", args: { item_id: itemId, text } }];
+}
+
 // The bulk edit: the words typed, one per whitespace-separated token, over the
 // times of the stored words. Only the same count can keep the times, so a
-// different count answers null and nothing is sent.
+// different count answers null and the caller sends the text instead.
 export function bulkEditWords(
 	words: readonly Word[],
 	text: string,

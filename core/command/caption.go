@@ -69,19 +69,27 @@ func (c *Context) captionForm(a *captionAddArgs) (words []timeline.Word, fields 
 	if duration, err = c.length("args.duration", string(a.Duration), false); err != nil {
 		return nil, nil, 0, err
 	}
-	fields = strings.Fields(*a.Text)
+	if fields, err = textFields(*a.Text); err != nil {
+		return nil, nil, 0, err
+	}
+	return nil, fields, duration, nil
+}
+
+// textFields splits a caption text on whitespace and checks each word (1 to 80 characters).
+func textFields(text string) ([]string, *Error) {
+	fields := strings.Fields(text)
 	if len(fields) == 0 {
-		return nil, nil, 0, Errorf(CodeValidation, "args.text has no word.").
+		return nil, Errorf(CodeValidation, "args.text has no word.").
 			WithHint(`Send the text to show, for example "Meet the new editor."`).WithPath("args.text")
 	}
 	for i, f := range fields {
 		if chars(f) > 80 {
 			p := fmt.Sprintf("args.text word %d", i)
-			return nil, nil, 0, Errorf(CodeValidation, "%s has %d characters; a word has 1 to 80.", p, chars(f)).
+			return nil, Errorf(CodeValidation, "%s has %d characters; a word has 1 to 80.", p, chars(f)).
 				WithHint("Split long words.").WithPath("args.text")
 		}
 	}
-	return nil, fields, duration, nil
+	return fields, nil
 }
 
 func applyCaptionAdd(c *Context, a *captionAddArgs) error {

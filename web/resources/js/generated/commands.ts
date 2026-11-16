@@ -451,7 +451,7 @@ export interface CaptionSetStyleArgs {
 
 export interface CaptionSetWordsArgs {
   /**
-   * A length, at least the end of the last word. Default: that end.
+   * A length. With words: at least the end of the last word, default that end. With text: default the current duration.
    */
   duration?: string;
   /**
@@ -459,9 +459,13 @@ export interface CaptionSetWordsArgs {
    */
   item_id: string;
   /**
-   * 1 to 60 words with times relative to the caption, as lengths.
+   * Text split on whitespace and spread over the duration; instead of words.
    */
-  words: {
+  text?: string;
+  /**
+   * 1 to 60 words with times relative to the caption, as lengths. Or give text.
+   */
+  words?: {
     /**
      * a time with a unit: "12.5s", "375f" or "00:00:12.500"
      */

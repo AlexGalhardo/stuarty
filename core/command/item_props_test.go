@@ -256,3 +256,23 @@ func TestSetFPSRoundTripKeepsWordsTouching(t *testing.T) {
 		t.Errorf("the last word ends at %d, want %d", end, want)
 	}
 }
+
+// caption.set_words with text changes the word count and keeps the caption's duration (VV-043).
+func TestCaptionSetWordsFromText(t *testing.T) {
+	d := base().caption(itemA, 0, 6).d
+
+	res, err := Default().Apply(d, op2("caption.set_words", `{"item_id": "`+itemA+`", "text": "just two"}`), Env{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	it := res.Doc.Items[itemA]
+	if len(it.Words) != 2 || it.Duration != 60 || it.Words[1].Start+it.Words[1].Duration != 60 {
+		t.Errorf("words = %+v, duration %d", it.Words, it.Duration)
+	}
+
+	both := `{"item_id": "` + itemA + `", "text": "x", "words": [{"text": "a", "start": "0f", "duration": "5f"}]}`
+	if _, err := Default().Apply(d, op2("caption.set_words", both), Env{}); AsError(err) == nil {
+		t.Error("words and text together were accepted")
+	}
+}

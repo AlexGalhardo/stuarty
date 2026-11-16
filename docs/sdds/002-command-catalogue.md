@@ -287,7 +287,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | Command | Phase | Arguments | Effect |
 | --- | --- | --- | --- |
 | `caption.add` | P | `track_id?`, `start`, and either `words` (array of `{text, start, duration}` with times relative to the caption as lengths) or `text` with `duration` (length); `linked_item?`, `x?`, `y?`, `id?` | Adds a caption item. `x` and `y` (pixels, the centre of the item) are used when the track's caption style position is `custom`. With `text`, it is split on whitespace and the words share the duration in proportion to their character counts, each word getting at least one frame |
-| `caption.set_words` | A | `item_id`, `words` | Replaces the words; the item's duration becomes the end of the last word unless `duration?` is given |
+| `caption.set_words` | A | `item_id`, `words` or `text` | Replaces the words; the item's duration becomes the end of the last word unless `duration?` is given |
 | `caption.edit_word` | A | `item_id`, `index`, `text` | Changes one word's text. An empty `text` removes the word; removing the only word of a caption is `E_INVALID_STATE` |
 | `caption.split` | A | `item_id`, `before_word` (index, 1 or more), `new_id?` | Splits a caption into two at a word boundary |
 | `caption.merge` | A | `item_ids` (exactly 2, on the same track, with no other item between them) | Joins two captions; the result keeps the first identifier and spans both |
@@ -2937,8 +2937,9 @@ Replaces the words of a caption.
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | a `caption` |
-| `words` | array of `{text, start, duration}` | yes | none | R16 |
-| `duration` | time, as a length | no | end of the last word | at least the end of the last word |
+| `words` | array of `{text, start, duration}` | one of `words`, `text` | none | R16 |
+| `text` | string | one of `words`, `text` | none | split on whitespace (each word 1 to 80 characters) and spread over the duration like `caption.add` with `text` |
+| `duration` | time, as a length | no | with `words`: end of the last word; with `text`: the current duration | with `words`: at least the end of the last word; with `text`: at least 1 frame per word |
 
 **Preconditions.**
 
