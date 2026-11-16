@@ -210,17 +210,28 @@ func (h *apiHandler) blockedAddress(w http.ResponseWriter, r *http.Request) bool
 // or per browser session, on the routes under /api/v1 and /mcp (4.4).
 func (h *apiHandler) credentialLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		caller, ok := service.CallerFrom(r.Context())
+		_, ok := service.CallerFrom(r.Context())
 		if !ok || !counted(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
+		}
+
+		// The credential, never the actor: in local mode the actor carries a label the client
+		// chooses, and rotating labels must not lift a cap (SR1-03).
+		limiter, key := h.limits.credential, ""
+
+		if header := r.Header.Get("Authorization"); header != "" {
+			tok, _ := auth.Bearer(header)
+			key = "token:" + digest(tok)
+		} else {
+			limiter, key = h.limits.session, "session:"+digest(h.sessionID(r))
 		}
 
 		// A route that is not counted but renders on a miss (the cached frame) has
 		// a cap on what one caller runs at once instead.
 		if route, exempt := h.limits.uncountedRoute(r.Method, r.URL.Path); exempt {
 			if route.maxInFlight > 0 {
-				if !h.limits.acquire(caller.Actor, route) {
+				if !h.limits.acquire(key, route) {
 					web.Fail(w, r, &service.Error{
 						Code: service.CodeQueueFull, Message: "this caller already has frames being rendered.",
 						Retryable: true, Hint: "wait for a frame to arrive before asking for another",
@@ -232,21 +243,12 @@ func (h *apiHandler) credentialLimit(next http.Handler) http.Handler {
 					return
 				}
 
-				defer h.limits.release(caller.Actor, route)
+				defer h.limits.release(key, route)
 			}
 
 			next.ServeHTTP(w, r)
 
 			return
-		}
-
-		limiter, key := h.limits.credential, ""
-
-		if header := r.Header.Get("Authorization"); header != "" {
-			tok, _ := auth.Bearer(header)
-			key = "token:" + digest(tok)
-		} else {
-			limiter, key = h.limits.session, "session:"+digest(h.sessionID(r))
 		}
 
 		if e := middleware.Allow(r, limiter, key); e != nil {
