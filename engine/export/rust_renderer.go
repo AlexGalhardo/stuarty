@@ -11,6 +11,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/engine/compositor"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem-video/engine/gpuhost"
 	"github.com/AlexGalhardo/vukem-video/engine/raster"
 	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
 )
@@ -23,6 +24,10 @@ type PixelRenderer string
 const (
 	PixelRendererGo   PixelRenderer = "go"
 	PixelRendererRust PixelRenderer = "rust"
+	// PixelRendererGPU draws on the GPU in the child process vukem-render when there is an adapter and a
+	// GPU host, and as PixelRendererRust otherwise. The GPU frames are held to the CPU path by SSIM, not byte
+	// for byte (SDD-013 section 3.8).
+	PixelRendererGPU PixelRenderer = "gpu"
 )
 
 // ParsePixelRenderer reads VUKEM_VIDEO_EXPORT_RENDERER: empty is the default, the Go compositor.
@@ -32,9 +37,11 @@ func ParsePixelRenderer(s string) (PixelRenderer, error) {
 		return PixelRendererGo, nil
 	case string(PixelRendererRust):
 		return PixelRendererRust, nil
+	case string(PixelRendererGPU):
+		return PixelRendererGPU, nil
 	}
 
-	return "", fmt.Errorf("export: the renderer %q is not go or rust", s)
+	return "", fmt.Errorf("export: the renderer %q is not go, rust or gpu", s)
 }
 
 // rustBandMinPixels is the frame size under which one instance draws the whole frame: splitting a small frame
@@ -50,6 +57,11 @@ type rustRenderer struct {
 	bitmaps func(plan.BitmapSpec) (raster.Bitmap, error)
 	bands   int
 	hosts   []*renderhost.Host
+
+	// gpu is the child process of the GPU path, started at the first frame; gpuTried is set once the start
+	// was attempted, so a machine without an adapter is asked once.
+	gpu      *gpuhost.Host
+	gpuTried bool
 }
 
 func newRustRenderer(
@@ -66,6 +78,11 @@ func newRustRenderer(
 }
 
 func (r *rustRenderer) close() {
+	if r.gpu != nil {
+		_ = r.gpu.Close()
+		r.gpu = nil
+	}
+
 	for _, h := range r.hosts {
 		_ = h.Close(context.WithoutCancel(r.s.ctx))
 	}
@@ -139,6 +156,10 @@ func (r *rustRenderer) compose(dst *image.RGBA, fp plan.FramePlan, scale float64
 
 	fp.Layers = kept
 
+	if g := r.gpuHost(); g != nil {
+		return rendererError(r.gpuFrame(g, dst, fp, scale, textures, bitmaps))
+	}
+
 	w, h := dst.Rect.Dx(), dst.Rect.Dy()
 
 	n := r.bands
@@ -165,6 +186,62 @@ func (r *rustRenderer) compose(dst *image.RGBA, fp plan.FramePlan, scale float64
 	wg.Wait()
 
 	return rendererError(errors.Join(errs...))
+}
+
+// gpuHost is the child process of the GPU path, or nil when the export draws on the CPU path: the job did not ask
+// for the GPU, has no GPU host, the runner is sandboxed, or the child could not start (no adapter, a missing
+// binary). The choice is made once, before the first frame, so the frames of one export are never a mix of both.
+func (r *rustRenderer) gpuHost() *gpuhost.Host {
+	job := r.s.job
+	if r.gpuTried || job.PixelRenderer != PixelRendererGPU || job.GPUHost == "" || r.s.single {
+		return r.gpu
+	}
+
+	r.gpuTried = true
+
+	g, err := gpuhost.Start(r.s.ctx, job.Runner, gpuhost.Config{
+		Path: job.GPUHost, Dir: r.s.dir, Deadline: r.s.deadline,
+	})
+	if err == nil {
+		r.gpu = g
+	}
+
+	return r.gpu
+}
+
+// gpuFrame draws the whole frame in the child and releases what it uploaded.
+func (r *rustRenderer) gpuFrame(
+	g *gpuhost.Host, dst *image.RGBA, fp plan.FramePlan, scale float64,
+	textures []textureUpload, bitmaps []bitmapUpload,
+) error {
+	var ids []string
+
+	defer func() {
+		for _, id := range ids {
+			_ = g.Release(id)
+		}
+	}()
+
+	for i := range textures {
+		t := &textures[i]
+		ids = append(ids, t.item)
+
+		if err := g.PutTexture(t.item, t.img.W, t.img.H, t.img.Pix, t.opaque); err != nil {
+			return err
+		}
+	}
+
+	for i := range bitmaps {
+		ids = append(ids, bitmaps[i].key)
+
+		if err := g.PutBitmap(bitmaps[i].key, bitmaps[i].bm); err != nil {
+			return err
+		}
+	}
+
+	out := renderhost.Output{Width: dst.Rect.Dx(), Height: dst.Rect.Dy(), Scale: scale}
+
+	return g.Render(renderhost.RenderInput{Output: out, Plan: fp}, dst)
 }
 
 func (r *rustRenderer) ensureHosts(n int) error {
