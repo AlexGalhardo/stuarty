@@ -63,6 +63,9 @@ type payload struct {
 	Expires     string           `json:"expires"`
 	Platforms   map[string]entry `json:"platforms"`
 	Notes       string           `json:"notes"`
+	// Launchers are the artifacts the desktop launcher replaces itself with (SDD-009 section 10.5), by
+	// platform; absent in an older feed.
+	Launchers map[string]entry `json:"launchers"`
 }
 
 type entry struct {
@@ -119,6 +122,7 @@ func parseFeed(raw []byte, key ed25519.PublicKey, platform string, now time.Time
 	}
 
 	e, ok := p.Platforms[platform]
+	e, signed, ok := pickEntry(&p, platform)
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrNoPlatform, platform)
 	}
@@ -128,9 +132,31 @@ func parseFeed(raw []byte, key ed25519.PublicKey, platform string, now time.Time
 		return nil, err
 	}
 
+	offer.signedPlatform = signed
+
 	offer.Notes = cutNotes(p.Notes)
 
 	return offer, nil
+}
+
+// launcherLabel prefixes the platform in the signed message of a launcher artifact, so the signature of an
+// installer never verifies as a launcher artifact and the other way round.
+const launcherLabel = "launcher:"
+
+// pickEntry chooses what the client downloads and the platform name its signature covers. The launcher
+// of macOS and Linux (an .app.zip, an AppImage) is preferred, because the installers of those systems
+// (.dmg, .deb) cannot be applied by the application. Windows and a feed without launchers use the
+// installer of platforms, signed with the plain platform.
+func pickEntry(p *payload, platform string) (entry, string, bool) {
+	if !strings.HasPrefix(platform, "windows-") {
+		if e, ok := p.Launchers[platform]; ok {
+			return e, launcherLabel + platform, true
+		}
+	}
+
+	e, ok := p.Platforms[platform]
+
+	return e, platform, ok
 }
 
 // cutNotes keeps the optional release notes within maxNotesBytes, cut on a character boundary.
