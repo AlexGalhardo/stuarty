@@ -175,7 +175,10 @@ func TestSecurity_T29_NoExistenceOracleOutsideRoots(t *testing.T) {
 	}
 
 	m := newMediaEnv(t, mediaCfg{guard: &pathguard.Config{Roots: []string{root}, Network: true}})
-	alice := network("user:alice", "alice")
+	// A member: an administrator is shown the import roots on purpose (VV-062, SDD-007 section 7.3).
+	alice := service.WithCaller(context.Background(), service.Caller{
+		Actor: "user:alice", Scopes: service.RoleScopes(service.RoleMember), OwnerUserID: "alice",
+	})
 
 	project, err := m.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "p"})
 	if err != nil {
@@ -213,8 +216,16 @@ func TestSecurity_T29_NoExistenceOracleOutsideRoots(t *testing.T) {
 		}
 	}
 
-	if strings.Contains(want, outside) || strings.Contains(want, root) || strings.Contains(want, m.ws) {
-		t.Errorf("the refusal names a path: %s", want)
+	// The JSON form escapes backslashes, so a Windows path must be searched in both forms.
+	for _, p := range []string{outside, root, m.ws} {
+		escaped, jerr := json.Marshal(p)
+		if jerr != nil {
+			t.Fatal(jerr)
+		}
+
+		if strings.Contains(want, p) || strings.Contains(want, strings.Trim(string(escaped), `"`)) {
+			t.Errorf("the refusal names the path %s: %s", p, want)
+		}
 	}
 
 	// The same call for a file inside the root works: the guard is a door, not a wall.
