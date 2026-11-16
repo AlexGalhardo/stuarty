@@ -69,6 +69,24 @@ jobs:
             sdd
             go
             security
+            desktop
+            http
+            ffmpeg
+            renderer
+            docker
+            library
+            events
+            cmd
+            contract
+            pathguard
+            remote
+            timeval
+            store
+            notices
+            projects
+            preview
+            owner
+            e2e
           requireScope: false
           subjectPattern: ^[^A-Z].*[^.]$
           subjectPatternError: Description must start lowercase and must not end with a period.
@@ -95,7 +113,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           types='build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test'
-          scopes='core|timeline|schema|command|plan|lint|engine|raster|ingest|export|image|transcribe|installers|service|workspace|web|api|mcp|cli|ui|site|docs|repo|ci|deps|deps-dev|release|adr|sdd|sdd-[0-9]{3}|go|security'
+          scopes='core|timeline|schema|command|plan|lint|engine|raster|ingest|export|image|transcribe|installers|service|workspace|web|api|mcp|cli|ui|site|docs|repo|ci|deps|deps-dev|release|adr|sdd|sdd-[0-9]{3}|go|security|desktop|http|ffmpeg|renderer|docker|library|events|cmd|contract|pathguard|remote|timeval|store|notices|projects|preview|owner|e2e'
           pattern="^(${types})(\((${scopes})\))?!?: [^A-Z ].*[^. ]$|^(${types})(\((${scopes})\))?!?: [^A-Z ]$"
           bad=0
           while IFS= read -r line; do
@@ -107,7 +125,7 @@ jobs:
             # Commits already pushed with a header over 100 characters; a pushed
             # commit cannot be reworded without a force push (SDD-009 section 6.1).
             case "$sha" in
-              0bb53009b47ba105470f7f29b925c0aea18881ff|c83d5ab77291639e5b320e934a590664fe84b45e|a2d2a6177e62a8c7b41799221e3b7d99202723c0) continue ;;
+              0bb53009b47ba105470f7f29b925c0aea18881ff|c83d5ab77291639e5b320e934a590664fe84b45e|a2d2a6177e62a8c7b41799221e3b7d99202723c0|af3252cc1c4d6e4cca475d2f0248744469bdd6cf|5cf1eba3e81e3a6356011cc2ecaf0e5310dddff2) continue ;;
             esac
             if [ "${#subject}" -gt 100 ] || ! printf '%s\n' "$subject" | grep -qE "$pattern"; then
               echo "::error title=Not a Conventional Commit::${sha:0:9} ${subject}"

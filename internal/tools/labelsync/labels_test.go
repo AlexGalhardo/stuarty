@@ -134,7 +134,7 @@ func TestAreaLabelsAreTheCommitScopes(t *testing.T) {
 
 	var sddScopes []string
 
-	for _, row := range regexp.MustCompile("(?m)^\\| `([a-z-]+)` \\|").FindAllStringSubmatch(table, -1) {
+	for _, row := range regexp.MustCompile("(?m)^\\| `([a-z0-9-]+)` \\|").FindAllStringSubmatch(table, -1) {
 		sddScopes = append(sddScopes, row[1])
 	}
 
