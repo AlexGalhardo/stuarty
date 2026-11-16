@@ -228,7 +228,7 @@ func (f *frameSource) prestart(fp *plan.FramePlan) {
 		}
 
 		d, err := f.decoder(l, &a)
-		if err != nil || d.begun {
+		if err != nil || (d.begun && d.curIdx == l.SourceFrame) {
 			continue
 		}
 
@@ -303,7 +303,7 @@ func (d *videoDecoder) frame(sf int) ([]byte, error) {
 
 		return nil, err
 	}
-	if !d.begun || sf < d.curIdx || sf-d.curIdx > restartGap {
+	if !d.begun || sf < d.curIdx || sf-d.curIdx > restartGap || (d.s.single && sf != d.curIdx) {
 		if err := d.start(sf); err != nil {
 			return nil, err
 		}
