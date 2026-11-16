@@ -7,9 +7,13 @@
 //! `.agents/rules/rust.md`).
 
 pub mod canvas;
+pub mod fonts;
 pub mod geom;
+pub mod layout;
 pub mod scan;
 pub mod shape;
+pub mod text;
+pub mod validate;
 
 /// A straight (non-premultiplied) RGBA colour.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
