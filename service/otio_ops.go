@@ -195,14 +195,31 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 		return nil, eerr
 	}
 
+	verb := "imported "
+	if !edit.Applied {
+		verb = "would import "
+	}
+
 	return &ProjectOtioImportResult{
 		UntrustedNotice: UntrustedNotice,
 		ProjectID:       row.ID, Revision: edit.Revision, Applied: edit.Applied, Edit: edit,
 		UnresolvedMedia: otioMedia(unresolved), Lost: otioLost(lost),
-		Text: "imported " + strconv.Itoa(len(ops)) + " operation(s) into " + row.ID + " r" +
+		Text: verb + strconv.Itoa(len(ops)) + " operation(s) into " + row.ID + " r" +
 			strconv.FormatInt(edit.Revision, 10) + "; " + strconv.Itoa(len(unresolved)) + " unresolved media, " +
-			strconv.Itoa(len(lost)) + " lost item(s)",
+			strconv.Itoa(len(lost)) + " lost item(s)" + noClipsNote(ops, len(unresolved)),
 	}, nil
+}
+
+// noClipsNote explains an import that placed tracks but no clip because no media reference
+// of the file matched an asset: media is matched by asset name, and nothing is opened.
+func noClipsNote(ops []command.Operation, unresolved int) string {
+	if unresolved == 0 ||
+		slices.ContainsFunc(ops, func(o command.Operation) bool { return o.Op == "clip.add" || o.Op == "audio.add" }) {
+		return ""
+	}
+
+	return "; no clip was placed: media is matched by asset name (the target_url of the file or its last path " +
+		"segment), so import the media with media:import first, then import the file again"
 }
 
 // readOtio opens the file with the import path rules and parses it.

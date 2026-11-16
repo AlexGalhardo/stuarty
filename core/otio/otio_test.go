@@ -556,3 +556,111 @@ func FuzzImport(f *testing.F) {
 		im.Operations(assets, seqIDs())
 	})
 }
+
+// VV-025: the properties OTIO has no field for travel in the vukem metadata and come back
+// as commands.
+func TestRoundTripKeepsVukemProperties(t *testing.T) {
+	d := sampleDoc()
+
+	trk := d.Tracks[trkVid]
+	trk.Muted = true
+	d.Tracks[trkVid] = trk
+
+	c1 := d.Items["itm_c000000001"]
+	x := 120.0
+	c1.X, c1.Scale, c1.Rotation, c1.Opacity = &x, 1.5, 12, 0.8
+	c1.Volume, c1.FadeIn, c1.AudioMuted = 0.5, 6, true
+	c1.Brightness, c1.Contrast, c1.Saturation = 0.1, 1.2, 0.9
+	c1.Fit, c1.Crop = "contain", &timeline.Crop{Left: 0.1, Bottom: 0.2}
+	c1.Filter, c1.FilterAmount, c1.Blur = "sepia", 0.6, 4
+	d.Items[c1.ID] = c1
+
+	music := d.Items["itm_c000000004"]
+	music.Volume, music.FadeOut = 2, 10
+	d.Items[music.ID] = music
+
+	first, _, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	im, err := Parse(first)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	doc := build(t, im, newDoc(im.FPS))
+
+	var got timeline.Item
+
+	for _, it := range doc.Items {
+		if it.Name == "intro" {
+			got = it
+		}
+	}
+
+	if got.X == nil || *got.X != 120 || got.Scale != 1.5 || got.Rotation != 12 || got.Opacity != 0.8 ||
+		got.Volume != 0.5 || got.FadeIn != 6 || !got.AudioMuted || got.Brightness != 0.1 || got.Contrast != 1.2 ||
+		got.Saturation != 0.9 || got.Fit != "contain" || got.Crop == nil || got.Crop.Left != 0.1 ||
+		got.Crop.Bottom != 0.2 || got.Filter != "sepia" || got.FilterAmount != 0.6 || got.Blur != 4 {
+		t.Errorf("properties did not come back: %+v", got)
+	}
+
+	if !doc.Tracks[findTrack(doc, "Video")].Muted {
+		t.Error("the muted flag of the track did not come back")
+	}
+
+	second, _, err := Export(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(withoutMarkers(t, second), withoutMarkers(t, first)) {
+		t.Errorf("round trip differs:\n%s\n---\n%s", second, first)
+	}
+}
+
+func findTrack(d *timeline.Document, name string) string {
+	for id, t := range d.Tracks {
+		if t.Name == name {
+			return id
+		}
+	}
+
+	return ""
+}
+
+// The metadata of a file is untrusted: a value out of range is reported and left out, and
+// the rest of the batch still applies.
+func TestImportReportsBadVukemMetadata(t *testing.T) {
+	file := `{"OTIO_SCHEMA":"Timeline.1","name":"x","tracks":{"OTIO_SCHEMA":"Stack.1","children":[
+	{"OTIO_SCHEMA":"Track.1","kind":"Video","name":"V","metadata":{"vukem":{"hidden":"yes"}},"children":[
+	{"OTIO_SCHEMA":"Clip.2","name":"c","metadata":{"vukem":{"properties":{"scale":99,"opacity":"x","blur":3,
+	"crop":{"left":5},"filter":"vhs","fit":"cover"}}},
+	"source_range":{"OTIO_SCHEMA":"TimeRange.1","start_time":{"OTIO_SCHEMA":"RationalTime.1","rate":30,"value":0},
+	"duration":{"OTIO_SCHEMA":"RationalTime.1","rate":30,"value":30}},
+	"media_reference":{"OTIO_SCHEMA":"ExternalReference.1","target_url":"clips/a.mp4"}}]}]}}`
+
+	im, err := Parse([]byte(file))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	lost := strings.Builder{}
+	for _, l := range im.Lost {
+		lost.WriteString(l.Feature + ";")
+	}
+
+	for _, want := range []string{"scale", "opacity", "crop", "filter", "fit"} {
+		if !strings.Contains(lost.String(), "vukem property "+want) {
+			t.Errorf("%s was not reported: %s", want, lost.String())
+		}
+	}
+
+	doc := build(t, im, newDoc(im.FPS))
+	for _, it := range doc.Items {
+		if it.Blur != 3 || it.Scale != 1 {
+			t.Errorf("the valid blur was not kept or a bad value got through: %+v", it)
+		}
+	}
+}

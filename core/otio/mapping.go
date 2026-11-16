@@ -22,6 +22,9 @@ const (
 	schemaTimeRange  = "TimeRange.1"
 	schemaRational   = "RationalTime.1"
 
+	// metaNamespace is the key of the metadata Vukem writes on tracks and clips (SDD-001 section 9).
+	metaNamespace = "vukem"
+
 	dissolve = "SMPTE_Dissolve"
 	kindVid  = "Video"
 	kindAud  = "Audio"

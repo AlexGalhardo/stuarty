@@ -145,6 +145,12 @@ func TestOtioImportReportsUnresolvedMediaAndLostItems(t *testing.T) {
 	if len(res.Lost) == 0 {
 		t.Errorf("the clips left out are not in lost: %+v", res)
 	}
+
+	// VV-025: an import that placed no clip says why and what to do.
+	if !strings.Contains(res.Text, "no clip was placed") || !strings.Contains(res.Text, "media:import") ||
+		!strings.HasPrefix(res.Text, "imported ") {
+		t.Errorf("text = %q", res.Text)
+	}
 }
 
 func TestOtioImportRefusals(t *testing.T) {
@@ -205,6 +211,11 @@ func TestOtioImportDryRunWritesNothing(t *testing.T) {
 
 	if !bytes.Equal(m.document(target), before) || m.head(target).Revision != base {
 		t.Errorf("a dry run changed the project")
+	}
+
+	// VV-025: nothing was imported, so the text must not say it was.
+	if !strings.HasPrefix(res.Text, "would import ") {
+		t.Errorf("dry run text = %q", res.Text)
 	}
 }
 
