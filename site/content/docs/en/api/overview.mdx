@@ -1,0 +1,116 @@
+---
+title: "API overview"
+description: "How to call the HTTP API of Vukem Video: the address, the token or key, the conventions and the errors."
+---
+
+## You will learn
+
+- where the API is and how to authenticate in local mode and in network mode
+- the conventions every operation shares: revisions, pages, retries and errors
+- how to read an operation page and run its request in your language
+
+## The idea
+
+The HTTP API is the editor's own interface. The browser editor, the CLI and the [MCP server](/docs/agents/mcp) call the same service, so a request here does exactly what the same action does in the editor. Every operation has a page in this section, grouped by resource in the sidebar, with its parameters, its body, its responses and a request you can copy in eight languages.
+
+The pages are generated from the OpenAPI document that the server itself serves, so a route, a field or a status never drifts from the program. The document is at `GET /openapi.json` while `vukem-video serve` runs.
+
+## Quick start
+
+<Steps>
+<Step title="Start the server">
+
+```bash
+vukem-video serve
+```
+
+The server listens on `127.0.0.1:7878` unless `VUKEM_VIDEO_ADDR` says otherwise. The API lives under `/api/v1`.
+
+</Step>
+<Step title="Read the token">
+
+In local mode the server creates a random token in the [workspace](/docs/workspace), in the file `token`. Put it in a variable:
+
+```bash
+export VUKEM_VIDEO_KEY="$(cat ~/.vukem-video/token)"
+```
+
+</Step>
+<Step title="Make a request">
+
+```bash
+curl -X POST "http://127.0.0.1:7878/api/v1/projects" \
+  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Launch teaser", "preset": "9:16"}'
+```
+
+The answer is `201 Created` with the id of the new project and its revision `0`. Open the same project in the editor to see it.
+
+</Step>
+</Steps>
+
+## Authentication
+
+Every operation takes the secret in one header:
+
+```text
+Authorization: Bearer <secret>
+```
+
+| Mode | The secret | Where it comes from |
+| --- | --- | --- |
+| Local | the local token | the file `token` in the [workspace](/docs/workspace) |
+| Network | an API key | created in the editor or with `POST /api/v1/keys`; see [API keys and scopes](/docs/self-hosting/api-keys) |
+
+A request with a header that is not valid is refused with `401`; it never falls back to a session cookie. The browser editor uses a cookie, which scripts do not need. A token or key is accepted only in a header, never in a URL.
+
+An API key has scopes (`read`, `edit`, `media`, `render`, `admin`) and each operation page says which one it needs. The local token has every scope. The [local and network mode](/docs/concepts/local-and-network-mode) page explains the two modes.
+
+### Name your client
+
+The optional header `Vukem-Video-Client` names the actor of your edits, so the history shows who did what. It takes 1 to 32 characters from `a-z`, `0-9` and `-`, and not `ui`. The actor is then `local:<label>`; without the header it is `local:api`.
+
+## Conventions
+
+- **Revisions.** A project has a revision that grows with every committed batch. An edit sends the `base_revision` it was planned against. If the project moved on, the edit is refused with `E_REVISION_CONFLICT` and changes nothing; read again and retry. See [Batches, revisions and idempotency](/docs/agents/batches).
+- **Retries.** An edit may carry an `idempotency_key` (8 to 64 characters), or the same value in the `Idempotency-Key` header. A repeated key with the same batch returns the first result.
+- **Dry runs.** Operations that change something accept `dry_run: true` and check without changing.
+- **Pages.** A list takes `cursor` and `limit` and answers with `next_cursor`; pass it back as `cursor` for the next page. It is `null` on the last page.
+- **Times.** A time is a string with a unit, such as `12.5s`, `375f` or `00:00:12.500`.
+- **Long work.** Imports, exports and transcriptions are [jobs](/docs/guide/jobs). The call returns `202 Accepted` with the job; read it with the jobs operations or follow the [events stream](/docs/reference/events).
+
+## Errors
+
+An error is `application/problem+json` with `code`, `message`, `hint` and `retryable`, and the HTTP status of the code:
+
+```json
+{
+  "status": 401,
+  "code": "E_UNAUTHORIZED",
+  "message": "the request carries no credentials.",
+  "hint": "send the local token as Authorization: Bearer <token>",
+  "retryable": false
+}
+```
+
+When `retryable` is true, a later retry can succeed. The [error codes](/docs/reference/error-codes) page lists every code and its status.
+
+## Read an operation page
+
+Each page has two columns. On the left: what the operation does, the authentication, the parameters, the request body and the responses. On the right: the same request in curl, Python, JavaScript, Go, PHP, Java, C# and Ruby, and an example of each response.
+
+The samples read the secret from the environment variable `VUKEM_VIDEO_KEY` and use the default address. Replace placeholders such as `PROJECT_ID` with real ids. The response examples are built from the schemas, so a value is a placeholder of its type; the tables hold the real fields.
+
+## Common mistakes
+
+- Sending the token as a query parameter or in a cookie from a script: only the `Authorization` header works for scripts.
+- Editing with a stale `base_revision`: read the project first with `GET /api/v1/projects/{id}` and use its revision.
+- Reading a `202` as done: the work runs in a job; wait for it before you use the result.
+
+## Next steps
+
+- [All endpoints](/docs/api/endpoints)
+- [The schemas](/docs/api/schemas)
+- [The MCP server](/docs/agents/mcp), for agents
+- [Error codes](/docs/reference/error-codes)

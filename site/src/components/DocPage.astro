@@ -13,6 +13,6 @@ const meta = docMetadata(doc);
 const html = await renderDoc(doc);
 ---
 
-<Base title={meta.title} description={meta.description} canonical={doc.href} twin={`${doc.href}.md`} progress>
+<Base title={meta.title} description={meta.description} canonical={doc.href} twin={`${doc.href}.md`} section={doc.section} progress>
 	<Fragment set:html={html} />
 </Base>

@@ -1,0 +1,124 @@
+{
+  "api": [
+    {
+      "tag": "Projects",
+      "pages": [
+        "projects.list",
+        "projects.create",
+        "projects.get",
+        "bitmaps.get",
+        "projects.bundle.export",
+        "projects.edit",
+        "projects.frame",
+        "projects.history",
+        "projects.lint",
+        "projects.otio.export",
+        "projects.otio.import",
+        "projects.plan",
+        "projects.redo",
+        "projects.restore",
+        "projects.sheet",
+        "projects.snap_points",
+        "projects.trash",
+        "projects.undo",
+        "projects.bundle.import",
+        "trash.empty"
+      ]
+    },
+    {
+      "tag": "Media",
+      "pages": [
+        "media.list",
+        "media.import",
+        "media.inspect",
+        "media.chunks",
+        "media.peaks",
+        "media.proxy",
+        "media.restore",
+        "media.strip",
+        "media.thumbnail",
+        "media.trash"
+      ]
+    },
+    {
+      "tag": "Jobs",
+      "pages": [
+        "jobs.get",
+        "jobs.cancel",
+        "jobs.file",
+        "jobs.list",
+        "jobs.start"
+      ]
+    },
+    {
+      "tag": "Events",
+      "pages": [
+        "events.stream"
+      ]
+    },
+    {
+      "tag": "Commands",
+      "pages": [
+        "commands.list",
+        "commands.get"
+      ]
+    },
+    {
+      "tag": "Templates",
+      "pages": [
+        "templates.list",
+        "templates.save",
+        "templates.export",
+        "templates.file",
+        "templates.instantiate",
+        "templates.import"
+      ]
+    },
+    {
+      "tag": "Fonts",
+      "pages": [
+        "fonts.list",
+        "fonts.import"
+      ]
+    },
+    {
+      "tag": "Brand kit",
+      "pages": [
+        "brand.get",
+        "brand.set"
+      ]
+    },
+    {
+      "tag": "System",
+      "pages": [
+        "handshake.get",
+        "system.get",
+        "system.launch",
+        "system.tools",
+        "system.tools.install"
+      ]
+    },
+    {
+      "tag": "API keys",
+      "pages": [
+        "keys.list",
+        "keys.create",
+        "keys.revoke"
+      ]
+    },
+    {
+      "tag": "Users",
+      "pages": [
+        "users.list",
+        "users.create",
+        "users.update"
+      ]
+    },
+    {
+      "tag": "Audit",
+      "pages": [
+        "audit.list"
+      ]
+    }
+  ]
+}

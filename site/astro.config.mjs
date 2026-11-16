@@ -47,6 +47,8 @@ export default defineConfig({
 		"/pt-br": `${prefix}/`,
 		"/pt-br/docs": `${prefix}/docs/introduction/`,
 		"/pt-br/changelog": `${prefix}/changelog/`,
+		// The HTTP API moved to its own section (docs/api).
+		"/docs/reference/http-api": `${prefix}/docs/api/overview/`,
 		...legacyPortuguese,
 	},
 });

@@ -1,13 +1,16 @@
 import { Sidebar } from "@/components/sidebar";
 import { getNavGroups } from "@/lib/content";
+import type { NavSection } from "@/lib/page-files";
 import { ui } from "@/lib/ui-text";
 
 /** Sidebar + content columns of every /docs page. */
 export function DocsFrame({
 	pathname,
+	section,
 	children,
 }: {
 	pathname: string;
+	section: NavSection;
 	children: React.ReactNode;
 }): React.ReactElement {
 	return (
@@ -16,7 +19,7 @@ export function DocsFrame({
 				aria-label={ui.documentation}
 				className="sticky top-(--header-h) hidden h-[calc(100dvh-var(--header-h))] w-64 shrink-0 overflow-y-auto py-8 pr-6 scroll-slim lg:block"
 			>
-				<Sidebar groups={getNavGroups()} pathname={pathname} />
+				<Sidebar groups={getNavGroups(section)} pathname={pathname} />
 			</aside>
 			<div className="min-w-0 flex-1">{children}</div>
 		</div>

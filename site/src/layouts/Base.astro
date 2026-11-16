@@ -6,6 +6,7 @@ import "@fontsource/jetbrains-mono/latin-400.css";
 import "../../app/globals.css";
 import { Header } from "@/components/header";
 import { getNavGroups } from "@/lib/content";
+import type { NavSection } from "@/lib/page-files";
 import { ui } from "@/lib/ui-text";
 import { site, withBase } from "@/lib/site";
 import { withTrailingSlash } from "@/lib/trailing-slash";
@@ -20,6 +21,8 @@ interface Props {
 	noindex?: boolean;
 	/** The path of the Markdown twin, when the page has one. */
 	twin?: string;
+	/** The sidebar the mobile drawer shows. */
+	section?: NavSection;
 }
 
 const {
@@ -29,10 +32,11 @@ const {
 	progress = false,
 	noindex = false,
 	twin,
+	section = "docs",
 } = Astro.props;
 const t = ui;
 const fullTitle = title.includes(site.name) ? title : `${title} — ${site.name}`;
-const groups = getNavGroups();
+const groups = getNavGroups(section);
 ---
 
 <!doctype html>

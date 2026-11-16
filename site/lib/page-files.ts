@@ -2,7 +2,7 @@
 // scripts, so it imports nothing through the "@/" alias. Node only.
 import fs from "node:fs";
 import path from "node:path";
-import { navigation, type NavCategory } from "../content/navigation.ts";
+import { navigation, type NavCategory, type NavSection } from "../content/navigation.ts";
 
 export const CONTENT_ROOT = path.join(process.cwd(), "content");
 
@@ -51,3 +51,4 @@ export function englishFiles(): string[] {
 }
 
 export { navigation };
+export type { NavSection };
