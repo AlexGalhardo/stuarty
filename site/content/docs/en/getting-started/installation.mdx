@@ -38,7 +38,7 @@ docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data \
 
 `latest` is for trying it out; pin `X.Y.Z` for a server you keep. The `127.0.0.1:` in `-p` matters: over plain HTTP nothing is encrypted, so any other interface needs TLS in front (see the [Docker page](/docs/self-hosting/docker)).
 
-A container always runs in [network mode](/docs/self-hosting/network-mode), where sign-in is required, so the two `VUKEM_VIDEO_ADMIN_*` variables create the first administrator. Open `http://127.0.0.1:7878` and sign in with that email and password. The [Docker page](/docs/self-hosting/docker) explains each option.
+A container always runs in [network mode](/docs/self-hosting/network-mode), where sign-in is required, so the two `VUKEM_VIDEO_ADMIN_*` variables create the first administrator. Open `http://127.0.0.1:7878` and sign in with that email and password. The [Docker page](/docs/self-hosting/docker) explains each option and walks from this command to a first verified export.
 
 The container runs as the user `app` (uid 10001) and sends no data anywhere by default. `docker run --rm ghcr.io/alexgalhardo/vukem-video:X.Y.Z version` prints the version.
 

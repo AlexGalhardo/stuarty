@@ -5,7 +5,7 @@ description: "Five complete command sequences an agent can copy: import, cut, ca
 
 ## The idea
 
-Each recipe is a sequence of CLI commands that works as written. The same operations exist as MCP tools; the batches are the same JSON. Replace the identifiers with the ones your commands print, or pass your own with `--id` and `--asset-id` as below.
+Each recipe is a sequence of CLI commands that works as written. The same operations exist as MCP tools; the batches are the same JSON. Replace the identifiers with the ones your commands print, or pass your own with `--id` and `--asset-id` as below. A server with accounts (network mode, the container) chooses the project id itself and refuses `project:create --id`: use the `project_id` it prints.
 
 ## Import, cut, caption and export
 
