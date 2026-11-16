@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Asset ast_3c5v8n2w6d is a video asset; lut_asset needs a lut asset.",
+  "hint": "Import a .cube file and use the id of that asset.",
+  "retryable": false,
+  "path": "args.lut_asset"
+}

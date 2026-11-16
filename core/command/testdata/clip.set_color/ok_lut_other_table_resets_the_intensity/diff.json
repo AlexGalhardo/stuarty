@@ -1,0 +1,18 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "lut": [
+        {
+          "asset": "ast_2b3c4d5f6g",
+          "intensity": 0.4
+        },
+        {
+          "asset": "ast_7h8j9k2m3n",
+          "intensity": 1
+        }
+      ]
+    }
+  }
+]

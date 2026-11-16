@@ -1,0 +1,12 @@
+{
+  "code": "E_IN_USE",
+  "message": "Asset ast_2b3c4d5f6g is used by items itm_m1n2p3q4r5.",
+  "hint": "Delete those items with item.delete, then remove the asset.",
+  "retryable": false,
+  "path": "args.asset_id",
+  "details": {
+    "used_by": [
+      "itm_m1n2p3q4r5"
+    ]
+  }
+}

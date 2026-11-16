@@ -32,7 +32,7 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `hash` | `string` | yes | pattern `^sha256:[0-9a-f]\{64\}$` |
 | `height` | `integer` | no | min 1 |
 | `id` | `string` | yes | pattern `^ast_[0-9a-hjkmnp-tv-z]\{10\}$` |
-| `kind` | `video`, `audio`, `image` | yes |  |
+| `kind` | `video`, `audio`, `image`, `lut` | yes |  |
 | `name` | `string` | yes |  |
 | `sample_count` | `integer` | no | min 1 |
 | `width` | `integer` | no | min 1 |
@@ -133,6 +133,7 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `keyframes` | `object` | no |  |
 | `link` | `string` | no | pattern `^lnk_[0-9a-hjkmnp-tv-z]\{10\}$` |
 | `linked_item` | `string` | no | pattern `^itm_[0-9a-hjkmnp-tv-z]\{10\}$` |
+| `lut` | `Lut` | no |  |
 | `markers` | array of `Marker` | no | at most 200 items |
 | `mask` | `Mask` | no |  |
 | `name` | `string` | no |  |
@@ -172,6 +173,13 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold` | no | default `"linear"` |
 | `t` | `integer` | yes | min 0 |
 | `value` | `number` | yes |  |
+
+## Lut
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset` | `string` | yes | pattern `^ast_[0-9a-hjkmnp-tv-z]\{10\}$` |
+| `intensity` | `number` | yes | min 0; max 1 |
 
 ## Marker
 

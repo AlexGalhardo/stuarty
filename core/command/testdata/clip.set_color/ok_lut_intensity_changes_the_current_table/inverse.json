@@ -1,0 +1,13 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "lut": {
+        "asset": "ast_2b3c4d5f6g",
+        "intensity": 1
+      }
+    }
+  }
+]

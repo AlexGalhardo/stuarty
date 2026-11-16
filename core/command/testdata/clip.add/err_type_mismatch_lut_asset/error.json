@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Asset ast_2b3c4d5f6g is a lookup table; clip.add places video or images.",
+  "hint": "Use clip.set_lut to grade a clip with it.",
+  "retryable": false,
+  "path": "args.asset_id"
+}

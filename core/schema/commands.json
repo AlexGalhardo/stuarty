@@ -56,7 +56,8 @@
               "enum": [
                 "video",
                 "audio",
-                "image"
+                "image",
+                "lut"
               ],
               "type": "string"
             },
@@ -1460,6 +1461,16 @@
           "description": "A clip.",
           "type": "string"
         },
+        "lut_asset": {
+          "description": "Id of a lut asset to grade the clip with.",
+          "type": "string"
+        },
+        "lut_intensity": {
+          "description": "0 to 1; default 1; 0 removes the lookup table.",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
         "saturation": {
           "description": "0 to 2; default 1.",
           "maximum": 2,
@@ -1484,7 +1495,7 @@
       ],
       "type": "object"
     },
-    "description": "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is warmer, positive tint is more magenta, hue rotates the colours in degrees.",
+    "description": "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is warmer, positive tint is more magenta, hue rotates the colours in degrees. lut_asset is the id of a lut asset (a .cube file) and lut_intensity how much of it is mixed in, 0 to 1, default 1; lut_intensity 0 removes the lookup table.",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -1499,7 +1510,7 @@
     "name": "clip.set_color",
     "phase": "alpha",
     "scope": "edit",
-    "summary": "Sets the brightness, contrast, saturation, temperature, tint and hue of a clip."
+    "summary": "Sets the brightness, contrast, saturation, temperature, tint, hue and lookup table of a clip."
   },
   {
     "args_schema": {

@@ -208,8 +208,10 @@ func (v *validator) asset(key string, a Asset) {
 		if a.Width < 1 || a.Height < 1 {
 			v.add(VShape, path+".width", key, "an image asset needs width and height")
 		}
+	case AssetLUT:
+		// A lookup table has no picture facts.
 	default:
-		v.add(VShape, path+".kind", key, "kind must be video, audio or image")
+		v.add(VShape, path+".kind", key, "kind must be video, audio, image or lut")
 	}
 }
 
@@ -433,7 +435,7 @@ func (v *validator) itemFieldsForType(path, key string, it Item) {
 		bad("asset")
 	}
 	if it.Type != ItemClip &&
-		(it.Crop != nil || it.Brightness != 0 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0 || it.AudioMuted) {
+		(it.Crop != nil || it.Lut != nil || it.Brightness != 0 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0 || it.AudioMuted) {
 		bad("crop")
 	}
 	if it.Type != ItemText && it.Text != "" {
@@ -543,11 +545,11 @@ func (v *validator) media(path, key string, it Item) {
 		return
 	}
 	switch {
-	case it.Type == ItemClip && a.Kind == AssetAudio:
-		v.add(VAssetRef, path+".asset", key, "a clip needs a video or image asset, %s is audio", it.Asset)
+	case it.Type == ItemClip && (a.Kind == AssetAudio || a.Kind == AssetLUT):
+		v.add(VAssetRef, path+".asset", key, "a clip needs a video or image asset, %s is %s", it.Asset, a.Kind)
 		v.related(it.Asset)
 		return
-	case it.Type == ItemAudio && (a.Kind == AssetImage || a.Kind == AssetVideo && !a.HasAudio):
+	case it.Type == ItemAudio && (a.Kind == AssetImage || a.Kind == AssetLUT || a.Kind == AssetVideo && !a.HasAudio):
 		v.add(
 			VAssetRef,
 			path+".asset",
@@ -614,8 +616,8 @@ func assetFrames(a Asset, fps Rational) (*big.Int, bool) {
 		n := new(big.Int).Mul(big.NewInt(int64(a.SampleCount)), big.NewInt(int64(fps.Num)))
 		d := new(big.Int).Mul(big.NewInt(48000), big.NewInt(int64(fps.Den)))
 		return n.Div(n, d), true
-	case AssetImage:
-		// An image has no duration limit.
+	case AssetImage, AssetLUT:
+		// An image has no duration limit and a lookup table has no duration.
 	}
 	return nil, false
 }
@@ -656,6 +658,32 @@ func (v *validator) clip(path, key string, it Item) {
 	}
 	if !inRange(it.Hue, -180, 180) {
 		v.add(VShape, path+".hue", key, "hue must be between -180 and 180")
+	}
+	v.lut(path, key, it)
+}
+
+// lut checks the lookup table reference of a clip: the asset is a lut asset of the project and the
+// intensity is between 0 and 1.
+func (v *validator) lut(path, key string, it Item) {
+	l := it.Lut
+	if l == nil {
+		return
+	}
+	if !inRange(l.Intensity, 0, 1) {
+		v.add(VShape, path+".lut.intensity", key, "lut intensity must be between 0 and 1")
+	}
+	if !ValidID(PrefixAsset, l.Asset) {
+		v.add(VID, path+".lut.asset", key, "%q is not a valid asset identifier", l.Asset)
+		return
+	}
+	a, ok := v.doc.Assets[l.Asset]
+	switch {
+	case !ok:
+		v.add(VAssetRef, path+".lut.asset", key, "asset %s does not exist", l.Asset)
+		v.related(l.Asset)
+	case a.Kind != AssetLUT:
+		v.add(VAssetRef, path+".lut.asset", key, "a lut needs an asset of kind lut, %s is %s", l.Asset, a.Kind)
+		v.related(l.Asset)
 	}
 }
 

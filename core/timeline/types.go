@@ -53,7 +53,7 @@ type Extra map[string]any
 type Color string
 
 type (
-	// AssetKind is video, audio or image.
+	// AssetKind is video, audio, image or lut.
 	AssetKind string
 	// TrackKind is visual or audio.
 	TrackKind string
@@ -66,6 +66,8 @@ const (
 	AssetVideo AssetKind = "video"
 	AssetAudio AssetKind = "audio"
 	AssetImage AssetKind = "image"
+	// AssetLUT is a colour lookup table (a .cube file, SDD-001 §3.2); a clip refers to it with Lut, it is never placed.
+	AssetLUT AssetKind = "lut"
 
 	TrackVisual TrackKind = "visual"
 	TrackAudio  TrackKind = "audio"
@@ -112,13 +114,13 @@ type Settings struct {
 type Asset struct {
 	ID          string    `json:"id"                     pattern:"^ast_[0-9a-hjkmnp-tv-z]{10}$"`
 	Hash        string    `json:"hash"                   pattern:"^sha256:[0-9a-f]{64}$"`
-	Kind        AssetKind `json:"kind"                                                          enum:"video,audio,image"`
+	Kind        AssetKind `json:"kind"                                                          enum:"video,audio,image,lut"`
 	Name        string    `json:"name"`
 	FrameRate   Rational  `json:"frame_rate,omitzero"`
-	FrameCount  int       `json:"frame_count,omitempty"                                                                  min:"1"`
-	SampleCount int       `json:"sample_count,omitempty"                                                                 min:"1"`
-	Width       int       `json:"width,omitempty"                                                                        min:"1"`
-	Height      int       `json:"height,omitempty"                                                                       min:"1"`
+	FrameCount  int       `json:"frame_count,omitempty"                                                                      min:"1"`
+	SampleCount int       `json:"sample_count,omitempty"                                                                     min:"1"`
+	Width       int       `json:"width,omitempty"                                                                            min:"1"`
+	Height      int       `json:"height,omitempty"                                                                           min:"1"`
 	HasAudio    bool      `json:"has_audio,omitempty"`
 	// HasAlpha says the video has an alpha channel (a lower third, a logo, an effect): the export
 	// composes it over the layers below instead of drawing it opaque (SDD-011 4.3.5).
@@ -175,6 +177,9 @@ type Item struct {
 
 	// Visual items, optional and additive (SDD-001 §3.4): the colour the compositor keys out.
 	ChromaKey *ChromaKey `json:"chroma_key,omitempty"`
+
+	// Clip only, optional and additive (SDD-001 §3.5): a colour lookup table applied after the colour adjustments.
+	Lut *Lut `json:"lut,omitempty"`
 
 	// Visual items, optional and additive (SDD-001 §3.4): how the item is mixed with what is below it.
 	// Absent means "normal".
@@ -267,6 +272,15 @@ type ChromaKey struct {
 	Smoothness float64 `json:"smoothness" min:"0" max:"1"`
 	Spill      float64 `json:"spill"      min:"0" max:"1"`
 	Extra      Extra   `json:"-"`
+}
+
+// Lut points a clip at a lookup table asset (a .cube file) and says how much of the grade is mixed in:
+// 0 is the original picture, 1 the full table. The core stores and checks the reference; reading the file
+// and applying it is the engine's work.
+type Lut struct {
+	Asset     string  `json:"asset"     pattern:"^ast_[0-9a-hjkmnp-tv-z]{10}$"`
+	Intensity float64 `json:"intensity"                                        min:"0" max:"1"`
+	Extra     Extra   `json:"-"`
 }
 
 // Mask limits the drawn pixels of an item to a rectangle or an ellipse in the item's own frame

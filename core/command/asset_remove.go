@@ -34,7 +34,7 @@ func applyAssetRemove(c *Context, a *assetRemoveArgs) error {
 	}
 	var users []string
 	for id := range c.Doc.Items {
-		if c.Doc.Items[id].Asset == a.AssetID {
+		if it := c.Doc.Items[id]; it.Asset == a.AssetID || it.Lut != nil && it.Lut.Asset == a.AssetID {
 			users = append(users, id)
 		}
 	}

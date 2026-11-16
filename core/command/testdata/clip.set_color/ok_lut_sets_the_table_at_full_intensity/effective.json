@@ -1,0 +1,12 @@
+{
+  "brightness": 0,
+  "contrast": 1,
+  "hue": 0,
+  "lut": {
+    "asset_id": "ast_2b3c4d5f6g",
+    "intensity": 1
+  },
+  "saturation": 1,
+  "temperature": 0,
+  "tint": 0
+}

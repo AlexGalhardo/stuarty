@@ -2,6 +2,7 @@
   "brightness": 0,
   "contrast": 1,
   "hue": -180,
+  "lut": null,
   "saturation": 1,
   "temperature": -1,
   "tint": 1

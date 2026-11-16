@@ -17,7 +17,7 @@ export interface AssetAddArgs {
     hash: string;
     height?: number;
     id: string;
-    kind: "video" | "audio" | "image";
+    kind: "video" | "audio" | "image" | "lut";
     name: string;
     sample_count?: number;
     width?: number;
@@ -623,6 +623,14 @@ export interface ClipSetColorArgs {
    * A clip.
    */
   item_id: string;
+  /**
+   * Id of a lut asset to grade the clip with.
+   */
+  lut_asset?: string;
+  /**
+   * 0 to 1; default 1; 0 removes the lookup table.
+   */
+  lut_intensity?: number;
   /**
    * 0 to 2; default 1.
    */
@@ -2201,7 +2209,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"clip.set_blend": { summary: "Sets how a visual item is mixed with what is below it.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_blur": { summary: "Sets the blur radius of a visual item.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_chroma_key": { summary: "Keys out one colour of a clip, such as a green screen.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
-	"clip.set_color": { summary: "Sets the brightness, contrast, saturation, temperature, tint and hue of a clip.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"clip.set_color": { summary: "Sets the brightness, contrast, saturation, temperature, tint, hue and lookup table of a clip.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_effects": { summary: "Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_filter": { summary: "Sets the colour filter of a visual item and how much of it is mixed in.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_flip": { summary: "Mirrors a visual item horizontally, vertically or both.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },

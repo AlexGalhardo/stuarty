@@ -674,7 +674,7 @@ Adds an asset that the import flow has already ingested, or reports the existing
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
-| `asset` | Asset object (SDD-001 §3.2) | yes | none | `id` is an `ast_` identifier; `hash` is `sha256:` plus 64 hex characters; `video` requires `frame_rate`, `frame_count`, `width`, `height`; `audio` requires `sample_count`; `image` requires `width`, `height`; `sample_count` is required exactly when the asset has audio (kind `audio`, or kind `video` with `has_audio` true) |
+| `asset` | Asset object (SDD-001 §3.2) | yes | none | `id` is an `ast_` identifier; `hash` is `sha256:` plus 64 hex characters; `video` requires `frame_rate`, `frame_count`, `width`, `height`; `audio` requires `sample_count`; `image` requires `width`, `height`; `sample_count` is required exactly when the asset has audio (kind `audio`, or kind `video` with `has_audio` true); `lut` (TASK-0254) requires nothing more |
 
 **Preconditions.**
 
@@ -725,6 +725,7 @@ Adds an asset that the import flow has already ingested, or reports the existing
 - `err_validation_bad_hash`
 - `err_id_exists_other_hash`
 - `err_limit_200_assets`
+- `ok_lut`
 
 ### C.5 `asset.remove` (phase A, scope media)
 
@@ -740,7 +741,7 @@ Removes an asset from the project when no item uses it.
 
 1. `asset_id` matches the `ast_` identifier pattern (`E_VALIDATION`). The reserved literal `ast_placeholder` does not match it here (R6).
 2. `asset_id` exists in `assets` (`E_NOT_FOUND`).
-3. No item has `asset` equal to `asset_id` (`E_IN_USE`, `details.used_by` lists the item ids sorted).
+3. No item has `asset` or `lut.asset` equal to `asset_id` (`E_IN_USE`, `details.used_by` lists the item ids sorted).
 
 **Postconditions.**
 
@@ -778,6 +779,7 @@ Removes an asset from the project when no item uses it.
 - `err_validation_placeholder_id`
 - `err_in_use_one_item`
 - `err_in_use_several_items_sorted`
+- `err_in_use_by_a_lut`
 
 ### C.6 `track.add` (phase P)
 
@@ -2159,6 +2161,7 @@ Places a video or image asset on a visual track. An animated image (BETA, RF-028
 - `err_out_of_source_one_frame_too_long`
 - `err_out_of_source_source_in_at_asset_end`
 - `err_overlap`
+- `err_type_mismatch_lut_asset`
 
 ### C.23 `audio.add` (phase A)
 
@@ -2235,6 +2238,7 @@ Places an audio asset, or the audio of a video asset, on an audio track.
 - `err_limit_500_items`
 - `err_out_of_source`
 - `err_overlap`
+- `err_type_mismatch_lut_asset`
 
 ### C.24 `clip.set_framing` (phase A)
 
@@ -2439,7 +2443,7 @@ Changes the speed of a clip or audio item, constant or along a curve (TASK-0275)
 
 ### C.26 `clip.set_color` (phase A)
 
-Sets the colour adjustments of a clip.
+Sets the colour adjustments of a clip and the lookup table (LUT) that grades it.
 
 **Arguments**
 
@@ -2452,27 +2456,29 @@ Sets the colour adjustments of a clip.
 | `temperature` | number | no | unchanged | -1 to 1; added after BETA (TASK-0233); positive is warmer, negative cooler |
 | `tint` | number | no | unchanged | -1 to 1; added after BETA; positive is more magenta, negative greener |
 | `hue` | number | no | unchanged | -180 to 180 degrees; added after BETA; rotates the colours about the grey axis |
+| `lut_asset` | asset id | no | unchanged | added after BETA (TASK-0254); a `lut` asset of the project; with no current table the intensity is 1, and giving another asset than the current one resets it to 1 |
+| `lut_intensity` | number | no | unchanged (1 for a new table) | 0 to 1, rounded to 3 decimals; 0 removes the table; given alone it needs a clip that already has a table |
 
-At least one of the six is required.
+At least one of the eight is required.
 
 **Preconditions.**
 
-1. At least one is present and in range (`E_VALIDATION`).
-2. The item exists (`E_NOT_FOUND`).
-3. The item is a `clip` (`E_TYPE_MISMATCH`).
+1. At least one is present and in range; `lut_asset` has the form of an asset id; `lut_intensity` is not given alone for a clip with no table (`E_VALIDATION`).
+2. The item and the `lut_asset` exist (`E_NOT_FOUND`).
+3. The item is a `clip`, and `lut_asset` is of kind `lut` (`E_TYPE_MISMATCH`).
 
 **Postconditions.**
 
-1. Given values are set, rounded to 3 decimals; values equal to the default (0, 1, 1, 0, 0, 0) remove the field.
-2. `diff` has one `item.updated`; empty when unchanged. `effective` has the stored values.
+1. Given values are set, rounded to 3 decimals; values equal to the default (0, 1, 1, 0, 0, 0) remove the field, and so does a `lut_intensity` of 0 for the table.
+2. `diff` has one `item.updated`; empty when unchanged. `effective` has the stored values, and `lut` as `{asset_id, intensity}` or null.
 
 **Errors.**
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
 | `E_VALIDATION` | nothing to set, or out of range | `args.contrast must be between 0 and 2, got 2.5.` | `Use contrast 2 for the strongest setting.` |
-| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
-| `E_TYPE_MISMATCH` | not a clip | `Item itm_s6t7v8w9x0 is an audio item; colour applies to clips.` | `Use a clip item.` |
+| `E_NOT_FOUND` | unknown item or `lut_asset` | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip, or `lut_asset` is not a `lut` asset | `Item itm_s6t7v8w9x0 is an audio item; colour applies to clips.` | `Use a clip item.` |
 
 **Inverse.** `patch {collection: "items", id, set: <old values>, unset: <fields that were absent>}`.
 
@@ -2498,6 +2504,18 @@ At least one of the six is required.
 - `ok_same_values_noop`
 - `ok_temperature_tint_hue`
 - `ok_white_balance_boundaries`
+- `ok_lut_sets_the_table_at_full_intensity`
+- `ok_lut_with_an_intensity`
+- `ok_lut_intensity_changes_the_current_table`
+- `ok_lut_other_table_resets_the_intensity`
+- `ok_lut_intensity_0_removes_the_table`
+- `ok_lut_with_a_colour_adjustment`
+- `ok_lut_same_values_noop`
+- `err_validation_lut_intensity_without_a_table`
+- `err_validation_lut_intensity_above_1`
+- `err_validation_lut_asset_bad_id`
+- `err_not_found_lut_asset`
+- `err_type_mismatch_lut_asset_is_a_video`
 - `ok_hue_180`
 - `ok_new_defaults_remove_fields`
 - `ok_new_rounded_to_3_decimals`
@@ -5537,7 +5555,7 @@ The groups, the item types that have them and what each copies (the source value
 
 | Group | Item types | Fields |
 | --- | --- | --- |
-| `color` | clip | `brightness`, `contrast`, `saturation`, `temperature`, `tint`, `hue` |
+| `color` | clip | `brightness`, `contrast`, `saturation`, `temperature`, `tint`, `hue`, `lut` |
 | `filter` | clip, text, caption, shape | `filter`, `filter_amount` |
 | `blur` | clip, text, caption, shape | `blur` |
 | `framing` | clip | `fit`, `crop` |
