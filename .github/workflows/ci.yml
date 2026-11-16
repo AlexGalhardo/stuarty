@@ -141,9 +141,10 @@ jobs:
       - name: Runner CPU
         if: runner.os == 'Windows'
         run: (Get-CimInstance Win32_Processor).Name
-      # The pinned LGPL FFmpeg (.config/ffmpeg.env) on Linux and Windows. macOS has
-      # no BtbN build: the script installs Homebrew's, which is GPL, so the tests
-      # that need the pinned build skip there with a message (risk R6).
+      # The pinned LGPL FFmpeg (.config/ffmpeg.env) on the three systems. While the pin
+      # is the BtbN one macOS has no build: the script installs Homebrew's, which is
+      # GPL, so the tests that need the pinned build skip there with a message (risk
+      # R6). With FFMPEG_SOURCE="own" macOS installs the own build and nothing skips.
       - name: Install FFmpeg
         shell: bash
         run: |
@@ -227,9 +228,9 @@ jobs:
   # Each one fails when a shard of its own operating system failed or did not
   # run (a skipped job would otherwise count as a pass), and the Linux one merges
   # the shard profiles and runs the coverage gate: Linux and Windows have the
-  # pinned LGPL FFmpeg, but only Linux gates. macOS has none (risk R6, SDD-009
-  # section 13.3), so the FFmpeg tests skip there and its coverage cannot reach
-  # the floors; it runs go test but not the gate.
+  # pinned LGPL FFmpeg, but only Linux gates. While the pin is the BtbN one macOS has
+  # none (risk R6, SDD-009 section 13.3), so the FFmpeg tests skip there; with the own
+  # build (FFMPEG_SOURCE="own") they run there too. macOS runs go test but not the gate.
   test:
     name: Test (${{ matrix.os }})
     needs: test-shard
@@ -699,9 +700,10 @@ jobs:
   # as in the export shards (the race scope is core, service and web/app, task
   # test:race; golang/go#81238 also crashes the Windows runtime under it). A
   # security test skipped without its platform in the name would pass silently, so
-  # the log is checked. macOS has only Homebrew's GPL FFmpeg (risk R6): the tests
-  # that need the pinned build skip there, so macOS lists its skips in the summary
-  # instead of failing on them.
+  # the log is checked. While the pin is the BtbN one, macOS has only Homebrew's GPL
+  # FFmpeg (risk R6): the tests that need the pinned build skip there, so macOS lists
+  # its skips in the summary instead of failing on them. With FFMPEG_SOURCE="own" it
+  # has the own build and is checked like the other two.
   security:
     name: Security tests (${{ matrix.os }})
     strategy:
@@ -732,7 +734,8 @@ jobs:
           RUNNER_OS_NAME: ${{ runner.os }}
         run: |
           skipped="$(grep -E -- "--- SKIP: TestSecurity_" security.log || true)"
-          if [ "$RUNNER_OS_NAME" = "macOS" ]; then
+          source_kind="$(. .config/ffmpeg.env && echo "${FFMPEG_SOURCE:-btbn}")"
+          if [ "$RUNNER_OS_NAME" = "macOS" ] && [ "$source_kind" != "own" ]; then
             { echo '### Skipped security tests (macOS, risk R6)'; echo '```'; echo "${skipped:-none}"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           elif echo "$skipped" | grep -vE "^$|TestSecurity_[A-Za-z0-9_]*_(Linux|Windows|Darwin)"; then
             echo "::error::a security test was skipped without a platform marker"
