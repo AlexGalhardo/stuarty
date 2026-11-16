@@ -14,6 +14,7 @@ export type GetPlan = (
 	to: number,
 	revision: number,
 	width: number | undefined,
+	signal: AbortSignal,
 ) => Promise<PlanWindow>;
 
 // The plan windows of the playhead and the next one (SDD-012 section 11.2
@@ -25,6 +26,7 @@ export class PlanWindows {
 	private width: number | undefined;
 	private readonly cache = new Lru<number, PlanWindow>(MAX_WINDOWS);
 	private readonly inFlight = new Map<number, Promise<PlanWindow>>();
+	private readonly controllers = new Map<number, AbortController>();
 
 	constructor(private readonly getPlan: GetPlan) {}
 
@@ -36,13 +38,21 @@ export class PlanWindows {
 		if (revision === this.revision) return;
 		this.revision = revision;
 		this.cache.clear();
-		this.inFlight.clear();
+		this.dropInFlight();
 	}
 
 	setWidth(width: number | undefined): void {
 		if (width === this.width) return;
 		this.width = width;
 		this.cache.clear();
+		this.dropInFlight();
+	}
+
+	// A window asked for an old revision or width is of no use: stop the request
+	// so the server stops planning it (SDD-012 section 19.2 rule 8).
+	private dropInFlight(): void {
+		for (const controller of this.controllers.values()) controller.abort();
+		this.controllers.clear();
 		this.inFlight.clear();
 	}
 
@@ -58,11 +68,14 @@ export class PlanWindows {
 		if (running) return running;
 		const revision = this.revision;
 		const width = this.width;
+		const controller = new AbortController();
+		this.controllers.set(from, controller);
 		const request = this.getPlan(
 			from,
 			from + WINDOW_FRAMES,
 			revision,
 			width,
+			controller.signal,
 		).then((plan) => {
 			// A revision or width change while waiting makes the answer stale.
 			if (revision === this.revision && width === this.width) {
@@ -72,7 +85,10 @@ export class PlanWindows {
 		});
 		this.inFlight.set(from, request);
 		const forget = (): void => {
-			if (this.inFlight.get(from) === request) this.inFlight.delete(from);
+			if (this.inFlight.get(from) === request) {
+				this.inFlight.delete(from);
+				this.controllers.delete(from);
+			}
 		};
 		request.then(forget, forget);
 		return request;

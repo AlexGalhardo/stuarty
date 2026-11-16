@@ -221,6 +221,23 @@ describe("PlanWindows", () => {
 		expect(windows.peek(0)).toBeUndefined();
 	});
 
+	test("a new revision aborts the request in flight and caches nothing", async () => {
+		const signals: AbortSignal[] = [];
+		const windows = new PlanWindows(
+			(_from, _to, _rev, _width, signal) =>
+				new Promise<PlanWindow>((_resolve, reject) => {
+					signals.push(signal);
+					signal.addEventListener("abort", () => reject(new Error("aborted")));
+				}),
+		);
+		windows.setRevision(1);
+		const stale = windows.ensure(0);
+		windows.setRevision(2);
+		await expect(stale).rejects.toThrow("aborted");
+		expect(signals[0]?.aborted).toBe(true);
+		expect(windows.size).toBe(0);
+	});
+
 	test("asks for the preview width and drops the windows when it changes", async () => {
 		const widths: (number | undefined)[] = [];
 		const windows = new PlanWindows(async (from, _to, rev, width) => {
