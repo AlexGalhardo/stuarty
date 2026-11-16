@@ -777,6 +777,18 @@ func cliOutcome(
 		return bytes.TrimSpace(stdout), job.Text, nil
 	}
 
+	// An import in which files failed is a result too: the batch prints its entries and
+	// exits 1 (VV-004).
+	var batch struct {
+		Code   string `json:"code"`
+		Failed int    `json:"failed"`
+		Text   string `json:"text"`
+	}
+
+	if json.Unmarshal(stdout, &batch) == nil && batch.Code == "" && code == cli.ExitFailure && batch.Failed > 0 {
+		return bytes.TrimSpace(stdout), batch.Text, nil
+	}
+
 	var doc service.ErrorDocument
 	if err := json.Unmarshal(stdout, &doc); err != nil || doc.Code == "" {
 		t.Fatalf("cli %s: exit %d with no error document: %q", name, code, stdout)
