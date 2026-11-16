@@ -128,16 +128,17 @@ func (h *apiHandler) jobStart(c *web.Ctx, in jobStartIn) (service.Job, error) {
 		}
 	}
 
+	isDry := dry(c, in.DryRun)
+
 	res, err := h.Service.JobStart(c.Context(), service.JobStartRequest{
-		ProjectID: in.ID, Kind: in.Kind, Args: args, WaitMS: in.WaitMS, DryRun: dry(c, in.DryRun),
+		ProjectID: in.ID, Kind: in.Kind, Args: args, WaitMS: in.WaitMS, DryRun: isDry,
 	})
 	if err != nil {
 		return service.Job{}, err
 	}
 
 	status := http.StatusAccepted
-	if res.State == service.JobSucceeded || res.State == service.JobFailed || res.State == service.JobCancelled ||
-		in.DryRun {
+	if service.JobFinal(res.State) || isDry {
 		status = http.StatusOK
 	}
 
