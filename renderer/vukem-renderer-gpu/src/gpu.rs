@@ -5,6 +5,7 @@ use std::mem::size_of;
 
 use vukem_renderer::blend::BlendMode;
 use vukem_renderer::compose::{Layer, Prepared, Target, copy_origin, parse_colour, prepare_layer};
+use vukem_renderer::effects::Direction;
 use vukem_renderer::error::{Error, Reason};
 use vukem_renderer::host::Renderer;
 use vukem_renderer::mask::MaskGeometry;
@@ -469,22 +470,31 @@ fn layer_bytes(w: usize, h: usize, op: u32, blend: BlendMode) -> Vec<u8> {
 }
 
 /// The uniform of a layer's mask: four `vec4<f32>`, all zero when the layer has none. The first
-/// holds the map of `x` and the enabled flag, the second the map of `y`, the third the corner and
-/// half-extents of the shape and the fourth the feather, the shape and the invert flag.
+/// holds the map of `x` and the enabled flag (1 a shape, 2 a wipe only), the second the map of `y`
+/// and the direction of a wipe (1 left, 2 right, 3 up, 4 down, 0 none), the third the corner and
+/// half-extents of the shape and the fourth the feather, the shape, the invert flag and the edge
+/// of the wipe in pixels.
 fn mask_bytes(m: Option<&MaskGeometry>) -> Vec<u8> {
 	let Some(m) = m else {
 		return f32_bytes(&[0.0; 16]);
 	};
 	let flag = |b: bool| if b { 1.0 } else { 0.0 };
+	let (dir, edge) = match m.wipe {
+		None => (0.0, 0.0),
+		Some((Direction::Left, e)) => (1.0, e as f32),
+		Some((Direction::Right, e)) => (2.0, e as f32),
+		Some((Direction::Up, e)) => (3.0, e as f32),
+		Some((Direction::Down, e)) => (4.0, e as f32),
+	};
 	f32_bytes(&[
 		m.map[0] as f32,
 		m.map[1] as f32,
 		m.map[2] as f32,
-		1.0,
+		if m.shapeless { 2.0 } else { 1.0 },
 		m.map[3] as f32,
 		m.map[4] as f32,
 		m.map[5] as f32,
-		0.0,
+		dir,
 		m.left as f32,
 		m.top as f32,
 		m.half_w as f32,
@@ -492,7 +502,7 @@ fn mask_bytes(m: Option<&MaskGeometry>) -> Vec<u8> {
 		m.feather as f32,
 		flag(m.ellipse),
 		flag(m.invert),
-		0.0,
+		edge,
 	])
 }
 
