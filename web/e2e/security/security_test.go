@@ -237,6 +237,10 @@ func TestSecurity_T22_CSPNonceOnly(t *testing.T) {
 			t.Fatalf("%s: script-src is not 'self' plus one nonce: %q", c.path, script)
 		}
 
+		if !strings.Contains("; "+policy+";", "; worker-src 'self';") {
+			t.Errorf("%s: worker-src is not exactly 'self': %s", c.path, policy)
+		}
+
 		nonces[match[1]] = true
 
 		// Every script the document carries bears the nonce of its own response.

@@ -339,7 +339,7 @@ func (h *Host) Close(ctx context.Context) error
 
 ### 4.7 The browser worker protocol
 
-The preview owns one dedicated module worker, `renderWorker.ts` in `web/resources/js/editor/preview/`, created with `new Worker(url, {type: "module"})` from a same-origin script (SDD-007 §3.6: no inline worker, no `blob:` URL; the CSP of the editor must allow `worker-src 'self'`). The main thread never calls the module: it posts messages and receives frames.
+The preview owns one dedicated module worker, `renderWorker.ts` in `web/resources/js/editor/preview/`, created with `new Worker(url, {type: "module"})` from a same-origin script (SDD-007 §8.5.5: no inline worker, no `blob:` URL; the CSP of the editor must allow `worker-src 'self'`). The main thread never calls the module: it posts messages and receives frames.
 
 Messages from the main thread to the worker:
 
