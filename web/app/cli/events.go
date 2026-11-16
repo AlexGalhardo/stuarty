@@ -254,3 +254,47 @@ func httpEvents(base, token string, hc doer) EventOpener {
 		return resp.Body, nil
 	}
 }
+
+// Downloader opens the body of a download URL such as /api/v1/jobs/{id}/file.
+type Downloader func(ctx context.Context, urlPath string) (io.ReadCloser, error)
+
+// httpDownload is the Downloader over the HTTP API of a server. The client has no timeout: a
+// video can take longer than one call.
+func httpDownload(base, token string, hc doer) Downloader {
+	return func(ctx context.Context, urlPath string) (io.ReadCloser, error) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(base, "/")+urlPath, http.NoBody)
+		if err != nil {
+			return nil, fmt.Errorf("build the request: %w", err)
+		}
+
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		resp, err := hc.Do(req)
+		if err != nil {
+			return nil, &service.Error{
+				Code: service.CodeWorkspaceLocked, Retryable: true, Message: "the server did not answer.",
+				Hint: "the file is ready on the server; fetch it again with the download URL of the job",
+			}
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			return resp.Body, nil
+		}
+
+		defer resp.Body.Close()
+
+		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<16))
+
+		var doc service.ErrorDocument
+		if json.Unmarshal(raw, &doc) != nil || doc.Code == "" {
+			return nil, &service.Error{
+				Code:    command.CodeInternal,
+				Message: fmt.Sprintf("the server answered %d without an error envelope.", resp.StatusCode),
+			}
+		}
+
+		return nil, &service.Error{
+			Code: doc.Code, Message: doc.Message, Hint: doc.Hint, Retryable: doc.Retryable, Path: doc.Path,
+		}
+	}
+}

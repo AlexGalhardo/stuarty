@@ -72,9 +72,10 @@ Um pacote é um único arquivo, `<name>.vvbundle`, que guarda um projeto e tudo 
 ```bash
 vukem-video bundle:export --project prj_7k2m9x4q1b --wait
 vukem-video bundle:export --project prj_7k2m9x4q1b --no-log --wait
+vukem-video bundle:export --project prj_7k2m9x4q1b --out ~/launch-teaser.vvbundle
 ```
 
-Como uma exportação, um pacote é uma tarefa: o `--wait` a acompanha, e o arquivo é gravado em `<workspace>/exports/<project id>/` como `bundle-r<revision>-<job id>.vvbundle`. O `--no-log` deixa o histórico de fora, o que esconde quem editou e por quê. Um projeto na lixeira não pode ser exportado. O comando roda na máquina que possui o espaço de trabalho.
+Como uma exportação, um pacote é uma tarefa: o `--wait` a acompanha, e o arquivo é gravado em `<workspace>/exports/<project id>/` como `bundle-r<revision>-<job id>.vvbundle`. O `--no-log` deixa o histórico de fora, o que esconde quem editou e por quê. Um projeto na lixeira não pode ser exportado. `--out <arquivo>` copia o pacote para fora do espaço de trabalho quando a tarefa termina (implica `--wait`, cria as pastas que faltam e recusa substituir um arquivo sem `--force`); contra um servidor remoto, baixa o arquivo. O mesmo `--out` vale para `export` e `template:export`. O comando mostra o caminho final.
 
 ## Importe um pacote de projeto
 

@@ -72,9 +72,10 @@ A bundle is one file, `<name>.vvbundle`, that holds a project and everything it 
 ```bash
 vukem-video bundle:export --project prj_7k2m9x4q1b --wait
 vukem-video bundle:export --project prj_7k2m9x4q1b --no-log --wait
+vukem-video bundle:export --project prj_7k2m9x4q1b --out ~/launch-teaser.vvbundle
 ```
 
-Like an export, a bundle is a job: `--wait` follows it, and the file is written under `<workspace>/exports/<project id>/` as `bundle-r<revision>-<job id>.vvbundle`. `--no-log` leaves the history out, which hides who edited and why. A project in the trash cannot be exported. The command runs on the machine that owns the workspace.
+Like an export, a bundle is a job: `--wait` follows it, and the file is written under `<workspace>/exports/<project id>/` as `bundle-r<revision>-<job id>.vvbundle`. `--no-log` leaves the history out, which hides who edited and why. A project in the trash cannot be exported. `--out <file>` copies the bundle out of the workspace when the job succeeds (it implies `--wait`, creates missing folders, and refuses to replace a file unless you add `--force`); against a remote server it downloads the file instead. The same `--out` works on `export` and `template:export`. The command prints the final path.
 
 ## Import a project bundle
 
