@@ -74,6 +74,17 @@ var requiredCases = []string{
 	"flip-x",
 	"flip-y",
 	"flip-rotated-masked",
+	"effect-motion-blur",
+	"effect-glow",
+	"effect-vignette",
+	"effect-grain",
+	"effect-rgb-split",
+	"effects-combined",
+	"transition-zoom",
+	"transition-whip",
+	"transition-dip",
+	"transition-wipe-left",
+	"transition-wipe-up",
 }
 
 const (
@@ -193,15 +204,63 @@ func (b *caseBuilder) backdrop(dur int) {
 }
 
 func transitionCase(kind string) alphaCase {
-	b := newCase("transition "+kind, rate(30, 1))
+	return transitionOf(timeline.Transition{Kind: kind, Duration: 8})
+}
+
+// transitionOf plays a transition on the entry and on the exit of a clip over the portrait clip (SDD-004
+// section 3.2, TASK-0279 for zoom, whip, dip and wipe).
+func transitionOf(tr timeline.Transition) alphaCase {
+	b := newCase("transition "+tr.Kind, rate(30, 1))
 	b.backdrop(30)
 	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
 		it.Fit = "contain"
-		it.TransitionIn = &timeline.Transition{Kind: kind, Duration: 8}
-		it.TransitionOut = &timeline.Transition{Kind: kind, Duration: 8}
+		in, out := tr, tr
+		it.TransitionIn, it.TransitionOut = &in, &out
 	})
 	// First, middle and last frame of the entry (duration 8) and of the exit (from frame 22).
 	return b.build(0, 4, 7, 22, 26, 29)
+}
+
+// effectCase draws an effect on a layer that stays (the portrait clip) and on one that moves and rotates (a
+// picture in picture sliding across it), both from the same clips (SDD-004 section 3.13, TASK-0279).
+func effectCase(e timeline.Effect) alphaCase {
+	b := newCase("effect "+e.Kind, rate(30, 1))
+	b.clip(b.track(), b.video(portrait), 0, 30, func(it *timeline.Item) {
+		it.Effects = []timeline.Effect{e}
+	})
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale = "contain", 0.6
+		it.Y = new(220.0)
+		it.Keyframes = timeline.Keyframes{
+			"x":        {timeline.NewKeyframe(0, 60), timeline.NewKeyframe(29, 120)},
+			"rotation": {timeline.NewKeyframe(0, -12), timeline.NewKeyframe(29, 18)},
+		}
+		it.Effects = []timeline.Effect{e}
+	})
+	return b.build(0, 15, 29)
+}
+
+// combinedEffects is the five pixel effects and the shake on one item, with a whip on the way in and a dip
+// on the way out, a mask and a flip: every stage of SDD-004 section 3.13 in one frame.
+func combinedEffects() alphaCase {
+	b := newCase("all the effects", rate(30, 1))
+	b.backdrop(30)
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale, it.FlipX = "contain", 0.9, true
+		it.X, it.Y = new(90.0), new(160.0)
+		it.Mask = &timeline.Mask{Shape: "ellipse", X: 0.05, Y: 0.05, Width: 0.9, Height: 0.9, Feather: 6}
+		it.TransitionIn = &timeline.Transition{Kind: "whip", Duration: 8, Direction: "down"}
+		it.TransitionOut = &timeline.Transition{Kind: "dip", Duration: 8, Color: "#FF8000"}
+		it.Effects = []timeline.Effect{
+			{Kind: timeline.EffectMotionBlur, Amount: new(0.3), Angle: new(20.0)},
+			{Kind: timeline.EffectGlow, Amount: new(0.5), Radius: new(6.0), Threshold: new(0.5)},
+			{Kind: timeline.EffectVignette, Amount: new(0.6), Softness: new(0.5)},
+			{Kind: timeline.EffectGrain, Amount: new(0.3), Size: new(2), Seed: new(7)},
+			{Kind: timeline.EffectRGBSplit, Amount: new(0.3), Angle: new(-30.0)},
+			{Kind: timeline.EffectShake, Amount: new(0.4), Speed: new(8), Seed: new(3)},
+		}
+	})
+	return b.build(0, 4, 15, 26, 29)
 }
 
 func scaleCase(easing string) alphaCase {
@@ -465,6 +524,39 @@ var alphaCases = map[string]func() alphaCase{
 			},
 		)
 	},
+	"effect-motion-blur": func() alphaCase {
+		return effectCase(timeline.Effect{Kind: timeline.EffectMotionBlur, Amount: new(0.5), Angle: new(20.0)})
+	},
+	"effect-glow": func() alphaCase {
+		return effectCase(timeline.Effect{
+			Kind: timeline.EffectGlow, Amount: new(0.7), Radius: new(8.0), Threshold: new(0.45),
+		})
+	},
+	"effect-vignette": func() alphaCase {
+		return effectCase(timeline.Effect{Kind: timeline.EffectVignette, Amount: new(0.8), Softness: new(0.5)})
+	},
+	"effect-grain": func() alphaCase {
+		return effectCase(timeline.Effect{
+			Kind: timeline.EffectGrain, Amount: new(0.5), Size: new(2), Seed: new(11),
+		})
+	},
+	"effect-rgb-split": func() alphaCase {
+		return effectCase(timeline.Effect{Kind: timeline.EffectRGBSplit, Amount: new(0.5), Angle: new(30.0)})
+	},
+	"effects-combined": combinedEffects,
+	"transition-zoom":  func() alphaCase { return transitionCase("zoom") },
+	"transition-whip": func() alphaCase {
+		return transitionOf(timeline.Transition{Kind: "whip", Duration: 8, Direction: "right"})
+	},
+	"transition-dip": func() alphaCase {
+		return transitionOf(timeline.Transition{Kind: "dip", Duration: 8, Color: "#FF8000"})
+	},
+	"transition-wipe-left": func() alphaCase {
+		return transitionOf(timeline.Transition{Kind: "wipe", Duration: 8, Direction: "left"})
+	},
+	"transition-wipe-up": func() alphaCase {
+		return transitionOf(timeline.Transition{Kind: "wipe", Duration: 8, Direction: "up"})
+	},
 	"flip-x": func() alphaCase { return flipCase("x", true, false, nil) },
 	"flip-y": func() alphaCase { return flipCase("y", false, true, nil) },
 	"flip-rotated-masked": func() alphaCase {
@@ -636,7 +728,8 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") &&
 			!strings.HasPrefix(name, "sticker-") && !strings.HasPrefix(name, "chroma-") &&
 			!strings.HasPrefix(name, "blend-") && !strings.HasPrefix(name, "mask-") &&
-			!strings.HasPrefix(name, "flip-") {
+			!strings.HasPrefix(name, "flip-") && !strings.HasPrefix(name, "effect") &&
+			!strings.HasPrefix(name, "transition-") {
 			continue
 		}
 		t.Run(name, func(t *testing.T) {
