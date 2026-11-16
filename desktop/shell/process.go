@@ -113,6 +113,11 @@ func Start(ctx context.Context, cfg Config) (*Server, error) {
 	if !filepath.IsAbs(cfg.Binary) {
 		return nil, &StartupError{Reason: ReasonSpawn, Message: "The server path is not absolute: " + cfg.Binary}
 	}
+	// On macOS the server starts through sh (the watchdog), where a missing file is an exit of the shell,
+	// not a failed spawn; looking first gives the same answer on every system.
+	if info, err := os.Stat(cfg.Binary); err != nil || info.IsDir() {
+		return nil, &StartupError{Reason: ReasonSpawn, Message: "Cannot start " + cfg.Binary, Err: err}
+	}
 	if cfg.ReadyTimeout <= 0 {
 		cfg.ReadyTimeout = defaultReadyTimeout
 	}
