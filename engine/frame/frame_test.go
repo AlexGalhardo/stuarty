@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"image"
 	"image/jpeg"
+	"image/png"
 	"path/filepath"
 	"strconv"
 	"testing"
@@ -351,5 +352,59 @@ func BenchmarkViewFrame(b *testing.B) {
 		); err != nil {
 			b.Fatal(err)
 		}
+	}
+}
+
+// A still is a PNG of the project's own size whose pixels are those of the compositor.
+func TestStillIsTheProjectSizePNG(t *testing.T) {
+	f := newFrames(t)
+	doc := sceneDoc(t)
+
+	b, err := f.Still(context.Background(), doc, 40)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	im, err := png.Decode(bytes.NewReader(b))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	st := doc.Settings
+	if got := im.Bounds().Size(); got.X != st.Width || got.Y != st.Height {
+		t.Errorf("still is %v, want %dx%d", got, st.Width, st.Height)
+	}
+
+	r, err := f.renderer(context.Background(), doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = r.Close() }()
+
+	want, err := r.Render(context.Background(), 40, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := image.NewRGBA(im.Bounds())
+	for y := range got.Rect.Dy() {
+		for x := range got.Rect.Dx() {
+			c := im.At(x, y)
+			rr, g, bl, a := c.RGBA()
+			o := got.PixOffset(x, y)
+			got.Pix[o], got.Pix[o+1], got.Pix[o+2], got.Pix[o+3] = uint8(rr>>8), uint8(g>>8), uint8(bl>>8), uint8(a>>8)
+		}
+	}
+
+	if !bytes.Equal(got.Pix, want.Pix) {
+		t.Error("the still differs from the composed frame")
+	}
+
+	if _, err := f.Still(context.Background(), doc, -1); err == nil {
+		t.Error("a negative time was accepted")
+	}
+
+	if _, err := f.Still(context.Background(), doc, 1<<20); err != nil {
+		t.Errorf("a time past the end: %v", err)
 	}
 }
