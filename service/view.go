@@ -257,7 +257,7 @@ func (v *view) sheetTimes(req *ViewSheetRequest) ([]int, error) {
 		if req.From != "" || req.Until != "" || req.Count != 0 {
 			return nil, newError(
 				command.CodeValidation,
-				"times cannot be used with from, to or count.",
+				"times cannot be used with from, until or count.",
 			).withPath("times")
 		}
 
@@ -294,6 +294,13 @@ func (v *view) sheetTimes(req *ViewSheetRequest) ([]int, error) {
 			frame.MaxSheetCells,
 		).
 			withPath("count")
+	}
+
+	// With no time given the sheet spans the timeline; an empty one has nothing
+	// to show, and six cells of "0s" would pass for an answer.
+	if req.From == "" && req.Until == "" && endFrame(v.doc) == 0 {
+		return nil, newError(command.CodeValidation, "the timeline is empty; there is nothing to show.").
+			withHint("add clips to the timeline, or pass times that exist")
 	}
 
 	from, to := int64(0), v.last()

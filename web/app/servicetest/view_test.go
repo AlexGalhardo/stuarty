@@ -9,8 +9,28 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
+
+// A sheet of an empty timeline is refused, and the refusal for times with a
+// range names the real argument, until.
+func TestViewSheetRefusesAnEmptyTimelineAndNamesUntil(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true})
+	ctx := m.as(ui)
+
+	_, err := m.svc.ViewSheet(ctx, service.ViewSheetRequest{ProjectID: m.newProject("empty")})
+	if se := serviceError(t, err); se.Code != command.CodeValidation || !strings.Contains(se.Message, "empty") {
+		t.Errorf("an empty timeline = %+v", se)
+	}
+
+	_, err = m.svc.ViewSheet(ctx, service.ViewSheetRequest{
+		ProjectID: m.exportable(), Times: []string{"0s", "0.5s"}, Until: "1s",
+	})
+	if se := serviceError(t, err); !strings.Contains(se.Message, "until") || strings.Contains(se.Message, " to ") {
+		t.Errorf("times with until = %+v", se)
+	}
+}
 
 func TestViewFrameAndSheetRenderTheCurrentRevision(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true})
