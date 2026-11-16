@@ -700,6 +700,10 @@ describe("clip section builders (SDD-002 C.19, C.24 to C.27)", () => {
 			item_id: "itm_a",
 			denoise: 0.4,
 		});
+		expect(audioOperations("itm_a", { voice: "warm" })[0]?.args).toEqual({
+			item_id: "itm_a",
+			voice: "warm",
+		});
 	});
 
 	test("filter and blur send one field each", () => {

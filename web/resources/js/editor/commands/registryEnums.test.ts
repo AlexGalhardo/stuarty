@@ -9,6 +9,7 @@ import {
 	KEYFRAME_PROPERTIES,
 	SHAPES,
 	TRANSITION_KINDS,
+	VOICE_PRESETS,
 } from "./builders";
 
 interface Schema {
@@ -36,6 +37,7 @@ const CASES: [string, readonly string[], string, string][] = [
 	["FILTERS", FILTERS, "clip.set_filter", "filter"],
 	["FITS", FITS, "clip.set_framing", "fit"],
 	["SHAPES", SHAPES, "shape.add", "shape"],
+	["VOICE_PRESETS", VOICE_PRESETS, "item.set_audio", "voice"],
 ];
 
 describe("editor enum lists match the command registry", () => {
