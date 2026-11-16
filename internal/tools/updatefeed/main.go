@@ -1,7 +1,7 @@
 // Command updatefeed makes and checks the signed feed of the desktop auto-update (SDD-009 section 10.5,
 // P3-REL-004). The release workflow runs it; the client that reads the feed is desktop/update.
 //
-//	UPDATE_FEED_SIGNING_KEY=<64 hex> updatefeed sign -version 0.15.0 -base-url https://host/updates -out feed.json <installer>...
+//	UPDATE_FEED_SIGNING_KEY=<64 hex> updatefeed sign -version 0.15.0 -base-url https://host/updates [-notes-file notes.md] -out feed.json <file>...
 //	UPDATE_FEED_SIGNING_KEY=<64 hex> updatefeed pubkey
 //	updatefeed verify -pub <64 hex> -checksums checksums.txt feed.json
 //
@@ -43,8 +43,18 @@ var (
 	installerName = regexp.MustCompile(
 		`^vukem-video-desktop_([0-9.]+)_(windows|darwin|linux)_(amd64|arm64)(?:_setup\.exe|\.dmg|\.deb)$`,
 	)
+	// A launcher artifact, the file the desktop launcher swaps for itself: an AppImage, a zipped macOS
+	// application or a zipped Windows portable build (EPIC-55, D-039).
+	launcherName = regexp.MustCompile(
+		`^vukem-video-desktop_([0-9.]+)_(windows|darwin|linux)_(amd64|arm64)(?:\.AppImage|\.app\.zip|_portable\.zip)$`,
+	)
 	hex64 = regexp.MustCompile(`^[0-9a-f]{64}$`)
 )
+
+// launcherPlatform prefixes the platform in the signed message of a launcher artifact: the same
+// artifact message as an installer, with the platform "launcher:<goos>-<goarch>", so the signature of
+// an installer is never valid for a launcher artifact and the other way round.
+const launcherPlatform = "launcher:"
 
 type envelope struct {
 	Payload   string `json:"payload"`
@@ -57,6 +67,11 @@ type payload struct {
 	PublishedAt string           `json:"published_at"`
 	Expires     string           `json:"expires"`
 	Platforms   map[string]entry `json:"platforms"`
+	// Notes is a short plain text summary of the release, signed with the rest of the payload.
+	Notes string `json:"notes,omitempty"`
+	// Launchers are the artifacts the launcher replaces itself with, by platform; absent when the
+	// release has none. Additive: a client that does not know the field ignores it.
+	Launchers map[string]entry `json:"launchers,omitempty"`
 }
 
 type entry struct {
@@ -143,6 +158,7 @@ func runSign(argv []string, stdout io.Writer) error {
 	version := fs.String("version", "", "the stable version, MAJOR.MINOR.PATCH")
 	baseURL := fs.String("base-url", "", "https URL of the directory that serves the installers")
 	out := fs.String("out", "feed.json", "the feed file to write")
+	notesFile := fs.String("notes-file", "", "the release notes (Markdown) to summarize into the feed; none when empty")
 	keyEnv := fs.String("key-env", defaultKeyEnv, "environment variable that holds the signing seed")
 	validFor := fs.Duration("valid-for", update.DefaultFeedValidity, "how long the signed feed stays fresh")
 
@@ -173,7 +189,18 @@ func runSign(argv []string, stdout io.Writer) error {
 		return err
 	}
 
-	body, err := buildPayload(*version, base, files, priv, time.Now().UTC(), *validFor)
+	notes := ""
+
+	if *notesFile != "" {
+		raw, rerr := os.ReadFile(*notesFile)
+		if rerr != nil {
+			return rerr
+		}
+
+		notes = summarizeNotes(string(raw))
+	}
+
+	body, err := buildPayload(*version, base, notes, files, priv, time.Now().UTC(), *validFor)
 	if err != nil {
 		return err
 	}
@@ -192,16 +219,16 @@ func runSign(argv []string, stdout io.Writer) error {
 		return err
 	}
 
-	_, err = fmt.Fprintf(stdout, "updatefeed: %s lists %d installer(s) for %s\n", *out, len(files), *version)
+	_, err = fmt.Fprintf(stdout, "updatefeed: %s lists %d file(s) for %s\n", *out, len(files), *version)
 
 	return err
 }
 
 func buildPayload(
-	version, base string, files []string, priv ed25519.PrivateKey, now time.Time, validFor time.Duration,
+	version, base, notes string, files []string, priv ed25519.PrivateKey, now time.Time, validFor time.Duration,
 ) ([]byte, error) {
 	p := payload{
-		Schema: feedSchema, Version: version, Platforms: map[string]entry{},
+		Schema: feedSchema, Version: version, Platforms: map[string]entry{}, Notes: notes,
 		PublishedAt: now.Format(time.RFC3339), Expires: now.Add(validFor).Format(time.RFC3339),
 	}
 
@@ -209,13 +236,23 @@ func buildPayload(
 		name := filepath.Base(file)
 
 		m := installerName.FindStringSubmatch(name)
+		group, signed := p.Platforms, ""
+
+		if len(m) == 0 {
+			if m = launcherName.FindStringSubmatch(name); len(m) == 4 && p.Launchers == nil {
+				p.Launchers = map[string]entry{}
+			}
+
+			group, signed = p.Launchers, launcherPlatform
+		}
+
 		if len(m) != 4 || m[1] != version {
-			return nil, fmt.Errorf("%s is not a desktop installer of version %s", name, version)
+			return nil, fmt.Errorf("%s is not a desktop installer or launcher artifact of version %s", name, version)
 		}
 
 		platform := m[2] + "-" + m[3]
-		if _, dup := p.Platforms[platform]; dup {
-			return nil, fmt.Errorf("two installers for %s", platform)
+		if _, dup := group[platform]; dup {
+			return nil, fmt.Errorf("two files for %s", signed+platform)
 		}
 
 		sum, size, err := digest(file)
@@ -232,8 +269,8 @@ func buildPayload(
 			)
 		}
 
-		sig := ed25519.Sign(priv, update.ArtifactMessage(version, platform, sum))
-		p.Platforms[platform] = entry{
+		sig := ed25519.Sign(priv, update.ArtifactMessage(version, signed+platform, sum))
+		group[platform] = entry{
 			URL: base + "/" + name, SHA256: sum, Size: size, Signature: base64.StdEncoding.EncodeToString(sig),
 		}
 	}
@@ -296,7 +333,7 @@ func runVerify(argv []string, stdout io.Writer) error {
 		stdout,
 		"updatefeed: the feed of %s is signed and its %d digest(s) equal checksums.txt\n",
 		p.Version,
-		len(p.Platforms),
+		len(p.Platforms)+len(p.Launchers),
 	)
 
 	return err
@@ -355,35 +392,65 @@ func verifyFeed(raw []byte, pub ed25519.PublicKey, sums map[string]string) (*pay
 		return nil, errors.New("the feed has an unknown schema, a version that is not stable or no platform")
 	}
 
-	platforms := make([]string, 0, len(p.Platforms))
-	for k := range p.Platforms {
+	if len(p.Notes) > maxNotesBytes {
+		return nil, fmt.Errorf("the notes of the feed are %d bytes, the limit is %d", len(p.Notes), maxNotesBytes)
+	}
+
+	if err := verifyEntries(&p, p.Platforms, "", pub, sums); err != nil {
+		return nil, err
+	}
+
+	if err := verifyEntries(&p, p.Launchers, launcherPlatform, pub, sums); err != nil {
+		return nil, err
+	}
+
+	return &p, nil
+}
+
+// verifyEntries checks every file of a group of the feed against checksums.txt and its own signature;
+// signed is the prefix of the platform in the signed message ("" for an installer).
+func verifyEntries(
+	p *payload,
+	group map[string]entry,
+	signed string,
+	pub ed25519.PublicKey,
+	sums map[string]string,
+) error {
+	platforms := make([]string, 0, len(group))
+	for k := range group {
 		platforms = append(platforms, k)
 	}
 
 	slices.Sort(platforms)
 
 	for _, platform := range platforms {
-		e := p.Platforms[platform]
+		e := group[platform]
 		name := e.URL[strings.LastIndex(e.URL, "/")+1:]
 
 		want, ok := sums[name]
 		if !ok {
-			return nil, fmt.Errorf("%s: %s is not in checksums.txt", platform, name)
+			return fmt.Errorf("%s%s: %s is not in checksums.txt", signed, platform, name)
 		}
 
 		if !hex64.MatchString(e.SHA256) || e.SHA256 != want {
-			return nil, fmt.Errorf("%s: the feed digest %s differs from checksums.txt %s", platform, e.SHA256, want)
+			return fmt.Errorf(
+				"%s%s: the feed digest %s differs from checksums.txt %s",
+				signed,
+				platform,
+				e.SHA256,
+				want,
+			)
 		}
 
 		asig, err := base64.StdEncoding.DecodeString(e.Signature)
-		if err != nil || !ed25519.Verify(pub, update.ArtifactMessage(p.Version, platform, e.SHA256), asig) {
-			return nil, fmt.Errorf("%s: the artifact signature does not verify", platform)
+		if err != nil || !ed25519.Verify(pub, update.ArtifactMessage(p.Version, signed+platform, e.SHA256), asig) {
+			return fmt.Errorf("%s%s: the artifact signature does not verify", signed, platform)
 		}
 
 		if !strings.HasPrefix(name, filePrefix+p.Version+"_") {
-			return nil, fmt.Errorf("%s: %s is not an installer of %s", platform, name, p.Version)
+			return fmt.Errorf("%s%s: %s is not a file of %s", signed, platform, name, p.Version)
 		}
 	}
 
-	return &p, nil
+	return nil
 }

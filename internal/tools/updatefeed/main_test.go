@@ -263,7 +263,7 @@ func TestSignRefusesWhatTheFeedMustNeverHold(t *testing.T) {
 		{
 			"another version",
 			[]string{"-version", "0.16.0", "-base-url", "https://h.example/u"},
-			"not a desktop installer of version 0.16.0",
+			"not a desktop installer or launcher artifact of version 0.16.0",
 		},
 	}
 	for _, c := range cases {

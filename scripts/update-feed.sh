@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # The feed of the desktop auto-update (SDD-009 section 10.5, P3-REL-004), on top of
 # internal/tools/updatefeed:
-#   bash scripts/update-feed.sh sign <version> <base-url> <installers dir> <feed.json>
-#       signs a feed that lists every desktop installer of the directory; needs UPDATE_FEED_SIGNING_KEY
+#   bash scripts/update-feed.sh sign <version> <base-url> <installers dir> <feed.json> [<release notes.md>]
+#       signs a feed that lists every desktop installer and every launcher artifact (.AppImage, .app.zip,
+#       _portable.zip) of the directory, with a short summary of the release notes when a file is given; needs UPDATE_FEED_SIGNING_KEY
 #       (the 64 hex characters of the Ed25519 seed, a repository secret). A version with a suffix is refused.
 #   bash scripts/update-feed.sh verify <public key hex> <checksums.txt> <feed.json>
 #       the signature of the feed and of every artifact verify, and every digest equals checksums.txt
@@ -22,8 +23,10 @@ abs() { (cd "$(dirname "$1")" && printf '%s/%s' "$PWD" "$(basename "$1")"); }
 
 case "${1:-}" in
 sign)
-	[ $# -eq 5 ] || die "usage: update-feed.sh sign <version> <base-url> <installers dir> <feed.json>"
+	[ $# -eq 5 ] || [ $# -eq 6 ] || die "usage: update-feed.sh sign <version> <base-url> <installers dir> <feed.json> [<release notes.md>]"
 	version="$2" base="$3" dir="$(abs "$4")" out="$(abs "$5")"
+	notes=()
+	[ $# -eq 6 ] && notes=(-notes-file "$(abs "$6")")
 	case "$version" in *-*) die "$version is a pre-release: it never reaches the feed" ;; esac
 	[ -d "$dir" ] || die "not a directory: $dir"
 	files=()
@@ -32,7 +35,7 @@ sign)
 		[ -e "$f" ] && files+=("$f")
 	done
 	[ ${#files[@]} -gt 0 ] || die "no desktop installer of $version in $dir"
-	(cd "$root" && go run ./internal/tools/updatefeed sign -version "$version" -base-url "$base" -out "$out" "${files[@]}")
+	(cd "$root" && go run ./internal/tools/updatefeed sign -version "$version" -base-url "$base" ${notes[@]+"${notes[@]}"} -out "$out" "${files[@]}")
 	;;
 verify)
 	[ $# -eq 4 ] || die "usage: update-feed.sh verify <public key hex> <checksums.txt> <feed.json>"
@@ -55,8 +58,8 @@ pages)
 	fi
 	mkdir -p "$out"
 	gh release download "$tag" -R "$repo" -p feed.json -D "$out" --clobber
-	# Every file the feed lists, checked against the digest the feed signs, before it is served.
-	jq -r '.payload' "$out/feed.json" | base64 -d | jq -r '.platforms[] | "\(.sha256) \(.url | split("/") | last)"' |
+	# Every file the feed lists (installers and launcher artifacts), checked against the digest the feed signs, before it is served.
+	jq -r '.payload' "$out/feed.json" | base64 -d | jq -r '(.platforms[], (.launchers // {})[]) | "\(.sha256) \(.url | split("/") | last)"' |
 		while read -r sum name; do
 			gh release download "$tag" -R "$repo" -p "$name" -D "$out" --clobber
 			[ "$(sha256sum <"$out/$name" | cut -d ' ' -f 1)" = "$sum" ] || die "$name does not match the digest of the feed"
