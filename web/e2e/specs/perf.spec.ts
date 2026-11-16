@@ -300,7 +300,9 @@ test.describe("scrub-latency", () => {
 			perTrack: 1,
 			clipDuration: "10s",
 		});
-		await page.goto(`/editor/${seeded.id}`);
+		// <video> path: the seeked event of the elements is what is timed. The
+		// WebCodecs path is timed by webcodecs-perf.spec.ts.
+		await page.goto(`/editor/${seeded.id}?decoder=video`);
 		await expect(
 			page.getByRole("main", { name: "Preview" }).locator("canvas"),
 		).toBeVisible();
