@@ -6,6 +6,10 @@
       "description": "Visual tracks only.",
       "type": "boolean"
     },
+    "locked": {
+      "description": "true refuses every edit of the items of the track until it is false again.",
+      "type": "boolean"
+    },
     "muted": {
       "type": "boolean"
     },
@@ -14,8 +18,18 @@
       "maxLength": 60,
       "type": "string"
     },
+    "solo": {
+      "description": "true plays only the soloed tracks (the picture of visual tracks, the sound of all).",
+      "type": "boolean"
+    },
     "track_id": {
       "type": "string"
+    },
+    "volume": {
+      "description": "Factor on the volume of the items of the track, 0 to 4; 1 is neutral.",
+      "maximum": 4,
+      "minimum": 0,
+      "type": "number"
     }
   },
   "required": [

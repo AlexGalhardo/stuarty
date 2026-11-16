@@ -211,7 +211,10 @@ export interface Track {
   hidden?: boolean;
   id: string;
   kind: "visual" | "audio";
+  locked?: boolean;
   muted?: boolean;
   name?: string;
   order: string;
+  solo?: boolean;
+  volume?: number;
 }

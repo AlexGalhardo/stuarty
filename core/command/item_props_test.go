@@ -293,3 +293,36 @@ func TestCaptionFromTranscriptOnAnAudioItem(t *testing.T) {
 		t.Errorf("caption = %+v", it)
 	}
 }
+
+// A locked track refuses every edit of its items, and only those (VV-036).
+func TestLockedTrackRefusesEditsOfItsItems(t *testing.T) {
+	d := base().clip(itemA, vidTr, 0, 150, 0).audio(itemB, 0, 60, 0).d
+	tr := d.Tracks[vidTr]
+	tr.Locked = true
+	d.Tracks[vidTr] = tr
+
+	refused := map[string]string{
+		"item.move":      `{"item_id": "` + itemA + `", "start": "10f"}`,
+		"item.delete":    `{"item_ids": ["` + itemA + `"]}`,
+		"item.trim":      `{"item_id": "` + itemA + `", "edge": "end", "to": "100f"}`,
+		"item.rename":    `{"item_id": "` + itemA + `", "name": "x"}`,
+		"clip.set_color": `{"item_id": "` + itemA + `", "brightness": 0.1}`,
+		"clip.add":       `{"track_id": "` + vidTr + `", "asset_id": "` + vidAsset + `", "id": "itm_x000000009", "start": "200f", "duration": "30f"}`,
+	}
+	for name, args := range refused {
+		_, err := Default().Apply(d, op2(name, args), Env{})
+		if e := AsError(err); e == nil || e.Code != CodeInvalidState || !strings.Contains(e.Message, "locked") {
+			t.Errorf("%s on a locked track: %v", name, err)
+		}
+	}
+
+	allowed := map[string]string{
+		"item.rename":  `{"item_id": "` + itemB + `", "name": "x"}`,
+		"track.update": `{"track_id": "` + vidTr + `", "locked": false}`,
+	}
+	for name, args := range allowed {
+		if _, err := Default().Apply(d, op2(name, args), Env{}); err != nil {
+			t.Errorf("%s should be allowed: %v", name, err)
+		}
+	}
+}

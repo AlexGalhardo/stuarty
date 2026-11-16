@@ -377,7 +377,7 @@ ffmpeg -nostdin -protocol_whitelist file,pipe -ss <time of first needed frame> -
 
 ## 7. Audio
 
-`plan.Audio(doc, from, to)` returns, for every `clip` with audio that is not `audio_muted` and every `audio` item, on tracks that are not `muted`, except an item whose `asset` is `ast_placeholder` (the unfilled optional slot of a template instance, SDD-001 section 3.10), which is skipped like a missing media layer:
+`plan.Audio(doc, from, to)` returns, for every `clip` with audio that is not `audio_muted` and every `audio` item, on tracks that are not `muted` and, when any track is `solo`, are soloed (`Document.TrackSounds`), and with the gain times the `volume` of the track, except an item whose `asset` is `ast_placeholder` (the unfilled optional slot of a template instance, SDD-001 section 3.10), which is skipped like a missing media layer:
 
 ```go
 type AudioSource struct {

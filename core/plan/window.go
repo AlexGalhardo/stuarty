@@ -276,8 +276,10 @@ func windowAudio(doc *timeline.Document, from, to int) []WindowAudio {
 
 		wa.SourceSeconds = round3(float64(pos) * float64(fps.Den) / float64(fps.Num))
 
+		k := doc.TrackGain(it.Track)
+
 		for t := cs; t < ce; t++ {
-			wa.Gain = append(wa.Gain, round3(gainAt(it, float64(t-it.Start))))
+			wa.Gain = append(wa.Gain, round3(gainAt(it, float64(t-it.Start))*k))
 		}
 
 		out = append(out, wa)

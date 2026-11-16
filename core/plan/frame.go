@@ -27,7 +27,7 @@ func newPlanner(doc *timeline.Document, opts Options) *planner {
 
 	for id := range doc.Tracks {
 		t := doc.Tracks[id]
-		if t.Kind == timeline.TrackAudio || t.Hidden {
+		if t.Kind == timeline.TrackAudio || !doc.TrackVisible(id) {
 			continue
 		}
 

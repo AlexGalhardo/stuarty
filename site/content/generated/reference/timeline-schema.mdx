@@ -202,9 +202,12 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `hidden` | `boolean` | no |  |
 | `id` | `string` | yes | pattern `^trk_[0-9a-hjkmnp-tv-z]\{10\}$` |
 | `kind` | `visual`, `audio` | yes |  |
+| `locked` | `boolean` | no |  |
 | `muted` | `boolean` | no |  |
 | `name` | `string` | no |  |
 | `order` | `string` | yes | pattern `^[0-9a-z]+$` |
+| `solo` | `boolean` | no |  |
+| `volume` | `number` | no | min 0; max 4 |
 
 ## Transition
 

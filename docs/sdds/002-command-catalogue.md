@@ -59,7 +59,8 @@ Rules:
 2. It then checks the command's preconditions against `doc` and returns the listed error if one fails. The document is unchanged on any error.
 3. On success the returned document satisfies every invariant of SDD-001 §4. `Apply` calls `timeline.Validate` on its result in tests and in debug builds; a violation there is a bug in the command, reported as `E_INTERNAL`.
 4. Identifiers of created objects come from `args` when the caller supplied them (the fields named `id` or `new_id`) and otherwise from `env.NewIDs`. The service fills them in before storing the operation, so a stored operation always carries the identifiers and replays identically. Two commands create a number of objects that is known only after they run (`clip.remove_silences`, `caption.from_transcript`): they report the identifiers they used in `effective.new_ids`, and the service stores the operation with `new_ids` equal to that list.
-5. A batch is applied by folding `Apply` over its operations. If any fails, the whole batch fails with that error and `op_index` set.
+5. An operation that adds, removes, moves or changes an item of a track that is `locked` when it starts is refused with `E_INVALID_STATE` (`details.track_ids` names the tracks) and changes nothing. `track.update` can still change the track, so unlocking works. Undo and redo are not operations and are not refused. (VV-036)
+6. A batch is applied by folding `Apply` over its operations. If any fails, the whole batch fails with that error and `op_index` set.
 
 ### A.4 Time arguments
 
@@ -236,7 +237,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | Command | Phase | Arguments | Effect |
 | --- | --- | --- | --- |
 | `track.add` | P | `kind`, `name?`, `id?`, and one of `position?` (`"top"` default, `"bottom"`), `above?` (track id), `below?` (track id) | Adds a track at that place in the order |
-| `track.update` | P | `track_id`, `name?`, `hidden?`, `muted?` | Sets the given fields |
+| `track.update` | P | `track_id`, `name?`, `hidden?`, `muted?`, `locked?`, `solo?`, `volume?` | Sets the given fields; `locked` refuses edits of the items of the track (A.3 rule 5), `solo` plays only soloed tracks, `volume` (0 to 4) is a factor on the volume of its items |
 | `track.move` | P | `track_id` and one of `position`, `above`, `below` | Changes the track's place in the order |
 | `track.remove` | P | `track_id`, `with_items?` (default false) | Removes the track. With items on it, fails with `E_NOT_EMPTY` unless `with_items` is true, in which case its items are removed too |
 | `track.set_caption_style` | P | `track_id`, `style` (partial CaptionStyle), `replace?` (default false) | Merges `style` into the track's caption style, or replaces it |
@@ -246,7 +247,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | Command | Phase | Arguments | Effect |
 | --- | --- | --- | --- |
 | `item.move` | P | `item_id`, `start?` (time), `track_id?` | Moves the item in time, to another track of the same kind, or both. At least one is required |
-| `item.trim` | P | `item_id`, `edge` (`"start"` or `"end"`), `to` (time) | Moves that edge to `to`. Rules in B.10 |
+| `item.trim` | P | `item_id`, `edge` (`"start"` or `"end"`), `to` (time), `ripple?` (`"none"` default, `"track"`) | Moves that edge to `to`. With ripple `"track"` the later items of the track shift by the change in length. Rules in B.10 and C.12 |
 | `item.split` | P | `item_id`, `at` (time), `new_id?` | Splits the item into two at `at`. Rules in B.10 |
 | `item.delete` | P | `item_ids` (1 to 200), `ripple?` (`"none"` default, `"track"`, `"all"`) | Removes the items. With `ripple: "track"` every later item on each affected track moves earlier by the length freed on that track; with `"all"` every later item on every track moves by the length freed, which requires the deleted items to cover one contiguous range |
 | `item.duplicate` | A | `item_id`, `start?` (time), `track_id?`, `new_id?` | Copies the item to the given place. A slot marking is not copied |
@@ -839,7 +840,7 @@ Adds an empty track at a place in the track order.
 
 ### C.7 `track.update` (phase P)
 
-Sets the name, hidden flag or muted flag of a track.
+Sets the name, the hidden, muted, locked or solo flag, or the volume of a track.
 
 **Arguments**
 
@@ -849,14 +850,17 @@ Sets the name, hidden flag or muted flag of a track.
 | `name` | string | no | unchanged | 0 to 60 characters; `""` clears it |
 | `hidden` | boolean | no | unchanged | visual tracks only |
 | `muted` | boolean | no | unchanged | both kinds |
+| `locked` | boolean | no | unchanged | both kinds; `true` refuses every edit of the items of the track (A.3 rule 5) until it is `false` again. VV-036 |
+| `solo` | boolean | no | unchanged | both kinds; while any track is solo, only soloed tracks sound, and while any visual track is solo, only soloed visual tracks are drawn (SDD-004 section 7) |
+| `volume` | number | no | unchanged | both kinds; 0 to 4, rounded to 3 decimals; a factor on the volume of the items of the track; 1 removes the field |
 
-At least one of `name`, `hidden`, `muted` is required.
+At least one of `name`, `hidden`, `muted`, `locked`, `solo`, `volume` is required.
 
 **Preconditions.**
 
 1. At least one field is present and valid (`E_VALIDATION`).
 2. The track exists (`E_NOT_FOUND`).
-3. `hidden` is only given for a visual track (`E_TYPE_MISMATCH`).
+3. `hidden` is only given for a visual track (`E_TYPE_MISMATCH`). `volume` is 0 to 4 (`E_VALIDATION`).
 
 **Postconditions.**
 
@@ -868,7 +872,7 @@ At least one of `name`, `hidden`, `muted` is required.
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | nothing to set, or a value out of range | `args: give at least one of name, hidden, muted.` | `Send for example {"track_id": "trk_f6g7h8j9k0", "muted": true}.` |
+| `E_VALIDATION` | nothing to set, or a value out of range | `args: give at least one of name, hidden, muted, locked, solo, volume.` | `Send for example {"track_id": "trk_f6g7h8j9k0", "muted": true}.` |
 | `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
 | `E_TYPE_MISMATCH` | `hidden` on an audio track | `Track trk_m1n2p3q4r5 is an audio track; hidden applies to visual tracks only.` | `Use muted to silence an audio track.` |
 
@@ -894,8 +898,15 @@ At least one of `name`, `hidden`, `muted` is required.
 - `ok_unhide_removes_field`
 - `ok_mute_audio_track`
 - `ok_mute_visual_track`
+- `ok_lock`
+- `ok_unlock_removes_field`
+- `ok_solo_audio_track`
+- `ok_volume`
+- `ok_volume_1_removes_field`
+- `ok_edit_a_locked_track_itself`
 - `ok_same_values_noop`
 - `ok_name_60_chars`
+- `err_validation_volume_above_4`
 - `err_validation_no_field`
 - `err_validation_name_61_chars`
 - `err_not_found`
@@ -1172,6 +1183,7 @@ Moves the start edge or the end edge of an item to a timeline position, keeping 
 | `item_id` | item id | yes | none | any item type |
 | `edge` | `"start"` or `"end"` | yes | none | |
 | `to` | time | yes | none | absolute timeline position of the edge; `end` is exclusive (the first frame after the item) |
+| `ripple` | `"none"` or `"track"` | no | `"none"` | `"track"` shifts every later item of the track (start at or after the old end of the item) by the change in duration, so a gap is closed or opened; with edge `start` the item then keeps its `start` and only its duration and source change. VV-036 |
 
 **Preconditions.**
 
@@ -1181,7 +1193,7 @@ Moves the start edge or the end edge of an item to a timeline position, keeping 
 4. Edge `start` moving earlier on a `clip` or `audio` item: the new `source_in` is not negative (`E_OUT_OF_SOURCE`). Edge `end` growing a `clip` or `audio` item: the source range holds (R9, `E_OUT_OF_SOURCE`). Images are exempt.
 5. A caption keeps at least one word (`E_INVALID_STATE`).
 6. Fades and transitions still fit the new duration (R14, `E_INVALID_STATE`).
-7. The item does not overlap another item of its track (`E_OVERLAP`, R8; `next_free` is the nearest valid `to`).
+7. The item does not overlap another item of its track (`E_OVERLAP`, R8; `next_free` is the nearest valid `to`). With ripple `"track"` the later items move first, so growing never overlaps them, but none may end after frame 108,000 (`E_INVALID_TIME`).
 
 **Postconditions.**
 
@@ -1268,6 +1280,13 @@ The same clip trimmed at the end with `{"edge": "end", "to": "150f"}` (and, for 
 - `ok_start_edge_shrink_drops_and_shifts_markers`
 - `ok_start_edge_extend_shifts_markers`
 - `ok_end_edge_shrink_drops_markers_past_the_end`
+- `ok_ripple_end_edge_shrink_closes_the_gap`
+- `ok_ripple_end_edge_extend_pushes_later_items`
+- `ok_ripple_start_edge_shrink_keeps_the_start`
+- `ok_ripple_start_edge_extend_pushes_later_items`
+- `ok_ripple_none_is_the_default`
+- `err_overlap_end_edge_extend_without_ripple`
+- `err_invalid_time_ripple_pushes_past_108000`
 
 ### C.13 `item.split` (phase P)
 

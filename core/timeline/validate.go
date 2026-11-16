@@ -231,6 +231,9 @@ func (v *validator) tracks() {
 		if runes(t.Name) > 60 {
 			v.add(VShape, path+".name", k, "name has more than 60 characters")
 		}
+		if t.Volume != nil && !inRange(*t.Volume, 0, 4) {
+			v.add(VShape, path+".volume", k, "volume must be between 0 and 4")
+		}
 		if !ValidOrder(t.Order) {
 			v.add(VTrackOrder, path+".order", k, "order must be a non-empty string of 0-9a-z")
 		} else if other, dup := byOrder[t.Order]; dup {

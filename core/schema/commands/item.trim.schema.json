@@ -12,6 +12,14 @@
     "item_id": {
       "type": "string"
     },
+    "ripple": {
+      "description": "none (default) or track: the later items of the track follow the change in length; with the start edge the item keeps its start.",
+      "enum": [
+        "none",
+        "track"
+      ],
+      "type": "string"
+    },
     "to": {
       "description": "Absolute position of the edge; the end is exclusive.",
       "type": "string",

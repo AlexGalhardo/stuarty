@@ -73,6 +73,18 @@ func init() {
 	u("ok_mute_visual_track", `{"track_id": "`+vidTr+`", "muted": true}`, base)
 	u("ok_same_values_noop", `{"track_id": "`+vidTr+`", "hidden": false, "name": "Video"}`, base)
 	u("ok_name_60_chars", `{"track_id": "`+vidTr+`", "name": "`+strings.Repeat("n", 60)+`"}`, base)
+	locked := func() *B {
+		return base().with(func(d *timeline.Document) { t := d.Tracks[vidTr]; t.Locked = true; d.Tracks[vidTr] = t })
+	}
+	u("ok_lock", `{"track_id": "`+vidTr+`", "locked": true}`, base)
+	u("ok_unlock_removes_field", `{"track_id": "`+vidTr+`", "locked": false}`, locked)
+	u("ok_solo_audio_track", `{"track_id": "`+audTr+`", "solo": true}`, base)
+	u("ok_volume", `{"track_id": "`+audTr+`", "volume": 0.5}`, base)
+	u("ok_volume_1_removes_field", `{"track_id": "`+audTr+`", "volume": 1}`, func() *B {
+		return base().with(func(d *timeline.Document) { t := d.Tracks[audTr]; v := 0.5; t.Volume = &v; d.Tracks[audTr] = t })
+	})
+	u("ok_edit_a_locked_track_itself", `{"track_id": "`+vidTr+`", "name": "Main"}`, locked)
+	u("err_validation_volume_above_4", `{"track_id": "`+audTr+`", "volume": 4.5}`, base)
 	u("err_validation_no_field", `{"track_id": "`+vidTr+`"}`, base)
 	u("err_validation_name_61_chars", `{"track_id": "`+vidTr+`", "name": "`+strings.Repeat("n", 61)+`"}`, base)
 	u("err_not_found", `{"track_id": "trk_zzzzzzzzzz", "name": "x"}`, base)

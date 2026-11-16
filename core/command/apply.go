@@ -140,6 +140,7 @@ func (r *Registry) run(work *timeline.Document, op Operation, env Env) (effectiv
 		return nil, e
 	}
 	ctx := &Context{Doc: work, Env: env, build: r.phase, effective: map[string]any{}}
+	locks := lockedItems(work)
 	defer func() {
 		if recover() != nil {
 			effective, err = nil, AsError(nil)
@@ -147,6 +148,9 @@ func (r *Registry) run(work *timeline.Document, op Operation, env Env) (effectiv
 	}()
 	if cerr := cmd.apply(ctx, args.Addr().Interface()); cerr != nil {
 		return nil, AsError(cerr)
+	}
+	if lerr := checkLocks(locks, work); lerr != nil {
+		return nil, lerr
 	}
 	if r.Debug {
 		if vs := timeline.Validate(work); len(vs) > 0 {
