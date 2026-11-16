@@ -13,23 +13,28 @@ import (
 var bundleExport = &spec{
 	name:    "bundle:export",
 	summary: "export a project as a .vvbundle to share or to back up",
-	usage:   []string{"vukem-video bundle:export --project <id> [--no-log] [--wait]"},
-	example: "vukem-video bundle:export --project prj_7k2m9x4q1b --wait",
+	usage:   []string{"vukem-video bundle:export --project <id> [--no-log] [--wait] [--out f] [--force]"},
+	example: "vukem-video bundle:export --project prj_7k2m9x4q1b --out ~/teaser.vvbundle",
 	project: true,
 	globals: []string{"wait", "timeout"},
 	write:   true,
-	flags: []flagDef{
+	flags: append([]flagDef{
 		{
 			Name: "log", Kind: kindBool, Default: "true",
 			Usage: "include the operation log (--no-log to share without history)",
 		},
-	},
+	}, outFlags()...),
 	run: func(ctx context.Context, c *call) (*output, error) {
+		dest, err := c.outPath()
+		if err != nil {
+			return nil, err
+		}
+
 		includeLog := c.args.boolean("log")
 		req := service.ProjectBundleExportRequest{ProjectID: c.projectID, IncludeLog: &includeLog}
 
 		deadline := time.Now().Add(c.args.timeout())
-		wait := c.args.boolean("wait")
+		wait := c.args.boolean("wait") || dest != ""
 
 		if wait {
 			req.WaitMS = waitSlice(deadline)
@@ -40,7 +45,12 @@ var bundleExport = &spec{
 			return nil, err
 		}
 
-		return jobOutput(ctx, c, job, wait, deadline)
+		out, err := jobOutput(ctx, c, job, wait, deadline)
+		if err != nil {
+			return nil, err
+		}
+
+		return c.saveJobFile(ctx, out, dest)
 	},
 }
 

@@ -137,6 +137,7 @@ type fakeResolver struct {
 	target    Target
 	resolved  int
 	events    EventOpener
+	download  Downloader
 }
 
 func (r *fakeResolver) Resolve(_ context.Context, t Target) (*Connection, error) {
@@ -147,7 +148,9 @@ func (r *fakeResolver) Resolve(_ context.Context, t Target) (*Connection, error)
 		return nil, r.err
 	}
 
-	return &Connection{Service: r.svc, InProcess: r.inProcess, Workspace: "/ws", Events: r.events}, nil
+	return &Connection{
+		Service: r.svc, InProcess: r.inProcess, Workspace: "/ws", Events: r.events, Download: r.download,
+	}, nil
 }
 
 type harness struct {

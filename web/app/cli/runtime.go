@@ -48,6 +48,9 @@ type Connection struct {
 	// Events opens the event stream of a project on the server; nil when no
 	// server answers (the events live in the hub of the owner).
 	Events EventOpener
+	// Download opens the file at an API path of the server (a download URL); nil when the
+	// workspace is local and the Service reports the path of the file.
+	Download Downloader
 }
 
 // Resolver finds the Service for a command: a remote server, the local owner,

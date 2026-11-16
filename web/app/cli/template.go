@@ -117,17 +117,27 @@ var templateNew = &spec{
 var templateExport = &spec{
 	name:       "template:export",
 	summary:    "write a template to a file the workspace keeps",
-	usage:      []string{"vukem-video template:export <template id>"},
-	example:    "vukem-video template:export tpl_5n8b2v6c1x",
+	usage:      []string{"vukem-video template:export <template id> [--out f] [--force]"},
+	example:    "vukem-video template:export tpl_5n8b2v6c1x --out ~/spring-sale.vukem-template.zip",
 	positional: true,
+	flags:      outFlags(),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		if len(c.args.Positional) != 1 {
 			return nil, validation("", "template:export takes one template id, got %d.", len(c.args.Positional))
 		}
 
+		dest, err := c.outPath()
+		if err != nil {
+			return nil, err
+		}
+
 		res, err := c.svc.TemplateExport(ctx, service.TemplateRef{TemplateID: c.args.Positional[0]})
 		if err != nil {
 			return nil, err
+		}
+
+		if dest != "" {
+			return c.saveResultFile(ctx, res, dest)
 		}
 
 		return &output{value: res, text: res.Text}, nil

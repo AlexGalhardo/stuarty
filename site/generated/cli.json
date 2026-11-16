@@ -558,7 +558,7 @@
       "name": "export",
       "summary": "export a project to a file",
       "usage": [
-        "vukem-video export --project <id> [--start t] [--end t] [--format f] [--wait] [--timeout d]"
+        "vukem-video export --project <id> [--start t] [--end t] [--format f] [--wait] [--timeout d] [--out f] [--force]"
       ],
       "example": "vukem-video export --project prj_7k2m9x4q1b --json",
       "flags": [
@@ -576,6 +576,17 @@
           "name": "format",
           "type": "string",
           "usage": "mp4 (default), gif, wav or aac"
+        },
+        {
+          "name": "out",
+          "type": "string",
+          "usage": "copy the file to this path when the job succeeds (implies --wait; the workspace keeps its own copy)"
+        },
+        {
+          "name": "force",
+          "type": "boolean",
+          "default": "false",
+          "usage": "replace the --out file when it exists"
         }
       ],
       "globals": [
@@ -808,9 +819,22 @@
       "name": "template:export",
       "summary": "write a template to a file the workspace keeps",
       "usage": [
-        "vukem-video template:export <template id>"
+        "vukem-video template:export <template id> [--out f] [--force]"
       ],
-      "example": "vukem-video template:export tpl_5n8b2v6c1x",
+      "example": "vukem-video template:export tpl_5n8b2v6c1x --out ~/spring-sale.vukem-template.zip",
+      "flags": [
+        {
+          "name": "out",
+          "type": "string",
+          "usage": "copy the file to this path when the job succeeds (implies --wait; the workspace keeps its own copy)"
+        },
+        {
+          "name": "force",
+          "type": "boolean",
+          "default": "false",
+          "usage": "replace the --out file when it exists"
+        }
+      ],
       "globals": [
         "json",
         "workspace",
@@ -837,15 +861,26 @@
       "name": "bundle:export",
       "summary": "export a project as a .vvbundle to share or to back up",
       "usage": [
-        "vukem-video bundle:export --project <id> [--no-log] [--wait]"
+        "vukem-video bundle:export --project <id> [--no-log] [--wait] [--out f] [--force]"
       ],
-      "example": "vukem-video bundle:export --project prj_7k2m9x4q1b --wait",
+      "example": "vukem-video bundle:export --project prj_7k2m9x4q1b --out ~/teaser.vvbundle",
       "flags": [
         {
           "name": "log",
           "type": "boolean",
           "default": "true",
           "usage": "include the operation log (--no-log to share without history)"
+        },
+        {
+          "name": "out",
+          "type": "string",
+          "usage": "copy the file to this path when the job succeeds (implies --wait; the workspace keeps its own copy)"
+        },
+        {
+          "name": "force",
+          "type": "boolean",
+          "default": "false",
+          "usage": "replace the --out file when it exists"
         }
       ],
       "globals": [

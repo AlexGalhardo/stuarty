@@ -252,12 +252,14 @@ var mediaList = &spec{
 var export = &spec{
 	name:    "export",
 	summary: "export a project to a file",
-	usage:   []string{"vukem-video export --project <id> [--start t] [--end t] [--format f] [--wait] [--timeout d]"},
+	usage: []string{
+		"vukem-video export --project <id> [--start t] [--end t] [--format f] [--wait] [--timeout d] [--out f] [--force]",
+	},
 	example: "vukem-video export --project prj_7k2m9x4q1b --json",
 	project: true,
 	globals: []string{"wait", "timeout"},
 	write:   true,
-	flags: []flagDef{
+	flags: append([]flagDef{
 		{Name: "start", Kind: kindString, Usage: "first time to export (default: the start)"},
 		{Name: "end", Kind: kindString, Usage: "end of the export (default: the end of the timeline)"},
 		{
@@ -265,8 +267,13 @@ var export = &spec{
 			Kind:  kindString,
 			Usage: service.ExportFormats[0] + " (default), " + service.JoinOr(service.ExportFormats[1:]),
 		},
-	},
+	}, outFlags()...),
 	run: func(ctx context.Context, c *call) (*output, error) {
+		dest, err := c.outPath()
+		if err != nil {
+			return nil, err
+		}
+
 		req := service.JobStartRequest{ProjectID: c.projectID, Kind: service.JobExport}
 
 		if c.args.has("start") || c.args.has("end") || c.args.has("format") {
@@ -281,7 +288,7 @@ var export = &spec{
 		}
 
 		deadline := time.Now().Add(c.args.timeout())
-		wait := c.args.boolean("wait")
+		wait := c.args.boolean("wait") || dest != ""
 
 		if wait {
 			req.WaitMS = waitSlice(deadline)
@@ -292,7 +299,12 @@ var export = &spec{
 			return nil, err
 		}
 
-		return jobOutput(ctx, c, job, wait, deadline)
+		out, err := jobOutput(ctx, c, job, wait, deadline)
+		if err != nil {
+			return nil, err
+		}
+
+		return c.saveJobFile(ctx, out, dest)
 	},
 }
 

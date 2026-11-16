@@ -21,6 +21,7 @@ type call struct {
 	args      *parsed
 	projectID string
 	events    EventOpener
+	download  Downloader
 	// inProcess is true when this process owns the workspace: the person at the
 	// terminal of the owner machine, who may install helpers and sweep the workspace.
 	inProcess bool
@@ -173,6 +174,7 @@ func (rt *Runtime) Execute(ctx context.Context, name string, args []string) int 
 
 	c.svc = conn.Service
 	c.events = conn.Events
+	c.download = conn.Download
 	c.inProcess = conn.InProcess
 
 	if !s.stream {

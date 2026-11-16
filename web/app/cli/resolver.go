@@ -92,6 +92,7 @@ func httpConnection(sess *workspace.Session) *Connection {
 		Service:   remote.New(sess.BaseURL, sess.Token, hc),
 		Workspace: string(sess.Dir),
 		Events:    httpEvents(sess.BaseURL, sess.Token, sc),
+		Download:  httpDownload(sess.BaseURL, sess.Token, sc),
 	}
 }
 

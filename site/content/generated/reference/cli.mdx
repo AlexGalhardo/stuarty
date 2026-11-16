@@ -389,7 +389,7 @@ vukem-video view --project prj_7k2m9x4q1b --at 1s --json
 Export a project to a file
 
 ```text
-vukem-video export --project <id> [--start t] [--end t] [--format f] [--wait] [--timeout d]
+vukem-video export --project <id> [--start t] [--end t] [--format f] [--wait] [--timeout d] [--out f] [--force]
 ```
 
 | Flag | Type | Default | Meaning |
@@ -397,6 +397,8 @@ vukem-video export --project <id> [--start t] [--end t] [--format f] [--wait] [-
 | `--start` | string |  | first time to export (default: the start) |
 | `--end` | string |  | end of the export (default: the end of the timeline) |
 | `--format` | string |  | mp4 (default), gif, wav or aac |
+| `--out` | string |  | copy the file to this path when the job succeeds (implies --wait; the workspace keeps its own copy) |
+| `--force` | boolean | `false` | replace the --out file when it exists |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
 
@@ -573,15 +575,20 @@ vukem-video template:new tpl_5n8b2v6c1x --name "Spring sale" --fill fill.json
 Write a template to a file the workspace keeps
 
 ```text
-vukem-video template:export <template id>
+vukem-video template:export <template id> [--out f] [--force]
 ```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--out` | string |  | copy the file to this path when the job succeeds (implies --wait; the workspace keeps its own copy) |
+| `--force` | boolean | `false` | replace the --out file when it exists |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
 Example:
 
 ```bash
-vukem-video template:export tpl_5n8b2v6c1x
+vukem-video template:export tpl_5n8b2v6c1x --out ~/spring-sale.vukem-template.zip
 ```
 
 ## `template:import`
@@ -605,19 +612,21 @@ vukem-video template:import spring-sale.vukem-template.zip
 Export a project as a .vvbundle to share or to back up
 
 ```text
-vukem-video bundle:export --project <id> [--no-log] [--wait]
+vukem-video bundle:export --project <id> [--no-log] [--wait] [--out f] [--force]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--log` | boolean | `true` | include the operation log (--no-log to share without history) |
+| `--out` | string |  | copy the file to this path when the job succeeds (implies --wait; the workspace keeps its own copy) |
+| `--force` | boolean | `false` | replace the --out file when it exists |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
 
 Example:
 
 ```bash
-vukem-video bundle:export --project prj_7k2m9x4q1b --wait
+vukem-video bundle:export --project prj_7k2m9x4q1b --out ~/teaser.vvbundle
 ```
 
 ## `bundle:import`
