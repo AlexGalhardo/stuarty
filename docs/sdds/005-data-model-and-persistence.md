@@ -773,7 +773,7 @@ CREATE INDEX project_assets_asset_hash_index ON project_assets (asset_hash);
 
 CREATE TABLE artifacts (
   asset_hash TEXT    NOT NULL REFERENCES assets (id) ON DELETE CASCADE,
-  kind       TEXT    NOT NULL CHECK (kind IN ('probe','normalized','proxy','thumbnails','peaks','silence','loudness','speech','beats','frames','transcript')),
+  kind       TEXT    NOT NULL CHECK (kind IN ('probe','normalized','proxy','thumbnails','peaks','silence','loudness','speech','beats','frames','chunks','transcript')),
   profile    INTEGER NOT NULL,                      -- profile version; part of the file name (SDD-000 section 9)
   variant    TEXT    NOT NULL DEFAULT '',           -- transcripts: the 12 hex key of provider, model and language (SDD-011 section 6.1); empty otherwise
   ext        TEXT    NOT NULL,                      -- file extension without the dot; one kind may have more than one file

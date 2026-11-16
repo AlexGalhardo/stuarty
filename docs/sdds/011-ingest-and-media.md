@@ -570,6 +570,32 @@ ffmpeg -y -nostdin -hide_banner -v error -protocol_whitelist file,pipe -i <work>
 
 GOP and seeking: every keyframe gap is `G` frames, so the preview's accurate seek decodes at most `G - 1` frames (SDD-004 §10 corrects drift above 2 frames).
 
+#### 4.4.1 Chunk index (`chunks-1.json`)
+
+Written in the mux step, right after `proxy.mp4`, for a video proxy only (audio and image proxies have none). The browser decodes the proxy with WebCodecs (ADR-0029 item 5), and the index is what lets it do that without a demuxer library: the configuration for `VideoDecoder.configure` and, for every sample, where its bytes are and when to show it. Go reads it from the sample table of the proxy's own `moov` box (`stsd`/`vpcC`, `stts`, `ctts`, `stss`, `stsz`, `stsc`, `stco` or `co64`, and the first `elst` entry), with no FFmpeg process and no new dependency (`ingest.ReadChunkIndex`). The proxy is VP9 only; any other codec, or a file with no video track, has no index (`ErrNoChunkIndex`).
+
+```json
+{
+  "version": 1,
+  "codec": "vp09.00.31.08.00.01.01.01.00",
+  "coded_width": 304,
+  "coded_height": 540,
+  "duration_us": 60000000,
+  "offsets": [4096, 9120],
+  "sizes": [5024, 812],
+  "timestamps_us": [0, 33333],
+  "keyframes": [0]
+}
+```
+
+- `codec` is the WebCodecs codec string of the VP9 registration, `vp09.<profile>.<level>.<bit depth>.<chroma>.<primaries>.<transfer>.<matrix>.<full range>`, every part read from the `vpcC` box.
+- `coded_width` and `coded_height` are the proxy's picture size (`ProxySize`).
+- The four arrays have one entry per sample in decode order. `offsets[i]` and `sizes[i]` are the byte range of sample `i` in `proxy-1.mp4`, so a client reads it with a `Range` request; `timestamps_us[i]` is its presentation time in microseconds (decode time plus the `ctts` offset, minus the media time of the first edit), which is what `EncodedVideoChunk.timestamp` takes. The proxy has no B-frames (`-lag-in-frames 0`), so decode and presentation order are the same.
+- `keyframes` lists the indexes of the samples a decode can start from (`stss`; all samples when the box is absent). The first sample is always a key frame, and the gap between key frames is the GOP `G` of 4.4.
+- Check: for the portrait fixture the arrays have `N` entries, the first sample is a key frame at 0, and the offsets, sizes, times and key frame flags equal `ffprobe -show_packets` of the proxy (`TestProxyChunkIndexMatchesFFprobe`).
+
+The file is deterministic for a given proxy, is an artifact of kind `chunks` and is served with the proxy (SDD-003 §6.5).
+
 ### 4.5 Thumbnails
 
 Artifacts `thumbnails-1.jpg` (the sprite sheet, served by the `strip` route; videos only) and the posters `thumbnails-1-w160.jpg`, `thumbnails-1-w320.jpg`, `thumbnails-1-w640.jpg` (one small picture of the asset at three widths, served by the `thumbnail` route; videos and images), four `thumbnails` rows told apart by `variant` (empty for the sheet, `w160`, `w320`, `w640` for the posters; 6.1). The widths are the closed set SDD-003 §6.5 allows for the `thumbnail` route (160, 320, 640).
@@ -743,6 +769,7 @@ Per SDD-000 §9, `artifacts/<asset sha256 hex, without the "sha256:" prefix>/<ki
 | `frames-1.anim` (animated images only, 4.7) | `frames` |
 | `proxy-1.mp4`, `proxy-1.jpg`, `proxy-1.png` | `proxy` |
 | `thumbnails-1.jpg` (the sheet), `thumbnails-1-w160.jpg`, `thumbnails-1-w320.jpg`, `thumbnails-1-w640.jpg` | `thumbnails`, one row per file: `variant` empty, `w160`, `w320`, `w640` |
+| `chunks-1.json` (video proxies only, 4.4.1) | `chunks` |
 | `peaks-1.bin` | `peaks` |
 | `silence-1.json`, `loudness-1.json`, `speech-1.json`, `beats-1.json` | `silence`, `loudness`, `speech`, `beats` |
 | `transcript-1-<key12>.json` | `transcript`, `variant = <key12>` |
@@ -759,7 +786,7 @@ All work happens in `tmp/<job id>/` (the `<work>` of the commands above; SDD-007
 
 A bump is a new constant and a new file name; old files are not touched (ADR-0010 item 5).
 
-- **Artifacts that do not carry facts** (`proxy`, `thumbnails`, `peaks`, `silence`, `loudness`, `transcript`): when a read finds no artifact of the current version, the service queues an `ingest` job with `reason: "profile_upgrade"` and `steps` listing the missing kinds. With a `normalized` artifact present, the step reads the normalized file instead of the original (a *derived pass*: decode `normalized-N.mov`, write proxy and thumbnails with the same filter graph of 4.3.2 minus piece 1 to 6, and run peaks and analyses from its audio). The asset stays `ready`; the job only produces `asset.updated` progress. Old files are deleted by 6.4 after the new ones are registered.
+- **Artifacts that do not carry facts** (`proxy`, `chunks`, `thumbnails`, `peaks`, `silence`, `loudness`, `transcript`): when a read finds no artifact of the current version, the service queues an `ingest` job with `reason: "profile_upgrade"` and `steps` listing the missing kinds. With a `normalized` artifact present, the step reads the normalized file instead of the original (a *derived pass*: decode `normalized-N.mov`, write proxy and thumbnails with the same filter graph of 4.3.2 minus piece 1 to 6, and run peaks and analyses from its audio). The asset stays `ready`; the job only produces `asset.updated` progress. Old files are deleted by 6.4 after the new ones are registered.
 - **`normalized`:** the document holds the facts of the file that was measured (frame rate, frame count, sample count, dimensions). A new normalized profile may change them. **Decision of this SDD (DS-12):** the `assets` row records `normalized_version`, the compositor and the mixer read `normalized-<that version>`, and a new `normalized` version applies only to newly imported assets. A background re-ingest may produce the new version for an existing asset only when all of its measured facts equal the stored ones; then `normalized_version` is advanced and the old file becomes eligible for deletion. If any fact differs, both files are kept and the old version stays in use.
 
 ### 6.4 Garbage collection

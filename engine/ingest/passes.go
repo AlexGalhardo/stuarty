@@ -463,6 +463,9 @@ func (j *job) mux(ctx context.Context, hasAudio bool, deadline time.Duration) er
 	if _, err := j.run(ctx, StepMux, pcmd, deadline, nil); err != nil {
 		return err
 	}
+	if err := j.writeChunks(); err != nil {
+		return err
+	}
 	j.add(workFile{kind: "normalized", profile: ProfileNormalized, ext: "mov", name: "normalized.mov"})
 	j.add(workFile{kind: "proxy", profile: ProfileProxy, ext: "mp4", name: "proxy.mp4"})
 	return j.posters(ctx, ffmpegSeek(j.durationMS), true, "proxy.mp4", deadline)
