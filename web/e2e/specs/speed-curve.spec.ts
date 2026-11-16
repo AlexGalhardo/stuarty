@@ -41,10 +41,10 @@ test.describe("speed-curve", () => {
 				page.evaluate(
 					(id) =>
 						(
-							window.__vv?.document as {
-								items: Record<string, { reverse?: boolean }>;
-							}
-						).items[id]?.reverse,
+							window.__vv?.document as
+								| { items: Record<string, { reverse?: boolean }> }
+								| undefined
+						)?.items[id]?.reverse,
 					itemId,
 				),
 			)
