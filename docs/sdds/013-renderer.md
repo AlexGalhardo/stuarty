@@ -350,3 +350,59 @@ Rules:
 - `TestRenderHostIsSandboxed` (Go): a module compiled for the test that tries to import `wasi_snapshot_preview1` or `env` fails to instantiate, and the production configuration has no clock or file system (the test inspects the `wazero` configuration the host builds).
 - `TestRenderHostCancels` (Go): cancelling the context of a long render returns `context.Canceled` within 1 s and leaves no goroutine.
 - A Vitest and a Playwright test for the worker: a render answers `frame` with the `seq` asked; two renders posted in a row draw only the newest; the `VideoFrame` count reported by the worker is 0 after 500 renders with uploads (the leak check of stage B's gate); `missing_texture` is answered by an upload and a second `render`, not by a black frame.
+
+## 5. Frames from the hosts
+
+The renderer draws what it is given; it never decodes video. Each host gets the pixels of a media layer in its own way and hands them over as a **texture** under the item id (§4.2, `vr_put_texture`). This section fixes what a texture is, and how each host makes one.
+
+### 5.1 What a texture is
+
+1. **Cropped already.** The texture is exactly the region the layer's `crop` names, in source pixels. The renderer draws the whole texture into the layer's rectangle and ignores `crop` (it is in the plan for the host, SDD-004 §6 "Pre-scaling"). A host that cannot crop while decoding crops by copying the rectangle.
+2. **Premultiplied RGBA8**, with `opaque` set when every alpha is 255. A video proxy has no alpha, so its texture is opaque; the frame of an asset with `has_alpha` (SDD-011 §4.3.5, the Go export only) is premultiplied by the host, as SDD-004 §6 says.
+3. **Non-linear sRGB-encoded values**, converted from the normalized media's BT.709 limited-range YUV by the host (§5.2 and §5.3). The renderer never converts a colour.
+4. **Its size is the delivered size.** A constant, unrotated layer may be delivered already scaled to its rounded drawn size (the copy path of §3.6); any other is delivered at the cropped native size and the renderer samples it. The host decides which, as `scanLayers` does in the Go export (SDD-004 §6), and says nothing to the renderer: the texture's own size is the signal.
+5. **One texture per item**, replaced at each frame (`vr_put_texture` with the same id). Two layers that show the same asset are two items and have two textures.
+6. **Images** (a still or one frame of an animated image) are decoded once by the host from the normalized PNG (Go export) or from the image proxy with `createImageBitmap` (browser), cropped, premultiplied and uploaded once; the texture stays until the layer's item leaves the window or its crop changes.
+
+### 5.2 The Go export: raw frames from FFmpeg
+
+Nothing changes in how frames are decoded. `engine/export`'s `frameSource` starts one FFmpeg process per active clip with the command of SDD-004 §6 (`crop`, `scale=...flags=bicubic+accurate_rnd+full_chroma_int`, `format=rgba`, `-f rawvideo pipe:1`, with `in_color_matrix=bt709:in_range=tv` explicit), reads `delivered_w x delivered_h x 4` bytes per frame and today passes them to the Go compositor as an `Image`. With the Rust renderer it passes the same bytes to `Host.PutTexture(item, w, h, rgba, opaque)` (§4.6). Because the bytes are the ones the Go compositor gets today, stage C's byte-for-byte gate (§3.10) tests the renderer and not the decoder. Rules:
+
+- Frames are read in order, three ahead, with the restart rules of SDD-004 §6 (a request more than 120 frames ahead or an earlier frame restarts the process). The host, not the renderer, repeats the last frame past the end of the media and reuses a frame for speeds below 1.
+- A frame is uploaded **once per render** for its layer. The host does not keep textures of frames that are not drawn: after the frame's `vr_render` it calls `vr_release` for the layers that left the frame, so the texture budget (§7) is the layers of one frame.
+- Pixel buffers are the host's; `PutTexture` copies (§4.4), so the decoder reuses its buffers at once.
+- The alpha of a `has_alpha` asset: FFmpeg delivers `rgba`; the host premultiplies each frame as it arrives with the `div255` of §3.2 before `PutTexture` (not inside the module), so the module sees only premultiplied textures.
+
+### 5.3 The browser: WebCodecs
+
+The preview worker decodes the video layers of the window from the proxies (ADR-0029 item 5) using the chunk index of §6. `<video>` stays as the fallback of §5.3.5.
+
+1. **Configure.** For each asset with a video layer the decoder worker fetches `GET .../media/{asset_id}/chunks` once (cached with the proxy's rules), then checks `VideoDecoder.isConfigSupported({codec, codedWidth, codedHeight})` with the index's `codec`, `coded_width` and `coded_height`. If it is supported, one `VideoDecoder` per asset is configured with the same values; otherwise the asset is decoded by the fallback.
+2. **Which sample.** The plan window gives `source_seconds[t]` for each frame (SDD-004 §10), the time in the proxy at which the frame to show starts. The sample to show is the one with the largest `timestamps_us[i]` not above `round(source_seconds x 1,000,000)` plus half a sample duration (0.5 frame of the asset's rate); it is found by binary search on `timestamps_us`, which is sorted because the proxy has no B-frames.
+3. **Seek (paused, scrubbing, a window change).** Find the last key frame `k <= i` in `keyframes` (binary search). If the decoder is already positioned so that `i` follows its last decoded sample by at most 4 samples and no key frame lies between, keep decoding forward. Otherwise: `reset()`, `configure()` again, then fetch the bytes of samples `k` to `i` with one `Range` request on the proxy (`offsets[k]` to `offsets[i] + sizes[i] - 1`), cut them with the index into `EncodedVideoChunk`s (`type: "key"` for `k`, `"delta"` for the others, `timestamp` and `data` as the index says) and `decode()` them in order, then `flush()`. Output frames whose timestamp is not that of sample `i` are closed on arrival; the frame of sample `i` is the result. At most `GOP - 1` samples are decoded and thrown away (SDD-011 §4.4: a key frame every half second, 15 samples at 30 fps), which is what keeps a scrub inside the budget of NFR-003.
+4. **Play.** Forward playback keeps decoding after the last sample, in order, at most 4 decoded `VideoFrame`s ahead of the one being shown per layer, and respects `decoder.decodeQueueSize <= 8` before queueing more chunks. The audio clock decides which frame is shown (SDD-012 §11.2 item 4): frames older than the target are closed, not drawn. At the end of the media the last frame stays.
+5. **Unsupported, or an error.** When `isConfigSupported` answers false, when the decoder's `error` callback fires, or when a `Range` fetch fails, the worker marks the asset as `fallback`, closes its decoder and every `VideoFrame` of it, and tells the main thread, which draws that asset's layers from a `<video>` element as the BETA preview does (`videoPool.ts`) and sends the picture to the renderer through `createImageBitmap(video)` as a texture. A fallback is per asset and lasts until the page is reloaded; it is shown by a stats counter (`stats.fallbackAssets`), not by a toast.
+6. **From a `VideoFrame` to a texture.**
+   - **CPU path.** The worker copies the frame's `rect` (the layer's `crop`, rounded to whole pixels) with `VideoFrame.copyTo(buffer, {format: "RGBA", rect, colorSpace: "srgb"})`, a conversion done by the browser from the colour tags of the proxy (BT.709 limited range, tagged by the ingest, SDD-011 §4.3), and uploads the bytes with `texture` (§4.7). The frame has no alpha, so `opaque` is 1.
+   - **GPU path.** The worker uses the frame as an external texture or copies it to a GPU texture (`importExternalTexture`, or `copyExternalImageToTexture` for the cropped rectangle) and draws with it in the same task.
+   - **Close.** `frame.close()` is called as soon as the pixels are copied (CPU path) or, on the GPU path, in the same task that submitted the commands that use it (an external texture expires at the end of the task). A frame is never kept across a message without being counted in `stats.openFrames`, and a `render` never starts with a frame whose `close()` was already called: that is the black texture of P2-QA-003.
+7. **Tolerance.** The browser's conversion from YUV to RGB is not the one FFmpeg does, so the preview's frames are in the tolerance class of §3.8 and ADR-0003 item 6, never byte-equal to the export's. Truth on pause is unchanged: the paused frame is the export's frame from `ViewFrame` (SDD-004 §9, SDD-012 §11.3).
+
+### 5.4 The two hosts side by side
+
+| | Go export | Browser worker |
+| --- | --- | --- |
+| Where the pixels come from | the FFmpeg process of SDD-004 §6, `rgba` pipe | the `VideoDecoder` on the proxy, or `<video>` as the fallback |
+| Which frame | `source_frame` of the plan | `source_seconds` of the window, matched to `timestamps_us` |
+| Crop | the decoder's `crop` filter | `VideoFrame.copyTo` `rect`, or a texture sub-rectangle |
+| Colour conversion | FFmpeg, `bt709` limited explicit | the browser, from the colour tags |
+| Alpha | host premultiplies | none (a proxy is opaque) |
+| Equality required | byte for byte with today's compositor | the tolerance of §3.8 against the CPU path |
+| Texture lifetime | one render | until the item leaves the window or the frame is replaced |
+| Release | `vr_release` for layers that left | `frame.close()` at once, `release` message for evicted items |
+
+### 5.5 Acceptance of this section
+
+- Go: `TestHostFramesEqualCompositorFrames`: for every golden case, the textures handed to the renderer host are byte-equal to the `Image`s the Go compositor receives today (a comparison of the two inputs, before any drawing).
+- Browser (Playwright, three browsers): `webcodecs-seek-is-frame-exact` seeks to 500 random frames of each reference clip and checks that the timestamp of the decoded frame is the one the plan asks for; `webcodecs-no-leak` reports `stats.openFrames === 0` after the 500 seeks and 500 more renders; `webcodecs-fallback` forces `isConfigSupported` to false for one asset and checks that its layers draw through `<video>` and the others through WebCodecs.
+- The gate of stage B: P2-QA-003 (black texture) does not appear in 500 repeated cases, and NFR-003 and NFR-004 hold on a quiet machine (ADR-0029, Stages).
