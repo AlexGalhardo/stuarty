@@ -97,7 +97,7 @@ func run() error {
 	go func() {
 		<-srv.Done()
 		application.InvokeSync(func() {
-			app.Dialog.Error().SetTitle("Vukem Video").SetMessage("The local server stopped unexpectedly.").Show()
+			app.Dialog.Error().SetTitle("Vukem Video").SetMessage(tr(shell.TextServerStopped)).Show()
 			app.Quit()
 		})
 	}()
@@ -121,7 +121,7 @@ func failStartup(app *application.App, err error) error {
 	if se, ok := errors.AsType[*shell.StartupError](err); ok {
 		msg = se.Message
 	}
-	app.Dialog.Error().SetTitle("Vukem Video cannot start").SetMessage(msg).Show()
+	app.Dialog.Error().SetTitle(tr(shell.TextCannotStart)).SetMessage(msg).Show()
 	return err
 }
 
