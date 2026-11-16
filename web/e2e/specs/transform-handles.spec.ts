@@ -163,12 +163,19 @@ test.describe("transform-handles", () => {
 		// The buffer of the canvas is the picture, with no overlay or exact-frame
 		// image over it. Playwright's own screenshot adds a <style> element, which
 		// WebKit reports as a violation of the page's CSP.
+		const preview = page
+			.getByRole("main", { name: "Preview" })
+			.locator("canvas");
 		const shot = (): Promise<string> =>
-			page
-				.getByRole("main", { name: "Preview" })
-				.locator("canvas")
-				.evaluate((el) => (el as HTMLCanvasElement).toDataURL("image/png"));
+			preview.evaluate((el) =>
+				(el as HTMLCanvasElement).toDataURL("image/png"),
+			);
 
+		// Firefox draws the first frame after the page is ready; before it the
+		// buffer is black and would pass for "the picture did not change".
+		await expect(preview).toHaveAttribute("data-drawn", "0", {
+			timeout: 20_000,
+		});
 		const before = await shot();
 		await page.route("**/plan?*", async (route) => {
 			await new Promise((resolve) => setTimeout(resolve, 1000));
