@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
@@ -270,6 +271,41 @@ func TestAServerThatDoesNotAnswerIsRetryable(t *testing.T) {
 
 	if _, err := c.ProjectList(ctx, service.ProjectListRequest{}); !errors.Is(err, context.Canceled) {
 		t.Fatalf("a cancelled context must surface as such: %v", err)
+	}
+}
+
+type doerFunc func(*http.Request) (*http.Response, error)
+
+func (f doerFunc) Do(r *http.Request) (*http.Response, error) { return f(r) }
+
+// A write that timed out after it was sent may have been applied: no blind
+// retry. A read is safe to repeat.
+func TestATimedOutWriteIsNotRetryable(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		time.Sleep(300 * time.Millisecond)
+		_, _ = w.Write([]byte("{}"))
+	}))
+	t.Cleanup(srv.Close)
+
+	c := New(srv.URL, "tok", doerFunc(func(r *http.Request) (*http.Response, error) {
+		ctx, cancel := context.WithTimeout(r.Context(), 50*time.Millisecond)
+		defer cancel()
+
+		return srv.Client().Do(r.WithContext(ctx))
+	}))
+
+	_, err := c.JobStart(asCLI("cli"), service.JobStartRequest{ProjectID: "prj_a", Kind: "export"})
+
+	var se *service.Error
+	if !errors.As(err, &se) || se.Code != command.CodeInternal || se.Retryable || se.Details["outcome"] != "unknown" {
+		t.Fatalf("a timed-out write = %#v", err)
+	}
+
+	_, err = c.ProjectList(asCLI("cli"), service.ProjectListRequest{})
+	if !errors.As(err, &se) || se.Code != service.CodeWorkspaceLocked || !se.Retryable {
+		t.Fatalf("a timed-out read = %#v", err)
 	}
 }
 

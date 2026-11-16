@@ -9,8 +9,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -88,6 +90,24 @@ func (c *Client) do(ctx context.Context, method, path string, query url.Values, 
 	if err != nil {
 		if ctx.Err() != nil {
 			return ctx.Err()
+		}
+
+		// A write that timed out after it was sent may have been applied, so a
+		// blind retry could duplicate it. A refused connection never reached the
+		// server, and a read is safe to repeat.
+		var ne net.Error
+
+		var oe *net.OpError
+
+		isDial := errors.As(err, &oe) && oe.Op == "dial"
+
+		if method != http.MethodGet && method != http.MethodHead && errors.As(err, &ne) && ne.Timeout() && !isDial {
+			return &service.Error{
+				Code:    command.CodeInternal,
+				Message: "the server did not answer in time; the operation may have been applied.",
+				Hint:    "check with list or get before running it again",
+				Details: map[string]any{"reason": "timeout", "outcome": "unknown"},
+			}
 		}
 
 		return &service.Error{
