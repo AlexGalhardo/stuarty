@@ -27,7 +27,13 @@ func (h *apiHandler) jobsFile(c *web.Ctx, in jobFileIn) (noIn, error) {
 
 	hd := c.Writer().Header()
 	hd.Set("Content-Type", f.ContentType)
-	hd.Set("Content-Disposition", `attachment; filename="`+in.JobID+path.Ext(f.Path)+`"`)
+
+	name := f.DownloadName
+	if name == "" {
+		name = in.JobID + path.Ext(f.Path)
+	}
+
+	hd.Set("Content-Disposition", `attachment; filename="`+name+`"`)
 	hd.Set("Cache-Control", "private, max-age="+strconv.Itoa(f.MaxAge)+", immutable")
 	hd.Set("ETag", f.ETag)
 

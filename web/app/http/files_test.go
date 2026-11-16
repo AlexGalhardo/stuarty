@@ -72,7 +72,7 @@ func TestExportFileServesBytesWithRange(t *testing.T) {
 
 	for header, want := range map[string]string{
 		"Content-Type":           "video/mp4",
-		"Content-Disposition":    `attachment; filename="job_aaaaaaaaaa.mp4"`,
+		"Content-Disposition":    `attachment; filename="export-1970-01-01.mp4"`,
 		"Cache-Control":          "private, max-age=31536000, immutable",
 		"Accept-Ranges":          "bytes",
 		"X-Content-Type-Options": "nosniff",
@@ -164,5 +164,20 @@ func TestSnapPointsAndFontsRoutes(t *testing.T) {
 
 	if audit := h.get("/api/v1/audit"); audit.status != http.StatusOK {
 		t.Errorf("audit = %d %s", audit.status, audit.body)
+	}
+}
+
+func TestExportFileDownloadNameIsTheProjectName(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	project := h.newProject("My Ad: 50% off!")
+
+	h.exportedJob(project, "job_cccccccccc", "succeeded", []byte("x"))
+
+	res := h.get("/api/v1/jobs/job_cccccccccc/file")
+	want := `attachment; filename="My-Ad-50-off-1970-01-01.mp4"`
+	if got := res.header.Get("Content-Disposition"); got != want {
+		t.Errorf("Content-Disposition = %q, want %q", got, want)
 	}
 }
