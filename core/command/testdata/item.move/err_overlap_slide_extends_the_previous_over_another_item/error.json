@@ -1,0 +1,10 @@
+{
+  "code": "E_OVERLAP",
+  "message": "Sliding itm_m1n2p3q4r5 to frame 400 makes itm_x000000003 occupy frames 40-399, where item itm_x000000002 already is (frames 300-359).",
+  "hint": "Slide by less, or move item itm_x000000002 out of the way first.",
+  "retryable": false,
+  "path": "args.start",
+  "details": {
+    "conflicting_item": "itm_x000000002"
+  }
+}

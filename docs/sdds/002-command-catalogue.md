@@ -1195,6 +1195,7 @@ At least one of `start` and `track_id` is required.
 - `err_invalid_state_slide_leaves_no_frame_in_the_next_item`
 - `err_out_of_source_slide_earlier_next_item_reads_before_zero`
 - `err_overlap_slide_into_a_non_touching_item`
+- `err_overlap_slide_extends_the_previous_over_another_item`
 - `ok_linked_items_move_together`
 - `ok_linked_items_move_earlier_together`
 - `ok_linked_move_to_other_track_moves_only_the_item`
