@@ -36,7 +36,8 @@ func (s *svc) Edit(ctx context.Context, req EditRequest) (*EditResult, error) {
 // as the asset.add batch that closes an ingest (SDD-005 section 5.5). The scope
 // of the command is still checked against the caller; only the refusal of an
 // internal command is lifted. It returns an error for a Service that was not
-// made by New.
+// made by New. Test-only: product code never calls it;
+// TestSecurity_T05_EditInternalOnlyFromTests fails the build when it does.
 func EditInternal(ctx context.Context, s Service, req EditRequest) (*EditResult, error) {
 	impl, ok := s.(*svc)
 	if !ok {
