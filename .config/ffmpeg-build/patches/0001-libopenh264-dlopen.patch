@@ -38,7 +38,7 @@ open and the product reports E_NO_ENCODER. The decoder is not built.
  
  #include "libopenh264.h"
  
-+#if HAVE_LOADLIBRARY
++#ifdef _WIN32
 +#include <windows.h>
 +#define OPENH264_LIBNAME "openh264-8.dll"
 +#else
@@ -74,7 +74,7 @@ open and the product reports E_NO_ENCODER. The decoder is not built.
 +        av_log(NULL, AV_LOG_ERROR, "OpenH264 path is too long\n");
 +        return;
 +    }
-+#if HAVE_LOADLIBRARY
++#ifdef _WIN32
 +    lib = (void *)LoadLibraryA(path);
 +    if (lib) {
 +        *(void **)&load_create  = (void *)GetProcAddress((HMODULE)lib, "WelsCreateSVCEncoder");
