@@ -68,7 +68,7 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
 						>
 							{t.changelog}
 						</Link>
-						<Sidebar groups={groups} collapsible onNavigate={() => setOpen(false)} />
+						<Sidebar groups={groups} onNavigate={() => setOpen(false)} />
 					</div>
 				</Dialog.Popup>
 			</Dialog.Portal>

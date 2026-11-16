@@ -1,6 +1,5 @@
 import { prerender } from "react-dom/static";
 import { ChangelogPage } from "@/components/changelog-page";
-import { DocsFrame } from "@/components/docs-frame";
 import { DocArticle } from "@/components/doc-article";
 import type { Doc } from "@/lib/content";
 
@@ -9,13 +8,9 @@ async function markup(node: React.ReactNode): Promise<string> {
 	return new Response(prelude).text();
 }
 
-/** Docs frame and article as HTML. Interactive tabs and copy are plain DOM. */
+/** The article as HTML. Interactive tabs and copy are plain DOM; the sidebar is an island of the page. */
 export function renderDoc(doc: Doc): Promise<string> {
-	return markup(
-		<DocsFrame pathname={doc.href} section={doc.section}>
-			<DocArticle doc={doc} />
-		</DocsFrame>,
-	);
+	return markup(<DocArticle doc={doc} />);
 }
 
 export function renderChangelog(): Promise<string> {
