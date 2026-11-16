@@ -16,7 +16,7 @@ Every batch names the `base_revision` it was planned against. If the project mov
 3. Use `dry_run: true` to check a batch without saving it.
 4. Use an `idempotency_key` when you may retry: the same key with the same batch returns the first result, with `replayed: true`. The same key with a different batch is `E_IDEMPOTENCY_MISMATCH`.
 
-The operations are in the [command catalogue](/docs/reference/commands).
+The operations are in the [operations of the edit tool](/docs/mcp/tools/edit).
 
 ## Common mistakes
 
