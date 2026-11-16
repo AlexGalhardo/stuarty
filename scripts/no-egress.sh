@@ -113,14 +113,4 @@ log "stopping the server"
 stop_server
 
 logs=("$work"/traces/*.log)
-loopback_re='inet_addr\("127\.[0-9.]+"\)|inet_pton\(AF_INET6, "(::1|::ffff:127\.[0-9.]+)"\)'
-net_lines="$(grep -hE 'sa_family=AF_INET6?' "${logs[@]}" || true)"
-bad="$(printf '%s\n' "$net_lines" | grep -vE "^$|$loopback_re" || true)"
-if [ -n "$bad" ]; then
-	echo "no-egress: socket addresses that are not loopback:" >&2
-	printf '%s\n' "$bad" >&2
-	die "a non-loopback address was used"
-fi
-good="$(printf '%s\n' "$net_lines" | grep -cE "$loopback_re" || true)"
-[ "$good" -gt 0 ] || die "the traces hold no loopback connect: strace saw nothing, the result is void"
-log "ok: $good loopback socket calls, no other address, in ${#logs[@]} traced processes"
+bash "$root/scripts/no-egress-scan.sh" "${logs[@]}"
