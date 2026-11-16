@@ -1098,16 +1098,18 @@ func TestRoundTripKeepsShapesCaptionsAndTransitions(t *testing.T) {
 		t.Errorf("text: %+v", got)
 	}
 
-	if got := byName["badge/shape"]; got.Shape != "rounded_rect" || got.Width != 300 || got.Height != 120 || got.Radius != 24 ||
+	got := byName["badge/shape"]
+	if got.Shape != "rounded_rect" || got.Width != 300 || got.Height != 120 || got.Radius != 24 ||
 		got.Fill != "#FF8800" || got.StrokeColor != "#112233" || got.StrokeWidth != 3 || got.Opacity != 0.7 ||
-		got.Blur != 2 || got.TransitionOut == nil ||
+		got.Blur != 2 ||
+		got.TransitionOut == nil ||
 		got.TransitionOut.Kind != "slide_down" ||
 		got.Start != 60 ||
 		got.Duration != 30 {
 		t.Errorf("shape: %+v", got)
 	}
 
-	got := byName["subtitle/caption"]
+	got = byName["subtitle/caption"]
 	if len(got.Words) != 3 || got.Words[2].Text != "three" || got.Words[2].Start != 20 || len(got.Breaks) != 1 ||
 		got.Breaks[0] != 2 || got.Style == nil || got.Style.Position == nil || *got.Style.Position != "middle" ||
 		got.TransitionIn == nil || got.Start != 100 || got.Duration != 40 {

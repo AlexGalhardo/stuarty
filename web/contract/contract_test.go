@@ -129,7 +129,10 @@ func normalize(t *testing.T, d driver, raw json.RawMessage) string {
 
 			x = strings.ReplaceAll(x, "\\", "/")
 
-			return mcpSession.ReplaceAllString(templateID.ReplaceAllString(jobID.ReplaceAllString(x, "job_X"), "tpl_X"), "$1")
+			return mcpSession.ReplaceAllString(
+				templateID.ReplaceAllString(jobID.ReplaceAllString(x, "job_X"), "tpl_X"),
+				"$1",
+			)
 		}
 
 		return x
