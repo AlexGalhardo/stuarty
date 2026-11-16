@@ -108,6 +108,34 @@ func TestProductCommandsThroughTheBinary(t *testing.T) {
 	}
 }
 
+// TestHelpThroughTheBinaryIsTheProductHelp checks VV-029: the root help, help
+// <command> and serve --help come from the product table, need no APP_KEY and
+// start nothing.
+func TestHelpThroughTheBinaryIsTheProductHelp(t *testing.T) {
+	bin := buildBinary(t)
+	home := filepath.Join(t.TempDir(), "ws")
+
+	for _, args := range [][]string{{"--help"}, {"-h"}, {"help"}} {
+		stdout, stderr, code := runBinary(t, bin, home, args...)
+		listsProduct := strings.Contains(stdout, "project:list") && !strings.Contains(stdout, "migrate")
+		if code != 0 || stderr != "" || !listsProduct {
+			t.Fatalf("%v: exit %d, %q, %q", args, code, stdout, stderr)
+		}
+	}
+
+	for _, name := range []string{"project:list", "serve"} {
+		viaHelp, stderr, code := runBinary(t, bin, home, "help", name)
+		if code != 0 || stderr != "" || !strings.Contains(viaHelp, "usage:") {
+			t.Fatalf("help %s: exit %d, %q, %q", name, code, viaHelp, stderr)
+		}
+
+		viaFlag, _, _ := runBinary(t, bin, home, name, "--help")
+		if viaFlag != viaHelp {
+			t.Errorf("%s --help differs from help %s", name, name)
+		}
+	}
+}
+
 // TestMCPOverStdioThroughTheBinary runs vukem-video mcp as a client such as
 // Claude Code does: a process on standard input and output. The client name
 // becomes the actor, standard output carries only protocol messages, and the

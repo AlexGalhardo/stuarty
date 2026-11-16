@@ -28,6 +28,8 @@ type ReferenceDoc struct {
 	Globals   []FlagDoc    `json:"globals"`
 	ExitCodes []ExitDoc    `json:"exit_codes"`
 	Commands  []CommandDoc `json:"commands"`
+	// ProcessCommands are the commands the binary runs itself: serve, open and the users.
+	ProcessCommands []CommandDoc `json:"process_commands"`
 }
 
 // ExitDoc is one exit code.
@@ -76,6 +78,13 @@ func Reference() ReferenceDoc {
 		}
 
 		doc.Commands = append(doc.Commands, c)
+	}
+
+	for i := range processCommands {
+		p := &processCommands[i]
+		doc.ProcessCommands = append(doc.ProcessCommands, CommandDoc{
+			Name: p.name, Summary: p.summary, Usage: p.usage, Example: p.example, Globals: []string{},
+		})
 	}
 
 	return doc

@@ -871,3 +871,59 @@ Example:
 ```bash
 vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --dry-run
 ```
+
+## `serve`
+
+Run the server that owns the workspace, configured by environment variables (see the configuration reference)
+
+```text
+vukem-video serve
+```
+
+Example:
+
+```bash
+VUKEM_VIDEO_ADDR=127.0.0.1:7878 vukem-video serve
+```
+
+## `open`
+
+Open the editor in the browser of the running server
+
+```text
+vukem-video open
+```
+
+Example:
+
+```bash
+vukem-video open
+```
+
+## `user:create`
+
+Create a user of network mode (the password is asked, never an argument)
+
+```text
+vukem-video user:create <name>
+```
+
+Example:
+
+```bash
+vukem-video user:create ana
+```
+
+## `user:passwd`
+
+Change the password of a user of network mode
+
+```text
+vukem-video user:passwd <name>
+```
+
+Example:
+
+```bash
+vukem-video user:passwd ana
+```

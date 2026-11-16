@@ -10,6 +10,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
 )
 
 // call is what a handler receives: the connected Service, the parsed flags
@@ -345,15 +346,64 @@ func (s *spec) help() string {
 	return b.String()
 }
 
-// processCommands are the commands the binary dispatches itself, before the
-// application is built, because they own the process or the workspace lock
-// (SDD-000 section 1, SDD-003 section 5.4): they are listed here and described
-// by their own usage line.
-var processCommands = []struct{ name, summary string }{
-	{"serve", "run the server that owns the workspace"},
-	{"open", "open the editor in the browser of the running server"},
-	{"user:create", "create a user of network mode (the password is asked, never an argument)"},
-	{"user:passwd", "change the password of a user of network mode"},
+// processCommand is a command the binary dispatches itself, before the
+// application is built, because it owns the process or the workspace lock
+// (SDD-000 section 1, SDD-003 section 5.4). It is listed and documented here,
+// next to the commands of the registry, so --help and the reference cover it.
+type processCommand struct {
+	name, summary, example string
+	usage                  []string
+}
+
+var processCommands = []processCommand{
+	{
+		name:    "serve",
+		summary: "run the server that owns the workspace, configured by environment variables (see the configuration reference)",
+		usage:   []string{"vukem-video serve"},
+		example: "VUKEM_VIDEO_ADDR=127.0.0.1:7878 vukem-video serve",
+	},
+	{
+		name:    "open",
+		summary: "open the editor in the browser of the running server",
+		usage:   []string{"vukem-video open"},
+		example: "vukem-video open",
+	},
+	{
+		name:    "user:create",
+		summary: "create a user of network mode (the password is asked, never an argument)",
+		usage:   []string{"vukem-video user:create <name>"},
+		example: "vukem-video user:create ana",
+	},
+	{
+		name:    "user:passwd",
+		summary: "change the password of a user of network mode",
+		usage:   []string{"vukem-video user:passwd <name>"},
+		example: "vukem-video user:passwd ana",
+	},
+}
+
+func lookupProcess(name string) *processCommand {
+	for i := range processCommands {
+		if processCommands[i].name == name {
+			return &processCommands[i]
+		}
+	}
+
+	return nil
+}
+
+func (p *processCommand) help() string {
+	var b strings.Builder
+
+	fmt.Fprintf(&b, "%s: %s\n\nusage:\n", p.name, p.summary)
+
+	for _, u := range p.usage {
+		fmt.Fprintf(&b, "  %s\n", u)
+	}
+
+	fmt.Fprintf(&b, "\nexample:\n  %s\n", p.example)
+
+	return b.String()
 }
 
 // List prints the short command list of "vukem-video" with no arguments.
@@ -364,11 +414,56 @@ func List(w io.Writer) {
 		fmt.Fprintf(w, "  %-16s %s\n", s.name, s.summary)
 	}
 
-	for _, e := range processCommands {
-		fmt.Fprintf(w, "  %-16s %s\n", e.name, e.summary)
+	for i := range processCommands {
+		fmt.Fprintf(w, "  %-16s %s\n", processCommands[i].name, processCommands[i].summary)
 	}
 
-	fmt.Fprintln(w, "\nrun vukem-video <command> --help for the arguments of a command")
+	fmt.Fprintln(w, "\nrun vukem-video help <command> or vukem-video <command> --help for the arguments of a command")
+}
+
+// Help answers the help requests of the binary before any framework code runs:
+// --help, -h and help for the list, "help <command>" and "<process command>
+// --help" for one command, --version. A product command with --help is the
+// business of Runtime.Execute. handled is false when args are not a help request.
+func Help(args []string, stdout, stderr io.Writer) (code int, handled bool) {
+	if len(args) == 0 {
+		return ExitOK, false
+	}
+
+	switch {
+	case len(args) == 1 && (args[0] == "--help" || args[0] == "-h" || args[0] == "help"):
+		List(stdout)
+
+		return ExitOK, true
+	case args[0] == "--version" || args[0] == "-v":
+		fmt.Fprintln(stdout, "vukem-video "+agentdocs.Version)
+
+		return ExitOK, true
+	case args[0] == "help" && len(args) >= 2:
+		return helpFor(args[1], stdout, stderr), true
+	case lookupProcess(args[0]) != nil && (slices.Contains(args[1:], "--help") || slices.Contains(args[1:], "-h")):
+		return helpFor(args[0], stdout, stderr), true
+	}
+
+	return ExitOK, false
+}
+
+func helpFor(name string, stdout, stderr io.Writer) int {
+	if s := lookup(name); s != nil {
+		fmt.Fprint(stdout, s.help())
+
+		return ExitOK
+	}
+
+	if p := lookupProcess(name); p != nil {
+		fmt.Fprint(stdout, p.help())
+
+		return ExitOK
+	}
+
+	fmt.Fprintf(stderr, "error E_VALIDATION: unknown command %q; run vukem-video help to list the commands\n", name)
+
+	return ExitFailure
 }
 
 // IsCommand reports whether name is a product command.

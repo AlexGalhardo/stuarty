@@ -173,28 +173,31 @@ function errorCodes(): string {
 	);
 }
 
+type CliCommand = {
+	name: string;
+	summary: string;
+	usage: string[];
+	example?: string;
+	flags?: { name: string; type: string; default?: string; usage: string; repeat?: boolean }[];
+	globals: string[];
+	pending?: string;
+};
+
 type CliDoc = {
 	globals: { name: string; type: string; default?: string; usage: string }[];
 	exit_codes: { code: number; meaning: string }[];
-	commands: {
-		name: string;
-		summary: string;
-		usage: string[];
-		example?: string;
-		flags?: { name: string; type: string; default?: string; usage: string; repeat?: boolean }[];
-		globals: string[];
-		pending?: string;
-	}[];
+	commands: CliCommand[];
+	process_commands: CliCommand[];
 };
 
 function cliReference(cli: CliDoc): string {
 	const flagRows = (flags: NonNullable<CliDoc["commands"][number]["flags"]>) =>
 		flags.map((f) => [code(`--${f.name}`), f.type + (f.repeat ? ", repeatable" : ""), f.default ? code(f.default) : "", esc(f.usage)]);
-	const sections = cli.commands.map((c) => {
+	const sections = [...cli.commands, ...cli.process_commands].map((c) => {
 		const out = [`## ${code(c.name)}`, esc(sentence(c.summary)) + (c.pending ? ` Not available yet: arrives with ${c.pending}.` : "")];
 		out.push("```text\n" + c.usage.join("\n") + "\n```");
 		if (c.flags?.length) out.push(table(["Flag", "Type", "Default", "Meaning"], flagRows(c.flags)));
-		out.push(`Global flags: ${c.globals.map((g) => code(`--${g}`)).join(", ")}.`);
+		if (c.globals.length) out.push(`Global flags: ${c.globals.map((g) => code(`--${g}`)).join(", ")}.`);
 		if (c.example) out.push("Example:\n\n```bash\n" + c.example + "\n```");
 		return out.join("\n\n");
 	});

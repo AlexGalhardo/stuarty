@@ -1156,5 +1156,43 @@
         "dry-run"
       ]
     }
+  ],
+  "process_commands": [
+    {
+      "name": "serve",
+      "summary": "run the server that owns the workspace, configured by environment variables (see the configuration reference)",
+      "usage": [
+        "vukem-video serve"
+      ],
+      "example": "VUKEM_VIDEO_ADDR=127.0.0.1:7878 vukem-video serve",
+      "globals": []
+    },
+    {
+      "name": "open",
+      "summary": "open the editor in the browser of the running server",
+      "usage": [
+        "vukem-video open"
+      ],
+      "example": "vukem-video open",
+      "globals": []
+    },
+    {
+      "name": "user:create",
+      "summary": "create a user of network mode (the password is asked, never an argument)",
+      "usage": [
+        "vukem-video user:create <name>"
+      ],
+      "example": "vukem-video user:create ana",
+      "globals": []
+    },
+    {
+      "name": "user:passwd",
+      "summary": "change the password of a user of network mode",
+      "usage": [
+        "vukem-video user:passwd <name>"
+      ],
+      "example": "vukem-video user:passwd ana",
+      "globals": []
+    }
   ]
 }
