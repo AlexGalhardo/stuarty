@@ -16,6 +16,7 @@ export interface ItemRange {
 	id: string;
 	start: number;
 	duration: number;
+	track?: string;
 }
 
 // Rule T8: every time argument carries a unit.
@@ -571,18 +572,33 @@ export function presetOperations(input: {
 
 // "Crossfade" with two items selected: `from` is the one whose stored start is
 // smaller. Only the two stored numbers are compared, to name the arguments.
+// Two neighbours of one track need another visual track for the arriving item:
+// `freeTrack` is one the caller found without items in the way, or null and the
+// same batch adds one first. The core judges whether the move fits.
 export function crossfadeOperations(
 	a: ItemRange,
 	b: ItemRange,
 	duration: string = CROSSFADE_DURATION,
+	sameTrack?: { freeTrack: string | null; newTrackId: () => string },
 ): Operations {
 	const [from, to] = a.start <= b.start ? [a, b] : [b, a];
-	return [
-		{
-			op: "item.crossfade",
-			args: { from_item_id: from.id, to_item_id: to.id, duration },
-		},
-	];
+	const args: {
+		from_item_id: string;
+		to_item_id: string;
+		duration: string;
+		track_id?: string;
+	} = { from_item_id: from.id, to_item_id: to.id, duration };
+	const ops: Operations = [];
+	if (sameTrack !== undefined && from.track === to.track) {
+		let track = sameTrack.freeTrack;
+		if (track === null) {
+			track = sameTrack.newTrackId();
+			ops.push({ op: "track.add", args: { kind: "visual", id: track } });
+		}
+		args.track_id = track;
+	}
+	ops.push({ op: "item.crossfade", args });
+	return ops;
 }
 
 // Delete, Shift+Delete and the menu entries (SDD-012 section 8.2): one

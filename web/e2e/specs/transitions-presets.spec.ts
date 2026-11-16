@@ -161,10 +161,24 @@ test.describe("transitions-presets", () => {
 		await page.getByRole("menuitem", { name: "Crossfade" }).click();
 
 		await expect.poll(() => posted.length).toBe(1);
-		expect(posted[0]?.operations).toEqual([
+		// Both items touch on one track, so the same batch adds the track the
+		// arriving item moves to (VV-042).
+		const operations = posted[0]?.operations as Array<{
+			op: string;
+			args: { id?: string };
+		}>;
+		const added = operations[0]?.args.id as string;
+		expect(added).toMatch(/^trk_/);
+		expect(operations).toEqual([
+			{ op: "track.add", args: { kind: "visual", id: added } },
 			{
 				op: "item.crossfade",
-				args: { from_item_id: first, to_item_id: second, duration: "0.5s" },
+				args: {
+					from_item_id: first,
+					to_item_id: second,
+					duration: "0.5s",
+					track_id: added,
+				},
 			},
 		]);
 	});

@@ -8,11 +8,13 @@ import {
 	selectFps,
 	selectOrderedTrackIds,
 	selectTrack,
+	selectTrackItemIds,
 } from "../state/selectors";
 import {
 	addAudioOperations,
 	addClipOperations,
 	adjacentTrack,
+	CROSSFADE_DURATION,
 	captionEditWordOperations,
 	captionMergeOperations,
 	captionOperations,
@@ -235,10 +237,27 @@ export function createActions(runtime: EditorRuntime): Actions {
 		for (const id of ids) {
 			const item = doc.items[id];
 			if (item !== undefined) {
-				ranges.push({ id, start: item.start, duration: item.duration });
+				ranges.push({
+					id,
+					start: item.start,
+					duration: item.duration,
+					track: item.track,
+				});
 			}
 		}
 		return ranges;
+	}
+
+	// An empty visual track other than the shared one: nothing can be in the way
+	// of the arriving item there. No overlap arithmetic in the client; with none
+	// empty the batch adds a track, and the core judges the move.
+	function emptyVisualTrackBut(shared: string | undefined): string | null {
+		const state = documents.getState();
+		for (const id of selectOrderedTrackIds(state)) {
+			if (id === shared || selectTrack(state, id)?.kind !== "visual") continue;
+			if (selectTrackItemIds(state, id).length === 0) return id;
+		}
+		return null;
 	}
 
 	// Wait for the read model to reach `revision`: the events normally are there
@@ -564,7 +583,12 @@ export function createActions(runtime: EditorRuntime): Actions {
 			if (a === undefined || b === undefined || rest.length > 0) {
 				return Promise.resolve(null);
 			}
-			return send(crossfadeOperations(a, b));
+			return send(
+				crossfadeOperations(a, b, CROSSFADE_DURATION, {
+					freeTrack: emptyVisualTrackBut(a.track),
+					newTrackId: () => newId("trk"),
+				}),
+			);
 		},
 		closeGap: (trackId, at) => send(closeGapOperations(trackId, at)),
 		async removeAsset(assetId) {
