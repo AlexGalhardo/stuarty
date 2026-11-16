@@ -1155,6 +1155,20 @@ export function speedCurveOperations(
 	];
 }
 
+// "Remove curve": the curve goes and the speed is its stored mean, as the exact
+// fraction the read model holds, so the duration does not change.
+export function constantSpeedOperations(
+	itemId: string,
+	speed: { num: number; den: number },
+): Operations {
+	return [
+		{
+			op: "clip.set_speed",
+			args: { item_id: itemId, speed: { num: speed.num, den: speed.den } },
+		},
+	];
+}
+
 // `reverse` alone changes nothing else: the duration, speed and curve stay.
 export function reverseOperations(
 	itemId: string,
