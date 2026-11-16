@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 61 commands, 60 public, of which 16 are Prototype, 32 ALPHA and 13 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 62 commands, 61 public, of which 16 are Prototype, 32 ALPHA and 14 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -273,6 +273,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.set_blur` | B | `item_id`, `radius` | BETA (RF-027). Sets the blur radius of a clip in pixels; 0 removes it |
 | `clip.set_chroma_key` | B | `item_id`, `color` (`#RRGGBB` or null), `similarity?`, `smoothness?`, `spill?` | Keys out one colour of a clip (a green screen); null removes the key. See C.55 |
 | `clip.set_blend` | B | `item_id`, `mode` (`normal`, `multiply`, `screen`, `overlay`, `add`) | Sets how a visual item is mixed with what is below it. See C.61 |
+| `clip.set_mask` | B | `item_id`, `mask` (`{shape, x, y, width, height, feather?, invert?}` or null) | Limits where a visual item is drawn to a rectangle or an ellipse in the item's own frame; null removes it. See C.62 |
 | `clip.remove_silences` | A | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip by one clip per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
 | `audio.duck` | B | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | BETA (RF-043). Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
 | `marker.add` | B | `at`, `label?` | Puts a marker (of the timeline, not of an item) at a frame; see C.56 |
@@ -4922,5 +4923,77 @@ Sets the blend mode of a visual item (VV-015, SDD-001 §3.4): how its pixels are
 - `ok_image_clip`
 - `err_validation_no_mode`
 - `err_validation_unknown_mode`
+- `err_not_found`
+- `err_type_mismatch_audio_item`
+
+### C.62 `clip.set_mask` (phase B)
+
+Sets or removes the mask of a visual item (VV-015, SDD-001 §3.4): the rectangle or ellipse, in the item's own frame, that limits where the item is drawn. The coverage formula is in SDD-004 §3.9.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip`, `text`, `caption` or `shape` item |
+| `mask` | object or null | yes | none | the whole mask, which replaces the current one; null removes it |
+| `mask.shape` | string | yes | none | `rect` or `ellipse` |
+| `mask.x`, `mask.y` | number | yes | none | the top-left corner, a fraction of the item's width and height, 0 to 1 |
+| `mask.width`, `mask.height` | number | yes | none | the size, a fraction of the item's width and height, 0.001 to 1 |
+| `mask.feather` | integer | no | 0 | the soft edge in pixels at project resolution, 0 to 200 |
+| `mask.invert` | boolean | no | false | keep the outside of the shape instead of the inside |
+
+The fractions are rounded to 3 decimals. `x + width` and `y + height` must be at most 1: the mask stays inside the item. The frame is the item's, not the canvas, so the mask moves, scales and rotates with the item.
+
+**Preconditions.**
+
+1. `mask` is present (`E_VALIDATION`); when it is an object, `shape`, `x`, `y`, `width` and `height` are present and in range (`E_VALIDATION`).
+2. The mask is inside the item after rounding (`E_VALIDATION`).
+3. The item exists (`E_NOT_FOUND`).
+4. The item is not an audio item (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. `mask` is set to the given object, with `feather` 0 when not given and `invert` stored only when true; null removes the field.
+2. `diff` has one `item.updated`; empty when unchanged. `effective.mask` is the stored mask, or null.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `mask` missing, a member missing, out of range or unknown, or the mask goes outside the item | `The mask goes outside the item: x + width or y + height is above 1.` | `Keep x + width and y + height at most 1.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | an audio item | `Item itm_c3d4e5f6g7 is an audio item; a mask applies to visual items.` | `Use item.set_audio for audio items.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old value>, unset: <field if it was absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5` with no mask.
+
+```json
+{"op": "clip.set_mask", "args": {"item_id": "itm_m1n2p3q4r5", "mask": {"shape": "ellipse", "x": 0.1, "y": 0.1, "width": 0.8, "height": 0.8}}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"mask": [null, {"shape": "ellipse", "x": 0.1, "y": 0.1, "width": 0.8, "height": 0.8, "feather": 0}]}}]
+```
+
+**Golden cases.**
+
+- `ok_ellipse`
+- `ok_rect_feather_invert`
+- `ok_replaces_mask`
+- `ok_null_removes_mask`
+- `ok_null_without_mask_noop`
+- `ok_same_mask_noop`
+- `ok_boundaries`
+- `ok_rounded_to_3_decimals`
+- `ok_image_clip`
+- `err_validation_no_mask`
+- `err_validation_unknown_shape`
+- `err_validation_outside_item`
+- `err_validation_width_zero`
+- `err_validation_feather_above_200`
+- `err_validation_missing_height`
 - `err_not_found`
 - `err_type_mismatch_audio_item`

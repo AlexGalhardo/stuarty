@@ -178,6 +178,9 @@ type Item struct {
 	// Absent means "normal".
 	Blend string `json:"blend,omitempty" enum:"normal,multiply,screen,overlay,add"`
 
+	// Visual items, optional and additive (SDD-001 §3.4): the shape that limits where the item is drawn.
+	Mask *Mask `json:"mask,omitempty"`
+
 	// Clip and audio.
 	Asset      string   `json:"asset,omitempty"       pattern:"^ast_([0-9a-hjkmnp-tv-z]{10}|placeholder)$"`
 	SourceIn   int      `json:"source_in,omitempty"                                                        min:"0"`
@@ -233,6 +236,20 @@ type ChromaKey struct {
 	Smoothness float64 `json:"smoothness" min:"0" max:"1"`
 	Spill      float64 `json:"spill"      min:"0" max:"1"`
 	Extra      Extra   `json:"-"`
+}
+
+// Mask limits the drawn pixels of an item to a rectangle or an ellipse in the item's own frame
+// (SDD-004 §3.9). X, Y, Width and Height are fractions of the drawn item (0,0 is its top left
+// corner), Feather is the width in pixels of the soft edge and Invert keeps the outside.
+type Mask struct {
+	Shape   string  `json:"shape"            enum:"rect,ellipse"`
+	X       float64 `json:"x"                                    min:"0"     max:"1"`
+	Y       float64 `json:"y"                                    min:"0"     max:"1"`
+	Width   float64 `json:"width"                                min:"0.001" max:"1"`
+	Height  float64 `json:"height"                               min:"0.001" max:"1"`
+	Feather int     `json:"feather"                              min:"0"     max:"200"`
+	Invert  bool    `json:"invert,omitempty"`
+	Extra   Extra   `json:"-"`
 }
 
 // Word is one timed word of a caption; Start is relative to the item.

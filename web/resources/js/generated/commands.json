@@ -1611,6 +1611,104 @@
 			"additionalProperties": false,
 			"properties": {
 				"item_id": {
+					"description": "A visual item.",
+					"type": "string"
+				},
+				"mask": {
+					"additionalProperties": false,
+					"description": "The mask, or null to remove it.",
+					"properties": {
+						"feather": {
+							"description": "Soft edge in pixels; default 0.",
+							"maximum": 200,
+							"minimum": 0,
+							"type": "integer"
+						},
+						"height": {
+							"description": "A fraction of the item height.",
+							"maximum": 1,
+							"minimum": 0.001,
+							"type": "number"
+						},
+						"invert": {
+							"description": "Keep the outside of the shape instead; default false.",
+							"type": "boolean"
+						},
+						"shape": {
+							"description": "rect or ellipse.",
+							"enum": [
+								"rect",
+								"ellipse"
+							],
+							"type": "string"
+						},
+						"width": {
+							"description": "A fraction of the item width.",
+							"maximum": 1,
+							"minimum": 0.001,
+							"type": "number"
+						},
+						"x": {
+							"description": "Left edge, a fraction of the item width.",
+							"maximum": 1,
+							"minimum": 0,
+							"type": "number"
+						},
+						"y": {
+							"description": "Top edge, a fraction of the item height.",
+							"maximum": 1,
+							"minimum": 0,
+							"type": "number"
+						}
+					},
+					"required": [
+						"shape",
+						"x",
+						"y",
+						"width",
+						"height"
+					],
+					"type": [
+						"object",
+						"null"
+					]
+				}
+			},
+			"required": [
+				"item_id",
+				"mask"
+			],
+			"type": "object"
+		},
+		"description": "Sets a mask in the item's own frame: x, y, width and height are fractions of the item (0 to 1, x plus width and y plus height at most 1), feather is the soft edge in pixels (0 to 200, default 0) and invert keeps the outside instead. Replaces the current mask. Works on clip, text, caption and shape items. mask null removes it.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH"
+		],
+		"example": {
+			"item_id": "itm_m1n2p3q4r5",
+			"mask": {
+				"feather": 12,
+				"height": 0.8,
+				"shape": "ellipse",
+				"width": 0.8,
+				"x": 0.1,
+				"y": 0.1
+			}
+		},
+		"internal": false,
+		"name": "clip.set_mask",
+		"phase": "beta",
+		"scope": "edit",
+		"summary": "Limits where a visual item is drawn to a rectangle or an ellipse."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"item_id": {
 					"description": "A clip of a video asset, or an audio item.",
 					"type": "string"
 				},

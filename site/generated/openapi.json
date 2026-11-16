@@ -1156,6 +1156,16 @@
             },
             "type": "array"
           },
+          "mask": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Mask"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -1595,6 +1605,70 @@
         },
         "type": "object"
       },
+      "Mask": {
+        "properties": {
+          "feather": {
+            "type": "integer"
+          },
+          "height": {
+            "format": "double",
+            "type": "number"
+          },
+          "invert": {
+            "type": "boolean"
+          },
+          "shape": {
+            "enum": [
+              "rect",
+              "ellipse"
+            ],
+            "type": "string"
+          },
+          "width": {
+            "format": "double",
+            "type": "number"
+          },
+          "x": {
+            "format": "double",
+            "type": "number"
+          },
+          "y": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "MaskSpec": {
+        "properties": {
+          "feather": {
+            "type": "integer"
+          },
+          "height": {
+            "format": "double",
+            "type": "number"
+          },
+          "invert": {
+            "type": "boolean"
+          },
+          "shape": {
+            "type": "string"
+          },
+          "width": {
+            "format": "double",
+            "type": "number"
+          },
+          "x": {
+            "format": "double",
+            "type": "number"
+          },
+          "y": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
       "MediaEntry": {
         "properties": {
           "asset_id": {
@@ -1874,6 +1948,7 @@
               "clip.set_color",
               "clip.set_filter",
               "clip.set_framing",
+              "clip.set_mask",
               "clip.set_speed",
               "font.add",
               "font.remove",
@@ -1985,6 +2060,9 @@
           },
           "clip.set_framing": {
             "$ref": "#/components/schemas/args.clip.set_framing"
+          },
+          "clip.set_mask": {
+            "$ref": "#/components/schemas/args.clip.set_mask"
           },
           "clip.set_speed": {
             "$ref": "#/components/schemas/args.clip.set_speed"
@@ -3365,6 +3443,16 @@
           "last": {
             "type": "integer"
           },
+          "mask": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MaskSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "natural": {
             "items": {
               "format": "double",
@@ -4493,6 +4581,79 @@
         },
         "required": [
           "item_id"
+        ],
+        "type": "object"
+      },
+      "args.clip.set_mask": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A visual item.",
+            "type": "string"
+          },
+          "mask": {
+            "additionalProperties": false,
+            "description": "The mask, or null to remove it.",
+            "properties": {
+              "feather": {
+                "description": "Soft edge in pixels; default 0.",
+                "maximum": 200,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "height": {
+                "description": "A fraction of the item height.",
+                "maximum": 1,
+                "minimum": 0.001,
+                "type": "number"
+              },
+              "invert": {
+                "description": "Keep the outside of the shape instead; default false.",
+                "type": "boolean"
+              },
+              "shape": {
+                "description": "rect or ellipse.",
+                "enum": [
+                  "rect",
+                  "ellipse"
+                ],
+                "type": "string"
+              },
+              "width": {
+                "description": "A fraction of the item width.",
+                "maximum": 1,
+                "minimum": 0.001,
+                "type": "number"
+              },
+              "x": {
+                "description": "Left edge, a fraction of the item width.",
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "y": {
+                "description": "Top edge, a fraction of the item height.",
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "shape",
+              "x",
+              "y",
+              "width",
+              "height"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "item_id",
+          "mask"
         ],
         "type": "object"
       },

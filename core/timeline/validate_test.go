@@ -240,6 +240,15 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"blend mode", func(d *Document) {
 			editItem(d, clipID, func(i *Item) { i.Blend = "dodge" })
 		}, VShape},
+		{"mask shape", func(d *Document) {
+			editItem(d, clipID, func(i *Item) { i.Mask = &Mask{Shape: "star", Width: 1, Height: 1} })
+		}, VShape},
+		{"mask outside the item", func(d *Document) {
+			editItem(d, clipID, func(i *Item) { i.Mask = &Mask{Shape: "rect", X: 0.6, Width: 0.6, Height: 1} })
+		}, VShape},
+		{"mask feather", func(d *Document) {
+			editItem(d, clipID, func(i *Item) { i.Mask = &Mask{Shape: "rect", Width: 1, Height: 1, Feather: 201} })
+		}, VShape},
 		{"chroma key colour", func(d *Document) {
 			editItem(d, clipID, func(i *Item) { i.ChromaKey = &ChromaKey{Color: "green", Similarity: 0.3} })
 		}, VShape},

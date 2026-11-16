@@ -1,0 +1,13 @@
+{
+  "op": "clip.set_mask",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "mask": {
+      "shape": "rect",
+      "x": 0.12345,
+      "y": 0,
+      "width": 0.5,
+      "height": 0.5
+    }
+  }
+}

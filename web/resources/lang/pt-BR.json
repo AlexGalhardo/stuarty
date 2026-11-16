@@ -458,6 +458,9 @@
           "set_blend": {
             "title": "Definir modo de mesclagem do clipe"
           },
+          "set_mask": {
+            "title": "Definir máscara do clipe"
+          },
           "set_chroma_key": {
             "title": "Definir chroma key do clipe"
           },

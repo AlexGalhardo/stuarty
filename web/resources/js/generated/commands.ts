@@ -660,6 +660,46 @@ export interface ClipSetFramingArgs {
   item_id: string;
 }
 
+export interface ClipSetMaskArgs {
+  /**
+   * A visual item.
+   */
+  item_id: string;
+  /**
+   * The mask, or null to remove it.
+   */
+  mask: {
+    /**
+     * Soft edge in pixels; default 0.
+     */
+    feather?: number;
+    /**
+     * A fraction of the item height.
+     */
+    height: number;
+    /**
+     * Keep the outside of the shape instead; default false.
+     */
+    invert?: boolean;
+    /**
+     * rect or ellipse.
+     */
+    shape: "rect" | "ellipse";
+    /**
+     * A fraction of the item width.
+     */
+    width: number;
+    /**
+     * Left edge, a fraction of the item width.
+     */
+    x: number;
+    /**
+     * Top edge, a fraction of the item height.
+     */
+    y: number;
+  } | null;
+}
+
 export interface ClipSetSpeedArgs {
   /**
    * A clip of a video asset, or an audio item.
@@ -1873,7 +1913,7 @@ export interface TrackUpdateArgs {
   volume?: number;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_filter" | "clip.set_framing" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_filter" | "clip.set_framing" | "clip.set_mask" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -1898,6 +1938,7 @@ export interface CommandArgsMap {
 	"clip.set_color": ClipSetColorArgs;
 	"clip.set_filter": ClipSetFilterArgs;
 	"clip.set_framing": ClipSetFramingArgs;
+	"clip.set_mask": ClipSetMaskArgs;
 	"clip.set_speed": ClipSetSpeedArgs;
 	"font.add": FontAddArgs;
 	"font.remove": FontRemoveArgs;
@@ -1964,6 +2005,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"clip.set_color": { summary: "Sets the brightness, contrast and saturation of a clip.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_filter": { summary: "Sets the colour filter of a clip and how much of it is mixed in.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_framing": { summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"clip.set_mask": { summary: "Limits where a visual item is drawn to a rectangle or an ellipse.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_speed": { summary: "Changes the speed of a clip or audio item while keeping the same source range.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE","E_INVALID_TIME","E_OVERLAP"] },
 	"font.add": { summary: "Adds a user font family to the project, or more weights to one it already has.", scope: "media", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
 	"font.remove": { summary: "Removes a user font family from the project.", scope: "media", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_IN_USE"] },

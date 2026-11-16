@@ -344,6 +344,15 @@ var alphaOps = map[string]func(p *docPick) string{
 			p.oneOf("normal", "multiply", "screen", "overlay", "add"),
 		)
 	},
+	"clip.set_mask": func(p *docPick) string {
+		if p.n(4) == 0 {
+			return fmt.Sprintf(`{"item_id":%q,"mask":null}`, p.clip())
+		}
+		return fmt.Sprintf(
+			`{"item_id":%q,"mask":{"shape":%q,"x":%.2f,"y":%.2f,"width":%.2f,"height":%.2f,"feather":%d,"invert":%s}}`,
+			p.clip(), p.oneOf("rect", "ellipse"), 0.1, 0.2, 0.5, 0.6, p.n(201), p.oneOf("true", "false"),
+		)
+	},
 	"clip.set_chroma_key": func(p *docPick) string {
 		color := p.oneOf(`"#00FF00"`, `"#0000FF"`, "null")
 		if color == "null" {

@@ -88,6 +88,7 @@ export interface Item {
    * @maxItems 200
    */
   markers?: Marker[];
+  mask?: Mask;
   name?: string;
   opacity?: number;
   radius?: number;
@@ -137,6 +138,15 @@ export interface Keyframe {
 export interface Marker {
   frame: number;
   label?: string;
+}
+export interface Mask {
+  feather: number;
+  height: number;
+  invert?: boolean;
+  shape: "rect" | "ellipse";
+  width: number;
+  x: number;
+  y: number;
 }
 export interface Slot {
   description?: string;

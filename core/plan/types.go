@@ -64,6 +64,9 @@ type Layer struct {
 	// Blend is the blend mode of SDD-004 §3.8: multiply, screen, overlay or add; empty means normal.
 	Blend string `json:"blend,omitempty"`
 
+	// Mask limits where the layer is drawn (SDD-004 §3.9); nil means no mask.
+	Mask *MaskSpec `json:"mask,omitempty"`
+
 	CX       float64 `json:"cx"`
 	CY       float64 `json:"cy"`
 	W        float64 `json:"w"` // drawn size before rotation
@@ -79,6 +82,18 @@ type ChromaKeySpec struct {
 	Similarity float64 `json:"similarity"`
 	Smoothness float64 `json:"smoothness"`
 	Spill      float64 `json:"spill"`
+}
+
+// MaskSpec is the mask of a layer: a rectangle or an ellipse in the layer's own frame, as fractions
+// of its drawn size (SDD-004 §3.9). Feather is in project pixels.
+type MaskSpec struct {
+	Shape   string  `json:"shape"`
+	X       float64 `json:"x"`
+	Y       float64 `json:"y"`
+	Width   float64 `json:"width"`
+	Height  float64 `json:"height"`
+	Feather int     `json:"feather,omitempty"`
+	Invert  bool    `json:"invert,omitempty"`
 }
 
 // BitmapSpec says what the rasterizer draws (SDD-004 §5). It lives here so
