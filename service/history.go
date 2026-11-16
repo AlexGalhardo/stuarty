@@ -43,6 +43,12 @@ func (s *svc) HistoryList(ctx context.Context, req HistoryListRequest) (*History
 
 	limit := clampLimit(req.Limit, defaultHistoryLimit, maxHistoryLimit)
 
+	// "cli" stands for "local:cli": a filter with no kind prefix is a local actor,
+	// not an empty answer.
+	if req.Actor != "" && !strings.Contains(req.Actor, ":") {
+		req.Actor = "local:" + req.Actor
+	}
+
 	rows, more, err := s.store.Operations().
 		Page(ctx, req.ProjectID, HistoryQuery{Before: before, Actor: req.Actor, Limit: limit})
 	if err != nil {
