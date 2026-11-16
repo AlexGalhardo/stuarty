@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeval"
 )
 
 const (
@@ -84,11 +85,11 @@ func speechFrames(raw []byte, fps timeline.Rational) ([]command.SilenceRange, bo
 	}
 
 	rate := int64(doc.SampleRate)
+	tfps := timeval.FPS{Num: int64(fps.Num), Den: int64(fps.Den)}
 	out := []command.SilenceRange{}
 
 	for _, r := range doc.Ranges {
-		start := r.Start * int64(fps.Num) / (rate * int64(fps.Den))
-		end := ceilDiv(r.End*int64(fps.Num), rate*int64(fps.Den))
+		start, end := tfps.FramesCovering(r.Start, r.End, rate)
 
 		if end <= start {
 			continue
@@ -161,7 +162,7 @@ func beatFrames(raw []byte, fps timeline.Rational) ([]int, bool) {
 		return nil, false
 	}
 
-	per := int64(doc.SampleRate) * int64(fps.Den)
+	tfps := timeval.FPS{Num: int64(fps.Num), Den: int64(fps.Den)}
 	out := make([]int, 0, len(doc.Beats))
 
 	for _, b := range doc.Beats {
@@ -169,7 +170,7 @@ func beatFrames(raw []byte, fps timeline.Rational) ([]int, bool) {
 			continue
 		}
 
-		f := int((2*b*int64(fps.Num) + per) / (2 * per))
+		f := int(tfps.FrameAtSample(b, int64(doc.SampleRate)))
 		if n := len(out); n > 0 && f <= out[n-1] {
 			continue
 		}

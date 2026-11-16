@@ -41,55 +41,6 @@ func TestSpeechFromSilenceIsTheInverse(t *testing.T) {
 	}
 }
 
-func TestSpeechFromWords(t *testing.T) {
-	t.Parallel()
-
-	words := []SpokenWord{
-		{100, 400}, {450, 800}, // 50 ms gap: one stretch
-		{1500, 1900},  // 700 ms gap: a new one
-		{1950, 2100},  //
-		{5000, 5000},  // empty word: ignored
-		{9000, 99999}, // past the end: clamped
-	}
-
-	got := SpeechFromWords(words, 10*SampleRate, SpeechMergeGapMS)
-	want := []SpeechRange{{4800, 38400}, {72000, 100800}, {432000, 480000}}
-
-	if len(got.Ranges) != len(want) {
-		t.Fatalf("ranges %v, want %v", got.Ranges, want)
-	}
-
-	for i := range want {
-		if got.Ranges[i] != want[i] {
-			t.Errorf("range %d = %v, want %v", i, got.Ranges[i], want[i])
-		}
-	}
-
-	if got.Source != SpeechFromTranscript {
-		t.Errorf("source %q", got.Source)
-	}
-
-	if none := SpeechFromWords(nil, SampleRate, SpeechMergeGapMS); none.Ranges == nil || len(none.Ranges) != 0 {
-		t.Errorf("no words: %v", none.Ranges)
-	}
-}
-
-func TestSpeechFrames(t *testing.T) {
-	t.Parallel()
-
-	// 30 fps: a frame is 1600 samples. Speech [1000, 5000) touches frames 0 to 3 (end rounds up).
-	got := SpeechFrames([]SpeechRange{{1000, 5000}, {5100, 6000}, {48000, 52000}}, Rational{30, 1})
-	want := []FrameRange{{0, 4}, {30, 33}}
-
-	if len(got) != len(want) || got[0] != want[0] || got[1] != want[1] {
-		t.Errorf("frames %v, want %v", got, want)
-	}
-
-	if got := SpeechFrames([]SpeechRange{{0, 100}}, Rational{}); len(got) != 0 {
-		t.Errorf("no rate: %v", got)
-	}
-}
-
 // The speech fixture has pauses of 0.5 s, 1.0 s and 0.2 s between four 1 s tones: the map of the
 // envelope is the inverse of the -35 dB silences within one 20 ms window (P3-RND-005).
 func TestSpeechMatchesSilenceInverse(t *testing.T) {

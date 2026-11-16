@@ -7,6 +7,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/core/timeval"
 )
 
 // resolveOps fills the `resolved` argument of the commands whose data comes
@@ -182,6 +183,7 @@ func silenceFrames(raw []byte, threshold int, fps timeline.Rational) ([]command.
 	}
 
 	rate := int64(doc.SampleRate)
+	tfps := timeval.FPS{Num: int64(fps.Num), Den: int64(fps.Den)}
 	out := []command.SilenceRange{}
 	found := false
 
@@ -193,8 +195,7 @@ func silenceFrames(raw []byte, threshold int, fps timeline.Rational) ([]command.
 		found = true
 
 		for _, r := range set.Ranges {
-			start := ceilDiv(r.Start*int64(fps.Num), rate*int64(fps.Den))
-			end := r.End * int64(fps.Num) / (rate * int64(fps.Den))
+			start, end := tfps.FramesInside(r.Start, r.End, rate)
 
 			if end > start && (len(out) == 0 || int(start) >= out[len(out)-1].End) {
 				out = append(out, command.SilenceRange{Start: int(start), End: int(end)})
@@ -286,8 +287,8 @@ func transcriptFrames(raw []byte, fps timeline.Rational) ([]command.ResolvedWord
 		return nil, false
 	}
 
-	num, den := int64(fps.Num), int64(fps.Den)
-	boundary := func(t int64) int64 { return (2*t*num + 1000*den) / (2000 * den) }
+	tfps := timeval.FPS{Num: int64(fps.Num), Den: int64(fps.Den)}
+	boundary := tfps.FrameAtMillis
 
 	out := make([]command.ResolvedWord, 0, len(doc.Words))
 
