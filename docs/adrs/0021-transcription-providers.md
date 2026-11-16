@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: author (D-009, D-010), architect
-- Links: [brainstorming D-010](../brainstorming.md), [spikes](../search/spikes.md), [features](../search/features-20-80.md), ADR-0018, ADR-0020, SDD-004
+- Links: author decision D-010, spikes, features, ADR-0018, ADR-0020, SDD-004
 
 ## Context
 

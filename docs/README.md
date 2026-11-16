@@ -2,7 +2,7 @@
 
 Everything needed to build Vukem Video, written so that an engineer who was not in the planning conversation can work from it. Read in this order: the three PRDs (what and why), the ADR list (how, in one page each), then the SDD of the area you are about to touch.
 
-Work is driven by `ROADMAP.md`, which lives in the workspace root next to `AGENTS.md`, outside this repository (D-025).
+Work is driven by the maintainers' task cards, a private work list kept outside version control (D-036); this folder holds only what defines the product. Names and numbering of the documents follow `.agents/rules/naming.md`: `prds/NNN-<slug>.md`, `adrs/NNNN-<slug>.md`, `sdds/NNN-<slug>.md`, decisions of the author `D-NNN` and research notes are kept by the maintainers outside version control and are cited by id or name only; a document is never renumbered or moved, and each starts with its title and a short paragraph that says what it answers.
 
 ## Reading map
 
@@ -15,7 +15,7 @@ Work is driven by `ROADMAP.md`, which lives in the workspace root next to `AGENT
 | add or change a command | `sdds/002-command-catalogue.md` |
 | understand why preview and export agree | `adrs/0003-render-one-plan-two-executors.md`, `sdds/004-render-pipeline.md` |
 | know what the Rust renderer reads, writes and may never do (Phase 5) | `adrs/0029-*.md`, then `sdds/013-renderer.md` |
-| know why a decision was taken | `adrs/`, and `brainstorming.md` for the decisions of the author |
+| know why a decision was taken | `adrs/`; the decisions of the author (`D-NNN`) they cite are kept privately by the maintainers |
 | check that a requirement is covered | `traceability.md` |
 | design or review a screen of the web UI or the desktop shell (tokens, components, content style, accessibility) | `design-system.md`, then `sdds/012-ui-architecture.md` |
 
@@ -29,9 +29,9 @@ Work is driven by `ROADMAP.md`, which lives in the workspace root next to `AGENT
 
 Each requirement has a phase: `P` Prototype, `A` ALPHA, `B` BETA.
 
-## Decisions of the author (`brainstorming.md`)
+## Decisions of the author (`D-NNN`)
 
-D-001 to D-025, each with date, alternatives, reason and impact. They are the input of the ADRs and are not reopened without the author.
+Each decision has a date, alternatives, reason and impact. They are the input of the ADRs and are not reopened without the author. The log itself is private (since D-037); the ADRs, PRDs and SDDs carry what a contributor needs.
 
 ## Architecture decisions (`adrs/`)
 
@@ -88,9 +88,9 @@ D-001 to D-025, each with date, alternatives, reason and impact. They are the in
 
 Every SDD except SDD-000 (names only) ends with an Acceptance section; the acceptance of SDD-002 is its golden cases (§A.11 and Part C).
 
-## Research (`search/`)
+## Research notes
 
-The evidence behind the decisions. Start at `search/README.md`. The thematic files state what is FACT (with a source), INFERENCE and OPINION. Where a research note and an ADR disagree, the ADR prevails: notes record what was found before decisions were taken.
+The evidence behind the decisions is kept privately by the maintainers (since D-037); documents cite a note as "research note `<slug>`". Where a research note and an ADR disagree, the ADR prevails: notes record what was found before decisions were taken.
 
 ## Rules for changing these documents
 

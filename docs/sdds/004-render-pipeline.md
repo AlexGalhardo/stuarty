@@ -264,7 +264,7 @@ A layer with a blend mode is never drawn by the opaque copy that skips blending 
 func SafeArea(width, height int) Rect
 ```
 
-- When `width / height <= 0.6` (vertical video): top 14%, bottom 35%, left 6%, right 6% of the frame are outside the safe area. These are the only margins found in an official source (Meta's ads guide for Reels; see `search/features-20-80.md` §5).
+- When `width / height <= 0.6` (vertical video): top 14%, bottom 35%, left 6%, right 6% of the frame are outside the safe area. These are the only margins found in an official source (Meta's ads guide for Reels; see research note `features-20-80` §5).
 - Otherwise: 5% on every side.
 
 The safe area is used for the default position of captions and by the lint rule for text outside it. It is a single function so the two cannot disagree.
@@ -566,7 +566,7 @@ References are regenerated only by an explicit command (`go test ./engine/export
 
 The compositor moves 8.3 MB per 1080×1920 frame in and out. The design keeps the common case cheap: one full-frame video delivered pre-scaled (a copy) plus small bitmaps. Slow paths (animated size, rotation, colour matrix) cost a per-pixel loop and are split across goroutines by horizontal bands.
 
-`spikes/go-compositor` measured the design on the reference machine (Ryzen 7 5700X3D, Windows 11; 30 seconds of 1080×1920 at 30 fps; two runs per configuration; details and limits in `search/spikes.md`):
+`spikes/go-compositor` measured the design on the reference machine (Ryzen 7 5700X3D, Windows 11; 30 seconds of 1080×1920 at 30 fps; two runs per configuration; details and limits in research note `spikes`):
 
 | Case | Target | Measured, times real time | Verdict |
 | --- | --- | --- | --- |

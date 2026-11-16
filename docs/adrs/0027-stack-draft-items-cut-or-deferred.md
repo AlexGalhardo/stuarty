@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: architect, on the author's decisions D-001 to D-016
-- Links: [stack trade-offs §2, §8](../search/stack-tradeoffs.md), [licensing](../search/licensing.md), ADR-0001 to ADR-0026
+- Links: stack trade-offs §2, §8, licensing, ADR-0001 to ADR-0026
 
 ## Context
 

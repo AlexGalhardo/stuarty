@@ -1,6 +1,16 @@
-# Working files of the workspace live outside the repository (D-025).
-# This line is a safety net in case one is copied in.
-vukem-feedback.md
+# The development and evolution files of the project (ROADMAP, status, feedback,
+# QA campaigns, test media, results and scripts) live in development/ and stay
+# out of git, by decision of the author (D-036).
+development/
+.playwright-mcp/
+
+# Advisor plans of the improve skill: local working files, never committed.
+plans/
+
+# The decisions of the author and the research notes are private since D-037;
+# they live in development/ and must never come back under docs/.
+docs/brainstorming.md
+docs/search/
 
 # Advisor plans of the improve skill: local working files, never committed.
 plans/

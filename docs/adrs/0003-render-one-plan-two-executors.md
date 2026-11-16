@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14); items 3 and 4 amended by [ADR-0029](0029-one-renderer-webgpu-webcodecs-rust.md) (2026-11-16)
 - Deciders: author (D-001), architect
-- Links: [stack trade-offs §4](../search/stack-tradeoffs.md), [post-mortems §1, §6, §10](../search/post-mortems.md), [spikes](../search/spikes.md), SDD-004
+- Links: stack trade-offs §4, post-mortems §1, §6, §10, spikes, SDD-004
 
 ## Context
 

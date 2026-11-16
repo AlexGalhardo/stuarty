@@ -3,7 +3,7 @@
 - Status: Accepted (2026-11-14)
 - Deciders: author (D-026), orchestrator
 - Supersedes: ADR-0025 items 1 and 2 (the version line starting at `v0.5.0` and one release per task group); the merge method of SDD-009 section 6.3
-- Links: [brainstorming D-026](../brainstorming.md), ADR-0025, SDD-009
+- Links: author decision D-026, ADR-0025, SDD-009
 
 ## Context
 

@@ -2,7 +2,7 @@
 
 This folder is for the people and agents who work on this repository. It holds what earlier sessions learned the hard way, so that the same mistakes are not made twice.
 
-- `rules/`: workflow rules that always apply. Read them before you start.
+- `rules/`: workflow rules that always apply. Read them before you start: `orchestration.md`, `task-cards.md` (the work list and its completion protocol), `development-folder.md` (the git-ignored local work folder), `naming.md` (folders, files and ids), `commits.md`, `git-and-branches.md`, `ci.md`.
 - `skills/`: step-by-step procedures, one per folder, each with a `SKILL.md`. Load the one that matches the task.
 
 | Skill | Use it when |

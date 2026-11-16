@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14); shell choice Proposed until the BETA test
 - Deciders: author (D-004), architect
-- Links: [brainstorming D-004](../brainstorming.md), [stack trade-offs §7](../search/stack-tradeoffs.md), ADR-0003, ADR-0007, ADR-0013
+- Links: author decision D-004, stack trade-offs §7, ADR-0003, ADR-0007, ADR-0013
 
 ## Context
 

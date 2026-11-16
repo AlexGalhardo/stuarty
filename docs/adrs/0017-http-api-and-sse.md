@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: architect
-- Links: [stack trade-offs §2, §6](../search/stack-tradeoffs.md), [engine §4](../search/engine.md), ADR-0006, ADR-0008, SDD-003, SDD-006
+- Links: stack trade-offs §2, §6, engine §4, ADR-0006, ADR-0008, SDD-003, SDD-006
 
 ## Context
 

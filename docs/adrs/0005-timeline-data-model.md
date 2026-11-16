@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: architect
-- Links: [engine §3](../search/engine.md), [post-mortems §6, §7](../search/post-mortems.md), SDD-001
+- Links: engine §3, post-mortems §6, §7, SDD-001
 
 ## Context
 

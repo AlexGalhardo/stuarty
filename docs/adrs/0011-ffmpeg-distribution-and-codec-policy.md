@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: author (D-006, D-017), architect
-- Links: [brainstorming D-006](../brainstorming.md), [licensing](../search/licensing.md), [spikes](../search/spikes.md), SDD-004, SDD-007, SDD-009
+- Links: author decision D-006, licensing, spikes, SDD-004, SDD-007, SDD-009
 
 ## Context
 
@@ -54,4 +54,4 @@ The pinned build has OpenH264 compiled in, and the Cisco patent coverage applies
 
 Status of this point: the pipeline is written (`.config/ffmpeg-build/`, `scripts/ffmpeg-build.sh`, `.github/workflows/ffmpeg-build.yml`, `scripts/ffmpeg-verify.sh`) and the image, `scripts/install-ffmpeg.sh` and the smoke test can use its output behind `FFMPEG_SOURCE`, but no build has been run or released yet: the BtbN pin stays the one in use until the first release of the own build fills the `FFMPEG_OWN_*` pins. The build links libvpx, Opus, zlib and zimg statically, and the NVENC headers (loaded at run time); the OpenH264 library is not linked. Decision of the author (2026-11-15), how the `libopenh264` encoder is exposed without it: a **dlopen patch**, as Fedora does. A patch of FFmpeg's `libopenh264` wrapper (`.config/ffmpeg-build/patches/0001-libopenh264-dlopen.patch`, pinned by SHA-256 in `sources.env`) resolves the three Cisco functions with `dlopen` or `LoadLibrary` from `VUKEM_VIDEO_OPENH264_DIR` and refuses a version other than the pinned 2.6.0; the configure line carries no `--enable-libopenh264`. Without the library the encoder cannot open and the product answers `E_NO_ENCODER` (SDD-011 section 8.4).
 
-The codecs of the normalized media and of the proxy are fixed by SDD-011 §4.2 (MPEG-4 Part 2 in MOV with PCM; VP9 in MP4 with AAC); their patent status is an open point for the author before the first public release (`search/licensing.md` §8 item 6).
+The codecs of the normalized media and of the proxy are fixed by SDD-011 §4.2 (MPEG-4 Part 2 in MOV with PCM; VP9 in MP4 with AAC); their patent status is an open point for the author before the first public release (research note `licensing` §8 item 6).

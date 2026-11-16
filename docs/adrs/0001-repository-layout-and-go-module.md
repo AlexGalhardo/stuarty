@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: author (D-002, D-005, D-007, D-008, D-020, D-021), architect
-- Links: [brainstorming D-002, D-005, D-007](../brainstorming.md), [vukem practices](../search/vukem-practices-and-releases.md), [existing Studio](../search/notes/existing-studio.md)
+- Links: author decision D-002, D-005, D-007, vukem practices, existing Studio
 
 ## Context
 

@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: author (D-005, restriction 2 of the briefing), architect
-- Links: [vukem practices and releases](../search/vukem-practices-and-releases.md), [brainstorming D-005](../brainstorming.md), ADR-0011, SDD-009
+- Links: vukem practices and releases, author decision D-005, ADR-0011, SDD-009
 
 ## Context
 

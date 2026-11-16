@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: author (D-001), architect
-- Links: [brainstorming D-001](../brainstorming.md), [post-mortems §12](../search/post-mortems.md), [agents and MCP §2](../search/agents-mcp.md), [engine §4](../search/engine.md), SDD-002
+- Links: author decision D-001, post-mortems §12, agents and MCP §2, engine §4, SDD-002
 
 ## Context
 
