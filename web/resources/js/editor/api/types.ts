@@ -216,6 +216,15 @@ export interface PlanMediaLayer extends PlanLayerBase {
 	// standard deviation in project pixels; both constant over the item.
 	filter?: number[] | null;
 	blur?: number;
+	// The key of SDD-004 section 3.7, constant over the item; absent without one.
+	chroma_key?: PlanChromaKey;
+}
+
+export interface PlanChromaKey {
+	color: string;
+	similarity: number;
+	smoothness: number;
+	spill: number;
 }
 
 export interface PlanBitmapLayer extends PlanLayerBase {

@@ -16,6 +16,7 @@ import type { ApiClient } from "../api/client";
 import type { PlanLayer, PlanMediaLayer, PlanWindow } from "../api/types";
 import { proxyUrl, thumbnailUrl } from "../api/urls";
 import { AudioGraph } from "./audioGraph";
+import { ChromaKeyFilter } from "./chromaKey";
 import { pixiColorMatrix } from "./layerFilters";
 import { Lru } from "./lru";
 import { MediaPool, type PoolTimers } from "./mediaPool";
@@ -40,11 +41,13 @@ import type {
 
 const BITMAP_CACHE = 64;
 
-// The filters of a layer in the order of the compositor: colour matrix, filter
+// The filters of a layer in the order of the compositor: chroma key, colour
+// matrix, filter
 // matrix, blur (SDD-004 section 6 step 2.2). Each runs in a pass of its own, so
 // the result of one is clamped to 0..1 before the next, as the export does.
 interface Drawn {
 	sprite: Sprite;
+	key: ChromaKeyFilter | null;
 	color: ColorMatrixFilter | null;
 	look: ColorMatrixFilter | null;
 	blur: BlurFilter | null;
@@ -385,7 +388,13 @@ export class PixiExecutor implements PreviewExecutor {
 			used.add(layer.item);
 			let entry = this.drawn.get(layer.item);
 			if (entry === undefined) {
-				entry = { sprite: new Sprite(), color: null, look: null, blur: null };
+				entry = {
+					sprite: new Sprite(),
+					key: null,
+					color: null,
+					look: null,
+					blur: null,
+				};
 				entry.sprite.anchor.set(0.5);
 				this.drawn.set(layer.item, entry);
 			}
@@ -441,7 +450,13 @@ export class PixiExecutor implements PreviewExecutor {
 
 	private applyFilters(entry: Drawn, layer: PlanLayer): void {
 		const media = layer.kind === "media" ? layer : null;
-		const before = [entry.color, entry.look, entry.blur];
+		const before = [entry.key, entry.color, entry.look, entry.blur];
+		if (media?.chroma_key) {
+			entry.key ??= new ChromaKeyFilter();
+			entry.key.set(media.chroma_key);
+		} else {
+			entry.key = null;
+		}
 		entry.color = this.matrixFilter(entry.color, media?.color_matrix ?? null);
 		entry.look = this.matrixFilter(entry.look, media?.filter ?? null);
 		// The blur is in project pixels; the stage scale is the output scale.
@@ -452,7 +467,7 @@ export class PixiExecutor implements PreviewExecutor {
 		} else {
 			entry.blur = null;
 		}
-		const now = [entry.color, entry.look, entry.blur];
+		const now = [entry.key, entry.color, entry.look, entry.blur];
 		if (now.some((f, i) => f !== before[i])) {
 			entry.sprite.filters = now.filter((f) => f !== null);
 		}
