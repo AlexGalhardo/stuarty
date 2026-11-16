@@ -988,6 +988,8 @@
         "install": {
           "title": "Instalar a transcrição local",
           "description": "A transcrição roda neste computador e precisa de arquivos que ainda não estão instalados.",
+          "model": "Modelo",
+          "model_hint": "O modelo escolhido passa a ser o padrão da transcrição neste workspace.",
           "missing": "Não instalado",
           "source": "de {host}",
           "size": "Tamanho do download: {megabytes} MB",
