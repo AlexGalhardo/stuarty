@@ -143,6 +143,14 @@ export function ShortcutsDialog({
 											) : (
 												<kbd className="font-sans">{shown}</kbd>
 											)}
+											{row.aliases !== undefined &&
+												(!isBindingId(id) || bindings[id] === row.keys) && (
+													<span className="ml-2 text-xs text-muted-foreground">
+														{t("ui.editor.shortcuts.also", {
+															keys: displayCombo(row.aliases, MAC),
+														})}
+													</span>
+												)}
 										</td>
 									</tr>
 								);

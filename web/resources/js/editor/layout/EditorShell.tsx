@@ -3,6 +3,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import LiveRegion from "../a11y/LiveRegion";
+import { useShellShortcuts } from "../commands/useShellShortcuts";
 import Inspector from "../inspector/Inspector";
 import Preview from "../preview/Preview";
 import { useDocumentState, useUiState } from "../state/EditorContext";
@@ -66,6 +67,7 @@ export default function EditorShell({
 		inspector: panels.inspector ? full.inspector : 0,
 	};
 	usePanelShortcuts();
+	useShellShortcuts();
 	const [captionOpen, setCaptionOpen] = useState(false);
 	useShortcuts(() => setCaptionOpen(true));
 

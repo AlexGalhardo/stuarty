@@ -173,6 +173,20 @@ export function adjacentCut(
 	return best;
 }
 
+// The items that start before the playhead (`left`) or end after it (`right`):
+// the selection of `[` and `]`. A reading of the frames the core gave.
+export function idsOnSide(
+	items: readonly Placed[],
+	frame: number,
+	side: "left" | "right",
+): string[] {
+	return items
+		.filter((item) =>
+			side === "left" ? item.start < frame : item.start + item.duration > frame,
+		)
+		.map((item) => item.id);
+}
+
 // The id of the item whose start is nearest to `start`, the first one on a tie
 // (keyboard focus moving to the track above or below, SDD-012 section 7.10).
 export function nearestByStart(

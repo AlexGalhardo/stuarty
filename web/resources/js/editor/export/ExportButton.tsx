@@ -24,6 +24,31 @@ export default function ExportButton(): ReactNode {
 	const ready = useDocumentState(
 		(s) => s.status === "ready" || s.status === "offline",
 	);
+	// Mod+E (SDD-012 section 18.7), not inside a field or another dialog.
+	useEffect(() => {
+		const onKey = (event: KeyboardEvent): void => {
+			if (
+				!(event.ctrlKey || event.metaKey) ||
+				event.altKey ||
+				event.shiftKey ||
+				event.key.toLowerCase() !== "e" ||
+				!ready
+			)
+				return;
+			const target = event.target;
+			if (
+				target instanceof HTMLElement &&
+				(target.isContentEditable ||
+					["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+					target.closest('[role="dialog"], [role="alertdialog"]') !== null)
+			)
+				return;
+			event.preventDefault();
+			setOpen(true);
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [ready]);
 	return (
 		<>
 			<JobsChip onOpen={() => setOpen(true)} />

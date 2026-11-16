@@ -42,7 +42,7 @@ describe("rebinding", () => {
 		expect(rebind("split", "X")).toEqual({ ok: true });
 		expect(getBindings().split).toBe("X");
 		expect(bindingFor(press("x"), ["split"])).toBe("split");
-		expect(bindingFor(press("s"), ["split"])).toBeNull();
+		expect(bindingFor(press("b", { ctrlKey: true }), ["split"])).toBeNull();
 	});
 
 	test("a key of another row is refused and names that row", () => {
@@ -51,7 +51,31 @@ describe("rebinding", () => {
 			conflict: "add_caption",
 		});
 		expect(rebind("split", "Mod+Z")).toEqual({ ok: false, conflict: "undo" });
-		expect(getBindings().split).toBe("S");
+		expect(getBindings().split).toBe("Mod+B");
+	});
+
+	test("S is the preview axis of the compatible map, Q and W are the trims", () => {
+		expect(DEFAULT_BINDINGS.split).toBe("Mod+B");
+		expect(DEFAULT_BINDINGS.trim_start).toBe("Q");
+		expect(DEFAULT_BINDINGS.trim_end).toBe("W");
+		expect(bindingFor(press("s"), ["split"])).toBeNull();
+		expect(bindingFor(press("["), ["trim_start", "trim_end"])).toBeNull();
+		expect(bindingFor(press("q"), ["trim_start", "trim_end"])).toBe(
+			"trim_start",
+		);
+	});
+
+	test("a key of a fixed row of the compatible map is refused", () => {
+		expect(findConflict("add_text", "Mod+B")).toBe("split");
+		expect(findConflict("add_text", "Mod+Shift+B")).toBe("split_all");
+		expect(findConflict("add_text", "[")).toBe("select_side");
+		expect(findConflict("add_text", "Mod+E")).toBe("export");
+	});
+
+	test("the aliases + and - are held by the zoom rows", () => {
+		expect(findConflict("add_text", "+")).toBe("zoom_in");
+		expect(findConflict("add_text", "-")).toBe("zoom_out");
+		expect(findConflict("zoom_in", "+")).toBeNull();
 	});
 
 	test("reserved keys and Alt combos are refused", () => {
@@ -73,7 +97,23 @@ describe("rebinding", () => {
 		expect(getBindings()).toEqual(DEFAULT_BINDINGS);
 	});
 
-	test("= still zooms in while + is the key", () => {
+	test("Mod+= zooms in, with + and = as aliases, and Mod+- and - zoom out", () => {
+		expect(bindingFor(press("=", { ctrlKey: true }), ["zoom_in"])).toBe(
+			"zoom_in",
+		);
+		expect(bindingFor(press("+", { shiftKey: true }), ["zoom_in"])).toBe(
+			"zoom_in",
+		);
 		expect(bindingFor(press("="), ["zoom_in"])).toBe("zoom_in");
+		expect(bindingFor(press("-", { ctrlKey: true }), ["zoom_out"])).toBe(
+			"zoom_out",
+		);
+		expect(bindingFor(press("-"), ["zoom_out"])).toBe("zoom_out");
+	});
+
+	test("a rebound zoom row drops its aliases", () => {
+		rebind("zoom_in", "X");
+		expect(bindingFor(press("+", { shiftKey: true }), ["zoom_in"])).toBeNull();
+		expect(bindingFor(press("x"), ["zoom_in"])).toBe("zoom_in");
 	});
 });

@@ -1474,6 +1474,8 @@ Each is a card for `senior-a`, with its name in `000-shared-definitions.md` firs
 | N-7 | decision of the author, no work before it: compound clip (`item.compound`, `item.uncompound`) and match cut | `Alt+G`, `Alt+Shift+G`, `Mod+J` |
 | N-8 | `item.paste_attributes`: copy the effects, colour and transform of one item to others | `Mod+Shift+C`, `Mod+Shift+V` |
 
+TASK-0236 draws and binds the rows of state exists and the UI rows that need no new surface: split, split every track, `Q`, `W`, `[` and `]`, `Mod+=` and `Mod+-`, copy, cut and paste (paste is `item.duplicate`), the volume keys (`item.set_audio`, 0.1 dB as a gain of `10^(0.1/20)`), the preview size keys, `Mod+I`, `Mod+E` and `Mod+S`. The UI rows that need a surface that does not exist yet (`J` `K` `L`, `I` `O`, `Shift+X` `Alt+X`, `B` `A`, `S` the preview axis, `Alt+K`, the wheel keys, the drag modifiers) and the desktop-only rows (`Mod+R`, `Mod+Shift+F`, `Mod+N`, `Mod+O`) are not in `SHORTCUTS` until their surface or the desktop shell exists. An alias is the `aliases` field of a row (`+` and `Mod++` for zoom in, `-` for zoom out): they are held by the row, so no other row may rebind to them, and they are lost when the person rebinds the row.
+
 The rows of N-1 to N-6 and N-8 enter `SHORTCUTS` when their command exists. The `surface.*` ids marked UI are added to `UI_SHORTCUT_ACTIONS` by TASK-0236. The cheat sheet and the shortcuts page of the site read the same table, so no key is written twice.
 
 ## 19. Performance budgets

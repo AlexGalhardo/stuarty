@@ -48,13 +48,21 @@ export type RebindResult =
 	// The id of the row that already uses the key, or "reserved".
 	| { ok: false; conflict: string };
 
+// The keys another row holds. A rebindable row's own keys are looked up in the
+// bindings, but its aliases (`+` and `-` of the zoom rows) are fixed.
 function fixedCombos(): Map<string, string> {
 	const map = new Map<string, string>();
 	for (const row of SHORTCUTS) {
+		for (const key of aliasesOf(row.id)) map.set(key, row.id);
 		if (isBindingId(row.id)) continue;
 		for (const key of row.keys.split(", ")) map.set(key, row.id);
 	}
 	return map;
+}
+
+function aliasesOf(id: string): readonly string[] {
+	const row = SHORTCUTS.find((candidate) => candidate.id === id);
+	return row?.aliases === undefined ? [] : row.aliases.split(", ");
 }
 
 // Looks for another row that holds the key: a fixed one, a rebindable one or a
@@ -68,7 +76,7 @@ export function findConflict(
 	if (RESERVED_KEYS.includes(combo) || combo.includes("Alt+"))
 		return "reserved";
 	const fixed = fixedCombos().get(combo);
-	if (fixed !== undefined) return fixed;
+	if (fixed !== undefined && fixed !== id) return fixed;
 	for (const other of BINDING_IDS) {
 		if (other !== id && bindings[other] === combo) return other;
 	}
@@ -99,8 +107,11 @@ export function bindingFor<T extends BindingId>(
 	const bindings = store.getState();
 	for (const id of ids) {
 		if (bindings[id] === combo) return id;
-		// `=` is the unshifted key of `+` on most layouts.
-		if (id === "zoom_in" && bindings[id] === "+" && combo === "=") return id;
+		// The aliases of the default key, and `=`, the unshifted key of `+` on
+		// most layouts. A key the person chose has none.
+		if (bindings[id] !== DEFAULT_BINDINGS[id]) continue;
+		if (aliasesOf(id).includes(combo)) return id;
+		if (id === "zoom_in" && combo === "=") return id;
 	}
 	return null;
 }

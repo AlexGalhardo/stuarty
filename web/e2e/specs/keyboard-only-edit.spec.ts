@@ -47,20 +47,20 @@ test.describe("keyboard-only-edit", () => {
 		await page.getByRole("slider", { name: "Playhead" }).focus();
 		await page.keyboard.press("PageUp");
 
-		// Split: S on the clip.
+		// Split: Ctrl+B on the clip.
 		await items.first().focus();
 		await page.keyboard.press("Enter");
-		await page.keyboard.press("s");
+		await page.keyboard.press("Control+b");
 		await expect(items).toHaveCount(2);
 		await expect(live).toHaveText("Split, 1 item");
 
-		// Trim: the playhead to 2 s, the second item selected, "[" trims its start.
+		// Trim: the playhead to 2 s, the second item selected, Q deletes what is left of the playhead.
 		await page.getByRole("slider", { name: "Playhead" }).focus();
 		await page.keyboard.press("PageUp");
 		await items.nth(1).focus();
 		await page.keyboard.press("Enter");
 		const before = await items.nth(1).boundingBox();
-		await page.keyboard.press("[");
+		await page.keyboard.press("q");
 		await expect
 			.poll(async () => (await items.nth(1).boundingBox())?.x ?? 0)
 			.toBeGreaterThan((before?.x ?? 0) + 1);

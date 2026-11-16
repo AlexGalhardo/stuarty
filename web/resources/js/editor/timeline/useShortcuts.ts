@@ -1,11 +1,16 @@
 import { useEffect } from "react";
 
 import { useT } from "@/lib/i18n";
-import { editShortcut, isSelectAllShortcut } from "../commands/keymap";
+import {
+	comboFromEvent,
+	editShortcut,
+	fixedRowFor,
+	isSelectAllShortcut,
+} from "../commands/keymap";
 import { bindingFor } from "../commands/keymapStore";
 import { useActions } from "../commands/useActions";
 import { useRuntime } from "../state/EditorContext";
-import { adjacentCut } from "./geometry";
+import { adjacentCut, idsOnSide } from "./geometry";
 
 function isEditable(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) return false;
@@ -32,15 +37,57 @@ const EDIT_BINDINGS = [
 	"add_text",
 ] as const;
 
-// The keys of the Prototype (SDD-012 sections 8.2 and 15): split, trim to the
-// playhead, Add caption and Add text have rebindable keys (S, [, ], C and T by
-// default, section 18.2); Ctrl+Z undoes, Ctrl+Shift+Z and Ctrl+Y redo. Typing
-// in a field never triggers them.
+// The items Mod+C and Mod+X took; Mod+V pastes a copy of each. UI state of the
+// page: it is not project data and no other actor sees it.
+let clipboard: readonly string[] = [];
+
+// The editing keys (SDD-012 sections 8.2, 15 and 18.7): split, trim to the
+// playhead, Add caption and Add text have rebindable keys (Mod+B, Q, W, C and T
+// by default, section 18.2); the fixed ones split every track, select a side of
+// the playhead, copy, cut, paste and step the volume; Ctrl+Z undoes,
+// Ctrl+Shift+Z and Ctrl+Y redo. Typing in a field never triggers them.
 export function useShortcuts(openCaption: () => void): void {
 	const actions = useActions();
 	const runtime = useRuntime();
 	const t = useT();
 	useEffect(() => {
+		// The fixed rows of section 18.7 that edit; true when the key was one.
+		const fixedKey = (event: KeyboardEvent): boolean => {
+			const combo = comboFromEvent(event);
+			const row = combo === null ? null : fixedRowFor(combo);
+			if (row === null) return false;
+			const { selection, focusedItem, playheadFrame } = runtime.ui.getState();
+			const held =
+				selection.items.length > 0
+					? selection.items
+					: focusedItem === null
+						? []
+						: [focusedItem];
+			if (row === "split_all") void actions.splitAllAtPlayhead();
+			else if (row === "volume_up") void actions.adjustVolume(0.1);
+			else if (row === "volume_down") void actions.adjustVolume(-0.1);
+			else if (row === "select_side") {
+				const doc = runtime.documents.getState().document;
+				if (doc === null) return false;
+				const items = Object.entries(doc.items).map(([id, item]) => ({
+					id,
+					start: item.start,
+					duration: item.duration,
+				}));
+				runtime.uiWriter.select(
+					idsOnSide(items, playheadFrame, combo === "[" ? "left" : "right"),
+				);
+			} else if (row === "copy" || row === "cut") {
+				if (held.length === 0) return false;
+				clipboard = [...held];
+				if (row === "cut") void actions.deleteSelection();
+			} else if (row === "paste") {
+				if (clipboard.length === 0) return false;
+				void actions.duplicateItems(clipboard);
+			} else return false;
+			event.preventDefault();
+			return true;
+		};
 		const onKey = (event: KeyboardEvent): void => {
 			if (isEditable(event.target) || event.altKey) return;
 			const edit = inOverlay(event.target) ? null : editShortcut(event);
@@ -85,6 +132,7 @@ export function useShortcuts(openCaption: () => void): void {
 				event.preventDefault();
 				return;
 			}
+			if (!inOverlay(event.target) && fixedKey(event)) return;
 			const bound = inOverlay(event.target)
 				? null
 				: bindingFor(event, EDIT_BINDINGS);

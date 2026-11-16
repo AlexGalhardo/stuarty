@@ -1,10 +1,10 @@
 import { expect, seedProject, test } from "./helpers";
 
-// P3-UI-001 (SDD-012 section 18.2): the cheat sheet opens with ?, rebinding S
-// to X makes X split (one batch) and S do nothing, and the binding survives a
-// reload; a key another row holds is refused; reset brings S back.
+// P3-UI-001 (SDD-012 section 18.2): the cheat sheet opens with ?, rebinding
+// Mod+B to X makes X split (one batch) and Mod+B do nothing, and the binding
+// survives a reload; a key another row holds is refused; reset brings Mod+B back.
 test.describe("shortcuts", () => {
-	test("rebinding S to X splits with X, keeps across a reload, conflicts are refused", async ({
+	test("rebinding Mod+B to X splits with X, keeps across a reload, conflicts are refused", async ({
 		page,
 		request,
 	}) => {
@@ -29,7 +29,7 @@ test.describe("shortcuts", () => {
 		const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
 		await expect(dialog).toBeVisible();
 		await expect(dialog.locator('[data-shortcut-row="split"]')).toContainText(
-			"S",
+			/(Ctrl|Cmd)\+B/,
 		);
 		await expect(dialog.locator('[data-shortcut-row="undo"]')).toContainText(
 			/(Ctrl|Cmd)\+Z/,
@@ -40,9 +40,9 @@ test.describe("shortcuts", () => {
 		await split.click();
 		await split.press("c");
 		await expect(dialog.getByRole("alert")).toContainText("Add caption");
-		await expect(split).toContainText("S");
+		await expect(split).toContainText(/(Ctrl|Cmd)\+B/);
 
-		// S to X.
+		// Mod+B to X.
 		await split.click();
 		await split.press("x");
 		await expect(split).toContainText("X");
@@ -54,7 +54,7 @@ test.describe("shortcuts", () => {
 		await items.first().focus();
 		await page.keyboard.press("Enter");
 
-		await page.keyboard.press("s");
+		await page.keyboard.press("Control+b");
 		await page.waitForTimeout(500);
 		await expect(items).toHaveCount(1);
 		expect(batches).toHaveLength(0);
@@ -79,6 +79,6 @@ test.describe("shortcuts", () => {
 			page
 				.getByRole("dialog", { name: "Keyboard shortcuts" })
 				.locator('[data-shortcut-key="split"]'),
-		).toContainText("S");
+		).toContainText(/(Ctrl|Cmd)\+B/);
 	});
 });
