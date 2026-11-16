@@ -10,16 +10,18 @@ wide: true
 
 <RefMain>
 
-Sets a fade or a slide on the in or out edge, 0.5 seconds long unless duration is given; kind null removes the transition. The two transitions together cannot be longer than the item.
+Sets a fade, a slide, a zoom, a whip, a dip or a wipe on the in or out edge, 0.5 seconds long unless duration is given; kind null removes the transition. color (#RRGGBB, default black) is for dip; direction (left, right, up or down, default left) is for whip and wipe. The two transitions together cannot be longer than the item.
 
 ## Arguments
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
+| `color` | `string` | no | Dip only: #RRGGBB, default #000000. |
+| `direction` | `left`, `right`, `up`, `down` | no | Whip and wipe only: left (default), right, up or down. |
 | `duration` | `string` | no | Length of the transition, at least 1 frame; default 0.5s. |
 | `edge` | `in`, `out` | yes | The edge: in or out. |
 | `item_id` | `string` | yes | A clip, text, caption or shape item. |
-| `kind` | `fade`, `slide_left`, `slide_right`, `slide_up`, `slide_down`, `null` | yes | Fade, slide_left, slide_right, slide_up, slide_down, or null to remove. |
+| `kind` | `string`, one of 10 values | yes | Fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, or null to remove. |
 
 ## Errors
 

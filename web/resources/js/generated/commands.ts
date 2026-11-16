@@ -637,6 +637,54 @@ export interface ClipSetColorArgs {
   tint?: number;
 }
 
+export interface ClipSetEffectsArgs {
+  /**
+   * The effects in order, up to 6, each kind once; [] removes them all.
+   */
+  effects: {
+    /**
+     * Strength, 0 to 1; all kinds.
+     */
+    amount?: number;
+    /**
+     * Direction in degrees, -180 to 180; motion_blur, rgb_split.
+     */
+    angle?: number;
+    /**
+     * The effect.
+     */
+    kind: "motion_blur" | "glow" | "vignette" | "grain" | "rgb_split" | "shake";
+    /**
+     * Spread in frame pixels, 1 to 100; glow.
+     */
+    radius?: number;
+    /**
+     * Noise seed, 0 to 65535; grain, shake.
+     */
+    seed?: number;
+    /**
+     * Grain size in frame pixels, 1 to 8; grain.
+     */
+    size?: number;
+    /**
+     * How far in the darkening starts, 0 to 1; vignette.
+     */
+    softness?: number;
+    /**
+     * Shakes per second, 1 to 30; shake.
+     */
+    speed?: number;
+    /**
+     * Brightness where the glow starts, 0 to 1; glow.
+     */
+    threshold?: number;
+  }[];
+  /**
+   * A clip.
+   */
+  item_id: string;
+}
+
 export interface ClipSetFilterArgs {
   /**
    * 0 to 1; default 1.
@@ -729,17 +777,39 @@ export interface ClipSetMaskArgs {
 
 export interface ClipSetSpeedArgs {
   /**
+   * Speed ramp: 2 to 8 points, linear between them, first t 0 and last t 1. Not with speed.
+   */
+  curve?: {
+    /**
+     * "1.5x" (up to 3 decimals), 1/4 to 4.
+     */
+    speed:
+      | string
+      | {
+          den: number;
+          num: number;
+        };
+    /**
+     * Position in the item, 0 to 1, up to 3 decimals.
+     */
+    t: number;
+  }[];
+  /**
    * A clip of a video asset, or an audio item.
    */
   item_id: string;
+  /**
+   * true plays the source range backwards; false plays it forwards.
+   */
+  reverse?: boolean;
   /**
    * none (default) or track: shift the later items of the track.
    */
   ripple?: "none" | "track";
   /**
-   * "1.5x" (up to 3 decimals) or {"num": 3, "den": 2}; 1/4 to 4.
+   * "1.5x" (up to 3 decimals) or {"num": 3, "den": 2}; 1/4 to 4. Not with curve.
    */
-  speed:
+  speed?:
     | string
     | {
         den: number;
@@ -1286,6 +1356,32 @@ export interface ItemDuplicateArgs {
   track_id?: string;
 }
 
+export interface ItemExtractAudioArgs {
+  /**
+   * The id of the new audio item.
+   */
+  id?: string;
+  /**
+   * A clip of a video asset with audio.
+   */
+  item_id: string;
+  /**
+   * An audio track with room for the item.
+   */
+  track_id: string;
+}
+
+export interface ItemLinkArgs {
+  /**
+   * The id of the link group, lnk_ and 10 characters; generated when omitted.
+   */
+  id?: string;
+  /**
+   * The items to link, 2 to 20.
+   */
+  item_ids: string[];
+}
+
 export interface ItemMoveArgs {
   item_id: string;
   /**
@@ -1380,6 +1476,14 @@ export interface ItemSetTransformArgs {
 
 export interface ItemSetTransitionArgs {
   /**
+   * dip only: #RRGGBB, default #000000.
+   */
+  color?: string;
+  /**
+   * whip and wipe only: left (default), right, up or down.
+   */
+  direction?: "left" | "right" | "up" | "down";
+  /**
    * Length of the transition, at least 1 frame; default 0.5s.
    */
   duration?: string;
@@ -1392,9 +1496,9 @@ export interface ItemSetTransitionArgs {
    */
   item_id: string;
   /**
-   * fade, slide_left, slide_right, slide_up, slide_down, or null to remove.
+   * fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, or null to remove.
    */
-  kind: "fade" | "slide_left" | "slide_right" | "slide_up" | "slide_down" | null;
+  kind: "fade" | "slide_left" | "slide_right" | "slide_up" | "slide_down" | "zoom" | "whip" | "dip" | "wipe" | null;
 }
 
 export interface ItemSlipArgs {
@@ -1418,6 +1522,10 @@ export interface ItemSplitArgs {
    * The id of the right part.
    */
   new_id?: string;
+  /**
+   * The ids of the right parts of the linked items that the split cuts, in the order of the ids of those items.
+   */
+  new_ids?: string[];
 }
 
 export interface ItemTrimArgs {
@@ -1435,6 +1543,13 @@ export interface ItemTrimArgs {
    * Absolute position of the edge; the end is exclusive.
    */
   to: string;
+}
+
+export interface ItemUnlinkArgs {
+  /**
+   * The items to take out of their link group.
+   */
+  item_ids: string[];
 }
 
 export interface KeyframeClearArgs {
@@ -1955,7 +2070,7 @@ export interface TrackUpdateArgs {
   volume?: number;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.link" | "item.move" | "item.rename" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -1978,6 +2093,7 @@ export interface CommandArgsMap {
 	"clip.set_blur": ClipSetBlurArgs;
 	"clip.set_chroma_key": ClipSetChromaKeyArgs;
 	"clip.set_color": ClipSetColorArgs;
+	"clip.set_effects": ClipSetEffectsArgs;
 	"clip.set_filter": ClipSetFilterArgs;
 	"clip.set_flip": ClipSetFlipArgs;
 	"clip.set_framing": ClipSetFramingArgs;
@@ -1988,6 +2104,8 @@ export interface CommandArgsMap {
 	"item.crossfade": ItemCrossfadeArgs;
 	"item.delete": ItemDeleteArgs;
 	"item.duplicate": ItemDuplicateArgs;
+	"item.extract_audio": ItemExtractAudioArgs;
+	"item.link": ItemLinkArgs;
 	"item.move": ItemMoveArgs;
 	"item.rename": ItemRenameArgs;
 	"item.set_audio": ItemSetAudioArgs;
@@ -1997,6 +2115,7 @@ export interface CommandArgsMap {
 	"item.slip": ItemSlipArgs;
 	"item.split": ItemSplitArgs;
 	"item.trim": ItemTrimArgs;
+	"item.unlink": ItemUnlinkArgs;
 	"keyframe.clear": KeyframeClearArgs;
 	"keyframe.remove": KeyframeRemoveArgs;
 	"keyframe.set": KeyframeSetArgs;
@@ -2047,16 +2166,19 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"clip.set_blur": { summary: "Sets the blur radius of a visual item.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_chroma_key": { summary: "Keys out one colour of a clip, such as a green screen.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_color": { summary: "Sets the brightness, contrast, saturation, temperature, tint and hue of a clip.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"clip.set_effects": { summary: "Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_filter": { summary: "Sets the colour filter of a visual item and how much of it is mixed in.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_flip": { summary: "Mirrors a visual item horizontally, vertically or both.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_framing": { summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_mask": { summary: "Limits where a visual item is drawn to a rectangle or an ellipse.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
-	"clip.set_speed": { summary: "Changes the speed of a clip or audio item while keeping the same source range.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE","E_INVALID_TIME","E_OVERLAP"] },
+	"clip.set_speed": { summary: "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE","E_INVALID_TIME","E_OVERLAP"] },
 	"font.add": { summary: "Adds a user font family to the project, or more weights to one it already has.", scope: "media", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
 	"font.remove": { summary: "Removes a user font family from the project.", scope: "media", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_IN_USE"] },
 	"item.crossfade": { summary: "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"item.delete": { summary: "Removes items, and optionally closes the freed space.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE","E_OVERLAP"] },
 	"item.duplicate": { summary: "Copies an item to another position, optionally on another track.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
+	"item.extract_audio": { summary: "Creates an audio item from the audio of a video clip, linked to it, and mutes the clip.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OVERLAP","E_ID_EXISTS","E_LIMIT"] },
+	"item.link": { summary: "Links items so that they move, trim and split together.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS"] },
 	"item.move": { summary: "Moves an item in time, to another track of the same kind, or both.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"item.rename": { summary: "Sets the label of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
 	"item.set_audio": { summary: "Sets the volume, the fades, the mute flag or the noise reduction of a clip or audio item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
@@ -2066,6 +2188,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"item.slip": { summary: "Shows another part of the source in a clip or audio item without moving or resizing it.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE"] },
 	"item.split": { summary: "Splits an item into two at a timeline frame.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT"] },
 	"item.trim": { summary: "Moves the start edge or the end edge of an item to a timeline position.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
+	"item.unlink": { summary: "Removes items from their link group.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE"] },
 	"keyframe.clear": { summary: "Removes all keyframes of one property, or of every property.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"keyframe.remove": { summary: "Removes the keyframe of a property at a frame.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"keyframe.set": { summary: "Adds or replaces a keyframe of one animated property of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_LIMIT"] },
