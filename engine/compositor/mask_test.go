@@ -8,7 +8,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
-func newTestMask(spec plan.MaskSpec, p placement) *maskState { return newMask(&spec, p, 1) }
+func newTestMask(spec plan.MaskSpec, p placement) *maskState { return newMask(&spec, nil, p, 1) }
 
 func TestMaskRectHardEdge(t *testing.T) {
 	t.Parallel()

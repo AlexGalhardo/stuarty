@@ -33,6 +33,10 @@ func clamped(v, hi float64) int64 {
 // Everything is integer, so the coverage is the same on every system and in every band.
 type maskState struct {
 	ellipse, invert bool
+	// shapeless is a state that has only a wipe: its mask coverage is 255 everywhere.
+	shapeless bool
+	// wipe is the hard edge of a wipe transition, nil for none.
+	wipe *wipeState
 	// l, t, r, b is the rectangle of the shape and ha, hb its half-extents; fq is the feather.
 	l, t, r, b, ha, hb, fq int64
 	// left and top are the rounded corner of the copy path; the affine is the sampler path (32.32).
@@ -42,21 +46,29 @@ type maskState struct {
 
 // newMask prepares the mask of spec for a layer placed as p (the placement before any blur, so a
 // blur halo never moves the mask).
-func newMask(spec *plan.MaskSpec, p placement, outScale float64) *maskState {
+func newMask(spec *plan.MaskSpec, wipe *wipeSpec, p placement, outScale float64) *maskState {
 	wq := clamped(mul(p.w, 256), maskLimit)
 	hq := clamped(mul(p.h, 256), maskLimit)
-	xm := clamped(mul(spec.X, 1000), 1000)
-	ym := clamped(mul(spec.Y, 1000), 1000)
-	wm := clamped(mul(spec.Width, 1000), 1000)
-	hm := clamped(mul(spec.Height, 1000), 1000)
 
-	m := &maskState{ellipse: spec.Shape == "ellipse", invert: spec.Invert}
-	m.l = (xm*wq + 500) / 1000
-	m.t = (ym*hq + 500) / 1000
-	m.ha = max(1, (wm*wq+1000)/2000)
-	m.hb = max(1, (hm*hq+1000)/2000)
-	m.r, m.b = m.l+2*m.ha, m.t+2*m.hb
-	m.fq = clamped(mul(mul(float64(spec.Feather), outScale), 256), maskLimit)
+	m := &maskState{shapeless: spec == nil}
+	if spec != nil {
+		xm := clamped(mul(spec.X, 1000), 1000)
+		ym := clamped(mul(spec.Y, 1000), 1000)
+		wm := clamped(mul(spec.Width, 1000), 1000)
+		hm := clamped(mul(spec.Height, 1000), 1000)
+
+		m.ellipse, m.invert = spec.Shape == "ellipse", spec.Invert
+		m.l = (xm*wq + 500) / 1000
+		m.t = (ym*hq + 500) / 1000
+		m.ha = max(1, (wm*wq+1000)/2000)
+		m.hb = max(1, (hm*hq+1000)/2000)
+		m.r, m.b = m.l+2*m.ha, m.t+2*m.hb
+		m.fq = clamped(mul(mul(float64(spec.Feather), outScale), 256), maskLimit)
+	}
+
+	if wipe != nil {
+		m.wipe = newWipe(wipe, wq, hq)
+	}
 
 	m.left, m.top = round(p.cx-p.w/2), round(p.cy-p.h/2)
 
@@ -91,6 +103,20 @@ func (m *maskState) sampleCov(x, y int) uint32 {
 func (m *maskState) coverage(lx, ly int64) uint32 {
 	lx, ly = min(max(lx, -maskPosLimit), maskPosLimit), min(max(ly, -maskPosLimit), maskPosLimit)
 
+	cov := uint32(255)
+	if !m.shapeless {
+		cov = m.shapeCoverage(lx, ly)
+	}
+
+	if m.wipe != nil {
+		cov = div255(cov * m.wipe.coverage(lx, ly))
+	}
+
+	return cov
+}
+
+// shapeCoverage is the coverage of the mask's shape alone.
+func (m *maskState) shapeCoverage(lx, ly int64) uint32 {
 	var d int64
 	if m.ellipse {
 		qx := min((abs64(lx-(m.l+m.ha))<<16)/m.ha, 1<<22)
@@ -131,4 +157,56 @@ func abs64(v int64) int64 {
 		return -v
 	}
 	return v
+}
+
+// wipeSpec is the wipe of a layer's transition: the 16.16 progress and the direction (SDD-004 section 3.2).
+type wipeSpec struct {
+	p   int64
+	dir string
+}
+
+// wipeOf is the wipe a transition asks for, nil when it is another kind of transition or none.
+func wipeOf(t *plan.TransitionSpec) *wipeSpec {
+	if t == nil || t.Kind != "wipe" {
+		return nil
+	}
+
+	return &wipeSpec{p: progress(t.P), dir: t.Direction}
+}
+
+// wipeState is the hard edge of a wipe on the layer's rectangle, in 24.8.
+type wipeState struct {
+	dir       string
+	r, wq, hq int64
+}
+
+func newWipe(w *wipeSpec, wq, hq int64) *wipeState {
+	size := wq
+	if w.dir == "up" || w.dir == "down" {
+		size = hq
+	}
+
+	return &wipeState{dir: w.dir, r: (w.p*size + 32768) >> 16, wq: wq, hq: hq}
+}
+
+// coverage is 255 where the edge has passed and 0 where it has not.
+func (w *wipeState) coverage(lx, ly int64) uint32 {
+	var in bool
+
+	switch w.dir {
+	case "right":
+		in = lx >= w.wq-w.r
+	case "up":
+		in = ly < w.r
+	case "down":
+		in = ly >= w.hq-w.r
+	default:
+		in = lx < w.r
+	}
+
+	if in {
+		return 255
+	}
+
+	return 0
 }
