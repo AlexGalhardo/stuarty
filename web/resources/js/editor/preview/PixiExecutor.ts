@@ -22,6 +22,8 @@ import "pixi.js/advanced-blend-modes";
 import { AudioGraph } from "./audioGraph";
 import { pixiBlendMode } from "./blend";
 import { ChromaKeyFilter } from "./chromaKey";
+import { EffectFilter } from "./effectFilter";
+import { type EffectPass, effectPasses } from "./effects";
 import { pixiColorMatrix } from "./layerFilters";
 import { Lru } from "./lru";
 import { coverageSize, coverageTexels } from "./mask";
@@ -59,11 +61,18 @@ const BITMAP_CACHE = 64;
 // matrix, blur (SDD-004 section 6 step 2.2). Each runs in a pass of its own, so
 // the result of one is clamped to 0..1 before the next, as the export does.
 interface Drawn {
+	// The filters, the opacity and the blend are on the holder, which has no
+	// transform of its own: a filter area is in the local space of the object
+	// that has it, and the passes of effects.ts need one they can place.
+	holder: Container;
 	sprite: Sprite;
 	key: ChromaKeyFilter | null;
 	color: ColorMatrixFilter | null;
 	look: ColorMatrixFilter | null;
 	blur: BlurFilter | null;
+	// The passes of the pixel effects and the transitions, reused from frame to
+	// frame; the ones before the mask come first (effects.ts).
+	fx: EffectFilter[];
 	mask: MaskDrawn | null;
 }
 
@@ -218,7 +227,10 @@ export class PixiExecutor implements PreviewExecutor {
 		this.bitmaps.clear();
 		for (const texture of this.stills.values()) texture.destroy(true);
 		this.stills.clear();
-		for (const entry of this.drawn.values()) this.dropMask(entry);
+		for (const entry of this.drawn.values()) {
+			this.dropMask(entry);
+			this.sizeFx(entry, 0);
+		}
 		this.app?.destroy({ removeView: true }, { children: true });
 		this.app = null;
 		this.audioGraph.detach();
@@ -419,22 +431,26 @@ export class PixiExecutor implements PreviewExecutor {
 			used.add(layer.item);
 			let entry = this.drawn.get(layer.item);
 			if (entry === undefined) {
+				const holder = new Container();
 				entry = {
+					holder,
 					sprite: new Sprite(),
 					key: null,
 					color: null,
 					look: null,
 					blur: null,
+					fx: [],
 					mask: null,
 				};
 				entry.sprite.anchor.set(0.5);
+				holder.addChild(entry.sprite);
 				this.drawn.set(layer.item, entry);
 			}
 			if (entry.sprite.texture !== texture) entry.sprite.texture = texture;
-			this.place(entry, layer, frame);
-			if (this.stage.children[index] !== entry.sprite) {
+			this.place(entry, layer, frame, info);
+			if (this.stage.children[index] !== entry.holder) {
 				this.stage.addChildAt(
-					entry.sprite,
+					entry.holder,
 					Math.min(index, this.stage.children.length),
 				);
 			}
@@ -443,9 +459,10 @@ export class PixiExecutor implements PreviewExecutor {
 
 		for (const [item, entry] of this.drawn) {
 			if (used.has(item)) continue;
-			entry.sprite.removeFromParent();
+			entry.holder.removeFromParent();
 			this.dropMask(entry);
-			entry.sprite.destroy();
+			this.sizeFx(entry, 0);
+			entry.holder.destroy({ children: true });
 			this.drawn.delete(item);
 		}
 		this.videos.idle(usedVideos);
@@ -470,7 +487,12 @@ export class PixiExecutor implements PreviewExecutor {
 		}
 	}
 
-	private place(entry: Drawn, layer: PlanLayer, frame: number): void {
+	private place(
+		entry: Drawn,
+		layer: PlanLayer,
+		frame: number,
+		info: ProjectInfo,
+	): void {
 		const g = geometryOf(layer, frame);
 		const { sprite } = entry;
 		sprite.position.set(g.cx, g.cy);
@@ -484,20 +506,19 @@ export class PixiExecutor implements PreviewExecutor {
 		sprite.scale.x = mirror.x * Math.abs(sprite.scale.x);
 		sprite.scale.y = mirror.y * Math.abs(sprite.scale.y);
 		sprite.angle = g.rotation;
-		sprite.alpha = valueAt(layer.opacity, frame, layer.first);
-		sprite.blendMode = pixiBlendMode(layer.blend);
-		this.applyFilters(entry, layer, g);
+		entry.holder.alpha = valueAt(layer.opacity, frame, layer.first);
+		entry.holder.blendMode = pixiBlendMode(layer.blend);
+		this.applyFilters(entry, layer, g, frame, info);
 	}
 
-	private applyFilters(entry: Drawn, layer: PlanLayer, g: LayerGeometry): void {
+	private applyFilters(
+		entry: Drawn,
+		layer: PlanLayer,
+		g: LayerGeometry,
+		frame: number,
+		info: ProjectInfo,
+	): void {
 		const media = layer.kind === "media" ? layer : null;
-		const before = [
-			entry.key,
-			entry.color,
-			entry.look,
-			entry.blur,
-			entry.mask?.filter ?? null,
-		];
 		if (media?.chroma_key) {
 			entry.key ??= new ChromaKeyFilter();
 			entry.key.set(media.chroma_key);
@@ -517,16 +538,85 @@ export class PixiExecutor implements PreviewExecutor {
 		// The mask goes last: it is applied after the key, colour, filter and blur,
 		// and the opacity and the blend of the sprite come after it (SDD-004 3.9).
 		this.applyMask(entry, layer, g);
+		const passes = effectPasses(layer, frame, {
+			scale: this.stage.scale.x,
+			rotation: g.rotation,
+			frameWidth: info.width,
+			frameHeight: info.height,
+		});
+		const used = [...passes.before, ...passes.after];
+		this.sizeFx(entry, used.length);
 		const now = [
 			entry.key,
 			entry.color,
 			entry.look,
 			entry.blur,
+			...entry.fx.slice(0, passes.before.length),
 			entry.mask?.filter ?? null,
-		];
-		if (now.some((f, i) => f !== before[i])) {
-			entry.sprite.filters = now.filter((f) => f !== null);
+			...entry.fx.slice(passes.before.length),
+		].filter((f) => f !== null);
+		const current = Array.isArray(entry.holder.filters)
+			? entry.holder.filters
+			: [];
+		if (current.length !== now.length || now.some((f, i) => f !== current[i])) {
+			entry.holder.filters = now.length > 0 ? now : null;
 		}
+		this.placeFx(entry, used, now, g);
+	}
+
+	private sizeFx(entry: Drawn, count: number): void {
+		while (entry.fx.length < count) entry.fx.push(new EffectFilter());
+		for (const extra of entry.fx.splice(count)) extra.destroy();
+	}
+
+	// The effects need to know where the layer is inside the texture they read,
+	// which PixiJS does not say. So the area of the filters is set here, as the
+	// box of the rotated layer grown by what the passes add, and the corner of
+	// the texture is that area less the padding the other filters ask for (the
+	// sum, cut to a whole number, as FilterSystem does).
+	private placeFx(
+		entry: Drawn,
+		passes: EffectPass[],
+		filters: readonly { padding: number }[],
+		g: LayerGeometry,
+	): void {
+		const { holder } = entry;
+		if (passes.length === 0) {
+			holder.filterArea = undefined;
+			return;
+		}
+		const scale = this.stage.scale.x;
+		const grow = passes.reduce((sum, pass) => sum + pass.padding, 0);
+		const halfW = (g.w * scale) / 2;
+		const halfH = (g.h * scale) / 2;
+		const turn = (g.rotation * Math.PI) / 180;
+		const ex =
+			Math.abs(Math.cos(turn)) * halfW + Math.abs(Math.sin(turn)) * halfH;
+		const ey =
+			Math.abs(Math.sin(turn)) * halfW + Math.abs(Math.cos(turn)) * halfH;
+		const cx = g.cx * scale;
+		const cy = g.cy * scale;
+		const left = Math.floor(cx - ex - grow);
+		const top = Math.floor(cy - ey - grow);
+		// The area is in the local space of the holder, which is the stage's: the
+		// project pixels, so the output pixels divided by the scale.
+		holder.filterArea = new Rectangle(
+			left / scale,
+			top / scale,
+			(Math.ceil(cx + ex + grow) - left) / scale,
+			(Math.ceil(cy + ey + grow) - top) / scale,
+		);
+		const others = filters.reduce((sum, f) => sum + f.padding, 0) | 0;
+		const geometry = {
+			cx: cx - (left - others),
+			cy: cy - (top - others),
+			halfWidth: halfW,
+			halfHeight: halfH,
+			rotation: g.rotation,
+		};
+		passes.forEach((pass, i) => {
+			entry.fx[i]?.set(pass, geometry);
+		});
 	}
 
 	// The coverage texture covers the layer rectangle (the plan's W by H, in
@@ -587,7 +677,7 @@ export class PixiExecutor implements PreviewExecutor {
 		const drawn = entry.mask;
 		if (drawn === null) return;
 		entry.mask = null;
-		entry.sprite.filters = null;
+		entry.holder.filters = null;
 		drawn.filter.destroy();
 		drawn.sprite.destroy({ texture: true, textureSource: true });
 	}
