@@ -231,6 +231,7 @@ export interface PlanAudio {
 	asset: string;
 	first: number;
 	last: number;
+	// at the entry's first frame (SDD-004 section 10); see audioSourceSeconds
 	source_seconds: number;
 	speed: number;
 	gain: PerFrame;
