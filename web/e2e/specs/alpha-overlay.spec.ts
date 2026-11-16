@@ -18,7 +18,9 @@ test.describe("alpha-overlay", () => {
 			}
 		});
 		const seeded = await seedProject(request, {
-			files: [alphaClip(), solidClip("green")],
+			// The first track added is the bottom one: the green clip is the base
+			// and the clip with alpha lies over it.
+			files: [solidClip("green"), alphaClip()],
 			tracks: 2,
 			perTrack: 1,
 			clipDuration: "1s",

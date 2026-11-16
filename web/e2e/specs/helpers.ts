@@ -400,9 +400,14 @@ export async function seedProject(
 		const out = (await call("POST", `/projects/${id}/edit`, {
 			base_revision: revision,
 			operations,
-		})) as { revision: number; created: string[] };
+		})) as {
+			revision: number;
+			effective: { created?: string[] }[];
+		};
 		revision = out.revision;
-		return out.created;
+		// The top-level `created` is sorted by (random) id; the per-operation lists
+		// keep the order of the operations, which the callers index into.
+		return out.effective.flatMap((effect) => effect.created ?? []);
 	};
 
 	const trackIds: string[] = [];
