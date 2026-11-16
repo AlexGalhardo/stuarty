@@ -66,7 +66,8 @@ type Config struct {
 	Binary string
 	// Workspace is the workspace directory the child uses.
 	Workspace workspace.Dir
-	// Port is the loopback port to bind; 0 picks a free one.
+	// Port is the loopback port to bind; 0 reuses the port of the last run when
+	// it is free and picks a free one otherwise.
 	Port int
 	// Env is added to the child environment (after the variables of the shell).
 	Env []string
@@ -110,7 +111,13 @@ func Start(ctx context.Context, cfg Config) (*Server, error) {
 	if cfg.StopGrace <= 0 {
 		cfg.StopGrace = defaultStopGrace
 	}
-	port, err := pickPort(cfg.Port)
+	var port int
+	var err error
+	if cfg.Port == 0 {
+		port, err = pickStablePort(cfg.Workspace)
+	} else {
+		port, err = pickPort(cfg.Port)
+	}
 	if err != nil {
 		return nil, err
 	}
