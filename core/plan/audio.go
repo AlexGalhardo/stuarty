@@ -39,7 +39,7 @@ type AudioSource struct {
 // or an audio item, not muted itself or by its track, and not the placeholder of an
 // unfilled optional slot (SDD-004 §7).
 func audible(doc *timeline.Document, it *timeline.Item) bool {
-	if it.AudioMuted || doc.Tracks[it.Track].Muted || it.Asset == timeline.PlaceholderAsset {
+	if it.AudioMuted || !doc.TrackSounds(it.Track) || it.Asset == timeline.PlaceholderAsset {
 		return false
 	}
 
@@ -120,6 +120,15 @@ func audioSource(doc *timeline.Document, it *timeline.Item, cs, ce int) AudioSou
 		pos += int64(cs-it.Start) * int64(it.Speed.Num) / int64(it.Speed.Den)
 	}
 
+	gain := envelope(it, fps, cs-it.Start, ce-it.Start)
+
+	// The volume of the track is a factor on the whole envelope.
+	if k := doc.TrackGain(it.Track); k != 1 {
+		for i := range gain {
+			gain[i].Gain = round3(gain[i].Gain * k)
+		}
+	}
+
 	return AudioSource{
 		ItemID:      it.ID,
 		AssetID:     it.Asset,
@@ -127,7 +136,7 @@ func audioSource(doc *timeline.Document, it *timeline.Item, cs, ce int) AudioSou
 		SourceStart: frameSample(fps, int(pos)),
 		Samples:     frameSample(fps, ce) - start,
 		Speed:       it.Speed,
-		Gain:        envelope(it, fps, cs-it.Start, ce-it.Start),
+		Gain:        gain,
 	}
 }
 

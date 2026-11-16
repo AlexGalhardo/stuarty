@@ -20,13 +20,16 @@ func init() {
 	}, applyTrackAdd))
 
 	Register(Define(Spec{
-		Name:        "track.update",
-		Summary:     "Sets the name, the hidden flag or the muted flag of a track.",
-		Description: "Sets the given fields. hidden applies to visual tracks, muted to both kinds.",
-		Example:     `{"track_id": "trk_f6g7h8j9k0", "hidden": true}`,
-		Errors:      []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
-		Scope:       ScopeEdit,
-		Phase:       Prototype,
+		Name:    "track.update",
+		Summary: "Sets the name, hidden, muted, locked or solo flag or the volume of a track.",
+		Description: "Sets the given fields. hidden applies to visual tracks, the others to both kinds. locked refuses " +
+			"every edit of the items of the track (E_INVALID_STATE) until it is unlocked. solo plays only the soloed " +
+			"tracks: the picture of visual tracks when one is solo, and the sound of every track. volume is a factor " +
+			"from 0 to 4 on the volume of the items of the track; 1 clears it.",
+		Example: `{"track_id": "trk_f6g7h8j9k0", "hidden": true}`,
+		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
+		Scope:   ScopeEdit,
+		Phase:   Prototype,
 	}, applyTrackUpdate))
 
 	Register(Define(Spec{
@@ -189,18 +192,24 @@ func applyTrackAdd(c *Context, a *trackAddArgs) error {
 }
 
 type trackUpdateArgs struct {
-	TrackID string  `json:"track_id"`
-	Name    *string `json:"name,omitempty"   max:"60" desc:"The track name; \"\" clears it."`
-	Hidden  *bool   `json:"hidden,omitempty"          desc:"Visual tracks only."`
-	Muted   *bool   `json:"muted,omitempty"`
+	TrackID string   `json:"track_id"`
+	Name    *string  `json:"name,omitempty"   max:"60" desc:"The track name; \"\" clears it."`
+	Hidden  *bool    `json:"hidden,omitempty"          desc:"Visual tracks only."`
+	Muted   *bool    `json:"muted,omitempty"`
+	Locked  *bool    `json:"locked,omitempty"          desc:"true refuses every edit of the items of the track until it is false again."`
+	Solo    *bool    `json:"solo,omitempty"            desc:"true plays only the soloed tracks (the picture of visual tracks, the sound of all)."`
+	Volume  *float64 `json:"volume,omitempty" max:"4"  desc:"Factor on the volume of the items of the track, 0 to 4; 1 is neutral."               min:"0"`
 }
 
 func applyTrackUpdate(c *Context, a *trackUpdateArgs) error {
 	if err := atLeastOne(
-		[]string{"name", "hidden", "muted"},
+		[]string{"name", "hidden", "muted", "locked", "solo", "volume"},
 		a.Name != nil,
 		a.Hidden != nil,
 		a.Muted != nil,
+		a.Locked != nil,
+		a.Solo != nil,
+		a.Volume != nil,
 	); err != nil {
 		return err
 	}
@@ -226,6 +235,26 @@ func applyTrackUpdate(c *Context, a *trackUpdateArgs) error {
 	if a.Muted != nil {
 		t.Muted = *a.Muted
 		c.SetEffective("muted", t.Muted)
+	}
+	if a.Locked != nil {
+		t.Locked = *a.Locked
+		c.SetEffective("locked", t.Locked)
+	}
+	if a.Solo != nil {
+		t.Solo = *a.Solo
+		c.SetEffective("solo", t.Solo)
+	}
+	if a.Volume != nil {
+		if *a.Volume < 0 || *a.Volume > 4 {
+			return invalidArg("args.volume", "The value of args.volume is %v, outside the accepted range.", *a.Volume).
+				WithHint("Use a value between 0 and 4.")
+		}
+		v := round3(*a.Volume)
+		t.Volume = &v
+		if v == 1 {
+			t.Volume = nil
+		}
+		c.SetEffective("volume", v)
 	}
 	c.Doc.Tracks[a.TrackID] = t
 	return nil

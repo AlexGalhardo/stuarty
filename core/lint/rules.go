@@ -54,7 +54,7 @@ func itemRange(it *timeline.Item) *Range {
 
 func (c *check) visibleTrack(id string) bool {
 	t, ok := c.doc.Tracks[id]
-	return ok && !t.Hidden
+	return ok && c.doc.TrackVisible(id) && !t.Hidden
 }
 
 func (c *check) emptyTimeline() {
@@ -264,7 +264,7 @@ func (c *check) audible(it *timeline.Item) bool {
 		return false
 	}
 
-	if t, ok := c.doc.Tracks[it.Track]; ok && t.Muted {
+	if _, ok := c.doc.Tracks[it.Track]; ok && (!c.doc.TrackSounds(it.Track) || c.doc.TrackGain(it.Track) <= 0) {
 		return false
 	}
 

@@ -136,6 +136,9 @@ type Track struct {
 	Order        string        `json:"order"                   pattern:"^[0-9a-z]+$"`
 	Hidden       bool          `json:"hidden,omitempty"`
 	Muted        bool          `json:"muted,omitempty"`
+	Locked       bool          `json:"locked,omitempty"`
+	Solo         bool          `json:"solo,omitempty"`
+	Volume       *float64      `json:"volume,omitempty"                                                                               min:"0" max:"4"`
 	CaptionStyle *CaptionStyle `json:"caption_style,omitempty"`
 	Extra        Extra         `json:"-"`
 }

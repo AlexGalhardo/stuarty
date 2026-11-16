@@ -1173,3 +1173,61 @@ func TestPlaceholderItemsAreSkipped(t *testing.T) {
 		t.Errorf("layers = %+v", got.Layers)
 	}
 }
+
+// VV-036: the volume of a track is a factor on its items, solo keeps only the soloed tracks,
+// and a solo visual track hides the picture of the others.
+func TestTrackVolumeAndSolo(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	put(d, clip("itm_v", trkBottom, 0, 30))
+
+	m := timeline.NewItem("itm_m", timeline.ItemAudio, trkSound, 0, 30)
+	m.Asset = astSound
+	put(d, m)
+
+	half := 0.5
+	tr := d.Tracks[trkSound]
+	tr.Volume = &half
+	d.Tracks[trkSound] = tr
+
+	for _, s := range Audio(d, 0, 30) {
+		want := 1.0
+		if s.ItemID == "itm_m" {
+			want = 0.5
+		}
+
+		if g := s.Gain[0].Gain; g != want {
+			t.Errorf("%s gain %v, want %v", s.ItemID, g, want)
+		}
+	}
+
+	if w := Window(d, 0, 30); w.Audio[0].Item == "itm_m" && w.Audio[0].Gain[0] != 0.5 &&
+		(len(w.Audio) < 2 || w.Audio[1].Gain[0] != 0.5) {
+		t.Errorf("window gain ignores the track volume: %+v", w.Audio)
+	}
+
+	tr.Solo = true
+	d.Tracks[trkSound] = tr
+
+	if got := Audio(d, 0, 30); len(got) != 1 || got[0].ItemID != "itm_m" {
+		t.Errorf("solo audio track: sources = %+v", got)
+	}
+
+	if len(Frame(d, 0).Layers) != 1 {
+		t.Error("a solo audio track must not hide the picture")
+	}
+
+	top := timeline.NewItem("itm_t", timeline.ItemShape, trkTop, 0, 30)
+	top.Shape, top.Width, top.Height = "rect", 10, 10
+	put(d, top)
+
+	st := d.Tracks[trkTop]
+	st.Solo = true
+	d.Tracks[trkTop] = st
+
+	layers := Frame(d, 0).Layers
+	if len(layers) != 1 || layers[0].ItemID != "itm_t" {
+		t.Errorf("solo visual track: layers = %+v", layers)
+	}
+}

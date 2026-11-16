@@ -1,0 +1,11 @@
+{
+  "code": "E_OVERLAP",
+  "message": "Item itm_m1n2p3q4r5 would occupy frames 30-169 on track trk_f6g7h8j9k0, where item itm_x000000002 already is (frames 150-209).",
+  "hint": "Use to \"150f\" (5s), the nearest end that avoids the overlap.",
+  "retryable": false,
+  "path": "args.to",
+  "details": {
+    "conflicting_item": "itm_x000000002",
+    "next_free": 150
+  }
+}

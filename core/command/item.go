@@ -23,7 +23,8 @@ func init() {
 		Name:    "item.trim",
 		Summary: "Moves the start edge or the end edge of an item to a timeline position.",
 		Description: "Moves an edge to an absolute position and keeps the source range, the keyframes and the caption words " +
-			"consistent. The end edge is exclusive: it is the first frame after the item.",
+			"consistent. The end edge is exclusive: it is the first frame after the item. With ripple track the later " +
+			"items of the track follow the change in length (a start trim then keeps the start of the item).",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "edge": "start", "to": "97f"}`,
 		Errors: []string{
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeInvalidState, CodeOutOfSource, CodeOverlap,
@@ -175,8 +176,9 @@ func (c *Context) checkSource(it *timeline.Item, duration, sourceIn int) *Error 
 
 type itemTrimArgs struct {
 	ItemID string `json:"item_id"`
-	Edge   string `json:"edge"    enum:"start,end"`
-	To     Time   `json:"to"                       desc:"Absolute position of the edge; the end is exclusive."`
+	Edge   string `json:"edge"             enum:"start,end"`
+	To     Time   `json:"to"                                 desc:"Absolute position of the edge; the end is exclusive."`
+	Ripple string `json:"ripple,omitempty" enum:"none,track" desc:"none (default) or track: the later items of the track follow the change in length; with the start edge the item keeps its start."`
 }
 
 func applyItemTrim(c *Context, a *itemTrimArgs) error {
@@ -203,6 +205,11 @@ func applyItemTrim(c *Context, a *itemTrimArgs) error {
 	if err := checkFit(&n, fmt.Sprintf("Trimming the %s of %s to frame %d", a.Edge, a.ItemID, to)); err != nil {
 		return err
 	}
+	if a.Ripple == "track" {
+		if err := c.rippleTrim(&it, &n, a.Edge); err != nil {
+			return err
+		}
+	}
 	if err := c.trimOverlap(&n, a.Edge); err != nil {
 		return err
 	}
@@ -212,6 +219,29 @@ func applyItemTrim(c *Context, a *itemTrimArgs) error {
 	c.SetEffective("duration", n.Duration)
 	if n.Type == timeline.ItemClip || n.Type == timeline.ItemAudio {
 		c.SetEffective("source_in", n.SourceIn)
+	}
+	return nil
+}
+
+// rippleTrim closes or opens the gap a trim leaves: the later items of the track shift by the
+// change in length, and a start trim keeps the start of the item where it was.
+func (c *Context) rippleTrim(old, n *timeline.Item, edge string) *Error {
+	shift := n.Duration - old.Duration
+	if edge == "start" {
+		n.Start = old.Start
+	}
+	for _, id := range c.trackItems(old.Track) {
+		if o := c.Doc.Items[id]; id != old.ID && o.Start >= itemEnd(old) {
+			o.Start += shift
+			c.Doc.Items[id] = o
+		}
+	}
+	for _, id := range c.trackItems(old.Track) {
+		if o := c.Doc.Items[id]; id != old.ID && itemEnd(&o) > timeline.MaxFrames {
+			return Errorf(CodeInvalidTime, "Item %s would end at frame %d; the limit is %d.", id, itemEnd(&o),
+				timeline.MaxFrames).
+				WithHint("Trim less, or use ripple none.").WithPath("args.ripple")
+		}
 	}
 	return nil
 }

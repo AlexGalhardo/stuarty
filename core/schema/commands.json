@@ -2187,6 +2187,14 @@
         "item_id": {
           "type": "string"
         },
+        "ripple": {
+          "description": "none (default) or track: the later items of the track follow the change in length; with the start edge the item keeps its start.",
+          "enum": [
+            "none",
+            "track"
+          ],
+          "type": "string"
+        },
         "to": {
           "description": "Absolute position of the edge; the end is exclusive.",
           "type": "string",
@@ -2200,7 +2208,7 @@
       ],
       "type": "object"
     },
-    "description": "Moves an edge to an absolute position and keeps the source range, the keyframes and the caption words consistent. The end edge is exclusive: it is the first frame after the item.",
+    "description": "Moves an edge to an absolute position and keeps the source range, the keyframes and the caption words consistent. The end edge is exclusive: it is the first frame after the item. With ripple track the later items of the track follow the change in length (a start trim then keeps the start of the item).",
     "errors": [
       "E_VALIDATION",
       "E_INVALID_TIME",
@@ -3812,6 +3820,10 @@
           "description": "Visual tracks only.",
           "type": "boolean"
         },
+        "locked": {
+          "description": "true refuses every edit of the items of the track until it is false again.",
+          "type": "boolean"
+        },
         "muted": {
           "type": "boolean"
         },
@@ -3820,8 +3832,18 @@
           "maxLength": 60,
           "type": "string"
         },
+        "solo": {
+          "description": "true plays only the soloed tracks (the picture of visual tracks, the sound of all).",
+          "type": "boolean"
+        },
         "track_id": {
           "type": "string"
+        },
+        "volume": {
+          "description": "Factor on the volume of the items of the track, 0 to 4; 1 is neutral.",
+          "maximum": 4,
+          "minimum": 0,
+          "type": "number"
         }
       },
       "required": [
@@ -3829,7 +3851,7 @@
       ],
       "type": "object"
     },
-    "description": "Sets the given fields. hidden applies to visual tracks, muted to both kinds.",
+    "description": "Sets the given fields. hidden applies to visual tracks, the others to both kinds. locked refuses every edit of the items of the track (E_INVALID_STATE) until it is unlocked. solo plays only the soloed tracks: the picture of visual tracks when one is solo, and the sound of every track. volume is a factor from 0 to 4 on the volume of the items of the track; 1 clears it.",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -3843,6 +3865,6 @@
     "name": "track.update",
     "phase": "prototype",
     "scope": "edit",
-    "summary": "Sets the name, the hidden flag or the muted flag of a track."
+    "summary": "Sets the name, hidden, muted, locked or solo flag or the volume of a track."
   }
 ]

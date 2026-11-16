@@ -1312,6 +1312,10 @@ export interface ItemTrimArgs {
   edge: "start" | "end";
   item_id: string;
   /**
+   * none (default) or track: the later items of the track follow the change in length; with the start edge the item keeps its start.
+   */
+  ripple?: "none" | "track";
+  /**
    * Absolute position of the edge; the end is exclusive.
    */
   to: string;
@@ -1800,12 +1804,24 @@ export interface TrackUpdateArgs {
    * Visual tracks only.
    */
   hidden?: boolean;
+  /**
+   * true refuses every edit of the items of the track until it is false again.
+   */
+  locked?: boolean;
   muted?: boolean;
   /**
    * The track name; "" clears it.
    */
   name?: string;
+  /**
+   * true plays only the soloed tracks (the picture of visual tracks, the sound of all).
+   */
+  solo?: boolean;
   track_id: string;
+  /**
+   * Factor on the volume of the items of the track, 0 to 4; 1 is neutral.
+   */
+  volume?: number;
 }
 
 export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_filter" | "clip.set_framing" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
@@ -1931,5 +1947,5 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"track.move": { summary: "Changes the place of a track in the track order.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE"] },
 	"track.remove": { summary: "Removes a track, and its items when with_items is true.", scope: "edit", phase: "prototype", internal: false, errors: ["E_NOT_FOUND","E_NOT_EMPTY"] },
 	"track.set_caption_style": { summary: "Merges a partial caption style into a track, or replaces it.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_FONT_UNKNOWN"] },
-	"track.update": { summary: "Sets the name, the hidden flag or the muted flag of a track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"track.update": { summary: "Sets the name, hidden, muted, locked or solo flag or the volume of a track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 };

@@ -697,6 +697,9 @@
           ],
           "type": "string"
         },
+        "locked": {
+          "type": "boolean"
+        },
         "muted": {
           "type": "boolean"
         },
@@ -707,6 +710,14 @@
         "order": {
           "pattern": "^[0-9a-z]+$",
           "type": "string"
+        },
+        "solo": {
+          "type": "boolean"
+        },
+        "volume": {
+          "maximum": 4,
+          "minimum": 0,
+          "type": "number"
         }
       },
       "required": [
