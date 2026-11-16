@@ -63,7 +63,7 @@ vukem-video project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30]
 | `--name` | string |  | project name (required) |
 | `--preset` | string | `9:16` | 9:16, 1:1, 16:9 or 4:5 |
 | `--fps` | string | `30` | frames per second, for example 30 or 30000/1001 |
-| `--id` | string |  | identifier to give the project |
+| `--id` | string |  | identifier for the project (omit it in network mode: the server chooses) |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
 
@@ -556,7 +556,7 @@ vukem-video template:new <template id> --name <name> [--fill <file|->] [--id prj
 | --- | --- | --- | --- |
 | `--name` | string |  | project name (required) |
 | `--fill` | string |  | a JSON object of slot name to value: a file, or - for standard input |
-| `--id` | string |  | identifier to give the project |
+| `--id` | string |  | identifier for the project (omit it in network mode: the server chooses) |
 | `--brand-color` | string, repeatable |  | a colour of the template that takes its value from the brand kit |
 | `--brand-font` | string, repeatable |  | a family of the brand kit to add to the project's fonts |
 

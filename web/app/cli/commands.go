@@ -91,7 +91,10 @@ var projectCreate = &spec{
 		{Name: "name", Kind: kindString, Usage: "project name (required)"},
 		{Name: "preset", Kind: kindString, Default: "9:16", Usage: "9:16, 1:1, 16:9 or 4:5"},
 		{Name: "fps", Kind: kindString, Default: "30", Usage: "frames per second, for example 30 or 30000/1001"},
-		{Name: "id", Kind: kindString, Usage: "identifier to give the project"},
+		{
+			Name: "id", Kind: kindString,
+			Usage: "identifier for the project (omit it in network mode: the server chooses)",
+		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
 		if !c.args.has("name") {

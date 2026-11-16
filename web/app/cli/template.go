@@ -68,7 +68,10 @@ var templateNew = &spec{
 	flags: []flagDef{
 		{Name: "name", Kind: kindString, Usage: "project name (required)"},
 		{Name: "fill", Kind: kindString, Usage: "a JSON object of slot name to value: a file, or - for standard input"},
-		{Name: "id", Kind: kindString, Usage: "identifier to give the project"},
+		{
+			Name: "id", Kind: kindString,
+			Usage: "identifier for the project (omit it in network mode: the server chooses)",
+		},
 		{
 			Name: "brand-color", Kind: kindString, Repeat: true,
 			Usage: "a colour of the template that takes its value from the brand kit",

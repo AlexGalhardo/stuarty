@@ -177,6 +177,7 @@ Code, HTTP status, usual fix; `retry` marks exit 2.
 Import, cut, caption and export:
 
 ```text
+# network mode: omit --id
 vukem-video project:create --name "Teaser" --id prj_7k2m9x4q1b
 vukem-video media:import clip.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d
 vukem-video edit --project prj_7k2m9x4q1b --ops - <<'EOF'
