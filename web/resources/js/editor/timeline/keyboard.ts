@@ -202,12 +202,14 @@ export type GridCommand =
 	| { kind: "activate" }
 	| { kind: "nudge"; unit: "frame" | "second"; sign: 1 | -1 }
 	| { kind: "move-track"; sign: 1 | -1 }
+	| { kind: "slide" | "roll" | "slip"; sign: 1 | -1 }
 	| { kind: "select-all" };
 
 type KeyEvent = Pick<
 	KeyboardEvent,
 	"key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey"
->;
+> &
+	Partial<Pick<KeyboardEvent, "code">>;
 
 const FOCUS_KEYS: Readonly<Record<string, Direction>> = {
 	ArrowLeft: "left",
@@ -223,11 +225,29 @@ const FOCUS_KEYS: Readonly<Record<string, Direction>> = {
 // already live. Space is never taken: it always toggles play.
 export function gridCommand(event: KeyEvent): GridCommand | null {
 	if (event.ctrlKey || event.metaKey) {
+		// Mod+Alt+arrows: slide; with Shift, roll (VV-036). Without Alt the key
+		// is the global next-marker or select-all.
+		if (
+			event.altKey &&
+			(event.key === "ArrowLeft" || event.key === "ArrowRight")
+		) {
+			return {
+				kind: event.shiftKey ? "roll" : "slide",
+				sign: event.key === "ArrowLeft" ? -1 : 1,
+			};
+		}
 		return event.key.toLowerCase() === "a" && !event.altKey && !event.shiftKey
 			? { kind: "select-all" }
 			: null;
 	}
 	if (event.altKey) {
+		// Alt+, and Alt+.: slip. `code`, because Option rewrites `key` on a Mac.
+		if (!event.shiftKey && event.code === "Comma") {
+			return { kind: "slip", sign: -1 };
+		}
+		if (!event.shiftKey && event.code === "Period") {
+			return { kind: "slip", sign: 1 };
+		}
 		const unit = event.shiftKey ? "second" : "frame";
 		if (event.key === "ArrowLeft") return { kind: "nudge", unit, sign: -1 };
 		if (event.key === "ArrowRight") return { kind: "nudge", unit, sign: 1 };

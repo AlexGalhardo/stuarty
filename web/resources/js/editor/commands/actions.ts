@@ -39,9 +39,12 @@ import {
 	type Ripple,
 	removeAssetOperations,
 	renameOperations,
+	rollOperations,
 	type ShapeKind,
 	settingsFpsOperations,
 	shapeAddOperations,
+	slideOperations,
+	slipOperations,
 	splitOperations,
 	type TrackChanges,
 	type TrackPlacement,
@@ -101,6 +104,20 @@ export interface Actions {
 	): Promise<EditOutcome | null>;
 	// Alt+Left and Alt+Right: every item of `ids` by `frames` frames, one batch.
 	nudge(ids: readonly string[], frames: number): Promise<EditOutcome | null>;
+	// Mod+Alt+Left and Right: slide, Mod+Alt+Shift+Left and Right: roll the cut
+	// after the item, Alt+, and Alt+.: slip. Every item of `ids` by `frames`.
+	slideItems(
+		ids: readonly string[],
+		frames: number,
+	): Promise<EditOutcome | null>;
+	rollItems(
+		ids: readonly string[],
+		frames: number,
+	): Promise<EditOutcome | null>;
+	slipItems(
+		ids: readonly string[],
+		frames: number,
+	): Promise<EditOutcome | null>;
 	// Alt+Up and Alt+Down: every item of `ids` to the track above or below its own.
 	moveToAdjacentTrack(
 		ids: readonly string[],
@@ -535,6 +552,19 @@ export function createActions(runtime: EditorRuntime): Actions {
 		resyncCaptions: (clipId) => send(captionRetimeOperations(clipId)),
 		setText: (itemId, text) => send(textSetOperations(itemId, text)),
 		nudge: (ids, frames) => send(nudgeOperations(rangesOf(ids), frames)),
+		slideItems: (ids, frames) => send(slideOperations(rangesOf(ids), frames)),
+		rollItems: (ids, frames) => send(rollOperations(rangesOf(ids), frames)),
+		slipItems(ids, frames) {
+			const doc = documents.getState().document;
+			if (doc === null) return Promise.resolve(null);
+			const targets = ids.flatMap((id) => {
+				const item = doc.items[id];
+				return item?.type === "clip" || item?.type === "audio"
+					? [{ id, sourceIn: item.source_in ?? 0 }]
+					: [];
+			});
+			return send(slipOperations(targets, frames));
+		},
 		moveToAdjacentTrack(ids, sign) {
 			const doc = documents.getState().document;
 			if (doc === null) return Promise.resolve(null);

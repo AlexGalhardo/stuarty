@@ -33,11 +33,14 @@ import {
 	presetOperations,
 	projectRenameOperations,
 	reframeOperations,
+	rollOperations,
 	settingsFpsOperations,
 	settingsSetOperations,
 	shapeAddOperations,
 	shapeSetOperations,
 	silenceOperations,
+	slideOperations,
+	slipOperations,
 	slotFillOperations,
 	slotMarkOperations,
 	slotUnmarkOperations,
@@ -576,6 +579,314 @@ describe("reframe builder (VV-038)", () => {
 	test("sends only the aspect preset", () => {
 		expect(reframeOperations("4:5")).toEqual([
 			{ op: "settings.reframe", args: { aspect: "4:5" } },
+		]);
+	});
+});
+
+describe("track builders (SDD-002 C.6 to C.10)", () => {
+	test("add names exactly one placement", () => {
+		expect(trackAddOperations("audio", { above: "trk_a" })).toEqual([
+			{ op: "track.add", args: { kind: "audio", above: "trk_a" } },
+		]);
+	});
+
+	test("update sends only the changed fields", () => {
+		expect(trackUpdateOperations("trk_a", { muted: true })).toEqual([
+			{ op: "track.update", args: { track_id: "trk_a", muted: true } },
+		]);
+	});
+
+	test("move names exactly one placement", () => {
+		expect(trackMoveOperations("trk_a", { below: "trk_b" })).toEqual([
+			{ op: "track.move", args: { track_id: "trk_a", below: "trk_b" } },
+		]);
+	});
+
+	test("remove carries with_items only after the confirmation", () => {
+		expect(trackRemoveOperations("trk_a", false)[0]?.args).toEqual({
+			track_id: "trk_a",
+		});
+		expect(trackRemoveOperations("trk_a", true)[0]?.args).toEqual({
+			track_id: "trk_a",
+			with_items: true,
+		});
+	});
+
+	test("the caption style merges unless replace is set", () => {
+		expect(
+			trackCaptionStyleOperations("trk_a", { size: 90 }, false)[0]?.args,
+		).toEqual({ track_id: "trk_a", style: { size: 90 } });
+		expect(
+			trackCaptionStyleOperations("trk_a", { size: 90 }, true)[0]?.args,
+		).toEqual({ track_id: "trk_a", style: { size: 90 }, replace: true });
+	});
+});
+
+describe("project builders (SDD-002 C.1 to C.3)", () => {
+	test("settings.set sends only the fields given", () => {
+		expect(settingsSetOperations({ width: 1080, height: 1080 })).toEqual([
+			{ op: "settings.set", args: { width: 1080, height: 1080 } },
+		]);
+	});
+
+	test("the frame rate goes as a string", () => {
+		expect(settingsFpsOperations("30000/1001")).toEqual([
+			{ op: "settings.set_fps", args: { fps: "30000/1001" } },
+		]);
+	});
+
+	test("rename sends the name as typed", () => {
+		expect(projectRenameOperations(" A ")).toEqual([
+			{ op: "project.rename", args: { name: " A " } },
+		]);
+	});
+});
+
+describe("clip section builders (SDD-002 C.19, C.24 to C.27)", () => {
+	test("audio sends only the field that changed, fades with their unit", () => {
+		expect(audioOperations("itm_a", { fade_in: "0.5s" })[0]?.args).toEqual({
+			item_id: "itm_a",
+			fade_in: "0.5s",
+		});
+		expect(audioOperations("itm_a", { audio_muted: true })[0]?.args).toEqual({
+			item_id: "itm_a",
+			audio_muted: true,
+		});
+	});
+
+	test("framing names one crop side, the core merges the rest", () => {
+		expect(
+			framingOperations("itm_a", { crop: { left: 0.1 } })[0]?.args,
+		).toEqual({ item_id: "itm_a", crop: { left: 0.1 } });
+	});
+
+	test("speed carries the x suffix and the ripple only when asked", () => {
+		expect(speedOperations("itm_a", 1.5, false)[0]?.args).toEqual({
+			item_id: "itm_a",
+			speed: "1.5x",
+		});
+		expect(speedOperations("itm_a", 0.25, true)[0]?.args).toEqual({
+			item_id: "itm_a",
+			speed: "0.25x",
+			ripple: "track",
+		});
+	});
+
+	test("colour sends only the slider that was released", () => {
+		expect(colorOperations("itm_a", { saturation: 1.4 })[0]?.args).toEqual({
+			item_id: "itm_a",
+			saturation: 1.4,
+		});
+	});
+
+	test("filter and blur send one field each", () => {
+		expect(filterOperations("itm_a", { filter: "sepia" })).toEqual([
+			{ op: "clip.set_filter", args: { item_id: "itm_a", filter: "sepia" } },
+		]);
+		expect(filterOperations("itm_a", { amount: 0.4 })[0]?.args).toEqual({
+			item_id: "itm_a",
+			amount: 0.4,
+		});
+		expect(blurOperations("itm_a", 12.5)).toEqual([
+			{ op: "clip.set_blur", args: { item_id: "itm_a", radius: 12.5 } },
+		]);
+	});
+
+	test("ducking sends the choices and never the speech ranges", () => {
+		const args = duckOperations("itm_m", {
+			speechItemIds: ["itm_s"],
+			gainDb: -12,
+			attack: "0.2s",
+			release: "0.5s",
+		})[0]?.args;
+		expect(args).toEqual({
+			item_id: "itm_m",
+			speech_item_ids: ["itm_s"],
+			gain_db: -12,
+			attack: "0.2s",
+			release: "0.5s",
+		});
+		expect(args).not.toHaveProperty("resolved");
+	});
+
+	test("beat markers send the choices, leave an empty label out and never the beats", () => {
+		const args = markBeatsOperations("itm_m", {
+			every: 2,
+			label: "",
+			replace: false,
+		})[0]?.args;
+		expect(args).toEqual({ item_id: "itm_m", every: 2, replace: false });
+		expect(
+			markBeatsOperations("itm_m", {
+				every: 1,
+				label: "beat",
+				replace: true,
+			})[0]?.args,
+		).toEqual({ item_id: "itm_m", every: 1, replace: true, label: "beat" });
+	});
+
+	test("font add names the family and its files; remove names the family", () => {
+		const hash = `sha256:${"ab".repeat(32)}`;
+		expect(fontAddOperations("Brand Sans", [{ weight: 700, hash }])).toEqual([
+			{
+				op: "font.add",
+				args: { family: "Brand Sans", files: [{ weight: 700, hash }] },
+			},
+		]);
+		expect(fontRemoveOperations("Brand Sans")).toEqual([
+			{ op: "font.remove", args: { family: "Brand Sans" } },
+		]);
+	});
+
+	test("silences send the choices and never the ranges", () => {
+		const args = silenceOperations("itm_a", {
+			minSilence: "0.4s",
+			padding: "0s",
+			ripple: false,
+		})[0]?.args;
+		expect(args).toEqual({
+			item_id: "itm_a",
+			min_silence: "0.4s",
+			padding: "0s",
+			ripple: "none",
+		});
+		expect(args).not.toHaveProperty("resolved");
+	});
+});
+
+describe("shape builders", () => {
+	test("Add shape is 3 s at the playhead and leaves the track to the core", () => {
+		const ops = shapeAddOperations({
+			shape: "rounded_rect",
+			playhead: 5,
+		});
+		expect(ops.map((o) => o.op)).toEqual(["shape.add"]);
+		expect(ops[0]?.args).toEqual({
+			start: "5f",
+			duration: "3s",
+			shape: "rounded_rect",
+			width: 400,
+			height: 240,
+		});
+	});
+
+	test("a shape field is one partial request", () => {
+		expect(shapeSetOperations("itm_a", { fill: "#FF0000" })).toEqual([
+			{ op: "shape.set", args: { item_id: "itm_a", fill: "#FF0000" } },
+		]);
+	});
+});
+
+describe("template builders", () => {
+	test("a slot mark carries the whole slot, with the policy for media only", () => {
+		expect(
+			slotMarkOperations("itm_a", {
+				name: "title",
+				description: "Headline",
+				required: false,
+			}),
+		).toEqual([
+			{
+				op: "slot.mark",
+				args: {
+					item_id: "itm_a",
+					name: "title",
+					description: "Headline",
+					required: false,
+				},
+			},
+		]);
+		expect(
+			slotMarkOperations("itm_a", {
+				name: "hero",
+				description: "",
+				required: true,
+				durationPolicy: "stretch_timeline",
+			})[0]?.args.duration_policy,
+		).toBe("stretch_timeline");
+	});
+
+	test("unmark, fill and template info are one command each", () => {
+		expect(slotUnmarkOperations("itm_a")).toEqual([
+			{ op: "slot.unmark", args: { item_id: "itm_a" } },
+		]);
+		expect(slotFillOperations("title", { text: "x" })).toEqual([
+			{ op: "slot.fill", args: { name: "title", text: "x" } },
+		]);
+		expect(slotFillOperations("hero", { asset_id: "ast_a" })).toEqual([
+			{ op: "slot.fill", args: { name: "hero", asset_id: "ast_a" } },
+		]);
+		expect(templateInfoOperations({ colors: { brand: null } })).toEqual([
+			{ op: "template.set_info", args: { colors: { brand: null } } },
+		]);
+	});
+});
+
+describe("nextSlotName", () => {
+	test("is the first slot_N no item uses", () => {
+		expect(nextSlotName([])).toBe("slot_1");
+		expect(nextSlotName(["slot_1", undefined, "intro", "slot_3"])).toBe(
+			"slot_2",
+		);
+	});
+});
+
+describe("volumeStepOperations", () => {
+	test("moves each volume by the decibels, to 3 decimals, one set_audio each", () => {
+		expect(
+			volumeStepOperations(
+				[
+					{ id: "a", volume: 1 },
+					{ id: "b", volume: 0.5 },
+				],
+				0.1,
+			),
+		).toEqual([
+			{ op: "item.set_audio", args: { item_id: "a", volume: 1.012 } },
+			{ op: "item.set_audio", args: { item_id: "b", volume: 0.506 } },
+		]);
+	});
+
+	test("stays inside 0 to 4 and skips what does not change", () => {
+		expect(volumeStepOperations([{ id: "a", volume: 4 }], 0.1)).toEqual([]);
+		expect(volumeStepOperations([{ id: "a", volume: 0 }], -0.1)).toEqual([]);
+		expect(volumeStepOperations([{ id: "a", volume: 3.999 }], 0.1)).toEqual([
+			{ op: "item.set_audio", args: { item_id: "a", volume: 4 } },
+		]);
+	});
+});
+
+describe("slide, roll and slip builders (VV-036)", () => {
+	test("slide sends the new start with slide true, leader first", () => {
+		expect(
+			slideOperations(
+				[
+					{ id: "a", start: 0, duration: 10 },
+					{ id: "b", start: 10, duration: 10 },
+				],
+				2,
+			),
+		).toEqual([
+			{ op: "item.move", args: { item_id: "b", start: "12f", slide: true } },
+			{ op: "item.move", args: { item_id: "a", start: "2f", slide: true } },
+		]);
+	});
+
+	test("roll moves the end edge with roll true", () => {
+		expect(rollOperations([{ id: "a", start: 4, duration: 10 }], -1)).toEqual([
+			{
+				op: "item.trim",
+				args: { item_id: "a", edge: "end", to: "13f", roll: true },
+			},
+		]);
+	});
+
+	test("slip sends the new source_in, never below 0", () => {
+		expect(slipOperations([{ id: "a", sourceIn: 0 }], -5)).toEqual([
+			{ op: "item.slip", args: { item_id: "a", source_in: "0f" } },
+		]);
+		expect(slipOperations([{ id: "a", sourceIn: 30 }], 1)).toEqual([
+			{ op: "item.slip", args: { item_id: "a", source_in: "31f" } },
 		]);
 	});
 });

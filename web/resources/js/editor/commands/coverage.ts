@@ -24,6 +24,9 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"timeline.marker": ["marker.add", "marker.remove"],
 	"timeline.trim_start": ["item.trim"],
 	"timeline.trim_end": ["item.trim"],
+	"timeline.slide": ["item.move"],
+	"timeline.roll": ["item.trim"],
+	"timeline.slip": ["item.slip"],
 	"caption.add": ["caption.add", "track.add"],
 	"inspector.rename": ["item.rename"],
 	"timeline.rename": ["item.rename"],
@@ -225,6 +228,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	],
 	"item.move": [
 		{ kind: "inspector", action: "inspector.move", phase: "A" },
+		{ kind: "key", action: "timeline.slide", phase: "A" },
 		palette,
 	],
 	"item.rename": [
@@ -257,6 +261,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "key", action: "timeline.trim_start", phase: "P" },
 		{ kind: "key", action: "timeline.trim_end", phase: "P" },
 		{ kind: "inspector", action: "inspector.trim_end", phase: "A" },
+		{ kind: "key", action: "timeline.roll", phase: "A" },
 		palette,
 	],
 	"keyframe.clear": [
@@ -281,7 +286,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "toolbar", action: "topbar.rename", phase: "A" },
 		palette,
 	],
-	"item.slip": [palette],
+	"item.slip": [{ kind: "key", action: "timeline.slip", phase: "A" }, palette],
 	"settings.reframe": [
 		{ kind: "inspector", action: "inspector.aspect", phase: "A" },
 		palette,

@@ -683,6 +683,58 @@ export function nudgeOperations(
 	}));
 }
 
+// Mod+Alt+Left and Mod+Alt+Right, the slide edit (VV-036): each item moves by
+// `delta` frames and the core keeps its neighbours touching it. Same order as
+// `nudgeOperations`.
+export function slideOperations(
+	items: readonly ItemRange[],
+	delta: number,
+): Operations {
+	const ordered = [...items].sort((a, b) =>
+		delta > 0 ? b.start - a.start : a.start - b.start,
+	);
+	return ordered.map((item) => ({
+		op: "item.move",
+		args: {
+			item_id: item.id,
+			start: frames(Math.max(0, item.start + delta)),
+			slide: true,
+		},
+	}));
+}
+
+// Mod+Alt+Shift+Left and Right, the roll edit (VV-036): the cut after each item
+// moves by `delta` frames, the core moves the edge of the next item with it.
+export function rollOperations(
+	items: readonly ItemRange[],
+	delta: number,
+): Operations {
+	return items.map((item) => ({
+		op: "item.trim",
+		args: {
+			item_id: item.id,
+			edge: "end",
+			to: frames(Math.max(0, item.start + item.duration + delta)),
+			roll: true,
+		},
+	}));
+}
+
+// Alt+, and Alt+., the slip edit (VV-036): the part of the source an item
+// shows moves by `delta` frames; the item itself stays where it is.
+export function slipOperations(
+	items: readonly { id: string; sourceIn: number }[],
+	delta: number,
+): Operations {
+	return items.map((item) => ({
+		op: "item.slip",
+		args: {
+			item_id: item.id,
+			source_in: frames(Math.max(0, item.sourceIn + delta)),
+		},
+	}));
+}
+
 // The track `sign` places away from `trackId` in display order, else null.
 export function adjacentTrack(
 	trackIds: readonly string[],

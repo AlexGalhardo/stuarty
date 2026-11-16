@@ -251,6 +251,19 @@ export default function Timeline(): ReactNode {
 				void actions.nudge(acted, command.sign * unit);
 				break;
 			}
+			case "slide":
+			case "roll":
+			case "slip": {
+				const sign = command.sign;
+				const run =
+					command.kind === "slide"
+						? actions.slideItems
+						: command.kind === "roll"
+							? actions.rollItems
+							: actions.slipItems;
+				void run(acted, sign);
+				break;
+			}
 			case "move-track":
 				void actions.moveToAdjacentTrack(acted, command.sign);
 				break;
