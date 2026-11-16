@@ -537,7 +537,7 @@ var alphaCases = map[string]func() alphaCase{
 	},
 	"effect-grain": func() alphaCase {
 		return effectCase(timeline.Effect{
-			Kind: timeline.EffectGrain, Amount: new(0.5), Size: new(2), Seed: new(11),
+			Kind: timeline.EffectGrain, Amount: new(0.3), Size: new(4), Seed: new(11),
 		})
 	},
 	"effect-rgb-split": func() alphaCase {
