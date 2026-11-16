@@ -242,7 +242,7 @@ func applyItemExtractAudio(c *Context, a *itemExtractAudioArgs) error {
 	au := timeline.NewItem(id, timeline.ItemAudio, a.TrackID, it.Start, it.Duration)
 	au.Asset, au.SourceIn, au.Speed, au.Reverse = it.Asset, it.SourceIn, it.Speed, it.Reverse
 	au.SpeedCurve = slices.Clone(it.SpeedCurve)
-	au.Volume, au.FadeIn, au.FadeOut, au.Denoise = it.Volume, it.FadeIn, it.FadeOut, it.Denoise
+	au.Volume, au.FadeIn, au.FadeOut, au.Denoise, au.Voice = it.Volume, it.FadeIn, it.FadeOut, it.Denoise, it.Voice
 	if kfs, ok := it.Keyframes["volume"]; ok {
 		au.Keyframes = timeline.Keyframes{"volume": slices.Clone(kfs)}
 	}

@@ -81,7 +81,7 @@ func init() {
 	)
 	ea("ok_copies_audio_settings", ex(fmt.Sprintf(`, "id": %q`, itemB)), clipOnly(func(it *timeline.Item) {
 		it.Speed = timeline.Rational{Num: 3, Den: 2}
-		it.Volume, it.FadeIn, it.FadeOut, it.Denoise = 0.5, 6, 9, 0.4
+		it.Volume, it.FadeIn, it.FadeOut, it.Denoise, it.Voice = 0.5, 6, 9, 0.4, "warm"
 		it.Keyframes = timeline.Keyframes{"volume": {kf(0, 1), kf(40, 0.2)}, "scale": {kf(0, 1), kf(40, 1.5)}}
 	}))
 	ea("ok_copies_curve_and_reverse", ex(fmt.Sprintf(`, "id": %q`, itemB)), clipOnly(func(it *timeline.Item) {

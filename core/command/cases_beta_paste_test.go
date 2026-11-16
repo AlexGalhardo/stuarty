@@ -27,7 +27,7 @@ func init() {
 			{Kind: "vignette", Amount: f(0.7), Softness: f(0.5)},
 			{Kind: "grain", Amount: f(0.3), Size: i(2), Seed: i(7)},
 		}
-		it.Volume, it.Denoise = 0.5, 0.4
+		it.Volume, it.Denoise, it.Voice = 0.5, 0.4, "warm"
 	}
 	// Source clip at frame 0, a second clip, a text, a shape and an audio item.
 	doc := func(dst func(*timeline.Item)) func() *B {

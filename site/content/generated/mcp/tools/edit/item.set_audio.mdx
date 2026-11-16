@@ -1,6 +1,6 @@
 ---
 title: "item.set_audio"
-description: "Sets the volume, the fades, the mute flag or the noise reduction of a clip or audio item."
+description: "Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Sets the given values. Volume 1, fades of 0, audio_muted false and denoise 0 clear the stored value. audio_muted applies to clip items only. denoise is the noise reduction strength, 0 to 1. The two fades together cannot be longer than the item.
+Sets the given values. Volume 1, fades of 0, audio_muted false, denoise 0 and voice none clear the stored value. audio_muted applies to clip items only. denoise is the noise reduction strength, 0 to 1. voice is a preset for speech: clear, warm, deep, bright or radio. The two fades together cannot be longer than the item.
 
 ## Arguments
 
@@ -21,6 +21,7 @@ Sets the given values. Volume 1, fades of 0, audio_muted false and denoise 0 cle
 | `fade_in` | `string` | no | Fade-in length; 0s removes it. |
 | `fade_out` | `string` | no | Fade-out length; 0s removes it. |
 | `item_id` | `string` | yes | A clip or audio item. |
+| `voice` | `none`, `clear`, `warm`, `deep`, `bright`, `radio` | no | Voice preset: none (default), clear, warm, deep, bright or radio. |
 | `volume` | `number` | no | Linear gain, 0 to 4.; min 0; max 4 |
 
 ## Errors

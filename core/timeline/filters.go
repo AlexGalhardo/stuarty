@@ -6,6 +6,15 @@ import "slices"
 // are implemented in Go by the compositor, never by an FFmpeg filter (ADR-0011).
 var Filters = []string{"none", "grayscale", "sepia", "invert", "warm", "cool"}
 
+// Voices is the fixed list of voice presets of a clip or audio item (SDD-004 §7); absent is none.
+var Voices = []string{"clear", "warm", "deep", "bright", "radio"}
+
+func (v *validator) voice(path, key string, it Item) {
+	if it.Voice != "" && !slices.Contains(Voices, it.Voice) {
+		v.add(VShape, path+".voice", key, "voice must be one of clear, warm, deep, bright or radio")
+	}
+}
+
 // Blends is the fixed list of blend modes of a visual item (SDD-004 §3.8); absent is "normal".
 var Blends = []string{"normal", "multiply", "screen", "overlay", "add"}
 

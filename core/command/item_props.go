@@ -44,10 +44,11 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "item.set_audio",
-		Summary: "Sets the volume, the fades, the mute flag or the noise reduction of a clip or audio item.",
-		Description: "Sets the given values. Volume 1, fades of 0, audio_muted false and denoise 0 clear the stored " +
-			"value. audio_muted applies to clip items only. denoise is the noise reduction strength, 0 to 1. The two " +
-			"fades together cannot be longer than the item.",
+		Summary: "Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item.",
+		Description: "Sets the given values. Volume 1, fades of 0, audio_muted false, denoise 0 and voice none clear " +
+			"the stored value. audio_muted applies to clip items only. denoise is the noise reduction strength, 0 to " +
+			"1. voice is a preset for speech: clear, warm, deep, bright or radio. The two fades together cannot be " +
+			"longer than the item.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "volume": 0.8, "fade_in": "1s", "fade_out": "0.5s"}`,
 		Errors: []string{
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState,
@@ -312,16 +313,18 @@ func applyItemSetTransition(c *Context, a *itemTransitionArgs) error {
 
 type itemAudioArgs struct {
 	ItemID     string   `json:"item_id"               desc:"A clip or audio item."`
-	Volume     *float64 `json:"volume,omitempty"      desc:"Linear gain, 0 to 4."                    min:"0" max:"4"`
+	Volume     *float64 `json:"volume,omitempty"      desc:"Linear gain, 0 to 4."                                              min:"0" max:"4"`
 	FadeIn     *Time    `json:"fade_in,omitempty"     desc:"Fade-in length; 0s removes it."`
 	FadeOut    *Time    `json:"fade_out,omitempty"    desc:"Fade-out length; 0s removes it."`
 	AudioMuted *bool    `json:"audio_muted,omitempty" desc:"Drop the audio of a clip."`
-	Denoise    *float64 `json:"denoise,omitempty"     desc:"Noise reduction strength, 0 (off) to 1." min:"0" max:"1"`
+	Denoise    *float64 `json:"denoise,omitempty"     desc:"Noise reduction strength, 0 (off) to 1."                           min:"0" max:"1"`
+	Voice      *string  `json:"voice,omitempty"       desc:"Voice preset: none (default), clear, warm, deep, bright or radio."                 enum:"none,clear,warm,deep,bright,radio"`
 }
 
 func applyItemSetAudio(c *Context, a *itemAudioArgs) error {
-	if err := atLeastOne([]string{"volume", "fade_in", "fade_out", "audio_muted", "denoise"},
-		a.Volume != nil, a.FadeIn != nil, a.FadeOut != nil, a.AudioMuted != nil, a.Denoise != nil); err != nil {
+	if err := atLeastOne([]string{"volume", "fade_in", "fade_out", "audio_muted", "denoise", "voice"},
+		a.Volume != nil, a.FadeIn != nil, a.FadeOut != nil, a.AudioMuted != nil, a.Denoise != nil,
+		a.Voice != nil); err != nil {
 		return err
 	}
 	var fadeIn, fadeOut int
@@ -395,10 +398,17 @@ func applyItemSetAudio(c *Context, a *itemAudioArgs) error {
 	if a.Denoise != nil {
 		it.Denoise = round3(*a.Denoise)
 	}
+	if a.Voice != nil {
+		it.Voice = *a.Voice
+		if it.Voice == "none" {
+			it.Voice = ""
+		}
+	}
 	c.Doc.Items[a.ItemID] = it
 	c.SetEffective("volume", it.Volume)
 	c.SetEffective("audio_muted", it.AudioMuted)
 	c.SetEffective("denoise", it.Denoise)
+	c.SetEffective("voice", voiceName(it.Voice))
 	c.SetEffective("fade_in", TimeEffective(c.FPS(), it.FadeIn, requestedOf(a.FadeIn)))
 	c.SetEffective("fade_out", TimeEffective(c.FPS(), it.FadeOut, requestedOf(a.FadeOut)))
 	return nil
@@ -409,4 +419,12 @@ func requestedOf(t *Time) string {
 		return ""
 	}
 	return string(*t)
+}
+
+// voiceName is the voice as the command reports it: no preset reads as none.
+func voiceName(v string) string {
+	if v == "" {
+		return "none"
+	}
+	return v
 }

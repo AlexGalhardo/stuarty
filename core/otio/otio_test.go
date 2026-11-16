@@ -752,6 +752,7 @@ func TestRoundTripKeepsSpeedKeyframesSlotsTextsAndKey(t *testing.T) {
 	title.FlipX, title.FlipY = true, true
 	voice.Disabled, title.Disabled = true, true
 	voice.Denoise = 0.35
+	voice.Voice = "radio"
 	title.Mask = &timeline.Mask{Shape: "rect", X: 0, Y: 0.25, Width: 1, Height: 0.5}
 
 	plain := timeline.NewItem("itm_d000000005", timeline.ItemText, trkTop, 60, 20)

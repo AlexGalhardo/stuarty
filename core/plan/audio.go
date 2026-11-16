@@ -36,6 +36,7 @@ type AudioSource struct {
 	Reverse     bool              `json:"reverse,omitempty"` // read backwards from the end of source frame SourceStart
 	Gain        []GainPoint       `json:"gain"`              // volume or its keyframes, times the fades
 	Denoise     float64           `json:"denoise,omitempty"` // noise reduction strength 0 to 1 (SDD-004 §7); absent means off
+	Voice       string            `json:"voice,omitempty"`   // voice preset (SDD-004 §7); absent means none
 }
 
 // SpeedRamp is the speed curve of an item as the plan carries it (SDD-004 §3.11): the points,
@@ -160,6 +161,7 @@ func audioSource(doc *timeline.Document, it *timeline.Item, cs, ce int) AudioSou
 		Reverse:     it.Reverse,
 		Gain:        gain,
 		Denoise:     round3(it.Denoise),
+		Voice:       it.Voice,
 	}
 }
 

@@ -576,6 +576,16 @@
           ],
           "type": "string"
         },
+        "voice": {
+          "enum": [
+            "clear",
+            "warm",
+            "deep",
+            "bright",
+            "radio"
+          ],
+          "type": "string"
+        },
         "volume": {
           "default": 1,
           "maximum": 4,

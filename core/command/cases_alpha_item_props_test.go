@@ -114,6 +114,15 @@ func init() {
 	sa("ok_denoise_rounded_to_3_decimals", arg(`"denoise": 0.12345`), cl())
 	sa("ok_denoise_when_volume_has_keyframes", arg(`"denoise": 0.5`),
 		cl(func(it *timeline.Item) { it.Keyframes = timeline.Keyframes{"volume": {kf(0, 1), kf(30, 0.5)}} }))
+	sa("ok_voice", arg(`"voice": "warm"`), cl())
+	sa("ok_voice_changes_the_preset", arg(`"voice": "radio"`), cl(func(it *timeline.Item) { it.Voice = "deep" }))
+	sa("ok_voice_none_removes_field", arg(`"voice": "none"`), cl(func(it *timeline.Item) { it.Voice = "deep" }))
+	sa("ok_voice_on_audio_item", fmt.Sprintf(`{"item_id": %q, "voice": "clear"}`, itemB),
+		func() *B { return base().audio(itemB, 0, 60, 0) })
+	sa("ok_voice_with_volume_and_denoise", arg(`"volume": 0.9, "denoise": 0.3, "voice": "bright"`), cl())
+	sa("ok_voice_same_value_noop", arg(`"voice": "warm"`), cl(func(it *timeline.Item) { it.Voice = "warm" }))
+	sa("err_validation_unknown_voice", arg(`"voice": "robot"`), cl())
+	sa("err_type_mismatch_voice_on_text_item", fmt.Sprintf(`{"item_id": %q, "voice": "warm"}`, itemC), text())
 	sa("err_validation_denoise_above_1", arg(`"denoise": 1.2`), cl())
 	sa("err_validation_denoise_negative", arg(`"denoise": -0.1`), cl())
 	sa("err_validation_no_argument", fmt.Sprintf(`{"item_id": %q}`, itemA), cl())

@@ -1446,6 +1446,10 @@ export interface ItemSetAudioArgs {
    */
   item_id: string;
   /**
+   * Voice preset: none (default), clear, warm, deep, bright or radio.
+   */
+  voice?: "none" | "clear" | "warm" | "deep" | "bright" | "radio";
+  /**
    * Linear gain, 0 to 4.
    */
   volume?: number;
@@ -2210,7 +2214,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"item.move": { summary: "Moves an item in time, to another track of the same kind, or both.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"item.paste_attributes": { summary: "Copies the look of one item to other items.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.rename": { summary: "Sets the label of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
-	"item.set_audio": { summary: "Sets the volume, the fades, the mute flag or the noise reduction of a clip or audio item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
+	"item.set_audio": { summary: "Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.set_enabled": { summary: "Turns an item off or on without removing it from the timeline.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
 	"item.set_transform": { summary: "Sets the position, scale, rotation or opacity of a visual item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.set_transition": { summary: "Sets or removes the transition on one edge of a visual item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },

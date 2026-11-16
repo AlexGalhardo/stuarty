@@ -13,7 +13,7 @@ func init() {
 		Summary: "Copies the look of one item to other items.",
 		Description: "Copies attribute groups from one item to 1 to 20 others: color, filter, blur, framing, " +
 			"transform (x, y, scale, rotation, opacity), blend, mask, flip, chroma_key, effects, audio (volume, " +
-			"denoise). A group the target type does not have is skipped and listed in effective.skipped. " +
+			"denoise, voice). A group the target type does not have is skipped and listed in effective.skipped. " +
 			"Keyframes are not copied; a target whose animated property would be overwritten is refused.",
 		Example: `{"from_item_id": "itm_m1n2p3q4r5", "item_ids": ["itm_s6t7v8w9x0"], "attributes": ["color", "filter"]}`,
 		Errors: []string{
@@ -69,7 +69,7 @@ var pasteGroups = []pasteGroup{
 		[]timeline.ItemType{timeline.ItemClip, timeline.ItemAudio},
 		[]string{"volume"},
 		func(d, s *timeline.Item) {
-			d.Volume, d.Denoise = s.Volume, s.Denoise
+			d.Volume, d.Denoise, d.Voice = s.Volume, s.Denoise, s.Voice
 		},
 	},
 }

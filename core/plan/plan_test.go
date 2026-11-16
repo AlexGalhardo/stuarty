@@ -993,6 +993,30 @@ func TestAudioCarriesDenoise(t *testing.T) {
 	}
 }
 
+func TestAudioCarriesTheVoice(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	m := timeline.NewItem("itm_m", timeline.ItemAudio, trkSound, 0, 60)
+	m.Asset = astSound
+	put(d, m)
+
+	if got := Audio(d, 0, 60); len(got) != 1 || got[0].Voice != "" {
+		t.Fatalf("an item with no voice must give none: %+v", got)
+	}
+
+	m.Voice = "deep"
+	put(d, m)
+
+	if got := Audio(d, 0, 60); len(got) != 1 || got[0].Voice != "deep" {
+		t.Errorf("source lost the voice: %+v", got)
+	}
+
+	if w := Window(d, 0, 10); len(w.Audio) != 1 || w.Audio[0].Voice != "deep" {
+		t.Errorf("window audio lost the voice: %+v", w.Audio)
+	}
+}
+
 func TestDisabledItemsLeaveThePlan(t *testing.T) {
 	t.Parallel()
 

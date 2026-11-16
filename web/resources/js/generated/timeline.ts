@@ -140,6 +140,7 @@ export interface Item {
   transition_in?: Transition;
   transition_out?: Transition;
   type: "clip" | "audio" | "text" | "caption" | "shape";
+  voice?: "clear" | "warm" | "deep" | "bright" | "radio";
   volume?: number;
   width?: number;
   /**

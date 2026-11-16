@@ -1,0 +1,9 @@
+{
+  "op": "item.set_audio",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "volume": 0.9,
+    "denoise": 0.3,
+    "voice": "bright"
+  }
+}

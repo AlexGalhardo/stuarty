@@ -397,6 +397,14 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 
 	clip.Denoise = 0
 
+	clip.Voice = "warm"
+
+	if got := itemLine(fps, &clip); !strings.Contains(got, "voice:warm") {
+		t.Errorf("the voice is not flagged: %s", got)
+	}
+
+	clip.Voice = ""
+
 	clip.Mask = &timeline.Mask{Shape: "ellipse", X: 0.1, Y: 0.1, Width: 0.5, Height: 0.5, Feather: 8}
 
 	if m := extraFields(fps, &clip)["mask"]; !strings.Contains(m, `"shape":"ellipse"`) ||
