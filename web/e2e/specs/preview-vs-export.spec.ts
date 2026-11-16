@@ -725,9 +725,48 @@ test.describe("preview-vs-export", () => {
 							const px = g?.getImageData(0, 0, 16, 16).data ?? [];
 							let sum = 0;
 							for (let i = 0; i < px.length; i += 4) sum += px[i + 1] ?? 0;
+							// And what a fresh WebGL texture uploaded from it holds.
+							const glCanvas = document.createElement("canvas");
+							glCanvas.width = 16;
+							glCanvas.height = 16;
+							const gl = glCanvas.getContext("webgl2");
+							let glGreen = -1;
+							if (gl) {
+								const tex = gl.createTexture();
+								gl.bindTexture(gl.TEXTURE_2D, tex);
+								gl.texImage2D(
+									gl.TEXTURE_2D,
+									0,
+									gl.RGBA,
+									gl.RGBA,
+									gl.UNSIGNED_BYTE,
+									v,
+								);
+								const fb = gl.createFramebuffer();
+								gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+								gl.framebufferTexture2D(
+									gl.FRAMEBUFFER,
+									gl.COLOR_ATTACHMENT0,
+									gl.TEXTURE_2D,
+									tex,
+									0,
+								);
+								const out = new Uint8Array(4);
+								gl.readPixels(
+									v.videoWidth >> 1,
+									v.videoHeight >> 1,
+									1,
+									1,
+									gl.RGBA,
+									gl.UNSIGNED_BYTE,
+									out,
+								);
+								glGreen = out[1] ?? -1;
+							}
 							const quality = v.getVideoPlaybackQuality();
 							return {
 								meanGreen: Math.round(sum / 256),
+								glGreen,
 								totalFrames: quality.totalVideoFrames,
 								corrupted: quality.corruptedVideoFrames,
 								src: v.currentSrc.split("/media/")[1],
