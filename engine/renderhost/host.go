@@ -47,6 +47,11 @@ const (
 	LimitExceeded      Reason = "limit_exceeded"
 	OutOfMemory        Reason = "out_of_memory"
 	InvalidArgument    Reason = "invalid_argument"
+	InvalidSpec        Reason = "invalid_spec"
+	FontUnknown        Reason = "font_unknown"
+	FontInvalid        Reason = "font_invalid"
+	FontNeeded         Reason = "font_needed"
+	TextFailed         Reason = "text_failed"
 	RenderTrap         Reason = "render_trap"
 )
 
@@ -54,6 +59,7 @@ const (
 var statusReasons = map[int32]Reason{
 	-1: InvalidPlan, -2: UnsupportedVersion, -3: UnsupportedLayer, -4: MissingTexture,
 	-5: LimitExceeded, -6: OutOfMemory, -7: InvalidArgument,
+	-8: InvalidSpec, -9: FontUnknown, -10: FontInvalid, -11: FontNeeded, -12: TextFailed,
 }
 
 // Error is a failure of the renderer. Detail names an item, a key or a limit, never a pixel or a path.

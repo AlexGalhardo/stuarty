@@ -20,6 +20,7 @@ pub mod json;
 pub mod mask;
 pub mod math;
 pub mod plan;
+pub mod rasterhost;
 pub mod resize;
 
 #[cfg(target_arch = "wasm32")]
@@ -27,4 +28,4 @@ mod ffi;
 
 /// The version of the boundary between the hosts and the renderer (`vr_api_version`). A host
 /// refuses a module whose number it does not know.
-pub const API_VERSION: u32 = 1;
+pub const API_VERSION: u32 = 2;

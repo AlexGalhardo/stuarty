@@ -13,9 +13,11 @@ use std::cell::RefCell;
 use crate::API_VERSION;
 use crate::error::{Error, Reason};
 use crate::host::{BitmapMetrics, Limits, Renderer};
+use crate::rasterhost::TextHost;
 
 thread_local! {
 	static RENDERER: RefCell<Renderer> = RefCell::new(Renderer::new(Limits::default()));
+	static TEXT: RefCell<TextHost> = RefCell::new(TextHost::new());
 	static LAST_ERROR: RefCell<String> = const { RefCell::new(String::new()) };
 }
 
@@ -199,4 +201,56 @@ pub extern "C" fn vr_error(buf_ptr: u32, buf_len: u32) -> u32 {
 		dst.copy_from_slice(&m.as_bytes()[..n]);
 		m.len() as u32
 	})
+}
+
+/// Stores the bytes of a user font under its lower-case hex SHA-256; no bytes record that the host
+/// does not have the file.
+#[unsafe(no_mangle)]
+pub extern "C" fn vr_text_font_put(
+	hash_ptr: u32,
+	hash_len: u32,
+	data_ptr: u32,
+	data_len: u32,
+) -> i32 {
+	status((|| {
+		let hash = text(hash_ptr, hash_len)?;
+		// SAFETY: a block of the host, valid for the call.
+		let data = unsafe { block(data_ptr, data_len) };
+		TEXT.with(|t| t.borrow_mut().put_font(hash, data))
+	})())
+}
+
+/// Draws or measures a shape, text or caption (the request of `rasterhost`); the result is read
+/// with `vr_text_result_ptr` and `vr_text_result_len`.
+#[unsafe(no_mangle)]
+pub extern "C" fn vr_text_run(req_ptr: u32, req_len: u32) -> i32 {
+	// SAFETY: a block of the host, valid for the call.
+	let request = unsafe { block(req_ptr, req_len) };
+	status(TEXT.with(|t| t.borrow_mut().run(request)))
+}
+
+/// Validates a user font file; a refusal leaves its reason and message as the result.
+#[unsafe(no_mangle)]
+pub extern "C" fn vr_text_validate_font(data_ptr: u32, data_len: u32) -> i32 {
+	// SAFETY: a block of the host, valid for the call.
+	let data = unsafe { block(data_ptr, data_len) };
+	status(TEXT.with(|t| t.borrow_mut().validate_font(data)))
+}
+
+/// The offset of the result of the last text call; valid until the next call.
+#[unsafe(no_mangle)]
+pub extern "C" fn vr_text_result_ptr() -> u32 {
+	TEXT.with(|t| t.borrow().result().as_ptr() as usize as u32)
+}
+
+/// The byte length of the result of the last text call.
+#[unsafe(no_mangle)]
+pub extern "C" fn vr_text_result_len() -> u32 {
+	TEXT.with(|t| t.borrow().result().len() as u32)
+}
+
+/// Releases the result of the last text call.
+#[unsafe(no_mangle)]
+pub extern "C" fn vr_text_result_clear() {
+	TEXT.with(|t| t.borrow_mut().clear_result());
 }
