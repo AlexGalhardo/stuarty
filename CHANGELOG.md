@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-11-16
+
+### Added
+
+- **ui:** Send an ended session on the keys page to the login ([371dc2d](https://github.com/AlexGalhardo/vukem-video/commit/371dc2d6d6faa4b21d0ef26f007cf7a3a703843b))
+
+### Fixed
+
+- **engine:** Plan each frame of a Renderer at its output scale ([376c26f](https://github.com/AlexGalhardo/vukem-video/commit/376c26fe89276153bf5bd6a649f1f5eadc66e6ae))
+- **engine:** Centre a text bitmap on its block when a shadow reaches further on one side ([39915de](https://github.com/AlexGalhardo/vukem-video/commit/39915de276aa294ba5a5b490df8bec27f1a3a0fe))
+- **engine:** Crop a clip's colour at an odd corner on the plan rectangle ([2d5edf5](https://github.com/AlexGalhardo/vukem-video/commit/2d5edf5fc9d6f9664f1571d388ed87ceea79738d))
+- **ui:** Send a JSON content type on every call that changes state ([dbd01fe](https://github.com/AlexGalhardo/vukem-video/commit/dbd01fe20d016dc965c0f4e6069553d1ba5d44ae))
+- **ui:** Size the preview buffer like ViewFrame and compare the buffer pixels ([8df7166](https://github.com/AlexGalhardo/vukem-video/commit/8df7166d5521ac20086aad71b1f1fb5d4714b561))
+- **ci:** Pin the OpenH264 headers by commit and digest ([10560fc](https://github.com/AlexGalhardo/vukem-video/commit/10560fc5b3e992945a94354262964e38de25b945))
+- **ci:** Expand empty arrays safely for bash 3.2 in the FFmpeg build ([cf3dc1f](https://github.com/AlexGalhardo/vukem-video/commit/cf3dc1fc0fa4e12890b95e98b9eaf3bd952547ec))
+- **ci:** Link libm for zimg and use the host pkg-config when cross compiling ([51f488d](https://github.com/AlexGalhardo/vukem-video/commit/51f488db8a2fffaec881a4371a047ea9879e0e53))
+- **ci:** Build the windows encoders and enable NVENC under disable-autodetect ([49b0a99](https://github.com/AlexGalhardo/vukem-video/commit/49b0a99d9dbfc1ac3f90a1d04174c1ab9d55a46a))
+- **ci:** Stop the encoder checks of ffmpeg-verify from dying of SIGPIPE ([87ca392](https://github.com/AlexGalhardo/vukem-video/commit/87ca392b7936d17b8519f056f47944455936e001))
+
+### Security
+
+- **security:** Add the no-egress job with scripts/no-egress.sh ([046f379](https://github.com/AlexGalhardo/vukem-video/commit/046f379798cf6416a50866081be9791acd962f08))
+- **security:** Add the dependency-review job ([eb982f8](https://github.com/AlexGalhardo/vukem-video/commit/eb982f8297f60662c17d434cd2933e44e9f82cf5))
+- **security:** Fuzz the path, untrusted text, OTIO and host targets ([fc8c8b7](https://github.com/AlexGalhardo/vukem-video/commit/fc8c8b760323bea0b0954f65b9dffee9f5da516b))
+- **security:** Allow the pinned digests and e2e passwords and satisfy the linters ([a8e57ed](https://github.com/AlexGalhardo/vukem-video/commit/a8e57edc16f50423a0bf4cad5322f668f85fdc59))
+
 ## [0.16.0] - 2026-11-16
 
 ### Added
@@ -740,7 +766,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.13.0...v0.14.0
