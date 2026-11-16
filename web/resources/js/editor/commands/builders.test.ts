@@ -29,6 +29,7 @@ import {
 	moveOperations,
 	nextSlotName,
 	nudgeOperations,
+	pasteOperations,
 	presetOperations,
 	projectRenameOperations,
 	settingsFpsOperations,
@@ -78,6 +79,23 @@ describe("builders emit times as strings with a unit (T8)", () => {
 		]);
 		for (const value of times(ops)) expect(value).toMatch(/^\d+f$/);
 		expect(ops.map((o) => o.args.item_id)).toEqual(["b", "a"]);
+	});
+
+	test("pasteOperations puts the first item on the playhead and keeps the gaps", () => {
+		const items = [range("b", 40), range("a", 10)];
+		expect(pasteOperations(items, 100, false)).toEqual([
+			{ op: "item.duplicate", args: { item_id: "a", start: "100f" } },
+			{ op: "item.duplicate", args: { item_id: "b", start: "130f" } },
+		]);
+		// A cut one moves; going right the leader goes first, going left the last.
+		expect(
+			pasteOperations(items, 100, true).map((o) => o.args.item_id),
+		).toEqual(["b", "a"]);
+		expect(pasteOperations(items, 0, true)).toEqual([
+			{ op: "item.move", args: { item_id: "a", start: "0f" } },
+			{ op: "item.move", args: { item_id: "b", start: "30f" } },
+		]);
+		expect(pasteOperations([], 5, false)).toEqual([]);
 	});
 
 	test("the other builders", () => {

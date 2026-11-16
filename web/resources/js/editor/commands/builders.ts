@@ -616,6 +616,28 @@ export function duplicateOperations(items: readonly ItemRange[]): Operations {
 		}));
 }
 
+// Mod+V: the copied items at the playhead, keeping the distances between them
+// (the first one lands on `at`). A copy is `item.duplicate` on the source
+// track; a cut one is `item.move`, so the item keeps its id and its history.
+// The core refuses a position another item holds (`E_OVERLAP`), and the batch
+// is atomic. Moves go leader first, as `nudgeOperations` does.
+export function pasteOperations(
+	items: readonly ItemRange[],
+	at: number,
+	cut: boolean,
+): Operations {
+	if (items.length === 0) return [];
+	const first = Math.min(...items.map((item) => item.start));
+	const delta = at - first;
+	const ordered = [...items].sort((a, b) =>
+		cut && delta > 0 ? b.start - a.start : a.start - b.start,
+	);
+	return ordered.map((item) => ({
+		op: cut ? "item.move" : "item.duplicate",
+		args: { item_id: item.id, start: frames(item.start + delta) },
+	}));
+}
+
 // The gap menu: the frame under the pointer names the gap, the core measures it.
 export function closeGapOperations(trackId: string, at: number): Operations {
 	return [

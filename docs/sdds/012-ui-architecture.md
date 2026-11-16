@@ -1400,7 +1400,7 @@ Decision D-038: the default keymap is the one a person coming from CapCut alread
 | Delete the selection | `Delete`, `Backspace` | `deleteSelection` (`item.delete`) | exists |
 | Delete and close the gap | `Shift+Delete` | `deleteSelection(ripple)` | exists |
 | Duplicate | `Mod+D` | `duplicateSelection` (`item.duplicate`) | exists |
-| Copy, cut, paste items | `Mod+C`, `Mod+X`, `Mod+V` | `surface.clipboard` (paste creates items with `item.duplicate` or `clip.add`; cut is copy then `item.delete`) | UI |
+| Copy, cut, paste items | `Mod+C`, `Mod+X`, `Mod+V` | `surface.clipboard` (paste puts the held items at the playhead, keeping the distances between them: a copy is `item.duplicate` with `start`, a cut one is `item.move`, so cut leaves the items in place until they are pasted and never needs a command to bring back a deleted item) | UI |
 | Copy, paste attributes | `Mod+Shift+C`, `Mod+Shift+V` | `item.paste_attributes` | needs command (N-8) |
 | Undo, redo | `Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y` | `undo`, `redo` | exists |
 | Select all | `Mod+A` | `surface.select_all` | exists |
