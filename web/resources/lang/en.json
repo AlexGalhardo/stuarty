@@ -1111,6 +1111,7 @@
         "title": "First steps",
         "items": {
           "library": "Paste the path of a media file in the library and press Import.",
+          "library_desktop": "Choose files in the library, drop them there or paste a path, then press Import.",
           "palette": "Press Ctrl+K to search every command.",
           "shortcuts": "Press ? to see and change the keyboard shortcuts."
         },

@@ -1111,6 +1111,7 @@
         "title": "Primeiros passos",
         "items": {
           "library": "Cole o caminho de um arquivo de mídia na biblioteca e pressione Importar.",
+          "library_desktop": "Escolha arquivos na biblioteca, solte-os ali ou cole um caminho e pressione Importar.",
           "palette": "Pressione Ctrl+K para buscar todos os comandos.",
           "shortcuts": "Pressione ? para ver e alterar os atalhos de teclado."
         },
