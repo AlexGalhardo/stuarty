@@ -19,9 +19,17 @@ confidence-threshold = 0.93
 unused-allowed-license = "allow"
 
 # unicode-ident (a dependency of wasm-bindgen-shared) carries the Unicode-3.0 data licence next to
-# MIT OR Apache-2.0. The notices allow-list does not list Unicode-3.0, so the exception is limited to
-# this crate until the author decides whether to allow it in both lists.
-exceptions = [{ allow = ["Unicode-3.0"], crate = "unicode-ident" }]
+# MIT OR Apache-2.0; yoke, yoke-derive, zerofrom and zerofrom-derive (dependencies of harfrust and
+# read-fonts, from ICU4X) are Unicode-3.0 alone. The notices allow-list does not list Unicode-3.0, so
+# the exception is limited to these crates (internal/tools/notices/spdx.go keeps the same list) until
+# the author decides whether to allow it in both lists.
+exceptions = [
+	{ allow = ["Unicode-3.0"], crate = "unicode-ident" },
+	{ allow = ["Unicode-3.0"], crate = "yoke" },
+	{ allow = ["Unicode-3.0"], crate = "yoke-derive" },
+	{ allow = ["Unicode-3.0"], crate = "zerofrom" },
+	{ allow = ["Unicode-3.0"], crate = "zerofrom-derive" },
+]
 
 [bans]
 multiple-versions = "warn"

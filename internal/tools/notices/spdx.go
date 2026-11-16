@@ -131,7 +131,11 @@ next:
 // crateExceptions mirrors the per-crate licence exceptions of renderer/deny.toml: ids allowed for one
 // Rust crate only, until the author decides whether to allow them in both lists.
 var crateExceptions = map[string][]string{
-	"unicode-ident": {"Unicode-3.0"},
+	"unicode-ident":   {"Unicode-3.0"},
+	"yoke":            {"Unicode-3.0"},
+	"yoke-derive":     {"Unicode-3.0"},
+	"zerofrom":        {"Unicode-3.0"},
+	"zerofrom-derive": {"Unicode-3.0"},
 }
 
 // checkSPDX applies the allow-list to an SPDX expression. "A OR B" passes when
