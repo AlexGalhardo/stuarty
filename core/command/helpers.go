@@ -59,9 +59,10 @@ func idForm(path, prefix, id string) *Error {
 	if id == "" || timeline.ValidID(prefix, id) {
 		return nil
 	}
-	return Errorf(CodeValidation, "%s %q is not %s id.", path, id, map[string]string{
+	return Errorf(CodeValidation, "%s %q is not %s id: an id is \"%s_\" followed by 10 characters from 0-9 and a-z "+
+		"without i, l, o and u.", path, id, map[string]string{
 		timeline.PrefixItem: "an item", timeline.PrefixTrack: "a track", timeline.PrefixAsset: "an asset",
-	}[prefix]).WithHint("Use an id like \"%s_%s\" or omit it.", prefix, "s6t7v8w9x0").WithPath(path)
+	}[prefix], prefix).WithHint("Use an id like \"%s_%s\" or omit it.", prefix, "s6t7v8w9x0").WithPath(path)
 }
 
 // newID returns the identifier for a new object of a collection: the supplied one or
