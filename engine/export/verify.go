@@ -24,7 +24,7 @@ type probedStream struct {
 	Height    int    `json:"height"`
 	PixFmt    string `json:"pix_fmt"`
 	Duration  string `json:"duration"`
-	AvgRate   string `json:"avg_frame_rate"`
+	Rate      string `json:"r_frame_rate"`
 }
 
 type probedFile struct {
@@ -104,8 +104,11 @@ func (s *state) verify(ctx context.Context, partial string, frames int) (Verifie
 		if v.PixFmt != "yuv420p" {
 			fail("pixel_format", "yuv420p", v.PixFmt)
 		}
-		if !sameRate(v.AvgRate, fps) {
-			fail("frame_rate", fmt.Sprintf("%d/%d", fps.Num, fps.Den), v.AvgRate)
+		// The nominal rate of the stream, not avg_frame_rate: the average divides the packet count by
+		// the stream duration, which an encoder with B-frames (h264_videotoolbox) ends one frame short,
+		// so a correct file reads 31.03 fps at 30. The count and the duration have their own checks.
+		if !sameRate(v.Rate, fps) {
+			fail("frame_rate", fmt.Sprintf("%d/%d", fps.Num, fps.Den), v.Rate)
 		}
 		checkDuration(&failed, "video_duration", v.Duration, want, frameSec)
 		got := strings.TrimSpace(string(pkts))
@@ -160,7 +163,7 @@ func checkDuration(failed *[]Check, name, got string, want, frameSec float64) {
 	}
 }
 
-// sameRate says whether ffprobe's avg_frame_rate ("60/1") is the project's frame rate, as fractions.
+// sameRate says whether ffprobe's r_frame_rate ("60/1") is the project's frame rate, as fractions.
 func sameRate(got string, fps timeline.Rational) bool {
 	num, den, ok := strings.Cut(got, "/")
 	n, err1 := strconv.ParseInt(num, 10, 64)
