@@ -103,6 +103,16 @@ func TestCheckSPDX(t *testing.T) {
 		{"CC-BY-4.0", groupNPM, "caniuse-lite", false},
 		{"CC-BY-4.0", groupGo, "m", false},
 		{"UNKNOWN", groupGo, "m", false},
+		{"(MIT OR Apache-2.0) AND Unicode-3.0", groupCrates, "m", false},
+		{"MIT OR (Apache-2.0 AND Unicode-3.0)", groupCrates, "m", true},
+		{"MIT OR Apache-2.0 AND Unicode-3.0", groupCrates, "m", true},
+		{"(MIT OR GPL-3.0) AND (ISC OR GPL-3.0)", groupCrates, "m", true},
+		{"(MIT OR GPL-3.0) AND GPL-3.0", groupCrates, "m", false},
+		{"(MIT OR Apache-2.0) AND Unicode-3.0", groupCrates, "unicode-ident", true},
+		{"(MIT OR Apache-2.0) AND Unicode-3.0", groupNPM, "unicode-ident", false},
+		{"((MIT", groupCrates, "m", false},
+		{"MIT AND", groupCrates, "m", false},
+		{"MIT WITH LLVM-exception", groupCrates, "m", false},
 	} {
 		err := checkSPDX(tc.expr, tc.group, tc.name)
 		if (err == nil) != tc.ok {

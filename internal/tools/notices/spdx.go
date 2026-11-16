@@ -125,21 +125,29 @@ next:
 	return ""
 }
 
+// crateExceptions mirrors the per-crate licence exceptions of renderer/deny.toml: ids allowed for one
+// Rust crate only, until the author decides whether to allow them in both lists.
+var crateExceptions = map[string][]string{
+	"unicode-ident": {"Unicode-3.0"},
+}
+
 // checkSPDX applies the allow-list to an SPDX expression. "A OR B" passes when
-// one alternative passes; "A AND B" passes when every id passes. OFL-1.1 is for
+// one alternative passes; "A AND B" passes when every id passes; AND binds
+// tighter than OR and parentheses group. A "WITH exception" term is kept whole,
+// so it passes only when that exact text is on the allow-list. OFL-1.1 is for
 // fonts only and LGPL-3.0-or-later for FFmpeg only (a separate process).
 func checkSPDX(expr, group, name string) error {
-	expr = strings.NewReplacer("(", " ", ")", " ").Replace(expr)
+	p := &spdxParser{tokens: spdxTokens(expr), group: group, name: name}
 
-	var reasons []string
+	ok, why := p.parseOr()
+	if ok && p.err == "" && p.pos == len(p.tokens) {
+		return nil
+	}
 
-	for alt := range strings.SplitSeq(expr, " OR ") {
-		ok, why := allAllowed(alt, group, name)
-		if ok {
-			return nil
-		}
-
-		reasons = append(reasons, why)
+	if p.err != "" {
+		why = p.err
+	} else if p.pos != len(p.tokens) {
+		why = "malformed expression"
 	}
 
 	return fmt.Errorf(
@@ -147,22 +155,117 @@ func checkSPDX(expr, group, name string) error {
 		groupLabel(group),
 		name,
 		strings.TrimSpace(expr),
-		strings.Join(reasons, "; "),
+		why,
 	)
 }
 
-func allAllowed(alt, group, name string) (bool, string) {
-	for id := range strings.SplitSeq(alt, " AND ") {
-		id = strings.TrimSpace(id)
+func spdxTokens(expr string) []string {
+	expr = strings.NewReplacer("(", " ( ", ")", " ) ").Replace(expr)
 
-		switch {
-		case !allowed[id]:
-			return false, id + " is not in the allow-list"
-		case id == "OFL-1.1" && group != groupFonts && !strings.HasPrefix(name, "@fontsource"):
-			return false, "OFL-1.1 is for fonts only"
-		case id == "LGPL-3.0-or-later" && (group != groupPrograms || name != "FFmpeg"):
-			return false, "LGPL-3.0-or-later is for FFmpeg only"
+	return strings.Fields(expr)
+}
+
+// spdxParser is a recursive descent parser: or := and ("OR" and)*,
+// and := atom ("AND" atom)*, atom := "(" or ")" | id ["WITH" id].
+type spdxParser struct {
+	tokens      []string
+	pos         int
+	group, name string
+	err         string
+}
+
+func (p *spdxParser) peek() string {
+	if p.pos < len(p.tokens) {
+		return p.tokens[p.pos]
+	}
+
+	return ""
+}
+
+// Every operand is parsed even after the result is known, to consume the input.
+func (p *spdxParser) parseOr() (bool, string) {
+	ok, why := p.parseAnd()
+	reasons := []string{why}
+
+	for p.peek() == "OR" {
+		p.pos++
+
+		altOK, altWhy := p.parseAnd()
+		ok = ok || altOK
+
+		reasons = append(reasons, altWhy)
+	}
+
+	if ok {
+		return true, ""
+	}
+
+	return false, strings.Join(reasons, "; ")
+}
+
+func (p *spdxParser) parseAnd() (bool, string) {
+	ok, why := p.parseAtom()
+
+	for p.peek() == "AND" {
+		p.pos++
+
+		nextOK, nextWhy := p.parseAtom()
+		if ok && !nextOK {
+			ok, why = false, nextWhy
 		}
+	}
+
+	return ok, why
+}
+
+func (p *spdxParser) parseAtom() (bool, string) {
+	tok := p.peek()
+
+	switch tok {
+	case "":
+		p.err = "malformed expression"
+
+		return false, p.err
+	case "(":
+		p.pos++
+
+		ok, why := p.parseOr()
+		if p.peek() != ")" {
+			p.err = "unbalanced parentheses"
+
+			return false, p.err
+		}
+
+		p.pos++
+
+		return ok, why
+	case ")", "AND", "OR", "WITH":
+		p.err = "malformed expression"
+
+		return false, p.err
+	}
+
+	p.pos++
+
+	id := tok
+	if p.peek() == "WITH" && p.pos+1 < len(p.tokens) {
+		id = tok + " WITH " + p.tokens[p.pos+1]
+		p.pos += 2
+	}
+
+	return checkID(id, p.group, p.name)
+}
+
+func checkID(id, group, name string) (bool, string) {
+	excepted := group == groupCrates && slices.Contains(crateExceptions[name], id)
+
+	switch {
+	case !allowed[id] && !excepted:
+		return false, id + " is not in the allow-list"
+	case id == "OFL-1.1" && group != groupFonts && !strings.HasPrefix(name, "@fontsource"):
+		return false, "OFL-1.1 is for fonts only"
+	case id == "LGPL-3.0-or-later" && (group != groupPrograms || name != "FFmpeg"):
+		return false, "LGPL-3.0-or-later is for FFmpeg only"
 	}
 
 	return true, ""
