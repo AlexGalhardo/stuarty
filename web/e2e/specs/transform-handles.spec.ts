@@ -160,24 +160,14 @@ test.describe("transform-handles", () => {
 		await openSelected(page, seeded.id, itemId);
 		const posted = recordEdits(page);
 
-		const shot = async (): Promise<string> => {
-			// The overlay and the exact-frame image are not the picture.
-			await page.evaluate(() => {
-				for (const el of document.querySelectorAll("img, [data-testid]")) {
-					(el as HTMLElement).style.visibility = "hidden";
-				}
-			});
-			const buffer = await page
+		// The buffer of the canvas is the picture, with no overlay or exact-frame
+		// image over it. Playwright's own screenshot adds a <style> element, which
+		// WebKit reports as a violation of the page's CSP.
+		const shot = (): Promise<string> =>
+			page
 				.getByRole("main", { name: "Preview" })
 				.locator("canvas")
-				.screenshot();
-			await page.evaluate(() => {
-				for (const el of document.querySelectorAll("img, [data-testid]")) {
-					(el as HTMLElement).style.visibility = "";
-				}
-			});
-			return buffer.toString("base64");
-		};
+				.evaluate((el) => (el as HTMLCanvasElement).toDataURL("image/png"));
 
 		const before = await shot();
 		await page.route("**/plan?*", async (route) => {
