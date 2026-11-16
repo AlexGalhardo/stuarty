@@ -71,7 +71,7 @@ func TestSecurity_T06_AssetByHashNeedsMembership(t *testing.T) {
 
 	asset := imported.Assets[0].AssetID
 
-	for _, kind := range []string{"proxy", "thumbnail", "strip", "peaks"} {
+	for _, kind := range []string{"proxy", "chunks", "thumbnail", "strip", "peaks"} {
 		_, err := m.svc.OpenFile(bob, service.FileRef{Kind: kind, ProjectID: bobProject, ID: asset})
 		if code(err) != command.CodeNotFound {
 			t.Errorf("bob opening %s of alice's asset through his project = %v, want E_NOT_FOUND", kind, err)

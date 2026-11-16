@@ -1187,6 +1187,10 @@ func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {
 	switch ref.Kind {
 	case "proxy":
 		kind, tag, profileInTag = "proxy", "proxy-"+short, true
+	case "chunks":
+		// Like the proxy it indexes: same scope, not immutable. A proxy written before the index existed
+		// has none and answers 404; importing the file again writes it (SDD-011 section 4.4.1).
+		kind, ext, tag, ctype, profileInTag = "chunks", "json", "chunks-"+short, "application/json", true
 	case "thumbnail":
 		w := ref.Variant
 		if w == "" {
