@@ -103,7 +103,8 @@ func (d Dir) WriteRuntime(r Runtime) error {
 	return nil
 }
 
-// RemoveRuntime deletes runtime.json; an absent file is not an error.
+// RemoveRuntime deletes runtime.json and the per-run secret beside it; an absent file is not an
+// error.
 func (d Dir) RemoveRuntime() error {
 	err := retryOnWindows(func() error {
 		err := os.Remove(d.Path("runtime.json"))
@@ -115,7 +116,7 @@ func (d Dir) RemoveRuntime() error {
 	if err != nil {
 		return fmt.Errorf("workspace: %w", err)
 	}
-	return nil
+	return d.removeRuntimeSecret()
 }
 
 // RemoveStaleRuntime deletes runtime.json unless it names a live process. Call

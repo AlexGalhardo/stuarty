@@ -207,6 +207,21 @@ func tryServer(ctx context.Context, d Dir, o Options) (*Session, error) {
 	}
 
 	if rt.Mode == ModeNetwork {
+		// The owner proves itself with the per-run secret before the key is sent: a process that
+		// took the advertised address cannot read a file private to the user (SDD-007 section 3.8).
+		secret, err := d.LoadRuntimeSecret()
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, nil // the owner is still starting
+		}
+		if err != nil {
+			return nil, err
+		}
+		if err := Handshake(ctx, o.Client, base, secret); err != nil {
+			if errors.Is(err, errHandshakeTransport) {
+				return nil, nil
+			}
+			return nil, err
+		}
 		key := o.Getenv(EnvKey)
 		if o.KeyFile != "" {
 			data, err := os.ReadFile(o.KeyFile)

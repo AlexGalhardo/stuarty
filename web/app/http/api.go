@@ -30,6 +30,9 @@ type Deps struct {
 	Registry  *command.Registry // the commands whose argument schemas the OpenAPI document carries
 	Workspace workspace.Dir
 	Token     string // the local token, as read from <workspace>/token; empty in network mode
+	// RuntimeSecret is the per-run secret of network mode (SDD-007 section 3.8), the key of the
+	// handshake there; empty in local mode, and in network mode it leaves the handshake unanswered.
+	RuntimeSecret string
 	// Network is the guard of network mode (SDD-007 section 4.3); nil is local mode.
 	Network  *Network
 	Sessions *auth.Sessions
@@ -111,7 +114,9 @@ func Routes(d *Deps) func(r *router.Router, app *vukem.App) error {
 
 // openPaths need no credential: the handshake proves the server to the client,
 // the launch route turns a code into a session, and the health probe is vukem's.
-var openPaths = []string{BasePath + "/handshake", "/auth/launch", healthPath}
+var openPaths = []string{handshakePath, "/auth/launch", healthPath}
+
+const handshakePath = BasePath + "/handshake"
 
 func (h *apiHandler) op(id string) api.Op {
 	ep := endpointOf(id)
@@ -182,12 +187,14 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 
 // authenticateNetwork is the authentication of network mode (SDD-007 sections
 // 4.1 and 5.1 item 3): the session cookie of a user who logged in. The local
-// token, the handshake and the launch code do not exist in this mode. With no
-// user yet, nothing authenticates and every request but the health probe and
-// the login is 401, which the start-up log says.
+// token and the launch code do not exist in this mode, and the handshake exists
+// only as the proof of the per-run secret. With no user yet, nothing
+// authenticates and every request but the health probe, the handshake and the
+// login is 401, which the start-up log says.
 func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request, next http.Handler) {
 	if r.URL.Path == healthPath || r.URL.Path == "/auth/login" || r.URL.Path == "/auth/logout" ||
-		(r.URL.Path == LoginPath && r.Method == http.MethodGet) {
+		(r.URL.Path == LoginPath && r.Method == http.MethodGet) ||
+		(r.URL.Path == handshakePath && h.RuntimeSecret != "") {
 		next.ServeHTTP(w, r)
 		return
 	}
