@@ -6,8 +6,12 @@
 pub mod blur;
 pub mod colour;
 pub mod compose;
+pub mod error;
+pub mod host;
 pub mod image;
+pub mod json;
 pub mod math;
+pub mod plan;
 pub mod resize;
 
 use wasm_bindgen::prelude::wasm_bindgen;
