@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.wheels.shadows.hue is 400, outside the accepted range.",
+  "hint": "Use a value between 0 and 360.",
+  "retryable": false,
+  "path": "args.wheels.shadows.hue"
+}

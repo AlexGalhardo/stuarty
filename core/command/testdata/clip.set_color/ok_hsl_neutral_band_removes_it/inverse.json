@@ -1,0 +1,19 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "hsl": [
+        {
+          "hue": 0.1,
+          "range": "red"
+        },
+        {
+          "range": "blue",
+          "saturation": -0.5
+        }
+      ]
+    }
+  }
+]

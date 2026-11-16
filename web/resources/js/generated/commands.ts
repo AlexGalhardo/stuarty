@@ -616,6 +616,84 @@ export interface ClipSetColorArgs {
    */
   contrast?: number;
   /**
+   * Tone curves: master, red, green, blue.
+   */
+  curves?: {
+    /**
+     * As master, for the blue channel.
+     */
+    blue?: {
+      /**
+       * Input, 0 to 1.
+       */
+      x: number;
+      /**
+       * Output, 0 to 1.
+       */
+      y: number;
+    }[];
+    /**
+     * As master, for the green channel.
+     */
+    green?: {
+      /**
+       * Input, 0 to 1.
+       */
+      x: number;
+      /**
+       * Output, 0 to 1.
+       */
+      y: number;
+    }[];
+    /**
+     * 2 to 8 points, x strictly increasing; [] or the line (0,0)-(1,1) removes the curve.
+     */
+    master?: {
+      /**
+       * Input, 0 to 1.
+       */
+      x: number;
+      /**
+       * Output, 0 to 1.
+       */
+      y: number;
+    }[];
+    /**
+     * As master, for the red channel.
+     */
+    red?: {
+      /**
+       * Input, 0 to 1.
+       */
+      x: number;
+      /**
+       * Output, 0 to 1.
+       */
+      y: number;
+    }[];
+  };
+  /**
+   * Bands of colour ranges, up to 8; a given range replaces its band, a neutral band removes it.
+   */
+  hsl?: {
+    /**
+     * Shift of the hue, -1 to 1 (30 degrees each way); default 0.
+     */
+    hue?: number;
+    /**
+     * -1 to 1; default 0.
+     */
+    lightness?: number;
+    /**
+     * The colour range.
+     */
+    range: "red" | "orange" | "yellow" | "green" | "cyan" | "blue" | "purple" | "magenta";
+    /**
+     * -1 to 1; default 0.
+     */
+    saturation?: number;
+  }[];
+  /**
    * -180 to 180 degrees; default 0.
    */
   hue?: number;
@@ -643,6 +721,62 @@ export interface ClipSetColorArgs {
    * -1 (greener) to 1 (more magenta); default 0.
    */
   tint?: number;
+  /**
+   * Colour wheels of shadows, midtones and highlights.
+   */
+  wheels?: {
+    /**
+     * As shadows.
+     */
+    highlights?: {
+      /**
+       * Strength of the tint, 0 to 1; default 0.
+       */
+      amount?: number;
+      /**
+       * Direction of the tint in degrees, 0 red, 120 green, 240 blue; default 0.
+       */
+      hue?: number;
+      /**
+       * Lifts or lowers the range, -1 to 1; default 0.
+       */
+      luma?: number;
+    };
+    /**
+     * As shadows.
+     */
+    midtones?: {
+      /**
+       * Strength of the tint, 0 to 1; default 0.
+       */
+      amount?: number;
+      /**
+       * Direction of the tint in degrees, 0 red, 120 green, 240 blue; default 0.
+       */
+      hue?: number;
+      /**
+       * Lifts or lowers the range, -1 to 1; default 0.
+       */
+      luma?: number;
+    };
+    /**
+     * Replaces the wheel; a neutral wheel (amount 0, luma 0) removes it.
+     */
+    shadows?: {
+      /**
+       * Strength of the tint, 0 to 1; default 0.
+       */
+      amount?: number;
+      /**
+       * Direction of the tint in degrees, 0 red, 120 green, 240 blue; default 0.
+       */
+      hue?: number;
+      /**
+       * Lifts or lowers the range, -1 to 1; default 0.
+       */
+      luma?: number;
+    };
+  };
 }
 
 export interface ClipSetEffectsArgs {
@@ -2233,7 +2367,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"clip.set_blend": { summary: "Sets how a visual item is mixed with what is below it.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_blur": { summary: "Sets the blur radius of a visual item.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_chroma_key": { summary: "Keys out one colour of a clip, such as a green screen.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
-	"clip.set_color": { summary: "Sets the brightness, contrast, saturation, temperature, tint, hue and lookup table of a clip.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"clip.set_color": { summary: "Sets the brightness, contrast, saturation, temperature, tint, hue, lookup table, HSL bands, wheels and curves of a clip.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_effects": { summary: "Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_filter": { summary: "Sets the colour filter of a visual item and how much of it is mixed in.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_flip": { summary: "Mirrors a visual item horizontally, vertically or both.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },

@@ -1,0 +1,13 @@
+{
+  "op": "clip.set_color",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "wheels": {
+      "midtones": {
+        "hue": 30.1234,
+        "amount": 0.5,
+        "luma": -0.2
+      }
+    }
+  }
+}

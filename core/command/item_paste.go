@@ -48,6 +48,7 @@ var pasteGroups = []pasteGroup{
 		d.Brightness, d.Contrast, d.Saturation = s.Brightness, s.Contrast, s.Saturation
 		d.Temperature, d.Tint, d.Hue = s.Temperature, s.Tint, s.Hue
 		d.Lut = s.Lut
+		d.Hsl, d.Wheels, d.Curves = s.Hsl, s.Wheels, s.Curves
 	}},
 	{"filter", visualTypes, nil, func(d, s *timeline.Item) { d.Filter, d.FilterAmount = s.Filter, s.FilterAmount }},
 	{"blur", visualTypes, nil, func(d, s *timeline.Item) { d.Blur = s.Blur }},

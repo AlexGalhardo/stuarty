@@ -63,6 +63,9 @@ type Layer struct {
 	// ChromaKey is the colour the compositor makes transparent (SDD-004 §3.7); nil means none.
 	ChromaKey *ChromaKeySpec `json:"chroma_key,omitempty"`
 
+	// Grade is the advanced colour of a media layer, drawn after ColorMatrix (SDD-004 §3.14); nil means none.
+	Grade *GradeSpec `json:"grade,omitempty"`
+
 	// Blend is the blend mode of SDD-004 §3.8: multiply, screen, overlay or add; empty means normal.
 	Blend string `json:"blend,omitempty"`
 
@@ -86,6 +89,13 @@ type Layer struct {
 	Rotation float64 `json:"rotation"` // degrees clockwise
 	Scale    float64 `json:"scale"`    // effective scale: keyframes and static value, before W and H are derived
 	Opacity  float64 `json:"opacity"`
+}
+
+// GradeSpec is the advanced colour of a layer: the bands, wheels and curves of the item, as stored.
+type GradeSpec struct {
+	Hsl    []timeline.HslBand `json:"hsl,omitempty"`
+	Wheels *timeline.Wheels   `json:"wheels,omitempty"`
+	Curves *timeline.Curves   `json:"curves,omitempty"`
 }
 
 // ChromaKeySpec is the key of a layer with the colour already resolved to #RRGGBB or #RRGGBBAA.

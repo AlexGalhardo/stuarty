@@ -1,0 +1,21 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "hsl": [
+        null,
+        [
+          {
+            "range": "red",
+            "saturation": 0.4
+          },
+          {
+            "hue": -0.2,
+            "range": "blue"
+          }
+        ]
+      ]
+    }
+  }
+]

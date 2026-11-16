@@ -158,6 +158,22 @@ The types named in the tables of the operations. The arguments of each editing c
 | `right` | `number (double)` | no |  |
 | `top` | `number (double)` | no |  |
 
+### CurvePoint
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `x` | `number (double)` | no |  |
+| `y` | `number (double)` | no |  |
+
+### Curves
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `blue` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
+| `green` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
+| `master` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
+| `red` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
+
 ### DoctorCheck
 
 | Name | Type | Required | Description |
@@ -310,6 +326,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `fonts` | array of [`FontFamily`](/docs/api/schemas#fontfamily) | no |  |
 
+### GradeSpec
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `curves` | [`Curves`](/docs/api/schemas#curves) or `any` or `null` or `null` | no |  |
+| `hsl` | array of [`HslBand`](/docs/api/schemas#hslband) | no |  |
+| `wheels` | [`Wheels`](/docs/api/schemas#wheels) or `any` or `null` or `null` | no |  |
+
 ### handshakeOut
 
 | Name | Type | Required | Description |
@@ -350,6 +374,15 @@ The types named in the tables of the operations. The arguments of each editing c
 | `at` | `string (date-time)` | no |  |
 | `kind` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
+
+### HslBand
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `hue` | `number (double)` | no |  |
+| `lightness` | `number (double)` | no |  |
+| `range` | `string`, one of 8 values | no |  |
+| `saturation` | `number (double)` | no |  |
 
 ### ImportedAsset
 
@@ -407,6 +440,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `chroma_key` | [`ChromaKey`](/docs/api/schemas#chromakey) or `any` or `null` or `null` | no |  |
 | `contrast` | `number (double)` | no |  |
 | `crop` | [`Crop`](/docs/api/schemas#crop) or `any` or `null` or `null` | no |  |
+| `curves` | [`Curves`](/docs/api/schemas#curves) or `any` or `null` or `null` | no |  |
 | `denoise` | `number (double)` | no |  |
 | `disabled` | `boolean` | no |  |
 | `duration` | `integer` | no |  |
@@ -421,6 +455,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `flip_y` | `boolean` | no |  |
 | `freeze` | `boolean` | no |  |
 | `height` | `number (double)` | no |  |
+| `hsl` | array of [`HslBand`](/docs/api/schemas#hslband) | no |  |
 | `hue` | `number (double)` | no |  |
 | `id` | `string` | no |  |
 | `keyframes` | map of array of [`Keyframe`](/docs/api/schemas#keyframe) | no |  |
@@ -454,6 +489,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `type` | `clip`, `audio`, `text`, `caption`, `shape` | no |  |
 | `voice` | `clear`, `warm`, `deep`, `bright`, `radio` | no |  |
 | `volume` | `number (double)` | no |  |
+| `wheels` | [`Wheels`](/docs/api/schemas#wheels) or `any` or `null` or `null` | no |  |
 | `width` | `number (double)` | no |  |
 | `words` | array of [`Word`](/docs/api/schemas#word) | no |  |
 | `x` | `number (double)` or `null` | no |  |
@@ -1174,6 +1210,22 @@ The types named in the tables of the operations. The arguments of each editing c
 | `name` | `string` | no |  |
 | `ok` | `boolean` | no |  |
 
+### Wheel
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `amount` | `number (double)` | no |  |
+| `hue` | `number (double)` | no |  |
+| `luma` | `number (double)` | no |  |
+
+### Wheels
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `highlights` | [`Wheel`](/docs/api/schemas#wheel) or `any` or `null` or `null` | no |  |
+| `midtones` | [`Wheel`](/docs/api/schemas#wheel) or `any` or `null` or `null` | no |  |
+| `shadows` | [`Wheel`](/docs/api/schemas#wheel) or `any` or `null` or `null` | no |  |
+
 ### WindowAudio
 
 | Name | Type | Required | Description |
@@ -1216,6 +1268,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `first` | `integer` | no |  |
 | `flip_x` | `boolean` | no |  |
 | `flip_y` | `boolean` | no |  |
+| `grade` | [`GradeSpec`](/docs/api/schemas#gradespec) or `any` or `null` or `null` | no |  |
 | `h` | `any` | no |  |
 | `item` | `string` | no |  |
 | `kind` | `string` | no |  |

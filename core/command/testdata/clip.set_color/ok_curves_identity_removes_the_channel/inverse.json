@@ -1,0 +1,25 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "curves": {
+        "master": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 0.5,
+            "y": 0.4
+          },
+          {
+            "x": 1,
+            "y": 1
+          }
+        ]
+      }
+    }
+  }
+]

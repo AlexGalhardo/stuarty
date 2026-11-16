@@ -20,11 +20,14 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "clip.set_color",
-		Summary: "Sets the brightness, contrast, saturation, temperature, tint, hue and lookup table of a clip.",
+		Summary: "Sets the brightness, contrast, saturation, temperature, tint, hue, lookup table, HSL bands, wheels and curves of a clip.",
 		Description: "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, " +
 			"contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is " +
 			"warmer, positive tint is more magenta, hue rotates the colours in degrees. lut_asset is the id of a lut asset (a " +
-			".cube file) and lut_intensity how much of it is mixed in, 0 to 1, default 1; lut_intensity 0 removes the lookup table.",
+			".cube file) and lut_intensity how much of it is mixed in, 0 to 1, default 1; lut_intensity 0 removes the lookup table. " +
+			"hsl bands (red, orange, yellow, green, cyan, blue, purple, magenta: hue, saturation, lightness, -1 to 1), " +
+			"wheels (shadows, midtones, highlights: hue 0 to 360, amount 0 to 1, luma -1 to 1) and curves (master, red, " +
+			"green, blue: 2 to 8 points of x and y from 0 to 1) each replace what they name and a neutral one removes it.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "brightness": 0.1, "temperature": 0.3}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
@@ -168,20 +171,35 @@ func cropMap(cr *timeline.Crop) map[string]any {
 }
 
 type clipColorArgs struct {
-	ItemID       string   `json:"item_id"                 desc:"A clip."`
-	Brightness   *float64 `json:"brightness,omitempty"    desc:"-1 to 1; default 0."                            min:"-1"   max:"1"`
-	Contrast     *float64 `json:"contrast,omitempty"      desc:"0 to 2; default 1."                             min:"0"    max:"2"`
-	Saturation   *float64 `json:"saturation,omitempty"    desc:"0 to 2; default 1."                             min:"0"    max:"2"`
-	Temperature  *float64 `json:"temperature,omitempty"   desc:"-1 (cooler) to 1 (warmer); default 0."          min:"-1"   max:"1"`
-	Tint         *float64 `json:"tint,omitempty"          desc:"-1 (greener) to 1 (more magenta); default 0."   min:"-1"   max:"1"`
-	Hue          *float64 `json:"hue,omitempty"           desc:"-180 to 180 degrees; default 0."                min:"-180" max:"180"`
-	LutAsset     string   `json:"lut_asset,omitempty"     desc:"Id of a lut asset to grade the clip with."`
-	LutIntensity *float64 `json:"lut_intensity,omitempty" desc:"0 to 1; default 1; 0 removes the lookup table." min:"0"    max:"1"`
+	ItemID       string        `json:"item_id"                 desc:"A clip."`
+	Brightness   *float64      `json:"brightness,omitempty"    desc:"-1 to 1; default 0."                                                                          min:"-1"   max:"1"`
+	Contrast     *float64      `json:"contrast,omitempty"      desc:"0 to 2; default 1."                                                                           min:"0"    max:"2"`
+	Saturation   *float64      `json:"saturation,omitempty"    desc:"0 to 2; default 1."                                                                           min:"0"    max:"2"`
+	Temperature  *float64      `json:"temperature,omitempty"   desc:"-1 (cooler) to 1 (warmer); default 0."                                                        min:"-1"   max:"1"`
+	Tint         *float64      `json:"tint,omitempty"          desc:"-1 (greener) to 1 (more magenta); default 0."                                                 min:"-1"   max:"1"`
+	Hue          *float64      `json:"hue,omitempty"           desc:"-180 to 180 degrees; default 0."                                                              min:"-180" max:"180"`
+	LutAsset     string        `json:"lut_asset,omitempty"     desc:"Id of a lut asset to grade the clip with."`
+	LutIntensity *float64      `json:"lut_intensity,omitempty" desc:"0 to 1; default 1; 0 removes the lookup table."                                               min:"0"    max:"1"`
+	Hsl          []hslBandArgs `json:"hsl,omitempty"           desc:"Bands of colour ranges, up to 8; a given range replaces its band, a neutral band removes it."                      maxitems:"8"`
+	Wheels       *wheelsArgs   `json:"wheels,omitempty"        desc:"Colour wheels of shadows, midtones and highlights."`
+	Curves       *curvesArgs   `json:"curves,omitempty"        desc:"Tone curves: master, red, green, blue."`
 }
 
 func applyClipSetColor(c *Context, a *clipColorArgs) error {
 	if err := atLeastOne(
-		[]string{"brightness", "contrast", "saturation", "temperature", "tint", "hue", "lut_asset", "lut_intensity"},
+		[]string{
+			"brightness",
+			"contrast",
+			"saturation",
+			"temperature",
+			"tint",
+			"hue",
+			"lut_asset",
+			"lut_intensity",
+			"hsl",
+			"wheels",
+			"curves",
+		},
 		a.Brightness != nil,
 		a.Contrast != nil,
 		a.Saturation != nil,
@@ -190,6 +208,9 @@ func applyClipSetColor(c *Context, a *clipColorArgs) error {
 		a.Hue != nil,
 		a.LutAsset != "",
 		a.LutIntensity != nil,
+		len(a.Hsl) > 0,
+		a.Wheels != nil,
+		a.Curves != nil,
 	); err != nil {
 		return err
 	}
@@ -221,6 +242,9 @@ func applyClipSetColor(c *Context, a *clipColorArgs) error {
 	if err := setLut(c, &it, a); err != nil {
 		return err
 	}
+	if err := setGrade(&it, a); err != nil {
+		return err
+	}
 	c.Doc.Items[a.ItemID] = it
 	c.SetEffective("brightness", it.Brightness)
 	c.SetEffective("contrast", it.Contrast)
@@ -228,6 +252,7 @@ func applyClipSetColor(c *Context, a *clipColorArgs) error {
 	c.SetEffective("temperature", it.Temperature)
 	c.SetEffective("tint", it.Tint)
 	c.SetEffective("hue", it.Hue)
+	gradeEffective(c, &it, a)
 	if it.Lut != nil {
 		c.SetEffective("lut", map[string]any{"asset_id": it.Lut.Asset, "intensity": it.Lut.Intensity})
 	} else {

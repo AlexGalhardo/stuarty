@@ -1451,6 +1451,163 @@
           "minimum": 0,
           "type": "number"
         },
+        "curves": {
+          "additionalProperties": false,
+          "description": "Tone curves: master, red, green, blue.",
+          "properties": {
+            "blue": {
+              "description": "As master, for the blue channel.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "x": {
+                    "description": "Input, 0 to 1.",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "y": {
+                    "description": "Output, 0 to 1.",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "green": {
+              "description": "As master, for the green channel.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "x": {
+                    "description": "Input, 0 to 1.",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "y": {
+                    "description": "Output, 0 to 1.",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "master": {
+              "description": "2 to 8 points, x strictly increasing; [] or the line (0,0)-(1,1) removes the curve.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "x": {
+                    "description": "Input, 0 to 1.",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "y": {
+                    "description": "Output, 0 to 1.",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "red": {
+              "description": "As master, for the red channel.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "x": {
+                    "description": "Input, 0 to 1.",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "y": {
+                    "description": "Output, 0 to 1.",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [],
+          "type": "object"
+        },
+        "hsl": {
+          "description": "Bands of colour ranges, up to 8; a given range replaces its band, a neutral band removes it.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "hue": {
+                "description": "Shift of the hue, -1 to 1 (30 degrees each way); default 0.",
+                "maximum": 1,
+                "minimum": -1,
+                "type": "number"
+              },
+              "lightness": {
+                "description": "-1 to 1; default 0.",
+                "maximum": 1,
+                "minimum": -1,
+                "type": "number"
+              },
+              "range": {
+                "description": "The colour range.",
+                "enum": [
+                  "red",
+                  "orange",
+                  "yellow",
+                  "green",
+                  "cyan",
+                  "blue",
+                  "purple",
+                  "magenta"
+                ],
+                "type": "string"
+              },
+              "saturation": {
+                "description": "-1 to 1; default 0.",
+                "maximum": 1,
+                "minimum": -1,
+                "type": "number"
+              }
+            },
+            "required": [
+              "range"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
         "hue": {
           "description": "-180 to 180 degrees; default 0.",
           "maximum": 180,
@@ -1488,6 +1645,92 @@
           "maximum": 1,
           "minimum": -1,
           "type": "number"
+        },
+        "wheels": {
+          "additionalProperties": false,
+          "description": "Colour wheels of shadows, midtones and highlights.",
+          "properties": {
+            "highlights": {
+              "additionalProperties": false,
+              "description": "As shadows.",
+              "properties": {
+                "amount": {
+                  "description": "Strength of the tint, 0 to 1; default 0.",
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "hue": {
+                  "description": "Direction of the tint in degrees, 0 red, 120 green, 240 blue; default 0.",
+                  "maximum": 360,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "luma": {
+                  "description": "Lifts or lowers the range, -1 to 1; default 0.",
+                  "maximum": 1,
+                  "minimum": -1,
+                  "type": "number"
+                }
+              },
+              "required": [],
+              "type": "object"
+            },
+            "midtones": {
+              "additionalProperties": false,
+              "description": "As shadows.",
+              "properties": {
+                "amount": {
+                  "description": "Strength of the tint, 0 to 1; default 0.",
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "hue": {
+                  "description": "Direction of the tint in degrees, 0 red, 120 green, 240 blue; default 0.",
+                  "maximum": 360,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "luma": {
+                  "description": "Lifts or lowers the range, -1 to 1; default 0.",
+                  "maximum": 1,
+                  "minimum": -1,
+                  "type": "number"
+                }
+              },
+              "required": [],
+              "type": "object"
+            },
+            "shadows": {
+              "additionalProperties": false,
+              "description": "Replaces the wheel; a neutral wheel (amount 0, luma 0) removes it.",
+              "properties": {
+                "amount": {
+                  "description": "Strength of the tint, 0 to 1; default 0.",
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "hue": {
+                  "description": "Direction of the tint in degrees, 0 red, 120 green, 240 blue; default 0.",
+                  "maximum": 360,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "luma": {
+                  "description": "Lifts or lowers the range, -1 to 1; default 0.",
+                  "maximum": 1,
+                  "minimum": -1,
+                  "type": "number"
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [],
+          "type": "object"
         }
       },
       "required": [
@@ -1495,7 +1738,7 @@
       ],
       "type": "object"
     },
-    "description": "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is warmer, positive tint is more magenta, hue rotates the colours in degrees. lut_asset is the id of a lut asset (a .cube file) and lut_intensity how much of it is mixed in, 0 to 1, default 1; lut_intensity 0 removes the lookup table.",
+    "description": "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is warmer, positive tint is more magenta, hue rotates the colours in degrees. lut_asset is the id of a lut asset (a .cube file) and lut_intensity how much of it is mixed in, 0 to 1, default 1; lut_intensity 0 removes the lookup table. hsl bands (red, orange, yellow, green, cyan, blue, purple, magenta: hue, saturation, lightness, -1 to 1), wheels (shadows, midtones, highlights: hue 0 to 360, amount 0 to 1, luma -1 to 1) and curves (master, red, green, blue: 2 to 8 points of x and y from 0 to 1) each replace what they name and a neutral one removes it.",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -1510,7 +1753,7 @@
     "name": "clip.set_color",
     "phase": "alpha",
     "scope": "edit",
-    "summary": "Sets the brightness, contrast, saturation, temperature, tint, hue and lookup table of a clip."
+    "summary": "Sets the brightness, contrast, saturation, temperature, tint, hue, lookup table, HSL bands, wheels and curves of a clip."
   },
   {
     "args_schema": {

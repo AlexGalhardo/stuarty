@@ -1,0 +1,16 @@
+{
+  "brightness": 0,
+  "contrast": 1,
+  "hue": 0,
+  "lut": null,
+  "saturation": 1,
+  "temperature": 0,
+  "tint": 0,
+  "wheels": {
+    "midtones": {
+      "hue": 30.123,
+      "amount": 0.5,
+      "luma": -0.2
+    }
+  }
+}

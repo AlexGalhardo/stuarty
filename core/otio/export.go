@@ -265,6 +265,10 @@ func playbackMetadata(it *timeline.Item, props object) {
 		props["freeze"] = true
 	}
 
+	if len(it.Hsl) > 0 || it.Wheels != nil || it.Curves != nil {
+		gradeProps(it, props)
+	}
+
 	if l := it.Lut; l != nil {
 		props["lut"] = object{"asset": l.Asset, "intensity": l.Intensity}
 	}
@@ -583,6 +587,7 @@ func lostProperties(it *timeline.Item) []Lost {
 		{(it.Filter != "none" && it.Filter != "") || it.Blur != 0, "filter and blur"},
 		{it.ChromaKey != nil, "chroma key"},
 		{it.Lut != nil, "lookup table"},
+		{len(it.Hsl) > 0 || it.Wheels != nil || it.Curves != nil, "advanced colour"},
 		{it.Freeze, "freeze frame"},
 		{it.Crop != nil || it.Fit != "cover", "framing"},
 		{it.X != nil || it.Y != nil || it.Scale != 1 || it.Rotation != 0 || it.Opacity != 1, "transform and opacity"},
@@ -601,4 +606,48 @@ func lostProperties(it *timeline.Item) []Lost {
 	}
 
 	return out
+}
+
+// gradeProps keeps the HSL bands, the wheels and the curves of a clip as the vukem properties hsl,
+// wheels and curves, in the shape of the document.
+func gradeProps(it *timeline.Item, props object) {
+	if len(it.Hsl) > 0 {
+		list := make([]any, len(it.Hsl))
+		for i, b := range it.Hsl {
+			list[i] = object{"range": b.Range, "hue": b.Hue, "saturation": b.Saturation, "lightness": b.Lightness}
+		}
+
+		props["hsl"] = list
+	}
+
+	if w := it.Wheels; w != nil {
+		out := object{}
+
+		for name, wh := range map[string]*timeline.Wheel{"shadows": w.Shadows, "midtones": w.Midtones, "highlights": w.Highlights} {
+			if wh != nil {
+				out[name] = object{"hue": wh.Hue, "amount": wh.Amount, "luma": wh.Luma}
+			}
+		}
+
+		props["wheels"] = out
+	}
+
+	if c := it.Curves; c != nil {
+		out := object{}
+
+		for _, ch := range c.Channels() {
+			if len(ch.Points) == 0 {
+				continue
+			}
+
+			pts := make([]any, len(ch.Points))
+			for i, p := range ch.Points {
+				pts[i] = object{"x": p.X, "y": p.Y}
+			}
+
+			out[ch.Name] = pts
+		}
+
+		props["curves"] = out
+	}
 }

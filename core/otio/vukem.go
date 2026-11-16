@@ -1,6 +1,8 @@
 package otio
 
 import (
+	"encoding/json"
+	"maps"
 	"math"
 	"regexp"
 	"slices"
@@ -171,24 +173,7 @@ func itemOps(props map[string]any, mode itemMode, start, dur int, used map[strin
 	}
 
 	if mode == modeClip {
-		// A freeze frame is not a command of its own (item.freeze_frame splits a clip) and a lookup table
-		// names an asset the file does not carry: both are reported, never dropped silently.
-		if f, _ := props["freeze"].(bool); f {
-			lose("freeze frame")
-		}
-
-		if _, ok := props["lut"]; ok {
-			lose("lookup table (the .cube asset is not part of the file)")
-		}
-
-		colour := map[string]any{}
-		set(colour, "brightness", -1, 1, false)
-		set(colour, "contrast", 0, 2, false)
-		set(colour, "saturation", 0, 2, false)
-		set(colour, "temperature", -1, 1, false)
-		set(colour, "tint", -1, 1, false)
-		set(colour, "hue", -180, 180, false)
-		add("clip.set_color", colour)
+		add("clip.set_color", colourArgs(p, props, lose))
 
 		add("clip.set_framing", framing(p))
 
@@ -626,4 +611,89 @@ func framing(p *propReader) map[string]any {
 	}
 
 	return args
+}
+
+// gradeArgs reads the hsl, wheels and curves properties. The three are decoded into the types of the
+// document and checked with timeline.GradeProblem, so a value the command would refuse is reported
+// here and left out, and the rest of the batch still applies.
+func gradeArgs(p *propReader) map[string]any {
+	out := map[string]any{}
+
+	var (
+		hsl    []timeline.HslBand
+		wheels *timeline.Wheels
+		curves *timeline.Curves
+	)
+
+	for _, f := range []struct {
+		name string
+		dst  any
+	}{{"hsl", &hsl}, {"wheels", &wheels}, {"curves", &curves}} {
+		raw, present := p.props[f.name]
+		if !present {
+			continue
+		}
+
+		b, err := json.Marshal(raw)
+		if err == nil {
+			err = json.Unmarshal(b, f.dst)
+		}
+
+		if err != nil {
+			p.lose("vukem property " + f.name + " is not a valid value")
+
+			continue
+		}
+
+		if _, msg := timeline.GradeProblem(hsl, wheels, curves); msg != "" {
+			p.lose("vukem property " + f.name + " is not a valid value")
+
+			hsl, wheels, curves = nil, nil, nil
+
+			continue
+		}
+
+		if f.name == "hsl" && len(hsl) == 0 {
+			continue
+		}
+
+		out[f.name] = raw
+	}
+
+	return out
+}
+
+// colourArgs is the argument of clip.set_color for the colour properties. A freeze frame is not a
+// command of its own (item.freeze_frame splits a clip) and a lookup table names an asset the file does
+// not carry: both are reported, never dropped silently.
+func colourArgs(p *propReader, props map[string]any, lose func(string)) map[string]any {
+	if f, _ := props["freeze"].(bool); f {
+		lose("freeze frame")
+	}
+
+	if _, ok := props["lut"]; ok {
+		lose("lookup table (the .cube asset is not part of the file)")
+	}
+
+	colour := map[string]any{}
+
+	for _, f := range []struct {
+		name   string
+		lo, hi float64
+	}{
+		{"brightness", -1, 1},
+		{"contrast", 0, 2},
+		{"saturation", 0, 2},
+		{"temperature", -1, 1},
+		{"tint", -1, 1},
+		{"hue", -180, 180},
+	} {
+		if v, ok := p.number(f.name, f.lo, f.hi, false); ok {
+			colour[f.name] = v
+		}
+	}
+
+	maps.Copy(colour, gradeArgs(p))
+
+	return colour
 }

@@ -1,0 +1,19 @@
+{
+  "brightness": 0,
+  "contrast": 1,
+  "hsl": [
+    {
+      "range": "red",
+      "lightness": 0.25
+    },
+    {
+      "range": "blue",
+      "saturation": -0.5
+    }
+  ],
+  "hue": 0,
+  "lut": null,
+  "saturation": 1,
+  "temperature": 0,
+  "tint": 0
+}

@@ -384,6 +384,18 @@ Pinned values of the shake (project 1080 by 1920 at 30 fps): `amount 0.3, speed 
 
 Golden cases for the five pixel effects (`engine/export/testdata/golden/effect-motion-blur`, `-glow`, `-vignette`, `-grain`, `-rgb-split`, each on a layer that stays and on a picture in picture that slides and rotates, frames 0, 15 and 29) and `effects-combined` (the five effects and a shake on one flipped, masked item with a whip in and a dip out): 0 differing bytes between 1 and 8 bands, and the same bytes from the Go compositor and the Rust renderer.
 
+### 3.14 Advanced colour
+
+Added after BETA (TASK-0254, NEW-09b). A clip with `hsl`, `wheels` or `curves` (SDD-001 §3.5, set by `clip.set_color`) has them in `Layer.Grade` (`{hsl, wheels, curves}`, each omitted when absent; the window carries it once per layer, `grade`, because it is constant over the item and not keyframeable). Core stores, validates and plans them; it does not compute pixels, so the integer form of each step below is for the renderer (engine) to pin in its own golden cases when it implements them. A plan with no `grade` is drawn exactly as before.
+
+**Where it sits.** Per layer, right after the colour matrix of section 3.5 and before the lookup table, the filter and the blur (section 3.6): colour matrix, then HSL bands, then wheels, then curves, then the filter. Defaults (no band, no wheel, no curve) are the identity: nothing changes a pixel.
+
+**HSL bands.** The 8 ranges are centred on the hues 0 (red), 30 (orange), 60 (yellow), 120 (green), 180 (cyan), 240 (blue), 275 (purple) and 320 (magenta) degrees. The weight of a band at a pixel is 1 at its centre and falls linearly to 0 at the centre of each neighbour range (a triangle over the hue circle), scaled by the pixel's saturation so that greys are untouched. The pixel moves its hue by `weight × hue × 30` degrees, its saturation by the factor `1 + weight × saturation` (limited to 0) and its lightness by `weight × lightness` of the way to white (positive) or black (negative).
+
+**Wheels.** The tonal weights of a pixel with luma `Y` (0 to 1) are `shadows = (1 - Y)^2`, `highlights = Y^2` and `midtones = 1 - shadows - highlights` (clamped to 0). A wheel adds to the RGB of the pixel `weight × amount × tint(hue)`, the tint being the unit RGB offset of that hue minus its mean (so it has no luma), and `weight × luma × 0.25` to every channel.
+
+**Curves.** `master` is applied to each channel, then `red`, `green` and `blue` to their channel. A curve is the monotone cubic (Fritsch-Carlson) through its points, held flat before the first point and after the last one, evaluated on a 256 entry table per channel.
+
 ## 4. Layout of text, captions and shapes
 
 ### 4.1 Safe area

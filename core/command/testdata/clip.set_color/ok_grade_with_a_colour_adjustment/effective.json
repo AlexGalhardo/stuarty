@@ -1,0 +1,16 @@
+{
+  "brightness": 0,
+  "contrast": 1.1,
+  "hue": 0,
+  "lut": null,
+  "saturation": 1,
+  "temperature": 0,
+  "tint": 0,
+  "wheels": {
+    "highlights": {
+      "hue": 60,
+      "amount": 0.2,
+      "luma": 0
+    }
+  }
+}

@@ -235,6 +235,11 @@ type Item struct {
 	Temperature float64 `json:"temperature,omitempty" min:"-1"   max:"1"`
 	Tint        float64 `json:"tint,omitempty"        min:"-1"   max:"1"`
 	Hue         float64 `json:"hue,omitempty"         min:"-180" max:"180"`
+	// Clip only, optional and additive (SDD-001 §3.5): advanced colour (SDD-004 §3.14), the bands of the
+	// colour ranges, the wheels of the tonal ranges and the tone curves.
+	Hsl    []HslBand `json:"hsl,omitempty"    minitems:"1" maxitems:"8"`
+	Wheels *Wheels   `json:"wheels,omitempty"`
+	Curves *Curves   `json:"curves,omitempty"`
 
 	// Text and caption. Style of a text item uses the TextStyle fields only.
 	Text  string        `json:"text,omitempty"  minlen:"1" maxlen:"2000"`
