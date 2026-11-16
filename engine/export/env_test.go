@@ -140,11 +140,15 @@ type fixtureSpec struct {
 	AlphaVP9 bool `json:"alpha_vp9,omitempty"`
 	// NoisyTone makes the fixture a WAV of a tone under white noise.
 	NoisyTone bool `json:"noisy_tone,omitempty"`
+	// OneClick makes the fixture a WAV of silence with one 10 ms burst at 0.5 s.
+	OneClick bool `json:"one_click,omitempty"`
 }
 
 // generate writes the media file of the spec into the fixtures folder.
 func (spec fixtureSpec) generate(ctx context.Context) (string, error) {
 	switch {
+	case spec.OneClick:
+		return shared.gen.OneClick(ctx, spec.Name)
 	case spec.NoisyTone:
 		return shared.gen.NoisyTone(ctx, spec.Name)
 	case len(spec.DelaysCS) > 0:

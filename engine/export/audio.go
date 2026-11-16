@@ -129,6 +129,10 @@ type audioOpener struct{ s *state }
 
 // Open starts the decoder. The stream is 48 kHz stereo signed 16-bit samples, ready for the mixer.
 func (o *audioOpener) Open(ctx context.Context, src plan.AudioSource) (io.ReadCloser, error) {
+	if src.Reverse || src.Curve != nil {
+		return o.openShaped(ctx, src)
+	}
+
 	s := o.s
 	a, ok := s.job.Doc.Assets[src.AssetID]
 	if !ok {
