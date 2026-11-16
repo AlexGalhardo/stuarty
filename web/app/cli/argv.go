@@ -1,7 +1,10 @@
 package cli
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -38,6 +41,43 @@ type parsed struct {
 }
 
 // validation builds the E_VALIDATION error the CLI raises for a bad invocation.
+// jsonProblem says in a few words what is wrong with a JSON argument, without
+// the Go type names of the decoder's own message.
+func jsonProblem(err error) string {
+	if ute, ok := errors.AsType[*json.UnmarshalTypeError](err); ok {
+		if ute.Field != "" {
+			return fmt.Sprintf("%s must be %s, not %s", ute.Field, jsonKind(ute.Type), ute.Value)
+		}
+
+		return fmt.Sprintf("a value must be %s, not %s", jsonKind(ute.Type), ute.Value)
+	}
+
+	if se, ok := errors.AsType[*json.SyntaxError](err); ok {
+		return fmt.Sprintf("it is not valid JSON (at byte %d)", se.Offset)
+	}
+
+	if name, found := strings.CutPrefix(err.Error(), "json: unknown field "); found {
+		return "the member " + name + " is not known"
+	}
+
+	return "it is not valid"
+}
+
+func jsonKind(t reflect.Type) string {
+	switch t.Kind() {
+	case reflect.Struct, reflect.Map:
+		return "an object"
+	case reflect.Slice, reflect.Array:
+		return "an array"
+	case reflect.String:
+		return "a string"
+	case reflect.Bool:
+		return "true or false"
+	default:
+		return "a number"
+	}
+}
+
 func validation(path, format string, args ...any) *service.Error {
 	return &service.Error{Code: command.CodeValidation, Message: fmt.Sprintf(format, args...), Path: path}
 }

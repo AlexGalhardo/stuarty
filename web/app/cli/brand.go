@@ -106,7 +106,10 @@ func (c *call) readKit(src string) (service.BrandKitSetRequest, error) {
 	dec.DisallowUnknownFields()
 
 	if err := dec.Decode(&req); err != nil {
-		return req, validation("kit", "the kit must be one JSON object with logo, colors and fonts.")
+		return req, validation("kit",
+			"the kit is not valid: %s. It must be one JSON object with logo, colors and fonts, "+
+				`like {"colors": {"accent": "#FF0000"}, "fonts": {"Brand": {"files": [{"weight": 400, "hash": "sha256:<64 hex digits>"}]}}}.`,
+			jsonProblem(err))
 	}
 
 	return req, nil
