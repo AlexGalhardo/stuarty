@@ -456,6 +456,33 @@ func rendererVectorCases() []vecCase {
 				l.Mask = &plan.MaskSpec{Shape: "rect", X: 0.2, Y: 0.2, Width: 0.6, Height: 0.6, Feather: 2}
 			}),
 		}},
+		{name: "flip-copy-opaque", w: 64, h: 48, scale: 1, bg: "#304050", layers: []vecLayer{
+			vm("a", big, 32, 24, 64, 48, 0, 1),
+			with(vm("b", opaque, 20, 18, 24, 16, 0, 1), func(l *plan.Layer) { l.FlipX = true }),
+			with(vm("c", opaque, 46, 30, 20, 14, 0, 1), func(l *plan.Layer) { l.FlipY = true }),
+			with(vm("d", soft, 44, 14, 16, 12, 0, 0.7), func(l *plan.Layer) { l.FlipX, l.FlipY = true, true }),
+		}},
+		{name: "flip-rotated-bilinear", w: 96, h: 72, scale: 1, bg: "#203040", layers: []vecLayer{
+			vm("a", big, 48, 36, 96, 72, 0, 1),
+			with(vm("b", big, 40, 34, 50, 38, 25, 1), func(l *plan.Layer) { l.FlipX = true }),
+			with(vm("c", soft, 68, 44, 31, 21, -40, 0.6), func(l *plan.Layer) { l.FlipY = true }),
+			with(vm("d", opaque, 20, 56, 23, 15, 133, 1), func(l *plan.Layer) { l.FlipX, l.FlipY = true, true }),
+		}},
+		{name: "flip-blur-mask-blend-bitmap", w: 64, h: 48, scale: 0.5, bg: "#802010", layers: []vecLayer{
+			vm("a", big, 32, 24, 64, 48, 0, 1),
+			with(vm("b", soft, 30, 24, 40, 28, 12, 1), func(l *plan.Layer) {
+				l.Blur, l.Blend, l.FlipX = 3, "overlay", true
+				l.Mask = &plan.MaskSpec{Shape: "rect", X: 0.1, Y: 0.1, Width: 0.5, Height: 0.8, Feather: 6}
+			}),
+			with(vb("t7", straightBitmap(24, 16, 14), 50, 34, 24, 16, 0, 1), func(l *plan.Layer) {
+				l.FlipX, l.FlipY = true, true
+				l.Mask = &plan.MaskSpec{Shape: "ellipse", X: 0, Y: 0, Width: 0.6, Height: 1}
+			}),
+			with(vm("g", greenScreen(27), 20, 16, 40, 30, 0, 1), func(l *plan.Layer) {
+				l.FlipY = true
+				l.ChromaKey = &plan.ChromaKeySpec{Color: "#00C81E", Similarity: 0.3, Smoothness: 0.2}
+			}),
+		}},
 		{name: "stack", w: 64, h: 48, scale: 1, bg: "#0a0a0a", layers: []vecLayer{
 			vm("a", big, 32, 24, 64, 48, 0, 1),
 			vm("b", soft, 20, 20, 20, 14, 12, 0.6),
@@ -521,7 +548,7 @@ func encodeVectors(t *testing.T) []byte {
 		}
 	}
 	buf.WriteString("VVCV")
-	w(uint32(4))
+	w(uint32(5))
 	w(sincosHash())
 	cases := rendererVectorCases()
 	w(uint32(len(cases)))
@@ -602,6 +629,15 @@ func encodeVectors(t *testing.T) []byte {
 				}
 				w(invert)
 			}
+
+			flips := uint8(0)
+			if pl.FlipX {
+				flips |= 1
+			}
+			if pl.FlipY {
+				flips |= 2
+			}
+			w(flips)
 		}
 		buf.Write(c.compose(t, 1))
 	}

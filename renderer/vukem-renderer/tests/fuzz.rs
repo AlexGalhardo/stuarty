@@ -379,6 +379,8 @@ fn the_composition_survives_extreme_numbers() {
 					chroma_key: chroma_key(&mut rng),
 					blend: *rng.pick(&BLENDS),
 					mask: rng.chance(2).then(|| mask(&mut rng)),
+					flip_x: rng.chance(2),
+					flip_y: rng.chance(2),
 					// A blur of a huge radius is capped at 128 source pixels; keep most small.
 					blur: if rng.chance(3) {
 						extreme(&mut rng)

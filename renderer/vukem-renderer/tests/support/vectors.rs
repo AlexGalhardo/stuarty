@@ -52,6 +52,8 @@ pub struct VecLayer {
 	pub chroma_key: Option<ChromaKeySpec>,
 	pub blend: BlendMode,
 	pub mask: Option<MaskSpec>,
+	pub flip_x: bool,
+	pub flip_y: bool,
 }
 
 pub struct Case {
@@ -67,7 +69,7 @@ pub struct Case {
 pub fn read_cases() -> (u64, Vec<Case>) {
 	let mut r = Reader(VECTORS);
 	assert_eq!(r.take(4), b"VVCV");
-	assert_eq!(r.u32(), 4);
+	assert_eq!(r.u32(), 5);
 	let hash = r.u64();
 	let n = r.u32();
 	let mut cases = Vec::new();
@@ -137,6 +139,7 @@ pub fn read_cases() -> (u64, Vec<Case>) {
 					invert: r.u8() == 1,
 				}
 			});
+			let flips = r.u8();
 			layers.push(VecLayer {
 				pixels,
 				nums,
@@ -145,6 +148,8 @@ pub fn read_cases() -> (u64, Vec<Case>) {
 				chroma_key,
 				blend,
 				mask,
+				flip_x: flips & 1 != 0,
+				flip_y: flips & 2 != 0,
 			});
 		}
 		let want = r.take(w * h * 4).to_vec();
@@ -195,6 +200,8 @@ pub fn layers_of(c: &Case) -> Vec<Layer<'_>> {
 				chroma_key: l.chroma_key.clone(),
 				blend: l.blend,
 				mask: l.mask,
+				flip_x: l.flip_x,
+				flip_y: l.flip_y,
 				blur,
 			}
 		})
