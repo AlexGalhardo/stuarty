@@ -19,7 +19,7 @@ const installTimeout = 30 * time.Minute
 // tools builds the install step: the manifest embedded in the binary, the
 // directory under the workspace and the one client that may download. A build
 // whose manifest pins no helper for this platform gets no install step.
-func (o *Owner) tools(model string) (*service.Tools, transcribe.Provider, error) {
+func (o *Owner) tools(model string, explicit bool) (*service.Tools, transcribe.Provider, error) {
 	manifest, err := transcribe.DefaultManifest()
 	if err != nil {
 		return nil, nil, err
@@ -45,8 +45,12 @@ func (o *Owner) tools(model string) (*service.Tools, transcribe.Provider, error)
 		return t, nil, nil
 	}
 
-	return t, &whisperProvider{dir: dir, model: model, entries: entries}, nil
+	return t, &whisperProvider{dir: dir, model: model, explicit: explicit, manifest: manifest, entries: entries}, nil
 }
+
+// modelPreference is the order in which an installed model is taken when
+// VUKEM_VIDEO_WHISPER_MODEL is not set: the default first, then the smaller ones.
+var modelPreference = []string{"small", "base", "tiny", "large-v3-turbo"}
 
 // whisperProvider is the whisper.cpp provider over what is installed now. It
 // looks the installed files up again on every call, so an install made while
@@ -54,20 +58,53 @@ func (o *Owner) tools(model string) (*service.Tools, transcribe.Provider, error)
 // of the model before anything is run or read: a changed file makes the helper
 // unavailable (SDD-007 section 6.8 item 6).
 type whisperProvider struct {
-	dir     string
-	model   string
-	entries []transcribe.ManifestEntry
-	ffmpeg  *ffmpeg.Runner
+	dir string
+	// model is the name VUKEM_VIDEO_WHISPER_MODEL asked for, or the default when it was not set.
+	model string
+	// explicit is true when the variable was set: then model is used as it is, installed or not.
+	explicit bool
+	manifest transcribe.Manifest
+	entries  []transcribe.ManifestEntry
+	ffmpeg   *ffmpeg.Runner
+}
+
+// resolve is the model and manifest entries in force now. Without the variable it is the
+// installed model (`tools:install whisper --model base`), found again on every call like the
+// files themselves, and the default only when none is installed (VV-007).
+func (p *whisperProvider) resolve() (string, []transcribe.ManifestEntry) {
+	if p.explicit {
+		return p.model, p.entries
+	}
+
+	for _, m := range modelPreference {
+		entries, ok := p.manifest.For("whisper", m, runtime.GOOS, runtime.GOARCH)
+		if !ok {
+			continue
+		}
+
+		for i := range entries {
+			if entries[i].Kind != transcribe.KindModel {
+				continue
+			}
+
+			if _, found := service.VerifiedTool(p.dir, entries[i].Name, entries[i].Kind, entries[i].Model); found {
+				return m, entries
+			}
+		}
+	}
+
+	return p.model, p.entries
 }
 
 func (p *whisperProvider) Name() string  { return transcribe.ProviderWhisper }
-func (p *whisperProvider) Model() string { return p.model }
+func (p *whisperProvider) Model() string { m, _ := p.resolve(); return m }
 
 func (p *whisperProvider) current() *transcribe.Whisper {
-	w := &transcribe.Whisper{FFmpeg: p.ffmpeg, ModelName: p.model}
+	model, entries := p.resolve()
+	w := &transcribe.Whisper{FFmpeg: p.ffmpeg, ModelName: model}
 
-	for i := range p.entries {
-		e := &p.entries[i]
+	for i := range entries {
+		e := &entries[i]
 		item := transcribe.Item{Name: e.File, URLHost: hostOf(e.URL), Bytes: e.Bytes}
 
 		path, _ := service.VerifiedTool(p.dir, e.Name, e.Kind, e.Model)

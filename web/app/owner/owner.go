@@ -212,11 +212,13 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	}
 
 	model := cfg.Getenv("VUKEM_VIDEO_WHISPER_MODEL")
-	if model == "" {
+
+	explicit := model != ""
+	if !explicit {
 		model = "small"
 	}
 
-	tools, transcriber, err := o.tools(model)
+	tools, transcriber, err := o.tools(model, explicit)
 	if err != nil {
 		return err
 	}
