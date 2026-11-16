@@ -82,7 +82,7 @@ download() { # download <tag> <asset> <destination>
 # The media fixture: the engine sniffer refuses an x264 MP4 whose moov box is at the end.
 media="$work/clip.mp4"
 ffmpeg -v error -y -f lavfi -i testsrc=size=320x240:rate=30:duration=2 -f lavfi -i sine=duration=2 \
-	-c:v libx264 -pix_fmt yuv420p -c:a aac -shortest -movflags +faststart "$media"
+	-c:v mpeg4 -pix_fmt yuv420p -c:a aac -shortest -movflags +faststart "$media"
 
 workspaces="$work/workspaces"
 binaries="$work/binaries"
