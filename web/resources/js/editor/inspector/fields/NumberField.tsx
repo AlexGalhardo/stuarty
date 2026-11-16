@@ -20,6 +20,7 @@ export default function NumberField({
 	step = 1,
 	min,
 	max,
+	below,
 	suffix,
 	placeholder,
 	marker,
@@ -31,6 +32,8 @@ export default function NumberField({
 	step?: number;
 	min?: number;
 	max?: number;
+	// An upper bound the value must stay under, which `max` cannot say.
+	below?: number;
 	suffix?: string;
 	// Shown while the field is empty, for a value the selected items do not share.
 	placeholder?: string;
@@ -45,6 +48,7 @@ export default function NumberField({
 		const value = Number(cleaned);
 		if (min !== undefined && value < min) return null;
 		if (max !== undefined && value > max) return null;
+		if (below !== undefined && value >= below) return null;
 		return value;
 	};
 	const binding = useCommitField(stored, async (draft) => {
@@ -55,7 +59,7 @@ export default function NumberField({
 				error: {
 					code: "E_VALIDATION",
 					message: "",
-					details: { min, max },
+					details: { min, max: below ?? max },
 				},
 			};
 		}

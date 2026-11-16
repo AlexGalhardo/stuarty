@@ -10,6 +10,7 @@ import {
 import { useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
 import { useDocumentState } from "../../state/EditorContext";
+import { registryRange } from "../fields/registryLimits";
 import SelectField from "../fields/SelectField";
 import SliderField from "../fields/SliderField";
 import Section from "../Section";
@@ -53,8 +54,7 @@ export default function FiltersSection({
 				label={t("ui.editor.clip.filter_amount")}
 				stored={String(item.filter_amount ?? 1)}
 				disabled={!canEdit}
-				min={0}
-				max={1}
+				{...registryRange("clip.set_filter", "amount")}
 				step={0.01}
 				commit={(amount) => send(filterOperations(itemId, { amount }))}
 			/>
@@ -62,8 +62,7 @@ export default function FiltersSection({
 				label={t("ui.editor.clip.blur")}
 				stored={String(item.blur ?? 0)}
 				disabled={!canEdit}
-				min={0}
-				max={100}
+				{...registryRange("clip.set_blur", "radius")}
 				step={0.5}
 				commit={(radius) => send(blurOperations(itemId, radius))}
 			/>

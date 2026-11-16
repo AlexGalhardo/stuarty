@@ -13,22 +13,23 @@ import {
 } from "../../state/EditorContext";
 import type { EffectiveValues } from "../../state/effectiveStore";
 import NumberField from "../fields/NumberField";
+import { registryLimits } from "../fields/registryLimits";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
 
 interface Row {
 	property: TransformProperty;
 	step: number;
+	// A lower bound the registry does not carry (`scale` is above 0, no minimum).
 	min?: number;
-	max?: number;
 }
 
 const ROWS: readonly Row[] = [
 	{ property: "x", step: 1 },
 	{ property: "y", step: 1 },
-	{ property: "scale", step: 0.05, min: 0.001, max: 20 },
+	{ property: "scale", step: 0.05, min: 0.001 },
 	{ property: "rotation", step: 1 },
-	{ property: "opacity", step: 0.05, min: 0, max: 1 },
+	{ property: "opacity", step: 0.05 },
 ];
 
 export const round3 = (value: number): string =>
@@ -105,6 +106,7 @@ export default function TransformSection({
 					shown(item, row.property, { width, height }, effective[item.id]),
 				);
 				const same = values.every((value) => value === values[0]);
+				const limits = registryLimits("item.set_transform", row.property);
 				const animated = targets.some(
 					(item) => (item.keyframes?.[row.property]?.length ?? 0) > 0,
 				);
@@ -116,8 +118,8 @@ export default function TransformSection({
 						placeholder={same ? undefined : t("ui.editor.inspector.mixed")}
 						marker={animated ? t("ui.editor.inspector.keyframed") : undefined}
 						step={row.step}
-						min={row.min}
-						max={row.max}
+						min={row.min ?? limits.min}
+						max={limits.max}
 						disabled={!canEdit}
 						commit={(value) =>
 							send(

@@ -7,6 +7,7 @@ import { useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
 import { readTimeDisplay } from "../../state/prefs";
 import NumberField from "../fields/NumberField";
+import { registryLimits } from "../fields/registryLimits";
 import TimeCommitField from "../fields/TimeCommitField";
 import ToggleField from "../fields/ToggleField";
 import Section from "../Section";
@@ -34,8 +35,7 @@ export default function AudioSection({
 				stored={String(item.volume ?? 1)}
 				disabled={!canEdit}
 				step={0.1}
-				min={0}
-				max={4}
+				{...registryLimits("item.set_audio", "volume")}
 				commit={(volume) => send(audioOperations(itemId, { volume }))}
 			/>
 			<TimeCommitField
