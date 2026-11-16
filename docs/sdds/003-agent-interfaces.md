@@ -2324,7 +2324,7 @@ When a **write or job-starting** command runs in process (step 3) and the output
 
 ### 5.3 Paths
 
-Every path argument (`media:import <path>`, `template:import <path>`) is made absolute by the CLI before the call: `filepath.Abs` against the current directory, cleaned (ADR-0016 item 7). The service then resolves the real path and applies the import rules (ADR-0020 item 6). Paths read by the CLI itself (`--ops <file>`, `--fill <file>`) are read from the CLI's current directory and are not sent. A path that does not exist is `E_FILE_NOT_FOUND` from the service; the CLI does not check it first.
+Every path argument (`media:import <path>`, `template:import <path>`) is made absolute by the CLI before the call (a leading `~` is the home directory and a `file://` URL is the path it names, because Windows shells expand neither; VV-048): `filepath.Abs` against the current directory, cleaned (ADR-0016 item 7). The service then resolves the real path and applies the import rules (ADR-0020 item 6). Paths read by the CLI itself (`--ops <file>`, `--fill <file>`) are read from the CLI's current directory and are not sent. A path that does not exist is `E_FILE_NOT_FOUND` from the service; the CLI does not check it first.
 
 ### 5.4 Command reference
 

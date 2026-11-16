@@ -70,6 +70,10 @@ type Runtime struct {
 	// Manifest returns the pins of the helpers this build may install; the one
 	// embedded in the binary when nil.
 	Manifest func() (transcribe.Manifest, error)
+
+	// resolved are the paths abs made absolute in this run, so that a missing
+	// file is reported with the path that was looked for (VV-048 b).
+	resolved []string
 }
 
 // NewRuntime is the Runtime of the real process.
@@ -115,6 +119,15 @@ func actorFrom(flag string) (string, error) {
 // to the service (SDD-003 section 5.3, ADR-0016 item 7). Against a remote server
 // (VUKEM_VIDEO_URL) a rooted path belongs to the server's filesystem and goes as typed.
 func (rt *Runtime) abs(path string) (string, error) {
+	out, err := rt.absolute(expandPath(path, rt.Getenv))
+	if err == nil {
+		rt.resolved = append(rt.resolved, out)
+	}
+
+	return out, err
+}
+
+func (rt *Runtime) absolute(path string) (string, error) {
 	if rt.Getenv != nil && rt.Getenv(workspace.EnvURL) != "" && strings.HasPrefix(path, "/") {
 		return path, nil
 	}

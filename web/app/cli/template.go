@@ -178,7 +178,7 @@ func (c *call) readFill(src string) (map[string]service.SlotValue, error) {
 	}
 
 	if err != nil {
-		return nil, validation("fill", "cannot read the fill: %v.", err)
+		return nil, validation("fill", "cannot read the fill %s: %s.", src, readReason(err))
 	}
 
 	dec := json.NewDecoder(bytes.NewReader(raw))

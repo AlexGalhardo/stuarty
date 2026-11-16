@@ -62,6 +62,17 @@ func asServiceError(err error) *service.Error {
 	}
 }
 
+// forCLI adapts a shared error to this surface without changing the original: a
+// missing file names the path that was looked for. Hints stay as the core emits them.
+func forCLI(se *service.Error, resolved []string) *service.Error {
+	out := *se
+	if se.Code == "E_FILE_NOT_FOUND" && len(resolved) > 0 {
+		out.Message = strings.TrimRight(se.Message, ".") + ": " + resolved[len(resolved)-1] + "."
+	}
+
+	return &out
+}
+
 // exitCodeOf maps an error to its exit code.
 func exitCodeOf(se *service.Error) int {
 	if se.IsRetryable() {
@@ -93,7 +104,7 @@ func writeJSON(w io.Writer, v any) error {
 // standard output with --json (standard error stays empty), the text on
 // standard error otherwise. It returns the exit code.
 func writeError(rt *Runtime, asJSON bool, err error) int {
-	se := asServiceError(err)
+	se := forCLI(asServiceError(err), rt.resolved)
 
 	if asJSON {
 		_ = writeJSON(rt.Stdout, se.Document())
