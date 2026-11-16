@@ -141,8 +141,16 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 		s.waitAssets(ctx, &row, res.Assets, time.Duration(req.WaitMS)*time.Millisecond)
 	}
 
+	// Failed counts the final state of every file, including an ingest that failed
+	// while the call waited, so the CLI exit code and the batch total agree with the entries.
+	res.Failed = 0
+
 	for i := range res.Assets {
 		s.refreshImported(ctx, c, &row, &res.Assets[i])
+
+		if res.Assets[i].Error != nil {
+			res.Failed++
+		}
 	}
 
 	if head, herr := s.store.Projects().Get(ctx, row.ID); herr == nil {
