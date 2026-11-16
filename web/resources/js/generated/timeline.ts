@@ -30,6 +30,7 @@ export interface Asset {
    */
   frame_delays?: [number, number, ...number[]];
   frame_rate?: Rational;
+  has_alpha?: boolean;
   has_audio?: boolean;
   hash: string;
   height?: number;

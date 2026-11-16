@@ -378,3 +378,19 @@ func TestSummarizeKeepsContainerAndStreamTags(t *testing.T) {
 		}
 	}
 }
+
+// A source with an alpha channel keeps it: ProRes 4444 in yuva444p10le, through the swscale path.
+func TestPlanVideoKeepsAlpha(t *testing.T) {
+	caps := &ffmpeg.Capabilities{Zscale: true, Tonemap: true, Bwdif: true, Yadif: true}
+
+	p := PlanVideo(videoSummary(VideoFacts{CodedWidth: 1920, CodedHeight: 1080, PixFmt: "yuva444p10le"}, 3000), caps)
+	if !p.Alpha || p.Colour != ColourScale || !strings.Contains(chain(p), "format=yuva444p10le") ||
+		strings.Contains(chain(p), "yuv420p") {
+		t.Errorf("alpha source: alpha=%v %v %s", p.Alpha, p.Colour, chain(p))
+	}
+
+	p = PlanVideo(videoSummary(VideoFacts{CodedWidth: 1920, CodedHeight: 1080, PixFmt: "yuv420p"}, 3000), caps)
+	if p.Alpha || !strings.Contains(chain(p), "format=yuv420p") {
+		t.Errorf("opaque source: alpha=%v %s", p.Alpha, chain(p))
+	}
+}

@@ -270,6 +270,22 @@ func (j *job) verifyVideo(ctx context.Context, plan VideoPlan, frames int, sampl
 	return nil
 }
 
+// checkNormalizedCodec expects the encoder and pixel format the plan chose for video.mov.
+func checkNormalizedCodec(c *checks, plan VideoPlan, codec, pixFmt string) {
+	if !plan.Alpha {
+		c.eq("video_codec", "mpeg4", codec)
+		c.eq("pix_fmt", "yuv420p", pixFmt)
+
+		return
+	}
+
+	c.eq("video_codec", "prores", codec)
+	// The ProRes decoder reports a 4444 stream as 12 bit; the file holds 10.
+	if pixFmt != "yuva444p10le" && pixFmt != "yuva444p12le" {
+		c.fail("pix_fmt", "yuva444p10le", pixFmt)
+	}
+}
+
 func (j *job) checkNormalizedVideo(
 	ctx context.Context,
 	c *checks,
@@ -286,8 +302,7 @@ func (j *job) checkNormalizedVideo(
 		c.fail("video_codec", "one video stream", "none")
 		return nil
 	}
-	c.eq("video_codec", "mpeg4", v.CodecName)
-	c.eq("pix_fmt", "yuv420p", v.PixFmt)
+	checkNormalizedCodec(c, plan, v.CodecName, v.PixFmt)
 	c.eq("size", fmt.Sprintf("%dx%d", plan.W, plan.H), fmt.Sprintf("%dx%d", v.Width, v.Height))
 	if plan.W%2 != 0 || plan.H%2 != 0 {
 		c.fail("size", "even", fmt.Sprintf("%dx%d", plan.W, plan.H))

@@ -15,17 +15,37 @@ type assetRepo struct{ ex database.Executor }
 
 const assetColumns = `id, kind, size_bytes, original_name, ingest_state, ingest_progress, ingest_error,
  normalized_version, duration_ms, width, height, has_audio, frame_rate_num, frame_rate_den,
- frame_count, sample_count, created_ms, updated_ms, frame_delays`
+ frame_count, sample_count, created_ms, updated_ms, frame_delays, has_alpha`
 
 func scanAsset(sc scanner) (service.AssetRow, error) {
 	var (
 		a                                             service.AssetRow
 		kind, ingestErr, delays                       sql.NullString
 		version, dur, w, h, frn, frd, frames, samples sql.NullInt64
-		hasAudio                                      int
+		hasAudio, hasAlpha                            int
 	)
-	err := sc.Scan(&a.Hash, &kind, &a.SizeBytes, &a.OriginalName, &a.IngestState, &a.Progress, &ingestErr,
-		&version, &dur, &w, &h, &hasAudio, &frn, &frd, &frames, &samples, &a.CreatedMs, &a.UpdatedMs, &delays)
+	err := sc.Scan(
+		&a.Hash,
+		&kind,
+		&a.SizeBytes,
+		&a.OriginalName,
+		&a.IngestState,
+		&a.Progress,
+		&ingestErr,
+		&version,
+		&dur,
+		&w,
+		&h,
+		&hasAudio,
+		&frn,
+		&frd,
+		&frames,
+		&samples,
+		&a.CreatedMs,
+		&a.UpdatedMs,
+		&delays,
+		&hasAlpha,
+	)
 	if err != nil {
 		return service.AssetRow{}, err
 	}
@@ -33,7 +53,7 @@ func scanAsset(sc scanner) (service.AssetRow, error) {
 	a.IngestError = rawJSON(ingestErr)
 	a.Facts = service.AssetFacts{
 		NormalizedVersion: ptrInt(version), DurationMs: ptrInt64(dur), Width: ptrInt(w), Height: ptrInt(h),
-		HasAudio: hasAudio != 0, FrameRateNum: ptrInt(frn), FrameRateDen: ptrInt(frd),
+		HasAudio: hasAudio != 0, HasAlpha: hasAlpha != 0, FrameRateNum: ptrInt(frn), FrameRateDen: ptrInt(frd),
 		FrameCount: ptrInt64(frames), SampleCount: ptrInt64(samples),
 	}
 	if delays.Valid {
@@ -53,12 +73,12 @@ func (r assetRepo) Upsert(ctx context.Context, a service.AssetRow) (service.Asse
 	n, err := rowsAffected(r.ex.ExecContext(ctx, `INSERT INTO assets
  (id, kind, size_bytes, original_name, ingest_state, ingest_progress, ingest_error, normalized_version,
   duration_ms, width, height, has_audio, frame_rate_num, frame_rate_den, frame_count, sample_count,
-  created_ms, updated_ms, frame_delays)
- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  created_ms, updated_ms, frame_delays, has_alpha)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
  ON CONFLICT (id) DO NOTHING`,
 		a.Hash, nullString(a.Kind), a.SizeBytes, a.OriginalName, string(state), a.Progress, nullJSON(a.IngestError),
 		f.NormalizedVersion, f.DurationMs, f.Width, f.Height, boolInt(f.HasAudio), f.FrameRateNum, f.FrameRateDen,
-		f.FrameCount, f.SampleCount, a.CreatedMs, a.UpdatedMs, delaysJSON(f.FrameDelays)))
+		f.FrameCount, f.SampleCount, a.CreatedMs, a.UpdatedMs, delaysJSON(f.FrameDelays), boolInt(f.HasAlpha)))
 	if err != nil {
 		return service.AssetRow{}, false, err
 	}
@@ -95,12 +115,27 @@ func (r assetRepo) SetIngest(
 }
 
 func (r assetRepo) SetFacts(ctx context.Context, hash string, f service.AssetFacts, nowMs int64) error {
-	return notFoundIfNone(rowsAffected(r.ex.ExecContext(ctx, `UPDATE assets SET
+	return notFoundIfNone(rowsAffected(r.ex.ExecContext(
+		ctx,
+		`UPDATE assets SET
  kind = COALESCE(NULLIF(?, ''), kind), normalized_version = ?, duration_ms = ?, width = ?, height = ?, has_audio = ?,
- frame_rate_num = ?, frame_rate_den = ?, frame_count = ?, sample_count = ?, frame_delays = ?, updated_ms = ?
+ frame_rate_num = ?, frame_rate_den = ?, frame_count = ?, sample_count = ?, frame_delays = ?, has_alpha = ?, updated_ms = ?
  WHERE id = ?`,
-		f.Kind, f.NormalizedVersion, f.DurationMs, f.Width, f.Height, boolInt(f.HasAudio),
-		f.FrameRateNum, f.FrameRateDen, f.FrameCount, f.SampleCount, delaysJSON(f.FrameDelays), nowMs, hash)))
+		f.Kind,
+		f.NormalizedVersion,
+		f.DurationMs,
+		f.Width,
+		f.Height,
+		boolInt(f.HasAudio),
+		f.FrameRateNum,
+		f.FrameRateDen,
+		f.FrameCount,
+		f.SampleCount,
+		delaysJSON(f.FrameDelays),
+		boolInt(f.HasAlpha),
+		nowMs,
+		hash,
+	)))
 }
 
 // delaysJSON stores the frame delays of an animated image as a JSON array, NULL for a still.

@@ -17,6 +17,9 @@
         "frame_rate": {
           "$ref": "#/$defs/Rational"
         },
+        "has_alpha": {
+          "type": "boolean"
+        },
         "has_audio": {
           "type": "boolean"
         },

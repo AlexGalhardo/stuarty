@@ -185,7 +185,7 @@ func (f *frameSource) video(l *plan.Layer, a *timeline.Asset) (compositor.Image,
 	if err != nil {
 		return compositor.Image{}, err
 	}
-	return compositor.Image{Pix: pix, W: d.w, H: d.h, Opaque: true}, nil
+	return compositor.Image{Pix: pix, W: d.w, H: d.h, Opaque: !a.HasAlpha}, nil
 }
 
 // decoder is the decoder of the clip of the layer, made on the first use.
@@ -204,7 +204,16 @@ func (f *frameSource) decoder(l *plan.Layer, a *timeline.Asset) (*videoDecoder, 
 			vf = append(vf, ffargs.CropRect(cw, ch, cx, cy)...)
 		}
 		vf = append(vf, ffargs.ScaleFrameToRGBA(w, h), ffargs.Format("rgba"))
-		d = &videoDecoder{s: f.s, path: path, w: w, h: h, vf: ffargs.Chain1(vf...), rate: a.FrameRate, item: l.ItemID}
+		d = &videoDecoder{
+			s:     f.s,
+			path:  path,
+			w:     w,
+			h:     h,
+			vf:    ffargs.Chain1(vf...),
+			rate:  a.FrameRate,
+			item:  l.ItemID,
+			alpha: a.HasAlpha,
+		}
 		f.vids[l.ItemID] = d
 	}
 	return d, nil
@@ -271,6 +280,8 @@ type videoDecoder struct {
 	w, h int
 	vf   string
 	rate timeline.Rational
+	// alpha says the decoded pixels carry an alpha channel: they are premultiplied as they arrive.
+	alpha bool
 
 	cancel context.CancelFunc
 	out    chan []byte
@@ -393,6 +404,7 @@ func (d *videoDecoder) start(sf int) error {
 		d.runErr, d.stderr = err, res.Stderr
 		close(exited)
 	}()
+	alpha := d.alpha
 	go func() {
 		defer close(read)
 		defer close(out)
@@ -405,6 +417,9 @@ func (d *videoDecoder) start(sf int) error {
 			}
 			if err := readFrame(pr, buf); err != nil {
 				return
+			}
+			if alpha {
+				premultiply(buf)
 			}
 			select {
 			case out <- buf:
@@ -419,6 +434,21 @@ func (d *videoDecoder) start(sf int) error {
 		_ = pr.Close()
 	}()
 	return nil
+}
+
+// premultiply turns straight RGBA into the premultiplied form the compositor blends, rounding to
+// the nearest like the image/draw conversion of the stills.
+func premultiply(pix []byte) {
+	for i := 0; i+3 < len(pix); i += 4 {
+		a := uint32(pix[i+3])
+		if a == 255 {
+			continue
+		}
+
+		for c := i; c < i+3; c++ {
+			pix[c] = byte((uint32(pix[c])*a + 127) / 255) //nolint:gosec // at most 255 by construction
+		}
+	}
 }
 
 // pipeReadChunk is the most one read asks of the decoder pipe. The pipe of os.Pipe holds 4 KiB on

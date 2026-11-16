@@ -83,6 +83,8 @@ type Facts struct {
 	Width       int      `json:"width"`
 	Height      int      `json:"height"`
 	HasAudio    bool     `json:"has_audio"`
+	// HasAlpha is true for a video whose normalized file keeps an alpha channel (SDD-011 4.3.5).
+	HasAlpha bool `json:"has_alpha,omitempty"`
 	// FrameDelays is the display time in milliseconds of each frame of an animated image, whose
 	// FrameCount is its length (SDD-001 3.2). Empty for every other asset.
 	FrameDelays []int `json:"frame_delays,omitempty"`

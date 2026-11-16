@@ -118,6 +118,9 @@ type Asset struct {
 	Width       int       `json:"width,omitempty"                                                                        min:"1"`
 	Height      int       `json:"height,omitempty"                                                                       min:"1"`
 	HasAudio    bool      `json:"has_audio,omitempty"`
+	// HasAlpha says the video has an alpha channel (a lower third, a logo, an effect): the export
+	// composes it over the layers below instead of drawing it opaque (SDD-011 4.3.5).
+	HasAlpha bool `json:"has_alpha,omitempty"`
 	// FrameDelays makes an image asset animated (BETA, SDD-001 §3.2): the display
 	// time of each frame in milliseconds, one per FrameCount.
 	FrameDelays []int `json:"frame_delays,omitempty" minitems:"2" maxitems:"1000"`

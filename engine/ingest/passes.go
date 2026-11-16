@@ -60,7 +60,14 @@ func (j *job) video(ctx context.Context) error {
 	}); err != nil {
 		return err
 	}
-	j.res.Facts = Facts{FrameRate: plan.FPS, FrameCount: frames, Width: plan.W, Height: plan.H, HasAudio: hasAudio}
+	j.res.Facts = Facts{
+		FrameRate:  plan.FPS,
+		FrameCount: frames,
+		Width:      plan.W,
+		Height:     plan.H,
+		HasAudio:   hasAudio,
+		HasAlpha:   plan.Alpha,
+	}
 
 	var samples int64
 	if hasAudio {
@@ -105,19 +112,12 @@ func (j *job) videoPass(ctx context.Context, plan VideoPlan, deadline time.Durat
 				NoAudio: true,
 				NoSubs:  true,
 				NoData:  true,
-				Opts: cat([]ffargs.Opt{
-					ffargs.Enum(
-						"-c:v",
-						"mpeg4",
-					),
-					ffargs.Int("-q:v", NormalizedQScale),
-					ffargs.Int("-threads", NormalizedThreads),
-					// The automatic DCT picks a SIMD version by CPU that is not bit-exact; int is.
-					ffargs.Enum("-dct", "int"),
-					ffargs.Int("-g", plan.GOP),
-					ffargs.Int("-bf", 0),
-					ffargs.Enum("-pix_fmt", "yuv420p"),
-				}, colourTags, []ffargs.Opt{ffargs.Enum("-fps_mode", "cfr"), ffargs.Int("-video_track_timescale", plan.Timescale)}, bitexact()),
+				Opts: cat(
+					normalizedCodecOpts(plan),
+					colourTags,
+					[]ffargs.Opt{ffargs.Enum("-fps_mode", "cfr"), ffargs.Int("-video_track_timescale", plan.Timescale)},
+					bitexact(),
+				),
 			},
 			{
 				Format:  "mp4",
@@ -177,6 +177,31 @@ func (j *job) videoPass(ctx context.Context, plan VideoPlan, deadline time.Durat
 	}
 	j.prog.set(StepVideo, 1)
 	return frames, nil
+}
+
+// normalizedCodecOpts is the encoder of video.mov: mpeg4 in yuv420p, or ProRes 4444 in yuva444p10le
+// when the source has an alpha channel (SDD-011 4.3.2 and 4.3.5).
+func normalizedCodecOpts(plan VideoPlan) []ffargs.Opt {
+	if plan.Alpha {
+		return []ffargs.Opt{
+			ffargs.Enum("-c:v", "prores_ks"),
+			ffargs.Enum("-profile:v", "4444"),
+			// One thread keeps the bytes the same on every machine (NFR-010).
+			ffargs.Int("-threads", 1),
+			ffargs.Enum("-pix_fmt", "yuva444p10le"),
+		}
+	}
+
+	return []ffargs.Opt{
+		ffargs.Enum("-c:v", "mpeg4"),
+		ffargs.Int("-q:v", NormalizedQScale),
+		ffargs.Int("-threads", NormalizedThreads),
+		// The automatic DCT picks a SIMD version by CPU that is not bit-exact; int is.
+		ffargs.Enum("-dct", "int"),
+		ffargs.Int("-g", plan.GOP),
+		ffargs.Int("-bf", 0),
+		ffargs.Enum("-pix_fmt", "yuv420p"),
+	}
 }
 
 func countDecodeErrors(stderr string) int {

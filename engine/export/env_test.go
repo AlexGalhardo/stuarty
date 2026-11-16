@@ -134,6 +134,8 @@ type fixtureSpec struct {
 	// Sticker makes it a PNG with a straight alpha. Both are images: FPS and Seconds are not used.
 	DelaysCS []int `json:"delays_cs,omitempty"`
 	Sticker  bool  `json:"sticker,omitempty"`
+	// Alpha makes the fixture a ProRes 4444 video with an alpha channel.
+	Alpha bool `json:"alpha,omitempty"`
 }
 
 // generate writes the media file of the spec into the fixtures folder.
@@ -143,6 +145,8 @@ func (spec fixtureSpec) generate(ctx context.Context) (string, error) {
 		return shared.gen.AnimatedGIF(spec.Name, spec.Width, spec.Height, spec.DelaysCS)
 	case spec.Sticker:
 		return shared.gen.StickerPNG(spec.Name, spec.Width, spec.Height)
+	case spec.Alpha:
+		return shared.gen.AlphaClip(ctx, spec.Name, spec.Width, spec.Height, spec.FPS, spec.Seconds)
 	}
 	return shared.gen.Clip(ctx, spec.Name, spec.Width, spec.Height, spec.FPS, spec.Seconds)
 }
@@ -177,7 +181,7 @@ func ingestClip(tb testing.TB, spec fixtureSpec) *ingested {
 		Hash:         put.Hash,
 		ArtifactsDir: artifactsDir(),
 		JobID: "ingest_" + strings.TrimSuffix(
-			strings.TrimSuffix(strings.TrimSuffix(spec.Name, ".mp4"), ".gif"),
+			strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(spec.Name, ".mp4"), ".gif"), ".mov"),
 			".png",
 		),
 	})
@@ -196,6 +200,7 @@ func useAsset(doc *timeline.Document, id string, in *ingested) {
 	a.FrameRate = timeline.Rational{Num: int(in.facts.FrameRate.Num), Den: int(in.facts.FrameRate.Den)}
 	a.FrameCount, a.SampleCount = in.facts.FrameCount, int(in.facts.SampleCount)
 	a.Width, a.Height, a.HasAudio = in.facts.Width, in.facts.Height, in.facts.HasAudio
+	a.HasAlpha = in.facts.HasAlpha
 	a.FrameDelays = in.facts.FrameDelays
 	doc.Assets[id] = a
 }

@@ -147,3 +147,29 @@ func (g Gen) Long(ctx context.Context) (string, error) {
 	return g.ff(ctx, "ingest-60s-1080p.mp4", append(append(src(1080, 1920, 30, 60), tone(60)...),
 		"-c:v", "mpeg4", "-dct", "int", "-q:v", "5", "-c:a", "aac", "-f", "mp4")...)
 }
+
+// AlphaClip is a ProRes 4444 clip with an alpha channel and no sound: the left half is fully
+// transparent and the right half is opaque red.
+func (g Gen) AlphaClip(ctx context.Context, name string, w, h, fps int, secs float64) (string, error) {
+	return g.ff(
+		ctx,
+		name,
+		"-f",
+		"lavfi",
+		"-i",
+		fmt.Sprintf("color=c=red:s=%dx%d:r=%d:d=%g", w, h, fps, secs),
+		"-vf",
+		fmt.Sprintf(
+			"format=yuva444p,geq=lum='lum(X,Y)':cb='cb(X,Y)':cr='cr(X,Y)':a='if(gte(X,%d),255,0)',format=yuva444p10le",
+			w/2,
+		),
+		"-c:v",
+		"prores_ks",
+		"-profile:v",
+		"4444",
+		"-pix_fmt",
+		"yuva444p10le",
+		"-f",
+		"mov",
+	)
+}
