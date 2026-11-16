@@ -130,6 +130,7 @@ export default function SpeedCurve({
 					size="sm"
 					variant="outline"
 					disabled={!canEdit}
+					data-speed-curve-start=""
 					onClick={start}
 				>
 					{t("ui.editor.clip.curve_start")}

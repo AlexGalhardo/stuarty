@@ -107,6 +107,60 @@ test.describe("compatible keymap, tools and ranges", () => {
 		await expect(header).toHaveAttribute("aria-expanded", "false");
 	});
 
+	test("Shift+B opens the speed curve of the selected clip, with focus on its first point", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+		await open(page, seeded.id, 1);
+		const edits = recordEdits(page);
+		await page.locator("[data-item-id]").first().click();
+		const header = page.getByRole("button", { name: "Speed", exact: true });
+		await header.click();
+		await expect(header).toHaveAttribute("aria-expanded", "false");
+		await page.locator("[data-item-id]").first().click();
+		await page.keyboard.press("Shift+b");
+		await expect(header).toHaveAttribute("aria-expanded", "true");
+		await expect(page.locator("[data-curve-point]")).toHaveCount(2);
+		await expect(
+			page.getByLabel("Point 1 speed", { exact: true }),
+		).toBeFocused();
+		expect(edits).toHaveLength(0);
+	});
+
+	test("Alt+wheel scrolls the timeline sideways", async ({ page, request }) => {
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+			clipDuration: "10s",
+		});
+		await open(page, seeded.id, 1);
+		for (let i = 0; i < 4; i++) await page.keyboard.press("Control+=");
+		const scroller = page.locator("#timeline");
+		const box = await scroller.boundingBox();
+		if (box === null) throw new Error("no timeline");
+		const start = await scroller.evaluate((el) => {
+			const target = el
+				.querySelector("[data-item-id]")
+				?.closest(".overflow-auto");
+			return (target ?? el).scrollLeft;
+		});
+		await page.mouse.move(box.x + 200, box.y + 60);
+		await page.keyboard.down("Alt");
+		await page.mouse.wheel(0, 300);
+		await page.keyboard.up("Alt");
+		await expect
+			.poll(() =>
+				scroller.evaluate((el) => {
+					const target = el
+						.querySelector("[data-item-id]")
+						?.closest(".overflow-auto");
+					return (target ?? el).scrollLeft;
+				}),
+			)
+			.toBeGreaterThan(start);
+	});
+
 	test("Ctrl+wheel zooms the timeline", async ({ page, request }) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
 		await open(page, seeded.id, 1);

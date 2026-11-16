@@ -64,7 +64,11 @@ export function useShortcuts(openCaption: () => void): void {
 	useEffect(() => {
 		// The fixed rows of section 18.7 that edit; true when the key was one.
 		const fixedKey = (event: KeyboardEvent): boolean => {
-			const combo = comboFromEvent(event);
+			// The physical key: Option changes the character on a Mac.
+			const combo =
+				event.altKey && event.shiftKey && event.code === "KeyM"
+					? "Alt+Shift+M"
+					: comboFromEvent(event);
 			const row = combo === null ? null : fixedRowFor(combo);
 			if (row === null) return false;
 			const { selection, focusedItem, playheadFrame } = runtime.ui.getState();
@@ -82,7 +86,7 @@ export function useShortcuts(openCaption: () => void): void {
 				const marker = adjacentMarker(
 					(doc.markers ?? []).map((m) => m.frame),
 					playheadFrame,
-					combo === "Mod+Shift+Right" ? 1 : -1,
+					combo === "Mod+Shift+Left" || combo === "Alt+Shift+M" ? -1 : 1,
 				);
 				if (marker !== null) runtime.uiWriter.setPlayhead(marker);
 			} else if (row === "range_in_out") {
@@ -137,7 +141,8 @@ export function useShortcuts(openCaption: () => void): void {
 			return true;
 		};
 		const onKey = (event: KeyboardEvent): void => {
-			if (isEditable(event.target) || event.altKey) return;
+			if (isEditable(event.target)) return;
+			if (event.altKey && !(event.shiftKey && event.code === "KeyM")) return;
 			const edit = inOverlay(event.target) ? null : editShortcut(event);
 			if (edit !== null) {
 				event.preventDefault();

@@ -49,4 +49,35 @@ test.describe("markers and in/out points", () => {
 		await page.keyboard.press("Control+Shift+x");
 		await expect(page.locator('[data-testid="ruler-range"]')).toHaveCount(0);
 	});
+
+	test("Shift+M goes to the next marker and Alt+Shift+M to the previous one", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+			clipDuration: "4s",
+		});
+		await page.goto(`/editor/${seeded.id}`);
+		await expect(page.locator("[data-item-id]")).toHaveCount(1);
+		const ruler = page.getByRole("slider", { name: "Playhead" });
+		const markers = page.locator('[data-testid="ruler-marker"]');
+		await ruler.focus();
+		await page.keyboard.press("PageUp");
+		await page.keyboard.press("m");
+		await page.keyboard.press("PageUp");
+		await page.keyboard.press("m");
+		await expect(markers).toHaveCount(2);
+		const first = await markers.first().getAttribute("data-frame");
+		const last = await markers.last().getAttribute("data-frame");
+		await page.keyboard.press("Home");
+		await expect(ruler).toHaveAttribute("aria-valuenow", "0");
+		await page.keyboard.press("Shift+m");
+		await expect(ruler).toHaveAttribute("aria-valuenow", String(first));
+		await page.keyboard.press("Shift+m");
+		await expect(ruler).toHaveAttribute("aria-valuenow", String(last));
+		await page.keyboard.press("Alt+Shift+m");
+		await expect(ruler).toHaveAttribute("aria-valuenow", String(first));
+	});
 });

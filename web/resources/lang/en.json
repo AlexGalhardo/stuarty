@@ -724,6 +724,8 @@
           "extract_audio": "Extract the audio of the selected clips",
           "toggle_snap": "Toggle snapping",
           "keyframe_panel": "Show or hide the keyframes of the selected item",
+          "speed_curve": "Open the speed curve of the selected clip",
+          "scroll": "Scroll the timeline: wheel up and down, Alt+wheel sideways",
           "preview_zoom": "Fit the preview, zoom it in, zoom it out",
           "import": "Import media",
           "export": "Export",
@@ -1248,6 +1250,7 @@
         "tool_select": "Select tool",
         "keyframes_shown": "Keyframes shown",
         "keyframes_hidden": "Keyframes hidden",
+        "speed_curve_shown": "Speed curve ready to edit",
         "split": {
           "one": "Split, {count} item",
           "other": "Split, {count} items"
