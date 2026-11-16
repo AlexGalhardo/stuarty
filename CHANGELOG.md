@@ -7,6 +7,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-11-16
+
+### Added
+
+- **ui:** Go to the previous and next cut with the Up and Down keys ([8775a6d](https://github.com/AlexGalhardo/vukem-video/commit/8775a6d0031ac79de85decc3922c9de536ef3f58))
+- **engine:** Keep the alpha channel of video overlays ([abf90cb](https://github.com/AlexGalhardo/vukem-video/commit/abf90cb9551c9e4a37971f4a1d3835abc6ea8e8c))
+- **ui:** Pick the PixiJS renderer, WebGPU when an adapter exists and WebGL otherwise ([cb4dab3](https://github.com/AlexGalhardo/vukem-video/commit/cb4dab32be8aabe1cf359f52b20dbf65c745aee3))
+
+### Removed
+
+- Keep media_import a successful MCP result when every file failed ([288489e](https://github.com/AlexGalhardo/vukem-video/commit/288489edd1f9a6624a68d17df2647f1be1b91c7c))
+
+### Fixed
+
+- **ci:** Build FFmpeg under a fixed path so both rounds match ([16f0815](https://github.com/AlexGalhardo/vukem-video/commit/16f0815f08a33da1919a63d365a49c5b5117eac3))
+- **ui:** Seek preview audio to the source time of the current frame ([b170223](https://github.com/AlexGalhardo/vukem-video/commit/b170223a0d71df1fb3789908561f34d4db37f9eb))
+- **ffmpeg:** Give internal run directories unique names ([ca29c9f](https://github.com/AlexGalhardo/vukem-video/commit/ca29c9fface2b2d6bb8ea4fda965bcff7ea89bcd))
+- **service:** Make every job reach a final state ([5d0c769](https://github.com/AlexGalhardo/vukem-video/commit/5d0c7699c8f970aebe070e70cff3b0b9796901c0))
+- **ui:** Let the export dialog start another export after one finished ([2062aaa](https://github.com/AlexGalhardo/vukem-video/commit/2062aaae941bdb739e514605ca8dfce3fd8e6b44))
+- **ui:** Show the load-failed banner when the first load fails on the network ([a5b967a](https://github.com/AlexGalhardo/vukem-video/commit/a5b967a880dfca85fc5e6668144893897c4f4ec5))
+- **ffmpeg:** Reclaim the leftover run directory of a retried job ([d0ff11b](https://github.com/AlexGalhardo/vukem-video/commit/d0ff11b00616ac9542584e3b87b7801f5b7e71a1))
+- **events:** Drop the export path from job events in network mode ([d96198e](https://github.com/AlexGalhardo/vukem-video/commit/d96198e92bb722e298793c2b2015c05536b99d82))
+- **ui:** Give the logo link an accessible name when appName is empty ([4063920](https://github.com/AlexGalhardo/vukem-video/commit/4063920560262696fc119d49eb0475d826980739))
+- **ui:** Send an expired session from any editor call to the login ([1a0e6dd](https://github.com/AlexGalhardo/vukem-video/commit/1a0e6ddb1b93c94a7edec8a863e92059be05fb7c))
+- **ui:** Give an empty timeline track a cell so its row is valid ARIA ([a60a0d8](https://github.com/AlexGalhardo/vukem-video/commit/a60a0d880d04075e3ec21a1c3679550793d4e9f7))
+- **ui:** Clear the alert of a projects form when another form is submitted ([ea4d99f](https://github.com/AlexGalhardo/vukem-video/commit/ea4d99fa67466e1c1ddf8c8edb525d1ece62ae70))
+- **ui:** Start the palette button label with its visible text ([845b46b](https://github.com/AlexGalhardo/vukem-video/commit/845b46b2327322b7a631eb4c3079668481f986ba))
+- **http:** Accept the loopback aliases of APP_URL in the container rule ([2240206](https://github.com/AlexGalhardo/vukem-video/commit/22402065bbf481ada7b0700c9cc5fe53a8d22104))
+- **core:** Bound extreme numeric arguments instead of panicking on +Inf ([6a9abf3](https://github.com/AlexGalhardo/vukem-video/commit/6a9abf3575db168ce876c53d0049dc9dd2dcb933))
+- **ui:** Put the edit toolbar of the editor inside a landmark ([7ede144](https://github.com/AlexGalhardo/vukem-video/commit/7ede1440d672ad9144da9fef80db591210c85c53))
+- **ui:** Name unnamed tracks V1/A1 and unnamed ducking items by their media ([468daf4](https://github.com/AlexGalhardo/vukem-video/commit/468daf4de83781e291c51741be6c1be7ffa9ea87))
+- **ui:** Show the limits of a refused number and hide the argument path in the inspector ([475c203](https://github.com/AlexGalhardo/vukem-video/commit/475c203a882895f30582c1982b39abe697e79f78))
+- **ui:** Mark a template slot with a default name when its toggle is switched on ([94df832](https://github.com/AlexGalhardo/vukem-video/commit/94df83247eedb165f4f9be71ee9d539e063b5381))
+- **service:** Remove invisible characters from untrusted text ([5ec7cf5](https://github.com/AlexGalhardo/vukem-video/commit/5ec7cf54aafa251b6b582c8d0d1a13c7be3182fc))
+- **service:** Key the heavy limit by credential ([72ebaec](https://github.com/AlexGalhardo/vukem-video/commit/72ebaec05a28fc83e1d0b4d2b567837b3d0bc80b))
+- **desktop:** Give the Choose files dialog media filters ([590c8c8](https://github.com/AlexGalhardo/vukem-video/commit/590c8c887696d2aacdf510b3fe2a399f8243b184))
+- **ui:** Show every time in the editor through one formatter and the time display preference ([486b7db](https://github.com/AlexGalhardo/vukem-video/commit/486b7dbee2cbe822b85de4da3fae19748d7bfc38))
+- **desktop:** Reuse the loopback port of the last run so browser preferences persist ([307db08](https://github.com/AlexGalhardo/vukem-video/commit/307db08c003041dc1fd0b706ee46a70d3eb97bd7))
+- **desktop:** Bind F5, page zoom and a QA-only F12 in the window ([5d8b0c2](https://github.com/AlexGalhardo/vukem-video/commit/5d8b0c2c2176d62190d35a068923b9dace12b541))
+- **export:** Stop composing frames once the encoder has exited ([bc83ed2](https://github.com/AlexGalhardo/vukem-video/commit/bc83ed2c469da09338068dbaaa05a67bba9ef27e))
+- **service:** Count assets whose ingest failed in media import failures ([986dcf0](https://github.com/AlexGalhardo/vukem-video/commit/986dcf00da9cbb9bf3b71e80e7866d47c03cd848))
+- **cli:** Send rooted paths as typed when talking to a remote server ([dc3d617](https://github.com/AlexGalhardo/vukem-video/commit/dc3d617995f023167d50ebfb151e1e5cda9e0050))
+- **desktop:** Tie the server child to the shell with a job object ([2df8854](https://github.com/AlexGalhardo/vukem-video/commit/2df8854a0ec79c3c3546ac9ae65c5d6a46fd02f1))
+- **owner:** Transcribe with the installed whisper model when none is configured ([87fa654](https://github.com/AlexGalhardo/vukem-video/commit/87fa654a843d185e2970d05f8e9693db31981b0e))
+- **desktop:** Show the native menu and dialogs in the system language ([d9b75e3](https://github.com/AlexGalhardo/vukem-video/commit/d9b75e368f28323d1ae37e1addfb289870ba8b24))
+- **ui:** Apply the next free slot only to the operation that failed ([1223d1d](https://github.com/AlexGalhardo/vukem-video/commit/1223d1d8cbd6b4fcf4e524d783742ce73e6ca06e))
+- **export:** Restart a single-frame decoder for every new source frame ([6774bf7](https://github.com/AlexGalhardo/vukem-video/commit/6774bf7b4cdcb8e331b9837812c4b34f50c857ec))
+- **preview:** Never ask for the frame past the end of the timeline ([a00ac7b](https://github.com/AlexGalhardo/vukem-video/commit/a00ac7b0ed80f5733dbf1c4b2565bed5532b3ad9))
+- **library:** Keep typing during an import and accept several paths ([dff6b15](https://github.com/AlexGalhardo/vukem-video/commit/dff6b15eb191fc791c09a5423b84a1551196e156))
+- **projects:** Create a project through the JSON API, without the 409 ([c505f2d](https://github.com/AlexGalhardo/vukem-video/commit/c505f2dc9c0126791989a9274ee885e84c7ed827))
+- **export:** Refuse wav and aac exports of a project with no sound ([9906744](https://github.com/AlexGalhardo/vukem-video/commit/9906744126a110300877c4ab479fb52563583c63))
+- **library:** Show an icon for audio assets instead of asking for a thumbnail ([4ee5756](https://github.com/AlexGalhardo/vukem-video/commit/4ee5756c4e454088b34a0136d2d576ac8500ce9c))
+- **mcp:** Report media_import as an error when every file failed ([6ba63ec](https://github.com/AlexGalhardo/vukem-video/commit/6ba63ecebe0814077b759b3ae79adc44954cc7ef))
+- **core:** Let text, shape and caption pick a free visual track ([6a38034](https://github.com/AlexGalhardo/vukem-video/commit/6a38034f18e22d351ec51e34eb1772b89304b3de))
+- **docker:** Install libgomp1 so the whisper helper starts in the image ([a2165e3](https://github.com/AlexGalhardo/vukem-video/commit/a2165e33751775b4b4da9df23bccbdaa276cc563))
+- **core:** Make beat markers readable in the diff text and in project detail full ([7595e20](https://github.com/AlexGalhardo/vukem-video/commit/7595e204ebb5676f63c33c8e228c1ed4198c87f9))
+- **http:** Include the project state in the project ETag ([6c0f9c2](https://github.com/AlexGalhardo/vukem-video/commit/6c0f9c26c8f841f0d1b9599633f94e1c9ff1f762))
+- **http:** Answer 200 for a dry run given in the query ([8e92843](https://github.com/AlexGalhardo/vukem-video/commit/8e9284331ca163c9932409290465dcb655e1d164))
+- **http:** Look operation names up exactly, as MCP does ([b0ff2cc](https://github.com/AlexGalhardo/vukem-video/commit/b0ff2ccbee6eec3321e73b4091e55b4e200ffbb1))
+- **cli:** Resume the live stream after resync.required ([b2e7da0](https://github.com/AlexGalhardo/vukem-video/commit/b2e7da0b3d48013a293352b56953f8fb653f2525))
+- **web:** Share the signed-in user and the app name in network mode ([5ffd28e](https://github.com/AlexGalhardo/vukem-video/commit/5ffd28ef8977032eb7c6ea54ffc618c9f044f0d3))
+- **web:** Answer pages that do not exist with the error page ([ed19ec9](https://github.com/AlexGalhardo/vukem-video/commit/ed19ec9841399ed8abf96f35e593e2233f181b2d))
+- **core:** Add an overlay image at its natural size instead of filling the frame ([23cd0c8](https://github.com/AlexGalhardo/vukem-video/commit/23cd0c835fb924cd0cf191c9d2217cb11e828df9))
+- **notices:** Parse SPDX expressions with their parentheses ([03a7b36](https://github.com/AlexGalhardo/vukem-video/commit/03a7b364299fc12d2e7bee891af0c880897c5654))
+- **core:** Resolve a missing font weight to the nearest the family has ([a46aaf4](https://github.com/AlexGalhardo/vukem-video/commit/a46aaf46ed072b42ba945a04728d5f8782c0de09))
+- **core:** Place a duplicate at the next free position when start is omitted ([3ba164b](https://github.com/AlexGalhardo/vukem-video/commit/3ba164b073669068a536932c818690d47978c082))
+- **core:** Rescale caption words by their two ends on set_fps ([4a60202](https://github.com/AlexGalhardo/vukem-video/commit/4a602028f0d6d5090fa26e7d08ec052b5184408a))
+- **service:** Show the revision a dry run would commit as ([cad4db0](https://github.com/AlexGalhardo/vukem-video/commit/cad4db0137422b4e86c0746a7a34a1d71f4c7b33))
+- **service:** Answer E_ASSET_NOT_READY for an edit on an asset still ingesting ([e873380](https://github.com/AlexGalhardo/vukem-video/commit/e8733800b1562d89b86401cd4588b0facf1cbdf7))
+- **lint:** Do not report L_OFF_FRAME for a box that covers the frame ([5b4f282](https://github.com/AlexGalhardo/vukem-video/commit/5b4f282ead155cc4b7e22807477ec0f2fbea86db))
+- **ui:** Keep the preview live frame and timecode in step with a paused seek ([14081d0](https://github.com/AlexGalhardo/vukem-video/commit/14081d0c83434701e9091b181b07c76afdf03d2d))
+- **store:** Refuse a stored file that is not a regular file ([b39556b](https://github.com/AlexGalhardo/vukem-video/commit/b39556b3eb8739dddc9bb9ea68009248a5c053ad))
+
 ## [0.17.0] - 2026-11-16
 
 ### Added
@@ -766,7 +839,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.18.0...HEAD
+[0.18.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.14.0...v0.15.0
