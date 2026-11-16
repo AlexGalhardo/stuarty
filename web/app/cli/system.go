@@ -142,7 +142,9 @@ func auditText(res *service.AuditListResult) string {
 var transcribeCmd = &spec{
 	name:    "transcribe",
 	summary: "transcribe the audio of an asset",
-	usage:   []string{"vukem-video transcribe --project <id> --asset <id> [--language auto] [--wait] [--timeout d]"},
+	usage: []string{
+		"vukem-video transcribe --project <id> --asset <id> [--language auto] [--model <name>] [--wait] [--timeout d]",
+	},
 	example: "vukem-video transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en",
 	project: true,
 	globals: []string{"wait", "timeout"},
@@ -150,6 +152,7 @@ var transcribeCmd = &spec{
 	flags: []flagDef{
 		{Name: "asset", Kind: kindString, Usage: "asset to transcribe (required)"},
 		{Name: "language", Kind: kindString, Default: "auto", Usage: "BCP 47 code, or auto"},
+		{Name: "model", Kind: kindString, Usage: "installed model name, such as base (default: the workspace default)"},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
 		if !c.args.has("asset") {
@@ -157,7 +160,7 @@ var transcribeCmd = &spec{
 		}
 
 		raw, err := json.Marshal(service.TranscribeArgs{
-			AssetID: c.args.str("asset"), Language: c.args.str("language"),
+			AssetID: c.args.str("asset"), Language: c.args.str("language"), Model: c.args.str("model"),
 		})
 		if err != nil {
 			return nil, err

@@ -396,7 +396,7 @@ vukem-video export --project <id> [--start t] [--end t] [--format f] [--wait] [-
 | --- | --- | --- | --- |
 | `--start` | string |  | first time to export (default: the start) |
 | `--end` | string |  | end of the export (default: the end of the timeline) |
-| `--format` | string |  | mp4 (default), gif, wav or aac |
+| `--format` | string |  | mp4 (default), gif, wav, aac or png |
 | `--out` | string |  | copy the file to this path when the job succeeds (implies --wait; the workspace keeps its own copy) |
 | `--force` | boolean | `false` | replace the --out file when it exists |
 
@@ -676,13 +676,14 @@ vukem-video agent:docs --write ~/.claude/skills/vukem-video
 Transcribe the audio of an asset
 
 ```text
-vukem-video transcribe --project <id> --asset <id> [--language auto] [--wait] [--timeout d]
+vukem-video transcribe --project <id> --asset <id> [--language auto] [--model <name>] [--wait] [--timeout d]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--asset` | string |  | asset to transcribe (required) |
 | `--language` | string | `auto` | BCP 47 code, or auto |
+| `--model` | string |  | installed model name, such as base (default: the workspace default) |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
 

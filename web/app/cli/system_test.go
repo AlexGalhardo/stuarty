@@ -138,6 +138,8 @@ func TestCLITranscribe(t *testing.T) {
 		"ast_3c5v8n2w6d",
 		"--language",
 		"en",
+		"--model",
+		"base",
 		"--no-wait",
 		"--json",
 	)
@@ -149,7 +151,7 @@ func TestCLITranscribe(t *testing.T) {
 		t.Fatalf("request: %+v", s.jobReq)
 	}
 
-	if got := string(s.jobReq.Args); got != `{"asset_id":"ast_3c5v8n2w6d","language":"en"}` {
+	if got := string(s.jobReq.Args); got != `{"asset_id":"ast_3c5v8n2w6d","language":"en","model":"base"}` {
 		t.Fatalf("args: %s", got)
 	}
 
