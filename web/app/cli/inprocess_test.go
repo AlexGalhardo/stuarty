@@ -113,6 +113,10 @@ func TestInProcessConnectionCanExport(t *testing.T) {
 	}
 
 	if job.State != service.JobSucceeded || job.Result == nil || job.Result.Export == nil {
+		if job.Error != nil {
+			t.Logf("error details: %+v", job.Error.Details) // the failed checks of a verification
+		}
+
 		t.Fatalf("job = %+v", job)
 	}
 }
