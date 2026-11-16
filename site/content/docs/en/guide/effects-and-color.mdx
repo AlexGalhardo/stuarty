@@ -1,73 +1,98 @@
 ---
 title: "Effects and color"
-description: "Adjust the brightness, contrast and saturation of a clip, and animate text with presets."
+description: "Correct the color of a clip, add a filter or a blur, blend layers, key out a green screen, mask a layer and animate text with presets."
 ---
 
 ## You will learn
 
-- how to correct the colour of a clip;
-- how to give text an entrance and an exit with a preset;
-- how to apply a colour filter and a blur to a clip;
-- what the product does not do.
+- how to correct the color of a clip;
+- how to apply a filter and a blur;
+- how to blend a layer with the ones below it, key out a color and mask a layer;
+- how to give text an entrance and an exit with a preset.
 
 ## The idea
 
-Colour correction is three numbers on a clip: `brightness` (-1 to 1, default 0), `contrast` (0 to 2, default 1) and `saturation` (0 to 2, default 1). A value equal to the default clears the stored one, so a clip that is back at the defaults has no correction at all. Both the preview and the export apply the correction through the same [render plan](/docs/concepts/render).
+An effect is a property of an item, not a separate object: you set it with one operation, and the preview and the export apply it the same way through the same [render plan](/docs/concepts/render). In the editor the inspector of a clip has a section for each one: **Colour**, **Filters** (with the blur), **Blend** and **Chroma key**. A mask has no inspector section yet; use the CLI, an agent or the command palette (`Ctrl+K`, `Cmd+K` on macOS).
 
-For text, captions, clips and shapes there are six **animation presets**: `fade_up`, `fade_down`, `pop`, `zoom_in`, `slide_left` and `slide_right`. A preset writes keyframes (or, for the slides, a transition) on the `in` or the `out` edge, 0.4 seconds long unless you give a duration. The inspector has an Animation section with the preset and the edge.
+A value equal to its default clears the stored one, so an item that is back at the defaults has no effect stored at all.
 
-Text styling (font, weight, size, colour, stroke, shadow and background) is described in [Text and captions](/docs/guide/text-and-captions). Fades and slides between items are in [Transitions](/docs/guide/transitions).
+## Correct the color
 
-### Filters and blur
-
-`clip.set_filter` sets one filter of a fixed list, `grayscale`, `sepia`, `invert`, `warm` or `cool` (`none` is the default), and `amount`, from 0 (the original) to 1 (the full filter). `clip.set_blur` sets a Gaussian blur radius in pixels at the project resolution, from 0 to 100. Both are constant over the clip: they cannot be keyframed. A filter set to `none` with amount 1, or a blur of 0, clears the stored value. The filter is applied after the colour correction and before the blur, in the preview and in the export alike.
-
-```bash
-vukem-video edit --project prj_7k2m9x4q1b clip.set_filter item_id=itm_m1n2p3q4r5   filter=sepia amount:=0.6
-vukem-video edit --project prj_7k2m9x4q1b clip.set_blur item_id=itm_m1n2p3q4r5 radius:=12
-```
-
-An MCP agent sends the same operations through `edit`. The colour correction, the filter and the blur have no inspector section yet: use the command palette (`Ctrl+K`, `Cmd+K` on macOS), the CLI or an agent. There are no LUTs.
-
-## Quick start
-
-<Tabs>
-<Tab title="CLI">
+`clip.set_color` sets three numbers: `brightness` (-1 to 1, default 0), `contrast` (0 to 2, default 1) and `saturation` (0 to 2, default 1).
 
 ```bash
 vukem-video edit --project prj_7k2m9x4q1b clip.set_color item_id=itm_m1n2p3q4r5 \
   brightness:=0.1 saturation:=1.2
+```
+
+## Apply a filter and a blur
+
+`clip.set_filter` sets one filter of a fixed list, `grayscale`, `sepia`, `invert`, `warm` or `cool` (`none` is the default), and `amount`, from 0 (the original) to 1 (the full filter). `clip.set_blur` sets a Gaussian blur radius in pixels at the project resolution, from 0 to 100.
+
+Both are constant over the clip: they cannot be keyframed. The filter is applied after the color correction and before the blur.
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b clip.set_filter item_id=itm_m1n2p3q4r5 filter=sepia amount:=0.6
+vukem-video edit --project prj_7k2m9x4q1b clip.set_blur item_id=itm_m1n2p3q4r5 radius:=12
+```
+
+There are no LUTs.
+
+## Blend a layer with the ones below
+
+`clip.set_blend` chooses how a visual item mixes with what is under it: `normal` (the default), `multiply`, `screen`, `overlay` or `add`. It works on clips, text, captions and shapes. `normal` clears the stored mode.
+
+```json
+{ "op": "clip.set_blend", "args": { "item_id": "itm_m1n2p3q4r5", "mode": "screen" } }
+```
+
+## Key out a color
+
+`clip.set_chroma_key` makes the pixels near one color transparent, for example a green screen, so the track below shows through. It works on clips.
+
+- `color` is `#RRGGBB`, or `null` to remove the key.
+- `similarity` (0 to 1, default 0.3) is how far from the color a pixel is still removed.
+- `smoothness` (0 to 1, default 0.1) is the soft edge beyond it.
+- `spill` (0 to 1, default 0) is how much of the color is taken out of the pixels that stay.
+
+On a clip that is already keyed, a value you do not give keeps its current value.
+
+```json
+{ "op": "clip.set_chroma_key", "args": {
+  "item_id": "itm_m1n2p3q4r5", "color": "#00FF00", "similarity": 0.35, "spill": 0.2
+} }
+```
+
+## Mask a layer
+
+`clip.set_mask` limits where an item is drawn to a rectangle or an ellipse. `x`, `y`, `width` and `height` are fractions of the item (0 to 1; `x` plus `width` and `y` plus `height` at most 1), `feather` is the soft edge in pixels (0 to 200, default 0) and `invert` keeps the outside instead. A new mask replaces the current one, and `mask: null` removes it. It works on clips, text, captions and shapes.
+
+```json
+{ "op": "clip.set_mask", "args": { "item_id": "itm_m1n2p3q4r5", "mask": {
+  "shape": "ellipse", "x": 0.1, "y": 0.1, "width": 0.8, "height": 0.8, "feather": 12
+} } }
+```
+
+## Animate text with a preset
+
+For text, captions, clips and shapes there are six **animation presets**: `fade_up`, `fade_down`, `pop`, `zoom_in`, `slide_left` and `slide_right`. A preset writes keyframes (or, for the slides, a transition) on the `in` or the `out` edge, 0.4 seconds long unless you give a duration. The inspector has an Animation section with the preset and the edge. A preset replaces the keyframes of the same properties inside its edge and keeps the rest of the animation.
+
+```bash
 vukem-video edit --project prj_7k2m9x4q1b text.apply_preset item_id=itm_t1u2v3w4x5 \
   preset=fade_up edge=in
 ```
 
-</Tab>
-<Tab title="MCP">
-
-`edit` with the operations:
-
-```json
-{ "op": "clip.set_color", "args": {
-  "item_id": "itm_m1n2p3q4r5", "brightness": 0.1, "saturation": 1.2
-} }
-{ "op": "text.apply_preset", "args": {
-  "item_id": "itm_t1u2v3w4x5", "preset": "pop", "edge": "in"
-} }
-```
-
-</Tab>
-</Tabs>
-
-A preset replaces the keyframes of the same properties inside its edge and keeps the rest of the animation.
+Text styling (font, weight, size, color, stroke, shadow and background) is in [Text and captions](/docs/guide/text-and-captions). Fades and slides between items are in [Transitions](/docs/guide/transitions).
 
 ## Common mistakes
 
-- Setting a contrast above 2 or a brightness outside -1 to 1: `E_VALIDATION`.
-- Applying a preset, a filter or a blur to an audio item: `E_TYPE_MISMATCH`.
-- A blur radius above 100 or a filter amount outside 0 to 1: `E_VALIDATION`.
+- A contrast above 2, a brightness outside -1 to 1, a blur radius above 100 or a filter amount outside 0 to 1: `E_VALIDATION`.
+- A preset, a filter, a blur, a blend, a key or a mask on an audio item: `E_TYPE_MISMATCH`. A chroma key works on clips only.
+- A mask larger than the item (`x` plus `width` above 1): `E_VALIDATION`.
 - A preset duration longer than the item: the command is refused.
 
 ## Next steps
 
 - [Animate with keyframes](/docs/guide/keyframes)
 - [Transitions](/docs/guide/transitions)
+- [Clip properties](/docs/guide/clip-properties)

@@ -6,7 +6,8 @@ description: "Add tracks, place clips and read the project back."
 ## You will learn
 
 - how to add a track and a clip in one batch;
-- how to read the project cheaply.
+- how to read the project cheaply;
+- how to put markers on the timeline.
 
 ## Quick start
 
@@ -30,6 +31,22 @@ Send it with the `edit` MCP tool, `vukem-video edit --project prj_7k2m9x4q1b --o
 
 Read the project back as text with `project_get` (or `project:show`). The concise view is meant to fit in two pages of a few thousand tokens even for a long project; follow `next_cursor` for the next page.
 
+## Markers
+
+A **marker** is a labelled point on the timeline. It changes neither the picture nor the sound: it only helps you (or an agent) find a place again.
+
+| To | Operation |
+| --- | --- |
+| put a marker at a position (`at`), with an optional `label` of up to 60 characters | `marker.add` |
+| move a marker (`to`) or change its label (an empty label removes it) | `marker.set` |
+| remove the marker at a position, or every marker (`all`) | `marker.remove` |
+
+```json
+{ "op": "marker.add", "args": { "at": "12s", "label": "chorus" } }
+```
+
+In the editor, `M` adds a marker at the playhead, or removes the one there, and `Mod+Shift+Left` and `Mod+Shift+Right` jump to the previous and the next marker. The [audio page](/docs/guide/audio) shows how to mark the beats of a song.
+
 ## Common mistakes
 
 - A clip longer than the asset, or a `source_in` past its end: `E_INVALID_TIME`.
@@ -37,4 +54,4 @@ Read the project back as text with `project_get` (or `project:show`). The concis
 
 ## Next steps
 
-- [Editing tools: trim, split, move](/docs/guide/editing-tools)
+- [Trim, split and move clips](/docs/guide/editing-tools)

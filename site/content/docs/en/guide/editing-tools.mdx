@@ -1,36 +1,96 @@
 ---
-title: "Editing tools: trim, split, move"
-description: "Trim a clip to change when it starts and ends, split it in two, move it, or remove it."
+title: "Trim, split and move clips"
+description: "Change where a clip starts and ends, cut it in two, move it, slip its content and close the gaps."
 ---
 
 ## You will learn
 
-- how to move, trim, split and delete an item;
+- how to trim, split, move, copy and delete an item;
+- how a ripple, a roll, a slide and a slip differ;
 - how to check a batch before it is saved.
 
-## Quick start
+## The idea
 
-Each is an operation in an `edit` batch. Use `command_help` (or `vukem-video command:help item.trim`) for the exact arguments.
+Every cut is an **operation** in an `edit` batch. An operation names an item (`item_id`) and a position. A position is a time such as `2s` or a frame such as `97f` (see [Time](/docs/concepts/time)). The end of an item is **exclusive**: it is the first frame after the item, so an item that starts at `0s` and lasts `5s` ends at `5s`.
 
 | To | Operation |
 | --- | --- |
-| move an item in time or to another track | `item.move` |
-| change its start or end | `item.trim` |
-| cut it in two | `item.split` |
-| remove it | `item.delete` |
+| change where an item starts or ends | `item.trim` |
+| cut an item in two | `item.split` |
+| move an item in time, or to another track | `item.move` |
+| change which part of the source an item shows | `item.slip` |
+| remove items | `item.delete` |
+| copy an item | `item.duplicate` |
+| close an empty range of a track | `timeline.close_gap` |
+
+Use `command_help` (or `vukem-video command:help item.trim`) for the exact arguments of each one.
+
+## Quick start
+
+Cut a clip in two at `2s`. The original keeps its id and becomes the left part; a new item is the right part:
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+vukem-video edit --project prj_7k2m9x4q1b item.split item_id=itm_m1n2p3q4r5 at=2s
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` with the operation:
 
 ```json
 { "op": "item.split", "args": { "item_id": "itm_m1n2p3q4r5", "at": "2s" } }
 ```
 
-Pass `dry_run: true` to see the diff without saving.
+</Tab>
+</Tabs>
+
+## Trim an edge
+
+`item.trim` moves one edge (`start` or `end`) to an absolute position (`to`). The source range, the keyframes and the caption words stay consistent.
+
+```json
+{ "op": "item.trim", "args": { "item_id": "itm_m1n2p3q4r5", "edge": "end", "to": "4s" } }
+```
+
+Two options decide what happens to the neighbours:
+
+- **Ripple.** With `"ripple": "track"` the later items of the track follow the change in length, so no gap opens (and no overlap). With a start trim, the item keeps its start.
+- **Roll.** With `"roll": true` the touching edge of the next item moves to the same frame: the cut moves and nothing else changes. A roll cannot be combined with a ripple.
+
+## Move or slide an item
+
+`item.move` sets the new `start` of an item, its `track_id`, or both (at least one). Keyframes, words, transitions and fades travel with the item.
+
+With `"slide": true` the neighbours that touch the item are trimmed so they keep touching it: the one before ends, and the one after starts, where the item now does. A slide needs `start` and cannot change the track.
+
+## Slip the content
+
+`item.slip` changes which part of the media an item shows (`source_in`) and changes nothing else: the start, the duration, the keyframes and the neighbours stay. The source range must stay inside the media.
+
+## Delete and close the gap
+
+`item.delete` removes items. `ripple` says what follows: `none` (the default) leaves a gap, `track` moves the later items of each affected track earlier, and `all` moves the later items of every track (the deleted items must cover one contiguous range).
+
+To close a gap that already exists, `timeline.close_gap` takes the track and any frame inside the gap (`at`), and moves the later items earlier by the length of the gap (`ripple` is `track` by default, or `all`).
+
+## Check before you save
+
+Add `dry_run: true` to a batch (`--dry-run` in the CLI) to see the diff without saving it. The editor also has undo and redo for each person or agent: see [Undo and history](/docs/guide/undo-and-history).
 
 ## Common mistakes
 
 - An unknown `item_id`: `E_NOT_FOUND`, with the path of the argument that failed.
-- A split point outside the item: `E_INVALID_TIME`.
+- A split point outside the item (it must be strictly inside): `E_INVALID_TIME`.
+- Slipping past the end of the media: the source range must stay inside it.
+- A roll together with a ripple, or a slide without `start`: the command is refused.
+- Forgetting that the end is exclusive. To keep a clip until `5s`, trim the end to `5s`, not `4s`.
 
 ## Next steps
 
+- [Basic timeline editing](/docs/guide/timeline)
 - [Undo and history](/docs/guide/undo-and-history)
 - [Command catalogue](/docs/reference/commands)

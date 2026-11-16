@@ -1,18 +1,23 @@
 ---
 title: "Text and captions"
-description: "Put text on screen and style word-timed captions."
+description: "Put text on screen, create word-timed captions and style them once for a whole track."
 ---
 
 ## You will learn
 
 - how to add a text item and edit it;
+- how a caption works, and how to split, merge and correct one;
 - how a caption track is styled.
 
 ## The idea
 
-A **text** item shows a string for a duration. A **caption** is word-timed text on a caption track, with a style set on the track. The lint rules check that text stays inside the safe area of the format.
+A **text** item shows a string for a duration. A **caption** is word-timed text on a caption track: every word has its own start and length, so the style can highlight the word being spoken. The style belongs to the **track**, so every caption on it looks the same.
+
+Captions usually come from speech: see [Transcription](/docs/guide/transcription) to create them from a clip. The lint rules check that text stays inside the safe area of the format ([Safe area](/docs/guide/safe-area)).
 
 ## Quick start
+
+Put a title on screen for three seconds:
 
 ```json
 { "op": "text.add", "args": {
@@ -20,13 +25,33 @@ A **text** item shows a string for a duration. A **caption** is word-timed text 
 } }
 ```
 
-Change the text later with `text.set`. Style a caption track with `track.set_caption_style`.
+Change the text later with `text.set`. Give a text item an entrance and an exit with [an animation preset](/docs/guide/effects-and-color).
+
+## Correct a caption
+
+| To | Operation |
+| --- | --- |
+| change one word, or remove it (empty text) | `caption.edit_word` |
+| replace all the words of a caption | `caption.set_words` |
+| cut a caption in two before a word | `caption.split` |
+| join two captions of one track | `caption.merge` |
+| choose where a line breaks | `caption.set_breaks` |
+| move the words to follow a clip you retimed | `caption.retime_from_clip` |
+
+`caption.split` takes the index of the first word of the right part (`before_word`, at least 1). `caption.merge` takes exactly two captions of the same track. In the editor, the **Caption words** table of the inspector lists every word with its start, duration and line break, and has a **Split** button before each word.
+
+## Style a caption track
+
+`track.set_caption_style` sets the style of a caption track. A caption item reads it from its track, so a change reaches every caption at once. In the editor the inspector of a caption track has the style fields and the buttons **Replace the whole style** and **Clear the style**.
 
 ## Common mistakes
 
 - Putting text on an audio track: `E_TYPE_MISMATCH`.
 - Text that leaves the safe area: a lint warning, not an error. Run `lint` before you export.
+- Styling one caption when you meant the track: the style is on the track, not on the caption.
 
 ## Next steps
 
+- [Transcription](/docs/guide/transcription)
+- [Safe area](/docs/guide/safe-area)
 - [Exporting](/docs/guide/exporting)

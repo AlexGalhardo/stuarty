@@ -16,7 +16,7 @@ Sound comes from two places: the audio of a video clip, and **audio items** on a
 
 Each clip or audio item has a `volume` (linear gain from 0 to 4), a `fade_in`, a `fade_out`, and a clip can be muted with `audio_muted`. Volume can also be animated with a [keyframe](/docs/guide/keyframes) on the property `volume`. The project has a `loudness_target` in LUFS (from -30 to -5) that the export aims for.
 
-There is no audio panel in the inspector yet: use the command palette (`Ctrl+K`, `Cmd+K` on macOS), the CLI or an agent.
+In the editor, the inspector of a clip or an audio item has an **Audio** section with the volume, the two fades and **Mute audio**. The CLI, an agent and the command palette (`Ctrl+K`, `Cmd+K` on macOS) reach the same operations.
 
 ## Quick start
 
@@ -67,7 +67,7 @@ If the speech item has no analysis yet the edit fails with `E_INVALID_STATE` and
 vukem-video edit --project prj_7k2m9x4q1b audio.mark_beats item_id=itm_s6t7v8w9x0 every:=2 label=beat
 ```
 
-An asset without audio has no beat grid and the edit fails with `E_INVALID_STATE`. The same two operations are available to an MCP agent through `edit`. The editor has no section for ducking or beat markers yet.
+An asset without audio has no beat grid and the edit fails with `E_INVALID_STATE`. The same two operations are available to an MCP agent through `edit`. In the editor, the inspector of a music item has a **Ducking** section (the speech items, the volume change, attack and release) and a **Beat markers** section (every nth beat, a label, replace the markers of the item).
 
 Run `vukem-video lint` before you export. These rules concern sound: `L_AUDIO_OVERLAP` (audio items that overlap), `L_AUDIO_CLIP` (the mix reaches clipping) and `L_SILENT_EXPORT` (the export would have no sound).
 
