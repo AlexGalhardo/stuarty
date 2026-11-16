@@ -90,10 +90,4 @@ export const landing = {
 			},
 		},
 	] satisfies Feature[],
-	footer: {
-		docs: "Documentation",
-		changelog: "Changelog",
-		repo: "GitHub",
-		license: "MIT licence. Documentation in English.",
-	},
 };
