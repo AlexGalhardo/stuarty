@@ -18,9 +18,12 @@ struct Layer {
 }
 
 // The mask of SDD-004 section 3.9 in pixels of the layer's own rectangle (all zero when the layer
-// has none). `map_x` is (ax, bx, ox, enabled) and `map_y` is (ay, by, oy, 0): the position of the
-// centre of the pixel (x, y) in the rectangle is (ax x + bx y + ox, ay x + by y + oy). `shape` is
-// (left, top, half width, half height) and `edge` is (feather, ellipse, invert, 0).
+// has none). `map_x` is (ax, bx, ox, enabled) and `map_y` is (ay, by, oy, wipe direction): the
+// position of the centre of the pixel (x, y) in the rectangle is (ax x + bx y + ox, ay x + by y + oy).
+// `enabled` is 1 for a shape and 2 for a wipe alone (no shape: the coverage of the shape is 1). The wipe
+// direction is 0 for none, 1 left, 2 right, 3 up and 4 down (SDD-004 section 3.2). `shape` is (left,
+// top, half width, half height) and `edge` is (feather, ellipse, invert, the edge of the wipe): the
+// wipe covers `u < edge` (left), `u >= edge` (right), `v < edge` (up) or `v >= edge` (down).
 struct Mask {
 	map_x: vec4<f32>,
 	map_y: vec4<f32>,
@@ -78,23 +81,40 @@ fn coverage(at: vec2<f32>) -> f32 {
 		mask.map_x.x * p.x + mask.map_x.y * p.y + mask.map_x.z,
 		mask.map_y.x * p.x + mask.map_y.y * p.y + mask.map_y.z,
 	);
-	let half = mask.shape.zw;
-	let corner = mask.shape.xy;
-	var d: f32;
-	if mask.edge.y != 0.0 {
-		let q = abs(l - corner - half) / half;
-		d = (1.0 - length(q)) * min(half.x, half.y);
-	} else {
-		let far = corner + 2.0 * half;
-		d = min(min(l.x - corner.x, far.x - l.x), min(l.y - corner.y, far.y - l.y));
+	var cov = 1.0;
+	if mask.map_x.w == 1.0 {
+		let half = mask.shape.zw;
+		let corner = mask.shape.xy;
+		var d: f32;
+		if mask.edge.y != 0.0 {
+			let q = abs(l - corner - half) / half;
+			d = (1.0 - length(q)) * min(half.x, half.y);
+		} else {
+			let far = corner + 2.0 * half;
+			d = min(min(l.x - corner.x, far.x - l.x), min(l.y - corner.y, far.y - l.y));
+		}
+		if mask.edge.x == 0.0 {
+			cov = select(0.0, 1.0, d >= 0.0);
+		} else {
+			cov = clamp(d / mask.edge.x + 0.5, 0.0, 1.0);
+		}
+		cov = select(cov, 1.0 - cov, mask.edge.z != 0.0);
 	}
-	var cov: f32;
-	if mask.edge.x == 0.0 {
-		cov = select(0.0, 1.0, d >= 0.0);
-	} else {
-		cov = clamp(d / mask.edge.x + 0.5, 0.0, 1.0);
+	let wipe = u32(mask.map_y.w);
+	if wipe != 0u {
+		var inside: bool;
+		if wipe == 1u {
+			inside = l.x < mask.edge.w;
+		} else if wipe == 2u {
+			inside = l.x >= mask.edge.w;
+		} else if wipe == 3u {
+			inside = l.y < mask.edge.w;
+		} else {
+			inside = l.y >= mask.edge.w;
+		}
+		cov = cov * select(0.0, 1.0, inside);
 	}
-	return select(cov, 1.0 - cov, mask.edge.z != 0.0);
+	return cov;
 }
 
 @fragment
