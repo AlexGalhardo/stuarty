@@ -5,7 +5,7 @@
 //! matrix, filter, blur: `prepare_layer`), the opacity and the choice between the one-to-one copy
 //! and the sampled draw. What the GPU decides is the sampling and the blend: each layer is one
 //! quad, transformed on the CPU in `f64` and handed over as final positions, drawn bottom first with
-//! premultiplied source-over. The result is not bit-exact; it is held to the CPU path by SSIM and
+//! premultiplied source-over, or by a shader that mixes with a copy of the frame for a blend mode. The result is not bit-exact; it is held to the CPU path by SSIM and
 //! geometry (SDD-013 section 3.8).
 //!
 //! This crate is native (Vulkan, Metal, Direct3D 12). It is separate from the core module of the CPU

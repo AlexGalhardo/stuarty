@@ -3,6 +3,7 @@
 use core::fmt;
 use std::mem::size_of;
 
+use vukem_renderer::blend::BlendMode;
 use vukem_renderer::compose::{Layer, Prepared, Target, parse_colour, prepare_layer};
 use vukem_renderer::error::{Error, Reason};
 use vukem_renderer::host::Renderer;
@@ -67,6 +68,7 @@ pub struct GpuRenderer {
 	queue: wgpu::Queue,
 	info: wgpu::AdapterInfo,
 	pipeline: wgpu::RenderPipeline,
+	blend_pipeline: wgpu::RenderPipeline,
 	layout: wgpu::BindGroupLayout,
 }
 
@@ -102,63 +104,70 @@ impl GpuRenderer {
 			},
 			count: None,
 		};
+		let texture = |binding| wgpu::BindGroupLayoutEntry {
+			binding,
+			visibility: wgpu::ShaderStages::FRAGMENT,
+			ty: wgpu::BindingType::Texture {
+				sample_type: wgpu::TextureSampleType::Float { filterable: false },
+				view_dimension: wgpu::TextureViewDimension::D2,
+				multisampled: false,
+			},
+			count: None,
+		};
 		let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
 			label: Some("layer"),
-			entries: &[
-				uniform(0),
-				uniform(1),
-				wgpu::BindGroupLayoutEntry {
-					binding: 2,
-					visibility: wgpu::ShaderStages::FRAGMENT,
-					ty: wgpu::BindingType::Texture {
-						sample_type: wgpu::TextureSampleType::Float { filterable: false },
-						view_dimension: wgpu::TextureViewDimension::D2,
-						multisampled: false,
-					},
-					count: None,
-				},
-			],
+			entries: &[uniform(0), uniform(1), texture(2), texture(3)],
 		});
 		let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
 			label: Some("layer"),
 			bind_group_layouts: &[Some(&layout)],
 			immediate_size: 0,
 		});
-		let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-			label: Some("layer"),
-			layout: Some(&pipeline_layout),
-			vertex: wgpu::VertexState {
-				module: &shader,
-				entry_point: Some("vs_main"),
-				compilation_options: Default::default(),
-				buffers: &[Some(wgpu::VertexBufferLayout {
-					array_stride: VERTEX_BYTES,
-					step_mode: wgpu::VertexStepMode::Vertex,
-					attributes: &wgpu::vertex_attr_array![0 => Float32x2, 1 => Float32x2],
-				})],
-			},
-			fragment: Some(wgpu::FragmentState {
-				module: &shader,
-				entry_point: Some("fs_main"),
-				compilation_options: Default::default(),
-				targets: &[Some(wgpu::ColorTargetState {
-					format: FORMAT,
-					blend: Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),
-					write_mask: wgpu::ColorWrites::ALL,
-				})],
-			}),
-			primitive: wgpu::PrimitiveState::default(),
-			depth_stencil: None,
-			multisample: wgpu::MultisampleState::default(),
-			multiview_mask: None,
-			cache: None,
-		});
+		// The pipeline of a layer drawn by the fixed blend state, and the one of a layer with a blend
+		// mode, whose fragment shader mixes with the backdrop and so replaces the pixel.
+		let make = |entry: &'static str, blend: Option<wgpu::BlendState>| {
+			device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+				label: Some(entry),
+				layout: Some(&pipeline_layout),
+				vertex: wgpu::VertexState {
+					module: &shader,
+					entry_point: Some("vs_main"),
+					compilation_options: Default::default(),
+					buffers: &[Some(wgpu::VertexBufferLayout {
+						array_stride: VERTEX_BYTES,
+						step_mode: wgpu::VertexStepMode::Vertex,
+						attributes: &wgpu::vertex_attr_array![0 => Float32x2, 1 => Float32x2],
+					})],
+				},
+				fragment: Some(wgpu::FragmentState {
+					module: &shader,
+					entry_point: Some(entry),
+					compilation_options: Default::default(),
+					targets: &[Some(wgpu::ColorTargetState {
+						format: FORMAT,
+						blend,
+						write_mask: wgpu::ColorWrites::ALL,
+					})],
+				}),
+				primitive: wgpu::PrimitiveState::default(),
+				depth_stencil: None,
+				multisample: wgpu::MultisampleState::default(),
+				multiview_mask: None,
+				cache: None,
+			})
+		};
+		let pipeline = make(
+			"fs_main",
+			Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),
+		);
+		let blend_pipeline = make("fs_blend", None);
 
 		Ok(Self {
 			device,
 			queue,
 			info,
 			pipeline,
+			blend_pipeline,
 			layout,
 		})
 	}
@@ -226,20 +235,34 @@ impl GpuRenderer {
 			contents: &f32_bytes(&[width as f32, height as f32, 0.0, 0.0]),
 			usage: wgpu::BufferUsages::UNIFORM,
 		});
-		let drawn: Vec<(wgpu::BindGroup, wgpu::Buffer)> =
-			prepared.iter().map(|p| self.layer(&frame, p)).collect();
-
-		let target = self.device.create_texture(&wgpu::TextureDescriptor {
-			label: Some("frame"),
-			size: extent(width, height),
-			mip_level_count: 1,
-			sample_count: 1,
-			dimension: wgpu::TextureDimension::D2,
-			format: FORMAT,
-			usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-			view_formats: &[],
-		});
+		let frame_texture = |label, usage| {
+			self.device.create_texture(&wgpu::TextureDescriptor {
+				label: Some(label),
+				size: extent(width, height),
+				mip_level_count: 1,
+				sample_count: 1,
+				dimension: wgpu::TextureDimension::D2,
+				format: FORMAT,
+				usage,
+				view_formats: &[],
+			})
+		};
+		let target = frame_texture(
+			"frame",
+			wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+		);
+		// The frame as it was before a blend layer: the shader reads the backdrop here and writes
+		// the mixed pixel to the target, which a texture cannot be at the same time.
+		let backdrop = frame_texture(
+			"backdrop",
+			wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+		);
 		let view = target.create_view(&wgpu::TextureViewDescriptor::default());
+		let backdrop_view = backdrop.create_view(&wgpu::TextureViewDescriptor::default());
+		let drawn: Vec<(wgpu::BindGroup, wgpu::Buffer)> = prepared
+			.iter()
+			.map(|p| self.layer(&frame, &backdrop_view, p))
+			.collect();
 		let pitch = (width * 4).div_ceil(ROW_ALIGN) * ROW_ALIGN;
 		let readback = self.device.create_buffer(&wgpu::BufferDescriptor {
 			label: Some("readback"),
@@ -253,40 +276,61 @@ impl GpuRenderer {
 			.create_command_encoder(&wgpu::CommandEncoderDescriptor {
 				label: Some("frame"),
 			});
-		{
-			let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-				label: Some("frame"),
-				color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-					view: &view,
-					depth_slice: None,
-					resolve_target: None,
-					ops: wgpu::Operations {
-						load: wgpu::LoadOp::Clear(wgpu::Color {
-							r: f64::from(bg[0]) / 255.0,
-							g: f64::from(bg[1]) / 255.0,
-							b: f64::from(bg[2]) / 255.0,
-							a: 1.0,
-						}),
-						store: wgpu::StoreOp::Store,
-					},
-				})],
-				depth_stencil_attachment: None,
-				timestamp_writes: None,
-				occlusion_query_set: None,
-				multiview_mask: None,
+		// One pass clears the frame, then one pass per layer loads it: a blend layer needs the frame
+		// copied to the backdrop first, and a copy cannot happen inside a pass.
+		let pass = |encoder: &mut wgpu::CommandEncoder, load: wgpu::LoadOp<wgpu::Color>| {
+			encoder
+				.begin_render_pass(&wgpu::RenderPassDescriptor {
+					label: Some("frame"),
+					color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+						view: &view,
+						depth_slice: None,
+						resolve_target: None,
+						ops: wgpu::Operations {
+							load,
+							store: wgpu::StoreOp::Store,
+						},
+					})],
+					depth_stencil_attachment: None,
+					timestamp_writes: None,
+					occlusion_query_set: None,
+					multiview_mask: None,
+				})
+				.forget_lifetime()
+		};
+		drop(pass(
+			&mut encoder,
+			wgpu::LoadOp::Clear(wgpu::Color {
+				r: f64::from(bg[0]) / 255.0,
+				g: f64::from(bg[1]) / 255.0,
+				b: f64::from(bg[2]) / 255.0,
+				a: 1.0,
+			}),
+		));
+		for ((group, vertices), p) in drawn.iter().zip(&prepared) {
+			let mixes = p.blend != BlendMode::Normal;
+			if mixes {
+				encoder.copy_texture_to_texture(
+					target.as_image_copy(),
+					backdrop.as_image_copy(),
+					extent(width, height),
+				);
+			}
+			let mut pass = pass(&mut encoder, wgpu::LoadOp::Load);
+			pass.set_pipeline(if mixes {
+				&self.blend_pipeline
+			} else {
+				&self.pipeline
 			});
-			pass.set_pipeline(&self.pipeline);
 			pass.set_scissor_rect(
 				0,
 				rows.start as u32,
 				width as u32,
 				(rows.end - rows.start) as u32,
 			);
-			for (group, vertices) in &drawn {
-				pass.set_bind_group(0, group, &[]);
-				pass.set_vertex_buffer(0, vertices.slice(..));
-				pass.draw(0..6, 0..1);
-			}
+			pass.set_bind_group(0, group, &[]);
+			pass.set_vertex_buffer(0, vertices.slice(..));
+			pass.draw(0..6, 0..1);
 		}
 		encoder.copy_texture_to_buffer(
 			target.as_image_copy(),
@@ -324,7 +368,12 @@ impl GpuRenderer {
 	}
 
 	/// The bind group and the vertex buffer of one prepared layer.
-	fn layer(&self, frame: &wgpu::Buffer, p: &Prepared<'_>) -> (wgpu::BindGroup, wgpu::Buffer) {
+	fn layer(
+		&self,
+		frame: &wgpu::Buffer,
+		backdrop: &wgpu::TextureView,
+		p: &Prepared<'_>,
+	) -> (wgpu::BindGroup, wgpu::Buffer) {
 		let img = &p.image;
 		let texture = self.device.create_texture_with_data(
 			&self.queue,
@@ -343,7 +392,7 @@ impl GpuRenderer {
 		);
 		let params = self.device.create_buffer_init(&BufferInitDescriptor {
 			label: Some("layer"),
-			contents: &f32_bytes(&[img.w as f32, img.h as f32, p.op as f32 / 255.0, 0.0]),
+			contents: &layer_bytes(img.w, img.h, p.op, p.blend),
 			usage: wgpu::BufferUsages::UNIFORM,
 		});
 		let group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -363,6 +412,10 @@ impl GpuRenderer {
 					resource: wgpu::BindingResource::TextureView(
 						&texture.create_view(&wgpu::TextureViewDescriptor::default()),
 					),
+				},
+				wgpu::BindGroupEntry {
+					binding: 3,
+					resource: wgpu::BindingResource::TextureView(backdrop),
 				},
 			],
 		});
@@ -388,6 +441,20 @@ fn extent(w: usize, h: usize) -> wgpu::Extent3d {
 		height: h as u32,
 		depth_or_array_layers: 1,
 	}
+}
+
+/// The uniform of a layer: the texture size, the opacity and the blend mode of the shader.
+fn layer_bytes(w: usize, h: usize, op: u32, blend: BlendMode) -> Vec<u8> {
+	let mode: u32 = match blend {
+		BlendMode::Normal => 0,
+		BlendMode::Multiply => 1,
+		BlendMode::Screen => 2,
+		BlendMode::Overlay => 3,
+		BlendMode::Add => 4,
+	};
+	let mut v = f32_bytes(&[w as f32, h as f32, op as f32 / 255.0]);
+	v.extend_from_slice(&mode.to_le_bytes());
+	v
 }
 
 fn f32_bytes(v: &[f32]) -> Vec<u8> {
