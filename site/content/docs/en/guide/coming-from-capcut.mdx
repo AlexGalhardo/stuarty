@@ -1,0 +1,69 @@
+---
+title: "Coming from CapCut"
+description: "For people coming from CapCut: what works the same in the Vukem Video editor, what differs, and where each feature lives."
+---
+
+## You will learn
+
+- which habits carry over from a timeline editor such as CapCut;
+- what is different, so a missing button does not look like a missing feature;
+- where the features you used live, and which shortcuts to learn first.
+
+## The idea
+
+This page is for people coming from CapCut. CapCut is a product of its own company; Vukem Video is a separate, open source editor and is not affiliated with it or compatible with its project files. The two editors share the same basic model: media in a library, clips on tracks of a timeline, a preview above, properties on the side. What differs is that Vukem Video is built to be driven by an agent as well as by a person, so every edit is a named command, and the editor shows the same result an agent would get.
+
+## What works the same
+
+- **Import, then place.** Import video, audio and images into the media library (`Mod+I`), then put them on tracks. See [Media library](/docs/guide/media-library).
+- **Tracks and clips.** Tracks stack, clips sit on them, and an item can be split at the playhead (`Mod+B`), trimmed, moved, duplicated (`Mod+D`) and deleted. See [Basic timeline editing](/docs/guide/timeline) and [Trim, split and move clips](/docs/guide/editing-tools).
+- **Captions from speech.** Speech is turned into word-timed captions on your computer, with no upload, and styled once for the whole track. See [Transcription](/docs/guide/transcription) and [Text and captions](/docs/guide/text-and-captions).
+- **Keyframes, transitions, filters, audio.** Animate position, scale, rotation, opacity and volume; fade, slide or crossfade; correct color, add a filter or a blur, key out a green screen; set volume and fades. See [Keyframes](/docs/guide/keyframes), [Transitions](/docs/guide/transitions), [Effects and color](/docs/guide/effects-and-color) and [Audio editing](/docs/guide/audio).
+- **Vertical video.** Start from a vertical project and keep text inside the safe area. See [Safe area](/docs/guide/safe-area) and the [vertical short tutorial](/docs/guide/tutorial-vertical-short).
+- **Undo.** `Mod+Z` undoes and `Mod+Shift+Z` redoes. See [Undo and history](/docs/guide/undo-and-history).
+- **Space plays.** `Space` plays and pauses, the arrow keys step frames, and `Mod+S` saves (every edit is saved already).
+
+## What differs
+
+- **Every edit is a command.** A split, a trim or a volume change is a command with arguments, in a history that says who made each step, a person or an agent. You can list it and undo it. See [Commands, batches and revisions](/docs/concepts/commands-and-revisions).
+- **The command palette.** `Mod+K` opens a list of every command of the product, each with a form built from its arguments. If you cannot find a button, look here. Anything an agent can do, you can do from the palette.
+- **Deleting leaves a gap.** `Delete` removes the selection and keeps the later items where they are. `Shift+Delete` removes it and closes the gap on the track (a ripple delete). To close a gap that already exists, use the command `timeline.close_gap`.
+- **Trim with the playhead.** `Q` deletes what is left of the playhead and `W` what is right of it. You can change these keys.
+- **Keys you may expect.** Split is `Mod+B`, not `S`. `V` turns the selected items off or on, rather than choosing a tool. `B` is the blade tool and `A` the select tool.
+- **Rendering is one pipeline.** The preview and the export draw pixels with the same renderer, so the frame you see is the frame the file contains. See [Preview](/docs/guide/preview) and [Exporting](/docs/guide/exporting).
+- **Your files stay on your computer.** The editor makes no outbound connection by default and has no telemetry.
+- **Templates are projects with open slots.** You fill the slots and can save your own. See [Templates](/docs/guide/templates).
+
+## Where things live
+
+| You look for | Go to |
+| --- | --- |
+| Media, imports | the library panel (`Alt+1`) |
+| Properties of the selected item | the inspector panel (`Alt+2`) |
+| Edit history | the history panel (`Alt+3`) |
+| Any command by name | the command palette (`Mod+K`) |
+| Find a name, text or caption word | find in the project (`Mod+F`) |
+| Add a caption or a text item | `C` and `T` |
+| Export | `Mod+E`, see [Exporting](/docs/guide/exporting) |
+| Every shortcut | [All keyboard shortcuts](/docs/guide/keyboard-shortcuts-list), or `?` in the editor |
+
+`Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS.
+
+## Quick start
+
+1. Press `?` in the editor to see the shortcuts, and `Mod+K` to see the commands.
+2. Import a clip with `Mod+I`, place it on a track, then split it at the playhead with `Mod+B`.
+3. Press `Shift+Delete` on the part you do not want and watch the gap close.
+4. Press `Mod+Z` to bring it back.
+
+## Common mistakes
+
+- Pressing `S` to split: split is `Mod+B`. You can rebind it, see [Keyboard shortcuts](/docs/guide/keyboard-shortcuts).
+- Pressing `Delete` and expecting the clip after it to move: it stays, and a gap opens. Use `Shift+Delete`.
+- Typing a shortcut while a text field has the focus: it types the letter. Click the timeline first.
+
+## Next steps
+
+- [All keyboard shortcuts](/docs/guide/keyboard-shortcuts-list)
+- [Basic timeline editing](/docs/guide/timeline)
+- [Tutorial: a vertical short with captions](/docs/guide/tutorial-vertical-short)
