@@ -1706,7 +1706,7 @@
 					"type": "string"
 				},
 				"start": {
-					"description": "Absolute start of the copy.",
+					"description": "Absolute start of the copy; default the first free position after the source.",
 					"type": "string",
 					"x-vv-kind": "time"
 				},
@@ -1716,12 +1716,11 @@
 				}
 			},
 			"required": [
-				"item_id",
-				"start"
+				"item_id"
 			],
 			"type": "object"
 		},
-		"description": "Adds a copy of the item at start, on the same track or another track of the same kind. Keyframes, words and the name are copied; the slot mark is not. It fails when the copy would overlap an item of the target track.",
+		"description": "Adds a copy of the item at start, on the same track or another track of the same kind. Keyframes, words and the name are copied; the slot mark is not. Without start the copy goes to the first free position at or after the end of the source on the target track. With start it fails when the copy would overlap an item of the target track.",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",

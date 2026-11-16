@@ -11,7 +11,7 @@
       "type": "string"
     },
     "start": {
-      "description": "Absolute start of the copy.",
+      "description": "Absolute start of the copy; default the first free position after the source.",
       "type": "string",
       "x-vv-kind": "time"
     },
@@ -21,8 +21,7 @@
     }
   },
   "required": [
-    "item_id",
-    "start"
+    "item_id"
   ],
   "type": "object"
 }

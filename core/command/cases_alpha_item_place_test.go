@@ -34,7 +34,7 @@ func init() {
 	dup("ok_copy_touching_source", da(`"start": "60f"`), srcText())
 	dup("ok_copy_ending_at_108000", da(`"start": "107940f"`), srcText())
 	dup("ok_new_id_supplied", da(`"start": "3s", "new_id": "`+itemC+`"`), srcText())
-	dup("err_validation_missing_start", `{"item_id": "`+itemA+`", "new_id": "`+itemC+`"}`, srcText())
+	dup("err_validation_bad_new_id", `{"item_id": "`+itemA+`", "start": "3s", "new_id": "bad"}`, srcText())
 	dup("err_invalid_time_end_past_108000", da(`"start": "107970f"`), srcText())
 	dup("err_not_found_item", `{"item_id": "itm_zzzzzzzzzz", "start": "3s"}`, srcText())
 	dup("err_not_found_track", da(`"start": "3s", "track_id": "trk_zzzzzzzzzz"`), srcText())

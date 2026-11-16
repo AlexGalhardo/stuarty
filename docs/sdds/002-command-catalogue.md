@@ -249,7 +249,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `item.trim` | P | `item_id`, `edge` (`"start"` or `"end"`), `to` (time) | Moves that edge to `to`. Rules in B.10 |
 | `item.split` | P | `item_id`, `at` (time), `new_id?` | Splits the item into two at `at`. Rules in B.10 |
 | `item.delete` | P | `item_ids` (1 to 200), `ripple?` (`"none"` default, `"track"`, `"all"`) | Removes the items. With `ripple: "track"` every later item on each affected track moves earlier by the length freed on that track; with `"all"` every later item on every track moves by the length freed, which requires the deleted items to cover one contiguous range |
-| `item.duplicate` | A | `item_id`, `start` (time), `track_id?`, `new_id?` | Copies the item to the given place. A slot marking is not copied |
+| `item.duplicate` | A | `item_id`, `start?` (time), `track_id?`, `new_id?` | Copies the item to the given place. A slot marking is not copied |
 | `item.rename` | A | `item_id`, `name` | Sets the label |
 | `item.set_transform` | A | `item_id`, `x?`, `y?`, `scale?`, `rotation?`, `opacity?` | Sets the given fields on a visual item. A property that has keyframes cannot be set this way: `E_INVALID_STATE` with the hint to use `keyframe.set` or `keyframe.clear` |
 | `item.set_transition` | A | `item_id`, `edge` (`"in"`, `"out"`), `kind` (a transition kind or `null` to remove), `duration?` (time, as a length; default `"0.5s"`) | Sets or removes the transition on a visual item |
@@ -1454,13 +1454,13 @@ Copies an item to another position, optionally on another track.
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | the source |
-| `start` | time | yes | none | absolute start of the copy |
+| `start` | time | no | the first free position at or after the end of the source on the target track | absolute start of the copy |
 | `track_id` | track id | no | the source's track | must accept the item type |
 | `new_id` | item id | no | generated | R6 |
 
 **Preconditions.**
 
-1. Arguments match the schema and `start` parses (`E_VALIDATION`, `E_INVALID_TIME`).
+1. Arguments match the schema and `start`, when given, parses (`E_VALIDATION`, `E_INVALID_TIME`).
 2. The item and `track_id` exist (`E_NOT_FOUND`).
 3. The target track accepts the item type (`E_TYPE_MISMATCH`).
 4. `new_id` is not used (`E_ID_EXISTS`).
@@ -1477,7 +1477,7 @@ Copies an item to another position, optionally on another track.
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | missing `start`, bad id form | `args.start is required.` | `Send for example "start": "3s".` |
+| `E_VALIDATION` | bad id form | `args.new_id "x" is not an item id.` | `Use an id like "itm_s6t7v8w9x0" or omit it.` |
 | `E_INVALID_TIME` | malformed time, or the copy ends after 108,000 | `The copy of itm_m1n2p3q4r5 would end at frame 108030; the limit is 108000.` | `Use a start of at most "107940f".` |
 | `E_NOT_FOUND` | unknown item or track | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_TYPE_MISMATCH` | track does not accept the type | `Item itm_m1n2p3q4r5 is a text item; track trk_m1n2p3q4r5 is an audio track.` | `Use a visual track.` |
@@ -1487,7 +1487,7 @@ Copies an item to another position, optionally on another track.
 
 **Inverse.** `remove {collection: "items", id: <new id>}`.
 
-**Idempotency.** Not idempotent: a second application with the same arguments and no `new_id` overlaps the first copy (`E_OVERLAP`); with the same `new_id` it returns `E_ID_EXISTS`.
+**Idempotency.** Not idempotent: a second application with the same `start` and no `new_id` overlaps the first copy (`E_OVERLAP`); without `start` it makes another copy at the next free position; with the same `new_id` it returns `E_ID_EXISTS`.
 
 **Example.** 30 fps project (so `"3s"` is frame 90). Text item `itm_m1n2p3q4r5` on `trk_f6g7h8j9k0`, `start` 0, `duration` 60, `text` "Hello", marked as slot `title`.
 
@@ -1509,7 +1509,7 @@ Copies an item to another position, optionally on another track.
 - `ok_copy_touching_source`
 - `ok_copy_ending_at_108000`
 - `ok_new_id_supplied`
-- `err_validation_missing_start`
+- `err_validation_bad_new_id`
 - `err_invalid_time_end_past_108000`
 - `err_not_found_item`
 - `err_not_found_track`

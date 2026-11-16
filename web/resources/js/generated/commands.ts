@@ -1164,9 +1164,9 @@ export interface ItemDuplicateArgs {
    */
   new_id?: string;
   /**
-   * Absolute start of the copy.
+   * Absolute start of the copy; default the first free position after the source.
    */
-  start: string;
+  start?: string;
   /**
    * The track of the copy; default the source's track.
    */
