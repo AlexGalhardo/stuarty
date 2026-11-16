@@ -3,6 +3,7 @@ package export
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"image"
@@ -18,6 +19,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/engine/compositor"
 	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
 )
 
 // The parity gate of stage C (SDD-013 section 3.10, skill renderer-parity): every golden case of this
@@ -46,6 +48,8 @@ type parityFrame struct {
 	name     string
 	frame    int
 	w, h     int
+	plan     plan.FramePlan
+	scale    float64
 	input    []byte
 	bands    [][]byte
 	textures []parityTexture
@@ -88,32 +92,13 @@ func parityBinary(t *testing.T) string {
 	return filepath.Join(root, "target", "release", name)
 }
 
-// renderInput is the render input of SDD-013 section 2.1 for a frame plan: the plan's own JSON with
-// the key of each bitmap added, and the rows of one band when y1 > y0.
+// renderInput is the render input of SDD-013 section 2.1 for a frame plan, for the rows of one band when
+// y1 > y0.
 func renderInput(t *testing.T, fp plan.FramePlan, w, h int, scale float64, y0, y1 int) []byte {
 	t.Helper()
-	raw, err := json.Marshal(fp)
-	if err != nil {
-		t.Fatal(err)
-	}
-	dec := json.NewDecoder(bytes.NewReader(raw))
-	dec.UseNumber()
-	var p map[string]any
-	if err := dec.Decode(&p); err != nil {
-		t.Fatal(err)
-	}
-	if layers, ok := p["layers"].([]any); ok {
-		for i, l := range layers {
-			if fp.Layers[i].Bitmap != nil {
-				l.(map[string]any)["bitmap_key"] = fp.Layers[i].Bitmap.Key()
-			}
-		}
-	}
-	output := map[string]any{"width": w, "height": h, "scale": scale}
-	if y1 > y0 {
-		output["y0"], output["y1"] = y0, y1
-	}
-	in, err := json.Marshal(map[string]any{"version": 1, "output": output, "plan": p})
+	in, err := json.Marshal(
+		renderhost.RenderInput{Output: renderhost.Output{Width: w, Height: h, Scale: scale, Y0: y0, Y1: y1}, Plan: fp},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +149,7 @@ func recordFrames(t *testing.T, dir, name string, frames []int) []parityFrame {
 		fp := plan.FrameWith(doc, f, s.opts)
 		pf := parityFrame{
 			name: name, frame: f, w: w, h: h, textures: textures, bitmaps: bitmaps, want: bytes.Clone(dst.Pix),
-			input: renderInput(t, fp, w, h, s.scale, 0, 0),
+			plan: fp, scale: s.scale, input: renderInput(t, fp, w, h, s.scale, 0, 0),
 		}
 		for i := range parityBands {
 			pf.bands = append(pf.bands, renderInput(t, fp, w, h, s.scale, h*i/parityBands, h*(i+1)/parityBands))
@@ -286,11 +271,50 @@ func firstDiff(a, b []byte, w int) (pos string, n int) {
 	return pos, n
 }
 
+// wasmFrame renders a frame with the core module under wazero: one instance for the whole frame, or one per
+// band as the export does (SDD-013 section 4.6), each holding the textures and bitmaps of the frame.
+func wasmFrame(t *testing.T, fr *parityFrame, banded bool) []byte {
+	t.Helper()
+	ctx := context.Background()
+	dst := image.NewRGBA(image.Rect(0, 0, fr.w, fr.h))
+	n := 1
+	if banded {
+		n = parityBands
+	}
+	for i := range n {
+		h, err := renderhost.New(ctx, renderhost.Config{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, tx := range fr.textures {
+			if err := h.PutTexture(ctx, tx.id, tx.w, tx.h, tx.pix, tx.opaque); err != nil {
+				t.Fatalf("%s frame %d: %v", fr.name, fr.frame, err)
+			}
+		}
+		for key, bm := range fr.bitmaps {
+			if err := h.PutBitmap(ctx, key, bm); err != nil {
+				t.Fatalf("%s frame %d: %v", fr.name, fr.frame, err)
+			}
+		}
+		out := renderhost.Output{Width: fr.w, Height: fr.h, Scale: fr.scale}
+		if banded {
+			out.Y0, out.Y1 = fr.h*i/parityBands, fr.h*(i+1)/parityBands
+		}
+		if err := h.Render(ctx, renderhost.RenderInput{Output: out, Plan: fr.plan}, dst); err != nil {
+			t.Fatalf("%s frame %d: %v", fr.name, fr.frame, err)
+		}
+		if err := h.Close(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return dst.Pix
+}
+
 // TestRustCPUPathEqualsGoCompositor is the gate of skill renderer-parity, part 1: not one byte differs
-// between the Go compositor and the Rust CPU path on any frame of any golden case.
+// between the Go compositor and the Rust CPU path, as a native process and as the WebAssembly module under
+// wazero, on any frame of any golden case, drawn whole and in eight bands.
 func TestRustCPUPathEqualsGoCompositor(t *testing.T) {
 	setup(t)
-	bin := parityBinary(t)
 
 	var all []parityFrame
 	for _, name := range requiredCases {
@@ -308,14 +332,8 @@ func TestRustCPUPathEqualsGoCompositor(t *testing.T) {
 		all = append(all, recordFrames(t, dir, "scene-"+name, frames)...)
 	}
 
-	for _, banded := range []bool{false, true} {
-		label := "whole frames"
-		if banded {
-			label = "eight bands"
-		}
-		corpus := filepath.Join(t.TempDir(), "corpus.bin")
-		writeCorpus(t, corpus, all, banded)
-		got := runRust(t, bin, corpus, all)
+	report := func(t *testing.T, label string, got [][]byte) {
+		t.Helper()
 		bad := 0
 		for i := range all {
 			fr := &all[i]
@@ -333,4 +351,31 @@ func TestRustCPUPathEqualsGoCompositor(t *testing.T) {
 			bad,
 		)
 	}
+
+	t.Run("native", func(t *testing.T) {
+		bin := parityBinary(t)
+		for _, banded := range []bool{false, true} {
+			label := "native, whole frames"
+			if banded {
+				label = "native, eight bands"
+			}
+			corpus := filepath.Join(t.TempDir(), "corpus.bin")
+			writeCorpus(t, corpus, all, banded)
+			report(t, label, runRust(t, bin, corpus, all))
+		}
+	})
+
+	t.Run("wasm", func(t *testing.T) {
+		for _, banded := range []bool{false, true} {
+			label := "wasm, whole frames"
+			if banded {
+				label = "wasm, eight bands (one instance each)"
+			}
+			got := make([][]byte, len(all))
+			for i := range all {
+				got[i] = wasmFrame(t, &all[i], banded)
+			}
+			report(t, label, got)
+		}
+	})
 }

@@ -31,6 +31,7 @@ Linked into the `vukem-video` binary, collected for the six release targets.
 | github.com/santhosh-tekuri/jsonschema/v6 | v6.0.3 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/github.com/santhosh-tekuri/jsonschema/v6@v6.0.3/LICENSE>) | - |
 | github.com/segmentio/asm | v1.1.3 | MIT | Copyright (c) 2021 Segment | [LICENSE](<licenses/go-modules/github.com/segmentio/asm@v1.1.3/LICENSE>) | - |
 | github.com/segmentio/encoding | v0.5.4 | MIT | Copyright (c) 2019 Segment.io, Inc. | [LICENSE](<licenses/go-modules/github.com/segmentio/encoding@v0.5.4/LICENSE>) | - |
+| github.com/tetratelabs/wazero | v1.12.0 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/github.com/tetratelabs/wazero@v1.12.0/LICENSE>), [NOTICE](<licenses/go-modules/github.com/tetratelabs/wazero@v1.12.0/NOTICE>) | - |
 | github.com/wailsapp/wails/v3 | v3.1.0 | MIT | Copyright (c) 2018-Present Lea Anthony | [LICENSE](<licenses/go-modules/github.com/wailsapp/wails/v3@v3.1.0/LICENSE>) | - |
 | github.com/yosida95/uritemplate/v3 | v3.0.2 | BSD-3-Clause | Copyright (C) 2016, Kohei YOSHIDA <<https://yosida95.com/>>. All rights reserved. | [LICENSE](<licenses/go-modules/github.com/yosida95/uritemplate/v3@v3.0.2/LICENSE>) | - |
 | go.opentelemetry.io/auto/sdk | v1.2.1 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/go.opentelemetry.io/auto/sdk@v1.2.1/LICENSE>) | - |
@@ -171,17 +172,6 @@ The production dependency closure of `web/package.json` (`dependencies`, transit
 | use-callback-ref | 1.3.3 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/use-callback-ref@1.3.3/LICENSE>) | - |
 | use-sidecar | 1.1.3 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/use-sidecar@1.1.3/LICENSE>) | - |
 | zustand | 5.1.0 | MIT | Copyright (c) 2019 Paul Henschel | [LICENSE](<licenses/npm/zustand@5.1.0/LICENSE>) | - |
-
-## Rust crates
-
-Compiled into the WebAssembly renderer of `renderer/` (`Cargo.lock`, normal dependencies of the wasm32 target; build-time proc macros are not shipped).
-
-| Name | Version | Licence | Copyright | Licence text | Notes |
-| --- | --- | --- | --- | --- | --- |
-| cfg-if | 1.0.5 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | [LICENSE-APACHE](<licenses/crates/cfg-if@1.0.5/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/cfg-if@1.0.5/LICENSE-MIT>) | - |
-| unicode-ident | 1.0.27 | (MIT OR Apache-2.0) AND Unicode-3.0 | COPYRIGHT AND PERMISSION NOTICE | [LICENSE-APACHE](<licenses/crates/unicode-ident@1.0.27/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/unicode-ident@1.0.27/LICENSE-MIT>), [LICENSE-UNICODE](<licenses/crates/unicode-ident@1.0.27/LICENSE-UNICODE>) | - |
-| wasm-bindgen | 0.2.130 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | [LICENSE-APACHE](<licenses/crates/wasm-bindgen@0.2.130/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/wasm-bindgen@0.2.130/LICENSE-MIT>) | - |
-| wasm-bindgen-shared | 0.2.130 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | [LICENSE-APACHE](<licenses/crates/wasm-bindgen-shared@0.2.130/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/wasm-bindgen-shared@0.2.130/LICENSE-MIT>) | - |
 
 ## Fonts
 

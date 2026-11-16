@@ -2,6 +2,10 @@
 //!
 //! The frame plan is decided in Go (`core/plan`); this crate only draws it. The CPU
 //! path (`compose`) is the port of `engine/compositor`, bit-exact with it (SDD-013 section 3).
+//!
+//! The WebAssembly build is the core module of SDD-013 section 4.1 (decision DS-1): plain C-ABI
+//! exports, no `wasm-bindgen`, no import. The exports are in the `ffi` module, the only place of
+//! the crate that uses `unsafe`.
 
 pub mod blur;
 pub mod colour;
@@ -14,24 +18,9 @@ pub mod math;
 pub mod plan;
 pub mod resize;
 
-use wasm_bindgen::prelude::wasm_bindgen;
+#[cfg(target_arch = "wasm32")]
+mod ffi;
 
-/// The version of the boundary between the hosts and the renderer. A host refuses a module
-/// whose number it does not know.
+/// The version of the boundary between the hosts and the renderer (`vr_api_version`). A host
+/// refuses a module whose number it does not know.
 pub const API_VERSION: u32 = 1;
-
-/// Returns [`API_VERSION`] to a host.
-#[wasm_bindgen]
-pub fn api_version() -> u32 {
-	API_VERSION
-}
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	#[test]
-	fn api_version_is_the_constant() {
-		assert_eq!(api_version(), API_VERSION);
-	}
-}

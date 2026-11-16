@@ -204,7 +204,7 @@ These rules make §3.1 to §3.7 give the same bytes on Linux, macOS, Windows and
 - Stage C gate: every golden case of SDD-004 §11 (the `requiredCases`, `sticker-png`, `sticker-anim`, `filter-*` and `blur-*`) composed by the Rust CPU path through `wazero` equals the stored frame byte for byte, at 1 and at 8 bands.
 - `div255` equals `x / 255` rounded to nearest for every `x` from 0 to 65535, in Rust and in Go; `sincos` equals the Go `sincos` bit for bit over 10,000 angles in `[-1000, 1000]` and at every multiple of 15 degrees.
 - The same Rust test suite runs natively on the three operating systems and in WebAssembly under `wazero`, and prints the same SHA-256 of the golden frames.
-- Harness (P5-RND-003): `TestRustCPUPathEqualsGoCompositor` (`engine/export/parity_rust_test.go`) records, for every frame of the 33 golden cases and of 3 reference scenes, the plan and the pixels the Go compositor was given, builds the render input of §2.1, renders it with the native process `vr-parity` of `renderer/` (`cargo build --release --bin vr-parity`, or `VUKEM_VIDEO_TEST_VR_PARITY`), once whole and once in eight bands (`output.y0`, `output.y1`), and requires the same bytes. The WebAssembly run under `wazero` joins it with the host of §4.6.
+- Harness (P5-RND-003): `TestRustCPUPathEqualsGoCompositor` (`engine/export/parity_rust_test.go`) records, for every frame of the 33 golden cases and of 3 reference scenes, the plan and the pixels the Go compositor was given, builds the render input of §2.1, renders it with the native process `vr-parity` of `renderer/` (`cargo build --release --bin vr-parity`, or `VUKEM_VIDEO_TEST_VR_PARITY`), once whole and once in eight bands (`output.y0`, `output.y1`), and requires the same bytes. The same frames are then drawn by the embedded WebAssembly module under `wazero` through `engine/renderhost` (§4.6), whole with one instance and in eight bands with one instance per band, and must be the same bytes: 155 frames, 0 bytes differ on every one of the four runs.
 - Fuzz (P5-RND-003): `renderer/vukem-renderer/tests/fuzz.rs` runs 100,000 random byte strings and 200,000 mutated plans through the decoder, 6,000 compositions with the extremes of a double (`NaN`, infinities, `f64::MAX`, empty and huge rectangles, bands outside the frame), 30,000 sampler placements, 50,000 mutated renders (each repeated and compared) and 20,000 store calls with every size and length; a panic or an arithmetic overflow fails the test. The generator is a fixed-seed xorshift written in the test (`proptest` and `cargo-fuzz` are not approved crates); `VR_FUZZ_ITERATIONS` scales a long run.
 - Vectors (P5-RND-003): `renderer/testdata/compose-vectors.bin` holds 22 small compositions (copy, clip, opacity, scale, rotation, colour matrix, filter, blur at three radii, bitmaps with metrics, the shrink of a large bitmap, a stack) with the frame `engine/compositor` draws for each; `cargo test` draws them again at 1 and 8 bands and requires the same bytes, and `TestRendererVectorsAreCurrent` keeps the file equal to the Go output. The FNV-1a hash of `sincos` over its 10,001 + 97 angles is stored in the same file.
 - Stage D gate: §3.8 on every golden case.
@@ -220,7 +220,7 @@ The renderer is a Cargo workspace under `renderer/` (ADR-0029 item 2). Two build
 | **core module** | `wasm32-unknown-unknown`, plain exports (below) | the CPU path of §3 | the Go export through `wazero`; the browser worker as the CPU fallback |
 | **GPU module** | `wasm32-unknown-unknown` with `wasm-bindgen` glue | the CPU path and the `wgpu` path of §3.8 | the browser worker, on WebGPU |
 
-**Decision of this SDD (DS-1).** The core module is built without `wasm-bindgen`: `wasm-bindgen` output imports a table of helper functions from its JavaScript glue, and ADR-0029 requires that the module the Go export runs has **no import except its memory**, so that it cannot reach a file, the network or the clock. The core module exports plain C-ABI functions, so both hosts load it without glue code (the browser with `WebAssembly.instantiate`, Go with `wazero`). The GPU module may import what `wgpu` needs from the browser, and runs only in the browser's worker, where the browser's own sandbox is the boundary.
+**Decision of this SDD (DS-1).** The core module is built without `wasm-bindgen` (the crate does not depend on it; the GPU module of stage D will, in its own crate): `wasm-bindgen` output imports a table of helper functions from its JavaScript glue, and ADR-0029 requires that the module the Go export runs has **no import except its memory**, so that it cannot reach a file, the network or the clock. The core module exports plain C-ABI functions, so both hosts load it without glue code (the browser with `WebAssembly.instantiate`, Go with `wazero`). The GPU module may import what `wgpu` needs from the browser, and runs only in the browser's worker, where the browser's own sandbox is the boundary.
 
 The core module has these properties, each tested (§4.8):
 
@@ -228,7 +228,7 @@ The core module has these properties, each tested (§4.8):
 2. It exports its memory as `memory` and the functions of §4.2, and nothing else.
 3. It declares a **maximum** memory size (65,536 pages of 64 KiB would be 4 GiB; the module declares 16,384 pages, 1 GiB) and a panic aborts the call with the `unreachable` instruction, which the host turns into `render_trap` (§7).
 4. It is single threaded, has no start function that runs code, and uses no `simd128` unless §3.9 rule 6 allows it.
-5. It is a build artifact: reproducible, embedded in the Go binary with `go:embed`, served to the browser at `/assets/renderer-<sha256 first 12 hex>.wasm`, and checked by digest like every pinned input (ADR-0029, Consequences).
+5. It is a build artifact: reproducible (`scripts/build-renderer.sh`, whose `embed` mode writes `engine/renderhost/renderer.wasm` and its SHA-256 in `renderer.wasm.sha256`, and whose `check` mode fails when the embedded module is not the one the source builds), embedded in the Go binary with `go:embed`, served to the browser at `/assets/renderer-<sha256 first 12 hex>.wasm`, and checked by digest like every pinned input (ADR-0029, Consequences).
 
 ### 4.2 The exports
 
@@ -293,19 +293,26 @@ The Go export runs the core module through `wazero` (pure Go, no cgo; approved f
 package renderhost
 
 // Host runs one instance of the core module. It is not safe for concurrent use.
-type Host struct{ /* wazero runtime, module, memory, budgets */ }
+type Host struct{ /* wazero module, memory, the output block */ }
 
-// New compiles the embedded module once per process (the CompiledModule is shared) and
-// instantiates it for one band. The module is refused unless it has no import and its
-// vr_api_version is 1.
+// New instantiates the embedded module (compiled once per process; the digest is checked, an
+// import or a missing export refuses it) and checks that vr_api_version is 1.
 func New(ctx context.Context, cfg Config) (*Host, error)
 
+// Output is the frame to write; Y1 > Y0 names the rows of a band.
+type Output struct { Width, Height int; Scale float64; Y0, Y1 int }
+
+// RenderInput is Output and the plan.FramePlan to draw; its JSON is the render input of section 2.1,
+// with bitmap_key added to the bitmap layers.
+type RenderInput struct { Output Output; Plan plan.FramePlan }
+
 // PutTexture uploads the premultiplied RGBA pixels of a media layer.
-func (h *Host) PutTexture(item string, w, h int, rgba []byte, opaque bool) error
+func (h *Host) PutTexture(ctx context.Context, item string, w, h int, rgba []byte, opaque bool) error
 // PutBitmap uploads a bitmap of engine/raster under its key.
-func (h *Host) PutBitmap(key string, bm raster.Bitmap) error
-func (h *Host) Release(id string) error
-// Render draws the frame into dst (RGBA, no stride padding, exactly output.width x output.height).
+func (h *Host) PutBitmap(ctx context.Context, key string, bm raster.Bitmap) error
+func (h *Host) Release(ctx context.Context, id string) error
+// Render draws the frame into dst (RGBA, no stride padding, exactly output.width x output.height);
+// with a band only those rows of dst are written.
 func (h *Host) Render(ctx context.Context, in RenderInput, dst *image.RGBA) error
 func (h *Host) Close(ctx context.Context) error
 ```
