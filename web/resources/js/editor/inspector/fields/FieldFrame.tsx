@@ -6,6 +6,7 @@ import { useT } from "@/lib/i18n";
 import { actorLabel } from "../../state/activityStore";
 import { errorHeadline } from "../../ui/errorHeadline";
 import type { FieldSnapshot } from "./commitField";
+import { rangeOf, withoutArgPath } from "./fieldMessage";
 
 // The message line under a field (docs/design/alpha-editor.md section 3.6): the
 // error as received, or the headline and the hint of a time the browser
@@ -26,15 +27,17 @@ export function FieldMessage({
 				(error.message === "" ? (
 					<p role="alert" className="text-destructive">
 						{errorHeadline(t, error.code)}.{" "}
-						{t(
-							error.code === "E_INVALID_TIME"
-								? "ui.editor.time.hint"
-								: "ui.editor.inspector.invalid_value",
-						)}
+						{rangeOf(error.details) !== null
+							? t("ui.editor.palette.range", { ...rangeOf(error.details) })
+							: t(
+									error.code === "E_INVALID_TIME"
+										? "ui.editor.time.hint"
+										: "ui.editor.inspector.invalid_value",
+								)}
 					</p>
 				) : (
 					<p role="alert" lang="en" className="text-destructive">
-						<UntrustedText>{error.message}</UntrustedText>
+						<UntrustedText>{withoutArgPath(error.message)}</UntrustedText>
 						{error.hint !== undefined && (
 							<>
 								{" "}
