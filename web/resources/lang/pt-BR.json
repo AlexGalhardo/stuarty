@@ -590,6 +590,17 @@
           "update": {
             "title": "Atualizar faixa"
           }
+        },
+        "marker": {
+          "add": {
+            "title": "Adicionar marcador"
+          },
+          "set": {
+            "title": "Editar marcador"
+          },
+          "remove": {
+            "title": "Remover marcador"
+          }
         }
       },
       "lint": {
