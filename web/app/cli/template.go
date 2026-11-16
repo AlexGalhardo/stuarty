@@ -183,7 +183,15 @@ func (c *call) readFill(src string) (map[string]service.SlotValue, error) {
 
 	var fill map[string]service.SlotValue
 	if err := dec.Decode(&fill); err != nil || fill == nil {
-		return nil, validation("fill", "the fill must be one JSON object of slot name to value.")
+		problem := "it is null"
+		if err != nil {
+			problem = jsonProblem(err)
+		}
+
+		return nil, validation("fill",
+			"the fill is not valid: %s. It must be one JSON object of slot name to value, "+
+				`like {"headline": {"text": "Spring sale"}}; a slot takes text, words, or asset_id with source_in.`,
+			problem)
 	}
 
 	return fill, nil

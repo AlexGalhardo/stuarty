@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"encoding/json"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -99,5 +101,33 @@ func TestAbsMakesPathsAbsoluteAgainstTheCurrentDirectory(t *testing.T) {
 
 	if got, _ := rt.abs(abs); got != filepath.Join(dir, "b.mov") {
 		t.Fatalf("an absolute path is cleaned: %q", got)
+	}
+}
+
+func TestJSONProblemNamesTheMemberAndTheExpectedKind(t *testing.T) {
+	t.Parallel()
+
+	type slot struct {
+		Text *string `json:"text"`
+	}
+
+	for in, want := range map[string]string{
+		`{"headline":"x"}`:        "must be an object, not string",
+		`{"headline":{"nope":1}}`: "the member \"nope\" is not known",
+		`not json`:                "not valid JSON",
+	} {
+		var out map[string]slot
+
+		dec := json.NewDecoder(strings.NewReader(in))
+		dec.DisallowUnknownFields()
+
+		err := dec.Decode(&out)
+		if err == nil {
+			t.Fatalf("%s: decoded", in)
+		}
+
+		if got := jsonProblem(err); !strings.Contains(got, want) {
+			t.Errorf("%s: problem = %q, want it to contain %q", in, got, want)
+		}
 	}
 }
