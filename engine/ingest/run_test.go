@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"image/png"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -429,5 +430,75 @@ func TestReadChunkIndexRefusesWhatIsNotAnMP4WithVideo(t *testing.T) {
 
 	if _, err := ReadChunkIndex(filepath.Join(dir, "missing.mp4")); err == nil {
 		t.Error("a missing file was indexed")
+	}
+}
+
+// A source with alpha gets a WebM proxy that keeps it (VP9 with an alpha plane, Opus for the sound) and PNG
+// posters and thumbnails that keep it, and no chunk index (VV-013, SDD-011 4.3.5 and 4.4).
+func TestIngestAlphaClipKeepsAlphaInProxyAndThumbnails(t *testing.T) {
+	e := newEnv(t)
+	p, err := e.gen.AlphaClipWithSound(context.Background(), "alpha-sound.mov", 160, 90, 30, 2)
+	hash, res := e.mustIngest(mustGen(t, p, err))
+
+	want := []string{
+		"loudness-1.json", "normalized-1.mov", "peaks-1.bin", "probe-1.json", "proxy-1.webm", "silence-1.json",
+		"thumbnails-1-w160.png", "thumbnails-1-w320.png", "thumbnails-1-w640.png", "thumbnails-1.png",
+	}
+	if got := res.names(); strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Fatalf("artifacts\n got  %v\n want %v", got, want)
+	}
+	if !res.Facts.HasAlpha || !res.Facts.HasAudio {
+		t.Fatalf("facts %+v", res.Facts)
+	}
+
+	d := e.probeArtifact(hash, "proxy-1.webm")
+	v, a := d.first("video"), d.first("audio")
+	if v == nil || v.CodecName != "vp9" || !hasAlphaMode(v) {
+		t.Errorf("proxy video %+v", v)
+	}
+	if a == nil || a.CodecName != "opus" {
+		t.Errorf("proxy audio %+v", a)
+	}
+
+	// The left half of the picture is transparent and the right half opaque red, in every poster and in
+	// the first tile of the sheet.
+	for _, name := range []string{"thumbnails-1-w160.png", "thumbnails-1-w640.png", "thumbnails-1.png"} {
+		f, err := os.Open(filepath.Join(e.artifacts(), hash, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		img, err := png.Decode(f)
+		_ = f.Close()
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		b := img.Bounds()
+		tileW := b.Dx()
+		if name == "thumbnails-1.png" {
+			l, ok := res.find("thumbnails", "").Meta.(ThumbLayout)
+			if !ok {
+				t.Fatalf("the sheet has no layout: %+v", res.find("thumbnails", "").Meta)
+			}
+			tileW = l.TileW
+		}
+		_, _, _, left := img.At(tileW/4, b.Dy()/2).RGBA()
+		r, g, bl, right := img.At(3*tileW/4, b.Dy()/2).RGBA()
+		if left != 0 || right != 0xFFFF || r>>8 < 200 || g>>8 > 60 || bl>>8 > 60 {
+			t.Errorf("%s: left alpha %d, right alpha %d colour (%d,%d,%d)", name, left>>8, right>>8, r>>8, g>>8, bl>>8)
+		}
+	}
+}
+
+// A source with alpha and no sound has a video-only WebM proxy.
+func TestIngestAlphaClipWithoutSound(t *testing.T) {
+	e := newEnv(t)
+	p, err := e.gen.AlphaClip(context.Background(), "alpha.mov", 160, 90, 30, 2)
+	hash, res := e.mustIngest(mustGen(t, p, err))
+	if res.find("proxy", "") == nil || res.find("chunks", "") != nil || res.Facts.HasAudio {
+		t.Fatalf("artifacts %v facts %+v", res.names(), res.Facts)
+	}
+	d := e.probeArtifact(hash, "proxy-1.webm")
+	if v := d.first("video"); v == nil || !hasAlphaMode(v) || d.first("audio") != nil {
+		t.Errorf("proxy %+v", d.Streams)
 	}
 }

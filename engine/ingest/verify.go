@@ -397,7 +397,8 @@ func (j *job) checkProxy(
 	hasAudio bool,
 	deadline time.Duration,
 ) error {
-	doc, err := j.docOf(ctx, "proxy.mp4")
+	proxy := "proxy." + plan.ProxyExt()
+	doc, err := j.docOf(ctx, proxy)
 	if err != nil {
 		return err
 	}
@@ -407,26 +408,35 @@ func (j *job) checkProxy(
 		return nil
 	}
 	c.eq("proxy_codec", "vp9", v.CodecName)
+	if plan.Alpha && !hasAlphaMode(v) {
+		c.fail("proxy_alpha", "alpha_mode=1", "no alpha plane")
+	}
 	c.eq("proxy_size", fmt.Sprintf("%dx%d", plan.PW, plan.PH), fmt.Sprintf("%dx%d", v.Width, v.Height))
-	ps, err := j.packets(ctx, "proxy.mp4", v.Index)
+	ps, err := j.packets(ctx, proxy, v.Index)
 	if err != nil {
 		return err
 	}
 	if ok, why := gopOK(ps, plan.GOP); !ok {
 		c.fail("proxy_gop", "keyframe at most every "+itoa(plan.GOP)+" frames", why)
 	}
-	if ok, err := faststart(j.path("proxy.mp4")); err != nil || !ok {
-		c.fail("faststart", "moov before mdat", "moov after mdat")
+	if !plan.Alpha {
+		if ok, err := faststart(j.path(proxy)); err != nil || !ok {
+			c.fail("faststart", "moov before mdat", "moov after mdat")
+		}
 	}
-	decoded, err := j.decodeFrames(ctx, "proxy.mp4", "0:v:0", deadline)
+	decoded, err := j.decodeFrames(ctx, proxy, "0:v:0", deadline)
 	if err != nil {
 		return err
 	}
 	c.eq("proxy_frames", frames, decoded)
 	if hasAudio {
 		a := doc.first("audio")
-		if a == nil || a.CodecName != "aac" {
-			c.fail("proxy_codec", "aac", "missing")
+		want := "aac"
+		if plan.Alpha {
+			want = "opus"
+		}
+		if a == nil || a.CodecName != want {
+			c.fail("proxy_codec", want, "missing")
 		} else if a.TimeBase == "1/48000" {
 			c.eq("proxy_audio", samples, a.DurationTS)
 		}
@@ -434,14 +444,30 @@ func (j *job) checkProxy(
 	return nil
 }
 
+// hasAlphaMode is true for a WebM video stream that says it carries an alpha plane (ffprobe reports
+// it as the tag alpha_mode, whatever the case of the name).
+func hasAlphaMode(s *Stream) bool {
+	for k, v := range s.Tags {
+		if strings.EqualFold(k, "alpha_mode") && v == "1" {
+			return true
+		}
+	}
+	return false
+}
+
 func (j *job) checkThumbs(c *checks, plan VideoPlan) error {
 	l := j.layout
-	f, err := os.Open(j.path("thumbnails.jpg"))
+	ext := plan.TileExt()
+	decodeConfig := jpeg.DecodeConfig
+	if plan.Alpha {
+		decodeConfig = png.DecodeConfig
+	}
+	f, err := os.Open(j.path("thumbnails." + ext))
 	if err != nil {
 		return err
 	}
 	defer func() { _ = f.Close() }()
-	cfg, err := jpeg.DecodeConfig(f)
+	cfg, err := decodeConfig(f)
 	if err != nil {
 		c.fail("thumbnails", "a decodable sheet", err.Error())
 		return nil
@@ -458,11 +484,11 @@ func (j *job) checkThumbs(c *checks, plan VideoPlan) error {
 		c.fail("thumbnails", fmt.Sprintf("between %d and %d tiles", lo, hi), l.Count)
 	}
 	for _, w := range PosterWidths {
-		pf, err := os.Open(j.path("w" + itoa(w) + ".jpg"))
+		pf, err := os.Open(j.path("w" + itoa(w) + "." + ext))
 		if err != nil {
 			return err
 		}
-		pc, derr := jpeg.DecodeConfig(pf)
+		pc, derr := decodeConfig(pf)
 		_ = pf.Close()
 		if derr != nil {
 			c.fail("thumbnails", "a decodable poster w"+itoa(w), derr.Error())

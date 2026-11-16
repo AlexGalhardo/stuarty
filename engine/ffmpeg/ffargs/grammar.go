@@ -35,7 +35,7 @@ var (
 	kRational = match(`^[1-9][0-9]{0,6}/[1-9][0-9]{0,6}$`)
 	kSize     = match(`^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$`)
 	kBitrate  = match(`^(0|[1-9][0-9]{0,5}[kKM]?)$`)
-	kPixFmt   = enum("rgba", "rgb24", "yuv420p", "yuvj420p", "yuva444p10le", "nv12", "gbrpf32le", "gray")
+	kPixFmt   = enum("rgba", "rgb24", "yuv420p", "yuvj420p", "yuva444p10le", "yuva420p", "nv12", "gbrpf32le", "gray")
 	kColour   = enum("bt709", "smpte170m", "tv", "pc", "limited", "full")
 	kMap      = match(`^([0-9]{1,2}:[0-9]{1,3}|[0-9]{1,2}:(v|a)(:[0-9]{1,2})?|\[[A-Za-z0-9_]{1,16}\])$`)
 	kProgress = enum("pipe:1")
@@ -52,11 +52,11 @@ var videoCodecs = []string{
 	"libopenh264", "libx264", "h264_nvenc", "h264_qsv", "h264_amf", "h264_videotoolbox", "h264_mf", "h264_vaapi",
 }
 
-var audioCodecs = []string{"pcm_s16le", "aac", "copy"}
+var audioCodecs = []string{"pcm_s16le", "aac", "libopus", "copy"}
 
 // OutputFormats is FF-13, plus mov (normalized video, SDD-011 4.3) and null (analysis
 // and detection runs write nothing).
-var outputFormats = []string{"mp4", "mov", "wav", "image2", "rawvideo", "s16le", "null"}
+var outputFormats = []string{"mp4", "mov", "webm", "wav", "image2", "rawvideo", "s16le", "null"}
 
 type optClass int
 
@@ -110,6 +110,7 @@ var ffmpegOptions = map[string]optSpec{
 	"-map":                   {class: classOutput, value: kMap},
 	"-map_metadata":          {class: classOutput, value: enum("-1")},
 	"-map_chapters":          {class: classOutput, value: enum("-1")},
+	"-metadata:s:v:0":        {class: classOutput, value: enum("alpha_mode=1")},
 	"-an":                    {class: classOutput, flag: true},
 	"-vn":                    {class: classOutput, flag: true},
 	"-c:v":                   {class: classOutput, value: enum(videoCodecs...)},
@@ -129,6 +130,7 @@ var ffmpegOptions = map[string]optSpec{
 	"-row-mt":                {class: classOutput, value: enum("0", "1")},
 	"-tile-columns":          {class: classOutput, value: intRange(0, 6)},
 	"-lag-in-frames":         {class: classOutput, value: intRange(0, 25)},
+	"-auto-alt-ref":          {class: classOutput, value: enum("0")},
 	"-colorspace":            {class: classOutput, value: kColour},
 	"-color_primaries":       {class: classOutput, value: kColour},
 	"-color_trc":             {class: classOutput, value: kColour},

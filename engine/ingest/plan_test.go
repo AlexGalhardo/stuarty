@@ -2,6 +2,7 @@ package ingest
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -392,6 +393,22 @@ func TestPlanVideoKeepsAlpha(t *testing.T) {
 	p = PlanVideo(videoSummary(VideoFacts{CodedWidth: 1920, CodedHeight: 1080, PixFmt: "yuv420p"}, 3000), caps)
 	if p.Alpha || !strings.Contains(chain(p), "format=yuv420p") {
 		t.Errorf("opaque source: alpha=%v %s", p.Alpha, chain(p))
+	}
+
+	// The proxy and the thumbnails keep the alpha too, in WebM and PNG.
+	proxy := func(p VideoPlan) string { return fmt.Sprint(p.ProxyFilters(), p.ThumbFilters()) }
+	alpha := PlanVideo(
+		videoSummary(VideoFacts{CodedWidth: 1920, CodedHeight: 1080, PixFmt: "yuva444p10le"}, 3000),
+		caps,
+	)
+	if got := proxy(alpha); !strings.Contains(got, "format=yuva420p") || !strings.Contains(got, "format=rgba") ||
+		strings.Contains(got, "yuv420p") || strings.Contains(got, "yuvj420p") ||
+		alpha.ProxyExt() != "webm" || alpha.TileExt() != "png" {
+		t.Errorf("alpha proxy: %s %s %s", got, alpha.ProxyExt(), alpha.TileExt())
+	}
+	if got := proxy(p); !strings.Contains(got, "format=yuv420p") || !strings.Contains(got, "format=yuvj420p") ||
+		p.ProxyExt() != "mp4" || p.TileExt() != "jpg" {
+		t.Errorf("opaque proxy: %s %s %s", got, p.ProxyExt(), p.TileExt())
 	}
 }
 

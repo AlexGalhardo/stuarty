@@ -17,6 +17,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
@@ -650,5 +651,76 @@ func TestEditWithAnAssetStillIngestingIsNotReady(t *testing.T) {
 	var se *service.Error
 	if !errors.As(err, &se) || se.Code != "E_ASSET_NOT_READY" || !se.IsRetryable() {
 		t.Fatalf("error = %v", err)
+	}
+}
+
+// A source with alpha has a WebM proxy and PNG posters and sheet (VV-013): they are served with their
+// own content type, and the asset has no chunk index.
+func TestOpenFileServesTheAlphaProxyAndPNGThumbnails(t *testing.T) {
+	var ws string
+
+	alphaIngest := func(_ context.Context, in ingest.Input) (*ingest.Result, error) {
+		res, err := fakeResult(ws, in)
+		if err != nil {
+			return nil, err
+		}
+
+		kept := res.Artifacts[:0]
+		for _, a := range res.Artifacts {
+			if a.Kind == "chunks" {
+				continue
+			}
+
+			if a.Kind == "proxy" || a.Kind == "thumbnails" {
+				ext := map[string]string{"proxy": "webm", "thumbnails": "png"}[a.Kind]
+				old := filepath.Join(ws, filepath.FromSlash(a.RelPath))
+				a.RelPath = strings.TrimSuffix(a.RelPath, "."+a.Ext) + "." + ext
+				a.Ext = ext
+
+				if err := os.Rename(old, filepath.Join(ws, filepath.FromSlash(a.RelPath))); err != nil {
+					return nil, err
+				}
+			}
+
+			kept = append(kept, a)
+		}
+		res.Artifacts = kept
+		res.Facts.HasAlpha = true
+
+		return res, nil
+	}
+
+	m := newMediaEnv(t, mediaCfg{ingest: alphaIngest})
+	ws = m.ws
+	project := m.newProject("p")
+	a := m.importOne(project, m.write("a.mp4", clipBytes)).Assets[0]
+
+	for name, c := range map[string]struct {
+		ref   service.FileRef
+		ctype string
+	}{
+		"proxy":     {service.FileRef{Kind: "proxy"}, "video/webm"},
+		"thumbnail": {service.FileRef{Kind: "thumbnail", Variant: "320"}, "image/png"},
+		"strip":     {service.FileRef{Kind: "strip"}, "image/png"},
+	} {
+		c.ref.ProjectID, c.ref.ID = project, a.AssetID
+
+		f, err := m.svc.OpenFile(m.as(ui), c.ref)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+
+		if f.ContentType != c.ctype || f.Size == 0 {
+			t.Errorf("%s: %+v", name, f)
+		}
+	}
+
+	if _, err := m.svc.OpenFile(
+		m.as(ui),
+		service.FileRef{Kind: "chunks", ProjectID: project, ID: a.AssetID},
+	); code(
+		err,
+	) != command.CodeNotFound {
+		t.Errorf("an alpha asset has no chunk index: %v", err)
 	}
 }

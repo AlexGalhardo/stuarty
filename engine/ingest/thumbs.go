@@ -8,7 +8,10 @@ import (
 	"image/color"
 	"image/draw"
 	"image/jpeg"
+	"image/png"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 // ThumbLayout is the layout stored in artifacts.meta of the sheet and returned as strip
@@ -33,7 +36,8 @@ var ErrTooManyTiles = errors.New("thumbnails: more tiles than planned")
 
 // BuildSheet decodes the tile files in order, places them row by row and left to right on a
 // black canvas of columns * tile_w by rows * tile_h, and encodes it as a JPEG. Standard
-// library only. Every tile must decode and have the planned size.
+// library only. Every tile must decode and have the planned size. Tiles that are PNG files (a
+// source with alpha, SDD-011 4.3.5) are placed on a transparent canvas and the sheet is a PNG.
 func BuildSheet(tilePaths []string, plan ThumbPlan) ([]byte, ThumbLayout, error) {
 	n := len(tilePaths)
 	if n == 0 {
@@ -52,10 +56,13 @@ func BuildSheet(tilePaths []string, plan ThumbPlan) ([]byte, ThumbLayout, error)
 		Count:      n,
 		IntervalMS: plan.IntervalS * 1000,
 	}
+	alpha := strings.EqualFold(filepath.Ext(tilePaths[0]), ".png")
 	sheet := image.NewRGBA(image.Rect(0, 0, l.Columns*l.TileW, l.Rows()*l.TileH))
-	draw.Draw(sheet, sheet.Bounds(), image.NewUniform(color.Black), image.Point{}, draw.Src)
+	if !alpha {
+		draw.Draw(sheet, sheet.Bounds(), image.NewUniform(color.Black), image.Point{}, draw.Src)
+	}
 	for i, p := range tilePaths {
-		img, err := decodeJPEG(p)
+		img, err := decodeTile(p, alpha)
 		if err != nil {
 			return nil, l, fmt.Errorf("thumbnails: tile %d: %w", i, err)
 		}
@@ -66,20 +73,31 @@ func BuildSheet(tilePaths []string, plan ThumbPlan) ([]byte, ThumbLayout, error)
 		draw.Draw(sheet, image.Rect(x, y, x+l.TileW, y+l.TileH), img, img.Bounds().Min, draw.Src)
 	}
 	var buf bytes.Buffer
+	if alpha {
+		if err := png.Encode(&buf, sheet); err != nil {
+			return nil, l, err
+		}
+		return buf.Bytes(), l, nil
+	}
 	if err := jpeg.Encode(&buf, sheet, &jpeg.Options{Quality: SheetJPEGQuality}); err != nil {
 		return nil, l, err
 	}
 	return buf.Bytes(), l, nil
 }
 
-func decodeJPEG(path string) (image.Image, error) {
+// decodeTile decodes a tile file, a PNG or a JPEG as the sheet needs.
+func decodeTile(path string, alpha bool) (image.Image, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer func() { _ = f.Close() }()
 	// The header first: the size a file declares must not size an allocation.
-	cfg, err := jpeg.DecodeConfig(f)
+	decodeConfig, decode := jpeg.DecodeConfig, jpeg.Decode
+	if alpha {
+		decodeConfig, decode = png.DecodeConfig, png.Decode
+	}
+	cfg, err := decodeConfig(f)
 	if err != nil {
 		return nil, err
 	}
@@ -89,5 +107,5 @@ func decodeJPEG(path string) (image.Image, error) {
 	if _, err := f.Seek(0, 0); err != nil {
 		return nil, err
 	}
-	return jpeg.Decode(f)
+	return decode(f)
 }

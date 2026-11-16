@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/jpeg"
+	"image/png"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -105,5 +106,47 @@ func TestPlannedTilesBound(t *testing.T) {
 		if got := PlanThumbnails(c.ms, 360, 640).Planned; got != min(c.planned, ThumbMaxCount) {
 			t.Errorf("%d ms: planned %d, want %d", c.ms, got, min(c.planned, ThumbMaxCount))
 		}
+	}
+}
+
+// PNG tiles (a source with alpha) make a PNG sheet on a transparent canvas, and a tile keeps its alpha.
+func TestBuildSheetOfPNGTilesKeepsAlpha(t *testing.T) {
+	plan := PlanThumbnails(25_000, 360, 640) // 25 tiles: a row of 20 and a row of 5
+	dir := t.TempDir()
+	var tiles []string
+	for i := range 25 {
+		img := image.NewNRGBA(image.Rect(0, 0, plan.TileW, plan.TileH))
+		for y := range plan.TileH {
+			for x := plan.TileW / 2; x < plan.TileW; x++ {
+				img.SetNRGBA(x, y, color.NRGBA{200, 10, 10, 255})
+			}
+		}
+		p := filepath.Join(dir, "t"+itoa(i)+".png")
+		f, err := os.Create(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := png.Encode(f, img); err != nil {
+			t.Fatal(err)
+		}
+		_ = f.Close()
+		tiles = append(tiles, p)
+	}
+	data, l, err := BuildSheet(tiles, plan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sheet, err := png.Decode(bytes.NewReader(data))
+	if err != nil {
+		t.Fatalf("the sheet is not a PNG: %v", err)
+	}
+	if b := sheet.Bounds(); b.Dx() != l.Columns*plan.TileW || b.Dy() != l.Rows()*plan.TileH {
+		t.Errorf("sheet %v for layout %+v", b, l)
+	}
+	_, _, _, left := sheet.At(plan.TileW/4, 5).RGBA()
+	_, _, _, right := sheet.At(3*plan.TileW/4, 5).RGBA()
+	_, _, _, beyond := sheet.At(10*plan.TileW+3*plan.TileW/4, plan.TileH+5).RGBA()
+	if left != 0 || right != 0xFFFF || beyond != 0 {
+		t.Errorf("alpha: transparent half %d, opaque half %d, unused canvas %d", left, right, beyond)
 	}
 }

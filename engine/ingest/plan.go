@@ -261,8 +261,31 @@ func (p VideoPlan) NormalizedFilters() []ffargs.Filter {
 }
 
 // ProxyFilters scales the normalized picture to the proxy size (flags=bicubic: the cheaper set).
+// A source with alpha keeps it in the proxy (yuva420p, SDD-011 4.3.5).
 func (p VideoPlan) ProxyFilters() []ffargs.Filter {
-	return []ffargs.Filter{ffargs.Scale(p.PW, p.PH, "bicubic"), ffargs.Format("yuv420p")}
+	pix := "yuv420p"
+	if p.Alpha {
+		pix = "yuva420p"
+	}
+	return []ffargs.Filter{ffargs.Scale(p.PW, p.PH, "bicubic"), ffargs.Format(pix)}
+}
+
+// ProxyExt is the container of the video proxy: WebM for a source with alpha, which MP4 cannot
+// carry for the browser, MP4 for every other (SDD-011 4.4).
+func (p VideoPlan) ProxyExt() string {
+	if p.Alpha {
+		return "webm"
+	}
+	return "mp4"
+}
+
+// TileExt is the format of the thumbnail tiles, the sheet and the posters: PNG for a source with
+// alpha, JPEG for every other (SDD-011 4.5).
+func (p VideoPlan) TileExt() string {
+	if p.Alpha {
+		return "png"
+	}
+	return "jpg"
 }
 
 // ThumbFilters cuts one tile every IntervalS seconds from the proxy-sized picture.
@@ -272,6 +295,9 @@ func (p VideoPlan) ThumbFilters() []ffargs.Filter {
 		f = append(f, ffargs.ScaleFit(p.Thumbs.TileW, p.Thumbs.TileH)...)
 	} else {
 		f = append(f, ffargs.Scale(p.Thumbs.TileW, p.Thumbs.TileH, "bicubic"))
+	}
+	if p.Alpha {
+		return append(f, ffargs.Format("rgba"))
 	}
 	return append(f, ffargs.Format("yuvj420p"))
 }

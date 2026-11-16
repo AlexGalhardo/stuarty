@@ -119,31 +119,17 @@ func (j *job) videoPass(ctx context.Context, plan VideoPlan, deadline time.Durat
 					bitexact(),
 				),
 			},
-			{
-				Format:  "mp4",
-				Path:    j.path("proxy-video.mp4"),
-				Maps:    []string{"[q]"},
-				NoAudio: true,
-				NoSubs:  true,
-				NoData:  true,
-				Opts: cat([]ffargs.Opt{
-					ffargs.Enum("-c:v", "libvpx-vp9"), ffargs.Int("-crf", ProxyCRF), ffargs.Bitrate("-b:v", "0"),
-					ffargs.Enum("-deadline", "realtime"), ffargs.Int("-cpu-used", 8), ffargs.Int("-row-mt", 1),
-					ffargs.Int("-tile-columns", 1), ffargs.Int("-lag-in-frames", 0), ffargs.Int("-g", plan.GOP),
-					ffargs.Int("-keyint_min", plan.GOP), ffargs.Enum("-pix_fmt", "yuv420p"),
-				}, colourTags, []ffargs.Opt{ffargs.Enum("-fps_mode", "cfr"), ffargs.Int("-video_track_timescale", plan.Timescale)}, bitexact()),
-			},
+			proxyVideoOutput(j.path("proxy-video."+plan.ProxyExt()), plan),
 			{
 				Format:  "image2",
-				Path:    filepath.Join(tiles, "t%04d.jpg"),
+				Path:    filepath.Join(tiles, "t%04d."+plan.TileExt()),
 				Maps:    []string{"[s]"},
 				NoAudio: true,
 				NoSubs:  true,
 				NoData:  true,
 				Opts: cat(
+					tileCodecOpts(plan),
 					[]ffargs.Opt{
-						ffargs.Enum("-c:v", "mjpeg"),
-						ffargs.Int("-q:v", 4),
 						ffargs.Enum("-fps_mode", "cfr"),
 						ffargs.Int("-frames:v", plan.Thumbs.Planned),
 					},
@@ -177,6 +163,42 @@ func (j *job) videoPass(ctx context.Context, plan VideoPlan, deadline time.Durat
 	}
 	j.prog.set(StepVideo, 1)
 	return frames, nil
+}
+
+// proxyVideoOutput is the video of the proxy: VP9 in MP4, or VP9 with an alpha plane in WebM when the
+// source has alpha (SDD-011 4.3.5). The mov-only timescale is not an option of the WebM muxer.
+func proxyVideoOutput(path string, plan VideoPlan) ffargs.Output {
+	opts := []ffargs.Opt{
+		ffargs.Enum("-c:v", "libvpx-vp9"), ffargs.Int("-crf", ProxyCRF), ffargs.Bitrate("-b:v", "0"),
+		ffargs.Enum("-deadline", "realtime"), ffargs.Int("-cpu-used", 8), ffargs.Int("-row-mt", 1),
+		ffargs.Int("-tile-columns", 1), ffargs.Int("-lag-in-frames", 0), ffargs.Int("-g", plan.GOP),
+		ffargs.Int("-keyint_min", plan.GOP),
+	}
+	format, tail := "mp4", []ffargs.Opt{
+		ffargs.Enum("-fps_mode", "cfr"),
+		ffargs.Int("-video_track_timescale", plan.Timescale),
+	}
+
+	if plan.Alpha {
+		// libvpx-vp9 only carries an alpha plane without the alternate reference frames.
+		opts = append(opts, ffargs.Enum("-auto-alt-ref", "0"), ffargs.Enum("-pix_fmt", "yuva420p"))
+		format, tail = "webm", []ffargs.Opt{ffargs.Enum("-fps_mode", "cfr")}
+	} else {
+		opts = append(opts, ffargs.Enum("-pix_fmt", "yuv420p"))
+	}
+
+	return ffargs.Output{
+		Format: format, Path: path, Maps: []string{"[q]"}, NoAudio: true, NoSubs: true, NoData: true,
+		Opts: cat(opts, colourTags, tail, bitexact()),
+	}
+}
+
+// tileCodecOpts is the encoder of a thumbnail tile: JPEG, or PNG with alpha for a source that has it.
+func tileCodecOpts(plan VideoPlan) []ffargs.Opt {
+	if plan.Alpha {
+		return []ffargs.Opt{ffargs.Enum("-c:v", "png"), ffargs.Enum("-pix_fmt", "rgba")}
+	}
+	return []ffargs.Opt{ffargs.Enum("-c:v", "mjpeg"), ffargs.Int("-q:v", 4)}
 }
 
 // videoInput is the source of the video pass, with the decoder the plan forces.
@@ -267,7 +289,11 @@ func (j *job) audioPass(ctx context.Context, samples int64, deadline time.Durati
 		return audioErr(err, a.Codec)
 	}
 	j.prog.set(StepAudio, 0.2)
-	return j.audioDerived(ctx, "audio.wav", "proxy-audio.mp4", samples, deadline)
+	proxyAudio := "proxy-audio.mp4"
+	if plan, ok := j.res.Plan.(VideoPlan); ok && plan.Alpha {
+		proxyAudio = "proxy-audio.webm"
+	}
+	return j.audioDerived(ctx, "audio.wav", proxyAudio, samples, deadline)
 }
 
 // audioErr turns a decode failure of the audio into audio_decode_failed: the video decoded and the
@@ -290,20 +316,21 @@ func (j *job) audioDerived(ctx context.Context, wav, proxyName string, samples i
 		wg.Go(func() { errs[i] = f() })
 	}
 	do(0, func() error {
+		format, codec, tail := "mp4", "aac", []ffargs.Opt{ffargs.Enum("-movflags", "+faststart")}
+		if strings.HasSuffix(proxyName, ".webm") {
+			// The proxy of a source with alpha is WebM, which holds Opus and not AAC.
+			format, codec, tail = "webm", "libopus", nil
+		}
 		cmd := ffargs.Cmd{
 			LogErrorOnly: true, Inputs: []ffargs.Input{ffargs.FileInput(j.path(wav))},
 			Outputs: []ffargs.Output{{
-				Format: "mp4", Path: j.path(proxyName), Maps: []string{"0:a:0"}, NoVideo: true,
+				Format: format, Path: j.path(proxyName), Maps: []string{"0:a:0"}, NoVideo: true,
 				Opts: cat([]ffargs.Opt{
-					ffargs.Enum(
-						"-c:a",
-						"aac",
-					),
+					ffargs.Enum("-c:a", codec),
 					ffargs.Bitrate("-b:a", "128k"),
 					ffargs.Int("-ar", SampleRate),
 					ffargs.Int("-ac", 2),
-					ffargs.Enum("-movflags", "+faststart"),
-				}, bitexact()),
+				}, tail, bitexact()),
 			}},
 		}
 		_, err := j.run(ctx, StepAudio, cmd, deadline, nil)
@@ -450,43 +477,63 @@ func (j *job) mux(ctx context.Context, hasAudio bool, deadline time.Duration) er
 	} else if err := os.Rename(j.path("video.mov"), j.path("normalized.mov")); err != nil {
 		return err
 	}
-	ins := []ffargs.Input{ffargs.FileInput(j.path("proxy-video.mp4"))}
+	plan, _ := j.res.Plan.(VideoPlan)
+	ext := plan.ProxyExt()
+	proxyName := "proxy." + ext
+	ins := []ffargs.Input{ffargs.FileInput(j.path("proxy-video." + ext))}
 	maps := []string{"0:v:0"}
 	opts := []ffargs.Opt{ffargs.Enum("-c:v", "copy")}
 	if hasAudio {
-		ins = append(ins, ffargs.FileInput(j.path("proxy-audio.mp4")))
+		ins = append(ins, ffargs.FileInput(j.path("proxy-audio."+ext)))
 		maps = append(maps, "1:a:0")
 		opts = append(opts, ffargs.Enum("-c:a", "copy"))
+	}
+	// Only the MP4 proxy moves its index to the front and has a chunk index; the WebM proxy of a
+	// source with alpha is played by a <video> element (SDD-011 4.4).
+	format, tail := "mp4", []ffargs.Opt{ffargs.Enum("-movflags", "+faststart")}
+	if plan.Alpha {
+		// -map_metadata -1 (FF-08) drops the alpha_mode tag that the WebM muxer turns into the AlphaMode
+		// element of the track, without which a browser ignores the alpha plane; it is written back.
+		format, tail = "webm", []ffargs.Opt{ffargs.Enum("-metadata:s:v:0", "alpha_mode=1")}
 	}
 	pcmd := ffargs.Cmd{
 		LogErrorOnly: true,
 		Inputs:       ins,
 		Outputs: []ffargs.Output{
-			{
-				Format: "mp4",
-				Path:   j.path("proxy.mp4"),
-				Maps:   maps,
-				Opts:   cat(opts, []ffargs.Opt{ffargs.Enum("-movflags", "+faststart")}, bitexact()),
-			},
+			{Format: format, Path: j.path(proxyName), Maps: maps, Opts: cat(opts, tail, bitexact())},
 		},
 	}
 	if _, err := j.run(ctx, StepMux, pcmd, deadline, nil); err != nil {
 		return err
 	}
-	if err := j.writeChunks(); err != nil {
-		return err
+	if !plan.Alpha {
+		if err := j.writeChunks(); err != nil {
+			return err
+		}
 	}
 	j.add(workFile{kind: "normalized", profile: ProfileNormalized, ext: "mov", name: "normalized.mov"})
-	j.add(workFile{kind: "proxy", profile: ProfileProxy, ext: "mp4", name: "proxy.mp4"})
-	return j.posters(ctx, ffmpegSeek(j.durationMS), true, "proxy.mp4", deadline)
+	j.add(workFile{kind: "proxy", profile: ProfileProxy, ext: ext, name: proxyName})
+	return j.posters(ctx, ffmpegSeek(j.durationMS), true, proxyName, plan.Alpha, deadline)
 }
 
 // ffmpegSeek is min(1 s, duration / 2) in milliseconds.
 func ffmpegSeek(durationMS int64) int64 { return min(1000, durationMS/2) }
 
 // posters writes the three posters from a stored proxy and builds the thumbnail sheet of a video.
-func (j *job) posters(ctx context.Context, seekMS int64, sheet bool, proxyName string, deadline time.Duration) error {
+// With alpha the posters and the sheet are PNG and keep it; the proxy is then read by libvpx-vp9,
+// which carries the alpha plane of VP9 that the native decoder drops (SDD-011 4.3.5).
+func (j *job) posters(
+	ctx context.Context,
+	seekMS int64,
+	sheet bool,
+	proxyName string,
+	alpha bool,
+	deadline time.Duration,
+) error {
 	in := ffargs.FileInput(j.path(proxyName))
+	if alpha {
+		in = in.Decoder("libvpx-vp9")
+	}
 	if seekMS > 0 {
 		in = in.At(seekMS)
 	}
@@ -498,22 +545,27 @@ func (j *job) posters(ctx context.Context, seekMS int64, sheet bool, proxyName s
 			g,
 			ffargs.Chain{
 				In:      []string{l},
-				Filters: []ffargs.Filter{ffargs.ScaleMinWidth(w), ffargs.Format("yuvj420p")},
+				Filters: []ffargs.Filter{ffargs.ScaleMinWidth(w), ffargs.Format(posterPixFmt(alpha))},
 				Out:     []string{o},
 			},
 		)
-		name := "w" + itoa(w) + ".jpg"
+		ext, codec := "jpg", []ffargs.Opt{ffargs.Enum("-c:v", "mjpeg"), ffargs.Int("-q:v", 4)}
+		if alpha {
+			ext, codec = "png", []ffargs.Opt{ffargs.Enum("-c:v", "png")}
+		}
+		name := "w" + itoa(w) + "." + ext
 		outs = append(outs, ffargs.Output{
 			Format: "image2",
 			Path:   j.path(name),
 			Maps:   []string{"[" + o + "]"},
 			Opts: cat(
-				[]ffargs.Opt{ffargs.Int("-frames:v", 1), ffargs.Enum("-c:v", "mjpeg"), ffargs.Int("-q:v", 4)},
+				[]ffargs.Opt{ffargs.Int("-frames:v", 1)},
+				codec,
 				bitexact(),
 				[]ffargs.Opt{ffargs.Int("-update", 1)},
 			),
 		})
-		j.add(workFile{kind: "thumbnails", profile: ProfileThumbnails, variant: "w" + itoa(w), ext: "jpg", name: name})
+		j.add(workFile{kind: "thumbnails", profile: ProfileThumbnails, variant: "w" + itoa(w), ext: ext, name: name})
 	}
 	if _, err := j.run(
 		ctx,
@@ -530,13 +582,20 @@ func (j *job) posters(ctx context.Context, seekMS int64, sheet bool, proxyName s
 	return j.thumbSheet()
 }
 
+func posterPixFmt(alpha bool) string {
+	if alpha {
+		return "rgba"
+	}
+	return "yuvj420p"
+}
+
 // thumbSheet assembles the sheet from the tile files of the video pass.
 func (j *job) thumbSheet() error {
 	plan, ok := j.res.Plan.(VideoPlan)
 	if !ok {
 		return errors.New("ingest: the plan is not a video plan")
 	}
-	matches, err := filepath.Glob(filepath.Join(j.wd.Dir(), "thumbs", "t*.jpg"))
+	matches, err := filepath.Glob(filepath.Join(j.wd.Dir(), "thumbs", "t*."+plan.TileExt()))
 	if err != nil {
 		return err
 	}
@@ -550,10 +609,11 @@ func (j *job) thumbSheet() error {
 			err,
 		)
 	}
-	if err := os.WriteFile(j.path("thumbnails.jpg"), data, 0o600); err != nil {
+	sheet := "thumbnails." + plan.TileExt()
+	if err := os.WriteFile(j.path(sheet), data, 0o600); err != nil {
 		return err
 	}
 	j.layout = layout
-	j.add(workFile{kind: "thumbnails", profile: ProfileThumbnails, ext: "jpg", name: "thumbnails.jpg", meta: layout})
+	j.add(workFile{kind: "thumbnails", profile: ProfileThumbnails, ext: plan.TileExt(), name: sheet, meta: layout})
 	return nil
 }
