@@ -1819,6 +1819,10 @@
           "description": "A clip of a video asset, or an audio item.",
           "type": "string"
         },
+        "reverse": {
+          "description": "true plays the source range backwards; false plays it forwards.",
+          "type": "boolean"
+        },
         "ripple": {
           "description": "none (default) or track: shift the later items of the track.",
           "enum": [
@@ -1863,7 +1867,7 @@
       ],
       "type": "object"
     },
-    "description": "Sets either speed, from 0.25x to 4x, or curve, 2 to 8 points {t, speed} with t the fraction of the item from 0 to 1 (first 0, last 1) and a linear ramp between points; a speed clears the curve. Rescales the duration, the fades, the transitions and the keyframes by the ratio of the old to the new mean speed. With ripple track the later items of the track follow the change in length. Captions linked to the clip are listed, not changed.",
+    "description": "Sets either speed, from 0.25x to 4x, or curve, 2 to 8 points {t, speed} with t the fraction of the item from 0 to 1 (first 0, last 1) and a linear ramp between points; a speed clears the curve. Rescales the duration, the fades, the transitions and the keyframes by the ratio of the old to the new mean speed. With ripple track the later items of the track follow the change in length. Captions linked to the clip are listed, not changed. reverse true plays the same source range backwards (false restores it), alone or with a speed or a curve.",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -1893,7 +1897,7 @@
     "name": "clip.set_speed",
     "phase": "alpha",
     "scope": "edit",
-    "summary": "Changes the speed of a clip or audio item, constant or along a curve, keeping the same source range."
+    "summary": "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards."
   },
   {
     "args_schema": {

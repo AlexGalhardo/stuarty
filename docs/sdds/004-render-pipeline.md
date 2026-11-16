@@ -169,7 +169,7 @@ SourceFrame = floor(pos × fps.den × frame_rate.num / (fps.num × frame_rate.de
 SourceFrame = min(SourceFrame, frame_count - 1)
 ```
 
-All integer arithmetic, with 64-bit intermediates. This is the only place a source frame is chosen. For an item with a `speed_curve` (SDD-001 section 3.5) the term `floor(r x speed.num / speed.den)` is `CurveOffset(r)` of section 3.11; everything else in the formula is unchanged.
+All integer arithmetic, with 64-bit intermediates. This is the only place a source frame is chosen. For an item with a `speed_curve` (SDD-001 section 3.5) the term `floor(r x speed.num / speed.den)` is `CurveOffset(r)` of section 3.11; and for a `reverse` item the term is replaced as in section 3.12; everything else in the formula is unchanged.
 
 **Animated image (BETA, RF-028).** A still image has source frame 0. An animated image (`image` asset with `frame_delays`, SDD-001 section 3.2) shows frame `AnimImageSourceFrame(frame_delays, fps, r)` at frame `r` of its item, where `r` counts from the item's start and `speed` and `source_in` do not apply:
 
@@ -307,6 +307,20 @@ and `Offset(r)` is the floor of the sum of the contributions of the segments in 
 **What the plan carries.** The frame plan needs nothing more than `SourceFrame` of section 3.3 per frame. The audio plan carries, besides `Speed` (the mean), `speed_curve` with the `points`, `item_frames` (`D`) and `first_frame` (the item frame at which the window starts), so that an executor can compute the source position of any later frame by the formula above. The audio source position of the first sample of the window is `source_in + Offset(first_frame)` in project frames, and the speed over output frame `r` is the segment speed at `(r + 1/2) / D`; resampling to follow it (the Go mixer, `atempo` pieces) is defined with the engine change (TASK-0279).
 
 **Examples.** `D = 4` and the curve `(0, 1x), (1, 3x)`: `T = 0, 1000`, `S = 1000, 3000`, one segment with `dT = 1000`, `dS = 2000`; `Offset(r) = floor(r + r x r / 4)`, that is 0, 1, 3, 5, 8 for `r = 0..4`, and `M = 1000 x (1000 + 3000) / 2,000,000 = 2`, so the item reads exactly `D x M = 8` source frames. `D = 100` and `(0, 1x), (0.5, 3x), (1, 1x)`: `M = 2`, `Offset(100) = 200`, `Offset(50) = 100 x integral from 0 to 1/2 of (1 + 4u) du = 100`.
+
+### 3.12 Reverse
+
+Added after BETA (TASK-0276). An item with `reverse` reads the source range it would read forwards, `[source_in, source_in + C)` with `C = ceil(D x speed.num / speed.den)` (`speed` is the mean for a curve), from its last frame to its first. Let `Offset(r)` be the forward offset of item frame `r` (`floor(r x num / den)`, or `CurveOffset` of section 3.11), for `0 <= r < D`. Then
+
+```text
+pos = source_in + (C - 1 - Offset(r))        (replaces  source_in + Offset(r)  in section 3.3)
+```
+
+`Offset(r) <= C - 1` for `r < D`, so `pos` stays inside the range. Everything after `pos` in section 3.3 is unchanged. Keyframes, transitions, fades and markers are in item frames and are not reversed: a fade-in is still at the start of what is seen.
+
+**Audio.** `AudioSource.Reverse` and `WindowAudio.reverse` are true for a reversed item. `SourceStart` is the first sample of source frame `pos` of the first frame of the window (computed with the reversed `pos`), and a reversed source is read backwards from the **end** of that frame: output sample `j` of the window reads the source at `SourceStart + frameSamples - 1 - j x speed` (constant speed; with a curve, from the position the ramp gives), samples inside a frame also reversed. The mixer that plays this (decode the range, reverse the samples, then the speed as for a forward source) is defined with the engine change (TASK-0279); until then the planner carries the flag and no executor uses it.
+
+**Examples.** `source_in = 20`, `D = 4`, speed 2: `C = 8`, forward offsets 0, 2, 4, 6, reversed positions 27, 25, 23, 21. With the curve `(0, 1x), (1, 3x)` of section 3.11 (`C = 8`, offsets 0, 1, 3, 5): positions 27, 26, 24, 22.
 
 ## 4. Layout of text, captions and shapes
 

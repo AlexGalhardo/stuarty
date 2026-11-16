@@ -587,7 +587,7 @@ func TestRoundTripKeepsVukemProperties(t *testing.T) {
 		{T: 0.4, Speed: timeline.Rational{Num: 3, Den: 2}},
 		{T: 1, Speed: timeline.Rational{Num: 3, Den: 4}},
 	}
-	c1.Speed = timeline.CurveMean(c1.SpeedCurve)
+	c1.Speed, c1.Reverse = timeline.CurveMean(c1.SpeedCurve), true
 	d.Items[c1.ID] = c1
 
 	music := d.Items["itm_c000000004"]
@@ -622,7 +622,7 @@ func TestRoundTripKeepsVukemProperties(t *testing.T) {
 	}
 
 	if len(got.SpeedCurve) != 3 || got.SpeedCurve[1] != c1.SpeedCurve[1] || got.Speed != c1.Speed ||
-		got.Duration != c1.Duration {
+		got.Duration != c1.Duration || !got.Reverse {
 		t.Errorf("speed curve did not come back: %+v (want %+v)", got.SpeedCurve, c1.SpeedCurve)
 	}
 

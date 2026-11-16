@@ -55,6 +55,11 @@ func (c *check) firstWordDrift(it, clip *timeline.Item) {
 		return
 	}
 
+	// A curve or a reverse has no constant mapping from the transcript to the timeline.
+	if clip.Reverse || len(clip.SpeedCurve) > 0 {
+		return
+	}
+
 	first := it.Words[0]
 	at := it.Start + first.Start
 	num, den, si := clip.Speed.Num, clip.Speed.Den, clip.SourceIn
@@ -131,7 +136,7 @@ func (c *check) mixPeaks(rate float64) map[int]float64 {
 				continue
 			}
 
-			secs := (float64(it.SourceIn) + float64(r)*float64(it.Speed.Num)/float64(it.Speed.Den)) / rate
+			secs := float64(it.SourceIn+it.SourceOffset(r)) / rate
 			if i := int(secs * 1000 / Window); i >= 0 && i < len(peaks) {
 				sum[w] += peaks[i] * gainAt(it, r)
 			}

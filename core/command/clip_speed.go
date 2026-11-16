@@ -12,12 +12,13 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "clip.set_speed",
-		Summary: "Changes the speed of a clip or audio item, constant or along a curve, keeping the same source range.",
+		Summary: "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards.",
 		Description: "Sets either speed, from 0.25x to 4x, or curve, 2 to 8 points {t, speed} with t the fraction of the " +
 			"item from 0 to 1 (first 0, last 1) and a linear ramp between points; a speed clears the curve. Rescales the " +
 			"duration, the fades, the transitions and the keyframes by the ratio of the old to the new mean speed. With " +
 			"ripple track the later items of the track follow the change in length. Captions linked to the clip are " +
-			"listed, not changed.",
+			"listed, not changed. reverse true plays the same source range backwards (false restores it), alone or " +
+			"with a speed or a curve.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "curve": [{"t": 0, "speed": "1x"}, {"t": 0.5, "speed": "3x"}, {"t": 1, "speed": "1x"}]}`,
 		Errors: []string{
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeOutOfSource, CodeInvalidTime, CodeOverlap,
@@ -28,10 +29,11 @@ func init() {
 }
 
 type clipSpeedArgs struct {
-	ItemID string           `json:"item_id"          desc:"A clip of a video asset, or an audio item."`
-	Speed  any              `json:"speed,omitempty"  desc:"\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4. Not with curve."      schema:"speed"`
-	Curve  []speedPointArgs `json:"curve,omitempty"  desc:"Speed ramp: 2 to 8 points, linear between them, first t 0 and last t 1. Not with speed."                minitems:"2" maxitems:"8"`
-	Ripple string           `json:"ripple,omitempty" desc:"none (default) or track: shift the later items of the track."                                                                     enum:"none,track"`
+	ItemID  string           `json:"item_id"           desc:"A clip of a video asset, or an audio item."`
+	Speed   any              `json:"speed,omitempty"   desc:"\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4. Not with curve."      schema:"speed"`
+	Curve   []speedPointArgs `json:"curve,omitempty"   desc:"Speed ramp: 2 to 8 points, linear between them, first t 0 and last t 1. Not with speed."                minitems:"2" maxitems:"8"`
+	Reverse *bool            `json:"reverse,omitempty" desc:"true plays the source range backwards; false plays it forwards."`
+	Ripple  string           `json:"ripple,omitempty"  desc:"none (default) or track: shift the later items of the track."                                                                     enum:"none,track"`
 }
 
 type speedPointArgs struct {
@@ -117,7 +119,12 @@ func parseCurve(in []speedPointArgs) ([]timeline.SpeedPoint, *Error) {
 }
 
 func applyClipSetSpeed(c *Context, a *clipSpeedArgs) error {
-	if err := atLeastOne([]string{"speed", "curve"}, a.Speed != nil, len(a.Curve) > 0); err != nil {
+	if err := atLeastOne(
+		[]string{"speed", "curve", "reverse"},
+		a.Speed != nil,
+		len(a.Curve) > 0,
+		a.Reverse != nil,
+	); err != nil {
 		return err
 	}
 	if a.Speed != nil && len(a.Curve) > 0 {
@@ -127,11 +134,13 @@ func applyClipSetSpeed(c *Context, a *clipSpeedArgs) error {
 	var next timeline.Rational
 	var curve []timeline.SpeedPoint
 	var err *Error
-	if len(a.Curve) > 0 {
+	given := a.Speed != nil || len(a.Curve) > 0
+	switch {
+	case len(a.Curve) > 0:
 		if curve, err = parseCurve(a.Curve); err == nil {
 			next = timeline.CurveMean(curve)
 		}
-	} else {
+	case a.Speed != nil:
 		next, err = parseSpeed(a.Speed)
 	}
 	if err != nil {
@@ -149,6 +158,9 @@ func applyClipSetSpeed(c *Context, a *clipSpeedArgs) error {
 		return Errorf(CodeTypeMismatch, "Item %s is %s item and has no speed.", a.ItemID, article(it.Type)).
 			WithHint("Change the duration with item.trim instead.").WithPath("args.item_id")
 	}
+	if !given {
+		next, curve = it.Speed, it.SpeedCurve
+	}
 	old := it.Speed
 	oldDur, oldEnd := it.Duration, itemEnd(&it)
 	newDur, clamped, err := c.speedDuration(&it, asset, next)
@@ -158,6 +170,9 @@ func applyClipSetSpeed(c *Context, a *clipSpeedArgs) error {
 
 	var adjusted []adjustment
 	it.Speed, it.SpeedCurve, it.Duration = next, curve, newDur
+	if a.Reverse != nil {
+		it.Reverse = *a.Reverse
+	}
 	adjusted = append(adjusted, rescaleForSpeed(&it, rescaler{
 		int64(old.Num) * int64(next.Den), int64(old.Den) * int64(next.Num),
 	})...)
@@ -196,6 +211,9 @@ func applyClipSetSpeed(c *Context, a *clipSpeedArgs) error {
 		linked = []string{}
 	}
 	c.SetEffective("speed", map[string]any{"num": next.Num, "den": next.Den})
+	if a.Reverse != nil {
+		c.SetEffective("reverse", it.Reverse)
+	}
 	if len(curve) > 0 {
 		c.SetEffective("curve_points", len(curve))
 	}

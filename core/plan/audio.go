@@ -33,6 +33,7 @@ type AudioSource struct {
 	Samples     int64             `json:"samples"`      // output samples
 	Speed       timeline.Rational `json:"speed"`        // the mean speed when Curve is set
 	Curve       *SpeedRamp        `json:"speed_curve,omitempty"`
+	Reverse     bool              `json:"reverse,omitempty"` // read backwards from the end of source frame SourceStart
 	Gain        []GainPoint       `json:"gain"`              // volume or its keyframes, times the fades
 	Denoise     float64           `json:"denoise,omitempty"` // noise reduction strength 0 to 1 (SDD-004 §7); absent means off
 }
@@ -156,6 +157,7 @@ func audioSource(doc *timeline.Document, it *timeline.Item, cs, ce int) AudioSou
 		Samples:     frameSample(fps, ce) - start,
 		Speed:       it.Speed,
 		Curve:       curveOf(it, cs),
+		Reverse:     it.Reverse,
 		Gain:        gain,
 		Denoise:     round3(it.Denoise),
 	}

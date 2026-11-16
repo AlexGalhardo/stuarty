@@ -97,15 +97,33 @@ func SnapPoints(doc *timeline.Document, words bool) Snap {
 			if i+1 < len(ids) {
 				lim.TrimEndMax = doc.Items[ids[i+1]].Start
 			}
-			if total, ok := sourceFrames(doc, &it); ok {
-				sp := it.Speed
-				lim.TrimStartMin = max(lim.TrimStartMin, it.Start-it.SourceIn*sp.Den/sp.Num)
-				lim.TrimEndMax = min(lim.TrimEndMax, it.Start+max((total-it.SourceIn)*sp.Den/sp.Num, 0))
-			}
+			lim = sourceLimit(doc, &it, lim)
 			out.Limits[id] = lim
 		}
 	}
 	return out
+}
+
+// sourceLimit narrows the trim limits of a clip or audio item to the asset: how far its start can
+// move earlier and its end later before the source range leaves the asset.
+func sourceLimit(doc *timeline.Document, it *timeline.Item, lim SnapLimit) SnapLimit {
+	total, ok := sourceFrames(doc, it)
+	if !ok {
+		return lim
+	}
+
+	sp := it.Speed
+	back, forward := it.SourceIn, total-it.SourceIn
+
+	if it.Reverse {
+		// The start of the output is the end of the source range (SDD-004 section 3.12).
+		back, forward = total-it.SourceIn-it.SourceSpan(), it.SourceIn+it.SourceSpan()
+	}
+
+	lim.TrimStartMin = max(lim.TrimStartMin, it.Start-max(back, 0)*sp.Den/sp.Num)
+	lim.TrimEndMax = min(lim.TrimEndMax, it.Start+max(forward*sp.Den/sp.Num, 0))
+
+	return lim
 }
 
 // sourceFrames is the asset duration in project frames of a clip or audio item that

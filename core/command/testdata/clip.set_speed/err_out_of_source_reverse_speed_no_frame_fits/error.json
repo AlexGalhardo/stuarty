@@ -1,0 +1,14 @@
+{
+  "code": "E_OUT_OF_SOURCE",
+  "message": "At speed 4x the clip needs 4 source frames from frame 899; asset ast_3c5v8n2w6d has 900.",
+  "hint": "Use item.trim to move source_in earlier, or choose a lower speed.",
+  "retryable": false,
+  "path": "args.speed",
+  "details": {
+    "available": {
+      "asset_duration": 900,
+      "max_duration": 0,
+      "source_in": 899
+    }
+  }
+}

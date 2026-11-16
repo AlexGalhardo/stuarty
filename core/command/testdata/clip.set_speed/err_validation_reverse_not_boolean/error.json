@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.reverse must be a boolean, but got a string.",
+  "hint": "Send a boolean for args.reverse.",
+  "retryable": false,
+  "path": "args.reverse"
+}

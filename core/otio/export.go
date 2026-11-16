@@ -254,6 +254,10 @@ func clipMetadata(it *timeline.Item) object {
 		props["speed"] = object{"num": it.Speed.Num, "den": it.Speed.Den}
 	}
 
+	if it.Reverse {
+		props["reverse"] = true
+	}
+
 	if len(it.SpeedCurve) > 0 {
 		pts := make([]any, len(it.SpeedCurve))
 		for i, p := range it.SpeedCurve {
@@ -509,6 +513,7 @@ func lostProperties(it *timeline.Item) []Lost {
 	}{
 		{len(it.Keyframes) > 0, "keyframes"},
 		{it.Speed.Num != it.Speed.Den || len(it.SpeedCurve) > 0, "speed"},
+		{it.Reverse, "reverse"},
 		{it.Brightness != 0 || it.Contrast != 1 || it.Saturation != 1 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0, "colour adjustment"},
 		{(it.Filter != "none" && it.Filter != "") || it.Blur != 0, "filter and blur"},
 		{it.ChromaKey != nil, "chroma key"},

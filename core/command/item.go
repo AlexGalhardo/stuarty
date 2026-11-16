@@ -194,6 +194,16 @@ func rejectCurve(it *timeline.Item, what string) *Error {
 		WithHint("Remove the curve first with clip.set_speed and a constant speed.").WithPath("args.item_id")
 }
 
+// rejectRemap is rejectCurve for the commands that read the source in the forward direction
+// (silences, speech, beats, ducking): they also refuse an item that plays backwards.
+func rejectRemap(it *timeline.Item, what string) *Error {
+	if it.Reverse {
+		return Errorf(CodeInvalidState, "Item %s plays backwards, which %s cannot follow.", it.ID, what).
+			WithHint("Play it forwards first with clip.set_speed and reverse false.").WithPath("args.item_id")
+	}
+	return rejectCurve(it, what)
+}
+
 // ceilDiv returns ceil(n/d) for positive d.
 func ceilDiv(n, d int) int { return (n + d - 1) / d }
 
@@ -370,11 +380,14 @@ func (c *Context) trimStart(old, n *timeline.Item, to int) *Error {
 	}
 	d := to - old.Start
 	if _, reads := c.sourceAsset(old); reads {
-		if err := rejectCurve(old, "moving the start of the item"); err != nil && d != 0 {
-			return err
+		if len(old.SpeedCurve) > 0 && d != 0 {
+			return rejectCurve(old, "moving the start of the item")
 		}
 		sp := old.Speed
 		switch {
+		case old.Reverse:
+			// The start of the output is the end of the source range: source_in stays and the range
+			// loses or gains frames at its end (SDD-004 section 3.12).
 		case d > 0:
 			n.SourceIn = old.SourceIn + d*sp.Num/sp.Den
 		case d < 0:
@@ -399,6 +412,11 @@ func (c *Context) trimStart(old, n *timeline.Item, to int) *Error {
 		}
 	}
 	n.Start, n.Duration = to, old.Duration-d
+	if old.Reverse && d < 0 {
+		if err := c.checkSource(n, n.Duration, n.SourceIn); err != nil {
+			return err.WithPath("args.to")
+		}
+	}
 	if d != 0 {
 		kShift(n, d)
 		trimWordsFront(n, d)
@@ -433,8 +451,22 @@ func (c *Context) trimEnd(old, n *timeline.Item, to int) *Error {
 			WithPath("args.to")
 	}
 	n.Duration = to - old.Start
+	if _, reads := c.sourceAsset(old); reads && old.Reverse && n.Duration != old.Duration {
+		// The end of the output is the start of the source range: the range keeps its end, so
+		// source_in moves by the change in the number of source frames read.
+		n.SourceIn = old.SourceIn + old.SourceSpan() - n.SourceSpan()
+		if n.SourceIn < 0 {
+			return Errorf(
+				CodeOutOfSource,
+				"Moving the end of %s to frame %d needs source frame %d before the start of asset %s.",
+				old.ID, to, n.SourceIn, old.Asset,
+			).
+				WithHint("Use a shorter end, or play the clip forwards with clip.set_speed and reverse false.").
+				WithPath("args.to")
+		}
+	}
 	switch {
-	case n.Duration > old.Duration:
+	case n.Duration > old.Duration && !old.Reverse:
 		if err := c.checkSource(old, n.Duration, old.SourceIn); err != nil {
 			return err.WithPath("args.to")
 		}

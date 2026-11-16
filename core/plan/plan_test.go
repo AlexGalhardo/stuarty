@@ -1373,3 +1373,29 @@ func TestSpeedCurveChoosesSourceFramesAndIsCarried(t *testing.T) {
 		t.Errorf("the window audio does not carry the ramp: %+v", w.Audio)
 	}
 }
+
+func TestReverseChoosesBackwardsSourceFrames(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	c := clip("itm_v", trkBottom, 0, 4)
+	c.SourceIn = 20
+	c.Speed, c.Reverse = timeline.Rational{Num: 2, Den: 1}, true
+	put(d, c)
+
+	for r, want := range []int{27, 25, 23, 21} {
+		if l := Frame(d, r).Layers; len(l) != 1 || l[0].SourceFrame != want {
+			t.Errorf("frame %d: want source frame %d, got %+v", r, want, l)
+		}
+	}
+
+	m := timeline.NewItem("itm_m", timeline.ItemAudio, trkSound, 0, 4)
+	m.Asset, m.Speed, m.Reverse = astSound, c.Speed, true
+	put(d, m)
+
+	for _, a := range Audio(d, 0, 4) {
+		if !a.Reverse {
+			t.Errorf("the audio source does not carry reverse: %+v", a)
+		}
+	}
+}

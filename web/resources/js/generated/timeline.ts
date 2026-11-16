@@ -97,6 +97,7 @@ export interface Item {
   name?: string;
   opacity?: number;
   radius?: number;
+  reverse?: boolean;
   rotation?: number;
   saturation?: number;
   scale?: number;

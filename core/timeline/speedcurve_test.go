@@ -62,3 +62,25 @@ func TestCurveError(t *testing.T) {
 		}
 	}
 }
+
+func TestReverseSourceOffset(t *testing.T) {
+	it := NewItem("itm_a", ItemClip, "trk_a", 0, 4)
+	it.Speed = Rational{Num: 2, Den: 1}
+	it.Reverse = true
+
+	for k, want := range []int{7, 5, 3, 1} {
+		if got := it.SourceOffset(k); got != want {
+			t.Errorf("k=%d got %d want %d", k, got, want)
+		}
+	}
+
+	// 1x to 3x over 4 frames reads 0, 1, 3, 5 forwards in 8 frames: backwards 7, 6, 4, 2.
+	it.Speed = Rational{Num: 2, Den: 1}
+	it.SpeedCurve = []SpeedPoint{pt(0, 1, 1), pt(1, 3, 1)}
+
+	for k, want := range []int{7, 6, 4, 2} {
+		if got := it.SourceOffset(k); got != want {
+			t.Errorf("curve k=%d got %d want %d", k, got, want)
+		}
+	}
+}

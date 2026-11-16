@@ -426,7 +426,7 @@ func (v *validator) itemFieldsForType(path, key string, it Item) {
 	bad := func(name string) { v.add(VShape, path+"."+name, key, "%s does not apply to %s items", name, it.Type) }
 	media := it.Type == ItemClip || it.Type == ItemAudio
 	if !media && (it.Asset != "" || it.SourceIn != 0 || it.FadeIn != 0 || it.FadeOut != 0 || it.Denoise != 0 ||
-		len(it.SpeedCurve) > 0) {
+		len(it.SpeedCurve) > 0 || it.Reverse) {
 		bad("asset")
 	}
 	if it.Type != ItemClip &&

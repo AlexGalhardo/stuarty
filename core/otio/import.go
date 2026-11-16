@@ -29,6 +29,7 @@ type entry struct {
 	props    []propOp
 	speed    *timeline.Rational
 	curve    []timeline.SpeedPoint
+	reverse  bool
 	slot     *slotSpec
 	body     string         // texts only
 	style    map[string]any // texts only
@@ -356,7 +357,7 @@ func (r *reader) clip(c map[string]any, cursor int, kind string) (entry, bool) {
 		}
 
 		spec := itemOps(props, mode, cursor, dur, r.slots, func(f string) { r.lose(f + " of clip " + name) })
-		e.props, e.speed, e.curve, e.slot = spec.ops, spec.speed, spec.curve, spec.slot
+		e.props, e.speed, e.curve, e.reverse, e.slot = spec.ops, spec.speed, spec.curve, spec.reverse, spec.slot
 	}
 
 	return e, true
@@ -570,6 +571,11 @@ func (b *batch) clip(trackID string, audio bool, e *entry) *placed {
 		if trim {
 			b.push("item.trim", map[string]any{"item_id": id, "edge": "end", "to": frameTime(e.start + e.duration)})
 		}
+	}
+
+	// Reverse comes last: trimming the end of a reversed clip moves its source_in.
+	if e.reverse {
+		b.push("clip.set_speed", map[string]any{"item_id": id, "reverse": true})
 	}
 
 	b.after(id, e, asset)
