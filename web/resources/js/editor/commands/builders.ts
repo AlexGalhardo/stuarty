@@ -1571,8 +1571,38 @@ export function markerAddOperations(frame: number): Operations {
 	return [{ op: "marker.add", args: { at: frames(frame) } }];
 }
 
-export function markerRemoveOperations(frame: number): Operations {
-	return [{ op: "marker.remove", args: { at: frames(frame) } }];
+export function markerRemoveOperations(
+	frame: number,
+	itemId?: string,
+): Operations {
+	return [
+		{
+			op: "marker.remove",
+			args: {
+				at: frames(frame),
+				...(itemId === undefined ? {} : { item_id: itemId }),
+			},
+		},
+	];
+}
+
+// A marker changed: its label (`""` removes it) or its position (`to`, a time
+// with a unit). Without `itemId` it is a marker of the timeline.
+export function markerSetOperations(
+	frame: number,
+	changes: { label?: string; to?: string },
+	itemId?: string,
+): Operations {
+	return [
+		{
+			op: "marker.set",
+			args: {
+				at: frames(frame),
+				...(itemId === undefined ? {} : { item_id: itemId }),
+				...changes,
+			},
+		},
+	];
 }
 
 export const BLEND_MODES = [

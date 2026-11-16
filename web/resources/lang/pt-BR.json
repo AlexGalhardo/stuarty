@@ -863,6 +863,15 @@
         },
         "beats_apply": "Marcar batidas"
       },
+      "markers": {
+        "title": {
+          "one": "Marcador (1)",
+          "other": "Marcadores ({count})"
+        },
+        "position": "Posição",
+        "label": "Rótulo",
+        "remove": "Remover marcador"
+      },
       "fonts": {
         "title": "Fontes",
         "remove": "Remover a família de fontes {name}",

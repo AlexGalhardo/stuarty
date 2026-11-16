@@ -27,6 +27,7 @@ import AnimationSection from "./AnimationSection";
 import BlendSection from "./BlendSection";
 import FlipSection from "./FlipSection";
 import KeyframesSection from "./KeyframesSection";
+import MarkersSection from "./MarkersSection";
 import MaskSection from "./MaskSection";
 import TransformSection from "./TransformSection";
 import TransitionsSection from "./TransitionsSection";
@@ -120,6 +121,7 @@ export default function ItemSections({
 			{item.type !== "audio" && <TransitionsSection itemId={itemId} />}
 			{item.type !== "audio" && <AnimationSection itemId={itemId} />}
 			<KeyframesSection itemId={itemId} />
+			<MarkersSection itemId={itemId} />
 		</>
 	);
 }
