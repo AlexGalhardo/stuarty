@@ -50,12 +50,15 @@ async function scan(
 	// WebKit runners catch it mid-transition. Endless animations (a spinner)
 	// are left out: they never finish.
 	await page.evaluate(() =>
-		Promise.all(
-			document
-				.getAnimations()
-				.filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
-				.map((a) => a.finished.catch(() => undefined)),
-		),
+		Promise.race([
+			Promise.all(
+				document
+					.getAnimations()
+					.filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+					.map((a) => a.finished.catch(() => undefined)),
+			),
+			new Promise((resolve) => setTimeout(resolve, 3000)),
+		]),
 	);
 	const { violations } = await new AxeBuilder({ page })
 		.withTags(TAGS)
