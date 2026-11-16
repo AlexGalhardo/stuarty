@@ -244,6 +244,64 @@ export function markerClip(width: number, height: number): string {
 	return out;
 }
 
+// alphaClip makes a 1 s 160x90 WebM (VP9 yuva420p) whose left half is fully
+// transparent and whose right half is opaque red: the source of the alpha path
+// of the preview (VV-013).
+export function alphaClip(): string {
+	const dir = join(tmpdir(), "vukem-video-e2e-media");
+	mkdirSync(dir, { recursive: true });
+	const out = join(dir, "alpha-half-red2.webm");
+	if (!existsSync(out)) {
+		execFileSync(
+			ffmpegExe(),
+			[
+				"-y",
+				"-f",
+				"lavfi",
+				"-i",
+				"color=c=red:s=160x90:r=10:d=1,format=yuva420p,geq=lum='lum(X,Y)':cb='cb(X,Y)':cr='cr(X,Y)':a='if(gte(X,80),255,0)'",
+				"-c:v",
+				"libvpx-vp9",
+				"-pix_fmt",
+				"yuva420p",
+				"-auto-alt-ref",
+				"0",
+				"-b:v",
+				"100k",
+				out,
+			],
+			{ stdio: "ignore" },
+		);
+	}
+	return out;
+}
+
+// solidClip makes a 1 s 160x90 opaque clip of one colour (an ffmpeg colour name).
+export function solidClip(color: string): string {
+	const dir = join(tmpdir(), "vukem-video-e2e-media");
+	mkdirSync(dir, { recursive: true });
+	const out = join(dir, `solid-${color}.mp4`);
+	if (!existsSync(out)) {
+		execFileSync(
+			ffmpegExe(),
+			[
+				"-y",
+				"-f",
+				"lavfi",
+				"-i",
+				`color=c=${color}:s=160x90:r=10:d=1`,
+				"-c:v",
+				"libopenh264",
+				"-pix_fmt",
+				"yuv420p",
+				out,
+			],
+			{ stdio: "ignore" },
+		);
+	}
+	return out;
+}
+
 export interface Seeded {
 	id: string;
 	assetId: string;
