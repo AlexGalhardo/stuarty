@@ -32,6 +32,7 @@
         "track.set_caption_style",
         "item.move",
         "item.trim",
+        "item.slip",
         "item.split",
         "item.delete",
         "item.duplicate",

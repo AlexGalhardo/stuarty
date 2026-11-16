@@ -1,0 +1,30 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        150,
+        190
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_x000000002",
+    "changes": {
+      "duration": [
+        90,
+        50
+      ],
+      "source_in": [
+        100,
+        140
+      ],
+      "start": [
+        250,
+        290
+      ]
+    }
+  }
+]

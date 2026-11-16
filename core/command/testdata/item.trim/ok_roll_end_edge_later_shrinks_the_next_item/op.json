@@ -1,0 +1,9 @@
+{
+  "op": "item.trim",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "edge": "end",
+    "to": "290f",
+    "roll": true
+  }
+}

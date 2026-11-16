@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Trimming the start of itm_x000000002 to frame 490 leaves no frame: the item ends at 340.",
+  "hint": "Slide by less, or trim the neighbour itm_x000000002 with item.trim first.",
+  "retryable": false,
+  "path": "args.start"
+}

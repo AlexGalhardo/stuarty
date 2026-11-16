@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Trimming the start of itm_x000000002 to frame 340 leaves no frame: the item ends at 340.",
+  "hint": "Use a start before \"340f\", or delete the item.",
+  "retryable": false,
+  "path": "args.to"
+}

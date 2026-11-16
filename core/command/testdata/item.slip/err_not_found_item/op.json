@@ -1,0 +1,7 @@
+{
+  "op": "item.slip",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "source_in": "1s"
+  }
+}

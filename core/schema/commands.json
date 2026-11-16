@@ -1883,6 +1883,10 @@
         "item_id": {
           "type": "string"
         },
+        "slide": {
+          "description": "Slide edit: the neighbours that touch the item keep touching it, the one before ends and the one after starts where the item now does. Needs start; not with track_id.",
+          "type": "boolean"
+        },
         "start": {
           "description": "The new absolute position of the first frame.",
           "type": "string",
@@ -1898,12 +1902,14 @@
       ],
       "type": "object"
     },
-    "description": "Sets the start of the item, its track, or both; at least one is required. Keyframes, words, transitions and fades are relative to the item and travel with it.",
+    "description": "Sets the start of the item, its track, or both; at least one is required. Keyframes, words, transitions and fades are relative to the item and travel with it. With slide true the neighbours that touch the item are trimmed so they keep touching it (a slide edit).",
     "errors": [
       "E_VALIDATION",
       "E_INVALID_TIME",
       "E_NOT_FOUND",
       "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_OUT_OF_SOURCE",
       "E_OVERLAP"
     ],
     "example": {
@@ -2133,6 +2139,45 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "item_id": {
+          "description": "A clip or audio item of a video or audio asset.",
+          "type": "string"
+        },
+        "source_in": {
+          "description": "The new offset into the asset where the item starts reading.",
+          "type": "string",
+          "x-vv-kind": "time"
+        }
+      },
+      "required": [
+        "item_id",
+        "source_in"
+      ],
+      "type": "object"
+    },
+    "description": "Sets source_in, the offset into the asset where the item starts reading (a slip edit). The start, the duration, the keyframes and the neighbours do not change. The source range must stay inside the asset.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_OUT_OF_SOURCE"
+    ],
+    "example": {
+      "item_id": "itm_m1n2p3q4r5",
+      "source_in": "2s"
+    },
+    "internal": false,
+    "name": "item.slip",
+    "phase": "beta",
+    "scope": "edit",
+    "summary": "Shows another part of the source in a clip or audio item without moving or resizing it."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "at": {
           "description": "Absolute position strictly inside the item.",
           "type": "string",
@@ -2195,6 +2240,10 @@
           ],
           "type": "string"
         },
+        "roll": {
+          "description": "Roll edit: the touching edge of the neighbouring item moves to the same frame, so the cut moves and nothing else changes. Not with ripple track.",
+          "type": "boolean"
+        },
         "to": {
           "description": "Absolute position of the edge; the end is exclusive.",
           "type": "string",
@@ -2208,7 +2257,7 @@
       ],
       "type": "object"
     },
-    "description": "Moves an edge to an absolute position and keeps the source range, the keyframes and the caption words consistent. The end edge is exclusive: it is the first frame after the item. With ripple track the later items of the track follow the change in length (a start trim then keeps the start of the item).",
+    "description": "Moves an edge to an absolute position and keeps the source range, the keyframes and the caption words consistent. The end edge is exclusive: it is the first frame after the item. With ripple track the later items of the track follow the change in length (a start trim then keeps the start of the item). With roll true the touching edge of the neighbouring item moves to the same frame (a roll edit).",
     "errors": [
       "E_VALIDATION",
       "E_INVALID_TIME",

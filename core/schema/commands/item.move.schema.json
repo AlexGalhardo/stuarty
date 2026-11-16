@@ -5,6 +5,10 @@
     "item_id": {
       "type": "string"
     },
+    "slide": {
+      "description": "Slide edit: the neighbours that touch the item keep touching it, the one before ends and the one after starts where the item now does. Needs start; not with track_id.",
+      "type": "boolean"
+    },
     "start": {
       "description": "The new absolute position of the first frame.",
       "type": "string",

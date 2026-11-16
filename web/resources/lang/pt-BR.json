@@ -505,6 +505,9 @@
           "set_transition": {
             "title": "Definir transição do item"
           },
+          "slip": {
+            "title": "Deslizar a fonte do item"
+          },
           "split": {
             "title": "Dividir item"
           },

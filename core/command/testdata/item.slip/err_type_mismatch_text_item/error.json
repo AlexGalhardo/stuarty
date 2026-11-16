@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_m1n2p3q4r5 is a text and has no source range to slip.",
+  "hint": "Slip applies to clip and audio items of a video or audio asset, not to images, text, captions or shapes.",
+  "retryable": false,
+  "path": "args.item_id"
+}

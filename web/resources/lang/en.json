@@ -505,6 +505,9 @@
           "set_transition": {
             "title": "Set item transition"
           },
+          "slip": {
+            "title": "Slip item"
+          },
           "split": {
             "title": "Split item"
           },

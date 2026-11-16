@@ -1,0 +1,9 @@
+{
+  "op": "item.move",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "start": "120f",
+    "track_id": "trk_f6g7h8j9k0",
+    "slide": true
+  }
+}

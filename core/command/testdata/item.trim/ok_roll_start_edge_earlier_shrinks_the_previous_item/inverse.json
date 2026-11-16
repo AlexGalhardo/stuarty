@@ -1,0 +1,20 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "duration": 150,
+      "source_in": 30,
+      "start": 100
+    }
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_x000000003",
+    "set": {
+      "duration": 60
+    }
+  }
+]

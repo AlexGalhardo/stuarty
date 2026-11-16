@@ -1,0 +1,11 @@
+{
+  "duration": 190,
+  "rolled_item": "itm_x000000002",
+  "source_in": 30,
+  "start": 100,
+  "to": {
+    "frame": 290,
+    "requested": "290f",
+    "seconds": 9.667
+  }
+}

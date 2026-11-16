@@ -1207,6 +1207,10 @@ export interface ItemDuplicateArgs {
 export interface ItemMoveArgs {
   item_id: string;
   /**
+   * Slide edit: the neighbours that touch the item keep touching it, the one before ends and the one after starts where the item now does. Needs start; not with track_id.
+   */
+  slide?: boolean;
+  /**
    * The new absolute position of the first frame.
    */
   start?: string;
@@ -1296,6 +1300,17 @@ export interface ItemSetTransitionArgs {
   kind: "fade" | "slide_left" | "slide_right" | "slide_up" | "slide_down" | null;
 }
 
+export interface ItemSlipArgs {
+  /**
+   * A clip or audio item of a video or audio asset.
+   */
+  item_id: string;
+  /**
+   * The new offset into the asset where the item starts reading.
+   */
+  source_in: string;
+}
+
 export interface ItemSplitArgs {
   /**
    * Absolute position strictly inside the item.
@@ -1315,6 +1330,10 @@ export interface ItemTrimArgs {
    * none (default) or track: the later items of the track follow the change in length; with the start edge the item keeps its start.
    */
   ripple?: "none" | "track";
+  /**
+   * Roll edit: the touching edge of the neighbouring item moves to the same frame, so the cut moves and nothing else changes. Not with ripple track.
+   */
+  roll?: boolean;
   /**
    * Absolute position of the edge; the end is exclusive.
    */
@@ -1824,7 +1843,7 @@ export interface TrackUpdateArgs {
   volume?: number;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_filter" | "clip.set_framing" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_filter" | "clip.set_framing" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -1859,6 +1878,7 @@ export interface CommandArgsMap {
 	"item.set_audio": ItemSetAudioArgs;
 	"item.set_transform": ItemSetTransformArgs;
 	"item.set_transition": ItemSetTransitionArgs;
+	"item.slip": ItemSlipArgs;
 	"item.split": ItemSplitArgs;
 	"item.trim": ItemTrimArgs;
 	"keyframe.clear": KeyframeClearArgs;
@@ -1917,11 +1937,12 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"item.crossfade": { summary: "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.delete": { summary: "Removes items, and optionally closes the freed space.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE","E_OVERLAP"] },
 	"item.duplicate": { summary: "Copies an item to another position, optionally on another track.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
-	"item.move": { summary: "Moves an item in time, to another track of the same kind, or both.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_OVERLAP"] },
+	"item.move": { summary: "Moves an item in time, to another track of the same kind, or both.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"item.rename": { summary: "Sets the label of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
 	"item.set_audio": { summary: "Sets the volume, the fades or the mute flag of a clip or audio item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.set_transform": { summary: "Sets the position, scale, rotation or opacity of a visual item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.set_transition": { summary: "Sets or removes the transition on one edge of a visual item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
+	"item.slip": { summary: "Shows another part of the source in a clip or audio item without moving or resizing it.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE"] },
 	"item.split": { summary: "Splits an item into two at a timeline frame.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT"] },
 	"item.trim": { summary: "Moves the start edge or the end edge of an item to a timeline position.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"keyframe.clear": { summary: "Removes all keyframes of one property, or of every property.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
