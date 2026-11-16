@@ -1978,7 +1978,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name":"job_start",
-  "description":"Start long work. kind=export renders the project to a file in the workspace: args {start?, end?, format?, at?}, format mp4 (default), gif, wav, aac or png (frame at `at`). kind=transcribe transcribes an asset's speech: args {asset_id, language?, model?}. Export is refused while lint has errors. Waits up to wait_ms, then returns the job; poll job_get.",
+  "description":"Start long work. kind=export renders to a workspace file: args {start?, end?, format?, at?}, format mp4 (default), gif, wav, aac or png (the frame at `at`). kind=transcribe makes a transcript: args {asset_id, language?, model?}. Lint errors block export. Returns the job after wait_ms at most; poll job_get.",
   "inputSchema":{
     "type":"object",
     "properties":{
