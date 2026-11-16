@@ -716,23 +716,30 @@ export function trimEndOperations(itemId: string, to: string): Operations {
 }
 
 // The same operations with the `start` the core named as the next free slot
-// (`details.next_free`, a frame number as received).
-export function withNextFree(ops: Operations, nextFree: number): Operations {
-	return ops.map((operation) =>
-		operation.op === "clip.add" ||
-		operation.op === "audio.add" ||
-		operation.op === "caption.add" ||
-		operation.op === "item.move"
-			? {
-					...operation,
-					args: { ...operation.args, start: frames(nextFree) },
-				}
-			: operation.op === "item.trim"
+// (`details.next_free`, a frame number as received) on the operation that
+// failed (`opIndex`); the others of the batch stay as they are.
+export function withNextFree(
+	ops: Operations,
+	nextFree: number,
+	opIndex: number,
+): Operations {
+	return ops.map((operation, index) =>
+		index !== opIndex
+			? operation
+			: operation.op === "clip.add" ||
+					operation.op === "audio.add" ||
+					operation.op === "caption.add" ||
+					operation.op === "item.move"
 				? {
 						...operation,
-						args: { ...operation.args, to: frames(nextFree) },
+						args: { ...operation.args, start: frames(nextFree) },
 					}
-				: operation,
+				: operation.op === "item.trim"
+					? {
+							...operation,
+							args: { ...operation.args, to: frames(nextFree) },
+						}
+					: operation,
 	);
 }
 

@@ -97,7 +97,7 @@ describe("builders emit times as strings with a unit (T8)", () => {
 				firstVisualTrack: "trk_1",
 				newTrackId: () => "trk_n",
 			}),
-			...withNextFree(moveItems([{ id: "a", from: 0, to: 5 }]), 40),
+			...withNextFree(moveItems([{ id: "a", from: 0, to: 5 }]), 40, 0),
 		];
 		for (const value of times(all)) expect(typeof value).toBe("string");
 		for (const value of times(all)) expect(value).toMatch(/^\d+(\.\d+)?[fs]$/);
@@ -149,9 +149,23 @@ describe("trim", () => {
 	});
 
 	test("the next free place of the core replaces `to`, the edge stays", () => {
-		expect(withNextFree(trimEdgeOperations("a", "start", 4), 12)).toEqual([
+		expect(withNextFree(trimEdgeOperations("a", "start", 4), 12, 0)).toEqual([
 			{ op: "item.trim", args: { item_id: "a", edge: "start", to: "12f" } },
 		]);
+	});
+});
+
+describe("withNextFree", () => {
+	test("only the failed operation of the batch is moved", () => {
+		const ops = moveItems([
+			{ id: "a", from: 0, to: 5 },
+			{ id: "b", from: 0, to: 6 },
+			{ id: "c", from: 0, to: 7 },
+		]);
+		const out = withNextFree(ops, 40, 1);
+		expect(out[0]).toEqual(ops[0]);
+		expect(out[1]?.args.start).toBe("40f");
+		expect(out[2]).toEqual(ops[2]);
 	});
 });
 

@@ -308,18 +308,19 @@ export function createActions(runtime: EditorRuntime): Actions {
 			return;
 		}
 		const free = error.code === "E_OVERLAP" ? nextFree(error) : null;
+		const failedOp = ops[error.opIndex ?? 0];
 		if (
 			free !== null &&
-			ops.some(
-				(o) =>
-					o.op.endsWith(".add") || o.op === "item.move" || o.op === "item.trim",
-			)
+			failedOp !== undefined &&
+			(failedOp.op.endsWith(".add") ||
+				failedOp.op === "item.move" ||
+				failedOp.op === "item.trim")
 		) {
 			noticeWriter.push({
 				...base,
 				action: {
 					labelKey: "ui.editor.notice.next_free",
-					operations: withNextFree(ops, free),
+					operations: withNextFree(ops, free, error.opIndex ?? 0),
 				},
 			});
 			return;
