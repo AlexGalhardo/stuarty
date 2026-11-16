@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"slices"
 	"testing"
 	"time"
 )
@@ -28,6 +29,38 @@ func (brokenLimiter) Allow(context.Context, string) (bool, time.Duration, error)
 
 func callerCtx() context.Context {
 	return WithCaller(context.Background(), Caller{Actor: "key:key_0123456789", Scopes: AllScopes})
+}
+
+type keyed struct{ seen []string }
+
+func (k *keyed) Allow(_ context.Context, key string) (bool, time.Duration, error) {
+	k.seen = append(k.seen, key)
+
+	return true, 0, nil
+}
+
+func TestHeavyLimitIgnoresTheLocalLabel(t *testing.T) {
+	k := &keyed{}
+	s := &svc{heavy: k}
+
+	for _, c := range []Caller{
+		{Actor: "local:agent-a"},
+		{Actor: "local:agent-b"},
+		{Actor: "local:ui", Browser: true},
+		{Actor: "key:key_0123456789"},
+		{Actor: "user:usr_1"},
+	} {
+		if err := s.heavyLimit(context.Background(), c); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	want := []string{
+		"heavy:local:agents", "heavy:local:agents", "heavy:local:ui", "heavy:key:key_0123456789", "heavy:user:usr_1",
+	}
+	if !slices.Equal(k.seen, want) {
+		t.Errorf("keys = %v, want %v", k.seen, want)
+	}
 }
 
 // SDD-007 section 4.4: the 11th heavy call within a minute is E_RATE_LIMITED
