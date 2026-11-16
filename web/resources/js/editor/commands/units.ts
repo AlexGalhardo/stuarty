@@ -153,6 +153,11 @@ export function wordFrame(itemStart: number, wordStart: number): number {
 	return itemStart + wordStart;
 }
 
+// A stored fraction as the number the speed fields and the curve chart use.
+export function ratioValue(ratio: { num: number; den: number }): number {
+	return ratio.num / ratio.den;
+}
+
 // The speed as the number the field shows: "1.5", "1" at normal speed.
 export function speedText(speed?: { num: number; den: number }): string {
 	if (speed === undefined) return "1";
