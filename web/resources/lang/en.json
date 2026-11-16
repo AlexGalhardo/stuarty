@@ -378,6 +378,7 @@
         "progress": "Export progress",
         "keeps_running": "You can close this dialog; the export keeps running.",
         "finished": "Export finished",
+        "show_in_folder": "Show in folder",
         "copy_path": "Copy path",
         "copy_details": "Copy details",
         "size": "{megabytes} MB · {duration} · revision {revision}",

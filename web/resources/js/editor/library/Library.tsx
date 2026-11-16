@@ -9,6 +9,13 @@ import {
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+	canDropPaths,
+	canPickFiles,
+	cleanPaths,
+	getDesktopBridge,
+	subscribeDesktopBridge,
+} from "@/lib/desktopBridge";
 import { useT } from "@/lib/i18n";
 import { useCanEdit } from "../commands/useActions";
 import { useStore } from "../state/createStore";
@@ -16,13 +23,6 @@ import { useRuntime } from "../state/EditorContext";
 import EmptyState from "../ui/EmptyState";
 import { errorHeadline } from "../ui/errorHeadline";
 import AssetCard, { type AssetDragStart } from "./AssetCard";
-import {
-	canDropPaths,
-	canPickFiles,
-	cleanPaths,
-	getDesktopBridge,
-	subscribeDesktopBridge,
-} from "./desktopBridge";
 import { createImportQueue, parsePastedPaths } from "./importPaths";
 import TrashGroup from "./TrashGroup";
 

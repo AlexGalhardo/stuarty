@@ -19,7 +19,14 @@ func TestParseBridgeMessage(t *testing.T) {
 		{`file:drop:1:2`, BridgeRequest{}, false},
 		{``, BridgeRequest{}, false},
 		{`{"vukem":"pickFiles","id":"x"}`, BridgeRequest{}, false},
-		{`{"vukem":"pickFiles","id":1,"pad":"` + strings.Repeat("a", 300) + `"}`, BridgeRequest{}, false},
+		{`{"vukem":"pickFiles","id":1,"pad":"` + strings.Repeat("a", 5000) + `"}`, BridgeRequest{}, false},
+		{
+			`{"vukem":"showInFolder","id":5,"path":"C:\\out\\a.mp4"}`,
+			BridgeRequest{Op: OpShowInFolder, ID: 5, Path: `C:\out\a.mp4`},
+			true,
+		},
+		{`{"vukem":"showInFolder","id":5}`, BridgeRequest{}, false},
+		{`{"vukem":"pickFiles","id":6,"path":"C:\\x"}`, BridgeRequest{Op: OpPickFiles, ID: 6}, true},
 	}
 	for _, tc := range tests {
 		got, ok := ParseBridgeMessage(tc.msg)
@@ -42,7 +49,7 @@ func TestResolveScriptEscapesPathsAndErrors(t *testing.T) {
 }
 
 func TestBridgeScriptDefinesTheTwoMembers(t *testing.T) {
-	for _, want := range []string{`w.vukemDesktop=`, `pickFiles:`, `onDropPaths:`, `handlePlatformFileDrop`, `vukem-desktop-ready`} {
+	for _, want := range []string{`w.vukemDesktop=`, `pickFiles:`, `showInFolder:`, `onDropPaths:`, `handlePlatformFileDrop`, `vukem-desktop-ready`} {
 		if !strings.Contains(BridgeScript, want) {
 			t.Errorf("BridgeScript lacks %s", want)
 		}

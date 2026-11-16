@@ -1,6 +1,9 @@
 package main
 
 import (
+	"context"
+	"os/exec"
+	"runtime"
 	"sync/atomic"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -29,8 +32,11 @@ func (b *bridge) handle(_ application.Window, message string, origin *applicatio
 	if !ok {
 		return
 	}
-	if req.Op == shell.OpPickFiles {
+	switch req.Op {
+	case shell.OpPickFiles:
 		go b.pickFiles(win, req.ID)
+	case shell.OpShowInFolder:
+		go b.showInFolder(win, req)
 	}
 }
 
@@ -51,6 +57,26 @@ func (b *bridge) pickFiles(win *application.WebviewWindow, id int64) {
 		msg = err.Error()
 	}
 	win.ExecJS(shell.ResolveScript(id, paths, msg))
+}
+
+// showInFolder opens the file manager on the exported file. The page names the
+// path; the shell opens it only when it is an existing file, and answers with an
+// empty list or the reason it could not.
+func (b *bridge) showInFolder(win *application.WebviewWindow, req shell.BridgeRequest) {
+	msg := ""
+	if err := shell.CheckRevealPath(req.Path); err != nil {
+		msg = err.Error()
+	} else {
+		name, args := shell.RevealCommand(runtime.GOOS, req.Path)
+		// Explorer exits with 1 even when it succeeded, so only a failure to start counts.
+		cmd := exec.CommandContext(context.Background(), name, args...)
+		if err := cmd.Start(); err != nil {
+			msg = err.Error()
+		} else {
+			go func() { _ = cmd.Wait() }()
+		}
+	}
+	win.ExecJS(shell.ResolveScript(req.ID, nil, msg))
 }
 
 // install runs the bridge script after every navigation, once the webview has

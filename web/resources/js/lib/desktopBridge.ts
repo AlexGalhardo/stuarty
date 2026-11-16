@@ -9,6 +9,7 @@ export type Unsubscribe = () => void;
 export interface DesktopBridge {
 	pickFiles?: () => Promise<string[]>;
 	onDropPaths?: (callback: (paths: string[]) => void) => Unsubscribe;
+	showInFolder?: (path: string) => Promise<unknown>;
 }
 
 // The shell runs its script after the page loads, so the bridge can appear
@@ -40,6 +41,10 @@ export function canDropPaths(bridge: DesktopBridge | null): boolean {
 	return typeof bridge?.onDropPaths === "function";
 }
 
+export function canShowInFolder(bridge: DesktopBridge | null): boolean {
+	return typeof bridge?.showInFolder === "function";
+}
+
 // A list of absolute paths from the shell, with anything that is not a
 // non-empty string dropped.
 export function cleanPaths(value: unknown): string[] {
@@ -47,6 +52,15 @@ export function cleanPaths(value: unknown): string[] {
 	return value.filter(
 		(item): item is string => typeof item === "string" && item.trim() !== "",
 	);
+}
+
+// Opens the file manager on an exported file; the shell refuses a path that is
+// not an existing file, and the promise then rejects.
+export async function showInFolder(
+	bridge: DesktopBridge | null,
+	path: string,
+): Promise<void> {
+	await bridge?.showInFolder?.(path);
 }
 
 export function subscribeDesktopBridge(listener: () => void): Unsubscribe {

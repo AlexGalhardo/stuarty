@@ -10,23 +10,37 @@ import (
 // bytes and never an editing rule. The page sends a
 // JSON message through the webview, the shell answers by running ResolveScript.
 
-// OpPickFiles is the one operation the page may ask for.
-const OpPickFiles = "pickFiles"
+// The operations the page may ask for; nothing else reaches the shell.
+const (
+	OpPickFiles    = "pickFiles"
+	OpShowInFolder = "showInFolder"
+)
 
-// BridgeRequest is one message from the page.
+// maxBridgeMessage bounds a message; a path is the longest thing it carries.
+const maxBridgeMessage = 4096
+
+// BridgeRequest is one message from the page. Path is set only for OpShowInFolder.
 type BridgeRequest struct {
-	Op string `json:"vukem"`
-	ID int64  `json:"id"`
+	Op   string `json:"vukem"`
+	ID   int64  `json:"id"`
+	Path string `json:"path,omitempty"`
 }
 
 // ParseBridgeMessage decodes a raw webview message. It reports false for
 // anything that is not a known request, so a page cannot reach any other code.
 func ParseBridgeMessage(msg string) (BridgeRequest, bool) {
 	var req BridgeRequest
-	if len(msg) > 256 || json.Unmarshal([]byte(msg), &req) != nil {
+	if len(msg) > maxBridgeMessage || json.Unmarshal([]byte(msg), &req) != nil {
 		return BridgeRequest{}, false
 	}
-	if req.Op != OpPickFiles {
+	switch req.Op {
+	case OpPickFiles:
+		req.Path = ""
+	case OpShowInFolder:
+		if req.Path == "" {
+			return BridgeRequest{}, false
+		}
+	default:
 		return BridgeRequest{}, false
 	}
 	return req, true
@@ -60,7 +74,8 @@ func ResolveScript(id int64, paths []string, errMsg string) string {
 const BridgeScript = `(function(){var w=window;` +
 	`if(w.vukemDesktop||!w._wails||typeof w._wails.invoke!=="function"){return;}` +
 	`var pending={},drops=[],next=1;` +
-	`function send(op,id){w._wails.invoke(JSON.stringify({vukem:op,id:id}));}` +
+	`function send(op,id,path){var m={vukem:op,id:id};if(path){m.path=path;}w._wails.invoke(JSON.stringify(m));}` +
+	`function ask(op,path){return new Promise(function(resolve,reject){var id=next++;pending[id]={resolve:resolve,reject:reject};send(op,id,path);});}` +
 	`w._wails.vukemResolve=function(id,paths,err){var p=pending[id];if(!p){return;}delete pending[id];` +
 	`if(err){p.reject(new Error(err));}else{p.resolve(paths);}};` +
 	`w._wails.handlePlatformFileDrop=function(paths){drops.slice().forEach(function(cb){cb(paths.slice());});};` +
@@ -71,6 +86,7 @@ const BridgeScript = `(function(){var w=window;` +
 	`document.addEventListener("drop",function(e){if(!files(e)){return;}e.preventDefault();` +
 	`wv.postMessageWithAdditionalObjects("file:drop:"+Math.round(e.clientX)+":"+Math.round(e.clientY),e.dataTransfer.files);},true);}` +
 	`w.vukemDesktop=Object.freeze({` +
-	`pickFiles:function(){return new Promise(function(resolve,reject){var id=next++;pending[id]={resolve:resolve,reject:reject};send("pickFiles",id);});},` +
+	`pickFiles:function(){return ask("pickFiles");},` +
+	`showInFolder:function(path){return ask("showInFolder",path);},` +
 	`onDropPaths:function(cb){drops.push(cb);return function(){var i=drops.indexOf(cb);if(i>=0){drops.splice(i,1);}};}});` +
 	`w.dispatchEvent(new Event("vukem-desktop-ready"));})();`
