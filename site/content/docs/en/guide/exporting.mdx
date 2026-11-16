@@ -91,6 +91,22 @@ Without `--as-new` the project keeps its id and its history of edits. If a proje
 
 There is no MCP tool for bundles and the editor has no bundle entry yet.
 
+## Draw the export on the GPU (optional)
+
+By default the export draws every frame on the CPU, and the output is the same on every machine. A GPU path exists for machines with a graphics adapter, but `vukem-render`, the helper program that runs it, is **not shipped yet**: no archive, installer or image carries it. To try it, build it from the source (it needs the Rust toolchain pinned in `rust-toolchain.toml`):
+
+```sh
+bash scripts/build-renderer.sh host
+```
+
+This writes `renderer/dist/vukem-render` (`vukem-render.exe` on Windows) and its SHA-256. Copy the file next to the server executable, or into `../libexec/vukem-video/` relative to it (the server looks next to the executable first, as it does for FFmpeg), then start the server with:
+
+```sh
+VUKEM_VIDEO_EXPORT_RENDERER=gpu vukem-video serve
+```
+
+`vukem-render --probe` tells whether the machine has an adapter. When the helper is missing, has no adapter, or runs inside a sandbox that hides the devices, the export falls back to the CPU path and still succeeds.
+
 ## Common mistakes
 
 - No H.264 encoder works on this machine: `E_NO_ENCODER`. `gif`, `wav` and `aac` still export.
