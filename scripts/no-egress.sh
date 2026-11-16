@@ -24,6 +24,7 @@ log() { echo "no-egress: $*" >&2; }
 
 [ "$(uname -s)" = Linux ] || die "Linux only (strace)"
 command -v strace >/dev/null 2>&1 || die "strace is required"
+[ "$(id -u)" -ne 0 ] || die "do not run as root: the owner refuses to start FFmpeg as root"
 command -v ffmpeg >/dev/null 2>&1 || die "ffmpeg is required to make the sample media"
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -71,7 +72,10 @@ project=prj_7k2m9x4q1b
 traced() {
 	local label="$1"
 	shift
-	strace -f --seccomp-bpf -e trace=connect,sendto,sendmsg,sendmmsg -o "$work/traces/$label.log" -- "$@"
+	if ! strace -f --seccomp-bpf -e trace=connect,sendto,sendmsg,sendmmsg -o "$work/traces/$label.log" -- "$@" 		>"$work/$label.out" 2>&1; then
+		cat "$work/$label.out" >&2
+		die "$label failed"
+	fi
 }
 vv() { traced "$1" "$bin" "${@:2}"; }
 
@@ -90,14 +94,14 @@ done
 log "CLI session: create, import, edit, export, view"
 ffmpeg -v error -f lavfi -i testsrc2=size=320x180:rate=30:duration=2 -f lavfi -i sine=frequency=220:duration=2 \
 	-c:v mpeg4 -c:a aac -shortest "$work/clip.mp4"
-vv cli-create project:create --name "No egress" --id "$project" >/dev/null
-vv cli-import media:import "$work/clip.mp4" --project "$project" --asset-id ast_3c5v8n2w6d >/dev/null
-vv cli-edit edit --project "$project" --ops - >/dev/null <<'JSON'
+vv cli-create project:create --name "No egress" --id "$project"
+vv cli-import media:import "$work/clip.mp4" --project "$project" --asset-id ast_3c5v8n2w6d
+vv cli-edit edit --project "$project" --ops - <<'JSON'
 [{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_m1n2p3q4r5"}},
  {"op":"clip.add","args":{"track_id":"trk_m1n2p3q4r5","asset_id":"ast_3c5v8n2w6d","start":"0s","duration":"2s","id":"itm_s6t7v8w9x0"}}]
 JSON
-vv cli-export export --project "$project" --wait --timeout 3m >/dev/null
-vv cli-view view --project "$project" --at 1s --json >/dev/null
+vv cli-export export --project "$project" --wait --timeout 3m
+vv cli-view view --project "$project" --at 1s --json
 
 log "MCP session on stdio: initialize, tools/list"
 mcp_out="$work/mcp.out"
