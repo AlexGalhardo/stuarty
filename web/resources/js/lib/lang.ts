@@ -26,9 +26,20 @@ export function installLangHeader(): void {
 	});
 }
 
+const RELOAD_ATTEMPTS = 40;
+
 // Once the app is mounted, reloads the first page in the stored language.
 export function reconcileLang(): void {
-	if (localeMismatch(document.documentElement.lang, readLocale())) {
-		router.reload();
-	}
+	if (!localeMismatch(document.documentElement.lang, readLocale())) return;
+	// Firefox and WebKit run this before Inertia holds its first page, and
+	// `router.reload` reads the page's url: try again on the next task.
+	const reload = (attempt: number): void => {
+		try {
+			router.reload();
+		} catch (error) {
+			if (attempt >= RELOAD_ATTEMPTS) throw error;
+			setTimeout(() => reload(attempt + 1), 50);
+		}
+	};
+	reload(0);
 }
