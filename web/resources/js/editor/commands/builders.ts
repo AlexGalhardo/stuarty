@@ -536,11 +536,15 @@ export const CROSSFADE_DURATION = "0.5s";
 
 // One transition control: the kind (null removes it) and, when the control has
 // one, the duration, which is a time with its unit. The core judges whether it fits.
+// `color` goes with a dip and `direction` with a whip or a wipe only; the core
+// refuses them on another kind, so the caller sends them for those kinds.
 export function transitionOperations(input: {
 	itemId: string;
 	edge: Edge;
 	kind: TransitionKind | null;
 	duration?: string;
+	color?: string;
+	direction?: TransitionDirection;
 }): Operations {
 	return [
 		{
@@ -550,10 +554,23 @@ export function transitionOperations(input: {
 				edge: input.edge,
 				kind: input.kind,
 				...(input.duration === undefined ? {} : { duration: input.duration }),
+				...(input.color === undefined ? {} : { color: input.color }),
+				...(input.direction === undefined
+					? {}
+					: { direction: input.direction }),
 			},
 		},
 	];
 }
+
+export const TRANSITION_DIRECTIONS = ["left", "right", "up", "down"] as const;
+export type TransitionDirection = (typeof TRANSITION_DIRECTIONS)[number];
+
+// The kinds that take a colour and a direction (SDD-002 C.18).
+export const transitionTakesColor = (kind: TransitionKind): boolean =>
+	kind === "dip";
+export const transitionTakesDirection = (kind: TransitionKind): boolean =>
+	kind === "whip" || kind === "wipe";
 
 export function presetOperations(input: {
 	itemId: string;
@@ -1106,6 +1123,158 @@ export function speedOperations(
 			},
 		},
 	];
+}
+
+// A point of the speed curve as the person edits it: `t` is a fraction of the
+// item (0 to 1) and `speed` the multiplier. The core checks the 2 to 8 points,
+// the bounds and the order (SDD-002 C.25).
+export interface CurvePoint {
+	t: number;
+	speed: number;
+}
+
+const round3 = (value: number): number => Math.round(value * 1000) / 1000;
+
+export function speedCurveOperations(
+	itemId: string,
+	points: readonly CurvePoint[],
+	ripple: boolean,
+): Operations {
+	return [
+		{
+			op: "clip.set_speed",
+			args: {
+				item_id: itemId,
+				curve: points.map((point) => ({
+					t: round3(point.t),
+					speed: `${round3(point.speed)}x`,
+				})),
+				...(ripple ? { ripple: "track" } : {}),
+			},
+		},
+	];
+}
+
+// `reverse` alone changes nothing else: the duration, speed and curve stay.
+export function reverseOperations(
+	itemId: string,
+	reverse: boolean,
+): Operations {
+	return [{ op: "clip.set_speed", args: { item_id: itemId, reverse } }];
+}
+
+export const EFFECT_KINDS = [
+	"motion_blur",
+	"glow",
+	"vignette",
+	"grain",
+	"rgb_split",
+	"shake",
+] as const;
+export type EffectKind = (typeof EFFECT_KINDS)[number];
+
+// The parameters of each kind with the range and the default of SDD-002 C.68,
+// in the order of SDD-004 section 3.13. The inputs show these bounds; the core
+// is the one that checks them.
+export interface EffectParam {
+	name:
+		| "amount"
+		| "angle"
+		| "radius"
+		| "threshold"
+		| "softness"
+		| "size"
+		| "speed"
+		| "seed";
+	min: number;
+	max: number;
+	step: number;
+	default: number;
+}
+
+export const EFFECT_PARAMS: Readonly<
+	Record<EffectKind, readonly EffectParam[]>
+> = {
+	motion_blur: [
+		{ name: "amount", min: 0, max: 1, step: 0.05, default: 0.5 },
+		{ name: "angle", min: -180, max: 180, step: 1, default: 0 },
+	],
+	glow: [
+		{ name: "amount", min: 0, max: 1, step: 0.05, default: 0.5 },
+		{ name: "radius", min: 1, max: 100, step: 1, default: 12 },
+		{ name: "threshold", min: 0, max: 1, step: 0.05, default: 0.6 },
+	],
+	vignette: [
+		{ name: "amount", min: 0, max: 1, step: 0.05, default: 0.5 },
+		{ name: "softness", min: 0, max: 1, step: 0.05, default: 0.5 },
+	],
+	grain: [
+		{ name: "amount", min: 0, max: 1, step: 0.05, default: 0.3 },
+		{ name: "size", min: 1, max: 8, step: 1, default: 1 },
+		{ name: "seed", min: 0, max: 65535, step: 1, default: 0 },
+	],
+	rgb_split: [
+		{ name: "amount", min: 0, max: 1, step: 0.05, default: 0.3 },
+		{ name: "angle", min: -180, max: 180, step: 1, default: 0 },
+	],
+	shake: [
+		{ name: "amount", min: 0, max: 1, step: 0.05, default: 0.3 },
+		{ name: "speed", min: 1, max: 30, step: 1, default: 8 },
+		{ name: "seed", min: 0, max: 65535, step: 1, default: 0 },
+	],
+};
+
+export type EffectValue = { kind: EffectKind } & Partial<
+	Record<EffectParam["name"], number>
+>;
+
+// The whole list is the argument (SDD-002 C.68); `[]` removes every effect.
+// A new effect of `kind` takes the defaults of its kind.
+export function effectsOperations(
+	itemId: string,
+	effects: readonly EffectValue[],
+): Operations {
+	return [
+		{
+			op: "clip.set_effects",
+			args: { item_id: itemId, effects: [...effects] },
+		},
+	];
+}
+
+export function defaultEffect(kind: EffectKind): EffectValue {
+	const effect: EffectValue = { kind };
+	for (const param of EFFECT_PARAMS[kind]) effect[param.name] = param.default;
+	return effect;
+}
+
+// `item.link`: the group id is the core's to generate.
+export function linkOperations(itemIds: readonly string[]): Operations {
+	return [{ op: "item.link", args: { item_ids: [...itemIds] } }];
+}
+
+export function unlinkOperations(itemIds: readonly string[]): Operations {
+	return [{ op: "item.unlink", args: { item_ids: [...itemIds] } }];
+}
+
+// The audio of a video clip goes to an audio track as a linked item, and the
+// clip is muted. The track is one the caller found, or a new one added first.
+export function extractAudioOperations(input: {
+	itemId: string;
+	audioTrack: string | null;
+	newTrackId: () => string;
+}): Operations {
+	const ops: Operations = [];
+	let track = input.audioTrack;
+	if (track === null) {
+		track = input.newTrackId();
+		ops.push({ op: "track.add", args: { kind: "audio", id: track } });
+	}
+	ops.push({
+		op: "item.extract_audio",
+		args: { item_id: input.itemId, track_id: track },
+	});
+	return ops;
 }
 
 export interface ColorChanges {
