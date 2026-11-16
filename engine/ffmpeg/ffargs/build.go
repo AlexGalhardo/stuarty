@@ -3,6 +3,7 @@ package ffargs
 import (
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -313,6 +314,11 @@ type Cmd struct {
 	Outputs       []Output
 }
 
+// CPUMask is the one value of -cpuflags: FFmpeg runs on an x86-64 machine without its AVX-512 code (SDD-007
+// FF-10, SDD-011 NFR-010). The pixels and samples it writes are then those of the SSE and AVX2 tiers, which
+// TestNormalizeIsTheSameOnEveryCPUTier shows equal to the plain C code, whatever the CPU of the runner.
+const CPUMask = "-avx512-avx512icl"
+
 // Argv renders the command and runs it through [Check], so an argv that leaves the
 // builder is one the grammar accepts.
 func (c Cmd) Argv(pol Policy) ([]string, error) {
@@ -324,6 +330,9 @@ func (c Cmd) Argv(pol Policy) ([]string, error) {
 		a = append(a, "-progress", "pipe:1")
 	}
 	a = append(a, "-n", "-max_alloc", strconv.Itoa(MaxAlloc))
+	if runtime.GOARCH == "amd64" {
+		a = append(a, "-cpuflags", CPUMask)
+	}
 	if c.FilterThreads > 0 {
 		// -filter_threads sizes the simple graphs (-vf); a -filter_complex graph takes its own option.
 		opt := "-filter_threads"

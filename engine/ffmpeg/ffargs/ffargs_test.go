@@ -3,6 +3,7 @@ package ffargs
 import (
 	"errors"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -908,6 +909,40 @@ func TestSecurity_AlphaProxyGrammar(t *testing.T) {
 	} {
 		if tag(c[0], c[1]) == nil {
 			t.Errorf("%s %s was accepted", c[0], c[1])
+		}
+	}
+}
+
+// On x86-64 every run masks the AVX-512 code of FFmpeg (SDD-007 FF-10); nothing else may be given to -cpuflags.
+func TestCPUFlagsAreMaskedOnX86AndNothingElseIsAccepted(t *testing.T) {
+	t.Parallel()
+
+	pol := testPolicy()
+
+	argv, err := Cmd{
+		Inputs:  []Input{FileInput(storeFile())},
+		Outputs: []Output{{Format: "null", Maps: []string{"0:v:0"}}},
+	}.Argv(pol)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	has := slices.Contains(argv, "-cpuflags")
+	if has != (runtime.GOARCH == "amd64") {
+		t.Fatalf("-cpuflags present %v on %s: %v", has, runtime.GOARCH, argv)
+	}
+
+	if has {
+		i := slices.Index(argv, "-cpuflags")
+		if argv[i+1] != CPUMask {
+			t.Fatalf("-cpuflags %s, want %s", argv[i+1], CPUMask)
+		}
+
+		bad := slices.Clone(argv)
+		bad[i+1] = "0"
+
+		if err := Check(FFmpeg, bad, pol); err == nil {
+			t.Fatal("-cpuflags 0 was accepted")
 		}
 	}
 }
