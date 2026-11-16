@@ -125,6 +125,7 @@ export default function Library({
 					}}
 					placeholder={t("ui.editor.library.path")}
 					aria-label={t("ui.editor.library.path")}
+					aria-describedby={pick || drops ? undefined : "library-path-why"}
 				/>
 				<Button
 					type="submit"
@@ -134,6 +135,11 @@ export default function Library({
 					{t("ui.editor.library.import")}
 				</Button>
 			</form>
+			{!(pick || drops) && (
+				<p id="library-path-why" className="text-xs text-muted-foreground">
+					{t("ui.editor.library.path_why")}
+				</p>
+			)}
 			{pick && (
 				<Button
 					type="button"

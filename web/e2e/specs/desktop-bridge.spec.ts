@@ -73,6 +73,7 @@ test.describe("desktop-bridge", () => {
 
 		await page.getByRole("region", { name: "Media" }).dispatchEvent("drop");
 		await expect(page.getByText("A browser page cannot see")).toHaveCount(0);
+		await expect(page.getByText("The editor imports by path")).toHaveCount(0);
 	});
 
 	test("without the object the button is absent and the plain message shows", async ({
@@ -85,6 +86,9 @@ test.describe("desktop-bridge", () => {
 		await expect(
 			page.getByRole("button", { name: "Choose files" }),
 		).toHaveCount(0);
+
+		// VV-062: the page explains why the import is by path.
+		await expect(page.getByText("The editor imports by path")).toBeVisible();
 
 		await page.getByRole("region", { name: "Media" }).dispatchEvent("drop");
 		await expect(
