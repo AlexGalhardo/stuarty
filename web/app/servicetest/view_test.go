@@ -197,3 +197,58 @@ func TestSecurity_BitmapKeyIsScopedToItsProject(t *testing.T) {
 		t.Errorf("key limited to B on project A = %v, want forbidden", err)
 	}
 }
+
+// VV-037: a token budget over what a 1080 pixel wide frame costs gives the widest frame, not a refusal.
+func TestViewFrameAcceptsTheWholeTokenRange(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true})
+	project := m.exportable()
+	m.mustEdit(ui, project, m.head(project).Revision, op("settings.set", `{"width":1920,"height":1080}`))
+
+	for _, tokens := range []int{800, 1500, 1568} {
+		f, err := m.svc.ViewFrame(m.as(ui), service.ViewFrameRequest{ProjectID: project, At: "0s", MaxTokens: tokens})
+		if err != nil {
+			t.Fatalf("max_tokens %d: %v", tokens, err)
+		}
+
+		if f.Width > 1080 || f.ImageTokens > tokens {
+			t.Errorf("max_tokens %d: %dx%d, %d tokens", tokens, f.Width, f.Height, f.ImageTokens)
+		}
+	}
+}
+
+// VV-037: a png export is one lossless frame at the project size.
+func TestExportStillIsAPNGAtTheProjectSize(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{realExport: true})
+	project := m.exportable()
+	m.mustEdit(ui, project, m.head(project).Revision, op("settings.set", `{"width":320,"height":180}`))
+
+	start := func(args string) (*service.Job, error) {
+		return m.svc.JobStart(m.as(ui), service.JobStartRequest{
+			ProjectID: project, Kind: "export", Args: []byte(args),
+		})
+	}
+
+	job, err := start(`{"format":"png","at":"0.5s"}`)
+	if err != nil || job.State != service.JobSucceeded || job.Result == nil || job.Result.Export == nil {
+		t.Fatalf("png export: %v, %+v", err, job)
+	}
+
+	e := job.Result.Export
+
+	body, rerr := os.ReadFile(e.Path)
+	if rerr != nil || !strings.HasSuffix(e.Path, ".png") || e.Format != "png" || e.Width != 320 || e.Height != 180 ||
+		!bytes.HasPrefix(body, []byte("\x89PNG")) || e.Bytes != int64(len(body)) {
+		t.Errorf("result %+v, read error %v", e, rerr)
+	}
+
+	for name, args := range map[string]string{
+		"at on a video":  `{"at":"1s"}`,
+		"range on a png": `{"format":"png","start":"0s"}`,
+		"past the end":   `{"format":"png","at":"9s"}`,
+		"not a time":     `{"format":"png","at":"soon"}`,
+	} {
+		if _, err := start(args); err == nil {
+			t.Errorf("%s: accepted", name)
+		}
+	}
+}

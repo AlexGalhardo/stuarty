@@ -666,7 +666,8 @@ type JobStartRequest struct {
 type ExportArgs struct { // the export renders the current revision, pinned at start; there is no revision member in the MVP
 	Start    string `json:"start,omitempty"`    // time; default "0s"
 	End      string `json:"end,omitempty"`      // time; default: the end of the timeline
-	Format   string `json:"format,omitempty"`   // "mp4" (default), "gif", "wav" or "aac" (SDD-004 section 8.1); anything else is E_VALIDATION with path args.format. There is no fps or size member: the frame rate and the size are project settings (SDD-001 section 3.1), and 60 fps or 4K is chosen by setting them
+	Format   string `json:"format,omitempty"`   // "mp4" (default), "gif", "wav", "aac" or "png" (SDD-004 section 8.1; png is one frame at the size of the project, lossless, chosen with `At`); anything else is E_VALIDATION with path args.format. There is no fps or size member: the frame rate and the size are project settings (SDD-001 section 3.1), and 60 fps or 4K is chosen by setting them
+	At       string `json:"at,omitempty"`       // time of the frame of a png export, "0s" when absent; refused for any other format; start and end are refused for png; a time past the last frame is E_VALIDATION with path args.at
 }
 type TranscribeArgs struct {
 	AssetID  string `json:"asset_id"`
@@ -1977,13 +1978,13 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name":"job_start",
-  "description":"Start long work. kind=export renders the project to a file in the workspace: args {start?, end?, format?}, format mp4 (default), gif, wav or aac. kind=transcribe transcribes an asset's speech: args {asset_id, language?, model?}. Export is refused while lint has errors. Waits up to wait_ms, then returns the job; poll with job_get.",
+  "description":"Start long work. kind=export renders the project to a file in the workspace: args {start?, end?, format?, at?}, format mp4 (default), gif, wav, aac or png (frame at `at`). kind=transcribe transcribes an asset's speech: args {asset_id, language?, model?}. Export is refused while lint has errors. Waits up to wait_ms, then returns the job; poll job_get.",
   "inputSchema":{
     "type":"object",
     "properties":{
       "project_id":{"type":"string","pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"},
       "kind":{"enum":["export","transcribe"]},
-      "args":{"type":"object","properties":{"start":{"type":"string"},"end":{"type":"string"},"format":{"enum":["mp4","gif","wav","aac"]}}},
+      "args":{"type":"object","properties":{"start":{"type":"string"},"end":{"type":"string"},"format":{"enum":["mp4","gif","wav","aac","png"]},"at":{"type":"string"}}},
       "wait_ms":{"type":"integer","minimum":0,"maximum":25000,"default":0}
     },
     "required":["project_id","kind"],
@@ -2016,10 +2017,10 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 
 | `kind` | `args` | Notes |
 | --- | --- | --- |
-| `export` | `{"start"?: time, "end"?: time, "format"?: "mp4" \| "gif" \| "wav" \| "aac"}` | renders the current revision, pinned when the job starts (there is no `revision` argument: old revisions are not rendered in the MVP), to `exports/<project id>/<job id>.<ext>`, where `<ext>` is `mp4`, `gif`, `wav` or `m4a` for the format (SDD-004 §8.1); `format` is `mp4` when absent and any other value is `E_VALIDATION` with the `path` `args.format`. The frame rate and the size are project settings (SDD-001 §3.1), not arguments: a project beyond 4096 pixels or 120 fps is refused at the start with `E_LIMIT`, and an encoder that cannot do 4K or 60 fps ends the job `failed` with `E_EXPORT_FAILED` and `details.reason` `unsupported_size`. Refused with `E_LINT_BLOCKING` while lint has errors (§2.8). The finished job is verified (ADR-0018 item 6) |
+| `export` | `{"start"?: time, "end"?: time, "format"?: "mp4" \| "gif" \| "wav" \| "aac" \| "png", "at"?: time}` | renders the current revision, pinned when the job starts (there is no `revision` argument: old revisions are not rendered in the MVP), to `exports/<project id>/<job id>.<ext>`, where `<ext>` is `mp4`, `gif`, `wav`, `m4a` or `png` for the format (SDD-004 §8.1); `format` is `mp4` when absent and any other value is `E_VALIDATION` with the `path` `args.format`. The frame rate and the size are project settings (SDD-001 §3.1), not arguments: a project beyond 4096 pixels or 120 fps is refused at the start with `E_LIMIT`, and an encoder that cannot do 4K or 60 fps ends the job `failed` with `E_EXPORT_FAILED` and `details.reason` `unsupported_size`. Refused with `E_LINT_BLOCKING` while lint has errors (§2.8). The finished job is verified (ADR-0018 item 6) |
 | `transcribe` | `{"asset_id": string, "language"?: string, "model"?: string}` | creates the transcript read by `media_inspect` and used by `caption.from_transcript`, `clip.remove_silences` |
 
-The adapter passes `args` as the one `Args` object of `JobStartRequest` and the service decodes it into `ExportArgs` or `TranscribeArgs` by `kind`; an unknown member is `E_VALIDATION` with the `path` `args.<name>`. The OpenAPI document lists the members of `args` under the request body of `POST /projects/{id}/jobs` (`start`, `end`, `format` with its enum, `asset_id`, `language`, `model` with its enum), so a client can offer only what the build accepts; `fps` and `size` are deliberately not there.
+The adapter passes `args` as the one `Args` object of `JobStartRequest` and the service decodes it into `ExportArgs` or `TranscribeArgs` by `kind`; an unknown member is `E_VALIDATION` with the `path` `args.<name>`. The OpenAPI document lists the members of `args` under the request body of `POST /projects/{id}/jobs` (`start`, `end`, `format` with its enum, `at`, `asset_id`, `language`, `model` with its enum), so a client can offer only what the build accepts; `fps` and `size` are deliberately not there.
 
 Example:
 
@@ -2351,7 +2352,7 @@ Every path argument (`media:import <path>`, `template:import <path>`) is made ab
 | `media:restore` | `media:restore <asset id> --project <id>` | none | none | `MediaStateResult` | A |
 | `view` | `view --project <id> [--mode frame\|sheet] [--at t] [--times t1,t2,...] [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]` | `--mode` string `frame`; `--at`; `--times`; `--from`; `--until`; `--count` int 9; `--cols` int; `--max-tokens` int 800 (sheet 1,500); `--width` int | none | `ViewResult` without `image_base64` (the image is the file in `path`; with a remote server the CLI downloads the image from the byte-serving route to a temporary file on the client and prints that path) | P |
 | `lint` | `lint --project <id> [--severity error\|warning] [--cursor c] [--limit n] [--strict]` | `--severity` string `warning`; `--cursor`; `--limit` int 25; `--strict` bool false | none | `LintResult` | P |
-| `export` | `export --project <id> [--start t] [--end t] [--format f] [--out f] [--force]` | `--start`; `--end`; `--format` mp4 (default), gif, wav or aac; `--wait`, `--timeout`; `--out`, `--force` (see "The file of `--out`" below) | none | `Job` | P |
+| `export` | `export --project <id> [--start t] [--end t] [--format f] [--out f] [--force]` | `--start`; `--end`; `--format` mp4 (default), gif, wav, aac or png; `--wait`, `--timeout`; `--out`, `--force` (see "The file of `--out`" below) | none | `Job` | P |
 | `transcribe` | `transcribe --project <id> --asset <id> [--language auto]` | `--asset` string, required; `--language` string `auto`; `--wait`, `--timeout` | none | `Job` | A |
 | `job:show` | `job:show <job id> [--wait] [--timeout d]` | `--wait` false; `--timeout` | none | `Job` | P |
 | `job:list` | `job:list --project <id> [--state s] [--cursor c] [--limit n]` | `--state` string (empty: queued, running and the 10 most recent final jobs; `queued`, `running`, `succeeded`, `failed`, `cancelled`, `active`, `all`); `--cursor`; `--limit` int 20 | none | `JobListResult` | P |

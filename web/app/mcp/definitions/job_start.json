@@ -1,6 +1,6 @@
 {
  "name": "job_start",
- "description": "Start long work. kind=export renders the project to a file in the workspace: args {start?, end?, format?}, format mp4 (default), gif, wav or aac. kind=transcribe transcribes an asset's speech: args {asset_id, language?, model?}. Export is refused while lint has errors. Waits up to wait_ms, then returns the job; poll with job_get.",
+ "description": "Start long work. kind=export renders the project to a file in the workspace: args {start?, end?, format?, at?}, format mp4 (default), gif, wav, aac or png (frame at `at`). kind=transcribe transcribes an asset's speech: args {asset_id, language?, model?}. Export is refused while lint has errors. Waits up to wait_ms, then returns the job; poll job_get.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -28,8 +28,12 @@
        "mp4",
        "gif",
        "wav",
-       "aac"
+       "aac",
+       "png"
       ]
+     },
+     "at": {
+      "type": "string"
      }
     }
    },

@@ -135,7 +135,11 @@ func describeJobStartArgs(doc *openapi.Document) {
 				"type":        "string",
 				"enum":        service.ExportFormats,
 				"default":     "mp4",
-				"description": "export: the file to write; wav and aac are audio only.",
+				"description": "export: the file to write; wav and aac are audio only; png is one frame at `at`.",
+			},
+			"at": map[string]any{
+				"type":        "string",
+				"description": "export png: the time of the frame, such as 1.5s.",
 			},
 			"asset_id": map[string]any{"type": "string", "description": "transcribe: the asset to transcribe."},
 			"language": map[string]any{"type": "string", "description": "transcribe: the spoken language."},

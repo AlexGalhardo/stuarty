@@ -46,6 +46,8 @@ type ExportArgs struct {
 	End   string `json:"end,omitempty"`
 	// Format is mp4 (the default), gif, wav or aac (SDD-004 section 8.1).
 	Format string `json:"format,omitempty"`
+	// At is the time of the frame of a png export, "0s" when absent; only for format png (VV-037).
+	At string `json:"at,omitempty"`
 }
 
 // JobGetRequest reads a job.

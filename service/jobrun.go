@@ -554,6 +554,10 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		return s.runBundleExport(ctx, job, pw, in)
 	}
 
+	if in.Format == FormatPNG {
+		return s.runStillExport(ctx, job, pw, in)
+	}
+
 	if s.exporter == nil || job.ProjectID == nil {
 		return nil, internalError()
 	}
