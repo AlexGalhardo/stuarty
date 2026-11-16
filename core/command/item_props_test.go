@@ -157,3 +157,30 @@ func TestTextAddDefaultWeightFallsToTheFamily(t *testing.T) {
 		t.Errorf("explicit weight: %v", err)
 	}
 }
+
+// Without start, duplicating twice walks to the next free position instead of E_OVERLAP (VV-066).
+func TestDuplicateWithoutStartTakesTheNextFreeSlot(t *testing.T) {
+	d := base().text(itemC, vidTr, 0, 60).d
+	n := 0
+	env := Env{NewIDs: func(prefix string) string {
+		n++
+		return prefix + "_" + strings.Repeat("c", 9) + string(rune('a'+n))
+	}}
+
+	var starts []int
+
+	for range 3 {
+		res, err := Default().Apply(d, op2("item.duplicate", `{"item_id": "`+itemC+`"}`), env)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		d = res.Doc
+		id, _ := res.Effective["new_id"].(string)
+		starts = append(starts, d.Items[id].Start)
+	}
+
+	if starts[0] != 60 || starts[1] != 120 || starts[2] != 180 {
+		t.Errorf("starts = %v, want 60 120 180", starts)
+	}
+}

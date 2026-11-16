@@ -2,6 +2,7 @@ package command
 
 import (
 	"slices"
+	"strconv"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
@@ -11,8 +12,9 @@ func init() {
 		Name:    "item.duplicate",
 		Summary: "Copies an item to another position, optionally on another track.",
 		Description: "Adds a copy of the item at start, on the same track or another track of the same kind. Keyframes, " +
-			"words and the name are copied; the slot mark is not. It fails when the copy would overlap an item " +
-			"of the target track.",
+			"words and the name are copied; the slot mark is not. Without start the copy goes to the first free " +
+			"position at or after the end of the source on the target track. With start it fails when the copy " +
+			"would overlap an item of the target track.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "start": "3s", "new_id": "itm_s6t7v8w9x0"}`,
 		Errors: []string{
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeIDExists, CodeLimit, CodeOverlap,
@@ -51,7 +53,7 @@ func init() {
 
 type itemDuplicateArgs struct {
 	ItemID  string `json:"item_id"            desc:"The item to copy."`
-	Start   Time   `json:"start"              desc:"Absolute start of the copy."`
+	Start   Time   `json:"start,omitempty"    desc:"Absolute start of the copy; default the first free position after the source."`
 	TrackID string `json:"track_id,omitempty" desc:"The track of the copy; default the source's track."`
 	NewID   string `json:"new_id,omitempty"   desc:"The id of the copy."`
 }
@@ -65,10 +67,6 @@ func applyItemDuplicate(c *Context, a *itemDuplicateArgs) error {
 		if err := idForm(f.path, f.prefix, f.id); err != nil {
 			return err
 		}
-	}
-	start, err := c.ParseTime("args.start", string(a.Start))
-	if err != nil {
-		return err
 	}
 	src, err := c.item(a.ItemID)
 	if err != nil {
@@ -98,6 +96,12 @@ func applyItemDuplicate(c *Context, a *itemDuplicateArgs) error {
 			WithHint("Use %s track.", want).
 			WithPath("args.track_id")
 	}
+	var start int
+	if a.Start == "" {
+		start, _ = c.nextFree(trackID, itemEnd(&src), src.Duration, "")
+	} else if start, err = c.ParseTime("args.start", string(a.Start)); err != nil {
+		return err
+	}
 	id, err := c.newID("items", timeline.PrefixItem, a.NewID)
 	if err != nil {
 		return err
@@ -120,7 +124,11 @@ func applyItemDuplicate(c *Context, a *itemDuplicateArgs) error {
 	cp.ID, cp.Start, cp.Track, cp.Slot = id, start, trackID, nil
 	c.Doc.Items[id] = cp
 	c.SetEffective("new_id", id)
-	c.SetEffectiveTime("start", start, string(a.Start))
+	requested := string(a.Start)
+	if requested == "" {
+		requested = strconv.Itoa(start) + "f"
+	}
+	c.SetEffectiveTime("start", start, requested)
 	c.SetEffective("track_id", trackID)
 	return nil
 }

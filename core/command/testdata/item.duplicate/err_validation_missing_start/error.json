@@ -1,7 +1,0 @@
-{
-  "code": "E_VALIDATION",
-  "message": "The required argument args.start is missing.",
-  "hint": "Add \"start\" (a time) to the arguments.",
-  "retryable": false,
-  "path": "args.start"
-}

@@ -591,15 +591,15 @@ export function deleteOperations(
 	];
 }
 
-// Ctrl+D: a copy of each item right after its end, on its own track. The end
-// frame is read from the item for request composition only; the core judges
-// the overlap. The copies go in start order.
+// Ctrl+D: a copy of each item on its own track; the core places it at the first
+// free position after the source, so a second Ctrl+D never overlaps. The copies
+// go in start order.
 export function duplicateOperations(items: readonly ItemRange[]): Operations {
 	return [...items]
 		.sort((a, b) => a.start - b.start)
 		.map((item) => ({
 			op: "item.duplicate",
-			args: { item_id: item.id, start: frames(item.start + item.duration) },
+			args: { item_id: item.id },
 		}));
 }
 
