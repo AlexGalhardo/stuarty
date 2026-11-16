@@ -3,9 +3,11 @@ package exporter
 import (
 	"context"
 	"errors"
+	"path/filepath"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/vukem-video/engine/export"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
@@ -57,5 +59,15 @@ func TestPickRunnerKeepsTheAddressSpaceLimitForSoftwareEncoders(t *testing.T) {
 		if got := pickRunner(tc.det, tc.err, software, hardware); got != tc.want {
 			t.Errorf("%s: picked the wrong runner", name)
 		}
+	}
+}
+
+func TestJobCarriesTheGPUHost(t *testing.T) {
+	host := filepath.Join(t.TempDir(), "vukem-render")
+	a := &adapter{cfg: Config{PixelRenderer: export.PixelRendererGPU, GPUHost: host}}
+
+	job := a.job(service.ExportInput{}, nil, nil)
+	if job.GPUHost != host || job.PixelRenderer != export.PixelRendererGPU {
+		t.Fatalf("job = %q %q, want %q gpu", job.GPUHost, job.PixelRenderer, host)
 	}
 }

@@ -85,16 +85,18 @@ type Owner struct {
 	Token   string
 	Events  *events.Events
 
-	deps     *httpapi.Deps
-	lock     *workspace.Lock
-	limits   service.Limits
-	child    service.ChildPolicy
-	version  string
-	now      func() time.Time
-	announce bool
-	mode     string
-	network  *httpapi.Network
-	netAuth  *auth.Network
+	deps   *httpapi.Deps
+	lock   *workspace.Lock
+	limits service.Limits
+	child  service.ChildPolicy
+	// gpuRenderer is the GPU renderer request and the vukem-render found for it.
+	gpuRenderer service.GPURenderer
+	version     string
+	now         func() time.Time
+	announce    bool
+	mode        string
+	network     *httpapi.Network
+	netAuth     *auth.Network
 
 	telemetry vukem.Provider
 }
@@ -283,6 +285,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		Lint: lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
 		Doctor: service.DoctorOptions{
 			Mode: o.mode, StartedAt: o.now().UTC(), Child: o.child, FFmpegPins: ffmpegpins.Current(),
+			GPURenderer: o.gpuRenderer,
 			Integrity: func(ctx context.Context) (string, error) {
 				var out string
 				err := st.DB().QueryRowContext(ctx, "PRAGMA integrity_check").Scan(&out)
@@ -443,11 +446,15 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 		return service.Media{}, nil, fmt.Errorf("owner: VUKEM_VIDEO_EXPORT_RENDERER: %w", err)
 	}
 
+	o.gpuRenderer = service.GPURenderer{Requested: pixelRenderer == export.PixelRendererGPU}
+	o.gpuRenderer.Host = gpuHostForRenderer(string(pixelRenderer), fc.ExecDir)
+
 	return media, exporter.New(exporter.Config{
 		Runner: child.Export, HardwareRunner: child.ExportHardware, Workspace: string(o.Dir),
 		Encoder:       ffmpeg.DetectOptions{Forced: cfg.Getenv("VUKEM_VIDEO_ENCODER"), AllowUserX264: allowX264},
 		Lint:          lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
 		PixelRenderer: pixelRenderer,
+		GPUHost:       o.gpuRenderer.Host,
 	}), nil
 }
 
