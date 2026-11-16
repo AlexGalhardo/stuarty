@@ -71,7 +71,7 @@ bash scripts/desktop-verify.sh "$VERSION" "$FILE"
 
 ### The update feed
 
-The desktop application can look for a newer version, but only when you turn it on: the setting `update.check` is off by default and the application then opens no connection. It reads one signed file, `feed.json`, from the GitHub Pages site of the project (`<site>/updates/feed.json`), and the installers it lists come from the same address. The feed and each installer are signed with an Ed25519 key whose public half is built into the application; a file that does not match its signature or its digest is refused. The release also attaches `feed.json`, and `bash scripts/release-verify.sh vX.Y.Z` checks that every digest in it equals `checksums.txt`.
+The desktop application can look for a newer version, but only with your consent: the application asks once at first use, and with the setting `update.check` off it opens no connection (see [Desktop updates and how to turn them off](/docs/self-hosting/desktop-updates)). It reads one signed file, `feed.json`, from the GitHub Pages site of the project (`<site>/updates/feed.json`), and the installers it lists come from the same address. The feed and each installer are signed with an Ed25519 key whose public half is built into the application; a file that does not match its signature or its digest is refused. The release also attaches `feed.json`, and `bash scripts/release-verify.sh vX.Y.Z` checks that every digest in it equals `checksums.txt`.
 
 ## Common mistakes
 

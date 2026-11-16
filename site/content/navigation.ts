@@ -143,6 +143,7 @@ export const navigation: NavCategory[] = [
 			"verify-a-release",
 			"observability",
 			"privacy",
+			"desktop-updates",
 		],
 	},
 	{
