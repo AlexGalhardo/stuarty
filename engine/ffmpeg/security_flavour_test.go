@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -155,7 +156,7 @@ func TestSecurity_T26_OpenH264SwapAfterInstall(t *testing.T) {
 				t.Fatal(err)
 			}
 			if err := os.Symlink(elsewhere, p); err != nil {
-				t.Skipf("no symlinks here: %v", err)
+				t.Skipf("%s cannot create a symlink here (needs the symlink privilege or developer mode): %v", runtime.GOOS, err)
 			}
 		},
 	}
