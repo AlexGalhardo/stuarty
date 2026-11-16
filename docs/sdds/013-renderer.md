@@ -406,3 +406,63 @@ The preview worker decodes the video layers of the window from the proxies (ADR-
 - Go: `TestHostFramesEqualCompositorFrames`: for every golden case, the textures handed to the renderer host are byte-equal to the `Image`s the Go compositor receives today (a comparison of the two inputs, before any drawing).
 - Browser (Playwright, three browsers): `webcodecs-seek-is-frame-exact` seeks to 500 random frames of each reference clip and checks that the timestamp of the decoded frame is the one the plan asks for; `webcodecs-no-leak` reports `stats.openFrames === 0` after the 500 seeks and 500 more renders; `webcodecs-fallback` forces `isConfigSupported` to false for one asset and checks that its layers draw through `<video>` and the others through WebCodecs.
 - The gate of stage B: P2-QA-003 (black texture) does not appear in 500 repeated cases, and NFR-003 and NFR-004 hold on a quiet machine (ADR-0029, Stages).
+
+## 6. The proxy chunk index
+
+The engine writes `chunks-1.json` next to every video proxy (SDD-011 §4.4.1, `ingest.ReadChunkIndex`, tasks TASK-0195 to TASK-0197) and the service serves it at `GET /api/v1/projects/{id}/media/{asset_id}/chunks` (SDD-003 §6.5). SDD-011 §4.4.1 is where the file is produced and measured; this section is the contract of the consumer, the WebCodecs worker of §5.3, and the schema both sides test against.
+
+### 6.1 The format, as a schema
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChunkIndex",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "codec", "coded_width", "coded_height", "duration_us", "offsets", "sizes", "timestamps_us", "keyframes"],
+  "properties": {
+    "version": {"const": 1},
+    "codec": {"type": "string", "pattern": "^vp09(\\.[0-9]{2}){8}$"},
+    "coded_width": {"type": "integer", "minimum": 1, "maximum": 4096},
+    "coded_height": {"type": "integer", "minimum": 1, "maximum": 4096},
+    "duration_us": {"type": "integer", "minimum": 0},
+    "offsets": {"type": "array", "items": {"type": "integer", "minimum": 1}},
+    "sizes": {"type": "array", "items": {"type": "integer", "minimum": 1}},
+    "timestamps_us": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+    "keyframes": {"type": "array", "items": {"type": "integer", "minimum": 0}}
+  }
+}
+```
+
+The schema is checked by `TestChunkIndexSchema` (Go, with the JSON Schema validator the contract tests already use): the index of every proxy of the ingest fixtures validates, and an index with an extra field, a `codec` of another family or a negative size does not. Beyond the schema, a consumer relies on these invariants, which `ingest.ReadChunkIndex` guarantees and the consumer verifies before using an index (§6.3):
+
+1. `offsets`, `sizes` and `timestamps_us` have the same length `N`, which is the number of video samples of the proxy; `keyframes` is strictly increasing, every entry is below `N`, and `keyframes[0] == 0`.
+2. `timestamps_us` is non-decreasing and `timestamps_us[0]` is 0 for the proxies of the ingest (the first sample is shown at the start). Decode order equals presentation order because the proxy is encoded without B-frames (`-lag-in-frames 0`, SDD-011 §4.3.2).
+3. Every range `[offsets[i], offsets[i] + sizes[i])` lies inside the proxy file and holds exactly the bytes of sample `i`. Nothing else is promised about layout: the ranges need not be in order or contiguous.
+4. `codec` is the WebCodecs codec string read from the `vpcC` box: `vp09.<profile>.<level>.<bit depth>.<chroma>.<colour primaries>.<transfer>.<matrix>.<full range>`, two decimal digits each.
+5. `duration_us` is the duration of the video track; it may differ from the container duration by the audio track's length, and the editor uses the plan's `end_frame`, not this, for the project.
+
+### 6.2 Versions
+
+`version` is 1. A change that would make a v1 consumer decode wrongly (a different timestamp base, a different sample order, a codec that needs a `description`) is a new version and a new artifact profile (`chunks-2.json`, SDD-011 §6.3) written beside the old one. A new optional field that no v1 consumer needs is not a new version, but the schema above has `additionalProperties: false`, so adding one means changing the schema in the same pull request and the consumers' tests with it. The consumer refuses an index whose `version` it does not know and treats that asset as `fallback` (§5.3.5).
+
+H.264 and other codecs are not in version 1: the proxy is VP9, and a codec that needs a `description` (the `avcC` of H.264) gets a `description` field in a later version, base64 encoded, with the codec string of its own registration.
+
+### 6.3 What the consumer does with it
+
+1. Fetch it once per asset with the cache rules of the proxy (SDD-003 §6.5: `ETag` `chunks-<hash16>-<profile>`, `private, max-age=86400`). The worker keeps the parsed index while the asset has a layer in a window or a decoder, and drops it with the asset (§5.3).
+2. Validate it as §6.1 lists: schema (a small hand-written check in the worker, not a schema library), the equal lengths, the sorted `keyframes`, and, once the proxy is known, that `offsets[N-1] + sizes[N-1]` does not exceed the `Content-Length` the proxy answered. An index that fails is not used: the asset is `fallback`.
+3. Use `offsets` and `sizes` for `Range` requests to the proxy (`GET .../proxy`, answered 206 by `http.ServeContent`, SDD-003 §6.5), `timestamps_us` for the sample to show (§5.3.2) and `keyframes` for the point to decode from (§5.3.3). The consumer never reads the MP4 boxes of the proxy.
+4. Build `EncodedVideoChunk` with `type` `"key"` for the samples in `keyframes` and `"delta"` for the rest, `timestamp` from `timestamps_us`, `duration` omitted (the decoder does not need it) and `data` the range of bytes.
+
+### 6.4 Old proxies and other assets
+
+- An asset ingested before the chunk index existed (profile of the `proxy` artifact written by a version without it) has no `chunks` artifact, and the route answers `404 E_NOT_FOUND`. The worker treats a 404 as `fallback` for that asset: the preview works as before, through `<video>`. Importing the file again writes the index. A later change may queue a `profile_upgrade` ingest job for the missing `chunks` kind (SDD-011 §6.3 does this for artifacts that carry no facts) so that old assets get one without the user doing anything; that is not required by this SDD.
+- An audio asset, an image asset and an asset without a video track have no index: 404, and nothing to decode.
+- An asset whose proxy is not VP9 (none today) has none: `ErrNoChunkIndex`, no artifact, 404.
+
+### 6.5 Acceptance of this section
+
+- `TestChunkIndexSchema` and `TestProxyChunkIndexMatchesFFprobe` (`engine/ingest`, TASK-0197): the index validates against §6.1 and equals `ffprobe -show_packets` of the proxy on the pinned LGPL FFmpeg for the portrait, a 24 fps and a short landscape clip.
+- A Vitest test of the worker's index check: each invariant of §6.1 broken in turn gives `fallback`; a valid index does not.
+- The service test that opens kind `chunks` for a ready asset (`web/app/servicetest`, TASK-0196) answers `application/json` with the proxy's scope and cache rules.
