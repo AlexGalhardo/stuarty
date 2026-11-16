@@ -47,6 +47,22 @@ func TestSniffRefusesTextAndUnknownBytes(t *testing.T) {
 	}
 }
 
+func TestSniffSaysThatSVGIsNotSupported(t *testing.T) {
+	for name, body := range map[string]string{
+		"bare":     `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"/>`,
+		"with xml": `<?xml version="1.0"?>` + "\n<!-- logo -->\n" + `<SVG viewBox="0 0 1 1"></SVG>`,
+	} {
+		e := asError(t, Sniff([]byte(body)))
+		if e.Code != CodeUnsupportedMedia || !strings.Contains(e.Message, "SVG") || !strings.Contains(e.Hint, "PNG") {
+			t.Errorf("%s: %+v", name, e)
+		}
+	}
+
+	if e := asError(t, Sniff([]byte("<html><body>hi</body></html>"))); strings.Contains(e.Message, "SVG") {
+		t.Errorf("html is not svg: %+v", e)
+	}
+}
+
 func TestSniffAcceptsTheSignaturesOfFF05(t *testing.T) {
 	ts := make([]byte, 400)
 	ts[0], ts[188], ts[376] = 0x47, 0x47, 0x47
