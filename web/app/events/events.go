@@ -54,6 +54,9 @@ type Options struct {
 	// Drop, when it returns true for a revision, keeps that batch event off the
 	// hub: the gap-filling path of section 5.4 is tested with it.
 	Drop func(revision int64) bool
+	// RedactPaths drops the absolute path of an export from job events: in
+	// network mode no caller may learn a server path (SDD-007 section 4.3).
+	RedactPaths bool
 }
 
 // Events is the hub and the handler.
@@ -146,6 +149,10 @@ func (e *Events) Publish(ev service.Event) {
 	case wire.AssetUpdated:
 		f = wire.AssetFrame(&ev)
 	case wire.JobUpdated:
+		if e.o.RedactPaths {
+			ev = redacted(ev)
+		}
+
 		f = wire.JobFrame(&ev)
 	default:
 		return
@@ -481,7 +488,7 @@ func (e *Events) snapshotJobs(s *sse.Stream, project string, recent int64) error
 			continue
 		}
 
-		if err := send(s, wire.JobFrame(jobEvent(project, j))); err != nil {
+		if err := send(s, wire.JobFrame(e.jobEvent(project, j))); err != nil {
 			return err
 		}
 	}
@@ -512,7 +519,7 @@ func (e *Events) snapshotAssets(s *sse.Stream, project string, recent int64) err
 
 		if active {
 			if j, jerr := e.store.Jobs().ActiveIngestForHash(ctx, pa.AssetHash); jerr == nil {
-				if err := send(s, wire.JobFrame(jobEvent(project, &j))); err != nil {
+				if err := send(s, wire.JobFrame(e.jobEvent(project, &j))); err != nil {
 					return err
 				}
 			}
@@ -534,7 +541,22 @@ func (e *Events) snapshotAssets(s *sse.Stream, project string, recent int64) err
 	return nil
 }
 
-func jobEvent(project string, j *service.JobRow) *service.Event {
+// redacted returns ev with a copy of its result whose export path is empty.
+func redacted(ev service.Event) service.Event {
+	if ev.Result == nil || ev.Result.Export == nil || ev.Result.Export.Path == "" {
+		return ev
+	}
+
+	res := *ev.Result
+	exp := *res.Export
+	exp.Path = ""
+	res.Export = &exp
+	ev.Result = &res
+
+	return ev
+}
+
+func (e *Events) jobEvent(project string, j *service.JobRow) *service.Event {
 	ev := &service.Event{
 		Type: wire.JobUpdated, ProjectID: project, JobID: j.ID, Kind: j.Kind, State: j.State, Progress: j.Progress,
 		Message: j.Message, Error: errorOf(j.Error), At: time.UnixMilli(j.UpdatedMs),
@@ -545,6 +567,10 @@ func jobEvent(project string, j *service.JobRow) *service.Event {
 		if json.Unmarshal(j.Result, &res) == nil && res.Export != nil {
 			ev.Result = &res
 		}
+	}
+
+	if e.o.RedactPaths {
+		*ev = redacted(*ev)
 	}
 
 	return ev
