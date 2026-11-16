@@ -117,7 +117,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "guide",
 		title: "The editor",
-		pages: ["keyboard-shortcuts", "settings", "accessibility", "desktop"],
+		pages: ["keyboard-shortcuts", "keyboard-shortcuts-list", "coming-from-capcut", "settings", "accessibility", "desktop"],
 	},
 	{
 		dir: "agents",

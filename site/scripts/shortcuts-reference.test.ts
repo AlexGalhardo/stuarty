@@ -10,7 +10,9 @@ test("every row of the editor keymap is on the page, with Mod spelled out per pl
 	const page = shortcutsPage(keymap, labels);
 	for (const row of shortcutRows(keymap, labels)) assert.ok(page.includes(row.label.replace(/\|/g, "\|")), `the page lacks "${row.label}"`);
 	assert.match(page, /`Ctrl\+B`.*`Cmd\+B`/);
-	assert.doesNotMatch(page, /`Mod\+/, "Mod is always replaced by Ctrl or Cmd in a key cell");
+	assert.doesNotMatch(page.split("
+").filter((l) => l.startsWith("|")).join("
+"), /`Mod\+/, "Mod is always replaced by Ctrl or Cmd in a key cell");
 });
 
 test("a row without a label in en.json fails the generation", async () => {
