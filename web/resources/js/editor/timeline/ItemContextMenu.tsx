@@ -1,5 +1,7 @@
 import {
 	Blend,
+	ClipboardPaste,
+	Copy,
 	CopyPlus,
 	Eye,
 	EyeOff,
@@ -141,6 +143,14 @@ export default function ItemContextMenuItems({
 					{t("ui.editor.edit.crossfade")}
 				</ContextMenuItem>
 			)}
+			<ContextMenuItem onSelect={() => actions.copyAttributes()}>
+				<Copy aria-hidden="true" />
+				{t("ui.editor.edit.copy_attributes")}
+			</ContextMenuItem>
+			<ContextMenuItem onSelect={() => void actions.pasteAttributes()}>
+				<ClipboardPaste aria-hidden="true" />
+				{t("ui.editor.edit.paste_attributes")}
+			</ContextMenuItem>
 			{linkable && (
 				<ContextMenuItem onSelect={() => void actions.linkSelection()}>
 					<Link2 aria-hidden="true" />

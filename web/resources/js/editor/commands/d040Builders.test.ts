@@ -11,6 +11,8 @@ import {
 	freezeFrameOperations,
 	insertCurvePoint,
 	linkOperations,
+	PASTE_GROUPS,
+	pasteAttributesOperations,
 	reverseOperations,
 	speedCurveOperations,
 	trackUpdateOperations,
@@ -211,6 +213,20 @@ describe("the builders of the D-040 commands", () => {
 		expect(freezeFrameOperations(items, 0)).toEqual([]);
 		expect(freezeFrameOperations(items, 50)).toEqual([]);
 		expect(freezeFrameOperations(items, 90)).toEqual([]);
+	});
+
+	test("paste attributes copies every group from one item to the others", () => {
+		expect(pasteAttributesOperations("itm_a", ["itm_b", "itm_c"])).toEqual([
+			{
+				op: "item.paste_attributes",
+				args: {
+					from_item_id: "itm_a",
+					item_ids: ["itm_b", "itm_c"],
+					attributes: [...PASTE_GROUPS],
+				},
+			},
+		]);
+		expect(pasteAttributesOperations("itm_a", [])).toEqual([]);
 	});
 
 	test("the magnet is one track.update with the new value", () => {

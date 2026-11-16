@@ -56,7 +56,9 @@ export type EditKey =
 	| "toggle_enabled"
 	| "toggle_link"
 	| "toggle_magnet"
-	| "extract_audio";
+	| "extract_audio"
+	| "copy_attributes"
+	| "paste_attributes";
 
 type EditKeyEvent = Pick<
 	KeyboardEvent,
@@ -72,6 +74,12 @@ export function editShortcut(event: EditKeyEvent): EditKey | null {
 	if (!hasMod(event) && event.key === "~") return "toggle_link";
 	if (!hasMod(event) && !event.shiftKey && event.key.toLowerCase() === "p") {
 		return "toggle_magnet";
+	}
+	if (hasMod(event) && event.shiftKey && event.key.toLowerCase() === "c") {
+		return "copy_attributes";
+	}
+	if (hasMod(event) && event.shiftKey && event.key.toLowerCase() === "v") {
+		return "paste_attributes";
 	}
 	if (hasMod(event) && event.shiftKey && event.key.toLowerCase() === "s") {
 		return "extract_audio";
@@ -240,6 +248,8 @@ export const SHORTCUTS: readonly Shortcut[] = [
 	{ id: "link", keys: "~", action: "toggleLink" },
 	{ id: "extract_audio", keys: "Mod+Shift+S", action: "extractAudio" },
 	{ id: "toggle_magnet", keys: "P", action: "toggleMagnet" },
+	{ id: "copy_attributes", keys: "Mod+Shift+C", action: "copyAttributes" },
+	{ id: "paste_attributes", keys: "Mod+Shift+V", action: "pasteAttributes" },
 	{ id: "toggle_snap", keys: "N", action: "surface.toggle_snap" },
 	{ id: "keyframe_panel", keys: "Alt+K", action: "surface.keyframe_panel" },
 	{ id: "speed_curve", keys: "Shift+B", action: "surface.speed_curve" },
