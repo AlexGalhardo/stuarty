@@ -30,6 +30,7 @@
 
 [linux]
 --enable-ffnvcodec
+--enable-nvenc
 --enable-libvpl
 --enable-amf
 
@@ -39,6 +40,9 @@
 
 [windows]
 --enable-ffnvcodec
+--enable-nvenc
 --enable-libvpl
 --enable-amf
 --enable-mediafoundation
+# mfenc.c of FFmpeg 9.0.2 uses the D3D11 types without guarding them, so MediaFoundation needs d3d11va under --disable-autodetect.
+--enable-d3d11va
