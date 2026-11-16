@@ -41,12 +41,14 @@ check_binary() {
 	elif command -v objdump >/dev/null 2>&1; then listing="$(objdump -p "$ffmpeg" 2>/dev/null | grep -i 'DLL Name\|NEEDED' || true)"
 	else listing=""; fi
 	case "$(printf '%s' "$listing" | tr 'A-Z' 'a-z')" in *openh264*) die "an OpenH264 library is linked: $listing" ;; esac
-	"$ffmpeg" -hide_banner -encoders | grep -q libopenh264 || die "the libopenh264 encoder (the run time loader patch) is missing"
+	local encoders
+	encoders="$("$ffmpeg" -hide_banner -encoders)"
+	# No grep -q on a pipe from ffmpeg: grep exits at the first match and ffmpeg dies of SIGPIPE, which pipefail turns into a failure.
+	grep libopenh264 <<<"$encoders" >/dev/null || die "the libopenh264 encoder (the run time loader patch) is missing"
 
 	# Hardware encoders (D-034): the flags are on where the build is for linux or windows on x86 (the arm64 linux build keeps NVENC only),
 	# and every encoder a flag promises must be listed.
-	local encoders hw_flags="" want_hw="" need enc e
-	encoders="$("$ffmpeg" -hide_banner -encoders)"
+	local hw_flags="" want_hw="" need enc e
 	case "$(uname -s)-$(uname -m)" in Linux-x86_64 | MINGW*-x86_64 | MSYS*-x86_64) want_hw=1 ;; esac
 	case "$version" in *--enable-libvpl*) hw_flags="$hw_flags qsv" ;; esac
 	case "$version" in *--enable-amf*) hw_flags="$hw_flags amf" ;; esac
@@ -63,7 +65,7 @@ check_binary() {
 		nvenc) enc="h264_nvenc hevc_nvenc" ;;
 		esac
 		for e in $enc; do
-			printf '%s\n' "$encoders" | awk '{print $2}' | grep -qx "$e" || die "the $e encoder is missing although its flag is on (D-034)"
+			printf '%s\n' "$encoders" | awk '{print $2}' | grep -x "$e" >/dev/null || die "the $e encoder is missing although its flag is on (D-034)"
 		done
 	done
 	grep -aq VUKEM_VIDEO_OPENH264_DIR "$ffmpeg" || die "the binary does not read VUKEM_VIDEO_OPENH264_DIR"
@@ -73,11 +75,11 @@ check_binary() {
 		have="$("$ffmpeg" -hide_banner -filters)"
 		while read -r f; do
 			case "$f" in "" | \#*) continue ;; esac
-			printf '%s\n' "$have" | awk '{print $2}' | grep -qx "$f" || missing="$missing $f"
+			printf '%s\n' "$have" | awk '{print $2}' | grep -x "$f" >/dev/null || missing="$missing $f"
 		done <"$filters_file"
 		[ -z "$missing" ] || die "filters missing:$missing"
 		for gpl in eq boxblur; do
-			if printf '%s\n' "$have" | awk '{print $2}' | grep -qx "$gpl"; then die "the GPL filter $gpl is present"; fi
+			if printf '%s\n' "$have" | awk '{print $2}' | grep -x "$gpl" >/dev/null; then die "the GPL filter $gpl is present"; fi
 		done
 	fi
 	if [ -n "$ffprobe" ]; then "$ffprobe" -hide_banner -version | head -n 1 >/dev/null; fi
