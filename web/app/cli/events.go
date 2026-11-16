@@ -233,6 +233,13 @@ func httpEvents(base, token string, hc doer) EventOpener {
 
 			var doc service.ErrorDocument
 			if json.Unmarshal(raw, &doc) != nil || doc.Code == "" {
+				if tooLarge := resp.StatusCode; tooLarge == http.StatusRequestHeaderFieldsTooLarge ||
+					tooLarge == http.StatusRequestEntityTooLarge {
+					return nil, &service.Error{
+						Code: service.CodePayloadTooLarge, Message: "the request is too large for the server.",
+					}
+				}
+
 				return nil, &service.Error{
 					Code:    command.CodeInternal,
 					Message: fmt.Sprintf("the server answered %d without an error envelope.", resp.StatusCode),

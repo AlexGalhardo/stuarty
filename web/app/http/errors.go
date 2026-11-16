@@ -109,7 +109,7 @@ func codeOf(p *web.Problem) string {
 		return command.CodeNotFound
 	case http.StatusMethodNotAllowed:
 		return CodeMethodNotAllowed
-	case http.StatusRequestEntityTooLarge:
+	case http.StatusRequestEntityTooLarge, http.StatusRequestHeaderFieldsTooLarge:
 		return service.CodePayloadTooLarge
 	case http.StatusTooManyRequests:
 		return service.CodeRateLimited

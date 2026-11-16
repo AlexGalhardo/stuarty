@@ -7,6 +7,7 @@ import (
 	"errors"
 	"regexp"
 	"strconv"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
@@ -138,6 +139,11 @@ func (s *svc) newDocument(req ProjectCreateRequest) (*timeline.Document, *Error)
 		).
 			withPath("name").
 			withHint("send a name of 1 to %d characters", maxProjectName)
+	}
+
+	if msg := projectNameProblem(req.Name); msg != "" {
+		return nil, newError(command.CodeValidation, "the name %s.", msg).
+			withPath("name").withHint("send a name with visible text and no control or direction characters")
 	}
 
 	preset := req.Preset
@@ -497,4 +503,33 @@ func (s *svc) setProjectState(
 	}
 
 	return res, nil
+}
+
+// projectNameProblem is why a name that has a valid length is still refused
+// (VV-049): the same rule for the desktop and the network mode.
+func projectNameProblem(name string) string {
+	visible := false
+
+	for _, r := range name {
+		switch {
+		case unicode.IsControl(r):
+			return "has a control character"
+		case isBidiControl(r):
+			return "has a text direction character"
+		case !unicode.IsSpace(r) && !unicode.Is(unicode.Cf, r):
+			visible = true
+		}
+	}
+
+	if !visible {
+		return "has no visible character"
+	}
+
+	return ""
+}
+
+// isBidiControl reports the characters that reorder the text around them.
+func isBidiControl(r rune) bool {
+	return r == 0x061C || r == 0x200E || r == 0x200F ||
+		(r >= 0x202A && r <= 0x202E) || (r >= 0x2066 && r <= 0x2069)
 }
