@@ -31,6 +31,7 @@ import type {
 	MediaStateResult,
 	PlanWindow,
 	PlanWindowHead,
+	ProjectCreateResult,
 	ProjectGetResult,
 	ProjectListResult,
 	ProjectStateResult,
@@ -135,6 +136,7 @@ export interface ApiClient {
 	// An administrator session; any other caller gets E_FORBIDDEN.
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
+	createProject(name: string, preset: string): Promise<ProjectCreateResult>;
 	trashProject(projectId: string): Promise<ProjectStateResult>;
 	restoreProject(projectId: string): Promise<ProjectStateResult>;
 	// The two routes of network mode live at the root, not under /api/v1: a client
@@ -319,6 +321,8 @@ export function createClient(
 			call("DELETE", `/keys/${encodeURIComponent(keyId)}`, EDIT_TIMEOUT_MS),
 		listTrashedProjects: () =>
 			call("GET", "/projects?state=trashed", READ_TIMEOUT_MS),
+		createProject: (name, preset) =>
+			call("POST", "/projects", EDIT_TIMEOUT_MS, { name, preset }),
 		trashProject: (id) =>
 			call("POST", `${project(id)}/trash`, EDIT_TIMEOUT_MS, {}),
 		restoreProject: (id) =>

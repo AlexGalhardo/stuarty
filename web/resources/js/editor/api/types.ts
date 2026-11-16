@@ -655,6 +655,13 @@ export interface ProjectListResult {
 	text: string;
 }
 
+// POST /projects.
+export interface ProjectCreateResult {
+	project_id: string;
+	name: string;
+	text: string;
+}
+
 export interface ProjectStateResult {
 	project_id: string;
 	state: ProjectState;
