@@ -50,7 +50,7 @@ Release notes have five sections only (D-027), so pick the commit type with that
 Run `task ci` before you push: `task lint`, `task vet`, `task test`, `task tidy:check` and `task notices:check`. The pull request pipeline (`ci.yml`) runs these jobs, each with `timeout-minutes: 20`; the ruleset requires them, so a name below is the name of the check:
 
 - `Lint (Go)`, `Lint (Markdown)`, `Types and lint (web)`
-- `Test (ubuntu-latest)`, `Test (windows-latest)`, `Test (macos-latest)`: `go test -race`, the coverage gate on Linux, and `BenchmarkExportCommonCase` with the floor of 1.5 x real time (`VUKEM_VIDEO_BENCH_MIN_RT`)
+- `Test (ubuntu-latest)`, `Test (windows-latest)`, `Test (macos-latest)`: until the BETA exit the Go suite runs only on macOS (`go test -race`, the coverage gate and `BenchmarkExportCommonCase` with the floor of 1.5 x real time, `VUKEM_VIDEO_BENCH_MIN_RT`); the other two skip it. `task gate -- <tag>` runs the full local release gate
 - `Generated files`: `task codegen` leaves `core/schema/` and `web/resources/js/generated/` unchanged; after a change to a generator run `task codegen` and commit
 - `Release build (snapshot)`: GoReleaser dry run, six archives under 60,000,000 bytes
 - `Reference scenario (ubuntu-latest)`, `(windows-latest)`, `(macos-latest)`: the reference scenario through the CLI process, MCP over stdio and MCP over HTTP against a real `serve`; each export is checked with ffprobe and the three documents are compared; skips where only a GPL FFmpeg exists (macOS)
