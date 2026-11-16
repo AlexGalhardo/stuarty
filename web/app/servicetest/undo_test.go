@@ -431,6 +431,14 @@ func TestHistoryList(t *testing.T) {
 		t.Errorf("filter by an actor with no steps = %+v, %v", only, err)
 	}
 
+	bare := strings.TrimPrefix(top.Actor, "local:")
+	if byBare, err := e.svc.HistoryList(
+		ctx,
+		service.HistoryListRequest{ProjectID: project, Actor: bare},
+	); err != nil || len(byBare.Entries) == 0 {
+		t.Errorf("the filter %q (no kind prefix) = %+v, %v; it must mean local:%s", bare, byBare, err, bare)
+	}
+
 	if _, err := e.svc.HistoryList(
 		ctx,
 		service.HistoryListRequest{ProjectID: project, Cursor: "nope"},

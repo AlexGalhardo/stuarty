@@ -190,7 +190,8 @@ func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f I
 	}
 
 	if f.AssetID != "" && !timeline.ValidID(timeline.PrefixAsset, f.AssetID) {
-		return refuse(newError(command.CodeValidation, "the asset id is not valid.").withPath("asset_id"))
+		return refuse(newError(command.CodeValidation, "the asset id is not valid.").withPath("asset_id").
+			withHint("an asset id is ast_ and 10 characters from 0-9 and a-z, without i, l, o and u"))
 	}
 
 	file, err := s.media.Guard.OpenImport(f.Path)
