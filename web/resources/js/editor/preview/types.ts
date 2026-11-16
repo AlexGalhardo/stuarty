@@ -86,5 +86,10 @@ export interface PreviewExecutor {
 		videoElements: number;
 		planWindows: number;
 		droppedFrames: number;
+		// VideoFrames open now and at most, and assets drawn by <video> because
+		// WebCodecs cannot decode them (SDD-013 section 5.3).
+		openFrames: number;
+		peakOpenFrames: number;
+		fallbackAssets: number;
 	};
 }

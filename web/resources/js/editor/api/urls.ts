@@ -27,6 +27,10 @@ export function proxyUrl(projectId: string, assetId: string): string {
 	return `${project(projectId)}/media/${encodeURIComponent(assetId)}/proxy`;
 }
 
+export function chunksUrl(projectId: string, assetId: string): string {
+	return `${project(projectId)}/media/${encodeURIComponent(assetId)}/chunks`;
+}
+
 export function exportFileUrl(jobId: string): string {
 	return `${BASE}/jobs/${encodeURIComponent(jobId)}/file`;
 }
