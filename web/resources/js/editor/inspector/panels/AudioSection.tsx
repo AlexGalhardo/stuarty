@@ -1,21 +1,29 @@
 import type { ReactNode } from "react";
 
 import { useT } from "@/lib/i18n";
-import { audioOperations } from "../../commands/builders";
+import {
+	audioOperations,
+	VOICE_PRESETS,
+	type VoicePreset,
+} from "../../commands/builders";
 import { formatTime, fpsOf } from "../../commands/units";
 import { useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
 import { readTimeDisplay } from "../../state/prefs";
 import NumberField from "../fields/NumberField";
 import { registryLimits, registryRange } from "../fields/registryLimits";
+import SelectField from "../fields/SelectField";
 import SliderField from "../fields/SliderField";
 import TimeCommitField from "../fields/TimeCommitField";
 import ToggleField from "../fields/ToggleField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
 
+const isVoice = (value: string): value is VoicePreset =>
+	(VOICE_PRESETS as readonly string[]).includes(value);
+
 // The Audio section of SDD-012 section 12.1 for a clip and an audio item:
-// volume, the two fades, the noise reduction and, for a clip, the mute flag. Each field is one
+// volume, the two fades, the noise reduction, the voice filter and, for a clip, the mute flag. Each field is one
 // `item.set_audio` with only the field that changed.
 export default function AudioSection({
 	itemId,
@@ -58,6 +66,20 @@ export default function AudioSection({
 				{...registryRange("item.set_audio", "denoise")}
 				step={0.01}
 				commit={(denoise) => send(audioOperations(itemId, { denoise }))}
+			/>
+			<SelectField
+				label={t("ui.editor.clip.voice")}
+				stored={item.voice ?? "none"}
+				disabled={!canEdit}
+				options={VOICE_PRESETS.map((preset) => ({
+					value: preset,
+					label: t(`ui.editor.clip.voice_${preset}`),
+				}))}
+				commit={async (value) =>
+					isVoice(value)
+						? send(audioOperations(itemId, { voice: value }))
+						: { ok: true }
+				}
 			/>
 			{item.type === "clip" && (
 				<ToggleField

@@ -1079,7 +1079,18 @@ export interface AudioChanges {
 	fade_out?: string;
 	audio_muted?: boolean;
 	denoise?: number;
+	voice?: VoicePreset;
 }
+
+export const VOICE_PRESETS = [
+	"none",
+	"clear",
+	"warm",
+	"deep",
+	"bright",
+	"radio",
+] as const;
+export type VoicePreset = (typeof VOICE_PRESETS)[number];
 
 // Only the fields the person changed (SDD-002 C.19); the fades are lengths with
 // a unit, as the time field normalized them.
