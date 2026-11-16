@@ -10,12 +10,17 @@ pub fn resize(src: &Image, w: usize, h: usize) -> Image {
 	if w == 0 || h == 0 || src.w == 0 || src.h == 0 {
 		return Image::default();
 	}
-	let mut cur = src.clone();
-	while cur.w >= 2 * w && cur.h >= 2 * h {
-		cur = halve(&cur);
+	let mut halved: Option<Image> = None;
+	loop {
+		let cur = halved.as_ref().unwrap_or(src);
+		if cur.w < 2 * w || cur.h < 2 * h {
+			break;
+		}
+		halved = Some(halve(cur));
 	}
+	let cur = halved.as_ref().unwrap_or(src);
 	if cur.w == w && cur.h == h {
-		return cur;
+		return cur.clone();
 	}
 
 	let mut dst = Image::new(w, h);
@@ -33,7 +38,7 @@ pub fn resize(src: &Image, w: usize, h: usize) -> Image {
 			height: h,
 			rows: 0..h,
 		},
-		&cur,
+		cur,
 		&p,
 		255,
 	);

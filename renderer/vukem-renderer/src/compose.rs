@@ -5,6 +5,7 @@
 //! split into: the result of a row never depends on another row.
 
 use core::ops::Range;
+use std::borrow::Cow;
 
 use crate::blur::blurred;
 use crate::colour::apply_matrix;
@@ -172,33 +173,37 @@ fn draw_layer(dst: &mut Target<'_>, l: &Layer<'_>, out_scale: f64) {
 		return;
 	}
 
-	let mut src = shrunk(image, is_bitmap, &p);
+	// A layer that needs no processing is drawn from the stored pixels, never from a copy.
+	let mut src: Cow<'_, Image> = shrunk(image, is_bitmap, &p);
 	if let Some(m) = &l.color_matrix {
-		src = apply_matrix(&src, m);
+		src = Cow::Owned(apply_matrix(&src, m));
 	}
 	if let Some(m) = &l.filter {
-		src = apply_matrix(&src, m);
+		src = Cow::Owned(apply_matrix(&src, m));
 	}
 	let mut p = p;
-	if l.blur > 0.0 {
-		(src, p) = blurred(&src, &p, mul(l.blur, out_scale));
+	if l.blur > 0.0
+		&& let Some((img, grown)) = blurred(&src, &p, mul(l.blur, out_scale))
+	{
+		src = Cow::Owned(img);
+		p = grown;
 	}
 	draw(dst, &src, &p, op);
 }
 
 /// A bitmap box-filtered down to its drawn size when it is at least twice as large in both
 /// directions, so a small frame is not point-sampled from a large bitmap.
-fn shrunk(src: &Image, is_bitmap: bool, p: &Placement) -> Image {
+fn shrunk<'a>(src: &'a Image, is_bitmap: bool, p: &Placement) -> Cow<'a, Image> {
 	if is_bitmap {
 		let (w, h) = (round_half_up(p.w), round_half_up(p.h));
 		if w >= 1 && h >= 1 {
 			let (w, h) = (w as usize, h as usize);
 			if src.w >= w.saturating_mul(2) && src.h >= h.saturating_mul(2) {
-				return resize(src, w, h);
+				return Cow::Owned(resize(src, w, h));
 			}
 		}
 	}
-	src.clone()
+	Cow::Borrowed(src)
 }
 
 fn draw(dst: &mut Target<'_>, src: &Image, p: &Placement, op: u32) {
