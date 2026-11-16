@@ -25,9 +25,7 @@ func buildMenu(app *application.App, win *application.WebviewWindow, ws workspac
 	view := menu.AddSubmenu("View")
 	// win.Reload() navigates to the first address again, the one-time launch URL, which
 	// the server refuses the second time; the page reloads the address it is at.
-	view.Add("Reload").SetAccelerator("CmdOrCtrl+R").OnClick(func(*application.Context) {
-		win.ExecJS("location.reload()")
-	})
+	view.Add("Reload").SetAccelerator("CmdOrCtrl+R").OnClick(func(*application.Context) { reloadPage(win) })
 	// F11 is a window key binding (main.go), not a menu accelerator: Windows hides the
 	// menu bar in full screen and a menu accelerator would leave no way out.
 	view.Add("Toggle full screen\tF11").OnClick(func(*application.Context) { win.ToggleFullscreen() })
