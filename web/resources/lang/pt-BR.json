@@ -206,7 +206,8 @@
         "shape": "Forma",
         "speed_badge": "Velocidade {speed}",
         "slot_badge": "Espaço do modelo: {name}",
-        "asset_missing": "A mídia original deste item não está no projeto"
+        "asset_missing": "A mídia original deste item não está no projeto",
+        "disabled_badge": "Desativado"
       },
       "loading": "Carregando o projeto",
       "unsupported_size": "O editor precisa de uma janela com pelo menos 1024 pixels de largura.",
@@ -324,7 +325,9 @@
         "text": "Adicionar texto",
         "split_caption": "Dividir a legenda aqui",
         "merge_captions": "Mesclar legendas",
-        "crossfade": "Transição cruzada"
+        "crossfade": "Transição cruzada",
+        "enable": "Ativar",
+        "disable": "Desativar"
       },
       "caption": {
         "title": "Adicionar legenda",
@@ -700,6 +703,7 @@
           "add_caption": "Adicionar legenda",
           "add_text": "Adicionar texto",
           "rename": "Renomear",
+          "toggle_enabled": "Ativar ou desativar os itens selecionados",
           "toggle_snap": "Ativar ou desativar o encaixe",
           "keyframe_panel": "Mostrar ou ocultar os keyframes do item selecionado",
           "preview_zoom": "Ajustar a prévia, aumentar o zoom, diminuir o zoom",
@@ -857,6 +861,13 @@
         "brightness": "Brilho",
         "contrast": "Contraste",
         "saturation": "Saturação",
+        "temperature": "Temperatura",
+        "tint": "Tonalidade",
+        "hue": "Matiz",
+        "flip_title": "Espelhar",
+        "flip_horizontal": "Espelhar na horizontal",
+        "flip_vertical": "Espelhar na vertical",
+        "denoise": "Redução de ruído",
         "filters_title": "Filtros",
         "filter": "Filtro",
         "filter_none": "Nenhum",
@@ -898,6 +909,7 @@
       },
       "inspector": {
         "name": "Nome",
+        "enabled": "Ativo",
         "timing": "Tempo",
         "start": "Início",
         "end": "Fim",

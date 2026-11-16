@@ -1,4 +1,4 @@
-import { Puzzle, TriangleAlert } from "lucide-react";
+import { EyeOff, Puzzle, TriangleAlert } from "lucide-react";
 import type { ReactNode } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
@@ -18,6 +18,7 @@ export default function Badges({ id }: { id: string }): ReactNode {
 	const speed = useDocumentState((s) =>
 		speedLabel(s.document?.items[id]?.speed),
 	);
+	const off = useDocumentState((s) => s.document?.items[id]?.disabled === true);
 	const slot = useDocumentState((s) => s.document?.items[id]?.slot);
 	const missing = useDocumentState((s) => {
 		const asset = s.document?.items[id]?.asset;
@@ -26,7 +27,7 @@ export default function Badges({ id }: { id: string }): ReactNode {
 			(asset === PLACEHOLDER_ASSET || s.document?.assets[asset] === undefined)
 		);
 	});
-	if (speed === null && slot === undefined && !missing) return null;
+	if (speed === null && slot === undefined && !missing && !off) return null;
 	return (
 		<span className="relative z-10 ml-1 flex shrink-0 items-center gap-1">
 			{speed !== null && (
@@ -36,6 +37,16 @@ export default function Badges({ id }: { id: string }): ReactNode {
 					title={t("ui.editor.item.speed_badge", { speed })}
 				>
 					{speed}
+				</span>
+			)}
+			{off && (
+				<span
+					data-badge="disabled"
+					role="img"
+					aria-label={t("ui.editor.item.disabled_badge")}
+					title={t("ui.editor.item.disabled_badge")}
+				>
+					<EyeOff aria-hidden="true" className="size-3.5" />
 				</span>
 			)}
 			{slot !== undefined && (

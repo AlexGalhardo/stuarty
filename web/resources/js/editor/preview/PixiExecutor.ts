@@ -34,7 +34,13 @@ import {
 	playbackRateFor,
 	rankVideoLayers,
 } from "./mediaSync";
-import { bitmapKeyAt, geometryOf, layersAt, valueAt } from "./planValue";
+import {
+	bitmapKeyAt,
+	geometryOf,
+	layersAt,
+	mirrorSigns,
+	valueAt,
+} from "./planValue";
 import { PlanWindows } from "./planWindows";
 import { detectRenderer } from "./rendererChoice";
 import type {
@@ -462,6 +468,13 @@ export class PixiExecutor implements PreviewExecutor {
 		sprite.position.set(g.cx, g.cy);
 		sprite.width = g.w;
 		sprite.height = g.h;
+		// The mirror turns the picture around the centre of the unrotated
+		// rectangle; the rotation below is applied after it (SDD-004 section 3.10).
+		// The mask and the chroma key keep the frame of the item, so they do not
+		// take part.
+		const mirror = mirrorSigns(layer);
+		sprite.scale.x = mirror.x * Math.abs(sprite.scale.x);
+		sprite.scale.y = mirror.y * Math.abs(sprite.scale.y);
 		sprite.angle = g.rotation;
 		sprite.alpha = valueAt(layer.opacity, frame, layer.first);
 		sprite.blendMode = pixiBlendMode(layer.blend);

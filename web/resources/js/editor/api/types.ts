@@ -207,6 +207,9 @@ interface PlanLayerBase {
 	blend?: PlanBlend;
 	// The mask of SDD-004 section 3.9, constant over the item; absent without one.
 	mask?: PlanMask;
+	// The mirror of SDD-004 section 3.10, constant over the item; absent is off.
+	flip_x?: boolean;
+	flip_y?: boolean;
 }
 
 export interface PlanMask {

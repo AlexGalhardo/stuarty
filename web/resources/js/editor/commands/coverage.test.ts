@@ -23,7 +23,9 @@ import {
 	dropAssetOperations,
 	duckOperations,
 	duplicateOperations,
+	enabledOperations,
 	filterOperations,
+	flipOperations,
 	fontAddOperations,
 	fontRemoveOperations,
 	framingOperations,
@@ -303,6 +305,13 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				(o) => o.op,
 			),
 			"timeline.duplicate": duplicateOperations(items).map((o) => o.op),
+			"timeline.toggle_enabled": enabledOperations("itm_a", false).map(
+				(o) => o.op,
+			),
+			"inspector.enabled": enabledOperations("itm_a", true).map((o) => o.op),
+			"inspector.flip": flipOperations("itm_a", { horizontal: true }).map(
+				(o) => o.op,
+			),
 			"timeline.close_gap": closeGapOperations("trk_a", 5).map((o) => o.op),
 			"inspector.move": moveOperations("itm_a", "1s").map((o) => o.op),
 			"inspector.trim_end": trimEndOperations("itm_a", "2s").map((o) => o.op),

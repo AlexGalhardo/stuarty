@@ -24,6 +24,7 @@ import {
 	crossfadeOperations,
 	deleteOperations,
 	duplicateOperations,
+	enabledOperations,
 	type ItemRange,
 	type KeyframeProperty,
 	keyframeFallbackOperations,
@@ -132,6 +133,8 @@ export interface Actions {
 	crossfadeSelection(): Promise<EditOutcome | null>;
 	// Ctrl+D: a copy of each selected item right after its end.
 	duplicateSelection(): Promise<EditOutcome | null>;
+	// V and the menu: every selected item off when any is on, else all on.
+	toggleEnabled(): Promise<EditOutcome | null>;
 	// Paste (Mod+V): the clipboard items at the playhead frame `at`; a cut
 	// clipboard moves them, a copy duplicates them (`pasteOperations`).
 	pasteItems(
@@ -600,6 +603,16 @@ export function createActions(runtime: EditorRuntime): Actions {
 			return send(deleteOperations(actedIds(), ripple));
 		},
 		duplicateSelection: () => send(duplicateOperations(rangesOf(actedIds()))),
+		toggleEnabled() {
+			const doc = documents.getState().document;
+			if (doc === null) return Promise.resolve(null);
+			const items = actedIds().flatMap((id) => {
+				const item = doc.items[id];
+				return item === undefined ? [] : [{ id, off: item.disabled === true }];
+			});
+			const enable = items.length > 0 && items.every((item) => item.off);
+			return send(items.flatMap((item) => enabledOperations(item.id, enable)));
+		},
 		pasteItems: (ids, at, cut) => send(pasteOperations(rangesOf(ids), at, cut)),
 		adjustVolume(db) {
 			const doc = documents.getState().document;

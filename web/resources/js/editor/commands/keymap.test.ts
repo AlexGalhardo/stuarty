@@ -66,6 +66,9 @@ describe("editShortcut", () => {
 		expect(edit("d", { ctrlKey: true })).toBe("duplicate");
 		expect(edit("D", { metaKey: true })).toBe("duplicate");
 		expect(edit("F2")).toBe("rename");
+		expect(edit("v")).toBe("toggle_enabled");
+		expect(edit("V", { shiftKey: true })).toBeNull();
+		expect(edit("v", { ctrlKey: true })).toBeNull();
 		expect(edit("d")).toBeNull();
 		expect(edit("Delete", { altKey: true })).toBeNull();
 	});
@@ -99,6 +102,7 @@ describe("the table of SDD-012 section 18.2", () => {
 			"C",
 			"T",
 			"F2",
+			"V",
 			"N",
 			"Mod+K",
 			"Alt+1",

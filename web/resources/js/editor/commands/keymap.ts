@@ -48,7 +48,12 @@ export function panelShortcut(
 	return PANEL_KEYS[digit] ?? null;
 }
 
-export type EditKey = "delete" | "ripple_delete" | "duplicate" | "rename";
+export type EditKey =
+	| "delete"
+	| "ripple_delete"
+	| "duplicate"
+	| "rename"
+	| "toggle_enabled";
 
 type EditKeyEvent = Pick<
 	KeyboardEvent,
@@ -56,9 +61,13 @@ type EditKeyEvent = Pick<
 >;
 
 // Delete and Backspace delete, Shift+Delete ripples on the track, Mod+D
-// duplicates and F2 renames (SDD-012 sections 7.10 and 18.2).
+// duplicates, F2 renames and V turns the item off or on (SDD-012 sections 7.10
+// and 18.2).
 export function editShortcut(event: EditKeyEvent): EditKey | null {
 	if (event.altKey) return null;
+	if (!hasMod(event) && !event.shiftKey && event.key.toLowerCase() === "v") {
+		return "toggle_enabled";
+	}
 	if (hasMod(event)) {
 		return event.key.toLowerCase() === "d" && !event.shiftKey
 			? "duplicate"
@@ -214,6 +223,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
 	{ id: "add_caption", keys: "C", action: "addCaption" },
 	{ id: "add_text", keys: "T", action: "addText" },
 	{ id: "rename", keys: "F2", action: "renameItem" },
+	{ id: "toggle_enabled", keys: "V", action: "toggleEnabled" },
 	{ id: "toggle_snap", keys: "N", action: "surface.toggle_snap" },
 	{ id: "keyframe_panel", keys: "Alt+K", action: "surface.keyframe_panel" },
 	{
