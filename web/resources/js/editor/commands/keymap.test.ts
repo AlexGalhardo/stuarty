@@ -164,6 +164,13 @@ describe("the CapCut-compatible map of SDD-012 section 18.7", () => {
 		expect(fixedRowFor("]")).toBe("select_side");
 		expect(fixedRowFor("Mod+C")).toBe("copy");
 	});
+
+	test("the marker, speed curve and scroll keys are rows of the table", () => {
+		expect(fixedRowFor("Shift+M")).toBe("next_marker");
+		expect(fixedRowFor("Alt+Shift+M")).toBe("next_marker");
+		expect(fixedRowFor("Shift+B")).toBe("speed_curve");
+		expect(fixedRowFor("Alt+Wheel")).toBe("scroll");
+	});
 });
 
 describe("selectAll and landmark keys", () => {

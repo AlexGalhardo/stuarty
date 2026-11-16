@@ -3,6 +3,7 @@ import { useRuntime } from "../state/EditorContext";
 import type { PreviewSize } from "../state/uiStore";
 import { toggleKeyframePanel } from "./keyframePanel";
 import { hasMod } from "./keymap";
+import { openSpeedCurve } from "./speedCurvePanel";
 
 const PREVIEW_SIZES: readonly PreviewSize[] = ["fit", "50", "100"];
 
@@ -60,6 +61,13 @@ export function useShellShortcuts(): void {
 				if (next === null) return;
 				event.preventDefault();
 				uiWriter.setPreviewSize(next);
+				return;
+			}
+			if (event.shiftKey && !event.altKey && !hasMod(event)) {
+				if (event.code === "KeyB") {
+					event.preventDefault();
+					openSpeedCurve(runtime);
+				}
 				return;
 			}
 			if (!hasMod(event) || event.altKey || event.shiftKey) return;

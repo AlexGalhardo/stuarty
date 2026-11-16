@@ -724,6 +724,8 @@
           "extract_audio": "Extrair o áudio dos clipes selecionados",
           "toggle_snap": "Ativar ou desativar o encaixe",
           "keyframe_panel": "Mostrar ou ocultar os keyframes do item selecionado",
+          "speed_curve": "Abrir a curva de velocidade do clipe selecionado",
+          "scroll": "Rolar a linha do tempo: roda para cima e para baixo, Alt+roda para os lados",
           "preview_zoom": "Ajustar a prévia, aumentar o zoom, diminuir o zoom",
           "import": "Importar mídia",
           "export": "Exportar",
@@ -1241,6 +1243,7 @@
         "tool_select": "Ferramenta de seleção",
         "keyframes_shown": "Keyframes visíveis",
         "keyframes_hidden": "Keyframes ocultos",
+        "speed_curve_shown": "Curva de velocidade pronta para editar",
         "split": {
           "one": "Dividido, {count} item",
           "other": "Dividido, {count} itens"

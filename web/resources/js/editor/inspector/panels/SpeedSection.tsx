@@ -28,7 +28,7 @@ export default function SpeedSection({
 	if (item === undefined) return null;
 	const speed = item.speed;
 	return (
-		<Section title={t("ui.editor.clip.speed_title")}>
+		<Section name="speed" title={t("ui.editor.clip.speed_title")}>
 			<NumberField
 				label={t("ui.editor.clip.speed")}
 				stored={speedText(speed)}

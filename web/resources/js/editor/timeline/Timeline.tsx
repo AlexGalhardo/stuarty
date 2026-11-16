@@ -316,6 +316,12 @@ export default function Timeline(): ReactNode {
 		const el = scroller.current;
 		if (el === null) return;
 		const onWheel = (event: WheelEvent): void => {
+			if (event.altKey && !(event.ctrlKey || event.metaKey)) {
+				// Alt+wheel scrolls sideways (SDD-012 section 18.7).
+				event.preventDefault();
+				el.scrollLeft += event.deltaY || event.deltaX;
+				return;
+			}
 			if (!(event.ctrlKey || event.metaKey)) return;
 			event.preventDefault();
 			const rect = el.getBoundingClientRect();

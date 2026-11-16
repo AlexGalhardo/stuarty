@@ -122,6 +122,8 @@ export const UI_SHORTCUT_ACTIONS = [
 	"surface.range",
 	"surface.tool",
 	"surface.keyframe_panel",
+	"surface.speed_curve",
+	"surface.scroll",
 	"surface.next_marker",
 	"surface.zoom",
 	"surface.toggle_snap",
@@ -182,7 +184,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
 	{ id: "shuttle", keys: "J, K, L", action: "surface.shuttle" },
 	{
 		id: "next_marker",
-		keys: "Mod+Shift+Left, Mod+Shift+Right",
+		keys: "Shift+M, Alt+Shift+M, Mod+Shift+Left, Mod+Shift+Right",
 		action: "surface.next_marker",
 	},
 	{ id: "marker", keys: "M", action: "toggleMarkerAtPlayhead" },
@@ -234,6 +236,8 @@ export const SHORTCUTS: readonly Shortcut[] = [
 	{ id: "extract_audio", keys: "Mod+Shift+S", action: "extractAudio" },
 	{ id: "toggle_snap", keys: "N", action: "surface.toggle_snap" },
 	{ id: "keyframe_panel", keys: "Alt+K", action: "surface.keyframe_panel" },
+	{ id: "speed_curve", keys: "Shift+B", action: "surface.speed_curve" },
+	{ id: "scroll", keys: "Wheel, Alt+Wheel", action: "surface.scroll" },
 	{
 		id: "preview_zoom",
 		keys: "Alt+Shift+Z, Alt+Shift+=, Alt+Shift+-",

@@ -1450,19 +1450,19 @@ Decision D-038: the default keymap is the one a person coming from CapCut alread
 | Group, ungroup | `Mod+G`, `Mod+Shift+G` | `item.group`, `item.ungroup` | needs command (N-2) |
 | Link or unlink audio and video | `~` | `toggleLink` (`item.link`, `item.unlink`) | exists (N-4, TASK-0277, TASK-0280) |
 | Extract the audio of a clip | `Mod+Shift+S` | `extractAudio` (`item.extract_audio`; restoring the audio is not a command: the person turns the audio of the clip on again and deletes the audio item) | exists (N-4, TASK-0277, TASK-0280) |
-| Add a marker, with another colour | `M`, `Alt+M` | `marker.add` | needs command (N-3) |
-| Next, previous marker | `Shift+M`, `Alt+Shift+M` | `surface.next_marker` | needs command (N-3) |
+| Add a marker, with another colour | `M`, `Alt+M` | `toggleMarkerAtPlayhead` (`marker.add`, `marker.remove`); `Alt+M` is not bound: `marker.add` has a label and no colour | exists for `M`; `Alt+M` needs a colour on the marker (N-3) |
+| Next, previous marker | `Shift+M`, `Alt+Shift+M`, `Mod+Shift+Right`, `Mod+Shift+Left` | `surface.next_marker` (`Alt+Shift+M` is read by the physical key, so Option works on a Mac) | UI, built (TASK-0236) |
 | Speed panel | `Mod+R` (desktop shell only, see the browser rules) | `surface.open_inspector_tab("speed")` | UI |
-| Speed by curve | `Shift+B` | `clip.set_speed` with curve points | needs command (N-5) |
+| Speed by curve | `Shift+B` | `surface.speed_curve`: opens the inspector, expands the Speed section, starts a draft curve if the clip has none (sent only by Apply, as `clip.set_speed` with `curve`) and focuses the first editable field | UI, built (TASK-0236; N-5 exists) |
 | Volume up, down 0.1 dB | `Mod+.`, `Mod+,` | `item.set_audio` (`volume`) | exists |
 | Show or hide the keyframe panel | `Alt+K` | `surface.keyframe_panel`: with an item selected it opens the inspector if hidden, expands the Keyframes section and moves focus to its header; again from inside the section it collapses it | UI, built (TASK-0236) |
 | Add a keyframe at the playhead | `Shift`+click in the keyframe panel | `keyframe.set` | exists |
 | Toggle snapping | `N` | `surface.toggle_snap` | exists |
 | Toggle the main-track magnet | `P` | `track.update` with `magnet` | needs command (N-6) |
-| Switch the preview axis | `S` | `surface.preview_axis` | UI |
+| Switch the preview axis | `S` | `surface.preview_axis` | UI, blocked: the preview has no axis guides to switch (only the safe-area overlay), so there is nothing for the key to do; it enters `SHORTCUTS` with the guides |
 | Zoom the timeline in, out | `Mod+=`, `Mod+-` (`+` and `-` stay as aliases), `Mod`+wheel (`Ctrl` or `Cmd`) | `surface.zoom` | exists |
 | Fit the timeline to the window | `Shift+Z` | `surface.zoom` | exists |
-| Scroll the timeline vertically, horizontally | wheel, `Alt`+wheel | `surface.scroll` | UI |
+| Scroll the timeline vertically, horizontally | wheel, `Alt`+wheel | `surface.scroll` | UI, built (TASK-0236) |
 | Preview full screen, leave it | `Mod+Shift+F` (desktop shell only), `Esc` | `surface.preview_fullscreen` | UI |
 | Fit the preview, zoom the preview | `Alt+Shift+Z`, `Alt+Shift+=`, `Alt+Shift+-` | `surface.preview_zoom` | UI |
 | Ignore the alignment guides while dragging | hold `Mod` | modifier of the drag gesture (§8): holding `Ctrl` or `Cmd` during a move, a trim or a word-boundary drag suspends snapping, like `Alt` | UI, built (TASK-0236) |
@@ -1519,7 +1519,7 @@ Each is a card for `senior-a`, with its name in `000-shared-definitions.md` firs
 
 TASK-0236 draws and binds the rows of state exists and the UI rows that need no new surface: split, split every track, `Q`, `W`, `[` and `]`, `Mod+=` and `Mod+-`, copy, cut and paste (paste is `item.duplicate`), the volume keys (`item.set_audio`, 0.1 dB as a gain of `10^(0.1/20)`), the preview size keys, `Mod+I`, `Mod+E` and `Mod+S`. The UI rows that need a surface that does not exist yet (`J` `K` `L`, `I` `O`, `Shift+X` `Alt+X`, `B` `A`, `S` the preview axis, `Alt+K`, the wheel keys, the drag modifiers) and the desktop-only rows (`Mod+R`, `Mod+Shift+F`, `Mod+N`, `Mod+O`) are not in `SHORTCUTS` until their surface or the desktop shell exists. An alias is the `aliases` field of a row (`+` and `Mod++` for zoom in, `-` for zoom out): they are held by the row, so no other row may rebind to them, and they are lost when the person rebinds the row.
 
-N-4 exists, and N-5 (the curve) exists as the Speed section, without the `Shift+B` key. The rows of N-1 to N-6 and N-8 enter `SHORTCUTS` when their command exists. The `surface.*` ids marked UI are added to `UI_SHORTCUT_ACTIONS` by TASK-0236. The cheat sheet and the shortcuts page of the site read the same table, so no key is written twice.
+N-4 and N-5 exist, `Shift+B` included. Rows still without a command or a surface when TASK-0236 closed: `Mod+Shift+C` and `Mod+Shift+V` (N-8), `Mod+G` and `Mod+Shift+G` (N-2), `P` (N-6), `Alt+M` (N-3, no colour), `S` (no preview axis) and the desktop-only `Mod+R`, `Mod+Shift+F`, `Mod+N`, `Mod+O`, which belong to the shell menu accelerators (§21), not to the page. The rows of N-2, N-6 and N-8 enter `SHORTCUTS` when their command exists. The `surface.*` ids marked UI are added to `UI_SHORTCUT_ACTIONS` by TASK-0236. The cheat sheet and the shortcuts page of the site read the same table, so no key is written twice.
 
 ### 18.8 Find bar
 
