@@ -157,9 +157,13 @@ jobs:
         run: |
           case "$SHARD" in
             export-*)
-              # Every third test of engine/export (sorted), shard k of 3.
+              # Every third test of engine/export (sorted), shard k of 3. Without -race:
+              # under the race detector a third of these frame-composing tests ran past
+              # 17 min (run 43924786343), and the race scope of the project is core,
+              # service and web/app (task test:race); -covermode=atomic keeps the
+              # profiles mergeable with the race shards.
               names="$(go test -list '^Test' ./engine/export/ | grep '^Test' | awk -v k="${SHARD#export-}" 'NR % 3 == k % 3' | paste -sd'|' -)"
-              go test -race -count=1 -timeout=17m -coverpkg=./... -coverprofile=coverage.out -run "^(${names})"'$' ./engine/export/
+              go test -count=1 -timeout=17m -covermode=atomic -coverpkg=./... -coverprofile=coverage.out -run "^(${names})"'$' ./engine/export/
               exit
               ;;
             engine) pkgs="$(go list ./engine/... | grep -vE '/engine/export$')" ;;
