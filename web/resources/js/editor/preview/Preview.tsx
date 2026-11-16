@@ -37,7 +37,7 @@ import InlineTextEditor from "./overlays/InlineTextEditor";
 import SafeArea from "./overlays/SafeArea";
 import SelectionBox from "./overlays/SelectionBox";
 import { PixiExecutor } from "./PixiExecutor";
-import { PausedFrame } from "./pausedFrame";
+import { clampToLastFrame, PausedFrame } from "./pausedFrame";
 import Timecode, { LiveTimecode } from "./Timecode";
 import type { CanvasPort, LayerGeometry, PreviewState } from "./types";
 
@@ -108,6 +108,7 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 	}, []);
 	const bufferWidth = useRef(0);
 	const revisionRef = useRef(0);
+	const endFrameRef = useRef(0);
 	const [state, setState] = useState<PreviewState>("idle");
 	const [live, setLive] = useState(playhead);
 	const [box, setBox] = useState({ w: 0, h: 0 });
@@ -124,6 +125,7 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 	const [override, setOverride] = useState<LayerGeometry | null>(null);
 
 	revisionRef.current = revision ?? 0;
+	endFrameRef.current = endFrame;
 	// Overlays are drawn from `live`, so they need every frame while shown.
 	needsLiveRef.current =
 		selection.length > 0 || editingText !== null || safeVisible;
@@ -144,7 +146,13 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 			},
 			show: () => overlay?.removeAttribute("hidden"),
 			hide: () => overlay?.setAttribute("hidden", ""),
-			urlFor: (frame, w, rev) => frameUrl(runtime.projectId, frame, w, rev),
+			urlFor: (frame, w, rev) =>
+				frameUrl(
+					runtime.projectId,
+					clampToLastFrame(frame, endFrameRef.current),
+					w,
+					rev,
+				),
 			mark: (name) => performance.mark(name),
 			measure: (name, a, b) => performance.measure(name, a, b),
 			onFailure: (error) => console.debug("truth on pause failed", error),
