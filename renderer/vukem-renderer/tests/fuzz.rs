@@ -11,6 +11,7 @@
 use vukem_renderer::blend::BlendMode;
 use vukem_renderer::chroma::ChromaKeySpec;
 use vukem_renderer::compose::{Layer, Placement, Source, Target, compose, sample};
+use vukem_renderer::effects::{Direction, Effect, FrameInfo, Transition, TransitionKind};
 use vukem_renderer::error::Reason;
 use vukem_renderer::host::{BitmapMetrics, Limits, Renderer};
 use vukem_renderer::image::Image;
@@ -52,10 +53,18 @@ fn iterations(default: usize) -> usize {
 const VALID: &[&str] = &[
 	r##"{"version":1,"output":{"width":16,"height":12,"scale":1},"plan":{"frame":3,"width":16,"height":12,"background":"#102030","layers":[{"item":"a","kind":"media","asset":"x","asset_kind":"video","source_frame":2,"crop":{"x":0,"y":0,"w":8,"h":8},"color_matrix":null,"filter":null,"blur":0,"cx":8,"cy":6,"w":8,"h":8,"rotation":15,"scale":1,"opacity":0.5}]}}"##,
 	r##"{"version":1,"output":{"width":16,"height":12,"scale":0.5,"y0":2,"y1":9},"plan":{"layers":[{"item":"b","kind":"media","color_matrix":[1,0,0,0,0,1,0,0,0,0,1,0],"filter":[0.3,0.6,0.1,0,0.3,0.6,0.1,0,0.3,0.6,0.1,0],"blur":2.5,"chroma_key":{"color":"#00ff00","similarity":0.3,"smoothness":0.1,"spill":0.5},"cx":8,"cy":6,"w":10,"h":10,"rotation":-30,"opacity":1}]}}"##,
+	r##"{"version":1,"output":{"width":24,"height":16,"scale":1},"plan":{"frame":5,"width":24,"height":16,"layers":[{"item":"a","kind":"media","cx":12,"cy":8,"w":12,"h":10,"rotation":10,"opacity":1,"effects":[{"kind":"motion_blur","amount":0.6,"angle":30},{"kind":"glow","amount":0.5,"radius":4,"threshold":0.3},{"kind":"vignette","amount":0.7,"softness":0.5},{"kind":"grain","amount":0.4,"size":2,"seed":9},{"kind":"rgb_split","amount":0.5,"angle":-40}],"transition":{"kind":"whip","edge":"in","p":9000,"direction":"up"}},{"item":"b","kind":"media","cx":6,"cy":6,"w":8,"h":8,"opacity":0.8,"transition":{"kind":"wipe","edge":"out","p":30000,"direction":"right"},"mask":{"shape":"rect","x":0,"y":0,"width":1,"height":1}},{"item":"b","kind":"media","cx":18,"cy":6,"w":8,"h":8,"opacity":1,"transition":{"kind":"dip","edge":"in","p":20000,"color":"#ff8000"}}]}}"##,
 	r##"{"version":1,"output":{"width":16,"height":12,"scale":1},"plan":{"background":"#ffffff","layers":[{"item":"t","kind":"bitmap","bitmap":{"kind":"text","text":"hi","words":["hi"],"breaks":[],"active_word":-1,"pixel_scale":1},"bitmap_key":"k1","cx":8,"cy":6,"w":8,"h":4,"rotation":0,"opacity":1},{"item":"a","kind":"media","cx":4,"cy":4,"w":8,"h":8,"rotation":90,"opacity":0.75}]}}"##,
 ];
 
 const TOKENS: &[&str] = &[
+	"\"effects\"",
+	"\"transition\"",
+	"\"whip\"",
+	"\"glow\"",
+	"\"grain\"",
+	"65536",
+	"65537",
 	"null",
 	"true",
 	"{}",
@@ -341,6 +350,51 @@ fn chroma_key(rng: &mut Rng) -> Option<ChromaKeySpec> {
 	})
 }
 
+fn effect(rng: &mut Rng) -> Effect {
+	match rng.below(5) {
+		0 => Effect::MotionBlur {
+			amount: extreme(rng),
+			angle: extreme(rng),
+		},
+		1 => Effect::Glow {
+			amount: extreme(rng),
+			radius: extreme(rng),
+			threshold: extreme(rng),
+		},
+		2 => Effect::Vignette {
+			amount: extreme(rng),
+			softness: extreme(rng),
+		},
+		3 => Effect::Grain {
+			amount: extreme(rng),
+			size: extreme(rng),
+			seed: rng.next() as i64,
+		},
+		_ => Effect::RgbSplit {
+			amount: extreme(rng),
+			angle: extreme(rng),
+		},
+	}
+}
+
+fn transition(rng: &mut Rng) -> Transition {
+	Transition {
+		kind: *rng.pick(&[
+			TransitionKind::Whip,
+			TransitionKind::Dip,
+			TransitionKind::Wipe,
+		]),
+		p: rng.next() as i64 >> rng.below(64),
+		direction: *rng.pick(&[
+			Direction::Left,
+			Direction::Right,
+			Direction::Up,
+			Direction::Down,
+		]),
+		colour: [rng.next() as u8, rng.next() as u8, rng.next() as u8, 255],
+	}
+}
+
 fn matrix(rng: &mut Rng) -> Option<[f64; 12]> {
 	rng.chance(3)
 		.then(|| core::array::from_fn(|_| extreme(rng)))
@@ -381,6 +435,17 @@ fn the_composition_survives_extreme_numbers() {
 					mask: rng.chance(2).then(|| mask(&mut rng)),
 					flip_x: rng.chance(2),
 					flip_y: rng.chance(2),
+					effects: if rng.chance(8) {
+						(0..1 + rng.below(3)).map(|_| effect(&mut rng)).collect()
+					} else {
+						Vec::new()
+					},
+					transition: rng.chance(8).then(|| transition(&mut rng)),
+					frame: FrameInfo {
+						frame: rng.next() as i64,
+						width: rng.next() as i64 >> rng.below(64),
+						height: rng.next() as i64 >> rng.below(64),
+					},
 					// A blur of a huge radius is capped at 128 source pixels; keep most small.
 					blur: if rng.chance(3) {
 						extreme(&mut rng)
@@ -434,7 +499,7 @@ fn the_sampler_survives_every_rotation_and_scale() {
 		};
 		let state = rng
 			.chance(2)
-			.then(|| MaskState::new(&mask(&mut rng), &p, extreme(&mut rng)));
+			.then(|| MaskState::new(Some(&mask(&mut rng)), None, &p, extreme(&mut rng)));
 		sample(
 			&mut Target {
 				pix: &mut pix,

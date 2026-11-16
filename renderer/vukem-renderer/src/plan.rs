@@ -5,6 +5,8 @@
 
 use crate::blend::BlendMode;
 use crate::chroma::ChromaKeySpec;
+use crate::compose::parse_colour;
+use crate::effects::{Direction, Effect, FrameInfo, Transition, TransitionKind};
 use crate::error::{Error, Reason};
 use crate::json::{JsonError, Value, parse};
 use crate::mask::{MaskShape, MaskSpec};
@@ -19,6 +21,8 @@ pub const MAX_LAYERS: usize = 64;
 pub const MAX_INPUT_BYTES: usize = 4 << 20;
 /// The longest item id or bitmap key.
 pub const MAX_ID_BYTES: usize = 64;
+/// The most effects on one layer: each kind at most once (SDD-004 section 3.13).
+pub const MAX_EFFECTS: usize = 6;
 
 /// The frame to write.
 #[derive(Clone, Debug, PartialEq)]
@@ -58,6 +62,8 @@ pub struct LayerSpec {
 	pub mask: Option<MaskSpec>,
 	pub flip_x: bool,
 	pub flip_y: bool,
+	pub effects: Vec<Effect>,
+	pub transition: Option<Transition>,
 }
 
 /// A decoded render input.
@@ -65,6 +71,8 @@ pub struct LayerSpec {
 pub struct RenderInput {
 	pub output: Output,
 	pub background: String,
+	/// The plan's frame number and the project's size: the grain and the whip depend on them.
+	pub frame: FrameInfo,
 	pub layers: Vec<LayerSpec>,
 }
 
@@ -246,6 +254,114 @@ fn mask(v: Option<Value>) -> Result<Option<MaskSpec>, Error> {
 	Ok(Some(spec))
 }
 
+fn effects(v: Option<Value>) -> Result<Vec<Effect>, Error> {
+	let items = match v {
+		None | Some(Value::Null) => return Ok(Vec::new()),
+		Some(Value::Arr(items)) => items,
+		Some(_) => return Err(invalid("layer: effects is not an array")),
+	};
+	if items.len() > MAX_EFFECTS {
+		return Err(limit("render_effects"));
+	}
+	items.into_iter().map(effect).collect()
+}
+
+fn effect(v: Value) -> Result<Effect, Error> {
+	let mut f = Fields::of(v, "effect")?;
+	let kind = f.string("kind")?;
+	let e = match kind.as_str() {
+		"motion_blur" => Effect::MotionBlur {
+			amount: f.num_or("amount", 0.5)?,
+			angle: f.num_or("angle", 0.0)?,
+		},
+		"glow" => Effect::Glow {
+			amount: f.num_or("amount", 0.5)?,
+			radius: f.num_or("radius", 12.0)?,
+			threshold: f.num_or("threshold", 0.6)?,
+		},
+		"vignette" => Effect::Vignette {
+			amount: f.num_or("amount", 0.5)?,
+			softness: f.num_or("softness", 0.5)?,
+		},
+		"grain" => Effect::Grain {
+			amount: f.num_or("amount", 0.3)?,
+			size: f.num_or("size", 1.0)?,
+			seed: f.opt_int("seed")?.unwrap_or(0),
+		},
+		"rgb_split" => Effect::RgbSplit {
+			amount: f.num_or("amount", 0.3)?,
+			angle: f.num_or("angle", 0.0)?,
+		},
+		other => {
+			return Err(invalid(format!(
+				"effect: kind {:?} is not a pixel effect",
+				truncate(other)
+			)));
+		}
+	};
+	f.finish()?;
+	Ok(e)
+}
+
+fn transition(v: Option<Value>) -> Result<Option<Transition>, Error> {
+	let Some(v) = v.filter(|v| !matches!(v, Value::Null)) else {
+		return Ok(None);
+	};
+	let mut f = Fields::of(v, "transition")?;
+	let kind = match f.string("kind")?.as_str() {
+		"whip" => TransitionKind::Whip,
+		"dip" => TransitionKind::Dip,
+		"wipe" => TransitionKind::Wipe,
+		other => {
+			return Err(invalid(format!(
+				"transition: kind {:?} is not whip, dip or wipe",
+				truncate(other)
+			)));
+		}
+	};
+	match f.string("edge")?.as_str() {
+		"in" | "out" => {}
+		other => {
+			return Err(invalid(format!(
+				"transition: edge {:?} is not in or out",
+				truncate(other)
+			)));
+		}
+	}
+	let p = f.int("p")?;
+	if !(0..=65536).contains(&p) {
+		return Err(invalid("transition: p is not a 16.16 progress"));
+	}
+	let direction = match f.take("direction") {
+		None | Some(Value::Null) => Direction::Left,
+		Some(Value::Str(s)) => match s.as_str() {
+			"left" => Direction::Left,
+			"right" => Direction::Right,
+			"up" => Direction::Up,
+			"down" => Direction::Down,
+			other => {
+				return Err(invalid(format!(
+					"transition: direction {:?} is not left, right, up or down",
+					truncate(other)
+				)));
+			}
+		},
+		Some(_) => return Err(invalid("transition: direction is not a string")),
+	};
+	let colour = match f.take("color") {
+		None | Some(Value::Null) => [0, 0, 0, 255],
+		Some(Value::Str(s)) => parse_colour(&s),
+		Some(_) => return Err(invalid("transition: color is not a string")),
+	};
+	f.finish()?;
+	Ok(Some(Transition {
+		kind,
+		p,
+		direction,
+		colour,
+	}))
+}
+
 fn id(s: String, what: &str) -> Result<String, Error> {
 	if s.is_empty() || s.len() > MAX_ID_BYTES || !s.is_ascii() {
 		return Err(invalid(format!(
@@ -282,9 +398,13 @@ pub fn decode(input: &[u8]) -> Result<RenderInput, Error> {
 	let mut plan = Fields::of(top.required("plan")?, "plan")?;
 	top.finish()?;
 
-	// Informational: nothing a pixel depends on.
-	for name in ["frame", "width", "height"] {
-		plan.opt_int(name)?;
+	let frame = FrameInfo {
+		frame: plan.opt_int("frame")?.unwrap_or(0),
+		width: plan.opt_int("width")?.unwrap_or(0),
+		height: plan.opt_int("height")?.unwrap_or(0),
+	};
+	if !(0..=i64::from(u32::MAX)).contains(&frame.frame) || frame.width < 0 || frame.height < 0 {
+		return Err(invalid("plan: frame, width or height is out of range"));
 	}
 	let background = match plan.take("background") {
 		None | Some(Value::Null) => "#000000".to_string(),
@@ -309,6 +429,7 @@ pub fn decode(input: &[u8]) -> Result<RenderInput, Error> {
 	Ok(RenderInput {
 		output,
 		background,
+		frame,
 		layers,
 	})
 }
@@ -423,6 +544,8 @@ fn decode_layer(v: Value) -> Result<LayerSpec, Error> {
 		mask: mask(f.take("mask"))?,
 		flip_x: flag(f.take("flip_x"), "flip_x")?,
 		flip_y: flag(f.take("flip_y"), "flip_y")?,
+		effects: effects(f.take("effects"))?,
+		transition: transition(f.take("transition"))?,
 		item,
 	};
 	f.finish()?;
@@ -540,6 +663,88 @@ mod tests {
 		let r = decode(with(r#""flip_y":true"#).as_bytes()).unwrap();
 		assert!(!r.layers[0].flip_x && r.layers[0].flip_y);
 		assert_eq!(reason(&with(r#""flip_x":1"#)), Reason::InvalidPlan);
+	}
+
+	#[test]
+	fn reads_the_effects_and_the_transition_of_a_layer() {
+		let with = |m: &str| GOOD.replace("\"blur\":0", &format!("\"blur\":0,{m}"));
+		let l = &decode(GOOD.as_bytes()).unwrap().layers[0];
+		assert!(l.effects.is_empty() && l.transition.is_none());
+		let r = decode(
+			with(
+				r##""effects":[{"kind":"motion_blur","amount":0.2,"angle":-30},{"kind":"grain","amount":0.5,"size":2,"seed":7},{"kind":"vignette"}],"transition":{"kind":"dip","edge":"out","p":40000,"color":"#ff8000"}"##,
+			)
+			.as_bytes(),
+		)
+		.unwrap();
+		assert_eq!(
+			r.layers[0].effects,
+			vec![
+				Effect::MotionBlur {
+					amount: 0.2,
+					angle: -30.0
+				},
+				Effect::Grain {
+					amount: 0.5,
+					size: 2.0,
+					seed: 7
+				},
+				Effect::Vignette {
+					amount: 0.5,
+					softness: 0.5
+				},
+			]
+		);
+		let t = r.layers[0].transition.unwrap();
+		assert_eq!(
+			(t.kind, t.p, t.colour),
+			(TransitionKind::Dip, 40000, [255, 128, 0, 255])
+		);
+		assert_eq!(t.direction, Direction::Left);
+		let r = decode(
+			with(r#""transition":{"kind":"wipe","edge":"in","p":1,"direction":"down"}"#).as_bytes(),
+		)
+		.unwrap();
+		assert_eq!(r.layers[0].transition.unwrap().direction, Direction::Down);
+		for bad in [
+			r#""effects":[{"kind":"shake"}]"#,
+			r#""effects":[{"kind":"glow","spin":1}]"#,
+			r#""effects":3"#,
+			r#""transition":{"kind":"fade","edge":"in","p":1}"#,
+			r#""transition":{"kind":"wipe","edge":"sideways","p":1}"#,
+			r#""transition":{"kind":"wipe","edge":"in","p":65537}"#,
+			r#""transition":{"kind":"wipe","edge":"in","p":-1}"#,
+			r#""transition":{"kind":"wipe","edge":"in","p":1,"direction":"north"}"#,
+			r#""transition":{"kind":"wipe","edge":"in"}"#,
+		] {
+			assert_eq!(reason(&with(bad)), Reason::InvalidPlan, "{bad}");
+		}
+		let seven = format!(
+			"\"effects\":[{}]",
+			[r#"{"kind":"vignette"}"#; MAX_EFFECTS + 1].join(",")
+		);
+		assert_eq!(reason(&with(&seven)), Reason::LimitExceeded);
+	}
+
+	#[test]
+	fn reads_the_frame_the_grain_and_the_whip_depend_on() {
+		let r = decode(GOOD.as_bytes()).unwrap();
+		assert_eq!(
+			r.frame,
+			FrameInfo {
+				frame: 120,
+				width: 1080,
+				height: 1920
+			}
+		);
+		assert_eq!(
+			reason(&GOOD.replace("\"frame\":120", "\"frame\":-1")),
+			Reason::InvalidPlan
+		);
+		assert_eq!(
+			reason(&GOOD.replace("\"width\":1080", "\"width\":-1")),
+			Reason::InvalidPlan
+		);
 	}
 
 	#[test]

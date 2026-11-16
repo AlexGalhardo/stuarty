@@ -11,8 +11,9 @@ use crate::blend::{BlendMode, mix_pixel};
 use crate::blur::blurred;
 use crate::chroma::{ChromaKeySpec, apply_chroma_key};
 use crate::colour::apply_matrix;
+use crate::effects::{Effect, EffectGeom, FrameInfo, Transition, TransitionKind, apply_effects};
 use crate::image::Image;
-use crate::mask::{MaskSpec, MaskState, scale};
+use crate::mask::{MaskSpec, MaskState, clamped_q, scale};
 use crate::math::{div255, mul, round_half_away, round_half_up, sincos, u8_of};
 use crate::resize::resize;
 
@@ -63,6 +64,12 @@ pub struct Layer<'a> {
 	/// Mirror the layer's own pixels across its vertical and horizontal axes (SDD-004 section 3.10).
 	pub flip_x: bool,
 	pub flip_y: bool,
+	/// The pixel effects, in order, after the filter, the blur and the flip (SDD-004 section 3.13).
+	pub effects: Vec<Effect>,
+	/// The whip, dip or wipe in progress (SDD-004 section 3.2).
+	pub transition: Option<Transition>,
+	/// The plan's frame number and the project's size, for the grain and the whip.
+	pub frame: FrameInfo,
 }
 
 /// Premultiplies a straight-alpha RGBA8 bitmap once.
@@ -215,7 +222,19 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 	if let Some(m) = &l.filter {
 		src = Cow::Owned(apply_matrix(&src, m));
 	}
-	let mask = l.mask.as_ref().map(|m| MaskState::new(m, &p, out_scale));
+	// The mask keeps the frame of the layer before the blur grows it; a wipe is a coverage of the same
+	// kind, multiplied with it (SDD-004 sections 3.2 and 3.9).
+	let wipe = l.transition.filter(|t| t.kind == TransitionKind::Wipe);
+	let mask = (l.mask.is_some() || wipe.is_some())
+		.then(|| MaskState::new(l.mask.as_ref(), wipe.as_ref(), &p, out_scale));
+	let pre = EffectGeom {
+		sw: src.w as i64,
+		sh: src.h as i64,
+		offx: 0,
+		offy: 0,
+		wq: clamped_q(p.w),
+		hq: clamped_q(p.h),
+	};
 	let mut p = p;
 	if l.blur > 0.0
 		&& let Some((img, grown)) = blurred(&src, &p, mul(l.blur, out_scale))
@@ -225,6 +244,18 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 	}
 	if l.flip_x || l.flip_y {
 		src = Cow::Owned(flipped(&src, l.flip_x, l.flip_y));
+	}
+	if let Some((img, grown)) = apply_effects(
+		&src,
+		&p,
+		pre,
+		&l.effects,
+		l.transition.as_ref(),
+		&l.frame,
+		out_scale,
+	) {
+		src = Cow::Owned(img);
+		p = grown;
 	}
 	Some(Prepared {
 		image: src,
