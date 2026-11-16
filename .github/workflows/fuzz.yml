@@ -1,20 +1,23 @@
 name: Fuzz
 
 # Fuzzing campaign of the native Go targets: weekly, and on demand with a
-# longer time. Crashers are uploaded as artifacts; commit them under
-# testdata/fuzz/<Target>/ as regression seeds together with the fix. Add a
-# line to the matrix when a package gets a Fuzz target (SDD-007 section 12
-# lists the ones planned).
+# longer time. Every target of SDD-007 section 12 has one ubuntu job that runs
+# for `fuzztime`; the four that SDD-002 and SDD-007 also want on Windows and
+# macOS have a second job per system that runs for `long_fuzztime`. Crashers
+# are uploaded as artifacts; commit them under testdata/fuzz/<Target>/ as
+# regression seeds together with the fix. Add a line to the matrix when a
+# package gets a Fuzz target. Run the campaign of TASK-0151 and TASK-0129 with
+#   gh workflow run fuzz.yml -f fuzztime=30m -f long_fuzztime=30m
 on:
   schedule:
     - cron: "17 3 * * 0" # Sundays 03:17 UTC
   workflow_dispatch:
     inputs:
       fuzztime:
-        description: Duration per target (go test -fuzztime)
+        description: Duration per target on ubuntu, all 14 targets (go test -fuzztime; 30m for the campaign)
         default: 30s
       long_fuzztime:
-        description: Duration per target of the three-system campaign (FuzzApplyBatch, FuzzSniffMedia, FuzzFFArgsCheck, FuzzFontHeader)
+        description: Duration per target on Windows and macOS (FuzzApplyBatch, FuzzSniffMedia, FuzzFFArgsCheck, FuzzFontHeader)
         default: 30m
 
 permissions:
@@ -28,7 +31,8 @@ jobs:
   fuzz:
     name: ${{ matrix.target }} (${{ matrix.pkg }})
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # 90 leaves room for a fuzztime of up to about 80 minutes plus the build.
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -41,6 +45,12 @@ jobs:
           - { pkg: ./service/untrusted, target: FuzzUntrustedClean }
           - { pkg: ./core/otio, target: FuzzImport }
           - { pkg: ./web/app/http, target: FuzzHostCheck }
+          - { pkg: ./core/command, target: FuzzApplyBatch }
+          - { pkg: ./core/command, target: FuzzApplyArgs }
+          - { pkg: ./core/timeline, target: FuzzDecode }
+          - { pkg: ./engine/ffmpeg, target: FuzzSniffMedia }
+          - { pkg: ./engine/ffmpeg, target: FuzzFFArgsCheck }
+          - { pkg: ./engine/renderhost, target: FuzzRenderInput }
     env:
       FUZZTIME: ${{ inputs.fuzztime || '30s' }}
     defaults:
@@ -74,16 +84,17 @@ jobs:
           path: ${{ steps.corpus.outputs.dir }}/
           if-no-files-found: ignore
 
-  # The campaign of P4-ENG-001 and P4-RND-002: 30 minutes per target on each operating system, with the
-  # whole registry and the whole hostile corpus. The job budget is the fuzz time plus the build.
+  # The campaign of P4-ENG-001 and P4-RND-002 on the two systems the ubuntu job above does not cover:
+  # 30 minutes per target, with the whole registry and the whole hostile corpus. The job budget is the
+  # fuzz time plus the build.
   fuzz-long:
     name: ${{ matrix.target }} (${{ matrix.os }}, long)
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [windows-latest, macos-latest]
         # target is a dimension, so every target runs on every system; include only adds its
         # package. An include entry with a key that is not a dimension would overwrite the one
         # before it and leave a single target.
@@ -110,12 +121,17 @@ jobs:
           PKG: ${{ matrix.pkg }}
           TARGET: ${{ matrix.target }}
         run: go test "$PKG" -run '^$' -fuzz "^${TARGET}\$" -fuzztime "$LONG_FUZZTIME"
+      - name: Locate crashers
+        id: corpus
+        if: failure()
+        env:
+          PKG: ${{ matrix.pkg }}
+          TARGET: ${{ matrix.target }}
+        run: echo "dir=${PKG#./}/testdata/fuzz/$TARGET" >> "$GITHUB_OUTPUT"
       - name: Upload crashers
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: crashers-${{ matrix.target }}-${{ matrix.os }}
-          path: |
-            core/command/testdata/fuzz/${{ matrix.target }}/
-            engine/ffmpeg/testdata/fuzz/${{ matrix.target }}/
+          path: ${{ steps.corpus.outputs.dir }}/
           if-no-files-found: ignore
