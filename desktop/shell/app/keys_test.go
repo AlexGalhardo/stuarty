@@ -4,7 +4,7 @@ import "testing"
 
 func TestWindowKeyBindings(t *testing.T) {
 	keys := windowKeyBindings(false)
-	for _, k := range []string{"F11", "F5", "ctrl+F5", "ctrl+=", "ctrl+-", "ctrl+0"} {
+	for _, k := range []string{"F11", "F5", "ctrl+F5", "ctrl+=", "ctrl+-", "ctrl+0", "ctrl+p"} {
 		if keys[k] == nil {
 			t.Errorf("missing binding %s", k)
 		}
