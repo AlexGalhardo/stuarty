@@ -1,0 +1,87 @@
+---
+title: "Connect a client"
+description: "Start the MCP server over standard input and output, or call it over HTTP at /mcp, and check that it answers."
+---
+
+## You will learn
+
+- the command that starts the server for a client
+- how to call it over HTTP, with the same credentials as the API
+- how to check that the connection works
+
+## The idea
+
+There are two ways to reach the same tools. The first is a process the client starts and talks to over standard input and output (stdio). The second is HTTP, at `POST /mcp` on the running server. Use stdio for an agent on your own machine, and HTTP for a client that can only make requests.
+
+## Over stdio
+
+```bash
+vukem-video mcp
+```
+
+This is the command a client runs. In a client's configuration it is a command and its arguments:
+
+```json
+{
+  "mcpServers": {
+    "vukem-video": { "command": "vukem-video", "args": ["mcp"] }
+  }
+}
+```
+
+When no other process owns your [workspace](/docs/workspace), `vukem-video mcp` becomes its owner for as long as it runs. When the editor server (`vukem-video serve`) is already running, it talks to that server instead, so the agent and the browser see the same project at once.
+
+The edits of the agent carry an actor, so the history shows who did what. By default it is `local:` plus the name the client gives itself. Name it yourself with `--actor`:
+
+```bash
+vukem-video mcp --actor claude-code
+```
+
+To use a server that runs elsewhere, set `VUKEM_VIDEO_URL` and `VUKEM_VIDEO_KEY`; the stdio server then talks to that server with the API key. See the [configuration variables](/docs/reference/configuration).
+
+## Over HTTP
+
+The server answers MCP at `POST /mcp`, on the same address as the API (`http://127.0.0.1:7878` by default). It is stateless: each request is one JSON-RPC message with a plain JSON answer, and there is no session header. `GET` and `DELETE` are refused with `405`.
+
+The credentials are the ones of the [API](/docs/api/overview): `Authorization: Bearer <secret>`, the local token in local mode or an API key in network mode. A call without them fails with `E_UNAUTHORIZED`. The request must accept both `application/json` and `text/event-stream`.
+
+```bash
+curl -X POST "http://127.0.0.1:7878/mcp" \
+  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}'
+```
+
+The answer lists the 16 tools, each with its input schema, its output schema and its annotations. To call one, send `tools/call`:
+
+```bash
+curl -X POST "http://127.0.0.1:7878/mcp" \
+  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "project_list",
+    "arguments": { "state": "active", "limit": 5 }
+  }
+}'
+```
+
+## Check that it works
+
+Ask the agent to list your projects. It should call [`project_list`](/docs/mcp/tools/project_list) and answer with the projects of your workspace, or with none. If the client shows no tools, run `vukem-video mcp` in a terminal: it must wait for input and print nothing on standard output. Logs go to standard error, never to standard output, because the protocol uses it.
+
+## Common mistakes
+
+- Printing to standard output in a wrapper script around `vukem-video mcp`: the protocol shares that stream, and extra text breaks the connection.
+- Calling `/mcp` over HTTP without the `Accept` header that names both types: the request is refused.
+- Starting a second `vukem-video mcp` or `serve` on the same workspace by hand: one process owns a workspace; the other fails with `E_WORKSPACE_LOCKED` or talks to the owner.
+
+## Next steps
+
+- [The tools](/docs/mcp/tools)
+- [Safety](/docs/agents/safety)

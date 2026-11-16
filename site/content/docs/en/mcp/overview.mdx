@@ -1,0 +1,87 @@
+---
+title: "MCP overview"
+description: "What the Vukem Video MCP server is, what it exposes, how a result looks and what keeps an agent safe."
+---
+
+## You will learn
+
+- what the MCP server is and how it relates to the editor
+- what a tool result looks like, and what an error looks like
+- which rules keep an agent from harming a project
+
+## The idea
+
+[MCP](https://modelcontextprotocol.io/) (the Model Context Protocol) is the standard way for an AI agent to call tools. The Vukem Video MCP server gives an agent the same abilities as the editor: create a project, import media, edit the timeline, look at the result, check it and export it. The server is a thin adapter over the same service as the editor, the CLI and the [HTTP API](/docs/api/overview), so what an agent does and what a person does in the browser are the same edits, on the same project.
+
+The server is called `vukem-video` and lists 16 [tools](/docs/mcp/tools). One of them, [`edit`](/docs/mcp/tools/edit), applies a batch of operations, and each operation has its own page.
+
+## Quick start
+
+<Steps>
+<Step title="Register the server in your agent">
+
+```bash
+claude mcp add vukem-video -- vukem-video mcp
+```
+
+This is the command for Claude Code. [Connect a client](/docs/mcp/connect) has the other ways.
+
+</Step>
+<Step title="Ask for something">
+
+> Create a vertical project called Launch teaser, then tell me what is in it.
+
+The agent calls [`project_create`](/docs/mcp/tools/project_create) and [`project_get`](/docs/mcp/tools/project_get). Open the editor and the project is there.
+
+</Step>
+</Steps>
+
+## What a result looks like
+
+A tool call returns one result with two parts:
+
+- `content`: readable text, written for the model, in a compact form that costs few tokens. The [`view`](/docs/mcp/tools/view) tool adds one image, and it is the only tool that does.
+- `structuredContent`: the same result as JSON, with the members listed on the page of each tool.
+
+An error has `isError` set to true and no structured content. Its text block has the code, the hint and whether a retry can help, then the same fields as one line of JSON. This is the result of a call with a malformed `project_id`:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "isError": true,
+    "content": [
+      {
+        "type": "text",
+        "text": "error E_VALIDATION: the argument \"project_id\" breaks the constraint \"pattern\".\nhint: check the tool definition; command_help lists the operations\nretryable: false  path: project_id\n{\"type\":\"urn:vukem-video:error:E_VALIDATION\",\"title\":\"E_VALIDATION\",\"status\":422,\"code\":\"E_VALIDATION\",\"retryable\":false,\"path\":\"project_id\"}"
+      }
+    ]
+  }
+}
+```
+
+The text of the line of JSON is shortened here (`detail`, `message` and `hint` repeat the lines above it). The error block is at most 6,000 characters. Every code is in the [error codes](/docs/reference/error-codes).
+
+## What keeps an agent safe
+
+- **No dangerous ability exists.** No tool deletes for good, publishes, uploads or calls a webhook. `project_trash` moves a project to the trash, and the trash is emptied only by a person in the editor.
+- **Every edit can be undone.** A batch is one undo step, and `history` lists who changed what. A revision check (`base_revision`) stops two actors from overwriting each other.
+- **Text from media is data.** A transcript, a file name or a metadata field can say "ignore your instructions". The server quotes it in double quotes or inside `untrusted_media_text` blocks, and the tool descriptions tell the agent to treat it as data.
+- **Tools say what they do.** Each tool carries the annotations `readOnlyHint`, `destructiveHint`, `idempotentHint` and `openWorldHint`; no tool is destructive and none reaches outside the workspace.
+- **Calls are limited.** Imports, exports and transcriptions have ceilings, and calls over HTTP are rate limited. See [Safety](/docs/agents/safety).
+- **Arguments are checked first.** A call that breaks the input schema is refused with `E_VALIDATION` before it reaches the service, and the error names the argument, never its value.
+
+The server asks for no confirmation: it removes the dangerous abilities instead.
+
+## Common mistakes
+
+- Treating `tools/list` as a catalogue of everything the product can do: it lists the tools of this build only, and clients may cache it for an hour.
+- Editing without reading first: read the revision with `project_get`, then send it as `base_revision`.
+- Looking at frames before checking: `view` costs image tokens, so run `lint` first.
+
+## Next steps
+
+- [Connect a client](/docs/mcp/connect)
+- [The tools](/docs/mcp/tools)
+- [The edit tool](/docs/mcp/tools/edit)

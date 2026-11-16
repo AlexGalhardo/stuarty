@@ -11,7 +11,7 @@ description: "How to call the HTTP API of Vukem Video: the address, the token or
 
 ## The idea
 
-The HTTP API is the editor's own interface. The browser editor, the CLI and the [MCP server](/docs/agents/mcp) call the same service, so a request here does exactly what the same action does in the editor. Every operation has a page in this section, grouped by resource in the sidebar, with its parameters, its body, its responses and a request you can copy in eight languages.
+The HTTP API is the editor's own interface. The browser editor, the CLI and the [MCP server](/docs/mcp/overview) call the same service, so a request here does exactly what the same action does in the editor. Every operation has a page in this section, grouped by resource in the sidebar, with its parameters, its body, its responses and a request you can copy in eight languages.
 
 The pages are generated from the OpenAPI document that the server itself serves, so a route, a field or a status never drifts from the program. The document is at `GET /openapi.json` while `vukem-video serve` runs.
 
@@ -112,5 +112,5 @@ The samples read the secret from the environment variable `VUKEM_VIDEO_KEY` and 
 
 - [All endpoints](/docs/api/endpoints)
 - [The schemas](/docs/api/schemas)
-- [The MCP server](/docs/agents/mcp), for agents
+- [The MCP server](/docs/mcp/overview), for agents
 - [Error codes](/docs/reference/error-codes)

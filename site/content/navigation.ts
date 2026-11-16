@@ -30,12 +30,29 @@ export type NavCategory = {
 	pages: string[];
 };
 
-type ReferenceNav = { api?: { tag: string; pages: string[] }[] };
+type ReferenceNav = { api?: { tag: string; pages: string[] }[]; mcp?: { tools: string[]; operations: string[] } };
 
 /** The order of the API reference, written by scripts/generate-reference.ts (generated/reference-nav.json). */
 function referenceNav(): ReferenceNav {
 	const file = path.join(process.cwd(), "generated", "reference-nav.json");
 	return fs.existsSync(file) ? (JSON.parse(fs.readFileSync(file, "utf8")) as ReferenceNav) : {};
+}
+
+/** The groups of the MCP reference: the server, the tools, and the operations of the edit tool. */
+function mcpCategories(): NavCategory[] {
+	const nav = referenceNav().mcp;
+	return [
+		{ dir: "mcp", prefix: "mcp", title: "MCP server", section: "mcp", pages: ["overview", "connect", "tools"] },
+		{ dir: "mcp/tools", prefix: "mcp/tools", title: "Tools", label: "MCP tools", section: "mcp", pages: nav?.tools ?? [] },
+		{
+			dir: "mcp/tools/edit",
+			prefix: "mcp/tools/edit",
+			title: "Operations of edit",
+			label: "MCP: edit operations",
+			section: "mcp",
+			pages: nav?.operations ?? [],
+		},
+	];
 }
 
 /** The groups of the API reference: its introduction, then one group per resource with a page per operation. */
@@ -174,4 +191,5 @@ export const navigation: NavCategory[] = [
 		pages: ["guide", "setup", "repository-layout", "commits-and-prs", "writing-docs", "renderer", "releases"],
 	},
 	...apiCategories(),
+	...mcpCategories(),
 ];

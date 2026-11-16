@@ -4,13 +4,15 @@
 // binary (go run ./internal/tools/clidoc -> generated/cli.json) and the configuration table of SDD-000
 // section 10. Run from site/: `npm run reference`. `npm run reference:check` fails on any difference.
 // The API reference (content/generated/api/) comes from site/generated/openapi.json, which `UPDATE_OPENAPI=1 go test
-// ./web/contract/ -run OpenAPI` writes from the running API. It also writes generated/reference-nav.json, the order
-// of the sidebar groups of the API reference. Node strips the types.
+// ./web/contract/ -run OpenAPI` writes from the running API. The MCP reference (content/generated/mcp/) comes from
+// web/app/mcp/definitions/ and from the command registry. Both write generated/reference-nav.json, the order of
+// their sidebar groups. Node strips the types.
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { apiPages, type OpenApi } from "./api-reference.ts";
 import { topicPages } from "./glossary-pages.ts";
+import { mcpPages } from "./mcp-reference.ts";
 import { code, esc, page, sentence, table } from "./reference-md.ts";
 
 export { esc };
@@ -21,6 +23,7 @@ const outDir = path.join(siteDir, "content", "generated", "reference");
 const agentsDir = path.join(siteDir, "content", "generated", "agents");
 const glossaryDir = path.join(siteDir, "content", "generated", "glossary");
 const apiDir = path.join(siteDir, "content", "generated", "api");
+const mcpDir = path.join(siteDir, "content", "generated", "mcp");
 
 type Json = Record<string, unknown>;
 
@@ -367,7 +370,12 @@ function main() {
 
 	const api = apiPages(readJson<OpenApi>("site/generated/openapi.json"), root, new Map(commands.map((c) => [c.name, c.example])));
 	for (const [file, text] of api.files) write(file, text, written, apiDir);
-	fs.writeFileSync(path.join(siteDir, "generated", "reference-nav.json"), JSON.stringify({ api: api.nav }, null, 2) + "\n");
+	const mcp = mcpPages(root, commands);
+	for (const [file, text] of mcp.files) write(file, text, written, mcpDir);
+	fs.writeFileSync(
+		path.join(siteDir, "generated", "reference-nav.json"),
+		JSON.stringify({ api: api.nav, mcp: { tools: mcp.tools, operations: mcp.operations } }, null, 2) + "\n",
+	);
 	for (const p of topicPages()) write(p.file, p.text, written, glossaryDir);
 
 	// A command that left the registry leaves its page too.
@@ -375,7 +383,7 @@ function main() {
 		fs.existsSync(dir)
 			? fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]))
 			: [];
-	for (const dir of [outDir, agentsDir, glossaryDir, apiDir]) for (const file of walk(dir)) if (!written.has(path.resolve(file))) fs.rmSync(file);
+	for (const dir of [outDir, agentsDir, glossaryDir, apiDir, mcpDir]) for (const file of walk(dir)) if (!written.has(path.resolve(file))) fs.rmSync(file);
 
 	console.log(`reference: ${written.size} pages`);
 }

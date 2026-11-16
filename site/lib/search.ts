@@ -15,6 +15,12 @@ export type SearchEntry = {
 
 const MAX_TEXT = 700;
 
+/** Cuts a text to MAX_TEXT characters at a word boundary, so a URL is never left half written in the index. */
+function clip(text: string): string {
+	if (text.length <= MAX_TEXT) return text;
+	return text.slice(0, MAX_TEXT).replace(/\s+\S*$/, "");
+}
+
 /** One entry per page plus one per h2/h3 section. */
 export function buildSearchIndex(): SearchEntry[] {
 	const entries: SearchEntry[] = [];
@@ -28,7 +34,7 @@ export function buildSearchIndex(): SearchEntry[] {
 		let inFence = false;
 
 		const flush = () => {
-			const text = markdownToPlain(buf.join("\n")).slice(0, MAX_TEXT);
+			const text = clip(markdownToPlain(buf.join("\n")));
 			if (heading) {
 				entries.push({ title: doc.title, heading, href: `${doc.href}#${id}`, category: doc.category, text });
 			} else {

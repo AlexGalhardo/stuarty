@@ -128,7 +128,7 @@ const refName = (ref: string): string => ref.replace("#/components/schemas/", ""
 const anchor = (name: string): string => new GithubSlugger().slug(name);
 
 /** The command an `args.<name>` schema describes: its page is the operation page of the edit tool. */
-const commandHref = (name: string): string => `/docs/reference/commands/${name.replace(/^args\./, "")}`;
+const commandHref = (name: string): string => `/docs/mcp/tools/edit/${name.replace(/^args\./, "")}`;
 
 /** A schema as the text of a table cell, with links to the schema page and to the edit operations. */
 export function apiType(s: Schema | undefined): string {
@@ -409,7 +409,7 @@ function schemaPage(doc: OpenApi): string {
 		"Schemas",
 		"The objects the HTTP API takes and returns, from its OpenAPI document.",
 		[
-			"The types named in the tables of the operations. The arguments of each editing command are on the pages of the [command catalogue](/docs/reference/commands), where the `args` of an operation of a batch are described.",
+			"The types named in the tables of the operations. The arguments of each editing command are on the pages of the [edit tool](/docs/mcp/tools/edit), where the `args` of an operation of a batch are described.",
 			...sections,
 		].join("\n\n"),
 	);
