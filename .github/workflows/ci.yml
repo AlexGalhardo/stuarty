@@ -626,6 +626,51 @@ jobs:
       - run: bun install --frozen-lockfile --cwd web
       - run: go run ./internal/tools/notices -check
 
+  # SDD-007 section 12 and SDD-009 job 11: every TestSecurity_ test on the three
+  # operating systems, on top of the full suite of the Test job. No race detector,
+  # as in the export shards (the race scope is core, service and web/app, task
+  # test:race; golang/go#81238 also crashes the Windows runtime under it). A
+  # security test skipped without its platform in the name would pass silently, so
+  # the log is checked. macOS has only Homebrew's GPL FFmpeg (risk R6): the tests
+  # that need the pinned build skip there, so macOS lists its skips in the summary
+  # instead of failing on them.
+  security:
+    name: Security tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Install FFmpeg
+        shell: bash
+        run: |
+          bin_dir="$(bash scripts/install-ffmpeg.sh)"
+          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+      - name: go test -run TestSecurity_
+        shell: bash
+        run: go test -count=1 -v -timeout=17m -run TestSecurity_ ./... | tee security.log
+      - name: Skip check
+        shell: bash
+        env:
+          RUNNER_OS_NAME: ${{ runner.os }}
+        run: |
+          skipped="$(grep -E -- "--- SKIP: TestSecurity_" security.log || true)"
+          if [ "$RUNNER_OS_NAME" = "macOS" ]; then
+            { echo '### Skipped security tests (macOS, risk R6)'; echo '```'; echo "${skipped:-none}"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          elif echo "$skipped" | grep -vE "^$|TestSecurity_[A-Za-z0-9_]*_(Linux|Windows|Darwin)"; then
+            echo "::error::a security test was skipped without a platform marker"
+            exit 1
+          fi
+
   # SDD-007 section 12, SDD-009 job 12: every threat of the table has a test that
   # exists, every TestSecurity_T.. test is named by a row, and every operation of
   # service.Service is in the scope matrix.
