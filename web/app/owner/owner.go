@@ -247,7 +247,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	var publish func(service.Event)
 
 	if !cfg.Inline {
-		o.Events = events.New(st, events.Options{Log: cfg.Log})
+		o.Events = events.New(st, events.Options{Log: cfg.Log, RedactPaths: o.mode == config.ModeNetwork})
 		publish = o.Events.Publish
 	}
 

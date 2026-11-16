@@ -447,6 +447,79 @@ func TestEventsSnapshotAndProjectUpdated(t *testing.T) {
 	}
 }
 
+// In network mode a job event, live or in the snapshot, carries no server path;
+// in local mode the editor still gets it.
+func TestEventsInNetworkModeCarryNoExportPath(t *testing.T) {
+	t.Parallel()
+
+	const serverPath = "/srv/ws/exports/p/j.mp4"
+
+	for _, tc := range []struct {
+		name   string
+		redact bool
+	}{{"network", true}, {"local", false}} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			h := newHarnessWith(t, events.Options{RedactPaths: tc.redact})
+			id := h.newProject("redact")
+			path := "/api/v1/projects/" + id + "/events"
+
+			now := time.Now().UnixMilli()
+			row := service.JobRow{
+				ID: "job_0000000002", Kind: "export", ProjectID: &id, Actor: "local:test", State: service.JobQueued,
+				Input: json.RawMessage(`{}`), CreatedMs: now, UpdatedMs: now,
+			}
+			result := json.RawMessage(`{"export":{"path":"` + serverPath + `","download_url":"/x"}}`)
+
+			if err := h.store.Write(context.Background(), func(ctx context.Context, tx service.Tx) error {
+				return tx.Jobs().CreateLimited(ctx, row, nil)
+			}); err != nil {
+				t.Fatal(err)
+			}
+
+			ctx := context.Background()
+			if ok, err := h.store.Jobs().Claim(ctx, row.ID, now); err != nil || !ok {
+				t.Fatalf("claim: %v %v", ok, err)
+			}
+
+			ok, err := h.store.Jobs().Finish(ctx, row.ID, service.JobSucceeded, result, nil, now)
+			if err != nil || !ok {
+				t.Fatalf("finish: %v %v", ok, err)
+			}
+
+			c := h.stream(path, nil)
+
+			check := func(what string, data string) {
+				t.Helper()
+
+				if !strings.Contains(data, "download_url") || strings.Contains(data, serverPath) == tc.redact {
+					t.Errorf("%s (redact=%v) = %s", what, tc.redact, data)
+				}
+			}
+
+			ev, ok := c.next(5 * time.Second)
+			if !ok || ev.event != "job.updated" {
+				t.Fatalf("snapshot = %+v", ev)
+			}
+
+			check("snapshot", ev.data)
+
+			h.events.Publish(service.Event{
+				Type: "job.updated", Kind: service.JobExport, ProjectID: id, JobID: row.ID, State: service.JobSucceeded,
+				Result: &service.JobResult{Export: &service.ExportResult{Path: serverPath, DownloadURL: "/x"}},
+			})
+
+			ev, ok = c.next(5 * time.Second)
+			if !ok || ev.event != "job.updated" {
+				t.Fatalf("live = %+v", ev)
+			}
+
+			check("live", ev.data)
+		})
+	}
+}
+
 // SDD-006 check 5: from the return of the commit to the receipt of the event on
 // a loopback client, p95 at most 20 ms over 1,000 commits.
 func TestEventsLatencyFromCommitToClient(t *testing.T) {
