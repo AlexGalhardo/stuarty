@@ -29,6 +29,10 @@ const NODE_GROWTH = 1.25;
 const NODE_SLACK = 200;
 const LISTENER_GROWTH = 1.25;
 const LISTENER_SLACK = 50;
+// The VideoFrames the WebCodecs preview may hold open at once (SDD-012 section
+// 11.2 item 8): the cache of 12, 4 decoded ahead in the worker and one in transit,
+// for the one video asset of the project.
+const OPEN_FRAMES_BOUND = 12 + 4 + 1;
 
 test.use({
 	launchOptions: {
@@ -330,6 +334,18 @@ test.describe("soak-5min", () => {
 		);
 		expect(last.documents, "documents").toBeLessThanOrEqual(
 			first.documents + 1,
+		);
+		// A leak of VideoFrames would grow without bound over ten minutes of seeks
+		// and plays (P5-UI-002); the preview counts the most it held open.
+		const canvas = page
+			.getByRole("main", { name: "Preview" })
+			.locator("canvas");
+		const peakFrames = Number(await canvas.getAttribute("data-peak-frames"));
+		console.log(
+			`soak: peak open VideoFrames ${peakFrames} (limit ${OPEN_FRAMES_BOUND})`,
+		);
+		expect(peakFrames, "open VideoFrames").toBeLessThanOrEqual(
+			OPEN_FRAMES_BOUND,
 		);
 	});
 });
