@@ -25,8 +25,8 @@ func TestForKnownAndUnknownPlatforms(t *testing.T) {
 		}
 	}
 
-	if For("darwin", "arm64") != nil {
-		t.Error("darwin bundles no FFmpeg, so it has no pin")
+	if For("plan9", "amd64") != nil {
+		t.Error("a platform with no FFmpeg build has no pin")
 	}
 
 	For("linux", "amd64")["ffmpeg"] = "changed"

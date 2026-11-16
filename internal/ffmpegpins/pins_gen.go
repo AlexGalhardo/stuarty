@@ -2,7 +2,7 @@
 
 package ffmpegpins
 
-// Release is the FFMPEG_RELEASE_TAG the digests belong to.
+// Release is the release tag of the pinned FFmpeg (FFMPEG_RELEASE_TAG, or FFMPEG_OWN_TAG for the own build) the digests belong to.
 const Release = "autobuild-2026-10-31-12-59"
 
 // table maps "goos/goarch" to the SHA-256 of the pinned ffmpeg and ffprobe binaries.

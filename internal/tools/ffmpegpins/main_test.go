@@ -100,3 +100,43 @@ func TestCheckFlagDetectsADriftedFile(t *testing.T) {
 		t.Fatalf("check after the env changed exited %d", code)
 	}
 }
+
+// FFMPEG_SOURCE=own selects the own build block: its tag and its digests, darwin included, and none of the BtbN ones.
+func TestGenerateFollowsTheSourceOfThePin(t *testing.T) {
+	t.Parallel()
+
+	own := sampleEnv + `FFMPEG_SOURCE="own"
+FFMPEG_OWN_TAG="ffmpeg-9.0.2-1"
+FFMPEG_OWN_BIN_SHA256_LINUX_AMD64="5555555555555555555555555555555555555555555555555555555555555555"
+FFPROBE_OWN_BIN_SHA256_LINUX_AMD64="6666666666666666666666666666666666666666666666666666666666666666"
+FFMPEG_OWN_BIN_SHA256_DARWIN_ARM64="7777777777777777777777777777777777777777777777777777777777777777"
+FFPROBE_OWN_BIN_SHA256_DARWIN_ARM64="8888888888888888888888888888888888888888888888888888888888888888"
+`
+
+	got, err := generate([]byte(own))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, want := range []string{`Release = "ffmpeg-9.0.2-1"`, `"darwin/arm64"`, strings.Repeat("5", 64), strings.Repeat("8", 64)} {
+		if !strings.Contains(string(got), want) {
+			t.Errorf("own pins lack %s", want)
+		}
+	}
+
+	for _, leaked := range []string{"autobuild-x", strings.Repeat("1", 64), `"windows/amd64"`} {
+		if strings.Contains(string(got), leaked) {
+			t.Errorf("a BtbN value leaked into the own pins: %s", leaked)
+		}
+	}
+
+	for name, in := range map[string]string{
+		"own without a tag":   strings.Replace(own, "FFMPEG_OWN_TAG", "OTHER", 1),
+		"own without digests": sampleEnv + "FFMPEG_SOURCE=\"own\"\nFFMPEG_OWN_TAG=\"t\"\n",
+		"unknown source":      strings.Replace(own, `FFMPEG_SOURCE="own"`, `FFMPEG_SOURCE="x"`, 1),
+	} {
+		if _, err := generate([]byte(in)); err == nil {
+			t.Errorf("%s: accepted", name)
+		}
+	}
+}
