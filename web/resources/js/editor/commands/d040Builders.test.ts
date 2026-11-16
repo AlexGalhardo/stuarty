@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
+	constantSpeedOperations,
 	defaultEffect,
 	EFFECT_KINDS,
 	EFFECT_PARAMS,
@@ -50,6 +51,15 @@ describe("the builders of the D-040 commands", () => {
 			true,
 		);
 		expect(ops[0]?.args).toMatchObject({ ripple: "track" });
+	});
+
+	test("removing a curve sends the stored mean as a fraction", () => {
+		expect(
+			constantSpeedOperations("itm_a", { num: 7, den: 3 })[0]?.args,
+		).toEqual({
+			item_id: "itm_a",
+			speed: { num: 7, den: 3 },
+		});
 	});
 
 	test("reverse is sent alone", () => {

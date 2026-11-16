@@ -1,7 +1,7 @@
 import { type ReactNode, useState } from "react";
 
 import { useT } from "@/lib/i18n";
-import { speedOperations } from "../../commands/builders";
+import { reverseOperations, speedOperations } from "../../commands/builders";
 import { speedText } from "../../commands/units";
 import { useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
@@ -9,10 +9,12 @@ import NumberField from "../fields/NumberField";
 import ToggleField from "../fields/ToggleField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
+import SpeedCurve from "./SpeedCurve";
 
 // The Speed section of SDD-012 section 12.1, for a clip only: the speed with an
-// `x` suffix and the choice to move the later items of the track with it. The
-// toggle is a choice for the next change, not a command of its own.
+// `x` suffix and the choice to move the later items of the track with it, the
+// Reverse toggle (`clip.set_speed` with `reverse`) and the speed curve. The
+// ripple toggle is a choice for the next change, not a command of its own.
 export default function SpeedSection({
 	itemId,
 }: {
@@ -22,11 +24,9 @@ export default function SpeedSection({
 	const canEdit = useCanEdit();
 	const send = useFieldCommit();
 	const [ripple, setRipple] = useState(false);
-	const speed = useDocumentState((s) => s.document?.items[itemId]?.speed);
-	const found = useDocumentState(
-		(s) => s.document?.items[itemId] !== undefined,
-	);
-	if (!found) return null;
+	const item = useDocumentState((s) => s.document?.items[itemId]);
+	if (item === undefined) return null;
+	const speed = item.speed;
 	return (
 		<Section title={t("ui.editor.clip.speed_title")}>
 			<NumberField
@@ -47,6 +47,18 @@ export default function SpeedSection({
 					setRipple(next);
 					return { ok: true };
 				}}
+			/>
+			<ToggleField
+				label={t("ui.editor.clip.reverse")}
+				stored={item.reverse === true}
+				disabled={!canEdit}
+				commit={(next) => send(reverseOperations(itemId, next))}
+			/>
+			<SpeedCurve
+				itemId={itemId}
+				curve={item.speed_curve}
+				speed={speed}
+				ripple={ripple}
 			/>
 		</Section>
 	);
