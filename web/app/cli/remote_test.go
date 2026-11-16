@@ -80,6 +80,13 @@ func startOwner(tb testing.TB) workspace.Dir {
 // over HTTP through service/remote, the actor travels in the client header, and
 // nothing is printed about running in process.
 func TestClientModeAgainstARunningOwner(t *testing.T) {
+	// workspace.Open probes the owner with a 500 ms timeout (workspace.ProbeTimeout); under the
+	// slowdown of coverage instrumentation on a loaded machine the probe can miss and the command
+	// falls back to running in process, which is correct behaviour but not what this test checks.
+	if testing.CoverMode() != "" {
+		t.Skip("the owner probe is a wall-clock deadline; coverage instrumentation can miss it")
+	}
+
 	dir := startOwner(t)
 
 	home := func(k string) string {

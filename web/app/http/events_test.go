@@ -598,7 +598,7 @@ func TestEventsLatencyFromCommitToClient(t *testing.T) {
 
 	// The budget of SDD-006 check 5 is measured without the race detector, which
 	// slows every goroutine switch; under it the numbers are only logged.
-	if !raceEnabled && p95 > 20*time.Millisecond {
+	if !raceEnabled && testing.CoverMode() == "" && p95 > 20*time.Millisecond {
 		t.Errorf("p95 = %v, want at most 20ms", p95)
 	}
 }

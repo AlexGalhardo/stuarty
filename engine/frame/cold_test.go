@@ -158,11 +158,11 @@ func BenchmarkViewFrameCold(b *testing.B) {
 }
 
 // A cold frame at the editor width stays under the 350 ms of SDD-004 section 13 item 6 at the 95th
-// percentile: the budget of NFR-004 (500 ms) less the 150 ms delay. The race detector slows every step, so
-// the gate is for normal builds.
+// percentile: the budget of NFR-004 (500 ms) less the 150 ms delay. The race detector and coverage
+// instrumentation slow every step, so the gate is for normal builds.
 func TestViewFrameColdP95(t *testing.T) {
-	if raceEnabled {
-		t.Skip("the race detector multiplies the time of every step")
+	if raceEnabled || testing.CoverMode() != "" {
+		t.Skip("the race detector and coverage instrumentation slow every step")
 	}
 
 	skipIfBusy(t)

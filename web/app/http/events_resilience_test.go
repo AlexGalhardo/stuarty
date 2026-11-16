@@ -129,9 +129,9 @@ func TestEventsSlowReaderIsDropped(t *testing.T) {
 	t.Logf("subscriber removed %v after the last commit", time.Since(dropped))
 
 	// Writes stay within 20% of the baseline (plus 5 ms of timer noise). The
-	// race detector distorts both runs unevenly, so the timing holds only for a
-	// normal build, which CI also runs; the drop itself is asserted above.
-	if b, d := p95(base), p95(during); !raceEnabled && d > b+b/5+5*time.Millisecond {
+	// race detector and coverage instrumentation distort both runs unevenly, so the
+	// timing holds only for a normal build, which CI also runs; the drop itself is asserted above.
+	if b, d := p95(base), p95(during); !raceEnabled && testing.CoverMode() == "" && d > b+b/5+5*time.Millisecond {
 		t.Errorf("commit p95 during the stall = %v, baseline %v", d, b)
 	}
 

@@ -190,8 +190,8 @@ func BenchmarkViewSheet9Scale(b *testing.B) {
 // width at the 95th percentile (NFR-004) and within 2 s at the agent width (NFR-023), and the image token
 // estimate of an agent frame at most 800 and of a sheet at most 1,600 (NFR-022).
 func TestScaleProjectViewGates(t *testing.T) {
-	if raceEnabled {
-		t.Skip("the race detector multiplies the time of every step")
+	if raceEnabled || testing.CoverMode() != "" {
+		t.Skip("the race detector and coverage instrumentation slow every step")
 	}
 
 	doc := scaleDoc(t)
