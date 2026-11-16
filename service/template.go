@@ -102,6 +102,8 @@ func (s *svc) TemplateSave(ctx context.Context, req TemplateSaveRequest) (*Templ
 	res.Text = "template " + row.ID + " saved: " + templateLine(&res.Template)
 
 	if req.DryRun {
+		res.Text = "template " + row.ID + " would be saved: " + templateLine(&res.Template)
+
 		return res, nil
 	}
 
@@ -499,7 +501,7 @@ func (s *svc) TemplateInstantiate(
 	res.Findings = lint.Lint(final, s.lintEnv, lint.Fast)
 
 	if req.DryRun {
-		res.Text = instantiateText(tpl.ID, res)
+		res.Text = instantiateText(tpl.ID, res, true)
 
 		return res, nil
 	}
@@ -518,13 +520,17 @@ func (s *svc) TemplateInstantiate(
 		res.Revision = 1
 	}
 
-	res.Text = instantiateText(tpl.ID, res)
+	res.Text = instantiateText(tpl.ID, res, false)
 
 	return res, nil
 }
 
-func instantiateText(template string, r *TemplateInstantiateResult) string {
+func instantiateText(template string, r *TemplateInstantiateResult, dryRun bool) string {
 	text := fmt.Sprintf("project %s made from %s at r%d", r.ProjectID, template, r.Revision)
+	if dryRun {
+		text = fmt.Sprintf("project %s would be made from %s", r.ProjectID, template)
+	}
+
 	if len(r.Unfilled) > 0 {
 		text += "; unfilled: " + strings.Join(r.Unfilled, ", ")
 	}

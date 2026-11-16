@@ -450,3 +450,13 @@ func TestTemplateDescriptionLimit(t *testing.T) {
 		t.Errorf("a 500-character description: %v", err)
 	}
 }
+
+func TestTemplateDryRunTextSaysWouldNotDone(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.exportable()
+
+	saved, err := m.svc.TemplateSave(m.as(ui), service.TemplateSaveRequest{ProjectID: project, Name: "t", DryRun: true})
+	if err != nil || !strings.Contains(saved.Text, "would be saved") {
+		t.Fatalf("dry-run save = %+v, %v", saved, err)
+	}
+}
