@@ -129,7 +129,7 @@ func noWordInRange(it *timeline.Item) *Error {
 }
 
 type captionFromTranscriptArgs struct {
-	ClipItemID string         `json:"clip_item_id"        desc:"A clip of a video asset with audio."`
+	ClipItemID string         `json:"clip_item_id"        desc:"A clip of a video asset with audio, or an audio item."`
 	TrackID    string         `json:"track_id"            desc:"A visual track that receives the captions."`
 	MaxWords   *int           `json:"max_words,omitempty" desc:"Words per caption, default 5."                                                   min:"1" max:"60"`
 	MaxChars   *int           `json:"max_chars,omitempty" desc:"Characters per caption, default 28."                                             min:"1" max:"500"`
@@ -202,9 +202,9 @@ func applyCaptionFromTranscript(c *Context, a *captionFromTranscriptArgs) error 
 	if err != nil {
 		return err
 	}
-	if err := c.speechClip(
+	if err := c.speechSource(
 		&clip,
-		"captions follow the speech of a clip.",
+		"captions follow the speech of a clip or an audio item.",
 		"there is no speech to caption.",
 	); err != nil {
 		return err.WithPath("args.clip_item_id")
@@ -267,7 +267,7 @@ func applyCaptionFromTranscript(c *Context, a *captionFromTranscriptArgs) error 
 }
 
 type captionRetimeArgs struct {
-	ClipItemID string         `json:"clip_item_id"       desc:"A clip of a video asset with audio."`
+	ClipItemID string         `json:"clip_item_id"       desc:"A clip of a video asset with audio, or an audio item."`
 	Resolved   *ResolvedWords `json:"resolved,omitempty" desc:"Filled by the service from the transcript of the asset; never sent by a caller."`
 }
 
@@ -301,7 +301,7 @@ func applyCaptionRetime(c *Context, a *captionRetimeArgs) error {
 	if err != nil {
 		return err.WithPath("args.clip_item_id")
 	}
-	if err := c.speechClip(&clip, "captions follow the speech of a clip.",
+	if err := c.speechSource(&clip, "captions follow the speech of a clip or an audio item.",
 		"there is no transcript to follow."); err != nil {
 		return err.WithPath("args.clip_item_id")
 	}

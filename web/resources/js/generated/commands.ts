@@ -318,7 +318,7 @@ export interface CaptionEditWordArgs {
 
 export interface CaptionFromTranscriptArgs {
   /**
-   * A clip of a video asset with audio.
+   * A clip of a video asset with audio, or an audio item.
    */
   clip_item_id: string;
   /**
@@ -369,7 +369,7 @@ export interface CaptionMergeArgs {
 
 export interface CaptionRetimeFromClipArgs {
   /**
-   * A clip of a video asset with audio.
+   * A clip of a video asset with audio, or an audio item.
    */
   clip_item_id: string;
   /**

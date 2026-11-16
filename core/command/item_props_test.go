@@ -276,3 +276,20 @@ func TestCaptionSetWordsFromText(t *testing.T) {
 		t.Error("words and text together were accepted")
 	}
 }
+
+// A voice-over on an audio track can be captioned from its transcript (VV-041).
+func TestCaptionFromTranscriptOnAnAudioItem(t *testing.T) {
+	d := base().audio(itemB, 0, 90, 0).d
+	args := `{"clip_item_id": "` + itemB + `", "track_id": "` + capTr + `", "new_ids": ["itm_z9y8x7w6v5"], ` +
+		`"resolved": {"words": [{"text": "Hello", "start": 2, "end": 10}, {"text": "world", "start": 12, "end": 20}]}}`
+
+	res, err := Default().Apply(d, op2("caption.from_transcript", args), Env{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	it := res.Doc.Items["itm_z9y8x7w6v5"]
+	if it.Type != timeline.ItemCaption || it.LinkedItem != itemB || len(it.Words) != 2 {
+		t.Errorf("caption = %+v", it)
+	}
+}

@@ -211,6 +211,19 @@ func (c *Context) speechClip(it *timeline.Item, notClip, noAudio string) *Error 
 	return nil
 }
 
+// speechSource is speechClip for the commands that caption speech: it also accepts an audio
+// item (a voice-over on an audio track) whose asset has sound (VV-041).
+func (c *Context) speechSource(it *timeline.Item, notClip, noAudio string) *Error {
+	if it.Type != timeline.ItemAudio {
+		return c.speechClip(it, notClip, noAudio)
+	}
+	if asset, ok := c.Doc.Assets[it.Asset]; !ok || asset.Kind == timeline.AssetImage || asset.Kind == timeline.AssetVideo && !asset.HasAudio {
+		return Errorf(CodeTypeMismatch, "Asset %s has no audio; %s", it.Asset, noAudio).
+			WithHint("Choose a clip or audio item whose asset has audio.").WithPath("args.item_id")
+	}
+	return nil
+}
+
 // silenceClip returns the clip of the command (precondition 2 and 3).
 func (c *Context) silenceClip(id string) (timeline.Item, *Error) {
 	it, err := c.item(id)
