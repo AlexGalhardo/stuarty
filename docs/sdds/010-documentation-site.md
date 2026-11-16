@@ -208,6 +208,10 @@ Rules:
 3. Validation (`check:mdx`): every `title` is non-empty; `dir` and `prefix` are unique; a slug appears once; every listed slug has a file or a generated source.
 4. The URL of a page is `/docs/<prefix or dir>/<slug>/`.
 
+### 3.1 The sidebar hierarchy (TASK-0268, 2026-11-16)
+
+The sidebar follows the order of the work, as the documentation of other editors does (FreeCut, Kdenlive, OpenShot and Final Cut Pro; the research note is private): Getting started, Tutorials, Concepts, Core editing, Creative tools, Templates, Output, The editor, Agents, Self-hosting, Reference, Commands, Glossary (TASK-0267, added when the section exists), Troubleshooting, Contributing. A category is a sidebar title plus a list of pages, and several categories may share one folder: Tutorials, Core editing, Creative tools, Templates, Output and The editor are all `guide/<slug>`, so a page URL never depends on its group and moving a page between groups changes no link. The section 7 tables list the pages by folder; the sidebar groups are in `content/navigation.ts`.
+
 ## 4. Canonical links and interface strings
 
 ### 4.1 Canonical links
