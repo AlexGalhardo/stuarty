@@ -1300,7 +1300,7 @@ Splits an item into two items at a timeline frame.
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | missing argument or bad `new_id` form | `args.new_id "clip-2" is not an item id.` | `Use an id like "itm_s6t7v8w9x0" or omit it.` |
+| `E_VALIDATION` | missing argument or bad `new_id` form | `args.new_id "clip-2" is not an item id: an id is "itm_" followed by 10 characters from 0-9 and a-z without i, l, o and u.` | `Use an id like "itm_s6t7v8w9x0" or omit it.` |
 | `E_INVALID_TIME` | malformed `at`, or `at` not strictly inside the item | `args.at "60f" is not inside item itm_m1n2p3q4r5 (frames 60-179); it must be between 61 and 179 inclusive.` | `Use at "61f" or later, up to "179f".` |
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_INVALID_STATE` | a caption part would have no word | `Splitting caption itm_m1n2p3q4r5 at frame 70 leaves the left part with no word.` | `Split at a word boundary with caption.split.` |
@@ -1479,7 +1479,7 @@ Copies an item to another position, optionally on another track.
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | bad id form | `args.new_id "x" is not an item id.` | `Use an id like "itm_s6t7v8w9x0" or omit it.` |
+| `E_VALIDATION` | bad id form | `args.new_id "x" is not an item id: an id is "itm_" followed by 10 characters from 0-9 and a-z without i, l, o and u.` | `Use an id like "itm_s6t7v8w9x0" or omit it.` |
 | `E_INVALID_TIME` | malformed time, or the copy ends after 108,000 | `The copy of itm_m1n2p3q4r5 would end at frame 108030; the limit is 108000.` | `Use a start of at most "107940f".` |
 | `E_NOT_FOUND` | unknown item or track | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_TYPE_MISMATCH` | track does not accept the type | `Item itm_m1n2p3q4r5 is a text item; track trk_m1n2p3q4r5 is an audio track.` | `Use a visual track.` |
@@ -2059,7 +2059,7 @@ Places an audio asset, or the audio of a video asset, on an audio track.
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | bad argument | `args.asset_id "ast_" is not an asset id.` | `Use an id like "ast_4h6j8k2m3n".` |
+| `E_VALIDATION` | bad argument | `args.asset_id "ast_" is not an asset id: an id is "ast_" followed by 10 characters from 0-9 and a-z without i, l, o and u.` | `Use an id like "ast_4h6j8k2m3n".` |
 | `E_INVALID_TIME` | as C.22 | `The audio item would end at frame 108400; the limit is 108000.` | `Use a duration of at most "500f".` |
 | `E_NOT_FOUND` | unknown track or asset | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
 | `E_TYPE_MISMATCH` | visual track, image asset, or video without audio | `Asset ast_3c5v8n2w6d is a video without audio; audio.add needs audio.` | `Use clip.add on a visual track to show it.` |
