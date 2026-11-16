@@ -221,7 +221,6 @@ func fillMismatch(a *slotFillArgs, slot *timeline.Slot) *Error {
 
 func applySlotFill(c *Context, a *slotFillArgs) error {
 	if err := requireOne(
-		"args",
 		[]string{"asset_id", "text", "words"},
 		a.AssetID != "",
 		a.Text != nil,

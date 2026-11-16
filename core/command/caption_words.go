@@ -90,7 +90,7 @@ func applyCaptionSetWords(c *Context, a *captionSetWordsArgs) error {
 	if err := idForm("args.item_id", timeline.PrefixItem, a.ItemID); err != nil {
 		return err
 	}
-	if e := requireOne("args", []string{"words", "text"}, a.Words != nil, a.Text != nil); e != nil {
+	if e := requireOne([]string{"words", "text"}, a.Words != nil, a.Text != nil); e != nil {
 		return e
 	}
 	var words []timeline.Word

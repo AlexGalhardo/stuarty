@@ -189,7 +189,7 @@ func (c *Context) sortedItemIDs() []string {
 	return ids
 }
 
-func requireOne(path string, names []string, given ...bool) *Error {
+func requireOne(names []string, given ...bool) *Error {
 	n := 0
 	for _, g := range given {
 		if g {
@@ -200,11 +200,11 @@ func requireOne(path string, names []string, given ...bool) *Error {
 		return nil
 	}
 	if n == 0 {
-		return Errorf(CodeValidation, "%s: give exactly one of %s.", path, strings.Join(names, ", ")).
-			WithHint("Send only one of %s.", strings.Join(names, ", ")).WithPath(path)
+		return Errorf(CodeValidation, "args: give exactly one of %s.", strings.Join(names, ", ")).
+			WithHint("Send only one of %s.", strings.Join(names, ", ")).WithPath("args")
 	}
-	return Errorf(CodeValidation, "%s: give only one of %s, not several.", path, strings.Join(names, ", ")).
-		WithHint("Send only one of %s.", strings.Join(names, ", ")).WithPath(path)
+	return Errorf(CodeValidation, "args: give only one of %s, not several.", strings.Join(names, ", ")).
+		WithHint("Send only one of %s.", strings.Join(names, ", ")).WithPath("args")
 }
 
 func atLeastOne(names []string, given ...bool) *Error {
