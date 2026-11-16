@@ -39,7 +39,13 @@ func asServiceError(err error) *service.Error {
 	}
 
 	if we, ok := errors.AsType[*workspace.Error](err); ok {
-		return &service.Error{Code: we.Code, Message: we.Message, Retryable: we.Retryable}
+		out := &service.Error{Code: we.Code, Message: we.Message, Retryable: we.Retryable}
+		if errors.Is(err, workspace.ErrLocked) {
+			out.Hint = "another process owns this workspace: close the desktop app or serve and run the command again, " +
+				"or wait if it is a short command"
+		}
+
+		return out
 	}
 
 	if ce, ok := errors.AsType[*command.Error](err); ok {
