@@ -71,6 +71,41 @@ func TestEventsResumesAfterTheLastIDWhenTheServerCloses(t *testing.T) {
 	}
 }
 
+func TestEventsContinuesLiveAfterResyncRequired(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+
+	var got []EventsQuery
+
+	h.res.events = func(_ context.Context, q EventsQuery) (io.ReadCloser, error) {
+		got = append(got, q)
+
+		body := "id: 7\nevent: batch.committed\ndata: {}\n\n"
+		if len(got) == 2 {
+			body = "event: resync.required\ndata: {\"reason\":\"gap_too_large\"}\n\n"
+		}
+
+		if len(got) == 3 {
+			body = "id: 9\nevent: batch.committed\ndata: {}\n\n"
+		}
+
+		return io.NopCloser(strings.NewReader(body)), nil
+	}
+
+	if code := h.run("events", "--project", "prj_7k2m9x4q1b", "--since", "3", "--count", "2"); code != ExitOK {
+		t.Fatalf("exit %d: %s", code, h.stderr.String())
+	}
+
+	if len(got) != 3 || got[1].LastEventID != "7" || got[2].LastEventID != "" || got[2].Since != "" {
+		t.Errorf("queries = %+v, want the third one live, with no resume point", got)
+	}
+
+	if !strings.Contains(h.stdout.String(), "resync.required") {
+		t.Errorf("the resync event was not printed: %q", h.stdout.String())
+	}
+}
+
 func TestEventsNeedsAServer(t *testing.T) {
 	t.Parallel()
 
