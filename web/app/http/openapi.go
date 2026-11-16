@@ -10,6 +10,7 @@ import (
 	"github.com/AlexGalhardo/vukem/openapi"
 	"github.com/AlexGalhardo/vukem/web"
 
+	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/untrusted"
 )
@@ -138,6 +139,11 @@ func describeJobStartArgs(doc *openapi.Document) {
 			},
 			"asset_id": map[string]any{"type": "string", "description": "transcribe: the asset to transcribe."},
 			"language": map[string]any{"type": "string", "description": "transcribe: the spoken language."},
+			"model": map[string]any{
+				"type":        "string",
+				"enum":        transcribe.Models,
+				"description": "transcribe: an installed whisper model; default is the workspace model.",
+			},
 		}
 		args["additionalProperties"] = false
 	}

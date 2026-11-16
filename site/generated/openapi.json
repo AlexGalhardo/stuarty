@@ -7477,6 +7477,16 @@
                         "description": "transcribe: the spoken language.",
                         "type": "string"
                       },
+                      "model": {
+                        "description": "transcribe: an installed whisper model; default is the workspace model.",
+                        "enum": [
+                          "tiny",
+                          "base",
+                          "small",
+                          "large-v3-turbo"
+                        ],
+                        "type": "string"
+                      },
                       "start": {
                         "description": "export: the first time to render, such as 1.5s or 45f.",
                         "type": "string"

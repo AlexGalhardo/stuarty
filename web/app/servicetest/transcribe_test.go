@@ -269,3 +269,82 @@ func TestInspectTranscriptSectionFollowsTheProvider(t *testing.T) {
 		})
 	}
 }
+
+// pickerProvider is a stub that can run the models it lists as installed.
+type pickerProvider struct {
+	stubProvider
+	model     string
+	installed []string
+	root      *pickerProvider
+	used      atomic.Value
+}
+
+func (p *pickerProvider) Model() string { return p.model }
+
+func (p *pickerProvider) InstalledModels() []string { return p.installed }
+
+func (p *pickerProvider) WithModel(model string) transcribe.Provider {
+	return &pickerProvider{model: model, installed: p.installed, root: p}
+}
+
+func (p *pickerProvider) Transcribe(
+	ctx context.Context, in transcribe.Input, progress func(done, total time.Duration),
+) (transcribe.Raw, error) {
+	if p.root != nil {
+		p.root.used.Store(p.model)
+	}
+
+	return p.stubProvider.Transcribe(ctx, in, progress)
+}
+
+func TestTranscribeModelIsCheckedAgainstTheInstalledOnes(t *testing.T) {
+	prov := &pickerProvider{model: "small", installed: []string{"base"}}
+	m := newMediaEnv(t, mediaCfg{transcriber: prov})
+	project, _, _, hash := m.speechProject()
+	row, _ := m.store.Assets().FindProjectAssetByHash(context.Background(), project, hash)
+
+	for name, model := range map[string]string{
+		"known but not installed": "tiny",
+		"unknown name":            "huge",
+		"a path":                  "../models/ggml-base.bin",
+	} {
+		req := service.JobStartRequest{
+			ProjectID: project, Kind: service.JobTranscribe,
+			Args: []byte(fmt.Sprintf(`{"asset_id":%q,"model":%q}`, row.AssetID, model)),
+		}
+
+		_, err := m.svc.JobStart(m.as(ui), req)
+
+		se := serviceErr(err)
+		if se == nil || se.Code != "E_VALIDATION" || se.Path != "args.model" || !strings.Contains(se.Hint, "base") {
+			t.Errorf("%s: error %v, want E_VALIDATION on args.model listing the installed model", name, err)
+		}
+	}
+
+	job, err := m.svc.JobStart(m.as(ui), service.JobStartRequest{
+		ProjectID: project, Kind: service.JobTranscribe, WaitMS: 20000,
+		Args: []byte(fmt.Sprintf(`{"asset_id":%q,"model":"base"}`, row.AssetID)),
+	})
+	if err != nil || job.State != "succeeded" {
+		t.Fatalf("installed model: job %+v, error %v", job, err)
+	}
+
+	if got := prov.used.Load(); got != "base" {
+		t.Errorf("the job ran on model %v, want base", got)
+	}
+}
+
+func TestTranscribeModelNeedsAProviderThatTakesOne(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{transcriber: &stubProvider{}})
+	project, _, _, hash := m.speechProject()
+	row, _ := m.store.Assets().FindProjectAssetByHash(context.Background(), project, hash)
+
+	_, err := m.svc.JobStart(m.as(ui), service.JobStartRequest{
+		ProjectID: project, Kind: service.JobTranscribe,
+		Args: []byte(fmt.Sprintf(`{"asset_id":%q,"model":"base"}`, row.AssetID)),
+	})
+
+	if se := serviceErr(err); se == nil || se.Code != "E_VALIDATION" || se.Path != "args.model" {
+		t.Errorf("error %v, want E_VALIDATION on args.model", err)
+	}
+}
