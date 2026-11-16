@@ -666,6 +666,69 @@ func TestGracefulShutdownRequeuesAndTheNextStartCompletes(t *testing.T) {
 	}
 }
 
+func TestAPanickingJobFailsInsteadOfStayingRunning(t *testing.T) {
+	m := newMediaEnv(
+		t,
+		mediaCfg{
+			noQueue: true,
+			exporter: exportFn(func(context.Context, service.ExportInput) (*service.ExportOutput, error) {
+				panic("boom")
+			}),
+		},
+	)
+
+	project := m.exportable()
+
+	job, err := m.startExport(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := m.runner.RunJob(context.Background(), job.JobID); err != nil {
+		t.Fatalf("RunJob = %v, want nil: the outcome is written", err)
+	}
+
+	j := m.job(job.JobID)
+	if j.State != service.JobFailed || j.Error == nil || j.Error.Code != command.CodeInternal {
+		t.Fatalf("after the panic: %+v", j)
+	}
+
+	if _, err := m.startExport(project); err != nil {
+		t.Errorf("a second export after the panic: %v", err)
+	}
+}
+
+func TestAJobPastItsQueueDeadlineFails(t *testing.T) {
+	m := newMediaEnv(
+		t,
+		mediaCfg{
+			noQueue: true,
+			exporter: exportFn(func(ctx context.Context, _ service.ExportInput) (*service.ExportOutput, error) {
+				<-ctx.Done()
+
+				return nil, ctx.Err()
+			}),
+		},
+	)
+
+	job, err := m.startExport(m.exportable())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+
+	if err := m.runner.RunJob(ctx, job.JobID); err != nil {
+		t.Fatalf("RunJob = %v, want nil: the deadline ends the job", err)
+	}
+
+	j := m.job(job.JobID)
+	if j.State != service.JobFailed || j.Error == nil || j.Error.Details["reason"] != "timeout" {
+		t.Fatalf("after the deadline: %+v", j)
+	}
+}
+
 // insertExport creates a queued export row that no queue message points at.
 func (m *mediaEnv) insertExport(project string, got func(id string)) {
 	m.t.Helper()

@@ -227,7 +227,7 @@ func (s *svc) startTranscribe(ctx context.Context, c Caller, req JobStartRequest
 		tx.AfterCommit(func() { s.emitJob(ctx, &queued) })
 
 		if s.enqueue != nil {
-			return s.enqueue.Enqueue(ctx, tx, QueueKindIngest, job.ID)
+			return s.enqueue.Enqueue(ctx, tx, queueKindFor(job.Kind), job.ID)
 		}
 
 		return nil

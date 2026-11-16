@@ -96,7 +96,7 @@ func (s *svc) ProjectBundleExport(ctx context.Context, req ProjectBundleExportRe
 		tx.AfterCommit(func() { s.emitJob(ctx, &queued) })
 
 		if s.enqueue != nil {
-			return s.enqueue.Enqueue(ctx, tx, QueueKindExport, job.ID)
+			return s.enqueue.Enqueue(ctx, tx, queueKindFor(job.Kind), job.ID)
 		}
 
 		return nil

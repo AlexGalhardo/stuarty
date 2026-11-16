@@ -422,7 +422,7 @@ func (s *svc) ensureIngestJob(ctx context.Context, tx Tx, hash, actor string, no
 	tx.AfterCommit(func() { s.emitJob(ctx, &queued) })
 
 	if s.enqueue != nil {
-		if err := s.enqueue.Enqueue(ctx, tx, QueueKindIngest, job.ID); err != nil {
+		if err := s.enqueue.Enqueue(ctx, tx, queueKindFor(job.Kind), job.ID); err != nil {
 			return "", err
 		}
 	}
