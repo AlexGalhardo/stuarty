@@ -1,0 +1,14 @@
+{
+  "code": "E_OUT_OF_SOURCE",
+  "message": "The range of 150 frames from source frame 751 would read to frame 901; asset ast_3c5v8n2w6d has 900 frames.",
+  "hint": "Use a duration of at most \"149f\" (4.967s), the most this asset allows from source_in 751.",
+  "retryable": false,
+  "path": "args.source_in",
+  "details": {
+    "available": {
+      "asset_duration": 900,
+      "max_duration": 149,
+      "source_in": 751
+    }
+  }
+}

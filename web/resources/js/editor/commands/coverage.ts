@@ -280,6 +280,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "toolbar", action: "topbar.rename", phase: "A" },
 		palette,
 	],
+	"item.slip": [palette],
 	"settings.set": [
 		{ kind: "inspector", action: "inspector.settings", phase: "A" },
 		palette,

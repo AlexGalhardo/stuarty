@@ -1,0 +1,13 @@
+{
+  "code": "E_OUT_OF_SOURCE",
+  "message": "Moving the start of itm_x000000002 from frame 250 to 220 needs source frame -20 at speed 1/1 (source_in 10); the asset begins at 0.",
+  "hint": "Slide by less, or trim the neighbour itm_x000000002 with item.trim first.",
+  "retryable": false,
+  "path": "args.start",
+  "details": {
+    "available": {
+      "earliest_to": 240,
+      "source_in": 10
+    }
+  }
+}

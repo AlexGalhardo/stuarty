@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: slide needs start and does not take track_id.",
+  "hint": "Send {\"item_id\": \"itm_m1n2p3q4r5\", \"start\": \"5s\", \"slide\": true}.",
+  "retryable": false,
+  "path": "args.slide"
+}

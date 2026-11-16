@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: roll and ripple track cannot be combined.",
+  "hint": "Use roll alone to move a cut, or ripple track alone to close or open a gap.",
+  "retryable": false,
+  "path": "args.roll"
+}

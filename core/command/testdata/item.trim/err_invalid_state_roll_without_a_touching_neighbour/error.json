@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "No item of track trk_f6g7h8j9k0 touches the end of itm_m1n2p3q4r5 at frame 250.",
+  "hint": "Roll needs a neighbour that starts exactly where this item ends (or ends where it starts); use item.trim without roll.",
+  "retryable": false,
+  "path": "args.roll"
+}

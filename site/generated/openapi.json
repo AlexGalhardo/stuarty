@@ -1868,6 +1868,7 @@
               "item.set_audio",
               "item.set_transform",
               "item.set_transition",
+              "item.slip",
               "item.split",
               "item.trim",
               "keyframe.clear",
@@ -1996,6 +1997,9 @@
           },
           "item.set_transition": {
             "$ref": "#/components/schemas/args.item.set_transition"
+          },
+          "item.slip": {
+            "$ref": "#/components/schemas/args.item.slip"
           },
           "item.split": {
             "$ref": "#/components/schemas/args.item.split"
@@ -4629,6 +4633,10 @@
           "item_id": {
             "type": "string"
           },
+          "slide": {
+            "description": "Slide edit: the neighbours that touch the item keep touching it, the one before ends and the one after starts where the item now does. Needs start; not with track_id.",
+            "type": "boolean"
+          },
           "start": {
             "description": "The new absolute position of the first frame.",
             "type": "string",
@@ -4776,6 +4784,25 @@
         ],
         "type": "object"
       },
+      "args.item.slip": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A clip or audio item of a video or audio asset.",
+            "type": "string"
+          },
+          "source_in": {
+            "description": "The new offset into the asset where the item starts reading.",
+            "type": "string",
+            "x-vv-kind": "time"
+          }
+        },
+        "required": [
+          "item_id",
+          "source_in"
+        ],
+        "type": "object"
+      },
       "args.item.split": {
         "additionalProperties": false,
         "properties": {
@@ -4818,6 +4845,10 @@
               "track"
             ],
             "type": "string"
+          },
+          "roll": {
+            "description": "Roll edit: the touching edge of the neighbouring item moves to the same frame, so the cut moves and nothing else changes. Not with ripple track.",
+            "type": "boolean"
           },
           "to": {
             "description": "Absolute position of the edge; the end is exclusive.",

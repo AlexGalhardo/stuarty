@@ -20,6 +20,10 @@
       ],
       "type": "string"
     },
+    "roll": {
+      "description": "Roll edit: the touching edge of the neighbouring item moves to the same frame, so the cut moves and nothing else changes. Not with ripple track.",
+      "type": "boolean"
+    },
     "to": {
       "description": "Absolute position of the edge; the end is exclusive.",
       "type": "string",

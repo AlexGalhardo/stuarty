@@ -347,6 +347,9 @@ var alphaOps = map[string]func(p *docPick) string{
 			p.clip(), color, float64(p.n(101))/100, float64(p.n(101))/100,
 		)
 	},
+	"item.slip": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"source_in":%q}`, p.clip(), p.frames(300))
+	},
 	"marker.add": func(p *docPick) string {
 		return fmt.Sprintf(`{"at":"%df","label":"m%d"}`, p.n(20), p.n(10))
 	},

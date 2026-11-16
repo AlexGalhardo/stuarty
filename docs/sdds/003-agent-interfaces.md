@@ -1526,7 +1526,7 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
               "enum":[
                 "project.rename", "settings.set", "settings.set_fps", "asset.remove", "track.add",
                 "track.update", "track.move", "track.remove", "track.set_caption_style", "item.move",
-                "item.trim", "item.split", "item.delete", "item.duplicate", "item.rename",
+                "item.trim", "item.slip", "item.split", "item.delete", "item.duplicate", "item.rename",
                 "item.set_transform", "item.set_transition", "item.set_audio", "item.crossfade",
                 "timeline.close_gap", "clip.add", "audio.add", "audio.duck", "audio.mark_beats", "clip.set_framing",
                 "clip.set_speed", "clip.set_color", "clip.set_blur", "clip.set_chroma_key", "marker.add", "marker.set", "marker.remove", "clip.set_filter", "clip.remove_silences", "text.add", "text.set", "text.apply_preset",

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "item_id": {
+      "description": "A clip or audio item of a video or audio asset.",
+      "type": "string"
+    },
+    "source_in": {
+      "description": "The new offset into the asset where the item starts reading.",
+      "type": "string",
+      "x-vv-kind": "time"
+    }
+  },
+  "required": [
+    "item_id",
+    "source_in"
+  ],
+  "type": "object"
+}

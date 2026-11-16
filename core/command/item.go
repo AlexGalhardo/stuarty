@@ -12,11 +12,15 @@ func init() {
 		Name:    "item.move",
 		Summary: "Moves an item in time, to another track of the same kind, or both.",
 		Description: "Sets the start of the item, its track, or both; at least one is required. Keyframes, words, " +
-			"transitions and fades are relative to the item and travel with it.",
+			"transitions and fades are relative to the item and travel with it. With slide true the neighbours " +
+			"that touch the item are trimmed so they keep touching it (a slide edit).",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "start": "5s"}`,
-		Errors:  []string{CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeOverlap},
-		Scope:   ScopeEdit,
-		Phase:   Prototype,
+		Errors: []string{
+			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeOutOfSource,
+			CodeOverlap,
+		},
+		Scope: ScopeEdit,
+		Phase: Prototype,
 	}, applyItemMove))
 
 	Register(Define(Spec{
@@ -24,7 +28,8 @@ func init() {
 		Summary: "Moves the start edge or the end edge of an item to a timeline position.",
 		Description: "Moves an edge to an absolute position and keeps the source range, the keyframes and the caption words " +
 			"consistent. The end edge is exclusive: it is the first frame after the item. With ripple track the later " +
-			"items of the track follow the change in length (a start trim then keeps the start of the item).",
+			"items of the track follow the change in length (a start trim then keeps the start of the item). With roll " +
+			"true the touching edge of the neighbouring item moves to the same frame (a roll edit).",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "edge": "start", "to": "97f"}`,
 		Errors: []string{
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeInvalidState, CodeOutOfSource, CodeOverlap,
@@ -69,6 +74,7 @@ type itemMoveArgs struct {
 	ItemID  string `json:"item_id"`
 	Start   Time   `json:"start,omitempty"    desc:"The new absolute position of the first frame."`
 	TrackID string `json:"track_id,omitempty" desc:"A track that accepts the item type."`
+	Slide   bool   `json:"slide,omitempty"    desc:"Slide edit: the neighbours that touch the item keep touching it, the one before ends and the one after starts where the item now does. Needs start; not with track_id."`
 }
 
 func applyItemMove(c *Context, a *itemMoveArgs) error {
@@ -112,6 +118,11 @@ func applyItemMove(c *Context, a *itemMoveArgs) error {
 	if err := c.checkEnd("args.start", start, it.Duration); err != nil {
 		return err
 	}
+	if a.Slide {
+		if err := c.slideNeighbours(&it, start, a.Start != "", a.TrackID != ""); err != nil {
+			return err
+		}
+	}
 	if err := c.checkOverlap(a.ItemID, target, start, it.Duration); err != nil {
 		return err
 	}
@@ -120,6 +131,45 @@ func applyItemMove(c *Context, a *itemMoveArgs) error {
 	req := string(a.Start)
 	c.SetEffectiveTime("start", start, req)
 	c.SetEffective("track_id", target)
+	return nil
+}
+
+// slideNeighbours is the slide edit: the item that ends where the moved item starts gets its end
+// moved to the new start, and the item that starts where it ends gets its start moved to the new end.
+// The neighbours are written into the document so the overlap check of the move sees them.
+func (c *Context) slideNeighbours(it *timeline.Item, start int, hasStart, hasTrack bool) *Error {
+	if !hasStart || hasTrack {
+		return Errorf(CodeValidation, "args: slide needs start and does not take track_id.").
+			WithHint("Send {\"item_id\": \"%s\", \"start\": \"5s\", \"slide\": true}.", it.ID).WithPath("args.slide")
+	}
+	for _, id := range c.trackItems(it.Track) {
+		o := c.Doc.Items[id]
+		var (
+			edge string
+			to   int
+		)
+		switch {
+		case id == it.ID:
+			continue
+		case itemEnd(&o) == it.Start:
+			edge, to = "end", start
+		case o.Start == itemEnd(it):
+			edge, to = "start", start+it.Duration
+		default:
+			continue
+		}
+		n, err := c.trimmed(
+			&o,
+			edge,
+			to,
+			fmt.Sprintf("Sliding %s to frame %d moves the %s of %s and", it.ID, start, edge, id),
+		)
+		if err != nil {
+			return err.WithHint("Slide by less, or trim the neighbour %s with item.trim first.", id).
+				WithPath("args.start")
+		}
+		c.Doc.Items[id] = n
+	}
 	return nil
 }
 
@@ -179,6 +229,7 @@ type itemTrimArgs struct {
 	Edge   string `json:"edge"             enum:"start,end"`
 	To     Time   `json:"to"                                 desc:"Absolute position of the edge; the end is exclusive."`
 	Ripple string `json:"ripple,omitempty" enum:"none,track" desc:"none (default) or track: the later items of the track follow the change in length; with the start edge the item keeps its start."`
+	Roll   bool   `json:"roll,omitempty"                     desc:"Roll edit: the touching edge of the neighbouring item moves to the same frame, so the cut moves and nothing else changes. Not with ripple track."`
 }
 
 func applyItemTrim(c *Context, a *itemTrimArgs) error {
@@ -193,17 +244,19 @@ func applyItemTrim(c *Context, a *itemTrimArgs) error {
 	if err != nil {
 		return err
 	}
-	n := timeline.CloneItem(it)
-	if a.Edge == "start" {
-		err = c.trimStart(&it, &n, to)
-	} else {
-		err = c.trimEnd(&it, &n, to)
+	if a.Roll && a.Ripple == "track" {
+		return Errorf(CodeValidation, "args: roll and ripple track cannot be combined.").
+			WithHint("Use roll alone to move a cut, or ripple track alone to close or open a gap.").
+			WithPath("args.roll")
 	}
+	n, err := c.trimmed(&it, a.Edge, to, fmt.Sprintf("Trimming the %s of %s to frame %d", a.Edge, a.ItemID, to))
 	if err != nil {
 		return err
 	}
-	if err := checkFit(&n, fmt.Sprintf("Trimming the %s of %s to frame %d", a.Edge, a.ItemID, to)); err != nil {
-		return err
+	if a.Roll {
+		if err := c.rollNeighbour(&it, a.Edge, to); err != nil {
+			return err
+		}
 	}
 	if a.Ripple == "track" {
 		if err := c.rippleTrim(&it, &n, a.Edge); err != nil {
@@ -221,6 +274,51 @@ func applyItemTrim(c *Context, a *itemTrimArgs) error {
 		c.SetEffective("source_in", n.SourceIn)
 	}
 	return nil
+}
+
+// trimmed returns a copy of the item with one edge moved to `to`, fades and transitions checked.
+func (c *Context) trimmed(it *timeline.Item, edge string, to int, what string) (timeline.Item, *Error) {
+	n := timeline.CloneItem(*it)
+	var err *Error
+	if edge == "start" {
+		err = c.trimStart(it, &n, to)
+	} else {
+		err = c.trimEnd(it, &n, to)
+	}
+	if err == nil {
+		err = checkFit(&n, what)
+	}
+	return n, err
+}
+
+// rollNeighbour moves the edge of the item that touches the trimmed one to the same frame, writing
+// the neighbour into the document so the overlap check of the trimmed item sees it.
+func (c *Context) rollNeighbour(it *timeline.Item, edge string, to int) *Error {
+	at, nbEdge := itemEnd(it), "start"
+	if edge == "start" {
+		at, nbEdge = it.Start, "end"
+	}
+	for _, id := range c.trackItems(it.Track) {
+		o := c.Doc.Items[id]
+		if id == it.ID || (nbEdge == "start" && o.Start != at) || (nbEdge == "end" && itemEnd(&o) != at) {
+			continue
+		}
+		n, err := c.trimmed(
+			&o,
+			nbEdge,
+			to,
+			fmt.Sprintf("Rolling the cut to frame %d moves the %s of %s and", to, nbEdge, id),
+		)
+		if err != nil {
+			return err.WithPath("args.to")
+		}
+		c.Doc.Items[id] = n
+		c.SetEffective("rolled_item", id)
+		return nil
+	}
+	return Errorf(CodeInvalidState, "No item of track %s touches the %s of %s at frame %d.", it.Track, edge, it.ID, at).
+		WithHint("Roll needs a neighbour that starts exactly where this item ends (or ends where it starts); use item.trim without roll.").
+		WithPath("args.roll")
 }
 
 // rippleTrim closes or opens the gap a trim leaves: the later items of the track shift by the

@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 58 commands, 57 public, of which 16 are Prototype, 32 ALPHA and 10 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` (C.59, VV-036) makes 59. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 59 commands, 58 public, of which 16 are Prototype, 32 ALPHA and 11 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -246,8 +246,9 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 
 | Command | Phase | Arguments | Effect |
 | --- | --- | --- | --- |
-| `item.move` | P | `item_id`, `start?` (time), `track_id?` | Moves the item in time, to another track of the same kind, or both. At least one is required |
-| `item.trim` | P | `item_id`, `edge` (`"start"` or `"end"`), `to` (time), `ripple?` (`"none"` default, `"track"`) | Moves that edge to `to`. With ripple `"track"` the later items of the track shift by the change in length. Rules in B.10 and C.12 |
+| `item.move` | P | `item_id`, `start?` (time), `track_id?`, `slide?` (default false) | Moves the item in time, to another track of the same kind, or both. At least one is required. With `slide` the touching neighbours are trimmed to keep touching it (C.11) |
+| `item.trim` | P | `item_id`, `edge` (`"start"` or `"end"`), `to` (time), `ripple?` (`"none"` default, `"track"`), `roll?` (default false) | Moves that edge to `to`. With ripple `"track"` the later items of the track shift by the change in length; with `roll` the touching edge of the neighbour moves to `to` too. Rules in B.10 and C.12 |
+| `item.slip` | B | `item_id`, `source_in` (time) | Shows another part of the source: sets `source_in` of a clip or audio item without moving or resizing it; see C.59 |
 | `item.split` | P | `item_id`, `at` (time), `new_id?` | Splits the item into two at `at`. Rules in B.10 |
 | `item.delete` | P | `item_ids` (1 to 200), `ripple?` (`"none"` default, `"track"`, `"all"`) | Removes the items. With `ripple: "track"` every later item on each affected track moves earlier by the length freed on that track; with `"all"` every later item on every track moves by the length freed, which requires the deleted items to cover one contiguous range |
 | `item.duplicate` | A | `item_id`, `start?` (time), `track_id?`, `new_id?` | Copies the item to the given place. A slot marking is not copied |
@@ -1110,6 +1111,7 @@ Moves an item in time, to another track of the same kind, or both.
 | `item_id` | item id | yes | none | |
 | `start` | time | no | unchanged | absolute position of the item's first frame |
 | `track_id` | track id | no | unchanged | a track that accepts the item's type |
+| `slide` | boolean | no | `false` | the slide edit (VV-036): needs `start`, not with `track_id`. The item on the same track that ends where the moved item starts gets its end edge moved to the new start, and the item that starts where it ends gets its start edge moved to the new end, as `item.trim` does (source, keyframes and words follow). A side with no touching item is left alone, so a slide without neighbours is a plain move |
 
 At least one of `start` and `track_id` is required.
 
@@ -1120,6 +1122,7 @@ At least one of `start` and `track_id` is required.
 3. The target track accepts the item type: visual types on a visual track, `audio` on an audio track (`E_TYPE_MISMATCH`).
 4. The new end `start + duration` is at most 108,000 (`E_INVALID_TIME`, R7).
 5. The item does not overlap another item of the target track, ignoring itself (`E_OVERLAP`, R8).
+6. With `slide`: `start` is given and `track_id` is not (`E_VALIDATION`); each trimmed neighbour keeps at least one frame (`E_INVALID_STATE`), its source range holds (`E_OUT_OF_SOURCE`) and its fades and transitions still fit.
 
 **Postconditions.**
 
@@ -1135,6 +1138,8 @@ At least one of `start` and `track_id` is required.
 | `E_INVALID_TIME` | bad time string, or the item would end after 108,000 | `args.start "100000s" puts item itm_m1n2p3q4r5 at frames 3000000-3000149, past the limit 108000.` | `Use a start of at most "107850f" for this 150-frame item.` |
 | `E_NOT_FOUND` | unknown item or track | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_TYPE_MISMATCH` | track does not accept the type | `Item itm_m1n2p3q4r5 is a clip; track trk_m1n2p3q4r5 is an audio track.` | `Move it to a visual track.` |
+| `E_INVALID_STATE` | with `slide`, a neighbour would be left with no frame | `Trimming the start of itm_c3d4e5f6g7 to frame 490 leaves no frame: the item ends at 340.` | `Slide by less, or trim the neighbour itm_c3d4e5f6g7 with item.trim first.` |
+| `E_OUT_OF_SOURCE` | with `slide`, a neighbour would read outside its asset | `Moving the start of itm_c3d4e5f6g7 from frame 250 to 220 needs source frame -20 at speed 1/1 (source_in 10); the asset begins at 0.` | `Slide by less, or trim the neighbour itm_c3d4e5f6g7 with item.trim first.` |
 | `E_OVERLAP` | overlap on the target | `Item itm_m1n2p3q4r5 would occupy frames 100-249 on track trk_f6g7h8j9k0, where item itm_c3d4e5f6g7 already is (frames 90-179).` | `Use start "180f" (6.000s), the next free position on that track, or move to another track.` |
 
 **Inverse.** `patch {collection: "items", id, set: {start: <old>, track: <old>}}` for the fields that changed.
@@ -1171,6 +1176,14 @@ At least one of `start` and `track_id` is required.
 - `err_type_mismatch_audio_track`
 - `err_overlap_in_time`
 - `err_overlap_on_other_track`
+- `ok_slide_later_trims_the_previous_and_next`
+- `ok_slide_earlier_trims_the_previous_and_next`
+- `ok_slide_without_neighbours_is_a_move`
+- `err_validation_slide_without_start`
+- `err_validation_slide_with_track_id`
+- `err_invalid_state_slide_leaves_no_frame_in_the_next_item`
+- `err_out_of_source_slide_earlier_next_item_reads_before_zero`
+- `err_overlap_slide_into_a_non_touching_item`
 
 ### C.12 `item.trim` (phase P)
 
@@ -1184,6 +1197,7 @@ Moves the start edge or the end edge of an item to a timeline position, keeping 
 | `edge` | `"start"` or `"end"` | yes | none | |
 | `to` | time | yes | none | absolute timeline position of the edge; `end` is exclusive (the first frame after the item) |
 | `ripple` | `"none"` or `"track"` | no | `"none"` | `"track"` shifts every later item of the track (start at or after the old end of the item) by the change in duration, so a gap is closed or opened; with edge `start` the item then keeps its `start` and only its duration and source change. VV-036 |
+| `roll` | boolean | no | `false` | the roll edit (VV-036): the edge of the neighbour that touches the trimmed one moves to `to` as well, so the cut moves and no other time changes. For edge `end` the neighbour is the item of the track that starts at the old end; for edge `start` the item that ends at the old start. The neighbour is trimmed like any item (source, keyframes, words), and `effective.rolled_item` names it. Not with `ripple` `"track"` (`E_VALIDATION`); with no touching neighbour `E_INVALID_STATE` |
 
 **Preconditions.**
 
@@ -1193,7 +1207,7 @@ Moves the start edge or the end edge of an item to a timeline position, keeping 
 4. Edge `start` moving earlier on a `clip` or `audio` item: the new `source_in` is not negative (`E_OUT_OF_SOURCE`). Edge `end` growing a `clip` or `audio` item: the source range holds (R9, `E_OUT_OF_SOURCE`). Images are exempt.
 5. A caption keeps at least one word (`E_INVALID_STATE`).
 6. Fades and transitions still fit the new duration (R14, `E_INVALID_STATE`).
-7. The item does not overlap another item of its track (`E_OVERLAP`, R8; `next_free` is the nearest valid `to`). With ripple `"track"` the later items move first, so growing never overlaps them, but none may end after frame 108,000 (`E_INVALID_TIME`).
+7. The item does not overlap another item of its track (`E_OVERLAP`, R8; `next_free` is the nearest valid `to`). With `roll` the neighbour is trimmed first, so the cut can move either way; it keeps at least one frame (`E_INVALID_STATE`), its source range holds (`E_OUT_OF_SOURCE`) and its fades and transitions fit. With ripple `"track"` the later items move first, so growing never overlaps them, but none may end after frame 108,000 (`E_INVALID_TIME`).
 
 **Postconditions.**
 
@@ -1287,6 +1301,14 @@ The same clip trimmed at the end with `{"edge": "end", "to": "150f"}` (and, for 
 - `ok_ripple_none_is_the_default`
 - `err_overlap_end_edge_extend_without_ripple`
 - `err_invalid_time_ripple_pushes_past_108000`
+- `ok_roll_end_edge_earlier_grows_the_next_item`
+- `ok_roll_end_edge_later_shrinks_the_next_item`
+- `ok_roll_start_edge_later_grows_the_previous_item`
+- `ok_roll_start_edge_earlier_shrinks_the_previous_item`
+- `err_validation_roll_with_ripple`
+- `err_invalid_state_roll_without_a_touching_neighbour`
+- `err_invalid_state_roll_leaves_no_frame_in_the_neighbour`
+- `err_out_of_source_roll_neighbour_reads_before_zero`
 
 ### C.13 `item.split` (phase P)
 
@@ -4703,3 +4725,65 @@ Removes the marker at a frame of the timeline, or every marker.
 - `err_validation_neither`
 - `err_not_found_no_marker_there`
 - `err_invalid_time_no_unit`
+
+### C.59 `item.slip` (phase B)
+
+Shows another part of the source in a clip or audio item without moving or resizing it (the slip edit, VV-036).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` or `audio` item of a video or audio asset |
+| `source_in` | time | yes | none | the new offset into the asset where the item starts reading; 0 or more |
+
+**Preconditions.**
+
+1. Both arguments are present and `source_in` parses (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `clip` or `audio` item of a video or audio asset: not an image clip, a placeholder, a text, a caption or a shape (`E_TYPE_MISMATCH`).
+4. The source range of the item, `source_in` plus its duration at its speed, stays inside the asset (R9, `E_OUT_OF_SOURCE`).
+
+**Postconditions.**
+
+1. `source_in` is set. `start`, `duration`, the speed, the keyframes, the fades, the transitions and every other item are unchanged.
+2. `diff` has one `item.updated` with `source_in`; empty when `source_in` is already that value. `effective` has `source_in` (the A.4 triple).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `item_id` or `source_in` missing | `The required argument args.source_in is missing.` | `Add "source_in" (a time) to the arguments.` |
+| `E_INVALID_TIME` | malformed `source_in` | `args.source_in "soon" is not a time.` | `Use "2s", "60f" or "00:00:02.000".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | no source range to slip | `Item itm_m1n2p3q4r5 is a text and has no source range to slip.` | `Slip applies to clip and audio items of a video or audio asset, not to images, text, captions or shapes.` |
+| `E_OUT_OF_SOURCE` | the range would end after the asset | `The range of 150 frames from source frame 751 would read to frame 901; asset ast_3c5v8n2w6d has 900 frames.` | `Use a duration of at most "149f" (4.967s), the most this asset allows from source_in 751.` |
+
+**Inverse.** `patch {collection: "items", id, set: {source_in: <old>}}`; `unset` when the old value was 0 and absent.
+
+**Idempotency.** Same result.
+
+**Example.** A 150 frame clip `itm_m1n2p3q4r5` with `source_in` 30 on an asset of 900 frames.
+
+```json
+{"op": "item.slip", "args": {"item_id": "itm_m1n2p3q4r5", "source_in": "2s"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"source_in": [30, 60]}}]
+```
+
+**Golden cases.**
+
+- `ok_slip_later`
+- `ok_slip_to_zero`
+- `ok_slip_to_the_end_of_the_asset`
+- `ok_slip_with_speed`
+- `ok_slip_audio`
+- `ok_slip_same_source_in_noop`
+- `err_validation_no_source_in`
+- `err_invalid_time_malformed`
+- `err_not_found_item`
+- `err_type_mismatch_image_clip`
+- `err_type_mismatch_text_item`
+- `err_out_of_source_past_the_asset`
