@@ -276,6 +276,7 @@
         "import": "Importar",
         "empty": "Nenhuma mídia ainda",
         "choose": "Escolher arquivos",
+        "path_why": "O editor importa por caminho: o servidor lê o arquivo do próprio disco, e uma página do navegador não pode enviar nem ver o conteúdo de arquivos. Informe o caminho de um arquivo na máquina onde o servidor roda. Shift+Enter adiciona uma linha para outro caminho.",
         "drop": "Uma página do navegador não vê o caminho de um arquivo. Cole o caminho no campo.",
         "add": "Adicionar à linha do tempo",
         "retry": "Tentar de novo",
