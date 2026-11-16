@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Clip itm_m1n2p3q4r5 is already muted: its audio was extracted or silenced.",
+  "hint": "Unmute it with item.set_audio muted false first, or use its audio item.",
+  "retryable": false,
+  "path": "args.item_id"
+}

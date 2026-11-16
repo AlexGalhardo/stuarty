@@ -359,6 +359,15 @@ var alphaOps = map[string]func(p *docPick) string{
 	"clip.set_blur": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"radius":%d}`, p.clip(), p.n(101))
 	},
+	"item.link": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_ids":[%q,%q]}`, p.clip(), p.audioItem())
+	},
+	"item.unlink": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_ids":[%q]}`, p.oneOf(p.clip(), p.audioItem()))
+	},
+	"item.extract_audio": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"track_id":%q}`, p.clip(), p.atrack())
+	},
 	"item.set_enabled": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"enabled":%s}`, p.clip(), p.oneOf("true", "false"))
 	},
@@ -569,6 +578,14 @@ func randomStart(rng *rand.Rand) *timeline.Document {
 		caption("itm_x000000003", 10, 4, func(it *timeline.Item) { it.LinkedItem = itemA }).
 		caption("itm_x000000006", 100, 3).
 		audio("itm_x000000004", 0, 300, 0)
+
+	if rng.Intn(2) == 0 {
+		for _, id := range []string{itemA, "itm_x000000004"} {
+			it := b.d.Items[id]
+			it.Link = "lnk_x000000001"
+			b.d.Items[id] = it
+		}
+	}
 
 	if rng.Intn(2) == 0 {
 		b.d.Markers = []timeline.Marker{{Frame: 5}, {Frame: 12, Label: "m"}}

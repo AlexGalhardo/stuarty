@@ -1,0 +1,11 @@
+{
+  "code": "E_OVERLAP",
+  "message": "Item itm_c3d4e5f6g7 would occupy frames 100-189 on track trk_m1n2p3q4r5, where item itm_d4e5f6g7h8 already is (frames 120-169).",
+  "hint": "Item itm_c3d4e5f6g7 is linked to itm_m1n2p3q4r5 and moves 70 frames with it; move by less, or unlink it with item.unlink.",
+  "retryable": false,
+  "path": "args.start",
+  "details": {
+    "conflicting_item": "itm_d4e5f6g7h8",
+    "next_free": 170
+  }
+}

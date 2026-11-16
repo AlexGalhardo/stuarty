@@ -521,6 +521,15 @@
           "set_enabled": {
             "title": "Turn item on or off"
           },
+          "link": {
+            "title": "Link items"
+          },
+          "unlink": {
+            "title": "Unlink items"
+          },
+          "extract_audio": {
+            "title": "Extract audio"
+          },
           "set_transition": {
             "title": "Set item transition"
           },

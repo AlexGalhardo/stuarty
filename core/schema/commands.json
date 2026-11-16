@@ -2149,6 +2149,92 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "id": {
+          "description": "The id of the new audio item.",
+          "type": "string"
+        },
+        "item_id": {
+          "description": "A clip of a video asset with audio.",
+          "type": "string"
+        },
+        "track_id": {
+          "description": "An audio track with room for the item.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "track_id"
+      ],
+      "type": "object"
+    },
+    "description": "Adds an audio item on an audio track with the same asset, start, duration, source range, speed, curve, reverse, volume, fades, noise reduction and volume keyframes as the clip, links the two, and sets audio_muted on the clip so the sound is not heard twice.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_OVERLAP",
+      "E_ID_EXISTS",
+      "E_LIMIT"
+    ],
+    "example": {
+      "item_id": "itm_m1n2p3q4r5",
+      "track_id": "trk_m1n2p3q4r5"
+    },
+    "internal": false,
+    "name": "item.extract_audio",
+    "phase": "beta",
+    "scope": "edit",
+    "summary": "Creates an audio item from the audio of a video clip, linked to it, and mutes the clip."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "The id of the link group, lnk_ and 10 characters; generated when omitted.",
+          "type": "string"
+        },
+        "item_ids": {
+          "description": "The items to link, 2 to 20.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "item_ids"
+      ],
+      "type": "object"
+    },
+    "description": "Puts 2 to 20 clip, audio, text or shape items in one link group. item.move, item.trim and item.split on one of them apply the same change to the others, and a locked track refuses the edit that would change a linked item on it. An item belongs to one group; unlink it first to link it elsewhere.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_ID_EXISTS"
+    ],
+    "example": {
+      "item_ids": [
+        "itm_m1n2p3q4r5",
+        "itm_c3d4e5f6g7"
+      ]
+    },
+    "internal": false,
+    "name": "item.link",
+    "phase": "beta",
+    "scope": "edit",
+    "summary": "Links items so that they move, trim and split together."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "item_id": {
           "type": "string"
         },
@@ -2499,6 +2585,13 @@
         "new_id": {
           "description": "The id of the right part.",
           "type": "string"
+        },
+        "new_ids": {
+          "description": "The ids of the right parts of the linked items that the split cuts, in the order of the ids of those items.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -2586,6 +2679,41 @@
     "phase": "prototype",
     "scope": "edit",
     "summary": "Moves the start edge or the end edge of an item to a timeline position."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "item_ids": {
+          "description": "The items to take out of their link group.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "item_ids"
+      ],
+      "type": "object"
+    },
+    "description": "Takes each listed item out of its link group. A group left with one item is dissolved, so the item that remains is unlinked too (listed in effective.also_unlinked).",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "item_ids": [
+        "itm_c3d4e5f6g7"
+      ]
+    },
+    "internal": false,
+    "name": "item.unlink",
+    "phase": "beta",
+    "scope": "edit",
+    "summary": "Removes items from their link group."
   },
   {
     "args_schema": {

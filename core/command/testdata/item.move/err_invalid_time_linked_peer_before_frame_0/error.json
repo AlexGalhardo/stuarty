@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_TIME",
+  "message": "Item itm_c3d4e5f6g7 is linked to itm_m1n2p3q4r5 and would move to frame -20, outside 0 to 108000.",
+  "hint": "Move by less, or unlink itm_c3d4e5f6g7 with item.unlink.",
+  "retryable": false,
+  "path": "args.start"
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "description": "The id of the link group, lnk_ and 10 characters; generated when omitted.",
+      "type": "string"
+    },
+    "item_ids": {
+      "description": "The items to link, 2 to 20.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "item_ids"
+  ],
+  "type": "object"
+}

@@ -378,6 +378,10 @@
           },
           "type": "object"
         },
+        "link": {
+          "pattern": "^lnk_[0-9a-hjkmnp-tv-z]{10}$",
+          "type": "string"
+        },
         "linked_item": {
           "pattern": "^itm_[0-9a-hjkmnp-tv-z]{10}$",
           "type": "string"

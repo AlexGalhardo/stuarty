@@ -1,0 +1,10 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Item itm_m1n2p3q4r5 is already linked (group lnk_f6g7h8j9k0).",
+  "hint": "Unlink it with item.unlink first.",
+  "retryable": false,
+  "path": "args.item_ids[0]",
+  "details": {
+    "link": "lnk_f6g7h8j9k0"
+  }
+}

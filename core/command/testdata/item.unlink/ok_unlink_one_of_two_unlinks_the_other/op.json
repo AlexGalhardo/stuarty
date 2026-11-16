@@ -1,0 +1,8 @@
+{
+  "op": "item.unlink",
+  "args": {
+    "item_ids": [
+      "itm_m1n2p3q4r5"
+    ]
+  }
+}

@@ -358,6 +358,10 @@ func itemFlags(it *timeline.Item) []string {
 		f = append(f, "rev")
 	}
 
+	if it.Link != "" {
+		f = append(f, "linked")
+	}
+
 	if it.Disabled {
 		f = append(f, "disabled")
 	}

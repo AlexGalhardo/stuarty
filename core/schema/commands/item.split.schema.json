@@ -13,6 +13,13 @@
     "new_id": {
       "description": "The id of the right part.",
       "type": "string"
+    },
+    "new_ids": {
+      "description": "The ids of the right parts of the linked items that the split cuts, in the order of the ids of those items.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
     }
   },
   "required": [

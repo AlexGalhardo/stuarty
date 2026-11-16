@@ -1,0 +1,9 @@
+{
+  "op": "item.link",
+  "args": {
+    "item_ids": [
+      "itm_m1n2p3q4r5",
+      "itm_m1n2p3q4r5"
+    ]
+  }
+}

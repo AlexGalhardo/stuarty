@@ -1164,6 +1164,9 @@
             },
             "type": "object"
           },
+          "link": {
+            "type": "string"
+          },
           "linked_item": {
             "type": "string"
           },
@@ -1990,6 +1993,8 @@
               "item.crossfade",
               "item.delete",
               "item.duplicate",
+              "item.extract_audio",
+              "item.link",
               "item.move",
               "item.rename",
               "item.set_audio",
@@ -1999,6 +2004,7 @@
               "item.slip",
               "item.split",
               "item.trim",
+              "item.unlink",
               "keyframe.clear",
               "keyframe.remove",
               "keyframe.set",
@@ -2121,6 +2127,12 @@
           "item.duplicate": {
             "$ref": "#/components/schemas/args.item.duplicate"
           },
+          "item.extract_audio": {
+            "$ref": "#/components/schemas/args.item.extract_audio"
+          },
+          "item.link": {
+            "$ref": "#/components/schemas/args.item.link"
+          },
           "item.move": {
             "$ref": "#/components/schemas/args.item.move"
           },
@@ -2147,6 +2159,9 @@
           },
           "item.trim": {
             "$ref": "#/components/schemas/args.item.trim"
+          },
+          "item.unlink": {
+            "$ref": "#/components/schemas/args.item.unlink"
           },
           "keyframe.clear": {
             "$ref": "#/components/schemas/args.keyframe.clear"
@@ -5030,6 +5045,48 @@
         ],
         "type": "object"
       },
+      "args.item.extract_audio": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "The id of the new audio item.",
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip of a video asset with audio.",
+            "type": "string"
+          },
+          "track_id": {
+            "description": "An audio track with room for the item.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "track_id"
+        ],
+        "type": "object"
+      },
+      "args.item.link": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "The id of the link group, lnk_ and 10 characters; generated when omitted.",
+            "type": "string"
+          },
+          "item_ids": {
+            "description": "The items to link, 2 to 20.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "item_ids"
+        ],
+        "type": "object"
+      },
       "args.item.move": {
         "additionalProperties": false,
         "properties": {
@@ -5244,6 +5301,13 @@
           "new_id": {
             "description": "The id of the right part.",
             "type": "string"
+          },
+          "new_ids": {
+            "description": "The ids of the right parts of the linked items that the split cuts, in the order of the ids of those items.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -5287,6 +5351,22 @@
           "item_id",
           "edge",
           "to"
+        ],
+        "type": "object"
+      },
+      "args.item.unlink": {
+        "additionalProperties": false,
+        "properties": {
+          "item_ids": {
+            "description": "The items to take out of their link group.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "item_ids"
         ],
         "type": "object"
       },

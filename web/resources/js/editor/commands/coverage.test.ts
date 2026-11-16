@@ -143,10 +143,10 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 		expect(coverageProblems(commands, COVERAGE, BUILD)).toEqual([]);
 	});
 
-	test("every non-internal command has a key: 47 of ALPHA and the 16 of BETA", () => {
+	test("every non-internal command has a key: 47 of ALPHA and the 19 of BETA", () => {
 		const keys = commands.filter((c) => !c.internal).map((c) => c.name);
 		expect(Object.keys(COVERAGE).sort()).toEqual(keys.sort());
-		expect(keys).toHaveLength(63);
+		expect(keys).toHaveLength(66);
 	});
 
 	test("the full BETA phase rule holds: every command has a BETA entry point and a palette entry", () => {
