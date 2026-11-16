@@ -54,3 +54,27 @@ func TestSetTransformRoundsToZeroScale(t *testing.T) {
 		t.Error("an out-of-range number was accepted")
 	}
 }
+
+// An extreme number is E_VALIDATION, never a document that cannot be encoded (VV-003).
+func TestExtremeNumbersAreRefused(t *testing.T) {
+	d := base().text(itemC, vidTr, 0, 60).d
+	for _, args := range []string{
+		`{"item_id": "` + itemC + `", "x": 1e308}`,
+		`{"item_id": "` + itemC + `", "y": -1e308}`,
+		`{"item_id": "` + itemC + `", "x": 1e300}`,
+		`{"item_id": "` + itemC + `", "rotation": 1e10}`,
+	} {
+		_, err := Default().Apply(d, op2("item.set_transform", args), Env{})
+		if e := AsError(err); err == nil || e.Code != CodeValidation {
+			t.Errorf("%s: %v", args, err)
+		}
+	}
+	shape := `{"track_id": "` + vidTr + `", "id": "itm_s1t2u3v4w5", "shape": "rect", "width": 1e308, "height": 10}`
+	_, err := Default().Apply(d, op2("shape.add", shape), Env{})
+	if e := AsError(err); err == nil || e.Code != CodeValidation {
+		t.Errorf("shape.add: %v", err)
+	}
+	if got := round3(1e308); got != 1e308 {
+		t.Errorf("round3(1e308) = %v", got)
+	}
+}

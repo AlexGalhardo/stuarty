@@ -84,9 +84,21 @@ type itemTransformArgs struct {
 	Opacity  *float64 `json:"opacity,omitempty"  desc:"0 to 1."                                       max:"1"  min:"0"`
 }
 
+// maxMagnitude bounds every position, size and angle a command accepts. Far below the
+// float64 range, so rounding and arithmetic on an accepted value can never overflow
+// into a value the canonical encoding refuses.
+const maxMagnitude = 1e9
+
 func finite(path string, v *float64) *Error {
-	if v != nil && (math.IsNaN(*v) || math.IsInf(*v, 0)) {
+	if v == nil {
+		return nil
+	}
+	if math.IsNaN(*v) || math.IsInf(*v, 0) {
 		return invalidArg(path, "%s must be a finite number.", path).WithHint("Send a number.")
+	}
+	if math.Abs(*v) > maxMagnitude {
+		return invalidArg(path, "%s must be between -1000000000 and 1000000000, got %s.", path, trimFloat(*v)).
+			WithHint("Send a smaller number.")
 	}
 	return nil
 }
