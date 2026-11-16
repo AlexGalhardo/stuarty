@@ -31,6 +31,12 @@ async function fakeBridge(page: Page, picked: string[]): Promise<void> {
 			},
 		};
 		w.__dropPaths = (p: string[]) => drop?.(p);
+		const revealed: string[] = [];
+		w.__revealed = revealed;
+		(w.vukemDesktop as Record<string, unknown>).showInFolder = (p: string) => {
+			revealed.push(p);
+			return Promise.resolve([]);
+		};
 	}, picked);
 }
 
@@ -94,6 +100,33 @@ test.describe("desktop-bridge", () => {
 		await expect(
 			page.getByText("A browser page cannot see the path of a file"),
 		).toBeVisible();
+	});
+});
+
+test.describe("desktop-bridge show in folder", () => {
+	// VV-027: a finished export offers "Show in folder" in the window, with the
+	// path the server wrote; a browser has no such button.
+	test("a finished export is shown in its folder through the bridge", async ({
+		page,
+		request,
+	}) => {
+		test.setTimeout(120_000);
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+		await fakeBridge(page, []);
+		await page.goto(`/editor/${seeded.id}`);
+		await expect(page.locator("[data-item-id]")).toHaveCount(1);
+		await page.getByRole("button", { name: "Export" }).click();
+		await page.getByRole("button", { name: "Start export" }).click();
+		const dialog = page.getByRole("dialog");
+		await expect(dialog.getByText("Export finished")).toBeVisible({
+			timeout: 90_000,
+		});
+		await dialog.getByRole("button", { name: "Show in folder" }).click();
+		const revealed = await page.evaluate(
+			() => (window as unknown as { __revealed: string[] }).__revealed,
+		);
+		expect(revealed).toHaveLength(1);
+		expect(revealed[0]).toMatch(/\.mp4$/);
 	});
 });
 

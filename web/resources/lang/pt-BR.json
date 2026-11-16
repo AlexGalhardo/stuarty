@@ -378,6 +378,7 @@
         "progress": "Progresso da exportação",
         "keeps_running": "Você pode fechar esta janela; a exportação continua.",
         "finished": "Exportação concluída",
+        "show_in_folder": "Mostrar na pasta",
         "copy_path": "Copiar caminho",
         "copy_details": "Copiar detalhes",
         "size": "{megabytes} MB · {duration} · revisão {revision}",

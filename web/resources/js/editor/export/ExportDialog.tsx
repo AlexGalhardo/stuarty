@@ -4,6 +4,7 @@ import {
 	CircleSlash,
 	Clock,
 	Copy,
+	FolderOpen,
 	Info,
 	TriangleAlert,
 } from "lucide-react";
@@ -13,6 +14,7 @@ import {
 	useEffect,
 	useRef,
 	useState,
+	useSyncExternalStore,
 } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
@@ -26,6 +28,12 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import {
+	canShowInFolder,
+	getDesktopBridge,
+	showInFolder,
+	subscribeDesktopBridge,
+} from "@/lib/desktopBridge";
 import { type Translate, useLocale, useT } from "@/lib/i18n";
 import { createClient } from "../api/client";
 import { ApiError } from "../api/errors";
@@ -180,6 +188,11 @@ export default function ExportDialog({
 	const [findings, setFindings] = useState<readonly LintFinding[]>([]);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [cancelling, setCancelling] = useState(false);
+	const bridge = useSyncExternalStore(
+		subscribeDesktopBridge,
+		getDesktopBridge,
+		() => null,
+	);
 	const startedAt = useRef(0);
 	const [capabilities, setCapabilities] = useState<ExportCapabilities | null>(
 		null,
@@ -286,6 +299,17 @@ export default function ExportDialog({
 			});
 		} finally {
 			setCancelling(false);
+		}
+	}
+
+	async function revealExport(path: string): Promise<void> {
+		try {
+			await showInFolder(bridge, path);
+		} catch (error) {
+			setFailure({
+				code: "E_DESKTOP",
+				message: error instanceof Error ? error.message : String(error),
+			});
 		}
 	}
 
@@ -456,6 +480,17 @@ export default function ExportDialog({
 							{result.path !== undefined && (
 								<p className="mt-1 flex items-center gap-1 font-mono text-xs break-all">
 									<UntrustedText>{result.path}</UntrustedText>
+									{canShowInFolder(bridge) && (
+										<Button
+											type="button"
+											variant="ghost"
+											size="icon-sm"
+											aria-label={t("ui.editor.export.show_in_folder")}
+											onClick={() => void revealExport(result.path ?? "")}
+										>
+											<FolderOpen aria-hidden="true" />
+										</Button>
+									)}
 									<Button
 										type="button"
 										variant="ghost"

@@ -2,9 +2,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	canDropPaths,
 	canPickFiles,
+	canShowInFolder,
 	cleanPaths,
 	DESKTOP_READY_EVENT,
 	getDesktopBridge,
+	showInFolder,
 	subscribeDesktopBridge,
 } from "./desktopBridge";
 
@@ -34,6 +36,22 @@ describe("desktopBridge", () => {
 		const bridge = getDesktopBridge();
 		expect(canPickFiles(bridge)).toBe(true);
 		expect(canDropPaths(bridge)).toBe(false);
+	});
+
+	it("shows a file in its folder only through a bridge that offers it", async () => {
+		const calls: string[] = [];
+		const bridge = {
+			showInFolder: async (path: string) => {
+				calls.push(path);
+				return [];
+			},
+		};
+		expect(canShowInFolder(bridge)).toBe(true);
+		expect(canShowInFolder({ pickFiles: async () => [] })).toBe(false);
+		expect(canShowInFolder(null)).toBe(false);
+		await showInFolder(bridge, "/out/a.mp4");
+		await showInFolder(null, "/out/b.mp4");
+		expect(calls).toEqual(["/out/a.mp4"]);
 	});
 
 	it("ignores a value that is not an object", () => {

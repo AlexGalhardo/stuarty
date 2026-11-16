@@ -1,13 +1,13 @@
 import { type ReactNode, useEffect, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
-import { useT } from "@/lib/i18n";
 import {
 	canDropPaths,
 	canPickFiles,
 	getDesktopBridge,
 	subscribeDesktopBridge,
-} from "../library/desktopBridge";
+} from "@/lib/desktopBridge";
+import { useT } from "@/lib/i18n";
 import { dismissTips, rememberTips, useTipsVisible } from "../state/tipsStore";
 
 const TIPS = ["library", "palette", "shortcuts"] as const;
