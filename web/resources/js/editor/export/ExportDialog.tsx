@@ -44,7 +44,12 @@ import { errorHeadline } from "../ui/errorHeadline";
 import { formatDecimal, formatSeconds } from "../ui/format";
 import ExportOptionsFields, { type Unsupported } from "./ExportOptions";
 import { exportCapabilities } from "./exportCapabilities";
-import { announcedPercent, exportPhase, groupFindings } from "./exportPhase";
+import {
+	announcedPercent,
+	exportIsStale,
+	exportPhase,
+	groupFindings,
+} from "./exportPhase";
 
 const POLL_AFTER_MS = 5000;
 const POLL_EVERY_MS = 2000;
@@ -197,6 +202,15 @@ export default function ExportDialog({
 			setChecking(false);
 		}
 	}, [runtime]);
+
+	// Reopening after the project changed starts over (VV-009).
+	const stale = exportIsStale(job, revision);
+	useEffect(() => {
+		if (open && stale) {
+			runtime.jobsWriter.setExportJob(null);
+			setFailure(null);
+		}
+	}, [open, stale, runtime]);
 
 	useEffect(() => {
 		if (open && jobId === null) void check();
@@ -575,6 +589,9 @@ export default function ExportDialog({
 								onClick={() => onOpenChange(false)}
 							>
 								{t("ui.editor.export.close")}
+							</Button>
+							<Button type="button" variant="outline" onClick={again}>
+								{t("ui.editor.export.again")}
 							</Button>
 							<Button asChild>
 								<a href={exportFileUrl(jobId)} download>

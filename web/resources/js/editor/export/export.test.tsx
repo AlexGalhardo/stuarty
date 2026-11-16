@@ -8,7 +8,12 @@ import { devFixture } from "../boot/devFixture";
 import { startHarness } from "../fixtures/harness";
 import Library from "../library/Library";
 import { EditorProvider } from "../state/EditorContext";
-import { announcedPercent, exportPhase, groupFindings } from "./exportPhase";
+import {
+	announcedPercent,
+	exportIsStale,
+	exportPhase,
+	groupFindings,
+} from "./exportPhase";
 
 const job = (state: Job["state"]): Job => ({
 	job_id: "job_1",
@@ -64,6 +69,21 @@ describe("export phase", () => {
 		expect([0, 0.09, 0.1, 0.42, 1].map(announcedPercent)).toEqual([
 			0, 0, 10, 40, 100,
 		]);
+	});
+});
+
+describe("export dialog restart", () => {
+	const done = (revision: number): Job => ({
+		...job("succeeded"),
+		result: { export: { revision } } as unknown as Job["result"],
+	});
+
+	test("a succeeded export of an older revision is stale", () => {
+		expect(exportIsStale(done(3), 4)).toBe(true);
+		expect(exportIsStale(done(3), 3)).toBe(false);
+		expect(exportIsStale(done(3), null)).toBe(false);
+		expect(exportIsStale(job("running"), 4)).toBe(false);
+		expect(exportIsStale(undefined, 4)).toBe(false);
 	});
 });
 

@@ -29,6 +29,21 @@ export function exportPhase(input: {
 		: "ready";
 }
 
+// A finished export of an older revision is not what the editor sees any more,
+// so the dialog starts over instead of reopening on that result.
+export function exportIsStale(
+	job: Job | undefined,
+	revision: number | null,
+): boolean {
+	const exported = job?.result?.export?.revision;
+	return (
+		job?.state === "succeeded" &&
+		exported !== undefined &&
+		revision !== null &&
+		revision > exported
+	);
+}
+
 export function groupFindings(findings: readonly LintFinding[]): {
 	errors: LintFinding[];
 	warnings: LintFinding[];
