@@ -125,6 +125,9 @@ func audioAssetKind(id string, asset *timeline.Asset) *Error {
 	case asset.Kind == timeline.AssetImage:
 		return Errorf(CodeTypeMismatch, "Asset %s is an image; audio.add needs audio.", id).
 			WithHint("Use clip.add on a visual track to show it.").WithPath("args.asset_id")
+	case asset.Kind == timeline.AssetLUT:
+		return Errorf(CodeTypeMismatch, "Asset %s is a lookup table; audio.add needs audio.", id).
+			WithHint("Use clip.set_lut to grade a clip with it.").WithPath("args.asset_id")
 	case asset.Kind == timeline.AssetVideo && !asset.HasAudio:
 		return Errorf(CodeTypeMismatch, "Asset %s is a video without audio; audio.add needs audio.", id).
 			WithHint("Use clip.add on a visual track to show it.").WithPath("args.asset_id")

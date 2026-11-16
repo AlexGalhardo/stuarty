@@ -73,7 +73,7 @@ An asset is a reference to a file in the content store plus the facts the frame 
 | --- | --- | --- | --- |
 | `id` | asset id | yes | |
 | `hash` | string | yes | `sha256:` followed by 64 hex characters; identity of the original file |
-| `kind` | `"video"`, `"audio"`, `"image"` | yes | |
+| `kind` | `"video"`, `"audio"`, `"image"`, `"lut"` | yes | `lut` (added after BETA, TASK-0254) is a colour lookup table, a `.cube` file: it has no picture facts, is never placed on a track and is used only through the `lut` of a clip (section 3.5). A `clip` or `audio` item, or a slot, that names a `lut` asset is `V_ASSET_REF` |
 | `name` | string | yes | original file name; display only; untrusted text |
 | `frame_rate` | rational | video only | frame rate of the normalized media |
 | `frame_count` | integer | video only | number of frames of the normalized media |
@@ -83,7 +83,7 @@ An asset is a reference to a file in the content store plus the facts the frame 
 | `has_alpha` | boolean | video only | default false. True when the normalized video keeps an alpha channel (SDD-011 4.3.5); the export then composes the clip over the layers below instead of drawing it opaque |
 | `frame_delays` | array of integers, 2 to 1,000 | animated image only | BETA. Display time of each frame in milliseconds, 10 to 60,000 each, read from the file by ingest. Present only on an `image` asset, with `frame_count` equal to its length; its presence is what makes the image animated (`Asset.IsAnimated`). A still image has neither |
 
-An asset appears in the document only after its ingest produced the normalized media (ADR-0010).
+An asset appears in the document only after its ingest produced the normalized media (ADR-0010); for a `lut` asset, after the `.cube` file was read and checked.
 
 **Animated image (BETA, RF-028).** An animated GIF, WebP or APNG is an `image` asset with `frame_count` and `frame_delays`; there is no fourth asset kind, so every rule that treats an image (no duration limit, `speed` and `source_in` ignored, `fit`, `crop`) holds unchanged and a binary that does not know the fields keeps them. The animation plays from its first frame at the start of the item, loops for as long as the item lasts, and is shown frame by frame by the cumulative delays (the frame at item time `t` is chosen in SDD-004 §3.3 by `t` in milliseconds, rounded to the nearest, modulo the sum of the delays; there is no hold-at-the-last-frame mode). A sticker is an image or animated image on a visual track above the picture, not a type. `frame_delays` on a video or audio asset is `V_SHAPE`. Adding the fields does not change `schema_version` (section 6, rule 2).
 
@@ -171,6 +171,7 @@ A `clip` shows a video or image asset. An `audio` item plays an audio asset, or 
 | `temperature` | number, -1 to 1 | 0 | clip | Added after BETA (TASK-0233). White balance on the warm-cool axis: positive raises red and lowers blue. Not keyframeable |
 | `tint` | number, -1 to 1 | 0 | clip | Added after BETA. White balance on the green-magenta axis: positive lowers green. Not keyframeable |
 | `hue` | number, -180 to 180 | 0 | clip | Added after BETA. Rotation of the colours about the grey axis, in degrees. Not keyframeable |
+| `lut` | object or absent | absent | clip | Added after BETA (TASK-0254). `{asset, intensity}`: `asset` is the id of a `lut` asset of the project (otherwise `V_ASSET_REF`) and `intensity`, 0 to 1, how much of the table is mixed in (0 is the original picture, 1 the full table). The table is applied after the colour adjustments of this section. The core stores and checks the reference; reading the `.cube` file and applying it is the engine's (SDD-004 section 3.6, not yet written). The commands store an intensity of 0 as absent. An `asset.remove` of the table is `E_IN_USE` while a clip uses it. Not keyframeable |
 
 **Source range.** At timeline frame `t` inside the item, the asset position in project frames is `source_in + floor((t - start) * speed.num / speed.den)`. With a `speed_curve` the term `floor((t - start) * speed.num / speed.den)` is `Offset(t - start)` of SDD-004 §3.11, and the number of source frames the item reads is `ceil(duration * speed.num / speed.den)` with `speed` the mean, so the rule below is unchanged. With `reverse` the item shows the same source range backwards: the offset is `ceil(duration * speed.num / speed.den) - 1 - offset` (SDD-004 §3.12), so the range is again `source_in` to `source_in + ceil(...)`. The item must stay inside the asset: `source_in + ceil(duration * speed.num / speed.den)` is at most the asset duration in project frames. Images are exempt.
 

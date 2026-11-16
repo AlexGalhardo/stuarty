@@ -1,6 +1,8 @@
 package command
 
 import (
+	"strings"
+
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
@@ -18,10 +20,11 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "clip.set_color",
-		Summary: "Sets the brightness, contrast, saturation, temperature, tint and hue of a clip.",
+		Summary: "Sets the brightness, contrast, saturation, temperature, tint, hue and lookup table of a clip.",
 		Description: "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, " +
 			"contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is " +
-			"warmer, positive tint is more magenta, hue rotates the colours in degrees.",
+			"warmer, positive tint is more magenta, hue rotates the colours in degrees. lut_asset is the id of a lut asset (a " +
+			".cube file) and lut_intensity how much of it is mixed in, 0 to 1, default 1; lut_intensity 0 removes the lookup table.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "brightness": 0.1, "temperature": 0.3}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
@@ -165,19 +168,32 @@ func cropMap(cr *timeline.Crop) map[string]any {
 }
 
 type clipColorArgs struct {
-	ItemID      string   `json:"item_id"               desc:"A clip."`
-	Brightness  *float64 `json:"brightness,omitempty"  desc:"-1 to 1; default 0."                          min:"-1"   max:"1"`
-	Contrast    *float64 `json:"contrast,omitempty"    desc:"0 to 2; default 1."                           min:"0"    max:"2"`
-	Saturation  *float64 `json:"saturation,omitempty"  desc:"0 to 2; default 1."                           min:"0"    max:"2"`
-	Temperature *float64 `json:"temperature,omitempty" desc:"-1 (cooler) to 1 (warmer); default 0."        min:"-1"   max:"1"`
-	Tint        *float64 `json:"tint,omitempty"        desc:"-1 (greener) to 1 (more magenta); default 0." min:"-1"   max:"1"`
-	Hue         *float64 `json:"hue,omitempty"         desc:"-180 to 180 degrees; default 0."              min:"-180" max:"180"`
+	ItemID       string   `json:"item_id"                 desc:"A clip."`
+	Brightness   *float64 `json:"brightness,omitempty"    desc:"-1 to 1; default 0."                            min:"-1"   max:"1"`
+	Contrast     *float64 `json:"contrast,omitempty"      desc:"0 to 2; default 1."                             min:"0"    max:"2"`
+	Saturation   *float64 `json:"saturation,omitempty"    desc:"0 to 2; default 1."                             min:"0"    max:"2"`
+	Temperature  *float64 `json:"temperature,omitempty"   desc:"-1 (cooler) to 1 (warmer); default 0."          min:"-1"   max:"1"`
+	Tint         *float64 `json:"tint,omitempty"          desc:"-1 (greener) to 1 (more magenta); default 0."   min:"-1"   max:"1"`
+	Hue          *float64 `json:"hue,omitempty"           desc:"-180 to 180 degrees; default 0."                min:"-180" max:"180"`
+	LutAsset     string   `json:"lut_asset,omitempty"     desc:"Id of a lut asset to grade the clip with."`
+	LutIntensity *float64 `json:"lut_intensity,omitempty" desc:"0 to 1; default 1; 0 removes the lookup table." min:"0"    max:"1"`
 }
 
 func applyClipSetColor(c *Context, a *clipColorArgs) error {
-	if err := atLeastOne([]string{"brightness", "contrast", "saturation", "temperature", "tint", "hue"},
-		a.Brightness != nil, a.Contrast != nil, a.Saturation != nil,
-		a.Temperature != nil, a.Tint != nil, a.Hue != nil); err != nil {
+	if err := atLeastOne(
+		[]string{"brightness", "contrast", "saturation", "temperature", "tint", "hue", "lut_asset", "lut_intensity"},
+		a.Brightness != nil,
+		a.Contrast != nil,
+		a.Saturation != nil,
+		a.Temperature != nil,
+		a.Tint != nil,
+		a.Hue != nil,
+		a.LutAsset != "",
+		a.LutIntensity != nil,
+	); err != nil {
+		return err
+	}
+	if err := idForm("args.lut_asset", timeline.PrefixAsset, a.LutAsset); err != nil {
 		return err
 	}
 	it, err := c.clipItem(a.ItemID, "colour")
@@ -202,6 +218,9 @@ func applyClipSetColor(c *Context, a *clipColorArgs) error {
 	if a.Hue != nil {
 		it.Hue = round3(*a.Hue)
 	}
+	if err := setLut(c, &it, a); err != nil {
+		return err
+	}
 	c.Doc.Items[a.ItemID] = it
 	c.SetEffective("brightness", it.Brightness)
 	c.SetEffective("contrast", it.Contrast)
@@ -209,5 +228,64 @@ func applyClipSetColor(c *Context, a *clipColorArgs) error {
 	c.SetEffective("temperature", it.Temperature)
 	c.SetEffective("tint", it.Tint)
 	c.SetEffective("hue", it.Hue)
+	if it.Lut != nil {
+		c.SetEffective("lut", map[string]any{"asset_id": it.Lut.Asset, "intensity": it.Lut.Intensity})
+	} else {
+		c.SetEffective("lut", nil)
+	}
 	return nil
+}
+
+// setLut applies lut_asset and lut_intensity: the asset must be a lut asset of the project, the
+// intensity defaults to 1 for a new table and keeps the current value for the same one, and an
+// intensity of 0 removes the table (SDD-001 section 3.5).
+func setLut(c *Context, it *timeline.Item, a *clipColorArgs) *Error {
+	if a.LutAsset == "" && a.LutIntensity == nil {
+		return nil
+	}
+	if a.LutAsset == "" && it.Lut == nil {
+		return invalidArg("args.lut_intensity", "args.lut_intensity is given but the clip has no lookup table.").
+			WithHint("Send lut_asset with the id of a lut asset.")
+	}
+	next := timeline.Lut{Intensity: 1}
+	if it.Lut != nil {
+		next = *it.Lut
+	}
+	if a.LutAsset != "" {
+		asset, err := c.asset(a.LutAsset, "args.lut_asset")
+		if err != nil {
+			return err
+		}
+		if asset.Kind != timeline.AssetLUT {
+			return Errorf(
+				CodeTypeMismatch,
+				"Asset %s is %s %s asset; lut_asset needs a lut asset.",
+				a.LutAsset,
+				indefinite(string(asset.Kind)),
+				asset.Kind,
+			).
+				WithHint("Import a .cube file and use the id of that asset.").
+				WithPath("args.lut_asset")
+		}
+		if next.Asset != a.LutAsset {
+			next.Intensity = 1
+		}
+		next.Asset = a.LutAsset
+	}
+	if a.LutIntensity != nil {
+		next.Intensity = round3(*a.LutIntensity)
+	}
+	if next.Intensity == 0 {
+		it.Lut = nil
+		return nil
+	}
+	it.Lut = &next
+	return nil
+}
+
+func indefinite(word string) string {
+	if word != "" && strings.ContainsRune("aeiou", rune(word[0])) {
+		return "an"
+	}
+	return "a"
 }

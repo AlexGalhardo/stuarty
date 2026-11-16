@@ -24,6 +24,16 @@
       "description": "A clip.",
       "type": "string"
     },
+    "lut_asset": {
+      "description": "Id of a lut asset to grade the clip with.",
+      "type": "string"
+    },
+    "lut_intensity": {
+      "description": "0 to 1; default 1; 0 removes the lookup table.",
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    },
     "saturation": {
       "description": "0 to 2; default 1.",
       "maximum": 2,

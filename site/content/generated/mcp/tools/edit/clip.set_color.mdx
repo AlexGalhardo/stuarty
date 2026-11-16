@@ -1,6 +1,6 @@
 ---
 title: "clip.set_color"
-description: "Sets the brightness, contrast, saturation, temperature, tint and hue of a clip."
+description: "Sets the brightness, contrast, saturation, temperature, tint, hue and lookup table of a clip."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is warmer, positive tint is more magenta, hue rotates the colours in degrees.
+Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is warmer, positive tint is more magenta, hue rotates the colours in degrees. lut_asset is the id of a lut asset (a .cube file) and lut_intensity how much of it is mixed in, 0 to 1, default 1; lut_intensity 0 removes the lookup table.
 
 ## Arguments
 
@@ -20,6 +20,8 @@ Sets the given adjustments, rounded to 3 decimals; a value equal to the default 
 | `contrast` | `number` | no | 0 to 2; default 1.; min 0; max 2 |
 | `hue` | `number` | no | -180 to 180 degrees; default 0.; min -180; max 180 |
 | `item_id` | `string` | yes | A clip. |
+| `lut_asset` | `string` | no | Id of a lut asset to grade the clip with. |
+| `lut_intensity` | `number` | no | 0 to 1; default 1; 0 removes the lookup table.; min 0; max 1 |
 | `saturation` | `number` | no | 0 to 2; default 1.; min 0; max 2 |
 | `temperature` | `number` | no | -1 (cooler) to 1 (warmer); default 0.; min -1; max 1 |
 | `tint` | `number` | no | -1 (greener) to 1 (more magenta); default 0.; min -1; max 1 |

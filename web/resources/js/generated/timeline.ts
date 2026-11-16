@@ -39,7 +39,7 @@ export interface Asset {
   hash: string;
   height?: number;
   id: string;
-  kind: "video" | "audio" | "image";
+  kind: "video" | "audio" | "image" | "lut";
   name: string;
   sample_count?: number;
   width?: number;
@@ -101,6 +101,7 @@ export interface Item {
   };
   link?: string;
   linked_item?: string;
+  lut?: Lut;
   /**
    * @maxItems 200
    */
@@ -178,6 +179,10 @@ export interface Keyframe {
   easing?: "linear" | "ease_in" | "ease_out" | "ease_in_out" | "hold";
   t: number;
   value: number;
+}
+export interface Lut {
+  asset: string;
+  intensity: number;
 }
 export interface Marker {
   frame: number;

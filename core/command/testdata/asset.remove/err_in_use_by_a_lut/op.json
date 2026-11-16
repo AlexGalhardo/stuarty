@@ -1,0 +1,6 @@
+{
+  "op": "asset.remove",
+  "args": {
+    "asset_id": "ast_2b3c4d5f6g"
+  }
+}

@@ -374,6 +374,7 @@ func outOfSource(slot *timeline.Slot, it *timeline.Item, asset *timeline.Asset, 
 func fillAssetKind(it *timeline.Item, slot *timeline.Slot, asset *timeline.Asset) *Error {
 	word := map[timeline.AssetKind]string{
 		timeline.AssetImage: "an image", timeline.AssetVideo: "a video", timeline.AssetAudio: "an audio file",
+		timeline.AssetLUT: "a lookup table",
 	}[asset.Kind]
 	if it.Type == timeline.ItemAudio {
 		if asset.Kind == timeline.AssetAudio || asset.Kind == timeline.AssetVideo && asset.HasAudio {
@@ -384,7 +385,7 @@ func fillAssetKind(it *timeline.Item, slot *timeline.Slot, asset *timeline.Asset
 			slot.Name).
 			WithHint("Use an audio asset, or a video with audio.").WithPath("args.asset_id")
 	}
-	if asset.Kind == timeline.AssetAudio {
+	if asset.Kind == timeline.AssetAudio || asset.Kind == timeline.AssetLUT {
 		return Errorf(CodeTypeMismatch, "Asset %s is %s; slot %q holds a clip.", asset.ID, word, slot.Name).
 			WithHint("Use a video or image asset.").WithPath("args.asset_id")
 	}

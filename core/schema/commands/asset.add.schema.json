@@ -54,7 +54,8 @@
           "enum": [
             "video",
             "audio",
-            "image"
+            "image",
+            "lut"
           ],
           "type": "string"
         },

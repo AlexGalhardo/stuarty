@@ -160,6 +160,10 @@ func (c *Context) clipTypes(a *clipAddArgs, asset timeline.Asset, placeholder bo
 		return Errorf(CodeTypeMismatch, "Asset %s is an audio asset; clip.add places video or images.", a.AssetID).
 			WithHint("Use audio.add on an audio track.").WithPath("args.asset_id")
 	}
+	if asset.Kind == timeline.AssetLUT {
+		return Errorf(CodeTypeMismatch, "Asset %s is a lookup table; clip.add places video or images.", a.AssetID).
+			WithHint("Use clip.set_lut to grade a clip with it.").WithPath("args.asset_id")
+	}
 	if asset.Kind == timeline.AssetImage && a.SourceIn != "" {
 		if f, err := c.ParseTime("args.source_in", string(a.SourceIn)); err == nil && f != 0 {
 			return Errorf(CodeValidation, "args.source_in must be omitted for image asset %s.", a.AssetID).

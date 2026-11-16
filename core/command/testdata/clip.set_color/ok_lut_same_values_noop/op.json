@@ -1,0 +1,8 @@
+{
+  "op": "clip.set_color",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "lut_asset": "ast_2b3c4d5f6g",
+    "lut_intensity": 0.4
+  }
+}

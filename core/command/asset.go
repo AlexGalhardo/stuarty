@@ -66,9 +66,10 @@ func checkAsset(a *timeline.Asset) *Error {
 		if a.Width < 1 || a.Height < 1 {
 			return missing("width", "image", probe+"width and height.")
 		}
+	case timeline.AssetLUT:
 	default:
-		return Errorf(CodeValidation, "args.asset.kind %q is not video, audio or image.", a.Kind).
-			WithHint("Use \"video\", \"audio\" or \"image\".").WithPath("args.asset.kind")
+		return Errorf(CodeValidation, "args.asset.kind %q is not video, audio, image or lut.", a.Kind).
+			WithHint("Use \"video\", \"audio\", \"image\" or \"lut\".").WithPath("args.asset.kind")
 	}
 	if hasAudio && a.SampleCount < 1 {
 		return Errorf(CodeValidation, "args.asset.sample_count is required for an asset with audio (kind %q).", a.Kind).

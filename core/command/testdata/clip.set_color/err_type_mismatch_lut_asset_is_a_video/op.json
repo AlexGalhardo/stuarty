@@ -1,0 +1,7 @@
+{
+  "op": "clip.set_color",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "lut_asset": "ast_3c5v8n2w6d"
+  }
+}

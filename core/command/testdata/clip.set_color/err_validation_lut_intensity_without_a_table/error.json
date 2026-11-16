@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.lut_intensity is given but the clip has no lookup table.",
+  "hint": "Send lut_asset with the id of a lut asset.",
+  "retryable": false,
+  "path": "args.lut_intensity"
+}

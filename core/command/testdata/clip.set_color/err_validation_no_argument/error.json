@@ -1,6 +1,6 @@
 {
   "code": "E_VALIDATION",
-  "message": "args: give at least one of brightness, contrast, saturation, temperature, tint, hue.",
+  "message": "args: give at least one of brightness, contrast, saturation, temperature, tint, hue, lut_asset, lut_intensity.",
   "hint": "Send for example {\"brightness\": ...}.",
   "retryable": false,
   "path": "args"
