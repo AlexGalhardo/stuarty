@@ -79,6 +79,7 @@ export interface Item {
   flip_x?: boolean;
   flip_y?: boolean;
   height?: number;
+  hue?: number;
   id: string;
   keyframes?: {
     /**
@@ -106,7 +107,9 @@ export interface Item {
   stroke_color?: string;
   stroke_width?: number;
   style?: CaptionStyle;
+  temperature?: number;
   text?: string;
+  tint?: number;
   track: string;
   transition_in?: Transition;
   transition_out?: Transition;

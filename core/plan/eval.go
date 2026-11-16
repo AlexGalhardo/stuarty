@@ -1,6 +1,7 @@
 package plan
 
 import (
+	"math"
 	"slices"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
@@ -106,12 +107,13 @@ func sourceFrame(it *timeline.Item, a *timeline.Asset, fps timeline.Rational, r 
 	return int(max(sf, 0))
 }
 
-// colorMatrix is the 3×4 matrix S×C of SDD-004 §3.5, row-major with the
-// offset in the fourth column, or nil when brightness, contrast and
-// saturation are neutral.
+// colorMatrix is the 3×4 matrix H×S×C×G of SDD-004 §3.5, row-major with the
+// offset in the fourth column, or nil when every adjustment is neutral.
 func colorMatrix(it *timeline.Item) *[12]float64 {
 	b, k, s := it.Brightness, it.Contrast, it.Saturation
-	if b == 0 && k == 1 && s == 1 {
+	temp, tint, hue := it.Temperature, it.Tint, it.Hue
+
+	if b == 0 && k == 1 && s == 1 && temp == 0 && tint == 0 && hue == 0 {
 		return nil
 	}
 
@@ -125,16 +127,52 @@ func colorMatrix(it *timeline.Item) *[12]float64 {
 		{lr * (1 - s), lg * (1 - s), lb + (1-lb)*s},
 	}
 
+	// G: per-channel gains of the white balance, applied to the input before C.
+	gain := [3]float64{1 + 0.25*temp, 1 - 0.25*tint, 1 - 0.25*temp}
+
+	for i := range rows {
+		for j := range rows[i] {
+			rows[i][j] *= k * gain[j]
+		}
+	}
+
+	if hue != 0 {
+		rows = hueRotate(hue, rows)
+	}
+
 	var m [12]float64
 
 	for i, row := range rows {
 		for j, v := range row {
-			m[i*4+j] = round3(v * k)
+			m[i*4+j] = round3(v)
 		}
 
-		// The offset passes through S as well: l(off,off,off) = off.
+		// The offset passes through S and H as well: both keep grey, l(off,off,off) = off.
 		m[i*4+3] = round3(off)
 	}
 
 	return &m
+}
+
+// hueRotate is H×rows with H the hue rotation of the W3C filter effects (a rotation about the
+// grey axis, rows summing to 1) for deg degrees.
+func hueRotate(deg float64, rows [3][3]float64) [3][3]float64 {
+	c, s := math.Cos(deg*math.Pi/180), math.Sin(deg*math.Pi/180)
+	h := [3][3]float64{
+		{0.213 + c*0.787 - s*0.213, 0.715 - c*0.715 - s*0.715, 0.072 - c*0.072 + s*0.928},
+		{0.213 - c*0.213 + s*0.143, 0.715 + c*0.285 + s*0.140, 0.072 - c*0.072 - s*0.283},
+		{0.213 - c*0.213 - s*0.787, 0.715 - c*0.715 + s*0.715, 0.072 + c*0.928 + s*0.072},
+	}
+
+	var out [3][3]float64
+
+	for i := range h {
+		for j := range out[i] {
+			for l := range h[i] {
+				out[i][j] += h[i][l] * rows[l][j]
+			}
+		}
+	}
+
+	return out
 }

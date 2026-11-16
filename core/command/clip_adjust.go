@@ -18,10 +18,11 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "clip.set_color",
-		Summary: "Sets the brightness, contrast and saturation of a clip.",
+		Summary: "Sets the brightness, contrast, saturation, temperature, tint and hue of a clip.",
 		Description: "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, " +
-			"contrast 1, saturation 1) clears the stored one.",
-		Example: `{"item_id": "itm_m1n2p3q4r5", "brightness": 0.1, "saturation": 1.2}`,
+			"contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is " +
+			"warmer, positive tint is more magenta, hue rotates the colours in degrees.",
+		Example: `{"item_id": "itm_m1n2p3q4r5", "brightness": 0.1, "temperature": 0.3}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
 		Phase:   Alpha,
@@ -140,15 +141,19 @@ func cropMap(cr *timeline.Crop) map[string]any {
 }
 
 type clipColorArgs struct {
-	ItemID     string   `json:"item_id"              desc:"A clip."`
-	Brightness *float64 `json:"brightness,omitempty" desc:"-1 to 1; default 0." min:"-1" max:"1"`
-	Contrast   *float64 `json:"contrast,omitempty"   desc:"0 to 2; default 1."  min:"0"  max:"2"`
-	Saturation *float64 `json:"saturation,omitempty" desc:"0 to 2; default 1."  min:"0"  max:"2"`
+	ItemID      string   `json:"item_id"               desc:"A clip."`
+	Brightness  *float64 `json:"brightness,omitempty"  desc:"-1 to 1; default 0."                          min:"-1"   max:"1"`
+	Contrast    *float64 `json:"contrast,omitempty"    desc:"0 to 2; default 1."                           min:"0"    max:"2"`
+	Saturation  *float64 `json:"saturation,omitempty"  desc:"0 to 2; default 1."                           min:"0"    max:"2"`
+	Temperature *float64 `json:"temperature,omitempty" desc:"-1 (cooler) to 1 (warmer); default 0."        min:"-1"   max:"1"`
+	Tint        *float64 `json:"tint,omitempty"        desc:"-1 (greener) to 1 (more magenta); default 0." min:"-1"   max:"1"`
+	Hue         *float64 `json:"hue,omitempty"         desc:"-180 to 180 degrees; default 0."              min:"-180" max:"180"`
 }
 
 func applyClipSetColor(c *Context, a *clipColorArgs) error {
-	if err := atLeastOne([]string{"brightness", "contrast", "saturation"},
-		a.Brightness != nil, a.Contrast != nil, a.Saturation != nil); err != nil {
+	if err := atLeastOne([]string{"brightness", "contrast", "saturation", "temperature", "tint", "hue"},
+		a.Brightness != nil, a.Contrast != nil, a.Saturation != nil,
+		a.Temperature != nil, a.Tint != nil, a.Hue != nil); err != nil {
 		return err
 	}
 	it, err := c.clipItem(a.ItemID, "colour")
@@ -164,9 +169,21 @@ func applyClipSetColor(c *Context, a *clipColorArgs) error {
 	if a.Saturation != nil {
 		it.Saturation = round3(*a.Saturation)
 	}
+	if a.Temperature != nil {
+		it.Temperature = round3(*a.Temperature)
+	}
+	if a.Tint != nil {
+		it.Tint = round3(*a.Tint)
+	}
+	if a.Hue != nil {
+		it.Hue = round3(*a.Hue)
+	}
 	c.Doc.Items[a.ItemID] = it
 	c.SetEffective("brightness", it.Brightness)
 	c.SetEffective("contrast", it.Contrast)
 	c.SetEffective("saturation", it.Saturation)
+	c.SetEffective("temperature", it.Temperature)
+	c.SetEffective("tint", it.Tint)
+	c.SetEffective("hue", it.Hue)
 	return nil
 }

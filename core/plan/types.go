@@ -47,7 +47,7 @@ type Layer struct {
 	AssetKind   string       `json:"asset_kind,omitempty"` // "video" or "image"
 	SourceFrame int          `json:"source_frame,omitempty"`
 	Crop        Rect         `json:"crop,omitzero"`          // in source pixels after the item's crop fractions
-	ColorMatrix *[12]float64 `json:"color_matrix,omitempty"` // nil when brightness, contrast and saturation are neutral
+	ColorMatrix *[12]float64 `json:"color_matrix,omitempty"` // nil when every colour adjustment is neutral
 
 	// Bitmap layers (text, caption, shape items).
 	Bitmap *BitmapSpec `json:"bitmap,omitempty"`

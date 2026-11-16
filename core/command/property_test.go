@@ -320,10 +320,12 @@ var alphaOps = map[string]func(p *docPick) string{
 	},
 	"clip.set_color": func(p *docPick) string {
 		return fmt.Sprintf(
-			`{"item_id":%q,"brightness":%.2f,"saturation":%.2f}`,
+			`{"item_id":%q,"brightness":%.2f,"saturation":%.2f,"temperature":%.2f,"hue":%d}`,
 			p.clip(),
 			float64(p.n(200))/100-1,
 			float64(p.n(200))/100,
+			float64(p.n(200))/100-1,
+			p.n(361)-180,
 		)
 	},
 	"clip.set_filter": func(p *docPick) string {

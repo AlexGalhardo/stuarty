@@ -1,5 +1,8 @@
 {
   "brightness": 0.123,
   "contrast": 1,
-  "saturation": 1.235
+  "hue": 0,
+  "saturation": 1.235,
+  "temperature": 0,
+  "tint": 0
 }

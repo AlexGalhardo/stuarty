@@ -273,6 +273,9 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"brightness", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Brightness = 2 }) }, VShape},
 		{"contrast", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Contrast = 3 }) }, VShape},
 		{"saturation", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Saturation = -1 }) }, VShape},
+		{"temperature", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Temperature = 1.5 }) }, VShape},
+		{"tint", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Tint = -1.5 }) }, VShape},
+		{"hue", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Hue = 181 }) }, VShape},
 
 		// Fields of another item type.
 		{"text on clip", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Text = "x" }) }, VShape},

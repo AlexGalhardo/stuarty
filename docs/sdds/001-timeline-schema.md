@@ -161,6 +161,9 @@ A `clip` shows a video or image asset. An `audio` item plays an audio asset, or 
 | `brightness` | number, -1 to 1 | 0 | clip | |
 | `contrast` | number, 0 to 2 | 1 | clip | |
 | `saturation` | number, 0 to 2 | 1 | clip | |
+| `temperature` | number, -1 to 1 | 0 | clip | Added after BETA (TASK-0233). White balance on the warm-cool axis: positive raises red and lowers blue. Not keyframeable |
+| `tint` | number, -1 to 1 | 0 | clip | Added after BETA. White balance on the green-magenta axis: positive lowers green. Not keyframeable |
+| `hue` | number, -180 to 180 | 0 | clip | Added after BETA. Rotation of the colours about the grey axis, in degrees. Not keyframeable |
 
 **Source range.** At timeline frame `t` inside the item, the asset position in project frames is `source_in + floor((t - start) * speed.num / speed.den)`. The item must stay inside the asset: `source_in + ceil(duration * speed.num / speed.den)` is at most the asset duration in project frames. Images are exempt.
 
@@ -401,7 +404,7 @@ The caption track sorts first (`a0` before `a1`), so captions are drawn over the
 
 1. `schema_version` is an integer that increases by one for every incompatible change: a removed or renamed field, a changed meaning, a tightened constraint.
 2. Adding an optional field with a default that preserves the old behaviour does not change `schema_version`. Older binaries keep it through the unknown-field rule.
-   BETA added `blur`, `filter`, `filter_amount`, `markers`, `frame_delays` and the `fonts` entries under this rule: all are optional with a default that preserves the old behaviour, so `schema_version` stays 1 and no `v1to2` exists. A document saved by the ALPHA binary validates unchanged. `chroma_key`, `blend` and `mask` (VV-015), `flip_x`, `flip_y` and `disabled` (TASK-0233) and the document `markers` (VV-035) are added under the same rule: optional and absent by default, so `schema_version` stays 1. The track fields `locked`, `solo` and `volume` (VV-036) follow the same rule.
+   BETA added `blur`, `filter`, `filter_amount`, `markers`, `frame_delays` and the `fonts` entries under this rule: all are optional with a default that preserves the old behaviour, so `schema_version` stays 1 and no `v1to2` exists. A document saved by the ALPHA binary validates unchanged. `chroma_key`, `blend` and `mask` (VV-015), `flip_x`, `flip_y`, `disabled`, `temperature`, `tint` and `hue` (TASK-0233) and the document `markers` (VV-035) are added under the same rule: optional and absent by default, so `schema_version` stays 1. The track fields `locked`, `solo` and `volume` (VV-036) follow the same rule.
 3. The chain lives in the package `core/timeline/migrate` (standard library only, no document type, so `timeline` can call it before typing a document). For each version step there is one pure function `func v1to2(doc Doc) (Doc, error)` over the decoded JSON (`Doc` is `map[string]any`, numbers as `json.Number`), registered in the `registry` table of `migrate.go`; `migrate.Migrate` chains the steps from the document's version to `migrate.Current`, and `timeline.Decode` calls it first through `timeline.Migrate`, which turns its error into a `V_SCHEMA_VERSION` or `V_SHAPE` violation. An `init` check panics when a version between 1 and `Current` has no step.
 
    **To add a version:** raise `migrate.Current` (and nothing else in the constant: `timeline.CurrentSchemaVersion` follows it), write `vNtoN+1`, register it, copy the valid examples to `testdata/versions/vN+1/`, add every new fixture path to `testdata/versions/MANIFEST.txt`, and regenerate the schema.

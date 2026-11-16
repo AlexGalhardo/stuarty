@@ -579,6 +579,7 @@ func TestRoundTripKeepsVukemProperties(t *testing.T) {
 	c1.X, c1.Scale, c1.Rotation, c1.Opacity = &x, 1.5, 12, 0.8
 	c1.Volume, c1.FadeIn, c1.AudioMuted = 0.5, 6, true
 	c1.Brightness, c1.Contrast, c1.Saturation = 0.1, 1.2, 0.9
+	c1.Temperature, c1.Tint, c1.Hue = 0.3, -0.2, 45
 	c1.Fit, c1.Crop = "contain", &timeline.Crop{Left: 0.1, Bottom: 0.2}
 	c1.Filter, c1.FilterAmount, c1.Blur = "sepia", 0.6, 4
 	d.Items[c1.ID] = c1
@@ -609,7 +610,7 @@ func TestRoundTripKeepsVukemProperties(t *testing.T) {
 
 	if got.X == nil || *got.X != 120 || got.Scale != 1.5 || got.Rotation != 12 || got.Opacity != 0.8 ||
 		got.Volume != 0.5 || got.FadeIn != 6 || !got.AudioMuted || got.Brightness != 0.1 || got.Contrast != 1.2 ||
-		got.Saturation != 0.9 || got.Fit != "contain" || got.Crop == nil || got.Crop.Left != 0.1 ||
+		got.Saturation != 0.9 || got.Temperature != 0.3 || got.Tint != -0.2 || got.Hue != 45 || got.Fit != "contain" || got.Crop == nil || got.Crop.Left != 0.1 ||
 		got.Crop.Bottom != 0.2 || got.Filter != "sepia" || got.FilterAmount != 0.6 || got.Blur != 4 {
 		t.Errorf("properties did not come back: %+v", got)
 	}

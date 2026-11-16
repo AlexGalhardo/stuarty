@@ -268,7 +268,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `audio.add` | A | `track_id`, `asset_id`, `start`, `source_in?`, `duration?`, `id?` | Places an audio asset, or the audio of a video asset, on an audio track |
 | `clip.set_framing` | A | `item_id`, `fit?`, `crop?` | Sets fit and crop |
 | `clip.set_speed` | A | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs |
-| `clip.set_color` | A | `item_id`, `brightness?`, `contrast?`, `saturation?` | Sets colour adjustment |
+| `clip.set_color` | A | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; after BETA also white balance and hue rotation (TASK-0233). See C.26 |
 | `clip.set_filter` | B | `item_id`, `filter?`, `amount?` | BETA (RF-027). Sets the colour filter of a clip and how much of it is mixed in |
 | `clip.set_blur` | B | `item_id`, `radius` | BETA (RF-027). Sets the blur radius of a clip in pixels; 0 removes it |
 | `clip.set_chroma_key` | B | `item_id`, `color` (`#RRGGBB` or null), `similarity?`, `smoothness?`, `spill?` | Keys out one colour of a clip (a green screen); null removes the key. See C.55 |
@@ -2343,8 +2343,11 @@ Sets the colour adjustments of a clip.
 | `brightness` | number | no | unchanged | -1 to 1 |
 | `contrast` | number | no | unchanged | 0 to 2 |
 | `saturation` | number | no | unchanged | 0 to 2 |
+| `temperature` | number | no | unchanged | -1 to 1; added after BETA (TASK-0233); positive is warmer, negative cooler |
+| `tint` | number | no | unchanged | -1 to 1; added after BETA; positive is more magenta, negative greener |
+| `hue` | number | no | unchanged | -180 to 180 degrees; added after BETA; rotates the colours about the grey axis |
 
-At least one of the three is required.
+At least one of the six is required.
 
 **Preconditions.**
 
@@ -2354,7 +2357,7 @@ At least one of the three is required.
 
 **Postconditions.**
 
-1. Given values are set, rounded to 3 decimals; values equal to the default (0, 1, 1) remove the field.
+1. Given values are set, rounded to 3 decimals; values equal to the default (0, 1, 1, 0, 0, 0) remove the field.
 2. `diff` has one `item.updated`; empty when unchanged. `effective` has the stored values.
 
 **Errors.**
@@ -2387,9 +2390,17 @@ At least one of the three is required.
 - `ok_default_values_remove_fields`
 - `ok_rounded_to_3_decimals`
 - `ok_same_values_noop`
+- `ok_temperature_tint_hue`
+- `ok_white_balance_boundaries`
+- `ok_hue_180`
+- `ok_new_defaults_remove_fields`
+- `ok_new_rounded_to_3_decimals`
 - `err_validation_no_argument`
 - `err_validation_brightness_above_1`
 - `err_validation_saturation_negative`
+- `err_validation_temperature_above_1`
+- `err_validation_tint_below_minus_1`
+- `err_validation_hue_above_180`
 - `err_not_found`
 - `err_type_mismatch_audio_item`
 

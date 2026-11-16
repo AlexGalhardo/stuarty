@@ -616,6 +616,10 @@ export interface ClipSetColorArgs {
    */
   contrast?: number;
   /**
+   * -180 to 180 degrees; default 0.
+   */
+  hue?: number;
+  /**
    * A clip.
    */
   item_id: string;
@@ -623,6 +627,14 @@ export interface ClipSetColorArgs {
    * 0 to 2; default 1.
    */
   saturation?: number;
+  /**
+   * -1 (cooler) to 1 (warmer); default 0.
+   */
+  temperature?: number;
+  /**
+   * -1 (greener) to 1 (more magenta); default 0.
+   */
+  tint?: number;
 }
 
 export interface ClipSetFilterArgs {
@@ -2030,7 +2042,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"clip.set_blend": { summary: "Sets how a visual item is mixed with what is below it.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_blur": { summary: "Sets the blur radius of a clip.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_chroma_key": { summary: "Keys out one colour of a clip, such as a green screen.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
-	"clip.set_color": { summary: "Sets the brightness, contrast and saturation of a clip.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"clip.set_color": { summary: "Sets the brightness, contrast, saturation, temperature, tint and hue of a clip.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_filter": { summary: "Sets the colour filter of a clip and how much of it is mixed in.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_flip": { summary: "Mirrors a visual item horizontally, vertically or both.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_framing": { summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
