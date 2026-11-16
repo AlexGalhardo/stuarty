@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "all": {
+      "description": "true removes every marker of the timeline, instead of at.",
+      "type": "boolean"
+    },
+    "at": {
+      "description": "The position of the marker to remove.",
+      "type": "string",
+      "x-vv-kind": "time"
+    }
+  },
+  "required": [],
+  "type": "object"
+}

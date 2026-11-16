@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "at": {
+      "description": "The position on the timeline.",
+      "type": "string",
+      "x-vv-kind": "time"
+    },
+    "label": {
+      "description": "Up to 60 characters; default none.",
+      "maxLength": 60,
+      "type": "string"
+    }
+  },
+  "required": [
+    "at"
+  ],
+  "type": "object"
+}

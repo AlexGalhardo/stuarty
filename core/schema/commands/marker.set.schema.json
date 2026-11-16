@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "at": {
+      "description": "The position of the marker to change.",
+      "type": "string",
+      "x-vv-kind": "time"
+    },
+    "label": {
+      "description": "The new label, up to 60 characters; \"\" removes it.",
+      "maxLength": 60,
+      "type": "string"
+    },
+    "to": {
+      "description": "The new position.",
+      "type": "string",
+      "x-vv-kind": "time"
+    }
+  },
+  "required": [
+    "at"
+  ],
+  "type": "object"
+}

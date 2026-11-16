@@ -49,6 +49,7 @@ Out of this document: how commands change the document (SDD-002), how it becomes
 | `items` | map of Item | yes, may be empty | section 3.4 |
 | `fonts` | map of ProjectFont | no | user fonts added to the project, section 3.9 |
 | `template` | TemplateInfo | no | present only in a template document, section 3.10 |
+| `markers` | array of Marker, up to 200 | no | Added after BETA (VV-035). Labelled frames of the timeline that a person or an agent keeps (`marker.add`, `marker.set`, `marker.remove`). Marker as in section 3.4 (`frame`, `label` up to 60 characters) but `frame` counts from frame 0 of the timeline, from 0 to the frame limit; frames strictly increasing. Not tied to an item, unlike the beat markers of an item |
 
 The revision number, timestamps and trash state are not in the document; they belong to its database row (SDD-005).
 
@@ -320,7 +321,7 @@ TemplateInfo, at the top of a template document: `{"description": string, "color
 | `V_TRANSITIONS` | transition durations sum to at most `duration` |
 | `V_KEYFRAMES` | keyframe rules of section 3.8 hold |
 | `V_WORDS` | caption word rules of section 3.7 hold |
-| `V_MARKERS` | marker rules of section 3.4 hold: at most 200, each frame inside the item, frames strictly increasing |
+| `V_MARKERS` | marker rules of section 3.4 hold: at most 200, each frame inside the item, frames strictly increasing; the same for the `markers` of the document, whose frames lie from 0 to the frame limit |
 | `V_FONT` | every `font_family` and weight exists in the bundled set or in `fonts`; no key of `fonts` is a bundled family and no family repeats a weight (section 3.9); the effective weight (the given one, else 700) must be one the family ships, as listed in `engine/raster/fonts/FONTS.md` and kept in `timeline.BundledWeights` by a test |
 | `V_SLOT` | slot names are unique and each slot kind matches its item type |
 | `V_COLOR_REF` | every `"$name"` colour reference exists in `template.colors` |
@@ -393,7 +394,7 @@ The caption track sorts first (`a0` before `a1`), so captions are drawn over the
 
 1. `schema_version` is an integer that increases by one for every incompatible change: a removed or renamed field, a changed meaning, a tightened constraint.
 2. Adding an optional field with a default that preserves the old behaviour does not change `schema_version`. Older binaries keep it through the unknown-field rule.
-   BETA added `blur`, `filter`, `filter_amount`, `markers`, `frame_delays` and the `fonts` entries under this rule: all are optional with a default that preserves the old behaviour, so `schema_version` stays 1 and no `v1to2` exists. A document saved by the ALPHA binary validates unchanged. `chroma_key` (VV-015) is added under the same rule: an optional object that is absent by default, so `schema_version` stays 1.
+   BETA added `blur`, `filter`, `filter_amount`, `markers`, `frame_delays` and the `fonts` entries under this rule: all are optional with a default that preserves the old behaviour, so `schema_version` stays 1 and no `v1to2` exists. A document saved by the ALPHA binary validates unchanged. `chroma_key` (VV-015) and the document `markers` (VV-035) are added under the same rule: optional and absent by default, so `schema_version` stays 1.
 3. The chain lives in the package `core/timeline/migrate` (standard library only, no document type, so `timeline` can call it before typing a document). For each version step there is one pure function `func v1to2(doc Doc) (Doc, error)` over the decoded JSON (`Doc` is `map[string]any`, numbers as `json.Number`), registered in the `registry` table of `migrate.go`; `migrate.Migrate` chains the steps from the document's version to `migrate.Current`, and `timeline.Decode` calls it first through `timeline.Migrate`, which turns its error into a `V_SCHEMA_VERSION` or `V_SHAPE` violation. An `init` check panics when a version between 1 and `Current` has no step.
 
    **To add a version:** raise `migrate.Current` (and nothing else in the constant: `timeline.CurrentSchemaVersion` follows it), write `vNtoN+1`, register it, copy the valid examples to `testdata/versions/vN+1/`, add every new fixture path to `testdata/versions/MANIFEST.txt`, and regenerate the schema.

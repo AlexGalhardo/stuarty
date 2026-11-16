@@ -40,6 +40,7 @@ Operations of `edit` (`namespace.action`); a star marks those added after the Pr
 - `font`: add*, remove*
 - `item`: crossfade*, delete, duplicate*, move, rename*, set_audio*, set_transform*, set_transition*, split, trim
 - `keyframe`: clear*, remove*, set*
+- `marker`: add*, remove*, set*
 - `project`: rename
 - `settings`: set, set_fps*
 - `shape`: add*, set*

@@ -103,6 +103,7 @@ func (v *validator) document() {
 		v.add(VShape, "name", d.ID, "name must have 1 to 120 characters")
 	}
 	v.settings()
+	v.docMarkers(d)
 	if len(d.Tracks) > MaxTracks {
 		v.add(VLimits, "tracks", d.ID, "%d tracks exceed the limit of %d", len(d.Tracks), MaxTracks)
 	}

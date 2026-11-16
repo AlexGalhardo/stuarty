@@ -1351,6 +1351,43 @@ export interface KeyframeSetArgs {
   value: number;
 }
 
+export interface MarkerAddArgs {
+  /**
+   * The position on the timeline.
+   */
+  at: string;
+  /**
+   * Up to 60 characters; default none.
+   */
+  label?: string;
+}
+
+export interface MarkerRemoveArgs {
+  /**
+   * true removes every marker of the timeline, instead of at.
+   */
+  all?: boolean;
+  /**
+   * The position of the marker to remove.
+   */
+  at?: string;
+}
+
+export interface MarkerSetArgs {
+  /**
+   * The position of the marker to change.
+   */
+  at: string;
+  /**
+   * The new label, up to 60 characters; "" removes it.
+   */
+  label?: string;
+  /**
+   * The new position.
+   */
+  to?: string;
+}
+
 export interface ProjectRenameArgs {
   /**
    * The new name, 1 to 120 characters.
@@ -1771,7 +1808,7 @@ export interface TrackUpdateArgs {
   track_id: string;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_filter" | "clip.set_framing" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_filter" | "clip.set_framing" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -1811,6 +1848,9 @@ export interface CommandArgsMap {
 	"keyframe.clear": KeyframeClearArgs;
 	"keyframe.remove": KeyframeRemoveArgs;
 	"keyframe.set": KeyframeSetArgs;
+	"marker.add": MarkerAddArgs;
+	"marker.remove": MarkerRemoveArgs;
+	"marker.set": MarkerSetArgs;
 	"project.rename": ProjectRenameArgs;
 	"settings.set": SettingsSetArgs;
 	"settings.set_fps": SettingsSetFpsArgs;
@@ -1871,6 +1911,9 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"keyframe.clear": { summary: "Removes all keyframes of one property, or of every property.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"keyframe.remove": { summary: "Removes the keyframe of a property at a frame.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"keyframe.set": { summary: "Adds or replaces a keyframe of one animated property of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_LIMIT"] },
+	"marker.add": { summary: "Puts a marker on the timeline.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_INVALID_STATE","E_LIMIT"] },
+	"marker.remove": { summary: "Removes a marker of the timeline.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND"] },
+	"marker.set": { summary: "Moves or relabels a marker of the timeline.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE"] },
 	"project.rename": { summary: "Sets the project name.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION"] },
 	"settings.set": { summary: "Sets the frame size, the background colour or the loudness target.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION"] },
 	"settings.set_fps": { summary: "Changes the project frame rate and rescales every time quantity.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME"] },

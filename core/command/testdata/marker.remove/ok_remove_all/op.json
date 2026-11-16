@@ -1,0 +1,6 @@
+{
+  "op": "marker.remove",
+  "args": {
+    "all": true
+  }
+}

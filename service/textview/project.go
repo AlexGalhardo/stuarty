@@ -202,6 +202,10 @@ func head(doc *timeline.Document, o ProjectOptions, fps timeval.FPS, emit func(s
 			),
 		)
 
+		if len(doc.Markers) > 0 {
+			emit("markers " + markerList(fps, doc.Markers))
+		}
+
 		if len(doc.Fonts) > 0 {
 			families := slices.Sorted(maps.Keys(doc.Fonts))
 			quoted := make([]string, len(families))

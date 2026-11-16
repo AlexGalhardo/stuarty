@@ -35,8 +35,8 @@ func loadRegistry(t *testing.T) []registryEntry {
 // mediaCommands are the commands whose scope is media; every other command is edit.
 var mediaCommands = map[string]bool{"asset.add": true, "asset.remove": true, "font.add": true, "font.remove": true}
 
-// The registry snapshot has the 55 commands of SDD-002 Part C: 16 of the Prototype, 32 of ALPHA
-// and 7 of BETA; every scope is edit or media, and asset.add is the only internal command.
+// The registry snapshot has the 58 commands of SDD-002 Part C: 16 of the Prototype, 32 of ALPHA
+// and 10 of BETA; every scope is edit or media, and asset.add is the only internal command.
 func TestRegistrySnapshotShape(t *testing.T) {
 	t.Parallel()
 
@@ -59,9 +59,9 @@ func TestRegistrySnapshotShape(t *testing.T) {
 		}
 	}
 
-	if len(cmds) != 55 || phases["prototype"] != 16 || phases["alpha"] != 32 || phases["beta"] != 7 {
+	if len(cmds) != 58 || phases["prototype"] != 16 || phases["alpha"] != 32 || phases["beta"] != 10 {
 		t.Errorf(
-			"%d commands (%v), want 55 with 16 prototype, 32 alpha and 7 beta (the exposed build)",
+			"%d commands (%v), want 58 with 16 prototype, 32 alpha and 10 beta (the exposed build)",
 			len(cmds),
 			phases,
 		)
@@ -120,8 +120,8 @@ func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 		got[c.Name] = c.Phase
 	}
 
-	if len(want) != 55 {
-		t.Fatalf("Part C has %d sections, want 55", len(want))
+	if len(want) != 58 {
+		t.Fatalf("Part C has %d sections, want 58", len(want))
 	}
 
 	for name, phase := range want {

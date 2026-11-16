@@ -232,6 +232,11 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"scale zero", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Scale = 0 }) }, VShape},
 		{"scale big", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Scale = 21 }) }, VShape},
 		{"opacity", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Opacity = 2 }) }, VShape},
+		{"document marker order", func(d *Document) { d.Markers = []Marker{{Frame: 9}, {Frame: 9}} }, VMarkers},
+		{"document marker frame", func(d *Document) { d.Markers = []Marker{{Frame: MaxFrames}} }, VMarkers},
+		{"document marker label", func(d *Document) {
+			d.Markers = []Marker{{Frame: 1, Label: strings.Repeat("é", 61)}}
+		}, VShape},
 		{"chroma key colour", func(d *Document) {
 			editItem(d, clipID, func(i *Item) { i.ChromaKey = &ChromaKey{Color: "green", Similarity: 0.3} })
 		}, VShape},
