@@ -104,8 +104,6 @@ describe("builders", () => {
 			text: "Hello",
 			duration: "3s",
 			playhead: 12,
-			firstVisualTrack: "trk_a",
-			newTrackId: ids(),
 		});
 		expect(ops[0]?.args).toMatchObject({
 			start: "12f",

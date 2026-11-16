@@ -3547,7 +3547,7 @@
             "type": "string"
           },
           "track_id": {
-            "description": "A visual track.",
+            "description": "A visual track; omitted, the highest free one, or a new one on top.",
             "type": "string"
           },
           "words": {
@@ -3586,7 +3586,6 @@
           }
         },
         "required": [
-          "track_id",
           "start"
         ],
         "type": "object"
@@ -4847,7 +4846,7 @@
             "type": "number"
           },
           "track_id": {
-            "description": "A visual track.",
+            "description": "A visual track; omitted, the highest free one, or a new one on top.",
             "type": "string"
           },
           "width": {
@@ -4862,7 +4861,6 @@
           }
         },
         "required": [
-          "track_id",
           "start",
           "duration",
           "shape",
@@ -5155,7 +5153,7 @@
             "type": "string"
           },
           "track_id": {
-            "description": "A visual track.",
+            "description": "A visual track; omitted, the highest free one, or a new one on top.",
             "type": "string"
           },
           "x": {
@@ -5166,7 +5164,6 @@
           }
         },
         "required": [
-          "track_id",
           "start",
           "duration",
           "text"

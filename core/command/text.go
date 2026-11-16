@@ -32,7 +32,7 @@ func init() {
 }
 
 type textAddArgs struct {
-	TrackID  string         `json:"track_id"        desc:"A visual track."`
+	TrackID  string         `json:"track_id,omitempty" desc:"A visual track; omitted, the highest free one, or a new one on top."`
 	Start    Time           `json:"start"`
 	Duration Time           `json:"duration"        desc:"A length of at least 1 frame."`
 	Text     string         `json:"text"            desc:"The text; line breaks are allowed." min:"1" max:"2000"`
@@ -60,6 +60,13 @@ func applyTextAdd(c *Context, a *textAddArgs) error {
 	duration, err := c.length("args.duration", string(a.Duration), false)
 	if err != nil {
 		return err
+	}
+	var auto bool
+	if a.TrackID, auto, err = c.visualTrackFor(a.TrackID, start, duration); err != nil {
+		return err
+	}
+	if auto {
+		c.SetEffective("track_id", a.TrackID)
 	}
 	t, err := c.track(a.TrackID, "args.track_id")
 	if err != nil {

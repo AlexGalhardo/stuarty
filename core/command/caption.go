@@ -28,7 +28,7 @@ func init() {
 }
 
 type captionAddArgs struct {
-	TrackID    string    `json:"track_id"              desc:"A visual track."`
+	TrackID    string    `json:"track_id,omitempty"    desc:"A visual track; omitted, the highest free one, or a new one on top."`
 	Start      Time      `json:"start"`
 	Words      []WordArg `json:"words,omitempty"       desc:"Words with times relative to the caption, as lengths."`
 	Text       *string   `json:"text,omitempty"        desc:"Text to split on whitespace; needs duration."`
@@ -101,6 +101,13 @@ func applyCaptionAdd(c *Context, a *captionAddArgs) error {
 	words, fields, duration, err := c.captionForm(a)
 	if err != nil {
 		return err
+	}
+	var auto bool
+	if a.TrackID, auto, err = c.visualTrackFor(a.TrackID, start, duration); err != nil {
+		return err
+	}
+	if auto {
+		c.SetEffective("track_id", a.TrackID)
 	}
 	t, err := c.track(a.TrackID, "args.track_id")
 	if err != nil {

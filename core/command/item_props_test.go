@@ -78,3 +78,56 @@ func TestExtremeNumbersAreRefused(t *testing.T) {
 		t.Errorf("round3(1e308) = %v", got)
 	}
 }
+
+// Without track_id an add command takes the highest free visual track, and makes a new one on
+// top when the clip occupies the only one (VV-008).
+func TestAddWithoutTrackPicksOrMakesAFreeVisualTrack(t *testing.T) {
+	d := base().clip(itemA, vidTr, 0, 150, 0).d
+	n := 0
+	env := Env{NewIDs: func(prefix string) string {
+		n++
+		return prefix + "_" + strings.Repeat("a", 9) + string(rune('a'+n))
+	}}
+	for id := range d.Tracks {
+		if id != vidTr {
+			delete(d.Tracks, id)
+		}
+	}
+	nTracks := len(d.Tracks)
+
+	for _, o := range []Operation{
+		op2("text.add", `{"start": "1s", "duration": "2s", "text": "Hi"}`),
+		op2("shape.add", `{"start": "1s", "duration": "2s", "shape": "rect", "width": 10, "height": 10}`),
+		op2("caption.add", `{"start": "1s", "duration": "2s", "text": "Hi there"}`),
+	} {
+		res, err := Default().Apply(d, o, env)
+		if err != nil {
+			t.Fatalf("%s: %v", o.Op, err)
+		}
+
+		tr, _ := res.Effective["track_id"].(string)
+		if tr == "" || tr == vidTr {
+			t.Fatalf("%s: effective track %q", o.Op, tr)
+		}
+
+		if len(res.Doc.Tracks) != nTracks+1 || res.Doc.Tracks[tr].Order >= d.Tracks[vidTr].Order {
+			t.Errorf("%s: tracks %d, new order %q, clip track %q", o.Op, len(res.Doc.Tracks),
+				res.Doc.Tracks[tr].Order, d.Tracks[vidTr].Order)
+		}
+	}
+
+	// A second overlay at the same time lands on the first free track, not on top of the first.
+	one, err := Default().Apply(d, op2("text.add", `{"start": "1s", "duration": "2s", "text": "A"}`), env)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	two, err := Default().Apply(one.Doc, op2("text.add", `{"start": "1s", "duration": "2s", "text": "B"}`), env)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if one.Effective["track_id"] == two.Effective["track_id"] {
+		t.Error("two overlapping texts share a track")
+	}
+}

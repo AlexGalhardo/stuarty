@@ -34,7 +34,7 @@ func init() {
 }
 
 type shapeAddArgs struct {
-	TrackID     string   `json:"track_id"               desc:"A visual track."`
+	TrackID     string   `json:"track_id,omitempty"     desc:"A visual track; omitted, the highest free one, or a new one on top."`
 	Start       Time     `json:"start"`
 	Duration    Time     `json:"duration"               desc:"A length of at least 1 frame."`
 	Shape       string   `json:"shape"                                                               enum:"rect,rounded_rect,ellipse"`
@@ -143,6 +143,13 @@ func applyShapeAdd(c *Context, a *shapeAddArgs) error {
 	duration, err := c.length("args.duration", string(a.Duration), false)
 	if err != nil {
 		return err
+	}
+	var auto bool
+	if a.TrackID, auto, err = c.visualTrackFor(a.TrackID, start, duration); err != nil {
+		return err
+	}
+	if auto {
+		c.SetEffective("track_id", a.TrackID)
 	}
 	t, err := c.track(a.TrackID, "args.track_id")
 	if err != nil {

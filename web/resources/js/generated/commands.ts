@@ -279,9 +279,9 @@ export interface CaptionAddArgs {
    */
   text?: string;
   /**
-   * A visual track.
+   * A visual track; omitted, the highest free one, or a new one on top.
    */
-  track_id: string;
+  track_id?: string;
   /**
    * Words with times relative to the caption, as lengths.
    */
@@ -1389,9 +1389,9 @@ export interface ShapeAddArgs {
    */
   stroke_width?: number;
   /**
-   * A visual track.
+   * A visual track; omitted, the highest free one, or a new one on top.
    */
-  track_id: string;
+  track_id?: string;
   /**
    * Pixels before scale, above 0.
    */
@@ -1554,9 +1554,9 @@ export interface TextAddArgs {
    */
   text: string;
   /**
-   * A visual track.
+   * A visual track; omitted, the highest free one, or a new one on top.
    */
-  track_id: string;
+  track_id?: string;
   x?: number;
   y?: number;
 }
