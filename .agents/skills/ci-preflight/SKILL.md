@@ -52,7 +52,7 @@ Hand-kept lists that a new feature must update in the same change:
 
 - In `web/`: `bun install --frozen-lockfile`, then `bun run lint`, `bun run typecheck`, `bun run check:i18n`, `bun run check:thin-client`, `bun run test`.
 - `check:i18n` runs with Node: the TypeScript 7 API it uses (`typescript/unstable/sync`) reads a Node child-process internal that Bun does not have. Do not move it back to Bun, and do not use `Bun.*` APIs in it.
-- In `site/`, which uses npm: `npm run lint`, `npm run test:scripts`, `npm run check:translations` (strict). The strict check marks a pt-BR page stale whenever its English page changes, even for a blank line: change both pages in the same commit.
+- In `site/`, which uses npm: `npm run lint`, `npm run test:scripts`.
 - Markdown: `bunx markdownlint-cli2@0.24.1 "**/*.md"`.
 
 ## 6. Security and notices

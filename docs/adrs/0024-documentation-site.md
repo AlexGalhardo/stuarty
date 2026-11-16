@@ -3,6 +3,7 @@
 - Status: Accepted (2026-11-14)
 - Deciders: author (D-008, D-015), architect
 - Links: vukem practices §7, author decision D-008, D-015, SDD-010
+- Amendment (TASK-0265, 2026-11-16, decision of the author): the site is English only. Item 3 (two locales), the pt-BR pages, the translation staleness check and the `Translation:` commit footer no longer exist; the text below is the decision as taken on 2026-11-14.
 
 ## Context
 
