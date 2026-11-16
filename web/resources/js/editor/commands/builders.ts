@@ -1135,6 +1135,24 @@ export interface CurvePoint {
 
 const round3 = (value: number): number => Math.round(value * 1000) / 1000;
 
+// "Add point": one in the middle of the widest gap, on the line between its
+// two neighbours, so the curve keeps its shape.
+export function insertCurvePoint(points: readonly CurvePoint[]): CurvePoint[] {
+	let at = 0;
+	for (let i = 1; i + 1 < points.length; i++) {
+		const gap = (points[i + 1]?.t ?? 0) - (points[i]?.t ?? 0);
+		if (gap > (points[at + 1]?.t ?? 0) - (points[at]?.t ?? 0)) at = i;
+	}
+	const a = points[at];
+	const b = points[at + 1];
+	if (a === undefined || b === undefined) return [...points];
+	const inserted = {
+		t: round3((a.t + b.t) / 2),
+		speed: round3((a.speed + b.speed) / 2),
+	};
+	return [...points.slice(0, at + 1), inserted, ...points.slice(at + 1)];
+}
+
 export function speedCurveOperations(
 	itemId: string,
 	points: readonly CurvePoint[],
