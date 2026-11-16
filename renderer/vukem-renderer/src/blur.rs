@@ -21,12 +21,13 @@ pub fn blur_radius(sigma: f64) -> usize {
 /// `src` blurred by `sigma`, a standard deviation in output pixels, and the placement that draws
 /// it. The blur is of the layer's own premultiplied pixels with the outside counted as
 /// transparent, so the result is larger than `src` by three radii on every side and the
-/// placement grows by the same amount around the same centre.
-pub fn blurred(src: &Image, p: &Placement, sigma: f64) -> (Image, Placement) {
+/// placement grows by the same amount around the same centre. `None` when both radii are 0 and the
+/// layer is drawn as it is.
+pub fn blurred(src: &Image, p: &Placement, sigma: f64) -> Option<(Image, Placement)> {
 	let rx = blur_radius(sigma / (p.w / src.w as f64));
 	let ry = blur_radius(sigma / (p.h / src.h as f64));
 	if rx == 0 && ry == 0 {
-		return (src.clone(), *p);
+		return None;
 	}
 
 	let (px, py) = (3 * rx, 3 * ry);
@@ -68,7 +69,7 @@ pub fn blurred(src: &Image, p: &Placement, sigma: f64) -> (Image, Placement) {
 		w: mul(p.w, w as f64) / src.w as f64,
 		h: mul(p.h, h as f64) / src.h as f64,
 	};
-	(
+	Some((
 		Image {
 			pix: out,
 			w,
@@ -76,7 +77,7 @@ pub fn blurred(src: &Image, p: &Placement, sigma: f64) -> (Image, Placement) {
 			opaque: false,
 		},
 		grown,
-	)
+	))
 }
 
 /// One box pass over a line of RGBA pixels: each output pixel is the mean of the `2r + 1` pixels

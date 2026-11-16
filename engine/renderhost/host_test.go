@@ -59,7 +59,7 @@ func uleb(t *testing.T, b []byte) (uint64, int) {
 	return 0, 0
 }
 
-func TestEmbeddedModuleMatchesItsDigest(t *testing.T) {
+func TestSecurity_T36_TamperedModuleIsRefused(t *testing.T) {
 	t.Parallel()
 
 	if err := verifyDigest(moduleBytes, moduleDigest); err != nil {
@@ -154,7 +154,7 @@ func TestCoreModuleHasNoImports(t *testing.T) {
 
 // A module that asks for the host (WASI or anything named env) is refused by the interface check, and the
 // runtime of the host has nothing to satisfy it with.
-func TestRenderHostIsSandboxed(t *testing.T) {
+func TestSecurity_T36_RenderHostIsSandboxed(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()

@@ -358,7 +358,7 @@ Rules:
 ### 4.8 Acceptance of this section
 
 - `TestCoreModuleHasNoImports` (Go): the embedded module has zero imported functions, memories, tables and globals, exports exactly `memory` and the functions of §4.2, and `vr_api_version` returns 1.
-- `TestRenderHostIsSandboxed` (Go): a module compiled for the test that tries to import `wasi_snapshot_preview1` or `env` fails to instantiate, and the production configuration has no clock or file system (the test inspects the `wazero` configuration the host builds).
+- `TestSecurity_T36_RenderHostIsSandboxed` (Go): a module compiled for the test that tries to import `wasi_snapshot_preview1` or `env` fails to instantiate, and the production configuration has no clock or file system (the test inspects the `wazero` configuration the host builds).
 - `TestRenderHostCancels` (Go): cancelling the context of a long render returns `context.Canceled` within 1 s and leaves no goroutine.
 - A Vitest and a Playwright test for the worker: a render answers `frame` with the `seq` asked; two renders posted in a row draw only the newest; the `VideoFrame` count reported by the worker is 0 after 500 renders with uploads (the leak check of stage B's gate); `missing_texture` is answered by an upload and a second `render`, not by a black frame.
 
@@ -534,11 +534,11 @@ Nothing the renderer says is retried by the export except `missing_texture`, whi
 
 ### 7.4 What the renderer does with hostile input
 
-The module receives frames decoded from untrusted media and plans built from a document an agent wrote. Every length is checked against the block the host passed, every size against §7.2 before any allocation, and the arithmetic of §3 cannot read or write outside the output block or a stored texture (the loops are bounded by the clipped rectangle of §3.6). A number the plan could never produce (a `NaN`, a negative size, an opacity of 400) is clamped as §3.3 says or refused as `invalid_plan`; it is never a reason to read memory. Because the core module has no import (§4.1), a defect that nevertheless executes is confined to the instance's memory, which is discarded after a trap. This is the threat row that ADR-0029 adds to SDD-007, and its test is `TestRenderHostSurvivesHostileInput` below.
+The module receives frames decoded from untrusted media and plans built from a document an agent wrote. Every length is checked against the block the host passed, every size against §7.2 before any allocation, and the arithmetic of §3 cannot read or write outside the output block or a stored texture (the loops are bounded by the clipped rectangle of §3.6). A number the plan could never produce (a `NaN`, a negative size, an opacity of 400) is clamped as §3.3 says or refused as `invalid_plan`; it is never a reason to read memory. Because the core module has no import (§4.1), a defect that nevertheless executes is confined to the instance's memory, which is discarded after a trap. This is the threat row that ADR-0029 adds to SDD-007, and its test is `TestSecurity_T36_RenderHostSurvivesHostileInput` below.
 
 ### 7.5 Acceptance of this section
 
 - `TestRenderReasons` (Go and Rust): for each reason of §7.1 with a status, an input that causes it returns that status and, through `renderhost`, that `Reason`: an unknown field, version 2, kind `"video"`, a layer with no texture, 65 layers, a 4097-pixel output, a texture of 8193 pixels, a 5 MiB input, an `out_len` that is one byte short, a texture whose pixels are one byte short.
-- `TestRenderHostSurvivesHostileInput` (Go): 10,000 random and mutated render inputs and textures (a fuzz target, `FuzzRenderInput`) never trap, never allocate beyond the budgets and never return a status outside §4.5; a plan with `NaN` as text is `invalid_plan`.
+- `TestSecurity_T36_RenderHostSurvivesHostileInput` (Go): 10,000 random and mutated render inputs and textures (a fuzz target, `FuzzRenderInput`) never trap, never allocate beyond the budgets and never return a status outside §4.5; a plan with `NaN` as text is `invalid_plan`.
 - `TestExportMapsRendererErrors` (Go): each `renderhost.Error` becomes the code and `details` of §7.3 (a table test), and a cancel becomes `E_CANCELLED`.
 - A Playwright test: forcing `out_of_memory` in the worker (a tiny `max_texture_bytes`) leaves the preview on the paused-frame state with the banner, and forcing `device_lost` switches to the CPU path and keeps drawing.
