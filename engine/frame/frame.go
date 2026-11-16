@@ -12,6 +12,7 @@ import (
 	"image/color"
 	"image/draw"
 	"image/jpeg"
+	"image/png"
 	"math"
 	"strconv"
 
@@ -65,6 +66,34 @@ func encode(img image.Image) ([]byte, error) {
 	if err := jpeg.Encode(&b, img, &jpeg.Options{Quality: JPEGQuality}); err != nil {
 		return nil, err
 	}
+	return b.Bytes(), nil
+}
+
+// Still is frame t of the document at the project's own size, as a lossless PNG (VV-037): a
+// thumbnail or a proof for a client. It is composed by the same compositor as an export and is not
+// cached. A time past the end is the last frame.
+func (f *Frames) Still(ctx context.Context, doc *timeline.Document, t int) ([]byte, error) {
+	if t < 0 {
+		return nil, fmt.Errorf("%w: frame %d", ErrRange, t)
+	}
+
+	r, err := f.renderer(ctx, doc)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() { _ = r.Close() }()
+
+	img, err := r.Render(ctx, min(t, lastFrame(doc)), 1)
+	if err != nil {
+		return nil, err
+	}
+
+	var b bytes.Buffer
+	if err := png.Encode(&b, img); err != nil {
+		return nil, err
+	}
+
 	return b.Bytes(), nil
 }
 
