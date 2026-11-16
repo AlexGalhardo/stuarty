@@ -159,7 +159,7 @@ Transitions modify the animated values; they never change the document.
 - **Dip.** With `pq = (P × 255 + 32768) >> 16` and `K` a channel of the colour (0 to 255), each premultiplied channel becomes `c' = div255(c × pq) + div255(div255(K × a) × (255 - pq))`; alpha is not changed. At `pq = 255` the layer is untouched, at `pq = 0` it is the colour inside its own shape. It is applied after the whip blur and before the mask.
 - **Wipe.** A coverage `cov` of 255 or 0 (a hard edge), multiplied with the mask coverage as `div255(cov_mask × cov_wipe)` and applied where the mask is, before the opacity. With `R = (P × size_q + 32768) >> 16` where `size_q` is `wq` for `left` and `right` and `hq` for `up` and `down`: `left` covers `lx < R`, `right` covers `lx >= wq - R`, `up` covers `ly < R`, `down` covers `ly >= hq - R`. For `transition_out` the same formulas run with the `P` of that edge (which falls from near 65536 to near 0), so the out transition is the in transition played backwards: `left` leaves towards the left edge.
 
-Golden cases for the executors (`engine/export/testdata/golden/transition-zoom`, `-whip`, `-dip`, `-wipe-left`, `-wipe-up`, in and out) are defined with the engine change (TASK-0279): 0 differing bytes between 1 and 8 bands, and the same bytes from the Go compositor and the Rust renderer.
+Golden cases for the executors (`engine/export/testdata/golden/transition-zoom`, `-whip` (direction right), `-dip` (orange), `-wipe-left` and `-wipe-up`, each on the entry and on the exit of a clip, frames 0, 4, 7, 22, 26 and 29): 0 differing bytes between 1 and 8 bands, and the same bytes from the Go compositor and the Rust renderer (`TestRustCPUPathEqualsGoCompositor`).
 
 Boundary frames that `core/plan` tests pin (`TestTransitionFactors`, `TestSlideLeftOffset`, opacity rounded to 3 decimals):
 
@@ -378,7 +378,7 @@ A shift by `k` along the angle is `(round_half_away(k × C / 1024), round_half_a
 
 Pinned values of the shake (project 1080 by 1920 at 30 fps): `amount 0.3, speed 8, seed 0` at frame 0 gives `(dx, dy, rot) = (2, 11, -438)`; `amount 1, speed 8, seed 5` at frame 7 gives `(-23, -31, 1265)`; `amount 0.5, speed 30, seed 65535` at frame 100 gives `(-5, 24, 792)`.
 
-Golden cases for the five pixel effects (`engine/export/testdata/golden/effect-motion-blur`, `-glow`, `-vignette`, `-grain`, `-rgb-split`, each on a still and on a layer that moves and rotates) are defined with the engine change (TASK-0279): 0 differing bytes between 1 and 8 bands, and the same bytes from the Go compositor and the Rust renderer.
+Golden cases for the five pixel effects (`engine/export/testdata/golden/effect-motion-blur`, `-glow`, `-vignette`, `-grain`, `-rgb-split`, each on a layer that stays and on a picture in picture that slides and rotates, frames 0, 15 and 29) and `effects-combined` (the five effects and a shake on one flipped, masked item with a whip in and a dip out): 0 differing bytes between 1 and 8 bands, and the same bytes from the Go compositor and the Rust renderer.
 
 ## 4. Layout of text, captions and shapes
 
