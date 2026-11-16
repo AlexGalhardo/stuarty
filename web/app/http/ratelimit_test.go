@@ -262,3 +262,30 @@ func TestRateLimitFrameConcurrencyCap(t *testing.T) {
 		t.Errorf("a frame after the others finished = %d", res.status)
 	}
 }
+
+// SR1-03 (T-18): the cap belongs to the credential, not to the label that the client chooses: rotating
+// Vukem-Video-Client labels with one token does not lift it.
+func TestRateLimitFrameCapIsPerTokenNotPerLabel(t *testing.T) {
+	slow := slowFrames{started: make(chan struct{}, 8), release: make(chan struct{})}
+	h := newHarnessWrapped(t, events.Options{}, func(s service.Service) service.Service {
+		slow.Service = s
+		return slow
+	})
+
+	const path = "/api/v1/projects/prj_0000000001/frame?at=0s"
+
+	var wg sync.WaitGroup
+
+	for _, label := range []string{"agent-a", "agent-b"} {
+		wg.Go(func() { h.do(req{path: path, headers: map[string]string{"Vukem-Video-Client": label}}) })
+		<-slow.started
+	}
+
+	res := h.do(req{path: path, headers: map[string]string{"Vukem-Video-Client": "agent-c"}})
+	if res.status != http.StatusTooManyRequests || res.json(t)["code"] != service.CodeQueueFull {
+		t.Errorf("a third label on the same token = %d %s, want 429 E_QUEUE_FULL", res.status, res.body)
+	}
+
+	close(slow.release)
+	wg.Wait()
+}
