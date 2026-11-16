@@ -175,6 +175,8 @@ type Options struct {
 	HeavyPerMinute int
 	// Log receives the job lines (start, end, failure); nil discards them.
 	Log *slog.Logger
+	// JobWait is how long TrashEmpty waits for the jobs of a trashed project to stop; zero is 15 s.
+	JobWait time.Duration
 }
 
 type svc struct {
@@ -198,6 +200,7 @@ type svc struct {
 	heavy       RateLimiter
 	heavyLimitN int
 	log         *slog.Logger
+	jobWait     time.Duration
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
 
@@ -240,6 +243,7 @@ func New(o Options) (Service, error) {
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
+		jobWait:     o.JobWait,
 		startedAt:   time.Now(),
 	}
 
@@ -267,6 +271,10 @@ func New(o Options) (Service, error) {
 
 	if s.now == nil {
 		s.now = time.Now
+	}
+
+	if s.jobWait <= 0 {
+		s.jobWait = jobWait
 	}
 
 	if s.log == nil {
