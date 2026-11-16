@@ -11,6 +11,7 @@ import (
 const (
 	groupGo       = "go"
 	groupNPM      = "npm"
+	groupCrates   = "crates"
 	groupFonts    = "fonts"
 	groupPrograms = "programs"
 	groupVendored = "vendored"
@@ -173,6 +174,8 @@ func groupLabel(group string) string {
 		return "Go module"
 	case groupNPM:
 		return "npm package"
+	case groupCrates:
+		return "Rust crate"
 	case groupFonts:
 		return "font"
 	case groupPrograms:

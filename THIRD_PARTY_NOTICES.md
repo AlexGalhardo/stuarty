@@ -172,6 +172,17 @@ The production dependency closure of `web/package.json` (`dependencies`, transit
 | use-sidecar | 1.1.3 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/use-sidecar@1.1.3/LICENSE>) | - |
 | zustand | 5.1.0 | MIT | Copyright (c) 2019 Paul Henschel | [LICENSE](<licenses/npm/zustand@5.1.0/LICENSE>) | - |
 
+## Rust crates
+
+Compiled into the WebAssembly renderer of `renderer/` (`Cargo.lock`, normal dependencies of the wasm32 target; build-time proc macros are not shipped).
+
+| Name | Version | Licence | Copyright | Licence text | Notes |
+| --- | --- | --- | --- | --- | --- |
+| cfg-if | 1.0.5 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | [LICENSE-APACHE](<licenses/crates/cfg-if@1.0.5/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/cfg-if@1.0.5/LICENSE-MIT>) | - |
+| unicode-ident | 1.0.27 | (MIT OR Apache-2.0) AND Unicode-3.0 | COPYRIGHT AND PERMISSION NOTICE | [LICENSE-APACHE](<licenses/crates/unicode-ident@1.0.27/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/unicode-ident@1.0.27/LICENSE-MIT>), [LICENSE-UNICODE](<licenses/crates/unicode-ident@1.0.27/LICENSE-UNICODE>) | - |
+| wasm-bindgen | 0.2.130 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | [LICENSE-APACHE](<licenses/crates/wasm-bindgen@0.2.130/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/wasm-bindgen@0.2.130/LICENSE-MIT>) | - |
+| wasm-bindgen-shared | 0.2.130 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | [LICENSE-APACHE](<licenses/crates/wasm-bindgen-shared@0.2.130/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/wasm-bindgen-shared@0.2.130/LICENSE-MIT>) | - |
+
 ## Fonts
 
 Embedded in the binary; the rasterizer reads no other font.
