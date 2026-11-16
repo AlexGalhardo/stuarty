@@ -171,6 +171,16 @@ func itemOps(props map[string]any, mode itemMode, start, dur int, used map[strin
 	}
 
 	if mode == modeClip {
+		// A freeze frame is not a command of its own (item.freeze_frame splits a clip) and a lookup table
+		// names an asset the file does not carry: both are reported, never dropped silently.
+		if f, _ := props["freeze"].(bool); f {
+			lose("freeze frame")
+		}
+
+		if _, ok := props["lut"]; ok {
+			lose("lookup table (the .cube asset is not part of the file)")
+		}
+
 		colour := map[string]any{}
 		set(colour, "brightness", -1, 1, false)
 		set(colour, "contrast", 0, 2, false)
