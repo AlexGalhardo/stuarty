@@ -176,10 +176,43 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 		replayed.Replayed = true
 		return replayed, nil
 	case err != nil:
-		return nil, projectErr(req.ProjectID, err)
+		return nil, s.assetStillIngesting(ctx, req.ProjectID, projectErr(req.ProjectID, err))
 	}
 
 	return res, nil
+}
+
+// assetStillIngesting turns E_NOT_FOUND for an asset id into E_ASSET_NOT_READY when the project
+// has imported that asset and its ingest has not finished: the asset joins the document only when
+// it is ready, so the core cannot tell it from a wrong id (VV-022).
+func (s *svc) assetStillIngesting(ctx context.Context, projectID string, err error) error {
+	se, ok := errors.AsType[*Error](err)
+	if !ok || se.Code != command.CodeNotFound || se.Details["kind"] != "asset" {
+		return err
+	}
+
+	id, _ := se.Details["id"].(string)
+
+	pa, gerr := s.store.Assets().GetProjectAsset(ctx, projectID, id)
+	if gerr != nil {
+		return err
+	}
+
+	ar, gerr := s.store.Assets().Get(ctx, pa.AssetHash)
+	if gerr != nil || ar.IngestState == IngestReady || ar.IngestState == IngestFailed {
+		return err
+	}
+
+	out := newError(
+		"E_ASSET_NOT_READY",
+		"the asset %s is %s; it cannot be used until its ingest ends.",
+		id,
+		ar.IngestState,
+	).
+		withHint("poll job:show (or media:list) until the asset is ready, then repeat the edit")
+	out.OpIndex, out.Path = se.OpIndex, se.Path
+
+	return out
 }
 
 // projectErr maps a missing project to E_NOT_FOUND and everything else as asError does.
