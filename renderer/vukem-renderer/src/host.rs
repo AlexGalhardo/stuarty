@@ -192,6 +192,7 @@ impl Renderer {
 				filter: l.filter,
 				blur: l.blur,
 				chroma_key: l.chroma_key.clone(),
+				blend: l.blend,
 			});
 		}
 		Ok(layers)

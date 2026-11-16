@@ -7,6 +7,7 @@
 //! exports, no `wasm-bindgen`, no import. The exports are in the `ffi` module, the only place of
 //! the crate that uses `unsafe`.
 
+pub mod blend;
 pub mod blur;
 pub mod chroma;
 pub mod colour;

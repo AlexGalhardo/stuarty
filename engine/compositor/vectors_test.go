@@ -383,6 +383,32 @@ func rendererVectorCases() []vecCase {
 				l.ChromaKey = &plan.ChromaKeySpec{Color: "#FF0000", Similarity: 0.4, Smoothness: 0.1, Spill: 0.5}
 			}),
 		}},
+		{name: "blend-multiply-screen", w: 64, h: 48, scale: 1, bg: "#506070", layers: []vecLayer{
+			vm("a", big, 32, 24, 64, 48, 0, 1),
+			with(vm("b", opaque, 24, 24, 16, 12, 0, 1), func(l *plan.Layer) { l.Blend = "multiply" }),
+			with(vm("c", soft, 40, 24, 20, 14, 0, 1), func(l *plan.Layer) { l.Blend = "screen" }),
+			with(vm("d", soft, 32, 36, 20, 14, 10, 0.5), func(l *plan.Layer) { l.Blend = "multiply" }),
+		}},
+		{name: "blend-overlay-add", w: 64, h: 48, scale: 1, bg: "#808080", layers: []vecLayer{
+			vm("a", big, 32, 24, 64, 48, 0, 1),
+			with(vm("b", opaque, 24, 24, 16, 12, 0, 1), func(l *plan.Layer) { l.Blend = "overlay" }),
+			with(vm("c", soft, 40, 24, 20, 14, 0, 0.7), func(l *plan.Layer) { l.Blend = "overlay" }),
+			with(vm("d", soft, 24, 36, 20, 14, 0, 1), func(l *plan.Layer) { l.Blend = "add" }),
+			with(vm("e", opaque, 44, 38, 24, 18, 0, 0.5), func(l *plan.Layer) { l.Blend = "add" }),
+		}},
+		{name: "blend-rotated-filter-bitmap", w: 64, h: 48, scale: 1, bg: "#a04020", layers: []vecLayer{
+			with(vm("a", big, 32, 24, 40, 30, 20, 1), func(l *plan.Layer) {
+				l.Blend, l.Blur, l.Filter = "overlay", 2, sepia
+			}),
+			with(
+				vb("t5", straightBitmap(24, 16, 10), 40, 30, 24, 16, 0, 1),
+				func(l *plan.Layer) { l.Blend = "screen" },
+			),
+			with(vm("g", greenScreen(25), 20, 16, 40, 30, 0, 1), func(l *plan.Layer) {
+				l.Blend = "multiply"
+				l.ChromaKey = &plan.ChromaKeySpec{Color: "#00C81E", Similarity: 0.3, Smoothness: 0.2}
+			}),
+		}},
 		{name: "stack", w: 64, h: 48, scale: 1, bg: "#0a0a0a", layers: []vecLayer{
 			vm("a", big, 32, 24, 64, 48, 0, 1),
 			vm("b", soft, 20, 20, 20, 14, 12, 0.6),
@@ -448,7 +474,7 @@ func encodeVectors(t *testing.T) []byte {
 		}
 	}
 	buf.WriteString("VVCV")
-	w(uint32(2))
+	w(uint32(3))
 	w(sincosHash())
 	cases := rendererVectorCases()
 	w(uint32(len(cases)))
@@ -507,6 +533,8 @@ func encodeVectors(t *testing.T) []byte {
 					w(v)
 				}
 			}
+
+			w(uint8(blendOf(pl.Blend)))
 		}
 		buf.Write(c.compose(t, 1))
 	}

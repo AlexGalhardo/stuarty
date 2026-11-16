@@ -7,6 +7,7 @@
 use core::ops::Range;
 use std::borrow::Cow;
 
+use crate::blend::{BlendMode, mix_pixel};
 use crate::blur::blurred;
 use crate::chroma::{ChromaKeySpec, apply_chroma_key};
 use crate::colour::apply_matrix;
@@ -54,6 +55,8 @@ pub struct Layer<'a> {
 	pub blur: f64,
 	/// Applied to the layer's own pixels before the colour matrix (SDD-004 section 3.7).
 	pub chroma_key: Option<ChromaKeySpec>,
+	/// The mix with the destination of the last step of the draw (SDD-004 section 3.8).
+	pub blend: BlendMode,
 }
 
 /// Premultiplies a straight-alpha RGBA8 bitmap once.
@@ -144,6 +147,7 @@ pub struct Prepared<'a> {
 	pub image: Cow<'a, Image>,
 	pub placement: Placement,
 	pub op: u32,
+	pub blend: BlendMode,
 }
 
 /// Steps 1 to 5 of SDD-013 section 3.3 for one layer; `None` when the layer draws nothing.
@@ -214,12 +218,13 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 		image: src,
 		placement: p,
 		op,
+		blend: l.blend,
 	})
 }
 
 fn draw_layer(dst: &mut Target<'_>, l: &Layer<'_>, out_scale: f64) {
 	if let Some(p) = prepare_layer(l, out_scale) {
-		draw(dst, &p.image, &p.placement, p.op);
+		draw(dst, &p.image, &p.placement, p.op, p.blend);
 	}
 }
 
@@ -250,15 +255,15 @@ pub fn copy_origin(src_w: usize, src_h: usize, p: &Placement) -> Option<(i64, i6
 	None
 }
 
-fn draw(dst: &mut Target<'_>, src: &Image, p: &Placement, op: u32) {
+fn draw(dst: &mut Target<'_>, src: &Image, p: &Placement, op: u32, mode: BlendMode) {
 	match copy_origin(src.w, src.h, p) {
-		Some((x0, y0)) => blit(dst, src, x0, y0, op),
-		None => sample(dst, src, p, op),
+		Some((x0, y0)) => blit(dst, src, x0, y0, op, mode),
+		None => sample(dst, src, p, op, mode),
 	}
 }
 
 /// Draws `src` with its top-left corner at `(x0, y0)`, pixel for pixel.
-fn blit(dst: &mut Target<'_>, src: &Image, x0: i64, y0: i64, op: u32) {
+fn blit(dst: &mut Target<'_>, src: &Image, x0: i64, y0: i64, op: u32, mode: BlendMode) {
 	let dw = dst.width;
 	let cx0 = x0.max(0);
 	let cx1 = x0.saturating_add(src.w as i64).min(dw as i64);
@@ -272,16 +277,16 @@ fn blit(dst: &mut Target<'_>, src: &Image, x0: i64, y0: i64, op: u32) {
 	for y in cy0..cy1 {
 		let so = ((y - y0) as usize * src.w + (cx0 - x0) as usize) * 4;
 		let d = (y as usize * dw + cx0 as usize) * 4;
-		if src.opaque && op == 255 {
+		if src.opaque && op == 255 && mode == BlendMode::Normal {
 			dst.pix[d..d + n].copy_from_slice(&src.pix[so..so + n]);
 		} else {
-			over_row(&mut dst.pix[d..d + n], &src.pix[so..so + n], op);
+			over_row(&mut dst.pix[d..d + n], &src.pix[so..so + n], op, mode);
 		}
 	}
 }
 
 /// Blends a row of premultiplied pixels over `d` with opacity `op` (0..255).
-fn over_row(d: &mut [u8], s: &[u8], op: u32) {
+fn over_row(d: &mut [u8], s: &[u8], op: u32, mode: BlendMode) {
 	for (dp, sp) in d
 		.as_chunks_mut::<4>()
 		.0
@@ -289,7 +294,7 @@ fn over_row(d: &mut [u8], s: &[u8], op: u32) {
 		.zip(s.as_chunks::<4>().0)
 	{
 		let mut a = u32::from(sp[3]);
-		if op == 255 && a == 255 {
+		if op == 255 && a == 255 && mode == BlendMode::Normal {
 			dp.copy_from_slice(sp);
 			continue;
 		}
@@ -305,16 +310,8 @@ fn over_row(d: &mut [u8], s: &[u8], op: u32) {
 			g = div255(g * op);
 			b = div255(b * op);
 		}
-		over_pixel(dp, r, g, b, a);
+		mix_pixel(dp, r, g, b, a, mode);
 	}
-}
-
-fn over_pixel(d: &mut [u8], r: u32, g: u32, b: u32, a: u32) {
-	let ia = 255 - a;
-	d[0] = u8_of(r + div255(u32::from(d[0]) * ia));
-	d[1] = u8_of(g + div255(u32::from(d[1]) * ia));
-	d[2] = u8_of(b + div255(u32::from(d[2]) * ia));
-	d[3] = u8_of(a + div255(u32::from(d[3]) * ia));
 }
 
 /// Fractional bits of the sampler coordinates.
@@ -323,7 +320,7 @@ const FIX: u32 = 32;
 /// Draws `src` into the rectangle `p` with bilinear interpolation: every destination pixel whose
 /// centre is inside the rectangle takes the four nearest source pixels. Edges are not smoothed.
 /// Only the destination rows of `dst.rows` are drawn.
-pub fn sample(dst: &mut Target<'_>, src: &Image, p: &Placement, op: u32) {
+pub fn sample(dst: &mut Target<'_>, src: &Image, p: &Placement, op: u32, mode: BlendMode) {
 	let (sin, cos) = sincos(mul(p.rot, core::f64::consts::PI / 180.0));
 	let dw = dst.width;
 
@@ -396,7 +393,7 @@ pub fn sample(dst: &mut Target<'_>, src: &Image, p: &Placement, op: u32) {
 			if a == 0 {
 				continue;
 			}
-			over_pixel(&mut dst.pix[here..here + 4], px[0], px[1], px[2], a);
+			mix_pixel(&mut dst.pix[here..here + 4], px[0], px[1], px[2], a, mode);
 		}
 	}
 }

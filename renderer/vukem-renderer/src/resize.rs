@@ -1,6 +1,7 @@
 //! The box-filtered shrink of a bitmap that is much larger than it is drawn (SDD-013 section 3.3
 //! step 4), the port of `compositor.Resize`.
 
+use crate::blend::BlendMode;
 use crate::compose::{Placement, Target, sample};
 use crate::image::Image;
 
@@ -41,6 +42,7 @@ pub fn resize(src: &Image, w: usize, h: usize) -> Image {
 		cur,
 		&p,
 		255,
+		BlendMode::Normal,
 	);
 	dst.opaque = cur.opaque;
 	dst
