@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
@@ -52,9 +53,15 @@ func TestExportFormatsEachSucceedsAndIsServed(t *testing.T) {
 		})},
 	)
 	project := m.exportable()
+	audible, _, _, _ := m.speechProject()
 
 	for _, c := range formatTable {
-		job, err := m.startFormat(project, c.format)
+		target := project
+		if c.format == "wav" || c.format == "aac" {
+			target = audible
+		}
+
+		job, err := m.startFormat(target, c.format)
 		if err != nil {
 			t.Fatalf("format %q: %v", c.format, err)
 		}
@@ -64,7 +71,7 @@ func TestExportFormatsEachSucceedsAndIsServed(t *testing.T) {
 		}
 
 		e := job.Result.Export
-		want := filepath.Join(m.ws, "exports", project, job.JobID+c.ext)
+		want := filepath.Join(m.ws, "exports", target, job.JobID+c.ext)
 
 		if e.Path != want {
 			t.Errorf("format %q: path = %s, want %s", c.format, e.Path, want)
@@ -96,7 +103,7 @@ func TestExportFormatsEachSucceedsAndIsServed(t *testing.T) {
 			t.Fatalf("format %q: ExportFile: %v", c.format, ferr)
 		}
 
-		if f.ContentType != c.contentType || f.Path != path.Join("exports", project, job.JobID+c.ext) {
+		if f.ContentType != c.contentType || f.Path != path.Join("exports", target, job.JobID+c.ext) {
 			t.Errorf("format %q: file = %+v", c.format, f)
 		}
 	}
@@ -139,7 +146,7 @@ func TestExportFormatsRefuseWhatIsNotAFormat(t *testing.T) {
 
 // A real export of every format on the pinned FFmpeg; the test skips without it.
 func TestExportFormatsRealEngine(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{realExport: true})
+	m := newMediaEnv(t, mediaCfg{realExport: true, ingest: ingest.Run})
 
 	project, track := m.withTrack()
 	if _, err := m.addText(ui, project, track, 1, "0s", "hello"); err != nil {
@@ -147,6 +154,14 @@ func TestExportFormatsRealEngine(t *testing.T) {
 	}
 
 	m.mustEdit(ui, project, m.head(project).Revision, op("settings.set", `{"width":320,"height":240}`))
+
+	// A sound for the audio-only formats: they refuse a project that is silent.
+	sound := m.importOne(project, m.write("tone.wav", string(silentWav()))).Assets[0].AssetID
+	audioTrack := m.mustEdit(ui, project, m.head(project).Revision, op("track.add", `{"kind":"audio","name":"A"}`))
+	m.mustEdit(ui, project, m.head(project).Revision, op(
+		"audio.add",
+		fmt.Sprintf(`{"track_id":%q,"asset_id":%q,"start":"0s","duration":"1s"}`, audioTrack.Created[0], sound),
+	))
 
 	for _, c := range formatTable {
 		job, err := m.startFormat(project, c.format)
@@ -184,6 +199,42 @@ func TestExportFormatsRealEngine(t *testing.T) {
 	}
 }
 
+// silentWav is one second of 8 kHz mono PCM silence: a real file the ingest can probe.
+func silentWav() []byte {
+	const rate, bytes = 8000, 16000
+
+	le := func(v uint32) []byte { return []byte{byte(v), byte(v >> 8), byte(v >> 16), byte(v >> 24)} }
+
+	out := append([]byte("RIFF"), le(36+bytes)...)
+	out = append(out, "WAVEfmt "...)
+	out = append(out, le(16)...)
+	out = append(out, 1, 0, 1, 0)
+	out = append(out, le(rate)...)
+	out = append(out, le(rate*2)...)
+	out = append(out, 2, 0, 16, 0)
+	out = append(out, "data"...)
+	out = append(out, le(bytes)...)
+
+	return append(out, make([]byte, bytes)...)
+}
+
 func jobSummary(j *service.Job) string {
 	return fmt.Sprintf("%+v", *j)
+}
+
+// A wav or aac of a project with no sound is refused with the finding, not written.
+func TestAudioOnlyExportRefusesASilentProject(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{exporter: goodExporter()})
+	project := m.exportable()
+
+	for _, format := range []string{"wav", "aac"} {
+		_, err := m.startFormat(project, format)
+		if code(err) != service.CodeLintBlocking {
+			t.Errorf("format %q: code = %q, want %q", format, code(err), service.CodeLintBlocking)
+		}
+	}
+
+	if _, err := m.startFormat(project, "mp4"); err != nil {
+		t.Errorf("mp4 of a silent project: %v", err)
+	}
 }

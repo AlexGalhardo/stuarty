@@ -97,7 +97,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, derr
 	}
 
-	totals, gerr := s.exportGate(ctx, doc)
+	totals, gerr := s.exportGate(ctx, doc, args.Format)
 	if gerr != nil {
 		return nil, gerr
 	}
@@ -224,8 +224,8 @@ func decodeExportArgs(raw json.RawMessage) (ExportArgs, *Error) {
 }
 
 // exportGate is the lint of rule 1: an error finding refuses the start.
-func (s *svc) exportGate(ctx context.Context, doc *timeline.Document) (LintTotals, *Error) {
-	all := lint.Lint(doc, s.lintEnvFor(ctx, doc), lint.Full)
+func (s *svc) exportGate(ctx context.Context, doc *timeline.Document, format string) (LintTotals, *Error) {
+	all := silentAudioIsError(lint.Lint(doc, s.lintEnvFor(ctx, doc), lint.Full), format)
 	errs, warns := lint.Totals(all)
 
 	if errs == 0 {
@@ -243,6 +243,23 @@ func (s *svc) exportGate(ctx context.Context, doc *timeline.Document) (LintTotal
 	return LintTotals{}, newError(CodeLintBlocking, "the project has %d problem(s) that stop an export.", errs).
 		withHint("fix the findings, or read them with lint, then start the export again").
 		withDetail("findings", first).withDetail("total", errs)
+}
+
+// silentAudioIsError makes L_SILENT_EXPORT an error for an audio-only export: a
+// silent video is a choice, but a wav or aac file of silence is never wanted.
+func silentAudioIsError(all []lint.Finding, format string) []lint.Finding {
+	if format != FormatWAV && format != FormatAAC {
+		return all
+	}
+
+	out := slices.Clone(all)
+	for i := range out {
+		if out[i].Code == lint.CodeSilentExport {
+			out[i].Severity = lint.SeverityError
+		}
+	}
+
+	return out
 }
 
 // exportRange resolves start and end to frames; end 0 is the end of the timeline.
