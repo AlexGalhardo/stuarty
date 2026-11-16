@@ -7,12 +7,13 @@ import {
 } from "react";
 
 import { useT } from "@/lib/i18n";
+import { formatTime } from "../commands/units";
+import { readTimeDisplay } from "../state/prefs";
 import {
 	clampPlayhead,
 	clientXToFrame,
 	type Fps,
 	formatRulerLabel,
-	formatTimecode,
 	framesPerSecond,
 	RULER_HEIGHT_PX,
 	rulerStep,
@@ -147,7 +148,7 @@ export default function Ruler(props: RulerProps): ReactNode {
 			aria-valuemin={0}
 			aria-valuemax={endFrame}
 			aria-valuenow={playheadFrame}
-			aria-valuetext={formatTimecode(playheadFrame, fps)}
+			aria-valuetext={formatTime(playheadFrame, fps, readTimeDisplay())}
 			title={t("ui.editor.timeline.ruler")}
 			className="relative h-full cursor-pointer touch-none overflow-hidden border-b border-ed-track-line bg-ed-panel select-none"
 			onPointerDown={(event) => {

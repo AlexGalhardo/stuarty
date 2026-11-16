@@ -10,13 +10,14 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/cn";
-import { useLocale, useT } from "@/lib/i18n";
+import { useT } from "@/lib/i18n";
 import type { MediaEntry } from "../api/types";
 import { thumbnailUrl } from "../api/urls";
+import { formatSeconds } from "../commands/units";
 import { useActions, useCanEdit } from "../commands/useActions";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
+import { readTimeDisplay } from "../state/prefs";
 import { errorHeadline } from "../ui/errorHeadline";
-import { formatSeconds } from "../ui/format";
 import AssetDetails from "./AssetDetails";
 
 // One card of the library (SDD-012 section 13.2). "Add to timeline" is enabled
@@ -35,7 +36,6 @@ export default function AssetCard({
 	onDragStart?: AssetDragStart;
 }): ReactNode {
 	const t = useT();
-	const locale = useLocale();
 	const runtime = useRuntime();
 	const actions = useActions();
 	const inDocument = useDocumentState(
@@ -92,7 +92,7 @@ export default function AssetCard({
 					</p>
 					<p className="text-muted-foreground [font-variant-numeric:tabular-nums]">
 						{entry.duration_seconds !== null &&
-							`${formatSeconds(entry.duration_seconds, locale)} · `}
+							`${formatSeconds(entry.duration_seconds, readTimeDisplay())} · `}
 						{entry.width !== undefined &&
 							entry.height !== undefined &&
 							`${entry.width}×${entry.height} · `}

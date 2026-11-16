@@ -1,7 +1,19 @@
 // The only file that touches the storage of the browser (rule R7). A blocked
 // storage (private mode) leaves the defaults and the choice lasts for the page.
 
+export type TimeDisplay = "timecode" | "frames" | "seconds";
 export type TimeUnit = "s" | "f";
+
+// How every time of the editor is shown (SDD-012 section 12.2): one preference
+// for the library, the preview, the ruler and the inspector.
+export function readTimeDisplay(): TimeDisplay {
+	try {
+		const value = localStorage.getItem("vv.timeDisplay");
+		return value === "frames" || value === "seconds" ? value : "timecode";
+	} catch {
+		return "timecode";
+	}
+}
 
 // The unit appended to a bare number typed in a time field (SDD-012 section 12.2).
 export function readTimeUnit(): TimeUnit {

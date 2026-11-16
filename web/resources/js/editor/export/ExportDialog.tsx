@@ -37,11 +37,13 @@ import type {
 	LintFinding,
 } from "../api/types";
 import { exportFileUrl } from "../api/urls";
+import { formatSeconds } from "../commands/units";
 import { useActions } from "../commands/useActions";
 import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
+import { readTimeDisplay } from "../state/prefs";
 import { errorHeadline } from "../ui/errorHeadline";
-import { formatDecimal, formatSeconds } from "../ui/format";
+import { formatDecimal } from "../ui/format";
 import ExportOptionsFields, { type Unsupported } from "./ExportOptions";
 import { exportCapabilities } from "./exportCapabilities";
 import {
@@ -470,7 +472,10 @@ export default function ExportDialog({
 							<p className="text-xs text-muted-foreground [font-variant-numeric:tabular-nums]">
 								{t("ui.editor.export.size", {
 									megabytes: formatDecimal(result.bytes / 1_000_000, locale),
-									duration: formatSeconds(result.duration.seconds, locale),
+									duration: formatSeconds(
+										result.duration.seconds,
+										readTimeDisplay(),
+									),
 									revision: result.revision,
 								})}
 							</p>

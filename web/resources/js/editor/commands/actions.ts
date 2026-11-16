@@ -2,13 +2,13 @@ import { announce } from "../a11y/announce";
 import type { EditOutcome } from "../api/edit";
 import type { ApiError } from "../api/errors";
 import type { Notice } from "../state/noticeStore";
+import { readTimeDisplay } from "../state/prefs";
 import type { EditorRuntime } from "../state/runtime";
 import {
 	selectFps,
 	selectOrderedTrackIds,
 	selectTrack,
 } from "../state/selectors";
-import { formatTimecode } from "../ui/timecode";
 import {
 	addAudioOperations,
 	addClipOperations,
@@ -50,7 +50,7 @@ import {
 	withNextFree,
 } from "./builders";
 import { newId } from "./ids";
-import { fpsOf } from "./units";
+import { formatTime, fpsOf } from "./units";
 
 // The action registry of the Prototype (SDD-012 sections 8.2, 9 and 15): every
 // gesture builds its operations from what the user chose and sends one batch
@@ -303,7 +303,7 @@ export function createActions(runtime: EditorRuntime): Actions {
 			noticeWriter.push({
 				...base,
 				messageKey: "ui.editor.notice.source_has_only",
-				params: { available: formatTimecode(available, fps) },
+				params: { available: formatTime(available, fps, readTimeDisplay()) },
 			});
 			return;
 		}

@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { readLayout, readTimeUnit, writeLayout, writeTimeUnit } from "./prefs";
+import {
+	readLayout,
+	readTimeDisplay,
+	readTimeUnit,
+	writeLayout,
+	writeTimeUnit,
+} from "./prefs";
 
 function storage(initial: Record<string, string> = {}) {
 	const data = new Map(Object.entries(initial));
@@ -19,6 +25,15 @@ describe("time unit preference", () => {
 		expect(readTimeUnit()).toBe("s");
 		writeTimeUnit("f");
 		expect(readTimeUnit()).toBe("f");
+	});
+
+	test("the time display defaults to timecode and reads the stored mode", () => {
+		vi.stubGlobal("localStorage", storage({}));
+		expect(readTimeDisplay()).toBe("timecode");
+		vi.stubGlobal("localStorage", storage({ "vv.timeDisplay": "frames" }));
+		expect(readTimeDisplay()).toBe("frames");
+		vi.stubGlobal("localStorage", storage({ "vv.timeDisplay": "x" }));
+		expect(readTimeDisplay()).toBe("timecode");
 	});
 
 	test("an unknown stored value reads as seconds", () => {

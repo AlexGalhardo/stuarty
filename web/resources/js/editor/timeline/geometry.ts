@@ -142,8 +142,6 @@ export function formatRulerLabel(
 	return `${Math.floor(whole / 60)}:${pad2(whole % 60)}`;
 }
 
-export { formatTimecode } from "../ui/timecode";
-
 export interface Placed {
 	id: string;
 	start: number;

@@ -11,6 +11,7 @@ import {
 import { formatTime, fpsOf } from "../../commands/units";
 import { useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
+import { readTimeDisplay } from "../../state/prefs";
 import SelectField from "../fields/SelectField";
 import TimeCommitField from "../fields/TimeCommitField";
 import Section from "../Section";
@@ -75,7 +76,7 @@ export default function TransitionsSection({
 							stored={
 								current === undefined
 									? ""
-									: formatTime(current.duration, fps, "timecode")
+									: formatTime(current.duration, fps, readTimeDisplay())
 							}
 							disabled={!canEdit || current === undefined}
 							commit={(duration) =>

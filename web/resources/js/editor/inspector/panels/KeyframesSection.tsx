@@ -25,6 +25,7 @@ import {
 	useRuntime,
 	useUiState,
 } from "../../state/EditorContext";
+import { readTimeDisplay } from "../../state/prefs";
 import type { CommitResult } from "../fields/commitField";
 import { FieldMessage } from "../fields/FieldFrame";
 import { useCommitField } from "../fields/useCommitField";
@@ -251,7 +252,7 @@ export default function KeyframesSection({
 						</div>
 						<ul className="flex flex-col gap-1">
 							{keys.map((key) => {
-								const time = formatTime(key.t, fps, "timecode");
+								const time = formatTime(key.t, fps, readTimeDisplay());
 								const frame = keyframeFrame(item.start, key.t);
 								const isPicked =
 									picked?.item === itemId &&

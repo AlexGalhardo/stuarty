@@ -35,7 +35,7 @@ describe("Timeline", () => {
 		expect(html).toContain("IMG_0421.MOV");
 		expect(html).toContain('aria-label="Timeline"');
 		expect(html).toContain("--ppf:1");
-		expect(html).toContain("00:00:00");
+		expect(html).toContain("00:00.000");
 	});
 
 	test("a track without items still has a cell in its row", async () => {
