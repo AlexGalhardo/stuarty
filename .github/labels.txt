@@ -70,3 +70,6 @@ area:projects|c5def5|projects
 area:preview|c5def5|preview
 area:owner|c5def5|owner
 area:e2e|c5def5|e2e
+area:upgrade|c5def5|upgrade
+area:servicetest|c5def5|servicetest
+area:auth|c5def5|auth
