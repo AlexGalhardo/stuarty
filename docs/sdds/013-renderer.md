@@ -151,7 +151,7 @@ The matrix `m` is 12 numbers: `m[4i + j]` is the coefficient of channel `j` for 
 - `nr = clamp8((q[0] x r + q[1] x g + q[2] x b + q[3] x 255 + 32768) >> 16)`, and `ng`, `nb` the same with `q[4..7]` and `q[8..11]`. The shift is arithmetic on `i64`.
 - For `a != 255` premultiply again: `n = div255(n x a)`. Alpha is unchanged.
 
-The result goes to scratch memory, never over the cached source. The filter matrix runs the same routine on the output of the colour matrix.
+A coefficient is clamped to the range of 2^24 in absolute value after the rounding, so no sum can overflow; the plan never produces one that large, and the Go compositor is the same in that range. The result goes to scratch memory, never over the cached source. The filter matrix runs the same routine on the output of the colour matrix.
 
 ### 3.5 Blur
 
@@ -205,6 +205,7 @@ These rules make §3.1 to §3.7 give the same bytes on Linux, macOS, Windows and
 - `div255` equals `x / 255` rounded to nearest for every `x` from 0 to 65535, in Rust and in Go; `sincos` equals the Go `sincos` bit for bit over 10,000 angles in `[-1000, 1000]` and at every multiple of 15 degrees.
 - The same Rust test suite runs natively on the three operating systems and in WebAssembly under `wazero`, and prints the same SHA-256 of the golden frames.
 - Harness (P5-RND-003): `TestRustCPUPathEqualsGoCompositor` (`engine/export/parity_rust_test.go`) records, for every frame of the 33 golden cases and of 3 reference scenes, the plan and the pixels the Go compositor was given, builds the render input of §2.1, renders it with the native process `vr-parity` of `renderer/` (`cargo build --release --bin vr-parity`, or `VUKEM_VIDEO_TEST_VR_PARITY`), once whole and once in eight bands (`output.y0`, `output.y1`), and requires the same bytes. The WebAssembly run under `wazero` joins it with the host of §4.6.
+- Fuzz (P5-RND-003): `renderer/vukem-renderer/tests/fuzz.rs` runs 100,000 random byte strings and 200,000 mutated plans through the decoder, 6,000 compositions with the extremes of a double (`NaN`, infinities, `f64::MAX`, empty and huge rectangles, bands outside the frame), 30,000 sampler placements, 50,000 mutated renders (each repeated and compared) and 20,000 store calls with every size and length; a panic or an arithmetic overflow fails the test. The generator is a fixed-seed xorshift written in the test (`proptest` and `cargo-fuzz` are not approved crates); `VR_FUZZ_ITERATIONS` scales a long run.
 - Vectors (P5-RND-003): `renderer/testdata/compose-vectors.bin` holds 22 small compositions (copy, clip, opacity, scale, rotation, colour matrix, filter, blur at three radii, bitmaps with metrics, the shrink of a large bitmap, a stack) with the frame `engine/compositor` draws for each; `cargo test` draws them again at 1 and 8 bands and requires the same bytes, and `TestRendererVectorsAreCurrent` keeps the file equal to the Go output. The FNV-1a hash of `sincos` over its 10,001 + 97 angles is stored in the same file.
 - Stage D gate: §3.8 on every golden case.
 

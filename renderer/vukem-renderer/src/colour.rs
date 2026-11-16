@@ -3,10 +3,16 @@
 use crate::image::Image;
 use crate::math::{div255_i64, mul, round_half_away};
 
+/// The largest fixed-point coefficient: 2^24 in 16.16.
+const MAX_Q: i64 = 1 << 40;
+
 /// `src` with the matrix applied to its non-linear RGB values, clamped. Coefficients are rounded
 /// to 16.16 fixed point once, so the per-pixel work is integer arithmetic.
 pub fn apply_matrix(src: &Image, m: &[f64; 12]) -> Image {
-	let q: [i64; 12] = core::array::from_fn(|i| round_half_away(mul(m[i], 65536.0)));
+	// A coefficient beyond 2^24 only saturates the result, and the clamp keeps every sum far from
+	// the limits of an i64.
+	let q: [i64; 12] =
+		core::array::from_fn(|i| round_half_away(mul(m[i], 65536.0)).clamp(-MAX_Q, MAX_Q));
 	let mut out = Image {
 		pix: vec![0; src.w * src.h * 4],
 		w: src.w,
@@ -53,4 +59,25 @@ pub fn apply_matrix(src: &Image, m: &[f64; 12]) -> Image {
 
 fn clamp8(v: i64) -> i64 {
 	v.clamp(0, 255)
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn a_huge_coefficient_saturates_instead_of_overflowing() {
+		let img = Image {
+			pix: vec![200, 100, 50, 255],
+			w: 1,
+			h: 1,
+			opaque: true,
+		};
+		let mut m = [0.0; 12];
+		m[0] = f64::MAX;
+		m[5] = f64::MIN;
+		m[10] = 1.0;
+		let out = apply_matrix(&img, &m);
+		assert_eq!(out.pix, [255, 0, 50, 255]);
+	}
 }
