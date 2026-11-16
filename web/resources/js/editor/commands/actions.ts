@@ -38,6 +38,7 @@ import {
 	moveToTrackOperations,
 	nudgeOperations,
 	type Operations,
+	pasteAttributesOperations,
 	pasteOperations,
 	projectRenameOperations,
 	type Ripple,
@@ -156,6 +157,12 @@ export interface Actions {
 	// Holds the picture at the playhead of the first selected item the playhead
 	// lies inside (`item.freeze_frame`); the core judges the kind of item.
 	freezeFrame(): Promise<EditOutcome | null>;
+	// Mod+Shift+C: remembers the first selected item as the source of the look
+	// to paste; false when nothing is selected.
+	copyAttributes(): boolean;
+	// Mod+Shift+V: sends `item.paste_attributes` from the remembered item to
+	// the other selected ones; the core skips the groups a target lacks.
+	pasteAttributes(): Promise<EditOutcome | null>;
 	// Paste (Mod+V): the clipboard items at the playhead frame `at`; a cut
 	// clipboard moves them, a copy duplicates them (`pasteOperations`).
 	pasteItems(
@@ -260,6 +267,9 @@ export function createActions(runtime: EditorRuntime): Actions {
 	}
 
 	const firstVisualTrack = (): string | null => firstTrackOfKind("visual");
+
+	// The item Mod+Shift+C took the look from; UI state, not project data.
+	let attributeSource: string | null = null;
 
 	function selectedRanges(): ItemRange[] {
 		return rangesOf(ui.getState().selection.items);
@@ -691,6 +701,22 @@ export function createActions(runtime: EditorRuntime): Actions {
 			send(
 				freezeFrameOperations(selectedRanges(), ui.getState().playheadFrame),
 			),
+		copyAttributes() {
+			const [first] = actedIds();
+			if (first === undefined) return false;
+			attributeSource = first;
+			return true;
+		},
+		pasteAttributes() {
+			if (attributeSource === null) return Promise.resolve(null);
+			const from = attributeSource;
+			return send(
+				pasteAttributesOperations(
+					from,
+					actedIds().filter((id) => id !== from),
+				),
+			);
+		},
 		pasteItems: (ids, at, cut) => send(pasteOperations(rangesOf(ids), at, cut)),
 		adjustVolume(db) {
 			const doc = documents.getState().document;

@@ -1315,6 +1315,40 @@ export function linkOperations(itemIds: readonly string[]): Operations {
 	return [{ op: "item.link", args: { item_ids: [...itemIds] } }];
 }
 
+// The groups `item.paste_attributes` copies; a group the target type does not
+// have is skipped by the core and listed in `effective.skipped`.
+export const PASTE_GROUPS = [
+	"color",
+	"filter",
+	"blur",
+	"framing",
+	"transform",
+	"blend",
+	"mask",
+	"flip",
+	"chroma_key",
+	"effects",
+	"audio",
+] as const;
+
+export function pasteAttributesOperations(
+	fromItemId: string,
+	itemIds: readonly string[],
+): Operations {
+	return itemIds.length === 0
+		? []
+		: [
+				{
+					op: "item.paste_attributes",
+					args: {
+						from_item_id: fromItemId,
+						item_ids: [...itemIds],
+						attributes: [...PASTE_GROUPS],
+					},
+				},
+			];
+}
+
 export function unlinkOperations(itemIds: readonly string[]): Operations {
 	return [{ op: "item.unlink", args: { item_ids: [...itemIds] } }];
 }

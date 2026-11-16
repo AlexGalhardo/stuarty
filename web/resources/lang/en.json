@@ -334,6 +334,8 @@
         "unlink": "Unlink items",
         "extract_audio": "Extract audio",
         "freeze_frame": "Freeze frame",
+        "copy_attributes": "Copy attributes",
+        "paste_attributes": "Paste attributes",
         "enable": "Turn on",
         "disable": "Turn off"
       },
@@ -734,6 +736,8 @@
           "extract_audio": "Extract the audio of the selected clips",
           "toggle_snap": "Toggle snapping",
           "toggle_magnet": "Turn the magnet of the track on or off",
+          "copy_attributes": "Copy the look of the selected item",
+          "paste_attributes": "Paste the copied look onto the selected items",
           "keyframe_panel": "Show or hide the keyframes of the selected item",
           "speed_curve": "Open the speed curve of the selected clip",
           "scroll": "Scroll the timeline: wheel up and down, Alt+wheel sideways",

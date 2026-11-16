@@ -1447,7 +1447,7 @@ Decision D-038: the default keymap is the one a person coming from CapCut alread
 | Slide, roll, slip the selected item by one frame | `Mod+Alt+Left, Right`, `Mod+Alt+Shift+Left, Right`, `Alt+,`, `Alt+.` | `slideItems`, `rollItems`, `slipItems` (`item.move` with `slide`, `item.trim` with `roll`, `item.slip`) | exists |
 | Duplicate | `Mod+D` | `duplicateSelection` (`item.duplicate`) | exists |
 | Copy, cut, paste items | `Mod+C`, `Mod+X`, `Mod+V` | `surface.clipboard` (paste puts the held items at the playhead, keeping the distances between them: a copy is `item.duplicate` with `start`, a cut one is `item.move`, so cut leaves the items in place until they are pasted and never needs a command to bring back a deleted item) | UI |
-| Copy, paste attributes | `Mod+Shift+C`, `Mod+Shift+V` | `item.paste_attributes` | needs command (N-8) |
+| Copy, paste attributes | `Mod+Shift+C`, `Mod+Shift+V` | `copyAttributes` (remembers the first selected item), `pasteAttributes` (`item.paste_attributes` with every group, onto the other selected items; the core skips the groups a target lacks); also the item menu | exists (N-8, TASK-0254) |
 | Undo, redo | `Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y` | `undo`, `redo` | exists |
 | Select all | `Mod+A` | `surface.select_all` | exists |
 | Enable or disable the item | `V` | `toggleEnabled` (`item.set_enabled`) | exists (N-1, TASK-0273) |
@@ -1524,7 +1524,7 @@ Each is a card for `senior-a`, with its name in `000-shared-definitions.md` firs
 
 TASK-0236 draws and binds the rows of state exists and the UI rows that need no new surface: split, split every track, `Q`, `W`, `[` and `]`, `Mod+=` and `Mod+-`, copy, cut and paste (paste is `item.duplicate`), the volume keys (`item.set_audio`, 0.1 dB as a gain of `10^(0.1/20)`), the preview size keys, `Mod+I`, `Mod+E` and `Mod+S`. The UI rows that need a surface that does not exist yet (`J` `K` `L`, `I` `O`, `Shift+X` `Alt+X`, `B` `A`, `S` the preview axis, `Alt+K`, the wheel keys, the drag modifiers) and the desktop-only rows (`Mod+R`, `Mod+Shift+F`, `Mod+N`, `Mod+O`) are not in `SHORTCUTS` until their surface or the desktop shell exists. An alias is the `aliases` field of a row (`+` and `Mod++` for zoom in, `-` for zoom out): they are held by the row, so no other row may rebind to them, and they are lost when the person rebinds the row.
 
-N-4 and N-5 exist, `Shift+B` included. Rows still without a command or a surface when TASK-0236 closed: `Mod+Shift+C` and `Mod+Shift+V` (N-8), `Mod+G` and `Mod+Shift+G` (N-2), `Alt+M` (N-3, no colour), `S` (no preview axis) and the desktop-only `Mod+R`, `Mod+Shift+F`, `Mod+N`, `Mod+O`, which belong to the shell menu accelerators (§21), not to the page. The rows of N-2, N-6 and N-8 enter `SHORTCUTS` when their command exists. The `surface.*` ids marked UI are added to `UI_SHORTCUT_ACTIONS` by TASK-0236. The cheat sheet and the shortcuts page of the site read the same table, so no key is written twice.
+N-4 and N-5 exist, `Shift+B` included. Rows still without a command or a surface when TASK-0236 closed: `Mod+Shift+C` and `Mod+Shift+V` (N-8), `Mod+G` and `Mod+Shift+G` (N-2), `Alt+M` (N-3, no colour), `S` (no preview axis) and the desktop-only `Mod+R`, `Mod+Shift+F`, `Mod+N`, `Mod+O`, which belong to the shell menu accelerators (§21), not to the page. The rows of N-2 enter `SHORTCUTS` when their command exists. The `surface.*` ids marked UI are added to `UI_SHORTCUT_ACTIONS` by TASK-0236. The cheat sheet and the shortcuts page of the site read the same table, so no key is written twice.
 
 ### 18.8 Find bar
 
