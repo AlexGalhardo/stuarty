@@ -203,7 +203,11 @@ var toolsInstallCmd = &spec{
 	write:      true,
 	globals:    []string{"timeout"},
 	flags: []flagDef{
-		{Name: "model", Kind: kindString, Usage: "the model to download (default: small)"},
+		{
+			Name:  "model",
+			Kind:  kindString,
+			Usage: "the model to download, which then becomes the default of transcribe (default: small)",
+		},
 		{Name: "yes", Kind: kindBool, Default: "false", Usage: "do not ask for confirmation"},
 	},
 	run: runToolsInstall,

@@ -511,3 +511,28 @@ func TestSecurity_T26_HelperDownloadVerified(t *testing.T) {
 		}
 	})
 }
+
+// The model an install brings is recorded as the workspace default, so a transcribe job without
+// a model uses it (VV-007).
+func TestToolsInstallRecordsTheModelAsTheWorkspaceDefault(t *testing.T) {
+	ts := newToolsServer(t)
+	dir := filepath.Join(t.TempDir(), "tools")
+	m := newMediaEnv(t, mediaCfg{tools: ts.tools(dir)})
+	person := service.WithCaller(context.Background(), service.Caller{
+		Actor: "local:ui", Scopes: service.AllScopes, Browser: true,
+	})
+
+	if _, ok := service.DefaultModel(dir, "whisper"); ok {
+		t.Fatal("a default is recorded before any install")
+	}
+
+	if _, err := m.svc.ToolsInstall(person, service.ToolsInstallRequest{Name: "whisper", Model: "tiny"}); err != nil {
+		t.Fatal(err)
+	}
+
+	m.waitInstall(person)
+
+	if got, ok := service.DefaultModel(dir, "whisper"); !ok || got != "tiny" {
+		t.Fatalf("default = %q, %v; want tiny", got, ok)
+	}
+}
