@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-11-16
+
+### Added
+
+- **engine:** Draw the pixel effects and the whip, dip and wipe in the compositor ([44ed5d2](https://github.com/AlexGalhardo/vukem-video/commit/44ed5d275d5b3e82dd49b5f710add10b2b642e2a))
+- **renderer:** Port the pixel effects, whip, dip and wipe, byte-equal with the Go compositor ([895b46f](https://github.com/AlexGalhardo/vukem-video/commit/895b46faee11197b7dc8370c49df9f58a17a74c9))
+- **renderer:** Draw the wipe coverage on the GPU path ([65e45d9](https://github.com/AlexGalhardo/vukem-video/commit/65e45d95e884feda65c92d7e30889514e1b134f3))
+- **export:** Play a speed curve and reverse in the exported audio, and test the video frames ([ce436c1](https://github.com/AlexGalhardo/vukem-video/commit/ce436c1bf02361246d302677238a36b60df74d8b))
+- **ui:** Decode the video proxy with WebCodecs in a worker ([8f7bd08](https://github.com/AlexGalhardo/vukem-video/commit/8f7bd085637c7c301a500c8e9908d7c1749b86d2))
+- **ui:** Seek frame exact and keep a bounded decode queue ahead of the playhead ([c509fb5](https://github.com/AlexGalhardo/vukem-video/commit/c509fb56768808ce0bc29a6f2db7f1609eb02c13))
+- **ui:** Fall back to the video element per asset and force either path in tests ([544b1d8](https://github.com/AlexGalhardo/vukem-video/commit/544b1d838838c00c197f23c9546777d3884c0c55))
+- **ui:** Bound the open VideoFrames and check it in the leak and soak specs ([0c43483](https://github.com/AlexGalhardo/vukem-video/commit/0c434834d18eacff695f341269636a0049d8114c))
+- **core:** Add item_id to marker.add, marker.set and marker.remove ([adbad74](https://github.com/AlexGalhardo/vukem-video/commit/adbad7455b8cf398387a1a090996afd30a803bba))
+- **core:** Add the item.paste_attributes command ([d4e8582](https://github.com/AlexGalhardo/vukem-video/commit/d4e858240e739b0ffb0c239ae7cabe825bb00b34))
+- **core:** Add voice presets to item.set_audio ([921b0f0](https://github.com/AlexGalhardo/vukem-video/commit/921b0f07b3e31423e950be2b15536e14f66687dd))
+- **engine:** Extend the hostile corpus with the BETA inputs and snapshot the build listings ([e382fcc](https://github.com/AlexGalhardo/vukem-video/commit/e382fccc1fcf271b593b9f63f990d4b72066c78d))
+
+### Fixed
+
+- **release:** Generate the doctor pins from the own FFmpeg block when FFMPEG_SOURCE is own ([98f10de](https://github.com/AlexGalhardo/vukem-video/commit/98f10def314dd97268dc960a695ce93491c113b1))
+- **servicetest:** Take the bench revision from the result and start with a real move ([2a47576](https://github.com/AlexGalhardo/vukem-video/commit/2a4757679e2fd5b9dac235951e6a6ab85162991e))
+
+### Security
+
+- **security:** Test the verdict of the no-egress strace scan on fixtures ([f589b0e](https://github.com/AlexGalhardo/vukem-video/commit/f589b0e9fc065364197489aa479ccf207a517492))
+- **security:** Print the failing command and refuse root in the no-egress run ([65690bc](https://github.com/AlexGalhardo/vukem-video/commit/65690bc5986129b89b1da2dbd020aa6d4ed576f2))
+- **security:** Add worker-src 'self' to the CSP for the same-origin preview workers ([9f5bc05](https://github.com/AlexGalhardo/vukem-video/commit/9f5bc05dd3779422840cfd2fb9980bf159cbe471))
+- **security:** Allow the sample admin password of the quick start and the timing script ([8268fda](https://github.com/AlexGalhardo/vukem-video/commit/8268fda7625af837a36d9c4b7697042b66922ee8))
+
 ## [0.22.0] - 2026-11-16
 
 ### Added
@@ -1048,7 +1077,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.22.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.23.0...HEAD
+[0.23.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.19.0...v0.20.0
