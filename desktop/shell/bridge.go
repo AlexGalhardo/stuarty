@@ -13,6 +13,7 @@ import (
 // The operations the page may ask for; nothing else reaches the shell.
 const (
 	OpPickFiles    = "pickFiles"
+	OpPickTemplate = "pickTemplate"
 	OpShowInFolder = "showInFolder"
 )
 
@@ -34,7 +35,7 @@ func ParseBridgeMessage(msg string) (BridgeRequest, bool) {
 		return BridgeRequest{}, false
 	}
 	switch req.Op {
-	case OpPickFiles:
+	case OpPickFiles, OpPickTemplate:
 		req.Path = ""
 	case OpShowInFolder:
 		if req.Path == "" {
@@ -87,6 +88,7 @@ const BridgeScript = `(function(){var w=window;` +
 	`wv.postMessageWithAdditionalObjects("file:drop:"+Math.round(e.clientX)+":"+Math.round(e.clientY),e.dataTransfer.files);},true);}` +
 	`w.vukemDesktop=Object.freeze({` +
 	`pickFiles:function(){return ask("pickFiles");},` +
+	`pickTemplate:function(){return ask("pickTemplate");},` +
 	`showInFolder:function(path){return ask("showInFolder",path);},` +
 	`onDropPaths:function(cb){drops.push(cb);return function(){var i=drops.indexOf(cb);if(i>=0){drops.splice(i,1);}};}});` +
 	`w.dispatchEvent(new Event("vukem-desktop-ready"));})();`

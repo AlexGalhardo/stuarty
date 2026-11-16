@@ -9,6 +9,7 @@ export type Unsubscribe = () => void;
 export interface DesktopBridge {
 	pickFiles?: () => Promise<string[]>;
 	onDropPaths?: (callback: (paths: string[]) => void) => Unsubscribe;
+	pickTemplate?: () => Promise<string[]>;
 	showInFolder?: (path: string) => Promise<unknown>;
 }
 
@@ -35,6 +36,10 @@ export function getDesktopBridge(): DesktopBridge | null {
 
 export function canPickFiles(bridge: DesktopBridge | null): boolean {
 	return typeof bridge?.pickFiles === "function";
+}
+
+export function canPickTemplate(bridge: DesktopBridge | null): boolean {
+	return typeof bridge?.pickTemplate === "function";
 }
 
 export function canDropPaths(bridge: DesktopBridge | null): boolean {

@@ -25,6 +25,7 @@ func TestParseBridgeMessage(t *testing.T) {
 			BridgeRequest{Op: OpShowInFolder, ID: 5, Path: `C:\out\a.mp4`},
 			true,
 		},
+		{`{"vukem":"pickTemplate","id":4}`, BridgeRequest{Op: OpPickTemplate, ID: 4}, true},
 		{`{"vukem":"showInFolder","id":5}`, BridgeRequest{}, false},
 		{`{"vukem":"pickFiles","id":6,"path":"C:\\x"}`, BridgeRequest{Op: OpPickFiles, ID: 6}, true},
 	}
@@ -49,7 +50,7 @@ func TestResolveScriptEscapesPathsAndErrors(t *testing.T) {
 }
 
 func TestBridgeScriptDefinesTheTwoMembers(t *testing.T) {
-	for _, want := range []string{`w.vukemDesktop=`, `pickFiles:`, `showInFolder:`, `onDropPaths:`, `handlePlatformFileDrop`, `vukem-desktop-ready`} {
+	for _, want := range []string{`w.vukemDesktop=`, `pickFiles:`, `pickTemplate:`, `showInFolder:`, `onDropPaths:`, `handlePlatformFileDrop`, `vukem-desktop-ready`} {
 		if !strings.Contains(BridgeScript, want) {
 			t.Errorf("BridgeScript lacks %s", want)
 		}
