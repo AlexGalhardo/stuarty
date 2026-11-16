@@ -439,6 +439,13 @@ func TestJobTextLeavesAStaleMessageOutAndShowsWhereTheFileIs(t *testing.T) {
 		t.Errorf("audio = %q, want %q", got, want)
 	}
 
+	bundle := local
+	bundle.Width, bundle.Height, bundle.Duration = 0, 0, ""
+
+	if got, want := Job(bundle), "job_1 export succeeded 100% file=/ws/exports/job_1.mp4 3.9 MiB"; got != want {
+		t.Errorf("no picture = %q, want %q", got, want)
+	}
+
 	running := JobView{ID: "job_2", Kind: "export", State: "running", Percent: 40, Message: "Rendering (40%)"}
 	if got, want := Job(running), "job_2 export running 40% Rendering (40%)"; got != want {
 		t.Errorf("running = %q, want %q", got, want)
