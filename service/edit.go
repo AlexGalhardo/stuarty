@@ -125,6 +125,13 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 		crashpoint.Hit("commit.after_apply")
 
 		res = s.editResult(c.Actor, &req, row.Revision, doc, &out, &ids)
+		if out.NoOp() {
+			// Nothing changed: no revision, no undo step, no event and no stored key (VV-050).
+			res.Applied, res.DryRun = false, req.DryRun
+
+			return nil
+		}
+
 		if req.DryRun {
 			// The revision a dry run shows is the one the batch would get (SDD-003 section 3.5).
 			res.Revision, res.Applied, res.DryRun = row.Revision+1, false, true

@@ -525,3 +525,34 @@ func TestSecurity_T24_RevisionLookbackBounded(t *testing.T) {
 		t.Errorf("the refusal took %v; it must not depend on the log", took)
 	}
 }
+
+// VV-050: a batch that changes nothing commits no revision and no undo step.
+func TestEditThatChangesNothingCommitsNothing(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	project, _ := e.withTrack()
+	before := e.head(project).Revision
+	events := len(e.events)
+	same := op("project.rename", `{"name":"p"}`)
+
+	res, err := e.edit(ui, project, before, same)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Applied || res.Revision != before || len(res.Diff) != 0 || len(res.Effective) != 1 {
+		t.Errorf("no-op result = %+v", res)
+	}
+
+	if h := e.head(project); h.Revision != before || len(e.events) != events {
+		t.Errorf("a no-op committed or published: head %+v, events %d to %d", h, events, len(e.events))
+	}
+
+	dry, err := e.svc.Edit(e.as(ui), service.EditRequest{
+		ProjectID: project, BaseRevision: before, DryRun: true, Operations: []command.Operation{same},
+	})
+	if err != nil || dry.Applied || !dry.DryRun || dry.Revision != before {
+		t.Errorf("no-op dry run = %+v, %v", dry, err)
+	}
+}
