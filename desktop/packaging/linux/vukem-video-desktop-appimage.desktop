@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Vukem Video Desktop
+GenericName=Video editor
+Comment=Edit video with Vukem Video in a native window
+Exec=vukem-video-desktop
+Icon=vukem-video-desktop
+Terminal=false
+Categories=AudioVideo;Video;AudioVideoEditing;
+Keywords=video;editor;captions;
+StartupNotify=true

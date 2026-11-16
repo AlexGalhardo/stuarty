@@ -8,6 +8,10 @@
 # it (the application looks for vukem-video in its own folder), and a link to /Applications. The
 # application is not signed or notarized (D-033): Gatekeeper warns at first open; control-click it and
 # choose Open, or run: xattr -d com.apple.quarantine "/Applications/Vukem Video.app"
+#
+# It also writes vukem-video-desktop_<version>_darwin_<arch>.app.zip: a zip that holds exactly one
+# "Vukem Video.app" at its top level, the artifact the launcher installs updates from (SDD-009 section
+# 10.5 item 6, the name the update feed expects).
 set -euo pipefail
 
 [ $# -eq 5 ] || { echo "usage: build-dmg.sh <desktop binary> <server binary> <version> <amd64|arm64> <output directory>" >&2; exit 2; }
@@ -47,4 +51,10 @@ iconutil -c icns "$iconset" -o "$app/Contents/Resources/vukem-video.icns"
 dmg="$out/vukem-video-desktop_${version}_darwin_${arch}.dmg"
 rm -f "$dmg"
 hdiutil create -quiet -volname "Vukem Video" -srcfolder "$stage" -ov -format UDZO "$dmg"
+
+zip="$out/vukem-video-desktop_${version}_darwin_${arch}.app.zip"
+rm -f "$zip"
+# ditto keeps the executable bits and the bundle layout; --keepParent puts the .app at the top of the zip.
+ditto -c -k --keepParent "$app" "$zip"
 echo "$dmg"
+echo "$zip"
