@@ -171,6 +171,9 @@ func TestAPIRefusals(t *testing.T) {
 
 	srv, test := tlsServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		hits.Add(1)
+		// An unread request body makes net/http close the connection with a delay of 500 ms after the reply;
+		// the client of the 17 MiB answer, slow under the race detector, then reads a connection reset.
+		_, _ = io.Copy(io.Discard, r.Body)
 
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/redirect/audio/transcriptions"):
