@@ -33,6 +33,7 @@ export default function ProjectsIndex() {
 	// reads again; the list above is reloaded from the controller.
 	const [trashVersion, setTrashVersion] = useState(0);
 	const [failure, setFailure] = useState<Failure | null>(null);
+	const [creating, setCreating] = useState(false);
 	const form = useForm<{ name: string; preset: SizePreset }>({
 		name: "",
 		preset: "9:16",
@@ -49,9 +50,21 @@ export default function ProjectsIndex() {
 		}
 	};
 
-	const submit = (event: FormEvent<HTMLFormElement>) => {
+	// The JSON API, not the Inertia form: the form answers with a 409 location
+	// visit, which the browser logs as a console error (VV-059).
+	const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
 		event.preventDefault();
-		form.post("/projects", { onSuccess: () => form.reset("name") });
+		setFailure(null);
+		setCreating(true);
+		try {
+			const created = await createClient(
+				new HttpTransport("/api/v1"),
+			).createProject(form.data.name, form.data.preset);
+			location.assign(`/editor/${created.project_id}`);
+		} catch (error) {
+			setFailure(failureOf(error));
+			setCreating(false);
+		}
 	};
 
 	return (
@@ -64,7 +77,7 @@ export default function ProjectsIndex() {
 						{t("ui.projects.new")}
 					</h2>
 					<form
-						onSubmit={submit}
+						onSubmit={(event) => void submit(event)}
 						className="mt-4 flex flex-col gap-5 rounded-xl border bg-card p-5 text-card-foreground"
 					>
 						<div className="flex flex-col gap-2">
@@ -126,7 +139,7 @@ export default function ProjectsIndex() {
 							)}
 						</fieldset>
 						<div>
-							<Button type="submit" disabled={form.processing}>
+							<Button type="submit" disabled={creating}>
 								{t("ui.projects.create")}
 							</Button>
 						</div>

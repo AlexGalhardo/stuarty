@@ -240,3 +240,16 @@ describe("brand kit, fonts, export options and bundles", () => {
 		]);
 	});
 });
+
+describe("createProject", () => {
+	test("posts the name and the preset to the JSON API", async () => {
+		const { transport, requests } = fake(ok({ project_id: "prj_a" }));
+		const result = await createClient(transport).createProject("Ad", "9:16");
+		expect(result.project_id).toBe("prj_a");
+		expect(requests[0]).toMatchObject({
+			method: "POST",
+			path: "/projects",
+			body: { name: "Ad", preset: "9:16" },
+		});
+	});
+});
