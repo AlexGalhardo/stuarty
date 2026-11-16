@@ -11,6 +11,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/vukem-video/service/untrusted"
 )
 
 // Note is the fixed line that starts every text with a quoted value or a
@@ -30,7 +31,7 @@ const cursorReserve = 160
 
 // Quote is the compact form of an untrusted value: in double quotes, with `"`
 // written `\"`, `\` written `\\`, `<` written `&lt;` and `&` written `&amp;`,
-// control and bidirectional characters removed, and cut after budget
+// control, bidirectional and invisible characters removed, and cut after budget
 // characters of the original with an ellipsis inside the quotes.
 func Quote(s string, budget int) string {
 	var b strings.Builder
@@ -39,8 +40,8 @@ func Quote(s string, budget int) string {
 
 	n := 0
 
-	for _, r := range s {
-		if unicode.IsControl(r) || isBidi(r) {
+	for _, r := range untrusted.Clean(s) {
+		if unicode.IsControl(r) {
 			continue
 		}
 
@@ -68,15 +69,6 @@ func Quote(s string, budget int) string {
 	b.WriteByte('"')
 
 	return b.String()
-}
-
-func isBidi(r rune) bool {
-	switch {
-	case r >= 0x202A && r <= 0x202E, r >= 0x2066 && r <= 0x2069:
-		return true
-	}
-
-	return r == 0x200E || r == 0x200F || r == 0x061C
 }
 
 // Cell is a time cell: "<seconds>s/<frames>f" (SDD-003 section 3.1 rule 1).
