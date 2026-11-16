@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.item_ids has 0 items; paste to 1 to 20.",
+  "hint": "Send between one and twenty item ids.",
+  "retryable": false,
+  "path": "args.item_ids"
+}

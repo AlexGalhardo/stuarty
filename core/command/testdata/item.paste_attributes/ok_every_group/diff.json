@@ -1,0 +1,127 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_c3d4e5f6g7",
+    "changes": {
+      "blend": [
+        null,
+        "screen"
+      ],
+      "blur": [
+        null,
+        4
+      ],
+      "brightness": [
+        null,
+        0.2
+      ],
+      "chroma_key": [
+        null,
+        {
+          "color": "#00FF00",
+          "similarity": 0.4,
+          "smoothness": 0.1,
+          "spill": 0.2
+        }
+      ],
+      "contrast": [
+        1,
+        1.2
+      ],
+      "crop": [
+        null,
+        {
+          "left": 0.1,
+          "top": 0.05
+        }
+      ],
+      "denoise": [
+        null,
+        0.4
+      ],
+      "effects": [
+        null,
+        [
+          {
+            "amount": 0.7,
+            "kind": "vignette",
+            "softness": 0.5
+          },
+          {
+            "amount": 0.3,
+            "kind": "grain",
+            "seed": 7,
+            "size": 2
+          }
+        ]
+      ],
+      "filter": [
+        "none",
+        "sepia"
+      ],
+      "filter_amount": [
+        1,
+        0.6
+      ],
+      "fit": [
+        "cover",
+        "contain"
+      ],
+      "flip_x": [
+        null,
+        true
+      ],
+      "hue": [
+        null,
+        15
+      ],
+      "mask": [
+        null,
+        {
+          "feather": 10,
+          "height": 0.8,
+          "shape": "ellipse",
+          "width": 0.8,
+          "x": 0.1,
+          "y": 0.1
+        }
+      ],
+      "opacity": [
+        1,
+        0.8
+      ],
+      "rotation": [
+        null,
+        5
+      ],
+      "saturation": [
+        1,
+        1.3
+      ],
+      "scale": [
+        1,
+        1.5
+      ],
+      "temperature": [
+        null,
+        0.3
+      ],
+      "tint": [
+        null,
+        -0.1
+      ],
+      "volume": [
+        1,
+        0.5
+      ],
+      "x": [
+        null,
+        10
+      ],
+      "y": [
+        null,
+        -20
+      ]
+    }
+  }
+]

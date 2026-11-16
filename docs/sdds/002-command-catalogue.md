@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67; `clip.set_effects` (C.68, TASK-0278) makes 68. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 68 commands, 67 public, of which 16 are Prototype, 32 ALPHA and 20 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67; `clip.set_effects` (C.68, TASK-0278) makes 68; `item.paste_attributes` (C.69, TASK-0254) makes 69. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 69 commands, 68 public, of which 16 are Prototype, 32 ALPHA and 21 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -277,6 +277,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.set_flip` | B | `item_id`, `horizontal?`, `vertical?` (booleans) | Mirrors a visual item left to right and or top to bottom; a side not given keeps its value. See C.63 |
 | `item.set_enabled` | B | `item_id`, `enabled` (boolean) | Turns any item off or on without removing it: a disabled item stays on the timeline and is ignored by preview, export and audio. See C.64 |
 | `clip.set_effects` | B | `item_id`, `effects` (up to 6 `{kind, ...}`) | Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake, each with its parameters. See C.68 |
+| `item.paste_attributes` | B | `from_item_id`, `item_ids`, `attributes` | Copies attribute groups (color, filter, blur, framing, transform, blend, mask, flip, chroma_key, effects, audio) from one item to 1 to 20 others. See C.69 |
 | `item.link` | B | `item_ids` (2 to 20), `id?` | Puts items in one link group: `item.move`, `item.trim` and `item.split` on one of them apply to all of them. See C.65 |
 | `item.unlink` | B | `item_ids` | Takes items out of their link group; a group left with one item is dissolved. See C.66 |
 | `item.extract_audio` | B | `item_id`, `track_id`, `id?` | Creates a linked audio item from the audio of a video clip and mutes the clip. See C.67 |
@@ -5501,3 +5502,93 @@ The parameters, with range and default: `motion_blur` `amount` 0 to 1 (0.5), `an
 - `err_validation_seven_effects`
 - `err_not_found`
 - `err_type_mismatch_text_item`
+
+### C.69 `item.paste_attributes` (phase B)
+
+Copies the look of one item to others (TASK-0254): the "paste attributes" of an editor, so an agent or a person grades one clip and applies the same grade, filter or transform to the rest in one operation and one undo step.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `from_item_id` | item id | yes | none | the item to copy from |
+| `item_ids` | list of item ids | yes | none | 1 to 20 other items, each once |
+| `attributes` | list of names | yes | none | 1 to 11 of the groups below, each once |
+
+The groups, the item types that have them and what each copies (the source value is copied as it is, so a default value clears a value of the target):
+
+| Group | Item types | Fields |
+| --- | --- | --- |
+| `color` | clip | `brightness`, `contrast`, `saturation`, `temperature`, `tint`, `hue` |
+| `filter` | clip, text, caption, shape | `filter`, `filter_amount` |
+| `blur` | clip, text, caption, shape | `blur` |
+| `framing` | clip | `fit`, `crop` |
+| `transform` | clip, text, caption, shape | `x`, `y`, `scale`, `rotation`, `opacity` |
+| `blend` | clip, text, caption, shape | `blend` |
+| `mask` | clip, text, caption, shape | `mask` |
+| `flip` | clip, text, caption, shape | `flip_x`, `flip_y` |
+| `chroma_key` | clip, text, caption, shape | `chroma_key` |
+| `effects` | clip, text, caption, shape | `effects` |
+| `audio` | clip, audio | `volume`, `denoise` |
+
+Keyframes, fades, speed, transitions and the position, size and source of the item are never copied.
+
+**Preconditions.**
+
+1. `item_ids` has 1 to 20 ids, each once and none the source; `attributes` has 1 to 11 known names, each once; the ids have the item form (`E_VALIDATION`).
+2. The source and every target exist (`E_NOT_FOUND`).
+3. The source has every group asked for (`E_TYPE_MISMATCH`, for example `color` from a text item).
+4. At least one target has at least one group asked for (`E_TYPE_MISMATCH`). A group the target type does not have is skipped for that target, not an error.
+5. No target has keyframes on a property of a copied group: any of `x`, `y`, `scale`, `rotation`, `opacity` for `transform`, `volume` for `audio` (`E_INVALID_STATE`; use `keyframe.clear` first). Keyframes of other properties do not matter.
+
+**Postconditions.**
+
+1. Each target has the source values of the groups it has, and nothing else changes.
+2. `diff` has one `item.updated` per target that changes; empty when nothing changes. `effective` has `items` (the number of targets), `attributes` (as given) and, when something was skipped, `skipped`: a list of `{item_id, attribute}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | an empty or too long list, an unknown or repeated group, the source among the targets, a repeated target | `args.attributes[1] "sparkle" is not an attribute group.` | `Use one of: color, filter, blur, framing, transform, blend, mask, flip, chroma_key, effects, audio.` |
+| `E_NOT_FOUND` | the source or a target does not exist | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | the source lacks a group, or no target has any group | `None of the target items has the attributes color.` | `Choose targets of a type that has them, or other groups.` |
+| `E_INVALID_STATE` | a target has keyframes on a copied property | `Property x of itm_c3d4e5f6g7 has 2 keyframes, which define its value.` | `Use keyframe.clear on the target first, or leave transform out of attributes.` |
+
+**Inverse.** One `patch {collection: "items", id, set: {...}}` per changed target with its old values (`unset` for a field that was absent), in the order of the targets.
+
+**Idempotency.** Same result.
+
+**Example.** Copy the grade of clip `itm_m1n2p3q4r5` to clip `itm_c3d4e5f6g7`.
+
+```json
+{"op": "item.paste_attributes", "args": {"from_item_id": "itm_m1n2p3q4r5", "item_ids": ["itm_c3d4e5f6g7"], "attributes": ["color", "filter"]}}
+```
+
+**Golden cases.**
+
+- `ok_color_to_a_clip`
+- `ok_filter_and_blur_to_a_clip`
+- `ok_framing_to_a_clip`
+- `ok_transform_to_a_clip_and_a_text`
+- `ok_look_to_a_text`
+- `ok_filter_and_blur_to_a_shape`
+- `ok_audio_to_an_audio_item`
+- `ok_skips_the_groups_the_target_lacks`
+- `ok_every_group`
+- `ok_defaults_of_the_source_clear_the_target`
+- `ok_same_values_noop`
+- `ok_keyframes_of_other_groups_do_not_block`
+- `err_validation_no_attributes`
+- `err_validation_unknown_attribute`
+- `err_validation_attribute_listed_twice`
+- `err_validation_no_targets`
+- `err_validation_target_is_the_source`
+- `err_validation_target_listed_twice`
+- `err_validation_bad_target_id`
+- `err_not_found_source`
+- `err_not_found_target`
+- `err_type_mismatch_source_lacks_the_group`
+- `err_type_mismatch_no_target_has_the_group`
+- `err_invalid_state_target_transform_has_keyframes`
+- `err_invalid_state_target_volume_has_keyframes`

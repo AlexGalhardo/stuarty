@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "None of the target items has the attributes color.",
+  "hint": "Choose targets of a type that has them, or other groups.",
+  "retryable": false,
+  "path": "args.item_ids"
+}

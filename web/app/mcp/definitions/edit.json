@@ -1,6 +1,6 @@
 {
  "name": "edit",
- "description": "Change a project. Batch of operations, atomic, one undo step. base_revision: last revision you read. Times are strings with unit. Use command_help for arguments. Returns revision, diff, lint. dry_run: check only. idempotency_key: safe retries.",
+ "description": "Change a project. Atomic batch of operations, one undo step. base_revision: last revision you read. Times need a unit. See command_help. Returns revision, diff, lint. dry_run: check only. idempotency_key: safe retries.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -60,6 +60,7 @@
         "item.link",
         "item.unlink",
         "item.extract_audio",
+        "item.paste_attributes",
         "marker.add",
         "marker.set",
         "marker.remove",

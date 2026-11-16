@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_s6t7v8w9x0 is a text item and has no color attributes.",
+  "hint": "Copy from an item of a type that has them: clip.",
+  "retryable": false,
+  "path": "args.attributes"
+}

@@ -1,0 +1,10 @@
+{
+  "attributes": [
+    "blend",
+    "mask",
+    "flip",
+    "chroma_key",
+    "effects"
+  ],
+  "items": 1
+}

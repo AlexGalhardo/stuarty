@@ -1398,6 +1398,21 @@ export interface ItemMoveArgs {
   track_id?: string;
 }
 
+export interface ItemPasteAttributesArgs {
+  /**
+   * Groups to copy: color, filter, blur, framing, transform, blend, mask, flip, chroma_key, effects, audio. At least one, each once.
+   */
+  attributes: string[];
+  /**
+   * The item to copy from.
+   */
+  from_item_id: string;
+  /**
+   * The items to copy to, 1 to 20.
+   */
+  item_ids: string[];
+}
+
 export interface ItemRenameArgs {
   /**
    * The item to label.
@@ -2082,7 +2097,7 @@ export interface TrackUpdateArgs {
   volume?: number;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.link" | "item.move" | "item.rename" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -2119,6 +2134,7 @@ export interface CommandArgsMap {
 	"item.extract_audio": ItemExtractAudioArgs;
 	"item.link": ItemLinkArgs;
 	"item.move": ItemMoveArgs;
+	"item.paste_attributes": ItemPasteAttributesArgs;
 	"item.rename": ItemRenameArgs;
 	"item.set_audio": ItemSetAudioArgs;
 	"item.set_enabled": ItemSetEnabledArgs;
@@ -2192,6 +2208,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"item.extract_audio": { summary: "Creates an audio item from the audio of a video clip, linked to it, and mutes the clip.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OVERLAP","E_ID_EXISTS","E_LIMIT"] },
 	"item.link": { summary: "Links items so that they move, trim and split together.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS"] },
 	"item.move": { summary: "Moves an item in time, to another track of the same kind, or both.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
+	"item.paste_attributes": { summary: "Copies the look of one item to other items.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.rename": { summary: "Sets the label of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
 	"item.set_audio": { summary: "Sets the volume, the fades, the mute flag or the noise reduction of a clip or audio item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.set_enabled": { summary: "Turns an item off or on without removing it from the timeline.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },

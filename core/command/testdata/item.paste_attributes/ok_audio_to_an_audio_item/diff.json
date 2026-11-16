@@ -1,0 +1,16 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_e5f6g7h8j9",
+    "changes": {
+      "denoise": [
+        null,
+        0.4
+      ],
+      "volume": [
+        1,
+        0.5
+      ]
+    }
+  }
+]

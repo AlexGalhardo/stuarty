@@ -537,6 +537,9 @@
           "extract_audio": {
             "title": "Extract audio"
           },
+          "paste_attributes": {
+            "title": "Paste attributes"
+          },
           "set_transition": {
             "title": "Set item transition"
           },

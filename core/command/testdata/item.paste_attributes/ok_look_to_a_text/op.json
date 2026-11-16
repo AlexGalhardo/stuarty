@@ -1,0 +1,16 @@
+{
+  "op": "item.paste_attributes",
+  "args": {
+    "from_item_id": "itm_m1n2p3q4r5",
+    "item_ids": [
+      "itm_s6t7v8w9x0"
+    ],
+    "attributes": [
+      "blend",
+      "mask",
+      "flip",
+      "chroma_key",
+      "effects"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attributes": {
+      "description": "Groups to copy: color, filter, blur, framing, transform, blend, mask, flip, chroma_key, effects, audio. At least one, each once.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "from_item_id": {
+      "description": "The item to copy from.",
+      "type": "string"
+    },
+    "item_ids": {
+      "description": "The items to copy to, 1 to 20.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "from_item_id",
+    "item_ids",
+    "attributes"
+  ],
+  "type": "object"
+}

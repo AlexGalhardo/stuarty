@@ -217,6 +217,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "menu", action: "timeline.extract_audio", phase: "B" },
 		palette,
 	],
+	"item.paste_attributes": [palette],
 	"marker.add": [
 		{ kind: "key", action: "timeline.marker", phase: "B" },
 		palette,

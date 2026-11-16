@@ -537,6 +537,9 @@
           "extract_audio": {
             "title": "Extrair áudio"
           },
+          "paste_attributes": {
+            "title": "Colar atributos"
+          },
           "set_transition": {
             "title": "Definir transição do item"
           },

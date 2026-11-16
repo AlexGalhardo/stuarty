@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_d4e5f6g7h8",
+    "changes": {
+      "blur": [
+        null,
+        4
+      ],
+      "filter": [
+        "none",
+        "sepia"
+      ],
+      "filter_amount": [
+        1,
+        0.6
+      ]
+    }
+  }
+]

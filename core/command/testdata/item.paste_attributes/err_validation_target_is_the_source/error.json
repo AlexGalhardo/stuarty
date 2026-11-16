@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.item_ids lists the source item itm_m1n2p3q4r5.",
+  "hint": "Copy to other items.",
+  "retryable": false,
+  "path": "args.item_ids"
+}
