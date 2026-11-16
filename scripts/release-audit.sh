@@ -123,8 +123,11 @@ unpack() {
 	*.zip) unzip -q -o "$file" -d "$out" ;;
 	*.exe)
 		[ -n "$innoextract" ] || return 1
-		"$innoextract" --silent --output-dir "$out" "$file" >/dev/null 2>&1 || true
-		[ -n "$(find "$out" -type f -print -quit)" ] || return 1
+		"$innoextract" --silent --output-dir "$out" "$file" >/dev/null 2>"$work/innoextract.err" || true
+		if [ -z "$(find "$out" -type f -print -quit)" ]; then
+			echo "release-audit: innoextract failed on ${file##*/}: $(head -c 300 "$work/innoextract.err" | tr '\n' ' ')" >&2
+			return 1
+		fi
 		;;
 	*)
 		[ -n "$sevenzip" ] || return 1

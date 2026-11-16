@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 )
@@ -83,5 +84,32 @@ func TestDetectSingleQuotedMIT(t *testing.T) {
 	text := "Permission is hereby granted, free of charge, to any person obtaining a copy THE SOFTWARE IS PROVIDED 'AS IS'"
 	if got := detect(text); got != "MIT" {
 		t.Errorf("detect = %q, want MIT", got)
+	}
+}
+
+func TestAuditTreeUnicodeText(t *testing.T) {
+	t.Parallel()
+
+	text, err := os.ReadFile("../../../licenses/crates/unicode-ident@1.0.27/LICENSE-UNICODE")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	root := t.TempDir()
+	put(t, root, "licenses/crates/unicode-ident@1.0.27/LICENSE-UNICODE", string(text))
+	put(t, root, "licenses/crates/other-crate@1.0.0/LICENSE-UNICODE", string(text))
+
+	var out bytes.Buffer
+
+	n, err := auditTree(root, &out)
+	if err != nil || n != 1 {
+		t.Fatalf("n = %d, err = %v, output %q", n, err, out.String())
+	}
+
+	if want := "notallowed	crates/other-crate@1.0.0/LICENSE-UNICODE	Unicode-3.0"; !strings.Contains(
+		out.String(),
+		want,
+	) {
+		t.Errorf("missing %q in %q", want, out.String())
 	}
 }

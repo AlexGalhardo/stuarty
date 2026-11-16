@@ -60,6 +60,9 @@ var signatures = []signature{
 			"altered source versions must be plainly marked as such",
 		},
 	},
+	// Unicode-3.0 is outside the allow-list: only the crateExceptions entry lets it pass, so a copy under another
+	// crate still fails the audit.
+	{id: "Unicode-3.0", all: []string{"unicode license v3", "data files and software are provided \"as is\""}},
 	{id: "Unlicense", all: []string{"this is free and unencumbered software released into the public domain"}},
 	{
 		id: "MIT",
