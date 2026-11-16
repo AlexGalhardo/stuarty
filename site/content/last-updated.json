@@ -149,9 +149,9 @@
   "docs/pt-br/troubleshooting/no-encoder.mdx": "2026-11-15T15:46:25-03:00",
   "docs/pt-br/troubleshooting/slow-export.mdx": "2026-11-16T05:17:39-03:00",
   "docs/pt-br/troubleshooting/workspace-locked.mdx": "2026-11-15T15:46:25-03:00",
-  "generated/agents/skill.mdx": "2026-11-16T05:17:39-03:00",
-  "generated/reference/cli.mdx": "2026-11-16T05:17:39-03:00",
-  "generated/reference/commands.mdx": "2026-11-15T12:29:14-03:00",
+  "generated/agents/skill.mdx": "2026-11-16T05:27:34-03:00",
+  "generated/reference/cli.mdx": "2026-11-16T05:18:46-03:00",
+  "generated/reference/commands.mdx": "2026-11-16T05:27:34-03:00",
   "generated/reference/commands/asset.remove.mdx": "2026-11-15T00:35:53-03:00",
   "generated/reference/commands/audio.add.mdx": "2026-11-15T00:35:53-03:00",
   "generated/reference/commands/audio.duck.mdx": "2026-11-15T12:29:14-03:00",
@@ -168,6 +168,7 @@
   "generated/reference/commands/clip.add.mdx": "2026-11-15T00:35:53-03:00",
   "generated/reference/commands/clip.remove_silences.mdx": "2026-11-15T00:39:26-03:00",
   "generated/reference/commands/clip.set_blur.mdx": "2026-11-15T12:29:14-03:00",
+  "generated/reference/commands/clip.set_chroma_key.mdx": "2026-11-16T05:27:34-03:00",
   "generated/reference/commands/clip.set_color.mdx": "2026-11-15T00:35:53-03:00",
   "generated/reference/commands/clip.set_filter.mdx": "2026-11-15T12:29:14-03:00",
   "generated/reference/commands/clip.set_framing.mdx": "2026-11-15T00:35:53-03:00",
@@ -209,5 +210,5 @@
   "generated/reference/error-codes.mdx": "2026-11-14T21:46:12-03:00",
   "generated/reference/glossary.mdx": "2026-11-14T21:46:17-03:00",
   "generated/reference/http-api.mdx": "2026-11-16T04:56:02-03:00",
-  "generated/reference/timeline-schema.mdx": "2026-11-16T03:46:10-03:00"
+  "generated/reference/timeline-schema.mdx": "2026-11-16T05:27:34-03:00"
 }
