@@ -135,7 +135,7 @@ func productTeaser(t *testing.T) *timeline.Document {
 		}),
 		o("settings.set", map[string]any{"background": "#000000"}),
 		o("track.add", map[string]any{"kind": "visual", "name": "Footage", "id": video}),
-		o("track.add", map[string]any{"kind": "audio", "name": "Music", "id": music}),
+		o("track.add", map[string]any{"kind": "audio", "name": "Music", "id": music, "position": "top"}),
 		o("track.add", map[string]any{"kind": "visual", "name": "Text", "id": text}),
 		o("clip.add", map[string]any{
 			"track_id": video, "asset_id": placeholder, "start": "0s", "duration": "5s", "id": id("itm", 1),
