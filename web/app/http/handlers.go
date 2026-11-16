@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/AlexGalhardo/vukem/api"
@@ -398,7 +397,7 @@ func (h *apiHandler) projectsEdit(c *web.Ctx, in editIn) (service.EditResult, er
 			}
 		}
 
-		ops[i] = command.Operation{Op: strings.TrimSpace(o.Op), Args: raw}
+		ops[i] = command.Operation{Op: o.Op, Args: raw}
 	}
 
 	res, err := h.Service.Edit(c.Context(), service.EditRequest{

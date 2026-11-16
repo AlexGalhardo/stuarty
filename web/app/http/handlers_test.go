@@ -259,6 +259,10 @@ func TestErrorEnvelope(t *testing.T) {
 			method: http.MethodPost, path: "/api/v1/projects/" + id + "/edit",
 			body: `{"base_revision":1,"operations":[{"op":"nope.nothing","args":{}}]}`,
 		}, 400, "E_UNKNOWN_COMMAND"},
+		"operation name with spaces": {req{
+			method: http.MethodPost, path: "/api/v1/projects/" + id + "/edit",
+			body: `{"base_revision":1,"operations":[{"op":" track.add ","args":{}}]}`,
+		}, 400, "E_UNKNOWN_COMMAND"},
 		"unknown route": {req{path: "/api/v1/nothing-here"}, 404, "E_NOT_FOUND"},
 		"wrong method":  {req{method: http.MethodDelete, path: "/api/v1/projects"}, 405, "E_METHOD_NOT_ALLOWED"},
 		"no credential": {req{path: "/api/v1/projects", noAuth: true}, 401, "E_UNAUTHORIZED"},
