@@ -230,7 +230,47 @@
       },
       {
         "OTIO_SCHEMA": "Track.1",
-        "children": [],
+        "children": [
+          {
+            "OTIO_SCHEMA": "Gap.1",
+            "name": "",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 10
+              },
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              }
+            }
+          },
+          {
+            "OTIO_SCHEMA": "Gap.1",
+            "metadata": {
+              "vukem": {
+                "text": "Hello"
+              }
+            },
+            "name": "",
+            "source_range": {
+              "OTIO_SCHEMA": "TimeRange.1",
+              "duration": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 40
+              },
+              "start_time": {
+                "OTIO_SCHEMA": "RationalTime.1",
+                "rate": 30,
+                "value": 0
+              }
+            }
+          }
+        ],
         "kind": "Video",
         "metadata": {},
         "name": "Top"

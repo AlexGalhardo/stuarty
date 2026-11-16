@@ -21,8 +21,8 @@ func tr(start, dur int, rate float64) object {
 
 // Export writes doc as an OpenTimelineIO file and reports what it could not carry.
 // The output is deterministic: object keys are sorted. Tracks are written bottom
-// first (OTIO stack order); text, caption and shape items, keyframes, colour and
-// the other properties of the report are not written, and a gap keeps their time.
+// first (OTIO stack order); a text item is a gap whose metadata holds it, caption and shape
+// items are not written, and a gap keeps their time.
 // A clip refers to its media by the asset name, as a relative target_url.
 func Export(doc *timeline.Document) ([]byte, []Lost, error) {
 	rate := fpsRate(doc.Settings.FPS)
@@ -58,45 +58,8 @@ func Export(doc *timeline.Document) ([]byte, []Lost, error) {
 		items := byTrack[id]
 		sort.Slice(items, func(i, j int) bool { return items[i].Start < items[j].Start })
 
-		kids := []any{}
-		cursor := 0
-
-		for i := range items {
-			it := &items[i]
-			if l := unsupported(it); l != "" {
-				lost = append(lost, Lost{ID: it.ID, Name: it.Name, Feature: l})
-
-				continue
-			}
-
-			a, ok := doc.Assets[it.Asset]
-			if !ok {
-				lost = append(lost, Lost{ID: it.ID, Name: it.Name, Feature: "placeholder or missing asset"})
-
-				continue
-			}
-
-			if it.Start > cursor {
-				kids = append(
-					kids,
-					object{"OTIO_SCHEMA": schemaGap, "name": "", "source_range": tr(0, it.Start-cursor, rate)},
-				)
-			}
-
-			lost = append(lost, lostProperties(it)...)
-
-			if d, ok := fade(it.TransitionIn); ok {
-				kids = append(kids, transition(0, d, rate))
-			}
-
-			kids = append(kids, clip(it, &a, rate))
-
-			if d, ok := fade(it.TransitionOut); ok {
-				kids = append(kids, transition(d, 0, rate))
-			}
-
-			cursor = it.Start + it.Duration
-		}
+		kids, itemLost := trackChildren(doc, items, rate)
+		lost = append(lost, itemLost...)
 
 		kind := kindVid
 		if t.Kind == timeline.TrackAudio {
@@ -123,6 +86,74 @@ func Export(doc *timeline.Document) ([]byte, []Lost, error) {
 	}
 
 	return buf.Bytes(), lost, nil
+}
+
+// trackChildren writes the items of one track, sorted by start, as OTIO children and reports what
+// they lose.
+func trackChildren(doc *timeline.Document, items []timeline.Item, rate float64) ([]any, []Lost) {
+	var lost []Lost
+
+	kids := []any{}
+	cursor := 0
+
+	for i := range items {
+		it := &items[i]
+		if l := unsupported(it); l != "" {
+			lost = append(lost, Lost{ID: it.ID, Name: it.Name, Feature: l})
+
+			if it.Type != timeline.ItemText {
+				continue
+			}
+
+			// A text item is a gap that carries the item in the vukem metadata: other tools see the
+			// time, Vukem gets the text back.
+			if it.Start > cursor {
+				kids = append(kids, gap(it.Start-cursor, "", nil, rate))
+			}
+
+			lost = append(lost, lostTextProperties(it)...)
+			kids = append(kids, gap(it.Duration, it.Name, textMetadata(it), rate))
+			cursor = it.Start + it.Duration
+
+			continue
+		}
+
+		a, ok := doc.Assets[it.Asset]
+		if !ok {
+			lost = append(lost, Lost{ID: it.ID, Name: it.Name, Feature: "placeholder or missing asset"})
+
+			continue
+		}
+
+		if it.Start > cursor {
+			kids = append(kids, gap(it.Start-cursor, "", nil, rate))
+		}
+
+		lost = append(lost, lostProperties(it)...)
+
+		if d, ok := fade(it.TransitionIn); ok {
+			kids = append(kids, transition(0, d, rate))
+		}
+
+		kids = append(kids, clip(it, &a, rate))
+
+		if d, ok := fade(it.TransitionOut); ok {
+			kids = append(kids, transition(d, 0, rate))
+		}
+
+		cursor = it.Start + it.Duration
+	}
+
+	return kids, lost
+}
+
+func gap(dur int, name string, meta object, rate float64) object {
+	g := object{"OTIO_SCHEMA": schemaGap, "name": name, "source_range": tr(0, dur, rate)}
+	if meta != nil {
+		g["metadata"] = meta
+	}
+
+	return g
 }
 
 func clip(it *timeline.Item, a *timeline.Asset, rate float64) object {
@@ -182,6 +213,21 @@ func clipMetadata(it *timeline.Item) object {
 		}
 	}
 
+	if it.Speed.Den != 0 && it.Speed.Num != it.Speed.Den {
+		props["speed"] = object{"num": it.Speed.Num, "den": it.Speed.Den}
+	}
+
+	if k := it.ChromaKey; k != nil {
+		props["chroma_key"] = object{
+			"color":      string(k.Color),
+			"similarity": k.Similarity,
+			"smoothness": k.Smoothness,
+			"spill":      k.Spill,
+		}
+	}
+
+	sharedProps(it, props)
+
 	if it.X != nil {
 		props["x"] = *it.X
 	}
@@ -229,6 +275,100 @@ func clipMetadata(it *timeline.Item) object {
 	}
 
 	return object{metaNamespace: object{"properties": props}}
+}
+
+// sharedProps writes the properties that clips and text items keep: keyframes and the slot.
+func sharedProps(it *timeline.Item, props object) {
+	if len(it.Keyframes) > 0 {
+		kfs := object{}
+
+		for name, list := range it.Keyframes {
+			out := make([]any, 0, len(list))
+			for _, k := range list {
+				out = append(out, object{"t": k.T, "value": k.Value, "easing": k.Easing})
+			}
+
+			kfs[name] = out
+		}
+
+		props["keyframes"] = kfs
+	}
+
+	if s := it.Slot; s != nil {
+		slot := object{"name": s.Name}
+		if s.Description != "" {
+			slot["description"] = s.Description
+		}
+
+		if !s.Required {
+			slot["required"] = false
+		}
+
+		if s.DurationPolicy != "fit" {
+			slot["duration_policy"] = s.DurationPolicy
+		}
+
+		if s.Filled {
+			slot["filled"] = true
+		}
+
+		props["slot"] = slot
+	}
+}
+
+// textMetadata keeps a text item in the vukem namespace of the gap that stands for it: the text,
+// its style and the properties of a text item.
+func textMetadata(it *timeline.Item) object {
+	v := object{"text": it.Text}
+	if m := timeline.StyleToMap(it.Style); len(m) > 0 {
+		v["style"] = m
+	}
+
+	props := object{}
+	if it.X != nil {
+		props["x"] = *it.X
+	}
+
+	if it.Y != nil {
+		props["y"] = *it.Y
+	}
+
+	for _, f := range []struct {
+		name     string
+		val, def float64
+	}{{"scale", it.Scale, 1}, {"rotation", it.Rotation, 0}, {"opacity", it.Opacity, 1}} {
+		if f.val != f.def {
+			props[f.name] = f.val
+		}
+	}
+
+	sharedProps(it, props)
+
+	if len(props) > 0 {
+		v["properties"] = props
+	}
+
+	return object{metaNamespace: v}
+}
+
+// lostTextProperties lists what a text item has that its metadata does not carry.
+func lostTextProperties(it *timeline.Item) []Lost {
+	var out []Lost
+
+	for _, f := range []struct {
+		on      bool
+		feature string
+	}{
+		{it.Blur != 0 || (it.Filter != "none" && it.Filter != ""), "filter and blur"},
+		{it.TransitionIn != nil || it.TransitionOut != nil, "transition of a text item"},
+		{len(it.Markers) > 0, "markers of a text item"},
+	} {
+		if f.on {
+			out = append(out, Lost{ID: it.ID, Name: it.Name, Feature: f.feature})
+		}
+	}
+
+	return out
 }
 
 func transition(in, out int, rate float64) object {

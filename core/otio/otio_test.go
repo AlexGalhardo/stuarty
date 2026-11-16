@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -662,5 +663,201 @@ func TestImportReportsBadVukemMetadata(t *testing.T) {
 		if it.Blur != 3 || it.Scale != 1 {
 			t.Errorf("the valid blur was not kept or a bad value got through: %+v", it)
 		}
+	}
+}
+
+// byName indexes the items of a document by name, with the id and the track left out, so that a
+// document and its round trip compare with reflect.DeepEqual.
+func byName(d *timeline.Document) map[string]timeline.Item {
+	out := map[string]timeline.Item{}
+
+	for id := range d.Items {
+		it := d.Items[id]
+		it.ID, it.Track = "", ""
+		out[it.Name] = it
+	}
+
+	return out
+}
+
+// Speed, keyframes, slots, texts with their style and the chroma key travel in the vukem
+// metadata: the items of the imported document are the items of the exported one.
+//
+//go:fix inline
+//go:fix inline
+func TestRoundTripKeepsSpeedKeyframesSlotsTextsAndKey(t *testing.T) {
+	d := sampleDoc()
+	delete(d.Items, "itm_c000000005")
+
+	slow := timeline.NewItem("itm_d000000001", timeline.ItemClip, trkVid, 300, 60)
+	slow.Asset, slow.SourceIn, slow.Name = vidAsset, 30, "sped"
+	slow.Speed = timeline.Rational{Num: 3, Den: 2}
+	slow.Keyframes = timeline.Keyframes{
+		"scale":   {timeline.NewKeyframe(0, 1), {T: 30, Value: 1.5, Easing: "ease_out"}, timeline.NewKeyframe(60, 1)},
+		"opacity": {{T: 10, Value: 0.5, Easing: "hold"}},
+		"volume":  {timeline.NewKeyframe(0, 0), timeline.NewKeyframe(20, 1)},
+	}
+	slow.Slot = &timeline.Slot{
+		Name: "hero", Kind: "media", Description: "Main shot", Required: false, DurationPolicy: "fit", Filled: true,
+	}
+	slow.ChromaKey = &timeline.ChromaKey{Color: "#00FF00", Similarity: 0.35, Smoothness: 0.05, Spill: 0.25}
+
+	// 7 frames at 1/4 speed cannot come from any whole source length: the clip is trimmed to it.
+	crawl := timeline.NewItem("itm_d000000002", timeline.ItemClip, trkVid, 400, 7)
+	crawl.Asset, crawl.SourceIn, crawl.Name = vidAsset, 0, "crawl"
+	crawl.Speed = timeline.Rational{Num: 1, Den: 4}
+
+	voice := timeline.NewItem("itm_d000000003", timeline.ItemAudio, trkAud, 200, 80)
+	voice.Asset, voice.Name = audAsset, "voice"
+	voice.Speed = timeline.Rational{Num: 2, Den: 1}
+	voice.Keyframes = timeline.Keyframes{"volume": {timeline.NewKeyframe(0, 1), timeline.NewKeyframe(80, 0.25)}}
+
+	title := timeline.NewItem("itm_d000000004", timeline.ItemText, trkTop, 10, 40)
+	title.Name, title.Text = "title", "Hello\nworld"
+	title.Style = &timeline.CaptionStyle{
+		FontFamily: new("Inter"), Size: new(72.0), StrokeWidth: new(4.0),
+	}
+	color := timeline.Color("#FFCC00")
+	title.Style.Color = &color
+	title.X, title.Y, title.Scale, title.Rotation, title.Opacity = new(540.0), new(300.0), 1.2, 5, 0.9
+	title.Keyframes = timeline.Keyframes{"opacity": {timeline.NewKeyframe(0, 0), timeline.NewKeyframe(10, 0.9)}}
+	title.Slot = &timeline.Slot{Name: "headline", Kind: "text", Required: true, DurationPolicy: "fit", Filled: true}
+
+	plain := timeline.NewItem("itm_d000000005", timeline.ItemText, trkTop, 60, 20)
+	plain.Name, plain.Text = "plain", "Bye"
+
+	for _, it := range []*timeline.Item{&slow, &crawl, &voice, &title, &plain} {
+		d.Items[it.ID] = *it
+	}
+
+	first, _, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	im, err := Parse(first)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, l := range im.Lost {
+		if !strings.Contains(l.Feature, "markers") {
+			t.Errorf("import lost %q", l.Feature)
+		}
+	}
+
+	doc := build(t, im, newDoc(im.FPS))
+	if errs := timeline.Validate(doc); len(errs) != 0 {
+		t.Fatalf("the imported document is invalid: %v", errs)
+	}
+
+	want, got := byName(d), byName(doc)
+	for _, name := range []string{"sped", "crawl", "voice", "title", "plain"} {
+		if !reflect.DeepEqual(got[name], want[name]) {
+			t.Errorf("%s did not come back:\n got  %+v\n want %+v", name, got[name], want[name])
+		}
+	}
+
+	second, _, err := Export(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(withoutMarkers(t, second), withoutMarkers(t, first)) {
+		t.Errorf("round trip differs:\n%s\n---\n%s", second, first)
+	}
+}
+
+func TestExportReportsWhatTextItemsDoNotCarry(t *testing.T) {
+	d := newDoc(timeline.Rational{Num: 30, Den: 1})
+	d.Tracks[trkTop] = timeline.Track{ID: trkTop, Kind: timeline.TrackVisual, Name: "Top", Order: "a0"}
+	title := timeline.NewItem("itm_c000000001", timeline.ItemText, trkTop, 0, 30)
+	title.Text, title.Blur = "Hi", 3
+	title.TransitionIn = &timeline.Transition{Kind: "fade", Duration: 5}
+	d.Items[title.ID] = title
+
+	_, lost, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := map[string]bool{}
+	for _, l := range lost {
+		got[l.Feature] = true
+	}
+
+	for _, f := range []string{"text item", "filter and blur", "transition of a text item"} {
+		if !got[f] {
+			t.Errorf("no loss reported for %q: %+v", f, lost)
+		}
+	}
+}
+
+// A file nobody vouches for: bad speed, keyframes, slot, key and text style are reported and
+// left out, and the rest of the batch still applies.
+func TestImportReportsBadAnimationSlotAndTextMetadata(t *testing.T) {
+	file := `{"OTIO_SCHEMA":"Timeline.1","name":"x","tracks":{"OTIO_SCHEMA":"Stack.1","children":[
+	{"OTIO_SCHEMA":"Track.1","kind":"Video","name":"V","children":[
+	{"OTIO_SCHEMA":"Gap.1","name":"t1","metadata":{"vukem":{"text":"ok","style":{"size":20,"font_family":"Nope"},
+	"properties":{"slot":{"name":"Bad Name"}}}},
+	"source_range":{"OTIO_SCHEMA":"TimeRange.1","start_time":{"OTIO_SCHEMA":"RationalTime.1","rate":30,"value":0},
+	"duration":{"OTIO_SCHEMA":"RationalTime.1","rate":30,"value":30}}},
+	{"OTIO_SCHEMA":"Gap.1","name":"t2","metadata":{"vukem":{"text":""}},
+	"source_range":{"OTIO_SCHEMA":"TimeRange.1","start_time":{"OTIO_SCHEMA":"RationalTime.1","rate":30,"value":0},
+	"duration":{"OTIO_SCHEMA":"RationalTime.1","rate":30,"value":10}}},
+	{"OTIO_SCHEMA":"Clip.2","name":"c","metadata":{"vukem":{"properties":{"speed":{"num":9,"den":1},
+	"keyframes":{"scale":[{"t":5,"value":1,"easing":"linear"},{"t":5,"value":2,"easing":"linear"}],
+	"opacity":[{"t":0,"value":0.5,"easing":"linear"}]},"chroma_key":{"color":"green"},
+	"slot":{"name":"main","required":true}}}},
+	"source_range":{"OTIO_SCHEMA":"TimeRange.1","start_time":{"OTIO_SCHEMA":"RationalTime.1","rate":30,"value":0},
+	"duration":{"OTIO_SCHEMA":"RationalTime.1","rate":30,"value":30}},
+	"media_reference":{"OTIO_SCHEMA":"ExternalReference.1","target_url":"clips/a.mp4"}}]}]}}`
+
+	im, err := Parse([]byte(file))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	lost := strings.Builder{}
+	for _, l := range im.Lost {
+		lost.WriteString(l.Feature + ";")
+	}
+
+	for _, want := range []string{
+		"vukem property slot", "vukem property text", "vukem property style font Nope", "vukem property speed",
+		"vukem property keyframes.scale", "vukem property chroma_key",
+	} {
+		if !strings.Contains(lost.String(), want) {
+			t.Errorf("%q was not reported: %s", want, lost.String())
+		}
+	}
+
+	doc := build(t, im, newDoc(im.FPS))
+
+	texts := 0
+
+	for id := range doc.Items {
+		it := doc.Items[id]
+
+		switch it.Type {
+		case timeline.ItemText:
+			texts++
+
+			if it.Text != "ok" || it.Style == nil || it.Style.FontFamily != nil || it.Style.Size == nil ||
+				*it.Style.Size != 20 {
+				t.Errorf("the text did not come back without its unknown font: %+v", it)
+			}
+		case timeline.ItemClip:
+			if it.Speed.Num != 1 || it.Slot != nil || it.ChromaKey != nil || len(it.Keyframes["scale"]) != 0 ||
+				len(it.Keyframes["opacity"]) != 1 {
+				t.Errorf("a bad value got through or a valid one was lost: %+v", it)
+			}
+		default:
+			t.Errorf("unexpected item %+v", it)
+		}
+	}
+
+	if texts != 1 {
+		t.Errorf("%d text items, want 1", texts)
 	}
 }
