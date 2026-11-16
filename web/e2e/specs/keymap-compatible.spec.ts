@@ -198,6 +198,21 @@ test.describe("compatible keymap", () => {
 			op: "item.set_audio",
 			args: { volume: 1.012 },
 		});
+		// The lower step reads the volume the document holds, so wait for the
+		// raised one to arrive before pressing it.
+		await expect
+			.poll(() =>
+				page.evaluate(
+					(id) =>
+						(
+							window.__vv?.document as
+								| { items: Record<string, { volume?: number }> }
+								| undefined
+						)?.items[id]?.volume,
+					seeded.itemIds[0] ?? "",
+				),
+			)
+			.toBeCloseTo(1.012, 2);
 		await page.keyboard.press("Control+,");
 		await expect.poll(() => edits.length).toBe(2);
 		expect(edits[1]?.operations[0]?.op).toBe("item.set_audio");
