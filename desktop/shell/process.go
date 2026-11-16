@@ -125,8 +125,8 @@ func Start(ctx context.Context, cfg Config) (*Server, error) {
 	}
 	addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(port))
 
-	// A stale runtime.json of a dead owner must not be taken for ours.
-	if err := cfg.Workspace.RemoveRuntime(); err != nil {
+	// A stale runtime.json of a dead owner must not be taken for ours; one of a live owner stays (VV-006).
+	if err := cfg.Workspace.RemoveStaleRuntime(); err != nil {
 		return nil, &StartupError{Reason: ReasonRuntime, Message: "Cannot prepare the workspace", Err: err}
 	}
 

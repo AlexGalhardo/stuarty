@@ -136,3 +136,47 @@ func deadPID(t *testing.T) int {
 	c.stop()
 	return pid
 }
+
+func TestRemoveStaleRuntimeKeepsALiveOwner(t *testing.T) {
+	t.Parallel()
+	d := newDir(t)
+
+	live := Runtime{
+		PID:       os.Getpid(),
+		Addr:      "127.0.0.1:7878",
+		Mode:      ModeLocal,
+		StartedAt: time.Now().UTC(),
+		Version:   "0.5.0",
+	}
+	if err := d.WriteRuntime(live); err != nil {
+		t.Fatal(err)
+	}
+	if err := d.RemoveStaleRuntime(); err != nil {
+		t.Fatal(err)
+	}
+	if rt, err := d.ReadRuntime(); err != nil || rt.PID != live.PID {
+		t.Fatalf("runtime.json of a live owner was removed: %v, %v", rt, err)
+	}
+
+	dead := live
+	dead.PID = deadPID(t)
+	if err := d.WriteRuntime(dead); err != nil {
+		t.Fatal(err)
+	}
+	if err := d.RemoveStaleRuntime(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := d.ReadRuntime(); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("runtime.json of a dead owner is still there: %v", err)
+	}
+
+	if err := os.WriteFile(d.Path("runtime.json"), []byte("{not json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := d.RemoveStaleRuntime(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(d.Path("runtime.json")); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("an unreadable runtime.json is still there: %v", err)
+	}
+}
