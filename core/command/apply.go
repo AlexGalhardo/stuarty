@@ -39,6 +39,10 @@ type BatchResult struct {
 	Effective []map[string]any // one entry per operation, in order
 }
 
+// NoOp reports whether the batch left the document as it was: nothing to commit, so no
+// revision and no undo step (VV-050). The effective values still describe each operation.
+func (b BatchResult) NoOp() bool { return len(b.Diff) == 0 && len(b.Inverse) == 0 }
+
 // Context is what a command sees: the working document, which it may edit freely
 // because Apply gives each operation a private copy, and the environment.
 type Context struct {

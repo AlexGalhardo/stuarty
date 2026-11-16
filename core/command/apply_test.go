@@ -226,3 +226,33 @@ func TestContextHelpers(t *testing.T) {
 		t.Errorf("%v", got)
 	}
 }
+
+func TestBatchThatChangesNothingIsANoOp(t *testing.T) {
+	r := testRegistry(t)
+	doc := baseDoc(t)
+	same := []Operation{
+		opJSON("test.item_move", `{"item_id":"`+clipID+`","start":"0f"}`),
+		opJSON("test.name", `{"name":"`+doc.Name+`"}`),
+	}
+	res, err := r.ApplyBatch(doc, same, Env{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !res.NoOp() {
+		t.Errorf("diff %+v inverse %+v", res.Diff, res.Inverse)
+	}
+
+	// A change undone inside the batch is also nothing to commit.
+	back := []Operation{
+		opJSON("test.item_move", `{"item_id":"`+clipID+`","start":"20f"}`),
+		opJSON("test.item_move", `{"item_id":"`+clipID+`","start":"0f"}`),
+	}
+	if res, err = r.ApplyBatch(doc, back, Env{}); err != nil || !res.NoOp() {
+		t.Errorf("round trip: %v %+v", err, res.Diff)
+	}
+
+	res, err = r.ApplyBatch(doc, []Operation{opJSON("test.name", `{"name":"Other"}`)}, Env{})
+	if err != nil || res.NoOp() {
+		t.Errorf("a real change reported as no-op: %v", err)
+	}
+}
