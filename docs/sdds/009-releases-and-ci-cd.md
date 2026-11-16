@@ -816,6 +816,11 @@ jobs:
         id: meta
         run: |
           version="${TAG#v}"
+          # latest moves only for the highest stable tag of the repository: a run of an
+          # older tag (a workflow_dispatch re-run of v0.18.0 after v0.20.0 did this on
+          # 2026-11-16) must not take latest back.
+          highest="$(git ls-remote --tags --refs "https://github.com/${GITHUB_REPOSITORY}.git" 'v*'             | sed 's#.*refs/tags/v##' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n 1)"
+          echo "highest stable tag: v${highest}, this run: v${version}"
           {
             echo "version=$version"
             echo "revision=$(git rev-parse HEAD)"
@@ -823,7 +828,9 @@ jobs:
             for image in "$GHCR_IMAGE" "$HUB_IMAGE"; do
               echo "$image:$version"
               echo "$image:${version%.*}"
-              echo "$image:latest"
+              if [ "$version" = "$highest" ]; then
+                echo "$image:latest"
+              fi
             done
             echo "EOF"
           } >>"$GITHUB_OUTPUT"
