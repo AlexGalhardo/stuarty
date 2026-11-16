@@ -1592,6 +1592,10 @@ export interface MarkerAddArgs {
    */
   at: string;
   /**
+   * An item to mark instead of the timeline; at must then fall inside it.
+   */
+  item_id?: string;
+  /**
    * Up to 60 characters; default none.
    */
   label?: string;
@@ -1599,13 +1603,17 @@ export interface MarkerAddArgs {
 
 export interface MarkerRemoveArgs {
   /**
-   * true removes every marker of the timeline, instead of at.
+   * true removes every marker, instead of at.
    */
   all?: boolean;
   /**
    * The position of the marker to remove.
    */
   at?: string;
+  /**
+   * The item that holds the marker; all then clears its markers.
+   */
+  item_id?: string;
 }
 
 export interface MarkerSetArgs {
@@ -1613,6 +1621,10 @@ export interface MarkerSetArgs {
    * The position of the marker to change.
    */
   at: string;
+  /**
+   * The item that holds the marker; at and to fall inside it.
+   */
+  item_id?: string;
   /**
    * The new label, up to 60 characters; "" removes it.
    */
@@ -2192,9 +2204,9 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"keyframe.clear": { summary: "Removes all keyframes of one property, or of every property.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"keyframe.remove": { summary: "Removes the keyframe of a property at a frame.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"keyframe.set": { summary: "Adds or replaces a keyframe of one animated property of an item.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_LIMIT"] },
-	"marker.add": { summary: "Puts a marker on the timeline.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_INVALID_STATE","E_LIMIT"] },
-	"marker.remove": { summary: "Removes a marker of the timeline.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND"] },
-	"marker.set": { summary: "Moves or relabels a marker of the timeline.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE"] },
+	"marker.add": { summary: "Puts a marker on the timeline, or on one item.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_INVALID_STATE","E_LIMIT"] },
+	"marker.remove": { summary: "Removes a marker of the timeline or of an item.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND"] },
+	"marker.set": { summary: "Moves or relabels a marker of the timeline or of an item.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE"] },
 	"project.rename": { summary: "Sets the project name.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION"] },
 	"settings.reframe": { summary: "Re-targets the project to another aspect ratio and refits the items to the new frame.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION"] },
 	"settings.set": { summary: "Sets the frame size, the background colour or the loudness target.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION"] },

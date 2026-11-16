@@ -5717,6 +5717,10 @@
             "type": "string",
             "x-vv-kind": "time"
           },
+          "item_id": {
+            "description": "An item to mark instead of the timeline; at must then fall inside it.",
+            "type": "string"
+          },
           "label": {
             "description": "Up to 60 characters; default none.",
             "maxLength": 60,
@@ -5732,13 +5736,17 @@
         "additionalProperties": false,
         "properties": {
           "all": {
-            "description": "true removes every marker of the timeline, instead of at.",
+            "description": "true removes every marker, instead of at.",
             "type": "boolean"
           },
           "at": {
             "description": "The position of the marker to remove.",
             "type": "string",
             "x-vv-kind": "time"
+          },
+          "item_id": {
+            "description": "The item that holds the marker; all then clears its markers.",
+            "type": "string"
           }
         },
         "required": [],
@@ -5751,6 +5759,10 @@
             "description": "The position of the marker to change.",
             "type": "string",
             "x-vv-kind": "time"
+          },
+          "item_id": {
+            "description": "The item that holds the marker; at and to fall inside it.",
+            "type": "string"
           },
           "label": {
             "description": "The new label, up to 60 characters; \"\" removes it.",

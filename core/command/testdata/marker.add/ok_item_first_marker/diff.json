@@ -1,0 +1,17 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "markers": [
+        null,
+        [
+          {
+            "frame": 30,
+            "label": "hit"
+          }
+        ]
+      ]
+    }
+  }
+]

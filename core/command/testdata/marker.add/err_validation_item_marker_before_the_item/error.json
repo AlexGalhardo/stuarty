@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.at is frame 29, outside item itm_m1n2p3q4r5 (frames 30 to 119).",
+  "hint": "Use a position inside the item, or leave item_id out to mark the timeline.",
+  "retryable": false,
+  "path": "args.at"
+}

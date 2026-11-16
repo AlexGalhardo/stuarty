@@ -7,6 +7,10 @@
       "type": "string",
       "x-vv-kind": "time"
     },
+    "item_id": {
+      "description": "The item that holds the marker; at and to fall inside it.",
+      "type": "string"
+    },
     "label": {
       "description": "The new label, up to 60 characters; \"\" removes it.",
       "maxLength": 60,
