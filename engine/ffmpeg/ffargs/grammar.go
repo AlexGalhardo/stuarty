@@ -83,6 +83,7 @@ var ffmpegOptions = map[string]optSpec{
 	"-max_alloc":              {class: classGlobal, value: enum(strconv.Itoa(MaxAlloc))},
 	"-v":                      {class: classGlobal, value: kLogLevel},
 	"-progress":               {class: classGlobal, value: kProgress},
+	"-cpuflags":               {class: classGlobal, value: enum(CPUMask)},
 	"-filter_threads":         {class: classGlobal, value: intRange(1, 1024)},
 	"-filter_complex_threads": {class: classGlobal, value: intRange(1, 1024)},
 	"-vaapi_device":           {class: classGlobal, value: kVaapiDev},
