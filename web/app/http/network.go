@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/AlexGalhardo/vukem-video/service/config"
@@ -16,6 +17,9 @@ import (
 type Network struct {
 	host   string // lower-case host, with the port unless it is the default of https
 	origin string // scheme://host[:port], as a browser sends it
+	// aliases are the other loopback names of the APP_URL port that the container
+	// rule admits (127.0.0.1, localhost, [::1]); empty outside that rule.
+	aliases []string
 	// loopbackHTTP is the container on the user's own machine (4.3 item 4):
 	// plain HTTP is accepted, and only as the loopback name of APP_URL.
 	loopbackHTTP bool
@@ -40,9 +44,17 @@ func NewNetwork(res config.Resolved, log *slog.Logger) (*Network, error) {
 		host = strings.TrimSuffix(host, ":443")
 	}
 
+	var aliases []string
+	if res.LoopbackHTTP {
+		for _, name := range []string{"localhost", "127.0.0.1", "[::1]"} {
+			aliases = append(aliases, name+":"+u.Port())
+		}
+	}
+
 	return &Network{
 		host:         host,
 		origin:       u.Scheme + "://" + host,
+		aliases:      aliases,
 		loopbackHTTP: res.LoopbackHTTP,
 		trustProto:   res.TrustForwardedProto,
 		proxies:      res.TrustedProxies,
@@ -75,7 +87,13 @@ func (n *Network) allowed(r *http.Request) bool {
 		return fetchSiteAllowed(r)
 	}
 
-	return n.schemeAllowed(r) && strings.EqualFold(r.Host, n.host) && fetchSiteAllowed(r) && n.originAllowed(r)
+	return n.schemeAllowed(r) && n.hostAllowed(r.Host) && fetchSiteAllowed(r) && n.originAllowed(r)
+}
+
+func (n *Network) hostAllowed(host string) bool {
+	return strings.EqualFold(host, n.host) || slices.ContainsFunc(n.aliases, func(a string) bool {
+		return strings.EqualFold(host, a)
+	})
 }
 
 func (n *Network) originAllowed(r *http.Request) bool {
@@ -84,7 +102,15 @@ func (n *Network) originAllowed(r *http.Request) bool {
 		return true
 	}
 
-	return len(origin) == 1 && origin[0] == n.origin
+	if len(origin) != 1 {
+		return false
+	}
+
+	if origin[0] == n.origin {
+		return true
+	}
+
+	return slices.ContainsFunc(n.aliases, func(a string) bool { return origin[0] == "http://"+a })
 }
 
 // schemeAllowed refuses a request whose effective scheme is not https, unless
