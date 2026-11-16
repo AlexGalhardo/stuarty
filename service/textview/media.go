@@ -181,11 +181,16 @@ func Job(j JobView) string {
 			b.WriteString(" url=" + j.URL)
 		}
 
-		if !j.Audio {
+		// A bundle has no picture and reports no size, like an audio export (VV-016).
+		if !j.Audio && j.Width > 0 && j.Height > 0 {
 			fmt.Fprintf(&b, " %dx%d", j.Width, j.Height)
 		}
 
-		fmt.Fprintf(&b, " %s %s", j.Duration, j.SizeText)
+		if j.Duration != "" {
+			b.WriteString(" " + j.Duration)
+		}
+
+		b.WriteString(" " + j.SizeText)
 	}
 
 	if j.State == "failed" && j.Error != "" {
