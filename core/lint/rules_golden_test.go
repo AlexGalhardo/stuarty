@@ -351,6 +351,7 @@ func init() {
 	rc(CodeOffFrame, "trigger_shape_more_than_half_outside", shape(), spec("itm_sh", 900, 100, 1300, 500))
 	rc(CodeOffFrame, "quiet_shape_exactly_half_outside", shape(), spec("itm_sh", 880, 100, 1280, 500))
 	rc(CodeOffFrame, "quiet_shape_slightly_outside", shape(), spec("itm_sh", 700, 100, 1100, 500))
+	rc(CodeOffFrame, "quiet_box_covers_the_frame", shape(), spec("itm_sh", -600, -100, 1700, 2000))
 	rc(CodeOffFrame, "quiet_without_a_measurer", text())
 }
 
