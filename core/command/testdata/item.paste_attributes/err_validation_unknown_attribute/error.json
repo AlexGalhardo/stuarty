@@ -1,0 +1,22 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.attributes[1] \"sparkle\" is not an attribute group.",
+  "hint": "Use one of: color, filter, blur, framing, transform, blend, mask, flip, chroma_key, effects, audio.",
+  "retryable": false,
+  "path": "args.attributes",
+  "details": {
+    "allowed": [
+      "color",
+      "filter",
+      "blur",
+      "framing",
+      "transform",
+      "blend",
+      "mask",
+      "flip",
+      "chroma_key",
+      "effects",
+      "audio"
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.attributes lists color twice.",
+  "hint": "List each group once.",
+  "retryable": false,
+  "path": "args.attributes"
+}

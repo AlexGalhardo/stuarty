@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.attributes has 0 groups; give 1 to 11.",
+  "hint": "Use groups from: color, filter, blur, framing, transform, blend, mask, flip, chroma_key, effects, audio.",
+  "retryable": false,
+  "path": "args.attributes"
+}

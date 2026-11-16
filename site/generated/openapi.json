@@ -2072,6 +2072,7 @@
               "item.extract_audio",
               "item.link",
               "item.move",
+              "item.paste_attributes",
               "item.rename",
               "item.set_audio",
               "item.set_enabled",
@@ -2214,6 +2215,9 @@
           },
           "item.move": {
             "$ref": "#/components/schemas/args.item.move"
+          },
+          "item.paste_attributes": {
+            "$ref": "#/components/schemas/args.item.paste_attributes"
           },
           "item.rename": {
             "$ref": "#/components/schemas/args.item.rename"
@@ -5330,6 +5334,35 @@
         },
         "required": [
           "item_id"
+        ],
+        "type": "object"
+      },
+      "args.item.paste_attributes": {
+        "additionalProperties": false,
+        "properties": {
+          "attributes": {
+            "description": "Groups to copy: color, filter, blur, framing, transform, blend, mask, flip, chroma_key, effects, audio. At least one, each once.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "from_item_id": {
+            "description": "The item to copy from.",
+            "type": "string"
+          },
+          "item_ids": {
+            "description": "The items to copy to, 1 to 20.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "from_item_id",
+          "item_ids",
+          "attributes"
         ],
         "type": "object"
       },

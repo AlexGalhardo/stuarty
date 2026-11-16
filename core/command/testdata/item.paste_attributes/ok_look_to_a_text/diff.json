@@ -1,0 +1,52 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_s6t7v8w9x0",
+    "changes": {
+      "blend": [
+        null,
+        "screen"
+      ],
+      "chroma_key": [
+        null,
+        {
+          "color": "#00FF00",
+          "similarity": 0.4,
+          "smoothness": 0.1,
+          "spill": 0.2
+        }
+      ],
+      "effects": [
+        null,
+        [
+          {
+            "amount": 0.7,
+            "kind": "vignette",
+            "softness": 0.5
+          },
+          {
+            "amount": 0.3,
+            "kind": "grain",
+            "seed": 7,
+            "size": 2
+          }
+        ]
+      ],
+      "flip_x": [
+        null,
+        true
+      ],
+      "mask": [
+        null,
+        {
+          "feather": 10,
+          "height": 0.8,
+          "shape": "ellipse",
+          "width": 0.8,
+          "x": 0.1,
+          "y": 0.1
+        }
+      ]
+    }
+  }
+]

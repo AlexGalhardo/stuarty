@@ -2,6 +2,7 @@ package command
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -209,6 +210,11 @@ func newDocPick(rng *rand.Rand, doc *timeline.Document) *docPick {
 		slices.Sort(l)
 	}
 
+	// The keyframes come from two maps: without an order the generator would not be deterministic.
+	slices.SortFunc(p.keys, func(a, b keyAt) int {
+		return cmp.Or(strings.Compare(a.item, b.item), strings.Compare(a.prop, b.prop), a.at-b.at)
+	})
+
 	return p
 }
 
@@ -313,7 +319,7 @@ var alphaOps = map[string]func(p *docPick) string{
 		return fmt.Sprintf(`{"item_id":%q,"start":%q}`, p.item(), p.frames(3000))
 	},
 	"item.crossfade": func(p *docPick) string {
-		return fmt.Sprintf(`{"from_item_id":%q,"to_item_id":%q,"duration":%q}`, p.item(), p.item(), p.frames(40))
+		return fmt.Sprintf(`{"from_item_id":%q,"to_item_id":%q,"duration":%q}`, p.item(), p.item(), p.frames(12))
 	},
 	"timeline.close_gap": func(p *docPick) string {
 		return fmt.Sprintf(`{"track_id":%q,"at":%q,"ripple":%q}`, p.vtrack(), p.frames(600), p.oneOf("track", "all"))
@@ -379,6 +385,12 @@ var alphaOps = map[string]func(p *docPick) string{
 	},
 	"item.extract_audio": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"track_id":%q}`, p.clip(), p.atrack())
+	},
+	"item.paste_attributes": func(p *docPick) string {
+		return fmt.Sprintf(
+			`{"from_item_id":%q,"item_ids":[%q],"attributes":[%q,%q]}`,
+			p.clip(), p.audioItem(), p.oneOf("audio", "color", "blend"), p.oneOf("filter", "effects", "flip"),
+		)
 	},
 	"item.set_enabled": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"enabled":%s}`, p.clip(), p.oneOf("true", "false"))

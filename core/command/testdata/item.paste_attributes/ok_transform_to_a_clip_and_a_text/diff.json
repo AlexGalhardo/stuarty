@@ -1,0 +1,54 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_c3d4e5f6g7",
+    "changes": {
+      "opacity": [
+        1,
+        0.8
+      ],
+      "rotation": [
+        null,
+        5
+      ],
+      "scale": [
+        1,
+        1.5
+      ],
+      "x": [
+        null,
+        10
+      ],
+      "y": [
+        null,
+        -20
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_s6t7v8w9x0",
+    "changes": {
+      "opacity": [
+        1,
+        0.8
+      ],
+      "rotation": [
+        null,
+        5
+      ],
+      "scale": [
+        1,
+        1.5
+      ],
+      "x": [
+        null,
+        10
+      ],
+      "y": [
+        null,
+        -20
+      ]
+    }
+  }
+]

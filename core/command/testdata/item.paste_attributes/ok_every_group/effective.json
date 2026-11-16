@@ -1,0 +1,16 @@
+{
+  "attributes": [
+    "color",
+    "filter",
+    "blur",
+    "framing",
+    "transform",
+    "blend",
+    "mask",
+    "flip",
+    "chroma_key",
+    "effects",
+    "audio"
+  ],
+  "items": 1
+}

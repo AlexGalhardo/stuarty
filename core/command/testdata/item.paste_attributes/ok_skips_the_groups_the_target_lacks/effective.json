@@ -1,0 +1,21 @@
+{
+  "attributes": [
+    "color",
+    "blend"
+  ],
+  "items": 3,
+  "skipped": [
+    {
+      "attribute": "color",
+      "item_id": "itm_s6t7v8w9x0"
+    },
+    {
+      "attribute": "color",
+      "item_id": "itm_e5f6g7h8j9"
+    },
+    {
+      "attribute": "blend",
+      "item_id": "itm_e5f6g7h8j9"
+    }
+  ]
+}

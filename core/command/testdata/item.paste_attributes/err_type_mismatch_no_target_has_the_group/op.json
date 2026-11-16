@@ -1,0 +1,13 @@
+{
+  "op": "item.paste_attributes",
+  "args": {
+    "from_item_id": "itm_m1n2p3q4r5",
+    "item_ids": [
+      "itm_s6t7v8w9x0",
+      "itm_d4e5f6g7h8"
+    ],
+    "attributes": [
+      "color"
+    ]
+  }
+}

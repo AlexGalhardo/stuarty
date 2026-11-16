@@ -279,15 +279,15 @@ func TestBuildPhaseExposesAlphaOnly(t *testing.T) {
 		}
 	}
 
-	if beta != 20 {
-		t.Errorf("the Beta build has %d Beta commands, want 20", beta)
+	if beta != 21 {
+		t.Errorf("the Beta build has %d Beta commands, want 21", beta)
 	}
 }
 
 func TestEveryCommandHasGoldenAndUndo(t *testing.T) {
 	cmds := fullRegistry().List()
-	if len(cmds) != 68 {
-		t.Errorf("the registry has %d commands, want 68", len(cmds))
+	if len(cmds) != 69 {
+		t.Errorf("the registry has %d commands, want 69", len(cmds))
 	}
 
 	for _, c := range cmds {
