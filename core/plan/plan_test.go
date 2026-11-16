@@ -421,6 +421,58 @@ func TestColorMatrix(t *testing.T) {
 	}
 }
 
+func TestColorMatrixWhiteBalanceAndHue(t *testing.T) {
+	t.Parallel()
+
+	apply := func(m *[12]float64, in [3]float64) [3]float64 {
+		var out [3]float64
+		for i := range out {
+			out[i] = m[i*4]*in[0] + m[i*4+1]*in[1] + m[i*4+2]*in[2] + m[i*4+3]
+		}
+
+		return out
+	}
+
+	it := timeline.NewItem("itm_a", timeline.ItemClip, trkBottom, 0, 10)
+	it.Temperature = 1
+
+	m := colorMatrix(&it)
+	if m == nil {
+		t.Fatal("temperature alone must give a matrix")
+	}
+
+	near3 := func(got, want [3]float64) bool {
+		return math.Abs(got[0]-want[0])+math.Abs(got[1]-want[1])+math.Abs(got[2]-want[2]) < 0.002
+	}
+
+	if got, want := apply(m, [3]float64{0.4, 0.4, 0.4}), [3]float64{0.5, 0.4, 0.3}; !near3(got, want) {
+		t.Errorf("warm grey = %v, want %v", got, want)
+	}
+
+	it.Temperature, it.Tint = 0, 1
+	if got, want := apply(colorMatrix(&it), [3]float64{0.4, 0.4, 0.4}), [3]float64{0.4, 0.3, 0.4}; !near3(got, want) {
+		t.Errorf("magenta grey = %v, want %v", got, want)
+	}
+
+	it.Tint, it.Hue = 0, 120
+	m = colorMatrix(&it)
+
+	// A rotation about the grey axis keeps grey; the W3C coefficients turn red into
+	// (-0.365, 0.443, -0.362) at 120 degrees, so green is the strongest channel.
+	if got := apply(m, [3]float64{0.5, 0.5, 0.5}); !near3(got, [3]float64{0.5, 0.5, 0.5}) {
+		t.Errorf("hue moved grey: %v", got)
+	}
+
+	if red := apply(m, [3]float64{1, 0, 0}); !near3(red, [3]float64{-0.365, 0.443, -0.362}) {
+		t.Errorf("red rotated by 120 degrees = %v", red)
+	}
+
+	it.Hue = 0
+	if colorMatrix(&it) != nil {
+		t.Error("neutral values must give nil again")
+	}
+}
+
 func TestLayerOrderHiddenTracksAndActiveRange(t *testing.T) {
 	t.Parallel()
 

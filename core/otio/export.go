@@ -294,6 +294,9 @@ func clipMetadata(it *timeline.Item) object {
 	num("brightness", it.Brightness, 0)
 	num("contrast", it.Contrast, 1)
 	num("saturation", it.Saturation, 1)
+	num("temperature", it.Temperature, 0)
+	num("tint", it.Tint, 0)
+	num("hue", it.Hue, 0)
 	num("blur", it.Blur, 0)
 
 	if it.AudioMuted {
@@ -496,7 +499,7 @@ func lostProperties(it *timeline.Item) []Lost {
 	}{
 		{len(it.Keyframes) > 0, "keyframes"},
 		{it.Speed.Num != it.Speed.Den, "speed"},
-		{it.Brightness != 0 || it.Contrast != 1 || it.Saturation != 1, "colour adjustment"},
+		{it.Brightness != 0 || it.Contrast != 1 || it.Saturation != 1 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0, "colour adjustment"},
 		{(it.Filter != "none" && it.Filter != "") || it.Blur != 0, "filter and blur"},
 		{it.ChromaKey != nil, "chroma key"},
 		{it.Crop != nil || it.Fit != "cover", "framing"},

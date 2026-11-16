@@ -14,6 +14,12 @@
       "minimum": 0,
       "type": "number"
     },
+    "hue": {
+      "description": "-180 to 180 degrees; default 0.",
+      "maximum": 180,
+      "minimum": -180,
+      "type": "number"
+    },
     "item_id": {
       "description": "A clip.",
       "type": "string"
@@ -22,6 +28,18 @@
       "description": "0 to 2; default 1.",
       "maximum": 2,
       "minimum": 0,
+      "type": "number"
+    },
+    "temperature": {
+      "description": "-1 (cooler) to 1 (warmer); default 0.",
+      "maximum": 1,
+      "minimum": -1,
+      "type": "number"
+    },
+    "tint": {
+      "description": "-1 (greener) to 1 (more magenta); default 0.",
+      "maximum": 1,
+      "minimum": -1,
       "type": "number"
     }
   },

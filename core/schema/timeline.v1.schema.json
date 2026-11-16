@@ -344,6 +344,11 @@
           "exclusiveMinimum": 0,
           "type": "number"
         },
+        "hue": {
+          "maximum": 180,
+          "minimum": -180,
+          "type": "number"
+        },
         "id": {
           "pattern": "^itm_[0-9a-hjkmnp-tv-z]{10}$",
           "type": "string"
@@ -449,10 +454,20 @@
         "style": {
           "$ref": "#/$defs/CaptionStyle"
         },
+        "temperature": {
+          "maximum": 1,
+          "minimum": -1,
+          "type": "number"
+        },
         "text": {
           "maxLength": 2000,
           "minLength": 1,
           "type": "string"
+        },
+        "tint": {
+          "maximum": 1,
+          "minimum": -1,
+          "type": "number"
         },
         "track": {
           "pattern": "^trk_[0-9a-hjkmnp-tv-z]{10}$",

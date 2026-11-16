@@ -205,6 +205,8 @@ S: l  = 0.2126 r' + 0.7152 g' + 0.0722 b'
 
 expressed as one 3×4 matrix in `ColorMatrix`, results clamped to 0..1. Neutral values (`β = 0`, `κ = 1`, `σ = 1`) give `nil`.
 
+Added after BETA (TASK-0233): with temperature `τ`, tint `θ` and hue `h` (degrees) the matrix is `H × S × C × G`. `G` is applied to the input before `C`: `r1 = r × (1 + 0.25 τ)`, `g1 = g × (1 - 0.25 θ)`, `b1 = b × (1 - 0.25 τ)`; it scales the columns of `S × C`, not the offset. `H` is applied last: with `c = cos h` and `s = sin h` its rows are `0.213 + 0.787c - 0.213s, 0.715 - 0.715c - 0.715s, 0.072 - 0.072c + 0.928s` / `0.213 - 0.213c + 0.143s, 0.715 + 0.285c + 0.140s, 0.072 - 0.072c - 0.283s` / `0.213 - 0.213c - 0.787s, 0.715 - 0.715c + 0.715s, 0.072 + 0.928c + 0.072s` (the hue rotation of the W3C filter effects). Every row of `H` sums to 1, so the offset of `S × C` passes through unchanged. The product is rounded to 3 decimals; `τ = θ = h = 0` leave the matrix of the previous paragraph. The layer still carries one `ColorMatrix`, so no executor changes.
+
 ### 3.6 Filters and blur
 
 BETA (RF-027). An item carries `filter`, `filter_amount` and `blur` (SDD-001 §3.4). They are constant over the item (not keyframeable) and apply to every visual item.

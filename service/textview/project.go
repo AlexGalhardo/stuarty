@@ -513,6 +513,9 @@ func extraFields(fps timeval.FPS, it *timeline.Item) map[string]string {
 		setIf("brightness", it.Brightness, 0)
 		setIf("contrast", it.Contrast, 1)
 		setIf("saturation", it.Saturation, 1)
+		setIf("temperature", it.Temperature, 0)
+		setIf("tint", it.Tint, 0)
+		setIf("hue", it.Hue, 0)
 
 		addJSON(f, "crop", it.Crop != nil, it.Crop)
 		addJSON(f, "chroma_key", it.ChromaKey != nil, it.ChromaKey)

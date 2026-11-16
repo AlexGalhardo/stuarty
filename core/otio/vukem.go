@@ -173,6 +173,9 @@ func itemOps(props map[string]any, mode itemMode, start, dur int, used map[strin
 		set(colour, "brightness", -1, 1, false)
 		set(colour, "contrast", 0, 2, false)
 		set(colour, "saturation", 0, 2, false)
+		set(colour, "temperature", -1, 1, false)
+		set(colour, "tint", -1, 1, false)
+		set(colour, "hue", -180, 180, false)
 		add("clip.set_color", colour)
 
 		add("clip.set_framing", framing(p))

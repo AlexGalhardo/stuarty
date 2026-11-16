@@ -428,7 +428,8 @@ func (v *validator) itemFieldsForType(path, key string, it Item) {
 	if !media && (it.Asset != "" || it.SourceIn != 0 || it.FadeIn != 0 || it.FadeOut != 0) {
 		bad("asset")
 	}
-	if it.Type != ItemClip && (it.Crop != nil || it.Brightness != 0 || it.AudioMuted) {
+	if it.Type != ItemClip &&
+		(it.Crop != nil || it.Brightness != 0 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0 || it.AudioMuted) {
 		bad("crop")
 	}
 	if it.Type != ItemText && it.Text != "" {
@@ -621,6 +622,15 @@ func (v *validator) clip(path, key string, it Item) {
 	}
 	if !inRange(it.Saturation, 0, 2) {
 		v.add(VShape, path+".saturation", key, "saturation must be between 0 and 2")
+	}
+	if !inRange(it.Temperature, -1, 1) {
+		v.add(VShape, path+".temperature", key, "temperature must be between -1 and 1")
+	}
+	if !inRange(it.Tint, -1, 1) {
+		v.add(VShape, path+".tint", key, "tint must be between -1 and 1")
+	}
+	if !inRange(it.Hue, -180, 180) {
+		v.add(VShape, path+".hue", key, "hue must be between -180 and 180")
 	}
 }
 

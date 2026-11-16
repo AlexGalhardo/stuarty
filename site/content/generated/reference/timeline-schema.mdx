@@ -112,6 +112,7 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `flip_x` | `boolean` | no |  |
 | `flip_y` | `boolean` | no |  |
 | `height` | `number` | no |  |
+| `hue` | `number` | no | min -180; max 180 |
 | `id` | `string` | yes | pattern `^itm_[0-9a-hjkmnp-tv-z]\{10\}$` |
 | `keyframes` | `object` | no |  |
 | `linked_item` | `string` | no | pattern `^itm_[0-9a-hjkmnp-tv-z]\{10\}$` |
@@ -131,7 +132,9 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `stroke_color` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$`; default `"#000000"` |
 | `stroke_width` | `number` | no | min 0 |
 | `style` | `CaptionStyle` | no |  |
+| `temperature` | `number` | no | min -1; max 1 |
 | `text` | `string` | no |  |
+| `tint` | `number` | no | min -1; max 1 |
 | `track` | `string` | yes | pattern `^trk_[0-9a-hjkmnp-tv-z]\{10\}$` |
 | `transition_in` | `Transition` | no |  |
 | `transition_out` | `Transition` | no |  |

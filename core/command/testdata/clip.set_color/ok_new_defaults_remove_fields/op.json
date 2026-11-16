@@ -1,0 +1,9 @@
+{
+  "op": "clip.set_color",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "temperature": 0,
+    "tint": 0,
+    "hue": 0
+  }
+}

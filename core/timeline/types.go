@@ -205,6 +205,10 @@ type Item struct {
 	Brightness float64 `json:"brightness,omitempty"                                           min:"-1" max:"1"`
 	Contrast   float64 `json:"contrast"             default:"1"                               min:"0"  max:"2"`
 	Saturation float64 `json:"saturation"           default:"1"                               min:"0"  max:"2"`
+	// Clip only, optional and additive (SDD-001 §3.5): white balance and hue rotation.
+	Temperature float64 `json:"temperature,omitempty" min:"-1"   max:"1"`
+	Tint        float64 `json:"tint,omitempty"        min:"-1"   max:"1"`
+	Hue         float64 `json:"hue,omitempty"         min:"-180" max:"180"`
 
 	// Text and caption. Style of a text item uses the TextStyle fields only.
 	Text  string        `json:"text,omitempty"  minlen:"1" maxlen:"2000"`

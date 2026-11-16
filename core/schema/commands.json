@@ -1450,6 +1450,12 @@
           "minimum": 0,
           "type": "number"
         },
+        "hue": {
+          "description": "-180 to 180 degrees; default 0.",
+          "maximum": 180,
+          "minimum": -180,
+          "type": "number"
+        },
         "item_id": {
           "description": "A clip.",
           "type": "string"
@@ -1459,6 +1465,18 @@
           "maximum": 2,
           "minimum": 0,
           "type": "number"
+        },
+        "temperature": {
+          "description": "-1 (cooler) to 1 (warmer); default 0.",
+          "maximum": 1,
+          "minimum": -1,
+          "type": "number"
+        },
+        "tint": {
+          "description": "-1 (greener) to 1 (more magenta); default 0.",
+          "maximum": 1,
+          "minimum": -1,
+          "type": "number"
         }
       },
       "required": [
@@ -1466,7 +1484,7 @@
       ],
       "type": "object"
     },
-    "description": "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, contrast 1, saturation 1) clears the stored one.",
+    "description": "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is warmer, positive tint is more magenta, hue rotates the colours in degrees.",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
@@ -1475,13 +1493,13 @@
     "example": {
       "brightness": 0.1,
       "item_id": "itm_m1n2p3q4r5",
-      "saturation": 1.2
+      "temperature": 0.3
     },
     "internal": false,
     "name": "clip.set_color",
     "phase": "alpha",
     "scope": "edit",
-    "summary": "Sets the brightness, contrast and saturation of a clip."
+    "summary": "Sets the brightness, contrast, saturation, temperature, tint and hue of a clip."
   },
   {
     "args_schema": {
