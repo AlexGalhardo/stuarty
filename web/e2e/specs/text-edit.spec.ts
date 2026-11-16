@@ -72,8 +72,8 @@ test.describe("text-edit", () => {
 		expect(posted[0]?.operations).toEqual([
 			{
 				op: "text.add",
+				// No track_id: the core picks a free visual track (SDD-002 C.6).
 				args: {
-					track_id: seeded.trackIds[0],
 					start: "0f",
 					duration: "3s",
 					text: "Your text",
@@ -89,7 +89,7 @@ test.describe("text-edit", () => {
 		expect(posted[1]?.operations[0]?.op).toBe("text.add");
 	});
 
-	test("Add text creates the visual track in the same batch when there is none", async ({
+	test("Add text sends one text.add and the core creates the visual track when there is none", async ({
 		page,
 		request,
 	}) => {
@@ -100,10 +100,8 @@ test.describe("text-edit", () => {
 
 		await page.getByRole("button", { name: "Add text" }).click();
 		await expect.poll(() => posted.length).toBe(1);
-		expect(posted[0]?.operations.map((o) => o.op)).toEqual([
-			"track.add",
-			"text.add",
-		]);
+		expect(posted[0]?.operations.map((o) => o.op)).toEqual(["text.add"]);
+		await expect(page.locator("[data-item-id]")).toHaveCount(1);
 	});
 
 	test("a double click on the timeline item edits inline; Ctrl+Enter sends one text.set", async ({

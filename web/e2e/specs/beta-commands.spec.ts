@@ -145,7 +145,7 @@ test.describe("beta-commands", () => {
 			exact: true,
 		});
 		await expect(apply).toBeDisabled();
-		const speech = page.getByRole("checkbox", { name: "Clip" });
+		const speech = page.getByRole("checkbox", { name: "gradient10-0.mp4" });
 		await speech.focus();
 		await speech.press("Space");
 		await expect(speech).toBeChecked();
