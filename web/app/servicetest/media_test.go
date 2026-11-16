@@ -408,6 +408,11 @@ func TestImportingATextFileRenamedMp4(t *testing.T) {
 		t.Fatalf("entry = %+v", a)
 	}
 
+	// VV-004: a failed ingest counts, so the CLI exits 1.
+	if res.Failed != 1 {
+		t.Errorf("failed = %d, want 1", res.Failed)
+	}
+
 	list, err := m.svc.MediaList(m.as(ui), service.MediaListRequest{ProjectID: project})
 	if err != nil || list.Assets[0].State != "failed" || list.Assets[0].Error == nil ||
 		list.Assets[0].Error.Code != "E_UNSUPPORTED_MEDIA" || list.Assets[0].Error.Hint == "" {
