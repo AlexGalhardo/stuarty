@@ -454,8 +454,6 @@ export function createActions(runtime: EditorRuntime): Actions {
 					text,
 					duration,
 					playhead: ui.getState().playheadFrame,
-					firstVisualTrack: firstVisualTrack(),
-					newTrackId: () => newId("trk"),
 				}),
 			),
 		addText: (text) =>
@@ -463,8 +461,6 @@ export function createActions(runtime: EditorRuntime): Actions {
 				textAddOperations({
 					text,
 					playhead: ui.getState().playheadFrame,
-					firstVisualTrack: firstVisualTrack(),
-					newTrackId: () => newId("trk"),
 				}),
 			),
 		addShape: (shape) =>
@@ -472,8 +468,6 @@ export function createActions(runtime: EditorRuntime): Actions {
 				shapeAddOperations({
 					shape,
 					playhead: ui.getState().playheadFrame,
-					firstVisualTrack: firstVisualTrack(),
-					newTrackId: () => newId("trk"),
 				}),
 			),
 		editWord: (itemId, index, text) =>

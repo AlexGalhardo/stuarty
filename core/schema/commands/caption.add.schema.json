@@ -24,7 +24,7 @@
       "type": "string"
     },
     "track_id": {
-      "description": "A visual track.",
+      "description": "A visual track; omitted, the highest free one, or a new one on top.",
       "type": "string"
     },
     "words": {
@@ -63,7 +63,6 @@
     }
   },
   "required": [
-    "track_id",
     "start"
   ],
   "type": "object"

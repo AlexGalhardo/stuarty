@@ -384,14 +384,10 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"text.add": textAddOperations({
 				text: "a",
 				playhead: 0,
-				firstVisualTrack: null,
-				newTrackId,
 			}).map((o) => o.op),
 			"shape.add": shapeAddOperations({
 				shape: "ellipse",
 				playhead: 0,
-				firstVisualTrack: null,
-				newTrackId,
 			}).map((o) => o.op),
 			"inspector.shape": shapeSetOperations("itm_a", { width: 10 }).map(
 				(o) => o.op,
@@ -475,8 +471,6 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				text: "a",
 				duration: "1s",
 				playhead: 0,
-				firstVisualTrack: null,
-				newTrackId,
 			}).map((o) => o.op),
 		};
 		for (const [action, ops] of Object.entries(emitted)) {

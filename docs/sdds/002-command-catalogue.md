@@ -276,17 +276,17 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 
 | Command | Phase | Arguments | Effect |
 | --- | --- | --- | --- |
-| `text.add` | P | `track_id`, `start`, `duration` (length), `text`, `style?` (partial TextStyle), `x?`, `y?`, `id?` | Adds a text item |
+| `text.add` | P | `track_id?`, `start`, `duration` (length), `text`, `style?` (partial TextStyle), `x?`, `y?`, `id?` | Adds a text item |
 | `text.set` | P | `item_id`, `text?`, `style?` (partial, merged), `reset_style?` (default false) | Changes content or style |
 | `text.apply_preset` | A | `item_id`, `preset` (`"fade_up"`, `"fade_down"`, `"pop"`, `"zoom_in"`, `"slide_left"`, `"slide_right"`), `edge` (`"in"`, `"out"`), `duration?` (length, default `"0.4s"`) | Writes the keyframes or transition that implement the preset on that edge, replacing keyframes of the same properties inside that edge's range. Works on any visual item. The definitions are in Part C |
-| `shape.add` | A | `track_id`, `start`, `duration`, `shape`, `width`, `height`, `fill?`, `stroke_color?`, `stroke_width?`, `radius?`, `x?`, `y?`, `id?` | Adds a shape item |
+| `shape.add` | A | `track_id?`, `start`, `duration`, `shape`, `width`, `height`, `fill?`, `stroke_color?`, `stroke_width?`, `radius?`, `x?`, `y?`, `id?` | Adds a shape item |
 | `shape.set` | A | `item_id`, and any of the shape fields | Changes a shape |
 
 ### B.7 Captions
 
 | Command | Phase | Arguments | Effect |
 | --- | --- | --- | --- |
-| `caption.add` | P | `track_id`, `start`, and either `words` (array of `{text, start, duration}` with times relative to the caption as lengths) or `text` with `duration` (length); `linked_item?`, `x?`, `y?`, `id?` | Adds a caption item. `x` and `y` (pixels, the centre of the item) are used when the track's caption style position is `custom`. With `text`, it is split on whitespace and the words share the duration in proportion to their character counts, each word getting at least one frame |
+| `caption.add` | P | `track_id?`, `start`, and either `words` (array of `{text, start, duration}` with times relative to the caption as lengths) or `text` with `duration` (length); `linked_item?`, `x?`, `y?`, `id?` | Adds a caption item. `x` and `y` (pixels, the centre of the item) are used when the track's caption style position is `custom`. With `text`, it is split on whitespace and the words share the duration in proportion to their character counts, each word getting at least one frame |
 | `caption.set_words` | A | `item_id`, `words` | Replaces the words; the item's duration becomes the end of the last word unless `duration?` is given |
 | `caption.edit_word` | A | `item_id`, `index`, `text` | Changes one word's text. An empty `text` removes the word; removing the only word of a caption is `E_INVALID_STATE` |
 | `caption.split` | A | `item_id`, `before_word` (index, 1 or more), `new_id?` | Splits a caption into two at a word boundary |
@@ -2436,7 +2436,7 @@ Adds a text item to a visual track.
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
-| `track_id` | track id | yes | none | a visual track |
+| `track_id` | track id | no | the highest visual track free for the range, else a new visual track on top | a visual track. When omitted the core chooses (and says which in `effective.track_id`), so an overlay over a clip never fails with `E_OVERLAP` |
 | `start` | time | yes | none | absolute |
 | `duration` | time, as a length | yes | none | at least 1 frame |
 | `text` | string | yes | none | 1 to 2,000 characters (Unicode code points); line breaks allowed |
@@ -2698,7 +2698,7 @@ Adds a shape item to a visual track.
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
-| `track_id` | track id | yes | none | a visual track |
+| `track_id` | track id | no | the highest visual track free for the range, else a new visual track on top | a visual track. When omitted the core chooses (and says which in `effective.track_id`), so an overlay over a clip never fails with `E_OVERLAP` |
 | `start` | time | yes | none | absolute |
 | `duration` | time, as a length | yes | none | at least 1 frame |
 | `shape` | `"rect"`, `"rounded_rect"`, `"ellipse"` | yes | none | |
@@ -2842,7 +2842,7 @@ Adds a caption item with timed words.
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
-| `track_id` | track id | yes | none | a visual track |
+| `track_id` | track id | no | the highest visual track free for the range, else a new visual track on top | a visual track. When omitted the core chooses (and says which in `effective.track_id`), so an overlay over a clip never fails with `E_OVERLAP` |
 | `start` | time | yes | none | absolute |
 | `words` | array of `{text, start, duration}` | one of `words` or `text` | none | R16; the item `duration` is the end of the last word |
 | `text` | string | one of `words` or `text` | none | split on Unicode whitespace; at least 1 word (none is `E_VALIDATION`) and at most 60 (`E_LIMIT`), each 1 to 80 characters |

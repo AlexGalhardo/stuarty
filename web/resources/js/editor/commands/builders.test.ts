@@ -94,8 +94,6 @@ describe("builders emit times as strings with a unit (T8)", () => {
 				text: "hi",
 				duration: "3s",
 				playhead: 4,
-				firstVisualTrack: "trk_1",
-				newTrackId: () => "trk_n",
 			}),
 			...withNextFree(moveItems([{ id: "a", from: 0, to: 5 }]), 40, 0),
 		];
@@ -244,36 +242,22 @@ describe("transformOperations", () => {
 });
 
 describe("text builders", () => {
-	test("Add text is 3 s at the playhead on the first visual track", () => {
+	test("Add text is 3 s at the playhead and leaves the track to the core", () => {
 		expect(
 			textAddOperations({
 				text: "Your text",
 				playhead: 12,
-				firstVisualTrack: "trk_1",
-				newTrackId: () => "trk_n",
 			}),
 		).toEqual([
 			{
 				op: "text.add",
 				args: {
-					track_id: "trk_1",
 					start: "12f",
 					duration: "3s",
 					text: "Your text",
 				},
 			},
 		]);
-	});
-
-	test("Add text creates the visual track in the same batch when there is none", () => {
-		const ops = textAddOperations({
-			text: "t",
-			playhead: 0,
-			firstVisualTrack: null,
-			newTrackId: () => "trk_n",
-		});
-		expect(ops.map((o) => o.op)).toEqual(["track.add", "text.add"]);
-		expect(ops[1]?.args.track_id).toBe("trk_n");
 	});
 
 	test("the content and one style key are separate partial requests", () => {
@@ -682,16 +666,13 @@ describe("clip section builders (SDD-002 C.19, C.24 to C.27)", () => {
 });
 
 describe("shape builders", () => {
-	test("Add shape is 3 s at the playhead, and creates the track when there is none", () => {
+	test("Add shape is 3 s at the playhead and leaves the track to the core", () => {
 		const ops = shapeAddOperations({
 			shape: "rounded_rect",
 			playhead: 5,
-			firstVisualTrack: null,
-			newTrackId: () => "trk_n",
 		});
-		expect(ops.map((o) => o.op)).toEqual(["track.add", "shape.add"]);
-		expect(ops[1]?.args).toEqual({
-			track_id: "trk_n",
+		expect(ops.map((o) => o.op)).toEqual(["shape.add"]);
+		expect(ops[0]?.args).toEqual({
 			start: "5f",
 			duration: "3s",
 			shape: "rounded_rect",

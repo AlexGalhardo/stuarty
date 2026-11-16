@@ -104,6 +104,33 @@ func (c *Context) placeOrder(exclude, position, above, below string) (string, *E
 	return got, nil
 }
 
+// visualTrackFor is the track an add command with no track_id puts an item on: the highest
+// visual track where [start, start+length) is free, or a new visual track on top when
+// every one is taken (SDD-002 C.6). auto is true when it chose the track.
+func (c *Context) visualTrackFor(given string, start, length int) (track string, auto bool, err *Error) {
+	if given != "" {
+		return given, false, nil
+	}
+	for _, id := range c.tracksByOrder("") {
+		if c.Doc.Tracks[id].Kind == timeline.TrackVisual && len(c.conflicts(id, start, length, "")) == 0 {
+			return id, true, nil
+		}
+	}
+	id, err := c.newID("tracks", timeline.PrefixTrack, "")
+	if err != nil {
+		return "", false, err
+	}
+	if err := c.limit("tracks", len(c.Doc.Tracks), timeline.MaxTracks); err != nil {
+		return "", false, err
+	}
+	order, err := c.placeOrder("", "top", "", "")
+	if err != nil {
+		return "", false, err
+	}
+	c.Doc.Tracks[id] = timeline.Track{ID: id, Kind: timeline.TrackVisual, Order: order}
+	return id, true, nil
+}
+
 type trackAddArgs struct {
 	Kind     string `json:"kind"               enum:"visual,audio"`
 	Name     string `json:"name,omitempty"                         max:"60"`

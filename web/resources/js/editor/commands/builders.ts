@@ -142,51 +142,35 @@ export function captionOperations(input: {
 	text: string;
 	duration: string;
 	playhead: number;
-	firstVisualTrack: string | null;
-	newTrackId: () => string;
 }): Operations {
-	const ops: Operations = [];
-	let track = input.firstVisualTrack;
-	if (track === null) {
-		track = input.newTrackId();
-		ops.push({ op: "track.add", args: { kind: "visual", id: track } });
-	}
-	ops.push({
-		op: "caption.add",
-		args: {
-			track_id: track,
-			start: frames(input.playhead),
-			text: input.text,
-			duration: input.duration,
+	return [
+		{
+			op: "caption.add",
+			args: {
+				start: frames(input.playhead),
+				text: input.text,
+				duration: input.duration,
+			},
 		},
-	});
-	return ops;
+	];
 }
 
-// Toolbar "Add text" and `T`: a text item of 3 s at the playhead on the first
-// visual track; when there is none, the same batch adds one first.
+// Toolbar "Add text" and `T`: a text item of 3 s at the playhead. The core picks
+// the track: the highest free visual one, or a new one on top (SDD-002 C.6).
 export function textAddOperations(input: {
 	text: string;
 	playhead: number;
-	firstVisualTrack: string | null;
-	newTrackId: () => string;
 }): Operations {
-	const ops: Operations = [];
-	let track = input.firstVisualTrack;
-	if (track === null) {
-		track = input.newTrackId();
-		ops.push({ op: "track.add", args: { kind: "visual", id: track } });
-	}
-	ops.push({
-		op: "text.add",
-		args: {
-			track_id: track,
-			start: frames(input.playhead),
-			duration: "3s",
-			text: input.text,
+	return [
+		{
+			op: "text.add",
+			args: {
+				start: frames(input.playhead),
+				duration: "3s",
+				text: input.text,
+			},
 		},
-	});
-	return ops;
+	];
 }
 
 // The inline editor of a text item and the content field of the inspector.
@@ -1039,31 +1023,23 @@ export type ShapeKind = (typeof SHAPES)[number];
 // The size of a shape added from the toolbar, in pixels before `scale`.
 export const DEFAULT_SHAPE_SIZE = { width: 400, height: 240 } as const;
 
-// Toolbar "Add shape": a shape of 3 s at the playhead on the first visual
-// track; when there is none, the same batch adds one first (SDD-002 C.31).
+// Toolbar "Add shape": a shape of 3 s at the playhead; the core picks the
+// track as for text (SDD-002 C.6, C.31).
 export function shapeAddOperations(input: {
 	shape: ShapeKind;
 	playhead: number;
-	firstVisualTrack: string | null;
-	newTrackId: () => string;
 }): Operations {
-	const ops: Operations = [];
-	let track = input.firstVisualTrack;
-	if (track === null) {
-		track = input.newTrackId();
-		ops.push({ op: "track.add", args: { kind: "visual", id: track } });
-	}
-	ops.push({
-		op: "shape.add",
-		args: {
-			track_id: track,
-			start: frames(input.playhead),
-			duration: "3s",
-			shape: input.shape,
-			...DEFAULT_SHAPE_SIZE,
+	return [
+		{
+			op: "shape.add",
+			args: {
+				start: frames(input.playhead),
+				duration: "3s",
+				shape: input.shape,
+				...DEFAULT_SHAPE_SIZE,
+			},
 		},
-	});
-	return ops;
+	];
 }
 
 export interface ShapeChanges {
