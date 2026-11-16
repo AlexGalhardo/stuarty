@@ -6,6 +6,7 @@ import { useT } from "@/lib/i18n";
 import {
 	type CurvePoint,
 	constantSpeedOperations,
+	insertCurvePoint,
 	speedCurveOperations,
 } from "../../commands/builders";
 import { ratioValue } from "../../commands/units";
@@ -117,22 +118,7 @@ export default function SpeedCurve({
 			{ t: 0, speed: mean },
 			{ t: 1, speed: mean },
 		]);
-	// A point in the middle of the widest gap, on the line between its ends.
-	const add = (): void => {
-		let at = 0;
-		for (let i = 1; i < points.length - 1; i++) {
-			const gap = (points[i + 1]?.t ?? 0) - (points[i]?.t ?? 0);
-			if (gap > (points[at + 1]?.t ?? 0) - (points[at]?.t ?? 0)) at = i;
-		}
-		const a = points[at];
-		const b = points[at + 1];
-		if (a === undefined || b === undefined) return;
-		const inserted = {
-			t: Math.round(((a.t + b.t) / 2) * 1000) / 1000,
-			speed: Math.round(((a.speed + b.speed) / 2) * 1000) / 1000,
-		};
-		change([...points.slice(0, at + 1), inserted, ...points.slice(at + 1)]);
-	};
+	const add = (): void => change(insertCurvePoint(points));
 	const setPoint = (index: number, changes: Partial<CurvePoint>): void =>
 		change(points.map((p, i) => (i === index ? { ...p, ...changes } : p)));
 

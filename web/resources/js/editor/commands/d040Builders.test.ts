@@ -7,6 +7,7 @@ import {
 	EFFECT_PARAMS,
 	effectsOperations,
 	extractAudioOperations,
+	insertCurvePoint,
 	linkOperations,
 	reverseOperations,
 	speedCurveOperations,
@@ -60,6 +61,21 @@ describe("the builders of the D-040 commands", () => {
 			item_id: "itm_a",
 			speed: { num: 7, den: 3 },
 		});
+	});
+
+	test("a new point goes in the middle of the widest gap", () => {
+		expect(
+			insertCurvePoint([
+				{ t: 0, speed: 1 },
+				{ t: 0.2, speed: 2 },
+				{ t: 1, speed: 4 },
+			]),
+		).toEqual([
+			{ t: 0, speed: 1 },
+			{ t: 0.2, speed: 2 },
+			{ t: 0.6, speed: 3 },
+			{ t: 1, speed: 4 },
+		]);
 	});
 
 	test("reverse is sent alone", () => {
