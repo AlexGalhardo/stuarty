@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { NO_VIDEO_DECODE_REASON, noVideoDecode } from "../support/browsers";
 import { caller, expect, seedProject, test } from "./helpers";
 
 type Rgb = [number, number, number];
@@ -42,7 +43,9 @@ test.describe("mask-preview", () => {
 	test("the preview draws the clip only inside the mask, and the inverse outside", async ({
 		page,
 		request,
+		browserName,
 	}) => {
+		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON);
 		const seeded = await seedProject(request, {
 			tracks: 1,
 			perTrack: 1,
