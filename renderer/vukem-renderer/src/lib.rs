@@ -8,6 +8,7 @@
 //! the crate that uses `unsafe`.
 
 pub mod blur;
+pub mod chroma;
 pub mod colour;
 pub mod compose;
 pub mod error;

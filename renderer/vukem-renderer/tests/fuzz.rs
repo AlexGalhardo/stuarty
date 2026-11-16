@@ -8,6 +8,7 @@
 //! test profile are on, so an arithmetic overflow is a panic too). `VR_FUZZ_ITERATIONS` scales
 //! them for a long run.
 
+use vukem_renderer::chroma::ChromaKeySpec;
 use vukem_renderer::compose::{Layer, Placement, Source, Target, compose, sample};
 use vukem_renderer::error::Reason;
 use vukem_renderer::host::{BitmapMetrics, Limits, Renderer};
@@ -48,7 +49,7 @@ fn iterations(default: usize) -> usize {
 
 const VALID: &[&str] = &[
 	r##"{"version":1,"output":{"width":16,"height":12,"scale":1},"plan":{"frame":3,"width":16,"height":12,"background":"#102030","layers":[{"item":"a","kind":"media","asset":"x","asset_kind":"video","source_frame":2,"crop":{"x":0,"y":0,"w":8,"h":8},"color_matrix":null,"filter":null,"blur":0,"cx":8,"cy":6,"w":8,"h":8,"rotation":15,"scale":1,"opacity":0.5}]}}"##,
-	r##"{"version":1,"output":{"width":16,"height":12,"scale":0.5,"y0":2,"y1":9},"plan":{"layers":[{"item":"b","kind":"media","color_matrix":[1,0,0,0,0,1,0,0,0,0,1,0],"filter":[0.3,0.6,0.1,0,0.3,0.6,0.1,0,0.3,0.6,0.1,0],"blur":2.5,"cx":8,"cy":6,"w":10,"h":10,"rotation":-30,"opacity":1}]}}"##,
+	r##"{"version":1,"output":{"width":16,"height":12,"scale":0.5,"y0":2,"y1":9},"plan":{"layers":[{"item":"b","kind":"media","color_matrix":[1,0,0,0,0,1,0,0,0,0,1,0],"filter":[0.3,0.6,0.1,0,0.3,0.6,0.1,0,0.3,0.6,0.1,0],"blur":2.5,"chroma_key":{"color":"#00ff00","similarity":0.3,"smoothness":0.1,"spill":0.5},"cx":8,"cy":6,"w":10,"h":10,"rotation":-30,"opacity":1}]}}"##,
 	r##"{"version":1,"output":{"width":16,"height":12,"scale":1},"plan":{"background":"#ffffff","layers":[{"item":"t","kind":"bitmap","bitmap":{"kind":"text","text":"hi","words":["hi"],"breaks":[],"active_word":-1,"pixel_scale":1},"bitmap_key":"k1","cx":8,"cy":6,"w":8,"h":4,"rotation":0,"opacity":1},{"item":"a","kind":"media","cx":4,"cy":4,"w":8,"h":8,"rotation":90,"opacity":0.75}]}}"##,
 ];
 
@@ -78,6 +79,8 @@ const TOKENS: &[&str] = &[
 	"\"layers\"",
 	"\"kind\"",
 	"\"bitmap_key\"",
+	"\"chroma_key\"",
+	"\"similarity\"",
 	",",
 	":",
 	"{\"a\":1}",
@@ -277,6 +280,25 @@ fn random_image(rng: &mut Rng, premultiplied: bool) -> Image {
 	Image { pix, w, h, opaque }
 }
 
+fn chroma_key(rng: &mut Rng) -> Option<ChromaKeySpec> {
+	const COLOURS: &[&str] = &[
+		"#00ff00",
+		"#808080",
+		"#ff0000ff",
+		"#zzzzzz",
+		"",
+		"#12",
+		"#0000FF",
+		"00ff00",
+	];
+	rng.chance(3).then(|| ChromaKeySpec {
+		color: (*rng.pick(COLOURS)).to_string(),
+		similarity: extreme(rng),
+		smoothness: extreme(rng),
+		spill: extreme(rng),
+	})
+}
+
 fn matrix(rng: &mut Rng) -> Option<[f64; 12]> {
 	rng.chance(3)
 		.then(|| core::array::from_fn(|_| extreme(rng)))
@@ -312,6 +334,7 @@ fn the_composition_survives_extreme_numbers() {
 					opacity: extreme(&mut rng),
 					color_matrix: matrix(&mut rng),
 					filter: matrix(&mut rng),
+					chroma_key: chroma_key(&mut rng),
 					// A blur of a huge radius is capped at 128 source pixels; keep most small.
 					blur: if rng.chance(3) {
 						extreme(&mut rng)

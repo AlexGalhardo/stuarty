@@ -108,6 +108,49 @@ func vb(id string, bm *raster.Bitmap, cx, cy, w, h, rot, op float64) vecLayer {
 	}
 }
 
+// greenScreen is a premultiplied image of a green screen with noise, a skin tone with a green cast and two other colours,
+// so that the key has pixels to remove, to fade, to despill and to leave.
+func greenScreen(seed uint64) Image {
+	const w, h = 40, 30
+
+	rng := rand.New(rand.NewPCG(seed, 17))
+	pix := make([]byte, w*h*4)
+
+	for y := range h {
+		for x := range w {
+			i := (y*w + x) * 4
+			r, g, b, a := 20+rng.UintN(60), 170+rng.UintN(80), 20+rng.UintN(70), uint32(255)
+
+			switch {
+			case x < w/4 && y < h/2:
+				r, g, b = 200+rng.UintN(40), 160+rng.UintN(60), 110+rng.UintN(30)
+			case x >= 3*w/4 && y < h/2:
+				r, g, b = 200+rng.UintN(55), rng.UintN(60), rng.UintN(60)
+			case y >= 3*h/4 && x < w/2:
+				r, g, b = rng.UintN(60), rng.UintN(60), 190+rng.UintN(60)
+			case y >= 3*h/4:
+				r, g, b = 90+rng.UintN(80), 200+rng.UintN(50), 60+rng.UintN(80)
+			}
+
+			if x < 2 || y < 2 {
+				a = uint32(rng.UintN(256))
+			}
+
+			pix[i], pix[i+1], pix[i+2], pix[i+3] = u8(
+				div255(uint32(r)*a),
+			), u8(
+				div255(uint32(g)*a),
+			), u8(
+				div255(uint32(b)*a),
+			), uint8(
+				a,
+			)
+		}
+	}
+
+	return Image{Pix: pix, W: w, H: h}
+}
+
 func softMedia(w, h int, seed uint64) Image {
 	return Image{Pix: softImage(w, h, seed), W: w, H: h}
 }
@@ -300,6 +343,46 @@ func rendererVectorCases() []vecCase {
 				with(vb("t3", straightBitmap(48, 32, 7), 64, 48, 48, 32, 25, 0.9), func(l *plan.Layer) { l.Blur = 8 }),
 			},
 		},
+		{
+			name:  "chroma-hard",
+			w:     64,
+			h:     48,
+			scale: 1,
+			bg:    "#101820",
+			layers: []vecLayer{with(vm("a", greenScreen(21), 32, 24, 40, 30, 0, 1), func(l *plan.Layer) {
+				l.ChromaKey = &plan.ChromaKeySpec{Color: "#00C81E", Similarity: 0.3}
+			})},
+		},
+		{
+			name:  "chroma-soft-spill",
+			w:     64,
+			h:     48,
+			scale: 1,
+			bg:    "#402010",
+			layers: []vecLayer{with(vm("a", greenScreen(22), 32, 24, 40, 30, 0, 1), func(l *plan.Layer) {
+				l.ChromaKey = &plan.ChromaKeySpec{Color: "#00FF00", Similarity: 0.25, Smoothness: 0.3, Spill: 0.7}
+			})},
+		},
+		{
+			name:  "chroma-alpha-rotated-matrix-blur",
+			w:     96,
+			h:     72,
+			scale: 1,
+			bg:    "#202020",
+			layers: []vecLayer{with(vm("a", greenScreen(23), 48, 36, 50, 38, 21, 0.85), func(l *plan.Layer) {
+				l.ChromaKey = &plan.ChromaKeySpec{Color: "#2EBE32", Similarity: 0.3, Smoothness: 0.15, Spill: 1}
+				l.ColorMatrix = bright
+				l.Blur = 3
+			})},
+		},
+		{name: "chroma-grey-key-and-bitmap", w: 64, h: 48, scale: 1, bg: "#303030", layers: []vecLayer{
+			with(vm("a", greenScreen(24), 24, 24, 40, 30, 0, 1), func(l *plan.Layer) {
+				l.ChromaKey = &plan.ChromaKeySpec{Color: "#808080", Similarity: 0.2, Smoothness: 0.2, Spill: 1}
+			}),
+			with(vb("t4", straightBitmap(24, 16, 9), 44, 30, 24, 16, 0, 1), func(l *plan.Layer) {
+				l.ChromaKey = &plan.ChromaKeySpec{Color: "#FF0000", Similarity: 0.4, Smoothness: 0.1, Spill: 0.5}
+			}),
+		}},
 		{name: "stack", w: 64, h: 48, scale: 1, bg: "#0a0a0a", layers: []vecLayer{
 			vm("a", big, 32, 24, 64, 48, 0, 1),
 			vm("b", soft, 20, 20, 20, 14, 12, 0.6),
@@ -365,7 +448,7 @@ func encodeVectors(t *testing.T) []byte {
 		}
 	}
 	buf.WriteString("VVCV")
-	w(uint32(1))
+	w(uint32(2))
 	w(sincosHash())
 	cases := rendererVectorCases()
 	w(uint32(len(cases)))
@@ -411,6 +494,18 @@ func encodeVectors(t *testing.T) []byte {
 				}
 				w(uint8(1))
 				w(*m)
+			}
+
+			if k := pl.ChromaKey; k == nil {
+				w(uint8(0))
+			} else {
+				w(uint8(1))
+				w(uint8(len(k.Color)))
+				buf.WriteString(k.Color)
+
+				for _, v := range []float64{k.Similarity, k.Smoothness, k.Spill} {
+					w(v)
+				}
 			}
 		}
 		buf.Write(c.compose(t, 1))

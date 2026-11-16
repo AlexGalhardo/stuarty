@@ -8,6 +8,7 @@ use core::ops::Range;
 use std::borrow::Cow;
 
 use crate::blur::blurred;
+use crate::chroma::{ChromaKeySpec, apply_chroma_key};
 use crate::colour::apply_matrix;
 use crate::image::Image;
 use crate::math::{div255, mul, round_half_away, round_half_up, sincos, u8_of};
@@ -39,7 +40,7 @@ pub enum Source<'a> {
 }
 
 /// One layer of the frame plan, in project pixels, with its pixels.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct Layer<'a> {
 	pub source: Source<'a>,
 	pub cx: f64,
@@ -51,6 +52,8 @@ pub struct Layer<'a> {
 	pub color_matrix: Option<[f64; 12]>,
 	pub filter: Option<[f64; 12]>,
 	pub blur: f64,
+	/// Applied to the layer's own pixels before the colour matrix (SDD-004 section 3.7).
+	pub chroma_key: Option<ChromaKeySpec>,
 }
 
 /// Premultiplies a straight-alpha RGBA8 bitmap once.
@@ -175,6 +178,9 @@ fn draw_layer(dst: &mut Target<'_>, l: &Layer<'_>, out_scale: f64) {
 
 	// A layer that needs no processing is drawn from the stored pixels, never from a copy.
 	let mut src: Cow<'_, Image> = shrunk(image, is_bitmap, &p);
+	if let Some(k) = &l.chroma_key {
+		src = Cow::Owned(apply_chroma_key(&src, k));
+	}
 	if let Some(m) = &l.color_matrix {
 		src = Cow::Owned(apply_matrix(&src, m));
 	}
