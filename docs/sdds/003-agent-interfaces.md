@@ -1512,7 +1512,7 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
 ```json
 {
   "name":"edit",
-  "description":"Change a project. Send a batch of operations; it is applied all or nothing as one undo step. base_revision is the revision you read last. Times are strings with a unit. Use command_help for an operation's arguments. Returns the new revision, a diff of what changed and any new lint findings. dry_run=true checks the batch without saving it. idempotency_key makes a retry safe.",
+  "description":"Change a project. Send a batch of operations; it is applied all or nothing as one undo step. base_revision is the revision you read last. Times are strings with a unit. Use command_help for an operation's arguments. Returns the new revision, a diff of what changed and new lint findings. dry_run=true checks without saving. idempotency_key makes a retry safe.",
   "inputSchema":{
     "type":"object",
     "properties":{
@@ -1532,7 +1532,7 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
                 "item.trim", "item.slip", "item.split", "item.delete", "item.duplicate", "item.rename",
                 "item.set_transform", "item.set_transition", "item.set_audio", "item.crossfade",
                 "timeline.close_gap", "clip.add", "audio.add", "audio.duck", "audio.mark_beats", "clip.set_framing",
-                "clip.set_speed", "clip.set_color", "clip.set_blur", "clip.set_chroma_key", "marker.add", "marker.set", "marker.remove", "clip.set_filter", "clip.remove_silences", "text.add", "text.set", "text.apply_preset",
+                "clip.set_speed", "clip.set_color", "clip.set_blur", "clip.set_chroma_key", "clip.set_blend", "marker.add", "marker.set", "marker.remove", "clip.set_filter", "clip.remove_silences", "text.add", "text.set", "text.apply_preset",
                 "shape.add", "shape.set", "caption.add", "caption.set_words", "caption.edit_word",
                 "caption.split", "caption.merge", "caption.set_breaks", "caption.set_style",
                 "caption.from_transcript", "caption.retime_from_clip", "keyframe.set", "keyframe.remove",

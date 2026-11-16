@@ -337,6 +337,13 @@ var alphaOps = map[string]func(p *docPick) string{
 	"clip.set_blur": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"radius":%d}`, p.clip(), p.n(101))
 	},
+	"clip.set_blend": func(p *docPick) string {
+		return fmt.Sprintf(
+			`{"item_id":%q,"mode":%q}`,
+			p.clip(),
+			p.oneOf("normal", "multiply", "screen", "overlay", "add"),
+		)
+	},
 	"clip.set_chroma_key": func(p *docPick) string {
 		color := p.oneOf(`"#00FF00"`, `"#0000FF"`, "null")
 		if color == "null" {

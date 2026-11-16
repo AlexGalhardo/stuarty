@@ -249,6 +249,16 @@
         "audio_muted": {
           "type": "boolean"
         },
+        "blend": {
+          "enum": [
+            "normal",
+            "multiply",
+            "screen",
+            "overlay",
+            "add"
+          ],
+          "type": "string"
+        },
         "blur": {
           "maximum": 100,
           "minimum": 0,

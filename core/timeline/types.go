@@ -174,6 +174,10 @@ type Item struct {
 	// Visual items, optional and additive (SDD-001 §3.4): the colour the compositor keys out.
 	ChromaKey *ChromaKey `json:"chroma_key,omitempty"`
 
+	// Visual items, optional and additive (SDD-001 §3.4): how the item is mixed with what is below it.
+	// Absent means "normal".
+	Blend string `json:"blend,omitempty" enum:"normal,multiply,screen,overlay,add"`
+
 	// Clip and audio.
 	Asset      string   `json:"asset,omitempty"       pattern:"^ast_([0-9a-hjkmnp-tv-z]{10}|placeholder)$"`
 	SourceIn   int      `json:"source_in,omitempty"                                                        min:"0"`

@@ -455,6 +455,9 @@
           "set_blur": {
             "title": "Definir desfoque do clipe"
           },
+          "set_blend": {
+            "title": "Definir modo de mesclagem do clipe"
+          },
           "set_chroma_key": {
             "title": "Definir chroma key do clipe"
           },

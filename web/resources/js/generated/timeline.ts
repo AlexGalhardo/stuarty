@@ -61,6 +61,7 @@ export interface FontFile {
 export interface Item {
   asset?: string;
   audio_muted?: boolean;
+  blend?: "normal" | "multiply" | "screen" | "overlay" | "add";
   blur?: number;
   breaks?: number[];
   brightness?: number;

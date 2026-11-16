@@ -455,6 +455,9 @@
           "set_blur": {
             "title": "Set clip blur"
           },
+          "set_blend": {
+            "title": "Set clip blend mode"
+          },
           "set_chroma_key": {
             "title": "Set clip chroma key"
           },

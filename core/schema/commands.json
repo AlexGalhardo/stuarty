@@ -1297,6 +1297,49 @@
       "additionalProperties": false,
       "properties": {
         "item_id": {
+          "description": "A visual item.",
+          "type": "string"
+        },
+        "mode": {
+          "description": "normal, multiply, screen, overlay or add.",
+          "enum": [
+            "normal",
+            "multiply",
+            "screen",
+            "overlay",
+            "add"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "mode"
+      ],
+      "type": "object"
+    },
+    "description": "Sets one blend mode of the fixed list (normal, multiply, screen, overlay, add). normal is the default and clears the stored one. Works on clip, text, caption and shape items.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH"
+    ],
+    "example": {
+      "item_id": "itm_m1n2p3q4r5",
+      "mode": "screen"
+    },
+    "internal": false,
+    "name": "clip.set_blend",
+    "phase": "beta",
+    "scope": "edit",
+    "summary": "Sets how a visual item is mixed with what is below it."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "item_id": {
           "description": "A clip.",
           "type": "string"
         },

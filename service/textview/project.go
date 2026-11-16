@@ -482,6 +482,10 @@ func extraFields(fps timeval.FPS, it *timeline.Item) map[string]string {
 		setIf("rotation", it.Rotation, 0)
 		setIf("opacity", it.Opacity, 1)
 
+		if it.Blend != "" {
+			f["blend"] = it.Blend
+		}
+
 		if it.X != nil {
 			f["x"] = num(*it.X)
 		}

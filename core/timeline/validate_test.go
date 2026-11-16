@@ -237,6 +237,9 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"document marker label", func(d *Document) {
 			d.Markers = []Marker{{Frame: 1, Label: strings.Repeat("é", 61)}}
 		}, VShape},
+		{"blend mode", func(d *Document) {
+			editItem(d, clipID, func(i *Item) { i.Blend = "dodge" })
+		}, VShape},
 		{"chroma key colour", func(d *Document) {
 			editItem(d, clipID, func(i *Item) { i.ChromaKey = &ChromaKey{Color: "green", Similarity: 0.3} })
 		}, VShape},
