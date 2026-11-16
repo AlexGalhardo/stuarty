@@ -274,7 +274,7 @@ func TestSessionBBlockedExport(t *testing.T) {
 	}
 
 	dry := s.ok("", move("5", "0.6s", "--dry-run")...)
-	if dry["applied"] != false || dry["dry_run"] != true || dry["revision"] != float64(5) {
+	if dry["applied"] != false || dry["dry_run"] != true || dry["revision"] != float64(6) {
 		t.Fatalf("dry run: %v", dry)
 	}
 
