@@ -15,7 +15,10 @@ import { fetchBitmap } from "../api/bitmaps";
 import type { ApiClient } from "../api/client";
 import type { PlanLayer, PlanMediaLayer, PlanWindow } from "../api/types";
 import { proxyUrl, thumbnailUrl } from "../api/urls";
+import "pixi.js/advanced-blend-modes";
+
 import { AudioGraph } from "./audioGraph";
+import { pixiBlendMode } from "./blend";
 import { ChromaKeyFilter } from "./chromaKey";
 import { pixiColorMatrix } from "./layerFilters";
 import { Lru } from "./lru";
@@ -445,6 +448,7 @@ export class PixiExecutor implements PreviewExecutor {
 		sprite.height = g.h;
 		sprite.angle = g.rotation;
 		sprite.alpha = valueAt(layer.opacity, frame, layer.first);
+		sprite.blendMode = pixiBlendMode(layer.blend);
 		this.applyFilters(entry, layer);
 	}
 
