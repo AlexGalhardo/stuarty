@@ -1,0 +1,40 @@
+---
+title: "One renderer, two hosts"
+description: "Where the renderer is going: one frame plan in Go, one renderer in Rust and WebAssembly, run by the browser preview and by the export."
+---
+
+## The idea
+
+Today the preview and the export draw frames with different code, and a lot of effort goes into keeping them close. The direction of the project is to remove that second implementation: **one frame plan, one renderer, two hosts**.
+
+- **One plan.** The frame plan stays in Go, in the command core. It alone decides the layers, the source frames, the transforms, the keyframes, the easing and the transitions of every frame. See [Render: one plan, two executors](/docs/concepts/render).
+- **One renderer.** A small renderer written in Rust draws what the plan says: blend, transform, crop, opacity, colour adjustments, filters and, later, text and captions. It decides nothing. It is compiled to WebAssembly.
+- **Two hosts.** The browser preview runs the renderer in a worker. The export runs the same module from Go, in process and sandboxed, with no access to files, the network or the clock.
+
+This is staged work. Each stage ships behind a setting, off by default, until its gates pass on the three operating systems and the three browsers. Until then the Go compositor and the current preview stay the default.
+
+## What WebCodecs and WebGPU do
+
+- **WebCodecs** decodes the video of the preview inside the browser. A worker reads the proxy the server already writes, plus a small index of its chunks, and gives each decoded frame to the renderer. Seeking is frame exact. When a codec is not supported, the preview falls back to the `<video>` element.
+- **WebGPU** lets the renderer draw on the graphics card. When it is missing, the renderer falls back to a path on the processor and a 2D canvas.
+
+## Why the processor path is the truth
+
+The renderer has two paths. The **processor path** uses integer arithmetic only, so it gives the same bytes on Linux, macOS, Windows and in WebAssembly. The **graphics path** is faster but can differ between graphics cards and drivers.
+
+The export and the reference frames use the processor path. The graphics path is held to it by a strict tolerance: SSIM of at least 0.99 on luma and no layer displaced by more than half a pixel. A frame that looks right in the preview, paused or playing, is therefore the frame you export.
+
+## What this means for you
+
+- Nothing changes in how you edit or in what an agent sees. The plan and the commands are the same.
+- Effects will be added once, in the renderer, and appear in the preview and in the export together.
+- While the stages are behind a setting, the paused frame still comes from the export path. See [Preview](/docs/guide/preview).
+
+## Common mistakes
+
+- Expecting the graphics path to be bit identical to the export. It is close by a measured tolerance; the processor path is the reference.
+
+## Next steps
+
+- [Render: one plan, two executors](/docs/concepts/render)
+- [Preview](/docs/guide/preview)
