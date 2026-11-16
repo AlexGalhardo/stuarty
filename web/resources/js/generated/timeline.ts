@@ -11,6 +11,10 @@ export interface ProjectDocument {
   items: {
     [k: string]: Item;
   };
+  /**
+   * @maxItems 200
+   */
+  markers?: Marker[];
   name: string;
   /**
    * Version of this schema.

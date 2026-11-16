@@ -12,6 +12,28 @@ type Marker struct {
 	Extra Extra  `json:"-"`
 }
 
+// docMarkers checks the markers of the document, the ones a person puts on the timeline:
+// frames from 0 of the timeline, strictly increasing, at most MaxMarkers.
+func (v *validator) docMarkers(d *Document) {
+	if len(d.Markers) > MaxMarkers {
+		v.add(VMarkers, "markers", d.ID, "%d markers exceed the limit of %d", len(d.Markers), MaxMarkers)
+	}
+	prev := -1
+	for i, m := range d.Markers {
+		mp := fmt.Sprintf("markers[%d]", i)
+		if runes(m.Label) > 60 {
+			v.add(VShape, mp+".label", d.ID, "label has more than 60 characters")
+		}
+		switch {
+		case m.Frame < 0 || m.Frame >= MaxFrames:
+			v.add(VMarkers, mp+".frame", d.ID, "marker frame %d is outside 0 to %d", m.Frame, MaxFrames-1)
+		case m.Frame <= prev:
+			v.add(VMarkers, mp+".frame", d.ID, "marker frames must be strictly increasing: %d after %d", m.Frame, prev)
+		}
+		prev = m.Frame
+	}
+}
+
 // markers checks the markers of an item: inside the item, strictly increasing.
 func (v *validator) markers(path, key string, it Item) {
 	if len(it.Markers) > MaxMarkers {

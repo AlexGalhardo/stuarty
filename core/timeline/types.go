@@ -93,6 +93,7 @@ type Document struct {
 	Items         map[string]Item        `json:"items"                                                                                                                     keypattern:"^itm_[0-9a-hjkmnp-tv-z]{10}$" maxprops:"500"`
 	Fonts         map[string]ProjectFont `json:"fonts,omitempty"`
 	Template      *TemplateInfo          `json:"template,omitempty"`
+	Markers       []Marker               `json:"markers,omitempty"                                                                                                                                                                  maxitems:"200"`
 	Extra         Extra                  `json:"-"`
 }
 

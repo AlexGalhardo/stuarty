@@ -1,0 +1,7 @@
+{
+  "op": "marker.remove",
+  "args": {
+    "at": "30f",
+    "all": true
+  }
+}

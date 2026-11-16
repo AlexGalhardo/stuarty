@@ -171,6 +171,9 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		palette,
 	],
 	"clip.set_chroma_key": [palette],
+	"marker.add": [palette],
+	"marker.remove": [palette],
+	"marker.set": [palette],
 	"clip.set_color": [
 		{ kind: "inspector", action: "inspector.color", phase: "A" },
 		palette,

@@ -345,6 +345,18 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 	s := timeline.NewSlot("hero", "media")
 	clip.Slot = &s
 
+	doc.Markers = []timeline.Marker{{Frame: 30, Label: "drop"}}
+	if lines, _ := Project(
+		doc,
+		ProjectOptions{Full: true, Page: 1},
+	); !strings.Contains(
+		lines,
+		`markers 1s/30f "drop"`,
+	) {
+		t.Errorf("the markers of the timeline are not listed: %s", lines)
+	}
+
+	doc.Markers = nil
 	clip.ChromaKey = &timeline.ChromaKey{Color: "#00FF00", Similarity: 0.3, Smoothness: 0.1}
 
 	if ck := extraFields(fps, &clip)["chroma_key"]; !strings.Contains(ck, `"color":"#00FF00"`) {

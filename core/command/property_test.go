@@ -347,6 +347,15 @@ var alphaOps = map[string]func(p *docPick) string{
 			p.clip(), color, float64(p.n(101))/100, float64(p.n(101))/100,
 		)
 	},
+	"marker.add": func(p *docPick) string {
+		return fmt.Sprintf(`{"at":"%df","label":"m%d"}`, p.n(20), p.n(10))
+	},
+	"marker.set": func(p *docPick) string {
+		return fmt.Sprintf(`{"at":"%df","to":"%df","label":"s%d"}`, p.n(20), p.n(20), p.n(10))
+	},
+	"marker.remove": func(p *docPick) string {
+		return fmt.Sprintf(`{"at":"%df"}`, p.n(20))
+	},
 	"audio.duck": func(p *docPick) string {
 		clip := p.clip()
 		var parts []string
@@ -505,6 +514,10 @@ func randomStart(rng *rand.Rand) *timeline.Document {
 		caption("itm_x000000003", 10, 4, func(it *timeline.Item) { it.LinkedItem = itemA }).
 		caption("itm_x000000006", 100, 3).
 		audio("itm_x000000004", 0, 300, 0)
+
+	if rng.Intn(2) == 0 {
+		b.d.Markers = []timeline.Marker{{Frame: 5}, {Frame: 12, Label: "m"}}
+	}
 
 	if rng.Intn(2) == 0 {
 		b.template()

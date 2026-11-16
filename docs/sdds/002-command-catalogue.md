@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) makes 55. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 55 commands, 54 public, of which 16 are Prototype, 32 ALPHA and 7 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 58 commands, 57 public, of which 16 are Prototype, 32 ALPHA and 10 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -271,6 +271,9 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.set_chroma_key` | B | `item_id`, `color` (`#RRGGBB` or null), `similarity?`, `smoothness?`, `spill?` | Keys out one colour of a clip (a green screen); null removes the key. See C.55 |
 | `clip.remove_silences` | A | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip by one clip per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
 | `audio.duck` | B | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | BETA (RF-043). Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
+| `marker.add` | B | `at`, `label?` | Puts a marker (of the timeline, not of an item) at a frame; see C.56 |
+| `marker.set` | B | `at`, `to?`, `label?` | Moves or relabels the marker at a frame; see C.57 |
+| `marker.remove` | B | `at` or `all` | Removes the marker at a frame, or every marker; see C.58 |
 | `audio.mark_beats` | B | `item_id`, `every?` (1 to 64, default 1), `label?`, `replace?` (default true) | BETA (RF-044). Writes markers on a music item at the beats of the visible part of its audio; the beats come through `resolved` (A.9) |
 
 ### B.6 Text and shapes
@@ -4523,3 +4526,161 @@ Sets the chroma key of a clip (VV-015, SDD-001 §3.4): the colour that becomes t
 - `err_validation_value_with_null`
 - `err_not_found`
 - `err_type_mismatch_audio_item`
+
+### C.56 `marker.add` (phase B)
+
+Puts a marker on the timeline (VV-035, SDD-001 §3.1): a labelled frame the person or the agent keeps, for example to find a place again or to cut on it. It is a marker of the document, in frames of the timeline; the markers of an item (SDD-001 §3.4, written by `audio.mark_beats`) are separate and relative to the item.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `at` | time | yes | none | the position on the timeline, 0 up to the frame limit |
+| `label` | string | no | none | up to 60 characters |
+
+**Preconditions.**
+
+1. `at` has a unit and is in range; `label` is at most 60 characters (`E_INVALID_TIME`, `E_VALIDATION`).
+2. No marker exists at that frame (`E_INVALID_STATE`; use `marker.set`).
+3. The timeline has fewer than 200 markers (`E_LIMIT`).
+
+**Postconditions.**
+
+1. `markers` of the document is the old list plus `{frame, label}`, in frame order.
+2. `diff` has one `project.updated` (`markers`). `effective` has `at` as an A.4 triple and `markers`, the count.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_INVALID_TIME` | `at` has no unit | `args.at "30" has no unit.` | `Use "1s", "30f" or "00:00:01.000".` |
+| `E_VALIDATION` | `at` out of range, or a label over 60 characters | `args.label has 61 characters; the limit is 60.` | `Shorten the label.` |
+| `E_INVALID_STATE` | a marker exists at that frame | `The timeline already has a marker at frame 30.` | `Use marker.set to change it.` |
+| `E_LIMIT` | 200 markers already | `The timeline would have 201 markers; the limit is 200.` | `Remove markers with marker.remove first.` |
+
+**Inverse.** `patch {collection: "project", set: {markers: <old>}}`, or `unset: ["markers"]` when there were none.
+
+**Idempotency.** Not idempotent: the second call is `E_INVALID_STATE`.
+
+**Example.**
+
+```json
+{"op": "marker.add", "args": {"at": "1s", "label": "drop"}}
+```
+
+**Golden cases.**
+
+- `ok_first_marker`
+- `ok_without_label`
+- `ok_between_existing_keeps_order`
+- `ok_frame_0`
+- `err_invalid_state_frame_taken`
+- `err_invalid_time_no_unit`
+- `err_validation_label_over_60_characters`
+- `err_limit_over_200_markers`
+
+### C.57 `marker.set` (phase B)
+
+Moves or relabels the marker at a frame of the timeline.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `at` | time | yes | none | the frame of the marker to change |
+| `to` | time | no | unchanged | the new frame |
+| `label` | string | no | unchanged | up to 60 characters; `""` removes the label |
+
+At least one of `to` and `label` is required.
+
+**Preconditions.**
+
+1. The times have units and are in range; the label is at most 60 characters (`E_INVALID_TIME`, `E_VALIDATION`); one of `to` and `label` is given (`E_VALIDATION`).
+2. A marker exists at `at` (`E_NOT_FOUND`).
+3. No other marker is at `to` (`E_INVALID_STATE`).
+
+**Postconditions.**
+
+1. The marker has the new frame and label; the list stays in frame order.
+2. `diff` has one `project.updated` (`markers`); empty when nothing changes. `effective` has `at`, the final frame as an A.4 triple, and `markers`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_INVALID_TIME` | a time has no unit | `args.to "45" has no unit.` | `Use "1s", "30f" or "00:00:01.000".` |
+| `E_VALIDATION` | nothing to change, out of range, or a label over 60 characters | `marker.set needs to or label.` | `Give the new position, the new label, or both.` |
+| `E_NOT_FOUND` | no marker at `at` | `The timeline has no marker at frame 40.` | `Read the markers with project_get detail full.` |
+| `E_INVALID_STATE` | another marker is at `to` | `The timeline already has a marker at frame 90.` | `Remove it first, or choose another position.` |
+
+**Inverse.** Same form as C.56.
+
+**Idempotency.** Same result.
+
+**Example.**
+
+```json
+{"op": "marker.set", "args": {"at": "1s", "to": "2s"}}
+```
+
+**Golden cases.**
+
+- `ok_move`
+- `ok_relabel`
+- `ok_clear_label`
+- `ok_move_past_the_next_keeps_order`
+- `ok_same_values_noop`
+- `err_validation_nothing_to_change`
+- `err_not_found_no_marker_there`
+- `err_invalid_state_target_taken`
+- `err_invalid_time_no_unit`
+
+### C.58 `marker.remove` (phase B)
+
+Removes the marker at a frame of the timeline, or every marker.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `at` | time | one of | none | the frame of the marker to remove |
+| `all` | boolean | one of | none | `true` removes every marker of the timeline |
+
+**Preconditions.**
+
+1. Exactly one of `at` and `all` is given, and `at` has a unit (`E_VALIDATION`, `E_INVALID_TIME`).
+2. With `at`, a marker exists there (`E_NOT_FOUND`).
+
+**Postconditions.**
+
+1. The marker is gone; `markers` is absent when none is left.
+2. `diff` has one `project.updated` (`markers`); empty when there were none and `all` is true. `effective` has `markers`, the count left.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_INVALID_TIME` | `at` has no unit | `args.at "30" has no unit.` | `Use "1s", "30f" or "00:00:01.000".` |
+| `E_VALIDATION` | both or neither of `at` and `all` | `marker.remove needs exactly one of at and all.` | `Give the position of the marker, or all true.` |
+| `E_NOT_FOUND` | no marker at `at` | `The timeline has no marker at frame 40.` | `Read the markers with project_get detail full.` |
+
+**Inverse.** Same form as C.56.
+
+**Idempotency.** With `at` not idempotent (the second call is `E_NOT_FOUND`); with `all` the same result.
+
+**Example.**
+
+```json
+{"op": "marker.remove", "args": {"at": "1s"}}
+```
+
+**Golden cases.**
+
+- `ok_remove_one`
+- `ok_remove_the_last_one`
+- `ok_remove_all`
+- `ok_remove_all_none_noop`
+- `err_validation_at_and_all`
+- `err_validation_neither`
+- `err_not_found_no_marker_there`
+- `err_invalid_time_no_unit`

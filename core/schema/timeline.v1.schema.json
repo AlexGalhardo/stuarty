@@ -796,6 +796,13 @@
       },
       "type": "object"
     },
+    "markers": {
+      "items": {
+        "$ref": "#/$defs/Marker"
+      },
+      "maxItems": 200,
+      "type": "array"
+    },
     "name": {
       "maxLength": 120,
       "minLength": 1,

@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The length of args.label is 61, outside the accepted range.",
+  "hint": "Use a length of at most 60.",
+  "retryable": false,
+  "path": "args.label"
+}
