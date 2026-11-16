@@ -1,3 +1,4 @@
+import { NO_VIDEO_DECODE_REASON, noVideoDecode } from "../support/browsers";
 import { canvasOf, skipWithoutWebCodecs } from "../support/webcodecs";
 import { expect, seedProject, test } from "./helpers";
 
@@ -82,7 +83,9 @@ test.describe("webcodecs", () => {
 	test("webcodecs-forced-video: ?decoder=video starts no worker and draws through <video>", async ({
 		page,
 		request,
+		browserName,
 	}) => {
+		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON);
 		let workers = 0;
 		page.on("worker", () => {
 			workers++;
