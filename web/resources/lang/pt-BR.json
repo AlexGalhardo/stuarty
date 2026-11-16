@@ -1128,6 +1128,31 @@
           "hold": "Manter"
         }
       },
+      "effects": {
+        "title": "Efeitos",
+        "add": "Adicionar efeito",
+        "choose": "Escolha um efeito",
+        "remove": "Remover {effect}",
+        "field": "{effect}: {param}",
+        "kind": {
+          "motion_blur": "Desfoque de movimento",
+          "glow": "Brilho",
+          "vignette": "Vinheta",
+          "grain": "Granulado",
+          "rgb_split": "Separação RGB",
+          "shake": "Tremor"
+        },
+        "param": {
+          "amount": "quantidade",
+          "angle": "ângulo",
+          "radius": "raio",
+          "threshold": "limiar",
+          "softness": "suavidade",
+          "size": "tamanho",
+          "speed": "velocidade",
+          "seed": "semente"
+        }
+      },
       "transitions": {
         "title": "Transições",
         "in": "Transição de entrada",

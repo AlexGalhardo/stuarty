@@ -1135,6 +1135,31 @@
           "hold": "Hold"
         }
       },
+      "effects": {
+        "title": "Effects",
+        "add": "Add effect",
+        "choose": "Choose an effect",
+        "remove": "Remove {effect}",
+        "field": "{effect} {param}",
+        "kind": {
+          "motion_blur": "Motion blur",
+          "glow": "Glow",
+          "vignette": "Vignette",
+          "grain": "Grain",
+          "rgb_split": "RGB split",
+          "shake": "Shake"
+        },
+        "param": {
+          "amount": "amount",
+          "angle": "angle",
+          "radius": "radius",
+          "threshold": "threshold",
+          "softness": "softness",
+          "size": "size",
+          "speed": "speed",
+          "seed": "seed"
+        }
+      },
       "transitions": {
         "title": "Transitions",
         "in": "In transition",
