@@ -40,6 +40,8 @@ type Config struct {
 	Lint lint.Env
 	// PixelRenderer is VUKEM_VIDEO_EXPORT_RENDERER; the zero value is the Go compositor.
 	PixelRenderer export.PixelRenderer
+	// GPUHost is the absolute path of vukem-render, found by the owner; empty keeps the CPU path.
+	GPUHost string
 }
 
 type adapter struct {
@@ -69,27 +71,7 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 		return nil, err
 	}
 
-	res, err := export.Run(ctx, export.Job{
-		Runner:        a.runnerFor(ctx, caps),
-		Caps:          caps,
-		Doc:           in.Doc,
-		Start:         int(in.Start),
-		End:           int(in.End),
-		JobID:         in.JobID,
-		ArtifactsDir:  filepath.Join(a.cfg.Workspace, "artifacts"),
-		OutPath:       in.OutPath,
-		Format:        export.Format(in.Format),
-		MaxBytes:      in.MaxBytes,
-		Encoder:       a.cfg.Encoder,
-		Lint:          a.cfg.Lint,
-		PixelRenderer: a.cfg.PixelRenderer,
-		Fonts:         service.FontSetFor(a.cfg.Workspace, in.Doc),
-		OnProgress: func(p export.Progress) {
-			if in.OnProgress != nil {
-				in.OnProgress(p.Frame, p.Total)
-			}
-		},
-	})
+	res, err := export.Run(ctx, a.job(in, a.runnerFor(ctx, caps), caps))
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +143,32 @@ func describe(res *export.Result, st timeline.Settings) (video, audio string, ch
 		{Name: "dimensions", OK: true, Detail: size},
 		{Name: "pixel_format", OK: true, Detail: "yuv420p"},
 		{Name: "faststart", OK: true, Detail: "moov before mdat"},
+	}
+}
+
+// job is the engine job of one export.
+func (a *adapter) job(in service.ExportInput, runner *ffmpeg.Runner, caps *ffmpeg.Capabilities) export.Job {
+	return export.Job{
+		Runner:        runner,
+		Caps:          caps,
+		Doc:           in.Doc,
+		Start:         int(in.Start),
+		End:           int(in.End),
+		JobID:         in.JobID,
+		ArtifactsDir:  filepath.Join(a.cfg.Workspace, "artifacts"),
+		OutPath:       in.OutPath,
+		Format:        export.Format(in.Format),
+		MaxBytes:      in.MaxBytes,
+		Encoder:       a.cfg.Encoder,
+		Lint:          a.cfg.Lint,
+		PixelRenderer: a.cfg.PixelRenderer,
+		GPUHost:       a.cfg.GPUHost,
+		Fonts:         service.FontSetFor(a.cfg.Workspace, in.Doc),
+		OnProgress: func(p export.Progress) {
+			if in.OnProgress != nil {
+				in.OnProgress(p.Frame, p.Total)
+			}
+		},
 	}
 }
 

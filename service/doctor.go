@@ -38,6 +38,16 @@ type DoctorOptions struct {
 	Integrity func(ctx context.Context) (string, error)
 	// Child is the policy the owner applied to FFmpeg and whisper.cpp (SDD-007 sections 6.5 and 6.7).
 	Child ChildPolicy
+	// GPURenderer is set when VUKEM_VIDEO_EXPORT_RENDERER=gpu asks for the GPU render host.
+	GPURenderer GPURenderer
+}
+
+// GPURenderer says whether the GPU renderer was requested and where its host was found.
+type GPURenderer struct {
+	// Requested is true when the configured renderer is gpu.
+	Requested bool
+	// Host is the absolute path of vukem-render; empty when it was not found.
+	Host string
 }
 
 // ChildPolicy says what bounds the child processes of this owner.
@@ -266,6 +276,7 @@ func (s *svc) doctorChecks(ctx context.Context, privileged, verify bool) []Docto
 
 	out = append(out, s.ffmpegChecks(ctx, privileged)...)
 	out = append(out, s.childPolicyChecks()...)
+	out = append(out, s.rendererChecks()...)
 	out = append(out, s.transcribeChecks()...)
 	out = append(out, s.workspaceChecks(ctx, privileged)...)
 	out = append(out, DoctorCheck{
@@ -744,4 +755,23 @@ func (s *svc) childPolicyChecks() []DoctorCheck {
 	}
 
 	return []DoctorCheck{limits, sandbox}
+}
+
+// rendererChecks is export.renderer, present only when the GPU renderer was requested. A missing
+// vukem-render is not a failure: the export draws on the CPU.
+func (s *svc) rendererChecks() []DoctorCheck {
+	g := s.doctor.GPURenderer
+	if !g.Requested {
+		return nil
+	}
+
+	if g.Host == "" {
+		return []DoctorCheck{{
+			Name: "export.renderer", OK: true,
+			Detail: "gpu requested, vukem-render not found, using cpu",
+			Hint:   "put vukem-render next to the server executable or in ../libexec/vukem-video",
+		}}
+	}
+
+	return []DoctorCheck{{Name: "export.renderer", OK: true, Detail: "gpu requested, vukem-render at " + g.Host}}
 }
