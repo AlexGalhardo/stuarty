@@ -1166,6 +1166,16 @@
         "out": "Out transition",
         "in_duration": "In duration",
         "out_duration": "Out duration",
+        "in_color": "In colour",
+        "out_color": "Out colour",
+        "in_direction": "In direction",
+        "out_direction": "Out direction",
+        "direction": {
+          "left": "Left",
+          "right": "Right",
+          "up": "Up",
+          "down": "Down"
+        },
         "none": "None",
         "kind": {
           "fade": "Fade",

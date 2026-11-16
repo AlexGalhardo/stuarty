@@ -1159,6 +1159,16 @@
         "out": "Transição de saída",
         "in_duration": "Duração da entrada",
         "out_duration": "Duração da saída",
+        "in_color": "Cor da entrada",
+        "out_color": "Cor da saída",
+        "in_direction": "Direção da entrada",
+        "out_direction": "Direção da saída",
+        "direction": {
+          "left": "Esquerda",
+          "right": "Direita",
+          "up": "Para cima",
+          "down": "Para baixo"
+        },
         "none": "Nenhuma",
         "kind": {
           "fade": "Esmaecer",
