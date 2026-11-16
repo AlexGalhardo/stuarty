@@ -72,6 +72,8 @@ type mediaCfg struct {
 	wrapStore func(service.Store) service.Store
 	// log receives the job lines of the service.
 	log *slog.Logger
+	// jobWait is how long TrashEmpty waits for a job to stop; zero is the default.
+	jobWait time.Duration
 }
 
 // mediaEnv is an env whose service has the media and job machinery, with a
@@ -126,6 +128,7 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 
 		o.Transcriber = cfg.transcriber
 		o.Log = cfg.log
+		o.JobWait = cfg.jobWait
 		o.Tools = cfg.tools
 		o.Workspace = m.ws
 		o.Media = service.Media{

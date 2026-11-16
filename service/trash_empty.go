@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -172,7 +173,7 @@ func (s *svc) stopProjectJobs(ctx context.Context, projectID string) {
 
 	for i := range rows {
 		if s.cancelJob(ctx, rows[i].ID) == nil {
-			s.waitJob(ctx, rows[i].ID, jobWait)
+			s.waitJob(ctx, rows[i].ID, s.jobWait)
 		}
 	}
 }
@@ -190,6 +191,20 @@ func (s *svc) deleteInTx(
 	plan *doomed,
 ) error {
 	for _, id := range targets {
+		// A job that outlived the wait of stopProjectJobs would be deleted by
+		// the cascade without a final state; the next emptying takes the project.
+		active, err := tx.Jobs().List(ctx, id, []string{JobQueued, JobRunning}, 1)
+		if err != nil {
+			return err
+		}
+
+		if len(active) > 0 {
+			s.log.LogAttrs(ctx, slog.LevelWarn, "trash empty: project kept, a job is still active",
+				slog.String("project", id))
+
+			continue
+		}
+
 		if err := tx.Projects().Delete(ctx, id); err != nil {
 			return err
 		}
@@ -213,6 +228,13 @@ func (s *svc) deleteInTx(
 	}
 
 	for i := range orphans {
+		// An ingest still reads and writes this file; the next emptying takes it.
+		if _, aerr := tx.Jobs().ActiveIngestForHash(ctx, orphans[i].Hash); aerr == nil {
+			continue
+		} else if !isNotFound(aerr) {
+			return aerr
+		}
+
 		if err := tx.Assets().Delete(ctx, orphans[i].Hash); err != nil {
 			return err
 		}

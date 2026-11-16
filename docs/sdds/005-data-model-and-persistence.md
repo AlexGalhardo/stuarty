@@ -1374,6 +1374,7 @@ ADR-0020 items 2 and 3; RF-005, RF-131.
   2. Delete `trashed` rows of `project_assets` that match.
   3. `Assets.Unreferenced`; for each, `Assets.Delete` (cascades `artifacts`), remembering its store path and artifact paths.
   4. Remember `exports/<project id>/` and `frames/<project id>/` of every deleted project.
+  A project that still has a queued or running job after that wait, and an asset whose ingest is queued or running, are left out of the emptying and logged; the next emptying removes them.
 - **After commit**, delete the remembered files and directories through `engine/store` (SDD-011).
 - **Crash.** Before commit: nothing changed. After commit and before the files are removed: orphan files remain, removed by the sweep of 13.4.
 

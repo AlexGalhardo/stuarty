@@ -391,3 +391,93 @@ func TestSweepRemovesStaleBundleTempFiles(t *testing.T) {
 		}
 	}
 }
+
+// A file whose ingest is still queued or running is read and written by that
+// ingest: emptying the trash leaves its asset, store file and job alone.
+func TestTrashEmptyKeepsAnAssetWhoseIngestIsActive(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	gone := m.newProject("gone")
+	m.importOne(gone, m.write("clip.mp4", clipBytes))
+
+	rows, err := m.store.Assets().ListProjectAssets(context.Background(), gone)
+	if err != nil || len(rows) != 1 {
+		t.Fatalf("project assets = %v, %v", rows, err)
+	}
+
+	hash := rows[0].AssetHash
+	row := service.JobRow{
+		ID: "job_ingest_active", Kind: service.JobIngest, AssetHash: &hash, Actor: ui,
+		State: service.JobQueued, CreatedMs: 1, UpdatedMs: 1,
+	}
+
+	if err := m.store.Write(context.Background(), func(ctx context.Context, tx service.Tx) error {
+		return tx.Jobs().CreateLimited(ctx, row, nil)
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	before := fileCount(t, filepath.Join(m.ws, "store"))
+	m.trash(gone)
+
+	res, err := m.svc.TrashEmpty(m.browser(), service.TrashEmptyRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Assets != 0 {
+		t.Errorf("result = %+v; the asset of an active ingest was counted", res)
+	}
+
+	if _, err := m.store.Assets().Get(context.Background(), hash); err != nil {
+		t.Errorf("the asset row is gone: %v", err)
+	}
+
+	if after := fileCount(t, filepath.Join(m.ws, "store")); after != before {
+		t.Errorf("store files %d -> %d", before, after)
+	}
+
+	if _, err := m.store.Jobs().Get(context.Background(), row.ID); err != nil {
+		t.Errorf("the ingest job row is gone: %v", err)
+	}
+}
+
+// A job still running after the wait keeps its project: deleting it would
+// cascade the job row away without a final state.
+func TestTrashEmptyKeepsAProjectWithARunningJob(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{jobWait: 50 * time.Millisecond})
+	project := m.newProject("busy")
+	ctx := context.Background()
+	row := service.JobRow{
+		ID: "job_running_export", Kind: service.JobExport, ProjectID: &project, Actor: ui,
+		State: service.JobQueued, CreatedMs: 1, UpdatedMs: 1,
+	}
+
+	if err := m.store.Write(ctx, func(ctx context.Context, tx service.Tx) error {
+		return tx.Jobs().CreateLimited(ctx, row, nil)
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if ok, err := m.store.Jobs().Claim(ctx, row.ID, 2); err != nil || !ok {
+		t.Fatalf("claim: %v %v", ok, err)
+	}
+
+	m.trash(project)
+
+	res, err := m.svc.TrashEmpty(m.browser(), service.TrashEmptyRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Projects != 0 {
+		t.Errorf("result = %+v; the project of a running job was deleted", res)
+	}
+
+	if m.projectCount() != 1 {
+		t.Error("the project is gone")
+	}
+
+	if _, err := m.store.Jobs().Get(context.Background(), "job_running_export"); err != nil {
+		t.Errorf("the job row is gone: %v", err)
+	}
+}
