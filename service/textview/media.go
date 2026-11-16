@@ -157,8 +157,9 @@ type JobView struct {
 	Height   int
 	Duration string // a time cell
 	SizeText string
-	Error    string // the error text, for a failed job
-	Waited   bool   // a wait elapsed without a final state
+	Error    string   // the error text, for a failed job
+	Warnings []string // notes about the job, one line each
+	Waited   bool     // a wait elapsed without a final state
 }
 
 // Job renders one job (SDD-003 section 3.9).
@@ -191,6 +192,10 @@ func Job(j JobView) string {
 		}
 
 		b.WriteString(" " + j.SizeText)
+	}
+
+	for _, w := range j.Warnings {
+		b.WriteString("\n" + oneLine(w, 300))
 	}
 
 	if j.State == "failed" && j.Error != "" {

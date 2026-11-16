@@ -109,20 +109,22 @@ type JobResult struct {
 
 // Job is the job object of SDD-003 section 2.8.
 type Job struct {
-	JobID      string      `json:"job_id"`
-	Kind       string      `json:"kind"`
-	ProjectID  *string     `json:"project_id"` // null for an ingest job
-	State      string      `json:"state"`
-	Progress   float64     `json:"progress"`
-	Message    string      `json:"message,omitempty"`
-	Result     *JobResult  `json:"result,omitempty"`
-	Error      *Error      `json:"error,omitempty"`
-	Lint       *LintTotals `json:"lint,omitempty"`
-	Actor      string      `json:"actor"`
-	CreatedAt  time.Time   `json:"created_at"`
-	StartedAt  *time.Time  `json:"started_at,omitempty"`
-	FinishedAt *time.Time  `json:"finished_at,omitempty"`
-	Text       string      `json:"text"`
+	JobID     string      `json:"job_id"`
+	Kind      string      `json:"kind"`
+	ProjectID *string     `json:"project_id"` // null for an ingest job
+	State     string      `json:"state"`
+	Progress  float64     `json:"progress"`
+	Message   string      `json:"message,omitempty"`
+	Result    *JobResult  `json:"result,omitempty"`
+	Error     *Error      `json:"error,omitempty"`
+	Lint      *LintTotals `json:"lint,omitempty"`
+	// Warnings are notes about an accepted export that are not a reason to refuse it, such as a huge GIF.
+	Warnings   []string   `json:"warnings,omitempty"`
+	Actor      string     `json:"actor"`
+	CreatedAt  time.Time  `json:"created_at"`
+	StartedAt  *time.Time `json:"started_at,omitempty"`
+	FinishedAt *time.Time `json:"finished_at,omitempty"`
+	Text       string     `json:"text"`
 }
 
 // exportInput is the input column of an export job.
@@ -131,6 +133,8 @@ type exportInput struct {
 	Start    int64       `json:"start_frame"`
 	End      int64       `json:"end_frame"`
 	Lint     *LintTotals `json:"lint,omitempty"`
+	// Warnings are the notes of the start (VV-056), shown on the job.
+	Warnings []string `json:"warnings,omitempty"`
 	// Document is the canonical document of Revision, kept with the job so
 	// that the export renders what was asked for even when edits land while
 	// the job waits (SDD-003 section 2.8 rule 9).
