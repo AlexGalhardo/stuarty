@@ -12,6 +12,11 @@ pub enum Reason {
 	LimitExceeded = 5,
 	OutOfMemory = 6,
 	InvalidArgument = 7,
+	InvalidSpec = 8,
+	FontUnknown = 9,
+	FontInvalid = 10,
+	FontNeeded = 11,
+	TextFailed = 12,
 }
 
 impl Reason {
@@ -30,6 +35,11 @@ impl Reason {
 			Self::LimitExceeded => "limit_exceeded",
 			Self::OutOfMemory => "out_of_memory",
 			Self::InvalidArgument => "invalid_argument",
+			Self::InvalidSpec => "invalid_spec",
+			Self::FontUnknown => "font_unknown",
+			Self::FontInvalid => "font_invalid",
+			Self::FontNeeded => "font_needed",
+			Self::TextFailed => "text_failed",
 		}
 	}
 }

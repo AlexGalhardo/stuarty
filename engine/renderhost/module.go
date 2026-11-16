@@ -28,12 +28,14 @@ var (
 const maxMemoryPages = 16384
 
 // APIVersion is the vr_api_version this host knows.
-const APIVersion = 1
+const APIVersion = 2
 
 // exports are the functions the module must export, and the only ones (SDD-013 section 4.2).
 var exports = []string{
 	"vr_api_version", "vr_alloc", "vr_free", "vr_init", "vr_put_texture", "vr_put_bitmap", "vr_release",
 	"vr_render", "vr_error",
+	"vr_text_font_put", "vr_text_run", "vr_text_validate_font", "vr_text_result_ptr", "vr_text_result_len",
+	"vr_text_result_clear",
 }
 
 var shared struct {

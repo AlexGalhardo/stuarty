@@ -210,6 +210,18 @@ impl FontSet {
 	/// The bundled set plus the families of a document's fonts map (SDD-001 section 3.9), whose files
 	/// `src` reads by hash. Bundled families win: the document validation forbids a key that names one.
 	pub fn new(doc_fonts: &[(String, Vec<DocFontFile>)], src: Option<FontSource>) -> Self {
+		let mut set = Self {
+			parsed: Mutex::new(HashMap::new()),
+			user: HashMap::new(),
+			src,
+		};
+		set.set_doc_fonts(doc_fonts);
+		set
+	}
+
+	/// Replaces the families of the document's fonts map, keeping the fonts already parsed (they are
+	/// keyed by the digest of their bytes, so another document can reuse them).
+	pub fn set_doc_fonts(&mut self, doc_fonts: &[(String, Vec<DocFontFile>)]) {
 		let mut user: HashMap<String, Vec<UserFace>> = HashMap::new();
 		for (name, files) in doc_fonts {
 			let faces = user.entry(name.clone()).or_default();
@@ -220,11 +232,7 @@ impl FontSet {
 				});
 			}
 		}
-		Self {
-			parsed: Mutex::new(HashMap::new()),
-			user,
-			src,
-		}
+		self.user = user;
 	}
 
 	/// Returns a face of the family at the weight, or a [`FontError`] with the code `E_FONT_UNKNOWN`.

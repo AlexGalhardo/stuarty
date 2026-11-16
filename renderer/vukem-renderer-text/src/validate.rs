@@ -9,7 +9,8 @@
 
 use std::fmt;
 
-use skrifa::Font;
+use skrifa::raw::TableProvider;
+use skrifa::{Font, FontRef};
 
 /// The largest font file accepted (a CJK family can be large).
 pub const MAX_FONT_BYTES: usize = 16 << 20;
@@ -261,6 +262,17 @@ fn has_table(recs: &[TableRecord], name: &[u8]) -> bool {
 /// Parses the font and touches a few glyphs, so lazy tables that are broken fail here and not while
 /// a frame renders.
 fn parse(data: Vec<u8>) -> Result<Font, InvalidFont> {
+	// The tables every font needs are read lazily and a junk one reads as empty, so they are read
+	// here, once, from the bytes before the font takes them.
+	let tables_ok = FontRef::from_index(&data, 0).is_ok_and(|f| {
+		f.head().is_ok() && f.hhea().is_ok() && f.maxp().is_ok() && f.cmap().is_ok()
+	});
+	if !tables_ok {
+		return Err(invalid(
+			Reason::ParseFailed,
+			"a table every font needs does not parse".to_owned(),
+		));
+	}
 	let font = Font::new(data, 0).ok_or_else(|| {
 		invalid(
 			Reason::ParseFailed,
@@ -402,8 +414,8 @@ mod tests {
 	#[test]
 	fn the_structure_of_the_table_directory_is_checked() {
 		let ok = directory(b"   ", &required(200), 400);
-		// The directory is well formed and no glyph is mapped, so nothing is read from the zeroed tables.
-		assert!(check_font(&ok).is_ok());
+		// The directory is well formed, but the zeroed tables behind it are not a font.
+		assert_eq!(reason(&ok), Reason::ParseFailed);
 
 		let mut missing = required(200);
 		missing.remove(3);

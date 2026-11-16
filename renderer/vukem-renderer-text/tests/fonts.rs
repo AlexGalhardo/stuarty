@@ -203,3 +203,28 @@ fn a_spec_that_cannot_be_drawn_is_refused_and_measures_nothing() {
 	s.pixel_scale = 9.0;
 	assert!(render_text(&s, &fonts).is_err());
 }
+
+/// An sfnt whose six tables are well placed and four-byte aligned but hold only junk.
+fn junk_table_font() -> Vec<u8> {
+	let tags = ["cmap", "head", "hhea", "hmtx", "maxp", "glyf"];
+	let mut out = vec![0_u8; 12 + 16 * tags.len()];
+	out[1] = 1;
+	out[5] = tags.len() as u8;
+	for (i, tag) in tags.iter().enumerate() {
+		let off = out.len() as u32;
+		let rec = 12 + 16 * i;
+		out[rec..rec + 4].copy_from_slice(tag.as_bytes());
+		out[rec + 8..rec + 12].copy_from_slice(&off.to_be_bytes());
+		out[rec + 12..rec + 16].copy_from_slice(&40_u32.to_be_bytes());
+		out.extend_from_slice(&[0xAB; 40]);
+	}
+	out
+}
+
+#[test]
+fn a_font_whose_tables_are_junk_is_refused_even_when_its_structure_is_right() {
+	let Err(e) = vukem_renderer_text::validate::check_font(&junk_table_font()) else {
+		panic!("junk tables must be refused");
+	};
+	assert_eq!(e.reason, Reason::ParseFailed);
+}

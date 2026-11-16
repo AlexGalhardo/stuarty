@@ -253,7 +253,7 @@ All numbers are `i32` or `u32` (WebAssembly `i32`), pointers are offsets into `m
 
 | Export | Signature | Meaning |
 | --- | --- | --- |
-| `vr_api_version` | `() -> u32` | `API_VERSION` of `renderer/vukem-renderer/src/lib.rs`, 1 here. A host refuses a module whose number it does not know (`unsupported_version`) before any other call |
+| `vr_api_version` | `() -> u32` | `API_VERSION` of `renderer/vukem-renderer/src/lib.rs`, 2 here (2 added the text exports below). A host refuses a module whose number it does not know (`unsupported_version`) before any other call |
 | `vr_alloc` | `(len: u32) -> u32` | reserves `len` bytes, 8-aligned, and returns the offset; 0 when the module is out of memory (`out_of_memory`). `len` 0 returns a valid non-null offset |
 | `vr_free` | `(ptr: u32, len: u32)` | releases a block obtained from `vr_alloc` with the same `len` |
 | `vr_init` | `(max_texture_bytes: u32, max_bitmap_bytes: u32) -> i32` | prepares an empty renderer with its two budgets (§7); a second call resets it. The status is 0 or a negative code of §4.5 |
@@ -262,6 +262,17 @@ All numbers are `i32` or `u32` (WebAssembly `i32`), pointers are offsets into `m
 | `vr_release` | `(id_ptr: u32, id_len: u32) -> i32` | forgets the texture or bitmap with that id or key; an unknown one is not an error |
 | `vr_render` | `(in_ptr: u32, in_len: u32, out_ptr: u32, out_len: u32) -> i32` | reads the render input of §2 (UTF-8 JSON, `in_len` at most 4 MiB), draws it, and writes `width x height x 4` bytes at `out_ptr`; `out_len` must be exactly that. The status is 0 or a negative code of §4.5 |
 | `vr_error` | `(buf_ptr: u32, buf_len: u32) -> u32` | copies the message of the last failed call (UTF-8, truncated to `buf_len`, no personal data: ids and keys only) and returns its full length |
+| `vr_text_font_put` | `(hash_ptr: u32, hash_len: u32, data_ptr: u32, data_len: u32) -> i32` | stores the bytes of a user font under its 64 lower-case hex SHA-256 for the text requests that name it (at most 16 MiB a file, 64 MiB in all, `limit_exceeded`); no bytes forget it |
+| `vr_text_run` | `(req_ptr: u32, req_len: u32) -> i32` | draws or measures a shape, a text or a caption (the request of §4.2.1, `req_len` at most 16 MiB); the result is read with the next two exports |
+| `vr_text_validate_font` | `(data_ptr: u32, data_len: u32) -> i32` | validates a user font file (SDD-007 §7.7): size, magic, table directory, the tables every font needs; a refusal is `font_invalid` and its reason and message are the result |
+| `vr_text_result_ptr` / `vr_text_result_len` | `() -> u32` | the offset and the byte length of the result of the last `vr_text_*` call, valid until the next call |
+| `vr_text_result_clear` | `()` | releases that result |
+
+#### 4.2.1 The text request
+
+The rasterizer of SDD-004 §5 is `renderer/vukem-renderer-text`, run by the module (stage E, TASK-0220). A request is little-endian: `u8` mode (0 draw, 1 measure), `u8` kind (0 shape, 1 text, 2 caption), `f64` pixel scale, then for a shape its kind (0 rect, 1 rounded rect, 2 ellipse), `f64` width, height, radius and stroke width and the fill and stroke colours (4 bytes, straight RGBA); for a text or caption a count of document font families, each `str` name and a count of files of `u32` weight and `str` digest, then the style (`str` family, `u32` weight, `f64` size, colour, stroke colour, `f64` stroke width, shadow colour, `f64` offset x, offset y and blur, an optional box colour as a flag byte and 4 bytes, `f64` padding and radius, `u8` alignment 0 left, 1 centre or 2 right, `f64` line height and maximum width, the upper-case flag, the highlight flag, the highlight colour, an optional highlight box colour) and the content: for a text a `str`, for a caption a count of `str` words, a count of `u32` breaks and `u32` active word plus one. A `str` is a `u32` length and UTF-8 bytes; a count is at most 65,536.
+
+The result of a successful call is `u32` width and height, `f64` natural width and height and centre offset x and y, a `u32` count of word boxes with four `f64` each, then `width x height x 4` bytes of straight-alpha RGBA; a measure has width and height 0 and no pixels. A failure has a status of §4.5 and `vr_error`; `font_unknown` also leaves as the result the family, the weight, the weights that exist (a flag, a count and the numbers) and the digest not stored (a flag and a `str`), and `font_invalid` the reason and the message. A user font a request names that the module does not hold is `font_needed` with the digest as the detail: the host reads the file, calls `vr_text_font_put` and repeats the request, or reports `E_FONT_UNKNOWN` itself when the workspace has no such file. The module keeps parsed fonts by digest, so a host that wants a font to be unknown to a document whose workspace lacks it checks its own source first (`engine/rasterize` does). `engine/renderhost` is the Go host of these exports (`PutFont`, `RunText`, `ValidateFont`); `engine/rasterize` encodes the requests.
 
 `f64` parameters are part of the export signature. A host that cannot pass a double (none of ours) passes them through a block written with `vr_alloc`; that form is not defined because no host needs it.
 
@@ -288,7 +299,7 @@ A `vr_render` that needs a texture or a bitmap the module does not hold fails wi
 
 ### 4.5 Status codes
 
-`vr_init`, `vr_put_*`, `vr_release` and `vr_render` return `0` for success and a negative number for a failure. The numbers are the `reason` strings of §7, in this order; the mapping is part of the API version.
+`vr_init`, `vr_put_*`, `vr_release`, `vr_render` and `vr_text_*` return `0` for success and a negative number for a failure. The numbers are the `reason` strings of §7, in this order; the mapping is part of the API version.
 
 | Status | `reason` |
 | --- | --- |
@@ -299,6 +310,11 @@ A `vr_render` that needs a texture or a bitmap the module does not hold fails wi
 | -5 | `limit_exceeded` |
 | -6 | `out_of_memory` |
 | -7 | `invalid_argument` |
+| -8 | `invalid_spec` |
+| -9 | `font_unknown` |
+| -10 | `font_invalid` |
+| -11 | `font_needed` |
+| -12 | `text_failed` |
 
 A trap (`unreachable`, an out-of-bounds access the module's own checks missed, a stack overflow) does not come back as a status: the host sees it as a failed call on the instance and reports `render_trap`. After a trap the instance is discarded and a new one is created; its stored textures are gone and the host uploads again.
 
@@ -313,7 +329,7 @@ package renderhost
 type Host struct{ /* wazero module, memory, the output block */ }
 
 // New instantiates the embedded module (compiled once per process; the digest is checked, an
-// import or a missing export refuses it) and checks that vr_api_version is 1.
+// import or a missing export refuses it) and checks that vr_api_version is 2.
 func New(ctx context.Context, cfg Config) (*Host, error)
 
 // Output is the frame to write; Y1 > Y0 names the rows of a band.
@@ -374,7 +390,7 @@ Rules:
 
 ### 4.8 Acceptance of this section
 
-- `TestCoreModuleHasNoImports` (Go): the embedded module has zero imported functions, memories, tables and globals, exports exactly `memory` and the functions of §4.2, and `vr_api_version` returns 1.
+- `TestCoreModuleHasNoImports` (Go): the embedded module has zero imported functions, memories, tables and globals, exports exactly `memory` and the functions of §4.2, and `vr_api_version` returns 2.
 - `TestSecurity_T36_RenderHostIsSandboxed` (Go): a module compiled for the test that tries to import `wasi_snapshot_preview1` or `env` fails to instantiate, and the production configuration has no clock or file system (the test inspects the `wazero` configuration the host builds).
 - `TestRenderHostCancels` (Go): cancelling the context of a long render returns `context.Canceled` within 1 s and leaves no goroutine.
 - A Vitest and a Playwright test for the worker: a render answers `frame` with the `seq` asked; two renders posted in a row draw only the newest; the `VideoFrame` count reported by the worker is 0 after 500 renders with uploads (the leak check of stage B's gate); `missing_texture` is answered by an upload and a second `render`, not by a black frame.
@@ -522,6 +538,11 @@ The renderer fails in a small, closed set of ways, each with a `reason` string, 
 | `limit_exceeded` | -5 | a limit of §7.2 would be passed; `detail` names it | export: `E_LIMIT_EXCEEDED`; preview: `error` |
 | `out_of_memory` | -6 | `vr_alloc` or a memory growth failed | §7.3 |
 | `invalid_argument` | -7 | a pointer, length, size or id that does not match what the call needs: a texture whose `rgba` is shorter than `width x height x 4`, an id longer than 64 bytes, an `out_len` that is not the frame size, a `y1` not greater than `y0` | export: `E_EXPORT_FAILED` (a host bug); preview: `error` |
+| `invalid_spec` | -8 | a text request names a spec the rasterizer cannot draw: a pixel scale outside (0, 8], a non-positive size, line height or width, a caption with no word, an active word out of range, an unknown kind | export: `E_EXPORT_FAILED`; the lint and the service measure it as 0 by 0 |
+| `font_unknown` | -9 | the family or the weight is not in the bundled set or in the request's document fonts, or a user font is not in the workspace | `E_FONT_UNKNOWN` (SDD-000 §8) with `details.available` |
+| `font_invalid` | -10 | a font file fails the validation of SDD-007 §7.7, or a font a request uses does not parse | `E_VALIDATION` with `details.reason` |
+| `font_needed` | -11 | a request names a user font the module does not hold; `detail` is its digest | the host supplies the file and repeats the request (§4.2.1); never a failure of its own |
+| `text_failed` | -12 | the bytes a host supplied do not hash to their digest, or the font source failed | export: `E_EXPORT_FAILED` |
 | `render_trap` | none (a failed call) | the instance trapped (`unreachable`, a stack overflow, an out-of-bounds access the module's checks missed) | export: `E_EXPORT_FAILED`; preview: `error`, instance replaced |
 | `device_lost` | none | the WebGPU device was lost (§4.7 rule 5) | preview only |
 | `unsupported_format` | none (not an error) | the browser's `VideoDecoder.isConfigSupported` says no for the proxy's codec (§5.3.1), or the chunk index is invalid or missing (§6.3, §6.4) | preview only: the asset is decoded by `<video>`; it is counted in `stats.fallbackAssets`, and is a `warning` in the log of the worker, never an `error` |
