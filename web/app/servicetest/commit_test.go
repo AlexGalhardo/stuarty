@@ -215,7 +215,7 @@ func TestCommit(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if res.Applied || !res.DryRun || res.Revision != 1 || len(res.Diff) != 1 {
+		if res.Applied || !res.DryRun || res.Revision != 2 || len(res.Diff) != 1 { // would commit as r2
 			t.Errorf("dry run = %+v", res)
 		}
 
