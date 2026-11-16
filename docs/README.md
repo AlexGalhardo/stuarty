@@ -51,7 +51,7 @@ D-001 to D-025, each with date, alternatives, reason and impact. They are the in
 | 0012 | text and shapes rasterized by Go code with bundled open fonts |
 | 0013 | browser stack: React, a canvas compositor behind an interface, `<video>` proxies |
 | 0014 | contracts in JSON Schema, generated to TypeScript and to the reference |
-| 0015 | MCP server: fifteen tools named by intent, stateless |
+| 0015 | MCP server: sixteen tools named by intent, stateless |
 | 0016 | CLI on vukem commands, JSON output, exit codes 0, 1, 2 |
 | 0017 | HTTP API under `/api/v1` and server-sent events |
 | 0018 | jobs: own table over the vukem queue, with progress and cancellation |

@@ -251,10 +251,38 @@ func (r *Registry) Help(name string) (string, error) {
 			fmt.Fprintf(&b, ": %s", f.desc)
 		}
 		b.WriteByte('\n')
+		if shape := itemShape(f.fieldType); shape != "" {
+			fmt.Fprintf(&b, "    each item of %s: %s\n", f.name, shape)
+		}
 	}
 	fmt.Fprintf(&b, "\nExample: {\"op\": %q, \"args\": %s}\n", c.Name, c.Example)
 	fmt.Fprintf(&b, "Errors: %s\nScope: %s, phase: %s\n", strings.Join(c.Errors, ", "), c.Scope, c.Phase)
+	if schema, err := r.Schema(name); err == nil {
+		fmt.Fprintf(&b, "JSON Schema: %s\n", schema)
+	}
 	return b.String(), nil
+}
+
+// itemShape describes the object an array argument holds, as "{name (type,
+// required), ...}", so a caller sees the shape of words[] or files[] before it
+// sends one. It is empty for any other type.
+func itemShape(t reflect.Type) string {
+	if t.Kind() != reflect.Slice {
+		return ""
+	}
+	el := t.Elem()
+	if el.Kind() != reflect.Struct {
+		return ""
+	}
+	parts := []string{}
+	for _, f := range argFields(el) {
+		need := "optional"
+		if f.required {
+			need = "required"
+		}
+		parts = append(parts, fmt.Sprintf("%s (%s, %s)", f.name, typeWord(f.fieldType), need))
+	}
+	return "{" + strings.Join(parts, ", ") + "}"
 }
 
 func (r *Registry) unknown(name string) *Error {

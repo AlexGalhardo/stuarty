@@ -1,4 +1,4 @@
-# ADR-0015: MCP server: fifteen tools by intent, stateless, text first
+# ADR-0015: MCP server: sixteen tools by intent, stateless, text first
 
 - Status: Accepted (2026-11-14)
 - Deciders: architect; author (D-011)
@@ -13,7 +13,7 @@ Tool selection degrades beyond 30 to 50 tools (Anthropic) and OpenAI advises few
 1. The server is built with the official Go SDK (`modelcontextprotocol/go-sdk`), targeting revision `2026-07-28` and negotiating older revisions when the SDK allows.
 2. Two transports: **stdio** (`vukem-video mcp`) and **Streamable HTTP** at `/mcp` on the server. Both are adapters over `Service` (ADR-0008).
 3. The server keeps no per-connection state. Every tool takes `project_id` explicitly.
-4. A fixed catalogue of fifteen tools named by intent: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`. The list is fixed in SDD-000 §1 and the schemas are in SDD-003. Fifteen stays under the guidance of fewer than 20 tools.
+4. A fixed catalogue of sixteen tools named by intent: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`. The list is fixed in SDD-000 §1 and the schemas are in SDD-003. Sixteen stays under the guidance of fewer than 20 tools.
 5. All timeline changes go through `edit`, which takes `base_revision`, an array of typed operations from the command catalogue, an optional idempotency key and `dry_run`. Adding a command never adds a tool.
 6. Every tool returns text plus `structuredContent` with an `outputSchema`. Read tools accept `detail: "concise" | "full"`, concise by default. No result exceeds a fixed token budget; longer content is paged with a cursor.
 7. Every write returns the new revision, a text diff of what changed and any new lint finding.
