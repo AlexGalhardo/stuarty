@@ -11,7 +11,7 @@ description: "The complete list of the ways the product can open a network conne
 
 ## The idea
 
-With the default settings the binary opens **no outbound network connection**. There is no telemetry, no update check, no crash reporting, no font or icon service and no analytics. The editor's assets are embedded, and its security policy lets the page reach only the server it came from. A test starts the server with every setting unset, runs a full create, import, edit, export and verify, and fails on any connection; a CI job repeats the run with the real binary and FFmpeg and watches for connections on Linux.
+With the default settings the binary opens **no outbound network connection**. There is no telemetry, no update check (the desktop application has one, which asks your consent first), no crash reporting, no font or icon service and no analytics. The editor's assets are embedded, and its security policy lets the page reach only the server it came from. A test starts the server with every setting unset, runs a full create, import, edit, export and verify, and fails on any connection; a CI job repeats the run with the real binary and FFmpeg and watches for connections on Linux.
 
 A connection **to** the server, from a browser or a client you use, is inbound and not counted here.
 
@@ -20,6 +20,7 @@ A connection **to** the server, from a browser or a client you use, is inbound a
 | Transcription API | `VUKEM_VIDEO_TRANSCRIBE_URL` and `VUKEM_VIDEO_TRANSCRIBE_KEY` are set and a transcription runs | the host you configured, with the audio of one asset and the key | off |
 | Helper download | a person runs `tools:install` or presses Install in the editor | the hosts of the embedded manifest | never at run time |
 | OpenTelemetry | `OTEL_EXPORTER_OTLP_ENDPOINT` is set | that endpoint | off |
+| Desktop update check | you answered Yes to the first-use question, or you choose **Help**, **Check for updates** | `video.vukem.dev`, one signed file, nothing about you | asked once; nothing connects before the answer |
 | CLI and stdio MCP as clients | a server owns the workspace | the loopback address of that server, or `VUKEM_VIDEO_URL` when you set it | loopback only |
 | Browser launch | `serve` opens your browser | your browser connects to loopback; the product makes no connection | loopback only |
 
@@ -46,5 +47,6 @@ You should see only the listening socket and your own browser. Stop the server w
 
 ## Next steps
 
+- [Desktop updates and how to turn them off](/docs/self-hosting/desktop-updates)
 - [Logs and OpenTelemetry](/docs/self-hosting/observability)
 - [Transcription](/docs/guide/transcription)

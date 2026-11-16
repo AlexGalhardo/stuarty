@@ -1,0 +1,74 @@
+---
+title: "Desktop updates and how to turn them off"
+description: "What the desktop application asks on first use, the one connection an update check makes, what it sends, and how to switch it off."
+---
+
+## You will learn
+
+- what the desktop application asks you the first time you use it;
+- the single connection an update check opens, and what the request carries;
+- how a forged or frozen update file is refused;
+- how to turn the check off, and how to check by hand when it is off.
+
+## The idea
+
+The desktop application is the only part of the product that can look for a newer version. The server binary, the archives and the container image never do (see [Privacy](/docs/self-hosting/privacy)). The check is the one outbound connection of the desktop application, and it happens only with your consent.
+
+The first time you start the application it shows a native question, **Check for updates automatically?**, with **Yes** selected and **No** beside it. The text says that the application connects only to the update server, only for this check, and sends nothing about you. Nothing connects before you answer, and your answer is saved. If you close the dialog without answering, that counts as No for this start and is not saved, so the question comes back at the next start.
+
+- **Yes**: the application checks once at start-up, then every 24 hours while it is open. A check that fails because you are offline is silent and tried again after one hour.
+- **No**: the application opens no connection, at start-up or later. A check happens only when you choose **Help**, **Check for updates**, and then it is one check for that action.
+
+The agent surfaces (MCP, the CLI and the HTTP API) cannot start a check or an install. It is a menu action of the desktop window only.
+
+## What a check sends
+
+One HTTPS `GET` of `https://video.vukem.dev/updates/feed.json`, to that single host.
+
+| The request | Detail |
+| --- | --- |
+| Carries | the request itself and the header `User-Agent: vukem-video-desktop/<version>`, where `<version>` is the version you run |
+| Does not carry | a cookie, an identifier, a body, your projects, file names, paths or workspace content |
+| Is restricted | the certificate is always verified; no proxy is used; a redirect is refused; the answer is capped at 1 MiB |
+
+Like any web request, the server sees the connection itself, that is, your network address and the time. The product adds nothing to that. The installer, when you accept an update, is downloaded from the same host and no other.
+
+## How the update file is trusted
+
+`feed.json` is signed with an Ed25519 key whose public half is built into the application. The application checks the signature before it reads the contents, so a forged file is refused.
+
+The signed file also carries two instants, `published_at` and `expires`. A file whose `expires` has passed is refused with the message that the update server has not been refreshed, and nothing is offered or installed. This stops someone from freezing an old file in front of you to hide a newer release. A version that is not strictly newer than yours is never offered.
+
+When you accept an update, the installer is downloaded, its SHA-256 and its own signature are checked, and only then is it run. A file that does not match is deleted and the application keeps running. On Windows the installer is started and the application quits; on macOS and Linux the application replaces itself and restarts, and if the new version does not start within 60 seconds the previous one is restored. See [Verify a release](/docs/self-hosting/verify-a-release) for how the feed is signed.
+
+A build made without the feed address and the public key built in (for example one you compiled yourself) has no update check, never asks the question, and says so in the **Help** menu.
+
+## Quick start
+
+To turn the automatic check off:
+
+<Steps>
+1. Open the desktop application and choose **Help**.
+2. Clear the checkbox **Check for updates automatically**. It takes effect at once and the schedule stops.
+3. The application now opens no connection. **Help**, **Check for updates** still makes one check when you ask for it.
+</Steps>
+
+The setting is `update.check` in the file `desktop.json`, in a `vukem-video` folder of your user configuration directory (`%AppData%\vukem-video` on Windows, `~/Library/Application Support/vukem-video` on macOS, `~/.config/vukem-video` on Linux). It is never in the workspace. To set it without the menu, close the application and write:
+
+```json
+{ "update.check": false }
+```
+
+With `true` the check is on. When the file is missing, has no such key or is damaged, the application treats the question as not asked yet and shows it; a damaged file never turns the network on.
+
+## Common mistakes
+
+- Expecting the server binary or the Docker image to check for updates: they never do. Only the desktop application has this channel.
+- Turning the setting off and expecting **Check for updates** to be gone: that menu entry is a check you ask for, so it stays.
+- Updating from v0.20.0 or older by the menu: those applications ask the old address and will not find the new feed. Install once by hand, as described in [The desktop application](/docs/guide/desktop).
+
+## Next steps
+
+- [Privacy: nothing leaves your machine](/docs/self-hosting/privacy)
+- [The desktop application](/docs/guide/desktop)
+- [Verify a release](/docs/self-hosting/verify-a-release)
