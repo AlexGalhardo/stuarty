@@ -220,3 +220,9 @@ The limits and their errors are specified in SDD-007 §9. Variables read by vuke
 | `Last-Event-ID` | request header | the last revision a stream client received (the `since` query parameter does the same) | SDD-006 §4 |
 | `vukem_video_session` | cookie | the browser session in local mode, and in network mode over plain HTTP on localhost | SDD-007 §3.5 |
 | `__Host-vukem_video_session` | cookie | the browser session in network mode over TLS | SDD-007 §4.1 |
+
+## 12. Renderer names (SDD-013)
+
+| Name | Kind | Meaning | Defined in |
+| --- | --- | --- | --- |
+| `RenderInputVersion` | constant | the version number of the render input the renderer reads, 1 | SDD-013 §2.1 |
