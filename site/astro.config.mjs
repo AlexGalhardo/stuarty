@@ -33,5 +33,7 @@ export default defineConfig({
 		// The destination is not rewritten with the base path by Astro, so it is written in full.
 		"/docs": `${prefix}/docs/introduction/`,
 		"/pt-br/docs": `${prefix}/pt-br/docs/introduction/`,
+		// The landing page is English only; the Portuguese address sends to it.
+		"/pt-br": `${prefix}/`,
 	},
 });

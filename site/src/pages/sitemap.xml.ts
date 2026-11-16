@@ -29,8 +29,7 @@ function pair(englishPath: string): Entry["alternates"] {
 /** Every page that has text of its own in its locale, with xhtml:link alternates for translated pairs. */
 export const GET: APIRoute = () => {
 	const entries: Entry[] = [
-		{ path: "/", priority: "1.0", alternates: pair("/") },
-		{ path: "/pt-br/", priority: "0.6", alternates: pair("/") },
+		{ path: "/", priority: "1.0", alternates: [] },
 	];
 
 	for (const locale of locales) {
