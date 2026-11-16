@@ -36,6 +36,11 @@ step notices go run ./internal/tools/notices -check
 step threat go run ./internal/tools/threatcheck
 step ffpins go run ./internal/tools/ffmpegpins -check
 step agentdocs go run ./web/cmd/gen-agent-docs --check
+if command -v cargo >/dev/null; then
+	step rust bash -c "cd renderer && cargo fmt --check && cargo clippy --locked --all-targets -- -D warnings && cargo test --locked && cargo deny check && cd .. && bash scripts/build-renderer.sh verify"
+else
+	echo "rust: cargo not installed, skipped"
+fi
 step test go test ./... -count=1 -timeout 60m
 step race go test -race -short -count=1 -timeout 30m ./core/... ./service/... ./web/app/...
 step cover bash -c "go test -short -count=1 -coverprofile='$L/coverage.out' ./... && go run ./internal/tools/covergate '$L/coverage.out'"
