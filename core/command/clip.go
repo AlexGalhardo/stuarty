@@ -96,8 +96,12 @@ func applyClipAdd(c *Context, a *clipAddArgs) error {
 
 	it := timeline.NewItem(id, timeline.ItemClip, a.TrackID, start, duration)
 	it.Asset, it.SourceIn = a.AssetID, sourceIn
-	if a.Fit != "" {
-		it.Fit = a.Fit
+	fit := a.Fit
+	if fit == "" && !placeholder {
+		fit = c.overlayImageFit(a.TrackID, &asset)
+	}
+	if fit != "" {
+		it.Fit = fit
 	}
 	if !placeholder {
 		if it.Duration, err = c.clipDuration(&it, &asset, a.Duration == "", start); err != nil {
@@ -116,6 +120,31 @@ func applyClipAdd(c *Context, a *clipAddArgs) error {
 	c.SetEffectiveTime("source_in", it.SourceIn, string(a.SourceIn))
 	c.SetEffectiveTime("duration", it.Duration, string(a.Duration))
 	return nil
+}
+
+// overlayImageFit is the default fit of an image added without one (VV-039): an
+// image on a track that has a visual track below it is an overlay (a logo, a
+// sticker), so it keeps its natural size when it fits the frame and is contained
+// when it does not. Any other clip keeps the schema default ("" means cover).
+func (c *Context) overlayImageFit(trackID string, asset *timeline.Asset) string {
+	if asset.Kind != timeline.AssetImage {
+		return ""
+	}
+	order := c.Doc.Tracks[trackID].Order
+	below := false
+	for id := range c.Doc.Tracks {
+		if t := c.Doc.Tracks[id]; t.Kind == timeline.TrackVisual && t.Order > order {
+			below = true
+			break
+		}
+	}
+	if !below {
+		return ""
+	}
+	if asset.Width <= c.Doc.Settings.Width && asset.Height <= c.Doc.Settings.Height {
+		return "none"
+	}
+	return "contain"
 }
 
 // clipTypes is precondition 3 of clip.add and the image rule of precondition 1.

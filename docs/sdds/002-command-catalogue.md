@@ -1939,7 +1939,7 @@ Places a video or image asset on a visual track. An animated image (BETA, RF-028
 | `start` | time | yes | none | absolute |
 | `source_in` | time | no | `"0s"` | offset into the asset; for an image it must be omitted or 0 (`E_VALIDATION`) |
 | `duration` | time, as a length | no | rest of the asset from `source_in`; `"5s"` for an image | at least 1 frame |
-| `fit` | `"cover"`, `"contain"`, `"none"` | no | `"cover"` | |
+| `fit` | `"cover"`, `"contain"`, `"none"` | no | `"cover"`; for an image on a track with a visual track below it (a larger `order`): `"none"` when the image fits the frame, `"contain"` when it does not | a logo or sticker enters at its natural size instead of filling the frame (VV-039) |
 | `id` | item id | no | generated | R6 |
 
 **Preconditions.**
@@ -1995,6 +1995,9 @@ Places a video or image asset on a visual track. An animated image (BETA, RF-028
 - `ok_animated_image_default_5s_loops`
 - `ok_animated_image_explicit_duration`
 - `ok_sticker_on_an_upper_track`
+- `ok_image_on_an_upper_track_keeps_natural_size`
+- `ok_image_on_an_upper_track_larger_than_frame_is_contained`
+- `ok_image_on_an_upper_track_explicit_fit`
 - `err_validation_source_in_on_animated_image`
 - `ok_fit_contain`
 - `ok_fit_none`
