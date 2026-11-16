@@ -93,3 +93,38 @@ func gifDelaysCS(fps timeline.Rational, n int) []int {
 
 	return out
 }
+
+// The bytes of one GIF pixel in one frame, measured on the writer of format_gif.go at 480x270: a
+// dithered gradient is 0.48, which is what the 130 MB and 200 MB GIFs of VV-056 came to (0.43 to
+// 0.47), flat colour 0.06 and noise 1.34. A typical project is near the gradient; noise is the bound.
+const (
+	gifTypicalBytesPerPixel = 0.5
+	gifWorstBytesPerPixel   = 1.4
+)
+
+// GIFEstimate is what a GIF export of a project will be, known before it starts.
+type GIFEstimate struct {
+	Width, Height int   // the pixel size of the GIF (gifMaxWidth wide at most)
+	Frames        int   // the number of GIF frames, after the frame rate is lowered
+	TypicalBytes  int64 // the size of ordinary footage
+	WorstBytes    int64 // the size of the noisiest picture, which no export passes
+}
+
+// EstimateGIF is the size of the GIF of a project of frames timeline frames, from the size and the
+// frame rate the export will use (gifSize and gifStep). It is an estimate to warn a person before a
+// huge file is written (VV-056), not a promise: the real size depends on the picture.
+func EstimateGIF(st timeline.Settings, frames int) GIFEstimate {
+	w, h, _ := gifSize(st)
+	if frames <= 0 || w <= 0 || h <= 0 || st.FPS.Num <= 0 || st.FPS.Den <= 0 {
+		return GIFEstimate{Width: w, Height: h}
+	}
+
+	n := (frames + gifStep(st.FPS) - 1) / gifStep(st.FPS)
+	px := float64(w) * float64(h) * float64(n)
+
+	return GIFEstimate{
+		Width: w, Height: h, Frames: n,
+		TypicalBytes: int64(px * gifTypicalBytesPerPixel),
+		WorstBytes:   int64(px * gifWorstBytesPerPixel),
+	}
+}
