@@ -168,6 +168,10 @@ func (c *Context) seconds(frame int) string {
 
 // round3 rounds a space value to 3 decimals (SDD-002 §A.10).
 func round3(v float64) float64 {
+	// Above this a float64 has no decimals left, and v*1000 could overflow to +Inf.
+	if math.Abs(v) >= 1e12 {
+		return v
+	}
 	return math.Round(v*1000) / 1000
 }
 

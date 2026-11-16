@@ -94,6 +94,8 @@ func checkKeyframeValue(prop string, v float64) *Error {
 	switch {
 	case math.IsNaN(v) || math.IsInf(v, 0):
 		return bad("a finite number")
+	case math.Abs(v) > maxMagnitude:
+		return bad("between -1000000000 and 1000000000")
 	case prop == "scale" && (v <= 0 || v > maxScale):
 		return bad("above 0 and at most 20")
 	case prop == "opacity" && (v < 0 || v > 1):
