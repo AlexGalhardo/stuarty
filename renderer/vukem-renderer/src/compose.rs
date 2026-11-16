@@ -12,6 +12,7 @@ use crate::blur::blurred;
 use crate::chroma::{ChromaKeySpec, apply_chroma_key};
 use crate::colour::apply_matrix;
 use crate::image::Image;
+use crate::mask::{MaskSpec, MaskState, scale};
 use crate::math::{div255, mul, round_half_away, round_half_up, sincos, u8_of};
 use crate::resize::resize;
 
@@ -57,6 +58,8 @@ pub struct Layer<'a> {
 	pub chroma_key: Option<ChromaKeySpec>,
 	/// The mix with the destination of the last step of the draw (SDD-004 section 3.8).
 	pub blend: BlendMode,
+	/// Limits where the layer is drawn, in its own frame (SDD-004 section 3.9).
+	pub mask: Option<MaskSpec>,
 }
 
 /// Premultiplies a straight-alpha RGBA8 bitmap once.
@@ -148,6 +151,8 @@ pub struct Prepared<'a> {
 	pub placement: Placement,
 	pub op: u32,
 	pub blend: BlendMode,
+	/// The mask, placed on the layer's rectangle before the blur grew it.
+	pub mask: Option<MaskState>,
 }
 
 /// Steps 1 to 5 of SDD-013 section 3.3 for one layer; `None` when the layer draws nothing.
@@ -207,6 +212,7 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 	if let Some(m) = &l.filter {
 		src = Cow::Owned(apply_matrix(&src, m));
 	}
+	let mask = l.mask.as_ref().map(|m| MaskState::new(m, &p, out_scale));
 	let mut p = p;
 	if l.blur > 0.0
 		&& let Some((img, grown)) = blurred(&src, &p, mul(l.blur, out_scale))
@@ -219,12 +225,13 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 		placement: p,
 		op,
 		blend: l.blend,
+		mask,
 	})
 }
 
 fn draw_layer(dst: &mut Target<'_>, l: &Layer<'_>, out_scale: f64) {
 	if let Some(p) = prepare_layer(l, out_scale) {
-		draw(dst, &p.image, &p.placement, p.op, p.blend);
+		draw(dst, &p.image, &p.placement, p.op, p.blend, p.mask.as_ref());
 	}
 }
 
@@ -255,15 +262,30 @@ pub fn copy_origin(src_w: usize, src_h: usize, p: &Placement) -> Option<(i64, i6
 	None
 }
 
-fn draw(dst: &mut Target<'_>, src: &Image, p: &Placement, op: u32, mode: BlendMode) {
+fn draw(
+	dst: &mut Target<'_>,
+	src: &Image,
+	p: &Placement,
+	op: u32,
+	mode: BlendMode,
+	mask: Option<&MaskState>,
+) {
 	match copy_origin(src.w, src.h, p) {
-		Some((x0, y0)) => blit(dst, src, x0, y0, op, mode),
-		None => sample(dst, src, p, op, mode),
+		Some((x0, y0)) => blit(dst, src, x0, y0, op, mode, mask),
+		None => sample(dst, src, p, op, mode, mask),
 	}
 }
 
 /// Draws `src` with its top-left corner at `(x0, y0)`, pixel for pixel.
-fn blit(dst: &mut Target<'_>, src: &Image, x0: i64, y0: i64, op: u32, mode: BlendMode) {
+fn blit(
+	dst: &mut Target<'_>,
+	src: &Image,
+	x0: i64,
+	y0: i64,
+	op: u32,
+	mode: BlendMode,
+	mask: Option<&MaskState>,
+) {
 	let dw = dst.width;
 	let cx0 = x0.max(0);
 	let cx1 = x0.saturating_add(src.w as i64).min(dw as i64);
@@ -277,7 +299,17 @@ fn blit(dst: &mut Target<'_>, src: &Image, x0: i64, y0: i64, op: u32, mode: Blen
 	for y in cy0..cy1 {
 		let so = ((y - y0) as usize * src.w + (cx0 - x0) as usize) * 4;
 		let d = (y as usize * dw + cx0 as usize) * 4;
-		if src.opaque && op == 255 && mode == BlendMode::Normal {
+		if let Some(m) = mask {
+			masked_row(
+				&mut dst.pix[d..d + n],
+				&src.pix[so..so + n],
+				op,
+				mode,
+				m,
+				cx0,
+				y,
+			);
+		} else if src.opaque && op == 255 && mode == BlendMode::Normal {
 			dst.pix[d..d + n].copy_from_slice(&src.pix[so..so + n]);
 		} else {
 			over_row(&mut dst.pix[d..d + n], &src.pix[so..so + n], op, mode);
@@ -314,13 +346,50 @@ fn over_row(d: &mut [u8], s: &[u8], op: u32, mode: BlendMode) {
 	}
 }
 
+/// [`over_row`] for a masked layer: each pixel is multiplied by its coverage first, then by the
+/// opacity, and a masked layer never takes the copy shortcut. `x` is the destination column of the
+/// first pixel of the row.
+fn masked_row(d: &mut [u8], s: &[u8], op: u32, mode: BlendMode, m: &MaskState, x: i64, y: i64) {
+	for (i, (dp, sp)) in d
+		.as_chunks_mut::<4>()
+		.0
+		.iter_mut()
+		.zip(s.as_chunks::<4>().0)
+		.enumerate()
+	{
+		let mut px = [
+			u32::from(sp[0]),
+			u32::from(sp[1]),
+			u32::from(sp[2]),
+			u32::from(sp[3]),
+		];
+		scale(&mut px, m.copy_cov(x + i as i64, y));
+		if op != 255 {
+			for v in &mut px {
+				*v = div255(*v * op);
+			}
+		}
+		if px[3] == 0 {
+			continue;
+		}
+		mix_pixel(dp, px[0], px[1], px[2], px[3], mode);
+	}
+}
+
 /// Fractional bits of the sampler coordinates.
 const FIX: u32 = 32;
 
 /// Draws `src` into the rectangle `p` with bilinear interpolation: every destination pixel whose
 /// centre is inside the rectangle takes the four nearest source pixels. Edges are not smoothed.
 /// Only the destination rows of `dst.rows` are drawn.
-pub fn sample(dst: &mut Target<'_>, src: &Image, p: &Placement, op: u32, mode: BlendMode) {
+pub fn sample(
+	dst: &mut Target<'_>,
+	src: &Image,
+	p: &Placement,
+	op: u32,
+	mode: BlendMode,
+	mask: Option<&MaskState>,
+) {
 	let (sin, cos) = sincos(mul(p.rot, core::f64::consts::PI / 180.0));
 	let dw = dst.width;
 
@@ -382,6 +451,9 @@ pub fn sample(dst: &mut Target<'_>, src: &Image, p: &Placement, op: u32, mode: B
 				let bot =
 					u32::from(src.pix[o01 + k]) * (256 - wx) + u32::from(src.pix[o11 + k]) * wx;
 				*v = (top * (256 - wy) + bot * wy + 32768) >> 16;
+			}
+			if let Some(m) = mask {
+				scale(&mut px, m.sample_cov(x, y));
 			}
 			let mut a = px[3];
 			if op != 255 {

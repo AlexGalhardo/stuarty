@@ -2,6 +2,7 @@ package compositor
 
 import (
 	"image"
+	"math"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
@@ -139,6 +140,20 @@ func TestMaskedSampledLayerBandsAgree(t *testing.T) {
 	for i := range one {
 		if one[i] != eight[i] {
 			t.Fatalf("byte %d differs between 1 and 8 bands", i)
+		}
+	}
+}
+
+func TestMaskClampsAbsurdNumbers(t *testing.T) {
+	t.Parallel()
+
+	m := newTestMask(
+		plan.MaskSpec{Shape: "ellipse", X: math.NaN(), Y: -3, Width: 1e300, Height: math.Inf(1), Feather: 1 << 30},
+		placement{cx: 1e300, cy: -1e300, w: 1e300, h: 1e-300},
+	)
+	for _, p := range [][2]int{{0, 0}, {math.MaxInt32, math.MinInt32}, {-5, 1 << 30}} {
+		if m.copyCov(p[0], p[1]) > 255 || m.sampleCov(p[0], p[1]) > 255 {
+			t.Fatalf("coverage out of range at %v", p)
 		}
 	}
 }

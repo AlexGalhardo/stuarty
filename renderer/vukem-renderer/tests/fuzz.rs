@@ -14,6 +14,7 @@ use vukem_renderer::compose::{Layer, Placement, Source, Target, compose, sample}
 use vukem_renderer::error::Reason;
 use vukem_renderer::host::{BitmapMetrics, Limits, Renderer};
 use vukem_renderer::image::Image;
+use vukem_renderer::mask::{MaskShape, MaskSpec, MaskState};
 use vukem_renderer::plan::{MAX_LAYERS, MAX_OUTPUT_SIDE, Pixels, decode};
 
 struct Rng(u64);
@@ -83,6 +84,9 @@ const TOKENS: &[&str] = &[
 	"\"chroma_key\"",
 	"\"blend\"",
 	"\"multiply\"",
+	"\"mask\"",
+	"\"ellipse\"",
+	"\"feather\"",
 	"\"similarity\"",
 	",",
 	":",
@@ -291,6 +295,33 @@ const BLENDS: [BlendMode; 5] = [
 	BlendMode::Add,
 ];
 
+fn mask(rng: &mut Rng) -> MaskSpec {
+	let fraction = |rng: &mut Rng| {
+		if rng.chance(2) {
+			extreme(rng)
+		} else {
+			rng.below(1001) as f64 / 1000.0
+		}
+	};
+	MaskSpec {
+		shape: if rng.chance(2) {
+			MaskShape::Ellipse
+		} else {
+			MaskShape::Rect
+		},
+		x: fraction(rng),
+		y: fraction(rng),
+		width: fraction(rng),
+		height: fraction(rng),
+		feather: if rng.chance(2) {
+			extreme(rng)
+		} else {
+			rng.below(60) as f64
+		},
+		invert: rng.chance(2),
+	}
+}
+
 fn chroma_key(rng: &mut Rng) -> Option<ChromaKeySpec> {
 	const COLOURS: &[&str] = &[
 		"#00ff00",
@@ -347,6 +378,7 @@ fn the_composition_survives_extreme_numbers() {
 					filter: matrix(&mut rng),
 					chroma_key: chroma_key(&mut rng),
 					blend: *rng.pick(&BLENDS),
+					mask: rng.chance(2).then(|| mask(&mut rng)),
 					// A blur of a huge radius is capped at 128 source pixels; keep most small.
 					blur: if rng.chance(3) {
 						extreme(&mut rng)
@@ -398,6 +430,9 @@ fn the_sampler_survives_every_rotation_and_scale() {
 			h: extreme(&mut rng),
 			rot: extreme(&mut rng),
 		};
+		let state = rng
+			.chance(2)
+			.then(|| MaskState::new(&mask(&mut rng), &p, extreme(&mut rng)));
 		sample(
 			&mut Target {
 				pix: &mut pix,
@@ -409,6 +444,7 @@ fn the_sampler_survives_every_rotation_and_scale() {
 			&p,
 			rng.below(256) as u32,
 			*rng.pick(&BLENDS),
+			state.as_ref(),
 		);
 	}
 }
