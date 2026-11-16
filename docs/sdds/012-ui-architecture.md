@@ -1379,7 +1379,7 @@ Runtime skips, each with a stated reason:
 - WebKit on Windows (the WinCairo build of Playwright) cannot decode the VP9 MP4 proxy (`MEDIA_ERR_SRC_NOT_SUPPORTED`), so the specs that compare video pixels skip there (`noVideoDecode`). The WebKit builds of Linux and macOS decode it and run them.
 - The same build has no Web Audio, so the preview cannot play; a scenario that plays skips with `skipWithoutWebAudio`, because the playback clock is the `AudioContext` clock (§11.2).
 
-`FIREFOX_DIVERGENCES` (in `preview-vs-export.spec.ts`) lists the cases that miss the gate in Firefox alone, as expected failures with their measurements: today `scale-linear`, whose SSIM is 0.9665 at frame 15 only because Firefox seeks the paused video to a neighbouring source frame while the scale grows. Chromium and WebKit meet the gate. The cases of `KNOWN_DIVERGENCES` are expected failures in every browser.
+Firefox has no divergence list of its own any more: `scale-linear` missed the gate there (SSIM 0.9665 at frame 15) until the preview buffer took the even width and the height of `ViewFrame`; it now scores 0.9879. The cases of `KNOWN_DIVERGENCES` are expected failures in every browser.
 
 Open item: WebKit reports one `style-src-attr` CSP violation each time React mounts elements that carry a `style` prop, although the styles apply and Chromium and Firefox report nothing on the same pages. The CSP specs drop only that directive in WebKit (`cspViolations`). This is not yet explained: it needs a run on a real macOS WebKit (the CI job of P3-REL-005) to tell a Playwright WebKit build artefact from a real violation, and the filter must be removed if the macOS run is clean.
 

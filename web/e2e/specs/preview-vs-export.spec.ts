@@ -672,12 +672,6 @@ test.describe("preview-vs-export measures", () => {
 const KNOWN_DIVERGENCES: Record<string, string> = {
 };
 
-// What Firefox alone misses. The cases above are expected failures everywhere.
-const FIREFOX_DIVERGENCES: Record<string, string> = {
-	"scale-linear":
-		"SSIM 0.9665 at frame 15 only (0.974 to 0.983 at the other frames, offset under 0.7 px): Firefox seeks the paused video to a neighbouring source frame while the scale grows. Chromium and WebKit meet the gate.",
-};
-
 test.describe("preview-vs-export", () => {
 	test.use({ viewport: { width: 1920, height: 1300 } });
 	test.describe.configure({ timeout: 300_000 });
@@ -690,18 +684,12 @@ test.describe("preview-vs-export", () => {
 		test(`golden ${name}: SSIM of at least ${MIN_SSIM} on luma and no layer displaced by more than ${MAX_DISPLACEMENT} px`, async ({
 			page,
 			request,
-			browserName,
 		}) => {
 			test.skip(
 				needsImageFixtures(name),
 				"the fixtures are an alpha PNG or a GIF with delays that only the Go suite generates",
 			);
-			const firefoxOnly =
-				browserName === "firefox" ? FIREFOX_DIVERGENCES[name] : undefined;
-			test.fail(
-				name in KNOWN_DIVERGENCES || firefoxOnly !== undefined,
-				KNOWN_DIVERGENCES[name] ?? firefoxOnly,
-			);
+			test.fail(name in KNOWN_DIVERGENCES, KNOWN_DIVERGENCES[name]);
 			const loaded = await loadCase(request, name);
 			await openCase(page, loaded.id);
 			await stepThrough(page, loaded.frames, async (frame) => {
