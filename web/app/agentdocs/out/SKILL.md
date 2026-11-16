@@ -25,8 +25,8 @@ Check with `vukem-video version` and `project:list`. The workspace is `~/.vukem-
 
 - Every time has a unit: `12.5s`, `375f`, `00:00:12.500`. A bare number is rejected.
 - Ids (`prj_`, `ast_`, `trk_`, `itm_`, `job_`) are never positions. List first.
-- The top track is drawn over the others; the views call the ends `top` and `bottom`.
-- `--base` is the `revision` of your last result. Omitted, the CLI uses the current one.
+- The top track is drawn over the others (ends: `top`, `bottom`).
+- `--base` is the `revision` of your last result; omitted, the current one.
 - Give your own `id` to what a batch creates when later operations use it.
 
 ## Command reference
