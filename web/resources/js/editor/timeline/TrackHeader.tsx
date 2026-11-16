@@ -32,6 +32,7 @@ import {
 } from "../state/selectors";
 import ConfirmTrackRemove from "../ui/ConfirmTrackRemove";
 import Splitter from "../ui/Splitter";
+import { trackLabel } from "../ui/trackLabel";
 import { beginReorder, type Ghost } from "./gestures/reorder";
 import { useRowHeight } from "./TrackRow";
 
@@ -88,13 +89,19 @@ export default function TrackHeader({ id }: { id: string }): ReactNode {
 	const kind = track?.kind === "audio" ? "audio" : "visual";
 	const rowPx = useRowHeight(kind);
 	const order = useDocumentState(selectOrderedTrackIds);
+	const tracks = useDocumentState((s) => s.document?.tracks);
 	const itemCount = useDocumentState((s) => selectTrackItemIds(s, id).length);
 	const [renaming, setRenaming] = useState(false);
 	const [confirming, setConfirming] = useState(false);
 	const [ghost, setGhost] = useState<Ghost | null>(null);
 	if (track === undefined) return null;
 	const Icon = track.kind === "audio" ? AudioLines : Video;
-	const name = track.name === undefined || track.name === "" ? id : track.name;
+	const name =
+		track.name === undefined || track.name === ""
+			? trackLabel(id, order, (other) =>
+					tracks?.[other]?.kind === "audio" ? "audio" : "visual",
+				)
+			: track.name;
 	const at = order.indexOf(id);
 	const above = order[at - 1];
 	const below = order[at + 1];
