@@ -9,6 +9,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // A project named "../../x" exports to exports/<project id>/<job id>.mp4 and nowhere else (T-13).
@@ -112,6 +114,36 @@ func TestExportSizeLimit(t *testing.T) {
 
 	if m, _ := filepath.Glob(filepath.Join(shared.dir, "tmp", job.JobID+"*")); len(m) > 0 {
 		t.Errorf("the work folders %v were not removed", m)
+	}
+}
+
+// When the encoder dies early (here the size watchdog), the frame loop stops
+// instead of composing the rest of the project.
+func TestExportStopsComposingWhenTheEncoderDies(t *testing.T) {
+	doc := loadScene(t, "contain-text")
+
+	// The size watchdog polls every 2 s, so the project must take longer than that to compose.
+	for id, it := range doc.Items {
+		if it.Type == timeline.ItemClip {
+			it.Duration = 300
+			doc.Items[id] = it
+		}
+	}
+
+	exports := filepath.Join(shared.dir, "exports-stop")
+	job := newJob(t, doc, "export-stop", "unused.mp4")
+	job.OutPath, job.ExportsDir, job.ProjectID, job.MaxBytes = "", exports, "prj_stop", 1000
+
+	var last Progress
+	job.OnProgress = func(p Progress) { last = p }
+
+	_, err := Run(context.Background(), job)
+	if ee := asFFError(t, err); ee.Details["reason"] != ReasonSizeLimit {
+		t.Fatalf("error = %v, want reason size_limit", err)
+	}
+
+	if last.Total > 0 && last.Frame >= last.Total {
+		t.Errorf("composed all %d frames after the encoder died", last.Total)
 	}
 }
 
