@@ -1,7 +1,13 @@
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import {
+	canDropPaths,
+	canPickFiles,
+	getDesktopBridge,
+	subscribeDesktopBridge,
+} from "../library/desktopBridge";
 import { dismissTips, rememberTips, useTipsVisible } from "../state/tipsStore";
 
 const TIPS = ["library", "palette", "shortcuts"] as const;
@@ -12,6 +18,13 @@ const TIPS = ["library", "palette", "shortcuts"] as const;
 export default function FirstRunTips(): ReactNode {
 	const t = useT();
 	const visible = useTipsVisible();
+	// In the desktop window the library also has "Choose files" and drops.
+	const bridge = useSyncExternalStore(
+		subscribeDesktopBridge,
+		getDesktopBridge,
+		() => null,
+	);
+	const desktop = canPickFiles(bridge) || canDropPaths(bridge);
 	useEffect(() => {
 		if (visible) rememberTips();
 	}, [visible]);
@@ -24,7 +37,13 @@ export default function FirstRunTips(): ReactNode {
 			<h2 className="font-semibold">{t("ui.editor.tips.title")}</h2>
 			<ul className="flex flex-1 flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
 				{TIPS.map((tip) => (
-					<li key={tip}>{t(`ui.editor.tips.items.${tip}`)}</li>
+					<li key={tip}>
+						{t(
+							tip === "library" && desktop
+								? "ui.editor.tips.items.library_desktop"
+								: `ui.editor.tips.items.${tip}`,
+						)}
+					</li>
 				))}
 			</ul>
 			<Button type="button" size="sm" variant="outline" onClick={dismissTips}>

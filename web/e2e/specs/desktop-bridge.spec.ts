@@ -92,3 +92,31 @@ test.describe("desktop-bridge", () => {
 		).toBeVisible();
 	});
 });
+
+test.describe("desktop-bridge first-run tip", () => {
+	test.use({ tipsSeen: false });
+
+	// VV-054: the tip does not say "paste a path" only, as the window also has
+	// the button and the drop.
+	test("the library tip names Choose files in the window", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
+		await fakeBridge(page, []);
+		await page.goto(`/editor/${seeded.id}`);
+		const tips = page.getByRole("region", { name: "First steps" });
+		await expect(tips).toContainText("Choose files in the library, drop them");
+	});
+
+	test("the library tip says to paste a path in a browser", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
+		await page.goto(`/editor/${seeded.id}`);
+		await expect(
+			page.getByRole("region", { name: "First steps" }),
+		).toContainText("Paste the path of a media file in the library");
+	});
+});
