@@ -58,7 +58,9 @@ func TestHashes(t *testing.T) {
 	t.Run("document and sorted media", func(t *testing.T) {
 		t.Parallel()
 
-		got, err := hashes(writeBundle(t, map[string]string{"manifest.json": manifestFor(docHash), "document.json": doc}))
+		got, err := hashes(
+			writeBundle(t, map[string]string{"manifest.json": manifestFor(docHash), "document.json": doc}),
+		)
 		if err != nil {
 			t.Fatal(err)
 		}
