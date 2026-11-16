@@ -74,6 +74,7 @@ Every number is a JSON number read as an IEEE 754 double (`f64`, correctly round
 | `color_matrix` | 12 numbers or `null` | the 3x4 colour matrix of SDD-004 §3.5, row-major, offset in the fourth column |
 | `filter` | 12 numbers or `null` | the filter matrix of SDD-004 §3.6, same form |
 | `chroma_key` | `{color, similarity, smoothness, spill}` or `null` | the key of SDD-004 §3.7, all four members required; absent or `null` means none |
+| `blend` | string | the blend mode of SDD-004 §3.8: `multiply`, `screen`, `overlay` or `add`; absent means normal (source-over of §3.7) |
 | `blur` | number | the standard deviation of the Gaussian of SDD-004 §3.6 in project pixels; 0 or absent for none |
 | `cx`, `cy` | number | the centre of the drawn rectangle in project pixels |
 | `w`, `h` | number | its size before rotation, in project pixels, scale already included |
@@ -178,6 +179,8 @@ Source-over on premultiplied values. For a source pixel `(r, g, b, a)` and the l
 - `op == 255` and `a == 255`: the destination pixel is replaced.
 - Otherwise, when `op != 255`: `a = div255(a x op)` and `c = div255(c x op)` for `r`, `g`, `b`. If `a == 0` nothing is drawn.
 - With `ia = 255 - a`, each destination channel, alpha included, becomes `u8(c + div255(d x ia))`.
+
+A layer with `blend` replaces the last bullet by the per-channel mix of SDD-004 §3.8 (same `op` handling, same `div255`, `a == 0` draws nothing, the destination alpha stays 255), and is never drawn by the replace shortcut of the first bullet.
 
 ### 3.8 The GPU path
 

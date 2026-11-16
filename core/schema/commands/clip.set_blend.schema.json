@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "item_id": {
+      "description": "A visual item.",
+      "type": "string"
+    },
+    "mode": {
+      "description": "normal, multiply, screen, overlay or add.",
+      "enum": [
+        "normal",
+        "multiply",
+        "screen",
+        "overlay",
+        "add"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id",
+    "mode"
+  ],
+  "type": "object"
+}

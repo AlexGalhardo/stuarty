@@ -365,6 +365,14 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 
 	clip.ChromaKey = nil
 
+	clip.Blend = "screen"
+
+	if b := extraFields(fps, &clip)["blend"]; b != "screen" {
+		t.Errorf("blend = %q", b)
+	}
+
+	clip.Blend = ""
+
 	got := itemLine(fps, &clip)
 	want := "itm_m1n2p3q4r5 clip 0s/0f +2s/60f ast_3c5v8n2w6d x1.5 [tin:fade tout:slide_left kf:2 mk:2 vol:0.5 muted slot:hero unfilled]"
 

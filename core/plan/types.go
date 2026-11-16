@@ -61,6 +61,9 @@ type Layer struct {
 	// ChromaKey is the colour the compositor makes transparent (SDD-004 §3.7); nil means none.
 	ChromaKey *ChromaKeySpec `json:"chroma_key,omitempty"`
 
+	// Blend is the blend mode of SDD-004 §3.8: multiply, screen, overlay or add; empty means normal.
+	Blend string `json:"blend,omitempty"`
+
 	CX       float64 `json:"cx"`
 	CY       float64 `json:"cy"`
 	W        float64 `json:"w"` // drawn size before rotation

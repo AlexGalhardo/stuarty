@@ -74,4 +74,22 @@ func init() {
 	ck("err_validation_value_with_null", fa(`"color": null, "spill": 0.1`), plain(keyed))
 	ck("err_not_found", `{"item_id": "itm_zzzzzzzzzz", "color": "#00FF00"}`, plain())
 	ck("err_type_mismatch_audio_item", fmt.Sprintf(`{"item_id": %q, "color": "#00FF00"}`, itemB), audioItem)
+
+	bm := func(name, args string, b func() *B) {
+		gc("clip.set_blend", name, b, op("clip.set_blend", args))
+	}
+	blended := func(it *timeline.Item) { it.Blend = "multiply" }
+	bm("ok_multiply", fa(`"mode": "multiply"`), plain())
+	bm("ok_screen", fa(`"mode": "screen"`), plain())
+	bm("ok_overlay", fa(`"mode": "overlay"`), plain())
+	bm("ok_add", fa(`"mode": "add"`), plain())
+	bm("ok_replaces_mode", fa(`"mode": "add"`), plain(blended))
+	bm("ok_normal_removes_field", fa(`"mode": "normal"`), plain(blended))
+	bm("ok_normal_without_field_noop", fa(`"mode": "normal"`), plain())
+	bm("ok_same_mode_noop", fa(`"mode": "multiply"`), plain(blended))
+	bm("ok_image_clip", fa(`"mode": "screen"`), plain(image))
+	bm("err_validation_no_mode", fmt.Sprintf(`{"item_id": %q}`, itemA), plain())
+	bm("err_validation_unknown_mode", fa(`"mode": "dodge"`), plain())
+	bm("err_not_found", `{"item_id": "itm_zzzzzzzzzz", "mode": "screen"}`, plain())
+	bm("err_type_mismatch_audio_item", fmt.Sprintf(`{"item_id": %q, "mode": "screen"}`, itemB), audioItem)
 }

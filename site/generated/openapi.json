@@ -1048,6 +1048,16 @@
           "audio_muted": {
             "type": "boolean"
           },
+          "blend": {
+            "enum": [
+              "normal",
+              "multiply",
+              "screen",
+              "overlay",
+              "add"
+            ],
+            "type": "string"
+          },
           "blur": {
             "format": "double",
             "type": "number"
@@ -1858,6 +1868,7 @@
               "caption.split",
               "clip.add",
               "clip.remove_silences",
+              "clip.set_blend",
               "clip.set_blur",
               "clip.set_chroma_key",
               "clip.set_color",
@@ -1956,6 +1967,9 @@
           },
           "clip.remove_silences": {
             "$ref": "#/components/schemas/args.clip.remove_silences"
+          },
+          "clip.set_blend": {
+            "$ref": "#/components/schemas/args.clip.set_blend"
           },
           "clip.set_blur": {
             "$ref": "#/components/schemas/args.clip.set_blur"
@@ -3298,6 +3312,9 @@
               }
             ]
           },
+          "blend": {
+            "type": "string"
+          },
           "blur": {
             "format": "double",
             "type": "number"
@@ -4279,6 +4296,31 @@
         },
         "required": [
           "item_id"
+        ],
+        "type": "object"
+      },
+      "args.clip.set_blend": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A visual item.",
+            "type": "string"
+          },
+          "mode": {
+            "description": "normal, multiply, screen, overlay or add.",
+            "enum": [
+              "normal",
+              "multiply",
+              "screen",
+              "overlay",
+              "add"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "mode"
         ],
         "type": "object"
       },

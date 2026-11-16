@@ -99,6 +99,30 @@ func TestLayerCarriesFilterAndBlur(t *testing.T) {
 	}
 }
 
+func TestLayerCarriesBlend(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	it := clip("itm_b", trkBottom, 0, 10)
+	it.Blend = "screen"
+	put(d, it)
+
+	if l := Frame(d, 0).Layers[0]; l.Blend != "screen" {
+		t.Errorf("layer blend %q, want screen", l.Blend)
+	}
+
+	if w := Window(d, 0, 10); len(w.Layers) != 1 || w.Layers[0].Blend != "screen" {
+		t.Errorf("window layer lost the blend: %+v", w.Layers)
+	}
+
+	plain := newDoc()
+	put(plain, clip("itm_p", trkBottom, 0, 10))
+
+	if Frame(plain, 0).Layers[0].Blend != "" {
+		t.Error("an item with no blend must give none")
+	}
+}
+
 func TestLayerCarriesChromaKey(t *testing.T) {
 	t.Parallel()
 

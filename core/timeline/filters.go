@@ -1,8 +1,13 @@
 package timeline
 
+import "slices"
+
 // Filters is the fixed list of colour filters of a visual item (SDD-001 §3.4). They
 // are implemented in Go by the compositor, never by an FFmpeg filter (ADR-0011).
 var Filters = []string{"none", "grayscale", "sepia", "invert", "warm", "cool"}
+
+// Blends is the fixed list of blend modes of a visual item (SDD-004 §3.8); absent is "normal".
+var Blends = []string{"normal", "multiply", "screen", "overlay", "add"}
 
 // MaxBlur is the largest blur radius, in pixels at project resolution.
 const MaxBlur = 100
@@ -21,6 +26,9 @@ func (v *validator) filter(path, key string, it Item) {
 	}
 	if !inRange(it.FilterAmount, 0, 1) {
 		v.add(VShape, path+".filter_amount", key, "filter_amount must be between 0 and 1")
+	}
+	if it.Blend != "" && !slices.Contains(Blends, it.Blend) {
+		v.add(VShape, path+".blend", key, "blend must be one of normal, multiply, screen, overlay or add")
 	}
 	if k := it.ChromaKey; k != nil {
 		v.color(path+".chroma_key.color", key, k.Color, true)

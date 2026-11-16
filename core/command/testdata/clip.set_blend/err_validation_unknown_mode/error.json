@@ -1,0 +1,16 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.mode is \"dodge\", which is not one of the accepted values.",
+  "hint": "Use one of: normal, multiply, screen, overlay, add.",
+  "retryable": false,
+  "path": "args.mode",
+  "details": {
+    "allowed": [
+      "normal",
+      "multiply",
+      "screen",
+      "overlay",
+      "add"
+    ]
+  }
+}
