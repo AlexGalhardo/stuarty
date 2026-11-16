@@ -93,7 +93,11 @@ windows)
 *) die "unsupported os: $os" ;;
 esac
 
-work="$(mktemp -d)"
+# A fixed path: FFmpeg embeds its configure line (with --prefix) in the binaries, so a mktemp name would differ per build.
+work="${VUKEM_FFBUILD_DIR:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}/vukem-ffbuild}"
+case "$work" in ""|/) die "unsafe build directory" ;; esac
+rm -rf "$work"
+mkdir -p "$work"
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$out"
 out="$(cd "$out" && pwd)"
