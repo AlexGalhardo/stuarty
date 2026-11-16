@@ -585,6 +585,91 @@ The editor is a desktop tool. The supported minimum is 1280 by 720 CSS pixels. D
 
 At 1280 by 720 the preview region is 760 px wide and 392 px high after the top bar (48), the transport row (40) and the 240 px timeline. After the 16 px padding of §11.4 (16 px less in each dimension) the canvas box is 744 by 376 px, and a 9:16 canvas measures about 211 by 376 px; the user can collapse the library and the inspector (`Alt+1`, `Alt+2`, or the panel buttons) to give the preview the full width, and drag the timeline splitter down to 160 px. Minimum sizes: timeline 160 px, preview 240 px high, panels 200 px. Height below 600 px is allowed and only produces smaller regions with scroll in the inspector and library (each panel scrolls on its own; the page itself never scrolls).
 
+### 6.4 CapCut-familiar layout
+
+Decision D-038: a person who edits in CapCut should find the same places in the Vukem editor. The layout of §6.1 already has the classic arrangement (material on the left, player in the centre, properties on the right, timeline below), so this section changes what is inside each region and adds one menu; it does not move a region. The research is `development/search/capcut-gui.md` (private). That note is partial: its tab names come from fragments of public product pages and the proportions are not measured, so each row below is checked against the CapCut app by TASK-0242, and a difference found there changes this section. CapCut is named only for compatibility; no CapCut asset, icon, colour or text is used.
+
+**What does not change.** The thin-client rules of §1 hold for every control here: a control calls an action of the registry (`commands/actions.ts`) or a `surface.*` id, shows what the core answered and computes nothing. A list of effects, transitions, filters, presets, fonts or shapes is read from the core (the argument schemas of the registry, `getFonts`, the preset lists the core serves) and never written in TypeScript. A control whose command does not exist is not drawn (absent, not disabled), so the editor never shows a button that does nothing. The tokens are those of `docs/design-system.md` §2; this section adds none. The sizes of §6.1 to §6.3 are kept, and the widths and heights below are inside those regions.
+
+#### Screens
+
+| Screen | Route | What it holds | Change |
+| --- | --- | --- | --- |
+| Start (projects) | `/projects` | a primary "Create project" button, a grid of project cards (thumbnail, name, last edit, a menu with Rename and Delete, and Duplicate when the project API has it), the size preset chosen at creation (RF-002) | the page already lists projects; the grid and the card menu are the change. Project actions are the existing project endpoints, not timeline commands |
+| Editor | `/editor/{project_id}` | the regions of §6.1 | tab rail, inspector tabs, timeline toolbar and menu, below |
+| Export | dialog of §14 | name, size, frame rate, lint findings, progress; later bitrate, format and range | fields are added as the engine supports them; today the dialog keeps what §14 lists |
+| Shortcuts and settings | dialog of §18.2 | the cheat sheet, "Show tips again", and now the language, the theme and the version | the editor still has no settings page |
+| Dialogs | §4.4, §9.2, §13, §14 | import, export, palette, schema form, confirmations | unchanged |
+
+#### Material panel (the library region)
+
+The library region keeps its width (§6.3) and gets a vertical tab rail of 40 px at its left edge: `role="tablist"` with `aria-orientation="vertical"`, one icon button of 32 px per tab (24 px at least, §18.1 item 7), an `aria-label` and a tooltip from `t()`, roving `tabindex` with `Up`, `Down`, `Home` and `End`. The panel of the selected tab is `ui/Panel` (design system §4.3.2) with the header and body of §6.1. A tab is drawn only when the registry has the command it needs. The tabs, in this order:
+
+| Tab | Body | Command or surface | State today |
+| --- | --- | --- | --- |
+| Media | the import bar and asset cards of §13 | `asset.add`, `clip.add`, `audio.add` | exists |
+| Audio | asset cards of kind audio, then the audio actions of the selection: ducking and beat markers | `audio.add`, `audio.duck`, `audio.mark_beats` | exists (sound libraries are out of scope, D-016) |
+| Text | "Add text", the text presets, the fonts, "Add shape" | `text.add`, `text.apply_preset`, `shape.add`, `getFonts` | exists |
+| Captions | "Generate captions" (§12.4), the caption styles, the track style | `caption.from_transcript`, `caption.set_style`, `track.set_caption_style` | exists |
+| Effects | the effect list served by the core | the effect commands (card NEW-18 of TASK-0232) | needs command |
+| Transitions | the transition kinds served by the core, grouped as the core groups them | `item.set_transition`, `item.crossfade` | exists (few kinds; more with the card NEW-16) |
+| Filters | the filter names served by the core, with an amount slider | `clip.set_filter` | exists |
+| Templates | the slots of the project and the template info | `slot.fill`, `slot.mark`, `template.set_info` | exists |
+| History | the history panel of §15 | `undo`, `redo` and the history endpoints | exists (ALPHA) |
+
+A card in Effects, Transitions or Filters applies to the selection with one command; with nothing selected it is disabled, with the reason in `aria-describedby`. A thumbnail of an effect is drawn by the same `ViewFrame` request as the player and is optional; without it the card shows the name. `Alt+1` still toggles the whole region (§18.2).
+
+#### Player
+
+The preview region keeps the canvas box and the transport row of §11. The transport row gains, at its right: the aspect ratio selector (the size presets of RF-002, calling `settings.set`), "Fit", the safe-area toggle (exists) and "Full screen" (`surface.preview_fullscreen`, §18.7). Time shows the project's `timeDisplay`. Nothing is added inside the canvas box.
+
+#### Properties panel (the inspector region)
+
+The inspector keeps the sections of §12.1, now behind a tab strip of 36 px under the panel header, so the person finds them where a CapCut editor puts them. The tab of a section is drawn only when the selection has the section.
+
+| Tab | Sections of §12.1 inside it |
+| --- | --- |
+| Video | Name, Timing, Transform, Framing, Keyframes, Transitions |
+| Audio | Audio, Silences |
+| Speed | Speed (and, when it exists, the speed curve) |
+| Animation | Animation |
+| Adjust | Color (and, when they exist, the advanced colour controls) |
+| Text | Text, Shape, Caption words, Caption style, Auto captions |
+
+The project panel, the track panel and the template sections have no tab strip. The keyframe diamond sits beside each animatable field (§12.1 Transform) and sends `keyframe.set`. A selection of several items shows only the tabs they share.
+
+#### Timeline toolbar and track headers
+
+The toolbar of §6.1 (40 px) holds, left to right: the tools "Select" and "Blade" (`surface.tool`), Undo and Redo, Split, Trim start, Trim end, Delete, Add caption, Snap, the main-track magnet when it exists, the audio-video link when it exists, and at the right the zoom controls with the slider (the slider is ALPHA, §6.1). Icons are those of `docs/design-system.md` §5.1. A text button collapses to its icon when the toolbar is narrow (design system §4.3.1). The track header (176 px) keeps name, hide or mute, drag handle and menu.
+
+#### Menu
+
+The editor has one menu, in two forms with the same content:
+
+- On the web, a "Menu" button at the left of the top bar opens a shadcn `DropdownMenu`.
+- In the desktop shell the items are the native menu bar (§21.3 item 4), and the in-page button is not drawn (feature-detected with `window.vukemDesktop`).
+
+Both call the same actions, the shell through `onMenuAction`. An item is drawn only when its action exists, and the key shown beside it is read from `SHORTCUTS` (§18.7), never written twice.
+
+| Menu | Items | Action |
+| --- | --- | --- |
+| File | New project, Open project, Import media, Export, Quit (the shell only) | `surface.new_project`, `surface.open_project`, `surface.import`, `surface.export` |
+| Edit | Undo, Redo, Cut, Copy, Paste, Select all, Delete, Duplicate | `undo`, `redo`, `surface.clipboard`, `surface.select_all`, `deleteSelection`, `duplicateSelection` |
+| Clip | Split, Trim start, Trim end, Speed, Rename and, when they exist, Reverse, Freeze frame, Group, Disable | `splitAtPlayhead`, `trimToPlayhead`, `surface.open_inspector_tab("speed")`, `renameItem` |
+| Timeline | Add track, Snap, Add caption, Add text, Add shape and, when they exist, the magnet and the markers | `addTrack`, `surface.toggle_snap`, `addCaption`, `addText`, `addShape` |
+| View | Library, Inspector and History panels, Zoom in, out and fit, Full screen preview, Theme, Language | `surface.toggle_panel`, `surface.zoom`, `surface.preview_fullscreen` |
+| Help | Keyboard shortcuts, Documentation, About (the version) | `surface.cheat_sheet`, `surface.about` |
+
+The context menu of a clip repeats the Clip menu and adds Copy, Cut, Paste, Duplicate, Delete and Ripple delete (§8).
+
+#### Accessibility and tests
+
+The tab rail and the tab strips follow the tabs pattern with roving `tabindex`; `F6` visits the regions in the order top bar, library, preview, timeline, inspector (§18.2). Every new region keeps its landmark and its `aria-label` (§18.1). Each screen or panel has an e2e test of its controls and an `axe` check in both themes and both languages; the strings are in the catalogues (§16) and checked by `check:i18n`. A control tied to a command that does not exist yet has no test and is not drawn.
+
+#### Order of work
+
+One card per screen or panel (listed in the report of TASK-0241): the tab rail with the Media, Text and Captions panels first, because their commands exist; then the inspector tabs, the timeline toolbar, the menu and the player row. Effects and the controls of new commands wait for the core cards of TASK-0232. The desktop menu bar is its own card for the shell (`desktop/`).
+
 ## 7. Timeline component
 
 ### 7.1 DOM structure
@@ -1584,7 +1669,7 @@ The shell loads this UI with the same `app.css`, tokens, bundled fonts and compo
 1. **Size.** Minimum inner size 1280 by 640 CSS pixels: 1280 is the supported minimum width of §6.3, and 640 fits a 1366 by 768 laptop after the taskbar and title bar while staying above the 600 px height §6.3 allows. Default inner size 1600 by 900, or maximized when the screen is smaller. The shell remembers position and size. The tolerated and unsupported widths of §6.3 therefore never occur in the window.
 2. **Chrome.** Native title bar and decorations; no custom title bar and no draggable CSS region.
 3. **First paint.** The window background is `oklch(0.16 0 0)` (dark `--ed-bg`) before the page loads, so there is no white flash. The theme rule of §17 item 1 applies inside the webview unchanged.
-4. **Menus (D-030).** A native menu bar: File (Import files, Export), Edit (Undo, Redo, Select all), View (toggle panels, zoom, theme, language), Help (documentation, version). Each item calls the same action as its in-page control through `window.vukemDesktop.onMenuAction` (§13.1). `Mod+Z`, `Mod+Shift+Z` and `Mod+A` are shown next to Undo, Redo and Select all but are **not registered as native accelerators**: the key reaches the webview, where §18.2 decides (native undo and select-all inside an editable field, project undo and select-all elsewhere). Other accelerators may be registered only for keys that mean the same in every focus context.
+4. **Menus (D-030).** A native menu bar with the items of the menu table of §6.4 (File, Edit, Clip, Timeline, View, Help); an item is present only when its action exists, so in the first desktop release it is File (Import files, Export), Edit (Undo, Redo, Select all), View (toggle panels, zoom, theme, language) and Help (documentation, version). Each item calls the same action as its in-page control through `window.vukemDesktop.onMenuAction` (§13.1). `Mod+Z`, `Mod+Shift+Z` and `Mod+A` are shown next to Undo, Redo and Select all but are **not registered as native accelerators**: the key reaches the webview, where §18.2 decides (native undo and select-all inside an editable field, project undo and select-all elsewhere). Other accelerators may be registered only for keys that mean the same in every focus context.
 5. **Theme of the chrome (D-030).** The UI calls `window.vukemDesktop.setTheme(theme)` at boot and on every toggle; the shell sets the native title bar to match.
 
 ## 22. Acceptance
