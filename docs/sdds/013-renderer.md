@@ -55,7 +55,7 @@ One call renders one frame. The input is this object (the **render input**):
 ```
 
 - `version` is the integer `RenderInputVersion` (SDD-000 §12), 1 in this SDD. A renderer that does not know the number refuses the call with `unsupported_version` (§7) and never guesses. A new field, a changed rule or a changed default that alters a single pixel is a new version; a field that no pixel depends on (a name, an id) may be added without one. Host and module ship in one build, so a mismatch can only come from a stale cache, and the answer is to reload.
-- `output.width` and `output.height` are the pixels of the frame to write, whole numbers from 1 to 4096 each (§7). `output.scale` is `outScale` of SDD-004 §6: every position and size of the plan is multiplied by it. The host computes `width = round(plan.width x scale)` and `height = round(plan.height x scale)` with `round` as in SDD-004 §6 (half up), except for the one caller that owns the rounding of the height (the size table of SDD-003 §3.11), which passes both; the renderer does not recompute them and does not check the relation, because the preview draws the paused frame at a width that is not a divisor of the project's.
+- `output.width` and `output.height` are the pixels of the frame to write, whole numbers from 1 to 4096 each (§7). `output.y0` and `output.y1` are optional: when present the renderer draws only the rows `[y0, y1)` of that frame and writes only them (the Go export gives each band its rows, §4.6); without them it draws every row. `output.scale` is `outScale` of SDD-004 §6: every position and size of the plan is multiplied by it. The host computes `width = round(plan.width x scale)` and `height = round(plan.height x scale)` with `round` as in SDD-004 §6 (half up), except for the one caller that owns the rounding of the height (the size table of SDD-003 §3.11), which passes both; the renderer does not recompute them and does not check the relation, because the preview draws the paused frame at a width that is not a divisor of the project's.
 - `plan` is the `FramePlan` of SDD-004 §2 with exactly the JSON names of `core/plan` (`json:` tags of `plan.FramePlan`, `plan.Layer`, `plan.Rect` and `plan.BitmapSpec`). It is not a second schema: the Go type is the schema, `core/schema` publishes it, and the Rust types are generated from or checked against that schema by a test.
 
 ### 2.2 The layer
@@ -204,3 +204,149 @@ These rules make §3.1 to §3.7 give the same bytes on Linux, macOS, Windows and
 - `div255` equals `x / 255` rounded to nearest for every `x` from 0 to 65535, in Rust and in Go; `sincos` equals the Go `sincos` bit for bit over 10,000 angles in `[-1000, 1000]` and at every multiple of 15 degrees.
 - The same Rust test suite runs natively on the three operating systems and in WebAssembly under `wazero`, and prints the same SHA-256 of the golden frames.
 - Stage D gate: §3.8 on every golden case.
+
+## 4. The host interface
+
+### 4.1 One module, no imports
+
+The renderer is a Cargo workspace under `renderer/` (ADR-0029 item 2). Two builds come out of it, and the difference is the only reason there are two:
+
+| Build | Target | Carries | Used by |
+| --- | --- | --- | --- |
+| **core module** | `wasm32-unknown-unknown`, plain exports (below) | the CPU path of §3 | the Go export through `wazero`; the browser worker as the CPU fallback |
+| **GPU module** | `wasm32-unknown-unknown` with `wasm-bindgen` glue | the CPU path and the `wgpu` path of §3.8 | the browser worker, on WebGPU |
+
+**Decision of this SDD (DS-1).** The core module is built without `wasm-bindgen`: `wasm-bindgen` output imports a table of helper functions from its JavaScript glue, and ADR-0029 requires that the module the Go export runs has **no import except its memory**, so that it cannot reach a file, the network or the clock. The core module exports plain C-ABI functions, so both hosts load it without glue code (the browser with `WebAssembly.instantiate`, Go with `wazero`). The GPU module may import what `wgpu` needs from the browser, and runs only in the browser's worker, where the browser's own sandbox is the boundary.
+
+The core module has these properties, each tested (§4.8):
+
+1. It declares **no import**. `wasm-objdump -x` (or `wazero`'s `CompiledModule.ImportedFunctions()`) lists none.
+2. It exports its memory as `memory` and the functions of §4.2, and nothing else.
+3. It declares a **maximum** memory size (65,536 pages of 64 KiB would be 4 GiB; the module declares 16,384 pages, 1 GiB) and a panic aborts the call with the `unreachable` instruction, which the host turns into `render_trap` (§7).
+4. It is single threaded, has no start function that runs code, and uses no `simd128` unless §3.9 rule 6 allows it.
+5. It is a build artifact: reproducible, embedded in the Go binary with `go:embed`, served to the browser at `/assets/renderer-<sha256 first 12 hex>.wasm`, and checked by digest like every pinned input (ADR-0029, Consequences).
+
+### 4.2 The exports
+
+All numbers are `i32` or `u32` (WebAssembly `i32`), pointers are offsets into `memory`, and a length is in bytes. The host owns every buffer it passes; the module never keeps a pointer between calls, it copies what it needs to keep.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `vr_api_version` | `() -> u32` | `API_VERSION` of `renderer/vukem-renderer/src/lib.rs`, 1 here. A host refuses a module whose number it does not know (`unsupported_version`) before any other call |
+| `vr_alloc` | `(len: u32) -> u32` | reserves `len` bytes, 8-aligned, and returns the offset; 0 when the module is out of memory (`out_of_memory`). `len` 0 returns a valid non-null offset |
+| `vr_free` | `(ptr: u32, len: u32)` | releases a block obtained from `vr_alloc` with the same `len` |
+| `vr_init` | `(max_texture_bytes: u32, max_bitmap_bytes: u32) -> i32` | prepares an empty renderer with its two budgets (§7); a second call resets it. The status is 0 or a negative code of §4.5 |
+| `vr_put_texture` | `(id_ptr: u32, id_len: u32, width: u32, height: u32, rgba_ptr: u32, opaque: u32) -> i32` | stores the pixels of a media layer under the item id (`id_len` at most 64 bytes of ASCII): `width x height x 4` bytes of premultiplied RGBA; `opaque` 1 when every alpha is 255. Replaces the texture of that id. The module copies the pixels |
+| `vr_put_bitmap` | `(key_ptr: u32, key_len: u32, width: u32, height: u32, natural_w: f64, natural_h: f64, center_dx: f64, center_dy: f64, rgba_ptr: u32) -> i32` | stores a bitmap of the rasterizer (§2.5) under its 64-character key: `width x height x 4` bytes of straight alpha; the module premultiplies it once |
+| `vr_release` | `(id_ptr: u32, id_len: u32) -> i32` | forgets the texture or bitmap with that id or key; an unknown one is not an error |
+| `vr_render` | `(in_ptr: u32, in_len: u32, out_ptr: u32, out_len: u32) -> i32` | reads the render input of §2 (UTF-8 JSON, `in_len` at most 1 MiB), draws it, and writes `width x height x 4` bytes at `out_ptr`; `out_len` must be exactly that. The status is 0 or a negative code of §4.5 |
+| `vr_error` | `(buf_ptr: u32, buf_len: u32) -> u32` | copies the message of the last failed call (UTF-8, truncated to `buf_len`, no personal data: ids and keys only) and returns its full length |
+
+`f64` parameters are part of the export signature. A host that cannot pass a double (none of ours) passes them through a block written with `vr_alloc`; that form is not defined because no host needs it.
+
+Textures and bitmaps live in the module's memory between calls, so a preview that scrubs over the same layers uploads each frame of video once (§5) and each bitmap once per key. They are evicted by the host with `vr_release`, or all at once by `vr_init`. The module itself never evicts: it counts the bytes against the two budgets of `vr_init` and refuses a `put` that would pass them with `limit_exceeded` (§7), so the host decides what to drop.
+
+### 4.3 One render, in order
+
+A host renders a frame with this sequence, and no other is supported:
+
+1. `vr_alloc` the output block of `output.width x output.height x 4` bytes, once, and reuse it while the size is the same.
+2. For every media layer of the plan not already uploaded, `vr_alloc` the pixels, write them, `vr_put_texture`, `vr_free` (§5).
+3. For every bitmap layer whose key is not already stored, the same with `vr_put_bitmap` (§2.5).
+4. `vr_alloc` the input, write the render input, `vr_render`, `vr_free` the input.
+5. Read the frame from the output block. A status other than 0 means the output block holds nothing to use.
+
+A `vr_render` that needs a texture or a bitmap the module does not hold fails with `missing_texture` (§7) and names the item or the key in `vr_error`; the host uploads it and calls again. `vr_render` never blocks, never retries and never reads anything the host did not put in memory.
+
+### 4.4 Memory and ownership rules
+
+1. The host owns every block. The module reads `in_ptr`, `rgba_ptr` and the id and key blocks during the call only, and writes `out_ptr` during `vr_render` only.
+2. A block is valid from `vr_alloc` to `vr_free`; a pointer used after `vr_free`, or a length that does not match, is a host bug and is not defended against by the module beyond staying inside its own memory (every access is bounds-checked by WebAssembly; the module is built with overflow checks on in release).
+3. The memory may grow during `vr_alloc`, `vr_put_texture` and `vr_put_bitmap`, which moves nothing but invalidates a host's `ArrayBuffer` view in the browser (`memory.buffer` is a new object): the host re-reads `memory.buffer` after each call that may allocate. `wazero`'s `Memory().Read` has no such trap.
+4. The module's peak memory for one render is the stored textures and bitmaps, plus the scratch of one layer at the size of §3.4 and §3.5, plus the output block; the budgets of §7 keep that below the declared maximum.
+
+### 4.5 Status codes
+
+`vr_init`, `vr_put_*`, `vr_release` and `vr_render` return `0` for success and a negative number for a failure. The numbers are the `reason` strings of §7, in this order; the mapping is part of the API version.
+
+| Status | `reason` |
+| --- | --- |
+| -1 | `invalid_plan` |
+| -2 | `unsupported_version` |
+| -3 | `unsupported_layer` |
+| -4 | `missing_texture` |
+| -5 | `limit_exceeded` |
+| -6 | `out_of_memory` |
+| -7 | `invalid_argument` |
+
+A trap (`unreachable`, an out-of-bounds access the module's own checks missed, a stack overflow) does not come back as a status: the host sees it as a failed call on the instance and reports `render_trap`. After a trap the instance is discarded and a new one is created; its stored textures are gone and the host uploads again.
+
+### 4.6 The Go host
+
+The Go export runs the core module through `wazero` (pure Go, no cgo; approved for this use by the author, AGENTS.md rule 9) in a package `engine/renderhost`. The package is the only place that knows the exports of §4.2.
+
+```go
+package renderhost
+
+// Host runs one instance of the core module. It is not safe for concurrent use.
+type Host struct{ /* wazero runtime, module, memory, budgets */ }
+
+// New compiles the embedded module once per process (the CompiledModule is shared) and
+// instantiates it for one band. The module is refused unless it has no import and its
+// vr_api_version is 1.
+func New(ctx context.Context, cfg Config) (*Host, error)
+
+// PutTexture uploads the premultiplied RGBA pixels of a media layer.
+func (h *Host) PutTexture(item string, w, h int, rgba []byte, opaque bool) error
+// PutBitmap uploads a bitmap of engine/raster under its key.
+func (h *Host) PutBitmap(key string, bm raster.Bitmap) error
+func (h *Host) Release(id string) error
+// Render draws the frame into dst (RGBA, no stride padding, exactly output.width x output.height).
+func (h *Host) Render(ctx context.Context, in RenderInput, dst *image.RGBA) error
+func (h *Host) Close(ctx context.Context) error
+```
+
+- **Sandbox.** The `wazero` runtime is configured with no WASI, no file system, no clock (no `WithSysWalltime`, `WithSysNanotime` or `WithSysNanosleep`), no random source, no environment and no arguments. The module has no import to satisfy, so there is no host function module either. This is what the threat row that ADR-0029 adds to SDD-007 relies on, and its test is in §4.8.
+- **Limits.** `WithMemoryLimitPages(16384)`, the same as the module's declared maximum; `WithCloseOnContextDone(true)`, so cancelling an export stops a render that is in progress (the export's own cancel, SDD-004 §8, reaches it). A frame has no deadline of its own: the export's cancel and its overall deadline (SDD-007 §6.5) reach it through the context.
+- **Bands.** The compositor of SDD-004 §12 splits a frame into bands that run in goroutines. The Rust module is single threaded, so the host runs one instance per band and gives each a `vr_render` of the rows it owns: the render input of a band carries `output.y0` and `output.y1` (§2.1; absent for the whole frame) and the module draws only those rows of the full output, which is why a band never changes a byte (§3.9 rule 5). The number of instances is the number of bands of the export, at most 8.
+- **Errors.** A non-zero status becomes a `*renderhost.Error{Reason, Detail}`; the export maps it to `E_EXPORT_FAILED` with `details.reason` (§7). A trap discards the instance, and the export fails, it does not retry on a new instance (a trap on the same input is deterministic).
+- **Frames in.** The export keeps decoding with FFmpeg (§5.2) and hands each decoded frame to `PutTexture`; the compositor stays in Go until stage C's gate passes (ADR-0029 item 8).
+
+### 4.7 The browser worker protocol
+
+The preview owns one dedicated module worker, `renderWorker.ts` in `web/resources/js/editor/preview/`, created with `new Worker(url, {type: "module"})` from a same-origin script (SDD-007 §3.6: no inline worker, no `blob:` URL; the CSP of the editor must allow `worker-src 'self'`). The main thread never calls the module: it posts messages and receives frames.
+
+Messages from the main thread to the worker:
+
+| `type` | Fields | Effect |
+| --- | --- | --- |
+| `init` | `module` (the `/assets/renderer-<digest>.wasm` URL), `canvas` (an `OffscreenCanvas`, transferred, for the GPU path), `prefer` (`"gpu"` or `"cpu"`), `budgets` | fetches and instantiates the module, checks `vr_api_version`, chooses the path, calls `vr_init` |
+| `texture` | `id`, `frame` (an `ImageBitmap` or a `VideoFrame`, transferred), `opaque` | uploads a media layer's pixels (§5.1); the worker closes the transferred object after the copy |
+| `bitmap` | `key`, `bitmap` (an `ImageBitmap`), `natural`, `center` | uploads a bitmap |
+| `release` | `ids` | `vr_release` for each |
+| `render` | `seq`, `input` (the render input of §2) | draws a frame |
+| `dispose` | none | frees the module, closes every `VideoFrame` still held, ends the worker |
+
+Messages from the worker:
+
+| `type` | Fields | Meaning |
+| --- | --- | --- |
+| `ready` | `apiVersion`, `path` (`"gpu"` or `"cpu"`) | the module is initialised; `path` is what was chosen |
+| `frame` | `seq`, `bitmap` (an `ImageBitmap`, transferred) or, on the GPU path, `presented: true` | the frame of `seq` is drawn; the CPU path returns the pixels, the GPU path draws on the canvas it was given |
+| `error` | `seq` (absent for `init`), `reason`, `detail` | a failure with a `reason` of §7; for `missing_texture`, `detail` names the item or key and the main thread uploads it and posts the same `render` again |
+
+Rules:
+
+1. **At most one render in flight.** The main thread does not post a `render` while one is pending; it keeps the newest request and posts it when the answer comes. A scrub therefore costs one frame of latency, not a queue.
+2. **Latest wins.** A `frame` whose `seq` is older than the newest `render` posted is dropped by the main thread and its bitmap closed.
+3. **Every `VideoFrame` is closed** by the worker after its pixels are copied or its texture is created (§5.1), on the error paths too. A leak is a failed test (§4.8).
+4. **The worker has no network access of its own**: the module URL and the media come through messages and `fetch` calls the main thread allows by CSP (`connect-src 'self'`).
+5. **WebGPU loss.** On `device lost` the worker answers every pending and following `render` with `error` and `reason: "device_lost"`, then tries once to re-create the device; if that fails it switches to the CPU path and sends `ready` with `path: "cpu"`. The main thread then resends the textures it still has.
+6. **Fallback.** With no adapter (`navigator.gpu` missing or `requestAdapter()` null) or `prefer: "cpu"`, the worker uses the core module and draws on a 2D canvas (`ImageData`), the same pixels as the export's CPU path.
+
+### 4.8 Acceptance of this section
+
+- `TestCoreModuleHasNoImports` (Go): the embedded module has zero imported functions, memories, tables and globals, exports exactly `memory` and the functions of §4.2, and `vr_api_version` returns 1.
+- `TestRenderHostIsSandboxed` (Go): a module compiled for the test that tries to import `wasi_snapshot_preview1` or `env` fails to instantiate, and the production configuration has no clock or file system (the test inspects the `wazero` configuration the host builds).
+- `TestRenderHostCancels` (Go): cancelling the context of a long render returns `context.Canceled` within 1 s and leaves no goroutine.
+- A Vitest and a Playwright test for the worker: a render answers `frame` with the `seq` asked; two renders posted in a row draw only the newest; the `VideoFrame` count reported by the worker is 0 after 500 renders with uploads (the leak check of stage B's gate); `missing_texture` is answered by an upload and a second `render`, not by a black frame.
