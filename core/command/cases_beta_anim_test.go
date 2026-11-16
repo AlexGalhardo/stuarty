@@ -41,5 +41,18 @@ func init() {
 	ca("ok_animated_image_default_5s_loops", args(vidTr, ``), anim)
 	ca("ok_animated_image_explicit_duration", args(vidTr, `, "duration": "2s"`), anim)
 	ca("ok_sticker_on_an_upper_track", args(upperTrack, `, "duration": "3s"`), withUpper)
+	bigLogo := func() *B {
+		return withUpper().with(func(d *timeline.Document) {
+			a := d.Assets[imgAsset]
+			a.Width, a.Height = 4000, 3000
+			d.Assets[imgAsset] = a
+		})
+	}
+	logoArgs := func(extra string) string {
+		return `{"track_id": "` + upperTrack + `", "asset_id": "` + imgAsset + `", "start": "1s", "id": "` + itemB + `"` + extra + `}`
+	}
+	ca("ok_image_on_an_upper_track_keeps_natural_size", logoArgs(``), withUpper)
+	ca("ok_image_on_an_upper_track_larger_than_frame_is_contained", logoArgs(``), bigLogo)
+	ca("ok_image_on_an_upper_track_explicit_fit", logoArgs(`, "fit": "cover"`), withUpper)
 	ca("err_validation_source_in_on_animated_image", args(vidTr, `, "source_in": "1s"`), anim)
 }
