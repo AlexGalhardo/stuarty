@@ -43,7 +43,7 @@ const LOADING =
 /** The host of every http(s) URL in text, read with the URL parser rather than a pattern on the host. */
 export function hostsIn(text: string): string[] {
 	const hosts = new Set<string>();
-	for (const [candidate] of text.matchAll(/\bhttps?:\/\/[^\s"'<>()\\]+/gi)) {
+	for (const [candidate] of text.matchAll(/\bhttps?:\/\/[^\s"'<>()`${}\\]+/gi)) {
 		try {
 			hosts.add(new URL(candidate).hostname.toLowerCase());
 		} catch {
@@ -246,7 +246,7 @@ function main(): number {
 		console.error("out/ does not exist: run `npm run build` first");
 		return 1;
 	}
-	const siteUrl = new URL(process.env.SITE_URL || "https://alexgalhardo.github.io/vukem-video");
+	const siteUrl = new URL(process.env.SITE_URL || "https://video.vukem.dev");
 	const base = siteUrl.pathname.replace(/\/$/, "");
 	const problems: string[] = [];
 	const files = walk(outDir);
