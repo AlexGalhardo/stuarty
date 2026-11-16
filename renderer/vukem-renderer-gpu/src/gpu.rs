@@ -4,9 +4,10 @@ use core::fmt;
 use std::mem::size_of;
 
 use vukem_renderer::blend::BlendMode;
-use vukem_renderer::compose::{Layer, Prepared, Target, parse_colour, prepare_layer};
+use vukem_renderer::compose::{Layer, Prepared, Target, copy_origin, parse_colour, prepare_layer};
 use vukem_renderer::error::{Error, Reason};
 use vukem_renderer::host::Renderer;
+use vukem_renderer::mask::MaskGeometry;
 use vukem_renderer::plan::decode;
 use wgpu::util::{BufferInitDescriptor, DeviceExt, TextureDataOrder};
 
@@ -116,7 +117,7 @@ impl GpuRenderer {
 		};
 		let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
 			label: Some("layer"),
-			entries: &[uniform(0), uniform(1), texture(2), texture(3)],
+			entries: &[uniform(0), uniform(1), texture(2), texture(3), uniform(4)],
 		});
 		let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
 			label: Some("layer"),
@@ -390,6 +391,12 @@ impl GpuRenderer {
 			TextureDataOrder::LayerMajor,
 			&img.pix[..img.w * img.h * 4],
 		);
+		let copy = copy_origin(img.w, img.h, &p.placement).is_some();
+		let mask = self.device.create_buffer_init(&BufferInitDescriptor {
+			label: Some("mask"),
+			contents: &mask_bytes(p.mask.as_ref().map(|m| m.geometry(copy)).as_ref()),
+			usage: wgpu::BufferUsages::UNIFORM,
+		});
 		let params = self.device.create_buffer_init(&BufferInitDescriptor {
 			label: Some("layer"),
 			contents: &layer_bytes(img.w, img.h, p.op, p.blend),
@@ -416,6 +423,10 @@ impl GpuRenderer {
 				wgpu::BindGroupEntry {
 					binding: 3,
 					resource: wgpu::BindingResource::TextureView(backdrop),
+				},
+				wgpu::BindGroupEntry {
+					binding: 4,
+					resource: mask.as_entire_binding(),
 				},
 			],
 		});
@@ -455,6 +466,34 @@ fn layer_bytes(w: usize, h: usize, op: u32, blend: BlendMode) -> Vec<u8> {
 	let mut v = f32_bytes(&[w as f32, h as f32, op as f32 / 255.0]);
 	v.extend_from_slice(&mode.to_le_bytes());
 	v
+}
+
+/// The uniform of a layer's mask: four `vec4<f32>`, all zero when the layer has none. The first
+/// holds the map of `x` and the enabled flag, the second the map of `y`, the third the corner and
+/// half-extents of the shape and the fourth the feather, the shape and the invert flag.
+fn mask_bytes(m: Option<&MaskGeometry>) -> Vec<u8> {
+	let Some(m) = m else {
+		return f32_bytes(&[0.0; 16]);
+	};
+	let flag = |b: bool| if b { 1.0 } else { 0.0 };
+	f32_bytes(&[
+		m.map[0] as f32,
+		m.map[1] as f32,
+		m.map[2] as f32,
+		1.0,
+		m.map[3] as f32,
+		m.map[4] as f32,
+		m.map[5] as f32,
+		0.0,
+		m.left as f32,
+		m.top as f32,
+		m.half_w as f32,
+		m.half_h as f32,
+		m.feather as f32,
+		flag(m.ellipse),
+		flag(m.invert),
+		0.0,
+	])
 }
 
 fn f32_bytes(v: &[f32]) -> Vec<u8> {
