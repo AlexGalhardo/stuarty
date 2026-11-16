@@ -15,7 +15,7 @@ import {
 } from "../../commands/units";
 import { useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
-import { DISPLAY } from "../display";
+import { readTimeDisplay } from "../../state/prefs";
 import TextField from "../fields/TextField";
 import TimeCommitField from "../fields/TimeCommitField";
 import Section from "../Section";
@@ -77,24 +77,24 @@ export default function ItemSections({
 			<Section title={t("ui.editor.inspector.timing")}>
 				<TimeCommitField
 					label={t("ui.editor.inspector.start")}
-					stored={displayStart(timed, fps, DISPLAY)}
+					stored={displayStart(timed, fps, readTimeDisplay())}
 					disabled={!canEdit}
 					commit={(start) => send(moveOperations(itemId, start))}
 				/>
 				<TimeCommitField
 					label={t("ui.editor.inspector.end")}
-					stored={displayEnd(timed, fps, DISPLAY)}
+					stored={displayEnd(timed, fps, readTimeDisplay())}
 					disabled={!canEdit}
 					commit={(to) => send(trimEndOperations(itemId, to))}
 				/>
 				<ReadOnlyRow
 					label={t("ui.editor.inspector.duration")}
-					value={displayDuration(timed, fps, DISPLAY)}
+					value={displayDuration(timed, fps, readTimeDisplay())}
 				/>
 				{hasSource && (
 					<ReadOnlyRow
 						label={t("ui.editor.inspector.in_point")}
-						value={displayInPoint(timed, fps, DISPLAY)}
+						value={displayInPoint(timed, fps, readTimeDisplay())}
 					/>
 				)}
 			</Section>

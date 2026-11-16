@@ -8,7 +8,6 @@ import {
 	extentPx,
 	fitZoom,
 	formatRulerLabel,
-	formatTimecode,
 	nextZoom,
 	rulerStep,
 	sortByStart,
@@ -86,7 +85,6 @@ describe("ruler", () => {
 		expect(formatRulerLabel(150, DEFAULT_FPS, "m:ss")).toBe("0:05");
 		expect(formatRulerLabel(3900, DEFAULT_FPS, "m:ss")).toBe("2:10");
 		expect(formatRulerLabel(375, DEFAULT_FPS, "s+ff")).toBe("12+15");
-		expect(formatTimecode(375, DEFAULT_FPS)).toBe("00:12:15");
 	});
 
 	test("NTSC rate steps are whole frames", () => {

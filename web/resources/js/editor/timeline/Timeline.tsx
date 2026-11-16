@@ -12,12 +12,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { bindingFor } from "../commands/keymapStore";
+import { formatTime } from "../commands/units";
 import { useActions } from "../commands/useActions";
 import {
 	useDocumentState,
 	useRuntime,
 	useUiState,
 } from "../state/EditorContext";
+import { readTimeDisplay } from "../state/prefs";
 import {
 	selectEndFrame,
 	selectFps,
@@ -33,7 +35,6 @@ import {
 	extentPx,
 	type Fps,
 	fitZoom,
-	formatTimecode,
 	framesPerSecond,
 	frameToContentX,
 	nextZoom,
@@ -375,7 +376,7 @@ export default function Timeline(): ReactNode {
 					{t("ui.editor.timeline.snap")}
 				</Button>
 				<span className="ml-auto font-mono text-xs text-muted-foreground tabular-nums">
-					{formatTimecode(playhead, fps)}
+					{formatTime(playhead, fps, readTimeDisplay())}
 				</span>
 			</div>
 

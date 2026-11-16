@@ -1,6 +1,11 @@
 import { type ReactNode, useEffect, useRef } from "react";
+import { readTimeDisplay } from "../state/prefs";
+import { formatTime } from "../ui/timeFormat";
 
-import { formatTimecode, type TimecodeRate } from "../ui/timecode";
+interface TimecodeRate {
+	num: number;
+	den: number;
+}
 
 // Geist with tabular numbers, not a monospace face (SDD-012 section 11.5).
 export default function Timecode({
@@ -18,7 +23,7 @@ export default function Timecode({
 			aria-label={label}
 			className="text-xs [font-variant-numeric:tabular-nums]"
 		>
-			{formatTimecode(frame, fps)}
+			{formatTime(frame, fps, readTimeDisplay())}
 		</span>
 	);
 }
@@ -41,7 +46,7 @@ export function LiveTimecode({
 		() =>
 			subscribe((frame) => {
 				if (ref.current !== null) {
-					ref.current.textContent = formatTimecode(frame, fps);
+					ref.current.textContent = formatTime(frame, fps, readTimeDisplay());
 				}
 			}),
 		[subscribe, fps],
@@ -53,7 +58,7 @@ export function LiveTimecode({
 			aria-label={label}
 			className="text-xs [font-variant-numeric:tabular-nums]"
 		>
-			{formatTimecode(initial, fps)}
+			{formatTime(initial, fps, readTimeDisplay())}
 		</span>
 	);
 }

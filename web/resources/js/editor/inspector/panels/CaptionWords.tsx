@@ -16,19 +16,16 @@ import {
 	fpsOf,
 	localizeDecimalInput,
 	normalizeTimeInput,
-	type TimeDisplay,
 } from "../../commands/units";
 import { useActions, useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
-import { readTimeUnit } from "../../state/prefs";
+import { readTimeDisplay, readTimeUnit } from "../../state/prefs";
 import type { CommitResult } from "../fields/commitField";
 import { FieldMessage } from "../fields/FieldFrame";
 import TextAreaField from "../fields/TextAreaField";
 import { useCommitField } from "../fields/useCommitField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
-
-const DISPLAY: TimeDisplay = "timecode";
 
 // One cell of the word table: Enter or blur commits, Esc discards, like every
 // field of the inspector (SDD-012 section 12.3).
@@ -188,7 +185,7 @@ export default function CaptionWords({
 										<Cell
 											mono
 											label={t("ui.editor.caption_words.start_of", { n })}
-											stored={formatTime(word.start, fps, DISPLAY)}
+											stored={formatTime(word.start, fps, readTimeDisplay())}
 											disabled={!canEdit}
 											commit={timeCell(index, "start")}
 										/>
@@ -197,7 +194,7 @@ export default function CaptionWords({
 										<Cell
 											mono
 											label={t("ui.editor.caption_words.duration_of", { n })}
-											stored={formatTime(word.duration, fps, DISPLAY)}
+											stored={formatTime(word.duration, fps, readTimeDisplay())}
 											disabled={!canEdit}
 											commit={timeCell(index, "duration")}
 										/>

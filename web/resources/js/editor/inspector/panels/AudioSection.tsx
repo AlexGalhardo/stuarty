@@ -5,7 +5,7 @@ import { audioOperations } from "../../commands/builders";
 import { formatTime, fpsOf } from "../../commands/units";
 import { useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
-import { DISPLAY } from "../display";
+import { readTimeDisplay } from "../../state/prefs";
 import NumberField from "../fields/NumberField";
 import TimeCommitField from "../fields/TimeCommitField";
 import ToggleField from "../fields/ToggleField";
@@ -40,13 +40,13 @@ export default function AudioSection({
 			/>
 			<TimeCommitField
 				label={t("ui.editor.clip.fade_in")}
-				stored={formatTime(item.fade_in ?? 0, fps, DISPLAY)}
+				stored={formatTime(item.fade_in ?? 0, fps, readTimeDisplay())}
 				disabled={!canEdit}
 				commit={(fade_in) => send(audioOperations(itemId, { fade_in }))}
 			/>
 			<TimeCommitField
 				label={t("ui.editor.clip.fade_out")}
-				stored={formatTime(item.fade_out ?? 0, fps, DISPLAY)}
+				stored={formatTime(item.fade_out ?? 0, fps, readTimeDisplay())}
 				disabled={!canEdit}
 				commit={(fade_out) => send(audioOperations(itemId, { fade_out }))}
 			/>
