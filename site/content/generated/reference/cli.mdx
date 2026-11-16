@@ -389,11 +389,13 @@ vukem-video view --project prj_7k2m9x4q1b --at 1s --json
 Export a project to a file
 
 ```text
-vukem-video export --project <id> [--format f] [--wait] [--timeout d]
+vukem-video export --project <id> [--start t] [--end t] [--format f] [--wait] [--timeout d]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
+| `--start` | string |  | first time to export (default: the start) |
+| `--end` | string |  | end of the export (default: the end of the timeline) |
 | `--format` | string |  | mp4 (default), gif, wav or aac |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
