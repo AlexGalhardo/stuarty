@@ -11,7 +11,14 @@ import {
 	Volume2,
 	VolumeX,
 } from "lucide-react";
-import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
+import {
+	Fragment,
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
@@ -23,6 +30,7 @@ import {
 } from "../state/EditorContext";
 import { selectEndFrame, selectFps } from "../state/selectors";
 import { bufferSize, fitScale, sizedScale, truthWidth } from "./fit";
+import { shouldCommitFrame } from "./mediaSync";
 import Handles from "./overlays/Handles";
 import { hitTest } from "./overlays/hitTest";
 import InlineTextEditor from "./overlays/InlineTextEditor";
@@ -30,7 +38,7 @@ import SafeArea from "./overlays/SafeArea";
 import SelectionBox from "./overlays/SelectionBox";
 import { PixiExecutor } from "./PixiExecutor";
 import { PausedFrame } from "./pausedFrame";
-import Timecode from "./Timecode";
+import Timecode, { LiveTimecode } from "./Timecode";
 import type { CanvasPort, LayerGeometry, PreviewState } from "./types";
 
 const DEFAULT_FPS = { num: 30, den: 1 } as const;
@@ -89,6 +97,15 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 	const paused = useRef<PausedFrame | null>(null);
 	const committed = useRef(0);
 	const playingRef = useRef(false);
+	const liveRef = useRef(playhead);
+	const needsLiveRef = useRef(false);
+	const listeners = useRef(new Set<(frame: number) => void>());
+	const subscribe = useCallback((cb: (frame: number) => void): (() => void) => {
+		listeners.current.add(cb);
+		return () => {
+			listeners.current.delete(cb);
+		};
+	}, []);
 	const bufferWidth = useRef(0);
 	const revisionRef = useRef(0);
 	const [state, setState] = useState<PreviewState>("idle");
@@ -107,6 +124,9 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 	const [override, setOverride] = useState<LayerGeometry | null>(null);
 
 	revisionRef.current = revision ?? 0;
+	// Overlays are drawn from `live`, so they need every frame while shown.
+	needsLiveRef.current =
+		selection.length > 0 || editingText !== null || safeVisible;
 
 	// The executor lives as long as the editor; the project info and revision
 	// are pushed to it as they change.
@@ -132,8 +152,20 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 		paused.current = frames;
 		let lastCommit = 0;
 		const offFrame = instance.onFrame((frame) => {
-			setLive(frame);
+			liveRef.current = frame;
+			for (const listener of listeners.current) listener(frame);
 			const now = performance.now();
+			if (
+				shouldCommitFrame(
+					playingRef.current,
+					needsLiveRef.current,
+					now,
+					lastCommit,
+					COMMIT_EVERY_MS,
+				)
+			) {
+				setLive(frame);
+			}
 			if (!playingRef.current || now - lastCommit >= COMMIT_EVERY_MS) {
 				lastCommit = now;
 				committed.current = frame;
@@ -143,6 +175,7 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 		const offState = instance.onState((next) => {
 			setState(next);
 			playingRef.current = next === "playing" || next === "buffering";
+			if (!playingRef.current) setLive(liveRef.current);
 			if (next === "idle") {
 				frames.request(
 					committed.current,
@@ -266,15 +299,17 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 		else void instance.play();
 	};
 
+	const togglePlayRef = useRef(togglePlay);
+	togglePlayRef.current = togglePlay;
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent): void => {
 			if (event.code !== "Space" || isEditable(event.target)) return;
 			event.preventDefault();
-			togglePlay();
+			togglePlayRef.current();
 		};
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
-	});
+	}, []);
 
 	const seekTo = (frame: number): void => {
 		executor.current?.pause();
@@ -526,8 +561,9 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 					</Button>
 				)}
 				<span className="ml-3 flex items-center gap-1 text-muted-foreground">
-					<Timecode
-						frame={live}
+					<LiveTimecode
+						initial={live}
+						subscribe={subscribe}
 						fps={fps}
 						label={t("ui.editor.preview.current")}
 					/>
