@@ -18,6 +18,7 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/AlexGalhardo/vukem-video/desktop/update"
 	"github.com/AlexGalhardo/vukem-video/internal/outbound"
@@ -97,6 +98,7 @@ type scenario struct {
 	feedRedirectTo string             // when set, the feed answers a redirect there
 	publishedAt    string             // default clock-1h; "-" leaves the field out of the signed payload
 	expires        string             // default clock+30d; "-" leaves the field out of the signed payload
+	notes          string             // optional release notes in the signed payload
 }
 
 type env struct {
@@ -202,6 +204,7 @@ func (e *env) feedJSON(t *testing.T, sc scenario) []byte {
 	fields := map[string]any{
 		"schema":  1,
 		"version": sc.feedVersion,
+		"notes":   sc.notes,
 		"platforms": map[string]any{
 			platform: map[string]any{
 				"url":    host + "/" + fileName,
@@ -644,4 +647,54 @@ func TestSecurity_T35_UpdateReachesTheFeedHostOnly(t *testing.T) {
 			t.Fatalf("got %v, want outbound.ErrScheme", err)
 		}
 	})
+}
+
+func TestOfferCarriesTheNotesOfTheSignedFeed(t *testing.T) {
+	e := newEnv(t, scenario{notes: "Faster export. Fixes a crash."})
+
+	offer, err := e.client(t).CheckNow(context.Background())
+	if err != nil || offer.Notes != "Faster export. Fixes a crash." {
+		t.Fatalf("offer %+v, err %v", offer, err)
+	}
+}
+
+func TestOfferWithoutNotesHasNone(t *testing.T) {
+	offer, err := newEnv(t, scenario{}).client(t).CheckNow(context.Background())
+	if err != nil || offer.Notes != "" {
+		t.Fatalf("offer %+v, err %v", offer, err)
+	}
+}
+
+func TestNotesAreCutOnACharacterBoundary(t *testing.T) {
+	long := strings.Repeat("é", 3000) // 6000 bytes
+	e := newEnv(t, scenario{notes: long})
+
+	offer, err := e.client(t).CheckNow(context.Background())
+	if err != nil || len(offer.Notes) > 4096 || !utf8.ValidString(offer.Notes) || len(offer.Notes) < 4000 {
+		t.Fatalf("notes of %d bytes, err %v", len(offer.Notes), err)
+	}
+}
+
+func TestApplyReportsProgressUpToTheDeclaredSize(t *testing.T) {
+	e := newEnv(t, scenario{})
+
+	var last, total int64
+
+	calls := 0
+	e.cfg.Progress = func(done, size int64) { last, total = done, size; calls++ }
+
+	c := e.client(t)
+
+	offer, err := c.CheckNow(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := c.Apply(context.Background(), offer); err != nil {
+		t.Fatal(err)
+	}
+
+	if last != total || total != int64(len(e.artifact)) || calls < 1 || calls > 100 {
+		t.Errorf("last %d total %d calls %d", last, total, calls)
+	}
 }

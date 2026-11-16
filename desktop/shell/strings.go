@@ -26,6 +26,11 @@ const (
 	TextServerStopped = "server_stopped"
 	TextCannotOpen    = "cannot_open"
 	TextCannotSave    = "cannot_save"
+	TextConsentTitle  = "consent_title"
+	TextConsentBody   = "consent_body"
+	TextYes           = "yes"
+	TextNo            = "no"
+	TextDownloading   = "downloading"
 )
 
 var catalogues = map[string]map[string]string{
@@ -33,19 +38,29 @@ var catalogues = map[string]map[string]string{
 		TextFile: "File", TextOpenWorkspace: "Open workspace folder", TextQuit: "Quit",
 		TextView: "View", TextReload: "Reload", TextFullScreen: "Toggle full screen",
 		TextHelp: "Help", TextCheckUpdates: "Check for updates",
-		TextCheckAtStart: "Check for updates at start-up", TextAbout: "About",
+		TextCheckAtStart: "Check for updates automatically", TextAbout: "About",
 		TextAboutTitle: "About Vukem Video", TextInstall: "Install and restart", TextNotNow: "Not now",
 		TextCannotStart: "Vukem Video cannot start", TextServerStopped: "The local server stopped unexpectedly.",
 		TextCannotOpen: "Cannot open the folder: ", TextCannotSave: "Cannot save the setting: ",
+		TextConsentTitle: "Check for updates automatically?",
+		TextConsentBody: "Vukem Video can look for a new version when it starts and once a day. " +
+			"It connects only to the update server, only for this check, and sends nothing about you. " +
+			"You can change this in Help.",
+		TextYes: "Yes", TextNo: "No", TextDownloading: "Downloading Vukem Video ",
 	},
 	"pt-BR": {
 		TextFile: "Arquivo", TextOpenWorkspace: "Abrir pasta do workspace", TextQuit: "Sair",
 		TextView: "Exibir", TextReload: "Recarregar", TextFullScreen: "Tela cheia",
 		TextHelp: "Ajuda", TextCheckUpdates: "Verificar atualizações",
-		TextCheckAtStart: "Verificar atualizações ao iniciar", TextAbout: "Sobre",
+		TextCheckAtStart: "Verificar atualizações automaticamente", TextAbout: "Sobre",
 		TextAboutTitle: "Sobre o Vukem Video", TextInstall: "Instalar e reiniciar", TextNotNow: "Agora não",
 		TextCannotStart: "O Vukem Video não consegue iniciar", TextServerStopped: "O servidor local parou de repente.",
 		TextCannotOpen: "Não foi possível abrir a pasta: ", TextCannotSave: "Não foi possível salvar a configuração: ",
+		TextConsentTitle: "Verificar atualizações automaticamente?",
+		TextConsentBody: "O Vukem Video pode procurar uma versão nova ao iniciar e uma vez por dia. " +
+			"Ele se conecta só ao servidor de atualizações, só para essa verificação, e não envia nada sobre você. " +
+			"Você pode mudar isso em Ajuda.",
+		TextYes: "Sim", TextNo: "Não", TextDownloading: "Baixando o Vukem Video ",
 	},
 }
 

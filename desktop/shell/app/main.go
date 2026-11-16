@@ -88,10 +88,12 @@ func run() error {
 	// macOS shows the application menu; Windows and Linux show a menu per window,
 	// and without win.SetMenu the window has no menu bar.
 	up := newUpdater(app)
+	app.OnShutdown(up.launcher.Close)
 	menu := buildMenu(app, win, ws, up)
 	app.Menu.SetApplicationMenu(menu)
 	win.SetMenu(menu)
-	up.checkOnStartup()
+	// A dialog shown before the loop runs is dropped (VV-006), so the launcher starts with the loop.
+	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) { up.start() })
 
 	// The child ending on its own is a crash: tell the person, then leave.
 	go func() {
