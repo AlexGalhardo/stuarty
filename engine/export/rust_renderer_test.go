@@ -14,14 +14,14 @@ import (
 func TestParsePixelRenderer(t *testing.T) {
 	t.Parallel()
 
-	for in, want := range map[string]PixelRenderer{"": PixelRendererGo, "go": PixelRendererGo, "rust": PixelRendererRust} {
+	for in, want := range map[string]PixelRenderer{"": PixelRendererGo, "go": PixelRendererGo, "rust": PixelRendererRust, "gpu": PixelRendererGPU} {
 		got, err := ParsePixelRenderer(in)
 		if err != nil || got != want {
 			t.Errorf("ParsePixelRenderer(%q) = %q, %v, want %q", in, got, err, want)
 		}
 	}
 
-	for _, in := range []string{"Rust", "wasm", "go ", "gpu"} {
+	for _, in := range []string{"Rust", "wasm", "go ", "GPU"} {
 		if _, err := ParsePixelRenderer(in); err == nil {
 			t.Errorf("ParsePixelRenderer(%q) was accepted", in)
 		}

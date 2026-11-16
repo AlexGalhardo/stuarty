@@ -61,6 +61,10 @@ type Job struct {
 	// PixelRenderer is VUKEM_VIDEO_EXPORT_RENDERER: the Go compositor (the zero value) or the Rust renderer
 	// running as WebAssembly under wazero (SDD-013 section 4.6). Both draw the same bytes.
 	PixelRenderer PixelRenderer
+	// GPUHost is the absolute path of the native GPU host vukem-render. With PixelRendererGPU and a path the
+	// frames are drawn by the child when the machine has a graphics adapter, and by the WebAssembly module
+	// otherwise (SDD-013 section 4.9); empty means no GPU host.
+	GPUHost string
 	// OnProgress is called at most 4 times per second and once at the last frame.
 	OnProgress func(Progress)
 
@@ -134,7 +138,7 @@ func (s *state) newRenderer(bands int) *renderer {
 	fs := newFrameSource(s, infos)
 	cache := raster.NewCache(s.fonts, 0)
 	rd := &renderer{s: s, fs: fs, comp: &compositor.Compositor{Media: fs.media, Bitmaps: cache.Get, Bands: bands}}
-	if s.job.PixelRenderer == PixelRendererRust {
+	if s.job.PixelRenderer == PixelRendererRust || s.job.PixelRenderer == PixelRendererGPU {
 		rd.rust = newRustRenderer(s, fs, cache.Get, bands)
 	}
 
