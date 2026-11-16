@@ -72,6 +72,9 @@ type Offer struct {
 	Size   int64
 
 	signature []byte
+	// signedPlatform is the platform name the artifact signature covers: the plain platform of an
+	// installer, "launcher:<platform>" of a launcher artifact.
+	signedPlatform string
 }
 
 // Config is the client configuration.
@@ -335,7 +338,7 @@ func (p *progressWriter) Write(b []byte) (int, error) {
 
 // verifyArtifact checks the signature over the digest the download matched.
 func verifyArtifact(key ed25519.PublicKey, o *Offer) error {
-	if !ed25519.Verify(key, ArtifactMessage(o.Version, o.Platform, o.SHA256), o.signature) {
+	if !ed25519.Verify(key, ArtifactMessage(o.Version, o.signedPlatform, o.SHA256), o.signature) {
 		return ErrBadArtifactSignature
 	}
 
