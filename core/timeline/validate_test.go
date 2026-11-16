@@ -274,6 +274,7 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"contrast", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Contrast = 3 }) }, VShape},
 		{"saturation", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Saturation = -1 }) }, VShape},
 		{"denoise", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Denoise = 1.5 }) }, VShape},
+		{"voice", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Voice = "robot" }) }, VShape},
 		{"temperature", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Temperature = 1.5 }) }, VShape},
 		{"tint", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Tint = -1.5 }) }, VShape},
 		{"hue", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Hue = 181 }) }, VShape},

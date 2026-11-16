@@ -210,9 +210,11 @@ type Item struct {
 	// Clip and audio, optional and additive (SDD-001 §3.5): play the source range backwards.
 	Reverse bool `json:"reverse,omitempty"`
 	// Clip and audio, optional and additive (SDD-001 §3.5): noise reduction strength, 0 (off) to 1.
-	Denoise float64 `json:"denoise,omitempty"  min:"0" max:"1"`
-	FadeIn  int     `json:"fade_in,omitempty"  min:"0"`
-	FadeOut int     `json:"fade_out,omitempty" min:"0"`
+	Denoise float64 `json:"denoise,omitempty" min:"0" max:"1"`
+	// Clip and audio, optional and additive (SDD-001 §3.5): the voice preset of the item's audio.
+	Voice   string `json:"voice,omitempty"    enum:"clear,warm,deep,bright,radio"`
+	FadeIn  int    `json:"fade_in,omitempty"                                      min:"0"`
+	FadeOut int    `json:"fade_out,omitempty"                                     min:"0"`
 
 	// Clip only.
 	Fit        string  `json:"fit"                  default:"cover" enum:"cover,contain,none"`

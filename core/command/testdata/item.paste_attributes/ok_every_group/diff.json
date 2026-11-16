@@ -110,6 +110,10 @@
         null,
         -0.1
       ],
+      "voice": [
+        null,
+        "warm"
+      ],
       "volume": [
         1,
         0.5

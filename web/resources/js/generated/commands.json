@@ -2421,7 +2421,7 @@
 			],
 			"type": "object"
 		},
-		"description": "Copies attribute groups from one item to 1 to 20 others: color, filter, blur, framing, transform (x, y, scale, rotation, opacity), blend, mask, flip, chroma_key, effects, audio (volume, denoise). A group the target type does not have is skipped and listed in effective.skipped. Keyframes are not copied; a target whose animated property would be overwritten is refused.",
+		"description": "Copies attribute groups from one item to 1 to 20 others: color, filter, blur, framing, transform (x, y, scale, rotation, opacity), blend, mask, flip, chroma_key, effects, audio (volume, denoise, voice). A group the target type does not have is skipped and listed in effective.skipped. Keyframes are not copied; a target whose animated property would be overwritten is refused.",
 		"errors": [
 			"E_VALIDATION",
 			"E_NOT_FOUND",
@@ -2510,6 +2510,18 @@
 					"description": "A clip or audio item.",
 					"type": "string"
 				},
+				"voice": {
+					"description": "Voice preset: none (default), clear, warm, deep, bright or radio.",
+					"enum": [
+						"none",
+						"clear",
+						"warm",
+						"deep",
+						"bright",
+						"radio"
+					],
+					"type": "string"
+				},
 				"volume": {
 					"description": "Linear gain, 0 to 4.",
 					"maximum": 4,
@@ -2522,7 +2534,7 @@
 			],
 			"type": "object"
 		},
-		"description": "Sets the given values. Volume 1, fades of 0, audio_muted false and denoise 0 clear the stored value. audio_muted applies to clip items only. denoise is the noise reduction strength, 0 to 1. The two fades together cannot be longer than the item.",
+		"description": "Sets the given values. Volume 1, fades of 0, audio_muted false, denoise 0 and voice none clear the stored value. audio_muted applies to clip items only. denoise is the noise reduction strength, 0 to 1. voice is a preset for speech: clear, warm, deep, bright or radio. The two fades together cannot be longer than the item.",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -2540,7 +2552,7 @@
 		"name": "item.set_audio",
 		"phase": "alpha",
 		"scope": "edit",
-		"summary": "Sets the volume, the fades, the mute flag or the noise reduction of a clip or audio item."
+		"summary": "Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item."
 	},
 	{
 		"args_schema": {

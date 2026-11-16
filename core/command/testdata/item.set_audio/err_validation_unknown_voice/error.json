@@ -1,0 +1,17 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.voice is \"robot\", which is not one of the accepted values.",
+  "hint": "Use one of: none, clear, warm, deep, bright, radio.",
+  "retryable": false,
+  "path": "args.voice",
+  "details": {
+    "allowed": [
+      "none",
+      "clear",
+      "warm",
+      "deep",
+      "bright",
+      "radio"
+    ]
+  }
+}

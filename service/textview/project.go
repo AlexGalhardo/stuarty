@@ -354,6 +354,10 @@ func itemFlags(it *timeline.Item) []string {
 		f = append(f, "nr:"+num(it.Denoise))
 	}
 
+	if it.Voice != "" && (it.Type == timeline.ItemClip || it.Type == timeline.ItemAudio) {
+		f = append(f, "voice:"+it.Voice)
+	}
+
 	if it.Reverse {
 		f = append(f, "rev")
 	}

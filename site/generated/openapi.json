@@ -1381,6 +1381,16 @@
             ],
             "type": "string"
           },
+          "voice": {
+            "enum": [
+              "clear",
+              "warm",
+              "deep",
+              "bright",
+              "radio"
+            ],
+            "type": "string"
+          },
           "volume": {
             "format": "double",
             "type": "number"
@@ -3573,6 +3583,9 @@
                 "type": "null"
               }
             ]
+          },
+          "voice": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -5411,6 +5424,18 @@
           },
           "item_id": {
             "description": "A clip or audio item.",
+            "type": "string"
+          },
+          "voice": {
+            "description": "Voice preset: none (default), clear, warm, deep, bright or radio.",
+            "enum": [
+              "none",
+              "clear",
+              "warm",
+              "deep",
+              "bright",
+              "radio"
+            ],
             "type": "string"
           },
           "volume": {

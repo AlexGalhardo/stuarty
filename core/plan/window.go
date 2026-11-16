@@ -106,6 +106,7 @@ type WindowAudio struct {
 	Reverse       bool       `json:"reverse,omitempty"`
 	Gain          Series     `json:"gain"`
 	Denoise       float64    `json:"denoise,omitempty"`
+	Voice         string     `json:"voice,omitempty"`
 }
 
 // Window returns the plans of frames [from, to) in the compact form of
@@ -300,7 +301,14 @@ func windowAudio(doc *timeline.Document, from, to int) []WindowAudio {
 			continue
 		}
 
-		wa := WindowAudio{Item: it.ID, Asset: it.Asset, First: cs, Last: ce - 1, Denoise: round3(it.Denoise)}
+		wa := WindowAudio{
+			Item:    it.ID,
+			Asset:   it.Asset,
+			First:   cs,
+			Last:    ce - 1,
+			Denoise: round3(it.Denoise),
+			Voice:   it.Voice,
+		}
 
 		pos := int64(it.SourceIn)
 		if it.Speed.Den > 0 {

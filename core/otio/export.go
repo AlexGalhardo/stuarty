@@ -341,6 +341,10 @@ func clipMetadata(it *timeline.Item) object {
 	num("blur", it.Blur, 0)
 	num("denoise", it.Denoise, 0)
 
+	if it.Voice != "" {
+		props["voice"] = it.Voice
+	}
+
 	if it.AudioMuted {
 		props["audio_muted"] = true
 	}
@@ -568,7 +572,7 @@ func lostProperties(it *timeline.Item) []Lost {
 		{it.ChromaKey != nil, "chroma key"},
 		{it.Crop != nil || it.Fit != "cover", "framing"},
 		{it.X != nil || it.Y != nil || it.Scale != 1 || it.Rotation != 0 || it.Opacity != 1, "transform and opacity"},
-		{it.Volume != 1 || it.AudioMuted || it.FadeIn != 0 || it.FadeOut != 0 || it.Denoise != 0, "audio settings"},
+		{it.Volume != 1 || it.AudioMuted || it.FadeIn != 0 || it.FadeOut != 0 || it.Denoise != 0 || it.Voice != "", "audio settings"},
 		{it.Slot != nil, "template slot"},
 	} {
 		if f.on {
