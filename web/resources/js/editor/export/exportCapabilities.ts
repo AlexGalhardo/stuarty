@@ -2,7 +2,7 @@ import type { ExportCapabilities } from "../api/types";
 
 type Json = { [key: string]: unknown };
 
-const NONE: ExportCapabilities = { formats: [] };
+const NONE: ExportCapabilities = { formats: [], range: false };
 
 function asObject(value: unknown): Json | undefined {
 	return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -56,5 +56,6 @@ export function exportCapabilities(openapi: unknown): ExportCapabilities {
 		formats: choices(member("format"), ["mp4", "gif", "wav", "aac"]).filter(
 			(value): value is string => typeof value === "string",
 		),
+		range: member("start") !== undefined && member("end") !== undefined,
 	};
 }

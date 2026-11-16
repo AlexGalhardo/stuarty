@@ -37,7 +37,7 @@ describe("exportCapabilities", () => {
 			}),
 		);
 		// fps is a project setting, not a job argument: never offered.
-		expect(caps).toEqual({ formats: ["mp4", "gif"] });
+		expect(caps).toEqual({ formats: ["mp4", "gif"], range: false });
 	});
 
 	test("a member without an enum is offered with the defaults", () => {
@@ -50,10 +50,29 @@ describe("exportCapabilities", () => {
 		expect(caps.formats).toEqual(["mp4", "gif", "wav", "aac"]);
 	});
 
+	test("start and end together offer the range", () => {
+		const caps = exportCapabilities(
+			doc({
+				type: "object",
+				properties: {
+					format: { enum: ["mp4"] },
+					start: { type: "string" },
+					end: { type: "string" },
+				},
+			}),
+		);
+		expect(caps.range).toBe(true);
+		expect(
+			exportCapabilities(
+				doc({ type: "object", properties: { start: { type: "string" } } }),
+			).range,
+		).toBe(false);
+	});
+
 	test("a free args map offers nothing", () => {
 		expect(
 			exportCapabilities(doc({ type: "object", additionalProperties: true })),
-		).toEqual({ formats: [] });
+		).toEqual({ formats: [], range: false });
 	});
 
 	test("anything that is not an OpenAPI document offers nothing", () => {

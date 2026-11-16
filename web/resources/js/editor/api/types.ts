@@ -779,10 +779,15 @@ export interface FontImportResult {
 // them the server accepts is read from its schema, never assumed.
 export interface ExportOptions {
 	format?: string;
+	// A time with a unit (`120f`): the part of the timeline to render.
+	start?: string;
+	end?: string;
 }
 
 export interface ExportCapabilities {
 	formats: string[];
+	// The schema lists `start` and `end`, so the dialog may export a range.
+	range: boolean;
 }
 
 // POST /projects/import answers 201 with the project it made.

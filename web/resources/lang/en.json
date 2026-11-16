@@ -409,6 +409,7 @@
         "options": {
           "title": "Export options",
           "format": "Format",
+          "range": "Export only the range between the in and out points",
           "formats": {
             "mp4": "MP4 video",
             "gif": "GIF animation",

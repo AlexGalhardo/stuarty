@@ -409,6 +409,7 @@
         "options": {
           "title": "Opções de exportação",
           "format": "Formato",
+          "range": "Exportar só o trecho entre os pontos de entrada e saída",
           "formats": {
             "mp4": "Vídeo MP4",
             "gif": "Animação GIF",
