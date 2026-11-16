@@ -288,6 +288,7 @@ jobs:
           gh release upload "$TAG" vukem-video.intoto.jsonl --clobber --repo "$GITHUB_REPOSITORY"
       # 6 archives + 6 SBOMs + 2 .deb + the Windows, AppImage and 2 macOS installers
       # + the desktop Windows installer, .deb and 2 .dmg + the desktop SBOM
+      # + the 3 launcher artifacts of the desktop application (the AppImage and 2 zipped .app)
       # + checksums.txt + its bundle + the provenance. A stable release adds feed.json (job feed).
       - name: Check the release assets
         env:
@@ -297,7 +298,7 @@ jobs:
           count="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq ".assets | length")"
           body="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq ".body | length")"
           echo "assets=$count body_length=$body"
-          [ "$count" -eq 26 ] && [ "$body" -gt 0 ]
+          [ "$count" -eq 29 ] && [ "$body" -gt 0 ]
 
   # The feed of the desktop auto-update (SDD-009 section 10.5, P3-REL-004). Stable tags only: a pre-release
   # never reaches it. The installers are the ones the release lists, so every digest of the feed is one
@@ -351,7 +352,7 @@ jobs:
           gh release upload "$TAG" feed.json --clobber --repo "$GITHUB_REPOSITORY"
           count="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq ".assets | length")"
           echo "assets=$count"
-          [ "$count" -eq 27 ]
+          [ "$count" -eq 30 ]
 
   # Publishes the feed and the installers it lists on GitHub Pages: site.yml adds the latest stable
   # release to the site it deploys (scripts/pages-updates.sh), so a docs-only deploy keeps them too.

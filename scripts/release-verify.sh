@@ -54,7 +54,9 @@ cd "$work"
 # stable release adds feed.json: 27 (release.yml, steps "Check the release assets" and "Attach the feed").
 # Before v0.16.0 there is no desktop application and no feed: v0.15.0 lists 21 assets (the 26 minus the 5 of
 # the desktop application), and the desktop and feed checks below are skipped. Releases older than v0.15.0
-# have other counts and are not verified by this script.
+# have other counts and are not verified by this script. From v0.18.0 the release adds the 3 launcher
+# artifacts of the desktop application (the AppImage and one zipped .app per macOS architecture): 29, and
+# 30 for a stable release.
 core="${v%%-*}"
 minor="${core#*.}"
 minor="${minor%%.*}"
@@ -64,11 +66,14 @@ if [ "${core%%.*}" = "0" ] && [ "$minor" -lt 16 ]; then
 fi
 want_assets=26
 [ "$desktop" -eq 1 ] || want_assets=21
+if [ "${core%%.*}" != "0" ] || [ "$minor" -ge 18 ]; then
+	want_assets=29
+fi
 stable=0
 case "$v" in
 *-*) ;;
 *)
-	[ "$desktop" -eq 0 ] || want_assets=27
+	[ "$desktop" -eq 0 ] || want_assets=$((want_assets + 1))
 	stable=1
 	;;
 esac

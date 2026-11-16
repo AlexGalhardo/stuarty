@@ -2,7 +2,9 @@ name: desktop
 
 # Builds and tests the installers of the desktop application (SDD-009 sections 10.4 and 10.5, P3-REL-003,
 # D-033): the Windows setup .exe (Inno Setup), the Debian package (dpkg-deb) and a macOS disk image per
-# architecture (hdiutil). Each holds the native window (desktop/shell/app, Wails) and the server it starts.
+# architecture (hdiutil). The launcher updates itself from three more files, listed in the feed under
+# "launchers" (SDD-009 section 10.5 item 6): the AppImage (appimagetool, pinned by version and SHA-256 in
+# .config/installers/tools.env) and one zip per macOS architecture that holds Vukem Video.app. Each holds the native window (desktop/shell/app, Wails) and the server it starts.
 # None is signed with a paid certificate (D-033): the release lists their SHA-256 in checksums.txt, signs
 # that file with cosign and attests every file. The windows and the server are installed or mounted and
 # checked, but not started: a runner has no screen.
@@ -125,7 +127,7 @@ jobs:
           if-no-files-found: error
 
   linux:
-    name: Debian package
+    name: Debian package and AppImage
     needs: binaries
     if: ${{ !cancelled() && !failure() }}
     runs-on: ubuntu-latest
@@ -161,14 +163,31 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends desktop-file-utils
           bash desktop/packaging/linux/smoke-test.sh package/*.deb
+      # The AppImage is what the launcher installs updates from on Linux. appimagetool is the pinned
+      # version of .config/installers/tools.env, downloaded by exact URL and checked by SHA-256 before use.
+      - name: Build the AppImage
+        run: bash desktop/packaging/linux/build-appimage.sh out/vukem-video-desktop binaries/linux_amd64/vukem-video "$VERSION" package
+      # Runners have no FUSE and no screen: the AppImage is extracted, not run.
+      - name: Check the AppImage
+        run: |
+          set -euo pipefail
+          appimage="$(ls package/vukem-video-desktop_*_linux_amd64.AppImage)"
+          chmod +x "$appimage"
+          dir="$(mktemp -d)"
+          (cd "$dir" && APPIMAGE_EXTRACT_AND_RUN=1 "$OLDPWD/$appimage" --appimage-extract >/dev/null)
+          test -x "$dir/squashfs-root/usr/bin/vukem-video-desktop"
+          test -x "$dir/squashfs-root/usr/bin/vukem-video"
+          "$dir/squashfs-root/usr/bin/vukem-video" version
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: desktop-linux
-          path: package/*.deb
+          path: |
+            package/*.deb
+            package/*.AppImage
           if-no-files-found: error
 
   macos:
-    name: macOS disk image (${{ matrix.arch }})
+    name: macOS disk image and app zip (${{ matrix.arch }})
     needs: binaries
     if: ${{ !cancelled() && !failure() }}
     runs-on: macos-latest
@@ -207,8 +226,19 @@ jobs:
       - name: Test the disk image
         if: matrix.arch == 'arm64'
         run: bash desktop/packaging/macos/smoke-test.sh image/*_darwin_arm64.dmg
+      # The launcher refuses a zip that does not hold exactly one Vukem Video.app (SDD-009 section 10.5).
+      - name: Check the app zip
+        run: |
+          set -euo pipefail
+          zip="$(ls image/vukem-video-desktop_*_darwin_${{ matrix.arch }}.app.zip)"
+          tops="$(unzip -Z1 "$zip" | cut -d/ -f1 | sort -u)"
+          [ "$tops" = "Vukem Video.app" ] || { echo "::error::the zip holds: $tops"; exit 1; }
+          unzip -Z1 "$zip" | grep -qx 'Vukem Video.app/Contents/MacOS/vukem-video-desktop'
+          unzip -Z1 "$zip" | grep -qx 'Vukem Video.app/Contents/MacOS/vukem-video'
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: desktop-macos-${{ matrix.arch }}
-          path: image/*.dmg
+          path: |
+            image/*.dmg
+            image/*.app.zip
           if-no-files-found: error
