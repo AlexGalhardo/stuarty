@@ -93,6 +93,7 @@ export interface ApiClient {
 		to: number,
 		revision: number,
 		width?: number,
+		signal?: AbortSignal,
 	): Promise<PlanWindow>;
 	getCommands(): Promise<CommandHelpResult>;
 	getCommand(name: string): Promise<CommandHelpResult>;
@@ -163,11 +164,18 @@ export function createClient(
 		path: string,
 		timeoutMs: number,
 		body?: unknown,
+		signal?: AbortSignal,
 	): Promise<T> {
 		return withRetry(async () => {
 			let response: Awaited<ReturnType<Transport["send"]>>;
 			try {
-				response = await transport.send({ method, path, body, timeoutMs });
+				response = await transport.send({
+					method,
+					path,
+					body,
+					timeoutMs,
+					signal,
+				});
 			} catch (error) {
 				if (error instanceof TransportError) throw networkError(error.message);
 				throw error;
@@ -240,13 +248,15 @@ export function createClient(
 			call("POST", `${project(id)}/edit`, EDIT_TIMEOUT_MS, request),
 		undo: (id) => call("POST", `${project(id)}/undo`, EDIT_TIMEOUT_MS, {}),
 		redo: (id) => call("POST", `${project(id)}/redo`, EDIT_TIMEOUT_MS, {}),
-		getPlan: (id, from, to, revision, width) =>
+		getPlan: (id, from, to, revision, width, signal) =>
 			call(
 				"GET",
 				`${project(id)}/plan?from=${from}&until=${to}&rev=${revision}${
 					width === undefined ? "" : `&width=${width}`
 				}`,
 				READ_TIMEOUT_MS,
+				undefined,
+				signal,
 			),
 		getCommands: () => call("GET", "/commands", READ_TIMEOUT_MS),
 		getCommand: (name) =>

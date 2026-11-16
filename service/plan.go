@@ -203,6 +203,13 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 	renamed := map[string]string{}
 
 	for t := req.From; t < req.Until; t++ {
+		// A client that gave up (a newer revision) stops the planning (SDD-012 section 19.2 rule 8).
+		if (t-req.From)%30 == 0 {
+			if cerr := ctx.Err(); cerr != nil {
+				return nil, cerr
+			}
+		}
+
 		layers := plan.FrameWith(doc, t, opts).Layers
 		for i := range layers {
 			if layers[i].Bitmap == nil {

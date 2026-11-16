@@ -205,8 +205,8 @@ export class PixiExecutor implements PreviewExecutor {
 			() => this.context?.currentTime ?? 0,
 			info.fps,
 		);
-		this.windows = new PlanWindows((from, to, rev, width) =>
-			this.client.getPlan(info.projectId, from, to, rev, width),
+		this.windows = new PlanWindows((from, to, rev, width, signal) =>
+			this.client.getPlan(info.projectId, from, to, rev, width, signal),
 		);
 		this.windows.setRevision(this.revision);
 		this.windows.setWidth(this.planWidth());
