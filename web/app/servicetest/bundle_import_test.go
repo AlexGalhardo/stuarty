@@ -234,6 +234,14 @@ func TestBundleImportRoundTrip(t *testing.T) {
 
 	for i := range want {
 		want[i].IdempotencyKey = nil // a bundle carries no idempotency keys (SDD-005 section 16.1)
+
+		// Foreign history is attributed to nobody who is live and cannot be undone (SDD-005 section 16.3 step 7).
+		want[i].Actor = "imported:" + want[i].Actor
+
+		if want[i].ClosedBy == nil {
+			closed := want[i].Revision
+			want[i].ClosedBy = &closed
+		}
 	}
 
 	if len(got) != len(want) || len(got) == 0 || !reflect.DeepEqual(got, want) {
@@ -703,5 +711,49 @@ func TestSecurity_T20_BundleCannotNameAnotherUsersMedia(t *testing.T) {
 	// The same bundle is fine for the local owner, whose store is their own.
 	if _, err := src.importBundle(stripped, true); err != nil {
 		t.Errorf("local import of a bundle that relies on the store: %v", err)
+	}
+}
+
+func TestSecurity_T20_ImportedHistoryCannotBeUndone(t *testing.T) {
+	src := newMediaEnv(t, mediaCfg{})
+	project, _ := src.bundleProject()
+
+	job := src.exportBundle(project, nil)
+	if job.State != service.JobSucceeded {
+		t.Fatalf("export = %+v", job)
+	}
+
+	dst := newMediaEnv(t, mediaCfg{})
+	if _, err := dst.importBundle(job.Result.Export.Path, false); err != nil {
+		t.Fatal(err)
+	}
+
+	rows, err := dst.store.Operations().Since(context.Background(), project, 0, service.OperationFilter{})
+	if err != nil || len(rows) == 0 {
+		t.Fatalf("log = %d rows, %v", len(rows), err)
+	}
+
+	for _, r := range rows {
+		if !strings.HasPrefix(r.Actor, "imported:") || r.ClosedBy == nil {
+			t.Errorf(
+				"revision %d: actor %q, closed_by %v; want an imported actor and a closed row",
+				r.Revision,
+				r.Actor,
+				r.ClosedBy,
+			)
+		}
+	}
+
+	// The bundle was made by "local:ui"; the person at the editor here did not make those steps.
+	for _, actor := range []string{ui, "local:" + "agent"} {
+		if _, err := dst.svc.Undo(
+			dst.as(actor),
+			service.UndoRequest{ProjectID: project},
+		); !isCode(
+			err,
+			"E_NOTHING_TO_UNDO",
+		) {
+			t.Errorf("%s undo after import = %v, want E_NOTHING_TO_UNDO", actor, err)
+		}
 	}
 }
