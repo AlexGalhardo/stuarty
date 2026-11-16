@@ -1080,7 +1080,7 @@
         {
           "name": "model",
           "type": "string",
-          "usage": "the model to download (default: small)"
+          "usage": "the model to download, which then becomes the default of transcribe (default: small)"
         },
         {
           "name": "yes",
