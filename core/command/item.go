@@ -197,8 +197,11 @@ func (c *Context) slideNeighbours(it *timeline.Item, start int, hasStart, hasTra
 				continue
 			}
 			ot := c.Doc.Items[other]
-			return Errorf(CodeOverlap, "Sliding %s to frame %d makes %s occupy frames %d-%d, where item %s already is (frames %d-%d).",
-				it.ID, start, id, n.Start, itemEnd(&n)-1, other, ot.Start, itemEnd(&ot)-1).
+			return Errorf(
+				CodeOverlap,
+				"Sliding %s to frame %d makes %s occupy frames %d-%d, where item %s already is (frames %d-%d).",
+				it.ID, start, id, n.Start, itemEnd(&n)-1, other, ot.Start, itemEnd(&ot)-1,
+			).
 				WithDetail("conflicting_item", other).
 				WithHint("Slide by less, or move item %s out of the way first.", other).
 				WithPath("args.start")
