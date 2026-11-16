@@ -34,9 +34,9 @@ func init() {
 type textAddArgs struct {
 	TrackID  string         `json:"track_id,omitempty" desc:"A visual track; omitted, the highest free one, or a new one on top."`
 	Start    Time           `json:"start"`
-	Duration Time           `json:"duration"        desc:"A length of at least 1 frame."`
-	Text     string         `json:"text"            desc:"The text; line breaks are allowed." min:"1" max:"2000"`
-	Style    map[string]any `json:"style,omitempty" desc:"A partial TextStyle."                                  schema:"text_style"`
+	Duration Time           `json:"duration"           desc:"A length of at least 1 frame."`
+	Text     string         `json:"text"               desc:"The text; line breaks are allowed."                                  min:"1" max:"2000"`
+	Style    map[string]any `json:"style,omitempty"    desc:"A partial TextStyle."                                                                   schema:"text_style"`
 	X        *float64       `json:"x,omitempty"`
 	Y        *float64       `json:"y,omitempty"`
 	ID       string         `json:"id,omitempty"`

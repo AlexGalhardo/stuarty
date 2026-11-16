@@ -37,7 +37,7 @@ type shapeAddArgs struct {
 	TrackID     string   `json:"track_id,omitempty"     desc:"A visual track; omitted, the highest free one, or a new one on top."`
 	Start       Time     `json:"start"`
 	Duration    Time     `json:"duration"               desc:"A length of at least 1 frame."`
-	Shape       string   `json:"shape"                                                               enum:"rect,rounded_rect,ellipse"`
+	Shape       string   `json:"shape"                                                                                             enum:"rect,rounded_rect,ellipse"`
 	Width       float64  `json:"width"                  desc:"Pixels before scale, above 0."`
 	Height      float64  `json:"height"                 desc:"Pixels before scale, above 0."`
 	Fill        string   `json:"fill,omitempty"         desc:"A colour; default #FFFFFF."`
