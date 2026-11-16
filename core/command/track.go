@@ -269,7 +269,6 @@ type trackMoveArgs struct {
 
 func applyTrackMove(c *Context, a *trackMoveArgs) error {
 	if err := requireOne(
-		"args",
 		[]string{"position", "above", "below"},
 		a.Position != "",
 		a.Above != "",

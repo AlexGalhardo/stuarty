@@ -43,7 +43,7 @@ type captionAddArgs struct {
 // the duration of the caption; for the text form the duration is the one given, and
 // the words are made once it is known to be long enough.
 func (c *Context) captionForm(a *captionAddArgs) (words []timeline.Word, fields []string, duration int, err *Error) {
-	if e := requireOne("args", []string{"words", "text"}, a.Words != nil, a.Text != nil); e != nil {
+	if e := requireOne([]string{"words", "text"}, a.Words != nil, a.Text != nil); e != nil {
 		return nil, nil, 0, e
 	}
 	if a.Words != nil {

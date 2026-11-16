@@ -217,7 +217,8 @@ func (c *Context) speechSource(it *timeline.Item, notClip, noAudio string) *Erro
 	if it.Type != timeline.ItemAudio {
 		return c.speechClip(it, notClip, noAudio)
 	}
-	if asset, ok := c.Doc.Assets[it.Asset]; !ok || asset.Kind == timeline.AssetImage || asset.Kind == timeline.AssetVideo && !asset.HasAudio {
+	if asset, ok := c.Doc.Assets[it.Asset]; !ok || asset.Kind == timeline.AssetImage ||
+		asset.Kind == timeline.AssetVideo && !asset.HasAudio {
 		return Errorf(CodeTypeMismatch, "Asset %s has no audio; %s", it.Asset, noAudio).
 			WithHint("Choose a clip or audio item whose asset has audio.").WithPath("args.item_id")
 	}
