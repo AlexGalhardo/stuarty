@@ -84,7 +84,7 @@ Rules of reading:
 1. **Order is the stacking order**: the first layer is the bottom. The renderer draws in array order and never sorts.
 2. **Unknown fields are refused** (`invalid_plan`), not ignored: an ignored field is a pixel the renderer silently does not draw. The exception is the informational fields of the table (`asset`, `asset_kind`, `source_frame`, `scale`), which must be accepted and may be absent.
 3. **Absent is zero or null**: `blur`, `color_matrix`, `filter`, `crop` and `bitmap` absent mean none. `opacity` has no default: a layer without it is `invalid_plan`. A number that is `NaN`, infinite or outside the double range cannot occur in JSON and is refused if a host builds the text by hand.
-4. **Counts are bounded** (§7): at most 256 layers and 12 numbers in a matrix, else `limit_exceeded`.
+4. **Counts are bounded** (§7): at most 64 layers and exactly 12 numbers in a matrix, else `limit_exceeded` and `invalid_plan` respectively.
 
 ### 2.3 What is not in the plan
 
@@ -239,7 +239,7 @@ All numbers are `i32` or `u32` (WebAssembly `i32`), pointers are offsets into `m
 | `vr_put_texture` | `(id_ptr: u32, id_len: u32, width: u32, height: u32, rgba_ptr: u32, opaque: u32) -> i32` | stores the pixels of a media layer under the item id (`id_len` at most 64 bytes of ASCII): `width x height x 4` bytes of premultiplied RGBA; `opaque` 1 when every alpha is 255. Replaces the texture of that id. The module copies the pixels |
 | `vr_put_bitmap` | `(key_ptr: u32, key_len: u32, width: u32, height: u32, natural_w: f64, natural_h: f64, center_dx: f64, center_dy: f64, rgba_ptr: u32) -> i32` | stores a bitmap of the rasterizer (§2.5) under its 64-character key: `width x height x 4` bytes of straight alpha; the module premultiplies it once |
 | `vr_release` | `(id_ptr: u32, id_len: u32) -> i32` | forgets the texture or bitmap with that id or key; an unknown one is not an error |
-| `vr_render` | `(in_ptr: u32, in_len: u32, out_ptr: u32, out_len: u32) -> i32` | reads the render input of §2 (UTF-8 JSON, `in_len` at most 1 MiB), draws it, and writes `width x height x 4` bytes at `out_ptr`; `out_len` must be exactly that. The status is 0 or a negative code of §4.5 |
+| `vr_render` | `(in_ptr: u32, in_len: u32, out_ptr: u32, out_len: u32) -> i32` | reads the render input of §2 (UTF-8 JSON, `in_len` at most 4 MiB), draws it, and writes `width x height x 4` bytes at `out_ptr`; `out_len` must be exactly that. The status is 0 or a negative code of §4.5 |
 | `vr_error` | `(buf_ptr: u32, buf_len: u32) -> u32` | copies the message of the last failed call (UTF-8, truncated to `buf_len`, no personal data: ids and keys only) and returns its full length |
 
 `f64` parameters are part of the export signature. A host that cannot pass a double (none of ours) passes them through a block written with `vr_alloc`; that form is not defined because no host needs it.
@@ -466,3 +466,68 @@ H.264 and other codecs are not in version 1: the proxy is VP9, and a codec that 
 - `TestChunkIndexSchema` and `TestProxyChunkIndexMatchesFFprobe` (`engine/ingest`, TASK-0197): the index validates against §6.1 and equals `ffprobe -show_packets` of the proxy on the pinned LGPL FFmpeg for the portrait, a 24 fps and a short landscape clip.
 - A Vitest test of the worker's index check: each invariant of §6.1 broken in turn gives `fallback`; a valid index does not.
 - The service test that opens kind `chunks` for a ready asset (`web/app/servicetest`, TASK-0196) answers `application/json` with the proxy's scope and cache rules.
+
+## 7. Errors and limits
+
+The renderer fails in a small, closed set of ways, each with a `reason` string, and it has a small, closed set of limits. No new error code is added to SDD-000 §8: a renderer failure reaches people and agents through the codes that already exist (`E_EXPORT_FAILED`, `E_LIMIT_EXCEEDED`, `E_CANCELLED`), with the `reason` in `details`. The preview never returns an API error: its failures are in the worker protocol (§4.7) and in the counters of the preview's `stats`.
+
+### 7.1 Reasons
+
+| `reason` | Status (§4.5) | Raised when | Where it surfaces |
+| --- | --- | --- | --- |
+| `invalid_plan` | -1 | the render input is not valid JSON of the shape of §2: an unknown field, a missing `opacity`, a matrix that is not 12 numbers, a number out of the double range, a bitmap layer without `bitmap`, a media layer with one | export: `E_EXPORT_FAILED`; preview: `error` message |
+| `unsupported_version` | -2 | `version` of the render input, or `vr_api_version` of the module, is not one the other side knows | export: `E_EXPORT_FAILED`; preview: `error`, then the main thread reloads the module |
+| `unsupported_layer` | -3 | `kind` is neither `media` nor `bitmap`, or a `BitmapSpec.kind` is not `text`, `caption` or `shape` (until stage E) | same |
+| `missing_texture` | -4 | a layer needs a texture or bitmap the module does not hold (§4.3); `detail` names the item or key | export: the host uploads it and calls again, and only a second failure is an error; preview: the main thread uploads and posts the `render` again |
+| `limit_exceeded` | -5 | a limit of §7.2 would be passed; `detail` names it | export: `E_LIMIT_EXCEEDED`; preview: `error` |
+| `out_of_memory` | -6 | `vr_alloc` or a memory growth failed | §7.3 |
+| `invalid_argument` | -7 | a pointer, length, size or id that does not match what the call needs: a texture whose `rgba` is shorter than `width x height x 4`, an id longer than 64 bytes, an `out_len` that is not the frame size, a `y1` not greater than `y0` | export: `E_EXPORT_FAILED` (a host bug); preview: `error` |
+| `render_trap` | none (a failed call) | the instance trapped (`unreachable`, a stack overflow, an out-of-bounds access the module's checks missed) | export: `E_EXPORT_FAILED`; preview: `error`, instance replaced |
+| `device_lost` | none | the WebGPU device was lost (§4.7 rule 5) | preview only |
+| `unsupported_format` | none (not an error) | the browser's `VideoDecoder.isConfigSupported` says no for the proxy's codec (§5.3.1), or the chunk index is invalid or missing (§6.3, §6.4) | preview only: the asset is decoded by `<video>`; it is counted in `stats.fallbackAssets`, and is a `warning` in the log of the worker, never an `error` |
+
+### 7.2 Limits
+
+The renderer enforces these itself, as the last defence, even though the product already refuses most of them earlier (SDD-007 §9.1: an export is at most 4096 pixels on a side, a document has at most 50 tracks, the ingest refuses sources above 8192 on a side). They are counted in the module's memory, not in the host's.
+
+| Limit | Default | `details.limit` | Notes |
+| --- | --- | --- | --- |
+| Output frame side | 4096 pixels, so a frame is at most 64 MiB | `render_frame_side` | the "frame too large" case; `value` is the side asked for, `ceiling` 4096 |
+| Layers in one plan | 64 | `render_layers` | 50 tracks give at most 50 layers; the margin is for a future overlay layer |
+| Render input | 4 MiB | `render_input_bytes` | a caption with all 5,000 words of the document is about 60 KiB |
+| One texture or bitmap | 8192 pixels on a side | `render_texture_side` | the normalized media is at most 3840 on its long edge (SDD-011 §1.5) |
+| Textures in memory | 512 MiB in all | `render_texture_bytes` | `max_texture_bytes` of `vr_init`; the layers of one frame (§5.2) |
+| Bitmaps in memory | 128 MiB in all | `render_bitmap_bytes` | `max_bitmap_bytes` of `vr_init`; premultiplied copies included |
+| Module memory | 1 GiB | none | the declared maximum of §4.1 and the `wazero` limit; the budgets above plus the scratch of one layer and the 64 MiB output stay under it |
+| Blur radius | 128 source pixels | none | SDD-004 §3.6; a larger blur is drawn as 128, not refused |
+
+A `put` that would pass a budget fails with `limit_exceeded` and changes nothing; it does not evict. In the export the textures are those of one frame (§5.2), so only an extreme project reaches a budget (64 layers of 3840 x 2160 pixels is 2 GiB): it is refused as `E_LIMIT_EXCEEDED` with `details.limit = "render_texture_bytes"`, `value` the bytes of the textures of that frame, `ceiling` 512 MiB and the hint "use smaller clips, or fewer large layers at the same time". The browser worker uses the same defaults and, below them, its own smaller ones on a device that reports low memory (`navigator.deviceMemory`), set in `init` (§4.7).
+
+### 7.3 What each side does
+
+**Export (Go).** `renderhost.Error` carries `Reason` and `Detail` and becomes:
+
+- `E_EXPORT_FAILED` with `details.reason = "render_failed"` (the existing reason, SDD-004 §8), `details.renderer_reason` the `reason` of §7.1 and `details.item` when `detail` names an item. The message is a sentence for a person ("A frame of the project could not be drawn."), the hint "Try again; if it repeats, report it with the output of vukem-video doctor". No file path, no pixel and no key is in a message.
+- `E_LIMIT_EXCEEDED` for `limit_exceeded`, with `details.limit`, `value` and `ceiling` as in SDD-007 §9.1.
+- `E_CANCELLED` when the context was cancelled. A cancel is not a trap and never becomes `render_failed`.
+- A trap discards the instance and fails the export once: a trap on the same input would repeat.
+
+Nothing the renderer says is retried by the export except `missing_texture`, which is the normal upload dance of §4.3, and only once per frame.
+
+**Preview (browser).**
+
+- `missing_texture` and `device_lost` are handled by the worker protocol (§4.7).
+- `limit_exceeded` on a texture: the main thread releases the textures of layers that left the window (§5.4) and posts the upload again once; if it fails again the layer is drawn from the fallback (`<video>` bitmap) and the failure is counted in `stats.renderErrors`.
+- `out_of_memory`: the main thread releases every texture and bitmap, calls `init` again with `prefer: "cpu"` and the smaller budgets, and resends what the window needs. If that fails too the preview shows the `unsupported` state of SDD-012 §11.2 item 6 (paused frames only, Play disabled, a banner that says why).
+- Any other reason is a bug of the product: it is logged with `console.error` and counted in `stats.renderErrors`, the canvas keeps the last good frame, and the editor shows no toast (SDD-012 §11.3: a failed frame is invisible, truth on pause shows the exact frame).
+
+### 7.4 What the renderer does with hostile input
+
+The module receives frames decoded from untrusted media and plans built from a document an agent wrote. Every length is checked against the block the host passed, every size against §7.2 before any allocation, and the arithmetic of §3 cannot read or write outside the output block or a stored texture (the loops are bounded by the clipped rectangle of §3.6). A number the plan could never produce (a `NaN`, a negative size, an opacity of 400) is clamped as §3.3 says or refused as `invalid_plan`; it is never a reason to read memory. Because the core module has no import (§4.1), a defect that nevertheless executes is confined to the instance's memory, which is discarded after a trap. This is the threat row that ADR-0029 adds to SDD-007, and its test is `TestRenderHostSurvivesHostileInput` below.
+
+### 7.5 Acceptance of this section
+
+- `TestRenderReasons` (Go and Rust): for each reason of §7.1 with a status, an input that causes it returns that status and, through `renderhost`, that `Reason`: an unknown field, version 2, kind `"video"`, a layer with no texture, 65 layers, a 4097-pixel output, a texture of 8193 pixels, a 5 MiB input, an `out_len` that is one byte short, a texture whose pixels are one byte short.
+- `TestRenderHostSurvivesHostileInput` (Go): 10,000 random and mutated render inputs and textures (a fuzz target, `FuzzRenderInput`) never trap, never allocate beyond the budgets and never return a status outside §4.5; a plan with `NaN` as text is `invalid_plan`.
+- `TestExportMapsRendererErrors` (Go): each `renderhost.Error` becomes the code and `details` of §7.3 (a table test), and a cancel becomes `E_CANCELLED`.
+- A Playwright test: forcing `out_of_memory` in the worker (a tiny `max_texture_bytes`) leaves the preview on the paused-frame state with the banner, and forcing `device_lost` switches to the CPU path and keeps drawing.
