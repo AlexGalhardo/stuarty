@@ -1,0 +1,50 @@
+[
+  {
+    "kind": "settings.updated",
+    "id": "prj_7k2m9x4q1b",
+    "changes": {
+      "height": [
+        1920,
+        1080
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_c3d4e5f6g7",
+    "changes": {
+      "scale": [
+        1.5,
+        0.844
+      ],
+      "y": [
+        1500,
+        843.75
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_x000000002",
+    "changes": {
+      "scale": [
+        1,
+        0.563
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_x000000003",
+    "changes": {
+      "scale": [
+        1,
+        0.563
+      ],
+      "y": [
+        200,
+        112.5
+      ]
+    }
+  }
+]

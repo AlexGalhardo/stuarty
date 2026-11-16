@@ -350,6 +350,9 @@ var alphaOps = map[string]func(p *docPick) string{
 	"item.slip": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"source_in":%q}`, p.clip(), p.frames(300))
 	},
+	"settings.reframe": func(p *docPick) string {
+		return fmt.Sprintf(`{"aspect":%q}`, p.oneOf("16:9", "9:16", "1:1", "4:5"))
+	},
 	"marker.add": func(p *docPick) string {
 		return fmt.Sprintf(`{"at":"%df","label":"m%d"}`, p.n(20), p.n(10))
 	},

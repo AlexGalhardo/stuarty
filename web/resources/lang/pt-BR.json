@@ -532,6 +532,9 @@
           }
         },
         "settings": {
+          "reframe": {
+            "title": "Reenquadrar projeto"
+          },
           "set": {
             "title": "Configurações do projeto"
           },

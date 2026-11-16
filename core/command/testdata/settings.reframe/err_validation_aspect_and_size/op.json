@@ -1,0 +1,8 @@
+{
+  "op": "settings.reframe",
+  "args": {
+    "aspect": "1:1",
+    "width": 1080,
+    "height": 1080
+  }
+}

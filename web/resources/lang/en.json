@@ -532,6 +532,9 @@
           }
         },
         "settings": {
+          "reframe": {
+            "title": "Reframe project"
+          },
           "set": {
             "title": "Project settings"
           },

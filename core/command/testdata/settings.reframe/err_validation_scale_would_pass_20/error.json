@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "Item itm_m1n2p3q4r5 would get the scale 30, outside 0.001 to 20.",
+  "hint": "Set the size with settings.set to keep the items as they are, or give the item a scale nearer to 1 first.",
+  "retryable": false,
+  "path": "args"
+}

@@ -1,0 +1,7 @@
+{
+  "op": "settings.reframe",
+  "args": {
+    "width": 2160,
+    "height": 3840
+  }
+}

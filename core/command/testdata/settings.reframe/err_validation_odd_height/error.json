@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.height must be even and between 16 and 4096, got 1081.",
+  "hint": "Use height 1080 or 1082.",
+  "retryable": false,
+  "path": "args.height"
+}
