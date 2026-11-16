@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-16
+
+### Added
+
+- **release:** Sign the desktop update feed with an Ed25519 key ([8768cfb](https://github.com/AlexGalhardo/vukem-video/commit/8768cfb3cd71f4b30a220325f19a4e11fbe9c6c6))
+- **release:** Add desktop-verify.sh for the unsigned desktop installers ([0545a1e](https://github.com/AlexGalhardo/vukem-video/commit/0545a1e6bcc4058adc7a8c35a9849bcd5ca12ebc))
+- **release:** Require a major bump for a breaking change after 1.0 ([aeb7914](https://github.com/AlexGalhardo/vukem-video/commit/aeb7914ef7a2f48732fede992076846cd109d297))
+- **site:** Add a link check over the deployed site ([f326487](https://github.com/AlexGalhardo/vukem-video/commit/f32648729fdfadfdf59d2d87f34c32256b060e71))
+- **release:** Add the upgrade path test script across released versions ([944f3a6](https://github.com/AlexGalhardo/vukem-video/commit/944f3a6c47f70ba3e008db0a64cb9e050a86cef6))
+- **release:** Add licence audit modes to the notices tool ([eb9f6fb](https://github.com/AlexGalhardo/vukem-video/commit/eb9f6fb400c7f0c8c21f56d8c961f19abb178d92))
+- **release:** Audit SBOM waivers, innoextract for Inno installers and an audit job ([f3c2912](https://github.com/AlexGalhardo/vukem-video/commit/f3c2912ee9035b758c867434918ec4662ef0f1d2))
+- **engine:** Fall back to the next encoder when the chosen one cannot do the export size ([26fb853](https://github.com/AlexGalhardo/vukem-video/commit/26fb853fb74d40b27c2762573a60d5b4984e72c8))
+- **site:** Check that pt-BR pages keep the headings of their English page ([42ac4c8](https://github.com/AlexGalhardo/vukem-video/commit/42ac4c84b7fbea48b76ef6d2528f3316f98db0f5))
+- **site:** Smoke-test the tutorial commands on a local server ([e711ccf](https://github.com/AlexGalhardo/vukem-video/commit/e711ccf400bcdc7e4085400022d02a33f47fdfbb))
+- **release:** Add the bundle matrix script and its hash tool ([989bd63](https://github.com/AlexGalhardo/vukem-video/commit/989bd63c78bcb52adaa9a686c6562aa17411f5d7))
+- **web:** Serve the login and API keys pages in network mode ([da6356d](https://github.com/AlexGalhardo/vukem-video/commit/da6356d7f1954ebfecdcc0b1bfcdfaa8d01885c5))
+
+### Fixed
+
+- **engine:** Accept an MP4 whose first bytes read as text when its ftyp box is well formed ([9ee30b6](https://github.com/AlexGalhardo/vukem-video/commit/9ee30b60b08d2341d1add3532c156b94183e2e2b))
+- **ui:** Give the select viewport and the Inertia pages the CSP nonce for their style elements ([35fbd7c](https://github.com/AlexGalhardo/vukem-video/commit/35fbd7cd2795783a851e7aed8cf57c74e546ff8d))
+- **web:** Show the newer-workspace and loose-token reasons on every surface ([57f1665](https://github.com/AlexGalhardo/vukem-video/commit/57f1665c6bedc3fb3b339f4a243913288c8d30bd))
+- **ui:** Show the code, message and hint when the editor cannot load a project ([1cf396d](https://github.com/AlexGalhardo/vukem-video/commit/1cf396d1282c06c8e4de090aeef0421cb60c6519))
+- **web:** Map an unusable workspace path to E_INVALID_STATE without naming it ([e43fe67](https://github.com/AlexGalhardo/vukem-video/commit/e43fe679ea27175105c41637682aec116e8740cc))
+- **service:** Sweep bundle export temp files that a killed process left ([421d218](https://github.com/AlexGalhardo/vukem-video/commit/421d218442ae02604af24d99e7a82e0b65d8be4b))
+- **service:** Refuse a stored document of a newer schema version with V_SCHEMA_VERSION ([b12fae8](https://github.com/AlexGalhardo/vukem-video/commit/b12fae887231c669658aeaa6611f5e6743ffa72c))
+- **web:** Show the code, message and hint when the editor page cannot open a project ([7550b7e](https://github.com/AlexGalhardo/vukem-video/commit/7550b7eb430ef17dbd4e7aae423e1ab63f3ed562))
+- **installers:** Carry the third-party notices and licenses in every installer ([ff0f5af](https://github.com/AlexGalhardo/vukem-video/commit/ff0f5afe09ada795a49fc6b126de5e3430b8a43a))
+- **release:** Expect 21 assets and skip the desktop and feed checks before v0.16.0 ([cdfb5e4](https://github.com/AlexGalhardo/vukem-video/commit/cdfb5e4ccb7ab5c23036a4539df1fcd8ed066fa6))
+- **plan:** Skip the placeholder items of an unfilled optional slot in the audio sources ([7db0b33](https://github.com/AlexGalhardo/vukem-video/commit/7db0b33ed1306a9dc45bfeab090ed60ae9e2c843))
+- **lint:** Leave an optional slot on its placeholder quiet so the starters export ([6cd0c43](https://github.com/AlexGalhardo/vukem-video/commit/6cd0c4394c3dd385679c4a802bf0f8a89f718e74))
+
+### Security
+
+- **security:** Count T-35 in the threat model ([7b41c23](https://github.com/AlexGalhardo/vukem-video/commit/7b41c23a265b1a859300b9024c71a1d9b6709d78))
+
 ## [0.15.0] - 2026-11-15
 
 ### Added
@@ -704,7 +740,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.12.0...v0.13.0
