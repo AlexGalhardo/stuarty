@@ -669,6 +669,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "vukem-renderer-text"
+version = "0.0.0"
+dependencies = [
+ "vukem-renderer",
+]
+
+[[package]]
 name = "wasm-bindgen"
 version = "0.2.130"
 source = "registry+https://github.com/rust-lang/crates.io-index"
