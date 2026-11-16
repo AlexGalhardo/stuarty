@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
@@ -46,6 +47,11 @@ func run() error {
 	// The watchdog is the previous version started by the new one's installer; it has no window.
 	if *watch != "" {
 		return shell.RunWatchdog(context.Background(), *watch)
+	}
+
+	// An update whose watchdog died leaves the previous version in a backup: put it back before anything else.
+	if dir, err := shell.UpdateStateDir(); err == nil {
+		_, _ = shell.RecoverPending(dir, version, time.Now)
 	}
 
 	br := &bridge{}

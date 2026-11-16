@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -572,5 +573,184 @@ func TestSwapInstallerRefusesWhenNotInstalledOrWrongFile(t *testing.T) {
 
 	if quits.Load() != 0 {
 		t.Error("must not quit")
+	}
+}
+
+// killedWatchdog is a swap whose watchdog died: pending.json and the backup stay, and no heartbeat is
+// fresh any more.
+func killedWatchdog(t *testing.T) (SwapRequest, Target) {
+	t.Helper()
+
+	_, req, target := swapped(t)
+	age := time.Now().Add(-time.Hour)
+
+	if err := os.Chtimes(pendingPath(req.StateDir), age, age); err != nil {
+		t.Fatal(err)
+	}
+
+	return req, target
+}
+
+func TestSecurity_T35_KilledWatchdogStillRestoresThePreviousVersion(t *testing.T) {
+	req, target := killedWatchdog(t)
+
+	write(t, filepath.Join(filepath.Dir(target.Path), "."+filepath.Base(target.Path)+".staging", "x"), "x")
+
+	done, err := RecoverPending(req.StateDir, "0.20.0", time.Now)
+	if err != nil || !done {
+		t.Fatalf("recover: %v %v", done, err)
+	}
+
+	if read(t, target.Exec) != "old" || !gone(target.Path+".bak") || !gone(pendingPath(req.StateDir)) {
+		t.Error("the previous version must be back and the marker cleared")
+	}
+
+	if !gone(filepath.Join(filepath.Dir(target.Path), "."+filepath.Base(target.Path)+".staging")) {
+		t.Error("the staging must be cleaned")
+	}
+
+	if f, ok := LoadFailed(req.StateDir); !ok || f.Version != "0.21.0" || f.Notified {
+		t.Errorf("failed record %+v %v", f, ok)
+	}
+
+	// Idempotent: a second start finds nothing to do.
+	if done, err := RecoverPending(req.StateDir, "0.20.0", time.Now); done || err != nil {
+		t.Errorf("second recover: %v %v", done, err)
+	}
+}
+
+func TestRecoverLeavesAnAliveWatchdogAlone(t *testing.T) {
+	_, req, target := swapped(t)
+
+	// A fresh pending.json: the watchdog has not started yet.
+	if done, err := RecoverPending(
+		req.StateDir,
+		"0.20.0",
+		time.Now,
+	); done || err != nil ||
+		read(t, target.Exec) != "new" {
+		t.Fatalf("fresh marker: %v %v", done, err)
+	}
+
+	// A fresh heartbeat of a running watchdog.
+	age := time.Now().Add(-time.Hour)
+	if err := os.Chtimes(pendingPath(req.StateDir), age, age); err != nil {
+		t.Fatal(err)
+	}
+
+	write(t, watchLockPath(req.StateDir), "")
+
+	if done, err := RecoverPending(
+		req.StateDir,
+		"0.20.0",
+		time.Now,
+	); done || err != nil ||
+		read(t, target.Exec) != "new" {
+		t.Fatalf("heartbeat: %v %v", done, err)
+	}
+}
+
+func TestRecoverWithTheNewCopyRunningConfirmsAndDeletesTheBackup(t *testing.T) {
+	req, target := killedWatchdog(t)
+
+	if done, err := RecoverPending(
+		req.StateDir,
+		"0.21.0",
+		time.Now,
+	); done || err != nil ||
+		read(t, target.Exec) != "new" {
+		t.Fatalf("the new copy is not undone: %v %v", done, err)
+	}
+
+	if err := ConfirmStart(req.StateDir, "0.21.0"); err != nil {
+		t.Fatal(err)
+	}
+
+	if !gone(target.Path+".bak") || !gone(pendingPath(req.StateDir)) || !gone(confirmedPath(req.StateDir, "0.21.0")) {
+		t.Error("a healthy new copy without a watchdog must finish the update")
+	}
+
+	if _, ok := LoadFailed(req.StateDir); ok || read(t, target.Exec) != "new" {
+		t.Error("nothing failed")
+	}
+}
+
+func TestRecoverIgnoresAStalePendingOfTheSameVersion(t *testing.T) {
+	req, target := killedWatchdog(t)
+	// The update was finished by hand: the backup is already gone.
+	if err := os.RemoveAll(target.Path + ".bak"); err != nil {
+		t.Fatal(err)
+	}
+
+	if done, err := RecoverPending(req.StateDir, "0.21.0", time.Now); done || err != nil {
+		t.Fatalf("same version: %v %v", done, err)
+	}
+
+	// An old copy without a backup: the target is never deleted, the marker is dropped.
+	if done, err := RecoverPending(
+		req.StateDir,
+		"0.20.0",
+		time.Now,
+	); done || err != nil ||
+		read(t, target.Exec) != "new" {
+		t.Fatalf("no backup: %v %v", done, err)
+	}
+
+	if !gone(pendingPath(req.StateDir)) {
+		t.Error("a marker with no backup is dropped")
+	}
+}
+
+func TestRecoverFinishesWhenTheNewVersionAlreadyConfirmed(t *testing.T) {
+	req, target := killedWatchdog(t)
+	write(t, confirmedPath(req.StateDir, "0.21.0"), "ok")
+
+	if done, err := RecoverPending(
+		req.StateDir,
+		"0.20.0",
+		time.Now,
+	); done || err != nil || read(t, target.Exec) != "new" ||
+		!gone(target.Path+".bak") ||
+		!gone(pendingPath(req.StateDir)) {
+		t.Fatalf("confirmed: %v %v", done, err)
+	}
+}
+
+func TestConcurrentStartsRecoverOnce(t *testing.T) {
+	req, target := killedWatchdog(t)
+
+	// A start that holds the swap lock keeps the others out.
+	unlock, err := lockSwap(req.StateDir, time.Now)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if done, err := RecoverPending(
+		req.StateDir,
+		"0.20.0",
+		time.Now,
+	); done || err != nil ||
+		read(t, target.Exec) != "new" {
+		t.Fatalf("locked: %v %v", done, err)
+	}
+
+	unlock()
+
+	var recovered atomic.Int32
+
+	var wg sync.WaitGroup
+
+	for range 8 {
+		wg.Go(func() {
+			if done, err := RecoverPending(req.StateDir, "0.20.0", time.Now); err == nil && done {
+				recovered.Add(1)
+			}
+		})
+	}
+
+	wg.Wait()
+
+	if recovered.Load() != 1 || read(t, target.Exec) != "old" || !gone(target.Path+".bak") {
+		t.Errorf("recovered %d times, exec %q", recovered.Load(), read(t, target.Exec))
 	}
 }
