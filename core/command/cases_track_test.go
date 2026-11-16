@@ -46,6 +46,7 @@ func init() {
 		return base().with(func(d *timeline.Document) { d.Tracks = map[string]timeline.Track{} })
 	})
 	a("ok_default_top", `{"kind": "visual", "id": "trk_k000000001"}`, base)
+	a("ok_audio_explicit_top", `{"kind": "audio", "position": "top", "id": "trk_k000000001"}`, base)
 	a("ok_position_bottom", `{"kind": "visual", "position": "bottom", "id": "trk_k000000001"}`, base)
 	a("ok_above", `{"kind": "visual", "above": "`+vidTr+`", "id": "trk_k000000001"}`, base)
 	a("ok_below", `{"kind": "visual", "below": "`+capTr+`", "id": "trk_k000000001"}`, base)

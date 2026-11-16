@@ -775,7 +775,7 @@ Adds an empty track at a place in the track order.
 | `kind` | `"visual"` or `"audio"` | yes | none | |
 | `name` | string | no | `""` | 0 to 60 characters |
 | `id` | track id | no | generated | R6 |
-| `position` | `"top"` or `"bottom"` | no | `"top"` when none of the three is given | at most one of `position`, `above`, `below` (`E_VALIDATION` if two are present) |
+| `position` | `"top"` or `"bottom"` | no | none of the three given: `"top"` for a visual track, `"bottom"` for an audio track (below the visual ones, as in an NLE) | at most one of `position`, `above`, `below` (`E_VALIDATION` if two are present) |
 | `above` | track id | no | none | the new track is placed directly over this track |
 | `below` | track id | no | none | the new track is placed directly under this track |
 
@@ -820,6 +820,7 @@ Adds an empty track at a place in the track order.
 
 - `ok_default_top_on_empty_document`
 - `ok_default_top`
+- `ok_audio_explicit_top`
 - `ok_position_bottom`
 - `ok_above`
 - `ok_below`
