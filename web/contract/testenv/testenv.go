@@ -380,7 +380,8 @@ func fakeResult(
 		Tags:  tags,
 	}
 
-	probe, err := json.Marshal(sum)
+	// The real ingest writes the summary next to the raw ffprobe output (SDD-011 section 3.2).
+	probe, err := json.Marshal(map[string]any{"summary": sum, "ffprobe": json.RawMessage("{}")})
 	if err != nil {
 		return nil, err
 	}
