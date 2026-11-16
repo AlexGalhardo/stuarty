@@ -3623,7 +3623,7 @@
         "additionalProperties": false,
         "properties": {
           "clip_item_id": {
-            "description": "A clip of a video asset with audio.",
+            "description": "A clip of a video asset with audio, or an audio item.",
             "type": "string"
           },
           "max_chars": {
@@ -3719,7 +3719,7 @@
         "additionalProperties": false,
         "properties": {
           "clip_item_id": {
-            "description": "A clip of a video asset with audio.",
+            "description": "A clip of a video asset with audio, or an audio item.",
             "type": "string"
           },
           "resolved": {
