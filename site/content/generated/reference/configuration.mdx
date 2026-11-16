@@ -15,7 +15,7 @@ All variables are optional.
 | `VUKEM_VIDEO_FFMPEG`, `VUKEM_VIDEO_FFPROBE` | discovered | explicit binaries |
 | `VUKEM_VIDEO_ENCODER` | automatic | force an H.264 encoder by FFmpeg name |
 | `VUKEM_VIDEO_ALLOW_USER_X264` | `false` | allow `libx264` when the user's own FFmpeg has it |
-| `VUKEM_VIDEO_EXPORT_RENDERER` | `go` | what draws the exported frames: `go` (the compositor in Go) or `rust` (the renderer of `renderer/`, a WebAssembly module under `wazero`, which draws the same bytes: SDD-013 §3.10). Any other value stops the server at start. The default changes only when the stage C gate passes on every system |
+| `VUKEM_VIDEO_EXPORT_RENDERER` | `go` | what draws the exported frames: `go` (the compositor in Go), `rust` (the renderer of `renderer/`, a WebAssembly module under `wazero`, which draws the same bytes: SDD-013 §3.10) or `gpu` (the native GPU host `vukem-render` when the machine has a graphics adapter, `rust` otherwise: SDD-013 §4.9). Any other value stops the server at start. The default changes only when the stage C gate passes on every system |
 | `VUKEM_VIDEO_IMPORT_ROOTS` | none | in network mode, directories from which import by path is allowed |
 | `VUKEM_VIDEO_MAX_EXPORTS` | `2` | concurrent exports per workspace |
 | `VUKEM_VIDEO_MAX_IMPORT_BYTES` | `8589934592` (8 GiB) | largest file accepted by import |

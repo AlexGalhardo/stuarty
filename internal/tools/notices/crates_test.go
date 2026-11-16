@@ -12,7 +12,7 @@ import (
 
 // cargoMetadataFor builds the `cargo metadata` document of a workspace "vukem-renderer" that depends on
 // "lib" (normal), "mac" (a proc macro) and "dev" (dev-only); "mac" needs "helper". A second member,
-// "gpu", is not the shipped module and brings "gpudep", which must not be listed.
+// "vukem-renderer-gpu", is the native host and brings "gpudep", which is listed for the native targets only.
 func cargoMetadataFor(dirs map[string]string) string {
 	pkg := func(name, kind, source string) string {
 		return `{"id":"` + name + `","name":"` + name + `","version":"1.0.0","license":"MIT","source":` + source +
@@ -26,13 +26,22 @@ func cargoMetadataFor(dirs map[string]string) string {
 	}
 
 	return `{"packages":[` + strings.Join([]string{
-		pkg("vukem-renderer", "cdylib", "null"), pkg("lib", "lib", reg), pkg("mac", "proc-macro", reg),
-		pkg("helper", "lib", reg), pkg("dev", "lib", reg), pkg("gpu", "lib", "null"), pkg("gpudep", "lib", reg),
-	}, ",") + `],"workspace_members":["vukem-renderer","gpu"],"resolve":{"nodes":[` +
+		pkg("vukem-renderer", "cdylib", "null"),
+		pkg("lib", "lib", reg),
+		pkg("mac", "proc-macro", reg),
+		pkg(
+			"helper",
+			"lib",
+			reg,
+		),
+		pkg("dev", "lib", reg),
+		pkg("vukem-renderer-gpu", "bin", "null"),
+		pkg("gpudep", "lib", reg),
+	}, ",") + `],"workspace_members":["vukem-renderer","vukem-renderer-gpu"],"resolve":{"nodes":[` +
 		`{"id":"vukem-renderer","deps":[` + dep("lib", "null") + "," + dep("mac", "null") + "," + dep("dev", `"dev"`) + `]},` +
 		`{"id":"lib","deps":[]},{"id":"mac","deps":[` + dep("helper", "null") + `]},` +
 		`{"id":"helper","deps":[]},{"id":"dev","deps":[]},` +
-		`{"id":"gpu","deps":[` + dep("gpudep", "null") + `]},{"id":"gpudep","deps":[]}]}}`
+		`{"id":"vukem-renderer-gpu","deps":[` + dep("gpudep", "null") + `]},{"id":"gpudep","deps":[]}]}}`
 }
 
 func TestRustCratesListsOnlyWhatIsShipped(t *testing.T) {
@@ -41,7 +50,7 @@ func TestRustCratesListsOnlyWhatIsShipped(t *testing.T) {
 	root := t.TempDir()
 	dirs := map[string]string{}
 
-	for _, n := range []string{"vukem-renderer", "lib", "mac", "helper", "dev", "gpu", "gpudep"} {
+	for _, n := range []string{"vukem-renderer", "lib", "mac", "helper", "dev", "vukem-renderer-gpu", "gpudep"} {
 		dirs[n] = filepath.Join(root, "crate-"+n)
 		if err := os.MkdirAll(dirs[n], 0o755); err != nil {
 			t.Fatal(err)
@@ -60,10 +69,10 @@ func TestRustCratesListsOnlyWhatIsShipped(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var got []string
+	var got [][]string
 
 	run := func(_ context.Context, _ string, _ []string, name string, args ...string) ([]byte, error) {
-		got = append([]string{name}, args...)
+		got = append(got, append([]string{name}, args...))
 
 		return []byte(cargoMetadataFor(dirs)), nil
 	}
@@ -78,20 +87,69 @@ func TestRustCratesListsOnlyWhatIsShipped(t *testing.T) {
 		names = append(names, c.Name)
 	}
 
-	if !slices.Equal(names, []string{"lib"}) {
+	if !slices.Equal(names, []string{"gpudep", "lib"}) {
 		t.Fatalf(
-			"crates = %v, want only [lib]: the workspace member, the proc macro, what only it needs and the dev dependency are not shipped",
+			"crates = %v, want [gpudep lib]: the workspace members, the proc macro, what only it needs and the dev dependency are not shipped",
 			names,
 		)
 	}
 
-	if c := comps[0]; c.Group != groupCrates || c.Copyright != "Copyright (c) 2024 Example Authors" ||
+	if c := comps[1]; c.Group != groupCrates || c.Copyright != "Copyright (c) 2024 Example Authors" ||
 		c.Licenses[0] != "licenses/crates/lib@1.0.0/LICENSE-MIT" {
 		t.Fatalf("component = %+v", c)
 	}
 
-	if !slices.Contains(got, "--locked") || !slices.Contains(got, rendererTarget) {
-		t.Fatalf("cargo was run as %v, want --locked and the wasm32 target", got)
+	if len(got) != 1+len(gpuHostTargets) {
+		t.Fatalf("cargo ran %d times, want the wasm32 target and %d native targets", len(got), len(gpuHostTargets))
+	}
+
+	for _, run := range got {
+		if !slices.Contains(run, "--locked") {
+			t.Fatalf("cargo was run as %v, want --locked", run)
+		}
+	}
+
+	if !slices.Contains(got[0], rendererTarget) || !slices.Contains(got[1], gpuHostTargets[0]) {
+		t.Fatalf("cargo was run as %v, want the wasm32 target first and then the native ones", got)
+	}
+}
+
+// TestRustCratesUsesTheKeptTextWhenACrateShipsNone: a crate whose package has no licence file takes the
+// text kept in licenses/crate-texts/<crate>, and the legacy "A/B" expression reads as "A OR B".
+func TestRustCratesUsesTheKeptTextWhenACrateShipsNone(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	pkgDir := filepath.Join(root, "crate-bare")
+	kept := filepath.Join(root, filepath.FromSlash(crateTextsDir), "bare")
+
+	for _, d := range []string{pkgDir, kept} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := os.WriteFile(filepath.Join(kept, "LICENSE-MIT"), []byte(mitText), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	c, err := crateComponent(root, cargoPackage{
+		Name: "bare", Version: "2.0.0", License: "MIT/Apache-2.0", ManifestPath: filepath.Join(pkgDir, "Cargo.toml"),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if c.SPDX != "MIT OR Apache-2.0" || len(c.Licenses) != 1 ||
+		c.Licenses[0] != "licenses/crates/bare@2.0.0/LICENSE-MIT" {
+		t.Fatalf("component = %+v", c)
+	}
+
+	if _, err := crateComponent(
+		t.TempDir(),
+		cargoPackage{Name: "bare", ManifestPath: filepath.Join(pkgDir, "Cargo.toml")},
+	); err == nil {
+		t.Fatal("a crate with no text anywhere must fail")
 	}
 }
 

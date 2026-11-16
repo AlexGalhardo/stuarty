@@ -173,6 +173,82 @@ The production dependency closure of `web/package.json` (`dependencies`, transit
 | use-sidecar | 1.1.3 | MIT | Copyright (c) 2017 Anton Korzunov | [LICENSE](<licenses/npm/use-sidecar@1.1.3/LICENSE>) | - |
 | zustand | 5.1.0 | MIT | Copyright (c) 2019 Paul Henschel | [LICENSE](<licenses/npm/zustand@5.1.0/LICENSE>) | - |
 
+## Rust crates
+
+Compiled into the WebAssembly renderer of `renderer/` (`Cargo.lock`, normal dependencies of the wasm32 target; build-time proc macros are not shipped).
+
+| Name | Version | Licence | Copyright | Licence text | Notes |
+| --- | --- | --- | --- | --- | --- |
+| allocator-api2 | 0.2.21 | MIT OR Apache-2.0 | - | [LICENSE-APACHE](<licenses/crates/allocator-api2@0.2.21/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/allocator-api2@0.2.21/LICENSE-MIT>) | - |
+| arrayvec | 0.7.8 | MIT OR Apache-2.0 | Copyright (c) Ulrik Sverdrup "bluss" 2015-2023 | [LICENSE-APACHE](<licenses/crates/arrayvec@0.7.8/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/arrayvec@0.7.8/LICENSE-MIT>) | - |
+| ash | 0.38.0+1.3.281 | MIT OR Apache-2.0 | Copyright (c) 2016 ASH | [LICENSE-APACHE](<licenses/crates/ash@0.38.0+1.3.281/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/ash@0.38.0+1.3.281/LICENSE-MIT>) | - |
+| bit-set | 0.10.0 | Apache-2.0 OR MIT | Copyright (c) 2026 The Rust Project Developers | [LICENSE-APACHE](<licenses/crates/bit-set@0.10.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/bit-set@0.10.0/LICENSE-MIT>) | - |
+| bit-vec | 0.9.1 | Apache-2.0 OR MIT | Copyright (c) 2023 The Rust Project Developers | [LICENSE-APACHE](<licenses/crates/bit-vec@0.9.1/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/bit-vec@0.9.1/LICENSE-MIT>) | - |
+| bitflags | 2.13.2 | MIT OR Apache-2.0 | Copyright (c) 2014 The Rust Project Developers | [LICENSE-APACHE](<licenses/crates/bitflags@2.13.2/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/bitflags@2.13.2/LICENSE-MIT>) | - |
+| block2 | 0.6.2 | MIT | Copyright 2026 Mads Marquart | [LICENSE-MIT.txt](<licenses/crates/block2@0.6.2/LICENSE-MIT.txt>) | - |
+| bytemuck | 1.25.2 | Zlib OR Apache-2.0 OR MIT | Copyright (c) 2019 Daniel "Lokathor" Gee. | [LICENSE-APACHE](<licenses/crates/bytemuck@1.25.2/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/bytemuck@1.25.2/LICENSE-MIT>), [LICENSE-ZLIB](<licenses/crates/bytemuck@1.25.2/LICENSE-ZLIB>) | - |
+| cfg-if | 1.0.5 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | [LICENSE-APACHE](<licenses/crates/cfg-if@1.0.5/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/cfg-if@1.0.5/LICENSE-MIT>) | - |
+| codespan-reporting | 0.13.1 | Apache-2.0 | - | [LICENSE](<licenses/crates/codespan-reporting@0.13.1/LICENSE>) | - |
+| dispatch2 | 0.3.1 | Zlib OR Apache-2.0 OR MIT | Copyright 2026 Mads Marquart | [LICENSE-MIT.txt](<licenses/crates/dispatch2@0.3.1/LICENSE-MIT.txt>), [LICENSE-ZLIB.txt](<licenses/crates/dispatch2@0.3.1/LICENSE-ZLIB.txt>) | - |
+| equivalent | 1.0.3 | Apache-2.0 OR MIT | Copyright (c) 2016--2023 | [LICENSE-APACHE](<licenses/crates/equivalent@1.0.3/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/equivalent@1.0.3/LICENSE-MIT>) | - |
+| foldhash | 0.2.0 | Zlib | Copyright (c) 2024 Orson Peters | [LICENSE](<licenses/crates/foldhash@0.2.0/LICENSE>) | - |
+| gpu-allocator | 0.28.0 | MIT OR Apache-2.0 | Copyright (c) 2021 Traverse Research B.V. | [LICENSE-APACHE](<licenses/crates/gpu-allocator@0.28.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/gpu-allocator@0.28.0/LICENSE-MIT>) | - |
+| half | 2.7.1 | MIT OR Apache-2.0 | - | [LICENSE-APACHE](<licenses/crates/half@2.7.1/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/half@2.7.1/LICENSE-MIT>) | - |
+| hashbrown | 0.16.1 | MIT OR Apache-2.0 | Copyright (c) 2016 Amanieu d'Antras | [LICENSE-APACHE](<licenses/crates/hashbrown@0.16.1/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/hashbrown@0.16.1/LICENSE-MIT>) | - |
+| hashbrown | 0.17.1 | MIT OR Apache-2.0 | Copyright (c) 2016 Amanieu d'Antras | [LICENSE-APACHE](<licenses/crates/hashbrown@0.17.1/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/hashbrown@0.17.1/LICENSE-MIT>) | - |
+| indexmap | 2.14.2 | Apache-2.0 OR MIT | Copyright (c) 2016--2017 | [LICENSE-APACHE](<licenses/crates/indexmap@2.14.2/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/indexmap@2.14.2/LICENSE-MIT>) | - |
+| libc | 0.2.191 | MIT OR Apache-2.0 | Copyright (c) The Rust Project Developers | [LICENSE-APACHE](<licenses/crates/libc@0.2.191/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/libc@0.2.191/LICENSE-MIT>) | - |
+| libloading | 0.8.9 | ISC | Copyright © 2015, Simonas Kazlauskas | [LICENSE](<licenses/crates/libloading@0.8.9/LICENSE>) | - |
+| libm | 0.2.16 | MIT | - | [LICENSE.txt](<licenses/crates/libm@0.2.16/LICENSE.txt>) | - |
+| lock_api | 0.4.14 | MIT OR Apache-2.0 | Copyright (c) 2016 The Rust Project Developers | [LICENSE-APACHE](<licenses/crates/lock_api@0.4.14/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/lock_api@0.4.14/LICENSE-MIT>) | - |
+| log | 0.4.35 | MIT OR Apache-2.0 | Copyright (c) 2014 The Rust Project Developers | [LICENSE-APACHE](<licenses/crates/log@0.4.35/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/log@0.4.35/LICENSE-MIT>) | - |
+| naga | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/naga@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/naga@30.0.2/LICENSE.MIT>) | - |
+| naga-types | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/naga-types@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/naga-types@30.0.2/LICENSE.MIT>) | - |
+| num-traits | 0.2.19 | MIT OR Apache-2.0 | Copyright (c) 2014 The Rust Project Developers | [LICENSE-APACHE](<licenses/crates/num-traits@0.2.19/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/num-traits@0.2.19/LICENSE-MIT>) | - |
+| objc2 | 0.6.5 | MIT | Copyright 2026 Mads Marquart | [LICENSE-MIT.txt](<licenses/crates/objc2@0.6.5/LICENSE-MIT.txt>) | - |
+| objc2-core-foundation | 0.3.2 | Zlib OR Apache-2.0 OR MIT | Copyright 2026 Mads Marquart | [LICENSE-MIT.txt](<licenses/crates/objc2-core-foundation@0.3.2/LICENSE-MIT.txt>), [LICENSE-ZLIB.txt](<licenses/crates/objc2-core-foundation@0.3.2/LICENSE-ZLIB.txt>) | - |
+| objc2-core-graphics | 0.3.2 | Zlib OR Apache-2.0 OR MIT | Copyright 2026 Mads Marquart | [LICENSE-MIT.txt](<licenses/crates/objc2-core-graphics@0.3.2/LICENSE-MIT.txt>), [LICENSE-ZLIB.txt](<licenses/crates/objc2-core-graphics@0.3.2/LICENSE-ZLIB.txt>) | - |
+| objc2-encode | 4.1.0 | MIT | Copyright 2026 Mads Marquart | [LICENSE-MIT.txt](<licenses/crates/objc2-encode@4.1.0/LICENSE-MIT.txt>) | - |
+| objc2-foundation | 0.3.2 | MIT | Copyright 2026 Mads Marquart | [LICENSE-MIT.txt](<licenses/crates/objc2-foundation@0.3.2/LICENSE-MIT.txt>) | - |
+| objc2-io-surface | 0.3.2 | Zlib OR Apache-2.0 OR MIT | Copyright 2026 Mads Marquart | [LICENSE-MIT.txt](<licenses/crates/objc2-io-surface@0.3.2/LICENSE-MIT.txt>), [LICENSE-ZLIB.txt](<licenses/crates/objc2-io-surface@0.3.2/LICENSE-ZLIB.txt>) | - |
+| objc2-metal | 0.3.2 | Zlib OR Apache-2.0 OR MIT | Copyright 2026 Mads Marquart | [LICENSE-MIT.txt](<licenses/crates/objc2-metal@0.3.2/LICENSE-MIT.txt>), [LICENSE-ZLIB.txt](<licenses/crates/objc2-metal@0.3.2/LICENSE-ZLIB.txt>) | - |
+| objc2-quartz-core | 0.3.2 | Zlib OR Apache-2.0 OR MIT | Copyright 2026 Mads Marquart | [LICENSE-MIT.txt](<licenses/crates/objc2-quartz-core@0.3.2/LICENSE-MIT.txt>), [LICENSE-ZLIB.txt](<licenses/crates/objc2-quartz-core@0.3.2/LICENSE-ZLIB.txt>) | - |
+| once_cell | 1.21.4 | MIT OR Apache-2.0 | - | [LICENSE-APACHE](<licenses/crates/once_cell@1.21.4/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/once_cell@1.21.4/LICENSE-MIT>) | - |
+| ordered-float | 5.5.1 | MIT | Copyright (c) 2015 Jonathan Reem | [LICENSE-MIT](<licenses/crates/ordered-float@5.5.1/LICENSE-MIT>) | - |
+| parking_lot | 0.12.5 | MIT OR Apache-2.0 | Copyright (c) 2016 The Rust Project Developers | [LICENSE-APACHE](<licenses/crates/parking_lot@0.12.5/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/parking_lot@0.12.5/LICENSE-MIT>) | - |
+| parking_lot_core | 0.9.12 | MIT OR Apache-2.0 | Copyright (c) 2016 The Rust Project Developers | [LICENSE-APACHE](<licenses/crates/parking_lot_core@0.9.12/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/parking_lot_core@0.9.12/LICENSE-MIT>) | - |
+| presser | 0.3.1 | MIT OR Apache-2.0 | Copyright (c) 2019 Embark Studios | [LICENSE-APACHE](<licenses/crates/presser@0.3.1/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/presser@0.3.1/LICENSE-MIT>) | - |
+| profiling | 1.0.18 | MIT OR Apache-2.0 | Copyright (c) 2020 Philip Degarmo and other contributors | [LICENSE-MIT](<licenses/crates/profiling@1.0.18/LICENSE-MIT>) | - |
+| range-alloc | 0.1.5 | MIT OR Apache-2.0 | Copyright (c) 2023 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/range-alloc@0.1.5/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/range-alloc@0.1.5/LICENSE.MIT>) | - |
+| raw-window-handle | 0.6.2 | MIT OR Apache-2.0 OR Zlib | Copyright (c) 2019 Osspial | [LICENSE-APACHE.md](<licenses/crates/raw-window-handle@0.6.2/LICENSE-APACHE.md>), [LICENSE-MIT.md](<licenses/crates/raw-window-handle@0.6.2/LICENSE-MIT.md>), [LICENSE-ZLIB.md](<licenses/crates/raw-window-handle@0.6.2/LICENSE-ZLIB.md>) | - |
+| raw-window-metal | 1.1.0 | MIT OR Apache-2.0 | - | [LICENSE-APACHE](<licenses/crates/raw-window-metal@1.1.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/raw-window-metal@1.1.0/LICENSE-MIT>) | - |
+| renderdoc-sys | 1.1.0 | MIT OR Apache-2.0 | Copyright (c) 2022 Eyal Kalderon | [LICENSE-APACHE](<licenses/crates/renderdoc-sys@1.1.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/renderdoc-sys@1.1.0/LICENSE-MIT>) | - |
+| rustc-hash | 1.1.0 | Apache-2.0 OR MIT | - | [LICENSE-APACHE](<licenses/crates/rustc-hash@1.1.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/rustc-hash@1.1.0/LICENSE-MIT>) | - |
+| scopeguard | 1.2.0 | MIT OR Apache-2.0 | Copyright (c) 2016-2019 Ulrik Sverdrup "bluss" and scopeguard developers | [LICENSE-APACHE](<licenses/crates/scopeguard@1.2.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/scopeguard@1.2.0/LICENSE-MIT>) | - |
+| smallvec | 1.16.5 | MIT OR Apache-2.0 | Copyright (c) 2018 The Servo Project Developers | [LICENSE-APACHE](<licenses/crates/smallvec@1.16.5/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/smallvec@1.16.5/LICENSE-MIT>) | - |
+| spirv | 0.4.0+sdk-1.4.341.0 | Apache-2.0 | - | [LICENSE](<licenses/crates/spirv@0.4.0+sdk-1.4.341.0/LICENSE>) | - |
+| static_assertions | 1.1.0 | MIT OR Apache-2.0 | Copyright (c) 2017 Nikolai Vazquez | [LICENSE-APACHE](<licenses/crates/static_assertions@1.1.0/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/static_assertions@1.1.0/LICENSE-MIT>) | - |
+| thiserror | 2.0.21 | MIT OR Apache-2.0 | - | [LICENSE-APACHE](<licenses/crates/thiserror@2.0.21/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/thiserror@2.0.21/LICENSE-MIT>) | - |
+| unicode-ident | 1.0.27 | (MIT OR Apache-2.0) AND Unicode-3.0 | COPYRIGHT AND PERMISSION NOTICE | [LICENSE-APACHE](<licenses/crates/unicode-ident@1.0.27/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/unicode-ident@1.0.27/LICENSE-MIT>), [LICENSE-UNICODE](<licenses/crates/unicode-ident@1.0.27/LICENSE-UNICODE>) | - |
+| unicode-width | 0.2.3 | MIT OR Apache-2.0 | Copyright (c) 2015 The Rust Project Developers | [LICENSE-APACHE](<licenses/crates/unicode-width@0.2.3/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/unicode-width@0.2.3/LICENSE-MIT>) | - |
+| wgpu | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/wgpu@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/wgpu@30.0.2/LICENSE.MIT>) | - |
+| wgpu-core | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/wgpu-core@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/wgpu-core@30.0.2/LICENSE.MIT>) | - |
+| wgpu-core-deps-apple | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/wgpu-core-deps-apple@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/wgpu-core-deps-apple@30.0.2/LICENSE.MIT>) | - |
+| wgpu-core-deps-windows-linux-android | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/wgpu-core-deps-windows-linux-android@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/wgpu-core-deps-windows-linux-android@30.0.2/LICENSE.MIT>) | - |
+| wgpu-hal | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/wgpu-hal@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/wgpu-hal@30.0.2/LICENSE.MIT>) | - |
+| wgpu-naga-bridge | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/wgpu-naga-bridge@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/wgpu-naga-bridge@30.0.2/LICENSE.MIT>) | - |
+| wgpu-types | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/wgpu-types@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/wgpu-types@30.0.2/LICENSE.MIT>) | - |
+| windows | 0.62.2 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. | [license-apache-2.0](<licenses/crates/windows@0.62.2/license-apache-2.0>), [license-mit](<licenses/crates/windows@0.62.2/license-mit>) | - |
+| windows-collections | 0.3.2 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. | [license-apache-2.0](<licenses/crates/windows-collections@0.3.2/license-apache-2.0>), [license-mit](<licenses/crates/windows-collections@0.3.2/license-mit>) | - |
+| windows-core | 0.62.2 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. | [license-apache-2.0](<licenses/crates/windows-core@0.62.2/license-apache-2.0>), [license-mit](<licenses/crates/windows-core@0.62.2/license-mit>) | - |
+| windows-future | 0.3.2 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. | [license-apache-2.0](<licenses/crates/windows-future@0.3.2/license-apache-2.0>), [license-mit](<licenses/crates/windows-future@0.3.2/license-mit>) | - |
+| windows-link | 0.2.1 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. | [license-apache-2.0](<licenses/crates/windows-link@0.2.1/license-apache-2.0>), [license-mit](<licenses/crates/windows-link@0.2.1/license-mit>) | - |
+| windows-numerics | 0.3.1 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. | [license-apache-2.0](<licenses/crates/windows-numerics@0.3.1/license-apache-2.0>), [license-mit](<licenses/crates/windows-numerics@0.3.1/license-mit>) | - |
+| windows-result | 0.4.1 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. | [license-apache-2.0](<licenses/crates/windows-result@0.4.1/license-apache-2.0>), [license-mit](<licenses/crates/windows-result@0.4.1/license-mit>) | - |
+| windows-strings | 0.5.1 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. | [license-apache-2.0](<licenses/crates/windows-strings@0.5.1/license-apache-2.0>), [license-mit](<licenses/crates/windows-strings@0.5.1/license-mit>) | - |
+| windows-threading | 0.2.1 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. | [license-apache-2.0](<licenses/crates/windows-threading@0.2.1/license-apache-2.0>), [license-mit](<licenses/crates/windows-threading@0.2.1/license-mit>) | - |
+| zerocopy | 0.8.63 | BSD-2-Clause OR Apache-2.0 OR MIT | Copyright 2019 The Fuchsia Authors. | [LICENSE-APACHE](<licenses/crates/zerocopy@0.8.63/LICENSE-APACHE>), [LICENSE-BSD](<licenses/crates/zerocopy@0.8.63/LICENSE-BSD>), [LICENSE-MIT](<licenses/crates/zerocopy@0.8.63/LICENSE-MIT>) | - |
+
 ## Fonts
 
 Embedded in the binary; the rasterizer reads no other font.
