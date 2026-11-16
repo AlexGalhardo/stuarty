@@ -38,6 +38,8 @@ type Config struct {
 	Encoder ffmpeg.DetectOptions
 	// Lint is the environment of the lint that gates the export.
 	Lint lint.Env
+	// PixelRenderer is VUKEM_VIDEO_EXPORT_RENDERER; the zero value is the Go compositor.
+	PixelRenderer export.PixelRenderer
 }
 
 type adapter struct {
@@ -68,19 +70,20 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 	}
 
 	res, err := export.Run(ctx, export.Job{
-		Runner:       a.runnerFor(ctx, caps),
-		Caps:         caps,
-		Doc:          in.Doc,
-		Start:        int(in.Start),
-		End:          int(in.End),
-		JobID:        in.JobID,
-		ArtifactsDir: filepath.Join(a.cfg.Workspace, "artifacts"),
-		OutPath:      in.OutPath,
-		Format:       export.Format(in.Format),
-		MaxBytes:     in.MaxBytes,
-		Encoder:      a.cfg.Encoder,
-		Lint:         a.cfg.Lint,
-		Fonts:        service.FontSetFor(a.cfg.Workspace, in.Doc),
+		Runner:        a.runnerFor(ctx, caps),
+		Caps:          caps,
+		Doc:           in.Doc,
+		Start:         int(in.Start),
+		End:           int(in.End),
+		JobID:         in.JobID,
+		ArtifactsDir:  filepath.Join(a.cfg.Workspace, "artifacts"),
+		OutPath:       in.OutPath,
+		Format:        export.Format(in.Format),
+		MaxBytes:      in.MaxBytes,
+		Encoder:       a.cfg.Encoder,
+		Lint:          a.cfg.Lint,
+		PixelRenderer: a.cfg.PixelRenderer,
+		Fonts:         service.FontSetFor(a.cfg.Workspace, in.Doc),
 		OnProgress: func(p export.Progress) {
 			if in.OnProgress != nil {
 				in.OnProgress(p.Frame, p.Total)

@@ -24,6 +24,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/lint"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/cache"
+	"github.com/AlexGalhardo/vukem-video/engine/export"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/frame"
 	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
@@ -437,10 +438,16 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 
 	allowX264, _ := strconv.ParseBool(cfg.Getenv("VUKEM_VIDEO_ALLOW_USER_X264"))
 
+	pixelRenderer, err := export.ParsePixelRenderer(cfg.Getenv("VUKEM_VIDEO_EXPORT_RENDERER"))
+	if err != nil {
+		return service.Media{}, nil, fmt.Errorf("owner: VUKEM_VIDEO_EXPORT_RENDERER: %w", err)
+	}
+
 	return media, exporter.New(exporter.Config{
 		Runner: child.Export, HardwareRunner: child.ExportHardware, Workspace: string(o.Dir),
-		Encoder: ffmpeg.DetectOptions{Forced: cfg.Getenv("VUKEM_VIDEO_ENCODER"), AllowUserX264: allowX264},
-		Lint:    lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
+		Encoder:       ffmpeg.DetectOptions{Forced: cfg.Getenv("VUKEM_VIDEO_ENCODER"), AllowUserX264: allowX264},
+		Lint:          lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
+		PixelRenderer: pixelRenderer,
 	}), nil
 }
 
