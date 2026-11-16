@@ -262,7 +262,10 @@ func (c *Context) rescaleTimes(r rescaler, adjusted *[]adjustment) {
 		if len(it.Words) > 0 {
 			ws := slices.Clone(it.Words)
 			for i := range ws {
-				ws[i].Start, ws[i].Duration = r.of(ws[i].Start), r.of(ws[i].Duration)
+				// The two ends are rounded, not the start and the length: words that touch keep
+				// touching and a rounding error never adds up from one word to the next (VV-058).
+				start, end := r.of(ws[i].Start), r.of(ws[i].Start+ws[i].Duration)
+				ws[i].Start, ws[i].Duration = start, end-start
 				zero(fmt.Sprintf("words[%d].duration", i), &ws[i].Duration)
 			}
 			it.Words = ws

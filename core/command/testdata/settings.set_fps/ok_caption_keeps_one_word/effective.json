@@ -9,13 +9,6 @@
     },
     {
       "id": "itm_m1n2p3q4r5",
-      "field": "words[1].duration",
-      "reason": "became_zero",
-      "rescaled": 0,
-      "final": 1
-    },
-    {
-      "id": "itm_m1n2p3q4r5",
       "field": "words[2].duration",
       "reason": "became_zero",
       "rescaled": 0,

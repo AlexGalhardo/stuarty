@@ -1,6 +1,8 @@
 package command
 
 import (
+	"encoding/json"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -182,5 +184,75 @@ func TestDuplicateWithoutStartTakesTheNextFreeSlot(t *testing.T) {
 
 	if starts[0] != 60 || starts[1] != 120 || starts[2] != 180 {
 		t.Errorf("starts = %v, want 60 120 180", starts)
+	}
+}
+
+// Changing the frame rate back and forth keeps the words of a caption touching (VV-058).
+func TestSetFPSRoundTripKeepsWordsTouching(t *testing.T) {
+	words := []timeline.Word{
+		{Text: "a", Start: 0, Duration: 8},
+		{Text: "b", Start: 8, Duration: 8},
+		{Text: "c", Start: 16, Duration: 7},
+		{Text: "d", Start: 23, Duration: 7},
+	}
+	d := base().d
+	n := 0
+	env := Env{NewIDs: func(prefix string) string {
+		n++
+		return prefix + "_" + strings.Repeat("d", 9) + string(rune('a'+n))
+	}}
+
+	var raw []map[string]string
+	for _, w := range words {
+		raw = append(raw, map[string]string{
+			"text": w.Text, "start": strconv.Itoa(w.Start) + "f", "duration": strconv.Itoa(w.Duration) + "f",
+		})
+	}
+
+	args, err := json.Marshal(map[string]any{"track_id": vidTr, "start": "0f", "words": raw})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, o := range []Operation{op2("caption.add", string(args))} {
+		res, err := Default().Apply(d, o, env)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		d = res.Doc
+	}
+
+	var capID string
+	for id, it := range d.Items {
+		if it.Type == timeline.ItemCaption {
+			capID = id
+		}
+	}
+
+	for _, fps := range []string{`"24"`, `"30000/1001"`, `"60"`, `"30"`} {
+		res, err := Default().Apply(d, op2("settings.set_fps", `{"fps": `+fps+`}`), env)
+		if err != nil {
+			t.Fatalf("%s: %v", fps, err)
+		}
+
+		d = res.Doc
+	}
+
+	// Rounding each frame rate loses information, so the exact start of a word may move by a
+	// frame; the words keep touching and the last one keeps ending with the caption.
+	got := d.Items[capID].Words
+	end := 0
+
+	for i, w := range got {
+		if w.Start != end {
+			t.Errorf("word %d starts at %d, the previous one ended at %d", i, w.Start, end)
+		}
+
+		end = w.Start + w.Duration
+	}
+
+	if want := words[len(words)-1].Start + words[len(words)-1].Duration; end != want {
+		t.Errorf("the last word ends at %d, want %d", end, want)
 	}
 }
