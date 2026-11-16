@@ -1,6 +1,8 @@
 import {
 	Blend,
 	CopyPlus,
+	Eye,
+	EyeOff,
 	Merge,
 	Pencil,
 	Scissors,
@@ -39,6 +41,9 @@ export default function ItemContextMenuItems({
 	const selection = useUiState((s) => s.selection.items);
 	const isCaption = useDocumentState(
 		(s) => s.document?.items[itemId]?.type === "caption",
+	);
+	const off = useDocumentState(
+		(s) => s.document?.items[itemId]?.disabled === true,
 	);
 	// Merge takes exactly two captions; the core judges whether they share a track.
 	const captionPair = useDocumentState(
@@ -88,6 +93,10 @@ export default function ItemContextMenuItems({
 			<ContextMenuItem onSelect={() => void actions.duplicateSelection()}>
 				<CopyPlus aria-hidden="true" />
 				{t("ui.editor.edit.duplicate")}
+			</ContextMenuItem>
+			<ContextMenuItem onSelect={() => void actions.toggleEnabled()}>
+				{off ? <Eye aria-hidden="true" /> : <EyeOff aria-hidden="true" />}
+				{t(off ? "ui.editor.edit.enable" : "ui.editor.edit.disable")}
 			</ContextMenuItem>
 			<ContextMenuItem onSelect={() => runtime.uiWriter.startRename(itemId)}>
 				<Pencil aria-hidden="true" />

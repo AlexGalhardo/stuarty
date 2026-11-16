@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { useT } from "@/lib/i18n";
 import {
+	enabledOperations,
 	moveOperations,
 	renameOperations,
 	trimEndOperations,
@@ -14,14 +15,17 @@ import {
 	fpsOf,
 } from "../../commands/units";
 import { useCanEdit } from "../../commands/useActions";
+import { useCommandsExposed } from "../../commands/useExposedCommands";
 import { useDocumentState } from "../../state/EditorContext";
 import { readTimeDisplay } from "../../state/prefs";
 import TextField from "../fields/TextField";
 import TimeCommitField from "../fields/TimeCommitField";
+import ToggleField from "../fields/ToggleField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
 import AnimationSection from "./AnimationSection";
 import BlendSection from "./BlendSection";
+import FlipSection from "./FlipSection";
 import KeyframesSection from "./KeyframesSection";
 import MaskSection from "./MaskSection";
 import TransformSection from "./TransformSection";
@@ -57,6 +61,7 @@ export default function ItemSections({
 	const item = useDocumentState((s) => s.document?.items[itemId]);
 	const rate = useDocumentState((s) => s.document?.settings.fps);
 	const fps = fpsOf(rate);
+	const enabledExposed = useCommandsExposed("item.set_enabled");
 	if (item === undefined) return null;
 	const timed = {
 		start: item.start,
@@ -75,6 +80,14 @@ export default function ItemSections({
 					disabled={!canEdit}
 					commit={(name) => send(renameOperations(itemId, name))}
 				/>
+				{enabledExposed && (
+					<ToggleField
+						label={t("ui.editor.inspector.enabled")}
+						stored={item.disabled !== true}
+						disabled={!canEdit}
+						commit={(enabled) => send(enabledOperations(itemId, enabled))}
+					/>
+				)}
 			</Section>
 			<Section title={t("ui.editor.inspector.timing")}>
 				<TimeCommitField
@@ -101,6 +114,7 @@ export default function ItemSections({
 				)}
 			</Section>
 			{item.type !== "audio" && <TransformSection itemIds={[itemId]} />}
+			{item.type !== "audio" && <FlipSection itemId={itemId} />}
 			{item.type !== "audio" && <BlendSection itemId={itemId} />}
 			{item.type !== "audio" && <MaskSection itemId={itemId} />}
 			{item.type !== "audio" && <TransitionsSection itemId={itemId} />}

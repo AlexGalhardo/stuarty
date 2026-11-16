@@ -122,6 +122,7 @@ export const TimelineItem = memo(function TimelineItem({
 				"ed-motion group absolute top-1 bottom-1 flex min-w-px items-center overflow-hidden rounded-md border border-ed-track-line px-2 text-xs whitespace-nowrap",
 				TYPE_CLASS[item.type],
 				blade ? "cursor-crosshair" : "cursor-pointer",
+				item.disabled === true && "opacity-40",
 				selected && "ring-2 ring-ed-selection",
 				remote && "ed-highlight outline-2 outline-agent",
 				conflicting && "ed-highlight outline-2 outline-destructive",
@@ -135,6 +136,7 @@ export const TimelineItem = memo(function TimelineItem({
 				width: "calc(var(--d) * var(--ppf) * 1px)",
 			}}
 			data-conflicting={conflicting ? "" : undefined}
+			data-disabled={item.disabled === true ? "" : undefined}
 			onPointerDown={(event) => {
 				if (event.button === 0 && runtime.ui.getState().tool === "blade") {
 					event.preventDefault();

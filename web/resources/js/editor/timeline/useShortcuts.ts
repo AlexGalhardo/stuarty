@@ -145,6 +145,7 @@ export function useShortcuts(openCaption: () => void): void {
 				else if (edit === "ripple_delete")
 					void actions.deleteSelection("track");
 				else if (edit === "duplicate") void actions.duplicateSelection();
+				else if (edit === "toggle_enabled") void actions.toggleEnabled();
 				else {
 					const { selection, focusedItem } = runtime.ui.getState();
 					const only = selection.items.length === 1 ? selection.items[0] : null;

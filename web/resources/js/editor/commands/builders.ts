@@ -1038,6 +1038,7 @@ export interface AudioChanges {
 	fade_in?: string;
 	fade_out?: string;
 	audio_muted?: boolean;
+	denoise?: number;
 }
 
 // Only the fields the person changed (SDD-002 C.19); the fades are lengths with
@@ -1107,6 +1108,9 @@ export interface ColorChanges {
 	brightness?: number;
 	contrast?: number;
 	saturation?: number;
+	temperature?: number;
+	tint?: number;
+	hue?: number;
 }
 
 export function colorOperations(
@@ -1330,6 +1334,21 @@ export function maskOperations(
 	mask: MaskArgs | null,
 ): Operations {
 	return [{ op: "clip.set_mask", args: { item_id: itemId, mask } }];
+}
+
+// A side not named keeps its value in the core (SDD-002 C.63).
+export function flipOperations(
+	itemId: string,
+	changes: { horizontal?: boolean; vertical?: boolean },
+): Operations {
+	return [{ op: "clip.set_flip", args: { item_id: itemId, ...changes } }];
+}
+
+export function enabledOperations(
+	itemId: string,
+	enabled: boolean,
+): Operations {
+	return [{ op: "item.set_enabled", args: { item_id: itemId, enabled } }];
 }
 
 export function blurOperations(itemId: string, radius: number): Operations {

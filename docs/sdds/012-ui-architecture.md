@@ -899,7 +899,9 @@ Phase of the entry point is the phase in which that entry point is built. Every 
 | `audio.add` | "Add to timeline" on an audio card; drag from the library | A |
 | `clip.set_framing` | inspector Framing section (fit, crop) | A |
 | `clip.set_speed` | inspector Speed section with the ripple toggle | A |
-| `clip.set_color` | inspector Color section | A |
+| `clip.set_color` | inspector Color section (brightness, contrast, saturation, temperature, tint, hue) | A |
+| `clip.set_flip` | inspector Flip section | B |
+| `item.set_enabled` | `V`, item menu "Turn off" and "Turn on", the On switch of the Name section | B |
 | `clip.set_blend` | inspector Blend section | A |
 | `clip.set_mask` | inspector Mask section | A |
 | `clip.remove_silences` | inspector button "Remove silences" with minimum silence and padding fields | A |
@@ -1072,16 +1074,17 @@ The inspector panel shows one panel by selection: nothing selected, the project 
 
 | Section | Fields | Command | Applies to |
 | --- | --- | --- | --- |
-| Name | name | `item.rename {name}` | any item |
+| Name | name; On switch (the item is off when cleared: dimmed on the timeline with an "off" badge, no layer in the preview, skipped by the export and the audio mix) | `item.rename {name}`; `item.set_enabled {item_id, enabled}` (`V` and the item menu send the same command to every selected item: off when any is on, else on) | any item |
 | Timing | Start (time field) | `item.move {start}` | any item |
 | | End (time field, shown through `displayEnd(item)`) | `item.trim {edge: "end", to}` | any item |
 | | Duration (read only, `displayDuration`), In point (read only) | none | any item |
 | Transform | X, Y, Scale, Rotation, Opacity | `item.set_transform {x, y, scale, rotation, opacity}` (only fields changed); an animated property shows a keyframe marker and sends `keyframe.set` | visual items |
 | Transitions | in kind, in duration, out kind, out duration | `item.set_transition {edge, kind, duration}` (kind none sends `kind: null`) | visual items |
-| Audio | volume, fade in, fade out, mute | `item.set_audio {volume, fade_in, fade_out, audio_muted}` | clip, audio |
+| Audio | volume, fade in, fade out, noise reduction (slider 0 to 1), mute | `item.set_audio {volume, fade_in, fade_out, denoise, audio_muted}` | clip, audio |
 | Framing | fit, crop left, top, right, bottom | `clip.set_framing {fit, crop}` | clip |
 | Speed | speed (numeric with `x` suffix), "ripple later items" toggle | `clip.set_speed {speed: "1.5x", ripple}` | clip (SDD-002 B.5 defines `clip.set_speed` for clips only; the field is not shown for audio items) |
-| Color | brightness, contrast, saturation | `clip.set_color {...}` | clip |
+| Color | brightness, contrast, saturation, temperature, tint, hue (sliders; the ranges come from the registry) | `clip.set_color {...}` | clip. The preview applies the single colour matrix of the layer, which already carries temperature, tint and hue (SDD-004 section 3.5) |
+| Flip | flip horizontally, flip vertically | `clip.set_flip {item_id, horizontal, vertical}` (only the side that changed) | visual items. The preview mirrors the layer sprite inside its unrotated rectangle from the layer `flip_x` and `flip_y` (SDD-004 section 3.10); the mask and the chroma key are not mirrored |
 | Blend | blend mode (normal, multiply, screen, overlay, add) | `clip.set_blend {item_id, mode}` | visual items (clip, text, caption, shape). The preview draws it from the layer `blend` of the plan: `multiply`, `screen` and `add` with the GPU blend functions of PixiJS, `overlay` with `pixi.js/advanced-blend-modes`; the GPU works in floats, so a pixel can differ from the export (integer formulas of SDD-004 section 3.8) by a rounding step |
 | Mask | shape (none, rect, ellipse), x, y, width, height (fractions of the item, 0 to 1), feather (project pixels, 0 to 200), invert | `clip.set_mask {item_id, mask}` (`mask` null for none) | visual items (clip, text, caption, shape). The preview draws it from the layer `mask` of the plan: the executor evaluates the integer coverage of SDD-004 section 3.9 (`mask.ts`, `maskCoverage`, tested against the section's values) once per texel of a coverage texture laid over the layer's own `W x H` rectangle, and the PixiJS `MaskFilter` multiplies the layer by it as the last filter, after key, colour, filter and blur and before opacity and blend, in the item's own frame, so it follows position, scale and rotation. The texture has at most 640 texels on its longest side and is sampled bilinearly, so on a layer larger than that an edge can differ from the export by a fraction of a pixel; the texture is rebuilt only when the mask or the rounded size of the layer changes. The PixiJS mask filter drops everything outside the layer rectangle, so with `invert` a blur halo outside the rectangle is cut (the export keeps it); the plan leaves out a feather of 0 and the preview reads it as 0 |
 | Silences | minimum silence, padding, ripple toggle, button | `clip.remove_silences {min_silence, padding, ripple}` | clip |
@@ -1332,6 +1335,7 @@ RF-075 (BETA in the PRD): this SDD builds the keyboard operation and automated c
 | `C` | add caption | P |
 | `T` | add text | A |
 | `F2` | rename | A |
+| `V` | turn the selected items off or on | B |
 | `N` | toggle snapping | A |
 | `Mod+K` | command palette | A |
 | `Alt+1`, `Alt+2`, `Alt+3` | toggle library, inspector, history panels | A |
@@ -1415,7 +1419,7 @@ Decision D-038: the default keymap is the one a person coming from CapCut alread
 | Copy, paste attributes | `Mod+Shift+C`, `Mod+Shift+V` | `item.paste_attributes` | needs command (N-8) |
 | Undo, redo | `Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y` | `undo`, `redo` | exists |
 | Select all | `Mod+A` | `surface.select_all` | exists |
-| Enable or disable the item | `V` | `item.set_enabled` | needs command (N-1) |
+| Enable or disable the item | `V` | `toggleEnabled` (`item.set_enabled`) | exists (N-1, TASK-0273) |
 | Group, ungroup | `Mod+G`, `Mod+Shift+G` | `item.group`, `item.ungroup` | needs command (N-2) |
 | Link or unlink audio and video | `~` | `item.link`, `item.unlink` | needs command (N-4) |
 | Extract or restore the audio of a clip | `Mod+Shift+S` | `item.extract_audio` | needs command (N-4) |

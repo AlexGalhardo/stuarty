@@ -35,6 +35,18 @@ export function geometryOf(layer: PlanLayer, frame: number): LayerGeometry {
 	};
 }
 
+// The sign each axis of the layer takes for the mirror of SDD-004 section 3.10:
+// -1 turns the picture around the centre of the unrotated rectangle.
+export function mirrorSigns(layer: Pick<PlanLayer, "flip_x" | "flip_y">): {
+	x: 1 | -1;
+	y: 1 | -1;
+} {
+	return {
+		x: layer.flip_x === true ? -1 : 1,
+		y: layer.flip_y === true ? -1 : 1,
+	};
+}
+
 // The key of the bitmap a bitmap layer shows at a frame.
 export function bitmapKeyAt(
 	layer: Extract<PlanLayer, { kind: "bitmap" }>,

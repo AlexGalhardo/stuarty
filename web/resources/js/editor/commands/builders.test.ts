@@ -15,7 +15,9 @@ import {
 	containsInclusive,
 	crossfadeOperations,
 	duckOperations,
+	enabledOperations,
 	filterOperations,
+	flipOperations,
 	fontAddOperations,
 	fontRemoveOperations,
 	framingOperations,
@@ -676,6 +678,27 @@ describe("clip section builders (SDD-002 C.19, C.24 to C.27)", () => {
 		expect(colorOperations("itm_a", { saturation: 1.4 })[0]?.args).toEqual({
 			item_id: "itm_a",
 			saturation: 1.4,
+		});
+	});
+
+	test("white balance, hue, flip, enabled and denoise send only what changed", () => {
+		expect(
+			colorOperations("itm_a", { temperature: 0.5, tint: -0.2, hue: 30 })[0],
+		).toEqual({
+			op: "clip.set_color",
+			args: { item_id: "itm_a", temperature: 0.5, tint: -0.2, hue: 30 },
+		});
+		expect(flipOperations("itm_a", { vertical: true })[0]).toEqual({
+			op: "clip.set_flip",
+			args: { item_id: "itm_a", vertical: true },
+		});
+		expect(enabledOperations("itm_a", false)[0]).toEqual({
+			op: "item.set_enabled",
+			args: { item_id: "itm_a", enabled: false },
+		});
+		expect(audioOperations("itm_a", { denoise: 0.4 })[0]?.args).toEqual({
+			item_id: "itm_a",
+			denoise: 0.4,
 		});
 	});
 

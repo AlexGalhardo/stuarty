@@ -206,7 +206,8 @@
         "shape": "Shape",
         "speed_badge": "Speed {speed}",
         "slot_badge": "Slot: {name}",
-        "asset_missing": "The media of this item is missing"
+        "asset_missing": "The media of this item is missing",
+        "disabled_badge": "Turned off"
       },
       "loading": "Loading the project",
       "unsupported_size": "The editor needs a window at least 1024 pixels wide.",
@@ -324,7 +325,9 @@
         "text": "Add text",
         "split_caption": "Split caption here",
         "merge_captions": "Merge captions",
-        "crossfade": "Crossfade"
+        "crossfade": "Crossfade",
+        "enable": "Turn on",
+        "disable": "Turn off"
       },
       "caption": {
         "title": "Add caption",
@@ -700,6 +703,7 @@
           "add_caption": "Add caption",
           "add_text": "Add text",
           "rename": "Rename",
+          "toggle_enabled": "Turn the selected items on or off",
           "toggle_snap": "Toggle snapping",
           "keyframe_panel": "Show or hide the keyframes of the selected item",
           "preview_zoom": "Fit the preview, zoom it in, zoom it out",
@@ -857,6 +861,13 @@
         "brightness": "Brightness",
         "contrast": "Contrast",
         "saturation": "Saturation",
+        "temperature": "Temperature",
+        "tint": "Tint",
+        "hue": "Hue",
+        "flip_title": "Flip",
+        "flip_horizontal": "Flip horizontally",
+        "flip_vertical": "Flip vertically",
+        "denoise": "Noise reduction",
         "filters_title": "Filters",
         "filter": "Filter",
         "filter_none": "None",
@@ -905,6 +916,7 @@
       },
       "inspector": {
         "name": "Name",
+        "enabled": "On",
         "timing": "Timing",
         "start": "Start",
         "end": "End",

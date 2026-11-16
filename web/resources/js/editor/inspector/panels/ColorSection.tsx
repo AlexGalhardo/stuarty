@@ -19,9 +19,12 @@ const ROWS: readonly Row[] = [
 	{ key: "brightness", fallback: 0 },
 	{ key: "contrast", fallback: 1 },
 	{ key: "saturation", fallback: 1 },
+	{ key: "temperature", fallback: 0 },
+	{ key: "tint", fallback: 0 },
+	{ key: "hue", fallback: 0 },
 ];
 
-// The Colour section of SDD-012 section 12.1 for a clip: three sliders, each
+// The Colour section of SDD-012 section 12.1 for a clip: six sliders, each
 // one `clip.set_color` sent when the slider is released.
 export default function ColorSection({
 	itemId,
@@ -42,7 +45,7 @@ export default function ColorSection({
 					stored={String(item[row.key] ?? row.fallback)}
 					disabled={!canEdit}
 					{...registryRange("clip.set_color", row.key)}
-					step={0.01}
+					step={row.key === "hue" ? 1 : 0.01}
 					commit={(value) =>
 						send(colorOperations(itemId, { [row.key]: value }))
 					}

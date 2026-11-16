@@ -20,7 +20,7 @@ import {
 	type PausedFrameDeps,
 	TRUTH_DELAY_MS,
 } from "./pausedFrame";
-import { bitmapKeyAt, layersAt, valueAt } from "./planValue";
+import { bitmapKeyAt, layersAt, mirrorSigns, valueAt } from "./planValue";
 import { PlanWindows, windowStart } from "./planWindows";
 
 const fps = { num: 30, den: 1 };
@@ -92,6 +92,24 @@ describe("plan values", () => {
 		};
 		expect(bitmapKeyAt(layer, 10)).toBe("k0");
 		expect(bitmapKeyAt(layer, 12)).toBe("k1");
+	});
+});
+
+describe("mirror", () => {
+	test("a layer is mirrored on the axes the plan names, and only those", () => {
+		expect(mirrorSigns(media("a"))).toEqual({ x: 1, y: 1 });
+		expect(mirrorSigns({ ...media("a"), flip_x: true })).toEqual({
+			x: -1,
+			y: 1,
+		});
+		expect(mirrorSigns({ ...media("a"), flip_y: true })).toEqual({
+			x: 1,
+			y: -1,
+		});
+		expect(mirrorSigns({ ...media("a"), flip_x: true, flip_y: true })).toEqual({
+			x: -1,
+			y: -1,
+		});
 	});
 });
 

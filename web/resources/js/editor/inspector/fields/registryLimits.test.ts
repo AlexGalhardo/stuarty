@@ -37,6 +37,10 @@ describe("registryRange", () => {
 			["clip.set_color", "brightness"],
 			["clip.set_color", "contrast"],
 			["clip.set_color", "saturation"],
+			["clip.set_color", "temperature"],
+			["clip.set_color", "tint"],
+			["clip.set_color", "hue"],
+			["item.set_audio", "denoise"],
 		] as const) {
 			expect(registryRange(command, arg), `${command} ${arg}`).toBeDefined();
 		}
