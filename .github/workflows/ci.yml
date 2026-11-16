@@ -586,3 +586,24 @@ jobs:
             echo "::error::an action is not pinned by a full commit SHA with a version comment"
             exit 1
           fi
+
+  # SDD-007 section 10.2 item 3 (check 25): the real binary and the pinned FFmpeg run a
+  # reference session under strace; any socket address that is not loopback fails.
+  no-egress:
+    name: No egress
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - run: sudo apt-get update && sudo apt-get install -y strace
+      # install-ffmpeg.sh appends the bin folder to GITHUB_PATH for the next steps.
+      - name: Install FFmpeg
+        run: bash scripts/install-ffmpeg.sh
+      - name: Reference session under strace
+        run: bash scripts/no-egress.sh
