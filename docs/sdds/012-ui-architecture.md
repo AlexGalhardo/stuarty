@@ -779,6 +779,9 @@ The grid has one tab stop (roving `tabindex`: 0 on the focused cell, -1 on the o
 | `Shift+Left`, `Shift+Right` | extend the selection along the track |
 | `Alt+Left`, `Alt+Right` | nudge the selected items by 1 frame (`Shift+Alt`: 1 second): one `item.move` per item from `nudgeOperations(items, delta)` of `commands/builders.ts` (request composition; `timeline/keyboard.ts` does no arithmetic of its own, rule R5) |
 | `Alt+Up`, `Alt+Down` | move the selected items to the track above or below (`item.move` `track_id`) |
+| `Mod+Alt+Left`, `Mod+Alt+Right` | slide the selected items by 1 frame: `item.move {item_id, start, slide: true}` from `slideOperations` (VV-036); the core keeps the neighbours touching |
+| `Mod+Alt+Shift+Left`, `Mod+Alt+Shift+Right` | roll the cut after the selected item by 1 frame: `item.trim {item_id, edge: "end", to, roll: true}` from `rollOperations` (VV-036); the core moves the edge of the next item with it |
+| `Alt+,`, `Alt+.` | slip the selected clips by 1 frame: `item.slip {item_id, source_in}` from `slipOperations`, `source_in` read from the item, 0 for a clip without one (VV-036); read from `event.code`, because Option rewrites `key` on a Mac |
 | `[` `]` | trim start or end of the selected item to the playhead (`item.trim`) |
 | `S` | split selected items at the playhead |
 | `Delete`, `Backspace` | delete selection; `Shift+Delete`: ripple on the track (A) |
@@ -876,12 +879,13 @@ Phase of the entry point is the phase in which that entry point is built. Every 
 | `asset.add` | internal: import flow (`MediaImport`) | P |
 | `asset.remove` | library card menu "Remove from project"; `E_IN_USE` dialog | A |
 | `track.add` | implicit in "Add to timeline" and "Add caption" when no track exists; later: "Add track" menu in the timeline toolbar and track header menu | P (implicit), A (explicit) |
+| `item.slip` | `Alt+,` and `Alt+.` (slip) | A |
 | `track.update` | track header (rename, hide, mute) and track panel | A |
 | `track.move` | track header drag handle; menu "Move up", "Move down" | A |
 | `track.remove` | track header menu with confirmation | A |
 | `track.set_caption_style` | track panel of the inspector, caption style section, "Replace" toggle | A |
-| `item.move` | drag, keyboard nudge, inspector Start field | A |
-| `item.trim` | `[` and `]` keys and toolbar buttons (P); handles, inspector End field (A) | P, A |
+| `item.move` | drag, keyboard nudge, `Mod+Alt+Left` and `Mod+Alt+Right` (slide), inspector Start field | A |
+| `item.trim` | `[` and `]` keys and toolbar buttons (P); handles, inspector End field, `Mod+Alt+Shift+Left` and `Mod+Alt+Shift+Right` (roll) (A) | P, A |
 | `item.split` | `S`, toolbar button, context menu | P |
 | `item.delete` | `Delete`, toolbar, context menu, ripple variants | A |
 | `item.duplicate` | `Ctrl+D`, context menu | A |
@@ -1400,6 +1404,7 @@ Decision D-038: the default keymap is the one a person coming from CapCut alread
 | Select everything left, right of the playhead | `[`, `]` | `surface.select_side` | UI |
 | Delete the selection | `Delete`, `Backspace` | `deleteSelection` (`item.delete`) | exists |
 | Delete and close the gap | `Shift+Delete` | `deleteSelection(ripple)` | exists |
+| Slide, roll, slip the selected item by one frame | `Mod+Alt+Left, Right`, `Mod+Alt+Shift+Left, Right`, `Alt+,`, `Alt+.` | `slideItems`, `rollItems`, `slipItems` (`item.move` with `slide`, `item.trim` with `roll`, `item.slip`) | exists |
 | Duplicate | `Mod+D` | `duplicateSelection` (`item.duplicate`) | exists |
 | Copy, cut, paste items | `Mod+C`, `Mod+X`, `Mod+V` | `surface.clipboard` (paste puts the held items at the playhead, keeping the distances between them: a copy is `item.duplicate` with `start`, a cut one is `item.move`, so cut leaves the items in place until they are pasted and never needs a command to bring back a deleted item) | UI |
 | Copy, paste attributes | `Mod+Shift+C`, `Mod+Shift+V` | `item.paste_attributes` | needs command (N-8) |

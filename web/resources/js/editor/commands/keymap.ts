@@ -174,6 +174,17 @@ export const SHORTCUTS: readonly Shortcut[] = [
 	{ id: "split_all", keys: "Mod+Shift+B", action: "splitAllAtPlayhead" },
 	{ id: "trim_start", keys: "Q", action: "trimToPlayhead" },
 	{ id: "trim_end", keys: "W", action: "trimToPlayhead" },
+	{
+		id: "slide",
+		keys: "Mod+Alt+Left, Mod+Alt+Right",
+		action: "slideItems",
+	},
+	{
+		id: "roll",
+		keys: "Mod+Alt+Shift+Left, Mod+Alt+Shift+Right",
+		action: "rollItems",
+	},
+	{ id: "slip", keys: "Alt+,, Alt+.", action: "slipItems" },
 	{ id: "select_side", keys: "[, ]", action: "surface.select_side" },
 	{ id: "undo", keys: "Mod+Z", action: "undo" },
 	{ id: "redo", keys: "Mod+Shift+Z", action: "redo" },

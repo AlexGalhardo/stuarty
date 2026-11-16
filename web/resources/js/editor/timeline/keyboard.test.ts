@@ -41,6 +41,40 @@ const key = (
 		...mods,
 	});
 
+describe("gridCommand: slide, roll and slip (VV-036)", () => {
+	test("Mod+Alt+arrows slide, with Shift they roll", () => {
+		expect(key("ArrowRight", { ctrlKey: true, altKey: true })).toEqual({
+			kind: "slide",
+			sign: 1,
+		});
+		expect(key("ArrowLeft", { metaKey: true, altKey: true })).toEqual({
+			kind: "slide",
+			sign: -1,
+		});
+		expect(
+			key("ArrowRight", { ctrlKey: true, altKey: true, shiftKey: true }),
+		).toEqual({ kind: "roll", sign: 1 });
+	});
+
+	test("Alt+, and Alt+. slip by the physical key", () => {
+		const slip = (code: string) =>
+			gridCommand({
+				key: "≤",
+				code,
+				ctrlKey: false,
+				metaKey: false,
+				altKey: true,
+				shiftKey: false,
+			});
+		expect(slip("Comma")).toEqual({ kind: "slip", sign: -1 });
+		expect(slip("Period")).toEqual({ kind: "slip", sign: 1 });
+	});
+
+	test("Mod+Shift+arrows without Alt stay with the global keys", () => {
+		expect(key("ArrowRight", { ctrlKey: true, shiftKey: true })).toBeNull();
+	});
+});
+
 describe("gridCommand: the key table of section 7.10", () => {
 	test("arrows, Home and End move the focus", () => {
 		expect(key("ArrowLeft")).toEqual({
