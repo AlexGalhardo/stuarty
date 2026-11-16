@@ -37,6 +37,9 @@
           "frame_rate": {
             "$ref": "#/components/schemas/Rational"
           },
+          "has_alpha": {
+            "type": "boolean"
+          },
           "has_audio": {
             "type": "boolean"
           },

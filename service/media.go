@@ -440,7 +440,12 @@ func (s *svc) ensureIngestJob(ctx context.Context, tx Tx, hash, actor string, no
 // idempotency key; empty when no job stands behind the call.
 func (s *svc) addAsset(ctx context.Context, project *ProjectRow, pa ProjectAssetRow, ar AssetRow, key string) *Error {
 	asset := timeline.Asset{
-		ID: pa.AssetID, Hash: ar.Hash, Kind: timeline.AssetKind(ar.Kind), Name: pa.Name, HasAudio: ar.Facts.HasAudio,
+		ID:       pa.AssetID,
+		Hash:     ar.Hash,
+		Kind:     timeline.AssetKind(ar.Kind),
+		Name:     pa.Name,
+		HasAudio: ar.Facts.HasAudio,
+		HasAlpha: ar.Facts.HasAlpha,
 	}
 
 	f := ar.Facts

@@ -341,7 +341,7 @@ type MediaSource func(l *plan.Layer) (Image, error)
 type BitmapSource func(spec plan.BitmapSpec) (raster.Bitmap, error)
 ```
 
-The compositor is `engine/compositor` (pure Go, no I/O, no FFmpeg); `engine/export` owns the decoders that feed it. An `Image` is RGBA with premultiplied alpha and an `Opaque` flag that lets a copy skip blending (a decoded video frame). `dst` is the project's frame: it is filled with the opaque background first, so it stays opaque.
+The compositor is `engine/compositor` (pure Go, no I/O, no FFmpeg); `engine/export` owns the decoders that feed it. An `Image` is RGBA with premultiplied alpha and an `Opaque` flag that lets a copy skip blending (a decoded video frame). The frame of a video asset with `has_alpha` (SDD-001 3.2) is not opaque: the decoder reads it as RGBA and premultiplies each frame as it arrives, so it is composed over the layers below (VV-013). `dst` is the project's frame: it is filled with the opaque background first, so it stays opaque.
 
 Rules, applied in this order for each frame:
 

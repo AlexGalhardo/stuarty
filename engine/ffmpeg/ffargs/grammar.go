@@ -35,7 +35,7 @@ var (
 	kRational = match(`^[1-9][0-9]{0,6}/[1-9][0-9]{0,6}$`)
 	kSize     = match(`^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$`)
 	kBitrate  = match(`^(0|[1-9][0-9]{0,5}[kKM]?)$`)
-	kPixFmt   = enum("rgba", "rgb24", "yuv420p", "yuvj420p", "nv12", "gbrpf32le", "gray")
+	kPixFmt   = enum("rgba", "rgb24", "yuv420p", "yuvj420p", "yuva444p10le", "nv12", "gbrpf32le", "gray")
 	kColour   = enum("bt709", "smpte170m", "tv", "pc", "limited", "full")
 	kMap      = match(`^([0-9]{1,2}:[0-9]{1,3}|[0-9]{1,2}:(v|a)(:[0-9]{1,2})?|\[[A-Za-z0-9_]{1,16}\])$`)
 	kProgress = enum("pipe:1")
@@ -48,7 +48,7 @@ var (
 
 // Codecs of the fixed table of ADR-0011 item 5 and SDD-011 section 4.2.
 var videoCodecs = []string{
-	"mpeg4", "libvpx-vp9", "mjpeg", "png", "copy",
+	"mpeg4", "prores_ks", "libvpx-vp9", "mjpeg", "png", "copy",
 	"libopenh264", "libx264", "h264_nvenc", "h264_qsv", "h264_amf", "h264_videotoolbox", "h264_mf", "h264_vaapi",
 }
 
@@ -122,7 +122,7 @@ var ffmpegOptions = map[string]optSpec{
 	"-keyint_min":            {class: classOutput, value: intRange(1, 1200)},
 	"-bf":                    {class: classOutput, value: intRange(0, 16)},
 	"-dct":                   {class: classOutput, value: enum("int")},
-	"-profile:v":             {class: classOutput, value: enum("high", "main", "baseline")},
+	"-profile:v":             {class: classOutput, value: enum("high", "main", "baseline", "4444")},
 	"-preset":                {class: classOutput, value: enum("medium")},
 	"-deadline":              {class: classOutput, value: enum("realtime", "good")},
 	"-cpu-used":              {class: classOutput, value: intRange(0, 16)},

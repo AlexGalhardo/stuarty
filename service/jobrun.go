@@ -424,7 +424,12 @@ func (s *svc) registerIngest(ctx context.Context, hash string, res *ingest.Resul
 			}
 		}
 
-		f := AssetFacts{Kind: string(res.Kind), NormalizedVersion: version, HasAudio: res.Facts.HasAudio}
+		f := AssetFacts{
+			Kind:              string(res.Kind),
+			NormalizedVersion: version,
+			HasAudio:          res.Facts.HasAudio,
+			HasAlpha:          res.Facts.HasAlpha,
+		}
 
 		if res.Facts.Width > 0 {
 			w, h := res.Facts.Width, res.Facts.Height

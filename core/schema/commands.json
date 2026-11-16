@@ -36,6 +36,9 @@
               ],
               "type": "object"
             },
+            "has_alpha": {
+              "type": "boolean"
+            },
             "has_audio": {
               "type": "boolean"
             },

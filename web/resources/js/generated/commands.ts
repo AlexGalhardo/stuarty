@@ -12,6 +12,7 @@ export interface AssetAddArgs {
       den: number;
       num: number;
     };
+    has_alpha?: boolean;
     has_audio?: boolean;
     hash: string;
     height?: number;

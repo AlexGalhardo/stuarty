@@ -744,6 +744,7 @@ CREATE TABLE assets (
   width           INTEGER,
   height          INTEGER,
   has_audio       INTEGER NOT NULL DEFAULT 0,
+  has_alpha       INTEGER NOT NULL DEFAULT 0,       -- video: the normalized file keeps an alpha channel (SDD-011 4.3.5)
   frame_rate_num  INTEGER,
   frame_rate_den  INTEGER,
   frame_count     INTEGER,

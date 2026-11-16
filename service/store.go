@@ -296,6 +296,7 @@ type AssetFacts struct {
 	DurationMs                 *int64
 	Width, Height              *int
 	HasAudio                   bool
+	HasAlpha                   bool // a video whose normalized file keeps an alpha channel
 	FrameRateNum, FrameRateDen *int
 	FrameCount                 *int64
 	SampleCount                *int64

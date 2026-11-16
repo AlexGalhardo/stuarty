@@ -544,6 +544,18 @@ ffmpeg -y -nostdin -hide_banner -v error -protocol_whitelist file,pipe -i <work>
 
 0.44 s on the fixture. A video without audio skips the audio pass and the mux: `video.mov` is renamed `normalized.mov`.
 
+#### 4.3.5 A video with an alpha channel
+
+A source video whose pixel format carries alpha (`yuva*`, `rgba`, `bgra`, `argb`, `gbrap*`; HDR sources excluded) keeps it, so a lower third, a logo or an effect can be composed over other clips (VV-013). The plan sets `alpha`, and three things change; every other source, and the proxy and thumbnails of every source, are unchanged:
+
+| Piece | Opaque source | Alpha source |
+| --- | --- | --- |
+| Colour path (4.3.1) | by the table | `scale` with explicit matrix and range (`zscale` does not carry the alpha plane of every format) |
+| Last filter of the chain | `format=yuv420p` | `format=yuva444p10le` |
+| Encoder of `video.mov` (4.3.2) | `-c:v mpeg4 -q:v ... -pix_fmt yuv420p` | `-c:v prores_ks -profile:v 4444 -threads 1 -pix_fmt yuva444p10le`, same colour tags, `-fps_mode cfr`, same timescale |
+
+The proxy and the thumbnails take their input from the same split and flatten the alpha onto black (`format=yuv420p`); a preview that shows the overlay over its background needs its own alpha proxy, which this section does not define. Verification (4.9) expects codec `prores` and pixel format `yuva444p10le` (ffprobe reports the 4444 stream as `yuva444p12le`, also accepted); the GOP check passes because ProRes is intra only. The fact `has_alpha` is true exactly for these assets. VP9 alpha in WebM is not detected: the probe reports `yuv420p` and the alpha lives in a side channel that the native decoder drops. An alpha asset ingested before this section existed has `has_alpha` false until it is imported again.
+
 ### 4.4 Proxy of a video asset
 
 Output `artifacts/<sha>/proxy-1.mp4`: VP9 (`yuv420p`, constant frame rate equal to the normalized media, size `PW × PH`) and, when there is audio, AAC-LC 128 kbit/s, 48 kHz, stereo, exactly `N` samples.
@@ -658,6 +670,7 @@ The handler computes the facts after the files exist and passes only these measu
 | `sample_count` | decode the audio stream to raw `s16le` stereo on a pipe and count bytes divided by 4; it must equal `duration_ts` of the audio stream (time base 1/48000). For audio assets this is the fact; for video it must also equal `N` | `N` of 4.3.3 |
 | `width`, `height` | `ffprobe` of the produced file (`normalized.mov`, `normalized.png`) | `W`, `H` |
 | `has_audio` | true when `normalized.mov` has an audio stream with `sample_count > 0` | the probe found a usable stream |
+| `has_alpha` | video only: true when `normalized.mov` is the ProRes 4444 file of 4.3.5 | the plan's `alpha` |
 
 Because the frame rate, timestamps, dimensions and counts are read back from the produced file and compared with the plan, the document never holds a number that the media does not have.
 

@@ -55,7 +55,10 @@ type VideoPlan struct {
 	Props        ColourProps
 	Matrix601    bool // scale-only conversion from BT.601
 	InRangePC    bool
-	Thumbs       ThumbPlan
+	// Alpha keeps the alpha channel of the source: the normalized video is ProRes 4444 with
+	// yuva444p10le instead of mpeg4 with yuv420p (SDD-011 4.3.5).
+	Alpha  bool
+	Thumbs ThumbPlan
 }
 
 // GOPFor is ceil(num / (2 * den)): a keyframe every half second.
@@ -155,6 +158,7 @@ func PlanVideo(s *Summary, caps *ffmpeg.Capabilities) VideoPlan {
 		rw, rh = rh, rw
 	}
 	p.Scale = p.W != rw || p.H != rh
+	p.Alpha = pixFmtHasAlpha(v.PixFmt) && v.HDR == "none"
 
 	// Assumed values for what the stream does not say (4.3.1).
 	assumed := "smpte170m"
@@ -191,6 +195,10 @@ func PlanVideo(s *Summary, caps *ffmpeg.Capabilities) VideoPlan {
 		p.Colour = ColourToneMap
 	case v.PixFmt == "yuv420p" && m == "bt709" && pr == "bt709" && t == "bt709" && rng == "tv":
 		p.Colour = ColourNone
+	case p.Alpha:
+		// zscale does not carry the alpha plane of every format; the swscale path does.
+		p.Colour = ColourScale
+		p.Scale = true
 	case hasZ:
 		p.Colour = ColourZScale
 	default:
@@ -233,7 +241,11 @@ func (p VideoPlan) NormalizedFilters() []ffargs.Filter {
 		case ColourNone, ColourScale:
 		}
 	}
-	f = append(f, ffargs.Format("yuv420p"))
+	if p.Alpha {
+		f = append(f, ffargs.Format("yuva444p10le"))
+	} else {
+		f = append(f, ffargs.Format("yuv420p"))
+	}
 	// FFmpeg writes the colour tags from the frames: a stream with none needs them set, and the
 	// zscale paths already set them.
 	if p.Colour == ColourNone || p.Colour == ColourScale {
@@ -277,9 +289,14 @@ func PlanImage(s *Summary) ImagePlan {
 	}
 	g := math.Min(1, float64(ImageProxyEdge)/float64(max(p.W, p.H)))
 	p.PW, p.PH = max(1, int(math.Round(float64(p.W)*g))), max(1, int(math.Round(float64(p.H)*g)))
-	p.Alpha = strings.Contains(v.PixFmt, "a") &&
-		(strings.HasPrefix(v.PixFmt, "rgba") || strings.HasPrefix(v.PixFmt, "bgra") ||
-			strings.HasPrefix(v.PixFmt, "argb") || strings.HasPrefix(v.PixFmt, "ya") || strings.HasPrefix(v.PixFmt, "yuva") ||
-			strings.HasPrefix(v.PixFmt, "gbrap") || v.PixFmt == "pal8")
+	p.Alpha = pixFmtHasAlpha(v.PixFmt)
 	return p
+}
+
+// pixFmtHasAlpha is true for the pixel formats that carry an alpha channel (or a palette with one).
+func pixFmtHasAlpha(pf string) bool {
+	return strings.Contains(pf, "a") &&
+		(strings.HasPrefix(pf, "rgba") || strings.HasPrefix(pf, "bgra") ||
+			strings.HasPrefix(pf, "argb") || strings.HasPrefix(pf, "ya") || strings.HasPrefix(pf, "yuva") ||
+			strings.HasPrefix(pf, "gbrap") || pf == "pal8")
 }

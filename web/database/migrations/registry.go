@@ -25,5 +25,6 @@ func All() []schema.Migration {
 		m20261115130000ArtifactsSpeechBeatsKinds(),
 		m20261115140000CreateBrandKitsAndFontOwners(),
 		m20261115150000AssetsFrameDelaysAndFramesKind(),
+		m20261116100000AssetsHasAlpha(),
 	}
 }
