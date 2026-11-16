@@ -637,7 +637,7 @@ func TestImportReportsBadVukemMetadata(t *testing.T) {
 	file := `{"OTIO_SCHEMA":"Timeline.1","name":"x","tracks":{"OTIO_SCHEMA":"Stack.1","children":[
 	{"OTIO_SCHEMA":"Track.1","kind":"Video","name":"V","metadata":{"vukem":{"hidden":"yes"}},"children":[
 	{"OTIO_SCHEMA":"Clip.2","name":"c","metadata":{"vukem":{"properties":{"scale":99,"opacity":"x","blur":3,
-	"crop":{"left":5},"filter":"vhs","fit":"cover"}}},
+	"crop":{"left":5},"filter":"vhs","fit":"cover","blend":"dodge"}}},
 	"source_range":{"OTIO_SCHEMA":"TimeRange.1","start_time":{"OTIO_SCHEMA":"RationalTime.1","rate":30,"value":0},
 	"duration":{"OTIO_SCHEMA":"RationalTime.1","rate":30,"value":30}},
 	"media_reference":{"OTIO_SCHEMA":"ExternalReference.1","target_url":"clips/a.mp4"}}]}]}}`
@@ -652,7 +652,7 @@ func TestImportReportsBadVukemMetadata(t *testing.T) {
 		lost.WriteString(l.Feature + ";")
 	}
 
-	for _, want := range []string{"scale", "opacity", "crop", "filter", "fit"} {
+	for _, want := range []string{"scale", "opacity", "crop", "filter", "fit", "blend"} {
 		if !strings.Contains(lost.String(), "vukem property "+want) {
 			t.Errorf("%s was not reported: %s", want, lost.String())
 		}
@@ -701,6 +701,7 @@ func TestRoundTripKeepsSpeedKeyframesSlotsTextsAndKey(t *testing.T) {
 		Name: "hero", Kind: "media", Description: "Main shot", Required: false, DurationPolicy: "fit", Filled: true,
 	}
 	slow.ChromaKey = &timeline.ChromaKey{Color: "#00FF00", Similarity: 0.35, Smoothness: 0.05, Spill: 0.25}
+	slow.Blend = "screen"
 
 	// 7 frames at 1/4 speed cannot come from any whole source length: the clip is trimmed to it.
 	crawl := timeline.NewItem("itm_d000000002", timeline.ItemClip, trkVid, 400, 7)
@@ -722,6 +723,7 @@ func TestRoundTripKeepsSpeedKeyframesSlotsTextsAndKey(t *testing.T) {
 	title.X, title.Y, title.Scale, title.Rotation, title.Opacity = new(540.0), new(300.0), 1.2, 5, 0.9
 	title.Keyframes = timeline.Keyframes{"opacity": {timeline.NewKeyframe(0, 0), timeline.NewKeyframe(10, 0.9)}}
 	title.Slot = &timeline.Slot{Name: "headline", Kind: "text", Required: true, DurationPolicy: "fit", Filled: true}
+	title.Blend = "multiply"
 
 	plain := timeline.NewItem("itm_d000000005", timeline.ItemText, trkTop, 60, 20)
 	plain.Name, plain.Text = "plain", "Bye"
@@ -859,5 +861,23 @@ func TestImportReportsBadAnimationSlotAndTextMetadata(t *testing.T) {
 
 	if texts != 1 {
 		t.Errorf("%d text items, want 1", texts)
+	}
+}
+
+func TestExportDoesNotListBlendAsLost(t *testing.T) {
+	d := sampleDoc()
+	it := d.Items["itm_c000000001"]
+	it.Blend = "add"
+	d.Items[it.ID] = it
+
+	_, lost, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, l := range lost {
+		if l.Feature == "blend mode" {
+			t.Errorf("blend is carried by the metadata, got a loss: %+v", l)
+		}
 	}
 }

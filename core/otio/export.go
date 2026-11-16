@@ -228,6 +228,10 @@ func clipMetadata(it *timeline.Item) object {
 
 	sharedProps(it, props)
 
+	if it.Blend != "" {
+		props["blend"] = it.Blend
+	}
+
 	if it.X != nil {
 		props["x"] = *it.X
 	}
@@ -344,6 +348,10 @@ func textMetadata(it *timeline.Item) object {
 
 	sharedProps(it, props)
 
+	if it.Blend != "" {
+		props["blend"] = it.Blend
+	}
+
 	if len(props) > 0 {
 		v["properties"] = props
 	}
@@ -413,7 +421,6 @@ func lostProperties(it *timeline.Item) []Lost {
 		{it.Brightness != 0 || it.Contrast != 1 || it.Saturation != 1, "colour adjustment"},
 		{(it.Filter != "none" && it.Filter != "") || it.Blur != 0, "filter and blur"},
 		{it.ChromaKey != nil, "chroma key"},
-		{it.Blend != "", "blend mode"},
 		{it.Crop != nil || it.Fit != "cover", "framing"},
 		{it.X != nil || it.Y != nil || it.Scale != 1 || it.Rotation != 0 || it.Opacity != 1, "transform and opacity"},
 		{it.Volume != 1 || it.AudioMuted || it.FadeIn != 0 || it.FadeOut != 0, "audio settings"},
