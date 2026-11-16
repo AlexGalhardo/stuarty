@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "The asset of item itm_c3d4e5f6g7 has no beats: its beat grid is empty.",
+  "hint": "Beats exist only in music with a steady rhythm; a sound effect or speech has none. Choose another item, or place cuts by time.",
+  "retryable": false,
+  "path": "args.item_id"
+}

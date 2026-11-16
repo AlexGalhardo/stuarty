@@ -138,6 +138,10 @@ func (s *svc) resolveSilences(
 		return nil, asError(err)
 	}
 
+	if e := noSound(index, a.ItemID, asset, "silences"); e != nil {
+		return nil, e
+	}
+
 	raw := s.readArtifact(arts, "silence", "")
 	if raw == nil {
 		return nil, notAnalysed(index, asset.ID, "the silences",
@@ -228,6 +232,10 @@ func (s *svc) resolveWords(
 		return nil, asError(err)
 	}
 
+	if e := noSound(index, a.ClipItemID, asset, "transcript"); e != nil {
+		return nil, e
+	}
+
 	raw := s.newestTranscript(arts)
 	if raw == nil {
 		return nil, notAnalysed(
@@ -303,6 +311,31 @@ func transcriptFrames(raw []byte, fps timeline.Rational) ([]command.ResolvedWord
 	}
 
 	return out, true
+}
+
+// noSound refuses an analysis of an asset that has no audio to analyse: an image, or a video
+// with no audio track. Waiting would never help, so the answer says what the item is
+// instead of "wait until the asset is ready" (VV-050).
+func noSound(index int, itemID string, asset timeline.Asset, what string) *Error {
+	if asset.Kind != timeline.AssetImage && (asset.Kind != timeline.AssetVideo || asset.HasAudio) {
+		return nil
+	}
+
+	e := newError(command.CodeTypeMismatch, "item %s has no audio (asset %s is %s), so it has no %s.",
+		itemID, asset.ID, noSoundKind(asset), what).
+		withHint("Use an item whose asset has audio; media_inspect shows which assets do.").
+		withPath("operations").withDetail("asset_id", asset.ID)
+	e.OpIndex = &index
+
+	return e
+}
+
+func noSoundKind(a timeline.Asset) string {
+	if a.Kind == timeline.AssetImage {
+		return "an image"
+	}
+
+	return "a video with no audio track"
 }
 
 // notAnalysed is the refusal of an edit that needs analysis nobody ran: it

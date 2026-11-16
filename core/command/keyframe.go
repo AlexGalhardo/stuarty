@@ -154,6 +154,11 @@ func applyKeyframeSet(c *Context, a *keyframeSetArgs) error {
 	if err := propApplies(&it, a.Property); err != nil {
 		return err
 	}
+	if a.Property == "volume" {
+		if err := c.stillImageNoAudio(&it, "has no volume to animate"); err != nil {
+			return err.WithPath("args.property")
+		}
+	}
 	t, err := c.keyframeT(&it, a.At)
 	if err != nil {
 		return err

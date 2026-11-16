@@ -1730,7 +1730,7 @@ At least one of the four is required.
 
 1. At least one argument is present and valid (`E_VALIDATION`, `E_INVALID_TIME`).
 2. The item exists (`E_NOT_FOUND`).
-3. The item is a `clip` or `audio` item, and `audio_muted` is only given for a `clip` (`E_TYPE_MISMATCH`).
+3. The item is a `clip` or `audio` item, not a clip of an image (an image has no audio), and `audio_muted` is only given for a `clip` (`E_TYPE_MISMATCH`).
 4. When `volume` is given, `volume` has no keyframes (`E_INVALID_STATE`, hint to use `keyframe.set` or `keyframe.clear`). The check does not apply when only fades or `audio_muted` are given.
 5. `fade_in + fade_out <= duration` after the change (R14, `E_INVALID_STATE`).
 
@@ -1746,7 +1746,7 @@ At least one of the four is required.
 | `E_VALIDATION` | nothing to set, or `volume` out of range | `args.volume must be between 0 and 4, got 5.` | `Use volume 4 for the loudest setting.` |
 | `E_INVALID_TIME` | malformed fade | `args.fade_in "2" has no unit.` | `Use "2s", "60f" or "00:00:02.000".` |
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
-| `E_TYPE_MISMATCH` | text, shape or caption item; or `audio_muted` on an `audio` item | `Item itm_s6t7v8w9x0 is a text item and has no audio.` | `Use item.set_transform for visual properties.` |
+| `E_TYPE_MISMATCH` | text, shape or caption item; a clip of an image; or `audio_muted` on an `audio` item | `Item itm_s6t7v8w9x0 is a text item and has no audio.` | `Use item.set_transform for visual properties.` |
 | `E_INVALID_STATE` | volume has keyframes; or the fades do not fit | `fade_in 100 frames plus fade_out 60 frames exceeds duration 150 of itm_m1n2p3q4r5.` | `Use fade_in of at most "90f" (3.000s) or shorten fade_out first.` |
 
 **Inverse.** `patch {collection: "items", id, set: <old values>, unset: <fields that were absent>}`.
@@ -1780,6 +1780,7 @@ At least one of the four is required.
 - `err_not_found`
 - `err_type_mismatch_text_item`
 - `err_type_mismatch_audio_muted_on_audio_item`
+- `err_type_mismatch_image_clip`
 - `err_invalid_state_volume_has_keyframes`
 - `err_invalid_state_fades_exceed_duration`
 
@@ -3575,7 +3576,7 @@ Adds or replaces a keyframe of one property.
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | |
-| `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"` | yes | none | `volume` for `clip` and `audio` items; the others for visual items |
+| `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"` | yes | none | `volume` for `audio` items and clips of a video (not of an image); the others for visual items |
 | `at` | time | yes | none | absolute; from the item's `start` to `start + duration` inclusive |
 | `value` | number | yes | none | valid for the property: `scale` above 0 and at most 20, `opacity` 0 to 1, `volume` 0 to 4, `x`, `y`, `rotation` finite |
 | `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"` | no | `"linear"` | applies from this keyframe to the next |
@@ -3640,6 +3641,7 @@ Adds or replaces a keyframe of one property.
 - `err_invalid_time_no_unit`
 - `err_not_found`
 - `err_type_mismatch_opacity_on_audio`
+- `err_type_mismatch_volume_on_image`
 - `err_type_mismatch_volume_on_text`
 - `err_invalid_time_at_before_item`
 - `err_invalid_time_at_after_item_end`
@@ -4289,8 +4291,8 @@ Writes markers on a music item at the beats of its audio (RF-044), so that cuts 
 **Preconditions.**
 
 1. The arguments are valid and `resolved` is present with increasing beats (`E_VALIDATION`).
-2. The item exists (`E_NOT_FOUND`) and is an audio item with audio (`E_TYPE_MISMATCH`).
-3. At least one beat lies inside the visible part of the item (`E_INVALID_STATE`).
+2. The item exists (`E_NOT_FOUND`) and is an audio item with audio (`E_TYPE_MISMATCH`); these are checked before `resolved`.
+3. The beat grid is not empty and at least one beat lies inside the visible part of the item (`E_INVALID_STATE`).
 4. The markers fit the limit of 200 per item (`E_LIMIT`; the command never truncates).
 
 **Postconditions.**
@@ -4303,10 +4305,10 @@ Writes markers on a music item at the beats of its audio (RF-044), so that cuts 
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | `resolved` missing, beats not increasing, `every` or `label` out of range | `args.resolved is missing: the beats of the asset are not known.` | `The service fills it from the beat grid; run the beat analysis of the asset first, then retry.` |
+| `E_VALIDATION` | `resolved` missing, beats not increasing, `every` or `label` out of range | `The beat grid of the asset is not known.` | `Wait until the asset is analysed (media_inspect shows its state), then retry.` |
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_TYPE_MISMATCH` | not an audio item, or the asset has no audio | `Item itm_m1n2p3q4r5 is a clip item, not an audio item; beats are marked on music.` | `Choose an audio item.` |
-| `E_INVALID_STATE` | no beat in the visible part | `The beat grid has no beat inside the visible part of item itm_c3d4e5f6g7.` | `Check that the item holds music, or widen it with item.trim.` |
+| `E_INVALID_STATE` | the beat grid is empty (the asset is not rhythmic music, a sound effect for instance), or no beat lies in the visible part | `The beat grid has no beat inside the visible part of item itm_c3d4e5f6g7.` | `Check that the item holds music, or widen it with item.trim.` |
 | `E_LIMIT` | more than 200 markers | `Item itm_c3d4e5f6g7 would have 220 markers; the limit is 200.` | `Use a larger every, or trim the item first.` |
 
 **Inverse.** `patch {collection: "items", id, set: {markers: <old>}}`, or `unset: ["markers"]` when there were none.
@@ -4340,6 +4342,7 @@ Markers at item frames 0, 30, 60 and 90.
 - `err_not_found`
 - `err_type_mismatch_clip`
 - `err_type_mismatch_asset_without_audio`
+- `err_invalid_state_empty_beat_grid`
 - `err_invalid_state_no_beat_in_the_visible_part`
 - `err_limit_over_200_markers`
 

@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_s6t7v8w9x0 shows an image, which has no volume to animate.",
+  "hint": "Audio settings apply to clips of a video with audio, and to audio items.",
+  "retryable": false,
+  "path": "args.property"
+}
