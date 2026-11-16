@@ -151,6 +151,8 @@ type JobView struct {
 	Percent  int
 	Message  string
 	File     string // set for a succeeded export, local callers only
+	URL      string // the download path of a succeeded export, when File is empty
+	Audio    bool   // the export has no picture: no dimensions
 	Width    int
 	Height   int
 	Duration string // a time cell
@@ -165,16 +167,25 @@ func Job(j JobView) string {
 
 	fmt.Fprintf(&b, "%s %s %s %d%%", j.ID, j.Kind, j.State, j.Percent)
 
-	if j.Message != "" {
+	// A succeeded job keeps the last progress message ("Rendering (98%)"), which
+	// would contradict the state.
+	if j.Message != "" && j.State != "succeeded" {
 		b.WriteString(" " + oneLine(j.Message, 120))
 	}
 
 	if j.State == "succeeded" && j.Kind == "export" {
-		if j.File != "" {
+		switch {
+		case j.File != "":
 			b.WriteString(" file=" + j.File)
+		case j.URL != "":
+			b.WriteString(" url=" + j.URL)
 		}
 
-		fmt.Fprintf(&b, " %dx%d %s %s", j.Width, j.Height, j.Duration, j.SizeText)
+		if !j.Audio {
+			fmt.Fprintf(&b, " %dx%d", j.Width, j.Height)
+		}
+
+		fmt.Fprintf(&b, " %s %s", j.Duration, j.SizeText)
 	}
 
 	if j.State == "failed" && j.Error != "" {
