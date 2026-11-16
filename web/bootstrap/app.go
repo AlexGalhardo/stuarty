@@ -41,6 +41,8 @@ func NewWith(api *httpapi.Deps, opts ...vukem.Option) (*vukem.App, error) {
 		vukem.WithMigrations(migrations.All()),
 		vukem.WithSeeders(seeders.All()...),
 		vukem.WithListeners(listeners.All()...),
+		// The pages middleware of routes.Web reads the language, with or without the API.
+		vukem.WithTranslations(resources.Lang()),
 	}
 
 	if api != nil {
@@ -51,7 +53,6 @@ func NewWith(api *httpapi.Deps, opts ...vukem.Option) (*vukem.App, error) {
 			vukem.WithViews(resources.Views()),
 			vukem.WithVite(resources.Public()),
 			vukem.WithInertia(errorPages(func() *vukem.App { return app })),
-			vukem.WithTranslations(resources.Lang()),
 		)
 	}
 
