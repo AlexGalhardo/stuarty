@@ -8,6 +8,11 @@ publish.workspace = true
 
 [dependencies]
 vukem-renderer = { version = "=0.0.0", path = "../vukem-renderer" }
+harfrust = "=0.16.0"
+skrifa = "=0.50.0"
+unicode-bidi = "=0.3.18"
+unicode-linebreak = "=0.1.5"
+unicode-script = "=0.5.9"
 
 [lints]
 workspace = true
