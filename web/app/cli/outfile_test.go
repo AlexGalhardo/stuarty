@@ -220,3 +220,15 @@ func TestOutExpandsTheHomeDirectory(t *testing.T) {
 		t.Fatal("the copy is not in the home directory")
 	}
 }
+
+func TestHTTPDownloadSendsTheTokenOnlyToItsOwnServer(t *testing.T) {
+	for _, p := range []string{"@evil.example/x", "//evil.example/x", "https://evil.example/x", `/\evil.example/x`, "jobs/x"} {
+		if sameServerPath(p) {
+			t.Errorf("sameServerPath(%q) = true, want false", p)
+		}
+	}
+
+	if !sameServerPath("/api/v1/jobs/job_0123456789/file") {
+		t.Error("a plain API path must be accepted")
+	}
+}
