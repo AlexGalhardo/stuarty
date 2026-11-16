@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "id": "prj_a1p2h3a4b5",
+  "name": "A clip with alpha over a clip",
+  "settings": {"width": 320, "height": 180, "fps": {"num": 30, "den": 1}},
+  "assets": {
+    "ast_b4s3c1p5k2": {"id": "ast_b4s3c1p5k2", "hash": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+      "kind": "video", "name": "ao-base.mp4", "frame_rate": {"num": 30, "den": 1}, "frame_count": 60,
+      "sample_count": 96000, "width": 320, "height": 180, "has_audio": true},
+    "ast_p7v3r1a9c2": {"id": "ast_p7v3r1a9c2", "hash": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+      "kind": "video", "name": "ao-overlay.mov", "frame_rate": {"num": 30, "den": 1}, "frame_count": 60,
+      "width": 320, "height": 180, "has_alpha": true}
+  },
+  "tracks": {
+    "trk_p1v2e3r4m5": {"id": "trk_p1v2e3r4m5", "kind": "visual", "name": "Overlay", "order": "a0"},
+    "trk_b1a2s3e4c5": {"id": "trk_b1a2s3e4c5", "kind": "visual", "name": "Video", "order": "a1"}
+  },
+  "items": {
+    "itm_b1s2c3m4p5": {"id": "itm_b1s2c3m4p5", "type": "clip", "track": "trk_b1a2s3e4c5", "start": 0, "duration": 30, "asset": "ast_b4s3c1p5k2"},
+    "itm_p1v2c3m4p5": {"id": "itm_p1v2c3m4p5", "type": "clip", "track": "trk_p1v2e3r4m5", "start": 0, "duration": 30, "asset": "ast_p7v3r1a9c2"}
+  }
+}

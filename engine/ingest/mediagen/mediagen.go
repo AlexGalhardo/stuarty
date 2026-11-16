@@ -173,3 +173,17 @@ func (g Gen) AlphaClip(ctx context.Context, name string, w, h, fps int, secs flo
 		"mov",
 	)
 }
+
+// AlphaWebM is a VP9 clip in WebM with an alpha plane and no sound: the left half is fully transparent
+// and the right half is opaque red. VP9 keeps the alpha apart and ffprobe still says yuv420p.
+func (g Gen) AlphaWebM(ctx context.Context, name string, w, h, fps int, secs float64) (string, error) {
+	return g.ff(
+		ctx,
+		name,
+		"-f", "lavfi", "-i", fmt.Sprintf("color=c=red:s=%dx%d:r=%d:d=%g", w, h, fps, secs),
+		"-vf", fmt.Sprintf(
+			"format=yuva420p,geq=lum='lum(X,Y)':cb='cb(X,Y)':cr='cr(X,Y)':a='if(gte(X,%d),255,0)'", w/2),
+		"-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-auto-alt-ref", "0", "-crf", "20", "-b:v", "0",
+		"-f", "webm",
+	)
+}

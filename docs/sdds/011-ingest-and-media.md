@@ -546,7 +546,7 @@ ffmpeg -y -nostdin -hide_banner -v error -protocol_whitelist file,pipe -i <work>
 
 #### 4.3.5 A video with an alpha channel
 
-A source video whose pixel format carries alpha (`yuva*`, `rgba`, `bgra`, `argb`, `gbrap*`; HDR sources excluded) keeps it, so a lower third, a logo or an effect can be composed over other clips (VV-013). The plan sets `alpha`, and three things change; every other source, and the proxy and thumbnails of every source, are unchanged:
+A source video whose pixel format carries alpha (`yuva*`, `rgba`, `bgra`, `argb`, `gbrap*`; HDR sources excluded) keeps it, so a lower third, a logo or an effect can be composed over other clips (VV-013). A VP9 stream in WebM keeps its alpha plane apart: ffprobe reports `yuv420p` and the stream tag `alpha_mode=1`, so the summary reports `yuva420p` for it, and the video pass reads it with the decoder `libvpx-vp9` (`-c:v libvpx-vp9` before `-i`, the plan's `decoder`), because the native VP9 decoder drops the plane. The plan sets `alpha`, and three things change; every other source, and the proxy and thumbnails of every source, are unchanged:
 
 | Piece | Opaque source | Alpha source |
 | --- | --- | --- |

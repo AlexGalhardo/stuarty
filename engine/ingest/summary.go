@@ -457,6 +457,11 @@ func videoFacts(st *Stream, ex Extras, caps *ffmpeg.Capabilities) (*VideoFacts, 
 	if v.CodedWidth == 0 {
 		v.CodedWidth, v.CodedHeight = st.Width, st.Height
 	}
+	// A VP9 stream in WebM keeps its alpha plane apart and says so with a stream tag; ffprobe still
+	// reports yuv420p. The summary says yuva420p so the plan keeps the alpha (VV-013).
+	if st.CodecName == "vp9" && tagValue(st.Tags, "alpha_mode") == "1" && !pixFmtHasAlpha(v.PixFmt) {
+		v.PixFmt = "yuva420p"
+	}
 	for _, sd := range st.SideData {
 		switch sd.Type {
 		case "Display Matrix":

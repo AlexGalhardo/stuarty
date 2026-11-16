@@ -103,7 +103,7 @@ func (j *job) videoPass(ctx context.Context, plan VideoPlan, deadline time.Durat
 	// normalized bytes must not depend on the machine (NFR-010).
 	cmd := ffargs.Cmd{
 		Progress: true, LogErrorOnly: true, Threads: j.r.In.ThreadLimit(), FilterThreads: 1,
-		Inputs: []ffargs.Input{ffargs.FileInput(j.original)}, Graph: g,
+		Inputs: []ffargs.Input{videoInput(j.original, plan)}, Graph: g,
 		Outputs: []ffargs.Output{
 			{
 				Format:  "mov",
@@ -177,6 +177,16 @@ func (j *job) videoPass(ctx context.Context, plan VideoPlan, deadline time.Durat
 	}
 	j.prog.set(StepVideo, 1)
 	return frames, nil
+}
+
+// videoInput is the source of the video pass, with the decoder the plan forces.
+func videoInput(path string, plan VideoPlan) ffargs.Input {
+	in := ffargs.FileInput(path)
+	if plan.Decoder != "" {
+		in = in.Decoder(plan.Decoder)
+	}
+
+	return in
 }
 
 // normalizedCodecOpts is the encoder of video.mov: mpeg4 in yuv420p, or ProRes 4444 in yuva444p10le
