@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import registry from "@/generated/commands.json";
 import {
 	ANIMATION_PRESETS,
+	BLEND_MODES,
 	FILTERS,
 	FITS,
 	KEYFRAME_EASINGS,
@@ -37,6 +38,7 @@ const CASES: [string, readonly string[], string, string][] = [
 	["FILTERS", FILTERS, "clip.set_filter", "filter"],
 	["FITS", FITS, "clip.set_framing", "fit"],
 	["SHAPES", SHAPES, "shape.add", "shape"],
+	["BLEND_MODES", BLEND_MODES, "clip.set_blend", "mode"],
 	["VOICE_PRESETS", VOICE_PRESETS, "item.set_audio", "voice"],
 ];
 

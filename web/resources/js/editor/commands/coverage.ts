@@ -37,6 +37,9 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"timeline.toggle_enabled": ["item.set_enabled"],
 	"inspector.enabled": ["item.set_enabled"],
 	"inspector.flip": ["clip.set_flip"],
+	"inspector.blend": ["clip.set_blend"],
+	"inspector.mask": ["clip.set_mask"],
+	"inspector.chroma_key": ["clip.set_chroma_key"],
 	"timeline.close_gap": ["timeline.close_gap"],
 	"inspector.move": ["item.move"],
 	"inspector.trim_end": ["item.trim"],
@@ -189,9 +192,18 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.blur", phase: "B" },
 		palette,
 	],
-	"clip.set_chroma_key": [palette],
-	"clip.set_blend": [palette],
-	"clip.set_mask": [palette],
+	"clip.set_chroma_key": [
+		{ kind: "inspector", action: "inspector.chroma_key", phase: "B" },
+		palette,
+	],
+	"clip.set_blend": [
+		{ kind: "inspector", action: "inspector.blend", phase: "B" },
+		palette,
+	],
+	"clip.set_mask": [
+		{ kind: "inspector", action: "inspector.mask", phase: "B" },
+		palette,
+	],
 	"clip.set_flip": [
 		{ kind: "inspector", action: "inspector.flip", phase: "B" },
 		palette,
