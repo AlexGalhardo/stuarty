@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_m1n2p3q4r5 shows an image, which is already a still.",
+  "hint": "Use a clip of a video asset.",
+  "retryable": false,
+  "path": "args.item_id"
+}

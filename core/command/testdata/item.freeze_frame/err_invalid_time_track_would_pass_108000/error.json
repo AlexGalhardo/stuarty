@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_TIME",
+  "message": "Holding the frame for 90 frames would move the end of the track from frame 107990 to 108080, past the limit 108000.",
+  "hint": "Use a duration of at most \"10f\".",
+  "retryable": false,
+  "path": "args.duration"
+}

@@ -1,0 +1,7 @@
+{
+  "op": "item.freeze_frame",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "at": "30f"
+  }
+}

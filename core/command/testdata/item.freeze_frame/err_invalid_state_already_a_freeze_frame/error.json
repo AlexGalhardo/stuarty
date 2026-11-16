@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Item itm_m1n2p3q4r5 is already a freeze frame.",
+  "hint": "Change its length with item.trim.",
+  "retryable": false,
+  "path": "args.item_id"
+}

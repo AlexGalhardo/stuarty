@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_m1n2p3q4r5 is a freeze frame, which has no speed.",
+  "hint": "Change its duration with item.trim, or slip the held frame with item.slip.",
+  "retryable": false,
+  "path": "args.item_id"
+}

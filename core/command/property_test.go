@@ -393,6 +393,9 @@ var alphaOps = map[string]func(p *docPick) string{
 			p.clip(), p.audioItem(), p.oneOf("audio", "color", "blend"), p.oneOf("filter", "effects", "flip"),
 		)
 	},
+	"item.freeze_frame": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"at":%q,"duration":%q}`, p.clip(), p.frames(400), p.frames(60))
+	},
 	"item.set_enabled": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"enabled":%s}`, p.clip(), p.oneOf("true", "false"))
 	},

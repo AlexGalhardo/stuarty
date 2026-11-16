@@ -19,7 +19,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `hash` | `string` | no |  |
 | `height` | `integer` | no |  |
 | `id` | `string` | no |  |
-| `kind` | `video`, `audio`, `image` | no |  |
+| `kind` | `video`, `audio`, `image`, `lut` | no |  |
 | `name` | `string` | no |  |
 | `sample_count` | `integer` | no |  |
 | `width` | `integer` | no |  |
@@ -419,12 +419,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `fit` | `cover`, `contain`, `none` | no |  |
 | `flip_x` | `boolean` | no |  |
 | `flip_y` | `boolean` | no |  |
+| `freeze` | `boolean` | no |  |
 | `height` | `number (double)` | no |  |
 | `hue` | `number (double)` | no |  |
 | `id` | `string` | no |  |
 | `keyframes` | map of array of [`Keyframe`](/docs/api/schemas#keyframe) | no |  |
 | `link` | `string` | no |  |
 | `linked_item` | `string` | no |  |
+| `lut` | [`Lut`](/docs/api/schemas#lut) or `any` or `null` or `null` | no |  |
 | `markers` | array of [`Marker`](/docs/api/schemas#marker) | no |  |
 | `mask` | [`Mask`](/docs/api/schemas#mask) or `any` or `null` or `null` | no |  |
 | `name` | `string` | no |  |
@@ -561,6 +563,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `range_lu` | `number (double)` | no |  |
 | `true_peak_dbtp` | `number (double)` or `null` | no |  |
 
+### Lut
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset` | `string` | no |  |
+| `intensity` | `number (double)` | no |  |
+
 ### Marker
 
 | Name | Type | Required | Description |
@@ -672,7 +681,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
-| `op` | `string`, one of 68 values | yes | A command name, as listed by GET /commands.. min length 1 |
+| `op` | `string`, one of 69 values | yes | A command name, as listed by GET /commands.. min length 1 |
 
 ### OtioLost
 
@@ -1058,6 +1067,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `id` | `string` | no |  |
 | `kind` | `visual`, `audio` | no |  |
 | `locked` | `boolean` | no |  |
+| `magnet` | `boolean` | no |  |
 | `muted` | `boolean` | no |  |
 | `name` | `string` | no |  |
 | `order` | `string` | no |  |

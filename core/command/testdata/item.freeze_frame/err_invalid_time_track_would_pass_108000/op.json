@@ -1,0 +1,10 @@
+{
+  "op": "item.freeze_frame",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "at": "107950f",
+    "duration": "3s",
+    "freeze_id": "itm_f1g2h3j4k5",
+    "new_id": "itm_m2n3p4q5r6"
+  }
+}

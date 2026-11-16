@@ -1,0 +1,30 @@
+{
+  "at": {
+    "frame": 89,
+    "requested": "89f",
+    "seconds": 2.967
+  },
+  "duration": {
+    "frame": 10,
+    "requested": "10f",
+    "seconds": 0.333
+  },
+  "freeze": {
+    "duration": 10,
+    "id": "itm_f1g2h3j4k5",
+    "start": 89
+  },
+  "freeze_id": "itm_f1g2h3j4k5",
+  "left": {
+    "duration": 89,
+    "id": "itm_m1n2p3q4r5",
+    "start": 0
+  },
+  "new_id": "itm_m2n3p4q5r6",
+  "right": {
+    "duration": 1,
+    "id": "itm_m2n3p4q5r6",
+    "start": 99
+  },
+  "source_frame": 99
+}

@@ -26,19 +26,19 @@ Check with `project:list`. Workspace: `~/.vukem-video` or `$VUKEM_VIDEO_HOME`; `
 - Times need a unit: `12.5s`, `375f`, `00:00:12.500`.
 - Ids (`prj_`, `ast_`, `trk_`, `itm_`, `job_`) are never positions. List first.
 - The top track draws over the others (ends: `top`, `bottom`).
-- `--base` is the `revision` of your last result; default: current.
-- Give your own `id` to what later batch operations use.
+- `--base` is your last result's `revision`; default: current.
+- Give your own `id` to what later operations use.
 
 ## Command reference
 
-Operations of `edit`; a star marks those added after the Prototype. `command_help [name]` lists them or shows arguments. `asset.remove` and `font.*` need the media scope.
+`edit` operations; a star marks those added after the Prototype. `command_help [name]` lists them or shows arguments. `asset.remove` and `font.*` need the media scope.
 
 - `asset`: remove*
 - `audio`: add*, duck*, mark_beats*
 - `caption`: add, edit_word*, from_transcript*, merge*, retime_from_clip*, set_breaks*, set_style*, set_words*, split*
 - `clip`: add, remove_silences*, set_blend*, set_blur*, set_chroma_key*, set_color*, set_effects*, set_filter*, set_flip*, set_framing*, set_mask*, set_speed*
 - `font`: add*, remove*
-- `item`: crossfade*, delete, duplicate*, extract_audio*, link*, move, paste_attributes*, rename*, set_audio*, set_enabled*, set_transform*, set_transition*, slip*, split, trim, unlink*
+- `item`: crossfade*, delete, duplicate*, extract_audio*, freeze_frame*, link*, move, paste_attributes*, rename*, set_audio*, set_enabled*, set_transform*, set_transition*, slip*, split, trim, unlink*
 - `keyframe`: clear*, remove*, set*
 - `marker`: add*, remove*, set*
 - `project`: rename
@@ -128,7 +128,7 @@ Lint rules (`!` blocks export): code, severity, what to do.
 
 ## Errors and recovery
 
-Exit codes: 0 success; 1 a failure a retry will not fix; 2 retryable or a `--wait` timeout. `E_REVISION_CONFLICT` has the changes since your revision in `details.diff`: re-plan, resend. `undo` reverts your latest step.
+Exit codes: 0 success; 1 a failure a retry will not fix; 2 retryable or a `--wait` timeout. `E_REVISION_CONFLICT` has the changes since your revision in `details.diff`: re-plan, resend. `undo` reverts your last step.
 
 Code, HTTP status, usual fix; `retry` marks exit 2.
 

@@ -321,6 +321,9 @@ func (c *check) sourceRange() {
 		}
 
 		span := (int64(it.Duration)*int64(it.Speed.Num) + int64(it.Speed.Den) - 1) / int64(it.Speed.Den)
+		if it.Freeze {
+			span = 1
+		}
 		last := int64(it.SourceIn) + span - 1
 		srcLast := last * int64(fps.Den) * int64(a.FrameRate.Num) / (int64(fps.Num) * int64(a.FrameRate.Den))
 

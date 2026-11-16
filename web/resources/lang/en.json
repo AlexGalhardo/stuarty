@@ -540,6 +540,9 @@
           "paste_attributes": {
             "title": "Paste attributes"
           },
+          "freeze_frame": {
+            "title": "Freeze frame"
+          },
           "set_transition": {
             "title": "Set item transition"
           },

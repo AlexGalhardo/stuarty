@@ -158,6 +158,11 @@ func applyClipSetSpeed(c *Context, a *clipSpeedArgs) error {
 		return Errorf(CodeTypeMismatch, "Item %s is %s item and has no speed.", a.ItemID, article(it.Type)).
 			WithHint("Change the duration with item.trim instead.").WithPath("args.item_id")
 	}
+	if it.Freeze {
+		return Errorf(CodeTypeMismatch, "Item %s is a freeze frame, which has no speed.", a.ItemID).
+			WithHint("Change its duration with item.trim, or slip the held frame with item.slip.").
+			WithPath("args.item_id")
+	}
 	if !given {
 		next, curve = it.Speed, it.SpeedCurve
 	}

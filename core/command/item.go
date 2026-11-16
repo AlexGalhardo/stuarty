@@ -256,7 +256,7 @@ func (c *Context) checkSource(it *timeline.Item, duration, sourceIn int) *Error 
 		return nil
 	}
 	sp := it.Speed
-	need := sourceIn + ceilDiv(duration*sp.Num, sp.Den)
+	need := sourceIn + it.SourceFrames(duration)
 	if need <= total {
 		return nil
 	}
@@ -429,7 +429,7 @@ func (c *Context) trimStart(old, n *timeline.Item, to int) *Error {
 			WithPath("args.to")
 	}
 	d := to - old.Start
-	if _, reads := c.sourceAsset(old); reads {
+	if _, reads := c.sourceAsset(old); reads && !old.Freeze {
 		if len(old.SpeedCurve) > 0 && d != 0 {
 			return rejectCurve(old, "moving the start of the item")
 		}

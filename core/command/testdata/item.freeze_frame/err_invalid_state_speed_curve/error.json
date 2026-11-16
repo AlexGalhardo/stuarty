@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Item itm_m1n2p3q4r5 has a speed curve, which a split cannot follow.",
+  "hint": "Remove the curve first with clip.set_speed and a constant speed.",
+  "retryable": false,
+  "path": "args.item_id"
+}

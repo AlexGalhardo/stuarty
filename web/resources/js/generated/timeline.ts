@@ -90,6 +90,7 @@ export interface Item {
   fit?: "cover" | "contain" | "none";
   flip_x?: boolean;
   flip_y?: boolean;
+  freeze?: boolean;
   height?: number;
   hue?: number;
   id: string;

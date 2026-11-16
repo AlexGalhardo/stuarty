@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "at": {
+      "description": "Absolute frame inside the clip whose picture is held.",
+      "type": "string",
+      "x-vv-kind": "time"
+    },
+    "duration": {
+      "description": "How long the frame is held; default 3s.",
+      "type": "string",
+      "x-vv-kind": "time"
+    },
+    "freeze_id": {
+      "description": "Id for the freeze frame item.",
+      "type": "string"
+    },
+    "item_id": {
+      "description": "A clip of a video asset.",
+      "type": "string"
+    },
+    "new_id": {
+      "description": "Id for the right part of the split.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id",
+    "at"
+  ],
+  "type": "object"
+}

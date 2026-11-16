@@ -56,7 +56,8 @@
             "enum": [
               "video",
               "audio",
-              "image"
+              "image",
+              "lut"
             ],
             "type": "string"
           },
@@ -1219,6 +1220,9 @@
           "flip_y": {
             "type": "boolean"
           },
+          "freeze": {
+            "type": "boolean"
+          },
           "height": {
             "format": "double",
             "type": "number"
@@ -1244,6 +1248,16 @@
           },
           "linked_item": {
             "type": "string"
+          },
+          "lut": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Lut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "markers": {
             "items": {
@@ -1716,6 +1730,18 @@
         },
         "type": "object"
       },
+      "Lut": {
+        "properties": {
+          "asset": {
+            "type": "string"
+          },
+          "intensity": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
       "Marker": {
         "properties": {
           "frame": {
@@ -2080,6 +2106,7 @@
               "item.delete",
               "item.duplicate",
               "item.extract_audio",
+              "item.freeze_frame",
               "item.link",
               "item.move",
               "item.paste_attributes",
@@ -2219,6 +2246,9 @@
           },
           "item.extract_audio": {
             "$ref": "#/components/schemas/args.item.extract_audio"
+          },
+          "item.freeze_frame": {
+            "$ref": "#/components/schemas/args.item.freeze_frame"
           },
           "item.link": {
             "$ref": "#/components/schemas/args.item.link"
@@ -3267,6 +3297,9 @@
             "type": "string"
           },
           "locked": {
+            "type": "boolean"
+          },
+          "magnet": {
             "type": "boolean"
           },
           "muted": {
@@ -4757,6 +4790,16 @@
             "description": "A clip.",
             "type": "string"
           },
+          "lut_asset": {
+            "description": "Id of a lut asset to grade the clip with.",
+            "type": "string"
+          },
+          "lut_intensity": {
+            "description": "0 to 1; default 1; 0 removes the lookup table.",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
           "saturation": {
             "description": "0 to 2; default 1.",
             "maximum": 2,
@@ -5302,6 +5345,38 @@
         "required": [
           "item_id",
           "track_id"
+        ],
+        "type": "object"
+      },
+      "args.item.freeze_frame": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "description": "Absolute frame inside the clip whose picture is held.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "duration": {
+            "description": "How long the frame is held; default 3s.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "freeze_id": {
+            "description": "Id for the freeze frame item.",
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip of a video asset.",
+            "type": "string"
+          },
+          "new_id": {
+            "description": "Id for the right part of the split.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "at"
         ],
         "type": "object"
       },
@@ -6836,6 +6911,10 @@
           },
           "locked": {
             "description": "true refuses every edit of the items of the track until it is false again.",
+            "type": "boolean"
+          },
+          "magnet": {
+            "description": "true keeps the items of the track packed from frame 0 with no gap, closing the gaps now and after every edit.",
             "type": "boolean"
           },
           "muted": {

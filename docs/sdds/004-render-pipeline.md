@@ -334,6 +334,10 @@ pos = source_in + (C - 1 - Offset(r))        (replaces  source_in + Offset(r)  i
 
 **Examples.** `source_in = 20`, `D = 4`, speed 2: `C = 8`, forward offsets 0, 2, 4, 6, reversed positions 27, 25, 23, 21. With the curve `(0, 1x), (1, 3x)` of section 3.11 (`C = 8`, offsets 0, 1, 3, 5): positions 27, 26, 24, 22.
 
+### 3.12.1 Freeze frame
+
+Added after BETA (TASK-0254). An item with `freeze` (SDD-001 §3.5, made by `item.freeze_frame`) shows one source frame for its whole duration: for every local frame `r`, `pos = source_in` in section 3.3, whatever `Offset(r)` is (it is 0). Speed is 1, there is no curve and no reverse, so `C = 1`. Everything after `pos` in section 3.3 is unchanged: the picture is that frame decoded once and drawn at each frame of the item with the item's own transform, colour, filter and effects. The item has no sound: `item.freeze_frame` sets `audio_muted`, and an audio source of a muted item is silence. `timeline.SourceOffset` and `SourceSpan` (1) implement it, so the plan needs no other rule.
+
 ### 3.13 Effects
 
 Added after BETA (TASK-0278). An item with `effects` (SDD-001 §3.4, set by `clip.set_effects`) carries up to six effects, each kind at most once, with every parameter filled in. The effects are constant over the item (not keyframeable). Five of them change the pixels of the layer and the plan lists them in `Layer.Effects` (the window carries the list once per layer, `effects`) in the order of the item; **shake** moves the layer and the planner applies it to `CX`, `CY` and `Rotation` of every frame, so it is not in the list and the executors know nothing of it. The Go compositor (`engine/compositor/effects.go`) and the Rust renderer (`renderer/vukem-renderer/src/effects.rs`) draw the five pixel effects as this section says, the same bytes (TASK-0279); the GPU path receives the pixels they prepare (SDD-013 §3.8), and the preview gives the same picture under the SSIM rule of section 11 where a platform cannot do integer arithmetic.

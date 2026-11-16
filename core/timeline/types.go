@@ -203,6 +203,9 @@ type Item struct {
 	Speed      Rational `json:"speed"                                                                              default:"1/1"`
 	Volume     float64  `json:"volume"                                                                     min:"0" default:"1"   max:"4"`
 	AudioMuted bool     `json:"audio_muted,omitempty"`
+	// Clip only, optional and additive (SDD-001 §3.5): a freeze frame. The item shows the one source frame
+	// SourceIn for its whole duration, with no sound; Speed is 1/1 and there is no curve or reverse.
+	Freeze bool `json:"freeze,omitempty"`
 	// Clip and audio, optional and additive (SDD-001 §3.5): the speed curve, 2 to 8 points with linear
 	// ramps between them; speed is then the mean of the curve.
 	SpeedCurve []SpeedPoint `json:"speed_curve,omitempty" minitems:"2" maxitems:"8"`
