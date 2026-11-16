@@ -433,3 +433,42 @@ func TestArtifactsAcceptSpeechAndBeats(t *testing.T) {
 		t.Errorf("artifacts after the cascade = %d, %v", n, err)
 	}
 }
+
+// TASK-0254: an asset may be of kind lut; the other kinds stay closed, and the rows and cascades that
+// hang from assets are untouched by the change of the check.
+func TestAssetsAcceptLutKind(t *testing.T) {
+	db := openMigrated(t)
+	ctx := context.Background()
+
+	exec := func(q string, args ...any) error {
+		_, err := db.ExecContext(ctx, q, args...)
+		return err
+	}
+
+	if err := exec(
+		`INSERT INTO assets (id, kind, size_bytes, original_name, created_ms, updated_ms) VALUES ('sha256:lut', 'lut', 1, 'a.cube', 1, 1)`,
+	); err != nil {
+		t.Errorf("kind lut refused: %v", err)
+	}
+
+	if err := exec(
+		`INSERT INTO assets (id, kind, size_bytes, original_name, created_ms, updated_ms) VALUES ('sha256:doc', 'doc', 1, 'n', 1, 1)`,
+	); err == nil {
+		t.Error("an unknown asset kind was accepted")
+	}
+
+	if err := exec(
+		`INSERT INTO artifacts (asset_hash, kind, profile, ext, rel_path, size_bytes, sha256, created_ms) VALUES ('sha256:lut', 'probe', 1, 'json', 'p', 1, 'x', 1)`,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := exec(`DELETE FROM assets WHERE id = 'sha256:lut'`); err != nil {
+		t.Fatal(err)
+	}
+
+	var n int
+	if err := db.QueryRowContext(ctx, "SELECT count(*) FROM artifacts").Scan(&n); err != nil || n != 0 {
+		t.Errorf("artifacts after the cascade = %d, %v", n, err)
+	}
+}
