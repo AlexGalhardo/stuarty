@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-11-16
+
+### Added
+
+- **web:** Draw the chroma key in the preview and add its inspector section ([973ae76](https://github.com/AlexGalhardo/vukem-video/commit/973ae769483258a470707f300ec8722e99426f5f))
+- **web:** Add markers, J/K/L and in/out points to the editor keys ([0f5e8ab](https://github.com/AlexGalhardo/vukem-video/commit/0f5e8abf57e1514ad8c399598bde6be2ca5fdf9a))
+- **desktop:** Print the page with Ctrl+P in the window ([3bcfe29](https://github.com/AlexGalhardo/vukem-video/commit/3bcfe298cb93772b321bbc0e57eebb4975bcd9d0))
+- **web:** Explain in the library why a browser imports by path ([9041803](https://github.com/AlexGalhardo/vukem-video/commit/90418034c15c6717618e842d94af741b1f66950e))
+- **cli:** Add --out to export, bundle:export and template:export ([04b7aed](https://github.com/AlexGalhardo/vukem-video/commit/04b7aedc0d356b5d62755879b781a61f7ba89054))
+- **core:** Add roll, slide and slip edits ([e9397ad](https://github.com/AlexGalhardo/vukem-video/commit/e9397ad85d9b053d23ddb155e240340a8348ae5d))
+- **core:** Add settings.reframe to re-target a project to another aspect ([587083c](https://github.com/AlexGalhardo/vukem-video/commit/587083c939b9a3f618d0c04195a44ec7afac700a))
+- **core:** Crossfade two neighbours of one track through a second track ([cfce71d](https://github.com/AlexGalhardo/vukem-video/commit/cfce71db5b9720884c1e744a04378b9706393612))
+- **ui:** Show a finished export in its folder from the desktop window ([1946345](https://github.com/AlexGalhardo/vukem-video/commit/1946345a83ea9a92c80c1c2211239d495ecffebb))
+- **ui:** Pick the template file with the native dialog in the desktop window ([5a7772d](https://github.com/AlexGalhardo/vukem-video/commit/5a7772d2e7830698462060921ea1b17dddeeb57a))
+- **engine:** Draw the frame plan on the GPU with wgpu ([df147ed](https://github.com/AlexGalhardo/vukem-video/commit/df147ed6618abac1badfe3551070bf907b53fec1))
+- **engine:** Hold the GPU path to the CPU path by SSIM and geometry ([d1ce87f](https://github.com/AlexGalhardo/vukem-video/commit/d1ce87f0cb85385f5a6d065d3dad315212f21746))
+- **service:** Warn at the start of a GIF export whose typical size is over 25 MB ([b267007](https://github.com/AlexGalhardo/vukem-video/commit/b2670075b6cea3422526c7912931f8d1f83e84b4))
+- **service:** Let a transcribe job pick an installed whisper model ([61a8d83](https://github.com/AlexGalhardo/vukem-video/commit/61a8d83dc50f8fa7a7302f0cc343d6e20ffdc161))
+- **service:** Export one frame as a png and accept the whole view token range ([6b336af](https://github.com/AlexGalhardo/vukem-video/commit/6b336af51df622a6850e5d286725e70af3538fc5))
+- **ui:** Crossfade two neighbours of one track through another visual track ([e37604c](https://github.com/AlexGalhardo/vukem-video/commit/e37604cea8875fe615cf612bddc6256ffc87dc9f))
+- **ui:** Change the project aspect with settings.reframe ([0d70b1a](https://github.com/AlexGalhardo/vukem-video/commit/0d70b1aaaad7b7690fbc39edc22b25f66d6d896b))
+- **ui:** Roll, slide and slip from the keyboard ([5f88cfd](https://github.com/AlexGalhardo/vukem-video/commit/5f88cfd487db8da14a95ad03f4f19c88f439d033))
+- **cli:** Add --model to transcribe ([9c9116e](https://github.com/AlexGalhardo/vukem-video/commit/9c9116e014b75dc1e5eec1924a27934aed5c8d08))
+- **cli:** Add --at to export for a png frame ([2ad8256](https://github.com/AlexGalhardo/vukem-video/commit/2ad8256d6d3b177dccdc5886cc1acc958b8652ca))
+- **ui:** Choose the whisper model in the install dialog ([33e2b2c](https://github.com/AlexGalhardo/vukem-video/commit/33e2b2c418e6f25db6809b3f0443d23bd56cd3e6))
+- **engine:** Run the GPU path in a child process fed through pipes ([4e17577](https://github.com/AlexGalhardo/vukem-video/commit/4e17577c6e74d8043a028815a2ecb3e1802c1322))
+- **engine:** Draw the export on the GPU host when there is an adapter and the config allows ([13fd041](https://github.com/AlexGalhardo/vukem-video/commit/13fd0414145451614af6bb7503bfb8e39ec3bf20))
+- **service:** Locate vukem-render and pass it to the GPU export ([568e960](https://github.com/AlexGalhardo/vukem-video/commit/568e9602dd4ae341c41c7cb8584de0aaa2b7f791))
+- **core:** Add blend modes to visual items (clip.set_blend and plan.Layer.Blend) ([b323715](https://github.com/AlexGalhardo/vukem-video/commit/b32371560789c7af55d79cd1b6967203b9b106d2))
+- **otio:** Keep speed, keyframes, slots, texts and chroma key in metadata.vukem ([5efaebe](https://github.com/AlexGalhardo/vukem-video/commit/5efaebe3dcdb1c0881f94098ec08fdd248a5d98a))
+- **otio:** Carry the blend mode of clips and text items in metadata.vukem ([2e3793f](https://github.com/AlexGalhardo/vukem-video/commit/2e3793f192adf083ca2387cee2806a68780e524c))
+- **otio:** Round-trip the document markers through the timeline metadata and the stack markers ([e0a9bd6](https://github.com/AlexGalhardo/vukem-video/commit/e0a9bd627b9d2e73edfe8f4fd61c30bc23dfd7bc))
+- **web:** Draw the blend modes in the preview and add the inspector Blend section ([c5e797f](https://github.com/AlexGalhardo/vukem-video/commit/c5e797ff04350f7d5b2db5ec952bbe3e1e8250b9))
+- **engine:** Draw blend modes in the compositor ([8dc3b9a](https://github.com/AlexGalhardo/vukem-video/commit/8dc3b9ab14fad201f7cec5e65e9ebd2e4820e907))
+- **engine:** Draw blend modes in the Rust renderer, byte-equal with the Go compositor ([53f1ce1](https://github.com/AlexGalhardo/vukem-video/commit/53f1ce1c2f3fe6a5ae643a608c112ad056a5e27a))
+- **engine:** Draw blend modes on the GPU path ([2d39d96](https://github.com/AlexGalhardo/vukem-video/commit/2d39d967fd4de451de6185cd37d8d08b504cf89d))
+- **core:** Add masks to visual items (clip.set_mask and plan.Layer.Mask) ([7b79a12](https://github.com/AlexGalhardo/vukem-video/commit/7b79a12ee9646fcd1c32b875f3e11f20d79f6d7c))
+
+### Fixed
+
+- **web:** Name Choose files and drops in the first-run library tip of the desktop window ([da40377](https://github.com/AlexGalhardo/vukem-video/commit/da403772cbc9bbb35cdc511dc61a5c37dab33d22))
+- **web:** Show the own actor as you instead of a raw id ([0870115](https://github.com/AlexGalhardo/vukem-video/commit/08701155469f09a11ad07de99f0bb3bb53a9fb6b))
+- **cli:** Read the --out file only from the own server when the connection is remote ([67f5936](https://github.com/AlexGalhardo/vukem-video/commit/67f59361fcb0ef39126634cafb46bf0c20023729))
+- **ui:** Paste copied items at the playhead and make cut then paste work ([8b3730f](https://github.com/AlexGalhardo/vukem-video/commit/8b3730fe78983167fffb976c84fa89f1ee5b8928))
+- **service:** Omit dimensions and an empty duration from the job text of a bundle export ([ba1c3a8](https://github.com/AlexGalhardo/vukem-video/commit/ba1c3a8c50b1e86849dd911c778b6212441c5cf6))
+- **service:** Record the installed whisper model as the workspace default ([742ebba](https://github.com/AlexGalhardo/vukem-video/commit/742ebbac350c7b8af7e608abf106bdfc131115de))
+- **service:** Show the vukem-render path in the doctor only to a privileged caller ([33725bf](https://github.com/AlexGalhardo/vukem-video/commit/33725bf30aa51c502ea344312214af95b867d23f))
+- **desktop:** End the server with the shell on Linux and macOS and show the startup error ([79aeb93](https://github.com/AlexGalhardo/vukem-video/commit/79aeb934d4715427e59e075da3c6db7010c7d4bd))
+- **desktop:** Keep the runtime.json of a live owner when the workspace is locked ([1cb0d6b](https://github.com/AlexGalhardo/vukem-video/commit/1cb0d6b5f64ef27964e9a6c35a0e149c232eb816))
+
 ## [0.19.0] - 2026-11-16
 
 ### Added
@@ -907,7 +957,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.19.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.20.0...HEAD
+[0.20.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.16.0...v0.17.0
