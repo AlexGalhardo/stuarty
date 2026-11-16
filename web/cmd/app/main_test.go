@@ -5,9 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -180,7 +182,8 @@ func TestMCPOverStdioThroughTheBinary(t *testing.T) {
 		t.Fatalf("edit: %v %+v", err, edited)
 	}
 
-	if es, _ := edited.StructuredContent.(map[string]any); es["actor"] != "local:claude-code" {
+	if es, _ := edited.StructuredContent.(map[string]any); !regexp.MustCompile(`^local:claude-code-[0-9a-z]{6}$`).
+		MatchString(fmt.Sprint(es["actor"])) {
 		t.Fatalf("actor = %v", es["actor"])
 	}
 }

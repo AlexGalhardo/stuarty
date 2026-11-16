@@ -7,6 +7,7 @@ package mcp
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -27,6 +28,9 @@ type Options struct {
 	Version string
 	// Actor overrides the label of the actor of the stdio server (--actor).
 	Actor string
+	// Session is the id of the MCP session in the actor label; empty makes a random one.
+	// A stdio server serves one client for the life of the process, so this is that client.
+	Session string
 	// Registry is the command registry of the build, which decides the operations
 	// edit offers; default command.Default().
 	Registry *command.Registry
@@ -39,6 +43,8 @@ var Pending = map[string]string{}
 
 const (
 	defaultActor = "mcp"
+	// maxLabelLength is the longest actor label (SDD-000 section 3).
+	maxLabelLength = 32
 	// listTTLMs is how long a client may cache tools/list: the list changes only
 	// when the binary is upgraded (SDD-003 section 4.1).
 	listTTLMs = 3_600_000
@@ -70,7 +76,11 @@ func New(svc service.Service, o Options) (*sdk.Server, error) {
 
 	srv.AddReceivingMiddleware(inTableOrder)
 
-	a := &adapter{svc: svc, opts: o}
+	if o.Session == "" {
+		o.Session = newSessionID()
+	}
+
+	a := &adapter{svc: svc, opts: o, session: o.Session}
 
 	for _, name := range order {
 		call, ok := a.handlers()[name]
@@ -148,6 +158,8 @@ func moduleVersion() string {
 type adapter struct {
 	svc  service.Service
 	opts Options
+	// session tells this server from another with the same client name (VV-026).
+	session string
 }
 
 // handle wraps a tool: validate the arguments against the schema, attach the
@@ -191,14 +203,52 @@ func (a *adapter) caller(ctx context.Context, req *sdk.CallToolRequest) (service
 		}
 	}
 
-	label := a.opts.Actor
-	if label == "" {
+	label := SanitizeLabel(a.opts.Actor)
+
+	if a.opts.Actor == "" {
+		name := ""
 		if ci := req.ClientInfo(); ci != nil {
-			label = ci.Name
+			name = ci.Name
 		}
+
+		label = sessionLabel(name, a.session)
 	}
 
-	return service.Caller{Actor: "local:" + SanitizeLabel(label), Scopes: service.AllScopes}, nil
+	return service.Caller{Actor: "local:" + label, Scopes: service.AllScopes}, nil
+}
+
+// sessionIDLength is the length of the session part of an actor label.
+const sessionIDLength = 6
+
+// crockford is the alphabet of the ids of the product (SDD-000 section 2), lower case.
+const crockford = "0123456789abcdefghjkmnpqrstvwxyz"
+
+// newSessionID is a random id for one MCP session: a stdio server serves one
+// client for the life of the process, so the id is made once per server.
+func newSessionID() string {
+	var raw [sessionIDLength]byte
+
+	_, _ = rand.Read(raw[:])
+
+	id := make([]byte, sessionIDLength)
+	for i, b := range raw {
+		id[i] = crockford[int(b)%len(crockford)]
+	}
+
+	return string(id)
+}
+
+// sessionLabel is the actor label of a client with no --actor: the sanitized
+// client name and the id of the session, so two agents with the same client name
+// are two actors and an undo never reaches the steps of another session or of an
+// earlier connection (VV-026). The label stays inside [a-z0-9-]{1,32}.
+func sessionLabel(clientName, session string) string {
+	name := SanitizeLabel(clientName)
+	if limit := maxLabelLength - 1 - len(session); len(name) > limit {
+		name = name[:limit]
+	}
+
+	return name + "-" + session
 }
 
 // SanitizeLabel makes an actor label from a client name: lower-case, every
