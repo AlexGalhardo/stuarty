@@ -226,6 +226,10 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 	useEffect(() => {
 		if (playhead === committed.current && playingRef.current) return;
 		committed.current = playhead;
+		// A seek is a frame like any other: the live ref and the timecode follow it, or
+		// the next state change would put the previous frame back into `live`.
+		liveRef.current = playhead;
+		for (const listener of listeners.current) listener(playhead);
 		setLive(playhead);
 		executor.current?.seek(playhead);
 	}, [playhead]);
