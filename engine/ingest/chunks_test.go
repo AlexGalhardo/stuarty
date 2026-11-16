@@ -66,6 +66,10 @@ func TestProxyChunkIndexMatchesFFprobe(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			if err := chunkIndexErr(t, idx); err != nil {
+				t.Fatalf("the index of a real proxy does not match docs/schemas/chunks-1.schema.json: %v", err)
+			}
+
 			pk := ffprobePackets(t, proxy)
 			if len(pk) != len(idx.Sizes) || len(pk) == 0 {
 				t.Fatalf("%d samples in the index, %d packets in ffprobe", len(idx.Sizes), len(pk))
