@@ -360,7 +360,7 @@ func (h *apiHandler) projectsGet(c *web.Ctx, in getIn) (service.ProjectGetResult
 		detail = "concise"
 	}
 
-	if c.NotModified(`"r`+strconv.FormatInt(res.Revision, 10)+"-"+detail+`"`, zeroTime) {
+	if c.NotModified(`"r`+strconv.FormatInt(res.Revision, 10)+"-"+detail+"-"+res.State+`"`, zeroTime) {
 		return service.ProjectGetResult{}, nil
 	}
 

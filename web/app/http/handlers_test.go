@@ -128,12 +128,14 @@ func TestProjectsListGetAndConditionalRead(t *testing.T) {
 	}
 
 	get := h.get("/api/v1/projects/" + id)
-	if get.status != http.StatusOK || get.header.Get("ETag") != `"r0-concise"` ||
+	if get.status != http.StatusOK || get.header.Get("ETag") != `"r0-concise-active"` ||
 		get.header.Get("X-Vukem-Revision") != "0" {
 		t.Fatalf("get = %d etag %q %s", get.status, get.header.Get("ETag"), get.body)
 	}
 
-	cached := h.do(req{path: "/api/v1/projects/" + id, headers: map[string]string{"If-None-Match": `"r0-concise"`}})
+	cached := h.do(
+		req{path: "/api/v1/projects/" + id, headers: map[string]string{"If-None-Match": `"r0-concise-active"`}},
+	)
 	if cached.status != http.StatusNotModified || len(cached.body) != 0 {
 		t.Errorf("conditional get = %d %q", cached.status, cached.body)
 	}
@@ -146,6 +148,27 @@ func TestProjectsListGetAndConditionalRead(t *testing.T) {
 	trashed := h.post("/api/v1/projects/"+id+"/trash", "")
 	if trashed.status != http.StatusOK || trashed.json(t)["state"] != "trashed" {
 		t.Errorf("trash = %d %s", trashed.status, trashed.body)
+	}
+}
+
+// Trash and restore change the state of a project but not its revision, so the
+// ETag carries the state and a stale cached copy is never confirmed.
+func TestProjectETagChangesWhenTheProjectIsTrashed(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	id := h.newProject("etag")
+	path := "/api/v1/projects/" + id
+
+	etag := h.get(path).header.Get("ETag")
+
+	if trashed := h.post(path+"/trash", ""); trashed.status != http.StatusOK {
+		t.Fatalf("trash = %d %s", trashed.status, trashed.body)
+	}
+
+	got := h.do(req{path: path, headers: map[string]string{"If-None-Match": etag}})
+	if got.status != http.StatusOK || got.json(t)["state"] != "trashed" {
+		t.Errorf("get after trash = %d %s, want 200 and state trashed", got.status, got.body)
 	}
 }
 
