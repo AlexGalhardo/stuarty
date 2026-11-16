@@ -26,28 +26,6 @@ func TestMinSilence(t *testing.T) {
 	}
 }
 
-func TestFramesFromSamples(t *testing.T) {
-	t.Parallel()
-
-	// 30 fps: a frame is 1600 samples. [1000, 5000) holds the whole frames 1 and 2 (1600 to 4800).
-	got := FramesFromSamples([]SilenceRange{{1000, 5000}, {100, 1500}, {48000, 96000}}, Rational{30, 1})
-	want := []FrameRange{{1, 3}, {30, 60}}
-
-	if len(got) != len(want) || got[0] != want[0] || got[1] != want[1] {
-		t.Errorf("frames = %v, want %v", got, want)
-	}
-
-	// 30000/1001: a frame is 1601.6 samples.
-	ntsc := FramesFromSamples([]SilenceRange{{0, 48048}}, Rational{30000, 1001})
-	if len(ntsc) != 1 || ntsc[0] != (FrameRange{0, 30}) {
-		t.Errorf("30000/1001: %v", ntsc)
-	}
-
-	if got := FramesFromSamples([]SilenceRange{{0, 100}}, Rational{}); len(got) != 0 {
-		t.Errorf("no rate: %v", got)
-	}
-}
-
 // probedSamples is the duration of the audio stream of the probe artifact, in samples at 48 kHz.
 func probedSamples(t *testing.T, e *env, hash string, res *Result) int64 {
 	t.Helper()
@@ -201,9 +179,8 @@ func TestSilencesOnSpeechFixture(t *testing.T) {
 		}
 	}
 
-	frames := FramesFromSamples(MinSilence(set, 19200), Rational{30, 1})
-	if len(frames) != 2 || frames[0].Start >= frames[0].End {
-		t.Errorf("frames %v", frames)
+	if kept := MinSilence(set, 19200); len(kept) != 2 {
+		t.Errorf("min_silence 0.4 s kept %v, want 2 ranges", kept)
 	}
 }
 

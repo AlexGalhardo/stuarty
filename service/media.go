@@ -1096,8 +1096,7 @@ func (s *svc) silencesSection(arts []ArtifactRow, row *ProjectRow, minSilence st
 				continue
 			}
 
-			start := ceilDiv(r.Start*fps.Num, rate*fps.Den)
-			end := r.End * fps.Num / (rate * fps.Den)
+			start, end := fps.FramesInside(r.Start, r.End, rate)
 
 			if end <= start {
 				continue
@@ -1132,8 +1131,6 @@ func (s *svc) silencesSection(arts []ArtifactRow, row *ProjectRow, minSilence st
 
 	return b.String()
 }
-
-func ceilDiv(a, b int64) int64 { return (a + b - 1) / b }
 
 // OpenFile resolves the byte-serving routes of an asset (SDD-003 section 6.5).
 func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {

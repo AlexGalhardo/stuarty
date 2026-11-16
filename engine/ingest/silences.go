@@ -20,28 +20,3 @@ func MinSilence(ranges []SilenceRange, minSamples int64) []SilenceRange {
 
 	return out
 }
-
-// FramesFromSamples converts sample ranges at 48 kHz into asset frame ranges at the frame rate
-// of the asset. A frame belongs to a range only when it lies wholly inside it, so the start
-// rounds up and the end rounds down; a range that holds no whole frame is dropped. The input
-// is sorted and not overlapping, and so is the output.
-func FramesFromSamples(ranges []SilenceRange, rate Rational) []FrameRange {
-	out := make([]FrameRange, 0, len(ranges))
-
-	if rate.Num <= 0 || rate.Den <= 0 {
-		return out
-	}
-
-	per := int64(SampleRate) * rate.Den
-
-	for _, r := range ranges {
-		start := (r.Start*rate.Num + per - 1) / per
-		end := r.End * rate.Num / per
-
-		if start < end {
-			out = append(out, FrameRange{Start: start, End: end})
-		}
-	}
-
-	return out
-}
