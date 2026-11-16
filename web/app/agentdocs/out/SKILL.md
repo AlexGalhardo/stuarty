@@ -27,7 +27,7 @@ Check with `project:list`. The workspace is `~/.vukem-video` or `$VUKEM_VIDEO_HO
 - Ids (`prj_`, `ast_`, `trk_`, `itm_`, `job_`) are never positions. List first.
 - The top track is drawn over the others (ends: `top`, `bottom`).
 - `--base` is the `revision` of your last result; omitted, the current one.
-- Give your own `id` to what a batch creates that later operations use.
+- Give your own `id` to what later operations of a batch use.
 
 ## Command reference
 
