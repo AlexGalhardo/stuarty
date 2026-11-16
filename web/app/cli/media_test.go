@@ -330,6 +330,22 @@ func TestExportSendsTheFormat(t *testing.T) {
 	}
 }
 
+func TestExportSendsTheFrameTimeOfAPNG(t *testing.T) {
+	t.Parallel()
+
+	f := &mediaFake{startAns: job("job_1", "queued", "job_1 export queued")}
+	h := mediaHarness(t, f)
+
+	if code := h.run("export", projectFlag, "--format", "png", "--at", "2.5s", "--no-wait"); code != ExitOK {
+		t.Fatalf("exit %d: %s", code, h.stderr.String())
+	}
+
+	var args service.ExportArgs
+	if err := json.Unmarshal(f.jobStart.Args, &args); err != nil || args.Format != "png" || args.At != "2.5s" {
+		t.Errorf("args = %s", f.jobStart.Args)
+	}
+}
+
 // With VUKEM_VIDEO_URL the path belongs to the server and goes as typed (VV-005): a
 // POSIX path is not rewritten against the Windows working directory.
 func TestAbsKeepsServerPathsWhenRemote(t *testing.T) {
