@@ -91,8 +91,8 @@ func Mix(
 	sink func(block []float32) error,
 ) error {
 	tracks := make([]*track, len(srcs))
-	for i, s := range srcs {
-		tracks[i] = &track{src: s}
+	for i := range srcs {
+		tracks[i] = &track{src: srcs[i]}
 	}
 	defer func() {
 		for _, t := range tracks {
