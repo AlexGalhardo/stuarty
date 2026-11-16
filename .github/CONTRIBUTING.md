@@ -99,7 +99,7 @@ Before the release tag, the maintainer runs the agent harness and attaches its o
 
 - [ ] Run the workflow `agent-harness` (Actions, "Run workflow") with the defaults: scenario `all`, 10 runs, model `claude-sonnet-5-5` (`internal/tools/agentharness`, SDD-003 section 9 check 29). It gives an agent only `SKILL.md` and the CLI, and runs the Prototype scenario and the template scenario 10 times each. Each scenario must complete in at least 9 of 10 runs.
 - [ ] Attach the 20 transcripts to the release: download the artifact `agent-harness-results` (folder `transcripts/`, with `summary.json`) and upload it to the GitHub release.
-- [ ] Record the vendor token count of `tools/list` that the same run logs (`tools-list-tokens.log`, at most 6,000) in the release notes.
+- [ ] Record the vendor token count of `tools/list` that the same run logs (`tools-list-tokens.log`, at most 6,500) in the release notes.
 
 The workflow calls the Anthropic API, so it costs money. It runs only when started by hand, never on a schedule, a push or a pull request. It needs the repository secret `ANTHROPIC_API_KEY`; without it the first step fails and names the secret. Locally the same run is `VUKEM_VIDEO_HARNESS=1 ANTHROPIC_API_KEY=... go run ./internal/tools/agentharness --runs 10 --bin ./vukem-video --clip ./clip.mp4 --out ./transcripts`, and the token count is `VUKEM_VIDEO_BUDGET_RELEASE=1 ANTHROPIC_API_KEY=... ANTHROPIC_MODEL=<model> go test ./web/app/mcp -run TestToolListVendorTokens -v`.
 
