@@ -3,7 +3,7 @@
   "additionalProperties": false,
   "properties": {
     "item_id": {
-      "description": "A clip.",
+      "description": "A clip, text, caption or shape item.",
       "type": "string"
     },
     "radius": {

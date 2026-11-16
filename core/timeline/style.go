@@ -103,11 +103,17 @@ func StyleFromMap(m map[string]any) (*CaptionStyle, error) {
 
 // StyleViolations checks the numbers, the colours and the keys of a text style the way Validate does,
 // without the font (which needs the project) and without template colour references.
-func StyleViolations(s *CaptionStyle) []Violation {
+func StyleViolations(s *CaptionStyle) []Violation { return styleViolations(s, false) }
+
+// CaptionStyleViolations is StyleViolations for the style of a caption or of a caption track, where
+// the position and the highlight keys are allowed.
+func CaptionStyleViolations(s *CaptionStyle) []Violation { return styleViolations(s, true) }
+
+func styleViolations(s *CaptionStyle, caption bool) []Violation {
 	v := &validator{doc: &Document{}}
 	v.styleNumbers("style", "", s)
 	v.styleColors("style", "", s)
-	v.styleCaption("style", "", s, false)
+	v.styleCaption("style", "", s, caption)
 
 	return v.vs
 }

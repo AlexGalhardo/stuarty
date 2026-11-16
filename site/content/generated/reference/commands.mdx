@@ -25,22 +25,19 @@ An `edit` call is a list of operations; each operation is one of these commands.
 | [`clip.add`](/docs/reference/commands/clip.add) | Places a video or image asset on a visual track. | `edit` | prototype |
 | [`clip.remove_silences`](/docs/reference/commands/clip.remove_silences) | Cuts the silent stretches out of a clip, leaving one clip per stretch of speech. | `edit` | alpha |
 | [`clip.set_blend`](/docs/reference/commands/clip.set_blend) | Sets how a visual item is mixed with what is below it. | `edit` | beta |
-| [`clip.set_blur`](/docs/reference/commands/clip.set_blur) | Sets the blur radius of a clip. | `edit` | beta |
+| [`clip.set_blur`](/docs/reference/commands/clip.set_blur) | Sets the blur radius of a visual item. | `edit` | beta |
 | [`clip.set_chroma_key`](/docs/reference/commands/clip.set_chroma_key) | Keys out one colour of a clip, such as a green screen. | `edit` | beta |
 | [`clip.set_color`](/docs/reference/commands/clip.set_color) | Sets the brightness, contrast, saturation, temperature, tint and hue of a clip. | `edit` | alpha |
-| [`clip.set_effects`](/docs/reference/commands/clip.set_effects) | Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake. | `edit` | beta |
-| [`clip.set_filter`](/docs/reference/commands/clip.set_filter) | Sets the colour filter of a clip and how much of it is mixed in. | `edit` | beta |
+| [`clip.set_filter`](/docs/reference/commands/clip.set_filter) | Sets the colour filter of a visual item and how much of it is mixed in. | `edit` | beta |
 | [`clip.set_flip`](/docs/reference/commands/clip.set_flip) | Mirrors a visual item horizontally, vertically or both. | `edit` | beta |
 | [`clip.set_framing`](/docs/reference/commands/clip.set_framing) | Sets how the asset of a clip is fitted into the frame and how much of each side is cropped. | `edit` | alpha |
 | [`clip.set_mask`](/docs/reference/commands/clip.set_mask) | Limits where a visual item is drawn to a rectangle or an ellipse. | `edit` | beta |
-| [`clip.set_speed`](/docs/reference/commands/clip.set_speed) | Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards. | `edit` | alpha |
+| [`clip.set_speed`](/docs/reference/commands/clip.set_speed) | Changes the speed of a clip or audio item while keeping the same source range. | `edit` | alpha |
 | [`font.add`](/docs/reference/commands/font.add) | Adds a user font family to the project, or more weights to one it already has. | `media` | beta |
 | [`font.remove`](/docs/reference/commands/font.remove) | Removes a user font family from the project. | `media` | beta |
 | [`item.crossfade`](/docs/reference/commands/item.crossfade) | Sets a matching fade-out and fade-in on two overlapping visual items of different tracks. | `edit` | alpha |
 | [`item.delete`](/docs/reference/commands/item.delete) | Removes items, and optionally closes the freed space. | `edit` | prototype |
 | [`item.duplicate`](/docs/reference/commands/item.duplicate) | Copies an item to another position, optionally on another track. | `edit` | alpha |
-| [`item.extract_audio`](/docs/reference/commands/item.extract_audio) | Creates an audio item from the audio of a video clip, linked to it, and mutes the clip. | `edit` | beta |
-| [`item.link`](/docs/reference/commands/item.link) | Links items so that they move, trim and split together. | `edit` | beta |
 | [`item.move`](/docs/reference/commands/item.move) | Moves an item in time, to another track of the same kind, or both. | `edit` | prototype |
 | [`item.rename`](/docs/reference/commands/item.rename) | Sets the label of an item. | `edit` | alpha |
 | [`item.set_audio`](/docs/reference/commands/item.set_audio) | Sets the volume, the fades, the mute flag or the noise reduction of a clip or audio item. | `edit` | alpha |
@@ -50,7 +47,6 @@ An `edit` call is a list of operations; each operation is one of these commands.
 | [`item.slip`](/docs/reference/commands/item.slip) | Shows another part of the source in a clip or audio item without moving or resizing it. | `edit` | beta |
 | [`item.split`](/docs/reference/commands/item.split) | Splits an item into two at a timeline frame. | `edit` | prototype |
 | [`item.trim`](/docs/reference/commands/item.trim) | Moves the start edge or the end edge of an item to a timeline position. | `edit` | prototype |
-| [`item.unlink`](/docs/reference/commands/item.unlink) | Removes items from their link group. | `edit` | beta |
 | [`keyframe.clear`](/docs/reference/commands/keyframe.clear) | Removes all keyframes of one property, or of every property. | `edit` | alpha |
 | [`keyframe.remove`](/docs/reference/commands/keyframe.remove) | Removes the keyframe of a property at a frame. | `edit` | alpha |
 | [`keyframe.set`](/docs/reference/commands/keyframe.set) | Adds or replaces a keyframe of one animated property of an item. | `edit` | alpha |

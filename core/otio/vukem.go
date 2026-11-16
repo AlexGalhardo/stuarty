@@ -182,23 +182,13 @@ func itemOps(props map[string]any, mode itemMode, start, dur int, used map[strin
 
 		add("clip.set_framing", framing(p))
 
-		filter := map[string]any{}
-		if f, ok := p.text("filter", "grayscale", "sepia", "invert", "warm", "cool"); ok {
-			filter["filter"] = f
-		}
-
-		if a, ok := p.number("filter_amount", 0, 1, false); ok {
-			filter["amount"] = a
-		}
-
-		add("clip.set_filter", filter)
-
-		if r, ok := p.number("blur", 0, 100, false); ok {
-			add("clip.set_blur", map[string]any{"radius": r})
-		}
-
 		add("clip.set_chroma_key", chromaKey(p))
 		add("clip.set_effects", effectsArgs(p))
+	}
+
+	if mode != modeAudio {
+		filterOps(p, add)
+		spec.ops = append(spec.ops, transitionOps(p, dur)...)
 	}
 
 	if mode != modeText {
@@ -289,6 +279,24 @@ func effects(p *propReader) []any {
 	}
 
 	return out
+}
+
+// filterOps reads the filter and the blur of any visual item.
+func filterOps(p *propReader, add func(string, map[string]any)) {
+	filter := map[string]any{}
+	if f, ok := p.text("filter", "grayscale", "sepia", "invert", "warm", "cool"); ok {
+		filter["filter"] = f
+	}
+
+	if a, ok := p.number("filter_amount", 0, 1, false); ok {
+		filter["amount"] = a
+	}
+
+	add("clip.set_filter", filter)
+
+	if r, ok := p.number("blur", 0, 100, false); ok {
+		add("clip.set_blur", map[string]any{"radius": r})
+	}
 }
 
 // chromaKey reads the chroma_key object; all four members are needed.
