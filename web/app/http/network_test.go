@@ -272,7 +272,7 @@ func TestNetworkSchemeRules(t *testing.T) {
 	})
 }
 
-// SDD-007 section 4.3 item 4: plain HTTP only as the loopback name of APP_URL.
+// SDD-007 section 4.3 item 4: plain HTTP only as a loopback name of the APP_URL port.
 func TestContainerLoopbackOnly(t *testing.T) {
 	h := newNetworkHarness(t, config.Resolved{
 		Mode: config.ModeNetwork, AppURL: "http://localhost:7878", LoopbackHTTP: true,
@@ -288,7 +288,16 @@ func TestContainerLoopbackOnly(t *testing.T) {
 	}{
 		{"localhost", "localhost:7878", nil, http.StatusUnauthorized},
 		{"the host's address", "192.168.1.5:7878", nil, http.StatusForbidden},
-		{"127.0.0.1 is another name", "127.0.0.1:7878", nil, http.StatusForbidden},
+		{"127.0.0.1 is a loopback alias", "127.0.0.1:7878", nil, http.StatusUnauthorized},
+		{"[::1] is a loopback alias", "[::1]:7878", nil, http.StatusUnauthorized},
+		{"LOCALHOST is case-insensitive", "LOCALHOST:7878", nil, http.StatusUnauthorized},
+		{"loopback alias, another port", "127.0.0.1:7879", nil, http.StatusForbidden},
+		{"foo.localhost", "foo.localhost:7878", nil, http.StatusForbidden},
+		{
+			"origin of a loopback alias", "127.0.0.1:7878",
+			map[string]string{"Origin": "http://127.0.0.1:7878"},
+			http.StatusUnauthorized,
+		},
 		{"another port", "localhost:7879", nil, http.StatusForbidden},
 		{
 			"origin of the host's address", "localhost:7878",
