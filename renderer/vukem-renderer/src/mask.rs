@@ -36,6 +36,25 @@ pub struct MaskSpec {
 	pub invert: bool,
 }
 
+/// The mask in floating point for the GPU path (SDD-013 section 3.8): the shape in pixels of the
+/// layer's own rectangle and the map from a destination pixel to a position in it. The GPU computes
+/// the same coverage as [`MaskState::coverage`] from these, within the tolerance of that section.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct MaskGeometry {
+	pub ellipse: bool,
+	pub invert: bool,
+	/// Left, top and the two half-extents of the shape, in pixels from the corner of the rectangle.
+	pub left: f64,
+	pub top: f64,
+	pub half_w: f64,
+	pub half_h: f64,
+	/// The soft edge in pixels; 0 is a hard edge.
+	pub feather: f64,
+	/// `u = map[0] x + map[1] y + map[2]` and `v = map[3] x + map[4] y + map[5]` for the integer
+	/// pixel index `(x, y)`: the position of the pixel centre in the rectangle, in pixels.
+	pub map: [f64; 6],
+}
+
 /// A mask ready to give a coverage for a destination pixel.
 #[derive(Clone, Copy, Debug)]
 pub struct MaskState {
@@ -110,6 +129,41 @@ impl MaskState {
 			ay: q(-sin),
 			by: q(cos),
 			oy: q(-mul(dx0, sin) + mul(dy0, cos) + hh),
+		}
+	}
+
+	/// The mask for the GPU; `copy` says the layer is drawn as a one-to-one copy.
+	pub fn geometry(&self, copy: bool) -> MaskGeometry {
+		let px = |v: i64| v as f64 / f64::from(1 << MASK_FIX);
+		let fix = (1_u64 << FIX) as f64;
+		let map = if copy {
+			[
+				1.0,
+				0.0,
+				0.5 - self.left as f64,
+				0.0,
+				1.0,
+				0.5 - self.top as f64,
+			]
+		} else {
+			[
+				self.ax as f64 / fix,
+				self.bx as f64 / fix,
+				self.ox as f64 / fix,
+				self.ay as f64 / fix,
+				self.by as f64 / fix,
+				self.oy as f64 / fix,
+			]
+		};
+		MaskGeometry {
+			ellipse: self.ellipse,
+			invert: self.invert,
+			left: px(self.l),
+			top: px(self.t),
+			half_w: px(self.ha),
+			half_h: px(self.hb),
+			feather: px(self.fq),
+			map,
 		}
 	}
 
@@ -295,6 +349,36 @@ mod tests {
 		for y in 10..40 {
 			for x in 5..60 {
 				assert_eq!(m.copy_cov(x, y), m.sample_cov(x, y), "({x}, {y})");
+			}
+		}
+	}
+
+	#[test]
+	fn the_gpu_map_gives_the_position_of_the_cpu_path() {
+		let p = Placement {
+			rot: 20.0,
+			..place(30.0, 25.0, 40.0, 20.0)
+		};
+		let m = state(spec(MaskShape::Ellipse), p);
+		let copy = state(spec(MaskShape::Rect), place(30.0, 25.0, 40.0, 20.0));
+		for (mask, is_copy) in [(&m, false), (&copy, true)] {
+			let g = mask.geometry(is_copy);
+			for (x, y) in [(12_i64, 15_i64), (30, 25), (47, 33)] {
+				let (u, v) = (
+					g.map[0] * x as f64 + g.map[1] * y as f64 + g.map[2],
+					g.map[3] * x as f64 + g.map[4] * y as f64 + g.map[5],
+				);
+				let (lx, ly) = if is_copy {
+					((x - mask.left) * 256 + 128, (y - mask.top) * 256 + 128)
+				} else {
+					let half = 1_i64 << 23;
+					(
+						(mask.bx * y + mask.ox + mask.ax * x + half) >> 24,
+						(mask.by * y + mask.oy + mask.ay * x + half) >> 24,
+					)
+				};
+				assert!((u * 256.0 - lx as f64).abs() <= 1.0, "u at ({x}, {y})");
+				assert!((v * 256.0 - ly as f64).abs() <= 1.0, "v at ({x}, {y})");
 			}
 		}
 	}
