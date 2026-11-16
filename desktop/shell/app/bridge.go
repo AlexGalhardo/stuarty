@@ -35,6 +35,8 @@ func (b *bridge) handle(_ application.Window, message string, origin *applicatio
 	switch req.Op {
 	case shell.OpPickFiles:
 		go b.pickFiles(win, req.ID)
+	case shell.OpPickTemplate:
+		go b.pickTemplate(win, req.ID)
 	case shell.OpShowInFolder:
 		go b.showInFolder(win, req)
 	}
@@ -55,6 +57,28 @@ func (b *bridge) pickFiles(win *application.WebviewWindow, id int64) {
 	msg := ""
 	if err != nil {
 		msg = err.Error()
+	}
+	win.ExecJS(shell.ResolveScript(id, paths, msg))
+}
+
+// pickTemplate shows the native dialog for one template file and gives the page
+// its absolute path (an empty list when the dialog is cancelled).
+func (b *bridge) pickTemplate(win *application.WebviewWindow, id int64) {
+	dialog := b.app.Dialog.OpenFile().
+		AttachToWindow(win).
+		SetTitle("Choose a template file").
+		CanChooseFiles(true).
+		CanChooseDirectories(false)
+	for _, f := range shell.TemplateFilters() {
+		dialog.AddFilter(f.Name, f.Pattern)
+	}
+	path, err := dialog.PromptForSingleSelection()
+	msg := ""
+	var paths []string
+	if err != nil {
+		msg = err.Error()
+	} else if path != "" {
+		paths = []string{path}
 	}
 	win.ExecJS(shell.ResolveScript(id, paths, msg))
 }

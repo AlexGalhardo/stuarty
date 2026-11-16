@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	canDropPaths,
 	canPickFiles,
+	canPickTemplate,
 	canShowInFolder,
 	cleanPaths,
 	DESKTOP_READY_EVENT,
@@ -52,6 +53,12 @@ describe("desktopBridge", () => {
 		await showInFolder(bridge, "/out/a.mp4");
 		await showInFolder(null, "/out/b.mp4");
 		expect(calls).toEqual(["/out/a.mp4"]);
+	});
+
+	it("detects the template picker on its own", () => {
+		expect(canPickTemplate({ pickTemplate: async () => [] })).toBe(true);
+		expect(canPickTemplate({ pickFiles: async () => [] })).toBe(false);
+		expect(canPickTemplate(null)).toBe(false);
 	});
 
 	it("ignores a value that is not an object", () => {

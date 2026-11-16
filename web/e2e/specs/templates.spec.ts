@@ -199,4 +199,31 @@ test.describe("templates", () => {
 		await expect(page).toHaveURL(/\/editor\/prj_/);
 		await expect(page.getByRole("toolbar", { name: "Editing" })).toBeVisible();
 	});
+
+	// VV-054: in the desktop window the native dialog fills the template path;
+	// a browser has no such button.
+	test("the desktop window picks the template path with its native dialog", async ({
+		page,
+	}) => {
+		await page.addInitScript(() => {
+			(window as unknown as Record<string, unknown>).vukemDesktop = {
+				pickTemplate: () => Promise.resolve(["C:\tspring.vukem-template.zip"]),
+			};
+		});
+		await page.goto("/projects");
+		await page.getByRole("button", { name: "Choose file" }).click();
+		await expect(
+			page.getByLabel("Path of a template file on this computer"),
+		).toHaveValue("C:\tspring.vukem-template.zip");
+	});
+
+	test("a browser has no template file dialog", async ({ page }) => {
+		await page.goto("/projects");
+		await expect(
+			page.getByLabel("Path of a template file on this computer"),
+		).toBeVisible();
+		await expect(page.getByRole("button", { name: "Choose file" })).toHaveCount(
+			0,
+		);
+	});
 });

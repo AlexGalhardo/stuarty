@@ -4,12 +4,19 @@ import {
 	useCallback,
 	useEffect,
 	useState,
+	useSyncExternalStore,
 } from "react";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	canPickTemplate,
+	cleanPaths,
+	getDesktopBridge,
+	subscribeDesktopBridge,
+} from "@/lib/desktopBridge";
 import { useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
@@ -168,6 +175,11 @@ export default function Templates(): ReactNode {
 	const [path, setPath] = useState("");
 	const [importing, setImporting] = useState(false);
 	const [kit, setKit] = useState<BrandKit | null>(null);
+	const bridge = useSyncExternalStore(
+		subscribeDesktopBridge,
+		getDesktopBridge,
+		() => null,
+	);
 	useClearAlertOnOtherSubmit("template-import", () => setFailure(null));
 
 	useEffect(() => {
@@ -190,6 +202,20 @@ export default function Templates(): ReactNode {
 	useEffect(() => {
 		void load();
 	}, [load]);
+
+	// The desktop window has a native file dialog; a browser cannot learn the
+	// path of a file, so there the path is typed or pasted.
+	async function chooseFile(): Promise<void> {
+		try {
+			const [picked] = cleanPaths(await bridge?.pickTemplate?.());
+			if (picked !== undefined) setPath(picked);
+		} catch (error) {
+			setFailure({
+				code: "E_DESKTOP",
+				message: error instanceof Error ? error.message : String(error),
+			});
+		}
+	}
 
 	async function importFile(event: FormEvent<HTMLFormElement>): Promise<void> {
 		event.preventDefault();
@@ -257,6 +283,15 @@ export default function Templates(): ReactNode {
 						onChange={(event) => setPath(event.target.value)}
 					/>
 				</div>
+				{canPickTemplate(bridge) && (
+					<Button
+						type="button"
+						variant="outline"
+						onClick={() => void chooseFile()}
+					>
+						{t("ui.projects.templates.choose")}
+					</Button>
+				)}
 				<Button
 					type="submit"
 					variant="outline"

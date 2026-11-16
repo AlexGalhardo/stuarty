@@ -50,6 +50,7 @@
         "new_from": "Novo a partir do modelo",
         "create": "Criar projeto",
         "export": "Exportar arquivo",
+        "choose": "Escolher arquivo",
         "import_path": "Caminho de um arquivo de modelo neste computador",
         "import": "Importar modelo",
         "use_brand": "Usar as cores e fontes do kit de marca"

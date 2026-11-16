@@ -50,6 +50,7 @@
         "new_from": "New from template",
         "create": "Create project",
         "export": "Export file",
+        "choose": "Choose file",
         "import_path": "Path of a template file on this computer",
         "import": "Import template",
         "use_brand": "Use the brand kit colours and fonts"

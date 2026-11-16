@@ -24,6 +24,15 @@ func pattern(groups ...[]string) string {
 	return strings.Join(parts, ";")
 }
 
+// TemplateFilters lists the dialog filters for importing a template file (a zip
+// named <id>.vukem-template.zip, SDD-005 section 15), then any file.
+func TemplateFilters() []FileFilter {
+	return []FileFilter{
+		{"Vukem templates", "*.zip"},
+		{"All files", "*.*"},
+	}
+}
+
 // MediaFilters lists the dialog filters for importing media: everything
 // supported first (the default), then each kind, then any file, because the
 // engine decides by content and an unusual extension must stay reachable.
