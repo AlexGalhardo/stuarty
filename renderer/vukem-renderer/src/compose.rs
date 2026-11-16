@@ -60,6 +60,9 @@ pub struct Layer<'a> {
 	pub blend: BlendMode,
 	/// Limits where the layer is drawn, in its own frame (SDD-004 section 3.9).
 	pub mask: Option<MaskSpec>,
+	/// Mirror the layer's own pixels across its vertical and horizontal axes (SDD-004 section 3.10).
+	pub flip_x: bool,
+	pub flip_y: bool,
 }
 
 /// Premultiplies a straight-alpha RGBA8 bitmap once.
@@ -220,6 +223,9 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 		src = Cow::Owned(img);
 		p = grown;
 	}
+	if l.flip_x || l.flip_y {
+		src = Cow::Owned(flipped(&src, l.flip_x, l.flip_y));
+	}
 	Some(Prepared {
 		image: src,
 		placement: p,
@@ -227,6 +233,36 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 		blend: l.blend,
 		mask,
 	})
+}
+
+/// `src` mirrored across its vertical axis, its horizontal axis or both: an exact permutation of
+/// pixels (SDD-004 section 3.10).
+fn flipped(src: &Image, flip_x: bool, flip_y: bool) -> Image {
+	let stride = src.w * 4;
+	let mut out = Image {
+		pix: vec![0; src.h * stride],
+		w: src.w,
+		h: src.h,
+		opaque: src.opaque,
+	};
+	for y in 0..src.h {
+		let sy = if flip_y { src.h - 1 - y } else { y };
+		let row = &src.pix[sy * stride..(sy + 1) * stride];
+		let dst = &mut out.pix[y * stride..(y + 1) * stride];
+		if flip_x {
+			for (d, s) in dst
+				.as_chunks_mut::<4>()
+				.0
+				.iter_mut()
+				.zip(row.as_chunks::<4>().0.iter().rev())
+			{
+				*d = *s;
+			}
+		} else {
+			dst.copy_from_slice(row);
+		}
+	}
+	out
 }
 
 fn draw_layer(dst: &mut Target<'_>, l: &Layer<'_>, out_scale: f64) {

@@ -194,6 +194,8 @@ impl Renderer {
 				chroma_key: l.chroma_key.clone(),
 				blend: l.blend,
 				mask: l.mask,
+				flip_x: l.flip_x,
+				flip_y: l.flip_y,
 			});
 		}
 		Ok(layers)

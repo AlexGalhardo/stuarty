@@ -56,6 +56,8 @@ pub struct LayerSpec {
 	pub chroma_key: Option<ChromaKeySpec>,
 	pub blend: BlendMode,
 	pub mask: Option<MaskSpec>,
+	pub flip_x: bool,
+	pub flip_y: bool,
 }
 
 /// A decoded render input.
@@ -200,6 +202,14 @@ fn blend(v: Option<Value>) -> Result<BlendMode, Error> {
 		Some(Value::Str(s)) => BlendMode::from_name(&s)
 			.ok_or_else(|| invalid(format!("layer: blend {s:?} is not a blend mode"))),
 		Some(_) => Err(invalid("layer: blend is not a string")),
+	}
+}
+
+fn flag(v: Option<Value>, name: &str) -> Result<bool, Error> {
+	match v {
+		None | Some(Value::Null) => Ok(false),
+		Some(Value::Bool(b)) => Ok(b),
+		Some(_) => Err(invalid(format!("layer: {name} is not a boolean"))),
 	}
 }
 
@@ -411,6 +421,8 @@ fn decode_layer(v: Value) -> Result<LayerSpec, Error> {
 		chroma_key: chroma_key(f.take("chroma_key"))?,
 		blend: blend(f.take("blend"))?,
 		mask: mask(f.take("mask"))?,
+		flip_x: flag(f.take("flip_x"), "flip_x")?,
+		flip_y: flag(f.take("flip_y"), "flip_y")?,
 		item,
 	};
 	f.finish()?;
@@ -516,6 +528,18 @@ mod tests {
 		);
 		assert_eq!(reason(&with("\"darken\"")), Reason::InvalidPlan);
 		assert_eq!(reason(&with("3")), Reason::InvalidPlan);
+	}
+
+	#[test]
+	fn reads_the_flips_of_a_layer() {
+		let with = |m: &str| GOOD.replace("\"blur\":0", &format!("\"blur\":0,{m}"));
+		let l = &decode(GOOD.as_bytes()).unwrap().layers[0];
+		assert!(!l.flip_x && !l.flip_y);
+		let r = decode(with(r#""flip_x":true,"flip_y":null"#).as_bytes()).unwrap();
+		assert!(r.layers[0].flip_x && !r.layers[0].flip_y);
+		let r = decode(with(r#""flip_y":true"#).as_bytes()).unwrap();
+		assert!(!r.layers[0].flip_x && r.layers[0].flip_y);
+		assert_eq!(reason(&with(r#""flip_x":1"#)), Reason::InvalidPlan);
 	}
 
 	#[test]
