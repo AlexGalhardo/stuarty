@@ -39,6 +39,7 @@ func main() {
 
 func run() error {
 	binary := flag.String("binary", defaultBinary(), "path of the vukem-video server binary")
+	devtools := flag.Bool("devtools", false, "bind F12 to the developer tools (debugging and QA builds)")
 	flag.Parse()
 
 	br := &bridge{}
@@ -76,10 +77,8 @@ func run() error {
 		MinHeight:        minHeight,
 		BackgroundColour: application.NewRGB(0x0b, 0x0b, 0x0b),
 		EnableFileDrop:   true,
-		KeyBindings: map[string]func(application.Window){
-			"F11": func(w application.Window) { w.ToggleFullscreen() },
-		},
-		URL: launch,
+		KeyBindings:      windowKeyBindings(*devtools),
+		URL:              launch,
 	})
 	guardNavigation(win, srv.Port, home)
 	br.app = app
