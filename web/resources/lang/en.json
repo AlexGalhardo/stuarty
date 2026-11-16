@@ -590,6 +590,17 @@
           "update": {
             "title": "Update track"
           }
+        },
+        "marker": {
+          "add": {
+            "title": "Add marker"
+          },
+          "set": {
+            "title": "Edit marker"
+          },
+          "remove": {
+            "title": "Remove marker"
+          }
         }
       },
       "lint": {
