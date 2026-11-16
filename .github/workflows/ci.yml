@@ -21,6 +21,8 @@ env:
   TASK_VERSION: v3.54.0
   GOLANGCI_LINT_VERSION: v2.15.0
   BUN_VERSION: 1.4.4
+  CARGO_DENY_VERSION: 0.20.2
+  WASM_BINDGEN_CLI_VERSION: 0.2.130
 
 jobs:
   lint-go:
@@ -586,6 +588,44 @@ jobs:
             echo "::error::an action is not pinned by a full commit SHA with a version comment"
             exit 1
           fi
+
+  # ADR-0029, rule .agents/rules/rust.md: the Rust gate of renderer/, on the three systems, and the
+  # WebAssembly module built twice from clean with equal digests. The toolchain is the one of
+  # rust-toolchain.toml (rustup installs it on the first cargo call).
+  renderer:
+    name: Renderer (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned toolchain and tools
+        run: |
+          rustup show active-toolchain
+          cargo install --locked cargo-deny --version "$CARGO_DENY_VERSION"
+          cargo install --locked wasm-bindgen-cli --version "$WASM_BINDGEN_CLI_VERSION"
+      - name: cargo fmt --check
+        working-directory: renderer
+        run: cargo fmt --check
+      - name: cargo clippy
+        working-directory: renderer
+        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: cargo test
+        working-directory: renderer
+        run: cargo test --locked
+      - name: cargo deny check
+        working-directory: renderer
+        run: cargo deny check
+      - name: The WebAssembly module is reproducible
+        run: bash scripts/build-renderer.sh verify
 
   # SDD-007 section 10.2 item 3 (check 25): the real binary and the pinned FFmpeg run a
   # reference session under strace; any socket address that is not loopback fails.
