@@ -175,12 +175,14 @@ jobs:
       # better. Benchmarks do not run under go test, and the race detector skips this
       # one, so it has a step of its own, on the three runners, with the pinned FFmpeg
       # (it skips with a message where only a GPL build exists, risk R6). The numbers
-      # are in the log and in the job summary.
+      # are in the log and in the job summary. The floor applies on the reference
+      # runner only, ubuntu-latest (SDD-004 section 12): the Windows runner measured
+      # 1.10 x on the same build (run 43924786343), so there it is reported, not gated.
       - name: Export benchmark (BenchmarkExportCommonCase)
         if: matrix.shard == 'export-1'
         shell: bash
         env:
-          VUKEM_VIDEO_BENCH_MIN_RT: "1.5"
+          VUKEM_VIDEO_BENCH_MIN_RT: ${{ matrix.os == 'ubuntu-latest' && '1.5' || '' }}
         run: |
           go test -run '^$' -bench BenchmarkExportCommonCase -benchtime=1x -count=1 -timeout=10m ./engine/export/ | tee bench.txt
           { echo '### BenchmarkExportCommonCase (${{ matrix.os }})'; echo '```'; grep -E "^Benchmark|x real time" bench.txt || echo "skipped: no pinned LGPL FFmpeg on this runner"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
