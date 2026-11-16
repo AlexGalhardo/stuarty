@@ -9,6 +9,7 @@
 // Node strips the types (no build step).
 import fs from "node:fs";
 import path from "node:path";
+import { sourceRegistry } from "../lib/glossary-data.ts";
 import { search } from "../lib/search-rank.ts";
 
 const outDir = path.join(import.meta.dirname, "..", "out");
@@ -54,10 +55,16 @@ export function hostsIn(text: string): string[] {
 }
 
 /** Problems of the "no external origin" property for one built file. */
+// The glossary cites authorities by link (text, never loaded): the hosts of its source registry and Wikipedia.
+const CITED_HOSTS = new Set([
+	"en.wikipedia.org",
+	...Object.values(sourceRegistry()).map((s) => new URL(s.url).hostname),
+]);
+
 export function foreignOriginProblems(file: string, text: string, ownHost: string): string[] {
 	const problems: string[] = [];
 	for (const host of hostsIn(text)) {
-		if (host !== ownHost && !INERT_HOSTS.has(host)) problems.push(`${file}: refers to ${host}`);
+		if (host !== ownHost && !INERT_HOSTS.has(host) && !CITED_HOSTS.has(host)) problems.push(`${file}: refers to ${host}`);
 	}
 	if (file.endsWith(".html")) {
 		for (const m of text.matchAll(LOADING)) {
@@ -168,7 +175,7 @@ function walk(dir: string): string[] {
 
 /** The queries that must find a page: the first result of each is on that page (SDD-010 section 14 check 8). The index holds paths without the base path. */
 export const SEARCH_EXPECTATIONS: { query: string; page: string }[] = [
-	{ query: "trim", page: "/docs/guide/editing-tools" },
+	{ query: "trim split and move clips", page: "/docs/guide/editing-tools" },
 	{ query: "keyframes", page: "/docs/guide/keyframes" },
 ];
 

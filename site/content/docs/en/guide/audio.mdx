@@ -7,14 +7,14 @@ description: "Add music and sound, set volume and fades, mute a clip and keep th
 
 - how to place audio on an audio track;
 - how to set volume, fades and mute;
-- how to lower music under speech (ducking) and mark the beats of a song;
+- how to lower music under speech (<Term id="ducking">ducking</Term>) and mark the beats of a song;
 - how the export mixes the audio and what the lint warns about.
 
 ## The idea
 
 Sound comes from two places: the audio of a video clip, and **audio items** on an audio track. An audio item points to an audio asset, or to the audio of a video asset, and plays from `source_in` for a duration. The export mixes every audible item into one 48 kHz stereo track.
 
-Each clip or audio item has a `volume` (linear gain from 0 to 4), a `fade_in`, a `fade_out`, and a clip can be muted with `audio_muted`. Volume can also be animated with a [keyframe](/docs/guide/keyframes) on the property `volume`. The project has a `loudness_target` in LUFS (from -30 to -5) that the export aims for.
+Each clip or audio item has a `volume` (linear gain from 0 to 4), a `fade_in`, a `fade_out`, and a clip can be muted with `audio_muted`. Volume can also be animated with a [keyframe](/docs/guide/keyframes) on the property `volume`. The project has a `loudness_target` in <Term id="lufs">LUFS</Term> (from -30 to -5) that the export aims for.
 
 In the editor, the inspector of a clip or an audio item has an **Audio** section with the volume, the two fades and **Mute audio**. The CLI, an agent and the command palette (`Ctrl+K`, `Cmd+K` on macOS) reach the same operations.
 
@@ -61,7 +61,7 @@ If the speech item has no analysis yet the edit fails with `E_INVALID_STATE` and
 
 ## Mark the beats of a song
 
-`audio.mark_beats` writes a marker on a music item at each beat of its visible part, so you can place cuts and transitions on the music. `every` marks every nth beat (1 to 64, default 1), `label` names the markers (up to 60 characters) and `replace` (true by default) replaces the markers the item already has. The beat grid comes from the analysis of the asset. Markers change neither the picture nor the sound.
+`audio.mark_beats` writes a marker on a music item at each <Term id="beat">beat</Term> of its visible part, so you can place cuts and transitions on the music. `every` marks every nth beat (1 to 64, default 1), `label` names the markers (up to 60 characters) and `replace` (true by default) replaces the markers the item already has. The beat grid comes from the analysis of the asset. Markers change neither the picture nor the sound.
 
 ```bash
 vukem-video edit --project prj_7k2m9x4q1b audio.mark_beats item_id=itm_s6t7v8w9x0 every:=2 label=beat

@@ -5,13 +5,13 @@ description: "Change a property over time with keyframes: position, scale, rotat
 
 ## You will learn
 
-- what a keyframe is and which properties can have them;
+- what a <Term id="keyframe">keyframe</Term> is and which properties can have them;
 - how to add, change and remove keyframes in the inspector;
 - how the same edit is done by a command.
 
 ## The idea
 
-A **keyframe** fixes the value of a property at one time inside an item. Between two keyframes the value moves with the easing of the first one: `linear` (the default), `ease_in`, `ease_out`, `ease_in_out` or `hold`, which keeps the value until the next keyframe. The properties are `x`, `y`, `scale`, `rotation`, `opacity` and, for clips and audio, `volume`.
+A **keyframe** fixes the value of a property at one time inside an item. Between two keyframes the value moves with the <Term id="easing">easing</Term> of the first one: `linear` (the default), `ease_in`, `ease_out`, `ease_in_out` or `hold`, which keeps the value until the next keyframe. The properties are `x`, `y`, `scale`, `rotation`, `opacity` and, for clips and audio, `volume`.
 
 The time of a keyframe is an absolute position on the timeline and must be inside the item, its end included. The first keyframe you add after the item's start also creates a keyframe at the start with the current static value, so the animation begins from where the item was. Removing the last keyframe of a property writes its value back as the static value.
 

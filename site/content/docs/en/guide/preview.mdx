@@ -11,7 +11,7 @@ description: "Play the timeline, step frame by frame and see the exact frame the
 
 ## The idea
 
-The preview draws what the [render plan](/docs/concepts/render) says every frame contains. While the timeline plays, the browser draws the plan with WebGL2. When you pause, the editor asks the server for the exact frame at the playhead, composed by the same plan the export uses. So the paused picture is the frame you will get in the file.
+The preview draws what the [render plan](/docs/concepts/render) says every <Term id="frame">frame</Term> contains. While the timeline plays, the browser draws the plan with WebGL2. When you pause, the editor asks the server for the exact frame at the playhead, composed by the same plan the export uses. So the paused picture is the frame you will get in the file.
 
 A browser without WebGL2 cannot play live. The editor says so and keeps showing the exact paused frame.
 

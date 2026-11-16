@@ -7,13 +7,13 @@ description: "Rename an item, move and scale it on the frame, crop and fit a cli
 
 - which properties an item has and where you change them;
 - how to place, scale, rotate and fade an item;
-- how to crop a clip, choose how it fits the frame and change its speed.
+- how to <Term id="crop">crop</Term> a clip, choose how it fits the frame and change its speed.
 
 ## The idea
 
 Select an item on the timeline and the inspector shows its **Name**, its **Timing** (start, end, duration and the in point inside the source) and its **Transform**: position `x` and `y` (the centre of the item, in pixels), `scale`, `rotation` in degrees clockwise and `opacity`. A field that has [keyframes](/docs/guide/keyframes) is marked as animated and cannot be set to one static value until you clear them.
 
-Two properties belong to video clips only. **Framing** says how the picture fits the frame (`cover`, `contain` or `none`) and how much of each side is cropped, as a fraction from 0 to 1. **Speed** runs the same source range faster or slower, from 0.25x to 4x, and rescales the duration, fades, transitions and keyframes by the same ratio.
+Two properties belong to video clips only. **Framing** says how the picture fits the frame (`cover`, `contain` or `none`) and how much of each side is cropped, as a fraction from 0 to 1. **Speed** runs the same source range faster or slower, from 0.25x to 4x, and rescales the duration, fades, transitions and <Term id="keyframe">keyframes</Term> by the same ratio.
 
 The inspector edits all of these. A video clip has a **Framing** section (fit and the four crops) and a **Speed** section (the speed and the option **Ripple later items**); colour, filters, blend and chroma key have their own sections, described in [Effects and color](/docs/guide/effects-and-color). The same changes are available from the CLI, an agent and the command palette (`Ctrl+K`, `Cmd+K` on macOS).
 
