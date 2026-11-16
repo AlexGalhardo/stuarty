@@ -16,6 +16,8 @@ export interface PointerSample {
 	dx: number;
 	dy: number;
 	alt: boolean;
+	// Ctrl or Cmd is held (SDD-012 section 18.7: ignore the alignment guides).
+	mod: boolean;
 }
 
 export interface Gesture {
@@ -62,6 +64,7 @@ export function runGesture(options: {
 		dx: 0,
 		dy: 0,
 		alt: false,
+		mod: false,
 	};
 	let frame = 0;
 
@@ -75,12 +78,15 @@ export function runGesture(options: {
 		clientX: number;
 		clientY: number;
 		altKey: boolean;
+		ctrlKey?: boolean;
+		metaKey?: boolean;
 	}) => ({
 		clientX: e.clientX,
 		clientY: e.clientY,
 		dx: e.clientX - event.clientX + ((scroller?.scrollLeft ?? 0) - startScroll),
 		dy: e.clientY - event.clientY,
 		alt: e.altKey,
+		mod: (e.ctrlKey ?? false) || (e.metaKey ?? false),
 	});
 
 	const detach = (): void => {
@@ -129,7 +135,11 @@ export function runGesture(options: {
 				const before = scroller.scrollLeft;
 				scroller.scrollLeft = before + step;
 				if (scroller.scrollLeft !== before) {
-					last = sample({ ...last, altKey: last.alt });
+					last = sample({
+						...last,
+						altKey: last.alt,
+						ctrlKey: last.mod,
+					});
 					gesture.move(last);
 				}
 			}

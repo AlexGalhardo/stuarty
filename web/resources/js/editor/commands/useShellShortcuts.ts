@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-
 import { useRuntime } from "../state/EditorContext";
 import type { PreviewSize } from "../state/uiStore";
+import { toggleKeyframePanel } from "./keyframePanel";
 import { hasMod } from "./keymap";
 
 const PREVIEW_SIZES: readonly PreviewSize[] = ["fit", "50", "100"];
@@ -36,6 +36,17 @@ export function useShellShortcuts(): void {
 		const onKey = (event: KeyboardEvent): void => {
 			if (isEditable(event.target) || inOverlay(event.target)) return;
 			const { uiWriter, noticeWriter, ui } = runtime;
+			if (event.altKey && !event.shiftKey && !hasMod(event)) {
+				// The physical key: Option changes the character on a Mac.
+				if (event.code === "KeyX") {
+					event.preventDefault();
+					uiWriter.clearRange();
+				} else if (event.code === "KeyK") {
+					event.preventDefault();
+					toggleKeyframePanel(runtime);
+				}
+				return;
+			}
 			if (event.altKey && event.shiftKey && !hasMod(event)) {
 				const current = ui.getState().previewSize;
 				const at = PREVIEW_SIZES.indexOf(current);

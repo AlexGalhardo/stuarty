@@ -5,10 +5,13 @@ import { type ReactNode, useId, useState } from "react";
 // header button with aria-expanded and the fields under it.
 export default function Section({
 	title,
+	name,
 	defaultOpen = true,
 	children,
 }: {
 	title: string;
+	// Names the section for the keys that open it (`data-section`).
+	name?: string;
 	defaultOpen?: boolean;
 	children: ReactNode;
 }): ReactNode {
@@ -16,7 +19,7 @@ export default function Section({
 	const bodyId = useId();
 	const Chevron = open ? ChevronDown : ChevronRight;
 	return (
-		<section className="flex flex-col gap-2">
+		<section data-section={name} className="flex flex-col gap-2">
 			<button
 				type="button"
 				aria-expanded={open}

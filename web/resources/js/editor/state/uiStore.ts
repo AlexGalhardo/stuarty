@@ -41,6 +41,9 @@ export interface UiState {
 	// E_IN_USE of an asset.remove: the ids `details.used_by` named, shown by the
 	// dialog (SDD-012 section 4.4); null when the dialog is closed.
 	inUse: { assetId: string; usedBy: readonly string[] } | null;
+	// The timeline tool of B and A (SDD-012 section 18.7): the blade cuts the
+	// item that is clicked at the pointer; the select tool is the usual one.
+	tool: "select" | "blade";
 	playheadFrame: number;
 	// The in and out points of I and O (VV-035): the span a later export or loop
 	// takes. Screen state of this page; the core does not know them.
@@ -75,6 +78,7 @@ export interface UiWriter {
 	showInUse(inUse: UiState["inUse"]): void;
 	selectTrack(trackId: string | null): void;
 	dropSelection(isKnown: (id: string) => boolean): void;
+	setTool(tool: UiState["tool"]): void;
 	setPlayhead(frame: number): void;
 	setRangeIn(frame: number): void;
 	setRangeOut(frame: number): void;
@@ -106,6 +110,7 @@ export function createUiStore(initialZoom = 1): {
 		editingWord: null,
 		safeAreaVisible: false,
 		inUse: null,
+		tool: "select",
 		playheadFrame: 0,
 		range: { in: null, out: null },
 		timeline: { pxPerFrame: initialZoom, snapEnabled: true },
@@ -194,6 +199,7 @@ export function createUiStore(initialZoom = 1): {
 							};
 				});
 			},
+			setTool: (tool) => store.setState((s) => ({ ...s, tool })),
 			setPlayhead: (playheadFrame) =>
 				store.setState((s) => ({ ...s, playheadFrame })),
 			// An in point after the out point (or the reverse) drops the other end.

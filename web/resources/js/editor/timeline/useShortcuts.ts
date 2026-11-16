@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { useT } from "@/lib/i18n";
+import { announce } from "../a11y/announce";
 import {
 	comboFromEvent,
 	editShortcut,
@@ -10,7 +11,12 @@ import {
 import { bindingFor } from "../commands/keymapStore";
 import { useActions } from "../commands/useActions";
 import { useRuntime } from "../state/EditorContext";
-import { adjacentCut, adjacentMarker, idsOnSide } from "./geometry";
+import {
+	adjacentCut,
+	adjacentMarker,
+	idsOnSide,
+	selectionSpan,
+} from "./geometry";
 
 function isEditable(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) return false;
@@ -82,8 +88,30 @@ export function useShortcuts(openCaption: () => void): void {
 			} else if (row === "range_in_out") {
 				if (combo === "I") runtime.uiWriter.setRangeIn(playheadFrame);
 				else runtime.uiWriter.setRangeOut(playheadFrame);
+			} else if (row === "range_select") {
+				const doc = runtime.documents.getState().document;
+				if (doc === null) return false;
+				const span = selectionSpan(
+					selection.items.flatMap((id) => {
+						const item = doc.items[id];
+						return item === undefined
+							? []
+							: [{ id, start: item.start, duration: item.duration }];
+					}),
+				);
+				if (span === null) return false;
+				runtime.uiWriter.setRangeIn(span.in);
+				runtime.uiWriter.setRangeOut(span.out);
 			} else if (row === "range_clear") runtime.uiWriter.clearRange();
-			else if (row === "volume_up") void actions.adjustVolume(0.1);
+			else if (row === "tool") {
+				const blade = combo === "B";
+				runtime.uiWriter.setTool(blade ? "blade" : "select");
+				announce(
+					blade
+						? "ui.editor.announce.tool_blade"
+						: "ui.editor.announce.tool_select",
+				);
+			} else if (row === "volume_up") void actions.adjustVolume(0.1);
 			else if (row === "volume_down") void actions.adjustVolume(-0.1);
 			else if (row === "select_side") {
 				const doc = runtime.documents.getState().document;

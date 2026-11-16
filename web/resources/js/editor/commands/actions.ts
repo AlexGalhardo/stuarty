@@ -68,6 +68,8 @@ import { formatTime, fpsOf } from "./units";
 export interface Actions {
 	addToTimeline(assetId: string): Promise<EditOutcome | null>;
 	splitAtPlayhead(): Promise<EditOutcome | null>;
+	// The blade tool: one item cut at the frame under the pointer.
+	splitItemAt(itemId: string, frame: number): Promise<EditOutcome | null>;
 	// M: a marker at the playhead, or removes the one that is already there.
 	toggleMarkerAtPlayhead(): Promise<EditOutcome | null>;
 	// Mod+Shift+B: every item under the playhead, on every track.
@@ -509,6 +511,8 @@ export function createActions(runtime: EditorRuntime): Actions {
 		},
 		splitAtPlayhead: () =>
 			send(splitOperations(selectedRanges(), ui.getState().playheadFrame)),
+		splitItemAt: (itemId, frame) =>
+			send(splitOperations(rangesOf([itemId]), frame)),
 		splitAllAtPlayhead() {
 			const doc = documents.getState().document;
 			if (doc === null) return Promise.resolve(null);

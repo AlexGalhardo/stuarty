@@ -10,9 +10,11 @@ import {
 	extentPx,
 	fitZoom,
 	formatRulerLabel,
+	frameInItem,
 	idsOnSide,
 	nextZoom,
 	rulerStep,
+	selectionSpan,
 	sortByStart,
 	TIMELINE_MAX_FRAME,
 	ZOOM_LEVELS,
@@ -161,5 +163,24 @@ describe("adjacentCut", () => {
 	test("is null past the last or before the first cut", () => {
 		expect(adjacentCut(items, 90, 1)).toBeNull();
 		expect(adjacentCut(items, 0, -1)).toBeNull();
+	});
+});
+
+describe("blade and range helpers", () => {
+	test("frameInItem is the item start plus the pixels from its left edge", () => {
+		expect(frameInItem(30, 160, 100, 2)).toBe(60);
+		expect(frameInItem(30, 100, 100, 2)).toBe(30);
+		expect(frameInItem(0, 0, 100, 2)).toBe(0);
+	});
+
+	test("selectionSpan covers the earliest start to the latest end", () => {
+		expect(selectionSpan([])).toBeNull();
+		expect(
+			selectionSpan([
+				{ id: "a", start: 30, duration: 20 },
+				{ id: "b", start: 10, duration: 5 },
+				{ id: "c", start: 40, duration: 30 },
+			]),
+		).toEqual({ in: 10, out: 70 });
 	});
 });
