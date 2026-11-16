@@ -122,7 +122,7 @@
         {
           "name": "id",
           "type": "string",
-          "usage": "identifier to give the project"
+          "usage": "identifier for the project (omit it in network mode: the server chooses)"
         }
       ],
       "globals": [
@@ -781,7 +781,7 @@
         {
           "name": "id",
           "type": "string",
-          "usage": "identifier to give the project"
+          "usage": "identifier for the project (omit it in network mode: the server chooses)"
         },
         {
           "name": "brand-color",

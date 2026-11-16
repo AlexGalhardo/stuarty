@@ -378,3 +378,14 @@ var recipeWords = []transcribe.RawWord{
 	{Text: "new", StartMS: 1100, EndMS: 1400},
 	{Text: "world", StartMS: 1400, EndMS: 1900},
 }
+
+// TestSkillSaysTheServerChoosesTheIDInNetworkMode is VV-049: a recipe that sends
+// --id fails in network mode, so the skill tells the agent to omit it there.
+func TestSkillSaysTheServerChoosesTheIDInNetworkMode(t *testing.T) {
+	t.Parallel()
+
+	skill := string(generated(t)["SKILL.md"])
+	if n := strings.Count(skill, "network mode: omit --id"); n < 1 {
+		t.Errorf("the skill says it %d times, want it on the project:create recipe", n)
+	}
+}

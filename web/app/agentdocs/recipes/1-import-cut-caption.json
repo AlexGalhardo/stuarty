@@ -2,7 +2,7 @@
 	"title": "Import, cut, caption and export",
 	"scenario": "cut-caption",
 	"steps": [
-		{"cmd": "project:create --name \"Teaser\" --id prj_7k2m9x4q1b"},
+		{"cmd": "project:create --name \"Teaser\" --id prj_7k2m9x4q1b", "note": "network mode: omit --id"},
 		{"cmd": "media:import clip.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d"},
 		{"cmd": "edit --project prj_7k2m9x4q1b --ops -", "stdin": "[{\"op\":\"track.add\",\"args\":{\"kind\":\"visual\",\"name\":\"Video\",\"id\":\"trk_f6g7h8j9k0\"}},\n {\"op\":\"track.add\",\"args\":{\"kind\":\"visual\",\"name\":\"Captions\",\"id\":\"trk_a1b2c3d4e5\"}},\n {\"op\":\"clip.add\",\"args\":{\"track_id\":\"trk_f6g7h8j9k0\",\"asset_id\":\"ast_3c5v8n2w6d\",\"start\":\"0s\",\"duration\":\"2s\",\"id\":\"itm_m1n2p3q4r5\"}}]"},
 		{"cmd": "edit --project prj_7k2m9x4q1b --ops -", "stdin": "[{\"op\":\"item.split\",\"args\":{\"item_id\":\"itm_m1n2p3q4r5\",\"at\":\"1s\",\"new_id\":\"itm_c3d4e5f6g7\"}},\n {\"op\":\"item.delete\",\"args\":{\"item_ids\":[\"itm_c3d4e5f6g7\"]}}]"},
