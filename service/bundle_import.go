@@ -233,10 +233,18 @@ func (s *svc) writeImportedProject(
 
 	if p.hasLog && !asNew {
 		sum, err := s.streamLog(ctx, p.entries[bundleOperationsName], func(op *bundleOperation) error {
+			// An imported row is history, not a step of this workspace: nobody here made it, so nobody
+			// may undo it (SDD-007 section 6.9).
+			closed := op.ClosedBy
+			if closed == nil {
+				closed = &op.Revision
+			}
+
 			return tx.Operations().Append(ctx, OperationRow{
-				ProjectID: id, Revision: op.Revision, Kind: op.Kind, Actor: op.Actor, BaseRevision: op.BaseRevision,
-				TargetRevision: op.TargetRevision, AtMs: op.AtMs, Ops: op.Ops, Inverse: op.Inverse, Diff: op.Diff,
-				Skipped: op.Skipped, SchemaVersion: op.SchemaVersion, DocSHA256: op.DocSHA256, ClosedBy: op.ClosedBy,
+				ProjectID: id, Revision: op.Revision, Kind: op.Kind, Actor: importedActor(op.Actor),
+				BaseRevision: op.BaseRevision, TargetRevision: op.TargetRevision, AtMs: op.AtMs, Ops: op.Ops,
+				Inverse: op.Inverse, Diff: op.Diff, Skipped: op.Skipped, SchemaVersion: op.SchemaVersion,
+				DocSHA256: op.DocSHA256, ClosedBy: closed,
 			})
 		})
 		if err != nil {
@@ -808,6 +816,19 @@ func checkBundleOperation(op *bundleOperation, want int64) *Error {
 	}
 
 	return nil
+}
+
+// importedActorPrefix marks the actor of a log row that came from a bundle.
+const importedActorPrefix = "imported:"
+
+// importedActor attributes a foreign row to nobody who is live: an actor from an archive could be
+// "local:ui" or the label of an agent of this workspace.
+func importedActor(actor string) string {
+	if strings.HasPrefix(actor, importedActorPrefix) {
+		return actor
+	}
+
+	return importedActorPrefix + actor
 }
 
 func isHex64(s string) bool {
