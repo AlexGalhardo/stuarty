@@ -335,7 +335,9 @@ jobs:
         run: |
           set -euo pipefail
           ls -l desktop-installers
-          bash scripts/update-feed.sh sign "${TAG#v}" "${SITE_URL%/}/updates" desktop-installers feed.json
+          # The notes of the feed are the bullets of the release body (a short summary, the tool bounds it).
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body > release-notes.md
+          bash scripts/update-feed.sh sign "${TAG#v}" "${SITE_URL%/}/updates" desktop-installers feed.json release-notes.md
       - name: The feed equals checksums.txt and verifies with the public key
         env:
           PUBLIC_KEY: ${{ vars.UPDATE_FEED_PUBLIC_KEY }}
