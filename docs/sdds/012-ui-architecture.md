@@ -934,7 +934,7 @@ export interface PreviewExecutor {
 }
 ```
 
-`PixiExecutor` implements it with PixiJS v8 on a WebGL2 canvas, imported as `pixi.js/unsafe-eval` (§2.2). Everything else in this section is the contract of SDD-004 §10, which is not restated, only bound to UI behaviour.
+`PixiExecutor` implements it with PixiJS v8, imported as `pixi.js/unsafe-eval` (§2.2), on a WebGPU canvas when the browser gives an adapter (`navigator.gpu.requestAdapter()`) and on a WebGL2 canvas otherwise (`rendererChoice.ts`; the query parameter `?renderer=webgl` or `?renderer=webgpu` forces one, for the end-to-end specs). Everything else in this section is the contract of SDD-004 §10, which is not restated, only bound to UI behaviour.
 
 ### 11.2 What the executor does and does not do
 

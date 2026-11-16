@@ -29,6 +29,7 @@ import {
 } from "./mediaSync";
 import { bitmapKeyAt, geometryOf, layersAt, valueAt } from "./planValue";
 import { PlanWindows } from "./planWindows";
+import { detectRenderer } from "./rendererChoice";
 import type {
 	LayerGeometry,
 	PreviewExecutor,
@@ -59,7 +60,8 @@ const browserTimers: PoolTimers = {
 	clearTimeout: (handle) => clearTimeout(handle as number),
 };
 
-// PixiJS v8 on a WebGL2 canvas drawing exactly what a plan window says: the
+// PixiJS v8 on a WebGPU or WebGL2 canvas drawing exactly what a plan window
+// says: the
 // background, then each layer at its centre, size, rotation, opacity and colour
 // matrix, in plan order, and nothing else (rule T6; SDD-012 section 11.2).
 export class PixiExecutor implements PreviewExecutor {
@@ -134,12 +136,13 @@ export class PixiExecutor implements PreviewExecutor {
 		host.append(canvas);
 		this.canvas = canvas;
 		try {
+			const preference = await detectRenderer();
 			const app = new Application();
 			await app.init({
 				canvas,
 				width: this.info?.width ?? 1080,
 				height: this.info?.height ?? 1920,
-				preference: "webgl",
+				preference,
 				antialias: false,
 				autoStart: false,
 				autoDensity: false,
