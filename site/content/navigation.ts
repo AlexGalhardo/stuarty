@@ -125,6 +125,11 @@ export const navigation: NavCategory[] = [
 		pages: ["overview", "connect", "mcp", "cli", "verify", "batches", "skill", "safety", "recipes"],
 	},
 	{
+		dir: "prompts",
+		title: "Prompts",
+		pages: ["overview", "claude-code", "codex", "opencode", "cursor", "gemini-cli", "other-clients"],
+	},
+	{
 		dir: "self-hosting",
 		title: "Self-hosting",
 		pages: [
