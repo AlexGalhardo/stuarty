@@ -60,6 +60,7 @@ export interface Item {
   blur?: number;
   breaks?: number[];
   brightness?: number;
+  chroma_key?: ChromaKey;
   contrast?: number;
   crop?: Crop;
   duration: number;
@@ -110,6 +111,12 @@ export interface Item {
   words?: [Word, ...Word[]];
   x?: number;
   y?: number;
+}
+export interface ChromaKey {
+  color: string;
+  similarity: number;
+  smoothness: number;
+  spill: number;
 }
 export interface Crop {
   bottom?: number;

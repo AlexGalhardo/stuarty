@@ -232,6 +232,18 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"scale zero", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Scale = 0 }) }, VShape},
 		{"scale big", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Scale = 21 }) }, VShape},
 		{"opacity", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Opacity = 2 }) }, VShape},
+		{"chroma key colour", func(d *Document) {
+			editItem(d, clipID, func(i *Item) { i.ChromaKey = &ChromaKey{Color: "green", Similarity: 0.3} })
+		}, VShape},
+		{"chroma key similarity", func(d *Document) {
+			editItem(d, clipID, func(i *Item) { i.ChromaKey = &ChromaKey{Color: "#00FF00", Similarity: 1.5} })
+		}, VShape},
+		{"chroma key on audio", func(d *Document) {
+			d.Tracks["trk_k000000001"] = Track{ID: "trk_k000000001", Kind: TrackAudio, Order: "a2"}
+			a := NewItem("itm_a000000001", ItemAudio, "trk_k000000001", 0, 10)
+			a.Asset, a.ChromaKey = assetID, &ChromaKey{Color: "#00FF00"}
+			addItem(d, a)
+		}, VShape},
 		{"rotation NaN", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Rotation = math.NaN() }) }, VShape},
 		{"x infinite", func(d *Document) { editItem(d, clipID, func(i *Item) { i.X = new(math.Inf(1)) }) }, VShape},
 		{"fit", func(d *Document) { editItem(d, clipID, func(i *Item) { i.Fit = "stretch" }) }, VShape},

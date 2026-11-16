@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 54 commands, 53 public, of which 16 are Prototype, 32 ALPHA and 6 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) makes 55. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 55 commands, 54 public, of which 16 are Prototype, 32 ALPHA and 7 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -268,6 +268,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.set_color` | A | `item_id`, `brightness?`, `contrast?`, `saturation?` | Sets colour adjustment |
 | `clip.set_filter` | B | `item_id`, `filter?`, `amount?` | BETA (RF-027). Sets the colour filter of a clip and how much of it is mixed in |
 | `clip.set_blur` | B | `item_id`, `radius` | BETA (RF-027). Sets the blur radius of a clip in pixels; 0 removes it |
+| `clip.set_chroma_key` | B | `item_id`, `color` (`#RRGGBB` or null), `similarity?`, `smoothness?`, `spill?` | Keys out one colour of a clip (a green screen); null removes the key. See C.55 |
 | `clip.remove_silences` | A | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip by one clip per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
 | `audio.duck` | B | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | BETA (RF-043). Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
 | `audio.mark_beats` | B | `item_id`, `every?` (1 to 64, default 1), `label?`, `replace?` (default true) | BETA (RF-044). Writes markers on a music item at the beats of the visible part of its audio; the beats come through `resolved` (A.9) |
@@ -4449,3 +4450,69 @@ Removes a user family from the `fonts` map. The files stay in the workspace stor
 - `err_in_use_caption_style`
 - `err_in_use_track_caption_style`
 - `err_in_use_lists_every_user`
+
+### C.55 `clip.set_chroma_key` (phase B)
+
+Sets the chroma key of a clip (VV-015, SDD-001 §3.4): the colour that becomes transparent, for a green screen or a clip on a plain background. The compositor draws it (SDD-004 §3.7).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` |
+| `color` | colour or null | yes | none | `#RRGGBB`, `#RRGGBBAA` or a `$name` of `template.colors`; null removes the key |
+| `similarity` | number | no | current value, else 0.3 | 0 to 1; how far from `color` a pixel is still removed |
+| `smoothness` | number | no | current value, else 0.1 | 0 to 1; the soft edge beyond `similarity` |
+| `spill` | number | no | current value, else 0 | 0 to 1; how much of `color` is taken out of the pixels that stay |
+
+**Preconditions.**
+
+1. `color` is present and is a colour or null; each given number is in range; with `color` null none of the numbers is given (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `clip` (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. `chroma_key` is set with the four values, the numbers rounded to 3 decimals; null removes the field.
+2. `diff` has one `item.updated`; empty when unchanged. `effective.chroma_key` is the object as stored, or null.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | `color` missing or not a colour, a number out of range, or a number given with `color` null | `args.color "green" is not a colour.` | `Send "#RRGGBB" or "#RRGGBBAA".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip | `Item itm_s6t7v8w9x0 is an audio item; chroma key applies to clips.` | `Use item.set_transform to size other items.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old value>, unset: <field if it was absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5` with no key.
+
+```json
+{"op": "clip.set_chroma_key", "args": {"item_id": "itm_m1n2p3q4r5", "color": "#00FF00"}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"chroma_key": [null, {"color": "#00FF00", "similarity": 0.3, "smoothness": 0.1, "spill": 0}]}}]
+```
+
+**Golden cases.**
+
+- `ok_defaults`
+- `ok_all_values`
+- `ok_keeps_current_values`
+- `ok_one_value`
+- `ok_null_removes_key`
+- `ok_null_without_key_noop`
+- `ok_boundaries_0_1`
+- `ok_rounded_to_3_decimals`
+- `ok_image_clip`
+- `err_validation_no_color`
+- `err_validation_bad_color`
+- `err_validation_similarity_above_1`
+- `err_validation_spill_negative`
+- `err_validation_value_with_null`
+- `err_not_found`
+- `err_type_mismatch_audio_item`

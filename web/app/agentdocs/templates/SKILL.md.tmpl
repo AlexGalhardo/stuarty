@@ -17,7 +17,7 @@ Check with `vukem-video version` and `project:list`. The workspace is `~/.vukem-
 1. Read: `project:show --project <id>` (text; note `rev`).
 2. Plan one batch.
 3. Apply: `edit --project <id> --base <rev> ...`. Read the diff it prints.
-4. `lint --project <id>`. Fix errors; they block export.
+4. `lint --project <id>`. Errors block export.
 5. Look only if text cannot answer: `view --at 1s` (~800 image tokens), then `view --mode sheet` (~1,500).
 6. `export --project <id>`, then check `lint` and the `checks` of the job.
 

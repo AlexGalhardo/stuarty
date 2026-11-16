@@ -441,7 +441,8 @@ func (v *validator) itemFieldsForType(path, key string, it Item) {
 		bad("shape")
 	}
 	if it.Type == ItemAudio &&
-		(it.Blur != 0 || (it.Filter != "" && it.Filter != "none") || (it.FilterAmount != 0 && it.FilterAmount != 1)) {
+		(it.Blur != 0 || (it.Filter != "" && it.Filter != "none") || (it.FilterAmount != 0 && it.FilterAmount != 1) ||
+			it.ChromaKey != nil) {
 		bad("filter")
 	}
 	if it.Type == ItemAudio && (it.TransitionIn != nil || it.TransitionOut != nil || it.X != nil || it.Y != nil) {

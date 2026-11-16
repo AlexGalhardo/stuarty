@@ -22,4 +22,15 @@ func (v *validator) filter(path, key string, it Item) {
 	if !inRange(it.FilterAmount, 0, 1) {
 		v.add(VShape, path+".filter_amount", key, "filter_amount must be between 0 and 1")
 	}
+	if k := it.ChromaKey; k != nil {
+		v.color(path+".chroma_key.color", key, k.Color, true)
+		for _, s := range []struct {
+			name string
+			val  float64
+		}{{"similarity", k.Similarity}, {"smoothness", k.Smoothness}, {"spill", k.Spill}} {
+			if !inRange(s.val, 0, 1) {
+				v.add(VShape, path+".chroma_key."+s.name, key, "chroma_key %s must be between 0 and 1", s.name)
+			}
+		}
+	}
 }

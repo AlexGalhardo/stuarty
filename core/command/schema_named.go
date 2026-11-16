@@ -19,6 +19,7 @@ var namedSchemas = map[string]func() map[string]any{
 	"fps":                  fpsSchema,
 	"transition_kind":      func() map[string]any { return nullable(map[string]any{"type": "string", "enum": transitionKinds}) },
 	"template_colors":      templateColorsSchema,
+	"chroma_color":         chromaColorSchema,
 }
 
 const (
@@ -132,5 +133,13 @@ func templateColorsSchema() map[string]any {
 		"additionalProperties": map[string]any{
 			"type": []string{"string", "null"}, "pattern": hexColourPattern,
 		},
+	}
+}
+
+func chromaColorSchema() map[string]any {
+	return map[string]any{
+		"type":        []string{"string", "null"},
+		"pattern":     "(" + hexColourPattern + ")|(" + namedColourFormat + ")",
+		"description": `"#RRGGBB", "#RRGGBBAA" or "$name" of a template colour; null removes the key`,
 	}
 }

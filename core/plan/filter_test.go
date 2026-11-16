@@ -98,3 +98,28 @@ func TestLayerCarriesFilterAndBlur(t *testing.T) {
 		t.Error("a bitmap layer carries the blur too")
 	}
 }
+
+func TestLayerCarriesChromaKey(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	it := clip("itm_k", trkBottom, 0, 10)
+	it.ChromaKey = &timeline.ChromaKey{Color: "#00FF00", Similarity: 0.30004, Smoothness: 0.1, Spill: 0.25}
+	put(d, it)
+
+	want := ChromaKeySpec{Color: "#00FF00", Similarity: 0.3, Smoothness: 0.1, Spill: 0.25}
+	if l := Frame(d, 0).Layers[0]; l.ChromaKey == nil || *l.ChromaKey != want {
+		t.Errorf("layer chroma key %+v, want %+v", l.ChromaKey, want)
+	}
+
+	if w := Window(d, 0, 10); len(w.Layers) != 1 || w.Layers[0].ChromaKey == nil || *w.Layers[0].ChromaKey != want {
+		t.Errorf("window layer lost the chroma key: %+v", w.Layers)
+	}
+
+	plain := newDoc()
+	put(plain, clip("itm_p", trkBottom, 0, 10))
+
+	if Frame(plain, 0).Layers[0].ChromaKey != nil {
+		t.Error("an item with no key must give none")
+	}
+}

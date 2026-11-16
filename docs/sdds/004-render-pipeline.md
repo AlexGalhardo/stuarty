@@ -225,6 +225,10 @@ The alpha channel is not touched. The filters are implemented in Go by the compo
 
 **Filters in the compositor.** A layer with `Filter` has the 3×4 matrix applied by the same integer routine as the colour matrix (16.16 fixed point, straight RGB, results clamped to 0..1, alpha untouched), after the colour matrix and before the blur. The five filters are golden cases `filter-grayscale`, `filter-sepia`, `filter-invert`, `filter-warm` and `filter-cool`, each on a layer that stays and on a picture in picture that slides; `blur-2`, `blur-6` and `blur-16` blur a sliding layer and `blur-still` a still one (`testdata/golden/`).
 
+### 3.7 Chroma key
+
+Added after BETA (VV-015). An item with `chroma_key` (SDD-001 §3.4) gives its layer a `ChromaKey` (`color` resolved to `#RRGGBB` or `#RRGGBBAA`, `similarity`, `smoothness` and `spill`, rounded to 3 decimals); the field is absent when the item has no key. It is constant over the item and, like the colour matrix, serialized once per layer in the window (`chroma_key`). The compositor applies it to the item's own pixels before the colour adjustment of section 3.5: it turns alpha down for the pixels near `color` and removes `color` from the others. The pixel formula belongs to the compositor and is specified here when the compositor implements it; the core only carries the values.
+
 ## 4. Layout of text, captions and shapes
 
 ### 4.1 Safe area

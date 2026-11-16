@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.similarity, smoothness or spill is given with color null, which removes the key.",
+  "hint": "Omit them, or send a colour.",
+  "retryable": false,
+  "path": "args.color"
+}

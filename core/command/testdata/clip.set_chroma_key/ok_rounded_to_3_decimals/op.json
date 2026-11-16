@@ -1,0 +1,8 @@
+{
+  "op": "clip.set_chroma_key",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "color": "#00FF00",
+    "similarity": 0.12345
+  }
+}

@@ -1264,6 +1264,67 @@
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"additionalProperties": false,
 			"properties": {
+				"color": {
+					"description": "The colour to remove, #RRGGBB, or null to remove the key.",
+					"pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+					"type": [
+						"string",
+						"null"
+					]
+				},
+				"item_id": {
+					"description": "A clip.",
+					"type": "string"
+				},
+				"similarity": {
+					"description": "0 to 1; default 0.3, or the current value.",
+					"maximum": 1,
+					"minimum": 0,
+					"type": "number"
+				},
+				"smoothness": {
+					"description": "0 to 1; default 0.1, or the current value.",
+					"maximum": 1,
+					"minimum": 0,
+					"type": "number"
+				},
+				"spill": {
+					"description": "0 to 1; default 0, or the current value.",
+					"maximum": 1,
+					"minimum": 0,
+					"type": "number"
+				}
+			},
+			"required": [
+				"item_id",
+				"color"
+			],
+			"type": "object"
+		},
+		"description": "Makes the pixels near a colour transparent. similarity (0 to 1, default 0.3) is how far from the colour a pixel is still removed, smoothness (0 to 1, default 0.1) the soft edge beyond it and spill (0 to 1, default 0) how much of the colour is taken out of the pixels that stay. On a clip that is already keyed, values not given keep their current value. color null removes the key. Values are rounded to 3 decimals.",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH"
+		],
+		"example": {
+			"color": "#00FF00",
+			"item_id": "itm_m1n2p3q4r5",
+			"similarity": 0.35,
+			"smoothness": 0.1,
+			"spill": 0.2
+		},
+		"internal": false,
+		"name": "clip.set_chroma_key",
+		"phase": "beta",
+		"scope": "edit",
+		"summary": "Keys out one colour of a clip, such as a green screen."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
 				"brightness": {
 					"description": "-1 to 1; default 0.",
 					"maximum": 1,

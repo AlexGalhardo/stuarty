@@ -1,0 +1,8 @@
+{
+  "chroma_key": {
+    "color": "#1FDB3A",
+    "similarity": 0.35,
+    "smoothness": 0.05,
+    "spill": 0.25
+  }
+}
