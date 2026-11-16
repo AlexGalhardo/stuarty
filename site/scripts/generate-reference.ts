@@ -2,7 +2,7 @@
 // (SDD-010 section 8): the command registry (core/schema/commands.json), the error registry
 // (core/schema/errors.json and SDD-000 section 8), the timeline schema, the CLI declarations of the
 // binary (go run ./internal/tools/clidoc -> generated/cli.json) and the configuration table of SDD-000
-// section 10. Run from site/: `npm run reference`. `npm run reference:check` fails on any difference.
+// section 10. The shortcuts page (content/generated/guide/) is read from the editor keymap (shortcuts-reference.ts). Run from site/: `npm run reference`. `npm run reference:check` fails on any difference.
 // The API reference (content/generated/api/) comes from site/generated/openapi.json, which `UPDATE_OPENAPI=1 go test
 // ./web/contract/ -run OpenAPI` writes from the running API. The MCP reference (content/generated/mcp/) comes from
 // web/app/mcp/definitions/ and from the command registry. Both write generated/reference-nav.json, the order of
@@ -13,6 +13,7 @@ import path from "node:path";
 import { apiPages, type OpenApi } from "./api-reference.ts";
 import { topicPages } from "./glossary-pages.ts";
 import { mcpPages } from "./mcp-reference.ts";
+import { readKeymap, shortcutsPage } from "./shortcuts-reference.ts";
 import { code, esc, page, sentence, table } from "./reference-md.ts";
 
 export { esc };
@@ -24,6 +25,7 @@ const agentsDir = path.join(siteDir, "content", "generated", "agents");
 const glossaryDir = path.join(siteDir, "content", "generated", "glossary");
 const apiDir = path.join(siteDir, "content", "generated", "api");
 const mcpDir = path.join(siteDir, "content", "generated", "mcp");
+const guideDir = path.join(siteDir, "content", "generated", "guide");
 
 type Json = Record<string, unknown>;
 
@@ -316,7 +318,7 @@ function write(file: string, text: string, expected: Set<string>, base = outDir)
 	expected.add(path.resolve(target));
 }
 
-function main() {
+async function main() {
 	const cliJson = execFileSync("go", ["run", "./internal/tools/clidoc"], { cwd: root, encoding: "utf8", maxBuffer: 1 << 26 });
 	fs.mkdirSync(path.join(siteDir, "generated"), { recursive: true });
 	fs.writeFileSync(path.join(siteDir, "generated", "cli.json"), cliJson);
@@ -341,6 +343,8 @@ function main() {
 		path.join(siteDir, "generated", "reference-nav.json"),
 		JSON.stringify({ api: api.nav, mcp: { tools: mcp.tools, operations: mcp.operations } }, null, 2) + "\n",
 	);
+	const { keymap, labels } = await readKeymap(root);
+	write("keyboard-shortcuts-list.mdx", shortcutsPage(keymap, labels), written, guideDir);
 	for (const p of topicPages()) write(p.file, p.text, written, glossaryDir);
 
 	// A command that left the registry leaves its page too.
@@ -348,9 +352,9 @@ function main() {
 		fs.existsSync(dir)
 			? fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]))
 			: [];
-	for (const dir of [outDir, agentsDir, glossaryDir, apiDir, mcpDir]) for (const file of walk(dir)) if (!written.has(path.resolve(file))) fs.rmSync(file);
+	for (const dir of [outDir, agentsDir, glossaryDir, apiDir, mcpDir, guideDir]) for (const file of walk(dir)) if (!written.has(path.resolve(file))) fs.rmSync(file);
 
 	console.log(`reference: ${written.size} pages`);
 }
 
-if (import.meta.main) main();
+if (import.meta.main) await main();
