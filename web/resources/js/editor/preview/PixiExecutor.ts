@@ -143,6 +143,9 @@ export class PixiExecutor implements PreviewExecutor {
 				autoStart: false,
 				autoDensity: false,
 				resolution: 1,
+				// The end-to-end build reads the buffer pixels back (preview-vs-export),
+				// which a WebGL canvas that clears after each composite cannot give.
+				preserveDrawingBuffer: import.meta.env.VITE_E2E === "1",
 			});
 			if (this.disposed) {
 				app.destroy(true);

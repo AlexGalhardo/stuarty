@@ -47,9 +47,14 @@ export function bufferSize(
 		w *= shrink;
 		h *= shrink;
 	}
+	// ViewFrame accepts only an even width and derives the height from it as
+	// round(width * H / W) (SDD-004 section 9), so the buffer takes the same
+	// numbers: the exact frame and the canvas then have the same pixels, and
+	// nothing has to be resampled to compare them.
+	const evenWidth = Math.max(2 * Math.round(w / 2), 2);
 	return {
-		width: Math.max(Math.round(w), 1),
-		height: Math.max(Math.round(h), 1),
+		width: evenWidth,
+		height: Math.max(Math.round((evenWidth * height) / width), 1),
 	};
 }
 

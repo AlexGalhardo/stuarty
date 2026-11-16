@@ -142,7 +142,11 @@ describe("fit and size", () => {
 	});
 
 	test("the pixel buffer is capped at 1080 on the long edge", () => {
-		expect(bufferSize(1080, 1920, 1, 2)).toEqual({ width: 608, height: 1080 });
+		expect(bufferSize(1080, 1920, 1, 2)).toEqual({ width: 608, height: 1081 });
+		expect(bufferSize(180, 320, 463 / 180, 1)).toEqual({
+			width: 464,
+			height: 825,
+		});
 		expect(bufferSize(1080, 1920, 0.25, 1)).toEqual({
 			width: 270,
 			height: 480,
