@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -586,11 +587,33 @@ func writeFileAtomic(path string, body []byte) error {
 		return err
 	}
 
-	if err := os.Rename(tmp.Name(), path); err != nil {
+	if err := renameReplacing(tmp.Name(), path); err != nil {
 		_ = os.Remove(tmp.Name())
 
 		return err
 	}
 
 	return nil
+}
+
+// renameReplacing renames over an existing file. On Windows the rename fails
+// with a sharing violation while a reader (a status poll, a virus scanner) has
+// the target open, and the reader lets go within milliseconds, so it retries
+// briefly; elsewhere the first attempt succeeds.
+func renameReplacing(from, to string) error {
+	var err error
+
+	for attempt := range 50 {
+		if err = os.Rename(from, to); err == nil {
+			return nil
+		}
+
+		if runtime.GOOS != "windows" {
+			return err
+		}
+
+		time.Sleep(time.Duration(attempt+1) * time.Millisecond)
+	}
+
+	return err
 }
