@@ -118,6 +118,7 @@ describe("builders", () => {
 		const ops = withNextFree(
 			[{ op: "clip.add", args: { track_id: "t", asset_id: "a", start: "0f" } }],
 			120,
+			0,
 		);
 		expect(ops[0]?.args.start).toBe("120f");
 	});
