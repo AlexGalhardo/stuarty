@@ -1,16 +1,19 @@
 import { describe, expect, test } from "vitest";
 
 import {
+	colorOperations,
 	constantSpeedOperations,
 	defaultEffect,
 	EFFECT_KINDS,
 	EFFECT_PARAMS,
 	effectsOperations,
 	extractAudioOperations,
+	freezeFrameOperations,
 	insertCurvePoint,
 	linkOperations,
 	reverseOperations,
 	speedCurveOperations,
+	trackUpdateOperations,
 	transitionOperations,
 	unlinkOperations,
 } from "./builders";
@@ -191,5 +194,41 @@ describe("the builders of the D-040 commands", () => {
 			transitionOperations({ itemId: "itm_a", edge: "in", kind: "fade" })[0]
 				?.args,
 		).toEqual({ item_id: "itm_a", edge: "in", kind: "fade" });
+	});
+
+	test("a freeze frame holds the picture at the playhead of the first item under it", () => {
+		const items = [
+			{ id: "itm_a", start: 0, duration: 30 },
+			{ id: "itm_b", start: 10, duration: 40 },
+		];
+		expect(freezeFrameOperations(items, 20)).toEqual([
+			{ op: "item.freeze_frame", args: { item_id: "itm_a", at: "20f" } },
+		]);
+		expect(freezeFrameOperations(items, 40)).toEqual([
+			{ op: "item.freeze_frame", args: { item_id: "itm_b", at: "40f" } },
+		]);
+		// The playhead on an edge, or outside every item, sends nothing.
+		expect(freezeFrameOperations(items, 0)).toEqual([]);
+		expect(freezeFrameOperations(items, 50)).toEqual([]);
+		expect(freezeFrameOperations(items, 90)).toEqual([]);
+	});
+
+	test("the magnet is one track.update with the new value", () => {
+		expect(trackUpdateOperations("trk_a", { magnet: true })).toEqual([
+			{ op: "track.update", args: { track_id: "trk_a", magnet: true } },
+		]);
+	});
+
+	test("a lookup table goes by asset id and its intensity; 0 removes it", () => {
+		expect(colorOperations("itm_a", { lut_asset: "ast_lut" })).toEqual([
+			{
+				op: "clip.set_color",
+				args: { item_id: "itm_a", lut_asset: "ast_lut" },
+			},
+		]);
+		expect(colorOperations("itm_a", { lut_intensity: 0 })[0]?.args).toEqual({
+			item_id: "itm_a",
+			lut_intensity: 0,
+		});
 	});
 });

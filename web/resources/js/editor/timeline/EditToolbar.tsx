@@ -2,6 +2,7 @@ import {
 	Captions,
 	Scissors,
 	Shapes,
+	Snowflake,
 	StepBack,
 	StepForward,
 	Trash2,
@@ -156,6 +157,16 @@ export default function EditToolbar({
 			>
 				<StepBack aria-hidden="true" />
 				{t("ui.editor.edit.trim_end")}
+			</Button>
+			<Button
+				type="button"
+				variant="ghost"
+				size="sm"
+				disabled={!canCut}
+				onClick={() => void actions.freezeFrame()}
+			>
+				<Snowflake aria-hidden="true" />
+				{t("ui.editor.edit.freeze_frame")}
 			</Button>
 			<Button
 				type="button"

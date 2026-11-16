@@ -16,7 +16,7 @@ import Section from "./Section";
 import { useFieldCommit } from "./useFieldCommit";
 
 // A track selected: its panel (SDD-012 section 12.1, row Track panel). Name,
-// hidden and muted send `track.update`; the caption style sends
+// hidden, muted and magnet send `track.update`; the caption style sends
 // `track.set_caption_style`, merged by default, or as the whole style while
 // "Replace" is on.
 export default function TrackPanel({
@@ -59,6 +59,12 @@ export default function TrackPanel({
 				stored={track.muted === true}
 				disabled={!canEdit}
 				commit={(muted) => update({ muted })}
+			/>
+			<ToggleField
+				label={t("ui.editor.track.magnet")}
+				stored={track.magnet === true}
+				disabled={!canEdit}
+				commit={(magnet) => update({ magnet })}
 			/>
 			<Section title={t("ui.editor.inspector.caption_style_title")}>
 				{track.kind === "audio" ? (
