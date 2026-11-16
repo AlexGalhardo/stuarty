@@ -451,6 +451,9 @@
           "set_blur": {
             "title": "Definir desfoque do clipe"
           },
+          "set_chroma_key": {
+            "title": "Definir chroma key do clipe"
+          },
           "remove_silences": {
             "title": "Remover silêncios"
           },
