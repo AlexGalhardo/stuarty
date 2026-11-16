@@ -26,6 +26,9 @@ interface RulerProps {
 	viewportWidth: number;
 	playheadFrame: number;
 	endFrame: number;
+	// The frames of the document markers and the in and out points of I and O.
+	markers?: readonly number[];
+	range?: { in: number | null; out: number | null };
 	onSeek(frame: number): void;
 }
 
@@ -92,6 +95,8 @@ export default function Ruler(props: RulerProps): ReactNode {
 		viewportWidth,
 		playheadFrame,
 		endFrame,
+		markers = [],
+		range = { in: null, out: null },
 		onSeek,
 	} = props;
 
@@ -111,6 +116,8 @@ export default function Ruler(props: RulerProps): ReactNode {
 	};
 
 	const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+		// Mod+Shift+arrows jump between markers (the shortcut of the timeline).
+		if (event.ctrlKey || event.metaKey) return;
 		const second = framesPerSecond(fps);
 		const delta = event.shiftKey ? second : 1;
 		switch (event.key) {
@@ -173,6 +180,31 @@ export default function Ruler(props: RulerProps): ReactNode {
 				className="absolute inset-0 h-full"
 				style={{ width: viewportWidth }}
 			/>
+			{range.in !== null || range.out !== null ? (
+				<div
+					aria-hidden="true"
+					data-testid="ruler-range"
+					className="pointer-events-none absolute top-0 bottom-0 bg-primary/25"
+					style={{
+						left: (range.in ?? 0) * ppf - scrollLeft,
+						width:
+							range.in !== null && range.out !== null
+								? (range.out - range.in) * ppf
+								: undefined,
+						right: range.in !== null && range.out !== null ? undefined : 0,
+					}}
+				/>
+			) : null}
+			{markers.map((frame) => (
+				<span
+					key={frame}
+					aria-hidden="true"
+					data-testid="ruler-marker"
+					data-frame={frame}
+					className="pointer-events-none absolute bottom-0 size-0 border-x-[5px] border-b-[8px] border-x-transparent border-b-ed-marker"
+					style={{ left: frame * ppf - scrollLeft - 5 }}
+				/>
+			))}
 			<div
 				aria-hidden="true"
 				className="pointer-events-none absolute top-0 bottom-0 left-0 w-0 border-l-2 border-ed-playhead"

@@ -27,6 +27,8 @@ import {
 	keyframeFallbackOperations,
 	keyframeFrame,
 	keyframeRemoveOperations,
+	markerAddOperations,
+	markerRemoveOperations,
 	moveToTrackOperations,
 	nudgeOperations,
 	type Operations,
@@ -60,6 +62,8 @@ import { formatTime, fpsOf } from "./units";
 export interface Actions {
 	addToTimeline(assetId: string): Promise<EditOutcome | null>;
 	splitAtPlayhead(): Promise<EditOutcome | null>;
+	// M: a marker at the playhead, or removes the one that is already there.
+	toggleMarkerAtPlayhead(): Promise<EditOutcome | null>;
 	// Mod+Shift+B: every item under the playhead, on every track.
 	splitAllAtPlayhead(): Promise<EditOutcome | null>;
 	trimToPlayhead(edge: "start" | "end"): Promise<EditOutcome | null>;
@@ -450,6 +454,15 @@ export function createActions(runtime: EditorRuntime): Actions {
 					firstVisualTrack: firstVisualTrack(),
 					newTrackId: () => newId("trk"),
 				}),
+			);
+		},
+		toggleMarkerAtPlayhead() {
+			const doc = documents.getState().document;
+			if (doc === null) return Promise.resolve(null);
+			const frame = ui.getState().playheadFrame;
+			const there = (doc.markers ?? []).some((m) => m.frame === frame);
+			return send(
+				there ? markerRemoveOperations(frame) : markerAddOperations(frame),
 			);
 		},
 		splitAtPlayhead: () =>

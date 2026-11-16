@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
 	adjacentCut,
+	adjacentMarker,
 	clampPlayhead,
 	clientXToFrame,
 	DEFAULT_FPS,
@@ -119,6 +120,23 @@ describe("idsOnSide", () => {
 		expect(idsOnSide(items, 30, "left")).toEqual(["a"]);
 		expect(idsOnSide(items, 50, "right")).toEqual(["c"]);
 		expect(idsOnSide(items, 0, "left")).toEqual([]);
+	});
+});
+
+describe("adjacentMarker", () => {
+	const frames = [40, 10, 90];
+
+	test("finds the nearest marker strictly after or before", () => {
+		expect(adjacentMarker(frames, 10, 1)).toBe(40);
+		expect(adjacentMarker(frames, 0, 1)).toBe(10);
+		expect(adjacentMarker(frames, 40, -1)).toBe(10);
+		expect(adjacentMarker(frames, 95, -1)).toBe(90);
+	});
+
+	test("is null past the last or before the first marker", () => {
+		expect(adjacentMarker(frames, 90, 1)).toBeNull();
+		expect(adjacentMarker(frames, 10, -1)).toBeNull();
+		expect(adjacentMarker([], 5, 1)).toBeNull();
 	});
 });
 

@@ -21,6 +21,7 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"library.drag": ["clip.add", "audio.add"],
 	"library.remove": ["asset.remove"],
 	"timeline.split": ["item.split"],
+	"timeline.marker": ["marker.add", "marker.remove"],
 	"timeline.trim_start": ["item.trim"],
 	"timeline.trim_end": ["item.trim"],
 	"caption.add": ["caption.add", "track.add"],
@@ -171,8 +172,14 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		palette,
 	],
 	"clip.set_chroma_key": [palette],
-	"marker.add": [palette],
-	"marker.remove": [palette],
+	"marker.add": [
+		{ kind: "key", action: "timeline.marker", phase: "B" },
+		palette,
+	],
+	"marker.remove": [
+		{ kind: "key", action: "timeline.marker", phase: "B" },
+		palette,
+	],
 	"marker.set": [palette],
 	"clip.set_color": [
 		{ kind: "inspector", action: "inspector.color", phase: "A" },

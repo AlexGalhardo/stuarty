@@ -42,6 +42,9 @@ export interface UiState {
 	// dialog (SDD-012 section 4.4); null when the dialog is closed.
 	inUse: { assetId: string; usedBy: readonly string[] } | null;
 	playheadFrame: number;
+	// The in and out points of I and O (VV-035): the span a later export or loop
+	// takes. Screen state of this page; the core does not know them.
+	range: { in: number | null; out: number | null };
 	timeline: { pxPerFrame: number; snapEnabled: boolean };
 	// Track row heights in pixels by kind of track, persisted in `vv.layout`.
 	rowPx: { visual: number; audio: number };
@@ -73,6 +76,9 @@ export interface UiWriter {
 	selectTrack(trackId: string | null): void;
 	dropSelection(isKnown: (id: string) => boolean): void;
 	setPlayhead(frame: number): void;
+	setRangeIn(frame: number): void;
+	setRangeOut(frame: number): void;
+	clearRange(): void;
 	setZoom(pxPerFrame: number): void;
 	toggleSnap(): void;
 	setRowPx(kind: "visual" | "audio", px: number): void;
@@ -101,6 +107,7 @@ export function createUiStore(initialZoom = 1): {
 		safeAreaVisible: false,
 		inUse: null,
 		playheadFrame: 0,
+		range: { in: null, out: null },
 		timeline: { pxPerFrame: initialZoom, snapEnabled: true },
 		rowPx: readLayout().rows,
 		previewSize: "fit",
@@ -189,6 +196,30 @@ export function createUiStore(initialZoom = 1): {
 			},
 			setPlayhead: (playheadFrame) =>
 				store.setState((s) => ({ ...s, playheadFrame })),
+			// An in point after the out point (or the reverse) drops the other end.
+			setRangeIn: (frame) =>
+				store.setState((s) => ({
+					...s,
+					range: {
+						in: frame,
+						out:
+							s.range.out !== null && s.range.out <= frame ? null : s.range.out,
+					},
+				})),
+			setRangeOut: (frame) =>
+				store.setState((s) => ({
+					...s,
+					range: {
+						in: s.range.in !== null && s.range.in >= frame ? null : s.range.in,
+						out: frame,
+					},
+				})),
+			clearRange: () =>
+				store.setState((s) =>
+					s.range.in === null && s.range.out === null
+						? s
+						: { ...s, range: { in: null, out: null } },
+				),
 			blockHistory: (kind, revision) =>
 				store.setState((s) => ({
 					...s,
