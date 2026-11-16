@@ -6,6 +6,9 @@
 #   bash scripts/build-renderer.sh verify     build the module twice from clean and fail unless the digests match
 #   bash scripts/build-renderer.sh embed      verify, then write the module and its digest where Go embeds them
 #   bash scripts/build-renderer.sh check      verify, then fail unless the embedded module is the one this source builds
+#   bash scripts/build-renderer.sh host       the GPU render child process vukem-render (SDD-013 section 4.9) for this machine,
+#                                             copied to renderer/dist/ with its SHA-256; an archive or installer that carries
+#                                             ffmpeg carries this file next to the server executable or in libexec/vukem-video/
 # The core module (SDD-013 section 4.1) has plain C-ABI exports and no import, so it needs no
 # wasm-bindgen glue; it is written to renderer/dist/vukem_renderer.wasm with vukem_renderer.wasm.sha256 next
 # to it. embed copies both to engine/renderhost/ (renderer.wasm and renderer.wasm.sha256).
@@ -29,8 +32,8 @@ sha256() {
 }
 
 case "$mode" in
-all | native | wasm | verify | embed | check) ;;
-*) die "unknown mode '$mode' (all, native, wasm, verify, embed or check)" ;;
+all | native | wasm | verify | embed | check | host) ;;
+*) die "unknown mode '$mode' (all, native, wasm, verify, embed, check or host)" ;;
 esac
 
 command -v cargo >/dev/null 2>&1 || die "cargo is not installed (rustup, then the toolchain of rust-toolchain.toml)"
@@ -73,6 +76,18 @@ wasm_build() {
 	printf 'build-renderer: vukem_renderer.wasm sha256 %s\n' "$(cat "$dist/vukem_renderer.wasm.sha256")"
 }
 
+host_build() {
+	local exe=vukem-render
+	case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) exe=vukem-render.exe ;; esac
+
+	cargo build --locked --release --bin vukem-render --manifest-path "$manifest"
+
+	mkdir -p "$dist"
+	cp "$CARGO_TARGET_DIR/release/$exe" "$dist/$exe"
+	sha256 "$dist/$exe" >"$dist/$exe.sha256"
+	printf 'build-renderer: %s sha256 %s\n' "$exe" "$(cat "$dist/$exe.sha256")"
+}
+
 clean_wasm() {
 	rm -rf "$CARGO_TARGET_DIR/wasm32-unknown-unknown" "$CARGO_TARGET_DIR/release"
 }
@@ -96,6 +111,7 @@ all)
 	native_build
 	wasm_build
 	;;
+host) host_build ;;
 verify) verify_build ;;
 embed)
 	verify_build
