@@ -134,7 +134,7 @@ func TestTheRealModelParses(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(threats) != 36 {
-		t.Errorf("the model has %d threats, want 36 (T-36, the renderer module)", len(threats))
+	if len(threats) != 37 {
+		t.Errorf("the model has %d threats, want 37 (T-37, the GPU render process)", len(threats))
 	}
 }
