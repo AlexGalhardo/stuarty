@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "aspect": {
+      "description": "A preset frame size, or give width and height.",
+      "enum": [
+        "16:9",
+        "9:16",
+        "1:1",
+        "4:5"
+      ],
+      "type": "string"
+    },
+    "height": {
+      "description": "Frame height in pixels; even.",
+      "maximum": 4096,
+      "minimum": 16,
+      "type": "integer"
+    },
+    "width": {
+      "description": "Frame width in pixels; even.",
+      "maximum": 4096,
+      "minimum": 16,
+      "type": "integer"
+    }
+  },
+  "required": [],
+  "type": "object"
+}

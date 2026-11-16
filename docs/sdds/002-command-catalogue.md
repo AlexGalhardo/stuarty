@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` (C.59, VV-036) makes 59. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 59 commands, 58 public, of which 16 are Prototype, 32 ALPHA and 11 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 60 commands, 59 public, of which 16 are Prototype, 32 ALPHA and 12 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -223,6 +223,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | --- | --- | --- | --- |
 | `project.rename` | P | `name` | Sets the project name |
 | `settings.set` | P | `width?`, `height?`, `background?`, `loudness_target?` | Sets the given settings. When the size changes, every visual item's `x` and `y` are scaled by the ratio of new to old size on each axis; `scale` is untouched; items with default position stay centred |
+| `settings.reframe` | B | `aspect?` (`"16:9"`, `"9:16"`, `"1:1"`, `"4:5"`) or `width` and `height` | Re-targets the project to another aspect: sets the size like `settings.set`, and also scales text, shape and fit `none` clips by the smaller axis ratio so they keep their share of the frame; see C.60 |
 | `settings.set_fps` | A | `fps` (`"30"`, `"30000/1001"` or a rational object) | Rescales every time quantity `q` to `round(q × new / old)`, then restores invariants: a duration that became 0 becomes 1; an overlap created by rounding is removed by shortening the earlier item. `effective.adjusted` lists every item changed by a fix-up |
 
 ### B.2 Assets
@@ -4787,3 +4788,63 @@ Shows another part of the source in a clip or audio item without moving or resiz
 - `err_type_mismatch_image_clip`
 - `err_type_mismatch_text_item`
 - `err_out_of_source_past_the_asset`
+
+### C.60 `settings.reframe` (phase B)
+
+Re-targets the project to another aspect ratio, from one preset or a size, and refits the items to the new frame (VV-038).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `aspect` | `"16:9"`, `"9:16"`, `"1:1"`, `"4:5"` | one of | none | the frame size 1920x1080, 1080x1920, 1080x1080 or 1080x1350 |
+| `width` | integer | with `height` | none | even, 16 to 4096 |
+| `height` | integer | with `width` | none | even, 16 to 4096 |
+
+Give `aspect`, or `width` and `height` together.
+
+**Preconditions.**
+
+1. Exactly one of `aspect` and the pair `width` and `height` is given, and each size obeys its rule (`E_VALIDATION`).
+2. No item would end with a scale outside 0.001 to 20, counting its scale keyframes (`E_VALIDATION`).
+
+**Postconditions.**
+
+1. `settings.width` and `settings.height` are set, and the `x` and `y` of the items and their keyframes are scaled axis by axis, as in C.2 postcondition 2.
+2. With `f` the smaller of `new_width / old_width` and `new_height / old_height`, every `text` item, every `shape` item and every `clip` with fit `none` gets `scale = round3(scale × f)` and its `scale` keyframes the same, so the overlays keep their share of the frame instead of overflowing it. Clips with fit `cover` or `contain` fill the frame by themselves (adjust their crop with `clip.set_framing`), captions are laid out by the safe area and the style, and audio has no frame: none of them is resized. Text sizes, `max_width` and shape sizes are not touched.
+3. `diff` has `settings.updated` followed by one `item.updated` per item changed; empty when the size is the same. `effective` has `width`, `height`, `rescaled_items` (items whose `x`, `y` or their keyframes changed) and `resized_items` (items whose scale changed).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | neither or both forms given, an odd size, or a scale out of range | `Item itm_m1n2p3q4r5 would get the scale 30, outside 0.001 to 20.` | `Set the size with settings.set to keep the items as they are, or give the item a scale nearer to 1 first.` |
+
+**Inverse.** The same two forms as C.2: one `patch` of `settings`, then one `patch` of `items` per changed item.
+
+**Idempotency.** Same result: the second application finds the size already set.
+
+**Example.** A 1080x1920 project with a text item `itm_c3d4e5f6g7` at `y` 1500 with scale 1.5.
+
+```json
+{"op": "settings.reframe", "args": {"aspect": "1:1"}}
+```
+
+`f` is 0.5625, so the text item gets scale 0.844 and `y` 843.75; the project `height` goes from 1920 to 1080.
+
+**Golden cases.**
+
+- `ok_9_16_to_16_9_scales_overlays_by_the_height_ratio`
+- `ok_9_16_to_1_1`
+- `ok_9_16_to_4_5`
+- `ok_16_9_to_9_16_scales_overlays_by_the_width_ratio`
+- `ok_width_and_height`
+- `ok_scale_keyframes_follow`
+- `ok_cover_and_contain_clips_keep_their_scale`
+- `ok_same_size_noop`
+- `err_validation_no_argument`
+- `err_validation_aspect_and_size`
+- `err_validation_width_without_height`
+- `err_validation_odd_height`
+- `err_validation_unknown_aspect`
+- `err_validation_scale_would_pass_20`

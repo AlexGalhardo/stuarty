@@ -2588,6 +2588,50 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "aspect": {
+          "description": "A preset frame size, or give width and height.",
+          "enum": [
+            "16:9",
+            "9:16",
+            "1:1",
+            "4:5"
+          ],
+          "type": "string"
+        },
+        "height": {
+          "description": "Frame height in pixels; even.",
+          "maximum": 4096,
+          "minimum": 16,
+          "type": "integer"
+        },
+        "width": {
+          "description": "Frame width in pixels; even.",
+          "maximum": 4096,
+          "minimum": 16,
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "description": "Sets the frame size from an aspect preset (16:9 is 1920x1080, 9:16 is 1080x1920, 1:1 is 1080x1080, 4:5 is 1080x1350) or from width and height. Like settings.set, the explicit x and y of the items and their keyframes follow the size. Beyond that, text and shape items, and clips with fit none, are scaled by the smaller of the two axis ratios so they keep their share of the frame instead of overflowing it. Clips with fit cover or contain fill the frame by themselves; adjust their crop with clip.set_framing.",
+    "errors": [
+      "E_VALIDATION"
+    ],
+    "example": {
+      "aspect": "9:16"
+    },
+    "internal": false,
+    "name": "settings.reframe",
+    "phase": "beta",
+    "scope": "edit",
+    "summary": "Re-targets the project to another aspect ratio and refits the items to the new frame."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "background": {
           "description": "A hex colour, or $name from template.colors.",
           "type": "string"

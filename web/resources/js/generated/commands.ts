@@ -1418,6 +1418,21 @@ export interface ProjectRenameArgs {
   name: string;
 }
 
+export interface SettingsReframeArgs {
+  /**
+   * A preset frame size, or give width and height.
+   */
+  aspect?: "16:9" | "9:16" | "1:1" | "4:5";
+  /**
+   * Frame height in pixels; even.
+   */
+  height?: number;
+  /**
+   * Frame width in pixels; even.
+   */
+  width?: number;
+}
+
 export interface SettingsSetArgs {
   /**
    * A hex colour, or $name from template.colors.
@@ -1843,7 +1858,7 @@ export interface TrackUpdateArgs {
   volume?: number;
 }
 
-export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_filter" | "clip.set_framing" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.remove_silences" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_filter" | "clip.set_framing" | "clip.set_speed" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.move" | "item.rename" | "item.set_audio" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
@@ -1888,6 +1903,7 @@ export interface CommandArgsMap {
 	"marker.remove": MarkerRemoveArgs;
 	"marker.set": MarkerSetArgs;
 	"project.rename": ProjectRenameArgs;
+	"settings.reframe": SettingsReframeArgs;
 	"settings.set": SettingsSetArgs;
 	"settings.set_fps": SettingsSetFpsArgs;
 	"shape.add": ShapeAddArgs;
@@ -1952,6 +1968,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"marker.remove": { summary: "Removes a marker of the timeline.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND"] },
 	"marker.set": { summary: "Moves or relabels a marker of the timeline.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE"] },
 	"project.rename": { summary: "Sets the project name.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION"] },
+	"settings.reframe": { summary: "Re-targets the project to another aspect ratio and refits the items to the new frame.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION"] },
 	"settings.set": { summary: "Sets the frame size, the background colour or the loudness target.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION"] },
 	"settings.set_fps": { summary: "Changes the project frame rate and rescales every time quantity.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME"] },
 	"shape.add": { summary: "Adds a rectangle, rounded rectangle or ellipse to a visual track.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },

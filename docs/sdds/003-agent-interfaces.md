@@ -1524,7 +1524,7 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
           "properties":{
             "op":{
               "enum":[
-                "project.rename", "settings.set", "settings.set_fps", "asset.remove", "track.add",
+                "project.rename", "settings.set", "settings.set_fps", "settings.reframe", "asset.remove", "track.add",
                 "track.update", "track.move", "track.remove", "track.set_caption_style", "item.move",
                 "item.trim", "item.slip", "item.split", "item.delete", "item.duplicate", "item.rename",
                 "item.set_transform", "item.set_transition", "item.set_audio", "item.crossfade",

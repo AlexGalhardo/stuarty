@@ -1,0 +1,52 @@
+[
+  {
+    "kind": "settings.updated",
+    "id": "prj_7k2m9x4q1b",
+    "changes": {
+      "height": [
+        1920,
+        1080
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "keyframes": [
+        {
+          "scale": [
+            {
+              "easing": "linear",
+              "t": 0,
+              "value": 1
+            },
+            {
+              "easing": "linear",
+              "t": 30,
+              "value": 2
+            }
+          ]
+        },
+        {
+          "scale": [
+            {
+              "easing": "linear",
+              "t": 0,
+              "value": 0.563
+            },
+            {
+              "easing": "linear",
+              "t": 30,
+              "value": 1.125
+            }
+          ]
+        }
+      ],
+      "scale": [
+        1,
+        0.563
+      ]
+    }
+  }
+]

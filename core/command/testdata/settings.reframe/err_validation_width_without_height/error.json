@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give aspect, or both width and height.",
+  "hint": "Send {\"aspect\": \"9:16\"} or {\"width\": 1080, \"height\": 1920}.",
+  "retryable": false,
+  "path": "args"
+}

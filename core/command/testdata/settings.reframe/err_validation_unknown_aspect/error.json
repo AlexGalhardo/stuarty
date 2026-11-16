@@ -1,0 +1,15 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.aspect is \"21:9\", which is not one of the accepted values.",
+  "hint": "Use one of: 16:9, 9:16, 1:1, 4:5.",
+  "retryable": false,
+  "path": "args.aspect",
+  "details": {
+    "allowed": [
+      "16:9",
+      "9:16",
+      "1:1",
+      "4:5"
+    ]
+  }
+}

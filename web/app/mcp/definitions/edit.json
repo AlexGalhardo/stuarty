@@ -24,6 +24,7 @@
         "project.rename",
         "settings.set",
         "settings.set_fps",
+        "settings.reframe",
         "asset.remove",
         "track.add",
         "track.update",

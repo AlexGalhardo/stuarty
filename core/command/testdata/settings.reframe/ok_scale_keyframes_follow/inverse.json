@@ -1,0 +1,32 @@
+[
+  {
+    "type": "patch",
+    "collection": "settings",
+    "id": "prj_7k2m9x4q1b",
+    "unset": [
+      "height"
+    ]
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "keyframes": {
+        "scale": [
+          {
+            "t": 0,
+            "value": 1
+          },
+          {
+            "t": 30,
+            "value": 2
+          }
+        ]
+      }
+    },
+    "unset": [
+      "scale"
+    ]
+  }
+]
