@@ -1,4 +1,4 @@
-/** Copy of the landing page (English only). The Docker command is built at build time from the latest release. */
+/** Copy of the landing page (English only). The Docker command runs the image tagged latest. */
 
 export type Feature = {
 	id: string;
@@ -15,7 +15,6 @@ export const landing = {
 	title: "Vukem Video: an open source video editor that agents and people share",
 	description:
 		"A minimalist, local-first, open source (MIT) video editor. An AI agent edits through MCP, a CLI or an HTTP API; you edit the same project in the browser.",
-	status: "BETA: released and still before 1.0",
 	hero: {
 		title: "Edit video with an agent, or by hand.",
 		lead: "A minimalist, open source video editor for short vertical videos with captions and for product commercials. An agent drives it through MCP, a CLI or an HTTP API; you edit the same project in your browser.",
