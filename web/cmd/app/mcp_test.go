@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -103,4 +104,45 @@ func TestStdioOwnerIsReachedByTheCLIAndOpen(t *testing.T) {
 	}
 
 	t.Error("runtime.json survived the close of the pipe")
+}
+
+func TestFreePortIfBusyMovesOnlyWhenTheDefaultIsTakenAndUnset(t *testing.T) {
+	t.Parallel()
+
+	taken, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = taken.Close() }()
+
+	busy := taken.Addr().String()
+	none := func(string) string { return "" }
+
+	if got := freePortIfBusy(t.Context(), none, busy); got != "127.0.0.1:0" {
+		t.Errorf("a busy default = %q, want any free port", got)
+	}
+
+	chosen := func(k string) string {
+		if k == envAddr {
+			return "127.0.0.1:9999"
+		}
+
+		return ""
+	}
+	if got := freePortIfBusy(t.Context(), chosen, busy); got != "" {
+		t.Errorf("an address the person chose = %q, want it kept", got)
+	}
+
+	free, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	addr := free.Addr().String()
+	_ = free.Close()
+
+	if got := freePortIfBusy(t.Context(), none, addr); got != "" {
+		t.Errorf("a free default = %q, want it kept", got)
+	}
 }
