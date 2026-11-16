@@ -119,6 +119,21 @@ func (c *call) copyFile(ctx context.Context, local, downloadURL, dest string) er
 	var src io.ReadCloser
 
 	switch {
+	case c.download != nil:
+		// A remote server's Path names a file on its machine, not ours: never open it here,
+		// or a server could make the CLI copy any local file the user can read.
+		if downloadURL == "" {
+			return &service.Error{
+				Code: command.CodeInternal, Message: "the server reported no download URL to copy to --out.",
+			}
+		}
+
+		body, err := c.download(ctx, downloadURL)
+		if err != nil {
+			return err
+		}
+
+		src = body
 	case local != "":
 		f, err := os.Open(local)
 		if err != nil {
@@ -132,13 +147,6 @@ func (c *call) copyFile(ctx context.Context, local, downloadURL, dest string) er
 		}
 
 		src = f
-	case c.download != nil && downloadURL != "":
-		body, err := c.download(ctx, downloadURL)
-		if err != nil {
-			return err
-		}
-
-		src = body
 	default:
 		return &service.Error{
 			Code: command.CodeInternal, Message: "the service reported no file to copy to --out.",

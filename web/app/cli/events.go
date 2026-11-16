@@ -262,6 +262,15 @@ type Downloader func(ctx context.Context, urlPath string) (io.ReadCloser, error)
 // video can take longer than one call.
 func httpDownload(base, token string, hc doer) Downloader {
 	return func(ctx context.Context, urlPath string) (io.ReadCloser, error) {
+		// The bearer token goes only to the connection's own server: a download URL must be a
+		// plain absolute path, never "//host", "@host" or a full URL.
+		if !sameServerPath(urlPath) {
+			return nil, &service.Error{
+				Code:    command.CodeInternal,
+				Message: fmt.Sprintf("the server gave a download URL that is not a path: %q.", urlPath),
+			}
+		}
+
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(base, "/")+urlPath, http.NoBody)
 		if err != nil {
 			return nil, fmt.Errorf("build the request: %w", err)
@@ -297,4 +306,15 @@ func httpDownload(base, token string, hc doer) Downloader {
 			Code: doc.Code, Message: doc.Message, Hint: doc.Hint, Retryable: doc.Retryable, Path: doc.Path,
 		}
 	}
+}
+
+// sameServerPath reports whether p is an absolute URL path with no host, scheme or user info.
+func sameServerPath(p string) bool {
+	if !strings.HasPrefix(p, "/") || strings.HasPrefix(p, "//") || strings.ContainsAny(p, "@\\") {
+		return false
+	}
+
+	u, err := url.Parse(p)
+
+	return err == nil && u.Scheme == "" && u.Host == "" && u.User == nil
 }
