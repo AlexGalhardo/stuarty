@@ -116,6 +116,69 @@ test.describe("clip-sections", () => {
 		await expect(mode).toHaveValue("multiply");
 	});
 
+	test("the mask controls send clip.set_mask with the whole mask and null for none", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+			clipDuration: "4s",
+		});
+		const itemId = seeded.itemIds[0] ?? "";
+		await open(page, seeded.id);
+		const edits = recordEdits(page);
+		const mask = {
+			shape: "ellipse",
+			x: 0.1,
+			y: 0.1,
+			width: 0.8,
+			height: 0.8,
+			feather: 0,
+			invert: false,
+		};
+
+		const shape = page.getByLabel("Mask shape", { exact: true });
+		await expect(shape).toHaveValue("none");
+		await expect(page.getByLabel("Mask feather")).toHaveCount(0);
+		await shape.selectOption("ellipse");
+		await expect.poll(() => edits.length).toBe(1);
+		expect(edits[0]?.operations).toEqual([
+			{ op: "clip.set_mask", args: { item_id: itemId, mask } },
+		]);
+		await expect(shape).toHaveValue("ellipse");
+
+		const feather = page.getByLabel("Mask feather", { exact: true });
+		await feather.fill("12");
+		await feather.press("Enter");
+		await expect.poll(() => edits.length).toBe(2);
+		expect(edits[1]?.operations).toEqual([
+			{
+				op: "clip.set_mask",
+				args: { item_id: itemId, mask: { ...mask, feather: 12 } },
+			},
+		]);
+
+		await page.getByLabel("Invert mask", { exact: true }).check();
+		await expect.poll(() => edits.length).toBe(3);
+		expect(edits[2]?.operations).toEqual([
+			{
+				op: "clip.set_mask",
+				args: {
+					item_id: itemId,
+					mask: { ...mask, feather: 12, invert: true },
+				},
+			},
+		]);
+
+		await shape.selectOption("none");
+		await expect.poll(() => edits.length).toBe(4);
+		expect(edits[3]?.operations).toEqual([
+			{ op: "clip.set_mask", args: { item_id: itemId, mask: null } },
+		]);
+		await expect(shape).toHaveValue("none");
+	});
+
 	test("a colour slider drag sends one command, on release", async ({
 		page,
 		request,
