@@ -34,7 +34,8 @@ func samplesAt(fps timeline.Rational, t int) int64 {
 // 16-bit WAV the encoder reads. It returns the path of that WAV.
 func (s *state) mixAudio(ctx context.Context) (string, Loudness, error) {
 	doc := s.job.Doc
-	total := samplesAt(doc.Settings.FPS, s.frames)
+	from := samplesAt(doc.Settings.FPS, s.offset)
+	total := samplesAt(doc.Settings.FPS, s.offset+s.frames) - from
 	target := doc.Settings.LoudnessTarget
 	loud := Loudness{TargetLUFS: target}
 
@@ -42,7 +43,10 @@ func (s *state) mixAudio(ctx context.Context) (string, Loudness, error) {
 	if err != nil {
 		return "", loud, err
 	}
-	srcs := plan.Audio(doc, 0, s.frames)
+	srcs := plan.Audio(doc, s.offset, s.offset+s.frames)
+	for i := range srcs {
+		srcs[i].StartSample -= from
+	}
 
 	if len(srcs) == 0 {
 		return out, loud, writeFile(out, func(w io.Writer) error { return audio.SilentWAV(w, total) })

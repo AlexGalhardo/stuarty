@@ -49,6 +49,9 @@ type Job struct {
 	MaxBytes int64
 	// Encoder is VUKEM_VIDEO_ENCODER and VUKEM_VIDEO_ALLOW_USER_X264 (ADR-0011 item 5).
 	Encoder ffmpeg.DetectOptions
+	// Start and End are the frames [Start, End) of the timeline to export. End 0 is the end of the
+	// last item; Start 0 and End 0 export the whole timeline (VV-018).
+	Start, End int
 	// Lint is the environment of the lint that gates the export (unready media, text sizes).
 	Lint lint.Env
 	// Fonts is the font set of the rasterizer; the bundled fonts when nil.
@@ -82,6 +85,8 @@ type state struct {
 	ctx    context.Context
 	dir    *ffmpeg.RunDir
 	frames int
+	// offset is the first timeline frame of the export; export frame i draws timeline frame offset+i.
+	offset int
 	fonts  *raster.FontSet
 	opts   plan.Options
 	// scale is the output scale of the frames; 1 is the project's size. single says one frame is
@@ -128,7 +133,7 @@ func (s *state) newRenderer(bands int) *renderer {
 
 // render composes frame t into dst, then stops the decoders of the clips that are no longer drawn.
 func (r *renderer) render(dst *image.RGBA, t int) error {
-	fp := plan.FrameWith(r.s.job.Doc, t, r.s.opts)
+	fp := plan.FrameWith(r.s.job.Doc, r.s.offset+t, r.s.opts)
 	if r.s.single {
 		r.fs.prestart(&fp)
 	}
@@ -189,7 +194,11 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 	if len(blocking) > 0 {
 		return nil, lintError(blocking)
 	}
-	frames := endFrame(doc)
+	start, end, err := exportRange(job, endFrame(doc))
+	if err != nil {
+		return nil, err
+	}
+	frames := end - start
 	if err := checkLimits(doc.Settings); err != nil {
 		return nil, err
 	}
@@ -201,6 +210,7 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 	defer func() { _ = dir.Remove() }()
 
 	s := newState(ctx, job, dir, frames)
+	s.offset = start
 
 	b, err := s.build(ctx, format)
 	if err != nil {
@@ -235,6 +245,23 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 		Width:      ver.Width,
 		Height:     ver.Height,
 	}, nil
+}
+
+// exportRange is the frames [start, end) the job exports out of a timeline of total frames.
+func exportRange(job *Job, total int) (start, end int, err error) {
+	start, end = job.Start, job.End
+	if end == 0 {
+		end = total
+	}
+	if start < 0 || start >= end || end > total {
+		return 0, 0, exportErr(
+			ReasonRender,
+			"The range to export is outside the timeline.",
+			fmt.Errorf("range [%d, %d) of a timeline of %d frames", start, end, total),
+			"",
+		)
+	}
+	return start, end, nil
 }
 
 // endFrame is the end of the last item: the number of frames of the export.

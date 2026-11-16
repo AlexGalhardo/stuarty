@@ -35,7 +35,7 @@ type layerInfo struct {
 // constant. The plans are not kept: they are cheap to make again and a long project has many frames.
 func (s *state) scanLayers() map[string]*layerInfo {
 	infos := map[string]*layerInfo{}
-	for t := range s.frames {
+	for t := s.offset; t < s.offset+s.frames; t++ {
 		fp := plan.FrameWith(s.job.Doc, t, s.opts)
 		for i := range fp.Layers {
 			l := &fp.Layers[i]

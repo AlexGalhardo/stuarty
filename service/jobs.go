@@ -108,14 +108,6 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, terr
 	}
 
-	// The engine renders the whole timeline; a job for a range would be created
-	// only to fail, so the range is refused before one is queued.
-	if start != 0 || end != endFrame(doc) {
-		return nil, newError(
-			command.CodeValidation, "exporting a range of the timeline is not available in this build.",
-		).withPath("args").withHint("leave out start and end to export the whole timeline")
-	}
-
 	format, ferr := checkExportFormat(args.Format)
 	if ferr != nil {
 		return nil, ferr
