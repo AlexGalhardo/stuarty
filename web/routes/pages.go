@@ -91,30 +91,6 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Settings/Keys", inertia.Props{})
 		}).Name("settings.keys")
 
-		// The choice is kept in the lang cookie, which i18n.Middleware reads on
-		// every request; Input accepts the JSON body the client sends.
-		r.Post("/locale", func(c *web.Ctx) error {
-			in, err := c.Input()
-			if err != nil {
-				return err
-			}
-
-			tag, _ := in["locale"].(string)
-
-			l, ok := app.I18n.Match(tag)
-			if !ok {
-				return errs.ErrNotFound
-			}
-
-			// Secure only over TLS: loopback is plain HTTP (SDD-007 section 3.5).
-			c.SetCookie(&http.Cookie{ //nolint:gosec // see above
-				Name: "lang", Value: l, Path: "/", MaxAge: 365 * 24 * 3600, HttpOnly: true,
-				Secure: c.Request().TLS != nil, SameSite: http.SameSiteLaxMode,
-			})
-
-			return c.Back("/projects")
-		}).Name("locale.update")
-
 		return nil
 	}
 }

@@ -2,9 +2,11 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 
 import {
 	readLayout,
+	readLocale,
 	readTimeDisplay,
 	readTimeUnit,
 	writeLayout,
+	writeLocale,
 	writeTimeUnit,
 } from "./prefs";
 
@@ -84,5 +86,19 @@ describe("layout preference", () => {
 		expect(() =>
 			writeLayout({ rows: { visual: 70, audio: 50 } }),
 		).not.toThrow();
+	});
+});
+
+describe("language preference", () => {
+	test("is none until chosen, then the stored tag", () => {
+		vi.stubGlobal("localStorage", storage());
+		expect(readLocale()).toBeNull();
+		writeLocale("pt-BR");
+		expect(readLocale()).toBe("pt-BR");
+	});
+
+	test("a stored value that is not a language tag reads as none", () => {
+		vi.stubGlobal("localStorage", storage({ "vv.lang": "<x>" }));
+		expect(readLocale()).toBeNull();
 	});
 });

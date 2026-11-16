@@ -152,3 +152,44 @@ func TestEditorPageShowsWhyAProjectCannotOpen(t *testing.T) {
 		}
 	}
 }
+
+// The language is a preference of each browser (SDD-012 section 16.3): the
+// Vukem-Video-Lang header decides, the shared lang cookie is neither read nor
+// written, and the old POST /locale is gone.
+func TestPagesLanguageIsPerBrowser(t *testing.T) {
+	h := pagesHarness(t)
+	ck := cookie(h)
+	page := func(headers map[string]string, query string) resp {
+		headers["Cookie"] = ck + "; " + headers["Cookie"]
+
+		return h.do(req{path: "/projects" + query, noAuth: true, headers: headers})
+	}
+
+	if got := page(map[string]string{"Vukem-Video-Lang": "pt-BR"}, "").header.Get("Content-Language"); got != "pt-BR" {
+		t.Errorf("the language header = %q, want pt-BR", got)
+	}
+
+	if got := page(map[string]string{"Cookie": "lang=pt-BR"}, "").header.Get("Content-Language"); got == "pt-BR" {
+		t.Errorf("the lang cookie of another browser was read: %q", got)
+	}
+
+	if got := page(map[string]string{"Accept-Language": "pt-BR"}, "").header.Get("Content-Language"); got != "pt-BR" {
+		t.Errorf("Accept-Language = %q, want pt-BR as the fallback", got)
+	}
+
+	if got := page(map[string]string{}, "?lang=pt-BR").header.Get("Content-Language"); got != "pt-BR" {
+		t.Errorf("?lang= = %q, want pt-BR", got)
+	}
+
+	res := h.do(req{
+		method: http.MethodPost, path: "/locale", body: `{"locale":"pt-BR"}`, noAuth: true,
+		headers: map[string]string{"Cookie": ck, "Content-Type": "application/json"},
+	})
+	if res.status != http.StatusNotFound && res.status != http.StatusMethodNotAllowed {
+		t.Errorf("POST /locale = %d, want it gone", res.status)
+	}
+
+	if len((&http.Response{Header: res.header}).Cookies()) != 0 {
+		t.Error("a response set a cookie for the language")
+	}
+}

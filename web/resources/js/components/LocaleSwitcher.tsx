@@ -1,9 +1,11 @@
 import { router } from "@inertiajs/react";
 
 import LocaleSelect from "@/components/LocaleSelect";
+import { writeLocale } from "@/editor/state/prefs";
 
-// LocaleSwitcher posts the choice to /locale, which stores it in the lang
-// cookie; preserveState keeps a half-filled brief while the page reloads.
+// LocaleSwitcher keeps the choice in this browser (the Vukem-Video-Lang header
+// carries it from then on) and reloads the page; a reload keeps the state of
+// the page, so a half-filled brief survives.
 export default function LocaleSwitcher({
 	className = "",
 }: {
@@ -12,13 +14,11 @@ export default function LocaleSwitcher({
 	return (
 		<LocaleSelect
 			className={className}
-			onChange={(next) =>
-				router.post(
-					"/locale",
-					{ locale: next },
-					{ preserveState: true, preserveScroll: true },
-				)
-			}
+			onChange={(next) => {
+				writeLocale(next);
+				document.documentElement.lang = next;
+				router.reload();
+			}}
 		/>
 	);
 }

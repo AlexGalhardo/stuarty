@@ -49,7 +49,7 @@ export default function EditorApp({
 						<EditorShell
 							onLocaleChange={(next) => {
 								const { playheadFrame, selection } = runtime.ui.getState();
-								void switchLocale(next, {
+								switchLocale(next, {
 									frame: playheadFrame,
 									item: selection.items[0] ?? null,
 								});
