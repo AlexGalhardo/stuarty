@@ -901,6 +901,7 @@ Phase of the entry point is the phase in which that entry point is built. Every 
 | `clip.set_speed` | inspector Speed section with the ripple toggle | A |
 | `clip.set_color` | inspector Color section | A |
 | `clip.set_blend` | inspector Blend section | A |
+| `clip.set_mask` | inspector Mask section | A |
 | `clip.remove_silences` | inspector button "Remove silences" with minimum silence and padding fields | A |
 | `text.add` | toolbar "Add text" (`T`) | A |
 | `text.set` | inspector Text section, inline canvas editor | A |
@@ -1081,6 +1082,7 @@ The inspector panel shows one panel by selection: nothing selected, the project 
 | Speed | speed (numeric with `x` suffix), "ripple later items" toggle | `clip.set_speed {speed: "1.5x", ripple}` | clip (SDD-002 B.5 defines `clip.set_speed` for clips only; the field is not shown for audio items) |
 | Color | brightness, contrast, saturation | `clip.set_color {...}` | clip |
 | Blend | blend mode (normal, multiply, screen, overlay, add) | `clip.set_blend {item_id, mode}` | visual items (clip, text, caption, shape). The preview draws it from the layer `blend` of the plan: `multiply`, `screen` and `add` with the GPU blend functions of PixiJS, `overlay` with `pixi.js/advanced-blend-modes`; the GPU works in floats, so a pixel can differ from the export (integer formulas of SDD-004 section 3.8) by a rounding step |
+| Mask | shape (none, rect, ellipse), x, y, width, height (fractions of the item, 0 to 1), feather (project pixels, 0 to 200), invert | `clip.set_mask {item_id, mask}` (`mask` null for none) | visual items (clip, text, caption, shape). The preview draws it from the layer `mask` of the plan: the executor evaluates the integer coverage of SDD-004 section 3.9 (`mask.ts`, `maskCoverage`, tested against the section's values) once per texel of a coverage texture laid over the layer's own `W x H` rectangle, and the PixiJS `MaskFilter` multiplies the layer by it as the last filter, after key, colour, filter and blur and before opacity and blend, in the item's own frame, so it follows position, scale and rotation. The texture has at most 640 texels on its longest side and is sampled bilinearly, so on a layer larger than that an edge can differ from the export by a fraction of a pixel; the texture is rebuilt only when the mask or the rounded size of the layer changes. The PixiJS mask filter drops everything outside the layer rectangle, so with `invert` a blur halo outside the rectangle is cut (the export keeps it); the plan leaves out a feather of 0 and the preview reads it as 0 |
 | Silences | minimum silence, padding, ripple toggle, button | `clip.remove_silences {min_silence, padding, ripple}` | clip |
 | Text | content (multi-line), font family, weight, size, color, stroke color and width, shadow color, dx, dy and blur, background color, padding and radius, align, line height, max width, uppercase | `text.set {text, style}` (style is the partial of changed fields) | text |
 | Animation | preset, edge, duration | `text.apply_preset {preset, edge, duration}` | any visual item (the command works on any visual item, SDD-002 B.6) |

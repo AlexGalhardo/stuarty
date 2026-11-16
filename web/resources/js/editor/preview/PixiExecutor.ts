@@ -2,9 +2,11 @@ import "pixi.js/unsafe-eval";
 import {
 	Application,
 	BlurFilter,
+	BufferImageSource,
 	ColorMatrixFilter,
 	Container,
 	ImageSource,
+	MaskFilter,
 	Rectangle,
 	Sprite,
 	Texture,
@@ -22,6 +24,7 @@ import { pixiBlendMode } from "./blend";
 import { ChromaKeyFilter } from "./chromaKey";
 import { pixiColorMatrix } from "./layerFilters";
 import { Lru } from "./lru";
+import { coverageSize, coverageTexels } from "./mask";
 import { MediaPool, type PoolTimers } from "./mediaPool";
 import {
 	audioSourceSeconds,
@@ -54,6 +57,16 @@ interface Drawn {
 	color: ColorMatrixFilter | null;
 	look: ColorMatrixFilter | null;
 	blur: BlurFilter | null;
+	mask: MaskDrawn | null;
+}
+
+// The mask of a layer: its coverage texture, drawn on a sprite that follows the
+// item, and the filter that multiplies the item by it. `key` names what the
+// texture was built from.
+interface MaskDrawn {
+	sprite: Sprite;
+	filter: MaskFilter;
+	key: string;
 }
 
 interface DrawMode {
@@ -195,6 +208,7 @@ export class PixiExecutor implements PreviewExecutor {
 		this.bitmaps.clear();
 		for (const texture of this.stills.values()) texture.destroy(true);
 		this.stills.clear();
+		for (const entry of this.drawn.values()) this.dropMask(entry);
 		this.app?.destroy({ removeView: true }, { children: true });
 		this.app = null;
 		this.audioGraph.detach();
@@ -397,6 +411,7 @@ export class PixiExecutor implements PreviewExecutor {
 					color: null,
 					look: null,
 					blur: null,
+					mask: null,
 				};
 				entry.sprite.anchor.set(0.5);
 				this.drawn.set(layer.item, entry);
@@ -415,6 +430,7 @@ export class PixiExecutor implements PreviewExecutor {
 		for (const [item, entry] of this.drawn) {
 			if (used.has(item)) continue;
 			entry.sprite.removeFromParent();
+			this.dropMask(entry);
 			entry.sprite.destroy();
 			this.drawn.delete(item);
 		}
@@ -449,12 +465,18 @@ export class PixiExecutor implements PreviewExecutor {
 		sprite.angle = g.rotation;
 		sprite.alpha = valueAt(layer.opacity, frame, layer.first);
 		sprite.blendMode = pixiBlendMode(layer.blend);
-		this.applyFilters(entry, layer);
+		this.applyFilters(entry, layer, g);
 	}
 
-	private applyFilters(entry: Drawn, layer: PlanLayer): void {
+	private applyFilters(entry: Drawn, layer: PlanLayer, g: LayerGeometry): void {
 		const media = layer.kind === "media" ? layer : null;
-		const before = [entry.key, entry.color, entry.look, entry.blur];
+		const before = [
+			entry.key,
+			entry.color,
+			entry.look,
+			entry.blur,
+			entry.mask?.filter ?? null,
+		];
 		if (media?.chroma_key) {
 			entry.key ??= new ChromaKeyFilter();
 			entry.key.set(media.chroma_key);
@@ -471,10 +493,82 @@ export class PixiExecutor implements PreviewExecutor {
 		} else {
 			entry.blur = null;
 		}
-		const now = [entry.key, entry.color, entry.look, entry.blur];
+		// The mask goes last: it is applied after the key, colour, filter and blur,
+		// and the opacity and the blend of the sprite come after it (SDD-004 3.9).
+		this.applyMask(entry, layer, g);
+		const now = [
+			entry.key,
+			entry.color,
+			entry.look,
+			entry.blur,
+			entry.mask?.filter ?? null,
+		];
 		if (now.some((f, i) => f !== before[i])) {
 			entry.sprite.filters = now.filter((f) => f !== null);
 		}
+	}
+
+	// The coverage texture covers the layer rectangle (the plan's W by H, in
+	// output pixels, rounded so a keyframed scale does not rebuild it on every
+	// frame) and its sprite takes the item's position, size and rotation, so the
+	// mask is in the item's own frame.
+	private applyMask(entry: Drawn, layer: PlanLayer, g: LayerGeometry): void {
+		const mask = layer.mask;
+		if (mask === undefined) {
+			this.dropMask(entry);
+			return;
+		}
+		const scale = this.stage.scale.x;
+		const w = Math.max(1, Math.round(g.w * scale));
+		const h = Math.max(1, Math.round(g.h * scale));
+		const key = `${JSON.stringify(mask)}|${w}|${h}|${scale}`;
+		let drawn = entry.mask;
+		if (drawn === null || drawn.key !== key) {
+			const size = coverageSize(w, h);
+			const texture = new Texture({
+				source: new BufferImageSource({
+					resource: coverageTexels(mask, w, h, scale, size.width, size.height),
+					width: size.width,
+					height: size.height,
+					format: "rgba8unorm",
+					alphaMode: "premultiply-alpha-on-upload",
+					scaleMode: "linear",
+				}),
+			});
+			if (drawn === null) {
+				const sprite = new Sprite(texture);
+				sprite.anchor.set(0.5);
+				drawn = {
+					sprite,
+					filter: new MaskFilter({ sprite, channel: "alpha" }),
+					key,
+				};
+				entry.mask = drawn;
+			} else {
+				const old = drawn.sprite.texture;
+				drawn.sprite.texture = texture;
+				old.destroy(true);
+				drawn.key = key;
+			}
+		}
+		// The sprite is not in the scene, so its world transform is set here, in
+		// output pixels (the stage is at the origin and only scaled).
+		const { sprite } = drawn;
+		sprite.position.set(g.cx * scale, g.cy * scale);
+		sprite.width = g.w * scale;
+		sprite.height = g.h * scale;
+		sprite.angle = g.rotation;
+		sprite.updateLocalTransform();
+		sprite.worldTransform.copyFrom(sprite.localTransform);
+	}
+
+	private dropMask(entry: Drawn): void {
+		const drawn = entry.mask;
+		if (drawn === null) return;
+		entry.mask = null;
+		entry.sprite.filters = null;
+		drawn.filter.destroy();
+		drawn.sprite.destroy({ texture: true, textureSource: true });
 	}
 
 	private matrixFilter(

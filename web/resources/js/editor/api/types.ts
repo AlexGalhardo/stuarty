@@ -205,6 +205,19 @@ interface PlanLayerBase {
 	opacity: PerFrame;
 	// The mix of SDD-004 section 3.8, constant over the item; absent is normal.
 	blend?: PlanBlend;
+	// The mask of SDD-004 section 3.9, constant over the item; absent without one.
+	mask?: PlanMask;
+}
+
+export interface PlanMask {
+	shape: "rect" | "ellipse";
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	// The plan leaves out a feather of 0.
+	feather?: number;
+	invert?: boolean;
 }
 
 export type PlanBlend = "normal" | "multiply" | "screen" | "overlay" | "add";

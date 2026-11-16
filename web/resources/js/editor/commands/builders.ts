@@ -1312,6 +1312,26 @@ export function blendOperations(itemId: string, mode: BlendMode): Operations {
 	return [{ op: "clip.set_blend", args: { item_id: itemId, mode } }];
 }
 
+export type MaskShapeName = "rect" | "ellipse";
+
+export type MaskArgs = {
+	shape: MaskShapeName;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	feather: number;
+	invert: boolean;
+};
+
+// A whole mask replaces the current one; null removes it (`clip.set_mask`).
+export function maskOperations(
+	itemId: string,
+	mask: MaskArgs | null,
+): Operations {
+	return [{ op: "clip.set_mask", args: { item_id: itemId, mask } }];
+}
+
 export function blurOperations(itemId: string, radius: number): Operations {
 	return [{ op: "clip.set_blur", args: { item_id: itemId, radius } }];
 }
