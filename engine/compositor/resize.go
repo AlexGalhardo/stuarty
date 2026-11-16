@@ -19,7 +19,7 @@ func Resize(src Image, w, h int) Image {
 	dst := image.NewRGBA(image.Rect(0, 0, w, h))
 	c := Compositor{Bands: 1}
 	whole := placement{cx: float64(w) / 2, cy: float64(h) / 2, w: float64(w), h: float64(h)}
-	c.sample(dst, src, whole, 255, blendNormal)
+	c.sample(dst, src, whole, 255, blendNormal, nil)
 	return Image{Pix: dst.Pix, W: w, H: h, Opaque: src.Opaque}
 }
 
