@@ -8,6 +8,7 @@
 //! test profile are on, so an arithmetic overflow is a panic too). `VR_FUZZ_ITERATIONS` scales
 //! them for a long run.
 
+use vukem_renderer::blend::BlendMode;
 use vukem_renderer::chroma::ChromaKeySpec;
 use vukem_renderer::compose::{Layer, Placement, Source, Target, compose, sample};
 use vukem_renderer::error::Reason;
@@ -80,6 +81,8 @@ const TOKENS: &[&str] = &[
 	"\"kind\"",
 	"\"bitmap_key\"",
 	"\"chroma_key\"",
+	"\"blend\"",
+	"\"multiply\"",
 	"\"similarity\"",
 	",",
 	":",
@@ -280,6 +283,14 @@ fn random_image(rng: &mut Rng, premultiplied: bool) -> Image {
 	Image { pix, w, h, opaque }
 }
 
+const BLENDS: [BlendMode; 5] = [
+	BlendMode::Normal,
+	BlendMode::Multiply,
+	BlendMode::Screen,
+	BlendMode::Overlay,
+	BlendMode::Add,
+];
+
 fn chroma_key(rng: &mut Rng) -> Option<ChromaKeySpec> {
 	const COLOURS: &[&str] = &[
 		"#00ff00",
@@ -335,6 +346,7 @@ fn the_composition_survives_extreme_numbers() {
 					color_matrix: matrix(&mut rng),
 					filter: matrix(&mut rng),
 					chroma_key: chroma_key(&mut rng),
+					blend: *rng.pick(&BLENDS),
 					// A blur of a huge radius is capped at 128 source pixels; keep most small.
 					blur: if rng.chance(3) {
 						extreme(&mut rng)
@@ -396,6 +408,7 @@ fn the_sampler_survives_every_rotation_and_scale() {
 			&img,
 			&p,
 			rng.below(256) as u32,
+			*rng.pick(&BLENDS),
 		);
 	}
 }

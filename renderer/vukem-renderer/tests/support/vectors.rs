@@ -1,6 +1,7 @@
 //! The vectors of `renderer/testdata/compose-vectors.bin` (written by
 //! `engine/compositor/vectors_test.go`), read for the CPU parity test and the GPU one.
 
+use vukem_renderer::blend::BlendMode;
 use vukem_renderer::chroma::ChromaKeySpec;
 use vukem_renderer::compose::{Layer, Source, premultiply};
 use vukem_renderer::image::Image;
@@ -48,6 +49,7 @@ pub struct VecLayer {
 	pub colour: Option<[f64; 12]>,
 	pub filter: Option<[f64; 12]>,
 	pub chroma_key: Option<ChromaKeySpec>,
+	pub blend: BlendMode,
 }
 
 pub struct Case {
@@ -63,7 +65,7 @@ pub struct Case {
 pub fn read_cases() -> (u64, Vec<Case>) {
 	let mut r = Reader(VECTORS);
 	assert_eq!(r.take(4), b"VVCV");
-	assert_eq!(r.u32(), 2);
+	assert_eq!(r.u32(), 3);
 	let hash = r.u64();
 	let n = r.u32();
 	let mut cases = Vec::new();
@@ -109,12 +111,21 @@ pub fn read_cases() -> (u64, Vec<Case>) {
 					spill: r.f64(),
 				}
 			});
+			let blend = match r.u8() {
+				0 => BlendMode::Normal,
+				1 => BlendMode::Multiply,
+				2 => BlendMode::Screen,
+				3 => BlendMode::Overlay,
+				4 => BlendMode::Add,
+				n => panic!("unknown blend mode {n}"),
+			};
 			layers.push(VecLayer {
 				pixels,
 				nums,
 				colour,
 				filter,
 				chroma_key,
+				blend,
 			});
 		}
 		let want = r.take(w * h * 4).to_vec();
@@ -163,6 +174,7 @@ pub fn layers_of(c: &Case) -> Vec<Layer<'_>> {
 				color_matrix: l.colour,
 				filter: l.filter,
 				chroma_key: l.chroma_key.clone(),
+				blend: l.blend,
 				blur,
 			}
 		})

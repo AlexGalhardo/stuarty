@@ -3,6 +3,7 @@
 //! The renderer reads the JSON of `core/plan` (`FramePlan`) inside the envelope of section 2.1. It
 //! refuses what it does not know: an unknown field is a pixel it would silently not draw.
 
+use crate::blend::BlendMode;
 use crate::chroma::ChromaKeySpec;
 use crate::error::{Error, Reason};
 use crate::json::{JsonError, Value, parse};
@@ -52,6 +53,7 @@ pub struct LayerSpec {
 	pub filter: Option<[f64; 12]>,
 	pub blur: f64,
 	pub chroma_key: Option<ChromaKeySpec>,
+	pub blend: BlendMode,
 }
 
 /// A decoded render input.
@@ -188,6 +190,15 @@ fn chroma_key(v: Option<Value>) -> Result<Option<ChromaKeySpec>, Error> {
 	};
 	f.finish()?;
 	Ok(Some(spec))
+}
+
+fn blend(v: Option<Value>) -> Result<BlendMode, Error> {
+	match v {
+		None | Some(Value::Null) => Ok(BlendMode::Normal),
+		Some(Value::Str(s)) => BlendMode::from_name(&s)
+			.ok_or_else(|| invalid(format!("layer: blend {s:?} is not a blend mode"))),
+		Some(_) => Err(invalid("layer: blend is not a string")),
+	}
 }
 
 fn id(s: String, what: &str) -> Result<String, Error> {
@@ -363,6 +374,7 @@ fn decode_layer(v: Value) -> Result<LayerSpec, Error> {
 		filter: matrix(f.take("filter"), "filter")?,
 		blur: f.num_or("blur", 0.0)?,
 		chroma_key: chroma_key(f.take("chroma_key"))?,
+		blend: blend(f.take("blend"))?,
 		item,
 	};
 	f.finish()?;
@@ -443,6 +455,31 @@ mod tests {
 		);
 		assert_eq!(reason("[]"), Reason::InvalidPlan);
 		assert_eq!(reason(""), Reason::InvalidPlan);
+	}
+
+	#[test]
+	fn reads_the_blend_mode_of_a_layer() {
+		let with = |b: &str| GOOD.replace("\"blur\":0", &format!("\"blur\":0,\"blend\":{b}"));
+		assert_eq!(
+			decode(GOOD.as_bytes()).unwrap().layers[0].blend,
+			BlendMode::Normal
+		);
+		for (name, mode) in [
+			("normal", BlendMode::Normal),
+			("multiply", BlendMode::Multiply),
+			("screen", BlendMode::Screen),
+			("overlay", BlendMode::Overlay),
+			("add", BlendMode::Add),
+		] {
+			let r = decode(with(&format!("\"{name}\"")).as_bytes()).unwrap();
+			assert_eq!(r.layers[0].blend, mode, "{name}");
+		}
+		assert_eq!(
+			decode(with("null").as_bytes()).unwrap().layers[0].blend,
+			BlendMode::Normal
+		);
+		assert_eq!(reason(&with("\"darken\"")), Reason::InvalidPlan);
+		assert_eq!(reason(&with("3")), Reason::InvalidPlan);
 	}
 
 	#[test]
