@@ -63,6 +63,7 @@ var requiredCases = []string{
 	"blur-still",
 	"sticker-png",
 	"sticker-anim",
+	"chroma-key",
 }
 
 const (
@@ -379,6 +380,15 @@ var alphaCases = map[string]func() alphaCase{
 		// (core/plan, AnimImageSourceFrame); 8, 10 and 29 are in later loops and choose 0, 2 and 2.
 		return b.build(0, 1, 2, 3, 5, 6, 8, 10, 29)
 	},
+	"chroma-key": func() alphaCase {
+		b := newCase("a clip keyed on its green over the portrait clip", rate(30, 1))
+		b.backdrop(30)
+		b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+			it.Fit = "contain"
+			it.ChromaKey = &timeline.ChromaKey{Color: "#00FF00", Similarity: 0.35, Smoothness: 0.2, Spill: 0.5}
+		})
+		return b.build(0, 15, 29)
+	},
 	"source-fps-24": func() alphaCase {
 		b := newCase("a source at 24 fps in a 30 fps project", rate(30, 1))
 		b.clip(b.track(), b.video(portrait24), 0, 60, nil)
@@ -540,7 +550,7 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 	setup(t)
 	for _, name := range requiredCases {
 		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") &&
-			!strings.HasPrefix(name, "sticker-") {
+			!strings.HasPrefix(name, "sticker-") && !strings.HasPrefix(name, "chroma-") {
 			continue
 		}
 		t.Run(name, func(t *testing.T) {

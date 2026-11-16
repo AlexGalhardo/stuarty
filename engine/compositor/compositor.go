@@ -153,6 +153,9 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, outScale float64) err
 	if l.Kind == plan.Bitmap {
 		src = c.shrunk(l.Bitmap.Key(), src, round(p.w), round(p.h))
 	}
+	if l.ChromaKey != nil {
+		src = c.applyChromaKey(src, l.ChromaKey)
+	}
 	if l.ColorMatrix != nil {
 		src = c.applyMatrix(src, l.ColorMatrix)
 	}
