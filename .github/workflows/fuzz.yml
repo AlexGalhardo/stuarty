@@ -37,6 +37,10 @@ jobs:
           - { pkg: ./engine/raster, target: FuzzFontHeader }
           - { pkg: ./service, target: FuzzTemplateArchive }
           - { pkg: ./web/app/servicetest, target: FuzzBundleArchive }
+          - { pkg: ./service/pathguard, target: FuzzCanonicalizeImportPath }
+          - { pkg: ./service/untrusted, target: FuzzUntrustedClean }
+          - { pkg: ./core/otio, target: FuzzImport }
+          - { pkg: ./web/app/http, target: FuzzHostCheck }
     env:
       FUZZTIME: ${{ inputs.fuzztime || '30s' }}
     defaults:
