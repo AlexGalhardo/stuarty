@@ -61,7 +61,7 @@ To build from source you need Go (see `go.mod`) and Bun for `web/`. The task run
 ## Documentation
 
 - [Planning documents](docs/README.md): requirements, architecture decisions and specifications.
-- The public `AGENTS.md` for contributors is added by a later task; until then [CONTRIBUTING](.github/CONTRIBUTING.md) is the entry point.
+- [AGENTS.md](AGENTS.md) and [CONTRIBUTING](.github/CONTRIBUTING.md) are the entry points for contributors.
 - [Security policy](.github/SECURITY.md) and [Code of Conduct](.github/CODE_OF_CONDUCT.md).
 - [Changelog](CHANGELOG.md).
 

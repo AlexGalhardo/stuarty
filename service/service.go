@@ -20,8 +20,8 @@ import (
 
 // Service is the single application boundary (ADR-0008): the UI, MCP, CLI and
 // HTTP adapters call it. This is the part of the interface of SDD-003 section
-// 2.1 for projects, edits, history and lint; the media, job, template and
-// system methods join it with their tasks. Every method returns a *Error on
+// 2.1: projects, edits, history, lint, media, jobs, templates, fonts,
+// bundles, OpenTimelineIO and system. Every method returns a *Error on
 // failure and never a partial result with a non-nil error.
 type Service interface {
 	ProjectList(ctx context.Context, req ProjectListRequest) (*ProjectListResult, error)
@@ -140,8 +140,8 @@ type Options struct {
 	// Publish receives events after the commit, in revision order per project.
 	Publish func(Event)
 	// Lint is the environment of the lint rules. SafeArea defaults to
-	// plan.SafeArea; TextSize stays nil until a rasterizer supplies it, which
-	// skips L_SAFE_AREA.
+	// plan.SafeArea; TextSize is the text Measurer that production supplies
+	// (web/app/owner/lintmeasure.go); while it is nil, L_SAFE_AREA is skipped.
 	Lint lint.Env
 
 	// Workspace is the workspace directory: the content store, the artifacts
@@ -169,7 +169,7 @@ type Options struct {
 	// Keys stores the API keys of network mode; without one the key operations
 	// answer E_NOT_FOUND, as in local mode.
 	Keys KeyStore
-	// Heavy limits JobStart, MediaImport and TemplateImport per actor; nil counts nothing.
+	// Heavy limits the heavy operations (jobs, media, template, font, bundle and OpenTimelineIO imports and exports) per actor; nil counts nothing.
 	Heavy RateLimiter
 	// HeavyPerMinute is the limit Heavy enforces, for the error message; zero is HeavyPerMinute.
 	HeavyPerMinute int
