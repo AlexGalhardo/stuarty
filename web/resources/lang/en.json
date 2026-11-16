@@ -626,6 +626,7 @@
           "step_frame": "Step one frame",
           "step_second": "Step one second",
           "go_to_edge": "Go to start or end",
+          "next_cut": "Go to the previous or next cut",
           "split": "Split at the playhead",
           "trim_start": "Trim the start to the playhead",
           "trim_end": "Trim the end to the playhead",

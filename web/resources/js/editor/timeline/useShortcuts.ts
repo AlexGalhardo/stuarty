@@ -5,6 +5,7 @@ import { editShortcut, isSelectAllShortcut } from "../commands/keymap";
 import { bindingFor } from "../commands/keymapStore";
 import { useActions } from "../commands/useActions";
 import { useRuntime } from "../state/EditorContext";
+import { adjacentCut } from "./geometry";
 
 function isEditable(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) return false;
@@ -55,6 +56,27 @@ export function useShortcuts(openCaption: () => void): void {
 					const id = only ?? focusedItem;
 					if (id !== null && id !== undefined) runtime.uiWriter.startRename(id);
 				}
+				return;
+			}
+			if (
+				(event.key === "ArrowUp" || event.key === "ArrowDown") &&
+				!event.shiftKey &&
+				!(event.ctrlKey || event.metaKey) &&
+				!inOverlay(event.target) &&
+				!(
+					event.target instanceof HTMLElement &&
+					event.target.closest('[role="grid"]') !== null
+				)
+			) {
+				const doc = runtime.documents.getState().document;
+				if (doc === null) return;
+				const cut = adjacentCut(
+					Object.values(doc.items),
+					runtime.ui.getState().playheadFrame,
+					event.key === "ArrowDown" ? 1 : -1,
+				);
+				if (cut !== null) runtime.uiWriter.setPlayhead(cut);
+				event.preventDefault();
 				return;
 			}
 			if (isSelectAllShortcut(event) && !inOverlay(event.target)) {

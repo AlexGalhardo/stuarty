@@ -626,6 +626,7 @@
           "step_frame": "Avançar ou voltar um quadro",
           "step_second": "Avançar ou voltar um segundo",
           "go_to_edge": "Ir ao início ou ao fim",
+          "next_cut": "Ir ao corte anterior ou ao seguinte",
           "split": "Dividir na posição de reprodução",
           "trim_start": "Aparar o início até a posição de reprodução",
           "trim_end": "Aparar o fim até a posição de reprodução",

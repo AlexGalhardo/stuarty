@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
+	adjacentCut,
 	clampPlayhead,
 	clientXToFrame,
 	DEFAULT_FPS,
@@ -101,5 +102,29 @@ describe("display order", () => {
 			{ id: "c", start: 0, duration: 1 },
 		]);
 		expect(sorted.map((i) => i.id)).toEqual(["c", "a", "b"]);
+	});
+});
+
+describe("adjacentCut", () => {
+	const items = [
+		{ start: 0, duration: 30 },
+		{ start: 30, duration: 20 },
+		{ start: 80, duration: 10 },
+	];
+
+	test("goes to the next cut after the playhead", () => {
+		expect(adjacentCut(items, 0, 1)).toBe(30);
+		expect(adjacentCut(items, 30, 1)).toBe(50);
+		expect(adjacentCut(items, 50, 1)).toBe(80);
+	});
+
+	test("goes to the previous cut before the playhead", () => {
+		expect(adjacentCut(items, 85, -1)).toBe(80);
+		expect(adjacentCut(items, 80, -1)).toBe(50);
+	});
+
+	test("is null past the last or before the first cut", () => {
+		expect(adjacentCut(items, 90, 1)).toBeNull();
+		expect(adjacentCut(items, 0, -1)).toBeNull();
 	});
 });

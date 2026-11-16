@@ -154,6 +154,25 @@ export function sortByStart<T extends Placed>(items: readonly T[]): T[] {
 	return [...items].sort((a, b) => a.start - b.start || (a.id < b.id ? -1 : 1));
 }
 
+// The nearest cut (an item start or end) strictly before or after `frame`, or
+// null when there is none in that direction. Navigation only: it reads the
+// frames the core gave and decides nothing about the edit.
+export function adjacentCut(
+	items: readonly Pick<Placed, "start" | "duration">[],
+	frame: number,
+	direction: 1 | -1,
+): number | null {
+	let best: number | null = null;
+	for (const item of items) {
+		for (const cut of [item.start, item.start + item.duration]) {
+			if (direction === 1 ? cut <= frame : cut >= frame) continue;
+			if (best === null || (direction === 1 ? cut < best : cut > best))
+				best = cut;
+		}
+	}
+	return best;
+}
+
 // The id of the item whose start is nearest to `start`, the first one on a tie
 // (keyboard focus moving to the track above or below, SDD-012 section 7.10).
 export function nearestByStart(
