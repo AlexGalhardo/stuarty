@@ -85,6 +85,25 @@ describe("a load the core refuses", () => {
 		});
 	});
 
+	test("a transport failure before any document is a failed load, not an offline editor", async () => {
+		const server = new FixtureServer(makeDocument({}));
+		server.setNetworkDown(true);
+		const runtime = createRuntime({
+			projectId: server.projectId,
+			actor: "local:ui",
+			mode: "local",
+			transport: server,
+			timers: new ManualTimers(),
+		});
+		await runtime.sync.start();
+		await flush();
+		await runtime.sync.settled();
+		const state = runtime.documents.getState();
+		expect(state.status).toBe("failed");
+		expect(state.document).toBeNull();
+		expect(state.loadError?.code).toBe("E_NETWORK");
+	});
+
 	test("a load that succeeds leaves no error", async () => {
 		const h = await startHarness();
 		expect(h.runtime.documents.getState().loadError).toBeNull();
