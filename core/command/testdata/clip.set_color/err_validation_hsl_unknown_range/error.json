@@ -1,0 +1,19 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.hsl[0].range is \"pink\", which is not one of the accepted values.",
+  "hint": "Use one of: red, orange, yellow, green, cyan, blue, purple, magenta.",
+  "retryable": false,
+  "path": "args.hsl[0].range",
+  "details": {
+    "allowed": [
+      "red",
+      "orange",
+      "yellow",
+      "green",
+      "cyan",
+      "blue",
+      "purple",
+      "magenta"
+    ]
+  }
+}

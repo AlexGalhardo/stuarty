@@ -2448,7 +2448,7 @@ Changes the speed of a clip or audio item, constant or along a curve (TASK-0275)
 
 ### C.26 `clip.set_color` (phase A)
 
-Sets the colour adjustments of a clip and the lookup table (LUT) that grades it.
+Sets the colour adjustments of a clip, the lookup table (LUT) that grades it and its advanced colour: HSL bands, wheels and curves (SDD-004 §3.14).
 
 **Arguments**
 
@@ -2463,12 +2463,15 @@ Sets the colour adjustments of a clip and the lookup table (LUT) that grades it.
 | `hue` | number | no | unchanged | -180 to 180 degrees; added after BETA; rotates the colours about the grey axis |
 | `lut_asset` | asset id | no | unchanged | added after BETA (TASK-0254); a `lut` asset of the project; with no current table the intensity is 1, and giving another asset than the current one resets it to 1 |
 | `lut_intensity` | number | no | unchanged (1 for a new table) | 0 to 1, rounded to 3 decimals; 0 removes the table; given alone it needs a clip that already has a table |
+| `hsl` | list | no | unchanged | added after BETA (TASK-0254, NEW-09b); up to 8 `{range, hue?, saturation?, lightness?}` with `range` one of `red`, `orange`, `yellow`, `green`, `cyan`, `blue`, `purple`, `magenta` (once each) and the three values -1 to 1 (default 0; `hue` is a shift of up to 30 degrees each way). A given range replaces the stored band of that range; a band with all three at 0 removes it |
+| `wheels` | object | no | unchanged | added after BETA; `shadows`, `midtones`, `highlights`, each `{hue?, amount?, luma?}` with `hue` 0 to 360 degrees (0 red, 120 green, 240 blue), `amount` 0 to 1 and `luma` -1 to 1 (default 0). A given wheel replaces the stored one; `amount` 0 and `luma` 0 removes it |
+| `curves` | object | no | unchanged | added after BETA; `master`, `red`, `green`, `blue`, each a list of 2 to 8 `{x, y}` (0 to 1, rounded to 3 decimals) with `x` strictly increasing. A given channel replaces the stored curve; `[]` or the line (0,0)-(1,1) removes it |
 
-At least one of the eight is required.
+At least one of the eleven is required.
 
 **Preconditions.**
 
-1. At least one is present and in range; `lut_asset` has the form of an asset id; `lut_intensity` is not given alone for a clip with no table (`E_VALIDATION`).
+1. At least one is present and in range; the `hsl` ranges are known and unique and every curve is valid; `lut_asset` has the form of an asset id; `lut_intensity` is not given alone for a clip with no table (`E_VALIDATION`).
 2. The item and the `lut_asset` exist (`E_NOT_FOUND`).
 3. The item is a `clip`, and `lut_asset` is of kind `lut` (`E_TYPE_MISMATCH`).
 
@@ -2521,6 +2524,23 @@ At least one of the eight is required.
 - `err_validation_lut_asset_bad_id`
 - `err_not_found_lut_asset`
 - `err_type_mismatch_lut_asset_is_a_video`
+- `ok_hsl_bands_in_hue_order`
+- `ok_hsl_replaces_the_band_of_the_range`
+- `ok_hsl_neutral_band_removes_it`
+- `ok_wheels_set_midtones`
+- `ok_wheels_neutral_wheel_removes_it`
+- `ok_curves_set_red_and_blue`
+- `ok_curves_empty_list_removes_the_channel`
+- `ok_curves_identity_removes_the_channel`
+- `ok_grade_with_a_colour_adjustment`
+- `err_validation_hsl_range_twice`
+- `err_validation_hsl_unknown_range`
+- `err_validation_hsl_hue_above_1`
+- `err_validation_wheel_hue_above_360`
+- `err_validation_curve_one_point`
+- `err_validation_curve_x_not_increasing`
+- `err_validation_curve_nine_points`
+- `err_validation_curve_y_above_1`
 - `ok_hue_180`
 - `ok_new_defaults_remove_fields`
 - `ok_new_rounded_to_3_decimals`

@@ -1,0 +1,16 @@
+{
+  "op": "clip.set_color",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "hsl": [
+      {
+        "range": "blue",
+        "hue": -0.2
+      },
+      {
+        "range": "red",
+        "saturation": 0.4
+      }
+    ]
+  }
+}

@@ -222,6 +222,62 @@
       },
       "type": "object"
     },
+    "CurvePoint": {
+      "properties": {
+        "x": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "y": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "type": "object"
+    },
+    "Curves": {
+      "properties": {
+        "blue": {
+          "items": {
+            "$ref": "#/$defs/CurvePoint"
+          },
+          "maxItems": 8,
+          "minItems": 2,
+          "type": "array"
+        },
+        "green": {
+          "items": {
+            "$ref": "#/$defs/CurvePoint"
+          },
+          "maxItems": 8,
+          "minItems": 2,
+          "type": "array"
+        },
+        "master": {
+          "items": {
+            "$ref": "#/$defs/CurvePoint"
+          },
+          "maxItems": 8,
+          "minItems": 2,
+          "type": "array"
+        },
+        "red": {
+          "items": {
+            "$ref": "#/$defs/CurvePoint"
+          },
+          "maxItems": 8,
+          "minItems": 2,
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
     "Effect": {
       "properties": {
         "amount": {
@@ -300,6 +356,42 @@
       ],
       "type": "object"
     },
+    "HslBand": {
+      "properties": {
+        "hue": {
+          "maximum": 1,
+          "minimum": -1,
+          "type": "number"
+        },
+        "lightness": {
+          "maximum": 1,
+          "minimum": -1,
+          "type": "number"
+        },
+        "range": {
+          "enum": [
+            "red",
+            "orange",
+            "yellow",
+            "green",
+            "cyan",
+            "blue",
+            "purple",
+            "magenta"
+          ],
+          "type": "string"
+        },
+        "saturation": {
+          "maximum": 1,
+          "minimum": -1,
+          "type": "number"
+        }
+      },
+      "required": [
+        "range"
+      ],
+      "type": "object"
+    },
     "Item": {
       "properties": {
         "asset": {
@@ -346,6 +438,9 @@
         },
         "crop": {
           "$ref": "#/$defs/Crop"
+        },
+        "curves": {
+          "$ref": "#/$defs/Curves"
         },
         "denoise": {
           "maximum": 1,
@@ -419,6 +514,14 @@
         "height": {
           "exclusiveMinimum": 0,
           "type": "number"
+        },
+        "hsl": {
+          "items": {
+            "$ref": "#/$defs/HslBand"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "type": "array"
         },
         "hue": {
           "maximum": 180,
@@ -598,6 +701,9 @@
           "maximum": 4,
           "minimum": 0,
           "type": "number"
+        },
+        "wheels": {
+          "$ref": "#/$defs/Wheels"
         },
         "width": {
           "exclusiveMinimum": 0,
@@ -992,6 +1098,45 @@
         "duration",
         "kind"
       ],
+      "type": "object"
+    },
+    "Wheel": {
+      "properties": {
+        "amount": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "hue": {
+          "maximum": 360,
+          "minimum": 0,
+          "type": "number"
+        },
+        "luma": {
+          "maximum": 1,
+          "minimum": -1,
+          "type": "number"
+        }
+      },
+      "required": [
+        "amount",
+        "hue",
+        "luma"
+      ],
+      "type": "object"
+    },
+    "Wheels": {
+      "properties": {
+        "highlights": {
+          "$ref": "#/$defs/Wheel"
+        },
+        "midtones": {
+          "$ref": "#/$defs/Wheel"
+        },
+        "shadows": {
+          "$ref": "#/$defs/Wheel"
+        }
+      },
       "type": "object"
     },
     "Word": {

@@ -435,7 +435,8 @@ func (v *validator) itemFieldsForType(path, key string, it Item) {
 		bad("asset")
 	}
 	if it.Type != ItemClip &&
-		(it.Crop != nil || it.Lut != nil || it.Brightness != 0 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0 || it.AudioMuted) {
+		(it.Crop != nil || it.Lut != nil || it.Brightness != 0 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0 || it.AudioMuted ||
+			len(it.Hsl) > 0 || it.Wheels != nil || it.Curves != nil) {
 		bad("crop")
 	}
 	if it.Freeze &&
@@ -674,6 +675,9 @@ func (v *validator) clip(path, key string, it Item) {
 		v.add(VShape, path+".hue", key, "hue must be between -180 and 180")
 	}
 	v.lut(path, key, it)
+	if p, m := GradeProblem(it.Hsl, it.Wheels, it.Curves); m != "" {
+		v.add(VShape, path+"."+p, key, "%s", m)
+	}
 }
 
 // lut checks the lookup table reference of a clip: the asset is a lut asset of the project and the

@@ -81,6 +81,22 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `right` | `number` | no | min 0; max 1 |
 | `top` | `number` | no | min 0; max 1 |
 
+## CurvePoint
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `x` | `number` | yes | min 0; max 1 |
+| `y` | `number` | yes | min 0; max 1 |
+
+## Curves
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `blue` | array of `CurvePoint` | no | at least 2 items; at most 8 items |
+| `green` | array of `CurvePoint` | no | at least 2 items; at most 8 items |
+| `master` | array of `CurvePoint` | no | at least 2 items; at most 8 items |
+| `red` | array of `CurvePoint` | no | at least 2 items; at most 8 items |
+
 ## Effect
 
 | Property | Type | Required | Description |
@@ -102,6 +118,15 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `hash` | `string` | yes | pattern `^sha256:[0-9a-f]\{64\}$` |
 | `weight` | `integer` | yes | min 100; max 900 |
 
+## HslBand
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `hue` | `number` | no | min -1; max 1 |
+| `lightness` | `number` | no | min -1; max 1 |
+| `range` | `red`, `orange`, `yellow`, `green`, `cyan`, `blue`, `purple`, `magenta` | yes |  |
+| `saturation` | `number` | no | min -1; max 1 |
+
 ## Item
 
 | Property | Type | Required | Description |
@@ -115,6 +140,7 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `chroma_key` | `ChromaKey` | no |  |
 | `contrast` | `number` | no | min 0; max 2; default `1` |
 | `crop` | `Crop` | no |  |
+| `curves` | `Curves` | no |  |
 | `denoise` | `number` | no | min 0; max 1 |
 | `disabled` | `boolean` | no |  |
 | `duration` | `integer` | yes | min 1 |
@@ -129,6 +155,7 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `flip_y` | `boolean` | no |  |
 | `freeze` | `boolean` | no |  |
 | `height` | `number` | no |  |
+| `hsl` | array of `HslBand` | no | at least 1 items; at most 8 items |
 | `hue` | `number` | no | min -180; max 180 |
 | `id` | `string` | yes | pattern `^itm_[0-9a-hjkmnp-tv-z]\{10\}$` |
 | `keyframes` | `object` | no |  |
@@ -162,6 +189,7 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `type` | `clip`, `audio`, `text`, `caption`, `shape` | yes |  |
 | `voice` | `clear`, `warm`, `deep`, `bright`, `radio` | no |  |
 | `volume` | `number` | no | min 0; max 4; default `1` |
+| `wheels` | `Wheels` | no |  |
 | `width` | `number` | no |  |
 | `words` | array of `Word` | no | at least 1 items; at most 60 items |
 | `x` | `number` | no |  |
@@ -274,6 +302,22 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `direction` | `left`, `right`, `up`, `down` | no |  |
 | `duration` | `integer` | yes | min 1 |
 | `kind` | `fade`, `slide_left`, `slide_right`, `slide_up`, `slide_down`, `zoom`, `whip`, `dip`, `wipe` | yes |  |
+
+## Wheel
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `amount` | `number` | yes | min 0; max 1 |
+| `hue` | `number` | yes | min 0; max 360 |
+| `luma` | `number` | yes | min -1; max 1 |
+
+## Wheels
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `highlights` | `Wheel` | no |  |
+| `midtones` | `Wheel` | no |  |
+| `shadows` | `Wheel` | no |  |
 
 ## Word
 

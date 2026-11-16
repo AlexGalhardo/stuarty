@@ -196,3 +196,29 @@ func TestLayerCarriesChromaKey(t *testing.T) {
 		t.Error("an item with no key must give none")
 	}
 }
+
+func TestLayerCarriesTheGrade(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	it := clip("itm_g", trkBottom, 0, 10)
+	it.Hsl = []timeline.HslBand{{Range: "red", Hue: 0.2}}
+	it.Curves = &timeline.Curves{Master: []timeline.CurvePoint{{X: 0, Y: 0}, {X: 0.5, Y: 0.4}, {X: 1, Y: 1}}}
+	put(d, it)
+
+	if l := Frame(d, 0).Layers[0]; l.Grade == nil || len(l.Grade.Hsl) != 1 || l.Grade.Curves == nil ||
+		l.Grade.Wheels != nil {
+		t.Errorf("layer grade %+v", l.Grade)
+	}
+
+	if w := Window(d, 0, 10); len(w.Layers) != 1 || w.Layers[0].Grade == nil || len(w.Layers[0].Grade.Hsl) != 1 {
+		t.Errorf("window layer lost the grade: %+v", w.Layers)
+	}
+
+	plain := newDoc()
+	put(plain, clip("itm_p", trkBottom, 0, 10))
+
+	if Frame(plain, 0).Layers[0].Grade != nil {
+		t.Error("an item with no grade must give none")
+	}
+}

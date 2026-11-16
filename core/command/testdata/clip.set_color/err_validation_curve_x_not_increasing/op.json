@@ -1,0 +1,18 @@
+{
+  "op": "clip.set_color",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "curves": {
+      "green": [
+        {
+          "x": 0.5,
+          "y": 0.1
+        },
+        {
+          "x": 0.5,
+          "y": 0.9
+        }
+      ]
+    }
+  }
+}

@@ -1270,3 +1270,70 @@ func TestRoundTripKeepsMagnetAndReportsLutAndFreezeOnImport(t *testing.T) {
 		t.Errorf("the magnet of the track was not restored: %+v", ops)
 	}
 }
+
+func TestRoundTripKeepsTheAdvancedColour(t *testing.T) {
+	d := sampleDoc()
+	c1 := d.Items["itm_c000000001"]
+	c1.Hsl = []timeline.HslBand{{Range: "red", Hue: 0.1}, {Range: "blue", Saturation: -0.4, Lightness: 0.2}}
+	c1.Wheels = &timeline.Wheels{Shadows: &timeline.Wheel{Hue: 240, Amount: 0.3, Luma: -0.1}}
+	c1.Curves = &timeline.Curves{Master: []timeline.CurvePoint{{X: 0, Y: 0}, {X: 0.5, Y: 0.4}, {X: 1, Y: 1}}}
+	d.Items[c1.ID] = c1
+
+	first, lost, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	found := false
+
+	for _, l := range lost {
+		found = found || l.Feature == "advanced colour"
+	}
+
+	if !found {
+		t.Errorf("export did not list the advanced colour as lost to other tools: %+v", lost)
+	}
+
+	im, err := Parse(first)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	doc := build(t, im, newDoc(im.FPS))
+
+	var got timeline.Item
+
+	for _, it := range doc.Items {
+		if it.Name == "intro" {
+			got = it
+		}
+	}
+
+	if len(got.Hsl) != 2 ||
+		!reflect.DeepEqual(got.Hsl[1], c1.Hsl[1]) ||
+		got.Wheels == nil ||
+		!reflect.DeepEqual(got.Wheels.Shadows, c1.Wheels.Shadows) ||
+		got.Curves == nil ||
+		len(got.Curves.Master) != 3 ||
+		!reflect.DeepEqual(got.Curves.Master[1], c1.Curves.Master[1]) {
+		t.Errorf("the advanced colour did not come back: %+v", got)
+	}
+}
+
+func TestImportReportsABadAdvancedColour(t *testing.T) {
+	p := &propReader{
+		props: map[string]any{
+			"hsl":    []any{map[string]any{"range": "pink"}},
+			"curves": map[string]any{"red": []any{map[string]any{"x": 0.0, "y": 0.0}}},
+		},
+		lose: func(string) {},
+	}
+
+	var lost []string
+
+	p.lose = func(f string) { lost = append(lost, f) }
+
+	if got := gradeArgs(p); len(got) != 0 || len(lost) != 2 {
+		t.Errorf("got %v and lost %v, want nothing kept and two losses", got, lost)
+	}
+}

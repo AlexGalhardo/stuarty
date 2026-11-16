@@ -68,6 +68,7 @@ export interface Item {
   chroma_key?: ChromaKey;
   contrast?: number;
   crop?: Crop;
+  curves?: Curves;
   denoise?: number;
   disabled?: boolean;
   duration: number;
@@ -92,6 +93,19 @@ export interface Item {
   flip_y?: boolean;
   freeze?: boolean;
   height?: number;
+  /**
+   * @minItems 1
+   * @maxItems 8
+   */
+  hsl?:
+    | [HslBand]
+    | [HslBand, HslBand]
+    | [HslBand, HslBand, HslBand]
+    | [HslBand, HslBand, HslBand, HslBand]
+    | [HslBand, HslBand, HslBand, HslBand, HslBand]
+    | [HslBand, HslBand, HslBand, HslBand, HslBand, HslBand]
+    | [HslBand, HslBand, HslBand, HslBand, HslBand, HslBand, HslBand]
+    | [HslBand, HslBand, HslBand, HslBand, HslBand, HslBand, HslBand, HslBand];
   hue?: number;
   id: string;
   keyframes?: {
@@ -144,6 +158,7 @@ export interface Item {
   type: "clip" | "audio" | "text" | "caption" | "shape";
   voice?: "clear" | "warm" | "deep" | "bright" | "radio";
   volume?: number;
+  wheels?: Wheels;
   width?: number;
   /**
    * @minItems 1
@@ -165,6 +180,60 @@ export interface Crop {
   right?: number;
   top?: number;
 }
+export interface Curves {
+  /**
+   * @minItems 2
+   * @maxItems 8
+   */
+  blue?:
+    | [CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint];
+  /**
+   * @minItems 2
+   * @maxItems 8
+   */
+  green?:
+    | [CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint];
+  /**
+   * @minItems 2
+   * @maxItems 8
+   */
+  master?:
+    | [CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint];
+  /**
+   * @minItems 2
+   * @maxItems 8
+   */
+  red?:
+    | [CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint]
+    | [CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint, CurvePoint];
+}
+export interface CurvePoint {
+  x: number;
+  y: number;
+}
 export interface Effect {
   amount?: number;
   angle?: number;
@@ -175,6 +244,12 @@ export interface Effect {
   softness?: number;
   speed?: number;
   threshold?: number;
+}
+export interface HslBand {
+  hue?: number;
+  lightness?: number;
+  range: "red" | "orange" | "yellow" | "green" | "cyan" | "blue" | "purple" | "magenta";
+  saturation?: number;
 }
 export interface Keyframe {
   easing?: "linear" | "ease_in" | "ease_out" | "ease_in_out" | "hold";
@@ -242,6 +317,16 @@ export interface Transition {
   direction?: "left" | "right" | "up" | "down";
   duration: number;
   kind: "fade" | "slide_left" | "slide_right" | "slide_up" | "slide_down" | "zoom" | "whip" | "dip" | "wipe";
+}
+export interface Wheels {
+  highlights?: Wheel;
+  midtones?: Wheel;
+  shadows?: Wheel;
+}
+export interface Wheel {
+  amount: number;
+  hue: number;
+  luma: number;
 }
 export interface Word {
   duration: number;

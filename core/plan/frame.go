@@ -220,6 +220,9 @@ func (p *planner) mediaLayer(l Layer, it *timeline.Item, r int, a animated) (Lay
 	l.SourceFrame = sourceFrame(it, &asset, p.doc.Settings.FPS, r)
 	l.Crop = Rect{X: round3(crop.X), Y: round3(crop.Y), W: round3(crop.W), H: round3(crop.H)}
 	l.ColorMatrix = colorMatrix(it)
+	if len(it.Hsl) > 0 || it.Wheels != nil || it.Curves != nil {
+		l.Grade = &GradeSpec{Hsl: it.Hsl, Wheels: it.Wheels, Curves: it.Curves}
+	}
 	l.CX, l.CY = round3(a.x), round3(a.y)
 	l.W, l.H = round3(crop.W*b*a.scale), round3(crop.H*b*a.scale)
 

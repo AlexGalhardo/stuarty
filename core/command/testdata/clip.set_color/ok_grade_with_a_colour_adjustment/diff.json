@@ -1,0 +1,22 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "contrast": [
+        1,
+        1.1
+      ],
+      "wheels": [
+        null,
+        {
+          "highlights": {
+            "amount": 0.2,
+            "hue": 60,
+            "luma": 0
+          }
+        }
+      ]
+    }
+  }
+]

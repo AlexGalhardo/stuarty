@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.hsl: range red appears twice.",
+  "hint": "Send one band per range.",
+  "retryable": false,
+  "path": "args.hsl[1].range"
+}

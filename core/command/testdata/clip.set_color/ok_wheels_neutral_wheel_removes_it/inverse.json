@@ -1,0 +1,16 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "wheels": {
+        "shadows": {
+          "amount": 0.3,
+          "hue": 240,
+          "luma": 0
+        }
+      }
+    }
+  }
+]

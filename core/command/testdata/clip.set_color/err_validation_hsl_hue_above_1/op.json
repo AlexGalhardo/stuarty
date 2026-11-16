@@ -1,0 +1,12 @@
+{
+  "op": "clip.set_color",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "hsl": [
+      {
+        "range": "red",
+        "hue": 1.5
+      }
+    ]
+  }
+}

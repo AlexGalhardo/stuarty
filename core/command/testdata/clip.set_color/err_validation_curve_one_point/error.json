@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.curves.master: a curve has 2 to 8 points, got 1.",
+  "hint": "Send 2 to 8 points with x strictly increasing and every value from 0 to 1.",
+  "retryable": false,
+  "path": "args.curves.master"
+}
