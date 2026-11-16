@@ -207,6 +207,7 @@
         "speed_badge": "Velocidade {speed}",
         "slot_badge": "Espaço do modelo: {name}",
         "asset_missing": "A mídia original deste item não está no projeto",
+        "link_badge": "Vinculado: move e apara junto com o grupo",
         "disabled_badge": "Desativado"
       },
       "loading": "Carregando o projeto",
@@ -326,6 +327,9 @@
         "split_caption": "Dividir a legenda aqui",
         "merge_captions": "Mesclar legendas",
         "crossfade": "Transição cruzada",
+        "link": "Vincular itens",
+        "unlink": "Desvincular itens",
+        "extract_audio": "Extrair o áudio",
         "enable": "Ativar",
         "disable": "Desativar"
       },
@@ -716,6 +720,8 @@
           "add_text": "Adicionar texto",
           "rename": "Renomear",
           "toggle_enabled": "Ativar ou desativar os itens selecionados",
+          "link": "Vincular ou desvincular os itens selecionados",
+          "extract_audio": "Extrair o áudio dos clipes selecionados",
           "toggle_snap": "Ativar ou desativar o encaixe",
           "keyframe_panel": "Mostrar ou ocultar os keyframes do item selecionado",
           "preview_zoom": "Ajustar a prévia, aumentar o zoom, diminuir o zoom",

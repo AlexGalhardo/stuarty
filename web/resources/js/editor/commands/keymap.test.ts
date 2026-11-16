@@ -67,6 +67,10 @@ describe("editShortcut", () => {
 		expect(edit("D", { metaKey: true })).toBe("duplicate");
 		expect(edit("F2")).toBe("rename");
 		expect(edit("v")).toBe("toggle_enabled");
+		expect(edit("~", { shiftKey: true })).toBe("toggle_link");
+		expect(edit("S", { ctrlKey: true, shiftKey: true })).toBe("extract_audio");
+		expect(edit("s", { metaKey: true, shiftKey: true })).toBe("extract_audio");
+		expect(edit("s", { ctrlKey: true })).toBeNull();
 		expect(edit("V", { shiftKey: true })).toBeNull();
 		expect(edit("v", { ctrlKey: true })).toBeNull();
 		expect(edit("d")).toBeNull();
