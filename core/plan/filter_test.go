@@ -148,6 +148,30 @@ func TestLayerCarriesMask(t *testing.T) {
 	}
 }
 
+func TestLayerCarriesFlip(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	it := clip("itm_f", trkBottom, 0, 10)
+	it.FlipX, it.FlipY = true, true
+	put(d, it)
+
+	if l := Frame(d, 0).Layers[0]; !l.FlipX || !l.FlipY {
+		t.Errorf("layer flip %v %v, want both", l.FlipX, l.FlipY)
+	}
+
+	if w := Window(d, 0, 10); len(w.Layers) != 1 || !w.Layers[0].FlipX || !w.Layers[0].FlipY {
+		t.Errorf("window layer lost the flip: %+v", w.Layers)
+	}
+
+	plain := newDoc()
+	put(plain, clip("itm_p", trkBottom, 0, 10))
+
+	if l := Frame(plain, 0).Layers[0]; l.FlipX || l.FlipY {
+		t.Error("an item with no flip must give none")
+	}
+}
+
 func TestLayerCarriesChromaKey(t *testing.T) {
 	t.Parallel()
 

@@ -373,6 +373,14 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 
 	clip.Blend = ""
 
+	clip.FlipX = true
+
+	if f := extraFields(fps, &clip); f["flip_x"] != "true" || f["flip_y"] != "" {
+		t.Errorf("flip = %q %q", f["flip_x"], f["flip_y"])
+	}
+
+	clip.FlipX = false
+
 	clip.Mask = &timeline.Mask{Shape: "ellipse", X: 0.1, Y: 0.1, Width: 0.5, Height: 0.5, Feather: 8}
 
 	if m := extraFields(fps, &clip)["mask"]; !strings.Contains(m, `"shape":"ellipse"`) ||

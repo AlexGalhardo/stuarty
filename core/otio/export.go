@@ -271,6 +271,14 @@ func clipMetadata(it *timeline.Item) object {
 
 	maskProps(it, props)
 
+	if it.FlipX {
+		props["flip_x"] = true
+	}
+
+	if it.FlipY {
+		props["flip_y"] = true
+	}
+
 	if it.X != nil {
 		props["x"] = *it.X
 	}
@@ -409,6 +417,14 @@ func textMetadata(it *timeline.Item) object {
 	}
 
 	maskProps(it, props)
+
+	if it.FlipX {
+		props["flip_x"] = true
+	}
+
+	if it.FlipY {
+		props["flip_y"] = true
+	}
 
 	if len(props) > 0 {
 		v["properties"] = props

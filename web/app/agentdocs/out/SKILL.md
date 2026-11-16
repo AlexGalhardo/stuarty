@@ -19,7 +19,7 @@ Check with `project:list`. The workspace is `~/.vukem-video` or `$VUKEM_VIDEO_HO
 3. Apply: `edit --project <id> --base <rev> ...`; read the diff.
 4. `lint --project <id>`. Errors block export.
 5. Look only if text cannot: `view --at 1s`, then `view --mode sheet`.
-6. `export --project <id>`, then check `lint` and the `checks` of the job.
+6. `export --project <id>`, then check the job `checks`.
 
 ## Rules that prevent mistakes
 
@@ -31,12 +31,12 @@ Check with `project:list`. The workspace is `~/.vukem-video` or `$VUKEM_VIDEO_HO
 
 ## Command reference
 
-Operations of `edit` (`namespace.action`); a star marks those added after the Prototype. `command_help [name]` lists them or shows arguments. `asset.remove` and `font.*` need the media scope.
+Operations of `edit`; a star marks those added after the Prototype. `command_help [name]` lists them or shows arguments. `asset.remove` and `font.*` need the media scope.
 
 - `asset`: remove*
 - `audio`: add*, duck*, mark_beats*
 - `caption`: add, edit_word*, from_transcript*, merge*, retime_from_clip*, set_breaks*, set_style*, set_words*, split*
-- `clip`: add, remove_silences*, set_blend*, set_blur*, set_chroma_key*, set_color*, set_filter*, set_framing*, set_mask*, set_speed*
+- `clip`: add, remove_silences*, set_blend*, set_blur*, set_chroma_key*, set_color*, set_filter*, set_flip*, set_framing*, set_mask*, set_speed*
 - `font`: add*, remove*
 - `item`: crossfade*, delete, duplicate*, move, rename*, set_audio*, set_transform*, set_transition*, slip*, split, trim
 - `keyframe`: clear*, remove*, set*
@@ -128,7 +128,7 @@ Lint rules (`!` blocks export): code, severity, what to do.
 
 ## Errors and recovery
 
-Exit codes: 0 success; 1 a failure a retry will not fix; 2 retryable or a `--wait` timeout. A conflict (`E_REVISION_CONFLICT`) has the changes since your revision in `details.diff`: re-plan, send again. `undo` reverts your latest step.
+Exit codes: 0 success; 1 a failure a retry will not fix; 2 retryable or a `--wait` timeout. `E_REVISION_CONFLICT` has the changes since your revision in `details.diff`: re-plan, resend. `undo` reverts your latest step.
 
 Code, HTTP status, usual fix; `retry` marks exit 2.
 

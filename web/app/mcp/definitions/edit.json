@@ -1,6 +1,6 @@
 {
  "name": "edit",
- "description": "Change a project. Send a batch of operations; it is applied all or nothing as one undo step. base_revision is the revision you read last. Times are strings with a unit. Use command_help for an operation's arguments. Returns the new revision, a diff and new lint findings. dry_run=true checks without saving. idempotency_key makes a retry safe.",
+ "description": "Change a project. Send a batch of operations, applied atomically as one undo step. base_revision: the revision you read last. Times are strings with a unit. Use command_help for arguments. Returns the new revision, a diff, new lint findings. dry_run=true only checks. idempotency_key makes retries safe.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -54,6 +54,7 @@
         "clip.set_chroma_key",
         "clip.set_blend",
         "clip.set_mask",
+        "clip.set_flip",
         "marker.add",
         "marker.set",
         "marker.remove",

@@ -1131,6 +1131,12 @@
             ],
             "type": "string"
           },
+          "flip_x": {
+            "type": "boolean"
+          },
+          "flip_y": {
+            "type": "boolean"
+          },
           "height": {
             "format": "double",
             "type": "number"
@@ -1947,6 +1953,7 @@
               "clip.set_chroma_key",
               "clip.set_color",
               "clip.set_filter",
+              "clip.set_flip",
               "clip.set_framing",
               "clip.set_mask",
               "clip.set_speed",
@@ -2057,6 +2064,9 @@
           },
           "clip.set_filter": {
             "$ref": "#/components/schemas/args.clip.set_filter"
+          },
+          "clip.set_flip": {
+            "$ref": "#/components/schemas/args.clip.set_flip"
           },
           "clip.set_framing": {
             "$ref": "#/components/schemas/args.clip.set_framing"
@@ -3433,6 +3443,12 @@
           "first": {
             "type": "integer"
           },
+          "flip_x": {
+            "type": "boolean"
+          },
+          "flip_y": {
+            "type": "boolean"
+          },
           "h": {},
           "item": {
             "type": "string"
@@ -4527,6 +4543,27 @@
           "item_id": {
             "description": "A clip.",
             "type": "string"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.clip.set_flip": {
+        "additionalProperties": false,
+        "properties": {
+          "horizontal": {
+            "description": "Mirror left to right.",
+            "type": "boolean"
+          },
+          "item_id": {
+            "description": "A visual item.",
+            "type": "string"
+          },
+          "vertical": {
+            "description": "Mirror top to bottom.",
+            "type": "boolean"
           }
         },
         "required": [

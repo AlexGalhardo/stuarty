@@ -178,6 +178,11 @@ type Item struct {
 	// Absent means "normal".
 	Blend string `json:"blend,omitempty" enum:"normal,multiply,screen,overlay,add"`
 
+	// Visual items, optional and additive (SDD-001 §3.4): mirror the item across its own vertical
+	// (FlipX) or horizontal (FlipY) axis. Absent means not mirrored.
+	FlipX bool `json:"flip_x,omitempty"`
+	FlipY bool `json:"flip_y,omitempty"`
+
 	// Visual items, optional and additive (SDD-001 §3.4): the shape that limits where the item is drawn.
 	Mask *Mask `json:"mask,omitempty"`
 

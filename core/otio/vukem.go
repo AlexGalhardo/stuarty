@@ -151,6 +151,17 @@ func itemOps(props map[string]any, mode itemMode, start, dur int, used map[strin
 		if m := mask(p); m != nil {
 			add("clip.set_mask", map[string]any{"mask": m})
 		}
+
+		flip := map[string]any{}
+		if f, _ := props["flip_x"].(bool); f {
+			flip["horizontal"] = true
+		}
+
+		if f, _ := props["flip_y"].(bool); f {
+			flip["vertical"] = true
+		}
+
+		add("clip.set_flip", flip)
 	}
 
 	if mode == modeClip {

@@ -67,6 +67,11 @@ type Layer struct {
 	// Mask limits where the layer is drawn (SDD-004 §3.9); nil means no mask.
 	Mask *MaskSpec `json:"mask,omitempty"`
 
+	// FlipX and FlipY mirror the drawn source across the layer's own vertical or horizontal axis
+	// (SDD-004 §3.10); the quadrilateral and its rotation are the same.
+	FlipX bool `json:"flip_x,omitempty"`
+	FlipY bool `json:"flip_y,omitempty"`
+
 	CX       float64 `json:"cx"`
 	CY       float64 `json:"cy"`
 	W        float64 `json:"w"` // drawn size before rotation

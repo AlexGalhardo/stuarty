@@ -134,6 +134,8 @@ func (p *planner) layer(it *timeline.Item, r int) (Layer, bool) {
 		l.Blend = it.Blend
 	}
 
+	l.FlipX, l.FlipY = it.FlipX, it.FlipY
+
 	if m := it.Mask; m != nil {
 		l.Mask = &MaskSpec{
 			Shape: m.Shape, X: round3(m.X), Y: round3(m.Y), Width: round3(m.Width), Height: round3(m.Height),

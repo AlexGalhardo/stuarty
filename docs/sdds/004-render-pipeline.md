@@ -276,6 +276,10 @@ The coverage multiplies the pixel as the very last step of the layer's own pixel
 
 Golden cases (`engine/export/testdata/golden/mask-rect`, `mask-ellipse-feather`, `mask-invert-rotated`: a clip over another clip, with a hard rectangle, with a feathered ellipse, and inverted on a layer rotated by 20 degrees with scale 0.8) must give 0 differing bytes between 1 and 8 bands and between the Go compositor and the Rust renderer.
 
+### 3.10 Flip
+
+Added after BETA (TASK-0233). An item with `flip_x` or `flip_y` (SDD-001 §3.4) gives its layer `FlipX` or `FlipY` (absent when false; the window carries them once per layer, `flip_x` and `flip_y`). Both are constant over the item. A flip mirrors the picture of the layer inside its own unrotated `w x h` rectangle: with `FlipX` the pixel at the local position `(lx, ly)` takes what the unflipped layer has at `(w - lx, ly)`, with `FlipY` the one at `(lx, h - ly)`. The quadrilateral (`CX`, `CY`, `W`, `H`, `Rotation`) is the same, so the item stays where it is and turns around its own axes; rotation is applied after the mirror, as for any layer. The mask (section 3.9) and the chroma key keep the item's frame and are not mirrored. The compositors do not draw it yet; the exact sampling arithmetic and its golden cases are defined with that change.
+
 ## 4. Layout of text, captions and shapes
 
 ### 4.1 Safe area

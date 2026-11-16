@@ -463,6 +463,9 @@
           "set_mask": {
             "title": "Definir máscara do clipe"
           },
+          "set_flip": {
+            "title": "Espelhar clipe"
+          },
           "set_chroma_key": {
             "title": "Definir chroma key do clipe"
           },

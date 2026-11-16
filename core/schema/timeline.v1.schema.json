@@ -331,6 +331,12 @@
           ],
           "type": "string"
         },
+        "flip_x": {
+          "type": "boolean"
+        },
+        "flip_y": {
+          "type": "boolean"
+        },
         "height": {
           "exclusiveMinimum": 0,
           "type": "number"
