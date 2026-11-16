@@ -364,8 +364,9 @@ Conventional Commits 1.0 in English (`docs/tooling.md:57-74`, vukem `.claude/rul
 | `e2e` | `web/e2e/`, the browser tests |
 | `upgrade` | the upgrade test of workspaces written by older releases (`scripts/upgrade-test.sh`, `upgrade.yml`) |
 | `servicetest` | `web/app/servicetest`, the shared test helpers of the service |
+| `auth` | `web/app/auth`, sessions, launch codes and network-mode users |
 
-On 2026-11-16 the 18 scopes the project already used in its commits (`desktop`, `http`, `ffmpeg`, `renderer`, `docker`, `library`, `events`, `cmd`, `contract`, `pathguard`, `remote`, `timeval`, `store`, `notices`, `projects`, `preview`, `owner`, `e2e`) were added, because the commits were already on the release branch and cannot be reworded without a force push. For the same reason `upgrade` and `servicetest` were added on 2026-11-16 for release v0.21.0. The subject length limit of 100 characters is unchanged; three older subjects are known exceptions (`af3252cc`, `5cf1eba3`, and `5144ea0d` of release v0.21.0).
+On 2026-11-16 the 18 scopes the project already used in its commits (`desktop`, `http`, `ffmpeg`, `renderer`, `docker`, `library`, `events`, `cmd`, `contract`, `pathguard`, `remote`, `timeval`, `store`, `notices`, `projects`, `preview`, `owner`, `e2e`) were added, because the commits were already on the release branch and cannot be reworded without a force push. For the same reason `upgrade`, `servicetest` and `auth` were added on 2026-11-16 for release v0.21.0. The subject length limit of 100 characters is unchanged; three older subjects are known exceptions (`af3252cc`, `5cf1eba3`, and `5144ea0d` of release v0.21.0).
 
 ### 6.3 Enforcement
 
