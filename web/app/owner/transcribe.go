@@ -96,6 +96,39 @@ func (p *whisperProvider) resolve() (string, []transcribe.ManifestEntry) {
 	return p.model, p.entries
 }
 
+// InstalledModels are the models whose file is installed and verified now (service.ModelPicker).
+func (p *whisperProvider) InstalledModels() []string {
+	var out []string
+
+	for _, m := range transcribe.Models {
+		entries, ok := p.manifest.For("whisper", m, runtime.GOOS, runtime.GOARCH)
+		if !ok {
+			continue
+		}
+
+		for i := range entries {
+			if entries[i].Kind != transcribe.KindModel {
+				continue
+			}
+
+			if _, found := service.VerifiedTool(p.dir, entries[i].Name, entries[i].Kind, entries[i].Model); found {
+				out = append(out, m)
+			}
+		}
+	}
+
+	return out
+}
+
+// WithModel is this provider bound to one model by name, as if VUKEM_VIDEO_WHISPER_MODEL named it.
+func (p *whisperProvider) WithModel(model string) transcribe.Provider {
+	entries, _ := p.manifest.For("whisper", model, runtime.GOOS, runtime.GOARCH)
+	bound := *p
+	bound.model, bound.explicit, bound.entries = model, true, entries
+
+	return &bound
+}
+
 func (p *whisperProvider) Name() string  { return transcribe.ProviderWhisper }
 func (p *whisperProvider) Model() string { m, _ := p.resolve(); return m }
 

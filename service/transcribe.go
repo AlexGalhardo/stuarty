@@ -29,6 +29,9 @@ const transcriptSampleRate = 48000
 type TranscribeArgs struct {
 	AssetID  string `json:"asset_id"`
 	Language string `json:"language,omitempty"` // BCP 47 code or "auto"; default "auto"
+	// Model is the name of an installed whisper model (tiny, base, small, large-v3-turbo); empty is the
+	// workspace default. Only a name, never a path (VV-007).
+	Model string `json:"model,omitempty"`
 }
 
 // TranscribeResult is the result of a finished transcription job.
@@ -43,6 +46,7 @@ type TranscribeResult struct {
 type transcribeInput struct {
 	AssetID  string `json:"asset_id"`
 	Language string `json:"language"`
+	Model    string `json:"model,omitempty"`
 	Key      string `json:"key"`
 }
 
@@ -76,6 +80,52 @@ func decodeTranscribeArgs(raw json.RawMessage) (TranscribeArgs, *Error) {
 	}
 
 	return a, nil
+}
+
+// ModelPicker is implemented by a provider that can run more than one model, so a job may name
+// one of the installed models (VV-007).
+type ModelPicker interface {
+	// InstalledModels are the names of the models installed and verified now.
+	InstalledModels() []string
+	// WithModel is the provider bound to one model, installed or not.
+	WithModel(model string) transcribe.Provider
+}
+
+// providerFor is the provider a job runs on: the default one, or the one bound to the model the job
+// named. A model name that is not installed is a validation error that lists the installed ones.
+func (s *svc) providerFor(model string) (transcribe.Provider, *Error) {
+	if model == "" {
+		return s.transcriber, nil
+	}
+
+	picker, ok := s.transcriber.(ModelPicker)
+	if !ok {
+		return nil, newError(command.CodeValidation, "the transcription provider %s does not take a model.",
+			s.transcriber.Name()).withPath("args.model").withHint("omit args.model")
+	}
+
+	installed := picker.InstalledModels()
+	if !slices.Contains(installed, model) {
+		hint := "install it with: vukem-video tools:install whisper --model " + model
+		if slices.Contains(transcribe.Models, model) {
+			hint = fmt.Sprintf("installed models: %s; or %s", listOrNone(installed), hint)
+		} else {
+			hint = "use one of the installed models: " + listOrNone(installed)
+		}
+
+		return nil, newError(command.CodeValidation, "the model %q is not installed.", model).
+			withPath("args.model").withHint("%s", hint).withDetail("installed", installed)
+	}
+
+	return picker.WithModel(model), nil
+}
+
+func listOrNone(models []string) string {
+	if len(models) == 0 {
+		return "none"
+	}
+
+	return strings.Join(models, ", ")
 }
 
 // unavailable is E_TRANSCRIBE_UNAVAILABLE for a provider that is not installed:
@@ -174,7 +224,12 @@ func (s *svc) startTranscribe(ctx context.Context, c Caller, req JobStartRequest
 			withHint("install the local helper with tools:install, or configure an API provider")
 	}
 
-	key := transcribe.ArtifactKey(pa.AssetHash, s.transcriber.Name(), s.transcriber.Model(), args.Language)
+	provider, perr := s.providerFor(args.Model)
+	if perr != nil {
+		return nil, perr
+	}
+
+	key := transcribe.ArtifactKey(pa.AssetHash, provider.Name(), provider.Model(), args.Language)
 
 	arts, err := s.store.Assets().Artifacts(ctx, pa.AssetHash)
 	if err != nil {
@@ -186,8 +241,8 @@ func (s *svc) startTranscribe(ctx context.Context, c Caller, req JobStartRequest
 	})
 
 	if !stored {
-		if cerr := s.transcriber.Check(ctx); cerr != nil {
-			return nil, unavailable(cerr, s.transcriber.Model())
+		if cerr := provider.Check(ctx); cerr != nil {
+			return nil, unavailable(cerr, provider.Model())
 		}
 
 		if derr := s.checkDisk(); derr != nil && !req.DryRun {
@@ -197,8 +252,15 @@ func (s *svc) startTranscribe(ctx context.Context, c Caller, req JobStartRequest
 
 	projectID, hash := project.ID, pa.AssetHash
 	job := JobRow{
-		ID: s.newIDs("job"), Kind: JobTranscribe, ProjectID: &projectID, AssetHash: &hash, Actor: c.Actor,
-		State: JobQueued, Input: marshalOrNull(transcribeInput{AssetID: pa.AssetID, Language: args.Language, Key: key}),
+		ID:        s.newIDs("job"),
+		Kind:      JobTranscribe,
+		ProjectID: &projectID,
+		AssetHash: &hash,
+		Actor:     c.Actor,
+		State:     JobQueued,
+		Input: marshalOrNull(
+			transcribeInput{AssetID: pa.AssetID, Language: args.Language, Model: args.Model, Key: key},
+		),
 	}
 
 	if req.DryRun {
@@ -270,6 +332,11 @@ func (s *svc) runTranscribe(ctx context.Context, job *JobRow, pw *progress) (jso
 		return nil, internalError()
 	}
 
+	provider, perr := s.providerFor(in.Model)
+	if perr != nil {
+		return nil, perr
+	}
+
 	hash := *job.AssetHash
 	hexHash := strings.TrimPrefix(hash, "sha256:")
 
@@ -286,8 +353,8 @@ func (s *svc) runTranscribe(ctx context.Context, job *JobRow, pw *progress) (jso
 
 	pw.report(ctx, 0.02, "checking the provider")
 
-	if cerr := s.transcriber.Check(ctx); cerr != nil {
-		return nil, unavailable(cerr, s.transcriber.Model())
+	if cerr := provider.Check(ctx); cerr != nil {
+		return nil, unavailable(cerr, provider.Model())
 	}
 
 	if derr := s.checkDisk(); derr != nil {
@@ -325,7 +392,7 @@ func (s *svc) runTranscribe(ctx context.Context, job *JobRow, pw *progress) (jso
 
 	pw.report(ctx, 0.06, "transcribing")
 
-	raw, terr := s.transcriber.Transcribe(ctx, transcribe.Input{
+	raw, terr := provider.Transcribe(ctx, transcribe.Input{
 		Audio: audio, InputDirs: []string{filepath.Join(s.workspace, "artifacts", hexHash)},
 		Duration: time.Duration(audioMS) * time.Millisecond, Language: in.Language, Silences: silences, WorkDir: runDir,
 	}, func(done, total time.Duration) {
@@ -345,9 +412,9 @@ func (s *svc) runTranscribe(ctx context.Context, job *JobRow, pw *progress) (jso
 		Version:           1,
 		Untrusted:         true,
 		Asset:             hash,
-		Provider:          s.transcriber.Name(),
+		Provider:          provider.Name(),
 		ProviderVersion:   raw.Info["provider_version"],
-		Model:             s.transcriber.Model(),
+		Model:             provider.Model(),
 		ModelSHA256:       raw.Info["model_sha256"],
 		Language:          tr.Language,
 		LanguageRequested: in.Language,

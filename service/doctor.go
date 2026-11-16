@@ -503,6 +503,10 @@ func (s *svc) toolCheck(kind, goos, goarch string) DoctorCheck {
 		if _, found := VerifiedTool(s.tools.Dir, e.Name, e.Kind, e.Model); found {
 			check.OK, check.Detail = true, "installed, version "+e.Version
 
+			if kind == transcribe.KindModel {
+				check.Detail += ", model " + e.Model
+			}
+
 			return check
 		}
 

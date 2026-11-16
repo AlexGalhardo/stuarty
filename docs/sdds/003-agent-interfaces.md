@@ -671,6 +671,7 @@ type ExportArgs struct { // the export renders the current revision, pinned at s
 type TranscribeArgs struct {
 	AssetID  string `json:"asset_id"`
 	Language string `json:"language,omitempty"` // BCP 47 code or "auto"; default "auto"
+	Model    string `json:"model,omitempty"`    // the name of an installed whisper model (tiny, base, small, large-v3-turbo); default is the workspace model; a name that is not installed is E_VALIDATION with path args.model and a hint that lists the installed models; never a path
 }
 
 type JobGetRequest struct {
@@ -1976,7 +1977,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name":"job_start",
-  "description":"Start long work. kind=export renders the project to a file in the workspace: args {start?, end?, format?}, format mp4 (default), gif, wav or aac. kind=transcribe transcribes an asset's speech: args {asset_id, language?}. Export is refused while lint has errors. Waits up to wait_ms, then returns the job; poll with job_get.",
+  "description":"Start long work. kind=export renders the project to a file in the workspace: args {start?, end?, format?}, format mp4 (default), gif, wav or aac. kind=transcribe transcribes an asset's speech: args {asset_id, language?, model?}. Export is refused while lint has errors. Waits up to wait_ms, then returns the job; poll with job_get.",
   "inputSchema":{
     "type":"object",
     "properties":{
@@ -2016,9 +2017,9 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 | `kind` | `args` | Notes |
 | --- | --- | --- |
 | `export` | `{"start"?: time, "end"?: time, "format"?: "mp4" \| "gif" \| "wav" \| "aac"}` | renders the current revision, pinned when the job starts (there is no `revision` argument: old revisions are not rendered in the MVP), to `exports/<project id>/<job id>.<ext>`, where `<ext>` is `mp4`, `gif`, `wav` or `m4a` for the format (SDD-004 §8.1); `format` is `mp4` when absent and any other value is `E_VALIDATION` with the `path` `args.format`. The frame rate and the size are project settings (SDD-001 §3.1), not arguments: a project beyond 4096 pixels or 120 fps is refused at the start with `E_LIMIT`, and an encoder that cannot do 4K or 60 fps ends the job `failed` with `E_EXPORT_FAILED` and `details.reason` `unsupported_size`. Refused with `E_LINT_BLOCKING` while lint has errors (§2.8). The finished job is verified (ADR-0018 item 6) |
-| `transcribe` | `{"asset_id": string, "language"?: string}` | creates the transcript read by `media_inspect` and used by `caption.from_transcript`, `clip.remove_silences` |
+| `transcribe` | `{"asset_id": string, "language"?: string, "model"?: string}` | creates the transcript read by `media_inspect` and used by `caption.from_transcript`, `clip.remove_silences` |
 
-The adapter passes `args` as the one `Args` object of `JobStartRequest` and the service decodes it into `ExportArgs` or `TranscribeArgs` by `kind`; an unknown member is `E_VALIDATION` with the `path` `args.<name>`. The OpenAPI document lists the members of `args` under the request body of `POST /projects/{id}/jobs` (`start`, `end`, `format` with its enum, `asset_id`, `language`), so a client can offer only what the build accepts; `fps` and `size` are deliberately not there.
+The adapter passes `args` as the one `Args` object of `JobStartRequest` and the service decodes it into `ExportArgs` or `TranscribeArgs` by `kind`; an unknown member is `E_VALIDATION` with the `path` `args.<name>`. The OpenAPI document lists the members of `args` under the request body of `POST /projects/{id}/jobs` (`start`, `end`, `format` with its enum, `asset_id`, `language`, `model` with its enum), so a client can offer only what the build accepts; `fps` and `size` are deliberately not there.
 
 Example:
 
