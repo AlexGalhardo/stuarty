@@ -485,15 +485,25 @@ async function capture(
 	const width = shot.readUInt32BE(16);
 	const decoded = await page.evaluate(
 		async ({ projectId, shotBase64, at, w }) => {
-			// The heavy routes are rate limited per minute: wait and ask again.
+			// Every worker of the run is the same caller (local:ui) and the core lets a
+			// caller render 2 frames at once (SDD-007 section 4.4), so with several
+			// specs in parallel a request is refused with E_QUEUE_FULL while the others
+			// render. That is the rule working: wait (the Retry-After the answer
+			// carries, else a jittered pause) and ask again.
 			let frameResponse: Response;
-			for (let attempt = 0; ; attempt++) {
+			const giveUp = Date.now() + 90_000;
+			for (;;) {
 				frameResponse = await fetch(
 					`/api/v1/projects/${projectId}/frame?at=${at}f&width=${w}`,
 					{ headers: { Accept: "application/json" } },
 				);
-				if (frameResponse.status !== 429 || attempt === 5) break;
-				await new Promise((resolve) => setTimeout(resolve, 2000));
+				if (frameResponse.status !== 429 || Date.now() > giveUp) break;
+				const header = Number(frameResponse.headers.get("Retry-After"));
+				const pause =
+					Number.isFinite(header) && header > 0
+						? Math.min(header, 5) * 1000
+						: 200 + Math.random() * 600;
+				await new Promise((resolve) => setTimeout(resolve, pause));
 			}
 			if (!frameResponse.ok)
 				throw new Error(
