@@ -327,6 +327,10 @@ func itemFlags(it *timeline.Item) []string {
 		f = append(f, fmt.Sprintf("kf:%d", n))
 	}
 
+	if n := len(it.Markers); n > 0 {
+		f = append(f, fmt.Sprintf("mk:%d", n))
+	}
+
 	if it.Volume != 1 && (it.Type == timeline.ItemClip || it.Type == timeline.ItemAudio) {
 		f = append(f, "vol:"+num(it.Volume))
 	}
@@ -425,6 +429,20 @@ func continuation(fps timeval.FPS, it *timeline.Item) []string {
 	return wrap(parts)
 }
 
+// markerList is every marker frame, relative to the item start: an agent cuts on the beat
+// from this list, so none is dropped.
+func markerList(fps timeval.FPS, markers []timeline.Marker) string {
+	marks := make([]string, len(markers))
+	for i, m := range markers {
+		marks[i] = Cell(fps, int64(m.Frame))
+		if m.Label != "" {
+			marks[i] += " " + Quote(m.Label, 60)
+		}
+	}
+
+	return strings.Join(marks, ", ")
+}
+
 func extraFields(fps timeval.FPS, it *timeline.Item) map[string]string {
 	f := map[string]string{}
 	frames := func(v int) string { return Cell(fps, int64(v)) }
@@ -490,6 +508,10 @@ func extraFields(fps timeval.FPS, it *timeline.Item) map[string]string {
 
 	if len(it.Keyframes) > 0 {
 		f["keyframes"] = jsonOf(it.Keyframes)
+	}
+
+	if len(it.Markers) > 0 {
+		f["markers"] = markerList(fps, it.Markers)
 	}
 
 	if it.Type == timeline.ItemText && it.Text != "" {

@@ -341,11 +341,17 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 	clip.TransitionIn = &timeline.Transition{Kind: "fade", Duration: 4}
 	clip.TransitionOut = &timeline.Transition{Kind: "slide_left", Duration: 4}
 	clip.Keyframes = timeline.Keyframes{"opacity": {{T: 0, Value: 0}}, "x": {{T: 0, Value: 1}}}
+	clip.Markers = []timeline.Marker{{Frame: 5}, {Frame: 9, Label: "kick"}}
 	s := timeline.NewSlot("hero", "media")
 	clip.Slot = &s
 
 	got := itemLine(fps, &clip)
-	want := "itm_m1n2p3q4r5 clip 0s/0f +2s/60f ast_3c5v8n2w6d x1.5 [tin:fade tout:slide_left kf:2 vol:0.5 muted slot:hero unfilled]"
+	want := "itm_m1n2p3q4r5 clip 0s/0f +2s/60f ast_3c5v8n2w6d x1.5 [tin:fade tout:slide_left kf:2 mk:2 vol:0.5 muted slot:hero unfilled]"
+
+	// Every marker frame is in the full detail, none cut (VV-014).
+	if mk := extraFields(fps, &clip)["markers"]; !strings.Contains(mk, "5f") || !strings.Contains(mk, `9f "kick"`) {
+		t.Errorf("markers = %q", mk)
+	}
 
 	if got != want {
 		t.Errorf("item line = %s\nwant %s", got, want)
