@@ -97,7 +97,7 @@ func sourceFrame(it *timeline.Item, a *timeline.Asset, fps timeline.Rational, r 
 		return 0
 	}
 
-	pos := int64(it.SourceIn) + int64(r)*int64(it.Speed.Num)/int64(it.Speed.Den)
+	pos := int64(it.SourceIn) + int64(it.SourceOffset(r))
 	sf := pos * int64(fps.Den) * int64(a.FrameRate.Num) / (int64(fps.Num) * int64(a.FrameRate.Den))
 
 	if a.FrameCount > 0 {

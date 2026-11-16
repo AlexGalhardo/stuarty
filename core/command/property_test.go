@@ -316,6 +316,20 @@ var alphaOps = map[string]func(p *docPick) string{
 			p.oneOf("cover", "contain", "none"), float64(p.n(40))/100, float64(p.n(40))/100)
 	},
 	"clip.set_speed": func(p *docPick) string {
+		if p.n(3) == 0 {
+			return fmt.Sprintf(
+				`{"item_id":%q,"curve":[{"t":0,"speed":"%d.%dx"},{"t":0.%03d,"speed":"%d.%dx"},{"t":1,"speed":"%d.%dx"}],"ripple":%q}`,
+				p.clip(),
+				p.n(3),
+				p.n(10),
+				1+p.n(998),
+				p.n(3),
+				p.n(10),
+				p.n(3),
+				p.n(10),
+				p.oneOf("none", "track"),
+			)
+		}
 		return fmt.Sprintf(
 			`{"item_id":%q,"speed":"%d.%dx","ripple":%q}`,
 			p.clip(),

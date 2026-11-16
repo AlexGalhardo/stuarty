@@ -1,0 +1,17 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "duration": 60,
+      "speed": {
+        "den": 2,
+        "num": 3
+      }
+    },
+    "unset": [
+      "speed_curve"
+    ]
+  }
+]

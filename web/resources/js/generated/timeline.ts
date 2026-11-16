@@ -104,6 +104,18 @@ export interface Item {
   slot?: Slot;
   source_in?: number;
   speed?: Rational1;
+  /**
+   * @minItems 2
+   * @maxItems 8
+   */
+  speed_curve?:
+    | [SpeedPoint, SpeedPoint]
+    | [SpeedPoint, SpeedPoint, SpeedPoint]
+    | [SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint]
+    | [SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint]
+    | [SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint]
+    | [SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint]
+    | [SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint, SpeedPoint];
   start: number;
   stroke_color?: string;
   stroke_width?: number;
@@ -166,6 +178,10 @@ export interface Slot {
 export interface Rational1 {
   den: number;
   num: number;
+}
+export interface SpeedPoint {
+  speed: Rational;
+  t: number;
 }
 export interface CaptionStyle {
   align?: "left" | "center" | "right";

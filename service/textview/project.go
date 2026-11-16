@@ -299,7 +299,14 @@ func itemDetail(it *timeline.Item) string {
 	switch it.Type {
 	case timeline.ItemClip, timeline.ItemAudio:
 		d := it.Asset
-		if it.Speed.Num != it.Speed.Den && it.Speed.Den > 0 {
+		if len(it.SpeedCurve) > 0 {
+			speeds := make([]string, len(it.SpeedCurve))
+			for i, p := range it.SpeedCurve {
+				speeds[i] = num(float64(p.Speed.Num) / float64(p.Speed.Den))
+			}
+
+			d += " curve:" + strings.Join(speeds, ">")
+		} else if it.Speed.Num != it.Speed.Den && it.Speed.Den > 0 {
 			d += " x" + num(float64(it.Speed.Num)/float64(it.Speed.Den))
 		}
 

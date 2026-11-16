@@ -183,6 +183,17 @@ func (c *Context) sourceAsset(it *timeline.Item) (timeline.Asset, bool) {
 	return a, ok && a.Kind != timeline.AssetImage
 }
 
+// rejectCurve refuses an edit that maps frames of the timeline to frames of the source
+// inside an item with a speed curve (SDD-002 C.25): the curve is defined over the whole
+// item, so the mapping would no longer be the one the agent asked for.
+func rejectCurve(it *timeline.Item, what string) *Error {
+	if len(it.SpeedCurve) == 0 {
+		return nil
+	}
+	return Errorf(CodeInvalidState, "Item %s has a speed curve, which %s cannot follow.", it.ID, what).
+		WithHint("Remove the curve first with clip.set_speed and a constant speed.").WithPath("args.item_id")
+}
+
 // ceilDiv returns ceil(n/d) for positive d.
 func ceilDiv(n, d int) int { return (n + d - 1) / d }
 
@@ -359,6 +370,9 @@ func (c *Context) trimStart(old, n *timeline.Item, to int) *Error {
 	}
 	d := to - old.Start
 	if _, reads := c.sourceAsset(old); reads {
+		if err := rejectCurve(old, "moving the start of the item"); err != nil && d != 0 {
+			return err
+		}
 		sp := old.Speed
 		switch {
 		case d > 0:
@@ -511,6 +525,11 @@ func applyItemSplit(c *Context, a *itemSplitArgs) error {
 	}
 	tc := at - it.Start
 	_, reads := c.sourceAsset(&it)
+	if reads {
+		if err := rejectCurve(&it, "a split"); err != nil {
+			return err
+		}
+	}
 	left, right := splitCore(&it, newID, tc, reads)
 	if it.Type == timeline.ItemCaption {
 		var lb, rb []int

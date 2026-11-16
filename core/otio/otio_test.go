@@ -582,6 +582,12 @@ func TestRoundTripKeepsVukemProperties(t *testing.T) {
 	c1.Temperature, c1.Tint, c1.Hue = 0.3, -0.2, 45
 	c1.Fit, c1.Crop = "contain", &timeline.Crop{Left: 0.1, Bottom: 0.2}
 	c1.Filter, c1.FilterAmount, c1.Blur = "sepia", 0.6, 4
+	c1.SpeedCurve = []timeline.SpeedPoint{
+		{T: 0, Speed: timeline.Rational{Num: 1, Den: 1}},
+		{T: 0.4, Speed: timeline.Rational{Num: 3, Den: 2}},
+		{T: 1, Speed: timeline.Rational{Num: 3, Den: 4}},
+	}
+	c1.Speed = timeline.CurveMean(c1.SpeedCurve)
 	d.Items[c1.ID] = c1
 
 	music := d.Items["itm_c000000004"]
@@ -613,6 +619,11 @@ func TestRoundTripKeepsVukemProperties(t *testing.T) {
 		got.Saturation != 0.9 || got.Temperature != 0.3 || got.Tint != -0.2 || got.Hue != 45 || got.Fit != "contain" || got.Crop == nil || got.Crop.Left != 0.1 ||
 		got.Crop.Bottom != 0.2 || got.Filter != "sepia" || got.FilterAmount != 0.6 || got.Blur != 4 {
 		t.Errorf("properties did not come back: %+v", got)
+	}
+
+	if len(got.SpeedCurve) != 3 || got.SpeedCurve[1] != c1.SpeedCurve[1] || got.Speed != c1.Speed ||
+		got.Duration != c1.Duration {
+		t.Errorf("speed curve did not come back: %+v (want %+v)", got.SpeedCurve, c1.SpeedCurve)
 	}
 
 	if !doc.Tracks[findTrack(doc, "Video")].Muted {

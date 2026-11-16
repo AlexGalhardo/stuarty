@@ -129,6 +129,7 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `slot` | `Slot` | no |  |
 | `source_in` | `integer` | no | min 0 |
 | `speed` | `Rational` | no | default `\{"den":1,"num":1\}` |
+| `speed_curve` | array of `SpeedPoint` | no | at least 2 items; at most 8 items |
 | `start` | `integer` | yes | min 0 |
 | `stroke_color` | `string` | no | pattern `^(#[0-9A-Fa-f]\{6\}([0-9A-Fa-f]\{2\})?\\\|\\\\$[a-z][a-z0-9_]\{0,39\})$`; default `"#000000"` |
 | `stroke_width` | `number` | no | min 0 |
@@ -206,6 +207,13 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `kind` | `media`, `text`, `caption` | yes |  |
 | `name` | `string` | yes | pattern `^[a-z][a-z0-9_]\{0,39\}$` |
 | `required` | `boolean` | no | default `true` |
+
+## SpeedPoint
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `speed` | `Rational` | yes |  |
+| `t` | `number` | yes | min 0; max 1 |
 
 ## TemplateInfo
 

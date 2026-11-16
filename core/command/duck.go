@@ -188,6 +188,9 @@ func applyDuck(c *Context, a *duckArgs) error {
 			return Errorf(CodeTypeMismatch, "Item %s has no asset with audio.", p.ID).
 				WithHint("Choose items placed from an asset with audio.").WithPath("args.speech_item_ids")
 		}
+		if err := rejectCurve(&p, "ducking under its speech"); err != nil {
+			return err.WithPath("args.speech_item_ids")
+		}
 		ranges = append(ranges, speechOnMusic(&m, &p, s.Ranges)...)
 	}
 	slices.SortFunc(ranges, func(x, y SilenceRange) int { return cmp.Or(x.Start-y.Start, x.End-y.End) })

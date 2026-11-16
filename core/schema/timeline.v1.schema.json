@@ -443,6 +443,14 @@
             "num": 1
           }
         },
+        "speed_curve": {
+          "items": {
+            "$ref": "#/$defs/SpeedPoint"
+          },
+          "maxItems": 8,
+          "minItems": 2,
+          "type": "array"
+        },
         "start": {
           "minimum": 0,
           "type": "integer"
@@ -743,6 +751,23 @@
       "required": [
         "kind",
         "name"
+      ],
+      "type": "object"
+    },
+    "SpeedPoint": {
+      "properties": {
+        "speed": {
+          "$ref": "#/$defs/Rational"
+        },
+        "t": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "speed",
+        "t"
       ],
       "type": "object"
     },

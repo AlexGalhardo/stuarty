@@ -169,7 +169,7 @@ SourceFrame = floor(pos × fps.den × frame_rate.num / (fps.num × frame_rate.de
 SourceFrame = min(SourceFrame, frame_count - 1)
 ```
 
-All integer arithmetic, with 64-bit intermediates. This is the only place a source frame is chosen.
+All integer arithmetic, with 64-bit intermediates. This is the only place a source frame is chosen. For an item with a `speed_curve` (SDD-001 section 3.5) the term `floor(r x speed.num / speed.den)` is `CurveOffset(r)` of section 3.11; everything else in the formula is unchanged.
 
 **Animated image (BETA, RF-028).** A still image has source frame 0. An animated image (`image` asset with `frame_delays`, SDD-001 section 3.2) shows frame `AnimImageSourceFrame(frame_delays, fps, r)` at frame `r` of its item, where `r` counts from the item's start and `speed` and `source_in` do not apply:
 
@@ -283,6 +283,30 @@ Golden cases (`engine/export/testdata/golden/mask-rect`, `mask-ellipse-feather`,
 ### 3.10 Flip
 
 Added after BETA (TASK-0233). An item with `flip_x` or `flip_y` (SDD-001 §3.4) gives its layer `FlipX` or `FlipY` (absent when false; the window carries them once per layer, `flip_x` and `flip_y`). Both are constant over the item. A flip mirrors the picture of the layer inside its own unrotated `w x h` rectangle: with `FlipX` the pixel at the local position `(lx, ly)` takes what the unflipped layer has at `(w - lx, ly)`, with `FlipY` the one at `(lx, h - ly)`. The quadrilateral (`CX`, `CY`, `W`, `H`, `Rotation`) is the same, so the item stays where it is and turns around its own axes; rotation is applied after the mirror, as for any layer. The mask (section 3.9) and the chroma key keep the item's frame and are not mirrored. The arithmetic is a permutation, with no new rounding. After the chroma key, the colour matrix, the filter matrix and the blur of sections 3.5 to 3.7 have produced the layer's pixels (all of them symmetric operations, so the order with the flip does not matter) and before the draw of section 6, the pixel image of `sw x sh` is mirrored: with `FlipX` the pixel at column `x` of row `y` becomes the one at column `sw - 1 - x` of that row, with `FlipY` the one at row `sh - 1 - y`, with both the two. The result is then drawn by the copy of section 6 rule 3 or by the sampler of SDD-013 �3.6 exactly as an unflipped layer, with the same quadrilateral, the same transform and the same weights: a bilinear sample of the mirrored image at a position equals the bilinear sample of the original at the mirrored position (`sw - u`), the four weights are exchanged in pairs, so the 8-bit rounding of the sampler is the same on both sides. The mask coverage of section 3.9 is computed from the destination pixel and the placement, never from the source, so it is not mirrored, and a flip never changes the opacity or the blend. A layer with a flip but no mask, no opacity under 255 and no blend still takes the opaque copy. Golden cases `flip-x`, `flip-y` and `flip-rotated-masked` (both flips on a layer rotated by 20 degrees with scale 0.8 and a feathered rectangle mask) must give 0 differing bytes between 1 and 8 bands and between the Go compositor and the Rust renderer.
+
+### 3.11 Speed curve
+
+Added after BETA (TASK-0275). A clip or audio item with `speed_curve`, 2 to 8 points `(t[i], s[i])`, has a speed that changes with its position in the item. Let `D` be the duration of the item in frames and `u = r / D` the position of item frame `r` (`0 <= r <= D`). With `T[i] = 1000 x t[i]` and `S[i] = 1000 x s[i]` (whole numbers: the points are multiples of 0.001), the speed at `u` is the linear interpolation of the neighbouring points and the number of source frames read before frame `r` is
+
+```text
+Offset(r) = floor( D x integral from 0 to r/D of speed(u) du )
+```
+
+evaluated exactly, with no floating point. For each segment `i` that starts before `r` (`lo = T[i] x D`, `hi = T[i+1] x D`, `v = min(1000 x r, hi) - lo`, `dT = T[i+1] - T[i]`, `dS = S[i+1] - S[i]`) its contribution to `D x integral` is the rational
+
+```text
+(2 x dT x D x S[i] x v + dS x v x v) / (2 x dT x D x 1,000,000)
+```
+
+and `Offset(r)` is the floor of the sum of the contributions of the segments in order. The numerators reach about 2^67 (`dS` up to 3,750, `v` up to 1.08e8), so an implementation uses 128-bit or arbitrary precision integers: `timeline.CurveOffset` uses `math/big`. For a constant curve (`S[i]` all equal to `1000 x n/d`) this is `floor(r x n / d)`, the same as section 3.3 without a curve. `Offset` is non-decreasing, `Offset(0) = 0`, and its steps are at most 4.
+
+**Mean speed and duration.** The mean speed over the item is `M = sum of dT x (S[i] + S[i+1]) / 2,000,000` over the segments, an exact rational (the trapezoids); the item reads `D x M` source frames, `ceil(D x M)` counted as in SDD-001 section 3.5, and the stored `speed` field is `M` in lowest terms. So every rule that needs only the whole source range (R9, the fit fix, `slot.fill`, the snap limits) uses `speed` as before. `clip.set_speed` keeps the source range `D x M` unchanged when it changes `M`: the new duration is `ceil(D x M_old / M_new)` (SDD-002 C.25).
+
+**Interaction with the rest of the item.** The curve is over output time. Keyframes, transitions, fades, the volume envelope and `markers` are in item frames and are not remapped by the curve; `clip.set_speed` rescales them by `M_old / M_new` only when the duration changes. A transition at the edge of the item runs over its own item frames and reads the frames the curve gives it, so the slow-motion or fast-forward under a dissolve is the one at that point of the curve. `item.trim` of the end edge stretches the curve over the new duration (the points are fractions); `item.split` and the trim of the start edge are refused (SDD-002 C.25 postcondition 7). With `ripple: "track"` the later items move by the change in duration as for a constant speed.
+
+**What the plan carries.** The frame plan needs nothing more than `SourceFrame` of section 3.3 per frame. The audio plan carries, besides `Speed` (the mean), `speed_curve` with the `points`, `item_frames` (`D`) and `first_frame` (the item frame at which the window starts), so that an executor can compute the source position of any later frame by the formula above. The audio source position of the first sample of the window is `source_in + Offset(first_frame)` in project frames, and the speed over output frame `r` is the segment speed at `(r + 1/2) / D`; resampling to follow it (the Go mixer, `atempo` pieces) is defined with the engine change (TASK-0279).
+
+**Examples.** `D = 4` and the curve `(0, 1x), (1, 3x)`: `T = 0, 1000`, `S = 1000, 3000`, one segment with `dT = 1000`, `dS = 2000`; `Offset(r) = floor(r + r x r / 4)`, that is 0, 1, 3, 5, 8 for `r = 0..4`, and `M = 1000 x (1000 + 3000) / 2,000,000 = 2`, so the item reads exactly `D x M = 8` source frames. `D = 100` and `(0, 1x), (0.5, 3x), (1, 1x)`: `M = 2`, `Offset(100) = 200`, `Offset(50) = 100 x integral from 0 to 1/2 of (1 + 4u) du = 100`.
 
 ## 4. Layout of text, captions and shapes
 

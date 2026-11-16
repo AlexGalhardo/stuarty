@@ -418,6 +418,14 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 		t.Errorf("item line = %s\nwant %s", got, want)
 	}
 
+	clip.SpeedCurve = []timeline.SpeedPoint{
+		{T: 0, Speed: timeline.Rational{Num: 1, Den: 1}}, {T: 1, Speed: timeline.Rational{Num: 2, Den: 1}},
+	}
+
+	if line := itemLine(fps, &clip); !strings.Contains(line, "ast_3c5v8n2w6d curve:1>2 [") {
+		t.Errorf("a speed curve is not shown: %s", line)
+	}
+
 	txt := timeline.NewItem("itm_t", timeline.ItemText, "trk_a1b2c3d4e5", 0, 30)
 	txt.Text = "A very long headline"
 	shp := timeline.NewItem("itm_s", timeline.ItemShape, "trk_a1b2c3d4e5", 0, 30)
