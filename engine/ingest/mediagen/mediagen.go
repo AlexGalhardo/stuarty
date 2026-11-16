@@ -120,6 +120,14 @@ func (g Gen) NoisyTone(ctx context.Context, name string) (string, error) {
 		"-c:a", "pcm_s16le", "-f", "wav")
 }
 
+// OneClick is a mono WAV of 2 s of silence with one 10 ms burst of a 1 kHz tone at 0.5 s, the fixture that shows
+// where a speed curve or a reverse puts a sound (SDD-004 sections 3.11 and 3.12).
+func (g Gen) OneClick(ctx context.Context, name string) (string, error) {
+	return g.ff(ctx, name,
+		"-f", "lavfi", "-i", "aevalsrc=exprs='0.8*sin(2*PI*1000*t)*between(t,0.5,0.51)':s=48000:d=2",
+		"-ar", "48000", "-ac", "1", "-c:a", "pcm_s16le", "-f", "wav")
+}
+
 // Speech3Pauses is a WAV of four 1 s tones separated by pauses of 0.5 s, 1.0 s and 0.2 s of
 // digital silence: the speech fixture of the silence tests.
 func (g Gen) Speech3Pauses(ctx context.Context) (string, error) {
