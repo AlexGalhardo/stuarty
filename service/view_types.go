@@ -8,6 +8,9 @@ type ViewFrameRequest struct {
 	AssetID   string `json:"asset_id,omitempty"`   // not available in this build
 	MaxTokens int    `json:"max_tokens,omitempty"` // default 800; 100 to 1568
 	Width     int    `json:"width,omitempty"`      // even; exclusive with MaxTokens
+	// Pin, when not 0, must be the current revision (SDD-003 section 6.3). Set
+	// by the HTTP adapter from rev; never on the wire of the Service.
+	Pin int64 `json:"-"`
 }
 
 // ViewSheetRequest asks for a contact sheet of the current revision.
@@ -20,6 +23,9 @@ type ViewSheetRequest struct {
 	Cols      int      `json:"cols,omitempty"`       // default ceil(sqrt(count))
 	AssetID   string   `json:"asset_id,omitempty"`   // not available in this build
 	MaxTokens int      `json:"max_tokens,omitempty"` // default 1500; 100 to 1568
+	// Pin, when not 0, must be the current revision (SDD-003 section 6.3). Set
+	// by the HTTP adapter from rev; never on the wire of the Service.
+	Pin int64 `json:"-"`
 }
 
 // ViewCell is one picture of a view: the index is 1-based, row-major.

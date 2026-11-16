@@ -403,7 +403,12 @@ func TestPlanRouteAnswersTheWindowOfSDD004(t *testing.T) {
 // frameService answers ViewFrame without a renderer.
 type frameService struct{ service.Service }
 
-func (frameService) ViewFrame(_ context.Context, req service.ViewFrameRequest) (*service.ViewResult, error) {
+// A pinned request goes to the real service, which owns the pin check.
+func (f frameService) ViewFrame(ctx context.Context, req service.ViewFrameRequest) (*service.ViewResult, error) {
+	if req.Pin != 0 {
+		return f.Service.ViewFrame(ctx, req)
+	}
+
 	return &service.ViewResult{
 		ProjectID: req.ProjectID, Mode: "frame", Width: 2, Height: 2, MIME: "image/jpeg",
 		Image: []byte{0xff, 0xd8, 0xff, 0xd9}, Cells: []service.ViewCell{{}}, Text: "frame",
