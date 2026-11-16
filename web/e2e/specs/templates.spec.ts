@@ -5,12 +5,19 @@ interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
 }
 
-function recordEdits(page: Page): Posted[] {
+// `settled.count` is how many of the posted edits the server has answered. A
+// field builds its batch from the document it shows, so a test that edits the
+// same item again must wait for the answer, not for the request: the next
+// field sent in between would carry the old values.
+function recordEdits(page: Page, settled = { count: 0 }): Posted[] {
 	const posted: Posted[] = [];
 	page.on("request", (r) => {
 		if (r.method() === "POST" && r.url().endsWith("/edit")) {
 			posted.push(r.postDataJSON() as Posted);
 		}
+	});
+	page.on("requestfinished", (r) => {
+		if (r.method() === "POST" && r.url().endsWith("/edit")) settled.count++;
 	});
 	return posted;
 }
@@ -140,15 +147,16 @@ test.describe("templates", () => {
 		const item = page.locator("[data-item-id]");
 		await expect(item).toHaveCount(1);
 		await item.click();
-		const posted = recordEdits(page);
+		const settled = { count: 0 };
+		const posted = recordEdits(page, settled);
 
 		await page.getByLabel("Template slot", { exact: true }).check();
 		const name = page.getByLabel("Slot name", { exact: true });
 		await name.fill("headline");
 		await name.press("Enter");
-		await expect.poll(() => posted.length).toBe(2);
+		await expect.poll(() => settled.count).toBe(2);
 		await page.getByLabel("Required", { exact: true }).uncheck();
-		await expect.poll(() => posted.length).toBe(3);
+		await expect.poll(() => settled.count).toBe(3);
 		expect(posted[2]?.operations).toEqual([
 			{
 				op: "slot.mark",
