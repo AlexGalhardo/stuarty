@@ -75,6 +75,8 @@ export interface Item {
   filter?: "none" | "grayscale" | "sepia" | "invert" | "warm" | "cool";
   filter_amount?: number;
   fit?: "cover" | "contain" | "none";
+  flip_x?: boolean;
+  flip_y?: boolean;
   height?: number;
   id: string;
   keyframes?: {

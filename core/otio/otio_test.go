@@ -709,6 +709,7 @@ func TestRoundTripKeepsSpeedKeyframesSlotsTextsAndKey(t *testing.T) {
 	}
 	slow.ChromaKey = &timeline.ChromaKey{Color: "#00FF00", Similarity: 0.35, Smoothness: 0.05, Spill: 0.25}
 	slow.Blend = "screen"
+	slow.FlipX = true
 	slow.Mask = &timeline.Mask{Shape: "ellipse", X: 0.1, Y: 0.2, Width: 0.5, Height: 0.6, Feather: 12, Invert: true}
 
 	// 7 frames at 1/4 speed cannot come from any whole source length: the clip is trimmed to it.
@@ -732,6 +733,7 @@ func TestRoundTripKeepsSpeedKeyframesSlotsTextsAndKey(t *testing.T) {
 	title.Keyframes = timeline.Keyframes{"opacity": {timeline.NewKeyframe(0, 0), timeline.NewKeyframe(10, 0.9)}}
 	title.Slot = &timeline.Slot{Name: "headline", Kind: "text", Required: true, DurationPolicy: "fit", Filled: true}
 	title.Blend = "multiply"
+	title.FlipX, title.FlipY = true, true
 	title.Mask = &timeline.Mask{Shape: "rect", X: 0, Y: 0.25, Width: 1, Height: 0.5}
 
 	plain := timeline.NewItem("itm_d000000005", timeline.ItemText, trkTop, 60, 20)

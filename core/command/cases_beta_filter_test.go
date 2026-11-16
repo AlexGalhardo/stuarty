@@ -75,6 +75,22 @@ func init() {
 	ck("err_not_found", `{"item_id": "itm_zzzzzzzzzz", "color": "#00FF00"}`, plain())
 	ck("err_type_mismatch_audio_item", fmt.Sprintf(`{"item_id": %q, "color": "#00FF00"}`, itemB), audioItem)
 
+	fl := func(name, args string, b func() *B) {
+		gc("clip.set_flip", name, b, op("clip.set_flip", args))
+	}
+	flipped := func(it *timeline.Item) { it.FlipX = true }
+	fl("ok_horizontal", fa(`"horizontal": true`), plain())
+	fl("ok_vertical", fa(`"vertical": true`), plain())
+	fl("ok_both", fa(`"horizontal": true, "vertical": true`), plain())
+	fl("ok_keeps_the_side_not_given", fa(`"vertical": true`), plain(flipped))
+	fl("ok_false_clears_the_field", fa(`"horizontal": false`), plain(flipped))
+	fl("ok_false_without_field_noop", fa(`"horizontal": false`), plain())
+	fl("ok_same_value_noop", fa(`"horizontal": true`), plain(flipped))
+	fl("ok_image_clip", fa(`"horizontal": true`), plain(image))
+	fl("err_validation_no_argument", fmt.Sprintf(`{"item_id": %q}`, itemA), plain())
+	fl("err_not_found", `{"item_id": "itm_zzzzzzzzzz", "horizontal": true}`, plain())
+	fl("err_type_mismatch_audio_item", fmt.Sprintf(`{"item_id": %q, "horizontal": true}`, itemB), audioItem)
+
 	bm := func(name, args string, b func() *B) {
 		gc("clip.set_blend", name, b, op("clip.set_blend", args))
 	}

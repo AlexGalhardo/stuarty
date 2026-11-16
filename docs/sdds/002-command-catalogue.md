@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 62 commands, 61 public, of which 16 are Prototype, 32 ALPHA and 14 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 63 commands, 62 public, of which 16 are Prototype, 32 ALPHA and 15 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -274,6 +274,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.set_chroma_key` | B | `item_id`, `color` (`#RRGGBB` or null), `similarity?`, `smoothness?`, `spill?` | Keys out one colour of a clip (a green screen); null removes the key. See C.55 |
 | `clip.set_blend` | B | `item_id`, `mode` (`normal`, `multiply`, `screen`, `overlay`, `add`) | Sets how a visual item is mixed with what is below it. See C.61 |
 | `clip.set_mask` | B | `item_id`, `mask` (`{shape, x, y, width, height, feather?, invert?}` or null) | Limits where a visual item is drawn to a rectangle or an ellipse in the item's own frame; null removes it. See C.62 |
+| `clip.set_flip` | B | `item_id`, `horizontal?`, `vertical?` (booleans) | Mirrors a visual item left to right and or top to bottom; a side not given keeps its value. See C.63 |
 | `clip.remove_silences` | A | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip by one clip per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
 | `audio.duck` | B | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | BETA (RF-043). Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
 | `marker.add` | B | `at`, `label?` | Puts a marker (of the timeline, not of an item) at a frame; see C.56 |
@@ -4995,5 +4996,64 @@ The fractions are rounded to 3 decimals. `x + width` and `y + height` must be at
 - `err_validation_width_zero`
 - `err_validation_feather_above_200`
 - `err_validation_missing_height`
+- `err_not_found`
+- `err_type_mismatch_audio_item`
+
+### C.63 `clip.set_flip` (phase B)
+
+Mirrors a visual item (TASK-0233, SDD-001 §3.4): `horizontal` flips it left to right, `vertical` top to bottom. The geometry is in SDD-004 §3.10.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip`, `text`, `caption` or `shape` item |
+| `horizontal` | boolean | no | the current value | true mirrors left to right; false clears it |
+| `vertical` | boolean | no | the current value | true mirrors top to bottom; false clears it |
+
+**Preconditions.**
+
+1. At least one of `horizontal` and `vertical` is present (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is not an audio item (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. `flip_x` and `flip_y` are set from the given sides; false is stored as an absent field.
+2. `diff` has one `item.updated`; empty when unchanged. `effective.horizontal` and `effective.vertical` are the stored values.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | neither side given | `args: give at least one of horizontal, vertical.` | `Send for example {"horizontal": ...}.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | an audio item | `Item itm_s6t7v8w9x0 is an audio item; flip applies to visual items.` | `Use item.set_audio for audio items.` |
+
+**Inverse.** `patch {collection: "items", id, set: <old value>, unset: <field if it was absent>}`.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5` not mirrored.
+
+```json
+{"op": "clip.set_flip", "args": {"item_id": "itm_m1n2p3q4r5", "horizontal": true}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"flip_x": [null, true]}}]
+```
+
+**Golden cases.**
+
+- `ok_horizontal`
+- `ok_vertical`
+- `ok_both`
+- `ok_keeps_the_side_not_given`
+- `ok_false_clears_the_field`
+- `ok_false_without_field_noop`
+- `ok_same_value_noop`
+- `ok_image_clip`
+- `err_validation_no_argument`
 - `err_not_found`
 - `err_type_mismatch_audio_item`

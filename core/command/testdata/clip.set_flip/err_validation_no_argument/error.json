@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give at least one of horizontal, vertical.",
+  "hint": "Send for example {\"horizontal\": ...}.",
+  "retryable": false,
+  "path": "args"
+}

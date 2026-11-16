@@ -1,0 +1,8 @@
+{
+  "op": "clip.set_flip",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "horizontal": true,
+    "vertical": true
+  }
+}

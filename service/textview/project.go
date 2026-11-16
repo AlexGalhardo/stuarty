@@ -486,6 +486,14 @@ func extraFields(fps timeval.FPS, it *timeline.Item) map[string]string {
 			f["blend"] = it.Blend
 		}
 
+		if it.FlipX {
+			f["flip_x"] = "true"
+		}
+
+		if it.FlipY {
+			f["flip_y"] = "true"
+		}
+
 		addJSON(f, "mask", it.Mask != nil, it.Mask)
 
 		if it.X != nil {
