@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"math"
 	"strings"
 
@@ -22,12 +23,14 @@ type entry struct {
 	source   int
 	duration int
 	in, out  int // transition offsets in frames
+	props    []propOp
 }
 
 type importTrack struct {
-	name    string
-	audio   bool
-	entries []entry
+	name          string
+	audio         bool
+	hidden, muted bool
+	entries       []entry
 }
 
 // Import is a parsed OTIO file: what it asks for, not a document. Operations turns
@@ -186,6 +189,12 @@ func (r *reader) track(t map[string]any) {
 		return
 	}
 
+	if v := vukemMeta(t); v != nil {
+		tk.hidden, _ = v["hidden"].(bool)
+		tk.muted, _ = v["muted"].(bool)
+		tk.hidden = tk.hidden && !tk.audio
+	}
+
 	cursor := 0
 	kids, _ := t["children"].([]any)
 
@@ -200,7 +209,7 @@ func (r *reader) track(t map[string]any) {
 		case schemaIs(c, "Transition"):
 			r.transition(&tk, c)
 		case schemaIs(c, "Clip"):
-			e, ok := r.clip(c, cursor)
+			e, ok := r.clip(c, cursor, kind)
 			if ok {
 				cursor += e.duration
 				tk.entries = append(tk.entries, e)
@@ -227,7 +236,7 @@ func (r *reader) transition(tk *importTrack, c map[string]any) {
 	tk.entries = append(tk.entries, entry{in: in, out: out})
 }
 
-func (r *reader) clip(c map[string]any, cursor int) (entry, bool) {
+func (r *reader) clip(c map[string]any, cursor int, kind string) (entry, bool) {
 	name, _ := c["name"].(string)
 	name = clipRunes(name, 120)
 
@@ -262,7 +271,14 @@ func (r *reader) clip(c map[string]any, cursor int) (entry, bool) {
 		r.im.Media = append(r.im.Media, m)
 	}
 
-	return entry{clip: true, ref: ref, name: name, start: cursor, source: start, duration: dur}, true
+	e := entry{clip: true, ref: ref, name: name, start: cursor, source: start, duration: dur}
+
+	if v := vukemMeta(c); v != nil {
+		props, _ := v["properties"].(map[string]any)
+		e.props = clipOps(props, kind == kindAud, func(f string) { r.lose(f + " of clip " + name) })
+	}
+
+	return e, true
 }
 
 // Operations returns the batch that builds what the file describes, bottom track
@@ -308,6 +324,19 @@ func (b *batch) track(tk *importTrack) {
 
 	b.push("track.add", map[string]any{"kind": kind, "name": tk.name, "id": trackID, "position": "top"})
 
+	if tk.hidden || tk.muted {
+		update := map[string]any{"track_id": trackID}
+		if tk.hidden {
+			update["hidden"] = true
+		}
+
+		if tk.muted {
+			update["muted"] = true
+		}
+
+		b.push("track.update", update)
+	}
+
 	ids := make([]*placed, len(tk.entries))
 
 	for i := range tk.entries {
@@ -349,6 +378,12 @@ func (b *batch) clip(trackID string, audio bool, e *entry) *placed {
 
 	if e.name != "" {
 		b.push("item.rename", map[string]any{"item_id": id, "name": e.name})
+	}
+
+	for _, p := range e.props {
+		args := map[string]any{"item_id": id}
+		maps.Copy(args, p.args)
+		b.push(p.op, args)
 	}
 
 	return &placed{id: id, visual: !audio}

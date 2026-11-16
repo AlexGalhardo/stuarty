@@ -104,7 +104,7 @@ func Export(doc *timeline.Document) ([]byte, []Lost, error) {
 		}
 
 		children = append(children, object{
-			"OTIO_SCHEMA": schemaTrack, "name": t.Name, "kind": kind, "children": kids, "metadata": object{},
+			"OTIO_SCHEMA": schemaTrack, "name": t.Name, "kind": kind, "children": kids, "metadata": trackMetadata(&t),
 		})
 	}
 
@@ -132,7 +132,7 @@ func clip(it *timeline.Item, a *timeline.Asset, rate float64) object {
 	}
 
 	c := object{
-		"OTIO_SCHEMA": schemaClip, "name": it.Name, "metadata": object{}, "effects": []any{},
+		"OTIO_SCHEMA": schemaClip, "name": it.Name, "metadata": clipMetadata(it), "effects": []any{},
 		"source_range": tr(src, it.Duration, rate),
 		"media_reference": object{
 			"OTIO_SCHEMA": schemaExternal, "name": "", "target_url": a.Name, "metadata": object{},
@@ -150,6 +150,85 @@ func clip(it *timeline.Item, a *timeline.Asset, rate float64) object {
 	c["markers"] = markers
 
 	return c
+}
+
+// trackMetadata keeps what OTIO has no field for in the vukem namespace, which other tools
+// ignore and Import reads back: hidden and muted. Ids are not kept: an import makes new ones.
+func trackMetadata(t *timeline.Track) object {
+	v := object{}
+	if t.Hidden {
+		v["hidden"] = true
+	}
+
+	if t.Muted {
+		v["muted"] = true
+	}
+
+	if len(v) == 0 {
+		return object{}
+	}
+
+	return object{metaNamespace: v}
+}
+
+// clipMetadata keeps the properties of a clip that OTIO has no field for, in the vukem
+// namespace, under the names and values of the document. Only values that differ from the
+// default are written. Import turns them back into commands.
+func clipMetadata(it *timeline.Item) object {
+	props := object{}
+	num := func(name string, v, def float64) {
+		if v != def {
+			props[name] = v
+		}
+	}
+
+	if it.X != nil {
+		props["x"] = *it.X
+	}
+
+	if it.Y != nil {
+		props["y"] = *it.Y
+	}
+
+	num("scale", it.Scale, 1)
+	num("rotation", it.Rotation, 0)
+	num("opacity", it.Opacity, 1)
+	num("volume", it.Volume, 1)
+	num("brightness", it.Brightness, 0)
+	num("contrast", it.Contrast, 1)
+	num("saturation", it.Saturation, 1)
+	num("blur", it.Blur, 0)
+
+	if it.AudioMuted {
+		props["audio_muted"] = true
+	}
+
+	if it.FadeIn != 0 {
+		props["fade_in"] = it.FadeIn
+	}
+
+	if it.FadeOut != 0 {
+		props["fade_out"] = it.FadeOut
+	}
+
+	if it.Fit != "" && it.Fit != "cover" {
+		props["fit"] = it.Fit
+	}
+
+	if c := it.Crop; c != nil {
+		props["crop"] = object{"left": c.Left, "top": c.Top, "right": c.Right, "bottom": c.Bottom}
+	}
+
+	if it.Filter != "" && it.Filter != "none" {
+		props["filter"] = it.Filter
+		props["filter_amount"] = it.FilterAmount
+	}
+
+	if len(props) == 0 {
+		return object{}
+	}
+
+	return object{metaNamespace: object{"properties": props}}
 }
 
 func transition(in, out int, rate float64) object {
