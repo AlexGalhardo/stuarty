@@ -210,6 +210,35 @@ interface PlanLayerBase {
 	// The mirror of SDD-004 section 3.10, constant over the item; absent is off.
 	flip_x?: boolean;
 	flip_y?: boolean;
+	// The pixel effects of SDD-004 section 3.13, constant over the item, in the
+	// order of the item; absent without any. A shake is not here: the plan has
+	// already moved the layer.
+	effects?: PlanEffect[];
+	// A whip, dip or wipe (SDD-004 section 3.2): one entry per frame from
+	// `first`, null where there is none; a frame past the end has none.
+	transition?: (PlanTransition | null)[];
+}
+
+export interface PlanEffect {
+	kind: "motion_blur" | "glow" | "vignette" | "grain" | "rgb_split";
+	amount?: number;
+	angle?: number;
+	radius?: number;
+	threshold?: number;
+	softness?: number;
+	size?: number;
+	seed?: number;
+}
+
+export interface PlanTransition {
+	kind: "whip" | "dip" | "wipe";
+	edge: "in" | "out";
+	// The progress as 16.16 fixed point, strictly between 0 and 65536.
+	p: number;
+	// A dip: `#RRGGBB`, black when absent.
+	color?: string;
+	// A whip or a wipe: `left` when absent.
+	direction?: "left" | "right" | "up" | "down";
 }
 
 export interface PlanMask {
