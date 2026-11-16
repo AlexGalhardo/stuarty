@@ -31,6 +31,7 @@ export default function DuckingSection({
 	const canEdit = useCanEdit();
 	const exposed = useCommandsExposed("audio.duck");
 	const items = useDocumentState((s) => s.document?.items);
+	const assets = useDocumentState((s) => s.document?.assets);
 	const [speech, setSpeech] = useState<readonly string[]>([]);
 	const [gain, setGain] = useState(DEFAULT_GAIN_DB);
 	const [attack, setAttack] = useState(DEFAULT_ATTACK);
@@ -65,7 +66,9 @@ export default function DuckingSection({
 							}
 						/>
 						<UntrustedText>
-							{other.name ?? t(`ui.editor.item.${other.type}`)}
+							{other.name ??
+								assets?.[other.asset ?? ""]?.name ??
+								t(`ui.editor.item.${other.type}`)}
 						</UntrustedText>
 					</label>
 				))}
