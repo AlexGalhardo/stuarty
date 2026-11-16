@@ -383,6 +383,17 @@ Inspect an asset
 
 Responses: `200` OK, `401`, `422`, `default`.
 
+### `GET /projects/{id}/media/{asset_id}/chunks`
+
+Download the chunk index of the video proxy of an asset
+
+| Parameter | In | Required | Type |
+| --- | --- | --- | --- |
+| `id` | path | yes | `string` |
+| `asset_id` | path | yes | `string` |
+
+Responses: `200` OK, `401`, `422`, `default`.
+
 ### `GET /projects/{id}/media/{asset_id}/peaks`
 
 Download the audio peaks of an asset

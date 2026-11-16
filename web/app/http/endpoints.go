@@ -313,6 +313,15 @@ var Endpoints = []Endpoint{
 		Summary: "Download the audio peaks of an asset",
 	},
 	{
+		ID:        "media.chunks",
+		Method:    http.MethodGet,
+		Path:      "/projects/{id}/media/{asset_id}/chunks",
+		Service:   "OpenFile",
+		Scope:     service.ScopeRead,
+		Uncounted: true, Status: 200,
+		Summary: "Download the chunk index of the video proxy of an asset",
+	},
+	{
 		ID: "bitmaps.get", Method: http.MethodGet, Path: "/projects/{id}/bitmaps/{key}", Scope: service.ScopeRead,
 		Uncounted: true, Status: 200, Summary: "Download a rasterized text or shape",
 	},

@@ -857,7 +857,7 @@ type Event struct {
 }
 
 type FileRef struct {
-	Kind      string `json:"kind"` // "export" | "proxy" | "thumbnail" | "strip" | "peaks" | "bitmap" | "template" | "frame"
+	Kind      string `json:"kind"` // "export" | "proxy" | "chunks" | "thumbnail" | "strip" | "peaks" | "bitmap" | "template" | "frame"
 	ProjectID string `json:"project_id,omitempty"`
 	ID        string `json:"id"` // job id, asset id, template id or bitmap key
 	Variant   string `json:"variant,omitempty"` // thumbnail size, frame file name
@@ -2583,6 +2583,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `media.thumbnail` | `GET /projects/{id}/media/{asset_id}/thumbnail` | `width` (160, 320 or 640; default 160) | none | 200 `image/jpeg` | read | 409 `E_ASSET_NOT_READY` |
 | `media.strip` | `GET /projects/{id}/media/{asset_id}/strip` | none | none | 200 `image/jpeg` (a sprite of tiles, SDD-011) | read | 409 `E_ASSET_NOT_READY` |
 | `media.peaks` | `GET /projects/{id}/media/{asset_id}/peaks` | none | none | 200 `application/octet-stream` (SDD-011) | read | 409 `E_ASSET_NOT_READY` |
+| `media.chunks` | `GET /projects/{id}/media/{asset_id}/chunks` | none | none | 200 `application/json` (the chunk index of SDD-011 §4.4.1) | read | 409 `E_ASSET_NOT_READY`; 404 `E_NOT_FOUND` for an asset that has no video proxy, or whose proxy was written before the index existed (import the file again) |
 | `bitmaps.get` | `GET /projects/{id}/bitmaps/{key}` | none | none | 200 `image/png` (rasterized text or shape, by content key) | read | none |
 | `templates.list` | `GET /templates` | `cursor`, `limit` | none | 200 `TemplateListResult` | read | none |
 | `templates.save` | `POST /templates` | none | `TemplateSaveRequest` | 201 `TemplateResult` | edit | none |
@@ -2618,7 +2619,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 
 ### 6.5 Binary endpoints
 
-The eight byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `thumbnail`, `strip`, `peaks`, `bitmaps`; the template file of §6.3 is served the same way) are served from `OpenFile` (§2.9), all with scope `read` and checked against the project, and written with vukem's `c.File` (`web/response.go` lines 289 to 343), which uses `http.ServeContent`: `Range` requests answer 206, an unsatisfiable range 416, `If-Range` and `If-None-Match` work, and `Accept-Ranges: bytes` is sent. The handler sets `ETag` before the call (stdlib `ServeContent` honours an existing `ETag` header) and `X-Vukem-Revision` where relevant. `OpenFile` returns paths inside the workspace; the filesystem passed to `c.File` is `os.DirFS(<workspace>)`, so a path cannot leave it.
+The nine byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `chunks`, `thumbnail`, `strip`, `peaks`, `bitmaps`; the template file of §6.3 is served the same way) are served from `OpenFile` (§2.9), all with scope `read` and checked against the project, and written with vukem's `c.File` (`web/response.go` lines 289 to 343), which uses `http.ServeContent`: `Range` requests answer 206, an unsatisfiable range 416, `If-Range` and `If-None-Match` work, and `Accept-Ranges: bytes` is sent. The handler sets `ETag` before the call (stdlib `ServeContent` honours an existing `ETag` header) and `X-Vukem-Revision` where relevant. `OpenFile` returns paths inside the workspace; the filesystem passed to `c.File` is `os.DirFS(<workspace>)`, so a path cannot leave it.
 
 | Endpoint | Content type | `ETag` | `Cache-Control` | Notes |
 | --- | --- | --- | --- | --- |
@@ -2628,6 +2629,7 @@ The eight byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `thum
 | `GET /projects/{id}/media/{asset_id}/proxy` | `video/mp4` (`audio/mp4` for audio) | `"proxy-<asset hash first 16>-<profile version>"` | `private, max-age=86400` | the proxy is for the UI's scrubbing (ADR-0013); `Range` is how a `<video>` element reads it |
 | `GET /projects/{id}/media/{asset_id}/thumbnail` | `image/jpeg` | `"thumb-<asset hash first 16>-w<width>"` | `private, max-age=86400, immutable` | `width` is 160, 320 or 640 (a closed set keeps the cache to three variants per asset) |
 | `GET /projects/{id}/media/{asset_id}/strip` | `image/jpeg` | `"strip-<asset hash first 16>-<profile version>"` | `private, max-age=86400, immutable` | one sprite of timeline tiles (SDD-011); `Range` works |
+| `GET /projects/{id}/media/{asset_id}/chunks` | `application/json` | `"chunks-<asset hash first 16>-<profile version>"` | `private, max-age=86400` | the chunk index of the video proxy (SDD-011 §4.4.1): the codec string and the offset, size, time and key frame flag of every sample, so the browser decodes the proxy with WebCodecs; same scope and cache rules as the proxy it describes |
 | `GET /projects/{id}/media/{asset_id}/peaks` | `application/octet-stream` | `"peaks-<asset hash first 16>-<profile version>"` | `private, max-age=86400, immutable` | the peaks file of SDD-011, read whole by the browser; `Range` works |
 | `GET /projects/{id}/bitmaps/{key}` | `image/png` | `"bmp-<key>"` | `private, max-age=31536000, immutable` (the key is the content hash) | rasterized text or shape (SDD-004); the project in the path is the access check, and the key must come from a plan window of that project (else 404) |
 
@@ -2773,7 +2775,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `TemplateImport` | `template` (`action` `import`) | `template:import` | `POST /templates/import` |
 | `Doctor` | none (exception E-1) | `doctor` | `GET /system` |
 | `Events` | none (exception E-1) | `events` | `GET /projects/{id}/events` |
-| `OpenFile` (kinds `export`, `proxy`, `thumbnail`, `strip`, `peaks`, `bitmap`, `template`, `frame`) | none (exception E-2) | none (the path is in the result; for a remote server the CLI of `view` downloads, §5.4) | the byte-serving routes of §6.5 |
+| `OpenFile` (kinds `export`, `proxy`, `chunks`, `thumbnail`, `strip`, `peaks`, `bitmap`, `template`, `frame`) | none (exception E-2) | none (the path is in the result; for a remote server the CLI of `view` downloads, §5.4) | the byte-serving routes of §6.5 |
 | `PlanWindow` | none (exception E-3) | none | `GET /projects/{id}/plan` |
 | `SnapPoints` | none (exception E-3) | none | `GET /projects/{id}/snap-points` |
 | `FontList` | none (exception E-3) | `fonts` | `GET /fonts` |
@@ -2965,7 +2967,7 @@ The implementation of this SDD is complete when every check below passes. "Test"
 
 ### 9.1 The frozen surface and the acceptance run of 2026-11-15 (P4-AGT-001)
 
-`TestSurfaceFrozen` (`web/contract/surface_test.go`) compares the MCP tools (15), the CLI commands (43, stubs included) and the HTTP routes (59) with `web/contract/testdata/surface.txt`. A removed or renamed name fails. A new name fails until `UPDATE_SURFACE=1 go test ./web/contract/ -run TestSurfaceFrozen` adds it in the same change; that command never drops a name, so a removal needs a deliberate edit of the snapshot and a major version. `TestSurfaceDiffRules` proves both directions on a synthetic surface.
+`TestSurfaceFrozen` (`web/contract/surface_test.go`) compares the MCP tools (15), the CLI commands (43, stubs included) and the HTTP routes (60) with `web/contract/testdata/surface.txt`. A removed or renamed name fails. A new name fails until `UPDATE_SURFACE=1 go test ./web/contract/ -run TestSurfaceFrozen` adds it in the same change; that command never drops a name, so a removal needs a deliberate edit of the snapshot and a major version. `TestSurfaceDiffRules` proves both directions on a synthetic surface.
 
 Numbers measured on the reference machine (AMD Ryzen 7 5700X3D, Windows 11, FFmpeg 9.0.2 LGPL), with `go test -race ./web/app/... ./web/contract/...` green:
 

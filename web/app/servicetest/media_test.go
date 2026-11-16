@@ -250,6 +250,7 @@ func TestOpenFileResolvesTheArtifactsOfAReadyAsset(t *testing.T) {
 		"thumbnail": {service.FileRef{Kind: "thumbnail", Variant: "320"}, "image/jpeg"},
 		"strip":     {service.FileRef{Kind: "strip"}, "image/jpeg"},
 		"peaks":     {service.FileRef{Kind: "peaks"}, "application/octet-stream"},
+		"chunks":    {service.FileRef{Kind: "chunks"}, "application/json"},
 	}
 
 	for name, c := range cases {

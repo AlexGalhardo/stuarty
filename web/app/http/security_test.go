@@ -277,7 +277,7 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 		"projects.list", "projects.create", "projects.get", "projects.edit", "commands.list", "commands.get",
 		"projects.history", "projects.undo", "projects.redo", "media.import", "media.inspect", "media.list",
 		"projects.frame", "projects.sheet", "projects.lint", "jobs.start", "jobs.get", "jobs.list", "jobs.file",
-		"events.stream", "projects.plan", "media.proxy", "media.thumbnail", "media.strip", "media.peaks", "bitmaps.get",
+		"events.stream", "projects.plan", "media.proxy", "media.thumbnail", "media.strip", "media.peaks", "media.chunks", "bitmaps.get",
 	} {
 		if !slices.ContainsFunc(httpapi.Endpoints, func(e httpapi.Endpoint) bool { return e.ID == id }) {
 			t.Errorf("the Prototype operation %s has no row", id)

@@ -269,6 +269,7 @@ func fakeResult(ws string, in ingest.Input) (*ingest.Result, error) {
 		{"probe", "", "json", string(probe), 1, nil},
 		{"normalized", "", "mov", "normalized", 1, nil},
 		{"proxy", "", "mp4", "proxy-bytes", 1, nil},
+		{"chunks", "", "json", `{"version":1,"codec":"vp09.00.31.08.00.01.01.01.00"}`, 1, nil},
 		{
 			"thumbnails",
 			"",

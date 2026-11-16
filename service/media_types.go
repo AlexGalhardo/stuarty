@@ -162,7 +162,7 @@ type MediaInspectResult struct {
 
 // FileRef names a stored file for download (SDD-003 section 2.9).
 type FileRef struct {
-	Kind      string `json:"kind"` // "proxy", "thumbnail", "strip", "peaks" or "bitmap"
+	Kind      string `json:"kind"` // "proxy", "chunks", "thumbnail", "strip", "peaks" or "bitmap"
 	ProjectID string `json:"project_id,omitempty"`
 	ID        string `json:"id"`                // the asset id
 	Variant   string `json:"variant,omitempty"` // thumbnail width: 160, 320 or 640

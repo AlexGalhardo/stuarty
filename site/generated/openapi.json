@@ -7460,6 +7460,51 @@
         "summary": "Inspect an asset"
       }
     },
+    "/api/v1/projects/{id}/media/{asset_id}/chunks": {
+      "get": {
+        "operationId": "media.chunks",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download the chunk index of the video proxy of an asset"
+      }
+    },
     "/api/v1/projects/{id}/media/{asset_id}/peaks": {
       "get": {
         "operationId": "media.peaks",
