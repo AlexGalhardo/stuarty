@@ -720,6 +720,24 @@ Rasterizer (P1-RND-003, `engine/raster`, same machine, Go 1.27.4, `go test -benc
 
 The measurements came from one Windows machine with other processes running. The Prototype repeats the first row on the Linux and macOS runners and records the numbers here; the first row is also a benchmark in CI (`BenchmarkExportCommonCase`) that fails below 1.5 times real time on the reference runner, `ubuntu-latest` (the job sets `VUKEM_VIDEO_BENCH_MIN_RT=1.5` there; the Windows and macOS runners only report their number, since the Windows runner measured 1.10 times on the same build in the first run of release v0.21.0).
 
+**Regression guard (TASK-0136).** The budgets above are guarded in CI by `scripts/bench-gate.sh` against `.github/bench-limits.txt`. A limit is the slowest value measured on `ubuntu-latest` (the reference runner; no other runner has limits) worsened by the 20 percent of SDD-008 section 7 (the same margin as `perfreport`), and never looser than the requirement it belongs to. A speed floor is the measure times 0.8, a time, a size or a token count the measure times 1.2. The measures are those of the nightly run `133226885991` and the CI run `133561986165` (2026-11-16). The `pr` profile runs in the `export-1` Linux shard of the Go tests job (about 40 s); the `nightly` profile checks every limit on the output of the long benchmarks.
+
+| Benchmark (unit) | Measured on ubuntu-latest | Limit | Profile |
+| --- | --- | --- | --- |
+| `BenchmarkExportCommonCase` (times real time) | 1.92 on the AMD EPYC runner of CI (Windows runner 1.77), 1.43 on the Intel Xeon runner of the nightly job | CI: 1.5 (the floor of this section, `VUKEM_VIDEO_BENCH_MIN_RT`); nightly: 1.14 | pr (existing step), nightly |
+| `BenchmarkComposeRotated`, `ComposeColorMatrix`, `ComposeFilter`, `ComposeBlur` (times real time) | 1.70, 3.25, 3.02, 0.92 | at least 1.36, 2.60, 2.42, 0.74 | pr |
+| `BenchmarkComposeBlur8Bands`, `SampleRotatedFullFrame8Bands`, `CopyFullFrame` | 0.91 times real time, 21.0 ms, 1.42 ms | at least 0.73, at most 25.1 ms, 1.7 ms | nightly |
+| `BenchmarkCaptionMiss`, `BenchmarkCaptionHit` | 7.35 ms, 17 us | at most 8.8 ms, 20.6 us | pr |
+| `BenchmarkCommit200Items` p95, `BenchmarkRoundTrip200Items` p95 (NFR-001, 50 ms) | 13.7 ms, 16.5 ms | at most 16.4 ms, 19.8 ms | pr, nightly |
+| `BenchmarkExport60s` (NFR-006, NFR-007) | 41.7 s, 106 MB | at most 50.1 s, 127 MB | nightly |
+| `BenchmarkExportScale60s` | 42.7 s (1.41 times real time), 122 MB | at most 51.2 s, 147 MB | nightly |
+| `BenchmarkReleaseFPS60`, `FourK`, `GIF`, `AnimatedImage` (times real time; FourK peak) | 12.8, 0.119, 26.9, 6.24; FourK 384 MB | at least 10.2, 0.095, 21.5, 4.98; FourK at most 461 MB | nightly |
+| `BenchmarkViewFrameColdScale` p95 UI540 / Agent384 (NFR-004, NFR-023) | 79 ms, 75 ms | at most 95 ms, 90 ms | nightly |
+| `BenchmarkViewSheet9Scale` (NFR-022) | 1,479 tokens, 581 ms | at most 1,600 tokens, 700 ms | nightly |
+| `BenchmarkIngest60s` (NFR-005) | 20.5 s | at most 24.6 s | nightly |
+
+Two numbers on the reference runner are over a budget that was set on Windows: the caption cache miss (7.35 ms against 5 ms) and `BenchmarkComposeBlur` (0.92 against 1 time real time). The limit guards the runner, not the budget; they stay open until the Linux numbers of this section are re-measured. The runners of `ubuntu-latest` are not one machine (the Intel Xeon 8573C and the AMD EPYC 9V45 differ by 34 percent on `BenchmarkExportCommonCase`); a job that fails by less than the margin on a Xeon run is a runner draw, to be confirmed by running the job again before it is read as a regression. After an intended change, set the limits again from a fresh run on the same runner.
+
 **Prototype measurements** (P1-RND-004, `engine/compositor` and `engine/export`; Ryzen 7 5700X3D, Windows 11, Go 1.27.4, the pinned LGPL FFmpeg, `libopenh264`, a 1080×1920 clip of the project's size plus a six-word caption):
 
 | What | Measured |
