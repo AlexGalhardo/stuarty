@@ -73,6 +73,13 @@ func (s *svc) ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult,
 		}
 
 		width, height, _ = frame.ImageSize(st.Width, st.Height, budget)
+
+		// A budget of more than about 1000 tokens sizes a wide frame past the widest one served; the
+		// frame is then the widest one, not a refusal (VV-037).
+		if width > frame.MaxWidth {
+			width = frame.MaxWidth
+			height = max(2, 2*int(math.Round(float64(width)*float64(st.Height)/float64(st.Width)/2)))
+		}
 	}
 
 	jpeg, rerr := s.framesFor(v.doc).FrameSized(ctx, v.doc, v.ref(), int(at), width, height)

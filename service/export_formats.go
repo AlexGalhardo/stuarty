@@ -14,11 +14,13 @@ const (
 	FormatGIF = "gif"
 	FormatWAV = "wav"
 	FormatAAC = "aac"
+	// FormatPNG is one frame at the size of the project, chosen with args.at (VV-037).
+	FormatPNG = "png"
 )
 
 // ExportFormats are the export formats in the order the help lists them; the default
 // (mp4) comes first. The MCP definition of job_start must list the same values.
-var ExportFormats = []string{FormatMP4, FormatGIF, FormatWAV, FormatAAC}
+var ExportFormats = []string{FormatMP4, FormatGIF, FormatWAV, FormatAAC, FormatPNG}
 
 // JoinOr writes names as "a, b or c", the way the hints and the help list choices.
 func JoinOr(names []string) string {
@@ -46,6 +48,7 @@ var exportFormats = map[string]exportFormat{
 	FormatGIF: {".gif", "image/gif"},
 	FormatWAV: {".wav", "audio/wav"},
 	FormatAAC: {".m4a", "audio/mp4"},
+	FormatPNG: {".png", "image/png"},
 }
 
 // exportFormatOf returns the format of an export, mp4 for the empty one; ok is false for a

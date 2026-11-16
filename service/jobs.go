@@ -105,7 +105,21 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, gerr
 	}
 
-	start, end, terr := exportRange(doc, args)
+	var (
+		start, end int64
+		terr       *Error
+	)
+
+	switch {
+	case args.Format == FormatPNG:
+		start, end, terr = stillRange(doc, args)
+	case args.At != "":
+		terr = newError(command.CodeValidation, "at is for a png export.").withPath("args.at").
+			withHint("set format to png, or use start and end")
+	default:
+		start, end, terr = exportRange(doc, args)
+	}
+
 	if terr != nil {
 		return nil, terr
 	}
@@ -214,14 +228,14 @@ func decodeExportArgs(raw json.RawMessage) (ExportArgs, *Error) {
 	}
 
 	for name := range probe {
-		if name != "start" && name != "end" && name != "format" {
+		if name != "start" && name != "end" && name != "format" && name != "at" {
 			return a, newError(command.CodeValidation, "the export does not take the argument %q.", name).
-				withPath("args." + name).withHint("use start, end and format, all optional")
+				withPath("args." + name).withHint("use start, end, format and at, all optional; at is for format png")
 		}
 	}
 
 	if err := json.Unmarshal(raw, &a); err != nil {
-		return a, newError(command.CodeValidation, "start, end and format must be strings.").withPath("args")
+		return a, newError(command.CodeValidation, "start, end, format and at must be strings.").withPath("args")
 	}
 
 	return a, nil

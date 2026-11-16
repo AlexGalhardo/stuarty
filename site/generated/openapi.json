@@ -7458,18 +7458,23 @@
                         "description": "transcribe: the asset to transcribe.",
                         "type": "string"
                       },
+                      "at": {
+                        "description": "export png: the time of the frame, such as 1.5s.",
+                        "type": "string"
+                      },
                       "end": {
                         "description": "export: the end time, not included.",
                         "type": "string"
                       },
                       "format": {
                         "default": "mp4",
-                        "description": "export: the file to write; wav and aac are audio only.",
+                        "description": "export: the file to write; wav and aac are audio only; png is one frame at `at`.",
                         "enum": [
                           "mp4",
                           "gif",
                           "wav",
-                          "aac"
+                          "aac",
+                          "png"
                         ],
                         "type": "string"
                       },
