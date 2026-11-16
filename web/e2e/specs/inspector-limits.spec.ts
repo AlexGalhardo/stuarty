@@ -2,16 +2,19 @@ import { expect, seedProject, test } from "./helpers";
 
 // VV-065: a number the core would refuse is refused by the field itself, with
 // the limits of the registry, and no request goes out to be answered with an
-// error (so the browser console has none either).
+// error.
 test.describe("inspector limits", () => {
-	test("Crop = 1 and Opacity = 2 are refused in the field, with no request and no console error", async ({
+	test("Crop = 1 and Opacity = 2 are refused in the field, with no request and no refused answer", async ({
 		page,
 		request,
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
 		const errors: string[] = [];
-		page.on("console", (m) => {
-			if (m.type() === "error") errors.push(m.text());
+		// The console line of a refused request is the browser's own and differs by
+		// engine (Firefox and WebKit add font and CSP lines of their own), so the
+		// check is on the answers: no request of the page is refused.
+		page.on("response", (r) => {
+			if (r.status() >= 400) errors.push(`${r.status()} ${r.url()}`);
 		});
 		const edits: string[] = [];
 		page.on("request", (r) => {
