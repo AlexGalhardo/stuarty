@@ -55,6 +55,8 @@ type Compositor struct {
 	Bands int
 
 	scratch []byte
+	// flipBuf holds the mirrored pixels of a flipped layer.
+	flipBuf []byte
 	// blurA holds the blurred pixels and blurB the rows between the two directions of a blur.
 	blurA   []byte
 	blurB   []uint32
@@ -170,6 +172,8 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, outScale float64) err
 	if l.Blur > 0 {
 		src, p = c.blurred(src, p, mul(l.Blur, outScale))
 	}
+	// The flip mirrors the layer's own pixels; the mask above keeps the item's frame (SDD-004 section 3.10).
+	src = c.flipped(src, l.FlipX, l.FlipY)
 	c.draw(dst, src, p, op, blendOf(l.Blend), mask)
 	return nil
 }

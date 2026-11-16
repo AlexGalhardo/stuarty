@@ -71,6 +71,9 @@ var requiredCases = []string{
 	"mask-rect",
 	"mask-ellipse-feather",
 	"mask-invert-rotated",
+	"flip-x",
+	"flip-y",
+	"flip-rotated-masked",
 }
 
 const (
@@ -274,6 +277,20 @@ func maskCase(name string, m timeline.Mask, edit func(it *timeline.Item)) alphaC
 	return b.build(0, 15, 29)
 }
 
+// flipCase draws a clip mirrored over the portrait clip; edit sets what else the item has.
+func flipCase(name string, fx, fy bool, edit func(it *timeline.Item)) alphaCase {
+	b := newCase("flip "+name, rate(30, 1))
+	b.backdrop(30)
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale, it.FlipX, it.FlipY = "contain", 0.9, fx, fy
+		it.X, it.Y = new(90.0), new(160.0)
+		if edit != nil {
+			edit(it)
+		}
+	})
+	return b.build(0, 15, 29)
+}
+
 // alphaCases are the builders of the cases, by folder name.
 var alphaCases = map[string]func() alphaCase{
 	"contain-background": func() alphaCase {
@@ -448,6 +465,14 @@ var alphaCases = map[string]func() alphaCase{
 			},
 		)
 	},
+	"flip-x": func() alphaCase { return flipCase("x", true, false, nil) },
+	"flip-y": func() alphaCase { return flipCase("y", false, true, nil) },
+	"flip-rotated-masked": func() alphaCase {
+		return flipCase("rotated masked", true, true, func(it *timeline.Item) {
+			it.Scale, it.Rotation = 0.8, 20
+			it.Mask = &timeline.Mask{Shape: "rect", X: 0.1, Y: 0.1, Width: 0.5, Height: 0.6, Feather: 4}
+		})
+	},
 	"source-fps-24": func() alphaCase {
 		b := newCase("a source at 24 fps in a 30 fps project", rate(30, 1))
 		b.clip(b.track(), b.video(portrait24), 0, 60, nil)
@@ -610,7 +635,8 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 	for _, name := range requiredCases {
 		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") &&
 			!strings.HasPrefix(name, "sticker-") && !strings.HasPrefix(name, "chroma-") &&
-			!strings.HasPrefix(name, "blend-") && !strings.HasPrefix(name, "mask-") {
+			!strings.HasPrefix(name, "blend-") && !strings.HasPrefix(name, "mask-") &&
+			!strings.HasPrefix(name, "flip-") {
 			continue
 		}
 		t.Run(name, func(t *testing.T) {
