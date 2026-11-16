@@ -863,6 +863,15 @@
         },
         "beats_apply": "Mark beats"
       },
+      "markers": {
+        "title": {
+          "one": "Marker (1)",
+          "other": "Markers ({count})"
+        },
+        "position": "Position",
+        "label": "Label",
+        "remove": "Remove marker"
+      },
       "fonts": {
         "title": "Fonts",
         "remove": "Remove font family {name}",

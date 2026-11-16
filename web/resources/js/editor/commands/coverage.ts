@@ -22,6 +22,7 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"library.remove": ["asset.remove"],
 	"timeline.split": ["item.split"],
 	"timeline.marker": ["marker.add", "marker.remove"],
+	"inspector.marker": ["marker.set", "marker.remove"],
 	"timeline.trim_start": ["item.trim"],
 	"timeline.trim_end": ["item.trim"],
 	"timeline.slide": ["item.move"],
@@ -236,9 +237,13 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	],
 	"marker.remove": [
 		{ kind: "key", action: "timeline.marker", phase: "B" },
+		{ kind: "inspector", action: "inspector.marker", phase: "B" },
 		palette,
 	],
-	"marker.set": [palette],
+	"marker.set": [
+		{ kind: "inspector", action: "inspector.marker", phase: "B" },
+		palette,
+	],
 	"clip.set_color": [
 		{ kind: "inspector", action: "inspector.color", phase: "A" },
 		palette,

@@ -27,6 +27,8 @@ import {
 	keyframeRemoveOperations,
 	keyframeSetOperations,
 	markBeatsOperations,
+	markerRemoveOperations,
+	markerSetOperations,
 	moveItems,
 	moveOperations,
 	nextSlotName,
@@ -76,6 +78,23 @@ function times(ops: ReturnType<typeof moveItems>): unknown[] {
 }
 
 const range = (id: string, start: number) => ({ id, start, duration: 30 });
+
+describe("marker builders", () => {
+	test("a marker is found by its frame, on the timeline or on an item", () => {
+		expect(markerSetOperations(30, { label: "Hook" })).toEqual([
+			{ op: "marker.set", args: { at: "30f", label: "Hook" } },
+		]);
+		expect(markerSetOperations(30, { to: "2s" }, "itm_a")).toEqual([
+			{ op: "marker.set", args: { at: "30f", item_id: "itm_a", to: "2s" } },
+		]);
+		expect(markerRemoveOperations(30, "itm_a")).toEqual([
+			{ op: "marker.remove", args: { at: "30f", item_id: "itm_a" } },
+		]);
+		expect(markerRemoveOperations(30)).toEqual([
+			{ op: "marker.remove", args: { at: "30f" } },
+		]);
+	});
+});
 
 describe("builders emit times as strings with a unit (T8)", () => {
 	test("moveItems", () => {
