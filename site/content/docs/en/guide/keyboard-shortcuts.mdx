@@ -1,54 +1,103 @@
 ---
 title: "Keyboard shortcuts"
-description: "The basic shortcuts of the editor, and the command palette that reaches every command."
+description: "Every shortcut of the editor, how to change nine of them, and the command palette that reaches every command."
 ---
 
 ## You will learn
 
-- the shortcuts the editor has today;
+- the shortcuts of the editor, grouped by what they do;
+- how to change a shortcut;
 - how to reach any command without a shortcut.
 
 ## The idea
 
-The editor has a basic set of shortcuts. `Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS. A shortcut never fires while you type in a field. Advanced and customizable shortcuts are not part of this release.
+`Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS. A shortcut never fires while you type in a field, except `Mod+K`. Press `?` at any time to open the list inside the editor.
+
+### Play and move the playhead
 
 | Keys | Does |
 | --- | --- |
 | `Space` | play or pause |
-| `Mod+K` | open or close the command palette, also inside a field |
-| `Mod+Z` | undo |
-| `Mod+Shift+Z` or `Mod+Y` | redo |
-| `S` | split the selected item at the playhead |
-| `[` and `]` | trim the start or the end of the selected item to the playhead |
-| `C` | add a caption |
-| `T` | add a text item |
-| `Delete` or `Backspace` | delete the selection |
+| `Left`, `Right` | step one frame |
+| `Shift+Left`, `Shift+Right` | step one second |
+| `Home`, `End` | go to the start or the end |
+| `Up`, `Down` | go to the previous or the next cut |
+| `J`, `K`, `L` | back one second, pause, play |
+
+### Markers and range
+
+| Keys | Does |
+| --- | --- |
+| `M` | add a marker at the playhead, or remove the one there |
+| `Mod+Shift+Left`, `Mod+Shift+Right` | go to the previous or the next marker |
+| `I`, `O` | set the in point and the out point |
+| `Mod+Shift+X` | clear the in and out points |
+
+### Cut and arrange
+
+| Keys | Does |
+| --- | --- |
+| `Mod+B` | split the selected item at the playhead |
+| `Mod+Shift+B` | split every track at the playhead |
+| `Q`, `W` | delete what is left, or right, of the playhead |
+| `[`, `]` | select everything left, or right, of the playhead |
+| `Mod+Alt+Left`, `Mod+Alt+Right` | slide the selected item by one frame; its neighbours keep touching it |
+| `Mod+Alt+Shift+Left`, `Mod+Alt+Shift+Right` | roll the cut after the selected item by one frame |
+| `Alt+,`, `Alt+.` | slip the selected clip by one frame, showing another part of its source |
+| `Delete`, `Backspace` | delete the selection |
 | `Shift+Delete` | delete and close the gap on the track |
 | `Mod+D` | duplicate the selection |
+| `Mod+C`, `Mod+X`, `Mod+V` | copy, cut and paste items |
 | `F2` | rename the selected item |
-| `Mod+A` | select every item |
-| Arrow keys | move the focus between items; `Home` and `End` go to the first and last of the track |
-| `Enter` | activate the focused item |
-| `Alt+Left` and `Alt+Right` | nudge the selection by one frame; with `Shift`, by one second |
-| `Alt+Up` and `Alt+Down` | move the selection to the track above or below |
-| `+` and `-` | zoom the timeline in and out |
+| `Mod+.`, `Mod+,` | volume up or down by 0.1 dB |
+
+### Add
+
+| Keys | Does |
+| --- | --- |
+| `C` | add a caption |
+| `T` | add a text item |
+| `Mod+I` | import media |
+| `Mod+E` | export |
+
+### History, zoom and panels
+
+| Keys | Does |
+| --- | --- |
+| `Mod+Z` | undo |
+| `Mod+Shift+Z`, `Ctrl+Y` | redo |
+| `Mod+=`, `+` | zoom the timeline in |
+| `Mod+-`, `-` | zoom the timeline out |
 | `Shift+Z` | fit the whole project in the timeline |
+| `Alt+Shift+Z`, `Alt+Shift+=`, `Alt+Shift+-` | fit the preview, zoom it in, zoom it out |
 | `N` | turn snapping on or off |
-| `Esc` | clear the selection |
 | `Alt+1`, `Alt+2`, `Alt+3` | show or hide the media, inspector and history panels |
+| `Mod+A` | select every item |
+| `Esc` | cancel, close or clear the selection |
+| `F6` | jump to the next region (`Shift+F6` to the previous) |
+| `Mod+K` | open or close the command palette, also inside a field |
+| `Mod+S` | save (every edit is saved already) |
+| `?` | open the list of shortcuts |
+
+Inside the timeline, the arrow keys move the focus between items, `Home` and `End` go to the first and last item of the track, and `Enter` activates the focused item.
+
+## Change a shortcut
+
+Nine shortcuts can be changed: split (`Mod+B`), the two trims (`Q` and `W`), add caption (`C`), add text (`T`), snapping (`N`) and the three timeline zooms. Press `?`, choose the key of the row, then press the new one. `Esc` cancels. A key that another row already uses, and `Tab` and `Enter`, are refused. **Reset to defaults** restores them all.
 
 ## Quick start
 
-Press `Mod+K`. The palette lists every command of the product with a form built from its arguments. Type part of a name, such as `crossfade`, choose a command, fill the form and press **Preview** to see the diff or **Run** to apply it. **Add to batch** collects several commands and runs them as one undo step. This is the same command set the CLI and the agents use, so any command without a shortcut or a panel is reachable here.
+Press `Mod+K`. The palette lists every command of the product with a form built from its arguments. Type part of a name, such as `crossfade`, choose it, fill the form and confirm. Anything an agent can do, you can do from here.
 
 An agent has no keyboard: it sends the same commands with `vukem-video edit` or the `edit` tool. See [Commands, batches and revisions](/docs/concepts/commands-and-revisions).
 
 ## Common mistakes
 
-- Pressing `S` while a text field is focused: it types the letter. Click the timeline first.
+- Pressing `Q` or `W` while a text field is focused: it types the letter. Click the timeline first.
 - Using `Alt+1` with `Ctrl` held: the browser owns that combination. Use `Alt` alone.
+- Looking for `S` to split: split is `Mod+B` (you can rebind it).
 
 ## Next steps
 
-- [Editing tools: trim, split, move](/docs/guide/editing-tools)
+- [Trim, split and move clips](/docs/guide/editing-tools)
 - [Undo and history](/docs/guide/undo-and-history)

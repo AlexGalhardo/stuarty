@@ -46,12 +46,26 @@ An export is an MP4 unless you choose another format with `--format` (CLI) or `a
 | `gif` | `.gif` | the composed frames, no audio; needs no encoder |
 | `wav` | `.wav` | the audio mix as 16-bit PCM, 48 kHz, stereo |
 | `aac` | `.m4a` | the same mix as AAC in an MP4 container |
+| `png` | `.png` | one frame at the size of the project, chosen with `--at` (the start by default) |
 
 ```bash
 vukem-video export --project prj_7k2m9x4q1b --format gif
+vukem-video export --project prj_7k2m9x4q1b --format png --at 2s
 ```
 
-With MCP: `job_start` with `{"project_id": "prj_7k2m9x4q1b", "kind": "export", "args": {"format": "wav"}}`.
+With MCP: `job_start` with `{"project_id": "prj_7k2m9x4q1b", "kind": "export", "args": {"format": "wav"}}`. For a frame, add `"at": "2s"` to `args`; `at` is only for `png`.
+
+### Choose the range
+
+`--start` and `--end` export only part of the timeline (by default, all of it).
+
+### Copy the file where you want it
+
+The workspace keeps the file under `exports/`. `--out <file>` also copies it to the path you give once the job succeeds (it implies `--wait`, and the workspace keeps its own copy). It refuses to replace a file unless you add `--force`.
+
+```bash
+vukem-video export --project prj_7k2m9x4q1b --out ~/teaser.mp4
+```
 
 ## Exchange a timeline with OpenTimelineIO
 
@@ -89,7 +103,7 @@ vukem-video bundle:import launch-teaser.vvbundle --dry-run
 
 Without `--as-new` the project keeps its id and its history of edits. If a project with that id exists, even in the trash, the import is refused with `E_ID_EXISTS`. With `--as-new` the project gets a new id and starts at revision 1 with no history, because the history of another project does not belong to a new one. A server with accounts requires `--as-new`. `--dry-run` checks the file and reports what would be created. A file that is damaged, too large, has a different format or comes from a newer version of the product is refused with `E_VALIDATION` and a reason, and nothing is imported. The HTTP API has the same operation as `POST /api/v1/projects/import`.
 
-There is no MCP tool for bundles and the editor has no bundle entry yet.
+There is no MCP tool for bundles. The projects page of the editor has **Import a bundle** (a file path on the machine of the server, with the option to import as a new project) and **Export bundle** on each project.
 
 ## Draw the export on the GPU (optional)
 

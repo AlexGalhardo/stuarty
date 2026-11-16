@@ -160,17 +160,65 @@ function errorCodes(): string {
 	const rows = [...registry]
 		.sort((a, b) => a.code.localeCompare(b.code))
 		.map((e) => [code(e.code), String(e.http), e.retryable ? "yes" : "no", esc(meaning.get(e.code) ?? "")]);
-	const anchors = rows.map((r) => `<a id="${r[0].replace(/`/g, "").toLowerCase()}"></a>`).join("");
+
+	const known = new Set(registry.map((e) => e.code));
+	const status = serviceStatuses();
+	const serviceRows: string[][] = [];
+	for (const [codes, text, retry] of sddTable("docs/sdds/000-shared-definitions.md", /^## 8\. /m)) {
+		for (const c of codes.match(/E_[A-Z_]+/g) ?? []) {
+			if (known.has(c)) continue;
+			serviceRows.push([code(c), String(status.get(c) ?? 500), retry === "yes" ? "yes" : "no", esc(text ?? "")]);
+		}
+	}
+	serviceRows.sort((a, b) => a[0].localeCompare(b[0]));
+
+	const anchors = [...rows, ...serviceRows].map((r) => `<a id="${r[0].replace(/`/g, "").toLowerCase()}"></a>`).join("");
 	return page(
 		"Error codes",
-		"Every error code of the core, its HTTP status and whether retrying can help.",
+		"Every error code, its HTTP status and whether retrying can help.",
 		[
 			"An error carries `code`, `message`, `hint` and `retryable`. The CLI exits with `2` for a retryable code and `1` otherwise.",
 			anchors,
+			"## Errors of the editing commands",
+			"Raised by the command core when an operation of a batch is refused.",
 			table(["Code", "HTTP", "Retryable", "Meaning"], rows),
-			"The service adds codes of its own (for example `E_UNAUTHORIZED`, `E_ASSET_NOT_READY`, `E_QUEUE_FULL`, `E_EXPORT_FAILED`); they appear in the results of the calls that raise them.",
+			"## Errors of the service",
+			"Raised around the commands: sign-in, imports, exports, jobs and limits. They appear in the results of the calls that raise them. A code that is not in the status table of the service answers with HTTP 500, which is the status of the failures of a job.",
+			table(["Code", "HTTP", "Retryable", "Meaning"], serviceRows),
 		].join("\n\n"),
 	);
+}
+
+const STATUS_NUMBERS: Record<string, number> = {
+	StatusBadRequest: 400,
+	StatusUnauthorized: 401,
+	StatusForbidden: 403,
+	StatusNotFound: 404,
+	StatusMethodNotAllowed: 405,
+	StatusConflict: 409,
+	StatusRequestEntityTooLarge: 413,
+	StatusUnprocessableEntity: 422,
+	StatusTooManyRequests: 429,
+	StatusClientClosed: 499,
+	StatusInternalServerError: 500,
+	StatusServiceUnavailable: 503,
+};
+
+/** The HTTP status of each error code of service/error.go, read from the `HTTPStatus` switch of the service. */
+export function serviceStatuses(): Map<string, number> {
+	const src = fs.readFileSync(path.join(root, "service", "error.go"), "utf8").replace(/\r\n/g, "\n");
+	const consts = new Map<string, string>();
+	for (const m of src.matchAll(/(Code[A-Za-z]+)\s*=\s*"(E_[A-Z_]+)"/g)) consts.set(m[1], m[2]);
+	const out = new Map<string, number>();
+	for (const m of src.matchAll(/case ([^:]+?):\s*return (?:http\.)?(Status[A-Za-z]+)/gs)) {
+		const num = STATUS_NUMBERS[m[2]];
+		if (num === undefined) throw new Error(`service/error.go: status ${m[2]} is not in STATUS_NUMBERS`);
+		for (const token of m[1].matchAll(/"(E_[A-Z_]+)"|(?<![A-Za-z.])(Code[A-Za-z]+)/g)) {
+			const c = token[1] ?? consts.get(token[2]);
+			if (c) out.set(c, num);
+		}
+	}
+	return out;
 }
 
 type CliCommand = {

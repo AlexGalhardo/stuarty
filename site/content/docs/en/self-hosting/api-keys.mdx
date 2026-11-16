@@ -28,8 +28,8 @@ Scopes are independent: none implies another, `admin` included. The effective sc
 - at most 10 creations per hour per user and 50 unrevoked keys per user;
 - only a signed-in session can create a key: a key can never create a key.
 
-<Callout type="warning" title="No keys page in this release">
-The editor has no page for keys yet. Create them with the HTTP calls below.
+<Callout type="info" title="The keys page">
+In network mode, the editor has an **API keys** page (`/settings/keys`, linked from the header) where a signed-in person creates a key with a name, its scopes and an optional project, sees the secret once and revokes keys. The HTTP calls below do the same.
 </Callout>
 
 ## Quick start

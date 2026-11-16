@@ -20,7 +20,7 @@ When a video asset is imported, the product analyses its audio and records where
 | `padding` | `0.1s` | Speech kept around each cut |
 | `ripple` | `track` | `track` closes the gaps, `none` leaves them |
 
-The command never starts an analysis itself: the service supplies the silences of the asset. Read them first with `media_inspect` and the section `silences`. Silence removal has no inspector section yet: use the command palette (`Ctrl+K`, `Cmd+K` on macOS), the CLI or an agent. The whole cut is one undo step.
+The command never starts an analysis itself: the service supplies the silences of the asset. Read them first with `media_inspect` and the section `silences`. The inspector of a clip has a **Silences** section (minimum silence, padding and **Remove silences**); the CLI and an agent use `clip.remove_silences`. The whole cut is one undo step.
 
 ## Quick start
 

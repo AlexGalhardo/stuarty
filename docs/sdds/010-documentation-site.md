@@ -320,7 +320,7 @@ The user guide follows the FreeCut outline of research note `notes/vukem` sectio
 | --- | --- | --- | --- | --- |
 | Core editing | Media library | `guide/media-library` | P | H |
 | Core editing | Basic timeline editing | `guide/timeline` | P | H |
-| Core editing | Editing tools: trim, split, move | `guide/editing-tools` | P | H |
+| Core editing | Trim, split and move clips | `guide/editing-tools` | P | H |
 | Core editing | Preview and playback | `guide/preview` | P | H |
 | Core editing | Clip properties | `guide/clip-properties` | A | H |
 | Core editing | Undo and history | `guide/undo-and-history` | P | H |
@@ -620,7 +620,7 @@ Each check is verifiable from this document and the repository alone.
 5. Every docs page has `<html lang="en">`, one `canonical` pointing to itself and no hreflang (verified by `check-built.ts`).
 6. (removed with the language switcher, TASK-0265) The header has no language control, and `/pt-br/...` addresses redirect to the English page (a built `out/pt-br/docs/guide/audio/index.html` refreshes to `docs/guide/audio/`).
 7. `sitemap.xml` lists every page and the landing page and the changelog, no `.md` twin and no `pt-br` URL.
-8. Searching `trim` in the dialog finds `Editing tools: trim, split, move`.
+8. Searching `trim` in the dialog finds `Trim, split and move clips`.
 9. (removed with the translation check, TASK-0265)
 10. `npm run reference` run twice produces no diff; changing a command description in the Go struct tags and rerunning changes only that command page and `commands.json`; a pull request that changes a command without regenerating fails the `Generated files` job and `reference:check`.
 11. `llms.txt` follows section 9 and every URL in it resolves in `out/`; `llms-full.txt` contains every page's twin in sidebar order.

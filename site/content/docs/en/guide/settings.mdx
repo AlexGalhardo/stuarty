@@ -15,11 +15,11 @@ There are three levels of settings, and they are kept apart on purpose.
 
 **Project settings** are part of the project and its history, so every change can be undone: the frame `width` and `height` (even numbers, 16 to 4096), the frame rate, the `background` colour (a hex colour or a template colour such as `$paper`), and the `loudness_target` in LUFS (-30 to -5). Changing the frame rate rescales every time in the project and repairs what rounding breaks, such as a duration that became zero; the result lists every item it adjusted. The name of the project is changed with `project.rename`. New projects start from a preset: 9:16, 1:1, 16:9 or 4:5.
 
-**Editor preferences** are yours and live in the browser: the language (English or Brazilian Portuguese), chosen on the projects page, and the light or dark theme, which has a button on the projects page and in the top bar of the editor. The language switch changes only the editor; the CLI and MCP text stays English.
+**Editor preferences** are yours and live in the browser. The **Settings** page (the `/settings` address) holds the language (English or Brazilian Portuguese), the theme (light or dark; the top bar of the editor has a button too), the unit of a number typed without a unit in a time field (seconds or frames), and an **About** block with the version and the workspace folder. The language switch changes only the editor; the CLI and MCP text stays English.
 
 **Server settings** are environment variables read at start-up, such as the encoder, the limits and the mode. They are listed in [Configuration variables](/docs/reference/configuration). Changing one needs a restart.
 
-There is no settings page in this release: project settings are changed with the command palette (`Ctrl+K`, `Cmd+K` on macOS), the CLI or an agent.
+In the editor, select nothing: the inspector then shows the project panel, with the project name, the aspect (or a custom width and height), the background, the loudness target and the frame rate. Changing the frame rate asks you to confirm and then lists every item that had to be adjusted. The same changes are available from the CLI, an agent and the command palette (`Ctrl+K`, `Cmd+K` on macOS).
 
 ## Quick start
 
