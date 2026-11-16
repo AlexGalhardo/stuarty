@@ -254,6 +254,15 @@ func clipMetadata(it *timeline.Item) object {
 		props["speed"] = object{"num": it.Speed.Num, "den": it.Speed.Den}
 	}
 
+	if len(it.SpeedCurve) > 0 {
+		pts := make([]any, len(it.SpeedCurve))
+		for i, p := range it.SpeedCurve {
+			pts[i] = object{"t": p.T, "speed": object{"num": p.Speed.Num, "den": p.Speed.Den}}
+		}
+
+		props["speed_curve"] = pts
+	}
+
 	if k := it.ChromaKey; k != nil {
 		props["chroma_key"] = object{
 			"color":      string(k.Color),
@@ -499,7 +508,7 @@ func lostProperties(it *timeline.Item) []Lost {
 		feature string
 	}{
 		{len(it.Keyframes) > 0, "keyframes"},
-		{it.Speed.Num != it.Speed.Den, "speed"},
+		{it.Speed.Num != it.Speed.Den || len(it.SpeedCurve) > 0, "speed"},
 		{it.Brightness != 0 || it.Contrast != 1 || it.Saturation != 1 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0, "colour adjustment"},
 		{(it.Filter != "none" && it.Filter != "") || it.Blur != 0, "filter and blur"},
 		{it.ChromaKey != nil, "chroma key"},

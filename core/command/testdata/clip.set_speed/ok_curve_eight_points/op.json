@@ -1,0 +1,40 @@
+{
+  "op": "clip.set_speed",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "curve": [
+      {
+        "t": 0,
+        "speed": "1x"
+      },
+      {
+        "t": 0.1,
+        "speed": "2x"
+      },
+      {
+        "t": 0.2,
+        "speed": "0.5x"
+      },
+      {
+        "t": 0.3,
+        "speed": "4x"
+      },
+      {
+        "t": 0.4,
+        "speed": "1x"
+      },
+      {
+        "t": 0.5,
+        "speed": "0.25x"
+      },
+      {
+        "t": 0.75,
+        "speed": "3x"
+      },
+      {
+        "t": 1,
+        "speed": "1x"
+      }
+    ]
+  }
+}

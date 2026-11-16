@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "Give either speed or curve, not both.",
+  "hint": "A speed clears the curve; a curve sets the speed to its mean.",
+  "retryable": false,
+  "path": "args.curve"
+}

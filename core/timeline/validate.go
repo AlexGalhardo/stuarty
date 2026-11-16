@@ -425,7 +425,8 @@ func (v *validator) item(key string, it Item) {
 func (v *validator) itemFieldsForType(path, key string, it Item) {
 	bad := func(name string) { v.add(VShape, path+"."+name, key, "%s does not apply to %s items", name, it.Type) }
 	media := it.Type == ItemClip || it.Type == ItemAudio
-	if !media && (it.Asset != "" || it.SourceIn != 0 || it.FadeIn != 0 || it.FadeOut != 0 || it.Denoise != 0) {
+	if !media && (it.Asset != "" || it.SourceIn != 0 || it.FadeIn != 0 || it.FadeOut != 0 || it.Denoise != 0 ||
+		len(it.SpeedCurve) > 0) {
 		bad("asset")
 	}
 	if it.Type != ItemClip &&
@@ -497,6 +498,23 @@ func (v *validator) media(path, key string, it Item) {
 		v.add(VShape, path+".speed", key, "speed num and den must be positive")
 	case sp.Num*4 < sp.Den || sp.Num > 4*sp.Den:
 		v.add(VSpeed, path+".speed", key, "speed %d/%d is outside 1/4 to 4", sp.Num, sp.Den)
+	}
+
+	if len(it.SpeedCurve) > 0 {
+		if msg := CurveError(it.SpeedCurve); msg != "" {
+			v.add(VSpeed, path+".speed_curve", key, "%s", msg)
+		} else if m := CurveMean(it.SpeedCurve); m != sp {
+			v.add(
+				VSpeed,
+				path+".speed",
+				key,
+				"speed %d/%d is not the mean %d/%d of the speed curve",
+				sp.Num,
+				sp.Den,
+				m.Num,
+				m.Den,
+			)
+		}
 	}
 
 	// Asset reference and source range.

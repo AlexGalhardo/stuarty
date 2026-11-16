@@ -2,6 +2,7 @@ package command
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -11,11 +12,13 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "clip.set_speed",
-		Summary: "Changes the speed of a clip or audio item while keeping the same source range.",
-		Description: "Sets the speed, from 0.25x to 4x, and rescales the duration, the fades, the transitions and the " +
-			"keyframes by the same ratio. With ripple track the later items of the track follow the change in length. " +
-			"Captions linked to the clip are listed, not changed.",
-		Example: `{"item_id": "itm_m1n2p3q4r5", "speed": "1.5x", "ripple": "track"}`,
+		Summary: "Changes the speed of a clip or audio item, constant or along a curve, keeping the same source range.",
+		Description: "Sets either speed, from 0.25x to 4x, or curve, 2 to 8 points {t, speed} with t the fraction of the " +
+			"item from 0 to 1 (first 0, last 1) and a linear ramp between points; a speed clears the curve. Rescales the " +
+			"duration, the fades, the transitions and the keyframes by the ratio of the old to the new mean speed. With " +
+			"ripple track the later items of the track follow the change in length. Captions linked to the clip are " +
+			"listed, not changed.",
+		Example: `{"item_id": "itm_m1n2p3q4r5", "curve": [{"t": 0, "speed": "1x"}, {"t": 0.5, "speed": "3x"}, {"t": 1, "speed": "1x"}]}`,
 		Errors: []string{
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeOutOfSource, CodeInvalidTime, CodeOverlap,
 		},
@@ -25,16 +28,24 @@ func init() {
 }
 
 type clipSpeedArgs struct {
-	ItemID string `json:"item_id"          desc:"A clip of a video asset, or an audio item."`
-	Speed  any    `json:"speed"            desc:"\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4." schema:"speed"`
-	Ripple string `json:"ripple,omitempty" desc:"none (default) or track: shift the later items of the track."                      enum:"none,track"`
+	ItemID string           `json:"item_id"          desc:"A clip of a video asset, or an audio item."`
+	Speed  any              `json:"speed,omitempty"  desc:"\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4. Not with curve."      schema:"speed"`
+	Curve  []speedPointArgs `json:"curve,omitempty"  desc:"Speed ramp: 2 to 8 points, linear between them, first t 0 and last t 1. Not with speed."                minitems:"2" maxitems:"8"`
+	Ripple string           `json:"ripple,omitempty" desc:"none (default) or track: shift the later items of the track."                                                                     enum:"none,track"`
+}
+
+type speedPointArgs struct {
+	T     float64 `json:"t"     desc:"Position in the item, 0 to 1, up to 3 decimals." min:"0" max:"1"`
+	Speed any     `json:"speed" desc:"\"1.5x\" (up to 3 decimals), 1/4 to 4."                          schema:"speed"`
 }
 
 // parseSpeed reads a speed argument and returns it in lowest terms.
-func parseSpeed(v any) (timeline.Rational, *Error) {
+func parseSpeed(v any) (timeline.Rational, *Error) { return parseSpeedAt(v, "args.speed") }
+
+func parseSpeedAt(v any, path string) (timeline.Rational, *Error) {
 	bad := func(format string, a ...any) *Error {
 		return Errorf(CodeValidation, format, a...).
-			WithHint(`Use a speed from "0.25x" to "4x".`).WithPath("args.speed")
+			WithHint(`Use a speed from "0.25x" to "4x".`).WithPath(path)
 	}
 	var num, den int
 	switch x := v.(type) {
@@ -82,8 +93,47 @@ func speedWord(num, den int) string {
 	return strconv.FormatFloat(float64(num)/float64(den), 'f', -1, 64) + "x"
 }
 
+// parseCurve reads the points of a speed curve and checks them against the limits of
+// timeline.CurveError; the speeds of a curve are multiples of 0.001.
+func parseCurve(in []speedPointArgs) ([]timeline.SpeedPoint, *Error) {
+	pts := make([]timeline.SpeedPoint, len(in))
+	for i, p := range in {
+		path := fmt.Sprintf("args.curve[%d]", i)
+		sp, err := parseSpeedAt(p.Speed, path+".speed")
+		if err != nil {
+			return nil, err
+		}
+		pts[i] = timeline.SpeedPoint{T: p.T, Speed: sp}
+	}
+	if msg := timeline.CurveError(pts); msg != "" {
+		return nil, Errorf(CodeValidation, "args.curve is not a speed curve: %s.", msg).
+			WithHint(`Use 2 to 8 points like {"t": 0, "speed": "1x"} ... {"t": 1, "speed": "2x"}.`).
+			WithPath("args.curve")
+	}
+	for i := range pts {
+		pts[i].T = round3(pts[i].T)
+	}
+	return pts, nil
+}
+
 func applyClipSetSpeed(c *Context, a *clipSpeedArgs) error {
-	next, err := parseSpeed(a.Speed)
+	if err := atLeastOne([]string{"speed", "curve"}, a.Speed != nil, len(a.Curve) > 0); err != nil {
+		return err
+	}
+	if a.Speed != nil && len(a.Curve) > 0 {
+		return Errorf(CodeValidation, "Give either speed or curve, not both.").
+			WithHint("A speed clears the curve; a curve sets the speed to its mean.").WithPath("args.curve")
+	}
+	var next timeline.Rational
+	var curve []timeline.SpeedPoint
+	var err *Error
+	if len(a.Curve) > 0 {
+		if curve, err = parseCurve(a.Curve); err == nil {
+			next = timeline.CurveMean(curve)
+		}
+	} else {
+		next, err = parseSpeed(a.Speed)
+	}
 	if err != nil {
 		return err
 	}
@@ -107,7 +157,7 @@ func applyClipSetSpeed(c *Context, a *clipSpeedArgs) error {
 	}
 
 	var adjusted []adjustment
-	it.Speed, it.Duration = next, newDur
+	it.Speed, it.SpeedCurve, it.Duration = next, curve, newDur
 	adjusted = append(adjusted, rescaleForSpeed(&it, rescaler{
 		int64(old.Num) * int64(next.Den), int64(old.Den) * int64(next.Num),
 	})...)
@@ -146,6 +196,9 @@ func applyClipSetSpeed(c *Context, a *clipSpeedArgs) error {
 		linked = []string{}
 	}
 	c.SetEffective("speed", map[string]any{"num": next.Num, "den": next.Den})
+	if len(curve) > 0 {
+		c.SetEffective("curve_points", len(curve))
+	}
 	c.SetEffective("duration", map[string]any{"before": oldDur, "after": newDur})
 	c.SetEffective("shift", shift)
 	c.SetEffective("clamped", clamped)

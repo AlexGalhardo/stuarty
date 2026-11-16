@@ -31,9 +31,27 @@ type AudioSource struct {
 	StartSample int64             `json:"start_sample"` // position on the output, at 48 kHz
 	SourceStart int64             `json:"source_start"` // first sample of the asset's normalized audio
 	Samples     int64             `json:"samples"`      // output samples
-	Speed       timeline.Rational `json:"speed"`
+	Speed       timeline.Rational `json:"speed"`        // the mean speed when Curve is set
+	Curve       *SpeedRamp        `json:"speed_curve,omitempty"`
 	Gain        []GainPoint       `json:"gain"`              // volume or its keyframes, times the fades
 	Denoise     float64           `json:"denoise,omitempty"` // noise reduction strength 0 to 1 (SDD-004 §7); absent means off
+}
+
+// SpeedRamp is the speed curve of an item as the plan carries it (SDD-004 §3.11): the points,
+// the duration of the whole item and the item frame at which the window starts, which is what
+// timeline.CurveOffset needs to give the source position of any later frame.
+type SpeedRamp struct {
+	Points     []timeline.SpeedPoint `json:"points"`
+	ItemFrames int                   `json:"item_frames"`
+	FirstFrame int                   `json:"first_frame"`
+}
+
+// curveOf is the ramp of an item whose window starts at timeline frame cs, or nil when its speed is constant.
+func curveOf(it *timeline.Item, cs int) *SpeedRamp {
+	if len(it.SpeedCurve) == 0 {
+		return nil
+	}
+	return &SpeedRamp{Points: it.SpeedCurve, ItemFrames: it.Duration, FirstFrame: cs - it.Start}
 }
 
 // audible reports whether the item is a source: a clip whose asset has audio
@@ -118,7 +136,7 @@ func audioSource(doc *timeline.Document, it *timeline.Item, cs, ce int) AudioSou
 
 	pos := int64(it.SourceIn)
 	if it.Speed.Den > 0 {
-		pos += int64(cs-it.Start) * int64(it.Speed.Num) / int64(it.Speed.Den)
+		pos += int64(it.SourceOffset(cs - it.Start))
 	}
 
 	gain := envelope(it, fps, cs-it.Start, ce-it.Start)
@@ -137,6 +155,7 @@ func audioSource(doc *timeline.Document, it *timeline.Item, cs, ce int) AudioSou
 		SourceStart: frameSample(fps, int(pos)),
 		Samples:     frameSample(fps, ce) - start,
 		Speed:       it.Speed,
+		Curve:       curveOf(it, cs),
 		Gain:        gain,
 		Denoise:     round3(it.Denoise),
 	}

@@ -69,3 +69,66 @@ func TestSetSpeedProperty(t *testing.T) {
 		t.Errorf("only %d random speed changes succeeded", ok)
 	}
 }
+
+// A speed curve keeps the invariants: the speed is the mean, the source range the clip read
+// before is the one it reads after (up to the ceiling), and the document stays valid.
+func TestSetSpeedCurveKeepsSourceRange(t *testing.T) {
+	reg := Default()
+	for _, curve := range []string{
+		`[{"t":0,"speed":"1x"},{"t":0.5,"speed":"3x"},{"t":1,"speed":"1x"}]`,
+		`[{"t":0,"speed":"0.25x"},{"t":1,"speed":"4x"}]`,
+		`[{"t":0,"speed":"2x"},{"t":0.333,"speed":"0.75x"},{"t":1,"speed":"1.337x"}]`,
+	} {
+		doc := base().clip(itemA, vidTr, 0, 90, 10).d
+		res, err := reg.Apply(
+			doc,
+			op2("clip.set_speed", fmt.Sprintf(`{"item_id": %q, "curve": %s}`, itemA, curve)),
+			Env{},
+		)
+		if err != nil {
+			t.Fatalf("%s: %v", curve, err)
+		}
+		if vs := timeline.Validate(res.Doc); len(vs) != 0 {
+			t.Fatalf("%s: %v", curve, vs)
+		}
+		it := res.Doc.Items[itemA]
+		if it.Speed != timeline.CurveMean(it.SpeedCurve) {
+			t.Errorf("%s: speed %v is not the mean %v", curve, it.Speed, timeline.CurveMean(it.SpeedCurve))
+		}
+		if got := timeline.CurveSourceFrames(
+			it.SpeedCurve,
+			it.Duration,
+		); got < 90 ||
+			got > 90+it.Speed.Num/it.Speed.Den+1 {
+			t.Errorf("%s: reads %d source frames for 90 before", curve, got)
+		}
+	}
+}
+
+func TestSpeedCurveRefusesSourceMappingEdits(t *testing.T) {
+	reg := Default()
+	doc := base().clip(itemA, vidTr, 0, 90, 100, func(it *timeline.Item) {
+		it.SpeedCurve = []timeline.SpeedPoint{
+			{T: 0, Speed: timeline.Rational{Num: 1, Den: 1}},
+			{T: 1, Speed: timeline.Rational{Num: 2, Den: 1}},
+		}
+		it.Speed = timeline.CurveMean(it.SpeedCurve)
+	}).d
+	for _, tc := range []struct{ name, args string }{
+		{"item.split", fmt.Sprintf(`{"item_id": %q, "at": "30f", "new_id": %q}`, itemA, itemB)},
+		{"item.trim", fmt.Sprintf(`{"item_id": %q, "edge": "start", "to": "10f"}`, itemA)},
+	} {
+		_, err := reg.Apply(doc, op2(tc.name, tc.args), Env{})
+		if e := AsError(err); e == nil || e.Code != CodeInvalidState {
+			t.Errorf("%s on a curve item: %v", tc.name, err)
+		}
+	}
+	// Trimming the end keeps the curve over the shorter item.
+	if _, err := reg.Apply(
+		doc,
+		op2("item.trim", fmt.Sprintf(`{"item_id": %q, "edge": "end", "to": "60f"}`, itemA)),
+		Env{},
+	); err != nil {
+		t.Errorf("trim end: %v", err)
+	}
+}

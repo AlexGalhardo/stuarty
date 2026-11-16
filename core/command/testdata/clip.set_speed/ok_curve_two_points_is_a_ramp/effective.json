@@ -1,0 +1,15 @@
+{
+  "adjusted": [],
+  "clamped": null,
+  "curve_points": 2,
+  "duration": {
+    "after": 48,
+    "before": 60
+  },
+  "linked_captions": [],
+  "shift": 0,
+  "speed": {
+    "den": 4,
+    "num": 5
+  }
+}

@@ -214,6 +214,9 @@ func (c *Context) speechClip(it *timeline.Item, notClip, noAudio string) *Error 
 // speechSource is speechClip for the commands that caption speech: it also accepts an audio
 // item (a voice-over on an audio track) whose asset has sound (VV-041).
 func (c *Context) speechSource(it *timeline.Item, notClip, noAudio string) *Error {
+	if err := rejectCurve(it, "the speech mapping"); err != nil {
+		return err
+	}
 	if it.Type != timeline.ItemAudio {
 		return c.speechClip(it, notClip, noAudio)
 	}
@@ -232,6 +235,9 @@ func (c *Context) silenceClip(id string) (timeline.Item, *Error) {
 		return it, err
 	}
 	err = c.speechClip(&it, "only a clip can be cut by its silences.", "there is nothing to analyse.")
+	if err == nil {
+		err = rejectCurve(&it, "cutting by silences")
+	}
 	return it, err
 }
 

@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.curve is not a speed curve: t and speed must be multiples of 0.001.",
+  "hint": "Use 2 to 8 points like {\"t\": 0, \"speed\": \"1x\"} ... {\"t\": 1, \"speed\": \"2x\"}.",
+  "retryable": false,
+  "path": "args.curve"
+}

@@ -28,6 +28,7 @@ type entry struct {
 	in, out  int // transition offsets in frames
 	props    []propOp
 	speed    *timeline.Rational
+	curve    []timeline.SpeedPoint
 	slot     *slotSpec
 	body     string         // texts only
 	style    map[string]any // texts only
@@ -355,7 +356,7 @@ func (r *reader) clip(c map[string]any, cursor int, kind string) (entry, bool) {
 		}
 
 		spec := itemOps(props, mode, cursor, dur, r.slots, func(f string) { r.lose(f + " of clip " + name) })
-		e.props, e.speed, e.slot = spec.ops, spec.speed, spec.slot
+		e.props, e.speed, e.curve, e.slot = spec.ops, spec.speed, spec.curve, spec.slot
 	}
 
 	return e, true
@@ -553,9 +554,18 @@ func (b *batch) clip(trackID string, audio bool, e *entry) *placed {
 	})
 
 	if e.speed != nil {
-		b.push("clip.set_speed", map[string]any{
-			"item_id": id, "speed": map[string]any{"num": e.speed.Num, "den": e.speed.Den},
-		})
+		args := map[string]any{"item_id": id, "speed": map[string]any{"num": e.speed.Num, "den": e.speed.Den}}
+
+		if len(e.curve) > 0 {
+			pts := make([]any, len(e.curve))
+			for i, p := range e.curve {
+				pts[i] = map[string]any{"t": p.T, "speed": map[string]any{"num": p.Speed.Num, "den": p.Speed.Den}}
+			}
+
+			args = map[string]any{"item_id": id, "curve": pts}
+		}
+
+		b.push("clip.set_speed", args)
 
 		if trim {
 			b.push("item.trim", map[string]any{"item_id": id, "edge": "end", "to": frameTime(e.start + e.duration)})

@@ -1,0 +1,25 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "speed_curve": [
+        {
+          "speed": {
+            "den": 1,
+            "num": 1
+          },
+          "t": 0
+        },
+        {
+          "speed": {
+            "den": 1,
+            "num": 3
+          },
+          "t": 1
+        }
+      ]
+    }
+  }
+]

@@ -106,6 +106,7 @@ type slotSpec struct {
 type itemSpec struct {
 	ops   []propOp
 	speed *timeline.Rational
+	curve []timeline.SpeedPoint // set with speed, which is then the mean of the curve
 	slot  *slotSpec
 }
 
@@ -217,7 +218,7 @@ func itemOps(props map[string]any, mode itemMode, start, dur int, used map[strin
 
 		add("item.set_audio", sound)
 
-		spec.speed = speed(p)
+		spec.speed, spec.curve = speedAndCurve(p)
 	}
 
 	spec.ops = append(spec.ops, keyframes(p, mode, start, dur)...)
@@ -325,6 +326,55 @@ func speed(p *propReader) *timeline.Rational {
 	}
 
 	return &timeline.Rational{Num: int(num), Den: int(den)}
+}
+
+// speedAndCurve reads the constant speed and the curve of an item; with a curve the speed is its mean.
+func speedAndCurve(p *propReader) (*timeline.Rational, []timeline.SpeedPoint) {
+	if curve := speedCurve(p); curve != nil {
+		mean := timeline.CurveMean(curve)
+
+		return &mean, curve
+	}
+
+	return speed(p), nil
+}
+
+// speedCurve reads the points {t, speed: {num, den}} of a speed curve and checks them with
+// timeline.CurveError, so that clip.set_speed accepts what comes back.
+func speedCurve(p *propReader) []timeline.SpeedPoint {
+	raw, present := p.props["speed_curve"]
+	if !present {
+		return nil
+	}
+
+	list, _ := raw.([]any)
+	pts := make([]timeline.SpeedPoint, 0, len(list))
+
+	for _, e := range list {
+		obj, _ := e.(map[string]any)
+		sp, _ := obj["speed"].(map[string]any)
+		sub := &propReader{props: sp, lose: func(string) {}}
+		pt := &propReader{props: obj, lose: func(string) {}}
+		t, ok0 := pt.number("t", 0, 1, false)
+		num, ok1 := sub.number("num", 1, 1e6, false)
+		den, ok2 := sub.number("den", 1, 1e6, false)
+
+		if !ok0 || !ok1 || !ok2 || num != math.Trunc(num) || den != math.Trunc(den) {
+			p.lose("vukem property speed_curve is not a valid value")
+
+			return nil
+		}
+
+		pts = append(pts, timeline.SpeedPoint{T: t, Speed: timeline.Rational{Num: int(num), Den: int(den)}})
+	}
+
+	if timeline.CurveError(pts) != "" {
+		p.lose("vukem property speed_curve is not a valid value")
+
+		return nil
+	}
+
+	return pts
 }
 
 var keyframeEasings = []string{"linear", "ease_in", "ease_out", "ease_in_out", "hold"}

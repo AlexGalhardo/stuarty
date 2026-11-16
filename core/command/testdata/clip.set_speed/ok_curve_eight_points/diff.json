@@ -1,0 +1,83 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        120,
+        70
+      ],
+      "speed": [
+        {
+          "den": 1,
+          "num": 1
+        },
+        {
+          "den": 32,
+          "num": 55
+        }
+      ],
+      "speed_curve": [
+        null,
+        [
+          {
+            "speed": {
+              "den": 1,
+              "num": 1
+            },
+            "t": 0
+          },
+          {
+            "speed": {
+              "den": 1,
+              "num": 2
+            },
+            "t": 0.1
+          },
+          {
+            "speed": {
+              "den": 2,
+              "num": 1
+            },
+            "t": 0.2
+          },
+          {
+            "speed": {
+              "den": 1,
+              "num": 4
+            },
+            "t": 0.3
+          },
+          {
+            "speed": {
+              "den": 1,
+              "num": 1
+            },
+            "t": 0.4
+          },
+          {
+            "speed": {
+              "den": 4,
+              "num": 1
+            },
+            "t": 0.5
+          },
+          {
+            "speed": {
+              "den": 1,
+              "num": 3
+            },
+            "t": 0.75
+          },
+          {
+            "speed": {
+              "den": 1,
+              "num": 1
+            },
+            "t": 1
+          }
+        ]
+      ]
+    }
+  }
+]

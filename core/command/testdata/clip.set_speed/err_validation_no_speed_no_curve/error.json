@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args: give at least one of speed, curve.",
+  "hint": "Send for example {\"speed\": ...}.",
+  "retryable": false,
+  "path": "args"
+}

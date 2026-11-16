@@ -196,6 +196,9 @@ type Item struct {
 	Speed      Rational `json:"speed"                                                                              default:"1/1"`
 	Volume     float64  `json:"volume"                                                                     min:"0" default:"1"   max:"4"`
 	AudioMuted bool     `json:"audio_muted,omitempty"`
+	// Clip and audio, optional and additive (SDD-001 §3.5): the speed curve, 2 to 8 points with linear
+	// ramps between them; speed is then the mean of the curve.
+	SpeedCurve []SpeedPoint `json:"speed_curve,omitempty" minitems:"2" maxitems:"8"`
 	// Clip and audio, optional and additive (SDD-001 §3.5): noise reduction strength, 0 (off) to 1.
 	Denoise float64 `json:"denoise,omitempty"  min:"0" max:"1"`
 	FadeIn  int     `json:"fade_in,omitempty"  min:"0"`

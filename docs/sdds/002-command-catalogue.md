@@ -267,7 +267,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.add` | P | `track_id`, `asset_id`, `start` (time), `source_in?` (time, offset into the asset; default 0), `duration?` (time, as a length; default: the rest of the asset from `source_in`, or `"5s"` for an image), `fit?`, `id?` | Places a video or image asset on a visual track |
 | `audio.add` | A | `track_id`, `asset_id`, `start`, `source_in?`, `duration?`, `id?` | Places an audio asset, or the audio of a video asset, on an audio track |
 | `clip.set_framing` | A | `item_id`, `fit?`, `crop?` | Sets fit and crop |
-| `clip.set_speed` | A | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs |
+| `clip.set_speed` | A | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object) or `curve` (2 to 8 `{t, speed}` points), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs |
 | `clip.set_color` | A | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; after BETA also white balance and hue rotation (TASK-0233). See C.26 |
 | `clip.set_filter` | B | `item_id`, `filter?`, `amount?` | BETA (RF-027). Sets the colour filter of a clip and how much of it is mixed in |
 | `clip.set_blur` | B | `item_id`, `radius` | BETA (RF-027). Sets the blur radius of a clip in pixels; 0 removes it |
@@ -2241,19 +2241,20 @@ At least one of `fit` and `crop` is required.
 
 ### C.25 `clip.set_speed` (phase A)
 
-Changes the speed of a clip or audio item while keeping the same source range.
+Changes the speed of a clip or audio item, constant or along a curve (TASK-0275), while keeping the same source range.
 
 **Arguments**
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | a `clip` of a video asset, or an `audio` item |
-| `speed` | string or rational object | yes | none | `"<decimal>x"` with at most 3 decimals (`"1.5x"` is 3/2, `"0.5x"` is 1/2, `"0.333x"` is 333/1000), or `{"num","den"}`; stored reduced to lowest terms; from 1/4 to 4 inclusive |
+| `speed` | string or rational object | one of `speed`, `curve` | none | `"<decimal>x"` with at most 3 decimals (`"1.5x"` is 3/2, `"0.5x"` is 1/2, `"0.333x"` is 333/1000), or `{"num","den"}`; stored reduced to lowest terms; from 1/4 to 4 inclusive. Clears the curve |
+| `curve` | array of `{"t", "speed"}` | one of `speed`, `curve` | none | 2 to 8 points; `t` is the position inside the item as a fraction of its duration, a multiple of 0.001, strictly increasing, the first 0 and the last 1; `speed` is a string `"<decimal>x"` of at most 3 decimals (or a `{"num","den"}` whose `den` divides 1000), from 1/4 to 4 inclusive. The speed ramps linearly between points |
 | `ripple` | `"none"` or `"track"` | no | `"none"` | `"track"` shifts later items of the track |
 
 **Preconditions.**
 
-1. Arguments match the schema; `speed` parses and is within 1/4 to 4 (`E_VALIDATION`).
+1. Arguments match the schema; exactly one of `speed` and `curve` is given; `speed` parses and is within 1/4 to 4; `curve` has 2 to 8 points that meet the rules above (`E_VALIDATION`).
 2. The item exists (`E_NOT_FOUND`).
 3. The item is a `clip` whose asset is a video, or an `audio` item (`E_TYPE_MISMATCH`).
 4. At least one frame fits in the source range at the new speed: `maxdur(source_in)` at the new speed is at least 1 (`E_OUT_OF_SOURCE`). A new duration that fails R9 only because of rounding is not an error: it is reduced (postcondition 1).
@@ -2262,18 +2263,19 @@ Changes the speed of a clip or audio item while keeping the same source range.
 
 **Postconditions.**
 
-1. Let `old` and `new` be the speeds and `d` the duration. The new duration is `d' = ceil(d × old.num × new.den / (old.den × new.num))`. If `source_in + ceil(d' × new.num / new.den)` would pass `A`, `d'` becomes `maxdur(source_in)` computed at the new speed, and `effective.clamped` is `{"duration": {"from": <d'>, "to": <maxdur>}}` (it is `null` otherwise); if `maxdur(source_in)` is below 1, no frame fits and the result is `E_OUT_OF_SOURCE`.
+1. Let `old` and `new` be the speeds and `d` the duration. For a curve, `new` is its **mean speed** `M = sum over the segments of (t[i+1] - t[i]) x (s[i] + s[i+1]) / 2` (SDD-004 section 3.11), an exact rational in lowest terms, and `old` of an item that has a curve is its stored mean; so the formulas below are the same for a constant speed and for a curve, and the source range an item reads, `d x M`, is what stays unchanged. The new duration is `d' = ceil(d × old.num × new.den / (old.den × new.num))`. If `source_in + ceil(d' × new.num / new.den)` would pass `A`, `d'` becomes `maxdur(source_in)` computed at the new speed, and `effective.clamped` is `{"duration": {"from": <d'>, "to": <maxdur>}}` (it is `null` otherwise); if `maxdur(source_in)` is below 1, no frame fits and the result is `E_OUT_OF_SOURCE`.
 2. Let `r = old / new` as a rational. `transition_in.duration`, `transition_out.duration`, `fade_in`, `fade_out` and every keyframe `t` become `round(x × r)` (halves up). Then, in order: transitions below 1 become 1; fades may become 0 and are then removed; keyframe `t` above `d'` becomes `d'`; keyframes sharing a `t` keep the last; the fit fix of R14. Each fix-up is listed in `effective.adjusted` as in C.3.
-3. `speed` is the new value, absent when it is 1/1. `source_in` and the source range are unchanged (up to the ceiling).
+3. `speed` is the new value (for a curve, the mean `M`), absent when it is 1/1. `speed_curve` is the given points with `t` rounded to 3 decimals and the speeds in lowest terms when `curve` was given, and is removed when `speed` was given. `source_in` and the source range are unchanged (up to the ceiling). Keyframes, transitions and fades are in frames of the item, not of the source, so a curve does not change what they mean; they only follow the rescale of postcondition 2.
 4. `ripple: "track"`: every item of the track with `start >= old end` moves by `d' - d` (earlier when the clip got shorter, later when longer). Otherwise nothing else moves.
 5. Captions whose `linked_item` is this item are not changed; `effective.linked_captions` lists their ids so the caller can run `caption.retime_from_clip`.
-6. `diff`: `item.updated` for the clip, then for every shifted item, sorted by id. `effective` has `speed` (`{num, den}`), `duration` (`{"before", "after"}`), `shift` and the lists above.
+6. `diff`: `item.updated` for the clip, then for every shifted item, sorted by id. `effective` has `speed` (`{num, den}`), `curve_points` (only when a curve was set), `duration` (`{"before", "after"}`), `shift` and the lists above.
+7. **What a curve forbids.** An item with a `speed_curve` has no constant speed, so a command that turns a frame of the timeline into a frame of the source inside it returns `E_INVALID_STATE` with the hint to remove the curve first: `item.split`, `item.trim` of the start edge (and the neighbour slide of `item.move` that does it), `clip.remove_silences`, `caption.from_transcript`, `caption.retime_from_clip`, `audio.mark_beats` and `audio.duck` with the item among the speech items. `item.trim` of the end edge and every other command keep the curve: its points are fractions of the duration, so the curve is stretched over the new duration and the item reads `d x M` frames of the new duration. Commands that only need the source range (R9, `slot.fill`, the fit fix) use `M`, which is exact for the whole range.
 
 **Errors.**
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | unparsable speed, or outside 1/4 to 4 | `args.speed "5x" is above the maximum 4x.` | `Use a speed from "0.25x" to "4x".` |
+| `E_VALIDATION` | unparsable speed, or outside 1/4 to 4; both or neither of `speed` and `curve`; a curve that is not valid | `args.speed "5x" is above the maximum 4x.` | `Use a speed from "0.25x" to "4x".` |
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_TYPE_MISMATCH` | text, shape, caption or image clip | `Item itm_s6t7v8w9x0 is a text item and has no speed.` | `Change the duration with item.trim instead.` |
 | `E_OUT_OF_SOURCE` | not even one frame fits at the asset end | `At speed 4x the clip needs 4 source frames from frame 898; asset ast_3c5v8n2w6d has 900.` | `Use item.trim to move source_in earlier, or choose a lower speed.` |
@@ -2339,6 +2341,27 @@ Changes the speed of a clip or audio item while keeping the same source range.
 - `err_invalid_time_ripple_pushes_item_past_108000`
 - `err_overlap_lengthening_without_ripple`
 - `ok_markers_rescaled_and_collisions_dropped`
+- `ok_curve_ramp_up_and_down`
+- `ok_curve_two_points_is_a_ramp`
+- `ok_curve_eight_points`
+- `ok_curve_ripple_track_with_keyframes_and_transition`
+- `ok_curve_over_constant_speed`
+- `ok_curve_replaces_curve`
+- `ok_speed_clears_curve`
+- `ok_curve_clamped_at_asset_end`
+- `ok_curve_audio_item`
+- `err_validation_curve_one_point`
+- `err_validation_curve_nine_points`
+- `err_validation_curve_first_t_not_0`
+- `err_validation_curve_last_t_not_1`
+- `err_validation_curve_t_not_increasing`
+- `err_validation_curve_t_4_decimals`
+- `err_validation_curve_speed_above_4`
+- `err_validation_curve_speed_rational_not_thousandths`
+- `err_validation_speed_and_curve`
+- `err_validation_no_speed_no_curve`
+- `err_type_mismatch_curve_on_image_clip`
+- `err_out_of_source_curve_no_frame_fits`
 
 ### C.26 `clip.set_color` (phase A)
 

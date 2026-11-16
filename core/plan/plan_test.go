@@ -1339,3 +1339,37 @@ func TestTrackVolumeAndSolo(t *testing.T) {
 		t.Errorf("solo visual track: layers = %+v", layers)
 	}
 }
+
+func TestSpeedCurveChoosesSourceFramesAndIsCarried(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	c := clip("itm_v", trkBottom, 10, 4)
+	c.SourceIn = 20
+	c.SpeedCurve = []timeline.SpeedPoint{
+		{T: 0, Speed: timeline.Rational{Num: 1, Den: 1}}, {T: 1, Speed: timeline.Rational{Num: 3, Den: 1}},
+	}
+	c.Speed = timeline.CurveMean(c.SpeedCurve)
+	put(d, c)
+
+	// Offsets 0, 1, 3, 5 (SDD-004 section 3.11); the asset and the project share a frame rate.
+	for r, off := range []int{0, 1, 3, 5} {
+		l := Frame(d, 10+r).Layers
+		if len(l) != 1 || l[0].SourceFrame != 20+off {
+			t.Errorf("frame %d: want source frame %d, got %+v", r, 20+off, l)
+		}
+	}
+
+	m := timeline.NewItem("itm_m", timeline.ItemAudio, trkSound, 0, 4)
+	m.Asset, m.SpeedCurve, m.Speed = astSound, c.SpeedCurve, c.Speed
+	put(d, m)
+
+	got := Audio(d, 2, 4)
+	if len(got) != 1 || got[0].Curve == nil || got[0].Curve.ItemFrames != 4 || got[0].Curve.FirstFrame != 2 {
+		t.Fatalf("the audio source does not carry the ramp: %+v", got)
+	}
+
+	if w := Window(d, 2, 4); len(w.Audio) != 1 || w.Audio[0].Curve == nil {
+		t.Errorf("the window audio does not carry the ramp: %+v", w.Audio)
+	}
+}
