@@ -1,4 +1,5 @@
 import {
+	AlignHorizontalJustifyStart,
 	Clapperboard,
 	Magnet,
 	Maximize2,
@@ -19,8 +20,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { bindingFor } from "../commands/keymapStore";
+import { magnetTrackId } from "../commands/magnet";
 import { formatTime } from "../commands/units";
-import { useActions } from "../commands/useActions";
+import { useActions, useCanEdit } from "../commands/useActions";
 import {
 	useDocumentState,
 	useRuntime,
@@ -117,6 +119,13 @@ export default function Timeline(): ReactNode {
 		[markerKey],
 	);
 	const snapEnabled = useUiState((s) => s.timeline.snapEnabled);
+	const canEdit = useCanEdit();
+	const selection = useUiState((s) => s.selection);
+	const focusedItem = useUiState((s) => s.focusedItem);
+	const magnetOn = useDocumentState((s) => {
+		const id = magnetTrackId(s, { selection, focusedItem });
+		return id !== null && s.document?.tracks[id]?.magnet === true;
+	});
 	const blade = useUiState((s) => s.tool === "blade");
 
 	const itemCount = useDocumentState(selectItemCount);
@@ -412,6 +421,18 @@ export default function Timeline(): ReactNode {
 				>
 					<Magnet aria-hidden="true" />
 					{t("ui.editor.timeline.snap")}
+				</Button>
+				<Button
+					type="button"
+					variant={magnetOn ? "secondary" : "ghost"}
+					size="sm"
+					aria-pressed={magnetOn}
+					title={t("ui.editor.timeline.magnet_hint")}
+					disabled={!canEdit}
+					onClick={() => void actions.toggleMagnet()}
+				>
+					<AlignHorizontalJustifyStart aria-hidden="true" />
+					{t("ui.editor.timeline.magnet")}
 				</Button>
 				<Button
 					type="button"

@@ -26,6 +26,7 @@ import {
 	duplicateOperations,
 	enabledOperations,
 	extractAudioOperations,
+	freezeFrameOperations,
 	type ItemRange,
 	type KeyframeProperty,
 	keyframeFallbackOperations,
@@ -63,6 +64,7 @@ import {
 	withNextFree,
 } from "./builders";
 import { newId } from "./ids";
+import { magnetTrackId } from "./magnet";
 import { formatTime, fpsOf } from "./units";
 
 // The action registry of the Prototype (SDD-012 sections 8.2, 9 and 15): every
@@ -146,6 +148,14 @@ export interface Actions {
 	// Mod+Shift+S and the menu: the audio of each selected clip goes to an audio
 	// track as a linked item and the clip is muted (`item.extract_audio`).
 	extractAudio(): Promise<EditOutcome | null>;
+	// P: turns the magnet of a track on or off (`track.update` with `magnet`). The
+	// track is the selected one, else the track of the selected or focused item,
+	// else the first visual track (the main one); the new value is the opposite
+	// of what the core stores for it.
+	toggleMagnet(): Promise<EditOutcome | null>;
+	// Holds the picture at the playhead of the first selected item the playhead
+	// lies inside (`item.freeze_frame`); the core judges the kind of item.
+	freezeFrame(): Promise<EditOutcome | null>;
 	// Paste (Mod+V): the clipboard items at the playhead frame `at`; a cut
 	// clipboard moves them, a copy duplicates them (`pasteOperations`).
 	pasteItems(
@@ -666,6 +676,21 @@ export function createActions(runtime: EditorRuntime): Actions {
 			}
 			return send(ops);
 		},
+		toggleMagnet() {
+			const state = documents.getState();
+			const doc = state.document;
+			if (doc === null) return Promise.resolve(null);
+			const trackId = magnetTrackId(state, ui.getState());
+			const track = trackId === null ? undefined : doc.tracks[trackId];
+			if (trackId === null || track === undefined) return Promise.resolve(null);
+			return send(
+				trackUpdateOperations(trackId, { magnet: track.magnet !== true }),
+			);
+		},
+		freezeFrame: () =>
+			send(
+				freezeFrameOperations(selectedRanges(), ui.getState().playheadFrame),
+			),
 		pasteItems: (ids, at, cut) => send(pasteOperations(rangesOf(ids), at, cut)),
 		adjustVolume(db) {
 			const doc = documents.getState().document;

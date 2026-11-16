@@ -153,6 +153,7 @@ export function useShortcuts(openCaption: () => void): void {
 				else if (edit === "toggle_enabled") void actions.toggleEnabled();
 				else if (edit === "toggle_link") void actions.toggleLink();
 				else if (edit === "extract_audio") void actions.extractAudio();
+				else if (edit === "toggle_magnet") void actions.toggleMagnet();
 				else {
 					const { selection, focusedItem } = runtime.ui.getState();
 					const only = selection.items.length === 1 ? selection.items[0] : null;

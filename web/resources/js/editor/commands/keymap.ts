@@ -55,6 +55,7 @@ export type EditKey =
 	| "rename"
 	| "toggle_enabled"
 	| "toggle_link"
+	| "toggle_magnet"
 	| "extract_audio";
 
 type EditKeyEvent = Pick<
@@ -64,10 +65,14 @@ type EditKeyEvent = Pick<
 
 // Delete and Backspace delete, Shift+Delete ripples on the track, Mod+D
 // duplicates, F2 renames, V turns the item off or on, ~ links or unlinks and
-// Mod+Shift+S extracts the audio of a clip (SDD-012 sections 7.10 and 18.2).
+// Mod+Shift+S extracts the audio of a clip and P turns the magnet of the
+// track on or off (SDD-012 sections 7.10 and 18.2).
 export function editShortcut(event: EditKeyEvent): EditKey | null {
 	if (event.altKey) return null;
 	if (!hasMod(event) && event.key === "~") return "toggle_link";
+	if (!hasMod(event) && !event.shiftKey && event.key.toLowerCase() === "p") {
+		return "toggle_magnet";
+	}
 	if (hasMod(event) && event.shiftKey && event.key.toLowerCase() === "s") {
 		return "extract_audio";
 	}
@@ -234,6 +239,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
 	{ id: "toggle_enabled", keys: "V", action: "toggleEnabled" },
 	{ id: "link", keys: "~", action: "toggleLink" },
 	{ id: "extract_audio", keys: "Mod+Shift+S", action: "extractAudio" },
+	{ id: "toggle_magnet", keys: "P", action: "toggleMagnet" },
 	{ id: "toggle_snap", keys: "N", action: "surface.toggle_snap" },
 	{ id: "keyframe_panel", keys: "Alt+K", action: "surface.keyframe_panel" },
 	{ id: "speed_curve", keys: "Shift+B", action: "surface.speed_curve" },

@@ -98,6 +98,8 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.aspect": ["settings.reframe"],
 	"timeline.add_track": ["track.add"],
 	"timeline.track_update": ["track.update"],
+	"timeline.toggle_magnet": ["track.update"],
+	"timeline.freeze_frame": ["item.freeze_frame"],
 	"inspector.track_update": ["track.update"],
 	"timeline.track_move": ["track.move"],
 	"timeline.track_remove": ["track.remove"],
@@ -218,7 +220,11 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		palette,
 	],
 	"item.paste_attributes": [palette],
-	"item.freeze_frame": [palette],
+	"item.freeze_frame": [
+		{ kind: "menu", action: "timeline.freeze_frame", phase: "B" },
+		{ kind: "toolbar", action: "timeline.freeze_frame", phase: "B" },
+		palette,
+	],
 	"marker.add": [
 		{ kind: "key", action: "timeline.marker", phase: "B" },
 		palette,
@@ -405,6 +411,8 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	"track.update": [
 		{ kind: "gesture", action: "timeline.track_update", phase: "A" },
 		{ kind: "inspector", action: "inspector.track_update", phase: "A" },
+		{ kind: "key", action: "timeline.toggle_magnet", phase: "B" },
+		{ kind: "toolbar", action: "timeline.toggle_magnet", phase: "B" },
 		palette,
 	],
 };

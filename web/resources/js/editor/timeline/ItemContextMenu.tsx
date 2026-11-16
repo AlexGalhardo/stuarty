@@ -9,6 +9,7 @@ import {
 	Music,
 	Pencil,
 	Scissors,
+	Snowflake,
 	Split,
 	Trash2,
 } from "lucide-react";
@@ -91,6 +92,16 @@ export default function ItemContextMenuItems({
 			s.document?.assets[asset]?.kind === "video"
 		);
 	});
+	// Freeze frame is for a clip of a video asset.
+	const freezable = useDocumentState((s) => {
+		const item = s.document?.items[itemId];
+		const asset = item?.asset;
+		return (
+			item?.type === "clip" &&
+			asset !== undefined &&
+			s.document?.assets[asset]?.kind === "video"
+		);
+	});
 	return (
 		<>
 			{isCaption && word !== null && (
@@ -115,6 +126,15 @@ export default function ItemContextMenuItems({
 				<Scissors aria-hidden="true" />
 				{t("ui.editor.edit.split")}
 			</ContextMenuItem>
+			{freezable && (
+				<ContextMenuItem
+					disabled={!canCut}
+					onSelect={() => void actions.freezeFrame()}
+				>
+					<Snowflake aria-hidden="true" />
+					{t("ui.editor.edit.freeze_frame")}
+				</ContextMenuItem>
+			)}
 			{visualPair && (
 				<ContextMenuItem onSelect={() => void actions.crossfadeSelection()}>
 					<Blend aria-hidden="true" />

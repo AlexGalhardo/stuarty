@@ -124,6 +124,24 @@ export function splitOperations(
 		}));
 }
 
+// One `item.freeze_frame` for the first item the playhead lies strictly inside:
+// the core holds the picture of that frame as a still after the split. It
+// refuses an item that is not a clip of a video asset.
+export function freezeFrameOperations(
+	items: readonly ItemRange[],
+	playhead: number,
+): Operations {
+	const item = items.find((candidate) => containsStrictly(candidate, playhead));
+	return item === undefined
+		? []
+		: [
+				{
+					op: "item.freeze_frame",
+					args: { item_id: item.id, at: frames(playhead) },
+				},
+			];
+}
+
 // One `item.trim` per item that the playhead lies strictly inside.
 export function trimOperations(
 	items: readonly ItemRange[],
@@ -957,6 +975,7 @@ export interface TrackChanges {
 	name?: string;
 	hidden?: boolean;
 	muted?: boolean;
+	magnet?: boolean;
 }
 
 export function trackUpdateOperations(
@@ -1316,6 +1335,9 @@ export interface ColorChanges {
 	temperature?: number;
 	tint?: number;
 	hue?: number;
+	// The id of a lut asset, and how much of it is applied (0 removes it).
+	lut_asset?: string;
+	lut_intensity?: number;
 }
 
 export function colorOperations(

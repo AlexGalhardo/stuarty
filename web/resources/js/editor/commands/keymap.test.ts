@@ -70,6 +70,10 @@ describe("editShortcut", () => {
 		expect(edit("~", { shiftKey: true })).toBe("toggle_link");
 		expect(edit("S", { ctrlKey: true, shiftKey: true })).toBe("extract_audio");
 		expect(edit("s", { metaKey: true, shiftKey: true })).toBe("extract_audio");
+		expect(edit("p")).toBe("toggle_magnet");
+		expect(edit("P")).toBe("toggle_magnet");
+		expect(edit("p", { shiftKey: true })).toBeNull();
+		expect(edit("p", { ctrlKey: true })).toBeNull();
 		expect(edit("s", { ctrlKey: true })).toBeNull();
 		expect(edit("V", { shiftKey: true })).toBeNull();
 		expect(edit("v", { ctrlKey: true })).toBeNull();

@@ -31,6 +31,7 @@ import {
 	fontAddOperations,
 	fontRemoveOperations,
 	framingOperations,
+	freezeFrameOperations,
 	keyframeClearOperations,
 	keyframeFallbackOperations,
 	keyframeRemoveOperations,
@@ -500,6 +501,13 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"timeline.add_track": trackAddOperations("audio", { above: "trk_a" }).map(
 				(o) => o.op,
 			),
+			"timeline.toggle_magnet": trackUpdateOperations("trk_a", {
+				magnet: true,
+			}).map((o) => o.op),
+			"timeline.freeze_frame": freezeFrameOperations(
+				[{ id: "itm_a", start: 0, duration: 30 }],
+				10,
+			).map((o) => o.op),
 			"timeline.track_update": trackUpdateOperations("trk_a", {
 				hidden: true,
 			}).map((o) => o.op),
