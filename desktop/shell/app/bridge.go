@@ -37,12 +37,15 @@ func (b *bridge) handle(_ application.Window, message string, origin *applicatio
 // pickFiles shows the native dialog and gives the page the chosen absolute
 // paths; the shell never reads the files.
 func (b *bridge) pickFiles(win *application.WebviewWindow, id int64) {
-	paths, err := b.app.Dialog.OpenFile().
+	dialog := b.app.Dialog.OpenFile().
 		AttachToWindow(win).
 		SetTitle("Choose files").
 		CanChooseFiles(true).
-		CanChooseDirectories(false).
-		PromptForMultipleSelection()
+		CanChooseDirectories(false)
+	for _, f := range shell.MediaFilters() {
+		dialog.AddFilter(f.Name, f.Pattern)
+	}
+	paths, err := dialog.PromptForMultipleSelection()
 	msg := ""
 	if err != nil {
 		msg = err.Error()
