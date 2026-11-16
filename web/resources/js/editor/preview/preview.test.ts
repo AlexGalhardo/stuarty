@@ -5,6 +5,7 @@ import { bufferSize, fitScale, sizedScale, truthWidth } from "./fit";
 import { pixiColorMatrix } from "./layerFilters";
 import { Lru } from "./lru";
 import {
+	audioSourceSeconds,
 	DRIFT_FRAMES,
 	MAX_VIDEO_LAYERS,
 	needsCorrection,
@@ -93,6 +94,16 @@ describe("plan values", () => {
 });
 
 describe("media sync", () => {
+	test("an audio item's target time advances with the frame", () => {
+		const audio = { first: 10, source_seconds: 2, speed: 1 };
+		expect(audioSourceSeconds(audio, 10, fps)).toBeCloseTo(2);
+		expect(audioSourceSeconds(audio, 40, fps)).toBeCloseTo(3);
+		expect(audioSourceSeconds({ ...audio, speed: 2 }, 40, fps)).toBeCloseTo(4);
+		expect(needsCorrection(3.01, audioSourceSeconds(audio, 40, fps), fps)).toBe(
+			false,
+		);
+	});
+
 	test("the video layers that decode are the topmost four", () => {
 		const layers = ["a", "b", "c", "d", "e", "f"].map((i) => media(i));
 		const decoding = rankVideoLayers(layers);

@@ -10,6 +10,19 @@ export function frameSeconds(fps: FrameRate): number {
 	return fps.den / fps.num;
 }
 
+// The time in the proxy for `frame` of an audio entry of the plan, whose
+// `source_seconds` is given at its first frame (SDD-004 section 10).
+export function audioSourceSeconds(
+	audio: { first: number; source_seconds: number; speed: number },
+	frame: number,
+	fps: FrameRate,
+): number {
+	return (
+		audio.source_seconds +
+		(frame - audio.first) * frameSeconds(fps) * audio.speed
+	);
+}
+
 // The slope of `source_seconds` over the window, clamped to 0.25 to 4 (SDD-012
 // section 11.2 item 3).
 export function playbackRateFor(

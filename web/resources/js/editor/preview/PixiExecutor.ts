@@ -20,6 +20,7 @@ import { pixiColorMatrix } from "./layerFilters";
 import { Lru } from "./lru";
 import { MediaPool, type PoolTimers } from "./mediaPool";
 import {
+	audioSourceSeconds,
 	MAX_VIDEO_LAYERS,
 	needsCorrection,
 	PlaybackClock,
@@ -610,10 +611,9 @@ export class PixiExecutor implements PreviewExecutor {
 				element.pause();
 				continue;
 			}
-			if (
-				needsCorrection(element.currentTime, audio.source_seconds, info.fps)
-			) {
-				element.currentTime = audio.source_seconds;
+			const target = audioSourceSeconds(audio, frame, info.fps);
+			if (needsCorrection(element.currentTime, target, info.fps)) {
+				element.currentTime = target;
 			}
 			if (element.paused) void element.play().catch(() => undefined);
 		}
