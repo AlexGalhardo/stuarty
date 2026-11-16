@@ -67,7 +67,6 @@ func TestViewFrameAndSheetRenderTheCurrentRevision(t *testing.T) {
 		"width and tokens":   {ProjectID: project, At: "0s", Width: 200, MaxTokens: 300},
 		"odd width":          {ProjectID: project, At: "0s", Width: 201},
 		"too few tokens":     {ProjectID: project, At: "0s", MaxTokens: 10},
-		"an asset":           {ProjectID: project, At: "0s", AssetID: "ast_none"},
 		"an unknown project": {ProjectID: "prj_unknown001", At: "0s"},
 	} {
 		if _, err := m.svc.ViewFrame(ctx, req); err == nil {

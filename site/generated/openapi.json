@@ -6999,13 +6999,6 @@
           },
           {
             "in": "query",
-            "name": "asset_id",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
             "name": "max_tokens",
             "schema": {
               "type": "integer"
@@ -8301,13 +8294,6 @@
             "schema": {
               "format": "int64",
               "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "asset_id",
-            "schema": {
-              "type": "string"
             }
           },
           {
