@@ -1216,7 +1216,7 @@ RF-075 (BETA in the PRD): this SDD builds the keyboard operation and automated c
 `Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS. Shortcuts are ignored while focus is in an editable field (text input, text area, select, a field with `contenteditable`), with two exceptions: `Mod+K` (the palette) and `Mod+Enter` where a form uses it to commit. Project undo, redo and select-all (`Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y`, `Mod+A`) act only outside an editable field, so the native undo and select-all of the input work there. The precedence by focus between this map and the grid keys is in §7.10. Defined in `commands/keymap.ts`; every shortcut calls an action of the action registry, so the map and the coverage table agree. Shortcut customization and the cheat sheet dialog (`?`) are BETA (RF-074):
 
 1. The table is `SHORTCUTS` in `commands/keymap.ts`, one row per shortcut with an `id`, its default keys and its action. The cheat sheet (dialog opened by `?` outside an editable field, or by the keyboard button of the top bar) is generated from that table and shows the current key of each row, never a second list.
-2. Rebindable rows are the single-key editing shortcuts: `split` (S), `trim_start` (`[`), `trim_end` (`]`), `add_caption` (C), `add_text` (T), `toggle_snap` (N), `zoom_in` (`+`), `zoom_out` (`-`) and `zoom_fit` (Shift+Z). The others (transport, undo and redo, delete, palette, panels, landmarks, grid keys) are fixed.
+2. Rebindable rows are the editing shortcuts: `split` (`Mod+B`), `trim_start` (`Q`), `trim_end` (`W`), `add_caption` (C), `add_text` (T), `toggle_snap` (N), `zoom_in` (`Mod+=`), `zoom_out` (`Mod+-`) and `zoom_fit` (Shift+Z). The others (transport, undo and redo, delete, palette, panels, landmarks, grid keys) are fixed. The default keys follow the CapCut-compatible keymap of §18.7.
 3. A rebinding is refused, with the name of the row in conflict, when the key is already another row's key (fixed or rebindable) or is `Tab`, `Shift+Tab` or `Enter`. There is no swap. `Esc` leaves the capture.
 4. Only the overrides are stored, as a JSON object from row id to key, in `localStorage` under `vv.keymap` through `state/prefs.ts` (rule R7; it is a UI preference, not project data, so T1 holds). A blocked storage keeps the choice for the page. "Reset to defaults" removes the key.
 5. The handlers read the current key when a key is pressed, so a rebinding takes effect at once and a reload keeps it. The old key then does nothing.
@@ -1228,10 +1228,10 @@ RF-075 (BETA in the PRD): this SDD builds the keyboard operation and automated c
 | `Left`, `Right` | step one frame (when focus is not in a field; from ALPHA also not on a grid cell, §7.10) | P |
 | `Shift+Left`, `Shift+Right` | step one second | P |
 | `Home`, `End` | go to start or end (on a grid cell from ALPHA: first or last item, §7.10) | P |
-| `S` | split at playhead | P |
-| `[`, `]` | trim start or end to playhead | P |
+| `Mod+B` | split at playhead (§18.7) | P |
+| `Q`, `W` | trim start or end to playhead, that is delete what is left or right of it (§18.7) | P |
 | `Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y` | undo, redo | P |
-| `+`, `-`, `Shift+Z` | zoom in, out, fit | P |
+| `Mod+=`, `Mod+-`, `Shift+Z` (`+` and `-` stay as aliases) | zoom in, out, fit | P |
 | `Delete`, `Backspace`, `Shift+Delete` | delete, ripple delete | A |
 | `Mod+D` | duplicate | A |
 | `C` | add caption | P |
@@ -1284,6 +1284,112 @@ State is `met`, `met by exception` (the exception is named), `not claimed` or `n
 | 3.3.7 Redundant entry | met | a refused font import keeps the path and the family name (`wcag22 > redundant entry`) |
 | 3.3.8 Accessible authentication (minimum) | met | `resources/js/pages/Auth/Login.test.tsx`: e-mail and password carry `autoComplete` `username` and `current-password`, have labels, nothing blocks paste or turns autofill off, and there is no puzzle or captcha. Local mode has no login |
 | 3.3.9 Accessible authentication (enhanced) | not claimed | AAA |
+
+### 18.7 CapCut-compatible keymap
+
+Decision D-038: the default keymap is the one a person coming from CapCut already knows, and the shortcuts page of the site is generated from it (TASK-0237). The keys come from public guides, not from a specification of the CapCut app: no source states the CapCut version, so every row is checked against the app by TASK-0238. CapCut is named only to say what the keys are compatible with; no CapCut text or asset is used. The table below is the contract of `SHORTCUTS` in `commands/keymap.ts` (§18.2 item 1); TASK-0236 implements it. Each row has a state:
+
+- **exists**: the action is a method of the registry (`commands/actions.ts`) or a `surface.*` id that exists today;
+- **UI**: an editor surface or tool with no core command (a selection, a tool, the preview, a dialog); it adds `surface.*` ids but changes nothing in `core/`;
+- **needs command** (`N-x`): the action needs a command of the core that does not exist. It is listed in "Commands to add to the core" and a card for `senior-a` comes before the card of the UI. Until the command exists the row is absent from `SHORTCUTS`, so the cheat sheet never lists a key that does nothing.
+
+`Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS, and `Alt` is `Option`. A single-letter key is the same on every system.
+
+#### Default map
+
+| Action | Keys | Action id or command | State |
+| --- | --- | --- | --- |
+| Play or pause | `Space` | `surface.play_pause` | exists |
+| Step one frame | `Left`, `Right` | `surface.step_frame` | exists |
+| Step several frames | `Shift+Left`, `Shift+Right` | `surface.step_second` (one second, as in §18.2) | exists |
+| First, last frame | `Home`, `End` (`Fn+Left`, `Fn+Right` on a Mac laptop) | `surface.go_to_edge` | exists |
+| Previous, next cut point | `Up`, `Down` | `surface.next_cut` | exists |
+| Shuttle back, stop, forward | `J`, `K`, `L` (J or L again goes faster) | `surface.shuttle` | UI |
+| Mark in, mark out | `I`, `O` | `surface.mark_range` (the range is view state; an export can be limited to it) | UI |
+| Select the range by clip, clear it | `Shift+X`, `Alt+X` | `surface.select_range` | UI |
+| Split the selected item at the playhead | `Mod+B` | `splitAtPlayhead` (`item.split`) | exists |
+| Split every track at the playhead | `Mod+Shift+B` | `splitAtPlayhead` with every item under the playhead | exists (the action takes the ranges) |
+| Blade tool, select tool | `B`, `A` | `surface.tool` | UI |
+| Delete what is left, right of the playhead | `Q`, `W` | `trimToPlayhead("start")`, `trimToPlayhead("end")` (`item.trim`) | exists |
+| Select everything left, right of the playhead | `[`, `]` | `surface.select_side` | UI |
+| Delete the selection | `Delete`, `Backspace` | `deleteSelection` (`item.delete`) | exists |
+| Delete and close the gap | `Shift+Delete` | `deleteSelection(ripple)` | exists |
+| Duplicate | `Mod+D` | `duplicateSelection` (`item.duplicate`) | exists |
+| Copy, cut, paste items | `Mod+C`, `Mod+X`, `Mod+V` | `surface.clipboard` (paste creates items with `item.duplicate` or `clip.add`; cut is copy then `item.delete`) | UI |
+| Copy, paste attributes | `Mod+Shift+C`, `Mod+Shift+V` | `item.paste_attributes` | needs command (N-8) |
+| Undo, redo | `Mod+Z`, `Mod+Shift+Z`, `Ctrl+Y` | `undo`, `redo` | exists |
+| Select all | `Mod+A` | `surface.select_all` | exists |
+| Enable or disable the item | `V` | `item.set_enabled` | needs command (N-1) |
+| Group, ungroup | `Mod+G`, `Mod+Shift+G` | `item.group`, `item.ungroup` | needs command (N-2) |
+| Link or unlink audio and video | `~` | `item.link`, `item.unlink` | needs command (N-4) |
+| Extract or restore the audio of a clip | `Mod+Shift+S` | `item.extract_audio` | needs command (N-4) |
+| Add a marker, with another colour | `M`, `Alt+M` | `marker.add` | needs command (N-3) |
+| Next, previous marker | `Shift+M`, `Alt+Shift+M` | `surface.next_marker` | needs command (N-3) |
+| Speed panel | `Mod+R` (desktop shell only, see the browser rules) | `surface.open_inspector_tab("speed")` | UI |
+| Speed by curve | `Shift+B` | `clip.set_speed` with curve points | needs command (N-5) |
+| Volume up, down 0.1 dB | `Mod+.`, `Mod+,` | `item.set_audio` (`volume`) | exists |
+| Show or hide the keyframe panel | `Alt+K` | `surface.keyframe_panel` | UI |
+| Add a keyframe at the playhead | `Shift`+click in the keyframe panel | `keyframe.set` | exists |
+| Toggle snapping | `N` | `surface.toggle_snap` | exists |
+| Toggle the main-track magnet | `P` | `track.update` with `magnet` | needs command (N-6) |
+| Switch the preview axis | `S` | `surface.preview_axis` | UI |
+| Zoom the timeline in, out | `Mod+=`, `Mod+-` (`+` and `-` stay as aliases), `Mod`+wheel | `surface.zoom` | exists |
+| Fit the timeline to the window | `Shift+Z` | `surface.zoom` | exists |
+| Scroll the timeline vertically, horizontally | wheel, `Alt`+wheel | `surface.scroll` | UI |
+| Preview full screen, leave it | `Mod+Shift+F` (desktop shell only), `Esc` | `surface.preview_fullscreen` | UI |
+| Fit the preview, zoom the preview | `Alt+Shift+Z`, `Alt+Shift+=`, `Alt+Shift+-` | `surface.preview_zoom` | UI |
+| Ignore the alignment guides while dragging | hold `Mod` | modifier of the drag gesture (§8) | UI |
+| Import media | `Mod+I` | `surface.import` (the import dialog; `asset.add`) | UI |
+| Export | `Mod+E` | `surface.export` (opens the dialog of §14) | UI |
+| Save | `Mod+S` | `surface.saved` (every command is saved already, RF-001; the key only shows "Saved") | UI |
+| New project, open a project | `Mod+N`, `Mod+O` | `surface.new_project`, `surface.open_project` | UI |
+| Split a caption at the cursor, line break in a caption | `Enter`, `Mod+Enter` in a caption word field | `caption.split`, `caption.set_breaks` | exists |
+| Resize a text box from its centre | hold `Alt` while dragging | modifier of the drag gesture (`item.set_transform`) | UI |
+| Keys the Vukem keeps | `Mod+K` palette, `Alt+1`, `Alt+2`, `Alt+3` panels, `F2` rename, `F6` landmarks, `C` add caption, `T` add text, `Esc`, `?` cheat sheet, grid keys (§7.10) | as in §18.2 | exists |
+
+Not mapped: `Tab` cycles the material panel in the compatible editor, but in the Vukem it moves focus between regions (§18.1) and stays so. `Mod+J` (match cut) and `Alt+G`, `Alt+Shift+G` (compound clip) have no command and no product decision (N-7, a decision for the author before any work). `Mod+Q` (quit) and `Mod+Alt+Q` (back to the edit page) belong to the desktop shell (§21).
+
+#### Conflicts with §18.2 and how they were resolved
+
+1. `S` was "split" and is the compatible key for "switch the preview axis". Split moves to `Mod+B`, and a rebinding of `split` to `S` is refused with the name of the row in conflict (§18.2 item 3).
+2. `[` and `]` were "trim" and are "select left, right". Trim moves to `Q` and `W`, as in the compatible map; the two do the same, they delete what is on one side of the playhead.
+3. `+` and `-` stay as aliases of `Mod+=` and `Mod+-`, so that a person who learned the first map keeps zooming. The alias is shown in the detail of the cheat sheet row, not as a row.
+4. `Tab` and `Enter` stay reserved for rebinding (`RESERVED_KEYS`). `Enter` is bound only inside a caption word field, where it is a field key and not a global shortcut.
+5. `C` and `T` have no compatible key and stay. `F2`, `F6`, `Mod+K`, `Alt+1` to `Alt+3` and `?` do not collide with the compatible map and stay.
+
+#### Browser rules
+
+The web editor cannot capture every key. A browser-reserved key is never bound on the web. A capturable key that collides with a browser action is captured only while the focus is inside the editor and not in an editable field, calls `preventDefault`, and is marked in the cheat sheet.
+
+| Group | Keys | Rule |
+| --- | --- | --- |
+| Reserved by the browser or the system (cannot be captured) | `Mod+N`, `Mod+T`, `Mod+W`, `Mod+Shift+N`, `Mod+Shift+T`, `Mod+Q` (`Cmd+Q` on a Mac), `Mod+Tab`, `Cmd+H`, `Cmd+M`, `Cmd+Space`, `Ctrl+Up` on a Mac (Mission Control) | not bound on the web. `Mod+N`, `Mod+O` and `Mod+Q` are bound by the desktop shell. On the web "New project" is in the palette and on the projects page |
+| Colliding but capturable | `Mod+B`, `Mod+Shift+B`, `Mod+D`, `Mod+G`, `Mod+Shift+G`, `Mod+I`, `Mod+E`, `Mod+O`, `Mod+S`, `Mod+Shift+C`, `Mod+Shift+S`, `Mod+=`, `Mod+-`, `Mod`+wheel, `Mod+.`, `Mod+,` | captured while the focus is in the editor. In a field the browser or the field keeps them |
+| Collides in a way that costs the page | `Mod+R` (reload), `Mod+Shift+F` and `Cmd+Ctrl+F` (the system full screen) | bound only by the desktop shell. On the web the speed panel and the full screen are buttons and palette entries, so a key that fails to be captured never reloads the page |
+| Free | single letters, `Shift`+letter, `Alt`+letter, arrows, `Home`, `End`, `Esc`, `Space` | bound as written |
+
+Each row of the first two groups is checked by an e2e test on Chromium, Firefox and WebKit (TASK-0236, EPIC-27); a key that the test shows not to be capturable moves to the first group. The browser behaviour in the table is the usual one and was not measured for this SDD.
+
+#### macOS
+
+`Mod` is `Cmd` on macOS and `Alt` is `Option`; the handlers already read `metaKey`. A key that uses `Alt` and a digit or a symbol reads `code`, because `Option` produces another character (as `panelShortcut` does). `Home` and `End` are `Fn+Left` and `Fn+Right` on a laptop, and the handlers read `Home` and `End`. The cheat sheet shows `Cmd`, `Option` and the glyph of `Shift` on a Mac.
+
+#### Commands to add to the core (before the UI card)
+
+Each is a card for `senior-a`, with its name in `000-shared-definitions.md` first (rule 3 of `AGENTS.md`). The UI card of a row waits for its command.
+
+| Id | Command | Used by |
+| --- | --- | --- |
+| N-1 | `item.set_enabled`: a disabled item stays on the timeline and is skipped by the preview and the export | `V` |
+| N-2 | `item.group`, `item.ungroup`: items move, trim and delete together | `Mod+G`, `Mod+Shift+G` |
+| N-3 | `marker.add`, `marker.set`, `marker.remove`: a marker on the timeline with a time, a label and a colour (today only `audio.mark_beats` writes markers, on a music item) | `M`, `Alt+M`, `Shift+M`, `Alt+Shift+M` |
+| N-4 | `item.link`, `item.unlink` and `item.extract_audio`: tie a clip to its audio item, and put the audio of a clip on an audio track (today `audio.add` can place the audio of a video asset but does not detach it from a clip or restore it) | `~`, `Mod+Shift+S` |
+| N-5 | a curve in `clip.set_speed`: points of time and speed, with presets (today only a constant speed) | `Shift+B` |
+| N-6 | the `magnet` property of `track.update`: the main track closes gaps on its own (`timeline.close_gap` is the building block) | `P` |
+| N-7 | decision of the author, no work before it: compound clip (`item.compound`, `item.uncompound`) and match cut | `Alt+G`, `Alt+Shift+G`, `Mod+J` |
+| N-8 | `item.paste_attributes`: copy the effects, colour and transform of one item to others | `Mod+Shift+C`, `Mod+Shift+V` |
+
+The rows of N-1 to N-6 and N-8 enter `SHORTCUTS` when their command exists. The `surface.*` ids marked UI are added to `UI_SHORTCUT_ACTIONS` by TASK-0236. The cheat sheet and the shortcuts page of the site read the same table, so no key is written twice.
 
 ## 19. Performance budgets
 
