@@ -607,3 +607,22 @@ jobs:
         run: bash scripts/install-ffmpeg.sh
       - name: Reference session under strace
         run: bash scripts/no-egress.sh
+
+  # SDD-007 section 12: a pull request that adds a dependency with a high or critical
+  # advisory, or a licence outside the allow-list of internal/tools/notices/spdx.go
+  # (SDD-009 section 12.2 item 4), fails. Keep the two lists equal.
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          allow-licenses: MIT, BSD-2-Clause, BSD-3-Clause, ISC, Apache-2.0, MPL-2.0, 0BSD, Unlicense, OFL-1.1, LGPL-3.0-or-later, blessing, Zlib, WTFPL
