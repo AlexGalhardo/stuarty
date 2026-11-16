@@ -42,7 +42,8 @@ func TestIngestPortraitClip(t *testing.T) {
 		t.Fatalf("kind %s", res.Kind)
 	}
 	want := []string{
-		"loudness-1.json", "normalized-1.mov", "peaks-1.bin", "probe-1.json", "proxy-1.mp4", "silence-1.json",
+		"chunks-1.json", "loudness-1.json", "normalized-1.mov", "peaks-1.bin", "probe-1.json", "proxy-1.mp4",
+		"silence-1.json",
 		"thumbnails-1-w160.jpg", "thumbnails-1-w320.jpg", "thumbnails-1-w640.jpg", "thumbnails-1.jpg",
 	}
 	if got := res.names(); strings.Join(got, ",") != strings.Join(want, ",") {
@@ -363,5 +364,70 @@ func TestIngestLong60Seconds(t *testing.T) {
 	}
 	if took > 30*time.Second {
 		t.Errorf("took %s, NFR-005 allows 30 s", took)
+	}
+}
+
+// The chunk index next to the video proxy describes every sample of the proxy: the arrays have one
+// entry per frame, the first sample is a key frame, the codec is VP9 and the coded size is the proxy's.
+func TestIngestWritesTheChunkIndex(t *testing.T) {
+	e := newEnv(t)
+	p, err := e.gen.Portrait(context.Background())
+	hash, res := e.mustIngest(mustGen(t, p, err))
+
+	art := res.find("chunks", "")
+	if art == nil {
+		t.Fatal("no chunks artifact")
+	}
+
+	var idx ChunkIndex
+	if err := json.Unmarshal(readJSONFile(t, e.publishedPath(hash, art)), &idx); err != nil {
+		t.Fatal(err)
+	}
+
+	n := res.Facts.FrameCount
+	if idx.Version != ChunkIndexVersion || !strings.HasPrefix(idx.Codec, "vp09.") ||
+		len(idx.Offsets) != n || len(idx.Sizes) != n || len(idx.TimestampsUS) != n {
+		t.Fatalf("index %d samples, want %d: %+v", len(idx.Sizes), n, idx.Codec)
+	}
+
+	pw, ph := ProxySize(res.Facts.Width, res.Facts.Height)
+	if idx.Width != pw || idx.Height != ph {
+		t.Errorf("coded size %dx%d, want %dx%d", idx.Width, idx.Height, pw, ph)
+	}
+
+	if len(idx.Keyframes) == 0 || idx.Keyframes[0] != 0 || idx.TimestampsUS[0] != 0 {
+		t.Errorf("first sample: keyframes %v, first time %d", idx.Keyframes, idx.TimestampsUS[0])
+	}
+
+	proxy := e.publishedPath(hash, res.find("proxy", ""))
+	st, err := os.Stat(proxy)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := range idx.Offsets {
+		if idx.Offsets[i] <= 0 || idx.Sizes[i] <= 0 || idx.Offsets[i]+idx.Sizes[i] > st.Size() {
+			t.Fatalf("sample %d is outside the proxy of %d bytes: offset %d, size %d",
+				i, st.Size(), idx.Offsets[i], idx.Sizes[i])
+		}
+	}
+}
+
+func TestReadChunkIndexRefusesWhatIsNotAnMP4WithVideo(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	junk := filepath.Join(dir, "junk.mp4")
+
+	if err := os.WriteFile(junk, []byte("not an mp4 file at all, really"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := ReadChunkIndex(junk); err == nil {
+		t.Error("a file without boxes was indexed")
+	}
+
+	if _, err := ReadChunkIndex(filepath.Join(dir, "missing.mp4")); err == nil {
+		t.Error("a missing file was indexed")
 	}
 }

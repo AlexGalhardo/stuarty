@@ -410,7 +410,7 @@ func TestArtifactsAcceptSpeechAndBeats(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
-	for _, kind := range []string{"probe", "speech", "beats", "frames"} {
+	for _, kind := range []string{"probe", "speech", "beats", "frames", "chunks"} {
 		if _, err := db.ExecContext(
 			ctx,
 			`INSERT INTO artifacts (asset_hash, kind, profile, ext, rel_path, size_bytes, sha256, created_ms) VALUES ('sha256:a', ?, 1, 'json', 'p', 1, 'x', 1)`,
