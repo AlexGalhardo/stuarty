@@ -1,0 +1,361 @@
+//! The CPU path of the renderer: the port of `engine/compositor` (SDD-013 section 3).
+//!
+//! Every pixel is computed with integer arithmetic from numbers that are rounded once per layer,
+//! so the result is the same on every system and does not depend on how many bands the frame is
+//! split into: the result of a row never depends on another row.
+
+use core::ops::Range;
+
+use crate::blur::blurred;
+use crate::colour::apply_matrix;
+use crate::image::Image;
+use crate::math::{div255, mul, round_half_away, round_half_up, sincos, u8_of};
+use crate::resize::resize;
+
+/// Where a source is drawn: a `w` by `h` rectangle centred on `(cx, cy)`, turned by `rot` degrees
+/// clockwise, all in output pixels.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Placement {
+	pub cx: f64,
+	pub cy: f64,
+	pub w: f64,
+	pub h: f64,
+	pub rot: f64,
+}
+
+/// The pixels of a layer.
+#[derive(Clone, Copy, Debug)]
+pub enum Source<'a> {
+	/// The decoded frame of a media layer, cropped and premultiplied (SDD-013 section 5.1).
+	Media(&'a Image),
+	/// A bitmap of the rasterizer, already premultiplied once, with its metrics at pixel scale 1.
+	Bitmap {
+		image: &'a Image,
+		natural_w: f64,
+		center_dx: f64,
+		center_dy: f64,
+	},
+}
+
+/// One layer of the frame plan, in project pixels, with its pixels.
+#[derive(Clone, Copy, Debug)]
+pub struct Layer<'a> {
+	pub source: Source<'a>,
+	pub cx: f64,
+	pub cy: f64,
+	pub w: f64,
+	pub h: f64,
+	pub rotation: f64,
+	pub opacity: f64,
+	pub color_matrix: Option<[f64; 12]>,
+	pub filter: Option<[f64; 12]>,
+	pub blur: f64,
+}
+
+/// Premultiplies a straight-alpha RGBA8 bitmap once.
+pub fn premultiply(pix: &[u8], w: usize, h: usize) -> Image {
+	let n = w.saturating_mul(h).saturating_mul(4).min(pix.len());
+	let mut out = vec![0_u8; n];
+	for (o, s) in out
+		.as_chunks_mut::<4>()
+		.0
+		.iter_mut()
+		.zip(pix.as_chunks::<4>().0)
+	{
+		let a = u32::from(s[3]);
+		o[0] = u8_of(div255(u32::from(s[0]) * a));
+		o[1] = u8_of(div255(u32::from(s[1]) * a));
+		o[2] = u8_of(div255(u32::from(s[2]) * a));
+		o[3] = s[3];
+	}
+	Image {
+		pix: out,
+		w,
+		h,
+		opaque: false,
+	}
+}
+
+/// Reads `#RRGGBB`; an alpha, if any, is ignored (the frame is opaque). Anything else is black.
+pub fn parse_colour(s: &str) -> [u8; 4] {
+	let black = [0, 0, 0, 255];
+	let b = s.as_bytes();
+	if b.len() < 7 || b[0] != b'#' {
+		return black;
+	}
+	let mut out = black;
+	for (i, o) in out.iter_mut().take(3).enumerate() {
+		let (Some(hi), Some(lo)) = (hex_val(b[1 + 2 * i]), hex_val(b[2 + 2 * i])) else {
+			return black;
+		};
+		*o = hi << 4 | lo;
+	}
+	out
+}
+
+fn hex_val(c: u8) -> Option<u8> {
+	match c {
+		b'0'..=b'9' => Some(c - b'0'),
+		b'a'..=b'f' => Some(c - b'a' + 10),
+		b'A'..=b'F' => Some(c - b'A' + 10),
+		_ => None,
+	}
+}
+
+/// The frame a composition writes: `width x height` RGBA8, no padding.
+pub struct Target<'a> {
+	pub pix: &'a mut [u8],
+	pub width: usize,
+	pub height: usize,
+	/// The rows to fill and draw (a band of the export); the rows outside are not touched.
+	pub rows: Range<usize>,
+}
+
+/// Draws one frame plan into `dst`, scaling every position and size by `out_scale`. The rows of
+/// `dst` end opaque.
+pub fn compose(dst: &mut Target<'_>, background: [u8; 4], layers: &[Layer<'_>], out_scale: f64) {
+	dst.rows = dst.rows.start.min(dst.height)..dst.rows.end.min(dst.height);
+	if dst.pix.len() < dst.width * dst.height * 4 || dst.rows.is_empty() {
+		return;
+	}
+	let (a, b) = (dst.rows.start * dst.width * 4, dst.rows.end * dst.width * 4);
+	for px in dst.pix[a..b].as_chunks_mut::<4>().0.iter_mut() {
+		px.copy_from_slice(&background);
+	}
+	for l in layers {
+		draw_layer(dst, l, out_scale);
+	}
+}
+
+fn draw_layer(dst: &mut Target<'_>, l: &Layer<'_>, out_scale: f64) {
+	let op = round_half_away(l.opacity.clamp(0.0, 1.0) * 255.0) as u32;
+	if op == 0 {
+		return;
+	}
+
+	let (image, p, is_bitmap) = match l.source {
+		Source::Media(img) => {
+			let p = Placement {
+				cx: l.cx * out_scale,
+				cy: l.cy * out_scale,
+				w: l.w * out_scale,
+				h: l.h * out_scale,
+				rot: l.rotation,
+			};
+			(img, p, false)
+		}
+		Source::Bitmap {
+			image,
+			natural_w,
+			center_dx,
+			center_dy,
+		} => {
+			// The plan places the centre of the text block; the bitmap reaches further on the
+			// side of a shadow, so its own centre is offset by the metrics of the rasterizer.
+			let sc = if natural_w > 0.0 {
+				l.w / natural_w
+			} else {
+				1.0
+			};
+			let p = Placement {
+				cx: (l.cx - mul(center_dx, sc)) * out_scale,
+				cy: (l.cy - mul(center_dy, sc)) * out_scale,
+				w: l.w * out_scale,
+				h: l.h * out_scale,
+				rot: l.rotation,
+			};
+			(image, p, true)
+		}
+	};
+
+	if !(p.w > 0.0 && p.h > 0.0) || !image.is_drawable() {
+		return;
+	}
+
+	let mut src = shrunk(image, is_bitmap, &p);
+	if let Some(m) = &l.color_matrix {
+		src = apply_matrix(&src, m);
+	}
+	if let Some(m) = &l.filter {
+		src = apply_matrix(&src, m);
+	}
+	let mut p = p;
+	if l.blur > 0.0 {
+		(src, p) = blurred(&src, &p, mul(l.blur, out_scale));
+	}
+	draw(dst, &src, &p, op);
+}
+
+/// A bitmap box-filtered down to its drawn size when it is at least twice as large in both
+/// directions, so a small frame is not point-sampled from a large bitmap.
+fn shrunk(src: &Image, is_bitmap: bool, p: &Placement) -> Image {
+	if is_bitmap {
+		let (w, h) = (round_half_up(p.w), round_half_up(p.h));
+		if w >= 1 && h >= 1 {
+			let (w, h) = (w as usize, h as usize);
+			if src.w >= w.saturating_mul(2) && src.h >= h.saturating_mul(2) {
+				return resize(src, w, h);
+			}
+		}
+	}
+	src.clone()
+}
+
+fn draw(dst: &mut Target<'_>, src: &Image, p: &Placement, op: u32) {
+	if p.rot == 0.0 && src.w as i64 == round_half_up(p.w) && src.h as i64 == round_half_up(p.h) {
+		let x0 = round_half_up(p.cx - p.w / 2.0);
+		let y0 = round_half_up(p.cy - p.h / 2.0);
+		blit(dst, src, x0, y0, op);
+		return;
+	}
+	sample(dst, src, p, op);
+}
+
+/// Draws `src` with its top-left corner at `(x0, y0)`, pixel for pixel.
+fn blit(dst: &mut Target<'_>, src: &Image, x0: i64, y0: i64, op: u32) {
+	let dw = dst.width;
+	let cx0 = x0.max(0);
+	let cx1 = x0.saturating_add(src.w as i64).min(dw as i64);
+	let cy0 = y0.max(dst.rows.start as i64);
+	let cy1 = y0.saturating_add(src.h as i64).min(dst.rows.end as i64);
+	if cx0 >= cx1 || cy0 >= cy1 {
+		return;
+	}
+	let n = (cx1 - cx0) as usize * 4;
+
+	for y in cy0..cy1 {
+		let so = ((y - y0) as usize * src.w + (cx0 - x0) as usize) * 4;
+		let d = (y as usize * dw + cx0 as usize) * 4;
+		if src.opaque && op == 255 {
+			dst.pix[d..d + n].copy_from_slice(&src.pix[so..so + n]);
+		} else {
+			over_row(&mut dst.pix[d..d + n], &src.pix[so..so + n], op);
+		}
+	}
+}
+
+/// Blends a row of premultiplied pixels over `d` with opacity `op` (0..255).
+fn over_row(d: &mut [u8], s: &[u8], op: u32) {
+	for (dp, sp) in d
+		.as_chunks_mut::<4>()
+		.0
+		.iter_mut()
+		.zip(s.as_chunks::<4>().0)
+	{
+		let mut a = u32::from(sp[3]);
+		if op == 255 && a == 255 {
+			dp.copy_from_slice(sp);
+			continue;
+		}
+		if op != 255 {
+			a = div255(a * op);
+		}
+		if a == 0 {
+			continue;
+		}
+		let (mut r, mut g, mut b) = (u32::from(sp[0]), u32::from(sp[1]), u32::from(sp[2]));
+		if op != 255 {
+			r = div255(r * op);
+			g = div255(g * op);
+			b = div255(b * op);
+		}
+		over_pixel(dp, r, g, b, a);
+	}
+}
+
+fn over_pixel(d: &mut [u8], r: u32, g: u32, b: u32, a: u32) {
+	let ia = 255 - a;
+	d[0] = u8_of(r + div255(u32::from(d[0]) * ia));
+	d[1] = u8_of(g + div255(u32::from(d[1]) * ia));
+	d[2] = u8_of(b + div255(u32::from(d[2]) * ia));
+	d[3] = u8_of(a + div255(u32::from(d[3]) * ia));
+}
+
+/// Fractional bits of the sampler coordinates.
+const FIX: u32 = 32;
+
+/// Draws `src` into the rectangle `p` with bilinear interpolation: every destination pixel whose
+/// centre is inside the rectangle takes the four nearest source pixels. Edges are not smoothed.
+/// Only the destination rows of `dst.rows` are drawn.
+pub fn sample(dst: &mut Target<'_>, src: &Image, p: &Placement, op: u32) {
+	let (sin, cos) = sincos(mul(p.rot, core::f64::consts::PI / 180.0));
+	let dw = dst.width;
+
+	let (hw, hh) = (p.w / 2.0, p.h / 2.0);
+	let ex = mul(hw, cos.abs()) + mul(hh, sin.abs());
+	let ey = mul(hw, sin.abs()) + mul(hh, cos.abs());
+	let bx0 = ((p.cx - ex).floor() as i64).max(0);
+	let bx1 = ((p.cx + ex).ceil() as i64).min(dw as i64);
+	let by0 = ((p.cy - ey).floor() as i64)
+		.max(0)
+		.max(dst.rows.start as i64);
+	let by1 = ((p.cy + ey).ceil() as i64).min(dst.rows.end as i64);
+	if bx0 >= bx1 || by0 >= by1 {
+		return;
+	}
+
+	// The inverse transform of a destination pixel centre to source coordinates, as 32.32 fixed
+	// point: sx = ax*px + bx*py + ox, sy = ay*px + by*py + oy.
+	let (kx, ky) = (src.w as f64 / p.w, src.h as f64 / p.h);
+	let (dx0, dy0) = (0.5 - p.cx, 0.5 - p.cy);
+	let one = (1_u64 << FIX) as f64;
+	let q = |v: f64| round_half_away(mul(v, one));
+	let (ax, bxx) = (q(mul(cos, kx)), q(mul(sin, kx)));
+	let (ay, byy) = (q(-mul(sin, ky)), q(mul(cos, ky)));
+	let ox = q(mul(mul(dx0, cos) + mul(dy0, sin) + hw, kx));
+	let oy = q(mul(-mul(dx0, sin) + mul(dy0, cos) + hh, ky));
+
+	let (lim_x, lim_y) = ((src.w as i64) << FIX, (src.h as i64) << FIX);
+	let half = 1_i64 << (FIX - 1);
+	let (max_x, max_y) = (src.w as i64 - 1, src.h as i64 - 1);
+	let stride = src.w * 4;
+
+	for y in by0..by1 {
+		let row_x = bxx.wrapping_mul(y).wrapping_add(ox);
+		let row_y = byy.wrapping_mul(y).wrapping_add(oy);
+		let mut d = (y as usize * dw + bx0 as usize) * 4;
+		for x in bx0..bx1 {
+			let sx = row_x.wrapping_add(ax.wrapping_mul(x));
+			let sy = row_y.wrapping_add(ay.wrapping_mul(x));
+			let here = d;
+			d += 4;
+			if sx < 0 || sy < 0 || sx >= lim_x || sy >= lim_y {
+				continue;
+			}
+			let (fx, fy) = (sx - half, sy - half);
+			let (x0, y0) = (fx >> FIX, fy >> FIX);
+			let (wx, wy) = (frac8(fx), frac8(fy));
+			let (x1, y1) = ((x0 + 1).min(max_x) as usize, (y0 + 1).min(max_y) as usize);
+			let (x0, y0) = (x0.max(0) as usize, y0.max(0) as usize);
+			let o00 = y0 * stride + x0 * 4;
+			let o10 = y0 * stride + x1 * 4;
+			let o01 = y1 * stride + x0 * 4;
+			let o11 = y1 * stride + x1 * 4;
+
+			let mut px = [0_u32; 4];
+			for (k, v) in px.iter_mut().enumerate() {
+				let top =
+					u32::from(src.pix[o00 + k]) * (256 - wx) + u32::from(src.pix[o10 + k]) * wx;
+				let bot =
+					u32::from(src.pix[o01 + k]) * (256 - wx) + u32::from(src.pix[o11 + k]) * wx;
+				*v = (top * (256 - wy) + bot * wy + 32768) >> 16;
+			}
+			let mut a = px[3];
+			if op != 255 {
+				a = div255(a * op);
+				px[0] = div255(px[0] * op);
+				px[1] = div255(px[1] * op);
+				px[2] = div255(px[2] * op);
+			}
+			if a == 0 {
+				continue;
+			}
+			over_pixel(&mut dst.pix[here..here + 4], px[0], px[1], px[2], a);
+		}
+	}
+}
+
+/// The 8 bits of weight of a 32.32 coordinate, the 8 bits under the integer part.
+fn frac8(v: i64) -> u32 {
+	((v >> (FIX - 8)) & 0xFF) as u32
+}

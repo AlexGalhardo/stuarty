@@ -203,6 +203,7 @@ These rules make §3.1 to §3.7 give the same bytes on Linux, macOS, Windows and
 - Stage C gate: every golden case of SDD-004 §11 (the `requiredCases`, `sticker-png`, `sticker-anim`, `filter-*` and `blur-*`) composed by the Rust CPU path through `wazero` equals the stored frame byte for byte, at 1 and at 8 bands.
 - `div255` equals `x / 255` rounded to nearest for every `x` from 0 to 65535, in Rust and in Go; `sincos` equals the Go `sincos` bit for bit over 10,000 angles in `[-1000, 1000]` and at every multiple of 15 degrees.
 - The same Rust test suite runs natively on the three operating systems and in WebAssembly under `wazero`, and prints the same SHA-256 of the golden frames.
+- Vectors (P5-RND-003): `renderer/testdata/compose-vectors.bin` holds 22 small compositions (copy, clip, opacity, scale, rotation, colour matrix, filter, blur at three radii, bitmaps with metrics, the shrink of a large bitmap, a stack) with the frame `engine/compositor` draws for each; `cargo test` draws them again at 1 and 8 bands and requires the same bytes, and `TestRendererVectorsAreCurrent` keeps the file equal to the Go output. The FNV-1a hash of `sincos` over its 10,001 + 97 angles is stored in the same file.
 - Stage D gate: §3.8 on every golden case.
 
 ## 4. The host interface
