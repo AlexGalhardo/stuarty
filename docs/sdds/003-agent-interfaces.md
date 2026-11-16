@@ -1528,12 +1528,13 @@ trashed prj_2x5c8d1f4g; restore it with project_trash restore=true
                 "track.update", "track.move", "track.remove", "track.set_caption_style", "item.move",
                 "item.trim", "item.split", "item.delete", "item.duplicate", "item.rename",
                 "item.set_transform", "item.set_transition", "item.set_audio", "item.crossfade",
-                "timeline.close_gap", "clip.add", "audio.add", "clip.set_framing", "clip.set_speed",
-                "clip.set_color", "clip.remove_silences", "text.add", "text.set", "text.apply_preset",
+                "timeline.close_gap", "clip.add", "audio.add", "audio.duck", "audio.mark_beats", "clip.set_framing",
+                "clip.set_speed", "clip.set_color", "clip.set_blur", "clip.set_filter", "clip.remove_silences", "text.add", "text.set", "text.apply_preset",
                 "shape.add", "shape.set", "caption.add", "caption.set_words", "caption.edit_word",
                 "caption.split", "caption.merge", "caption.set_breaks", "caption.set_style",
                 "caption.from_transcript", "caption.retime_from_clip", "keyframe.set", "keyframe.remove",
-                "keyframe.clear", "slot.mark", "slot.unmark", "slot.fill", "template.set_info"
+                "keyframe.clear", "slot.mark", "slot.unmark", "slot.fill", "template.set_info",
+                "font.add", "font.remove"
               ]
             },
             "args":{"type":"object"}
