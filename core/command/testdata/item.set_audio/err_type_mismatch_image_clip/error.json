@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Item itm_m1n2p3q4r5 shows an image, which has no audio to set.",
+  "hint": "Audio settings apply to clips of a video with audio, and to audio items.",
+  "retryable": false,
+  "path": "args.item_id"
+}

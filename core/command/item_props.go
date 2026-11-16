@@ -298,6 +298,9 @@ func applyItemSetAudio(c *Context, a *itemAudioArgs) error {
 		return Errorf(CodeTypeMismatch, "Item %s is a %s item and has no audio.", a.ItemID, it.Type).
 			WithHint("Use item.set_transform for visual properties.").WithPath("args.item_id")
 	}
+	if err := c.stillImageNoAudio(&it, "has no audio to set"); err != nil {
+		return err
+	}
 	if a.AudioMuted != nil && it.Type != timeline.ItemClip {
 		return Errorf(CodeTypeMismatch, "Item %s is an audio item; audio_muted applies to clip items.", a.ItemID).
 			WithHint("Use volume 0 to silence an audio item.").WithPath("args.audio_muted")

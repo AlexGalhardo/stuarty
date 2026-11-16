@@ -1,7 +1,7 @@
 {
   "code": "E_VALIDATION",
-  "message": "args.resolved is missing: the beats of the asset are not known.",
-  "hint": "The service fills it from the beat grid; run the beat analysis of the asset first, then retry.",
+  "message": "The beat grid of the asset is not known.",
+  "hint": "Wait until the asset is analysed (media_inspect shows its state), then retry.",
   "retryable": false,
-  "path": "args.resolved"
+  "path": "args.item_id"
 }

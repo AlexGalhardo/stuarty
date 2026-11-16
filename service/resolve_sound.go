@@ -47,6 +47,10 @@ func (s *svc) resolveSpeech(
 			return nil, asError(err)
 		}
 
+		if e := noSound(index, id, asset, "speech"); e != nil {
+			return nil, e
+		}
+
 		raw := s.readArtifact(arts, "speech", "")
 		if raw == nil {
 			return nil, notAnalysed(index, asset.ID, "the speech", waitForAnalysis)
@@ -129,6 +133,10 @@ func (s *svc) resolveBeats(
 	arts, err := tx.Assets().Artifacts(ctx, asset.Hash)
 	if err != nil {
 		return nil, asError(err)
+	}
+
+	if e := noSound(index, a.ItemID, asset, "beat grid"); e != nil {
+		return nil, e
 	}
 
 	raw := s.readArtifact(arts, "beats", "")

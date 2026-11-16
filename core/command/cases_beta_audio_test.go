@@ -174,6 +174,7 @@ func beatCases() {
 	mb("err_type_mismatch_clip", fmt.Sprintf(`{"item_id": %q, %s}`, itemA, grid),
 		func() *B { return base().clip(itemA, vidTr, 0, 120, 0) })
 	mb("err_type_mismatch_asset_without_audio", ma(grid), scene(func(it *timeline.Item) { it.Asset = imgAsset }))
+	mb("err_invalid_state_empty_beat_grid", ma(beats()), scene())
 	mb("err_invalid_state_no_beat_in_the_visible_part", ma(beats(0, 20, 200, 260)), scene())
 	mb(
 		"err_limit_over_200_markers",

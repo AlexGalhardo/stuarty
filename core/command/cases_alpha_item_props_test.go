@@ -96,6 +96,8 @@ func init() {
 	sa("err_validation_volume_4_001", arg(`"volume": 4.001`), cl())
 	sa("err_invalid_time_no_unit", arg(`"fade_in": "2"`), cl())
 	sa("err_not_found", `{"item_id": "itm_zzzzzzzzzz", "volume": 1}`, cl())
+	sa("err_type_mismatch_image_clip", arg(`"volume": 1`),
+		cl(func(it *timeline.Item) { it.Asset, it.SourceIn = imgAsset, 0 }))
 	sa("err_type_mismatch_text_item", fmt.Sprintf(`{"item_id": %q, "volume": 1}`, itemC), text())
 	sa("err_type_mismatch_audio_muted_on_audio_item", fmt.Sprintf(`{"item_id": %q, "audio_muted": true}`, itemB),
 		func() *B { return base().audio(itemB, 0, 60, 0) })

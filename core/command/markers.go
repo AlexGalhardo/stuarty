@@ -43,9 +43,9 @@ type markBeatsArgs struct {
 
 func checkBeats(r *ResolvedBeats) *Error {
 	if r == nil {
-		return Errorf(CodeValidation, "args.resolved is missing: the beats of the asset are not known.").
-			WithHint("The service fills it from the beat grid; run the beat analysis of the asset first, then retry.").
-			WithPath("args.resolved")
+		return Errorf(CodeValidation, "The beat grid of the asset is not known.").
+			WithHint("Wait until the asset is analysed (media_inspect shows its state), then retry.").
+			WithPath("args.item_id")
 	}
 	if len(r.Beats) > maxBeats {
 		return Errorf(CodeValidation, "args.resolved.beats has %d beats; the limit is %d.", len(r.Beats), maxBeats).
@@ -77,6 +77,19 @@ func (c *Context) audioSource(it *timeline.Item, what string) *Error {
 	return nil
 }
 
+// stillImageNoAudio refuses an audio setting on a clip of an image: an image has no sound.
+func (c *Context) stillImageNoAudio(it *timeline.Item, what string) *Error {
+	if it.Type != timeline.ItemClip {
+		return nil
+	}
+	if asset, ok := c.Doc.Assets[it.Asset]; ok && asset.Kind == timeline.AssetImage {
+		return Errorf(CodeTypeMismatch, "Item %s shows an image, which %s.", it.ID, what).
+			WithHint("Audio settings apply to clips of a video with audio, and to audio items.").
+			WithPath("args.item_id")
+	}
+	return nil
+}
+
 func assetHasAudio(a timeline.Asset) bool {
 	return a.Kind == timeline.AssetAudio || (a.Kind == timeline.AssetVideo && a.HasAudio)
 }
@@ -85,15 +98,21 @@ func applyMarkBeats(c *Context, a *markBeatsArgs) error {
 	if err := idForm("args.item_id", timeline.PrefixItem, a.ItemID); err != nil {
 		return err
 	}
-	if err := checkBeats(a.Resolved); err != nil {
-		return err
-	}
 	it, err := c.item(a.ItemID)
 	if err != nil {
 		return err
 	}
 	if err := c.audioSource(&it, "beats are marked on music."); err != nil {
 		return err
+	}
+	if err := checkBeats(a.Resolved); err != nil {
+		return err
+	}
+	if len(a.Resolved.Beats) == 0 {
+		return Errorf(CodeInvalidState, "The asset of item %s has no beats: its beat grid is empty.", a.ItemID).
+			WithHint("Beats exist only in music with a steady rhythm; a sound effect or speech has none. " +
+				"Choose another item, or place cuts by time.").
+			WithPath("args.item_id")
 	}
 	every := max(a.Every, 1)
 	sp := it.Speed

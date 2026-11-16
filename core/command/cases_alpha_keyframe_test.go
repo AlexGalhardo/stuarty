@@ -50,6 +50,10 @@ func init() {
 		`{"item_id": "itm_zzzzzzzzzz", "property": "scale", "at": "2s", "value": 1.2}`))
 	set("err_type_mismatch_opacity_on_audio", `"property": "opacity", "at": "10f", "value": 0.5`,
 		func() *B { return base().audio(itemC, 0, 60, 0) })
+	set("err_type_mismatch_volume_on_image", `"property": "volume", "at": "10f", "value": 0.5`,
+		func() *B {
+			return base().clip(itemC, vidTr, 0, 60, 0, func(it *timeline.Item) { it.Asset, it.SourceIn = imgAsset, 0 })
+		})
 	set("err_type_mismatch_volume_on_text", `"property": "volume", "at": "2s", "value": 1`, item())
 	set("err_invalid_time_at_before_item", scaleAt("10f", "1.2"), item())
 	set("err_invalid_time_at_after_item_end", scaleAt("300f", "1.2"), item())
