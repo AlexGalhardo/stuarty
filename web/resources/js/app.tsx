@@ -2,6 +2,7 @@ import { createInertiaApp } from "@inertiajs/react";
 
 import AppLayout from "./layouts/AppLayout";
 import { installStyleNonce } from "./lib/cspNonce";
+import { installLangHeader, reconcileLang } from "./lib/lang";
 
 // Dark by default (D-024, SDD-012 section 17): the "dark" class on <html> is
 // set before paint by the inline script of app.html, from localStorage.theme
@@ -16,6 +17,9 @@ try {
 	document.documentElement.classList.add("dark");
 }
 
+// The language of this browser rides on every request (SDD-012 section 16.3).
+installLangHeader();
+
 // The scroll lock of a Radix select or dialog writes a <style> element.
 installStyleNonce();
 
@@ -29,6 +33,7 @@ createInertiaApp({
 		?.nonce,
 	progress: { color: "oklch(0.62 0.17 255)" },
 }).finally(() => {
+	reconcileLang();
 	// app.html sets data-hydrating; style it (button:disabled, a pending hint)
 	// for the gap before the app mounts.
 	document.documentElement.removeAttribute("data-hydrating");

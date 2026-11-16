@@ -138,7 +138,7 @@ test.describe("project-settings", () => {
 		]);
 	});
 
-	test("the language select posts the locale and reloads at the same playhead", async ({
+	test("the language select keeps the locale and reloads at the same playhead", async ({
 		page,
 		request,
 	}) => {
@@ -147,16 +147,15 @@ test.describe("project-settings", () => {
 		await expect(
 			page.getByRole("link", { name: "Back to projects" }),
 		).toBeVisible();
-		const posted = page.waitForRequest(
-			(r) => r.method() === "POST" && r.url().endsWith("/locale"),
-		);
 
 		const reloaded = page.waitForRequest(
 			(r) => r.isNavigationRequest() && r.url().includes("t=45f"),
 		);
 		await page.getByRole("combobox", { name: "Language" }).click();
 		await page.getByRole("option", { name: "Português (Brasil)" }).click();
-		expect((await posted).postDataJSON()).toEqual({ locale: "pt-BR" });
+		expect(await page.evaluate(() => localStorage.getItem("vv.lang"))).toBe(
+			"pt-BR",
+		);
 		await reloaded;
 
 		await expect(
@@ -165,18 +164,14 @@ test.describe("project-settings", () => {
 		await expect(
 			page.locator('[role="slider"][aria-valuenow="45"]'),
 		).toBeVisible();
-		// Leave the cookie as the other specs expect it.
-		await page.context().clearCookies({ name: "lang" });
 	});
 
 	test("/settings loads in pt-BR and shows the version and the workspace path", async ({
 		page,
-		baseURL,
 	}) => {
-		if (baseURL === undefined) throw new Error("no baseURL");
-		await page
-			.context()
-			.addCookies([{ name: "lang", value: "pt-BR", url: baseURL }]);
+		await page.addInitScript(() => {
+			localStorage.setItem("vv.lang", "pt-BR");
+		});
 		const response = await page.goto("/settings");
 		expect(response?.status()).toBe(200);
 		await expect(
@@ -184,6 +179,5 @@ test.describe("project-settings", () => {
 		).toBeVisible();
 		await expect(page.getByTestId("settings-version")).not.toBeEmpty();
 		await expect(page.getByTestId("settings-workspace")).not.toBeEmpty();
-		await page.context().clearCookies({ name: "lang" });
 	});
 });

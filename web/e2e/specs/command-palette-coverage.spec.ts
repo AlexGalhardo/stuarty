@@ -55,8 +55,6 @@ test.describe("command-palette-coverage pt-BR", () => {
 	test("every row of the palette shows its Portuguese title", async ({
 		page,
 		request,
-		context,
-		baseURL,
 	}) => {
 		const catalogue = JSON.parse(
 			readFileSync(
@@ -90,7 +88,9 @@ test.describe("command-palette-coverage pt-BR", () => {
 			.map((c) => c.name);
 		expect(names.length).toBeGreaterThan(40);
 
-		await context.addCookies([{ name: "lang", value: "pt-BR", url: baseURL }]);
+		await page.addInitScript(() => {
+			localStorage.setItem("vv.lang", "pt-BR");
+		});
 		await page.goto(`/editor/${created.project_id as string}`);
 		await expect(page.locator("html")).toHaveAttribute("lang", "pt-BR");
 		await expect(

@@ -92,16 +92,14 @@ for (const lang of ["en", "pt-BR"] as const) {
 			test(`the editor has no serious or critical violation in ${theme} in ${lang}`, async ({
 				page,
 				request,
-				context,
-				baseURL,
 			}) => {
 				test.setTimeout(180_000);
-				await context.addCookies([
-					{ name: "lang", value: lang, url: baseURL ?? "" },
-				]);
 				await page.addInitScript((value) => {
 					if (value === "light") localStorage.setItem("theme", "light");
 				}, theme);
+				await page.addInitScript((value) => {
+					localStorage.setItem("vv.lang", value);
+				}, lang);
 
 				const empty = await seedProject(request, { tracks: 0, perTrack: 0 });
 				const seeded = await seedProject(request, {

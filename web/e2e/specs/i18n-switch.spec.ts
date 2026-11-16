@@ -90,13 +90,15 @@ async function noOverflow(page: Page): Promise<void> {
 	expect(overflow.header).toBeLessThanOrEqual(0);
 }
 
-async function langCookie(page: Page): Promise<string | undefined> {
-	return (await page.context().cookies()).find((c) => c.name === "lang")?.value;
+// The language is a preference of the browser (SDD-012 section 16.3): it lives in
+// localStorage, and every test starts with a fresh context, so none is stored.
+async function storedLang(page: Page): Promise<string | null> {
+	return page.evaluate(() => localStorage.getItem("vv.lang"));
 }
 
 // Scenario 21 (SDD-012 sections 16 and 22): switch to pt-BR from an Inertia
 // page and from the editor, no English UI string remains on the main screens,
-// the playhead and the selection survive the reload, the lang cookie holds,
+// the playhead and the selection survive the reload, the stored language holds,
 // and switching back restores English.
 test.describe("i18n-switch", () => {
 	test.use({ viewport: { width: 1280, height: 720 } });
@@ -108,9 +110,8 @@ test.describe("i18n-switch", () => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
 		const itemId = seeded.itemIds[0];
 		if (itemId === undefined) throw new Error("no item seeded");
-		await page.context().clearCookies({ name: "lang" });
 
-		// Inertia page: the select posts the locale and the page renders again.
+		// Inertia page: the select keeps the locale and the page renders again.
 		await page.goto("/projects");
 		await expect(
 			page.getByRole("heading", { name: "Projects", level: 1 }),
@@ -120,11 +121,11 @@ test.describe("i18n-switch", () => {
 		await expect(
 			page.getByRole("heading", { name: "Projetos", level: 1 }),
 		).toBeVisible();
-		expect(await langCookie(page)).toBe("pt-BR");
+		expect(await storedLang(page)).toBe("pt-BR");
 		await expectNoEnglish(page, "/projects");
 		await noOverflow(page);
 
-		// The cookie persists across a reload and a new page of the context.
+		// The choice persists across a reload and a new page of the context.
 		await page.reload();
 		await expect(
 			page.getByRole("heading", { name: "Projetos", level: 1 }),
@@ -177,10 +178,7 @@ test.describe("i18n-switch", () => {
 		).toBeVisible();
 		await expect(page.getByRole("heading", { name: /^Clip/ })).toBeVisible();
 		await expect(page.locator(`[data-item-id="${itemId}"]`)).toBeVisible();
-		expect(await langCookie(page)).toBe("en");
-
-		// Leave the cookie as the other specs expect it.
-		await page.context().clearCookies({ name: "lang" });
+		expect(await storedLang(page)).toBe("en");
 	});
 
 	test("the editor keeps the playhead and the selection when it switches to pt-BR", async ({
@@ -188,7 +186,6 @@ test.describe("i18n-switch", () => {
 		request,
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
-		await page.context().clearCookies({ name: "lang" });
 		await page.goto(`/editor/${seeded.id}?t=45f`);
 		await page.locator("[data-item-id]").click();
 		await expect(page.getByRole("heading", { name: /^Clip/ })).toBeVisible();
@@ -207,7 +204,6 @@ test.describe("i18n-switch", () => {
 			page.locator('[role="slider"][aria-valuenow="45"]'),
 		).toBeVisible();
 		await expect(page.getByRole("heading", { name: /^Clipe/ })).toBeVisible();
-		expect(await langCookie(page)).toBe("pt-BR");
-		await page.context().clearCookies({ name: "lang" });
+		expect(await storedLang(page)).toBe("pt-BR");
 	});
 });

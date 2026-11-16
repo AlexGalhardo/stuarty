@@ -128,3 +128,25 @@ export function writeLayout(layout: LayoutPrefs): void {
 		// Storage can be blocked: the heights last for this page only.
 	}
 }
+
+// The language of the interface is a preference of this browser (SDD-012
+// section 16.3), not of the workspace: two browsers on one server keep their own.
+// It is sent on every request in the Vukem-Video-Lang header.
+const LOCALE_TAG = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/;
+
+export function readLocale(): string | null {
+	try {
+		const value = localStorage.getItem("vv.lang");
+		return value !== null && LOCALE_TAG.test(value) ? value : null;
+	} catch {
+		return null;
+	}
+}
+
+export function writeLocale(locale: string): void {
+	try {
+		localStorage.setItem("vv.lang", locale);
+	} catch {
+		// Storage can be blocked: the choice lasts for this page only.
+	}
+}

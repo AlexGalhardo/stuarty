@@ -11,8 +11,10 @@ import {
 import { installDebugHooks } from "./editor/boot/debugHooks";
 import EditorApp from "./editor/boot/EditorApp";
 import { FailurePage, failureOf } from "./editor/boot/ErrorBoundary";
+import { reconcileUrl } from "./editor/boot/locale";
 import { setBuildPhase } from "./editor/boot/phase";
 import { loadUserNames } from "./editor/boot/userNames";
+import { readLocale } from "./editor/state/prefs";
 import { createRuntime } from "./editor/state/runtime";
 import { installStyleNonce } from "./lib/cspNonce";
 import { I18nProvider, type Message } from "./lib/i18n";
@@ -45,6 +47,29 @@ function base(bootstrap: EditorBootstrap) {
 async function main(): Promise<void> {
 	const root = document.getElementById("editor");
 	if (root === null) throw new Error("#editor is missing");
+
+	// The language is a preference of this browser: when the page came back in
+	// another one, load it again in the stored one (SDD-012 section 16.3).
+	const lang = new URLSearchParams(location.search).get("lang");
+	const again = reconcileUrl(
+		document.documentElement.lang,
+		readLocale(),
+		location,
+	);
+	if (again !== null) {
+		location.replace(again);
+		return;
+	}
+	if (lang !== null) {
+		const rest = new URLSearchParams(location.search);
+		rest.delete("lang");
+		const text = rest.toString();
+		history.replaceState(
+			null,
+			"",
+			location.pathname + (text === "" ? "" : `?${text}`),
+		);
+	}
 
 	let bootstrap: EditorBootstrap;
 	let runtime: ReturnType<typeof createRuntime>;
