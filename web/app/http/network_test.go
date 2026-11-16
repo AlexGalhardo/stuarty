@@ -3,6 +3,7 @@ package httpapi_test
 import (
 	"bytes"
 	"context"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -105,16 +106,17 @@ func newNetworkHarnessRates(
 	}
 
 	deps := &httpapi.Deps{
-		Service:     svc,
-		Registry:    command.Default(),
-		Workspace:   dir,
-		Network:     netw,
-		Auth:        netAuth,
-		LoginLimits: limits,
-		RateLimits:  rates,
-		Sessions:    auth.NewSessions(now),
-		Launch:      auth.NewLaunch(now),
-		Now:         now,
+		Service:       svc,
+		Registry:      command.Default(),
+		Workspace:     dir,
+		Network:       netw,
+		Auth:          netAuth,
+		RuntimeSecret: testRuntimeSecret,
+		LoginLimits:   limits,
+		RateLimits:    rates,
+		Sessions:      auth.NewSessions(now),
+		Launch:        auth.NewLaunch(now),
+		Now:           now,
 	}
 
 	app := vukemtest.New(t, func(opts ...vukem.Option) (*vukem.App, error) {
@@ -162,6 +164,8 @@ func (h *networkHarness) do(t *testing.T, path, host string, headers map[string]
 
 	return answer{status: res.StatusCode, www: res.Header.Get("WWW-Authenticate")}
 }
+
+const testRuntimeSecret = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 
 func resolved() config.Resolved {
 	return config.Resolved{Mode: config.ModeNetwork, AppURL: "https://video.example.com"}
@@ -321,10 +325,56 @@ func TestContainerLoopbackOnly(t *testing.T) {
 	}
 }
 
+// A command on the same machine asks the owner for a proof of the per-run secret before it sends an
+// API key (SDD-007 section 3.8): loopback peers only, no relay header, no Host rule, no credential.
+func TestNetworkOwnerProvesTheRunSecret(t *testing.T) {
+	h := newNetworkHarness(t, resolved(), false)
+
+	const nonce = "00112233445566778899aabbccddeeff"
+
+	get := func(host string, headers map[string]string) (int, string) {
+		t.Helper()
+
+		req, err := http.NewRequest(http.MethodGet, h.srv.URL+"/api/v1/handshake?nonce="+nonce, http.NoBody)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Host = host
+
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+
+		res, err := h.srv.Client().Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer res.Body.Close()
+
+		body, _ := io.ReadAll(res.Body)
+
+		return res.StatusCode, string(body)
+	}
+
+	status, body := get("127.0.0.1:7878", nil)
+	if status != http.StatusOK || !strings.Contains(body, auth.Proof(testRuntimeSecret, nonce)) {
+		t.Fatalf("handshake = %d %s", status, body)
+	}
+
+	if status, _ := get(
+		"127.0.0.1:7878",
+		map[string]string{"X-Forwarded-For": "1.2.3.4"},
+	); status != http.StatusForbidden {
+		t.Errorf("handshake through a relay = %d, want 403", status)
+	}
+}
+
 func TestNetworkWithNoUsersAnswers401AndLogsHowToCreateOne(t *testing.T) {
 	h := newNetworkHarness(t, resolved(), true)
 
-	for _, path := range []string{"/api/v1/projects", "/openapi.json", "/api/v1/handshake", "/auth/launch"} {
+	for _, path := range []string{"/api/v1/projects", "/openapi.json", "/auth/launch"} {
 		res := h.do(t, path, "video.example.com", map[string]string{"Authorization": "Bearer vvk_x.y"})
 		if res.status != http.StatusUnauthorized || res.www != "Bearer" {
 			t.Errorf("%s: status = %d, www-authenticate = %q", path, res.status, res.www)

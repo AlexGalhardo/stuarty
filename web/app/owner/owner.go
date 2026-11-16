@@ -83,7 +83,9 @@ type Owner struct {
 	Runner  service.JobRunner
 	Queue   *queue.Queue
 	Token   string
-	Events  *events.Events
+	// runtimeSecret is the per-run secret of network mode, the key of its handshake.
+	runtimeSecret string
+	Events        *events.Events
 
 	deps   *httpapi.Deps
 	lock   *workspace.Lock
@@ -307,7 +309,8 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 
 	o.deps = &httpapi.Deps{
 		Service: o.Service, Registry: command.Default(), Workspace: o.Dir, Token: o.Token,
-		Sessions: auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
+		RuntimeSecret: o.runtimeSecret,
+		Sessions:      auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
 		Events: o.Events, Version: o.version, Network: o.network, Auth: o.netAuth, RateLimits: rates,
 	}
 
@@ -359,12 +362,17 @@ func (o *Owner) authSetup(ctx context.Context, cfg Config) error {
 		return nil
 	}
 
+	var err error
+
 	if cfg.Resolved.AppURL == "" {
 		return errors.New("owner: network mode runs only through `vukem-video serve`, which validates the " +
 			"configuration; unset VUKEM_VIDEO_MODE for any other command")
 	}
 
-	var err error
+	// Written before runtime.json: a command that finds the owner must find the secret too.
+	if o.runtimeSecret, err = o.Dir.NewRuntimeSecret(); err != nil {
+		return err
+	}
 
 	if o.network, err = httpapi.NewNetwork(cfg.Resolved, cfg.Log); err != nil {
 		return err
@@ -499,7 +507,7 @@ func (o *Owner) Close() error {
 		o.Events.Close() // ends the open streams at once
 	}
 
-	if o.announce {
+	if o.announce || o.runtimeSecret != "" {
 		errs = append(errs, o.Dir.RemoveRuntime())
 	}
 

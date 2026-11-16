@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io/fs"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -156,10 +157,14 @@ func TestOpenNetworkModeNeedsKey(t *testing.T) {
 	d := Dir(home)
 	owner, _ := d.TryLock()
 	defer owner.Release()
-	srv := fakeOwner(t, "")
+	secret, err := d.NewRuntimeSecret()
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := fakeOwner(t, secret)
 	advertise(t, d, srv, ModeNetwork)
 
-	_, err := Open(context.Background(), fast(home))
+	_, err = Open(context.Background(), fast(home))
 	var we *Error
 	if !errors.As(err, &we) || we.Code != CodeUnauthorized {
 		t.Fatalf("err = %v, want %s", err, CodeUnauthorized)
@@ -469,7 +474,12 @@ func TestOpenNetworkModeReadsTheKeyFile(t *testing.T) {
 	owner, _ := d.TryLock()
 	defer owner.Release()
 
-	advertise(t, d, fakeOwner(t, ""), ModeNetwork)
+	secret, err := d.NewRuntimeSecret()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	advertise(t, d, fakeOwner(t, secret), ModeNetwork)
 
 	keyFile := t.TempDir() + "/key"
 	if err := os.WriteFile(keyFile, []byte("key-2\n"), 0o600); err != nil {
@@ -573,5 +583,88 @@ func TestOpenStopsWhenTheContextIsCancelledWhileWaiting(t *testing.T) {
 
 	if _, err := Open(ctx, o); !errors.Is(err, context.Canceled) {
 		t.Fatalf("err = %v, want context.Canceled", err)
+	}
+}
+
+// A process that took the advertised address of a network-mode owner cannot read the per-run
+// secret, so it never receives the API key (SDD-007 section 3.8).
+func TestSecurity_T30_NetworkOwnerMustProveItselfBeforeTheKey(t *testing.T) {
+	t.Parallel()
+
+	home := t.TempDir()
+	d := Dir(home)
+
+	owner, _ := d.TryLock()
+	defer owner.Release()
+
+	if _, err := d.NewRuntimeSecret(); err != nil {
+		t.Fatal(err)
+	}
+
+	var (
+		mu   sync.Mutex
+		seen []string
+	)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/up", func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write([]byte(`{"status":"ok"}`)) })
+	mux.HandleFunc(handshakePath, func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		seen = append(seen, r.Header.Get("Authorization"))
+		mu.Unlock()
+
+		_ = json.NewEncoder(w).
+			Encode(map[string]string{"proof": HandshakeProof("not-the-secret", r.URL.Query().Get("nonce"))})
+	})
+
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+	advertise(t, d, srv, ModeNetwork)
+
+	o := fast(home)
+	o.Getenv = openEnv(home, map[string]string{EnvKey: "key-1"})
+
+	_, err := Open(context.Background(), o)
+
+	var we *Error
+	if !errors.As(err, &we) || we.Code != CodeUnauthorized {
+		t.Fatalf("err = %v, want %s", err, CodeUnauthorized)
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	for _, h := range seen {
+		if h != "" {
+			t.Errorf("the key was sent to an owner that failed the proof: %q", h)
+		}
+	}
+}
+
+func TestRuntimeSecretIsPrivatePerRunAndRemovedWithRuntime(t *testing.T) {
+	t.Parallel()
+
+	d := Dir(t.TempDir())
+
+	first, err := d.NewRuntimeSecret()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	second, err := d.NewRuntimeSecret()
+	if err != nil || first == second || len(first) != 64 {
+		t.Fatalf("secrets %q and %q (%v), want two different 64 character values", first, second, err)
+	}
+
+	if got, err := d.LoadRuntimeSecret(); err != nil || got != second {
+		t.Fatalf("LoadRuntimeSecret = %q, %v", got, err)
+	}
+
+	if err := d.RemoveRuntime(); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := d.LoadRuntimeSecret(); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("after RemoveRuntime: %v, want not exist", err)
 	}
 }

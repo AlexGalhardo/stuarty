@@ -978,8 +978,9 @@ ADR-0008 decides that one process owns a workspace. This section fixes how.
 | `<workspace>/lock` | the process that takes the lock | empty; created if missing, never deleted (SDD-000 §9) |
 | `<workspace>/runtime.json` | an owner process: `serve`, or `mcp` when it becomes the owner (6.4) | owner details, below |
 | `<workspace>/token` | an owner process at first start | local token (SDD-007 §3.1) |
+| `<workspace>/runtime.secret` | a network-mode owner, at every start, before `runtime.json`; removed with it | per-run handshake secret, mode 0600 (SDD-007 §3.8) |
 
-The token is in its own `token` file (ADR-0019, SDD-007 §3.2). `runtime.json` holds no secret:
+The token is in its own `token` file (ADR-0019, SDD-007 §3.2). `runtime.json` holds no secret (the per-run secret of network mode is its own file):
 
 ```json
 {"schema": 1, "pid": 18344, "addr": "127.0.0.1:7878", "mode": "local", "started_at": "2026-11-14T12:00:00Z", "version": "0.5.0"}

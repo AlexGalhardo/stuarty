@@ -83,7 +83,9 @@ func (n *Network) logStartup(noUsers bool) {
 // allowed is steps 1 to 3 of local mode replaced (4.3 item 3) plus steps 4 and
 // 5 with the origin of APP_URL.
 func (n *Network) allowed(r *http.Request) bool {
-	if r.URL.Path == healthPath && peerAllowed(r) && !hasRelay(r) {
+	// The handshake is the health probe's sibling: a command on this machine proves the owner
+	// before it sends a key (SDD-007 section 3.8), and the owner answers it nobody else.
+	if (r.URL.Path == healthPath || r.URL.Path == handshakePath) && peerAllowed(r) && !hasRelay(r) {
 		return fetchSiteAllowed(r)
 	}
 

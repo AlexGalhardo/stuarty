@@ -289,7 +289,12 @@ func (h *apiHandler) registerAll() {
 			}
 		}
 
-		return handshakeOut{Proof: auth.Proof(h.Token, in.Nonce)}, nil
+		key := h.Token
+		if h.Network != nil {
+			key = h.RuntimeSecret
+		}
+
+		return handshakeOut{Proof: auth.Proof(key, in.Nonce)}, nil
 	})
 
 	ep := endpointOf("auth.launch")
