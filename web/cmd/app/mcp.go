@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"time"
 
@@ -40,6 +41,16 @@ func becomeOwner(
 ) func(context.Context, *workspace.Session, func(string) string) (*cli.Connection, error) {
 	return func(ctx context.Context, sess *workspace.Session, getenv func(string) string) (*cli.Connection, error) {
 		log, closeLog := openLog(getenv, stderr)
+
+		// An agent's server has no business failing because the usual port is
+		// taken: runtime.json tells everyone else where it listens.
+		if addr := freePortIfBusy(ctx, getenv, net.JoinHostPort(defaultHost, defaultPort)); addr != "" {
+			if err := os.Setenv(envAddr, addr); err != nil {
+				_ = closeLog.Close()
+
+				return nil, err
+			}
+		}
 
 		ow, err := owner.Open(
 			ctx,
@@ -81,6 +92,24 @@ func becomeOwner(
 
 		return &cli.Connection{Service: ow.Service, InProcess: true, Workspace: string(ow.Dir), Close: stop}, nil
 	}
+}
+
+// freePortIfBusy returns an address on any free loopback port when the address
+// was not chosen (VUKEM_VIDEO_ADDR unset) and the default one is taken; empty
+// means keep what is configured.
+func freePortIfBusy(ctx context.Context, getenv func(string) string, def string) string {
+	if getenv(envAddr) != "" {
+		return ""
+	}
+
+	ln, err := (&net.ListenConfig{}).Listen(ctx, "tcp", def)
+	if err != nil {
+		return net.JoinHostPort(defaultHost, "0")
+	}
+
+	_ = ln.Close()
+
+	return ""
 }
 
 // awaitAnnounce waits for runtime.json to name this process, or for the server
