@@ -1,6 +1,7 @@
 package command
 
 import (
+	"cmp"
 	"slices"
 	"strings"
 
@@ -21,11 +22,12 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "track.update",
-		Summary: "Sets the name, hidden, muted, locked or solo flag or the volume of a track.",
+		Summary: "Sets the name, hidden, muted, locked, solo or magnet flag or the volume of a track.",
 		Description: "Sets the given fields. hidden applies to visual tracks, the others to both kinds. locked refuses " +
 			"every edit of the items of the track (E_INVALID_STATE) until it is unlocked. solo plays only the soloed " +
 			"tracks: the picture of visual tracks when one is solo, and the sound of every track. volume is a factor " +
-			"from 0 to 4 on the volume of the items of the track; 1 clears it.",
+			"from 0 to 4 on the volume of the items of the track; 1 clears it. magnet packs the items of the track from frame " +
+			"0 with no gap, now and after every later edit (a locked track is not repacked).",
 		Example: `{"track_id": "trk_f6g7h8j9k0", "hidden": true}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
@@ -198,17 +200,19 @@ type trackUpdateArgs struct {
 	Muted   *bool    `json:"muted,omitempty"`
 	Locked  *bool    `json:"locked,omitempty"          desc:"true refuses every edit of the items of the track until it is false again."`
 	Solo    *bool    `json:"solo,omitempty"            desc:"true plays only the soloed tracks (the picture of visual tracks, the sound of all)."`
-	Volume  *float64 `json:"volume,omitempty" max:"4"  desc:"Factor on the volume of the items of the track, 0 to 4; 1 is neutral."               min:"0"`
+	Magnet  *bool    `json:"magnet,omitempty"          desc:"true keeps the items of the track packed from frame 0 with no gap, closing the gaps now and after every edit."`
+	Volume  *float64 `json:"volume,omitempty" max:"4"  desc:"Factor on the volume of the items of the track, 0 to 4; 1 is neutral."                                         min:"0"`
 }
 
 func applyTrackUpdate(c *Context, a *trackUpdateArgs) error {
 	if err := atLeastOne(
-		[]string{"name", "hidden", "muted", "locked", "solo", "volume"},
+		[]string{"name", "hidden", "muted", "locked", "solo", "magnet", "volume"},
 		a.Name != nil,
 		a.Hidden != nil,
 		a.Muted != nil,
 		a.Locked != nil,
 		a.Solo != nil,
+		a.Magnet != nil,
 		a.Volume != nil,
 	); err != nil {
 		return err
@@ -243,6 +247,10 @@ func applyTrackUpdate(c *Context, a *trackUpdateArgs) error {
 	if a.Solo != nil {
 		t.Solo = *a.Solo
 		c.SetEffective("solo", t.Solo)
+	}
+	if a.Magnet != nil {
+		t.Magnet = *a.Magnet
+		c.SetEffective("magnet", t.Magnet)
 	}
 	if a.Volume != nil {
 		if *a.Volume < 0 || *a.Volume > 4 {
@@ -391,4 +399,31 @@ func applyTrackSetCaptionStyle(c *Context, a *trackCaptionStyleArgs) error {
 	}
 	c.SetEffective("caption_style", stored)
 	return nil
+}
+
+// packMagnetTracks closes every gap on the tracks with magnet: the items, in order of start, are laid
+// end to end from frame 0 (SDD-001 §3.3). A locked track is left as it is. Run after every command, so the
+// result of any edit is packed and one undo step holds both the edit and the repack.
+func packMagnetTracks(doc *timeline.Document) {
+	for id, t := range doc.Tracks {
+		if !t.Magnet || t.Locked {
+			continue
+		}
+		var ids []string
+		for itemID := range doc.Items {
+			if doc.Items[itemID].Track == id {
+				ids = append(ids, itemID)
+			}
+		}
+		slices.SortFunc(ids, func(a, b string) int {
+			return cmp.Or(cmp.Compare(doc.Items[a].Start, doc.Items[b].Start), cmp.Compare(a, b))
+		})
+		at := 0
+		for _, itemID := range ids {
+			it := doc.Items[itemID]
+			it.Start = at
+			doc.Items[itemID] = it
+			at += it.Duration
+		}
+	}
 }

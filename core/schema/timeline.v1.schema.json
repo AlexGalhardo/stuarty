@@ -899,6 +899,9 @@
         "locked": {
           "type": "boolean"
         },
+        "magnet": {
+          "type": "boolean"
+        },
         "muted": {
           "type": "boolean"
         },

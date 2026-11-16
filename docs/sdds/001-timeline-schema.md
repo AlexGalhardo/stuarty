@@ -102,6 +102,7 @@ An asset appears in the document only after its ingest produced the normalized m
 | `locked` | boolean | false | Added after BETA (VV-036). The commands refuse to add, remove, move or change an item of the track; the track itself can still be updated |
 | `solo` | boolean | false | Added after BETA (VV-036). While any track is solo only soloed tracks sound, and while any visual track is solo only soloed visual tracks are drawn |
 | `volume` | number, 0 to 4 | absent (1) | Added after BETA (VV-036). A factor on the volume of the items of the track |
+| `magnet` | boolean | false | Added after BETA (TASK-0254). The items of the track are kept packed from frame 0 with no gap: after every command the items are laid end to end in the order of their `start`, so deleting, moving or trimming an item closes the gap. A locked track is not repacked; the command that turns the magnet on packs the track at once. The shift moves only the items of this track (a linked item on another track does not follow) |
 | `caption_style` | CaptionStyle | none | style of the caption items on this track, section 3.7 |
 
 #### 3.3.1 Track order

@@ -49,7 +49,7 @@ func Export(doc *timeline.Document) ([]byte, []Lost, error) {
 		for _, f := range []struct {
 			on      bool
 			feature string
-		}{{t.Hidden, "hidden track"}, {t.Muted, "muted track"}, {t.Locked, "locked track"}, {t.Solo, "solo track"}, {t.Volume != nil, "track volume"}, {t.CaptionStyle != nil, "caption style"}} {
+		}{{t.Hidden, "hidden track"}, {t.Muted, "muted track"}, {t.Locked, "locked track"}, {t.Solo, "solo track"}, {t.Magnet, "track magnet"}, {t.Volume != nil, "track volume"}, {t.CaptionStyle != nil, "caption style"}} {
 			if f.on {
 				lost = append(lost, Lost{ID: id, Name: t.Name, Feature: f.feature})
 			}

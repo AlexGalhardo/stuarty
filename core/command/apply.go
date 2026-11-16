@@ -153,6 +153,7 @@ func (r *Registry) run(work *timeline.Document, op Operation, env Env) (effectiv
 	if cerr := cmd.apply(ctx, args.Addr().Interface()); cerr != nil {
 		return nil, AsError(cerr)
 	}
+	packMagnetTracks(work)
 	if lerr := checkLocks(locks, work); lerr != nil {
 		return nil, lerr
 	}

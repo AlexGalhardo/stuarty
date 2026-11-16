@@ -1,0 +1,31 @@
+[
+  {
+    "type": "put",
+    "collection": "items",
+    "id": "itm_c3d4e5f6g7",
+    "object": {
+      "asset": "ast_3c5v8n2w6d",
+      "duration": 20,
+      "id": "itm_c3d4e5f6g7",
+      "start": 60,
+      "track": "trk_f6g7h8j9k0",
+      "type": "clip"
+    }
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "start": 10
+    }
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_s6t7v8w9x0",
+    "set": {
+      "start": 100
+    }
+  }
+]

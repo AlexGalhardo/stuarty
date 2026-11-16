@@ -139,6 +139,7 @@ type Track struct {
 	Muted        bool          `json:"muted,omitempty"`
 	Locked       bool          `json:"locked,omitempty"`
 	Solo         bool          `json:"solo,omitempty"`
+	Magnet       bool          `json:"magnet,omitempty"`
 	Volume       *float64      `json:"volume,omitempty"                                                                               min:"0" max:"4"`
 	CaptionStyle *CaptionStyle `json:"caption_style,omitempty"`
 	Extra        Extra         `json:"-"`
