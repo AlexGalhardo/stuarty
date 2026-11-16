@@ -10,8 +10,9 @@ import (
 	"testing"
 )
 
-// cargoMetadataFor builds the `cargo metadata` document of a workspace "app" that depends on
-// "lib" (normal), "mac" (a proc macro) and "dev" (dev-only); "mac" needs "helper".
+// cargoMetadataFor builds the `cargo metadata` document of a workspace "vukem-renderer" that depends on
+// "lib" (normal), "mac" (a proc macro) and "dev" (dev-only); "mac" needs "helper". A second member,
+// "gpu", is not the shipped module and brings "gpudep", which must not be listed.
 func cargoMetadataFor(dirs map[string]string) string {
 	pkg := func(name, kind, source string) string {
 		return `{"id":"` + name + `","name":"` + name + `","version":"1.0.0","license":"MIT","source":` + source +
@@ -25,12 +26,13 @@ func cargoMetadataFor(dirs map[string]string) string {
 	}
 
 	return `{"packages":[` + strings.Join([]string{
-		pkg("app", "cdylib", "null"), pkg("lib", "lib", reg), pkg("mac", "proc-macro", reg),
-		pkg("helper", "lib", reg), pkg("dev", "lib", reg),
-	}, ",") + `],"workspace_members":["app"],"resolve":{"nodes":[` +
-		`{"id":"app","deps":[` + dep("lib", "null") + "," + dep("mac", "null") + "," + dep("dev", `"dev"`) + `]},` +
+		pkg("vukem-renderer", "cdylib", "null"), pkg("lib", "lib", reg), pkg("mac", "proc-macro", reg),
+		pkg("helper", "lib", reg), pkg("dev", "lib", reg), pkg("gpu", "lib", "null"), pkg("gpudep", "lib", reg),
+	}, ",") + `],"workspace_members":["vukem-renderer","gpu"],"resolve":{"nodes":[` +
+		`{"id":"vukem-renderer","deps":[` + dep("lib", "null") + "," + dep("mac", "null") + "," + dep("dev", `"dev"`) + `]},` +
 		`{"id":"lib","deps":[]},{"id":"mac","deps":[` + dep("helper", "null") + `]},` +
-		`{"id":"helper","deps":[]},{"id":"dev","deps":[]}]}}`
+		`{"id":"helper","deps":[]},{"id":"dev","deps":[]},` +
+		`{"id":"gpu","deps":[` + dep("gpudep", "null") + `]},{"id":"gpudep","deps":[]}]}}`
 }
 
 func TestRustCratesListsOnlyWhatIsShipped(t *testing.T) {
@@ -39,7 +41,7 @@ func TestRustCratesListsOnlyWhatIsShipped(t *testing.T) {
 	root := t.TempDir()
 	dirs := map[string]string{}
 
-	for _, n := range []string{"app", "lib", "mac", "helper", "dev"} {
+	for _, n := range []string{"vukem-renderer", "lib", "mac", "helper", "dev", "gpu", "gpudep"} {
 		dirs[n] = filepath.Join(root, "crate-"+n)
 		if err := os.MkdirAll(dirs[n], 0o755); err != nil {
 			t.Fatal(err)

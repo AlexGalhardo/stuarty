@@ -131,10 +131,26 @@ pub fn compose(dst: &mut Target<'_>, background: [u8; 4], layers: &[Layer<'_>], 
 	}
 }
 
-fn draw_layer(dst: &mut Target<'_>, l: &Layer<'_>, out_scale: f64) {
-	let op = round_half_away(l.opacity.clamp(0.0, 1.0) * 255.0) as u32;
+/// The opacity of a layer as the 0..255 weight of the blend (SDD-013 section 3.3 step 2.1). Zero
+/// means the layer is not drawn.
+pub fn layer_opacity(opacity: f64) -> u32 {
+	round_half_away(opacity.clamp(0.0, 1.0) * 255.0) as u32
+}
+
+/// A layer ready to draw: its pixels after the chroma key, the matrices and the blur, where the
+/// rectangle is, and the opacity. The GPU path draws the same prepared layers.
+#[derive(Debug)]
+pub struct Prepared<'a> {
+	pub image: Cow<'a, Image>,
+	pub placement: Placement,
+	pub op: u32,
+}
+
+/// Steps 1 to 5 of SDD-013 section 3.3 for one layer; `None` when the layer draws nothing.
+pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> {
+	let op = layer_opacity(l.opacity);
 	if op == 0 {
-		return;
+		return None;
 	}
 
 	let (image, p, is_bitmap) = match l.source {
@@ -173,11 +189,11 @@ fn draw_layer(dst: &mut Target<'_>, l: &Layer<'_>, out_scale: f64) {
 	};
 
 	if !(p.w > 0.0 && p.h > 0.0) || !image.is_drawable() {
-		return;
+		return None;
 	}
 
 	// A layer that needs no processing is drawn from the stored pixels, never from a copy.
-	let mut src: Cow<'_, Image> = shrunk(image, is_bitmap, &p);
+	let mut src: Cow<'a, Image> = shrunk(image, is_bitmap, &p);
 	if let Some(k) = &l.chroma_key {
 		src = Cow::Owned(apply_chroma_key(&src, k));
 	}
@@ -194,7 +210,17 @@ fn draw_layer(dst: &mut Target<'_>, l: &Layer<'_>, out_scale: f64) {
 		src = Cow::Owned(img);
 		p = grown;
 	}
-	draw(dst, &src, &p, op);
+	Some(Prepared {
+		image: src,
+		placement: p,
+		op,
+	})
+}
+
+fn draw_layer(dst: &mut Target<'_>, l: &Layer<'_>, out_scale: f64) {
+	if let Some(p) = prepare_layer(l, out_scale) {
+		draw(dst, &p.image, &p.placement, p.op);
+	}
 }
 
 /// A bitmap box-filtered down to its drawn size when it is at least twice as large in both
@@ -212,14 +238,23 @@ fn shrunk<'a>(src: &'a Image, is_bitmap: bool, p: &Placement) -> Cow<'a, Image> 
 	Cow::Borrowed(src)
 }
 
-fn draw(dst: &mut Target<'_>, src: &Image, p: &Placement, op: u32) {
-	if p.rot == 0.0 && src.w as i64 == round_half_up(p.w) && src.h as i64 == round_half_up(p.h) {
-		let x0 = round_half_up(p.cx - p.w / 2.0);
-		let y0 = round_half_up(p.cy - p.h / 2.0);
-		blit(dst, src, x0, y0, op);
-		return;
+/// The top-left corner of the one-to-one copy of SDD-013 section 3.6, when the placement is one:
+/// no rotation and a rectangle that rounds to the size of the source.
+pub fn copy_origin(src_w: usize, src_h: usize, p: &Placement) -> Option<(i64, i64)> {
+	if p.rot == 0.0 && src_w as i64 == round_half_up(p.w) && src_h as i64 == round_half_up(p.h) {
+		return Some((
+			round_half_up(p.cx - p.w / 2.0),
+			round_half_up(p.cy - p.h / 2.0),
+		));
 	}
-	sample(dst, src, p, op);
+	None
+}
+
+fn draw(dst: &mut Target<'_>, src: &Image, p: &Placement, op: u32) {
+	match copy_origin(src.w, src.h, p) {
+		Some((x0, y0)) => blit(dst, src, x0, y0, op),
+		None => sample(dst, src, p, op),
+	}
 }
 
 /// Draws `src` with its top-left corner at `(x0, y0)`, pixel for pixel.

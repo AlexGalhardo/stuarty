@@ -188,6 +188,8 @@ The GPU path (stage D, `wgpu`: WebGPU in the browser, Vulkan, Metal or D3D12 nat
 
 Both are checked on every golden case, in three browsers, and on the three operating systems for the native host. A case that fails is a bug of the GPU path; the CPU path is never loosened to match it.
 
+**Implementation (P5-RND-005, native).** The crate `renderer/vukem-renderer-gpu` (`wgpu` 30.0.2, Vulkan, Metal and Direct3D 12, no WebAssembly yet) depends on `vukem-renderer`, so the two paths share the plan decoder, the stored textures and bitmaps (`Renderer::layers`), the preparation of each layer (`compose::prepare_layer`: shrink of a large bitmap, chroma key, colour matrix, filter and blur, still on the CPU), the opacity (`layer_opacity`) and the choice of the one-to-one copy (`compose::copy_origin`). The GPU decides the sampling and the blend: one quad per layer, positioned by `quad_for` (the rounded integer rectangle for a copy, else the rectangle turned about its centre, in `f64`, handed over as `f32` positions), a WGSL fragment shader that interpolates the four nearest texels with the clamped edges of section 3.6, and the premultiplied source-over of section 3.7 as the fixed blend state of the pipeline. The rows of a band are a scissor rectangle. The core module of the CPU path does not depend on this crate (DS-1), and `internal/tools/notices` lists only the crates of that module until a GPU module is published.
+
 ### 3.9 Determinism rules for the Rust code
 
 These rules make §3.1 to §3.7 give the same bytes on Linux, macOS, Windows and in WebAssembly, for any number of bands:

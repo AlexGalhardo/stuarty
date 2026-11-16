@@ -58,13 +58,13 @@ manifest="$root/renderer/Cargo.toml"
 embedded="$root/engine/renderhost"
 
 native_build() {
-	cargo build --locked --release --manifest-path "$manifest"
+	cargo build --locked --release -p vukem-renderer --manifest-path "$manifest"
 }
 
 wasm_build() {
 	# 16,384 pages of 64 KiB: the memory limit of SDD-013 section 4.1, also set in wazero.
 	RUSTFLAGS="$remap -C link-arg=--max-memory=1073741824" \
-		cargo build --locked --release --lib --target wasm32-unknown-unknown --manifest-path "$manifest"
+		cargo build --locked --release -p vukem-renderer --lib --target wasm32-unknown-unknown --manifest-path "$manifest"
 
 	rm -rf "$dist"
 	mkdir -p "$dist"

@@ -13,6 +13,11 @@ import (
 // rendererManifest is the Cargo workspace of the pixel renderer (ADR-0029).
 const rendererManifest = "renderer/Cargo.toml"
 
+// rendererShipped is the workspace member whose dependencies are shipped: the core module of
+// SDD-013 section 4.1, which the Go export embeds. The native GPU crate is not a root until a
+// module of it is published, and then its crates need their notices like these.
+const rendererShipped = "vukem-renderer"
+
 // rendererTarget is the target whose normal dependencies end up in the shipped module.
 const rendererTarget = "wasm32-unknown-unknown"
 
@@ -55,7 +60,7 @@ func (p cargoPackage) isProcMacro() bool {
 }
 
 // rustCrates lists the crates compiled into the WebAssembly renderer: the normal dependencies
-// of the workspace for the wasm32 target, without the proc macros and what only they need (they run at
+// of the shipped crate for the wasm32 target, without the proc macros and what only they need (they run at
 // build time and are not shipped). It returns nothing while renderer/ has no Cargo.lock.
 func rustCrates(ctx context.Context, run Runner, root string) ([]Component, error) {
 	if _, err := os.Stat(filepath.Join(root, "renderer", "Cargo.lock")); err != nil {
@@ -93,7 +98,14 @@ func rustCrates(ctx context.Context, run Runner, root string) ([]Component, erro
 	}
 
 	seen := map[string]bool{}
-	queue := slices.Clone(md.WorkspaceMembers)
+
+	var queue []string
+
+	for _, id := range md.WorkspaceMembers {
+		if pkgs[id].Name == rendererShipped {
+			queue = append(queue, id)
+		}
+	}
 
 	var comps []Component
 

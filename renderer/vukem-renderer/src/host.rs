@@ -4,11 +4,10 @@
 
 use std::collections::BTreeMap;
 
-use crate::compose::{Layer, Source, Target, compose, parse_colour, premultiply};
+use crate::compose::{Layer, Source, Target, compose, layer_opacity, parse_colour, premultiply};
 use crate::error::{Error, Reason};
 use crate::image::Image;
-use crate::math::round_half_away;
-use crate::plan::{MAX_ID_BYTES, Pixels, decode};
+use crate::plan::{MAX_ID_BYTES, Pixels, RenderInput, decode};
 
 /// The largest side of a texture or bitmap.
 pub const MAX_TEXTURE_SIDE: usize = 8192;
@@ -139,10 +138,31 @@ impl Renderer {
 			));
 		}
 
+		let layers = self.layers(&r)?;
+
+		let mut target = Target {
+			pix: out,
+			width,
+			height,
+			rows: r.output.rows.clone(),
+		};
+		compose(
+			&mut target,
+			parse_colour(&r.background),
+			&layers,
+			r.output.scale,
+		);
+		Ok(())
+	}
+
+	/// The layers of a decoded render input with the stored pixels they draw, in plan order. A
+	/// layer that rounds to no opacity is left out; a texture or bitmap the host did not store is
+	/// an error. The CPU and the GPU path both draw this list.
+	pub fn layers<'a>(&'a self, r: &RenderInput) -> Result<Vec<Layer<'a>>, Error> {
 		let mut layers = Vec::with_capacity(r.layers.len());
 		for l in &r.layers {
 			// A layer that rounds to no opacity is not drawn, so the host need not have uploaded it.
-			if round_half_away(l.opacity.clamp(0.0, 1.0) * 255.0) == 0 {
+			if layer_opacity(l.opacity) == 0 {
 				continue;
 			}
 			let source = match &l.pixels {
@@ -174,20 +194,7 @@ impl Renderer {
 				chroma_key: l.chroma_key.clone(),
 			});
 		}
-
-		let mut target = Target {
-			pix: out,
-			width,
-			height,
-			rows: r.output.rows.clone(),
-		};
-		compose(
-			&mut target,
-			parse_colour(&r.background),
-			&layers,
-			r.output.scale,
-		);
-		Ok(())
+		Ok(layers)
 	}
 }
 
