@@ -669,8 +669,7 @@ test.describe("preview-vs-export measures", () => {
 // each, canvas 463 x 823 over a 180 x 320 project). Playwright reports a case
 // listed here that starts to pass as a failure, so the entry is removed when the
 // cause is fixed. None of them is a defect of the preview geometry.
-const KNOWN_DIVERGENCES: Record<string, string> = {
-};
+const KNOWN_DIVERGENCES: Record<string, string> = {};
 
 test.describe("preview-vs-export", () => {
 	test.use({ viewport: { width: 1920, height: 1300 } });
