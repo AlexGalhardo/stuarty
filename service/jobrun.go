@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -122,7 +123,7 @@ func (p *progress) report(ctx context.Context, v float64, msg string) {
 // claims the job, runs it with a context that a cancellation can end, and
 // finishes it. A job never ends because a handler returned an error: the
 // outcome is written here.
-func (s *svc) RunJob(ctx context.Context, jobID string) error {
+func (s *svc) RunJob(ctx context.Context, jobID string) (err error) {
 	job, err := s.store.Jobs().Get(ctx, jobID)
 	if err != nil {
 		if isNotFound(err) {
@@ -152,9 +153,32 @@ func (s *svc) RunJob(ctx context.Context, jobID string) error {
 		return nil
 	}
 
-	if job, err = s.store.Jobs().Get(ctx, jobID); err != nil {
-		return err
+	// A panic of a handler fails the job: the queue would only fail the message
+	// and leave the row running, holding a concurrency slot for ever.
+	defer func() {
+		if p := recover(); p != nil {
+			s.logJob(ctx, slog.LevelError, "job panicked", &job,
+				slog.Any("panic", p), slog.String("stack", string(debug.Stack())))
+
+			fctx, fcancel := context.WithTimeout(context.WithoutCancel(ctx), finishTimeout)
+			defer fcancel()
+
+			_ = s.finishFailed(fctx, &job, JobFailed, internalError())
+			err = nil
+		}
+	}()
+
+	fresh, gerr := s.store.Jobs().Get(ctx, jobID)
+	if gerr != nil {
+		fctx, fcancel := context.WithTimeout(context.WithoutCancel(ctx), finishTimeout)
+		defer fcancel()
+
+		_ = s.finishFailed(fctx, &job, JobFailed, internalError())
+
+		return gerr
 	}
+
+	job = fresh
 
 	jctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -259,10 +283,15 @@ func (s *svc) settle(parent, jctx context.Context, job *JobRow, result json.RawM
 			return s.finishFailed(ctx, job, JobCancelled, newError(CodeCancelled, "the job was cancelled."))
 		}
 
-		if parent.Err() != nil {
+		// A queue deadline ends the job; only a shutdown requeues it.
+		if perr := parent.Err(); perr != nil {
+			if errors.Is(perr, context.DeadlineExceeded) {
+				return s.finishFailed(ctx, job, JobFailed, timeoutError(job.Kind))
+			}
+
 			s.requeueInterrupted(ctx, job)
 
-			return parent.Err()
+			return perr
 		}
 	}
 
@@ -279,7 +308,7 @@ func (s *svc) finishFailed(ctx context.Context, job *JobRow, state string, e *Er
 		return err
 	}
 
-	if job.Kind == JobIngest && job.AssetHash != nil {
+	if ok && job.Kind == JobIngest && job.AssetHash != nil {
 		if aerr := s.store.Assets().SetIngest(ctx, *job.AssetHash, IngestFailed, 0, ej, s.nowMs()); aerr == nil {
 			s.emitAsset(ctx, *job.AssetHash, IngestFailed, 0, e)
 		}
@@ -726,6 +755,12 @@ func (s *svc) recoverRunning(ctx context.Context, tx Tx, now int64) ([]JobRow, e
 
 		j.State, j.Message = JobQueued, msgRestarted
 
+		if j.Kind == JobIngest && j.AssetHash != nil {
+			if err := tx.Assets().SetIngest(ctx, *j.AssetHash, IngestPending, 0, nil, now); err != nil {
+				return nil, err
+			}
+		}
+
 		if err := s.enqueueKind(ctx, tx, &j); err != nil {
 			return nil, err
 		}
@@ -741,30 +776,44 @@ func (s *svc) enqueueKind(ctx context.Context, tx Tx, j *JobRow) error {
 		return nil
 	}
 
-	kind := QueueKindFrame
+	return s.enqueue.Enqueue(ctx, tx, queueKindFor(j.Kind), j.ID)
+}
 
-	switch j.Kind {
-	case JobIngest:
-		kind = QueueKindIngest
+// queueKindFor is the queue message kind of a job kind. A transcription runs
+// on the ingest queue (its timeout fits a long transcription).
+func queueKindFor(jobKind string) string {
+	switch jobKind {
+	case JobIngest, JobTranscribe:
+		return QueueKindIngest
 	case JobExport:
-		kind = QueueKindExport
+		return QueueKindExport
+	default:
+		return QueueKindFrame
 	}
+}
 
-	return s.enqueue.Enqueue(ctx, tx, kind, j.ID)
+// failCode is the error code of a job of the kind that was stopped.
+func failCode(kind string) string {
+	switch kind {
+	case JobExport:
+		return CodeExportFailed
+	case JobIngest:
+		return CodeIngestFailed
+	default:
+		return command.CodeInternal
+	}
+}
+
+// timeoutError is the error of a job that outran its queue deadline.
+func timeoutError(kind string) *Error {
+	return newError(failCode(kind), "the job ran past its time limit and was stopped.").
+		withDetail("reason", "timeout").
+		withHint("run it again with a shorter range or a smaller project")
 }
 
 // failInterrupted ends a job interrupted three times (SDD-005 section 14.5).
 func (s *svc) failInterrupted(ctx context.Context, tx Tx, j *JobRow, now int64) error {
-	code := command.CodeInternal
-
-	switch j.Kind {
-	case JobExport:
-		code = CodeExportFailed
-	case JobIngest:
-		code = CodeIngestFailed
-	}
-
-	e := newError(code, "the job was interrupted %d times and given up.", j.Attempts).
+	e := newError(failCode(j.Kind), "the job was interrupted %d times and given up.", j.Attempts).
 		withDetail("reason", "interrupted").withHint("run it again")
 	ej := errorJSON(e)
 
