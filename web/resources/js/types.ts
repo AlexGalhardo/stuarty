@@ -27,16 +27,15 @@ export interface ProjectsIndexProps {
 }
 
 export interface User {
-	id: number;
-	name: string;
+	id: string;
 	email: string;
-	email_verified_at: string | null;
+	role: string;
 }
 
 export interface SharedProps {
 	appName: string;
 	errors: Record<string, string>;
-	// Present in network mode (ALPHA).
+	// Present in network mode; `user` is null before the login.
 	auth?: { user: User | null };
 	[key: string]: unknown;
 }
