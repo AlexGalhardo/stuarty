@@ -1,7 +1,7 @@
 # PRD-002: Agents as first-class users
 
 - Status: Accepted (2026-11-14)
-- Depends on: [brainstorming](../brainstorming.md) D-001, D-011, D-012; [agents and MCP](../search/agents-mcp.md)
+- Depends on: author decisions D-001, D-011, D-012; agents and MCP
 - Implemented by: SDD-002, SDD-003, SDD-005, SDD-006, SDD-007, SDD-011 (see [traceability](../traceability.md))
 
 ## 1. Problem

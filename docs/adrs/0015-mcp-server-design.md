@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: architect; author (D-011)
-- Links: [agents and MCP](../search/agents-mcp.md), ADR-0002, ADR-0008, ADR-0014, ADR-0020, SDD-003
+- Links: agents and MCP, ADR-0002, ADR-0008, ADR-0014, ADR-0020, SDD-003
 
 ## Context
 

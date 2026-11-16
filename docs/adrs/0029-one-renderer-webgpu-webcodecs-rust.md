@@ -3,7 +3,7 @@
 - Status: Accepted (2026-11-16)
 - Deciders: author (D-035), orchestrator
 - Amends: ADR-0003 items 3 and 4 (the export executor and the preview executor); AGENTS.md rule 5 ("pixels are composed in Go")
-- Links: [brainstorming D-035](../brainstorming.md), ADR-0002, ADR-0003, ADR-0007, ADR-0011, ADR-0012, ADR-0013, SDD-004, SDD-012, SDD-013 (to be written by P5-RND-001)
+- Links: author decision D-035, ADR-0002, ADR-0003, ADR-0007, ADR-0011, ADR-0012, ADR-0013, SDD-004, SDD-012, SDD-013 (to be written by P5-RND-001)
 
 ## Context
 

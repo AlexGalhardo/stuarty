@@ -1,7 +1,7 @@
 # PRD-003: Distribution, self-hosting and documentation
 
 - Status: Accepted (2026-11-14)
-- Depends on: [brainstorming](../brainstorming.md) D-003, D-004, D-005, D-006, D-007, D-008, D-012, D-015, D-016; [licensing](../search/licensing.md); [vukem practices and releases](../search/vukem-practices-and-releases.md)
+- Depends on: author decisions D-003, D-004, D-005, D-006, D-007, D-008, D-012, D-015, D-016; licensing; vukem practices and releases
 - Implemented by: SDD-005, SDD-007, SDD-009, SDD-010, SDD-011 (see [traceability](../traceability.md))
 
 ## 1. Problem

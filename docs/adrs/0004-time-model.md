@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: architect
-- Links: [engine §2](../search/engine.md), [agents and MCP §8](../search/agents-mcp.md), SDD-001, SDD-002
+- Links: engine §2, agents and MCP §8, SDD-001, SDD-002
 
 ## Context
 

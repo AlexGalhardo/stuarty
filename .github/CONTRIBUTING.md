@@ -89,7 +89,7 @@ Before 1.0 the project builds its own LGPL FFmpeg (D-017, ADR-0011) with no Open
 
 ### Releases
 
-During ALPHA a release is one `v0.N.0` per group of `ROADMAP.md` (kept in the workspace root, outside this repository) that ships something runnable, plus the rule of ADR-0028: about one minor every 90 commits on `main`. Minors may carry breaking changes; a patch never does, and `release prepare` refuses a patch version when a commit in the range is marked `!`.
+A release is one `v0.N.0` for each group of the maintainers' task cards (a private work list, outside this repository) that ships something runnable, plus the rule of ADR-0028: about one minor every 90 commits on `main`. Minors may carry breaking changes; a patch never does, and `release prepare` refuses a patch version when a commit in the range is marked `!`.
 
 `v1.0.0` is cut directly from the BETA exit: there is no `-rc` tag (ADR-0025 item 2, SDD-009 section 4). From then on `release prepare` also refuses a minor or a patch when a commit in the range carries a `!` header or a `BREAKING CHANGE:` footer; the next major (`v2.0.0`) is accepted.
 

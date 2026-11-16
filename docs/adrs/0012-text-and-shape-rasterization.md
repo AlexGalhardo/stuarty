@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14); library choice confirmed by the Prototype measurement below (P1-RND-003, 2026-11-14)
 - Deciders: author (D-001, D-014, D-022), architect
-- Links: [post-mortems §1, §6](../search/post-mortems.md), [stack trade-offs §3](../search/stack-tradeoffs.md), ADR-0003, SDD-004
+- Links: post-mortems §1, §6, stack trade-offs §3, ADR-0003, SDD-004
 
 ## Context
 

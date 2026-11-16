@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: author (D-008, D-015), architect
-- Links: [vukem practices §7](../search/vukem-practices-and-releases.md), [brainstorming D-008, D-015](../brainstorming.md), SDD-010
+- Links: vukem practices §7, author decision D-008, D-015, SDD-010
 
 ## Context
 

@@ -1,7 +1,7 @@
 # PRD-001: The editor
 
 - Status: Accepted (2026-11-14)
-- Depends on: [brainstorming](../brainstorming.md) D-001, D-002, D-009, D-013, D-014; [features 20/80](../search/features-20-80.md); [performance](../search/performance.md)
+- Depends on: author decisions D-001, D-002, D-009, D-013, D-014; features 20/80; performance
 - Implemented by: SDD-001, SDD-002, SDD-004, SDD-005, SDD-006, SDD-011, SDD-012 (see [traceability](../traceability.md))
 
 ## 1. Problem

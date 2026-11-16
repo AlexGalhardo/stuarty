@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: architect; author (D-013, D-023, D-024)
-- Links: [stack trade-offs §2, §3, §9](../search/stack-tradeoffs.md), [performance §3](../search/performance.md), ADR-0003, ADR-0007, SDD-012
+- Links: stack trade-offs §2, §3, §9, performance §3, ADR-0003, ADR-0007, SDD-012
 
 ## Context
 

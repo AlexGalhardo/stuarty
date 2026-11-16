@@ -1,0 +1,4 @@
+# The image is built from the product sources only. development/ holds the work
+# contract and the QA campaigns (several GB of media and local builds, D-036).
+# .git stays in the context: the Dockerfile stamps the version from it.
+development/

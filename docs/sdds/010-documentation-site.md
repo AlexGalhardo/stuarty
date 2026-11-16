@@ -1,7 +1,7 @@
 # SDD-010: Documentation site and i18n
 
 - Status: Accepted (2026-11-14). Drafted by a delegated engineer, audited independently, corrected under the architect's decisions.
-- Depends on: SDD-000, SDD-009, ADR-0001, ADR-0014, ADR-0016, ADR-0017, ADR-0024, brainstorming D-008, D-015, D-016, D-018, D-019
+- Depends on: SDD-000, SDD-009, ADR-0001, ADR-0014, ADR-0016, ADR-0017, ADR-0024, author decisions D-008, D-015, D-016, D-018, D-019
 - Implements: RF-211, RF-212, RF-214 (documentation part), NFR-040 (the getting-started page is the test of that requirement)
 - Owner area: senior-d (agent surfaces, documentation site, releases and CI)
 
@@ -76,9 +76,9 @@ ADR-0024 item 1: the site starts from the **current** vukem `site/`, not from th
 
 ### 1.4 Taken from neither the Studio fork nor FreeCut, and why
 
-From the Studio's `web/site` (older fork of the same shell, `docs/search/notes/vukem.md` section 4.2): nothing is taken. It lacks the Markdown twin, the anchor check and the trailing-slash tests, and its extras are not wanted: the standalone Node server `scripts/serve.ts` and `static-path.ts` and the `Dockerfile` for Railway (D-015: only a static site on GitHub Pages is hosted), the six Studio categories, and the `/` redirect to `/docs/introduction`. Its package name `studio-docs` and its Railway deployment notes are removed with the Studio (SDD-009 section 17).
+From the Studio's `web/site` (older fork of the same shell, research note `notes/vukem` section 4.2): nothing is taken. It lacks the Markdown twin, the anchor check and the trailing-slash tests, and its extras are not wanted: the standalone Node server `scripts/serve.ts` and `static-path.ts` and the `Dockerfile` for Railway (D-015: only a static site on GitHub Pages is hosted), the six Studio categories, and the `/` redirect to `/docs/introduction`. Its package name `studio-docs` and its Railway deployment notes are removed with the Studio (SDD-009 section 17).
 
-From FreeCut's documentation (`docs/search/notes/vukem.md` section 4.3): the **outline** of the user guide only (section 7). Its **implementation** is not taken: the documentation is a route inside the React application, every URL returns the same 1,408-byte shell, and there is no sitemap, `robots.txt` or `llms.txt`, so neither a search engine nor an agent can read it without running JavaScript. This product's main readers are agents, so a page must be real HTML and real Markdown at its own URL.
+From FreeCut's documentation (research note `notes/vukem` section 4.3): the **outline** of the user guide only (section 7). Its **implementation** is not taken: the documentation is a route inside the React application, every URL returns the same 1,408-byte shell, and there is no sitemap, `robots.txt` or `llms.txt`, so neither a search engine nor an agent can read it without running JavaScript. This product's main readers are agents, so a page must be real HTML and real Markdown at its own URL.
 
 ### 1.5 What P1-DOC-002 built, and where it differs from sections 1.1 to 1.4
 
@@ -265,7 +265,7 @@ Every page also carries `<link rel="alternate" type="text/markdown" href="<twin 
 
 ### 5.1 Front matter and structure
 
-Follows vukem's page style (`site/README.md` "Add a page"; `docs/search/vukem-practices-and-releases.md` section 7: "The idea", "Quick start", "Common mistakes", "Next steps", "You will learn").
+Follows vukem's page style (`site/README.md` "Add a page"; research note `vukem-practices-and-releases` section 7: "The idea", "Quick start", "Common mistakes", "Next steps", "You will learn").
 
 ```mdx
 ---
@@ -357,7 +357,7 @@ A counter in the front matter would be exact but needs a human to bump it. Dates
 
 Phase: `P` Prototype, `A` ALPHA, `B` BETA (RF-211: skeleton and reference in the Prototype, guide in ALPHA, complete in BETA). A page is written, in English and pt-BR, in the phase shown; it may be updated in later phases as features land. Source: **H** hand-written, **G** generated (section 8). Slugs are `<dir>/<slug>`; the Getting started pages have no `<dir>` in the URL.
 
-The user guide follows the FreeCut outline of `docs/search/notes/vukem.md` section 4.3 (Start, Core editing, Creative tools, Output, Reference), without the FreeCut pages for features this product does not have (source monitor, motion workspace, scene browser with AI analysis; their purpose is covered by Transcription, Silence removal and Templates). The Agents section is specific to this product.
+The user guide follows the FreeCut outline of research note `notes/vukem` section 4.3 (Start, Core editing, Creative tools, Output, Reference), without the FreeCut pages for features this product does not have (source monitor, motion workspace, scene browser with AI analysis; their purpose is covered by Transcription, Silence removal and Templates). The Agents section is specific to this product.
 
 ### 7.1 Getting started (`getting-started`, no URL prefix)
 

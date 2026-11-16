@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: author (D-016), architect
-- Links: [brainstorming D-016](../brainstorming.md), ADR-0006, ADR-0018, SDD-007
+- Links: author decision D-016, ADR-0006, ADR-0018, SDD-007
 
 ## Context
 

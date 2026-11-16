@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: author (D-012), architect
-- Links: [brainstorming D-012](../brainstorming.md), [agents and MCP §9](../search/agents-mcp.md), ADR-0008, ADR-0020, SDD-007
+- Links: author decision D-012, agents and MCP §9, ADR-0008, ADR-0020, SDD-007
 
 ## Context
 

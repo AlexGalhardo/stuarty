@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: author (D-003), architect
-- Links: [brainstorming D-003](../brainstorming.md), [engine §8](../search/engine.md), [post-mortems §8](../search/post-mortems.md), [vukem practices](../search/vukem-practices-and-releases.md), ADR-0006, SDD-001, SDD-005
+- Links: author decision D-003, engine §8, post-mortems §8, vukem practices, ADR-0006, SDD-001, SDD-005
 
 ## Context
 

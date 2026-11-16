@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: architect; author (D-003)
-- Links: [engine §5, §7](../search/engine.md), [post-mortems §4](../search/post-mortems.md), [performance §3, §6](../search/performance.md), ADR-0003, SDD-004, SDD-005
+- Links: engine §5, §7, post-mortems §4, performance §3, §6, ADR-0003, SDD-004, SDD-005
 
 ## Context
 
@@ -44,6 +44,6 @@ Negative: disk use is roughly the original plus the normalized copy plus the pro
 
 Negative: export quality has one extra generation of compression. The normalized media is encoded at a high quality setting to keep this small.
 
-The codecs of the normalized media and of the proxy are fixed by SDD-011 §4.2 (MPEG-4 Part 2 in MOV with PCM; VP9 in MP4 with AAC); their patent status is an open point for the author before the first public release (`search/licensing.md` §8 item 6).
+The codecs of the normalized media and of the proxy are fixed by SDD-011 §4.2 (MPEG-4 Part 2 in MOV with PCM; VP9 in MP4 with AAC); their patent status is an open point for the author before the first public release (research note `licensing` §8 item 6).
 
 Open, to be settled by measurement in the Prototype: the exact tone-mapping filter chain for HLG, tested against real iPhone footage.

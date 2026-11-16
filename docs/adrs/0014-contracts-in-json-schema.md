@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-14)
 - Deciders: architect
-- Links: [stack trade-offs §2](../search/stack-tradeoffs.md), [agents and MCP §4](../search/agents-mcp.md), ADR-0002, SDD-001, SDD-002, SDD-003
+- Links: stack trade-offs §2, agents and MCP §4, ADR-0002, SDD-001, SDD-002, SDD-003
 
 ## Context
 
