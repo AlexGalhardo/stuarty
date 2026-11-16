@@ -128,11 +128,14 @@ func (s *state) encode(
 		free <- image.NewRGBA(image.Rect(0, 0, st.Width, st.Height))
 	}
 	writeErr := make(chan error, 1)
+	broken := make(chan struct{}) // closed once, when the first write to the encoder fails
 	go func() {
 		var werr error
 		for b := range full {
 			if werr == nil {
-				_, werr = pw.Write(b.Pix)
+				if _, werr = pw.Write(b.Pix); werr != nil {
+					close(broken)
+				}
 			}
 			free <- b
 		}
@@ -155,14 +158,14 @@ func (s *state) encode(
 	}
 
 	fail := func(cause error) error {
-		r, _ := finish(false)
+		r, werr := finish(false)
 		if cerr := ctx.Err(); cerr != nil {
 			return cerr
 		}
 		if cause != nil {
 			return cause
 		}
-		return wrapRun(r.err, ReasonEncoder, "The video encoder failed.", r.res.Stderr)
+		return encoderOutcome(r, werr)
 	}
 
 	last := time.Now()
@@ -170,6 +173,8 @@ func (s *state) encode(
 		var buf *image.RGBA
 		select {
 		case buf = <-free:
+		case <-broken:
+			return fail(nil)
 		case <-ctx.Done():
 			return fail(nil)
 		}
@@ -187,13 +192,22 @@ func (s *state) encode(
 	}
 
 	r, werr := finish(true)
-	switch {
-	case ctx.Err() != nil:
+	if ctx.Err() != nil {
 		return ctx.Err()
+	}
+
+	return encoderOutcome(r, werr)
+}
+
+// encoderOutcome is the error of an encoder that ended: its own failure first, then the broken
+// pipe, nil when both are clean.
+func encoderOutcome(r encoderResult, werr error) error {
+	switch {
 	case r.err != nil:
 		return wrapRun(r.err, ReasonEncoder, "The video encoder failed.", r.res.Stderr)
 	case werr != nil:
 		return exportErr(ReasonEncoder, "The frames could not be handed to the encoder.", werr, r.res.Stderr)
 	}
+
 	return nil
 }
