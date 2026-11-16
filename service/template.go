@@ -511,13 +511,14 @@ func (s *svc) TemplateInstantiate(
 	}
 
 	if len(ops) > 0 {
-		if _, eerr := s.edit(ctx, EditRequest{ProjectID: doc.ID, BaseRevision: 0, Operations: ops}, true); eerr != nil {
+		er, eerr := s.edit(ctx, EditRequest{ProjectID: doc.ID, BaseRevision: 0, Operations: ops}, true)
+		if eerr != nil {
 			s.discard(ctx, c, doc.ID)
 
 			return nil, eerr
 		}
 
-		res.Revision = 1
+		res.Revision = er.Revision
 	}
 
 	res.Text = instantiateText(tpl.ID, res, false)
