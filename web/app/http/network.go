@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"log/slog"
+	"net"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -23,9 +24,11 @@ type Network struct {
 	// loopbackHTTP is the container on the user's own machine (4.3 item 4):
 	// plain HTTP is accepted, and only as the loopback name of APP_URL.
 	loopbackHTTP bool
-	trustProto   bool
-	proxies      []netip.Prefix
-	log          *slog.Logger
+	// bind is the address the server listens on; with plain HTTP it says who can reach the port.
+	bind       string
+	trustProto bool
+	proxies    []netip.Prefix
+	log        *slog.Logger
 }
 
 // NewNetwork builds the network guard from a valid configuration (config.Validate).
@@ -56,6 +59,7 @@ func NewNetwork(res config.Resolved, log *slog.Logger) (*Network, error) {
 		origin:       u.Scheme + "://" + host,
 		aliases:      aliases,
 		loopbackHTTP: res.LoopbackHTTP,
+		bind:         res.Addr,
 		trustProto:   res.TrustForwardedProto,
 		proxies:      res.TrustedProxies,
 		log:          log,
@@ -71,6 +75,14 @@ func (n *Network) logStartup(noUsers bool) {
 			"app_url", n.origin)
 	}
 
+	if n.loopbackHTTP && n.bindsBeyondLoopback() {
+		// Inside a container the published port, not this process, decides who can reach it (SDD-007 4.3 item 4).
+		n.log.Warn("network mode over plain HTTP on "+n.bind+": no credential is encrypted on this listener, so "+
+			"publish the port on the loopback address only (docker run -p 127.0.0.1:<port>:<port>); on any other "+
+			"interface a password and a session cookie cross the network in clear",
+			"bind", n.bind)
+	}
+
 	if !noUsers {
 		return
 	}
@@ -78,6 +90,12 @@ func (n *Network) logStartup(noUsers bool) {
 	n.log.Warn("network mode has no users yet: every API request is answered 401; " +
 		"create the first administrator with `vukem-video user:create <email> --admin` while the server is " +
 		"stopped, or start it with VUKEM_VIDEO_ADMIN_EMAIL and VUKEM_VIDEO_ADMIN_PASSWORD")
+}
+
+func (n *Network) bindsBeyondLoopback() bool {
+	host, _, err := net.SplitHostPort(n.bind)
+
+	return err == nil && !config.IsLoopbackHost(host)
 }
 
 // allowed is steps 1 to 3 of local mode replaced (4.3 item 3) plus steps 4 and
