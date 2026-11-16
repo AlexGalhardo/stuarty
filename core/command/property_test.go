@@ -341,19 +341,21 @@ var alphaOps = map[string]func(p *docPick) string{
 			)
 		}
 		return fmt.Sprintf(
-			`{"item_id":%q,"speed":"%d.%dx","ripple":%q}`,
+			`{"item_id":%q,"speed":"%d.%dx","reverse":%s,"ripple":%q}`,
 			p.clip(),
 			p.n(3),
 			p.n(10),
+			p.oneOf("true", "false"),
 			p.oneOf("none", "track"),
 		)
 	},
 	"clip.set_color": func(p *docPick) string {
 		return fmt.Sprintf(
-			`{"item_id":%q,"brightness":%.2f,"saturation":%.2f,"temperature":%.2f,"hue":%d}`,
+			`{"item_id":%q,"brightness":%.2f,"saturation":%.2f,"temperature":%.2f,"tint":%.2f,"hue":%d}`,
 			p.clip(),
 			float64(p.n(200))/100-1,
 			float64(p.n(200))/100,
+			float64(p.n(200))/100-1,
 			float64(p.n(200))/100-1,
 			p.n(361)-180,
 		)
@@ -587,7 +589,8 @@ func randomStart(rng *rand.Rand) *timeline.Document {
 		shape("itm_x000000005", vidTr, 400, 60).
 		caption("itm_x000000003", 10, 4, func(it *timeline.Item) { it.LinkedItem = itemA }).
 		caption("itm_x000000006", 100, 3).
-		audio("itm_x000000004", 0, 300, 0)
+		audio("itm_x000000004", 0, 300, 0).
+		clip("itm_x000000007", vidTr, 150, 50, 0)
 
 	if rng.Intn(2) == 0 {
 		for _, id := range []string{itemA, "itm_x000000004"} {
