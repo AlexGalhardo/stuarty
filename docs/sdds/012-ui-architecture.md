@@ -840,7 +840,7 @@ Entries marked P exist in the Prototype (§10); every other entry is A unless ma
 | Drag corner handle on the canvas | `item.set_transform {item_id, scale}`; with keyframes on `scale`: `keyframe.set {item_id, property: "scale", at: "<playhead>f", value}` | outline box only; the compositor is not touched (T6) | A |
 | Drag body on the canvas | `item.set_transform {item_id, x, y}` (or two `keyframe.set` for animated properties) | outline box | A |
 | Drag rotate handle | `item.set_transform {item_id, rotation}` | outline box | A |
-| Crossfade (menu with two selected items) | `item.crossfade {from_item_id, to_item_id, duration}` where `from` is the item with the smaller `start` | none | A |
+| Crossfade (menu with two selected items) | `item.crossfade {from_item_id, to_item_id, duration}` where `from` is the item with the smaller `start`; for two neighbours on one track the same batch carries `track_id`, an empty visual track of the project, or a `track.add` (client id) when none is empty | none | A |
 | Track header actions | `track.add`, `track.update`, `track.move {track_id, above or below}`, `track.remove {track_id}` (confirm; `with_items: true` after `E_NOT_EMPTY`) | reorder ghost row | A |
 | Rename project in the top bar | `project.rename {name}` | none | A |
 | Scrub on the ruler, `Left` or `Right` (one frame), `Shift` (one second), Space | no command; moves the playhead (UI state) | the playhead itself | P |

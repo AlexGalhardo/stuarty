@@ -517,6 +517,60 @@ describe("transition, preset and crossfade builders", () => {
 	});
 });
 
+describe("crossfade of neighbours on one track (VV-042)", () => {
+	const first = { id: "itm_a", start: 0, duration: 30, track: "trk_1" };
+	const second = { id: "itm_b", start: 30, duration: 30, track: "trk_1" };
+
+	test("moves the arriving item to a free track", () => {
+		expect(
+			crossfadeOperations(second, first, "0.5s", {
+				freeTrack: "trk_2",
+				newTrackId: () => "trk_new",
+			}),
+		).toEqual([
+			{
+				op: "item.crossfade",
+				args: {
+					from_item_id: "itm_a",
+					to_item_id: "itm_b",
+					duration: "0.5s",
+					track_id: "trk_2",
+				},
+			},
+		]);
+	});
+
+	test("adds a visual track in the same batch when none is free", () => {
+		expect(
+			crossfadeOperations(first, second, "0.5s", {
+				freeTrack: null,
+				newTrackId: () => "trk_new",
+			}),
+		).toEqual([
+			{ op: "track.add", args: { kind: "visual", id: "trk_new" } },
+			{
+				op: "item.crossfade",
+				args: {
+					from_item_id: "itm_a",
+					to_item_id: "itm_b",
+					duration: "0.5s",
+					track_id: "trk_new",
+				},
+			},
+		]);
+	});
+
+	test("items of different tracks send no track_id", () => {
+		const other = { ...second, track: "trk_2" };
+		const ops = crossfadeOperations(first, other, "0.5s", {
+			freeTrack: "trk_3",
+			newTrackId: () => "trk_new",
+		});
+		expect(ops).toHaveLength(1);
+		expect(ops[0]?.args).not.toHaveProperty("track_id");
+	});
+});
+
 describe("track builders (SDD-002 C.6 to C.10)", () => {
 	test("add names exactly one placement", () => {
 		expect(trackAddOperations("audio", { above: "trk_a" })).toEqual([
