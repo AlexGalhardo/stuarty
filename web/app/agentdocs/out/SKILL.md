@@ -256,3 +256,4 @@ The tools return the same text as the commands.
 - `job_get`: `job:show`, `job:list`
 - `job_cancel`: `job:cancel`
 - `template`: `template:list`, `template:save`, `template:new`, `template:export`, `template:import`
+- `font_import`: `font:import`

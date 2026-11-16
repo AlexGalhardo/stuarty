@@ -28,6 +28,7 @@ func (a *adapter) handlers() map[string]callFunc {
 		"job_cancel":     jobCancel,
 		"template":       template,
 		"view":           view,
+		"font_import":    fontImport,
 	}
 }
 
@@ -528,6 +529,22 @@ func template(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 	res, err := svc.TemplateInstantiate(ctx, service.TemplateInstantiateRequest{
 		TemplateID: in.TemplateID, Name: in.Name, Fill: in.Fill, ID: in.ID,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &toolOutput{value: res, text: res.Text}, nil
+}
+
+func fontImport(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
+	in, err := decode[struct {
+		Path string `json:"path"`
+	}](raw)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := svc.FontImport(ctx, service.FontImportRequest{Path: in.Path})
 	if err != nil {
 		return nil, err
 	}

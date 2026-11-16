@@ -382,6 +382,8 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		}
 
 		return "media_import", args, nil
+	case "FontImport":
+		return "font_import", args, nil
 	case "MediaList":
 		return "media_inspect", args, nil
 	case "MediaInspect":

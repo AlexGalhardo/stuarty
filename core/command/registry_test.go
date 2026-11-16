@@ -511,3 +511,26 @@ func TestGoldenErrorsQuoteIdsNotNames(t *testing.T) {
 		t.Errorf("only %d error cases were checked", n)
 	}
 }
+
+func TestHelpCarriesTheSchemaAndTheShapeOfListItems(t *testing.T) {
+	r := BetaBuild()
+
+	for name, want := range map[string][]string{
+		"caption.add": {
+			"each item of words: {text (a string, required), start (a time, required), duration (a time, required)}",
+			`JSON Schema: {"$schema":"https://json-schema.org/draft/2020-12/schema"`,
+		},
+		"font.add": {"each item of files: {weight (a whole number, required), hash (a string, required)}"},
+	} {
+		help, err := r.Help(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for _, w := range want {
+			if !strings.Contains(help, w) {
+				t.Errorf("%s: help lacks %q:\n%s", name, w, help)
+			}
+		}
+	}
+}

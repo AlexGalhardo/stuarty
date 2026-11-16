@@ -1273,10 +1273,10 @@ A frame is one JPEG (quality 80, 4:2:0). A sheet is one JPEG:
 | Implementation | the official Go SDK `github.com/modelcontextprotocol/go-sdk` v1.8.0 (it implements revision `2026-07-28` and still serves older revisions: `mcp/shared.go` lines 50 to 91, 555 to 580) |
 | Server identity | `name` `vukem-video`, `version` the binary version |
 | Capabilities | `tools` only. No resources, prompts, completions, logging, sampling, roots or elicitation (ADR-0015 item 10) |
-| `tools/list` | the tools below whose operations exist in the build (phase filter): the 15 tools of the ALPHA and BETA builds, 12 in the Prototype (no `project_trash`, `job_cancel`, `template`, whose operations are phase A in SDD-000 §1). Always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). Within a tool, a parameter or `kind` of a later phase is absent from that build's schema (`transcribe` in `job_start`) |
+| `tools/list` | the tools below whose operations exist in the build (phase filter): the 16 tools of the BETA build (15 in ALPHA), 12 in the Prototype (no `project_trash`, `job_cancel`, `template`, whose operations are phase A in SDD-000 §1). Always in the order of the table, never paged, with `ttlMs` 3,600,000 and `cacheScope` `public` (the SDK type `Cacheable`, `mcp/protocol.go` lines 1148 to 1166; the list changes only when the binary is upgraded). Within a tool, a parameter or `kind` of a later phase is absent from that build's schema (`transcribe` in `job_start`) |
 | Tool registration | each tool is registered with the SDK's raw `(*Server).AddTool` (`mcp/server.go` line 315) with `inputSchema` and `outputSchema` taken from the registry generator, **not** with the generic `mcp.AddTool[In, Out]`, which infers schemas from Go types and would not produce the `edit` schema of §4.4. The adapter validates `arguments` against `inputSchema` with the validator of ADR-0014 and converts a failure into `E_VALIDATION` with the `path` of the first invalid value (a failure of the `operations[].op` enum is `E_UNKNOWN_COMMAND`, §2.4 rule 5). The message names the path and the constraint, never the value (§1.2 rule 9) |
 | Call result | `CallToolResult` (`Content`, `StructuredContent`, `IsError`) built as §1.3 and §1.4 say |
-| Cost | the minified `tools/list` result is at most **17,500 bytes**: at the conservative 3 bytes per token of JSON this is 5,833 tokens, under the 6,000 of NFR-020. The definitions of this section measure 17,064 bytes in total (about 5,690 tokens at that rate), 436 bytes under the cap, so a new parameter must shorten a description. `edit` is 2,312 bytes (limit 2,500) and the largest other tool is `view` at 1,518 (limit 1,600); `media_inspect` is 1,428 and `template` 1,315. No single tool is larger than 2,500 bytes (`edit`) or 1,600 bytes (the others). **Verified by** `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (if it exceeds 6,000 tokens the descriptions are shortened; no field is removed) |
+| Cost | the minified `tools/list` result is at most **18,000 bytes**: at the conservative 3 bytes per token of JSON this is 6,000 tokens, the NFR-020 limit (raised from 17,500 when `font_import` became the 16th tool, VV-024; at the 3.2 characters per token of check 2 it is 5,625 tokens). The definitions of this section measure about 17,990 bytes in total, under the cap, so a new parameter must shorten a description. `edit` is 2,312 bytes (limit 2,500) and the largest other tool is `view` at 1,518 (limit 1,600); `media_inspect` is 1,428 and `template` 1,315. No single tool is larger than 2,500 bytes (`edit`) or 1,600 bytes (the others). **Verified by** `TestToolDefinitionBudget` and, once per release, a count with the model vendor's token counting endpoint (if it exceeds 6,000 tokens the descriptions are shortened; no field is removed) |
 | Order | deterministic (MCP `2026-07-28` Tools: "SHOULD return tools in a deterministic order"), so prompt caches hit |
 
 Tool and Service mapping, scope and annotations (annotations are hints and clients treat them as untrusted; they are never a security control, ADR-0020):
@@ -1298,6 +1298,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `job_get` | `JobGet` (with `job_id`), `JobList` (with `project_id` and no `job_id`) | read | true | n/a | true | false |
 | `job_cancel` | `JobCancel` | render, or media for the caller's own `transcribe` or `ingest` job | false | false | true | false |
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
+| `font_import` | `FontImport` | media | false | false | true | false |
 
 `destructiveHint` is `false` on every tool: every write is undoable and recorded per actor, and nothing is removed for good (ADR-0020 items 2 and 3). A client that prompts on destructive tools therefore never prompts for this server, which is what unattended use needs (D-011). `openWorldHint` is `false` on every tool: no tool reaches an address chosen by the caller (RF-130). `TestNoOutboundTools` asserts both hints for every registered tool and that `web/app/mcp` imports no HTTP client.
 
@@ -2171,6 +2172,32 @@ Example (`action` `new`):
 
 The result is a `TemplateInstantiateResult` (§2.9): `project_id`, `revision`, `unfilled`, `findings`. The adapter maps `action` to the Service operation (`list`, `save`, `new` to `TemplateInstantiate`, `export`, `import`); a missing member the action needs is `E_VALIDATION` with the `path` of the member, and so is a member that the action does not use (`list`: `template_id`, `project_id`, `id`, `name`, `description`, `fill`, `path` are refused; `cursor` and `limit` apply to `list` only; `save`: `project_id`, `name`, `description`; `new`: `template_id`, `name`, `fill`, `id`; `export`: `template_id`; `import`: `path`).
 
+#### `font_import`
+
+```json
+{
+  "name":"font_import",
+  "description":"Add a TTF/OTF file to the font store. path is absolute, on the server. Returns the hash for font.add.",
+  "inputSchema":{
+    "type":"object",
+    "properties":{
+      "path":{"type":"string"}
+    },
+    "required":["path"],
+    "additionalProperties":false
+  },
+  "outputSchema":{"type":"object"},
+  "annotations":{
+    "readOnlyHint":false,
+    "destructiveHint":false,
+    "idempotentHint":true,
+    "openWorldHint":false
+  }
+}
+```
+
+The `outputSchema` and the `title` are minimal, to stay under the budget of §4.1; the result is a `FontImportResult` (`hash`, `bytes`, `deduplicated`) in `structuredContent`; the hash goes into `files[].hash` of a `font.add` edit. The same bytes twice store one file. The tool is the MCP form of `font:import` and `POST /fonts` (VV-024).
+
 ### 4.3 `command_help`
 
 `command_help` is the only place that serves a command's schema over MCP. Without `name` it returns one line per public command of the build (`<name> [<scope>] <summary>`, about 53 lines at BETA, 47 at ALPHA, under 2,000 tokens). With a name it returns the description, the `args` JSON Schema, an example and the error codes of that command, from `Registry.Get` and `Registry.Schema`, in the format of §3.9. Descriptions and summaries come from the registry's `summary` and `description` fields, so the tool, the CLI `command:help`, `GET /commands/{name}` and the skill file always agree.
@@ -2779,7 +2806,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `AuditList` | none (exception E-3) | `audit` | `GET /audit` (scope `admin`) |
 | `TrashEmpty` | none (exception E-4) | none (exception E-4) | `POST /trash/empty` |
 | `KeyCreate`, `KeyList`, `KeyRevoke` | none (exception E-4) | none | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` |
-| `FontImport` | none (exception E-3) | `font:import` (phase B) | `POST /fonts` |
+| `FontImport` | `font_import` (VV-024) | `font:import` (phase B) | `POST /fonts` |
 | `BrandKitGet` | none (exception E-3) | `brand:show` (phase B) | `GET /brand-kit` |
 | `BrandKitSet` | none (exception E-3) | `brand:set` (phase B) | `PUT /brand-kit` |
 | `ProjectBundleExport` | none (exception E-3) | `bundle:export` (phase B) | `POST /projects/{id}/bundle` |
@@ -2809,7 +2836,7 @@ The CLI commands of SDD-000 §1 that are not service operations (`serve`, `mcp`,
 | S-7 | `HistoryList` filters by `actor` on MCP and HTTP, by `--by` on the CLI | the CLI's `--actor` names the caller |
 | S-8 | MCP `media_import` takes `paths` (and optional `asset_ids`, the same length), the service `files[]` | shorter schema; the mapping is positional |
 | S-9 | `ViewResult.image_base64` and `MediaInspectResult.untrusted.transcript` are absent from MCP `structuredContent` (fields tagged `bulk`) | they duplicate the text block |
-| S-10 | `MediaList` is `media_inspect` without `asset_id` and `JobList` is `job_get` with `project_id` and no `job_id` (its `state` filter is `state`; `cursor` and `limit` are CLI and HTTP only) | the catalogue stays at 15 tools (SDD-000 §1) |
+| S-10 | `MediaList` is `media_inspect` without `asset_id` and `JobList` is `job_get` with `project_id` and no `job_id` (its `state` filter is `state`; `cursor` and `limit` are CLI and HTTP only) | the catalogue stays at 15 tools (SDD-000 §1); `font_import` is the 16th (VV-024) |
 | S-11 | `history` with `action` `undo` or `redo` takes no `actor`, `cursor` or `limit`; `template` takes only the members of its `action` | the cross-field rules are in the tool descriptions and enforced by the adapter |
 
 ### 7.2 The contract test
@@ -2932,7 +2959,7 @@ The implementation of this SDD is complete when every check below passes. "Test"
 | # | Check | How verified |
 | --- | --- | --- |
 | 1 | Every `service.Service` method has an MCP tool, CLI command and HTTP route, or is in the exceptions of §7.1; the §7.1 table equals the one derived from the code | `TestParityTableCoversTheService`, `TestDriversCoverService`, `TestEveryOperationIsReachableOnEverySurface` (`web/contract`) |
-| 2 | `tools/list` holds exactly the 15 tools of SDD-000 §1 in the order of §4.1 in the ALPHA build and the 12 tools whose operations exist in the Prototype build, byte-equal across two calls, at most 17,500 bytes minified, `edit` at most 2,500 bytes and every other tool at most 1,600 (NFR-020) | `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 6,000 |
+| 2 | `tools/list` holds exactly the 16 tools of SDD-000 §1 in the order of §4.1 in the BETA build and the 12 tools whose operations exist in the Prototype build, byte-equal across two calls, at most 18,000 bytes minified, `edit` at most 2,500 bytes and every other tool at most 1,600 (NFR-020) | `TestToolDefinitionBudget`; release checklist: token count with the vendor endpoint at most 6,000 |
 | 3 | Every `inputSchema` and `outputSchema` is valid JSON Schema 2020-12; every `inputSchema` has `additionalProperties: false`; the `edit` operation enum equals the public command names of the build; the annotations equal the table of §4.1; every output path that holds text from media or other actors carries `"x-untrusted": true` and a result with such a value has `untrusted_notice` | `TestToolSchemas` |
 | 4 | The first 512 characters of `instructions` (after the generated header line is stripped) are those of §4.6, the whole is at most 2,100 bytes, it names the tools by their exact names and does not mention locks | `TestInstructionsHead` |
 | 5 | The MCP server is stateless: no `Mcp-Session-Id` is sent or read, `GET /mcp` and `DELETE /mcp` answer 405, two interleaved clients do not influence each other; revisions `2026-07-28` and `2025-11-25` both work over stdio and HTTP | `TestHTTPIsStateless` (`web/app/mcp`), `TestMCPOverStdioThroughTheBinary` (`web/cmd/app`); no single test runs both revisions with the SDK client |
@@ -2970,7 +2997,7 @@ Numbers measured on the reference machine (AMD Ryzen 7 5700X3D, Windows 11, FFmp
 
 | Budget | Measured | Limit |
 | --- | --- | --- |
-| `tools/list` definitions, 15 tools | 17,323 bytes, about 5,413 tokens by the 3.2 characters per token estimate | at most 17,500 bytes (check 2) |
+| `tools/list` definitions, 16 tools | about 17,990 bytes, about 5,620 tokens by the 3.2 characters per token estimate | at most 18,000 bytes (check 2) |
 | `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 6,000 tokens |
 | Concise view of the reference project | 1 page, 11,785 characters | at most 2 pages, cap 12,800 characters (check 7) |
 | Frame and sheet image tokens | `TestViewImageSizeTable` passes for the four presets | frame at most 800, sheet at most 1,500 (check 8) |

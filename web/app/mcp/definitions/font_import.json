@@ -1,0 +1,25 @@
+{
+ "name": "font_import",
+ "description": "Add a TTF/OTF file to the font store. path is absolute, on the server. Returns the hash for font.add.",
+ "inputSchema": {
+  "type": "object",
+  "properties": {
+   "path": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "path"
+  ],
+  "additionalProperties": false
+ },
+ "outputSchema": {
+  "type": "object"
+ },
+ "annotations": {
+  "readOnlyHint": false,
+  "destructiveHint": false,
+  "idempotentHint": true,
+  "openWorldHint": false
+ }
+}

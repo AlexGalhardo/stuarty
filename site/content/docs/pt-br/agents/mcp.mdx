@@ -21,8 +21,9 @@ O `vukem-video mcp` serve MCP pela entrada e saída padrão; as mesmas ferrament
 | `lint` | conferir o projeto contra as regras |
 | `job_start`, `job_get`, `job_cancel` | iniciar uma exportação ou uma transcrição; ler uma tarefa, ou listar as tarefas de um projeto; cancelar uma tarefa na fila ou em execução |
 | `template` | `action` `list`, `save`, `new`, `export` ou `import`: modelos são projetos com campos nomeados |
+| `font_import` | adicionar um arquivo de fonte (`path`, absoluto, na máquina do servidor) e obter o hash para uma edição `font.add` |
 
-O servidor lista 15 ferramentas, nesta ordem. O `view` renderiza pelo caminho da exportação, então o quadro é o que a exportação produz, e custa tokens de imagem: leia `project_get` e `lint` antes, e reduza `max_tokens` quando uma imagem pequena bastar. O `template` com `action` `new` recebe `fill`, um mapa do nome do campo para `{asset_id}`, `{text}` ou `{words}`; um membro que a ação não usa é recusado.
+O servidor lista 16 ferramentas, nesta ordem. O `view` renderiza pelo caminho da exportação, então o quadro é o que a exportação produz, e custa tokens de imagem: leia `project_get` e `lint` antes, e reduza `max_tokens` quando uma imagem pequena bastar. O `template` com `action` `new` recebe `fill`, um mapa do nome do campo para `{asset_id}`, `{text}` ou `{words}`; um membro que a ação não usa é recusado.
 
 ## Como é um resultado
 

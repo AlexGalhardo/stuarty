@@ -38,6 +38,7 @@ func TestToolListHasTheToolsWhoseOperationsExist(t *testing.T) {
 	want := []string{
 		"project_list", "project_create", "project_get", "project_trash", "edit", "command_help", "history",
 		"media_import", "media_inspect", "view", "lint", "job_start", "job_get", "job_cancel", "template",
+		"font_import",
 	}
 	if strings.Join(names, ",") != strings.Join(want, ",") {
 		t.Fatalf("tools = %v, want %v (the others wait for their Service methods: %v)", names, want, Pending)
@@ -532,5 +533,22 @@ func TestMCPTrashRestore(t *testing.T) {
 	got := structured(t, ok(t, call(t, cs, "project_get", map[string]any{"project_id": project})))
 	if got["revision"] != edited["revision"] {
 		t.Fatalf("the revision changed from %v to %v", edited["revision"], got["revision"])
+	}
+}
+
+// TestFontImportReachesTheService is VV-024: the font import has an MCP tool, and
+// the Service decides what it accepts (a relative path is refused there, not here).
+func TestFontImportReachesTheService(t *testing.T) {
+	t.Parallel()
+
+	cs := connect(t, newService(t), Options{}, "x")
+
+	res := call(t, cs, "font_import", map[string]any{"path": "relative.ttf"})
+	if !res.IsError || !strings.Contains(textOf(t, res), "E_") {
+		t.Fatalf("a relative path: %s", textOf(t, res))
+	}
+
+	if bad := call(t, cs, "font_import", map[string]any{}); !bad.IsError {
+		t.Fatalf("a call without path must fail: %s", textOf(t, bad))
 	}
 }

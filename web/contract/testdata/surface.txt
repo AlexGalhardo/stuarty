@@ -103,6 +103,7 @@ route POST /users
 route PUT /brand-kit
 tool command_help
 tool edit
+tool font_import
 tool history
 tool job_cancel
 tool job_get
