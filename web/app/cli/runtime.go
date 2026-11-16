@@ -14,6 +14,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 const (
@@ -111,8 +112,13 @@ func actorFrom(flag string) (string, error) {
 }
 
 // abs makes a path absolute against the current directory before it is sent
-// to the service (SDD-003 section 5.3, ADR-0016 item 7).
+// to the service (SDD-003 section 5.3, ADR-0016 item 7). Against a remote server
+// (VUKEM_VIDEO_URL) a rooted path belongs to the server's filesystem and goes as typed.
 func (rt *Runtime) abs(path string) (string, error) {
+	if rt.Getenv != nil && rt.Getenv(workspace.EnvURL) != "" && strings.HasPrefix(path, "/") {
+		return path, nil
+	}
+
 	if filepath.IsAbs(path) {
 		return filepath.Clean(path), nil
 	}
