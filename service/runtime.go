@@ -61,6 +61,9 @@ type ExportOutput struct {
 	VideoCodec   string
 	AudioCodec   string
 	LoudnessLUFS *float64
+	// Width and Height are the pixels of the file when they differ from the project's
+	// (a GIF is capped); zero means the project's size.
+	Width, Height int
 	// Checks are the verification checks that ran. The job succeeds only when
 	// every one is ok and the file is on disk with the size reported.
 	Checks []VerifyCheck

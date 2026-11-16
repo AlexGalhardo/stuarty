@@ -33,8 +33,8 @@ func TestFormatGIFTiming(t *testing.T) {
 		total int // hundredths of a second
 	}{
 		{timeline.Rational{Num: 30, Den: 1}, 60, 2, 30, 200},
-		{timeline.Rational{Num: 24, Den: 1}, 48, 1, 48, 200},
-		{timeline.Rational{Num: 60, Den: 1}, 300, 3, 100, 500},
+		{timeline.Rational{Num: 24, Den: 1}, 48, 2, 24, 200},
+		{timeline.Rational{Num: 60, Den: 1}, 300, 4, 75, 500},
 		{timeline.Rational{Num: 30000, Den: 1001}, 60, 2, 30, 200},
 		{timeline.Rational{Num: 30, Den: 1}, 61, 2, 31, 203},
 	}
@@ -190,6 +190,57 @@ func TestFormatGIFExport(t *testing.T) {
 
 	if !slices.Equal(dec.Delay, gifDelaysCS(doc.Settings.FPS, endFrame(doc))) {
 		t.Errorf("delays %v", dec.Delay)
+	}
+}
+
+func TestGIFSizeIsCapped(t *testing.T) {
+	t.Parallel()
+
+	for _, c := range []struct {
+		w, h, wantW, wantH int
+	}{
+		{720, 1280, 480, 853},
+		{1920, 1080, 480, 270},
+		{480, 480, 480, 480},
+		{180, 320, 180, 320},
+	} {
+		w, h, scale := gifSize(timeline.Settings{Width: c.w, Height: c.h})
+		if w != c.wantW || h != c.wantH {
+			t.Errorf("%dx%d: %dx%d, want %dx%d", c.w, c.h, w, h, c.wantW, c.wantH)
+		}
+
+		if c.w <= gifMaxWidth && scale != 1 {
+			t.Errorf("%dx%d: scale %v, want 1", c.w, c.h, scale)
+		}
+	}
+}
+
+// A project wider than the cap is composed at the cap, and the file passes its own verification.
+func TestFormatGIFExportOfAWideProject(t *testing.T) {
+	doc := loadDir(t, formatDir("gif2s"))
+	doc.Settings.Width, doc.Settings.Height = 960, 540
+
+	job := newJob(t, doc, "format-gif-wide", "format-gif-wide.gif")
+	job.Format = FormatGIF
+
+	res, err := Run(context.Background(), job)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Width != 480 || res.Height != 270 {
+		t.Errorf("result size %dx%d, want 480x270", res.Width, res.Height)
+	}
+
+	f, err := os.Open(res.Path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = f.Close() }()
+
+	cfg, err := gif.DecodeConfig(f)
+	if err != nil || cfg.Width != 480 || cfg.Height != 270 {
+		t.Errorf("file %dx%d, %v", cfg.Width, cfg.Height, err)
 	}
 }
 

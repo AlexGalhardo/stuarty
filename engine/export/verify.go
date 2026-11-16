@@ -38,6 +38,9 @@ type probedFile struct {
 type Verified struct {
 	DurationMS int64
 	Size       int64
+	// Width and Height are the pixels of the file when they are not the project's (a GIF is
+	// capped, VV-056); zero means the project's size.
+	Width, Height int
 }
 
 // verify applies section 8 step 7 to the partial file: one H.264 and one AAC stream, the project's

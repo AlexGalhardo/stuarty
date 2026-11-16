@@ -48,12 +48,29 @@ func (f Format) Ext() string {
 	return ".mp4"
 }
 
-// gifMaxFPS is the highest frame rate of a GIF: the delay is in hundredths of a second and browsers
-// show a delay under 2 as 10, so 25 fps (4 hundredths) is where an even step stays exact enough.
-const gifMaxFPS = 25
+// gifMaxFPS is the highest frame rate of a GIF. The GIF is only a preview or a sticker, and its
+// size grows with the number of frames: 15 fps keeps the motion readable at about half the bytes of
+// 25. Delays are in hundredths of a second, so 15 fps is 6 and 7 alternating, never below 2.
+const gifMaxFPS = 15
+
+// gifMaxWidth is the widest a GIF is made: a wider project is composed at this width, with its
+// height scaled to match, because a 720p or 1080p GIF is hundreds of megabytes (VV-056).
+const gifMaxWidth = 480
+
+// gifSize is the pixel size of the GIF of a project: the project's size, or gifMaxWidth wide with
+// the height rounded to the same aspect when the project is wider. scale is the output scale.
+func gifSize(st timeline.Settings) (w, h int, scale float64) {
+	if st.Width <= gifMaxWidth {
+		return st.Width, st.Height, 1
+	}
+
+	scale = float64(gifMaxWidth) / float64(st.Width)
+
+	return gifMaxWidth, max(round(float64(st.Height)*scale), 1), scale
+}
 
 // gifStep is how many timeline frames one GIF frame covers: the smallest whole number that brings the
-// frame rate to gifMaxFPS or less (30 fps gives 2, 60 fps gives 3, 24 fps gives 1).
+// frame rate to gifMaxFPS or less (30 fps gives 2, 60 fps gives 4, 24 fps gives 2).
 func gifStep(fps timeline.Rational) int {
 	return max(1, (fps.Num+gifMaxFPS*fps.Den-1)/(gifMaxFPS*fps.Den))
 }
