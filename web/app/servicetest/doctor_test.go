@@ -333,6 +333,37 @@ func TestDoctorRefusesAProjectLimitedKeyTheMachineDetails(t *testing.T) {
 	}
 }
 
+// SR1-01 (T-29): a logged-in member of network mode holds a browser session but is not the person
+// running the machine: no paths, no environment, no verify, no bundle (SDD-007 sections 5.2 and 7.3).
+func TestDoctorRefusesANetworkMemberTheMachineDetails(t *testing.T) {
+	e := doctorEnv(t, service.ModeNetwork)
+
+	member := service.WithCaller(context.Background(), service.Caller{
+		Actor: "user:usr_member", Scopes: service.RoleScopes(service.RoleMember), OwnerUserID: "usr_member", Browser: true,
+	})
+
+	res, err := e.svc.Doctor(member, service.DoctorRequest{Full: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	whole, jerr := json.Marshal(res)
+	if jerr != nil {
+		t.Fatal(jerr)
+	}
+
+	if res.Workspace != "" || strings.Contains(string(whole), string(e.dir)) ||
+		strings.Contains(string(whole), "environment") {
+		t.Errorf("a member sees machine details: %s", whole)
+	}
+
+	for _, req := range []service.DoctorRequest{{Verify: true}, {Bundle: true}} {
+		if _, err := e.svc.Doctor(member, req); code(err) != service.CodeForbidden {
+			t.Errorf("%+v by a member = %v, want E_FORBIDDEN", req, err)
+		}
+	}
+}
+
 // SDD-007 sections 6.5 and 6.7: doctor says whether the limits and the sandbox are
 // available, and never prints the path of the sandbox.
 func TestDoctorReportsTheChildPolicy(t *testing.T) {

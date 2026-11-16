@@ -115,10 +115,13 @@ func (t *Tools) platform() (goos, goarch string) {
 	return goos, goarch
 }
 
-// humanForTools is the caller class that may install: a person at the browser,
-// an admin key, or the operator at the terminal of the owner machine.
+// humanForTools is the caller class that may install: an admin at the browser (the local
+// editor holds every scope; a network member does not, SDD-007 section 5.2), an admin key,
+// or the operator at the terminal of the owner machine.
 func humanForTools(c Caller) bool {
-	return c.Browser || c.Operator || strings.HasPrefix(c.Actor, "key:") && slices.Contains(c.Scopes, ScopeAdmin)
+	admin := slices.Contains(c.Scopes, ScopeAdmin)
+
+	return c.Browser && admin || c.Operator || strings.HasPrefix(c.Actor, "key:") && admin
 }
 
 func installDenied() *Error {
