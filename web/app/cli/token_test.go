@@ -87,6 +87,10 @@ func TestTokenRotateRefusesWhileAnOwnerHoldsTheWorkspace(t *testing.T) {
 		!strings.Contains(h.stdout.String(), "E_WORKSPACE_LOCKED") {
 		t.Errorf("exit %d: %s", code, h.stdout)
 	}
+
+	if !strings.Contains(h.stdout.String(), "close the desktop app or serve") {
+		t.Errorf("the refusal has no hint: %s", h.stdout)
+	}
 }
 
 func TestListNamesTheCommandsTheBinaryDispatchesItself(t *testing.T) {
