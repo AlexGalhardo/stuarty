@@ -30,7 +30,7 @@ func (h *apiHandler) projectBundleExport(c *web.Ctx, in bundleExportIn) (service
 	}
 
 	status := http.StatusAccepted
-	if res.State == service.JobSucceeded || res.State == service.JobFailed || res.State == service.JobCancelled {
+	if service.JobFinal(res.State) {
 		status = http.StatusOK
 	}
 

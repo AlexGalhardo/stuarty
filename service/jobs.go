@@ -29,7 +29,8 @@ const (
 
 var jobStates = []string{JobQueued, JobRunning, JobSucceeded, JobFailed, JobCancelled}
 
-func isFinal(state string) bool {
+// JobFinal reports whether a job state is final: succeeded, failed or cancelled.
+func JobFinal(state string) bool {
 	return state == JobSucceeded || state == JobFailed || state == JobCancelled
 }
 
@@ -401,7 +402,7 @@ func (s *svc) waitJob(ctx context.Context, id string, d time.Duration) {
 
 	for {
 		row, err := s.store.Jobs().Get(ctx, id)
-		if err != nil || isFinal(row.State) || time.Now().After(deadline) {
+		if err != nil || JobFinal(row.State) || time.Now().After(deadline) {
 			return
 		}
 
@@ -568,7 +569,7 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 			withHint("use a key that covers this project")
 	}
 
-	if row.Kind == JobIngest && row.AssetHash != nil && !isFinal(row.State) {
+	if row.Kind == JobIngest && row.AssetHash != nil && !JobFinal(row.State) {
 		done, cerr := s.cancelSharedIngest(ctx, c, &row)
 		if cerr != nil {
 			return nil, asError(cerr)
@@ -587,7 +588,7 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 		return nil, asError(err)
 	}
 
-	if !isFinal(row.State) {
+	if !JobFinal(row.State) {
 		s.waitJob(ctx, row.ID, cancelWait)
 	}
 
@@ -708,7 +709,7 @@ func (s *svc) cancelJob(ctx context.Context, id string) error {
 		return err
 	}
 
-	if isFinal(before.State) {
+	if JobFinal(before.State) {
 		return nil
 	}
 

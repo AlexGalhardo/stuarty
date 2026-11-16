@@ -18,10 +18,6 @@ import (
 // maxServiceWait is the longest wait_ms the Service accepts.
 const maxServiceWait = 25 * time.Second
 
-func isFinal(state string) bool {
-	return state == service.JobSucceeded || state == service.JobFailed || state == service.JobCancelled
-}
-
 // waitSlice is the wait_ms of the next call: what is left of the deadline,
 // at most what the Service accepts.
 func waitSlice(deadline time.Time) int {
@@ -303,7 +299,7 @@ var export = &spec{
 // jobOutput waits for the job when asked and reports it. A job that failed or
 // was cancelled is exit 1; a wait that ran out is exit 2 (SDD-003 section 5.1).
 func jobOutput(ctx context.Context, c *call, job *service.Job, wait bool, deadline time.Time) (*output, error) {
-	for wait && !isFinal(job.State) && time.Until(deadline) > 0 {
+	for wait && !service.JobFinal(job.State) && time.Until(deadline) > 0 {
 		var err error
 
 		job, err = c.svc.JobGet(ctx, service.JobGetRequest{JobID: job.JobID, WaitMS: waitSlice(deadline)})
@@ -315,7 +311,7 @@ func jobOutput(ctx context.Context, c *call, job *service.Job, wait bool, deadli
 	out := &output{value: job, text: job.Text}
 
 	switch {
-	case !isFinal(job.State) && wait:
+	case !service.JobFinal(job.State) && wait:
 		out.exit = ExitTransient
 		out.text = strings.TrimRight(stripStill(job.Text), "\n") +
 			fmt.Sprintf("\nstill running: run vukem-video job:show %s --wait", job.JobID)

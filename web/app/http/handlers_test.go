@@ -172,6 +172,48 @@ func TestProjectETagChangesWhenTheProjectIsTrashed(t *testing.T) {
 	}
 }
 
+// dryService answers every job start as a queued job, as a dry run does, and
+// records whether the call was a dry run.
+type dryService struct {
+	service.Service
+	dry *[]bool
+}
+
+func (d dryService) JobStart(_ context.Context, req service.JobStartRequest) (*service.Job, error) {
+	*d.dry = append(*d.dry, req.DryRun)
+
+	return &service.Job{JobID: "job_0000000001", Kind: req.Kind, State: service.JobQueued}, nil
+}
+
+// A dry run answers 200 whether it is asked in the query or in the body.
+func TestJobStartDryRunAnswersOKInQueryAndBody(t *testing.T) {
+	t.Parallel()
+
+	var seen []bool
+
+	h := newHarnessWrapped(t, events.Options{}, func(s service.Service) service.Service {
+		return dryService{Service: s, dry: &seen}
+	})
+	id := h.newProject("dry")
+
+	for name, res := range map[string]resp{
+		"query": h.post("/api/v1/projects/"+id+"/jobs?dry_run=true", `{"kind":"export"}`),
+		"body":  h.post("/api/v1/projects/"+id+"/jobs", `{"kind":"export","dry_run":true}`),
+	} {
+		if res.status != http.StatusOK {
+			t.Errorf("dry run in the %s = %d %s, want 200", name, res.status, res.body)
+		}
+	}
+
+	if len(seen) != 2 || !seen[0] || !seen[1] {
+		t.Errorf("the service saw dry flags %v, want [true true]", seen)
+	}
+
+	if res := h.post("/api/v1/projects/"+id+"/jobs", `{"kind":"export"}`); res.status != http.StatusAccepted {
+		t.Errorf("a queued job = %d, want 202", res.status)
+	}
+}
+
 func TestCommandsListAndGet(t *testing.T) {
 	t.Parallel()
 
