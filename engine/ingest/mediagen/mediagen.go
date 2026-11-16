@@ -110,6 +110,16 @@ func (g Gen) AudioFile(ctx context.Context, name string, codec ...string) (strin
 	return g.ff(ctx, name, append(tone(2), codec...)...)
 }
 
+// NoisyTone is a 2 s WAV of white noise (about -48 dBFS once normalized) with a 440 Hz tone joining it at 1 s (the first second is the
+// noise alone, as a pause in speech is), for the tests of the noise reduction. The noise is seeded, so the file is the same bytes every time.
+func (g Gen) NoisyTone(ctx context.Context, name string) (string, error) {
+	return g.ff(ctx, name,
+		"-f", "lavfi", "-i", "sine=f=440:r=48000:d=2",
+		"-f", "lavfi", "-i", "anoisesrc=d=2:r=48000:a=0.004:c=white:seed=1",
+		"-filter_complex", "[0:a]volume='if(gte(t,1),1,0)':eval=frame[t];[t][1:a]amix=inputs=2:normalize=0",
+		"-c:a", "pcm_s16le", "-f", "wav")
+}
+
 // Speech3Pauses is a WAV of four 1 s tones separated by pauses of 0.5 s, 1.0 s and 0.2 s of
 // digital silence: the speech fixture of the silence tests.
 func (g Gen) Speech3Pauses(ctx context.Context) (string, error) {

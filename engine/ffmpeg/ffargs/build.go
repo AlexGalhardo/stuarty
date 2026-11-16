@@ -126,6 +126,10 @@ func ATrimStart(startSample int) Filter {
 // the export chains them for a speed outside 0.5 to 2 (SDD-004 section 7).
 func ATempo(tempo float64) Filter { return Filter(fmt.Sprintf("atempo=%.6f", tempo)) }
 
+// AFFTDN reduces the noise of audio by nr decibels (0.01 to 97), taking the noise to lie at nf dBFS
+// (-80 to -20) and tracking it as it goes (SDD-004 section 7).
+func AFFTDN(nr, nf float64) Filter { return Filter(fmt.Sprintf("afftdn=nr=%.2f:nf=%.2f:tn=1", nr, nf)) }
+
 // Ebur128 measures loudness and prints the summary on stderr.
 func Ebur128() Filter { return "ebur128=peak=true:framelog=quiet" }
 

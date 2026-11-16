@@ -121,7 +121,14 @@ var filters = map[string]filterSpec{
 	"atrim":         {opts: map[string]kind{"start_sample": intRange(0, 1<<30), "end_sample": intRange(1, 1<<30)}},
 	"silencedetect": {opts: map[string]kind{"noise": kDB, "d": match(`^[0-9]{1,3}(\.[0-9]{1,3})?$`)}},
 	"ebur128":       {opts: map[string]kind{"peak": enum("true"), "framelog": enum("quiet")}},
-	"atempo":        {pos: []string{"tempo"}, opts: map[string]kind{"tempo": match(`^[0-9]{1,2}(\.[0-9]{1,6})?$`)}},
+	"afftdn": {opts: map[string]kind{
+		"nr": match(
+			`^(0\.0[1-9]|0\.[1-9][0-9]?|([1-9]|[1-8][0-9]|9[0-6])(\.[0-9]{1,2})?|97(\.0{1,2})?)$`,
+		),
+		"nf": match(`^-(2[0-9]|[3-7][0-9])(\.[0-9]{1,2})?$|^-80(\.0{1,2})?$`),
+		"tn": enum("1"),
+	}},
+	"atempo": {pos: []string{"tempo"}, opts: map[string]kind{"tempo": match(`^[0-9]{1,2}(\.[0-9]{1,6})?$`)}},
 }
 
 // lavfiSources are the only -f lavfi inputs (FF-12) plus testsrc2 for the detection runs.
