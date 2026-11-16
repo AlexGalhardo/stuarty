@@ -55,6 +55,7 @@ export default function NumberField({
 				error: {
 					code: "E_VALIDATION",
 					message: "",
+					details: { min, max },
 				},
 			};
 		}
