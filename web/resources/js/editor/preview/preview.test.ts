@@ -12,6 +12,7 @@ import {
 	PlaybackClock,
 	playbackRateFor,
 	rankVideoLayers,
+	shouldCommitFrame,
 } from "./mediaSync";
 import {
 	PausedFrame,
@@ -94,6 +95,13 @@ describe("plan values", () => {
 });
 
 describe("media sync", () => {
+	test("React state follows the frame only when it must", () => {
+		expect(shouldCommitFrame(false, false, 1, 0, 250)).toBe(true);
+		expect(shouldCommitFrame(true, false, 100, 0, 250)).toBe(false);
+		expect(shouldCommitFrame(true, false, 250, 0, 250)).toBe(true);
+		expect(shouldCommitFrame(true, true, 1, 0, 250)).toBe(true);
+	});
+
 	test("an audio item's target time advances with the frame", () => {
 		const audio = { first: 10, source_seconds: 2, speed: 1 };
 		expect(audioSourceSeconds(audio, 10, fps)).toBeCloseTo(2);

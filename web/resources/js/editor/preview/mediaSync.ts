@@ -38,6 +38,19 @@ export function playbackRateFor(
 	return Math.min(Math.max(slope, MIN_RATE), MAX_RATE);
 }
 
+// While playing, React state follows the frame at most every `everyMs`, unless
+// an overlay needs the exact frame; the timecode is written directly
+// (SDD-012 section 19.2 rule 1).
+export function shouldCommitFrame(
+	playing: boolean,
+	needsLive: boolean,
+	now: number,
+	last: number,
+	everyMs: number,
+): boolean {
+	return !playing || needsLive || now - last >= everyMs;
+}
+
 // During playback the element's `currentTime` is corrected only when it drifts
 // by more than 2 frames from the plan (SDD-004 section 10 item 2).
 export function needsCorrection(
