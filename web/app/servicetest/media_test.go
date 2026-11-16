@@ -2,6 +2,8 @@ package servicetest
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -626,5 +628,26 @@ func TestIngestJobStoresTheSoundMaps(t *testing.T) {
 
 	if !found["speech"] || !found["beats"] {
 		t.Errorf("artifact kinds = %v, want speech and beats", found)
+	}
+}
+
+// An edit that names an asset whose ingest has not finished is E_ASSET_NOT_READY, not
+// E_NOT_FOUND (VV-022).
+func TestEditWithAnAssetStillIngestingIsNotReady(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true})
+	project := m.newProject("p")
+	asset := m.importOne(project, m.write("clip.mp4", clipBytes)).Assets[0]
+
+	_, err := m.svc.Edit(m.as(ui), service.EditRequest{
+		ProjectID: project,
+		Operations: []command.Operation{
+			op("track.add", `{"kind":"visual","id":"trk_f6g7h8j9k0"}`),
+			op("clip.add", fmt.Sprintf(`{"track_id":"trk_f6g7h8j9k0","asset_id":%q,"start":"0s"}`, asset.AssetID)),
+		},
+	})
+
+	var se *service.Error
+	if !errors.As(err, &se) || se.Code != "E_ASSET_NOT_READY" || !se.IsRetryable() {
+		t.Fatalf("error = %v", err)
 	}
 }
