@@ -227,3 +227,49 @@ func TestErrorTextAndUnwrap(t *testing.T) {
 		t.Errorf("Error() without a cause = %q", got)
 	}
 }
+
+func TestStoreRefusesALinkInsideTheStore(t *testing.T) {
+	s := New(t.TempDir())
+	outside := filepath.Join(t.TempDir(), "outside.bin")
+	if err := os.WriteFile(outside, bytes.Repeat([]byte{7}, 64), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	hash := sum([]byte("linked"))
+	p, err := s.Path(hash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, p); err != nil {
+		t.Skipf("symlinks are not available: %v", err)
+	}
+	if s.Has(hash) {
+		t.Error("Has followed a link")
+	}
+	_, err = s.Open(hash)
+	var e *Error
+	if !errors.As(err, &e) || e.Reason != "not_regular" {
+		t.Errorf("Open of a link: %v", err)
+	}
+}
+
+func TestStoreRefusesAnythingThatIsNotARegularFile(t *testing.T) {
+	s := New(t.TempDir())
+	hash := sum([]byte("a folder"))
+	p, err := s.Path(hash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(p, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if s.Has(hash) {
+		t.Error("Has accepted a folder")
+	}
+	var e *Error
+	if _, err := s.Open(hash); !errors.As(err, &e) || e.Reason != "not_regular" {
+		t.Errorf("Open of a folder: %v", err)
+	}
+}

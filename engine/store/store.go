@@ -243,7 +243,7 @@ func (s *Store) Has(hash string) bool {
 	if err != nil {
 		return false
 	}
-	st, err := os.Stat(p)
+	st, err := os.Lstat(p)
 	return err == nil && st.Mode().IsRegular()
 }
 
@@ -252,6 +252,17 @@ func (s *Store) Open(hash string) (*os.File, error) {
 	p, err := s.Path(hash)
 	if err != nil {
 		return nil, err
+	}
+	// Lstat does not follow links: a link inside store/ is refused (SDD-007 section 6.4 item 4).
+	st, err := os.Lstat(p)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, &Error{Code: CodeNotFound, Reason: "not_stored", Message: "the file is not in the store", Err: err}
+	}
+	if err != nil {
+		return nil, err
+	}
+	if !st.Mode().IsRegular() {
+		return nil, &Error{Code: CodeNotFound, Reason: "not_regular", Message: "the stored file is not a regular file"}
 	}
 	f, err := os.Open(p)
 	if errors.Is(err, fs.ErrNotExist) {
