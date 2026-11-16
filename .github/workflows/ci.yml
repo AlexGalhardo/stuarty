@@ -148,6 +148,10 @@ jobs:
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
           echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       - name: go test
+        # Non-blocking for the export shards while the golden frames diverge on the runners
+        # (CPU-dependent bytes, under investigation): the author asked on 2026-11-16 to keep the
+        # recurring failures from blocking releases v0.21.0 to v0.23.0. The failures stay in the log.
+        continue-on-error: ${{ startsWith(matrix.shard, 'export') }}
         shell: bash # PowerShell would split -coverprofile=coverage.out at the dot
         # -coverpkg=./... credits a package with what the tests of the others
         # execute: the wiring packages of web/ (bootstrap, routes, seeders) are
@@ -224,8 +228,16 @@ jobs:
           jobs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs" \
             --jq ".jobs[] | select(.name | startswith(\"Go tests (\") and endswith(\", ${RUNNER_OS_NAME})\")) | .name + \" \" + (.conclusion // \"running\")")"
           echo "$jobs"
-          test "$(printf '%s\n' "$jobs" | grep -c .)" -eq 5
-          if printf '%s\n' "$jobs" | grep -qv ' success$'; then
+          if [ "${RUNNER_OS_NAME}" != macos-latest ]; then
+            test "$(printf '%s\n' "$jobs" | grep -c .)" -eq 5
+          fi
+          # macOS shards are often cancelled before a runner picks them up (5 concurrent macOS jobs
+          # for a public repository): a cancelled macOS shard is reported, not failed (2026-11-16).
+          if [ "${RUNNER_OS_NAME}" = macos-latest ] && printf '%s\n' "$jobs" | grep -q ' cancelled$'; then
+            echo "::warning::a macOS Go test shard was cancelled (no runner); not blocking"
+            jobs="$(printf '%s\n' "$jobs" | grep -v ' cancelled$')"
+          fi
+          if printf '%s\n' "$jobs" | grep -q . && printf '%s\n' "$jobs" | grep -qv ' success$'; then
             echo "::error::a Go test shard of ${RUNNER_OS_NAME} did not pass"
             exit 1
           fi
