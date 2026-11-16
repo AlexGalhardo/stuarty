@@ -5,7 +5,7 @@ description: "Why every time is a string with a unit, and how the project frame 
 
 ## The idea
 
-Inside a project, time is a whole number of frames at the project frame rate. A cut can never fall between two frames, so two edits at "the same time" are the same frame.
+Inside a project, time is a whole number of frames at the project <Term id="frame">frame</Term> rate. A cut can never fall between two frames, so two edits at "the same time" are the same frame.
 
 On every input a time is a string with a unit: `12.5s`, `375f` or `00:00:12.500`. A bare number is rejected, because `5` could mean seconds, frames or milliseconds. The one exception is `wait_ms`, whose unit is in its name.
 

@@ -6,7 +6,7 @@ description: "Import video, audio and images, wait for the ingest, and see what 
 ## You will learn
 
 - how to import files and wait until they are usable;
-- how to read the probe, the silences and the loudness of an asset.
+- how to read the probe, the silences and the loudness of an <Term id="asset">asset</Term>.
 
 ## The idea
 
@@ -37,7 +37,7 @@ Paths are absolute on the machine that runs the server; the CLI makes them absol
 
 A GIF, an animated WebP or an APNG with more than one frame becomes an image asset that remembers the delay of every frame. Place it with `clip.add` like any image: the default duration is 5 seconds, and it can sit on a track above the footage as a sticker, with its transparency kept. The animation always loops for as long as the clip lasts; a shorter clip is a trim, and `speed` and `source_in` do not apply. The preview and the export pick the same frame for the same time.
 
-An animation of more than 1,000 frames, or whose frames add up to more than 134,217,728 pixels, is refused with `E_LIMIT_EXCEEDED`. In the editor the proxy of an animated image is its first frame.
+An animation of more than 1,000 frames, or whose frames add up to more than 134,217,728 pixels, is refused with `E_LIMIT_EXCEEDED`. In the editor the <Term id="proxy">proxy</Term> of an animated image is its first frame.
 
 ## Common mistakes
 

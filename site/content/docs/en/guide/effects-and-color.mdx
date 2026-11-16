@@ -6,13 +6,13 @@ description: "Correct the color of a clip, add a filter or a blur, blend layers,
 ## You will learn
 
 - how to correct the color of a clip;
-- how to apply a filter and a blur;
-- how to blend a layer with the ones below it, key out a color and mask a layer;
+- how to apply a filter and a <Term id="blur">blur</Term>;
+- how to <Term id="blend-mode">blend</Term> a layer with the ones below it, key out a color and <Term id="mask">mask</Term> a layer;
 - how to give text an entrance and an exit with a preset.
 
 ## The idea
 
-An effect is a property of an item, not a separate object: you set it with one operation, and the preview and the export apply it the same way through the same [render plan](/docs/concepts/render). In the editor the inspector of a clip has a section for each one: **Colour**, **Filters** (with the blur), **Blend** and **Chroma key**. A mask has no inspector section yet; use the CLI, an agent or the command palette (`Ctrl+K`, `Cmd+K` on macOS).
+An effect is a property of an item, not a separate object: you set it with one operation, and the preview and the export apply it the same way through the same [render plan](/docs/concepts/render). In the editor the inspector of a clip has a section for each one: **Colour**, **Filters** (with the blur), **Blend** and **<Term id="chroma-key">Chroma key</Term>**. A mask has no inspector section yet; use the CLI, an agent or the command palette (`Ctrl+K`, `Cmd+K` on macOS).
 
 A value equal to its default clears the stored one, so an item that is back at the defaults has no effect stored at all.
 
@@ -29,7 +29,7 @@ vukem-video edit --project prj_7k2m9x4q1b clip.set_color item_id=itm_m1n2p3q4r5 
 
 `clip.set_filter` sets one filter of a fixed list, `grayscale`, `sepia`, `invert`, `warm` or `cool` (`none` is the default), and `amount`, from 0 (the original) to 1 (the full filter). `clip.set_blur` sets a Gaussian blur radius in pixels at the project resolution, from 0 to 100.
 
-Both are constant over the clip: they cannot be keyframed. The filter is applied after the color correction and before the blur.
+Both are constant over the clip: they cannot be keyframed. The filter is applied after the <Term id="color-correction">color correction</Term> and before the blur.
 
 ```bash
 vukem-video edit --project prj_7k2m9x4q1b clip.set_filter item_id=itm_m1n2p3q4r5 filter=sepia amount:=0.6
@@ -86,7 +86,7 @@ Text styling (font, weight, size, color, stroke, shadow and background) is in [T
 
 ## Common mistakes
 
-- A contrast above 2, a brightness outside -1 to 1, a blur radius above 100 or a filter amount outside 0 to 1: `E_VALIDATION`.
+- A <Term id="contrast">contrast</Term> above 2, a brightness outside -1 to 1, a blur radius above 100 or a filter amount outside 0 to 1: `E_VALIDATION`.
 - A preset, a filter, a blur, a blend, a key or a mask on an audio item: `E_TYPE_MISMATCH`. A chroma key works on clips only.
 - A mask larger than the item (`x` plus `width` above 1): `E_VALIDATION`.
 - A preset duration longer than the item: the command is refused.

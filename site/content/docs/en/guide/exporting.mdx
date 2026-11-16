@@ -10,7 +10,7 @@ description: "Render a project to an MP4, GIF, WAV or AAC file, wait for it, and
 
 ## The idea
 
-An export is a **job**. It renders the current revision, encodes an MP4 with FFmpeg and verifies the file (streams, duration, dimensions, pixel format and fast start) before the job is marked `succeeded`. A file that fails verification is never reported as done.
+An export is a **job**. It renders the current revision, encodes an MP4 with FFmpeg and verifies the file (streams, duration, dimensions, pixel format and <Term id="fast-start">fast start</Term>) before the job is marked `succeeded`. A file that fails verification is never reported as done.
 
 The export is refused while the lint finds an error, with `E_LINT_BLOCKING` and the first findings. Warnings never block.
 
@@ -77,7 +77,7 @@ vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --dry-run
 vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --base-revision 12
 ```
 
-`otio:import` reads a file from the machine that runs the server and applies it to the project as one batch, so one `undo` reverts it. The frame rate of the file must be the project's. The media of the file are never opened: a reference is matched by name to an asset already in the project, and the ones that match nothing are listed as unresolved. `--dry-run` shows what would change; `--base-revision` defaults to the current revision. The HTTP API has `GET` and `POST /api/v1/projects/{id}/otio`. There is no MCP tool for OpenTimelineIO.
+`otio:import` reads a file from the machine that runs the server and applies it to the project as one batch, so one `undo` reverts it. The frame rate of the file must be the project's. The media of the file are never opened: a reference is matched by name to an asset already in the project, and the ones that match nothing are listed as unresolved. `--dry-run` shows what would change; `--base-revision` defaults to the current revision. The HTTP API has `GET` and `POST /api/v1/projects/{id}/otio`. There is no MCP tool for <Term id="opentimelineio">OpenTimelineIO</Term>.
 
 ## Export a project bundle
 
@@ -123,7 +123,7 @@ VUKEM_VIDEO_EXPORT_RENDERER=gpu vukem-video serve
 
 ## Common mistakes
 
-- No H.264 encoder works on this machine: `E_NO_ENCODER`. `gif`, `wav` and `aac` still export.
+- No <Term id="h264">H.264</Term> encoder works on this machine: `E_NO_ENCODER`. `gif`, `wav` and `aac` still export.
 - Importing a bundle whose project id already exists: `E_ID_EXISTS`. Use `--as-new`.
 - Too many exports at once: `E_QUEUE_FULL`, retryable. `VUKEM_VIDEO_MAX_EXPORTS` sets the limit.
 
