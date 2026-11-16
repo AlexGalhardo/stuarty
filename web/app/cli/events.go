@@ -18,6 +18,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
+	event "github.com/AlexGalhardo/vukem-video/service/events"
 )
 
 // EventsQuery is what the stream of a project is opened with.
@@ -83,13 +84,19 @@ func runEvents(ctx context.Context, c *call) (*output, error) {
 			break // interrupted: a normal end
 		}
 
-		last, n, done := c.rt.copyEvents(ctx, body, limit-seen, limit > 0)
+		last, n, done, resync := c.rt.copyEvents(ctx, body, limit-seen, limit > 0)
 		_ = body.Close()
 
 		seen += n
 
 		if last != "" {
 			q.LastEventID = last
+		}
+
+		// The server cannot replay from the resume point: continue live from
+		// now instead of asking for it again once a second.
+		if resync {
+			q.LastEventID, q.Since = "", ""
 		}
 
 		if done {
@@ -106,9 +113,32 @@ func runEvents(ctx context.Context, c *call) (*output, error) {
 	return nil, nil //nolint:nilnil // a stream command prints its own output
 }
 
+// field reads one line of a block into the event and the data lines. A comment
+// (the heartbeat) starts with a colon and is ignored.
+func (e *eventLine) field(line string, data []string) []string {
+	k, v, ok := strings.Cut(line, ":")
+	if !ok || k == "" {
+		return data
+	}
+
+	v = strings.TrimPrefix(v, " ")
+
+	switch k {
+	case "id":
+		e.ID = v
+	case "event":
+		e.Name = v
+	case "data":
+		data = append(data, v)
+	}
+
+	return data
+}
+
 // copyEvents prints the events of one stream and returns the id of the last
-// one, how many it printed and whether the count was reached.
-func (rt *Runtime) copyEvents(ctx context.Context, r io.Reader, left int, counted bool) (string, int, bool) {
+// one, how many it printed and whether the count was reached. It also says
+// whether the server asked to resync; that event is printed but not counted.
+func (rt *Runtime) copyEvents(ctx context.Context, r io.Reader, left int, counted bool) (string, int, bool, bool) {
 	sc := bufio.NewScanner(r)
 	sc.Buffer(make([]byte, 0, 64<<10), sseMaxLine)
 
@@ -117,25 +147,15 @@ func (rt *Runtime) copyEvents(ctx context.Context, r io.Reader, left int, counte
 		data []string
 		last string
 		n    int
+
+		resync bool
 	)
 
 	for sc.Scan() && ctx.Err() == nil {
 		line := sc.Text()
 
 		if line != "" {
-			// A comment (the heartbeat) starts with a colon.
-			if k, v, ok := strings.Cut(line, ":"); ok && k != "" {
-				v = strings.TrimPrefix(v, " ")
-
-				switch k {
-				case "id":
-					cur.ID = v
-				case "event":
-					cur.Name = v
-				case "data":
-					data = append(data, v)
-				}
-			}
+			data = cur.field(line, data)
 
 			continue
 		}
@@ -151,21 +171,25 @@ func (rt *Runtime) copyEvents(ctx context.Context, r io.Reader, left int, counte
 				fmt.Fprintf(rt.Stdout, "%s\n", raw)
 			}
 
-			n++
+			if cur.Name == event.ResyncRequired {
+				resync = true
+			} else {
+				n++
+			}
 
 			if cur.ID != "" {
 				last = cur.ID
 			}
 
 			if counted && n >= left {
-				return last, n, true
+				return last, n, true, resync
 			}
 		}
 
 		cur, data = eventLine{}, nil
 	}
 
-	return last, n, false
+	return last, n, false, resync
 }
 
 // doer is the part of an HTTP client the stream needs; the client itself is
