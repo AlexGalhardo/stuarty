@@ -28,12 +28,12 @@ import { coverageSize, coverageTexels } from "./mask";
 import { MediaPool, type PoolTimers } from "./mediaPool";
 import {
 	audioClockReady,
-	audioSourceSeconds,
+	audioDrive,
 	MAX_VIDEO_LAYERS,
 	needsCorrection,
 	PlaybackClock,
-	playbackRateFor,
 	rankVideoLayers,
+	videoDrive,
 } from "./mediaSync";
 import {
 	bitmapKeyAt,
@@ -650,7 +650,14 @@ export class PixiExecutor implements PreviewExecutor {
 		);
 		const target = layer.source_seconds[at] ?? 0;
 		if (mode.playing) {
-			video.playbackRate = playbackRateFor(layer.source_seconds, info.fps);
+			const drive = videoDrive(layer.source_seconds, at, info.fps);
+			if (drive.seek) {
+				// A reversed item: one seek per frame, the element stays paused.
+				video.pause();
+				if (video.currentTime !== target) video.currentTime = target;
+				return;
+			}
+			video.playbackRate = drive.rate;
 			video.preservesPitch = true;
 			if (needsCorrection(video.currentTime, target, info.fps)) {
 				video.currentTime = target;
@@ -743,14 +750,14 @@ export class PixiExecutor implements PreviewExecutor {
 				entry.gain.gain.value = valueAt(audio.gain, frame, audio.first);
 			}
 			const element = entry.element;
-			element.playbackRate = audio.speed;
-			if (!playing) {
+			const drive = audioDrive(audio, frame, info.fps);
+			element.playbackRate = drive.rate;
+			if (!playing || drive.silent) {
 				element.pause();
 				continue;
 			}
-			const target = audioSourceSeconds(audio, frame, info.fps);
-			if (needsCorrection(element.currentTime, target, info.fps)) {
-				element.currentTime = target;
+			if (needsCorrection(element.currentTime, drive.seconds, info.fps)) {
+				element.currentTime = drive.seconds;
 			}
 			if (element.paused) void element.play().catch(() => undefined);
 		}

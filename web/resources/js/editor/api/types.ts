@@ -262,8 +262,21 @@ export interface PlanAudio {
 	last: number;
 	// at the entry's first frame (SDD-004 section 10); see audioSourceSeconds
 	source_seconds: number;
+	// The mean speed when `speed_curve` is set (SDD-004 section 3.11).
 	speed: number;
+	speed_curve?: PlanSpeedRamp;
+	// The item reads its source backwards (SDD-004 section 3.12).
+	reverse?: boolean;
 	gain: PerFrame;
+}
+
+// The ramp of a speed curve as the plan carries it: the points (`t` a fraction
+// of the item, `speed` a fraction), the item's length in frames and the item
+// frame at which the window starts.
+export interface PlanSpeedRamp {
+	points: { t: number; speed: { num: number; den: number } }[];
+	item_frames: number;
+	first_frame: number;
 }
 
 // GET /projects/{id}/plan (SDD-004 section 10).

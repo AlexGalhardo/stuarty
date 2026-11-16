@@ -1,4 +1,4 @@
-import type { PlanLayer, PlanMediaLayer } from "../api/types";
+import type { PlanLayer, PlanMediaLayer, PlanSpeedRamp } from "../api/types";
 import type { FrameRate } from "../state/selectors";
 
 export const MAX_VIDEO_LAYERS = 4;
@@ -23,19 +23,113 @@ export function audioSourceSeconds(
 	);
 }
 
-// The slope of `source_seconds` over the window, clamped to 0.25 to 4 (SDD-012
-// section 11.2 item 3).
-export function playbackRateFor(
-	sourceSeconds: readonly number[],
-	fps: FrameRate,
+// The speed of a ramp at `u`, a fraction of the item: the linear interpolation
+// of the neighbouring points (SDD-004 section 3.11).
+export function curveSpeedAt(
+	points: PlanSpeedRamp["points"],
+	u: number,
 ): number {
-	if (sourceSeconds.length < 2) return 1;
-	const first = sourceSeconds[0] ?? 0;
-	const last = sourceSeconds[sourceSeconds.length - 1] ?? 0;
+	const value = (i: number): number => {
+		const speed = points[i]?.speed;
+		return speed === undefined ? 1 : speed.num / speed.den;
+	};
+	for (let i = 0; i + 1 < points.length; i++) {
+		const t0 = points[i]?.t ?? 0;
+		const t1 = points[i + 1]?.t ?? 1;
+		if (u <= t1 || i + 2 === points.length) {
+			const f = t1 === t0 ? 0 : Math.min(Math.max((u - t0) / (t1 - t0), 0), 1);
+			return value(i) + (value(i + 1) - value(i)) * f;
+		}
+	}
+	return 1;
+}
+
+// The source frames read before item frame `r`: `D x integral of the speed from
+// 0 to r/D`, the formula of SDD-004 section 3.11 in floating point (the preview
+// only needs it to place an audio element, not to the sample).
+export function curveOffset(ramp: PlanSpeedRamp, r: number): number {
+	const d = ramp.item_frames;
+	const u = Math.min(Math.max(r / d, 0), 1);
+	let total = 0;
+	for (let i = 0; i + 1 < ramp.points.length; i++) {
+		const t0 = ramp.points[i]?.t ?? 0;
+		const t1 = ramp.points[i + 1]?.t ?? 1;
+		if (u <= t0) break;
+		const end = Math.min(u, t1);
+		total +=
+			((end - t0) *
+				(curveSpeedAt(ramp.points, t0) + curveSpeedAt(ramp.points, end))) /
+			2;
+	}
+	return total * d;
+}
+
+// The preview audio: where the proxy element should be at `frame` and how fast
+// it should play. A reversed item cannot be played by a media element, so it is
+// left silent in the preview (the export plays it).
+export interface AudioDrive {
+	seconds: number;
+	rate: number;
+	silent: boolean;
+}
+
+export function audioDrive(
+	audio: {
+		first: number;
+		source_seconds: number;
+		speed: number;
+		speed_curve?: PlanSpeedRamp;
+		reverse?: boolean;
+	},
+	frame: number,
+	fps: FrameRate,
+): AudioDrive {
+	const ramp = audio.speed_curve;
+	if (ramp === undefined) {
+		return {
+			seconds: audioSourceSeconds(audio, frame, fps),
+			rate: audio.speed,
+			silent: audio.reverse === true,
+		};
+	}
+	const r = ramp.first_frame + (frame - audio.first);
+	const frames = curveOffset(ramp, r) - curveOffset(ramp, ramp.first_frame);
+	return {
+		seconds: audio.source_seconds + frames * frameSeconds(fps),
+		rate: Math.min(
+			Math.max(
+				curveSpeedAt(ramp.points, (r + 0.5) / ramp.item_frames),
+				MIN_RATE,
+			),
+			MAX_RATE,
+		),
+		silent: audio.reverse === true,
+	};
+}
+
+// How the video element follows a layer while playing: at a rate, or, when the
+// source runs backwards (a reversed item), by a seek at every frame, because a
+// media element cannot play backwards. The rate is the slope of the next
+// `LOOKAHEAD_FRAMES` of `source_seconds`, so a curve is followed as it ramps.
+export const LOOKAHEAD_FRAMES = 8;
+
+export type VideoDrive = { seek: true } | { seek: false; rate: number };
+
+export function videoDrive(
+	sourceSeconds: readonly number[],
+	at: number,
+	fps: FrameRate,
+): VideoDrive {
+	const last = Math.min(at + LOOKAHEAD_FRAMES, sourceSeconds.length - 1);
+	// At the end of the window the slope of the last frames is the best guess.
+	const from = Math.max(Math.min(at, last - 1), 0);
+	if (last <= from) return { seek: false, rate: 1 };
 	const slope =
-		(last - first) / ((sourceSeconds.length - 1) * frameSeconds(fps));
-	if (!Number.isFinite(slope) || slope <= 0) return 1;
-	return Math.min(Math.max(slope, MIN_RATE), MAX_RATE);
+		((sourceSeconds[last] ?? 0) - (sourceSeconds[from] ?? 0)) /
+		((last - from) * frameSeconds(fps));
+	if (!Number.isFinite(slope)) return { seek: false, rate: 1 };
+	if (slope < 0) return { seek: true };
+	return { seek: false, rate: Math.min(Math.max(slope, MIN_RATE), MAX_RATE) };
 }
 
 // While playing, React state follows the frame at most every `everyMs`, unless
