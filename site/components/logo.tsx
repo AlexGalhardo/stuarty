@@ -1,14 +1,18 @@
 import { Link } from "@/components/link";
 import { useT } from "@/lib/locale-context";
 
-/** The Vukem Video mark: a play triangle above two timeline clips. */
+/** The Vukem Video mark: the corners of a viewfinder around a play triangle. */
 export function LogoMark({ className = "size-6" }: { className?: string }) {
 	return (
 		<svg viewBox="0 0 32 32" fill="none" aria-hidden className={className}>
-			<rect width="32" height="32" rx="8" fill="#7C5CFF" />
-			<path d="M11 7.5v11l9-5.5z" fill="#fff" />
-			<rect x="6" y="22" width="9" height="3" rx="1.5" fill="#fff" />
-			<rect x="17" y="22" width="9" height="3" rx="1.5" fill="#fff" fillOpacity=".6" />
+			<path
+				d="M4 10V7a3 3 0 0 1 3-3h3M22 4h3a3 3 0 0 1 3 3v3M28 22v3a3 3 0 0 1-3 3h-3M10 28H7a3 3 0 0 1-3-3v-3"
+				stroke="#7C5CFF"
+				strokeWidth="2.4"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			/>
+			<path d="M13 10.5v11l9-5.5z" fill="#7C5CFF" />
 		</svg>
 	);
 }

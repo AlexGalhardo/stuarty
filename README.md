@@ -1,7 +1,7 @@
 <div align="center">
 
 <a href="https://alexgalhardo.github.io/vukem-video" target="_blank" rel="noopener noreferrer">
-  <img src="site/public/logo.svg" alt="Vukem Video" width="400" height="250">
+  <img src="site/public/logo.svg" alt="Vukem Video" width="96" height="96">
 </a>
 
 <br/>
