@@ -612,6 +612,8 @@ func (s *svc) editResult(
 		effective[i] = OpEffect{Index: i, Op: op.Op, Effective: eff, Created: createdBy(eff, created)}
 	}
 
+	created = inOperationOrder(created, effective)
+
 	findings, totals := s.findings(before, out.Doc)
 
 	return &EditResult{
@@ -620,6 +622,32 @@ func (s *svc) editResult(
 		Created: created, Effective: effective, Diff: nonNilChanges(out.Diff),
 		Findings: findings, Lint: totals, Description: describe(out.Doc, out.Diff),
 	}
+}
+
+// inOperationOrder orders the created ids of a batch as its operations created
+// them (SDD-003): the diff lists them by id, which is random, so a caller that
+// reads created[0] would get a different object on each run. An id that no
+// operation reports keeps its place after the others.
+func inOperationOrder(created []string, effective []OpEffect) []string {
+	out := make([]string, 0, len(created))
+	seen := make(map[string]bool, len(created))
+
+	for _, e := range effective {
+		for _, id := range e.Created {
+			if !seen[id] {
+				seen[id] = true
+				out = append(out, id)
+			}
+		}
+	}
+
+	for _, id := range created {
+		if !seen[id] {
+			out = append(out, id)
+		}
+	}
+
+	return out
 }
 
 // createdBy lists the created ids that an operation reports in its effective
