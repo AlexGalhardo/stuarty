@@ -1,0 +1,43 @@
+# Benchmark limits of the regression guard (scripts/bench-gate.sh; SDD-004 section 12, SDD-009 section 13).
+# <profile> <Benchmark> <unit> <min|max> <limit>
+# Each limit is the slowest value measured on ubuntu-latest (nightly run 133226885991, CI run
+# 133561986165, 2026-11-16) worsened by the 20% of SDD-008 section 7, and never looser than the NFR
+# it belongs to. Set it again from a fresh run on the same runner after an intended change.
+#
+# pr: the fast ones, run by the Go tests job (ubuntu-latest, export-1 shard). nightly: all of them.
+
+# The compositor (SDD-004 section 12). 1.696 / 3.248 / 3.019 / 0.919 times real time.
+pr      BenchmarkComposeRotated      x_realtime min 1.36
+pr      BenchmarkComposeColorMatrix  x_realtime min 2.60
+pr      BenchmarkComposeFilter       x_realtime min 2.42
+pr      BenchmarkComposeBlur         x_realtime min 0.74
+nightly BenchmarkComposeBlur8Bands   x_realtime min 0.73
+nightly BenchmarkSampleRotatedFullFrame8Bands ns/op max 25100000
+nightly BenchmarkCopyFullFrame       ns/op max 1700000
+
+# The caption rasterizer: 7.35 ms miss, 17 us hit.
+pr      BenchmarkCaptionMiss         ns/op max 8800000
+pr      BenchmarkCaptionHit          ns/op max 20600
+
+# NFR-001, commit round trip p95: 13.7 ms and 16.5 ms (limit 50 ms).
+pr      BenchmarkCommit200Items      p95-ms max 16.4
+nightly BenchmarkRoundTrip200Items   p95-ms max 19.8
+
+# NFR-006 and NFR-007 (60 s export, 500 MB), NFR-009 project: 1.407 times real time, 122 MB.
+nightly BenchmarkExportCommonCase    x_realtime min 1.14
+nightly BenchmarkExport60s           s_export max 50.1
+nightly BenchmarkExport60s           peak_MB max 127
+nightly BenchmarkExportScale60s      s_export max 51.2
+nightly BenchmarkExportScale60s      peak_rss_MB max 147
+nightly BenchmarkReleaseFPS60        x_realtime min 10.2
+nightly BenchmarkReleaseFourK        x_realtime min 0.095
+nightly BenchmarkReleaseFourK        peak_MB max 461
+nightly BenchmarkReleaseGIF          x_realtime min 21.5
+nightly BenchmarkReleaseAnimatedImage x_realtime min 4.98
+
+# NFR-004, NFR-022, NFR-023 and NFR-005 (limits 500 ms, 1,600 tokens, 2 s, 30 s).
+nightly BenchmarkViewFrameColdScale/UI540    p95_ms max 95
+nightly BenchmarkViewFrameColdScale/Agent384 p95_ms max 90
+nightly BenchmarkViewSheet9Scale     tokens max 1600
+nightly BenchmarkViewSheet9Scale     sheet_ms max 700
+nightly BenchmarkIngest60s           s_ingest max 24.6

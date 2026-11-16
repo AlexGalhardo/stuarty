@@ -192,6 +192,22 @@ jobs:
         run: |
           go test -run '^$' -bench BenchmarkExportCommonCase -benchtime=1x -count=1 -timeout=10m ./engine/export/ | tee bench.txt
           { echo '### BenchmarkExportCommonCase (${{ matrix.os }})'; echo '```'; grep -E "^Benchmark|x real time" bench.txt || echo "skipped: no pinned LGPL FFmpeg on this runner"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      # Regression guard (TASK-0136): the fast benchmarks must stay within the limits of
+      # .github/bench-limits.txt (the slowest value measured on ubuntu-latest worsened by
+      # 20%), on the reference runner only: other runners have other CPUs and no limits.
+      - name: Benchmark limits (regression guard)
+        if: matrix.shard == 'export-1' && runner.os == 'Linux'
+        shell: bash
+        run: |
+          {
+            go test -run '^$' -bench 'ComposeRotated|ComposeColorMatrix|ComposeFilter|ComposeBlur$' -benchtime=20x -count=1 -timeout=5m ./engine/export/
+            go test -run '^$' -bench 'Commit200Items$' -benchtime=3x -count=1 -timeout=5m ./web/app/servicetest/
+            go test -run '^$' -bench 'CaptionMiss$|CaptionHit$' -benchtime=300ms -count=1 -timeout=5m ./engine/raster/
+          } | tee limits-bench.txt
+          status=0
+          bash scripts/bench-gate.sh pr .github/bench-limits.txt limits-bench.txt | tee limits-gate.txt || status=$?
+          { echo '### Benchmark limits (ubuntu-latest)'; echo '```'; cat limits-gate.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
       # Only Linux feeds the coverage gate (see the Test job).
       - name: Upload coverage
         if: runner.os == 'Linux'

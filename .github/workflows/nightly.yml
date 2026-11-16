@@ -34,13 +34,21 @@ jobs:
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
           echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+      # shell: bash turns on pipefail: without it `| tee` hid the exit code of go test and a
+      # failed benchmark (BenchmarkExportCommonCase at 1.43 x real time, run 133226885991)
+      # left the job green. The floors are in .github/bench-limits.txt, not in
+      # VUKEM_VIDEO_BENCH_MIN_RT: the runners of ubuntu-latest differ by 30% (1.43 and 1.92).
       - name: Benchmarks
-        env:
-          VUKEM_VIDEO_BENCH_MIN_RT: "1.5"
+        shell: bash
         run: |
-          go test -run '^$' -bench . -benchtime=3x -benchmem -count=1 -timeout=15m ./core/... ./engine/... ./web/app/servicetest/... | tee bench.txt
+          status=0
+          go test -run '^$' -bench . -benchtime=3x -benchmem -count=1 -timeout=15m ./core/... ./engine/... ./web/app/servicetest/... | tee bench.txt || status=$?
           { echo '### Benchmarks'; echo '```'; grep -E "^(Benchmark|ok|FAIL)" bench.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          bash scripts/bench-gate.sh nightly .github/bench-limits.txt bench.txt | tee limits-gate.txt || status=$?
+          { echo '### Benchmark limits'; echo '```'; cat limits-gate.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
       - name: The 60 s export (NFR-006, NFR-007)
+        shell: bash
         run: |
           go test -count=1 -v -run TestExportSixtySecondsStaysUnder500MB -timeout=10m ./engine/export/ | tee export60.txt
           { echo '### 60 s export'; echo '```'; grep -E "x real time|^(ok|FAIL|--- )" export60.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
