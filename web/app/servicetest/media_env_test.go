@@ -249,7 +249,11 @@ func fakeResult(ws string, in ingest.Input) (*ingest.Result, error) {
 		Audio: &ingest.AudioFacts{Codec: "aac", SampleRate: 48000, Channels: 2},
 	}
 
-	probe, err := json.Marshal(sum)
+	// The shape engine/ingest writes (SDD-011 section 3.2): the summary next to the raw ffprobe JSON.
+	probe, err := json.Marshal(struct {
+		Summary *ingest.Summary `json:"summary"`
+		FFprobe json.RawMessage `json:"ffprobe"`
+	}{sum, json.RawMessage(`{"format":{"filename":""}}`)})
 	if err != nil {
 		return nil, err
 	}

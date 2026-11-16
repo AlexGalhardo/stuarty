@@ -625,7 +625,9 @@ func (s *svc) probeOf(ctx context.Context, project *ProjectRow, ar *AssetRow) *P
 	return p
 }
 
-// readSummary reads probe-1.json of an asset; nil when it cannot be read.
+// readSummary reads the summary of probe-1.json of an asset, which engine/ingest
+// writes as {"summary": ..., "ffprobe": ...} (SDD-011 section 3.2); nil when it
+// cannot be read.
 func (s *svc) readSummary(ctx context.Context, hash string) *ingest.Summary {
 	arts, err := s.store.Assets().Artifacts(ctx, hash)
 	if err != nil {
@@ -637,12 +639,14 @@ func (s *svc) readSummary(ctx context.Context, hash string) *ingest.Summary {
 		return nil
 	}
 
-	var sum ingest.Summary
-	if json.Unmarshal(raw, &sum) != nil {
+	var doc struct {
+		Summary *ingest.Summary `json:"summary"`
+	}
+	if json.Unmarshal(raw, &doc) != nil {
 		return nil
 	}
 
-	return &sum
+	return doc.Summary
 }
 
 // readArtifact reads a small JSON artifact of a kind; nil when it is missing,
