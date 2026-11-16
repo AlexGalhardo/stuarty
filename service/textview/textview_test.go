@@ -385,3 +385,42 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 		}
 	}
 }
+
+func TestJobTextLeavesAStaleMessageOutAndShowsWhereTheFileIs(t *testing.T) {
+	t.Parallel()
+
+	done := JobView{
+		ID: "job_1", Kind: "export", State: "succeeded", Percent: 100, Message: "Rendering (98%)",
+		Width: 1080, Height: 1920, Duration: "4s/120f", SizeText: "3.9 MiB",
+	}
+
+	local := done
+	local.File = "/ws/exports/job_1.mp4"
+
+	if got, want := Job(
+		local,
+	), "job_1 export succeeded 100% file=/ws/exports/job_1.mp4 1080x1920 4s/120f 3.9 MiB"; got != want {
+		t.Errorf("local = %q, want %q", got, want)
+	}
+
+	remote := done
+	remote.URL = "/api/v1/jobs/job_1/file"
+
+	if got, want := Job(
+		remote,
+	), "job_1 export succeeded 100% url=/api/v1/jobs/job_1/file 1080x1920 4s/120f 3.9 MiB"; got != want {
+		t.Errorf("remote = %q, want %q", got, want)
+	}
+
+	audio := local
+	audio.Audio = true
+
+	if got, want := Job(audio), "job_1 export succeeded 100% file=/ws/exports/job_1.mp4 4s/120f 3.9 MiB"; got != want {
+		t.Errorf("audio = %q, want %q", got, want)
+	}
+
+	running := JobView{ID: "job_2", Kind: "export", State: "running", Percent: 40, Message: "Rendering (40%)"}
+	if got, want := Job(running), "job_2 export running 40% Rendering (40%)"; got != want {
+		t.Errorf("running = %q, want %q", got, want)
+	}
+}

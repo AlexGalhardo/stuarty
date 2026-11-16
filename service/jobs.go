@@ -815,7 +815,8 @@ func jobText(j *Job, waited bool) string {
 
 	if j.Result != nil && j.Result.Export != nil {
 		e := j.Result.Export
-		v.File, v.Width, v.Height, v.SizeText = e.Path, e.Width, e.Height, textview.Size(e.Bytes)
+		v.File, v.URL, v.Width, v.Height, v.SizeText = e.Path, e.DownloadURL, e.Width, e.Height, textview.Size(e.Bytes)
+		v.Audio = e.Format == "wav" || e.Format == "aac"
 
 		if fps, ok := parseFPS(e.FPS); ok {
 			v.Duration = textview.Cell(timeval.FPS{Num: int64(fps.Num), Den: int64(fps.Den)}, e.Duration.Frame)
