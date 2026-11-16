@@ -121,19 +121,22 @@ func TestDoctorVerifyAgainstTheEmbeddedPins(t *testing.T) {
 func TestDoctorSaysWhenTheGPUHostIsMissing(t *testing.T) {
 	s := &svc{doctor: DoctorOptions{GPURenderer: GPURenderer{Requested: true}}}
 
-	got := s.rendererChecks()
+	got := s.rendererChecks(true)
 	if len(got) != 1 || got[0].Name != "export.renderer" || !got[0].OK ||
 		got[0].Detail != "gpu requested, vukem-render not found, using cpu" {
 		t.Fatalf("checks = %+v", got)
 	}
 
 	s.doctor.GPURenderer.Host = "/x/vukem-render"
-	if got := s.rendererChecks(); len(got) != 1 || got[0].Detail != "gpu requested, vukem-render at /x/vukem-render" {
+	if got := s.rendererChecks(
+		true,
+	); len(got) != 1 ||
+		got[0].Detail != "gpu requested, vukem-render at /x/vukem-render" {
 		t.Fatalf("checks with host = %+v", got)
 	}
 
 	s.doctor.GPURenderer = GPURenderer{}
-	if got := s.rendererChecks(); len(got) != 0 {
+	if got := s.rendererChecks(true); len(got) != 0 {
 		t.Fatalf("not requested: %+v", got)
 	}
 }

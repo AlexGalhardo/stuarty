@@ -276,7 +276,7 @@ func (s *svc) doctorChecks(ctx context.Context, privileged, verify bool) []Docto
 
 	out = append(out, s.ffmpegChecks(ctx, privileged)...)
 	out = append(out, s.childPolicyChecks()...)
-	out = append(out, s.rendererChecks()...)
+	out = append(out, s.rendererChecks(privileged)...)
 	out = append(out, s.transcribeChecks()...)
 	out = append(out, s.workspaceChecks(ctx, privileged)...)
 	out = append(out, DoctorCheck{
@@ -758,8 +758,9 @@ func (s *svc) childPolicyChecks() []DoctorCheck {
 }
 
 // rendererChecks is export.renderer, present only when the GPU renderer was requested. A missing
-// vukem-render is not a failure: the export draws on the CPU.
-func (s *svc) rendererChecks() []DoctorCheck {
+// vukem-render is not a failure: the export draws on the CPU. The path is shown only to a privileged
+// caller, like the FFmpeg paths.
+func (s *svc) rendererChecks(privileged bool) []DoctorCheck {
 	g := s.doctor.GPURenderer
 	if !g.Requested {
 		return nil
@@ -773,5 +774,10 @@ func (s *svc) rendererChecks() []DoctorCheck {
 		}}
 	}
 
-	return []DoctorCheck{{Name: "export.renderer", OK: true, Detail: "gpu requested, vukem-render at " + g.Host}}
+	detail := "gpu requested, vukem-render found"
+	if privileged {
+		detail = "gpu requested, vukem-render at " + g.Host
+	}
+
+	return []DoctorCheck{{Name: "export.renderer", OK: true, Detail: detail}}
 }
