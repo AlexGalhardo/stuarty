@@ -111,7 +111,7 @@ regexes = ['''@evil\.com''']
 [[allowlists]]
 description = "login labels in the UI catalogues and sample values in self-hosting docs"
 condition = "AND"
-paths = ['''^(?:web/resources/lang/[A-Za-z-]+\.json|site/content/docs/[a-z-]+/self-hosting/[a-z-]+\.mdx)$''']
+paths = ['''^(?:web/resources/lang/[A-Za-z-]+\.json|site/content/docs/[a-z-]+/(?:self-hosting|getting-started)/[a-z-]+\.mdx|scripts/first-export-timing\.sh)$''']
 regexTarget = "secret"
 regexes = ['''^(?:Password|Senha|@file:/run/secrets/admin_password|choose-a-long-password|a-long-password-here)$''']
 
