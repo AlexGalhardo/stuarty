@@ -38,6 +38,13 @@ describe("Timeline", () => {
 		expect(html).toContain("00:00:00");
 	});
 
+	test("a track without items still has a cell in its row", async () => {
+		const h = await startHarness({ tracks: 2, itemsPerTrack: 0 });
+		const html = render(h.runtime, <Timeline />);
+		expect(html.match(/data-track-id=/g)?.length).toBe(2);
+		expect(html.match(/role="gridcell"/g)?.length).toBe(2);
+	});
+
 	test("marks the selected item and remote highlights", async () => {
 		const h = await startHarness();
 		const id = fakeId("itm", 1);

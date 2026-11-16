@@ -109,6 +109,11 @@ export const TrackRow = memo(function TrackRow({
 					{mounted.map((itemId) => (
 						<TimelineItem key={itemId} id={itemId} />
 					))}
+					{mounted.length === 0 && (
+						// A row needs a cell (aria-required-children); an empty track keeps one.
+						// biome-ignore lint/a11y/useSemanticElements: the row sits in a CSS-positioned grid (SDD-012 section 7.1).
+						<div role="gridcell" tabIndex={-1} />
+					)}
 				</div>
 			</ContextMenuTrigger>
 			<ContextMenuContent
