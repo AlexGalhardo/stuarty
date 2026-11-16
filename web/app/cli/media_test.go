@@ -227,12 +227,12 @@ func TestExportStartsWaitsAndReportsTheOutcome(t *testing.T) {
 	}
 	h := mediaHarness(t, f)
 
-	if code := h.run("export", projectFlag, "--start", "1s", "--end", "3s"); code != ExitOK {
+	if code := h.run("export", projectFlag, "--format", "gif"); code != ExitOK {
 		t.Fatalf("exit %d: %s", code, h.stderr.String())
 	}
 
 	var args service.ExportArgs
-	if err := json.Unmarshal(f.jobStart.Args, &args); err != nil || args.Start != "1s" || args.End != "3s" {
+	if err := json.Unmarshal(f.jobStart.Args, &args); err != nil || args.Format != "gif" {
 		t.Errorf("args = %s", f.jobStart.Args)
 	}
 
@@ -345,5 +345,27 @@ func TestAbsKeepsServerPathsWhenRemote(t *testing.T) {
 	got, err := h.rt.abs("/assets/video/a.mp4")
 	if err != nil || got != "/assets/video/a.mp4" {
 		t.Errorf("abs = %q, %v", got, err)
+	}
+}
+
+// The service refuses an export range (VV-018), so the command no longer takes
+// --start or --end: the help does not offer them and they are an unknown flag.
+func TestExportDoesNotOfferARange(t *testing.T) {
+	t.Parallel()
+
+	if strings.Contains(export.usage[0], "--start") || strings.Contains(export.usage[0], "--end") {
+		t.Errorf("usage = %q", export.usage[0])
+	}
+
+	for _, f := range export.flags {
+		if f.Name == "start" || f.Name == "end" {
+			t.Errorf("flag %q is still declared", f.Name)
+		}
+	}
+
+	h := mediaHarness(t, &mediaFake{})
+
+	if code := h.run("export", projectFlag, "--start", "1s"); code != ExitFailure {
+		t.Errorf("--start: exit %d, want a failure", code)
 	}
 }

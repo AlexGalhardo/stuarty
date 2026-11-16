@@ -563,20 +563,10 @@
       "name": "export",
       "summary": "export a project to a file",
       "usage": [
-        "vukem-video export --project <id> [--start t] [--end t] [--format f] [--wait] [--timeout d]"
+        "vukem-video export --project <id> [--format f] [--wait] [--timeout d]"
       ],
       "example": "vukem-video export --project prj_7k2m9x4q1b --json",
       "flags": [
-        {
-          "name": "start",
-          "type": "string",
-          "usage": "first time to export (default: the start)"
-        },
-        {
-          "name": "end",
-          "type": "string",
-          "usage": "end of the export (default: the end of the timeline)"
-        },
         {
           "name": "format",
           "type": "string",
