@@ -233,6 +233,12 @@ func init() {
 		over(0, func(it *timeline.Item) { it.TransitionIn = fade() }))
 	rc(CodeTransitionEmpty, "quiet_transition_out_at_the_timeline_end",
 		over(30, func(it *timeline.Item) { it.TransitionOut = fade() }))
+	rc(CodeTransitionEmpty, "quiet_transition_out_of_the_last_picture_while_audio_runs_on", func() *timeline.Document {
+		d := over(30, func(it *timeline.Item) { it.TransitionOut = fade() })
+		put(d, timeline.NewItem("itm_music", timeline.ItemAudio, trkAudio, 0, 400))
+
+		return d
+	}())
 	rc(CodeTransitionEmpty, "quiet_something_lies_beneath",
 		underneath(over(30, func(it *timeline.Item) { it.TransitionIn = fade() })))
 	rc(CodeTransitionEmpty, "trigger_beneath_ends_inside_the_transition", func() *timeline.Document {
@@ -299,6 +305,18 @@ func init() {
 	rc(CodeDurationLimit, "trigger_5401_frames", long(5401))
 	rc(CodeDurationLimit, "quiet_5400_frames", long(5400))
 	rc(CodeDurationLimit, "trigger_one_hour", long(108000))
+	rc(CodeDurationLimit, "quiet_landscape_project", func() *timeline.Document {
+		d := long(5401)
+		d.Settings.Width, d.Settings.Height = 1920, 1080
+
+		return d
+	}())
+	rc(CodeDurationLimit, "trigger_square_project", func() *timeline.Document {
+		d := long(5401)
+		d.Settings.Width, d.Settings.Height = 1080, 1080
+
+		return d
+	}())
 }
 
 func init() {
@@ -353,6 +371,30 @@ func init() {
 	rc(CodeOffFrame, "quiet_shape_slightly_outside", shape(), spec("itm_sh", 700, 100, 1100, 500))
 	rc(CodeOffFrame, "quiet_box_covers_the_frame", shape(), spec("itm_sh", -600, -100, 1700, 2000))
 	rc(CodeOffFrame, "quiet_without_a_measurer", text())
+	rc(CodeOffFrame, "quiet_text_enters_by_a_slide", func() *timeline.Document {
+		d := text()
+		it := d.Items[id]
+		it.TransitionIn = &timeline.Transition{Kind: "slide_left", Duration: 10}
+		d.Items[id] = it
+
+		return d
+	}(), spec(id, 1100, 500, 1500, 650))
+	rc(CodeOffFrame, "quiet_text_with_position_keyframes", func() *timeline.Document {
+		d := text()
+		it := d.Items[id]
+		it.Keyframes = timeline.Keyframes{"x": {{T: 0, Value: 1500}, {T: 20, Value: 540}}}
+		d.Items[id] = it
+
+		return d
+	}(), spec(id, 1100, 500, 1500, 650))
+	rc(CodeOffFrame, "trigger_text_with_a_fade_only", func() *timeline.Document {
+		d := text()
+		it := d.Items[id]
+		it.TransitionIn = &timeline.Transition{Kind: "fade", Duration: 10}
+		d.Items[id] = it
+
+		return d
+	}(), spec(id, 1100, 500, 1500, 650))
 }
 
 func init() {

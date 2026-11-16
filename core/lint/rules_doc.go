@@ -22,12 +22,29 @@ func (c *check) timelineEnd() int {
 	return end
 }
 
-// durationLimit warns when the timeline is longer than 180 seconds.
+// visualEnd is the end of the last visible visual item, in frames: where the picture
+// ends, even when an audio item or a hidden track runs on.
+func (c *check) visualEnd() int {
+	end := 0
+
+	for _, it := range c.sorted() {
+		if it.Type != timeline.ItemAudio && c.visibleTrack(it.Track) {
+			end = max(end, it.Start+it.Duration)
+		}
+	}
+
+	return end
+}
+
+// durationLimit warns when a portrait or square timeline is longer than 180 seconds.
+// The limit belongs to the short vertical platforms, so a landscape project (a YouTube
+// video) is left alone (VV-021).
 func (c *check) durationLimit() {
 	fps := c.doc.Settings.FPS
 	end := c.timelineEnd()
 
-	if fps.Num < 1 || fps.Den < 1 || int64(end)*int64(fps.Den) <= int64(maxSeconds)*int64(fps.Num) {
+	if c.doc.Settings.Width > c.doc.Settings.Height || fps.Num < 1 || fps.Den < 1 ||
+		int64(end)*int64(fps.Den) <= int64(maxSeconds)*int64(fps.Num) {
 		return
 	}
 
@@ -139,9 +156,10 @@ func (c *check) audioOverlap() {
 
 // transitionEmpty reports a transition that has nothing visible beneath it, so that
 // it fades or slides over the background. A transition_in at frame 0 and a
-// transition_out at the end of the timeline are expected and left alone.
+// transition_out at the end of the picture (the last visible item) are expected and
+// left alone (VV-021).
 func (c *check) transitionEmpty() {
-	end := c.timelineEnd()
+	end := c.visualEnd()
 
 	for _, it := range c.sorted() {
 		if it.Type == timeline.ItemAudio || !c.visibleTrack(it.Track) {
