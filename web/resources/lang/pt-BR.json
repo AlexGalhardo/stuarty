@@ -695,6 +695,7 @@
           "export": "Exportar",
           "save": "Salvar (toda edição já é salva)",
           "palette": "Paleta de comandos",
+          "find": "Buscar no projeto",
           "toggle_panel": "Mostrar ou ocultar biblioteca, inspetor e histórico",
           "select_all": "Selecionar todos os itens",
           "cancel": "Cancelar, fechar ou limpar a seleção",
@@ -702,6 +703,19 @@
           "grid_keys": "Mover-se na linha do tempo",
           "cheat_sheet": "Abrir esta lista"
         }
+      },
+      "find": {
+        "label": "Buscar no projeto",
+        "placeholder": "Buscar um nome ou texto",
+        "close": "Fechar a busca",
+        "hint": "Busca nomes de itens, textos e palavras de legenda. Enter vai à próxima ocorrência, Shift+Enter à anterior, Esc fecha.",
+        "none": "Nenhuma ocorrência",
+        "found": "{count} ocorrências. Pressione Enter para ir à primeira.",
+        "position": "{current} de {count}",
+        "results": "Ocorrências",
+        "kind_name": "Nome",
+        "kind_text": "Texto",
+        "kind_word": "Palavra de legenda"
       },
       "palette": {
         "open": "Comandos (Ctrl+K)",

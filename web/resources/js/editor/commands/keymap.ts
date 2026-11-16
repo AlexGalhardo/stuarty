@@ -109,6 +109,7 @@ export const UI_SHORTCUT_ACTIONS = [
 	"surface.zoom",
 	"surface.toggle_snap",
 	"surface.palette",
+	"surface.find",
 	"surface.toggle_panel",
 	"surface.select_all",
 	"surface.select_side",
@@ -218,6 +219,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
 	{ id: "export", keys: "Mod+E", action: "surface.export" },
 	{ id: "save", keys: "Mod+S", action: "surface.saved" },
 	{ id: "palette", keys: "Mod+K", action: "surface.palette" },
+	{ id: "find", keys: "Mod+F", action: "surface.find" },
 	{
 		id: "toggle_panel",
 		keys: "Alt+1, Alt+2, Alt+3",
