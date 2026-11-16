@@ -22,7 +22,7 @@ func TestCSPMatchesSDD007(t *testing.T) {
 	nonce := regexp.MustCompile(`'nonce-[^']+'`)
 	got := nonce.ReplaceAllString(csp, "'nonce-<n>'")
 
-	want := "default-src 'self'; script-src 'self' 'nonce-<n>'; style-src 'self' 'nonce-<n>'; " +
+	want := "default-src 'self'; script-src 'self' 'nonce-<n>'; worker-src 'self'; style-src 'self' 'nonce-<n>'; " +
 		"img-src 'self' data:; media-src 'self'; connect-src 'self'; font-src 'self'; " +
 		"frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'self'"
 	if got != want {

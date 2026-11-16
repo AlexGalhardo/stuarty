@@ -17,7 +17,7 @@ const maxBody = 1 << 20
 // replaced per request by vukem. It names every fetch directive and closes
 // base-uri and object-src instead of leaving them to the framework default.
 const ContentSecurityPolicy = "default-src 'self'; script-src 'self' 'nonce-{nonce}'; " +
-	"style-src 'self' 'nonce-{nonce}'; img-src 'self' data:; media-src 'self'; connect-src 'self'; " +
+	"worker-src 'self'; style-src 'self' 'nonce-{nonce}'; img-src 'self' data:; media-src 'self'; connect-src 'self'; " +
 	"font-src 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'self'"
 
 // LangHeader carries the language the browser keeps in its own storage.
