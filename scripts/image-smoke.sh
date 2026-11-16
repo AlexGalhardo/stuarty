@@ -48,6 +48,8 @@ docker image inspect --format "{{json .Config.Env}}" "$img" | grep -q "VUKEM_VID
 docker image inspect --format "{{json .Config.Volumes}}" "$img" | grep -q "\"/data\""
 docker run --rm --entrypoint sh "$img" -c "test -s /usr/share/doc/vukem-video/LICENSE.md && test -s /usr/share/doc/vukem-video/THIRD_PARTY_NOTICES.md && test -d /usr/share/doc/vukem-video/licenses && test -s /usr/share/doc/vukem-video/base-image-packages.txt"
 docker run --rm --entrypoint prlimit "$img" --version >/dev/null
+# The whisper.cpp helper installed by tools:install needs the OpenMP runtime (VV-012).
+docker run --rm --entrypoint sh "$img" -c "ldconfig -p | grep -q libgomp.so.1"
 
 # RF-206: with no network at all, the product still runs the part of the
 # Prototype scenario that needs no media, through the CLI in the container.
