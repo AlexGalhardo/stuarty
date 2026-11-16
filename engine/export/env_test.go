@@ -138,11 +138,15 @@ type fixtureSpec struct {
 	Alpha bool `json:"alpha,omitempty"`
 	// AlphaVP9 makes the fixture a VP9 video in WebM with an alpha plane.
 	AlphaVP9 bool `json:"alpha_vp9,omitempty"`
+	// NoisyTone makes the fixture a WAV of a tone under white noise.
+	NoisyTone bool `json:"noisy_tone,omitempty"`
 }
 
 // generate writes the media file of the spec into the fixtures folder.
 func (spec fixtureSpec) generate(ctx context.Context) (string, error) {
 	switch {
+	case spec.NoisyTone:
+		return shared.gen.NoisyTone(ctx, spec.Name)
 	case len(spec.DelaysCS) > 0:
 		return shared.gen.AnimatedGIF(spec.Name, spec.Width, spec.Height, spec.DelaysCS)
 	case spec.Sticker:

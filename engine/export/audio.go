@@ -154,9 +154,13 @@ func (o *audioOpener) Open(ctx context.Context, src plan.AudioSource) (io.ReadCl
 		drop = src.SourceStart - ms*perMS
 	}
 
+	// The noise reduction cleans the decoded source before the tempo change (SDD-004 section 7).
 	var chain []ffargs.Filter
+	if nr, nf, ok := audio.DenoiseParams(src.Denoise); ok {
+		chain = append(chain, ffargs.AFFTDN(nr, nf))
+	}
 	if !speed1 && src.Speed.Den > 0 && src.Speed.Num > 0 {
-		chain = tempoChain(float64(src.Speed.Num) / float64(src.Speed.Den))
+		chain = append(chain, tempoChain(float64(src.Speed.Num)/float64(src.Speed.Den))...)
 	}
 	// A little more than needed: the mixer truncates, and a stream that ends early is padded.
 	need := src.Samples + drop

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math"
 	"os"
@@ -427,5 +428,92 @@ func TestNoAudioExportsSilentTrack(t *testing.T) {
 
 	if !found {
 		t.Errorf("no AAC stream in %s", res.Path)
+	}
+}
+
+// rmsDB is the RMS level, in dB relative to full scale, of the left channel of the samples from to to
+// (exclusive) of 16-bit stereo PCM, or of their first difference (a crude high-pass that leaves white
+// noise and drops a low tone by about 25 dB) when diff is set.
+func rmsDB(pcm []byte, from, to int, diff bool) float64 {
+	var sum float64
+
+	prev := 0.0
+
+	for i := from; i < to; i++ {
+		v := float64(int16(binary.LittleEndian.Uint16(pcm[i*4:]))) / 32768
+		if diff {
+			v, prev = v-prev, v
+		}
+
+		sum += v * v
+	}
+
+	return 10 * math.Log10(sum/float64(to-from)+1e-12)
+}
+
+// A source with denoise asks the decoder for afftdn, and a tone under white noise gets quieter as the
+// strength grows, while a denoise of 0 decodes the same bytes as no denoise at all (SDD-004 section 7).
+func TestAudioDenoiseQuietsANoisyTone(t *testing.T) {
+	doc := loadScene(t, "clip-caption")
+	job := newJob(t, doc, "mixer-denoise", "unused.mp4")
+
+	const id = "ast_noisytone"
+
+	in := ingestClip(t, fixtureSpec{Name: "noisy-tone-quiet.wav", NoisyTone: true})
+	doc.Assets[id] = timeline.Asset{Kind: timeline.AssetAudio}
+	useAsset(doc, id, in)
+
+	calls := 0
+	decode := func(denoise float64) []byte {
+		calls++
+		s := testState(t, job, fmt.Sprintf("mixer-denoise-%d", calls))
+		n := int64(2 * audio.SampleRate)
+
+		rc, err := (&audioOpener{s: s}).Open(context.Background(), plan.AudioSource{
+			ItemID: "i", AssetID: id, Samples: n, Gain: gp(0, 1), Denoise: denoise,
+			Speed: timeline.Rational{Num: 1, Den: 1},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		pcm, err := io.ReadAll(io.LimitReader(rc, n*4))
+		_ = rc.Close()
+
+		if err != nil || int64(len(pcm)) != n*4 {
+			t.Fatalf("%d bytes decoded (%v), want %d", len(pcm), err, n*4)
+		}
+
+		return pcm
+	}
+
+	plain, off, mid, full := decode(0), decode(0.0001), decode(0.4), decode(1)
+	if !bytes.Equal(plain, off) {
+		t.Error("a denoise too small to matter changed the audio")
+	}
+
+	// The first second is the noise alone (what the first difference measures); the tone joins at 1 s.
+	const sec = audio.SampleRate
+
+	na, nb, nc := rmsDB(plain, 0, sec*9/10, true), rmsDB(mid, 0, sec*9/10, true), rmsDB(full, 0, sec*9/10, true)
+	ta, tc := rmsDB(plain, sec*11/10, 2*sec, false), rmsDB(full, sec*11/10, 2*sec, false)
+	t.Logf(
+		"noise: plain %.2f dB, denoise 0.4 %.2f dB, denoise 1 %.2f dB; tone: %.2f dB then %.2f dB",
+		na,
+		nb,
+		nc,
+		ta,
+		tc,
+	)
+
+	if !(na-nb >= 3 && nb-nc >= 0.5 && math.Abs(ta-tc) < 1) {
+		t.Errorf(
+			"the noise was not reduced in proportion: %.2f, %.2f, %.2f dB (tone %.2f, %.2f dB)",
+			na,
+			nb,
+			nc,
+			ta,
+			tc,
+		)
 	}
 }

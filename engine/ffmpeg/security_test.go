@@ -96,11 +96,22 @@ func TestSecurity_T15_FilterAllowlist(t *testing.T) {
 	}
 
 	for _, graph := range []string{
-		"aresample=48000", "aformat=sample_fmts=fltp:channel_layouts=stereo", "atempo=1.5",
+		"aresample=48000", "aformat=sample_fmts=fltp:channel_layouts=stereo", "atempo=1.5", "afftdn=nr=12.50:nf=-40.00:tn=1",
 		"silencedetect=noise=-35dB:d=0.300", "ebur128=peak=true:framelog=quiet",
 	} {
 		if err := ffargs.Check(ffargs.FFmpeg, replaceAfter(t, base, "-af", graph), corpusPolicy); err != nil {
 			t.Errorf("filter graph %q was refused: %v", graph, err)
+		}
+	}
+
+	// afftdn takes only a bounded noise reduction and the tracking switch (SDD-007 FF-10).
+	for _, graph := range []string{
+		"afftdn=nr=98", "afftdn=nr=-1", "afftdn=nr=1e2", "afftdn=nr=12:nf=-10", "afftdn=nr=12:nf=-81",
+		"afftdn=nr=12:nf=x", "afftdn=nr=12:tn=0",
+		"afftdn=nr=12:bn=/etc/passwd", "afftdn=nr=12;anull", "afftdn=/etc/passwd",
+	} {
+		if err := ffargs.Check(ffargs.FFmpeg, replaceAfter(t, base, "-af", graph), corpusPolicy); err == nil {
+			t.Errorf("filter graph %q was accepted", graph)
 		}
 	}
 
