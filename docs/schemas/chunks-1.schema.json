@@ -1,0 +1,24 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://github.com/AlexGalhardo/vukem-video/docs/schemas/chunks-1.schema.json",
+	"title": "Proxy chunk index (chunks-1.json)",
+	"description": "What a WebCodecs decoder needs to read the video of a proxy without a demuxer (SDD-011 section 4.4.1, SDD-013). The four arrays have one entry per sample in decode order, so they have the same length; a schema cannot say it and TestChunkIndexMatchesItsSchema checks it.",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["version", "codec", "coded_width", "coded_height", "duration_us", "offsets", "sizes", "timestamps_us", "keyframes"],
+	"properties": {
+		"version": { "const": 1 },
+		"codec": {
+			"description": "The WebCodecs codec string of the VP9 registration: vp09.profile.level.bit depth.chroma.primaries.transfer.matrix.full range.",
+			"type": "string",
+			"pattern": "^vp09([.][0-9]{2}){8}$"
+		},
+		"coded_width": { "type": "integer", "minimum": 1, "maximum": 65535 },
+		"coded_height": { "type": "integer", "minimum": 1, "maximum": 65535 },
+		"duration_us": { "type": "integer", "minimum": 0 },
+		"offsets": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+		"sizes": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+		"timestamps_us": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+		"keyframes": { "type": "array", "items": { "type": "integer", "minimum": 0 }, "uniqueItems": true }
+	}
+}
