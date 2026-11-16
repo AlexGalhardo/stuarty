@@ -82,3 +82,20 @@ func TestBundledWeightsMatchFontsMD(t *testing.T) {
 		}
 	}
 }
+
+func TestDefaultFontWeightFallsToTheNearestAvailable(t *testing.T) {
+	doc := &Document{Fonts: map[string]ProjectFont{
+		"Regular":  {Files: []FontFile{{Weight: 400}}},
+		"Light":    {Files: []FontFile{{Weight: 300}, {Weight: 500}}},
+		"HasBold":  {Files: []FontFile{{Weight: 400}, {Weight: 700}}},
+		"Light300": {Files: []FontFile{{Weight: 200}, {Weight: 300}}},
+	}}
+
+	for family, want := range map[string]int{
+		"Inter": 700, "Anton": 400, "Regular": 400, "Light": 500, "HasBold": 700, "Light300": 300, "Unknown": 700,
+	} {
+		if got := DefaultFontWeight(doc, family); got != want {
+			t.Errorf("%s: %d, want %d", family, got, want)
+		}
+	}
+}

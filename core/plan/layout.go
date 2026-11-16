@@ -119,6 +119,10 @@ func textStyle(doc *timeline.Document, it *timeline.Item) ResolvedStyle {
 		applyStyle(doc, &st, &it.Style.TextStyle)
 	}
 
+	if it.Style == nil || it.Style.FontWeight == nil {
+		st.FontWeight = timeline.DefaultFontWeight(doc, st.FontFamily)
+	}
+
 	return st
 }
 
@@ -131,16 +135,24 @@ func captionStyle(doc *timeline.Document, it *timeline.Item) (st ResolvedStyle, 
 	position = "bottom"
 
 	layers := []*timeline.CaptionStyle{doc.Tracks[it.Track].CaptionStyle, it.Style}
+	weightSet := false
+
 	for _, cs := range layers {
 		if cs == nil {
 			continue
 		}
+
+		weightSet = weightSet || cs.FontWeight != nil
 
 		applyStyle(doc, &st, &cs.TextStyle)
 		setStr(&position, cs.Position)
 		setStr(&st.Highlight, cs.Highlight)
 		setColor(doc, &st.HighlightColor, cs.HighlightColor)
 		setColor(doc, &st.HighlightBackground, cs.HighlightBackground)
+	}
+
+	if !weightSet {
+		st.FontWeight = timeline.DefaultFontWeight(doc, st.FontFamily)
 	}
 
 	return st, position

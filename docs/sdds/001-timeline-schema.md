@@ -171,7 +171,7 @@ TextStyle:
 | Field | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `font_family` | string | `"Inter"` | a family of the bundled set or of `fonts` |
-| `font_weight` | integer | 700 | 100 to 900 in steps of 100; must exist for the family |
+| `font_weight` | integer | 700 | 100 to 900 in steps of 100; an explicit weight must exist for the family. When it is omitted the weight is 700, or the nearest weight the family has (the heavier at a tie) when 700 is missing |
 | `size` | number | 72 | pixels at project resolution, 8 to 1000 |
 | `color` | colour | `#FFFFFF` | |
 | `stroke_color` | colour | `#000000` | |
