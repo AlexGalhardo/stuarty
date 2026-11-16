@@ -227,7 +227,7 @@ test.describe("beta-commands", () => {
 		});
 		await page.goto(`/editor/${created.project_id as string}`);
 		await expect(
-			page.getByRole("button", { name: /Command palette/ }),
+			page.getByRole("button", { name: /^Commands \(Ctrl\+K\)/ }),
 		).toBeEnabled();
 		await page.keyboard.press("Control+k");
 		const search = page.getByRole("combobox", { name: "Search commands" });
