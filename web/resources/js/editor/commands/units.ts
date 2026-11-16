@@ -147,6 +147,12 @@ export function captionWordSegments(
 	}));
 }
 
+// The timeline frame of a caption word: its start is relative to the caption.
+// Where the find bar puts the playhead; a position to show, not an edit result.
+export function wordFrame(itemStart: number, wordStart: number): number {
+	return itemStart + wordStart;
+}
+
 // The speed as the number the field shows: "1.5", "1" at normal speed.
 export function speedText(speed?: { num: number; den: number }): string {
 	if (speed === undefined) return "1";

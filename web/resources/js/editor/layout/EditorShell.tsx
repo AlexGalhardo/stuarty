@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import LiveRegion from "../a11y/LiveRegion";
 import { useShellShortcuts } from "../commands/useShellShortcuts";
+import FindBar from "../find/FindBar";
 import Inspector from "../inspector/Inspector";
 import Preview from "../preview/Preview";
 import { useDocumentState, useUiState } from "../state/EditorContext";
@@ -147,6 +148,7 @@ export default function EditorShell({
 				<Timeline />
 			</div>
 			<Notices />
+			<FindBar />
 			<LiveRegion />
 			<InUseHost />
 		</div>

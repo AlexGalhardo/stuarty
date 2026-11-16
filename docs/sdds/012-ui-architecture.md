@@ -1440,6 +1440,7 @@ Decision D-038: the default keymap is the one a person coming from CapCut alread
 | New project, open a project | `Mod+N`, `Mod+O` | `surface.new_project`, `surface.open_project` | UI |
 | Split a caption at the cursor, line break in a caption | `Enter`, `Mod+Enter` in a caption word field | `caption.split`, `caption.set_breaks` | exists |
 | Resize a text box from its centre | hold `Alt` while dragging | modifier of the drag gesture (`item.set_transform`) | UI |
+| Find in the project | `Mod+F` | `surface.find` (the find bar, section 18.8) | UI |
 | Keys the Vukem keeps | `Mod+K` palette, `Alt+1`, `Alt+2`, `Alt+3` panels, `F2` rename, `F6` landmarks, `C` add caption, `T` add text, `Esc`, `?` cheat sheet, grid keys (§7.10) | as in §18.2 | exists |
 
 Not mapped: `Tab` cycles the material panel in the compatible editor, but in the Vukem it moves focus between regions (§18.1) and stays so. `Mod+J` (match cut) and `Alt+G`, `Alt+Shift+G` (compound clip) have no command and no product decision (N-7, a decision for the author before any work). `Mod+Q` (quit) and `Mod+Alt+Q` (back to the edit page) belong to the desktop shell (§21).
@@ -1459,7 +1460,7 @@ The web editor cannot capture every key. A browser-reserved key is never bound o
 | Group | Keys | Rule |
 | --- | --- | --- |
 | Reserved by the browser or the system (cannot be captured) | `Mod+N`, `Mod+T`, `Mod+W`, `Mod+Shift+N`, `Mod+Shift+T`, `Mod+Q` (`Cmd+Q` on a Mac), `Mod+Tab`, `Cmd+H`, `Cmd+M`, `Cmd+Space`, `Ctrl+Up` on a Mac (Mission Control) | not bound on the web. `Mod+N`, `Mod+O` and `Mod+Q` are bound by the desktop shell. On the web "New project" is in the palette and on the projects page |
-| Colliding but capturable | `Mod+B`, `Mod+Shift+B`, `Mod+D`, `Mod+G`, `Mod+Shift+G`, `Mod+I`, `Mod+E`, `Mod+O`, `Mod+S`, `Mod+Shift+C`, `Mod+Shift+S`, `Mod+=`, `Mod+-`, `Mod`+wheel, `Mod+.`, `Mod+,` | captured while the focus is in the editor. In a field the browser or the field keeps them |
+| Colliding but capturable | `Mod+B`, `Mod+Shift+B`, `Mod+D`, `Mod+G`, `Mod+Shift+G`, `Mod+I`, `Mod+E`, `Mod+O`, `Mod+S`, `Mod+Shift+C`, `Mod+Shift+S`, `Mod+F`, `Mod+=`, `Mod+-`, `Mod`+wheel, `Mod+.`, `Mod+,` | captured while the focus is in the editor. In a field the browser or the field keeps them |
 | Collides in a way that costs the page | `Mod+R` (reload), `Mod+Shift+F` and `Cmd+Ctrl+F` (the system full screen) | bound only by the desktop shell. On the web the speed panel and the full screen are buttons and palette entries, so a key that fails to be captured never reloads the page |
 | Free | single letters, `Shift`+letter, `Alt`+letter, arrows, `Home`, `End`, `Esc`, `Space` | bound as written |
 
@@ -1487,6 +1488,16 @@ Each is a card for `senior-a`, with its name in `000-shared-definitions.md` firs
 TASK-0236 draws and binds the rows of state exists and the UI rows that need no new surface: split, split every track, `Q`, `W`, `[` and `]`, `Mod+=` and `Mod+-`, copy, cut and paste (paste is `item.duplicate`), the volume keys (`item.set_audio`, 0.1 dB as a gain of `10^(0.1/20)`), the preview size keys, `Mod+I`, `Mod+E` and `Mod+S`. The UI rows that need a surface that does not exist yet (`J` `K` `L`, `I` `O`, `Shift+X` `Alt+X`, `B` `A`, `S` the preview axis, `Alt+K`, the wheel keys, the drag modifiers) and the desktop-only rows (`Mod+R`, `Mod+Shift+F`, `Mod+N`, `Mod+O`) are not in `SHORTCUTS` until their surface or the desktop shell exists. An alias is the `aliases` field of a row (`+` and `Mod++` for zoom in, `-` for zoom out): they are held by the row, so no other row may rebind to them, and they are lost when the person rebinds the row.
 
 The rows of N-1 to N-6 and N-8 enter `SHORTCUTS` when their command exists. The `surface.*` ids marked UI are added to `UI_SHORTCUT_ACTIONS` by TASK-0236. The cheat sheet and the shortcuts page of the site read the same table, so no key is written twice.
+
+### 18.8 Find bar
+
+VV-052. `Mod+F` opens a find bar in the editor, on the web and in the desktop window alike: the web view of the shell turns the accelerators of the browser off (Wails v3), so the key is read by the page, never by a native find. Like every capturable colliding key (§18.7) it is taken only while focus is not in an editable field or an open dialog or menu, and the browser's own find is kept there. Inside the bar `Mod+F` selects the text again.
+
+- **What it searches.** The name of an item, the name of its asset (what the timeline shows when the item has no name of its own), the content of a text item and every caption word, of the project open at the revision the client holds. It is the read model that is looked through; there is no endpoint, and it is display logic, not an edit (rule T6): nothing is sent to the core. The text is compared without case and without accents (`acao` finds `Ação`). `findMatches` in `find/findMatches.ts` is the one place.
+- **Matches.** One per hit, in playhead order (a word is at its own frame), each with its kind (name, text, caption word) and the text that matched, listed in the bar. Text is drawn as untrusted text (`UntrustedText`).
+- **Keys.** Typing changes the list and moves nothing. `Enter` goes to the next match and `Shift+Enter` to the previous one, wrapping at the ends; the first `Enter` goes to the first match and the first `Shift+Enter` to the last. Going to a match selects its item, selects the word for a caption word and puts the playhead at the start of the match (of the item, or of the word), and scrolls the item into view. `Esc` closes the bar and clears the query. Every other key typed in the bar stops there, so `Delete` or a letter never edits the timeline.
+- **Accessibility.** The bar is a `search` landmark named "Find in the project"; its field is a `searchbox` with a label; the count ("3 of 12", "No match") is a `status` region; each match is a button in a list, the current one has `aria-current`. Opening remembers the element that had focus and `Esc` gives focus back to it (to the timeline when it is gone).
+- **Strings** are `ui.editor.find.*` and the row `ui.editor.shortcuts.rows.find`, in English and pt-BR.
 
 ## 19. Performance budgets
 

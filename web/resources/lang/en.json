@@ -695,6 +695,7 @@
           "export": "Export",
           "save": "Save (every edit is saved already)",
           "palette": "Command palette",
+          "find": "Find in the project",
           "toggle_panel": "Toggle library, inspector and history",
           "select_all": "Select all items",
           "cancel": "Cancel, close or clear the selection",
@@ -702,6 +703,19 @@
           "grid_keys": "Move inside the timeline",
           "cheat_sheet": "Open this list"
         }
+      },
+      "find": {
+        "label": "Find in the project",
+        "placeholder": "Find a name or text",
+        "close": "Close the find bar",
+        "hint": "Searches item names, text and caption words. Enter goes to the next match, Shift+Enter to the previous one, Esc closes.",
+        "none": "No match",
+        "found": "{count} matches. Press Enter to go to the first.",
+        "position": "{current} of {count}",
+        "results": "Matches",
+        "kind_name": "Name",
+        "kind_text": "Text",
+        "kind_word": "Caption word"
       },
       "palette": {
         "open": "Commands (Ctrl+K)",
