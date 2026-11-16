@@ -29,7 +29,7 @@ const (
 // ViewFrame renders one frame of the current revision through the export
 // executor (SDD-003 section 2.7).
 func (s *svc) ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult, error) {
-	v, err := s.beginView(ctx, "ViewFrame", req.ProjectID, req.AssetID)
+	v, err := s.beginView(ctx, "ViewFrame", req.ProjectID, req.AssetID, req.Pin)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (s *svc) ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult,
 
 // ViewSheet renders a contact sheet of the current revision (SDD-003 section 3.11).
 func (s *svc) ViewSheet(ctx context.Context, req ViewSheetRequest) (*ViewResult, error) {
-	v, err := s.beginView(ctx, "ViewSheet", req.ProjectID, req.AssetID)
+	v, err := s.beginView(ctx, "ViewSheet", req.ProjectID, req.AssetID, req.Pin)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,15 @@ func (v *view) fps() timeval.FPS {
 // last is the last frame that has a picture: the end of the timeline is not one.
 func (v *view) last() int64 { return max(endFrame(v.doc)-1, 0) }
 
-func (s *svc) beginView(ctx context.Context, method, projectID, assetID string) (*view, error) {
+// pinMismatch is the error of a view or plan pinned to a revision that is not
+// the current one (SDD-003 section 6.3): the service renders the current one only.
+func pinMismatch(current int64) *Error {
+	return newError(command.CodeInvalidState, "the project is at revision %d.", current).
+		withHint("ask again without rev, or with the current revision").
+		withDetail("current_revision", current)
+}
+
+func (s *svc) beginView(ctx context.Context, method, projectID, assetID string, pin int64) (*view, error) {
 	c, err := authorize(ctx, method, projectID)
 	if err != nil {
 		return nil, err
@@ -209,6 +217,10 @@ func (s *svc) beginView(ctx context.Context, method, projectID, assetID string) 
 	row, lerr := s.loadProject(ctx, c, projectID)
 	if lerr != nil {
 		return nil, lerr
+	}
+
+	if pin != 0 && row.Revision != pin {
+		return nil, pinMismatch(row.Revision)
 	}
 
 	if s.media.Frames == nil {

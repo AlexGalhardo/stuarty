@@ -10,7 +10,6 @@ import (
 
 	"github.com/AlexGalhardo/vukem/web"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
@@ -39,12 +38,8 @@ type sheetIn struct {
 // projectsFrame is GET /projects/{id}/frame (SDD-003 section 6.5): the JPEG, or
 // the ViewResult as JSON when the client asks for application/json.
 func (h *apiHandler) projectsFrame(c *web.Ctx, in frameIn) (noIn, error) {
-	if err := h.pinRevision(c, in.ID, in.Rev); err != nil {
-		return noIn{}, err
-	}
-
 	res, err := h.Service.ViewFrame(c.Context(), service.ViewFrameRequest{
-		ProjectID: in.ID, At: in.At, AssetID: in.AssetID, MaxTokens: in.MaxTokens, Width: in.Width,
+		ProjectID: in.ID, At: in.At, AssetID: in.AssetID, MaxTokens: in.MaxTokens, Width: in.Width, Pin: in.Rev,
 	})
 	if err != nil {
 		return noIn{}, err
@@ -55,10 +50,6 @@ func (h *apiHandler) projectsFrame(c *web.Ctx, in frameIn) (noIn, error) {
 
 // projectsSheet is GET /projects/{id}/sheet.
 func (h *apiHandler) projectsSheet(c *web.Ctx, in sheetIn) (noIn, error) {
-	if err := h.pinRevision(c, in.ID, in.Rev); err != nil {
-		return noIn{}, err
-	}
-
 	until, err := untilAlias(in.Until, in.To)
 	if err != nil {
 		return noIn{}, err
@@ -72,7 +63,7 @@ func (h *apiHandler) projectsSheet(c *web.Ctx, in sheetIn) (noIn, error) {
 
 	res, err := h.Service.ViewSheet(c.Context(), service.ViewSheetRequest{
 		ProjectID: in.ID, Times: times, From: in.From, Until: until, Count: in.Count, Cols: in.Cols,
-		AssetID: in.AssetID, MaxTokens: in.MaxTokens,
+		AssetID: in.AssetID, MaxTokens: in.MaxTokens, Pin: in.Rev,
 	})
 	if err != nil {
 		return noIn{}, err
@@ -86,30 +77,6 @@ func (h *apiHandler) projectsSheet(c *web.Ctx, in sheetIn) (noIn, error) {
 	c.SetHeader("X-Vukem-Cells", strings.Join(cells, ","))
 
 	return noIn{}, writeView(c, res, in.Rev != 0, "s", 12)
-}
-
-// pinRevision refuses a rev that is not the current revision (SDD-003 section
-// 6.3): the service renders the current one only.
-func (h *apiHandler) pinRevision(c *web.Ctx, project string, rev int64) error {
-	if rev == 0 {
-		return nil
-	}
-
-	head, err := h.Service.ProjectGet(c.Context(), service.ProjectGetRequest{ProjectID: project})
-	if err != nil {
-		return err
-	}
-
-	if head.Revision != rev {
-		return &service.Error{
-			Code:    command.CodeInvalidState,
-			Message: "the project is at revision " + strconv.FormatInt(head.Revision, 10) + ".",
-			Hint:    "ask again without rev, or with the current revision",
-			Details: map[string]any{"current_revision": head.Revision},
-		}
-	}
-
-	return nil
 }
 
 // writeView answers the image with the headers of SDD-003 section 6.5, or the
@@ -189,10 +156,6 @@ type planIn struct {
 
 // projectsPlan is GET /projects/{id}/plan (SDD-004 section 10).
 func (h *apiHandler) projectsPlan(c *web.Ctx, in planIn) (service.PlanWindowResult, error) {
-	if err := h.pinRevision(c, in.ID, in.Rev); err != nil {
-		return service.PlanWindowResult{}, err
-	}
-
 	until, err := untilAlias(in.Until, in.To)
 	if err != nil {
 		return service.PlanWindowResult{}, err
@@ -200,7 +163,7 @@ func (h *apiHandler) projectsPlan(c *web.Ctx, in planIn) (service.PlanWindowResu
 
 	res, err := h.Service.PlanWindow(
 		c.Context(),
-		service.PlanWindowRequest{ProjectID: in.ID, From: in.From, Until: until, Width: in.Width},
+		service.PlanWindowRequest{ProjectID: in.ID, From: in.From, Until: until, Width: in.Width, Pin: in.Rev},
 	)
 	if res != nil {
 		revisionHeader(c, res.Revision)

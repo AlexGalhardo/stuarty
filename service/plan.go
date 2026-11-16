@@ -24,6 +24,9 @@ type PlanWindowRequest struct {
 	// Width is the output width in pixels the preview draws at; 0 is the project width. The
 	// bitmaps of the plan are rasterized at that scale, as ViewFrame does (SDD-004 section 10).
 	Width int `json:"width,omitempty"`
+	// Pin, when not 0, must be the current revision (SDD-003 section 6.3). Set
+	// by the HTTP adapter from rev; never on the wire of the Service.
+	Pin int64 `json:"-"`
 }
 
 // PlanWindowResult is the compact plan of a window; Revision is the revision it
@@ -171,6 +174,10 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 	row, lerr := s.loadProject(ctx, c, req.ProjectID)
 	if lerr != nil {
 		return nil, lerr
+	}
+
+	if req.Pin != 0 && row.Revision != req.Pin {
+		return nil, pinMismatch(row.Revision)
 	}
 
 	doc, derr := decodeRow(&row)
