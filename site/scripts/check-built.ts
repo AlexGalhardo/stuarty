@@ -22,6 +22,12 @@ const INERT_HOSTS = new Set([
 	"base-ui.com",
 	"semver.org",
 	"modelcontextprotocol.io",
+	// Official documentation of the agents that the Prompts pages cite; text, never loaded.
+	"code.claude.com",
+	"learn.chatgpt.com",
+	"opencode.ai",
+	"cursor.com",
+	"geminicli.com",
 	"keepachangelog.com",
 	"github.com",
 	"127.0.0.1",

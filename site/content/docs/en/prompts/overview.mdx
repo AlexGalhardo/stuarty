@@ -1,0 +1,72 @@
+---
+title: "Prompts overview"
+description: "Copy-ready prompts to set up Vukem Video in your AI agent and to make a vertical video, a commercial, a silence cut and an export."
+---
+
+## You will learn
+
+- which page to open for your agent
+- how the prompts are built, so you can change them
+- the loop every good prompt follows
+
+## The idea
+
+An agent edits well when it is told the loop to follow and one outcome to reach. These pages give you both, ready to paste. Each agent has its own page with the real way to register the Vukem Video [MCP server](/docs/mcp/overview), a setup prompt, and four task prompts.
+
+## Pick your agent
+
+| Agent | Page | How it registers the server |
+| --- | --- | --- |
+| Claude Code | [Claude Code](/docs/prompts/claude-code) | the command `claude mcp add` |
+| OpenAI Codex CLI | [OpenAI Codex CLI](/docs/prompts/codex) | the command `codex mcp add`, or `config.toml` |
+| OpenCode | [OpenCode](/docs/prompts/opencode) | `opencode.jsonc` |
+| Cursor | [Cursor](/docs/prompts/cursor) | `.cursor/mcp.json` |
+| Gemini CLI | [Gemini CLI](/docs/prompts/gemini-cli) | the command `gemini mcp add`, or `settings.json` |
+| Any other client | [Any MCP client](/docs/prompts/other-clients) | `vukem-video mcp` over stdio, or `POST /mcp` over HTTP |
+
+All of them start the same program, `vukem-video mcp`, so install Vukem Video first: see [Installation](/docs/installation).
+
+## The loop behind every prompt
+
+<Steps>
+<Step title="Read">
+
+The agent reads the project with `project_get` and notes its revision. It never edits from memory.
+
+</Step>
+<Step title="Edit">
+
+It sends one batch with `edit`, with that revision as `base_revision`. A batch is one undo step.
+
+</Step>
+<Step title="Check">
+
+It runs `lint`, which says what would block an export, and looks at a frame with `view` only when text cannot answer. A frame costs image tokens.
+
+</Step>
+<Step title="Deliver">
+
+It exports with `job_start` and waits with `job_get`. Nothing is exported before you have looked.
+
+</Step>
+</Steps>
+
+## How to write your own
+
+- **One outcome per prompt.** "Make a vertical video with captions from this clip" is one outcome. "Make my channel better" is not.
+- **Give paths and names.** Say where the files are and what the project is called. Paths are absolute and on the machine that runs the server.
+- **Number the steps and say when to stop.** "If lint has errors, list them and stop" saves a bad export.
+- **Name the tools you expect.** The agent can find them, but naming `template`, `lint` or `job_start` removes a guess.
+- **Ask for the check before the export.** Reading the result costs seconds; a wrong export costs a render.
+
+## Common mistakes
+
+- Pasting a prompt before the server is registered and connected: the agent then invents commands. Run the check on the page of your agent first.
+- Asking the agent to "remember" ids between sessions: it does not. Give the project name, and it finds the id with `project_list`.
+- Expecting captions without a transcript: transcribe first, which needs the helper from `vukem-video tools:install whisper`.
+
+## Next steps
+
+- [The MCP tools](/docs/mcp/tools)
+- [Recipes: cut, caption, export](/docs/agents/recipes)
+- [Safety](/docs/agents/safety)
