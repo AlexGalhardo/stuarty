@@ -1299,6 +1299,19 @@ export function markerRemoveOperations(frame: number): Operations {
 	return [{ op: "marker.remove", args: { at: frames(frame) } }];
 }
 
+export const BLEND_MODES = [
+	"normal",
+	"multiply",
+	"screen",
+	"overlay",
+	"add",
+] as const;
+export type BlendMode = (typeof BLEND_MODES)[number];
+
+export function blendOperations(itemId: string, mode: BlendMode): Operations {
+	return [{ op: "clip.set_blend", args: { item_id: itemId, mode } }];
+}
+
 export function blurOperations(itemId: string, radius: number): Operations {
 	return [{ op: "clip.set_blur", args: { item_id: itemId, radius } }];
 }

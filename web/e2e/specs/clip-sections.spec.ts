@@ -93,6 +93,29 @@ test.describe("clip-sections", () => {
 		await expect(page.getByLabel("Speed", { exact: true })).toHaveValue("2");
 	});
 
+	test("the blend mode select sends clip.set_blend and shows the stored mode", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+			clipDuration: "4s",
+		});
+		const itemId = seeded.itemIds[0] ?? "";
+		await open(page, seeded.id);
+		const edits = recordEdits(page);
+
+		const mode = page.getByLabel("Blend mode", { exact: true });
+		await expect(mode).toHaveValue("normal");
+		await mode.selectOption("multiply");
+		await expect.poll(() => edits.length).toBe(1);
+		expect(edits[0]?.operations).toEqual([
+			{ op: "clip.set_blend", args: { item_id: itemId, mode: "multiply" } },
+		]);
+		await expect(mode).toHaveValue("multiply");
+	});
+
 	test("a colour slider drag sends one command, on release", async ({
 		page,
 		request,

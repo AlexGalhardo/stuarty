@@ -203,7 +203,11 @@ interface PlanLayerBase {
 	// The effective scale and opacity, keyframes and presets applied.
 	scale: PerFrame;
 	opacity: PerFrame;
+	// The mix of SDD-004 section 3.8, constant over the item; absent is normal.
+	blend?: PlanBlend;
 }
+
+export type PlanBlend = "normal" | "multiply" | "screen" | "overlay" | "add";
 
 export interface PlanMediaLayer extends PlanLayerBase {
 	kind: "media";

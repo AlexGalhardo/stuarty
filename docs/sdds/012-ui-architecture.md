@@ -900,6 +900,7 @@ Phase of the entry point is the phase in which that entry point is built. Every 
 | `clip.set_framing` | inspector Framing section (fit, crop) | A |
 | `clip.set_speed` | inspector Speed section with the ripple toggle | A |
 | `clip.set_color` | inspector Color section | A |
+| `clip.set_blend` | inspector Blend section | A |
 | `clip.remove_silences` | inspector button "Remove silences" with minimum silence and padding fields | A |
 | `text.add` | toolbar "Add text" (`T`) | A |
 | `text.set` | inspector Text section, inline canvas editor | A |
@@ -1079,6 +1080,7 @@ The inspector panel shows one panel by selection: nothing selected, the project 
 | Framing | fit, crop left, top, right, bottom | `clip.set_framing {fit, crop}` | clip |
 | Speed | speed (numeric with `x` suffix), "ripple later items" toggle | `clip.set_speed {speed: "1.5x", ripple}` | clip (SDD-002 B.5 defines `clip.set_speed` for clips only; the field is not shown for audio items) |
 | Color | brightness, contrast, saturation | `clip.set_color {...}` | clip |
+| Blend | blend mode (normal, multiply, screen, overlay, add) | `clip.set_blend {item_id, mode}` | visual items (clip, text, caption, shape). The preview draws it from the layer `blend` of the plan: `multiply`, `screen` and `add` with the GPU blend functions of PixiJS, `overlay` with `pixi.js/advanced-blend-modes`; the GPU works in floats, so a pixel can differ from the export (integer formulas of SDD-004 section 3.8) by a rounding step |
 | Silences | minimum silence, padding, ripple toggle, button | `clip.remove_silences {min_silence, padding, ripple}` | clip |
 | Text | content (multi-line), font family, weight, size, color, stroke color and width, shadow color, dx, dy and blur, background color, padding and radius, align, line height, max width, uppercase | `text.set {text, style}` (style is the partial of changed fields) | text |
 | Animation | preset, edge, duration | `text.apply_preset {preset, edge, duration}` | any visual item (the command works on any visual item, SDD-002 B.6) |

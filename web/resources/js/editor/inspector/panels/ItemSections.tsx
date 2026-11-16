@@ -21,6 +21,7 @@ import TimeCommitField from "../fields/TimeCommitField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
 import AnimationSection from "./AnimationSection";
+import BlendSection from "./BlendSection";
 import KeyframesSection from "./KeyframesSection";
 import TransformSection from "./TransformSection";
 import TransitionsSection from "./TransitionsSection";
@@ -99,6 +100,7 @@ export default function ItemSections({
 				)}
 			</Section>
 			{item.type !== "audio" && <TransformSection itemIds={[itemId]} />}
+			{item.type !== "audio" && <BlendSection itemId={itemId} />}
 			{item.type !== "audio" && <TransitionsSection itemId={itemId} />}
 			{item.type !== "audio" && <AnimationSection itemId={itemId} />}
 			<KeyframesSection itemId={itemId} />
