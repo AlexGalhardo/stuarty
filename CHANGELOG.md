@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-11-16
+
+### Added
+
+- **ui:** Add builders for the speed curve, reverse, effects, link and extract audio ([66f1427](https://github.com/AlexGalhardo/vukem-video/commit/66f1427ae3c0b4f12f541cbedd9ac3b76e9acd44))
+- **ui:** Add the speed curve editor and the Reverse toggle to the Speed section ([fb3f7bb](https://github.com/AlexGalhardo/vukem-video/commit/fb3f7bb491b9258832aa24e71c42a78fd6ed0ba9))
+- **preview:** Play a speed curve and a reversed item from the plan ([747dba4](https://github.com/AlexGalhardo/vukem-video/commit/747dba4d915c2c03b1038565d16cad6e780ef326))
+- **ui:** Link, unlink and extract audio from the item menu and the keyboard ([8436485](https://github.com/AlexGalhardo/vukem-video/commit/8436485654aa0d501dabf798d53c3d0d5ad6e9bc))
+- **ui:** Add the Effects section for clip.set_effects ([e86583c](https://github.com/AlexGalhardo/vukem-video/commit/e86583cd57a14a6faffc3342e0eddf0a7ca97d9a))
+- **ui:** Add the colour and the direction to the transition controls ([a9f7ce4](https://github.com/AlexGalhardo/vukem-video/commit/a9f7ce456cf40dc00ce216abb9d0fefc2c0b955a))
+- **preview:** Draw the pixel effects, the whip blur, the dip and the wipe ([559a761](https://github.com/AlexGalhardo/vukem-video/commit/559a7617d68739b41e755909fcfc54f92eb65849))
+- **ui:** Add Shift+B speed curve, Shift+M marker jumps and Alt+wheel scroll keys ([9a8c2d8](https://github.com/AlexGalhardo/vukem-video/commit/9a8c2d897f157abb0a2307188537a9dd5eb6adb3))
+
+### Fixed
+
+- **export:** Verify the nominal frame rate so a VideoToolbox export is not refused ([0a32ad6](https://github.com/AlexGalhardo/vukem-video/commit/0a32ad60fbf38a2d06c510e24d4d766aa8332337))
+- **preview:** Play on the wall clock when the audio context cannot run ([bd8a33f](https://github.com/AlexGalhardo/vukem-video/commit/bd8a33fe1316ad42a46d98c18b2effd781c1f5fe))
+- **service:** List the created ids of an edit in operation order ([75b30b8](https://github.com/AlexGalhardo/vukem-video/commit/75b30b85c984ee8bb6eb09fd94b48fc8f36bdcef))
+- **ffmpeg:** Mask the AVX-512 code of FFmpeg on x86-64 so media bytes do not depend on the CPU ([ceb8d2f](https://github.com/AlexGalhardo/vukem-video/commit/ceb8d2fb3c4e1e8caee1e6f93cfd9937c00a2ade))
+- **core:** Refuse a slide whose extended neighbour would overlap another item ([048d0ce](https://github.com/AlexGalhardo/vukem-video/commit/048d0ce45373a7a2285be6d65dee722996ff605e))
+- **ui:** Read the speed fractions through a units helper ([bc10ef5](https://github.com/AlexGalhardo/vukem-video/commit/bc10ef5cfa660cd1d730a888f3aced4abc1d1c88))
+- **ui:** Keep the curve point arithmetic in the builders ([fd6f1aa](https://github.com/AlexGalhardo/vukem-video/commit/fd6f1aab5965095e08ecab30ca1663d01e754513))
+
+### Security
+
+- **security:** Run the TestSecurity_ tests on the three operating systems ([e8ab2f4](https://github.com/AlexGalhardo/vukem-video/commit/e8ab2f420f584a7d90229ad6b3d8ede487d3b8fd))
+- **security:** Fail a security test that skips without its platform or a documented condition ([e24d19f](https://github.com/AlexGalhardo/vukem-video/commit/e24d19febfd8647c7321ec5f1ee2d3207f363366))
+
 ## [0.21.0] - 2026-11-16
 
 ### Added
@@ -1020,7 +1048,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.21.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.22.0...HEAD
+[0.22.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.18.0...v0.19.0
