@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -92,15 +91,15 @@ func (o offerOnly) CheckNow(context.Context) (*update.Offer, error) { return o.o
 
 func (u *updater) show(out shell.UpdateOutcome) {
 	if out.Offer == nil {
-		u.app.Dialog.Info().SetTitle(out.Title).SetMessage(out.Message).Show()
+		u.app.Dialog.Info().SetTitle(tr(shell.TextCheckUpdates)).SetMessage(out.Message).Show()
 
 		return
 	}
 
-	d := u.app.Dialog.Question().SetTitle(out.Title).SetMessage(out.Message)
-	install := d.AddButton("Install and restart")
+	d := u.app.Dialog.Question().SetTitle(tr(shell.TextCheckUpdates)).SetMessage(out.Message)
+	install := d.AddButton(tr(shell.TextInstall))
 	install.OnClick(func() { u.apply(out.Offer) })
-	later := d.AddButton("Not now")
+	later := d.AddButton(tr(shell.TextNotNow))
 	d.SetDefaultButton(install)
 	d.SetCancelButton(later)
 	d.Show()
@@ -111,7 +110,8 @@ func (u *updater) apply(offer *update.Offer) {
 	go func() {
 		if err := u.client.Apply(context.Background(), offer); err != nil {
 			application.InvokeSync(func() {
-				u.app.Dialog.Error().SetTitle("Check for updates").SetMessage(shell.InstallFailedMessage(err)).Show()
+				u.app.Dialog.Error().SetTitle(tr(shell.TextCheckUpdates)).
+					SetMessage(shell.InstallFailedMessage(err)).Show()
 			})
 		}
 	}()
@@ -127,7 +127,7 @@ func (u *updater) setCheckOnStartup(on bool) {
 
 	if err := u.settings.Save(u.settingsPath); err != nil {
 		application.InvokeSync(func() {
-			u.app.Dialog.Error().SetTitle("Vukem Video").SetMessage(fmt.Sprint("Cannot save the setting: ", err)).Show()
+			u.app.Dialog.Error().SetTitle("Vukem Video").SetMessage(tr(shell.TextCannotSave) + err.Error()).Show()
 		})
 	}
 }

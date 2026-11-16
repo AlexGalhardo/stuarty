@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 
+	"github.com/AlexGalhardo/vukem-video/desktop/shell"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
@@ -13,30 +14,30 @@ import (
 func buildMenu(app *application.App, win *application.WebviewWindow, ws workspace.Dir, up *updater) *application.Menu {
 	menu := app.NewMenu()
 
-	file := menu.AddSubmenu("File")
-	file.Add("Open workspace folder").OnClick(func(*application.Context) {
+	file := menu.AddSubmenu(tr(shell.TextFile))
+	file.Add(tr(shell.TextOpenWorkspace)).OnClick(func(*application.Context) {
 		if err := app.Browser.OpenFile(string(ws)); err != nil {
-			app.Dialog.Error().SetTitle("Vukem Video").SetMessage("Cannot open the folder: " + err.Error()).Show()
+			app.Dialog.Error().SetTitle("Vukem Video").SetMessage(tr(shell.TextCannotOpen) + err.Error()).Show()
 		}
 	})
 	file.AddSeparator()
-	file.Add("Quit").SetAccelerator("CmdOrCtrl+Q").OnClick(func(*application.Context) { app.Quit() })
+	file.Add(tr(shell.TextQuit)).SetAccelerator("CmdOrCtrl+Q").OnClick(func(*application.Context) { app.Quit() })
 
-	view := menu.AddSubmenu("View")
+	view := menu.AddSubmenu(tr(shell.TextView))
 	// win.Reload() navigates to the first address again, the one-time launch URL, which
 	// the server refuses the second time; the page reloads the address it is at.
-	view.Add("Reload").SetAccelerator("CmdOrCtrl+R").OnClick(func(*application.Context) { reloadPage(win) })
+	view.Add(tr(shell.TextReload)).SetAccelerator("CmdOrCtrl+R").OnClick(func(*application.Context) { reloadPage(win) })
 	// F11 is a window key binding (main.go), not a menu accelerator: Windows hides the
 	// menu bar in full screen and a menu accelerator would leave no way out.
-	view.Add("Toggle full screen\tF11").OnClick(func(*application.Context) { win.ToggleFullscreen() })
+	view.Add(tr(shell.TextFullScreen) + "\tF11").OnClick(func(*application.Context) { win.ToggleFullscreen() })
 
-	help := menu.AddSubmenu("Help")
-	help.Add("Check for updates").OnClick(func(*application.Context) { up.checkNow() })
-	help.AddCheckbox("Check for updates at start-up", up.settings.UpdateCheck).
+	help := menu.AddSubmenu(tr(shell.TextHelp))
+	help.Add(tr(shell.TextCheckUpdates)).OnClick(func(*application.Context) { up.checkNow() })
+	help.AddCheckbox(tr(shell.TextCheckAtStart), up.settings.UpdateCheck).
 		OnClick(func(ctx *application.Context) { up.setCheckOnStartup(ctx.ClickedMenuItem().Checked()) })
 	help.AddSeparator()
-	help.Add("About").OnClick(func(*application.Context) {
-		app.Dialog.Info().SetTitle("About Vukem Video").SetMessage("Vukem Video " + version).Show()
+	help.Add(tr(shell.TextAbout)).OnClick(func(*application.Context) {
+		app.Dialog.Info().SetTitle(tr(shell.TextAboutTitle)).SetMessage("Vukem Video " + version).Show()
 	})
 	return menu
 }
