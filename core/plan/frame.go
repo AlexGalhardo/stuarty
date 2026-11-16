@@ -86,6 +86,19 @@ func FrameWith(doc *timeline.Document, t int, opts Options) FramePlan {
 	return newPlanner(doc, opts).frame(t)
 }
 
+// Planner plans frames of one document; building it once and asking many
+// frames avoids copying and sorting the items per frame. It is not safe for
+// concurrent use.
+type Planner struct{ p *planner }
+
+// NewPlanner prepares the frames of doc.
+func NewPlanner(doc *timeline.Document, opts Options) *Planner {
+	return &Planner{p: newPlanner(doc, opts)}
+}
+
+// Frame is FrameWith for this planner's document and options.
+func (pl *Planner) Frame(t int) FramePlan { return pl.p.frame(t) }
+
 func (p *planner) frame(t int) FramePlan {
 	st := p.doc.Settings
 	fp := FramePlan{
