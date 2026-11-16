@@ -201,6 +201,8 @@ func auditGroup(rel string) (group, name string) {
 		return groupVendored, parts[min(1, len(parts)-1)]
 	case "npm":
 		return groupNPM, strings.Join(parts[1:len(parts)-1], "/")
+	case "crates":
+		return groupCrates, strings.Join(parts[1:len(parts)-1], "/")
 	default:
 		return groupGo, strings.Join(parts[1:len(parts)-1], "/")
 	}

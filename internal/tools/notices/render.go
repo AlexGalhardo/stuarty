@@ -20,7 +20,7 @@ const noticesFile = "THIRD_PARTY_NOTICES.md"
 // managedDirs are the folders of licenses/ that the generator owns and
 // rewrites completely. licenses/fonts and licenses/vendored are kept by hand
 // and listed in the inventory.
-var managedDirs = []string{"licenses/go-modules", "licenses/npm"}
+var managedDirs = []string{"licenses/go-modules", "licenses/npm", "licenses/crates"}
 
 // build collects every component, applies the allow-list and renders the
 // output files, keyed by repository-relative slash path.
@@ -35,12 +35,17 @@ func build(ctx context.Context, run Runner, root string) (map[string][]byte, err
 		return nil, err
 	}
 
+	crates, err := rustCrates(ctx, run, root)
+	if err != nil {
+		return nil, err
+	}
+
 	inv, err := inventory(root)
 	if err != nil {
 		return nil, err
 	}
 
-	all := slices.Concat(goMods, npm, inv)
+	all := slices.Concat(goMods, npm, crates, inv)
 
 	if err := checkAll(all); err != nil {
 		return nil, err
@@ -48,7 +53,7 @@ func build(ctx context.Context, run Runner, root string) (map[string][]byte, err
 
 	files := map[string][]byte{}
 
-	copied := slices.Concat(goMods, npm)
+	copied := slices.Concat(goMods, npm, crates)
 
 	for ci := range copied {
 		c := &copied[ci]
@@ -88,6 +93,11 @@ var groupTitles = []struct{ group, title, intro string }{
 		groupNPM,
 		"npm packages",
 		"The production dependency closure of `web/package.json` (`dependencies`, transitively).",
+	},
+	{
+		groupCrates,
+		"Rust crates",
+		"Compiled into the WebAssembly renderer of `renderer/` (`Cargo.lock`, normal dependencies of the wasm32 target; build-time proc macros are not shipped).",
 	},
 	{groupFonts, "Fonts", "Embedded in the binary; the rasterizer reads no other font."},
 	{groupVendored, "Vendored code", "Source copied into this repository."},
