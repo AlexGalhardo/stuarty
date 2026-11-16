@@ -274,6 +274,7 @@ func TestSecurity_T15_WhisperRefusesRelativePaths(t *testing.T) {
 	relHelper, errH := filepath.Rel(wd, helper)
 	relModel, errM := filepath.Rel(wd, model)
 	if errH != nil || errM != nil {
+		// skip-env: relative-path
 		t.Skip("the temp directory has no relative path from the working directory")
 	}
 

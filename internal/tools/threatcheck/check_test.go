@@ -138,3 +138,42 @@ func TestTheRealModelParses(t *testing.T) {
 		t.Errorf("the model has %d threats, want 37 (T-37, the GPU render process)", len(threats))
 	}
 }
+
+func TestSecuritySkipNeedsItsPlatformOrADocumentedCondition(t *testing.T) {
+	t.Parallel()
+
+	src := "package x\n\n" +
+		"func TestSecurity_T01_Bare(t *testing.T) { t.Skip(\"x\") }\n" +
+		"func TestSecurity_T01_Closure(t *testing.T) { t.Run(\"a\", func(t *testing.T) { t.Skipf(\"x\") }) }\n" +
+		"func TestSecurity_T01_Now(t *testing.T) { t.SkipNow() }\n" +
+		"func TestSecurity_T01_Linux(t *testing.T) { t.Skip(\"x\") }\n" +
+		"func TestSecurity_T01_Windows_Paths(t *testing.T) { t.Skip(\"x\") }\n" +
+		"func TestSecurity_T01_Marked(t *testing.T) {\n\t// skip-env: pinned-ffmpeg\n\tt.Skip(\"x\")\n}\n" +
+		"func TestSecurity_T01_Unknown(t *testing.T) {\n\t// skip-env: because\n\tt.Skip(\"x\")\n}\n" +
+		"func TestSecurity_T01_NoSkip(t *testing.T) {}\n" +
+		"func TestOther(t *testing.T) { t.Skip(\"x\") }\n"
+
+	got := skipProblems("x_test.go", []byte(src))
+	if len(got) != 4 {
+		t.Fatalf("got %d problems, want 4:\n%s", len(got), strings.Join(got, "\n"))
+	}
+
+	for _, name := range []string{"_Bare", "_Closure", "_Now", "_Unknown"} {
+		if !strings.Contains(strings.Join(got, "\n"), name) {
+			t.Errorf("no problem for %s", name)
+		}
+	}
+}
+
+func TestTheRepositoryHasNoUnmarkedSecuritySkip(t *testing.T) {
+	t.Parallel()
+
+	problems, err := skipsOf("../../..")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(problems) > 0 {
+		t.Errorf("%s", strings.Join(problems, "\n"))
+	}
+}

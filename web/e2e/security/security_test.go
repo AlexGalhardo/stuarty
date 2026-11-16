@@ -261,16 +261,19 @@ func TestSecurity_T22_CSPNonceOnly(t *testing.T) {
 // where bun or the browser is not installed.
 func TestSecurity_T22_UIRendersTextNotHTML(t *testing.T) {
 	if testing.Short() {
+		// skip-env: short-mode
 		t.Skip("the browser test is not run with -short")
 	}
 
 	bun, err := exec.LookPath("bun")
 	if err != nil {
+		// skip-env: browser
 		t.Skip("bun is not on PATH: the Playwright spec security-ui.spec.ts did not run")
 	}
 
 	dir := webDir(t)
 	if _, err := os.Stat(filepath.Join(dir, "node_modules", "@playwright", "test")); err != nil {
+		// skip-env: browser
 		t.Skip(
 			"Playwright is not installed in web/node_modules (run bun install): the spec security-ui.spec.ts did not run",
 		)
@@ -286,6 +289,7 @@ func TestSecurity_T22_UIRendersTextNotHTML(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		if strings.Contains(string(out), "Executable doesn't exist") {
+			// skip-env: browser
 			t.Skip("the Playwright browser is not installed (bunx playwright install chromium): the spec did not run")
 		}
 

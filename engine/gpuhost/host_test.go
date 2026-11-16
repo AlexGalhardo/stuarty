@@ -419,10 +419,12 @@ func TestSecurity_T37_RealHostSurvivesHostileRequests(t *testing.T) {
 	}
 
 	if _, err := os.Stat(bin); err != nil {
+		// skip-env: gpu-adapter
 		t.Skip("vukem-render is not built: set VUKEM_VIDEO_TEST_GPU_HOST or run bash scripts/build-renderer.sh native")
 	}
 
 	if out, err := exec.CommandContext(t.Context(), bin, "--probe").Output(); err != nil {
+		// skip-env: gpu-adapter
 		t.Skipf("no graphics adapter for the real host: %v (%s)", err, out)
 	}
 

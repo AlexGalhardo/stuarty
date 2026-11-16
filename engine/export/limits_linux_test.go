@@ -18,6 +18,7 @@ func TestSecurity_T16_LimitsDoNotBreakGoldenExport(t *testing.T) {
 	job := newJob(t, doc, "export-limits", filepath.Join("limits", "out.mp4"))
 
 	if ok, why := ffmpeg.LimitsAvailable(); !ok {
+		// skip-env: rlimits
 		t.Skip(why)
 	}
 

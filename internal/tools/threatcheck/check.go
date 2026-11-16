@@ -199,6 +199,13 @@ func check(root, sddPath, phase string) ([]string, error) {
 		}
 	}
 
+	skips, err := skipsOf(root)
+	if err != nil {
+		return nil, err
+	}
+
+	problems = append(problems, skips...)
+
 	ops, err := operationsOf(root)
 	if err != nil {
 		return nil, err
