@@ -2,6 +2,7 @@
   "ui": {
     "nav": {
       "label": "Main navigation",
+      "home": "{name}, projects",
       "language": "Language",
       "languages": {
         "en": "English",
