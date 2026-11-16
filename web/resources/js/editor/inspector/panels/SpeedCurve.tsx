@@ -8,6 +8,7 @@ import {
 	constantSpeedOperations,
 	speedCurveOperations,
 } from "../../commands/builders";
+import { ratioValue } from "../../commands/units";
 import { useCanEdit } from "../../commands/useActions";
 import type { CommitResult } from "../fields/commitField";
 import { FieldMessage } from "../fields/FieldFrame";
@@ -30,7 +31,7 @@ type StoredCurve = readonly { readonly t: number; readonly speed: Ratio }[];
 export function storedCurve(curve: StoredCurve | undefined): CurvePoint[] {
 	return (curve ?? []).map((point) => ({
 		t: point.t,
-		speed: point.speed.num / point.speed.den,
+		speed: ratioValue(point.speed),
 	}));
 }
 
@@ -103,7 +104,7 @@ export default function SpeedCurve({
 	const points = draft ?? stored;
 	const editing = draft !== null;
 	const hasCurve = stored.length > 0;
-	const mean = speed === undefined ? 1 : speed.num / speed.den;
+	const mean = speed === undefined ? 1 : ratioValue(speed);
 	const change = (next: CurvePoint[]): void => {
 		setDraft(next);
 		setFailure(null);
