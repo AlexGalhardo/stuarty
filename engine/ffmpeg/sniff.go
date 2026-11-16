@@ -30,6 +30,9 @@ func Sniff(head []byte) error {
 	trimmed := bytes.TrimPrefix(head, []byte("\xef\xbb\xbf"))
 	for _, p := range refusedPrefixes {
 		if bytes.HasPrefix(trimmed, []byte(p)) {
+			if isSVG(trimmed) {
+				return svgNotSupported()
+			}
 			return notMedia()
 		}
 	}
@@ -72,6 +75,18 @@ func isoBaseHead(h []byte) bool {
 	size := binary.BigEndian.Uint32(h[:4])
 
 	return size >= 16 && size <= 1024 && size%4 == 0
+}
+
+// isSVG reports whether markup that is refused anyway is a vector image, so the person is told
+// what to do instead of being told the file is fake.
+func isSVG(head []byte) bool {
+	return bytes.Contains(bytes.ToLower(head), []byte("<svg"))
+}
+
+func svgNotSupported() *Error {
+	return unsupported("unrecognized_format", "SVG images are not supported.",
+		"Convert the image to PNG or WebP and import that file.",
+		map[string]any{"ffprobe": "not a media signature", "format": "svg"})
 }
 
 func notMedia() *Error {
