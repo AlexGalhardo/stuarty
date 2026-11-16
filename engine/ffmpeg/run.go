@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"cmp"
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -89,6 +91,17 @@ func (r *Runner) NewRunDir(jobID string) (*RunDir, error) {
 		return nil, internalErr("cannot create the run directory", err)
 	}
 	return &RunDir{path: p}, nil
+}
+
+// newInternalRunDir creates a run directory for FFmpeg's own checks (capabilities, encoder
+// detection and size probes) under a unique name, so a directory left behind by an
+// interrupted run can never make a later one fail (VV-001).
+func (r *Runner) newInternalRunDir(prefix string) (*RunDir, error) {
+	var b [6]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return nil, internalErr("cannot name the run directory", err)
+	}
+	return r.NewRunDir(prefix + "-" + hex.EncodeToString(b[:]))
 }
 
 // Dir is the directory path.
