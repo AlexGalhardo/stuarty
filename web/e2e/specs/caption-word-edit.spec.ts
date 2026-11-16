@@ -532,8 +532,10 @@ test.describe("auto captions", () => {
 				},
 			});
 		});
-		await page.route("**/api/v1/system/tools/install", (route) =>
-			route.fulfill({
+		let installBody: unknown;
+		await page.route("**/api/v1/system/tools/install", (route) => {
+			installBody = route.request().postDataJSON();
+			return route.fulfill({
 				status: 202,
 				contentType: "application/json",
 				json: {
@@ -542,8 +544,8 @@ test.describe("auto captions", () => {
 					download_bytes: 4_200_000,
 					text: "",
 				},
-			}),
-		);
+			});
+		});
 		const seen = recordRequests(page);
 		const touchedTools = (): boolean =>
 			seen.some((r) => r.path.startsWith("/api/v1/system/tools"));
@@ -570,11 +572,15 @@ test.describe("auto captions", () => {
 		await page
 			.getByRole("button", { name: "Install local transcription" })
 			.click();
-		await page
-			.getByRole("dialog")
+		const installDialog = page.getByRole("dialog");
+		await expect(installDialog.getByLabel("Model")).toHaveValue("small");
+		await expect(installDialog).toContainText("becomes the default");
+		await installDialog.getByLabel("Model").selectOption("base");
+		await installDialog
 			.getByRole("button", { name: "Install", exact: true })
 			.click();
 		await expect(page.getByRole("dialog")).toContainText("Installed.");
+		expect(installBody).toEqual({ name: "whisper", model: "base" });
 		const installs = seen.filter(
 			(r) => r.method === "POST" && r.path === "/api/v1/system/tools/install",
 		);

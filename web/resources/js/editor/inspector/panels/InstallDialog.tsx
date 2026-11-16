@@ -11,13 +11,19 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useLocale, useT } from "@/lib/i18n";
 import { ApiError } from "../../api/errors";
 import { useRuntime } from "../../state/EditorContext";
 import { errorHeadline } from "../../ui/errorHeadline";
 import { formatDecimal } from "../../ui/format";
-import { installRequest, type Unavailable } from "./transcriptModel";
+import {
+	DEFAULT_WHISPER_MODEL,
+	installRequest,
+	type Unavailable,
+	WHISPER_MODELS,
+} from "./transcriptModel";
 
 const POLL_EVERY_MS = 1000;
 
@@ -48,11 +54,22 @@ export default function InstallDialog({
 	const locale = useLocale();
 	const runtime = useRuntime();
 	const [phase, setPhase] = useState<Phase>({ name: "offer" });
-	const request = unavailable === null ? null : installRequest(unavailable);
+	const [model, setModel] = useState(DEFAULT_WHISPER_MODEL);
+	const base = unavailable === null ? null : installRequest(unavailable);
+	const choosesModel = base?.name === "whisper";
+	const request = base !== null && choosesModel ? { ...base, model } : base;
 
 	// A new answer of the service starts the dialog again.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: `unavailable` is the trigger.
-	useEffect(() => setPhase({ name: "offer" }), [unavailable]);
+	useEffect(() => {
+		setPhase({ name: "offer" });
+		const named = base?.model;
+		setModel(
+			named !== undefined && WHISPER_MODELS.includes(named)
+				? named
+				: DEFAULT_WHISPER_MODEL,
+		);
+	}, [unavailable]);
 
 	const installing = phase.name === "installing";
 	useEffect(() => {
@@ -89,7 +106,7 @@ export default function InstallDialog({
 		setPhase({
 			name: "installing",
 			done: 0,
-			total: unavailable?.downloadBytes ?? 0,
+			total: sizeKnown ? (unavailable?.downloadBytes ?? 0) : 0,
 		});
 		try {
 			await runtime.client.installTool(request);
@@ -109,6 +126,8 @@ export default function InstallDialog({
 	if (unavailable === null) return null;
 	const command = unavailable.installCommand;
 	const canInstall = request !== null && phase.name !== "command_only";
+	// The size the service announced is that of its own model.
+	const sizeKnown = model === (base?.model ?? DEFAULT_WHISPER_MODEL);
 	const percent =
 		phase.name === "installing" && phase.total > 0
 			? Math.min(100, Math.round((phase.done / phase.total) * 100))
@@ -165,7 +184,30 @@ export default function InstallDialog({
 						</div>
 					)}
 
-					{unavailable.downloadBytes !== undefined && (
+					{choosesModel && phase.name === "offer" && (
+						<div className="flex flex-col gap-1">
+							<Label htmlFor="install-model" className="text-xs">
+								{t("ui.editor.auto_captions.install.model")}
+							</Label>
+							<select
+								id="install-model"
+								value={model}
+								className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+								onChange={(event) => setModel(event.target.value)}
+							>
+								{WHISPER_MODELS.map((name) => (
+									<option key={name} value={name}>
+										{name}
+									</option>
+								))}
+							</select>
+							<p className="text-xs text-muted-foreground">
+								{t("ui.editor.auto_captions.install.model_hint")}
+							</p>
+						</div>
+					)}
+
+					{unavailable.downloadBytes !== undefined && sizeKnown && (
 						<p data-testid="install-size">
 							{t("ui.editor.auto_captions.install.size", {
 								megabytes: megabytes(unavailable.downloadBytes, locale),

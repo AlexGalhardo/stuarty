@@ -82,6 +82,16 @@ export function unavailableFrom(error: {
 	};
 }
 
+// The whisper models `tools:install --model` accepts. The service does not list
+// them over HTTP, so this is the list the CLI help gives (engine/transcribe).
+export const WHISPER_MODELS: readonly string[] = [
+	"tiny",
+	"base",
+	"small",
+	"large-v3-turbo",
+];
+export const DEFAULT_WHISPER_MODEL = "small";
+
 // The install request: the tool and model the service names, or, from an older
 // server that does not send them, the ones read from its command.
 export function installRequest(
