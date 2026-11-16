@@ -21,7 +21,7 @@ export type Names = { operations: Set<string>; cli: Set<string>; tools: Set<stri
 export type Finding = { page: string; message: string };
 
 export function loadNames(): Names {
-	const opsDir = path.join(siteDir, "content", "generated", "reference", "commands");
+	const opsDir = path.join(siteDir, "content", "generated", "mcp", "tools", "edit");
 	const operations = new Set(fs.readdirSync(opsDir).filter((f) => f.endsWith(".mdx")).map((f) => f.slice(0, -4)));
 	const cli = JSON.parse(fs.readFileSync(path.join(siteDir, "generated", "cli.json"), "utf8")) as { commands: { name: string }[] };
 	const toolsDir = path.join(siteDir, "..", "web", "app", "mcp", "definitions");

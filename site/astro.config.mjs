@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@astrojs/react";
@@ -25,6 +26,15 @@ const legacyPortuguese = Object.fromEntries(
 	),
 );
 
+// The editing commands moved from /docs/reference/commands/<name> to the pages of the edit tool. Their names are in
+// generated/reference-nav.json, written by scripts/generate-reference.ts.
+const navFile = path.join(root, "generated", "reference-nav.json");
+const operations = fs.existsSync(navFile) ? JSON.parse(fs.readFileSync(navFile, "utf8")).mcp?.operations ?? [] : [];
+const movedCommands = Object.fromEntries([
+	["/docs/reference/commands", `${prefix}/docs/mcp/tools/edit/`],
+	...operations.map((name) => [`/docs/reference/commands/${name}`, `${prefix}/docs/mcp/tools/edit/${name}/`]),
+]);
+
 // Static HTML for GitHub Pages. The docs root opens the introduction.
 export default defineConfig({
 	site: siteUrl.origin,
@@ -49,6 +59,7 @@ export default defineConfig({
 		"/pt-br/changelog": `${prefix}/changelog/`,
 		// The HTTP API moved to its own section (docs/api).
 		"/docs/reference/http-api": `${prefix}/docs/api/overview/`,
+		...movedCommands,
 		...legacyPortuguese,
 	},
 });

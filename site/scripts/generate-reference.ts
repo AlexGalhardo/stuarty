@@ -90,39 +90,6 @@ function propertyRows(s: Schema): string[][] {
 	]);
 }
 
-function commandPage(c: Command): string {
-	const errors = c.errors.map((e) => `[${code(e)}](/docs/reference/error-codes#${e.toLowerCase()})`).join(", ") || "none";
-	const body = [
-		esc(c.description),
-		"## Arguments",
-		propertyRows(c.args_schema).length
-			? table(["Argument", "Type", "Required", "Description"], propertyRows(c.args_schema))
-			: "This command takes no arguments.",
-		"## Example",
-		"As one operation of an `edit` batch (the `edit` tool of MCP, `vukem-video edit --ops`, or `POST /api/v1/projects/{id}/edit`):",
-		"```json\n" + JSON.stringify({ op: c.name, args: c.example }, null, 2) + "\n```",
-		"## Errors",
-		errors,
-		"## Scope and phase",
-		`Scope ${code(c.scope)}, phase ${code(c.phase)}. Run \`vukem-video command:help ${c.name}\` for the same description from the binary.`,
-	];
-	return page(c.name, c.summary, body.filter((b) => b !== "").join("\n\n"));
-}
-
-function commandCatalogue(commands: Command[]): string {
-	return page(
-		"Command catalogue",
-		"Every editing command a batch can contain, with its scope and phase.",
-		[
-			"An `edit` call is a list of operations; each operation is one of these commands. Each page has the arguments, an example and the errors.",
-			table(
-				["Command", "Summary", "Scope", "Phase"],
-				commands.map((c) => [`[${code(c.name)}](/docs/reference/commands/${c.name})`, esc(c.summary), code(c.scope), c.phase]),
-			),
-		].join("\n\n"),
-	);
-}
-
 type ErrorEntry = { code: string; http: number; retryable: boolean };
 
 function sddTable(rel: string, heading: RegExp): string[][] {
@@ -359,8 +326,6 @@ function main() {
 		.filter((c) => !c.internal)
 		.sort((a, b) => a.name.localeCompare(b.name));
 
-	write("commands.mdx", commandCatalogue(commands), written);
-	for (const c of commands) write(`commands/${c.name}.mdx`, commandPage(c), written);
 	write("cli.mdx", cliReference(JSON.parse(cliJson) as CliDoc), written);
 	write("timeline-schema.mdx", timelineSchema(), written);
 	write("error-codes.mdx", errorCodes(), written);

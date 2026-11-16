@@ -66,18 +66,6 @@ function apiCategories(): NavCategory[] {
 	];
 }
 
-/** The generated command pages (scripts/generate-reference.ts), in alphabetical order. */
-function commandPages(): string[] {
-	const dir = path.join(process.cwd(), "content", "generated", "reference", "commands");
-	return fs.existsSync(dir)
-		? fs
-				.readdirSync(dir)
-				.filter((f) => f.endsWith(".mdx"))
-				.map((f) => f.slice(0, -".mdx".length))
-				.sort()
-		: [];
-}
-
 export const navigation: NavCategory[] = [
 	{
 		dir: "getting-started",
@@ -155,12 +143,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "reference",
 		title: "Reference",
-		pages: ["commands", "cli", "timeline-schema", "error-codes", "configuration", "events", "glossary"],
-	},
-	{
-		dir: "reference/commands",
-		title: "Commands",
-		pages: commandPages(),
+		pages: ["cli", "timeline-schema", "error-codes", "configuration", "events", "glossary"],
 	},
 	{
 		dir: "glossary",

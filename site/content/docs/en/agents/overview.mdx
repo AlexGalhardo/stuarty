@@ -21,7 +21,7 @@ The product sends nothing outside your computer, and an agent cannot make it. No
 2. `edit` with a batch of operations. A batch applies all or nothing, as one undo step, and needs the `base_revision` you read from `project_get` or from the previous edit.
 3. `lint`, then `job_start` with `kind=export`, then `job_get` until the job is final.
 
-Every time is a string with a unit: `12.5s`, `375f` or `00:00:12.500`. A bare number is rejected. Call `command_help` to list the operations, or with a name for its schema and an example; the same text is in the [command catalogue](/docs/reference/commands).
+Every time is a string with a unit: `12.5s`, `375f` or `00:00:12.500`. A bare number is rejected. Call `command_help` to list the operations, or with a name for its schema and an example; the same text is in the [operations of the edit tool](/docs/mcp/tools/edit).
 
 ## When a call fails
 
