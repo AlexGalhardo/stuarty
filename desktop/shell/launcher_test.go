@@ -82,6 +82,12 @@ func (u *fakeUI) OfferUpdate(o *update.Offer, _ string, decide func(bool)) {
 	}
 }
 
+func (u *fakeUI) Undone(v string) {
+	u.mu.Lock()
+	u.informed = append(u.informed, "undone "+v)
+	u.mu.Unlock()
+}
+
 func (u *fakeUI) Inform(m string)     { u.mu.Lock(); u.informed = append(u.informed, m); u.mu.Unlock() }
 func (u *fakeUI) Fail(m string)       { u.mu.Lock(); u.failed = append(u.failed, m); u.mu.Unlock() }
 func (u *fakeUI) ShowProgress(string) { u.mu.Lock(); u.shown++; u.mu.Unlock() }
@@ -326,5 +332,29 @@ func TestCheckNowWithoutAClientShowsTheNotConfiguredMessage(t *testing.T) {
 
 	if len(ui.informed) != 1 || !strings.Contains(ui.informed[0], "no update feed or signing key") {
 		t.Errorf("informed %q", ui.informed)
+	}
+}
+
+func TestARolledBackVersionIsToldOnceAndNeverScheduled(t *testing.T) {
+	notified := 0
+	ui := &fakeUI{}
+	no := true
+	ui.answer = &no
+	client := &fakeClient{offer: &update.Offer{Version: "0.21.0"}, results: []error{nil}}
+	l := NewLauncher(LauncherConfig{
+		Settings: Settings{}.WithAutoCheck(true), UI: ui, Client: client, Current: "0.20.0",
+		After: newClock().After, RolledBack: "0.21.0", Notify: true, Notified: func() { notified++ },
+	})
+	t.Cleanup(l.Close)
+
+	l.Start(context.Background())
+	eventually(t, "the check", func() bool { return client.count() == 1 })
+
+	if notified != 1 || len(ui.informed) != 1 || ui.informed[0] != "undone 0.21.0" {
+		t.Errorf("notified %d, informed %v", notified, ui.informed)
+	}
+
+	if len(ui.offered()) != 0 {
+		t.Error("the schedule must not offer the version that was rolled back")
 	}
 }

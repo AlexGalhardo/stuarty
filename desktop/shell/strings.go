@@ -31,6 +31,7 @@ const (
 	TextYes           = "yes"
 	TextNo            = "no"
 	TextDownloading   = "downloading"
+	TextUndone        = "undone"
 )
 
 var catalogues = map[string]map[string]string{
@@ -47,6 +48,7 @@ var catalogues = map[string]map[string]string{
 			"It connects only to the update server, only for this check, and sends nothing about you. " +
 			"You can change this in Help.",
 		TextYes: "Yes", TextNo: "No", TextDownloading: "Downloading Vukem Video ",
+		TextUndone: "Vukem Video could not start the new version, so the previous version was restored. Version ",
 	},
 	"pt-BR": {
 		TextFile: "Arquivo", TextOpenWorkspace: "Abrir pasta do workspace", TextQuit: "Sair",
@@ -61,6 +63,7 @@ var catalogues = map[string]map[string]string{
 			"Ele se conecta só ao servidor de atualizações, só para essa verificação, e não envia nada sobre você. " +
 			"Você pode mudar isso em Ajuda.",
 		TextYes: "Sim", TextNo: "Não", TextDownloading: "Baixando o Vukem Video ",
+		TextUndone: "O Vukem Video não conseguiu iniciar a versão nova e restaurou a anterior. Versão ",
 	},
 }
 
