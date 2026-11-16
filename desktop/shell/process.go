@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -135,21 +136,37 @@ func Start(ctx context.Context, cfg Config) (*Server, error) {
 	cmd.Env = append(os.Environ(), envAddr+"="+addr, envHome+"="+string(cfg.Workspace))
 	cmd.Env = append(cmd.Env, cfg.Env...)
 	cmd.Stderr = &errBuf
-	if err := cmd.Start(); err != nil {
-		return nil, &StartupError{Reason: ReasonSpawn, Message: "Cannot start " + cfg.Binary, Err: err}
-	}
-	release, err := bindToShell(cmd)
-	if err != nil {
-		_ = cmd.Process.Kill()
-		_ = cmd.Wait()
+	prepareCommand(cmd)
 
-		return nil, &StartupError{Reason: ReasonSpawn, Message: "Cannot tie the server to the window", Err: err}
-	}
-	s := &Server{cmd: cmd, grace: cfg.StopGrace, done: make(chan struct{}), release: release}
+	s := &Server{cmd: cmd, grace: cfg.StopGrace, done: make(chan struct{})}
+	started := make(chan error, 1)
+	// The thread that starts the child must outlive it: on Linux the parent-death signal fires when
+	// that thread exits. Locking it and keeping Wait here holds it until the child is gone.
 	go func() {
+		runtime.LockOSThread()
+		if err := cmd.Start(); err != nil {
+			started <- &StartupError{Reason: ReasonSpawn, Message: "Cannot start " + cfg.Binary, Err: err}
+			close(s.done)
+
+			return
+		}
+		release, err := bindToShell(cmd)
+		if err != nil {
+			_ = cmd.Process.Kill()
+			_ = cmd.Wait()
+			started <- &StartupError{Reason: ReasonSpawn, Message: "Cannot tie the server to the window", Err: err}
+			close(s.done)
+
+			return
+		}
+		s.release = release
+		started <- nil
 		_ = cmd.Wait()
 		close(s.done)
 	}()
+	if err := <-started; err != nil {
+		return nil, err
+	}
 
 	if err := s.waitReady(ctx, cfg, &errBuf); err != nil {
 		s.Stop()

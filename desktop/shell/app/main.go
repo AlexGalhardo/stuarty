@@ -121,7 +121,14 @@ func failStartup(app *application.App, err error) error {
 	if se, ok := errors.AsType[*shell.StartupError](err); ok {
 		msg = se.Message
 	}
-	app.Dialog.Error().SetTitle(tr(shell.TextCannotStart)).SetMessage(msg).Show()
+	title := tr(shell.TextCannotStart)
+	// A dialog shown before the loop runs is dropped (Wails: "MessageDialog.Show was called before the
+	// application started"), so the person saw nothing (VV-006). Run the loop just to show it, then leave.
+	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
+		app.Dialog.Error().SetTitle(title).SetMessage(msg).Show()
+		app.Quit()
+	})
+	_ = app.Run()
 	return err
 }
 

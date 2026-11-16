@@ -56,7 +56,9 @@ while WebView2 starts. The shell:
 2. proves the server knows the workspace token (handshake), asks for a one-time
    launch address (`POST /api/v1/system/launch`) and opens it in the window, so
    the window gets its session cookie and never sees the token (ADR-0019);
-3. on Quit, closing the window or a crash of the shell, stops the server.
+3. on Quit, closing the window or a crash of the shell, stops the server: a job object on Windows,
+   `Pdeathsig` on Linux, and on macOS (no parent-death signal) a small watcher in `/bin/sh` that
+   ends the server when the shell is gone.
 
 Menu: File (Open workspace folder, Quit), View (Reload, Toggle full screen), Help (About, with the
 version set by `-X main.version`).
