@@ -40,15 +40,17 @@
 
 ## Quick start
 
-Run the container image of the web version. The port is published on your computer only:
+Run the container image of the latest release. The port is published on your computer only:
 
 ```bash
 docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data \
   -e APP_KEY="$(openssl rand -base64 32)" \
-  ghcr.io/alexgalhardo/vukem-video:0.20.0
+  -e VUKEM_VIDEO_ADMIN_EMAIL=admin@example.com \
+  -e VUKEM_VIDEO_ADMIN_PASSWORD=choose-a-long-password \
+  ghcr.io/alexgalhardo/vukem-video:latest
 ```
 
-Then open `http://127.0.0.1:7878` in a browser.
+Then open `http://127.0.0.1:7878` in a browser and sign in with that email and password. The two variables create the first administrator on the first start only; later starts ignore them.
 
 Installers for Windows, Linux and macOS and the desktop application are on the [releases page](https://github.com/AlexGalhardo/vukem-video/releases). Read [Installation](https://video.vukem.dev/docs/getting-started/installation/) for every option and how to verify a download.
 
