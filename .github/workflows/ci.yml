@@ -126,6 +126,8 @@ jobs:
     timeout-minutes: 20
     env:
       SHARD: ${{ matrix.shard }}
+      # Frames that differ from a golden are written here and uploaded on failure.
+      VUKEM_VIDEO_TEST_ARTIFACTS_DIR: ${{ github.workspace }}/golden-mismatch
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -197,6 +199,13 @@ jobs:
         with:
           name: coverage-${{ matrix.shard }}
           path: coverage.out
+      - name: Upload the frames that differ from a golden
+        if: failure() && startsWith(matrix.shard, 'export')
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: golden-mismatch-${{ matrix.shard }}-${{ matrix.os }}
+          path: golden-mismatch
+          if-no-files-found: ignore
 
   # The required checks of the ruleset (`Test (ubuntu-latest)` and the other two).
   # Each one fails when a shard of its own operating system failed or did not
