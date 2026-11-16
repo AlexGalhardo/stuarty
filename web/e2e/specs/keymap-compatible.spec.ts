@@ -151,25 +151,37 @@ test.describe("compatible keymap", () => {
 		await expect.poll(width).toBeLessThan(again);
 	});
 
-	test("Ctrl+C then Ctrl+V pastes a copy and Ctrl+X cuts", async ({
+	test("Ctrl+C then Ctrl+V pastes a copy at the playhead and Ctrl+X then Ctrl+V moves the item there", async ({
 		page,
 		request,
 	}) => {
-		const seeded = await seedProject(request, { tracks: 1, perTrack: 2 });
-		const items = await open(page, seeded.id, 2);
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+		const items = await open(page, seeded.id, 1);
 		const edits = recordEdits(page);
 		await items.first().click();
 		await page.keyboard.press("Control+c");
 		await page.waitForTimeout(200);
 		expect(edits).toHaveLength(0);
+		await playheadTo(page, 3);
 		await page.keyboard.press("Control+v");
-		await expect(items).toHaveCount(3);
-		expect(edits).toHaveLength(1);
-		expect(edits[0]?.operations.map((o) => o.op)).toEqual(["item.duplicate"]);
-		await items.nth(1).click();
-		await page.keyboard.press("Control+x");
 		await expect(items).toHaveCount(2);
-		expect(edits[1]?.operations.map((o) => o.op)).toEqual(["item.delete"]);
+		expect(edits).toHaveLength(1);
+		expect(edits[0]?.operations).toHaveLength(1);
+		expect(edits[0]?.operations[0]?.op).toBe("item.duplicate");
+		expect(edits[0]?.operations[0]?.args.start).toMatch(/^\d+f$/);
+		const copyStart = edits[0]?.operations[0]?.args.start;
+
+		await items.first().click();
+		await page.keyboard.press("Control+x");
+		await page.waitForTimeout(200);
+		expect(edits).toHaveLength(1);
+		await expect(items).toHaveCount(2);
+		await playheadTo(page, 3);
+		await page.keyboard.press("Control+v");
+		await expect.poll(() => edits.length).toBe(2);
+		expect(edits[1]?.operations.map((o) => o.op)).toEqual(["item.move"]);
+		expect(edits[1]?.operations[0]?.args.start).not.toBe(copyStart);
+		await expect(items).toHaveCount(2);
 	});
 
 	test("Ctrl+. and Ctrl+, raise and lower the volume by 0.1 dB", async ({

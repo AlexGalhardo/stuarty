@@ -37,9 +37,14 @@ const EDIT_BINDINGS = [
 	"add_text",
 ] as const;
 
-// The items Mod+C and Mod+X took; Mod+V pastes a copy of each. UI state of the
-// page: it is not project data and no other actor sees it.
-let clipboard: readonly string[] = [];
+// The items Mod+C and Mod+X took; Mod+V puts them at the playhead: a copy
+// duplicates, a cut moves (the items stay until pasted, so no command is needed
+// to bring back what a delete removed). UI state of the page: it is not project
+// data and no other actor sees it.
+let clipboard: { ids: readonly string[]; cut: boolean } = {
+	ids: [],
+	cut: false,
+};
 
 // The editing keys (SDD-012 sections 8.2, 15 and 18.7): split, trim to the
 // playhead, Add caption and Add text have rebindable keys (Mod+B, Q, W, C and T
@@ -93,11 +98,12 @@ export function useShortcuts(openCaption: () => void): void {
 				);
 			} else if (row === "copy" || row === "cut") {
 				if (held.length === 0) return false;
-				clipboard = [...held];
-				if (row === "cut") void actions.deleteSelection();
+				clipboard = { ids: [...held], cut: row === "cut" };
 			} else if (row === "paste") {
-				if (clipboard.length === 0) return false;
-				void actions.duplicateItems(clipboard);
+				if (clipboard.ids.length === 0) return false;
+				const { ids, cut } = clipboard;
+				if (cut) clipboard = { ids: [], cut: false };
+				void actions.pasteItems(ids, playheadFrame, cut);
 			} else return false;
 			event.preventDefault();
 			return true;

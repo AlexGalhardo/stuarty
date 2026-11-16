@@ -32,6 +32,7 @@ import {
 	moveToTrackOperations,
 	nudgeOperations,
 	type Operations,
+	pasteOperations,
 	projectRenameOperations,
 	type Ripple,
 	removeAssetOperations,
@@ -110,8 +111,13 @@ export interface Actions {
 	crossfadeSelection(): Promise<EditOutcome | null>;
 	// Ctrl+D: a copy of each selected item right after its end.
 	duplicateSelection(): Promise<EditOutcome | null>;
-	// Paste (Mod+V): a copy of each item the clipboard holds, right after its end.
-	duplicateItems(ids: readonly string[]): Promise<EditOutcome | null>;
+	// Paste (Mod+V): the clipboard items at the playhead frame `at`; a cut
+	// clipboard moves them, a copy duplicates them (`pasteOperations`).
+	pasteItems(
+		ids: readonly string[],
+		at: number,
+		cut: boolean,
+	): Promise<EditOutcome | null>;
 	// Mod+. and Mod+,: the volume of the selected clips and audio items, moved
 	// by `db` decibels (one `item.set_audio` each, one batch).
 	adjustVolume(db: number): Promise<EditOutcome | null>;
@@ -541,7 +547,7 @@ export function createActions(runtime: EditorRuntime): Actions {
 			return send(deleteOperations(actedIds(), ripple));
 		},
 		duplicateSelection: () => send(duplicateOperations(rangesOf(actedIds()))),
-		duplicateItems: (ids) => send(duplicateOperations(rangesOf(ids))),
+		pasteItems: (ids, at, cut) => send(pasteOperations(rangesOf(ids), at, cut)),
 		adjustVolume(db) {
 			const doc = documents.getState().document;
 			if (doc === null) return Promise.resolve(null);
