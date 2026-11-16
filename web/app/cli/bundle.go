@@ -36,16 +36,11 @@ var bundleExport = &spec{
 		deadline := time.Now().Add(c.args.timeout())
 		wait := c.args.boolean("wait") || dest != ""
 
-		if wait {
-			req.WaitMS = waitSlice(deadline)
-		}
+		out, err := c.runJob(ctx, wait, deadline, func(ctx context.Context, waitMS int) (*service.Job, error) {
+			req.WaitMS = waitMS
 
-		job, err := c.svc.ProjectBundleExport(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-
-		out, err := jobOutput(ctx, c, job, wait, deadline)
+			return c.svc.ProjectBundleExport(ctx, req)
+		})
 		if err != nil {
 			return nil, err
 		}

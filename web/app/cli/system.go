@@ -170,16 +170,12 @@ var transcribeCmd = &spec{
 		wait := c.args.boolean("wait")
 
 		req := service.JobStartRequest{ProjectID: c.projectID, Kind: service.JobTranscribe, Args: raw}
-		if wait {
-			req.WaitMS = waitSlice(deadline)
-		}
 
-		job, err := c.svc.JobStart(ctx, req)
-		if err != nil {
-			return nil, err
-		}
+		return c.runJob(ctx, wait, deadline, func(ctx context.Context, waitMS int) (*service.Job, error) {
+			req.WaitMS = waitMS
 
-		return jobOutput(ctx, c, job, wait, deadline)
+			return c.svc.JobStart(ctx, req)
+		})
 	},
 }
 
@@ -249,9 +245,12 @@ func runToolsInstall(ctx context.Context, c *call) (*output, error) {
 	}
 
 	deadline := time.Now().Add(c.args.timeout())
+	p := c.progress()
 
 	st, err := c.svc.ToolsStatus(ctx, service.ToolsStatusRequest{})
 	for err == nil && st.State == "running" && time.Now().Before(deadline) {
+		p.download(st.Done, st.Total)
+
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()

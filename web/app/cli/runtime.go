@@ -70,6 +70,8 @@ type Runtime struct {
 	Resolver Resolver
 	// Interactive is true when Stdin is a terminal, so a command may ask a question.
 	Interactive bool
+	// StderrTTY is true when Stderr is a terminal, so a long command may draw its progress there.
+	StderrTTY bool
 	// Manifest returns the pins of the helpers this build may install; the one
 	// embedded in the binary when nil.
 	Manifest func() (transcribe.Manifest, error)
@@ -84,6 +86,7 @@ func NewRuntime(r Resolver) *Runtime {
 	return &Runtime{
 		Stdin: os.Stdin, Stdout: os.Stdout, Stderr: os.Stderr,
 		Getenv: os.Getenv, Getwd: os.Getwd, Resolver: r, Interactive: isTerminal(os.Stdin),
+		StderrTTY: isTerminal(os.Stderr),
 	}
 }
 
