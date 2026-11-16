@@ -102,9 +102,8 @@ func readEntry(zr *zip.ReadCloser, name string, limit int64) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		defer r.Close()
-
 		b, err := io.ReadAll(io.LimitReader(r, limit+1))
+		_ = r.Close() // a read-only zip entry: its Close reports nothing the read did not
 		if err != nil {
 			return nil, err
 		}

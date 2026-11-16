@@ -271,7 +271,9 @@ func TestSecurity_T22_UIRendersTextNotHTML(t *testing.T) {
 
 	dir := webDir(t)
 	if _, err := os.Stat(filepath.Join(dir, "node_modules", "@playwright", "test")); err != nil {
-		t.Skip("Playwright is not installed in web/node_modules (run bun install): the spec security-ui.spec.ts did not run")
+		t.Skip(
+			"Playwright is not installed in web/node_modules (run bun install): the spec security-ui.spec.ts did not run",
+		)
 	}
 
 	ctx, cancel := context.WithTimeout(t.Context(), 8*time.Minute)
