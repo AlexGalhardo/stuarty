@@ -185,7 +185,7 @@ log "ffmpeg-build: opus"
 	host_arg=()
 	[ -n "$cross_prefix" ] && host_arg=(--host=x86_64-w64-mingw32)
 	./configure --prefix="$prefix" --disable-shared --enable-static --disable-doc --disable-extra-programs \
-		"${host_arg[@]}" >&2
+		${host_arg[@]+"${host_arg[@]}"} >&2
 	make -j"$jobs" >&2 && make install >&2
 )
 
@@ -195,7 +195,7 @@ log "ffmpeg-build: zimg"
 	host_arg=()
 	[ -n "$cross_prefix" ] && host_arg=(--host=x86_64-w64-mingw32)
 	./autogen.sh >&2
-	CXXFLAGS="-O2 $remap" ./configure --prefix="$prefix" --disable-shared --enable-static "${host_arg[@]}" >&2
+	CXXFLAGS="-O2 $remap" ./configure --prefix="$prefix" --disable-shared --enable-static ${host_arg[@]+"${host_arg[@]}"} >&2
 	make -j"$jobs" >&2 && make install >&2
 )
 
@@ -215,7 +215,7 @@ if [ -d "$work/src/libvpl" ]; then
 	cmake -S "$work/src/libvpl" -B "$work/libvpl-build" -DCMAKE_INSTALL_PREFIX="$prefix" -DCMAKE_INSTALL_LIBDIR=lib \
 		-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TOOLS=OFF \
 		-DBUILD_PREVIEW=OFF -DBUILD_EXPERIMENTAL=OFF -DINSTALL_EXAMPLE_CODE=OFF -DENABLE_WARNINGS_AS_ERRORS=OFF \
-		-DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CFLAGS" "${cmake_cross[@]}" >&2
+		-DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CFLAGS" ${cmake_cross[@]+"${cmake_cross[@]}"} >&2
 	cmake --build "$work/libvpl-build" -j "$jobs" >&2 && cmake --install "$work/libvpl-build" >&2
 fi
 
@@ -245,7 +245,7 @@ linux)
 	extra+=("--extra-ldflags=-static-libgcc")
 	[ "$arch" = arm64 ] && extra+=(--arch=aarch64)
 	;;
-darwin) extra+=("${configure_target[@]}") ;;
+darwin) extra+=(${configure_target[@]+"${configure_target[@]}"}) ;;
 windows)
 	extra+=(--arch=x86_64 --target-os=mingw32 --cross-prefix="$cross_prefix" --enable-cross-compile
 		"--extra-ldflags=-static -Wl,--no-insert-timestamp")
@@ -260,7 +260,7 @@ log "ffmpeg-build: ffmpeg $FFMPEG_BUILD_VERSION for $os-$arch"
 	cd "$work/src/ffmpeg"
 	./configure --prefix="$work/install" --pkg-config-flags=--static \
 		"--extra-cflags=-I$prefix/include $remap" "--extra-ldflags=-L$prefix/lib" \
-		"${flags[@]}" "${extra[@]}" >&2
+		"${flags[@]}" ${extra[@]+"${extra[@]}"} >&2
 	make -j"$jobs" >&2 && make install >&2
 )
 
