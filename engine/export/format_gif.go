@@ -222,6 +222,9 @@ func (b *gifBlocks) flush() {
 // and the size cap is checked as it grows.
 func (s *state) buildGIF(ctx context.Context, rd *renderer) (built, error) {
 	st := s.job.Doc.Settings
+	width, height, scale := gifSize(st)
+
+	s.scale, s.opts.OutputScale = scale, scale
 
 	partial, err := s.dir.Path(s.job.JobID + ".partial.gif")
 	if err != nil {
@@ -237,8 +240,8 @@ func (s *state) buildGIF(ctx context.Context, rd *renderer) (built, error) {
 
 	step := gifStep(st.FPS)
 	delays := gifDelaysCS(st.FPS, s.frames)
-	g := newGIFWriter(f, st.Width, st.Height, s.job.MaxBytes)
-	buf := image.NewRGBA(image.Rect(0, 0, st.Width, st.Height))
+	g := newGIFWriter(f, width, height, s.job.MaxBytes)
+	buf := image.NewRGBA(image.Rect(0, 0, width, height))
 	last := time.Now()
 
 	for j, delay := range delays {
@@ -270,6 +273,8 @@ func (s *state) buildGIF(ctx context.Context, rd *renderer) (built, error) {
 
 	ver, err := s.verifyGIF(partial, delays)
 
+	ver.Width, ver.Height = width, height
+
 	return built{partial: partial, encoder: "gif", ver: ver}, err
 }
 
@@ -297,8 +302,9 @@ func (s *state) verifyGIF(path string, delays []int) (Verified, error) {
 	var failed []Check
 	fail := func(name, expected, got string) { failed = append(failed, Check{name, expected, got}) }
 
-	if info.width != st.Width || info.height != st.Height {
-		fail("dimensions", fmt.Sprintf("%dx%d", st.Width, st.Height), fmt.Sprintf("%dx%d", info.width, info.height))
+	wantW, wantH, _ := gifSize(st)
+	if info.width != wantW || info.height != wantH {
+		fail("dimensions", fmt.Sprintf("%dx%d", wantW, wantH), fmt.Sprintf("%dx%d", info.width, info.height))
 	}
 
 	if !slices.Equal(info.delays, delays) {

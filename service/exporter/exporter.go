@@ -111,6 +111,7 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 		Bytes: res.Size, SHA256: sum, DurationMS: res.DurationMS, Frames: res.Frames,
 	}
 	out.VideoCodec, out.AudioCodec, out.Checks = describe(res, in.Doc.Settings)
+	out.Width, out.Height = res.Width, res.Height
 
 	if l := res.Loudness.IntegratedLUFS; l != nil {
 		v := *l + res.Loudness.GainDB
@@ -118,6 +119,17 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 	}
 
 	return out, nil
+}
+
+// gifDimensions is the detail of the dimensions check of a GIF. A GIF is capped in width and in
+// frame rate (SDD-004 section 8.1), and the check says so when the file is smaller than the project.
+func gifDimensions(res *export.Result, size string, st timeline.Settings) string {
+	if res.Width == 0 || res.Width == st.Width && res.Height == st.Height {
+		return size
+	}
+
+	return fmt.Sprintf("%dx%d (reduced from the project's %s; a GIF is capped at 480 pixels wide and 15 fps)",
+		res.Width, res.Height, size)
 }
 
 // describe names the codecs of the verified file and the checks that the engine ran for its
@@ -134,7 +146,7 @@ func describe(res *export.Result, st timeline.Settings) (video, audio string, ch
 		return "gif", "", []service.VerifyCheck{
 			{Name: "streams", OK: true, Detail: "one video stream, no audio"},
 			dur,
-			{Name: "dimensions", OK: true, Detail: size},
+			{Name: "dimensions", OK: true, Detail: gifDimensions(res, size, st)},
 		}
 	case export.FormatWAV:
 		return "", "pcm_s16le", []service.VerifyCheck{

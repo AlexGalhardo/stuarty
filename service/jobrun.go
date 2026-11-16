@@ -629,6 +629,11 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		frames = in.End - in.Start
 	}
 
+	width, height := doc.Settings.Width, doc.Settings.Height
+	if res.Width > 0 && res.Height > 0 {
+		width, height = res.Width, res.Height
+	}
+
 	export := ExportResult{
 		Revision:     in.Revision,
 		Format:       formatName(in.Format),
@@ -637,8 +642,8 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		Bytes:        res.Bytes,
 		SHA256:       res.SHA256,
 		Duration:     timeValue(fps, frames),
-		Width:        doc.Settings.Width,
-		Height:       doc.Settings.Height,
+		Width:        width,
+		Height:       height,
 		FPS:          fpsString(fps.Num, fps.Den),
 		VideoCodec:   res.VideoCodec,
 		AudioCodec:   res.AudioCodec,

@@ -71,6 +71,9 @@ type Result struct {
 	Frames     int
 	Encoder    string
 	Loudness   Loudness
+	// Width and Height are the pixels of the file when they differ from the project's (a GIF is
+	// capped at 480 pixels wide); zero means the project's size.
+	Width, Height int
 }
 
 // state is what the parts of one export share.
@@ -229,6 +232,8 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 		Format:     format,
 		Encoder:    b.encoder,
 		Loudness:   b.loud,
+		Width:      ver.Width,
+		Height:     ver.Height,
 	}, nil
 }
 
