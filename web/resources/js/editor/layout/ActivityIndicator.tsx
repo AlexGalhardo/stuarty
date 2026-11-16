@@ -9,12 +9,9 @@ import {
 } from "@/components/ui/popover";
 import { type Translate, useLocale, useT } from "@/lib/i18n";
 import { announce } from "../a11y/announce";
-import {
-	ACTIVE_MS,
-	type ActivityEntry,
-	actorLabel,
-} from "../state/activityStore";
+import { ACTIVE_MS, type ActivityEntry } from "../state/activityStore";
 import { useActivityState } from "../state/EditorContext";
+import { useActorLabel } from "../state/useActorLabel";
 
 const SETTLED_MS = 5 * 60 * 1000;
 const ANNOUNCE_EVERY_MS = 2000;
@@ -55,6 +52,7 @@ function summary(t: Translate, counts: ActivityEntry["counts"]): string {
 // the latest remote batch while it is fresh, then settles to "Last edit by".
 export default function ActivityIndicator(): ReactNode {
 	const t = useT();
+	const actorLabel = useActorLabel();
 	const locale = useLocale();
 	const entries = useActivityState((s) => s.entries);
 	const active = useActivityState((s) => s.active);
@@ -79,7 +77,7 @@ export default function ActivityIndicator(): ReactNode {
 			{ actor: actorLabel(latest.actor) },
 			{ minIntervalMs: ANNOUNCE_EVERY_MS },
 		);
-	}, [latest]);
+	}, [latest, actorLabel]);
 
 	if (latest === undefined || now - latest.at > SETTLED_MS) {
 		return null;

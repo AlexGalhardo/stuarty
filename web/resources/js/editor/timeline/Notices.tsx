@@ -5,11 +5,11 @@ import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { useActions } from "../commands/useActions";
-import { actorLabel } from "../state/activityStore";
 import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 import type { Notice } from "../state/noticeStore";
 import { selectItem } from "../state/selectors";
+import { useActorLabel } from "../state/useActorLabel";
 import ConflictNotice from "../ui/ConflictNotice";
 import { errorHeadline } from "../ui/errorHeadline";
 import { capitalizeFirst } from "../ui/format";
@@ -20,6 +20,7 @@ function ConflictBody({
 	conflict: NonNullable<Notice["conflict"]>;
 }): ReactNode {
 	const t = useT();
+	const actorLabel = useActorLabel();
 	const item = useDocumentState((s) =>
 		conflict.itemId === null ? undefined : selectItem(s, conflict.itemId),
 	);
@@ -56,6 +57,7 @@ export const MAX_NOTICES_SHOWN = 3;
 
 export default function Notices(): ReactNode {
 	const t = useT();
+	const actorLabel = useActorLabel();
 	const runtime = useRuntime();
 	const actions = useActions();
 	const notices = useStore(runtime.notices, (s) => s.notices);
