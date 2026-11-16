@@ -447,8 +447,11 @@ type AudioSource struct {
     Samples     int64     // output samples
     Speed       Rational
     Gain        []GainPoint // piecewise-linear envelope in output samples: volume or its keyframes, times the fades
+    Denoise     float64     // noise reduction strength 0 to 1 (SDD-001 §3.5), rounded to 3 decimals; absent when 0
 }
 ```
+
+`Denoise` (added after BETA, TASK-0233) is constant over the item and the window carries it once per audio entry (`denoise`). It asks the mixer to clean the decoded source before the envelope is applied: the executor maps the strength to the noise reduction of FFmpeg's `afftdn` filter and the exact mapping, with its golden measurements, is defined with that engine change; until then the planner carries the value and no executor uses it.
 
 Conversions: output sample of timeline frame `t` is `t × 48000 × fps.den / fps.num` (integer division, floor); the last sample of an item is the first sample of the frame after it, minus one. Fades are linear ramps over their frame ranges.
 

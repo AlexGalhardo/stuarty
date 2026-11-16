@@ -291,7 +291,13 @@ var alphaOps = map[string]func(p *docPick) string{
 			p.oneOf("fade", "slide_left", "slide_right"), p.frames(40))
 	},
 	"item.set_audio": func(p *docPick) string {
-		return fmt.Sprintf(`{"item_id":%q,"volume":%.1f,"fade_in":%q}`, p.item(), float64(p.n(30))/10, p.frames(30))
+		return fmt.Sprintf(
+			`{"item_id":%q,"volume":%.1f,"fade_in":%q,"denoise":%.2f}`,
+			p.item(),
+			float64(p.n(30))/10,
+			p.frames(30),
+			float64(p.n(101))/100,
+		)
 	},
 	"item.duplicate": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"start":%q}`, p.item(), p.frames(3000))

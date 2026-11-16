@@ -32,7 +32,8 @@ type AudioSource struct {
 	SourceStart int64             `json:"source_start"` // first sample of the asset's normalized audio
 	Samples     int64             `json:"samples"`      // output samples
 	Speed       timeline.Rational `json:"speed"`
-	Gain        []GainPoint       `json:"gain"` // volume or its keyframes, times the fades
+	Gain        []GainPoint       `json:"gain"`              // volume or its keyframes, times the fades
+	Denoise     float64           `json:"denoise,omitempty"` // noise reduction strength 0 to 1 (SDD-004 §7); absent means off
 }
 
 // audible reports whether the item is a source: a clip whose asset has audio
@@ -137,6 +138,7 @@ func audioSource(doc *timeline.Document, it *timeline.Item, cs, ce int) AudioSou
 		Samples:     frameSample(fps, ce) - start,
 		Speed:       it.Speed,
 		Gain:        gain,
+		Denoise:     round3(it.Denoise),
 	}
 }
 

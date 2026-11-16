@@ -6,6 +6,12 @@
       "description": "Drop the audio of a clip.",
       "type": "boolean"
     },
+    "denoise": {
+      "description": "Noise reduction strength, 0 (off) to 1.",
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    },
     "fade_in": {
       "description": "Fade-in length; 0s removes it.",
       "type": "string",

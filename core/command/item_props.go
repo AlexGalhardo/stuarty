@@ -42,9 +42,10 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "item.set_audio",
-		Summary: "Sets the volume, the fades or the mute flag of a clip or audio item.",
-		Description: "Sets the given values. Volume 1, fades of 0 and audio_muted false clear the stored value. " +
-			"audio_muted applies to clip items only. The two fades together cannot be longer than the item.",
+		Summary: "Sets the volume, the fades, the mute flag or the noise reduction of a clip or audio item.",
+		Description: "Sets the given values. Volume 1, fades of 0, audio_muted false and denoise 0 clear the stored " +
+			"value. audio_muted applies to clip items only. denoise is the noise reduction strength, 0 to 1. The two " +
+			"fades together cannot be longer than the item.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "volume": 0.8, "fade_in": "1s", "fade_out": "0.5s"}`,
 		Errors: []string{
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState,
@@ -264,19 +265,24 @@ func applyItemSetTransition(c *Context, a *itemTransitionArgs) error {
 
 type itemAudioArgs struct {
 	ItemID     string   `json:"item_id"               desc:"A clip or audio item."`
-	Volume     *float64 `json:"volume,omitempty"      desc:"Linear gain, 0 to 4."            min:"0" max:"4"`
+	Volume     *float64 `json:"volume,omitempty"      desc:"Linear gain, 0 to 4."                    min:"0" max:"4"`
 	FadeIn     *Time    `json:"fade_in,omitempty"     desc:"Fade-in length; 0s removes it."`
 	FadeOut    *Time    `json:"fade_out,omitempty"    desc:"Fade-out length; 0s removes it."`
 	AudioMuted *bool    `json:"audio_muted,omitempty" desc:"Drop the audio of a clip."`
+	Denoise    *float64 `json:"denoise,omitempty"     desc:"Noise reduction strength, 0 (off) to 1." min:"0" max:"1"`
 }
 
 func applyItemSetAudio(c *Context, a *itemAudioArgs) error {
-	if err := atLeastOne([]string{"volume", "fade_in", "fade_out", "audio_muted"},
-		a.Volume != nil, a.FadeIn != nil, a.FadeOut != nil, a.AudioMuted != nil); err != nil {
+	if err := atLeastOne([]string{"volume", "fade_in", "fade_out", "audio_muted", "denoise"},
+		a.Volume != nil, a.FadeIn != nil, a.FadeOut != nil, a.AudioMuted != nil, a.Denoise != nil); err != nil {
 		return err
 	}
 	var fadeIn, fadeOut int
 	var err *Error
+	if a.Denoise != nil && (*a.Denoise < 0 || *a.Denoise > 1) {
+		return invalidArg("args.denoise", "args.denoise must be between 0 and 1, got %s.", trimFloat(*a.Denoise)).
+			WithHint("Use denoise 1 for the strongest reduction and 0 to turn it off.")
+	}
 	if a.FadeIn != nil {
 		if fadeIn, err = c.length("args.fade_in", string(*a.FadeIn), true); err != nil {
 			return err
@@ -339,9 +345,13 @@ func applyItemSetAudio(c *Context, a *itemAudioArgs) error {
 	if a.AudioMuted != nil {
 		it.AudioMuted = *a.AudioMuted
 	}
+	if a.Denoise != nil {
+		it.Denoise = round3(*a.Denoise)
+	}
 	c.Doc.Items[a.ItemID] = it
 	c.SetEffective("volume", it.Volume)
 	c.SetEffective("audio_muted", it.AudioMuted)
+	c.SetEffective("denoise", it.Denoise)
 	c.SetEffective("fade_in", TimeEffective(c.FPS(), it.FadeIn, requestedOf(a.FadeIn)))
 	c.SetEffective("fade_out", TimeEffective(c.FPS(), it.FadeOut, requestedOf(a.FadeOut)))
 	return nil

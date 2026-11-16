@@ -98,6 +98,7 @@ type WindowAudio struct {
 	SourceSeconds float64 `json:"source_seconds"` // at the first frame
 	Speed         float64 `json:"speed"`
 	Gain          Series  `json:"gain"`
+	Denoise       float64 `json:"denoise,omitempty"`
 }
 
 // Window returns the plans of frames [from, to) in the compact form of
@@ -274,7 +275,7 @@ func windowAudio(doc *timeline.Document, from, to int) []WindowAudio {
 			continue
 		}
 
-		wa := WindowAudio{Item: it.ID, Asset: it.Asset, First: cs, Last: ce - 1}
+		wa := WindowAudio{Item: it.ID, Asset: it.Asset, First: cs, Last: ce - 1, Denoise: round3(it.Denoise)}
 
 		pos := int64(it.SourceIn)
 		if it.Speed.Den > 0 {

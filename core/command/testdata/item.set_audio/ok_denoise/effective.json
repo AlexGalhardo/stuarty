@@ -1,0 +1,15 @@
+{
+  "audio_muted": false,
+  "denoise": 0.6,
+  "fade_in": {
+    "frame": 0,
+    "requested": null,
+    "seconds": 0
+  },
+  "fade_out": {
+    "frame": 0,
+    "requested": null,
+    "seconds": 0
+  },
+  "volume": 1
+}

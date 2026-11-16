@@ -343,6 +343,10 @@ func itemFlags(it *timeline.Item) []string {
 		f = append(f, "muted")
 	}
 
+	if it.Denoise != 0 && (it.Type == timeline.ItemClip || it.Type == timeline.ItemAudio) {
+		f = append(f, "nr:"+num(it.Denoise))
+	}
+
 	if it.Disabled {
 		f = append(f, "disabled")
 	}
@@ -458,6 +462,41 @@ func addJSON(f map[string]string, key string, present bool, v any) {
 	}
 }
 
+func setIf(f map[string]string, k string, v, def float64) {
+	if v != def {
+		f[k] = num(v)
+	}
+}
+
+// visualFields adds the fields of a visual item that are not the defaults.
+func visualFields(f map[string]string, it *timeline.Item) {
+	setIf(f, "scale", it.Scale, 1)
+	setIf(f, "rotation", it.Rotation, 0)
+	setIf(f, "opacity", it.Opacity, 1)
+
+	if it.Blend != "" {
+		f["blend"] = it.Blend
+	}
+
+	if it.FlipX {
+		f["flip_x"] = "true"
+	}
+
+	if it.FlipY {
+		f["flip_y"] = "true"
+	}
+
+	addJSON(f, "mask", it.Mask != nil, it.Mask)
+
+	if it.X != nil {
+		f["x"] = num(*it.X)
+	}
+
+	if it.Y != nil {
+		f["y"] = num(*it.Y)
+	}
+}
+
 func extraFields(fps timeval.FPS, it *timeline.Item) map[string]string {
 	f := map[string]string{}
 	frames := func(v int) string { return Cell(fps, int64(v)) }
@@ -475,47 +514,17 @@ func extraFields(fps timeval.FPS, it *timeline.Item) map[string]string {
 		f["fit"] = it.Fit
 	}
 
-	setIf := func(k string, v, def float64) {
-		if v != def {
-			f[k] = num(v)
-		}
-	}
-
 	if it.Type != timeline.ItemAudio {
-		setIf("scale", it.Scale, 1)
-		setIf("rotation", it.Rotation, 0)
-		setIf("opacity", it.Opacity, 1)
-
-		if it.Blend != "" {
-			f["blend"] = it.Blend
-		}
-
-		if it.FlipX {
-			f["flip_x"] = "true"
-		}
-
-		if it.FlipY {
-			f["flip_y"] = "true"
-		}
-
-		addJSON(f, "mask", it.Mask != nil, it.Mask)
-
-		if it.X != nil {
-			f["x"] = num(*it.X)
-		}
-
-		if it.Y != nil {
-			f["y"] = num(*it.Y)
-		}
+		visualFields(f, it)
 	}
 
 	if it.Type == timeline.ItemClip {
-		setIf("brightness", it.Brightness, 0)
-		setIf("contrast", it.Contrast, 1)
-		setIf("saturation", it.Saturation, 1)
-		setIf("temperature", it.Temperature, 0)
-		setIf("tint", it.Tint, 0)
-		setIf("hue", it.Hue, 0)
+		setIf(f, "brightness", it.Brightness, 0)
+		setIf(f, "contrast", it.Contrast, 1)
+		setIf(f, "saturation", it.Saturation, 1)
+		setIf(f, "temperature", it.Temperature, 0)
+		setIf(f, "tint", it.Tint, 0)
+		setIf(f, "hue", it.Hue, 0)
 
 		addJSON(f, "crop", it.Crop != nil, it.Crop)
 		addJSON(f, "chroma_key", it.ChromaKey != nil, it.ChromaKey)

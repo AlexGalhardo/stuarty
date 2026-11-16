@@ -425,7 +425,7 @@ func (v *validator) item(key string, it Item) {
 func (v *validator) itemFieldsForType(path, key string, it Item) {
 	bad := func(name string) { v.add(VShape, path+"."+name, key, "%s does not apply to %s items", name, it.Type) }
 	media := it.Type == ItemClip || it.Type == ItemAudio
-	if !media && (it.Asset != "" || it.SourceIn != 0 || it.FadeIn != 0 || it.FadeOut != 0) {
+	if !media && (it.Asset != "" || it.SourceIn != 0 || it.FadeIn != 0 || it.FadeOut != 0 || it.Denoise != 0) {
 		bad("asset")
 	}
 	if it.Type != ItemClip &&
@@ -478,6 +478,9 @@ func (v *validator) visual(path, key string, it Item) {
 func (v *validator) media(path, key string, it Item) {
 	if !inRange(it.Volume, 0, 4) {
 		v.add(VShape, path+".volume", key, "volume must be between 0 and 4")
+	}
+	if !inRange(it.Denoise, 0, 1) {
+		v.add(VShape, path+".denoise", key, "denoise must be between 0 and 1")
 	}
 	if it.SourceIn < 0 {
 		v.add(VShape, path+".source_in", key, "source_in cannot be negative")

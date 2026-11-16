@@ -287,6 +287,11 @@
         "crop": {
           "$ref": "#/$defs/Crop"
         },
+        "denoise": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
         "disabled": {
           "type": "boolean"
         },

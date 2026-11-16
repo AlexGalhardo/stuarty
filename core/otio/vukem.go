@@ -201,6 +201,7 @@ func itemOps(props map[string]any, mode itemMode, start, dur int, used map[strin
 	if mode != modeText {
 		sound := map[string]any{}
 		set(sound, "volume", 0, 4, false)
+		set(sound, "denoise", 0, 1, false)
 
 		if f, ok := p.frames("fade_in"); ok {
 			sound["fade_in"] = frameTime(f)
