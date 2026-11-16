@@ -677,13 +677,14 @@ vukem-video agent:docs --write ~/.claude/skills/vukem-video
 Transcribe the audio of an asset
 
 ```text
-vukem-video transcribe --project <id> --asset <id> [--language auto] [--wait] [--timeout d]
+vukem-video transcribe --project <id> --asset <id> [--language auto] [--model <name>] [--wait] [--timeout d]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--asset` | string |  | asset to transcribe (required) |
 | `--language` | string | `auto` | BCP 47 code, or auto |
+| `--model` | string |  | installed model name, such as base (default: the workspace default) |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
 
