@@ -1174,6 +1174,27 @@ export function filterOperations(
 	return [{ op: "clip.set_filter", args: { item_id: itemId, ...changes } }];
 }
 
+export interface ChromaKeyChanges {
+	similarity?: number;
+	smoothness?: number;
+	spill?: number;
+}
+
+// A colour turns the key on (or changes its colour) and null removes it; the
+// settings not sent keep their value (`clip.set_chroma_key`).
+export function chromaKeyOperations(
+	itemId: string,
+	color: string | null,
+	changes: ChromaKeyChanges = {},
+): Operations {
+	return [
+		{
+			op: "clip.set_chroma_key",
+			args: { item_id: itemId, color, ...changes },
+		},
+	];
+}
+
 export function blurOperations(itemId: string, radius: number): Operations {
 	return [{ op: "clip.set_blur", args: { item_id: itemId, radius } }];
 }

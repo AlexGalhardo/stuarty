@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useDocumentState } from "../../state/EditorContext";
 import AudioSection from "./AudioSection";
 import AutoCaptions from "./AutoCaptions";
+import ChromaKeySection from "./ChromaKeySection";
 import ColorSection from "./ColorSection";
 import FiltersSection from "./FiltersSection";
 import FramingSection from "./FramingSection";
@@ -26,6 +27,7 @@ export default function ClipPanel({ itemId }: { itemId: string }): ReactNode {
 			{!still && <SpeedSection itemId={itemId} />}
 			<ColorSection itemId={itemId} />
 			<FiltersSection itemId={itemId} />
+			<ChromaKeySection itemId={itemId} />
 			<SilencesSection itemId={itemId} />
 			<AutoCaptions itemId={itemId} />
 		</>
