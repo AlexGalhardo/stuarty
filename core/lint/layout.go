@@ -125,7 +125,7 @@ func (c *check) safeAreaText(it *timeline.Item, b, safe box) (msg, hint string) 
 
 // offFrame reports a visible item whose box lies partly or wholly outside the frame:
 // any pixel for text and captions; wholly outside, or more than half outside, for clips
-// and shapes. It needs a Measurer.
+// and shapes, unless the box covers the whole frame (fit "cover"). It needs a Measurer.
 func (c *check) offFrame() {
 	if c.env.Measurer == nil {
 		return
@@ -154,6 +154,12 @@ func (c *check) offFrame() {
 		}
 
 		if !textual && (area <= 0 || inside*2 >= area) {
+			continue
+		}
+
+		// A box that covers the whole frame cuts nothing the viewer would see: this is the
+		// overflow of a fit "cover" clip, which is the normal framing, not a mistake (VV-021).
+		if !textual && b.x0 <= frame.x0 && b.y0 <= frame.y0 && b.x1 >= frame.x1 && b.y1 >= frame.y1 {
 			continue
 		}
 
