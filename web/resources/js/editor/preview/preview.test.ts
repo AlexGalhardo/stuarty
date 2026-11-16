@@ -6,14 +6,17 @@ import { pixiColorMatrix } from "./layerFilters";
 import { Lru } from "./lru";
 import {
 	audioClockReady,
+	audioDrive,
 	audioSourceSeconds,
+	curveOffset,
+	curveSpeedAt,
 	DRIFT_FRAMES,
 	MAX_VIDEO_LAYERS,
 	needsCorrection,
 	PlaybackClock,
-	playbackRateFor,
 	rankVideoLayers,
 	shouldCommitFrame,
+	videoDrive,
 } from "./mediaSync";
 import {
 	clampToLastFrame,
@@ -140,10 +143,51 @@ describe("media sync", () => {
 	});
 
 	test("the playback rate is the slope of source_seconds, clamped", () => {
-		expect(playbackRateFor([0, 1 / 30, 2 / 30], fps)).toBeCloseTo(1);
-		expect(playbackRateFor([0, 2 / 30, 4 / 30], fps)).toBeCloseTo(2);
-		expect(playbackRateFor([0, 20 / 30], fps)).toBe(4);
-		expect(playbackRateFor([1], fps)).toBe(1);
+		expect(videoDrive([0, 1 / 30, 2 / 30], 0, fps)).toEqual({
+			seek: false,
+			rate: expect.closeTo(1),
+		});
+		expect(videoDrive([0, 2 / 30, 4 / 30], 0, fps)).toEqual({
+			seek: false,
+			rate: expect.closeTo(2),
+		});
+		expect(videoDrive([0, 20 / 30], 0, fps)).toEqual({ seek: false, rate: 4 });
+		expect(videoDrive([1], 0, fps)).toEqual({ seek: false, rate: 1 });
+	});
+
+	test("a ramp is followed by the slope of the next frames", () => {
+		const seconds = Array.from({ length: 40 }, (_, i) =>
+			i < 20 ? i / 30 : 20 / 30 + ((i - 20) * 3) / 30,
+		);
+		const early = videoDrive(seconds, 0, fps);
+		const late = videoDrive(seconds, 30, fps);
+		expect(early.seek).toBe(false);
+		expect(early.seek === false && early.rate).toBeLessThan(1.8);
+		expect(late).toEqual({ seek: false, rate: expect.closeTo(3) });
+	});
+
+	test("a source that runs backwards is followed by seeks", () => {
+		expect(videoDrive([3, 2.9667, 2.9333], 0, fps)).toEqual({ seek: true });
+	});
+
+	test("the audio of a curve follows the integral of the ramp", () => {
+		const ramp = {
+			points: [
+				{ t: 0, speed: { num: 1, den: 1 } },
+				{ t: 1, speed: { num: 3, den: 1 } },
+			],
+			item_frames: 4,
+			first_frame: 0,
+		};
+		expect(curveSpeedAt(ramp.points, 0.5)).toBeCloseTo(2);
+		expect([0, 1, 2, 3, 4].map((r) => curveOffset(ramp, r))).toEqual([
+			0, 1.25, 3, 5.25, 8,
+		]);
+		const audio = { first: 10, source_seconds: 2, speed: 2, speed_curve: ramp };
+		const drive = audioDrive(audio, 12, fps);
+		expect(drive.seconds).toBeCloseTo(2 + 3 / 30);
+		expect(drive.silent).toBe(false);
+		expect(audioDrive({ ...audio, reverse: true }, 12, fps).silent).toBe(true);
 	});
 
 	test("currentTime is corrected only past two frames of drift", () => {
