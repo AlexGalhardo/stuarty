@@ -216,6 +216,20 @@ The types named in the tables of the operations. The arguments of each editing c
 | `revision` | `integer (int64)` | no |  |
 | `untrusted_notice` | `string` | no |  |
 
+### Effect
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `amount` | `number (double)` or `null` | no |  |
+| `angle` | `number (double)` or `null` | no |  |
+| `kind` | `motion_blur`, `glow`, `vignette`, `grain`, `rgb_split`, `shake` | no |  |
+| `radius` | `number (double)` or `null` | no |  |
+| `seed` | `integer` or `null` | no |  |
+| `size` | `integer` or `null` | no |  |
+| `softness` | `number (double)` or `null` | no |  |
+| `speed` | `integer` or `null` | no |  |
+| `threshold` | `number (double)` or `null` | no |  |
+
 ### Error
 
 | Name | Type | Required | Description |
@@ -396,6 +410,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `denoise` | `number (double)` | no |  |
 | `disabled` | `boolean` | no |  |
 | `duration` | `integer` | no |  |
+| `effects` | array of [`Effect`](/docs/api/schemas#effect) | no |  |
 | `fade_in` | `integer` | no |  |
 | `fade_out` | `integer` | no |  |
 | `fill` | `string` | no |  |
@@ -408,12 +423,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `hue` | `number (double)` | no |  |
 | `id` | `string` | no |  |
 | `keyframes` | map of array of [`Keyframe`](/docs/api/schemas#keyframe) | no |  |
+| `link` | `string` | no |  |
 | `linked_item` | `string` | no |  |
 | `markers` | array of [`Marker`](/docs/api/schemas#marker) | no |  |
 | `mask` | [`Mask`](/docs/api/schemas#mask) or `any` or `null` or `null` | no |  |
 | `name` | `string` | no |  |
 | `opacity` | `number (double)` | no |  |
 | `radius` | `number (double)` | no |  |
+| `reverse` | `boolean` | no |  |
 | `rotation` | `number (double)` | no |  |
 | `saturation` | `number (double)` | no |  |
 | `scale` | `number (double)` | no |  |
@@ -421,6 +438,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `slot` | [`Slot`](/docs/api/schemas#slot) or `any` or `null` or `null` | no |  |
 | `source_in` | `integer` | no |  |
 | `speed` | [`Rational`](/docs/api/schemas#rational) | no |  |
+| `speed_curve` | array of [`SpeedPoint`](/docs/api/schemas#speedpoint) | no |  |
 | `start` | `integer` | no |  |
 | `stroke_color` | `string` | no |  |
 | `stroke_width` | `number (double)` | no |  |
@@ -653,7 +671,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
-| `op` | `string`, one of 63 values | yes | A command name, as listed by GET /commands.. min length 1 |
+| `op` | `string`, one of 67 values | yes | A command name, as listed by GET /commands.. min length 1 |
 
 ### OtioLost
 
@@ -905,6 +923,21 @@ The types named in the tables of the operations. The arguments of each editing c
 | `points` | array of [`SnapPoint`](/docs/api/schemas#snappoint) | no |  |
 | `revision` | `integer (int64)` | no |  |
 
+### SpeedPoint
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `speed` | [`Rational`](/docs/api/schemas#rational) | no |  |
+| `t` | `number (double)` | no |  |
+
+### SpeedRamp
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `first_frame` | `integer` | no |  |
+| `item_frames` | `integer` | no |  |
+| `points` | array of [`SpeedPoint`](/docs/api/schemas#speedpoint) | no |  |
+
 ### Strip
 
 | Name | Type | Required | Description |
@@ -1050,8 +1083,20 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `color` | `string` | no |  |
+| `direction` | `left`, `right`, `up`, `down` | no |  |
 | `duration` | `integer` | no |  |
-| `kind` | `fade`, `slide_left`, `slide_right`, `slide_up`, `slide_down` | no |  |
+| `kind` | `string`, one of 9 values | no |  |
+
+### TransitionSpec
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `color` | `string` | no |  |
+| `direction` | `string` | no |  |
+| `edge` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `p` | `integer` | no |  |
 
 ### TrashEmptyResult
 
@@ -1128,8 +1173,10 @@ The types named in the tables of the operations. The arguments of each editing c
 | `gain` | `any` | no |  |
 | `item` | `string` | no |  |
 | `last` | `integer` | no |  |
+| `reverse` | `boolean` | no |  |
 | `source_seconds` | `number (double)` | no |  |
 | `speed` | `number (double)` | no |  |
+| `speed_curve` | [`SpeedRamp`](/docs/api/schemas#speedramp) or `any` or `null` or `null` | no |  |
 
 ### WindowBitmaps
 
@@ -1152,6 +1199,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `crop` | array of `number (double)` or `null` | no |  |
 | `cx` | `any` | no |  |
 | `cy` | `any` | no |  |
+| `effects` | array of [`Effect`](/docs/api/schemas#effect) | no |  |
 | `filter` | array of `number (double)` or `null` | no |  |
 | `first` | `integer` | no |  |
 | `flip_x` | `boolean` | no |  |
@@ -1167,6 +1215,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `scale` | `any` | no |  |
 | `source_frames` | array of `integer` | no |  |
 | `source_seconds` | array of `number (double)` | no |  |
+| `transition` | array of [`TransitionSpec`](/docs/api/schemas#transitionspec) or `any` or `null` or `null` | no |  |
 | `w` | `any` | no |  |
 
 ### WindowPlan

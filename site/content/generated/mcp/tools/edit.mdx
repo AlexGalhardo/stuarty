@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Change a project. Send a batch of operations, applied atomically as one undo step. base_revision: the revision you read last. Times are strings with a unit. Use command_help for arguments. Returns the new revision, a diff, new lint findings. dry_run=true only checks. idempotency_key makes retries safe.
+Change a project. Batch of operations, atomic, one undo step. base_revision: last revision you read. Times are strings with unit. Use command_help for arguments. Returns revision, diff, lint. dry_run: check only. idempotency_key: safe retries.
 
 ## Behaviour
 
@@ -30,7 +30,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `base_revision` | `integer` | yes | min 0 |
 | `operations` | array of `object` | yes | at least 1 items; at most 200 items |
-| `operations[].op` | `string`, one of 63 values | yes |  |
+| `operations[].op` | `string`, one of 67 values | yes |  |
 | `operations[].args` | `object` | yes |  |
 | `idempotency_key` | `string` | no | pattern `^[A-Za-z0-9._~-]{8,64}$` |
 | `dry_run` | `boolean` | no | default `false` |
@@ -72,19 +72,22 @@ Each member of `operations` is `{ op, args }`. Every operation has its own page 
 | [`clip.add`](/docs/mcp/tools/edit/clip.add) | Places a video or image asset on a visual track. | `edit` | prototype |
 | [`clip.remove_silences`](/docs/mcp/tools/edit/clip.remove_silences) | Cuts the silent stretches out of a clip, leaving one clip per stretch of speech. | `edit` | alpha |
 | [`clip.set_blend`](/docs/mcp/tools/edit/clip.set_blend) | Sets how a visual item is mixed with what is below it. | `edit` | beta |
-| [`clip.set_blur`](/docs/mcp/tools/edit/clip.set_blur) | Sets the blur radius of a clip. | `edit` | beta |
+| [`clip.set_blur`](/docs/mcp/tools/edit/clip.set_blur) | Sets the blur radius of a visual item. | `edit` | beta |
 | [`clip.set_chroma_key`](/docs/mcp/tools/edit/clip.set_chroma_key) | Keys out one colour of a clip, such as a green screen. | `edit` | beta |
 | [`clip.set_color`](/docs/mcp/tools/edit/clip.set_color) | Sets the brightness, contrast, saturation, temperature, tint and hue of a clip. | `edit` | alpha |
-| [`clip.set_filter`](/docs/mcp/tools/edit/clip.set_filter) | Sets the colour filter of a clip and how much of it is mixed in. | `edit` | beta |
+| [`clip.set_effects`](/docs/mcp/tools/edit/clip.set_effects) | Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake. | `edit` | beta |
+| [`clip.set_filter`](/docs/mcp/tools/edit/clip.set_filter) | Sets the colour filter of a visual item and how much of it is mixed in. | `edit` | beta |
 | [`clip.set_flip`](/docs/mcp/tools/edit/clip.set_flip) | Mirrors a visual item horizontally, vertically or both. | `edit` | beta |
 | [`clip.set_framing`](/docs/mcp/tools/edit/clip.set_framing) | Sets how the asset of a clip is fitted into the frame and how much of each side is cropped. | `edit` | alpha |
 | [`clip.set_mask`](/docs/mcp/tools/edit/clip.set_mask) | Limits where a visual item is drawn to a rectangle or an ellipse. | `edit` | beta |
-| [`clip.set_speed`](/docs/mcp/tools/edit/clip.set_speed) | Changes the speed of a clip or audio item while keeping the same source range. | `edit` | alpha |
+| [`clip.set_speed`](/docs/mcp/tools/edit/clip.set_speed) | Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards. | `edit` | alpha |
 | [`font.add`](/docs/mcp/tools/edit/font.add) | Adds a user font family to the project, or more weights to one it already has. | `media` | beta |
 | [`font.remove`](/docs/mcp/tools/edit/font.remove) | Removes a user font family from the project. | `media` | beta |
 | [`item.crossfade`](/docs/mcp/tools/edit/item.crossfade) | Sets a matching fade-out and fade-in on two overlapping visual items of different tracks. | `edit` | alpha |
 | [`item.delete`](/docs/mcp/tools/edit/item.delete) | Removes items, and optionally closes the freed space. | `edit` | prototype |
 | [`item.duplicate`](/docs/mcp/tools/edit/item.duplicate) | Copies an item to another position, optionally on another track. | `edit` | alpha |
+| [`item.extract_audio`](/docs/mcp/tools/edit/item.extract_audio) | Creates an audio item from the audio of a video clip, linked to it, and mutes the clip. | `edit` | beta |
+| [`item.link`](/docs/mcp/tools/edit/item.link) | Links items so that they move, trim and split together. | `edit` | beta |
 | [`item.move`](/docs/mcp/tools/edit/item.move) | Moves an item in time, to another track of the same kind, or both. | `edit` | prototype |
 | [`item.rename`](/docs/mcp/tools/edit/item.rename) | Sets the label of an item. | `edit` | alpha |
 | [`item.set_audio`](/docs/mcp/tools/edit/item.set_audio) | Sets the volume, the fades, the mute flag or the noise reduction of a clip or audio item. | `edit` | alpha |
@@ -94,6 +97,7 @@ Each member of `operations` is `{ op, args }`. Every operation has its own page 
 | [`item.slip`](/docs/mcp/tools/edit/item.slip) | Shows another part of the source in a clip or audio item without moving or resizing it. | `edit` | beta |
 | [`item.split`](/docs/mcp/tools/edit/item.split) | Splits an item into two at a timeline frame. | `edit` | prototype |
 | [`item.trim`](/docs/mcp/tools/edit/item.trim) | Moves the start edge or the end edge of an item to a timeline position. | `edit` | prototype |
+| [`item.unlink`](/docs/mcp/tools/edit/item.unlink) | Removes items from their link group. | `edit` | beta |
 | [`keyframe.clear`](/docs/mcp/tools/edit/keyframe.clear) | Removes all keyframes of one property, or of every property. | `edit` | alpha |
 | [`keyframe.remove`](/docs/mcp/tools/edit/keyframe.remove) | Removes the keyframe of a property at a frame. | `edit` | alpha |
 | [`keyframe.set`](/docs/mcp/tools/edit/keyframe.set) | Adds or replaces a keyframe of one animated property of an item. | `edit` | alpha |

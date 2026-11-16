@@ -1,6 +1,6 @@
 ---
 title: "clip.set_speed"
-description: "Changes the speed of a clip or audio item while keeping the same source range."
+description: "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards."
 wide: true
 ---
 
@@ -10,15 +10,17 @@ wide: true
 
 <RefMain>
 
-Sets the speed, from 0.25x to 4x, and rescales the duration, the fades, the transitions and the keyframes by the same ratio. With ripple track the later items of the track follow the change in length. Captions linked to the clip are listed, not changed.
+Sets either speed, from 0.25x to 4x, or curve, 2 to 8 points \{t, speed\} with t the fraction of the item from 0 to 1 (first 0, last 1) and a linear ramp between points; a speed clears the curve. Rescales the duration, the fades, the transitions and the keyframes by the ratio of the old to the new mean speed. With ripple track the later items of the track follow the change in length. Captions linked to the clip are listed, not changed. reverse true plays the same source range backwards (false restores it), alone or with a speed or a curve.
 
 ## Arguments
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
+| `curve` | array of `object` | no | Speed ramp: 2 to 8 points, linear between them, first t 0 and last t 1. Not with speed. |
 | `item_id` | `string` | yes | A clip of a video asset, or an audio item. |
+| `reverse` | `boolean` | no | True plays the source range backwards; false plays it forwards. |
 | `ripple` | `none`, `track` | no | None (default) or track: shift the later items of the track. |
-| `speed` | `any` | yes | "1.5x" (up to 3 decimals) or \{"num": 3, "den": 2\}; 1/4 to 4. |
+| `speed` | `any` | no | "1.5x" (up to 3 decimals) or \{"num": 3, "den": 2\}; 1/4 to 4. Not with curve. |
 
 ## Errors
 
@@ -58,9 +60,21 @@ Scope `edit`, phase `alpha`. The scope is the one an API key needs in network mo
         {
           "op": "clip.set_speed",
           "args": {
-            "item_id": "itm_m1n2p3q4r5",
-            "ripple": "track",
-            "speed": "1.5x"
+            "curve": [
+              {
+                "speed": "1x",
+                "t": 0
+              },
+              {
+                "speed": "3x",
+                "t": 0.5
+              },
+              {
+                "speed": "1x",
+                "t": 1
+              }
+            ],
+            "item_id": "itm_m1n2p3q4r5"
           }
         }
       ]
@@ -76,9 +90,21 @@ Scope `edit`, phase `alpha`. The scope is the one an API key needs in network mo
   {
     "op": "clip.set_speed",
     "args": {
-      "item_id": "itm_m1n2p3q4r5",
-      "ripple": "track",
-      "speed": "1.5x"
+      "curve": [
+        {
+          "speed": "1x",
+          "t": 0
+        },
+        {
+          "speed": "3x",
+          "t": 0.5
+        },
+        {
+          "speed": "1x",
+          "t": 1
+        }
+      ],
+      "item_id": "itm_m1n2p3q4r5"
     }
   }
 ]
@@ -100,9 +126,21 @@ curl -X POST "http://127.0.0.1:7878/api/v1/projects/prj_7k2m9x4q1b/edit" \
     {
       "op": "clip.set_speed",
       "args": {
-        "item_id": "itm_m1n2p3q4r5",
-        "ripple": "track",
-        "speed": "1.5x"
+        "curve": [
+          {
+            "speed": "1x",
+            "t": 0
+          },
+          {
+            "speed": "3x",
+            "t": 0.5
+          },
+          {
+            "speed": "1x",
+            "t": 1
+          }
+        ],
+        "item_id": "itm_m1n2p3q4r5"
       }
     }
   ]
