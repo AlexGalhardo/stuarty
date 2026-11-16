@@ -833,6 +833,8 @@ Kind `ingest`, handler `ingest.Handle(ctx, job)`. For a video with audio:
 | 6 | `verify` | step 5 | nothing (section 5) |
 | 7 | `publish` | step 6 | renames, `artifacts` rows, `assets` facts, `asset.add` (2.5) |
 
+A `.cube` colour table (asset kind `lut`, TASK-0254) has no FFmpeg step: before step 1 the handler reads the first 4 KiB of the original, and a file whose first line that is neither empty nor a `#` comment starts with a keyword of the format (`TITLE`, `DOMAIN_MIN`, `DOMAIN_MAX`, `LUT_3D_SIZE`, `LUT_1D_SIZE`, `LUT_3D_INPUT_RANGE`, `LUT_1D_INPUT_RANGE`) and has no NUL byte is read in full as a table. The check refuses with `E_INGEST_FAILED` (`reason: decode_failed`) a file over 32 MiB, a line over 4096 bytes, a 1D table, a `LUT_3D_SIZE` that is not given once as a whole number from 2 to 65, a data line that is not three finite numbers, a header line after the data, a `DOMAIN_MIN` that is not below `DOMAIN_MAX`, and a count of data lines other than size cubed; nothing is allocated from a number in the file. A valid table registers no artifact, only the kind (`assets.kind = 'lut'`, no picture facts), the asset is `ready` and `asset.add` adds a `lut` asset. A file that does not start like a `.cube` file goes to step 1 as before (a text file renamed `.cube` is `E_UNSUPPORTED_MEDIA`).
+
 A video without audio skips step 4 and the mux of audio; an audio asset skips step 3 and has one audio pass that writes `normalized.wav` directly; an image has one pass (4.7) in place of 3 to 5, followed by the `poster` step (4.5). After step 7 the asset is `ready`.
 
 ### 7.2 Claim and execution

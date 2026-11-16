@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"log/slog"
 	"math"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
 	"github.com/AlexGalhardo/vukem-video/service/logging"
@@ -379,22 +381,80 @@ func (s *svc) runIngest(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 			OnProgress:   func(p ingest.Progress) { pw.report(ctx, p.Fraction, p.Message) },
 		}
 
-		res, rerr := s.media.Ingest(ctx, in)
-		if rerr != nil {
-			return nil, rerr
+		isLUT, lerr := s.ingestLUT(ctx, hash)
+		if lerr != nil {
+			return nil, lerr
 		}
 
-		if err := s.registerIngest(ctx, hash, res); err != nil {
-			return nil, err
+		if !isLUT {
+			res, rerr := s.media.Ingest(ctx, in)
+			if rerr != nil {
+				return nil, rerr
+			}
+
+			if err := s.registerIngest(ctx, hash, res); err != nil {
+				return nil, err
+			}
+
+			timings, warnings = res.TimingsMS, res.Warnings
 		}
 
-		timings, warnings = res.TimingsMS, res.Warnings
 		s.emitAsset(ctx, hash, IngestReady, 1, nil)
 	}
 
 	warnings = append(warnings, s.completePending(ctx, hash, job.ID)...)
 
 	return marshalOrNull(map[string]any{"timings_ms": timings, "warnings": warnings}), nil
+}
+
+// ingestLUT handles an original that is a .cube table: it is read and checked in full, and the asset is
+// ready as a lut with no artifact and no picture facts (SDD-011 section 7.1). A file that does not look
+// like a .cube table is left to the media ingest (false, nil); one that does and is not valid fails the
+// job (E_INGEST_FAILED, reason decode_failed).
+func (s *svc) ingestLUT(ctx context.Context, hash string) (bool, error) {
+	if s.media.Content == nil {
+		return false, nil
+	}
+
+	f, err := s.media.Content.Open(strings.TrimPrefix(hash, "sha256:"))
+	if err != nil {
+		return false, err
+	}
+
+	defer func() { _ = f.Close() }()
+
+	head := make([]byte, cubeSniffWindow)
+
+	n, err := io.ReadFull(f, head)
+	if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) && !errors.Is(err, io.EOF) {
+		return false, err
+	}
+
+	if !sniffCube(head[:n]) {
+		return false, nil
+	}
+
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return false, err
+	}
+
+	if _, err := checkCube(f); err != nil {
+		return false, &Error{
+			Code: CodeIngestFailed, Message: "the file is not a valid .cube table: " + err.Error() + ".",
+			Hint:    "export a 3D table (LUT_3D_SIZE 2 to 65) as a .cube file from the grading tool",
+			Details: map[string]any{"reason": "decode_failed", "step": "probe"},
+		}
+	}
+
+	now := s.nowMs()
+
+	return true, s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		if err := tx.Assets().SetFacts(ctx, hash, AssetFacts{Kind: string(timeline.AssetLUT)}, now); err != nil {
+			return err
+		}
+
+		return tx.Assets().SetIngest(ctx, hash, IngestReady, 1, nil, now)
+	})
 }
 
 // registerIngest records the artifacts and the facts and makes the asset
