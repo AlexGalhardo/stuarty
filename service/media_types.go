@@ -170,11 +170,12 @@ type FileRef struct {
 
 // File is a stored file, resolved to a path inside the workspace.
 type File struct {
-	Path        string // slash path relative to the workspace
-	ContentType string
-	Size        int64
-	ETag        string // quoted
-	ModTime     time.Time
-	Immutable   bool
-	MaxAge      int // seconds of the Cache-Control header
+	Path         string // slash path relative to the workspace
+	DownloadName string // file name for Content-Disposition; empty means the job id
+	ContentType  string
+	Size         int64
+	ETag         string // quoted
+	ModTime      time.Time
+	Immutable    bool
+	MaxAge       int // seconds of the Cache-Control header
 }

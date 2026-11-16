@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 )
@@ -50,11 +51,12 @@ func (s *svc) ExportFile(ctx context.Context, req ExportFileRequest) (*File, err
 		}
 
 		return &File{
-			Path:        path.Join("exports", *job.ProjectID, bundleFileName(res.Export.Revision, job.ID)),
-			ContentType: "application/zip",
-			ETag:        exportETag(&job),
-			Immutable:   true,
-			MaxAge:      31536000,
+			Path:         path.Join("exports", *job.ProjectID, bundleFileName(res.Export.Revision, job.ID)),
+			DownloadName: s.downloadName(ctx, &job, ".vvbundle"),
+			ContentType:  "application/zip",
+			ETag:         exportETag(&job),
+			Immutable:    true,
+			MaxAge:       31536000,
 		}, nil
 	}
 
@@ -69,11 +71,12 @@ func (s *svc) ExportFile(ctx context.Context, req ExportFileRequest) (*File, err
 	}
 
 	return &File{
-		Path:        path.Join("exports", *job.ProjectID, job.ID+f.ext),
-		ContentType: f.contentType,
-		ETag:        exportETag(&job),
-		Immutable:   true,
-		MaxAge:      31536000,
+		Path:         path.Join("exports", *job.ProjectID, job.ID+f.ext),
+		DownloadName: s.downloadName(ctx, &job, f.ext),
+		ContentType:  f.contentType,
+		ETag:         exportETag(&job),
+		Immutable:    true,
+		MaxAge:       31536000,
 	}, nil
 }
 
@@ -98,4 +101,47 @@ func (s *svc) isBundle(job *JobRow) bool {
 	var in exportInput
 
 	return json.Unmarshal(job.Input, &in) == nil && in.Format == bundleExportFormat
+}
+
+// downloadName is the file name a browser saves an export under:
+// <project name>-<yyyy-mm-dd><ext>, with the name reduced to ASCII letters and
+// digits so it is safe in a header. An unreadable project falls back to the job id.
+func (s *svc) downloadName(ctx context.Context, job *JobRow, ext string) string {
+	row, err := s.store.Projects().Get(ctx, *job.ProjectID)
+	if err != nil {
+		return job.ID + ext
+	}
+
+	var b strings.Builder
+
+	dash := true
+
+	for _, r := range row.Name {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9':
+			b.WriteRune(r)
+
+			dash = false
+		case !dash:
+			b.WriteByte('-')
+
+			dash = true
+		}
+	}
+
+	slug := strings.Trim(b.String(), "-")
+	if len(slug) > 60 {
+		slug = strings.TrimRight(slug[:60], "-")
+	}
+
+	if slug == "" {
+		return job.ID + ext
+	}
+
+	ms := job.CreatedMs
+	if job.FinishedMs != nil {
+		ms = *job.FinishedMs
+	}
+
+	return slug + "-" + time.UnixMilli(ms).UTC().Format("2006-01-02") + ext
 }
