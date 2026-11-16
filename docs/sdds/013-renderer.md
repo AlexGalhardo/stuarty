@@ -442,7 +442,7 @@ The preview worker decodes the video layers of the window from the proxies (ADR-
 ### 5.5 Acceptance of this section
 
 - Go: `TestHostFramesEqualCompositorFrames`: for every golden case, the textures handed to the renderer host are byte-equal to the `Image`s the Go compositor receives today (a comparison of the two inputs, before any drawing).
-- Browser (Playwright, three browsers): `webcodecs-seek-is-frame-exact` seeks to 500 random frames of each reference clip and checks that the timestamp of the decoded frame is the one the plan asks for; `webcodecs-no-leak` reports `stats.openFrames === 0` after the 500 seeks and 500 more renders; `webcodecs-fallback` forces `isConfigSupported` to false for one asset and checks that its layers draw through `<video>` and the others through WebCodecs.
+- Browser (Playwright, three browsers): `webcodecs-seek-is-frame-exact` seeks to 500 random frames of each reference clip and checks that the timestamp of the decoded frame is the one the plan asks for; `webcodecs-no-leak` seeks to 500 random frames and then plays, and checks that the peak of `stats.openFrames` (`peakOpenFrames`) and its value at rest never exceed the cache bound (client cache 12 + worker read-ahead 4 + 1 frame in transit = 17), so the count does not grow with the number of seeks; `webcodecs-fallback` forces `isConfigSupported` to false for one asset and checks that its layers draw through `<video>` and the others through WebCodecs.
 - The gate of stage B: P2-QA-003 (black texture) does not appear in 500 repeated cases, and NFR-003 and NFR-004 hold on a quiet machine (ADR-0029, Stages).
 
 ## 6. The proxy chunk index
