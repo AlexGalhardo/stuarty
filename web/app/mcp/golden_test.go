@@ -208,3 +208,20 @@ func TestProjectViewCursorGoesStale(t *testing.T) {
 		t.Errorf("a stale cursor: %s", text)
 	}
 }
+
+// When every file of a batch fails, the call is an error for the agent (VV-004).
+func TestMediaImportIsAnErrorWhenEveryFileFails(t *testing.T) {
+	t.Parallel()
+
+	env := testenv.New(t, testenv.Options{})
+	cs := connect(t, env.Service, Options{}, "claude-code")
+	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "P"})))["project_id"].(string)
+
+	res := call(t, cs, "media_import", map[string]any{
+		"project_id": project,
+		"paths":      []any{filepath.Join(t.TempDir(), "a.mp4"), filepath.Join(t.TempDir(), "b.mp4")},
+	})
+	if !res.IsError || res.StructuredContent == nil {
+		t.Errorf("isError = %v, structured = %v", res.IsError, res.StructuredContent)
+	}
+}
