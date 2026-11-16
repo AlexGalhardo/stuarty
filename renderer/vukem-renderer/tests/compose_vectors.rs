@@ -3,6 +3,7 @@
 //! `renderer/testdata/compose-vectors.bin` is written by `engine/compositor/vectors_test.go`: small
 //! compositions with their inputs and the frame the Go compositor draws for each.
 
+use vukem_renderer::chroma::ChromaKeySpec;
 use vukem_renderer::compose::{Layer, Source, Target, compose, parse_colour, premultiply};
 use vukem_renderer::image::Image;
 use vukem_renderer::math::sincos;
@@ -49,6 +50,7 @@ struct VecLayer {
 	nums: [f64; 7],
 	colour: Option<[f64; 12]>,
 	filter: Option<[f64; 12]>,
+	chroma_key: Option<ChromaKeySpec>,
 }
 
 struct Case {
@@ -64,7 +66,7 @@ struct Case {
 fn read_cases() -> (u64, Vec<Case>) {
 	let mut r = Reader(VECTORS);
 	assert_eq!(r.take(4), b"VVCV");
-	assert_eq!(r.u32(), 1);
+	assert_eq!(r.u32(), 2);
 	let hash = r.u64();
 	let n = r.u32();
 	let mut cases = Vec::new();
@@ -100,11 +102,22 @@ fn read_cases() -> (u64, Vec<Case>) {
 			};
 			let nums = core::array::from_fn(|_| r.f64());
 			let (colour, filter) = (r.matrix(), r.matrix());
+			let chroma_key = (r.u8() == 1).then(|| {
+				let n = usize::from(r.u8());
+				let color = String::from_utf8(r.take(n).to_vec()).unwrap();
+				ChromaKeySpec {
+					color,
+					similarity: r.f64(),
+					smoothness: r.f64(),
+					spill: r.f64(),
+				}
+			});
 			layers.push(VecLayer {
 				pixels,
 				nums,
 				colour,
 				filter,
+				chroma_key,
 			});
 		}
 		let want = r.take(w * h * 4).to_vec();
@@ -152,6 +165,7 @@ fn render(c: &Case, bands: usize) -> Vec<u8> {
 				opacity,
 				color_matrix: l.colour,
 				filter: l.filter,
+				chroma_key: l.chroma_key.clone(),
 				blur,
 			}
 		})

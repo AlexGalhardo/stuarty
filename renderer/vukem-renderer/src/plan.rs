@@ -3,6 +3,7 @@
 //! The renderer reads the JSON of `core/plan` (`FramePlan`) inside the envelope of section 2.1. It
 //! refuses what it does not know: an unknown field is a pixel it would silently not draw.
 
+use crate::chroma::ChromaKeySpec;
 use crate::error::{Error, Reason};
 use crate::json::{JsonError, Value, parse};
 
@@ -50,6 +51,7 @@ pub struct LayerSpec {
 	pub color_matrix: Option<[f64; 12]>,
 	pub filter: Option<[f64; 12]>,
 	pub blur: f64,
+	pub chroma_key: Option<ChromaKeySpec>,
 }
 
 /// A decoded render input.
@@ -171,6 +173,21 @@ fn matrix(v: Option<Value>, name: &str) -> Result<Option<[f64; 12]>, Error> {
 		}
 		Some(_) => Err(invalid(format!("layer: {name} is not 12 numbers"))),
 	}
+}
+
+fn chroma_key(v: Option<Value>) -> Result<Option<ChromaKeySpec>, Error> {
+	let Some(v) = v.filter(|v| !matches!(v, Value::Null)) else {
+		return Ok(None);
+	};
+	let mut f = Fields::of(v, "chroma_key")?;
+	let spec = ChromaKeySpec {
+		color: f.string("color")?,
+		similarity: f.num("similarity")?,
+		smoothness: f.num("smoothness")?,
+		spill: f.num("spill")?,
+	};
+	f.finish()?;
+	Ok(Some(spec))
 }
 
 fn id(s: String, what: &str) -> Result<String, Error> {
@@ -345,6 +362,7 @@ fn decode_layer(v: Value) -> Result<LayerSpec, Error> {
 		color_matrix: matrix(f.take("color_matrix"), "color_matrix")?,
 		filter: matrix(f.take("filter"), "filter")?,
 		blur: f.num_or("blur", 0.0)?,
+		chroma_key: chroma_key(f.take("chroma_key"))?,
 		item,
 	};
 	f.finish()?;

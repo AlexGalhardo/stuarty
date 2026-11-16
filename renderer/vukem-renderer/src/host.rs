@@ -171,6 +171,7 @@ impl Renderer {
 				color_matrix: l.color_matrix,
 				filter: l.filter,
 				blur: l.blur,
+				chroma_key: l.chroma_key.clone(),
 			});
 		}
 
