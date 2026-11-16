@@ -158,6 +158,7 @@ func (c *Context) slideNeighbours(it *timeline.Item, start int, hasStart, hasTra
 		return Errorf(CodeValidation, "args: slide needs start and does not take track_id.").
 			WithHint("Send {\"item_id\": \"%s\", \"start\": \"5s\", \"slide\": true}.", it.ID).WithPath("args.slide")
 	}
+	var slid []string
 	for _, id := range c.trackItems(it.Track) {
 		o := c.Doc.Items[id]
 		var (
@@ -185,6 +186,23 @@ func (c *Context) slideNeighbours(it *timeline.Item, start int, hasStart, hasTra
 				WithPath("args.start")
 		}
 		c.Doc.Items[id] = n
+		slid = append(slid, id)
+	}
+	// Every neighbour is trimmed first, then checked: the moved item is checked on its own after the
+	// slide, and a neighbour that grows must not run into anyone else.
+	for _, id := range slid {
+		n := c.Doc.Items[id]
+		for _, other := range c.conflicts(n.Track, n.Start, n.Duration, id) {
+			if other == it.ID {
+				continue
+			}
+			ot := c.Doc.Items[other]
+			return Errorf(CodeOverlap, "Sliding %s to frame %d makes %s occupy frames %d-%d, where item %s already is (frames %d-%d).",
+				it.ID, start, id, n.Start, itemEnd(&n)-1, other, ot.Start, itemEnd(&ot)-1).
+				WithDetail("conflicting_item", other).
+				WithHint("Slide by less, or move item %s out of the way first.", other).
+				WithPath("args.start")
+		}
 	}
 	return nil
 }

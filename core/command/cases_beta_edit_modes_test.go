@@ -38,6 +38,10 @@ func init() {
 		func() *B { return base().clip(itemA, vidTr, 100, 150, 30).clip(next, vidTr, 250, 90, 10) })
 	mv("err_overlap_slide_into_a_non_touching_item", a+`"start": "120f", "slide": true}`,
 		func() *B { return base().clip(itemA, vidTr, 100, 150, 30).clip(next, vidTr, 260, 90, 100) })
+	mv("err_overlap_slide_extends_the_previous_over_another_item", a+`"start": "400f", "slide": true}`,
+		func() *B {
+			return base().clip(prev, vidTr, 40, 60, 0).clip(itemA, vidTr, 100, 30, 30).clip(next, vidTr, 300, 60, 100)
+		})
 
 	sl := func(name, args string, b func() *B) { gc("item.slip", name, b, op("item.slip", args)) }
 	sl("ok_slip_later", a+`"source_in": "2s"}`, scene)
