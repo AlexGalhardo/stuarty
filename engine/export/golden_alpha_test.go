@@ -68,6 +68,9 @@ var requiredCases = []string{
 	"blend-screen",
 	"blend-overlay",
 	"blend-add",
+	"mask-rect",
+	"mask-ellipse-feather",
+	"mask-invert-rotated",
 }
 
 const (
@@ -257,6 +260,20 @@ func blendCase(mode string) alphaCase {
 	return b.build(0, 15, 29)
 }
 
+// maskCase draws a clip through a mask over the portrait clip; edit sets what else the item has.
+func maskCase(name string, m timeline.Mask, edit func(it *timeline.Item)) alphaCase {
+	b := newCase("mask "+name, rate(30, 1))
+	b.backdrop(30)
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale, it.Mask = "contain", 0.9, &m
+		it.X, it.Y = new(90.0), new(160.0)
+		if edit != nil {
+			edit(it)
+		}
+	})
+	return b.build(0, 15, 29)
+}
+
 // alphaCases are the builders of the cases, by folder name.
 var alphaCases = map[string]func() alphaCase{
 	"contain-background": func() alphaCase {
@@ -412,6 +429,25 @@ var alphaCases = map[string]func() alphaCase{
 	"blend-screen":   func() alphaCase { return blendCase("screen") },
 	"blend-overlay":  func() alphaCase { return blendCase("overlay") },
 	"blend-add":      func() alphaCase { return blendCase("add") },
+	"mask-rect": func() alphaCase {
+		return maskCase("rect", timeline.Mask{Shape: "rect", X: 0.2, Y: 0.1, Width: 0.6, Height: 0.7}, nil)
+	},
+	"mask-ellipse-feather": func() alphaCase {
+		return maskCase(
+			"ellipse feather",
+			timeline.Mask{Shape: "ellipse", X: 0.05, Y: 0.05, Width: 0.9, Height: 0.9, Feather: 12},
+			nil,
+		)
+	},
+	"mask-invert-rotated": func() alphaCase {
+		return maskCase(
+			"invert rotated",
+			timeline.Mask{Shape: "ellipse", X: 0.25, Y: 0.15, Width: 0.5, Height: 0.7, Feather: 4, Invert: true},
+			func(it *timeline.Item) {
+				it.Scale, it.Rotation = 0.8, 20
+			},
+		)
+	},
 	"source-fps-24": func() alphaCase {
 		b := newCase("a source at 24 fps in a 30 fps project", rate(30, 1))
 		b.clip(b.track(), b.video(portrait24), 0, 60, nil)
@@ -574,7 +610,7 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 	for _, name := range requiredCases {
 		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") &&
 			!strings.HasPrefix(name, "sticker-") && !strings.HasPrefix(name, "chroma-") &&
-			!strings.HasPrefix(name, "blend-") {
+			!strings.HasPrefix(name, "blend-") && !strings.HasPrefix(name, "mask-") {
 			continue
 		}
 		t.Run(name, func(t *testing.T) {

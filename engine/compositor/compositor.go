@@ -162,10 +162,15 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, outScale float64) err
 	if l.Filter != nil {
 		src = c.applyMatrix(src, l.Filter)
 	}
+	// The mask keeps the frame of the layer before the blur grows it (SDD-004 section 3.9).
+	var mask *maskState
+	if l.Mask != nil {
+		mask = newMask(l.Mask, p, outScale)
+	}
 	if l.Blur > 0 {
 		src, p = c.blurred(src, p, mul(l.Blur, outScale))
 	}
-	c.draw(dst, src, p, op, blendOf(l.Blend))
+	c.draw(dst, src, p, op, blendOf(l.Blend), mask)
 	return nil
 }
 
@@ -189,12 +194,12 @@ func (c *Compositor) shrunk(key string, src Image, w, h int) Image {
 // round is round-half-up, which is what the copy path uses for offsets and sizes.
 func round(v float64) int { return int(math.Floor(v + 0.5)) }
 
-func (c *Compositor) draw(dst *image.RGBA, src Image, p placement, op uint32, mode blendMode) {
+func (c *Compositor) draw(dst *image.RGBA, src Image, p placement, op uint32, mode blendMode, mask *maskState) {
 	if p.rot == 0 && src.W == round(p.w) && src.H == round(p.h) {
-		c.blit(dst, src, round(p.cx-p.w/2), round(p.cy-p.h/2), op, mode)
+		c.blit(dst, src, round(p.cx-p.w/2), round(p.cy-p.h/2), op, mode, mask)
 		return
 	}
-	c.sample(dst, src, p, op, mode)
+	c.sample(dst, src, p, op, mode, mask)
 }
 
 // premultiplied converts a straight-alpha bitmap of the rasterizer, once per key.
@@ -260,7 +265,7 @@ func (c *Compositor) runBands(y0, y1, width int, fn func(y0, y1 int)) {
 }
 
 // blit draws src with its top-left corner at (x0, y0), pixel for pixel.
-func (c *Compositor) blit(dst *image.RGBA, src Image, x0, y0 int, op uint32, mode blendMode) {
+func (c *Compositor) blit(dst *image.RGBA, src Image, x0, y0 int, op uint32, mode blendMode, mask *maskState) {
 	b := dst.Bounds()
 	cx0, cy0 := max(x0, 0), max(y0, 0)
 	cx1, cy1 := min(x0+src.W, b.Dx()), min(y0+src.H, b.Dy())
@@ -269,7 +274,7 @@ func (c *Compositor) blit(dst *image.RGBA, src Image, x0, y0 int, op uint32, mod
 	}
 	n := (cx1 - cx0) * 4
 
-	if src.Opaque && op == 255 && mode == blendNormal {
+	if src.Opaque && op == 255 && mode == blendNormal && mask == nil {
 		for y := cy0; y < cy1; y++ {
 			so := ((y-y0)*src.W + (cx0 - x0)) * 4
 			do := (y*b.Dx() + cx0) * 4
@@ -282,6 +287,10 @@ func (c *Compositor) blit(dst *image.RGBA, src Image, x0, y0 int, op uint32, mod
 		for y := ya; y < yb; y++ {
 			so := ((y-y0)*src.W + (cx0 - x0)) * 4
 			do := (y*b.Dx() + cx0) * 4
+			if mask != nil {
+				maskedRow(dst.Pix[do:do+n], src.Pix[so:so+n], op, mode, mask, cx0, y)
+				continue
+			}
 			overRow(dst.Pix[do:do+n], src.Pix[so:so+n], op, mode)
 		}
 	})
@@ -309,6 +318,25 @@ func overRow(d, s []byte, op uint32, mode blendMode) {
 	}
 }
 
+// maskedRow is overRow for a masked layer: each pixel is multiplied by its coverage first, then by
+// the opacity, and a masked layer never takes the copy shortcut. x is the destination column of the
+// first pixel of the row.
+func maskedRow(d, s []byte, op uint32, mode blendMode, m *maskState, x, y int) {
+	for i := 0; i+3 < len(s); i += 4 {
+		px := [4]uint32{uint32(s[i]), uint32(s[i+1]), uint32(s[i+2]), uint32(s[i+3])}
+		m.scale(&px, m.copyCov(x+i/4, y))
+		if op != 255 {
+			for k := range px {
+				px[k] = div255(px[k] * op)
+			}
+		}
+		if px[3] == 0 {
+			continue
+		}
+		mixPixel(d[i:i+4:i+4], px[0], px[1], px[2], px[3], mode)
+	}
+}
+
 func overPixel(d []byte, r, g, b, a uint32) {
 	ia := 255 - a
 	d[0] = u8(r + div255(uint32(d[0])*ia))
@@ -321,7 +349,7 @@ const fix = 32 // fractional bits of the sampler coordinates
 
 // sample draws src into the rectangle p with bilinear interpolation: every destination pixel whose
 // centre is inside the rectangle takes the four nearest source pixels. Edges are not smoothed.
-func (c *Compositor) sample(dst *image.RGBA, src Image, p placement, op uint32, mode blendMode) {
+func (c *Compositor) sample(dst *image.RGBA, src Image, p placement, op uint32, mode blendMode, mask *maskState) {
 	b := dst.Bounds()
 	sin, cos := sincos(mul(p.rot, math.Pi/180))
 
@@ -372,6 +400,9 @@ func (c *Compositor) sample(dst *image.RGBA, src Image, p placement, op uint32, 
 					top := uint32(src.Pix[o00+k])*(256-wx) + uint32(src.Pix[o10+k])*wx
 					bot := uint32(src.Pix[o01+k])*(256-wx) + uint32(src.Pix[o11+k])*wx
 					px[k] = (top*(256-wy) + bot*wy + 32768) >> 16
+				}
+				if mask != nil {
+					mask.scale(&px, mask.sampleCov(x, y))
 				}
 				a := px[3]
 				if op != 255 {
