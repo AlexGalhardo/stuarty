@@ -3,12 +3,47 @@
 // workspace. Locally, stop the Vite dev server and delete
 // resources/public/hot first: a leftover hot file makes the app load its
 // scripts from the dev server.
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "@playwright/test";
 import { CHROMIUM_ONLY, NOT_IN_MATRIX } from "./support/browsers";
 import { NETWORK_ADMIN, NETWORK_PORT, NETWORK_URL } from "./support/network";
+
+// The server serves resources/public/build, which is not the sources: a build
+// older than them runs the specs against an old editor (a stale one once drew
+// text at a scale of 1), so the run stops and says so. `bun run build:e2e` in
+// web/ makes the build.
+function newestSource(dir: string): number {
+	let newest = 0;
+	for (const entry of readdirSync(dir, { withFileTypes: true })) {
+		const path = join(dir, entry.name);
+		newest = Math.max(
+			newest,
+			entry.isDirectory() ? newestSource(path) : statSync(path).mtimeMs,
+		);
+	}
+	return newest;
+}
+
+function assertBuildIsFresh(): void {
+	const resources = fileURLToPath(new URL("../resources/", import.meta.url));
+	const manifest = join(resources, "public", "build", ".vite", "manifest.json");
+	if (!existsSync(manifest)) {
+		throw new Error("no editor build: run `bun run build:e2e` in web/ first");
+	}
+	const built = statSync(manifest).mtimeMs;
+	for (const source of ["js", "css"]) {
+		if (newestSource(join(resources, source)) > built) {
+			throw new Error(
+				`the editor build is older than resources/${source}: run \`bun run build:e2e\` in web/ first`,
+			);
+		}
+	}
+}
+
+if (process.env.VUKEM_VIDEO_DETECT_ONLY !== "1") assertBuildIsFresh();
 
 const port = Number(process.env.VUKEM_VIDEO_E2E_PORT ?? 3101);
 // The pinned FFmpeg of the tests (scripts/install-ffmpeg.sh prints its folder):
