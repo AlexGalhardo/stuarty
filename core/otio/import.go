@@ -33,8 +33,9 @@ type entry struct {
 	curve    []timeline.SpeedPoint
 	reverse  bool
 	slot     *slotSpec
-	body     string         // texts only
-	style    map[string]any // texts only
+	markers  []timeline.Marker // clips only: the markers of the item, in frames of the item
+	body     string            // texts only
+	style    map[string]any    // texts only
 }
 
 type importTrack struct {
@@ -334,10 +335,6 @@ func (r *reader) clip(c map[string]any, cursor int, kind string) (entry, bool) {
 		return entry{}, false
 	}
 
-	if ms, _ := c["markers"].([]any); len(ms) > 0 {
-		r.lose("markers of clip " + name)
-	}
-
 	if es, _ := c["effects"].([]any); len(es) > 0 {
 		r.lose("effects of clip " + name)
 	}
@@ -359,6 +356,7 @@ func (r *reader) clip(c map[string]any, cursor int, kind string) (entry, bool) {
 	}
 
 	e := entry{clip: true, ref: ref, name: name, start: cursor, source: start, duration: dur}
+	e.markers = r.clipMarkers(c, name, start, dur)
 
 	if v := vukemMeta(c); v != nil {
 		props, _ := v["properties"].(map[string]any)
@@ -372,6 +370,39 @@ func (r *reader) clip(c map[string]any, cursor int, kind string) (entry, bool) {
 	}
 
 	return e, true
+}
+
+// clipMarkers reads the markers of a clip as the markers of the item: the vukem export writes each
+// one at the source frame of the item plus its own frame, so the frame is the position minus the
+// start of the source range. A marker that no marker.add accepts (outside the item, a label over
+// 60 characters, a frame already marked, more than 200) is reported and left out.
+func (r *reader) clipMarkers(c map[string]any, name string, sourceStart, dur int) []timeline.Marker {
+	list, _ := c["markers"].([]any)
+
+	var out []timeline.Marker
+
+	seen := map[int]bool{}
+
+	for _, e := range list {
+		m, _ := e.(map[string]any)
+		label, _ := m["name"].(string)
+		at, ok := r.frames(asMap(m["marked_range"])["start_time"])
+		frame := at - sourceStart
+
+		switch {
+		case !ok || frame < 0 || frame >= dur || utf8.RuneCountInString(label) > 60:
+			r.lose("marker of clip " + name + " that is not a valid value")
+		case seen[frame]:
+			r.lose("marker of clip " + name + " at a frame that is already marked")
+		case len(out) >= timeline.MaxMarkers:
+			r.lose("markers of clip " + name + " over the limit of 200")
+		default:
+			seen[frame] = true
+			out = append(out, timeline.Marker{Frame: frame, Label: label})
+		}
+	}
+
+	return out
 }
 
 // visualItem reads a Gap that carries a text, shape or caption item of the vukem metadata; a Gap
@@ -675,6 +706,15 @@ func (b *batch) clip(trackID string, audio bool, e *entry) *placed {
 	// Reverse comes last: trimming the end of a reversed clip moves its source_in.
 	if e.reverse {
 		b.push("clip.set_speed", map[string]any{"item_id": id, "reverse": true})
+	}
+
+	for _, m := range e.markers {
+		args := map[string]any{"item_id": id, "at": frameTime(e.start + m.Frame)}
+		if m.Label != "" {
+			args["label"] = m.Label
+		}
+
+		b.push("marker.add", args)
 	}
 
 	b.after(id, e, asset)

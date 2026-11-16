@@ -1,6 +1,6 @@
 ---
 title: "marker.add"
-description: "Puts a marker on the timeline."
+description: "Puts a marker on the timeline, or on one item."
 wide: true
 ---
 
@@ -10,13 +10,14 @@ wide: true
 
 <RefMain>
 
-Adds a marker the person or the agent keeps at a frame of the timeline (not of an item), with an optional label of up to 60 characters. At most 200 markers; one marker per frame. Markers have no effect on the picture or the sound. The beat markers of a music item are separate (audio.mark_beats).
+Adds a marker at a frame of the timeline, with an optional label of up to 60 characters. With item_id the marker belongs to that item (at must fall inside it) and moves with it, like the beat markers of audio.mark_beats. At most 200 markers on the timeline and on each item; one marker per frame. Markers have no effect on the picture or the sound.
 
 ## Arguments
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `at` | `string` | yes | The position on the timeline. |
+| `item_id` | `string` | no | An item to mark instead of the timeline; at must then fall inside it. |
 | `label` | `string` | no | Up to 60 characters; default none.; max length 60 |
 
 ## Errors

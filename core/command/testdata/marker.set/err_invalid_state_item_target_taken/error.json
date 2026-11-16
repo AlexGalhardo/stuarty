@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Item itm_m1n2p3q4r5 already has a marker at frame 60.",
+  "hint": "Remove it first, or choose another position.",
+  "retryable": false,
+  "path": "args.to"
+}

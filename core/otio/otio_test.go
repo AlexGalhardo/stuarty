@@ -161,9 +161,9 @@ func TestRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Item markers (audio.mark_beats) have no command to restore them: reported, not dropped.
-	if len(im.Lost) != 1 || !strings.Contains(im.Lost[0].Feature, "markers") {
-		t.Errorf("import lost = %+v, want the markers", im.Lost)
+	// The markers of a clip come back through marker.add with item_id (TASK-0254).
+	if len(im.Lost) != 0 {
+		t.Errorf("import lost = %+v, want nothing", im.Lost)
 	}
 
 	if im.FPS != (timeline.Rational{Num: 30, Den: 1}) || im.Name != "Demo" {
@@ -184,9 +184,7 @@ func TestRoundTrip(t *testing.T) {
 		t.Errorf("document markers did not come back: %+v, want %+v", doc.Markers, d.Markers)
 	}
 
-	// The item marker and the text item are the declared losses; compare without markers.
-	want := withoutMarkers(t, first)
-	if !bytes.Equal(withoutMarkers(t, second), want) {
+	if !bytes.Equal(second, first) {
 		t.Errorf("round trip differs:\n%s\n---\n%s", second, first)
 	}
 }
@@ -434,7 +432,7 @@ func TestImportLossesAndOddInput(t *testing.T) {
 		feats[strings.SplitN(l.Feature, " ", 2)[0]] = true
 	}
 
-	for _, f := range []string{"nested", "track", "markers", "effects", "transition", "clip"} {
+	for _, f := range []string{"nested", "track", "marker", "effects", "transition", "clip"} {
 		if !feats[f] {
 			t.Errorf("no loss reported starting with %q: %+v", f, im.Lost)
 		}
@@ -974,6 +972,39 @@ func TestImportReadsNativeStackMarkersAndReportsBadOnes(t *testing.T) {
 	doc := build(t, im, newDoc(im.FPS))
 	if want := []timeline.Marker{{Frame: 5, Label: "a"}}; !reflect.DeepEqual(doc.Markers, want) {
 		t.Errorf("markers = %+v, want %+v", doc.Markers, want)
+	}
+}
+
+func TestImportReadsClipMarkersRelativeToTheSourceRangeAndReportsBadOnes(t *testing.T) {
+	rt := func(v int) string {
+		return fmt.Sprintf(`{"OTIO_SCHEMA":"RationalTime.1","value":%d,"rate":30}`, v)
+	}
+	mk := func(name string, v int) string {
+		return `{"OTIO_SCHEMA":"Marker.2","name":"` + name +
+			`","marked_range":{"OTIO_SCHEMA":"TimeRange.1","start_time":` + rt(v) + `,"duration":` + rt(0) + `}}`
+	}
+	file := `{"OTIO_SCHEMA":"Timeline.1","name":"x","tracks":{"OTIO_SCHEMA":"Stack.1","children":[
+	{"OTIO_SCHEMA":"Track.1","kind":"Video","name":"v","children":[
+	{"OTIO_SCHEMA":"Clip.2","name":"c","source_range":{"start_time":` + rt(30) + `,"duration":` + rt(60) + `},
+	"media_reference":{"OTIO_SCHEMA":"ExternalReference.1","target_url":"clips/a.mp4"},
+	"markers":[` + mk("a", 40) + `,` + mk("dup", 40) + `,` + mk("before", 29) + `,` + mk("after", 90) + `,` + mk("b", 89) + `]}]}]}}`
+
+	im, err := Parse([]byte(file))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(im.Lost) != 3 {
+		t.Errorf("lost = %+v, want the duplicate and the two outside the clip", im.Lost)
+	}
+
+	doc := build(t, im, newDoc(im.FPS))
+	want := []timeline.Marker{{Frame: 10, Label: "a"}, {Frame: 59, Label: "b"}}
+
+	for _, it := range doc.Items {
+		if !reflect.DeepEqual(it.Markers, want) {
+			t.Errorf("markers = %+v, want %+v", it.Markers, want)
+		}
 	}
 }
 

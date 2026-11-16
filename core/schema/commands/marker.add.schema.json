@@ -7,6 +7,10 @@
       "type": "string",
       "x-vv-kind": "time"
     },
+    "item_id": {
+      "description": "An item to mark instead of the timeline; at must then fall inside it.",
+      "type": "string"
+    },
     "label": {
       "description": "Up to 60 characters; default none.",
       "maxLength": 60,

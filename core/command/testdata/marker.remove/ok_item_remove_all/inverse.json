@@ -1,0 +1,18 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "markers": [
+        {
+          "frame": 0,
+          "label": "beat"
+        },
+        {
+          "frame": 30
+        }
+      ]
+    }
+  }
+]

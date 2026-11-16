@@ -1,0 +1,24 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "markers": [
+        [
+          {
+            "frame": 0,
+            "label": "beat"
+          },
+          {
+            "frame": 30
+          }
+        ],
+        [
+          {
+            "frame": 30
+          }
+        ]
+      ]
+    }
+  }
+]

@@ -1,6 +1,6 @@
 ---
 title: "marker.set"
-description: "Moves or relabels a marker of the timeline."
+description: "Moves or relabels a marker of the timeline or of an item."
 wide: true
 ---
 
@@ -10,13 +10,14 @@ wide: true
 
 <RefMain>
 
-Finds the marker at a frame and changes its frame (to) and or its label; a label of "" removes the label.
+Finds the marker at a frame and changes its frame (to) and or its label; a label of "" removes the label. With item_id it works on the markers of that item, and at and to fall inside it.
 
 ## Arguments
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `at` | `string` | yes | The position of the marker to change. |
+| `item_id` | `string` | no | The item that holds the marker; at and to fall inside it. |
 | `label` | `string` | no | The new label, up to 60 characters; "" removes it.; max length 60 |
 | `to` | `string` | no | The new position. |
 

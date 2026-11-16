@@ -1,6 +1,6 @@
 ---
 title: "marker.remove"
-description: "Removes a marker of the timeline."
+description: "Removes a marker of the timeline or of an item."
 wide: true
 ---
 
@@ -10,14 +10,15 @@ wide: true
 
 <RefMain>
 
-Removes the marker at a frame; all removes every marker of the timeline.
+Removes the marker at a frame; all removes every marker. With item_id it works on the markers of that item, beat markers included.
 
 ## Arguments
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `all` | `boolean` | no | True removes every marker of the timeline, instead of at. |
+| `all` | `boolean` | no | True removes every marker, instead of at. |
 | `at` | `string` | no | The position of the marker to remove. |
+| `item_id` | `string` | no | The item that holds the marker; all then clears its markers. |
 
 ## Errors
 

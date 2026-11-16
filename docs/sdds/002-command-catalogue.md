@@ -282,9 +282,9 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `item.extract_audio` | B | `item_id`, `track_id`, `id?` | Creates a linked audio item from the audio of a video clip and mutes the clip. See C.67 |
 | `clip.remove_silences` | A | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip by one clip per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
 | `audio.duck` | B | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | BETA (RF-043). Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
-| `marker.add` | B | `at`, `label?` | Puts a marker (of the timeline, not of an item) at a frame; see C.56 |
-| `marker.set` | B | `at`, `to?`, `label?` | Moves or relabels the marker at a frame; see C.57 |
-| `marker.remove` | B | `at` or `all` | Removes the marker at a frame, or every marker; see C.58 |
+| `marker.add` | B | `item_id?`, `at`, `label?` | Puts a marker at a frame of the timeline, or of an item with `item_id` (TASK-0254); see C.56 |
+| `marker.set` | B | `item_id?`, `at`, `to?`, `label?` | Moves or relabels the marker at a frame, of the timeline or of an item; see C.57 |
+| `marker.remove` | B | `item_id?`, `at` or `all` | Removes the marker at a frame, or every marker, of the timeline or of an item; see C.58 |
 | `audio.mark_beats` | B | `item_id`, `every?` (1 to 64, default 1), `label?`, `replace?` (default true) | BETA (RF-044). Writes markers on a music item at the beats of the visible part of its audio; the beats come through `resolved` (A.9) |
 
 ### B.6 Text and shapes
@@ -4692,12 +4692,13 @@ Sets the chroma key of a clip (VV-015, SDD-001 §3.4): the colour that becomes t
 
 ### C.56 `marker.add` (phase B)
 
-Puts a marker on the timeline (VV-035, SDD-001 §3.1): a labelled frame the person or the agent keeps, for example to find a place again or to cut on it. It is a marker of the document, in frames of the timeline; the markers of an item (SDD-001 §3.4, written by `audio.mark_beats`) are separate and relative to the item.
+Puts a marker on the timeline (VV-035, SDD-001 §3.1): a labelled frame the person or the agent keeps, for example to find a place again or to cut on it. Without `item_id` it is a marker of the document, in frames of the timeline. With `item_id` (TASK-0254) it is a marker of that item (SDD-001 §3.4, the kind `audio.mark_beats` writes): `at` is still a position of the timeline and must fall inside the item, the marker is stored relative to the item's first frame and moves, trims and splits with it (M1 to M4), and a marker written this way survives an OTIO round trip.
 
 **Arguments**
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
+| `item_id` | item id | no | none | the item to mark instead of the timeline (TASK-0254); `at` must fall inside it |
 | `at` | time | yes | none | the position on the timeline, 0 up to the frame limit |
 | `label` | string | no | none | up to 60 characters |
 
@@ -4705,12 +4706,12 @@ Puts a marker on the timeline (VV-035, SDD-001 §3.1): a labelled frame the pers
 
 1. `at` has a unit and is in range; `label` is at most 60 characters (`E_INVALID_TIME`, `E_VALIDATION`).
 2. No marker exists at that frame (`E_INVALID_STATE`; use `marker.set`).
-3. The timeline has fewer than 200 markers (`E_LIMIT`).
+3. The timeline, or the item, has fewer than 200 markers (`E_LIMIT`). With `item_id` the item exists (`E_NOT_FOUND`) and `at` is inside it (`E_VALIDATION`).
 
 **Postconditions.**
 
-1. `markers` of the document is the old list plus `{frame, label}`, in frame order.
-2. `diff` has one `project.updated` (`markers`). `effective` has `at` as an A.4 triple and `markers`, the count.
+1. `markers` of the document (of the item with `item_id`) is the old list plus `{frame, label}`, in frame order.
+2. `diff` has one `project.updated` (`markers`), or one `item.updated` with `item_id`. `effective` has `at` as an A.4 triple and `markers`, the count.
 
 **Errors.**
 
@@ -4721,7 +4722,7 @@ Puts a marker on the timeline (VV-035, SDD-001 §3.1): a labelled frame the pers
 | `E_INVALID_STATE` | a marker exists at that frame | `The timeline already has a marker at frame 30.` | `Use marker.set to change it.` |
 | `E_LIMIT` | 200 markers already | `The timeline would have 201 markers; the limit is 200.` | `Remove markers with marker.remove first.` |
 
-**Inverse.** `patch {collection: "project", set: {markers: <old>}}`, or `unset: ["markers"]` when there were none.
+**Inverse.** `patch {collection: "project", set: {markers: <old>}}`, or `unset: ["markers"]` when there were none; with `item_id`, the same on `collection: "items"` and the item id.
 
 **Idempotency.** Not idempotent: the second call is `E_INVALID_STATE`.
 
@@ -4741,15 +4742,26 @@ Puts a marker on the timeline (VV-035, SDD-001 §3.1): a labelled frame the pers
 - `err_invalid_time_no_unit`
 - `err_validation_label_over_60_characters`
 - `err_limit_over_200_markers`
+- `ok_item_first_marker`
+- `ok_item_marker_at_the_first_frame`
+- `ok_item_marker_keeps_order`
+- `ok_item_marker_on_the_last_frame`
+- `err_validation_item_marker_before_the_item`
+- `err_validation_item_marker_after_the_item`
+- `err_invalid_state_item_frame_taken`
+- `err_not_found_item`
+- `err_validation_item_id_form`
+- `err_limit_over_200_markers_on_an_item`
 
 ### C.57 `marker.set` (phase B)
 
-Moves or relabels the marker at a frame of the timeline.
+Moves or relabels the marker at a frame of the timeline, or of an item with `item_id` (then `at` and `to` are positions of the timeline inside the item, as in C.56).
 
 **Arguments**
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
+| `item_id` | item id | no | none | the item that holds the marker (TASK-0254) |
 | `at` | time | yes | none | the frame of the marker to change |
 | `to` | time | no | unchanged | the new frame |
 | `label` | string | no | unchanged | up to 60 characters; `""` removes the label |
@@ -4797,17 +4809,23 @@ At least one of `to` and `label` is required.
 - `err_not_found_no_marker_there`
 - `err_invalid_state_target_taken`
 - `err_invalid_time_no_unit`
+- `ok_item_move`
+- `ok_item_relabel`
+- `err_not_found_item_marker_there`
+- `err_invalid_state_item_target_taken`
+- `err_validation_item_target_outside`
 
 ### C.58 `marker.remove` (phase B)
 
-Removes the marker at a frame of the timeline, or every marker.
+Removes the marker at a frame of the timeline, or every marker; with `item_id` (TASK-0254) the markers of that item, the beat markers of `audio.mark_beats` included.
 
 **Arguments**
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
+| `item_id` | item id | no | none | the item that holds the marker (TASK-0254) |
 | `at` | time | one of | none | the frame of the marker to remove |
-| `all` | boolean | one of | none | `true` removes every marker of the timeline |
+| `all` | boolean | one of | none | `true` removes every marker of the timeline, or of the item |
 
 **Preconditions.**
 
@@ -4847,6 +4865,10 @@ Removes the marker at a frame of the timeline, or every marker.
 - `err_validation_neither`
 - `err_not_found_no_marker_there`
 - `err_invalid_time_no_unit`
+- `ok_item_remove_one`
+- `ok_item_remove_all`
+- `ok_item_remove_all_leaves_the_timeline_markers`
+- `err_not_found_item_marker_there`
 
 ### C.59 `item.slip` (phase B)
 
