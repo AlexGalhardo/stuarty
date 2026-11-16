@@ -14,6 +14,7 @@ Work is driven by `ROADMAP.md`, which lives in the workspace root next to `AGENT
 | change the document format | `sdds/001-timeline-schema.md` |
 | add or change a command | `sdds/002-command-catalogue.md` |
 | understand why preview and export agree | `adrs/0003-render-one-plan-two-executors.md`, `sdds/004-render-pipeline.md` |
+| know what the Rust renderer reads, writes and may never do (Phase 5) | `adrs/0029-*.md`, then `sdds/013-renderer.md` |
 | know why a decision was taken | `adrs/`, and `brainstorming.md` for the decisions of the author |
 | check that a requirement is covered | `traceability.md` |
 | design or review a screen of the web UI or the desktop shell (tokens, components, content style, accessibility) | `design-system.md`, then `sdds/012-ui-architecture.md` |
@@ -83,6 +84,7 @@ D-001 to D-025, each with date, alternatives, reason and impact. They are the in
 | 010 | documentation site and its two languages | senior-d |
 | 011 | ingest and media: import, probe, profiles, artifacts, analysis, transcription | senior-b |
 | 012 | editor UI architecture: thin-client rules, state, timeline, preview, command coverage | senior-e |
+| 013 | the renderer: the plan as input, the pixel contract, the module and its hosts, frames from WebCodecs and FFmpeg, the proxy chunk index, errors and limits (Phase 5) | senior-b |
 
 Every SDD except SDD-000 (names only) ends with an Acceptance section; the acceptance of SDD-002 is its golden cases (§A.11 and Part C).
 
