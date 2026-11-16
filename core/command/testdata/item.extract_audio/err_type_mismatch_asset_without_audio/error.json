@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "The asset of clip itm_m1n2p3q4r5 has no audio to extract.",
+  "hint": "Choose a clip placed from a video asset with audio.",
+  "retryable": false,
+  "path": "args.item_id"
+}

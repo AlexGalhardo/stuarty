@@ -1,0 +1,12 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "Track trk_m1n2p3q4r5 is locked; the operation would change its items.",
+  "hint": "Unlock the track with track.update locked false, then repeat the edit.",
+  "retryable": false,
+  "path": "args",
+  "details": {
+    "track_ids": [
+      "trk_m1n2p3q4r5"
+    ]
+  }
+}

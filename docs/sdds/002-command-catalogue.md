@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 64 commands, 63 public, of which 16 are Prototype, 32 ALPHA and 16 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 67 commands, 66 public, of which 16 are Prototype, 32 ALPHA and 19 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -276,6 +276,9 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.set_mask` | B | `item_id`, `mask` (`{shape, x, y, width, height, feather?, invert?}` or null) | Limits where a visual item is drawn to a rectangle or an ellipse in the item's own frame; null removes it. See C.62 |
 | `clip.set_flip` | B | `item_id`, `horizontal?`, `vertical?` (booleans) | Mirrors a visual item left to right and or top to bottom; a side not given keeps its value. See C.63 |
 | `item.set_enabled` | B | `item_id`, `enabled` (boolean) | Turns any item off or on without removing it: a disabled item stays on the timeline and is ignored by preview, export and audio. See C.64 |
+| `item.link` | B | `item_ids` (2 to 20), `id?` | Puts items in one link group: `item.move`, `item.trim` and `item.split` on one of them apply to all of them. See C.65 |
+| `item.unlink` | B | `item_ids` | Takes items out of their link group; a group left with one item is dissolved. See C.66 |
+| `item.extract_audio` | B | `item_id`, `track_id`, `id?` | Creates a linked audio item from the audio of a video clip and mutes the clip. See C.67 |
 | `clip.remove_silences` | A | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip by one clip per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
 | `audio.duck` | B | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | BETA (RF-043). Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
 | `marker.add` | B | `at`, `label?` | Puts a marker (of the timeline, not of an item) at a frame; see C.56 |
@@ -1135,6 +1138,8 @@ At least one of `start` and `track_id` is required.
 2. `diff` has one `item.updated` with `start` and/or `track`; empty for a no-op (R2).
 3. `effective` has `start` (the A.4 triple) and `track_id`.
 
+**Linked items (TASK-0277).** When the item has a `link` (SDD-001 section 3.5), every other item of its link group moves by the same number of frames as the item did (`start - old start`), on its own track; a `track_id` change moves the named item only. A linked item that would start before frame 0 or end after 108,000 is `E_INVALID_TIME`, one that would overlap on its track is `E_OVERLAP` (the message names the linked item and the hint says to move by less or unlink it), and a linked item on a locked track refuses the whole command with `E_INVALID_STATE` like any edit of a locked track. `effective.moved_with` lists the linked ids (sorted) when any moved. `slide` neighbours are those of the named item only.
+
 **Errors.**
 
 | Code | When | Example message | Example hint |
@@ -1189,6 +1194,13 @@ At least one of `start` and `track_id` is required.
 - `err_invalid_state_slide_leaves_no_frame_in_the_next_item`
 - `err_out_of_source_slide_earlier_next_item_reads_before_zero`
 - `err_overlap_slide_into_a_non_touching_item`
+- `ok_linked_items_move_together`
+- `ok_linked_items_move_earlier_together`
+- `ok_linked_move_to_other_track_moves_only_the_item`
+- `ok_linked_peer_out_of_the_way_unaffected`
+- `err_invalid_time_linked_peer_before_frame_0`
+- `err_overlap_linked_peer`
+- `err_invalid_state_linked_peer_on_a_locked_track`
 
 ### C.12 `item.trim` (phase P)
 
@@ -1222,6 +1234,8 @@ Moves the start edge or the end edge of an item to a timeline position, keeping 
 4. `fade_in`, `fade_out`, `transition_in`, `transition_out` keep their lengths.
 5. `diff` has one `item.updated` with the changed fields (`start`, `duration`, `source_in`, `keyframes`, `words`, `breaks` and the static fields written by R11 or R12). No change when `to` is the current edge (R2).
 6. `effective` has `to` (the A.4 triple), `start`, `duration` and, for `clip` and `audio`, `source_in`, all as applied.
+
+**Linked items (TASK-0277).** When the item has a `link`, the same edge of every other item of its link group moves by the same number of frames as the edge of the item (`to` minus the old edge), each with the rules of its own type (source range, fades, transitions, words, R14), and the first linked item that cannot follow refuses the command with the error it would give alone, the hint naming it. `ripple` and `roll` apply to the named item only. A linked item on a locked track refuses the command as for any edit of a locked track. `effective.trimmed_with` lists the linked ids (sorted) when any was trimmed.
 
 **Errors.**
 
@@ -1314,6 +1328,11 @@ The same clip trimmed at the end with `{"edge": "end", "to": "150f"}` (and, for 
 - `err_invalid_state_roll_without_a_touching_neighbour`
 - `err_invalid_state_roll_leaves_no_frame_in_the_neighbour`
 - `err_out_of_source_roll_neighbour_reads_before_zero`
+- `ok_linked_trim_end_together`
+- `ok_linked_trim_start_together`
+- `ok_linked_trim_extend_start_together`
+- `err_invalid_state_linked_peer_would_have_no_frame`
+- `err_invalid_state_linked_peer_on_a_locked_track`
 
 ### C.13 `item.split` (phase P)
 
@@ -1344,6 +1363,8 @@ Splits an item into two items at a timeline frame.
 4. Every other field (name, position, scale, rotation, opacity, text, style, asset, speed, volume, framing, colour, shape fields) is copied to the right part unchanged.
 5. `diff`: `item.updated` for the left part and `item.added` for the right part, sorted by id.
 6. `effective` has `at` (the A.4 triple), `new_id`, `left` and `right`, each `{"id", "start", "duration"}`.
+
+**Linked items (TASK-0277).** When the item has a `link`, every other item of its link group that `at` falls strictly inside is split at the same frame by the same rule; the others are left alone. The left parts keep the link group, and the right parts, the new item and the right parts of the linked items, form a new link group whose id is `lnk_` plus the ten characters of `new_id`; if no linked item was cut the right part has no link, since a group of one links nothing. `new_ids` supplies the ids of the right parts of the cut linked items, in the order of the ids of those items (missing ones come from the generator); `effective.new_ids` and `effective.split_with` list them when any was cut. A linked item that cannot be split (a speed curve, a caption with no word on a side) refuses the command, the hint naming it, and a linked item on a locked track refuses it as for any edit of a locked track.
 
 **Errors.**
 
@@ -1424,6 +1445,12 @@ The cut value is the linear value at relative frame 37: `1 + (0.4 - 1) × 37/60 
 - `err_id_exists`
 - `err_limit_500_items`
 - `ok_markers_divided_at_the_cut`
+- `ok_linked_split_together`
+- `ok_linked_split_with_generated_ids`
+- `ok_linked_split_cuts_only_the_items_that_span_the_frame`
+- `ok_linked_split_where_no_peer_spans_leaves_the_right_part_unlinked`
+- `err_invalid_state_linked_peer_speed_curve`
+- `err_invalid_state_linked_peer_on_a_locked_track`
 
 ### C.14 `item.delete` (phase P)
 
@@ -5167,3 +5194,194 @@ Turns an item off or on (TASK-0233, SDD-001 §3.4): a disabled item keeps its pl
 - `ok_disable_twice_noop`
 - `err_validation_no_enabled`
 - `err_not_found`
+
+### C.65 `item.link` (phase B)
+
+Puts items in one link group (TASK-0277, SDD-001 section 3.5): `item.move`, `item.trim` and `item.split` on one of them apply to all of them.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_ids` | list of item ids | yes | none | 2 to 20 distinct items, each a `clip`, `audio`, `text` or `shape` item |
+| `id` | link id | no | generated | `lnk_` and 10 characters; a group id that no item uses |
+
+**Preconditions.**
+
+1. `item_ids` has 2 to 20 distinct well-formed ids and `id`, when given, is a link id (`E_VALIDATION`).
+2. Every item exists (`E_NOT_FOUND`).
+3. No item is a caption (`E_TYPE_MISMATCH`; captions follow a clip with `linked_item`).
+4. No item is already linked (`E_INVALID_STATE`, the hint says `item.unlink`).
+5. `id`, when given, is not the link of another item (`E_ID_EXISTS`).
+
+**Postconditions.**
+
+1. `link` of every item is the group id: `id`, or the one the generator returns for the prefix `lnk`.
+2. `diff` has one `item.updated` per item, sorted by id. `effective.link_id` is the group id and `effective.item_ids` the sorted ids. The service stores a generated group id in the `id` argument of the operation, so a replay gets the same one.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | fewer than 2 or more than 20 items, an id listed twice, a malformed id | `args.item_ids[1] "itm_m1n2p3q4r5" is listed twice.` | `List each item id once.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | a caption | `Item itm_s6t7v8w9x0 is a caption; captions follow a clip with linked_item, not a link group.` | `Link clip, audio, text or shape items.` |
+| `E_INVALID_STATE` | an item already linked | `Item itm_c3d4e5f6g7 is already linked (group lnk_f6g7h8j9k0).` | `Unlink it with item.unlink first.` |
+| `E_ID_EXISTS` | `id` used by another group | `Link id lnk_a1b2c3d4e5 is already used by item itm_s6t7v8w9x0.` | `Omit id or use an unused id.` |
+
+**Inverse.** `patch {collection: "items", id, unset: ["link"]}` per item, in order of mutation (R5).
+
+**Idempotency.** Not idempotent: a second application finds the items already linked (`E_INVALID_STATE`).
+
+**Example.** A clip `itm_m1n2p3q4r5` and its audio item `itm_c3d4e5f6g7`.
+
+```json
+{"op": "item.link", "args": {"item_ids": ["itm_m1n2p3q4r5", "itm_c3d4e5f6g7"], "id": "lnk_a1b2c3d4e5"}}
+```
+
+```json
+[
+  {"kind": "item.updated", "id": "itm_c3d4e5f6g7", "changes": {"link": [null, "lnk_a1b2c3d4e5"]}},
+  {"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"link": [null, "lnk_a1b2c3d4e5"]}}
+]
+```
+
+**Golden cases.**
+
+- `ok_link_clip_and_audio`
+- `ok_link_three_items`
+- `ok_link_with_given_id`
+- `ok_link_with_generated_id`
+- `ok_link_text_and_shape`
+- `err_validation_one_item`
+- `err_validation_listed_twice`
+- `err_validation_bad_link_id`
+- `err_not_found_item`
+- `err_type_mismatch_caption`
+- `err_invalid_state_already_linked`
+- `err_id_exists_link_in_use`
+
+### C.66 `item.unlink` (phase B)
+
+Takes items out of their link group (TASK-0277).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_ids` | list of item ids | yes | none | 1 to 50 distinct linked items |
+
+**Preconditions.**
+
+1. `item_ids` has 1 to 50 distinct well-formed ids (`E_VALIDATION`).
+2. Every item exists (`E_NOT_FOUND`).
+3. Every item is linked (`E_INVALID_STATE`).
+
+**Postconditions.**
+
+1. `link` is removed from every listed item.
+2. A group left with exactly one item is dissolved: that item loses its `link` too and is listed in `effective.also_unlinked` (sorted; `[]` when none).
+3. `diff` has one `item.updated` per changed item, sorted by id. `effective.item_ids` is the sorted list given.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | an id listed twice, a malformed id, an empty or longer than 50 list | `args.item_ids[1] "itm_m1n2p3q4r5" is listed twice.` | `List each item id once.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_INVALID_STATE` | an item that is not linked | `Item itm_m1n2p3q4r5 is not linked.` | `Only linked items can be unlinked.` |
+
+**Inverse.** `patch {collection: "items", id, set: {"link": <old group id>}}` per changed item, in order of mutation (R5).
+
+**Idempotency.** Not idempotent: a second application finds the items not linked (`E_INVALID_STATE`).
+
+**Example.** Two linked items; unlinking one dissolves the group.
+
+```json
+{"op": "item.unlink", "args": {"item_ids": ["itm_m1n2p3q4r5"]}}
+```
+
+```json
+[
+  {"kind": "item.updated", "id": "itm_c3d4e5f6g7", "changes": {"link": ["lnk_a1b2c3d4e5", null]}},
+  {"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"link": ["lnk_a1b2c3d4e5", null]}}
+]
+```
+
+**Golden cases.**
+
+- `ok_unlink_one_of_three`
+- `ok_unlink_two_of_two_dissolves`
+- `ok_unlink_one_of_two_unlinks_the_other`
+- `ok_unlink_whole_group`
+- `err_validation_listed_twice`
+- `err_not_found_item`
+- `err_invalid_state_not_linked`
+
+### C.67 `item.extract_audio` (phase B)
+
+Creates an audio item from the audio of a video clip, linked to it, and mutes the clip (TASK-0277).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` of a video asset that has audio |
+| `track_id` | track id | yes | none | an audio track |
+| `id` | item id | no | generated | the id of the new audio item |
+
+**Preconditions.**
+
+1. The ids are well formed (`E_VALIDATION`).
+2. The item and the track exist (`E_NOT_FOUND`).
+3. The item is a `clip` (not an audio item), the track is an audio track and the asset of the clip is a video with audio (`E_TYPE_MISMATCH`).
+4. The clip is not `audio_muted` (`E_INVALID_STATE`: its audio was already extracted or silenced).
+5. The project has fewer than 500 items (`E_LIMIT`) and `id` is unused (`E_ID_EXISTS`).
+6. The audio item does not overlap another item of the track (`E_OVERLAP`, R8).
+
+**Postconditions.**
+
+1. A new `audio` item on `track_id` with the `start`, `duration`, `asset`, `source_in`, `speed`, `speed_curve`, `reverse`, `volume`, `fade_in`, `fade_out` and `denoise` of the clip, and the `volume` keyframes of the clip. Other keyframes, the transitions, the colour and the transform stay on the clip.
+2. The clip gets `audio_muted: true`. Both items get the `link` of the clip when it has one (the audio item joins its group); otherwise the group id is `lnk_` plus the ten characters of the new item id.
+3. `diff`: `item.added` for the audio item, then `item.updated` for the clip. `effective` has `new_id`, `link` and `track_id`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | a malformed id | `args.id "audio1" is not an item id.` | `Use itm_ and 10 characters, or omit id.` |
+| `E_NOT_FOUND` | unknown item or track | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip, a visual track, an image clip, an asset with no audio | `Track trk_a1b2c3d4e5 is a visual track; the audio item needs an audio track.` | `Use an audio track, for example the one from track.add.` |
+| `E_INVALID_STATE` | the clip is already muted | `Clip itm_m1n2p3q4r5 is already muted: its audio was extracted or silenced.` | `Unmute it with item.set_audio muted false first, or use its audio item.` |
+| `E_OVERLAP` | the range is taken on the audio track | `Item itm_d4e5f6g7h8 would occupy frames 30-119 on track trk_m1n2p3q4r5, where item itm_c3d4e5f6g7 already is (frames 60-89).` | `Use another audio track.` |
+| `E_ID_EXISTS` | `id` is used | `Item id itm_m1n2p3q4r5 already exists.` | `Omit id or use an unused id.` |
+| `E_LIMIT` | 500 items | `items would exceed the limit of 500.` | `Delete items first.` |
+
+**Inverse.** `patch {collection: "items", id: <clip>, unset: ["audio_muted", "link"]}` (or set the old link), then `remove {collection: "items", id: <new>}`, in order of mutation (R5).
+
+**Idempotency.** Not idempotent: a second application finds the clip muted (`E_INVALID_STATE`).
+
+**Example.** Clip `itm_m1n2p3q4r5` (start 30, 90 frames, `source_in` 10) and the audio track `trk_m1n2p3q4r5`.
+
+```json
+{"op": "item.extract_audio", "args": {"item_id": "itm_m1n2p3q4r5", "track_id": "trk_m1n2p3q4r5", "id": "itm_c3d4e5f6g7"}}
+```
+
+**Golden cases.**
+
+- `ok_extract_audio`
+- `ok_extract_audio_with_generated_id`
+- `ok_copies_audio_settings`
+- `ok_copies_curve_and_reverse`
+- `ok_joins_the_group_of_the_clip`
+- `err_validation_bad_new_id`
+- `err_not_found_item`
+- `err_not_found_track`
+- `err_type_mismatch_not_a_clip`
+- `err_type_mismatch_visual_track`
+- `err_type_mismatch_image_clip`
+- `err_type_mismatch_asset_without_audio`
+- `err_invalid_state_already_muted`
+- `err_overlap_audio_track_busy`
+- `err_id_exists`
+- `err_limit_500_items`

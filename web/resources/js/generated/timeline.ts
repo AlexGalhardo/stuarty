@@ -88,6 +88,7 @@ export interface Item {
      */
     [k: string]: Keyframe[];
   };
+  link?: string;
   linked_item?: string;
   /**
    * @maxItems 200

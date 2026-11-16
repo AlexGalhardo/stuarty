@@ -521,6 +521,15 @@
           "set_enabled": {
             "title": "Ligar ou desligar item"
           },
+          "link": {
+            "title": "Vincular itens"
+          },
+          "unlink": {
+            "title": "Desvincular itens"
+          },
+          "extract_audio": {
+            "title": "Extrair áudio"
+          },
           "set_transition": {
             "title": "Definir transição do item"
           },

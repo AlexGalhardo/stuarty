@@ -123,11 +123,27 @@ func applyItemMove(c *Context, a *itemMoveArgs) error {
 			return err
 		}
 	}
+	moved, err := c.movePeers(&it, start-it.Start)
+	if err != nil {
+		return err
+	}
 	if err := c.checkOverlap(a.ItemID, target, start, it.Duration); err != nil {
 		return err
 	}
+	delta := start - it.Start
 	it.Start, it.Track = start, target
 	c.Doc.Items[a.ItemID] = it
+	for _, id := range moved {
+		o := c.Doc.Items[id]
+		if err := c.checkOverlap(id, o.Track, o.Start, o.Duration); err != nil {
+			return err.WithHint("Item %s is linked to %s and moves %d frames with it; move by less, or unlink it with item.unlink.",
+				id, a.ItemID, delta).
+				WithPath("args.start")
+		}
+	}
+	if len(moved) > 0 {
+		c.SetEffective("moved_with", moved)
+	}
 	req := string(a.Start)
 	c.SetEffectiveTime("start", start, req)
 	c.SetEffective("track_id", target)
@@ -284,10 +300,23 @@ func applyItemTrim(c *Context, a *itemTrimArgs) error {
 			return err
 		}
 	}
+	trimmedWith, err := c.trimPeers(&it, a.Edge, to)
+	if err != nil {
+		return err
+	}
 	if err := c.trimOverlap(&n, a.Edge); err != nil {
 		return err
 	}
 	c.Doc.Items[a.ItemID] = n
+	for _, id := range trimmedWith {
+		o := c.Doc.Items[id]
+		if err := c.trimOverlap(&o, a.Edge); err != nil {
+			return err.WithPath("args.to")
+		}
+	}
+	if len(trimmedWith) > 0 {
+		c.SetEffective("trimmed_with", trimmedWith)
+	}
 	c.SetEffectiveTime("to", to, string(a.To))
 	c.SetEffective("start", n.Start)
 	c.SetEffective("duration", n.Duration)
@@ -515,9 +544,10 @@ func (c *Context) trimOverlap(n *timeline.Item, edge string) *Error {
 }
 
 type itemSplitArgs struct {
-	ItemID string `json:"item_id"`
-	At     Time   `json:"at"               desc:"Absolute position strictly inside the item."`
-	NewID  string `json:"new_id,omitempty" desc:"The id of the right part."`
+	ItemID string   `json:"item_id"`
+	At     Time     `json:"at"                desc:"Absolute position strictly inside the item."`
+	NewID  string   `json:"new_id,omitempty"  desc:"The id of the right part."`
+	NewIDs []string `json:"new_ids,omitempty" desc:"The ids of the right parts of the linked items that the split cuts, in the order of the ids of those items."`
 }
 
 func applyItemSplit(c *Context, a *itemSplitArgs) error {
@@ -555,41 +585,55 @@ func applyItemSplit(c *Context, a *itemSplitArgs) error {
 	if err := c.limit("items", len(c.Doc.Items), timeline.MaxItems); err != nil {
 		return err
 	}
-	tc := at - it.Start
-	_, reads := c.sourceAsset(&it)
-	if reads {
-		if err := rejectCurve(&it, "a split"); err != nil {
-			return err
-		}
-	}
-	left, right := splitCore(&it, newID, tc, reads)
-	if it.Type == timeline.ItemCaption {
-		var lb, rb []int
-		left.Words, right.Words, lb, rb = splitWords(it.Words, it.Breaks, tc)
-		left.Breaks, right.Breaks = lb, rb
-		for _, side := range []struct {
-			name  string
-			words []timeline.Word
-		}{{"left", left.Words}, {"right", right.Words}} {
-			if len(side.words) == 0 {
-				return Errorf(
-					CodeInvalidState,
-					"Splitting caption %s at frame %d leaves the %s part with no word.",
-					a.ItemID,
-					at,
-					side.name,
-				).
-					WithHint("Split at a word boundary with caption.split.").
-					WithPath("args.at")
-			}
-		}
+	left, right, err := c.splitParts(&it, at, newID)
+	if err != nil {
+		return err
 	}
 	c.Doc.Items[a.ItemID], c.Doc.Items[newID] = left, right
+	if err := c.splitPeers(&it, at, newID, a.NewIDs); err != nil {
+		return err
+	}
 	c.SetEffectiveTime("at", at, string(a.At))
 	c.SetEffective("new_id", newID)
 	c.SetEffective("left", map[string]any{"id": a.ItemID, "start": left.Start, "duration": left.Duration})
 	c.SetEffective("right", map[string]any{"id": newID, "start": right.Start, "duration": right.Duration})
 	return nil
+}
+
+// splitParts is S(X, Tc) of R17 for one item: the left and right parts at the absolute frame `at`
+// (strictly inside the item), with the caption words divided.
+func (c *Context) splitParts(it *timeline.Item, at int, newID string) (left, right timeline.Item, err *Error) {
+	tc := at - it.Start
+	_, reads := c.sourceAsset(it)
+	if reads {
+		if err := rejectCurve(it, "a split"); err != nil {
+			return left, right, err
+		}
+	}
+	left, right = splitCore(it, newID, tc, reads)
+	if it.Type != timeline.ItemCaption {
+		return left, right, nil
+	}
+	var lb, rb []int
+	left.Words, right.Words, lb, rb = splitWords(it.Words, it.Breaks, tc)
+	left.Breaks, right.Breaks = lb, rb
+	for _, side := range []struct {
+		name  string
+		words []timeline.Word
+	}{{"left", left.Words}, {"right", right.Words}} {
+		if len(side.words) == 0 {
+			return left, right, Errorf(
+				CodeInvalidState,
+				"Splitting caption %s at frame %d leaves the %s part with no word.",
+				it.ID,
+				at,
+				side.name,
+			).
+				WithHint("Split at a word boundary with caption.split.").
+				WithPath("args.at")
+		}
+	}
+	return left, right, nil
 }
 
 type itemDeleteArgs struct {

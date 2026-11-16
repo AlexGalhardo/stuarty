@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Track trk_a1b2c3d4e5 is a visual track; the audio item needs an audio track.",
+  "hint": "Use an audio track, for example the one from track.add.",
+  "retryable": false,
+  "path": "args.track_id"
+}

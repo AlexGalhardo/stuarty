@@ -261,7 +261,7 @@ func silencePieces(it *timeline.Item, pieces []piece, ids []string, ripple bool)
 		cp.Start, cp.Duration, cp.SourceIn = start, dur, pc.a
 		if i > 0 {
 			cp.ID = ids[i-1]
-			cp.FadeIn, cp.TransitionIn, cp.Slot = 0, nil, nil
+			cp.FadeIn, cp.TransitionIn, cp.Slot, cp.Link = 0, nil, nil, ""
 		}
 		if i < len(pieces)-1 {
 			cp.FadeOut, cp.TransitionOut = 0, nil

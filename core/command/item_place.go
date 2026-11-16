@@ -125,7 +125,7 @@ func applyItemDuplicate(c *Context, a *itemDuplicateArgs) error {
 		return err
 	}
 	cp := timeline.CloneItem(src)
-	cp.ID, cp.Start, cp.Track, cp.Slot = id, start, trackID, nil
+	cp.ID, cp.Start, cp.Track, cp.Slot, cp.Link = id, start, trackID, nil, ""
 	c.Doc.Items[id] = cp
 	c.SetEffective("new_id", id)
 	requested := string(a.Start)

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "description": "The id of the new audio item.",
+      "type": "string"
+    },
+    "item_id": {
+      "description": "A clip of a video asset with audio.",
+      "type": "string"
+    },
+    "track_id": {
+      "description": "An audio track with room for the item.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id",
+    "track_id"
+  ],
+  "type": "object"
+}

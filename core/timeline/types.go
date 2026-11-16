@@ -40,6 +40,7 @@ const (
 	PrefixAsset   = "ast"
 	PrefixTrack   = "trk"
 	PrefixItem    = "itm"
+	PrefixLink    = "lnk"
 )
 
 // Extra holds the fields the binary does not know, kept verbatim at every object
@@ -199,6 +200,10 @@ type Item struct {
 	// Clip and audio, optional and additive (SDD-001 §3.5): the speed curve, 2 to 8 points with linear
 	// ramps between them; speed is then the mean of the curve.
 	SpeedCurve []SpeedPoint `json:"speed_curve,omitempty" minitems:"2" maxitems:"8"`
+	// Clip, audio, text and shape, optional and additive (SDD-001 §3.5): the link group. Items with the
+	// same link move, trim and split together.
+	Link string `json:"link,omitempty" pattern:"^lnk_[0-9a-hjkmnp-tv-z]{10}$"`
+
 	// Clip and audio, optional and additive (SDD-001 §3.5): play the source range backwards.
 	Reverse bool `json:"reverse,omitempty"`
 	// Clip and audio, optional and additive (SDD-001 §3.5): noise reduction strength, 0 (off) to 1.

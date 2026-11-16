@@ -191,6 +191,9 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.enabled", phase: "B" },
 		palette,
 	],
+	"item.link": [palette],
+	"item.unlink": [palette],
+	"item.extract_audio": [palette],
 	"marker.add": [
 		{ kind: "key", action: "timeline.marker", phase: "B" },
 		palette,

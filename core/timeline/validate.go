@@ -419,6 +419,7 @@ func (v *validator) item(key string, it Item) {
 	v.transitions(path, key, it)
 	v.keyframes(path, key, it)
 	v.slot(path, key, it)
+	v.link(path, key, it)
 }
 
 // itemFieldsForType reports fields that belong to another item type.
@@ -712,6 +713,16 @@ func (v *validator) caption(path, key string, it Item) {
 	}
 	if it.LinkedItem != "" && !ValidID(PrefixItem, it.LinkedItem) {
 		v.add(VID, path+".linked_item", key, "%q is not a valid item identifier", it.LinkedItem)
+	}
+}
+
+func (v *validator) link(path, key string, it Item) {
+	switch {
+	case it.Link == "":
+	case !ValidID(PrefixLink, it.Link):
+		v.add(VID, path+".link", key, "%q is not a valid link identifier", it.Link)
+	case it.Type == ItemCaption:
+		v.add(VShape, path+".link", key, "link does not apply to caption items")
 	}
 }
 
