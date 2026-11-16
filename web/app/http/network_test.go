@@ -276,6 +276,29 @@ func TestNetworkSchemeRules(t *testing.T) {
 	})
 }
 
+// SDD-007 section 4.3 item 4: a server that binds a non-loopback address and takes plain HTTP
+// warns that the published port decides who can read a credential; one bound to loopback does not.
+func TestPlainHTTPOnANonLoopbackBindWarns(t *testing.T) {
+	for _, c := range []struct {
+		addr string
+		warn bool
+	}{
+		{"0.0.0.0:7878", true},
+		{"[::]:7878", true},
+		{"127.0.0.1:7878", false},
+	} {
+		h := newNetworkHarness(t, config.Resolved{
+			Mode: config.ModeNetwork, Addr: c.addr, AppURL: "http://localhost:7878", LoopbackHTTP: true,
+		}, false)
+
+		out := h.log.String()
+		got := strings.Contains(out, "level=WARN") && strings.Contains(out, "publish the port on the loopback")
+		if got != c.warn {
+			t.Errorf("bind %s: warning = %v, want %v\n%s", c.addr, got, c.warn, out)
+		}
+	}
+}
+
 // SDD-007 section 4.3 item 4: plain HTTP only as a loopback name of the APP_URL port.
 func TestContainerLoopbackOnly(t *testing.T) {
 	h := newNetworkHarness(t, config.Resolved{
