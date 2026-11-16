@@ -198,15 +198,32 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 	w := plan.WindowWith(doc, req.From, req.Until, opts)
 	w.Revision = row.Revision
 
-	// The bitmaps of the window can be asked for by key from now on. A bitmap drawn with a user
-	// font is handed out under a key that also names the font files (see bitmaps).
+	if err := s.registerBitmaps(ctx, &row, doc, fonts, opts, &w, req.From, req.Until); err != nil {
+		return nil, err
+	}
+
+	return &w, nil
+}
+
+// registerBitmaps makes the bitmaps of frames from to until askable by key. A bitmap drawn with a
+// user font is handed out under a key that also names the font files (see bitmaps), and the window
+// is rewritten to those keys.
+func (s *svc) registerBitmaps(
+	ctx context.Context,
+	row *ProjectRow,
+	doc *timeline.Document,
+	fonts *raster.FontSet,
+	opts plan.Options,
+	w *plan.WindowPlan,
+	from, until int,
+) error {
 	renamed := map[string]string{}
 
-	for t := req.From; t < req.Until; t++ {
+	for t := from; t < until; t++ {
 		// A client that gave up (a newer revision) stops the planning (SDD-012 section 19.2 rule 8).
-		if (t-req.From)%30 == 0 {
+		if (t-from)%30 == 0 {
 			if cerr := ctx.Err(); cerr != nil {
-				return nil, cerr
+				return cerr
 			}
 		}
 
@@ -229,21 +246,19 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 		}
 	}
 
-	if len(renamed) > 0 {
-		for i := range w.Layers {
-			if w.Layers[i].Bitmaps == nil {
-				continue
-			}
+	for i := range w.Layers {
+		if w.Layers[i].Bitmaps == nil {
+			continue
+		}
 
-			for j, k := range w.Layers[i].Bitmaps.Keys {
-				if r, ok := renamed[k]; ok {
-					w.Layers[i].Bitmaps.Keys[j] = r
-				}
+		for j, k := range w.Layers[i].Bitmaps.Keys {
+			if r, ok := renamed[k]; ok {
+				w.Layers[i].Bitmaps.Keys[j] = r
 			}
 		}
 	}
 
-	return &w, nil
+	return nil
 }
 
 // openBitmap serves a rasterized text or shape by its content key: the PNG is
