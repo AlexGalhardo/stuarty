@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 // mediaFake answers the media and job methods from scripts.
@@ -326,5 +327,23 @@ func TestExportSendsTheFormat(t *testing.T) {
 	var args service.ExportArgs
 	if err := json.Unmarshal(f.jobStart.Args, &args); err != nil || args.Format != "gif" {
 		t.Errorf("args = %s", f.jobStart.Args)
+	}
+}
+
+// With VUKEM_VIDEO_URL the path belongs to the server and goes as typed (VV-005): a
+// POSIX path is not rewritten against the Windows working directory.
+func TestAbsKeepsServerPathsWhenRemote(t *testing.T) {
+	h := newHarness(t)
+	h.rt.Getenv = func(k string) string {
+		if k == workspace.EnvURL {
+			return "http://server:7878"
+		}
+
+		return ""
+	}
+
+	got, err := h.rt.abs("/assets/video/a.mp4")
+	if err != nil || got != "/assets/video/a.mp4" {
+		t.Errorf("abs = %q, %v", got, err)
 	}
 }
