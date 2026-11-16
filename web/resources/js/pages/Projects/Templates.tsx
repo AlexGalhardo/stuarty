@@ -15,6 +15,7 @@ import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { BrandKit, TemplateSummary } from "../../editor/api/types";
 import { templateFileUrl } from "../../editor/api/urls";
+import { clearOtherAlerts, useClearAlertOnOtherSubmit } from "./formAlerts";
 
 const NAME_MAX = 120;
 
@@ -47,6 +48,7 @@ function TemplateRow({
 
 	async function create(event: FormEvent<HTMLFormElement>): Promise<void> {
 		event.preventDefault();
+		clearOtherAlerts("template-create");
 		setBusy(true);
 		onFailure(null);
 		try {
@@ -166,6 +168,7 @@ export default function Templates(): ReactNode {
 	const [path, setPath] = useState("");
 	const [importing, setImporting] = useState(false);
 	const [kit, setKit] = useState<BrandKit | null>(null);
+	useClearAlertOnOtherSubmit("template-import", () => setFailure(null));
 
 	useEffect(() => {
 		createClient(new HttpTransport("/api/v1"))
@@ -190,6 +193,7 @@ export default function Templates(): ReactNode {
 
 	async function importFile(event: FormEvent<HTMLFormElement>): Promise<void> {
 		event.preventDefault();
+		clearOtherAlerts("template-import");
 		setImporting(true);
 		setFailure(null);
 		try {

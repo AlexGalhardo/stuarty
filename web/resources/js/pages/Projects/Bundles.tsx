@@ -11,6 +11,7 @@ import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { Job } from "../../editor/api/types";
 import { exportFileUrl } from "../../editor/api/urls";
+import { clearOtherAlerts, useClearAlertOnOtherSubmit } from "./formAlerts";
 
 const POLL_MS = 1000;
 const POLL_LIMIT = 600;
@@ -113,9 +114,11 @@ export function BundleImport(): ReactNode {
 	const [busy, setBusy] = useState(false);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [imported, setImported] = useState<string | null>(null);
+	useClearAlertOnOtherSubmit("bundle-import", () => setFailure(null));
 
 	async function submit(event: FormEvent<HTMLFormElement>): Promise<void> {
 		event.preventDefault();
+		clearOtherAlerts("bundle-import");
 		setBusy(true);
 		setFailure(null);
 		setImported(null);
