@@ -111,6 +111,12 @@ fetch() { # fetch <url> <sha256> <name>: downloads, verifies and unpacks into $w
 	tar -xf "$file" -C "$work/src/$name" --strip-components=1
 }
 
+fetch_file() { # fetch_file <url> <sha256> <dest>: downloads one file and verifies it
+	local url="$1" sum="$2" dest="$3"
+	curl -fsSL --retry 3 -o "$dest" "$url" || die "download failed: $url"
+	[ "$(sha256_of "$dest")" = "$sum" ] || die "SHA-256 mismatch for $url"
+}
+
 fetch "$FFMPEG_SRC_URL" "$FFMPEG_SRC_SHA256" ffmpeg
 fetch "$LIBVPX_SRC_URL" "$LIBVPX_SRC_SHA256" libvpx
 fetch "$OPUS_SRC_URL" "$OPUS_SRC_SHA256" opus
@@ -127,16 +133,18 @@ linux | windows)
 	;;
 esac
 
-fetch "$OPENH264_SRC_URL" "$OPENH264_SRC_SHA256" openh264
-
 patch_file="$build_dir/patches/$FFMPEG_PATCH_FILE"
 [ "$(sha256_of "$patch_file")" = "$FFMPEG_PATCH_SHA256" ] || die "SHA-256 mismatch for $patch_file"
 patch -p1 -d "$work/src/ffmpeg" <"$patch_file" >&2 || die "patch $patch_file does not apply"
 
 prefix="$work/prefix"
 mkdir -p "$prefix/include/wels"
-# Only the Cisco headers: libopenh264 is loaded at run time by the patched encoder, never linked.
-cp "$work"/src/openh264/codec/api/wels/*.h "$prefix/include/wels/"
+# Only the four Cisco API headers, each pinned by SHA-256 at the commit of the v2.6.0 tag (the auto-generated
+# tag archive is not byte-stable): libopenh264 is loaded at run time by the patched encoder, never linked.
+fetch_file "$OPENH264_RAW_URL/codec_api.h" "$OPENH264_CODEC_API_SHA256" "$prefix/include/wels/codec_api.h"
+fetch_file "$OPENH264_RAW_URL/codec_app_def.h" "$OPENH264_CODEC_APP_DEF_SHA256" "$prefix/include/wels/codec_app_def.h"
+fetch_file "$OPENH264_RAW_URL/codec_def.h" "$OPENH264_CODEC_DEF_SHA256" "$prefix/include/wels/codec_def.h"
+fetch_file "$OPENH264_RAW_URL/codec_ver.h" "$OPENH264_CODEC_VER_SHA256" "$prefix/include/wels/codec_ver.h"
 remap="-ffile-prefix-map=$work=. -ffile-prefix-map=$root=."
 export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
 export CFLAGS="-O2 $remap"
@@ -271,7 +279,7 @@ fi
 	printf 'FFmpeg %s, own LGPL build %s, built from the source tarball below by scripts/ffmpeg-build.sh.\n' "$FFMPEG_BUILD_VERSION" "$FFMPEG_BUILD_TAG"
 	printf 'Corresponding FFmpeg source: %s (SHA-256 %s)\n' "$FFMPEG_SRC_URL" "$FFMPEG_SRC_SHA256"
 	printf 'libvpx: %s\nopus: %s\nzlib: %s\n' "$LIBVPX_SRC_URL" "$OPUS_SRC_URL" "$ZLIB_SRC_URL"
-	printf 'OpenH264 (headers only, BSD-2-Clause; the library is loaded at run time, not included): %s\n' "$OPENH264_SRC_URL"
+	printf 'OpenH264 (four API headers only, BSD-2-Clause; the library is loaded at run time, not included): %s/{codec_api,codec_app_def,codec_def,codec_ver}.h (SHA-256 %s %s %s %s)\n' "$OPENH264_RAW_URL" "$OPENH264_CODEC_API_SHA256" "$OPENH264_CODEC_APP_DEF_SHA256" "$OPENH264_CODEC_DEF_SHA256" "$OPENH264_CODEC_VER_SHA256"
 	printf 'Patch: .config/ffmpeg-build/patches/%s (SHA-256 %s)\n' "$FFMPEG_PATCH_FILE" "$FFMPEG_PATCH_SHA256"
 	printf 'Build scripts and flags:https://github.com/AlexGalhardo/vukem-video/tree/%s/.config/ffmpeg-build\n' "$FFMPEG_BUILD_TAG"
 } >"$pkg/SOURCE.txt"
