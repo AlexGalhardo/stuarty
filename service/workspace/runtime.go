@@ -118,6 +118,18 @@ func (d Dir) RemoveRuntime() error {
 	return nil
 }
 
+// RemoveStaleRuntime deletes runtime.json unless it names a live process. Call
+// it where the workspace lock is not held: the file may belong to another owner
+// that is still serving, and removing it would hide that owner from the CLI.
+func (d Dir) RemoveStaleRuntime() error {
+	rt, err := d.ReadRuntime()
+	if err == nil && ProcessAlive(rt.PID) {
+		return nil
+	}
+
+	return d.RemoveRuntime()
+}
+
 // retryOnWindows retries up to 10 times over 1 second: a rename or delete
 // fails there while another process has the file open without delete sharing.
 func retryOnWindows(op func() error) error {
