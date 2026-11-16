@@ -108,72 +108,144 @@ jobs:
       # `bun run test` is added with the unit test runner, which needs the
       # author's approval (SDD-012 section 3.1).
 
-  test:
-    name: Test (${{ matrix.os }})
+  # The Go suite runs in five shards per operating system, in parallel, each inside
+  # the 20 minute budget of SDD-009 section 13.4: the export tests (engine/export,
+  # which alone took 19 minutes without the race detector on a loaded machine) in
+  # three shards by test name, the rest of engine/, and everything else. Together
+  # they cover `./...`. The
+  # `Test (<os>)` job below keeps the name the ruleset requires, merges the
+  # coverage profiles and runs the gate.
+  test-shard:
+    name: Go tests (${{ matrix.shard }}, ${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        shard: [export-1, export-2, export-3, engine, rest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
-    # The author paused the Go suite on Linux and Windows until the BETA phase
-    # (2026-11-15): with the pinned FFmpeg the export tests outran the 20 min
-    # budget there. The job still runs, so the required checks report, and says so.
     env:
-      GO_SUITE: ${{ matrix.os == 'macos-latest' }}
+      SHARD: ${{ matrix.shard }}
     steps:
-      - name: Go suite paused on this runner
-        if: env.GO_SUITE != 'true'
-        shell: bash
-        run: echo "go test is paused on ${{ matrix.os }} until the BETA phase; macOS runs it." | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: env.GO_SUITE == 'true'
         with:
           persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        if: env.GO_SUITE == 'true'
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
       # golang/go#81238 corrupts the heap on Intel AMX hosts: the CPU tells a
       # runtime crash of that bug from a real one.
       - name: Runner CPU
-        if: runner.os == 'Windows' && env.GO_SUITE == 'true'
+        if: runner.os == 'Windows'
         run: (Get-CimInstance Win32_Processor).Name
       # The pinned LGPL FFmpeg (.config/ffmpeg.env) on Linux and Windows. macOS has
       # no BtbN build: the script installs Homebrew's, which is GPL, so the tests
       # that need the pinned build skip there with a message (risk R6).
       - name: Install FFmpeg
-        if: env.GO_SUITE == 'true'
         shell: bash
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
           echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       - name: go test
-        if: env.GO_SUITE == 'true'
         shell: bash # PowerShell would split -coverprofile=coverage.out at the dot
         # -coverpkg=./... credits a package with what the tests of the others
         # execute: the wiring packages of web/ (bootstrap, routes, seeders) are
-        # exercised by web/tests, not by tests of their own.
-        run: go test -race -count=1 -timeout=20m -coverpkg=./... -coverprofile=coverage.out ./...
+        # exercised by web/tests, not by tests of their own. The profiles of the
+        # shards are merged before the gate (a block counts as covered when any
+        # shard hit it).
+        run: |
+          case "$SHARD" in
+            export-*)
+              # Every third test of engine/export (sorted), shard k of 3.
+              names="$(go test -list '^Test' ./engine/export/ | grep '^Test' | awk -v k="${SHARD#export-}" 'NR % 3 == k % 3' | paste -sd'|' -)"
+              go test -race -count=1 -timeout=17m -coverpkg=./... -coverprofile=coverage.out -run "^(${names})"'$' ./engine/export/
+              exit
+              ;;
+            engine) pkgs="$(go list ./engine/... | grep -vE '/engine/export$')" ;;
+            rest) pkgs="$(go list ./... | grep -vE '/engine(/|$)')" ;;
+          esac
+          # shellcheck disable=SC2086
+          go test -race -count=1 -timeout=17m -coverpkg=./... -coverprofile=coverage.out $pkgs
       # SDD-004 section 12: the common-case export must run at 1.5 x real time or
       # better. Benchmarks do not run under go test, and the race detector skips this
       # one, so it has a step of its own, on the three runners, with the pinned FFmpeg
       # (it skips with a message where only a GPL build exists, risk R6). The numbers
       # are in the log and in the job summary.
       - name: Export benchmark (BenchmarkExportCommonCase)
-        if: env.GO_SUITE == 'true'
+        if: matrix.shard == 'export-1'
         shell: bash
         env:
           VUKEM_VIDEO_BENCH_MIN_RT: "1.5"
         run: |
           go test -run '^$' -bench BenchmarkExportCommonCase -benchtime=1x -count=1 -timeout=10m ./engine/export/ | tee bench.txt
           { echo '### BenchmarkExportCommonCase (${{ matrix.os }})'; echo '```'; grep -E "^Benchmark|x real time" bench.txt || echo "skipped: no pinned LGPL FFmpeg on this runner"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      # Only Linux feeds the coverage gate (see the Test job).
+      - name: Upload coverage
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-${{ matrix.shard }}
+          path: coverage.out
+
+  # The required checks of the ruleset (`Test (ubuntu-latest)` and the other two).
+  # Each one fails when a shard of its own operating system failed or did not
+  # run (a skipped job would otherwise count as a pass), and the Linux one merges
+  # the shard profiles and runs the coverage gate: Linux and Windows have the
+  # pinned LGPL FFmpeg, but only Linux gates. macOS has none (risk R6, SDD-009
+  # section 13.3), so the FFmpeg tests skip there and its coverage cannot reach
+  # the floors; it runs go test but not the gate.
+  test:
+    name: Test (${{ matrix.os }})
+    needs: test-shard
+    if: ${{ !cancelled() }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: The shards of ${{ matrix.os }} passed
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUNNER_OS_NAME: ${{ matrix.os }}
+        run: |
+          jobs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs" \
+            --jq ".jobs[] | select(.name | startswith(\"Go tests (\") and endswith(\", ${RUNNER_OS_NAME})\")) | .name + \" \" + (.conclusion // \"running\")")"
+          echo "$jobs"
+          test "$(printf '%s\n' "$jobs" | grep -c .)" -eq 5
+          if printf '%s\n' "$jobs" | grep -qv ' success$'; then
+            echo "::error::a Go test shard of ${RUNNER_OS_NAME} did not pass"
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          pattern: coverage-*
+          path: shards
+      - name: Merge the coverage profiles
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          { echo "mode: atomic"; grep -hv '^mode:' shards/*/coverage.out; } > coverage.out
       - name: Coverage gate
-        if: env.GO_SUITE == 'true'
+        if: matrix.os == 'ubuntu-latest'
         run: go run ./internal/tools/covergate -v coverage.out
       - name: Upload coverage
-        if: env.GO_SUITE == 'true'
+        if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage
