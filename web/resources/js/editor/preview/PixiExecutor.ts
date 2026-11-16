@@ -27,6 +27,7 @@ import { Lru } from "./lru";
 import { coverageSize, coverageTexels } from "./mask";
 import { MediaPool, type PoolTimers } from "./mediaPool";
 import {
+	audioClockReady,
 	audioSourceSeconds,
 	MAX_VIDEO_LAYERS,
 	needsCorrection,
@@ -109,6 +110,9 @@ export class PixiExecutor implements PreviewExecutor {
 	private generation = 0;
 	private disposed = false;
 	private context: AudioContext | null = null;
+	// False when the context cannot run (no audio device): the clock is then
+	// the wall clock. Decided at each play(), so it never changes mid-playback.
+	private audioClock = true;
 	private readonly audioGraph = new AudioGraph();
 	private clock: PlaybackClock | null = null;
 	private windows: PlanWindows;
@@ -231,7 +235,10 @@ export class PixiExecutor implements PreviewExecutor {
 	setProject(info: ProjectInfo): void {
 		this.info = info;
 		this.clock = new PlaybackClock(
-			() => this.context?.currentTime ?? 0,
+			() =>
+				this.audioClock && this.context !== null
+					? this.context.currentTime
+					: performance.now() / 1000,
 			info.fps,
 		);
 		this.windows = new PlanWindows((from, to, rev, width, signal) =>
@@ -297,7 +304,8 @@ export class PixiExecutor implements PreviewExecutor {
 		if (this.playing || this.state === "unsupported" || this.clock === null) {
 			return;
 		}
-		await this.context?.resume();
+		this.audioClock = await audioClockReady(this.context);
+		if (this.disposed) return;
 		this.playing = true;
 		this.generation++;
 		this.clock.start(this.frame);

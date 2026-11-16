@@ -1,10 +1,11 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import type { PlanLayer, PlanWindow } from "../api/types";
 import { bufferSize, fitScale, sizedScale, truthWidth } from "./fit";
 import { pixiColorMatrix } from "./layerFilters";
 import { Lru } from "./lru";
 import {
+	audioClockReady,
 	audioSourceSeconds,
 	DRIFT_FRAMES,
 	MAX_VIDEO_LAYERS,
@@ -404,5 +405,36 @@ describe("clampToLastFrame", () => {
 		expect(clampToLastFrame(600, 600)).toBe(599);
 		expect(clampToLastFrame(10, 600)).toBe(10);
 		expect(clampToLastFrame(5, 0)).toBe(0);
+	});
+});
+
+describe("audioClockReady", () => {
+	test("a running context is the clock without a resume", async () => {
+		const resume = vi.fn(() => Promise.resolve());
+		expect(await audioClockReady({ state: "running", resume })).toBe(true);
+		expect(resume).not.toHaveBeenCalled();
+	});
+
+	test("no context means the wall clock", async () => {
+		expect(await audioClockReady(null)).toBe(false);
+	});
+
+	test("a context that runs after resume is the clock", async () => {
+		const context = {
+			state: "suspended" as AudioContextState,
+			resume: () => {
+				context.state = "running";
+				return Promise.resolve();
+			},
+		};
+		expect(await audioClockReady(context)).toBe(true);
+	});
+
+	test("a resume that never settles falls back to the wall clock", async () => {
+		const context = {
+			state: "suspended" as AudioContextState,
+			resume: () => new Promise<void>(() => undefined),
+		};
+		expect(await audioClockReady(context, 10)).toBe(false);
 	});
 });
