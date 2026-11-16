@@ -131,3 +131,29 @@ func TestAddWithoutTrackPicksOrMakesAFreeVisualTrack(t *testing.T) {
 		t.Error("two overlapping texts share a track")
 	}
 }
+
+// A family with no 700 face works without naming a weight; an explicit missing weight still fails (VV-057).
+func TestTextAddDefaultWeightFallsToTheFamily(t *testing.T) {
+	d := base().d
+	n := 0
+	env := Env{NewIDs: func(prefix string) string {
+		n++
+		return prefix + "_" + strings.Repeat("b", 9) + string(rune('a'+n))
+	}}
+
+	ok := op2(
+		"text.add",
+		`{"track_id": "`+vidTr+`", "start": "0s", "duration": "1s", "text": "x", "style": {"font_family": "Anton"}}`,
+	)
+	if _, err := Default().Apply(d, ok, env); err != nil {
+		t.Errorf("default weight: %v", err)
+	}
+
+	bad := op2(
+		"text.add",
+		`{"track_id": "`+vidTr+`", "start": "0s", "duration": "1s", "text": "x", "style": {"font_family": "Anton", "font_weight": 700}}`,
+	)
+	if _, err := Default().Apply(d, bad, env); AsError(err) == nil || AsError(err).Code != CodeFontUnknown {
+		t.Errorf("explicit weight: %v", err)
+	}
+}

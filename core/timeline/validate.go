@@ -264,7 +264,7 @@ func (v *validator) styleFont(path, id string, s *CaptionStyle) {
 	if s.FontFamily == nil && s.FontWeight == nil {
 		return
 	}
-	family, weight := "Inter", 700
+	family, weight := "Inter", 0
 	if s.FontFamily != nil {
 		family = *s.FontFamily
 	}
@@ -275,7 +275,7 @@ func (v *validator) styleFont(path, id string, s *CaptionStyle) {
 	switch {
 	case !ok:
 		v.add(VFont, path+".font_family", id, "font family %q is not bundled and not in fonts", family)
-	case weight%100 == 0 && weight >= 100 && weight <= 900 && !slices.Contains(weights, weight):
+	case s.FontWeight != nil && weight%100 == 0 && weight >= 100 && weight <= 900 && !slices.Contains(weights, weight):
 		v.add(VFont, path+".font_weight", id, "font %q has no weight %d; it has %v", family, weight, weights)
 	}
 }

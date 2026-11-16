@@ -263,10 +263,10 @@ func (c *Context) checkFont(s *timeline.CaptionStyle) *Error {
 			WithDetail("available", avail).
 			WithPath(path + ".font_family")
 	}
-	weight := 700 // the default weight must exist for the family too
-	if s.FontWeight != nil {
-		weight = *s.FontWeight
+	if s.FontWeight == nil {
+		return nil // the default weight falls to the nearest the family has (VV-057)
 	}
+	weight := *s.FontWeight
 	if slices.Contains(weights, weight) {
 		return nil
 	}

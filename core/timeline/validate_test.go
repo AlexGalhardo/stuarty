@@ -391,10 +391,6 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 			d.Fonts = map[string]ProjectFont{"Mine": {Files: []FontFile{{Weight: 400, Hash: d.Assets[assetID].Hash}}}}
 			text(d, "itm_x000000001", 60, &CaptionStyle{FontFamily: new("Mine"), FontWeight: new(700)})
 		}, VFont},
-		{"user font default weight", func(d *Document) {
-			d.Fonts = map[string]ProjectFont{"Mine": {Files: []FontFile{{Weight: 400, Hash: d.Assets[assetID].Hash}}}}
-			text(d, "itm_x000000001", 60, &CaptionStyle{FontFamily: new("Mine")})
-		}, VFont},
 		{"font weight step", func(d *Document) {
 			text(d, "itm_x000000001", 60, &CaptionStyle{FontWeight: new(750)})
 		}, VShape},
@@ -429,8 +425,8 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 				&CaptionStyle{FontFamily: new("JetBrains Mono"), FontWeight: new(900)},
 			)
 		}, VFont},
-		{"bundled default weight missing", func(d *Document) {
-			text(d, "itm_x000000001", 60, &CaptionStyle{FontFamily: new("Anton")})
+		{"bundled weight missing", func(d *Document) {
+			text(d, "itm_x000000001", 60, &CaptionStyle{FontFamily: new("Anton"), FontWeight: new(700)})
 		}, VFont},
 		{"fonts no files", func(d *Document) { d.Fonts = map[string]ProjectFont{"Mine": {}} }, VShape},
 		{"fonts weight", func(d *Document) {

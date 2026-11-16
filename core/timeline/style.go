@@ -33,6 +33,30 @@ func FontWeights(doc *Document, family string) ([]int, bool) {
 	return w, ok
 }
 
+// DefaultFontWeight is the weight a style without font_weight resolves to for a family: 700,
+// or the nearest weight the family has (the heavier one at a tie), so a brand font with
+// only a regular face works without naming its weight.
+func DefaultFontWeight(doc *Document, family string) int {
+	weights, ok := FontWeights(doc, family)
+	if !ok || len(weights) == 0 || slices.Contains(weights, 700) {
+		return 700
+	}
+	best := weights[0]
+	for _, w := range weights {
+		if d, bd := abs(w-700), abs(best-700); d < bd || d == bd && w > best {
+			best = w
+		}
+	}
+	return best
+}
+
+func abs(v int) int {
+	if v < 0 {
+		return -v
+	}
+	return v
+}
+
 // StyleKeys returns the keys of a style object: those of TextStyle, then the ones
 // only a CaptionStyle has.
 func StyleKeys() (text, caption []string) {
