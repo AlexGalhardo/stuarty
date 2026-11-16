@@ -112,7 +112,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "contributing",
 		title: { en: "Contributing", "pt-br": "Contribuindo" },
-		pages: ["guide", "setup", "repository-layout", "commits-and-prs", "writing-docs", "translating", "releases"],
+		pages: ["guide", "setup", "repository-layout", "commits-and-prs", "writing-docs", "translating", "renderer", "releases"],
 	},
 	{
 		dir: "reference/commands",

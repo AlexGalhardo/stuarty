@@ -1,0 +1,57 @@
+---
+title: "Trabalhando no renderizador"
+description: "A toolchain do Rust, o script de build, os critérios de paridade e o gate de licenças para mudanças em renderer/."
+---
+
+## O que você vai aprender
+
+- como configurar a toolchain do Rust e compilar o renderizador;
+- o que significa um build reproduzível aqui e como conferi-lo;
+- quais critérios uma mudança do renderizador precisa passar.
+
+## A ideia
+
+O renderizador de pixels é o único Rust do repositório. Ele fica em `renderer/`, desenha o plano de quadro que o núcleo em Go decide, e é compilado para WebAssembly para os dois hospedeiros descritos em [Um renderizador, dois hospedeiros](/docs/concepts/one-renderer). O renderizador não decide nada: uma regra sobre camadas, tempo ou quadros-chave pertence a `core/plan`, em Go. Tudo fora de `renderer/` continua em Go e TypeScript.
+
+## Início rápido
+
+1. Instale o rustup, o instalador da toolchain do Rust. A primeira chamada de `cargo` no repositório instala a toolchain fixada em `rust-toolchain.toml`: uma versão estável exata com `rustfmt`, `clippy` e o alvo `wasm32-unknown-unknown`.
+2. Instale as duas ferramentas nas versões que o pipeline usa: `cargo install --locked cargo-deny --version 0.20.2` e `cargo install --locked wasm-bindgen-cli --version <a versão do wasm-bindgen em renderer/Cargo.lock>`. O script de build recusa uma ferramenta de linha de comando diferente do arquivo de lock.
+3. Compile a partir da raiz do clone:
+
+```bash
+bash scripts/build-renderer.sh          # o crate nativo e o módulo WebAssembly
+bash scripts/build-renderer.sh wasm     # somente o módulo
+bash scripts/build-renderer.sh verify   # o módulo duas vezes do zero; os digests devem coincidir
+```
+
+O módulo, a cola dele e o SHA-256 são gravados em `renderer/dist/`, que não é versionado.
+
+## Os critérios
+
+Antes de cada commit que toca `renderer/`, rode em `renderer/`:
+
+```bash
+cargo fmt --check
+cargo clippy --locked --all-targets -- -D warnings
+cargo test --locked
+cargo deny check
+```
+
+`bash scripts/gate.sh` roda os mesmos passos, mais o build reproduzível, quando o `cargo` está instalado, e os jobs `Renderer` do pipeline de pull requests os rodam em Linux, macOS e Windows.
+
+- **Build reproduzível.** O script fixa o caminho de build, define `SOURCE_DATE_EPOCH`, esconde os caminhos da máquina com `--remap-path-prefix` e compila com `--locked`, então dois builds limpos dão o mesmo digest. O digest é o que os hospedeiros conferem antes de carregar o módulo.
+- **Gate de licenças.** O `renderer/deny.toml` permite apenas licenças que o `internal/tools/notices` permite, e um teste mantém as duas listas consistentes. Os crates compilados no módulo ficam listados em `THIRD_PARTY_NOTICES.md`; rode `task notices` depois de mudar o arquivo de lock.
+- **Versões exatas.** Os crates ficam em versões exatas (`=x.y.z`) e o `Cargo.lock` é versionado. Só `wgpu`, `wasm-bindgen`, `bytemuck` e `cargo-deny` estão aprovados; qualquer outro crate precisa antes da aprovação do mantenedor.
+- **Paridade.** Uma mudança na saída do renderizador é provada pelos critérios de paridade, nunca a olho: o caminho do processador deve ser idêntico byte a byte aos quadros de referência, o caminho da placa de vídeo deve ficar a SSIM 0,99 e meio pixel dele, e a pré-visualização deve coincidir com a exportação nos três navegadores. O harness de paridade chega com a etapa que adiciona a composição; o procedimento está em `.agents/skills/renderer-parity/`.
+
+## Erros comuns
+
+- Usar ponto flutuante no caminho do processador. Todo valor que chega a um pixel é inteiro ou ponto fixo ali; ponto flutuante só é permitido no caminho da placa de vídeo.
+- Adicionar uma importação ao módulo. Ele não importa nada do hospedeiro além de memória; uma nova importação é uma mudança de segurança.
+- Regenerar quadros de referência para fazer um teste de paridade passar. Os quadros de referência só mudam com uma mudança intencional e revisada da saída.
+
+## Próximos passos
+
+- [Um renderizador, dois hospedeiros](/docs/concepts/one-renderer)
+- [Configuração de desenvolvimento](/docs/contributing/setup)
