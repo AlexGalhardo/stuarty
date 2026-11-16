@@ -1,0 +1,19 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "mask": [
+        null,
+        {
+          "feather": 0,
+          "height": 1,
+          "shape": "ellipse",
+          "width": 1,
+          "x": 0,
+          "y": 0
+        }
+      ]
+    }
+  }
+]

@@ -709,6 +709,7 @@ func TestRoundTripKeepsSpeedKeyframesSlotsTextsAndKey(t *testing.T) {
 	}
 	slow.ChromaKey = &timeline.ChromaKey{Color: "#00FF00", Similarity: 0.35, Smoothness: 0.05, Spill: 0.25}
 	slow.Blend = "screen"
+	slow.Mask = &timeline.Mask{Shape: "ellipse", X: 0.1, Y: 0.2, Width: 0.5, Height: 0.6, Feather: 12, Invert: true}
 
 	// 7 frames at 1/4 speed cannot come from any whole source length: the clip is trimmed to it.
 	crawl := timeline.NewItem("itm_d000000002", timeline.ItemClip, trkVid, 400, 7)
@@ -731,6 +732,7 @@ func TestRoundTripKeepsSpeedKeyframesSlotsTextsAndKey(t *testing.T) {
 	title.Keyframes = timeline.Keyframes{"opacity": {timeline.NewKeyframe(0, 0), timeline.NewKeyframe(10, 0.9)}}
 	title.Slot = &timeline.Slot{Name: "headline", Kind: "text", Required: true, DurationPolicy: "fit", Filled: true}
 	title.Blend = "multiply"
+	title.Mask = &timeline.Mask{Shape: "rect", X: 0, Y: 0.25, Width: 1, Height: 0.5}
 
 	plain := timeline.NewItem("itm_d000000005", timeline.ItemText, trkTop, 60, 20)
 	plain.Name, plain.Text = "plain", "Bye"
@@ -817,6 +819,7 @@ func TestImportReportsBadAnimationSlotAndTextMetadata(t *testing.T) {
 	{"OTIO_SCHEMA":"Clip.2","name":"c","metadata":{"vukem":{"properties":{"speed":{"num":9,"den":1},
 	"keyframes":{"scale":[{"t":5,"value":1,"easing":"linear"},{"t":5,"value":2,"easing":"linear"}],
 	"opacity":[{"t":0,"value":0.5,"easing":"linear"}]},"chroma_key":{"color":"green"},
+	"mask":{"shape":"star","x":0,"y":0,"width":1,"height":1,"feather":0},
 	"slot":{"name":"main","required":true}}}},
 	"source_range":{"OTIO_SCHEMA":"TimeRange.1","start_time":{"OTIO_SCHEMA":"RationalTime.1","rate":30,"value":0},
 	"duration":{"OTIO_SCHEMA":"RationalTime.1","rate":30,"value":30}},
@@ -834,7 +837,7 @@ func TestImportReportsBadAnimationSlotAndTextMetadata(t *testing.T) {
 
 	for _, want := range []string{
 		"vukem property slot", "vukem property text", "vukem property style font Nope", "vukem property speed",
-		"vukem property keyframes.scale", "vukem property chroma_key",
+		"vukem property keyframes.scale", "vukem property chroma_key", "vukem property mask",
 	} {
 		if !strings.Contains(lost.String(), want) {
 			t.Errorf("%q was not reported: %s", want, lost.String())
@@ -857,7 +860,8 @@ func TestImportReportsBadAnimationSlotAndTextMetadata(t *testing.T) {
 				t.Errorf("the text did not come back without its unknown font: %+v", it)
 			}
 		case timeline.ItemClip:
-			if it.Speed.Num != 1 || it.Slot != nil || it.ChromaKey != nil || len(it.Keyframes["scale"]) != 0 ||
+			if it.Speed.Num != 1 || it.Slot != nil || it.ChromaKey != nil || it.Mask != nil ||
+				len(it.Keyframes["scale"]) != 0 ||
 				len(it.Keyframes["opacity"]) != 1 {
 				t.Errorf("a bad value got through or a valid one was lost: %+v", it)
 			}
@@ -868,6 +872,24 @@ func TestImportReportsBadAnimationSlotAndTextMetadata(t *testing.T) {
 
 	if texts != 1 {
 		t.Errorf("%d text items, want 1", texts)
+	}
+}
+
+func TestExportDoesNotListMaskAsLost(t *testing.T) {
+	d := sampleDoc()
+	it := d.Items["itm_c000000001"]
+	it.Mask = &timeline.Mask{Shape: "rect", X: 0, Y: 0, Width: 0.5, Height: 0.5}
+	d.Items[it.ID] = it
+
+	_, lost, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, l := range lost {
+		if strings.Contains(l.Feature, "mask") {
+			t.Errorf("the mask is carried by the metadata, got a loss: %+v", l)
+		}
 	}
 }
 

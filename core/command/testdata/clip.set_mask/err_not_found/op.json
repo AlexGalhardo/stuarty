@@ -1,0 +1,7 @@
+{
+  "op": "clip.set_mask",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "mask": null
+  }
+}

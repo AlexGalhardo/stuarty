@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The mask goes outside the item: x + width or y + height is above 1.",
+  "hint": "Keep x + width and y + height at most 1.",
+  "retryable": false,
+  "path": "args.mask"
+}

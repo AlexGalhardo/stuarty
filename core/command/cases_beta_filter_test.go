@@ -92,4 +92,45 @@ func init() {
 	bm("err_validation_unknown_mode", fa(`"mode": "dodge"`), plain())
 	bm("err_not_found", `{"item_id": "itm_zzzzzzzzzz", "mode": "screen"}`, plain())
 	bm("err_type_mismatch_audio_item", fmt.Sprintf(`{"item_id": %q, "mode": "screen"}`, itemB), audioItem)
+
+	mk := func(name, args string, b func() *B) {
+		gc("clip.set_mask", name, b, op("clip.set_mask", args))
+	}
+	mask := func(body string) string { return fa(`"mask": ` + body) }
+	masked := func(it *timeline.Item) {
+		it.Mask = &timeline.Mask{Shape: "rect", X: 0, Y: 0, Width: 0.5, Height: 0.5, Feather: 4}
+	}
+	mk("ok_ellipse", mask(`{"shape": "ellipse", "x": 0.1, "y": 0.1, "width": 0.8, "height": 0.8}`), plain())
+	mk(
+		"ok_rect_feather_invert",
+		mask(`{"shape": "rect", "x": 0, "y": 0.25, "width": 1, "height": 0.5, "feather": 30, "invert": true}`),
+		plain(),
+	)
+	mk("ok_replaces_mask", mask(`{"shape": "ellipse", "x": 0.2, "y": 0.2, "width": 0.6, "height": 0.6}`), plain(masked))
+	mk("ok_null_removes_mask", mask(`null`), plain(masked))
+	mk("ok_null_without_mask_noop", mask(`null`), plain())
+	mk(
+		"ok_same_mask_noop",
+		mask(`{"shape": "rect", "x": 0, "y": 0, "width": 0.5, "height": 0.5, "feather": 4}`),
+		plain(masked),
+	)
+	mk("ok_boundaries", mask(`{"shape": "rect", "x": 0, "y": 0, "width": 1, "height": 1, "feather": 200}`), plain())
+	mk(
+		"ok_rounded_to_3_decimals",
+		mask(`{"shape": "rect", "x": 0.12345, "y": 0, "width": 0.5, "height": 0.5}`),
+		plain(),
+	)
+	mk("ok_image_clip", mask(`{"shape": "ellipse", "x": 0, "y": 0, "width": 1, "height": 1}`), plain(image))
+	mk("err_validation_no_mask", fmt.Sprintf(`{"item_id": %q}`, itemA), plain())
+	mk("err_validation_unknown_shape", mask(`{"shape": "star", "x": 0, "y": 0, "width": 1, "height": 1}`), plain())
+	mk("err_validation_outside_item", mask(`{"shape": "rect", "x": 0.6, "y": 0, "width": 0.6, "height": 1}`), plain())
+	mk("err_validation_width_zero", mask(`{"shape": "rect", "x": 0, "y": 0, "width": 0, "height": 1}`), plain())
+	mk(
+		"err_validation_feather_above_200",
+		mask(`{"shape": "rect", "x": 0, "y": 0, "width": 1, "height": 1, "feather": 201}`),
+		plain(),
+	)
+	mk("err_validation_missing_height", mask(`{"shape": "rect", "x": 0, "y": 0, "width": 1}`), plain())
+	mk("err_not_found", `{"item_id": "itm_zzzzzzzzzz", "mask": null}`, plain())
+	mk("err_type_mismatch_audio_item", fmt.Sprintf(`{"item_id": %q, "mask": null}`, itemB), audioItem)
 }

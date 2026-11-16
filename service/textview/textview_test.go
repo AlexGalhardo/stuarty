@@ -373,6 +373,15 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 
 	clip.Blend = ""
 
+	clip.Mask = &timeline.Mask{Shape: "ellipse", X: 0.1, Y: 0.1, Width: 0.5, Height: 0.5, Feather: 8}
+
+	if m := extraFields(fps, &clip)["mask"]; !strings.Contains(m, `"shape":"ellipse"`) ||
+		!strings.Contains(m, `"feather":8`) {
+		t.Errorf("mask = %q", m)
+	}
+
+	clip.Mask = nil
+
 	got := itemLine(fps, &clip)
 	want := "itm_m1n2p3q4r5 clip 0s/0f +2s/60f ast_3c5v8n2w6d x1.5 [tin:fade tout:slide_left kf:2 mk:2 vol:0.5 muted slot:hero unfilled]"
 

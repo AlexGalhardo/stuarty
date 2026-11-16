@@ -134,6 +134,13 @@ func (p *planner) layer(it *timeline.Item, r int) (Layer, bool) {
 		l.Blend = it.Blend
 	}
 
+	if m := it.Mask; m != nil {
+		l.Mask = &MaskSpec{
+			Shape: m.Shape, X: round3(m.X), Y: round3(m.Y), Width: round3(m.Width), Height: round3(m.Height),
+			Feather: m.Feather, Invert: m.Invert,
+		}
+	}
+
 	if k := it.ChromaKey; k != nil {
 		l.ChromaKey = &ChromaKeySpec{
 			Color: resolveColor(p.doc, string(k.Color)), Similarity: round3(k.Similarity),

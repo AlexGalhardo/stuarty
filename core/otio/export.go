@@ -269,6 +269,8 @@ func clipMetadata(it *timeline.Item) object {
 		props["blend"] = it.Blend
 	}
 
+	maskProps(it, props)
+
 	if it.X != nil {
 		props["x"] = *it.X
 	}
@@ -316,6 +318,23 @@ func clipMetadata(it *timeline.Item) object {
 	}
 
 	return object{metaNamespace: object{"properties": props}}
+}
+
+// maskProps keeps the mask of an item in its vukem properties.
+func maskProps(it *timeline.Item, props object) {
+	m := it.Mask
+	if m == nil {
+		return
+	}
+
+	mask := object{
+		"shape": m.Shape, "x": m.X, "y": m.Y, "width": m.Width, "height": m.Height, "feather": m.Feather,
+	}
+	if m.Invert {
+		mask["invert"] = true
+	}
+
+	props["mask"] = mask
 }
 
 // sharedProps writes the properties that clips and text items keep: keyframes and the slot.
@@ -388,6 +407,8 @@ func textMetadata(it *timeline.Item) object {
 	if it.Blend != "" {
 		props["blend"] = it.Blend
 	}
+
+	maskProps(it, props)
 
 	if len(props) > 0 {
 		v["properties"] = props

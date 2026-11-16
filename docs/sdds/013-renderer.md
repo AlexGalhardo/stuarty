@@ -75,6 +75,7 @@ Every number is a JSON number read as an IEEE 754 double (`f64`, correctly round
 | `filter` | 12 numbers or `null` | the filter matrix of SDD-004 §3.6, same form |
 | `chroma_key` | `{color, similarity, smoothness, spill}` or `null` | the key of SDD-004 §3.7, all four members required; absent or `null` means none |
 | `blend` | string | the blend mode of SDD-004 §3.8: `multiply`, `screen`, `overlay` or `add`; absent means normal (source-over of §3.7) |
+| `mask` | `{shape, x, y, width, height, feather, invert}` or `null` | the mask of SDD-004 §3.9: `shape` is `rect` or `ellipse`, `x`, `y`, `width`, `height` are fractions of the layer rectangle, `feather` is in project pixels (an integer), `invert` is a boolean and may be absent; absent or `null` means none |
 | `blur` | number | the standard deviation of the Gaussian of SDD-004 §3.6 in project pixels; 0 or absent for none |
 | `cx`, `cy` | number | the centre of the drawn rectangle in project pixels |
 | `w`, `h` | number | its size before rotation, in project pixels, scale already included |
@@ -181,6 +182,8 @@ Source-over on premultiplied values. For a source pixel `(r, g, b, a)` and the l
 - With `ia = 255 - a`, each destination channel, alpha included, becomes `u8(c + div255(d x ia))`.
 
 A layer with `blend` replaces the last bullet by the per-channel mix of SDD-004 §3.8 (same `op` handling, same `div255`, `a == 0` draws nothing, the destination alpha stays 255), and is never drawn by the replace shortcut of the first bullet.
+
+A layer with `mask` multiplies each source pixel by its coverage `cov` of SDD-004 §3.9 (all four channels, `div255` each) before the `op` step, and is never drawn by the replace shortcut either; `cov == 0` draws nothing. The position of the pixel for the coverage comes from the placement of §3.6 (copy path: the corner of the copy; sampling path: the transform of step 3 with `kx = ky = 1`).
 
 ### 3.8 The GPU path
 

@@ -1,0 +1,11 @@
+{
+  "mask": {
+    "feather": 30,
+    "height": 0.5,
+    "invert": true,
+    "shape": "rect",
+    "width": 1,
+    "x": 0,
+    "y": 0.25
+  }
+}

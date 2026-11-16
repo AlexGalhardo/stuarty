@@ -370,6 +370,9 @@
           "maxItems": 200,
           "type": "array"
         },
+        "mask": {
+          "$ref": "#/$defs/Mask"
+        },
         "name": {
           "maxLength": 120,
           "type": "string"
@@ -536,6 +539,54 @@
       },
       "required": [
         "frame"
+      ],
+      "type": "object"
+    },
+    "Mask": {
+      "properties": {
+        "feather": {
+          "maximum": 200,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "height": {
+          "maximum": 1,
+          "minimum": 0.001,
+          "type": "number"
+        },
+        "invert": {
+          "type": "boolean"
+        },
+        "shape": {
+          "enum": [
+            "rect",
+            "ellipse"
+          ],
+          "type": "string"
+        },
+        "width": {
+          "maximum": 1,
+          "minimum": 0.001,
+          "type": "number"
+        },
+        "x": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "y": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "feather",
+        "height",
+        "shape",
+        "width",
+        "x",
+        "y"
       ],
       "type": "object"
     },

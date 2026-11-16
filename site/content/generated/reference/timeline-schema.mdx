@@ -113,6 +113,7 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `keyframes` | `object` | no |  |
 | `linked_item` | `string` | no | pattern `^itm_[0-9a-hjkmnp-tv-z]\{10\}$` |
 | `markers` | array of `Marker` | no | at most 200 items |
+| `mask` | `Mask` | no |  |
 | `name` | `string` | no |  |
 | `opacity` | `number` | no | min 0; max 1; default `1` |
 | `radius` | `number` | no | min 0 |
@@ -152,6 +153,18 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | --- | --- | --- | --- |
 | `frame` | `integer` | yes | min 0 |
 | `label` | `string` | no |  |
+
+## Mask
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `feather` | `integer` | yes | min 0; max 200 |
+| `height` | `number` | yes | min 0.001; max 1 |
+| `invert` | `boolean` | no |  |
+| `shape` | `rect`, `ellipse` | yes |  |
+| `width` | `number` | yes | min 0.001; max 1 |
+| `x` | `number` | yes | min 0; max 1 |
+| `y` | `number` | yes | min 0; max 1 |
 
 ## ProjectFont
 

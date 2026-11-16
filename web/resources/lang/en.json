@@ -458,6 +458,9 @@
           "set_blend": {
             "title": "Set clip blend mode"
           },
+          "set_mask": {
+            "title": "Set clip mask"
+          },
           "set_chroma_key": {
             "title": "Set clip chroma key"
           },

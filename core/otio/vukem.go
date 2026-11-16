@@ -147,6 +147,10 @@ func itemOps(props map[string]any, mode itemMode, start, dur int, used map[strin
 		if b, ok := p.text("blend", "multiply", "screen", "overlay", "add"); ok {
 			add("clip.set_blend", map[string]any{"mode": b})
 		}
+
+		if m := mask(p); m != nil {
+			add("clip.set_mask", map[string]any{"mask": m})
+		}
 	}
 
 	if mode == modeClip {
@@ -226,6 +230,56 @@ func chromaKey(p *propReader) map[string]any {
 
 	if obj == nil || !hexColourRe.MatchString(colour) || sub.bad {
 		p.lose("vukem property chroma_key is not a valid value")
+
+		return nil
+	}
+
+	return args
+}
+
+// mask reads the mask object; the shape, the four fractions and the feather are checked here, the
+// rectangle inside the item by the command.
+func mask(p *propReader) map[string]any {
+	raw, present := p.props["mask"]
+	if !present {
+		return nil
+	}
+
+	obj, _ := raw.(map[string]any)
+	sub := &propReader{props: obj, lose: func(string) {}}
+	shape, shapeOK := sub.text("shape", "rect", "ellipse")
+	args := map[string]any{"shape": shape}
+
+	for _, f := range []struct {
+		name   string
+		lo, hi float64
+	}{{"x", 0, 1}, {"y", 0, 1}, {"width", 0.001, 1}, {"height", 0.001, 1}} {
+		v, ok := sub.number(f.name, f.lo, f.hi, false)
+		if !ok {
+			sub.bad = true
+		}
+
+		args[f.name] = v
+	}
+
+	feather, ok := sub.number("feather", 0, timeline.MaxMaskFeather, false)
+	if _, given := obj["feather"]; given && (!ok || feather != math.Trunc(feather)) {
+		sub.bad = true
+	}
+
+	args["feather"] = feather
+
+	if invert, given := obj["invert"]; given {
+		b, isBool := invert.(bool)
+		if !isBool {
+			sub.bad = true
+		}
+
+		args["invert"] = b
+	}
+
+	if obj == nil || !shapeOK || sub.bad {
+		p.lose("vukem property mask is not a valid value")
 
 		return nil
 	}

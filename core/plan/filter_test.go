@@ -123,6 +123,31 @@ func TestLayerCarriesBlend(t *testing.T) {
 	}
 }
 
+func TestLayerCarriesMask(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	it := clip("itm_m", trkBottom, 0, 10)
+	it.Mask = &timeline.Mask{Shape: "ellipse", X: 0.1, Y: 0.2, Width: 0.5, Height: 0.60004, Feather: 12, Invert: true}
+	put(d, it)
+
+	want := MaskSpec{Shape: "ellipse", X: 0.1, Y: 0.2, Width: 0.5, Height: 0.6, Feather: 12, Invert: true}
+	if l := Frame(d, 0).Layers[0]; l.Mask == nil || *l.Mask != want {
+		t.Errorf("layer mask %+v, want %+v", l.Mask, want)
+	}
+
+	if w := Window(d, 0, 10); len(w.Layers) != 1 || w.Layers[0].Mask == nil || *w.Layers[0].Mask != want {
+		t.Errorf("window layer lost the mask: %+v", w.Layers)
+	}
+
+	plain := newDoc()
+	put(plain, clip("itm_p", trkBottom, 0, 10))
+
+	if Frame(plain, 0).Layers[0].Mask != nil {
+		t.Error("an item with no mask must give none")
+	}
+}
+
 func TestLayerCarriesChromaKey(t *testing.T) {
 	t.Parallel()
 

@@ -1,0 +1,17 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "mask": {
+        "feather": 4,
+        "height": 0.5,
+        "shape": "rect",
+        "width": 0.5,
+        "x": 0,
+        "y": 0
+      }
+    }
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.mask.shape is \"star\", which is not one of the accepted values.",
+  "hint": "Use one of: rect, ellipse.",
+  "retryable": false,
+  "path": "args.mask.shape",
+  "details": {
+    "allowed": [
+      "rect",
+      "ellipse"
+    ]
+  }
+}

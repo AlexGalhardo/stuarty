@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The required argument args.mask.height is missing.",
+  "hint": "Add \"height\" (a number) to the arguments.",
+  "retryable": false,
+  "path": "args.mask.height"
+}
