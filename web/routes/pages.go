@@ -53,7 +53,7 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		// The static files carry no credential and nothing private: the build of
 		// the editor, the fonts it bundles and robots.txt.
 		r.UseServer(middleware.StaticFS(resources.Public(), middleware.StaticConfig{Prefix: "/"}))
-		r.Use(app.Inertia.Middleware, inertia.I18n("ui."))
+		r.Use(app.Inertia.Middleware, inertia.I18n("ui."), sharedProps(d))
 
 		r.Get("/{$}", func(c *web.Ctx) error { return c.Redirect("/projects") }).Name("home")
 
@@ -116,6 +116,43 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		}).Name("locale.update")
 
 		return nil
+	}
+}
+
+// appName is the name the layout shows and gives the logo as its accessible name.
+const appName = "Vukem Video"
+
+// sharedUser is the account that network mode shows in the header; the layout
+// draws the keys link and the log out button when it is not null.
+type sharedUser struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+}
+
+// sharedProps shares on every page the name of the app and, in network mode,
+// the signed-in user (`auth.user`, null with no session and always in local
+// mode). The caller was put in the context by the guard of the API.
+func sharedProps(d *httpapi.Deps) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			inertia.Share(ctx, "appName", appName)
+
+			if d.Network != nil && d.Auth != nil {
+				var user *sharedUser
+
+				if c, ok := service.CallerFrom(ctx); ok && c.OwnerUserID != "" && c.Browser {
+					if u, err := d.Auth.Users.ByID(ctx, c.OwnerUserID); err == nil {
+						user = &sharedUser{ID: u.ID, Email: u.Email, Role: u.Role}
+					}
+				}
+
+				inertia.Share(ctx, "auth", map[string]any{"user": user})
+			}
+
+			next.ServeHTTP(w, r)
+		})
 	}
 }
 
