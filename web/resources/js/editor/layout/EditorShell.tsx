@@ -91,12 +91,16 @@ export default function EditorShell({
 			<div className="col-span-full">
 				<TopBar onLocaleChange={onLocaleChange} />
 				<TrashedBanner />
-				<div className="border-b border-ed-track-line bg-ed-panel px-3 py-1">
+				{/* A landmark, so the toolbar is not content outside regions (axe region). */}
+				<section
+					aria-label={t("ui.editor.edit.label")}
+					className="border-b border-ed-track-line bg-ed-panel px-3 py-1"
+				>
 					<EditToolbar
 						captionOpen={captionOpen}
 						onCaptionOpenChange={setCaptionOpen}
 					/>
-				</div>
+				</section>
 				<FirstRunTips />
 				{status === "failed" && (
 					<div
