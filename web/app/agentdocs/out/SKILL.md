@@ -71,7 +71,7 @@ Prefix each with `vukem-video`.
 - `media:trash <asset id> --project <id>`
 - `media:restore <asset id> --project <id>`
 - `view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]`
-- `export --project <id> [--start t] [--end t] [--format f] [--wait] [--timeout d]`
+- `export --project <id> [--format f] [--wait] [--timeout d]`
 - `job:show <job id> [--wait] [--timeout d]`
 - `job:cancel <job id>`
 - `job:list --project <id> [--state s] [--cursor c] [--limit n]`
