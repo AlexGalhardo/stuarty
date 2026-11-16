@@ -1751,6 +1751,10 @@
         "to_item_id": {
           "description": "The item that arrives.",
           "type": "string"
+        },
+        "track_id": {
+          "description": "Only for two neighbours that touch on one track: another visual track the arriving item moves to.",
+          "type": "string"
         }
       },
       "required": [
@@ -1760,13 +1764,15 @@
       ],
       "type": "object"
     },
-    "description": "The item that leaves gets a fade transition out and the item that arrives a fade transition in, both of the given length, plus the matching audio fades for clips. The two items must overlap by at least that length, and the arriving item must start after the leaving one.",
+    "description": "The item that leaves gets a fade transition out and the item that arrives a fade transition in, both of the given length, plus the matching audio fades for clips. The two items must overlap by at least that length, and the arriving item must start after the leaving one. For two neighbours that touch on the same track give track_id, another visual track: the arriving item moves there and starts duration earlier, using the source it has before the cut, so they overlap by duration.",
     "errors": [
       "E_VALIDATION",
       "E_INVALID_TIME",
       "E_NOT_FOUND",
       "E_TYPE_MISMATCH",
-      "E_INVALID_STATE"
+      "E_INVALID_STATE",
+      "E_OUT_OF_SOURCE",
+      "E_OVERLAP"
     ],
     "example": {
       "duration": "1s",
