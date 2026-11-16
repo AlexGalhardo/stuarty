@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/lint"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/vukem-video/engine/export"
 	"github.com/AlexGalhardo/vukem-video/service/textview"
 )
 
@@ -120,6 +122,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 	input := marshalOrNull(
 		exportInput{
 			Revision: row.Revision, Start: start, End: end, Lint: &totals, Document: row.Document, Format: format,
+			Warnings: exportWarnings(doc, format, end-start),
 		},
 	)
 	projectID := row.ID
@@ -222,6 +225,27 @@ func decodeExportArgs(raw json.RawMessage) (ExportArgs, *Error) {
 	}
 
 	return a, nil
+}
+
+// gifWarnBytes is the typical GIF size above which the start of an export warns (VV-056).
+const gifWarnBytes = 25 << 20
+
+// exportWarnings are the notes about an export that is accepted but probably not what the person
+// wants: today a GIF whose typical size is over 25 MB.
+func exportWarnings(doc *timeline.Document, format string, frames int64) []string {
+	if format != FormatGIF {
+		return nil
+	}
+
+	est := export.EstimateGIF(doc.Settings, int(frames))
+	if est.TypicalBytes <= gifWarnBytes {
+		return nil
+	}
+
+	return []string{fmt.Sprintf(
+		"The GIF will be about %s (up to %s) at %dx%d, %d frames; a GIF this size is slow to share. "+
+			"Export mp4 instead, or shorten the range.",
+		textview.Size(est.TypicalBytes), textview.Size(est.WorstBytes), est.Width, est.Height, est.Frames)}
 }
 
 // exportGate is the lint of rule 1: an error finding refuses the start.
@@ -776,6 +800,7 @@ func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 		var in exportInput
 		if json.Unmarshal(r.Input, &in) == nil {
 			j.Lint = in.Lint
+			j.Warnings = in.Warnings
 		}
 
 		var res JobResult
@@ -813,6 +838,10 @@ func jobText(j *Job, waited bool) string {
 		if fps, ok := parseFPS(e.FPS); ok {
 			v.Duration = textview.Cell(timeval.FPS{Num: int64(fps.Num), Den: int64(fps.Den)}, e.Duration.Frame)
 		}
+	}
+
+	for _, w := range j.Warnings {
+		v.Warnings = append(v.Warnings, "warning: "+w)
 	}
 
 	if j.Error != nil && j.State == JobFailed {

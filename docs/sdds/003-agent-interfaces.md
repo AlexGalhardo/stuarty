@@ -703,6 +703,7 @@ type Job struct {
 	Result     *JobResult `json:"result,omitempty"` // export and transcribe only; an ingest job has no result member (its outcome is the asset state, MediaList)
 	Error      *Error     `json:"error,omitempty"` // set when State is "failed" and when it is "cancelled" (E_CANCELLED); E_INGEST_FAILED, E_EXPORT_FAILED, E_VERIFY_FAILED, E_TRANSCRIBE_FAILED and E_CANCELLED travel here with HTTP status 200
 	Lint       *LintTotals `json:"lint,omitempty"` // export: totals at the pinned revision (warnings only: errors refuse the start)
+	Warnings   []string    `json:"warnings,omitempty"` // export: notes about an accepted start, not a reason to refuse it; a GIF whose typical size is over 25 MB says its estimated size (VV-056)
 	Actor      string     `json:"actor"`
 	CreatedAt  time.Time  `json:"created_at"`
 	StartedAt  *time.Time `json:"started_at,omitempty"`
