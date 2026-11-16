@@ -77,28 +77,56 @@ func runMediaImport(ctx context.Context, c *call) (*output, error) {
 		}
 	}
 
-	deadline := time.Now().Add(c.args.timeout())
-	wait := c.args.boolean("wait")
-
-	req := service.MediaImportRequest{ProjectID: c.projectID, Files: files}
-	if wait {
-		req.WaitMS = waitSlice(deadline)
-	}
-
-	first, err := c.svc.MediaImport(ctx, req)
-	if err != nil {
+	if err := c.noWaitInProcess(); err != nil {
 		return nil, err
 	}
 
-	res := first
+	deadline := time.Now().Add(c.args.timeout())
+	wait := c.args.boolean("wait")
+	p := c.progress()
 
-	for wait && importPending(res) && time.Until(deadline) > 0 {
-		req.WaitMS = waitSlice(deadline)
+	req := service.MediaImportRequest{ProjectID: c.projectID, Files: files}
+
+	var first *service.MediaImportResult
+
+	if c.inProcess && wait {
+		// The Service ingests inside the call: bound it by --timeout.
+		res, expired, err := inline(ctx, deadline, c.watchAssets(p, len(files)), nil,
+			func(ctx context.Context) (*service.MediaImportResult, error) { return c.svc.MediaImport(ctx, req) })
+		if expired {
+			return c.importExpired(ctx)
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		first = res
+	} else {
+		if wait {
+			req.WaitMS = p.slice(deadline)
+		}
+
+		var err error
+		if first, err = c.svc.MediaImport(ctx, req); err != nil {
+			return nil, err
+		}
+	}
+
+	res := first
+	p.assets(importDone(res), len(res.Assets), 0)
+
+	for wait && !c.inProcess && importPending(res) && time.Until(deadline) > 0 {
+		req.WaitMS = p.slice(deadline)
+
+		var err error
 
 		// The same files again return the same assets (import is idempotent).
 		if res, err = c.svc.MediaImport(ctx, req); err != nil {
 			return nil, err
 		}
+
+		p.assets(importDone(res), len(res.Assets), 0)
 	}
 
 	if res != first {
@@ -291,16 +319,11 @@ var export = &spec{
 		deadline := time.Now().Add(c.args.timeout())
 		wait := c.args.boolean("wait") || dest != ""
 
-		if wait {
-			req.WaitMS = waitSlice(deadline)
-		}
+		out, err := c.runJob(ctx, wait, deadline, func(ctx context.Context, waitMS int) (*service.Job, error) {
+			req.WaitMS = waitMS
 
-		job, err := c.svc.JobStart(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-
-		out, err := jobOutput(ctx, c, job, wait, deadline)
+			return c.svc.JobStart(ctx, req)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -311,14 +334,20 @@ var export = &spec{
 
 // jobOutput waits for the job when asked and reports it. A job that failed or
 // was cancelled is exit 1; a wait that ran out is exit 2 (SDD-003 section 5.1).
-func jobOutput(ctx context.Context, c *call, job *service.Job, wait bool, deadline time.Time) (*output, error) {
+func jobOutput(
+	ctx context.Context, c *call, job *service.Job, wait bool, deadline time.Time, p *progress,
+) (*output, error) {
+	p.job(job)
+
 	for wait && !service.JobFinal(job.State) && time.Until(deadline) > 0 {
 		var err error
 
-		job, err = c.svc.JobGet(ctx, service.JobGetRequest{JobID: job.JobID, WaitMS: waitSlice(deadline)})
+		job, err = c.svc.JobGet(ctx, service.JobGetRequest{JobID: job.JobID, WaitMS: p.slice(deadline)})
 		if err != nil {
 			return nil, err
 		}
+
+		p.job(job)
 	}
 
 	out := &output{value: job, text: job.Text}
@@ -400,7 +429,7 @@ var jobShow = &spec{
 			return nil, err
 		}
 
-		return jobOutput(ctx, c, job, wait, deadline)
+		return jobOutput(ctx, c, job, wait, deadline, c.progress())
 	},
 }
 
