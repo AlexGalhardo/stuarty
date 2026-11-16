@@ -10,6 +10,10 @@
       "description": "true refuses every edit of the items of the track until it is false again.",
       "type": "boolean"
     },
+    "magnet": {
+      "description": "true keeps the items of the track packed from frame 0 with no gap, closing the gaps now and after every edit.",
+      "type": "boolean"
+    },
     "muted": {
       "type": "boolean"
     },

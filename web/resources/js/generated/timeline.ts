@@ -273,6 +273,7 @@ export interface Track {
   id: string;
   kind: "visual" | "audio";
   locked?: boolean;
+  magnet?: boolean;
   muted?: boolean;
   name?: string;
   order: string;

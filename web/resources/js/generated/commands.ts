@@ -2085,6 +2085,10 @@ export interface TrackUpdateArgs {
    * true refuses every edit of the items of the track until it is false again.
    */
   locked?: boolean;
+  /**
+   * true keeps the items of the track packed from frame 0 with no gap, closing the gaps now and after every edit.
+   */
+  magnet?: boolean;
   muted?: boolean;
   /**
    * The track name; "" clears it.
@@ -2246,5 +2250,5 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"track.move": { summary: "Changes the place of a track in the track order.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE"] },
 	"track.remove": { summary: "Removes a track, and its items when with_items is true.", scope: "edit", phase: "prototype", internal: false, errors: ["E_NOT_FOUND","E_NOT_EMPTY"] },
 	"track.set_caption_style": { summary: "Merges a partial caption style into a track, or replaces it.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_FONT_UNKNOWN"] },
-	"track.update": { summary: "Sets the name, hidden, muted, locked or solo flag or the volume of a track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"track.update": { summary: "Sets the name, hidden, muted, locked, solo or magnet flag or the volume of a track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 };

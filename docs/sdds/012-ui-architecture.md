@@ -1462,7 +1462,7 @@ Decision D-038: the default keymap is the one a person coming from CapCut alread
 | Show or hide the keyframe panel | `Alt+K` | `surface.keyframe_panel`: with an item selected it opens the inspector if hidden, expands the Keyframes section and moves focus to its header; again from inside the section it collapses it | UI, built (TASK-0236) |
 | Add a keyframe at the playhead | `Shift`+click in the keyframe panel | `keyframe.set` | exists |
 | Toggle snapping | `N` | `surface.toggle_snap` | exists |
-| Toggle the main-track magnet | `P` | `track.update` with `magnet` | needs command (N-6) |
+| Toggle the main-track magnet | `P` | `track.update` with `magnet` | exists (N-6, TASK-0254) |
 | Switch the preview axis | `S` | `surface.preview_axis` | UI, blocked: the preview has no axis guides to switch (only the safe-area overlay), so there is nothing for the key to do; it enters `SHORTCUTS` with the guides |
 | Zoom the timeline in, out | `Mod+=`, `Mod+-` (`+` and `-` stay as aliases), `Mod`+wheel (`Ctrl` or `Cmd`) | `surface.zoom` | exists |
 | Fit the timeline to the window | `Shift+Z` | `surface.zoom` | exists |
@@ -1517,7 +1517,7 @@ Each is a card for `senior-a`, with its name in `000-shared-definitions.md` firs
 | N-3 | `marker.add`, `marker.set`, `marker.remove`: a marker on the timeline with a time, a label and a colour (today only `audio.mark_beats` writes markers, on a music item) | `M`, `Alt+M`, `Shift+M`, `Alt+Shift+M` |
 | N-4 | `item.link`, `item.unlink` and `item.extract_audio`: tie a clip to its audio item, and put the audio of a clip on an audio track (today `audio.add` can place the audio of a video asset but does not detach it from a clip or restore it) | `~`, `Mod+Shift+S` |
 | N-5 | a curve in `clip.set_speed`: points of time and speed, with presets (today only a constant speed) | `Shift+B` |
-| N-6 | the `magnet` property of `track.update`: the main track closes gaps on its own (`timeline.close_gap` is the building block) | `P` |
+| N-6 | the `magnet` property of `track.update`: the track closes gaps on its own, after every command (built, TASK-0254; `timeline.close_gap` stays for a one-off close) | `P` |
 | N-7 | decision of the author, no work before it: compound clip (`item.compound`, `item.uncompound`) and match cut | `Alt+G`, `Alt+Shift+G`, `Mod+J` |
 | N-8 | `item.paste_attributes`: copy the effects, colour and transform of one item to others | `Mod+Shift+C`, `Mod+Shift+V` |
 

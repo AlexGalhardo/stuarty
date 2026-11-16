@@ -1,0 +1,10 @@
+{
+  "duration": 10,
+  "source_in": 0,
+  "start": 10,
+  "to": {
+    "frame": 20,
+    "requested": "20f",
+    "seconds": 0.667
+  }
+}

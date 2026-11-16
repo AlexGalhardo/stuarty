@@ -851,7 +851,7 @@ Adds an empty track at a place in the track order.
 
 ### C.7 `track.update` (phase P)
 
-Sets the name, the hidden, muted, locked or solo flag, or the volume of a track.
+Sets the name, the hidden, muted, locked, solo or magnet flag, or the volume of a track.
 
 **Arguments**
 
@@ -863,9 +863,10 @@ Sets the name, the hidden, muted, locked or solo flag, or the volume of a track.
 | `muted` | boolean | no | unchanged | both kinds |
 | `locked` | boolean | no | unchanged | both kinds; `true` refuses every edit of the items of the track (A.3 rule 5) until it is `false` again. VV-036 |
 | `solo` | boolean | no | unchanged | both kinds; while any track is solo, only soloed tracks sound, and while any visual track is solo, only soloed visual tracks are drawn (SDD-004 section 7) |
+| `magnet` | boolean | no | unchanged | both kinds; `true` packs the items of the track from frame 0 with no gap, now and after every later command (TASK-0254, SDD-001 section 3.3); a locked track is not repacked; `false` leaves the items where they are |
 | `volume` | number | no | unchanged | both kinds; 0 to 4, rounded to 3 decimals; a factor on the volume of the items of the track; 1 removes the field |
 
-At least one of `name`, `hidden`, `muted`, `locked`, `solo`, `volume` is required.
+At least one of `name`, `hidden`, `muted`, `locked`, `solo`, `magnet`, `volume` is required.
 
 **Preconditions.**
 
@@ -876,14 +877,14 @@ At least one of `name`, `hidden`, `muted`, `locked`, `solo`, `volume` is require
 **Postconditions.**
 
 1. The given fields are set. A field set to its default (`""`, `false`) is removed from the stored track.
-2. `diff` has one `track.updated` with the changed fields (R3); empty when nothing changes.
+2. `diff` has one `track.updated` with the changed fields (R3); empty when nothing changes. With `magnet` the items that were packed move too: one `item.updated` with `start` for each, in the same operation and the same undo step. The same repack runs after every other command for each unlocked track with `magnet`.
 3. `effective` has the stored values of the given fields.
 
 **Errors.**
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | nothing to set, or a value out of range | `args: give at least one of name, hidden, muted, locked, solo, volume.` | `Send for example {"track_id": "trk_f6g7h8j9k0", "muted": true}.` |
+| `E_VALIDATION` | nothing to set, or a value out of range | `args: give at least one of name, hidden, muted, locked, solo, magnet, volume.` | `Send for example {"track_id": "trk_f6g7h8j9k0", "muted": true}.` |
 | `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
 | `E_TYPE_MISMATCH` | `hidden` on an audio track | `Track trk_m1n2p3q4r5 is an audio track; hidden applies to visual tracks only.` | `Use muted to silence an audio track.` |
 
@@ -912,6 +913,10 @@ At least one of `name`, `hidden`, `muted`, `locked`, `solo`, `volume` is require
 - `ok_lock`
 - `ok_unlock_removes_field`
 - `ok_solo_audio_track`
+- `ok_magnet_on_packs_the_track`
+- `ok_magnet_off_keeps_the_items`
+- `ok_magnet_on_a_packed_track_only_sets_the_flag`
+- `ok_magnet_on_locked_track_keeps_the_items`
 - `ok_volume`
 - `ok_volume_1_removes_field`
 - `ok_edit_a_locked_track_itself`
@@ -1204,6 +1209,8 @@ At least one of `start` and `track_id` is required.
 - `err_invalid_time_linked_peer_before_frame_0`
 - `err_overlap_linked_peer`
 - `err_invalid_state_linked_peer_on_a_locked_track`
+- `ok_magnet_repacks_after_a_move_to_the_front`
+- `ok_a_track_without_magnet_is_not_packed`
 
 ### C.12 `item.trim` (phase P)
 
@@ -1336,6 +1343,7 @@ The same clip trimmed at the end with `{"edge": "end", "to": "150f"}` (and, for 
 - `ok_linked_trim_extend_start_together`
 - `err_invalid_state_linked_peer_would_have_no_frame`
 - `err_invalid_state_linked_peer_on_a_locked_track`
+- `ok_magnet_follows_a_trim_of_the_end`
 
 ### C.13 `item.split` (phase P)
 
@@ -1525,6 +1533,7 @@ Removes items, and optionally closes the freed space on the same track or on all
 - `err_not_found_first_missing_reported`
 - `err_invalid_state_ripple_all_not_contiguous`
 - `err_overlap_ripple_all_straddling_item`
+- `ok_magnet_closes_the_gap_of_the_deleted_item`
 
 ### C.15 `item.duplicate` (phase A)
 
