@@ -7,6 +7,7 @@ import {
 	bulkEditWords,
 	captionBreaksOperations,
 	captionEditWordOperations,
+	captionTextOperations,
 	captionWordsOperations,
 	toggleBreak,
 	withWordField,
@@ -128,10 +129,7 @@ export default function CaptionWords({
 				commit={async (text) => {
 					const next = bulkEditWords(words, text);
 					if (next === null) {
-						return {
-							ok: false,
-							error: { code: "E_VALIDATION", message: "" },
-						};
+						return send(captionTextOperations(itemId, text));
 					}
 					return send(captionWordsOperations(itemId, next));
 				}}

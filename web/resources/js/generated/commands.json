@@ -932,7 +932,7 @@
 			"additionalProperties": false,
 			"properties": {
 				"duration": {
-					"description": "A length, at least the end of the last word. Default: that end.",
+					"description": "A length. With words: at least the end of the last word, default that end. With text: default the current duration.",
 					"type": "string",
 					"x-vv-kind": "time"
 				},
@@ -940,8 +940,12 @@
 					"description": "A caption.",
 					"type": "string"
 				},
+				"text": {
+					"description": "Text split on whitespace and spread over the duration; instead of words.",
+					"type": "string"
+				},
 				"words": {
-					"description": "1 to 60 words with times relative to the caption, as lengths.",
+					"description": "1 to 60 words with times relative to the caption, as lengths. Or give text.",
 					"items": {
 						"additionalProperties": false,
 						"properties": {
@@ -970,12 +974,11 @@
 				}
 			},
 			"required": [
-				"item_id",
-				"words"
+				"item_id"
 			],
 			"type": "object"
 		},
-		"description": "Replaces all words (1 to 60, times relative to the caption, as lengths). The caption lasts until the end of the last word unless duration is given. Line breaks are cleared; keyframes are cut when the caption gets shorter.",
+		"description": "Replaces all words, given as words (1 to 60, times relative to the caption, as lengths) or as text, which is split on whitespace and spread over the caption's current duration like caption.add (duration may change it). With words the caption lasts until the end of the last word unless duration is given. Line breaks are cleared; keyframes are cut when the caption gets shorter.",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",

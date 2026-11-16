@@ -12,9 +12,10 @@ func init() {
 	Register(Define(Spec{
 		Name:    "caption.set_words",
 		Summary: "Replaces the words of a caption.",
-		Description: "Replaces all words (1 to 60, times relative to the caption, as lengths). The caption lasts until " +
-			"the end of the last word unless duration is given. Line breaks are cleared; keyframes are cut when " +
-			"the caption gets shorter.",
+		Description: "Replaces all words, given as words (1 to 60, times relative to the caption, as lengths) or as " +
+			"text, which is split on whitespace and spread over the caption's current duration like caption.add " +
+			"(duration may change it). With words the caption lasts until the end of the last word unless duration " +
+			"is given. Line breaks are cleared; keyframes are cut when the caption gets shorter.",
 		Example: `{"item_id": "itm_s6t7v8w9x0", "words": [{"text": "Hello", "start": "0f", "duration": "12f"}, ` +
 			`{"text": "world", "start": "12f", "duration": "12f"}]}`,
 		Errors: []string{
@@ -78,17 +79,24 @@ func (c *Context) caption(id, textMsg, textHint string) (timeline.Item, *Error) 
 
 type captionSetWordsArgs struct {
 	ItemID   string    `json:"item_id"            desc:"A caption."`
-	Words    []WordArg `json:"words"              desc:"1 to 60 words with times relative to the caption, as lengths."`
-	Duration Time      `json:"duration,omitempty" desc:"A length, at least the end of the last word. Default: that end."`
+	Words    []WordArg `json:"words,omitempty"    desc:"1 to 60 words with times relative to the caption, as lengths. Or give text."`
+	Text     *string   `json:"text,omitempty"     desc:"Text split on whitespace and spread over the duration; instead of words."`
+	Duration Time      `json:"duration,omitempty" desc:"A length. With words: at least the end of the last word, default that end. With text: default the current duration."`
 }
 
 func applyCaptionSetWords(c *Context, a *captionSetWordsArgs) error {
 	if err := idForm("args.item_id", timeline.PrefixItem, a.ItemID); err != nil {
 		return err
 	}
-	words, err := c.parseWords("args.words", a.Words)
-	if err != nil {
-		return err
+	if e := requireOne("args", []string{"words", "text"}, a.Words != nil, a.Text != nil); e != nil {
+		return e
+	}
+	var words []timeline.Word
+	var err *Error
+	if a.Text == nil {
+		if words, err = c.parseWords("args.words", a.Words); err != nil {
+			return err
+		}
 	}
 	given := 0
 	if a.Duration != "" {
@@ -100,9 +108,28 @@ func applyCaptionSetWords(c *Context, a *captionSetWordsArgs) error {
 	if err != nil {
 		return err
 	}
-	last := words[len(words)-1]
-	duration := last.Start + last.Duration
-	if a.Duration != "" {
+	var duration int
+	if a.Text != nil {
+		fields, ferr := textFields(*a.Text)
+		if ferr != nil {
+			return ferr
+		}
+		duration = it.Duration
+		if a.Duration != "" {
+			duration = given
+		}
+		if duration < len(fields) {
+			return Errorf(CodeInvalidState, "Duration %d frames is too short for %d words; each word needs 1 frame.",
+				duration, len(fields)).
+				WithHint("Use duration \"%df\" or longer.", len(fields)).
+				WithDetail("min_duration", len(fields)).WithPath("args.duration")
+		}
+		words = wordsFromText(fields, duration)
+	} else {
+		last := words[len(words)-1]
+		duration = last.Start + last.Duration
+	}
+	if a.Text == nil && a.Duration != "" {
 		if given < duration {
 			return Errorf(
 				CodeInvalidState,

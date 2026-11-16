@@ -3917,7 +3917,7 @@
         "additionalProperties": false,
         "properties": {
           "duration": {
-            "description": "A length, at least the end of the last word. Default: that end.",
+            "description": "A length. With words: at least the end of the last word, default that end. With text: default the current duration.",
             "type": "string",
             "x-vv-kind": "time"
           },
@@ -3925,8 +3925,12 @@
             "description": "A caption.",
             "type": "string"
           },
+          "text": {
+            "description": "Text split on whitespace and spread over the duration; instead of words.",
+            "type": "string"
+          },
           "words": {
-            "description": "1 to 60 words with times relative to the caption, as lengths.",
+            "description": "1 to 60 words with times relative to the caption, as lengths. Or give text.",
             "items": {
               "additionalProperties": false,
               "properties": {
@@ -3955,8 +3959,7 @@
           }
         },
         "required": [
-          "item_id",
-          "words"
+          "item_id"
         ],
         "type": "object"
       },
