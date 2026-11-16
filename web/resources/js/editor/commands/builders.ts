@@ -943,6 +943,12 @@ export const SIZE_PRESETS = [
 ] as const;
 export type SizePresetId = (typeof SIZE_PRESETS)[number]["id"];
 
+// "Change aspect": the core re-targets the size and rescales text, shapes and
+// fit none clips (SDD-002 C.60); the panel sends only the preset id.
+export function reframeOperations(aspect: SizePresetId): Operations {
+	return [{ op: "settings.reframe", args: { aspect } }];
+}
+
 export interface SettingsChanges {
 	width?: number;
 	height?: number;

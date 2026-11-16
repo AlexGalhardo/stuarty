@@ -740,7 +740,7 @@
       "project": {
         "name_label": "Nome do projeto",
         "rename": "Renomear o projeto {name}",
-        "preset": "Formato",
+        "aspect": "Mudar proporção",
         "custom": "Personalizado",
         "width": "Largura",
         "height": "Altura",

@@ -37,6 +37,7 @@ import {
 	moveOperations,
 	presetOperations,
 	projectRenameOperations,
+	reframeOperations,
 	removeAssetOperations,
 	renameOperations,
 	settingsFpsOperations,
@@ -452,6 +453,7 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				(o) => o.op,
 			),
 			"inspector.fps": settingsFpsOperations("30").map((o) => o.op),
+			"inspector.aspect": reframeOperations("1:1").map((o) => o.op),
 			"timeline.add_track": trackAddOperations("audio", { above: "trk_a" }).map(
 				(o) => o.op,
 			),
