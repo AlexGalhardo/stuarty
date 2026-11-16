@@ -196,6 +196,9 @@ impl Renderer {
 				mask: l.mask,
 				flip_x: l.flip_x,
 				flip_y: l.flip_y,
+				effects: l.effects.clone(),
+				transition: l.transition,
+				frame: r.frame,
 			});
 		}
 		Ok(layers)

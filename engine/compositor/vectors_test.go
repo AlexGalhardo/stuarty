@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/raster"
 )
 
@@ -37,6 +38,8 @@ type vecCase struct {
 	scale  float64
 	bg     string
 	layers []vecLayer
+	// frame, fw and fh are the plan's frame number and the project's size (the grain and the whip use them).
+	frame, fw, fh int
 }
 
 // softImage is a premultiplied image with a soft alpha edge, so blends and blurs see every alpha.
@@ -483,6 +486,143 @@ func rendererVectorCases() []vecCase {
 				l.ChromaKey = &plan.ChromaKeySpec{Color: "#00C81E", Similarity: 0.3, Smoothness: 0.2}
 			}),
 		}},
+		{
+			name:  "effect-motion-blur",
+			w:     64,
+			h:     48,
+			scale: 1,
+			bg:    "#203040",
+			frame: 3,
+			fw:    64,
+			fh:    48,
+			layers: []vecLayer{
+				vm("a", big, 32, 24, 64, 48, 0, 1),
+				with(vm("b", soft, 20, 20, 20, 14, 0, 1), func(l *plan.Layer) {
+					l.Effects = []timeline.Effect{
+						fx(timeline.EffectMotionBlur, map[string]float64{"amount": 0.5, "angle": 0}),
+					}
+				}),
+				with(vm("c", soft, 46, 30, 24, 17, 23, 0.8), func(l *plan.Layer) {
+					l.Effects = []timeline.Effect{
+						fx(timeline.EffectMotionBlur, map[string]float64{"amount": 0.2, "angle": -125}),
+					}
+				}),
+			},
+		},
+		{name: "effect-glow", w: 64, h: 48, scale: 1, bg: "#101010", frame: 0, fw: 64, fh: 48, layers: []vecLayer{
+			with(vm("a", big, 24, 24, 40, 30, 0, 1), func(l *plan.Layer) {
+				l.Effects = []timeline.Effect{
+					fx(timeline.EffectGlow, map[string]float64{"amount": 0.8, "radius": 3, "threshold": 0.4}),
+				}
+			}),
+			with(vm("b", soft, 46, 30, 24, 17, -17, 0.9), func(l *plan.Layer) {
+				l.Effects = []timeline.Effect{
+					fx(timeline.EffectGlow, map[string]float64{"amount": 1, "radius": 2, "threshold": 0.2}),
+				}
+			}),
+		}},
+		{
+			name:  "effect-vignette-grain",
+			w:     64,
+			h:     48,
+			scale: 1,
+			bg:    "#202020",
+			frame: 7,
+			fw:    64,
+			fh:    48,
+			layers: []vecLayer{
+				with(vm("a", big, 32, 24, 64, 48, 0, 1), func(l *plan.Layer) {
+					l.Effects = []timeline.Effect{
+						fx(timeline.EffectVignette, map[string]float64{"amount": 0.8, "softness": 0.4}),
+						fx(timeline.EffectGrain, map[string]float64{"amount": 0.7, "size": 2, "seed": 9}),
+					}
+				}),
+				with(vm("b", soft, 20, 24, 20, 14, 31, 1), func(l *plan.Layer) {
+					l.Effects = []timeline.Effect{
+						fx(timeline.EffectGrain, map[string]float64{"amount": 1, "size": 1, "seed": 65535}),
+					}
+				}),
+				with(vb("t", straightBitmap(24, 16, 15), 50, 34, 24, 16, 0, 1), func(l *plan.Layer) {
+					l.Effects = []timeline.Effect{
+						fx(timeline.EffectVignette, map[string]float64{"amount": 1, "softness": 0}),
+					}
+				}),
+			},
+		},
+		{
+			name:  "effect-rgb-split",
+			w:     64,
+			h:     48,
+			scale: 0.5,
+			bg:    "#303030",
+			frame: 0,
+			fw:    128,
+			fh:    96,
+			layers: []vecLayer{
+				with(vm("a", soft, 64, 48, 60, 42, 0, 1), func(l *plan.Layer) {
+					l.Effects = []timeline.Effect{
+						fx(timeline.EffectRGBSplit, map[string]float64{"amount": 0.9, "angle": 35}),
+					}
+				}),
+				with(vm("b", big, 30, 30, 40, 30, 12, 1), func(l *plan.Layer) {
+					l.Effects = []timeline.Effect{
+						fx(timeline.EffectRGBSplit, map[string]float64{"amount": 0.3, "angle": 180}),
+					}
+				}),
+			},
+		},
+		{
+			name: "effects-stacked-masked-flipped", w: 96, h: 72, scale: 1, bg: "#202838", frame: 12, fw: 96, fh: 72,
+			layers: []vecLayer{
+				vm("a", big, 48, 36, 96, 72, 0, 1),
+				with(vm("b", greenScreen(28), 50, 36, 50, 38, 15, 0.9), func(l *plan.Layer) {
+					l.Blur, l.FlipX = 2, true
+					l.Mask = &plan.MaskSpec{Shape: "ellipse", X: 0.1, Y: 0.1, Width: 0.8, Height: 0.8, Feather: 6}
+					l.Effects = []timeline.Effect{
+						fx(timeline.EffectMotionBlur, map[string]float64{"amount": 0.3, "angle": 20}),
+						fx(timeline.EffectGlow, map[string]float64{"amount": 0.6, "radius": 3, "threshold": 0.3}),
+						fx(timeline.EffectVignette, map[string]float64{"amount": 0.7, "softness": 0.6}),
+						fx(timeline.EffectGrain, map[string]float64{"amount": 0.4, "size": 3, "seed": 5}),
+						fx(timeline.EffectRGBSplit, map[string]float64{"amount": 0.4, "angle": -60}),
+					}
+				}),
+			},
+		},
+		{name: "transition-whip", w: 96, h: 72, scale: 1, bg: "#202838", frame: 4, fw: 96, fh: 72, layers: []vecLayer{
+			vm("a", big, 48, 36, 96, 72, 0, 1),
+			with(vm("b", soft, 30, 24, 30, 21, 0, 1), func(l *plan.Layer) {
+				l.Transition = &plan.TransitionSpec{Kind: "whip", Edge: "in", P: 6000, Direction: "right"}
+			}),
+			with(vm("c", big, 66, 48, 36, 27, 14, 1), func(l *plan.Layer) {
+				l.Transition = &plan.TransitionSpec{Kind: "whip", Edge: "out", P: 12000, Direction: "up"}
+			}),
+		}},
+		{name: "transition-dip", w: 64, h: 48, scale: 1, bg: "#202838", frame: 4, fw: 64, fh: 48, layers: []vecLayer{
+			vm("a", big, 32, 24, 64, 48, 0, 1),
+			with(vm("b", soft, 20, 24, 20, 14, 0, 1), func(l *plan.Layer) {
+				l.Transition = &plan.TransitionSpec{Kind: "dip", Edge: "in", P: 20000, Color: "#ff8000"}
+			}),
+			with(vm("c", big, 46, 24, 24, 18, 20, 0.8), func(l *plan.Layer) {
+				l.Transition = &plan.TransitionSpec{Kind: "dip", Edge: "out", P: 50000, Color: "#000000"}
+			}),
+		}},
+		{name: "transition-wipe", w: 96, h: 72, scale: 1, bg: "#202838", frame: 4, fw: 96, fh: 72, layers: []vecLayer{
+			vm("a", big, 48, 36, 96, 72, 0, 1),
+			with(vm("b", opaque, 24, 20, 32, 24, 0, 1), func(l *plan.Layer) {
+				l.Transition = &plan.TransitionSpec{Kind: "wipe", Edge: "in", P: 32768, Direction: "left"}
+			}),
+			with(vm("c", soft, 70, 20, 30, 21, 17, 1), func(l *plan.Layer) {
+				l.Transition = &plan.TransitionSpec{Kind: "wipe", Edge: "out", P: 20000, Direction: "up"}
+				l.Mask = &plan.MaskSpec{Shape: "ellipse", X: 0, Y: 0, Width: 1, Height: 1, Feather: 4}
+			}),
+			with(vm("d", big, 30, 56, 36, 27, -9, 0.9), func(l *plan.Layer) {
+				l.Transition = &plan.TransitionSpec{Kind: "wipe", Edge: "in", P: 41000, Direction: "down"}
+				l.Blur = 1
+			}),
+			with(vm("e", opaque, 74, 56, 28, 20, 0, 1), func(l *plan.Layer) {
+				l.Transition = &plan.TransitionSpec{Kind: "wipe", Edge: "out", P: 9000, Direction: "right"}
+			}),
+		}},
 		{name: "stack", w: 64, h: 48, scale: 1, bg: "#0a0a0a", layers: []vecLayer{
 			vm("a", big, 32, 24, 64, 48, 0, 1),
 			vm("b", soft, 20, 20, 20, 14, 12, 0.6),
@@ -513,10 +653,42 @@ func (c vecCase) compose(t *testing.T, bands int) []byte {
 		Bitmaps: func(s plan.BitmapSpec) (raster.Bitmap, error) { return bms[s.Key()], nil },
 	}
 	dst := image.NewRGBA(image.Rect(0, 0, c.w, c.h))
-	if err := comp.Compose(dst, plan.FramePlan{Background: c.bg, Layers: layers}, c.scale); err != nil {
+	if err := comp.Compose(
+		dst, plan.FramePlan{Frame: c.frame, Width: c.fw, Height: c.fh, Background: c.bg, Layers: layers}, c.scale,
+	); err != nil {
 		t.Fatal(err)
 	}
 	return dst.Pix
+}
+
+func effectCode(kind string) uint8 {
+	switch kind {
+	case timeline.EffectMotionBlur:
+		return 0
+	case timeline.EffectGlow:
+		return 1
+	case timeline.EffectVignette:
+		return 2
+	case timeline.EffectGrain:
+		return 3
+	case timeline.EffectRGBSplit:
+		return 4
+	}
+
+	panic("not a pixel effect: " + kind)
+}
+
+func transitionCode(kind string) uint8 {
+	switch kind {
+	case "whip":
+		return 1
+	case "dip":
+		return 2
+	case "wipe":
+		return 3
+	}
+
+	panic("not a pixel transition: " + kind)
 }
 
 // sincosHash is the FNV-1a 64 of the bits of sincos over 10,001 angles in [-1000, 1000] and over the
@@ -548,7 +720,7 @@ func encodeVectors(t *testing.T) []byte {
 		}
 	}
 	buf.WriteString("VVCV")
-	w(uint32(5))
+	w(uint32(6))
 	w(sincosHash())
 	cases := rendererVectorCases()
 	w(uint32(len(cases)))
@@ -560,6 +732,9 @@ func encodeVectors(t *testing.T) []byte {
 		w(c.scale)
 		bg := parseColour(c.bg)
 		buf.Write(bg[:])
+		w(uint32(c.frame))
+		w(uint32(c.fw))
+		w(uint32(c.fh))
 		w(uint32(len(c.layers)))
 		for i := range c.layers {
 			l := &c.layers[i]
@@ -638,6 +813,31 @@ func encodeVectors(t *testing.T) []byte {
 				flips |= 2
 			}
 			w(flips)
+
+			w(uint8(len(pl.Effects)))
+
+			for i := range pl.Effects {
+				ef := &pl.Effects[i]
+				w(effectCode(ef.Kind))
+
+				names := timeline.EffectParams[ef.Kind]
+				w(uint8(len(names)))
+
+				for _, name := range names {
+					w(effectParam(ef, name, 0))
+				}
+			}
+
+			if t := pl.Transition; t == nil {
+				w(uint8(0))
+			} else {
+				w(transitionCode(t.Kind))
+				w(uint8(map[string]int{"in": 0, "out": 1}[t.Edge]))
+				w(uint32(t.P))
+				w(uint8(map[string]int{"": 0, "left": 0, "right": 1, "up": 2, "down": 3}[t.Direction]))
+				col := parseColour(t.Color)
+				buf.Write(col[:])
+			}
 		}
 		buf.Write(c.compose(t, 1))
 	}

@@ -4,6 +4,7 @@
 use vukem_renderer::blend::BlendMode;
 use vukem_renderer::chroma::ChromaKeySpec;
 use vukem_renderer::compose::{Layer, Source, premultiply};
+use vukem_renderer::effects::{Direction, Effect, FrameInfo, Transition, TransitionKind};
 use vukem_renderer::image::Image;
 use vukem_renderer::mask::{MaskShape, MaskSpec};
 
@@ -54,6 +55,8 @@ pub struct VecLayer {
 	pub mask: Option<MaskSpec>,
 	pub flip_x: bool,
 	pub flip_y: bool,
+	pub effects: Vec<Effect>,
+	pub transition: Option<Transition>,
 }
 
 pub struct Case {
@@ -62,6 +65,7 @@ pub struct Case {
 	pub h: usize,
 	pub scale: f64,
 	pub bg: [u8; 4],
+	pub frame: FrameInfo,
 	pub layers: Vec<VecLayer>,
 	pub want: Vec<u8>,
 }
@@ -69,7 +73,7 @@ pub struct Case {
 pub fn read_cases() -> (u64, Vec<Case>) {
 	let mut r = Reader(VECTORS);
 	assert_eq!(r.take(4), b"VVCV");
-	assert_eq!(r.u32(), 5);
+	assert_eq!(r.u32(), 6);
 	let hash = r.u64();
 	let n = r.u32();
 	let mut cases = Vec::new();
@@ -79,6 +83,11 @@ pub fn read_cases() -> (u64, Vec<Case>) {
 		let (w, h) = (r.u32() as usize, r.u32() as usize);
 		let scale = r.f64();
 		let bg: [u8; 4] = r.take(4).try_into().unwrap();
+		let frame = FrameInfo {
+			frame: i64::from(r.u32()),
+			width: i64::from(r.u32()),
+			height: i64::from(r.u32()),
+		};
 		let nl = r.u32();
 		let mut layers = Vec::new();
 		for _ in 0..nl {
@@ -140,6 +149,63 @@ pub fn read_cases() -> (u64, Vec<Case>) {
 				}
 			});
 			let flips = r.u8();
+			let effects = (0..r.u8())
+				.map(|_| {
+					let kind = r.u8();
+					let n = usize::from(r.u8());
+					let v: Vec<f64> = (0..n).map(|_| r.f64()).collect();
+					match kind {
+						0 => Effect::MotionBlur {
+							amount: v[0],
+							angle: v[1],
+						},
+						1 => Effect::Glow {
+							amount: v[0],
+							radius: v[1],
+							threshold: v[2],
+						},
+						2 => Effect::Vignette {
+							amount: v[0],
+							softness: v[1],
+						},
+						3 => Effect::Grain {
+							amount: v[0],
+							size: v[1],
+							seed: v[2] as i64,
+						},
+						4 => Effect::RgbSplit {
+							amount: v[0],
+							angle: v[1],
+						},
+						n => panic!("unknown effect {n}"),
+					}
+				})
+				.collect();
+			let transition = match r.u8() {
+				0 => None,
+				k => {
+					let kind = match k {
+						1 => TransitionKind::Whip,
+						2 => TransitionKind::Dip,
+						_ => TransitionKind::Wipe,
+					};
+					let _edge = r.u8();
+					let p = i64::from(r.u32());
+					let direction = match r.u8() {
+						0 => Direction::Left,
+						1 => Direction::Right,
+						2 => Direction::Up,
+						_ => Direction::Down,
+					};
+					let colour: [u8; 4] = r.take(4).try_into().unwrap();
+					Some(Transition {
+						kind,
+						p,
+						direction,
+						colour,
+					})
+				}
+			};
 			layers.push(VecLayer {
 				pixels,
 				nums,
@@ -150,6 +216,8 @@ pub fn read_cases() -> (u64, Vec<Case>) {
 				mask,
 				flip_x: flips & 1 != 0,
 				flip_y: flips & 2 != 0,
+				effects,
+				transition,
 			});
 		}
 		let want = r.take(w * h * 4).to_vec();
@@ -159,6 +227,7 @@ pub fn read_cases() -> (u64, Vec<Case>) {
 			h,
 			scale,
 			bg,
+			frame,
 			layers,
 			want,
 		});
@@ -202,6 +271,9 @@ pub fn layers_of(c: &Case) -> Vec<Layer<'_>> {
 				mask: l.mask,
 				flip_x: l.flip_x,
 				flip_y: l.flip_y,
+				effects: l.effects.clone(),
+				transition: l.transition,
+				frame: c.frame,
 				blur,
 			}
 		})

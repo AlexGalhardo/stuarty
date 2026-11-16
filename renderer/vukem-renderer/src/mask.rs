@@ -5,6 +5,7 @@
 //! valid plan is clamped; only an invalid plan reaches the clamps.
 
 use crate::compose::Placement;
+use crate::effects::{Direction, Transition};
 use crate::math::{div255, mul, round_half_away, round_half_up, sincos};
 
 /// Fractional bits of a position inside the rectangle: 24.8 fixed point.
@@ -53,11 +54,19 @@ pub struct MaskGeometry {
 	/// `u = map[0] x + map[1] y + map[2]` and `v = map[3] x + map[4] y + map[5]` for the integer
 	/// pixel index `(x, y)`: the position of the pixel centre in the rectangle, in pixels.
 	pub map: [f64; 6],
+	/// There is no shape, only a wipe: the coverage of the mask is 1 everywhere.
+	pub shapeless: bool,
+	/// The wipe of the layer's transition (SDD-004 section 3.2): its edge in pixels along `u`
+	/// (`Left`, `Right`) or `v` (`Up`, `Down`), and the direction; `None` when there is no wipe.
+	pub wipe: Option<(Direction, f64)>,
 }
 
 /// A mask ready to give a coverage for a destination pixel.
 #[derive(Clone, Copy, Debug)]
 pub struct MaskState {
+	/// Only a wipe: the coverage of the mask is 255 everywhere.
+	shapeless: bool,
+	wipe: Option<WipeState>,
 	ellipse: bool,
 	invert: bool,
 	l: i64,
@@ -88,12 +97,55 @@ fn clamped(v: f64, hi: f64) -> i64 {
 	}
 }
 
+/// The size of a layer's rectangle in 24.8 fixed point, held to the limit of the arithmetic.
+pub fn clamped_q(v: f64) -> i64 {
+	clamped(mul(v, 256.0), LIMIT)
+}
+
+/// The hard edge of a wipe on the layer's rectangle, in 24.8.
+#[derive(Clone, Copy, Debug)]
+struct WipeState {
+	dir: Direction,
+	r: i64,
+	wq: i64,
+	hq: i64,
+}
+
+impl WipeState {
+	/// 255 where the edge has passed and 0 where it has not.
+	fn coverage(&self, lx: i64, ly: i64) -> u32 {
+		let covered = match self.dir {
+			Direction::Left => lx < self.r,
+			Direction::Right => lx >= self.wq - self.r,
+			Direction::Up => ly < self.r,
+			Direction::Down => ly >= self.hq - self.r,
+		};
+		if covered { 255 } else { 0 }
+	}
+}
+
 impl MaskState {
-	/// The mask of `spec` for a layer placed as `p`: the placement before any blur grows it, so a
-	/// blur halo never moves the mask.
-	pub fn new(spec: &MaskSpec, p: &Placement, out_scale: f64) -> Self {
-		let wq = clamped(mul(p.w, 256.0), LIMIT);
-		let hq = clamped(mul(p.h, 256.0), LIMIT);
+	/// The mask of `spec` (none for a wipe alone) and the wipe, for a layer placed as `p`: the
+	/// placement before any blur grows it, so a blur halo never moves the mask.
+	pub fn new(
+		spec: Option<&MaskSpec>,
+		wipe: Option<&Transition>,
+		p: &Placement,
+		out_scale: f64,
+	) -> Self {
+		let wq = clamped_q(p.w);
+		let hq = clamped_q(p.h);
+		let default = MaskSpec {
+			shape: MaskShape::Rect,
+			x: 0.0,
+			y: 0.0,
+			width: 1.0,
+			height: 1.0,
+			feather: 0.0,
+			invert: false,
+		};
+		let shapeless = spec.is_none();
+		let spec = spec.unwrap_or(&default);
 		let xm = clamped(mul(spec.x, 1000.0), 1000.0);
 		let ym = clamped(mul(spec.y, 1000.0), 1000.0);
 		let wm = clamped(mul(spec.width, 1000.0), 1000.0);
@@ -104,6 +156,18 @@ impl MaskState {
 		let ha = ((wm * wq + 1000) / 2000).max(1);
 		let hb = ((hm * hq + 1000) / 2000).max(1);
 		let fq = clamped(mul(mul(spec.feather, out_scale), 256.0), LIMIT);
+		let wipe = wipe.map(|w| {
+			let size = match w.direction {
+				Direction::Up | Direction::Down => hq,
+				_ => wq,
+			};
+			WipeState {
+				dir: w.direction,
+				r: (w.p.clamp(0, 65536) * size + 32768) >> 16,
+				wq,
+				hq,
+			}
+		});
 
 		let (sin, cos) = sincos(mul(p.rot, core::f64::consts::PI / 180.0));
 		let (hw, hh) = (p.w / 2.0, p.h / 2.0);
@@ -112,6 +176,8 @@ impl MaskState {
 		let q = |v: f64| round_half_away(mul(v, one));
 
 		Self {
+			shapeless,
+			wipe,
 			ellipse: spec.shape == MaskShape::Ellipse,
 			invert: spec.invert,
 			l,
@@ -164,6 +230,15 @@ impl MaskState {
 			half_h: px(self.hb),
 			feather: px(self.fq),
 			map,
+			shapeless: self.shapeless,
+			wipe: self.wipe.map(|w| {
+				let edge = match w.dir {
+					Direction::Left | Direction::Up => w.r,
+					Direction::Right => w.wq - w.r,
+					Direction::Down => w.hq - w.r,
+				};
+				(w.dir, px(edge))
+			}),
 		}
 	}
 
@@ -203,6 +278,19 @@ impl MaskState {
 	pub fn coverage(&self, lx: i64, ly: i64) -> u32 {
 		let lx = lx.clamp(-POS_LIMIT, POS_LIMIT);
 		let ly = ly.clamp(-POS_LIMIT, POS_LIMIT);
+		let mut cov = if self.shapeless {
+			255
+		} else {
+			self.shape_coverage(lx, ly)
+		};
+		if let Some(w) = &self.wipe {
+			cov = div255(cov * w.coverage(lx, ly));
+		}
+		cov
+	}
+
+	/// The coverage of the mask's shape alone.
+	fn shape_coverage(&self, lx: i64, ly: i64) -> u32 {
 		let d = if self.ellipse {
 			let qx = (((lx - (self.l + self.ha)).abs() << 16) / self.ha).min(1 << 22);
 			let qy = (((ly - (self.t + self.hb)).abs() << 16) / self.hb).min(1 << 22);
@@ -239,7 +327,7 @@ pub fn scale(px: &mut [u32; 4], cov: u32) {
 }
 
 /// The largest `x` with `x * x <= n`.
-fn isqrt(n: u64) -> u64 {
+pub(crate) fn isqrt(n: u64) -> u64 {
 	if n < 2 {
 		return n;
 	}
@@ -258,7 +346,7 @@ mod tests {
 	use super::*;
 
 	fn state(spec: MaskSpec, p: Placement) -> MaskState {
-		MaskState::new(&spec, &p, 1.0)
+		MaskState::new(Some(&spec), None, &p, 1.0)
 	}
 
 	fn spec(shape: MaskShape) -> MaskSpec {
@@ -393,7 +481,12 @@ mod tests {
 			feather: 1e300,
 			..spec(MaskShape::Ellipse)
 		};
-		let m = MaskState::new(&huge, &place(1e300, -1e300, 1e300, 1e-300), 1e300);
+		let m = MaskState::new(
+			Some(&huge),
+			None,
+			&place(1e300, -1e300, 1e300, 1e-300),
+			1e300,
+		);
 		for (x, y) in [(0, 0), (i64::MAX, i64::MIN), (-5, 1 << 40)] {
 			assert!(m.copy_cov(x, y) <= 255);
 			assert!(m.sample_cov(x, y) <= 255);

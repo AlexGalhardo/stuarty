@@ -12,6 +12,7 @@ pub mod blur;
 pub mod chroma;
 pub mod colour;
 pub mod compose;
+pub mod effects;
 pub mod error;
 pub mod host;
 pub mod image;
