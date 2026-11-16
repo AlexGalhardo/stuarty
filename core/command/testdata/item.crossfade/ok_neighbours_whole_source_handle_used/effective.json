@@ -1,0 +1,10 @@
+{
+  "duration": {
+    "frame": 60,
+    "requested": "60f",
+    "seconds": 2
+  },
+  "overlap": 60,
+  "to_start": 90,
+  "to_track_id": "trk_a1b2c3d4e5"
+}

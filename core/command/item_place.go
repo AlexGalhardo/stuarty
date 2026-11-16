@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"slices"
 	"strconv"
 
@@ -28,10 +29,13 @@ func init() {
 		Summary: "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.",
 		Description: "The item that leaves gets a fade transition out and the item that arrives a fade transition in, " +
 			"both of the given length, plus the matching audio fades for clips. The two items must overlap by at " +
-			"least that length, and the arriving item must start after the leaving one.",
+			"least that length, and the arriving item must start after the leaving one. For two neighbours that " +
+			"touch on the same track give track_id, another visual track: the arriving item moves there and starts " +
+			"duration earlier, using the source it has before the cut, so they overlap by duration.",
 		Example: `{"from_item_id": "itm_m1n2p3q4r5", "to_item_id": "itm_s6t7v8w9x0", "duration": "1s"}`,
 		Errors: []string{
-			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState,
+			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeOutOfSource,
+			CodeOverlap,
 		},
 		Scope: ScopeEdit,
 		Phase: Alpha,
@@ -134,9 +138,10 @@ func applyItemDuplicate(c *Context, a *itemDuplicateArgs) error {
 }
 
 type itemCrossfadeArgs struct {
-	From     string `json:"from_item_id" desc:"The item that leaves."`
-	To       string `json:"to_item_id"   desc:"The item that arrives."`
-	Duration Time   `json:"duration"     desc:"Length of the crossfade, at least 1 frame."`
+	From     string `json:"from_item_id"       desc:"The item that leaves."`
+	To       string `json:"to_item_id"         desc:"The item that arrives."`
+	Duration Time   `json:"duration"           desc:"Length of the crossfade, at least 1 frame."`
+	TrackID  string `json:"track_id,omitempty" desc:"Only for two neighbours that touch on one track: another visual track the arriving item moves to."`
 }
 
 func applyItemCrossfade(c *Context, a *itemCrossfadeArgs) error {
@@ -164,9 +169,22 @@ func applyItemCrossfade(c *Context, a *itemCrossfadeArgs) error {
 		}
 	}
 	if from.Track == to.Track {
-		return Errorf(CodeInvalidState, "Items %s and %s are on the same track %s; a crossfade needs two tracks.",
-			from.ID, to.ID, from.Track).
-			WithHint("Move %s to another track with item.move first.", to.ID)
+		moved, err := c.crossfadeNeighbours(&from, &to, length, a.TrackID)
+		if err != nil {
+			return err
+		}
+		to = moved
+	} else if a.TrackID != "" {
+		return Errorf(
+			CodeValidation,
+			"args.track_id applies only to two items of the same track; %s and %s are on tracks %s and %s.",
+			from.ID,
+			to.ID,
+			from.Track,
+			to.Track,
+		).
+			WithHint("Leave track_id out.").
+			WithPath("args.track_id")
 	}
 	if from.Start >= to.Start {
 		return Errorf(CodeInvalidState, "Item %s starts at frame %d, not after %s at frame %d.",
@@ -205,6 +223,57 @@ func applyItemCrossfade(c *Context, a *itemCrossfadeArgs) error {
 	c.SetEffectiveTime("duration", length, string(a.Duration))
 	c.SetEffective("overlap", overlap)
 	return nil
+}
+
+// crossfadeNeighbours prepares a crossfade of two items that touch on one track (VV-042): the
+// arriving item moves to another visual track and starts `length` frames earlier, reading the
+// source it has before the cut, so the two overlap by `length` and the common rules apply.
+func (c *Context) crossfadeNeighbours(from, to *timeline.Item, length int, trackID string) (timeline.Item, *Error) {
+	if err := idForm("args.track_id", timeline.PrefixTrack, trackID); err != nil {
+		return *to, err
+	}
+	if trackID == "" {
+		return *to, Errorf(CodeInvalidState, "Items %s and %s are on the same track %s; a crossfade needs two tracks.",
+			from.ID, to.ID, from.Track).
+			WithHint("Send track_id, a visual track for %s, or move it to another track with item.move first.", to.ID)
+	}
+	if to.Start != itemEnd(from) {
+		return *to, Errorf(CodeInvalidState, "Items %s and %s do not touch: %s ends at frame %d and %s starts at %d.",
+			from.ID, to.ID, from.ID, itemEnd(from), to.ID, to.Start).
+			WithHint("Use the neighbour that starts at frame %d as to_item_id.", itemEnd(from))
+	}
+	tr, err := c.track(trackID, "args.track_id")
+	if err != nil {
+		return *to, err
+	}
+	if trackID == from.Track || !acceptsType(tr, to.Type) {
+		return *to, Errorf(CodeTypeMismatch, "Track %s is not another visual track than %s.", trackID, from.Track).
+			WithHint("Use a visual track other than %s, adding one with track.add if needed.", from.Track).
+			WithPath("args.track_id")
+	}
+	start := to.Start - length
+	if start < 0 {
+		return *to, Errorf(CodeInvalidState, "A %d-frame crossfade would start %s before frame 0 (it starts at %d).",
+			length, to.ID, to.Start).
+			WithHint("Use duration \"%df\" or less.", to.Start).WithPath("args.duration")
+	}
+	moved, terr := c.trimmed(to, "start", start, fmt.Sprintf("A %d-frame crossfade of %s", length, to.ID))
+	if terr != nil {
+		if terr.Code == CodeOutOfSource {
+			terr = terr.WithHint(
+				"Use a shorter duration (%s has less source before the cut), or move it to another track with item.move first.",
+				to.ID,
+			)
+		}
+		return *to, terr.WithPath("args.duration")
+	}
+	moved.Track = trackID
+	if oerr := c.checkOverlap(to.ID, trackID, moved.Start, moved.Duration); oerr != nil {
+		return *to, oerr.WithPath("args.track_id")
+	}
+	c.SetEffective("to_track_id", trackID)
+	c.SetEffective("to_start", moved.Start)
+	return moved, nil
 }
 
 // crossfadeRoom is R14 for one side of a crossfade: the new fade of the given length

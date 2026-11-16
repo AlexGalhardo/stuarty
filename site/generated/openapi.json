@@ -4570,6 +4570,10 @@
           "to_item_id": {
             "description": "The item that arrives.",
             "type": "string"
+          },
+          "track_id": {
+            "description": "Only for two neighbours that touch on one track: another visual track the arriving item moves to.",
+            "type": "string"
           }
         },
         "required": [

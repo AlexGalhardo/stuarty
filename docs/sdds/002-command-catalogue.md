@@ -257,7 +257,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `item.set_transform` | A | `item_id`, `x?`, `y?`, `scale?`, `rotation?`, `opacity?` | Sets the given fields on a visual item. A property that has keyframes cannot be set this way: `E_INVALID_STATE` with the hint to use `keyframe.set` or `keyframe.clear` |
 | `item.set_transition` | A | `item_id`, `edge` (`"in"`, `"out"`), `kind` (a transition kind or `null` to remove), `duration?` (time, as a length; default `"0.5s"`) | Sets or removes the transition on a visual item |
 | `item.set_audio` | A | `item_id`, `volume?`, `fade_in?` (time, as a length), `fade_out?`, `audio_muted?` | Sets audio properties on a `clip` or `audio` item |
-| `item.crossfade` | A | `from_item_id`, `to_item_id`, `duration` (time, as a length) | Helper for RF-023. Requires two visual items on different tracks where `from` starts before `to` and the two overlap in time by at least `duration`. Sets `transition_out: fade` on `from` and `transition_in: fade` on `to`, both of that duration, and the matching audio fades |
+| `item.crossfade` | A | `from_item_id`, `to_item_id`, `duration` (time, as a length), `track_id?` | Helper for RF-023. Requires two visual items on different tracks where `from` starts before `to` and the two overlap in time by at least `duration`. Sets `transition_out: fade` on `from` and `transition_in: fade` on `to`, both of that duration, and the matching audio fades. For two neighbours that touch on one track, `track_id` (another visual track) moves `to` there and makes it start `duration` earlier, from the source it has before the cut (C.20, VV-042) |
 | `timeline.close_gap` | A | `track_id`, `at` (time), `ripple?` (`"track"` default, `"all"`) | Finds the empty range on the track that contains frame `at` and moves later items earlier by its length. Fails with `E_INVALID_STATE` when `at` is inside an item or after the last item |
 
 ### B.5 Clips and audio
@@ -1841,13 +1841,14 @@ Sets a matching fade-out and fade-in on two overlapping visual items of differen
 | `from_item_id` | item id | yes | none | the item that leaves |
 | `to_item_id` | item id | yes | none | the item that arrives |
 | `duration` | time, as a length | yes | none | at least 1 frame |
+| `track_id` | track id | only for neighbours | none | VV-042. For two items that touch on one track (`to.start == from.end`): another visual track, to which `to` moves. It also starts `duration` frames earlier, as `item.trim` with edge `start` does (its `source_in` drops by `duration` at its speed, so what is seen after the cut does not move), and so overlaps `from` by exactly `duration`; the rest is as for two tracks. This needs no model change: no two items of a track overlap. An item on two different tracks refuses `track_id` |
 
 **Preconditions.**
 
 1. Arguments match the schema and `duration` parses to at least 1 frame (`E_VALIDATION`, `E_INVALID_TIME`).
 2. Both items exist (`E_NOT_FOUND`).
 3. Both are visual items (`E_TYPE_MISMATCH`).
-4. They are on different tracks (`E_INVALID_STATE`).
+4. They are on different tracks, or touch on one track and `track_id` names another visual track (`E_INVALID_STATE` when the items do not touch, when `to` would start before frame 0 or when `track_id` is missing; `E_VALIDATION` when `track_id` is given for items of two tracks; `E_TYPE_MISMATCH` for the same or an audio track; `E_NOT_FOUND`). With `track_id`, `to` must have `duration` frames of source before the cut unless it has no source range (`E_OUT_OF_SOURCE`), and the new range must be free on that track (`E_OVERLAP`).
 5. `from.start < to.start`, and the overlap `min(from.end, to.end) - to.start` is at least `duration`, where `end` is `start + duration` (`E_INVALID_STATE`, `details.overlap`). An item that starts at or before the start of `from`, or a `to` that ends inside the fade, fails here.
 6. After the change both items satisfy R14: for `from`, `duration + transition_in.duration <= from.duration`, and for a `clip` also `fade_in + duration <= from.duration`; for `to`, `duration + transition_out.duration <= to.duration`, and for a `clip` also `duration + fade_out <= to.duration` (`E_INVALID_STATE`).
 
@@ -1856,7 +1857,7 @@ Sets a matching fade-out and fade-in on two overlapping visual items of differen
 1. `from.transition_out = {fade, duration}` and `to.transition_in = {fade, duration}`, replacing any existing ones.
 2. For a `clip`, `from.fade_out = duration` and `to.fade_in = duration`. Other visual types have no audio fades.
 3. Positions, tracks and every other field are unchanged. The fade covers the last `duration` frames of `from` and the first `duration` frames of `to`; the two coincide exactly when the overlap equals `duration`.
-4. `diff` has one `item.updated` per item. `effective` has `duration` (the A.4 triple) and `overlap` (frames).
+4. `diff` has one `item.updated` per item. `effective` has `duration` (the A.4 triple) and `overlap` (frames); with `track_id` also `to_track_id` and `to_start`, where `to` now starts (the `diff` of `to` then has `track`, `start`, `duration` and `source_in` as well).
 
 **Errors.**
 
@@ -1865,8 +1866,10 @@ Sets a matching fade-out and fade-in on two overlapping visual items of differen
 | `E_VALIDATION` | missing argument | `args.duration is required.` | `Send for example "duration": "1s".` |
 | `E_INVALID_TIME` | malformed or zero `duration` | `args.duration "0f" is 0 frames.` | `Use "1s" or "30f".` |
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the ids of items listed by project_get.` |
-| `E_TYPE_MISMATCH` | an audio item | `Item itm_s6t7v8w9x0 is an audio item; crossfade needs visual items.` | `Use item.set_audio fades for audio items.` |
-| `E_INVALID_STATE` | same track, `to` not starting after `from`, too little overlap, or no room | `Items overlap by 20 frames (120-139); a 30-frame crossfade needs 30.` | `Move itm_s6t7v8w9x0 to start at "110f" or earlier with item.move (from ends at 140), or use duration "20f".` |
+| `E_TYPE_MISMATCH` | an audio item, or `track_id` that is the track of `from` or an audio track | `Item itm_s6t7v8w9x0 is an audio item; crossfade needs visual items.` | `Use item.set_audio fades for audio items.` |
+| `E_INVALID_STATE` | same track without `track_id` (or not touching, or no room before frame 0), `to` not starting after `from`, too little overlap, or no room | `Items overlap by 20 frames (120-139); a 30-frame crossfade needs 30.` | `Move itm_s6t7v8w9x0 to start at "110f" or earlier with item.move (from ends at 140), or use duration "20f".` |
+| `E_OUT_OF_SOURCE` | with `track_id`, `to` has less source before the cut than `duration` | `Moving the start of itm_s6t7v8w9x0 from frame 150 to 120 needs source frame -20 at speed 1/1 (source_in 10); the asset begins at 0.` | `Use a shorter duration (itm_s6t7v8w9x0 has less source before the cut), or move it to another track with item.move first.` |
+| `E_OVERLAP` | with `track_id`, the new range of `to` is not free on that track | `Item itm_s6t7v8w9x0 would occupy frames 120-299 on track trk_a1b2c3d4e5, where item itm_c3d4e5f6g7 already is (frames 100-159).` | `Use start "160f" (5.333s), the next free position on that track, or move to another track.` |
 
 **Inverse.** One `patch {collection: "items", id, set: <old values>, unset: <fields that were absent>}` per item, `from` first.
 
@@ -1905,6 +1908,18 @@ Sets a matching fade-out and fade-in on two overlapping visual items of differen
 - `err_invalid_state_to_ends_inside_the_fade`
 - `err_invalid_state_to_ends_before_from_starts`
 - `err_invalid_state_existing_transition_leaves_no_room`
+- `ok_neighbours_use_the_source_before_the_cut`
+- `ok_neighbours_image_clip_has_no_source_to_check`
+- `ok_neighbours_text_items`
+- `ok_neighbours_whole_source_handle_used`
+- `err_invalid_state_neighbours_do_not_touch`
+- `err_invalid_state_neighbours_start_before_frame_0`
+- `err_out_of_source_neighbour_has_no_handle`
+- `err_overlap_target_track_is_taken`
+- `err_type_mismatch_target_is_an_audio_track`
+- `err_type_mismatch_target_is_the_same_track`
+- `err_not_found_target_track`
+- `err_validation_track_id_with_items_on_two_tracks`
 
 ### C.21 `timeline.close_gap` (phase A)
 
