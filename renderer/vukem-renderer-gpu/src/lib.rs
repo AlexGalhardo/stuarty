@@ -13,6 +13,7 @@
 
 mod block;
 mod gpu;
+pub mod proto;
 mod quad;
 
 pub use gpu::{Adapter, GpuError, GpuRenderer};

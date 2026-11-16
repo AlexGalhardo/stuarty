@@ -6,6 +6,10 @@ edition.workspace = true
 license.workspace = true
 publish.workspace = true
 
+[[bin]]
+name = "vukem-render"
+path = "src/bin/vukem-render.rs"
+
 [dependencies]
 vukem-renderer = { version = "=0.0.0", path = "../vukem-renderer" }
 wgpu = { version = "=30.0.2", default-features = false, features = ["std", "parking_lot", "dx12", "metal", "vulkan", "wgsl"] }
