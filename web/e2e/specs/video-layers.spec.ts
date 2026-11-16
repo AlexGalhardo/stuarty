@@ -61,7 +61,8 @@ test.describe("video-layers-budget", () => {
 				perTrack: 1,
 				clipDuration: "10s",
 			});
-			await page.goto(`/editor/${seeded.id}`);
+			// The cap of MAX_VIDEO_LAYERS is that of pooled <video> elements.
+			await page.goto(`/editor/${seeded.id}?decoder=video`);
 			await expect(
 				page.getByRole("main", { name: "Preview" }).locator("canvas"),
 			).toBeVisible();
