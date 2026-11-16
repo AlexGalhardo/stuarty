@@ -108,7 +108,7 @@ func SnapPoints(doc *timeline.Document, words bool) Snap {
 // move earlier and its end later before the source range leaves the asset.
 func sourceLimit(doc *timeline.Document, it *timeline.Item, lim SnapLimit) SnapLimit {
 	total, ok := sourceFrames(doc, it)
-	if !ok {
+	if !ok || it.Freeze {
 		return lim
 	}
 

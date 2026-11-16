@@ -540,6 +540,9 @@
           "paste_attributes": {
             "title": "Colar atributos"
           },
+          "freeze_frame": {
+            "title": "Congelar quadro"
+          },
           "set_transition": {
             "title": "Definir transição do item"
           },

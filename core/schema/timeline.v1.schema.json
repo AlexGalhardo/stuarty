@@ -413,6 +413,9 @@
         "flip_y": {
           "type": "boolean"
         },
+        "freeze": {
+          "type": "boolean"
+        },
         "height": {
           "exclusiveMinimum": 0,
           "type": "number"

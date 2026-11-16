@@ -2317,6 +2317,61 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "at": {
+          "description": "Absolute frame inside the clip whose picture is held.",
+          "type": "string",
+          "x-vv-kind": "time"
+        },
+        "duration": {
+          "description": "How long the frame is held; default 3s.",
+          "type": "string",
+          "x-vv-kind": "time"
+        },
+        "freeze_id": {
+          "description": "Id for the freeze frame item.",
+          "type": "string"
+        },
+        "item_id": {
+          "description": "A clip of a video asset.",
+          "type": "string"
+        },
+        "new_id": {
+          "description": "Id for the right part of the split.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "at"
+      ],
+      "type": "object"
+    },
+    "description": "Splits the clip at a timeline frame and puts between the two parts a new clip that shows the source frame at that point for duration (default 3s), with no sound. The right part and the later items of the track move later by duration; other tracks are untouched. The freeze frame has no keyframes. Not for linked items or items with a speed curve.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_ID_EXISTS",
+      "E_LIMIT"
+    ],
+    "example": {
+      "at": "97f",
+      "duration": "2s",
+      "item_id": "itm_m1n2p3q4r5"
+    },
+    "internal": false,
+    "name": "item.freeze_frame",
+    "phase": "beta",
+    "scope": "edit",
+    "summary": "Holds one frame of a clip: splits the clip at a frame and inserts a still of that frame."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "id": {
           "description": "The id of the link group, lnk_ and 10 characters; generated when omitted.",
           "type": "string"

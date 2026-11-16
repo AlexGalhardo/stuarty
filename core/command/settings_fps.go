@@ -304,7 +304,7 @@ func (c *Context) fixSourceRanges() {
 	for _, id := range c.sortedItems() {
 		it := c.Doc.Items[id]
 		a, ok := c.sourceAsset(&it)
-		if !ok {
+		if !ok || it.Freeze {
 			continue
 		}
 		total, ok := timeline.AssetDuration(a, c.Doc.Settings.FPS)

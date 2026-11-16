@@ -172,6 +172,7 @@
       "item.delete",
       "item.duplicate",
       "item.extract_audio",
+      "item.freeze_frame",
       "item.link",
       "item.move",
       "item.paste_attributes",

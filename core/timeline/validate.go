@@ -438,6 +438,10 @@ func (v *validator) itemFieldsForType(path, key string, it Item) {
 		(it.Crop != nil || it.Lut != nil || it.Brightness != 0 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0 || it.AudioMuted) {
 		bad("crop")
 	}
+	if it.Freeze &&
+		(it.Type != ItemClip || it.Speed != (Rational{Num: 1, Den: 1}) || len(it.SpeedCurve) > 0 || it.Reverse) {
+		bad("freeze")
+	}
 	if it.Type != ItemText && it.Text != "" {
 		bad("text")
 	}
@@ -565,10 +569,7 @@ func (v *validator) media(path, key string, it Item) {
 	}
 	if total, ok := assetFrames(a, v.doc.Settings.FPS); ok {
 		// source_in + ceil(duration * speed.num / speed.den) <= total
-		need := new(big.Int).Mul(big.NewInt(int64(it.Duration)), big.NewInt(int64(sp.Num)))
-		need.Add(need, big.NewInt(int64(sp.Den-1)))
-		need.Div(need, big.NewInt(int64(sp.Den)))
-		need.Add(need, big.NewInt(int64(it.SourceIn)))
+		need := sourceEnd(it)
 		if need.Cmp(total) > 0 {
 			v.add(
 				VSourceRange,
@@ -582,6 +583,19 @@ func (v *validator) media(path, key string, it Item) {
 			v.related(it.Asset)
 		}
 	}
+}
+
+// sourceEnd is the first source frame after the range an item reads: source_in + ceil(duration * speed.num /
+// speed.den), or source_in + 1 for a freeze frame.
+func sourceEnd(it Item) *big.Int {
+	sp := it.Speed
+	need := new(big.Int).Mul(big.NewInt(int64(it.Duration)), big.NewInt(int64(sp.Num)))
+	need.Add(need, big.NewInt(int64(sp.Den-1)))
+	need.Div(need, big.NewInt(int64(sp.Den)))
+	if it.Freeze {
+		need.SetInt64(1)
+	}
+	return need.Add(need, big.NewInt(int64(it.SourceIn)))
 }
 
 // AssetDuration is the length of an asset in project frames (SDD-001 §3.2); ok is

@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.freeze_id and args.new_id are the same id.",
+  "hint": "Use two different ids or omit them.",
+  "retryable": false,
+  "path": "args.new_id"
+}

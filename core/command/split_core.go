@@ -13,6 +13,8 @@ func splitCore(x *timeline.Item, newID string, tc int, reads bool) (left, right 
 	left.Duration = tc
 	right.ID, right.Start, right.Duration = newID, x.Start+tc, x.Duration-tc
 	switch {
+	case x.Freeze:
+		// Both parts hold the same frame.
 	case reads && x.Reverse:
 		// The left part plays the end of the source range, the right part the start (SDD-004 section 3.12).
 		left.SourceIn = x.SourceIn + x.SourceSpan() - ceilDiv(tc*x.Speed.Num, x.Speed.Den)

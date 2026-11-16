@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67; `clip.set_effects` (C.68, TASK-0278) makes 68; `item.paste_attributes` (C.69, TASK-0254) makes 69. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 69 commands, 68 public, of which 16 are Prototype, 32 ALPHA and 21 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67; `clip.set_effects` (C.68, TASK-0278) makes 68; `item.paste_attributes` (C.69, TASK-0254) makes 69; `item.freeze_frame` (C.70, TASK-0254) makes 70. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 70 commands, 69 public, of which 16 are Prototype, 32 ALPHA and 22 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -278,6 +278,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `item.set_enabled` | B | `item_id`, `enabled` (boolean) | Turns any item off or on without removing it: a disabled item stays on the timeline and is ignored by preview, export and audio. See C.64 |
 | `clip.set_effects` | B | `item_id`, `effects` (up to 6 `{kind, ...}`) | Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake, each with its parameters. See C.68 |
 | `item.paste_attributes` | B | `from_item_id`, `item_ids`, `attributes` | Copies attribute groups (color, filter, blur, framing, transform, blend, mask, flip, chroma_key, effects, audio) from one item to 1 to 20 others. See C.69 |
+| `item.freeze_frame` | B | `item_id`, `at`, `duration?`, `freeze_id?`, `new_id?` | Splits a clip at a frame and inserts between the parts a still of the source frame shown there, held for `duration` (default 3s); the later items of the track move later. See C.70 |
 | `item.link` | B | `item_ids` (2 to 20), `id?` | Puts items in one link group: `item.move`, `item.trim` and `item.split` on one of them apply to all of them. See C.65 |
 | `item.unlink` | B | `item_ids` | Takes items out of their link group; a group left with one item is dissolved. See C.66 |
 | `item.extract_audio` | B | `item_id`, `track_id`, `id?` | Creates a linked audio item from the audio of a video clip and mutes the clip. See C.67 |
@@ -1346,6 +1347,8 @@ The same clip trimmed at the end with `{"edge": "end", "to": "150f"}` (and, for 
 - `err_invalid_state_linked_peer_would_have_no_frame`
 - `err_invalid_state_linked_peer_on_a_locked_track`
 - `ok_magnet_follows_a_trim_of_the_end`
+- `ok_freeze_frame_start_keeps_the_held_frame`
+- `ok_freeze_frame_end_grows_past_the_clip_length`
 
 ### C.13 `item.split` (phase P)
 
@@ -1464,6 +1467,7 @@ The cut value is the linear value at relative frame 37: `1 + (0.4 - 1) × 37/60 
 - `ok_linked_split_where_no_peer_spans_leaves_the_right_part_unlinked`
 - `err_invalid_state_linked_peer_speed_curve`
 - `err_invalid_state_linked_peer_on_a_locked_track`
+- `ok_freeze_frame_parts_hold_the_same_frame`
 
 ### C.14 `item.delete` (phase P)
 
@@ -2322,7 +2326,7 @@ Changes the speed of a clip or audio item, constant or along a curve (TASK-0275)
 
 1. Arguments match the schema; at least one of `speed`, `curve` and `reverse` is given and not both `speed` and `curve`; `speed` parses and is within 1/4 to 4; `curve` has 2 to 8 points that meet the rules above (`E_VALIDATION`).
 2. The item exists (`E_NOT_FOUND`).
-3. The item is a `clip` whose asset is a video, or an `audio` item (`E_TYPE_MISMATCH`).
+3. The item is a `clip` whose asset is a video, or an `audio` item, and is not a freeze frame (`E_TYPE_MISMATCH`; a freeze frame has no speed, TASK-0254).
 4. At least one frame fits in the source range at the new speed: `maxdur(source_in)` at the new speed is at least 1 (`E_OUT_OF_SOURCE`). A new duration that fails R9 only because of rounding is not an error: it is reduced (postcondition 1).
 5. Every item ends at or before 108,000 after the change (`E_INVALID_TIME`).
 6. Without ripple, a longer item does not overlap its neighbour (`E_OVERLAP`, R8).
@@ -2336,7 +2340,7 @@ Changes the speed of a clip or audio item, constant or along a curve (TASK-0275)
 5. Captions whose `linked_item` is this item are not changed; `effective.linked_captions` lists their ids so the caller can run `caption.retime_from_clip`.
 6. `diff`: `item.updated` for the clip, then for every shifted item, sorted by id. `effective` has `speed` (`{num, den}`), `curve_points` (only when a curve was set), `duration` (`{"before", "after"}`), `shift` and the lists above.
 7. **What a curve forbids.** An item with a `speed_curve` has no constant speed, so a command that turns a frame of the timeline into a frame of the source inside it returns `E_INVALID_STATE` with the hint to remove the curve first: `item.split`, `item.trim` of the start edge (and the neighbour slide of `item.move` that does it), `clip.remove_silences`, `caption.from_transcript`, `caption.retime_from_clip`, `audio.mark_beats` and `audio.duck` with the item among the speech items. A reversed item (postcondition 8) also gets `E_INVALID_STATE` from the last five of these, which read the source forwards; it can be split and trimmed. `item.trim` of the end edge and every other command keep the curve: its points are fractions of the duration, so the curve is stretched over the new duration and the item reads `d x M` frames of the new duration. Commands that only need the source range (R9, `slot.fill`, the fit fix) use `M`, which is exact for the whole range.
-8. **Reverse.** A reversed item reads the same source range `[source_in, source_in + C)`, `C = ceil(d x M)`, backwards (SDD-004 section 3.12). So `item.trim` of the start edge keeps `source_in` (the range loses or gains frames at its end, and a start that would read past the asset is `E_OUT_OF_SOURCE`), `item.trim` of the end edge sets `source_in' = source_in + C - C'` with `C'` the range of the new duration (below 0 is `E_OUT_OF_SOURCE`), and `item.split` at `tc` gives the left part `source_in + C - ceil(tc x M)` and the right part the original `source_in`. A freeze frame is not a command: the UI splits the clip and sets a speed on the piece.
+8. **Reverse.** A reversed item reads the same source range `[source_in, source_in + C)`, `C = ceil(d x M)`, backwards (SDD-004 section 3.12). So `item.trim` of the start edge keeps `source_in` (the range loses or gains frames at its end, and a start that would read past the asset is `E_OUT_OF_SOURCE`), `item.trim` of the end edge sets `source_in' = source_in + C - C'` with `C'` the range of the new duration (below 0 is `E_OUT_OF_SOURCE`), and `item.split` at `tc` gives the left part `source_in + C - ceil(tc x M)` and the right part the original `source_in`. A freeze frame is `item.freeze_frame` (C.70).
 
 **Errors.**
 
@@ -2440,6 +2444,7 @@ Changes the speed of a clip or audio item, constant or along a curve (TASK-0275)
 - `err_validation_reverse_not_boolean`
 - `err_type_mismatch_reverse_on_image_clip`
 - `err_out_of_source_reverse_speed_no_frame_fits`
+- `err_type_mismatch_freeze_frame`
 
 ### C.26 `clip.set_color` (phase A)
 
@@ -5628,3 +5633,81 @@ Keyframes, fades, speed, transitions and the position, size and source of the it
 - `err_type_mismatch_no_target_has_the_group`
 - `err_invalid_state_target_transform_has_keyframes`
 - `err_invalid_state_target_volume_has_keyframes`
+
+### C.70 `item.freeze_frame` (phase B)
+
+Holds one frame of a clip (TASK-0254): the "freeze frame" of an editor. The clip is split at the frame and a still of the source frame shown there is put between the two parts, for as long as asked, in one operation and one undo step.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` of a video asset, not linked, with no speed curve, not a freeze frame itself |
+| `at` | time | yes | none | absolute frame strictly inside the clip (`start < at < end`), like `item.split`; the picture held is the one shown at `at` |
+| `duration` | time | no | `3s` | at least 1 frame |
+| `freeze_id` | item id | no | generated | id of the freeze frame |
+| `new_id` | item id | no | generated | id of the right part of the split |
+
+**Preconditions.**
+
+1. `item_id`, `freeze_id` and `new_id` have the item form and `freeze_id` is not `new_id` (`E_VALIDATION`).
+2. `at` and `duration` are times and `duration` is at least 1 frame; `at` is strictly inside the clip (`E_INVALID_TIME`); the last item of the track, moved by `duration`, still ends by frame 108,000 (`E_INVALID_TIME`).
+3. The item exists (`E_NOT_FOUND`).
+4. The item is a `clip` of a video asset (`E_TYPE_MISMATCH`; an image is already a still).
+5. The item is not already a freeze frame, has no `link` and has no speed curve (`E_INVALID_STATE`; the commands that split an item refuse a curve, and a linked sound would go out of step).
+6. The ids are not used (`E_ID_EXISTS`) and the document has room for two more items (`E_LIMIT`).
+
+**Postconditions.**
+
+1. The left part keeps the id and the front of the clip (R17, as `item.split`); the right part is `new_id`, from `at + duration`. The source frame held is `source_in + SourceOffset(at - start)` (`effective.source_frame`), which is the first frame of the right part, so a reversed or sped-up clip holds the frame that is on screen.
+2. The freeze frame, `freeze_id`, is a copy of the clip with `freeze` true, from `at`, for `duration`, `source_in` the frame above, speed 1, no curve or reverse, `audio_muted` true, no fades, transitions, keyframes, markers or slot. Its transform, colour, filter, mask and effects are the static values of the clip.
+3. Every other item of the clip's track that started at or after the end of the clip moves later by `duration`; items of other tracks do not move. A track with `magnet` is then packed as after any command.
+4. `diff` has the `item.updated` of the left part and of the moved items, and two `item.added`. `effective` has `at`, `duration`, `freeze_id`, `new_id`, `source_frame`, and `left`, `freeze` and `right` as `{id, start, duration}`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | a bad id, or `freeze_id` equal to `new_id` | `args.freeze_id and args.new_id are the same id.` | `Use two different ids or omit them.` |
+| `E_INVALID_TIME` | `at` is a bad time or not inside the clip, `duration` is 0, or the track would pass the end | `args.at "0f" is not inside item itm_m1n2p3q4r5 (frames 0-89); it must be between 1 and 89 inclusive.` | `Use at "1f" or later, up to "89f".` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip of a video asset | `Item itm_e5f6g7h8j9 is an audio item; a freeze frame needs a clip of a video asset.` | `Use a clip of a video asset.` |
+| `E_INVALID_STATE` | a freeze frame, a linked item or an item with a speed curve | `Item itm_m1n2p3q4r5 is linked to other items, which a freeze frame would put out of step.` | `Unlink it with item.unlink first.` |
+| `E_ID_EXISTS` | an id is used | `Item id itm_c3d4e5f6g7 already exists.` | `Omit id or use an unused id.` |
+| `E_LIMIT` | fewer than two free item places | `The document has 499 items; a freeze frame adds two and the limit is 500.` | `Delete unused items first.` |
+
+**Inverse.** `patch` of the changed items with their old values, `delete` of the two new items.
+
+**Idempotency.** Not idempotent: a second call splits again.
+
+**Example.** Hold the frame at 30 for 2 seconds.
+
+```json
+{"op": "item.freeze_frame", "args": {"item_id": "itm_m1n2p3q4r5", "at": "30f", "duration": "2s", "freeze_id": "itm_f1g2h3j4k5", "new_id": "itm_m2n3p4q5r6"}}
+```
+
+**Golden cases.**
+
+- `ok_holds_the_frame_for_the_given_duration`
+- `ok_default_duration_is_3_seconds`
+- `ok_later_items_of_the_track_move_other_tracks_do_not`
+- `ok_reversed_clip_holds_the_frame_that_is_on_screen`
+- `ok_sped_up_clip_holds_the_frame_that_is_on_screen`
+- `ok_keyframes_and_fades_stay_with_the_parts`
+- `ok_last_frame_of_the_clip`
+- `ok_magnet_track_stays_packed`
+- `err_validation_bad_freeze_id`
+- `err_validation_same_ids`
+- `err_invalid_time_zero_duration`
+- `err_invalid_time_at_the_start_of_the_clip`
+- `err_invalid_time_at_the_end_of_the_clip`
+- `err_invalid_time_malformed`
+- `err_invalid_time_track_would_pass_108000`
+- `err_not_found`
+- `err_type_mismatch_audio_item`
+- `err_type_mismatch_image_clip`
+- `err_invalid_state_linked_item`
+- `err_invalid_state_already_a_freeze_frame`
+- `err_invalid_state_speed_curve`
+- `err_id_exists`
+- `err_limit_500_items`

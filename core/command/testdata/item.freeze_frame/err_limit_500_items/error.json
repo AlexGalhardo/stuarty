@@ -1,0 +1,6 @@
+{
+  "code": "E_LIMIT",
+  "message": "The document has 500 items; a freeze frame adds two and the limit is 500.",
+  "hint": "Delete unused items first.",
+  "retryable": false
+}
