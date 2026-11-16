@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"go/parser"
 	"go/token"
 	"os"
@@ -58,6 +59,7 @@ func newDoc(fps timeline.Rational) *timeline.Document {
 
 func sampleDoc() *timeline.Document {
 	d := newDoc(timeline.Rational{Num: 30, Den: 1})
+	d.Markers = []timeline.Marker{{Frame: 0}, {Frame: 45, Label: "chorus"}}
 	d.Tracks[trkTop] = timeline.Track{ID: trkTop, Kind: timeline.TrackVisual, Name: "Top", Order: "a0"}
 	d.Tracks[trkVid] = timeline.Track{ID: trkVid, Kind: timeline.TrackVisual, Name: "Video", Order: "a1"}
 	d.Tracks[trkAud] = timeline.Track{ID: trkAud, Kind: timeline.TrackAudio, Name: "Music", Order: "a2"}
@@ -144,7 +146,8 @@ func build(t *testing.T, im *Import, d *timeline.Document) *timeline.Document {
 }
 
 func TestRoundTrip(t *testing.T) {
-	first, lost, err := Export(sampleDoc())
+	d := sampleDoc()
+	first, lost, err := Export(d)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +161,7 @@ func TestRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Markers have no command yet: they are reported, not silently dropped.
+	// Item markers (audio.mark_beats) have no command to restore them: reported, not dropped.
 	if len(im.Lost) != 1 || !strings.Contains(im.Lost[0].Feature, "markers") {
 		t.Errorf("import lost = %+v, want the markers", im.Lost)
 	}
@@ -177,7 +180,11 @@ func TestRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The marker and the text item are the declared losses; compare without them.
+	if !reflect.DeepEqual(doc.Markers, d.Markers) {
+		t.Errorf("document markers did not come back: %+v, want %+v", doc.Markers, d.Markers)
+	}
+
+	// The item marker and the text item are the declared losses; compare without markers.
 	want := withoutMarkers(t, first)
 	if !bytes.Equal(withoutMarkers(t, second), want) {
 		t.Errorf("round trip differs:\n%s\n---\n%s", second, first)
@@ -879,5 +886,50 @@ func TestExportDoesNotListBlendAsLost(t *testing.T) {
 		if l.Feature == "blend mode" {
 			t.Errorf("blend is carried by the metadata, got a loss: %+v", l)
 		}
+	}
+}
+
+func TestImportReadsNativeStackMarkersAndReportsBadOnes(t *testing.T) {
+	rt := func(v int) string {
+		return fmt.Sprintf(`{"OTIO_SCHEMA":"RationalTime.1","value":%d,"rate":30}`, v)
+	}
+	mk := func(name string, v int) string {
+		return `{"OTIO_SCHEMA":"Marker.2","name":"` + name +
+			`","marked_range":{"OTIO_SCHEMA":"TimeRange.1","start_time":` + rt(v) + `,"duration":` + rt(0) + `}}`
+	}
+	file := `{"OTIO_SCHEMA":"Timeline.1","name":"x","tracks":{"OTIO_SCHEMA":"Stack.1","children":[],
+	"markers":[` + mk("a", 5) + `,` + mk("dup", 5) + `,` + mk("neg", -3) + `,` + mk(strings.Repeat("x", 61), 9) + `]}}`
+
+	im, err := Parse([]byte(file))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(im.Lost) != 3 {
+		t.Errorf("lost = %+v, want the duplicate, the negative and the long label", im.Lost)
+	}
+
+	doc := build(t, im, newDoc(im.FPS))
+	if want := []timeline.Marker{{Frame: 5, Label: "a"}}; !reflect.DeepEqual(doc.Markers, want) {
+		t.Errorf("markers = %+v, want %+v", doc.Markers, want)
+	}
+}
+
+func TestImportReportsBadVukemTimelineMarkers(t *testing.T) {
+	file := `{"OTIO_SCHEMA":"Timeline.1","name":"x","metadata":{"vukem":{"markers":[
+	{"frame":4,"label":"ok"},{"frame":"x"},{"frame":1.5},{"frame":6,"label":7},{"frame":4}]}},
+	"tracks":{"OTIO_SCHEMA":"Stack.1","children":[]}}`
+
+	im, err := Parse([]byte(file))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(im.Lost) != 4 {
+		t.Errorf("lost = %+v, want 4", im.Lost)
+	}
+
+	if want := []timeline.Marker{{Frame: 4, Label: "ok"}}; !reflect.DeepEqual(im.markers, want) {
+		t.Errorf("markers = %+v, want %+v", im.markers, want)
 	}
 }
