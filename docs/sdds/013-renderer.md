@@ -69,7 +69,8 @@ Every number is a JSON number read as an IEEE 754 double (`f64`, correctly round
 | `asset`, `asset_kind` | string | media layers: the asset and `"video"` or `"image"`; informational for the renderer |
 | `source_frame` | integer | media layers: the frame of the normalized media; informational, the host has already fetched it |
 | `crop` | `{x, y, w, h}` | media layers: the source rectangle in source pixels, already cut by the item's crop fractions; absent for a bitmap |
-| `bitmap` | `BitmapSpec` | bitmap layers: what to draw; its `key` is `BitmapSpec.Key()` (§2.5) |
+| `bitmap` | `BitmapSpec` | bitmap layers: what to draw; the renderer checks only its `kind` (`text`, `caption` or `shape`, else `unsupported_layer`) and leaves the rest of the object alone until stage E (§2.5) |
+| `bitmap_key` | string | bitmap layers, added by the host to the plan's layer: `BitmapSpec.Key()` (§2.5), 1 to 64 ASCII bytes, the key under which the host stored the bitmap. The renderer does not hash the spec: it cannot reproduce Go's canonical JSON, and the host already has the key. A bitmap layer without it, or a media layer with it, is `invalid_plan` |
 | `color_matrix` | 12 numbers or `null` | the 3x4 colour matrix of SDD-004 §3.5, row-major, offset in the fourth column |
 | `filter` | 12 numbers or `null` | the filter matrix of SDD-004 §3.6, same form |
 | `blur` | number | the standard deviation of the Gaussian of SDD-004 §3.6 in project pixels; 0 or absent for none |
@@ -203,6 +204,7 @@ These rules make §3.1 to §3.7 give the same bytes on Linux, macOS, Windows and
 - Stage C gate: every golden case of SDD-004 §11 (the `requiredCases`, `sticker-png`, `sticker-anim`, `filter-*` and `blur-*`) composed by the Rust CPU path through `wazero` equals the stored frame byte for byte, at 1 and at 8 bands.
 - `div255` equals `x / 255` rounded to nearest for every `x` from 0 to 65535, in Rust and in Go; `sincos` equals the Go `sincos` bit for bit over 10,000 angles in `[-1000, 1000]` and at every multiple of 15 degrees.
 - The same Rust test suite runs natively on the three operating systems and in WebAssembly under `wazero`, and prints the same SHA-256 of the golden frames.
+- Harness (P5-RND-003): `TestRustCPUPathEqualsGoCompositor` (`engine/export/parity_rust_test.go`) records, for every frame of the 33 golden cases and of 3 reference scenes, the plan and the pixels the Go compositor was given, builds the render input of §2.1, renders it with the native process `vr-parity` of `renderer/` (`cargo build --release --bin vr-parity`, or `VUKEM_VIDEO_TEST_VR_PARITY`), once whole and once in eight bands (`output.y0`, `output.y1`), and requires the same bytes. The WebAssembly run under `wazero` joins it with the host of §4.6.
 - Vectors (P5-RND-003): `renderer/testdata/compose-vectors.bin` holds 22 small compositions (copy, clip, opacity, scale, rotation, colour matrix, filter, blur at three radii, bitmaps with metrics, the shrink of a large bitmap, a stack) with the frame `engine/compositor` draws for each; `cargo test` draws them again at 1 and 8 bands and requires the same bytes, and `TestRendererVectorsAreCurrent` keeps the file equal to the Go output. The FNV-1a hash of `sincos` over its 10,001 + 97 angles is stored in the same file.
 - Stage D gate: §3.8 on every golden case.
 
