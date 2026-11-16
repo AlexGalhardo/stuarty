@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -12,25 +13,28 @@ import (
 	"github.com/AlexGalhardo/vukem-video/desktop/update"
 )
 
-// updater joins the update client (desktop/update) to the native menu (SDD-009 section 10.5). The client
-// exists only when the build carries a feed URL and a signing key; without them every menu action shows
-// the not-configured message instead of failing.
+// updater joins the launcher (desktop/shell) to the native dialogs and menu (SDD-009 section 10.5). The
+// update client exists only when the build carries a feed URL and a signing key; without them the
+// launcher never asks and every menu action shows the not-configured message instead of failing.
 type updater struct {
 	app          *application.App
-	client       *update.Client
-	buildErr     error
-	settings     shell.Settings
+	launcher     *shell.Launcher
+	ui           *nativeUI
 	settingsPath string
+	ctx          context.Context
 }
 
-// newUpdater reads the settings and builds the client. A damaged settings file leaves the check off.
+// newUpdater reads the settings and builds the client. A damaged settings file means "not asked yet",
+// which opens no connection.
 func newUpdater(app *application.App) *updater {
-	u := &updater{app: app}
+	u := &updater{app: app, ui: &nativeUI{app: app}, ctx: context.Background()}
+
+	var settings shell.Settings
 
 	path, err := shell.SettingsPath()
 	if err == nil {
 		u.settingsPath = path
-		u.settings, _ = shell.LoadSettings(path)
+		settings, _ = shell.LoadSettings(path)
 	}
 
 	staging, err := os.UserCacheDir()
@@ -38,96 +42,134 @@ func newUpdater(app *application.App) *updater {
 		staging = os.TempDir()
 	}
 
-	cfg, err := update.FromBuild(version, filepath.Join(staging, "vukem-video", "updates"),
-		u.settings.UpdateCheck, shell.InstallerFor(runtime.GOOS, app.Quit))
-	if err == nil {
-		u.client, err = update.New(cfg)
+	cfg, buildErr := update.FromBuild(version, filepath.Join(staging, "vukem-video", "updates"),
+		settings.AutoCheck(), shell.InstallerFor(runtime.GOOS, app.Quit))
+
+	lc := shell.LauncherConfig{Settings: settings, UI: u.ui, Current: version}
+
+	if buildErr == nil {
+		cfg.Progress = func(done, total int64) { u.ui.SetProgress(done, total) }
+
+		var client *update.Client
+
+		if client, buildErr = update.New(cfg); buildErr == nil {
+			lc.Client = client
+		}
 	}
 
-	u.buildErr = err
+	lc.BuildErr = buildErr
+
+	if u.settingsPath != "" {
+		lc.Save = func(s shell.Settings) error { return s.Save(u.settingsPath) }
+	}
+
+	u.launcher = shell.NewLauncher(lc)
 
 	return u
 }
 
-// checker is nil, not a typed nil, when the build has no client.
-func (u *updater) checker() shell.UpdateChecker {
-	if u.client == nil {
-		return nil
-	}
-
-	return u.client
-}
+// start is called once the event loop runs: it asks the first-start question or starts the schedule.
+func (u *updater) start() { go u.launcher.Start(u.ctx) }
 
 // checkNow is the menu action: one check, then a dialog with the result.
-func (u *updater) checkNow() {
+func (u *updater) checkNow() { u.launcher.CheckNow(u.ctx) }
+
+// setAutoCheck stores the setting update.check from the menu; it takes effect at once.
+func (u *updater) setAutoCheck(on bool) {
 	go func() {
-		out := shell.CheckForUpdates(context.Background(), u.checker(), u.buildErr, version)
-		application.InvokeSync(func() { u.show(out) })
+		if err := u.launcher.SetAutoCheck(u.ctx, on); err != nil {
+			u.ui.Fail(tr(shell.TextCannotSave) + err.Error())
+		}
 	}()
 }
 
-// checkOnStartup makes the one check of the setting update.check. With the setting off, or without a
-// client, it opens no connection. A failure at start-up is silent: the person did not ask for it.
-func (u *updater) checkOnStartup() {
-	if u.client == nil || !u.settings.UpdateCheck {
+// nativeUI is the shell.LauncherUI on Wails dialogs. Dialogs are shown on the main thread.
+type nativeUI struct {
+	app      *application.App
+	progress *application.WebviewWindow
+}
+
+func (n *nativeUI) AskConsent(answer func(yes bool)) {
+	application.InvokeSync(func() {
+		d := n.app.Dialog.Question().SetTitle(tr(shell.TextConsentTitle)).SetMessage(tr(shell.TextConsentBody))
+		yes := d.AddButton(tr(shell.TextYes))
+		yes.OnClick(func() { answer(true) })
+		no := d.AddButton(tr(shell.TextNo))
+		no.OnClick(func() { answer(false) })
+		d.SetDefaultButton(yes)
+		d.Show()
+	})
+}
+
+func (n *nativeUI) OfferUpdate(offer *update.Offer, current string, decide func(install bool)) {
+	application.InvokeSync(func() {
+		d := n.app.Dialog.Question().SetTitle(tr(shell.TextCheckUpdates)).
+			SetMessage(shell.OfferMessage(offer, current))
+		install := d.AddButton(tr(shell.TextInstall))
+		install.OnClick(func() { decide(true) })
+		later := d.AddButton(tr(shell.TextNotNow))
+		later.OnClick(func() { decide(false) })
+		d.SetDefaultButton(install)
+		d.SetCancelButton(later)
+		d.Show()
+	})
+}
+
+func (n *nativeUI) Inform(message string) {
+	application.InvokeSync(func() {
+		n.app.Dialog.Info().SetTitle(tr(shell.TextCheckUpdates)).SetMessage(message).Show()
+	})
+}
+
+func (n *nativeUI) Fail(message string) {
+	application.InvokeSync(func() {
+		n.app.Dialog.Error().SetTitle(tr(shell.TextCheckUpdates)).SetMessage(message).Show()
+	})
+}
+
+// progressPage is the whole page of the progress window; the version is MAJOR.MINOR.PATCH, so it needs
+// no escaping.
+const progressPage = `<!doctype html><meta charset="utf-8"><body style="margin:0;padding:24px;` +
+	`font:14px system-ui,sans-serif;background:#0b0b0b;color:#eee"><div>%s</div>` +
+	`<progress id="p" max="100" value="0" style="width:100%%;margin-top:16px"></progress>` +
+	`<div id="n" style="margin-top:8px">0%%</div>`
+
+func (n *nativeUI) ShowProgress(version string) {
+	application.InvokeSync(func() {
+		n.progress = n.app.Window.NewWithOptions(application.WebviewWindowOptions{
+			Title:            tr(shell.TextDownloading) + version,
+			Width:            420,
+			Height:           150,
+			DisableResize:    true,
+			BackgroundColour: application.NewRGB(0x0b, 0x0b, 0x0b),
+			HTML:             fmt.Sprintf(progressPage, tr(shell.TextDownloading)+version),
+		})
+		n.progress.Center()
+	})
+}
+
+func (n *nativeUI) SetProgress(done, total int64) {
+	if total <= 0 {
 		return
 	}
 
-	go func() {
-		offer, err := u.client.CheckOnStartup(context.Background())
-		if err != nil {
+	percent := done * 100 / total
+
+	application.InvokeAsync(func() {
+		if n.progress == nil {
 			return
 		}
 
-		out := shell.CheckForUpdates(context.Background(), offerOnly{offer}, nil, version)
-		application.InvokeSync(func() { u.show(out) })
-	}()
+		n.progress.ExecJS(fmt.Sprintf(
+			"document.getElementById('p').value=%d;document.getElementById('n').textContent='%d%%'", percent, percent))
+	})
 }
 
-// offerOnly replays the offer that CheckOnStartup already verified, so the same dialog is built.
-type offerOnly struct{ offer *update.Offer }
-
-func (o offerOnly) CheckNow(context.Context) (*update.Offer, error) { return o.offer, nil }
-
-func (u *updater) show(out shell.UpdateOutcome) {
-	if out.Offer == nil {
-		u.app.Dialog.Info().SetTitle(tr(shell.TextCheckUpdates)).SetMessage(out.Message).Show()
-
-		return
-	}
-
-	d := u.app.Dialog.Question().SetTitle(tr(shell.TextCheckUpdates)).SetMessage(out.Message)
-	install := d.AddButton(tr(shell.TextInstall))
-	install.OnClick(func() { u.apply(out.Offer) })
-	later := d.AddButton(tr(shell.TextNotNow))
-	d.SetDefaultButton(install)
-	d.SetCancelButton(later)
-	d.Show()
-}
-
-// apply downloads, verifies and installs the offer. On success the installer quits the application.
-func (u *updater) apply(offer *update.Offer) {
-	go func() {
-		if err := u.client.Apply(context.Background(), offer); err != nil {
-			application.InvokeSync(func() {
-				u.app.Dialog.Error().SetTitle(tr(shell.TextCheckUpdates)).
-					SetMessage(shell.InstallFailedMessage(err)).Show()
-			})
+func (n *nativeUI) HideProgress() {
+	application.InvokeSync(func() {
+		if n.progress != nil {
+			n.progress.Close()
+			n.progress = nil
 		}
-	}()
-}
-
-// setCheckOnStartup stores the setting update.check; it takes effect at the next launch.
-func (u *updater) setCheckOnStartup(on bool) {
-	u.settings.UpdateCheck = on
-
-	if u.settingsPath == "" {
-		return
-	}
-
-	if err := u.settings.Save(u.settingsPath); err != nil {
-		application.InvokeSync(func() {
-			u.app.Dialog.Error().SetTitle("Vukem Video").SetMessage(tr(shell.TextCannotSave) + err.Error()).Show()
-		})
-	}
+	})
 }

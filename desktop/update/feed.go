@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // Domain separation labels of the two signed messages (SDD-009 section 10.5).
@@ -32,6 +33,7 @@ const (
 
 	// feedClockSkew is how far in the future published_at may be before the feed is refused.
 	feedClockSkew = 10 * time.Minute
+	maxNotesBytes = 4096
 )
 
 // Errors of the feed and of the artifact checks.
@@ -60,6 +62,7 @@ type payload struct {
 	PublishedAt string           `json:"published_at"`
 	Expires     string           `json:"expires"`
 	Platforms   map[string]entry `json:"platforms"`
+	Notes       string           `json:"notes"`
 }
 
 type entry struct {
@@ -120,7 +123,28 @@ func parseFeed(raw []byte, key ed25519.PublicKey, platform string, now time.Time
 		return nil, fmt.Errorf("%w: %s", ErrNoPlatform, platform)
 	}
 
-	return offerOf(p.Version, platform, e)
+	offer, err := offerOf(p.Version, platform, e)
+	if err != nil {
+		return nil, err
+	}
+
+	offer.Notes = cutNotes(p.Notes)
+
+	return offer, nil
+}
+
+// cutNotes keeps the optional release notes within maxNotesBytes, cut on a character boundary.
+func cutNotes(s string) string {
+	if len(s) <= maxNotesBytes {
+		return s
+	}
+
+	s = s[:maxNotesBytes]
+	for !utf8.ValidString(s) {
+		s = s[:len(s)-1]
+	}
+
+	return s
 }
 
 // checkFreshness enforces the signed published_at and expires. A feed without them is refused: the

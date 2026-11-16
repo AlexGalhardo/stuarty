@@ -33,8 +33,8 @@ func buildMenu(app *application.App, win *application.WebviewWindow, ws workspac
 
 	help := menu.AddSubmenu(tr(shell.TextHelp))
 	help.Add(tr(shell.TextCheckUpdates)).OnClick(func(*application.Context) { up.checkNow() })
-	help.AddCheckbox(tr(shell.TextCheckAtStart), up.settings.UpdateCheck).
-		OnClick(func(ctx *application.Context) { up.setCheckOnStartup(ctx.ClickedMenuItem().Checked()) })
+	help.AddCheckbox(tr(shell.TextCheckAtStart), up.launcher.AutoCheck()).
+		OnClick(func(ctx *application.Context) { up.setAutoCheck(ctx.ClickedMenuItem().Checked()) })
 	help.AddSeparator()
 	help.Add(tr(shell.TextAbout)).OnClick(func(*application.Context) {
 		app.Dialog.Info().SetTitle(tr(shell.TextAboutTitle)).SetMessage("Vukem Video " + version).Show()

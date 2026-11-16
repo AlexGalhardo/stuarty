@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/AlexGalhardo/vukem-video/desktop/update"
 )
@@ -17,8 +18,22 @@ const ReleasePageURL = "https://github.com/AlexGalhardo/vukem-video/releases"
 // Settings are the preferences of the desktop shell. They are not workspace data: the update client
 // never touches the workspace (SDD-009 section 10.5 item 7), so they live in the user config directory.
 type Settings struct {
-	// UpdateCheck is the setting update.check: check once at start-up. Off by default.
-	UpdateCheck bool `json:"update.check"`
+	// UpdateCheck is the setting update.check (SDD-009 section 10.5): nil means the person was not asked
+	// yet, true means check at every start and every 24 hours, false means only on request.
+	UpdateCheck *bool `json:"update.check,omitempty"`
+}
+
+// Asked reports whether the person already answered the first-start question.
+func (s Settings) Asked() bool { return s.UpdateCheck != nil }
+
+// AutoCheck reports whether the person agreed to the automatic checks. Not asked yet is false.
+func (s Settings) AutoCheck() bool { return s.UpdateCheck != nil && *s.UpdateCheck }
+
+// WithAutoCheck returns the settings with the answer recorded.
+func (s Settings) WithAutoCheck(on bool) Settings {
+	s.UpdateCheck = &on
+
+	return s
 }
 
 // SettingsPath is the settings file of the shell, in the user config directory.
@@ -31,9 +46,9 @@ func SettingsPath() (string, error) {
 	return filepath.Join(dir, "vukem-video", "desktop.json"), nil
 }
 
-// LoadSettings reads the settings file. A missing file gives the defaults, with the check off. A file
-// that cannot be read or parsed also gives the defaults, together with the error, so that a damaged
-// file never turns the network on.
+// LoadSettings reads the settings file. A missing file gives the defaults: not asked yet, so nothing
+// connects. A file that cannot be read or parsed also gives the defaults, together with the error, so
+// that a damaged file never turns the network on.
 func LoadSettings(path string) (Settings, error) {
 	data, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) {
@@ -105,19 +120,26 @@ func CheckForUpdates(ctx context.Context, client UpdateChecker, buildErr error, 
 	switch {
 	case err == nil:
 		return UpdateOutcome{
-			Title: updateTitle,
-			Message: fmt.Sprintf(
-				"Version %s is available (this is %s). Download and install it?",
-				offer.Version,
-				current,
-			),
-			Offer: offer,
+			Title:   updateTitle,
+			Message: OfferMessage(offer, current),
+			Offer:   offer,
 		}
 	case errors.Is(err, update.ErrNotNewer):
 		return UpdateOutcome{Title: updateTitle, Message: fmt.Sprintf("Vukem Video %s is up to date.", current)}
 	default:
 		return failedOutcome(err)
 	}
+}
+
+// OfferMessage is the text of the dialog that offers a verified newer version, with its release notes
+// when the feed carries them.
+func OfferMessage(offer *update.Offer, current string) string {
+	msg := fmt.Sprintf("Version %s is available (this is %s). Download and install it?", offer.Version, current)
+	if notes := strings.TrimSpace(offer.Notes); notes != "" {
+		msg += "\n\n" + notes
+	}
+
+	return msg
 }
 
 func failedOutcome(err error) UpdateOutcome {

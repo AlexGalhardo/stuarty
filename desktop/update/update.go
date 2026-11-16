@@ -65,9 +65,11 @@ type Installer interface {
 type Offer struct {
 	Version  string
 	Platform string
-	URL      string
-	SHA256   string
-	Size     int64
+	// Notes is the optional plain text summary of the release, from the signed feed.
+	Notes  string
+	URL    string
+	SHA256 string
+	Size   int64
 
 	signature []byte
 }
@@ -84,6 +86,9 @@ type Config struct {
 	// AutoCheck is the setting update.check, off by default.
 	AutoCheck bool
 	Installer Installer
+	// Progress, when set, is called with the bytes written and the declared size while the artifact
+	// downloads; the client calls it from the downloading goroutine.
+	Progress func(done, total int64)
 	// CheckTimeout bounds the feed request (default 30 s); DownloadTimeout the artifact (default 30 min).
 	CheckTimeout    time.Duration
 	DownloadTimeout time.Duration
@@ -283,7 +288,13 @@ func (c *Client) fetchTo(ctx context.Context, root *os.Root, name string, offer 
 	}
 
 	h := sha256.New()
-	n, copyErr := io.Copy(io.MultiWriter(f, h), io.LimitReader(res.Body, offer.Size+1))
+	w := io.MultiWriter(f, h)
+
+	if c.cfg.Progress != nil {
+		w = io.MultiWriter(f, h, &progressWriter{total: offer.Size, report: c.cfg.Progress})
+	}
+
+	n, copyErr := io.Copy(w, io.LimitReader(res.Body, offer.Size+1))
 
 	if err := f.Close(); err != nil && copyErr == nil {
 		copyErr = err
@@ -302,6 +313,24 @@ func (c *Client) fetchTo(ctx context.Context, root *os.Root, name string, offer 
 	}
 
 	return nil
+}
+
+// progressWriter reports how much of the artifact has been written, at most once per percent.
+type progressWriter struct {
+	total, done int64
+	lastPercent int64
+	report      func(done, total int64)
+}
+
+func (p *progressWriter) Write(b []byte) (int, error) {
+	p.done += int64(len(b))
+
+	if percent := p.done * 100 / p.total; percent != p.lastPercent {
+		p.lastPercent = percent
+		p.report(min(p.done, p.total), p.total)
+	}
+
+	return len(b), nil
 }
 
 // verifyArtifact checks the signature over the digest the download matched.

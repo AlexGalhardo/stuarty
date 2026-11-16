@@ -16,30 +16,43 @@ func TestSettingsDefaultToOff(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "sub", "desktop.json")
 
 	s, err := LoadSettings(path)
-	if err != nil || s.UpdateCheck {
+	if err != nil || s.Asked() || s.AutoCheck() {
 		t.Fatalf("missing file: %+v, %v", s, err)
 	}
 
-	if (Settings{}).UpdateCheck {
-		t.Error("the zero value of the setting must be off")
+	if (Settings{}).Asked() || (Settings{}).AutoCheck() {
+		t.Error("the zero value of the setting must be not asked and off")
 	}
 }
 
 func TestSettingsRoundTrip(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "sub", "desktop.json")
 
-	if err := (Settings{UpdateCheck: true}).Save(path); err != nil {
+	if err := (Settings{}).WithAutoCheck(true).Save(path); err != nil {
 		t.Fatal(err)
 	}
 
 	s, err := LoadSettings(path)
-	if err != nil || !s.UpdateCheck {
+	if err != nil || !s.Asked() || !s.AutoCheck() {
 		t.Fatalf("after save: %+v, %v", s, err)
 	}
 
 	raw, _ := os.ReadFile(path)
 	if !strings.Contains(string(raw), `"update.check":true`) {
 		t.Errorf("file %q lacks the setting key update.check", raw)
+	}
+}
+
+func TestAnsweredNoIsAskedButOff(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "desktop.json")
+
+	if err := (Settings{}).WithAutoCheck(false).Save(path); err != nil {
+		t.Fatal(err)
+	}
+
+	s, err := LoadSettings(path)
+	if err != nil || !s.Asked() || s.AutoCheck() {
+		t.Fatalf("after No: %+v, %v", s, err)
 	}
 }
 
@@ -50,7 +63,7 @@ func TestDamagedSettingsStayOff(t *testing.T) {
 	}
 
 	s, err := LoadSettings(path)
-	if err == nil || s.UpdateCheck {
+	if err == nil || s.AutoCheck() || s.Asked() {
 		t.Errorf("damaged file: %+v, %v", s, err)
 	}
 }
@@ -93,6 +106,12 @@ func TestCheckForUpdatesOutcomes(t *testing.T) {
 		offer bool
 	}{
 		{"new version", &fakeChecker{offer: offer}, "Version 0.16.0 is available", true},
+		{
+			"with notes",
+			&fakeChecker{offer: &update.Offer{Version: "0.16.0", Notes: "Faster export"}},
+			"install it?\n\nFaster export",
+			true,
+		},
 		{"up to date", &fakeChecker{err: fmt.Errorf("%w: offered 0.15.0", update.ErrNotNewer)}, "is up to date", false},
 		{
 			"failure",
