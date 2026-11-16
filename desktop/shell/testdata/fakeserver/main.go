@@ -67,6 +67,11 @@ func main() {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
+		// The shell must prove the secret it put in this process environment (SDD-007 section 5.3).
+		if want := os.Getenv("VUKEM_VIDEO_LAUNCHER_SECRET"); want == "" || r.Header.Get("Vukem-Video-Launcher") != want {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
 		_ = json.NewEncoder(w).Encode(map[string]string{"url": "http://" + ln.Addr().String() + "/auth/launch?code=abc"})
 	})
 	srv := &http.Server{Handler: mux, ReadHeaderTimeout: time.Second}

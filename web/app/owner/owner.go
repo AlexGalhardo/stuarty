@@ -307,10 +307,17 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 
 	late.JobRunner = o.Runner
 
+	// Read once and removed from the environment, so ffmpeg and the helper never inherit it. It stays
+	// in memory and on no disk or log (SDD-007 section 5.3).
+	launcherSecret := cfg.Getenv(auth.EnvLauncherSecret)
+	if launcherSecret != "" {
+		_ = os.Unsetenv(auth.EnvLauncherSecret)
+	}
+
 	o.deps = &httpapi.Deps{
 		Service: o.Service, Registry: command.Default(), Workspace: o.Dir, Token: o.Token,
-		RuntimeSecret: o.runtimeSecret,
-		Sessions:      auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
+		RuntimeSecret: o.runtimeSecret, LauncherSecret: launcherSecret,
+		Sessions: auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
 		Events: o.Events, Version: o.version, Network: o.network, Auth: o.netAuth, RateLimits: rates,
 	}
 

@@ -40,10 +40,11 @@ const (
 // open the UI in the default browser. The seams are fields so the tests need no browser and no
 // server process.
 //
-// It is a minimal first version: the launch code of SDD-007 3.4 (POST /api/v1/system/launch) does
-// not exist in the server yet, so it opens the plain address. It runs before the application is
-// built because every command of the application needs APP_KEY (vukem-feedback.md VF-030), and a
-// shortcut must work on a machine that has none.
+// It is a minimal first version: it opens the plain address and does not use the launch code of
+// SDD-007 3.4 (POST /api/v1/system/launch), which would give a session without the browser-only
+// privileges anyway, since only the desktop shell holds the launcher secret (3.4 item 7). It runs
+// before the application is built because every command of the application needs APP_KEY
+// (vukem-feedback.md VF-030), and a shortcut must work on a machine that has none.
 type opener struct {
 	getenv   func(string) string
 	stdout   io.Writer

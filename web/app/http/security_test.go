@@ -10,6 +10,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem-video/web/app/auth"
 	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
 )
 
@@ -23,10 +24,20 @@ func concrete(path string) string {
 }
 
 // session redeems a launch code over HTTP and returns the Cookie header.
+const launcherSecret = "launcher-secret-of-the-test-harness-0123456789abcdef"
+
+// session logs in as the desktop shell does: the launch request proves the launcher secret.
 func (h *harness) session(t *testing.T) string {
 	t.Helper()
 
-	issued := h.post("/api/v1/system/launch", "")
+	return h.sessionWith(t, launcherSecret)
+}
+
+// sessionWith logs in with a launch request that sends the given launcher secret (none when empty).
+func (h *harness) sessionWith(t *testing.T, secret string) string {
+	t.Helper()
+
+	issued := h.do(req{method: http.MethodPost, path: "/api/v1/system/launch", headers: launcherHeaders(secret)})
 	if issued.status != http.StatusOK {
 		t.Fatalf("launch = %d %s", issued.status, issued.body)
 	}
@@ -44,6 +55,14 @@ func (h *harness) session(t *testing.T) string {
 	name, _, _ := strings.Cut(cookie, ";")
 
 	return name
+}
+
+func launcherHeaders(secret string) map[string]string {
+	if secret == "" {
+		return nil
+	}
+
+	return map[string]string{auth.LauncherHeader: secret}
 }
 
 func TestLaunchFlowGivesACookieSession(t *testing.T) {
@@ -418,6 +437,50 @@ func TestSecurity_T28_TrashEmptyNeedsHumanSession(t *testing.T) {
 
 	if res := h.get("/api/v1/projects/" + id); res.status != http.StatusNotFound {
 		t.Errorf("the emptied project = %d, want 404", res.status)
+	}
+}
+
+// T-28 again, from the other side (SDD-007 section 5.3): a launch code asked for with the bearer
+// token alone (`vukem-video open`, an agent) or with a wrong launcher secret redeems into a
+// session that works as the editor but has none of the browser-only privileges.
+func TestSecurity_T28_BearerLaunchCodeGivesNoBrowserPrivileges(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+
+	for name, secret := range map[string]string{
+		"no secret":    "",
+		"wrong secret": launcherSecret + "x",
+		"shorter":      launcherSecret[:8],
+		"blank":        " ",
+	} {
+		id := h.newProject(name)
+		if res := h.post("/api/v1/projects/"+id+"/trash", ""); res.status != http.StatusOK {
+			t.Fatalf("%s: trash = %d %s", name, res.status, res.body)
+		}
+
+		cookie := h.sessionWith(t, secret)
+		headers := map[string]string{"Cookie": cookie, "Sec-Fetch-Site": "same-origin", "Origin": h.srv.URL}
+
+		// The session is a working editor session.
+		read := h.do(req{path: "/api/v1/projects/" + id, noAuth: true, headers: headers})
+		if read.status != http.StatusOK {
+			t.Errorf("%s: read with the session = %d %s", name, read.status, read.body)
+		}
+
+		for _, r := range []req{
+			{method: http.MethodPost, path: "/api/v1/trash/empty", body: "{}"},
+			{method: http.MethodPost, path: "/api/v1/system/tools/install", body: `{"name":"whisper","model":"tiny"}`},
+		} {
+			r.noAuth, r.headers = true, headers
+			if res := h.do(r); res.status != http.StatusForbidden || res.json(t)["code"] != "E_FORBIDDEN" {
+				t.Errorf("%s: %s = %d %s, want 403 E_FORBIDDEN", name, r.path, res.status, res.body)
+			}
+		}
+
+		if res := h.get("/api/v1/projects/" + id); res.status != http.StatusOK {
+			t.Errorf("%s: the project did not survive: %d", name, res.status)
+		}
 	}
 }
 

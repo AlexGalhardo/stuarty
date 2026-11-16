@@ -202,6 +202,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE` | `10` | calls of `JobStart`, `MediaImport`, `TemplateImport`, `ProjectBundleExport`, `ProjectBundleImport`, `FontImport` and `ProjectOtioImport` per minute per actor |
 | `VUKEM_VIDEO_SANDBOX` | `none` | `bwrap` runs FFmpeg and whisper.cpp in a sandbox on Linux |
 | `VUKEM_VIDEO_INSECURE_ALLOW_ROOT` | `false` | allow network mode as root |
+| `VUKEM_VIDEO_LAUNCHER_SECRET` | none | set only by the desktop shell in the environment of the server it starts (SDD-007 §5.3); the server reads it once and removes it; never set it by hand or write it to a file |
 | `VUKEM_VIDEO_ADMIN_EMAIL`, `VUKEM_VIDEO_ADMIN_PASSWORD` | none | network mode: create the first administrator at start-up when no user exists |
 | `VUKEM_VIDEO_URL`, `VUKEM_VIDEO_KEY` | none | client side: make the CLI and the stdio MCP server talk to a remote server with an API key |
 | `VUKEM_VIDEO_PROJECT` | none | client side: the default project of CLI commands that take one |

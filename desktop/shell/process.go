@@ -24,6 +24,8 @@ import (
 const (
 	envAddr = "VUKEM_VIDEO_ADDR"
 	envHome = workspace.EnvHome
+	// envLauncher carries the launcher secret (SDD-007 section 5.3).
+	envLauncher = "VUKEM_VIDEO_LAUNCHER_SECRET"
 )
 
 const (
@@ -87,6 +89,10 @@ type Server struct {
 	// Token is the workspace local token.
 	Token string
 
+	// launcher is the secret of this server process: random, given to the child through its
+	// environment only, never written to disk or logged, and sent with the launch request.
+	launcher string
+
 	cmd     *exec.Cmd
 	release func() // closes the job object tying the child to this process
 	grace   time.Duration
@@ -130,15 +136,21 @@ func Start(ctx context.Context, cfg Config) (*Server, error) {
 		return nil, &StartupError{Reason: ReasonRuntime, Message: "Cannot prepare the workspace", Err: err}
 	}
 
+	launcher, err := newLauncherSecret()
+	if err != nil {
+		return nil, &StartupError{Reason: ReasonSpawn, Message: "Cannot prepare the server start", Err: err}
+	}
+
 	var errBuf tailBuffer
 	// The path comes from the caller of the shell, never from a page.
 	cmd := exec.Command(cfg.Binary, "serve") //nolint:gosec,noctx // a child that lives as long as the window
 	cmd.Env = append(os.Environ(), envAddr+"="+addr, envHome+"="+string(cfg.Workspace))
 	cmd.Env = append(cmd.Env, cfg.Env...)
+	cmd.Env = append(cmd.Env, envLauncher+"="+launcher) // last, so nothing before it can override it
 	cmd.Stderr = &errBuf
 	prepareCommand(cmd)
 
-	s := &Server{cmd: cmd, grace: cfg.StopGrace, done: make(chan struct{})}
+	s := &Server{launcher: launcher, cmd: cmd, grace: cfg.StopGrace, done: make(chan struct{})}
 	started := make(chan error, 1)
 	// The thread that starts the child must outlive it: on Linux the parent-death signal fires when
 	// that thread exits. Locking it and keeping Wait here holds it until the child is gone.

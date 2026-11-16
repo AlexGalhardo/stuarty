@@ -31,38 +31,75 @@ func (c *fakeClock) advance(d time.Duration) {
 
 func newClock() *fakeClock { return &fakeClock{t: time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)} }
 
+func redeemed(l *Launch, code string) bool {
+	_, ok := l.Redeem(code)
+
+	return ok
+}
+
+func live(s *Sessions, id string) bool {
+	valid, _ := s.Lookup(id)
+
+	return valid
+}
+
+func TestPrivilegeFollowsTheLauncherSecret(t *testing.T) {
+	t.Parallel()
+
+	l, s := NewLaunch(nil), NewSessions(nil)
+
+	for _, privileged := range []bool{false, true} {
+		code, _ := l.Issue(privileged)
+
+		got, ok := l.Redeem(code)
+		if !ok || got != privileged {
+			t.Errorf("Redeem(issued privileged=%v) = %v, %v", privileged, got, ok)
+		}
+
+		id, _ := s.Create(got)
+		if valid, p := s.Lookup(id); !valid || p != privileged {
+			t.Errorf("Lookup(created privileged=%v) = %v, %v", privileged, valid, p)
+		}
+	}
+
+	if IsLauncher("", "") || IsLauncher("", "x") || IsLauncher("secret", "") || IsLauncher("secret", "secreT") ||
+		!IsLauncher("secret", "secret") {
+		t.Error("IsLauncher: an empty secret must match nothing and the rest must match exactly")
+	}
+}
+
 func TestLaunchCodeWorksOnceAndExpires(t *testing.T) {
 	t.Parallel()
 
 	clock := newClock()
 	l := NewLaunch(clock.now)
 
-	code, err := l.Issue()
+	code, err := l.Issue(false)
 	if err != nil || len(code) != 64 {
 		t.Fatalf("Issue = %q, %v; want 64 hex characters", code, err)
 	}
 
-	if !l.Redeem(code) {
+	if !redeemed(l, code) {
 		t.Error("a fresh code was refused")
 	}
 
-	if l.Redeem(code) {
+	if redeemed(l, code) {
 		t.Error("a code worked twice")
 	}
 
-	late, _ := l.Issue()
+	late, _ := l.Issue(false)
 
 	clock.advance(121 * time.Second)
 
-	if l.Redeem(late) {
+	if redeemed(l, late) {
 		t.Error("a code worked after 120 seconds")
 	}
 
-	edge, _ := l.Issue()
+	edge, _ := l.Issue(false)
 
 	clock.advance(120 * time.Second)
 
-	if !l.Redeem(edge) {
+	if !redeemed(l, edge) {
 		t.Error("a code was refused at exactly 120 seconds")
 	}
 }
@@ -73,12 +110,12 @@ func TestLaunchKeepsEightCodesAndLocksAfterFiveFailures(t *testing.T) {
 	clock := newClock()
 	l := NewLaunch(clock.now)
 
-	first, _ := l.Issue()
+	first, _ := l.Issue(false)
 	for range 8 {
-		_, _ = l.Issue()
+		_, _ = l.Issue(false)
 	}
 
-	if l.Redeem(first) {
+	if redeemed(l, first) {
 		t.Error("the ninth code did not push the oldest out")
 	}
 
@@ -87,7 +124,7 @@ func TestLaunchKeepsEightCodesAndLocksAfterFiveFailures(t *testing.T) {
 	}
 
 	for range 4 {
-		l.Redeem(strings.Repeat("0", 64))
+		redeemed(l, strings.Repeat("0", 64))
 	}
 
 	if !l.Locked() {
@@ -107,37 +144,37 @@ func TestSessionLifetimes(t *testing.T) {
 	clock := newClock()
 	s := NewSessions(clock.now)
 
-	id, err := s.Create()
-	if err != nil || !s.Valid(id) || s.Valid("nope") {
+	id, err := s.Create(false)
+	if err != nil || !live(s, id) || live(s, "nope") {
 		t.Fatalf("Create = %q, %v", id, err)
 	}
 
 	clock.advance(23 * time.Hour)
 
-	if !s.Valid(id) {
+	if !live(s, id) {
 		t.Error("the session ended before 24 hours without use")
 	}
 
 	clock.advance(23 * time.Hour) // used 23 hours ago, 46 hours old: the idle time renews
 
-	if !s.Valid(id) {
+	if !live(s, id) {
 		t.Error("use did not renew the idle time")
 	}
 
 	for range 6 {
 		clock.advance(23 * time.Hour)
-		s.Valid(id)
+		live(s, id)
 	}
 
-	if s.Valid(id) {
+	if live(s, id) {
 		t.Error("the session outlived 7 days")
 	}
 
-	other, _ := s.Create()
+	other, _ := s.Create(false)
 
 	s.Clear()
 
-	if s.Valid(other) {
+	if live(s, other) {
 		t.Error("Clear left a session")
 	}
 }
