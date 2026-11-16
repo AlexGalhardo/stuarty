@@ -56,7 +56,11 @@ if [ "$#" -gt 0 ]; then
 	versions=("$@")
 else
 	command -v gh >/dev/null 2>&1 || die "gh is required to list the releases (or pass the versions)"
-	mapfile -t versions < <(gh release list -R "$repo" --limit 200 --json tagName -q '.[].tagName' | tr -d '\r' |
+	# A while loop instead of mapfile: macOS ships bash 3.2, which has no mapfile.
+	versions=()
+	while IFS= read -r v; do
+		versions+=("$v")
+	done < <(gh release list -R "$repo" --limit 200 --json tagName -q '.[].tagName' | tr -d '\r' |
 		grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' |
 		awk -F'[v.]' '($2 > 0) || ($2 == 0 && $3 >= 3)' | sort -t. -k1.2,1n -k2,2n -k3,3n)
 fi
