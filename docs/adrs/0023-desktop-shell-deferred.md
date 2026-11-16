@@ -35,3 +35,16 @@ Positive: nothing is spent on desktop packaging until the product works.
 Negative: until BETA there is no installer, icon or auto-update; users run a binary and a browser.
 
 Negative: if the system webviews fail the floor, the fallback adds Electron's size and a JavaScript main process.
+
+## Results of the detection runs
+
+The runs of the detection page (`desktop/detect`, SDD-012 section 21.2) are versioned one file per run in `desktop/results/`, with a note per day in `desktop/results/verdict.md`. This note records data only; the status of the shell choice stays with the author.
+
+| Engine | Platform | Runs | Verdict | `video-seek` p50 and p95 | NFR-003 (100 ms) |
+| --- | --- | --- | --- | --- | --- |
+| Chromium 156 (Playwright build) | Windows 11 | 2026-11-15 headless, 2026-11-16 headed | pass | 3.7 ms and 6 ms; 10 ms and 21 ms | met |
+| Edge 157, the engine of WebView2 | Windows 11 | 2026-11-15 headless, 2026-11-16 headed | pass | 7.1 ms and 10.9 ms; 7 ms and 26 ms | met |
+| WKWebView | macOS | not run | n/a | n/a | n/a |
+| WebKitGTK 6.0 | Linux | not run | n/a | n/a | n/a |
+
+The first headed Edge run of 2026-11-16 has verdict `fail` on the `pointer` test only: the scripted drag sent too few moves for the page to count them. The second, with `steps` on every move, passes; both files are kept.
