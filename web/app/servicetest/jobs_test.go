@@ -249,12 +249,20 @@ func TestJobStartGates(t *testing.T) {
 		"unknown kind":     {ProjectID: project, Kind: "render"},
 		"unknown argument": {ProjectID: project, Kind: "export", Args: json.RawMessage(`{"codec":"x"}`)},
 		"range past end":   {ProjectID: project, Kind: "export", Args: json.RawMessage(`{"end":"10m"}`)},
+		"a sub-range":      {ProjectID: project, Kind: "export", Args: json.RawMessage(`{"start":"1f"}`)},
 		"not a time":       {ProjectID: project, Kind: "export", Args: json.RawMessage(`{"start":"soon"}`)},
 		"wait too long":    {ProjectID: project, Kind: "export", WaitMS: 99999},
 	} {
 		if _, err := m.svc.JobStart(m.as(ui), req); err == nil {
 			t.Errorf("%s: accepted", name)
 		}
+	}
+
+	_, rerr := m.svc.JobStart(m.as(ui), service.JobStartRequest{
+		ProjectID: project, Kind: "export", Args: json.RawMessage(`{"start":"1f"}`),
+	})
+	if se := serviceError(t, rerr); se.Code != command.CodeValidation || !strings.Contains(se.Message, "range") {
+		t.Errorf("a sub-range = %+v, want E_VALIDATION about the range", se)
 	}
 
 	if _, err := m.svc.JobStart(
