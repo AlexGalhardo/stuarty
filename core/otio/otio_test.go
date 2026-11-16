@@ -1205,3 +1205,68 @@ func TestImportDropsAnUnknownProjectFont(t *testing.T) {
 		t.Errorf("the unknown font was not reported: %+v", dropped)
 	}
 }
+
+func TestRoundTripKeepsMagnetAndReportsLutAndFreezeOnImport(t *testing.T) {
+	d := sampleDoc()
+	tr := d.Tracks[trkVid]
+	tr.Magnet = true
+	d.Tracks[trkVid] = tr
+
+	c := d.Items["itm_c000000001"]
+	c.Lut = &timeline.Lut{Asset: "ast_l000000001", Intensity: 0.5}
+	c.Freeze = true
+	d.Items[c.ID] = c
+
+	data, lost, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := map[string]bool{}
+	for _, l := range lost {
+		got[l.Feature] = true
+	}
+
+	for _, f := range []string{"track magnet", "lookup table", "freeze frame"} {
+		if !got[f] {
+			t.Errorf("export did not report %q: %+v", f, lost)
+		}
+	}
+
+	im, err := Parse(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	imported := map[string]bool{}
+	for _, l := range im.Lost {
+		imported[strings.SplitN(l.Feature, " of clip", 2)[0]] = true
+	}
+
+	if !imported["freeze frame"] || !imported["lookup table (the .cube asset is not part of the file)"] {
+		t.Errorf("import did not report the lookup table and the freeze frame: %+v", im.Lost)
+	}
+
+	ops, _ := im.Operations(map[string]string{"clips/a.mp4": vidAsset, "logo.png": imgAsset}, seqIDs())
+
+	found := false
+
+	for _, op := range ops {
+		if op.Op != "track.update" {
+			continue
+		}
+
+		var args map[string]any
+		if err := json.Unmarshal(op.Args, &args); err != nil {
+			t.Fatal(err)
+		}
+
+		if args["magnet"] == true {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Errorf("the magnet of the track was not restored: %+v", ops)
+	}
+}

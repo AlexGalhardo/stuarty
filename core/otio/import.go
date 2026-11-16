@@ -42,6 +42,7 @@ type importTrack struct {
 	name          string
 	audio         bool
 	hidden, muted bool
+	magnet        bool
 	captionStyle  map[string]any
 	entries       []entry
 }
@@ -272,6 +273,7 @@ func (r *reader) track(t map[string]any) {
 	if v := vukemMeta(t); v != nil {
 		tk.hidden, _ = v["hidden"].(bool)
 		tk.muted, _ = v["muted"].(bool)
+		tk.magnet, _ = v["magnet"].(bool)
 		tk.hidden = tk.hidden && !tk.audio
 
 		if raw, present := v["caption_style"]; present && !tk.audio {
@@ -617,7 +619,7 @@ func (b *batch) track(tk *importTrack) {
 		})
 	}
 
-	if tk.hidden || tk.muted {
+	if tk.hidden || tk.muted || tk.magnet {
 		update := map[string]any{"track_id": trackID}
 		if tk.hidden {
 			update["hidden"] = true
@@ -625,6 +627,10 @@ func (b *batch) track(tk *importTrack) {
 
 		if tk.muted {
 			update["muted"] = true
+		}
+
+		if tk.magnet {
+			update["magnet"] = true
 		}
 
 		b.push("track.update", update)

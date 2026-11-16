@@ -222,7 +222,7 @@ func timelineMarkers(marks []timeline.Marker, rate float64) []any {
 }
 
 // trackMetadata keeps what OTIO has no field for in the vukem namespace, which other tools
-// ignore and Import reads back: hidden and muted. Ids are not kept: an import makes new ones.
+// ignore and Import reads back: hidden, muted and magnet. Ids are not kept: an import makes new ones.
 func trackMetadata(t *timeline.Track) object {
 	v := object{}
 	if t.Hidden {
@@ -231,6 +231,10 @@ func trackMetadata(t *timeline.Track) object {
 
 	if t.Muted {
 		v["muted"] = true
+	}
+
+	if t.Magnet {
+		v["magnet"] = true
 	}
 
 	if m := timeline.StyleToMap(t.CaptionStyle); len(m) > 0 {
@@ -255,6 +259,14 @@ func playbackMetadata(it *timeline.Item, props object) {
 
 	if it.Reverse {
 		props["reverse"] = true
+	}
+
+	if it.Freeze {
+		props["freeze"] = true
+	}
+
+	if l := it.Lut; l != nil {
+		props["lut"] = object{"asset": l.Asset, "intensity": l.Intensity}
 	}
 
 	if len(it.Effects) > 0 {
@@ -571,6 +583,7 @@ func lostProperties(it *timeline.Item) []Lost {
 		{(it.Filter != "none" && it.Filter != "") || it.Blur != 0, "filter and blur"},
 		{it.ChromaKey != nil, "chroma key"},
 		{it.Lut != nil, "lookup table"},
+		{it.Freeze, "freeze frame"},
 		{it.Crop != nil || it.Fit != "cover", "framing"},
 		{it.X != nil || it.Y != nil || it.Scale != 1 || it.Rotation != 0 || it.Opacity != 1, "transform and opacity"},
 		{it.Volume != 1 || it.AudioMuted || it.FadeIn != 0 || it.FadeOut != 0 || it.Denoise != 0 || it.Voice != "", "audio settings"},
