@@ -6,7 +6,7 @@
 
 use std::f64::consts::PI;
 
-use vukem_renderer::math::{mul, sincos};
+use crate::math::{mul, sincos};
 
 use crate::scan::Rasterizer;
 

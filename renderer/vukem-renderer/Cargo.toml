@@ -9,5 +9,8 @@ publish.workspace = true
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[dependencies]
+vukem-renderer-text = { version = "=0.0.0", path = "../vukem-renderer-text" }
+
 [lints]
 workspace = true

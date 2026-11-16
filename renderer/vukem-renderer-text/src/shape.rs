@@ -1,6 +1,6 @@
 //! Shapes: the port of `renderShape` and `shapeGeometry` of `engine/raster/draw.go`.
 
-use vukem_renderer::math::mul;
+use crate::math::mul;
 
 use crate::canvas::{Canvas, Painter};
 use crate::geom::{Point, Polyline, ellipse, rounded_rect, stroke_shapes};

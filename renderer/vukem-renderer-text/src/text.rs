@@ -2,12 +2,12 @@
 
 use std::fmt;
 
+use crate::math::mul;
 use skrifa::GlyphId;
 use skrifa::font::glyph::outline::{
 	DrawMemory, DrawOptions, OutlineGlyph, PathSink, UnscaledOutlineSink,
 };
 use skrifa::raw::tables::glyf::PointFlags;
-use vukem_renderer::math::mul;
 
 use crate::canvas::{Canvas, Mask, Painter, box_blur3};
 use crate::fonts::{Face, FontSet, LookupError};
