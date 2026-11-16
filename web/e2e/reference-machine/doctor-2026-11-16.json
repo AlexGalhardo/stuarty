@@ -1,0 +1,85 @@
+{
+	"recorded_on": "2026-11-16",
+	"reference": "SDD-008 section 8 (the machine of the spikes)",
+	"machine": {
+		"cpu": "AMD Ryzen 7 5700X3D 8-Core Processor",
+		"gpu": "NVIDIA GeForce RTX 4060",
+		"os": "Windows 11 Pro 10.0.26300",
+		"logical_cpus": 16
+	},
+	"command": "vukem-video doctor --full --json",
+	"exit_code": 1,
+	"exit_note": "1 because the whisper helper and model are not installed on this machine; every other check is ok",
+	"doctor": {
+		"version": "0.21.0",
+		"api_version": "v1",
+		"mode": "local",
+		"pid": 67716,
+		"started_at": "2026-11-16T22:25:20.0806366Z",
+		"workspace": "C:\\Users\\<user>\\AppData\\Local\\Temp\\vv-doctor-home",
+		"checks": [
+			{
+				"name": "ffmpeg.binary",
+				"ok": true,
+				"detail": "configured, n9.0.2-39-g7adfbe40dc-20261031, ffprobe n9.0.2-39-g7adfbe40dc-20261031, C:\\Users\\<user>\\AppData\\Local\\Temp/ffmpeg/autobuild-2026-10-31-12-59-WINDOWS_AMD64/ffmpeg-n9.0.2-39-g7adfbe40dc-win64-lgpl-9.0/bin/ffmpeg.exe"
+			},
+			{
+				"name": "ffmpeg.license",
+				"ok": true,
+				"detail": "lgpl, version3; flavour btbn; --prefix=/ffbuild/prefix --pkg-config-flags=--static --pkg-config=pkg-config --cross-prefix=x86_64-w64-mingw32- --arch=x86_64 --target-os=mingw32 --enable-version3 --disable-debug --disable-w32threads --enable-pthreads --enable-iconv --enable-zlib --enable-libxml2 --enable-libvmaf --enable-fontconfig --enable-libharfbuzz --enable-libfreetype --enable-libfribidi --enable-lcms2 --enable-vulkan --enable-libdav1d --enable-libvorbis --enable-librav1e --enable-librsvg --disable-libxcb --disable-xlib --disable-libpulse --enable-gmp --enable-lzma --enable-liblcevc-dec --enable-opencl --enable-amf --enable-libaom --disable-avisynth --enable-chromaprint --disable-libdavs2 --disable-libdvdread --disable-libdvdnav --disable-libfdk-aac --enable-ffnvcodec --enable-cuda-llvm --disable-frei0r --enable-libgme --enable-libkvazaar --enable-libaribb24 --enable-libaribcaption --enable-libass --enable-libbluray --enable-libjxl --enable-libmp3lame --enable-libopus --enable-libplacebo --enable-librist --enable-libssh --enable-libtheora --enable-libvpx --enable-libwebp --enable-libzmq --enable-lv2 --enable-libvpl --enable-openal --enable-liboapv --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenh264 --enable-libopenjpeg --enable-libopenmpt --disable-librubberband --enable-schannel --enable-sdl2 --enable-libsnappy --enable-libsoxr --enable-libsrt --enable-libsvtav1 --enable-libtwolame --enable-libuavs3d --disable-libdrm --enable-vaapi --enable-vapoursynth --disable-libvidstab --enable-libvvenc --disable-whisper --disable-libx264 --disable-libx265 --disable-libxavs2 --disable-libxvid --enable-libzimg --enable-libzvbi --extra-cflags=-DLIBTWOLAME_STATIC --extra-cxxflags= --extra-libs=-lgomp --extra-ldflags=-pthread --extra-ldexeflags= --cc=x86_64-w64-mingw32-gcc --cxx=x86_64-w64-mingw32-g++ --ar=x86_64-w64-mingw32-gcc-ar --ranlib=x86_64-w64-mingw32-gcc-ranlib --nm=x86_64-w64-mingw32-gcc-nm --extra-version=20261031"
+			},
+			{
+				"name": "ffmpeg.capabilities",
+				"ok": true,
+				"detail": "zscale=true tonemap=true bwdif=true yadif=true hdr_ok=true"
+			},
+			{
+				"name": "ffmpeg.encoder",
+				"ok": true,
+				"detail": "h264_nvenc (forced false); h264_videotoolbox not_listed 0 ms, h264_nvenc ok 677 ms, h264_qsv failed 224 ms, h264_amf failed 113 ms, h264_mf ok 445 ms, h264_vaapi not_listed 0 ms, libopenh264 ok 332 ms, libx264 not_listed 0 ms"
+			},
+			{
+				"name": "child.limits",
+				"ok": true,
+				"detail": "available: prlimit(1) sets RLIMIT_CPU and RLIMIT_FSIZE on every child, and RLIMIT_AS on the software paths"
+			},
+			{
+				"name": "child.sandbox",
+				"ok": true,
+				"detail": "unavailable: not requested (VUKEM_VIDEO_SANDBOX is unset); children run with the user's privileges"
+			},
+			{
+				"name": "transcribe.provider",
+				"ok": true,
+				"detail": "whisper.cpp"
+			},
+			{
+				"name": "transcribe.helper",
+				"ok": false,
+				"detail": "not installed or changed since the install, 8194445 bytes to download",
+				"hint": "Run \"vukem-video tools:install whisper\"."
+			},
+			{
+				"name": "transcribe.model",
+				"ok": false,
+				"detail": "not installed or changed since the install, 487601967 bytes to download",
+				"hint": "Run \"vukem-video tools:install whisper\"."
+			},
+			{
+				"name": "workspace.store",
+				"ok": true,
+				"detail": "database ok, 119222 MiB free"
+			},
+			{
+				"name": "system",
+				"ok": true,
+				"detail": "windows amd64, 16 CPUs"
+			},
+			{
+				"name": "environment",
+				"ok": true,
+				"detail": "VUKEM_VIDEO_FFMPEG=set VUKEM_VIDEO_FFPROBE=set VUKEM_VIDEO_HOME=set"
+			}
+		]
+	}
+}
