@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -554,5 +555,29 @@ func TestEditThatChangesNothingCommitsNothing(t *testing.T) {
 	})
 	if err != nil || dry.Applied || !dry.DryRun || dry.Revision != before {
 		t.Errorf("no-op dry run = %+v, %v", dry, err)
+	}
+}
+
+// The created ids of a batch are in operation order (SDD-003), not in the order
+// of the diff, which sorts them by id.
+func TestEditListsCreatedIDsInOperationOrder(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	project, _ := e.withTrack()
+	base := e.head(project).Revision
+
+	res, err := e.edit(ui, project, base,
+		op("track.add", `{"kind":"visual","name":"Z","id":"trk_zzzzzzzzzz"}`),
+		op("track.add", `{"kind":"visual","name":"A","id":"trk_aaaaaaaaaa"}`),
+		op("track.add", `{"kind":"audio","name":"M","id":"trk_mmmmmmmmmm"}`),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := []string{"trk_zzzzzzzzzz", "trk_aaaaaaaaaa", "trk_mmmmmmmmmm"}
+	if !slices.Equal(res.Created, want) {
+		t.Errorf("created = %v, want %v", res.Created, want)
 	}
 }
