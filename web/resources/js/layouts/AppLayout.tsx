@@ -27,16 +27,22 @@ function Shell({ children }: { children: ReactNode }) {
 	const t = useT();
 	const page = usePage<SharedProps>();
 	const message = page.flash?.success ?? page.flash?.status;
+	// The shared prop can arrive empty; the link keeps a name (axe link-name).
+	const appName = page.props.appName || "Vukem Video";
 
 	return (
 		<TooltipProvider>
 			<header className="flex min-h-14 flex-wrap items-center gap-x-4 gap-y-1 border-b px-4 py-2 md:px-6">
-				<Link href="/projects" className="flex items-center gap-2">
+				<Link
+					href="/projects"
+					aria-label={t("ui.nav.home", { name: appName })}
+					className="flex items-center gap-2"
+				>
 					<span className="flex size-8 items-center justify-center rounded-lg bg-brand text-brand-foreground">
 						<Video aria-hidden="true" className="size-4" />
 					</span>
 					<span className="text-lg font-semibold tracking-tight">
-						{page.props.appName}
+						{appName}
 					</span>
 				</Link>
 				<nav aria-label={t("ui.nav.label")} className="text-sm">
