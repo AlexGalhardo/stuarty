@@ -58,19 +58,8 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 		return nil, internal("no FFmpeg runner is configured")
 	}
 
-	// The engine renders the whole timeline; a range is not a feature of the
-	// export yet, and rendering more than was asked would be a wrong answer.
 	if in.Doc == nil {
 		return nil, internal("no document to export")
-	}
-
-	if last := lastFrame(in); in.Start != 0 || in.End != 0 && in.End != last {
-		return nil, &ffmpeg.Error{
-			Code: export.CodeExportFailed, Reason: "range_unsupported",
-			Message: "Exporting a range of the timeline is not available in this build.",
-			Hint:    "Export the whole timeline.",
-			Details: map[string]any{"reason": "range_unsupported"},
-		}
 	}
 
 	caps, err := a.capabilities(ctx)
@@ -82,6 +71,8 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 		Runner:       a.runnerFor(ctx, caps),
 		Caps:         caps,
 		Doc:          in.Doc,
+		Start:        int(in.Start),
+		End:          int(in.End),
 		JobID:        in.JobID,
 		ArtifactsDir: filepath.Join(a.cfg.Workspace, "artifacts"),
 		OutPath:      in.OutPath,
@@ -221,17 +212,6 @@ func (a *adapter) capabilities(ctx context.Context) (*ffmpeg.Capabilities, error
 	a.caps = caps
 
 	return caps, nil
-}
-
-func lastFrame(in service.ExportInput) int64 {
-	var end int64
-
-	for id := range in.Doc.Items {
-		it := in.Doc.Items[id]
-		end = max(end, int64(it.Start+it.Duration))
-	}
-
-	return end
 }
 
 func internal(msg string) *ffmpeg.Error {

@@ -20,12 +20,6 @@ func TestExportRefusesWhatItCannotDo(t *testing.T) {
 	}{
 		"no runner":   {Config{}, service.ExportInput{Doc: doc}, "E_INTERNAL"},
 		"no document": {Config{Runner: &ffmpeg.Runner{}}, service.ExportInput{}, "E_INTERNAL"},
-		"a range start": {
-			Config{Runner: &ffmpeg.Runner{}},
-			service.ExportInput{Doc: doc, Start: 5, End: 30},
-			"E_EXPORT_FAILED",
-		},
-		"a range end": {Config{Runner: &ffmpeg.Runner{}}, service.ExportInput{Doc: doc, End: 10}, "E_EXPORT_FAILED"},
 	}
 
 	for name, c := range cases {
