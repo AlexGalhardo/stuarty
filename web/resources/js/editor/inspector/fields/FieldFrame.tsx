@@ -3,7 +3,7 @@ import { type ReactNode, useId } from "react";
 import UntrustedText from "@/components/UntrustedText";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
-import { actorLabel } from "../../state/activityStore";
+import { useActorLabel } from "../../state/useActorLabel";
 import { errorHeadline } from "../../ui/errorHeadline";
 import type { FieldSnapshot } from "./commitField";
 import { rangeOf, withoutArgPath } from "./fieldMessage";
@@ -19,6 +19,7 @@ export function FieldMessage({
 	state: Pick<FieldSnapshot, "error" | "remoteActor">;
 }): ReactNode {
 	const t = useT();
+	const actorLabel = useActorLabel();
 	const { error, remoteActor } = state;
 	if (error === null && remoteActor === null) return null;
 	return (

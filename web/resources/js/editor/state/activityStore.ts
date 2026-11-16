@@ -71,6 +71,16 @@ export function actorLabel(actor: string): string {
 	return actor;
 }
 
+// The label for a person: the own actor shows as `you`, never as a raw id
+// (VV-061); every other actor goes through `actorLabel`.
+export function actorLabelFor(
+	actor: string,
+	ownActor: string,
+	you: string,
+): string {
+	return actor === ownActor ? you : actorLabel(actor);
+}
+
 export function createActivityStore(): {
 	store: ReadStore<ActivityState>;
 	writer: ActivityWriter;

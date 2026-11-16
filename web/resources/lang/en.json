@@ -119,6 +119,7 @@
         "inspector": "Inspector"
       },
       "activity": {
+        "you": "you",
         "editing": "{actor} is editing",
         "editing_others": {
           "one": "{actor} and {count} other are editing",

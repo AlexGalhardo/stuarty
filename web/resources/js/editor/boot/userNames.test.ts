@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, test } from "vitest";
 
-import { actorLabel, setUserNames } from "../state/activityStore";
+import {
+	actorLabel,
+	actorLabelFor,
+	setUserNames,
+} from "../state/activityStore";
 import type { EditorBootstrap } from "./bootstrap";
 import { loadUserNames } from "./userNames";
 
@@ -62,5 +66,15 @@ describe("loadUserNames", () => {
 	test("other actors keep their labels", () => {
 		expect(actorLabel("local:claude-code")).toBe("claude-code");
 		expect(actorLabel("key:key_ab12cd34ef")).toBe("key ab12");
+	});
+
+	test("the own actor reads as you, never as a raw id", () => {
+		expect(
+			actorLabelFor("user:usr_44w9jmh3vt", "user:usr_44w9jmh3vt", "you"),
+		).toBe("you");
+		expect(actorLabelFor("local:ui", "local:ui", "você")).toBe("você");
+		expect(actorLabelFor("local:claude-code", "local:ui", "you")).toBe(
+			"claude-code",
+		);
 	});
 });
