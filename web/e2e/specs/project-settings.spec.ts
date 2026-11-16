@@ -18,13 +18,13 @@ function recordEdits(page: Page): Posted[] {
 // P2-UI-024 (SDD-012 sections 2.1, 6.2, 12.1 and 16.3): the project panel, the
 // top bar name, the language select and the settings page.
 test.describe("project-settings", () => {
-	test("changing the preset sends one settings.set", async ({
+	test("changing the aspect sends one settings.reframe", async ({
 		page,
 		request,
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
 		await page.goto(`/editor/${seeded.id}?debug=1`);
-		const preset = page.getByLabel("Size preset");
+		const preset = page.getByLabel("Change aspect");
 		await expect(preset).toHaveValue("9:16");
 		const edits = recordEdits(page);
 
@@ -34,7 +34,7 @@ test.describe("project-settings", () => {
 		);
 		expect(edits).toHaveLength(1);
 		expect(edits[0]?.operations).toEqual([
-			{ op: "settings.set", args: { width: 1080, height: 1080 } },
+			{ op: "settings.reframe", args: { aspect: "1:1" } },
 		]);
 		await expect(preset).toHaveValue("1:1");
 	});

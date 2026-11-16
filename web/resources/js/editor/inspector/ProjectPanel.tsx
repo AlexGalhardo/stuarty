@@ -4,6 +4,7 @@ import { useT } from "@/lib/i18n";
 import {
 	FRAME_RATES,
 	projectRenameOperations,
+	reframeOperations,
 	type SettingsChanges,
 	SIZE_PRESETS,
 	settingsSetOperations,
@@ -120,7 +121,7 @@ export default function ProjectPanel(): ReactNode {
 				commit={(next) => send(projectRenameOperations(next))}
 			/>
 			<SelectField
-				label={t("ui.editor.project.preset")}
+				label={t("ui.editor.project.aspect")}
 				stored={preset}
 				disabled={!canEdit}
 				options={[
@@ -135,7 +136,7 @@ export default function ProjectPanel(): ReactNode {
 				commit={async (value) => {
 					const chosen = SIZE_PRESETS.find((p) => p.id === value);
 					if (chosen === undefined) return { ok: true };
-					return change({ width: chosen.width, height: chosen.height });
+					return send(reframeOperations(chosen.id));
 				}}
 			/>
 			<NumberField

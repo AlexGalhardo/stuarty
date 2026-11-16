@@ -82,6 +82,7 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"topbar.rename": ["project.rename"],
 	"inspector.settings": ["settings.set"],
 	"inspector.fps": ["settings.set_fps"],
+	"inspector.aspect": ["settings.reframe"],
 	"timeline.add_track": ["track.add"],
 	"timeline.track_update": ["track.update"],
 	"inspector.track_update": ["track.update"],
@@ -281,7 +282,10 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		palette,
 	],
 	"item.slip": [palette],
-	"settings.reframe": [palette],
+	"settings.reframe": [
+		{ kind: "inspector", action: "inspector.aspect", phase: "A" },
+		palette,
+	],
 	"settings.set": [
 		{ kind: "inspector", action: "inspector.settings", phase: "A" },
 		palette,

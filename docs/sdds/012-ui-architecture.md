@@ -870,7 +870,8 @@ Phase of the entry point is the phase in which that entry point is built. Every 
 | Command | Entry points besides the palette | Phase |
 | --- | --- | --- |
 | `project.rename` | top bar name field | A |
-| `settings.set` | project panel of the inspector (size preset, width, height, background, loudness target) | A |
+| `settings.set` | project panel of the inspector (width, height, background, loudness target) | A |
+| `settings.reframe` | project panel of the inspector, the "Change aspect" select (16:9, 9:16, 1:1, 4:5): `settings.reframe {aspect}`; the core rescales text, shapes and fit none clips | A |
 | `settings.set_fps` | project panel, with a confirmation dialog that lists `effective.adjusted` afterwards | A |
 | `asset.add` | internal: import flow (`MediaImport`) | P |
 | `asset.remove` | library card menu "Remove from project"; `E_IN_USE` dialog | A |

@@ -32,6 +32,7 @@ import {
 	pasteOperations,
 	presetOperations,
 	projectRenameOperations,
+	reframeOperations,
 	settingsFpsOperations,
 	settingsSetOperations,
 	shapeAddOperations,
@@ -568,6 +569,14 @@ describe("crossfade of neighbours on one track (VV-042)", () => {
 		});
 		expect(ops).toHaveLength(1);
 		expect(ops[0]?.args).not.toHaveProperty("track_id");
+	});
+});
+
+describe("reframe builder (VV-038)", () => {
+	test("sends only the aspect preset", () => {
+		expect(reframeOperations("4:5")).toEqual([
+			{ op: "settings.reframe", args: { aspect: "4:5" } },
+		]);
 	});
 });
 
