@@ -269,6 +269,7 @@ func TestSecurity_T36_MemoryIsBoundedByTheBudgets(t *testing.T) {
 // new instance must work afterwards. (The product refuses sources above 8192 on a side earlier: SDD-007 9.1.)
 func TestSecurity_T36_MemoryExhaustionIsContained(t *testing.T) {
 	if testing.Short() {
+		// skip-env: short-mode
 		t.Skip("allocates up to 1 GiB")
 	}
 

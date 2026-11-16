@@ -113,6 +113,7 @@ func TestBwrapArgsMakeTheRunDirTheOnlyWritablePlace(t *testing.T) {
 func TestSecurity_T16_BwrapHasNoNetwork(t *testing.T) {
 	path, err := ResolveSandbox(context.Background(), SandboxBwrap)
 	if err != nil {
+		// skip-env: bwrap
 		t.Skipf("no usable bwrap: %v", err)
 	}
 

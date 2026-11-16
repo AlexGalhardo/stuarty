@@ -70,6 +70,7 @@ func TestSecurity_T35_NothingConnectsBeforeTheAnswerAndNeverAfterNo(t *testing.T
 
 func TestSecurity_T35_ArchiveCannotEscapeItsStagingDirectory(t *testing.T) {
 	if runtime.GOOS == "windows" {
+		// skip-env: symlink-privilege
 		t.Skip("the link cases need symbolic links, which Windows creates only with a privilege")
 	}
 
