@@ -5,6 +5,7 @@ import AudioSection from "./AudioSection";
 import AutoCaptions from "./AutoCaptions";
 import ChromaKeySection from "./ChromaKeySection";
 import ColorSection from "./ColorSection";
+import EffectsSection from "./EffectsSection";
 import FiltersSection from "./FiltersSection";
 import FramingSection from "./FramingSection";
 import ItemSections from "./ItemSections";
@@ -28,6 +29,7 @@ export default function ClipPanel({ itemId }: { itemId: string }): ReactNode {
 			<ColorSection itemId={itemId} />
 			<FiltersSection itemId={itemId} />
 			<ChromaKeySection itemId={itemId} />
+			<EffectsSection itemId={itemId} />
 			<SilencesSection itemId={itemId} />
 			<AutoCaptions itemId={itemId} />
 		</>
