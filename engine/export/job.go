@@ -58,6 +58,9 @@ type Job struct {
 	Fonts *raster.FontSet
 	// Bands is the number of bands of the compositor; zero is one per CPU, at most 8.
 	Bands int
+	// PixelRenderer is VUKEM_VIDEO_EXPORT_RENDERER: the Go compositor (the zero value) or the Rust renderer
+	// running as WebAssembly under wazero (SDD-013 section 4.6). Both draw the same bytes.
+	PixelRenderer PixelRenderer
 	// OnProgress is called at most 4 times per second and once at the last frame.
 	OnProgress func(Progress)
 
@@ -119,6 +122,8 @@ type renderer struct {
 	s    *state
 	comp *compositor.Compositor
 	fs   *frameSource
+	// rust draws instead of comp when the job asks for the Rust renderer.
+	rust *rustRenderer
 }
 
 func (s *state) newRenderer(bands int) *renderer {
@@ -128,7 +133,12 @@ func (s *state) newRenderer(bands int) *renderer {
 	}
 	fs := newFrameSource(s, infos)
 	cache := raster.NewCache(s.fonts, 0)
-	return &renderer{s: s, fs: fs, comp: &compositor.Compositor{Media: fs.media, Bitmaps: cache.Get, Bands: bands}}
+	rd := &renderer{s: s, fs: fs, comp: &compositor.Compositor{Media: fs.media, Bitmaps: cache.Get, Bands: bands}}
+	if s.job.PixelRenderer == PixelRendererRust {
+		rd.rust = newRustRenderer(s, fs, cache.Get, bands)
+	}
+
+	return rd
 }
 
 // render composes frame t into dst, then stops the decoders of the clips that are no longer drawn.
@@ -137,12 +147,22 @@ func (r *renderer) render(dst *image.RGBA, t int) error {
 	if r.s.single {
 		r.fs.prestart(&fp)
 	}
-	err := r.comp.Compose(dst, fp, r.s.scale)
+	var err error
+	if r.rust != nil {
+		err = r.rust.compose(dst, fp, r.s.scale)
+	} else {
+		err = r.comp.Compose(dst, fp, r.s.scale)
+	}
 	r.fs.endFrame()
 	return err
 }
 
-func (r *renderer) close() { r.fs.close() }
+func (r *renderer) close() {
+	if r.rust != nil {
+		r.rust.close()
+	}
+	r.fs.close()
+}
 
 // Run exports the project: it checks the lint, mixes the audio, composes every frame into the
 // encoder, verifies the file and publishes it (SDD-004 section 8). On any failure, and on
