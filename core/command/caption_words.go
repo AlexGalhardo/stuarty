@@ -49,9 +49,11 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "caption.set_style",
-		Summary: "Sets or clears the style override of one caption.",
-		Description: "The given object replaces the whole override and is stored as given. null or {} clears it. " +
-			"The caption style of the track is not touched.",
+		Summary: "Sets, changes or clears the style override of one caption.",
+		Description: "The given keys are merged into the override the caption already has, so a later call that " +
+			"gives only a colour keeps the position set before; a null value removes one key. With replace true the " +
+			"object replaces the whole override. A null or {} style clears the override. highlight is none or " +
+			"word. The caption style of the track is not touched.",
 		Example: `{"item_id": "itm_s6t7v8w9x0", "style": {"size": 80, "highlight": "word"}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeFontUnknown},
 		Scope:   ScopeEdit,
@@ -259,8 +261,9 @@ func applyCaptionSetBreaks(c *Context, a *captionSetBreaksArgs) error {
 }
 
 type captionSetStyleArgs struct {
-	ItemID string `json:"item_id" desc:"A caption."`
-	Style  any    `json:"style"   desc:"A partial CaptionStyle replacing the override, or null or {} to clear it." schema:"caption_style_or_nil"`
+	ItemID  string `json:"item_id"           desc:"A caption."`
+	Style   any    `json:"style"             desc:"A partial CaptionStyle merged into the override (null removes a key), or null or {} to clear it." schema:"caption_style_merge_or_nil"`
+	Replace bool   `json:"replace,omitempty" desc:"Replace the whole override with style instead of merging."`
 }
 
 func applyCaptionSetStyle(c *Context, a *captionSetStyleArgs) error {
@@ -276,14 +279,15 @@ func applyCaptionSetStyle(c *Context, a *captionSetStyleArgs) error {
 		return Errorf(CodeValidation, "args.style must be an object or null, got %s.", kindOf(a.Style)).
 			WithHint("Send a partial CaptionStyle, or null to clear the override.").WithPath("args.style")
 	}
-	if err := c.validateStyle(given, true, false); err != nil {
+	if err := c.validateStyle(given, true, !a.Replace); err != nil {
 		return err
 	}
 	it, err := c.caption(a.ItemID, "use text.set.", "Use text.set for text items.")
 	if err != nil {
 		return err
 	}
-	style, err := mergeStyle(nil, given, true)
+	clearAll := len(given) == 0
+	style, err := mergeStyle(it.Style, given, a.Replace || clearAll)
 	if err != nil {
 		return err
 	}

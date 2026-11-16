@@ -3285,14 +3285,15 @@ Sets the forced line breaks of a caption.
 
 ### C.39 `caption.set_style` (phase A)
 
-Sets or clears the style override of one caption.
+Sets, changes or clears the style override of one caption.
 
 **Arguments**
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | a `caption` |
-| `style` | partial CaptionStyle or `null` | yes | none | R15 without `null` values inside; the object replaces the whole override and is stored exactly as given, keys equal to a default included; `null` and `{}` clear it |
+| `style` | partial CaptionStyle or `null` | yes | none | R15. The keys are merged into the existing override (VV-070); a `null` value inside removes that key; with `replace` the object replaces the whole override and is stored exactly as given, keys equal to a default included, and `null` values inside are `E_VALIDATION`; `null` and `{}` clear the override. `highlight` is `"none"` or `"word"` |
+| `replace` | boolean | no | false | true replaces the whole override with `style` instead of merging |
 
 **Preconditions.**
 
@@ -3302,7 +3303,7 @@ Sets or clears the style override of one caption.
 
 **Postconditions.**
 
-1. The item's `style` is the given object with every key kept, even a key equal to the default (R15), or absent for `null` or `{}`. Keeping the key matters: it overrides a different value on the track. The track's `caption_style` is not touched.
+1. The item's `style` is the existing override with the given keys set (a `null` value removes its key), or exactly the given object with `replace`, or absent for `null`, `{}` or an empty result. Every key kept is kept even when equal to the default (R15). Keeping the key matters: it overrides a different value on the track. The track's `caption_style` is not touched.
 2. `diff` has one `item.updated` (`style`); empty when unchanged. `effective` has the stored `style`.
 
 **Errors.**
@@ -3331,6 +3332,8 @@ Sets or clears the style override of one caption.
 **Golden cases.**
 
 - `ok_set_override`
+- `ok_merge_keeps_the_other_keys`
+- `ok_null_removes_one_key`
 - `ok_replace_existing_override`
 - `ok_key_equal_to_default_overrides_track_style`
 - `ok_clear_with_null`

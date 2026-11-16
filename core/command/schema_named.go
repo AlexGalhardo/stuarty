@@ -11,15 +11,16 @@ import (
 // because the apply function checks the shape itself (the schema tag of args.go). Each
 // one describes exactly what that check accepts, so a form can be built from it.
 var namedSchemas = map[string]func() map[string]any{
-	"text_style":           func() map[string]any { return styleSchema(false, false) },
-	"text_style_merge":     func() map[string]any { return styleSchema(false, true) },
-	"caption_style_merge":  func() map[string]any { return styleSchema(true, true) },
-	"caption_style_or_nil": func() map[string]any { return nullable(styleSchema(true, false)) },
-	"speed":                speedSchema,
-	"fps":                  fpsSchema,
-	"transition_kind":      func() map[string]any { return nullable(map[string]any{"type": "string", "enum": transitionKinds}) },
-	"template_colors":      templateColorsSchema,
-	"chroma_color":         chromaColorSchema,
+	"text_style":                 func() map[string]any { return styleSchema(false, false) },
+	"text_style_merge":           func() map[string]any { return styleSchema(false, true) },
+	"caption_style_merge":        func() map[string]any { return styleSchema(true, true) },
+	"caption_style_or_nil":       func() map[string]any { return nullable(styleSchema(true, false)) },
+	"caption_style_merge_or_nil": func() map[string]any { return nullable(styleSchema(true, true)) },
+	"speed":                      speedSchema,
+	"fps":                        fpsSchema,
+	"transition_kind":            func() map[string]any { return nullable(map[string]any{"type": "string", "enum": transitionKinds}) },
+	"template_colors":            templateColorsSchema,
+	"chroma_color":               chromaColorSchema,
 }
 
 const (

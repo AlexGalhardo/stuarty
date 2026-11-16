@@ -404,48 +404,52 @@ export interface CaptionSetStyleArgs {
    */
   item_id: string;
   /**
-   * A partial CaptionStyle replacing the override, or null or {} to clear it.
+   * Replace the whole override with style instead of merging.
+   */
+  replace?: boolean;
+  /**
+   * A partial CaptionStyle merged into the override (null removes a key), or null or {} to clear it.
    */
   style: {
-    align?: "left" | "center" | "right";
+    align?: "left" | "center" | "right" | null;
     /**
      * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
      */
-    background_color?: string;
-    background_padding?: number;
-    background_radius?: number;
+    background_color?: string | null;
+    background_padding?: number | null;
+    background_radius?: number | null;
     /**
      * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
      */
-    color?: string;
-    font_family?: string;
-    font_weight?: number;
-    highlight?: "none" | "word";
+    color?: string | null;
+    font_family?: string | null;
+    font_weight?: number | null;
+    highlight?: "none" | "word" | null;
     /**
      * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
      */
-    highlight_background?: string;
+    highlight_background?: string | null;
     /**
      * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
      */
-    highlight_color?: string;
-    line_height?: number;
-    max_width?: number;
-    position?: "bottom" | "middle" | "top" | "custom";
-    shadow_blur?: number;
+    highlight_color?: string | null;
+    line_height?: number | null;
+    max_width?: number | null;
+    position?: "bottom" | "middle" | "top" | "custom" | null;
+    shadow_blur?: number | null;
     /**
      * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
      */
-    shadow_color?: string;
-    shadow_dx?: number;
-    shadow_dy?: number;
-    size?: number;
+    shadow_color?: string | null;
+    shadow_dx?: number | null;
+    shadow_dy?: number | null;
+    size?: number | null;
     /**
      * "#RRGGBB", "#RRGGBBAA" or "$name" of a template colour
      */
-    stroke_color?: string;
-    stroke_width?: number;
-    uppercase?: boolean;
+    stroke_color?: string | null;
+    stroke_width?: number | null;
+    uppercase?: boolean | null;
   } | null;
 }
 
@@ -1841,7 +1845,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"caption.merge": { summary: "Joins two captions of one track into one that spans both.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
 	"caption.retime_from_clip": { summary: "Retimes the captions linked to a clip after the clip was moved, trimmed or sped up.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OVERLAP"] },
 	"caption.set_breaks": { summary: "Sets the forced line breaks of a caption.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
-	"caption.set_style": { summary: "Sets or clears the style override of one caption.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_FONT_UNKNOWN"] },
+	"caption.set_style": { summary: "Sets, changes or clears the style override of one caption.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_FONT_UNKNOWN"] },
 	"caption.set_words": { summary: "Replaces the words of a caption.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT","E_OVERLAP"] },
 	"caption.split": { summary: "Splits a caption into two at a word boundary.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT"] },
 	"clip.add": { summary: "Places a video or image asset on a visual track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
