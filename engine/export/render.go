@@ -40,7 +40,7 @@ func NewRenderer(ctx context.Context, cfg RenderConfig) (*Renderer, error) {
 			"",
 		)
 	}
-	dir, err := cfg.Runner.NewRunDir(cfg.JobID)
+	dir, err := cfg.Runner.NewJobRunDir(cfg.JobID)
 	if err != nil {
 		return nil, wrapRun(err, ReasonRender, "A work folder for the frame could not be made.", "")
 	}

@@ -323,7 +323,7 @@ func Run(ctx context.Context, in Input) (*Result, error) {
 	if !validHash(in.Hash) {
 		return nil, ingestErr(ReasonDecodeFailed, "the store key is not a SHA-256", nil, nil)
 	}
-	wd, err := in.Runner.NewRunDir(in.JobID)
+	wd, err := in.Runner.NewJobRunDir(in.JobID)
 	if err != nil {
 		return nil, err
 	}

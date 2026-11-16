@@ -93,6 +93,26 @@ func (r *Runner) NewRunDir(jobID string) (*RunDir, error) {
 	return &RunDir{path: p}, nil
 }
 
+// NewJobRunDir is NewRunDir for a job's own directory. A job id belongs to one job, so a
+// directory that already exists is the leftover of an interrupted earlier attempt (the
+// process was closed mid-encode and the job was requeued): it is removed first.
+func (r *Runner) NewJobRunDir(jobID string) (*RunDir, error) {
+	if !jobIDRe.MatchString(jobID) {
+		return nil, internalErr("a job id is letters, digits, '_' and '-'", nil)
+	}
+	tmp := r.tmpDir
+	if tmp == "" {
+		tmp = filepath.Join(r.Workspace, "tmp")
+	}
+	stale := &RunDir{path: filepath.Join(tmp, jobID)}
+	if _, err := os.Lstat(stale.path); err == nil {
+		if err := stale.Remove(); err != nil {
+			return nil, internalErr("cannot remove the leftover run directory of the job", err)
+		}
+	}
+	return r.NewRunDir(jobID)
+}
+
 // newInternalRunDir creates a run directory for FFmpeg's own checks (capabilities, encoder
 // detection and size probes) under a unique name, so a directory left behind by an
 // interrupted run can never make a later one fail (VV-001).
