@@ -865,10 +865,13 @@ func (s *svc) entryOf(ctx context.Context, c Caller, pa *ProjectAssetRow, ar *As
 	return e
 }
 
+// isThumbExt is the file type of a poster or a sheet: JPEG, or PNG for a source with alpha (SDD-011 4.5).
+func isThumbExt(ext string) bool { return ext == "jpg" || ext == "png" }
+
 func stripOf(arts []ArtifactRow) *Strip {
 	i := slices.IndexFunc(
 		arts,
-		func(a ArtifactRow) bool { return a.Kind == "thumbnails" && a.Variant == "" && a.Ext == "jpg" },
+		func(a ArtifactRow) bool { return a.Kind == "thumbnails" && a.Variant == "" && isThumbExt(a.Ext) },
 	)
 	if i < 0 || len(arts[i].Meta) == 0 {
 		return nil
@@ -1213,15 +1216,23 @@ func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {
 	}
 
 	i := slices.IndexFunc(arts, func(a ArtifactRow) bool {
-		return a.Kind == kind && a.Variant == variant && (ext == "" || a.Ext == ext)
+		return a.Kind == kind && a.Variant == variant &&
+			(ext == "" || a.Ext == ext || (kind == "thumbnails" && isThumbExt(a.Ext)))
 	})
 	if i < 0 {
 		return nil, newError(command.CodeNotFound, "the asset has no %s file.", ref.Kind).
 			withHint("an asset without video or audio has no such file")
 	}
 
+	if kind == "thumbnails" && arts[i].Ext == "png" {
+		ctype = "image/png"
+	}
+
 	if ref.Kind == "proxy" {
 		switch arts[i].Ext {
+		case "webm":
+			// The proxy of a source with alpha (SDD-011 4.4); the browser plays it with its alpha.
+			ctype = "video/webm"
 		case "mp4":
 			ctype = "video/mp4"
 			if ar.Kind == string(timeline.AssetAudio) {

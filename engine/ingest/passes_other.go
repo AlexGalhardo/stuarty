@@ -169,7 +169,10 @@ func (j *job) image(ctx context.Context) error {
 	j.prog.set(StepVideo, 1)
 	j.add(workFile{kind: "normalized", profile: ProfileNormalized, ext: "png", name: "normalized.png"})
 	j.add(workFile{kind: "proxy", profile: ProfileProxy, ext: proxyExt, name: proxyName})
-	if err := j.timed(StepMux, func() error { return j.posters(ctx, 0, false, proxyName, deadline) }); err != nil {
+	if err := j.timed(
+		StepMux,
+		func() error { return j.posters(ctx, 0, false, proxyName, false, deadline) },
+	); err != nil {
 		return err
 	}
 	return j.timed(StepVerify, func() error { return j.verifyImage(plan, proxyName) })

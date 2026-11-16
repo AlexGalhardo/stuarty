@@ -174,6 +174,23 @@ func (g Gen) AlphaClip(ctx context.Context, name string, w, h, fps int, secs flo
 	)
 }
 
+// AlphaClipWithSound is AlphaClip with a 440 Hz tone: the left half is transparent, the right half opaque
+// red, and the sound is 16-bit PCM.
+func (g Gen) AlphaClipWithSound(ctx context.Context, name string, w, h, fps int, secs float64) (string, error) {
+	return g.ff(
+		ctx,
+		name,
+		append(append([]string{
+			"-f", "lavfi", "-i", fmt.Sprintf("color=c=red:s=%dx%d:r=%d:d=%g", w, h, fps, secs),
+		}, tone(secs)...),
+			"-vf", fmt.Sprintf(
+				"format=yuva444p,geq=lum='lum(X,Y)':cb='cb(X,Y)':cr='cr(X,Y)':a='if(gte(X,%d),255,0)',format=yuva444p10le",
+				w/2,
+			),
+			"-c:v", "prores_ks", "-profile:v", "4444", "-pix_fmt", "yuva444p10le", "-c:a", "pcm_s16le", "-f", "mov")...,
+	)
+}
+
 // AlphaWebM is a VP9 clip in WebM with an alpha plane and no sound: the left half is fully transparent
 // and the right half is opaque red. VP9 keeps the alpha apart and ffprobe still says yuv420p.
 func (g Gen) AlphaWebM(ctx context.Context, name string, w, h, fps int, secs float64) (string, error) {

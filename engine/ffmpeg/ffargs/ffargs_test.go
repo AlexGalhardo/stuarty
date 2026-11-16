@@ -836,3 +836,78 @@ func TestSecurity_ForcedInputDecoder(t *testing.T) {
 		t.Error("a forced decoder on a synthetic input was accepted")
 	}
 }
+
+// The alpha proxy is VP9 with an alpha plane and Opus in WebM (VV-013): the output format, the
+// pixel format, the audio codec and the one libvpx option it needs are on the grammar, and their
+// neighbours (another container, a value other than 0, another audio codec) are not.
+func TestSecurity_AlphaProxyGrammar(t *testing.T) {
+	pol := testPolicy()
+	video := func(altRef string) ([]string, error) {
+		return Cmd{
+			LogErrorOnly: true, Inputs: []Input{FileInput(storeFile())},
+			Outputs: []Output{{
+				Format: "webm", Path: run("proxy-video.webm"), Maps: []string{"0:v:0"}, NoAudio: true,
+				Opts: []Opt{
+					Enum("-c:v", "libvpx-vp9"), Enum("-pix_fmt", "yuva420p"), Enum("-auto-alt-ref", altRef),
+				},
+			}},
+		}.Argv(pol)
+	}
+	argv, err := video("0")
+	if err != nil {
+		t.Fatalf("the alpha proxy video: %v", err)
+	}
+	if joined := strings.Join(argv, " "); !strings.Contains(joined, "-auto-alt-ref 0") ||
+		!strings.Contains(joined, "-f webm") {
+		t.Errorf("argv lacks the alpha options: %s", joined)
+	}
+
+	audio := func(codec, format string) error {
+		_, err := Cmd{
+			LogErrorOnly: true, Inputs: []Input{FileInput(storeFile())},
+			Outputs: []Output{{
+				Format: format, Path: run("proxy-audio.webm"), Maps: []string{"0:a:0"}, NoVideo: true,
+				Opts: []Opt{Enum("-c:a", codec), Bitrate("-b:a", "128k")},
+			}},
+		}.Argv(pol)
+		return err
+	}
+	if err := audio("libopus", "webm"); err != nil {
+		t.Errorf("the alpha proxy audio: %v", err)
+	}
+	for _, c := range []struct{ codec, format string }{
+		{"libvorbis", "webm"}, {"opus", "webm"}, {"libopus", "matroska"}, {"libopus", "ogg"},
+	} {
+		if audio(c.codec, c.format) == nil {
+			t.Errorf("%s in %s was accepted", c.codec, c.format)
+		}
+	}
+	if _, err := video("1"); err == nil {
+		t.Error("-auto-alt-ref 1 was accepted")
+	}
+
+	// The tag that keeps the alpha plane visible is the one metadata option, with the one value.
+	tag := func(opt, value string) error {
+		_, err := Cmd{
+			LogErrorOnly: true, Inputs: []Input{FileInput(storeFile())},
+			Outputs: []Output{{
+				Format: "webm", Path: run("proxy.webm"), Maps: []string{"0:v:0"}, NoAudio: true,
+				Opts: []Opt{Enum("-c:v", "copy"), Enum(opt, value)},
+			}},
+		}.Argv(pol)
+		return err
+	}
+	if err := tag("-metadata:s:v:0", "alpha_mode=1"); err != nil {
+		t.Errorf("alpha_mode tag: %v", err)
+	}
+	for _, c := range [][2]string{
+		{"-metadata:s:v:0", "alpha_mode=0"},
+		{"-metadata:s:v:0", "title=x"},
+		{"-metadata", "alpha_mode=1"},
+		{"-metadata:s:a:0", "alpha_mode=1"},
+	} {
+		if tag(c[0], c[1]) == nil {
+			t.Errorf("%s %s was accepted", c[0], c[1])
+		}
+	}
+}
