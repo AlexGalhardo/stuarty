@@ -234,7 +234,7 @@ func (v *view) parseTime(field, raw string) (int64, error) {
 
 	if t < 0 || t > v.last() {
 		return 0, newError(command.CodeInvalidTime, "%s is frame %d; the last frame is %d.", field, t, v.last()).
-			withPath(field).withHint("the last valid time is %s", v.fps().FormatSeconds(v.last())+"s")
+			withPath(field).withHint("the last valid time is %s", v.fps().FormatSeconds(v.last()))
 	}
 
 	return t, nil

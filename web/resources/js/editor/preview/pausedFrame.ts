@@ -1,5 +1,10 @@
 export const TRUTH_DELAY_MS = 150;
 
+// The end of the timeline has no picture: the core refuses it (E_INVALID_TIME).
+export function clampToLastFrame(frame: number, end: number): number {
+	return Math.max(Math.min(frame, end - 1), 0);
+}
+
 export interface PausedFrameDeps {
 	setTimeout(fn: () => void, ms: number): unknown;
 	clearTimeout(handle: unknown): void;

@@ -15,6 +15,7 @@ import {
 	shouldCommitFrame,
 } from "./mediaSync";
 import {
+	clampToLastFrame,
 	PausedFrame,
 	type PausedFrameDeps,
 	TRUTH_DELAY_MS,
@@ -360,5 +361,13 @@ describe("plan matrices for PixiJS", () => {
 
 	test("a matrix of another size is refused", () => {
 		expect(() => pixiColorMatrix([1, 0, 0, 0])).toThrow("12 numbers");
+	});
+});
+
+describe("clampToLastFrame", () => {
+	test("the end of the timeline is not a frame", () => {
+		expect(clampToLastFrame(600, 600)).toBe(599);
+		expect(clampToLastFrame(10, 600)).toBe(10);
+		expect(clampToLastFrame(5, 0)).toBe(0);
 	});
 });
