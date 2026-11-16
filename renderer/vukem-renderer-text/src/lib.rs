@@ -10,6 +10,7 @@ pub mod canvas;
 pub mod fonts;
 pub mod geom;
 pub mod layout;
+pub mod math;
 pub mod scan;
 pub mod shape;
 pub mod text;

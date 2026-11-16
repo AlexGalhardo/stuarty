@@ -6,12 +6,12 @@
 //! `Never`, no truncation): which UAX #14 opportunities are valid, what a candidate line measures,
 //! when a line ends, how the trailing space is trimmed and how the runs of a line are ordered.
 
+use crate::math::mul;
 use harfrust::{Buffer, Direction, Language, ShapeOptions, ShaperFont, Tag};
 use skrifa::GlyphId;
 use unicode_bidi::BidiInfo;
 use unicode_linebreak::{BreakOpportunity, linebreaks};
 use unicode_script::Script as UScript;
-use vukem_renderer::math::mul;
 
 use crate::Rect;
 use crate::fonts::Face;
