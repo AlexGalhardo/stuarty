@@ -309,7 +309,7 @@ Conventional Commits 1.0 in English (`docs/tooling.md:57-74`, vukem `.claude/rul
 
 ### 6.2 Allowed scopes
 
-**Adapted:** vukem lists scopes in prose and does not enforce the list (`internal/tools/commitlint/lint.go:20,63-64` checks only the shape). Here the list is enforced twice: by the local validator and by the pull request title check. A scope is optional; when present it must be one of these **31** scopes. The list is derived from ADR-0001; the first eleven rows are the `core/`, `engine/` and `service/` packages. `release` is the scope of the release commit and the release pull request (`chore(release): vX.Y.Z`); without it the commit-msg hook and `Conventional title` would reject every release. `deps-dev` is what Dependabot writes for development dependencies (`include: scope`). `adr`, `sdd`, `go` and `security` were added on 2026-11-14 because the team already writes them; the first two name the documents of `docs/` that `docs` would hide, and `security` is the scope D-027 reads. Three commits of release/v0.3.0 (`0bb53009b`, `c83d5ab77`, `a2d2a6177`) were pushed with a header of 101 to 108 characters; `Conventional commits` skips them by hash, because a pushed commit cannot be reworded without a force push, and every later commit is checked for length before it is pushed. `image` and `workspace` were added on 2026-11-14 (the container image and `service/workspace`), and a numbered `sdd-NNN` is accepted as a spelling of `sdd` (one commit of P1-SRV-003 used it). `installers` was added with P1-REL-010 for the installer packaging of `.config/installers/`.
+**Adapted:** vukem lists scopes in prose and does not enforce the list (`internal/tools/commitlint/lint.go:20,63-64` checks only the shape). Here the list is enforced twice: by the local validator and by the pull request title check. A scope is optional; when present it must be one of these **49** scopes. The list is derived from ADR-0001; the first eleven rows are the `core/`, `engine/` and `service/` packages. `release` is the scope of the release commit and the release pull request (`chore(release): vX.Y.Z`); without it the commit-msg hook and `Conventional title` would reject every release. `deps-dev` is what Dependabot writes for development dependencies (`include: scope`). `adr`, `sdd`, `go` and `security` were added on 2026-11-14 because the team already writes them; the first two name the documents of `docs/` that `docs` would hide, and `security` is the scope D-027 reads. Three commits of release/v0.3.0 (`0bb53009b`, `c83d5ab77`, `a2d2a6177`) were pushed with a header of 101 to 108 characters; `Conventional commits` skips them by hash, because a pushed commit cannot be reworded without a force push, and every later commit is checked for length before it is pushed. `image` and `workspace` were added on 2026-11-14 (the container image and `service/workspace`), and a numbered `sdd-NNN` is accepted as a spelling of `sdd` (one commit of P1-SRV-003 used it). `installers` was added with P1-REL-010 for the installer packaging of `.config/installers/`.
 
 | Scope | Covers |
 | --- | --- |
@@ -344,8 +344,26 @@ Conventional Commits 1.0 in English (`docs/tooling.md:57-74`, vukem `.claude/rul
 | `sdd` | `docs/sdds/` |
 | `go` | Go-wide changes that fit no package scope: formatter or linter findings, toolchain bumps |
 | `security` | a security fix or hardening; also files the commit under Security in the changelog (D-027) |
+| `desktop` | `desktop/`, the desktop shell |
+| `http` | `web/app/http`, the HTTP handlers and middleware |
+| `ffmpeg` | `engine/ffmpeg`, the FFmpeg runner and its pins |
+| `renderer` | `renderer/`, the Rust pixel renderer and its build |
+| `docker` | `.config/docker/` and the image build |
+| `library` | the media library panel of the editor |
+| `events` | `web/app/events`, the event stream |
+| `cmd` | `web/cmd/`, the program entry points |
+| `contract` | `web/contract/`, the contract scenarios |
+| `pathguard` | `service/pathguard` |
+| `remote` | the remote client mode of the CLI |
+| `timeval` | `core/timeval` |
+| `store` | `engine/store` |
+| `notices` | `internal/tools/notices`, the third-party notices |
+| `projects` | the projects page and the project endpoints |
+| `preview` | the preview component and its frame requests |
+| `owner` | `web/app/owner`, the process that owns a workspace |
+| `e2e` | `web/e2e/`, the browser tests |
 
-`desktop/` has no scope until BETA; the task that starts `desktop/` adds `desktop` to this table, to the validator and to the labels in the same pull request (a change of this SDD).
+On 2026-11-16 the 18 scopes the project already used in its commits (`desktop`, `http`, `ffmpeg`, `renderer`, `docker`, `library`, `events`, `cmd`, `contract`, `pathguard`, `remote`, `timeval`, `store`, `notices`, `projects`, `preview`, `owner`, `e2e`) were added, because the commits were already on the release branch and cannot be reworded without a force push. The subject length limit of 100 characters is unchanged; two older subjects are known exceptions (`af3252cc`, `5cf1eba3`).
 
 ### 6.3 Enforcement
 
@@ -575,6 +593,24 @@ jobs:
             sdd
             go
             security
+            desktop
+            http
+            ffmpeg
+            renderer
+            docker
+            library
+            events
+            cmd
+            contract
+            pathguard
+            remote
+            timeval
+            store
+            notices
+            projects
+            preview
+            owner
+            e2e
           requireScope: false
           subjectPattern: ^[^A-Z].*[^.]$
           subjectPatternError: Description must start lowercase and must not end with a period.
