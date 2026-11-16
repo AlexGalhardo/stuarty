@@ -1,0 +1,14 @@
+# SDD-013 section 3.9 rules 2 and 3: a fused multiply-add and the platform math library give different bits on different systems.
+disallowed-methods = [
+	{ path = "f64::mul_add", reason = "fused multiply-add differs across targets (SDD-013 3.9 rule 2)" },
+	{ path = "f64::sin", reason = "platform libm (SDD-013 3.9 rule 3); use math::sincos" },
+	{ path = "f64::cos", reason = "platform libm (SDD-013 3.9 rule 3); use math::sincos" },
+	{ path = "f64::tan", reason = "platform libm (SDD-013 3.9 rule 3)" },
+	{ path = "f64::sin_cos", reason = "platform libm (SDD-013 3.9 rule 3); use math::sincos" },
+	{ path = "f64::powf", reason = "platform libm (SDD-013 3.9 rule 3)" },
+	{ path = "f64::powi", reason = "platform libm (SDD-013 3.9 rule 3)" },
+	{ path = "f64::exp", reason = "platform libm (SDD-013 3.9 rule 3)" },
+	{ path = "f64::ln", reason = "platform libm (SDD-013 3.9 rule 3)" },
+	{ path = "f64::atan2", reason = "platform libm (SDD-013 3.9 rule 3)" },
+	{ path = "f32::mul_add", reason = "no f32 in the CPU path" },
+]

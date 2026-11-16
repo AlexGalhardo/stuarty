@@ -1,7 +1,14 @@
 //! The pixel renderer of Vukem Video (ADR-0029, rule `.agents/rules/rust.md`).
 //!
-//! The frame plan is decided in Go (`core/plan`); this crate only draws it. This is the
-//! skeleton of the workspace: the composition arrives with the next stages.
+//! The frame plan is decided in Go (`core/plan`); this crate only draws it. The CPU
+//! path (`compose`) is the port of `engine/compositor`, bit-exact with it (SDD-013 section 3).
+
+pub mod blur;
+pub mod colour;
+pub mod compose;
+pub mod image;
+pub mod math;
+pub mod resize;
 
 use wasm_bindgen::prelude::wasm_bindgen;
 
