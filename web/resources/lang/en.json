@@ -451,6 +451,9 @@
           "set_blur": {
             "title": "Set clip blur"
           },
+          "set_chroma_key": {
+            "title": "Set clip chroma key"
+          },
           "remove_silences": {
             "title": "Remove silences"
           },
