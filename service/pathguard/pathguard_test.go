@@ -419,3 +419,30 @@ func caseInsensitive(root, inside string) bool {
 
 	return e1 == nil && e2 == nil
 }
+
+// The guard never puts a server path in an answer; only Roots lets the service show them to an administrator.
+func TestNetworkRefusalNamesNoPath(t *testing.T) {
+	base := realTemp(t)
+	root := filepath.Join(base, "media")
+
+	if err := os.MkdirAll(root, 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	g, err := New(Config{Roots: []string{root}, Network: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, path := range []string{filepath.Join(base, "other.mp4"), filepath.Join(root, "missing.mp4")} {
+		_, err := g.OpenImport(path)
+
+		if pe, ok := errors.AsType[*Error](err); !ok || strings.Contains(pe.Hint+pe.Message, base) {
+			t.Errorf("answer %v names a server path", err)
+		}
+	}
+
+	if got := g.Roots(); len(got) != 1 || !strings.EqualFold(got[0], root) {
+		t.Errorf("Roots = %v, want [%s]", got, root)
+	}
+}

@@ -22,6 +22,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/core/timeval"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/service/pathguard"
 	"github.com/AlexGalhardo/vukem-video/service/textview"
 	"github.com/AlexGalhardo/vukem-video/service/untrusted"
 )
@@ -196,7 +197,7 @@ func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f I
 
 	file, err := s.media.Guard.OpenImport(f.Path)
 	if err != nil {
-		return refuse(err)
+		return refuse(s.withRootsHint(c, err))
 	}
 
 	defer func() { _ = file.Close() }()
@@ -1251,4 +1252,24 @@ func etag(tag string, profile int, withProfile bool) string {
 	}
 
 	return `"` + tag + `"`
+}
+
+// withRootsHint names the import roots in a refused path for the caller who may see
+// the server's paths: an administrator, or anyone in local mode. A member of a
+// network server gets the generic hint (SDD-007 section 7.3).
+func (s *svc) withRootsHint(c Caller, err error) error {
+	pe, ok := errors.AsType[*pathguard.Error](err)
+	if !ok || pe.Code != pathguard.CodePathNotAllowed {
+		return err
+	}
+
+	roots := s.media.Guard.Roots()
+	if len(roots) == 0 || (c.OwnerUserID != "" && !slices.Contains(c.Scopes, ScopeAdmin)) {
+		return err
+	}
+
+	out := *pe
+	out.Hint += " Import roots: " + strings.Join(roots, ", ") + "."
+
+	return &out
 }

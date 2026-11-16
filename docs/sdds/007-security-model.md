@@ -608,7 +608,7 @@ In every mode: URLs and schemes, UNC and device paths, relative paths, paths wit
 
 ### 7.3 Error answers and oracles
 
-Local mode: `E_FILE_NOT_FOUND` when the path does not exist, `E_PATH_NOT_ALLOWED` for the other refusals. Network mode: every failure of steps 7 to 10 is `E_PATH_NOT_ALLOWED` with the same message, whether the file exists or not, so a caller cannot map the server's file system.
+Local mode: `E_FILE_NOT_FOUND` when the path does not exist, `E_PATH_NOT_ALLOWED` for the other refusals. Network mode: every failure of steps 7 to 10 is `E_PATH_NOT_ALLOWED` with the same message, whether the file exists or not, so a caller cannot map the server's file system. The guard's answer never names a path. The service adds the import roots to the hint only for an administrator (the `admin` scope) or in local mode, so a member of a network server never learns the server's directories; a member is told to ask the operator.
 
 ### 7.4 Fonts
 

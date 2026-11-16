@@ -253,6 +253,10 @@ func splitParts(p string) []string {
 	return strings.FieldsFunc(filepath.ToSlash(p), func(r rune) bool { return r == '/' })
 }
 
+// Roots are the canonical import roots. They are server paths: a caller that is
+// not an administrator must never be shown them.
+func (g *Guard) Roots() []string { return slices.Clone(g.roots) }
+
 // OpenImport is steps 1 to 10: it returns the file opened for reading, which
 // the caller must close. Every later step uses the handle, never the path.
 func (g *Guard) OpenImport(path string) (*os.File, error) {
