@@ -2,6 +2,9 @@
 # This line is a safety net in case one is copied in.
 vukem-feedback.md
 
+# Advisor plans of the improve skill: local working files, never committed.
+plans/
+
 # Dependencies, builds and caches
 node_modules/
 dist/
