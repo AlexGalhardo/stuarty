@@ -158,7 +158,12 @@ export async function clippedText(page: Page): Promise<string[]> {
 // hidden by author content. Reports the focused element when its centre and all
 // four corners (inset by 1 px) resolve to something outside it.
 export async function obscuredFocus(page: Page): Promise<string | null> {
-	return page.evaluate(() => {
+	return page.evaluate(async () => {
+		// WebKit scrolls a focused element into view after the key event, so the
+		// position is read once two frames have drawn.
+		await new Promise<void>((done) =>
+			requestAnimationFrame(() => requestAnimationFrame(() => done())),
+		);
 		const el = document.activeElement;
 		if (!el || el === document.body) return null;
 		const rect = el.getBoundingClientRect();
