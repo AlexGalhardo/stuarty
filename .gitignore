@@ -41,3 +41,7 @@ spikes/**/*.ppm
 spikes/**/*.raw
 spikes/**/*.yuv
 spikes/**/models/
+
+# Rust renderer build output (ADR-0029)
+/renderer/target/
+/renderer/dist/
