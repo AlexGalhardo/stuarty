@@ -150,7 +150,10 @@ func init() {
 	}
 
 	ss("ok_set_override", args(`{"size": 80, "highlight": "word"}`), meetWords())
-	ss("ok_replace_existing_override", args(`{"size": 80}`), styled(map[string]any{"size": 60, "uppercase": true}))
+	ss("ok_merge_keeps_the_other_keys", args(`{"size": 80}`), styled(map[string]any{"size": 60, "uppercase": true}))
+	ss("ok_null_removes_one_key", args(`{"uppercase": null}`), styled(map[string]any{"size": 60, "uppercase": true}))
+	ss("ok_replace_existing_override", fmt.Sprintf(`{"item_id": %q, "style": {"size": 80}, "replace": true}`, itemC),
+		styled(map[string]any{"size": 60, "uppercase": true}))
 	ss("ok_key_equal_to_default_overrides_track_style", args(`{"highlight": "none"}`), meetWords())
 	ss("ok_clear_with_null", args(`null`), styled(map[string]any{"size": 60}))
 	ss("ok_clear_with_empty_object", args(`{}`), styled(map[string]any{"size": 60}))
@@ -158,7 +161,11 @@ func init() {
 	ss("ok_template_color_reference", args(`{"color": "$accent"}`),
 		func() *B { return meetWords()().template() })
 	ss("err_validation_bad_highlight", args(`{"highlight": "all"}`), meetWords())
-	ss("err_validation_null_value_inside", args(`{"size": null}`), meetWords())
+	ss(
+		"err_validation_null_value_inside",
+		fmt.Sprintf(`{"item_id": %q, "style": {"size": null}, "replace": true}`, itemC),
+		meetWords(),
+	)
 	ss("err_validation_unknown_color_reference", args(`{"color": "$nope"}`),
 		func() *B { return meetWords()().template() })
 	ss("err_not_found", `{"item_id": "itm_zzzzzzzzzz", "style": {"size": 80}}`, meetWords())

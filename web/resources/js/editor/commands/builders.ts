@@ -286,7 +286,8 @@ export function toggleBreak(
 }
 
 // `style: null` clears the override ("Use track style"); a style replaces it
-// whole, so the caller passes the stored style with the changed key.
+// whole (replace: true, as the command merges by default), so the caller passes
+// the stored style with the changed key.
 export function captionStyleOperations(
 	itemId: string,
 	style: CaptionStyle | null,
@@ -294,7 +295,10 @@ export function captionStyleOperations(
 	return [
 		{
 			op: "caption.set_style",
-			args: { item_id: itemId, style: style === null ? null : { ...style } },
+			args:
+				style === null
+					? { item_id: itemId, style: null }
+					: { item_id: itemId, style: { ...style }, replace: true },
 		},
 	];
 }
