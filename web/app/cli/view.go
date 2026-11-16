@@ -17,7 +17,7 @@ var view = &spec{
 	summary: "render a frame or a contact sheet of a project",
 	usage: []string{
 		"vukem-video view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]",
-		"    [--from t --until t --count n] [--cols n] [--asset <id>] [--max-tokens n] [--width px]",
+		"    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]",
 	},
 	example: "vukem-video view --project prj_7k2m9x4q1b --at 1s --json",
 	project: true,
@@ -29,7 +29,6 @@ var view = &spec{
 		{Name: "until", Kind: kindString, Usage: "sheet: last time, included (default the last frame)"},
 		{Name: "count", Kind: kindInt, Default: "9", Usage: "sheet: frames evenly spaced from --from to --until"},
 		{Name: "cols", Kind: kindInt, Usage: "sheet: columns (default ceil(sqrt(count)))"},
-		{Name: "asset", Kind: kindString, Usage: "view the media of a source asset instead of the timeline"},
 		{Name: "max-tokens", Kind: kindInt, Usage: "image token budget (default 800, a sheet 1,500; at most 1,568)"},
 		{Name: "width", Kind: kindInt, Usage: "image width in pixels, even; exclusive with --max-tokens"},
 	},
@@ -53,7 +52,7 @@ func runView(ctx context.Context, c *call) (*output, error) {
 		}
 
 		res, err = c.svc.ViewFrame(ctx, service.ViewFrameRequest{
-			ProjectID: c.projectID, At: p.str("at"), AssetID: p.str("asset"),
+			ProjectID: c.projectID, At: p.str("at"),
 			MaxTokens: p.integer("max-tokens"), Width: p.integer("width"),
 		})
 	case "sheet":
@@ -66,7 +65,7 @@ func runView(ctx context.Context, c *call) (*output, error) {
 
 		req := service.ViewSheetRequest{
 			ProjectID: c.projectID, From: p.str("from"), Until: p.str("until"), Cols: p.integer("cols"),
-			AssetID: p.str("asset"), MaxTokens: p.integer("max-tokens"),
+			MaxTokens: p.integer("max-tokens"),
 		}
 		if p.has("times") {
 			req.Times = strings.Split(p.str("times"), ",")

@@ -361,7 +361,7 @@ Render a frame or a contact sheet of a project
 
 ```text
 vukem-video view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]
-    [--from t --until t --count n] [--cols n] [--asset <id>] [--max-tokens n] [--width px]
+    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]
 ```
 
 | Flag | Type | Default | Meaning |
@@ -373,7 +373,6 @@ vukem-video view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...
 | `--until` | string |  | sheet: last time, included (default the last frame) |
 | `--count` | integer | `9` | sheet: frames evenly spaced from --from to --until |
 | `--cols` | integer |  | sheet: columns (default ceil(sqrt(count))) |
-| `--asset` | string |  | view the media of a source asset instead of the timeline |
 | `--max-tokens` | integer |  | image token budget (default 800, a sheet 1,500; at most 1,568) |
 | `--width` | integer |  | image width in pixels, even; exclusive with --max-tokens |
 

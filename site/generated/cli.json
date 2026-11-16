@@ -494,7 +494,7 @@
       "summary": "render a frame or a contact sheet of a project",
       "usage": [
         "vukem-video view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]",
-        "    [--from t --until t --count n] [--cols n] [--asset <id>] [--max-tokens n] [--width px]"
+        "    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]"
       ],
       "example": "vukem-video view --project prj_7k2m9x4q1b --at 1s --json",
       "flags": [
@@ -534,11 +534,6 @@
           "name": "cols",
           "type": "integer",
           "usage": "sheet: columns (default ceil(sqrt(count)))"
-        },
-        {
-          "name": "asset",
-          "type": "string",
-          "usage": "view the media of a source asset instead of the timeline"
         },
         {
           "name": "max-tokens",
