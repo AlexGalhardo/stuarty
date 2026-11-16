@@ -9,6 +9,25 @@ import (
 // maskFix is the fractional bits of the position inside a mask's rectangle: 24.8 fixed point.
 const maskFix = 8
 
+// maskLimit holds the arithmetic of a mask to a size, a feather or a position (24.8) of 2^32, and
+// maskPosLimit holds a position to 2^40 either side of the rectangle; a plan that core accepts never
+// reaches either (SDD-004 section 3.9).
+const (
+	maskLimit    = 1 << 32
+	maskPosLimit = 1 << 40
+)
+
+// clamped is v rounded half away from zero and held to 0..hi; NaN is 0.
+func clamped(v, hi float64) int64 {
+	if math.IsNaN(v) || v <= 0 {
+		return 0
+	}
+	if v > hi {
+		return int64(hi)
+	}
+	return int64(math.Round(v))
+}
+
 // maskState is the mask of one layer (SDD-004 section 3.9): the shape in 24.8 fixed point in the
 // layer's own unrotated rectangle, and the two ways of finding where a destination pixel is in it.
 // Everything is integer, so the coverage is the same on every system and in every band.
@@ -24,12 +43,12 @@ type maskState struct {
 // newMask prepares the mask of spec for a layer placed as p (the placement before any blur, so a
 // blur halo never moves the mask).
 func newMask(spec *plan.MaskSpec, p placement, outScale float64) *maskState {
-	wq := int64(math.Round(mul(p.w, 256)))
-	hq := int64(math.Round(mul(p.h, 256)))
-	xm := int64(math.Round(mul(spec.X, 1000)))
-	ym := int64(math.Round(mul(spec.Y, 1000)))
-	wm := int64(math.Round(mul(spec.Width, 1000)))
-	hm := int64(math.Round(mul(spec.Height, 1000)))
+	wq := clamped(mul(p.w, 256), maskLimit)
+	hq := clamped(mul(p.h, 256), maskLimit)
+	xm := clamped(mul(spec.X, 1000), 1000)
+	ym := clamped(mul(spec.Y, 1000), 1000)
+	wm := clamped(mul(spec.Width, 1000), 1000)
+	hm := clamped(mul(spec.Height, 1000), 1000)
 
 	m := &maskState{ellipse: spec.Shape == "ellipse", invert: spec.Invert}
 	m.l = (xm*wq + 500) / 1000
@@ -37,7 +56,7 @@ func newMask(spec *plan.MaskSpec, p placement, outScale float64) *maskState {
 	m.ha = max(1, (wm*wq+1000)/2000)
 	m.hb = max(1, (hm*hq+1000)/2000)
 	m.r, m.b = m.l+2*m.ha, m.t+2*m.hb
-	m.fq = int64(math.Round(mul(mul(float64(spec.Feather), outScale), 256)))
+	m.fq = clamped(mul(mul(float64(spec.Feather), outScale), 256), maskLimit)
 
 	m.left, m.top = round(p.cx-p.w/2), round(p.cy-p.h/2)
 
@@ -70,6 +89,8 @@ func (m *maskState) sampleCov(x, y int) uint32 {
 
 // coverage is the 0..255 coverage at the position (lx, ly) in 24.8 inside the rectangle.
 func (m *maskState) coverage(lx, ly int64) uint32 {
+	lx, ly = min(max(lx, -maskPosLimit), maskPosLimit), min(max(ly, -maskPosLimit), maskPosLimit)
+
 	var d int64
 	if m.ellipse {
 		qx := min((abs64(lx-(m.l+m.ha))<<16)/m.ha, 1<<22)

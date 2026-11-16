@@ -16,6 +16,7 @@ pub mod error;
 pub mod host;
 pub mod image;
 pub mod json;
+pub mod mask;
 pub mod math;
 pub mod plan;
 pub mod resize;

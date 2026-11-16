@@ -43,6 +43,7 @@ pub fn resize(src: &Image, w: usize, h: usize) -> Image {
 		&p,
 		255,
 		BlendMode::Normal,
+		None,
 	);
 	dst.opaque = cur.opaque;
 	dst

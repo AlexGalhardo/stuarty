@@ -7,6 +7,7 @@ use crate::blend::BlendMode;
 use crate::chroma::ChromaKeySpec;
 use crate::error::{Error, Reason};
 use crate::json::{JsonError, Value, parse};
+use crate::mask::{MaskShape, MaskSpec};
 
 /// The version of the render input this module reads (`RenderInputVersion`, SDD-000 section 12).
 pub const RENDER_INPUT_VERSION: i64 = 1;
@@ -54,6 +55,7 @@ pub struct LayerSpec {
 	pub blur: f64,
 	pub chroma_key: Option<ChromaKeySpec>,
 	pub blend: BlendMode,
+	pub mask: Option<MaskSpec>,
 }
 
 /// A decoded render input.
@@ -199,6 +201,39 @@ fn blend(v: Option<Value>) -> Result<BlendMode, Error> {
 			.ok_or_else(|| invalid(format!("layer: blend {s:?} is not a blend mode"))),
 		Some(_) => Err(invalid("layer: blend is not a string")),
 	}
+}
+
+fn mask(v: Option<Value>) -> Result<Option<MaskSpec>, Error> {
+	let Some(v) = v.filter(|v| !matches!(v, Value::Null)) else {
+		return Ok(None);
+	};
+	let mut f = Fields::of(v, "mask")?;
+	let shape = match f.string("shape")?.as_str() {
+		"rect" => MaskShape::Rect,
+		"ellipse" => MaskShape::Ellipse,
+		other => {
+			return Err(invalid(format!(
+				"mask: shape {:?} is not rect or ellipse",
+				truncate(other)
+			)));
+		}
+	};
+	let invert = match f.take("invert") {
+		None | Some(Value::Null) => false,
+		Some(Value::Bool(b)) => b,
+		Some(_) => return Err(invalid("mask: invert is not a boolean")),
+	};
+	let spec = MaskSpec {
+		shape,
+		x: f.num("x")?,
+		y: f.num("y")?,
+		width: f.num("width")?,
+		height: f.num("height")?,
+		feather: f.num_or("feather", 0.0)?,
+		invert,
+	};
+	f.finish()?;
+	Ok(Some(spec))
 }
 
 fn id(s: String, what: &str) -> Result<String, Error> {
@@ -375,6 +410,7 @@ fn decode_layer(v: Value) -> Result<LayerSpec, Error> {
 		blur: f.num_or("blur", 0.0)?,
 		chroma_key: chroma_key(f.take("chroma_key"))?,
 		blend: blend(f.take("blend"))?,
+		mask: mask(f.take("mask"))?,
 		item,
 	};
 	f.finish()?;
@@ -480,6 +516,47 @@ mod tests {
 		);
 		assert_eq!(reason(&with("\"darken\"")), Reason::InvalidPlan);
 		assert_eq!(reason(&with("3")), Reason::InvalidPlan);
+	}
+
+	#[test]
+	fn reads_the_mask_of_a_layer() {
+		let with = |m: &str| GOOD.replace("\"blur\":0", &format!("\"blur\":0,\"mask\":{m}"));
+		assert_eq!(decode(GOOD.as_bytes()).unwrap().layers[0].mask, None);
+		let r = decode(
+			with(
+				r#"{"shape":"ellipse","x":0.1,"y":0.2,"width":0.5,"height":0.6,"feather":4,"invert":true}"#,
+			)
+			.as_bytes(),
+		)
+		.unwrap();
+		assert_eq!(
+			r.layers[0].mask,
+			Some(MaskSpec {
+				shape: MaskShape::Ellipse,
+				x: 0.1,
+				y: 0.2,
+				width: 0.5,
+				height: 0.6,
+				feather: 4.0,
+				invert: true,
+			})
+		);
+		let r = decode(with(r#"{"shape":"rect","x":0,"y":0,"width":1,"height":1}"#).as_bytes())
+			.unwrap();
+		assert_eq!(r.layers[0].mask.unwrap().feather, 0.0);
+		assert_eq!(
+			decode(with("null").as_bytes()).unwrap().layers[0].mask,
+			None
+		);
+		for bad in [
+			r#"{"shape":"star","x":0,"y":0,"width":1,"height":1}"#,
+			r#"{"shape":"rect","x":0,"y":0,"width":1}"#,
+			r#"{"shape":"rect","x":0,"y":0,"width":1,"height":1,"spin":1}"#,
+			r#"{"shape":"rect","x":0,"y":0,"width":1,"height":1,"invert":1}"#,
+			"3",
+		] {
+			assert_eq!(reason(&with(bad)), Reason::InvalidPlan, "{bad}");
+		}
 	}
 
 	#[test]

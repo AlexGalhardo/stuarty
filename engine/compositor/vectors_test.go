@@ -409,6 +409,53 @@ func rendererVectorCases() []vecCase {
 				l.ChromaKey = &plan.ChromaKeySpec{Color: "#00C81E", Similarity: 0.3, Smoothness: 0.2}
 			}),
 		}},
+		{name: "mask-rect-copy", w: 64, h: 48, scale: 1, bg: "#304050", layers: []vecLayer{
+			vm("a", big, 32, 24, 64, 48, 0, 1),
+			with(vm("b", opaque, 24, 24, 16, 12, 0, 1), func(l *plan.Layer) {
+				l.Mask = &plan.MaskSpec{Shape: "rect", X: 0.25, Y: 0.1, Width: 0.5, Height: 0.7}
+			}),
+			with(vm("c", soft, 44.5, 26.5, 20, 14, 0, 0.8), func(l *plan.Layer) {
+				l.Mask = &plan.MaskSpec{Shape: "rect", X: 0, Y: 0, Width: 0.6, Height: 1, Feather: 5}
+			}),
+		}},
+		{name: "mask-ellipse-rotated-feather", w: 96, h: 72, scale: 1, bg: "#203040", layers: []vecLayer{
+			vm("a", big, 48, 36, 96, 72, 0, 1),
+			with(vm("b", big, 44, 34, 50, 38, 25, 1), func(l *plan.Layer) {
+				l.Mask = &plan.MaskSpec{Shape: "ellipse", X: 0.1, Y: 0.05, Width: 0.8, Height: 0.9, Feather: 6}
+			}),
+			with(vm("c", soft, 64, 46, 30, 21, -40, 0.6), func(l *plan.Layer) {
+				l.Mask = &plan.MaskSpec{Shape: "ellipse", X: 0.2, Y: 0.2, Width: 0.5, Height: 0.6, Invert: true}
+			}),
+		}},
+		{name: "mask-invert-blur-blend-bitmap", w: 64, h: 48, scale: 0.5, bg: "#802010", layers: []vecLayer{
+			vm("a", big, 32, 24, 64, 48, 0, 1),
+			with(vm("b", soft, 30, 24, 40, 28, 12, 1), func(l *plan.Layer) {
+				l.Blur, l.Blend, l.Filter = 3, "overlay", sepia
+				l.Mask = &plan.MaskSpec{
+					Shape:   "rect",
+					X:       0.1,
+					Y:       0.1,
+					Width:   0.8,
+					Height:  0.8,
+					Feather: 8,
+					Invert:  true,
+				}
+			}),
+			with(vb("t6", straightBitmap(24, 16, 12), 50, 34, 24, 16, 0, 1), func(l *plan.Layer) {
+				l.Mask = &plan.MaskSpec{Shape: "ellipse", X: 0, Y: 0, Width: 1, Height: 1, Feather: 4}
+			}),
+			with(vm("g", greenScreen(26), 20, 16, 40, 30, 0, 1), func(l *plan.Layer) {
+				l.ChromaKey = &plan.ChromaKeySpec{Color: "#00C81E", Similarity: 0.3, Smoothness: 0.2}
+				l.Blend = "screen"
+				l.Mask = &plan.MaskSpec{Shape: "ellipse", X: 0.3, Y: 0.3, Width: 0.001, Height: 0.001}
+			}),
+		}},
+		{name: "mask-blurred-copy", w: 48, h: 36, scale: 1, bg: "#102030", layers: []vecLayer{
+			with(vm("a", big, 24.4, 18.6, 40, 30, 0, 1), func(l *plan.Layer) {
+				l.Blur = 2
+				l.Mask = &plan.MaskSpec{Shape: "rect", X: 0.2, Y: 0.2, Width: 0.6, Height: 0.6, Feather: 2}
+			}),
+		}},
 		{name: "stack", w: 64, h: 48, scale: 1, bg: "#0a0a0a", layers: []vecLayer{
 			vm("a", big, 32, 24, 64, 48, 0, 1),
 			vm("b", soft, 20, 20, 20, 14, 12, 0.6),
@@ -474,7 +521,7 @@ func encodeVectors(t *testing.T) []byte {
 		}
 	}
 	buf.WriteString("VVCV")
-	w(uint32(3))
+	w(uint32(4))
 	w(sincosHash())
 	cases := rendererVectorCases()
 	w(uint32(len(cases)))
@@ -535,6 +582,26 @@ func encodeVectors(t *testing.T) []byte {
 			}
 
 			w(uint8(blendOf(pl.Blend)))
+
+			if m := pl.Mask; m == nil {
+				w(uint8(0))
+			} else {
+				w(uint8(1))
+				shape := uint8(0)
+				if m.Shape == "ellipse" {
+					shape = 1
+				}
+				w(shape)
+				for _, v := range []float64{m.X, m.Y, m.Width, m.Height} {
+					w(v)
+				}
+				w(uint32(m.Feather))
+				invert := uint8(0)
+				if m.Invert {
+					invert = 1
+				}
+				w(invert)
+			}
 		}
 		buf.Write(c.compose(t, 1))
 	}

@@ -5,6 +5,7 @@ use vukem_renderer::blend::BlendMode;
 use vukem_renderer::chroma::ChromaKeySpec;
 use vukem_renderer::compose::{Layer, Source, premultiply};
 use vukem_renderer::image::Image;
+use vukem_renderer::mask::{MaskShape, MaskSpec};
 
 const VECTORS: &[u8] = include_bytes!("../../../testdata/compose-vectors.bin");
 
@@ -50,6 +51,7 @@ pub struct VecLayer {
 	pub filter: Option<[f64; 12]>,
 	pub chroma_key: Option<ChromaKeySpec>,
 	pub blend: BlendMode,
+	pub mask: Option<MaskSpec>,
 }
 
 pub struct Case {
@@ -65,7 +67,7 @@ pub struct Case {
 pub fn read_cases() -> (u64, Vec<Case>) {
 	let mut r = Reader(VECTORS);
 	assert_eq!(r.take(4), b"VVCV");
-	assert_eq!(r.u32(), 3);
+	assert_eq!(r.u32(), 4);
 	let hash = r.u64();
 	let n = r.u32();
 	let mut cases = Vec::new();
@@ -119,6 +121,22 @@ pub fn read_cases() -> (u64, Vec<Case>) {
 				4 => BlendMode::Add,
 				n => panic!("unknown blend mode {n}"),
 			};
+			let mask = (r.u8() == 1).then(|| {
+				let shape = if r.u8() == 1 {
+					MaskShape::Ellipse
+				} else {
+					MaskShape::Rect
+				};
+				MaskSpec {
+					shape,
+					x: r.f64(),
+					y: r.f64(),
+					width: r.f64(),
+					height: r.f64(),
+					feather: f64::from(r.u32()),
+					invert: r.u8() == 1,
+				}
+			});
 			layers.push(VecLayer {
 				pixels,
 				nums,
@@ -126,6 +144,7 @@ pub fn read_cases() -> (u64, Vec<Case>) {
 				filter,
 				chroma_key,
 				blend,
+				mask,
 			});
 		}
 		let want = r.take(w * h * 4).to_vec();
@@ -175,6 +194,7 @@ pub fn layers_of(c: &Case) -> Vec<Layer<'_>> {
 				filter: l.filter,
 				chroma_key: l.chroma_key.clone(),
 				blend: l.blend,
+				mask: l.mask,
 				blur,
 			}
 		})
