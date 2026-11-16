@@ -39,7 +39,7 @@ func TestArgvFixturesAreRejected(t *testing.T) {
 	t.Parallel()
 
 	files, err := filepath.Glob(filepath.Join("testdata", "argv", "*.json"))
-	if err != nil || len(files) < 38 {
+	if err != nil || len(files) < 56 {
 		t.Fatalf("%d fixtures, %v", len(files), err)
 	}
 
@@ -47,9 +47,11 @@ func TestArgvFixturesAreRejected(t *testing.T) {
 		name := strings.TrimSuffix(filepath.Base(f), ".json")
 		err := ffargs.Check(ffargs.FFmpeg, readArgv(t, f), corpusPolicy)
 
-		if name == "valid-base" {
+		// The valid-* fixtures are argv the BETA features build; the rejected fixtures around
+		// them (alpha-proxy-*, cpuflags-*, filter-afftdn-*) each change one token of one.
+		if strings.HasPrefix(name, "valid-") {
 			if err != nil {
-				t.Errorf("the valid argv was refused: %v", err)
+				t.Errorf("the valid argv %s was refused: %v", name, err)
 			}
 
 			continue
@@ -66,7 +68,7 @@ func TestSecurity_T14_SniffRejectsText(t *testing.T) {
 	t.Parallel()
 
 	files, err := filepath.Glob(filepath.Join("testdata", "hostile", "*"))
-	if err != nil || len(files) < 26 {
+	if err != nil || len(files) < 29 {
 		t.Fatalf("%d hostile files, %v", len(files), err)
 	}
 
