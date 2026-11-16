@@ -1,0 +1,123 @@
+name: Long verification
+
+# The runs of TASK-0144 and TASK-0146 that are too long for the shared development machine and for
+# every other workflow: the crash suite 100 times on each operating system, the SIGKILL tests for 10
+# minutes on each, and the one-hour soak (in process and over HTTP, four keys). On demand only; no
+# schedule, push or pull request. The logs are artifacts. Run the whole campaign with
+#   gh workflow run long-verification.yml
+# and shorten it for a trial with
+#   gh workflow run long-verification.yml -f crash_count=2 -f kill_minutes=1 -f soak_duration=2m
+# A GitHub job stops at 6 hours: these jobs stay far below it (see timeout-minutes).
+on:
+  workflow_dispatch:
+    inputs:
+      crash_count:
+        description: Repetitions of the crash suite (go test -count)
+        default: "100"
+      kill_minutes:
+        description: Minutes of repeated SIGKILL tests (the real serve process and the in-process child)
+        default: "10"
+      soak_duration:
+        description: Length of the soak (VUKEM_VIDEO_SOAK_DURATION, a Go duration)
+        default: 1h
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  crash:
+    name: Crash suite and SIGKILL (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    # 100 repetitions take a few minutes and the kill loop 10 more; 90 leaves room for bigger inputs.
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      CRASH_COUNT: ${{ inputs.crash_count }}
+      KILL_MINUTES: ${{ inputs.kill_minutes }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      # The crash points are chosen by the tests at random on every run (SDD-005 section 18), so the
+      # repetitions are what randomises them.
+      - name: Crash suite, repeated
+        run: |
+          go test -tags crashtest ./web/app/servicetest/ -run 'TestCrash' -count="$CRASH_COUNT" -timeout 60m -v 2>&1 | tee crash.log
+      # SIGKILL on Linux and macOS, TerminateProcess (what taskkill /F calls) on Windows: each test
+      # kills a real process in the middle of acknowledged commits. One run lasts seconds, so the
+      # tests repeat until the minutes are used.
+      - name: SIGKILL tests, repeated
+        run: |
+          end=$((SECONDS + KILL_MINUTES * 60))
+          runs=0
+          while [ "$SECONDS" -lt "$end" ]; do
+            go test -tags crashtest ./web/app/servicetest/ -run 'TestKill' -count=1 -timeout 10m -v 2>&1 | tee -a kill.log
+            runs=$((runs + 1))
+          done
+          echo "SIGKILL tests: $runs rounds in $KILL_MINUTES minutes" | tee -a kill.log
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Crash suite and SIGKILL (${{ matrix.os }})"
+            echo '```'
+            grep -E -- "^(--- FAIL|FAIL|ok|SIGKILL tests)" crash.log kill.log || true
+            echo "crash tests passed: $(grep -c -- '^--- PASS: TestCrash' crash.log || true)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: crash-logs-${{ matrix.os }}
+          path: |
+            crash.log
+            kill.log
+          if-no-files-found: ignore
+
+  soak:
+    name: Soak (ubuntu)
+    runs-on: ubuntu-latest
+    # One hour of soak, plus the warm-up, the settling and the build; the test timeout is 90 minutes.
+    timeout-minutes: 100
+    env:
+      VUKEM_VIDEO_SOAK_DURATION: ${{ inputs.soak_duration }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Soak
+        shell: bash
+        run: |
+          go test -tags soak -run TestSoak -count=1 -timeout 90m -v ./web/app/servicetest/ 2>&1 | tee soak.log
+          {
+            echo '### Soak'
+            echo '```'
+            grep -E -- "^(--- |ok|FAIL|\s+soak_test)" soak.log || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: soak-log
+          path: soak.log
+          if-no-files-found: ignore

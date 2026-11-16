@@ -472,7 +472,7 @@ Common rules for every file in `.github/workflows/` (vukem `docs/tooling.md:151`
 - `permissions: contents: read` at the top; a job widens permissions only for what it writes.
 - `persist-credentials: false` on checkout when the job does not push.
 - `concurrency` with `cancel-in-progress: true` on workflows that run on pull requests (never on `release.yml`).
-- Every job has `timeout-minutes`. Jobs that gate a pull request have 20 at most (NFR-042). The release jobs and the weekly jobs state their own, truthfully: `release.yml` job `goreleaser` 30, job `image` 45, `fuzz.yml` 90, other weekly jobs 20.
+- Every job has `timeout-minutes`. Jobs that gate a pull request have 20 at most (NFR-042). The release jobs and the weekly jobs state their own, truthfully: `release.yml` job `goreleaser` 30, job `image` 45, `fuzz.yml` 90, `long-verification.yml` 90 (crash and SIGKILL) and 100 (soak), other weekly jobs 20.
 - Pinned actions, copied from vukem at the cited line (table 9.0).
 - The repository variable `SITE_URL` is optional (SDD-010).
 
@@ -524,6 +524,7 @@ Tools pinned by version in workflows: `govulncheck@v1.9.0` (`ci.yml:166`), Bette
 | `vuln.yml` | Vulnerabilities (weekly) | weekly, manual | `ci-failure` issue |
 | `scorecard.yml` | Scorecard | branch protection rule, push to `main`, weekly, manual | `ci-failure` issue |
 | `fuzz.yml` | Fuzz | weekly (cron `17 3 * * 0`), manual with `fuzztime` and `long_fuzztime` | `ci-failure` issue (the long run; the 30 s pull request run is the `Fuzz (30 s)` job of `ci.yml`) |
+| `long-verification.yml` | Long verification | manual only, with `crash_count` (default 100), `kill_minutes` (default 10) and `soak_duration` (default `1h`); never on a schedule, a push or a pull request | The result of the run (TASK-0144, TASK-0146); logs are artifacts. Jobs: `crash` on ubuntu, windows and macos runs `go test -tags crashtest ./web/app/servicetest/ -run TestCrash -count=100 -timeout 60m`, then repeats `-run TestKill` (the in-process kill and the real `serve` killed during concurrent HTTP commits; `SIGKILL`, and `TerminateProcess` on Windows) for `kill_minutes`; `soak` on ubuntu runs `go test -tags soak -run TestSoak -timeout 90m ./web/app/servicetest/` with `VUKEM_VIDEO_SOAK_DURATION`. Command: `gh workflow run long-verification.yml` |
 | `agent-harness.yml` | Agent harness | manual only, with `scenario`, `runs` (default 10) and `model` (default `claude-sonnet-5-5`); never on a schedule, a push or a pull request | The release checklist (live agent run and vendor token count of `tools/list`); not required; uploads the transcripts as an artifact; fails first, naming it, when the secret `ANTHROPIC_API_KEY` is missing |
 | `ffmpeg-freshness.yml` | FFmpeg freshness | weekly, manual | `ci-failure` issue |
 | `ci-failure.yml` | CI failure issue | `workflow_run` of the weekly workflows failing | Blocks the next release (R25) |
