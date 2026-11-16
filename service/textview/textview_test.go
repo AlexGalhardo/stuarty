@@ -426,6 +426,12 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 		t.Errorf("a speed curve is not shown: %s", line)
 	}
 
+	clip.Reverse = true
+
+	if line := itemLine(fps, &clip); !strings.Contains(line, " rev") {
+		t.Errorf("reverse is not shown: %s", line)
+	}
+
 	txt := timeline.NewItem("itm_t", timeline.ItemText, "trk_a1b2c3d4e5", 0, 30)
 	txt.Text = "A very long headline"
 	shp := timeline.NewItem("itm_s", timeline.ItemShape, "trk_a1b2c3d4e5", 0, 30)

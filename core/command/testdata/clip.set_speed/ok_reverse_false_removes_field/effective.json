@@ -1,0 +1,15 @@
+{
+  "adjusted": [],
+  "clamped": null,
+  "duration": {
+    "after": 60,
+    "before": 60
+  },
+  "linked_captions": [],
+  "reverse": false,
+  "shift": 0,
+  "speed": {
+    "den": 1,
+    "num": 1
+  }
+}

@@ -406,6 +406,9 @@
           "minimum": 0,
           "type": "number"
         },
+        "reverse": {
+          "type": "boolean"
+        },
         "rotation": {
           "type": "number"
         },

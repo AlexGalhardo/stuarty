@@ -1194,6 +1194,9 @@
             "format": "double",
             "type": "number"
           },
+          "reverse": {
+            "type": "boolean"
+          },
           "rotation": {
             "format": "double",
             "type": "number"
@@ -3416,6 +3419,9 @@
           "last": {
             "type": "integer"
           },
+          "reverse": {
+            "type": "boolean"
+          },
           "source_seconds": {
             "format": "double",
             "type": "number"
@@ -4840,6 +4846,10 @@
           "item_id": {
             "description": "A clip of a video asset, or an audio item.",
             "type": "string"
+          },
+          "reverse": {
+            "description": "true plays the source range backwards; false plays it forwards.",
+            "type": "boolean"
           },
           "ripple": {
             "description": "none (default) or track: shift the later items of the track.",

@@ -56,6 +56,10 @@
       "description": "A clip of a video asset, or an audio item.",
       "type": "string"
     },
+    "reverse": {
+      "description": "true plays the source range backwards; false plays it forwards.",
+      "type": "boolean"
+    },
     "ripple": {
       "description": "none (default) or track: shift the later items of the track.",
       "enum": [

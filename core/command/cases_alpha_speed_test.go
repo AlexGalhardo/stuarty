@@ -104,6 +104,21 @@ func init() {
 	)
 	sp("ok_curve_audio_item", fmt.Sprintf(`{"item_id": %q, %s}`, itemB, ramp),
 		func() *B { return base().audio(itemB, 0, 60, 0) })
+	// Reverse.
+	reversed := func(it *timeline.Item) { it.Reverse = true }
+	sp("ok_reverse_alone", sa(`"reverse": true`), alone(30, 60, 10))
+	sp("ok_reverse_with_speed", sa(`"speed": "2x", "reverse": true`), alone(30, 90, 10))
+	sp("ok_reverse_with_curve", sa(ramp+`, "reverse": true`), alone(30, 90, 10))
+	sp("ok_reverse_false_removes_field", sa(`"reverse": false`), alone(30, 60, 10, reversed))
+	sp("ok_speed_keeps_reverse", sa(`"speed": "0.5x"`), alone(30, 60, 10, reversed))
+	sp("ok_reverse_keeps_curve", sa(`"reverse": true`), alone(30, 60, 10, curved(pt(0, 1), pt(1, 3))))
+	sp("ok_reverse_audio_item", fmt.Sprintf(`{"item_id": %q, "reverse": true}`, itemB),
+		func() *B { return base().audio(itemB, 0, 60, 0) })
+	sp("ok_reverse_same_value_noop", sa(`"reverse": true`), alone(30, 60, 10, reversed))
+	sp("err_validation_reverse_not_boolean", sa(`"reverse": "yes"`), alone(30, 60, 10))
+	sp("err_type_mismatch_reverse_on_image_clip", sa(`"reverse": true`),
+		alone(0, 60, 0, func(it *timeline.Item) { it.Asset = imgAsset }))
+	sp("err_out_of_source_reverse_speed_no_frame_fits", sa(`"speed": "4x", "reverse": true`), alone(0, 1, 899))
 	sp("err_validation_curve_one_point", sa(`"curve": [{"t": 0, "speed": "1x"}]`), alone(0, 60, 0))
 	sp(
 		"err_validation_curve_nine_points",

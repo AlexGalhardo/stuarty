@@ -105,7 +105,7 @@ func applyMarkBeats(c *Context, a *markBeatsArgs) error {
 	if err := c.audioSource(&it, "beats are marked on music."); err != nil {
 		return err
 	}
-	if err := rejectCurve(&it, "beat markers"); err != nil {
+	if err := rejectRemap(&it, "beat markers"); err != nil {
 		return err
 	}
 	if err := checkBeats(a.Resolved); err != nil {

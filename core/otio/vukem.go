@@ -104,10 +104,11 @@ type slotSpec struct {
 // itemSpec is what the properties of an item ask for: the commands that follow its creation,
 // the speed that must be set before anything is animated, and its slot.
 type itemSpec struct {
-	ops   []propOp
-	speed *timeline.Rational
-	curve []timeline.SpeedPoint // set with speed, which is then the mean of the curve
-	slot  *slotSpec
+	ops     []propOp
+	speed   *timeline.Rational
+	curve   []timeline.SpeedPoint // set with speed, which is then the mean of the curve
+	reverse bool
+	slot    *slotSpec
 }
 
 var (
@@ -219,6 +220,7 @@ func itemOps(props map[string]any, mode itemMode, start, dur int, used map[strin
 		add("item.set_audio", sound)
 
 		spec.speed, spec.curve = speedAndCurve(p)
+		spec.reverse, _ = props["reverse"].(bool)
 	}
 
 	spec.ops = append(spec.ops, keyframes(p, mode, start, dur)...)

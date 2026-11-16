@@ -99,12 +99,20 @@ func CurveSourceFrames(pts []SpeedPoint, d int) int {
 	return (d*m.Num + m.Den - 1) / m.Den
 }
 
+// SourceSpan is the number of source frames the item reads, ceil(duration x speed), where
+// speed is the mean for a curve.
+func (it *Item) SourceSpan() int { return (it.Duration*it.Speed.Num + it.Speed.Den - 1) / it.Speed.Den }
+
 // SourceOffset is the source frame, counted from source_in, that an item shows at its
-// local frame k (SDD-004 §3.3 and §3.11): constant speed floor(k x num / den), a curve
-// CurveOffset.
+// local frame k (SDD-004 §3.3, §3.11 and §3.12): constant speed floor(k x num / den), a curve
+// CurveOffset, and with Reverse the same range read backwards, SourceSpan - 1 - offset.
 func (it *Item) SourceOffset(k int) int {
+	off := k * it.Speed.Num / it.Speed.Den
 	if len(it.SpeedCurve) > 0 {
-		return CurveOffset(it.SpeedCurve, it.Duration, k)
+		off = CurveOffset(it.SpeedCurve, it.Duration, k)
 	}
-	return k * it.Speed.Num / it.Speed.Den
+	if it.Reverse {
+		return max(it.SourceSpan()-1-off, 0)
+	}
+	return off
 }

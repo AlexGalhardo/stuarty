@@ -751,6 +751,10 @@ export interface ClipSetSpeedArgs {
    */
   item_id: string;
   /**
+   * true plays the source range backwards; false plays it forwards.
+   */
+  reverse?: boolean;
+  /**
    * none (default) or track: shift the later items of the track.
    */
   ripple?: "none" | "track";
@@ -2069,7 +2073,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"clip.set_flip": { summary: "Mirrors a visual item horizontally, vertically or both.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_framing": { summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_mask": { summary: "Limits where a visual item is drawn to a rectangle or an ellipse.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
-	"clip.set_speed": { summary: "Changes the speed of a clip or audio item, constant or along a curve, keeping the same source range.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE","E_INVALID_TIME","E_OVERLAP"] },
+	"clip.set_speed": { summary: "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE","E_INVALID_TIME","E_OVERLAP"] },
 	"font.add": { summary: "Adds a user font family to the project, or more weights to one it already has.", scope: "media", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
 	"font.remove": { summary: "Removes a user font family from the project.", scope: "media", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_IN_USE"] },
 	"item.crossfade": { summary: "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },

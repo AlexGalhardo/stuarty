@@ -354,6 +354,10 @@ func itemFlags(it *timeline.Item) []string {
 		f = append(f, "nr:"+num(it.Denoise))
 	}
 
+	if it.Reverse {
+		f = append(f, "rev")
+	}
+
 	if it.Disabled {
 		f = append(f, "disabled")
 	}

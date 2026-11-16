@@ -132,3 +132,66 @@ func TestSpeedCurveRefusesSourceMappingEdits(t *testing.T) {
 		t.Errorf("trim end: %v", err)
 	}
 }
+
+// A reversed item keeps showing the same source frames when its end is trimmed, and its
+// split and start trim stay within a frame of the unsplit mapping (SDD-004 section 3.12).
+func TestReverseTrimAndSplitKeepTheMapping(t *testing.T) {
+	reg := Default()
+	doc := base().clip(itemA, vidTr, 0, 60, 100, func(it *timeline.Item) {
+		it.Speed, it.Reverse = timeline.Rational{Num: 3, Den: 2}, true
+	}).d
+	orig := doc.Items[itemA]
+
+	res, err := reg.Apply(
+		doc,
+		op2("item.trim", fmt.Sprintf(`{"item_id": %q, "edge": "end", "to": "41f"}`, itemA)),
+		Env{},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := res.Doc.Items[itemA]
+	for k := range n.Duration {
+		if got, want := n.SourceIn+n.SourceOffset(k), orig.SourceIn+orig.SourceOffset(k); got != want {
+			t.Fatalf("trim end: frame %d shows %d, was %d", k, got, want)
+		}
+	}
+
+	res, err = reg.Apply(
+		doc,
+		op2("item.trim", fmt.Sprintf(`{"item_id": %q, "edge": "start", "to": "10f"}`, itemA)),
+		Env{},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	n = res.Doc.Items[itemA]
+	for k := range n.Duration {
+		if d := n.SourceIn + n.SourceOffset(k) - (orig.SourceIn + orig.SourceOffset(k+10)); d < -1 || d > 1 {
+			t.Fatalf("trim start: frame %d is %d frames off", k, d)
+		}
+	}
+
+	res, err = reg.Apply(
+		doc,
+		op2("item.split", fmt.Sprintf(`{"item_id": %q, "at": "25f", "new_id": %q}`, itemA, itemB)),
+		Env{},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if vs := timeline.Validate(res.Doc); len(vs) != 0 {
+		t.Fatal(vs)
+	}
+	l, r := res.Doc.Items[itemA], res.Doc.Items[itemB]
+	for k := range l.Duration {
+		if d := l.SourceIn + l.SourceOffset(k) - (orig.SourceIn + orig.SourceOffset(k)); d < -1 || d > 1 {
+			t.Fatalf("split left: frame %d is %d frames off", k, d)
+		}
+	}
+	for k := range r.Duration {
+		if d := r.SourceIn + r.SourceOffset(k) - (orig.SourceIn + orig.SourceOffset(25+k)); d < -1 || d > 1 {
+			t.Fatalf("split right: frame %d is %d frames off", k, d)
+		}
+	}
+}

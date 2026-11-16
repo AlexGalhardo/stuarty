@@ -98,6 +98,7 @@ type WindowAudio struct {
 	SourceSeconds float64    `json:"source_seconds"` // at the first frame
 	Speed         float64    `json:"speed"`
 	Curve         *SpeedRamp `json:"speed_curve,omitempty"`
+	Reverse       bool       `json:"reverse,omitempty"`
 	Gain          Series     `json:"gain"`
 	Denoise       float64    `json:"denoise,omitempty"`
 }
@@ -283,6 +284,7 @@ func windowAudio(doc *timeline.Document, from, to int) []WindowAudio {
 			pos += int64(it.SourceOffset(cs - it.Start))
 			wa.Speed = round3(float64(it.Speed.Num) / float64(it.Speed.Den))
 			wa.Curve = curveOf(it, cs)
+			wa.Reverse = it.Reverse
 		}
 
 		wa.SourceSeconds = round3(float64(pos) * float64(fps.Den) / float64(fps.Num))
