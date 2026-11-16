@@ -103,6 +103,10 @@ type Env struct {
 // Lint runs the rules over doc and returns the findings in report order:
 // errors first, then by code, range start and item id.
 func Lint(doc *timeline.Document, env Env, mode Mode) []Finding {
+	if dm, ok := env.Measurer.(DocumentMeasurer); ok {
+		env.Measurer = dm.ForDocument(doc)
+	}
+
 	c := &check{doc: doc, env: env}
 
 	c.emptyTimeline()

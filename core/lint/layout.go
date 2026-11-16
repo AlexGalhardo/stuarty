@@ -19,6 +19,14 @@ type Measurer interface {
 	Measure(doc *timeline.Document, it *timeline.Item) (r Rect, ok bool)
 }
 
+// DocumentMeasurer is a Measurer that prepares once per document. Lint asks it
+// for the measurer of a document at the start of each run; the returned
+// Measurer is used for that run only, by one goroutine.
+type DocumentMeasurer interface {
+	Measurer
+	ForDocument(doc *timeline.Document) Measurer
+}
+
 // boxOf is the box of an item: the Measurer's, or for text and captions the one made
 // from Env.TextSize.
 func (c *check) boxOf(it *timeline.Item, safe box) (box, bool) {

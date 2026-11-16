@@ -1,6 +1,7 @@
 package owner
 
 import (
+	"encoding/json"
 	"math"
 
 	"github.com/AlexGalhardo/vukem-video/core/lint"
@@ -18,12 +19,96 @@ type lintMeasurer struct{ workspace string }
 
 var _ lint.Measurer = lintMeasurer{}
 
+var _ lint.DocumentMeasurer = lintMeasurer{}
+
+// Measure plans the frame of the item on its own: the fallback for a document that
+// was not prepared with ForDocument.
 func (m lintMeasurer) Measure(doc *timeline.Document, it *timeline.Item) (lint.Rect, bool) {
 	fp := plan.FrameWith(doc, it.Start, plan.Options{Measure: raster.Measure(service.FontSetFor(m.workspace, doc))})
 
+	return boxInPlan(&fp, it.ID)
+}
+
+// ForDocument prepares the font set and the frame planner once; the returned
+// measurer also remembers each frame and box it computed. It serves one lint run.
+func (m lintMeasurer) ForDocument(doc *timeline.Document) lint.Measurer {
+	measure := memoMeasure(raster.Measure(service.FontSetFor(m.workspace, doc)))
+
+	return &docMeasurer{
+		fallback: m,
+		doc:      doc,
+		planner:  plan.NewPlanner(doc, plan.Options{Measure: measure}),
+		frames:   map[int]*plan.FramePlan{},
+		boxes:    map[string]boxResult{},
+	}
+}
+
+// memoMeasure remembers the natural size of each bitmap spec: shaping is the cost of a
+// frame plan, and many frames of a lint run hold the same text. The size is a pure
+// function of the spec for one font set.
+func memoMeasure(inner plan.Measurer) plan.Measurer {
+	type size struct{ w, h float64 }
+
+	seen := map[string]size{}
+
+	return func(spec plan.BitmapSpec) (w, h float64) {
+		key, err := json.Marshal(spec)
+		if err != nil {
+			return inner(spec)
+		}
+
+		if v, ok := seen[string(key)]; ok {
+			return v.w, v.h
+		}
+
+		w, h = inner(spec)
+		seen[string(key)] = size{w, h}
+
+		return w, h
+	}
+}
+
+type boxResult struct {
+	rect lint.Rect
+	ok   bool
+}
+
+// docMeasurer is the measurer of one document for one lint run (one goroutine).
+type docMeasurer struct {
+	fallback lintMeasurer
+	doc      *timeline.Document
+	planner  *plan.Planner
+	frames   map[int]*plan.FramePlan
+	boxes    map[string]boxResult
+}
+
+func (d *docMeasurer) Measure(doc *timeline.Document, it *timeline.Item) (lint.Rect, bool) {
+	if doc != d.doc {
+		return d.fallback.Measure(doc, it)
+	}
+
+	if r, ok := d.boxes[it.ID]; ok {
+		return r.rect, r.ok
+	}
+
+	fp, ok := d.frames[it.Start]
+	if !ok {
+		p := d.planner.Frame(it.Start)
+		fp = &p
+		d.frames[it.Start] = fp
+	}
+
+	rect, found := boxInPlan(fp, it.ID)
+	d.boxes[it.ID] = boxResult{rect: rect, ok: found}
+
+	return rect, found
+}
+
+// boxInPlan is the box of the layer of an item in a frame plan, rotation applied.
+func boxInPlan(fp *plan.FramePlan, itemID string) (lint.Rect, bool) {
 	for i := range fp.Layers {
 		l := &fp.Layers[i]
-		if l.ItemID != it.ID {
+		if l.ItemID != itemID {
 			continue
 		}
 
