@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 # Builds the pixel renderer of renderer/ (ADR-0029, rule .agents/rules/rust.md 9):
-#   bash scripts/build-renderer.sh            the native crate and the WebAssembly module
+#   bash scripts/build-renderer.sh            the native crate and the WebAssembly core module
 #   bash scripts/build-renderer.sh native     only the native crate
-#   bash scripts/build-renderer.sh wasm       only the WebAssembly module
+#   bash scripts/build-renderer.sh wasm       only the WebAssembly core module
 #   bash scripts/build-renderer.sh verify     build the module twice from clean and fail unless the digests match
-# The module and its glue are written to renderer/dist/, with vukem_renderer_bg.wasm.sha256 next to it.
+#   bash scripts/build-renderer.sh embed      verify, then write the module and its digest where Go embeds them
+#   bash scripts/build-renderer.sh check      verify, then fail unless the embedded module is the one this source builds
+# The core module (SDD-013 section 4.1) has plain C-ABI exports and no import, so it needs no
+# wasm-bindgen glue; it is written to renderer/dist/vukem_renderer.wasm with vukem_renderer.wasm.sha256 next
+# to it. embed copies both to engine/renderhost/ (renderer.wasm and renderer.wasm.sha256).
 # Reproducible: the toolchain is the one of rust-toolchain.toml, dependencies come from Cargo.lock
 # (--locked), the build path is fixed (renderer/target), SOURCE_DATE_EPOCH defaults to the commit time
-# of HEAD and --remap-path-prefix hides the machine paths. The wasm-bindgen CLI must be the version
-# the crate is locked to: cargo install --locked wasm-bindgen-cli --version <that version>.
+# of HEAD and --remap-path-prefix hides the machine paths and the separators of the source paths, so the
+# digest is the same on every system. The memory of the module is capped at 16,384 pages (1 GiB).
 # Runs on bash 3.2 (macOS).
 set -euo pipefail
 
@@ -25,8 +29,8 @@ sha256() {
 }
 
 case "$mode" in
-all | native | wasm | verify) ;;
-*) die "unknown mode '$mode' (all, native, wasm or verify)" ;;
+all | native | wasm | verify | embed | check) ;;
+*) die "unknown mode '$mode' (all, native, wasm, verify, embed or check)" ;;
 esac
 
 command -v cargo >/dev/null 2>&1 || die "cargo is not installed (rustup, then the toolchain of rust-toolchain.toml)"
@@ -40,42 +44,49 @@ cargo_home="$(native "${CARGO_HOME:-$HOME/.cargo}")"
 rustup_home="$(native "${RUSTUP_HOME:-$HOME/.rustup}")"
 src="$(native "$root")"
 export CARGO_TARGET_DIR="$src/renderer/target"
-export RUSTFLAGS="--remap-path-prefix=$src=/build --remap-path-prefix=$cargo_home=/cargo --remap-path-prefix=$rustup_home=/rustup"
+# The crate sources are named relative to renderer/ in panic locations, with the separator of the
+# system: the two remaps below turn them into the same text everywhere (no leading slash, which Git
+# Bash would rewrite as a Windows path).
+remap="--remap-path-prefix=$src=/build --remap-path-prefix=$cargo_home=/cargo --remap-path-prefix=$rustup_home=/rustup"
+remap="$remap --remap-path-prefix=vukem-renderer/src=renderer-src/ --remap-path-prefix=vukem-renderer\\src=renderer-src/"
+export RUSTFLAGS="$remap"
 # An incremental cache is not part of a reproducible build.
 export CARGO_INCREMENTAL=0
 
 dist="$root/renderer/dist"
 manifest="$root/renderer/Cargo.toml"
+embedded="$root/engine/renderhost"
 
 native_build() {
 	cargo build --locked --release --manifest-path "$manifest"
 }
 
-locked_bindgen() {
-	awk '/^name = "wasm-bindgen"$/ { getline; gsub(/version = |"/, ""); print; exit }' "$root/renderer/Cargo.lock"
-}
-
 wasm_build() {
-	local want have
-	want="$(locked_bindgen)"
-	[ -n "$want" ] || die "wasm-bindgen is not in renderer/Cargo.lock"
-	command -v wasm-bindgen >/dev/null 2>&1 || die "wasm-bindgen CLI is not installed: cargo install --locked wasm-bindgen-cli --version $want"
-	have="$(wasm-bindgen --version | awk '{ print $2 }')"
-	[ "$have" = "$want" ] || die "wasm-bindgen CLI is $have, Cargo.lock pins $want: cargo install --locked wasm-bindgen-cli --version $want"
-
-	cargo build --locked --release --target wasm32-unknown-unknown --manifest-path "$manifest"
+	# 16,384 pages of 64 KiB: the memory limit of SDD-013 section 4.1, also set in wazero.
+	RUSTFLAGS="$remap -C link-arg=--max-memory=1073741824" \
+		cargo build --locked --release --lib --target wasm32-unknown-unknown --manifest-path "$manifest"
 
 	rm -rf "$dist"
 	mkdir -p "$dist"
-	wasm-bindgen --target web --out-dir "$(native "$dist")" --out-name vukem_renderer \
-		"$CARGO_TARGET_DIR/wasm32-unknown-unknown/release/vukem_renderer.wasm"
-
-	sha256 "$dist/vukem_renderer_bg.wasm" >"$dist/vukem_renderer_bg.wasm.sha256"
-	printf 'build-renderer: vukem_renderer_bg.wasm sha256 %s\n' "$(cat "$dist/vukem_renderer_bg.wasm.sha256")"
+	cp "$CARGO_TARGET_DIR/wasm32-unknown-unknown/release/vukem_renderer.wasm" "$dist/vukem_renderer.wasm"
+	sha256 "$dist/vukem_renderer.wasm" >"$dist/vukem_renderer.wasm.sha256"
+	printf 'build-renderer: vukem_renderer.wasm sha256 %s\n' "$(cat "$dist/vukem_renderer.wasm.sha256")"
 }
 
 clean_wasm() {
 	rm -rf "$CARGO_TARGET_DIR/wasm32-unknown-unknown" "$CARGO_TARGET_DIR/release"
+}
+
+verify_build() {
+	local first second
+	clean_wasm
+	wasm_build
+	first="$(cat "$dist/vukem_renderer.wasm.sha256")"
+	clean_wasm
+	wasm_build
+	second="$(cat "$dist/vukem_renderer.wasm.sha256")"
+	[ "$first" = "$second" ] || die "two clean builds differ: $first and $second"
+	printf 'build-renderer: reproducible, two clean builds give %s\n' "$first"
 }
 
 case "$mode" in
@@ -85,14 +96,18 @@ all)
 	native_build
 	wasm_build
 	;;
-verify)
-	clean_wasm
-	wasm_build
-	first="$(cat "$dist/vukem_renderer_bg.wasm.sha256")"
-	clean_wasm
-	wasm_build
-	second="$(cat "$dist/vukem_renderer_bg.wasm.sha256")"
-	[ "$first" = "$second" ] || die "two clean builds differ: $first and $second"
-	printf 'build-renderer: reproducible, two clean builds give %s\n' "$first"
+verify) verify_build ;;
+embed)
+	verify_build
+	cp "$dist/vukem_renderer.wasm" "$embedded/renderer.wasm"
+	cp "$dist/vukem_renderer.wasm.sha256" "$embedded/renderer.wasm.sha256"
+	printf 'build-renderer: embedded in engine/renderhost/\n'
+	;;
+check)
+	verify_build
+	have="$(sha256 "$embedded/renderer.wasm")"
+	want="$(cat "$dist/vukem_renderer.wasm.sha256")"
+	[ "$have" = "$want" ] || die "engine/renderhost/renderer.wasm ($have) is not what the source builds ($want): run bash scripts/build-renderer.sh embed"
+	printf 'build-renderer: the embedded module is the one this source builds\n'
 	;;
 esac
