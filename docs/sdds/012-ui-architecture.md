@@ -1813,6 +1813,22 @@ The `perf` project (budgets of the reference machine, §19.1) ran while other ag
 | 13 | Constants equal the code | met | `VIRTUALIZE_ABOVE` 150 (`virtualize.ts`), `MAX_VIDEO_LAYERS` 4 (`mediaSync.ts`), `SNAP_PX` 8 (`snapping.ts`), plan windows of `WINDOW_FRAMES` 300 with `PREFETCH_FRAMES` 60 and `MAX_WINDOWS` 8 (`planWindows.ts`), bitmap cache 64 (`BITMAP_CACHE` in `PixiExecutor.ts`); checked against the code again on 2026-11-15 (P4-UI-001), none changed |
 | 14 | Detection page, `pass` in Chromium; WKWebView and WebKitGTK results | partly met | `desktop-detect` passes in Chromium; the system webview results are P3-DSK-001 and do not block ALPHA |
 
+### 22.4 Browser matrix status (2026-11-16, TASK-0060, TASK-0203)
+
+Run: Windows 11, `bun run build:e2e`, `playwright test` on the three projects of the matrix, each in one full run with 3 or 4 workers, then every failure rerun alone with one worker. The pinned LGPL FFmpeg, a port and a workspace of its own (a run that reuses the server of another checkout can test old code).
+
+| Browser | Full run | Failures of the full run | Alone |
+| --- | --- | --- | --- |
+| Chromium 156 | 284 passed, 4 failed, 5 skipped (8.1 min, 4 workers) | `a11y-axe-both-themes` dark and light pt-BR (the export did not finish in 120 s: the server answered 429 to `POST /jobs` while four workers exported), `scenarios` prototype-reference (one 429 on `GET /frame` in the console), `templates` slot name | all pass (15 of 15 in the three files); `text-style` passes at SSIM 0.9941 to 0.9948, shift 0.05 px |
+| Firefox | 283 passed, 5 failed, 5 skipped (13.8 min, 3 workers) | three failures with `ENOENT` on `test-results` (a second Playwright run of the same checkout started in the meantime and cleared the folder), `a11y-axe-both-themes` dark en (120 s export, load), `transform-handles` plan window | the first four pass; `transform-handles` failed 3 of 3 alone: a test defect, see below |
+| WebKit (Windows) | 214 passed, 2 failed, 77 skipped (4.9 min, 3 workers) | `a11y-axe-both-themes` dark pt-BR (load), `mask-preview` | the a11y case passes; `mask-preview` is a test defect, see below |
+
+Test defects found and fixed: `templates` waited for the posted request, not for its answer, so the next field of the item built its batch from the old slot (`slot_1` again); `transform-handles` "the picture changes only after the new plan window arrives" took its "before" picture while Firefox had drawn nothing (a black buffer), so the first drawn frame looked like a change before the plan arrived; it now waits for `data-drawn`; `mask-preview` had no skip for WebKit on Windows, which cannot decode the VP9 proxy.
+
+The failures under load are the 429 of the heavy limit and the 120 s export wait of four or three parallel workers on one server; none of them fails alone. The `text-style` failure at SSIM 0.9693 of the earlier Chromium run did not reproduce in four runs (two alone, the full Chromium run and the full Firefox run; frames 0, 15 and 29: 0.9941, 0.9948, 0.9948; the preview buffer is sized like `ViewFrame` since the even-buffer change, and `KNOWN_DIVERGENCES` is empty); the threshold was not changed.
+
+`preview-vs-export` with WebCodecs: Chromium and Firefox pass all 58 tests (golden cases and prototype scenes, 211 frames each, lowest SSIM 0.9779 in Chromium and 0.9860 in Firefox, offsets under 1 px). WebKit on Windows skips them (62 skipped): its build answers `MEDIA_ERR_SRC_NOT_SUPPORTED` for the VP9 proxy, so neither WebCodecs nor the `<video>` fallback draws a video layer there; the WebKit jobs of Linux and macOS decode it. `webcodecs-seek-is-frame-exact`, `webcodecs-no-leak`, `webcodecs-fallback` and `webcodecs-forced-video` pass in Chromium and Firefox.
+
 ## Appendix A: Decisions of this SDD
 
 | # | Decision | Section |
