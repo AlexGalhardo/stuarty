@@ -1,127 +1,113 @@
 ---
-import { localizePath } from "@/lib/locale";
-import { dockerCommand, type LandingCopy } from "@/lib/landing";
+import { landing as copy } from "@/lib/landing";
+import { dockerRunCommand, latestVersion } from "@/lib/latest-release";
 import { site, withBase } from "@/lib/site";
 
-interface Props {
-	copy: LandingCopy;
-}
-
-const { copy } = Astro.props;
-const isPt = copy.lang === "pt-BR";
-const copyLabel = isPt ? "Copiar o comando" : "Copy the command";
-const docsHref = withBase(localizePath(copy.lang === "pt-BR" ? "pt-br" : "en", "/docs/introduction/"));
+const version = latestVersion();
+const command = dockerRunCommand(version);
+const lines = command.split("\n");
 ---
 
-<main id="content">
-	<section class="relative overflow-hidden border-b border-border">
-		<div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,var(--accent-soft),transparent_65%)]"></div>
-		<div class="mx-auto max-w-5xl px-4 pt-6 pb-20 sm:px-6 sm:pt-10">
-			<div class="flex flex-wrap items-center justify-between gap-3 text-sm">
-				<p class="inline-flex items-center gap-2 rounded-full border border-border-strong bg-subtle px-3 py-1 font-medium text-muted">
-					<span aria-hidden="true" class="size-2 rounded-full bg-brand"></span>
-					{copy.status}
-				</p>
-				<a href={withBase(copy.nav.other.href)} hreflang={isPt ? "en" : "pt-BR"} lang={isPt ? "en" : "pt-BR"} class="text-muted hover:text-fg">{copy.nav.other.label}</a>
+<main
+	id="content"
+	data-landing
+	class="fit:h-[calc(100dvh-var(--header-h))] fit:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] fit:overflow-hidden grid grid-cols-1"
+>
+	<section aria-labelledby="hero" class="relative flex min-w-0 flex-col px-5 py-8 sm:px-8 fit:px-10 fit:py-6">
+		<div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_left,var(--accent-soft),transparent_70%)]"></div>
+
+		<div class="my-auto">
+			<p class="inline-flex items-center gap-2 rounded-full border border-border-strong bg-subtle px-3 py-1 text-xs font-medium text-muted">
+				<span aria-hidden="true" class="size-2 rounded-full bg-brand"></span>
+				{copy.status}
+				<span class="text-faint">&middot; v{version}</span>
+			</p>
+
+			<h1 id="hero" class="mt-3 text-3xl font-semibold tracking-tight text-fg">{copy.hero.title}</h1>
+			<p class="mt-2 max-w-xl text-sm leading-snug text-muted">{copy.hero.lead}</p>
+
+			<div class="mt-4 max-w-xl">
+				<p id="run-label" class="text-xs text-muted">{copy.hero.runLabel}</p>
+				<div role="group" aria-labelledby="run-label" class="mt-2 overflow-hidden rounded-xl border border-border-strong bg-code-bg">
+					<div class="flex items-center justify-between border-b border-border px-3 py-1.5">
+						<span aria-hidden="true" class="flex gap-1.5"><i class="size-2.5 rounded-full bg-border-strong"></i><i class="size-2.5 rounded-full bg-border-strong"></i><i class="size-2.5 rounded-full bg-border-strong"></i></span>
+						<button
+							type="button"
+							data-copy={command}
+							aria-label={`Copy the docker run command for version ${version}`}
+							class="rounded-md border border-border px-2 py-0.5 text-xs font-medium text-muted hover:bg-hover hover:text-fg"
+						>
+							Copy
+						</button>
+					</div>
+					<pre
+						tabindex="0"
+						class="overflow-x-auto px-3 py-2.5 font-mono text-[0.7rem] leading-relaxed text-fg"
+					><code>{lines.map((line, i) => (<span class="block whitespace-pre">{i === 0 ? <span aria-hidden="true" class="select-none text-faint">$ </span> : <span aria-hidden="true" class="select-none">{"  "}</span>}{line.replace(/^ {2}/, "")}</span>))}</code></pre>
+				</div>
+				<p class="mt-2 text-xs leading-relaxed text-faint">{copy.hero.runNote}</p>
 			</div>
 
-			<h1 class="mt-10 max-w-3xl text-4xl font-semibold tracking-tight text-fg sm:text-5xl">{copy.hero.title}</h1>
-			<p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">{copy.hero.lead}</p>
+			<ul class="mt-4 grid max-w-xl gap-x-4 gap-y-1 text-xs text-muted [@media(max-height:760px)]:hidden sm:grid-cols-2">
+				{copy.hero.points.map((point) => (
+					<li class="flex gap-2">
+						<svg aria-hidden="true" viewBox="0 0 16 16" class="mt-0.5 size-4 shrink-0 text-accent" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 8.5 3.2 3L13 4.5"></path></svg>
+						<span>{point}</span>
+					</li>
+				))}
+			</ul>
 
-			<div class="mt-8 flex flex-wrap gap-3">
-				<a href="#run" class="inline-flex h-11 items-center rounded-lg bg-[#6446f0] px-5 text-sm font-semibold text-white hover:bg-[#5a3be6]">{copy.hero.primary}</a>
-				<a href={docsHref} class="inline-flex h-11 items-center rounded-lg border border-border-strong px-5 text-sm font-semibold text-fg hover:bg-hover">{copy.hero.secondary}</a>
-				<a href={site.releases} class="inline-flex h-11 items-center rounded-lg border border-border-strong px-5 text-sm font-semibold text-fg hover:bg-hover">{copy.nav.releases}</a>
+			<div class="mt-4 flex flex-wrap items-center gap-3">
+				<a href={withBase("/docs/quick-start/")} class="inline-flex h-10 items-center rounded-lg bg-[#6446f0] px-4 text-sm font-semibold text-white hover:bg-[#5a3be6]">{copy.hero.quickStart} &rarr;</a>
+				<a href={site.releases} class="inline-flex h-10 items-center rounded-lg border border-border-strong px-4 text-sm font-semibold text-fg hover:bg-hover">{copy.hero.releases}</a>
 			</div>
+		</div>
 
-			<div id="run" class="mt-10 max-w-3xl scroll-mt-24">
-				<p class="text-sm text-muted">{copy.hero.dockerLabel}</p>
-				<div class="mt-2 flex items-center gap-2 rounded-xl border border-border-strong bg-code-bg px-4 py-3">
-					<code class="min-w-0 flex-1 overflow-x-auto font-mono text-sm whitespace-nowrap text-fg">{dockerCommand}</code>
-					<button type="button" data-copy={dockerCommand} aria-label={copyLabel} class="shrink-0 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted hover:bg-hover hover:text-fg">
-						{isPt ? "Copiar" : "Copy"}
+		<footer class="mt-4 text-xs text-muted">
+			<p class="text-faint">{copy.footer.license}</p>
+		</footer>
+	</section>
+
+	<section aria-labelledby="gallery" class="flex min-w-0 flex-col justify-center border-t border-border bg-subtle px-5 py-6 sm:px-8 fit:border-t-0 fit:border-l fit:px-8">
+		<h2 id="gallery" class="sr-only">{copy.gallery.label}</h2>
+		<div data-tabs class="mx-auto w-full max-w-3xl">
+			<div role="tablist" aria-label={copy.gallery.label} class="flex flex-wrap gap-1.5">
+				{copy.features.map((f, i) => (
+					<button
+						type="button"
+						role="tab"
+						id={`tab-${f.id}`}
+						data-tab={f.id}
+						aria-controls={`panel-${f.id}`}
+						aria-selected={i === 0 ? "true" : "false"}
+						class="rounded-full border border-border-strong px-3 py-1 text-xs font-medium text-muted hover:bg-hover hover:text-fg aria-selected:border-accent aria-selected:bg-accent-soft aria-selected:text-accent"
+					>
+						{f.tab}
 					</button>
-				</div>
-				<p class="mt-2 text-sm text-faint">{copy.hero.dockerNote}</p>
+				))}
 			</div>
 
-			<div aria-hidden="true" class="mt-14 rounded-2xl border border-border-strong bg-subtle p-4 shadow-2xl shadow-black/20">
-				<div class="grid gap-3 sm:grid-cols-[1fr_9rem]">
-					<div class="flex h-40 items-center justify-center rounded-lg bg-black sm:h-52">
-						<div class="flex aspect-[9/16] h-[85%] items-center justify-center rounded-md bg-gradient-to-b from-[#3b2a8f] to-[#111827]">
-							<span class="text-2xl text-white/90">&#9654;</span>
-						</div>
-					</div>
-					<div class="hidden space-y-2 rounded-lg border border-border bg-bg p-3 sm:block">
-						<div class="h-2 w-2/3 rounded bg-border-strong"></div>
-						<div class="h-2 w-full rounded bg-border"></div>
-						<div class="h-2 w-1/2 rounded bg-border"></div>
-					</div>
+			{copy.features.map((f, i) => (
+				<div role="tabpanel" id={`panel-${f.id}`} data-panel={f.id} aria-labelledby={`tab-${f.id}`} hidden={i !== 0} class="mt-3">
+					<figure class="m-0">
+						<img
+							src={withBase(f.image.src)}
+							alt={f.image.alt}
+							width="1600"
+							height="1000"
+							loading={i === 0 ? "eager" : "lazy"}
+							decoding="async"
+							class="aspect-[8/5] max-h-[calc(100dvh-var(--header-h)-15rem)] w-full rounded-xl border border-border-strong bg-black object-contain shadow-2xl shadow-black/20"
+						/>
+						<figcaption class="mt-3">
+							<h3 class="text-base font-semibold text-fg">{f.title}</h3>
+							<p class="mt-1 text-sm leading-relaxed text-muted">{f.text}</p>
+							<p class="mt-2 text-xs text-faint">In Vukem Video: <code class="rounded bg-code-bg px-1.5 py-0.5 font-mono text-fg">{f.command}</code></p>
+						</figcaption>
+					</figure>
 				</div>
-				<div class="mt-3 space-y-2">
-					<div class="flex gap-2"><div class="h-6 w-[40%] rounded bg-brand/80"></div><div class="h-6 w-[25%] rounded bg-brand/50"></div><div class="h-6 w-[20%] rounded bg-brand/70"></div></div>
-					<div class="flex gap-2 pl-[10%]"><div class="h-6 w-[30%] rounded bg-amber-400/70"></div><div class="h-6 w-[35%] rounded bg-amber-400/50"></div></div>
-					<div class="flex gap-2"><div class="h-6 w-[70%] rounded bg-emerald-400/50"></div></div>
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<section aria-labelledby="tour" class="border-b border-border">
-		<div class="mx-auto max-w-5xl px-4 py-20 sm:px-6">
-			<h2 id="tour" class="text-3xl font-semibold tracking-tight">{copy.tour.title}</h2>
-			<p class="mt-3 max-w-2xl text-muted">{copy.tour.lead}</p>
-			<ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{copy.tour.items.map((item) => (
-					<li class="rounded-xl border border-border bg-subtle p-5">
-						<p class="text-xs font-semibold tracking-wide text-accent uppercase">{item.phase}</p>
-						<h3 class="mt-2 text-base font-semibold text-fg">{item.title}</h3>
-						<p class="mt-2 text-sm leading-relaxed text-muted">{item.text}</p>
-					</li>
-				))}
-			</ul>
-		</div>
-	</section>
-
-	<section aria-labelledby="agents" class="border-b border-border">
-		<div class="mx-auto max-w-5xl px-4 py-20 sm:px-6">
-			<h2 id="agents" class="text-3xl font-semibold tracking-tight">{copy.agents.title}</h2>
-			<p class="mt-3 max-w-2xl text-muted">{copy.agents.lead}</p>
-			<ul class="mt-10 grid gap-4 lg:grid-cols-3">
-				{copy.agents.routes.map((route) => (
-					<li class="rounded-xl border border-border bg-subtle p-5">
-						<h3 class="text-base font-semibold text-fg">{route.name}</h3>
-						<p class="mt-2 text-sm leading-relaxed text-muted">{route.text}</p>
-						<code class="mt-3 block rounded-md bg-code-bg px-3 py-2 font-mono text-xs break-words whitespace-pre-wrap text-fg">{route.command}</code>
-					</li>
-				))}
-			</ul>
-			<p class="mt-4 text-sm text-faint">{copy.agents.note}</p>
-		</div>
-	</section>
-
-	<section aria-labelledby="open" class="border-b border-border">
-		<div class="mx-auto max-w-5xl px-4 py-20 sm:px-6">
-			<h2 id="open" class="text-3xl font-semibold tracking-tight">{copy.open.title}</h2>
-			<dl class="mt-10 grid gap-x-8 gap-y-6 sm:grid-cols-2">
-				{copy.open.points.map((point) => (
-					<div>
-						<dt class="font-semibold text-fg">{point.title}</dt>
-						<dd class="mt-1 text-sm leading-relaxed text-muted">{point.text}</dd>
-					</div>
-				))}
-			</dl>
+			))}
+			<p class="mt-3 text-xs text-faint">{copy.gallery.placeholderNote}</p>
 		</div>
 	</section>
 </main>
-
-<footer class="mx-auto max-w-5xl px-4 py-10 text-sm text-muted sm:px-6">
-	<nav aria-label={isPt ? "Rodapé" : "Footer"} class="flex flex-wrap gap-x-6 gap-y-2">
-		<a class="hover:text-fg" href={docsHref}>{copy.footer.docs}</a>
-		<a class="hover:text-fg" href={withBase(localizePath(copy.lang === "pt-BR" ? "pt-br" : "en", "/changelog/"))}>{copy.footer.changelog}</a>
-		<a class="hover:text-fg" href={site.repo}>{copy.footer.repo}</a>
-		<a class="hover:text-fg" href={site.releases}>{copy.nav.releases}</a>
-	</nav>
-	<p class="mt-4 text-faint">{copy.footer.license}</p>
-	{copy.footer.docsNote ? <p class="mt-1 text-faint">{copy.footer.docsNote}</p> : null}
-</footer>
