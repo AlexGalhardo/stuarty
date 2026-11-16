@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Collapsible } from "@base-ui/react/collapsible";
 import { Link } from "@/components/link";
+import { methodClass } from "@/components/mdx/reference";
 import { ChevronRight } from "lucide-react";
 import type { NavGroup } from "@/lib/content";
 import { ui as t } from "@/lib/ui-text";
@@ -11,11 +12,13 @@ import { site } from "@/lib/site";
 function Item({
 	href,
 	title,
+	badge,
 	active,
 	onNavigate,
 }: {
 	href: string;
 	title: string;
+	badge?: string;
 	active: boolean;
 	onNavigate?: () => void;
 }) {
@@ -25,11 +28,19 @@ function Item({
 				href={href}
 				onClick={onNavigate}
 				aria-current={active ? "page" : undefined}
-				className={`block rounded-lg px-3 py-1.5 text-sm transition-colors ${
+				className={`flex items-baseline gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors ${
 					active ? "bg-accent-soft font-medium text-accent" : "text-muted hover:bg-hover hover:text-fg"
 				}`}
 			>
-				{title}
+				{badge ? (
+					<span
+						aria-hidden
+						className={`inline-block w-11 shrink-0 rounded px-1 py-px text-center font-mono text-[0.625rem] leading-4 font-semibold ${methodClass(badge)}`}
+					>
+						{badge}
+					</span>
+				) : null}
+				<span className="min-w-0">{title}</span>
 			</Link>
 		</li>
 	);
@@ -77,7 +88,7 @@ export function Sidebar({
 
 				if (!collapsible) {
 					return (
-						<div key={group.title}>
+						<div key={group.label}>
 							<p className="mb-2 px-3 text-xs font-semibold tracking-wide text-fg">{group.title}</p>
 							{list}
 						</div>
@@ -86,7 +97,7 @@ export function Sidebar({
 
 				const open = group.items.some((i) => i.href === path);
 				return (
-					<Collapsible.Root key={group.title} defaultOpen={open}>
+					<Collapsible.Root key={group.label} defaultOpen={open}>
 						<Collapsible.Trigger className="group flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-xs font-semibold tracking-wide text-fg hover:bg-hover">
 							{group.title}
 							<ChevronRight

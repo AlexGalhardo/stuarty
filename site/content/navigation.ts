@@ -13,12 +13,41 @@ import path from "node:path";
  * categories may share a folder (`guide`): a category is a sidebar title plus a list of pages, so the URLs
  * of the pages do not depend on how they are grouped.
  */
+/**
+ * The sidebar a page belongs to: the documentation, the API reference or the MCP reference. A page shows only the
+ * groups of its own section, and its previous and next links stay in it.
+ */
+export type NavSection = "docs" | "api" | "mcp";
+
 export type NavCategory = {
 	dir: string;
 	prefix?: string;
+	/** The sidebar group. */
 	title: string;
+	/** The name above the page title and in search results, when the group title alone is not enough. */
+	label?: string;
+	section?: NavSection;
 	pages: string[];
 };
+
+type ReferenceNav = { api?: { tag: string; pages: string[] }[] };
+
+/** The order of the API reference, written by scripts/generate-reference.ts (generated/reference-nav.json). */
+function referenceNav(): ReferenceNav {
+	const file = path.join(process.cwd(), "generated", "reference-nav.json");
+	return fs.existsSync(file) ? (JSON.parse(fs.readFileSync(file, "utf8")) as ReferenceNav) : {};
+}
+
+/** The groups of the API reference: its introduction, then one group per resource with a page per operation. */
+function apiCategories(): NavCategory[] {
+	const nav = referenceNav();
+	return [
+		{ dir: "api", prefix: "api", title: "API reference", section: "api", pages: ["overview", "endpoints", "schemas"] },
+		...(nav.api ?? []).map(
+			(g): NavCategory => ({ dir: "api", prefix: "api", title: g.tag, label: `API: ${g.tag}`, section: "api", pages: g.pages }),
+		),
+	];
+}
 
 /** The generated command pages (scripts/generate-reference.ts), in alphabetical order. */
 function commandPages(): string[] {
@@ -109,7 +138,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "reference",
 		title: "Reference",
-		pages: ["commands", "cli", "http-api", "timeline-schema", "error-codes", "configuration", "events", "glossary"],
+		pages: ["commands", "cli", "timeline-schema", "error-codes", "configuration", "events", "glossary"],
 	},
 	{
 		dir: "reference/commands",
@@ -144,4 +173,5 @@ export const navigation: NavCategory[] = [
 		title: "Contributing",
 		pages: ["guide", "setup", "repository-layout", "commits-and-prs", "writing-docs", "renderer", "releases"],
 	},
+	...apiCategories(),
 ];

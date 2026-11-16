@@ -40,7 +40,7 @@ function SearchLauncher() {
 					setOpened(true);
 					setOpen(true);
 				}}
-				className="flex h-8 items-center gap-2 rounded-lg text-sm text-faint transition-colors hover:text-fg max-sm:w-8 max-sm:justify-center sm:w-64 sm:border sm:border-border sm:bg-subtle sm:pr-1.5 sm:pl-2.5 sm:hover:border-border-strong"
+				className="flex h-8 items-center gap-2 rounded-lg text-sm text-faint transition-colors hover:text-fg max-sm:w-8 max-sm:justify-center sm:w-64 lg:w-48 xl:w-64 sm:border sm:border-border sm:bg-subtle sm:pr-1.5 sm:pl-2.5 sm:hover:border-border-strong"
 			>
 				<Search aria-hidden className="size-4 shrink-0" />
 				<span className="hidden flex-1 text-left sm:inline">{t.searchButton}</span>
@@ -70,7 +70,7 @@ export function Header({ groups }: { groups: NavGroup[] }) {
 		<Providers>
 			<header className="sticky top-0 z-40 h-(--header-h) border-b border-border bg-bg/80 backdrop-blur-md supports-[backdrop-filter]:bg-bg/70">
 				{/* Same container as app/docs/layout.tsx; the left column matches the sidebar width. */}
-				<div className="mx-auto flex h-full max-w-[90rem] items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:grid lg:grid-cols-[16rem_1fr_16rem] lg:gap-0">
+				<div className="mx-auto flex h-full max-w-[90rem] items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:grid lg:grid-cols-[16rem_1fr_auto] lg:gap-0">
 					<div className="flex items-center gap-2 sm:gap-3">
 						<MobileNav groups={groups} />
 						<Logo />
@@ -93,6 +93,12 @@ export function Header({ groups }: { groups: NavGroup[] }) {
 						>
 							{t.agents}
 						</a>
+						<Link
+							href="/docs/api/overview"
+							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium whitespace-nowrap text-muted transition-colors hover:bg-hover hover:text-fg lg:inline-flex"
+						>
+							{t.apiReference}
+						</Link>
 						<Link
 							href="/changelog"
 							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-fg sm:inline-flex"

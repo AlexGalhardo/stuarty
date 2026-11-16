@@ -17,6 +17,12 @@ const LANGS = [
 	"ini",
 	"toml",
 	"protobuf",
+	"python",
+	"javascript",
+	"php",
+	"java",
+	"csharp",
+	"ruby",
 ] as const;
 
 const ALIASES: Record<string, string> = {
@@ -29,6 +35,10 @@ const ALIASES: Record<string, string> = {
 	gohtml: "html",
 	tmpl: "html",
 	proto: "protobuf",
+	py: "python",
+	js: "javascript",
+	cs: "csharp",
+	rb: "ruby",
 };
 
 let highlighter: Promise<Highlighter> | undefined;

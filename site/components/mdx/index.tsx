@@ -4,6 +4,7 @@ import { Callout } from "@/components/mdx/callout";
 import { Card, CardGroup } from "@/components/mdx/card";
 import { CodeBlock } from "@/components/mdx/code-block";
 import { Quote } from "@/components/mdx/quote";
+import { ApiRoute, RefAside, RefMain, RefSplit } from "@/components/mdx/reference";
 import { Step, Steps } from "@/components/mdx/steps";
 import { CodeGroup, Tab, Tabs } from "@/components/mdx/tabs";
 import { Term } from "@/components/mdx/term";
@@ -69,12 +70,16 @@ export const mdxComponents: MDXComponents = {
 	a: A,
 	img: Img,
 	table: Table,
+	ApiRoute,
 	Callout,
 	Card,
 	CardGroup,
 	CodeBlock,
 	CodeGroup,
 	Quote,
+	RefAside,
+	RefMain,
+	RefSplit,
 	Step,
 	Steps,
 	Tab,

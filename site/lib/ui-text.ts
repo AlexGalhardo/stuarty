@@ -7,6 +7,7 @@ export type UiText = {
 	githubTooltip: string;
 	githubLabel: string;
 	agents: string;
+	apiReference: string;
 	changelog: string;
 	changelogTitle: string;
 	changelogDescription: string;
@@ -45,6 +46,7 @@ export const ui: UiText = {
 	githubTooltip: "GitHub repository",
 	githubLabel: "Vukem Video on GitHub",
 	agents: "Agents",
+	apiReference: "API Reference",
 	changelog: "Changelog",
 	changelogTitle: "Changelog",
 	changelogDescription: "Every release of Vukem Video, with a link to the commit behind each change.",

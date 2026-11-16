@@ -12,7 +12,7 @@ async function markup(node: React.ReactNode): Promise<string> {
 /** Docs frame and article as HTML. Interactive tabs and copy are plain DOM. */
 export function renderDoc(doc: Doc): Promise<string> {
 	return markup(
-		<DocsFrame pathname={doc.href}>
+		<DocsFrame pathname={doc.href} section={doc.section}>
 			<DocArticle doc={doc} />
 		</DocsFrame>,
 	);

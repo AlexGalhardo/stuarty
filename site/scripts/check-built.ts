@@ -95,6 +95,18 @@ export function basePathProblems(file: string, html: string, base: string): stri
 }
 
 /**
+ * The docs pages of a build: every `docs/<path>/index.html` that holds a page. A redirect (a page that moved, which
+ * Astro writes as a refresh to the new address) is not a page: it has no twin, no canonical of its own and is not
+ * listed in the sitemap or in llms.txt.
+ */
+export function docPages(files: string[], read: (rel: string) => string): string[] {
+	return files
+		.filter((f) => f.startsWith("docs/") && f.endsWith("/index.html") && f !== "docs/index.html")
+		.filter((f) => !/http-equiv="refresh"/.test(read(f)))
+		.map((f) => f.slice(0, -"/index.html".length));
+}
+
+/**
  * Twins and llms.txt (SDD-010 section 9, properties 1 to 3): every docs page has a Markdown twin
  * without JSX or imports, llms.txt lists every page, and every URL it lists resolves to a file.
  * `files` are paths relative to out/ with forward slashes.
@@ -102,9 +114,7 @@ export function basePathProblems(file: string, html: string, base: string): stri
 export function twinProblems(files: string[], read: (rel: string) => string, siteUrl: string): string[] {
 	const problems: string[] = [];
 	const set = new Set(files);
-	const pages = files
-		.filter((f) => f.startsWith("docs/") && f.endsWith("/index.html") && f !== "docs/index.html")
-		.map((f) => f.slice(0, -"/index.html".length));
+	const pages = docPages(files, read);
 	if (!set.has("llms.txt")) return ["llms.txt is missing"];
 	const listed = new Set(
 		[...read("llms.txt").matchAll(/\]\((https?:\/\/[^)\s]+)\)/g)].map((m) =>
@@ -116,7 +126,8 @@ export function twinProblems(files: string[], read: (rel: string) => string, sit
 		if (!set.has(`${page}.md`)) problems.push(`${page}: no Markdown twin (${page}.md)`);
 		else {
 			const md = read(`${page}.md`);
-			if (/^import\s/m.test(md) || /<[A-Z][A-Za-z]*[\s/>]/.test(md)) problems.push(`${page}.md: has JSX or an import`);
+			const prose = md.replace(/^```[\s\S]*?^```/gm, "");
+			if (/^import\s/m.test(prose) || /<[A-Z][A-Za-z]*[\s/>]/.test(prose)) problems.push(`${page}.md: has JSX or an import`);
 		}
 		if (!listed.has(page)) problems.push(`llms.txt does not list ${page}`);
 	}
@@ -145,9 +156,7 @@ export function pageProblems(files: string[], read: (rel: string) => string, sit
 	const problems: string[] = [];
 	const set = new Set(files);
 	const at = (url: string) => url.replace(siteUrl, "").replace(/^\//, "").replace(/\/$/, "");
-	const pages = files
-		.filter((f) => f.startsWith("docs/") && f.endsWith("/index.html") && f !== "docs/index.html")
-		.map((f) => f.slice(0, -"/index.html".length));
+	const pages = docPages(files, read);
 	const sitemap = set.has("sitemap.xml") ? read("sitemap.xml") : "";
 
 	for (const page of pages) {

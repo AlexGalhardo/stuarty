@@ -73,6 +73,15 @@ test("a complete site has no twin problems", () => {
 	assert.deepEqual(twinProblems(files, read, url), []);
 });
 
+test("a page that moved is a redirect, not a page, and code in a twin is not JSX", () => {
+	const url = "https://example.org";
+	const redirect = '<!doctype html><meta http-equiv="refresh" content="0;url=/docs/new/"><link rel="canonical" href="https://example.org/docs/new/">';
+	const files = ["llms.txt", "docs/new/index.html", "docs/new.md", "docs/old/index.html"];
+	const java = ["# New", "", "```java", "import java.net.URI;", "HttpResponse<String> r;", "```"].join("\n");
+	const read = (rel: string) => (rel === "llms.txt" ? `- [New](${url}/docs/new/): x` : rel === "docs/old/index.html" ? redirect : rel === "docs/new.md" ? java : "<html></html>");
+	assert.deepEqual(twinProblems(files, read, url), []);
+});
+
 const SITE = "https://example.org";
 
 function page(opts: { lang: string; canonical: string; alternates?: [string, string][] }): string {

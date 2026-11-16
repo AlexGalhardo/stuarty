@@ -24,7 +24,7 @@ export function llmsTxt(): string {
 
 	for (const group of getNavGroups()) {
 		if (group.items.length === 0) continue;
-		lines.push(`## ${group.title}`, "");
+		lines.push(`## ${group.label}`, "");
 		for (const item of group.items) lines.push(`- [${item.title}](${url(item.href)}): ${docs.get(item.href)?.description ?? ""}`);
 		lines.push("");
 	}
