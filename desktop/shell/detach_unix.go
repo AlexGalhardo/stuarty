@@ -3,6 +3,7 @@
 package shell
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -16,7 +17,7 @@ import (
 func startDetached(execPath string, args ...string) (<-chan struct{}, error) {
 	if runtime.GOOS == "darwin" && len(args) == 0 {
 		if app := bundleOf(execPath); app != "" {
-			if err := exec.Command("/usr/bin/open", "-n", app).Start(); err != nil {
+			if err := exec.CommandContext(context.Background(), "/usr/bin/open", "-n", app).Start(); err != nil {
 				return nil, fmt.Errorf("open %s: %w", app, err)
 			}
 
@@ -24,7 +25,8 @@ func startDetached(execPath string, args ...string) (<-chan struct{}, error) {
 		}
 	}
 
-	cmd := exec.Command(execPath, args...)
+	// The child is detached and outlives this process, so no context ever cancels it.
+	cmd := exec.CommandContext(context.Background(), execPath, args...)
 	cmd.Env = os.Environ()
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 
