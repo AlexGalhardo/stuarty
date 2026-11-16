@@ -18,6 +18,22 @@ const SELECT =
 // own name, until the catalogue has a label for it.
 const FORMAT_KEYS = ["mp4", "gif", "wav", "aac"] as const;
 
+// Turns the range on, as the in and out points of the timeline (a point that
+// is not set leaves that end open), or off.
+export function rangeOptions(
+	value: ExportOptions,
+	range: { in: number | null; out: number | null },
+	on: boolean,
+): ExportOptions {
+	const { start: _start, end: _end, ...rest } = value;
+	if (!on) return rest;
+	return {
+		...rest,
+		...(range.in === null ? {} : { start: `${range.in}f` }),
+		...(range.out === null ? {} : { end: `${range.out}f` }),
+	};
+}
+
 // The export options of SDD-012 section 14: the format. Frame rate and size are
 // project settings (SDD-004 section 8.1), not job arguments. Only what the
 // server schema exposes is offered (`capabilities`), and a choice the
@@ -28,17 +44,23 @@ export default function ExportOptionsFields({
 	value,
 	disabled,
 	unsupported,
+	range = { in: null, out: null },
 	onChange,
 }: {
 	capabilities: ExportCapabilities;
 	value: ExportOptions;
 	disabled: boolean;
 	unsupported: Unsupported | null;
+	// The in and out points of the timeline (frames); the range is offered when
+	// one is set and the server takes `start` and `end`.
+	range?: { in: number | null; out: number | null };
 	onChange(next: ExportOptions): void;
 }): ReactNode {
 	const t = useT();
 	const { formats } = capabilities;
-	if (formats.length === 0) return null;
+	const rangeSet =
+		capabilities.range && (range.in !== null || range.out !== null);
+	if (formats.length === 0 && !rangeSet) return null;
 	const format = value.format ?? "mp4";
 	return (
 		<fieldset
@@ -60,7 +82,7 @@ export default function ExportOptionsFields({
 						value={format}
 						onChange={(event) => {
 							const next = event.target.value;
-							onChange({ format: next === "mp4" ? undefined : next });
+							onChange({ ...value, format: next === "mp4" ? undefined : next });
 						}}
 					>
 						{(formats.includes("mp4") ? formats : ["mp4", ...formats]).map(
@@ -73,6 +95,22 @@ export default function ExportOptionsFields({
 							),
 						)}
 					</select>
+				</div>
+			)}
+			{rangeSet && (
+				<div className="flex items-center gap-2">
+					<input
+						id="export-range"
+						type="checkbox"
+						className="size-4 accent-primary"
+						checked={value.start !== undefined || value.end !== undefined}
+						onChange={(event) =>
+							onChange(rangeOptions(value, range, event.target.checked))
+						}
+					/>
+					<Label htmlFor="export-range" className="text-xs">
+						{t("ui.editor.export.options.range")}
+					</Label>
 				</div>
 			)}
 			{unsupported !== null && (

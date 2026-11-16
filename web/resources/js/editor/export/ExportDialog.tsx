@@ -183,6 +183,7 @@ export default function ExportDialog({
 	const job = useStore(runtime.jobs, (s) =>
 		s.exportJobId === null ? undefined : s.jobs[s.exportJobId],
 	);
+	const range = useStore(runtime.ui, (s) => s.range);
 	const lastEventAt = useStore(runtime.jobs, (s) => s.lastEventAt);
 	const [checking, setChecking] = useState(false);
 	const [findings, setFindings] = useState<readonly LintFinding[]>([]);
@@ -239,7 +240,7 @@ export default function ExportDialog({
 			.getOpenApi()
 			.then(
 				(doc) => setCapabilities(exportCapabilities(doc)),
-				() => setCapabilities({ formats: [] }),
+				() => setCapabilities({ formats: [], range: false }),
 			);
 	}, [open, capabilities]);
 
@@ -399,6 +400,7 @@ export default function ExportDialog({
 									value={options}
 									disabled={false}
 									unsupported={unsupported}
+									range={range}
 									onChange={setOptions}
 								/>
 							)}
