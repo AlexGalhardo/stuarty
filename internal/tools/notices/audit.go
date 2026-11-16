@@ -202,7 +202,10 @@ func auditGroup(rel string) (group, name string) {
 	case "npm":
 		return groupNPM, strings.Join(parts[1:len(parts)-1], "/")
 	case "crates":
-		return groupCrates, strings.Join(parts[1:len(parts)-1], "/")
+		// The folder is "<crate>@<version>"; the exceptions are keyed by the crate name.
+		name, _, _ = strings.Cut(strings.Join(parts[1:len(parts)-1], "/"), "@")
+
+		return groupCrates, name
 	default:
 		return groupGo, strings.Join(parts[1:len(parts)-1], "/")
 	}
