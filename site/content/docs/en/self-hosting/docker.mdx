@@ -39,11 +39,21 @@ curl -fsS http://localhost:7878/up
 - The two `VUKEM_VIDEO_ADMIN_*` variables create the first administrator, once, when no user exists. A container never lets you run `user:create` before the first start, because the server owns the workspace. Afterwards the variables are ignored. The password may be `@file:/run/secrets/admin_password` to keep it out of the environment, and the log shows the email and never the password.
 - `GET /up` answers 200 when the server is healthy; the image has a health check on it. `docker run --rm ghcr.io/alexgalhardo/vukem-video:X.Y.Z version` prints the version.
 
+### Plain HTTP is safe only on the loopback address
+
+The container serves plain HTTP for `APP_URL=http://localhost:7878`, and nothing on that listener is encrypted. That is safe only when the port is published on your own machine, with `-p 127.0.0.1:7878:7878` (or `[::1]`), or when TLS is in front. Inside a container the server cannot see how the port is published, so when it listens on a non-loopback address over plain HTTP it logs this warning (the address is the one it binds):
+
+```text
+network mode over plain HTTP on 0.0.0.0:7878: no credential is encrypted on this listener, so publish the port on the loopback address only (docker run -p 127.0.0.1:<port>:<port>); on any other interface a password and a session cookie cross the network in clear
+```
+
+If you see it, republish the port on `127.0.0.1`, or terminate TLS in the server or in a proxy.
+
 For any use other than `localhost` (another machine, a domain name), set `APP_URL` to the public `https` address and put TLS in front: see [Put Caddy in front](/docs/self-hosting/caddy).
 
 ## Common mistakes
 
-- Publishing the port as `-p 7878:7878`, which listens on every interface. Use `127.0.0.1:` unless a proxy with TLS is in front.
+- Publishing the port as `-p 7878:7878`, which listens on every interface: a password and a session cookie then cross the network in clear, and the server logs the warning above. Use `127.0.0.1:` unless a proxy with TLS is in front.
 - Starting without `APP_KEY`: the server exits with `APP_KEY missing`. The message names the variable.
 - Reaching the published port from another machine by the address of the host: refused, since the host and origin must be `localhost:7878`.
 - Starting a second container on the same volume. One process owns a workspace; the second fails with `E_WORKSPACE_LOCKED`.
