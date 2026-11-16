@@ -34,8 +34,9 @@ function problems(dir: string, pages: string[], base: string): string[] {
 	);
 }
 
+// The production site is on a custom domain (base "/"); a project-site address keeps the base-path code honest.
 test("under a base path, every root-relative href and src starts with it (SDD-010 section 14 check 15)", () => {
-	const { dir, pages } = build("https://alexgalhardo.github.io/vukem-video");
+	const { dir, pages } = build("https://example.org/vukem-video");
 	try {
 		assert.ok(pages.length > 50, `only ${pages.length} pages were built`);
 		assert.deepEqual(problems(dir, pages, "/vukem-video"), []);
@@ -45,7 +46,7 @@ test("under a base path, every root-relative href and src starts with it (SDD-01
 });
 
 test("on a custom domain the base is the root and no page carries the project base path", () => {
-	const { dir, pages } = build("https://example.org");
+	const { dir, pages } = build("https://video.vukem.dev");
 	try {
 		assert.ok(pages.length > 50, `only ${pages.length} pages were built`);
 		const leaks = pages.filter((f) => /\b(?:href|src)\s*=\s*"\/vukem-video[/"]/.test(fs.readFileSync(f, "utf8")));

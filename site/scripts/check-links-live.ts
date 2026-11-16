@@ -4,7 +4,7 @@
 // and /pt-br/docs/, and reports each link that does not answer 200 and each #fragment with no matching id.
 // Links to pages outside the two doc trees (home, changelog) are fetched but not crawled further.
 // External links are listed, never fetched: the site must not depend on them. Node strips the types.
-const DEFAULT_SITE = "https://alexgalhardo.github.io/vukem-video";
+const DEFAULT_SITE = "https://video.vukem.dev";
 
 export interface PageLink {
 	href: string;
