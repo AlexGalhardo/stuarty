@@ -62,6 +62,8 @@ tasks:
     cmds:
       - bun run typecheck
       - bun run lint
+      - bun run check:thin-client
+      - bun run check:i18n
 
   lint:site:
     desc: Lint the documentation site and check its build (skipped while site/ does not exist)
@@ -88,6 +90,28 @@ tasks:
     desc: Run the Go tests
     cmds:
       - go test -short -count=1 -timeout 20m ./...
+
+  test:race:
+    desc: Run the Go tests of core, service and web/app with the race detector (needs cgo)
+    cmds:
+      - go test -race -short -count=1 -timeout 30m ./core/... ./service/... ./web/app/...
+
+  test:web:
+    desc: Run the web unit tests (Vitest)
+    dir: web
+    cmds:
+      - bun run test
+
+  test:cover:
+    desc: Run the Go tests with coverage and apply the coverage gate (SDD-009 section 13.2)
+    cmds:
+      - go test -short -count=1 -coverprofile=coverage.out ./...
+      - go run ./internal/tools/covergate coverage.out
+
+  gate:
+    desc: "The full local release gate (task gate -- <tag>); prints GATE_FAIL=n"
+    cmds:
+      - bash scripts/gate.sh {{.CLI_ARGS}}
 
   vet:
     desc: Run go vet
@@ -204,5 +228,6 @@ tasks:
       - task: lint
       - task: vet
       - task: test
+      - task: test:web
       - task: tidy:check
       - task: notices:check
