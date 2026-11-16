@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-11-16
+
+### Added
+
+- **web:** Draw masks in the preview and add the Mask inspector section ([20e1e01](https://github.com/AlexGalhardo/vukem-video/commit/20e1e015e4874b87da0b7ab2e838d9ad7463a3ab))
+- **desktop:** Sign published_at and expires in the update feed and refuse a stale one ([6850e8b](https://github.com/AlexGalhardo/vukem-video/commit/6850e8bd424c9c655b18f51f7375b59d4980486a))
+- **ui:** Add an in-editor find bar on Mod+F ([fa29465](https://github.com/AlexGalhardo/vukem-video/commit/fa29465d714861d4e397846ccbfa1cc1ca627342))
+- **ui:** Add the blade and select tools, range keys, keyframe panel key and Mod-to-ignore-guides ([11af877](https://github.com/AlexGalhardo/vukem-video/commit/11af8775f0c09b25b00e3b9825d5e39f9023cf11))
+- **workspace:** Let a network-mode owner prove itself with a per-run secret before the key is sent ([1a6cc72](https://github.com/AlexGalhardo/vukem-video/commit/1a6cc72b7ff1d16ea8355d4f1c3c09da66147157))
+- **engine:** Draw masks in the compositor ([3ae652e](https://github.com/AlexGalhardo/vukem-video/commit/3ae652e5856573c97fad9505f487d3f988672dde))
+- **engine:** Draw masks in the Rust renderer, byte-equal with the Go compositor ([1c61472](https://github.com/AlexGalhardo/vukem-video/commit/1c61472914dd62b13b73602027573740a1da5db8))
+- **engine:** Draw masks on the GPU path ([5297cdb](https://github.com/AlexGalhardo/vukem-video/commit/5297cdb55cd9c8e6fd7e3d330783f9ff699e7b00))
+- **ingest:** Keep the alpha of a source in a WebM proxy and PNG thumbnails ([adaec4b](https://github.com/AlexGalhardo/vukem-video/commit/adaec4bce62d9ace4f44e7adc200622f2ab35f36))
+- **cli:** Show progress, honour --timeout and refuse --no-wait in process ([aa899a8](https://github.com/AlexGalhardo/vukem-video/commit/aa899a89a9a5b140c3a6b0d47b4ed37dedfac4ed))
+- **release:** Carry the release notes and the launcher artifacts in the update feed ([0be4b60](https://github.com/AlexGalhardo/vukem-video/commit/0be4b60abd3e7eca932d19e94528b3bac92a5b28))
+- **desktop:** Add the launcher that keeps the editor up to date ([48a87b9](https://github.com/AlexGalhardo/vukem-video/commit/48a87b96908ba0fec6a3a02359bcc50f8e34964f))
+- **desktop:** Install updates on macOS and Linux ([c40d29d](https://github.com/AlexGalhardo/vukem-video/commit/c40d29db18f50602fb6976256c7eddd1adca9528))
+- **core:** Add clip.set_flip and plan flip fields ([f3b6a13](https://github.com/AlexGalhardo/vukem-video/commit/f3b6a131cd0ed84dfe409a930c4a6b57e2ef4acb))
+- **core:** Add item.set_enabled and the disabled item field ([8ffaece](https://github.com/AlexGalhardo/vukem-video/commit/8ffaece3f6e26050ffe7c60480f8e46d341b5000))
+- **core:** Add white balance and hue to clip.set_color ([e8e3c15](https://github.com/AlexGalhardo/vukem-video/commit/e8e3c15dd211d7e9d6ac665bfa9cc1a3f306cb14))
+- **core:** Add noise reduction strength to item.set_audio ([ab2bdce](https://github.com/AlexGalhardo/vukem-video/commit/ab2bdce45ff66ccd0497ce61ddd29115410f348e))
+- **ui:** Add flip, enable, white balance, hue and noise reduction controls ([15c8274](https://github.com/AlexGalhardo/vukem-video/commit/15c8274ba8b3e575799fb9ae3eff0405680a69fc))
+- **site:** Use the viewfinder mark for the favicon, the docs navbar and the README ([43d9a93](https://github.com/AlexGalhardo/vukem-video/commit/43d9a93104b7a4132f6f6f51ca88f31d8e862737))
+- **engine:** Draw flip_x and flip_y in the compositor ([7a1bc02](https://github.com/AlexGalhardo/vukem-video/commit/7a1bc02bcb71fdf25c85cc6893e099406973fbf1))
+- **engine:** Draw flip_x and flip_y in the Rust renderer, byte-equal with the Go compositor ([22ba834](https://github.com/AlexGalhardo/vukem-video/commit/22ba834a3b813864e64893cf585392b9666fc26a))
+- **engine:** Reduce the noise of a source with denoise through afftdn in the export ([579cc06](https://github.com/AlexGalhardo/vukem-video/commit/579cc06081ad945eecbe16056ea21853c07a2057))
+- **site:** Add a Scalar-style API reference generated from the OpenAPI document ([39c9a75](https://github.com/AlexGalhardo/vukem-video/commit/39c9a75b9a37e01a2f541107e3f37c66329dd2c5))
+- **site:** Add an MCP reference with one page per tool and per edit operation ([0707a6b](https://github.com/AlexGalhardo/vukem-video/commit/0707a6bc3ca1192fda0018768a220e898f2feb44))
+- **site:** Make the desktop sidebar an accordion like the mobile drawer ([6baf944](https://github.com/AlexGalhardo/vukem-video/commit/6baf944da8961a53448901ad915769c4523e011c))
+- **core:** Add a speed curve to clip.set_speed ([8c5c1ea](https://github.com/AlexGalhardo/vukem-video/commit/8c5c1ea3143e3d38452a449c5f42b7e53d3bd9c2))
+- **core:** Add reverse to clip.set_speed ([6682d12](https://github.com/AlexGalhardo/vukem-video/commit/6682d126d5e3d4aeecceca648db65bc984abd116))
+- **core:** Add item.link, item.unlink and item.extract_audio ([6258824](https://github.com/AlexGalhardo/vukem-video/commit/6258824cd2228291350813f74d9a8fa45469e6df))
+- **core:** Add clip.set_effects and the zoom, whip, dip and wipe transitions ([7f1ff09](https://github.com/AlexGalhardo/vukem-video/commit/7f1ff096b7a033e434d50f8716a30d12f85f07d0))
+- **core:** Carry captions, shapes, transitions and text effects in the OTIO vukem metadata ([b72e2db](https://github.com/AlexGalhardo/vukem-video/commit/b72e2db1a03ccd6fa93c792043b577e8c2a75587))
+
+### Fixed
+
+- **service:** Attribute imported bundle history to imported actors and close it to undo ([aa2032a](https://github.com/AlexGalhardo/vukem-video/commit/aa2032a144e04d3899de8f7c0468a814db22991e))
+- **mcp:** Make the local actor the client name plus a session id ([01159c5](https://github.com/AlexGalhardo/vukem-video/commit/01159c592c72287302c7a7ef51a40cff4be7e321))
+- **desktop:** Recover a pending update whose watchdog died ([fcdad07](https://github.com/AlexGalhardo/vukem-video/commit/fcdad0771e0d6acecc80c14e8ddfc6d2d98badc7))
+- **desktop:** Prefer the launcher artifacts of the feed on macOS and Linux ([06c6572](https://github.com/AlexGalhardo/vukem-video/commit/06c657211d168876c071044d2ba2e88d58fb07c6))
+- **desktop:** Reconcile the feed freshness and the launcher entries after integration ([9192b33](https://github.com/AlexGalhardo/vukem-video/commit/9192b3345e5696c04bf61e11ee0f49449805d487))
+- **ci:** Recognise the Unicode-3.0 licence text in the release audit ([dace9b7](https://github.com/AlexGalhardo/vukem-video/commit/dace9b7532f695c4df31cbb6eef478c3be1fcdec))
+- **cli:** Document user:create and user:passwd as taking an email ([38f12c6](https://github.com/AlexGalhardo/vukem-video/commit/38f12c6e1f28c80397cb6893c927a5baf0b0d88e))
+- **site:** Run the latest image on the landing and match the navbar width ([3217838](https://github.com/AlexGalhardo/vukem-video/commit/321783816b94bd9eac712145a68195b26dfd471b))
+- **desktop:** Start the detached process with a context ([e3d8a2b](https://github.com/AlexGalhardo/vukem-video/commit/e3d8a2b70c4475c7ce76fc04b46bb7e39be622c6))
+- **site:** Keep test:scripts free of dependencies ([70d64ef](https://github.com/AlexGalhardo/vukem-video/commit/70d64ef2900d3e5644c4cbadc5463e1ce77776b8))
+- **ci:** Encode the upgrade test clip with the LGPL mpeg4 encoder ([da1b4b4](https://github.com/AlexGalhardo/vukem-video/commit/da1b4b4e0a4c8532b9c023be500a8f26cf62907e))
+- **ci:** List the release versions without mapfile for the bash 3.2 of macOS ([b610913](https://github.com/AlexGalhardo/vukem-video/commit/b610913d53342710880ea08f22d876a9e003081f))
+- **auth:** Give a browser session its privileges only for a launch code with the launcher secret ([053737f](https://github.com/AlexGalhardo/vukem-video/commit/053737fd47184749e90431dcde32d2a87aef6f14))
+- **auth:** State the real limit of plain HTTP in a container and warn when the bind is not loopback ([2d917f6](https://github.com/AlexGalhardo/vukem-video/commit/2d917f6a309a23dfceef39a387679024a7f18237))
+- **site:** Drop the licence line from the landing ([2c1595f](https://github.com/AlexGalhardo/vukem-video/commit/2c1595ff3c54e765b919ba2f74ad9e2f075b3b5c))
+- **site:** Add the trailing slash to pages named after a dotted operation ([f7b7f0d](https://github.com/AlexGalhardo/vukem-video/commit/f7b7f0dbb0251416f4fc1e980a74b421b7249db1))
+- **web:** Load the translations in every build of the app, not only with the API ([764528b](https://github.com/AlexGalhardo/vukem-video/commit/764528b2d17bcc9ae5445e91089ffb8c49c20542))
+- **desktop:** Report a missing server binary as a spawn failure on macOS too ([9ed30ca](https://github.com/AlexGalhardo/vukem-video/commit/9ed30ca44c253c4a122ca6d9e9f3970bb1a9828a))
+- **cli:** Treat the context deadline as the in-process timeout without waiting for the timer ([a182e59](https://github.com/AlexGalhardo/vukem-video/commit/a182e591057c2865df0c4c98977a54c1ba0b5b7c))
+- **service:** Retry the atomic rename that Windows refuses while a reader holds the target ([0d0d808](https://github.com/AlexGalhardo/vukem-video/commit/0d0d80863f304f6138ecae149edbbc697903d6ee))
+
+### Security
+
+- **security:** Allow the usage lines of the CLI help test in the leak scan ([c31b916](https://github.com/AlexGalhardo/vukem-video/commit/c31b916d56088f7dcfa3f8ca36e7a9a7c9cb8646))
+- **security:** Allow the type-name placeholders of the generated API reference ([035dfce](https://github.com/AlexGalhardo/vukem-video/commit/035dfcefe2c55a1ee8233ef630a5ae18a8d100b0))
+
 ## [0.20.0] - 2026-11-16
 
 ### Added
@@ -957,7 +1020,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.20.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.21.0...HEAD
+[0.21.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.17.0...v0.18.0
