@@ -269,6 +269,7 @@ func extractZip(zipPath, dest string) error {
 	defer func() { _ = root.Close() }()
 
 	budget := int64(maxArchiveBytes)
+	links := map[string]bool{}
 
 	for _, f := range zr.File {
 		name, err := safeName(f.Name)
@@ -276,8 +277,21 @@ func extractZip(zipPath, dest string) error {
 			return err
 		}
 
+		// A link is checked as if its directory were a real one. An entry written through an earlier
+		// link would make that check wrong (a link to ".." created inside a link to ".." leaves the
+		// bundle), so nothing may be extracted below a link.
+		for dir := path.Dir(name); dir != "."; dir = path.Dir(dir) {
+			if links[dir] {
+				return fmt.Errorf("%w: %q is below a link", ErrBadArchive, f.Name)
+			}
+		}
+
 		if err := extractEntry(root, f, name, &budget); err != nil {
 			return err
+		}
+
+		if f.Mode()&fs.ModeSymlink != 0 {
+			links[name] = true
 		}
 	}
 

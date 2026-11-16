@@ -85,20 +85,33 @@ func (f *installerFake) Install(_ context.Context, a update.Artifact) error {
 
 // scenario describes what the local feed serves. The zero value is a valid update.
 type scenario struct {
-	feedVersion    string             // default 0.15.0
-	feedKey        ed25519.PrivateKey // key that signs the feed, default the test key
-	artifactKey    ed25519.PrivateKey // key that signs the artifact, default the test key
-	sigVersion     string             // version in the signed artifact message, default feedVersion
-	sigPlatform    string             // platform in the signed artifact message, default platform
-	declaredSHA    []byte             // bytes whose digest the feed declares, default the artifact
-	declaredSize   int64              // default len(artifact)
-	served         []byte             // bytes the server sends, default the artifact
-	truncateAt     int                // when > 0 the server promises the full length and sends this many bytes
-	artifactHost   string             // host for the artifact URL, default the server
-	feedRedirectTo string             // when set, the feed answers a redirect there
-	publishedAt    string             // default clock-1h; "-" leaves the field out of the signed payload
-	expires        string             // default clock+30d; "-" leaves the field out of the signed payload
-	notes          string             // optional release notes in the signed payload
+	feedVersion    string              // default 0.15.0
+	feedKey        ed25519.PrivateKey  // key that signs the feed, default the test key
+	artifactKey    ed25519.PrivateKey  // key that signs the artifact, default the test key
+	sigVersion     string              // version in the signed artifact message, default feedVersion
+	sigPlatform    string              // platform in the signed artifact message, default platform
+	declaredSHA    []byte              // bytes whose digest the feed declares, default the artifact
+	declaredSize   int64               // default len(artifact)
+	served         []byte              // bytes the server sends, default the artifact
+	truncateAt     int                 // when > 0 the server promises the full length and sends this many bytes
+	artifactHost   string              // host for the artifact URL, default the server
+	feedRedirectTo string              // when set, the feed answers a redirect there
+	publishedAt    string              // default clock-1h; "-" leaves the field out of the signed payload
+	expires        string              // default clock+30d; "-" leaves the field out of the signed payload
+	notes          string              // optional release notes in the signed payload
+	feedVersion    string              // default 0.15.0
+	feedKey        ed25519.PrivateKey  // key that signs the feed, default the test key
+	artifactKey    ed25519.PrivateKey  // key that signs the artifact, default the test key
+	sigVersion     string              // version in the signed artifact message, default feedVersion
+	sigPlatform    string              // platform in the signed artifact message, default platform
+	declaredSHA    []byte              // bytes whose digest the feed declares, default the artifact
+	declaredSize   int64               // default len(artifact)
+	served         []byte              // bytes the server sends, default the artifact
+	truncateAt     int                 // when > 0 the server promises the full length and sends this many bytes
+	artifactHost   string              // host for the artifact URL, default the server
+	feedRedirectTo string              // when set, the feed answers a redirect there
+	notes          string              // optional release notes in the signed payload
+	mutateFeed     func([]byte) []byte // rewrites the served feed after it was signed
 }
 
 type env struct {
@@ -128,7 +141,12 @@ func newEnv(t *testing.T, sc scenario) *env {
 			return
 		}
 
-		_, _ = w.Write(e.feedJSON(t, sc))
+		body := e.feedJSON(t, sc)
+		if sc.mutateFeed != nil {
+			body = sc.mutateFeed(body)
+		}
+
+		_, _ = w.Write(body)
 	})
 	mux.HandleFunc("/"+fileName, func(w http.ResponseWriter, _ *http.Request) {
 		e.fileHits.Add(1)
@@ -696,5 +714,64 @@ func TestApplyReportsProgressUpToTheDeclaredSize(t *testing.T) {
 
 	if last != total || total != int64(len(e.artifact)) || calls < 1 || calls > 100 {
 		t.Errorf("last %d total %d calls %d", last, total, calls)
+	}
+}
+
+// The attacker holds the feed host but not the key: the payload is rewritten after it was signed, to
+// offer a far newer version at the attacker's own URL.
+func TestSecurity_T35_ForgedFeedPayloadIsNeverReadOrDownloaded(t *testing.T) {
+	forge := func(raw []byte) []byte {
+		var env map[string]string
+		if err := json.Unmarshal(raw, &env); err != nil {
+			t.Fatal(err)
+		}
+
+		payload, err := base64.StdEncoding.DecodeString(env["payload"])
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		payload = bytes.Replace(payload, []byte(`"version":"0.15.0"`), []byte(`"version":"9.9.9"`), 1)
+		env["payload"] = base64.StdEncoding.EncodeToString(payload)
+
+		out, err := json.Marshal(env)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return out
+	}
+
+	e := newEnv(t, scenario{mutateFeed: forge})
+
+	_, err := e.client(t).CheckNow(t.Context())
+	if !errors.Is(err, update.ErrBadFeedSignature) {
+		t.Fatalf("got %v, want ErrBadFeedSignature", err)
+	}
+
+	if e.fileHits.Load() != 0 {
+		t.Error("a forged feed must never lead to a download")
+	}
+
+	assertNeverInstalled(t, e)
+}
+
+// A validly signed older release replayed as the newest, and the same version again, are not updates.
+func TestSecurity_T35_ReplayedSignedReleaseIsNotAnUpdate(t *testing.T) {
+	for _, v := range []string{"0.13.0", "0.14.0"} {
+		e := newEnv(t, scenario{feedVersion: v})
+		e.cfg.CurrentVersion = running
+
+		c := e.client(t)
+
+		if _, err := c.CheckNow(t.Context()); !errors.Is(err, update.ErrNotNewer) {
+			t.Fatalf("replayed %s: got %v, want ErrNotNewer", v, err)
+		}
+
+		if e.fileHits.Load() != 0 {
+			t.Errorf("replayed %s: the artifact was requested", v)
+		}
+
+		assertNeverInstalled(t, e)
 	}
 }
