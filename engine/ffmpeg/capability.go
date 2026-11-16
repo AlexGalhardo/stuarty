@@ -50,7 +50,7 @@ func (r *Runner) TestEncoderAt(ctx context.Context, c Candidate, p SizeProbe) er
 }
 
 func (r *Runner) testEncoderAt(ctx context.Context, c Candidate, p SizeProbe) error {
-	dir, err := r.NewRunDir("encoder-size")
+	dir, err := r.newInternalRunDir("encoder-size")
 	if err != nil {
 		return err
 	}

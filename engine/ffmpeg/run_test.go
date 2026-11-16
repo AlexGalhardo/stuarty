@@ -412,3 +412,29 @@ func TestDeadlines(t *testing.T) {
 		t.Error("transcription")
 	}
 }
+
+// A leftover directory of an interrupted run must never block a later one (VV-001).
+func TestInternalRunDirSurvivesLeftovers(t *testing.T) {
+	r, _, _ := helperRunner(t)
+	for _, name := range []string{"encoder-detection", "encoder-size", "capabilities"} {
+		if err := os.MkdirAll(filepath.Join(r.Workspace, "tmp", name), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		a, err := r.newInternalRunDir(name)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		b, err := r.newInternalRunDir(name)
+		if err != nil {
+			t.Fatalf("%s: second: %v", name, err)
+		}
+		if a.Dir() == b.Dir() || !strings.HasPrefix(filepath.Base(a.Dir()), name+"-") {
+			t.Errorf("names = %s, %s", a.Dir(), b.Dir())
+		}
+		_ = a.Remove()
+		_ = b.Remove()
+	}
+	if _, err := r.newInternalRunDir("a b"); err == nil {
+		t.Error("an invalid prefix was accepted")
+	}
+}

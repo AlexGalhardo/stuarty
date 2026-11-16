@@ -109,7 +109,7 @@ func missingRequired(c *Capabilities) []string {
 // smoke encodes of the required encoders and the HDR chain. A missing or failing required
 // item is E_FFMPEG_MISSING with details.missing.
 func (r *Runner) ReadCapabilities(ctx context.Context) (*Capabilities, error) {
-	dir, err := r.NewRunDir("capabilities")
+	dir, err := r.newInternalRunDir("capabilities")
 	if err != nil {
 		return nil, err
 	}

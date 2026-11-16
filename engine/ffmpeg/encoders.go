@@ -158,7 +158,7 @@ func (r *Runner) detectEncoder(ctx context.Context, caps *Capabilities, opt Dete
 		names = []string{opt.Forced}
 	}
 
-	dir, err := r.NewRunDir("encoder-detection")
+	dir, err := r.newInternalRunDir("encoder-detection")
 	if err != nil {
 		return nil, err
 	}
