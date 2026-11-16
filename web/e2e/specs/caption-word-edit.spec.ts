@@ -302,7 +302,7 @@ test.describe("caption-word-edit", () => {
 		await expect.poll(() => posted.length).toBe(4);
 		expect(posted[3]?.operations[0]).toEqual({
 			op: "caption.set_style",
-			args: { item_id: itemId, style: { highlight: "word" } },
+			args: { item_id: itemId, style: { highlight: "word" }, replace: true },
 		});
 
 		await page.getByRole("button", { name: "Use track style" }).click();
