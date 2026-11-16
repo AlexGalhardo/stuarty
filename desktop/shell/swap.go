@@ -25,6 +25,10 @@ const (
 	maxLinkBytes      = 4096
 	swapLockStale     = 10 * time.Minute
 
+	// watchdogStale is how long the heartbeat of the watchdog (and the age of a fresh pending.json, which
+	// covers the moment before the watchdog is up) may be before the watchdog counts as dead.
+	watchdogStale = 15 * time.Second
+
 	// StartTimeout is how long the watchdog waits for the new version to confirm its start.
 	StartTimeout = 60 * time.Second
 )
@@ -82,7 +86,8 @@ func pendingPath(stateDir string) string { return filepath.Join(stateDir, "pendi
 func confirmedPath(stateDir, version string) string {
 	return filepath.Join(stateDir, "confirmed-"+version)
 }
-func failedPath(stateDir string) string { return filepath.Join(stateDir, "failed.json") }
+func failedPath(stateDir string) string    { return filepath.Join(stateDir, "failed.json") }
+func watchLockPath(stateDir string) string { return filepath.Join(stateDir, "watch.lock") }
 
 // LocateTarget finds what the running executable is, for goos. A copy that is not an installed bundle or
 // an AppImage (a build run from a folder, a .deb) cannot replace itself.
@@ -453,7 +458,107 @@ func ConfirmStart(stateDir, running string) error {
 		return nil
 	}
 
-	return os.WriteFile(confirmedPath(stateDir, running), []byte("ok\n"), 0o600)
+	if err := os.WriteFile(confirmedPath(stateDir, running), []byte("ok\n"), 0o600); err != nil {
+		return err
+	}
+
+	// A watchdog that was killed cannot delete the backup, so the confirmed start does it.
+	finishOrphan(stateDir, running, time.Now)
+
+	return nil
+}
+
+// fresh reports whether file was written less than watchdogStale ago.
+func fresh(file string, now func() time.Time) bool {
+	info, err := os.Stat(file)
+
+	return err == nil && now().Sub(info.ModTime()) < watchdogStale
+}
+
+// watchdogAlive reports whether a watchdog is working on the pending update: its heartbeat file is
+// fresh, or the marker was written so recently that the watchdog has not started yet.
+func watchdogAlive(stateDir string, now func() time.Time) bool {
+	return fresh(watchLockPath(stateDir), now) || fresh(pendingPath(stateDir), now)
+}
+
+// finish deletes the backup and the markers of an update that started well.
+func finish(stateDir string, p Pending) {
+	_ = os.RemoveAll(p.Backup)
+	_ = os.Remove(pendingPath(stateDir))
+	_ = os.Remove(confirmedPath(stateDir, p.Version))
+}
+
+// finishOrphan completes an update whose new version is running and healthy but whose watchdog is gone.
+func finishOrphan(stateDir, running string, now func() time.Time) {
+	if !pendingIs(stateDir, running) || watchdogAlive(stateDir, now) {
+		return
+	}
+
+	unlock, err := lockSwap(stateDir, now)
+	if err != nil {
+		return
+	}
+
+	defer unlock()
+
+	var p Pending
+	if readJSON(pendingPath(stateDir), &p) == nil && p.Version == running {
+		finish(stateDir, p)
+	}
+}
+
+// RecoverPending is called first thing at every start of the application. When an earlier update left
+// pending.json, its watchdog is gone (it died mid-update) and the running copy is not the new version, the
+// backup is put back exactly as the watchdog would and failed.json tells the person once. A running copy
+// that is the new version is left alone: ConfirmStart finishes the update when it starts well. It returns
+// whether it undid an update. It takes the swap lock, so two starts at once recover once.
+func RecoverPending(stateDir, running string, now func() time.Time) (bool, error) {
+	var p Pending
+	if readJSON(pendingPath(stateDir), &p) != nil || p.Version == "" || p.Version == running ||
+		watchdogAlive(stateDir, now) {
+		return false, nil
+	}
+
+	unlock, err := lockSwap(stateDir, now)
+	if err != nil {
+		// Another start is recovering, or a swap is running: it owns the update.
+		return false, nil
+	}
+
+	defer unlock()
+
+	// Read again under the lock: the other start may have finished already.
+	if readJSON(pendingPath(stateDir), &p) != nil || p.Version == running {
+		return false, nil
+	}
+
+	_ = os.RemoveAll(filepath.Join(filepath.Dir(p.Target), "."+filepath.Base(p.Target)+".staging"))
+
+	if _, err := os.Stat(confirmedPath(stateDir, p.Version)); err == nil {
+		finish(stateDir, p)
+
+		return false, nil
+	}
+
+	if _, err := os.Lstat(p.Backup); err != nil {
+		// Nothing to restore: never delete the target without a backup to put in its place.
+		_ = os.Remove(pendingPath(stateDir))
+
+		return false, nil
+	}
+
+	if err := rollbackFiles(p); err != nil {
+		return false, err
+	}
+
+	_ = os.Remove(pendingPath(stateDir))
+	_ = os.Remove(confirmedPath(stateDir, p.Version))
+
+	if err := writeJSON(failedPath(stateDir), Failed{Version: p.Version}); err != nil {
+		return true, err
+	}
+
+	return true, nil
 }
 
 func readJSON(file string, v any) error {
@@ -526,6 +631,14 @@ func Watch(ctx context.Context, cfg WatchConfig) error {
 		return fmt.Errorf("read the pending update: %w", err)
 	}
 
+	// The heartbeat tells a later start that this watchdog is alive; a killed one stops beating.
+	beat := watchLockPath(cfg.StateDir)
+	if err := os.WriteFile(beat, nil, 0o600); err != nil {
+		return fmt.Errorf("watchdog lock: %w", err)
+	}
+
+	defer func() { _ = os.Remove(beat) }()
+
 	exited, err := cfg.Start(p.TargetExec)
 	if err != nil {
 		return failUpdate(cfg, p, fmt.Errorf("start the new version: %w", err))
@@ -534,10 +647,11 @@ func Watch(ctx context.Context, cfg WatchConfig) error {
 	deadline := cfg.After(cfg.Timeout)
 
 	for {
+		now := time.Now()
+		_ = os.Chtimes(beat, now, now)
+
 		if _, err := os.Stat(confirmedPath(cfg.StateDir, p.Version)); err == nil {
-			_ = os.RemoveAll(p.Backup)
-			_ = os.Remove(pendingPath(cfg.StateDir))
-			_ = os.Remove(confirmedPath(cfg.StateDir, p.Version))
+			finish(cfg.StateDir, p)
 
 			return nil
 		}
