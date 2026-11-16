@@ -47,6 +47,13 @@ func newUpdater(app *application.App) *updater {
 
 	lc := shell.LauncherConfig{Settings: settings, UI: u.ui, Current: version}
 
+	if dir, err := shell.UpdateStateDir(); err == nil {
+		if failed, ok := shell.LoadFailed(dir); ok {
+			lc.RolledBack, lc.Notify = failed.Version, !failed.Notified
+			lc.Notified = func() { _ = shell.MarkFailedNotified(dir) }
+		}
+	}
+
 	if buildErr == nil {
 		cfg.Progress = func(done, total int64) { u.ui.SetProgress(done, total) }
 
@@ -118,6 +125,12 @@ func (n *nativeUI) OfferUpdate(offer *update.Offer, current string, decide func(
 func (n *nativeUI) Inform(message string) {
 	application.InvokeSync(func() {
 		n.app.Dialog.Info().SetTitle(tr(shell.TextCheckUpdates)).SetMessage(message).Show()
+	})
+}
+
+func (n *nativeUI) Undone(version string) {
+	application.InvokeSync(func() {
+		n.app.Dialog.Info().SetTitle("Vukem Video").SetMessage(tr(shell.TextUndone) + version).Show()
 	})
 }
 

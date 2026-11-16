@@ -35,6 +35,8 @@ type LauncherUI interface {
 	ShowProgress(version string)
 	SetProgress(done, total int64)
 	HideProgress()
+	// Undone tells that the update to version was undone because it did not start.
+	Undone(version string)
 	// Fail shows why an accepted update was not installed.
 	Fail(message string)
 }
@@ -51,6 +53,12 @@ type LauncherConfig struct {
 	Current  string
 	// After is the clock: it returns a channel that fires after d. Default time.After.
 	After func(d time.Duration) <-chan time.Time
+	// RolledBack is the version of an update that was undone: the schedule never offers it again, only
+	// the menu action does. Notify is true until the person was told, once, at a start.
+	RolledBack string
+	Notify     bool
+	// Notified is called after the person was told; it records that.
+	Notified func()
 }
 
 // Launcher keeps the editor up to date: the first-start consent, the schedule, the offer and the
@@ -72,7 +80,12 @@ func NewLauncher(cfg LauncherConfig) *Launcher {
 		cfg.After = time.After
 	}
 
-	return &Launcher{cfg: cfg, settings: cfg.Settings, declined: map[string]bool{}}
+	l := &Launcher{cfg: cfg, settings: cfg.Settings, declined: map[string]bool{}}
+	if cfg.RolledBack != "" {
+		l.declined[cfg.RolledBack] = true
+	}
+
+	return l
 }
 
 // Start runs the first-start question when the person was not asked yet, and the schedule when the
@@ -81,6 +94,14 @@ func NewLauncher(cfg LauncherConfig) *Launcher {
 func (l *Launcher) Start(ctx context.Context) {
 	if l.cfg.Client == nil {
 		return
+	}
+
+	if l.cfg.Notify && l.cfg.RolledBack != "" {
+		l.cfg.UI.Undone(l.cfg.RolledBack)
+
+		if l.cfg.Notified != nil {
+			l.cfg.Notified()
+		}
 	}
 
 	l.mu.Lock()

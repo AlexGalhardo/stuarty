@@ -40,7 +40,13 @@ func main() {
 func run() error {
 	binary := flag.String("binary", defaultBinary(), "path of the vukem-video server binary")
 	devtools := flag.Bool("devtools", false, "bind F12 to the developer tools (debugging and QA builds)")
+	watch := flag.String(shell.WatchFlag[2:], "", "internal: run the watchdog of an update (marker file)")
 	flag.Parse()
+
+	// The watchdog is the previous version started by the new one's installer; it has no window.
+	if *watch != "" {
+		return shell.RunWatchdog(context.Background(), *watch)
+	}
 
 	br := &bridge{}
 	app := application.New(application.Options{
@@ -93,7 +99,10 @@ func run() error {
 	app.Menu.SetApplicationMenu(menu)
 	win.SetMenu(menu)
 	// A dialog shown before the loop runs is dropped (VV-006), so the launcher starts with the loop.
-	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) { up.start() })
+	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
+		go confirmStart()
+		up.start()
+	})
 
 	// The child ending on its own is a crash: tell the person, then leave.
 	go func() {
@@ -145,4 +154,11 @@ func defaultBinary() string {
 		return name
 	}
 	return filepath.Join(filepath.Dir(exe), name)
+}
+
+// confirmStart tells the watchdog of an update that this version started (SDD-009 section 10.5 item 7).
+func confirmStart() {
+	if dir, err := shell.UpdateStateDir(); err == nil {
+		_ = shell.ConfirmStart(dir, version)
+	}
 }
