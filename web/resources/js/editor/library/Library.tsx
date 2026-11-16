@@ -2,12 +2,13 @@ import { Film } from "lucide-react";
 import {
 	type ReactNode,
 	useEffect,
+	useMemo,
 	useState,
 	useSyncExternalStore,
 } from "react";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { useCanEdit } from "../commands/useActions";
 import { useStore } from "../state/createStore";
@@ -22,7 +23,7 @@ import {
 	getDesktopBridge,
 	subscribeDesktopBridge,
 } from "./desktopBridge";
-import { parsePastedPaths } from "./importPaths";
+import { createImportQueue, parsePastedPaths } from "./importPaths";
 import TrashGroup from "./TrashGroup";
 
 // The media library of SDD-012 section 13: import by path, cards with their
@@ -52,16 +53,16 @@ export default function Library({
 	const pick = canPickFiles(bridge);
 	const drops = canDropPaths(bridge);
 
-	async function submit(): Promise<void> {
+	const queue = useMemo(
+		() => createImportQueue((paths) => runtime.importPaths(paths), setBusy),
+		[runtime],
+	);
+
+	function submit(): void {
 		const paths = parsePastedPaths(text);
 		if (paths.length === 0) return;
-		setBusy(true);
-		try {
-			await runtime.importPaths(paths);
-			setText("");
-		} finally {
-			setBusy(false);
-		}
+		setText("");
+		queue.add(paths);
 	}
 
 	async function choose(): Promise<void> {
@@ -107,19 +108,27 @@ export default function Library({
 				className="flex gap-1"
 				onSubmit={(event) => {
 					event.preventDefault();
-					void submit();
+					submit();
 				}}
 			>
-				<Input
+				<Textarea
 					value={text}
+					rows={1}
+					className="min-h-8 resize-y"
 					onChange={(event) => setText(event.target.value)}
+					onKeyDown={(event) => {
+						if (event.key === "Enter" && !event.shiftKey) {
+							event.preventDefault();
+							submit();
+						}
+					}}
 					placeholder={t("ui.editor.library.path")}
 					aria-label={t("ui.editor.library.path")}
 				/>
 				<Button
 					type="submit"
 					size="sm"
-					disabled={busy || !canEdit || text.trim() === ""}
+					disabled={!canEdit || text.trim() === ""}
 				>
 					{t("ui.editor.library.import")}
 				</Button>
