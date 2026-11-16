@@ -181,6 +181,11 @@ func TestDescribeDiffValues(t *testing.T) {
 		{"x", true, "true"},
 		{"x", false, "false"},
 		{"x", jn("12.5"), "12.5"},
+		{
+			"markers",
+			[]any{map[string]any{"frame": jn("19")}, map[string]any{"frame": jn("36")}},
+			"2 markers at 19f 36f",
+		},
 		{"start", jn("375"), "12.5s/375f"},
 		{"fade_in", jn("0"), "0s/0f"},
 		{"name", "a\"b\\c<d&e" + rlo + "\x07", `"a\"b\\c&lt;d&amp;e"`},

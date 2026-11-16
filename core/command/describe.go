@@ -177,6 +177,15 @@ func (d describer) value(field string, v any) string {
 		} else {
 			s = string(x)
 		}
+	case []any:
+		if field == "markers" {
+			return markersValue(x)
+		}
+		b, err := json.Marshal(x)
+		if err != nil {
+			return "none"
+		}
+		s = string(b)
 	default:
 		b, err := json.Marshal(x)
 		if err != nil {
@@ -186,6 +195,25 @@ func (d describer) value(field string, v any) string {
 	}
 	if utf8.RuneCountInString(s) > maxValue {
 		s = string([]rune(s)[:maxValue-1]) + "…"
+	}
+	return s
+}
+
+// markersValue is a marker list as its count and the first frames, so a long list is
+// not cut in the middle of an object (VV-014); the whole list is in project_get with detail full.
+func markersValue(list []any) string {
+	const shown = 6
+	frames := make([]string, 0, shown)
+	for _, m := range list[:min(len(list), shown)] {
+		obj, ok := m.(map[string]any)
+		if !ok {
+			return fmt.Sprintf("%d markers", len(list))
+		}
+		frames = append(frames, numStr(obj["frame"])+"f")
+	}
+	s := fmt.Sprintf("%d markers at %s", len(list), strings.Join(frames, " "))
+	if len(list) > shown {
+		s += " …"
 	}
 	return s
 }
