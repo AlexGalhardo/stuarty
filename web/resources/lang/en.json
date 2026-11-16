@@ -159,6 +159,8 @@
         "track_audio": "Audio track",
         "item_summary": "{type}, {name}",
         "snap": "Snap",
+        "blade": "Blade",
+        "blade_hint": "Blade tool (B): click an item to cut it there. A or Esc goes back to select.",
         "caption_words": {
           "one": "{count} word",
           "other": "{count} words"
@@ -663,7 +665,9 @@
           "next_marker": "Go to the previous or next marker",
           "marker": "Add a marker at the playhead, or remove the one there",
           "range_in_out": "Set the in point (I) and the out point (O)",
+          "range_select": "Set the in and out points to the selected items",
           "range_clear": "Clear the in and out points",
+          "tool": "Blade tool (B), select tool (A)",
           "split": "Split the selected item at the playhead",
           "split_all": "Split every track at the playhead",
           "trim_start": "Delete what is left of the playhead",
@@ -678,6 +682,7 @@
           "zoom_in": "Zoom in",
           "zoom_out": "Zoom out",
           "zoom_fit": "Fit the timeline",
+          "zoom_wheel": "Zoom the timeline with the wheel",
           "delete": "Delete",
           "ripple_delete": "Ripple delete",
           "duplicate": "Duplicate",
@@ -690,6 +695,7 @@
           "add_text": "Add text",
           "rename": "Rename",
           "toggle_snap": "Toggle snapping",
+          "keyframe_panel": "Show or hide the keyframes of the selected item",
           "preview_zoom": "Fit the preview, zoom it in, zoom it out",
           "import": "Import media",
           "export": "Export",
@@ -1152,6 +1158,10 @@
         }
       },
       "announce": {
+        "tool_blade": "Blade tool: click an item to cut it",
+        "tool_select": "Select tool",
+        "keyframes_shown": "Keyframes shown",
+        "keyframes_hidden": "Keyframes hidden",
         "split": {
           "one": "Split, {count} item",
           "other": "Split, {count} items"

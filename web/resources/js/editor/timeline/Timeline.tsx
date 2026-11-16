@@ -1,4 +1,11 @@
-import { Clapperboard, Magnet, Maximize2, ZoomIn, ZoomOut } from "lucide-react";
+import {
+	Clapperboard,
+	Magnet,
+	Maximize2,
+	Scissors,
+	ZoomIn,
+	ZoomOut,
+} from "lucide-react";
 import {
 	type ReactNode,
 	useCallback,
@@ -110,6 +117,7 @@ export default function Timeline(): ReactNode {
 		[markerKey],
 	);
 	const snapEnabled = useUiState((s) => s.timeline.snapEnabled);
+	const blade = useUiState((s) => s.tool === "blade");
 
 	const itemCount = useDocumentState(selectItemCount);
 	const actions = useActions();
@@ -308,7 +316,7 @@ export default function Timeline(): ReactNode {
 		const el = scroller.current;
 		if (el === null) return;
 		const onWheel = (event: WheelEvent): void => {
-			if (!event.ctrlKey) return;
+			if (!(event.ctrlKey || event.metaKey)) return;
 			event.preventDefault();
 			const rect = el.getBoundingClientRect();
 			const anchorX = event.clientX - rect.left;
@@ -337,9 +345,10 @@ export default function Timeline(): ReactNode {
 			else if (
 				event.key === "Escape" &&
 				!(event.ctrlKey || event.metaKey || event.altKey)
-			)
+			) {
+				runtime.uiWriter.setTool("select");
 				runtime.uiWriter.select([]);
-			else return;
+			} else return;
 			event.preventDefault();
 		};
 		window.addEventListener("keydown", onKeyDown);
@@ -397,6 +406,17 @@ export default function Timeline(): ReactNode {
 				>
 					<Magnet aria-hidden="true" />
 					{t("ui.editor.timeline.snap")}
+				</Button>
+				<Button
+					type="button"
+					variant={blade ? "secondary" : "ghost"}
+					size="sm"
+					aria-pressed={blade}
+					title={t("ui.editor.timeline.blade_hint")}
+					onClick={() => runtime.uiWriter.setTool(blade ? "select" : "blade")}
+				>
+					<Scissors aria-hidden="true" />
+					{t("ui.editor.timeline.blade")}
 				</Button>
 				<span className="ml-auto font-mono text-xs text-muted-foreground tabular-nums">
 					{formatTime(playhead, fps, readTimeDisplay())}

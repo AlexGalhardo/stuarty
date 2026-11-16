@@ -101,7 +101,7 @@ export function beginMove(options: {
 					points: snap.points(),
 					exclude,
 					enabled: snapEnabled,
-					suspended: sample.alt,
+					suspended: sample.alt || sample.mod,
 				};
 				const a = snapFrame({ ...common, frame: wantStart });
 				const b = snapFrame({ ...common, frame: wantEnd });

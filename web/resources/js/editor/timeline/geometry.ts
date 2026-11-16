@@ -48,6 +48,31 @@ export function clientXToFrame(
 	return clamp(frame, 0, TIMELINE_MAX_FRAME);
 }
 
+// The frame under the pointer inside an item whose box starts at `rectLeft`.
+export function frameInItem(
+	itemStart: number,
+	clientX: number,
+	rectLeft: number,
+	ppf: number,
+): number {
+	return clamp(
+		itemStart + Math.round((clientX - rectLeft) / ppf),
+		0,
+		TIMELINE_MAX_FRAME,
+	);
+}
+
+// The span the selected items cover, for the range of Shift+X; null when none.
+export function selectionSpan(
+	items: readonly Placed[],
+): { in: number; out: number } | null {
+	if (items.length === 0) return null;
+	return {
+		in: Math.min(...items.map((item) => item.start)),
+		out: Math.max(...items.map((item) => item.start + item.duration)),
+	};
+}
+
 export function deltaPxToFrames(dx: number, ppf: number): number {
 	return Math.round(dx / ppf);
 }

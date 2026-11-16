@@ -1400,10 +1400,10 @@ Decision D-038: the default keymap is the one a person coming from CapCut alread
 | Previous, next cut point | `Up`, `Down` | `surface.next_cut` | exists |
 | Shuttle back, stop, forward | `J`, `K`, `L` (J or L again goes faster) | `surface.shuttle` | UI |
 | Mark in, mark out | `I`, `O` | `surface.mark_range` (the range is view state; an export can be limited to it) | UI |
-| Select the range by clip, clear it | `Shift+X`, `Alt+X` | `surface.select_range` | UI |
+| Select the range by clip, clear it | `Shift+X`, `Alt+X` | `surface.range`: `Shift+X` sets the in and out points to the span of the selected items, `Alt+X` clears them (`Mod+Shift+X` stays as an alias of `Alt+X`, read by the physical key so Option works on a Mac) | UI, built (TASK-0236) |
 | Split the selected item at the playhead | `Mod+B` | `splitAtPlayhead` (`item.split`) | exists |
 | Split every track at the playhead | `Mod+Shift+B` | `splitAtPlayhead` with every item under the playhead | exists (the action takes the ranges) |
-| Blade tool, select tool | `B`, `A` | `surface.tool` | UI |
+| Blade tool, select tool | `B`, `A` | `surface.tool`: `B` arms the blade, and a click on an item sends `item.split` at the frame under the pointer; `A` or `Esc` goes back to select. The state is `UiState.tool`, shown by the pressed "Blade" button of the timeline bar and the crosshair cursor | UI, built (TASK-0236) |
 | Delete what is left, right of the playhead | `Q`, `W` | `trimToPlayhead("start")`, `trimToPlayhead("end")` (`item.trim`) | exists |
 | Select everything left, right of the playhead | `[`, `]` | `surface.select_side` | UI |
 | Delete the selection | `Delete`, `Backspace` | `deleteSelection` (`item.delete`) | exists |
@@ -1423,17 +1423,17 @@ Decision D-038: the default keymap is the one a person coming from CapCut alread
 | Speed panel | `Mod+R` (desktop shell only, see the browser rules) | `surface.open_inspector_tab("speed")` | UI |
 | Speed by curve | `Shift+B` | `clip.set_speed` with curve points | needs command (N-5) |
 | Volume up, down 0.1 dB | `Mod+.`, `Mod+,` | `item.set_audio` (`volume`) | exists |
-| Show or hide the keyframe panel | `Alt+K` | `surface.keyframe_panel` | UI |
+| Show or hide the keyframe panel | `Alt+K` | `surface.keyframe_panel`: with an item selected it opens the inspector if hidden, expands the Keyframes section and moves focus to its header; again from inside the section it collapses it | UI, built (TASK-0236) |
 | Add a keyframe at the playhead | `Shift`+click in the keyframe panel | `keyframe.set` | exists |
 | Toggle snapping | `N` | `surface.toggle_snap` | exists |
 | Toggle the main-track magnet | `P` | `track.update` with `magnet` | needs command (N-6) |
 | Switch the preview axis | `S` | `surface.preview_axis` | UI |
-| Zoom the timeline in, out | `Mod+=`, `Mod+-` (`+` and `-` stay as aliases), `Mod`+wheel | `surface.zoom` | exists |
+| Zoom the timeline in, out | `Mod+=`, `Mod+-` (`+` and `-` stay as aliases), `Mod`+wheel (`Ctrl` or `Cmd`) | `surface.zoom` | exists |
 | Fit the timeline to the window | `Shift+Z` | `surface.zoom` | exists |
 | Scroll the timeline vertically, horizontally | wheel, `Alt`+wheel | `surface.scroll` | UI |
 | Preview full screen, leave it | `Mod+Shift+F` (desktop shell only), `Esc` | `surface.preview_fullscreen` | UI |
 | Fit the preview, zoom the preview | `Alt+Shift+Z`, `Alt+Shift+=`, `Alt+Shift+-` | `surface.preview_zoom` | UI |
-| Ignore the alignment guides while dragging | hold `Mod` | modifier of the drag gesture (§8) | UI |
+| Ignore the alignment guides while dragging | hold `Mod` | modifier of the drag gesture (§8): holding `Ctrl` or `Cmd` during a move, a trim or a word-boundary drag suspends snapping, like `Alt` | UI, built (TASK-0236) |
 | Import media | `Mod+I` | `surface.import` (the import dialog; `asset.add`) | UI |
 | Export | `Mod+E` | `surface.export` (opens the dialog of §14) | UI |
 | Save | `Mod+S` | `surface.saved` (every command is saved already, RF-001; the key only shows "Saved") | UI |

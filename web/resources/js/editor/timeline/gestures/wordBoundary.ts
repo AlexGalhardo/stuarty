@@ -60,7 +60,7 @@ export function beginWordBoundary(options: {
 					points: snap.points(),
 					exclude,
 					enabled: snapEnabled,
-					suspended: sample.alt,
+					suspended: sample.alt || sample.mod,
 				});
 				to = clampBoundary(words, index, snapped.frame - item.start);
 				ghostWriter.setSnapLine(item.start + to);

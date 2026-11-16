@@ -132,7 +132,7 @@ export default function KeyframesSection({
 	const canAdd = canEdit && inside && Number.isFinite(value);
 
 	return (
-		<Section title={t("ui.editor.keyframes.title")}>
+		<Section name="keyframes" title={t("ui.editor.keyframes.title")}>
 			<div className="grid grid-cols-[96px_1fr] items-center gap-x-2 gap-y-1">
 				<Label htmlFor={`kf-property-${itemId}`} className="text-xs">
 					{t("ui.editor.keyframes.property")}

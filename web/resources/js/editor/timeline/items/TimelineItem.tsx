@@ -14,6 +14,7 @@ import {
 } from "../../state/EditorContext";
 import { countRender } from "../../state/renderCount";
 import { selectAsset, selectItem } from "../../state/selectors";
+import { frameInItem } from "../geometry";
 import { consumeDragClick } from "../gestures/lifecycle";
 import { beginMove } from "../gestures/move";
 import { clickSelection, gridLayout } from "../keyboard";
@@ -98,6 +99,7 @@ export const TimelineItem = memo(function TimelineItem({
 	const conflicting = useStore(runtime.ghosts, (s) => s.errorItem === id);
 	const remote = useActivityState((s) => s.highlighted.includes(id));
 	const renaming = useUiState((s) => s.renamingItem === id);
+	const blade = useUiState((s) => s.tool === "blade");
 	if (item === undefined) return null;
 
 	const typeName = t(`ui.editor.item.${item.type}`);
@@ -117,8 +119,9 @@ export const TimelineItem = memo(function TimelineItem({
 			})}
 			data-item-id={id}
 			className={cn(
-				"ed-motion group absolute top-1 bottom-1 flex min-w-px cursor-pointer items-center overflow-hidden rounded-md border border-ed-track-line px-2 text-xs whitespace-nowrap",
+				"ed-motion group absolute top-1 bottom-1 flex min-w-px items-center overflow-hidden rounded-md border border-ed-track-line px-2 text-xs whitespace-nowrap",
 				TYPE_CLASS[item.type],
+				blade ? "cursor-crosshair" : "cursor-pointer",
 				selected && "ring-2 ring-ed-selection",
 				remote && "ed-highlight outline-2 outline-agent",
 				conflicting && "ed-highlight outline-2 outline-destructive",
@@ -133,6 +136,19 @@ export const TimelineItem = memo(function TimelineItem({
 			}}
 			data-conflicting={conflicting ? "" : undefined}
 			onPointerDown={(event) => {
+				if (event.button === 0 && runtime.ui.getState().tool === "blade") {
+					event.preventDefault();
+					void actions.splitItemAt(
+						id,
+						frameInItem(
+							item.start,
+							event.clientX,
+							event.currentTarget.getBoundingClientRect().left,
+							runtime.ui.getState().timeline.pxPerFrame,
+						),
+					);
+					return;
+				}
 				if (
 					event.button !== 0 ||
 					event.shiftKey ||

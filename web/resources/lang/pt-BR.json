@@ -159,6 +159,8 @@
         "track_audio": "Faixa de áudio",
         "item_summary": "{type}, {name}",
         "snap": "Encaixar",
+        "blade": "Lâmina",
+        "blade_hint": "Ferramenta lâmina (B): clique num item para cortá-lo ali. A ou Esc volta à seleção.",
         "caption_words": {
           "one": "{count} palavra",
           "other": "{count} palavras"
@@ -663,7 +665,9 @@
           "next_marker": "Ir ao marcador anterior ou ao seguinte",
           "marker": "Adicionar um marcador na posição de reprodução, ou remover o que estiver nela",
           "range_in_out": "Definir o ponto de entrada (I) e o de saída (O)",
+          "range_select": "Definir os pontos de entrada e saída pelos itens selecionados",
           "range_clear": "Limpar os pontos de entrada e saída",
+          "tool": "Ferramenta lâmina (B), ferramenta de seleção (A)",
           "split": "Dividir o item selecionado na posição de reprodução",
           "split_all": "Dividir todas as trilhas na posição de reprodução",
           "trim_start": "Excluir o que está à esquerda da posição de reprodução",
@@ -678,6 +682,7 @@
           "zoom_in": "Aumentar o zoom",
           "zoom_out": "Diminuir o zoom",
           "zoom_fit": "Ajustar a linha do tempo",
+          "zoom_wheel": "Ampliar a linha do tempo com a roda",
           "delete": "Excluir",
           "ripple_delete": "Excluir e fechar o espaço",
           "duplicate": "Duplicar",
@@ -690,6 +695,7 @@
           "add_text": "Adicionar texto",
           "rename": "Renomear",
           "toggle_snap": "Ativar ou desativar o encaixe",
+          "keyframe_panel": "Mostrar ou ocultar os keyframes do item selecionado",
           "preview_zoom": "Ajustar a prévia, aumentar o zoom, diminuir o zoom",
           "import": "Importar mídia",
           "export": "Exportar",
@@ -1145,6 +1151,10 @@
         }
       },
       "announce": {
+        "tool_blade": "Ferramenta lâmina: clique num item para cortá-lo",
+        "tool_select": "Ferramenta de seleção",
+        "keyframes_shown": "Keyframes visíveis",
+        "keyframes_hidden": "Keyframes ocultos",
         "split": {
           "one": "Dividido, {count} item",
           "other": "Dividido, {count} itens"

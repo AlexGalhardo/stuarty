@@ -62,7 +62,7 @@ export function beginTrim(options: {
 					points: snap.points(),
 					exclude,
 					enabled: snapEnabled,
-					suspended: sample.alt,
+					suspended: sample.alt || sample.mod,
 				});
 				const limits = snap.limits(itemId);
 				// One frame is the shortest an item can be.
