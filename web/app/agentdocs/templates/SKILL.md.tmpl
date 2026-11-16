@@ -23,7 +23,7 @@ Check with `project:list`. The workspace is `~/.vukem-video` or `$VUKEM_VIDEO_HO
 
 ## Rules that prevent mistakes
 
-- Every time has a unit: `12.5s`, `375f`, `00:00:12.500`. A bare number is rejected.
+- Times need a unit: `12.5s`, `375f`, `00:00:12.500`.
 - Ids (`prj_`, `ast_`, `trk_`, `itm_`, `job_`) are never positions. List first.
 - The top track is drawn over the others (ends: `top`, `bottom`).
 - `--base` is the `revision` of your last result; omitted, the current one.
