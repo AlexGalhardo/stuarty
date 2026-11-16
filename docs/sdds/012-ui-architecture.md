@@ -1696,6 +1696,17 @@ The shell loads this UI with the same `app.css`, tokens, bundled fonts and compo
 3. **First paint.** The window background is `oklch(0.16 0 0)` (dark `--ed-bg`) before the page loads, so there is no white flash. The theme rule of §17 item 1 applies inside the webview unchanged.
 4. **Menus (D-030).** A native menu bar with the items of the menu table of §6.4 (File, Edit, Clip, Timeline, View, Help); an item is present only when its action exists, so in the first desktop release it is File (Import files, Export), Edit (Undo, Redo, Select all), View (toggle panels, zoom, theme, language) and Help (documentation, version). Each item calls the same action as its in-page control through `window.vukemDesktop.onMenuAction` (§13.1). `Mod+Z`, `Mod+Shift+Z` and `Mod+A` are shown next to Undo, Redo and Select all but are **not registered as native accelerators**: the key reaches the webview, where §18.2 decides (native undo and select-all inside an editable field, project undo and select-all elsewhere). Other accelerators may be registered only for keys that mean the same in every focus context.
 5. **Theme of the chrome (D-030).** The UI calls `window.vukemDesktop.setTheme(theme)` at boot and on every toggle; the shell sets the native title bar to match.
+6. **Launcher dialogs (D-039, SDD-009 10.5).** The updater uses native dialogs and one small window, never the page; the texts come from the catalogue of `desktop/shell/strings.go` (en and pt-BR, system language). The rows:
+
+   | Dialog | When | Content | Buttons |
+   | --- | --- | --- | --- |
+   | Consent | first start, setting absent, build with a feed | "Check for updates automatically?" and one line saying that it connects to the update server only for this check and sends nothing about the person | Yes (default), No |
+   | Update available | the check found a newer stable version | the version, the notes of the feed when present (plain text, scrollable by the system dialog), the running version | Install and restart (default), Not now |
+   | Progress | after Install, until the file is verified | title "Downloading Vukem Video X.Y.Z", a bar and a percentage; it has no close button | none |
+   | Up to date, check failed | only after the menu action "Check for updates" | one line, with the reason for a failure | OK |
+   | Update undone | the first start after a rollback | "Version X.Y.Z could not start, so the previous version was restored." | OK |
+
+   The Help menu has "Check for updates" and the checkbox "Check for updates automatically" (checked while the setting is `true`). The automatic checks show a dialog only for the "Update available" row and, once, for "Update undone"; a failed automatic check is silent.
 
 ## 22. Acceptance
 
