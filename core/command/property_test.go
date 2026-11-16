@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"hash/crc32"
 	"maps"
 	"math/rand"
 	"os"
@@ -713,8 +714,47 @@ func TestRandomBatches(t *testing.T) {
 		}
 	}
 
+	// The mixed run above depends on the order of the generators, so adding a command
+	// reshuffles it. A command it did not reach gets its own seeded stream, on fresh
+	// starting documents, so that the check does not move with the registry.
 	for _, c := range fullRegistry().List() {
-		if ok[c.Name] == 0 && !c.Internal {
+		if ok[c.Name] != 0 || c.Internal {
+			continue
+		}
+
+		gen, known := alphaOps[c.Name]
+		if !known {
+			t.Errorf("%s never succeeded in the random sequences and has no generator", c.Name)
+
+			continue
+		}
+
+		own := rand.New(rand.NewSource(int64(crc32.ChecksumIEEE([]byte(c.Name)))))
+
+		for try := 0; try < 2000 && ok[c.Name] == 0; try++ {
+			start := randomStart(own)
+
+			// Some commands act on state that other commands build (keyframes, links).
+			for range own.Intn(12) {
+				warm, err := checkStep(start, randomRegistryOp(own, start), ids)
+				if err != nil {
+					t.Fatalf("%s, try %d, warm-up: %v", c.Name, try, err)
+				}
+
+				start = warm
+			}
+
+			next, err := checkStep(start, op2(c.Name, gen(newDocPick(own, start))), ids)
+			if err != nil {
+				t.Fatalf("%s, try %d: %v", c.Name, try, err)
+			}
+
+			if next != start {
+				ok[c.Name]++
+			}
+		}
+
+		if ok[c.Name] == 0 {
 			t.Errorf("%s never succeeded in the random sequences", c.Name)
 		}
 	}
