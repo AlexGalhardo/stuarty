@@ -130,6 +130,13 @@ func (p *planner) layer(it *timeline.Item, r int) (Layer, bool) {
 	l := Layer{ItemID: it.ID, Rotation: round3(a.rotation), Scale: round3(a.scale), Opacity: round3(a.opacity)}
 	l.Filter, l.Blur = FilterMatrix(it.Filter, it.FilterAmount), round3(it.Blur)
 
+	if k := it.ChromaKey; k != nil {
+		l.ChromaKey = &ChromaKeySpec{
+			Color: resolveColor(p.doc, string(k.Color)), Similarity: round3(k.Similarity),
+			Smoothness: round3(k.Smoothness), Spill: round3(k.Spill),
+		}
+	}
+
 	switch it.Type {
 	case timeline.ItemClip:
 		return p.mediaLayer(l, it, r, a)

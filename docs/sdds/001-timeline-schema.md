@@ -132,8 +132,9 @@ Visual items (`clip`, `text`, `caption`, `shape`) also have:
 | `blur` | number, 0 to 100 | 0 | BETA (RF-027). Gaussian blur radius in pixels at project resolution, applied to the item's own pixels before it is composed. Not keyframeable |
 | `filter` | `"none"`, `"grayscale"`, `"sepia"`, `"invert"`, `"warm"`, `"cool"` | `"none"` | BETA (RF-027). The fixed list of colour filters; no other name is accepted and none depends on a GPL-only component (ADR-0011 item 6). Each is a per-pixel colour transform done by the compositor in Go |
 | `filter_amount` | number, 0 to 1 | 1 | BETA. How much of the filter is mixed in: 0 is the original, 1 the full filter. Ignored when `filter` is `none` |
+| `chroma_key` | object or absent | absent | Added after BETA (VV-015). The colour the compositor makes transparent: `color` (`#RRGGBB`, `#RRGGBBAA` or a `$name` template colour), `similarity`, `smoothness` and `spill`, each 0 to 1 and all four present. Absent means no key. Not keyframeable |
 
-`blur`, `filter` and `filter_amount` apply to every visual item (`clip`, `text`, `caption`, `shape`); on an `audio` item a non-default value is `V_SHAPE`. The order is: colour adjustment of section 3.5, then the filter, then blur, then opacity. The exact formulas and the plan fields are in SDD-004 §3.6.
+`blur`, `filter`, `filter_amount` and `chroma_key` apply to every visual item (`clip`, `text`, `caption`, `shape`); on an `audio` item a non-default value is `V_SHAPE`. The order is: chroma key (SDD-004 §3.7), colour adjustment of section 3.5, then the filter, then blur, then opacity. The exact formulas and the plan fields are in SDD-004 §3.6.
 
 ### 3.5 Clip and audio items
 
@@ -392,7 +393,7 @@ The caption track sorts first (`a0` before `a1`), so captions are drawn over the
 
 1. `schema_version` is an integer that increases by one for every incompatible change: a removed or renamed field, a changed meaning, a tightened constraint.
 2. Adding an optional field with a default that preserves the old behaviour does not change `schema_version`. Older binaries keep it through the unknown-field rule.
-   BETA added `blur`, `filter`, `filter_amount`, `markers`, `frame_delays` and the `fonts` entries under this rule: all are optional with a default that preserves the old behaviour, so `schema_version` stays 1 and no `v1to2` exists. A document saved by the ALPHA binary validates unchanged.
+   BETA added `blur`, `filter`, `filter_amount`, `markers`, `frame_delays` and the `fonts` entries under this rule: all are optional with a default that preserves the old behaviour, so `schema_version` stays 1 and no `v1to2` exists. A document saved by the ALPHA binary validates unchanged. `chroma_key` (VV-015) is added under the same rule: an optional object that is absent by default, so `schema_version` stays 1.
 3. The chain lives in the package `core/timeline/migrate` (standard library only, no document type, so `timeline` can call it before typing a document). For each version step there is one pure function `func v1to2(doc Doc) (Doc, error)` over the decoded JSON (`Doc` is `map[string]any`, numbers as `json.Number`), registered in the `registry` table of `migrate.go`; `migrate.Migrate` chains the steps from the document's version to `migrate.Current`, and `timeline.Decode` calls it first through `timeline.Migrate`, which turns its error into a `V_SCHEMA_VERSION` or `V_SHAPE` violation. An `init` check panics when a version between 1 and `Current` has no step.
 
    **To add a version:** raise `migrate.Current` (and nothing else in the constant: `timeline.CurrentSchemaVersion` follows it), write `vNtoN+1`, register it, copy the valid examples to `testdata/versions/vN+1/`, add every new fixture path to `testdata/versions/MANIFEST.txt`, and regenerate the schema.

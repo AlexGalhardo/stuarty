@@ -49,6 +49,7 @@
         "clip.set_speed",
         "clip.set_color",
         "clip.set_blur",
+        "clip.set_chroma_key",
         "clip.set_filter",
         "clip.remove_silences",
         "text.add",

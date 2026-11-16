@@ -443,6 +443,13 @@ func markerList(fps timeval.FPS, markers []timeline.Marker) string {
 	return strings.Join(marks, ", ")
 }
 
+// addJSON sets f[key] to the JSON of v when present is true.
+func addJSON(f map[string]string, key string, present bool, v any) {
+	if present {
+		f[key] = string(marshalOrNull(v))
+	}
+}
+
 func extraFields(fps timeval.FPS, it *timeline.Item) map[string]string {
 	f := map[string]string{}
 	frames := func(v int) string { return Cell(fps, int64(v)) }
@@ -485,9 +492,8 @@ func extraFields(fps timeval.FPS, it *timeline.Item) map[string]string {
 		setIf("contrast", it.Contrast, 1)
 		setIf("saturation", it.Saturation, 1)
 
-		if it.Crop != nil {
-			f["crop"] = jsonOf(it.Crop)
-		}
+		addJSON(f, "crop", it.Crop != nil, it.Crop)
+		addJSON(f, "chroma_key", it.ChromaKey != nil, it.ChromaKey)
 	}
 
 	if it.FadeIn != 0 {

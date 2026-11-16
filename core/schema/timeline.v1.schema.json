@@ -166,6 +166,36 @@
       },
       "type": "object"
     },
+    "ChromaKey": {
+      "properties": {
+        "color": {
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "type": "string"
+        },
+        "similarity": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "smoothness": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "spill": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "color",
+        "similarity",
+        "smoothness",
+        "spill"
+      ],
+      "type": "object"
+    },
     "Crop": {
       "properties": {
         "bottom": {
@@ -234,6 +264,9 @@
           "maximum": 1,
           "minimum": -1,
           "type": "number"
+        },
+        "chroma_key": {
+          "$ref": "#/$defs/ChromaKey"
         },
         "contrast": {
           "default": 1,

@@ -167,6 +167,9 @@ type Item struct {
 	Filter       string  `json:"filter"                           default:"none" enum:"none,grayscale,sepia,invert,warm,cool"`
 	FilterAmount float64 `json:"filter_amount"  min:"0" max:"1"   default:"1"`
 
+	// Visual items, optional and additive (SDD-001 §3.4): the colour the compositor keys out.
+	ChromaKey *ChromaKey `json:"chroma_key,omitempty"`
+
 	// Clip and audio.
 	Asset      string   `json:"asset,omitempty"       pattern:"^ast_([0-9a-hjkmnp-tv-z]{10}|placeholder)$"`
 	SourceIn   int      `json:"source_in,omitempty"                                                        min:"0"`
@@ -211,6 +214,17 @@ type Crop struct {
 	Right  float64 `json:"right,omitempty"  min:"0" max:"1"`
 	Bottom float64 `json:"bottom,omitempty" min:"0" max:"1"`
 	Extra  Extra   `json:"-"`
+}
+
+// ChromaKey makes the pixels near Color transparent. Similarity is how far from Color a
+// pixel is still removed, Smoothness the soft edge beyond it, Spill how much of Color is
+// taken out of the pixels that stay; all three are 0 to 1.
+type ChromaKey struct {
+	Color      Color   `json:"color"`
+	Similarity float64 `json:"similarity" min:"0" max:"1"`
+	Smoothness float64 `json:"smoothness" min:"0" max:"1"`
+	Spill      float64 `json:"spill"      min:"0" max:"1"`
+	Extra      Extra   `json:"-"`
 }
 
 // Word is one timed word of a caption; Start is relative to the item.

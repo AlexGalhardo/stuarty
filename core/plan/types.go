@@ -58,6 +58,9 @@ type Layer struct {
 	Filter *[12]float64 `json:"filter,omitempty"`
 	Blur   float64      `json:"blur,omitempty"`
 
+	// ChromaKey is the colour the compositor makes transparent (SDD-004 §3.7); nil means none.
+	ChromaKey *ChromaKeySpec `json:"chroma_key,omitempty"`
+
 	CX       float64 `json:"cx"`
 	CY       float64 `json:"cy"`
 	W        float64 `json:"w"` // drawn size before rotation
@@ -65,6 +68,14 @@ type Layer struct {
 	Rotation float64 `json:"rotation"` // degrees clockwise
 	Scale    float64 `json:"scale"`    // effective scale: keyframes and static value, before W and H are derived
 	Opacity  float64 `json:"opacity"`
+}
+
+// ChromaKeySpec is the key of a layer with the colour already resolved to #RRGGBB or #RRGGBBAA.
+type ChromaKeySpec struct {
+	Color      string  `json:"color"`
+	Similarity float64 `json:"similarity"`
+	Smoothness float64 `json:"smoothness"`
+	Spill      float64 `json:"spill"`
 }
 
 // BitmapSpec says what the rasterizer draws (SDD-004 §5). It lives here so

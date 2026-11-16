@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "color": {
+      "description": "The colour to remove, #RRGGBB, or null to remove the key.",
+      "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "item_id": {
+      "description": "A clip.",
+      "type": "string"
+    },
+    "similarity": {
+      "description": "0 to 1; default 0.3, or the current value.",
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    },
+    "smoothness": {
+      "description": "0 to 1; default 0.1, or the current value.",
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    },
+    "spill": {
+      "description": "0 to 1; default 0, or the current value.",
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    }
+  },
+  "required": [
+    "item_id",
+    "color"
+  ],
+  "type": "object"
+}

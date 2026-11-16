@@ -1,0 +1,17 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "chroma_key": [
+        null,
+        {
+          "color": "#00FF00",
+          "similarity": 0.3,
+          "smoothness": 0.1,
+          "spill": 0
+        }
+      ]
+    }
+  }
+]

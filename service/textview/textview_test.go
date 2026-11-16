@@ -345,6 +345,14 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 	s := timeline.NewSlot("hero", "media")
 	clip.Slot = &s
 
+	clip.ChromaKey = &timeline.ChromaKey{Color: "#00FF00", Similarity: 0.3, Smoothness: 0.1}
+
+	if ck := extraFields(fps, &clip)["chroma_key"]; !strings.Contains(ck, `"color":"#00FF00"`) {
+		t.Errorf("chroma_key = %q", ck)
+	}
+
+	clip.ChromaKey = nil
+
 	got := itemLine(fps, &clip)
 	want := "itm_m1n2p3q4r5 clip 0s/0f +2s/60f ast_3c5v8n2w6d x1.5 [tin:fade tout:slide_left kf:2 mk:2 vol:0.5 muted slot:hero unfilled]"
 

@@ -337,6 +337,16 @@ var alphaOps = map[string]func(p *docPick) string{
 	"clip.set_blur": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"radius":%d}`, p.clip(), p.n(101))
 	},
+	"clip.set_chroma_key": func(p *docPick) string {
+		color := p.oneOf(`"#00FF00"`, `"#0000FF"`, "null")
+		if color == "null" {
+			return fmt.Sprintf(`{"item_id":%q,"color":null}`, p.clip())
+		}
+		return fmt.Sprintf(
+			`{"item_id":%q,"color":%s,"similarity":%.2f,"spill":%.2f}`,
+			p.clip(), color, float64(p.n(101))/100, float64(p.n(101))/100,
+		)
+	},
 	"audio.duck": func(p *docPick) string {
 		clip := p.clip()
 		var parts []string
@@ -575,7 +585,7 @@ func TestRandomBatches(t *testing.T) {
 	doc := randomStart(rng)
 	ids := &seqIDs{}
 
-	for i := range 6000 {
+	for i := range 9000 {
 		o := randomRegistryOp(rng, doc)
 
 		next, err := checkStep(doc, o, ids)

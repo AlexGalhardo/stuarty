@@ -343,6 +343,46 @@
         },
         "type": "object"
       },
+      "ChromaKey": {
+        "properties": {
+          "color": {
+            "type": "string"
+          },
+          "similarity": {
+            "format": "double",
+            "type": "number"
+          },
+          "smoothness": {
+            "format": "double",
+            "type": "number"
+          },
+          "spill": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "ChromaKeySpec": {
+        "properties": {
+          "color": {
+            "type": "string"
+          },
+          "similarity": {
+            "format": "double",
+            "type": "number"
+          },
+          "smoothness": {
+            "format": "double",
+            "type": "number"
+          },
+          "spill": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
       "CommandDetail": {
         "properties": {
           "args_schema": {
@@ -1015,6 +1055,16 @@
           "brightness": {
             "format": "double",
             "type": "number"
+          },
+          "chroma_key": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChromaKey"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "contrast": {
             "format": "double",
@@ -1797,6 +1847,7 @@
               "clip.add",
               "clip.remove_silences",
               "clip.set_blur",
+              "clip.set_chroma_key",
               "clip.set_color",
               "clip.set_filter",
               "clip.set_framing",
@@ -1891,6 +1942,9 @@
           },
           "clip.set_blur": {
             "$ref": "#/components/schemas/args.clip.set_blur"
+          },
+          "clip.set_chroma_key": {
+            "$ref": "#/components/schemas/args.clip.set_chroma_key"
           },
           "clip.set_color": {
             "$ref": "#/components/schemas/args.clip.set_color"
@@ -3203,6 +3257,16 @@
             "format": "double",
             "type": "number"
           },
+          "chroma_key": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChromaKeySpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "color_matrix": {},
           "crop": {
             "items": {
@@ -4120,6 +4184,46 @@
         "required": [
           "item_id",
           "radius"
+        ],
+        "type": "object"
+      },
+      "args.clip.set_chroma_key": {
+        "additionalProperties": false,
+        "properties": {
+          "color": {
+            "description": "The colour to remove, #RRGGBB, or null to remove the key.",
+            "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "item_id": {
+            "description": "A clip.",
+            "type": "string"
+          },
+          "similarity": {
+            "description": "0 to 1; default 0.3, or the current value.",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "smoothness": {
+            "description": "0 to 1; default 0.1, or the current value.",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "spill": {
+            "description": "0 to 1; default 0, or the current value.",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "item_id",
+          "color"
         ],
         "type": "object"
       },
