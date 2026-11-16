@@ -58,7 +58,7 @@ Run `task ci` before you push: `task lint`, `task vet`, `task test`, `task tidy:
 - `Browser tests (firefox)`, `Browser tests (webkit)`: the same specs on the other two engines, except those tagged `CHROMIUM_ONLY`; run one by hand with `bunx playwright test -c e2e/playwright.config.ts --project=firefox` in `web/`
 - `Bundle export (<os>)`, `Bundle matrix (<os>)`: a bundle of the reference project made on each system is imported on all three, and the document and media hashes must be equal; `bash scripts/bundle-matrix.sh` runs it by hand
 - `Sandbox (bwrap)`: `TestSecurity_T16_` must pass, not skip
-- `Renderer (ubuntu-latest)`, `(windows-latest)`, `(macos-latest)`: the Rust gate of `renderer/` and the WebAssembly module built twice from clean with equal digests (see [The Rust renderer](#the-rust-renderer))
+- `Renderer (ubuntu-24.04)`: the Rust gate of `renderer/` and the WebAssembly module built twice from clean with equal digests and equal to the embedded one (see [The Rust renderer](#the-rust-renderer))
 - `Notices`, `Vulnerabilities`, `Workflow pins`
 
 `Golden cases (PATH FFmpeg)` is reported and does not block. `nightly.yml` runs once a day the long benchmarks, the 60 s export and the soak tests; a failure opens a `ci-failure` issue. `bash scripts/ci-time.sh` prints the median and the maximum of the last 10 pull request runs of `CI` (the budget is a median under 15 minutes and no run over 20, NFR-042). The same checks run on Linux, macOS and Windows. Work in `web/` uses Bun, not npm.
@@ -68,10 +68,10 @@ Run `task ci` before you push: `task lint`, `task vet`, `task test`, `task tidy:
 Rust lives only in `renderer/` (ADR-0029, rule `.agents/rules/rust.md`); you need it only to change the renderer.
 
 1. Install [rustup](https://rustup.rs). The first `cargo` call in the repository installs the toolchain pinned in `rust-toolchain.toml` (an exact stable version with `rustfmt`, `clippy` and the `wasm32-unknown-unknown` target).
-2. Install the two tools at the versions of CI: `cargo install --locked cargo-deny --version 0.20.2` and `cargo install --locked wasm-bindgen-cli --version <the wasm-bindgen version in renderer/Cargo.lock>`. `build-renderer.sh` refuses a CLI that differs from the lockfile.
+2. Install the tool at the version of CI: `cargo install --locked cargo-deny --version 0.20.2`. The module has no wasm-bindgen glue, so no wasm-bindgen CLI is needed.
 3. Before every commit that touches `renderer/`, in `renderer/`: `cargo fmt --check`, `cargo clippy --locked --all-targets -- -D warnings`, `cargo test --locked`, `cargo deny check`.
-4. `bash scripts/build-renderer.sh` builds the native crate and the module into `renderer/dist/`; `bash scripts/build-renderer.sh verify` builds the module twice from clean and fails unless the digests match.
-5. Crates are at exact versions (`=x.y.z`) and `Cargo.lock` is committed. Only `wgpu`, `wasm-bindgen`, `bytemuck` and `cargo-deny` are approved; any other crate needs the maintainer's approval. The licence allowlist of `renderer/deny.toml` must stay within the one of `internal/tools/notices`, which also lists the shipped crates in `THIRD_PARTY_NOTICES.md` (`task notices`).
+4. `bash scripts/build-renderer.sh` builds the native crate and the module into `renderer/dist/`; `bash scripts/build-renderer.sh verify` builds the module twice from clean and fails unless the digests match; `bash scripts/build-renderer.sh check` also fails unless the module embedded in `engine/renderhost/` is the one this source builds (the CI job).
+5. Crates are at exact versions (`=x.y.z`) and `Cargo.lock` is committed. Only `wgpu`, `bytemuck` and `cargo-deny` are approved; any other crate needs the maintainer's approval. The licence allowlist of `renderer/deny.toml` must stay within the one of `internal/tools/notices`, which also lists the shipped crates in `THIRD_PARTY_NOTICES.md` (`task notices`).
 
 `bash scripts/gate.sh` runs all of this as its `rust` step when `cargo` is installed.
 

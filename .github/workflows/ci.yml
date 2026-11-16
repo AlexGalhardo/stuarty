@@ -22,7 +22,6 @@ env:
   GOLANGCI_LINT_VERSION: v2.15.0
   BUN_VERSION: 1.4.4
   CARGO_DENY_VERSION: 0.20.2
-  WASM_BINDGEN_CLI_VERSION: 0.2.130
 
 jobs:
   lint-go:
@@ -589,17 +588,14 @@ jobs:
             exit 1
           fi
 
-  # ADR-0029, rule .agents/rules/rust.md: the Rust gate of renderer/, on the three systems, and the
-  # WebAssembly module built twice from clean with equal digests. The toolchain is the one of
-  # rust-toolchain.toml (rustup installs it on the first cargo call).
+  # ADR-0029, rule .agents/rules/rust.md: the Rust gate of renderer/ on one pinned Linux runner, and the
+  # WebAssembly module built twice from clean with equal digests and equal to the one embedded in
+  # engine/renderhost. The toolchain is the one of rust-toolchain.toml (rustup installs it on the first
+  # cargo call). The crate has no wasm-bindgen glue, so no wasm-bindgen-cli is installed.
   renderer:
-    name: Renderer (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: Renderer (ubuntu-24.04)
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
     defaults:
       run:
         shell: bash
@@ -611,7 +607,6 @@ jobs:
         run: |
           rustup show active-toolchain
           cargo install --locked cargo-deny --version "$CARGO_DENY_VERSION"
-          cargo install --locked wasm-bindgen-cli --version "$WASM_BINDGEN_CLI_VERSION"
       - name: cargo fmt --check
         working-directory: renderer
         run: cargo fmt --check
@@ -624,8 +619,8 @@ jobs:
       - name: cargo deny check
         working-directory: renderer
         run: cargo deny check
-      - name: The WebAssembly module is reproducible
-        run: bash scripts/build-renderer.sh verify
+      - name: The WebAssembly module is reproducible and is the embedded one
+        run: bash scripts/build-renderer.sh check
 
   # SDD-007 section 10.2 item 3 (check 25): the real binary and the pinned FFmpeg run a
   # reference session under strace; any socket address that is not loopback fails.
