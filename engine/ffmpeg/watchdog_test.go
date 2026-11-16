@@ -61,13 +61,17 @@ func TestSecurity_T17_OutputSizeWatchdog(t *testing.T) {
 }
 
 // blockedWriter never accepts a byte until released: a child whose output cannot be drained
-// keeps the run from ending after it is killed.
+// keeps the run from ending after it is killed. reached closes on the first Write, which proves
+// the child is running and has written: before that, a killed child ends the copy with EOF.
 type blockedWriter struct {
 	once    sync.Once
 	release chan struct{}
+	reached chan struct{}
+	first   sync.Once
 }
 
 func (w *blockedWriter) Write(p []byte) (int, error) {
+	w.first.Do(func() { close(w.reached) })
 	<-w.release
 
 	return len(p), nil
@@ -79,7 +83,7 @@ func TestCancelTimeoutFailsTheJob(t *testing.T) {
 	r, dir, tool := helperRunner(t)
 	r.Grace = 100 * time.Millisecond
 
-	w := &blockedWriter{release: make(chan struct{})}
+	w := &blockedWriter{release: make(chan struct{}), reached: make(chan struct{})}
 	t.Cleanup(w.free)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -92,7 +96,12 @@ func TestCancelTimeoutFailsTheJob(t *testing.T) {
 		done <- err
 	}()
 
-	time.Sleep(300 * time.Millisecond)
+	select {
+	case <-w.reached:
+	case <-time.After(30 * time.Second):
+		t.Fatal("the child never wrote")
+	}
+
 	cancel()
 
 	select {
