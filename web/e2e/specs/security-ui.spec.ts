@@ -104,8 +104,22 @@ test.describe("security-ui", () => {
 			],
 		}).catch(() => undefined);
 
+		// The text of the rendered elements, not the text of the body: the body also
+		// holds the Inertia props as JSON in a script element, which a browser may
+		// keep or drop once the page has started, so it says nothing about what is
+		// shown.
 		const shown = async (): Promise<string> =>
-			(await page.locator("body").textContent()) ?? "";
+			page.evaluate(() =>
+				[...document.body.querySelectorAll("*")]
+					.filter(
+						(el) =>
+							el.tagName !== "SCRIPT" &&
+							el.tagName !== "STYLE" &&
+							el.children.length === 0,
+					)
+					.map((el) => el.textContent ?? "")
+					.join(" | "),
+			);
 		const clean = async (view: string): Promise<void> => {
 			expect(await page.evaluate(() => window.__pwned), view).toBeUndefined();
 			expect(
@@ -125,6 +139,8 @@ test.describe("security-ui", () => {
 		await page.goto(`/editor/${seeded.id}`);
 		await expect(page.locator("[data-track-id]").first()).toBeVisible();
 		await expect(page.locator("[data-item-id]").first()).toBeVisible();
+		// The library lists the assets after the timeline: wait for the name.
+		await expect(page.getByText(ASSET_NAME).first()).toBeVisible();
 		let text = await shown();
 		expect(text).toContain(PAYLOAD);
 		expect(text).toContain(ASSET_NAME);
