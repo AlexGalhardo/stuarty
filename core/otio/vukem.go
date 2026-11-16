@@ -143,6 +143,10 @@ func itemOps(props map[string]any, mode itemMode, start, dur int, used map[strin
 		set(transform, "rotation", -1e9, 1e9, false)
 		set(transform, "opacity", 0, 1, false)
 		add("item.set_transform", transform)
+
+		if b, ok := p.text("blend", "multiply", "screen", "overlay", "add"); ok {
+			add("clip.set_blend", map[string]any{"mode": b})
+		}
 	}
 
 	if mode == modeClip {
