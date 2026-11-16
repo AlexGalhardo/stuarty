@@ -74,6 +74,7 @@
 	--color-ed-item-shape: var(--ed-item-shape);
 	--color-ed-item-shape-fg: var(--ed-item-shape-fg);
 	--color-ed-playhead: var(--ed-playhead);
+	--color-ed-marker: var(--ed-marker);
 	--color-ed-selection: var(--ed-selection);
 	--color-ed-snap: var(--ed-snap);
 	--color-ed-ghost: var(--ed-ghost);
@@ -153,6 +154,7 @@
 	--ed-item-shape: oklch(0.82 0.08 350);
 	--ed-item-shape-fg: oklch(0.2 0 0);
 	--ed-playhead: oklch(0.55 0.22 25);
+	--ed-marker: oklch(0.6 0.16 250);
 	--ed-selection: oklch(0.45 0.18 250);
 	--ed-snap: oklch(0.5 0.15 90);
 	--ed-ghost: oklch(0.45 0.18 250 / 0.75);
@@ -225,6 +227,7 @@
 	--ed-item-shape: oklch(0.46 0.13 350);
 	--ed-item-shape-fg: oklch(0.98 0 0);
 	--ed-playhead: oklch(0.7 0.2 25);
+	--ed-marker: oklch(0.75 0.14 250);
 	--ed-selection: oklch(0.85 0.12 230);
 	--ed-snap: oklch(0.85 0.15 90);
 	--ed-ghost: oklch(0.85 0.12 230 / 0.5);

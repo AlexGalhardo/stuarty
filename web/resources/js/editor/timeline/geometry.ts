@@ -173,6 +173,20 @@ export function adjacentCut(
 	return best;
 }
 
+// The nearest marker frame strictly before or after `frame`; navigation only.
+export function adjacentMarker(
+	frames: readonly number[],
+	frame: number,
+	direction: 1 | -1,
+): number | null {
+	let best: number | null = null;
+	for (const at of frames) {
+		if (direction === 1 ? at <= frame : at >= frame) continue;
+		if (best === null || (direction === 1 ? at < best : at > best)) best = at;
+	}
+	return best;
+}
+
 // The items that start before the playhead (`left`) or end after it (`right`):
 // the selection of `[` and `]`. A reading of the frames the core gave.
 export function idsOnSide(

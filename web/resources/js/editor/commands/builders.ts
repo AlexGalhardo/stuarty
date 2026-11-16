@@ -1195,6 +1195,14 @@ export function chromaKeyOperations(
 	];
 }
 
+export function markerAddOperations(frame: number): Operations {
+	return [{ op: "marker.add", args: { at: frames(frame) } }];
+}
+
+export function markerRemoveOperations(frame: number): Operations {
+	return [{ op: "marker.remove", args: { at: frames(frame) } }];
+}
+
 export function blurOperations(itemId: string, radius: number): Operations {
 	return [{ op: "clip.set_blur", args: { item_id: itemId, radius } }];
 }

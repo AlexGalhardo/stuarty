@@ -99,6 +99,16 @@ export default function Timeline(): ReactNode {
 	const fps: Fps = useDocumentState(selectFps) ?? DEFAULT_FPS;
 	const ppf = useUiState((s) => s.timeline.pxPerFrame);
 	const playhead = useUiState((s) => s.playheadFrame);
+	const range = useUiState((s) => s.range);
+	// A string so the selector returns a stable value; the list is parsed once
+	// per change of the markers.
+	const markerKey = useDocumentState((s) =>
+		(s.document?.markers ?? []).map((m) => m.frame).join(","),
+	);
+	const markerFrames = useMemo(
+		() => (markerKey === "" ? [] : markerKey.split(",").map(Number)),
+		[markerKey],
+	);
 	const snapEnabled = useUiState((s) => s.timeline.snapEnabled);
 
 	const itemCount = useDocumentState(selectItemCount);
@@ -421,6 +431,8 @@ export default function Timeline(): ReactNode {
 							viewportWidth={viewportWidth}
 							playheadFrame={playhead}
 							endFrame={endFrame}
+							markers={markerFrames}
+							range={range}
 							onSeek={runtime.uiWriter.setPlayhead}
 						/>
 					</div>

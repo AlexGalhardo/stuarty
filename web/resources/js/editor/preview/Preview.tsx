@@ -315,9 +315,25 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 	togglePlayRef.current = togglePlay;
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent): void => {
-			if (event.code !== "Space" || isEditable(event.target)) return;
+			if (isEditable(event.target)) return;
+			if (event.code === "Space") {
+				event.preventDefault();
+				togglePlayRef.current();
+				return;
+			}
+			// J, K and L (VV-035): back one second, pause, play. The preview has
+			// no reverse or fast playback, so J steps back instead of shuttling.
+			if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) {
+				return;
+			}
+			if (event.key.toLowerCase() === "k") {
+				executor.current?.pause();
+			} else if (event.key.toLowerCase() === "l") {
+				if (!playingRef.current) void executor.current?.play();
+			} else if (event.key.toLowerCase() === "j") {
+				backOneSecondRef.current();
+			} else return;
 			event.preventDefault();
-			togglePlayRef.current();
 		};
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
@@ -327,6 +343,12 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 		executor.current?.pause();
 		runtime.uiWriter.setPlayhead(Math.max(frame, 0));
 	};
+	const backOneSecondRef = useRef(() => {});
+	backOneSecondRef.current = () =>
+		seekTo(
+			runtime.ui.getState().playheadFrame -
+				Math.max(1, Math.round(fps.num / fps.den)),
+		);
 	const playing = state === "playing" || state === "buffering";
 	const scale = width > 0 ? box.w / width : 0;
 	const layers = executor.current?.getLayerGeometry(live) ?? [];

@@ -81,3 +81,23 @@ describe("preview audio and size", () => {
 		expect(store.getState().previewSize).toBe("50");
 	});
 });
+
+describe("in and out points", () => {
+	test("an in point after the out point drops the out point, and the reverse", () => {
+		const { store, writer } = createUiStore();
+		writer.setRangeIn(10);
+		writer.setRangeOut(50);
+		expect(store.getState().range).toEqual({ in: 10, out: 50 });
+		writer.setRangeIn(60);
+		expect(store.getState().range).toEqual({ in: 60, out: null });
+		writer.setRangeOut(20);
+		expect(store.getState().range).toEqual({ in: null, out: 20 });
+	});
+
+	test("clearing leaves no points", () => {
+		const { store, writer } = createUiStore();
+		writer.setRangeIn(10);
+		writer.clearRange();
+		expect(store.getState().range).toEqual({ in: null, out: null });
+	});
+});

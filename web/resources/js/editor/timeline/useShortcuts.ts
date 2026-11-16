@@ -10,7 +10,7 @@ import {
 import { bindingFor } from "../commands/keymapStore";
 import { useActions } from "../commands/useActions";
 import { useRuntime } from "../state/EditorContext";
-import { adjacentCut, idsOnSide } from "./geometry";
+import { adjacentCut, adjacentMarker, idsOnSide } from "./geometry";
 
 function isEditable(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) return false;
@@ -64,6 +64,20 @@ export function useShortcuts(openCaption: () => void): void {
 						? []
 						: [focusedItem];
 			if (row === "split_all") void actions.splitAllAtPlayhead();
+			else if (row === "marker") void actions.toggleMarkerAtPlayhead();
+			else if (row === "next_marker") {
+				const doc = runtime.documents.getState().document;
+				if (doc === null) return false;
+				const marker = adjacentMarker(
+					(doc.markers ?? []).map((m) => m.frame),
+					playheadFrame,
+					combo === "Mod+Shift+Right" ? 1 : -1,
+				);
+				if (marker !== null) runtime.uiWriter.setPlayhead(marker);
+			} else if (row === "range_in_out") {
+				if (combo === "I") runtime.uiWriter.setRangeIn(playheadFrame);
+				else runtime.uiWriter.setRangeOut(playheadFrame);
+			} else if (row === "range_clear") runtime.uiWriter.clearRange();
 			else if (row === "volume_up") void actions.adjustVolume(0.1);
 			else if (row === "volume_down") void actions.adjustVolume(-0.1);
 			else if (row === "select_side") {

@@ -32,6 +32,8 @@ import {
 	keyframeRemoveOperations,
 	keyframeSetOperations,
 	markBeatsOperations,
+	markerAddOperations,
+	markerRemoveOperations,
 	moveOperations,
 	presetOperations,
 	projectRenameOperations,
@@ -278,6 +280,9 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			}).map((o) => o.op),
 			"library.remove": removeAssetOperations("ast_a").map((o) => o.op),
 			"timeline.split": splitOperations(items, 10).map((o) => o.op),
+			"timeline.marker": markerAddOperations(10)
+				.concat(markerRemoveOperations(10))
+				.map((o) => o.op),
 			"timeline.trim_start": trimOperations(items, "start", 10).map(
 				(o) => o.op,
 			),
