@@ -7,6 +7,8 @@ test("internal paths get the trailing slash, keeping query and hash", () => {
 	assert.equal(withTrailingSlash("/docs/basics/routing"), "/docs/basics/routing/");
 	assert.equal(withTrailingSlash("/docs/basics/routing#groups"), "/docs/basics/routing/#groups");
 	assert.equal(withTrailingSlash("/docs?q=orm"), "/docs/?q=orm");
+	assert.equal(withTrailingSlash("/docs/api/bitmaps.get"), "/docs/api/bitmaps.get/");
+	assert.equal(withTrailingSlash("/docs/mcp/tools/edit/item.split#args"), "/docs/mcp/tools/edit/item.split/#args");
 });
 
 test("everything else is left alone", () => {
@@ -19,6 +21,8 @@ test("everything else is left alone", () => {
 		"//cdn.example/x",
 		"/icon.svg",
 		"/llms.txt",
+		"/docs/api/bitmaps.get.md",
+		"/updates/feed.json",
 		"mailto:a@b.c",
 		"",
 	]) {
