@@ -104,7 +104,7 @@ test.describe("delete-ripple-duplicate", () => {
 		await expect(page.locator(`[data-item-id="${third}"]`)).toBeFocused();
 	});
 
-	test("Ctrl+D sends one item.duplicate right after the item end", async ({
+	test("Ctrl+D sends one item.duplicate and the core places it right after the item end", async ({
 		page,
 		request,
 	}) => {
@@ -121,6 +121,8 @@ test.describe("delete-ripple-duplicate", () => {
 		expect(edits).toHaveLength(1);
 		expect(edits[0]?.operations).toHaveLength(1);
 		expect(edits[0]?.operations[0]?.op).toBe("item.duplicate");
+		// No start in the request: the core picks the first free position.
+		expect(edits[0]?.operations[0]?.args.start).toBeUndefined();
 		const doc = await page.evaluate(
 			() =>
 				(
@@ -129,10 +131,8 @@ test.describe("delete-ripple-duplicate", () => {
 					}
 				).items,
 		);
-		const source = Object.values(doc).sort((a, b) => a.start - b.start)[0];
-		expect(edits[0]?.operations[0]?.args.start).toBe(
-			`${(source?.start ?? 0) + (source?.duration ?? 0)}f`,
-		);
+		const [source, copy] = Object.values(doc).sort((a, b) => a.start - b.start);
+		expect(copy?.start).toBe((source?.start ?? 0) + (source?.duration ?? 0));
 	});
 
 	test("the gap menu sends one timeline.close_gap and the later item moves earlier", async ({

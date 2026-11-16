@@ -94,7 +94,7 @@ test.describe("command-palette-coverage pt-BR", () => {
 		await page.goto(`/editor/${created.project_id as string}`);
 		await expect(page.locator("html")).toHaveAttribute("lang", "pt-BR");
 		await expect(
-			page.getByRole("button", { name: /Paleta de comandos/ }),
+			page.getByRole("button", { name: /Comandos \(Ctrl\+K\)/ }),
 		).toBeEnabled();
 		await page.keyboard.press("Control+k");
 		const options = page.getByRole("option");

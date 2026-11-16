@@ -127,7 +127,9 @@ test.describe("export-formats", () => {
 					text: "done",
 					result: {
 						export: {
-							revision: 1,
+							// At or above the project revision, or the dialog drops the result as
+							// that of an older revision (VV-009).
+							revision: 1_000_000,
 							download_url: "/api/v1/jobs/job_stubgif/file",
 							bytes: 1000,
 							duration: { frame: 30, seconds: 1 },

@@ -19,7 +19,9 @@ test.describe("safe-area", () => {
 		const plans: Plan[] = [];
 		page.on("response", async (response) => {
 			if (!response.url().includes("/plan?") || !response.ok()) return;
-			plans.push((await response.json()) as Plan);
+			// A plan window the editor aborted for a newer one has no body to read.
+			const body = await response.json().catch(() => null);
+			if (body !== null) plans.push(body as Plan);
 		});
 		await page.goto(`/editor/${seeded.id}?debug=1`);
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);

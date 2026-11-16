@@ -38,8 +38,8 @@ test.describe("shapes", () => {
 		expect(posted[0]?.operations).toEqual([
 			{
 				op: "shape.add",
+				// No track_id: the core picks a free visual track (SDD-002 C.6).
 				args: {
-					track_id: seeded.trackIds[0],
 					start: "0f",
 					duration: "3s",
 					shape: "rounded_rect",
