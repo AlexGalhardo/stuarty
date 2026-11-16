@@ -11,6 +11,7 @@ import { createEditQueue } from "./edit";
 import { ApiError, fromResponse } from "./errors";
 import { type ConnectionState, createEventStream } from "./events";
 import { RETRY_DELAYS_MS, withJitter } from "./retry";
+import { guardUnauthorized } from "./transport";
 import type { EditRequest } from "./types";
 
 function fastDeps() {
@@ -353,5 +354,26 @@ describe("event stream", () => {
 		server.failStreams(true);
 		await timers.advance(1000);
 		expect(denied).toBe(1);
+	});
+});
+
+describe("an expired session", () => {
+	test("a 401 on any call reaches the login hook and is still an error", async () => {
+		const server = new FixtureServer();
+		server.failures.push({
+			match: "POST /projects/",
+			status: 401,
+			body: { code: "E_UNAUTHORIZED", message: "sign in", retryable: false },
+		});
+		let calls = 0;
+		const client = createClient(
+			guardUnauthorized(server, () => {
+				calls++;
+			}),
+		);
+		await expect(
+			client.importMedia(server.projectId, ["a.mp4"]),
+		).rejects.toBeInstanceOf(ApiError);
+		expect(calls).toBe(1);
 	});
 });

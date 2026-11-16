@@ -4,6 +4,7 @@ import { ApiError } from "../api/errors";
 import { browserTimers, createEventStream, type Timers } from "../api/events";
 import { createSharedEventStream } from "../api/eventsLock";
 import type { Transport } from "../api/transport";
+import { guardUnauthorized } from "../api/transport";
 import type { Job, ProjectEvent } from "../api/types";
 import {
 	type ActivityState,
@@ -109,7 +110,14 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 	const checked = options.checked ?? false;
 	const { projectId, actor } = options;
 
-	const client = createClient(transport);
+	const toLogin = (): void => {
+		location.assign(`/login?next=${encodeURIComponent(location.pathname)}`);
+	};
+	const client = createClient(
+		options.mode === "network"
+			? guardUnauthorized(transport, toLogin)
+			: transport,
+	);
 	const { store: documents, writer } = createDocumentStore({
 		projectId,
 		freeze: checked,
@@ -228,7 +236,7 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		// /login; local mode keeps the failed status and the shell shows the banner.
 		onUnauthorized: () => {
 			if (options.mode === "network") {
-				location.assign(`/login?next=${encodeURIComponent(location.pathname)}`);
+				toLogin();
 			}
 		},
 	});

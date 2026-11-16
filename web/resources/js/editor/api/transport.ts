@@ -46,3 +46,20 @@ export interface Transport {
 	send(request: TransportRequest): Promise<TransportResponse>;
 	openStream(path: string, handlers: StreamHandlers): StreamConnection;
 }
+
+// A transport that tells `onUnauthorized` about every 401, so an expired
+// session in network mode goes to the login whichever call met it (SDD-012
+// section 4.4). The answer is passed on unchanged.
+export function guardUnauthorized(
+	transport: Transport,
+	onUnauthorized: () => void,
+): Transport {
+	return {
+		async send(request) {
+			const response = await transport.send(request);
+			if (response.status === 401) onUnauthorized();
+			return response;
+		},
+		openStream: (path, handlers) => transport.openStream(path, handlers),
+	};
+}
