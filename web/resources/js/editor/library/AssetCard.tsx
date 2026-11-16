@@ -1,4 +1,4 @@
-import { ImageOff, MoreHorizontal, Plus } from "lucide-react";
+import { ImageOff, MoreHorizontal, Music, Plus } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
@@ -19,6 +19,7 @@ import { useDocumentState, useRuntime } from "../state/EditorContext";
 import { readTimeDisplay } from "../state/prefs";
 import { errorHeadline } from "../ui/errorHeadline";
 import AssetDetails from "./AssetDetails";
+import { hasThumbnail } from "./thumbnail";
 
 // One card of the library (SDD-012 section 13.2). "Add to timeline" is enabled
 // only when the asset is ready and already in the read model, because the
@@ -72,12 +73,17 @@ export default function AssetCard({
 		>
 			<div className="flex gap-2">
 				<div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
-					{entry.state === "ready" ? (
+					{hasThumbnail(entry) ? (
 						<img
 							src={thumbnailUrl(runtime.projectId, entry.asset_id, 160)}
 							alt=""
 							draggable={false}
 							className="size-full object-cover"
+						/>
+					) : entry.kind === "audio" ? (
+						<Music
+							aria-hidden="true"
+							className="size-5 text-muted-foreground"
 						/>
 					) : (
 						<ImageOff
