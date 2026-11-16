@@ -3,10 +3,9 @@ import { site } from "@/lib/site";
 import { mdxToMarkdown } from "@/lib/text";
 import { withTrailingSlash } from "@/lib/trailing-slash";
 
-/** The Markdown twin of a page (SDD-010 section 9). An untranslated page says so on its first line. */
+/** The Markdown twin of a page (SDD-010 section 9). */
 export function twinOf(doc: Doc): string {
 	return [
-		...(doc.kind === "fallback" ? ["> Not translated yet: this is the English text.", ""] : []),
 		`# ${doc.title}`,
 		"",
 		`> ${doc.description}`,

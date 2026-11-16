@@ -4,4 +4,4 @@ import { llmsFull } from "@/lib/llms";
 export const prerender = true;
 
 export const GET: APIRoute = () =>
-	new Response(llmsFull("en"), { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+	new Response(llmsFull(), { headers: { "Content-Type": "text/plain; charset=utf-8" } });

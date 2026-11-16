@@ -1,8 +1,8 @@
 // Link check over a deployed site (SDD-010 section 14, P4-DOC-001):
 //   npm run check:links-live [-- <site url>]
-// Starts at the documentation entry of each locale, follows every internal link of the pages under /docs/
-// and /pt-br/docs/, and reports each link that does not answer 200 and each #fragment with no matching id.
-// Links to pages outside the two doc trees (home, changelog) are fetched but not crawled further.
+// Starts at the documentation entry, follows every internal link of the pages under /docs/, and reports
+// each link that does not answer 200 and each #fragment with no matching id.
+// Links to pages outside the doc tree (home, changelog) are fetched but not crawled further.
 // External links are listed, never fetched: the site must not depend on them. Node strips the types.
 const DEFAULT_SITE = "https://video.vukem.dev";
 
@@ -47,13 +47,13 @@ async function main(): Promise<number> {
 	const base = new URL(site).pathname.replace(/\/$/, "");
 	const inTree = (url: string): boolean => {
 		const p = new URL(url).pathname.slice(base.length);
-		return p.startsWith("/docs/") || p.startsWith("/pt-br/docs/");
+		return p.startsWith("/docs/");
 	};
 
 	const pages = new Map<string, { status: number; ids: Set<string> }>();
 	const problems: string[] = [];
 	const externals = new Set<string>();
-	const queue = [`${site}/docs/introduction/`, `${site}/pt-br/docs/introduction/`];
+	const queue = [`${site}/docs/introduction/`];
 	const fragments: { from: string; link: PageLink }[] = [];
 
 	async function load(url: string): Promise<{ status: number; ids: Set<string>; html: string }> {

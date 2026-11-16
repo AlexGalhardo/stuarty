@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { basePathProblems, foreignOriginProblems, localeProblems, searchProblems, twinProblems } from "./check-built.ts";
+import { basePathProblems, foreignOriginProblems, pageProblems, searchProblems, twinProblems } from "./check-built.ts";
 
 const own = "video.vukem.dev";
 
@@ -80,54 +80,39 @@ function page(opts: { lang: string; canonical: string; alternates?: [string, str
 	return `<html lang="${opts.lang}"><head><link rel="canonical" href="${SITE}/${opts.canonical}/">${alt}</head></html>`;
 }
 
-function site(translated: boolean): { files: string[]; read: (rel: string) => string } {
+function site(): { files: string[]; read: (rel: string) => string } {
 	const pages: Record<string, string> = {
-		"docs/a/index.html": page({
-			lang: "en",
-			canonical: "docs/a",
-			alternates: translated
-				? [["en", "docs/a"], ["pt-BR", "pt-br/docs/a"], ["x-default", "docs/a"]]
-				: [["en", "docs/a"], ["x-default", "docs/a"]],
-		}),
-		"pt-br/docs/a/index.html": translated
-			? page({
-					lang: "pt-BR",
-					canonical: "pt-br/docs/a",
-					alternates: [["en", "docs/a"], ["pt-BR", "pt-br/docs/a"], ["x-default", "docs/a"]],
-				})
-			: page({ lang: "pt-BR", canonical: "docs/a" }),
+		"docs/a/index.html": page({ lang: "en", canonical: "docs/a" }),
 		"docs/a.md": "# A",
-		"pt-br/docs/a.md": translated ? "# A" : "> Not translated yet: this is the English text.\n\n# A",
-		"404.html": '<div data-lang="en"></div><div data-lang="pt-br"></div>',
-		"sitemap.xml": translated ? `<loc>${SITE}/docs/a/</loc><loc>${SITE}/pt-br/docs/a/</loc>` : `<loc>${SITE}/docs/a/</loc>`,
+		"404.html": "<p>404</p>",
+		"sitemap.xml": `<loc>${SITE}/docs/a/</loc>`,
 	};
 	return { files: Object.keys(pages), read: (rel) => pages[rel] ?? "" };
 }
 
-test("a translated pair names each other and a fallback claims no alternate", () => {
-	const good = site(true);
-	assert.deepEqual(localeProblems(good.files, good.read, SITE), []);
-
-	const fallback = site(false);
-	assert.deepEqual(localeProblems(fallback.files, fallback.read, SITE), []);
+test("an English page with its own canonical and a sitemap line has no problems", () => {
+	const good = site();
+	assert.deepEqual(pageProblems(good.files, good.read, SITE), []);
 });
 
-test("an asymmetric hreflang, a fallback with alternates and a missing twin are refused", () => {
-	const broken = site(true);
-	const read = (rel: string) =>
-		rel === "pt-br/docs/a/index.html" ? page({ lang: "pt-BR", canonical: "pt-br/docs/a" }) : broken.read(rel);
-	assert.ok(localeProblems(broken.files, read, SITE).some((p) => p.includes("hreflang en should point to docs/a")));
+test("a wrong canonical, an hreflang alternate, a pt-br sitemap line and a missing 404 are refused", () => {
+	const good = site();
+	const readWith = (html: string, sitemap = `<loc>${SITE}/docs/a/</loc>`) => (rel: string) =>
+		rel === "docs/a/index.html" ? html : rel === "sitemap.xml" ? sitemap : good.read(rel);
 
-	const lost = site(true);
-	const files = lost.files.filter((f) => f !== "pt-br/docs/a.md");
-	assert.ok(localeProblems(files, lost.read, SITE).some((p) => p.includes("pt-br/docs/a.md is missing")));
-
-	const chatty = site(false);
-	const readChatty = (rel: string) =>
-		rel === "pt-br/docs/a/index.html"
-			? page({ lang: "pt-BR", canonical: "docs/a", alternates: [["pt-BR", "pt-br/docs/a"]] })
-			: chatty.read(rel);
-	assert.ok(localeProblems(chatty.files, readChatty, SITE).some((p) => p.includes("has hreflang alternates")));
+	assert.ok(pageProblems(good.files, readWith(page({ lang: "en", canonical: "docs/b" })), SITE).some((p) => p.includes("is not the page itself")));
+	assert.ok(
+		pageProblems(good.files, readWith(page({ lang: "en", canonical: "docs/a", alternates: [["pt-BR", "pt-br/docs/a"]] })), SITE).some((p) =>
+			p.includes("has hreflang alternates"),
+		),
+	);
+	assert.ok(
+		pageProblems(good.files, readWith(page({ lang: "en", canonical: "docs/a" }), `<loc>${SITE}/docs/a/</loc><loc>${SITE}/pt-br/docs/a/</loc>`), SITE).some((p) =>
+			p.includes("lists a pt-br page"),
+		),
+	);
+	assert.ok(pageProblems(good.files.filter((f) => f !== "404.html"), good.read, SITE).includes("404.html is missing"));
+	assert.ok(pageProblems(good.files, readWith(page({ lang: "pt-BR", canonical: "docs/a" })), SITE).some((p) => p.includes("lang is not en")));
 });
 
 test("the search index finds the editing tools page for trim and the keyframes page for keyframes", () => {

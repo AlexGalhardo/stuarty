@@ -6,11 +6,10 @@ import { Dialog } from "@base-ui/react/dialog";
 import { Menu, X } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
 import type { NavGroup } from "@/lib/content";
-import { useT } from "@/lib/locale-context";
+import { ui as t } from "@/lib/ui-text";
 
 /** Drawer with the sidebar for small screens. */
 export function MobileNav({ groups }: { groups: NavGroup[] }) {
-	const t = useT();
 	const [open, setOpen] = useState(false);
 
 	return (

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { IconTooltip } from "@/components/icon-tooltip";
-import { useT } from "@/lib/locale-context";
+import { ui as t } from "@/lib/ui-text";
 
 const OPTIONS = [
 	{ value: "light", label: "lightTheme", icon: Sun },
@@ -24,7 +24,6 @@ function applyTheme(theme: Theme): void {
 }
 
 export function ThemeToggle() {
-	const t = useT();
 	const [theme, setThemeState] = useState<Theme | undefined>(undefined);
 
 	useEffect(() => {

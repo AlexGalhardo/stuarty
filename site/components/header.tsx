@@ -8,16 +8,13 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { IconTooltip } from "@/components/icon-tooltip";
 import { Providers } from "@/components/providers";
 import type { NavGroup } from "@/lib/content";
-import { LocaleProvider, useLocale, useT } from "@/lib/locale-context";
-import { localizePath, locales, type Locale } from "@/lib/locale";
+import { ui as t } from "@/lib/ui-text";
 import { site, withBase } from "@/lib/site";
-import { withTrailingSlash } from "@/lib/trailing-slash";
 
 // The dialog and its fuzzy matcher load on the first open, not with the header.
 const SearchDialog = lazy(() => import("@/components/search-dialog").then((m) => ({ default: m.SearchDialog })));
 
 function SearchLauncher() {
-	const t = useT();
 	const isMac = useIsMac();
 	const [opened, setOpened] = useState(false);
 	const [open, setOpen] = useState(false);
@@ -68,59 +65,7 @@ function GitHubIcon({ className }: { className?: string }) {
 	);
 }
 
-const LANGUAGE_NAMES: Record<Locale, { short: string; name: string }> = {
-	en: { short: "EN", name: "English" },
-	"pt-br": { short: "PT", name: "Português (Brasil)" },
-};
-
-/** Plain links to the same page in each locale: no script, no cookie, no redirect by browser language. */
-function LanguageSwitcher({ switcher }: { switcher: Record<Locale, string> }) {
-	const t = useT();
-	const current = useLocale();
-
-	return (
-		<nav aria-label={t.language} className="flex items-center">
-			{locales.map((l) => (
-				<a
-					key={l}
-					href={withBase(withTrailingSlash(switcher[l]))}
-					lang={l === "en" ? "en" : "pt-BR"}
-					hrefLang={l === "en" ? "en" : "pt-BR"}
-					title={LANGUAGE_NAMES[l].name}
-					aria-label={LANGUAGE_NAMES[l].name}
-					aria-current={l === current ? "true" : undefined}
-					className={`inline-flex h-8 items-center rounded-lg px-2 text-xs font-semibold transition-colors ${
-						l === current ? "bg-accent-soft text-accent" : "text-muted hover:bg-hover hover:text-fg"
-					}`}
-				>
-					{LANGUAGE_NAMES[l].short}
-				</a>
-			))}
-		</nav>
-	);
-}
-
-export function Header({
-	groups,
-	locale,
-	switcher,
-}: {
-	groups: NavGroup[];
-	locale: Locale;
-	/** The same page in each locale, as a served path without the base path. */
-	switcher: Record<Locale, string>;
-}) {
-	return (
-		<LocaleProvider locale={locale}>
-			<HeaderBody groups={groups} switcher={switcher} />
-		</LocaleProvider>
-	);
-}
-
-function HeaderBody({ groups, switcher }: { groups: NavGroup[]; switcher: Record<Locale, string> }) {
-	const t = useT();
-	const locale = useLocale();
-
+export function Header({ groups }: { groups: NavGroup[] }) {
 	return (
 		<Providers>
 			<header className="sticky top-0 z-40 h-(--header-h) border-b border-border bg-bg/80 backdrop-blur-md supports-[backdrop-filter]:bg-bg/70">
@@ -141,7 +86,7 @@ function HeaderBody({ groups, switcher }: { groups: NavGroup[]; switcher: Record
 							{t.docs}
 						</Link>
 						<a
-							href={withBase(localizePath(locale, "/llms.txt"))}
+							href={withBase("/llms.txt")}
 							target="_blank"
 							rel="noreferrer"
 							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-fg sm:inline-flex"
@@ -165,7 +110,6 @@ function HeaderBody({ groups, switcher }: { groups: NavGroup[]; switcher: Record
 								<GitHubIcon className="size-4" />
 							</a>
 						</IconTooltip>
-						<LanguageSwitcher switcher={switcher} />
 						<ThemeToggle />
 					</div>
 				</div>
