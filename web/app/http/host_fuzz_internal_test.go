@@ -29,7 +29,7 @@ func FuzzHostCheck(f *testing.F) {
 			return
 		}
 
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		r := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
 		r.URL.Path = path
 		r.Host = host
 

@@ -43,6 +43,7 @@ regexes = [
 	'''(?i)x{8,}|\.\.\.$''',
 	'''correct horse battery|another long password|a brand new password''',
 	'''^(wrong|guess|Show password|Hide password|Password)$''',
+	'''^e2e-[a-z]+-password-[0-9]+$''',  # fake passwords of the network-mode e2e users (web/e2e/support/network.ts)
 ]
 
 # The specifications in docs/sdds/ show example actor ids (key:key_<10 characters>,
@@ -113,3 +114,12 @@ condition = "AND"
 paths = ['''^(?:web/resources/lang/[A-Za-z-]+\.json|site/content/docs/[a-z-]+/self-hosting/[a-z-]+\.mdx)$''']
 regexTarget = "secret"
 regexes = ['''^(?:Password|Senha|@file:/run/secrets/admin_password|choose-a-long-password|a-long-password-here)$''']
+
+# The FFmpeg build inputs are pinned by SHA-256 (64 hex characters) in sources.env; a digest is
+# public data, not a secret. Both conditions must hold, so a real key elsewhere is still reported.
+[[allowlists]]
+description = "SHA-256 digests of the pinned FFmpeg build inputs"
+condition = "AND"
+paths = ['''^\.config/ffmpeg-build/sources\.env$''']
+regexTarget = "line"
+regexes = ['''[A-Z0-9_]+_SHA256="[0-9a-f]{64}"''']
