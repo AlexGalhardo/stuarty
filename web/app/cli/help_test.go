@@ -94,3 +94,22 @@ func TestReferenceDocumentsTheProcessCommands(t *testing.T) {
 		}
 	}
 }
+
+func TestHelpUserCommandsTakeAnEmail(t *testing.T) {
+	t.Parallel()
+
+	for name, want := range map[string]string{
+		"user:create": "vukem-video user:create <email> [--admin]",
+		"user:passwd": "vukem-video user:passwd <email>",
+	} {
+		var out, errOut bytes.Buffer
+
+		if code, handled := Help([]string{"help", name}, &out, &errOut); !handled || code != ExitOK {
+			t.Fatalf("help %s: handled %v, exit %d, %q", name, handled, code, errOut.String())
+		}
+
+		if !strings.Contains(out.String(), want) || strings.Contains(out.String(), "<name>") {
+			t.Errorf("help %s: want usage %q, got %q", name, want, out.String())
+		}
+	}
+}

@@ -373,14 +373,14 @@ var processCommands = []processCommand{
 	{
 		name:    "user:create",
 		summary: "create a user of network mode (the password is asked, never an argument)",
-		usage:   []string{"vukem-video user:create <name>"},
-		example: "vukem-video user:create ana",
+		usage:   []string{"vukem-video user:create <email> [--admin]"},
+		example: "vukem-video user:create ana@example.com --admin",
 	},
 	{
 		name:    "user:passwd",
 		summary: "change the password of a user of network mode",
-		usage:   []string{"vukem-video user:passwd <name>"},
-		example: "vukem-video user:passwd ana",
+		usage:   []string{"vukem-video user:passwd <email>"},
+		example: "vukem-video user:passwd ana@example.com",
 	},
 }
 
