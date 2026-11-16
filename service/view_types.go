@@ -5,7 +5,6 @@ package service
 type ViewFrameRequest struct {
 	ProjectID string `json:"project_id"`
 	At        string `json:"at"`                   // a time; required
-	AssetID   string `json:"asset_id,omitempty"`   // not available in this build
 	MaxTokens int    `json:"max_tokens,omitempty"` // default 800; 100 to 1568
 	Width     int    `json:"width,omitempty"`      // even; exclusive with MaxTokens
 	// Pin, when not 0, must be the current revision (SDD-003 section 6.3). Set
@@ -21,7 +20,6 @@ type ViewSheetRequest struct {
 	Until     string   `json:"until,omitempty"`      // inclusive; default the last frame
 	Count     int      `json:"count,omitempty"`      // default 9; 2 to 16
 	Cols      int      `json:"cols,omitempty"`       // default ceil(sqrt(count))
-	AssetID   string   `json:"asset_id,omitempty"`   // not available in this build
 	MaxTokens int      `json:"max_tokens,omitempty"` // default 1500; 100 to 1568
 	// Pin, when not 0, must be the current revision (SDD-003 section 6.3). Set
 	// by the HTTP adapter from rev; never on the wire of the Service.

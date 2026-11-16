@@ -583,7 +583,6 @@ A section with no data (no transcript yet, an image has no loudness) is absent f
 type ViewFrameRequest struct {
 	ProjectID string `json:"project_id"`
 	At        string `json:"at"`                  // time; required
-	AssetID   string `json:"asset_id,omitempty"`  // view a source asset's normalized media instead of the timeline
 	MaxTokens int    `json:"max_tokens,omitempty"` // default 800; 100 to 1568
 	Width     int    `json:"width,omitempty"`     // CLI and HTTP only; even; exclusive with MaxTokens
 }
@@ -1261,7 +1260,7 @@ A frame is one JPEG (quality 80, 4:2:0). A sheet is one JPEG:
 1. Cells are `count` frames, row-major, `cols` columns (default `ceil(sqrt(count))`) and `ceil(count / cols)` rows. Times are `from + i * (until - from) / (count - 1)` rounded to the nearest frame, or the explicit `times`; the range has both ends included (the first cell is at `from`, the last at `to`).
 2. The canvas has the aspect `cols*aw : rows*ah` and is sized by `ImageSize` with the sheet budget; each cell is the canvas divided by the grid, with a 2-pixel gutter of the project's background colour.
 3. **The time is printed in each cell**: a label in the cell's top-left corner, white text (size `max(12, cell height / 28)` pixels, bundled font Inter, weight 700) on a black box at 70% opacity, reading `<index> <seconds>s f<frame>`, for example `3 1s f30`. The labels are drawn by the same rasterizer as text items. `TestSheetLabelGolden` pins the pixels.
-4. The cell frames come from the export executor (SDD-004), never from a browser preview, so the agent sees what the export will contain. For an asset view (`asset_id`) the frames come from the asset's normalized media through the same executor path with a default timeline of that asset.
+4. The cell frames come from the export executor (SDD-004), never from a browser preview, so the agent sees what the export will contain. Viewing a source asset is not part of `view` (VV-019); a file is inspected with `media_inspect`.
 5. A frame or sheet is served from `frames/<project id>/<revision>/` when the file already exists. The cache key is `(revision, frame, width)` for a frame and `(revision, sha256 of the time list, canvas width)` for a sheet (**Decision of this SDD**: SDD-000 §9 names only the frame file; sheets use `sheet-<first 12 hex of the key hash>-<width>.jpg`).
 6. NFR-023 (answer within 2 s) is **verified by** `BenchmarkViewSheet9` on the reference machine of SDD-008: median under 2 s for a 9-cell sheet of the 200-item reference project at 1080x1920.
 
@@ -1858,7 +1857,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 ```json
 {
   "name":"view",
-  "description":"See the result. mode=frame returns one image of the timeline at time at; mode=sheet returns a grid of frames with the time printed in each cell (count evenly spaced between from and until, or explicit times). Rendered by the export path: what you see is what export produces. Costs image tokens: read project_get and lint first. asset_id views a source asset instead. frame needs at; sheet takes times, or from, to and count (not both).",
+  "description":"See the result. mode=frame returns one image of the timeline at time at; mode=sheet returns a grid of frames with the time printed in each cell (count evenly spaced between from and until, or explicit times). Rendered by the export path: what you see is what export produces. Costs image tokens: read project_get and lint first. frame needs at; sheet takes times, or from, to and count (not both).",
   "inputSchema":{
     "type":"object",
     "properties":{
@@ -1869,7 +1868,6 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
       "from":{"type":"string"},
       "until":{"type":"string"},
       "count":{"type":"integer","minimum":2,"maximum":16,"default":9},
-      "asset_id":{"type":"string","pattern":"^ast_[0-9a-hjkmnp-tv-z]{10}$"},
       "max_tokens":{"type":"integer","minimum":100,"maximum":1568}
     },
     "required":["project_id"],
@@ -1905,7 +1903,6 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 | `at` | time of the frame; a time beyond the timeline is `E_INVALID_TIME` |
 | `times` | sheet: 2 to 16 explicit times; exclusive with `from`, `until`, `count` (`E_VALIDATION` with the `path` of the second member) |
 | `from`, `until`, `count` | sheet: `count` (default 9) frames evenly spaced from `from` (default `0s`) to `until` (default the last frame), both ends included |
-| `asset_id` | view the source asset (its normalized media) instead of the timeline |
 | `max_tokens` | image token budget: default 800 for a frame and 1,500 for a sheet, maximum 1,568. The service derives the size with `ImageSize` (§3.11); there is no `width` and no `cols` on MCP. There is no `revision` either: only the current revision is rendered (§2.7) |
 
 Result: a text block (§3.9), one `image` block (`image/jpeg`, base64) and `structuredContent` with `revision`, `width`, `height`, `image_tokens`, `cells` and `path`. Images come from the export executor, so they show what the export will produce (ADR-0015 item 8). The time is printed in each sheet cell (§3.11). A client that does not support images in tool results receives the text block and the `path` (the file is in `<workspace>/frames/`).
@@ -2323,7 +2320,7 @@ Every path argument (`media:import <path>`, `template:import <path>`) is made ab
 | `media:list` | `media:list --project <id> [--cursor c] [--limit n]` | `--cursor`; `--limit` int 50 | none | `MediaListResult` | P |
 | `media:trash` | `media:trash <asset id> --project <id>` | none | none | `MediaStateResult` | A |
 | `media:restore` | `media:restore <asset id> --project <id>` | none | none | `MediaStateResult` | A |
-| `view` | `view --project <id> [--mode frame\|sheet] [--at t] [--times t1,t2,...] [--from t --until t --count n] [--cols n] [--asset <id>] [--max-tokens n] [--width px]` | `--mode` string `frame`; `--at`; `--times`; `--from`; `--until`; `--count` int 9; `--cols` int; `--asset`; `--max-tokens` int 800 (sheet 1,500); `--width` int | none | `ViewResult` without `image_base64` (the image is the file in `path`; with a remote server the CLI downloads the image from the byte-serving route to a temporary file on the client and prints that path) | P |
+| `view` | `view --project <id> [--mode frame\|sheet] [--at t] [--times t1,t2,...] [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]` | `--mode` string `frame`; `--at`; `--times`; `--from`; `--until`; `--count` int 9; `--cols` int; `--max-tokens` int 800 (sheet 1,500); `--width` int | none | `ViewResult` without `image_base64` (the image is the file in `path`; with a remote server the CLI downloads the image from the byte-serving route to a temporary file on the client and prints that path) | P |
 | `lint` | `lint --project <id> [--severity error\|warning] [--cursor c] [--limit n] [--strict]` | `--severity` string `warning`; `--cursor`; `--limit` int 25; `--strict` bool false | none | `LintResult` | P |
 | `export` | `export --project <id> [--format f]` | `--format` mp4 (default), gif, wav or aac (no `--start` or `--end`: the service refuses an export range, VV-018, until the engine can export one); `--wait`, `--timeout` | none | `Job` | P |
 | `transcribe` | `transcribe --project <id> --asset <id> [--language auto]` | `--asset` string, required; `--language` string `auto`; `--wait`, `--timeout` | none | `Job` | A |
@@ -2569,8 +2566,8 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `media.inspect` | `GET /projects/{id}/media/{asset_id}` | `sections`, `min_silence`, `cursor`, `limit` | none | 200 `MediaInspectResult` | read | 409 `E_ASSET_NOT_READY` |
 | `media.trash` | `POST /projects/{id}/media/{asset_id}/trash` | `dry_run` | none | 200 `MediaStateResult` | media | none |
 | `media.restore` | `POST /projects/{id}/media/{asset_id}/restore` | `dry_run` | none | 200 `MediaStateResult` | media | none |
-| `projects.frame` | `GET /projects/{id}/frame` | `at`, `rev`, `asset_id`, `max_tokens`, `width` | none | 200 `image/jpeg` (§6.5) | read | 400 `E_INVALID_TIME`; 409 `E_INVALID_STATE` when `rev` is given and is not the current revision (`details.current_revision`); 422 `E_LIMIT_EXCEEDED` |
-| `projects.sheet` | `GET /projects/{id}/sheet` | `times`, `from`, `until` (`to` is a deprecated alias until 1.0), `count`, `cols`, `rev`, `asset_id`, `max_tokens` | none | 200 `image/jpeg` | read | as frame |
+| `projects.frame` | `GET /projects/{id}/frame` | `at`, `rev`, `max_tokens`, `width` | none | 200 `image/jpeg` (§6.5) | read | 400 `E_INVALID_TIME`; 409 `E_INVALID_STATE` when `rev` is given and is not the current revision (`details.current_revision`); 422 `E_LIMIT_EXCEEDED` |
+| `projects.sheet` | `GET /projects/{id}/sheet` | `times`, `from`, `until` (`to` is a deprecated alias until 1.0), `count`, `cols`, `rev`, `max_tokens` | none | 200 `image/jpeg` | read | as frame |
 | `projects.plan` | `GET /projects/{id}/plan` | `from`, `until` (`to` is a deprecated alias until 1.0), `rev`, `width` (SDD-004 §10) | none | 200 `PlanWindowResult` | read | 409 `E_INVALID_STATE` as frame |
 | `projects.snap_points` | `GET /projects/{id}/snap-points` | `rev`, `words` (SDD-012 §7.8) | none | 200 `SnapPointsResult` | read | 409 `E_INVALID_STATE` as frame |
 | `projects.lint` | `GET /projects/{id}/lint` | `severity`, `cursor`, `limit` | none | 200 `LintResult` | read | none |

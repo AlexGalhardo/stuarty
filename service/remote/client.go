@@ -473,7 +473,6 @@ func (c *Client) PlanWindow(ctx context.Context, req service.PlanWindowRequest) 
 func (c *Client) ViewFrame(ctx context.Context, req service.ViewFrameRequest) (*service.ViewResult, error) {
 	q := url.Values{}
 	setIf(q, "at", req.At)
-	setIf(q, "asset_id", req.AssetID)
 
 	if req.MaxTokens > 0 {
 		q.Set("max_tokens", strconv.Itoa(req.MaxTokens))
@@ -492,7 +491,6 @@ func (c *Client) ViewSheet(ctx context.Context, req service.ViewSheetRequest) (*
 	setIf(q, "times", strings.Join(req.Times, ","))
 	setIf(q, "from", req.From)
 	setIf(q, "until", req.Until)
-	setIf(q, "asset_id", req.AssetID)
 
 	for k, v := range map[string]int{"count": req.Count, "cols": req.Cols, "max_tokens": req.MaxTokens} {
 		if v > 0 {

@@ -17,7 +17,6 @@ type frameIn struct {
 	ID        string `json:"id"                   validate:"required"`
 	At        string `json:"at,omitempty"                             doc:"The time to render; required."`
 	Rev       int64  `json:"rev,omitempty"                            doc:"Must be the current revision when given."`
-	AssetID   string `json:"asset_id,omitempty"`
 	MaxTokens int    `json:"max_tokens,omitempty"`
 	Width     int    `json:"width,omitempty"`
 }
@@ -31,7 +30,6 @@ type sheetIn struct {
 	Count     int    `json:"count,omitempty"`
 	Cols      int    `json:"cols,omitempty"`
 	Rev       int64  `json:"rev,omitempty"                            doc:"Must be the current revision when given."`
-	AssetID   string `json:"asset_id,omitempty"`
 	MaxTokens int    `json:"max_tokens,omitempty"`
 }
 
@@ -39,7 +37,7 @@ type sheetIn struct {
 // the ViewResult as JSON when the client asks for application/json.
 func (h *apiHandler) projectsFrame(c *web.Ctx, in frameIn) (noIn, error) {
 	res, err := h.Service.ViewFrame(c.Context(), service.ViewFrameRequest{
-		ProjectID: in.ID, At: in.At, AssetID: in.AssetID, MaxTokens: in.MaxTokens, Width: in.Width, Pin: in.Rev,
+		ProjectID: in.ID, At: in.At, MaxTokens: in.MaxTokens, Width: in.Width, Pin: in.Rev,
 	})
 	if err != nil {
 		return noIn{}, err
@@ -63,7 +61,7 @@ func (h *apiHandler) projectsSheet(c *web.Ctx, in sheetIn) (noIn, error) {
 
 	res, err := h.Service.ViewSheet(c.Context(), service.ViewSheetRequest{
 		ProjectID: in.ID, Times: times, From: in.From, Until: until, Count: in.Count, Cols: in.Cols,
-		AssetID: in.AssetID, MaxTokens: in.MaxTokens, Pin: in.Rev,
+		MaxTokens: in.MaxTokens, Pin: in.Rev,
 	})
 	if err != nil {
 		return noIn{}, err

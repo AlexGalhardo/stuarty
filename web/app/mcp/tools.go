@@ -391,7 +391,6 @@ func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 		From      string   `json:"from"`
 		Until     string   `json:"until"`
 		Count     int      `json:"count"`
-		AssetID   string   `json:"asset_id"`
 		MaxTokens int      `json:"max_tokens"`
 	}](raw)
 	if err != nil {
@@ -410,11 +409,11 @@ func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 
 		res, err = svc.ViewSheet(ctx, service.ViewSheetRequest{
 			ProjectID: in.ProjectID, Times: in.Times, From: in.From, Until: in.Until, Count: in.Count,
-			AssetID: in.AssetID, MaxTokens: in.MaxTokens,
+			MaxTokens: in.MaxTokens,
 		})
 	} else {
 		res, err = svc.ViewFrame(ctx, service.ViewFrameRequest{
-			ProjectID: in.ProjectID, At: in.At, AssetID: in.AssetID, MaxTokens: in.MaxTokens,
+			ProjectID: in.ProjectID, At: in.At, MaxTokens: in.MaxTokens,
 		})
 	}
 

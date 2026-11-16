@@ -469,7 +469,7 @@ Both operations use the compositor, so they show what the export produces.
 
 **`ViewSheet(project, from, to, count, cols)`.** Composes `count` frames (default 9, maximum 16) evenly spaced from `from` to `to`, both ends included (default the whole timeline: `0s` to the last frame), arranged in `cols` columns (default `ceil(sqrt(count))`, so 3 for 9 cells; `cols` is CLI and HTTP only). The canvas is sized by `ImageSize` with the sheet budget (`max_tokens`, default 1,500, maximum 1,568), so a 9:16 project gives a 804×1428 canvas (1,479 image tokens, within the 1,600 of NFR-022), with a 2-pixel gutter. The frame's time is drawn by the rasterizer in the top-left corner of each cell, in white (bundled font Inter, weight 700) on a black box at 70% opacity, as `<index> <seconds>s f<frame>` (for example `3 1s f30`). The JPEG has quality 80. Returns one JPEG. The response also lists the frame and time of each cell as text.
 
-**A frame of an asset** is the `asset_id` member of `view` (and of the HTTP frame and sheet routes), not a `MediaInspect` option: it returns a frame of the normalized media, uncomposed, with the same sizes. Details of the sizes, the label and the cache keys are in SDD-003 §3.11.
+**A frame of an asset** is not offered: `view` and the HTTP frame and sheet routes render the timeline only (VV-019); the `asset_id` member was removed because it could only answer "not available". Details of the sizes, the label and the cache keys are in SDD-003 §3.11.
 
 ## 10. The preview executor
 
