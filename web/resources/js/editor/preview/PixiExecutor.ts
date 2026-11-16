@@ -16,12 +16,14 @@ import {
 import { fetchBitmap } from "../api/bitmaps";
 import type { ApiClient } from "../api/client";
 import type { PlanLayer, PlanMediaLayer, PlanWindow } from "../api/types";
-import { proxyUrl, thumbnailUrl } from "../api/urls";
+import { chunksUrl, proxyUrl, thumbnailUrl } from "../api/urls";
 import "pixi.js/advanced-blend-modes";
 
 import { AudioGraph } from "./audioGraph";
 import { pixiBlendMode } from "./blend";
 import { ChromaKeyFilter } from "./chromaKey";
+import { DecodeClient, decoderPreference } from "./decode/client";
+import { createDecodeWorker } from "./decode/createWorker";
 import { EffectFilter } from "./effectFilter";
 import { type EffectPass, effectPasses } from "./effects";
 import { pixiColorMatrix } from "./layerFilters";
@@ -127,6 +129,11 @@ export class PixiExecutor implements PreviewExecutor {
 	private windows: PlanWindows;
 	private readonly videos: MediaPool;
 	private readonly sounds: MediaPool;
+	// Decodes the proxies with WebCodecs in a worker; an asset it cannot decode
+	// is drawn from a pooled <video> (SDD-013 section 5.3).
+	private readonly decoder: DecodeClient<VideoFrame>;
+	// The timestamp, in microseconds, of the last decoded frame drawn exactly.
+	private decodedUs = -1;
 	private readonly drawn = new Map<string, Drawn>();
 	private readonly bitmaps = new Lru<string, Texture>(BITMAP_CACHE, (_k, t) =>
 		t.destroy(true),
@@ -144,6 +151,14 @@ export class PixiExecutor implements PreviewExecutor {
 			Promise.reject(new Error("no project")),
 		);
 		const redraw = (): void => this.redraw();
+		this.decoder = new DecodeClient<VideoFrame>({
+			preference: decoderPreference(window.location.search),
+			createWorker: createDecodeWorker,
+			indexUrl: (asset) => chunksUrl(this.info?.projectId ?? "", asset),
+			proxyUrl: (asset) => proxyUrl(this.info?.projectId ?? "", asset),
+			onChange: redraw,
+			now: () => performance.now(),
+		});
 		this.videos = new MediaPool(
 			"video",
 			() => this.context,
@@ -165,6 +180,7 @@ export class PixiExecutor implements PreviewExecutor {
 			videoElements: this.videos.size,
 			planWindows: this.windows.size,
 			droppedFrames: this.videos.droppedFrames(),
+			...this.decoder.stats,
 		};
 	}
 
@@ -224,6 +240,7 @@ export class PixiExecutor implements PreviewExecutor {
 		cancelAnimationFrame(this.raf);
 		this.videos.dispose();
 		this.sounds.dispose();
+		this.decoder.dispose();
 		this.bitmaps.clear();
 		for (const texture of this.stills.values()) texture.destroy(true);
 		this.stills.clear();
@@ -468,7 +485,31 @@ export class PixiExecutor implements PreviewExecutor {
 		this.videos.idle(usedVideos);
 		this.syncAudio(plan, frame, mode.playing);
 		app.render();
+		// A frame evicted from the decode cache is closed only after the render
+		// that may have read it.
+		this.decoder.sweep();
+		this.publishDecode();
 		this.markDrawn(frame);
+	}
+
+	// What the page shows about the decode path, for the end-to-end specs: the
+	// open VideoFrames and their peak, the assets that fell back to <video> and
+	// the timestamp of the last frame drawn exactly. Written on change only.
+	private publishDecode(): void {
+		const canvas = this.canvas;
+		if (canvas === null) return;
+		const { openFrames, peakOpenFrames, fallbackAssets } = this.decoder.stats;
+		const values: Record<string, string> = {
+			"data-open-frames": String(openFrames),
+			"data-peak-frames": String(peakOpenFrames),
+			"data-fallback-assets": String(fallbackAssets),
+		};
+		if (this.complete && this.decodedUs >= 0) {
+			values["data-frame-us"] = String(this.decodedUs);
+		}
+		for (const [name, value] of Object.entries(values)) {
+			if (canvas.getAttribute(name) !== value) canvas.setAttribute(name, value);
+		}
 	}
 
 	// The canvas says which frame it shows once every layer of that frame is on
@@ -711,6 +752,8 @@ export class PixiExecutor implements PreviewExecutor {
 		if (layer.asset_kind === "image" || !decoding.has(layer.item)) {
 			return this.still(info.projectId, layer);
 		}
+		const decoded = this.decodedTexture(layer, frame, mode, info);
+		if (decoded !== "fallback") return decoded;
 		usedVideos.add(layer.asset);
 		const { element } = this.videos.acquire(
 			layer.asset,
@@ -725,6 +768,58 @@ export class PixiExecutor implements PreviewExecutor {
 			this.complete = false;
 		}
 		return this.videoTexture(video, layer);
+	}
+
+	// The layer drawn from a decoded frame: null while the first frame is not
+	// there, "fallback" when this asset is drawn by <video> instead.
+	private decodedTexture(
+		layer: PlanMediaLayer,
+		frame: number,
+		mode: DrawMode,
+		info: ProjectInfo,
+	): Texture | null | "fallback" {
+		if (!this.decoder.handles(layer.asset)) return "fallback";
+		const at = Math.min(
+			Math.max(frame - layer.first, 0),
+			layer.source_seconds.length - 1,
+		);
+		const seconds = layer.source_seconds[at] ?? 0;
+		// A reversed item reads backwards, which a decoder does not do forward:
+		// every frame is a seek.
+		const forward =
+			mode.playing && !videoDrive(layer.source_seconds, at, info.fps).seek;
+		const step = Math.round((1_000_000 * info.fps.den) / info.fps.num);
+		const result = this.decoder.request(
+			layer.asset,
+			Math.round(seconds * 1_000_000),
+			forward ? "play" : "seek",
+			step,
+		);
+		if (result.state === "fallback") return "fallback";
+		if (result.state === "pending") {
+			this.complete = false;
+			return null;
+		}
+		if (result.exact) this.decodedUs = result.timestamp;
+		else this.complete = false;
+		return this.frameTexture(layer, result.frame);
+	}
+
+	// One texture per asset and crop whose source is swapped for each new
+	// frame; the frame stays open until the decode cache evicts it.
+	private frameTexture(layer: PlanMediaLayer, frame: VideoFrame): Texture {
+		const key = `frame:${layer.asset}:${layer.crop.join(",")}`;
+		let texture = this.stills.get(key);
+		if (texture === undefined) {
+			const source = new ImageSource({ resource: frame });
+			const [x, y, w, h] = layer.crop;
+			texture = new Texture({ source, frame: new Rectangle(x, y, w, h) });
+			this.stills.set(key, texture);
+		} else if (texture.source.resource !== frame) {
+			texture.source.resource = frame;
+			texture.source.update();
+		}
+		return texture;
 	}
 
 	private driveVideo(

@@ -186,7 +186,11 @@ function checkFile(sf: SourceFile, rel: string, fileLabel: string): Finding[] {
 	};
 
 	const folder = rel.split("/")[0];
-	const inApiOrBoot = folder === "api" || folder === "boot";
+	// The decode worker of the preview reads the proxy and its chunk index in byte
+	// ranges (SDD-013 section 5.3); it edits nothing and holds no project data.
+	const isDecodeWorker = rel === "preview/decode/decodeWorker.ts";
+	const mayCreateWorker = rel === "preview/decode/createWorker.ts";
+	const inApiOrBoot = folder === "api" || folder === "boot" || isDecodeWorker;
 	const isSync = rel === "state/sync.ts";
 	const isPrefs = rel === "state/prefs.ts";
 	const r5Allowed = R5_ALLOWLIST.some((entry) => rel === entry || rel.startsWith(entry));
@@ -234,7 +238,7 @@ function checkFile(sf: SourceFile, rel: string, fileLabel: string): Finding[] {
 			}
 			case SyntaxKind.NewExpression: {
 				const callee = text(n.expression);
-				if (callee === "Worker" || callee === "SharedWorker") {
+				if (callee === "SharedWorker" || (callee === "Worker" && !mayCreateWorker)) {
 					report(n, "R1", `new ${callee}(...) is not allowed`);
 				}
 				if (!inApiOrBoot && ["EventSource", "XMLHttpRequest"].includes(callee)) {
