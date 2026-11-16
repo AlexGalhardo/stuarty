@@ -3,6 +3,8 @@
 package bootstrap
 
 import (
+	"context"
+
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/inertia"
 
@@ -30,6 +32,8 @@ func New(opts ...vukem.Option) (*vukem.App, error) { return NewWith(nil, opts...
 // NewWith is New with the HTTP API of SDD-003 section 6 installed over the
 // given dependencies; nil installs none (the commands that never serve).
 func NewWith(api *httpapi.Deps, opts ...vukem.Option) (*vukem.App, error) {
+	var app *vukem.App
+
 	base := []vukem.Option{
 		vukem.WithName("Vukem Video"),
 		vukem.WithEnvDefaults(defaultEnv),
@@ -46,7 +50,7 @@ func NewWith(api *httpapi.Deps, opts ...vukem.Option) (*vukem.App, error) {
 			vukem.WithRoutes(httpapi.Routes(api)),
 			vukem.WithViews(resources.Views()),
 			vukem.WithVite(resources.Public()),
-			vukem.WithInertia(inertia.Config{}),
+			vukem.WithInertia(errorPages(func() *vukem.App { return app })),
 			vukem.WithTranslations(resources.Lang()),
 		)
 	}
@@ -60,7 +64,9 @@ func NewWith(api *httpapi.Deps, opts ...vukem.Option) (*vukem.App, error) {
 		base = append(base, vukem.WithRoutes(routes.Pages(api)))
 	}
 
-	app, err := vukem.New(append(base, opts...)...)
+	var err error
+
+	app, err = vukem.New(append(base, opts...)...)
 	if err != nil {
 		return nil, err
 	}
@@ -68,4 +74,26 @@ func NewWith(api *httpapi.Deps, opts ...vukem.Option) (*vukem.App, error) {
 	app.AddCommand(Commands()...)
 
 	return app, nil
+}
+
+// errorPages makes a page that does not exist answer the Inertia error page with
+// the layout instead of the bare status line (ErrorFullPages). A route that does
+// not match never runs the route middleware that shares the catalogue, so the
+// config shares the one of the default locale for the error page; a matched page
+// shares its own and wins.
+func errorPages(app func() *vukem.App) inertia.Config {
+	lazy := func(value func(*vukem.App) any) func(context.Context) (any, error) {
+		return func(context.Context) (any, error) { return value(app()), nil }
+	}
+
+	return inertia.Config{
+		ErrorFullPages: true,
+		Shared: inertia.Props{
+			"locale":  lazy(func(a *vukem.App) any { return a.I18n.Default() }),
+			"locales": lazy(func(a *vukem.App) any { return a.I18n.Locales() }),
+			"messages": lazy(func(a *vukem.App) any {
+				return a.I18n.Messages(a.I18n.Default(), "ui.")
+			}),
+		},
+	}
 }

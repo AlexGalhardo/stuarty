@@ -228,9 +228,13 @@ func editorPage(c *web.Ctx, d *httpapi.Deps, app *vukem.App) error {
 		return editorFailure(c, err)
 	}
 
-	// A trashed project opens read-only from ALPHA; in the Prototype it is gone.
+	// A trashed project does not open in the editor: the page says where it is and
+	// how to bring it back (SDD-012 section 2.1, the trash of the projects page).
 	if head.State != "active" {
-		return errs.ErrNotFound
+		return inertia.RenderStatus(c, http.StatusNotFound, "Error", inertia.Props{
+			"status": http.StatusNotFound, "message": "This project is in the trash.",
+			"hint": "restore it from the trash on the projects page, then open it again",
+		})
 	}
 
 	locale := i18n.Locale(c.Context())
