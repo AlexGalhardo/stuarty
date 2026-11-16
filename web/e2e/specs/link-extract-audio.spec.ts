@@ -36,7 +36,9 @@ test.describe("link-extract-audio", () => {
 		expect(edits[0]?.operations).toHaveLength(1);
 		expect(edits[0]?.operations[0]?.op).toBe("item.link");
 		expect(
-			(edits[0]?.operations[0]?.args.item_ids as string[]).slice().sort(),
+			((edits[0]?.operations[0]?.args.item_ids ?? []) as string[])
+				.slice()
+				.sort(),
 		).toEqual([...seeded.itemIds].sort());
 		await expect(page.locator("[data-badge=link]")).toHaveCount(2);
 		const ids = await page
@@ -111,10 +113,10 @@ test.describe("link-extract-audio", () => {
 				page.evaluate(
 					(id) =>
 						(
-							window.__vv?.document as {
-								items: Record<string, { audio_muted?: boolean }>;
-							}
-						).items[id]?.audio_muted,
+							window.__vv?.document as
+								| { items: Record<string, { audio_muted?: boolean }> }
+								| undefined
+						)?.items[id]?.audio_muted,
 					clipId,
 				),
 			)
