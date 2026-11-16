@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -174,5 +175,35 @@ func assertReason(t *testing.T, err error, want Reason) {
 	}
 	if se.Message == "" {
 		t.Error("the message for the dialog is empty")
+	}
+}
+
+// The child must not outlive the shell: closing the job handle (what a crash does) ends it (VV-006).
+func TestBoundChildDiesWithTheShell(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("the job object is Windows only")
+	}
+
+	cmd := exec.Command("ping", "-n", "60", "127.0.0.1")
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+
+	done := make(chan struct{})
+	go func() { _ = cmd.Wait(); close(done) }()
+
+	closeJob, err := bindToShell(cmd)
+	if err != nil {
+		_ = cmd.Process.Kill()
+		t.Fatal(err)
+	}
+
+	closeJob()
+
+	select {
+	case <-done:
+	case <-time.After(10 * time.Second):
+		_ = cmd.Process.Kill()
+		t.Fatal("the child survived the close of the job")
 	}
 }

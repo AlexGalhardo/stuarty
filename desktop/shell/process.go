@@ -86,10 +86,11 @@ type Server struct {
 	// Token is the workspace local token.
 	Token string
 
-	cmd   *exec.Cmd
-	grace time.Duration
-	done  chan struct{}
-	once  sync.Once
+	cmd     *exec.Cmd
+	release func() // closes the job object tying the child to this process
+	grace   time.Duration
+	done    chan struct{}
+	once    sync.Once
 }
 
 // URL is the base address of the server.
@@ -137,7 +138,14 @@ func Start(ctx context.Context, cfg Config) (*Server, error) {
 	if err := cmd.Start(); err != nil {
 		return nil, &StartupError{Reason: ReasonSpawn, Message: "Cannot start " + cfg.Binary, Err: err}
 	}
-	s := &Server{cmd: cmd, grace: cfg.StopGrace, done: make(chan struct{})}
+	release, err := bindToShell(cmd)
+	if err != nil {
+		_ = cmd.Process.Kill()
+		_ = cmd.Wait()
+
+		return nil, &StartupError{Reason: ReasonSpawn, Message: "Cannot tie the server to the window", Err: err}
+	}
+	s := &Server{cmd: cmd, grace: cfg.StopGrace, done: make(chan struct{}), release: release}
 	go func() {
 		_ = cmd.Wait()
 		close(s.done)
@@ -237,6 +245,7 @@ func (s *Server) Stop() {
 			_ = s.cmd.Process.Kill()
 			<-s.done
 		}
+		s.release()
 	})
 }
 
