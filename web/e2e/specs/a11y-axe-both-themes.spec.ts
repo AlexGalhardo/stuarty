@@ -88,6 +88,9 @@ for (const lang of ["en", "pt-BR"] as const) {
 			// The dark theme is checked with the system in light mode: the default
 			// ignores prefers-color-scheme (SDD-012 section 17 item 1).
 			test.use({ colorScheme: theme === "dark" ? "light" : "dark" });
+			// From 1440 px the palette button shows its text, whose name the
+			// label must start with (VV-064); below it the button is an icon.
+			test.use({ viewport: { width: 1600, height: 900 } });
 
 			test(`the editor has no serious or critical violation in ${theme} in ${lang}`, async ({
 				page,
