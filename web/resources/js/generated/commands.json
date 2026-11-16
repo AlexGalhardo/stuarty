@@ -2172,6 +2172,12 @@
 					"description": "Drop the audio of a clip.",
 					"type": "boolean"
 				},
+				"denoise": {
+					"description": "Noise reduction strength, 0 (off) to 1.",
+					"maximum": 1,
+					"minimum": 0,
+					"type": "number"
+				},
 				"fade_in": {
 					"description": "Fade-in length; 0s removes it.",
 					"type": "string",
@@ -2198,7 +2204,7 @@
 			],
 			"type": "object"
 		},
-		"description": "Sets the given values. Volume 1, fades of 0 and audio_muted false clear the stored value. audio_muted applies to clip items only. The two fades together cannot be longer than the item.",
+		"description": "Sets the given values. Volume 1, fades of 0, audio_muted false and denoise 0 clear the stored value. audio_muted applies to clip items only. denoise is the noise reduction strength, 0 to 1. The two fades together cannot be longer than the item.",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -2216,7 +2222,7 @@
 		"name": "item.set_audio",
 		"phase": "alpha",
 		"scope": "edit",
-		"summary": "Sets the volume, the fades or the mute flag of a clip or audio item."
+		"summary": "Sets the volume, the fades, the mute flag or the noise reduction of a clip or audio item."
 	},
 	{
 		"args_schema": {

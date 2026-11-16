@@ -92,6 +92,16 @@ func init() {
 	sa("ok_same_values_noop", arg(`"volume": 1, "audio_muted": false`), cl())
 	sa("ok_fades_only_when_volume_has_keyframes", arg(`"fade_in": "1s"`),
 		cl(func(it *timeline.Item) { it.Keyframes = timeline.Keyframes{"volume": {kf(0, 1), kf(30, 0.5)}} }))
+	sa("ok_denoise", arg(`"denoise": 0.6`), cl())
+	sa("ok_denoise_boundaries_0_and_1", arg(`"denoise": 1`), cl(func(it *timeline.Item) { it.Denoise = 0.4 }))
+	sa("ok_denoise_0_removes_field", arg(`"denoise": 0`), cl(func(it *timeline.Item) { it.Denoise = 0.4 }))
+	sa("ok_denoise_on_audio_item", fmt.Sprintf(`{"item_id": %q, "denoise": 0.8}`, itemB),
+		func() *B { return base().audio(itemB, 0, 60, 0) })
+	sa("ok_denoise_rounded_to_3_decimals", arg(`"denoise": 0.12345`), cl())
+	sa("ok_denoise_when_volume_has_keyframes", arg(`"denoise": 0.5`),
+		cl(func(it *timeline.Item) { it.Keyframes = timeline.Keyframes{"volume": {kf(0, 1), kf(30, 0.5)}} }))
+	sa("err_validation_denoise_above_1", arg(`"denoise": 1.2`), cl())
+	sa("err_validation_denoise_negative", arg(`"denoise": -0.1`), cl())
 	sa("err_validation_no_argument", fmt.Sprintf(`{"item_id": %q}`, itemA), cl())
 	sa("err_validation_volume_4_001", arg(`"volume": 4.001`), cl())
 	sa("err_invalid_time_no_unit", arg(`"fade_in": "2"`), cl())

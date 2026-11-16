@@ -1,6 +1,6 @@
 {
   "code": "E_VALIDATION",
-  "message": "args: give at least one of volume, fade_in, fade_out, audio_muted.",
+  "message": "args: give at least one of volume, fade_in, fade_out, audio_muted, denoise.",
   "hint": "Send for example {\"volume\": ...}.",
   "retryable": false,
   "path": "args"

@@ -1,5 +1,6 @@
 {
   "audio_muted": false,
+  "denoise": 0,
   "fade_in": {
     "frame": 0,
     "requested": null,

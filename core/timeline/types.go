@@ -196,8 +196,10 @@ type Item struct {
 	Speed      Rational `json:"speed"                                                                              default:"1/1"`
 	Volume     float64  `json:"volume"                                                                     min:"0" default:"1"   max:"4"`
 	AudioMuted bool     `json:"audio_muted,omitempty"`
-	FadeIn     int      `json:"fade_in,omitempty"                                                          min:"0"`
-	FadeOut    int      `json:"fade_out,omitempty"                                                         min:"0"`
+	// Clip and audio, optional and additive (SDD-001 §3.5): noise reduction strength, 0 (off) to 1.
+	Denoise float64 `json:"denoise,omitempty"  min:"0" max:"1"`
+	FadeIn  int     `json:"fade_in,omitempty"  min:"0"`
+	FadeOut int     `json:"fade_out,omitempty" min:"0"`
 
 	// Clip only.
 	Fit        string  `json:"fit"                  default:"cover" enum:"cover,contain,none"`

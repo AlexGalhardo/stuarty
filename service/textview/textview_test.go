@@ -389,6 +389,14 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 
 	clip.Disabled = false
 
+	clip.Denoise = 0.5
+
+	if got := itemLine(fps, &clip); !strings.Contains(got, "nr:0.5") {
+		t.Errorf("denoise is not flagged: %s", got)
+	}
+
+	clip.Denoise = 0
+
 	clip.Mask = &timeline.Mask{Shape: "ellipse", X: 0.1, Y: 0.1, Width: 0.5, Height: 0.5, Feather: 8}
 
 	if m := extraFields(fps, &clip)["mask"]; !strings.Contains(m, `"shape":"ellipse"`) ||

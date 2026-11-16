@@ -256,7 +256,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `item.rename` | A | `item_id`, `name` | Sets the label |
 | `item.set_transform` | A | `item_id`, `x?`, `y?`, `scale?`, `rotation?`, `opacity?` | Sets the given fields on a visual item. A property that has keyframes cannot be set this way: `E_INVALID_STATE` with the hint to use `keyframe.set` or `keyframe.clear` |
 | `item.set_transition` | A | `item_id`, `edge` (`"in"`, `"out"`), `kind` (a transition kind or `null` to remove), `duration?` (time, as a length; default `"0.5s"`) | Sets or removes the transition on a visual item |
-| `item.set_audio` | A | `item_id`, `volume?`, `fade_in?` (time, as a length), `fade_out?`, `audio_muted?` | Sets audio properties on a `clip` or `audio` item |
+| `item.set_audio` | A | `item_id`, `volume?`, `fade_in?` (time, as a length), `fade_out?`, `audio_muted?`, `denoise?` | Sets audio properties on a `clip` or `audio` item; after BETA also the noise reduction strength (TASK-0233) |
 | `item.crossfade` | A | `from_item_id`, `to_item_id`, `duration` (time, as a length), `track_id?` | Helper for RF-023. Requires two visual items on different tracks where `from` starts before `to` and the two overlap in time by at least `duration`. Sets `transition_out: fade` on `from` and `transition_in: fade` on `to`, both of that duration, and the matching audio fades. For two neighbours that touch on one track, `track_id` (another visual track) moves `to` there and makes it start `duration` earlier, from the source it has before the cut (C.20, VV-042) |
 | `timeline.close_gap` | A | `track_id`, `at` (time), `ripple?` (`"track"` default, `"all"`) | Finds the empty range on the track that contains frame `at` and moves later items earlier by its length. Fails with `E_INVALID_STATE` when `at` is inside an item or after the last item |
 
@@ -1773,8 +1773,9 @@ Sets volume, fades or the mute flag of a clip or audio item.
 | `fade_in` | time, as a length (may be 0) | no | unchanged | `"0s"` removes the fade |
 | `fade_out` | time, as a length (may be 0) | no | unchanged | |
 | `audio_muted` | boolean | no | unchanged | `clip` items only |
+| `denoise` | number | no | unchanged | 0 to 1; added after BETA (TASK-0233); 0 removes the field |
 
-At least one of the four is required.
+At least one of the five is required.
 
 **Preconditions.**
 
@@ -1786,14 +1787,14 @@ At least one of the four is required.
 
 **Postconditions.**
 
-1. Given fields are set; `volume` 1, fades of 0 and `audio_muted` false remove the field.
+1. Given fields are set; `volume` 1, fades of 0, `audio_muted` false and `denoise` 0 remove the field.
 2. `diff` has one `item.updated`; empty when nothing changes. `effective` has the stored `volume`, `audio_muted` and each fade as an A.4 triple.
 
 **Errors.**
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | nothing to set, or `volume` out of range | `args.volume must be between 0 and 4, got 5.` | `Use volume 4 for the loudest setting.` |
+| `E_VALIDATION` | nothing to set, or `volume` or `denoise` out of range | `args.volume must be between 0 and 4, got 5.` | `Use volume 4 for the loudest setting.` |
 | `E_INVALID_TIME` | malformed fade | `args.fade_in "2" has no unit.` | `Use "2s", "60f" or "00:00:02.000".` |
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_TYPE_MISMATCH` | text, shape or caption item; a clip of an image; or `audio_muted` on an `audio` item | `Item itm_s6t7v8w9x0 is a text item and has no audio.` | `Use item.set_transform for visual properties.` |
@@ -1824,8 +1825,16 @@ At least one of the four is required.
 - `ok_audio_item`
 - `ok_same_values_noop`
 - `ok_fades_only_when_volume_has_keyframes`
+- `ok_denoise`
+- `ok_denoise_boundaries_0_and_1`
+- `ok_denoise_0_removes_field`
+- `ok_denoise_on_audio_item`
+- `ok_denoise_rounded_to_3_decimals`
+- `ok_denoise_when_volume_has_keyframes`
 - `err_validation_no_argument`
 - `err_validation_volume_4_001`
+- `err_validation_denoise_above_1`
+- `err_validation_denoise_negative`
 - `err_invalid_time_no_unit`
 - `err_not_found`
 - `err_type_mismatch_text_item`

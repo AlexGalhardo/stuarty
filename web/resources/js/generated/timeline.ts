@@ -68,6 +68,7 @@ export interface Item {
   chroma_key?: ChromaKey;
   contrast?: number;
   crop?: Crop;
+  denoise?: number;
   disabled?: boolean;
   duration: number;
   fade_in?: number;

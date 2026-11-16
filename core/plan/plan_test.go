@@ -969,6 +969,30 @@ func TestMutedProducesNothing(t *testing.T) {
 	}
 }
 
+func TestAudioCarriesDenoise(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	m := timeline.NewItem("itm_m", timeline.ItemAudio, trkSound, 0, 60)
+	m.Asset = astSound
+	put(d, m)
+
+	if got := Audio(d, 0, 60); len(got) != 1 || got[0].Denoise != 0 {
+		t.Fatalf("an item with no denoise must give none: %+v", got)
+	}
+
+	m.Denoise = 0.6
+	put(d, m)
+
+	if got := Audio(d, 0, 60); len(got) != 1 || got[0].Denoise != 0.6 {
+		t.Errorf("source lost the denoise: %+v", got)
+	}
+
+	if w := Window(d, 0, 10); len(w.Audio) != 1 || w.Audio[0].Denoise != 0.6 {
+		t.Errorf("window audio lost the denoise: %+v", w.Audio)
+	}
+}
+
 func TestDisabledItemsLeaveThePlan(t *testing.T) {
 	t.Parallel()
 
