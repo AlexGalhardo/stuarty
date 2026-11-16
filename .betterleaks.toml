@@ -133,3 +133,12 @@ condition = "AND"
 paths = ['''^web/app/cli/help_test\.go$''']
 regexTarget = "line"
 regexes = ['''"user:(?:create|passwd)":\s*"vukem-video user:(?:create|passwd) <email>''']
+
+# The API reference pages are generated from the OpenAPI document, whose request examples put the
+# JSON type name where a value goes ("password": "string"). Only that placeholder, only in those pages.
+[[allowlists]]
+description = "type-name placeholders in the generated API reference"
+condition = "AND"
+paths = ['''^site/content/generated/api/[^/]+\.mdx$''']
+regexTarget = "secret"
+regexes = ['''^string$''']
