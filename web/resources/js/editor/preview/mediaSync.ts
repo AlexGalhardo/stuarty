@@ -74,6 +74,35 @@ export function rankVideoLayers(
 	return new Set(videos.slice(-max).map((layer) => layer.item));
 }
 
+// How long play() waits for the AudioContext to run. A browser with no audio
+// output device (Firefox on a headless Linux machine) leaves resume() pending
+// forever, and the preview must still play.
+export const AUDIO_RESUME_TIMEOUT_MS = 500;
+
+// Whether the AudioContext can be the master clock: it is running now or
+// within `timeoutMs` of the resume request. Otherwise the preview falls back
+// to the wall clock, and plays without sound.
+export async function audioClockReady(
+	context: Pick<AudioContext, "state" | "resume"> | null,
+	timeoutMs: number = AUDIO_RESUME_TIMEOUT_MS,
+): Promise<boolean> {
+	if (context === null) return false;
+	if (context.state === "running") return true;
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const gave = new Promise<boolean>((resolve) => {
+		timer = setTimeout(() => resolve(false), timeoutMs);
+	});
+	const resumed = context.resume().then(
+		() => context.state === "running",
+		() => false,
+	);
+	try {
+		return await Promise.race([resumed, gave]);
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
 // The master clock during playback is the audio clock (SDD-004 section 10
 // item 4): frame = startFrame + floor((now - t0) * num / den).
 export class PlaybackClock {
