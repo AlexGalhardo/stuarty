@@ -147,10 +147,12 @@ func benchCommit200Items(b *testing.B, logRows int) {
 	b.ResetTimer()
 
 	for i := range b.N {
-		start := fmt.Sprintf("%ds", 500+(i%2)*2)
+		// The item starts at 500s: the first move goes to 502s, because a move to where the
+		// item already is applies nothing and the revision would not advance.
+		start := fmt.Sprintf("%ds", 500+((i+1)%2)*2)
 
 		t0 := time.Now()
-		_, err := e.edit(ui, project, rev, op("item.move", fmt.Sprintf(`{"item_id":%q,"start":%q}`, moved, start)))
+		res, err := e.edit(ui, project, rev, op("item.move", fmt.Sprintf(`{"item_id":%q,"start":%q}`, moved, start)))
 		times = append(times, time.Since(t0))
 		storeTimes = append(storeTimes, clock.last)
 
@@ -158,7 +160,7 @@ func benchCommit200Items(b *testing.B, logRows int) {
 			b.Fatal(err)
 		}
 
-		rev++
+		rev = res.Revision
 	}
 
 	b.StopTimer()
