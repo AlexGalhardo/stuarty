@@ -219,14 +219,17 @@ export function createSync(deps: SyncDeps): Sync {
 				deps.onUnauthorized?.();
 			}
 			const network = error instanceof ApiError && error.isNetwork;
-			if (error instanceof ApiError && !network) {
+			// Without a document there is nothing to show offline: it is a failed
+			// load, with the Reload banner (VV-010).
+			const noDocument = !loadedOnce;
+			if (error instanceof ApiError && (!network || noDocument)) {
 				writer.setLoadError({
 					code: error.code,
 					message: error.message,
 					...(error.hint === undefined ? {} : { hint: error.hint }),
 				});
 			}
-			writer.setStatus(network ? "offline" : "failed");
+			writer.setStatus(network && !noDocument ? "offline" : "failed");
 		}
 	}
 
