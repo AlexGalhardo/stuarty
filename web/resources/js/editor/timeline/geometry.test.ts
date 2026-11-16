@@ -9,6 +9,7 @@ import {
 	extentPx,
 	fitZoom,
 	formatRulerLabel,
+	idsOnSide,
 	nextZoom,
 	rulerStep,
 	sortByStart,
@@ -102,6 +103,22 @@ describe("display order", () => {
 			{ id: "c", start: 0, duration: 1 },
 		]);
 		expect(sorted.map((i) => i.id)).toEqual(["c", "a", "b"]);
+	});
+});
+
+describe("idsOnSide", () => {
+	const items = [
+		{ id: "a", start: 0, duration: 30 },
+		{ id: "b", start: 30, duration: 20 },
+		{ id: "c", start: 80, duration: 10 },
+	];
+
+	test("left holds what starts before the playhead, right what ends after it", () => {
+		expect(idsOnSide(items, 40, "left")).toEqual(["a", "b"]);
+		expect(idsOnSide(items, 40, "right")).toEqual(["b", "c"]);
+		expect(idsOnSide(items, 30, "left")).toEqual(["a"]);
+		expect(idsOnSide(items, 50, "right")).toEqual(["c"]);
+		expect(idsOnSide(items, 0, "left")).toEqual([]);
 	});
 });
 

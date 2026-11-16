@@ -2,7 +2,9 @@ import { describe, expect, test } from "vitest";
 
 import actionsSource from "./actions.ts?raw";
 import {
+	BINDING_IDS,
 	editShortcut,
+	fixedRowFor,
 	isSelectAllShortcut,
 	landmarkShortcut,
 	panelShortcut,
@@ -106,6 +108,53 @@ describe("the table of SDD-012 section 18.2", () => {
 		]) {
 			expect(keys, key).toContain(key);
 		}
+	});
+});
+
+describe("the CapCut-compatible map of SDD-012 section 18.7", () => {
+	// Every key a row names, with the aliases, so a key held by two rows shows.
+	const held = SHORTCUTS.flatMap((row) =>
+		[...row.keys.split(", "), ...(row.aliases?.split(", ") ?? [])]
+			.filter((key) => !key.startsWith("Timeline"))
+			.map((key) => ({ id: row.id, key })),
+	);
+
+	test("no key is held by two rows", () => {
+		const seen = new Map<string, string>();
+		for (const { id, key } of held) {
+			expect(
+				seen.get(key),
+				`${key}: ${id} and ${seen.get(key)}`,
+			).toBeUndefined();
+			seen.set(key, id);
+		}
+	});
+
+	test("the rebindable rows are rows of the table with a default key", () => {
+		for (const id of BINDING_IDS) {
+			const row = SHORTCUTS.find((candidate) => candidate.id === id);
+			expect(row, id).toBeDefined();
+			expect(row?.keys, id).not.toBe("");
+		}
+	});
+
+	test("the keys the browser reserves are not bound on the web", () => {
+		const reserved = ["Mod+N", "Mod+T", "Mod+W", "Mod+Shift+N", "Mod+Shift+T"];
+		const reservedMore = ["Mod+Q", "Mod+Tab", "Mod+R", "Mod+Shift+F", "Mod+O"];
+		for (const { key } of held) {
+			expect(reserved, key).not.toContain(key);
+			expect(reservedMore, key).not.toContain(key);
+		}
+	});
+
+	test("old keys of the first map do not stay on a row", () => {
+		const keys = held.map((entry) => entry.key);
+		expect(keys).not.toContain("S");
+		expect(keys).not.toContain("[ ");
+		expect(fixedRowFor("Mod+Shift+B")).toBe("split_all");
+		expect(fixedRowFor("[")).toBe("select_side");
+		expect(fixedRowFor("]")).toBe("select_side");
+		expect(fixedRowFor("Mod+C")).toBe("copy");
 	});
 });
 

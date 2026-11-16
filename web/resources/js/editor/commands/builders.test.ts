@@ -54,6 +54,7 @@ import {
 	transitionOperations,
 	trimEdgeOperations,
 	trimOperations,
+	volumeStepOperations,
 	withNextFree,
 } from "./builders";
 
@@ -739,5 +740,30 @@ describe("nextSlotName", () => {
 		expect(nextSlotName(["slot_1", undefined, "intro", "slot_3"])).toBe(
 			"slot_2",
 		);
+	});
+});
+
+describe("volumeStepOperations", () => {
+	test("moves each volume by the decibels, to 3 decimals, one set_audio each", () => {
+		expect(
+			volumeStepOperations(
+				[
+					{ id: "a", volume: 1 },
+					{ id: "b", volume: 0.5 },
+				],
+				0.1,
+			),
+		).toEqual([
+			{ op: "item.set_audio", args: { item_id: "a", volume: 1.012 } },
+			{ op: "item.set_audio", args: { item_id: "b", volume: 0.506 } },
+		]);
+	});
+
+	test("stays inside 0 to 4 and skips what does not change", () => {
+		expect(volumeStepOperations([{ id: "a", volume: 4 }], 0.1)).toEqual([]);
+		expect(volumeStepOperations([{ id: "a", volume: 0 }], -0.1)).toEqual([]);
+		expect(volumeStepOperations([{ id: "a", volume: 3.999 }], 0.1)).toEqual([
+			{ op: "item.set_audio", args: { item_id: "a", volume: 4 } },
+		]);
 	});
 });

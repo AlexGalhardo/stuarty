@@ -115,6 +115,7 @@ export default function Library({
 					value={text}
 					rows={1}
 					className="min-h-8 resize-y"
+					data-import-path=""
 					onChange={(event) => setText(event.target.value)}
 					onKeyDown={(event) => {
 						if (event.key === "Enter" && !event.shiftKey) {
@@ -139,6 +140,7 @@ export default function Library({
 					size="sm"
 					variant="outline"
 					disabled={busy || !canEdit}
+					data-import-choose=""
 					onClick={() => void choose()}
 				>
 					{t("ui.editor.library.choose")}

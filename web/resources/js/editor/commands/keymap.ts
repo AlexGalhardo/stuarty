@@ -108,6 +108,12 @@ export const UI_SHORTCUT_ACTIONS = [
 	"surface.palette",
 	"surface.toggle_panel",
 	"surface.select_all",
+	"surface.select_side",
+	"surface.clipboard",
+	"surface.preview_zoom",
+	"surface.import",
+	"surface.export",
+	"surface.saved",
 	"surface.cancel",
 	"surface.next_landmark",
 	"surface.grid_keys",
@@ -136,6 +142,9 @@ export interface Shortcut {
 	// Names the row in the cheat sheet (ui.editor.shortcuts.rows.<id>).
 	id: string;
 	keys: string;
+	// Keys that do the same and are not listed as a row of their own (the
+	// section 18.7 aliases `+` and `-`); other rows may not rebind to them.
+	aliases?: string;
 	action: keyof Actions | UiShortcutAction;
 }
 
@@ -149,22 +158,42 @@ export const SHORTCUTS: readonly Shortcut[] = [
 	},
 	{ id: "go_to_edge", keys: "Home, End", action: "surface.go_to_edge" },
 	{ id: "next_cut", keys: "Up, Down", action: "surface.next_cut" },
-	{ id: "split", keys: "S", action: "splitAtPlayhead" },
-	{ id: "trim_start", keys: "[", action: "trimToPlayhead" },
-	{ id: "trim_end", keys: "]", action: "trimToPlayhead" },
+	{ id: "split", keys: "Mod+B", action: "splitAtPlayhead" },
+	{ id: "split_all", keys: "Mod+Shift+B", action: "splitAllAtPlayhead" },
+	{ id: "trim_start", keys: "Q", action: "trimToPlayhead" },
+	{ id: "trim_end", keys: "W", action: "trimToPlayhead" },
+	{ id: "select_side", keys: "[, ]", action: "surface.select_side" },
 	{ id: "undo", keys: "Mod+Z", action: "undo" },
 	{ id: "redo", keys: "Mod+Shift+Z", action: "redo" },
 	{ id: "redo_alt", keys: "Ctrl+Y", action: "redo" },
-	{ id: "zoom_in", keys: "+", action: "surface.zoom" },
-	{ id: "zoom_out", keys: "-", action: "surface.zoom" },
+	{
+		id: "zoom_in",
+		keys: "Mod+=",
+		aliases: "+, Mod++",
+		action: "surface.zoom",
+	},
+	{ id: "zoom_out", keys: "Mod+-", aliases: "-", action: "surface.zoom" },
 	{ id: "zoom_fit", keys: "Shift+Z", action: "surface.zoom" },
 	{ id: "delete", keys: "Delete, Backspace", action: "deleteSelection" },
 	{ id: "ripple_delete", keys: "Shift+Delete", action: "deleteSelection" },
 	{ id: "duplicate", keys: "Mod+D", action: "duplicateSelection" },
+	{ id: "copy", keys: "Mod+C", action: "surface.clipboard" },
+	{ id: "cut", keys: "Mod+X", action: "surface.clipboard" },
+	{ id: "paste", keys: "Mod+V", action: "surface.clipboard" },
+	{ id: "volume_up", keys: "Mod+.", action: "adjustVolume" },
+	{ id: "volume_down", keys: "Mod+,", action: "adjustVolume" },
 	{ id: "add_caption", keys: "C", action: "addCaption" },
 	{ id: "add_text", keys: "T", action: "addText" },
 	{ id: "rename", keys: "F2", action: "renameItem" },
 	{ id: "toggle_snap", keys: "N", action: "surface.toggle_snap" },
+	{
+		id: "preview_zoom",
+		keys: "Alt+Shift+Z, Alt+Shift+=, Alt+Shift+-",
+		action: "surface.preview_zoom",
+	},
+	{ id: "import", keys: "Mod+I", action: "surface.import" },
+	{ id: "export", keys: "Mod+E", action: "surface.export" },
+	{ id: "save", keys: "Mod+S", action: "surface.saved" },
 	{ id: "palette", keys: "Mod+K", action: "surface.palette" },
 	{
 		id: "toggle_panel",
@@ -177,6 +206,18 @@ export const SHORTCUTS: readonly Shortcut[] = [
 	{ id: "grid_keys", keys: "Timeline grid keys", action: "surface.grid_keys" },
 	{ id: "cheat_sheet", keys: "?", action: "surface.cheat_sheet" },
 ];
+
+// The row of the table that holds a key, for the fixed rows (the rebindable
+// ones are read through their bindings, keymapStore.ts).
+const FIXED_ROW_BY_COMBO: ReadonlyMap<string, string> = new Map(
+	SHORTCUTS.filter(
+		(row) => !(BINDING_IDS as readonly string[]).includes(row.id),
+	).flatMap((row) => row.keys.split(", ").map((key) => [key, row.id] as const)),
+);
+
+export function fixedRowFor(combo: string): string | null {
+	return FIXED_ROW_BY_COMBO.get(combo) ?? null;
+}
 
 export type Bindings = Readonly<Record<BindingId, string>>;
 

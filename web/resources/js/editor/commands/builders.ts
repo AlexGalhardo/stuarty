@@ -940,6 +940,21 @@ export function audioOperations(
 	return [{ op: "item.set_audio", args: { item_id: itemId, ...changes } }];
 }
 
+// Mod+. and Mod+,: the volume (a linear gain, 0 to 4) of each item moved by `db`
+// decibels, to the 3 decimals the core keeps (SDD-002 A.10).
+export function volumeStepOperations(
+	items: readonly { id: string; volume: number }[],
+	db: number,
+): Operations {
+	return items.flatMap(({ id, volume }) => {
+		const next = Math.min(
+			4,
+			Math.max(0, Math.round(volume * 10 ** (db / 20) * 1000) / 1000),
+		);
+		return next === volume ? [] : audioOperations(id, { volume: next });
+	});
+}
+
 export const FITS = ["cover", "contain", "none"] as const;
 export type Fit = (typeof FITS)[number];
 

@@ -47,6 +47,7 @@ import {
 	trackRemoveOperations,
 	trackUpdateOperations,
 	trimOperations,
+	volumeStepOperations,
 	withNextFree,
 } from "./builders";
 import { newId } from "./ids";
@@ -59,6 +60,8 @@ import { formatTime, fpsOf } from "./units";
 export interface Actions {
 	addToTimeline(assetId: string): Promise<EditOutcome | null>;
 	splitAtPlayhead(): Promise<EditOutcome | null>;
+	// Mod+Shift+B: every item under the playhead, on every track.
+	splitAllAtPlayhead(): Promise<EditOutcome | null>;
 	trimToPlayhead(edge: "start" | "end"): Promise<EditOutcome | null>;
 	addCaption(text: string, duration: string): Promise<EditOutcome | null>;
 	// Toolbar "Add text" and `T`: `text` is the localized default content.
@@ -103,6 +106,11 @@ export interface Actions {
 	crossfadeSelection(): Promise<EditOutcome | null>;
 	// Ctrl+D: a copy of each selected item right after its end.
 	duplicateSelection(): Promise<EditOutcome | null>;
+	// Paste (Mod+V): a copy of each item the clipboard holds, right after its end.
+	duplicateItems(ids: readonly string[]): Promise<EditOutcome | null>;
+	// Mod+. and Mod+,: the volume of the selected clips and audio items, moved
+	// by `db` decibels (one `item.set_audio` each, one batch).
+	adjustVolume(db: number): Promise<EditOutcome | null>;
 	// The gap menu: `at` is the frame under the pointer.
 	closeGap(trackId: string, at: number): Promise<EditOutcome | null>;
 	// "Remove from project" on a card; E_IN_USE opens the dialog of the items.
@@ -446,6 +454,16 @@ export function createActions(runtime: EditorRuntime): Actions {
 		},
 		splitAtPlayhead: () =>
 			send(splitOperations(selectedRanges(), ui.getState().playheadFrame)),
+		splitAllAtPlayhead() {
+			const doc = documents.getState().document;
+			if (doc === null) return Promise.resolve(null);
+			return send(
+				splitOperations(
+					rangesOf(Object.keys(doc.items)),
+					ui.getState().playheadFrame,
+				),
+			);
+		},
 		trimToPlayhead: (edge) =>
 			send(trimOperations(selectedRanges(), edge, ui.getState().playheadFrame)),
 		addCaption: (text, duration) =>
@@ -510,6 +528,18 @@ export function createActions(runtime: EditorRuntime): Actions {
 			return send(deleteOperations(actedIds(), ripple));
 		},
 		duplicateSelection: () => send(duplicateOperations(rangesOf(actedIds()))),
+		duplicateItems: (ids) => send(duplicateOperations(rangesOf(ids))),
+		adjustVolume(db) {
+			const doc = documents.getState().document;
+			if (doc === null) return Promise.resolve(null);
+			const targets = actedIds().flatMap((id) => {
+				const item = doc.items[id];
+				return item?.type === "clip" || item?.type === "audio"
+					? [{ id, volume: item.volume ?? 1 }]
+					: [];
+			});
+			return send(volumeStepOperations(targets, db));
+		},
 		crossfadeSelection() {
 			const [a, b, ...rest] = selectedRanges();
 			if (a === undefined || b === undefined || rest.length > 0) {
