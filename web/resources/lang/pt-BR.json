@@ -469,6 +469,9 @@
           "set_flip": {
             "title": "Espelhar clipe"
           },
+          "set_effects": {
+            "title": "Definir efeitos do clipe"
+          },
           "set_chroma_key": {
             "title": "Definir chroma key do clipe"
           },
@@ -1120,7 +1123,11 @@
           "slide_left": "Deslizar para a esquerda",
           "slide_right": "Deslizar para a direita",
           "slide_up": "Deslizar para cima",
-          "slide_down": "Deslizar para baixo"
+          "slide_down": "Deslizar para baixo",
+          "zoom": "Ampliar (zoom)",
+          "whip": "Whip (giro rápido)",
+          "dip": "Mergulho em cor",
+          "wipe": "Cortina"
         }
       },
       "animation": {

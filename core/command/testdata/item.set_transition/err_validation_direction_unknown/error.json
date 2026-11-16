@@ -1,0 +1,15 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.direction is \"diagonal\", which is not one of the accepted values.",
+  "hint": "Use one of: left, right, up, down.",
+  "retryable": false,
+  "path": "args.direction",
+  "details": {
+    "allowed": [
+      "left",
+      "right",
+      "up",
+      "down"
+    ]
+  }
+}

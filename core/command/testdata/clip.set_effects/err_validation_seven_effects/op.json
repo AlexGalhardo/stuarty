@@ -1,0 +1,29 @@
+{
+  "op": "clip.set_effects",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "effects": [
+      {
+        "kind": "glow"
+      },
+      {
+        "kind": "grain"
+      },
+      {
+        "kind": "vignette"
+      },
+      {
+        "kind": "shake"
+      },
+      {
+        "kind": "rgb_split"
+      },
+      {
+        "kind": "motion_blur"
+      },
+      {
+        "kind": "glow"
+      }
+    ]
+  }
+}

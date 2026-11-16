@@ -124,6 +124,18 @@ func (p *planner) frame(t int) FramePlan {
 }
 
 func (p *planner) layer(it *timeline.Item, r int) (Layer, bool) {
+	l, ok := p.layerBase(it, r)
+	if !ok {
+		return l, false
+	}
+
+	l.Effects, l.Transition = pixelEffects(it), p.transitionAt(it, r)
+	p.applyShake(it, r, &l)
+
+	return l, true
+}
+
+func (p *planner) layerBase(it *timeline.Item, r int) (Layer, bool) {
 	st := p.doc.Settings
 	w, h := float64(st.Width), float64(st.Height)
 	a := evaluate(it, r, w, h, w/2, h/2)

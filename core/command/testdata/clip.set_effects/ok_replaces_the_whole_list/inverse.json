@@ -1,0 +1,22 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "effects": [
+        {
+          "amount": 0.5,
+          "kind": "vignette",
+          "softness": 0.5
+        },
+        {
+          "amount": 0.3,
+          "kind": "grain",
+          "seed": 0,
+          "size": 1
+        }
+      ]
+    }
+  }
+]

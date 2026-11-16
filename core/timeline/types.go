@@ -200,6 +200,9 @@ type Item struct {
 	// Clip and audio, optional and additive (SDD-001 §3.5): the speed curve, 2 to 8 points with linear
 	// ramps between them; speed is then the mean of the curve.
 	SpeedCurve []SpeedPoint `json:"speed_curve,omitempty" minitems:"2" maxitems:"8"`
+	// Visual items, optional and additive (SDD-001 §3.4): the effects, each kind once, applied in order.
+	Effects []Effect `json:"effects,omitempty" minitems:"1" maxitems:"6"`
+
 	// Clip, audio, text and shape, optional and additive (SDD-001 §3.5): the link group. Items with the
 	// same link move, trim and split together.
 	Link string `json:"link,omitempty" pattern:"^lnk_[0-9a-hjkmnp-tv-z]{10}$"`
@@ -287,9 +290,51 @@ type Word struct {
 
 // Transition of an item entry or exit (SDD-001 §3.8).
 type Transition struct {
-	Kind     string `json:"kind"     enum:"fade,slide_left,slide_right,slide_up,slide_down"`
-	Duration int    `json:"duration"                                                        min:"1"`
-	Extra    Extra  `json:"-"`
+	Kind     string `json:"kind"     enum:"fade,slide_left,slide_right,slide_up,slide_down,zoom,whip,dip,wipe"`
+	Duration int    `json:"duration"                                                                           min:"1"`
+	// Added after BETA (TASK-0278, SDD-004 §3.2): the colour of a dip, #RRGGBB or #RRGGBBAA, default
+	// black when absent, and the direction of a whip or a wipe, default left when absent.
+	Color     Color  `json:"color,omitempty"`
+	Direction string `json:"direction,omitempty" enum:"left,right,up,down"`
+	Extra     Extra  `json:"-"`
+}
+
+// Effect kinds (SDD-004 §3.13).
+const (
+	EffectMotionBlur = "motion_blur"
+	EffectGlow       = "glow"
+	EffectVignette   = "vignette"
+	EffectGrain      = "grain"
+	EffectRGBSplit   = "rgb_split"
+	EffectShake      = "shake"
+)
+
+// MaxEffects is the number of effects an item can carry: each kind at most once.
+const MaxEffects = 6
+
+// Effect is one visual effect of an item (SDD-004 §3.13). Only the parameters of its kind are
+// present, all of them: the commands fill the defaults in, so a stored effect says everything.
+type Effect struct {
+	Kind      string   `json:"kind"                enum:"motion_blur,glow,vignette,grain,rgb_split,shake"`
+	Amount    *float64 `json:"amount,omitempty"                                                           min:"0"    max:"1"`
+	Angle     *float64 `json:"angle,omitempty"                                                            min:"-180" max:"180"`
+	Radius    *float64 `json:"radius,omitempty"                                                           min:"1"    max:"100"`
+	Threshold *float64 `json:"threshold,omitempty"                                                        min:"0"    max:"1"`
+	Softness  *float64 `json:"softness,omitempty"                                                         min:"0"    max:"1"`
+	Size      *int     `json:"size,omitempty"                                                             min:"1"    max:"8"`
+	Speed     *int     `json:"speed,omitempty"                                                            min:"1"    max:"30"`
+	Seed      *int     `json:"seed,omitempty"                                                             min:"0"    max:"65535"`
+	Extra     Extra    `json:"-"`
+}
+
+// EffectParams is, per kind, the parameters it takes in the order of SDD-004 §3.13.
+var EffectParams = map[string][]string{
+	EffectMotionBlur: {"amount", "angle"},
+	EffectGlow:       {"amount", "radius", "threshold"},
+	EffectVignette:   {"amount", "softness"},
+	EffectGrain:      {"amount", "size", "seed"},
+	EffectRGBSplit:   {"amount", "angle"},
+	EffectShake:      {"amount", "speed", "seed"},
 }
 
 // Keyframes maps a property (x, y, scale, rotation, opacity, volume) to its keyframes.

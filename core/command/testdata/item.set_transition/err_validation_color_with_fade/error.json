@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.color applies to a dip transition, not to fade.",
+  "hint": "Send color with kind \"dip\".",
+  "retryable": false,
+  "path": "args.color"
+}

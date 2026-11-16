@@ -1,0 +1,46 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "effects": [
+        null,
+        [
+          {
+            "amount": 0.5,
+            "angle": 0,
+            "kind": "motion_blur"
+          },
+          {
+            "amount": 0.5,
+            "kind": "glow",
+            "radius": 12,
+            "threshold": 0.6
+          },
+          {
+            "amount": 0.5,
+            "kind": "vignette",
+            "softness": 0.5
+          },
+          {
+            "amount": 0.5,
+            "kind": "grain",
+            "seed": 0,
+            "size": 1
+          },
+          {
+            "amount": 0.5,
+            "angle": 0,
+            "kind": "rgb_split"
+          },
+          {
+            "amount": 0.5,
+            "kind": "shake",
+            "seed": 0,
+            "speed": 8
+          }
+        ]
+      ]
+    }
+  }
+]

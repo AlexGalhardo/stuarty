@@ -10,7 +10,7 @@ metadata:
 
 A video editor operated by commands: the CLI `vukem-video`, or the MCP server (`vukem-video mcp`), same operations. Output is text; `--json` is JSON.
 
-Check with `project:list`. The workspace is `~/.vukem-video` or `$VUKEM_VIDEO_HOME`. `serve` shares it with the browser.
+Check with `project:list`. Workspace: `~/.vukem-video` or `$VUKEM_VIDEO_HOME`; `serve` shares it with the browser.
 
 ## The loop
 
@@ -18,16 +18,16 @@ Check with `project:list`. The workspace is `~/.vukem-video` or `$VUKEM_VIDEO_HO
 2. Plan a batch.
 3. Apply: `edit --project <id> --base <rev> ...`; read the diff.
 4. `lint --project <id>`. Errors block export.
-5. Look only if text cannot: `view --at 1s`, then `view --mode sheet`.
+5. Look only if text can't: `view --at 1s`, then `view --mode sheet`.
 6. `export --project <id>`, then check the job `checks`.
 
 ## Rules that prevent mistakes
 
 - Times need a unit: `12.5s`, `375f`, `00:00:12.500`.
 - Ids (`prj_`, `ast_`, `trk_`, `itm_`, `job_`) are never positions. List first.
-- The top track is drawn over the others (ends: `top`, `bottom`).
-- `--base` is the `revision` of your last result; omitted, the current one.
-- Give your own `id` to what later operations of a batch use.
+- The top track draws over the others (ends: `top`, `bottom`).
+- `--base` is the `revision` of your last result; default: current.
+- Give your own `id` to what later batch operations use.
 
 ## Command reference
 
@@ -36,7 +36,7 @@ Operations of `edit`; a star marks those added after the Prototype. `command_hel
 - `asset`: remove*
 - `audio`: add*, duck*, mark_beats*
 - `caption`: add, edit_word*, from_transcript*, merge*, retime_from_clip*, set_breaks*, set_style*, set_words*, split*
-- `clip`: add, remove_silences*, set_blend*, set_blur*, set_chroma_key*, set_color*, set_filter*, set_flip*, set_framing*, set_mask*, set_speed*
+- `clip`: add, remove_silences*, set_blend*, set_blur*, set_chroma_key*, set_color*, set_effects*, set_filter*, set_flip*, set_framing*, set_mask*, set_speed*
 - `font`: add*, remove*
 - `item`: crossfade*, delete, duplicate*, extract_audio*, link*, move, rename*, set_audio*, set_enabled*, set_transform*, set_transition*, slip*, split, trim, unlink*
 - `keyframe`: clear*, remove*, set*

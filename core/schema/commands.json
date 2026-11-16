@@ -1506,6 +1506,119 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "effects": {
+          "description": "The effects in order, up to 6, each kind once; [] removes them all.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "amount": {
+                "description": "Strength, 0 to 1; all kinds.",
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "angle": {
+                "description": "Direction in degrees, -180 to 180; motion_blur, rgb_split.",
+                "maximum": 180,
+                "minimum": -180,
+                "type": "number"
+              },
+              "kind": {
+                "description": "The effect.",
+                "enum": [
+                  "motion_blur",
+                  "glow",
+                  "vignette",
+                  "grain",
+                  "rgb_split",
+                  "shake"
+                ],
+                "type": "string"
+              },
+              "radius": {
+                "description": "Spread in frame pixels, 1 to 100; glow.",
+                "maximum": 100,
+                "minimum": 1,
+                "type": "number"
+              },
+              "seed": {
+                "description": "Noise seed, 0 to 65535; grain, shake.",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "size": {
+                "description": "Grain size in frame pixels, 1 to 8; grain.",
+                "maximum": 8,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "softness": {
+                "description": "How far in the darkening starts, 0 to 1; vignette.",
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "speed": {
+                "description": "Shakes per second, 1 to 30; shake.",
+                "maximum": 30,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "threshold": {
+                "description": "Brightness where the glow starts, 0 to 1; glow.",
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "item_id": {
+          "description": "A clip.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "effects"
+      ],
+      "type": "object"
+    },
+    "description": "Replaces the whole list of effects, applied in order; an empty list removes them. Each kind appears at most once and takes only its own parameters (omitted ones get the defaults): motion_blur amount 0.5 and angle 0; glow amount 0.5, radius 12 and threshold 0.6; vignette amount 0.5 and softness 0.5; grain amount 0.3, size 1 and seed 0; rgb_split amount 0.3 and angle 0; shake amount 0.3, speed 8 and seed 0.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH"
+    ],
+    "example": {
+      "effects": [
+        {
+          "amount": 0.6,
+          "kind": "vignette"
+        },
+        {
+          "kind": "grain"
+        }
+      ],
+      "item_id": "itm_m1n2p3q4r5"
+    },
+    "internal": false,
+    "name": "clip.set_effects",
+    "phase": "beta",
+    "scope": "edit",
+    "summary": "Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "amount": {
           "description": "0 to 1; default 1.",
           "maximum": 1,
@@ -2471,6 +2584,20 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "color": {
+          "description": "dip only: #RRGGBB, default #000000.",
+          "type": "string"
+        },
+        "direction": {
+          "description": "whip and wipe only: left (default), right, up or down.",
+          "enum": [
+            "left",
+            "right",
+            "up",
+            "down"
+          ],
+          "type": "string"
+        },
         "duration": {
           "description": "Length of the transition, at least 1 frame; default 0.5s.",
           "type": "string",
@@ -2489,13 +2616,17 @@
           "type": "string"
         },
         "kind": {
-          "description": "fade, slide_left, slide_right, slide_up, slide_down, or null to remove.",
+          "description": "fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, or null to remove.",
           "enum": [
             "fade",
             "slide_left",
             "slide_right",
             "slide_up",
             "slide_down",
+            "zoom",
+            "whip",
+            "dip",
+            "wipe",
             null
           ],
           "type": [
@@ -2511,7 +2642,7 @@
       ],
       "type": "object"
     },
-    "description": "Sets a fade or a slide on the in or out edge, 0.5 seconds long unless duration is given; kind null removes the transition. The two transitions together cannot be longer than the item.",
+    "description": "Sets a fade, a slide, a zoom, a whip, a dip or a wipe on the in or out edge, 0.5 seconds long unless duration is given; kind null removes the transition. color (#RRGGBB, default black) is for dip; direction (left, right, up or down, default left) is for whip and wipe. The two transitions together cannot be longer than the item.",
     "errors": [
       "E_VALIDATION",
       "E_INVALID_TIME",

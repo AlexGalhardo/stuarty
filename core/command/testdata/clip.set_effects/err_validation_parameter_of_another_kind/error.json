@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.effects[0].radius does not apply to vignette.",
+  "hint": "vignette takes [amount softness].",
+  "retryable": false,
+  "path": "args.effects[0].radius"
+}

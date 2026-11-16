@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.effects[0].angle is 200, outside the accepted range.",
+  "hint": "Use a value between -180 and 180.",
+  "retryable": false,
+  "path": "args.effects[0].angle"
+}

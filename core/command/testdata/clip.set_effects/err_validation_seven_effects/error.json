@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.effects has 7 effects; the limit is 6.",
+  "hint": "Send at most 6 effects.",
+  "retryable": false,
+  "path": "args.effects"
+}

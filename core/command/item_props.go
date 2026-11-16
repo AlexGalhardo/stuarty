@@ -32,8 +32,10 @@ func init() {
 	Register(Define(Spec{
 		Name:    "item.set_transition",
 		Summary: "Sets or removes the transition on one edge of a visual item.",
-		Description: "Sets a fade or a slide on the in or out edge, 0.5 seconds long unless duration is given; kind " +
-			"null removes the transition. The two transitions together cannot be longer than the item.",
+		Description: "Sets a fade, a slide, a zoom, a whip, a dip or a wipe on the in or out edge, 0.5 seconds long unless " +
+			"duration is given; kind null removes the transition. color (#RRGGBB, default black) is for dip; " +
+			"direction (left, right, up or down, default left) is for whip and wipe. The two transitions together " +
+			"cannot be longer than the item.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "edge": "in", "kind": "fade"}`,
 		Errors:  []string{CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState},
 		Scope:   ScopeEdit,
@@ -188,13 +190,48 @@ func applyItemSetTransform(c *Context, a *itemTransformArgs) error {
 	return nil
 }
 
-var transitionKinds = []string{"fade", "slide_left", "slide_right", "slide_up", "slide_down"}
+var transitionKinds = []string{
+	"fade",
+	"slide_left",
+	"slide_right",
+	"slide_up",
+	"slide_down",
+	"zoom",
+	"whip",
+	"dip",
+	"wipe",
+}
 
 type itemTransitionArgs struct {
-	ItemID   string `json:"item_id"            desc:"A clip, text, caption or shape item."`
-	Edge     string `json:"edge"               desc:"The edge: in or out."                                                    enum:"in,out"`
-	Kind     any    `json:"kind"               desc:"fade, slide_left, slide_right, slide_up, slide_down, or null to remove."               schema:"transition_kind"`
-	Duration *Time  `json:"duration,omitempty" desc:"Length of the transition, at least 1 frame; default 0.5s."`
+	ItemID    string `json:"item_id"             desc:"A clip, text, caption or shape item."`
+	Edge      string `json:"edge"                desc:"The edge: in or out."                                                                           enum:"in,out"`
+	Kind      any    `json:"kind"                desc:"fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, or null to remove."                           schema:"transition_kind"`
+	Duration  *Time  `json:"duration,omitempty"  desc:"Length of the transition, at least 1 frame; default 0.5s."`
+	Color     string `json:"color,omitempty"     desc:"dip only: #RRGGBB, default #000000."                                                                                                               pattern:"^#[0-9A-Fa-f]{6}$"`
+	Direction string `json:"direction,omitempty" desc:"whip and wipe only: left (default), right, up or down."                                         enum:"left,right,up,down"`
+}
+
+// checkTransitionParams refuses a colour on anything but a dip, and a direction on anything but a
+// whip or a wipe: the stored transition says only what the executors use.
+func checkTransitionParams(a *itemTransitionArgs, kind string) *Error {
+	switch {
+	case a.Color != "" && kind != "dip":
+		return invalidArg("args.color", "args.color applies to a dip transition, not to %v.", a.Kind).
+			WithHint("Send color with kind \"dip\".")
+	case a.Color != "" && (len(a.Color) != 7 || !isHex(a.Color)):
+		return invalidArg(
+			"args.color",
+			"args.color %q is not #RRGGBB.",
+			a.Color,
+		).WithHint("Use a colour like \"#FF8800\".")
+	case a.Direction != "" && kind != "whip" && kind != "wipe":
+		return invalidArg("args.direction", "args.direction applies to whip and wipe transitions, not to %v.", a.Kind).
+			WithHint("Send direction with kind \"whip\" or \"wipe\".")
+	case a.Direction != "" && !slices.Contains([]string{"left", "right", "up", "down"}, a.Direction):
+		return invalidArg("args.direction", "args.direction %q is not a direction.", a.Direction).
+			WithHint("Use left, right, up or down.")
+	}
+	return nil
 }
 
 func applyItemSetTransition(c *Context, a *itemTransitionArgs) error {
@@ -207,7 +244,10 @@ func applyItemSetTransition(c *Context, a *itemTransitionArgs) error {
 		}
 	case !isString || !slices.Contains(transitionKinds, kind):
 		return invalidArg("args.kind", "args.kind %v is not a transition kind.", a.Kind).
-			WithHint("Use fade, slide_left, slide_right, slide_up, slide_down or null.")
+			WithHint("Use fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe or null.")
+	}
+	if err := checkTransitionParams(a, kind); err != nil {
+		return err
 	}
 	length, requested := 0, "0.5s"
 	if a.Kind != nil {
@@ -255,7 +295,14 @@ func applyItemSetTransition(c *Context, a *itemTransitionArgs) error {
 				WithHint("Use a duration of at most \"%df\" (%s) or shorten %s first.",
 					room, c.seconds(room), otherName).WithPath("args.duration")
 		}
-		*edge = &timeline.Transition{Kind: kind, Duration: length}
+		tr := &timeline.Transition{Kind: kind, Duration: length}
+		if a.Color != "" && a.Color != "#000000" {
+			tr.Color = timeline.Color(a.Color)
+		}
+		if a.Direction != "" && a.Direction != "left" {
+			tr.Direction = a.Direction
+		}
+		*edge = tr
 		c.SetEffective("kind", kind)
 		c.SetEffectiveTime("duration", length, requested)
 	}

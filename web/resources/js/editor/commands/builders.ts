@@ -512,6 +512,10 @@ export const TRANSITION_KINDS = [
 	"slide_right",
 	"slide_up",
 	"slide_down",
+	"zoom",
+	"whip",
+	"dip",
+	"wipe",
 ] as const;
 export type TransitionKind = (typeof TRANSITION_KINDS)[number];
 

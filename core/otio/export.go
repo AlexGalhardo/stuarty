@@ -242,20 +242,32 @@ func trackMetadata(t *timeline.Track) object {
 // clipMetadata keeps the properties of a clip that OTIO has no field for, in the vukem
 // namespace, under the names and values of the document. Only values that differ from the
 // default are written. Import turns them back into commands.
-func clipMetadata(it *timeline.Item) object {
-	props := object{}
-	num := func(name string, v, def float64) {
-		if v != def {
-			props[name] = v
-		}
-	}
-
+// playbackMetadata writes the speed, the speed curve, reverse and the effects of an item.
+func playbackMetadata(it *timeline.Item, props object) {
 	if it.Speed.Den != 0 && it.Speed.Num != it.Speed.Den {
 		props["speed"] = object{"num": it.Speed.Num, "den": it.Speed.Den}
 	}
 
 	if it.Reverse {
 		props["reverse"] = true
+	}
+
+	if len(it.Effects) > 0 {
+		list := make([]any, len(it.Effects))
+
+		for i, e := range it.Effects {
+			o := object{"kind": e.Kind}
+
+			for _, name := range timeline.EffectParams[e.Kind] {
+				if v, ok := e.Param(name); ok {
+					o[name] = v
+				}
+			}
+
+			list[i] = o
+		}
+
+		props["effects"] = list
 	}
 
 	if len(it.SpeedCurve) > 0 {
@@ -266,6 +278,17 @@ func clipMetadata(it *timeline.Item) object {
 
 		props["speed_curve"] = pts
 	}
+}
+
+func clipMetadata(it *timeline.Item) object {
+	props := object{}
+	num := func(name string, v, def float64) {
+		if v != def {
+			props[name] = v
+		}
+	}
+
+	playbackMetadata(it, props)
 
 	if k := it.ChromaKey; k != nil {
 		props["chroma_key"] = object{
@@ -514,6 +537,7 @@ func lostProperties(it *timeline.Item) []Lost {
 		{len(it.Keyframes) > 0, "keyframes"},
 		{it.Speed.Num != it.Speed.Den || len(it.SpeedCurve) > 0, "speed"},
 		{it.Reverse, "reverse"},
+		{len(it.Effects) > 0, "effects"},
 		{it.Link != "", "link"},
 		{it.Brightness != 0 || it.Contrast != 1 || it.Saturation != 1 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0, "colour adjustment"},
 		{(it.Filter != "none" && it.Filter != "") || it.Blur != 0, "filter and blur"},

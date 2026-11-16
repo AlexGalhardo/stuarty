@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.effects[1] repeats the effect glow.",
+  "hint": "List each effect once.",
+  "retryable": false,
+  "path": "args.effects[1].kind"
+}

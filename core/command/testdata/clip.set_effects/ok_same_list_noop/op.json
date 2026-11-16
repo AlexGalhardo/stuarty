@@ -1,0 +1,13 @@
+{
+  "op": "clip.set_effects",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "effects": [
+      {
+        "kind": "vignette",
+        "amount": 0.5,
+        "softness": 0.5
+      }
+    ]
+  }
+}

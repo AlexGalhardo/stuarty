@@ -1,0 +1,17 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.effects[0].kind is \"sparkle\", which is not one of the accepted values.",
+  "hint": "Use one of: motion_blur, glow, vignette, grain, rgb_split, shake.",
+  "retryable": false,
+  "path": "args.effects[0].kind",
+  "details": {
+    "allowed": [
+      "motion_blur",
+      "glow",
+      "vignette",
+      "grain",
+      "rgb_split",
+      "shake"
+    ]
+  }
+}

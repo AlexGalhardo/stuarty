@@ -198,6 +198,7 @@ func itemOps(props map[string]any, mode itemMode, start, dur int, used map[strin
 		}
 
 		add("clip.set_chroma_key", chromaKey(p))
+		add("clip.set_effects", effectsArgs(p))
 	}
 
 	if mode != modeText {
@@ -227,6 +228,67 @@ func itemOps(props map[string]any, mode itemMode, start, dur int, used map[strin
 	spec.slot = slot(p, mode, used)
 
 	return spec
+}
+
+// effectsArgs is the argument of clip.set_effects for the effects of the metadata, empty when none.
+func effectsArgs(p *propReader) map[string]any {
+	if fx := effects(p); fx != nil {
+		return map[string]any{"effects": fx}
+	}
+
+	return nil
+}
+
+// effects reads the list of effects of a clip with the kinds and ranges of clip.set_effects; one that
+// is not valid is dropped with the rest of the list, so that the batch still applies.
+func effects(p *propReader) []any {
+	raw, present := p.props["effects"]
+	if !present {
+		return nil
+	}
+
+	list, _ := raw.([]any)
+	out := make([]any, 0, len(list))
+
+	for _, e := range list {
+		obj, _ := e.(map[string]any)
+		kind, _ := obj["kind"].(string)
+
+		params, known := timeline.EffectParams[kind]
+		if !known || len(obj) > len(params)+1 {
+			p.lose("vukem property effects is not a valid value")
+
+			return nil
+		}
+
+		args := map[string]any{"kind": kind}
+		sub := &propReader{props: obj, lose: func(string) {}}
+
+		for _, name := range params {
+			if _, has := obj[name]; !has {
+				continue
+			}
+
+			lo, hi := timeline.EffectRange(name)
+
+			v, ok := sub.number(name, lo, hi, false)
+			if !ok || (name == "size" || name == "speed" || name == "seed") && v != math.Trunc(v) {
+				p.lose("vukem property effects is not a valid value")
+
+				return nil
+			}
+
+			args[name] = v
+		}
+
+		out = append(out, args)
+	}
+
+	if len(out) == 0 {
+		return nil
+	}
+
+	return out
 }
 
 // chromaKey reads the chroma_key object; all four members are needed.

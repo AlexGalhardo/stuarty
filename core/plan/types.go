@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"math"
+
+	"github.com/AlexGalhardo/vukem-video/core/timeline"
 )
 
 // BitmapVersion is part of every bitmap key; bump it with any change that
@@ -66,6 +68,11 @@ type Layer struct {
 
 	// Mask limits where the layer is drawn (SDD-004 §3.9); nil means no mask.
 	Mask *MaskSpec `json:"mask,omitempty"`
+
+	// Effects change the layer's pixels, in order, after the filter and the blur (SDD-004 §3.13); shake is
+	// not here, it has already moved the layer. Transition is the whip, dip or wipe in progress (§3.2).
+	Effects    []timeline.Effect `json:"effects,omitempty"`
+	Transition *TransitionSpec   `json:"transition,omitempty"`
 
 	// FlipX and FlipY mirror the drawn source across the layer's own vertical or horizontal axis
 	// (SDD-004 §3.10); the quadrilateral and its rotation are the same.

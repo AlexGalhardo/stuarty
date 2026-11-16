@@ -420,6 +420,7 @@ func (v *validator) item(key string, it Item) {
 	v.keyframes(path, key, it)
 	v.slot(path, key, it)
 	v.link(path, key, it)
+	v.effects(path, key, it)
 }
 
 // itemFieldsForType reports fields that belong to another item type.
@@ -449,7 +450,7 @@ func (v *validator) itemFieldsForType(path, key string, it Item) {
 	}
 	if it.Type == ItemAudio &&
 		(it.Blur != 0 || (it.Filter != "" && it.Filter != "none") || (it.FilterAmount != 0 && it.FilterAmount != 1) ||
-			it.ChromaKey != nil || it.Blend != "" || it.Mask != nil || it.FlipX || it.FlipY) {
+			it.ChromaKey != nil || it.Blend != "" || it.Mask != nil || it.FlipX || it.FlipY || len(it.Effects) > 0) {
 		bad("filter")
 	}
 	if it.Type == ItemAudio && (it.TransitionIn != nil || it.TransitionOut != nil || it.X != nil || it.Y != nil) {
@@ -736,10 +737,11 @@ func (v *validator) transitions(path, key string, it Item) {
 			continue
 		}
 		switch t.val.Kind {
-		case "fade", "slide_left", "slide_right", "slide_up", "slide_down":
+		case "fade", "slide_left", "slide_right", "slide_up", "slide_down", "zoom", "whip", "dip", "wipe":
 		default:
 			v.add(VShape, path+"."+t.name+".kind", key, "unknown transition kind %q", t.val.Kind)
 		}
+		v.transitionParams(path+"."+t.name, key, t.val)
 		if t.val.Duration < 1 {
 			v.add(VShape, path+"."+t.name+".duration", key, "transition duration must be at least 1")
 		}
@@ -748,6 +750,120 @@ func (v *validator) transitions(path, key string, it Item) {
 	if sum > it.Duration {
 		v.add(VTransitions, path, key, "transition durations sum to %d, more than the duration %d", sum, it.Duration)
 	}
+}
+
+// transitionParams checks the colour of a dip and the direction of a whip or a wipe.
+func (v *validator) transitionParams(path, key string, t *Transition) {
+	if t.Color != "" {
+		if t.Kind != "dip" {
+			v.add(VShape, path+".color", key, "color applies to dip transitions only")
+		} else {
+			v.color(path+".color", key, t.Color, true)
+		}
+	}
+	if t.Direction != "" {
+		if t.Kind != "whip" && t.Kind != "wipe" {
+			v.add(VShape, path+".direction", key, "direction applies to whip and wipe transitions only")
+		} else if !slices.Contains([]string{"left", "right", "up", "down"}, t.Direction) {
+			v.add(VShape, path+".direction", key, "direction must be left, right, up or down")
+		}
+	}
+}
+
+// effects checks the effects of an item: known kinds, each once, only the parameters of the kind,
+// all of them present and in range.
+func (v *validator) effects(path, key string, it Item) {
+	if len(it.Effects) == 0 {
+		return
+	}
+	if len(it.Effects) > MaxEffects {
+		v.add(VShape, path+".effects", key, "an item has at most %d effects", MaxEffects)
+	}
+	seen := map[string]bool{}
+	for i, e := range it.Effects {
+		p := fmt.Sprintf("%s.effects[%d]", path, i)
+		params, ok := EffectParams[e.Kind]
+		switch {
+		case !ok:
+			v.add(VShape, p+".kind", key, "unknown effect kind %q", e.Kind)
+			continue
+		case seen[e.Kind]:
+			v.add(VShape, p+".kind", key, "effect %s is listed twice", e.Kind)
+		}
+		seen[e.Kind] = true
+		for _, name := range []string{"amount", "angle", "radius", "threshold", "softness", "size", "speed", "seed"} {
+			val, present := e.Param(name)
+			switch {
+			case present != slices.Contains(params, name):
+				v.add(
+					VShape,
+					p+"."+name,
+					key,
+					"%s %s the parameter %s",
+					e.Kind,
+					map[bool]string{true: "does not take", false: "needs"}[present],
+					name,
+				)
+			case present && !finite(val):
+				v.add(VShape, p+"."+name, key, "%s must be a finite number", name)
+			case present && !effectInRange(name, val):
+				v.add(VShape, p+"."+name, key, "%s is out of range", name)
+			}
+		}
+	}
+}
+
+// Param is the value of a named parameter and whether it is set.
+func (e Effect) Param(name string) (float64, bool) {
+	var f *float64
+	var n *int
+	switch name {
+	case "amount":
+		f = e.Amount
+	case "angle":
+		f = e.Angle
+	case "radius":
+		f = e.Radius
+	case "threshold":
+		f = e.Threshold
+	case "softness":
+		f = e.Softness
+	case "size":
+		n = e.Size
+	case "speed":
+		n = e.Speed
+	case "seed":
+		n = e.Seed
+	}
+	switch {
+	case f != nil:
+		return *f, true
+	case n != nil:
+		return float64(*n), true
+	}
+	return 0, false
+}
+
+// EffectRange is the range of a parameter of an effect.
+func EffectRange(name string) (lo, hi float64) {
+	switch name {
+	case "angle":
+		return -180, 180
+	case "radius":
+		return 1, 100
+	case "size":
+		return 1, 8
+	case "speed":
+		return 1, 30
+	case "seed":
+		return 0, 65535
+	}
+	return 0, 1
+}
+
+func effectInRange(name string, v float64) bool {
+	lo, hi := EffectRange(name)
+	return inRange(v, lo, hi)
 }
 
 func (v *validator) keyframes(path, key string, it Item) {

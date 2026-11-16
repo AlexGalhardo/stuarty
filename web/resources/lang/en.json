@@ -469,6 +469,9 @@
           "set_flip": {
             "title": "Flip clip"
           },
+          "set_effects": {
+            "title": "Set clip effects"
+          },
           "set_chroma_key": {
             "title": "Set clip chroma key"
           },
@@ -1127,7 +1130,11 @@
           "slide_left": "Slide left",
           "slide_right": "Slide right",
           "slide_up": "Slide up",
-          "slide_down": "Slide down"
+          "slide_down": "Slide down",
+          "zoom": "Zoom",
+          "whip": "Whip",
+          "dip": "Dip to colour",
+          "wipe": "Wipe"
         }
       },
       "animation": {

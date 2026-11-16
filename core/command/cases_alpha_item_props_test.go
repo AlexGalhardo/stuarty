@@ -71,7 +71,21 @@ func init() {
 		cl(func(it *timeline.Item) { it.TransitionIn = tr("fade", 60) }))
 	st("ok_text_caption_shape_items", fmt.Sprintf(`{"item_id": %q, "edge": "in", "kind": "fade"}`, itemB),
 		func() *B { return base().shape(itemB, vidTr, 0, 60) })
-	st("err_validation_unknown_kind", arg(`"edge": "in", "kind": "wipe"`), cl())
+	st("err_validation_unknown_kind", arg(`"edge": "in", "kind": "spin"`), cl())
+	st("ok_zoom", arg(`"edge": "in", "kind": "zoom", "duration": "12f"`), cl())
+	st("ok_whip_with_direction", arg(`"edge": "out", "kind": "whip", "direction": "up", "duration": "9f"`), cl())
+	st("ok_whip_default_direction_left_not_stored", arg(`"edge": "in", "kind": "whip", "direction": "left"`), cl())
+	st("ok_dip_with_colour", arg(`"edge": "in", "kind": "dip", "color": "#FF8800", "duration": "15f"`), cl())
+	st("ok_dip_black_not_stored", arg(`"edge": "out", "kind": "dip", "color": "#000000"`), cl())
+	st("ok_wipe_with_direction", arg(`"edge": "in", "kind": "wipe", "direction": "right", "duration": "20f"`), cl())
+	st("ok_replace_colour_dip_with_fade_drops_parameters", arg(`"edge": "in", "kind": "fade"`),
+		cl(func(it *timeline.Item) {
+			it.TransitionIn = &timeline.Transition{Kind: "dip", Duration: 20, Color: "#FF8800"}
+		}))
+	st("err_validation_color_with_fade", arg(`"edge": "in", "kind": "fade", "color": "#FF8800"`), cl())
+	st("err_validation_color_not_6_digit_hex", arg(`"edge": "in", "kind": "dip", "color": "#FF8800CC"`), cl())
+	st("err_validation_direction_with_fade", arg(`"edge": "in", "kind": "fade", "direction": "up"`), cl())
+	st("err_validation_direction_unknown", arg(`"edge": "in", "kind": "wipe", "direction": "diagonal"`), cl())
 	st("err_validation_duration_with_null_kind", arg(`"edge": "in", "kind": null, "duration": "1s"`), cl())
 	st("err_invalid_time_zero_duration", arg(`"edge": "in", "kind": "fade", "duration": "0s"`), cl())
 	st("err_not_found", `{"item_id": "itm_zzzzzzzzzz", "edge": "in", "kind": "fade"}`, cl())

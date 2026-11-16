@@ -74,6 +74,11 @@ type WindowLayer struct {
 
 	Mask *MaskSpec `json:"mask,omitempty"`
 
+	// Constant over the item: the pixel effects (SDD-004 §3.13). Transition is the whip, dip or wipe at
+	// each frame of the window, null where there is none; absent when no frame has one.
+	Effects    []timeline.Effect `json:"effects,omitempty"`
+	Transition []*TransitionSpec `json:"transition,omitempty"`
+
 	CX       Series `json:"cx"`
 	CY       Series `json:"cy"`
 	W        Series `json:"w"`
@@ -178,7 +183,7 @@ func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
 		CX: make(Series, 0, room), CY: make(Series, 0, room), W: make(Series, 0, room), H: make(Series, 0, room),
 		Rotation: make(Series, 0, room), Scale: make(Series, 0, room), Opacity: make(Series, 0, room),
 		Filter: first.Filter, Blur: first.Blur, ChromaKey: first.ChromaKey, Blend: first.Blend, Mask: first.Mask,
-		FlipX: first.FlipX, FlipY: first.FlipY,
+		FlipX: first.FlipX, FlipY: first.FlipY, Effects: first.Effects,
 	}
 
 	if first.Kind == Media {
@@ -212,6 +217,23 @@ func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
 	return a
 }
 
+// transition keeps the whip, dip or wipe of the frame; the series is started when one appears, with
+// null for the frames before.
+func (a *layerAcc) transition(l *Layer) {
+	wl := &a.wl
+	n := len(wl.Opacity) // frames added so far, this one included
+
+	if l.Transition == nil && wl.Transition == nil {
+		return
+	}
+
+	for len(wl.Transition) < n-1 {
+		wl.Transition = append(wl.Transition, nil)
+	}
+
+	wl.Transition = append(wl.Transition, l.Transition)
+}
+
 func (a *layerAcc) add(t int, l *Layer) {
 	wl := &a.wl
 	wl.Last = t
@@ -219,6 +241,7 @@ func (a *layerAcc) add(t int, l *Layer) {
 	wl.W, wl.H = append(wl.W, l.W), append(wl.H, l.H)
 	wl.Rotation, wl.Opacity = append(wl.Rotation, l.Rotation), append(wl.Opacity, l.Opacity)
 	wl.Scale = append(wl.Scale, l.Scale)
+	a.transition(l)
 
 	if l.Kind == Media {
 		sec := 0.0

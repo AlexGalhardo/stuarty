@@ -1,0 +1,10 @@
+{
+  "op": "item.set_transition",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "edge": "in",
+    "kind": "wipe",
+    "direction": "right",
+    "duration": "20f"
+  }
+}

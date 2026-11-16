@@ -185,6 +185,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.flip", phase: "B" },
 		palette,
 	],
+	"clip.set_effects": [palette],
 	"item.set_enabled": [
 		{ kind: "key", action: "timeline.toggle_enabled", phase: "B" },
 		{ kind: "menu", action: "timeline.toggle_enabled", phase: "B" },

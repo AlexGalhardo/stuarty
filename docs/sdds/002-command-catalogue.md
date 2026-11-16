@@ -1,6 +1,6 @@
 # SDD-002: Command catalogue of the core
 
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 67 commands, 66 public, of which 16 are Prototype, 32 ALPHA and 19 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen for ALPHA: all 48 commands have golden cases and pass the registry-wide gates (P2-ENG-018). BETA adds `clip.set_filter` and `clip.set_blur` (C.49, C.50; P3-ENG-001), `audio.duck` and `audio.mark_beats` (C.51, C.52; P3-ENG-002), `font.add` and `font.remove` (C.53, C.54; P3-ENG-005), 54 in the BETA build; after BETA `clip.set_chroma_key` (C.55, VV-015) and the marker commands `marker.add`, `marker.set` and `marker.remove` (C.56 to C.58, VV-035) make 58; `item.slip` and `settings.reframe` (C.59, C.60, VV-036 and VV-038) make 60; `clip.set_blend` (C.61, VV-015) makes 61; `clip.set_mask` (C.62, VV-015) makes 62; `clip.set_flip` (C.63, TASK-0233) makes 63; `item.set_enabled` (C.64, TASK-0233) makes 64; `item.link`, `item.unlink` and `item.extract_audio` (C.65 to C.67, TASK-0277) make 67; `clip.set_effects` (C.68, TASK-0278) makes 68. The binary exposes the BETA build (`command.Build` is `Beta`, switched on 2026-11-15): 68 commands, 67 public, of which 16 are Prototype, 32 ALPHA and 20 BETA; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -276,6 +276,7 @@ Scope is `edit` unless stated. Phase: `P` Prototype, `A` ALPHA. "Time" marks arg
 | `clip.set_mask` | B | `item_id`, `mask` (`{shape, x, y, width, height, feather?, invert?}` or null) | Limits where a visual item is drawn to a rectangle or an ellipse in the item's own frame; null removes it. See C.62 |
 | `clip.set_flip` | B | `item_id`, `horizontal?`, `vertical?` (booleans) | Mirrors a visual item left to right and or top to bottom; a side not given keeps its value. See C.63 |
 | `item.set_enabled` | B | `item_id`, `enabled` (boolean) | Turns any item off or on without removing it: a disabled item stays on the timeline and is ignored by preview, export and audio. See C.64 |
+| `clip.set_effects` | B | `item_id`, `effects` (up to 6 `{kind, ...}`) | Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake, each with its parameters. See C.68 |
 | `item.link` | B | `item_ids` (2 to 20), `id?` | Puts items in one link group: `item.move`, `item.trim` and `item.split` on one of them apply to all of them. See C.65 |
 | `item.unlink` | B | `item_ids` | Takes items out of their link group; a group left with one item is dissolved. See C.66 |
 | `item.extract_audio` | B | `item_id`, `track_id`, `id?` | Creates a linked audio item from the audio of a video clip and mutes the clip. See C.67 |
@@ -1728,7 +1729,9 @@ Sets or removes the transition on one edge of a visual item.
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | a visual item |
 | `edge` | `"in"` or `"out"` | yes | none | |
-| `kind` | `"fade"`, `"slide_left"`, `"slide_right"`, `"slide_up"`, `"slide_down"` or `null` | yes | none | `null` removes the transition |
+| `kind` | `"fade"`, `"slide_left"`, `"slide_right"`, `"slide_up"`, `"slide_down"`, `"zoom"`, `"whip"`, `"dip"`, `"wipe"` or `null` | yes | none | `null` removes the transition. The last four were added after BETA (TASK-0278, formulas in SDD-004 section 3.2) |
+| `color` | `#RRGGBB` | no | `"#000000"` | `dip` only; on another kind `E_VALIDATION`. Black is stored as absent |
+| `direction` | `"left"`, `"right"`, `"up"`, `"down"` | no | `"left"` | `whip` and `wipe` only; on another kind `E_VALIDATION`. `left` is stored as absent |
 | `duration` | time, as a length | no | `"0.5s"` | at least 1 frame; rejected with `kind: null` (`E_VALIDATION`). The default applies whenever it is omitted, even when a transition already exists |
 
 **Preconditions.**
@@ -1740,14 +1743,14 @@ Sets or removes the transition on one edge of a visual item.
 
 **Postconditions.**
 
-1. `transition_in` or `transition_out` is `{kind, duration}`, or removed when `kind` is `null`. The other edge is untouched.
+1. `transition_in` or `transition_out` is `{kind, duration}` (with `color` for a dip that is not black, with `direction` for a whip or a wipe that is not `left`), or removed when `kind` is `null`. The other edge is untouched.
 2. `diff` has one `item.updated`; empty when nothing changes (including removing a transition that does not exist). `effective` has `edge`, `kind` and, when set, `duration` as the A.4 triple.
 
 **Errors.**
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | bad `kind` or `edge`, or `duration` with `kind: null` | `args.kind "wipe" is not a transition kind.` | `Use fade, slide_left, slide_right, slide_up, slide_down or null.` |
+| `E_VALIDATION` | bad `kind` or `edge`, `duration` with `kind: null`, `color` on a kind that is not `dip`, `direction` on a kind that is not `whip` or `wipe`, a malformed `color` or `direction` | `args.kind "spin" is not a transition kind.` | `Use fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe or null.` |
 | `E_INVALID_TIME` | malformed or zero `duration` | `args.duration "0s" is 0 frames; a transition lasts at least 1 frame.` | `Use "0.5s" or "15f".` |
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_TYPE_MISMATCH` | audio item | `Item itm_s6t7v8w9x0 is an audio item; transitions apply to visual items.` | `Use item.set_audio fade_in and fade_out instead.` |
@@ -1786,6 +1789,17 @@ Sets or removes the transition on one edge of a visual item.
 - `err_not_found`
 - `err_type_mismatch_audio_item`
 - `err_invalid_state_sum_exceeds_duration`
+- `ok_zoom`
+- `ok_whip_with_direction`
+- `ok_whip_default_direction_left_not_stored`
+- `ok_dip_with_colour`
+- `ok_dip_black_not_stored`
+- `ok_wipe_with_direction`
+- `ok_replace_colour_dip_with_fade_drops_parameters`
+- `err_validation_color_with_fade`
+- `err_validation_color_not_6_digit_hex`
+- `err_validation_direction_with_fade`
+- `err_validation_direction_unknown`
 
 ### C.19 `item.set_audio` (phase A)
 
@@ -5385,3 +5399,78 @@ Creates an audio item from the audio of a video clip, linked to it, and mutes th
 - `err_overlap_audio_track_busy`
 - `err_id_exists`
 - `err_limit_500_items`
+
+### C.68 `clip.set_effects` (phase B)
+
+Sets the visual effects of a clip (TASK-0278, SDD-001 section 3.4, pixels in SDD-004 section 3.13). One list command instead of an add, a set and a remove per effect: the whole list is the argument, so an agent states the result it wants, the inverse is one patch, and the tool list stays one entry smaller.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` |
+| `effects` | list of effects | yes | none | up to 6; `[]` removes them all. An effect is `{"kind", ...}` with `kind` one of `motion_blur`, `glow`, `vignette`, `grain`, `rgb_split`, `shake`, each kind at most once, and only the parameters of its kind |
+
+The parameters, with range and default: `motion_blur` `amount` 0 to 1 (0.5), `angle` -180 to 180 degrees (0); `glow` `amount` 0 to 1 (0.5), `radius` 1 to 100 frame pixels (12), `threshold` 0 to 1 (0.6); `vignette` `amount` 0 to 1 (0.5), `softness` 0 to 1 (0.5); `grain` `amount` 0 to 1 (0.3), `size` 1 to 8 (1), `seed` 0 to 65535 (0); `rgb_split` `amount` 0 to 1 (0.3), `angle` -180 to 180 (0); `shake` `amount` 0 to 1 (0.3), `speed` 1 to 30 per second (8), `seed` 0 to 65535 (0). `size`, `speed` and `seed` are whole numbers; the other values are rounded to 3 decimals.
+
+**Preconditions.**
+
+1. Arguments match the schema: known kinds, no kind twice, at most 6 effects, a parameter only on a kind that takes it, every value in range (`E_VALIDATION`).
+2. The item exists (`E_NOT_FOUND`).
+3. The item is a `clip` (`E_TYPE_MISMATCH`).
+
+**Postconditions.**
+
+1. `effects` is the given list in the given order, each effect with every parameter of its kind present (the defaults filled in, values rounded); it is absent when the list is empty. A parameter equal to its default is still stored, so a stored effect says everything.
+2. `diff` has one `item.updated`; empty when nothing changes. `effective.effects` is the number of effects.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | unknown kind, a kind twice, a parameter of another kind, a value out of range, more than 6 effects | `args.effects[0].radius does not apply to vignette.` | `vignette takes [amount softness].` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip | `Item itm_s6t7v8w9x0 is a text item; effects applies to clips.` | `Use item.set_transform to size other items.` |
+
+**Inverse.** `patch {collection: "items", id, set: {effects: <old>}}` or `unset: ["effects"]` when there were none.
+
+**Idempotency.** Same result.
+
+**Example.** Clip `itm_m1n2p3q4r5` with no effects.
+
+```json
+{"op": "clip.set_effects", "args": {"item_id": "itm_m1n2p3q4r5", "effects": [{"kind": "vignette", "amount": 0.6}]}}
+```
+
+```json
+[{"kind": "item.updated", "id": "itm_m1n2p3q4r5", "changes": {"effects": [null, [{"kind": "vignette", "amount": 0.6, "softness": 0.5}]]}}]
+```
+
+**Golden cases.**
+
+- `ok_each_kind_with_defaults`
+- `ok_motion_blur_parameters`
+- `ok_glow_parameters`
+- `ok_vignette_parameters`
+- `ok_grain_parameters`
+- `ok_rgb_split_parameters`
+- `ok_shake_parameters`
+- `ok_amount_0_is_stored`
+- `ok_decimals_rounded_to_3`
+- `ok_order_is_kept`
+- `ok_replaces_the_whole_list`
+- `ok_empty_list_removes_them`
+- `ok_empty_list_without_effects_noop`
+- `ok_same_list_noop`
+- `err_validation_unknown_kind`
+- `err_validation_kind_listed_twice`
+- `err_validation_parameter_of_another_kind`
+- `err_validation_amount_above_1`
+- `err_validation_angle_above_180`
+- `err_validation_radius_below_1`
+- `err_validation_size_above_8`
+- `err_validation_speed_0`
+- `err_validation_seed_above_65535`
+- `err_validation_seven_effects`
+- `err_not_found`
+- `err_type_mismatch_text_item`
