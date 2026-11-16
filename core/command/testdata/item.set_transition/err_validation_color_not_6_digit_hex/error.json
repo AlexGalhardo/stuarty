@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.color \"#FF8800CC\" is not #RRGGBB.",
+  "hint": "Use a colour like \"#FF8800\".",
+  "retryable": false,
+  "path": "args.color"
+}

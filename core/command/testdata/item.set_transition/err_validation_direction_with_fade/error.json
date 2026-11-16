@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.direction applies to whip and wipe transitions, not to fade.",
+  "hint": "Send direction with kind \"whip\" or \"wipe\".",
+  "retryable": false,
+  "path": "args.direction"
+}

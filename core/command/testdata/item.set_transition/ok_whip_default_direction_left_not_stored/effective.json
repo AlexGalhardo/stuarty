@@ -1,0 +1,9 @@
+{
+  "duration": {
+    "frame": 15,
+    "requested": "0.5s",
+    "seconds": 0.5
+  },
+  "edge": "in",
+  "kind": "whip"
+}

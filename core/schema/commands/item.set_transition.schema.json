@@ -2,6 +2,20 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "color": {
+      "description": "dip only: #RRGGBB, default #000000.",
+      "type": "string"
+    },
+    "direction": {
+      "description": "whip and wipe only: left (default), right, up or down.",
+      "enum": [
+        "left",
+        "right",
+        "up",
+        "down"
+      ],
+      "type": "string"
+    },
     "duration": {
       "description": "Length of the transition, at least 1 frame; default 0.5s.",
       "type": "string",
@@ -20,13 +34,17 @@
       "type": "string"
     },
     "kind": {
-      "description": "fade, slide_left, slide_right, slide_up, slide_down, or null to remove.",
+      "description": "fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, or null to remove.",
       "enum": [
         "fade",
         "slide_left",
         "slide_right",
         "slide_up",
         "slide_down",
+        "zoom",
+        "whip",
+        "dip",
+        "wipe",
         null
       ],
       "type": [

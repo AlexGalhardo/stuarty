@@ -288,7 +288,17 @@ var alphaOps = map[string]func(p *docPick) string{
 	},
 	"item.set_transition": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"edge":%q,"kind":%q,"duration":%q}`, p.item(), p.oneOf("in", "out"),
-			p.oneOf("fade", "slide_left", "slide_right"), p.frames(40))
+			p.oneOf("fade", "slide_left", "slide_right", "zoom", "whip", "dip", "wipe"), p.frames(40))
+	},
+	"clip.set_effects": func(p *docPick) string {
+		return fmt.Sprintf(
+			`{"item_id":%q,"effects":[{"kind":"vignette","amount":%.2f},{"kind":"grain","size":%d,"seed":%d},{"kind":"shake","speed":%d}]}`,
+			p.clip(),
+			float64(p.n(101))/100,
+			1+p.n(8),
+			p.n(65536),
+			1+p.n(30),
+		)
 	},
 	"item.set_audio": func(p *docPick) string {
 		return fmt.Sprintf(

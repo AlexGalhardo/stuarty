@@ -140,9 +140,10 @@ Visual items (`clip`, `text`, `caption`, `shape`) also have:
 | `chroma_key` | object or absent | absent | Added after BETA (VV-015). The colour the compositor makes transparent: `color` (`#RRGGBB`, `#RRGGBBAA` or a `$name` template colour), `similarity`, `smoothness` and `spill`, each 0 to 1 and all four present. Absent means no key. Not keyframeable |
 | `blend` | `"normal"`, `"multiply"`, `"screen"`, `"overlay"`, `"add"` or absent | absent | Added after BETA (VV-015). How the item is mixed with what is below it; absent means `normal`. The commands store `normal` as absent. The exact per-channel formulas are in SDD-004 §3.8. Not keyframeable |
 | `flip_x`, `flip_y` | boolean or absent | absent | Added after BETA (TASK-0233). Mirror the item left to right (`flip_x`) or top to bottom (`flip_y`) across its own axes; absent means false and the commands store false as absent. The geometry is in SDD-004 §3.10. Not keyframeable |
+| `effects` | array of Effect, up to 6, or absent | absent | Added after BETA (TASK-0278). Visual effects applied in order, each kind at most once: `{"kind", ...parameters}` with `kind` one of `motion_blur`, `glow`, `vignette`, `grain`, `rgb_split`, `shake` and exactly the parameters of that kind, every one present (the command fills the defaults in): `motion_blur` `amount` 0 to 1 and `angle` -180 to 180; `glow` `amount` 0 to 1, `radius` 1 to 100 and `threshold` 0 to 1; `vignette` `amount` and `softness` 0 to 1; `grain` `amount` 0 to 1, `size` 1 to 8 and `seed` 0 to 65535; `rgb_split` `amount` and `angle`; `shake` `amount` 0 to 1, `speed` 1 to 30 and `seed` 0 to 65535 (`size`, `speed` and `seed` are integers). An unknown kind, a repeated kind, a parameter of another kind, a missing or out-of-range parameter, or more than 6 effects is `V_SHAPE`; an `audio` item with effects is `V_SHAPE`. The pixels are in SDD-004 §3.13. Set by `clip.set_effects`, a clip only |
 | `mask` | object or absent | absent | Added after BETA (VV-015). Limits where the item is drawn: `shape` (`rect` or `ellipse`), `x`, `y`, `width`, `height` (fractions of the item's own drawn rectangle, `x` and `y` from 0 to 1, `width` and `height` from 0.001 to 1, `x + width` and `y + height` at most 1), `feather` (the soft edge in pixels, a whole number from 0 to 200) and `invert` (boolean, absent means false). Absent means no mask. The frame is the item's, not the canvas, so the mask follows the item when it moves, scales or rotates. Not keyframeable |
 
-`blur`, `filter`, `filter_amount`, `chroma_key`, `blend`, `flip_x`, `flip_y` and `mask` apply to every visual item (`clip`, `text`, `caption`, `shape`); on an `audio` item a non-default value is `V_SHAPE`. The order is: chroma key (SDD-004 §3.7), colour adjustment of section 3.5, then the filter, then blur, then opacity; the mask (SDD-004 §3.9) is applied after the blur and before the opacity, and the blend mode (SDD-004 §3.8) is how the result is then drawn over the layers below. The exact formulas and the plan fields are in SDD-004 §3.6.
+`blur`, `filter`, `filter_amount`, `chroma_key`, `blend`, `flip_x`, `flip_y`, `mask` and `effects` apply to every visual item (`clip`, `text`, `caption`, `shape`); on an `audio` item a non-default value is `V_SHAPE`. The order is: chroma key (SDD-004 §3.7), colour adjustment of section 3.5, then the filter, then blur, then the effects (SDD-004 §3.13), then opacity; the mask (SDD-004 §3.9) is applied after the blur and before the opacity, and the blend mode (SDD-004 §3.8) is how the result is then drawn over the layers below. The exact formulas and the plan fields are in SDD-004 §3.6.
 
 ### 3.5 Clip and audio items
 
@@ -254,10 +255,12 @@ Transition:
 
 | Field | Type | Meaning |
 | --- | --- | --- |
-| `kind` | `"fade"`, `"slide_left"`, `"slide_right"`, `"slide_up"`, `"slide_down"` | for `transition_in` the item arrives from that side; for `transition_out` it leaves towards it |
+| `kind` | `"fade"`, `"slide_left"`, `"slide_right"`, `"slide_up"`, `"slide_down"`, `"zoom"`, `"whip"`, `"dip"`, `"wipe"` | for `transition_in` the item arrives from that side; for `transition_out` it leaves towards it. `zoom`, `whip`, `dip` and `wipe` were added after BETA (TASK-0278) |
 | `duration` | integer, at least 1 | frames |
+| `color` | `#RRGGBB` or `#RRGGBBAA` (a template colour reference is allowed) | `dip` only: the colour the item dips to; absent means black. On any other kind it is `V_SHAPE` |
+| `direction` | `"left"`, `"right"`, `"up"`, `"down"` | `whip` and `wipe` only; absent means `left`. On any other kind it is `V_SHAPE` |
 
-The sum of an item's `transition_in.duration` and `transition_out.duration` is at most its `duration`. A fade multiplies opacity from 0 to 1 (in) or 1 to 0 (out), linearly. A slide moves the item from fully outside the frame to its position (in) or the reverse (out), with ease-out for in and ease-in for out.
+The sum of an item's `transition_in.duration` and `transition_out.duration` is at most its `duration`. A fade multiplies opacity from 0 to 1 (in) or 1 to 0 (out), linearly. A slide moves the item from fully outside the frame to its position (in) or the reverse (out), with ease-out for in and ease-in for out. The formulas of `zoom`, `whip`, `dip` and `wipe` are in SDD-004 §3.2.
 
 Keyframes animate a property over the item's duration:
 

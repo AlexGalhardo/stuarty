@@ -1,0 +1,19 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "effects": [
+        null,
+        [
+          {
+            "amount": 1,
+            "kind": "glow",
+            "radius": 40,
+            "threshold": 0.2
+          }
+        ]
+      ]
+    }
+  }
+]

@@ -362,6 +362,10 @@ func itemFlags(it *timeline.Item) []string {
 		f = append(f, "linked")
 	}
 
+	if n := len(it.Effects); n > 0 {
+		f = append(f, fmt.Sprintf("fx:%d", n))
+	}
+
 	if it.Disabled {
 		f = append(f, "disabled")
 	}

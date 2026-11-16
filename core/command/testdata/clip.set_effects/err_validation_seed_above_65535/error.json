@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The value of args.effects[0].seed is 70000, outside the accepted range.",
+  "hint": "Use a value between 0 and 65535.",
+  "retryable": false,
+  "path": "args.effects[0].seed"
+}

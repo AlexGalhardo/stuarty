@@ -71,6 +71,17 @@ export interface Item {
   denoise?: number;
   disabled?: boolean;
   duration: number;
+  /**
+   * @minItems 1
+   * @maxItems 6
+   */
+  effects?:
+    | [Effect]
+    | [Effect, Effect]
+    | [Effect, Effect, Effect]
+    | [Effect, Effect, Effect, Effect]
+    | [Effect, Effect, Effect, Effect, Effect]
+    | [Effect, Effect, Effect, Effect, Effect, Effect];
   fade_in?: number;
   fade_out?: number;
   fill?: string;
@@ -151,6 +162,17 @@ export interface Crop {
   right?: number;
   top?: number;
 }
+export interface Effect {
+  amount?: number;
+  angle?: number;
+  kind: "motion_blur" | "glow" | "vignette" | "grain" | "rgb_split" | "shake";
+  radius?: number;
+  seed?: number;
+  size?: number;
+  softness?: number;
+  speed?: number;
+  threshold?: number;
+}
 export interface Keyframe {
   easing?: "linear" | "ease_in" | "ease_out" | "ease_in_out" | "hold";
   t: number;
@@ -209,8 +231,10 @@ export interface CaptionStyle {
   uppercase?: boolean;
 }
 export interface Transition {
+  color?: string;
+  direction?: "left" | "right" | "up" | "down";
   duration: number;
-  kind: "fade" | "slide_left" | "slide_right" | "slide_up" | "slide_down";
+  kind: "fade" | "slide_left" | "slide_right" | "slide_up" | "slide_down" | "zoom" | "whip" | "dip" | "wipe";
 }
 export interface Word {
   duration: number;

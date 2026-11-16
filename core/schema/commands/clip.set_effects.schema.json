@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "effects": {
+      "description": "The effects in order, up to 6, each kind once; [] removes them all.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "description": "Strength, 0 to 1; all kinds.",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "angle": {
+            "description": "Direction in degrees, -180 to 180; motion_blur, rgb_split.",
+            "maximum": 180,
+            "minimum": -180,
+            "type": "number"
+          },
+          "kind": {
+            "description": "The effect.",
+            "enum": [
+              "motion_blur",
+              "glow",
+              "vignette",
+              "grain",
+              "rgb_split",
+              "shake"
+            ],
+            "type": "string"
+          },
+          "radius": {
+            "description": "Spread in frame pixels, 1 to 100; glow.",
+            "maximum": 100,
+            "minimum": 1,
+            "type": "number"
+          },
+          "seed": {
+            "description": "Noise seed, 0 to 65535; grain, shake.",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "size": {
+            "description": "Grain size in frame pixels, 1 to 8; grain.",
+            "maximum": 8,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "softness": {
+            "description": "How far in the darkening starts, 0 to 1; vignette.",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "speed": {
+            "description": "Shakes per second, 1 to 30; shake.",
+            "maximum": 30,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "threshold": {
+            "description": "Brightness where the glow starts, 0 to 1; glow.",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "item_id": {
+      "description": "A clip.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id",
+    "effects"
+  ],
+  "type": "object"
+}

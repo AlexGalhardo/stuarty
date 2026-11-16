@@ -1,0 +1,14 @@
+{
+  "op": "clip.set_effects",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "effects": [
+      {
+        "kind": "shake",
+        "amount": 0.7,
+        "speed": 30,
+        "seed": 65535
+      }
+    ]
+  }
+}

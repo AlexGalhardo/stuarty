@@ -1,0 +1,13 @@
+{
+  "op": "clip.set_effects",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "effects": [
+      {
+        "kind": "rgb_split",
+        "amount": 1,
+        "angle": 180
+      }
+    ]
+  }
+}

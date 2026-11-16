@@ -1,0 +1,14 @@
+{
+  "op": "clip.set_effects",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "effects": [
+      {
+        "kind": "grain",
+        "amount": 0.6,
+        "size": 3,
+        "seed": 1234
+      }
+    ]
+  }
+}

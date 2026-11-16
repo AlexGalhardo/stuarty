@@ -660,6 +660,75 @@
         },
         "type": "object"
       },
+      "Effect": {
+        "properties": {
+          "amount": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "angle": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "motion_blur",
+              "glow",
+              "vignette",
+              "grain",
+              "rgb_split",
+              "shake"
+            ],
+            "type": "string"
+          },
+          "radius": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "seed": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "size": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "softness": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "speed": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "threshold": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
       "Error": {
         "properties": {
           "code": {
@@ -1105,6 +1174,12 @@
           },
           "duration": {
             "type": "integer"
+          },
+          "effects": {
+            "items": {
+              "$ref": "#/components/schemas/Effect"
+            },
+            "type": "array"
           },
           "fade_in": {
             "type": "integer"
@@ -1983,6 +2058,7 @@
               "clip.set_blur",
               "clip.set_chroma_key",
               "clip.set_color",
+              "clip.set_effects",
               "clip.set_filter",
               "clip.set_flip",
               "clip.set_framing",
@@ -2096,6 +2172,9 @@
           },
           "clip.set_color": {
             "$ref": "#/components/schemas/args.clip.set_color"
+          },
+          "clip.set_effects": {
+            "$ref": "#/components/schemas/args.clip.set_effects"
           },
           "clip.set_filter": {
             "$ref": "#/components/schemas/args.clip.set_filter"
@@ -3231,6 +3310,18 @@
       },
       "Transition": {
         "properties": {
+          "color": {
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "left",
+              "right",
+              "up",
+              "down"
+            ],
+            "type": "string"
+          },
           "duration": {
             "type": "integer"
           },
@@ -3240,9 +3331,33 @@
               "slide_left",
               "slide_right",
               "slide_up",
-              "slide_down"
+              "slide_down",
+              "zoom",
+              "whip",
+              "dip",
+              "wipe"
             ],
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TransitionSpec": {
+        "properties": {
+          "color": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string"
+          },
+          "edge": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "p": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -3523,6 +3638,12 @@
           },
           "cx": {},
           "cy": {},
+          "effects": {
+            "items": {
+              "$ref": "#/components/schemas/Effect"
+            },
+            "type": "array"
+          },
           "filter": {
             "items": {
               "format": "double",
@@ -3585,6 +3706,19 @@
             "items": {
               "format": "double",
               "type": "number"
+            },
+            "type": "array"
+          },
+          "transition": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/TransitionSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "type": "array"
           },
@@ -4630,6 +4764,93 @@
         ],
         "type": "object"
       },
+      "args.clip.set_effects": {
+        "additionalProperties": false,
+        "properties": {
+          "effects": {
+            "description": "The effects in order, up to 6, each kind once; [] removes them all.",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "amount": {
+                  "description": "Strength, 0 to 1; all kinds.",
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "angle": {
+                  "description": "Direction in degrees, -180 to 180; motion_blur, rgb_split.",
+                  "maximum": 180,
+                  "minimum": -180,
+                  "type": "number"
+                },
+                "kind": {
+                  "description": "The effect.",
+                  "enum": [
+                    "motion_blur",
+                    "glow",
+                    "vignette",
+                    "grain",
+                    "rgb_split",
+                    "shake"
+                  ],
+                  "type": "string"
+                },
+                "radius": {
+                  "description": "Spread in frame pixels, 1 to 100; glow.",
+                  "maximum": 100,
+                  "minimum": 1,
+                  "type": "number"
+                },
+                "seed": {
+                  "description": "Noise seed, 0 to 65535; grain, shake.",
+                  "maximum": 65535,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "size": {
+                  "description": "Grain size in frame pixels, 1 to 8; grain.",
+                  "maximum": 8,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "softness": {
+                  "description": "How far in the darkening starts, 0 to 1; vignette.",
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "speed": {
+                  "description": "Shakes per second, 1 to 30; shake.",
+                  "maximum": 30,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "threshold": {
+                  "description": "Brightness where the glow starts, 0 to 1; glow.",
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "item_id": {
+            "description": "A clip.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "effects"
+        ],
+        "type": "object"
+      },
       "args.clip.set_filter": {
         "additionalProperties": false,
         "properties": {
@@ -5228,6 +5449,20 @@
       "args.item.set_transition": {
         "additionalProperties": false,
         "properties": {
+          "color": {
+            "description": "dip only: #RRGGBB, default #000000.",
+            "type": "string"
+          },
+          "direction": {
+            "description": "whip and wipe only: left (default), right, up or down.",
+            "enum": [
+              "left",
+              "right",
+              "up",
+              "down"
+            ],
+            "type": "string"
+          },
           "duration": {
             "description": "Length of the transition, at least 1 frame; default 0.5s.",
             "type": "string",
@@ -5246,13 +5481,17 @@
             "type": "string"
           },
           "kind": {
-            "description": "fade, slide_left, slide_right, slide_up, slide_down, or null to remove.",
+            "description": "fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, or null to remove.",
             "enum": [
               "fade",
               "slide_left",
               "slide_right",
               "slide_up",
               "slide_down",
+              "zoom",
+              "whip",
+              "dip",
+              "wipe",
               null
             ],
             "type": [

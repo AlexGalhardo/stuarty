@@ -310,7 +310,57 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 			})
 		}, VTransitions},
 		{"transition kind", func(d *Document) {
-			editItem(d, clipID, func(i *Item) { i.TransitionIn = &Transition{Kind: "wipe", Duration: 5} })
+			editItem(d, clipID, func(i *Item) { i.TransitionIn = &Transition{Kind: "spin", Duration: 5} })
+		}, VShape},
+		{"transition colour on a fade", func(d *Document) {
+			editItem(
+				d,
+				clipID,
+				func(i *Item) { i.TransitionIn = &Transition{Kind: "fade", Duration: 5, Color: "#FF0000"} },
+			)
+		}, VShape},
+		{"transition colour not a colour", func(d *Document) {
+			editItem(d, clipID, func(i *Item) { i.TransitionIn = &Transition{Kind: "dip", Duration: 5, Color: "red"} })
+		}, VShape},
+		{"transition direction on a dip", func(d *Document) {
+			editItem(
+				d,
+				clipID,
+				func(i *Item) { i.TransitionIn = &Transition{Kind: "dip", Duration: 5, Direction: "up"} },
+			)
+		}, VShape},
+		{"transition direction unknown", func(d *Document) {
+			editItem(
+				d,
+				clipID,
+				func(i *Item) { i.TransitionIn = &Transition{Kind: "wipe", Duration: 5, Direction: "sideways"} },
+			)
+		}, VShape},
+		{"effect kind", func(d *Document) {
+			editItem(d, clipID, func(i *Item) { i.Effects = []Effect{{Kind: "sparkle"}} })
+		}, VShape},
+		{"effect parameter of another kind", func(d *Document) {
+			a, r := 0.5, 10.0
+			editItem(d, clipID, func(i *Item) {
+				i.Effects = []Effect{{Kind: EffectVignette, Amount: &a, Softness: &a, Radius: &r}}
+			})
+		}, VShape},
+		{"effect parameter missing", func(d *Document) {
+			a := 0.5
+			editItem(d, clipID, func(i *Item) { i.Effects = []Effect{{Kind: EffectVignette, Amount: &a}} })
+		}, VShape},
+		{"effect parameter out of range", func(d *Document) {
+			a, s := 1.5, 0.5
+			editItem(
+				d,
+				clipID,
+				func(i *Item) { i.Effects = []Effect{{Kind: EffectVignette, Amount: &a, Softness: &s}} },
+			)
+		}, VShape},
+		{"effect twice", func(d *Document) {
+			a, s := 0.5, 0.5
+			e := Effect{Kind: EffectVignette, Amount: &a, Softness: &s}
+			editItem(d, clipID, func(i *Item) { i.Effects = []Effect{e, e} })
 		}, VShape},
 		{
 			"transition duration",

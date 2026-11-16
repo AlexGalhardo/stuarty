@@ -49,11 +49,11 @@ func evaluate(it *timeline.Item, r int, width, height, cx, cy float64) animated 
 	}
 
 	if tr := it.TransitionIn; tr != nil && r < tr.Duration {
-		a.transition(tr.Kind, float64(r+1)/float64(tr.Duration+1), width, height)
+		a.transition(tr, float64(r+1)/float64(tr.Duration+1), width, height)
 	}
 
 	if tr := it.TransitionOut; tr != nil && r >= it.Duration-tr.Duration {
-		a.transition(tr.Kind, float64(it.Duration-r)/float64(tr.Duration+1), width, height)
+		a.transition(tr, float64(it.Duration-r)/float64(tr.Duration+1), width, height)
 	}
 
 	return a
@@ -68,10 +68,10 @@ func orDefault(p *float64, def float64) float64 {
 }
 
 // transition applies one transition at progress p (SDD-004 §3.2).
-func (a *animated) transition(kind string, p, width, height float64) {
+func (a *animated) transition(tr *timeline.Transition, p, width, height float64) {
 	s := 1 - (1-p)*(1-p)*(1-p)
 
-	switch kind {
+	switch tr.Kind {
 	case "fade":
 		a.opacity *= p
 	case "slide_left":
@@ -82,6 +82,22 @@ func (a *animated) transition(kind string, p, width, height float64) {
 		a.y -= (1 - s) * height
 	case "slide_down":
 		a.y += (1 - s) * height
+	case "zoom":
+		a.scale *= 1 + (1-s)/2
+		a.opacity *= p
+	case "whip":
+		s5 := 1 - math.Pow(1-p, 5)
+
+		switch tr.Direction {
+		case "right":
+			a.x += (1 - s5) * width
+		case "up":
+			a.y -= (1 - s5) * height
+		case "down":
+			a.y += (1 - s5) * height
+		default:
+			a.x -= (1 - s5) * width
+		}
 	}
 }
 

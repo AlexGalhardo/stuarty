@@ -221,6 +221,65 @@
       },
       "type": "object"
     },
+    "Effect": {
+      "properties": {
+        "amount": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "angle": {
+          "maximum": 180,
+          "minimum": -180,
+          "type": "number"
+        },
+        "kind": {
+          "enum": [
+            "motion_blur",
+            "glow",
+            "vignette",
+            "grain",
+            "rgb_split",
+            "shake"
+          ],
+          "type": "string"
+        },
+        "radius": {
+          "maximum": 100,
+          "minimum": 1,
+          "type": "number"
+        },
+        "seed": {
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "size": {
+          "maximum": 8,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "softness": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "speed": {
+          "maximum": 30,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "threshold": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "type": "object"
+    },
     "FontFile": {
       "properties": {
         "hash": {
@@ -298,6 +357,14 @@
         "duration": {
           "minimum": 1,
           "type": "integer"
+        },
+        "effects": {
+          "items": {
+            "$ref": "#/$defs/Effect"
+          },
+          "maxItems": 6,
+          "minItems": 1,
+          "type": "array"
         },
         "fade_in": {
           "minimum": 0,
@@ -851,6 +918,19 @@
     },
     "Transition": {
       "properties": {
+        "color": {
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "left",
+            "right",
+            "up",
+            "down"
+          ],
+          "type": "string"
+        },
         "duration": {
           "minimum": 1,
           "type": "integer"
@@ -861,7 +941,11 @@
             "slide_left",
             "slide_right",
             "slide_up",
-            "slide_down"
+            "slide_down",
+            "zoom",
+            "whip",
+            "dip",
+            "wipe"
           ],
           "type": "string"
         }
