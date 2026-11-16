@@ -253,7 +253,7 @@ var export = &spec{
 	name:    "export",
 	summary: "export a project to a file",
 	usage: []string{
-		"vukem-video export --project <id> [--start t] [--end t] [--format f] [--wait] [--timeout d] [--out f] [--force]",
+		"vukem-video export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]",
 	},
 	example: "vukem-video export --project prj_7k2m9x4q1b --json",
 	project: true,
@@ -262,6 +262,7 @@ var export = &spec{
 	flags: append([]flagDef{
 		{Name: "start", Kind: kindString, Usage: "first time to export (default: the start)"},
 		{Name: "end", Kind: kindString, Usage: "end of the export (default: the end of the timeline)"},
+		{Name: "at", Kind: kindString, Usage: "the time of the frame, only with --format png (default: the start)"},
 		{
 			Name:  "format",
 			Kind:  kindString,
@@ -276,9 +277,9 @@ var export = &spec{
 
 		req := service.JobStartRequest{ProjectID: c.projectID, Kind: service.JobExport}
 
-		if c.args.has("start") || c.args.has("end") || c.args.has("format") {
+		if c.args.has("start") || c.args.has("end") || c.args.has("format") || c.args.has("at") {
 			raw, err := json.Marshal(service.ExportArgs{
-				Start: c.args.str("start"), End: c.args.str("end"), Format: c.args.str("format"),
+				Start: c.args.str("start"), End: c.args.str("end"), Format: c.args.str("format"), At: c.args.str("at"),
 			})
 			if err != nil {
 				return nil, err
