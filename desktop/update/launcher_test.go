@@ -8,12 +8,16 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 )
 
 const testSHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 
 // launcherFeed signs a feed. Each map gives, per platform key, the platform name its artifact signature
 // covers, so a test can sign with the wrong label.
+// launcherNow is the clock of the launcher feed tests: the feeds they sign are fresh at this instant.
+var launcherNow = time.Date(2026, 11, 16, 12, 0, 0, 0, time.UTC)
+
 func launcherFeed(t *testing.T, priv ed25519.PrivateKey, platforms, launchers map[string]string) []byte {
 	t.Helper()
 
@@ -25,7 +29,11 @@ func launcherFeed(t *testing.T, priv ed25519.PrivateKey, platforms, launchers ma
 		}
 	}
 
-	body := map[string]any{"schema": feedSchema, "version": "0.21.0", "platforms": map[string]any{}}
+	body := map[string]any{
+		"schema": feedSchema, "version": "0.21.0", "platforms": map[string]any{},
+		"published_at": launcherNow.Add(-time.Hour).Format(time.RFC3339),
+		"expires":      launcherNow.Add(30 * 24 * time.Hour).Format(time.RFC3339),
+	}
 
 	for key, signedAs := range platforms {
 		body["platforms"].(map[string]any)[key] = mk("https://h.example/installer-"+key, signedAs)
@@ -59,7 +67,7 @@ func launcherFeed(t *testing.T, priv ed25519.PrivateKey, platforms, launchers ma
 func offerFor(t *testing.T, feed []byte, pub ed25519.PublicKey, platform string) (*Offer, error) {
 	t.Helper()
 
-	return parseFeed(feed, pub, platform)
+	return parseFeed(feed, pub, platform, launcherNow)
 }
 
 func TestFeedWithLaunchersOffersTheLauncherOnMacAndLinux(t *testing.T) {

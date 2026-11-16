@@ -121,7 +121,6 @@ func parseFeed(raw []byte, key ed25519.PublicKey, platform string, now time.Time
 		return nil, err
 	}
 
-	e, ok := p.Platforms[platform]
 	e, signed, ok := pickEntry(&p, platform)
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrNoPlatform, platform)

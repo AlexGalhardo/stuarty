@@ -99,18 +99,6 @@ type scenario struct {
 	publishedAt    string              // default clock-1h; "-" leaves the field out of the signed payload
 	expires        string              // default clock+30d; "-" leaves the field out of the signed payload
 	notes          string              // optional release notes in the signed payload
-	feedVersion    string              // default 0.15.0
-	feedKey        ed25519.PrivateKey  // key that signs the feed, default the test key
-	artifactKey    ed25519.PrivateKey  // key that signs the artifact, default the test key
-	sigVersion     string              // version in the signed artifact message, default feedVersion
-	sigPlatform    string              // platform in the signed artifact message, default platform
-	declaredSHA    []byte              // bytes whose digest the feed declares, default the artifact
-	declaredSize   int64               // default len(artifact)
-	served         []byte              // bytes the server sends, default the artifact
-	truncateAt     int                 // when > 0 the server promises the full length and sends this many bytes
-	artifactHost   string              // host for the artifact URL, default the server
-	feedRedirectTo string              // when set, the feed answers a redirect there
-	notes          string              // optional release notes in the signed payload
 	mutateFeed     func([]byte) []byte // rewrites the served feed after it was signed
 }
 
