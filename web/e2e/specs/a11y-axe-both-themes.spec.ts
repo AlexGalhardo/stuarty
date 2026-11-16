@@ -45,6 +45,18 @@ async function scan(
 	state: string,
 	found: Finding[],
 ): Promise<void> {
+	// A dialog or a popover that is still fading in has a text color halfway to
+	// its final one, which axe reads as low contrast; the slower Firefox and
+	// WebKit runners catch it mid-transition. Endless animations (a spinner)
+	// are left out: they never finish.
+	await page.evaluate(() =>
+		Promise.all(
+			document
+				.getAnimations()
+				.filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+				.map((a) => a.finished.catch(() => undefined)),
+		),
+	);
 	const { violations } = await new AxeBuilder({ page })
 		.withTags(TAGS)
 		.analyze();
@@ -168,8 +180,11 @@ for (const lang of ["en", "pt-BR"] as const) {
 							},
 						},
 					],
-				})) as { created: string[] };
-				const [clip, text, shape, caption, tone] = out.created;
+				})) as { effective: { created?: string[] }[] };
+				// `created` at the top level is sorted by id, not by operation.
+				const [clip, text, shape, caption, tone] = out.effective.map(
+					(effect) => effect.created?.[0],
+				);
 
 				const found: Finding[] = [];
 				const html = page.locator("html");
