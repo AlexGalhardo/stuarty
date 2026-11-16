@@ -652,7 +652,7 @@
         }
       },
       "palette": {
-        "open": "Command palette (Ctrl+K)",
+        "open": "Commands (Ctrl+K)",
         "open_hint": "Commands (Ctrl+K)",
         "label": "Commands",
         "title": "Command palette",
