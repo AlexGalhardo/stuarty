@@ -918,13 +918,13 @@ vukem-video open
 Create a user of network mode (the password is asked, never an argument)
 
 ```text
-vukem-video user:create <name>
+vukem-video user:create <email> [--admin]
 ```
 
 Example:
 
 ```bash
-vukem-video user:create ana
+vukem-video user:create ana@example.com --admin
 ```
 
 ## `user:passwd`
@@ -932,11 +932,11 @@ vukem-video user:create ana
 Change the password of a user of network mode
 
 ```text
-vukem-video user:passwd <name>
+vukem-video user:passwd <email>
 ```
 
 Example:
 
 ```bash
-vukem-video user:passwd ana
+vukem-video user:passwd ana@example.com
 ```
