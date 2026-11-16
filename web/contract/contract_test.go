@@ -81,6 +81,10 @@ func mustJSON(t *testing.T, v any) string {
 
 var jobID = regexp.MustCompile(`job_[0-9a-hjkmnp-tv-z]{10}`)
 
+// mcpSession is the session id the MCP server appends to the actor label of a client (VV-026,
+// web/app/mcp sessionLabel); the other surfaces have no session, so it is dropped to compare them.
+var mcpSession = regexp.MustCompile(`(local:contract)-[0-9a-hjkmnp-tv-z]{6}\b`)
+
 // templateID is the identifier a saved template is given: the Service makes it,
 // so a scenario reads it back as "$template:0", the first one a result named.
 var templateID = regexp.MustCompile(`tpl_[0-9a-hjkmnp-tv-z]{10}`)
@@ -125,7 +129,7 @@ func normalize(t *testing.T, d driver, raw json.RawMessage) string {
 
 			x = strings.ReplaceAll(x, "\\", "/")
 
-			return templateID.ReplaceAllString(jobID.ReplaceAllString(x, "job_X"), "tpl_X")
+			return mcpSession.ReplaceAllString(templateID.ReplaceAllString(jobID.ReplaceAllString(x, "job_X"), "tpl_X"), "$1")
 		}
 
 		return x
@@ -144,7 +148,9 @@ func normalizeText(d driver, text string) string {
 		text = strings.ReplaceAll(text, dir, "<dir>")
 	}
 
-	return templateID.ReplaceAllString(jobID.ReplaceAllString(strings.ReplaceAll(text, "\\", "/"), "job_X"), "tpl_X")
+	text = templateID.ReplaceAllString(jobID.ReplaceAllString(strings.ReplaceAll(text, "\\", "/"), "job_X"), "tpl_X")
+
+	return mcpSession.ReplaceAllString(text, "$1")
 }
 
 func errorLine(doc *service.ErrorDocument) string {
