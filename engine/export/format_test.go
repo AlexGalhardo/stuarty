@@ -8,6 +8,7 @@ import (
 	"image"
 	"image/color"
 	"image/gif"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"slices"
@@ -542,5 +543,49 @@ func TestFormatUnknownIsRefused(t *testing.T) {
 	_, err := Run(context.Background(), job)
 	if ee := asFFError(t, err); ee.Details["reason"] != ReasonBadFormat {
 		t.Fatalf("error = %v", err)
+	}
+}
+
+// The estimate follows the size and frame rate of the export and brackets what the writer makes.
+func TestEstimateGIF(t *testing.T) {
+	st := timeline.Settings{Width: 1920, Height: 1080, FPS: timeline.Rational{Num: 30, Den: 1}}
+
+	e := EstimateGIF(st, 300)
+	if e.Width != 480 || e.Height != 270 || e.Frames != 150 {
+		t.Fatalf("size and frames = %dx%d, %d", e.Width, e.Height, e.Frames)
+	}
+
+	if e.TypicalBytes != int64(480*270*150*0.5) || e.WorstBytes <= e.TypicalBytes {
+		t.Errorf("bytes = %d typical, %d worst", e.TypicalBytes, e.WorstBytes)
+	}
+
+	if z := EstimateGIF(st, 0); z.Frames != 0 || z.TypicalBytes != 0 {
+		t.Errorf("no frames: %+v", z)
+	}
+
+	// Noise is the worst a picture gets: the bound holds for what the writer really produces.
+	img := image.NewRGBA(image.Rect(0, 0, 480, 270))
+	r := rand.New(rand.NewSource(1))
+
+	for i := range img.Pix {
+		img.Pix[i] = byte(r.Intn(256))
+	}
+
+	var b bytes.Buffer
+
+	g := newGIFWriter(&b, 480, 270, 0)
+
+	for range 3 {
+		if err := g.frame(img, 6); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := g.finish(); err != nil {
+		t.Fatal(err)
+	}
+
+	if got, bound := int64(b.Len()), EstimateGIF(st, 6).WorstBytes; got > bound {
+		t.Errorf("noise GIF is %d bytes, over the worst bound %d", got, bound)
 	}
 }
