@@ -316,8 +316,14 @@ func TestRootInsideWorkspaceIsRefused(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := g.OpenImport(file); code(err) != CodePathNotAllowed {
+	_, err = g.OpenImport(file)
+	if code(err) != CodePathNotAllowed {
 		t.Fatalf("a file inside the workspace: %v", err)
+	}
+
+	var pe *Error
+	if !errors.As(err, &pe) || !strings.Contains(pe.Hint, "outside the workspace") {
+		t.Fatalf("the hint does not say to copy the file out: %v", err)
 	}
 }
 

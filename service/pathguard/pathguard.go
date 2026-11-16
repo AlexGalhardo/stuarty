@@ -25,6 +25,7 @@ const (
 const (
 	maxPathBytes = 4096
 	hintPlain    = "Pass a plain absolute file path."
+	hintInside   = "Copy the file outside the workspace, then import the copy."
 )
 
 // Error is a refusal. Its message never contains the path.
@@ -269,7 +270,7 @@ func (g *Guard) OpenImport(path string) (*os.File, error) {
 	}
 
 	if g.workspace != "" && g.within(g.workspace, resolved) {
-		return nil, g.late(refuse("the file lies inside the workspace.", hintPlain))
+		return nil, g.late(refuse("the file lies inside the workspace.", hintInside))
 	}
 
 	var root string
