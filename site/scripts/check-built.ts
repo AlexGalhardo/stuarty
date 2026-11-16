@@ -21,6 +21,7 @@ const INERT_HOSTS = new Set([
 	"react.dev",
 	"base-ui.com",
 	"semver.org",
+	"modelcontextprotocol.io",
 	"keepachangelog.com",
 	"github.com",
 	"127.0.0.1",

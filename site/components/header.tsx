@@ -100,6 +100,12 @@ export function Header({ groups }: { groups: NavGroup[] }) {
 							{t.apiReference}
 						</Link>
 						<Link
+							href="/docs/mcp/overview"
+							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-fg lg:inline-flex"
+						>
+							{t.mcp}
+						</Link>
+						<Link
 							href="/changelog"
 							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-fg sm:inline-flex"
 						>
