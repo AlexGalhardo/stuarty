@@ -105,18 +105,19 @@ func trackChildren(doc *timeline.Document, items []timeline.Item, rate float64) 
 		if l := unsupported(it); l != "" {
 			lost = append(lost, Lost{ID: it.ID, Name: it.Name, Feature: l})
 
-			if it.Type != timeline.ItemText {
+			meta := gapMetadata(it)
+			if meta == nil {
 				continue
 			}
 
-			// A text item is a gap that carries the item in the vukem metadata: other tools see the
-			// time, Vukem gets the text back.
+			// A text, caption or shape item is a gap that carries the item in the vukem metadata: other
+			// tools see the time, Vukem gets the item back.
 			if it.Start > cursor {
 				kids = append(kids, gap(it.Start-cursor, "", nil, rate))
 			}
 
 			lost = append(lost, lostTextProperties(it)...)
-			kids = append(kids, gap(it.Duration, it.Name, textMetadata(it), rate))
+			kids = append(kids, gap(it.Duration, it.Name, meta, rate))
 			cursor = it.Start + it.Duration
 
 			continue
@@ -230,6 +231,10 @@ func trackMetadata(t *timeline.Track) object {
 
 	if t.Muted {
 		v["muted"] = true
+	}
+
+	if m := timeline.StyleToMap(t.CaptionStyle); len(m) > 0 {
+		v["caption_style"] = m
 	}
 
 	if len(v) == 0 {
@@ -361,6 +366,8 @@ func clipMetadata(it *timeline.Item) object {
 		props["filter_amount"] = it.FilterAmount
 	}
 
+	transitionProps(it, props, true)
+
 	if len(props) == 0 {
 		return object{}
 	}
@@ -470,6 +477,9 @@ func textMetadata(it *timeline.Item) object {
 		props["flip_y"] = true
 	}
 
+	transitionProps(it, props, false)
+	visualProps(it, props)
+
 	if len(props) > 0 {
 		v["properties"] = props
 	}
@@ -477,7 +487,23 @@ func textMetadata(it *timeline.Item) object {
 	return object{metaNamespace: v}
 }
 
-// lostTextProperties lists what a text item has that its metadata does not carry.
+// gapMetadata is the vukem metadata of the gap that stands for a text, caption or shape item, nil
+// for any other type.
+func gapMetadata(it *timeline.Item) object {
+	switch it.Type {
+	case timeline.ItemText:
+		return textMetadata(it)
+	case timeline.ItemCaption:
+		return captionMetadata(it)
+	case timeline.ItemShape:
+		return shapeMetadata(it)
+	case timeline.ItemClip, timeline.ItemAudio:
+	}
+
+	return nil
+}
+
+// lostTextProperties lists what a text, caption or shape item has that its metadata does not carry.
 func lostTextProperties(it *timeline.Item) []Lost {
 	var out []Lost
 
@@ -485,9 +511,7 @@ func lostTextProperties(it *timeline.Item) []Lost {
 		on      bool
 		feature string
 	}{
-		{it.Blur != 0 || (it.Filter != "none" && it.Filter != ""), "filter and blur"},
-		{it.TransitionIn != nil || it.TransitionOut != nil, "transition of a text item"},
-		{len(it.Markers) > 0, "markers of a text item"},
+		{len(it.Markers) > 0, "markers of a " + string(it.Type) + " item"},
 	} {
 		if f.on {
 			out = append(out, Lost{ID: it.ID, Name: it.Name, Feature: f.feature})

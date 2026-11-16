@@ -59,6 +59,30 @@ func (c *Context) clipItem(id, what string) (timeline.Item, *Error) {
 	return it, nil
 }
 
+// visualItem returns the item when it is a clip, text, caption or shape item, else the
+// E_TYPE_MISMATCH of the commands that apply to every visual item (blur, filter).
+func (c *Context) visualItem(id, what string) (timeline.Item, *Error) {
+	if err := idForm("args.item_id", timeline.PrefixItem, id); err != nil {
+		return timeline.Item{}, err
+	}
+	it, err := c.item(id)
+	if err != nil {
+		return it, err
+	}
+	if !isVisual(it.Type) {
+		return it, Errorf(
+			CodeTypeMismatch,
+			"Item %s is %s item; %s applies to visual items.",
+			id,
+			article(it.Type),
+			what,
+		).
+			WithHint("Use item.set_audio for the sound of an audio item.").
+			WithPath("args.item_id")
+	}
+	return it, nil
+}
+
 func article(t timeline.ItemType) string {
 	if t == timeline.ItemAudio {
 		return "an audio"

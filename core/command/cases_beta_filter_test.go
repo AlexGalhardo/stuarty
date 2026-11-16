@@ -32,6 +32,10 @@ func init() {
 	fi("ok_image_clip", fa(`"filter": "invert"`), plain(image))
 	fi("ok_same_values_noop", fa(`"filter": "sepia", "amount": 0.5`),
 		plain(func(it *timeline.Item) { it.Filter, it.FilterAmount = "sepia", 0.5 }))
+	fi("ok_text_item", fmt.Sprintf(`{"item_id": %q, "filter": "sepia"}`, itemC),
+		func() *B { return base().text(itemC, vidTr, 0, 60) })
+	fi("ok_shape_item", fmt.Sprintf(`{"item_id": %q, "filter": "grayscale", "amount": 0.4}`, itemC),
+		func() *B { return base().shape(itemC, vidTr, 0, 60) })
 	fi("err_validation_no_argument", fmt.Sprintf(`{"item_id": %q}`, itemA), plain())
 	fi("err_validation_unknown_filter", fa(`"filter": "sharpen"`), plain())
 	fi("err_validation_amount_above_1", fa(`"amount": 1.5`), plain())
@@ -46,6 +50,10 @@ func init() {
 	bl("ok_rounded_to_3_decimals", fa(`"radius": 3.14159`), plain())
 	bl("ok_image_clip", fa(`"radius": 8`), plain(image))
 	bl("ok_same_value_noop", fa(`"radius": 5`), plain(func(it *timeline.Item) { it.Blur = 5 }))
+	bl("ok_text_item", fmt.Sprintf(`{"item_id": %q, "radius": 6}`, itemC),
+		func() *B { return base().text(itemC, vidTr, 0, 60) })
+	bl("ok_caption_item", fmt.Sprintf(`{"item_id": %q, "radius": 6}`, itemC),
+		func() *B { return base().caption(itemC, 0, 3) })
 	bl("err_validation_no_argument", fmt.Sprintf(`{"item_id": %q}`, itemA), plain())
 	bl("err_validation_radius_above_100", fa(`"radius": 120`), plain())
 	bl("err_validation_radius_negative", fa(`"radius": -1`), plain())

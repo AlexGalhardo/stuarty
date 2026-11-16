@@ -4232,13 +4232,13 @@ At least one of `description` and `colors` is required.
 
 ### C.49 `clip.set_filter` (phase B)
 
-Sets the colour filter of a clip (RF-027, SDD-001 §3.4). The filters are a fixed list implemented in Go by the compositor (SDD-004 §3.6); there is no way to name another one.
+Sets the colour filter of a visual item (RF-027, SDD-001 §3.4; text, caption and shape items since VV-025, the filter applies to every visual item). The filters are a fixed list implemented in Go by the compositor (SDD-004 §3.6); there is no way to name another one.
 
 **Arguments**
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
-| `item_id` | item id | yes | none | a `clip` |
+| `item_id` | item id | yes | none | a `clip`, `text`, `caption` or `shape` item |
 | `filter` | string | no | unchanged | `none`, `grayscale`, `sepia`, `invert`, `warm` or `cool` |
 | `amount` | number | no | unchanged | 0 to 1; how much of the filter is mixed in |
 
@@ -4248,7 +4248,7 @@ At least one of `filter` and `amount` is required.
 
 1. At least one is present, and each given value is valid (`E_VALIDATION`).
 2. The item exists (`E_NOT_FOUND`).
-3. The item is a `clip` (`E_TYPE_MISMATCH`).
+3. The item is not an `audio` item (`E_TYPE_MISMATCH`).
 
 **Postconditions.**
 
@@ -4261,7 +4261,7 @@ At least one of `filter` and `amount` is required.
 | --- | --- | --- | --- |
 | `E_VALIDATION` | nothing to set, an unknown filter, or `amount` out of range | `args.filter is "sharpen", which is not one of the accepted values.` | `Use one of: none, grayscale, sepia, invert, warm, cool.` |
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
-| `E_TYPE_MISMATCH` | not a clip | `Item itm_s6t7v8w9x0 is an audio item; filter applies to clips.` | `Use item.set_transform to size other items.` |
+| `E_TYPE_MISMATCH` | an audio item | `Item itm_s6t7v8w9x0 is an audio item; filter applies to visual items.` | `Use item.set_audio for the sound of an audio item.` |
 
 **Inverse.** `patch {collection: "items", id, set: <old values>, unset: <fields that were absent>}`.
 
@@ -4288,6 +4288,8 @@ At least one of `filter` and `amount` is required.
 - `ok_none_keeps_amount`
 - `ok_rounded_to_3_decimals`
 - `ok_image_clip`
+- `ok_text_item`
+- `ok_shape_item`
 - `ok_same_values_noop`
 - `err_validation_no_argument`
 - `err_validation_unknown_filter`
@@ -4298,20 +4300,20 @@ At least one of `filter` and `amount` is required.
 
 ### C.50 `clip.set_blur` (phase B)
 
-Sets the blur of a clip (RF-027, SDD-001 §3.4).
+Sets the blur of a visual item (RF-027, SDD-001 §3.4; text, caption and shape items since VV-025).
 
 **Arguments**
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
-| `item_id` | item id | yes | none | a `clip` |
+| `item_id` | item id | yes | none | a `clip`, `text`, `caption` or `shape` item |
 | `radius` | number | yes | none | 0 to 100, pixels at project resolution |
 
 **Preconditions.**
 
 1. `radius` is present and in range (`E_VALIDATION`).
 2. The item exists (`E_NOT_FOUND`).
-3. The item is a `clip` (`E_TYPE_MISMATCH`).
+3. The item is not an `audio` item (`E_TYPE_MISMATCH`).
 
 **Postconditions.**
 
@@ -4324,7 +4326,7 @@ Sets the blur of a clip (RF-027, SDD-001 §3.4).
 | --- | --- | --- | --- |
 | `E_VALIDATION` | `radius` missing or out of range | `The value of args.radius is 120, outside the accepted range.` | `Use a value between 0 and 100.` |
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
-| `E_TYPE_MISMATCH` | not a clip | `Item itm_s6t7v8w9x0 is an audio item; blur applies to clips.` | `Use item.set_transform to size other items.` |
+| `E_TYPE_MISMATCH` | an audio item | `Item itm_s6t7v8w9x0 is an audio item; blur applies to visual items.` | `Use item.set_audio for the sound of an audio item.` |
 
 **Inverse.** `patch {collection: "items", id, set: <old value>, unset: <field if it was absent>}`.
 
@@ -4347,6 +4349,8 @@ Sets the blur of a clip (RF-027, SDD-001 §3.4).
 - `ok_zero_removes_field`
 - `ok_rounded_to_3_decimals`
 - `ok_image_clip`
+- `ok_text_item`
+- `ok_caption_item`
 - `ok_same_value_noop`
 - `err_validation_no_argument`
 - `err_validation_radius_above_100`

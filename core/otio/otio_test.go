@@ -807,6 +807,7 @@ func TestExportReportsWhatTextItemsDoNotCarry(t *testing.T) {
 	title := timeline.NewItem("itm_c000000001", timeline.ItemText, trkTop, 0, 30)
 	title.Text, title.Blur = "Hi", 3
 	title.TransitionIn = &timeline.Transition{Kind: "fade", Duration: 5}
+	title.Markers = []timeline.Marker{{Frame: 4}}
 	d.Items[title.ID] = title
 
 	_, lost, err := Export(d)
@@ -819,9 +820,16 @@ func TestExportReportsWhatTextItemsDoNotCarry(t *testing.T) {
 		got[l.Feature] = true
 	}
 
-	for _, f := range []string{"text item", "filter and blur", "transition of a text item"} {
+	for _, f := range []string{"text item", "markers of a text item"} {
 		if !got[f] {
 			t.Errorf("no loss reported for %q: %+v", f, lost)
+		}
+	}
+
+	// The blur and the transition travel in the metadata now (VV-025).
+	for _, f := range []string{"filter and blur", "transition of a text item"} {
+		if got[f] {
+			t.Errorf("%q is still reported as lost: %+v", f, lost)
 		}
 	}
 }
@@ -858,7 +866,7 @@ func TestImportReportsBadAnimationSlotAndTextMetadata(t *testing.T) {
 	}
 
 	for _, want := range []string{
-		"vukem property slot", "vukem property text", "vukem property style font Nope", "vukem property speed",
+		"vukem property slot", "vukem property text", "vukem property speed",
 		"vukem property keyframes.scale", "vukem property chroma_key", "vukem property mask",
 	} {
 		if !strings.Contains(lost.String(), want) {
@@ -866,7 +874,17 @@ func TestImportReportsBadAnimationSlotAndTextMetadata(t *testing.T) {
 		}
 	}
 
-	doc := build(t, im, newDoc(im.FPS))
+	ops, dropped := im.Operations(map[string]string{}, seqIDs())
+	if len(dropped) != 2 || !strings.Contains(dropped[0].Feature+dropped[1].Feature, "style font Nope") {
+		t.Errorf("the unknown font and the clip without an asset are reported: %+v", dropped)
+	}
+
+	res, err := command.Default().ApplyBatch(newDoc(im.FPS), ops, command.Env{NewIDs: seqIDs()})
+	if err != nil {
+		t.Fatalf("the batch does not apply: %v", err)
+	}
+
+	doc := res.Doc
 
 	texts := 0
 
@@ -975,5 +993,181 @@ func TestImportReportsBadVukemTimelineMarkers(t *testing.T) {
 
 	if want := []timeline.Marker{{Frame: 4, Label: "ok"}}; !reflect.DeepEqual(im.markers, want) {
 		t.Errorf("markers = %+v, want %+v", im.markers, want)
+	}
+}
+
+// VV-025: shapes, captions, the caption style of a track, every kind of transition, and the blur and
+// filter of a text come back from the vukem metadata; a project font is kept when the caller names it.
+func TestRoundTripKeepsShapesCaptionsAndTransitions(t *testing.T) {
+	d := sampleDoc()
+
+	size, pos, fam := 64.0, "middle", "Project Sans"
+	top := d.Tracks[trkTop]
+	top.CaptionStyle = &timeline.CaptionStyle{
+		Size: &size, FontFamily: &fam, Position: &pos,
+	}
+	d.Tracks[trkTop] = top
+	d.Fonts = map[string]timeline.ProjectFont{fam: {}}
+
+	c1 := d.Items["itm_c000000001"]
+	c1.TransitionIn = &timeline.Transition{Kind: "slide_up", Duration: 6}
+	d.Items[c1.ID] = c1
+
+	title := d.Items["itm_c000000005"]
+	title.Blur, title.Filter, title.FilterAmount = 4, "sepia", 0.5
+	title.TransitionIn = &timeline.Transition{Kind: "fade", Duration: 5}
+	title.TransitionOut = &timeline.Transition{Kind: "slide_left", Duration: 7}
+	title.Style = &timeline.CaptionStyle{FontFamily: &fam}
+	d.Items[title.ID] = title
+
+	shape := timeline.NewItem("itm_c000000006", timeline.ItemShape, trkTop, 60, 30)
+	shape.Name, shape.Shape, shape.Width, shape.Height, shape.Radius = "badge", "rounded_rect", 300, 120, 24
+	shape.Fill, shape.StrokeColor, shape.StrokeWidth = "#FF8800", "#112233", 3
+	shape.Opacity, shape.Blur = 0.7, 2
+	shape.TransitionOut = &timeline.Transition{Kind: "slide_down", Duration: 4}
+	d.Items[shape.ID] = shape
+
+	sub := timeline.NewItem("itm_c000000007", timeline.ItemCaption, trkTop, 100, 40)
+	sub.Name = "subtitle"
+	sub.Words = []timeline.Word{
+		{
+			Text:     "one",
+			Start:    0,
+			Duration: 10,
+		},
+		{Text: "two", Start: 10, Duration: 10},
+		{Text: "three", Start: 20, Duration: 10},
+	}
+	sub.Breaks = []int{2}
+	sub.Style = &timeline.CaptionStyle{Position: &pos}
+	sub.TransitionIn = &timeline.Transition{Kind: "fade", Duration: 3}
+	d.Items[sub.ID] = sub
+
+	first, lost, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, l := range lost {
+		if l.Feature == "filter and blur" || l.Feature == "transition of a text item" {
+			t.Errorf("still reported as lost: %+v", l)
+		}
+	}
+
+	im, err := Parse(first)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	im.KnownFonts = []string{fam}
+
+	byRef := map[string]string{}
+	for id := range d.Assets {
+		byRef[d.Assets[id].Name] = id
+	}
+
+	empty := newDoc(im.FPS)
+	empty.Fonts = d.Fonts
+
+	ops, dropped := im.Operations(byRef, seqIDs())
+	for _, l := range dropped {
+		t.Errorf("dropped: %+v", l)
+	}
+
+	res, err := command.Default().ApplyBatch(empty, ops, command.Env{NewIDs: seqIDs()})
+	if err != nil {
+		t.Fatalf("the batch does not apply: %v", err)
+	}
+
+	doc := res.Doc
+
+	byName := map[string]timeline.Item{}
+	for _, it := range doc.Items {
+		byName[it.Name+"/"+string(it.Type)] = it
+	}
+
+	if got := byName["intro/clip"]; got.TransitionIn == nil || got.TransitionIn.Kind != "slide_up" ||
+		got.TransitionIn.Duration != 6 || got.TransitionOut == nil || got.TransitionOut.Kind != "fade" {
+		t.Errorf("clip transitions: %+v / %+v", got.TransitionIn, got.TransitionOut)
+	}
+
+	if got := byName["/text"]; got.Blur != 4 || got.Filter != "sepia" || got.FilterAmount != 0.5 ||
+		got.TransitionIn == nil || got.TransitionIn.Kind != "fade" || got.TransitionOut == nil ||
+		got.TransitionOut.Kind != "slide_left" || got.Style == nil || got.Style.FontFamily == nil ||
+		*got.Style.FontFamily != fam {
+		t.Errorf("text: %+v", got)
+	}
+
+	if got := byName["badge/shape"]; got.Shape != "rounded_rect" || got.Width != 300 || got.Height != 120 || got.Radius != 24 ||
+		got.Fill != "#FF8800" || got.StrokeColor != "#112233" || got.StrokeWidth != 3 || got.Opacity != 0.7 ||
+		got.Blur != 2 || got.TransitionOut == nil ||
+		got.TransitionOut.Kind != "slide_down" ||
+		got.Start != 60 ||
+		got.Duration != 30 {
+		t.Errorf("shape: %+v", got)
+	}
+
+	got := byName["subtitle/caption"]
+	if len(got.Words) != 3 || got.Words[2].Text != "three" || got.Words[2].Start != 20 || len(got.Breaks) != 1 ||
+		got.Breaks[0] != 2 || got.Style == nil || got.Style.Position == nil || *got.Style.Position != "middle" ||
+		got.TransitionIn == nil || got.Start != 100 || got.Duration != 40 {
+		t.Errorf("caption: %+v", got)
+	}
+
+	var ts *timeline.CaptionStyle
+
+	for _, tr := range doc.Tracks {
+		if tr.Name == "Top" {
+			ts = tr.CaptionStyle
+		}
+	}
+
+	if ts == nil || ts.Size == nil || *ts.Size != 64 || ts.Position == nil || *ts.Position != "middle" ||
+		ts.FontFamily == nil || *ts.FontFamily != fam {
+		t.Errorf("caption style of the track: %+v", ts)
+	}
+
+	second, _, err := Export(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(withoutMarkers(t, second), withoutMarkers(t, first)) {
+		t.Errorf("round trip differs:\n%s\n---\n%s", second, first)
+	}
+}
+
+// A font that is neither bundled nor named by the caller is dropped from a style and reported, as
+// before; the rest of the style stays.
+func TestImportDropsAnUnknownProjectFont(t *testing.T) {
+	d := sampleDoc()
+	fam, size := "Project Sans", 30.0
+	title := d.Items["itm_c000000005"]
+	title.Style = &timeline.CaptionStyle{FontFamily: &fam, Size: &size}
+	d.Items[title.ID] = title
+
+	data, _, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	im, err := Parse(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, dropped := im.Operations(
+		map[string]string{"clips/a.mp4": vidAsset, "music.wav": audAsset, "logo.png": imgAsset},
+		seqIDs(),
+	)
+
+	found := false
+
+	for _, l := range dropped {
+		found = found || strings.Contains(l.Feature, "Project Sans")
+	}
+
+	if !found {
+		t.Errorf("the unknown font was not reported: %+v", dropped)
 	}
 }

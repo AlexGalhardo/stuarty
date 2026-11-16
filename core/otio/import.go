@@ -20,6 +20,8 @@ var ErrInvalid = errors.New("otio: not a readable OpenTimelineIO timeline")
 type entry struct {
 	clip     bool
 	text     bool
+	shape    map[string]any // shape items only: the arguments of shape.add
+	caption  *captionSpec   // caption items only
 	ref      string
 	name     string
 	start    int // timeline frame, clips and texts only
@@ -39,6 +41,7 @@ type importTrack struct {
 	name          string
 	audio         bool
 	hidden, muted bool
+	captionStyle  map[string]any
 	entries       []entry
 }
 
@@ -49,6 +52,10 @@ type Import struct {
 	FPS   timeline.Rational `json:"fps"`   // the frame rate of the file; the caller creates the project with it
 	Media []Media           `json:"media"` // every distinct reference, in file order
 	Lost  []Lost            `json:"lost"`  // what the batch cannot carry
+
+	// KnownFonts are the families of the fonts of the project the batch applies to; a text or caption
+	// style may use them besides the bundled fonts. The caller sets it before Operations.
+	KnownFonts []string `json:"-"`
 
 	tracks  []importTrack
 	markers []timeline.Marker
@@ -265,6 +272,10 @@ func (r *reader) track(t map[string]any) {
 		tk.hidden, _ = v["hidden"].(bool)
 		tk.muted, _ = v["muted"].(bool)
 		tk.hidden = tk.hidden && !tk.audio
+
+		if raw, present := v["caption_style"]; present && !tk.audio {
+			tk.captionStyle = textStyle(raw, true, func(f string) { r.lose(f + " of track " + name) })
+		}
 	}
 
 	cursor := 0
@@ -276,7 +287,7 @@ func (r *reader) track(t map[string]any) {
 		switch {
 		case schemaIs(c, "Gap"):
 			if _, d, ok := r.rangeOf(c["source_range"]); ok && d > 0 {
-				if e, ok := r.textItem(c, cursor, d); ok {
+				if e, ok := r.visualItem(c, cursor, d); ok {
 					tk.entries = append(tk.entries, e)
 				}
 
@@ -363,14 +374,63 @@ func (r *reader) clip(c map[string]any, cursor int, kind string) (entry, bool) {
 	return e, true
 }
 
-// textItem reads a Gap that carries a text item of the vukem metadata; a Gap without one, or with
-// a text that is not valid, is only a gap.
-func (r *reader) textItem(c map[string]any, cursor, dur int) (entry, bool) {
+// visualItem reads a Gap that carries a text, shape or caption item of the vukem metadata; a Gap
+// without one, or with one that is not valid, is only a gap.
+func (r *reader) visualItem(c map[string]any, cursor, dur int) (entry, bool) {
 	v := vukemMeta(c)
-	if v == nil || v["text"] == nil {
+
+	switch {
+	case v == nil:
+		return entry{}, false
+	case v["text"] != nil:
+		return r.textItem(c, v, cursor, dur)
+	case v["shape"] != nil:
+		return r.shapeItem(c, v, cursor, dur)
+	case v["caption"] != nil:
+		return r.captionItem(c, v, cursor, dur)
+	}
+
+	return entry{}, false
+}
+
+func (r *reader) shapeItem(c, v map[string]any, cursor, dur int) (entry, bool) {
+	name, _ := c["name"].(string)
+	name = clipRunes(name, 120)
+	lose := func(f string) { r.lose(f + " of shape " + name) }
+
+	args := shapeSpec(v["shape"], lose)
+	if args == nil {
 		return entry{}, false
 	}
 
+	e := entry{shape: args, name: name, start: cursor, duration: dur}
+	props, _ := v["properties"].(map[string]any)
+	spec := itemOps(props, modeText, cursor, dur, r.slots, lose)
+	e.props = spec.ops
+
+	return e, true
+}
+
+func (r *reader) captionItem(c, v map[string]any, cursor, dur int) (entry, bool) {
+	name, _ := c["name"].(string)
+	name = clipRunes(name, 120)
+	lose := func(f string) { r.lose(f + " of caption " + name) }
+
+	spec := readCaption(v["caption"], dur, lose)
+	if spec == nil {
+		return entry{}, false
+	}
+
+	e := entry{caption: spec, name: name, start: cursor, duration: dur}
+	props, _ := v["properties"].(map[string]any)
+	ops := itemOps(props, modeText, cursor, dur, r.slots, lose)
+	e.props = ops.ops
+
+	return e, true
+}
+
+// textItem reads the text item of a Gap's metadata.
+func (r *reader) textItem(c, v map[string]any, cursor, dur int) (entry, bool) {
 	name, _ := c["name"].(string)
 	name = clipRunes(name, 120)
 	lose := func(f string) { r.lose(f + " of text " + name) }
@@ -385,7 +445,7 @@ func (r *reader) textItem(c map[string]any, cursor, dur int) (entry, bool) {
 	e := entry{text: true, name: name, start: cursor, duration: dur, body: body}
 
 	if raw, present := v["style"]; present {
-		e.style = textStyle(raw, lose)
+		e.style = textStyle(raw, false, lose)
 	}
 
 	props, _ := v["properties"].(map[string]any)
@@ -398,7 +458,7 @@ func (r *reader) textItem(c map[string]any, cursor, dur int) (entry, bool) {
 // textStyle checks a style object like text.add does, except for the project fonts, which are
 // not known here: a family that is not bundled is dropped with its weight, never left to fail
 // the batch.
-func textStyle(raw any, lose func(string)) map[string]any {
+func textStyle(raw any, caption bool, lose func(string)) map[string]any {
 	style, _ := raw.(map[string]any)
 
 	data, err := json.Marshal(style)
@@ -416,24 +476,11 @@ func textStyle(raw any, lose func(string)) map[string]any {
 	}
 
 	cs, err := timeline.StyleFromMap(typed)
-	if err != nil || len(timeline.StyleViolations(cs)) > 0 {
+	if err != nil || len(timeline.StyleViolations(cs)) > 0 && !caption ||
+		caption && len(timeline.CaptionStyleViolations(cs)) > 0 {
 		lose("vukem property style is not a valid value")
 
 		return nil
-	}
-
-	family := "Inter"
-	if cs.FontFamily != nil {
-		family = *cs.FontFamily
-	}
-
-	weights, bundled := timeline.BundledWeights[family]
-	if !bundled || (cs.FontWeight != nil && !slices.Contains(weights, *cs.FontWeight)) {
-		lose("vukem property style font " + family + " is not a bundled font")
-
-		style = maps.Clone(style)
-		delete(style, "font_family")
-		delete(style, "font_weight")
 	}
 
 	return style
@@ -445,7 +492,10 @@ func textStyle(raw any, lose func(string)) map[string]any {
 // reported. newID supplies the identifiers (SDD-001 §2 item 6). The batch applies
 // to a project that has the file's FPS and those assets.
 func (im *Import) Operations(assets map[string]string, newID func(prefix string) string) ([]command.Operation, []Lost) {
-	b := &batch{assets: assets, newID: newID}
+	b := &batch{assets: assets, newID: newID, known: map[string]bool{}}
+	for _, f := range im.KnownFonts {
+		b.known[f] = true
+	}
 
 	for _, m := range im.markers {
 		args := map[string]any{"at": frameTime(m.Frame)}
@@ -471,6 +521,7 @@ type placed struct {
 
 type batch struct {
 	assets  map[string]string
+	known   map[string]bool // project font families
 	newID   func(prefix string) string
 	ops     []command.Operation
 	pending []command.Operation // transitions, after every clip exists
@@ -479,6 +530,44 @@ type batch struct {
 
 func (b *batch) push(op string, args any) {
 	b.ops = append(b.ops, command.Operation{Op: op, Args: mustJSON(args)})
+}
+
+// knownStyle drops the font family and weight of a style when the family is neither bundled nor a
+// font of the project the batch applies to (Import.KnownFonts); the rest of the style is kept, so
+// that the batch never fails on a font.
+func (b *batch) knownStyle(style map[string]any, what string) map[string]any {
+	data, err := json.Marshal(style)
+	if err != nil || len(style) == 0 {
+		return style
+	}
+
+	typed, err := timeline.DecodeRaw(data)
+	if err != nil {
+		return style
+	}
+
+	cs, err := timeline.StyleFromMap(typed)
+	if err != nil {
+		return style
+	}
+
+	family := "Inter"
+	if cs.FontFamily != nil {
+		family = *cs.FontFamily
+	}
+
+	weights, bundled := timeline.BundledWeights[family]
+	if b.known[family] || bundled && (cs.FontWeight == nil || slices.Contains(weights, *cs.FontWeight)) {
+		return style
+	}
+
+	b.lost = append(b.lost, Lost{Name: what, Feature: "style font " + family + " is not a bundled or project font"})
+
+	style = maps.Clone(style)
+	delete(style, "font_family")
+	delete(style, "font_weight")
+
+	return style
 }
 
 func (b *batch) track(tk *importTrack) {
@@ -490,6 +579,12 @@ func (b *batch) track(tk *importTrack) {
 	}
 
 	b.push("track.add", map[string]any{"kind": kind, "name": tk.name, "id": trackID, "position": "top"})
+
+	if len(tk.captionStyle) > 0 {
+		b.push("track.set_caption_style", map[string]any{
+			"track_id": trackID, "style": b.knownStyle(tk.captionStyle, "track "+tk.name), "replace": true,
+		})
+	}
 
 	if tk.hidden || tk.muted {
 		update := map[string]any{"track_id": trackID}
@@ -512,12 +607,16 @@ func (b *batch) track(tk *importTrack) {
 			ids[i] = b.clip(trackID, tk.audio, e)
 		case e.text:
 			ids[i] = b.text(trackID, e)
+		case e.shape != nil:
+			ids[i] = b.shape(trackID, e)
+		case e.caption != nil:
+			ids[i] = b.caption(trackID, e)
 		}
 	}
 
 	for i := range tk.entries {
 		e := &tk.entries[i]
-		if e.clip || e.text {
+		if e.clip || e.text || e.shape != nil || e.caption != nil {
 			continue
 		}
 
@@ -591,10 +690,57 @@ func (b *batch) text(trackID string, e *entry) *placed {
 	}
 
 	if len(e.style) > 0 {
-		args["style"] = e.style
+		args["style"] = b.knownStyle(e.style, e.name)
 	}
 
 	b.push("text.add", args)
+	b.after(id, e, "")
+
+	return &placed{id: id, visual: true}
+}
+
+// shape adds one shape item and what its metadata asks for.
+func (b *batch) shape(trackID string, e *entry) *placed {
+	id := b.newID(timeline.PrefixItem)
+	args := map[string]any{
+		"track_id": trackID, "id": id, "start": frameTime(e.start), "duration": frameTime(e.duration),
+	}
+	maps.Copy(args, e.shape)
+
+	b.push("shape.add", args)
+	b.after(id, e, "")
+
+	return &placed{id: id, visual: true}
+}
+
+// caption adds one caption item, trims it to the length of the item in the file when the words end
+// before it, and sets its line breaks and style override.
+func (b *batch) caption(trackID string, e *entry) *placed {
+	id := b.newID(timeline.PrefixItem)
+	words := make([]any, len(e.caption.words))
+
+	for i, w := range e.caption.words {
+		words[i] = w
+	}
+
+	b.push("caption.add", map[string]any{
+		"track_id": trackID, "id": id, "start": frameTime(e.start), "words": words,
+	})
+
+	if e.caption.last < e.duration {
+		b.push("item.trim", map[string]any{"item_id": id, "edge": "end", "to": frameTime(e.start + e.duration)})
+	}
+
+	if len(e.caption.breaks) > 0 {
+		b.push("caption.set_breaks", map[string]any{"item_id": id, "breaks": e.caption.breaks})
+	}
+
+	if len(e.caption.style) > 0 {
+		b.push("caption.set_style", map[string]any{
+			"item_id": id, "style": b.knownStyle(e.caption.style, e.name), "replace": true,
+		})
+	}
+
 	b.after(id, e, "")
 
 	return &placed{id: id, visual: true}

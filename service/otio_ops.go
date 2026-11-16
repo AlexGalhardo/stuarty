@@ -174,6 +174,10 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 
 	assets, unresolved := matchOtioMedia(doc, im.Media)
 
+	for family := range doc.Fonts {
+		im.KnownFonts = append(im.KnownFonts, family)
+	}
+
 	ops, dropped := im.Operations(assets, s.newIDs)
 	lost := append(slices.Clone(im.Lost), dropped...)
 
