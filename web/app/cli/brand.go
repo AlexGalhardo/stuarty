@@ -99,7 +99,7 @@ func (c *call) readKit(src string) (service.BrandKitSetRequest, error) {
 	}
 
 	if err != nil {
-		return req, validation("kit", "cannot read the kit: %v.", err)
+		return req, validation("kit", "cannot read the kit %s: %s.", src, readReason(err))
 	}
 
 	dec := json.NewDecoder(bytes.NewReader(raw))

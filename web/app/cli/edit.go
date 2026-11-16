@@ -127,7 +127,7 @@ func (c *call) readOps(src string) ([]byte, error) {
 	}
 
 	if err != nil {
-		return nil, validation("ops", "cannot read the batch: %v.", err)
+		return nil, validation("ops", "cannot read the batch %s: %s.", src, readReason(err))
 	}
 
 	return raw, nil
