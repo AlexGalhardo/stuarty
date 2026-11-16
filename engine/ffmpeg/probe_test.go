@@ -303,6 +303,16 @@ func TestSecurity_T14_RealMediaPassesAndHostileFilesFail(t *testing.T) {
 			[]byte("\x00\x01\x00\x00\x00\x0d\x00\x80\x00\x03\x00\x30OS/2"),
 			bytes.Repeat([]byte{0x00, 0x81}, 40)...),
 		"woff2 font": append([]byte("wOF2\x00\x01\x00\x00"), bytes.Repeat([]byte{0x00, 0x81}, 40)...),
+		// Reported since the ALPHA: a movie cut in half, which has its mdat and lost its moov.
+		"mp4 cut before the moov": append(
+			box("ftyp", []byte("isom"), []byte{0, 0, 2, 0}, []byte("isomiso2")),
+			append([]byte("\x00\x10\x00\x00mdat"), bytes.Repeat([]byte{0x65, 0x88}, 300)...)...),
+		// The WebM of a VP9 alpha proxy (SDD-011 4.3.5): an EBML header for webm, an open Segment and a
+		// Tracks element that is cut short.
+		"webm alpha proxy cut short": append([]byte(
+			"\x1a\x45\xdf\xa3\x9f\x42\x86\x81\x01\x42\xf7\x81\x01\x42\xf2\x81\x04\x42\xf3\x81\x08\x42\x82\x84webm"+
+				"\x42\x87\x81\x04\x42\x85\x81\x02\x18\x53\x80\x67\x01\xff\xff\xff\xff\xff\xff\xff\x16\x54\xae\x6b\xff"),
+			bytes.Repeat([]byte{0xe0, 0x81}, 30)...),
 	}
 	for name, body := range hostile {
 		store := putStoreBytes(t, r, body)
