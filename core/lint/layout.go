@@ -133,7 +133,8 @@ func (c *check) safeAreaText(it *timeline.Item, b, safe box) (msg, hint string) 
 
 // offFrame reports a visible item whose box lies partly or wholly outside the frame:
 // any pixel for text and captions; wholly outside, or more than half outside, for clips
-// and shapes, unless the box covers the whole frame (fit "cover"). It needs a Measurer.
+// and shapes, unless the box covers the whole frame (fit "cover") or the item is animated
+// in position or size. It needs a Measurer.
 func (c *check) offFrame() {
 	if c.env.Measurer == nil {
 		return
@@ -144,6 +145,10 @@ func (c *check) offFrame() {
 
 	for _, it := range c.sorted() {
 		if it.Type == timeline.ItemAudio || !c.visibleTrack(it.Track) {
+			continue
+		}
+
+		if movesInOrOut(it) {
 			continue
 		}
 
@@ -176,6 +181,25 @@ func (c *check) offFrame() {
 				it.Type, b.x0, b.x1, b.y0, b.y1, st.Width, st.Height),
 			"reposition it with item.set_transform")
 	}
+}
+
+// movesInOrOut says whether the position or size of an item is animated, by keyframes
+// or by a slide transition: the box measured from the stored values is then only one
+// moment, and an item that enters from outside the frame is on purpose (VV-021).
+func movesInOrOut(it *timeline.Item) bool {
+	for _, p := range []string{"x", "y", "scale", "rotation"} {
+		if len(it.Keyframes[p]) > 0 {
+			return true
+		}
+	}
+
+	for _, t := range []*timeline.Transition{it.TransitionIn, it.TransitionOut} {
+		if t != nil && t.Kind != "fade" {
+			return true
+		}
+	}
+
+	return false
 }
 
 func overlapArea(a, b box) float64 {
