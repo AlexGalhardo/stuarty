@@ -1105,6 +1105,15 @@ export function slotMarkOperations(itemId: string, mark: SlotMark): Operations {
 	];
 }
 
+// The name a slot gets when the toggle is switched on: the first `slot_N`
+// that no item of the project uses, so the mark is sent at once.
+export function nextSlotName(taken: Iterable<string | undefined>): string {
+	const used = new Set(taken);
+	let n = 1;
+	while (used.has(`slot_${n}`)) n++;
+	return `slot_${n}`;
+}
+
 // "Template slot" off.
 export function slotUnmarkOperations(itemId: string): Operations {
 	return [{ op: "slot.unmark", args: { item_id: itemId } }];

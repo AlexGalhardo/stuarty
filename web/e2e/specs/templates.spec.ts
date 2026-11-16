@@ -57,12 +57,24 @@ test.describe("templates", () => {
 		const posted = recordEdits(page);
 
 		await page.getByLabel("Template slot", { exact: true }).check();
-		expect(posted).toHaveLength(0);
+		await expect.poll(() => posted.length).toBe(1);
+		expect(posted[0]?.operations).toEqual([
+			{
+				op: "slot.mark",
+				args: {
+					item_id: seeded.itemId,
+					name: "slot_1",
+					description: "",
+					required: true,
+				},
+			},
+		]);
 		const name = page.getByLabel("Slot name", { exact: true });
 		await name.fill("title");
 		await name.press("Enter");
-		await expect.poll(() => posted.length).toBe(1);
-		expect(posted[0]?.operations).toEqual([
+		await expect.poll(() => posted.length).toBe(2);
+		expect(posted[1]?.operations).toEqual([
+			{ op: "slot.unmark", args: { item_id: seeded.itemId } },
 			{
 				op: "slot.mark",
 				args: {
@@ -77,8 +89,8 @@ test.describe("templates", () => {
 		const description = page.getByLabel("Slot description", { exact: true });
 		await description.fill("Headline");
 		await description.press("Enter");
-		await expect.poll(() => posted.length).toBe(2);
-		expect(posted[1]?.operations).toEqual([
+		await expect.poll(() => posted.length).toBe(3);
+		expect(posted[2]?.operations).toEqual([
 			{
 				op: "slot.mark",
 				args: {
@@ -105,8 +117,8 @@ test.describe("templates", () => {
 		);
 		await row.getByLabel("Text", { exact: true }).fill("Big news");
 		await row.getByRole("button", { name: "Fill" }).click();
-		await expect.poll(() => posted.length).toBe(3);
-		expect(posted[2]?.operations).toEqual([
+		await expect.poll(() => posted.length).toBe(4);
+		expect(posted[3]?.operations).toEqual([
 			{ op: "slot.fill", args: { name: "title", text: "Big news" } },
 		]);
 		await expect(row).toContainText("Filled");
@@ -134,10 +146,10 @@ test.describe("templates", () => {
 		const name = page.getByLabel("Slot name", { exact: true });
 		await name.fill("headline");
 		await name.press("Enter");
-		await expect.poll(() => posted.length).toBe(1);
-		await page.getByLabel("Required", { exact: true }).uncheck();
 		await expect.poll(() => posted.length).toBe(2);
-		expect(posted[1]?.operations).toEqual([
+		await page.getByLabel("Required", { exact: true }).uncheck();
+		await expect.poll(() => posted.length).toBe(3);
+		expect(posted[2]?.operations).toEqual([
 			{
 				op: "slot.mark",
 				args: {
@@ -149,8 +161,8 @@ test.describe("templates", () => {
 			},
 		]);
 		await page.getByLabel("Template slot", { exact: true }).uncheck();
-		await expect.poll(() => posted.length).toBe(3);
-		expect(posted[2]?.operations).toEqual([
+		await expect.poll(() => posted.length).toBe(4);
+		expect(posted[3]?.operations).toEqual([
 			{ op: "slot.unmark", args: { item_id: seeded.itemId } },
 		]);
 
@@ -159,8 +171,8 @@ test.describe("templates", () => {
 		await expect(info).toBeVisible();
 		await info.fill("A short template");
 		await info.press("Enter");
-		await expect.poll(() => posted.length).toBe(4);
-		expect(posted[3]?.operations).toEqual([
+		await expect.poll(() => posted.length).toBe(5);
+		expect(posted[4]?.operations).toEqual([
 			{
 				op: "template.set_info",
 				args: { description: "A short template" },

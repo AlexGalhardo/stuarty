@@ -26,6 +26,7 @@ import {
 	markBeatsOperations,
 	moveItems,
 	moveOperations,
+	nextSlotName,
 	nudgeOperations,
 	presetOperations,
 	projectRenameOperations,
@@ -734,5 +735,14 @@ describe("template builders", () => {
 		expect(templateInfoOperations({ colors: { brand: null } })).toEqual([
 			{ op: "template.set_info", args: { colors: { brand: null } } },
 		]);
+	});
+});
+
+describe("nextSlotName", () => {
+	test("is the first slot_N no item uses", () => {
+		expect(nextSlotName([])).toBe("slot_1");
+		expect(nextSlotName(["slot_1", undefined, "intro", "slot_3"])).toBe(
+			"slot_2",
+		);
 	});
 });
