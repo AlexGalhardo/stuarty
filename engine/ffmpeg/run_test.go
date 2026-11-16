@@ -438,3 +438,25 @@ func TestInternalRunDirSurvivesLeftovers(t *testing.T) {
 		t.Error("an invalid prefix was accepted")
 	}
 }
+
+// A retried job reuses its id; the directory its interrupted attempt left behind is reclaimed (VV-001).
+func TestNewJobRunDirReclaimsLeftover(t *testing.T) {
+	r, _, _ := helperRunner(t)
+	left := filepath.Join(r.Workspace, "tmp", "job_9")
+	if err := os.MkdirAll(left, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(left, "mix.wav"), []byte("partial"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	d, err := r.NewJobRunDir("job_9")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(d.Dir(), "mix.wav")); err == nil {
+		t.Error("the leftover file survived")
+	}
+	if _, err := r.NewJobRunDir("a/b"); err == nil {
+		t.Error("an invalid job id was accepted")
+	}
+}

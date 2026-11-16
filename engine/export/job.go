@@ -191,7 +191,7 @@ func run(ctx context.Context, job *Job) (*Result, error) {
 		return nil, err
 	}
 
-	dir, err := job.Runner.NewRunDir(job.JobID)
+	dir, err := job.Runner.NewJobRunDir(job.JobID)
 	if err != nil {
 		return nil, wrapRun(err, ReasonRender, "A work folder for the export could not be made.", "")
 	}

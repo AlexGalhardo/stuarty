@@ -472,7 +472,7 @@ func (s *state) childDir() (*ffmpeg.RunDir, error) {
 	s.children.n++
 	n := s.children.n
 	s.children.mu.Unlock()
-	d, err := s.job.Runner.NewRunDir(fmt.Sprintf("%s-c%d", s.job.JobID, n))
+	d, err := s.job.Runner.NewJobRunDir(fmt.Sprintf("%s-c%d", s.job.JobID, n))
 	if err != nil {
 		return nil, wrapRun(err, ReasonRender, "A work folder for the export could not be made.", "")
 	}
