@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"maps"
 	"math"
+	"slices"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
@@ -17,13 +19,18 @@ var ErrInvalid = errors.New("otio: not a readable OpenTimelineIO timeline")
 
 type entry struct {
 	clip     bool
+	text     bool
 	ref      string
 	name     string
-	start    int // timeline frame, clips only
+	start    int // timeline frame, clips and texts only
 	source   int
 	duration int
 	in, out  int // transition offsets in frames
 	props    []propOp
+	speed    *timeline.Rational
+	slot     *slotSpec
+	body     string         // texts only
+	style    map[string]any // texts only
 }
 
 type importTrack struct {
@@ -45,9 +52,10 @@ type Import struct {
 }
 
 type reader struct {
-	im   *Import
-	fps  timeline.Rational
-	seen map[string]bool
+	im    *Import
+	fps   timeline.Rational
+	seen  map[string]bool
+	slots map[string]bool
 }
 
 // Parse reads an OTIO file. It never opens a media reference: each target_url is
@@ -69,7 +77,7 @@ func Parse(data []byte) (*Import, error) {
 
 	name, _ := root["name"].(string)
 	im := &Import{Name: name, Media: []Media{}, Lost: []Lost{}}
-	r := &reader{im: im, seen: map[string]bool{}}
+	r := &reader{im: im, seen: map[string]bool{}, slots: map[string]bool{}}
 
 	if err := checkDepth(stack, 1); err != nil {
 		return nil, err
@@ -204,6 +212,10 @@ func (r *reader) track(t map[string]any) {
 		switch {
 		case schemaIs(c, "Gap"):
 			if _, d, ok := r.rangeOf(c["source_range"]); ok && d > 0 {
+				if e, ok := r.textItem(c, cursor, d); ok {
+					tk.entries = append(tk.entries, e)
+				}
+
 				cursor += d
 			}
 		case schemaIs(c, "Transition"):
@@ -275,10 +287,92 @@ func (r *reader) clip(c map[string]any, cursor int, kind string) (entry, bool) {
 
 	if v := vukemMeta(c); v != nil {
 		props, _ := v["properties"].(map[string]any)
-		e.props = clipOps(props, kind == kindAud, func(f string) { r.lose(f + " of clip " + name) })
+		mode := modeClip
+		if kind == kindAud {
+			mode = modeAudio
+		}
+
+		spec := itemOps(props, mode, cursor, dur, r.slots, func(f string) { r.lose(f + " of clip " + name) })
+		e.props, e.speed, e.slot = spec.ops, spec.speed, spec.slot
 	}
 
 	return e, true
+}
+
+// textItem reads a Gap that carries a text item of the vukem metadata; a Gap without one, or with
+// a text that is not valid, is only a gap.
+func (r *reader) textItem(c map[string]any, cursor, dur int) (entry, bool) {
+	v := vukemMeta(c)
+	if v == nil || v["text"] == nil {
+		return entry{}, false
+	}
+
+	name, _ := c["name"].(string)
+	name = clipRunes(name, 120)
+	lose := func(f string) { r.lose(f + " of text " + name) }
+
+	body, _ := v["text"].(string)
+	if n := utf8.RuneCountInString(body); n < 1 || n > 2000 {
+		lose("vukem property text is not a valid value")
+
+		return entry{}, false
+	}
+
+	e := entry{text: true, name: name, start: cursor, duration: dur, body: body}
+
+	if raw, present := v["style"]; present {
+		e.style = textStyle(raw, lose)
+	}
+
+	props, _ := v["properties"].(map[string]any)
+	spec := itemOps(props, modeText, cursor, dur, r.slots, lose)
+	e.props, e.slot = spec.ops, spec.slot
+
+	return e, true
+}
+
+// textStyle checks a style object like text.add does, except for the project fonts, which are
+// not known here: a family that is not bundled is dropped with its weight, never left to fail
+// the batch.
+func textStyle(raw any, lose func(string)) map[string]any {
+	style, _ := raw.(map[string]any)
+
+	data, err := json.Marshal(style)
+	if err != nil || style == nil {
+		lose("vukem property style is not a valid value")
+
+		return nil
+	}
+
+	typed, err := timeline.DecodeRaw(data)
+	if err != nil {
+		lose("vukem property style is not a valid value")
+
+		return nil
+	}
+
+	cs, err := timeline.StyleFromMap(typed)
+	if err != nil || len(timeline.StyleViolations(cs)) > 0 {
+		lose("vukem property style is not a valid value")
+
+		return nil
+	}
+
+	family := "Inter"
+	if cs.FontFamily != nil {
+		family = *cs.FontFamily
+	}
+
+	weights, bundled := timeline.BundledWeights[family]
+	if !bundled || (cs.FontWeight != nil && !slices.Contains(weights, *cs.FontWeight)) {
+		lose("vukem property style font " + family + " is not a bundled font")
+
+		style = maps.Clone(style)
+		delete(style, "font_family")
+		delete(style, "font_weight")
+	}
+
+	return style
 }
 
 // Operations returns the batch that builds what the file describes, bottom track
@@ -340,13 +434,17 @@ func (b *batch) track(tk *importTrack) {
 	ids := make([]*placed, len(tk.entries))
 
 	for i := range tk.entries {
-		if e := &tk.entries[i]; e.clip {
+		switch e := &tk.entries[i]; {
+		case e.clip:
 			ids[i] = b.clip(trackID, tk.audio, e)
+		case e.text:
+			ids[i] = b.text(trackID, e)
 		}
 	}
 
-	for i, e := range tk.entries {
-		if e.clip {
+	for i := range tk.entries {
+		e := &tk.entries[i]
+		if e.clip || e.text {
 			continue
 		}
 
@@ -371,11 +469,53 @@ func (b *batch) clip(trackID string, audio bool, e *entry) *placed {
 		op = "audio.add"
 	}
 
+	// A sped clip is added with the source length that set_speed turns back into e.duration, and
+	// trimmed to it when no length does (set_speed rounds up).
+	length, trim := e.duration, false
+	if e.speed != nil {
+		length, trim = sourceLength(e.duration, *e.speed)
+	}
+
 	b.push(op, map[string]any{
 		"track_id": trackID, "asset_id": asset, "id": id,
-		"start": frameTime(e.start), "source_in": frameTime(e.source), "duration": frameTime(e.duration),
+		"start": frameTime(e.start), "source_in": frameTime(e.source), "duration": frameTime(length),
 	})
 
+	if e.speed != nil {
+		b.push("clip.set_speed", map[string]any{
+			"item_id": id, "speed": map[string]any{"num": e.speed.Num, "den": e.speed.Den},
+		})
+
+		if trim {
+			b.push("item.trim", map[string]any{"item_id": id, "edge": "end", "to": frameTime(e.start + e.duration)})
+		}
+	}
+
+	b.after(id, e, asset)
+
+	return &placed{id: id, visual: !audio}
+}
+
+// text adds one text item and what its metadata asks for.
+func (b *batch) text(trackID string, e *entry) *placed {
+	id := b.newID(timeline.PrefixItem)
+	args := map[string]any{
+		"track_id": trackID, "id": id, "start": frameTime(e.start), "duration": frameTime(e.duration), "text": e.body,
+	}
+
+	if len(e.style) > 0 {
+		args["style"] = e.style
+	}
+
+	b.push("text.add", args)
+	b.after(id, e, "")
+
+	return &placed{id: id, visual: true}
+}
+
+// after pushes the name, the properties and the slot of an item that was just added. A filled
+// slot is filled again with what the item holds, unless that would move other items.
+func (b *batch) after(id string, e *entry, asset string) {
 	if e.name != "" {
 		b.push("item.rename", map[string]any{"item_id": id, "name": e.name})
 	}
@@ -386,7 +526,50 @@ func (b *batch) clip(trackID string, audio bool, e *entry) *placed {
 		b.push(p.op, args)
 	}
 
-	return &placed{id: id, visual: !audio}
+	s := e.slot
+	if s == nil {
+		return
+	}
+
+	mark := map[string]any{"item_id": id, "name": s.name}
+	if s.description != "" {
+		mark["description"] = s.description
+	}
+
+	if s.notRequired {
+		mark["required"] = false
+	}
+
+	if e.clip && s.policy != "fit" {
+		mark["duration_policy"] = s.policy
+	}
+
+	b.push("slot.mark", mark)
+
+	switch {
+	case !s.filled:
+	case e.text:
+		b.push("slot.fill", map[string]any{"name": s.name, "text": e.body})
+	case s.policy == "fit":
+		b.push("slot.fill", map[string]any{"name": s.name, "asset_id": asset, "source_in": frameTime(e.source)})
+	default:
+		b.lost = append(b.lost, Lost{Name: e.name, Feature: "filled state of slot " + s.name})
+	}
+}
+
+// sourceLength is the length in frames a clip is added with so that set_speed (which rounds the
+// new duration up) gives duration; trim is true when no length does and the clip must be trimmed.
+func sourceLength(duration int, speed timeline.Rational) (length int, trim bool) {
+	n, d := int64(speed.Num), int64(speed.Den)
+	ceilDur := func(l int64) int64 { return (l*d + n - 1) / n }
+
+	if l := (int64(duration)-1)*n/d + 1; ceilDur(l) == int64(duration) {
+		return int(l), false
+	}
+
+	l := max((int64(duration)*n+d/2)/d, 1)
+
+	return int(l), ceilDur(l) != int64(duration)
 }
 
 // transition sets a fade on the clip at idx, when there is one.
