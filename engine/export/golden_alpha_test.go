@@ -64,6 +64,10 @@ var requiredCases = []string{
 	"sticker-png",
 	"sticker-anim",
 	"chroma-key",
+	"blend-multiply",
+	"blend-screen",
+	"blend-overlay",
+	"blend-add",
 }
 
 const (
@@ -238,6 +242,21 @@ func blurCase(radius float64) alphaCase {
 	return b.build(0, 15, 29)
 }
 
+// blendCase draws two clips with a blend mode over the portrait clip, one at full opacity and one at half.
+func blendCase(mode string) alphaCase {
+	b := newCase("blend "+mode, rate(30, 1))
+	b.backdrop(30)
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale, it.Blend = "contain", 0.6, mode
+		it.X, it.Y = new(60.0), new(110.0)
+	})
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale, it.Blend, it.Opacity = "contain", 0.6, mode, 0.5
+		it.X, it.Y = new(120.0), new(220.0)
+	})
+	return b.build(0, 15, 29)
+}
+
 // alphaCases are the builders of the cases, by folder name.
 var alphaCases = map[string]func() alphaCase{
 	"contain-background": func() alphaCase {
@@ -389,6 +408,10 @@ var alphaCases = map[string]func() alphaCase{
 		})
 		return b.build(0, 15, 29)
 	},
+	"blend-multiply": func() alphaCase { return blendCase("multiply") },
+	"blend-screen":   func() alphaCase { return blendCase("screen") },
+	"blend-overlay":  func() alphaCase { return blendCase("overlay") },
+	"blend-add":      func() alphaCase { return blendCase("add") },
 	"source-fps-24": func() alphaCase {
 		b := newCase("a source at 24 fps in a 30 fps project", rate(30, 1))
 		b.clip(b.track(), b.video(portrait24), 0, 60, nil)
@@ -550,7 +573,8 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 	setup(t)
 	for _, name := range requiredCases {
 		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") &&
-			!strings.HasPrefix(name, "sticker-") && !strings.HasPrefix(name, "chroma-") {
+			!strings.HasPrefix(name, "sticker-") && !strings.HasPrefix(name, "chroma-") &&
+			!strings.HasPrefix(name, "blend-") {
 			continue
 		}
 		t.Run(name, func(t *testing.T) {
