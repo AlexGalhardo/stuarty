@@ -109,15 +109,23 @@ func realOp(rng *rand.Rand, doc *timeline.Document) Operation {
 			),
 		)
 	case 14, 15:
-		return op2("item.move", fmt.Sprintf(`{"item_id": %q, "start": %q}`, pick(items), frames(2500)))
+		extra := ""
+		if rng.Intn(3) == 0 {
+			extra = `, "slide": true`
+		}
+
+		return op2("item.move", fmt.Sprintf(`{"item_id": %q, "start": %q%s}`, pick(items), frames(2500), extra))
 	case 16, 17:
+		extra := []string{"", `, "roll": true`, `, "ripple": "track"`}[rng.Intn(3)]
+
 		return op2(
 			"item.trim",
 			fmt.Sprintf(
-				`{"item_id": %q, "edge": %q, "to": %q}`,
+				`{"item_id": %q, "edge": %q, "to": %q%s}`,
 				pick(items),
 				[]string{"start", "end"}[rng.Intn(2)],
 				frames(2500),
+				extra,
 			),
 		)
 	case 18, 19:
