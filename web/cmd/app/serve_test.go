@@ -18,6 +18,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/internal/outbound"
 	"github.com/AlexGalhardo/vukem-video/service"
 	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
 	"github.com/AlexGalhardo/vukem-video/web/app/cli"
 )
 
@@ -125,7 +126,7 @@ func TestServeIsTheOwnerAndTheCLIUsesIt(t *testing.T) {
 	p := startServe(t, bin, home)
 
 	rt, err := workspace.Dir(home).ReadRuntime()
-	if err != nil || rt.Mode != workspace.ModeLocal || rt.Version != "dev" {
+	if err != nil || rt.Mode != workspace.ModeLocal || rt.Version != agentdocs.Version {
 		t.Fatalf("runtime.json = %+v, %v", rt, err)
 	}
 
