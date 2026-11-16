@@ -1,0 +1,96 @@
+package cli
+
+import (
+	"bytes"
+	"strings"
+	"testing"
+)
+
+func TestHelpRootListsTheProductCommandsAndServe(t *testing.T) {
+	t.Parallel()
+
+	for _, args := range [][]string{{"--help"}, {"-h"}, {"help"}} {
+		var out, errOut bytes.Buffer
+
+		code, handled := Help(args, &out, &errOut)
+		if !handled || code != ExitOK || errOut.Len() != 0 {
+			t.Fatalf("%v: handled %v, exit %d, stderr %q", args, handled, code, errOut.String())
+		}
+
+		for _, want := range []string{"project:list", "serve", "open", "user:create"} {
+			if !strings.Contains(out.String(), want) {
+				t.Errorf("%v: the root help does not list %s", args, want)
+			}
+		}
+
+		if strings.Contains(out.String(), "migrate") {
+			t.Errorf("%v: the root help lists a framework command", args)
+		}
+	}
+}
+
+func TestHelpCommandEqualsCommandDashHelp(t *testing.T) {
+	t.Parallel()
+
+	for _, name := range []string{"project:list", "serve", "user:create"} {
+		var viaHelp, errOut bytes.Buffer
+
+		if code, handled := Help([]string{"help", name}, &viaHelp, &errOut); !handled || code != ExitOK {
+			t.Fatalf("help %s: handled %v, exit %d, %q", name, handled, code, errOut.String())
+		}
+
+		if !strings.Contains(viaHelp.String(), name) || !strings.Contains(viaHelp.String(), "usage:") {
+			t.Errorf("help %s: %q", name, viaHelp.String())
+		}
+
+		if IsCommand(name) {
+			continue
+		}
+
+		var viaFlag bytes.Buffer
+		if code, handled := Help([]string{name, "--help"}, &viaFlag, &errOut); !handled || code != ExitOK ||
+			viaFlag.String() != viaHelp.String() {
+			t.Errorf("%s --help differs from help %s: %q", name, name, viaFlag.String())
+		}
+	}
+}
+
+func TestHelpUnknownCommandIsAnErrorNotTheFrameworkList(t *testing.T) {
+	t.Parallel()
+
+	var out, errOut bytes.Buffer
+
+	code, handled := Help([]string{"help", "project:lst"}, &out, &errOut)
+	if !handled || code != ExitFailure || out.Len() != 0 || !strings.Contains(errOut.String(), "project:lst") {
+		t.Fatalf("handled %v, exit %d, %q, %q", handled, code, out.String(), errOut.String())
+	}
+}
+
+func TestHelpLeavesOtherArgumentsAlone(t *testing.T) {
+	t.Parallel()
+
+	for _, args := range [][]string{{"project:list", "--help"}, {"migrate"}, {"serve"}} {
+		if _, handled := Help(args, &bytes.Buffer{}, &bytes.Buffer{}); handled {
+			t.Errorf("%v must not be handled by Help", args)
+		}
+	}
+}
+
+func TestReferenceDocumentsTheProcessCommands(t *testing.T) {
+	t.Parallel()
+
+	names := map[string]bool{}
+	for _, c := range Reference().ProcessCommands {
+		names[c.Name] = true
+
+		if c.Summary == "" || len(c.Usage) == 0 {
+			t.Errorf("%s: needs a summary and a usage line", c.Name)
+		}
+	}
+
+	for _, want := range []string{"serve", "open", "user:create", "user:passwd"} {
+		if !names[want] {
+			t.Errorf("the reference lacks %s", want)
+		}
+	}
+}

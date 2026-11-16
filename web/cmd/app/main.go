@@ -17,6 +17,13 @@ import (
 func main() {
 	args := os.Args
 
+	if len(args) > 1 {
+		// Help comes from the product table, never from the framework (VV-029).
+		if code, handled := cli.Help(args[1:], os.Stdout, os.Stderr); handled {
+			os.Exit(code)
+		}
+	}
+
 	switch {
 	case len(args) > 1 && args[1] == "open":
 		// open runs before the application is built: see opener.
