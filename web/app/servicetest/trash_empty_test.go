@@ -370,6 +370,13 @@ func TestSweepRemovesStaleBundleTempFiles(t *testing.T) {
 		}
 	}
 
+	// Linux stamps a new file with a coarse clock that can read a few milliseconds before the
+	// service start, so the running export's time is set explicitly instead of left to the write.
+	soon := time.Now().Add(time.Minute)
+	if err := os.Chtimes(running, soon, soon); err != nil {
+		t.Fatal(err)
+	}
+
 	sweeper, _ := service.SweeperOf(m.svc)
 
 	res, err := sweeper.Sweep(context.Background())
