@@ -67,7 +67,7 @@ All have the form `<prefix>_<10 lower-case Crockford base32 characters>`.
 
 ## 3. Actors
 
-An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>` is supplied by the client in local mode (for example `local:ui`, `local:cli`, `local:claude-code`), limited to `[a-z0-9-]{1,32}`, default `local:cli` for the CLI, `local:mcp` for the MCP server, `local:ui` for the browser and `local:api` for a raw HTTP client that sends no label. A client never obtains `local:ui` by asking for it: that label belongs to the browser session.
+An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>` is supplied by the client in local mode (for example `local:ui`, `local:cli`, `local:claude-code`), limited to `[a-z0-9-]{1,32}`, default `local:cli` for the CLI, `local:mcp` for the MCP server, `local:ui` for the browser and `local:api` for a raw HTTP client that sends no label. A client never obtains `local:ui` by asking for it: that label belongs to the browser session. The stdio MCP server, when it is not given `--actor`, builds its label from the client name and a session id (`local:claude-code-k3m9x2`, SDD-003 section 4.5), so two agents with the same client name are two actors and undo never crosses sessions or reconnections; the label stays within the same `[a-z0-9-]{1,32}` rule.
 
 ## 4. Scopes
 

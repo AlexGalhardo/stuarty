@@ -101,8 +101,8 @@ func TestScenarioOverTheTools(t *testing.T) {
 		},
 	}))
 
-	if !strings.Contains(textOf(t, edited), "committed r1 (base r0) by local:claude-code: changes=1") {
-		t.Fatalf("edit text = %q, the actor must come from clientInfo", textOf(t, edited))
+	if !strings.Contains(textOf(t, edited), "committed r1 (base r0) by local:claude-code-s1: changes=1") {
+		t.Fatalf("edit text = %q, the actor must come from clientInfo and the session", textOf(t, edited))
 	}
 
 	if es := structured(t, edited); es["revision"] != float64(1) || es["applied"] != true {
@@ -550,5 +550,51 @@ func TestFontImportReachesTheService(t *testing.T) {
 
 	if bad := call(t, cs, "font_import", map[string]any{}); !bad.IsError {
 		t.Fatalf("a call without path must fail: %s", textOf(t, bad))
+	}
+}
+
+// VV-026: two agents with the same client name are two actors, so one never undoes
+// the steps of the other.
+func TestSameClientNameInTwoSessionsAreTwoActors(t *testing.T) {
+	t.Parallel()
+
+	svc := newService(t)
+	a := connect(t, svc, Options{Session: "aaaaaa"}, "claude-code")
+	b := connect(t, svc, Options{Session: "bbbbbb"}, "claude-code")
+
+	id, _ := structured(t, ok(t, call(t, a, "project_create", map[string]any{"name": "A"})))["project_id"].(string)
+
+	edited := ok(t, call(t, a, "edit", map[string]any{
+		"project_id": id, "base_revision": 0,
+		"operations": []any{map[string]any{"op": "track.add", "args": map[string]any{"kind": "visual"}}},
+	}))
+
+	if got := structured(t, edited)["actor"]; got != "local:claude-code-aaaaaa" {
+		t.Fatalf("actor = %v", got)
+	}
+
+	undo := call(t, b, "history", map[string]any{"project_id": id, "action": "undo"})
+	if !undo.IsError || !strings.Contains(textOf(t, undo), "E_NOTHING_TO_UNDO") {
+		t.Fatalf("the other session undid a step it did not make: %q", textOf(t, undo))
+	}
+
+	if undone := ok(t, call(t, a, "history", map[string]any{"project_id": id, "action": "undo"})); undone == nil {
+		t.Fatal("the author could not undo its own step")
+	}
+}
+
+func TestSessionLabelFitsTheActorLabelRule(t *testing.T) {
+	t.Parallel()
+
+	for _, name := range []string{"claude-code", "", strings.Repeat("x", 60), "ui"} {
+		label := sessionLabel(name, newSessionID())
+		if !regexp.MustCompile(`^[a-z0-9-]{1,32}$`).MatchString(label) {
+			t.Errorf("sessionLabel(%q) = %q", name, label)
+		}
+	}
+
+	first, second := newSessionID(), newSessionID()
+	if first == second {
+		t.Error("two session ids are equal")
 	}
 }

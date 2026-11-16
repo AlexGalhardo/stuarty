@@ -55,6 +55,10 @@ func newService(tb testing.TB) service.Service {
 func connect(tb testing.TB, svc service.Service, o Options, clientName string) *sdk.ClientSession {
 	tb.Helper()
 
+	if o.Session == "" {
+		o.Session = "s1"
+	}
+
 	srv, err := New(svc, o)
 	if err != nil {
 		tb.Fatal(err)
