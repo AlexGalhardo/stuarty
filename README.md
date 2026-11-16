@@ -1,6 +1,6 @@
 <div align="center">
 
-<a href="https://alexgalhardo.github.io/vukem-video" target="_blank" rel="noopener noreferrer">
+<a href="https://video.vukem.dev" target="_blank" rel="noopener noreferrer">
   <img src="site/public/logo.svg" alt="Vukem Video" width="96" height="96">
 </a>
 
@@ -23,7 +23,7 @@
 
 | Area | What you get |
 | --- | --- |
-| **Documentation site** | <a href="https://alexgalhardo.github.io/vukem-video">https://alexgalhardo.github.io/vukem-video</a> |
+| **Documentation site** | <a href="https://video.vukem.dev">https://video.vukem.dev</a> |
 | **Two use cases** | Short vertical videos with captions for social networks<br>Product commercials |
 | **Interfaces** | Editor in the browser<br>MCP server (`vukem-video mcp`)<br>CLI with `--json`<br>HTTP API (`vukem-video serve`)<br>Desktop application |
 | **Editing** | Captions from a transcript, with editable words and styles<br>Cuts, trims, splits, ripple, roll, slide and slip, and silence removal<br>Chroma key, blend modes, filters, color and blur per clip<br>Framing, speed, transitions and keyframes<br>Re-target a project to 16:9, 9:16, 1:1 or 4:5 in one command<br>Text, shapes and markers<br>Audio ducking and beat marks<br>Templates and brand kit |
@@ -50,7 +50,7 @@ docker run --rm -p 127.0.0.1:7878:7878 -v vukem-video:/data \
 
 Then open `http://127.0.0.1:7878` in a browser.
 
-Installers for Windows, Linux and macOS and the desktop application are on the [releases page](https://github.com/AlexGalhardo/vukem-video/releases). Read [Installation](https://alexgalhardo.github.io/vukem-video/docs/getting-started/installation/) for every option and how to verify a download.
+Installers for Windows, Linux and macOS and the desktop application are on the [releases page](https://github.com/AlexGalhardo/vukem-video/releases). Read [Installation](https://video.vukem.dev/docs/getting-started/installation/) for every option and how to verify a download.
 
 ## Agentic development
 
