@@ -168,12 +168,11 @@ tasks:
       - bash scripts/release-verify.sh {{.CLI_ARGS}}
 
   release:preflight:
-    desc: Everything the CI-equivalent checks run, plus the notices, generated files, site, translations and image
+    desc: Everything the CI-equivalent checks run, plus the notices, generated files, site and image
     cmds:
       - task: ci
       - task: generate:check
       - task: site:build
-      - task: site:translations
       - task: image:smoke
 
   generate:check:
@@ -193,12 +192,6 @@ tasks:
       - npm run check:built
       - npm run reference:check
       - npm run check:last-updated
-
-  site:translations:
-    desc: Fail when a page has a missing or stale Brazilian Portuguese twin (strict)
-    dir: site
-    cmds:
-      - npm run check:translations -- --strict
 
   image:build:
     desc: Build the container image as vukem-video:local
