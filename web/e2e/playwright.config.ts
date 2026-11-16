@@ -105,7 +105,15 @@ export default defineConfig({
 			name: "firefox",
 			testIgnore: NOT_IN_MATRIX,
 			grepInvert: new RegExp(CHROMIUM_ONLY),
-			use: { browserName: "firefox" },
+			use: {
+				browserName: "firefox",
+				// Headless Firefox on Linux has no WebGL ("Exhausted GL driver
+				// options"), so the preview falls back to a Canvas2D renderer that
+				// skips every filter (masks, blur, color) and the golden specs cannot
+				// pass. A headed Firefox on a virtual display (xvfb-run) has WebGL2
+				// on Mesa; the CI job sets this variable and wraps the run in it.
+				headless: process.env.VUKEM_VIDEO_FIREFOX_HEADED !== "1",
+			},
 		},
 		{
 			name: "webkit",

@@ -406,7 +406,15 @@ jobs:
         working-directory: web
         env:
           BROWSER: ${{ matrix.browser }}
-      - run: bunx playwright test -c e2e/playwright.config.ts --project="$BROWSER"
+      # Headless Firefox on Linux has no WebGL, so the preview would fall back to the
+      # Canvas2D renderer, which skips every filter; a headed Firefox on a virtual
+      # display has WebGL2 on Mesa (web/e2e/playwright.config.ts).
+      - run: |
+          if [ "$BROWSER" = firefox ]; then
+            VUKEM_VIDEO_FIREFOX_HEADED=1 xvfb-run -a bunx playwright test -c e2e/playwright.config.ts --project=firefox
+          else
+            bunx playwright test -c e2e/playwright.config.ts --project="$BROWSER"
+          fi
         working-directory: web
         env:
           BROWSER: ${{ matrix.browser }}
