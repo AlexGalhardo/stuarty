@@ -71,9 +71,13 @@ func Export(doc *timeline.Document) ([]byte, []Lost, error) {
 		})
 	}
 
+	stack := object{"OTIO_SCHEMA": schemaStack, "name": "tracks", "children": children, "metadata": object{}}
+	if len(doc.Markers) > 0 {
+		stack["markers"] = timelineMarkers(doc.Markers, rate)
+	}
+
 	root := object{
-		"OTIO_SCHEMA": schemaTimeline, "name": doc.Name, "metadata": object{},
-		"tracks": object{"OTIO_SCHEMA": schemaStack, "name": "tracks", "children": children, "metadata": object{}},
+		"OTIO_SCHEMA": schemaTimeline, "name": doc.Name, "metadata": timelineMetadata(doc), "tracks": stack,
 	}
 
 	var buf bytes.Buffer
@@ -181,6 +185,39 @@ func clip(it *timeline.Item, a *timeline.Asset, rate float64) object {
 	c["markers"] = markers
 
 	return c
+}
+
+// timelineMetadata keeps the markers of the document, in frames from the start of the timeline,
+// in the vukem namespace. The same markers are also written as the native markers of the stack, so
+// that other tools see them; Import reads the vukem ones first because they are exact.
+func timelineMetadata(doc *timeline.Document) object {
+	if len(doc.Markers) == 0 {
+		return object{}
+	}
+
+	list := make([]any, 0, len(doc.Markers))
+	for _, m := range doc.Markers {
+		e := object{"frame": m.Frame}
+		if m.Label != "" {
+			e["label"] = m.Label
+		}
+
+		list = append(list, e)
+	}
+
+	return object{metaNamespace: object{"markers": list}}
+}
+
+func timelineMarkers(marks []timeline.Marker, rate float64) []any {
+	out := make([]any, 0, len(marks))
+	for _, m := range marks {
+		out = append(out, object{
+			"OTIO_SCHEMA": schemaMarker, "name": m.Label, "color": "GREEN", "metadata": object{},
+			"marked_range": tr(m.Frame, 0, rate),
+		})
+	}
+
+	return out
 }
 
 // trackMetadata keeps what OTIO has no field for in the vukem namespace, which other tools

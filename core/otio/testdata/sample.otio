@@ -1,6 +1,18 @@
 {
   "OTIO_SCHEMA": "Timeline.1",
-  "metadata": {},
+  "metadata": {
+    "vukem": {
+      "markers": [
+        {
+          "frame": 0
+        },
+        {
+          "frame": 45,
+          "label": "chorus"
+        }
+      ]
+    }
+  },
   "name": "Demo",
   "tracks": {
     "OTIO_SCHEMA": "Stack.1",
@@ -274,6 +286,46 @@
         "kind": "Video",
         "metadata": {},
         "name": "Top"
+      }
+    ],
+    "markers": [
+      {
+        "OTIO_SCHEMA": "Marker.2",
+        "color": "GREEN",
+        "marked_range": {
+          "OTIO_SCHEMA": "TimeRange.1",
+          "duration": {
+            "OTIO_SCHEMA": "RationalTime.1",
+            "rate": 30,
+            "value": 0
+          },
+          "start_time": {
+            "OTIO_SCHEMA": "RationalTime.1",
+            "rate": 30,
+            "value": 0
+          }
+        },
+        "metadata": {},
+        "name": ""
+      },
+      {
+        "OTIO_SCHEMA": "Marker.2",
+        "color": "GREEN",
+        "marked_range": {
+          "OTIO_SCHEMA": "TimeRange.1",
+          "duration": {
+            "OTIO_SCHEMA": "RationalTime.1",
+            "rate": 30,
+            "value": 0
+          },
+          "start_time": {
+            "OTIO_SCHEMA": "RationalTime.1",
+            "rate": 30,
+            "value": 45
+          }
+        },
+        "metadata": {},
+        "name": "chorus"
       }
     ],
     "metadata": {},

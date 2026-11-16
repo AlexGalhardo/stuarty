@@ -48,7 +48,8 @@ type Import struct {
 	Media []Media           `json:"media"` // every distinct reference, in file order
 	Lost  []Lost            `json:"lost"`  // what the batch cannot carry
 
-	tracks []importTrack
+	tracks  []importTrack
+	markers []timeline.Marker
 }
 
 type reader struct {
@@ -86,6 +87,8 @@ func Parse(data []byte) (*Import, error) {
 	r.fps = r.findRate(stack)
 	im.FPS = r.fps
 
+	r.timelineMarkers(root, stack)
+
 	kids, _ := stack["children"].([]any)
 	for _, k := range kids {
 		t, _ := k.(map[string]any)
@@ -99,6 +102,65 @@ func Parse(data []byte) (*Import, error) {
 	}
 
 	return im, nil
+}
+
+// timelineMarkers reads the markers of the document: the vukem metadata of the timeline when it
+// has them, otherwise the native markers of the stack. A marker that no marker.add accepts (a
+// frame outside the timeline, a label over 60 characters, a frame already marked, more than 200)
+// is reported and left out.
+func (r *reader) timelineMarkers(root, stack map[string]any) {
+	type cand struct {
+		frame int
+		label string
+		ok    bool
+	}
+
+	var cands []cand
+
+	if v := vukemMeta(root); v != nil && v["markers"] != nil {
+		list, _ := v["markers"].([]any)
+		for _, e := range list {
+			m, _ := e.(map[string]any)
+			f, ok := m["frame"].(float64)
+			label, hasLabel := m["label"].(string)
+			ok = ok && f == math.Trunc(f) && (hasLabel || m["label"] == nil)
+			cands = append(cands, cand{frame: int(f), label: label, ok: ok})
+		}
+
+		if _, isList := v["markers"].([]any); !isList {
+			r.lose("vukem property markers is not a valid value")
+		}
+	} else {
+		list, _ := stack["markers"].([]any)
+		for _, e := range list {
+			m, _ := e.(map[string]any)
+			label, _ := m["name"].(string)
+			f, ok := r.frames(asMap(m["marked_range"])["start_time"])
+			cands = append(cands, cand{frame: f, label: label, ok: ok})
+		}
+	}
+
+	seen := map[int]bool{}
+
+	for _, c := range cands {
+		switch {
+		case !c.ok || c.frame < 0 || c.frame >= timeline.MaxFrames || utf8.RuneCountInString(c.label) > 60:
+			r.lose("timeline marker that is not a valid value")
+		case seen[c.frame]:
+			r.lose("timeline marker at a frame that is already marked")
+		case len(r.im.markers) >= timeline.MaxMarkers:
+			r.lose("timeline markers over the limit of 200")
+		default:
+			seen[c.frame] = true
+			r.im.markers = append(r.im.markers, timeline.Marker{Frame: c.frame, Label: c.label})
+		}
+	}
+}
+
+func asMap(v any) map[string]any {
+	m, _ := v.(map[string]any)
+
+	return m
 }
 
 func schemaIs(m map[string]any, kind string) bool {
@@ -382,6 +444,15 @@ func textStyle(raw any, lose func(string)) map[string]any {
 // to a project that has the file's FPS and those assets.
 func (im *Import) Operations(assets map[string]string, newID func(prefix string) string) ([]command.Operation, []Lost) {
 	b := &batch{assets: assets, newID: newID}
+
+	for _, m := range im.markers {
+		args := map[string]any{"at": frameTime(m.Frame)}
+		if m.Label != "" {
+			args["label"] = m.Label
+		}
+
+		b.push("marker.add", args)
+	}
 
 	for i := range im.tracks {
 		b.track(&im.tracks[i])
