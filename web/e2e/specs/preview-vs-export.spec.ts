@@ -466,14 +466,15 @@ async function capture(
 		`the canvas never showed frame ${frame} complete`,
 	).toHaveAttribute("data-drawn", String(frame), { timeout: 20_000 });
 	for (;;) {
-		// The exact frame is an <img> above the canvas: hide it, so the test
-		// compares the canvas itself (a style tag would break the CSP).
-		await page.evaluate(() => {
-			for (const img of document.querySelectorAll("img")) {
-				img.style.visibility = "hidden";
-			}
-		});
-		shot = await canvas.screenshot();
+		// The pixels of the buffer itself (463 wide where the canvas is 462.94 CSS
+		// pixels), not a screenshot of the element, which the browser resamples to
+		// whole pixels (464): ViewFrame is asked for the same width below, so no
+		// image is resampled. The exact frame <img> above the canvas is not part
+		// of the buffer.
+		const png = await canvas.evaluate(
+			(el) => (el as HTMLCanvasElement).toDataURL("image/png").split(",")[1],
+		);
+		shot = Buffer.from(png ?? "", "base64");
 		if (previous?.equals(shot)) break;
 		if (Date.now() > deadline) {
 			throw new Error(`the canvas at frame ${frame} never settled`);
@@ -494,7 +495,10 @@ async function capture(
 				if (frameResponse.status !== 429 || attempt === 5) break;
 				await new Promise((resolve) => setTimeout(resolve, 2000));
 			}
-			if (!frameResponse.ok) throw new Error(`frame ${frameResponse.status}`);
+			if (!frameResponse.ok)
+				throw new Error(
+					`frame ${frameResponse.status} ${await frameResponse.text()}`,
+				);
 			const body = (await frameResponse.json()) as { image_base64: string };
 			// fetch() of a data: URL is refused by the connect-src of the CSP.
 			const load = (base64: string, type: string): Promise<ImageBitmap> => {
@@ -666,8 +670,6 @@ test.describe("preview-vs-export measures", () => {
 // listed here that starts to pass as a failure, so the entry is removed when the
 // cause is fixed. None of them is a defect of the preview geometry.
 const KNOWN_DIVERGENCES: Record<string, string> = {
-	"filter-sepia":
-		"SSIM 0.9698 at frame 0 (0.9724 and 0.9741 at the others): 0.0002 under the gate. The colours agree (channel means within 0.5 levels, equal contrast); what differs is the edge of the second clip, a pixel off on each side. The preview buffer is 463 x 823 (CSS width 462.94) while the element screenshot is 464 px wide, so ViewFrame is asked for at width 464 (2.578 per project pixel) and the preview was drawn at 463 (2.572): the two place the 0.6 scale clip at y 488.8 and 487.7. The harness, not the engine or the preview, sets that scale.",
 };
 
 // What Firefox alone misses. The cases above are expected failures everywhere.
