@@ -146,7 +146,9 @@ fetch_file "$OPENH264_RAW_URL/codec_app_def.h" "$OPENH264_CODEC_APP_DEF_SHA256" 
 fetch_file "$OPENH264_RAW_URL/codec_def.h" "$OPENH264_CODEC_DEF_SHA256" "$prefix/include/wels/codec_def.h"
 fetch_file "$OPENH264_RAW_URL/codec_ver.h" "$OPENH264_CODEC_VER_SHA256" "$prefix/include/wels/codec_ver.h"
 remap="-ffile-prefix-map=$work=. -ffile-prefix-map=$root=."
-export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
+# Only our prefix: every dependency installs its .pc under $prefix/lib/pkgconfig (--libdir above), nothing from the system.
+unset PKG_CONFIG_PATH
+export PKG_CONFIG_LIBDIR="$prefix/lib/pkgconfig"
 export CFLAGS="-O2 $remap"
 
 # --- dependencies, static, into $prefix ---
@@ -154,9 +156,9 @@ log "ffmpeg-build: zlib"
 (
 	cd "$work/src/zlib"
 	if [ -n "$cross_prefix" ]; then
-		CC="${cross_prefix}gcc" AR="${cross_prefix}ar" RANLIB="${cross_prefix}ranlib" ./configure --static --prefix="$prefix" >&2
+		CC="${cross_prefix}gcc" AR="${cross_prefix}ar" RANLIB="${cross_prefix}ranlib" ./configure --static --prefix="$prefix" --libdir="$prefix/lib" >&2
 	else
-		./configure --static --prefix="$prefix" >&2
+		./configure --static --prefix="$prefix" --libdir="$prefix/lib" >&2
 	fi
 	make -j"$jobs" >&2 && make install >&2
 )
@@ -173,7 +175,7 @@ log "ffmpeg-build: libvpx"
 	windows-amd64) vpx_target=x86_64-win64-gcc ;;
 	esac
 	if [ -n "$cross_prefix" ]; then export CROSS="$cross_prefix"; fi
-	./configure --target="$vpx_target" --prefix="$prefix" --disable-shared --enable-static --enable-pic \
+	./configure --target="$vpx_target" --prefix="$prefix" --libdir="$prefix/lib" --disable-shared --enable-static --enable-pic \
 		--disable-examples --disable-tools --disable-docs --disable-unit-tests --enable-vp9-highbitdepth \
 		--disable-install-bins >&2
 	make -j"$jobs" >&2 && make install >&2
@@ -184,7 +186,7 @@ log "ffmpeg-build: opus"
 	cd "$work/src/opus"
 	host_arg=()
 	[ -n "$cross_prefix" ] && host_arg=(--host=x86_64-w64-mingw32)
-	./configure --prefix="$prefix" --disable-shared --enable-static --disable-doc --disable-extra-programs \
+	./configure --prefix="$prefix" --libdir="$prefix/lib" --disable-shared --enable-static --disable-doc --disable-extra-programs \
 		${host_arg[@]+"${host_arg[@]}"} >&2
 	make -j"$jobs" >&2 && make install >&2
 )
@@ -195,7 +197,7 @@ log "ffmpeg-build: zimg"
 	host_arg=()
 	[ -n "$cross_prefix" ] && host_arg=(--host=x86_64-w64-mingw32)
 	./autogen.sh >&2
-	CXXFLAGS="-O2 $remap" ./configure --prefix="$prefix" --disable-shared --enable-static ${host_arg[@]+"${host_arg[@]}"} >&2
+	CXXFLAGS="-O2 $remap" ./configure --prefix="$prefix" --libdir="$prefix/lib" --disable-shared --enable-static ${host_arg[@]+"${host_arg[@]}"} >&2
 	make -j"$jobs" >&2 && make install >&2
 )
 
@@ -247,11 +249,13 @@ linux)
 	;;
 darwin) extra+=(${configure_target[@]+"${configure_target[@]}"}) ;;
 windows)
-	extra+=(--arch=x86_64 --target-os=mingw32 --cross-prefix="$cross_prefix" --enable-cross-compile
+	extra+=(--arch=x86_64 --target-os=mingw32 --cross-prefix="$cross_prefix" --enable-cross-compile --pkg-config=pkg-config
 		"--extra-ldflags=-static -Wl,--no-insert-timestamp")
 	;;
 esac
 
+# zimg.pc does not list libm in Libs.private, yet libzimg.a needs it (log10f): the link test fails without it.
+extra+=(--extra-libs=-lm)
 # The libvpl dispatcher is C++: a static link needs the C++ runtime named explicitly.
 [ -d "$work/src/libvpl" ] && extra+=(--extra-libs=-lstdc++)
 
