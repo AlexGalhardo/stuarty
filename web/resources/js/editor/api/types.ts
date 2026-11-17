@@ -261,12 +261,69 @@ export interface PlanMediaLayer extends PlanLayerBase {
 	source_seconds: number[];
 	crop: [number, number, number, number];
 	color_matrix: number[] | null;
+	// The matrix of each frame from `first` (a matrix or null) when a colour
+	// property is animated; it then replaces `color_matrix` (SDD-004 section 3.5).
+	color_matrices?: (number[] | null)[];
+	// The advanced colour of SDD-004 section 3.14, constant over the item.
+	grade?: PlanGrade;
+	// The lookup table of SDD-004 section 3.6; absent when its intensity is 0.
+	lut?: PlanLut;
 	// The filter of SDD-004 section 3.6 as a 3x4 matrix, and the blur as the
 	// standard deviation in project pixels; both constant over the item.
 	filter?: number[] | null;
 	blur?: number;
 	// The key of SDD-004 section 3.7, constant over the item; absent without one.
 	chroma_key?: PlanChromaKey;
+}
+
+export type PlanHslRange =
+	| "red"
+	| "orange"
+	| "yellow"
+	| "green"
+	| "cyan"
+	| "blue"
+	| "purple"
+	| "magenta";
+
+// The parameters are -1 to 1; the plan leaves out a 0.
+export interface PlanHslBand {
+	range: PlanHslRange;
+	hue?: number;
+	saturation?: number;
+	lightness?: number;
+}
+
+export interface PlanWheel {
+	// Degrees, 0 red, 120 green, 240 blue.
+	hue: number;
+	amount: number;
+	luma: number;
+}
+
+export interface PlanCurvePoint {
+	x: number;
+	y: number;
+}
+
+export interface PlanGrade {
+	hsl?: PlanHslBand[];
+	wheels?: {
+		shadows?: PlanWheel;
+		midtones?: PlanWheel;
+		highlights?: PlanWheel;
+	};
+	curves?: {
+		master?: PlanCurvePoint[];
+		red?: PlanCurvePoint[];
+		green?: PlanCurvePoint[];
+		blue?: PlanCurvePoint[];
+	};
+}
+
+export interface PlanLut {
+	asset: string;
+	intensity: number;
 }
 
 export interface PlanChromaKey {
