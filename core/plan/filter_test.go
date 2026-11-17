@@ -223,6 +223,32 @@ func TestLayerCarriesTheGrade(t *testing.T) {
 	}
 }
 
+func TestLayerCarriesTheLut(t *testing.T) {
+	t.Parallel()
+
+	d := newDoc()
+	it := clip("itm_l", trkBottom, 0, 10)
+	it.Lut = &timeline.Lut{Asset: "ast_l000000001", Intensity: 0.6}
+	put(d, it)
+
+	want := LutSpec{Asset: "ast_l000000001", Intensity: 0.6}
+
+	if l := Frame(d, 3).Layers[0]; l.Lut == nil || *l.Lut != want {
+		t.Errorf("layer lut %+v, want %+v", l.Lut, want)
+	}
+
+	if w := Window(d, 0, 10); len(w.Layers) != 1 || w.Layers[0].Lut == nil || *w.Layers[0].Lut != want {
+		t.Errorf("window layer lost the lut: %+v", w.Layers)
+	}
+
+	plain := newDoc()
+	put(plain, clip("itm_p", trkBottom, 0, 10))
+
+	if Frame(plain, 0).Layers[0].Lut != nil {
+		t.Error("an item with no lut must give none")
+	}
+}
+
 func TestAnimatedColourGivesEachFrameItsMatrix(t *testing.T) {
 	t.Parallel()
 

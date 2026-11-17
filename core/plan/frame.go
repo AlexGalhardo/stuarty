@@ -223,6 +223,9 @@ func (p *planner) mediaLayer(l Layer, it *timeline.Item, r int, a animated) (Lay
 	if len(it.Hsl) > 0 || it.Wheels != nil || it.Curves != nil {
 		l.Grade = &GradeSpec{Hsl: it.Hsl, Wheels: it.Wheels, Curves: it.Curves}
 	}
+	if it.Lut != nil && it.Lut.Intensity > 0 {
+		l.Lut = &LutSpec{Asset: it.Lut.Asset, Intensity: it.Lut.Intensity}
+	}
 	l.CX, l.CY = round3(a.x), round3(a.y)
 	l.W, l.H = round3(crop.W*b*a.scale), round3(crop.H*b*a.scale)
 
