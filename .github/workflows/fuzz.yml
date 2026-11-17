@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       fuzztime:
-        description: Duration per target on ubuntu, all 14 targets (go test -fuzztime; 30m for the campaign)
+        description: Duration per target on ubuntu, all 15 targets (go test -fuzztime; 30m for the campaign)
         default: 30s
       long_fuzztime:
         description: Duration per target on Windows and macOS (FuzzApplyBatch, FuzzSniffMedia, FuzzFFArgsCheck, FuzzFontHeader)
@@ -38,6 +38,7 @@ jobs:
       matrix:
         include:
           - { pkg: ./core/timeval, target: FuzzParse }
+          - { pkg: ./engine/lut, target: FuzzCubeParse }
           - { pkg: ./engine/rasterize, target: FuzzFontHeader }
           - { pkg: ./service, target: FuzzTemplateArchive }
           - { pkg: ./web/app/servicetest, target: FuzzBundleArchive }
