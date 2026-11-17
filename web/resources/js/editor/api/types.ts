@@ -220,6 +220,10 @@ interface PlanLayerBase {
 	// A whip, dip or wipe (SDD-004 section 3.2): one entry per frame from
 	// `first`, null where there is none; a frame past the end has none.
 	transition?: (PlanTransition | null)[];
+	// The drop shadow and the outline of SDD-004 section 3.15, constant over
+	// the item; absent without one.
+	shadow?: PlanShadow;
+	outline?: PlanOutline;
 }
 
 export interface PlanEffect {
@@ -253,6 +257,21 @@ export interface PlanMask {
 	// The plan leaves out a feather of 0.
 	feather?: number;
 	invert?: boolean;
+}
+
+// The drop shadow of SDD-004 section 3.15. Lengths are project pixels.
+export interface PlanShadow {
+	color: string;
+	opacity: number;
+	dx: number;
+	dy: number;
+	blur: number;
+}
+
+// The outline of SDD-004 section 3.15. `width` is project pixels.
+export interface PlanOutline {
+	color: string;
+	width: number;
 }
 
 export type PlanBlend = "normal" | "multiply" | "screen" | "overlay" | "add";

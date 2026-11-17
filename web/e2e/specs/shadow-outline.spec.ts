@@ -16,7 +16,8 @@ function recordEdits(page: Page): Posted[] {
 }
 
 // Shadow and Outline (SDD-012 section 12.1): each switch and each field is one
-// clip.set_shadow or clip.set_outline. The preview does not draw those pixels.
+// clip.set_shadow or clip.set_outline. The preview draws those pixels from the
+// plan (SDD-004 section 3.15).
 test.describe("shadow and outline", () => {
 	test("the shadow and outline controls send their commands", async ({
 		page,
