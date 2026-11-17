@@ -1,6 +1,6 @@
 import { Link, usePage } from "@inertiajs/react";
 import { Video } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -16,6 +16,11 @@ import { HttpTransport } from "../editor/api/http";
 // (SDD-012 section 16.3).
 export default function AppLayout({ children }: { children: ReactNode }) {
 	const { messages = {}, locale = "en", locales } = usePage<I18nProps>().props;
+	// The page prop is the language of the rendering; <html lang> follows it after
+	// an Inertia visit or reload, which never replaces the root template (VV-169).
+	useEffect(() => {
+		document.documentElement.lang = locale;
+	}, [locale]);
 	return (
 		<I18nProvider messages={messages} locale={locale} locales={locales}>
 			<Shell>{children}</Shell>
