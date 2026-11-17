@@ -43,6 +43,8 @@ type importTrack struct {
 	audio         bool
 	hidden, muted bool
 	magnet        bool
+	locked, solo  bool
+	volume        *float64
 	captionStyle  map[string]any
 	entries       []entry
 }
@@ -274,7 +276,13 @@ func (r *reader) track(t map[string]any) {
 		tk.hidden, _ = v["hidden"].(bool)
 		tk.muted, _ = v["muted"].(bool)
 		tk.magnet, _ = v["magnet"].(bool)
+		tk.locked, _ = v["locked"].(bool)
+		tk.solo, _ = v["solo"].(bool)
 		tk.hidden = tk.hidden && !tk.audio
+
+		if f, ok := v["volume"].(float64); ok && f >= 0 && f <= 4 {
+			tk.volume = &f
+		}
 
 		if raw, present := v["caption_style"]; present && !tk.audio {
 			tk.captionStyle = textStyle(raw, true, func(f string) { r.lose(f + " of track " + name) })
@@ -619,8 +627,16 @@ func (b *batch) track(tk *importTrack) {
 		})
 	}
 
-	if tk.hidden || tk.muted || tk.magnet {
+	if tk.hidden || tk.muted || tk.magnet || tk.solo || tk.volume != nil {
 		update := map[string]any{"track_id": trackID}
+		if tk.solo {
+			update["solo"] = true
+		}
+
+		if tk.volume != nil {
+			update["volume"] = *tk.volume
+		}
+
 		if tk.hidden {
 			update["hidden"] = true
 		}
@@ -659,6 +675,13 @@ func (b *batch) track(tk *importTrack) {
 
 		b.transition(ids, i+1, "in", e.out)
 		b.transition(ids, i-1, "out", e.in)
+	}
+
+	// A locked track refuses every edit of its items, so it is locked after the last one.
+	if tk.locked {
+		b.pending = append(b.pending, command.Operation{
+			Op: "track.update", Args: mustJSON(map[string]any{"track_id": trackID, "locked": true}),
+		})
 	}
 }
 

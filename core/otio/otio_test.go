@@ -1398,3 +1398,61 @@ func TestRoundTripKeepsEveryTransitionKind(t *testing.T) {
 		}
 	}
 }
+
+// VV-025: the lock, the solo flag and the volume of a track come back, and what the file still
+// cannot carry (a link, the template information) is reported on export.
+func TestRoundTripKeepsTrackLockSoloVolumeAndReportsTheRest(t *testing.T) {
+	d := sampleDoc()
+
+	vol := 0.5
+	vid, aud := d.Tracks[trkVid], d.Tracks[trkAud]
+	vid.Locked = true
+	aud.Solo, aud.Volume = true, &vol
+	d.Tracks[trkVid], d.Tracks[trkAud] = vid, aud
+
+	c1 := d.Items["itm_c000000001"]
+	c1.Link = "lnk_0000000001"
+	d.Items[c1.ID] = c1
+	d.Template = &timeline.TemplateInfo{}
+
+	first, lost, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	features := map[string]bool{}
+	for _, l := range lost {
+		features[l.Feature] = true
+	}
+
+	for _, want := range []string{"link", "template information of the project"} {
+		if !features[want] {
+			t.Errorf("export did not report %q: %+v", want, lost)
+		}
+	}
+
+	im, err := Parse(first)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	doc := build(t, im, newDoc(im.FPS))
+
+	got := map[string]timeline.Track{}
+	for _, tr := range doc.Tracks {
+		got[tr.Name] = tr
+	}
+
+	if !got["Video"].Locked || !got["Music"].Solo || got["Music"].Volume == nil || *got["Music"].Volume != 0.5 {
+		t.Errorf("tracks = %+v", got)
+	}
+
+	second, _, err := Export(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(withoutMarkers(t, second), withoutMarkers(t, first)) {
+		t.Errorf("round trip differs:\n%s\n---\n%s", second, first)
+	}
+}

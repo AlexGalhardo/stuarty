@@ -678,7 +678,7 @@ Any string that the product did not generate is untrusted, whatever its origin: 
 | Metadata tags (title, artist, comment, encoder, location, handler names) | the file's container and streams | `media_inspect` |
 | Project, track and item `name`; `text` of text items; caption words | any actor, including an earlier hijacked agent | `project_get`, the timeline view, diffs, `history` |
 | Template and slot `description`, template colour names | a template author or an agent | `template`, the timeline view, lint |
-| OpenTimelineIO result text: `lost[].name` and `lost[].feature` (clip and track names, project names on export), `unresolved_media[].ref` and `.reason` (the `target_url` as written), `file_name` (reduced to letters, digits, dash and underscore) | an imported `.otio` file; any actor on export | `project_otio_export` and `project_otio_import` results and the `details` of their refusal |
+| OpenTimelineIO result text: `lost[].name` and `lost[].feature` (clip and track names, project names on export), `unresolved_media[].ref` and `.reason`, `matched_media[].ref` (the `target_url` as written), `file_name` (reduced to letters, digits, dash and underscore) | an imported `.otio` file; any actor on export | `project_otio_export` and `project_otio_import` results and the `details` of their refusal |
 | Error messages that would quote any of the above | | |
 
 ### 8.2 Delimiting format

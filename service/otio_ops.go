@@ -39,6 +39,14 @@ type OtioMedia struct {
 	Reason string `json:"reason,omitempty" untrusted:"true"`
 }
 
+// OtioMatch is a media reference of an imported file answered by an asset of the project because
+// the names are equal. The file carries no content hash, so the match is not proof of identity (VV-025).
+type OtioMatch struct {
+	Ref     string `json:"ref"      untrusted:"true"`
+	AssetID string `json:"asset_id"`
+	Matched string `json:"matched"` // always "by_name"
+}
+
 // otioText is the budget of a name, a feature or a reference of an OTIO result.
 const otioText = untrusted.AssetNameFull
 
@@ -97,9 +105,13 @@ type ProjectOtioImportResult struct {
 	Edit *EditResult `json:"edit"`
 	// UnresolvedMedia is every reference of the file that no asset of the project answers.
 	UnresolvedMedia []OtioMedia `json:"unresolved_media"`
+	// MatchedMedia is every reference answered by an asset of the same name, not by content.
+	MatchedMedia []OtioMatch `json:"matched_media"`
 	// Lost is what the batch cannot carry, and the clips it left out.
 	Lost []OtioLost `json:"lost"`
-	Text string     `json:"text"`
+	// Warnings are notes about the import that are not a reason to refuse it.
+	Warnings []string `json:"warnings"`
+	Text     string   `json:"text"`
 }
 
 // ProjectOtioExport converts the head revision of a project to OpenTimelineIO. It writes nothing.
@@ -176,7 +188,7 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 			withPath("path").withHint("set the frame rate of the project to the one of the file, then import again")
 	}
 
-	assets, unresolved := matchOtioMedia(doc, im.Media)
+	assets, unresolved, matched := matchOtioMedia(doc, im.Media)
 
 	for family := range doc.Fonts {
 		im.KnownFonts = append(im.KnownFonts, family)
@@ -220,12 +232,37 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 	return &ProjectOtioImportResult{
 		UntrustedNotice: UntrustedNotice,
 		ProjectID:       row.ID, Revision: edit.Revision, Applied: edit.Applied, Edit: edit,
-		UnresolvedMedia: otioMedia(unresolved), Lost: otioLost(lost),
+		UnresolvedMedia: otioMedia(unresolved), MatchedMedia: otioMatches(matched), Lost: otioLost(lost),
+		Warnings: otioWarnings(matched),
 		Text: verb + strconv.Itoa(len(ops)) + " operation(s) into " + row.ID + " r" +
 			strconv.FormatInt(edit.Revision, 10) + "; " + strconv.Itoa(len(unresolved)) + " unresolved media, " +
 			strconv.Itoa(len(lost)) + " lost item(s)" + noClipsNote(ops, len(unresolved)),
 	}, nil
 }
+
+// otioMatches turns the by-name matches into the members of the result, in the order of the file.
+func otioMatches(in []otioMatch) []OtioMatch {
+	out := make([]OtioMatch, len(in))
+	for i, m := range in {
+		out[i] = OtioMatch{Ref: untrusted.Value(m.ref, otioText), AssetID: m.asset, Matched: "by_name"}
+	}
+
+	return out
+}
+
+// otioWarnings says once that the media was matched by file name. It carries no name from the file.
+func otioWarnings(matched []otioMatch) []string {
+	if len(matched) == 0 {
+		return []string{}
+	}
+
+	return []string{strconv.Itoa(len(matched)) + " media reference(s) were matched to assets of the project by " +
+		"file name, not by content: the file carries no hash, so check matched_media that each asset is the " +
+		"footage you meant"}
+}
+
+// otioMatch is a reference and the asset a name equality chose for it.
+type otioMatch struct{ ref, asset string }
 
 // noClipsNote explains an import that placed tracks but no clip because no media reference
 // of the file matched an asset: media is matched by asset name, and nothing is opened.
@@ -293,7 +330,7 @@ func (s *svc) readOtio(path string) (*otio.Import, error) {
 // matchOtioMedia maps each candidate reference to the asset of the document with that name: the
 // reference as written or its last path segment, in the form displayName gives an imported file.
 // The lowest id wins when two assets share a name. A reference with no asset is unresolved.
-func matchOtioMedia(doc *timeline.Document, media []otio.Media) (map[string]string, []otio.Media) {
+func matchOtioMedia(doc *timeline.Document, media []otio.Media) (map[string]string, []otio.Media, []otioMatch) {
 	ids := make([]string, 0, len(doc.Assets))
 	for id := range doc.Assets {
 		ids = append(ids, id)
@@ -311,6 +348,8 @@ func matchOtioMedia(doc *timeline.Document, media []otio.Media) (map[string]stri
 
 	assets := map[string]string{}
 	unresolved := []otio.Media{}
+
+	var matched []otioMatch
 
 	for _, m := range media {
 		if m.Status != otio.Candidate {
@@ -333,10 +372,14 @@ func matchOtioMedia(doc *timeline.Document, media []otio.Media) (map[string]stri
 			continue
 		}
 
+		if _, seen := assets[m.Ref]; !seen {
+			matched = append(matched, otioMatch{ref: m.Ref, asset: id})
+		}
+
 		assets[m.Ref] = id
 	}
 
-	return assets, unresolved
+	return assets, unresolved, matched
 }
 
 // otioFileName is the project name reduced to letters, digits, dash and underscore.

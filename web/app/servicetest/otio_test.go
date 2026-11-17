@@ -97,6 +97,12 @@ func TestOtioImportIsOneUndoStepAndRoundTrips(t *testing.T) {
 		t.Errorf("unresolved = %+v", res.UnresolvedMedia)
 	}
 
+	if len(res.MatchedMedia) == 0 || res.MatchedMedia[0].Matched != "by_name" || res.MatchedMedia[0].AssetID == "" ||
+		len(res.Warnings) != 1 || !strings.Contains(res.Warnings[0], "by file name") {
+		t.Errorf("matched = %+v, warnings = %v; a media matched by name must be reported (VV-025)",
+			res.MatchedMedia, res.Warnings)
+	}
+
 	doc, derr := timeline.Decode(m.document(target))
 	if derr != nil {
 		t.Fatal(derr)
