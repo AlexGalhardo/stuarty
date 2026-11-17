@@ -1264,7 +1264,7 @@
 			"additionalProperties": false,
 			"properties": {
 				"item_id": {
-					"description": "A clip of a video asset with audio.",
+					"description": "A clip of a video asset with audio, or an audio item.",
 					"type": "string"
 				},
 				"min_silence": {
@@ -1332,7 +1332,7 @@
 			],
 			"type": "object"
 		},
-		"description": "Replaces the clip by one clip per non-silent stretch of its source range. Silences shorter than min_silence are kept; padding of speech is kept on each side of a cut. With ripple track the pieces close up and the later items of the track follow. The silences come from the analysis of the asset and are supplied by the service in resolved; the command never starts a job.",
+		"description": "Replaces the clip or audio item by one item per non-silent stretch of its source range. Silences shorter than min_silence are kept; padding of speech is kept on each side of a cut. With ripple track the pieces close up and the later items of the track follow. The silences come from the analysis of the asset and are supplied by the service in resolved; the command never starts a job.",
 		"errors": [
 			"E_VALIDATION",
 			"E_INVALID_TIME",
@@ -1352,7 +1352,7 @@
 		"name": "clip.remove_silences",
 		"phase": "alpha",
 		"scope": "edit",
-		"summary": "Cuts the silent stretches out of a clip, leaving one clip per stretch of speech."
+		"summary": "Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech."
 	},
 	{
 		"args_schema": {

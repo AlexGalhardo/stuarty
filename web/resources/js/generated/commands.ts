@@ -547,7 +547,7 @@ export interface ClipAddArgs {
 
 export interface ClipRemoveSilencesArgs {
   /**
-   * A clip of a video asset with audio.
+   * A clip of a video asset with audio, or an audio item.
    */
   item_id: string;
   /**
@@ -2437,7 +2437,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"caption.set_words": { summary: "Replaces the words of a caption.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT","E_OVERLAP"] },
 	"caption.split": { summary: "Splits a caption into two at a word boundary.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT"] },
 	"clip.add": { summary: "Places a video or image asset on a visual track.", scope: "edit", phase: "prototype", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
-	"clip.remove_silences": { summary: "Cuts the silent stretches out of a clip, leaving one clip per stretch of speech.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_INVALID_STATE","E_LIMIT"] },
+	"clip.remove_silences": { summary: "Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech.", scope: "edit", phase: "alpha", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_INVALID_STATE","E_LIMIT"] },
 	"clip.set_blend": { summary: "Sets how a visual item is mixed with what is below it.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_blur": { summary: "Sets the blur radius of a visual item.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_chroma_key": { summary: "Keys out one colour of a clip, such as a green screen.", scope: "edit", phase: "beta", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },

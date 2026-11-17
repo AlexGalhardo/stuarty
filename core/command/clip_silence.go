@@ -11,8 +11,8 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "clip.remove_silences",
-		Summary: "Cuts the silent stretches out of a clip, leaving one clip per stretch of speech.",
-		Description: "Replaces the clip by one clip per non-silent stretch of its source range. Silences shorter than " +
+		Summary: "Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech.",
+		Description: "Replaces the clip or audio item by one item per non-silent stretch of its source range. Silences shorter than " +
 			"min_silence are kept; padding of speech is kept on each side of a cut. With ripple track the pieces " +
 			"close up and the later items of the track follow. The silences come from the analysis of the asset " +
 			"and are supplied by the service in resolved; the command never starts a job.",
@@ -37,7 +37,7 @@ type ResolvedSilences struct {
 }
 
 type removeSilencesArgs struct {
-	ItemID      string            `json:"item_id"                desc:"A clip of a video asset with audio."`
+	ItemID      string            `json:"item_id"                desc:"A clip of a video asset with audio, or an audio item."`
 	MinSilence  Time              `json:"min_silence,omitempty"  desc:"A length; shorter silences are ignored. Default \"0.4s\"."`
 	Padding     Time              `json:"padding,omitempty"      desc:"A length, may be 0; speech kept around each cut. Default \"0.1s\"."`
 	ThresholdDB *int              `json:"threshold_db,omitempty" desc:"Noise level of silence: -30, -35 (default), -40 or -45."`
@@ -228,16 +228,13 @@ func (c *Context) speechSource(it *timeline.Item, notClip, noAudio string) *Erro
 	return nil
 }
 
-// silenceClip returns the clip of the command (precondition 2 and 3).
+// silenceClip returns the clip or audio item of the command (precondition 2 and 3).
 func (c *Context) silenceClip(id string) (timeline.Item, *Error) {
 	it, err := c.item(id)
 	if err != nil {
 		return it, err
 	}
-	err = c.speechClip(&it, "only a clip can be cut by its silences.", "there is nothing to analyse.")
-	if err == nil {
-		err = rejectRemap(&it, "cutting by silences")
-	}
+	err = c.speechSource(&it, "only a clip or an audio item can be cut by its silences.", "there is nothing to analyse.")
 	return it, err
 }
 
