@@ -93,6 +93,11 @@ test.describe("history-panel", () => {
 			"true",
 		);
 		await page.keyboard.press("Alt+1");
-		await expect(page.getByRole("tab", { name: "Media" })).toHaveCount(0);
+		// The panel is hidden and the rail stays (docs/design-system.md 3.4.4).
+		await expect(page.getByRole("tab", { name: "Media" })).toHaveAttribute(
+			"aria-selected",
+			"false",
+		);
+		await expect(page.getByRole("region", { name: "Media" })).toHaveCount(0);
 	});
 });

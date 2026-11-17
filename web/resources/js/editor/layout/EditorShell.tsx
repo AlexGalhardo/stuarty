@@ -38,6 +38,8 @@ export function panelSizes(viewportWidth: number): PanelSizes {
 }
 
 const MIN_SUPPORTED_WIDTH = 1024;
+// The collapsed material region keeps its tab rail (docs/design-system.md 3.4.4).
+const RAIL_PX = 40;
 
 function useViewportWidth(): number {
 	const [width, setWidth] = useState(() => window.innerWidth);
@@ -68,7 +70,7 @@ export default function EditorShell({
 	const full = panelSizes(viewport);
 	const sizes = {
 		...full,
-		library: panels.left ? full.library : 0,
+		library: panels.left ? full.library : RAIL_PX,
 		inspector: panels.inspector ? full.inspector : 0,
 	};
 	usePanelShortcuts();
@@ -133,7 +135,7 @@ export default function EditorShell({
 					</div>
 				)}
 			</div>
-			{panels.left ? <LeftPanel /> : <div />}
+			<LeftPanel />
 			<main
 				aria-label={t("ui.editor.panels.preview")}
 				data-landmark="3"

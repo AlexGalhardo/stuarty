@@ -328,6 +328,7 @@
         }
       },
       "library": {
+        "rail": "Painéis de material",
         "path": "Caminho de um arquivo para importar",
         "import": "Importar",
         "empty": "Nenhuma mídia ainda",
