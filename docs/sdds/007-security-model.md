@@ -498,7 +498,7 @@ Timeouts (defaults, all as context deadlines so that `contrib/engine`'s own 5-mi
 | Run | Deadline |
 | --- | --- |
 | `ffprobe` | 30 s |
-| Ingest normalisation, proxy, thumbnails, peaks | `60 s + 3 x media duration`, at most 4 h |
+| Ingest normalisation, proxy, thumbnails, peaks | `60 s + 3 x media duration + 1 s per MiB of the source`, at most 4 h |
 | Frame (`view`) | 30 s |
 | Export | `120 s + 6 x timeline duration`, at most 2 h |
 | Audio extraction for transcription | `60 s + 1 x audio duration`, at most 1 h |

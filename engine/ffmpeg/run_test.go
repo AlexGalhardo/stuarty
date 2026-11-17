@@ -396,6 +396,12 @@ func TestDeadlines(t *testing.T) {
 	if IngestDeadline(60*time.Second) != 4*time.Minute {
 		t.Error("ingest of 60 s")
 	}
+	if IngestDeadlineFor(10*time.Second, 225<<20) != 60*time.Second+30*time.Second+225*time.Second {
+		t.Error("ingest of a 225 MiB file")
+	}
+	if IngestDeadlineFor(time.Minute, 0) != IngestDeadline(time.Minute) {
+		t.Error("ingest of an empty file")
+	}
 	if IngestDeadline(10*time.Hour) != 4*time.Hour {
 		t.Error("ingest cap")
 	}
