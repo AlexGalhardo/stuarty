@@ -294,6 +294,7 @@
         "dismiss": "Dispensar",
         "menu": "Ações de {name}",
         "inspect": "Inspecionar",
+        "hash": "Hash do conteúdo (o logotipo do kit de marca usa este):",
         "inspect_loading": "Lendo a mídia.",
         "remove": "Remover do projeto",
         "trash": "Mover para a lixeira",

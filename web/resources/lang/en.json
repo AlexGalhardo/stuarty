@@ -294,6 +294,7 @@
         "dismiss": "Dismiss",
         "menu": "Actions for {name}",
         "inspect": "Inspect",
+        "hash": "Content hash (the brand kit logo takes this):",
         "inspect_loading": "Reading the media.",
         "remove": "Remove from project",
         "trash": "Move to trash",

@@ -155,4 +155,21 @@ test.describe("palette Escape, documented keys and the attributes menu", () => {
 		expect((await request.get("/icon.svg")).status()).toBe(200);
 		expect(failed).toEqual([]);
 	});
+
+	// VV-117: Inspect shows the content hash, which the brand kit logo takes.
+	test("Inspect on an asset card shows its hash", async ({ page, request }) => {
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+		});
+		await page.goto(`/editor/${seeded.id}`);
+		await page
+			.getByRole("button", { name: /^Actions for/ })
+			.first()
+			.click();
+		await page.getByRole("menuitem", { name: "Inspect" }).click();
+		await expect(page.getByTestId("asset-hash")).toHaveText(
+			/^sha256:[0-9a-f]{64}$/,
+		);
+	});
 });
