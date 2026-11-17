@@ -14,6 +14,7 @@ pub mod colour;
 pub mod compose;
 pub mod effects;
 pub mod error;
+pub mod grade;
 pub mod host;
 pub mod image;
 pub mod json;

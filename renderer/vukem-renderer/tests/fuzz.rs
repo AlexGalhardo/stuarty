@@ -13,6 +13,7 @@ use vukem_renderer::chroma::ChromaKeySpec;
 use vukem_renderer::compose::{Layer, Placement, Source, Target, compose, sample};
 use vukem_renderer::effects::{Direction, Effect, FrameInfo, Transition, TransitionKind};
 use vukem_renderer::error::Reason;
+use vukem_renderer::grade::{CurvePoint, GradeSpec, HslBand, Wheel};
 use vukem_renderer::host::{BitmapMetrics, Limits, Renderer};
 use vukem_renderer::image::Image;
 use vukem_renderer::mask::{MaskShape, MaskSpec, MaskState};
@@ -395,6 +396,40 @@ fn transition(rng: &mut Rng) -> Transition {
 	}
 }
 
+fn curve(rng: &mut Rng) -> Vec<CurvePoint> {
+	(0..rng.below(9))
+		.map(|_| CurvePoint {
+			x: extreme(rng),
+			y: extreme(rng),
+		})
+		.collect()
+}
+
+fn grade(rng: &mut Rng) -> Option<GradeSpec> {
+	rng.chance(3).then(|| {
+		let mut g = GradeSpec::default();
+		for b in &mut g.hsl {
+			*b = HslBand {
+				hue: extreme(rng),
+				saturation: extreme(rng),
+				lightness: extreme(rng),
+			};
+		}
+		for w in &mut g.wheels {
+			*w = rng.chance(2).then(|| Wheel {
+				hue: extreme(rng),
+				amount: extreme(rng),
+				luma: extreme(rng),
+			});
+		}
+		g.master = curve(rng);
+		g.red = curve(rng);
+		g.green = curve(rng);
+		g.blue = curve(rng);
+		g
+	})
+}
+
 fn matrix(rng: &mut Rng) -> Option<[f64; 12]> {
 	rng.chance(3)
 		.then(|| core::array::from_fn(|_| extreme(rng)))
@@ -430,6 +465,7 @@ fn the_composition_survives_extreme_numbers() {
 					opacity: extreme(&mut rng),
 					color_matrix: matrix(&mut rng),
 					filter: matrix(&mut rng),
+					grade: grade(&mut rng),
 					chroma_key: chroma_key(&mut rng),
 					blend: *rng.pick(&BLENDS),
 					mask: rng.chance(2).then(|| mask(&mut rng)),

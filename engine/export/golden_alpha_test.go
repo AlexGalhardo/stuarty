@@ -49,6 +49,10 @@ var requiredCases = []string{
 	"shape",
 	"color-adjust",
 	"color-keyframes",
+	"grade-hsl",
+	"grade-wheels",
+	"grade-curves",
+	"grade-all",
 	"speed-half",
 	"speed-double",
 	"fps-30000-1001",
@@ -451,6 +455,10 @@ var alphaCases = map[string]func() alphaCase{
 		return b.build(5, 15, 25)
 	},
 	"color-keyframes": colourKeyframesCase,
+	"grade-hsl":       func() alphaCase { return gradeCase("grade hsl", gradeHSL) },
+	"grade-wheels":    func() alphaCase { return gradeCase("grade wheels", gradeWheels) },
+	"grade-curves":    func() alphaCase { return gradeCase("grade curves", gradeCurves) },
+	"grade-all":       func() alphaCase { return gradeCase("grade all", gradeAll) },
 	"speed-half":      func() alphaCase { return speedCase("speed 0.5", rate(1, 2), 40, 0, 13, 26, 39) },
 	"speed-double":    func() alphaCase { return speedCase("speed 2", rate(2, 1), 30, 0, 10, 20, 29) },
 	"fps-30000-1001": func() alphaCase {
@@ -730,7 +738,10 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 		if !strings.HasPrefix(name, "blur-") && !strings.HasPrefix(name, "filter-") &&
 			!strings.HasPrefix(name, "sticker-") && !strings.HasPrefix(name, "chroma-") &&
 			!strings.HasPrefix(name, "blend-") && !strings.HasPrefix(name, "mask-") &&
-			!strings.HasPrefix(name, "flip-") && !strings.HasPrefix(name, "effect") &&
+			!strings.HasPrefix(
+				name,
+				"flip-",
+			) && !strings.HasPrefix(name, "grade-") && !strings.HasPrefix(name, "effect") &&
 			!strings.HasPrefix(name, "transition-") {
 			continue
 		}
@@ -826,4 +837,51 @@ func colourKeyframesCase() alphaCase {
 		}
 	})
 	return b.build(0, 10, 20, 29)
+}
+
+// The grades of SDD-004 section 3.14, set on the item as clip.set_color stores them.
+func gradeHSL(it *timeline.Item) {
+	it.Hsl = []timeline.HslBand{
+		{Range: "red", Hue: 0.6, Saturation: 0.3},
+		{Range: "yellow", Hue: -0.5, Lightness: 0.3},
+		{Range: "blue", Saturation: 0.8, Lightness: -0.2},
+		{Range: "green", Hue: 1, Saturation: -0.5},
+	}
+}
+
+func gradeWheels(it *timeline.Item) {
+	it.Wheels = &timeline.Wheels{
+		Shadows:    &timeline.Wheel{Hue: 220, Amount: 0.5, Luma: -0.1},
+		Midtones:   &timeline.Wheel{Hue: 30, Amount: 0.25, Luma: 0.05},
+		Highlights: &timeline.Wheel{Hue: 50, Amount: 0.6, Luma: 0.2},
+	}
+}
+
+func gradeCurves(it *timeline.Item) {
+	it.Curves = &timeline.Curves{
+		Master: []timeline.CurvePoint{{X: 0, Y: 0.08}, {X: 0.4, Y: 0.3}, {X: 0.75, Y: 0.85}, {X: 1, Y: 1}},
+		Red:    []timeline.CurvePoint{{X: 0, Y: 0}, {X: 0.5, Y: 0.62}, {X: 1, Y: 1}},
+		Blue:   []timeline.CurvePoint{{X: 0, Y: 0.15}, {X: 1, Y: 0.85}},
+	}
+}
+
+func gradeAll(it *timeline.Item) {
+	gradeHSL(it)
+	gradeWheels(it)
+	gradeCurves(it)
+	it.Brightness, it.Filter, it.FilterAmount = 0.1, "warm", 0.5
+}
+
+// gradeCase draws a grade on a layer that stays and on a picture in picture that slides and rotates, both from
+// the same clip, so the grade is checked on pixels that change place and on pixels that do not.
+func gradeCase(name string, set func(*timeline.Item)) alphaCase {
+	b := newCase(name, rate(30, 1))
+	asset := b.video(portrait)
+	b.clip(b.track(), asset, 0, 30, set)
+	b.clip(b.track(), asset, 0, 30, func(it *timeline.Item) {
+		set(it)
+		it.Scale, it.Rotation = 0.5, 12
+		it.Keyframes = timeline.Keyframes{"x": {timeline.NewKeyframe(0, 40), timeline.NewKeyframe(29, 140)}}
+	})
+	return b.build(0, 15, 29)
 }

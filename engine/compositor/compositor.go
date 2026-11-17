@@ -161,6 +161,9 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, fp *plan.FramePlan, o
 	if l.ColorMatrix != nil {
 		src = c.applyMatrix(src, l.ColorMatrix)
 	}
+	if g := newGrade(l.Grade); g != nil {
+		src = c.applyGrade(src, g)
+	}
 	if l.Filter != nil {
 		src = c.applyMatrix(src, l.Filter)
 	}

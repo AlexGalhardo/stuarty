@@ -190,6 +190,7 @@ impl Renderer {
 				opacity: l.opacity,
 				color_matrix: l.color_matrix,
 				filter: l.filter,
+				grade: l.grade.clone(),
 				blur: l.blur,
 				chroma_key: l.chroma_key.clone(),
 				blend: l.blend,
