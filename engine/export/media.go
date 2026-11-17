@@ -25,12 +25,16 @@ import (
 )
 
 // layerInfo is what the pre-pass learns about a media layer over its whole item: whether its drawn
-// size and rotation never change, which lets the decoder deliver frames already scaled to it
-// (SDD-004 section 6, pre-scaling, and section 12 rule 1).
+// size, rotation and crop never change, which lets the decoder deliver frames already cropped and
+// scaled (SDD-004 section 6, pre-scaling, and section 12 rule 1).
 type layerInfo struct {
 	w, h, rot float64
 	cx, cy    float64
+	crop      plan.Rect
 	constant  bool
+	// cropVaries says Crop is not the same rectangle on every frame of the item (VV-120). The decoder
+	// then delivers the whole frame and each frame is cropped in Go; one crop is not baked in.
+	cropVaries bool
 	// plain says no frame of the item flips, blurs, masks, transitions or applies an effect to it, and the
 	// centre never moves: the visible part of the layer is the same on every frame, so the decoder may
 	// deliver only that part (compositor.Image.FullW).
@@ -41,8 +45,9 @@ func isPlain(l *plan.Layer) bool {
 	return !l.FlipX && !l.FlipY && l.Blur == 0 && l.Mask == nil && l.Transition == nil && len(l.Effects) == 0
 }
 
-// scanLayers plans every frame once and records, for each media item, whether its size and rotation are
-// constant. The plans are not kept: they are cheap to make again and a long project has many frames.
+// scanLayers plans every frame once and records, for each media item, whether its size, rotation and
+// crop are constant. A changing crop is recorded like a changing size: nothing may assume one crop.
+// The plans are not kept: they are cheap to make again and a long project has many frames.
 func (s *state) scanLayers() map[string]*layerInfo {
 	infos := map[string]*layerInfo{}
 	for t := s.offset; t < s.offset+s.frames; t++ {
@@ -55,10 +60,14 @@ func (s *state) scanLayers() map[string]*layerInfo {
 			in, ok := infos[l.ItemID]
 			if !ok {
 				infos[l.ItemID] = &layerInfo{
-					w: l.W, h: l.H, rot: l.Rotation, cx: l.CX, cy: l.CY,
+					w: l.W, h: l.H, rot: l.Rotation, cx: l.CX, cy: l.CY, crop: l.Crop,
 					constant: l.Rotation == 0, plain: isPlain(l),
 				}
 				continue
+			}
+			if l.Crop != in.crop {
+				in.cropVaries = true
+				in.constant = false
 			}
 			if l.W != in.w || l.H != in.h || l.Rotation != in.rot {
 				in.constant = false
@@ -79,8 +88,8 @@ type frameSource struct {
 
 	vids   map[string]*videoDecoder
 	used   map[string]bool
-	images map[string]compositor.Image // decoded PNG by asset id
-	placed map[string]compositor.Image // an image cropped and scaled for its item
+	images map[string]compositor.Image    // decoded PNG by asset id
+	placed map[placedKey]compositor.Image // an image cropped and scaled for one crop of its item
 
 	luts map[string]*lut.Table // parsed lookup tables by asset id
 
@@ -93,7 +102,7 @@ func newFrameSource(s *state, infos map[string]*layerInfo) *frameSource {
 	return &frameSource{
 		s: s, infos: infos,
 		vids: map[string]*videoDecoder{}, used: map[string]bool{},
-		images: map[string]compositor.Image{}, placed: map[string]compositor.Image{},
+		images: map[string]compositor.Image{}, placed: map[placedKey]compositor.Image{},
 		luts:  map[string]*lut.Table{},
 		anims: map[string]*ingest.Anim{}, animFrames: map[animKey]compositor.Image{},
 	}
@@ -134,10 +143,16 @@ func (f *frameSource) target(l *plan.Layer, cw, ch int) (w, h int, scaled bool) 
 	return cw, ch, false
 }
 
+// placedKey is one delivered image of an item: the crop in source pixels and the size it was scaled
+// to. A static crop is one key, so the cache still holds one picture; a changing crop is a key per
+// frame and the first rectangle is never reused for a later one.
+type placedKey struct {
+	item       string
+	x, y, w, h int
+	tw, th     int
+}
+
 func (f *frameSource) image(l *plan.Layer, a *timeline.Asset) (compositor.Image, error) {
-	if img, ok := f.placed[l.ItemID]; ok {
-		return img, nil
-	}
 	src, ok := f.images[l.AssetID]
 	if !ok {
 		path, err := f.s.artifact(a, "png")
@@ -151,12 +166,17 @@ func (f *frameSource) image(l *plan.Layer, a *timeline.Asset) (compositor.Image,
 	}
 
 	cx, cy, cw, ch := cropRect(l, a)
-	cw, ch = min(cw, src.W-cx), min(ch, src.H-cy)
-	img := cropImage(src, cx, cy, cw, ch)
-	if w, h, scaled := f.target(l, cw, ch); scaled && (w != cw || h != ch) {
-		img = compositor.Resize(img, w, h)
+	cw, ch = min(cw, max(src.W-cx, 0)), min(ch, max(src.H-cy, 0))
+	tw, th, scaled := f.target(l, cw, ch)
+	key := placedKey{l.ItemID, cx, cy, cw, ch, tw, th}
+	if img, ok := f.placed[key]; ok {
+		return img, nil
 	}
-	f.placed[l.ItemID] = img
+	img := cropImage(src, cx, cy, cw, ch)
+	if scaled && (tw != cw || th != ch) {
+		img = compositor.Resize(img, tw, th)
+	}
+	f.placed[key] = img
 	return img, nil
 }
 
@@ -208,6 +228,12 @@ func (f *frameSource) video(l *plan.Layer, a *timeline.Asset) (compositor.Image,
 	if d.win.full {
 		img.FullW, img.FullH, img.OffX, img.OffY = d.win.fullW, d.win.fullH, d.win.x, d.win.y
 	}
+	// A changing crop was not applied by FFmpeg: cut this frame's rectangle out of the whole picture.
+	if d.each {
+		cx, cy, cw, ch := cropRect(l, a)
+		cw, ch = min(cw, max(img.W-cx, 0)), min(ch, max(img.H-cy, 0))
+		img = cropImage(img, cx, cy, cw, ch)
+	}
 
 	return img, nil
 }
@@ -258,12 +284,30 @@ func (f *frameSource) window(l *plan.Layer, cw, ch, w, h int) visibleWindow {
 	}
 }
 
-// decoder is the decoder of the clip of the layer, made on the first use.
+// deliverCrop is the rectangle the decoder cuts, in source pixels. When the crop changes across the
+// item it is the whole frame (each is true) and video crops per frame; a static crop is applied once
+// in the filter, which is what the existing goldens are built from.
+func (f *frameSource) deliverCrop(l *plan.Layer, a *timeline.Asset) (x, y, w, h int, each bool) {
+	if in := f.infos[l.ItemID]; in != nil && in.cropVaries {
+		return 0, 0, a.Width, a.Height, true
+	}
+	x, y, w, h = cropRect(l, a)
+	return x, y, w, h, false
+}
+
+// decoder is the decoder of the clip of the layer, made on the first use. A later frame whose crop
+// is not the one this process was built for starts a new process, so a single-frame renderer that is
+// asked twice does not keep the first crop.
 func (f *frameSource) decoder(l *plan.Layer, a *timeline.Asset) (*videoDecoder, error) {
 	f.used[l.ItemID] = true
+	cx, cy, cw, ch, each := f.deliverCrop(l, a)
 	d := f.vids[l.ItemID]
+	if d != nil && (d.each != each || d.cx != cx || d.cy != cy || d.cw != cw || d.ch != ch) {
+		d.stop()
+		delete(f.vids, l.ItemID)
+		d = nil
+	}
 	if d == nil {
-		cx, cy, cw, ch := cropRect(l, a)
 		w, h, _ := f.target(l, cw, ch)
 		win := f.window(l, cw, ch, w, h)
 		path, err := f.s.artifact(a, "mov")
@@ -271,7 +315,7 @@ func (f *frameSource) decoder(l *plan.Layer, a *timeline.Asset) (*videoDecoder, 
 			return nil, err
 		}
 		var vf []ffargs.Filter
-		if cx != 0 || cy != 0 || cw != a.Width || ch != a.Height {
+		if !each && (cx != 0 || cy != 0 || cw != a.Width || ch != a.Height) {
 			vf = append(vf, ffargs.CropRect(cw, ch, cx, cy)...)
 		}
 		if win.full {
@@ -291,6 +335,11 @@ func (f *frameSource) decoder(l *plan.Layer, a *timeline.Asset) (*videoDecoder, 
 			rate:  a.FrameRate,
 			item:  l.ItemID,
 			alpha: a.HasAlpha,
+			each:  each,
+			cx:    cx,
+			cy:    cy,
+			cw:    cw,
+			ch:    ch,
 		}
 		f.vids[l.ItemID] = d
 	}
@@ -361,6 +410,11 @@ type videoDecoder struct {
 	// alpha says the decoded pixels carry an alpha channel: they are premultiplied as they arrive.
 	alpha bool
 	win   visibleWindow
+	// each says the filter delivers the whole frame and video crops per frame. cx, cy, cw, ch are the
+	// rectangle the filter was built with, the whole frame when each is set.
+	each   bool
+	cx, cy int
+	cw, ch int
 
 	cancel context.CancelFunc
 	out    chan []byte

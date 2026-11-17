@@ -16,10 +16,13 @@ import (
 // decoded again from the sequence each time it is asked for.
 const animCacheBytes = 128 << 20
 
-// animKey names one frame of the animation of one item.
+// animKey names one delivered frame of the animation of one item, including the crop and the size it
+// was scaled to, so a later frame with another crop is not the cached picture of the first.
 type animKey struct {
-	item  string
-	frame int
+	item       string
+	frame      int
+	x, y, w, h int
+	tw, th     int
 }
 
 // animImage is the picture of an animated image layer (SDD-004 section 3.3): the frame the plan names, read
@@ -32,22 +35,22 @@ func (f *frameSource) animImage(l *plan.Layer, a *timeline.Asset) (compositor.Im
 		return compositor.Image{}, err
 	}
 	n := seq.Frames()
-	key := animKey{l.ItemID, ((l.SourceFrame % n) + n) % n}
-	if img, ok := f.animFrames[key]; ok {
-		return img, nil
-	}
-
-	pix, err := seq.Frame(key.frame)
+	pix, err := seq.Frame(((l.SourceFrame % n) + n) % n)
 	if err != nil {
 		return compositor.Image{}, fmt.Errorf("animated image %s: %w", l.AssetID, err)
 	}
 	src := toPremultiplied(pix, seq.W, seq.H)
 
 	cx, cy, cw, ch := cropRect(l, a)
-	cw, ch = min(cw, src.W-cx), min(ch, src.H-cy)
+	cw, ch = min(cw, max(src.W-cx, 0)), min(ch, max(src.H-cy, 0))
+	tw, th, scaled := f.target(l, cw, ch)
+	key := animKey{l.ItemID, ((l.SourceFrame % n) + n) % n, cx, cy, cw, ch, tw, th}
+	if img, ok := f.animFrames[key]; ok {
+		return img, nil
+	}
 	img := cropImage(src, cx, cy, cw, ch)
-	if w, h, scaled := f.target(l, cw, ch); scaled && (w != cw || h != ch) {
-		img = compositor.Resize(img, w, h)
+	if scaled && (tw != cw || th != ch) {
+		img = compositor.Resize(img, tw, th)
 	}
 	if size := int64(len(img.Pix)); f.animBytes+size <= animCacheBytes {
 		f.animFrames[key] = img
