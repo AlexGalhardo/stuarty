@@ -14,6 +14,10 @@ import (
 // prints it. When it is unset the tests look where the script installs by default.
 const envTestFFmpegDir = "VUKEM_VIDEO_TEST_FFMPEG_DIR"
 
+// envTestToolsDir names the tools folder (<workspace>/tools) that holds the Cisco OpenH264 library the own
+// build loads; the own build has no H.264 encoder without it.
+const envTestToolsDir = "VUKEM_VIDEO_TEST_TOOLS_DIR"
+
 var pinnedCache *Installation
 
 // pinned returns the pinned LGPL FFmpeg, or skips the test. A test never downloads anything:
@@ -42,7 +46,7 @@ func pinned(t *testing.T) *Installation {
 			"no pinned FFmpeg: run scripts/install-ffmpeg.sh and set " + envTestFFmpegDir + " to the folder it prints",
 		)
 	}
-	in, err := Discover(context.Background(), Config{FFmpegPath: filepath.Join(dir, exeName("ffmpeg")), CPUCount: 2})
+	in, err := Discover(context.Background(), Config{FFmpegPath: filepath.Join(dir, exeName("ffmpeg")), CPUCount: 2, ToolsDir: os.Getenv(envTestToolsDir)})
 	if err != nil {
 		t.Skipf("the FFmpeg in %s is not usable: %v", envTestFFmpegDir, err)
 	}

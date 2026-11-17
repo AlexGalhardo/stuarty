@@ -54,7 +54,7 @@ func pinnedInstall(tb testing.TB) (*ffmpeg.Installation, *ffmpeg.Capabilities) {
 		}
 		in, err := ffmpeg.Discover(
 			context.Background(),
-			ffmpeg.Config{FFmpegPath: filepath.Join(dir, exe("ffmpeg")), CPUCount: runtime.NumCPU()},
+			ffmpeg.Config{FFmpegPath: filepath.Join(dir, exe("ffmpeg")), CPUCount: runtime.NumCPU(), ToolsDir: os.Getenv("VUKEM_VIDEO_TEST_TOOLS_DIR")},
 		)
 		if err != nil || in.Info.License.Name != "lgpl" {
 			pinSkip = "the FFmpeg in " + envTestFFmpegDir + " is not the pinned LGPL build"
