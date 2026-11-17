@@ -54,7 +54,9 @@ type TemplateRef struct {
 type TemplateResult struct {
 	Envelope
 	Template TemplateSummary `json:"template"`
-	Text     string          `json:"text"`
+	// Deduplicated is true when an import found the same content already stored and created nothing (VV-128).
+	Deduplicated bool   `json:"deduplicated,omitempty"`
+	Text         string `json:"text"`
 }
 
 // SlotValue fills one slot; exactly one member is given.

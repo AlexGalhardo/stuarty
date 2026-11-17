@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
@@ -183,5 +184,43 @@ func TestTemplateExportIsPerOwner(t *testing.T) {
 		err,
 	) != command.CodeNotFound {
 		t.Errorf("download by another owner = %v", err)
+	}
+}
+
+// VV-128: importing the same template file twice answers the existing template and creates no copy.
+func TestTemplateImportDeduplicatesByContent(t *testing.T) {
+	a := newMediaEnv(t, mediaCfg{})
+	saved := a.saveTemplate(a.templateProject())
+	file := string(a.exportTemplate(saved.Template.TemplateID))
+
+	b := newMediaEnv(t, mediaCfg{})
+	path := b.write("t.zip", file)
+
+	first, err := b.svc.TemplateImport(b.as(ui), service.TemplateImportRequest{Path: path})
+	if err != nil || first.Deduplicated {
+		t.Fatalf("first = %+v, %v", first, err)
+	}
+
+	second, err := b.svc.TemplateImport(b.as(ui), service.TemplateImportRequest{Path: path})
+	if err != nil || !second.Deduplicated || second.Template.TemplateID != first.Template.TemplateID ||
+		!strings.Contains(second.Text, "already imported") {
+		t.Fatalf("second = %+v, %v", second, err)
+	}
+
+	list, err := b.svc.TemplateList(b.as(ui), service.TemplateListRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	n := 0
+
+	for i := range list.Templates {
+		if list.Templates[i].Name == first.Template.Name {
+			n++
+		}
+	}
+
+	if n != 1 {
+		t.Errorf("%d templates named %q after two imports, want 1", n, first.Template.Name)
 	}
 }
