@@ -225,6 +225,21 @@ func TestBuildWithoutAClientNeverAsks(t *testing.T) {
 	}
 }
 
+func TestTurningTheScheduleOnWithoutAClientDoesNotPanic(t *testing.T) {
+	h := newHarness(t, Settings{}.WithAutoCheck(true), nil)
+	h.l.Start(context.Background())
+
+	if err := h.l.SetAutoCheck(context.Background(), true); err != nil {
+		t.Fatal(err)
+	}
+
+	h.l.Wait()
+
+	if h.l.CanUpdate() || h.l.AutoCheck() && len(h.saved) != 0 {
+		t.Errorf("CanUpdate %v, saved %v", h.l.CanUpdate(), h.saved)
+	}
+}
+
 func TestAnsweredYesChecksAtOnceThenEvery24Hours(t *testing.T) {
 	h := newHarness(t, Settings{}.WithAutoCheck(true), &fakeClient{results: []error{update.ErrNotNewer}})
 	h.l.Start(context.Background())
