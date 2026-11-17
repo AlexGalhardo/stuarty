@@ -30,7 +30,7 @@
       "x-vv-kind": "time"
     },
     "start": {
-      "description": "Absolute position.",
+      "description": "Absolute position; omitted, the end of the last item of the track (0s on an empty track).",
       "type": "string",
       "x-vv-kind": "time"
     },
@@ -42,8 +42,7 @@
   },
   "required": [
     "track_id",
-    "asset_id",
-    "start"
+    "asset_id"
   ],
   "type": "object"
 }

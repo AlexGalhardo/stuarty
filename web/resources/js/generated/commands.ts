@@ -46,9 +46,9 @@ export interface AudioAddArgs {
    */
   source_in?: string;
   /**
-   * Absolute position.
+   * Absolute position; omitted, the end of the last item of the track (0s on an empty track).
    */
-  start: string;
+  start?: string;
   /**
    * An audio track.
    */
@@ -544,9 +544,9 @@ export interface ClipAddArgs {
    */
   source_in?: string;
   /**
-   * Absolute position.
+   * Absolute position; omitted, the end of the last item of the track (0s on an empty track).
    */
-  start: string;
+  start?: string;
   /**
    * A visual track.
    */

@@ -170,3 +170,12 @@ func (c *Context) trackEnd(track string) int {
 	}
 	return end
 }
+
+// startOrTrackEnd is the start of an added item: the time given, or the end of the last item
+// of the track when it is omitted, which is always a free position (VV-158).
+func (c *Context) startOrTrackEnd(track string, start Time) (int, *Error) {
+	if start == "" {
+		return c.trackEnd(track), nil
+	}
+	return c.ParseTime("args.start", string(start))
+}

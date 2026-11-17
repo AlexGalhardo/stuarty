@@ -17,6 +17,9 @@ func init() {
 		aa(audAsset, `"start": "1s", "source_in": "1s", "duration": "10s"`),
 		base,
 	)
+	au("ok_start_omitted_goes_to_the_end_of_the_track",
+		fmt.Sprintf(`{"track_id": %q, "asset_id": %q, "id": %q, "duration": "1s"}`, audTr, audAsset, itemC),
+		func() *B { return base().audio(itemB, 5, 40, 0) })
 	au("ok_video_with_audio_asset", aa(vidAsset, `"start": "0s"`), base)
 	au("ok_ends_exactly_at_asset_end", aa(audAsset, `"start": "0s", "source_in": "30f", "duration": "870f"`), base)
 	au("ok_supplied_id", aa(audAsset, `"start": "5s"`), base)

@@ -21,7 +21,7 @@ Adds a clip. The default duration is the rest of the asset from source_in, or 5 
 | `fit` | `cover`, `contain`, `none` | no |  |
 | `id` | `string` | no | pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `source_in` | `string` | no | Offset into the asset; default 0s; omit for an image. |
-| `start` | `string` | yes | Absolute position. |
+| `start` | `string` | no | Absolute position; omitted, the end of the last item of the track (0s on an empty track). |
 | `track_id` | `string` | yes | A visual track.; pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 
 ## Errors

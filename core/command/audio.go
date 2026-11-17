@@ -21,12 +21,12 @@ func init() {
 }
 
 type audioAddArgs struct {
-	TrackID  string `json:"track_id"            desc:"An audio track."                                                             pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	AssetID  string `json:"asset_id"            desc:"An audio asset, a video asset with audio, or ast_placeholder in a template." pattern:"^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}|placeholder)$"`
-	Start    Time   `json:"start"               desc:"Absolute position."`
+	TrackID  string `json:"track_id"            desc:"An audio track."                                                                           pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	AssetID  string `json:"asset_id"            desc:"An audio asset, a video asset with audio, or ast_placeholder in a template."               pattern:"^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}|placeholder)$"`
+	Start    Time   `json:"start,omitempty"     desc:"Absolute position; omitted, the end of the last item of the track (0s on an empty track)."`
 	SourceIn Time   `json:"source_in,omitempty" desc:"Offset into the asset; default 0s."`
 	Duration Time   `json:"duration,omitempty"  desc:"A length; default the rest of the asset."`
-	ID       string `json:"id,omitempty"                                                                                           pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	ID       string `json:"id,omitempty"                                                                                                         pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyAudioAdd(c *Context, a *audioAddArgs) error {
@@ -42,7 +42,7 @@ func applyAudioAdd(c *Context, a *audioAddArgs) error {
 	if err := idForm("args.id", timeline.PrefixItem, a.ID); err != nil {
 		return err
 	}
-	start, err := c.ParseTime("args.start", string(a.Start))
+	start, err := c.startOrTrackEnd(a.TrackID, a.Start)
 	if err != nil {
 		return err
 	}

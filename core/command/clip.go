@@ -21,13 +21,13 @@ func init() {
 }
 
 type clipAddArgs struct {
-	TrackID  string `json:"track_id"            desc:"A visual track."                                              pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	AssetID  string `json:"asset_id"            desc:"A video or image asset, or ast_placeholder in a template."    pattern:"^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}|placeholder)$"`
-	Start    Time   `json:"start"               desc:"Absolute position."`
+	TrackID  string `json:"track_id"            desc:"A visual track."                                                                           pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	AssetID  string `json:"asset_id"            desc:"A video or image asset, or ast_placeholder in a template."                                 pattern:"^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}|placeholder)$"`
+	Start    Time   `json:"start,omitempty"     desc:"Absolute position; omitted, the end of the last item of the track (0s on an empty track)."`
 	SourceIn Time   `json:"source_in,omitempty" desc:"Offset into the asset; default 0s; omit for an image."`
 	Duration Time   `json:"duration,omitempty"  desc:"A length; default the rest of the asset, or 5s for an image."`
-	Fit      string `json:"fit,omitempty"                                                                                                                                                enum:"cover,contain,none"`
-	ID       string `json:"id,omitempty"                                                                            pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Fit      string `json:"fit,omitempty"                                                                                                                                                                             enum:"cover,contain,none"`
+	ID       string `json:"id,omitempty"                                                                                                         pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyClipAdd(c *Context, a *clipAddArgs) error {
@@ -43,7 +43,7 @@ func applyClipAdd(c *Context, a *clipAddArgs) error {
 	if err := idForm("args.id", timeline.PrefixItem, a.ID); err != nil {
 		return err
 	}
-	start, err := c.ParseTime("args.start", string(a.Start))
+	start, err := c.startOrTrackEnd(a.TrackID, a.Start)
 	if err != nil {
 		return err
 	}
