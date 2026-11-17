@@ -956,6 +956,12 @@
               "$ref": "#/components/schemas/FontFamily"
             },
             "type": "array"
+          },
+          "imported": {
+            "items": {
+              "$ref": "#/components/schemas/ImportedFont"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -1161,6 +1167,18 @@
             "type": "number"
           },
           "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImportedFont": {
+        "properties": {
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "hash": {
             "type": "string"
           }
         },

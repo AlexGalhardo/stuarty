@@ -97,6 +97,14 @@ func fontsText(res *service.FontListResult) string {
 		fmt.Fprintf(&b, "\n%s: %v", f.Family, f.Weights)
 	}
 
+	if len(res.Imported) > 0 {
+		fmt.Fprintf(&b, "\nimported (%d), by the hash font.add takes:", len(res.Imported))
+
+		for _, f := range res.Imported {
+			fmt.Fprintf(&b, "\n%s (%d bytes)", f.Hash, f.Bytes)
+		}
+	}
+
 	return b.String()
 }
 

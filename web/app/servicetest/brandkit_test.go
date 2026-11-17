@@ -287,3 +287,26 @@ func TestSecurity_T21_BundleExportRefusesAFontTheCallerDoesNotOwn(t *testing.T) 
 		t.Fatalf("bob after importing: %v", err)
 	}
 }
+
+// VV-094: an imported font is listed with the hash font.add takes.
+func TestFontListShowsTheImportedFontsWithTheirHash(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{beta: true})
+
+	before, err := m.svc.FontList(m.as(ui), service.FontListRequest{})
+	if err != nil || len(before.Imported) != 0 {
+		t.Fatalf("before = %+v, %v", before, err)
+	}
+
+	anton := bundledFontFile(t, "Anton-Regular.ttf")
+
+	imported, err := m.importFont(m.as(ui), m.writeFont(m.files, "a.ttf", anton))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	after, err := m.svc.FontList(m.as(ui), service.FontListRequest{})
+	if err != nil || len(after.Imported) != 1 || after.Imported[0].Hash != imported.Hash ||
+		after.Imported[0].Bytes != int64(len(anton)) {
+		t.Fatalf("after = %+v, %v; want the hash %s", after, err, imported.Hash)
+	}
+}

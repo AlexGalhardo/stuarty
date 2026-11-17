@@ -39,6 +39,30 @@ func (r fontRepo) Owns(ctx context.Context, owner, hash string) (bool, error) {
 	return true, nil
 }
 
+func (r fontRepo) Owned(ctx context.Context, owner string) ([]string, error) {
+	rows, err := r.ex.QueryContext(
+		ctx, `SELECT hash FROM font_owners WHERE owner_user_id = ? ORDER BY created_ms, hash`, owner,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() { _ = rows.Close() }()
+
+	var out []string
+
+	for rows.Next() {
+		var h string
+		if err := rows.Scan(&h); err != nil {
+			return nil, err
+		}
+
+		out = append(out, h)
+	}
+
+	return out, rows.Err()
+}
+
 type brandKitRepo struct{ ex database.Executor }
 
 func (r brandKitRepo) Get(ctx context.Context, owner string) (service.BrandKitRow, error) {

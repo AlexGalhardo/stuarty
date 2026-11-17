@@ -26,6 +26,7 @@ Content type `application/json`. Schema: [`FontListResult`](/docs/api/schemas#fo
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `fonts` | array of [`FontFamily`](/docs/api/schemas#fontfamily) | no |  |
+| `imported` | array of [`ImportedFont`](/docs/api/schemas#importedfont) | no |  |
 
 ### 401 Unauthorized
 
@@ -186,6 +187,12 @@ puts "#{response.code} #{response.body}"
     {
       "family": "string",
       "weights": []
+    }
+  ],
+  "imported": [
+    {
+      "bytes": 0,
+      "hash": "string"
     }
   ]
 }
