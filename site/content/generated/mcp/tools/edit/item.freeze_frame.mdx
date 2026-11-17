@@ -18,9 +18,9 @@ Splits the clip at a timeline frame and puts between the two parts a new clip th
 | --- | --- | --- | --- |
 | `at` | `string` | yes | Absolute frame inside the clip whose picture is held. |
 | `duration` | `string` | no | How long the frame is held; default 3s. |
-| `freeze_id` | `string` | no | Id for the freeze frame item. |
-| `item_id` | `string` | yes | A clip of a video asset. |
-| `new_id` | `string` | no | Id for the right part of the split. |
+| `freeze_id` | `string` | no | Id for the freeze frame item.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
+| `item_id` | `string` | yes | A clip of a video asset.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
+| `new_id` | `string` | no | Id for the right part of the split.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 
 ## Errors
 

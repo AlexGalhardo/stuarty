@@ -8,6 +8,7 @@
       "x-vv-kind": "time"
     },
     "item_id": {
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "property": {

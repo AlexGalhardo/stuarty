@@ -30,7 +30,7 @@ func init() {
 // SpeechRanges is the speech of one item on the time axis of its asset, in frames,
 // half-open, sorted and not overlapping.
 type SpeechRanges struct {
-	ItemID string         `json:"item_id" desc:"One of the speech items."`
+	ItemID string         `json:"item_id" desc:"One of the speech items."                                             pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Ranges []SilenceRange `json:"ranges"  desc:"Sorted, non-overlapping ranges of speech in asset frames, half-open."`
 }
 
@@ -40,9 +40,9 @@ type ResolvedSpeech struct {
 }
 
 type duckArgs struct {
-	ItemID        string          `json:"item_id"            desc:"The music: an audio item with no volume keyframes."`
-	SpeechItemIDs []string        `json:"speech_item_ids"    desc:"Clips or audio items that carry the speech."                                 min:"1"   max:"20"`
-	GainDB        *float64        `json:"gain_db,omitempty"  desc:"Change of volume while speech sounds, -40 to -1; default -12."               min:"-40" max:"-1"`
+	ItemID        string          `json:"item_id"            desc:"The music: an audio item with no volume keyframes."                          pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	SpeechItemIDs []string        `json:"speech_item_ids"    desc:"Clips or audio items that carry the speech."                                 pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$" min:"1"   max:"20"`
+	GainDB        *float64        `json:"gain_db,omitempty"  desc:"Change of volume while speech sounds, -40 to -1; default -12."                                                                      min:"-40" max:"-1"`
 	Attack        Time            `json:"attack,omitempty"   desc:"A length, may be 0; the ramp down before speech. Default \"0.2s\"."`
 	Release       Time            `json:"release,omitempty"  desc:"A length, may be 0; the ramp up after speech. Default \"0.5s\"."`
 	Resolved      *ResolvedSpeech `json:"resolved,omitempty" desc:"Filled by the service from the speech of the items; never sent by a caller."`

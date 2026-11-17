@@ -16,9 +16,9 @@ Adds a visual or audio track. A visual track goes on top by default and an audio
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `above` | `string` | no | Place the track directly over this track. |
-| `below` | `string` | no | Place the track directly under this track. |
-| `id` | `string` | no |  |
+| `above` | `string` | no | Place the track directly over this track.; pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
+| `below` | `string` | no | Place the track directly under this track.; pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
+| `id` | `string` | no | pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `kind` | `visual`, `audio` | yes |  |
 | `name` | `string` | no | max length 60 |
 | `position` | `top`, `bottom` | no | Top (default) or bottom. |

@@ -15,6 +15,7 @@
     },
     "item_id": {
       "description": "The music: an audio item with no volume keyframes.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "release": {
@@ -33,6 +34,7 @@
             "properties": {
               "item_id": {
                 "description": "One of the speech items.",
+                "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
                 "type": "string"
               },
               "ranges": {
@@ -73,6 +75,7 @@
     "speech_item_ids": {
       "description": "Clips or audio items that carry the speech.",
       "items": {
+        "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
         "type": "string"
       },
       "maxItems": 20,

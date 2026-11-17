@@ -4,14 +4,17 @@
   "properties": {
     "id": {
       "description": "The id of the new audio item.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "item_id": {
       "description": "A clip of a video asset with audio.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "track_id": {
       "description": "An audio track with room for the item.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

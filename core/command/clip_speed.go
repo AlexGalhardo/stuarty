@@ -29,11 +29,11 @@ func init() {
 }
 
 type clipSpeedArgs struct {
-	ItemID  string           `json:"item_id"           desc:"A clip of a video asset, or an audio item."`
-	Speed   any              `json:"speed,omitempty"   desc:"\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4. Not with curve."      schema:"speed"`
-	Curve   []speedPointArgs `json:"curve,omitempty"   desc:"Speed ramp: 2 to 8 points, linear between them, first t 0 and last t 1. Not with speed."                minitems:"2" maxitems:"8"`
+	ItemID  string           `json:"item_id"           desc:"A clip of a video asset, or an audio item."                                              pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Speed   any              `json:"speed,omitempty"   desc:"\"1.5x\" (up to 3 decimals) or {\"num\": 3, \"den\": 2}; 1/4 to 4. Not with curve."                                                             schema:"speed"`
+	Curve   []speedPointArgs `json:"curve,omitempty"   desc:"Speed ramp: 2 to 8 points, linear between them, first t 0 and last t 1. Not with speed."                                                                       minitems:"2" maxitems:"8"`
 	Reverse *bool            `json:"reverse,omitempty" desc:"true plays the source range backwards; false plays it forwards."`
-	Ripple  string           `json:"ripple,omitempty"  desc:"none (default) or track: shift the later items of the track."                                                                     enum:"none,track"`
+	Ripple  string           `json:"ripple,omitempty"  desc:"none (default) or track: shift the later items of the track."                                                                                                                            enum:"none,track"`
 }
 
 type speedPointArgs struct {

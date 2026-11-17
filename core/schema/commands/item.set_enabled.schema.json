@@ -8,6 +8,7 @@
     },
     "item_id": {
       "description": "Any item.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

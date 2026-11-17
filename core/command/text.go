@@ -32,14 +32,14 @@ func init() {
 }
 
 type textAddArgs struct {
-	TrackID  string         `json:"track_id,omitempty" desc:"A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it."`
+	TrackID  string         `json:"track_id,omitempty" desc:"A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it." pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Start    Time           `json:"start"`
 	Duration Time           `json:"duration"           desc:"A length of at least 1 frame."`
-	Text     string         `json:"text"               desc:"The text; line breaks are allowed."                                                                                                                                                                 min:"1" max:"2000"`
-	Style    map[string]any `json:"style,omitempty"    desc:"A partial TextStyle."                                                                                                                                                                                                  schema:"text_style"`
+	Text     string         `json:"text"               desc:"The text; line breaks are allowed."                                                                                                                                                                                                                        min:"1" max:"2000"`
+	Style    map[string]any `json:"style,omitempty"    desc:"A partial TextStyle."                                                                                                                                                                                                                                                         schema:"text_style"`
 	X        *float64       `json:"x,omitempty"`
 	Y        *float64       `json:"y,omitempty"`
-	ID       string         `json:"id,omitempty"`
+	ID       string         `json:"id,omitempty"                                                                                                                                                                                                                 pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyTextAdd(c *Context, a *textAddArgs) error {
@@ -114,9 +114,9 @@ func styleOrEmpty(s *timeline.CaptionStyle) map[string]any {
 }
 
 type textSetArgs struct {
-	ItemID     string         `json:"item_id"               desc:"A text item."`
-	Text       *string        `json:"text,omitempty"                                                                min:"1" max:"2000"`
-	Style      map[string]any `json:"style,omitempty"       desc:"A partial TextStyle, merged; null removes a key."                    schema:"text_style_merge"`
+	ItemID     string         `json:"item_id"               desc:"A text item."                                     pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Text       *string        `json:"text,omitempty"                                                                                                                       min:"1" max:"2000"`
+	Style      map[string]any `json:"style,omitempty"       desc:"A partial TextStyle, merged; null removes a key."                                                                           schema:"text_style_merge"`
 	ResetStyle bool           `json:"reset_style,omitempty" desc:"Empty the stored style before applying style."`
 }
 

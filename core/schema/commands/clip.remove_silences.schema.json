@@ -4,6 +4,7 @@
   "properties": {
     "item_id": {
       "description": "A clip of a video asset with audio, or an audio item.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "min_silence": {
@@ -14,6 +15,7 @@
     "new_ids": {
       "description": "Ids for the second, third, ... pieces, in order.",
       "items": {
+        "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
         "type": "string"
       },
       "type": "array"

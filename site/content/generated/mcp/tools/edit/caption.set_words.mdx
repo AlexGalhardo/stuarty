@@ -17,7 +17,7 @@ Replaces all words, given as words (1 to 60, times relative to the caption, as l
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `duration` | `string` | no | A length. With words: at least the end of the last word, default that end. With text: default the current duration. |
-| `item_id` | `string` | yes | A caption. |
+| `item_id` | `string` | yes | A caption.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `text` | `string` | no | Text split on whitespace and spread over the duration; instead of words. |
 | `words` | array of `object` | no | 1 to 60 words with times relative to the caption, as lengths. Or give text. |
 

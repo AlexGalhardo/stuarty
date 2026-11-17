@@ -17,7 +17,7 @@ Replaces the text of the word at index; timing is untouched. An empty text remov
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `index` | `integer` | yes | 0-based index of the word.; min 0 |
-| `item_id` | `string` | yes | A caption. |
+| `item_id` | `string` | yes | A caption.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `text` | `string` | yes | The new text, 0 to 80 characters, no whitespace; empty removes.; min length 0; max length 80 |
 
 ## Errors

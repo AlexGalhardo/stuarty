@@ -18,7 +18,7 @@ Writes the keyframes (or, for slide_left and slide_right, the transition) of the
 | --- | --- | --- | --- |
 | `duration` | `string` | no | A length, at most the item's duration. Default "0.4s". |
 | `edge` | `in`, `out` | yes | In or out. |
-| `item_id` | `string` | yes | A clip, text, caption or shape item. |
+| `item_id` | `string` | yes | A clip, text, caption or shape item.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `preset` | `fade_up`, `fade_down`, `pop`, `zoom_in`, `slide_left`, `slide_right` | yes | The animation. |
 
 ## Errors

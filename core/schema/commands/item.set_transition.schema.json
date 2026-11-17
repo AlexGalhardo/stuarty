@@ -4,6 +4,7 @@
   "properties": {
     "color": {
       "description": "dip only: #RRGGBB, default #000000.",
+      "pattern": "^#[0-9A-Fa-f]{6}$",
       "type": "string"
     },
     "direction": {
@@ -31,6 +32,7 @@
     },
     "item_id": {
       "description": "A clip, text, caption or shape item.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "kind": {

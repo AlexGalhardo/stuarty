@@ -26,9 +26,9 @@ func init() {
 }
 
 type textPresetArgs struct {
-	ItemID   string `json:"item_id"            desc:"A clip, text, caption or shape item."`
-	Preset   string `json:"preset"             desc:"The animation."                                           enum:"fade_up,fade_down,pop,zoom_in,slide_left,slide_right"`
-	Edge     string `json:"edge"               desc:"in or out."                                               enum:"in,out"`
+	ItemID   string `json:"item_id"            desc:"A clip, text, caption or shape item."                     pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Preset   string `json:"preset"             desc:"The animation."                                                                                                  enum:"fade_up,fade_down,pop,zoom_in,slide_left,slide_right"`
+	Edge     string `json:"edge"               desc:"in or out."                                                                                                      enum:"in,out"`
 	Duration Time   `json:"duration,omitempty" desc:"A length, at most the item's duration. Default \"0.4s\"."`
 }
 

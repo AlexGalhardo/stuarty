@@ -71,10 +71,10 @@ func acceptsType(t timeline.Track, typ timeline.ItemType) bool {
 }
 
 type itemMoveArgs struct {
-	ItemID  string `json:"item_id"`
-	Start   Time   `json:"start,omitempty"    desc:"The new absolute position of the first frame."`
-	TrackID string `json:"track_id,omitempty" desc:"A track that accepts the item type."`
-	Slide   bool   `json:"slide,omitempty"    desc:"Slide edit: the neighbours that touch the item keep touching it, the one before ends and the one after starts where the item now does. Needs start; not with track_id."`
+	ItemID  string `json:"item_id"            pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Start   Time   `json:"start,omitempty"                                                           desc:"The new absolute position of the first frame."`
+	TrackID string `json:"track_id,omitempty" pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$" desc:"A track that accepts the item type."`
+	Slide   bool   `json:"slide,omitempty"                                                           desc:"Slide edit: the neighbours that touch the item keep touching it, the one before ends and the one after starts where the item now does. Needs start; not with track_id."`
 }
 
 func applyItemMove(c *Context, a *itemMoveArgs) error {
@@ -283,11 +283,11 @@ func (c *Context) checkSource(it *timeline.Item, duration, sourceIn int) *Error 
 }
 
 type itemTrimArgs struct {
-	ItemID string `json:"item_id"`
-	Edge   string `json:"edge"             enum:"start,end"`
-	To     Time   `json:"to"                                 desc:"Absolute position of the edge; the end is exclusive."`
-	Ripple string `json:"ripple,omitempty" enum:"none,track" desc:"none (default) or track: the later items of the track follow the change in length; with the start edge the item keeps its start."`
-	Roll   bool   `json:"roll,omitempty"                     desc:"Roll edit: the touching edge of the neighbouring item moves to the same frame, so the cut moves and nothing else changes. Not with ripple track."`
+	ItemID string `json:"item_id"          pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Edge   string `json:"edge"                                                                    enum:"start,end"`
+	To     Time   `json:"to"                                                                                        desc:"Absolute position of the edge; the end is exclusive."`
+	Ripple string `json:"ripple,omitempty"                                                        enum:"none,track" desc:"none (default) or track: the later items of the track follow the change in length; with the start edge the item keeps its start."`
+	Roll   bool   `json:"roll,omitempty"                                                                            desc:"Roll edit: the touching edge of the neighbouring item moves to the same frame, so the cut moves and nothing else changes. Not with ripple track."`
 }
 
 func applyItemTrim(c *Context, a *itemTrimArgs) error {
@@ -565,10 +565,10 @@ func (c *Context) trimOverlap(n *timeline.Item, edge string) *Error {
 }
 
 type itemSplitArgs struct {
-	ItemID string   `json:"item_id"`
-	At     Time     `json:"at"                desc:"Absolute position strictly inside the item."`
-	NewID  string   `json:"new_id,omitempty"  desc:"The id of the right part."`
-	NewIDs []string `json:"new_ids,omitempty" desc:"The ids of the right parts of the linked items that the split cuts, in the order of the ids of those items."`
+	ItemID string   `json:"item_id"           pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	At     Time     `json:"at"                                                                       desc:"Absolute position strictly inside the item."`
+	NewID  string   `json:"new_id,omitempty"  pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$" desc:"The id of the right part."`
+	NewIDs []string `json:"new_ids,omitempty" pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$" desc:"The ids of the right parts of the linked items that the split cuts, in the order of the ids of those items."`
 }
 
 func applyItemSplit(c *Context, a *itemSplitArgs) error {
@@ -658,8 +658,8 @@ func (c *Context) splitParts(it *timeline.Item, at int, newID string) (left, rig
 }
 
 type itemDeleteArgs struct {
-	ItemIDs []string `json:"item_ids"         min:"1" max:"200"`
-	Ripple  string   `json:"ripple,omitempty"                   enum:"none,track,all" desc:"none (default), track or all."`
+	ItemIDs []string `json:"item_ids"         min:"1" max:"200" pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Ripple  string   `json:"ripple,omitempty"                                                                          enum:"none,track,all" desc:"none (default), track or all."`
 }
 
 func applyItemDelete(c *Context, a *itemDeleteArgs) error {

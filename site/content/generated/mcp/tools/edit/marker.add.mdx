@@ -17,7 +17,7 @@ Adds a marker at a frame of the timeline, with an optional label of up to 60 cha
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `at` | `string` | yes | The position on the timeline. |
-| `item_id` | `string` | no | An item to mark instead of the timeline; at must then fall inside it. |
+| `item_id` | `string` | no | An item to mark instead of the timeline; at must then fall inside it.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `label` | `string` | no | Up to 60 characters; default none.; max length 60 |
 
 ## Errors

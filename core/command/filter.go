@@ -25,9 +25,9 @@ func init() {
 }
 
 type clipFilterArgs struct {
-	ItemID string   `json:"item_id"          desc:"A clip, text, caption or shape item."`
-	Filter string   `json:"filter,omitempty" desc:"none (default), grayscale, sepia, invert, warm or cool." enum:"none,grayscale,sepia,invert,warm,cool"`
-	Amount *float64 `json:"amount,omitempty" desc:"0 to 1; default 1."                                                                                   min:"0" max:"1"`
+	ItemID string   `json:"item_id"          desc:"A clip, text, caption or shape item."                    pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Filter string   `json:"filter,omitempty" desc:"none (default), grayscale, sepia, invert, warm or cool."                                                        enum:"none,grayscale,sepia,invert,warm,cool"`
+	Amount *float64 `json:"amount,omitempty" desc:"0 to 1; default 1."                                                                                                                                          min:"0" max:"1"`
 }
 
 func applyClipSetFilter(c *Context, a *clipFilterArgs) error {
@@ -51,8 +51,8 @@ func applyClipSetFilter(c *Context, a *clipFilterArgs) error {
 }
 
 type clipBlurArgs struct {
-	ItemID string  `json:"item_id" desc:"A clip, text, caption or shape item."`
-	Radius float64 `json:"radius"  desc:"Blur radius in pixels, 0 to 100; 0 removes the blur." min:"0" max:"100"`
+	ItemID string  `json:"item_id" desc:"A clip, text, caption or shape item."                 pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Radius float64 `json:"radius"  desc:"Blur radius in pixels, 0 to 100; 0 removes the blur."                                                        min:"0" max:"100"`
 }
 
 func applyClipSetBlur(c *Context, a *clipBlurArgs) error {

@@ -16,7 +16,7 @@ func init() {
 }
 
 type itemSlipArgs struct {
-	ItemID   string `json:"item_id"   desc:"A clip or audio item of a video or audio asset."`
+	ItemID   string `json:"item_id"   desc:"A clip or audio item of a video or audio asset."              pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	SourceIn Time   `json:"source_in" desc:"The new offset into the asset where the item starts reading."`
 }
 

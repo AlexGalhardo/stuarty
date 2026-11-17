@@ -17,7 +17,7 @@ Places a marker at each beat of the visible part of the item, or at every nth be
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `every` | `integer` | no | Mark every nth beat of the visible part, from the first; default 1.; min 1; max 64 |
-| `item_id` | `string` | yes | An audio item of an audio asset, or of a video asset with audio. |
+| `item_id` | `string` | yes | An audio item of an audio asset, or of a video asset with audio.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `label` | `string` | no | Label of every marker, up to 60 characters; default none.; max length 60 |
 | `replace` | `boolean` | no | True (default) replaces the item's markers; false keeps them and adds the beats. |
 | `resolved` | `object` | no | Filled by the service from the beat grid of the asset; never sent by a caller. |

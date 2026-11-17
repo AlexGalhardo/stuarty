@@ -35,8 +35,8 @@ type maskArgs struct {
 }
 
 type clipMaskArgs struct {
-	ItemID string    `json:"item_id" desc:"A visual item."`
-	Mask   *maskArgs `json:"mask"    desc:"The mask, or null to remove it." schema:"mask_or_null"`
+	ItemID string    `json:"item_id" desc:"A visual item."                  pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Mask   *maskArgs `json:"mask"    desc:"The mask, or null to remove it."                                                        schema:"mask_or_null"`
 }
 
 func applyClipSetMask(c *Context, a *clipMaskArgs) error {

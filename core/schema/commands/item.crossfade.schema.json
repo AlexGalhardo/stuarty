@@ -9,14 +9,17 @@
     },
     "from_item_id": {
       "description": "The item that leaves.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "to_item_id": {
       "description": "The item that arrives.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "track_id": {
       "description": "Only for two neighbours that touch on one track: another visual track the arriving item moves to.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

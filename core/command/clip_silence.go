@@ -37,12 +37,12 @@ type ResolvedSilences struct {
 }
 
 type removeSilencesArgs struct {
-	ItemID      string            `json:"item_id"                desc:"A clip of a video asset with audio, or an audio item."`
+	ItemID      string            `json:"item_id"                desc:"A clip of a video asset with audio, or an audio item."                                 pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	MinSilence  Time              `json:"min_silence,omitempty"  desc:"A length; shorter silences are ignored. Default \"0.4s\"."`
 	Padding     Time              `json:"padding,omitempty"      desc:"A length, may be 0; speech kept around each cut. Default \"0.1s\"."`
 	ThresholdDB *int              `json:"threshold_db,omitempty" desc:"Noise level of silence: -30, -35 (default), -40 or -45."`
-	Ripple      string            `json:"ripple,omitempty"       desc:"track (default) or none."                                                              enum:"track,none"`
-	NewIDs      []string          `json:"new_ids,omitempty"      desc:"Ids for the second, third, ... pieces, in order."`
+	Ripple      string            `json:"ripple,omitempty"       desc:"track (default) or none."                                                                                                                     enum:"track,none"`
+	NewIDs      []string          `json:"new_ids,omitempty"      desc:"Ids for the second, third, ... pieces, in order."                                      pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Resolved    *ResolvedSilences `json:"resolved,omitempty"     desc:"Filled by the service from the silence analysis of the asset; never sent by a caller."`
 }
 

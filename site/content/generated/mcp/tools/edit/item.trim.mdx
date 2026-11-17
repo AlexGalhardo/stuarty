@@ -17,7 +17,7 @@ Moves an edge to an absolute position and keeps the source range, the keyframes 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `edge` | `start`, `end` | yes |  |
-| `item_id` | `string` | yes |  |
+| `item_id` | `string` | yes | pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `ripple` | `none`, `track` | no | None (default) or track: the later items of the track follow the change in length; with the start edge the item keeps its start. |
 | `roll` | `boolean` | no | Roll edit: the touching edge of the neighbouring item moves to the same frame, so the cut moves and nothing else changes. Not with ripple track. |
 | `to` | `string` | yes | Absolute position of the edge; the end is exclusive. |

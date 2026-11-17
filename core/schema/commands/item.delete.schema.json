@@ -4,6 +4,7 @@
   "properties": {
     "item_ids": {
       "items": {
+        "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
         "type": "string"
       },
       "maxItems": 200,

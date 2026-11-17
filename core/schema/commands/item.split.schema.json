@@ -8,15 +8,18 @@
       "x-vv-kind": "time"
     },
     "item_id": {
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "new_id": {
       "description": "The id of the right part.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "new_ids": {
       "description": "The ids of the right parts of the linked items that the split cuts, in the order of the ids of those items.",
       "items": {
+        "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
         "type": "string"
       },
       "type": "array"

@@ -18,7 +18,7 @@ Makes a clip, audio, text or caption item a slot named name; the slot kind follo
 | --- | --- | --- | --- |
 | `description` | `string` | no | Up to 200 characters.; max length 200 |
 | `duration_policy` | `fit`, `stretch_timeline` | no | Media slots only. Default fit. |
-| `item_id` | `string` | yes | A clip, audio, text or caption item. |
+| `item_id` | `string` | yes | A clip, audio, text or caption item.; pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `name` | `string` | yes | Matches [a-z][a-z0-9_]\{0,39\}; unique among the slots. |
 | `required` | `boolean` | no | Default true. |
 

@@ -80,7 +80,7 @@ func (c *Context) caption(id, textMsg, textHint string) (timeline.Item, *Error) 
 }
 
 type captionSetWordsArgs struct {
-	ItemID   string    `json:"item_id"            desc:"A caption."`
+	ItemID   string    `json:"item_id"            desc:"A caption."                                                                                                          pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Words    []WordArg `json:"words,omitempty"    desc:"1 to 60 words with times relative to the caption, as lengths. Or give text."`
 	Text     *string   `json:"text,omitempty"     desc:"Text split on whitespace and spread over the duration; instead of words."`
 	Duration Time      `json:"duration,omitempty" desc:"A length. With words: at least the end of the last word, default that end. With text: default the current duration."`
@@ -170,9 +170,9 @@ func applyCaptionSetWords(c *Context, a *captionSetWordsArgs) error {
 }
 
 type captionEditWordArgs struct {
-	ItemID string `json:"item_id" desc:"A caption."`
-	Index  int    `json:"index"   desc:"0-based index of the word."                                      min:"0"`
-	Text   string `json:"text"    desc:"The new text, 0 to 80 characters, no whitespace; empty removes." min:"0" max:"80"`
+	ItemID string `json:"item_id" desc:"A caption."                                                      pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Index  int    `json:"index"   desc:"0-based index of the word."                                                                                             min:"0"`
+	Text   string `json:"text"    desc:"The new text, 0 to 80 characters, no whitespace; empty removes."                                                        min:"0" max:"80"`
 }
 
 func applyCaptionEditWord(c *Context, a *captionEditWordArgs) error {
@@ -223,7 +223,7 @@ func applyCaptionEditWord(c *Context, a *captionEditWordArgs) error {
 }
 
 type captionSetBreaksArgs struct {
-	ItemID string `json:"item_id" desc:"A caption."`
+	ItemID string `json:"item_id" desc:"A caption."                                                                  pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Breaks []int  `json:"breaks"  desc:"Indexes of the words that start a new line, strictly increasing; [] clears."`
 }
 
@@ -261,8 +261,8 @@ func applyCaptionSetBreaks(c *Context, a *captionSetBreaksArgs) error {
 }
 
 type captionSetStyleArgs struct {
-	ItemID  string `json:"item_id"           desc:"A caption."`
-	Style   any    `json:"style"             desc:"A partial CaptionStyle merged into the override (null removes a key), or null or {} to clear it." schema:"caption_style_merge_or_nil"`
+	ItemID  string `json:"item_id"           desc:"A caption."                                                                                       pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Style   any    `json:"style"             desc:"A partial CaptionStyle merged into the override (null removes a key), or null or {} to clear it."                                                        schema:"caption_style_merge_or_nil"`
 	Replace bool   `json:"replace,omitempty" desc:"Replace the whole override with style instead of merging."`
 }
 

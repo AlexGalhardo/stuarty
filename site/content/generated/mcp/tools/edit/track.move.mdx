@@ -16,10 +16,10 @@ Moves a track to the top or the bottom, or directly above or below another track
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `above` | `string` | no |  |
-| `below` | `string` | no |  |
+| `above` | `string` | no | pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
+| `below` | `string` | no | pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `position` | `top`, `bottom` | no |  |
-| `track_id` | `string` | yes |  |
+| `track_id` | `string` | yes | pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 
 ## Errors
 

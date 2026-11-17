@@ -10,6 +10,7 @@
     },
     "item_id": {
       "description": "An audio item of an audio asset, or of a video asset with audio.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "label": {

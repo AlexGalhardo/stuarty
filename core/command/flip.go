@@ -18,7 +18,7 @@ func init() {
 }
 
 type clipFlipArgs struct {
-	ItemID     string `json:"item_id"              desc:"A visual item."`
+	ItemID     string `json:"item_id"              desc:"A visual item."        pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Horizontal *bool  `json:"horizontal,omitempty" desc:"Mirror left to right."`
 	Vertical   *bool  `json:"vertical,omitempty"   desc:"Mirror top to bottom."`
 }

@@ -11,11 +11,13 @@
     },
     "from_item_id": {
       "description": "The item to copy from.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "item_ids": {
       "description": "The items to copy to, 1 to 20.",
       "items": {
+        "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
         "type": "string"
       },
       "type": "array"

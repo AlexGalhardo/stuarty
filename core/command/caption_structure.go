@@ -36,9 +36,9 @@ func init() {
 }
 
 type captionSplitArgs struct {
-	ItemID     string `json:"item_id"          desc:"A caption."`
-	BeforeWord int    `json:"before_word"      desc:"Index of the first word of the right part." min:"1"`
-	NewID      string `json:"new_id,omitempty" desc:"The id of the right part."`
+	ItemID     string `json:"item_id"          desc:"A caption."                                 pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	BeforeWord int    `json:"before_word"      desc:"Index of the first word of the right part."                                                        min:"1"`
+	NewID      string `json:"new_id,omitempty" desc:"The id of the right part."                  pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyCaptionSplit(c *Context, a *captionSplitArgs) error {
@@ -98,7 +98,7 @@ func applyCaptionSplit(c *Context, a *captionSplitArgs) error {
 }
 
 type captionMergeArgs struct {
-	ItemIDs []string `json:"item_ids" desc:"Exactly two distinct captions of one track, in any order."`
+	ItemIDs []string `json:"item_ids" desc:"Exactly two distinct captions of one track, in any order." pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 // mergeDropped lists the fields of the second caption that the merge does not carry over.

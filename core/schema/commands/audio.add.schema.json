@@ -4,6 +4,7 @@
   "properties": {
     "asset_id": {
       "description": "An audio asset, a video asset with audio, or ast_placeholder in a template.",
+      "pattern": "^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}|placeholder)$",
       "type": "string"
     },
     "duration": {
@@ -12,6 +13,7 @@
       "x-vv-kind": "time"
     },
     "id": {
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "source_in": {
@@ -26,6 +28,7 @@
     },
     "track_id": {
       "description": "An audio track.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

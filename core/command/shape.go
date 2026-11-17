@@ -34,10 +34,10 @@ func init() {
 }
 
 type shapeAddArgs struct {
-	TrackID     string   `json:"track_id,omitempty"     desc:"A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it."`
+	TrackID     string   `json:"track_id,omitempty"     desc:"A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it." pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 	Start       Time     `json:"start"`
 	Duration    Time     `json:"duration"               desc:"A length of at least 1 frame."`
-	Shape       string   `json:"shape"                                                                                                                                                                                                                            enum:"rect,rounded_rect,ellipse"`
+	Shape       string   `json:"shape"                                                                                                                                                                                                                                                                                   enum:"rect,rounded_rect,ellipse"`
 	Width       float64  `json:"width"                  desc:"Pixels before scale, above 0 and at most 32768."`
 	Height      float64  `json:"height"                 desc:"Pixels before scale, above 0 and at most 32768."`
 	Fill        string   `json:"fill,omitempty"         desc:"A colour; default #FFFFFF."`
@@ -46,7 +46,7 @@ type shapeAddArgs struct {
 	Radius      *float64 `json:"radius,omitempty"       desc:"Pixels, 0 or more; rounded_rect only."`
 	X           *float64 `json:"x,omitempty"`
 	Y           *float64 `json:"y,omitempty"`
-	ID          string   `json:"id,omitempty"`
+	ID          string   `json:"id,omitempty"                                                                                                                                                                                                                     pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 // shapeColour checks a colour argument and returns its stored form: a hex colour in
@@ -220,8 +220,8 @@ func roundedPtr(v *float64) *float64 {
 }
 
 type shapeSetArgs struct {
-	ItemID      string   `json:"item_id"                desc:"A shape item."`
-	Shape       string   `json:"shape,omitempty"                                                               enum:"rect,rounded_rect,ellipse"`
+	ItemID      string   `json:"item_id"                desc:"A shape item."                                   pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Shape       string   `json:"shape,omitempty"                                                                                                                      enum:"rect,rounded_rect,ellipse"`
 	Width       *float64 `json:"width,omitempty"        desc:"Pixels before scale, above 0 and at most 32768."`
 	Height      *float64 `json:"height,omitempty"       desc:"Pixels before scale, above 0 and at most 32768."`
 	Fill        string   `json:"fill,omitempty"         desc:"A colour."`

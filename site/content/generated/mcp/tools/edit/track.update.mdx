@@ -22,7 +22,7 @@ Sets the given fields. hidden applies to visual tracks, the others to both kinds
 | `muted` | `boolean` | no |  |
 | `name` | `string` | no | The track name; "" clears it.; max length 60 |
 | `solo` | `boolean` | no | True plays only the soloed tracks (the picture of visual tracks, the sound of all). |
-| `track_id` | `string` | yes |  |
+| `track_id` | `string` | yes | pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `volume` | `number` | no | Factor on the volume of the items of the track, 0 to 4; 1 is neutral.; min 0; max 4 |
 
 ## Errors

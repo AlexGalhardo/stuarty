@@ -9,10 +9,12 @@
     },
     "item_id": {
       "description": "A caption.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "new_id": {
       "description": "The id of the right part.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

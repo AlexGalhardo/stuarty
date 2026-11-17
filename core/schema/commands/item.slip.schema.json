@@ -4,6 +4,7 @@
   "properties": {
     "item_id": {
       "description": "A clip or audio item of a video or audio asset.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "source_in": {

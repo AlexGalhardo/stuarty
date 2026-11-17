@@ -20,8 +20,8 @@ func init() {
 }
 
 type clipBlendArgs struct {
-	ItemID string `json:"item_id" desc:"A visual item."`
-	Mode   string `json:"mode"    desc:"normal, multiply, screen, overlay or add." enum:"normal,multiply,screen,overlay,add"`
+	ItemID string `json:"item_id" desc:"A visual item."                            pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Mode   string `json:"mode"    desc:"normal, multiply, screen, overlay or add."                                                        enum:"normal,multiply,screen,overlay,add"`
 }
 
 func applyClipSetBlend(c *Context, a *clipBlendArgs) error {

@@ -16,13 +16,13 @@ Adds a clip. The default duration is the rest of the asset from source_in, or 5 
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `asset_id` | `string` | yes | A video or image asset, or ast_placeholder in a template. |
+| `asset_id` | `string` | yes | A video or image asset, or ast_placeholder in a template.; pattern `^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}\|placeholder)$` |
 | `duration` | `string` | no | A length; default the rest of the asset, or 5s for an image. |
 | `fit` | `cover`, `contain`, `none` | no |  |
-| `id` | `string` | no |  |
+| `id` | `string` | no | pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `source_in` | `string` | no | Offset into the asset; default 0s; omit for an image. |
 | `start` | `string` | yes | Absolute position. |
-| `track_id` | `string` | yes | A visual track. |
+| `track_id` | `string` | yes | A visual track.; pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 
 ## Errors
 

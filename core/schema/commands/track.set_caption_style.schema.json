@@ -186,6 +186,7 @@
       "type": "object"
     },
     "track_id": {
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

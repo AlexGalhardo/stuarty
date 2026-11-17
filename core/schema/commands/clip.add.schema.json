@@ -4,6 +4,7 @@
   "properties": {
     "asset_id": {
       "description": "A video or image asset, or ast_placeholder in a template.",
+      "pattern": "^ast_([0123456789abcdefghjkmnpqrstvwxyz]{10}|placeholder)$",
       "type": "string"
     },
     "duration": {
@@ -20,6 +21,7 @@
       "type": "string"
     },
     "id": {
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "source_in": {
@@ -34,6 +36,7 @@
     },
     "track_id": {
       "description": "A visual track.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     }
   },

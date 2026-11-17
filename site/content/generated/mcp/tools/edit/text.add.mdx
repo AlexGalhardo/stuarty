@@ -17,11 +17,11 @@ Adds a text item. The style is stored exactly as given, including keys equal to 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `duration` | `string` | yes | A length of at least 1 frame. |
-| `id` | `string` | no |  |
+| `id` | `string` | no | pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `start` | `string` | yes | A time with a unit: "12.5s", "375f" or "00:00:12.500" |
 | `style` | `object` | no | A partial TextStyle. |
 | `text` | `string` | yes | The text; line breaks are allowed.; min length 1; max length 2000 |
-| `track_id` | `string` | no | A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it. |
+| `track_id` | `string` | no | A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it.; pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `x` | `number` | no |  |
 | `y` | `number` | no |  |
 

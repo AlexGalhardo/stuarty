@@ -92,8 +92,8 @@ func (c *Context) checkItemIDs(ids []string) *Error {
 }
 
 type itemLinkArgs struct {
-	ItemIDs []string `json:"item_ids"     desc:"The items to link, 2 to 20."                                               minitems:"2" maxitems:"20"`
-	ID      string   `json:"id,omitempty" desc:"The id of the link group, lnk_ and 10 characters; generated when omitted."`
+	ItemIDs []string `json:"item_ids"     desc:"The items to link, 2 to 20."                                               minitems:"2" maxitems:"20" pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	ID      string   `json:"id,omitempty" desc:"The id of the link group, lnk_ and 10 characters; generated when omitted."                            pattern:"^lnk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyItemLink(c *Context, a *itemLinkArgs) error {
@@ -145,7 +145,7 @@ func applyItemLink(c *Context, a *itemLinkArgs) error {
 }
 
 type itemUnlinkArgs struct {
-	ItemIDs []string `json:"item_ids" desc:"The items to take out of their link group." minitems:"1" maxitems:"50"`
+	ItemIDs []string `json:"item_ids" desc:"The items to take out of their link group." minitems:"1" maxitems:"50" pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyItemUnlink(c *Context, a *itemUnlinkArgs) error {
@@ -187,9 +187,9 @@ func applyItemUnlink(c *Context, a *itemUnlinkArgs) error {
 }
 
 type itemExtractAudioArgs struct {
-	ItemID  string `json:"item_id"      desc:"A clip of a video asset with audio."`
-	TrackID string `json:"track_id"     desc:"An audio track with room for the item."`
-	ID      string `json:"id,omitempty" desc:"The id of the new audio item."`
+	ItemID  string `json:"item_id"      desc:"A clip of a video asset with audio."    pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	TrackID string `json:"track_id"     desc:"An audio track with room for the item." pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	ID      string `json:"id,omitempty" desc:"The id of the new audio item."          pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
 func applyItemExtractAudio(c *Context, a *itemExtractAudioArgs) error {

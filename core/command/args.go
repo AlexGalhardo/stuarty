@@ -422,6 +422,7 @@ func schemaOf(t reflect.Type) map[string]any {
 			p["enum"] = f.enum
 		}
 		applyBounds(p, f)
+		applyPattern(p, t.Field(f.index).Tag.Get("pattern"))
 		props[f.name] = p
 		if f.required {
 			required = append(required, f.name)
@@ -444,4 +445,16 @@ func applyBounds(p map[string]any, f argField) {
 	if f.max != nil {
 		p[keys[1]] = *f.max
 	}
+}
+
+// applyPattern puts the pattern tag on the string, or on the elements of a list of strings.
+func applyPattern(p map[string]any, pattern string) {
+	if pattern == "" {
+		return
+	}
+	if items, ok := p["items"].(map[string]any); ok && p["type"] == "array" {
+		items["pattern"] = pattern
+		return
+	}
+	p["pattern"] = pattern
 }

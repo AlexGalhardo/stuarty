@@ -179,10 +179,12 @@
     },
     "item_id": {
       "description": "A clip.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "lut_asset": {
       "description": "Id of a lut asset to grade the clip with.",
+      "pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "lut_intensity": {

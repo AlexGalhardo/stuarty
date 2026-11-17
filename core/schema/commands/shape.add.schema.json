@@ -16,6 +16,7 @@
       "type": "number"
     },
     "id": {
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "radius": {
@@ -45,6 +46,7 @@
     },
     "track_id": {
       "description": "A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },
     "width": {
