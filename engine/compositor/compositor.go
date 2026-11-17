@@ -209,6 +209,8 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, fp *plan.FramePlan, o
 	// The effects and the pixels of a transition come after the flip, so a direction is a direction on the
 	// screen, and before the mask (section 3.13).
 	src, p = c.applyEffects(src, p, pre, l, fp, outScale)
+	// The shadow and the outline sit under the picture and are cut by the mask with it (SDD-004 §3.15).
+	src, p = c.shadowed(src, p, l, outScale)
 	c.draw(dst, src, p, op, blendOf(l.Blend), mask)
 	return nil
 }
@@ -217,7 +219,8 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, fp *plan.FramePlan, o
 // full image, not turned, and nothing reads the pixels outside the window.
 func windowDrawable(src Image, l *plan.Layer, p placement) bool {
 	return l.Kind == plan.Media && p.rot == 0 && src.FullW == round(p.w) && src.FullH == round(p.h) &&
-		!l.FlipX && !l.FlipY && l.Blur == 0 && l.Mask == nil && l.Transition == nil && len(l.Effects) == 0
+		!l.FlipX && !l.FlipY && l.Blur == 0 && l.Mask == nil && l.Transition == nil && len(l.Effects) == 0 &&
+		l.Shadow == nil && l.Outline == nil
 }
 
 // shrunk is src box-filtered down to w by h when it is at least twice as large in both directions, as a

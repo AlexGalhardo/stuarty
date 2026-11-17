@@ -490,6 +490,8 @@ fn the_composition_survives_extreme_numbers() {
 						Vec::new()
 					},
 					transition: rng.chance(8).then(|| transition(&mut rng)),
+					shadow: None,
+					outline: None,
 					frame: FrameInfo {
 						frame: rng.next() as i64,
 						width: rng.next() as i64 >> rng.below(64),

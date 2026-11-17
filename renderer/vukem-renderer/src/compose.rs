@@ -8,7 +8,7 @@ use core::ops::Range;
 use std::borrow::Cow;
 
 use crate::blend::{BlendMode, mix_pixel};
-use crate::blur::blurred;
+use crate::blur::{blur_radius, blurred};
 use crate::chroma::{ChromaKeySpec, apply_chroma_key};
 use crate::colour::apply_matrix;
 use crate::effects::{Effect, EffectGeom, FrameInfo, Transition, TransitionKind, apply_effects};
@@ -76,7 +76,30 @@ pub struct Layer<'a> {
 	pub transition: Option<Transition>,
 	/// The plan's frame number and the project's size, for the grain and the whip.
 	pub frame: FrameInfo,
+	/// The drop shadow and the contour, drawn under the picture (SDD-004 section 3.15).
+	pub shadow: Option<ShadowSpec>,
+	pub outline: Option<OutlineSpec>,
 }
+
+/// A drop shadow. `color` is `#RRGGBB` or `#RRGGBBAA`; lengths are project pixels.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ShadowSpec {
+	pub color: String,
+	pub opacity: f64,
+	pub dx: f64,
+	pub dy: f64,
+	pub blur: f64,
+}
+
+/// A contour. `width` is project pixels.
+#[derive(Clone, Debug, PartialEq)]
+pub struct OutlineSpec {
+	pub color: String,
+	pub width: f64,
+}
+
+/// The largest outline radius in source pixels, the same bound as an effect length.
+const MAX_OUTLINE_RADIUS: usize = 256;
 
 /// Premultiplies a straight-alpha RGBA8 bitmap once.
 pub fn premultiply(pix: &[u8], w: usize, h: usize) -> Image {
@@ -271,6 +294,12 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 		src = Cow::Owned(img);
 		p = grown;
 	}
+	// The shadow and the outline sit under the picture and are cut by the mask with it.
+	if let Some((img, grown)) = shadowed(&src, &p, l.shadow.as_ref(), l.outline.as_ref(), out_scale)
+	{
+		src = Cow::Owned(img);
+		p = grown;
+	}
 	Some(Prepared {
 		image: src,
 		placement: p,
@@ -308,6 +337,283 @@ fn flipped(src: &Image, flip_x: bool, flip_y: bool) -> Image {
 		}
 	}
 	out
+}
+
+/// Reads `#RRGGBB` (alpha 255) or `#RRGGBBAA`. Anything else is opaque black.
+pub fn parse_rgba(s: &str) -> [u8; 4] {
+	let mut out = [0, 0, 0, 255];
+	let b = s.as_bytes();
+	if (b.len() != 7 && b.len() != 9) || b[0] != b'#' {
+		return out;
+	}
+	for i in 0..(b.len() - 1) / 2 {
+		let (Some(hi), Some(lo)) = (hex_val(b[1 + 2 * i]), hex_val(b[2 + 2 * i])) else {
+			return [0, 0, 0, 255];
+		};
+		out[i] = hi << 4 | lo;
+	}
+	out
+}
+
+fn src_len_signed(length: f64, out_scale: f64, src: usize, drawn: f64) -> i64 {
+	if drawn <= 0.0 || drawn.is_nan() {
+		return 0;
+	}
+	round_half_up(length * out_scale * src as f64 / drawn)
+}
+
+fn src_len(length: f64, out_scale: f64, src: usize, drawn: f64) -> usize {
+	let n = src_len_signed(length, out_scale, src, drawn);
+	if n < 0 { 0 } else { n as usize }
+}
+
+fn iabs(v: i64) -> usize {
+	usize::try_from(v.unsigned_abs()).unwrap_or(usize::MAX)
+}
+
+fn in_disc(dx: i64, dy: i64, ox: i64, oy: i64) -> bool {
+	if ox == 0 && oy == 0 {
+		return dx == 0 && dy == 0;
+	}
+	if ox == 0 {
+		return dx == 0 && dy * dy <= oy * oy;
+	}
+	if oy == 0 {
+		return dy == 0 && dx * dx <= ox * ox;
+	}
+	let (dx2, dy2) = (dx * dx, dy * dy);
+	let (ox2, oy2) = (ox * ox, oy * oy);
+	dx2 * oy2 + dy2 * ox2 <= ox2 * oy2
+}
+
+fn dilate_alpha(src: &Image, ox: usize, oy: usize) -> Image {
+	let (w, h) = (src.w + 2 * ox, src.h + 2 * oy);
+	let mut out = Image::new(w, h);
+	let (ox, oy) = (ox as i64, oy as i64);
+	for y in 0..h {
+		for x in 0..w {
+			let (cx, cy) = (x as i64 - ox, y as i64 - oy);
+			let mut max_a = 0_u8;
+			for dy in -oy..=oy {
+				for dx in -ox..=ox {
+					if !in_disc(dx, dy, ox, oy) {
+						continue;
+					}
+					let (sx, sy) = (cx + dx, cy + dy);
+					if sx < 0 || sy < 0 || sx >= src.w as i64 || sy >= src.h as i64 {
+						continue;
+					}
+					let a = src.pix[(sy as usize * src.w + sx as usize) * 4 + 3];
+					if a > max_a {
+						max_a = a;
+					}
+				}
+			}
+			out.pix[(y * w + x) * 4 + 3] = max_a;
+		}
+	}
+	out
+}
+
+fn shadow_silhouette(src: &Image, dilated: Option<&Image>, ox: usize, oy: usize) -> Image {
+	if ox == 0 && oy == 0 {
+		let mut pix = vec![0_u8; src.w * src.h * 4];
+		for (i, px) in src.pix.as_chunks::<4>().0.iter().enumerate() {
+			pix[i * 4 + 3] = px[3];
+		}
+		return Image {
+			pix,
+			w: src.w,
+			h: src.h,
+			opaque: false,
+		};
+	}
+	let Some(dil) = dilated else {
+		return shadow_silhouette(src, None, 0, 0);
+	};
+	let mut pix = vec![0_u8; dil.w * dil.h * 4];
+	for y in 0..dil.h {
+		for x in 0..dil.w {
+			let ao = u32::from(dil.pix[(y * dil.w + x) * 4 + 3]);
+			let (sx, sy) = (x as i64 - ox as i64, y as i64 - oy as i64);
+			let ap = if sx >= 0 && sy >= 0 && (sx as usize) < src.w && (sy as usize) < src.h {
+				u32::from(src.pix[(sy as usize * src.w + sx as usize) * 4 + 3])
+			} else {
+				0
+			};
+			pix[(y * dil.w + x) * 4 + 3] = (ap + div255(ao * (255 - ap))) as u8;
+		}
+	}
+	Image {
+		pix,
+		w: dil.w,
+		h: dil.h,
+		opaque: false,
+	}
+}
+
+fn paint_colour(dst: &mut Image, alpha: &Image, x0: i64, y0: i64, color: [u8; 4], factor: u32) {
+	if factor == 0 {
+		return;
+	}
+	for y in 0..alpha.h {
+		let dy = y0 + y as i64;
+		if dy < 0 || dy >= dst.h as i64 {
+			continue;
+		}
+		for x in 0..alpha.w {
+			let dx = x0 + x as i64;
+			if dx < 0 || dx >= dst.w as i64 {
+				continue;
+			}
+			let a = div255(u32::from(alpha.pix[(y * alpha.w + x) * 4 + 3]) * factor);
+			if a == 0 {
+				continue;
+			}
+			let o = (dy as usize * dst.w + dx as usize) * 4;
+			over_pixel(
+				&mut dst.pix[o..o + 4],
+				div255(u32::from(color[0]) * a),
+				div255(u32::from(color[1]) * a),
+				div255(u32::from(color[2]) * a),
+				a,
+			);
+		}
+	}
+}
+
+fn paint_image(dst: &mut Image, src: &Image, x0: i64, y0: i64) {
+	for y in 0..src.h {
+		let dy = y0 + y as i64;
+		if dy < 0 || dy >= dst.h as i64 {
+			continue;
+		}
+		for x in 0..src.w {
+			let dx = x0 + x as i64;
+			if dx < 0 || dx >= dst.w as i64 {
+				continue;
+			}
+			let s = &src.pix[(y * src.w + x) * 4..];
+			let a = u32::from(s[3]);
+			if a == 0 {
+				continue;
+			}
+			let o = (dy as usize * dst.w + dx as usize) * 4;
+			over_pixel(
+				&mut dst.pix[o..o + 4],
+				u32::from(s[0]),
+				u32::from(s[1]),
+				u32::from(s[2]),
+				a,
+			);
+		}
+	}
+}
+
+fn over_pixel(d: &mut [u8], r: u32, g: u32, b: u32, a: u32) {
+	let ia = 255 - a;
+	d[0] = u8_of(r + div255(u32::from(d[0]) * ia));
+	d[1] = u8_of(g + div255(u32::from(d[1]) * ia));
+	d[2] = u8_of(b + div255(u32::from(d[2]) * ia));
+	d[3] = u8_of(a + div255(u32::from(d[3]) * ia));
+}
+
+/// The shadow and the outline of SDD-004 section 3.15. `None` when they change no pixel, so the
+/// source is sampled as it was.
+fn shadowed(
+	src: &Image,
+	p: &Placement,
+	shadow: Option<&ShadowSpec>,
+	outline: Option<&OutlineSpec>,
+	out_scale: f64,
+) -> Option<(Image, Placement)> {
+	if shadow.is_none() && outline.is_none() || !(p.w > 0.0 && p.h > 0.0) || src.w < 1 || src.h < 1
+	{
+		return None;
+	}
+	let mut oc = [0_u8; 4];
+	let (mut ox, mut oy) = (0_usize, 0_usize);
+	if let Some(ol) = outline {
+		oc = parse_rgba(&ol.color);
+		if oc[3] != 0 {
+			ox = src_len(ol.width, out_scale, src.w, p.w).min(MAX_OUTLINE_RADIUS);
+			oy = src_len(ol.width, out_scale, src.h, p.h).min(MAX_OUTLINE_RADIUS);
+		}
+	}
+	let mut sc = [0_u8; 4];
+	let mut factor = 0_u32;
+	let (mut dxs, mut dys) = (0_i64, 0_i64);
+	let (mut rx, mut ry) = (0_usize, 0_usize);
+	let sigma = shadow
+		.map(|sh| mul(sh.blur, out_scale) / 2.0)
+		.unwrap_or(0.0);
+	if let Some(sh) = shadow {
+		sc = parse_rgba(&sh.color);
+		let op = round_half_away(sh.opacity.clamp(0.0, 1.0) * 255.0).clamp(0, 255) as u32;
+		factor = div255(op * u32::from(sc[3]));
+		if factor != 0 {
+			dxs = src_len_signed(sh.dx, out_scale, src.w, p.w);
+			dys = src_len_signed(sh.dy, out_scale, src.h, p.h);
+			rx = blur_radius(sigma / (p.w / src.w as f64));
+			ry = blur_radius(sigma / (p.h / src.h as f64));
+		}
+	}
+	if factor == 0 && ox == 0 && oy == 0 {
+		return None;
+	}
+	let (blur_pad_x, blur_pad_y) = (3 * rx, 3 * ry);
+	let pad_x = ox + blur_pad_x + iabs(dxs);
+	let pad_y = oy + blur_pad_y + iabs(dys);
+	let (cw, ch) = (src.w + 2 * pad_x, src.h + 2 * pad_y);
+	let mut out = Image::new(cw, ch);
+	let dilated = (ox != 0 || oy != 0).then(|| dilate_alpha(src, ox, oy));
+	if factor != 0 {
+		let sil = shadow_silhouette(src, dilated.as_ref(), ox, oy);
+		let (shadow_img, bpx, bpy) = if rx != 0 || ry != 0 {
+			let sil_p = Placement {
+				cx: 0.0,
+				cy: 0.0,
+				rot: 0.0,
+				w: p.w * sil.w as f64 / src.w as f64,
+				h: p.h * sil.h as f64 / src.h as f64,
+			};
+			let (img, _) = blurred(&sil, &sil_p, sigma).unwrap_or((sil.clone(), sil_p));
+			let bpx = img.w.saturating_sub(sil.w) / 2;
+			let bpy = img.h.saturating_sub(sil.h) / 2;
+			(img, bpx, bpy)
+		} else {
+			(sil, 0, 0)
+		};
+		paint_colour(
+			&mut out,
+			&shadow_img,
+			pad_x as i64 - ox as i64 - bpx as i64 + dxs,
+			pad_y as i64 - oy as i64 - bpy as i64 + dys,
+			sc,
+			factor,
+		);
+	}
+	if let Some(dil) = &dilated {
+		paint_colour(
+			&mut out,
+			dil,
+			pad_x as i64 - ox as i64,
+			pad_y as i64 - oy as i64,
+			oc,
+			u32::from(oc[3]),
+		);
+	}
+	paint_image(&mut out, src, pad_x as i64, pad_y as i64);
+	Some((
+		out,
+		Placement {
+			cx: p.cx,
+			cy: p.cy,
+			rot: p.rot,
+			w: mul(p.w, cw as f64) / src.w as f64,
+			h: mul(p.h, ch as f64) / src.h as f64,
+		},
+	))
 }
 
 fn draw_layer(dst: &mut Target<'_>, l: &Layer<'_>, out_scale: f64) {

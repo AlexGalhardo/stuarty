@@ -321,6 +321,8 @@ pub fn layers_of(c: &Case) -> Vec<Layer<'_>> {
 				transition: l.transition,
 				frame: c.frame,
 				blur,
+				shadow: None,
+				outline: None,
 			}
 		})
 		.collect()
