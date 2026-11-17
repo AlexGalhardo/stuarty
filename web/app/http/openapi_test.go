@@ -440,3 +440,29 @@ func TestOpenAPIDeclaresTheStatusesTheRoutesReturn(t *testing.T) {
 		}
 	}
 }
+
+// VV-209: a dry run of jobs.start answers 200 and a read pinned with ?rev= can answer 409.
+func TestOpenAPIDeclaresDryRunAndRevisionStatuses(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	paths, _ := h.openapi()["paths"].(map[string]any)
+
+	responses := func(path, method string) map[string]any {
+		item, _ := paths["/api/v1"+path].(map[string]any)
+		op, _ := item[method].(map[string]any)
+		r, _ := op["responses"].(map[string]any)
+
+		return r
+	}
+
+	if _, ok := responses("/projects/{id}/jobs", "post")["200"]; !ok {
+		t.Error("POST /projects/{id}/jobs does not declare 200 for a dry run")
+	}
+
+	for _, p := range []string{"snap-points", "frame", "plan", "sheet"} {
+		if _, ok := responses("/projects/{id}/"+p, "get")["409"]; !ok {
+			t.Errorf("GET /projects/{id}/%s does not declare 409", p)
+		}
+	}
+}
