@@ -85,8 +85,8 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 			withHint("%s", hintRestoreProject)
 	}
 
-	if s.exporter == nil {
-		return nil, newError(command.CodeInternal, "exporting is not available in this build.")
+	if err := s.exporterMissing(); err != nil {
+		return nil, err
 	}
 
 	// Starting an export writes a row and a file; below the free-space floor it
@@ -218,6 +218,20 @@ func limitError(err error, l Limits) error {
 	}
 
 	return out
+}
+
+// exporterMissing refuses an export when this build has no exporter. A missing
+// ffmpeg or ffprobe keeps its own code; anything else is an internal error.
+func (s *svc) exporterMissing() error {
+	if s.exporter != nil {
+		return nil
+	}
+
+	if s.media.FFmpegMissing != nil {
+		return fromEngine(s.media.FFmpegMissing)
+	}
+
+	return newError(command.CodeInternal, "exporting is not available in this build.")
 }
 
 func decodeExportArgs(raw json.RawMessage) (ExportArgs, *Error) {

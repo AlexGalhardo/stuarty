@@ -166,8 +166,11 @@ type Media struct {
 	Content *enginestore.Store
 	Guard   *pathguard.Guard
 	Runner  *ffmpeg.Runner
-	Caps    *ffmpeg.Capabilities
-	Ingest  Ingester
+	// FFmpegMissing is Discover's error when ffmpeg or ffprobe cannot be used.
+	// An ingest or an export returns it; editing does not read it.
+	FFmpegMissing error
+	Caps          *ffmpeg.Capabilities
+	Ingest        Ingester
 	// Frames renders the frames and sheets of ViewFrame and ViewSheet.
 	Frames *frame.Frames
 	// FreeBytes reports the free space of the volume of a directory.

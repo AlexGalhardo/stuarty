@@ -395,9 +395,10 @@ func (o *Owner) authSetup(ctx context.Context, cfg Config) error {
 	return auth.BootstrapAdmin(ctx, o.netAuth.Users, cfg.Getenv, cfg.Log)
 }
 
-// media builds the media side of the Service. A missing FFmpeg is not a start
-// failure: the editor still edits, and an import or an export answers with the
-// error of the missing tool.
+// media builds the media side of the Service. A missing FFmpeg or ffprobe is not a
+// start failure: the editor still edits, and an import or an export answers with the
+// error of the missing tool. The error is kept on Media so a job returns it instead
+// of panicking on a nil runner.
 func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.Exporter, error) {
 	roots := splitList(cfg.Getenv("VUKEM_VIDEO_IMPORT_ROOTS"))
 
@@ -418,11 +419,8 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 
 	in, err := ffmpeg.Discover(ctx, fc)
 	if err != nil {
-		if fc.FFmpegPath != "" {
-			return service.Media{}, nil, fmt.Errorf("owner: %w", err)
-		}
-
 		cfg.Log.WarnContext(ctx, "FFmpeg was not found: import and export are unavailable", "error", err)
+		media.FFmpegMissing = err
 
 		return media, nil, nil
 	}
