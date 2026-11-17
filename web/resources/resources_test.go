@@ -14,6 +14,11 @@ func TestEmbeddedFilesAreServed(t *testing.T) {
 		t.Errorf("Public() has no robots.txt: %v", err)
 	}
 
+	// The pages link it, so the browser does not ask for /favicon.ico and log a 404 (VV-124).
+	if _, err := fs.Stat(Public(), "icon.svg"); err != nil {
+		t.Errorf("Public() has no icon.svg: %v", err)
+	}
+
 	if Views() == nil || Lang() == nil {
 		t.Error("Views() or Lang() is nil")
 	}
