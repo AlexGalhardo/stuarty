@@ -56,7 +56,8 @@ func init() {
 		Summary: "Removes items, and optionally closes the freed space.",
 		Description: "Removes the items. With ripple track, every later item on each affected track moves earlier by the " +
 			"length freed on that track; with ripple all, every later item on every track moves by the length freed, which " +
-			"requires the deleted items to cover one contiguous range.",
+			"requires the deleted items to cover one contiguous range; ripple all also moves the timeline markers after " +
+			"the range earlier by that length and removes those inside it (effective.markers_removed, markers_moved).",
 		Example: `{"item_ids": ["itm_a1b2c3d4e5"], "ripple": "track"}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeInvalidState, CodeOverlap},
 		Scope:   ScopeEdit,
@@ -721,6 +722,9 @@ func applyItemDelete(c *Context, a *itemDeleteArgs) error {
 		if err := c.overlapAfterShift(shifts); err != nil {
 			return err
 		}
+		if length, ok := freed.(int); ok {
+			c.rippleMarkers(rippleStart(removed), rippleStart(removed)+length)
+		}
 	}
 	c.SetEffective("deleted", deleted)
 	c.SetEffective("shifted", shifted)
@@ -765,6 +769,15 @@ func (c *Context) rippleTrack(removed []timeline.Item) (map[string]int, any) {
 		}
 	}
 	return shifts, freed
+}
+
+// rippleStart is the first frame of the deleted items.
+func rippleStart(removed []timeline.Item) int {
+	start := removed[0].Start
+	for i := range removed {
+		start = min(start, removed[i].Start)
+	}
+	return start
 }
 
 // rippleAll: the deleted items must cover one contiguous range [a, b); every item

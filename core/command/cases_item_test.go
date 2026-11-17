@@ -253,6 +253,16 @@ func init() {
 		return base().text("itm_a1b2c3d4e5", vidTr, 0, 40).text("itm_b1b2c3d4e5", vidTr, 50, 10).
 			text("itm_f6g7h8j9k0", capTr, 10, 20).text("itm_d1b2c3d4e5", capTr, 40, 10)
 	})
+	d("ok_ripple_all_moves_and_drops_timeline_markers", del(`["itm_a1b2c3d4e5"]`, "all"), func() *B {
+		return base().text("itm_a1b2c3d4e5", vidTr, 20, 40).text("itm_b1b2c3d4e5", vidTr, 60, 30).
+			with(func(d *timeline.Document) {
+				d.Markers = []timeline.Marker{{Frame: 5}, {Frame: 30, Label: "cut"}, {Frame: 70, Label: "after"}}
+			})
+	})
+	d("ok_ripple_track_leaves_timeline_markers", del(`["itm_a1b2c3d4e5"]`, "track"), func() *B {
+		return base().text("itm_a1b2c3d4e5", vidTr, 20, 40).text("itm_b1b2c3d4e5", vidTr, 60, 30).
+			with(func(d *timeline.Document) { d.Markers = []timeline.Marker{{Frame: 70}} })
+	})
 	d("ok_ripple_all_one_track_range", del(`["itm_a1b2c3d4e5"]`, "all"), func() *B {
 		return base().text("itm_a1b2c3d4e5", vidTr, 0, 60).
 			text("itm_b1b2c3d4e5", vidTr, 60, 30).

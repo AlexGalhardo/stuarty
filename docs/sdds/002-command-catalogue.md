@@ -1497,7 +1497,7 @@ Removes items, and optionally closes the freed space on the same track or on all
 
 1. All listed items are removed.
 2. `ripple: "track"`: for every item that stays, on a track that lost items, `start` decreases by the sum of the durations of the deleted items of that track whose end is at or before this item's `start`. Gaps are kept.
-3. `ripple: "all"`: let `[a, b)` be the covered range; every remaining item on every track with `start >= b` moves earlier by `b - a`.
+3. `ripple: "all"`: let `[a, b)` be the covered range; every remaining item on every track with `start >= b` moves earlier by `b - a`. The timeline markers (SDD-001 §3.1 `markers`) follow it (VV-201): one inside `[a, b)` is removed and one at or after `b` moves earlier by `b - a`; `effective` has `markers_removed` and `markers_moved` when any marker is touched. `ripple: "track"` leaves them where they are. The markers of an item are the item's and go with it.
 4. `diff`: `item.removed` for every deleted item and `item.updated` (`start`) for every shifted one, sorted by id.
 5. `effective` has `deleted` (ids sorted), `shifted` (`[{"id", "from", "to"}]` sorted by id) and `freed` (frames per track as an object, for `"track"`; one number for `"all"`).
 
@@ -1537,6 +1537,8 @@ Removes items, and optionally closes the freed space on the same track or on all
 - `ok_ripple_track_two_items_between_shift_differs`
 - `ok_ripple_track_two_tracks_independent`
 - `ok_ripple_all_one_track_range`
+- `ok_ripple_all_moves_and_drops_timeline_markers`
+- `ok_ripple_track_leaves_timeline_markers`
 - `ok_ripple_all_range_covered_by_items_on_two_tracks`
 - `ok_ripple_track_keeps_gaps`
 - `err_validation_empty_list`
@@ -2034,7 +2036,7 @@ Closes the empty range that contains a given frame on a track.
 **Postconditions.**
 
 1. The gap is `[g0, g1)`: `g0` is the end of the last item that ends at or before `at` (0 when there is none) and `g1` is the start of the first item that starts after `at`. Its length is `L = g1 - g0`.
-2. `"track"`: every item of the track with `start >= g1` moves earlier by `L`. `"all"`: every item of every track with `start >= g1` moves earlier by `L`.
+2. `"track"`: every item of the track with `start >= g1` moves earlier by `L`. `"all"`: every item of every track with `start >= g1` moves earlier by `L`, and so do the timeline markers: one inside `[g0, g1)` is removed and one at or after `g1` moves earlier by `L` (VV-201; `effective.markers_removed` and `markers_moved` when any is touched). `"track"` leaves the markers.
 3. `diff`: one `item.updated` (`start`) per moved item, sorted by id. `effective` has `at` (the A.4 triple), `gap` (`{"start", "end", "length"}`) and `moved` (`[{"id", "from", "to"}]`). In the example, `effective.at` is `{"frame": 70, "seconds": 2.333, "requested": "70f"}`.
 
 **Errors.**
@@ -2071,6 +2073,8 @@ Closes the empty range that contains a given frame on a track.
 - `ok_gap_first_frame`
 - `ok_gap_last_frame`
 - `ok_ripple_all_moves_other_tracks`
+- `ok_ripple_all_moves_and_drops_timeline_markers`
+- `ok_ripple_track_leaves_timeline_markers`
 - `ok_ripple_track_leaves_other_tracks`
 - `err_validation_bad_ripple`
 - `err_invalid_time_no_unit`

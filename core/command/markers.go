@@ -295,3 +295,32 @@ func nilIfEmpty(m []timeline.Marker) []timeline.Marker {
 	}
 	return m
 }
+
+// rippleMarkers makes the markers of the timeline follow a ripple all that closes the frames
+// [from, to): a marker inside is removed and one at or after to moves earlier by to - from (VV-201).
+// It records how many markers were removed and moved in effective.
+func (c *Context) rippleMarkers(from, to int) {
+	if len(c.Doc.Markers) == 0 || to <= from {
+		return
+	}
+	var kept []timeline.Marker
+	removed, moved := 0, 0
+	for _, m := range c.Doc.Markers {
+		switch {
+		case m.Frame < from:
+			kept = append(kept, m)
+		case m.Frame < to:
+			removed++
+		default:
+			m.Frame -= to - from
+			moved++
+			kept = append(kept, m)
+		}
+	}
+	if removed == 0 && moved == 0 {
+		return
+	}
+	c.Doc.Markers = nilIfEmpty(kept)
+	c.SetEffective("markers_removed", removed)
+	c.SetEffective("markers_moved", moved)
+}

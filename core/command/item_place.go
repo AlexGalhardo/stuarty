@@ -45,7 +45,8 @@ func init() {
 		Name:    "timeline.close_gap",
 		Summary: "Closes the empty range that contains a given frame on a track.",
 		Description: "Moves the items after the gap earlier by the length of the gap: those of the track (ripple " +
-			"track, the default) or those of every track (ripple all).",
+			"track, the default) or those of every track (ripple all); ripple all also moves the timeline markers after the " +
+			"gap and removes those inside it.",
 		Example: `{"track_id": "trk_f6g7h8j9k0", "at": "70f"}`,
 		Errors: []string{
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeInvalidState, CodeOverlap,
@@ -351,6 +352,7 @@ func applyCloseGap(c *Context, a *closeGapArgs) error {
 		if err := c.overlapAfterShiftHint(shifts, "Use ripple \"track\" to move only this track."); err != nil {
 			return err
 		}
+		c.rippleMarkers(g0, g1)
 	}
 	c.SetEffectiveTime("at", at, string(a.At))
 	c.SetEffective("gap", map[string]any{"start": g0, "end": g1, "length": gap})
