@@ -107,7 +107,7 @@ The preview does not request one plan per frame; it requests a window (SDD-004 �
 
 ### 2.5 Bitmaps until stage E
 
-Until the text rasterizer moves into the renderer (stage E), a bitmap layer's pixels come from `engine/raster` through the host: a `BitmapSpec` is rasterized to a `raster.Bitmap` (straight-alpha RGBA8, `Width`, `Height`, `NaturalW`, `NaturalH`, `CenterDX`, `CenterDY`; `engine/raster/types.go`), and the host hands it to the renderer under the key `BitmapSpec.Key()` together with the metrics. The renderer premultiplies it once per key (§3.2), places its centre at `cx - CenterDX x s`, `cy - CenterDY x s` with `s = w / NaturalW` (SDD-004 §6 step 2.1), and caches by key. In the browser the bitmap comes from `GET /api/v1/projects/{id}/bitmaps/{key}` (SDD-004 §10) and in the Go export from `raster.Cache`; the metrics travel with the bitmap in both. At stage E the spec in the plan is enough and the host supplies nothing; the key stays the cache key.
+Until the text rasterizer moves into the renderer (stage E), a bitmap layer's pixels come from the Rust rasterizer through the host (since TASK-0220 that is the text exports of §4.2.1, reached from Go through `engine/rasterize`): a `BitmapSpec` is rasterized to a `bitmap.Bitmap` (straight-alpha RGBA8, `Width`, `Height`, `NaturalW`, `NaturalH`, `CenterDX`, `CenterDY`; `engine/bitmap`), and the host hands it to the renderer under the key `BitmapSpec.Key()` together with the metrics. The renderer premultiplies it once per key (§3.2), places its centre at `cx - CenterDX x s`, `cy - CenterDY x s` with `s = w / NaturalW` (SDD-004 §6 step 2.1), and caches by key. In the browser the bitmap comes from `GET /api/v1/projects/{id}/bitmaps/{key}` (SDD-004 §10) and in the Go export from `rasterize.Cache`; the metrics travel with the bitmap in both. At stage E the spec in the plan is enough and the host supplies nothing; the key stays the cache key.
 
 ### 2.6 Acceptance of this section
 
@@ -341,8 +341,8 @@ type RenderInput struct { Output Output; Plan plan.FramePlan }
 
 // PutTexture uploads the premultiplied RGBA pixels of a media layer.
 func (h *Host) PutTexture(ctx context.Context, item string, w, h int, rgba []byte, opaque bool) error
-// PutBitmap uploads a bitmap of engine/raster under its key.
-func (h *Host) PutBitmap(ctx context.Context, key string, bm raster.Bitmap) error
+// PutBitmap uploads a bitmap of the rasterizer under its key.
+func (h *Host) PutBitmap(ctx context.Context, key string, bm bitmap.Bitmap) error
 func (h *Host) Release(ctx context.Context, id string) error
 // Render draws the frame into dst (RGBA, no stride padding, exactly output.width x output.height);
 // with a band only those rows of dst are written.
@@ -351,7 +351,7 @@ func (h *Host) Close(ctx context.Context) error
 ```
 
 - **Sandbox.** The `wazero` runtime is configured with no WASI, no file system, no clock (no `WithSysWalltime`, `WithSysNanotime` or `WithSysNanosleep`), no random source, no environment and no arguments. The module has no import to satisfy, so there is no host function module either. This is what the threat row that ADR-0029 adds to SDD-007 relies on, and its test is in §4.8.
-- **Limits.** `WithMemoryLimitPages(16384)`, the same as the module's declared maximum; `WithCloseOnContextDone(true)`, so cancelling an export stops a render that is in progress (the export's own cancel, SDD-004 §8, reaches it). A frame has no deadline of its own: the export's cancel and its overall deadline (SDD-007 §6.5) reach it through the context.
+- **Limits.** `WithMemoryLimitPages(16384)`, the same as the module's declared maximum; `WithCloseOnContextDone(true)`, so cancelling an export stops a render that is in progress (the export's own cancel, SDD-004 §8, reaches it). The instances that draw text (`Config.Uncancellable`, `engine/rasterize`) use a second runtime with `WithCloseOnContextDone(false)`: the check that makes a call stoppable sits on every loop of the module and made a caption bitmap 5 times slower (57 ms against 11.5 ms on the machine of TASK-0220), and a text request is bounded by its limits (a bitmap of at most `MAX_PIXELS`, a request of at most 16 MiB, at most 65,536 words or families); `TestSecurity_T36_TextRequestsSurviveHostileInput` mutates requests and requires the instance to stay usable. A frame has no deadline of its own: the export's cancel and its overall deadline (SDD-007 §6.5) reach it through the context.
 - **Bands.** The compositor of SDD-004 §12 splits a frame into bands that run in goroutines. The Rust module is single threaded, so the host runs one instance per band and gives each a `vr_render` of the rows it owns: the render input of a band carries `output.y0` and `output.y1` (§2.1; absent for the whole frame) and the module draws only those rows of the full output, which is why a band never changes a byte (§3.9 rule 5). The number of instances is the number of bands of the export, at most 8.
 - **Errors.** A non-zero status becomes a `*renderhost.Error{Reason, Detail}`; the export maps it to `E_EXPORT_FAILED` with `details.reason` (§7). A trap discards the instance, and the export fails, it does not retry on a new instance (a trap on the same input is deterministic).
 - **Frames in.** The export keeps decoding with FFmpeg (§5.2) and hands each decoded frame to `PutTexture`; the compositor stays in Go until stage C's gate passes (ADR-0029 item 8).

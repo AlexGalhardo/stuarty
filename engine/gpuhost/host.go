@@ -19,8 +19,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
 	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
 )
 
@@ -183,8 +183,8 @@ func (h *Host) PutTexture(item string, w, ht int, rgba []byte, opaque bool) erro
 	return err
 }
 
-// PutBitmap uploads a bitmap of engine/raster under its key; the child premultiplies it.
-func (h *Host) PutBitmap(key string, bm raster.Bitmap) error {
+// PutBitmap uploads a bitmap of the rasterizer under its key; the child premultiplies it.
+func (h *Host) PutBitmap(key string, bm bitmap.Bitmap) error {
 	if err := checkImage(key, bm.Width, bm.Height, bm.Pix); err != nil {
 		return err
 	}

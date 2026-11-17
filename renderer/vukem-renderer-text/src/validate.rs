@@ -486,7 +486,7 @@ mod tests {
 
 	#[test]
 	fn a_bundled_font_is_valid() {
-		let anton = include_bytes!("../../../engine/raster/fonts/Anton-Regular.ttf");
+		let anton = include_bytes!("../../../renderer/fonts/Anton-Regular.ttf");
 		assert!(check_font(anton).is_ok());
 	}
 

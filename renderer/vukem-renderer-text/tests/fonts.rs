@@ -1,5 +1,5 @@
 //! The font set: bundled families, user fonts by hash and the errors of both (port of
-//! `engine/raster/fonts_test.go` and `userfont_test.go`).
+//! `renderer/fonts_test.go` and `userfont_test.go`).
 
 use std::sync::Arc;
 
@@ -8,7 +8,7 @@ use vukem_renderer_text::fonts::{DocFontFile, FontSet, LookupError, SourceError,
 use vukem_renderer_text::text::{Align, Content, Style, TextSpec, measure_text, render_text};
 use vukem_renderer_text::validate::Reason;
 
-const ANTON: &[u8] = include_bytes!("../../../engine/raster/fonts/Anton-Regular.ttf");
+const ANTON: &[u8] = include_bytes!("../../fonts/Anton-Regular.ttf");
 
 fn hex_sha256(data: &[u8]) -> String {
 	vukem_renderer_text::validate::sha256_hex(data)

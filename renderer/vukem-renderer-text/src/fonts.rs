@@ -1,7 +1,7 @@
-//! The fonts of the rasterizer: the port of `engine/raster/fonts.go`.
+//! The fonts of the rasterizer: the port of `renderer/fonts.go`.
 //!
 //! The bundled fonts are embedded in the binary; system fonts are never read (ADR-0012 item 3,
-//! D-016). The files and their licences stay where they are, in `engine/raster/fonts`
+//! D-016). The files and their licences are in `renderer/fonts`
 //! (`FONTS.md` lists their sources).
 
 use std::collections::HashMap;
@@ -106,42 +106,42 @@ struct Family {
 const FAMILIES: [Family; 6] = [
 	Family {
 		name: "Inter",
-		data: include_bytes!("../../../engine/raster/fonts/Inter-Variable.ttf"),
+		data: include_bytes!("../../fonts/Inter-Variable.ttf"),
 		min: 100,
 		max: 900,
 		variable: true,
 	},
 	Family {
 		name: "Montserrat",
-		data: include_bytes!("../../../engine/raster/fonts/Montserrat-Variable.ttf"),
+		data: include_bytes!("../../fonts/Montserrat-Variable.ttf"),
 		min: 100,
 		max: 900,
 		variable: true,
 	},
 	Family {
 		name: "Anton",
-		data: include_bytes!("../../../engine/raster/fonts/Anton-Regular.ttf"),
+		data: include_bytes!("../../fonts/Anton-Regular.ttf"),
 		min: 400,
 		max: 400,
 		variable: false,
 	},
 	Family {
 		name: "Bebas Neue",
-		data: include_bytes!("../../../engine/raster/fonts/BebasNeue-Regular.ttf"),
+		data: include_bytes!("../../fonts/BebasNeue-Regular.ttf"),
 		min: 400,
 		max: 400,
 		variable: false,
 	},
 	Family {
 		name: "Playfair Display",
-		data: include_bytes!("../../../engine/raster/fonts/PlayfairDisplay-Variable.ttf"),
+		data: include_bytes!("../../fonts/PlayfairDisplay-Variable.ttf"),
 		min: 400,
 		max: 900,
 		variable: true,
 	},
 	Family {
 		name: "JetBrains Mono",
-		data: include_bytes!("../../../engine/raster/fonts/JetBrainsMono-Variable.ttf"),
+		data: include_bytes!("../../fonts/JetBrainsMono-Variable.ttf"),
 		min: 100,
 		max: 800,
 		variable: true,

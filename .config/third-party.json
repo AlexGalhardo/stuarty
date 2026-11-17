@@ -132,7 +132,7 @@
     "files": [
       "licenses/vendored/x-image-vector-BSD-3-Clause.txt"
     ],
-    "note": "copied, with changes, as engine/raster/internal/scan",
+    "note": "ported to Rust as renderer/vukem-renderer-text/src/scan.rs (it was engine/raster/internal/scan)",
     "shipped_in": [
       "archive",
       "image"

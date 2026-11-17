@@ -16,7 +16,7 @@ import (
 	"sync"
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
 )
 
 // MaxBands is the largest number of bands (SDD-004 section 12, rule 5).
@@ -41,7 +41,7 @@ type Image struct {
 type MediaSource func(l *plan.Layer) (Image, error)
 
 // BitmapSource renders (or fetches from a cache) the bitmap of a text, caption or shape layer.
-type BitmapSource func(spec plan.BitmapSpec) (raster.Bitmap, error)
+type BitmapSource func(spec plan.BitmapSpec) (bitmap.Bitmap, error)
 
 // ErrSource is wrapped by the error of a layer whose pixels could not be had.
 var ErrSource = errors.New("compositor: a layer has no pixels")
@@ -221,7 +221,7 @@ func (c *Compositor) draw(dst *image.RGBA, src Image, p placement, op uint32, mo
 }
 
 // premultiplied converts a straight-alpha bitmap of the rasterizer, once per key.
-func (c *Compositor) premultiplied(key string, bm raster.Bitmap) Image {
+func (c *Compositor) premultiplied(key string, bm bitmap.Bitmap) Image {
 	if img, ok := c.premul[key]; ok {
 		return img
 	}

@@ -1,4 +1,4 @@
-package raster
+package rasterize
 
 import (
 	"testing"

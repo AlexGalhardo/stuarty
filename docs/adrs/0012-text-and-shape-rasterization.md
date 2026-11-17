@@ -10,7 +10,7 @@ Text is where preview and export diverge most in the editors studied: fallback f
 
 ## Decision
 
-1. `engine/raster` is the only place text is laid out and drawn. It takes a text or caption item's content and style and produces RGBA bitmaps plus metrics (bounding box, baseline, per-word boxes).
+1. The rasterizer (`engine/raster` when this ADR was written, `renderer/vukem-renderer-text` since TASK-0220) is the only place text is laid out and drawn. It takes a text or caption item's content and style and produces RGBA bitmaps plus metrics (bounding box, baseline, per-word boxes).
 2. Shaping uses `go-text/typesetting` (pure Go port of HarfBuzz with bidi and line segmentation); glyph outlines are rasterized with `golang.org/x/image/vector`. Both are permissively licensed and need no cgo.
 3. Only **bundled fonts** are used: six open families shipped inside the binary, each with its licence file (D-022): Inter (the default), Montserrat, Anton, Bebas Neue, Playfair Display and JetBrains Mono. The licence of each family and the weights shipped are verified at the source by a ROADMAP task before the fonts are committed. System fonts are never read. A project refers to a font by family and weight from that set; user-supplied font files arrive in BETA with the brand kit (RF-053); until then the `fonts` map of a document stays empty.
 4. Bitmaps are cached by a hash of content, style, size and rasterizer version, and are served to the browser as images. Both executors draw the same bitmap (ADR-0003).

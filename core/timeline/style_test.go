@@ -58,7 +58,7 @@ func TestStyleKeysAndFontWeights(t *testing.T) {
 
 // FONTS.md is the source of the shipped weights; BundledWeights must say the same.
 func TestBundledWeightsMatchFontsMD(t *testing.T) {
-	b, err := os.ReadFile("../../engine/raster/fonts/FONTS.md")
+	b, err := os.ReadFile("../../renderer/fonts/FONTS.md")
 	if err != nil {
 		t.Fatal(err)
 	}

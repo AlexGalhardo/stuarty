@@ -1,5 +1,5 @@
 //go:build !race
 
-package raster
+package rasterize
 
 const raceEnabled = false

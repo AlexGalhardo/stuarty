@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // Fonts is the user fonts of a workspace: fonts/<sha256>, mode 0600 (SDD-000
@@ -43,9 +43,9 @@ func (f *Fonts) path(hash string) (string, error) {
 
 // Put validates the font and stores it by content hash. It returns the hex
 // SHA-256 (the document writes it as "sha256:" and the digest). The error of
-// a refused font is a *raster.InvalidFontError and nothing is written.
+// a refused font is a *rasterize.InvalidFontError and nothing is written.
 func (f *Fonts) Put(data []byte) (string, error) {
-	if err := raster.ValidateFont(data); err != nil {
+	if err := rasterize.ValidateFont(data); err != nil {
 		return "", err
 	}
 
@@ -124,7 +124,7 @@ func (f *Fonts) Has(hash string) bool {
 }
 
 // Read returns the bytes of a stored font. A font that is not stored is an
-// error that wraps raster.ErrFontNotStored (and fs.ErrNotExist).
+// error that wraps rasterize.ErrFontNotStored (and fs.ErrNotExist).
 // Bytes whose hash differs from their name are refused as corrupt.
 func (f *Fonts) Read(hash string) ([]byte, error) {
 	p, err := f.path(hash)
@@ -134,14 +134,14 @@ func (f *Fonts) Read(hash string) ([]byte, error) {
 
 	st, err := os.Stat(p)
 	if errors.Is(err, fs.ErrNotExist) {
-		return nil, fmt.Errorf("%w: %w", raster.ErrFontNotStored, err)
+		return nil, fmt.Errorf("%w: %w", rasterize.ErrFontNotStored, err)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if st.Size() > raster.MaxFontBytes {
+	if st.Size() > rasterize.MaxFontBytes {
 		return nil, &Error{
 			Code:    CodeInternal,
 			Reason:  "store_corrupt",
@@ -165,8 +165,8 @@ func (f *Fonts) Read(hash string) ([]byte, error) {
 	return data, nil
 }
 
-// Source is Read as a raster.FontSource.
-func (f *Fonts) Source() raster.FontSource { return f.Read }
+// Source is Read as a rasterize.FontSource.
+func (f *Fonts) Source() rasterize.FontSource { return f.Read }
 
 func fontsUnwritable(err error) error {
 	return &Error{

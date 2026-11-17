@@ -89,7 +89,7 @@ func scaleDoc(tb testing.TB) *timeline.Document {
 			doc.Assets[id] = a
 		case timeline.AssetAudio:
 			delete(doc.Assets, id)
-		case timeline.AssetImage:
+		case timeline.AssetImage, timeline.AssetLUT:
 		}
 	}
 

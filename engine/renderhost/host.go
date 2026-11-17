@@ -13,7 +13,7 @@ import (
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
 )
 
 // Default budgets of vr_init (SDD-013 section 7.2).
@@ -84,6 +84,9 @@ var ErrClosed = errors.New("renderhost: the instance is closed")
 type Config struct {
 	MaxTextureBytes uint32
 	MaxBitmapBytes  uint32
+	// Uncancellable runs the instance without the check that stops a call when its context ends, which is
+	// about five times faster. Text requests use it: they are bounded by construction (SDD-013 section 4.6).
+	Uncancellable bool
 }
 
 // Host runs one instance of the core module. It is not safe for concurrent use.
@@ -99,7 +102,7 @@ type Host struct {
 // New instantiates the embedded module, compiled once per process. The module is refused unless its
 // digest matches, it has no import, and its vr_api_version is APIVersion.
 func New(ctx context.Context, cfg Config) (*Host, error) {
-	rt, cm, err := compile(ctx)
+	rt, cm, err := compileFor(ctx, !cfg.Uncancellable)
 	if err != nil {
 		return nil, err
 	}
@@ -305,8 +308,8 @@ func (h *Host) PutTexture(ctx context.Context, item string, w, ht int, rgba []by
 	return h.status(ctx, "vr_put_texture", uint64(id.ptr), uint64(id.n), uint64(w), uint64(ht), uint64(px.ptr), op)
 }
 
-// PutBitmap uploads a bitmap of engine/raster under its key (plan.BitmapSpec.Key). The module premultiplies it.
-func (h *Host) PutBitmap(ctx context.Context, key string, bm raster.Bitmap) error {
+// PutBitmap uploads a bitmap of the rasterizer under its key (plan.BitmapSpec.Key). The module premultiplies it.
+func (h *Host) PutBitmap(ctx context.Context, key string, bm bitmap.Bitmap) error {
 	if len(key) > maxIDBytes || bm.Width < 0 || bm.Height < 0 {
 		return &Error{InvalidArgument, "PutBitmap"}
 	}

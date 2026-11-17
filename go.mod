@@ -6,7 +6,6 @@ require (
 	github.com/AlexGalhardo/vukem v0.45.0
 	github.com/AlexGalhardo/vukem/contrib/engine v0.2.0
 	github.com/AlexGalhardo/vukem/drivers/otel v0.4.5
-	github.com/go-text/typesetting v0.3.5
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 	github.com/tetratelabs/wazero v1.12.0

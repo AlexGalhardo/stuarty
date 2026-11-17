@@ -38,7 +38,11 @@ var exports = []string{
 	"vr_text_result_clear",
 }
 
-var shared struct {
+// shared holds the compiled module once per process, in two runtimes: the one that stops a call when its
+// context ends, for renders that can be cancelled, and the one that does not, for text requests, which
+// are bounded by construction. The check that makes a call stoppable sits on every loop of the module and
+// makes it about five times slower, which a bitmap that takes milliseconds does not need to pay.
+var shared [2]struct {
 	once     sync.Once
 	runtime  wazero.Runtime
 	compiled wazero.CompiledModule
@@ -65,23 +69,37 @@ func verifyDigest(module []byte, digest string) error {
 
 // newRuntime is the sandbox of the module (SDD-013 section 4.6): no WASI, no file system, no clock, no
 // random source, no environment, no arguments, and a memory limit; cancelling the context stops a render.
-func newRuntime(ctx context.Context) wazero.Runtime {
+func newRuntime(ctx context.Context) wazero.Runtime { return newRuntimeFor(ctx, true) }
+
+// newRuntimeFor is newRuntime for a runtime that stops a call when its context ends (cancellable) or one that
+// lets the call run to its end.
+func newRuntimeFor(ctx context.Context, cancellable bool) wazero.Runtime {
 	cfg := wazero.NewRuntimeConfig().
 		WithMemoryLimitPages(maxMemoryPages).
-		WithCloseOnContextDone(true)
+		WithCloseOnContextDone(cancellable)
 
 	return wazero.NewRuntimeWithConfig(ctx, cfg)
 }
 
 // compile checks and compiles the embedded module once per process.
 func compile(ctx context.Context) (wazero.Runtime, wazero.CompiledModule, error) {
-	shared.once.Do(func() {
-		shared.err = func() error {
+	return compileFor(ctx, true)
+}
+
+// compileFor is compile for the cancellable runtime or the one that is not.
+func compileFor(ctx context.Context, cancellable bool) (wazero.Runtime, wazero.CompiledModule, error) {
+	sh := &shared[0]
+	if !cancellable {
+		sh = &shared[1]
+	}
+
+	sh.once.Do(func() {
+		sh.err = func() error {
 			if err := verifyDigest(moduleBytes, moduleDigest); err != nil {
 				return err
 			}
 
-			rt := newRuntime(context.WithoutCancel(ctx))
+			rt := newRuntimeFor(context.WithoutCancel(ctx), cancellable)
 
 			cm, err := rt.CompileModule(context.WithoutCancel(ctx), moduleBytes)
 			if err != nil {
@@ -96,13 +114,13 @@ func compile(ctx context.Context) (wazero.Runtime, wazero.CompiledModule, error)
 				return err
 			}
 
-			shared.runtime, shared.compiled = rt, cm
+			sh.runtime, sh.compiled = rt, cm
 
 			return nil
 		}()
 	})
 
-	return shared.runtime, shared.compiled, shared.err
+	return sh.runtime, sh.compiled, sh.err
 }
 
 // checkInterface refuses a module that imports anything or does not export the interface of section 4.2:

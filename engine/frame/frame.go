@@ -21,14 +21,14 @@ import (
 	"github.com/AlexGalhardo/vukem-video/engine/cache"
 	"github.com/AlexGalhardo/vukem-video/engine/export"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // Frames makes frames and sheets for the documents of one workspace.
 type Frames struct {
 	Runner       *ffmpeg.Runner
 	ArtifactsDir string
-	Fonts        *raster.FontSet // the bundled fonts when nil
+	Fonts        *rasterize.FontSet // the bundled fonts when nil
 	// Cache holds the JPEGs by project, revision, frame and width. It may be nil: nothing is kept.
 	Cache *cache.Store
 }
@@ -268,7 +268,7 @@ func (f *Frames) Sheet(ctx context.Context, doc *timeline.Document, ref Ref, req
 	cellW, cellH := cw/cols, ch/rows
 	fonts := f.Fonts
 	if fonts == nil {
-		fonts = raster.Bundled()
+		fonts = rasterize.Bundled()
 	}
 	for i, c := range cells {
 		x0, y0 := (i%cols)*cellW, (i/cols)*cellH
@@ -294,10 +294,10 @@ func (f *Frames) Sheet(ctx context.Context, doc *timeline.Document, ref Ref, req
 
 // label prints "<index> <seconds>s f<frame>" in the top-left corner of the cell: white Inter 700 of
 // max(12, cell height / 28) pixels on a black box at 70% opacity, drawn by the rasterizer.
-func label(canvas *image.RGBA, area image.Rectangle, fonts *raster.FontSet, c Cell) error {
+func label(canvas *image.RGBA, area image.Rectangle, fonts *rasterize.FontSet, c Cell) error {
 	size := float64(max(12, area.Dy()/28))
 	spec := plan.BitmapSpec{
-		Kind: raster.KindText, ActiveWord: -1, PixelScale: 1,
+		Kind: rasterize.KindText, ActiveWord: -1, PixelScale: 1,
 		Text: fmt.Sprintf("%d %ss f%d", c.Index, secondsText(c.Seconds), c.Frame),
 		Style: plan.ResolvedStyle{
 			FontFamily:        "Inter",
@@ -313,7 +313,7 @@ func label(canvas *image.RGBA, area image.Rectangle, fonts *raster.FontSet, c Ce
 			MaxWidth:          float64(area.Dx()),
 		},
 	}
-	bm, err := raster.Render(spec, fonts)
+	bm, err := rasterize.Render(spec, fonts)
 	if err != nil {
 		return fmt.Errorf("sheet label: %w", err)
 	}

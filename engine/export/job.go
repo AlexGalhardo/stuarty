@@ -16,7 +16,7 @@ import (
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/compositor"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // Progress is the share of the frames written to the encoder.
@@ -55,7 +55,7 @@ type Job struct {
 	// Lint is the environment of the lint that gates the export (unready media, text sizes).
 	Lint lint.Env
 	// Fonts is the font set of the rasterizer; the bundled fonts when nil.
-	Fonts *raster.FontSet
+	Fonts *rasterize.FontSet
 	// Bands is the number of bands of the compositor; zero is one per CPU, at most 8.
 	Bands int
 	// PixelRenderer is VUKEM_VIDEO_EXPORT_RENDERER: the Go compositor (the zero value) or the Rust renderer
@@ -94,7 +94,7 @@ type state struct {
 	frames int
 	// offset is the first timeline frame of the export; export frame i draws timeline frame offset+i.
 	offset int
-	fonts  *raster.FontSet
+	fonts  *rasterize.FontSet
 	opts   plan.Options
 	// scale is the output scale of the frames; 1 is the project's size. single says one frame is
 	// asked for, so every unrotated layer is as good as constant and the decoder scales it.
@@ -108,13 +108,13 @@ type state struct {
 func newState(ctx context.Context, job *Job, dir *ffmpeg.RunDir, frames int) *state {
 	fonts := job.Fonts
 	if fonts == nil {
-		fonts = raster.Bundled()
+		fonts = rasterize.Bundled()
 	}
 	fps := job.Doc.Settings.FPS
 	secs := time.Duration(float64(frames) * float64(fps.Den) / float64(fps.Num) * float64(time.Second))
 	return &state{
 		job: job, ctx: ctx, dir: dir, frames: frames, fonts: fonts, scale: 1,
-		opts:      plan.Options{Measure: raster.Measure(fonts)},
+		opts:      plan.Options{Measure: rasterize.Measure(fonts)},
 		deadline:  exportDeadline(secs),
 		inputDirs: assetDirs(job),
 	}
@@ -136,7 +136,7 @@ func (s *state) newRenderer(bands int) *renderer {
 		infos = s.scanLayers()
 	}
 	fs := newFrameSource(s, infos)
-	cache := raster.NewCache(s.fonts, 0)
+	cache := rasterize.NewCache(s.fonts, 0)
 	rd := &renderer{s: s, fs: fs, comp: &compositor.Compositor{Media: fs.media, Bitmaps: cache.Get, Bands: bands}}
 	if s.job.PixelRenderer == PixelRendererRust || s.job.PixelRenderer == PixelRendererGPU {
 		rd.rust = newRustRenderer(s, fs, cache.Get, bands)

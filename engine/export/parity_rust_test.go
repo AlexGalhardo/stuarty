@@ -17,8 +17,8 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
 	"github.com/AlexGalhardo/vukem-video/engine/compositor"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
 	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
 )
 
@@ -53,7 +53,7 @@ type parityFrame struct {
 	input    []byte
 	bands    [][]byte
 	textures []parityTexture
-	bitmaps  map[string]raster.Bitmap
+	bitmaps  map[string]bitmap.Bitmap
 	want     []byte
 }
 
@@ -117,7 +117,7 @@ func recordFrames(t *testing.T, dir, name string, frames []int) []parityFrame {
 
 	var (
 		textures []parityTexture
-		bitmaps  map[string]raster.Bitmap
+		bitmaps  map[string]bitmap.Bitmap
 	)
 	media, bm := rd.comp.Media, rd.comp.Bitmaps
 	rd.comp.Media = func(l *plan.Layer) (compositor.Image, error) {
@@ -130,7 +130,7 @@ func recordFrames(t *testing.T, dir, name string, frames []int) []parityFrame {
 		}
 		return img, err
 	}
-	rd.comp.Bitmaps = func(spec plan.BitmapSpec) (raster.Bitmap, error) {
+	rd.comp.Bitmaps = func(spec plan.BitmapSpec) (bitmap.Bitmap, error) {
 		b, err := bm(spec)
 		if err == nil {
 			bitmaps[spec.Key()] = b
@@ -142,7 +142,7 @@ func recordFrames(t *testing.T, dir, name string, frames []int) []parityFrame {
 	dst := image.NewRGBA(image.Rect(0, 0, w, h))
 	var out []parityFrame
 	for _, f := range frames {
-		textures, bitmaps = nil, map[string]raster.Bitmap{}
+		textures, bitmaps = nil, map[string]bitmap.Bitmap{}
 		if err := rd.render(dst, f); err != nil {
 			t.Fatalf("%s frame %d: %v", name, f, err)
 		}

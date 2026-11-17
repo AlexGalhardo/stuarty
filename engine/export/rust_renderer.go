@@ -9,10 +9,10 @@ import (
 	"sync"
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
 	"github.com/AlexGalhardo/vukem-video/engine/compositor"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
 	"github.com/AlexGalhardo/vukem-video/engine/gpuhost"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
 	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
 )
 
@@ -54,7 +54,7 @@ const rustBandMinPixels = 1 << 14
 type rustRenderer struct {
 	s       *state
 	fs      *frameSource
-	bitmaps func(plan.BitmapSpec) (raster.Bitmap, error)
+	bitmaps func(plan.BitmapSpec) (bitmap.Bitmap, error)
 	bands   int
 	hosts   []*renderhost.Host
 
@@ -67,7 +67,7 @@ type rustRenderer struct {
 func newRustRenderer(
 	s *state,
 	fs *frameSource,
-	bitmaps func(plan.BitmapSpec) (raster.Bitmap, error),
+	bitmaps func(plan.BitmapSpec) (bitmap.Bitmap, error),
 	bands int,
 ) *rustRenderer {
 	if bands <= 0 {
@@ -103,7 +103,7 @@ type textureUpload struct {
 
 type bitmapUpload struct {
 	key string
-	bm  raster.Bitmap
+	bm  bitmap.Bitmap
 }
 
 // compose draws the frame plan into dst, scaling every position and size by scale, as Compositor.Compose does.

@@ -16,8 +16,8 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
 	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
 	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
 )
 
@@ -196,7 +196,7 @@ func TestARoundTripFeedsTheChildAndReadsTheFrame(t *testing.T) {
 
 	if err := h.PutBitmap(
 		"b",
-		raster.Bitmap{Pix: []byte{1, 2, 3, 4}, Width: 1, Height: 1, NaturalW: 1, NaturalH: 1},
+		bitmap.Bitmap{Pix: []byte{1, 2, 3, 4}, Width: 1, Height: 1, NaturalW: 1, NaturalH: 1},
 	); err != nil {
 		t.Fatal(err)
 	}

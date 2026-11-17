@@ -19,7 +19,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 // The limits of a template file (SDD-007 section 7.6 item 1 and 2).
@@ -60,7 +60,7 @@ func templateEntryCap(name string) (int64, bool) {
 	}
 
 	if templateFontEntry.MatchString(name) {
-		return raster.MaxFontBytes, true
+		return rasterize.MaxFontBytes, true
 	}
 
 	return 0, false

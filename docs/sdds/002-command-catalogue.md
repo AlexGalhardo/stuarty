@@ -208,7 +208,7 @@ These are the decisions of the implementation (task P1-ENG-001) that Part A leav
    - `item.split` and `item.trim` advance or move `source_in` only for a clip or audio item whose asset is a video or an audio file; an image clip keeps its `source_in` (R9 exempts images, and `clip.add` refuses a `source_in` on an image).
    - `asset.add` refuses a `sample_count` on an asset with no audio (the rule says it is required exactly when the asset has audio).
    - `settings.set` accepts `background: "$name"` when `template.colors` has the name; `Validate` accepts the reference in `settings.background` (SDD-001 section 3.1).
-   - The weights of the bundled font families come from `timeline.BundledWeights`, which a test keeps equal to `engine/raster/fonts/FONTS.md`; the weight checked is the given one, else the default 700, so Anton needs an explicit `font_weight` 400. `E_FONT_UNKNOWN` carries `details.available`.
+   - The weights of the bundled font families come from `timeline.BundledWeights`, which a test keeps equal to `renderer/fonts/FONTS.md`; the weight checked is the given one, else the default 700, so Anton needs an explicit `font_weight` 400. `E_FONT_UNKNOWN` carries `details.available`.
    - `item.delete` leaves `effective.freed` out for `ripple: "none"`; `E_OUT_OF_SOURCE` of `item.trim` on the start edge carries `details.available = {source_in, earliest_to}`.
    - `caption.add` with `text` refuses a word of more than 80 characters with `E_VALIDATION`; the error codes of `track.remove` are `E_NOT_FOUND` and `E_NOT_EMPTY` (there is no schema error to report).
    - The `order` strings, the seconds in hints and the messages in Part C are examples; the golden files hold the real ones.

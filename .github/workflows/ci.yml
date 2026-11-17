@@ -235,7 +235,7 @@ jobs:
           {
             go test -run '^$' -bench 'ComposeRotated|ComposeColorMatrix|ComposeFilter|ComposeBlur$' -benchtime=20x -count=1 -timeout=5m ./engine/export/
             go test -run '^$' -bench 'Commit200Items$' -benchtime=3x -count=1 -timeout=5m ./web/app/servicetest/
-            go test -run '^$' -bench 'CaptionMiss$|CaptionHit$' -benchtime=300ms -count=1 -timeout=5m ./engine/raster/
+            go test -run '^$' -bench 'CaptionMiss$|CaptionHit$' -benchtime=300ms -count=1 -timeout=5m ./engine/rasterize/
           } | tee limits-bench.txt
           status=0
           bash scripts/bench-gate.sh pr .github/bench-limits.txt limits-bench.txt | tee limits-gate.txt || status=$?
@@ -830,7 +830,7 @@ jobs:
         env:
           FONTCONFIG_PATH: ${{ runner.temp }}/no-fontconfig
           FONTCONFIG_FILE: ${{ runner.temp }}/no-fontconfig/none.conf
-        run: go test -count=1 ./engine/raster/...
+        run: go test -count=1 ./engine/rasterize/...
 
   pins:
     name: Workflow pins

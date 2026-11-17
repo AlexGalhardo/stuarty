@@ -13,13 +13,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
 )
 
 func antonBytes(t *testing.T) []byte {
 	t.Helper()
 
-	data, err := os.ReadFile(filepath.Join("..", "raster", "fonts", "Anton-Regular.ttf"))
+	data, err := os.ReadFile(filepath.Join("..", "..", "renderer", "fonts", "Anton-Regular.ttf"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,7 +76,7 @@ func TestFontsReadMissingAndCorrupt(t *testing.T) {
 
 	if _, err := fonts.Read(
 		hex.EncodeToString(make([]byte, 32)),
-	); !errors.Is(err, raster.ErrFontNotStored) ||
+	); !errors.Is(err, rasterize.ErrFontNotStored) ||
 		!errors.Is(err, fs.ErrNotExist) {
 		t.Fatalf("missing: %v", err)
 	}
@@ -119,7 +119,7 @@ func TestSecurity_T21_FontValidation(t *testing.T) {
 		"numTables 65535":   huge,
 		"overlapping":       overlap,
 		"not a font":        []byte("this is not a font file at all"),
-		"too large":         make([]byte, raster.MaxFontBytes+1),
+		"too large":         make([]byte, rasterize.MaxFontBytes+1),
 		"empty":             nil,
 		"magic only":        []byte("OTTO\x00\x00\x00\x00\x00\x00\x00\x00"),
 		"wrong magic, body": append([]byte("wOFF"), anton[4:]...),
@@ -134,11 +134,11 @@ func TestSecurity_T21_FontValidation(t *testing.T) {
 
 			hash, err := fonts.Put(data)
 
-			if _, ok := errors.AsType[*raster.InvalidFontError](err); !ok {
-				t.Fatalf("Put = %q, %v; want *raster.InvalidFontError", hash, err)
+			if _, ok := errors.AsType[*rasterize.InvalidFontError](err); !ok {
+				t.Fatalf("Put = %q, %v; want *rasterize.InvalidFontError", hash, err)
 			}
 
-			if d := time.Since(start); d > raster.FontParseDeadline {
+			if d := time.Since(start); d > rasterize.FontParseDeadline {
 				t.Errorf("refused after %s", d)
 			}
 

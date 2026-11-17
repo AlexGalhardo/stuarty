@@ -13,7 +13,7 @@ import (
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/raster"
+	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
 )
 
 // The Rust renderer (renderer/, SDD-013 section 3) is held byte for byte to this compositor. These
@@ -29,7 +29,7 @@ type vecLayer struct {
 	pix    []byte // straight alpha for a bitmap, premultiplied for media
 	w, h   int
 	opaque bool
-	bitmap *raster.Bitmap
+	bitmap *bitmap.Bitmap
 }
 
 type vecCase struct {
@@ -62,7 +62,7 @@ func softImage(w, h int, seed uint64) (pix []byte) {
 	return pix
 }
 
-func straightBitmap(w, h int, seed uint64) *raster.Bitmap {
+func straightBitmap(w, h int, seed uint64) *bitmap.Bitmap {
 	rng := rand.New(rand.NewPCG(seed, 13))
 	pix := make([]byte, w*h*4)
 	for i := 0; i < len(pix); i += 4 {
@@ -76,7 +76,7 @@ func straightBitmap(w, h int, seed uint64) *raster.Bitmap {
 			rng.UintN(256),
 		)
 	}
-	return &raster.Bitmap{
+	return &bitmap.Bitmap{
 		Pix:      pix,
 		Width:    w,
 		Height:   h,
@@ -94,7 +94,7 @@ func vm(id string, img Image, cx, cy, w, h, rot, op float64) vecLayer {
 	}
 }
 
-func vb(id string, bm *raster.Bitmap, cx, cy, w, h, rot, op float64) vecLayer {
+func vb(id string, bm *bitmap.Bitmap, cx, cy, w, h, rot, op float64) vecLayer {
 	return vecLayer{
 		layer: plan.Layer{
 			ItemID:   id,
@@ -636,7 +636,7 @@ func rendererVectorCases() []vecCase {
 func (c vecCase) compose(t *testing.T, bands int) []byte {
 	t.Helper()
 	imgs := map[string]Image{}
-	bms := map[string]raster.Bitmap{}
+	bms := map[string]bitmap.Bitmap{}
 	var layers []plan.Layer
 	for i := range c.layers {
 		l := &c.layers[i]
@@ -650,7 +650,7 @@ func (c vecCase) compose(t *testing.T, bands int) []byte {
 	comp := &Compositor{
 		Bands:   bands,
 		Media:   func(l *plan.Layer) (Image, error) { return imgs[l.ItemID], nil },
-		Bitmaps: func(s plan.BitmapSpec) (raster.Bitmap, error) { return bms[s.Key()], nil },
+		Bitmaps: func(s plan.BitmapSpec) (bitmap.Bitmap, error) { return bms[s.Key()], nil },
 	}
 	dst := image.NewRGBA(image.Rect(0, 0, c.w, c.h))
 	if err := comp.Compose(
