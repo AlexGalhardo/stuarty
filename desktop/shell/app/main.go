@@ -55,15 +55,19 @@ func run() error {
 	}
 
 	br := &bridge{}
+	ws, wsErr := workspace.Resolve(os.Getenv)
 	app := application.New(application.Options{
 		Name:              "Vukem Video",
 		Description:       "Vukem Video desktop",
 		RawMessageHandler: br.handle,
 		Mac:               application.MacOptions{ApplicationShouldTerminateAfterLastWindowClosed: true},
+		Windows: application.WindowsOptions{
+			WebviewUserDataPath:   shell.WebviewDataPath(os.Getenv, string(ws)),
+			AdditionalBrowserArgs: shell.WebviewArgs(os.Getenv),
+		},
 	})
 
-	ws, err := workspace.Resolve(os.Getenv)
-	if err != nil {
+	if err := wsErr; err != nil {
 		return failStartup(app, err)
 	}
 	srv, err := shell.Start(context.Background(), shell.Config{Binary: *binary, Workspace: ws})
