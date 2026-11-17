@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -40,9 +41,9 @@ const (
 // open the UI in the default browser. The seams are fields so the tests need no browser and no
 // server process.
 //
-// It is a minimal first version: it opens the plain address and does not use the launch code of
-// SDD-007 3.4 (POST /api/v1/system/launch), which would give a session without the browser-only
-// privileges anyway, since only the desktop shell holds the launcher secret (3.4 item 7). It runs
+// It asks the running server for a launch code (POST /api/v1/system/launch, SDD-007 3.4 item 3), whose
+// session has no browser-only privileges because only the desktop shell holds the launcher secret
+// (3.4 item 7). It runs
 // before the application is built because every command of the application needs APP_KEY
 // (vukem-feedback.md VF-030), and a shortcut must work on a machine that has none.
 type opener struct {
@@ -144,22 +145,92 @@ func (o *opener) run(ctx context.Context) error {
 	}
 	base := baseURL(host, port)
 
-	if !o.isUp(ctx, base) {
+	// The server that owns the workspace says where it listens in runtime.json: it wins over the
+	// default address, so open never starts a second server beside it (VV-079).
+	if rb, ok := o.runningServer(ctx); ok {
+		base = rb
+	} else if !o.isUp(ctx, base) {
 		if err := o.start(ctx, host, port, base); err != nil {
 			return err
 		}
 	}
 
+	target := o.launchURL(ctx, base)
+
 	if o.getenv(envNoBrowser) != "" {
-		_, _ = fmt.Fprintln(o.stdout, base+"/")
+		_, _ = fmt.Fprintln(o.stdout, target)
 		return nil
 	}
 	_, _ = fmt.Fprintln(o.stderr, "Opening", base+"/")
-	if err := o.browse(base + "/"); err != nil {
-		_, _ = fmt.Fprintln(o.stdout, base+"/")
+	if err := o.browse(target); err != nil {
+		_, _ = fmt.Fprintln(o.stdout, target)
 		return fmt.Errorf("the server is running but the browser could not be started: %w", err)
 	}
 	return nil
+}
+
+var launchCode = regexp.MustCompile(`^[0-9a-f]{64}$`)
+
+// runningServer is the address in runtime.json when its process is alive, it is a loopback address
+// and it answers /up.
+func (o *opener) runningServer(ctx context.Context) (string, bool) {
+	ws, err := workspace.Resolve(o.getenv)
+	if err != nil {
+		return "", false
+	}
+	rt, err := ws.ReadRuntime()
+	if err != nil || !workspace.ProcessAlive(rt.PID) || rt.Mode == workspace.ModeNetwork {
+		return "", false
+	}
+	host, port, err := net.SplitHostPort(rt.Addr)
+	if err != nil {
+		return "", false
+	}
+	switch strings.Trim(host, "[]") {
+	case "127.0.0.1", "localhost", "::1":
+	default:
+		return "", false
+	}
+	base := baseURL(strings.Trim(host, "[]"), port)
+	return base, o.isUp(ctx, base)
+}
+
+// launchURL asks the server for a one-time launch code (SDD-007 3.4 item 3) and returns the address
+// that signs the browser in. Without the local token (a server that is still starting) it returns the
+// plain address; the editor then shows its sign-in page.
+func (o *opener) launchURL(ctx context.Context, base string) string {
+	plain := base + "/"
+	ws, err := workspace.Resolve(o.getenv)
+	if err != nil {
+		return plain
+	}
+	token, err := ws.LoadToken()
+	if err != nil {
+		return plain
+	}
+	if err := workspace.Handshake(ctx, o.client, base, token); err != nil {
+		_, _ = fmt.Fprintln(o.stderr, "vukem-video open: the server did not prove it knows the token:", err)
+		return plain
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, base+"/api/v1/system/launch", strings.NewReader("{}"))
+	if err != nil {
+		return plain
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := o.client.Do(req)
+	if err != nil {
+		return plain
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var body struct {
+		Code string `json:"code"`
+	}
+	if resp.StatusCode != http.StatusOK || json.NewDecoder(io.LimitReader(resp.Body, 4096)).Decode(&body) != nil ||
+		!launchCode.MatchString(body.Code) {
+		return plain
+	}
+	return base + "/auth/launch?code=" + body.Code
 }
 
 // start launches `vukem-video serve` in the background and waits for /up.
