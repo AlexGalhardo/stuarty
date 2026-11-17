@@ -125,6 +125,10 @@ fetch "$FFMPEG_SRC_URL" "$FFMPEG_SRC_SHA256" ffmpeg
 fetch "$LIBVPX_SRC_URL" "$LIBVPX_SRC_SHA256" libvpx
 fetch "$OPUS_SRC_URL" "$OPUS_SRC_SHA256" opus
 fetch "$ZLIB_SRC_URL" "$ZLIB_SRC_SHA256" zlib
+fetch "$LAME_SRC_URL" "$LAME_SRC_SHA256" lame
+fetch "$OGG_SRC_URL" "$OGG_SRC_SHA256" ogg
+fetch "$VORBIS_SRC_URL" "$VORBIS_SRC_SHA256" vorbis
+fetch "$LIBWEBP_SRC_URL" "$LIBWEBP_SRC_SHA256" libwebp
 fetch "$ZIMG_SRC_URL" "$ZIMG_SRC_SHA256" zimg
 case "$os" in
 linux | windows)
@@ -193,6 +197,48 @@ log "ffmpeg-build: opus"
 	./configure --prefix="$prefix" --libdir="$prefix/lib" --disable-shared --enable-static --disable-doc --disable-extra-programs \
 		${host_arg[@]+"${host_arg[@]}"} >&2
 	make -j"$jobs" >&2 && make install >&2
+)
+
+log "ffmpeg-build: lame"
+(
+	cd "$work/src/lame"
+	host_arg=()
+	[ -n "$cross_prefix" ] && host_arg=(--host=x86_64-w64-mingw32)
+	# Only libmp3lame: the lame executable and the mpg123 decoder are not needed.
+	./configure --prefix="$prefix" --libdir="$prefix/lib" --disable-shared --enable-static --disable-frontend --disable-decoder \
+		--disable-gtktest ${host_arg[@]+"${host_arg[@]}"} >&2
+	make -j"$jobs" -C libmp3lame >&2 && make -C libmp3lame install >&2 && make -C include install >&2
+)
+
+log "ffmpeg-build: ogg"
+(
+	cd "$work/src/ogg"
+	host_arg=()
+	[ -n "$cross_prefix" ] && host_arg=(--host=x86_64-w64-mingw32)
+	./configure --prefix="$prefix" --libdir="$prefix/lib" --disable-shared --enable-static ${host_arg[@]+"${host_arg[@]}"} >&2
+	make -j"$jobs" >&2 && make install >&2
+)
+
+log "ffmpeg-build: vorbis"
+(
+	cd "$work/src/vorbis"
+	host_arg=()
+	[ -n "$cross_prefix" ] && host_arg=(--host=x86_64-w64-mingw32)
+	./configure --prefix="$prefix" --libdir="$prefix/lib" --disable-shared --enable-static --disable-docs --disable-examples \
+		--disable-oggtest --with-ogg="$prefix" ${host_arg[@]+"${host_arg[@]}"} >&2
+	make -j"$jobs" >&2 && make install >&2
+)
+
+log "ffmpeg-build: libwebp"
+(
+	cd "$work/src/libwebp"
+	host_arg=()
+	[ -n "$cross_prefix" ] && host_arg=(--host=x86_64-w64-mingw32)
+	# Only the libraries (sharpyuv and src): the command line tools need image libraries the build does not have.
+	./configure --prefix="$prefix" --libdir="$prefix/lib" --disable-shared --enable-static --disable-gl --disable-sdl \
+		--disable-png --disable-jpeg --disable-tiff --disable-gif --disable-wic ${host_arg[@]+"${host_arg[@]}"} >&2
+	make -j"$jobs" -C sharpyuv >&2 && make -C sharpyuv install >&2
+	make -j"$jobs" -C src >&2 && make -C src install >&2
 )
 
 log "ffmpeg-build: zimg"
@@ -287,6 +333,7 @@ fi
 	printf 'FFmpeg %s, own LGPL build %s, built from the source tarball below by scripts/ffmpeg-build.sh.\n' "$FFMPEG_BUILD_VERSION" "$FFMPEG_BUILD_TAG"
 	printf 'Corresponding FFmpeg source: %s (SHA-256 %s)\n' "$FFMPEG_SRC_URL" "$FFMPEG_SRC_SHA256"
 	printf 'libvpx: %s\nopus: %s\nzlib: %s\n' "$LIBVPX_SRC_URL" "$OPUS_SRC_URL" "$ZLIB_SRC_URL"
+	printf 'lame: %s\nlibogg: %s\nlibvorbis: %s\nlibwebp: %s\n' "$LAME_SRC_URL" "$OGG_SRC_URL" "$VORBIS_SRC_URL" "$LIBWEBP_SRC_URL"
 	printf 'OpenH264 (four API headers only, BSD-2-Clause; the library is loaded at run time, not included): %s/{codec_api,codec_app_def,codec_def,codec_ver}.h (SHA-256 %s %s %s %s)\n' "$OPENH264_RAW_URL" "$OPENH264_CODEC_API_SHA256" "$OPENH264_CODEC_APP_DEF_SHA256" "$OPENH264_CODEC_DEF_SHA256" "$OPENH264_CODEC_VER_SHA256"
 	printf 'Patch: .config/ffmpeg-build/patches/%s (SHA-256 %s)\n' "$FFMPEG_PATCH_FILE" "$FFMPEG_PATCH_SHA256"
 	printf 'Build scripts and flags:https://github.com/AlexGalhardo/vukem-video/tree/%s/.config/ffmpeg-build\n' "$FFMPEG_BUILD_TAG"

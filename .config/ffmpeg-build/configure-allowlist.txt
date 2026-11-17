@@ -9,6 +9,9 @@
 --enable-libvpx
 --enable-libopus
 --enable-libzimg
+--enable-libmp3lame
+--enable-libvorbis
+--enable-libwebp
 --enable-ffnvcodec
 --enable-nvenc
 --enable-libvpl

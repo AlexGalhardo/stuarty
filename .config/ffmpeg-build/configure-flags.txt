@@ -24,6 +24,9 @@
 --enable-libvpx
 --enable-libopus
 --enable-libzimg
+--enable-libmp3lame
+--enable-libvorbis
+--enable-libwebp
 --disable-libopenh264
 --disable-libx264
 --disable-libx265
