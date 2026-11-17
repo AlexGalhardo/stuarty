@@ -5,6 +5,11 @@ version: 2
 
 project_name: vukem-video
 
+# A build tag such as ffmpeg-9.0.2-2 is not a release: the version comes from the v* tags only.
+git:
+  ignore_tags:
+    - "ffmpeg-*"
+
 before:
   hooks:
     # Hooks are plain commands (no dir key), so the web build runs in a shell.
