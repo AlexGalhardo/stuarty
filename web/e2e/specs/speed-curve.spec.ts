@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, seedProject, test } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -33,6 +34,7 @@ test.describe("speed-curve", () => {
 		await expect(page.getByRole("heading", { name: /^Clip/ })).toBeVisible();
 		const edits = recordEdits(page);
 
+		await openInspectorTab(page, "Speed");
 		await page.getByLabel("Reverse", { exact: true }).check();
 		await expect.poll(() => edits.length).toBe(1);
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);
@@ -108,6 +110,7 @@ test.describe("speed-curve", () => {
 		});
 		await page.goto(`/editor/${seeded.id}?debug=1`);
 		await page.locator("[data-item-id]").click();
+		await openInspectorTab(page, "Speed");
 		await page.getByRole("button", { name: "Add a speed curve" }).click();
 		// The last point is at 100%: a middle point past it is out of order.
 		await page.getByRole("button", { name: "Add point" }).click();

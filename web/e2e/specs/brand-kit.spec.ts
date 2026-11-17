@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Page } from "@playwright/test";
 import { caller, expect, seedProject, test } from "./helpers";
-import { openSection } from "./sections";
+import { openInspectorTab, openSection } from "./sections";
 
 // The tests share one brand kit per workspace, so they run one after the other.
 test.describe.configure({ timeout: 120_000, mode: "serial" });
@@ -100,6 +100,7 @@ test.describe("brand-kit", () => {
 		// VV-183: with the text selected, the font select says where the brand
 		// kit families come from while the project does not hold them.
 		await page.locator("[data-item-id]").click();
+		await openInspectorTab(page, "Text");
 		const hint = page.getByText(
 			"The brand kit has fonts that are not in this project yet.",
 		);

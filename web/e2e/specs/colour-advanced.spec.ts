@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, seedProject, test } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -34,6 +35,7 @@ test.describe("advanced colour", () => {
 		await expect(page.getByRole("heading", { name: /^Clip/ })).toBeVisible();
 		const edits = recordEdits(page);
 
+		await openInspectorTab(page, "Adjust");
 		await page
 			.getByRole("button", { name: "HSL by colour", exact: true })
 			.click();
@@ -128,6 +130,7 @@ test.describe("advanced colour", () => {
 		await expect(page.getByRole("heading", { name: /^Clip/ })).toBeVisible();
 		const edits = recordEdits(page);
 
+		await openInspectorTab(page, "Adjust");
 		await page
 			.getByRole("button", {
 				name: "Add a keyframe for Brightness at the playhead",
@@ -178,6 +181,7 @@ test.describe("advanced colour", () => {
 		const itemId = seeded.itemIds[0] ?? "";
 		await page.goto(`/editor/${seeded.id}`);
 		await page.locator("[data-item-id]").click();
+		await openInspectorTab(page, "Adjust");
 		await page
 			.getByRole("button", { name: "Colour wheels", exact: true })
 			.click();

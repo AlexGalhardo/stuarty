@@ -51,11 +51,7 @@ function ReadOnlyRow({
 // 12.1): `item.rename`, `item.move {start}` and `item.trim {edge: "end", to}`.
 // Duration and In point are read only and come from the units helpers; the
 // panel does no arithmetic on times (rule R5).
-export default function ItemSections({
-	itemId,
-}: {
-	itemId: string;
-}): ReactNode {
+export function ItemBasics({ itemId }: { itemId: string }): ReactNode {
 	const t = useT();
 	const canEdit = useCanEdit();
 	const send = useFieldCommit();
@@ -114,12 +110,35 @@ export default function ItemSections({
 					/>
 				)}
 			</Section>
-			{item.type !== "audio" && <TransformSection itemIds={[itemId]} />}
-			{item.type !== "audio" && <FlipSection itemId={itemId} />}
-			{item.type !== "audio" && <BlendSection itemId={itemId} />}
-			{item.type !== "audio" && <MaskSection itemId={itemId} />}
-			{item.type !== "audio" && <TransitionsSection itemId={itemId} />}
-			{item.type !== "audio" && <AnimationSection itemId={itemId} />}
+		</>
+	);
+}
+
+// Transform, flip, blend, mask and transitions: how the item sits on the canvas
+// and enters and leaves it. A sound has none of them.
+export function ItemVisual({ itemId }: { itemId: string }): ReactNode {
+	const type = useDocumentState((s) => s.document?.items[itemId]?.type);
+	if (type === undefined || type === "audio") return null;
+	return (
+		<>
+			<TransformSection itemIds={[itemId]} />
+			<FlipSection itemId={itemId} />
+			<BlendSection itemId={itemId} />
+			<MaskSection itemId={itemId} />
+			<TransitionsSection itemId={itemId} />
+		</>
+	);
+}
+
+// The animation presets of the item (`text.apply_preset`).
+export function ItemAnimation({ itemId }: { itemId: string }): ReactNode {
+	return <AnimationSection itemId={itemId} />;
+}
+
+// Keyframes and markers.
+export function ItemKeyframes({ itemId }: { itemId: string }): ReactNode {
+	return (
+		<>
 			<KeyframesSection itemId={itemId} />
 			<MarkersSection itemId={itemId} />
 		</>

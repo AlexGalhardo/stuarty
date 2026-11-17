@@ -1,19 +1,37 @@
 import type { ReactNode } from "react";
 
+import InspectorTabs from "../InspectorTabs";
 import AudioSection from "./AudioSection";
 import BeatMarkers from "./BeatMarkers";
 import DuckingSection from "./DuckingSection";
-import ItemSections from "./ItemSections";
+import { ItemBasics, ItemKeyframes } from "./ItemSections";
 
-// The audio panel (SDD-012 section 12.1): Name and Timing, then the audio
-// section.
+// The audio panel (SDD-012 sections 6.4 and 12.1): Video (name, timing,
+// keyframes, markers) and Audio (volume, ducking, beat markers).
 export default function AudioPanel({ itemId }: { itemId: string }): ReactNode {
 	return (
-		<>
-			<ItemSections itemId={itemId} />
-			<AudioSection itemId={itemId} />
-			<DuckingSection itemId={itemId} />
-			<BeatMarkers itemId={itemId} />
-		</>
+		<InspectorTabs
+			tabs={[
+				{
+					id: "video",
+					content: (
+						<>
+							<ItemBasics itemId={itemId} />
+							<ItemKeyframes itemId={itemId} />
+						</>
+					),
+				},
+				{
+					id: "audio",
+					content: (
+						<>
+							<AudioSection itemId={itemId} />
+							<DuckingSection itemId={itemId} />
+							<BeatMarkers itemId={itemId} />
+						</>
+					),
+				},
+			]}
+		/>
 	);
 }

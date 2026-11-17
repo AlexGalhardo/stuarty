@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, seedProject, test } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -56,6 +57,7 @@ test.describe("shapes", () => {
 		await expect(page.getByRole("heading", { name: /^Shape/ })).toBeVisible();
 		const itemId = (await item.getAttribute("data-item-id")) ?? "";
 
+		await openInspectorTab(page, "Text");
 		const width = page.getByLabel("Width", { exact: true });
 		await width.fill("600");
 		await width.press("Enter");

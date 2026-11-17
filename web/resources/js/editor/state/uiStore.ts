@@ -67,6 +67,7 @@ export interface UiState {
 	// 6.1 and 18.2: Alt+1, Alt+2 and Alt+3).
 	activePanelTab: LeftTab;
 	panels: { left: boolean; inspector: boolean };
+	inspectorTab: InspectorTab;
 }
 
 // The tabs of the material rail (SDD-012 section 6.4); "library" is Media.
@@ -80,6 +81,16 @@ export type LeftTab =
 	| "filters"
 	| "templates"
 	| "history";
+
+// The tab strip of the inspector (SDD-012 section 6.4). It is remembered across
+// selections; a selection that lacks the tab shows its first one.
+export type InspectorTab =
+	| "video"
+	| "audio"
+	| "speed"
+	| "animation"
+	| "adjust"
+	| "text";
 
 export interface UiWriter {
 	select(items: readonly string[], anchor?: string | null): void;
@@ -111,6 +122,7 @@ export interface UiWriter {
 	// panel (a toggle).
 	toggleLeftTab(tab: LeftTab): void;
 	toggleInspector(): void;
+	showInspectorTab(tab: InspectorTab): void;
 	showLeftTab(tab: LeftTab): void;
 	// Alt+1: show or hide the whole left region (the rail stays). Showing it from
 	// History goes back to Media; otherwise the last tab comes back.
@@ -142,6 +154,7 @@ export function createUiStore(initialZoom = 1): {
 		historyBlocked: { undo: null, redo: null },
 		activePanelTab: "library",
 		panels: { left: true, inspector: true },
+		inspectorTab: "video",
 	});
 	return {
 		store: readOnly(store),
@@ -283,6 +296,10 @@ export function createUiStore(initialZoom = 1): {
 					activePanelTab: tab,
 					panels: { ...s.panels, left: true },
 				})),
+			showInspectorTab: (tab) =>
+				store.setState((s) =>
+					s.inspectorTab === tab ? s : { ...s, inspectorTab: tab },
+				),
 			toggleInspector: () =>
 				store.setState((s) => ({
 					...s,

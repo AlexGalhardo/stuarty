@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, seedProject, test } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -115,6 +116,7 @@ test.describe("compatible keymap, tools and ranges", () => {
 		await open(page, seeded.id, 1);
 		const edits = recordEdits(page);
 		await page.locator("[data-item-id]").first().click();
+		await openInspectorTab(page, "Speed");
 		const header = page.getByRole("button", { name: "Speed", exact: true });
 		await header.click();
 		await expect(header).toHaveAttribute("aria-expanded", "false");

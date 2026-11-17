@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, seedProject, test } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -29,6 +30,7 @@ test.describe("slider keyboard", () => {
 		});
 		await page.goto(`/editor/${seeded.id}`);
 		await page.locator("[data-item-id]").click();
+		await openInspectorTab(page, "Adjust");
 		await page.getByRole("checkbox", { name: "Chroma key" }).check();
 		const spill = page.getByRole("slider", { name: "Spill" });
 		await expect(spill).toBeVisible();

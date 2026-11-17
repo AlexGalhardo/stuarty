@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, seedProject, test } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -34,6 +35,7 @@ test.describe("effects-inspector", () => {
 		await expect(page.getByRole("heading", { name: /^Clip/ })).toBeVisible();
 		const edits = recordEdits(page);
 
+		await openInspectorTab(page, "Adjust");
 		await page
 			.getByLabel("Add effect", { exact: true })
 			.selectOption("vignette");
@@ -108,6 +110,7 @@ test.describe("effects-inspector", () => {
 		await page.goto(`/editor/${seeded.id}?debug=1`);
 		await page.locator("[data-item-id]").click();
 		const edits = recordEdits(page);
+		await openInspectorTab(page, "Adjust");
 		await page.getByLabel("Add effect", { exact: true }).selectOption("grain");
 		await expect.poll(() => edits.length).toBe(1);
 		const seed = page.getByLabel("Grain seed", { exact: true });

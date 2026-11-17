@@ -10,6 +10,8 @@ export function openSpeedCurve(runtime: EditorRuntime): void {
 	const { ui, uiWriter } = runtime;
 	if (ui.getState().selection.items.length === 0) return;
 	if (!ui.getState().panels.inspector) uiWriter.toggleInspector();
+	// The section lives in a tab of the strip (SDD-012 section 6.4).
+	uiWriter.showInspectorTab("speed");
 	requestAnimationFrame(() => {
 		const section = document.querySelector<HTMLElement>(
 			'[data-section="speed"]',

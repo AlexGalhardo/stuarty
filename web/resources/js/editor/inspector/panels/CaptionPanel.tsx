@@ -1,13 +1,18 @@
 import type { ReactNode } from "react";
 
 import { useDocumentState } from "../../state/EditorContext";
+import InspectorTabs from "../InspectorTabs";
 import CaptionStyle from "./CaptionStyle";
 import CaptionWords from "./CaptionWords";
 import ImportSubtitles from "./ImportSubtitles";
-import ItemSections from "./ItemSections";
+import {
+	ItemAnimation,
+	ItemBasics,
+	ItemKeyframes,
+	ItemVisual,
+} from "./ItemSections";
 
-// The caption panel: Name, Timing and Transform, then the word list and the
-// caption style (SDD-012 section 12.1).
+// The caption panel (SDD-012 sections 6.4 and 12.1): Video, Animation and Text (the words, the style and the subtitle import).
 export default function CaptionPanel({
 	itemId,
 }: {
@@ -15,11 +20,30 @@ export default function CaptionPanel({
 }): ReactNode {
 	const track = useDocumentState((s) => s.document?.items[itemId]?.track);
 	return (
-		<>
-			<ItemSections itemId={itemId} />
-			<CaptionWords itemId={itemId} />
-			<CaptionStyle itemId={itemId} />
-			{track !== undefined && <ImportSubtitles trackId={track} />}
-		</>
+		<InspectorTabs
+			tabs={[
+				{
+					id: "video",
+					content: (
+						<>
+							<ItemBasics itemId={itemId} />
+							<ItemVisual itemId={itemId} />
+							<ItemKeyframes itemId={itemId} />
+						</>
+					),
+				},
+				{ id: "animation", content: <ItemAnimation itemId={itemId} /> },
+				{
+					id: "text",
+					content: (
+						<>
+							<CaptionWords itemId={itemId} />
+							<CaptionStyle itemId={itemId} />
+							{track !== undefined && <ImportSubtitles trackId={track} />}
+						</>
+					),
+				},
+			]}
+		/>
 	);
 }

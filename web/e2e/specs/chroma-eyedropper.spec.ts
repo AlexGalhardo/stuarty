@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { NO_VIDEO_DECODE_REASON, noVideoDecode } from "../support/browsers";
 import { expect, seedProject, test } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 type Rgb = [number, number, number];
 
@@ -54,6 +55,7 @@ test.describe("chroma key eyedropper", () => {
 		const itemId = seeded.itemIds[0] as string;
 		await page.goto(`/editor/${seeded.id}?debug=1`);
 		await page.locator(`[data-item-id="${itemId}"]`).click();
+		await openInspectorTab(page, "Adjust");
 		await page.getByRole("checkbox", { name: "Chroma key" }).check();
 		const pick = page.getByRole("button", {
 			name: "Pick the colour from the preview",
@@ -102,6 +104,7 @@ test.describe("chroma key eyedropper", () => {
 		const itemId = seeded.itemIds[0] as string;
 		await page.goto(`/editor/${seeded.id}`);
 		await page.locator(`[data-item-id="${itemId}"]`).click();
+		await openInspectorTab(page, "Adjust");
 		await page.getByRole("checkbox", { name: "Chroma key" }).check();
 		const pick = page.getByRole("button", {
 			name: "Pick the colour from the preview",

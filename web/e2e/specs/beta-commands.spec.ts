@@ -10,7 +10,7 @@ import {
 	test,
 	testClip,
 } from "./helpers";
-import { openSection } from "./sections";
+import { openInspectorTab, openSection } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -101,13 +101,16 @@ test.describe("beta-commands", () => {
 		const seeded = await seed(request);
 		await page.goto(`/editor/${seeded.id}?debug=1`);
 		await page.locator(`[data-item-id="${seeded.clip}"]`).click();
+		await openInspectorTab(page, "Audio");
 		await expect(
 			page.getByRole("button", { name: "Silences", exact: true }),
 		).toBeVisible();
+		await openInspectorTab(page, "Adjust");
 		await expect(
 			page.getByRole("button", { name: "Filters", exact: true }),
 		).toBeVisible();
 		await page.locator(`[data-item-id="${seeded.audio}"]`).click();
+		await openInspectorTab(page, "Audio");
 		await expect(
 			page.getByRole("button", { name: "Audio", exact: true }),
 		).toBeVisible();
@@ -128,6 +131,7 @@ test.describe("beta-commands", () => {
 		const edits = recordEdits(page);
 
 		await page.locator(`[data-item-id="${seeded.clip}"]`).click();
+		await openInspectorTab(page, "Adjust");
 		await page.getByLabel("Filter", { exact: true }).selectOption("sepia");
 		await expect.poll(() => edits.length).toBe(1);
 		const amount = page.getByLabel("Filter amount", { exact: true });
@@ -141,6 +145,7 @@ test.describe("beta-commands", () => {
 
 		await dismissNotices(page);
 		await page.locator(`[data-item-id="${seeded.audio}"]`).click();
+		await openInspectorTab(page, "Audio");
 		const apply = page.getByRole("button", {
 			name: "Duck under speech",
 			exact: true,

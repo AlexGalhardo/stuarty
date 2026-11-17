@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { NO_VIDEO_DECODE_REASON, noVideoDecode } from "../support/browsers";
 import { caller, expect, markerClip, seedProject, test } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -78,18 +79,20 @@ test.describe("flip, enable, colour and noise reduction", () => {
 		await expect.poll(() => edits.length).toBe(1);
 		await page.getByLabel("Flip vertically").check();
 		await expect.poll(() => edits.length).toBe(2);
-		for (const [label, key] of [
-			["Temperature", "End"],
-			["Tint", "Home"],
-			["Hue", "End"],
-			["Noise reduction", "End"],
+		for (const [label, key, tab] of [
+			["Temperature", "End", "Adjust"],
+			["Tint", "Home", "Adjust"],
+			["Hue", "End", "Adjust"],
+			["Noise reduction", "End", "Audio"],
 		] as const) {
+			await openInspectorTab(page, tab);
 			const slider = page.getByLabel(label, { exact: true });
 			await slider.scrollIntoViewIfNeeded();
 			await slider.focus();
 			await slider.press(key);
 		}
 		await expect.poll(() => edits.length).toBe(6);
+		await openInspectorTab(page, "Video");
 		await page.getByLabel("On", { exact: true }).uncheck();
 		await expect.poll(() => edits.length).toBe(7);
 

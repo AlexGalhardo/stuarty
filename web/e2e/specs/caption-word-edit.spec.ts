@@ -1,6 +1,7 @@
 import type { APIRequestContext, Page } from "@playwright/test";
 import { cspViolations } from "../support/browsers";
 import { caller, expect, seedProject, test } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
@@ -267,6 +268,7 @@ test.describe("caption-word-edit", () => {
 		await open(page, seeded.id);
 		await expect(page.locator("[data-word-index='1']")).toHaveText(payload);
 		await page.locator("[data-item-id]").click({ position: { x: 4, y: 4 } });
+		await openInspectorTab(page, "Text");
 		await expect(page.getByLabel("Text of word 2")).toHaveValue(payload);
 
 		expect(
@@ -296,6 +298,7 @@ test.describe("caption-word-edit", () => {
 		await page.locator("[data-item-id]").click({ position: { x: 4, y: 4 } });
 		const posted = recordEdits(page);
 
+		await openInspectorTab(page, "Text");
 		const cell = page.getByLabel("Text of word 3");
 		await cell.fill("3");
 		await cell.press("Enter");
@@ -368,6 +371,7 @@ test.describe("caption-word-edit", () => {
 		await page.getByRole("menuitem", { name: "Split caption here" }).click();
 		await expect(page.getByRole("alert")).toContainText("Split at a word");
 		await page.getByRole("button", { name: "Show the words" }).click();
+		await openInspectorTab(page, "Text");
 		await expect(page.locator("[data-item-id]")).toHaveAttribute(
 			"aria-selected",
 			"true",
@@ -403,6 +407,7 @@ async function openClip(
 	const clipId = seeded.itemIds[0] as string;
 	await page.goto(`/editor/${seeded.id}?debug=1`);
 	await page.locator(`[data-item-id="${clipId}"]`).click();
+	await openInspectorTab(page, "Text");
 	await expect(
 		page.getByRole("button", { name: "Generate captions" }),
 	).toBeVisible();
@@ -652,6 +657,7 @@ test.describe("auto captions", () => {
 		await page.locator(`[data-item-id="${seeded.clipId}"]`).click();
 		const posted = recordEdits(page);
 
+		await openInspectorTab(page, "Text");
 		await page.getByRole("button", { name: "Re-sync captions" }).click();
 
 		await expect.poll(() => posted.length).toBe(1);
