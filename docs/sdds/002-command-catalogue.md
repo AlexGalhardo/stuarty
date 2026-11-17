@@ -6002,7 +6002,7 @@ Repeats an item back to back after its end (VV-123): a looping background, a sti
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_INVALID_STATE` | `link` on an item that is linked already | `Item itm_m1n2p3q4r5 is already linked (lnk_a1b2c3d4e5).` | `Unlink it with item.unlink first, or repeat without link.` |
 | `E_ID_EXISTS` | a supplied id is used | `Item id itm_c3d4e5f6g7 already exists.` | `Omit id or use an unused id.` |
-| `E_LIMIT` | more than 200 copies, or more than 500 items | `Repeating itm_m1n2p3q4r5 until 1500f needs 299 copies; the limit is 200.` | `Use a later start of the sequence, a longer item, or two item.repeat calls.` |
+| `E_LIMIT` | more than 200 copies, more than 500 items, or the copies of a caption would take the document over 5,000 caption words | `Repeating itm_m1n2p3q4r5 until 1500f needs 299 copies; the limit is 200.` | `Use a later start of the sequence, a longer item, or two item.repeat calls.` |
 | `E_OVERLAP` | a copy meets an item of the track (ripple `none`) | `Item itm_n1p2q3r4s5 would occupy frames 180-269 on track trk_f6g7h8j9k0, where item itm_c3d4e5f6g7 already is (frames 120-149).` | `Use ripple track, or move the item first.` |
 
 **Inverse.** The `remove` of every added item, and a `patch` of the moved and linked items.
@@ -6037,5 +6037,6 @@ The copies start at frames 90 and 180; the sequence ends at frame 270 (`effectiv
 - `err_not_found`
 - `err_invalid_state_already_linked`
 - `err_limit_until_needs_over_200_copies`
+- `err_limit_caption_words_over_document_limit`
 - `err_overlap_next_item`
 - `err_id_exists`

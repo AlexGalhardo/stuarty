@@ -124,8 +124,10 @@ func applyItemRepeat(c *Context, a *itemRepeatArgs) error {
 		return err
 	}
 	if src.Type == timeline.ItemCaption {
-		if err := c.checkWordLimits("", len(src.Words)); err != nil {
-			return err
+		if total := c.wordTotal("") + len(src.Words)*len(durs); total > maxWordsPerDocument {
+			return Errorf(CodeLimit, "The document would have %d caption words; the limit is %d.", total,
+				maxWordsPerDocument).
+				WithHint("Repeat fewer times, or remove captions you no longer need.").WithPath("args.copies")
 		}
 	}
 	ids, _, err := c.takeNewIDs(a.NewIDs, len(durs))
