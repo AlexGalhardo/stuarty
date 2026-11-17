@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -53,7 +54,11 @@ func overlapChild(args []string) {
 			break
 		}
 	}
-	time.Sleep(time.Minute)
+	// Stay until the runner kills this process. A bare receive deadlocks, and a
+	// timed sleep on a new test line is refused. The signal watcher is the wait.
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
+	<-sig
 }
 
 func helper(mode string) {
