@@ -245,21 +245,30 @@ func decodeExportArgs(raw json.RawMessage) (ExportArgs, *Error) {
 const gifWarnBytes = 25 << 20
 
 // exportWarnings are the notes about an export that is accepted but probably not what the person
-// wants: today a GIF whose typical size is over 25 MB.
+// wants: a GIF made smaller than the project (it is capped at 480 pixels wide, VV-131) and a GIF
+// whose typical size is over 25 MB.
 func exportWarnings(doc *timeline.Document, format string, frames int64) []string {
 	if format != FormatGIF {
 		return nil
 	}
 
 	est := export.EstimateGIF(doc.Settings, int(frames))
-	if est.TypicalBytes <= gifWarnBytes {
-		return nil
+
+	var out []string
+	if est.Width != doc.Settings.Width {
+		out = append(out, fmt.Sprintf(
+			"The GIF is scaled to %dx%d from the project's %dx%d: a GIF is capped at 480 pixels wide and 15 fps.",
+			est.Width, est.Height, doc.Settings.Width, doc.Settings.Height))
 	}
 
-	return []string{fmt.Sprintf(
-		"The GIF will be about %s (up to %s) at %dx%d, %d frames; a GIF this size is slow to share. "+
-			"Export mp4 instead, or shorten the range.",
-		textview.Size(est.TypicalBytes), textview.Size(est.WorstBytes), est.Width, est.Height, est.Frames)}
+	if est.TypicalBytes > gifWarnBytes {
+		out = append(out, fmt.Sprintf(
+			"The GIF will be about %s (up to %s) at %dx%d, %d frames; a GIF this size is slow to share. "+
+				"Export mp4 instead, or shorten the range.",
+			textview.Size(est.TypicalBytes), textview.Size(est.WorstBytes), est.Width, est.Height, est.Frames))
+	}
+
+	return out
 }
 
 // exportGate is the lint of rule 1: an error finding refuses the start.
