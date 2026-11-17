@@ -77,6 +77,7 @@ export type LeftTab =
 	| "captions"
 	| "transitions"
 	| "filters"
+	| "templates"
 	| "history";
 
 export interface UiWriter {

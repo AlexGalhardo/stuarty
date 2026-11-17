@@ -138,7 +138,8 @@
         "text": "Text",
         "captions": "Captions",
         "transitions": "Transitions",
-        "filters": "Filters"
+        "filters": "Filters",
+        "templates": "Templates"
       },
       "activity": {
         "you": "you",
@@ -381,7 +382,8 @@
         "select_text_first": "Select one text item first.",
         "fonts": "Fonts",
         "captions_select_clip": "Select a video clip with audio to generate captions.",
-        "select_clip_first": "Select a clip first."
+        "select_clip_first": "Select a clip first.",
+        "templates_select": "Select one clip, audio, text or caption item to mark it as a slot."
       },
       "edit": {
         "label": "Editing",
