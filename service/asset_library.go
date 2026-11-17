@@ -14,6 +14,8 @@ import (
 type AssetListRequest struct {
 	// Kind keeps only "image", "video" or "audio" files; empty lists every kind.
 	Kind string `json:"kind,omitempty"`
+	// Limit keeps the first files of the list; 0 is the default of 500 (VV-192).
+	Limit int `json:"limit,omitempty"`
 }
 
 // LibraryAsset is one file of the workspace by content, with the hash that the brand kit and font.add take.
@@ -94,6 +96,10 @@ func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListRe
 		return nil, err
 	}
 
+	if err := checkLimit(req.Limit); err != nil {
+		return nil, err
+	}
+
 	if req.Kind != "" && req.Kind != "image" && req.Kind != "video" && req.Kind != "audio" {
 		return nil, newError(command.CodeValidation, "the kind %q is not known.", req.Kind).
 			withPath("kind").withHint("use image, video or audio, or omit it")
@@ -128,8 +134,8 @@ func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListRe
 		return strings.Compare(a.Hash, b.Hash)
 	})
 
-	if len(res.Assets) > maxLibraryAssets {
-		res.Assets = res.Assets[:maxLibraryAssets]
+	if keep := clampLimit(req.Limit, maxLibraryAssets, maxLibraryAssets); len(res.Assets) > keep {
+		res.Assets = res.Assets[:keep]
 	}
 
 	res.Text = libraryText(res.Assets)

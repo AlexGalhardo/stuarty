@@ -7800,6 +7800,14 @@
         "operationId": "assets.list",
         "parameters": [
           {
+            "description": "Keep the first files of the list; the default and the largest are 500.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
             "description": "image, video or audio; omit it for every kind.",
             "in": "query",
             "name": "kind",
