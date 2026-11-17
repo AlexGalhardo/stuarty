@@ -1757,7 +1757,7 @@ Sets or removes the transition on one edge of a visual item.
 | `direction` | `"left"`, `"right"`, `"up"`, `"down"` | no | `"left"` | `whip` and `wipe` only; on another kind `E_VALIDATION`. `left` is stored as absent |
 | `duration` | time, as a length | no | `"0.5s"` | at least 1 frame; rejected with `kind: null` (`E_VALIDATION`). The default applies whenever it is omitted, even when a transition already exists |
 
-A transition needs something visible beneath it (VV-154): the previous clip must run under the edge, on another track below, so that the transition crosses it; otherwise the linter reports `L_TRANSITION_EMPTY` (a `transition_in` at frame 0 and a `transition_out` at the end of the picture are not reported). The command itself does not check this. Example: clip A on the lower track ends at 4.5 s and clip B on the upper track starts at 4 s; B gets `{"item_id": B, "edge": "in", "kind": "fade", "duration": "0.5s"}`.
+A transition needs something visible beneath it (VV-154): the previous clip must run under the edge, on another track below, so that the transition crosses it; otherwise the linter reports `L_TRANSITION_EMPTY` (a `transition_in` at frame 0 and a `transition_out` at the end of the picture, even when a bar, title or caption runs on after it, are not reported). The command itself does not check this. Example: clip A on the lower track ends at 4.5 s and clip B on the upper track starts at 4 s; B gets `{"item_id": B, "edge": "in", "kind": "fade", "duration": "0.5s"}`.
 
 **Preconditions.**
 
