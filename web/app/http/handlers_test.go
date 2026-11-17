@@ -483,6 +483,19 @@ func TestLimitAndCountBelowOneAreRefused(t *testing.T) {
 	}
 }
 
+// VV-194: a plan asked with at= says that until is the missing parameter.
+func TestPlanWithoutUntilNamesTheMissingParameter(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	id := h.newProject("p")
+
+	res := h.get("/api/v1/projects/" + id + "/plan?at=1s")
+	if res.status != http.StatusBadRequest || !strings.Contains(string(res.body), "until is required") {
+		t.Errorf("plan = %d %s", res.status, res.body)
+	}
+}
+
 // VV-107: the listing names the id of a project the way every other answer does.
 func TestProjectListCarriesProjectID(t *testing.T) {
 	t.Parallel()
