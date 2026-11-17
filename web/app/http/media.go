@@ -354,6 +354,7 @@ func (h *apiHandler) trashEmpty(c *web.Ctx, in trashEmptyIn) (service.TrashEmpty
 type toolsInstallIn struct {
 	Name  string `json:"name"            validate:"required" doc:"The tool to install, for example whisper."`
 	Model string `json:"model,omitempty"                     doc:"The model, one the manifest of this build pins; default small."`
+	Force bool   `json:"force,omitempty"                     doc:"Download again what is already installed and verified."`
 }
 
 type toolsStatusIn struct{}
@@ -361,7 +362,8 @@ type toolsStatusIn struct{}
 // toolsInstall starts the download and answers 202 with what is coming. Only a
 // browser session or an admin key passes the Service check.
 func (h *apiHandler) toolsInstall(c *web.Ctx, in toolsInstallIn) (service.ToolsInstallResult, error) {
-	res, err := h.Service.ToolsInstall(c.Context(), service.ToolsInstallRequest{Name: in.Name, Model: in.Model})
+	res, err := h.Service.ToolsInstall(
+		c.Context(), service.ToolsInstallRequest{Name: in.Name, Model: in.Model, Force: in.Force})
 	if err != nil {
 		return service.ToolsInstallResult{}, err
 	}

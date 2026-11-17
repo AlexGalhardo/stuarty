@@ -1074,7 +1074,7 @@
       "name": "tools:install",
       "summary": "download a helper such as the transcription program",
       "usage": [
-        "vukem-video tools:install <name> [--model <model>] [--yes] [--timeout d]"
+        "vukem-video tools:install <name> [--model <model>] [--force] [--yes] [--timeout d]"
       ],
       "example": "vukem-video tools:install whisper --model small",
       "flags": [
@@ -1082,6 +1082,12 @@
           "name": "model",
           "type": "string",
           "usage": "the model to download, which then becomes the default of transcribe (default: small)"
+        },
+        {
+          "name": "force",
+          "type": "boolean",
+          "default": "false",
+          "usage": "download again what is installed and verified"
         },
         {
           "name": "yes",

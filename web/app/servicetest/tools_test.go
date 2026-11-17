@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -589,4 +590,55 @@ func TestToolsInstallRecordsTheModelAsTheWorkspaceDefault(t *testing.T) {
 	if got, ok := service.DefaultModel(dir, "whisper"); !ok || got != "tiny" {
 		t.Fatalf("default = %q, %v; want tiny", got, ok)
 	}
+}
+
+// VV-167: an install of what is already installed and verified downloads nothing; force installs again.
+func TestToolsInstallOfWhatIsInstalledDownloadsNothing(t *testing.T) {
+	ts := newToolsServer(t)
+	dir := filepath.Join(t.TempDir(), "tools")
+	m := newMediaEnv(t, mediaCfg{tools: ts.tools(dir)})
+	person := service.WithCaller(context.Background(), service.Caller{
+		Actor: "local:ui", Scopes: service.AllScopes, Browser: true,
+	})
+
+	if _, err := m.svc.ToolsInstall(person, service.ToolsInstallRequest{Name: "whisper", Model: "tiny"}); err != nil {
+		t.Fatal(err)
+	}
+
+	m.waitInstall(person)
+
+	first := ts.requests.Load()
+
+	res, err := m.svc.ToolsInstall(person, service.ToolsInstallRequest{Name: "whisper", Model: "tiny"})
+	if err != nil || res.State != "installed" || res.DownloadBytes != 0 || !strings.Contains(res.Text, "already installed") {
+		t.Fatalf("second install = %+v, %v", res, err)
+	}
+
+	if ts.requests.Load() != first {
+		t.Errorf("an installed tool was downloaded again: %d requests, %d before", ts.requests.Load(), first)
+	}
+
+	res, err = m.svc.ToolsInstall(person, service.ToolsInstallRequest{Name: "whisper", Model: "tiny", Force: true})
+	if err != nil || res.State != "running" {
+		t.Fatalf("forced install = %+v, %v", res, err)
+	}
+
+	m.waitInstall(person)
+
+	if ts.requests.Load() == first {
+		t.Error("a forced install downloaded nothing")
+	}
+
+	// A file that changed is not installed: the next install repairs it.
+	helper, _ := service.VerifiedTool(dir, "whisper", transcribe.KindHelper, "")
+	if err := os.WriteFile(helper, []byte("tampered"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	if res, err = m.svc.ToolsInstall(person, service.ToolsInstallRequest{Name: "whisper", Model: "tiny"}); err != nil ||
+		res.State != "running" {
+		t.Fatalf("install over a tampered helper = %+v, %v", res, err)
+	}
+
+	m.waitInstall(person)
 }

@@ -203,7 +203,7 @@ type toolsInstallDoc struct {
 var toolsInstallCmd = &spec{
 	name:       "tools:install",
 	summary:    "download a helper such as the transcription program",
-	usage:      []string{"vukem-video tools:install <name> [--model <model>] [--yes] [--timeout d]"},
+	usage:      []string{"vukem-video tools:install <name> [--model <model>] [--force] [--yes] [--timeout d]"},
 	example:    "vukem-video tools:install whisper --model small",
 	positional: true,
 	write:      true,
@@ -214,6 +214,7 @@ var toolsInstallCmd = &spec{
 			Kind:  kindString,
 			Usage: "the model to download, which then becomes the default of transcribe (default: small)",
 		},
+		{Name: "force", Kind: kindBool, Default: "false", Usage: "download again what is installed and verified"},
 		{Name: "yes", Kind: kindBool, Default: "false", Usage: "do not ask for confirmation"},
 	},
 	run: runToolsInstall,
@@ -260,9 +261,16 @@ func runToolsInstall(ctx context.Context, c *call) (*output, error) {
 		ctx = service.WithCaller(ctx, caller)
 	}
 
-	start, err := inst.ToolsInstall(ctx, service.ToolsInstallRequest{Name: name, Model: model})
+	start, err := inst.ToolsInstall(
+		ctx, service.ToolsInstallRequest{Name: name, Model: model, Force: c.args.boolean("force")})
 	if err != nil {
 		return nil, err
+	}
+
+	if start.State == "installed" {
+		doc := toolsInstallDoc{State: start.State, Files: start.Files, Text: start.Text}
+
+		return &output{value: doc, text: doc.Text}, nil
 	}
 
 	deadline := time.Now().Add(c.args.timeout())
