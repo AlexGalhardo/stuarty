@@ -23,6 +23,16 @@ sha256_of() {
 	else shasum -a 256 <"$1" | cut -d ' ' -f 1; fi
 }
 
+# `check` validates the own block of .config/ffmpeg.env, which exists only when FFMPEG_SOURCE is "own": while the
+# BtbN build is pinned, FFMPEG_BUILD_TAG may name a release that is built but not adopted yet (or not published).
+if [ "$mode" = check ]; then
+	pinned_source="$(grep -m1 '^FFMPEG_SOURCE=' "$root/.config/ffmpeg.env" | tr -d '"\r' | cut -d '=' -f 2)"
+	if [ "${pinned_source:-btbn}" != own ]; then
+		printf 'ffmpeg-pin: .config/ffmpeg.env pins %s, not the own build: nothing to check against %s\n' "${pinned_source:-btbn}" "$FFMPEG_BUILD_TAG"
+		exit 0
+	fi
+fi
+
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 dir="${2:-}"
