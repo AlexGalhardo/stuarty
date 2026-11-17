@@ -251,3 +251,57 @@ func TestBeatsRefusesNoChannels(t *testing.T) {
 		t.Error("0 channels accepted")
 	}
 }
+
+// buriedPulse is a kick every 60/bpm s under irregular noise bursts: a pulse that real music
+// with fills and a busy top end has, and whose autocorrelation peak is weak (VV-153).
+func buriedPulse(bpm, secs float64, bursts int, amp float64) ([]float64, []int64) {
+	x := make([]float64, int(secs*SampleRate))
+	noise, rnd, period := lcg(7), lcg(99), 60/bpm
+
+	for i := range x {
+		x[i] = 0.05 * math.Sin(2*math.Pi*220*float64(i)/SampleRate)
+	}
+
+	var truth []int64
+
+	for n := 0; float64(n)*period < secs-0.3; n++ {
+		at := int(math.Round(float64(n) * period * SampleRate))
+		truth = append(truth, int64(at))
+
+		phase := 0.0
+
+		for k := 0; k < SampleRate/5 && at+k < len(x); k++ {
+			s := float64(k) / SampleRate
+			phase += 2 * math.Pi * (50 + 90*math.Exp(-s/0.03)) / SampleRate
+			x[at+k] += 0.7 * math.Sin(phase) * math.Exp(-s/0.08)
+		}
+	}
+
+	for range int(secs) * bursts {
+		at := int((rnd.next()*0.5 + 0.5) * (secs - 0.3) * SampleRate)
+		for k := 0; k < SampleRate/50 && at+k < len(x); k++ {
+			x[at+k] += amp * noise.next() * math.Exp(-float64(k)/SampleRate/0.008)
+		}
+	}
+
+	return x, truth
+}
+
+// TestBeatsBuriedPulse: a steady pulse under busy noise has a tempo peak of 0.11, below the
+// 0.12 the grid asked for until VV-153; A-MUSIC-2 sat at 0.116 and got no beats.
+func TestBeatsBuriedPulse(t *testing.T) {
+	t.Parallel()
+
+	x, truth := buriedPulse(67.4, 60, 14, 0.6)
+
+	b, err := ComputeBeats(context.Background(), bytes.NewReader(pcm(x)), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("tempo %.1f, confidence %.2f, %d beats for %d", b.TempoBPM, b.Confidence, len(b.Beats), len(truth))
+
+	if math.Abs(b.TempoBPM-67.4) > 2 || hitRate(b.Beats, truth, 40) < 0.75 {
+		t.Errorf("tempo %.1f, hit rate %.3f: want 67.4 BPM and 0.75", b.TempoBPM, hitRate(b.Beats, truth, 40))
+	}
+}
