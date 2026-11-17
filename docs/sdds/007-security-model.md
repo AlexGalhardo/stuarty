@@ -211,7 +211,7 @@ The browser never sees the local token. It receives a **launch code**, a separat
 
 | Mode | Name | Attributes |
 | --- | --- | --- |
-| Local | `vukem_video_session` | `Path=/`, `HttpOnly`, `SameSite=Strict`, `Max-Age=604800`, no `Domain`, `Secure` only when the request arrived over TLS (loopback is plain HTTP, and Safari drops a `Secure` cookie on plain HTTP, as vukem's `contrib/studio` notes) |
+| Local | `vukem_video_session_<port>` (the port the browser reached; a cookie is shared by every port of a host, VV-170) | `Path=/`, `HttpOnly`, `SameSite=Strict`, `Max-Age=604800`, no `Domain`, `Secure` only when the request arrived over TLS (loopback is plain HTTP, and Safari drops a `Secure` cookie on plain HTTP, as vukem's `contrib/studio` notes) |
 | Network | `__Host-vukem_video_session` | `Path=/`, `HttpOnly`, `Secure`, `SameSite=Lax`, no `Domain`, lifetime in 4.1 |
 
 `SameSite` does not isolate ports of one host, which is why 3.6 exists.

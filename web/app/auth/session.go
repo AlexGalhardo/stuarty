@@ -17,6 +17,17 @@ const (
 // CookieName is the cookie of local mode (SDD-007 section 3.5).
 const CookieName = "vukem_video_session"
 
+// LocalCookieName is the cookie of local mode for the server that the browser reached at port. A
+// cookie is shared by every port of a host, so two local servers would overwrite each other's session
+// under one name; the port keeps them apart (VV-170). An unknown port gives the bare CookieName.
+func LocalCookieName(port string) string {
+	if port == "" {
+		return CookieName
+	}
+
+	return CookieName + "_" + port
+}
+
 // SessionMaxAge is the Max-Age of the cookie in seconds.
 const SessionMaxAge = int(sessionMax / time.Second)
 

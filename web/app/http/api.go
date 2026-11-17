@@ -154,7 +154,10 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 			privileged bool
 		)
 
-		if ck, err := r.Cookie(auth.CookieName); err == nil && r.Header.Get("Authorization") == "" {
+		if ck, err := r.Cookie(
+			auth.LocalCookieName(browserPort(r)),
+		); err == nil &&
+			r.Header.Get("Authorization") == "" {
 			valid, privileged = h.Sessions.Lookup(ck.Value)
 		}
 
