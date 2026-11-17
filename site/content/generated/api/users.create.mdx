@@ -13,6 +13,8 @@ wide: true
 
 <RefMain>
 
+Network mode only: local mode answers 404.
+
 ## Authentication
 
 Send the secret in the header `Authorization: Bearer <secret>`: the local token in local mode, an [API key](/docs/self-hosting/api-keys) in network mode. An API key needs the `admin` scope; the local token has every scope. See the [API overview](/docs/api/overview) for both modes.
@@ -53,6 +55,18 @@ Error (RFC 9457 problem details)
 
 Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
 
+### 403
+
+Error (RFC 9457 problem details)
+
+Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
+
+### 404
+
+Error (RFC 9457 problem details)
+
+Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
+
 ### 409
 
 Error (RFC 9457 problem details)
@@ -60,6 +74,12 @@ Error (RFC 9457 problem details)
 Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
 
 ### 422 Unprocessable Content
+
+Error (RFC 9457 problem details)
+
+Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
+
+### 429
 
 Error (RFC 9457 problem details)
 
@@ -323,6 +343,64 @@ puts "#{response.code} #{response.body}"
 }
 ```
 
+```json title="403"
+{
+  "code": "string",
+  "detail": "string",
+  "details": {},
+  "errors": {},
+  "hint": "string",
+  "instance": "string",
+  "issues": [
+    {
+      "code": "string",
+      "key": "string",
+      "message": "string",
+      "on": "string",
+      "params": {},
+      "path": "string"
+    }
+  ],
+  "message": "string",
+  "op_index": 0,
+  "path": "string",
+  "request_id": "string",
+  "retryable": false,
+  "status": 0,
+  "title": "string",
+  "type": "string"
+}
+```
+
+```json title="404"
+{
+  "code": "string",
+  "detail": "string",
+  "details": {},
+  "errors": {},
+  "hint": "string",
+  "instance": "string",
+  "issues": [
+    {
+      "code": "string",
+      "key": "string",
+      "message": "string",
+      "on": "string",
+      "params": {},
+      "path": "string"
+    }
+  ],
+  "message": "string",
+  "op_index": 0,
+  "path": "string",
+  "request_id": "string",
+  "retryable": false,
+  "status": 0,
+  "title": "string",
+  "type": "string"
+}
+```
+
 ```json title="409"
 {
   "code": "string",
@@ -376,6 +454,35 @@ puts "#{response.code} #{response.body}"
   "request_id": "string",
   "retryable": false,
   "status": 422,
+  "title": "string",
+  "type": "string"
+}
+```
+
+```json title="429"
+{
+  "code": "string",
+  "detail": "string",
+  "details": {},
+  "errors": {},
+  "hint": "string",
+  "instance": "string",
+  "issues": [
+    {
+      "code": "string",
+      "key": "string",
+      "message": "string",
+      "on": "string",
+      "params": {},
+      "path": "string"
+    }
+  ],
+  "message": "string",
+  "op_index": 0,
+  "path": "string",
+  "request_id": "string",
+  "retryable": false,
+  "status": 0,
   "title": "string",
   "type": "string"
 }

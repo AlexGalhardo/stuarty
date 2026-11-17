@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -358,6 +359,83 @@ func TestOpenAPIMarksTheHeavyOperations(t *testing.T) {
 	for _, id := range want {
 		if !marked[id] {
 			t.Errorf("%s is not marked as a heavy call", id)
+		}
+	}
+}
+
+// declaredStatuses returns the statuses the document declares for a method and a path template.
+func declaredStatuses(t *testing.T, doc map[string]any, method, path string) []string {
+	t.Helper()
+
+	paths, _ := doc["paths"].(map[string]any)
+	item, _ := paths[path].(map[string]any)
+	op, _ := item[method].(map[string]any)
+	resp, _ := op["responses"].(map[string]any)
+
+	if len(resp) == 0 {
+		t.Fatalf("%s %s declares no responses", method, path)
+	}
+
+	out := make([]string, 0, len(resp))
+	for status := range resp {
+		out = append(out, status)
+	}
+
+	return out
+}
+
+// TestOpenAPIDeclaresTheStatusesTheRoutesReturn calls the routes that VV-139 found answering a
+// status the document did not declare, and checks the document declares what came back.
+func TestOpenAPIDeclaresTheStatusesTheRoutesReturn(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	doc := h.openapi()
+
+	calls := []struct {
+		method, template, path, body string
+	}{
+		{"post", "/api/v1/templates", "/api/v1/templates", `{"project_id":"prj_aaaaaaaaaa","name":"t"}`},
+		{"get", "/api/v1/keys", "/api/v1/keys", ""},
+		{"get", "/api/v1/users", "/api/v1/users", ""},
+	}
+
+	for _, c := range calls {
+		var got resp
+		if c.method == "get" {
+			got = h.get(c.path)
+		} else {
+			got = h.post(c.path, c.body)
+		}
+
+		if got.status < 400 {
+			t.Errorf("%s %s = %d %.200s, want an error", c.method, c.path, got.status, got.body)
+
+			continue
+		}
+
+		if want := strconv.Itoa(got.status); !slices.Contains(declaredStatuses(t, doc, c.method, c.template), want) {
+			t.Errorf("%s %s returns %s, which the OpenAPI document does not declare", c.method, c.template, want)
+		}
+	}
+
+	static := []struct {
+		method, path string
+		statuses     []string
+	}{
+		{"post", "/api/v1/projects/{id}/bundle", []string{"200", "202"}},
+		{"post", "/api/v1/projects/import", []string{"404"}},
+		{"post", "/api/v1/templates/import", []string{"404"}},
+		{"post", "/api/v1/trash/empty", []string{"403"}},
+		{"post", "/api/v1/system/tools/install", []string{"403"}},
+		{"post", "/api/v1/fonts", []string{"429"}},
+	}
+
+	for _, c := range static {
+		for _, want := range c.statuses {
+			if !slices.Contains(declaredStatuses(t, doc, c.method, c.path), want) {
+				t.Errorf("%s %s does not declare %s", c.method, c.path, want)
+			}
 		}
 	}
 }

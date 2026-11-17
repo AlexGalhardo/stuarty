@@ -93,6 +93,7 @@ func (h *apiHandler) completeOpenAPI(doc *openapi.Document) {
 	markUntrusted(doc)
 	describeJobStartArgs(doc)
 	describeErrorStatuses(doc)
+	describeReturnedStatuses(doc)
 	describeIDFormats(doc)
 	describeHeavyOperations(doc)
 
@@ -139,6 +140,56 @@ func describeErrorStatuses(doc *openapi.Document) {
 			if method == "post" {
 				op.Responses["409"] = problem
 				op.Responses["422"] = problem
+			}
+		}
+	}
+}
+
+// notFoundOperations are the operations without a path id that still answer 404: the file they read
+// is missing, or the project named in the body does not exist (VV-139).
+var notFoundOperations = []string{"projects.bundle.import", "templates.import", "templates.save", "fonts.import"}
+
+// networkOnlyPrefixes are the operations of the keys and the users, which answer 404 in local mode.
+var networkOnlyPrefixes = []string{"keys.", "users."}
+
+// describeReturnedStatuses declares the statuses the framework cannot derive from the handlers
+// (VV-139): 403 on every route that needs a scope, 429 on every route that the rate limiters count,
+// 404 where a file or a project in the body can be missing, the 200 of a bundle export that has
+// already finished (202 when it is still running), and the 404 of the keys and users routes in
+// local mode.
+func describeReturnedStatuses(doc *openapi.Document) {
+	problem := openapi.Response{Ref: "#/components/responses/Problem"}
+
+	for _, item := range doc.Paths {
+		for _, op := range item {
+			if op == nil {
+				continue
+			}
+
+			ep, ok := endpointByID(op.OperationID)
+			if !ok {
+				continue
+			}
+
+			if ep.Scope != "" {
+				op.Responses["403"] = problem
+			}
+
+			if !ep.Uncounted {
+				op.Responses["429"] = problem
+			}
+
+			if slices.Contains(notFoundOperations, ep.ID) {
+				op.Responses["404"] = problem
+			}
+
+			if ep.ID == "projects.bundle.export" {
+				op.Responses["200"] = op.Responses["202"]
+			}
+
+			if slices.ContainsFunc(networkOnlyPrefixes, func(p string) bool { return strings.HasPrefix(ep.ID, p) }) {
+				op.Responses["404"] = problem
+				op.Description = strings.TrimSpace(op.Description + " Network mode only: local mode answers 404.")
 			}
 		}
 	}
