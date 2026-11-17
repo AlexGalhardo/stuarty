@@ -424,6 +424,7 @@ func TestOpenAPIDeclaresTheStatusesTheRoutesReturn(t *testing.T) {
 		statuses     []string
 	}{
 		{"post", "/api/v1/projects/{id}/bundle", []string{"200", "202"}},
+		{"post", "/api/v1/projects/{id}/media", []string{"200", "202"}},
 		{"post", "/api/v1/projects/import", []string{"404"}},
 		{"post", "/api/v1/templates/import", []string{"404"}},
 		{"post", "/api/v1/trash/empty", []string{"403"}},

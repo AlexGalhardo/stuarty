@@ -37,6 +37,22 @@ Content type `application/json`.
 
 ## Responses
 
+### 200 OK
+
+Accepted
+
+Content type `application/json`. Schema: [`MediaImportResult`](/docs/api/schemas#mediaimportresult).
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `assets` | array of [`ImportedAsset`](/docs/api/schemas#importedasset) | no |  |
+| `failed` | `integer` | no |  |
+| `imported` | `integer` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### 202 Accepted
 
 Content type `application/json`. Schema: [`MediaImportResult`](/docs/api/schemas#mediaimportresult).
@@ -316,6 +332,31 @@ puts "#{response.code} #{response.body}"
 **Response examples**
 
 <CodeGroup>
+
+```json title="200"
+{
+  "assets": [
+    {
+      "asset_id": "string",
+      "deduplicated": false,
+      "error": {},
+      "hash": "string",
+      "job_id": "string",
+      "kind": "string",
+      "name": "string",
+      "probe": {},
+      "progress": 0,
+      "state": "string"
+    }
+  ],
+  "failed": 0,
+  "imported": 0,
+  "project_id": "string",
+  "revision": 0,
+  "text": "string",
+  "untrusted_notice": "string"
+}
+```
 
 ```json title="202"
 {

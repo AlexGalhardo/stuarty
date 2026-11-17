@@ -51,6 +51,10 @@ type ImportedAsset struct {
 	Deduplicated bool          `json:"deduplicated"`
 	Probe        *ProbeSummary `json:"probe,omitempty"`
 	Error        *Error        `json:"error,omitempty"`
+
+	// newInProject is true when this import created the asset in the project; MediaImport reads it to
+	// tell a refused new file from a retry (VV-193).
+	newInProject bool
 }
 
 // MediaImportResult answers MediaImport.
