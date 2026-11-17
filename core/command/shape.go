@@ -37,9 +37,9 @@ type shapeAddArgs struct {
 	TrackID     string   `json:"track_id,omitempty"     desc:"A visual track; omitted, the highest visual track free over the item (an empty track you made for video counts; pass track_id to keep it clear), or a new one on top. effective.track_id names it."`
 	Start       Time     `json:"start"`
 	Duration    Time     `json:"duration"               desc:"A length of at least 1 frame."`
-	Shape       string   `json:"shape"                                                                                             enum:"rect,rounded_rect,ellipse"`
-	Width       float64  `json:"width"                  desc:"Pixels before scale, above 0."`
-	Height      float64  `json:"height"                 desc:"Pixels before scale, above 0."`
+	Shape       string   `json:"shape"                                                                                                                                                                                                                            enum:"rect,rounded_rect,ellipse"`
+	Width       float64  `json:"width"                  desc:"Pixels before scale, above 0 and at most 32768."`
+	Height      float64  `json:"height"                 desc:"Pixels before scale, above 0 and at most 32768."`
 	Fill        string   `json:"fill,omitempty"         desc:"A colour; default #FFFFFF."`
 	StrokeColor string   `json:"stroke_color,omitempty" desc:"A colour; default #000000."`
 	StrokeWidth *float64 `json:"stroke_width,omitempty" desc:"Pixels, 0 or more."`
@@ -61,7 +61,11 @@ func (c *Context) shapeColour(path, v string) (timeline.Color, *Error) {
 	return timeline.Color(v), nil
 }
 
-// positive checks a size that must be above 0 once rounded to 3 decimals.
+// maxShapeSize is the largest width or height of a shape, in pixels before scale: a
+// wider shape cannot be composed and its export fails (VV-088).
+const maxShapeSize = 32768
+
+// positive checks a size that must be above 0 once rounded to 3 decimals and at most maxShapeSize.
 func positive(path string, v float64) *Error {
 	if err := finite(path, &v); err != nil {
 		return err
@@ -69,6 +73,10 @@ func positive(path string, v float64) *Error {
 	if round3(v) <= 0 {
 		return invalidArg(path, "%s must be greater than 0, got %s.", path, trimFloat(v)).
 			WithHint("Use a value of at least 1.")
+	}
+	if v > maxShapeSize {
+		return invalidArg(path, "%s must be at most %d, got %s.", path, maxShapeSize, trimFloat(v)).
+			WithHint("Use a value up to 32768 pixels, and scale the item for a larger look.")
 	}
 	return nil
 }
@@ -213,9 +221,9 @@ func roundedPtr(v *float64) *float64 {
 
 type shapeSetArgs struct {
 	ItemID      string   `json:"item_id"                desc:"A shape item."`
-	Shape       string   `json:"shape,omitempty"                                                     enum:"rect,rounded_rect,ellipse"`
-	Width       *float64 `json:"width,omitempty"        desc:"Pixels before scale, above 0."`
-	Height      *float64 `json:"height,omitempty"       desc:"Pixels before scale, above 0."`
+	Shape       string   `json:"shape,omitempty"                                                               enum:"rect,rounded_rect,ellipse"`
+	Width       *float64 `json:"width,omitempty"        desc:"Pixels before scale, above 0 and at most 32768."`
+	Height      *float64 `json:"height,omitempty"       desc:"Pixels before scale, above 0 and at most 32768."`
 	Fill        string   `json:"fill,omitempty"         desc:"A colour."`
 	StrokeColor string   `json:"stroke_color,omitempty" desc:"A colour."`
 	StrokeWidth *float64 `json:"stroke_width,omitempty" desc:"Pixels, 0 or more."`
