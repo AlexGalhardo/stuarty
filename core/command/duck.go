@@ -132,6 +132,26 @@ func duckKeyframes(ranges []SilenceRange, duration, attack, release int, base, l
 	return keys
 }
 
+// speechItem is one speech source of audio.duck. The path stays args.speech_item_ids.
+func (c *Context) speechItem(id string) (timeline.Item, *Error) {
+	p, err := c.item(id)
+	if err != nil {
+		return p, err.WithPath("args.speech_item_ids")
+	}
+	if p.Type != timeline.ItemClip && p.Type != timeline.ItemAudio {
+		return p, Errorf(CodeTypeMismatch, "Item %s is %s item and carries no speech.", p.ID, article(p.Type)).
+			WithHint("Choose clips or audio items.").WithPath("args.speech_item_ids")
+	}
+	if asset, ok := c.Doc.Assets[p.Asset]; !ok || !assetHasAudio(asset) {
+		return p, Errorf(CodeTypeMismatch, "Item %s has no asset with audio.", p.ID).
+			WithHint("Choose items placed from an asset with audio.").WithPath("args.speech_item_ids")
+	}
+	if err := rejectRemap(&p, "ducking under its speech"); err != nil {
+		return p, err.WithPath("args.speech_item_ids")
+	}
+	return p, nil
+}
+
 func applyDuck(c *Context, a *duckArgs) error {
 	if err := idForm("args.item_id", timeline.PrefixItem, a.ItemID); err != nil {
 		return err
@@ -158,9 +178,6 @@ func applyDuck(c *Context, a *duckArgs) error {
 	if err != nil {
 		return err
 	}
-	if err := checkSpeech(a.SpeechItemIDs, a.Resolved); err != nil {
-		return err
-	}
 
 	m, err := c.item(a.ItemID)
 	if err != nil {
@@ -174,23 +191,23 @@ func applyDuck(c *Context, a *duckArgs) error {
 			WithHint("Run keyframe.clear on volume first, then duck again.").WithPath("args.item_id")
 	}
 
+	// Name a missing or wrong item before the internal resolved field. The service
+	// leaves resolved empty in that case and expects this answer (VV-207).
+	speechItems := make(map[string]timeline.Item, len(a.SpeechItemIDs))
+	for _, id := range a.SpeechItemIDs {
+		p, err := c.speechItem(id)
+		if err != nil {
+			return err
+		}
+		speechItems[id] = p
+	}
+	if err := checkSpeech(a.SpeechItemIDs, a.Resolved); err != nil {
+		return err
+	}
+
 	var ranges []SilenceRange
 	for _, s := range a.Resolved.Speech {
-		p, err := c.item(s.ItemID)
-		if err != nil {
-			return err.WithPath("args.speech_item_ids")
-		}
-		if p.Type != timeline.ItemClip && p.Type != timeline.ItemAudio {
-			return Errorf(CodeTypeMismatch, "Item %s is %s item and carries no speech.", p.ID, article(p.Type)).
-				WithHint("Choose clips or audio items.").WithPath("args.speech_item_ids")
-		}
-		if asset, ok := c.Doc.Assets[p.Asset]; !ok || !assetHasAudio(asset) {
-			return Errorf(CodeTypeMismatch, "Item %s has no asset with audio.", p.ID).
-				WithHint("Choose items placed from an asset with audio.").WithPath("args.speech_item_ids")
-		}
-		if err := rejectRemap(&p, "ducking under its speech"); err != nil {
-			return err.WithPath("args.speech_item_ids")
-		}
+		p := speechItems[s.ItemID]
 		ranges = append(ranges, speechOnMusic(&m, &p, s.Ranges)...)
 	}
 	slices.SortFunc(ranges, func(x, y SilenceRange) int { return cmp.Or(x.Start-y.Start, x.End-y.End) })
