@@ -8379,6 +8379,13 @@
                       }
                     ]
                   },
+                  "height": {
+                    "description": "Not accepted: the size comes from preset.",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
                   "id": {
                     "description": "An id of your own; E_ID_EXISTS when taken.",
                     "pattern": "^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
@@ -8392,6 +8399,13 @@
                   "preset": {
                     "description": "9:16 (default), 1:1, 16:9 or 4:5.",
                     "type": "string"
+                  },
+                  "width": {
+                    "description": "Not accepted: the size comes from preset.",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
