@@ -1,0 +1,40 @@
+---
+title: "Driving the editor as an agent"
+description: "When an agent has to use the browser editor: the command palette path, stable labels, how big the page is for the agent, and why the MCP server and the CLI are cheaper."
+---
+
+## The idea
+
+The browser editor is made for a person, and an agent that drives it through a browser tool pays for the page every time it looks: each accessibility snapshot of the editor lists the controls on the screen. Prefer the [MCP server](/docs/agents/mcp) or the [CLI](/docs/reference/cli): an edit is one call with a small answer, it needs no snapshot, and it produces the same project document. Use the editor only when the task is about the editor itself, or when a person is watching the same project.
+
+## The cheap path in the editor
+
+1. Press `Ctrl+K` (`Cmd+K` on macOS). The command palette opens and takes the focus.
+2. Type the name of the operation, for example `item.split` or `clip.add`. The list is filtered by what you type.
+3. Press `Enter` on the entry. A form opens with one labelled field for each argument of the command; fill the fields and press `Enter`.
+
+The palette reaches every operation of the product, so an agent never needs to find a button, drag a clip or open an inspector section. The form shows the error of the core under the field it names, in the language of the page.
+
+## Labels that stay the same
+
+- Controls have a short accessible name that does not change with the project: `Split`, `Delete`, `Add to timeline`, `Export`, `Undo`, `Redo`. Ask for them with `getByRole("button", { name })`, never by position.
+- Each clip is a `gridcell` named `<type>, <name>` (for example `Clip, intro.mp4`); each track is a row named `<track>, <n> items`.
+- The language changes the names. Set it once (the selector in the header) and keep it for the whole session.
+
+## How much of the page the agent reads
+
+A clip row lists only a few clips to assistive technology, the ones near the playhead and the selected ones, and says how many it holds (`Video 1, 120 items, 6 listed near the playhead; the arrow keys reach the others`). The other clips are still on the screen and in the keyboard order: click one, or move with the arrow keys, and it is listed. The inspector sections of a project (fonts, template) start collapsed.
+
+A snapshot of a 2-minute project (three video tracks of 120 clips, one audio track) has about 190 lines with nothing selected and about 410 with a clip selected. The editor keeps a budget for it in its tests.
+
+## Common mistakes
+
+- Taking a snapshot after every click. Act, then read only the field or the region that changed (`locator.ariaSnapshot()` on one region).
+- Dragging with the pointer. Use the palette, a keyboard shortcut or the operation instead.
+- Using the editor to import, cut and export many files. That is what `edit` batches and the CLI are for.
+
+## Next steps
+
+- [Agents overview](/docs/agents/overview)
+- [Connect an agent](/docs/agents/connect)
+- [Accessibility](/docs/guide/accessibility)
