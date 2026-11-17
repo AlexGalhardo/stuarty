@@ -81,6 +81,13 @@ type stateIn struct {
 	DryRun bool   `json:"dry_run,omitempty"`
 }
 
+// stepIn is the body of undo and redo. dry_run is read as it came: the binder coerces text to a boolean for
+// a bool field, and "yes" or "true" as a string must be refused as a number is (VV-210).
+type stepIn struct {
+	ID     string `json:"id"                validate:"required"`
+	DryRun any    `json:"dry_run,omitempty"`
+}
+
 type mediaStateIn struct {
 	ID      string `json:"id"                validate:"required"`
 	AssetID string `json:"asset_id"          validate:"required"`
@@ -243,10 +250,10 @@ func (h *apiHandler) registerAll() {
 
 		return deref(res), err
 	})
-	register(h, "projects.undo", func(c *web.Ctx, in stateIn) (service.UndoResult, error) {
+	register(h, "projects.undo", func(c *web.Ctx, in stepIn) (service.UndoResult, error) {
 		return h.step(c, in, h.Service.Undo)
 	})
-	register(h, "projects.redo", func(c *web.Ctx, in stateIn) (service.UndoResult, error) {
+	register(h, "projects.redo", func(c *web.Ctx, in stepIn) (service.UndoResult, error) {
 		return h.step(c, in, h.Service.Redo)
 	})
 	register(h, "projects.lint", func(c *web.Ctx, in lintIn) (service.LintResult, error) {
@@ -375,6 +382,22 @@ func page(p pageIn) service.Page { return service.Page{Cursor: p.Cursor, Limit: 
 // dry reads the body member or its alias ?dry_run=true (SDD-003 section 6.3).
 func dry(c *web.Ctx, member bool) bool { return member || c.QueryBool("dry_run") }
 
+// jsonBool is a body member that must be a JSON boolean; absent is false. The query alias is text and is
+// read by dry.
+func jsonBool(v any, name string) (bool, error) {
+	switch b := v.(type) {
+	case nil:
+		return false, nil
+	case bool:
+		return b, nil
+	}
+
+	return false, &service.Error{
+		Code: command.CodeValidation, Path: name,
+		Message: name + " must be true or false.", Hint: "send the JSON boolean true or false",
+	}
+}
+
 func revisionHeader(c *web.Ctx, rev int64) {
 	c.SetHeader("X-Vukem-Revision", strconv.FormatInt(rev, 10))
 }
@@ -497,10 +520,21 @@ func (h *apiHandler) projectsEdit(c *web.Ctx, in editIn) (service.EditResult, er
 
 func (h *apiHandler) step(
 	c *web.Ctx,
-	in stateIn,
+	in stepIn,
 	fn func(ctx context.Context, req service.UndoRequest) (*service.UndoResult, error),
 ) (service.UndoResult, error) {
-	res, err := fn(c.Context(), service.UndoRequest{ProjectID: in.ID, DryRun: dry(c, in.DryRun)})
+	// The binder merges ?dry_run= into the member as text; that is the alias, which dry reads itself.
+	raw := in.DryRun
+	if s, ok := raw.(string); ok && s != "" && s == c.Query("dry_run") {
+		raw = nil
+	}
+
+	member, err := jsonBool(raw, "dry_run")
+	if err != nil {
+		return service.UndoResult{}, err
+	}
+
+	res, err := fn(c.Context(), service.UndoRequest{ProjectID: in.ID, DryRun: dry(c, member)})
 	if err != nil {
 		return service.UndoResult{}, err
 	}
