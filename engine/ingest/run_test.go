@@ -261,6 +261,21 @@ func TestIngestImage(t *testing.T) {
 	}
 }
 
+func TestIngestImageWithAlphaReportsIt(t *testing.T) {
+	e := newEnv(t)
+	p, err := e.gen.AlphaImage(context.Background())
+	_, res := e.mustIngest(mustGen(t, p, err))
+
+	if !res.Facts.HasAlpha {
+		t.Errorf("a PNG with an alpha channel has no has_alpha: %+v", res.Facts)
+	}
+
+	p, err = e.gen.Image(context.Background())
+	if _, res = e.mustIngest(mustGen(t, p, err)); res.Facts.HasAlpha {
+		t.Errorf("an opaque PNG reports has_alpha: %+v", res.Facts)
+	}
+}
+
 func TestIngestFailuresPublishNothing(t *testing.T) {
 	e := newEnv(t)
 	ctx := context.Background()

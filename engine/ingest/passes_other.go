@@ -159,7 +159,7 @@ func (j *job) image(ctx context.Context) error {
 	}); err != nil {
 		return err
 	}
-	j.res.Facts = Facts{Width: plan.W, Height: plan.H}
+	j.res.Facts = Facts{Width: plan.W, Height: plan.H, HasAlpha: plan.Alpha}
 	if delays := sum.FrameDelays; len(delays) > 1 {
 		if err := j.timed(StepVideo, func() error { return j.animated(ctx, plan) }); err != nil {
 			return err
