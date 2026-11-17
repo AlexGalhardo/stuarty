@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, seedProject, test } from "./helpers";
 
@@ -195,5 +196,30 @@ test.describe("keyframes", () => {
 			op: "keyframe.set",
 			args: { item_id: itemId, property: "rotation", at: "0f", value: 20 },
 		});
+	});
+
+	// WCAG 2.5.8: the value input, the easing select and the buttons of a
+	// keyframe row do not overlap and each has room to be pressed.
+	test("a keyframe row passes the axe target-size rule", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+		const itemId = seeded.itemIds[0] as string;
+		await page.goto(`/editor/${seeded.id}?debug=1`);
+		await page.locator(`[data-item-id="${itemId}"]`).click();
+		await page.getByLabel("Property", { exact: true }).selectOption("scale");
+		await page.getByLabel("Value", { exact: true }).fill("1.5");
+		await page.getByRole("button", { name: "Add at playhead" }).click();
+		const row = page.locator("[data-keyframe-row]");
+		await expect(row).toHaveCount(1);
+
+		const { violations } = await new AxeBuilder({ page })
+			.include("[data-keyframe-row]")
+			.withRules(["target-size"])
+			.analyze();
+		expect(violations.map((v) => v.nodes.map((n) => n.failureSummary))).toEqual(
+			[],
+		);
 	});
 });

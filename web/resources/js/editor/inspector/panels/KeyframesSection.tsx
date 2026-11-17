@@ -76,14 +76,14 @@ function ValueCell({
 }): ReactNode {
 	const binding = useCommitField(stored, commit);
 	return (
-		<div className="flex min-w-0 flex-col gap-0.5">
+		<div className="flex min-w-20 flex-1 flex-col gap-0.5">
 			<Input
 				{...binding.input}
 				aria-label={label}
 				disabled={disabled}
 				autoComplete="off"
 				spellCheck={false}
-				className="h-7 px-1 font-mono text-xs"
+				className="h-7 min-w-20 px-1 font-mono text-xs"
 			/>
 			<FieldMessage id={`${label}-message`} state={binding} />
 		</div>
@@ -290,7 +290,7 @@ export default function KeyframesSection({
 										data-keyframe-row={`${name}:${key.t}`}
 										data-selected={isPicked ? "" : undefined}
 										className={cn(
-											"grid grid-cols-[auto_1fr_auto_auto] items-start gap-1 rounded-md px-1",
+											"flex flex-wrap items-start gap-1 rounded-md px-1",
 											isPicked && "bg-accent",
 										)}
 									>
@@ -339,7 +339,7 @@ export default function KeyframesSection({
 											})}
 											value={key.easing ?? "linear"}
 											disabled={!canEdit}
-											className={cn(SELECT_CLASS, "h-7 text-xs")}
+											className={cn(SELECT_CLASS, "h-7 w-28 text-xs")}
 											onChange={(event) => {
 												const next = event.target.value;
 												if (isEasing(next)) void resend({ easing: next });
