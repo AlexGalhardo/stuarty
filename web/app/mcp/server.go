@@ -11,12 +11,15 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"runtime/debug"
 	"slices"
 	"strings"
+	"sync"
 
+	"github.com/modelcontextprotocol/go-sdk/jsonrpc"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
@@ -269,7 +272,96 @@ func RunStdio(ctx context.Context, svc service.Service, o Options) error {
 		return err
 	}
 
-	return srv.Run(ctx, &sdk.StdioTransport{})
+	return srv.Run(ctx, &drainTransport{inner: &sdk.StdioTransport{}})
+}
+
+// runDraining is RunStdio over any transport.
+func runDraining(ctx context.Context, svc service.Service, o Options, t sdk.Transport) error {
+	srv, err := New(svc, o)
+	if err != nil {
+		return err
+	}
+
+	return srv.Run(ctx, &drainTransport{inner: t})
+}
+
+// drainTransport keeps the connection open after the input ends until every
+// request already read has been answered, so `echo <request> | vukem-video mcp`
+// gets its response instead of exiting while the call is still running.
+type drainTransport struct {
+	inner sdk.Transport
+}
+
+func (t *drainTransport) Connect(ctx context.Context) (sdk.Connection, error) {
+	c, err := t.inner.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &drainConn{Connection: c, idle: make(chan struct{})}, nil
+}
+
+type drainConn struct {
+	sdk.Connection
+
+	mu      sync.Mutex
+	pending map[string]struct{}
+	idle    chan struct{} // closed-and-replaced whenever pending becomes empty
+}
+
+func (c *drainConn) Read(ctx context.Context) (jsonrpc.Message, error) {
+	msg, err := c.Connection.Read(ctx)
+	if err != nil {
+		c.waitIdle(ctx)
+
+		return nil, err
+	}
+
+	if req, ok := msg.(*jsonrpc.Request); ok && req.IsCall() {
+		c.mu.Lock()
+		if c.pending == nil {
+			c.pending = map[string]struct{}{}
+		}
+		c.pending[fmt.Sprint(req.ID.Raw())] = struct{}{}
+		c.mu.Unlock()
+	}
+
+	return msg, nil
+}
+
+func (c *drainConn) Write(ctx context.Context, msg jsonrpc.Message) error {
+	err := c.Connection.Write(ctx, msg)
+
+	if resp, ok := msg.(*jsonrpc.Response); ok {
+		c.mu.Lock()
+		delete(c.pending, fmt.Sprint(resp.ID.Raw()))
+		if len(c.pending) == 0 {
+			close(c.idle)
+			c.idle = make(chan struct{})
+		}
+		c.mu.Unlock()
+	}
+
+	return err
+}
+
+func (c *drainConn) waitIdle(ctx context.Context) {
+	for {
+		c.mu.Lock()
+		if len(c.pending) == 0 {
+			c.mu.Unlock()
+
+			return
+		}
+		idle := c.idle
+		c.mu.Unlock()
+
+		select {
+		case <-idle:
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
 func moduleVersion() string {
