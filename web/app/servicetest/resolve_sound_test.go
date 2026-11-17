@@ -74,3 +74,19 @@ func TestResolveBeatsFromTheArtifact(t *testing.T) {
 		t.Errorf("stored operation = %s", args)
 	}
 }
+
+// VV-083: clip.remove_silences on an audio item gets its silences from the artifact of the asset, like a clip.
+func TestResolveSilencesOfAnAudioItem(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{beta: true})
+	project, clip, _, _ := m.speechProject()
+	music := m.musicOnClipAsset(project, clip)
+
+	m.mustEdit(ui, project, m.head(project).Revision, op(
+		"clip.remove_silences", fmt.Sprintf(`{"item_id":%q,"min_silence":"0.1s","padding":"0s"}`, music),
+	))
+
+	args := string(storedOps(t, m, project, m.head(project).Revision)[0].Args)
+	if !strings.Contains(args, `"resolved":{"silences":[`) {
+		t.Errorf("stored operation = %s, want resolved silences", args)
+	}
+}
