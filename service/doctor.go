@@ -264,6 +264,8 @@ func doctorText(r *DoctorResult) string {
 			state = "missing"
 		case !c.OK:
 			state = "FAIL"
+		case c.Hint != "":
+			state = "warn"
 		}
 
 		fmt.Fprintf(&b, "%s %s: %s\n", state, c.Name, c.Detail)
@@ -354,7 +356,9 @@ func licenseCheck(in *ffmpeg.Installation, privileged bool) DoctorCheck {
 	case lic.Name == "nonfree":
 		licHint = "this FFmpeg was built with --enable-nonfree and cannot be redistributed; use an LGPL build"
 	case lic.Name == "gpl":
-		licHint = "this FFmpeg is GPL: fine for your own use, not for anything this project ships"
+		licHint = "this FFmpeg is GPL (" + gplFlags(in.Info.Flags) + "), not the LGPL build the product is made for: " +
+			"fine for your own use, not for anything this project ships or redistributes; " +
+			"point VUKEM_VIDEO_FFMPEG at an LGPL build (the pinned one, or the FFmpeg of the container image)"
 	}
 
 	parts := []string{lic.Name + versionSuffix(lic.Version3), "flavour " + string(fl.Name)}
@@ -372,6 +376,24 @@ func licenseCheck(in *ffmpeg.Installation, privileged bool) DoctorCheck {
 		Hint:   licHint,
 		Detail: strings.TrimSpace(strings.Join(parts, "; ")),
 	}
+}
+
+// gplFlags names the configure flags that make an FFmpeg GPL, or "GPL libraries" when the licence
+// came from the encoders (libx264 or libx265) and no flag says it.
+func gplFlags(flags []string) string {
+	var out []string
+
+	for _, f := range flags {
+		if f == "--enable-gpl" || f == "--enable-libx264" || f == "--enable-libx265" {
+			out = append(out, f)
+		}
+	}
+
+	if len(out) == 0 {
+		return "GPL libraries"
+	}
+
+	return strings.Join(out, " ")
 }
 
 // openH264Check is ffmpeg.openh264 and exists for the own build only. It reads the library from disk
