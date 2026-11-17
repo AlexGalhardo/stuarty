@@ -15,6 +15,8 @@ An **asset** is imported media, kept by its content hash. The project refers to 
 
 Ids carry a prefix: `prj_` for a project, `ast_` for an asset, `trk_` for a track, `itm_` for an item and `job_` for a job. They are stable, and you may supply your own when you create something.
 
+The form of an id is the prefix, an underscore and exactly 10 characters from `0123456789abcdefghjkmnpqrstvwxyz` (the digits and the lowercase letters without `i`, `l`, `o` and `u`). `trk_k3m9x4q1bz` is a valid track id; `trk_e2evid001` is not (it has an `i` and only 9 characters), and the command answers `E_VALIDATION` with an id to copy.
+
 ## Next steps
 
 - [Media library](/docs/guide/media-library)

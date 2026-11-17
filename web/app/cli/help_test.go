@@ -175,3 +175,20 @@ func TestRejectArgsOnlyForTheCommandsWithoutArguments(t *testing.T) {
 		t.Fatal("user:create takes arguments")
 	}
 }
+
+// VV-147: the commands that take an id state its form in --help.
+func TestHelpStatesTheIDRule(t *testing.T) {
+	t.Parallel()
+
+	for _, name := range []string{"edit", "history", "lint"} {
+		var out, errOut bytes.Buffer
+
+		if code, handled := Help([]string{"help", name}, &out, &errOut); !handled || code != 0 {
+			t.Fatalf("%s --help: handled %v, exit %d", name, handled, code)
+		}
+
+		if !strings.Contains(out.String(), "without i, l, o and u, such as trk_k3m9x4q1bz") {
+			t.Errorf("%s --help does not state the id rule:\n%s", name, out.String())
+		}
+	}
+}
