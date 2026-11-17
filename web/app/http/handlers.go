@@ -40,6 +40,11 @@ type createIn struct {
 	FPS    fpsText `json:"fps,omitempty"                         doc:"30 (default); n or n/1001, as text or as a number."`
 	ID     string  `json:"id,omitempty"                          doc:"An id of your own; E_ID_EXISTS when taken."`
 	DryRun bool    `json:"dry_run,omitempty"`
+
+	// Width and Height are not accepted: a project takes its size from preset. They are members so that a
+	// request that sends them is refused instead of silently made 9:16 (VV-086).
+	Width  *int `json:"width,omitempty"  doc:"Not accepted: the size comes from preset."`
+	Height *int `json:"height,omitempty" doc:"Not accepted: the size comes from preset."`
 }
 
 // fpsText is the frame rate of a new project. The CLI takes --fps 30, so the API takes the JSON
@@ -360,6 +365,19 @@ func (h *apiHandler) projectsList(c *web.Ctx, in listIn) (service.ProjectListRes
 
 func (h *apiHandler) projectsCreate(c *web.Ctx, in createIn) (service.ProjectCreateResult, error) {
 	dryRun := dry(c, in.DryRun)
+
+	if in.Width != nil || in.Height != nil {
+		path := "width"
+		if in.Width == nil {
+			path = "height"
+		}
+
+		return service.ProjectCreateResult{}, &service.Error{
+			Code: command.CodeValidation, Path: path,
+			Message: "a project takes its size from preset, not from width and height.",
+			Hint:    "send preset: 9:16 (default), 1:1, 16:9 or 4:5",
+		}
+	}
 
 	res, err := h.Service.ProjectCreate(c.Context(), service.ProjectCreateRequest{
 		Name: in.Name, Preset: in.Preset, FPS: string(in.FPS), ID: in.ID, DryRun: dryRun,

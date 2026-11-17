@@ -443,3 +443,19 @@ func TestFrameRouteAnswersTheJPEGToAnImageAccept(t *testing.T) {
 		t.Errorf("an error to an image client = %d %s", bad.status, bad.body)
 	}
 }
+
+// VV-086: a field the route does not know is refused, not dropped (a 1920x1080 project was silently made 9:16).
+func TestProjectCreateRefusesAnUnknownField(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+
+	res := h.post("/api/v1/projects", `{"name":"wide","width":1920,"height":1080}`)
+	if res.status < 400 || res.status >= 500 || !strings.Contains(string(res.body), "width") {
+		t.Fatalf("an unknown field = %d %s, want a 4xx that names the field", res.status, res.body)
+	}
+
+	if res := h.post("/api/v1/projects", `{"name":"ok","preset":"16:9"}`); res.status != http.StatusCreated {
+		t.Fatalf("a known body = %d %s", res.status, res.body)
+	}
+}
