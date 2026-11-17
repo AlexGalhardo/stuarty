@@ -222,6 +222,11 @@ log "ffmpeg-build: ogg"
 log "ffmpeg-build: vorbis"
 (
 	cd "$work/src/vorbis"
+	# libvorbis 1.3.7 adds -force_cpusubtype_ALL on macOS, which the current Apple
+	# linker refuses ("ld: unknown options"); drop it before configuring.
+	if [ "$os" = darwin ]; then
+		perl -pi -e 's/-force_cpusubtype_ALL//g' configure
+	fi
 	host_arg=()
 	[ -n "$cross_prefix" ] && host_arg=(--host=x86_64-w64-mingw32)
 	./configure --prefix="$prefix" --libdir="$prefix/lib" --disable-shared --enable-static --disable-docs --disable-examples \
