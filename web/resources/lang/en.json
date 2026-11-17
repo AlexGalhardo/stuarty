@@ -1340,6 +1340,7 @@
         "choose": "Choose an asset",
         "fill": "Fill",
         "caption_hint": "Fill a caption slot with words from the CLI, MCP or API.",
+        "row_unfilled": "this required slot is not filled",
         "unfilled": {
           "one": "{count} required slot is not filled",
           "other": "{count} required slots are not filled"
