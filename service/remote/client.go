@@ -366,7 +366,17 @@ func (c *Client) JobStart(ctx context.Context, req service.JobStartRequest) (*se
 		DryRun bool            `json:"dry_run,omitempty"`
 	}{req.Kind, req.Args, req.WaitMS, req.DryRun}
 
-	return post[service.Job](ctx, c, projectPath(req.ProjectID, "/jobs"), body)
+	return jobText(post[service.Job](ctx, c, projectPath(req.ProjectID, "/jobs"), body))
+}
+
+// jobText turns the HTTP form of the next call in the text of a job ("call GET /api/v1/jobs/{id}")
+// back to the tool names, so the surface that relays the job names its own commands (VV-200).
+func jobText(j *service.Job, err error) (*service.Job, error) {
+	if j != nil {
+		j.Text = service.CanonicalHint(j.Text)
+	}
+
+	return j, err
 }
 
 // JobGet implements service.Service.
@@ -376,12 +386,12 @@ func (c *Client) JobGet(ctx context.Context, req service.JobGetRequest) (*servic
 		q.Set("wait_ms", strconv.Itoa(req.WaitMS))
 	}
 
-	return get[service.Job](ctx, c, "/jobs/"+url.PathEscape(req.JobID), q)
+	return jobText(get[service.Job](ctx, c, "/jobs/"+url.PathEscape(req.JobID), q))
 }
 
 // JobCancel implements service.Service.
 func (c *Client) JobCancel(ctx context.Context, req service.JobCancelRequest) (*service.Job, error) {
-	return post[service.Job](ctx, c, "/jobs/"+url.PathEscape(req.JobID)+"/cancel", struct{}{})
+	return jobText(post[service.Job](ctx, c, "/jobs/"+url.PathEscape(req.JobID)+"/cancel", struct{}{}))
 }
 
 // TemplateList implements service.Service.
