@@ -18,6 +18,9 @@ function recordEdits(page: Page): string[][] {
 // VV-089 to VV-091 (round L1): Escape closes the command palette from the field, from the form and
 // from the page, the documented keys act, and the item menu copies and pastes the look.
 test.describe("palette Escape, documented keys and the attributes menu", () => {
+	// Parallel imports of the same clip race in the ingest, so these run one after the other.
+	test.describe.configure({ mode: "serial" });
+
 	test("Escape closes the palette and leaves the controls reachable", async ({
 		page,
 		request,
@@ -30,6 +33,9 @@ test.describe("palette Escape, documented keys and the attributes menu", () => {
 		await page.goto(`/editor/${seeded.id}`);
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);
 		const search = page.getByRole("combobox", { name: "Search commands" });
+		await expect(
+			page.getByRole("button", { name: /^Commands \(Ctrl\+K\)/ }),
+		).toBeEnabled();
 		const back = page.getByRole("button", { name: "Back to the list" });
 
 		await page.keyboard.press("Control+k");
@@ -163,6 +169,7 @@ test.describe("palette Escape, documented keys and the attributes menu", () => {
 			perTrack: 1,
 		});
 		await page.goto(`/editor/${seeded.id}`);
+		await expect(page.locator("[data-item-id]")).toHaveCount(1);
 		await page
 			.getByRole("button", { name: /^Actions for/ })
 			.first()
