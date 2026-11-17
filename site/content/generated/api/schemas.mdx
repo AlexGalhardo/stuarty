@@ -494,11 +494,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `mask` | [`Mask`](/docs/api/schemas#mask) or `any` or `null` or `null` | no |  |
 | `name` | `string` | no |  |
 | `opacity` | `number (double)` | no |  |
+| `outline` | [`Outline`](/docs/api/schemas#outline) or `any` or `null` or `null` | no |  |
 | `radius` | `number (double)` | no |  |
 | `reverse` | `boolean` | no |  |
 | `rotation` | `number (double)` | no |  |
 | `saturation` | `number (double)` | no |  |
 | `scale` | `number (double)` | no |  |
+| `shadow` | [`Shadow`](/docs/api/schemas#shadow) or `any` or `null` or `null` | no |  |
 | `shape` | `rect`, `rounded_rect`, `ellipse` | no |  |
 | `slot` | [`Slot`](/docs/api/schemas#slot) or `any` or `null` or `null` | no |  |
 | `source_in` | `integer` | no |  |
@@ -767,7 +769,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
-| `op` | `string`, one of 70 values | yes | A command name, as listed by GET /commands.. min length 1 |
+| `op` | `string`, one of 72 values | yes | A command name, as listed by GET /commands.. min length 1 |
 
 ### OtioLost
 
@@ -792,6 +794,20 @@ The types named in the tables of the operations. The arguments of each editing c
 | `reason` | `string` | no |  |
 | `ref` | `string` | no |  |
 | `status` | `string` | no |  |
+
+### Outline
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `color` | `string` | no |  |
+| `width` | `number (double)` | no |  |
+
+### OutlineSpec
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `color` | `string` | no |  |
+| `width` | `number (double)` | no |  |
 
 ### ProbeSummary
 
@@ -966,6 +982,26 @@ The types named in the tables of the operations. The arguments of each editing c
 | `height` | `integer` | no |  |
 | `loudness_target` | `number (double)` | no |  |
 | `width` | `integer` | no |  |
+
+### Shadow
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `blur` | `number (double)` | no |  |
+| `color` | `string` | no |  |
+| `dx` | `number (double)` | no |  |
+| `dy` | `number (double)` | no |  |
+| `opacity` | `number (double)` | no |  |
+
+### ShadowSpec
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `blur` | `number (double)` | no |  |
+| `color` | `string` | no |  |
+| `dx` | `number (double)` | no |  |
+| `dy` | `number (double)` | no |  |
+| `opacity` | `number (double)` | no |  |
 
 ### SkippedOp
 
@@ -1327,6 +1363,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `color_matrices` | array of `any` | no |  |
 | `color_matrix` | `any` | no |  |
 | `crop` | array of `number (double)` or `null` | no |  |
+| `crops` | array of array of `number (double)` | no |  |
 | `cx` | `any` | no |  |
 | `cy` | `any` | no |  |
 | `effects` | array of [`Effect`](/docs/api/schemas#effect) | no |  |
@@ -1341,10 +1378,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `last` | `integer` | no |  |
 | `lut` | [`LutSpec`](/docs/api/schemas#lutspec) or `any` or `null` or `null` | no |  |
 | `mask` | [`MaskSpec`](/docs/api/schemas#maskspec) or `any` or `null` or `null` | no |  |
+| `masks` | array of [`MaskSpec`](/docs/api/schemas#maskspec) or `any` or `null` or `null` | no |  |
 | `natural` | array of `number (double)` or `null` | no |  |
 | `opacity` | `any` | no |  |
+| `outline` | [`OutlineSpec`](/docs/api/schemas#outlinespec) or `any` or `null` or `null` | no |  |
 | `rotation` | `any` | no |  |
 | `scale` | `any` | no |  |
+| `shadow` | [`ShadowSpec`](/docs/api/schemas#shadowspec) or `any` or `null` or `null` | no |  |
 | `source_frames` | array of `integer` | no |  |
 | `source_seconds` | array of `number (double)` | no |  |
 | `transition` | array of [`TransitionSpec`](/docs/api/schemas#transitionspec) or `any` or `null` or `null` | no |  |
@@ -1363,6 +1403,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `revision` | `integer (int64)` | no |  |
 | `safe_area` | array of `number (double)` | no |  |
 | `to` | `integer` | no |  |
+| `transparent` | `boolean` | no |  |
 | `width` | `integer` | no |  |
 
 ### Word
