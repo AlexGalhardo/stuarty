@@ -131,7 +131,6 @@ describe("builders emit times as strings with a unit (T8)", () => {
 			...trimOperations([range("a", 0)], "end", 10),
 			...addClipOperations({
 				assetId: "ast_1",
-				playhead: 7,
 				firstVisualTrack: "trk_1",
 				newTrackId: () => "trk_n",
 			}),

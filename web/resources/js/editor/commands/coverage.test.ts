@@ -277,14 +277,12 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 		const emitted: Record<string, string[]> = {
 			"library.add_to_timeline": addClipOperations({
 				assetId: "ast_a",
-				playhead: 0,
 				firstVisualTrack: null,
 				newTrackId,
 			})
 				.concat(
 					addAudioOperations({
 						assetId: "ast_a",
-						playhead: 0,
 						firstAudioTrack: null,
 						newTrackId,
 					}),

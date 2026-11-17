@@ -39,17 +39,30 @@ test.describe("thin-client-no-optimistic", () => {
 	});
 });
 
-test.describe("overlap-snapback", () => {
-	test("an overlap leaves the item in place and shows the message of the core", async ({
+test.describe("add-to-timeline-appends", () => {
+	test("adding twice puts the second item after the first, with no overlap notice (VV-158)", async ({
 		page,
 		request,
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
-		await page.goto(`/editor/${seeded.id}`);
+		await page.goto(`/editor/${seeded.id}?debug=1`);
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);
-		await page.getByRole("button", { name: "Add to timeline" }).first().click();
-		await expect(page.getByRole("alert")).toContainText("Overlaps");
-		await expect(page.locator("[data-item-id]")).toHaveCount(1);
+		const add = page.getByRole("button", { name: "Add to timeline" }).first();
+		await add.click();
+		await expect(page.locator("[data-item-id]")).toHaveCount(2);
+		await add.click();
+		await expect(page.locator("[data-item-id]")).toHaveCount(3);
+		await expect(page.getByRole("alert")).toHaveCount(0);
+		const items = await page.evaluate(() => {
+			const doc = window.__vv?.document as {
+				items: Record<string, { start: number; duration: number }>;
+			};
+			return Object.values(doc.items)
+				.map((i) => ({ start: i.start, end: i.start + i.duration }))
+				.sort((a, b) => a.start - b.start);
+		});
+		expect(items[1]?.start).toBe(items[0]?.end);
+		expect(items[2]?.start).toBe(items[1]?.end);
 	});
 });
 

@@ -532,7 +532,6 @@ export function createActions(runtime: EditorRuntime): Actions {
 				return send(
 					addAudioOperations({
 						assetId,
-						playhead: ui.getState().playheadFrame,
 						firstAudioTrack: destinationTrack("audio"),
 						newTrackId: () => newId("trk"),
 					}),
@@ -541,7 +540,6 @@ export function createActions(runtime: EditorRuntime): Actions {
 			return send(
 				addClipOperations({
 					assetId,
-					playhead: ui.getState().playheadFrame,
 					firstVisualTrack: destinationTrack("visual"),
 					newTrackId: () => newId("trk"),
 				}),
