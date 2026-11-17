@@ -1,13 +1,15 @@
 import { type ReactNode, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
 import LiveRegion from "../a11y/LiveRegion";
+import { fpsOf, localizeDecimalInput, timeToFrame } from "../commands/units";
 import { useShellShortcuts } from "../commands/useShellShortcuts";
 import FindBar from "../find/FindBar";
 import Inspector from "../inspector/Inspector";
 import Preview from "../preview/Preview";
 import { useDocumentState, useUiState } from "../state/EditorContext";
+import { selectFps } from "../state/selectors";
 import EditToolbar from "../timeline/EditToolbar";
 import { useCanvasPort } from "../timeline/gestures/transformDrag";
 import Notices from "../timeline/Notices";
@@ -58,6 +60,8 @@ export default function EditorShell({
 	const t = useT();
 	const canvasPort = useCanvasPort();
 	const status = useDocumentState((s) => s.status);
+	const locale = useLocale();
+	const fps = useDocumentState(selectFps);
 	const loadError = useDocumentState((s) => s.loadError);
 	const viewport = useViewportWidth();
 	const panels = useUiState((s) => s.panels);
@@ -140,7 +144,12 @@ export default function EditorShell({
 						{t("ui.editor.loading")}
 					</p>
 				) : (
-					<Preview port={canvasPort} />
+					<Preview
+						port={canvasPort}
+						parseTime={(text) =>
+							timeToFrame(localizeDecimalInput(text, locale), fpsOf(fps))
+						}
+					/>
 				)}
 			</main>
 			{panels.inspector ? <Inspector /> : <div />}

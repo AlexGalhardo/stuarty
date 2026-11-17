@@ -61,6 +61,24 @@ export function normalizeTimeInput(
 		: { ok: false };
 }
 
+// The frame a typed time names, for seeking the playhead: the same three forms as
+// `normalizeTimeInput`, a bare number read in the default unit. A seek is a position of the view; the
+// core still parses every time it is sent (rule T8). Null when the text is not a time.
+export function timeToFrame(
+	raw: string,
+	fps: { num: number; den: number },
+	defaultUnit: TimeUnit = DEFAULT_TIME_UNIT,
+): number | null {
+	const normalized = normalizeTimeInput(raw, defaultUnit);
+	if (!normalized.ok) return null;
+	const text = normalized.value;
+	if (FRAMES.test(text)) return Number.parseInt(text, 10);
+	const seconds = text.includes(":")
+		? text.split(":").reduce((total, part) => total * 60 + Number(part), 0)
+		: Number.parseFloat(text);
+	return Math.round((seconds * fps.num) / fps.den);
+}
+
 export interface TimedItem {
 	start: number;
 	duration: number;

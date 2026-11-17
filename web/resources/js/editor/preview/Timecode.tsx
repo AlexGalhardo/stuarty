@@ -28,37 +28,81 @@ export default function Timecode({
 	);
 }
 
-// Writes the text of the span directly so playback does not re-render the
-// preview for it (SDD-012 section 19.2 rule 1).
+// The current time: a field that follows the playhead while it is not being typed in, and seeks to the
+// time typed on Enter or on leaving it (VV-127). It writes the text of the input directly so playback
+// does not re-render the preview for it (SDD-012 section 19.2 rule 1).
 export function LiveTimecode({
 	initial,
 	fps,
 	label,
 	subscribe,
+	parse,
+	onSeek,
 }: {
 	initial: number;
 	fps: TimecodeRate;
 	label: string;
 	subscribe: (cb: (frame: number) => void) => () => void;
+	// The frame a typed text names, or null (`timeToFrame` of commands/units.ts, passed by the shell).
+	parse: (text: string) => number | null;
+	onSeek: (frame: number) => void;
 }): ReactNode {
-	const ref = useRef<HTMLSpanElement>(null);
+	const ref = useRef<HTMLInputElement>(null);
+	const latest = useRef(initial);
 	useEffect(
 		() =>
 			subscribe((frame) => {
-				if (ref.current !== null) {
-					ref.current.textContent = formatTime(frame, fps, readTimeDisplay());
+				latest.current = frame;
+				if (ref.current !== null && document.activeElement !== ref.current) {
+					ref.current.value = formatTime(frame, fps, readTimeDisplay());
 				}
 			}),
 		[subscribe, fps],
 	);
+	const commit = (input: HTMLInputElement): void => {
+		const frame = parse(input.value);
+		if (frame === null) {
+			input.setAttribute("aria-invalid", "true");
+			return;
+		}
+		input.removeAttribute("aria-invalid");
+		onSeek(frame);
+		input.value = formatTime(frame, fps, readTimeDisplay());
+	};
 	return (
-		<span
+		<input
 			ref={ref}
-			role="timer"
+			type="text"
 			aria-label={label}
-			className="text-xs [font-variant-numeric:tabular-nums]"
-		>
-			{formatTime(initial, fps, readTimeDisplay())}
-		</span>
+			defaultValue={formatTime(initial, fps, readTimeDisplay())}
+			spellCheck={false}
+			autoComplete="off"
+			size={12}
+			className="w-24 rounded bg-transparent px-1 text-xs [font-variant-numeric:tabular-nums] aria-invalid:ring-1 aria-invalid:ring-destructive"
+			onKeyDown={(event) => {
+				// The keys of the editor (space, J/K/L, arrows) are not for a field.
+				event.stopPropagation();
+				if (event.key === "Enter") {
+					event.preventDefault();
+					commit(event.currentTarget);
+				} else if (event.key === "Escape") {
+					event.currentTarget.value = formatTime(
+						latest.current,
+						fps,
+						readTimeDisplay(),
+					);
+					event.currentTarget.removeAttribute("aria-invalid");
+					event.currentTarget.blur();
+				}
+			}}
+			onBlur={(event) => {
+				if (
+					event.currentTarget.value !==
+					formatTime(latest.current, fps, readTimeDisplay())
+				) {
+					commit(event.currentTarget);
+				}
+			}}
+		/>
 	);
 }
