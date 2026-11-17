@@ -2,7 +2,10 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
-import { KEYFRAME_PROPERTIES } from "../../commands/builders";
+import {
+	KEYFRAME_COLOUR_PROPERTIES,
+	KEYFRAME_PROPERTIES,
+} from "../../commands/builders";
 import {
 	useDocumentState,
 	useRuntime,
@@ -21,7 +24,7 @@ export default function KeyframeDiamonds({ id }: { id: string }): ReactNode {
 		s.selection.keyframe?.item === id ? s.selection.keyframe : null,
 	);
 	if (keyframes === undefined) return null;
-	const names = KEYFRAME_PROPERTIES.filter(
+	const names = [...KEYFRAME_PROPERTIES, ...KEYFRAME_COLOUR_PROPERTIES].filter(
 		(name) => (keyframes[name]?.length ?? 0) > 0,
 	);
 	return (

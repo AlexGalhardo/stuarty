@@ -17,6 +17,7 @@ export default function SliderField({
 	step,
 	commit,
 	disabled = false,
+	trailing,
 }: {
 	label: string;
 	stored: string;
@@ -25,6 +26,8 @@ export default function SliderField({
 	step: number;
 	commit(value: number): Promise<CommitResult>;
 	disabled?: boolean;
+	// A control after the value, such as the keyframe button of a row.
+	trailing?: ReactNode;
 }): ReactNode {
 	const binding = useCommitField(stored, async (draft) => {
 		const value = Number(draft);
@@ -74,6 +77,7 @@ export default function SliderField({
 					>
 						{binding.text}
 					</output>
+					{trailing}
 				</div>
 			)}
 		</FieldRow>

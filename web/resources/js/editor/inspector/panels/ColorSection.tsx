@@ -1,9 +1,20 @@
+import { Diamond } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
-import { type ColorChanges, colorOperations } from "../../commands/builders";
+import {
+	COLOUR_FALLBACK,
+	type ColourKeyframeProperty,
+	colorOperations,
+	containsInclusive,
+	keyframeAt,
+	keyframeRemoveOperations,
+	keyframeSetOperations,
+	shownColourKeyframe,
+} from "../../commands/builders";
 import { useCanEdit } from "../../commands/useActions";
-import { useDocumentState } from "../../state/EditorContext";
+import { useDocumentState, useUiState } from "../../state/EditorContext";
 import { registryRange } from "../fields/registryLimits";
 import SelectField from "../fields/SelectField";
 import SliderField from "../fields/SliderField";
@@ -13,21 +24,13 @@ import CurveEditor from "./CurveEditor";
 import HslControls from "./HslControls";
 import WheelControls from "./WheelControls";
 
-type SliderKey = Exclude<keyof ColorChanges, "lut_asset" | "lut_intensity">;
-
-interface Row {
-	key: SliderKey;
-	// What the core uses when the item stores nothing.
-	fallback: number;
-}
-
-const ROWS: readonly Row[] = [
-	{ key: "brightness", fallback: 0 },
-	{ key: "contrast", fallback: 1 },
-	{ key: "saturation", fallback: 1 },
-	{ key: "temperature", fallback: 0 },
-	{ key: "tint", fallback: 0 },
-	{ key: "hue", fallback: 0 },
+const ROWS: readonly ColourKeyframeProperty[] = [
+	"brightness",
+	"contrast",
+	"saturation",
+	"temperature",
+	"tint",
+	"hue",
 ];
 
 const NO_LUT = "";
@@ -46,6 +49,7 @@ export default function ColorSection({
 	const canEdit = useCanEdit();
 	const send = useFieldCommit();
 	const item = useDocumentState((s) => s.document?.items[itemId]);
+	const playhead = useUiState((s) => s.playheadFrame);
 	const assets = useDocumentState((s) => s.document?.assets);
 	if (item === undefined) return null;
 	const luts = Object.values(assets ?? {}).filter(
@@ -54,19 +58,83 @@ export default function ColorSection({
 	const lut = item.lut;
 	return (
 		<Section title={t("ui.editor.clip.color_title")}>
-			{ROWS.map((row) => (
-				<SliderField
-					key={row.key}
-					label={t(`ui.editor.clip.${row.key}`)}
-					stored={String(item[row.key] ?? row.fallback)}
-					disabled={!canEdit}
-					{...registryRange("clip.set_color", row.key)}
-					step={row.key === "hue" ? 1 : 0.01}
-					commit={(value) =>
-						send(colorOperations(itemId, { [row.key]: value }))
-					}
-				/>
-			))}
+			{ROWS.map((key) => {
+				const keys = item.keyframes?.[key] ?? [];
+				const animated = keys.length > 0;
+				const here = keyframeAt(keys, item.start, playhead);
+				const inside = containsInclusive(
+					{ id: itemId, start: item.start, duration: item.duration },
+					playhead,
+				);
+				const label = t(`ui.editor.clip.${key}`);
+				// A property with keyframes shows the keyframe at the playhead (or the
+				// nearest before it) and an edit becomes a keyframe there, as for the
+				// Transform fields; `clip.set_color` refuses a static value for it.
+				const shown = animated
+					? (shownColourKeyframe(keys, item.start, playhead)?.value ??
+						COLOUR_FALLBACK[key])
+					: (item[key] ?? COLOUR_FALLBACK[key]);
+				return (
+					<SliderField
+						key={key}
+						label={label}
+						stored={String(shown)}
+						disabled={!canEdit}
+						{...registryRange("clip.set_color", key)}
+						step={key === "hue" ? 1 : 0.01}
+						commit={(value) =>
+							send(
+								animated
+									? keyframeSetOperations({
+											itemId,
+											property: key,
+											frame: playhead,
+											value,
+											easing: here?.easing,
+										})
+									: colorOperations(itemId, { [key]: value }),
+							)
+						}
+						trailing={
+							<Button
+								type="button"
+								size="icon-xs"
+								variant="ghost"
+								disabled={!canEdit || !inside}
+								aria-pressed={here !== undefined}
+								data-keyframe-button={key}
+								aria-label={t(
+									here === undefined
+										? "ui.editor.clip.color_keyframe_add"
+										: "ui.editor.clip.color_keyframe_remove",
+									{ property: label },
+								)}
+								onClick={() =>
+									void send(
+										here === undefined
+											? keyframeSetOperations({
+													itemId,
+													property: key,
+													frame: playhead,
+													value: shown,
+												})
+											: keyframeRemoveOperations(itemId, key, playhead),
+									)
+								}
+							>
+								<Diamond
+									aria-hidden="true"
+									className={
+										here === undefined
+											? "size-3"
+											: "size-3 fill-current text-ed-handle"
+									}
+								/>
+							</Button>
+						}
+					/>
+				);
+			})}
 			{luts.length > 0 && (
 				<>
 					<SelectField

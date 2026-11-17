@@ -89,6 +89,7 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"timeline.unlink": ["item.unlink"],
 	"timeline.extract_audio": ["item.extract_audio", "track.add"],
 	"inspector.color": ["clip.set_color"],
+	"inspector.color_keyframe": ["keyframe.set", "keyframe.remove"],
 	"inspector.silences": ["clip.remove_silences"],
 	"inspector.filter": ["clip.set_filter"],
 	"inspector.blur": ["clip.set_blur"],
@@ -344,6 +345,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	],
 	"keyframe.remove": [
 		{ kind: "inspector", action: "inspector.keyframe_remove", phase: "A" },
+		{ kind: "inspector", action: "inspector.color_keyframe", phase: "A" },
 		{ kind: "key", action: "timeline.delete_keyframe", phase: "A" },
 		palette,
 	],
@@ -352,6 +354,7 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.transform", phase: "A" },
 		{ kind: "menu", action: "notice.use_keyframes", phase: "A" },
 		{ kind: "inspector", action: "inspector.keyframe_add", phase: "A" },
+		{ kind: "inspector", action: "inspector.color_keyframe", phase: "A" },
 		{ kind: "inspector", action: "inspector.keyframe_easing", phase: "A" },
 		{ kind: "inspector", action: "inspector.keyframe_value", phase: "A" },
 		palette,

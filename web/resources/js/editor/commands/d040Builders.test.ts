@@ -11,10 +11,13 @@ import {
 	extractAudioOperations,
 	freezeFrameOperations,
 	insertCurvePoint,
+	keyframeAt,
+	keyframeSetOperations,
 	linkOperations,
 	PASTE_GROUPS,
 	pasteAttributesOperations,
 	reverseOperations,
+	shownColourKeyframe,
 	speedCurveOperations,
 	trackUpdateOperations,
 	transitionOperations,
@@ -292,5 +295,48 @@ describe("the builders of the D-040 commands", () => {
 		expect(
 			colorResetChanges("curves", { ...none, curves: ["master", "green"] }),
 		).toEqual({ curves: { master: [], green: [] } });
+	});
+
+	test("a colour keyframe is one keyframe.set at the frame, with the easing only when given", () => {
+		expect(
+			keyframeSetOperations({
+				itemId: "itm_a",
+				property: "brightness",
+				frame: 12,
+				value: 0.4,
+			}),
+		).toEqual([
+			{
+				op: "keyframe.set",
+				args: {
+					item_id: "itm_a",
+					property: "brightness",
+					at: "12f",
+					value: 0.4,
+				},
+			},
+		]);
+		expect(
+			keyframeSetOperations({
+				itemId: "itm_a",
+				property: "hue",
+				frame: 12,
+				value: 30,
+				easing: "hold",
+			})[0]?.args,
+		).toMatchObject({ easing: "hold" });
+	});
+
+	test("an animated colour slider shows the keyframe at the playhead, else the latest before it, else the first", () => {
+		const keys = [
+			{ t: 10, value: 0.1 },
+			{ t: 30, value: 0.5, easing: "hold" as const },
+		];
+		expect(keyframeAt(keys, 100, 130)).toEqual(keys[1]);
+		expect(keyframeAt(keys, 100, 120)).toBeUndefined();
+		expect(shownColourKeyframe(keys, 100, 130)?.value).toBe(0.5);
+		expect(shownColourKeyframe(keys, 100, 125)?.value).toBe(0.1);
+		expect(shownColourKeyframe(keys, 100, 105)?.value).toBe(0.1);
+		expect(shownColourKeyframe([], 100, 105)).toBeUndefined();
 	});
 });
