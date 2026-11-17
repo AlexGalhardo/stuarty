@@ -45,3 +45,55 @@ export function useCommandsExposed(...names: string[]): boolean {
 	const exposed = useCommandNames();
 	return names.every((name) => exposed.has(name));
 }
+
+const details = new WeakMap<ApiClient, Map<string, Promise<unknown>>>();
+
+function loadDetail(client: ApiClient, command: string): Promise<unknown> {
+	let byName = details.get(client);
+	if (byName === undefined) {
+		byName = new Map();
+		details.set(client, byName);
+	}
+	let schema = byName.get(command);
+	if (schema === undefined) {
+		schema = client.getCommand(command).then(
+			(result) => result.command?.args_schema ?? null,
+			() => {
+				byName.delete(command);
+				return null;
+			},
+		);
+		byName.set(command, schema);
+	}
+	return schema;
+}
+
+// The string values of one argument of a command, read from the registry the
+// service sent (`args_schema.properties[arg].enum`): the kinds, filters and
+// presets a panel lists are the core's, never a copy (SDD-012 section 6.4).
+// Empty until the registry answers, and for an argument with no enum.
+export function useCommandEnum(
+	command: string,
+	arg: string,
+): readonly string[] {
+	const runtime = useRuntime();
+	const [values, setValues] = useState<readonly string[]>([]);
+	useEffect(() => {
+		let current = true;
+		void loadDetail(runtime.client, command).then((schema) => {
+			if (!current) return;
+			const property = (
+				schema as { properties?: Record<string, { enum?: unknown[] }> } | null
+			)?.properties?.[arg];
+			setValues(
+				(property?.enum ?? []).filter(
+					(value): value is string => typeof value === "string",
+				),
+			);
+		});
+		return () => {
+			current = false;
+		};
+	}, [runtime, command, arg]);
+	return values;
+}

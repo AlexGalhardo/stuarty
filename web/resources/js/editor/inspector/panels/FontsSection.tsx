@@ -13,11 +13,11 @@ import {
 } from "../../commands/builders";
 import { useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
+import { useFonts } from "../../commands/useFonts";
 import { useDocumentState } from "../../state/EditorContext";
 import Section from "../Section";
 import { useBrandKit } from "../useBrandKit";
 import { useFieldCommit } from "../useFieldCommit";
-import { useFonts } from "../useFonts";
 
 const WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
 

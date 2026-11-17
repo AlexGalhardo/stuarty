@@ -1816,6 +1816,12 @@ export function blurOperations(itemId: string, radius: number): Operations {
 	return [{ op: "clip.set_blur", args: { item_id: itemId, radius } }];
 }
 
+// What the core uses when a request names no gain, attack or release
+// (SDD-002 C.51); the panels start there and the choices go with the button.
+export const DEFAULT_GAIN_DB = -12;
+export const DEFAULT_ATTACK = "0.2s";
+export const DEFAULT_RELEASE = "0.5s";
+
 export interface DuckOptions {
 	speechItemIds: readonly string[];
 	gainDb: number;

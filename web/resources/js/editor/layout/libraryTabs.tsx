@@ -1,9 +1,11 @@
-import { Film, History, type LucideIcon } from "lucide-react";
+import { AudioLines, Film, History, type LucideIcon, Type } from "lucide-react";
 import type { ReactNode } from "react";
 
 import HistoryPanel from "../history/HistoryPanel";
 import type { AssetDragStart } from "../library/AssetCard";
+import AudioPanel from "../library/AudioPanel";
 import Library from "../library/Library";
+import TextPanel from "../library/TextPanel";
 import type { LeftTab } from "../state/uiStore";
 
 export interface LibraryTabDef {
@@ -27,6 +29,24 @@ export const LIBRARY_TABS: readonly LibraryTabDef[] = [
 		render: ({ onAssetDragStart }) => (
 			<Library onAssetDragStart={onAssetDragStart} />
 		),
+	},
+	{
+		id: "audio",
+		labelKey: "ui.editor.panels.audio",
+		icon: AudioLines,
+		commands: ["audio.add"],
+		bodyClass: "*:flex-1",
+		render: ({ onAssetDragStart }) => (
+			<AudioPanel onAssetDragStart={onAssetDragStart} />
+		),
+	},
+	{
+		id: "text",
+		labelKey: "ui.editor.panels.text",
+		icon: Type,
+		commands: ["text.add"],
+		bodyClass: "*:flex-1",
+		render: () => <TextPanel />,
 	},
 	{
 		id: "history",

@@ -133,7 +133,9 @@
       "panels": {
         "library": "Media",
         "preview": "Preview",
-        "inspector": "Inspector"
+        "inspector": "Inspector",
+        "audio": "Audio",
+        "text": "Text"
       },
       "activity": {
         "you": "you",
@@ -361,7 +363,20 @@
           "failed": "Failed"
         },
         "empty_hint": "Paste the path of a video, audio or image file above and press Import.",
-        "empty_hint_desktop": "Choose files, drop them here or paste a path above, then press Import."
+        "empty_hint_desktop": "Choose files, drop them here or paste a path above, then press Import.",
+        "audio_empty": "No audio imported yet",
+        "for_selection": "For the selection",
+        "duck": "Duck under voice",
+        "duck_why": "Select the music first, then the speech items: the first item you select is the music.",
+        "mark_beats": "Mark beats",
+        "mark_beats_why": "Select one audio or video item first.",
+        "audio_note": "Sound libraries are not bundled.",
+        "add_text": "Add text",
+        "shapes": "Shapes",
+        "presets": "Animation presets",
+        "select_first": "Select an item first.",
+        "select_text_first": "Select one text item first.",
+        "fonts": "Fonts"
       },
       "edit": {
         "label": "Editing",

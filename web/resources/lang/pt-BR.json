@@ -133,7 +133,9 @@
       "panels": {
         "library": "Mídia",
         "preview": "Pré-visualização",
-        "inspector": "Inspetor"
+        "inspector": "Inspetor",
+        "audio": "Áudio",
+        "text": "Texto"
       },
       "activity": {
         "you": "você",
@@ -361,7 +363,20 @@
           "failed": "Falhou"
         },
         "empty_hint": "Cole acima o caminho de um arquivo de vídeo, áudio ou imagem e pressione Importar.",
-        "empty_hint_desktop": "Escolha arquivos, solte-os aqui ou cole um caminho acima e pressione Importar."
+        "empty_hint_desktop": "Escolha arquivos, solte-os aqui ou cole um caminho acima e pressione Importar.",
+        "audio_empty": "Nenhum áudio importado ainda",
+        "for_selection": "Para a seleção",
+        "duck": "Baixar sob a voz",
+        "duck_why": "Selecione primeiro a música e depois os itens de fala: o primeiro item selecionado é a música.",
+        "mark_beats": "Marcar batidas",
+        "mark_beats_why": "Selecione antes um item de áudio ou vídeo.",
+        "audio_note": "As bibliotecas de som não vêm incluídas.",
+        "add_text": "Adicionar texto",
+        "shapes": "Formas",
+        "presets": "Predefinições de animação",
+        "select_first": "Selecione um item antes.",
+        "select_text_first": "Selecione um item de texto antes.",
+        "fonts": "Fontes"
       },
       "edit": {
         "label": "Edição",
