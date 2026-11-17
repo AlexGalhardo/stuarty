@@ -55,6 +55,11 @@ import {
 } from "./planValue";
 import { PlanWindows } from "./planWindows";
 import { detectRenderer } from "./rendererChoice";
+import {
+	type PlacedPixels,
+	type ShadowOutlineImage,
+	shadowOutline,
+} from "./shadowOutline";
 import type {
 	LayerGeometry,
 	PreviewExecutor,
@@ -84,6 +89,22 @@ interface Drawn {
 	// frame; the ones before the mask come first (effects.ts).
 	fx: EffectFilter[];
 	mask: MaskDrawn | null;
+	// The shadow, then the outline, under the picture. Both are children of the
+	// holder, so the mask filter cuts the three together (SDD-004 section 3.15).
+	shadowSprite: Sprite | null;
+	outlineSprite: Sprite | null;
+	shadowPlace: PaintBox | null;
+	outlinePlace: PaintBox | null;
+	shadowKey: string;
+	shadowSrcW: number;
+	shadowSrcH: number;
+}
+
+interface PaintBox {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
 }
 
 // The mask of a layer: its coverage texture, drawn on a sprite that follows the
@@ -106,9 +127,9 @@ const browserTimers: PoolTimers = {
 };
 
 // PixiJS v8 on a WebGPU or WebGL2 canvas drawing exactly what a plan window
-// says: the
-// background, then each layer at its centre, size, rotation, opacity and colour
-// matrix, in plan order, and nothing else (rule T6; SDD-012 section 11.2).
+// says: the background, then each layer at its centre, size, rotation, opacity
+// and colour matrix, with its shadow and outline, in plan order, and nothing
+// else (rule T6; SDD-012 section 11.2).
 export class PixiExecutor implements PreviewExecutor {
 	private app: Application | null = null;
 	private readonly stage = new Container();
@@ -148,6 +169,10 @@ export class PixiExecutor implements PreviewExecutor {
 	);
 	private readonly loading = new Set<string>();
 	private readonly stills = new Map<string, Texture>();
+	// Pixels of a layer, read once per source, to paint its shadow and outline.
+	private shadowScratch: HTMLCanvasElement | null = null;
+	private readonly shadowStamps = new WeakMap<object, number>();
+	private shadowSerial = 1;
 	// The parsed table of each lut asset; null once it cannot be had, so the
 	// layer is drawn without it and the route is not asked again.
 	private readonly luts = new Map<string, LutTable | null>();
@@ -262,6 +287,7 @@ export class PixiExecutor implements PreviewExecutor {
 		this.luts.clear();
 		for (const entry of this.drawn.values()) {
 			this.dropMask(entry);
+			this.dropShadowOutline(entry);
 			this.sizeFx(entry, 0);
 			entry.grade?.destroy();
 		}
@@ -506,6 +532,13 @@ export class PixiExecutor implements PreviewExecutor {
 					blur: null,
 					fx: [],
 					mask: null,
+					shadowSprite: null,
+					outlineSprite: null,
+					shadowPlace: null,
+					outlinePlace: null,
+					shadowKey: "",
+					shadowSrcW: 0,
+					shadowSrcH: 0,
 				};
 				entry.sprite.anchor.set(0.5);
 				holder.addChild(entry.sprite);
@@ -526,6 +559,7 @@ export class PixiExecutor implements PreviewExecutor {
 			if (used.has(item)) continue;
 			entry.holder.removeFromParent();
 			this.dropMask(entry);
+			this.dropShadowOutline(entry);
 			this.sizeFx(entry, 0);
 			entry.grade?.destroy();
 			entry.lut?.destroy();
@@ -600,6 +634,8 @@ export class PixiExecutor implements PreviewExecutor {
 		entry.holder.alpha = valueAt(layer.opacity, frame, layer.first);
 		entry.holder.blendMode = pixiBlendMode(layer.blend);
 		this.applyFilters(entry, layer, g, frame, info);
+		// Under the picture, on the holder, so the mask cuts all three together.
+		this.applyShadowOutline(entry, layer, g);
 	}
 
 	private applyFilters(
@@ -780,6 +816,238 @@ export class PixiExecutor implements PreviewExecutor {
 		entry.holder.filters = null;
 		drawn.filter.destroy();
 		drawn.sprite.destroy({ texture: true, textureSource: true });
+	}
+
+	// The shadow and the outline are constant on the item. The picture sprite
+	// stays; these two sit under it in source pixels of the same texture.
+	private applyShadowOutline(
+		entry: Drawn,
+		layer: PlanLayer,
+		g: LayerGeometry,
+	): void {
+		if (layer.shadow === undefined && layer.outline === undefined) {
+			this.dropShadowOutline(entry);
+			return;
+		}
+		const scale = this.stage.scale.x;
+		const key = this.shadowCacheKey(
+			entry.sprite.texture,
+			layer,
+			scale,
+			g.w,
+			g.h,
+		);
+		if (key === null) {
+			this.dropShadowOutline(entry);
+			return;
+		}
+		if (entry.shadowKey !== key) {
+			const read = this.readLayerPixels(entry.sprite.texture, layer);
+			if (read === null) {
+				this.dropShadowOutline(entry);
+				return;
+			}
+			const painted = shadowOutline(
+				read.pixels,
+				read.width,
+				read.height,
+				layer,
+				scale,
+				g.w * scale,
+				g.h * scale,
+			);
+			this.installPaint(entry, painted);
+			entry.shadowSrcW = read.width;
+			entry.shadowSrcH = read.height;
+			entry.shadowKey = key;
+		}
+		this.placePaint(entry, g);
+	}
+
+	private shadowCacheKey(
+		texture: Texture,
+		layer: PlanLayer,
+		scale: number,
+		w: number,
+		h: number,
+	): string | null {
+		const resource: unknown = texture.source?.resource;
+		if (!isDrawable(resource)) return null;
+		const frame = texture.frame;
+		const moving =
+			resource instanceof HTMLVideoElement ? resource.currentTime : "";
+		const shadow = layer.shadow;
+		const outline = layer.outline;
+		return [
+			texture.uid,
+			this.objectStamp(resource),
+			moving,
+			frame.x,
+			frame.y,
+			frame.width,
+			frame.height,
+			scale,
+			w,
+			h,
+			layer.flip_x === true ? 1 : 0,
+			layer.flip_y === true ? 1 : 0,
+			shadow?.color ?? "",
+			shadow?.opacity ?? "",
+			shadow?.dx ?? "",
+			shadow?.dy ?? "",
+			shadow?.blur ?? "",
+			outline?.color ?? "",
+			outline?.width ?? "",
+		].join("|");
+	}
+
+	private objectStamp(resource: object): number {
+		let id = this.shadowStamps.get(resource);
+		if (id === undefined) {
+			id = this.shadowSerial++;
+			this.shadowStamps.set(resource, id);
+		}
+		return id;
+	}
+
+	private readLayerPixels(
+		texture: Texture,
+		layer: PlanLayer,
+	): { pixels: Uint8Array; width: number; height: number } | null {
+		const resource: unknown = texture.source?.resource;
+		if (!isDrawable(resource) || typeof document === "undefined") return null;
+		const frame = texture.frame;
+		const width = Math.round(frame.width);
+		const height = Math.round(frame.height);
+		if (width < 1 || height < 1) return null;
+		const canvas = this.shadowScratch ?? document.createElement("canvas");
+		this.shadowScratch = canvas;
+		if (canvas.width !== width || canvas.height !== height) {
+			canvas.width = width;
+			canvas.height = height;
+		}
+		const ctx = canvas.getContext("2d", { willReadFrequently: true });
+		if (ctx === null) return null;
+		ctx.imageSmoothingEnabled = false;
+		ctx.clearRect(0, 0, width, height);
+		try {
+			ctx.drawImage(
+				resource,
+				frame.x,
+				frame.y,
+				frame.width,
+				frame.height,
+				0,
+				0,
+				width,
+				height,
+			);
+			const view = ctx.getImageData(0, 0, width, height).data;
+			return {
+				pixels: mirrorPixels(new Uint8Array(view), width, height, layer),
+				width,
+				height,
+			};
+		} catch (err) {
+			// A frame the decoder already closed, or a canvas the browser will not read.
+			if (err instanceof DOMException) return null;
+			throw err;
+		}
+	}
+
+	private installPaint(entry: Drawn, painted: ShadowOutlineImage): void {
+		entry.shadowSprite = this.replacePaint(
+			entry.shadowSprite,
+			painted.shadow,
+			entry.holder,
+		);
+		entry.outlineSprite = this.replacePaint(
+			entry.outlineSprite,
+			painted.outline,
+			entry.holder,
+		);
+		entry.shadowPlace = paintBox(painted.shadow);
+		entry.outlinePlace = paintBox(painted.outline);
+		this.orderPaint(entry);
+	}
+
+	private replacePaint(
+		current: Sprite | null,
+		painted: PlacedPixels | null,
+		holder: Container,
+	): Sprite | null {
+		if (painted === null) {
+			this.destroyPaint(current);
+			return null;
+		}
+		const texture = new Texture({
+			source: new BufferImageSource({
+				resource: painted.pixels,
+				width: painted.width,
+				height: painted.height,
+				format: "rgba8unorm",
+				alphaMode: "premultiplied-alpha",
+				scaleMode: "linear",
+			}),
+		});
+		if (current === null) {
+			const sprite = new Sprite(texture);
+			sprite.anchor.set(0.5);
+			holder.addChild(sprite);
+			return sprite;
+		}
+		const old = current.texture;
+		current.texture = texture;
+		old.destroy(true);
+		return current;
+	}
+
+	private placePaint(entry: Drawn, g: LayerGeometry): void {
+		const srcW = entry.shadowSrcW;
+		const srcH = entry.shadowSrcH;
+		if (!(srcW > 0) || !(srcH > 0)) return;
+		if (entry.shadowSprite !== null && entry.shadowPlace !== null) {
+			placePainted(entry.shadowSprite, entry.shadowPlace, srcW, srcH, g);
+		}
+		if (entry.outlineSprite !== null && entry.outlinePlace !== null) {
+			placePainted(entry.outlineSprite, entry.outlinePlace, srcW, srcH, g);
+		}
+		this.orderPaint(entry);
+	}
+
+	private orderPaint(entry: Drawn): void {
+		const { holder, sprite } = entry;
+		let at = 0;
+		if (entry.shadowSprite !== null)
+			holder.addChildAt(entry.shadowSprite, at++);
+		if (entry.outlineSprite !== null)
+			holder.addChildAt(entry.outlineSprite, at);
+		holder.addChild(sprite);
+	}
+
+	private dropShadowOutline(entry: Drawn): void {
+		if (
+			entry.shadowSprite === null &&
+			entry.outlineSprite === null &&
+			entry.shadowKey === ""
+		) {
+			return;
+		}
+		this.destroyPaint(entry.shadowSprite);
+		this.destroyPaint(entry.outlineSprite);
+		entry.shadowSprite = null;
+		entry.outlineSprite = null;
+		entry.shadowPlace = null;
+		entry.outlinePlace = null;
+		entry.shadowKey = "";
+		entry.shadowSrcW = 0;
+		entry.shadowSrcH = 0;
+	}
+
+	private destroyPaint(sprite: Sprite | null): void {
+		if (sprite === null) return;
+		sprite.removeFromParent();
+		sprite.destroy({ texture: true, textureSource: true });
 	}
 
 	// The advanced colour comes right after the colour matrix (SDD-004 section
@@ -1067,4 +1335,78 @@ export class PixiExecutor implements PreviewExecutor {
 		}
 		this.sounds.idle(inUse);
 	}
+}
+
+function isDrawable(resource: unknown): resource is CanvasImageSource {
+	return (
+		(typeof HTMLImageElement !== "undefined" &&
+			resource instanceof HTMLImageElement) ||
+		(typeof HTMLVideoElement !== "undefined" &&
+			resource instanceof HTMLVideoElement) ||
+		(typeof HTMLCanvasElement !== "undefined" &&
+			resource instanceof HTMLCanvasElement) ||
+		(typeof ImageBitmap !== "undefined" && resource instanceof ImageBitmap) ||
+		(typeof VideoFrame !== "undefined" && resource instanceof VideoFrame) ||
+		(typeof OffscreenCanvas !== "undefined" &&
+			resource instanceof OffscreenCanvas)
+	);
+}
+
+// The silhouette is the alpha after the flip (SDD-004 section 3.15). The picture
+// sprite mirrors on its own; this copy is the source the shadow is built from.
+function mirrorPixels(
+	src: Uint8Array,
+	width: number,
+	height: number,
+	layer: PlanLayer,
+): Uint8Array {
+	const flipX = layer.flip_x === true;
+	const flipY = layer.flip_y === true;
+	if (!flipX && !flipY) return src;
+	const out = new Uint8Array(src.length);
+	for (let y = 0; y < height; y++) {
+		const sy = flipY ? height - 1 - y : y;
+		for (let x = 0; x < width; x++) {
+			const sx = flipX ? width - 1 - x : x;
+			const di = (y * width + x) * 4;
+			const si = (sy * width + sx) * 4;
+			out[di] = src[si] ?? 0;
+			out[di + 1] = src[si + 1] ?? 0;
+			out[di + 2] = src[si + 2] ?? 0;
+			out[di + 3] = src[si + 3] ?? 0;
+		}
+	}
+	return out;
+}
+
+function paintBox(painted: PlacedPixels | null): PaintBox | null {
+	if (painted === null) return null;
+	return {
+		x: painted.x,
+		y: painted.y,
+		width: painted.width,
+		height: painted.height,
+	};
+}
+
+// The sprite rotates around its own centre, so that centre is the source offset
+// rotated around the picture centre. Pixi's positive angle is clockwise.
+function placePainted(
+	sprite: Sprite,
+	place: PaintBox,
+	srcW: number,
+	srcH: number,
+	g: LayerGeometry,
+): void {
+	sprite.width = (g.w * place.width) / srcW;
+	sprite.height = (g.h * place.height) / srcH;
+	sprite.scale.x = Math.abs(sprite.scale.x);
+	sprite.scale.y = Math.abs(sprite.scale.y);
+	const lx = ((place.x + place.width / 2 - srcW / 2) * g.w) / srcW;
+	const ly = ((place.y + place.height / 2 - srcH / 2) * g.h) / srcH;
+	const turn = (g.rotation * Math.PI) / 180;
+	const cos = Math.cos(turn);
+	const sin = Math.sin(turn);
+	sprite.position.set(g.cx + lx * cos - ly * sin, g.cy + lx * sin + ly * cos);
+	sprite.angle = g.rotation;
 }
