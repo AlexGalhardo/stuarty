@@ -26,6 +26,7 @@ export default function NumberField({
 	placeholder,
 	marker,
 	reset,
+	trailing,
 	disabled = false,
 }: {
 	label: string;
@@ -44,6 +45,8 @@ export default function NumberField({
 	// Puts the property back to its default, beside the keyframe marker. Drawn
 	// only when given; `disabled` while the value already is the default.
 	reset?: { label: string; disabled: boolean; onReset(): void };
+	// A control after the reset button, such as the keyframe toggle of a row.
+	trailing?: ReactNode;
 	disabled?: boolean;
 }): ReactNode {
 	const locale = useLocale();
@@ -125,6 +128,7 @@ export default function NumberField({
 							<RotateCcw aria-hidden="true" />
 						</Button>
 					)}
+					{trailing}
 				</div>
 			)}
 		</FieldRow>

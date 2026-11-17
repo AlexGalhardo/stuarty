@@ -1,7 +1,14 @@
+import { Diamond } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import {
+	containsInclusive,
+	keyframeAt,
+	keyframeRemoveOperations,
+	keyframeSetOperations,
+	type Operations,
 	type TransformProperty,
 	transformOperations,
 } from "../../commands/builders";
@@ -98,6 +105,53 @@ export function shown(
 	}
 }
 
+// The keyframe toggle of a row (SDD-012 section 6.5 item 4): off while some
+// selected item has no keyframe of the property at the playhead, on when every
+// one has. Adding takes the value each item shows now; the core judges the
+// rest. Null when no item can take a keyframe there: the playhead is outside
+// one of them or a shown value is not a number.
+export function keyframeToggle(
+	property: TransformProperty,
+	targets: readonly (ItemView & {
+		id: string;
+		start: number;
+		duration: number;
+	})[],
+	values: readonly string[],
+	playhead: number,
+): { on: boolean; operations: Operations } | null {
+	const inside = targets.every((item) => containsInclusive(item, playhead));
+	if (!inside || targets.length === 0) return null;
+	const there = targets.map((item) =>
+		keyframeAt(item.keyframes?.[property] ?? [], item.start, playhead),
+	);
+	if (there.every((key) => key !== undefined)) {
+		return {
+			on: true,
+			operations: targets.flatMap((item) =>
+				keyframeRemoveOperations(item.id, property, playhead),
+			),
+		};
+	}
+	const numbers = values.map((shownValue) =>
+		shownValue === "" ? Number.NaN : Number(shownValue),
+	);
+	if (numbers.some((value) => !Number.isFinite(value))) return null;
+	return {
+		on: false,
+		operations: targets.flatMap((item, index) =>
+			there[index] === undefined
+				? keyframeSetOperations({
+						itemId: item.id,
+						property,
+						frame: playhead,
+						value: numbers[index] as number,
+					})
+				: [],
+		),
+	};
+}
+
 // The Transform section of SDD-012 section 12.1: X, Y, Scale, Rotation and
 // Opacity of one or several visual items. A commit sends only the changed field
 // to every selected item, in one batch: `item.set_transform`, or `keyframe.set`
@@ -136,6 +190,7 @@ export default function TransformSection({
 				);
 				const reset = resetOf(row.property, values, animated);
 				const label = t(`ui.editor.inspector.transform.${row.property}`);
+				const toggle = keyframeToggle(row.property, targets, values, playhead);
 				return (
 					<NumberField
 						key={row.property}
@@ -163,6 +218,34 @@ export default function TransformSection({
 												),
 											),
 									}
+						}
+						trailing={
+							toggle === null ? undefined : (
+								<Button
+									type="button"
+									size="icon-xs"
+									variant="ghost"
+									disabled={!canEdit}
+									aria-pressed={toggle.on}
+									data-keyframe-button={row.property}
+									aria-label={t(
+										toggle.on
+											? "ui.editor.inspector.keyframe_remove"
+											: "ui.editor.inspector.keyframe_add",
+										{ name: label },
+									)}
+									onClick={() => void send(toggle.operations)}
+								>
+									<Diamond
+										aria-hidden="true"
+										className={
+											toggle.on
+												? "size-3 fill-current text-ed-handle"
+												: "size-3"
+										}
+									/>
+								</Button>
+							)
 						}
 						step={row.step}
 						min={row.min ?? limits.min}
