@@ -190,10 +190,7 @@ func parseSilenceArgs(c *Context, a *removeSilencesArgs) (silenceParams, *Error)
 	if sp.padding, err = c.length("args.padding", padStr, true); err != nil {
 		return sp, err
 	}
-	if err := checkSilences(a.Resolved); err != nil {
-		return sp, err
-	}
-	sp.silences, sp.ripple = a.Resolved.Silences, a.Ripple != "none"
+	sp.ripple = a.Ripple != "none"
 	return sp, nil
 }
 
@@ -307,6 +304,12 @@ func applyRemoveSilences(c *Context, a *removeSilencesArgs) error {
 	if err != nil {
 		return err
 	}
+	// The service leaves resolved empty when it cannot see an asset and expects this
+	// command to name the item. Check that first, then the analysis (VV-207).
+	if err := checkSilences(a.Resolved); err != nil {
+		return err
+	}
+	sp.silences = a.Resolved.Silences
 	si := it.SourceIn
 	end := si + ceilDiv(it.Duration*it.Speed.Num, it.Speed.Den)
 	pieces, removedAny := speechPieces(si, end, it.Speed.Num, it.Speed.Den, sp.min, sp.padding, sp.silences)

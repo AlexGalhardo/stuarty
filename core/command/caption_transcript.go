@@ -180,9 +180,6 @@ func applyCaptionFromTranscript(c *Context, a *captionFromTranscriptArgs) error 
 	if err != nil {
 		return err
 	}
-	if err := checkResolvedWords(a.Resolved); err != nil {
-		return err
-	}
 	maxWords, maxChars, replace := 5, 28, true
 	if a.MaxWords != nil {
 		maxWords = *a.MaxWords
@@ -212,6 +209,10 @@ func applyCaptionFromTranscript(c *Context, a *captionFromTranscriptArgs) error 
 	if track.Kind != timeline.TrackVisual {
 		return Errorf(CodeTypeMismatch, "Track %s is an audio track; captions need a visual track.", a.TrackID).
 			WithHint("Use a visual track, for example the one from track.add.").WithPath("args.track_id")
+	}
+	// Name a missing or wrong clip or track before the internal resolved field (VV-207).
+	if err := checkResolvedWords(a.Resolved); err != nil {
+		return err
 	}
 	mapped := mapTranscript(&clip, a.Resolved.Words)
 	if len(mapped) == 0 {
@@ -297,9 +298,6 @@ func applyCaptionRetime(c *Context, a *captionRetimeArgs) error {
 	if err := idForm("args.clip_item_id", timeline.PrefixItem, a.ClipItemID); err != nil {
 		return err
 	}
-	if err := checkResolvedWords(a.Resolved); err != nil {
-		return err
-	}
 	clip, err := c.item(a.ClipItemID)
 	if err != nil {
 		return err.WithPath("args.clip_item_id")
@@ -307,6 +305,10 @@ func applyCaptionRetime(c *Context, a *captionRetimeArgs) error {
 	if err := c.speechSource(&clip, "captions follow the speech of a clip or an audio item.",
 		"there is no transcript to follow."); err != nil {
 		return err.WithPath("args.clip_item_id")
+	}
+	// Name a missing or wrong clip before the internal resolved field (VV-207).
+	if err := checkResolvedWords(a.Resolved); err != nil {
+		return err
 	}
 	tracks, byTrack := c.linkedCaptions(a.ClipItemID)
 	if len(tracks) == 0 {
