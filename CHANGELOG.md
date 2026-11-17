@@ -7,6 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-11-17
+
+### Added
+
+- **engine:** Pin per-frame colour matrices with a golden case of animated colour ([2d6e8f7](https://github.com/AlexGalhardo/vukem-video/commit/2d6e8f7d4d9602897a9dcc47e80975f7760f9e25))
+- **engine:** Draw the HSL bands, colour wheels and curves of the advanced colour ([da86436](https://github.com/AlexGalhardo/vukem-video/commit/da864364041a96217798eb1c3ba5c161b5d008f7))
+- **plan:** Carry the lookup table of a clip in the layer and the window ([60379f7](https://github.com/AlexGalhardo/vukem-video/commit/60379f752f3ce0ca1817e27f982d98b429747091))
+- **engine:** Parse .cube lookup tables with limits and a fuzz target ([8848ab2](https://github.com/AlexGalhardo/vukem-video/commit/8848ab23e3bcefd77bb212ddf55a89963ad21152))
+- **engine:** Draw .cube lookup tables in the Go compositor and the Rust renderer ([0ff4203](https://github.com/AlexGalhardo/vukem-video/commit/0ff42039d8ba316f9579c00f2b95008144ef37ce))
+- **ui:** Type the grade, the lookup table and the per-frame colour matrices of a plan layer ([0331bb6](https://github.com/AlexGalhardo/vukem-video/commit/0331bb6d992fcd8faeda2d3d292f20567311646e))
+- **ui:** Draw the colour matrix of each frame when the plan animates colour ([df4c547](https://github.com/AlexGalhardo/vukem-video/commit/df4c547cb59f22f69dfd2a9bfe624b40215ca08d))
+- **ui:** Draw the HSL bands, colour wheels and curves of a clip in the preview ([28511d3](https://github.com/AlexGalhardo/vukem-video/commit/28511d315ca0675c9bf3e856a74904288179c2dc))
+- **http:** Serve the parsed lookup table of a lut asset for the preview ([6cab0ff](https://github.com/AlexGalhardo/vukem-video/commit/6cab0ffcc223adf425541bfa4643966677f0bd83))
+- **ui:** Fetch and validate the parsed lookup table of a lut asset ([e891d42](https://github.com/AlexGalhardo/vukem-video/commit/e891d42abffef151e1e3d2f396b2cece6d483f30))
+- **ui:** Draw the lookup table of a clip in the preview ([03c2662](https://github.com/AlexGalhardo/vukem-video/commit/03c26626aed43a8f2644dd5753fcf1dbac3c5684))
+- **ui:** Make the current time of the preview a field that seeks the playhead ([05d9f37](https://github.com/AlexGalhardo/vukem-video/commit/05d9f3734b467f213d6aad0267f570e812b5047d))
+- **ui:** Save the open project as a template from the project panel ([76d6c29](https://github.com/AlexGalhardo/vukem-video/commit/76d6c29b9fa6b6871fc882d5ba8e521bd412ce04))
+- **ui:** Show the content hash of an asset in Inspect for the brand kit logo ([d97e785](https://github.com/AlexGalhardo/vukem-video/commit/d97e7852804749b9d083991f67bc738a0c56d983))
+- **service:** Show frames, loop duration and animated in the probe of an animated image ([16831b5](https://github.com/AlexGalhardo/vukem-video/commit/16831b54c8546296e88aa582b1b295e004b35653))
+- **ui:** Show the shortcut in the tooltip of the edit tools ([5ab96a6](https://github.com/AlexGalhardo/vukem-video/commit/5ab96a6708aaab364a1a91bffb70d75dc97d180b))
+- **ui:** Light the toggle buttons that are on ([e3dcead](https://github.com/AlexGalhardo/vukem-video/commit/e3dcead41c5d1d0d4f3f83837556cb35f6f0e653))
+- **ui:** Show the time of the last automatic save in the top bar ([59b9568](https://github.com/AlexGalhardo/vukem-video/commit/59b95680d5135676a7748207b0bc2cf4c07ce011))
+- **ui:** Group the timeline toolbar into edit tools at the left and modes and zoom at the right ([a0c5b9e](https://github.com/AlexGalhardo/vukem-video/commit/a0c5b9e23bd7f2ccad13477ef5754ee655415e36))
+- **ui:** Add a reset button beside the scale, rotation and opacity fields ([fff9c7d](https://github.com/AlexGalhardo/vukem-video/commit/fff9c7de8beb718a388c82285099330bda7768aa))
+- **api:** List the imported fonts with their hash in GET /fonts ([a344c14](https://github.com/AlexGalhardo/vukem-video/commit/a344c1487303c9c368ba3e66f2281f5738d20412))
+- **api:** Add a beats section to media_inspect with the tempo and the first beats ([f4902d9](https://github.com/AlexGalhardo/vukem-video/commit/f4902d93b5f80ebd2931fdf5e688629fc4b2d93c))
+- **api:** Add project_id to the items of the project listing ([fcbca07](https://github.com/AlexGalhardo/vukem-video/commit/fcbca0791d3f3054d2e3b796fb4d6c3082748c21))
+
+### Fixed
+
+- **service:** Write the .cube table as the normalized artifact the export reads ([18e7f1d](https://github.com/AlexGalhardo/vukem-video/commit/18e7f1d4d12f733b9301c908259872881d728f5d))
+- **ffmpeg:** Drop the macOS linker flag that libvorbis adds and the current ld refuses ([07214ea](https://github.com/AlexGalhardo/vukem-video/commit/07214ea9c86a0459d3d789df81140243ffc58cd9))
+- **ffmpeg:** Make the macOS own build reproducible with the new audio and image libraries ([1e5c21a](https://github.com/AlexGalhardo/vukem-video/commit/1e5c21aff9c731c5f6e433fa0db2fae2031eb39b))
+- **http:** Make the OpenAPI document declare the statuses and the server the API really has ([4e7ba74](https://github.com/AlexGalhardo/vukem-video/commit/4e7ba74c0e54ffe489f197029e166bb49fe3c2aa))
+- **api:** Give the OpenAPI the form of ids, nonce and fps and accept a numeric fps ([62032c8](https://github.com/AlexGalhardo/vukem-video/commit/62032c8114bc7cd3567f4521ca5bf35d21e5fa4f))
+- **mcp:** Say the accepted values and type in a validation error and that view needs at ([83b935e](https://github.com/AlexGalhardo/vukem-video/commit/83b935e39d1e42271efe0d2f094a29b26a8810e7))
+- **cli:** Show the batch file format in the help of edit --ops ([61fd54e](https://github.com/AlexGalhardo/vukem-video/commit/61fd54e66db4b797ea4ca571dbb19c87d8149c2e))
+- **mcp:** Report the workspace and server in serverInfo ([4e980bf](https://github.com/AlexGalhardo/vukem-video/commit/4e980bfe168d10d582933e20a0b092063ae79ecf))
+- **desktop:** Do not start the update schedule in a build without a feed ([bfee4b5](https://github.com/AlexGalhardo/vukem-video/commit/bfee4b55ebab22e37a4c4558260ed965d7279466))
+- **desktop:** Pass the WebView2 browser arguments and keep one profile per workspace ([bbe6595](https://github.com/AlexGalhardo/vukem-video/commit/bbe6595290725b05e39cc065711a3863c47d6062))
+- **ui:** Keep the copied attributes source between the menu entries ([58a03de](https://github.com/AlexGalhardo/vukem-video/commit/58a03deec1f90d52823d799c88a864db945ecd18))
+- **ui:** Tell the person that linking needs two items instead of sending one ([b38b814](https://github.com/AlexGalhardo/vukem-video/commit/b38b81465148ea478fdb567186fe54c6c68971bc))
+- **ui:** Say what a template import brought and warn when the name was already there ([5c6e844](https://github.com/AlexGalhardo/vukem-video/commit/5c6e844164b29d2026f5bb875da616d78c094a0c))
+- **desktop:** Show the update dialog bodies in the language of the menu ([fda81b1](https://github.com/AlexGalhardo/vukem-video/commit/fda81b1489950d8f5bc6cdc16397a68242166456))
+- **ui:** Name the open template slots in the language of the page ([217a04e](https://github.com/AlexGalhardo/vukem-video/commit/217a04eb0a919bfaa2d4dc55c7ebf1e0b7c4fa29))
+- **ui:** Link an icon so the browser does not log a 404 for the favicon ([b39faef](https://github.com/AlexGalhardo/vukem-video/commit/b39faef95bcf70d45ab485cd70bb8c41292dbd97))
+- **ui:** Make the caption words on the timeline named, focusable buttons that Enter edits ([315bdad](https://github.com/AlexGalhardo/vukem-video/commit/315bdad288c1cba1f76ab1b15dc2f84e26a5f9bb))
+- **ui:** Add to the timeline on the track of the selected item ([71e5a9d](https://github.com/AlexGalhardo/vukem-video/commit/71e5a9d5403f70d5e385338db4b4f589346bc7c1))
+- **engine:** Reach the loudness target with a peak limiter and report the shortfall ([d00ebac](https://github.com/AlexGalhardo/vukem-video/commit/d00ebacb927c665d44b0341c5d27c14196437d68))
+- **core:** Scale a caption or text down to max_width when a word is wider than it ([7ba4db6](https://github.com/AlexGalhardo/vukem-video/commit/7ba4db640f041479d584df3c8c86904e037dfedb))
+- **engine:** Give the ingest deadline a term for the size of the source file ([5abcf37](https://github.com/AlexGalhardo/vukem-video/commit/5abcf3794f4380ad34f563af4fc8c964e5a2fd66))
+- **service:** Warn when a GIF export scales the project down and document the cap ([79c5969](https://github.com/AlexGalhardo/vukem-video/commit/79c596940eb9cba4980e4639bd911d7543d07a50))
+- **ffmpeg:** Keep the macOS UUID but derive it from the binary so the build is reproducible ([4446342](https://github.com/AlexGalhardo/vukem-video/commit/44463427670fd4f84d68641b27a4c3c3e3e3a0b6))
+- **ui:** Give the border of a pressed toggle 3:1 contrast against the panel ([dff510d](https://github.com/AlexGalhardo/vukem-video/commit/dff510d56b0aa7410b604f95824604da24262e7a))
+- **core:** Treat project and settings as objects in the revision conflict check ([8013e91](https://github.com/AlexGalhardo/vukem-video/commit/8013e9138b88dcb4ba0ce4a557c4281d0bb95440))
+- **core:** Let clip.remove_silences cut audio items ([2542e6b](https://github.com/AlexGalhardo/vukem-video/commit/2542e6b7fbcbce5539f70454ccb6d78f7a053abe))
+- **core:** Refuse a shape width or height above 32768 pixels ([64f3f88](https://github.com/AlexGalhardo/vukem-video/commit/64f3f888ae090ffc22b3a070d18ca523e05664c3))
+- **core:** Correct the operation help and name the resulting length of a speed overlap ([3da7fc8](https://github.com/AlexGalhardo/vukem-video/commit/3da7fc86b3930aa17efed8a592929b8e40c51f6d))
+- **core:** Stop four lint rules from flagging things that are fine ([edd2de6](https://github.com/AlexGalhardo/vukem-video/commit/edd2de6141e26e3813a83b0583bbb13cc9d95940))
+- **core:** Cap the loudness estimate of the lint by what the export gain can reach ([a875ae8](https://github.com/AlexGalhardo/vukem-video/commit/a875ae8ea93bef98845e493cf9523a1186524a9a))
+- **core:** Give the id arguments of every command the id pattern in its schema ([50a8bfd](https://github.com/AlexGalhardo/vukem-video/commit/50a8bfd2e101500372b1e0311ecb2ac0bb346c04))
+- **cli:** Let the person at the terminal install a helper while the server runs ([28d4ab0](https://github.com/AlexGalhardo/vukem-video/commit/28d4ab02423084f81371b532c2d8d2f43bc6a67d))
+- **cli:** Answer an unknown command or flag in the product error format ([47b52dd](https://github.com/AlexGalhardo/vukem-video/commit/47b52dd0f7db4521905ffd6976736e655a0841a5))
+- **cli:** Make open find the running server and print its launch address ([c547d18](https://github.com/AlexGalhardo/vukem-video/commit/c547d186c3f88a73848154c112f12127b6767083))
+- **api:** Let any reader list the installed helpers and document the restricted routes ([966ec21](https://github.com/AlexGalhardo/vukem-video/commit/966ec21f4f30d5f70baab96f5c57eaa9212ef10e))
+- **service:** Import back the bundle and template files the server exported ([a70e045](https://github.com/AlexGalhardo/vukem-video/commit/a70e045dec9355c6b701f62107b5c58318c84fae))
+- **service:** Resolve the transcript of a clip created in the same batch ([0209dd4](https://github.com/AlexGalhardo/vukem-video/commit/0209dd41c88dd4201d9f4be752e8db3f27259199))
+- **http:** Refuse width and height on project creation instead of dropping them ([f698f4c](https://github.com/AlexGalhardo/vukem-video/commit/f698f4cdf77bc71b4f55aea26f618452daf931dc))
+- **api:** Name the commands of the surface in the hints of an error ([7d865a7](https://github.com/AlexGalhardo/vukem-video/commit/7d865a777b223e7e7a60d16fd09631a119b2b47c))
+- **service:** Clear the progress message of a succeeded job ([f1ea253](https://github.com/AlexGalhardo/vukem-video/commit/f1ea2533bee71283e78174c35f58c6ca293de0b9))
+- **api:** Refuse a limit or count below 1 instead of answering 200 ([4ce7903](https://github.com/AlexGalhardo/vukem-video/commit/4ce79030bd7e505dbc26b0f387f7678d475b8eb4))
+- **service:** Check every asset id before a media import imports anything ([a9ca552](https://github.com/AlexGalhardo/vukem-video/commit/a9ca552c165d420c97cde81f72cffaa65c464dcb))
+- **repo:** Count a release pull request from the previous release tag, not a build tag ([b50d533](https://github.com/AlexGalhardo/vukem-video/commit/b50d533fc38f2a88a0cf714d227ce8bd1885a889))
+
 ## [0.24.0] - 2026-11-17
 
 ### Added
@@ -1121,7 +1195,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.24.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.25.0...HEAD
+[0.25.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.24.0...v0.25.0
 [0.24.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.21.0...v0.22.0
