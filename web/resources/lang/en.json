@@ -1075,6 +1075,8 @@
         "mixed": "Mixed",
         "keyframed": "Animated with keyframes",
         "reset_field": "Reset {name}",
+        "keyframe_add": "Add a keyframe for {name} at the playhead",
+        "keyframe_remove": "Remove the keyframe of {name} at the playhead",
         "color_picker": "{label}, colour picker",
         "alpha": "{label}, opacity",
         "track_kind": {

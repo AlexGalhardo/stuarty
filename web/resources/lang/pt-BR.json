@@ -1067,6 +1067,8 @@
         },
         "mixed": "Misto",
         "reset_field": "Redefinir {name}",
+        "keyframe_add": "Adicionar um quadro-chave de {name} no cabeçote de reprodução",
+        "keyframe_remove": "Remover o quadro-chave de {name} no cabeçote de reprodução",
         "keyframed": "Animado com quadros-chave",
         "color_picker": "{label}, seletor de cor",
         "alpha": "{label}, opacidade",
