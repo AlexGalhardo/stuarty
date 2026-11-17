@@ -13,7 +13,7 @@ func init() {
 	Register(Define(Spec{
 		Name:    "keyframe.set",
 		Summary: "Adds or replaces a keyframe of one animated property of an item.",
-		Description: "Sets the value of x, y, scale, rotation, opacity or (clips and audio) volume at an absolute " +
+		Description: "Sets the value of x, y, scale, rotation, opacity, (clips and audio) volume or (clips) brightness, contrast, saturation, temperature, tint or hue at an absolute " +
 			"position inside the item, from its start to its end inclusive. When the property had no keyframe " +
 			"and at is after the start, its current static value becomes the first keyframe. The easing applies " +
 			"from this keyframe to the next. At most 100 keyframes per property.",
@@ -56,6 +56,16 @@ func propApplies(it *timeline.Item, prop string) *Error {
 	case prop == "volume" && !hasVolume:
 		return Errorf(CodeTypeMismatch, "Property volume does not apply to %s item %s.", it.Type, it.ID).
 			WithHint("Use opacity, scale, x, y or rotation.").WithPath("args.property")
+	case isColourProp(prop) && it.Type != timeline.ItemClip:
+		return Errorf(
+			CodeTypeMismatch,
+			"Property %s applies to clips; item %s is %s item.",
+			prop,
+			it.ID,
+			article(it.Type),
+		).
+			WithHint("Use opacity, scale, x, y or rotation.").
+			WithPath("args.property")
 	case prop != "volume" && it.Type == timeline.ItemAudio:
 		return Errorf(CodeTypeMismatch, "Property %s does not apply to audio item %s.", prop, it.ID).
 			WithHint("Use property volume for audio items.").WithPath("args.property")
@@ -82,8 +92,15 @@ func (c *Context) staticValue(it *timeline.Item, prop string) float64 {
 		return it.Rotation
 	case "opacity":
 		return it.Opacity
+	case "volume":
+		return it.Volume
 	}
-	return it.Volume
+	return it.ColourValue(prop)
+}
+
+func isColourProp(prop string) bool {
+	_, _, ok := timeline.ColourRange(prop)
+	return ok
 }
 
 func checkKeyframeValue(prop string, v float64) *Error {
@@ -102,6 +119,9 @@ func checkKeyframeValue(prop string, v float64) *Error {
 		return bad("from 0 to 1")
 	case prop == "volume" && (v < 0 || v > 4):
 		return bad("from 0 to 4")
+	}
+	if lo, hi, ok := timeline.ColourRange(prop); ok && (v < lo || v > hi) {
+		return bad("from " + trimFloat(lo) + " to " + trimFloat(hi))
 	}
 	return nil
 }
@@ -131,10 +151,10 @@ func (c *Context) keyframeT(it *timeline.Item, at Time) (int, *Error) {
 
 type keyframeSetArgs struct {
 	ItemID   string  `json:"item_id"`
-	Property string  `json:"property"         enum:"x,y,scale,rotation,opacity,volume"`
-	At       Time    `json:"at"                                                               desc:"Absolute position inside the item, inclusive of its end."`
-	Value    float64 `json:"value"                                                            desc:"Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4."`
-	Easing   string  `json:"easing,omitempty" enum:"linear,ease_in,ease_out,ease_in_out,hold" desc:"From this keyframe to the next. Default linear."`
+	Property string  `json:"property"         enum:"x,y,scale,rotation,opacity,volume,brightness,contrast,saturation,temperature,tint,hue"`
+	At       Time    `json:"at"                                                                                                            desc:"Absolute position inside the item, inclusive of its end."`
+	Value    float64 `json:"value"                                                                                                         desc:"Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4."`
+	Easing   string  `json:"easing,omitempty" enum:"linear,ease_in,ease_out,ease_in_out,hold"                                              desc:"From this keyframe to the next. Default linear."`
 }
 
 func applyKeyframeSet(c *Context, a *keyframeSetArgs) error {
@@ -210,8 +230,8 @@ func dropKeyframes(it *timeline.Item, prop string, value float64) {
 
 type keyframeRemoveArgs struct {
 	ItemID   string `json:"item_id"`
-	Property string `json:"property" enum:"x,y,scale,rotation,opacity,volume"`
-	At       Time   `json:"at"                                                desc:"Absolute position of the keyframe."`
+	Property string `json:"property" enum:"x,y,scale,rotation,opacity,volume,brightness,contrast,saturation,temperature,tint,hue"`
+	At       Time   `json:"at"                                                                                                    desc:"Absolute position of the keyframe."`
 }
 
 func applyKeyframeRemove(c *Context, a *keyframeRemoveArgs) error {
@@ -280,7 +300,7 @@ func abs(v int) int { return max(v, -v) }
 
 type keyframeClearArgs struct {
 	ItemID   string `json:"item_id"`
-	Property string `json:"property,omitempty" desc:"One property; default every animated property." enum:"x,y,scale,rotation,opacity,volume"`
+	Property string `json:"property,omitempty" desc:"One property; default every animated property." enum:"x,y,scale,rotation,opacity,volume,brightness,contrast,saturation,temperature,tint,hue"`
 }
 
 func applyKeyframeClear(c *Context, a *keyframeClearArgs) error {

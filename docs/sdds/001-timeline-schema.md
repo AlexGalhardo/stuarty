@@ -169,7 +169,7 @@ A `clip` shows a video or image asset. An `audio` item plays an audio asset, or 
 | `fade_in`, `fade_out` | integer | 0 | both | audio fade lengths in frames; their sum is at most `duration` |
 | `fit` | `"cover"`, `"contain"`, `"none"` | `"cover"` | clip | how the asset is sized into the frame before `scale` is applied |
 | `crop` | `{"left","top","right","bottom"}` numbers 0 to 1 | all 0 | clip | fraction removed from each side of the asset; `left + right < 1`, `top + bottom < 1` |
-| `brightness` | number, -1 to 1 | 0 | clip | |
+| `brightness` | number, -1 to 1 | 0 | clip | Keyframeable since TASK-0254 (NEW-15), like `contrast`, `saturation`, `temperature`, `tint` and `hue`: the property name is a key of `keyframes` and the range is that of the static value |
 | `contrast` | number, 0 to 2 | 1 | clip | |
 | `saturation` | number, 0 to 2 | 1 | clip | |
 | `temperature` | number, -1 to 1 | 0 | clip | Added after BETA (TASK-0233). White balance on the warm-cool axis: positive raises red and lowers blue. Not keyframeable |

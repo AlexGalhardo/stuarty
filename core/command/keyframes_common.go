@@ -34,6 +34,18 @@ func setStatic(it *timeline.Item, prop string, v float64) {
 		it.Opacity = v
 	case "volume":
 		it.Volume = v
+	case "brightness":
+		it.Brightness = v
+	case "contrast":
+		it.Contrast = v
+	case "saturation":
+		it.Saturation = v
+	case "temperature":
+		it.Temperature = v
+	case "tint":
+		it.Tint = v
+	case "hue":
+		it.Hue = v
 	}
 }
 

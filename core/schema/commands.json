@@ -1742,7 +1742,8 @@
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",
-      "E_TYPE_MISMATCH"
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
     ],
     "example": {
       "brightness": 0.1,
@@ -3237,7 +3238,13 @@
             "scale",
             "rotation",
             "opacity",
-            "volume"
+            "volume",
+            "brightness",
+            "contrast",
+            "saturation",
+            "temperature",
+            "tint",
+            "hue"
           ],
           "type": "string"
         }
@@ -3283,7 +3290,13 @@
             "scale",
             "rotation",
             "opacity",
-            "volume"
+            "volume",
+            "brightness",
+            "contrast",
+            "saturation",
+            "temperature",
+            "tint",
+            "hue"
           ],
           "type": "string"
         }
@@ -3344,7 +3357,13 @@
             "scale",
             "rotation",
             "opacity",
-            "volume"
+            "volume",
+            "brightness",
+            "contrast",
+            "saturation",
+            "temperature",
+            "tint",
+            "hue"
           ],
           "type": "string"
         },
@@ -3361,7 +3380,7 @@
       ],
       "type": "object"
     },
-    "description": "Sets the value of x, y, scale, rotation, opacity or (clips and audio) volume at an absolute position inside the item, from its start to its end inclusive. When the property had no keyframe and at is after the start, its current static value becomes the first keyframe. The easing applies from this keyframe to the next. At most 100 keyframes per property.",
+    "description": "Sets the value of x, y, scale, rotation, opacity, (clips and audio) volume or (clips) brightness, contrast, saturation, temperature, tint or hue at an absolute position inside the item, from its start to its end inclusive. When the property had no keyframe and at is after the start, its current static value becomes the first keyframe. The easing applies from this keyframe to the next. At most 100 keyframes per property.",
     "errors": [
       "E_VALIDATION",
       "E_INVALID_TIME",

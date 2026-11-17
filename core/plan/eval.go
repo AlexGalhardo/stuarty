@@ -126,8 +126,17 @@ func sourceFrame(it *timeline.Item, a *timeline.Asset, fps timeline.Rational, r 
 // colorMatrix is the 3×4 matrix H×S×C×G of SDD-004 §3.5, row-major with the
 // offset in the fourth column, or nil when every adjustment is neutral.
 func colorMatrix(it *timeline.Item) *[12]float64 {
-	b, k, s := it.Brightness, it.Contrast, it.Saturation
-	temp, tint, hue := it.Temperature, it.Tint, it.Hue
+	return colorMatrixAt(it, 0)
+}
+
+// colorMatrixAt is colorMatrix at frame r inside the item: a colour property with keyframes takes
+// the interpolated value (SDD-004 §3.5), the others their static one.
+func colorMatrixAt(it *timeline.Item, r int) *[12]float64 {
+	fr := float64(r)
+	b, k, s := property(it, "brightness", it.Brightness, fr), property(it, "contrast", it.Contrast, fr),
+		property(it, "saturation", it.Saturation, fr)
+	temp, tint, hue := property(it, "temperature", it.Temperature, fr), property(it, "tint", it.Tint, fr),
+		property(it, "hue", it.Hue, fr)
 
 	if b == 0 && k == 1 && s == 1 && temp == 0 && tint == 0 && hue == 0 {
 		return nil

@@ -463,6 +463,10 @@ func keyframeValueOK(prop string, v float64) bool {
 		return v >= 0 && v <= 4
 	}
 
+	if lo, hi, ok := timeline.ColourRange(prop); ok {
+		return v >= lo && v <= hi
+	}
+
 	return true
 }
 
@@ -530,7 +534,7 @@ func keyframeList(name string, raw any, mode itemMode, dur int) ([]keyframeAt, b
 	switch {
 	case name == "volume" && mode == modeText, name != "volume" && mode == modeAudio:
 		return nil, false
-	case !slices.Contains([]string{"x", "y", "scale", "rotation", "opacity", "volume"}, name):
+	case !slices.Contains([]string{"x", "y", "scale", "rotation", "opacity", "volume"}, name) && !isColourKey(name, mode):
 		return nil, false
 	}
 
@@ -696,4 +700,11 @@ func colourArgs(p *propReader, props map[string]any, lose func(string)) map[stri
 	maps.Copy(colour, gradeArgs(p))
 
 	return colour
+}
+
+// isColourKey is true for the colour properties a clip can animate.
+func isColourKey(name string, mode itemMode) bool {
+	_, _, ok := timeline.ColourRange(name)
+
+	return ok && mode == modeClip
 }

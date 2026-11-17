@@ -2485,6 +2485,7 @@ At least one of the eleven is required.
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
 | `E_VALIDATION` | nothing to set, or out of range | `args.contrast must be between 0 and 2, got 2.5.` | `Use contrast 2 for the strongest setting.` |
+| `E_INVALID_STATE` | a given colour property has keyframes (added with NEW-15) | `Property brightness of itm_m1n2p3q4r5 has 2 keyframes, which define its value.` | `Use keyframe.set to change a keyframe, or keyframe.clear to remove them first.` |
 | `E_NOT_FOUND` | unknown item or `lut_asset` | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
 | `E_TYPE_MISMATCH` | not a clip, or `lut_asset` is not a `lut` asset | `Item itm_s6t7v8w9x0 is an audio item; colour applies to clips.` | `Use a clip item.` |
 
@@ -2545,6 +2546,7 @@ At least one of the eleven is required.
 - `ok_new_defaults_remove_fields`
 - `ok_new_rounded_to_3_decimals`
 - `err_validation_no_argument`
+- `err_invalid_state_property_has_keyframes`
 - `err_validation_brightness_above_1`
 - `err_validation_saturation_negative`
 - `err_validation_temperature_above_1`
@@ -3804,9 +3806,9 @@ Adds or replaces a keyframe of one property.
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | |
-| `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"` | yes | none | `volume` for `audio` items and clips of a video (not of an image); the others for visual items |
+| `property` | `"x"`, `"y"`, `"scale"`, `"rotation"`, `"opacity"`, `"volume"`, `"brightness"`, `"contrast"`, `"saturation"`, `"temperature"`, `"tint"`, `"hue"` | yes | none | `volume` for `audio` items and clips of a video (not of an image); `brightness`, `contrast`, `saturation`, `temperature`, `tint` and `hue` (added after BETA, TASK-0254, NEW-15) for clips only; the others for visual items |
 | `at` | time | yes | none | absolute; from the item's `start` to `start + duration` inclusive |
-| `value` | number | yes | none | valid for the property: `scale` above 0 and at most 20, `opacity` 0 to 1, `volume` 0 to 4, `x`, `y`, `rotation` finite |
+| `value` | number | yes | none | valid for the property: `scale` above 0 and at most 20, `opacity` 0 to 1, `volume` 0 to 4, a colour property the range of `clip.set_color` (-1 to 1 for `brightness`, `temperature` and `tint`, 0 to 2 for `contrast` and `saturation`, -180 to 180 for `hue`), `x`, `y`, `rotation` finite |
 | `easing` | `"linear"`, `"ease_in"`, `"ease_out"`, `"ease_in_out"`, `"hold"` | no | `"linear"` | applies from this keyframe to the next |
 
 **Preconditions.**
@@ -3870,6 +3872,10 @@ Adds or replaces a keyframe of one property.
 - `err_not_found`
 - `err_type_mismatch_opacity_on_audio`
 - `err_type_mismatch_volume_on_image`
+- `ok_colour_property_on_a_clip`
+- `ok_colour_property_at_its_limits`
+- `err_validation_colour_above_range`
+- `err_type_mismatch_colour_on_text`
 - `err_type_mismatch_volume_on_text`
 - `err_invalid_time_at_before_item`
 - `err_invalid_time_at_after_item_end`
@@ -3999,6 +4005,7 @@ Removes all keyframes of one property, or of every property, keeping the value a
 - `err_validation_bad_property`
 - `err_not_found`
 - `err_type_mismatch_volume_on_text`
+- `ok_colour_property_returns_to_static`
 
 ### C.45 `slot.mark` (phase A)
 

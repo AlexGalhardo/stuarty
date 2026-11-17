@@ -450,6 +450,16 @@ export const KEYFRAME_PROPERTIES = [
 ] as const;
 export type KeyframeProperty = (typeof KEYFRAME_PROPERTIES)[number];
 
+// The colour properties of a clip that `keyframe.set` also animates; the inspector does not offer them yet.
+export const KEYFRAME_COLOUR_PROPERTIES = [
+	"brightness",
+	"contrast",
+	"saturation",
+	"temperature",
+	"tint",
+	"hue",
+] as const;
+
 // The spellings of the registry (`keyframe.set` easing).
 export const KEYFRAME_EASINGS = [
 	"linear",

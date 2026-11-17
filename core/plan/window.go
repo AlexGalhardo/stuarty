@@ -52,6 +52,9 @@ type WindowLayer struct {
 	SourceSeconds []float64       `json:"source_seconds,omitempty"`
 	Crop          *[4]float64     `json:"crop,omitempty"`
 	ColorMatrix   json.RawMessage `json:"color_matrix,omitempty"`
+	// ColorMatrices is the matrix of each frame of the window, present only when a colour property is
+	// animated and the matrix changes (SDD-004 §3.5); then it replaces color_matrix.
+	ColorMatrices []json.RawMessage `json:"color_matrices,omitempty"`
 
 	// Animated image layers (BETA, SDD-004 section 3.3): the frame of the image shown at
 	// each frame of the window. Absent for video and still images.
@@ -174,6 +177,7 @@ type layerAcc struct {
 	wl        WindowLayer
 	asset     timeline.Asset // media layers
 	keyByWord map[int]int    // bitmap layers: active word -> index in the keys
+	colourKF  bool           // media layers: a colour property has keyframes
 }
 
 func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
@@ -181,6 +185,9 @@ func newLayerAcc(p *planner, t, room int, first *Layer) *layerAcc {
 	room = min(room, it.Start+it.Duration-t)
 
 	a := &layerAcc{}
+	for _, name := range timeline.ColourProps {
+		a.colourKF = a.colourKF || len(it.Keyframes[name]) > 0
+	}
 	a.wl = WindowLayer{
 		Item:      first.ItemID,
 		Kind:      first.Kind,
@@ -270,6 +277,7 @@ func (a *layerAcc) add(t int, l *Layer) {
 		}
 
 		wl.SourceSeconds = append(wl.SourceSeconds, round3(sec))
+		a.addMatrix(l)
 
 		if wl.SourceFrames != nil {
 			wl.SourceFrames = append(wl.SourceFrames, l.SourceFrame)
@@ -349,4 +357,33 @@ func windowAudio(doc *timeline.Document, from, to int) []WindowAudio {
 	}
 
 	return out
+}
+
+// addMatrix keeps the colour matrix of a frame when it differs from the first one: the series starts
+// at the first difference, filled with the first matrix for the frames before.
+func (a *layerAcc) addMatrix(l *Layer) {
+	if !a.colourKF {
+		return
+	}
+
+	wl := &a.wl
+	m := json.RawMessage("null")
+
+	if l.ColorMatrix != nil {
+		if data, err := json.Marshal(l.ColorMatrix); err == nil {
+			m = data
+		}
+	}
+
+	if wl.ColorMatrices == nil {
+		if string(m) == string(wl.ColorMatrix) {
+			return
+		}
+
+		for len(wl.ColorMatrices) < len(wl.Opacity)-1 {
+			wl.ColorMatrices = append(wl.ColorMatrices, wl.ColorMatrix)
+		}
+	}
+
+	wl.ColorMatrices = append(wl.ColorMatrices, m)
 }

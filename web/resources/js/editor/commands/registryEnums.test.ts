@@ -6,6 +6,7 @@ import {
 	BLEND_MODES,
 	FILTERS,
 	FITS,
+	KEYFRAME_COLOUR_PROPERTIES,
 	KEYFRAME_EASINGS,
 	KEYFRAME_PROPERTIES,
 	SHAPES,
@@ -32,7 +33,12 @@ function registryEnum(command: string, arg: string): string[] {
 
 const CASES: [string, readonly string[], string, string][] = [
 	["KEYFRAME_EASINGS", KEYFRAME_EASINGS, "keyframe.set", "easing"],
-	["KEYFRAME_PROPERTIES", KEYFRAME_PROPERTIES, "keyframe.set", "property"],
+	[
+		"KEYFRAME_PROPERTIES",
+		[...KEYFRAME_PROPERTIES, ...KEYFRAME_COLOUR_PROPERTIES],
+		"keyframe.set",
+		"property",
+	],
 	["TRANSITION_KINDS", TRANSITION_KINDS, "item.set_transition", "kind"],
 	["ANIMATION_PRESETS", ANIMATION_PRESETS, "text.apply_preset", "preset"],
 	["FILTERS", FILTERS, "clip.set_filter", "filter"],
