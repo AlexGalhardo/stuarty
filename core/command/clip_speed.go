@@ -57,7 +57,7 @@ func parseSpeedAt(v any, path string) (timeline.Rational, *Error) {
 		n, e1 := strconv.Atoi(whole + frac)
 		if !ok || body == "" || len(frac) > 3 || e1 != nil || strings.ContainsAny(body, "+- ") ||
 			whole == "" && frac == "" {
-			return timeline.Rational{}, bad("args.speed %q is not a speed like \"1.5x\".", x)
+			return timeline.Rational{}, bad("%s %q is not a speed like \"1.5x\".", path, x)
 		}
 		num, den = n, 1
 		for range frac {
@@ -72,21 +72,21 @@ func parseSpeedAt(v any, path string) (timeline.Rational, *Error) {
 			den, e2 = strconv.Atoi(string(d))
 		}
 		if !ok1 || !ok2 || e1 != nil || e2 != nil || len(x) != 2 || num < 1 || den < 1 {
-			return timeline.Rational{}, bad("args.speed is not a rational {\"num\", \"den\"} of positive integers.")
+			return timeline.Rational{}, bad("%s is not a rational {\"num\", \"den\"} of positive integers.", path)
 		}
 	default:
-		return timeline.Rational{}, bad("args.speed must be a string or an object, got %s.", kindOf(v))
+		return timeline.Rational{}, bad("%s must be a string or an object, got %s.", path, kindOf(v))
 	}
 	g := int(gcd(int64(num), int64(den)))
 	if g == 0 {
-		return timeline.Rational{}, bad("args.speed is 0.")
+		return timeline.Rational{}, bad("%s is 0.", path)
 	}
 	num, den = num/g, den/g
 	switch {
 	case num*4 > den*16:
-		return timeline.Rational{}, bad("args.speed %s is above the maximum 4x.", speedWord(num, den))
+		return timeline.Rational{}, bad("%s %s is above the maximum 4x.", path, speedWord(num, den))
 	case num*4 < den:
-		return timeline.Rational{}, bad("args.speed %s is below the minimum 0.25x.", speedWord(num, den))
+		return timeline.Rational{}, bad("%s %s is below the minimum 0.25x.", path, speedWord(num, den))
 	}
 	return timeline.Rational{Num: num, Den: den}, nil
 }
