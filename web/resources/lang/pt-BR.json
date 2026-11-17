@@ -90,7 +90,19 @@
       "unavailable": "O serviço não respondeu.",
       "version": "Versão",
       "workspace": "Pasta do espaço de trabalho",
-      "workspace_none": "Não informada"
+      "workspace_none": "Não informada",
+      "transcription": {
+        "title": "Transcrição",
+        "intro": "As legendas são geradas neste computador. O auxiliar e um modelo são baixados uma vez, só quando você pressiona Instalar.",
+        "ready": "Instalado. Modelos: {models}.",
+        "missing": "Ainda não instalado.",
+        "model": "Modelo",
+        "install": "Instalar transcrição",
+        "progress": "Progresso da instalação",
+        "forbidden": "Esta sessão não pode instalar arquivos. Rode o comando abaixo em um terminal.",
+        "command": "Comando de instalação",
+        "copy_command": "Copiar o comando"
+      }
     },
     "editor": {
       "dialog": {

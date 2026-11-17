@@ -90,7 +90,19 @@
       "unavailable": "The service did not answer.",
       "version": "Version",
       "workspace": "Workspace folder",
-      "workspace_none": "Not reported"
+      "workspace_none": "Not reported",
+      "transcription": {
+        "title": "Transcription",
+        "intro": "Captions are generated on this computer. The helper and a model are downloaded once, only when you press Install.",
+        "ready": "Installed. Models: {models}.",
+        "missing": "Not installed yet.",
+        "model": "Model",
+        "install": "Install transcription",
+        "progress": "Installation progress",
+        "forbidden": "This session cannot install files. Run the command below in a terminal.",
+        "command": "Install command",
+        "copy_command": "Copy the command"
+      }
     },
     "editor": {
       "dialog": {
