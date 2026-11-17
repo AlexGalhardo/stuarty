@@ -558,6 +558,12 @@
           "set_mask": {
             "title": "Set clip mask"
           },
+          "set_shadow": {
+            "title": "Set clip shadow"
+          },
+          "set_outline": {
+            "title": "Set clip outline"
+          },
           "set_flip": {
             "title": "Flip clip"
           },
@@ -600,6 +606,9 @@
           },
           "duplicate": {
             "title": "Duplicate item"
+          },
+          "repeat": {
+            "title": "Repeat item"
           },
           "move": {
             "title": "Move item"
