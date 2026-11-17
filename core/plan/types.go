@@ -32,11 +32,14 @@ const (
 
 // FramePlan is what one frame contains (SDD-004 §2).
 type FramePlan struct {
-	Frame      int     `json:"frame"`
-	Width      int     `json:"width"`
-	Height     int     `json:"height"`
-	Background string  `json:"background"`
-	Layers     []Layer `json:"layers"` // bottom first
+	Frame      int    `json:"frame"`
+	Width      int    `json:"width"`
+	Height     int    `json:"height"`
+	Background string `json:"background"`
+	// Transparent is true when the project has no background colour (settings.background is "transparent");
+	// Background is then #000000, so an executor that ignores the flag composites over black.
+	Transparent bool    `json:"transparent,omitempty"`
+	Layers      []Layer `json:"layers"` // bottom first
 }
 
 // Layer is one drawn thing. Placement is valid for both kinds.

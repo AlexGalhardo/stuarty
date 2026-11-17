@@ -103,11 +103,12 @@ func (pl *Planner) Frame(t int) FramePlan { return pl.p.frame(t) }
 func (p *planner) frame(t int) FramePlan {
 	st := p.doc.Settings
 	fp := FramePlan{
-		Frame:      t,
-		Width:      st.Width,
-		Height:     st.Height,
-		Background: string(st.Background),
-		Layers:     make([]Layer, 0, len(p.tracks)),
+		Frame:       t,
+		Width:       st.Width,
+		Height:      st.Height,
+		Background:  backgroundOf(st),
+		Transparent: st.Background == timeline.BackgroundTransparent,
+		Layers:      make([]Layer, 0, len(p.tracks)),
 	}
 
 	for i := range p.tracks {
@@ -122,6 +123,16 @@ func (p *planner) frame(t int) FramePlan {
 	}
 
 	return fp
+}
+
+// backgroundOf is the background colour of the plan: black when the project has none (settings.background
+// "transparent"), so that every executor has a colour to start from.
+func backgroundOf(st timeline.Settings) string {
+	if st.Background == timeline.BackgroundTransparent {
+		return "#000000"
+	}
+
+	return string(st.Background)
 }
 
 func (p *planner) layer(it *timeline.Item, r int) (Layer, bool) {

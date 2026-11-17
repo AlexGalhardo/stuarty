@@ -893,7 +893,7 @@
       "properties": {
         "background": {
           "default": "#000000",
-          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39})$",
+          "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\\$[a-z][a-z0-9_]{0,39}|transparent)$",
           "type": "string"
         },
         "fps": {

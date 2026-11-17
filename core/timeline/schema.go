@@ -27,6 +27,8 @@ type schemaGen struct{ defs map[string]any }
 
 const (
 	colorPattern = `^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\$[a-z][a-z0-9_]{0,39})$`
+	// backgroundPattern is colorPattern plus the keyword of a frame without a background colour.
+	backgroundPattern = `^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|\$[a-z][a-z0-9_]{0,39}|transparent)$`
 )
 
 var (
@@ -91,6 +93,9 @@ func (g *schemaGen) field(owner, name string, sf reflect.StructField) map[string
 			},
 		}, "description": "den is 1 or 1001; num/den between 1 and 120."}
 		return s
+	}
+	if owner == "Settings" && name == "background" {
+		s["pattern"] = backgroundPattern
 	}
 	tags(s, sf.Tag, t)
 	return s

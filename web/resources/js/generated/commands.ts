@@ -1950,7 +1950,7 @@ export interface SettingsReframeArgs {
 
 export interface SettingsSetArgs {
   /**
-   * A hex colour, or $name from template.colors.
+   * A hex colour, $name from template.colors, or transparent (no background colour; formats with alpha keep it).
    */
   background?: string;
   /**

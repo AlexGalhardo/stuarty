@@ -155,7 +155,9 @@ func (v *validator) settings() {
 	if !inRange(s.LoudnessTarget, -30, -5) {
 		v.add(VShape, "settings.loudness_target", id, "loudness_target must be between -30 and -5")
 	}
-	v.color("settings.background", id, s.Background, true)
+	if s.Background != BackgroundTransparent {
+		v.color("settings.background", id, s.Background, true)
+	}
 }
 
 // color checks a colour value; refs says whether "$name" is accepted.
