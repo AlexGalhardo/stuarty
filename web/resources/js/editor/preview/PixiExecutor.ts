@@ -60,6 +60,7 @@ import {
 	type ShadowOutlineImage,
 	shadowOutline,
 } from "./shadowOutline";
+import { STILL_POSTER_WIDTH, stillFrameRect } from "./stillFrame";
 import type {
 	LayerGeometry,
 	PreviewExecutor,
@@ -169,6 +170,8 @@ export class PixiExecutor implements PreviewExecutor {
 	);
 	private readonly loading = new Set<string>();
 	private readonly stills = new Map<string, Texture>();
+	// The poster of a still asset, shared by every crop of that asset.
+	private readonly stillImages = new Map<string, HTMLImageElement>();
 	// Pixels of a layer, read once per source, to paint its shadow and outline.
 	private shadowScratch: HTMLCanvasElement | null = null;
 	private readonly shadowStamps = new WeakMap<object, number>();
@@ -181,8 +184,14 @@ export class PixiExecutor implements PreviewExecutor {
 
 	constructor(
 		private readonly client: ApiClient,
-		timers: PoolTimers = browserTimers,
+		timers?: PoolTimers,
+		// Asset pixel size, the space the plan's crop is measured in. Absent
+		// means the poster is the source (a still at most STILL_POSTER_WIDTH wide).
+		private readonly sources: (
+			asset: string,
+		) => { width: number; height: number } | null = () => null,
 	) {
+		const poolTimers = timers ?? browserTimers;
 		this.windows = new PlanWindows(() =>
 			Promise.reject(new Error("no project")),
 		);
@@ -199,14 +208,14 @@ export class PixiExecutor implements PreviewExecutor {
 			"video",
 			() => this.context,
 			() => this.audioGraph.input,
-			timers,
+			poolTimers,
 			redraw,
 		);
 		this.sounds = new MediaPool(
 			"audio",
 			() => this.context,
 			() => this.audioGraph.input,
-			timers,
+			poolTimers,
 			redraw,
 		);
 	}
@@ -1128,7 +1137,7 @@ export class PixiExecutor implements PreviewExecutor {
 			return null;
 		}
 		if (layer.asset_kind === "image" || !decoding.has(layer.item)) {
-			return this.still(info.projectId, layer);
+			return this.still(info.projectId, layer, frame);
 		}
 		const decoded = this.decodedTexture(layer, frame, mode, info);
 		if (decoded !== "fallback") return decoded;
@@ -1268,26 +1277,56 @@ export class PixiExecutor implements PreviewExecutor {
 	}
 
 	// The thumbnail still of an asset that has no decoding element (beyond
-	// MAX_VIDEO_LAYERS) or that is an image.
-	private still(projectId: string, layer: PlanMediaLayer): Texture | null {
-		const key = `still:${layer.asset}`;
+	// MAX_VIDEO_LAYERS) or that is an image. The frame's crop is the source
+	// region, the same rectangle a decoded video uses, scaled onto the poster.
+	private still(
+		projectId: string,
+		layer: PlanMediaLayer,
+		frame: number,
+	): Texture | null {
+		const crop = cropAt(layer, frame);
+		if (crop === null) return null;
+		const key = `still:${layer.asset}:${crop.join(",")}`;
 		const cached = this.stills.get(key);
 		if (cached !== undefined) return cached;
-		if (this.loading.has(key)) return null;
-		this.loading.add(key);
-		const image = new Image();
-		image.onload = () => {
-			this.loading.delete(key);
+		const image = this.stillImages.get(layer.asset);
+		if (image !== undefined) {
+			const texture = this.textureOfStill(image, layer.asset, crop);
+			this.stills.set(key, texture);
+			return texture;
+		}
+		const loadKey = `still:${layer.asset}`;
+		if (this.loading.has(loadKey)) return null;
+		this.loading.add(loadKey);
+		const loading = new Image();
+		loading.onload = () => {
+			this.loading.delete(loadKey);
 			if (this.disposed) return;
-			this.stills.set(
-				key,
-				new Texture({ source: new ImageSource({ resource: image }) }),
-			);
+			this.stillImages.set(layer.asset, loading);
 			this.redraw();
 		};
-		image.onerror = () => this.loading.delete(key);
-		image.src = thumbnailUrl(projectId, layer.asset, 640);
+		loading.onerror = () => this.loading.delete(loadKey);
+		loading.src = thumbnailUrl(projectId, layer.asset, STILL_POSTER_WIDTH);
 		return null;
+	}
+
+	private textureOfStill(
+		image: HTMLImageElement,
+		asset: string,
+		crop: [number, number, number, number],
+	): Texture {
+		const source = this.sources(asset);
+		const rect = stillFrameRect(
+			crop,
+			image.naturalWidth,
+			image.naturalHeight,
+			source?.width ?? image.naturalWidth,
+			source?.height ?? image.naturalHeight,
+		);
+		return new Texture({
+			source: new ImageSource({ resource: image }),
+			frame: new Rectangle(rect.x, rect.y, rect.width, rect.height),
+		});
 	}
 
 	private loadBitmap(projectId: string, key: string): void {
