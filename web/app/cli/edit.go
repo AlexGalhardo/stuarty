@@ -25,7 +25,9 @@ var edit = &spec{
 	globals:    []string{"dry-run"},
 	write:      true,
 	flags: []flagDef{
-		{Name: "ops", Kind: kindString, Usage: "a file with the batch, or - for standard input"},
+		{Name: "ops", Kind: kindString, Usage: "a JSON file with the batch, or - for standard input: " +
+			`{"operations":[{"op":"item.move","args":{"item_id":"itm_m1n2p3q4r5","start":"2s"}}]}, ` +
+			"or only the array of {op, args}; base_revision, idempotency_key and dry_run may sit beside operations"},
 		{Name: "base", Kind: kindInt, Usage: "the revision the batch was planned against (default: the current one)"},
 		{Name: "key", Kind: kindString, Usage: "idempotency key"},
 	},

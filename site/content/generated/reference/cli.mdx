@@ -138,7 +138,7 @@ vukem-video edit --project <id> <op> [k=v | k:=json]...
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--ops` | string |  | a file with the batch, or - for standard input |
+| `--ops` | string |  | a JSON file with the batch, or - for standard input: \{"operations":[\{"op":"item.move","args":\{"item_id":"itm_m1n2p3q4r5","start":"2s"\}\}]\}, or only the array of \{op, args\}; base_revision, idempotency_key and dry_run may sit beside operations |
 | `--base` | integer |  | the revision the batch was planned against (default: the current one) |
 | `--key` | string |  | idempotency key |
 

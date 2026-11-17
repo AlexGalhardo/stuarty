@@ -210,7 +210,7 @@
         {
           "name": "ops",
           "type": "string",
-          "usage": "a file with the batch, or - for standard input"
+          "usage": "a JSON file with the batch, or - for standard input: {\"operations\":[{\"op\":\"item.move\",\"args\":{\"item_id\":\"itm_m1n2p3q4r5\",\"start\":\"2s\"}}]}, or only the array of {op, args}; base_revision, idempotency_key and dry_run may sit beside operations"
         },
         {
           "name": "base",
