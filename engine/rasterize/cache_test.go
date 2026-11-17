@@ -108,3 +108,22 @@ func TestCacheError(t *testing.T) {
 		t.Error("Get of an invalid spec succeeded")
 	}
 }
+
+// Warm may be called from many goroutines at start-up and while a render runs.
+func TestWarmIsSafeToCallConcurrently(t *testing.T) {
+	t.Parallel()
+
+	var wg sync.WaitGroup
+
+	for range 4 {
+		wg.Go(Warm)
+	}
+
+	wg.Go(func() {
+		if _, err := Render(textSpec("Warm", plainStyle()), Bundled()); err != nil {
+			t.Error(err)
+		}
+	})
+
+	wg.Wait()
+}
