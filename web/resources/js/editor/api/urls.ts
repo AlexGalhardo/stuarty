@@ -50,3 +50,7 @@ export function stripUrl(projectId: string, assetId: string): string {
 export function peaksUrl(projectId: string, assetId: string): string {
 	return `${project(projectId)}/media/${encodeURIComponent(assetId)}/peaks`;
 }
+
+export function lutUrl(projectId: string, assetId: string): string {
+	return `${project(projectId)}/media/${encodeURIComponent(assetId)}/lut`;
+}
