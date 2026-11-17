@@ -72,7 +72,13 @@ function isEditable(target: EventTarget | null): boolean {
 
 // The preview of SDD-012 section 11: the executor draws the plan on a canvas,
 // and 150 ms after a pause the core's exact frame replaces it.
-export default function Preview({ port }: { port: CanvasPort }): ReactNode {
+export default function Preview({
+	port,
+	parseTime,
+}: {
+	port: CanvasPort;
+	parseTime: (text: string) => number | null;
+}): ReactNode {
 	const t = useT();
 	const runtime = useRuntime();
 	const status = useDocumentState((s) => s.status);
@@ -600,6 +606,8 @@ export default function Preview({ port }: { port: CanvasPort }): ReactNode {
 						subscribe={subscribe}
 						fps={fps}
 						label={t("ui.editor.preview.current")}
+						parse={parseTime}
+						onSeek={(frame) => seekTo(Math.min(frame, endFrame))}
 					/>
 					<span aria-hidden="true">/</span>
 					<Timecode

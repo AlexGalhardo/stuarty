@@ -117,4 +117,27 @@ test.describe("palette Escape, documented keys and the attributes menu", () => {
 		await page.getByRole("menuitem", { name: "Paste attributes" }).click();
 		await expect.poll(() => edits.flat()).toContain("item.paste_attributes");
 	});
+
+	// VV-127: the current time is a field; a typed time moves the playhead.
+	test("typing a time in the current time field seeks the playhead", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+			clipDuration: "8s",
+		});
+		await page.goto(`/editor/${seeded.id}`);
+		await expect(page.locator("[data-item-id]")).toHaveCount(1);
+		const field = page.getByRole("textbox", { name: "Current time" });
+		await field.fill("5");
+		await field.press("Enter");
+		const playhead = page.getByRole("slider", { name: "Playhead" });
+		await expect(playhead).toHaveAttribute("aria-valuenow", "150");
+		await field.fill("nonsense");
+		await field.press("Enter");
+		await expect(field).toHaveAttribute("aria-invalid", "true");
+		await expect(playhead).toHaveAttribute("aria-valuenow", "150");
+	});
 });

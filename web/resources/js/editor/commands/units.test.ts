@@ -10,6 +10,7 @@ import {
 	localizeDecimalInput,
 	normalizeTimeInput,
 	speedText,
+	timeToFrame,
 } from "./units";
 
 const ok = (value: string) => ({ ok: true, value });
@@ -108,5 +109,24 @@ describe("speedText", () => {
 		expect(speedText({ num: 3, den: 2 })).toBe("1.5");
 		expect(speedText({ num: 1, den: 3 })).toBe("0.333");
 		expect(speedText({ num: 4, den: 1 })).toBe("4");
+	});
+});
+
+describe("timeToFrame (VV-127)", () => {
+	const fps = { num: 30, den: 1 };
+
+	test("reads seconds, frames and timecodes", () => {
+		expect(timeToFrame("67s", fps)).toBe(2010);
+		expect(timeToFrame("67", fps)).toBe(2010);
+		expect(timeToFrame("12.5s", fps)).toBe(375);
+		expect(timeToFrame("90f", fps)).toBe(90);
+		expect(timeToFrame("01:07.000", fps)).toBe(2010);
+		expect(timeToFrame("1:00:00", fps)).toBe(108000);
+	});
+
+	test("rounds on a fractional rate and refuses what is not a time", () => {
+		expect(timeToFrame("1s", { num: 30000, den: 1001 })).toBe(30);
+		expect(timeToFrame("abc", fps)).toBeNull();
+		expect(timeToFrame("", fps)).toBeNull();
 	});
 });
