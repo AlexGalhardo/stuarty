@@ -103,6 +103,39 @@ func TestFlagsMayFollowPositionalArguments(t *testing.T) {
 	}
 }
 
+// A flag value can be enormous. The validation error names the flag and the
+// kind it expected, and it does not repeat the value (SDD-003 section 1.2 rule 9).
+func TestInvalidFlagDoesNotEchoTheValue(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	huge := strings.Repeat("9", 8000)
+
+	if code := h.run("project:list", "--limit", huge, "--json"); code != ExitFailure {
+		t.Fatalf("exit %d: %s", code, h.stdout.String())
+	}
+
+	doc := oneJSONDocument(t, h.stdout.String())
+	msg, _ := doc["message"].(string)
+
+	if doc["code"] != command.CodeValidation || doc["path"] != "limit" || strings.Contains(msg, huge) {
+		t.Fatalf("the error echoed the value or missed the code: %v", doc)
+	}
+
+	if !strings.Contains(msg, "integer") {
+		t.Fatalf("the message does not name the expected kind: %q", msg)
+	}
+
+	hint, _ := doc["hint"].(string)
+	if hint == "" {
+		t.Fatalf("a bad flag needs a hint: %v", doc)
+	}
+
+	if h.res.resolved != 0 {
+		t.Fatal("an invalid flag must not open the workspace")
+	}
+}
+
 func TestProjectResolution(t *testing.T) {
 	t.Parallel()
 

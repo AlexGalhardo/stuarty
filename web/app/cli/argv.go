@@ -181,10 +181,30 @@ func checkValue(def flagDef, value string) error {
 	}
 
 	if err != nil {
-		return validation(def.Name, "flag --%s: %q is not a valid %s", def.Name, value, kindName(def.Kind))
+		// The value is not repeated: it can be huge, and a validation message names the constraint only.
+		return &service.Error{
+			Code:    command.CodeValidation,
+			Path:    def.Name,
+			Message: fmt.Sprintf("flag --%s: the value is not a valid %s", def.Name, kindName(def.Kind)),
+			Hint:    flagValueHint(def.Kind),
+		}
 	}
 
 	return nil
+}
+
+func flagValueHint(k flagKind) string {
+	switch k {
+	case kindBool:
+		return "use true or false"
+	case kindInt:
+		return "use a whole number"
+	case kindDuration:
+		return "use a duration such as 30s or 10m"
+	case kindString:
+	}
+
+	return ""
 }
 
 func kindName(k flagKind) string {
