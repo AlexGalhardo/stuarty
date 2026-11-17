@@ -7787,6 +7787,7 @@
         "summary": "List the bundled font families and weights"
       },
       "post": {
+        "description": "Heavy call: shares the limit of 10 a minute per credential (E_RATE_LIMITED with Retry-After).",
         "operationId": "fonts.import",
         "requestBody": {
           "content": {
@@ -8333,6 +8334,7 @@
     },
     "/api/v1/projects/import": {
       "post": {
+        "description": "Heavy call: shares the limit of 10 a minute per credential (E_RATE_LIMITED with Retry-After).",
         "operationId": "projects.bundle.import",
         "requestBody": {
           "content": {
@@ -8516,6 +8518,7 @@
     },
     "/api/v1/projects/{id}/bundle": {
       "post": {
+        "description": "Heavy call: shares the limit of 10 a minute per credential (E_RATE_LIMITED with Retry-After).",
         "operationId": "projects.bundle.export",
         "parameters": [
           {
@@ -8934,6 +8937,7 @@
         "summary": "List the jobs of a project"
       },
       "post": {
+        "description": "Heavy call: shares the limit of 10 a minute per credential (E_RATE_LIMITED with Retry-After).",
         "operationId": "jobs.start",
         "parameters": [
           {
@@ -9192,6 +9196,7 @@
         "summary": "List the assets of a project"
       },
       "post": {
+        "description": "Heavy call: shares the limit of 10 a minute per credential (E_RATE_LIMITED with Retry-After).",
         "operationId": "media.import",
         "parameters": [
           {
@@ -9853,6 +9858,7 @@
         "summary": "Export a project as OpenTimelineIO"
       },
       "post": {
+        "description": "Heavy call: shares the limit of 10 a minute per credential (E_RATE_LIMITED with Retry-After).",
         "operationId": "projects.otio.import",
         "parameters": [
           {
@@ -10736,6 +10742,7 @@
     },
     "/api/v1/templates/import": {
       "post": {
+        "description": "Heavy call: shares the limit of 10 a minute per credential (E_RATE_LIMITED with Retry-After).",
         "operationId": "templates.import",
         "requestBody": {
           "content": {

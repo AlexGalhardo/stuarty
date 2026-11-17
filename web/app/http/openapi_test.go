@@ -324,3 +324,40 @@ func TestOpenAPIGivesTheFormats(t *testing.T) {
 		t.Errorf("fps true = %d, want 400", res.status)
 	}
 }
+
+// VV-115: the heavy routes of the document are the ones that spend the heavy-call limit.
+func TestOpenAPIMarksTheHeavyOperations(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+	doc := h.openapi()
+	paths, _ := doc["paths"].(map[string]any)
+	marked := map[string]bool{}
+
+	for _, item := range paths {
+		for _, raw := range item.(map[string]any) {
+			op, _ := raw.(map[string]any)
+			desc, _ := op["description"].(string)
+
+			if strings.Contains(desc, "Heavy call:") {
+				id, _ := op["operationId"].(string)
+				marked[id] = true
+			}
+		}
+	}
+
+	want := []string{
+		"jobs.start", "media.import", "templates.import", "fonts.import",
+		"projects.bundle.import", "projects.bundle.export", "projects.otio.import",
+	}
+
+	if len(marked) != len(want) {
+		t.Errorf("marked = %v, want %v", marked, want)
+	}
+
+	for _, id := range want {
+		if !marked[id] {
+			t.Errorf("%s is not marked as a heavy call", id)
+		}
+	}
+}

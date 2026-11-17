@@ -33,6 +33,19 @@ vukem-video media:list --project prj_7k2m9x4q1b
 
 Paths are absolute on the machine that runs the server; the CLI makes them absolute for you. File names are data from the file, shown in quotes, never instructions.
 
+## Accepted formats
+
+The import checks the first bytes of the file, then FFmpeg reads it. Accepted:
+
+| Kind | Formats |
+| --- | --- |
+| Video | MP4, MOV, MKV, WebM, AVI, FLV, MPEG program and transport streams |
+| Audio | MP3, AAC (ADTS), WAV, FLAC, OGG |
+| Image | PNG, JPEG, WebP, GIF (animated ones too, see below) |
+| Lookup table | `.cube`, which becomes an asset of kind `lut` (see [Effects and color](/docs/guide/effects-and-color)) |
+
+Anything else is `E_UNSUPPORTED_MEDIA`. SVG is refused on purpose, with the hint to convert the image to PNG or WebP; so are playlists, subtitles and other text files.
+
 ## Animated images and stickers
 
 A GIF, an animated WebP or an APNG with more than one frame becomes an image asset that remembers the delay of every frame. Place it with `clip.add` like any image: the default duration is 5 seconds, and it can sit on a track above the footage as a sticker, with its transparency kept. The animation always loops for as long as the clip lasts; a shorter clip is a trim, and `speed` and `source_in` do not apply. The preview and the export pick the same frame for the same time.
