@@ -577,8 +577,17 @@ export function createActions(runtime: EditorRuntime): Actions {
 				),
 			);
 		},
+		// Q and W, and every other trim-to-playhead control, close the gap. The
+		// core default of item.trim stays none for agents (SDD-012 §6.5).
 		trimToPlayhead: (edge) =>
-			send(trimOperations(selectedRanges(), edge, ui.getState().playheadFrame)),
+			send(
+				trimOperations(
+					selectedRanges(),
+					edge,
+					ui.getState().playheadFrame,
+					"track",
+				),
+			),
 		addCaption: (text, duration) =>
 			send(
 				captionOperations({
