@@ -414,6 +414,20 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 
 	clip.Mask = nil
 
+	clip.Brightness, clip.Contrast, clip.Saturation = 0.2, 1, 0.8
+	clip.Hsl = []timeline.HslBand{{}}
+	clip.Wheels = &timeline.Wheels{}
+	clip.Curves = &timeline.Curves{}
+	clip.Lut = &timeline.Lut{Asset: "ast_3c5v8n2w6d", Intensity: 0.5}
+
+	// Colour work shows in the summary (VV-150).
+	const colour = "grade:bri0.2,sat0.8 hsl:1 wheels curves lut:ast_3c5v8n2w6d@0.5"
+	if got := itemLine(fps, &clip); !strings.Contains(got, colour) {
+		t.Errorf("colour is not flagged: %s", got)
+	}
+
+	clip.Brightness, clip.Saturation, clip.Hsl, clip.Wheels, clip.Curves, clip.Lut = 0, 1, nil, nil, nil, nil
+
 	got := itemLine(fps, &clip)
 	want := "itm_m1n2p3q4r5 clip 0s/0f +2s/60f ast_3c5v8n2w6d x1.5 [tin:fade tout:slide_left kf:2 mk:2 vol:0.5 muted slot:hero unfilled]"
 
