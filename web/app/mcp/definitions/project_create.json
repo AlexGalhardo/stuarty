@@ -19,8 +19,12 @@
     "default": "9:16"
    },
    "fps": {
-    "type": "string",
+    "type": [
+     "string",
+     "integer"
+    ],
     "pattern": "^[0-9]+(/1001)?$",
+    "minimum": 1,
     "default": "30"
    },
    "id": {

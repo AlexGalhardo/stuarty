@@ -1375,7 +1375,7 @@ prj_2x5c8d1f4g "Coffee ad" r17 1080x1920 30fps 21.5s/645f items=48
     "properties":{
       "name":{"type":"string","minLength":1,"maxLength":120},
       "preset":{"enum":["9:16","1:1","16:9","4:5"],"default":"9:16"},
-      "fps":{"type":"string","pattern":"^[0-9]+(/1001)?$","default":"30"},
+      "fps":{"type":["string","integer"],"pattern":"^[0-9]+(/1001)?$","minimum":1,"default":"30"},
       "id":{"type":"string","pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"}
     },
     "required":["name"],

@@ -29,7 +29,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | --- | --- | --- | --- |
 | `name` | `string` | yes | min length 1; max length 120 |
 | `preset` | `9:16`, `1:1`, `16:9`, `4:5` | no | default `"9:16"` |
-| `fps` | `string` | no | pattern `^[0-9]+(/1001)?$`; default `"30"` |
+| `fps` | `string` or `integer` | no | min 1; pattern `^[0-9]+(/1001)?$`; default `"30"` |
 | `id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 
 ## Output

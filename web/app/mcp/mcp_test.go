@@ -3,6 +3,7 @@ package mcp
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -635,5 +636,23 @@ func TestServerInfoCarriesTheDescription(t *testing.T) {
 
 	if got := cs.InitializeResult().ServerInfo.Description; got != "Vukem Video MCP server for the workspace W" {
 		t.Errorf("serverInfo.description = %q", got)
+	}
+}
+
+// TestProjectCreateFPSNumberOrText (VV-198): the frame rate is a number or text, as in the CLI and the API.
+func TestProjectCreateFPSNumberOrText(t *testing.T) {
+	t.Parallel()
+
+	cs := connect(t, newService(t), Options{}, "agent")
+
+	for _, fps := range []any{30, "30", "30000/1001", 60} {
+		got := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "F", "fps": fps})))["fps"]
+		if want := fmt.Sprint(fps); got != want {
+			t.Errorf("fps %v: project has %v", fps, got)
+		}
+	}
+
+	if res := call(t, cs, "project_create", map[string]any{"name": "F", "fps": 0}); !res.IsError {
+		t.Error("fps 0 must be refused")
 	}
 }
