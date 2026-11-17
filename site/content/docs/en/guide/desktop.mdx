@@ -33,6 +33,10 @@ Put the two files in one folder and double-click `vukem-video-desktop.exe`. To u
 
 The workspace is `~/.vukem-video`, or the folder in `VUKEM_VIDEO_HOME` if you set it before you start the application. You can still run the same server with `vukem-video serve` and open it in a browser; the two are the same data.
 
+## Automate the window
+
+To drive the window from a tool such as Playwright or a Chrome DevTools client, start the application with `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` set to the flags you want, for example `--remote-debugging-port=9223` (Windows). The application reads the variable at start and passes the flags to the window component. Then connect to `http://127.0.0.1:9223/json/list`. Choose a port that is free; the port opens a few seconds after the window appears. The flag does not show in the command line of the `msedgewebview2` process, so check the port, not the command line. `WEBVIEW2_USER_DATA_FOLDER` names the browser profile folder; without it each workspace has its own, in `webview` inside the workspace. This is for tests and debugging only: the debugging port gives full control of the editor to any program on the machine.
+
 ## The menu, the file picker and full screen
 
 | Menu | Entry | What it does |
