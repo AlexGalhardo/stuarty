@@ -29,7 +29,7 @@ import {
 	useUiState,
 } from "../../state/EditorContext";
 import { readTimeDisplay } from "../../state/prefs";
-import type { CommitResult } from "../fields/commitField";
+import type { CommitResult, FieldSnapshot } from "../fields/commitField";
 import { FieldMessage } from "../fields/FieldFrame";
 import { useCommitField } from "../fields/useCommitField";
 import Section from "../Section";
@@ -113,6 +113,8 @@ export default function KeyframesSection({
 	const [property, setProperty] = useState<AnyKeyframeProperty | null>(null);
 	const [valueText, setValueText] = useState("");
 	const [easing, setEasing] = useState<KeyframeEasing>("linear");
+	// The refusal of the last "Add at playhead": the core's message and hint.
+	const [addError, setAddError] = useState<FieldSnapshot["error"]>(null);
 	if (item === undefined || width === undefined || height === undefined) {
 		return null;
 	}
@@ -160,6 +162,7 @@ export default function KeyframesSection({
 						if (isProperty(next)) {
 							setProperty(next);
 							setValueText("");
+							setAddError(null);
 						}
 					}}
 				>
@@ -180,7 +183,12 @@ export default function KeyframesSection({
 					autoComplete="off"
 					disabled={!canEdit}
 					className="h-8 px-2 font-mono text-sm"
-					onChange={(event) => setValueText(event.target.value)}
+					aria-invalid={addError === null ? undefined : true}
+					aria-describedby={addError === null ? undefined : `kf-add-${itemId}-message`}
+					onChange={(event) => {
+						setValueText(event.target.value);
+						setAddError(null);
+					}}
 				/>
 				<Label htmlFor={`kf-easing-${itemId}`} className="text-xs">
 					{t("ui.editor.keyframes.easing")}
@@ -216,7 +224,12 @@ export default function KeyframesSection({
 								value,
 								easing,
 							}),
-						).then(() => setValueText(""));
+						).then((result) => {
+							if (result.ok) {
+								setAddError(null);
+								setValueText("");
+							} else setAddError(result.error);
+						});
 					}}
 				>
 					{t("ui.editor.keyframes.add")}
@@ -238,6 +251,10 @@ export default function KeyframesSection({
 					</Button>
 				)}
 			</div>
+			<FieldMessage
+				id={`kf-add-${itemId}-message`}
+				state={{ error: addError, remoteActor: null }}
+			/>
 
 			{animated.map((name) => {
 				const keys = item.keyframes?.[name] ?? [];
