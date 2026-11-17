@@ -253,3 +253,30 @@ func TestAnimatedColourGivesEachFrameItsMatrix(t *testing.T) {
 		t.Error("a clip with no animated colour must carry no series")
 	}
 }
+
+func TestSpinShrinkAndGrowTransitionsMoveTheLayer(t *testing.T) {
+	t.Parallel()
+
+	for _, kind := range []string{"spin", "shrink", "grow"} {
+		d := newDoc()
+		it := clip("itm_t", trkBottom, 0, 30)
+		it.TransitionIn = &timeline.Transition{Kind: kind, Duration: 10}
+		put(d, it)
+
+		first, settled := Frame(d, 0).Layers[0], Frame(d, 15).Layers[0]
+		if first.Scale >= settled.Scale && first.Rotation <= settled.Rotation {
+			t.Errorf(
+				"%s: frame 0 is scale %v rotation %v, the settled frame %v and %v",
+				kind,
+				first.Scale,
+				first.Rotation,
+				settled.Scale,
+				settled.Rotation,
+			)
+		}
+
+		if settled.Scale != 1 || settled.Rotation != 0 {
+			t.Errorf("%s: the item must settle, got scale %v rotation %v", kind, settled.Scale, settled.Rotation)
+		}
+	}
+}

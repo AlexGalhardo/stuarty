@@ -544,6 +544,9 @@ export const TRANSITION_KINDS = [
 	"whip",
 	"dip",
 	"wipe",
+	"spin",
+	"shrink",
+	"grow",
 ] as const;
 export type TransitionKind = (typeof TRANSITION_KINDS)[number];
 

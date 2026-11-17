@@ -1095,7 +1095,10 @@
             "zoom",
             "whip",
             "dip",
-            "wipe"
+            "wipe",
+            "spin",
+            "shrink",
+            "grow"
           ],
           "type": "string"
         }

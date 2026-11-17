@@ -11,7 +11,20 @@ import (
 // The shape, caption and transition metadata of VV-025: what clips and text items already keep
 // in the vukem namespace, for the other visual items.
 
-var transitionKinds = []string{"fade", "slide_left", "slide_right", "slide_up", "slide_down"}
+var transitionKinds = []string{
+	"fade",
+	"slide_left",
+	"slide_right",
+	"slide_up",
+	"slide_down",
+	"zoom",
+	"whip",
+	"dip",
+	"wipe",
+	"spin",
+	"shrink",
+	"grow",
+}
 
 // transitionProps keeps the transitions of an item in its vukem properties. A clip keeps its fades
 // as the native Transition objects of OTIO and so writes only the other kinds here; every other
@@ -25,7 +38,16 @@ func transitionProps(it *timeline.Item, props object, nativeFade bool) {
 			continue
 		}
 
-		props[t.name] = object{"kind": t.val.Kind, "duration": t.val.Duration}
+		o := object{"kind": t.val.Kind, "duration": t.val.Duration}
+		if t.val.Color != "" {
+			o["color"] = string(t.val.Color)
+		}
+
+		if t.val.Direction != "" {
+			o["direction"] = t.val.Direction
+		}
+
+		props[t.name] = o
 	}
 }
 
@@ -146,9 +168,17 @@ func transitionOps(p *propReader, dur int) []propOp {
 			continue
 		}
 
-		out = append(out, propOp{op: "item.set_transition", args: map[string]any{
-			"edge": e.edge, "kind": kind, "duration": frameTime(int(d)),
-		}})
+		args := map[string]any{"edge": e.edge, "kind": kind, "duration": frameTime(int(d))}
+
+		if c, ok := obj["color"].(string); ok && hexColourRe.MatchString(c) && kind == "dip" {
+			args["color"] = c
+		}
+
+		if dir, ok := sub.text("direction", "left", "right", "up", "down"); ok && (kind == "whip" || kind == "wipe") {
+			args["direction"] = dir
+		}
+
+		out = append(out, propOp{op: "item.set_transition", args: args})
 	}
 
 	return out

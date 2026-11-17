@@ -32,7 +32,7 @@ func init() {
 	Register(Define(Spec{
 		Name:    "item.set_transition",
 		Summary: "Sets or removes the transition on one edge of a visual item.",
-		Description: "Sets a fade, a slide, a zoom, a whip, a dip or a wipe on the in or out edge, 0.5 seconds long unless " +
+		Description: "Sets a fade, a slide, a zoom, a whip, a dip, a wipe, a spin, a shrink or a grow on the in or out edge, 0.5 seconds long unless " +
 			"duration is given; kind null removes the transition. color (#RRGGBB, default black) is for dip; " +
 			"direction (left, right, up or down, default left) is for whip and wipe. The two transitions together " +
 			"cannot be longer than the item.",
@@ -201,15 +201,18 @@ var transitionKinds = []string{
 	"whip",
 	"dip",
 	"wipe",
+	"spin",
+	"shrink",
+	"grow",
 }
 
 type itemTransitionArgs struct {
 	ItemID    string `json:"item_id"             desc:"A clip, text, caption or shape item."`
-	Edge      string `json:"edge"                desc:"The edge: in or out."                                                                           enum:"in,out"`
-	Kind      any    `json:"kind"                desc:"fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, or null to remove."                           schema:"transition_kind"`
+	Edge      string `json:"edge"                desc:"The edge: in or out."                                                                                               enum:"in,out"`
+	Kind      any    `json:"kind"                desc:"fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, spin, shrink, grow, or null to remove."                           schema:"transition_kind"`
 	Duration  *Time  `json:"duration,omitempty"  desc:"Length of the transition, at least 1 frame; default 0.5s."`
-	Color     string `json:"color,omitempty"     desc:"dip only: #RRGGBB, default #000000."                                                                                                               pattern:"^#[0-9A-Fa-f]{6}$"`
-	Direction string `json:"direction,omitempty" desc:"whip and wipe only: left (default), right, up or down."                                         enum:"left,right,up,down"`
+	Color     string `json:"color,omitempty"     desc:"dip only: #RRGGBB, default #000000."                                                                                                                                   pattern:"^#[0-9A-Fa-f]{6}$"`
+	Direction string `json:"direction,omitempty" desc:"whip and wipe only: left (default), right, up or down."                                                             enum:"left,right,up,down"`
 }
 
 // checkTransitionParams refuses a colour on anything but a dip, and a direction on anything but a
@@ -245,7 +248,7 @@ func applyItemSetTransition(c *Context, a *itemTransitionArgs) error {
 		}
 	case !isString || !slices.Contains(transitionKinds, kind):
 		return invalidArg("args.kind", "args.kind %v is not a transition kind.", a.Kind).
-			WithHint("Use fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe or null.")
+			WithHint("Use fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, spin, shrink, grow or null.")
 	}
 	if err := checkTransitionParams(a, kind); err != nil {
 		return err

@@ -1366,3 +1366,35 @@ func TestRoundTripKeepsColourKeyframes(t *testing.T) {
 		}
 	}
 }
+
+func TestRoundTripKeepsEveryTransitionKind(t *testing.T) {
+	d := sampleDoc()
+	c1 := d.Items["itm_c000000001"]
+	c1.TransitionIn = &timeline.Transition{Kind: "wipe", Duration: 10, Direction: "up"}
+	c1.TransitionOut = &timeline.Transition{Kind: "spin", Duration: 8}
+	d.Items[c1.ID] = c1
+
+	first, _, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	im, err := Parse(first)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	doc := build(t, im, newDoc(im.FPS))
+
+	for _, it := range doc.Items {
+		if it.Name != "intro" {
+			continue
+		}
+
+		in, out := it.TransitionIn, it.TransitionOut
+		if in == nil || in.Kind != "wipe" || in.Direction != "up" || in.Duration != 10 || out == nil ||
+			out.Kind != "spin" {
+			t.Errorf("transitions did not come back: %+v %+v", in, out)
+		}
+	}
+}

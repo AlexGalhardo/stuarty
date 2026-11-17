@@ -316,7 +316,19 @@ export interface Transition {
   color?: string;
   direction?: "left" | "right" | "up" | "down";
   duration: number;
-  kind: "fade" | "slide_left" | "slide_right" | "slide_up" | "slide_down" | "zoom" | "whip" | "dip" | "wipe";
+  kind:
+    | "fade"
+    | "slide_left"
+    | "slide_right"
+    | "slide_up"
+    | "slide_down"
+    | "zoom"
+    | "whip"
+    | "dip"
+    | "wipe"
+    | "spin"
+    | "shrink"
+    | "grow";
 }
 export interface Wheels {
   highlights?: Wheel;

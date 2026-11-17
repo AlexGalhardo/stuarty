@@ -1,7 +1,7 @@
 {
   "code": "E_VALIDATION",
-  "message": "args.kind spin is not a transition kind.",
-  "hint": "Use fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe or null.",
+  "message": "args.kind bounce is not a transition kind.",
+  "hint": "Use fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, spin, shrink, grow or null.",
   "retryable": false,
   "path": "args.kind"
 }

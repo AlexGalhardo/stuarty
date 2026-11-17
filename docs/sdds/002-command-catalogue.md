@@ -1746,7 +1746,7 @@ Sets or removes the transition on one edge of a visual item.
 | --- | --- | --- | --- | --- |
 | `item_id` | item id | yes | none | a visual item |
 | `edge` | `"in"` or `"out"` | yes | none | |
-| `kind` | `"fade"`, `"slide_left"`, `"slide_right"`, `"slide_up"`, `"slide_down"`, `"zoom"`, `"whip"`, `"dip"`, `"wipe"` or `null` | yes | none | `null` removes the transition. The last four were added after BETA (TASK-0278, formulas in SDD-004 section 3.2) |
+| `kind` | `"fade"`, `"slide_left"`, `"slide_right"`, `"slide_up"`, `"slide_down"`, `"zoom"`, `"whip"`, `"dip"`, `"wipe"`, `"spin"`, `"shrink"`, `"grow"` or `null` | yes | none | `null` removes the transition. The last four were added after BETA (TASK-0278, formulas in SDD-004 section 3.2) |
 | `color` | `#RRGGBB` | no | `"#000000"` | `dip` only; on another kind `E_VALIDATION`. Black is stored as absent |
 | `direction` | `"left"`, `"right"`, `"up"`, `"down"` | no | `"left"` | `whip` and `wipe` only; on another kind `E_VALIDATION`. `left` is stored as absent |
 | `duration` | time, as a length | no | `"0.5s"` | at least 1 frame; rejected with `kind: null` (`E_VALIDATION`). The default applies whenever it is omitted, even when a transition already exists |
@@ -1807,6 +1807,9 @@ Sets or removes the transition on one edge of a visual item.
 - `err_type_mismatch_audio_item`
 - `err_invalid_state_sum_exceeds_duration`
 - `ok_zoom`
+- `ok_spin`
+- `ok_shrink`
+- `ok_grow`
 - `ok_whip_with_direction`
 - `ok_whip_default_direction_left_not_stored`
 - `ok_dip_with_colour`

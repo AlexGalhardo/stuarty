@@ -34,7 +34,7 @@
       "type": "string"
     },
     "kind": {
-      "description": "fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, or null to remove.",
+      "description": "fade, slide_left, slide_right, slide_up, slide_down, zoom, whip, dip, wipe, spin, shrink, grow, or null to remove.",
       "enum": [
         "fade",
         "slide_left",
@@ -45,6 +45,9 @@
         "whip",
         "dip",
         "wipe",
+        "spin",
+        "shrink",
+        "grow",
         null
       ],
       "type": [

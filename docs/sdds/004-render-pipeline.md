@@ -147,6 +147,9 @@ Transitions modify the animated values; they never change the document.
 | `slide_up` | `y = y - (1 - s(p)) × Height` |
 | `slide_down` | `y = y + (1 - s(p)) × Height` |
 | `zoom` | `scale = scale × (1 + (1 - s(p)) / 2)` and `opacity = opacity × p`: the item settles from 1.5 times its size, fading in (in) or grows to 1.5 times while it fades out (out) |
+| `spin` | `rotation = rotation + (1 - s(p)) × 90` degrees and `opacity = opacity × p`: the item turns a quarter turn into place while it fades in (in), or turns away while it fades out (out). Added after BETA (TASK-0254, NEW-16); a value of the animated item, no new pixels |
+| `shrink` | `scale = scale × (0.5 + 0.5 s(p))` and `opacity = opacity × p`: the item grows from half its size, fading in (in) or shrinks to half while it fades out (out). Added with `spin` |
+| `grow` | `scale = scale × (0.001 + 0.999 s(p))`: the item grows from a point (in) or shrinks to a point (out), opacity unchanged. Added with `spin` |
 | `whip` | a slide with `s5(p) = 1 - (1 - p)^5` in place of `s(p)`, in the `direction` (default `left`) with the naming of the slides: `left` is `x = x - (1 - s5(p)) × Width`, `right` `x + ...`, `up` `y - (1 - s5(p)) × Height`, `down` `y + ...`; and a directional blur along the same axis (below) |
 | `dip` | the layer is mixed with a solid colour (below): its own pixels at `p`, the colour at `1 - p` |
 | `wipe` | the layer is revealed by a hard edge that crosses it in the `direction` (below) |
