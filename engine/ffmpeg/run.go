@@ -479,10 +479,7 @@ func scaleAllowance(base time.Duration, n int, ceiling time.Duration) time.Durat
 		}
 	}
 	if ceiling > 0 {
-		limit := ceiling
-		if limit < base {
-			limit = base
-		}
+		limit := max(ceiling, base)
 		if scaled > limit {
 			scaled = limit
 		}

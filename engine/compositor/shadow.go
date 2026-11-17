@@ -173,7 +173,8 @@ func shadowSilhouette(src Image, dilated []byte, dw, dh, ox, oy int) Image {
 			if sx >= 0 && sy >= 0 && sx < src.W && sy < src.H {
 				ap = uint32(src.Pix[(sy*src.W+sx)*4+3])
 			}
-			pix[(y*dw+x)*4+3] = byte(ap + div255(ao*(255-ap)))
+			covered := ap + div255(ao*(255-ap))
+			pix[(y*dw+x)*4+3] = byte(covered) //nolint:gosec // G115: at most 255
 		}
 	}
 	return Image{Pix: pix, W: dw, H: dh}
