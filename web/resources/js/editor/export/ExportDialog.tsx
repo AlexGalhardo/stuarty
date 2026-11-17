@@ -184,6 +184,7 @@ export default function ExportDialog({
 		s.exportJobId === null ? undefined : s.jobs[s.exportJobId],
 	);
 	const range = useStore(runtime.ui, (s) => s.range);
+	const playhead = useStore(runtime.ui, (s) => s.playheadFrame);
 	const lastEventAt = useStore(runtime.jobs, (s) => s.lastEventAt);
 	const [checking, setChecking] = useState(false);
 	const [findings, setFindings] = useState<readonly LintFinding[]>([]);
@@ -401,6 +402,7 @@ export default function ExportDialog({
 									disabled={false}
 									unsupported={unsupported}
 									range={range}
+									playhead={playhead}
 									onChange={setOptions}
 								/>
 							)}

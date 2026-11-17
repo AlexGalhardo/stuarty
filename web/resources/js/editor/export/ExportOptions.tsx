@@ -16,7 +16,26 @@ const SELECT =
 
 // The format names the server lists; one it adds later still shows, under its
 // own name, until the catalogue has a label for it.
-const FORMAT_KEYS = ["mp4", "gif", "wav", "aac"] as const;
+const FORMAT_KEYS = ["mp4", "gif", "wav", "aac", "png"] as const;
+
+// The options after the format changed. A png is one frame at the playhead
+// (`at`) and takes no range (SDD-003 section 2.8); any other format takes no
+// `at`.
+export function formatOptions(
+	value: ExportOptions,
+	format: string,
+	playhead: number,
+): ExportOptions {
+	if (format === "png") {
+		const { start: _start, end: _end, ...rest } = value;
+		return { ...rest, format, at: `${playhead}f` };
+	}
+	return {
+		...value,
+		format: format === "mp4" ? undefined : format,
+		at: undefined,
+	};
+}
 
 // Turns the range on, as the in and out points of the timeline (a point that
 // is not set leaves that end open), or off.
@@ -45,6 +64,7 @@ export default function ExportOptionsFields({
 	disabled,
 	unsupported,
 	range = { in: null, out: null },
+	playhead = 0,
 	onChange,
 }: {
 	capabilities: ExportCapabilities;
@@ -54,14 +74,18 @@ export default function ExportOptionsFields({
 	// The in and out points of the timeline (frames); the range is offered when
 	// one is set and the server takes `start` and `end`.
 	range?: { in: number | null; out: number | null };
+	// The playhead frame: the frame of a png export.
+	playhead?: number;
 	onChange(next: ExportOptions): void;
 }): ReactNode {
 	const t = useT();
 	const { formats } = capabilities;
-	const rangeSet =
-		capabilities.range && (range.in !== null || range.out !== null);
-	if (formats.length === 0 && !rangeSet) return null;
 	const format = value.format ?? "mp4";
+	const rangeSet =
+		capabilities.range &&
+		format !== "png" &&
+		(range.in !== null || range.out !== null);
+	if (formats.length === 0 && !rangeSet) return null;
 	return (
 		<fieldset
 			className="mb-3 flex flex-col gap-2"
@@ -81,8 +105,7 @@ export default function ExportOptionsFields({
 						className={SELECT}
 						value={format}
 						onChange={(event) => {
-							const next = event.target.value;
-							onChange({ ...value, format: next === "mp4" ? undefined : next });
+							onChange(formatOptions(value, event.target.value, playhead));
 						}}
 					>
 						{(formats.includes("mp4") ? formats : ["mp4", ...formats]).map(

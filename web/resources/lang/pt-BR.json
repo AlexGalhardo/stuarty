@@ -414,7 +414,8 @@
             "mp4": "Vídeo MP4",
             "gif": "Animação GIF",
             "wav": "Somente áudio WAV",
-            "aac": "Somente áudio AAC"
+            "aac": "Somente áudio AAC",
+            "png": "Imagem PNG do quadro na posição do cursor"
           }
         }
       },

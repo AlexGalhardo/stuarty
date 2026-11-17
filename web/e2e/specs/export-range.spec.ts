@@ -80,6 +80,7 @@ test.describe("export-range", () => {
 		await page.reload();
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);
 		await page.getByRole("slider", { name: "Playhead" }).focus();
+		await page.keyboard.press("Home");
 		await page.keyboard.press("PageUp");
 		await page.keyboard.press("i");
 		await page.keyboard.press("PageUp");
@@ -97,5 +98,51 @@ test.describe("export-range", () => {
 			kind: "export",
 			args: { start: `${inFrame}f`, end: `${outFrame}f` },
 		});
+	});
+
+	test("PNG exports the frame at the playhead and the job reaches succeeded", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+			clipDuration: "4s",
+		});
+		const schema = await page.request.get("/openapi.json");
+		test.skip(
+			!schema.ok() ||
+				!exportCapabilities(await schema.json()).formats.includes("png"),
+			"the server does not list png in job_start yet",
+		);
+		const bodies: { args?: Record<string, unknown>; dry_run?: boolean }[] = [];
+		page.on("request", (r) => {
+			if (r.method() === "POST" && r.url().endsWith("/jobs")) {
+				bodies.push(r.postDataJSON());
+			}
+		});
+		await page.goto(`/editor/${seeded.id}`);
+		await expect(page.locator("[data-item-id]")).toHaveCount(1);
+		const ruler = page.getByRole("slider", { name: "Playhead" });
+		await ruler.focus();
+		await page.keyboard.press("PageUp");
+		const frame = await ruler.getAttribute("aria-valuenow");
+
+		await page.getByRole("button", { name: "Export", exact: true }).click();
+		const dialog = page.getByRole("dialog");
+		await dialog
+			.getByLabel("Format")
+			.selectOption({ label: "PNG image of the frame at the playhead" });
+		await dialog.getByRole("button", { name: "Start export" }).click();
+		await expect(dialog.locator("[data-phase='succeeded']")).toBeVisible({
+			timeout: 90_000,
+		});
+		expect(bodies.filter((b) => b.dry_run !== true).at(-1)).toEqual({
+			kind: "export",
+			args: { format: "png", at: `${frame}f` },
+		});
+		await expect(
+			dialog.getByRole("link", { name: "Download" }),
+		).toHaveAttribute("href", /\/api\/v1\/jobs\/job_.+\/file$/);
 	});
 });

@@ -414,7 +414,8 @@
             "mp4": "MP4 video",
             "gif": "GIF animation",
             "wav": "WAV audio only",
-            "aac": "AAC audio only"
+            "aac": "AAC audio only",
+            "png": "PNG image of the frame at the playhead"
           }
         }
       },

@@ -53,9 +53,13 @@ export function exportCapabilities(openapi: unknown): ExportCapabilities {
 	if (props === undefined) return NONE;
 	const member = (name: string): Json | undefined => resolve(doc, props[name]);
 	return {
-		formats: choices(member("format"), ["mp4", "gif", "wav", "aac"]).filter(
-			(value): value is string => typeof value === "string",
-		),
+		formats: choices(member("format"), [
+			"mp4",
+			"gif",
+			"wav",
+			"aac",
+			"png",
+		]).filter((value): value is string => typeof value === "string"),
 		range: member("start") !== undefined && member("end") !== undefined,
 	};
 }

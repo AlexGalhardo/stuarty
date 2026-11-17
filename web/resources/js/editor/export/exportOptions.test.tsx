@@ -5,6 +5,7 @@ import { I18nProvider } from "@/lib/i18n";
 import type { ExportCapabilities, ExportOptions } from "../api/types";
 import { devFixture } from "../boot/devFixture";
 import ExportOptionsFields, {
+	formatOptions,
 	rangeOptions,
 	type Unsupported,
 } from "./ExportOptions";
@@ -90,5 +91,42 @@ describe("ExportOptionsFields", () => {
 				false,
 			),
 		).toEqual({ format: "gif" });
+	});
+});
+
+describe("formatOptions", () => {
+	test("png is one frame at the playhead and drops the range", () => {
+		expect(formatOptions({ start: "30f", end: "90f" }, "png", 45)).toEqual({
+			format: "png",
+			at: "45f",
+		});
+	});
+
+	test("another format drops the frame and keeps the range; mp4 is the default", () => {
+		expect(formatOptions({ format: "png", at: "45f" }, "gif", 10)).toEqual({
+			format: "gif",
+			at: undefined,
+		});
+		expect(
+			formatOptions({ format: "png", at: "45f", start: "1f" }, "mp4", 10),
+		).toEqual({ format: undefined, at: undefined, start: "1f" });
+	});
+
+	test("the png choice is labelled and hides the range", () => {
+		const caps = { formats: ["mp4", "png"], range: true };
+		const html = renderToString(
+			<I18nProvider messages={devFixture(1).bootstrap.messages} locale="en">
+				<ExportOptionsFields
+					capabilities={caps}
+					value={{ format: "png", at: "5f" }}
+					disabled={false}
+					unsupported={null}
+					range={{ in: 30, out: 90 }}
+					onChange={() => undefined}
+				/>
+			</I18nProvider>,
+		);
+		expect(html).toContain("PNG image of the frame at the playhead");
+		expect(html).not.toContain("export-range");
 	});
 });
