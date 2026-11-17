@@ -323,6 +323,10 @@ func TestExportLimit(t *testing.T) {
 		t.Fatalf("error = %+v", se)
 	}
 
+	if after, _ := se.Details["retry_after"].(int); after < 1 {
+		t.Errorf("details.retry_after = %v, want seconds to wait (VV-116)", se.Details["retry_after"])
+	}
+
 	running, _ := se.Details["running"].([]string)
 	if len(running) != 2 || running[0] != ids[0] || running[1] != ids[1] {
 		t.Errorf("details.running = %v, want %v", se.Details["running"], ids)
