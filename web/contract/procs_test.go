@@ -206,7 +206,7 @@ func startProc(t *testing.T, ffmpeg, ffprobe string, extraEnv ...string) *procEn
 
 	cmd.Stdout, cmd.Stderr = &out, &out
 
-	if err := cmd.Start(); err != nil {
+	if err := startBound(cmd); err != nil {
 		cancel()
 		t.Fatal(err)
 	}
@@ -216,7 +216,8 @@ func startProc(t *testing.T, ffmpeg, ffprobe string, extraEnv ...string) *procEn
 	go func() { _ = cmd.Wait(); close(done) }()
 
 	t.Cleanup(func() {
-		cancel() // kills the process: Windows has no SIGTERM for another process
+		_ = cmd.Process.Kill() // by pid, in case the context is not enough
+		cancel()               // kills the process: Windows has no SIGTERM for another process
 		<-done
 	})
 
