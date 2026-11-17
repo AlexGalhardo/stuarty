@@ -1,12 +1,4 @@
-import {
-	AlignHorizontalJustifyStart,
-	Clapperboard,
-	Magnet,
-	Maximize2,
-	Scissors,
-	ZoomIn,
-	ZoomOut,
-} from "lucide-react";
+import { Clapperboard } from "lucide-react";
 import {
 	type ReactNode,
 	useCallback,
@@ -17,19 +9,14 @@ import {
 	useState,
 } from "react";
 
-import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { bindingFor } from "../commands/keymapStore";
-import { magnetTrackId } from "../commands/magnet";
-import { formatTime } from "../commands/units";
-import { useActions, useCanEdit } from "../commands/useActions";
-import { useShortcutLabel } from "../commands/useShortcutLabel";
+import { useActions } from "../commands/useActions";
 import {
 	useDocumentState,
 	useRuntime,
 	useUiState,
 } from "../state/EditorContext";
-import { readTimeDisplay } from "../state/prefs";
 import {
 	selectEndFrame,
 	selectFps,
@@ -65,6 +52,7 @@ import {
 } from "./keyboard";
 import Ruler from "./Ruler";
 import SnapLine from "./SnapLine";
+import TimelineToolbar from "./TimelineToolbar";
 import TrackHeader from "./TrackHeader";
 import { TrackRow } from "./TrackRow";
 import { type FrameWindow, frameWindow, VIRTUALIZE_ABOVE } from "./virtualize";
@@ -101,9 +89,14 @@ function isEditable(target: EventTarget | null): boolean {
 // The timeline of SDD-012 section 7 for the Prototype: tracks and items as
 // labelled blocks, a ruler, a playhead, selection by click, zoom and scroll.
 // It draws the read model and the UI state and never edits either.
-export default function Timeline(): ReactNode {
+export default function Timeline({
+	onAddCaption,
+	undoRedo,
+}: {
+	onAddCaption(): void;
+	undoRedo: ReactNode;
+}): ReactNode {
 	const t = useT();
-	const tip = useShortcutLabel();
 	const runtime = useRuntime();
 	const trackIds = useDocumentState(selectOrderedTrackIds);
 	const endFrame = useDocumentState(selectEndFrame);
@@ -120,15 +113,6 @@ export default function Timeline(): ReactNode {
 		() => (markerKey === "" ? [] : markerKey.split(",").map(Number)),
 		[markerKey],
 	);
-	const snapEnabled = useUiState((s) => s.timeline.snapEnabled);
-	const canEdit = useCanEdit();
-	const selection = useUiState((s) => s.selection);
-	const focusedItem = useUiState((s) => s.focusedItem);
-	const magnetOn = useDocumentState((s) => {
-		const id = magnetTrackId(s, { selection, focusedItem });
-		return id !== null && s.document?.tracks[id]?.magnet === true;
-	});
-	const blade = useUiState((s) => s.tool === "blade");
 
 	const itemCount = useDocumentState(selectItemCount);
 	const actions = useActions();
@@ -312,6 +296,16 @@ export default function Timeline(): ReactNode {
 		[ppf, zoomTo],
 	);
 
+	const zoomToCentre = useCallback(
+		(next: number) => {
+			const el = scroller.current;
+			const anchorX = (el?.clientWidth ?? 0) / 2;
+			const anchorFrame = clientXToFrame(anchorX, 0, el?.scrollLeft ?? 0, ppf);
+			zoomTo(next, anchorFrame, anchorX);
+		},
+		[ppf, zoomTo],
+	);
+
 	const fitToView = useCallback(() => {
 		const el = scroller.current;
 		const next = fitZoom(el?.clientWidth ?? 0, endFrame);
@@ -391,89 +385,14 @@ export default function Timeline(): ReactNode {
 			data-landmark="4"
 			className="flex h-full min-h-0 flex-col bg-ed-timeline"
 		>
-			<div className="flex h-10 shrink-0 items-center gap-2 border-b border-ed-track-line bg-ed-panel px-3">
-				{/* biome-ignore lint/a11y/useSemanticElements: a fieldset would draw a border and legend around buttons in a toolbar. */}
-				<div
-					role="group"
-					aria-label={t("ui.editor.timeline.group_tools")}
-					className="flex items-center gap-2"
-				>
-					<Button
-						type="button"
-						variant={blade ? "secondary" : "ghost"}
-						size="sm"
-						aria-pressed={blade}
-						title={t("ui.editor.timeline.blade_hint")}
-						onClick={() => runtime.uiWriter.setTool(blade ? "select" : "blade")}
-					>
-						<Scissors aria-hidden="true" />
-						{t("ui.editor.timeline.blade")}
-					</Button>
-					<span className="font-mono text-xs text-muted-foreground tabular-nums">
-						{formatTime(playhead, fps, readTimeDisplay())}
-					</span>
-				</div>
-				{/* biome-ignore lint/a11y/useSemanticElements: a fieldset would draw a border and legend around buttons in a toolbar. */}
-				<div
-					role="group"
-					aria-label={t("ui.editor.timeline.group_modes")}
-					className="ml-auto flex items-center gap-2"
-				>
-					<Button
-						type="button"
-						variant={snapEnabled ? "secondary" : "ghost"}
-						size="sm"
-						aria-pressed={snapEnabled}
-						title={tip(t("ui.editor.timeline.snap"), "toggle_snap")}
-						onClick={runtime.uiWriter.toggleSnap}
-					>
-						<Magnet aria-hidden="true" />
-						{t("ui.editor.timeline.snap")}
-					</Button>
-					<Button
-						type="button"
-						variant={magnetOn ? "secondary" : "ghost"}
-						size="sm"
-						aria-pressed={magnetOn}
-						title={t("ui.editor.timeline.magnet_hint")}
-						disabled={!canEdit}
-						onClick={() => void actions.toggleMagnet()}
-					>
-						<AlignHorizontalJustifyStart aria-hidden="true" />
-						{t("ui.editor.timeline.magnet")}
-					</Button>
-					<Button
-						type="button"
-						variant="ghost"
-						size="icon-sm"
-						aria-label={t("ui.editor.timeline.zoom_out")}
-						title={tip(t("ui.editor.timeline.zoom_out"), "zoom_out")}
-						onClick={() => zoomStep(-1)}
-					>
-						<ZoomOut aria-hidden="true" />
-					</Button>
-					<Button
-						type="button"
-						variant="ghost"
-						size="icon-sm"
-						aria-label={t("ui.editor.timeline.zoom_in")}
-						title={tip(t("ui.editor.timeline.zoom_in"), "zoom_in")}
-						onClick={() => zoomStep(1)}
-					>
-						<ZoomIn aria-hidden="true" />
-					</Button>
-					<Button
-						type="button"
-						variant="ghost"
-						size="sm"
-						title={tip(t("ui.editor.timeline.fit"), "zoom_fit")}
-						onClick={fitToView}
-					>
-						<Maximize2 aria-hidden="true" />
-						{t("ui.editor.timeline.fit")}
-					</Button>
-				</div>
-			</div>
+			<TimelineToolbar
+				undoRedo={undoRedo}
+				onAddCaption={onAddCaption}
+				onZoomStep={zoomStep}
+				onZoomTo={zoomToCentre}
+				onFit={fitToView}
+				ppf={ppf}
+			/>
 
 			{/* biome-ignore lint/a11y/useSemanticElements: SDD-012 section 7.1 specifies a CSS-positioned grid, which a table cannot express. */}
 			<div

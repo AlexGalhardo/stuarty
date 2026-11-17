@@ -37,7 +37,7 @@ export default function UndoRedo(): ReactNode {
 				onClick={() => void actions.undo()}
 			>
 				<Undo2 aria-hidden="true" />
-				{t("ui.editor.undo")}
+				<span className="max-2xl:sr-only">{t("ui.editor.undo")}</span>
 			</Button>
 			<Button
 				type="button"
@@ -48,7 +48,7 @@ export default function UndoRedo(): ReactNode {
 				onClick={() => void actions.redo()}
 			>
 				<Redo2 aria-hidden="true" />
-				{t("ui.editor.redo")}
+				<span className="max-2xl:sr-only">{t("ui.editor.redo")}</span>
 			</Button>
 		</div>
 	);

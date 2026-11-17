@@ -6,6 +6,7 @@ import LiveRegion from "../a11y/LiveRegion";
 import { fpsOf, localizeDecimalInput, timeToFrame } from "../commands/units";
 import { useShellShortcuts } from "../commands/useShellShortcuts";
 import FindBar from "../find/FindBar";
+import UndoRedo from "../history/UndoRedo";
 import Inspector from "../inspector/Inspector";
 import Preview from "../preview/Preview";
 import { useDocumentState, useUiState } from "../state/EditorContext";
@@ -157,7 +158,10 @@ export default function EditorShell({
 			</main>
 			{panels.inspector ? <Inspector /> : <div />}
 			<div className="col-span-full min-h-0 border-t border-ed-track-line">
-				<Timeline />
+				<Timeline
+					onAddCaption={() => setCaptionOpen(true)}
+					undoRedo={<UndoRedo />}
+				/>
 			</div>
 			<Notices />
 			<FindBar />
