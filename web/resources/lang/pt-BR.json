@@ -53,6 +53,8 @@
         "choose": "Escolher arquivo",
         "import_path": "Caminho de um arquivo de modelo neste computador",
         "import": "Importar modelo",
+        "imported": "Importado:",
+        "imported_again": "Já havia um modelo com este nome na lista, então agora são dois.",
         "use_brand": "Usar as cores e fontes do kit de marca"
       },
       "trash": {
