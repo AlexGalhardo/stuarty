@@ -41,6 +41,8 @@ var signatures = []signature{
 	{id: "AGPL-3.0", all: []string{"gnu affero general public license"}},
 	{id: "LGPL-3.0-or-later", all: []string{"gnu lesser general public license", "version 3"}},
 	{id: "LGPL-2.1", all: []string{"gnu lesser general public license", "version 2.1"}},
+	// The Library GPL 2 text of LAME: allowed for that one program only (programExceptions), denied anywhere else.
+	{id: "LGPL-2.0-or-later", all: []string{"gnu library general public license", "version 2, june 1991"}},
 	{id: "GPL-3.0", all: []string{"gnu general public license", "version 3"}},
 	{id: "GPL-2.0", all: []string{"gnu general public license", "version 2"}},
 	{id: "SSPL-1.0", all: []string{"server side public license"}},
@@ -263,8 +265,16 @@ func (p *spdxParser) parseAtom() (bool, string) {
 	return checkID(id, p.group, p.name)
 }
 
+// programExceptions are ids allowed for one program of the programs group only. LAME ships under the
+// Library GPL, version 2 or (at your option) any later version, so the own FFmpeg build uses it under
+// the LGPL-3.0-or-later that the build already carries (approved by the author on 2026-11-16).
+var programExceptions = map[string][]string{
+	"lame": {"LGPL-2.0-or-later"},
+}
+
 func checkID(id, group, name string) (bool, string) {
-	excepted := group == groupCrates && slices.Contains(crateExceptions[name], id)
+	excepted := group == groupCrates && slices.Contains(crateExceptions[name], id) ||
+		group == groupPrograms && slices.Contains(programExceptions[strings.ToLower(name)], id)
 
 	switch {
 	case !allowed[id] && !excepted:

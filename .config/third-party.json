@@ -77,6 +77,54 @@
   },
   {
     "group": "programs",
+    "name": "lame",
+    "version": "3.100 (inside the own FFmpeg build)",
+    "spdx": "LGPL-2.0-or-later",
+    "copyright": "Copyright (c) 1999-2011 The LAME Project, 1999-2001 Mark Taylor, 1998 Michael Cheng",
+    "files": [
+      "licenses/programs/lame/COPYING"
+    ],
+    "note": "linked statically into the own FFmpeg build of D-017 (.config/ffmpeg-build) for the libmp3lame encoder, used under the LGPL-3.0-or-later of the build (LAME is licensed under the LGPL version 2 or any later version); listed as shipped when the pins of that build replace the BtbN pin",
+    "shipped_in": []
+  },
+  {
+    "group": "programs",
+    "name": "libogg",
+    "version": "1.3.6 (inside the own FFmpeg build)",
+    "spdx": "BSD-3-Clause",
+    "copyright": "Copyright (c) 2002, Xiph.org Foundation",
+    "files": [
+      "licenses/programs/libogg/COPYING"
+    ],
+    "note": "linked statically into the own FFmpeg build of D-017 (.config/ffmpeg-build) for the libvorbis encoder; listed as shipped when the pins of that build replace the BtbN pin",
+    "shipped_in": []
+  },
+  {
+    "group": "programs",
+    "name": "libvorbis",
+    "version": "1.3.7 (inside the own FFmpeg build)",
+    "spdx": "BSD-3-Clause",
+    "copyright": "Copyright (c) 2002-2020 Xiph.org Foundation",
+    "files": [
+      "licenses/programs/libvorbis/COPYING"
+    ],
+    "note": "linked statically into the own FFmpeg build of D-017 (.config/ffmpeg-build) for the libvorbis encoder; listed as shipped when the pins of that build replace the BtbN pin",
+    "shipped_in": []
+  },
+  {
+    "group": "programs",
+    "name": "libwebp",
+    "version": "1.6.0 (inside the own FFmpeg build)",
+    "spdx": "BSD-3-Clause",
+    "copyright": "Copyright (c) 2010, Google Inc.",
+    "files": [
+      "licenses/programs/libwebp/COPYING"
+    ],
+    "note": "linked statically into the own FFmpeg build of D-017 (.config/ffmpeg-build) for the libwebp and libwebp_anim encoders; listed as shipped when the pins of that build replace the BtbN pin",
+    "shipped_in": []
+  },
+  {
+    "group": "programs",
     "name": "libvpl",
     "version": "2.17.0 (inside the own FFmpeg build)",
     "spdx": "MIT",
