@@ -4733,7 +4733,7 @@
       ],
       "type": "object"
     },
-    "description": "Adds a visual or audio track. A visual track goes on top by default and an audio track at the bottom, below the visual ones; position top or bottom, above or below another track places it elsewhere. The first track in the order is the top layer.",
+    "description": "Adds a visual or audio track. A visual track goes on top by default and an audio track at the bottom, below the visual ones; position top or bottom, above or below another track places it elsewhere. The first track in the order is the top layer. The document keeps tracks in a map by id, so read the stacking from the order field (ascending, the smallest is the top layer), not from the position of a track in the listing.",
     "errors": [
       "E_VALIDATION",
       "E_NOT_FOUND",

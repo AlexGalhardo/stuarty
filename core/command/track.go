@@ -13,7 +13,8 @@ func init() {
 		Name:    "track.add",
 		Summary: "Adds an empty track at a place in the track order.",
 		Description: "Adds a visual or audio track. A visual track goes on top by default and an audio track at the bottom, " +
-			"below the visual ones; position top or bottom, above or below another track places it elsewhere. The first track in the order is the top layer.",
+			"below the visual ones; position top or bottom, above or below another track places it elsewhere. The first track in the order is the top layer. " +
+			"The document keeps tracks in a map by id, so read the stacking from the order field (ascending, the smallest is the top layer), not from the position of a track in the listing.",
 		Example: `{"kind": "visual", "name": "Captions", "id": "trk_a1b2c3d4e5"}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeIDExists, CodeLimit},
 		Scope:   ScopeEdit,
