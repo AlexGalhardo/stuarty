@@ -74,7 +74,7 @@ To check a download before you run it, verify `checksums.txt` with cosign and co
 ## For a person
 
 1. Start the server (`vukem-video serve`).
-2. Open `http://127.0.0.1:7878` in a browser, or run `vukem-video open`.
+2. Run `vukem-video open`. It finds the running server of the workspace, wherever it listens, and opens the editor signed in with a one-time code. The plain address answers 401 until a browser has signed in this way (in network mode, open it and sign in with your account).
 
 ## For an agent
 

@@ -80,6 +80,49 @@ func TestOpenReusesARunningServer(t *testing.T) {
 	}
 }
 
+// VV-079: open finds the server through runtime.json, whatever address it was started on, and opens the
+// launch address, not the plain one that answers 401.
+func TestOpenUsesTheRunningServerOfTheWorkspaceAndItsLaunchCode(t *testing.T) {
+	code := strings.Repeat("ab", 32)
+	token := ""
+	mux := upHandler().(*http.ServeMux)
+	mux.HandleFunc("/api/v1/handshake", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"proof":"` + workspace.HandshakeProof(token, r.URL.Query().Get("nonce")) + `"}`))
+	})
+	mux.HandleFunc("/api/v1/system/launch", func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer "+token {
+			http.Error(w, "no", http.StatusUnauthorized)
+			return
+		}
+		_, _ = w.Write([]byte(`{"code":"` + code + `","url":"http://127.0.0.1:1/auth/launch?code=` + code + `"}`))
+	})
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+	addr := strings.TrimPrefix(srv.URL, "http://")
+
+	f := newFixture(t, freePort(t), map[string]string{envNoBrowser: "1"})
+	ws := workspace.Dir(f.home)
+	var err error
+	if token, err = ws.EnsureToken(); err != nil {
+		t.Fatal(err)
+	}
+	if err := ws.WriteRuntime(workspace.Runtime{PID: os.Getpid(), Addr: addr, Mode: workspace.ModeLocal}); err != nil {
+		t.Fatal(err)
+	}
+	f.o.startSrv = func(string, string, string, []string, string) (<-chan error, error) {
+		f.started++
+		return nil, errors.New("must not start a second server")
+	}
+
+	if err := f.o.run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	want := srv.URL + "/auth/launch?code=" + code
+	if f.started != 0 || strings.TrimSpace(f.out.String()) != want {
+		t.Errorf("started %d, printed %q, want %q", f.started, f.out.String(), want)
+	}
+}
+
 func TestOpenStartsTheServerWhenNoneRuns(t *testing.T) {
 	port := freePort(t)
 	f := newFixture(t, port, nil)
