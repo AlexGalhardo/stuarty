@@ -17,27 +17,22 @@ base="${1:-origin/main}"
 mb="$(git merge-base "$base" HEAD 2>/dev/null || echo "$base")"
 
 tests='(_test\.go|\.test\.tsx?|\.spec\.tsx?|/e2e/.*\.tsx?|playwright\.config\.ts|vitest\.config\.ts)$'
-patterns='t\.Skip(f|Now)?\(|\b(test|it|describe)\.(skip|fixme)\b|\.only\(|\bretries\s*:|\bretry\(|--retries|-count=([2-9]|[1-9][0-9])|time\.Sleep\(|waitForTimeout\(|setTimeout\('
+# A timeout limit (test.setTimeout, page.setDefaultTimeout) is not a sleep, and retries: 0 is not a retry.
+patterns='t\.Skip(f|Now)?\(|\b(test|it|describe)\.(skip|fixme)\b|\.only\(|\bretries\s*:\s*([1-9]|process)|\bretry\(|--retries|-count=([2-9]|[1-9][0-9])|time\.Sleep\(|waitForTimeout\(|(^|[^.A-Za-z_])setTimeout\('
 
-bad=0
-# Added lines with their new line number, from the committed range and from the working tree.
-for range in "$mb...HEAD" ""; do
-	if [ -n "$range" ]; then diff_cmd=(git diff -U0 --no-color "$range"); else diff_cmd=(git diff -U0 --no-color HEAD); fi
-	while IFS=$'\t' read -r file line text; do
-		[ -n "$file" ] || continue
-		echo "$file" | grep -qE "$tests" || continue
-		echo "$text" | grep -qE "$patterns" || continue
-		if echo "$text" | grep -q "verify:env-skip [^ ]" && echo "$text" | grep -qE 't\.Skip|\.skip'; then
-			continue
-		fi
-		echo "$file:$line: $text"
-		bad=$((bad + 1))
-	done < <("${diff_cmd[@]}" | awk '
-		/^\+\+\+ b\// { file = substr($0, 7); next }
+# One pass: the added lines (committed range and working tree) of test files, as file:line: text.
+added() {
+	{ git diff -U0 --no-color "$mb...HEAD"; git diff -U0 --no-color HEAD; } | TESTS="$tests" awk '
+		/^\+\+\+ / { file = substr($0, 7); keep = (file ~ ENVIRON["TESTS"]); next }
 		/^@@/ { split($3, a, ","); n = substr(a[1], 2) + 0; next }
-		/^\+/ && !/^\+\+\+/ { printf "%s\t%d\t%s\n", file, n, substr($0, 2); n++; next }
-	')
-done
+		/^\+/ { if (keep) printf "%s:%d: %s\n", file, n, substr($0, 2); n++; next }
+	'
+}
+hits="$(added | grep -E -- "$patterns" || true)"
+# The env-skip marker excuses only a skip, never a retry or a sleep on the same line.
+hits="$(printf '%s\n' "$hits" | grep -v '^$' | awk '!(/verify:env-skip [^ ]/ && /(t\.Skip|\.skip)/)' || true)"
+bad=0
+[ -z "$hits" ] || { printf '%s\n' "$hits"; bad="$(printf '%s\n' "$hits" | grep -c .)"; }
 
 if [ "$bad" -gt 0 ]; then
 	echo "FLAKY_FAIL=$bad: fix the cause; never skip, retry or sleep (rules/ci.md). An environment skip needs 'verify:env-skip <reason>' on the line."
