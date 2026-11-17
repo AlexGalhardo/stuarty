@@ -239,6 +239,14 @@ func init() {
 
 		return d
 	}())
+	rc(CodeTransitionEmpty, "quiet_transition_out_of_the_last_clip_while_a_title_runs_on", func() *timeline.Document {
+		d := over(40, func(it *timeline.Item) { it.TransitionOut = fade() })
+		text := timeline.NewItem("itm_title", timeline.ItemText, trkText, 100, 300)
+		text.Text = "Fin"
+		put(d, text)
+
+		return d
+	}())
 	rc(CodeTransitionEmpty, "quiet_something_lies_beneath",
 		underneath(over(30, func(it *timeline.Item) { it.TransitionIn = fade() })))
 	rc(CodeTransitionEmpty, "trigger_beneath_ends_inside_the_transition", func() *timeline.Document {

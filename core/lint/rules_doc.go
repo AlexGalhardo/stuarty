@@ -36,6 +36,21 @@ func (c *check) visualEnd() int {
 	return end
 }
 
+// pictureEnd is the end of the last visible clip or full-frame shape: where the picture ends, even when a
+// bar, a title or a caption on another track runs on. A fade out to the background there is deliberate
+// (VV-202).
+func (c *check) pictureEnd() int {
+	end := 0
+
+	for _, it := range c.sorted() {
+		if c.visibleTrack(it.Track) && (it.Type == timeline.ItemClip || it.Type == timeline.ItemShape && c.covers(it)) {
+			end = max(end, it.Start+it.Duration)
+		}
+	}
+
+	return end
+}
+
 // durationLimit warns when a portrait or square timeline is longer than 180 seconds.
 // The limit belongs to the short vertical platforms, so a landscape project (a YouTube
 // video) is left alone (VV-021).
@@ -160,6 +175,7 @@ func (c *check) audioOverlap() {
 // left alone (VV-021).
 func (c *check) transitionEmpty() {
 	end := c.visualEnd()
+	pictureEnd := c.pictureEnd()
 
 	for _, it := range c.sorted() {
 		if it.Type == timeline.ItemAudio || !c.visibleTrack(it.Track) {
@@ -175,7 +191,7 @@ func (c *check) transitionEmpty() {
 			expectedAt bool
 		}{
 			{"transition_in", it.TransitionIn, it.Start, it.Start + durationOf(it.TransitionIn), it.Start == 0},
-			{"transition_out", it.TransitionOut, itemEnd - durationOf(it.TransitionOut), itemEnd, itemEnd == end},
+			{"transition_out", it.TransitionOut, itemEnd - durationOf(it.TransitionOut), itemEnd, itemEnd == end || itemEnd >= pictureEnd},
 		} {
 			if t.tr == nil || t.tr.Kind == "dip" || t.expectedAt || c.coveredBeneath(it, t.from, t.to) {
 				continue
