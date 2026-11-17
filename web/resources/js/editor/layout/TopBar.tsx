@@ -6,7 +6,7 @@ import {
 	Wifi,
 	WifiOff,
 } from "lucide-react";
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import LocaleSelect from "@/components/LocaleSelect";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -14,7 +14,7 @@ import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
 import PaletteButton from "../commands/palette/PaletteButton";
 import ShortcutsButton from "../commands/ShortcutsDialog";
 import { useActions, useCanEdit } from "../commands/useActions";
@@ -105,6 +105,35 @@ function ProjectName({ name }: { name: string }): ReactNode {
 	);
 }
 
+// "Saved automatically: 14:32": every edit is already stored by the core when
+// its revision arrives, so the time is the moment the open revision reached the
+// editor. It stays mounted while the editor is not live, so a reconnect does
+// not restart the time, and it says nothing then.
+export function SavedIndicator({ live }: { live: boolean }): ReactNode {
+	const t = useT();
+	const locale = useLocale();
+	const revision = useDocumentState((s) => s.revision);
+	const seen = useRef(revision);
+	const [savedAt, setSavedAt] = useState<Date | null>(() =>
+		revision === null ? null : new Date(),
+	);
+	useEffect(() => {
+		if (revision === seen.current) return;
+		seen.current = revision;
+		if (revision !== null) setSavedAt(new Date());
+	}, [revision]);
+	if (!live || savedAt === null) return null;
+	const time = new Intl.DateTimeFormat(locale, {
+		hour: "2-digit",
+		minute: "2-digit",
+	}).format(savedAt);
+	return (
+		<span className="text-xs text-muted-foreground" data-saved-at="">
+			{t("ui.editor.saved_auto", { time })}
+		</span>
+	);
+}
+
 // The top bar of SDD-012 section 6.2: back link, project
 // name (click to rename), revision and connection state as text and icon, undo and
 // redo, the activity indicator and the theme toggle.
@@ -153,6 +182,7 @@ export default function TopBar({
 				<span>{t(`ui.editor.connection.${shown}`)}</span>
 			</span>
 			<UndoRedo />
+			<SavedIndicator live={shown === "live"} />
 			<div className="ml-auto flex items-center gap-2">
 				<PaletteButton />
 				<ShortcutsButton />
