@@ -207,6 +207,9 @@ interface PlanLayerBase {
 	blend?: PlanBlend;
 	// The mask of SDD-004 section 3.9, constant over the item; absent without one.
 	mask?: PlanMask;
+	// The mask of each frame from `first` (a mask or null) when a mask property
+	// is animated; it then replaces `mask`.
+	masks?: (PlanMask | null)[];
 	// The mirror of SDD-004 section 3.10, constant over the item; absent is off.
 	flip_x?: boolean;
 	flip_y?: boolean;
@@ -260,6 +263,9 @@ export interface PlanMediaLayer extends PlanLayerBase {
 	asset_kind: "video" | "image";
 	source_seconds: number[];
 	crop: [number, number, number, number];
+	// The crop of each frame from `first` when a crop side is animated; it then
+	// replaces `crop`.
+	crops?: [number, number, number, number][];
 	color_matrix: number[] | null;
 	// The matrix of each frame from `first` (a matrix or null) when a colour
 	// property is animated; it then replaces `color_matrix` (SDD-004 section 3.5).
