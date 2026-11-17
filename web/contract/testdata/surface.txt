@@ -62,6 +62,7 @@ route GET /projects/{}/lint
 route GET /projects/{}/media
 route GET /projects/{}/media/{}
 route GET /projects/{}/media/{}/chunks
+route GET /projects/{}/media/{}/lut
 route GET /projects/{}/media/{}/peaks
 route GET /projects/{}/media/{}/proxy
 route GET /projects/{}/media/{}/strip

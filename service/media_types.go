@@ -177,5 +177,6 @@ type File struct {
 	ETag         string // quoted
 	ModTime      time.Time
 	Immutable    bool
-	MaxAge       int // seconds of the Cache-Control header
+	MaxAge       int    // seconds of the Cache-Control header
+	Body         []byte // the bytes to send when the file is built from the artifact (kind lut); Path is then not read
 }

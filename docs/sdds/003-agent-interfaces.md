@@ -151,7 +151,7 @@ type Service interface {
 	Doctor(ctx context.Context, req DoctorRequest) (*DoctorResult, error)
 	Events(ctx context.Context, req EventsRequest) (<-chan Event, error) // semantics in SDD-006
 
-	// OpenFile resolves a stored file (export, proxy, thumbnail, strip, peaks, bitmap, template file, cached frame) for download.
+	// OpenFile resolves a stored file (export, proxy, thumbnail, strip, peaks, lut, bitmap, template file, cached frame) for download.
 	// It checks scope and project ownership; the caller serves the bytes (§6.5). SDD-000 §1 calls the export case ExportFile; the name is OpenFile for every kind.
 	OpenFile(ctx context.Context, ref FileRef) (*File, error)
 
@@ -859,7 +859,7 @@ type Event struct {
 }
 
 type FileRef struct {
-	Kind      string `json:"kind"` // "export" | "proxy" | "chunks" | "thumbnail" | "strip" | "peaks" | "bitmap" | "template" | "frame"
+	Kind      string `json:"kind"` // "export" | "proxy" | "chunks" | "thumbnail" | "strip" | "peaks" | "lut" | "bitmap" | "template" | "frame"
 	ProjectID string `json:"project_id,omitempty"`
 	ID        string `json:"id"` // job id, asset id, template id or bitmap key
 	Variant   string `json:"variant,omitempty"` // thumbnail size, frame file name
@@ -2611,6 +2611,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `media.thumbnail` | `GET /projects/{id}/media/{asset_id}/thumbnail` | `width` (160, 320 or 640; default 160) | none | 200 `image/jpeg` | read | 409 `E_ASSET_NOT_READY` |
 | `media.strip` | `GET /projects/{id}/media/{asset_id}/strip` | none | none | 200 `image/jpeg` (a sprite of tiles, SDD-011) | read | 409 `E_ASSET_NOT_READY` |
 | `media.peaks` | `GET /projects/{id}/media/{asset_id}/peaks` | none | none | 200 `application/octet-stream` (SDD-011) | read | 409 `E_ASSET_NOT_READY` |
+| `media.lut` | `GET /projects/{id}/media/{asset_id}/lut` | none | none | 200 `application/octet-stream` (the parsed table, SDD-004 §3.6) | read | 409 `E_ASSET_NOT_READY`; 404 `E_NOT_FOUND` for an asset that is not a `lut` |
 | `media.chunks` | `GET /projects/{id}/media/{asset_id}/chunks` | none | none | 200 `application/json` (the chunk index of SDD-011 §4.4.1) | read | 409 `E_ASSET_NOT_READY`; 404 `E_NOT_FOUND` for an asset that has no video proxy, or whose proxy was written before the index existed (import the file again) |
 | `bitmaps.get` | `GET /projects/{id}/bitmaps/{key}` | none | none | 200 `image/png` (rasterized text or shape, by content key) | read | none |
 | `templates.list` | `GET /templates` | `cursor`, `limit` | none | 200 `TemplateListResult` | read | none |
@@ -2647,7 +2648,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 
 ### 6.5 Binary endpoints
 
-The nine byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `chunks`, `thumbnail`, `strip`, `peaks`, `bitmaps`; the template file of §6.3 is served the same way) are served from `OpenFile` (§2.9), all with scope `read` and checked against the project, and written with vukem's `c.File` (`web/response.go` lines 289 to 343), which uses `http.ServeContent`: `Range` requests answer 206, an unsatisfiable range 416, `If-Range` and `If-None-Match` work, and `Accept-Ranges: bytes` is sent. The handler sets `ETag` before the call (stdlib `ServeContent` honours an existing `ETag` header) and `X-Vukem-Revision` where relevant. `OpenFile` returns paths inside the workspace; the filesystem passed to `c.File` is `os.DirFS(<workspace>)`, so a path cannot leave it.
+The ten byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `chunks`, `thumbnail`, `strip`, `peaks`, `lut`, `bitmaps`; the template file of §6.3 is served the same way) are served from `OpenFile` (§2.9), all with scope `read` and checked against the project, and written with vukem's `c.File` (`web/response.go` lines 289 to 343), which uses `http.ServeContent`: `Range` requests answer 206, an unsatisfiable range 416, `If-Range` and `If-None-Match` work, and `Accept-Ranges: bytes` is sent. The handler sets `ETag` before the call (stdlib `ServeContent` honours an existing `ETag` header) and `X-Vukem-Revision` where relevant. `OpenFile` returns paths inside the workspace; the filesystem passed to `c.File` is `os.DirFS(<workspace>)`, so a path cannot leave it.
 
 | Endpoint | Content type | `ETag` | `Cache-Control` | Notes |
 | --- | --- | --- | --- | --- |
@@ -2659,6 +2660,7 @@ The nine byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `chunk
 | `GET /projects/{id}/media/{asset_id}/strip` | `image/jpeg` | `"strip-<asset hash first 16>-<profile version>"` | `private, max-age=86400, immutable` | one sprite of timeline tiles (SDD-011); `Range` works |
 | `GET /projects/{id}/media/{asset_id}/chunks` | `application/json` | `"chunks-<asset hash first 16>-<profile version>"` | `private, max-age=86400` | the chunk index of the video proxy (SDD-011 §4.4.1): the codec string and the offset, size, time and key frame flag of every sample, so the browser decodes the proxy with WebCodecs; same scope and cache rules as the proxy it describes |
 | `GET /projects/{id}/media/{asset_id}/peaks` | `application/octet-stream` | `"peaks-<asset hash first 16>-<profile version>"` | `private, max-age=86400, immutable` | the peaks file of SDD-011, read whole by the browser; `Range` works |
+| `GET /projects/{id}/media/{asset_id}/lut` | `application/octet-stream` | `"lut-<asset hash first 16>"` | `private, max-age=86400, immutable` | the table of a `lut` asset parsed by `engine/lut` and sent as binary for the preview (SDD-004 §3.6), so the browser parses no text; `OpenFile` builds the body, `Range` and `If-None-Match` work |
 | `GET /projects/{id}/bitmaps/{key}` | `image/png` | `"bmp-<key>"` | `private, max-age=31536000, immutable` (the key is the content hash) | rasterized text or shape (SDD-004); the project in the path is the access check, and the key must come from a plan window of that project (else 404) |
 
 A frame or sheet is written to the cache (`frames/<project id>/<revision>/`) by the first request and served from it afterwards. In network mode a cached file is served only to a caller allowed to read that project.
@@ -2803,7 +2805,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `TemplateImport` | `template` (`action` `import`) | `template:import` | `POST /templates/import` |
 | `Doctor` | none (exception E-1) | `doctor` | `GET /system` |
 | `Events` | none (exception E-1) | `events` | `GET /projects/{id}/events` |
-| `OpenFile` (kinds `export`, `proxy`, `chunks`, `thumbnail`, `strip`, `peaks`, `bitmap`, `template`, `frame`) | none (exception E-2) | none (the path is in the result; for a remote server the CLI of `view` downloads, §5.4) | the byte-serving routes of §6.5 |
+| `OpenFile` (kinds `export`, `proxy`, `chunks`, `thumbnail`, `strip`, `peaks`, `lut`, `bitmap`, `template`, `frame`) | none (exception E-2) | none (the path is in the result; for a remote server the CLI of `view` downloads, §5.4) | the byte-serving routes of §6.5 |
 | `PlanWindow` | none (exception E-3) | none | `GET /projects/{id}/plan` |
 | `SnapPoints` | none (exception E-3) | none | `GET /projects/{id}/snap-points` |
 | `FontList` | none (exception E-3) | `fonts` | `GET /fonts` |

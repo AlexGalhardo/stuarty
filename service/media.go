@@ -1211,6 +1211,12 @@ func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {
 		kind, ext, tag, ctype, profileInTag, immutable = "thumbnails", "jpg", "strip-"+short, "image/jpeg", true, true
 	case "peaks":
 		kind, ext, tag, ctype, profileInTag, immutable = "peaks", "bin", "peaks-"+short, "application/octet-stream", true, true
+	case "lut":
+		if ar.Kind != string(timeline.AssetLUT) {
+			return nil, newError(command.CodeNotFound, "the asset is not a lookup table.")
+		}
+
+		kind, ext, tag, ctype, immutable = "normalized", "cube", "lut-"+short, "application/octet-stream", true
 	default:
 		return nil, newError(command.CodeValidation, "the file kind %q is not served here.", ref.Kind).withPath("kind")
 	}
@@ -1229,20 +1235,7 @@ func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {
 	}
 
 	if ref.Kind == "proxy" {
-		switch arts[i].Ext {
-		case "webm":
-			// The proxy of a source with alpha (SDD-011 4.4); the browser plays it with its alpha.
-			ctype = "video/webm"
-		case "mp4":
-			ctype = "video/mp4"
-			if ar.Kind == string(timeline.AssetAudio) {
-				ctype = "audio/mp4"
-			}
-		case "png":
-			ctype = "image/png"
-		default:
-			ctype = "image/jpeg"
-		}
+		ctype = proxyContentType(arts[i].Ext, ar.Kind)
 	}
 
 	art := arts[i]
@@ -1250,11 +1243,39 @@ func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {
 		return nil, internalError()
 	}
 
-	return &File{
+	f := &File{
 		Path: art.RelPath, ContentType: ctype, Size: art.SizeBytes,
 		ETag: etag(tag, art.Profile, profileInTag), ModTime: msTime(art.CreatedMs),
 		Immutable: immutable, MaxAge: 86400,
-	}, nil
+	}
+
+	if ref.Kind == "lut" {
+		if f.Body, err = lutBody(s.artifactPath, art.RelPath); err != nil {
+			return nil, err
+		}
+
+		f.Size = int64(len(f.Body))
+	}
+
+	return f, nil
+}
+
+func proxyContentType(ext, assetKind string) string {
+	switch ext {
+	case "webm":
+		// The proxy of a source with alpha (SDD-011 4.4); the browser plays it with its alpha.
+		return "video/webm"
+	case "mp4":
+		if assetKind == string(timeline.AssetAudio) {
+			return "audio/mp4"
+		}
+
+		return "video/mp4"
+	case "png":
+		return "image/png"
+	default:
+		return "image/jpeg"
+	}
 }
 
 func etag(tag string, profile int, withProfile bool) string {

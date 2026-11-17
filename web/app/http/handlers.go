@@ -269,6 +269,9 @@ func (h *apiHandler) registerAll() {
 	register(h, "media.peaks", func(c *web.Ctx, in mediaFileIn) (noIn, error) {
 		return h.serveAsset(c, "peaks", in.ID, in.AssetID, "")
 	})
+	register(h, "media.lut", func(c *web.Ctx, in mediaFileIn) (noIn, error) {
+		return h.serveAsset(c, "lut", in.ID, in.AssetID, "")
+	})
 	register(h, "media.chunks", func(c *web.Ctx, in mediaFileIn) (noIn, error) {
 		return h.serveAsset(c, "chunks", in.ID, in.AssetID, "")
 	})

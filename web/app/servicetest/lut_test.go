@@ -13,8 +13,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/AlexGalhardo/vukem-video/core/command"
 	"github.com/AlexGalhardo/vukem-video/core/timeline"
 	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/vukem-video/engine/lut"
 	"github.com/AlexGalhardo/vukem-video/service"
 )
 
@@ -213,5 +215,51 @@ func TestAnImportedCubeGradesTheExport(t *testing.T) {
 
 	if pr>>8 < 150 || gr>>8 > 110 {
 		t.Errorf("centre red: without the table %d, with the inverting table %d", pr>>8, gr>>8)
+	}
+}
+
+// TASK-0254: the preview reads the table the server parsed, never the text of the file.
+func TestOpenFileServesTheParsedTableOfALutAsset(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.newProject("p")
+	body := invertingCube()
+	a := m.importOne(project, m.write("invert.cube", body)).Assets[0]
+
+	f, err := m.svc.OpenFile(m.as(ui), service.FileRef{Kind: "lut", ProjectID: project, ID: a.AssetID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want, err := lut.Parse(strings.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if f.ContentType != "application/octet-stream" || !f.Immutable || !strings.HasPrefix(f.ETag, `"lut-`) {
+		t.Errorf("file = %+v", f)
+	}
+
+	if len(f.Body) != 7+6*8 || string(f.Body[:4]) != "VLUT" || f.Body[4] != 1 || f.Body[5] != 2 || f.Body[6] != 0 {
+		t.Fatalf("header or length of % x", f.Body)
+	}
+
+	if !bytes.Equal(f.Body[7:], want.Bytes()) || f.Size != int64(len(f.Body)) {
+		t.Errorf("entries % x, want % x", f.Body[7:], want.Bytes())
+	}
+
+	// Red varies fastest: the second entry is red 1, green 0, blue 0, which the table maps to (0, 1, 1).
+	if got := f.Body[7+6 : 7+12]; !bytes.Equal(got, []byte{0, 0, 0xFF, 0xFF, 0xFF, 0xFF}) {
+		t.Errorf("second entry % x", got)
+	}
+}
+
+func TestOpenFileRefusesTheLutOfAnAssetThatIsNotOne(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project := m.newProject("p")
+	a := m.importOne(project, m.write("a.mp4", clipBytes)).Assets[0]
+
+	_, err := m.svc.OpenFile(m.as(ui), service.FileRef{Kind: "lut", ProjectID: project, ID: a.AssetID})
+	if code(err) != command.CodeNotFound {
+		t.Errorf("lut of a video: %v", err)
 	}
 }

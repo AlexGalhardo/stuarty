@@ -32,6 +32,7 @@
         "media.import",
         "media.inspect",
         "media.chunks",
+        "media.lut",
         "media.peaks",
         "media.proxy",
         "media.restore",

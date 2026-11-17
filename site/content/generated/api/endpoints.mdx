@@ -40,6 +40,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/projects/{id}/media` | [`media.import`](/docs/api/media.import) | Import media files |
 | `GET` | `/api/v1/projects/{id}/media/{asset_id}` | [`media.inspect`](/docs/api/media.inspect) | Inspect an asset |
 | `GET` | `/api/v1/projects/{id}/media/{asset_id}/chunks` | [`media.chunks`](/docs/api/media.chunks) | Download the chunk index of the video proxy of an asset |
+| `GET` | `/api/v1/projects/{id}/media/{asset_id}/lut` | [`media.lut`](/docs/api/media.lut) | Download the parsed lookup table of a lut asset |
 | `GET` | `/api/v1/projects/{id}/media/{asset_id}/peaks` | [`media.peaks`](/docs/api/media.peaks) | Download the audio peaks of an asset |
 | `GET` | `/api/v1/projects/{id}/media/{asset_id}/proxy` | [`media.proxy`](/docs/api/media.proxy) | Download the proxy of an asset |
 | `POST` | `/api/v1/projects/{id}/media/{asset_id}/restore` | [`media.restore`](/docs/api/media.restore) | Restore an asset from the trash |
