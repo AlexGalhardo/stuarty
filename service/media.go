@@ -111,6 +111,16 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 			withPath("wait_ms")
 	}
 
+	// The ids are checked before the first file is read, so that one bad id fails the call and not
+	// just its entry after the other files were imported (VV-105).
+	for i, f := range req.Files {
+		if f.AssetID != "" && !timeline.ValidID(timeline.PrefixAsset, f.AssetID) {
+			return nil, newError(command.CodeValidation, "the asset id of file %d is not valid.", i).
+				withPath(fmt.Sprintf("files[%d].asset_id", i)).
+				withHint("an asset id is ast_ and 10 characters from 0-9 and a-z, without i, l, o and u")
+		}
+	}
+
 	row, lerr := s.loadProject(ctx, c, req.ProjectID)
 	if lerr != nil {
 		return nil, lerr
