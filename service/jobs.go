@@ -203,13 +203,18 @@ func (s *svc) stamp(j JobRow) JobRow {
 	return j
 }
 
+// exportRetryAfter is the Retry-After, in seconds, of an export refused because the exports are all busy.
+const exportRetryAfter = 10
+
 // limitError adds the details of SDD-003 section 2.8 rule 2 to a queue-full error.
 func limitError(err error, l Limits) error {
 	out := asError(err)
 
 	if e, ok := errors.AsType[*Error](out); ok && e.Code == CodeQueueFull {
-		return e.withHint("at most %d exports run at the same time: wait for one to finish with job_get or stop one "+
-			"with job_cancel; the person running the server can raise VUKEM_VIDEO_MAX_EXPORTS", l.MaxExports)
+		// An export lasts seconds to minutes: ten seconds is a fair first wait before the caller asks again (VV-116).
+		return e.withDetail("retry_after", exportRetryAfter).
+			withHint("at most %d exports run at the same time: wait for one to finish with job_get or stop one "+
+				"with job_cancel; the person running the server can raise VUKEM_VIDEO_MAX_EXPORTS", l.MaxExports)
 	}
 
 	return out
