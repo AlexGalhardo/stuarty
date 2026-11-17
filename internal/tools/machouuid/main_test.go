@@ -19,13 +19,13 @@ func fixture(uuid [16]byte, body string, sig string) []byte {
 	binary.LittleEndian.PutUint32(b[32:], lcUUID)
 	binary.LittleEndian.PutUint32(b[36:], 24)
 	copy(b[40:], uuid[:])
-	b = append(b, body...)
+	b = append(b, body...) //nolint:makezero // the header is written in place, the body follows it
 	if sig != "" {
 		binary.LittleEndian.PutUint32(b[56:], lcCodeSig)
 		binary.LittleEndian.PutUint32(b[60:], 16)
 		binary.LittleEndian.PutUint32(b[64:], uint32(len(b)))
 		binary.LittleEndian.PutUint32(b[68:], uint32(len(sig)))
-		b = append(b, sig...)
+		b = append(b, sig...) //nolint:makezero // the signature follows the body
 	}
 	return b
 }
@@ -81,7 +81,7 @@ func TestFatSlices(t *testing.T) {
 	binary.BigEndian.PutUint32(data[4:], 1)
 	binary.BigEndian.PutUint32(data[16:], 28)
 	binary.BigEndian.PutUint32(data[20:], uint32(len(s)))
-	data = append(data, s...)
+	data = append(data, s...) //nolint:makezero // the slice follows the fat header written in place
 	if err := rewrite(data); err != nil {
 		t.Fatal(err)
 	}

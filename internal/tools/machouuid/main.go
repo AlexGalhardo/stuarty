@@ -40,18 +40,19 @@ func main() {
 }
 
 func rewriteFile(path string) error {
-	info, err := os.Stat(path)
+	// The path is an argument of the FFmpeg build script, which names the binaries it just linked.
+	info, err := os.Stat(path) //nolint:gosec // G703: a build tool given its own output paths
 	if err != nil {
 		return err
 	}
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // G703: see above
 	if err != nil {
 		return err
 	}
 	if err := rewrite(data); err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, info.Mode().Perm())
+	return os.WriteFile(path, data, info.Mode().Perm()) //nolint:gosec // G703: see above
 }
 
 // rewrite updates data in place; data is a thin 64-bit little endian Mach-O or a fat file of them.
@@ -64,7 +65,7 @@ func rewrite(data []byte) error {
 		if n < 1 || 8+20*n > len(data) {
 			return errors.New("bad fat header")
 		}
-		for i := 0; i < n; i++ {
+		for i := range n {
 			e := data[8+20*i:]
 			off, size := uint64(binary.BigEndian.Uint32(e[8:])), uint64(binary.BigEndian.Uint32(e[12:]))
 			if off+size > uint64(len(data)) {
@@ -90,7 +91,7 @@ func rewriteThin(s []byte) error {
 	}
 	uuidAt, sigOff, sigSize := -1, 0, 0
 	pos := header64Len
-	for i := 0; i < ncmds; i++ {
+	for range ncmds {
 		if pos+8 > header64Len+sizeofcmds {
 			return errors.New("truncated load command")
 		}
