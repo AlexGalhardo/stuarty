@@ -156,6 +156,25 @@ describe("finalize", () => {
 		});
 	});
 
+	test("an untouched required boolean is sent as its default or false (VV-178)", () => {
+		const flags = obj(
+			{
+				enabled: { type: "boolean" },
+				on: { type: "boolean", default: true },
+				optional: { type: "boolean" },
+			},
+			["enabled", "on"],
+		);
+		expect(finalize(flags, {}, context)).toEqual({
+			ok: true,
+			value: { enabled: false, on: true },
+		});
+		expect(finalize(flags, { enabled: true, on: false }, context)).toEqual({
+			ok: true,
+			value: { enabled: true, on: false },
+		});
+	});
+
 	test("a JSON fallback is parsed", () => {
 		expect(finalize(schema, { extra: '{"a": 1}' }, context)).toEqual({
 			ok: true,
