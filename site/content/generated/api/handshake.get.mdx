@@ -33,15 +33,15 @@ Content type `application/json`. Schema: [`handshakeOut`](/docs/api/schemas#hand
 | --- | --- | --- | --- |
 | `proof` | `string` | no | HMAC-SHA256 keyed by the token over the nonce (SDD-007 section 3.8). |
 
-### 401 Unauthorized
+### 400
 
-Error (RFC 9457 problem details)
+Validation failed; errors maps each field to its messages and issues lists each problem with its code, key and params
 
 Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
 
-### 422 Unprocessable Content
+### 401 Unauthorized
 
-Validation failed; errors maps each field to its messages and issues lists each problem with its code, key and params
+Error (RFC 9457 problem details)
 
 Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#problem).
 
@@ -200,6 +200,35 @@ puts "#{response.code} #{response.body}"
 }
 ```
 
+```json title="400"
+{
+  "code": "string",
+  "detail": "string",
+  "details": {},
+  "errors": {},
+  "hint": "string",
+  "instance": "string",
+  "issues": [
+    {
+      "code": "string",
+      "key": "string",
+      "message": "string",
+      "on": "string",
+      "params": {},
+      "path": "string"
+    }
+  ],
+  "message": "string",
+  "op_index": 0,
+  "path": "string",
+  "request_id": "string",
+  "retryable": false,
+  "status": 0,
+  "title": "string",
+  "type": "string"
+}
+```
+
 ```json title="401"
 {
   "code": "E_UNAUTHORIZED",
@@ -224,35 +253,6 @@ puts "#{response.code} #{response.body}"
   "request_id": "string",
   "retryable": false,
   "status": 401,
-  "title": "string",
-  "type": "string"
-}
-```
-
-```json title="422"
-{
-  "code": "E_VALIDATION",
-  "detail": "string",
-  "details": {},
-  "errors": {},
-  "hint": "string",
-  "instance": "string",
-  "issues": [
-    {
-      "code": "string",
-      "key": "string",
-      "message": "string",
-      "on": "string",
-      "params": {},
-      "path": "string"
-    }
-  ],
-  "message": "string",
-  "op_index": 0,
-  "path": "string",
-  "request_id": "string",
-  "retryable": false,
-  "status": 422,
   "title": "string",
   "type": "string"
 }

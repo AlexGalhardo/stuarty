@@ -13,7 +13,7 @@ description: "How to call the HTTP API of Vukem Video: the address, the token or
 
 The HTTP API is the editor's own interface. The browser editor, the CLI and the [MCP server](/docs/mcp/overview) call the same service, so a request here does exactly what the same action does in the editor. Every operation has a page in this section, grouped by resource in the sidebar, with its parameters, its body, its responses and a request you can copy in eight languages.
 
-The pages are generated from the OpenAPI document that the server itself serves, so a route, a field or a status never drifts from the program. The document is at `GET /openapi.json` while `vukem-video serve` runs.
+The pages are generated from the OpenAPI document that the server itself serves, so a route, a field or a status never drifts from the program. The document is at `GET /openapi.json` while `vukem-video serve` runs. Like every other route it needs the `Authorization: Bearer <token>` header; without it the answer is 401 `E_UNAUTHORIZED`. It has no `servers` member: the paths resolve against the address the document was fetched from.
 
 ## Quick start
 
