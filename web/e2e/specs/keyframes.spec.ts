@@ -198,6 +198,32 @@ test.describe("keyframes", () => {
 		});
 	});
 
+	// VV-180: a refused keyframe shows the core's message and hint under the
+	// button, and the field is marked invalid until the value changes.
+	test("a keyframe the core refuses shows the error with its hint", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+		const itemId = seeded.itemIds[0] as string;
+		await page.goto(`/editor/${seeded.id}?debug=1`);
+		await page.locator(`[data-item-id="${itemId}"]`).click();
+		await page.getByLabel("Property", { exact: true }).selectOption("hue");
+		const value = page.getByLabel("Value", { exact: true });
+		await value.fill("200");
+		await page.getByRole("button", { name: "Add at playhead" }).click();
+		const alert = page.getByRole("alert").filter({ hasText: "hue" });
+		await expect(alert).toBeVisible();
+		await expect(alert).toContainText("Use a value in range.");
+		await expect(value).toHaveAttribute("aria-invalid", "true");
+		await expect(page.locator("[data-keyframe-row]")).toHaveCount(0);
+
+		await value.fill("20");
+		await expect(alert).toHaveCount(0);
+		await page.getByRole("button", { name: "Add at playhead" }).click();
+		await expect(page.locator("[data-keyframe-row]")).toHaveCount(1);
+	});
+
 	// WCAG 2.5.8: the value input, the easing select and the buttons of a
 	// keyframe row do not overlap and each has room to be pressed.
 	test("a keyframe row passes the axe target-size rule", async ({
