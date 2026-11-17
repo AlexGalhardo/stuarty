@@ -17,6 +17,7 @@ Work is driven by the maintainers' task cards, a private work list kept outside 
 | know what the Rust renderer reads, writes and may never do (Phase 5) | `adrs/0029-*.md`, then `sdds/013-renderer.md` |
 | know why a decision was taken | `adrs/`; the decisions of the author (`D-NNN`) they cite are kept privately by the maintainers |
 | check that a requirement is covered | `traceability.md` |
+| see how well small and large AI agents use the product, round by round | `agent-benchmark.md` |
 | design or review a screen of the web UI or the desktop shell (tokens, components, content style, accessibility) | `design-system.md`, then `sdds/012-ui-architecture.md` |
 
 ## Requirements (`prds/`)
