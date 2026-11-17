@@ -19,7 +19,6 @@ import PaletteButton from "../commands/palette/PaletteButton";
 import ShortcutsButton from "../commands/ShortcutsDialog";
 import { useActions, useCanEdit } from "../commands/useActions";
 import ExportButton from "../export/ExportButton";
-import UndoRedo from "../history/UndoRedo";
 import { useDocumentState } from "../state/EditorContext";
 import ActivityIndicator from "./ActivityIndicator";
 
@@ -181,7 +180,6 @@ export default function TopBar({
 				)}
 				<span>{t(`ui.editor.connection.${shown}`)}</span>
 			</span>
-			<UndoRedo />
 			<SavedIndicator live={shown === "live"} />
 			<div className="ml-auto flex items-center gap-2">
 				<PaletteButton />

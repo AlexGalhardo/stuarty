@@ -26,7 +26,10 @@ function render(runtime: EditorRuntime, node: React.ReactNode): string {
 describe("Timeline", () => {
 	test("draws every track and item as a labelled block", async () => {
 		const h = await startHarness({ tracks: 3, itemsPerTrack: 4 });
-		const html = render(h.runtime, <Timeline />);
+		const html = render(
+			h.runtime,
+			<Timeline onAddCaption={() => undefined} undoRedo={null} />,
+		);
 		expect(html.match(/role="gridcell"/g)?.length).toBe(12);
 		// One row of cells and one header row per track, and the ruler row.
 		expect(html.match(/role="row"/g)?.length).toBe(7);
@@ -40,7 +43,10 @@ describe("Timeline", () => {
 
 	test("a track without items still has a cell in its row", async () => {
 		const h = await startHarness({ tracks: 2, itemsPerTrack: 0 });
-		const html = render(h.runtime, <Timeline />);
+		const html = render(
+			h.runtime,
+			<Timeline onAddCaption={() => undefined} undoRedo={null} />,
+		);
 		expect(html.match(/data-track-id=/g)?.length).toBe(2);
 		expect(html.match(/role="gridcell"/g)?.length).toBe(2);
 	});
@@ -49,7 +55,10 @@ describe("Timeline", () => {
 		const h = await startHarness();
 		const id = fakeId("itm", 1);
 		h.runtime.uiWriter.select([id]);
-		const html = render(h.runtime, <Timeline />);
+		const html = render(
+			h.runtime,
+			<Timeline onAddCaption={() => undefined} undoRedo={null} />,
+		);
 		const selected = html.match(/aria-selected="true"/g) ?? [];
 		expect(selected.length).toBe(1);
 		expect(html).toContain("ring-ed-selection");
@@ -59,16 +68,27 @@ describe("Timeline", () => {
 		const h = await startHarness({ tracks: 5, itemsPerTrack: 40 });
 		const count = (html: string): number =>
 			html.match(/role="gridcell"/g)?.length ?? 0;
-		const windowed = count(render(h.runtime, <Timeline />));
+		const windowed = count(
+			render(
+				h.runtime,
+				<Timeline onAddCaption={() => undefined} undoRedo={null} />,
+			),
+		);
 		expect(windowed).toBeGreaterThan(0);
 		expect(windowed).toBeLessThan(200);
-		expect(render(h.runtime, <Timeline />)).not.toContain(
-			`data-item-id="${fakeId("itm", 40)}"`,
-		);
+		expect(
+			render(
+				h.runtime,
+				<Timeline onAddCaption={() => undefined} undoRedo={null} />,
+			),
+		).not.toContain(`data-item-id="${fakeId("itm", 40)}"`);
 		// Item 40 is the last of track 1, far past the window.
 		h.runtime.uiWriter.select([fakeId("itm", 40)]);
 		h.runtime.uiWriter.focusItem(fakeId("itm", 80));
-		const pinned = render(h.runtime, <Timeline />);
+		const pinned = render(
+			h.runtime,
+			<Timeline onAddCaption={() => undefined} undoRedo={null} />,
+		);
 		expect(count(pinned)).toBe(windowed + 2);
 		expect(pinned).toContain(`data-item-id="${fakeId("itm", 40)}"`);
 		expect(pinned).toContain(`data-item-id="${fakeId("itm", 80)}"`);
@@ -76,13 +96,21 @@ describe("Timeline", () => {
 
 	test("at the threshold every item is mounted", async () => {
 		const h = await startHarness({ tracks: 5, itemsPerTrack: 30 });
-		const html = render(h.runtime, <Timeline />);
+		const html = render(
+			h.runtime,
+			<Timeline onAddCaption={() => undefined} undoRedo={null} />,
+		);
 		expect(html.match(/role="gridcell"/g)?.length).toBe(150);
 	});
 
 	test("an empty project shows the empty message", async () => {
 		const h = await startHarness({ tracks: 0 });
-		expect(render(h.runtime, <Timeline />)).toContain("The timeline is empty");
+		expect(
+			render(
+				h.runtime,
+				<Timeline onAddCaption={() => undefined} undoRedo={null} />,
+			),
+		).toContain("The timeline is empty");
 	});
 });
 

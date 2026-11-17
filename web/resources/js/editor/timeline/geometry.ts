@@ -91,6 +91,19 @@ export function zoomAround(
 	return { scrollLeft: Math.max(0, anchorFrame * nextPpf - anchorViewportX) };
 }
 
+// The zoom slider moves on a base 2 logarithm of the pixels per frame, so each
+// notch doubles or halves the scale like the levels above.
+export const ZOOM_SLIDER_MIN = Math.log2(MIN_ZOOM);
+export const ZOOM_SLIDER_MAX = Math.log2(MAX_ZOOM);
+
+export function zoomToSlider(ppf: number): number {
+	return Math.log2(clampZoom(ppf));
+}
+
+export function sliderToZoom(value: number): number {
+	return clampZoom(2 ** value);
+}
+
 export function fitZoom(viewportPx: number, endFrame: number): number {
 	if (endFrame <= 0) return 1;
 	return clampZoom(viewportPx / (endFrame * 1.05));

@@ -1,13 +1,4 @@
-import {
-	Captions,
-	Scissors,
-	Shapes,
-	Snowflake,
-	StepBack,
-	StepForward,
-	Trash2,
-	Type,
-} from "lucide-react";
+import { Shapes, Type } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -29,12 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { SHAPES } from "../commands/builders";
-import {
-	useActions,
-	useCanCut,
-	useCanEdit,
-	useHasSelection,
-} from "../commands/useActions";
+import { useActions, useCanEdit } from "../commands/useActions";
 import { useShortcutLabel } from "../commands/useShortcutLabel";
 
 const DEFAULT_CAPTION_DURATION = "3s";
@@ -109,8 +95,8 @@ function AddCaptionDialog({
 	);
 }
 
-// The Prototype editing buttons of SDD-012 section 8.2: split and trim at the
-// playhead, and Add caption. Each sends one batch.
+// The Add text and Add shape buttons of SDD-012 section 8.2, and the Add caption
+// dialog the timeline toolbar and the shortcut open. Each sends one batch.
 export default function EditToolbar({
 	captionOpen,
 	onCaptionOpenChange,
@@ -121,80 +107,13 @@ export default function EditToolbar({
 	const t = useT();
 	const tip = useShortcutLabel();
 	const actions = useActions();
-	const canCut = useCanCut();
 	const ready = useCanEdit();
-	const hasSelection = useHasSelection();
 	return (
 		<div
 			role="toolbar"
 			aria-label={t("ui.editor.edit.label")}
 			className="flex items-center gap-1"
 		>
-			<Button
-				type="button"
-				variant="ghost"
-				size="sm"
-				disabled={!canCut}
-				title={tip(t("ui.editor.edit.split"), "split")}
-				onClick={() => void actions.splitAtPlayhead()}
-			>
-				<Scissors aria-hidden="true" />
-				{t("ui.editor.edit.split")}
-			</Button>
-			<Button
-				type="button"
-				variant="ghost"
-				size="sm"
-				disabled={!canCut}
-				title={tip(t("ui.editor.edit.trim_start"), "trim_start")}
-				onClick={() => void actions.trimToPlayhead("start")}
-			>
-				<StepForward aria-hidden="true" />
-				{t("ui.editor.edit.trim_start")}
-			</Button>
-			<Button
-				type="button"
-				variant="ghost"
-				size="sm"
-				disabled={!canCut}
-				title={tip(t("ui.editor.edit.trim_end"), "trim_end")}
-				onClick={() => void actions.trimToPlayhead("end")}
-			>
-				<StepBack aria-hidden="true" />
-				{t("ui.editor.edit.trim_end")}
-			</Button>
-			<Button
-				type="button"
-				variant="ghost"
-				size="sm"
-				disabled={!canCut}
-				onClick={() => void actions.freezeFrame()}
-			>
-				<Snowflake aria-hidden="true" />
-				{t("ui.editor.edit.freeze_frame")}
-			</Button>
-			<Button
-				type="button"
-				variant="ghost"
-				size="sm"
-				disabled={!hasSelection}
-				title={tip(t("ui.editor.edit.delete"), "delete")}
-				onClick={() => void actions.deleteSelection()}
-			>
-				<Trash2 aria-hidden="true" />
-				{t("ui.editor.edit.delete")}
-			</Button>
-			<Button
-				type="button"
-				variant="ghost"
-				size="sm"
-				disabled={!ready}
-				title={tip(t("ui.editor.edit.caption"), "add_caption")}
-				onClick={() => onCaptionOpenChange(true)}
-			>
-				<Captions aria-hidden="true" />
-				{t("ui.editor.edit.caption")}
-			</Button>
 			<Button
 				type="button"
 				variant="ghost"
