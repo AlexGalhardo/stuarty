@@ -18,7 +18,7 @@
 		{
 			"cmd": "edit --project prj_7k2m9x4q1b --base 1 track.update track_id=trk_f6g7h8j9k0 name=Mine",
 			"exit": 2,
-			"note": "a stale --base is a conflict, exit 2; read details.diff"
+			"note": "another actor changed it: conflict, exit 2"
 		},
 		{
 			"cmd": "project:show prj_7k2m9x4q1b"
