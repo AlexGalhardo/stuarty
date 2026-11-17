@@ -431,7 +431,7 @@ func assetLines(doc *timeline.Document, fps timeval.FPS, full bool) []string {
 		case timeline.AssetImage:
 			s += fmt.Sprintf(" %dx%d", a.Width, a.Height)
 		case timeline.AssetLUT:
-			// A lookup table has no picture facts to show.
+			// A lookup table has no picture facts.
 		}
 
 		lines = append(lines, s)

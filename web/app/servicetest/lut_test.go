@@ -14,7 +14,7 @@ func cubeFile(size int, header string, rows int) string {
 
 	b.WriteString("# a table\nTITLE \"grade\"\n")
 	b.WriteString(header)
-	b.WriteString(fmt.Sprintf("LUT_3D_SIZE %d\n", size))
+	fmt.Fprintf(&b, "LUT_3D_SIZE %d\n", size)
 
 	for range rows {
 		b.WriteString("0.1 0.2 0.3\n")
@@ -50,7 +50,10 @@ func TestImportingACubeFileMakesALutAsset(t *testing.T) {
 		t.Fatalf("list = %+v, %v", list, err)
 	}
 
-	if _, err := m.svc.MediaInspect(m.as(ui), service.MediaInspectRequest{ProjectID: project, AssetID: a.AssetID}); err != nil {
+	if _, err := m.svc.MediaInspect(
+		m.as(ui),
+		service.MediaInspectRequest{ProjectID: project, AssetID: a.AssetID},
+	); err != nil {
 		t.Errorf("inspect of a lut: %v", err)
 	}
 }
