@@ -848,7 +848,7 @@ Entries marked P exist in the Prototype (§10); every other entry is A unless ma
 
 | Gesture | Command or batch sent | Ephemeral preview | Phase |
 | --- | --- | --- | --- |
-| Click "Add to timeline" on an asset card | `clip.add {track_id, asset_id, start: "<playhead>f"}` on the first visual track by `order`; if the project has no visual track the batch is `[track.add {kind: "visual", id}, clip.add {track_id: id, ...}]`; audio-only assets use `audio.add` on an audio track, creating one the same way | none | P (visual), A (audio) |
+| Click "Add to timeline" on an asset card | `clip.add {track_id, asset_id}` (`start` omitted: the core places the item at the end of the last item of the track, so a second add never overlaps) on the first visual track by `order`; if the project has no visual track the batch is `[track.add {kind: "visual", id}, clip.add {track_id: id, ...}]`; audio-only assets use `audio.add` on an audio track, creating one the same way | none | P (visual), A (audio) |
 | Drag an asset card onto a track at a time | `clip.add` or `audio.add` with `track_id` of the row under the pointer and `start` from the pointer frame | ghost of the item with the asset's duration (from `listMedia`) | A |
 | Drag item body horizontally | `item.move {item_id, start}` (only `start`) | ghost at the snapped frame | A |
 | Drag item body to another track | `item.move {item_id, track_id, start?}` | ghost on the target row | A |
@@ -1024,7 +1024,7 @@ D-023: the Prototype UI shows the timeline and the preview updating live while a
 | Zoom | zoom buttons, `Ctrl+wheel`, fit; keys `+`, `-` and `Shift+Z`; horizontal and vertical scroll |
 | Keyboard | exactly the keys marked `P` in §18.2: `Space`, `Left` and `Right`, `Shift+Left` and `Shift+Right`, `Home` and `End`, `S`, `[` and `]`, `Mod+Z`, `Mod+Shift+Z` and `Ctrl+Y`, `+`, `-` and `Shift+Z`, `C`, `Esc`, `Tab` and `Shift+Tab` |
 | Operation 1: import a file by path | the library has a path text field and an Import button; ingest progress from `asset.updated` events; asset cards with thumbnail, duration and state; failed cards show code and hint (§13) |
-| Placing the imported file | a button "Add to timeline" on a `ready` card (`clip.add` at the playhead, creating a visual track if there is none). This is not a fifth manual operation: it is the minimum that lets the reference scenario start (Decision of this SDD) |
+| Placing the imported file | a button "Add to timeline" on a `ready` card (`clip.add` after the last item of the track, creating a visual track if there is none). This is not a fifth manual operation: it is the minimum that lets the reference scenario start (Decision of this SDD) |
 | Operation 2: split or trim | click an item to select it; `S` or the Split button splits it at the playhead (`item.split`); `[` and `]` or the Trim buttons trim its start or end to the playhead (`item.trim`). No handles, no drag |
 | Operation 3: add a caption | the Add caption button opens a dialog (text, start defaulting to the playhead, duration defaulting to 3 s) and sends `caption.add`, creating a visual track if needed |
 | Operation 4: export with progress | the Export dialog: lint findings, Start, progress bar from `job.updated` events, result with path and download link, failure with code and hint (§14) |

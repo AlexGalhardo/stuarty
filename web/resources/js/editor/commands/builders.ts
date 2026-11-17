@@ -28,11 +28,11 @@ export function containsStrictly(item: ItemRange, playhead: number): boolean {
 	return playhead > item.start && playhead < item.start + item.duration;
 }
 
-// "Add to timeline": on the first visual track by order; when there is none,
-// the same batch adds one first.
+// "Add to timeline": on the first visual track by order, after the last item
+// (`start` omitted, SDD-012 section 8.2); when there is no track, the same
+// batch adds one first.
 export function addClipOperations(input: {
 	assetId: string;
-	playhead: number;
 	firstVisualTrack: string | null;
 	newTrackId: () => string;
 }): Operations {
@@ -47,7 +47,6 @@ export function addClipOperations(input: {
 		args: {
 			track_id: track,
 			asset_id: input.assetId,
-			start: frames(input.playhead),
 		},
 	});
 	return ops;
@@ -58,7 +57,6 @@ export function addClipOperations(input: {
 // supplies.
 export function addAudioOperations(input: {
 	assetId: string;
-	playhead: number;
 	firstAudioTrack: string | null;
 	newTrackId: () => string;
 }): Operations {
@@ -73,7 +71,6 @@ export function addAudioOperations(input: {
 		args: {
 			track_id: track,
 			asset_id: input.assetId,
-			start: frames(input.playhead),
 		},
 	});
 	return ops;

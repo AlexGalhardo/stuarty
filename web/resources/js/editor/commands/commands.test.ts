@@ -65,19 +65,17 @@ describe("builders", () => {
 	test("add to timeline uses the first visual track, or adds one in the same batch", () => {
 		const onTrack = addClipOperations({
 			assetId: "ast_1",
-			playhead: 30,
 			firstVisualTrack: "trk_a",
 			newTrackId: ids(),
 		});
 		expect(onTrack).toEqual([
 			{
 				op: "clip.add",
-				args: { track_id: "trk_a", asset_id: "ast_1", start: "30f" },
+				args: { track_id: "trk_a", asset_id: "ast_1" },
 			},
 		]);
 		const created = addClipOperations({
 			assetId: "ast_1",
-			playhead: 0,
 			firstVisualTrack: null,
 			newTrackId: ids(),
 		});
