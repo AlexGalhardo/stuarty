@@ -1,0 +1,7 @@
+{
+  "code": "E_LIMIT",
+  "message": "The document would have 5040 caption words; the limit is 5000.",
+  "hint": "Repeat fewer times, or remove captions you no longer need.",
+  "retryable": false,
+  "path": "args.copies"
+}

@@ -58,6 +58,17 @@ func init() {
 	rp("err_validation_link_over_20_items", fa(`"copies": 20, "link": true`), one())
 	rp("err_limit_until_needs_over_200_copies", fa(`"until": "1500f"`),
 		func() *B { return base().clip(itemA, vidTr, 0, 5, 0) })
+	rp("err_limit_caption_words_over_document_limit", fmt.Sprintf(`{"item_id": %q, "copies": 3}`, itemA),
+		func() *B {
+			return base().caption(itemA, 0, 60).with(func(d *timeline.Document) {
+				for i := range 80 {
+					id := fmt.Sprintf("itm_k%09d", i)
+					it := d.Items[itemA]
+					it.ID, it.Start = id, 10000+i*600
+					d.Items[id] = it
+				}
+			})
+		})
 	rp("err_id_exists", fa(`"copies": 1, "new_ids": ["`+itemB+`"]`),
 		func() *B { return base().clip(itemA, vidTr, 0, 90, 0).clip(itemB, audTr, 0, 30, 0) })
 }
