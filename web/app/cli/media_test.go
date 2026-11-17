@@ -130,6 +130,38 @@ func TestMediaImportMakesPathsAbsoluteAndWaitsForTheAssets(t *testing.T) {
 	}
 }
 
+// The wait loop throws away the text of the first answer and draws the last one.
+// A file that fails while the command is waiting must keep its hint in that text.
+func TestMediaImportWaitKeepsTheErrorHint(t *testing.T) {
+	t.Parallel()
+
+	f := &mediaFake{importAns: []*service.MediaImportResult{
+		{Assets: []service.ImportedAsset{{AssetID: "ast_1", Name: "a.mov", State: "ingesting"}}, Text: "ingesting"},
+		{
+			Assets: []service.ImportedAsset{{
+				AssetID: "ast_1", Name: "a.mov", State: "failed",
+				Error: &service.Error{
+					Code:    "E_UNSUPPORTED_MEDIA",
+					Message: "The file is not a media file FFmpeg can read.",
+					Hint:    "Import a video, audio or image file.",
+				},
+			}},
+			Failed: 1,
+		},
+	}}
+	h := mediaHarness(t, f)
+
+	if code := h.run("media:import", "a.mov", projectFlag); code != ExitFailure {
+		t.Fatalf("exit %d: %s", code, h.stdout.String())
+	}
+
+	out := h.stdout.String()
+	if !strings.Contains(out, "E_UNSUPPORTED_MEDIA") ||
+		!strings.Contains(out, "hint: Import a video, audio or image file.") {
+		t.Fatalf("the redrawn text dropped the hint:\n%s", out)
+	}
+}
+
 func TestMediaImportNoWaitCallsOnceAndExitCodes(t *testing.T) {
 	t.Parallel()
 

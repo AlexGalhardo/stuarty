@@ -172,7 +172,9 @@ func settleImport(res, first *service.MediaImportResult) {
 		}
 
 		if a.Error != nil {
-			lines[i].ErrorCode, lines[i].ErrorMessage = a.Error.Code, a.Error.Message
+			lines[i].ErrorCode = a.Error.Code
+			lines[i].ErrorMessage = a.Error.Message
+			lines[i].ErrorHint = a.Error.Hint
 		}
 	}
 
