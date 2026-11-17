@@ -1,0 +1,9 @@
+{
+  "op": "item.delete",
+  "args": {
+    "item_ids": [
+      "itm_a1b2c3d4e5"
+    ],
+    "ripple": "all"
+  }
+}

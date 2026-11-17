@@ -1,0 +1,15 @@
+{
+  "deleted": [
+    "itm_a1b2c3d4e5"
+  ],
+  "freed": 40,
+  "markers_moved": 1,
+  "markers_removed": 1,
+  "shifted": [
+    {
+      "from": 60,
+      "id": "itm_b1b2c3d4e5",
+      "to": 20
+    }
+  ]
+}

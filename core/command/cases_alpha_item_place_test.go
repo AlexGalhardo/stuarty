@@ -141,6 +141,14 @@ func init() {
 	cg("ok_gap_last_frame", cgArgs(`"at": "99f"`), gap)
 	other := func() *B { return gap().text("itm_x000000001", capTr, 200, 10).text("itm_x000000002", capTr, 0, 20) }
 	cg("ok_ripple_all_moves_other_tracks", cgArgs(`"at": "70f", "ripple": "all"`), other)
+	cg("ok_ripple_all_moves_and_drops_timeline_markers", cgArgs(`"at": "70f", "ripple": "all"`), func() *B {
+		return gap().with(func(d *timeline.Document) {
+			d.Markers = []timeline.Marker{{Frame: 50}, {Frame: 80, Label: "in the gap"}, {Frame: 120, Label: "after"}}
+		})
+	})
+	cg("ok_ripple_track_leaves_timeline_markers", cgArgs(`"at": "70f", "ripple": "track"`), func() *B {
+		return gap().with(func(d *timeline.Document) { d.Markers = []timeline.Marker{{Frame: 120}} })
+	})
 	cg("ok_ripple_track_leaves_other_tracks", cgArgs(`"at": "70f", "ripple": "track"`), other)
 	cg("err_validation_bad_ripple", cgArgs(`"at": "70f", "ripple": "none"`), gap)
 	cg("err_invalid_time_no_unit", cgArgs(`"at": "70"`), gap)
