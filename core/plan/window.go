@@ -26,16 +26,17 @@ func (s Series) MarshalJSON() ([]byte, error) {
 
 // WindowPlan is the compact form of SDD-004 §10. The caller sets Revision.
 type WindowPlan struct {
-	Revision   int64         `json:"revision"`
-	From       int           `json:"from"`
-	To         int           `json:"to"`
-	EndFrame   int           `json:"end_frame"`
-	Width      int           `json:"width"`
-	Height     int           `json:"height"`
-	Background string        `json:"background"`
-	SafeArea   [4]float64    `json:"safe_area"`
-	Layers     []WindowLayer `json:"layers"`
-	Audio      []WindowAudio `json:"audio"`
+	Revision    int64         `json:"revision"`
+	From        int           `json:"from"`
+	To          int           `json:"to"`
+	EndFrame    int           `json:"end_frame"`
+	Width       int           `json:"width"`
+	Height      int           `json:"height"`
+	Background  string        `json:"background"`
+	Transparent bool          `json:"transparent,omitempty"`
+	SafeArea    [4]float64    `json:"safe_area"`
+	Layers      []WindowLayer `json:"layers"`
+	Audio       []WindowAudio `json:"audio"`
 }
 
 // WindowLayer is one item over the frames of the window in which it is active.
@@ -137,9 +138,18 @@ func WindowWith(doc *timeline.Document, from, to int, opts Options) WindowPlan {
 	st := doc.Settings
 	safe := SafeArea(st.Width, st.Height)
 	w := WindowPlan{
-		From: from, To: to, EndFrame: endFrame(doc), Width: st.Width, Height: st.Height,
-		Background: string(st.Background), SafeArea: [4]float64{safe.X, safe.Y, safe.W, safe.H},
-		Layers: []WindowLayer{}, Audio: []WindowAudio{},
+		From:     from,
+		To:       to,
+		EndFrame: endFrame(doc),
+		Width:    st.Width,
+		Height:   st.Height,
+		Background: backgroundOf(
+			st,
+		),
+		Transparent: st.Background == timeline.BackgroundTransparent,
+		SafeArea:    [4]float64{safe.X, safe.Y, safe.W, safe.H},
+		Layers:      []WindowLayer{},
+		Audio:       []WindowAudio{},
 	}
 
 	p := newPlanner(doc, opts)

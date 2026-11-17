@@ -43,7 +43,7 @@ func applyProjectRename(c *Context, a *renameArgs) error {
 type settingsArgs struct {
 	Width          *int     `json:"width,omitempty"           min:"16"  max:"4096" desc:"Frame width in pixels; even."`
 	Height         *int     `json:"height,omitempty"          min:"16"  max:"4096" desc:"Frame height in pixels; even."`
-	Background     *string  `json:"background,omitempty"                           desc:"A hex colour, or $name from template.colors."`
+	Background     *string  `json:"background,omitempty"                           desc:"A hex colour, $name from template.colors, or transparent (no background colour; formats with alpha keep it)."`
 	LoudnessTarget *float64 `json:"loudness_target,omitempty" min:"-30" max:"-5"   desc:"Integrated loudness target in LUFS."`
 }
 
@@ -62,8 +62,10 @@ func applySettingsSet(c *Context, a *settingsArgs) error {
 		}
 	}
 	if a.Background != nil {
-		if err := c.checkColour("args.background", *a.Background); err != nil {
-			return err
+		if *a.Background != timeline.BackgroundTransparent {
+			if err := c.checkColour("args.background", *a.Background); err != nil {
+				return err
+			}
 		}
 	}
 

@@ -517,7 +517,7 @@ Sets frame size, background colour or loudness target, rescaling the position of
 | --- | --- | --- | --- | --- |
 | `width` | integer | no | unchanged | even, 16 to 4096 |
 | `height` | integer | no | unchanged | even, 16 to 4096 |
-| `background` | colour | no | unchanged | `#RRGGBB` or `#RRGGBBAA` or `"$name"`; stored upper case |
+| `background` | colour | no | unchanged | `#RRGGBB` or `#RRGGBBAA` or `"$name"`; stored upper case; or `"transparent"` (VV-172), stored as is: no background colour, see SDD-001 §3.1 |
 | `loudness_target` | number | no | unchanged | -30 to -5 |
 
 At least one argument is required.
@@ -569,6 +569,7 @@ Width 1080 and height 1920 are the defaults, so they are absent before the chang
 - `ok_keyframed_x_rescaled`
 - `ok_background`
 - `ok_background_with_alpha_uppercased`
+- `ok_background_transparent`
 - `ok_loudness_boundaries_minus30_minus5`
 - `ok_size_boundaries_16_and_4096`
 - `ok_same_values_noop`
@@ -578,6 +579,7 @@ Width 1080 and height 1920 are the defaults, so they are absent before the chang
 - `err_validation_width_4098`
 - `err_validation_loudness_minus31`
 - `err_validation_unknown_color_reference`
+- `err_validation_background_unknown_keyword`
 
 ### C.3 `settings.set_fps` (phase A)
 

@@ -66,6 +66,8 @@ func init() {
 	})
 	s("ok_background", `{"background": "#112233"}`, base)
 	s("ok_background_with_alpha_uppercased", `{"background": "#aabbccdd"}`, base)
+	s("ok_background_transparent", `{"background": "transparent"}`, base)
+	s("err_validation_background_unknown_keyword", `{"background": "clear"}`, base)
 	s("ok_loudness_boundaries_minus30_minus5", `{"loudness_target": -30}`, base)
 	s("ok_size_boundaries_16_and_4096", `{"width": 16, "height": 4096}`, base)
 	s("ok_same_values_noop", `{"width": 1080, "height": 1920}`, positioned)

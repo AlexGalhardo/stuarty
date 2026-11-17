@@ -60,7 +60,7 @@ The revision number, timestamps and trash state are not in the document; they be
 | `width` | integer | 1080 | even, 16 to 4096 |
 | `height` | integer | 1920 | even, 16 to 4096 |
 | `fps` | rational | `{"num":30,"den":1}` | `den` is 1 or 1001; `num/den` between 1 and 120 |
-| `background` | colour | `#000000` | shown where no visual item covers the frame |
+| `background` | colour or `"transparent"` | `#000000` | shown where no visual item covers the frame. `"transparent"` (VV-172) means no background colour: the plan has `transparent: true` and the background `#000000`, a format that carries alpha (GIF, PNG) keeps the uncovered pixels transparent and a format that does not (MP4) shows black, as it does for `#000000` |
 | `loudness_target` | number | -14 | integrated loudness target in LUFS, between -30 and -5 |
 
 Audio is always mixed at 48,000 Hz stereo; that is not a setting.

@@ -100,6 +100,10 @@ type Document struct {
 	Extra         Extra                  `json:"-"`
 }
 
+// BackgroundTransparent is the value of settings.background that leaves the frame without a background
+// colour: formats that carry alpha keep it, the others composite over black (SDD-001 §3.1).
+const BackgroundTransparent = "transparent"
+
 // Settings of the project (SDD-001 §3.1).
 type Settings struct {
 	Width          int      `json:"width"           default:"1080"    min:"16"  max:"4096" step:"2"`

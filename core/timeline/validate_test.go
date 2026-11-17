@@ -690,3 +690,15 @@ func TestValidateOverlapNestedItems(t *testing.T) {
 		t.Errorf("want 2 overlap violations, got %v", Validate(d))
 	}
 }
+
+func TestValidateTransparentBackground(t *testing.T) {
+	d := base(t)
+	d.Settings.Background = BackgroundTransparent
+	if vs := Validate(d); len(vs) != 0 {
+		t.Fatalf("transparent is a valid background, got %v", vs)
+	}
+	d.Settings.Background = "clear"
+	if got := codesOf(Validate(d)); len(got) != 1 || got[0] != VShape {
+		t.Errorf("an unknown background keyword gives %v, want only %s", got, VShape)
+	}
+}
