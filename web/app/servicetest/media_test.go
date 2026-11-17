@@ -325,7 +325,11 @@ func TestImportRefusalsAreEntriesOfTheCall(t *testing.T) {
 		}
 	}
 
-	if res.Assets[1].State != "ready" || !strings.Contains(res.Text, "3 of 4 files failed") {
+	if res.Imported != 1 || res.Imported+res.Failed != len(res.Assets) {
+		t.Errorf("imported = %d, failed = %d", res.Imported, res.Failed)
+	}
+
+	if res.Assets[1].State != "ready" || !strings.Contains(res.Text, "3 of 4 files failed, 1 imported") {
 		t.Errorf("good entry %+v\n%s", res.Assets[1], res.Text)
 	}
 

@@ -60,6 +60,7 @@ type MediaImportResult struct {
 	Revision  int64           `json:"revision"`
 	Assets    []ImportedAsset `json:"assets"`
 	Failed    int             `json:"failed"`
+	Imported  int             `json:"imported"`
 	Text      string          `json:"text"`
 }
 

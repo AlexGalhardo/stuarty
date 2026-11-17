@@ -164,6 +164,8 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 		}
 	}
 
+	res.Imported = len(res.Assets) - res.Failed
+
 	if head, herr := s.store.Projects().Get(ctx, row.ID); herr == nil {
 		res.Revision = head.Revision
 	}
