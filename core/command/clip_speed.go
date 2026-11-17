@@ -13,7 +13,7 @@ func init() {
 	Register(Define(Spec{
 		Name:    "clip.set_speed",
 		Summary: "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards.",
-		Description: "Sets either speed, from 0.25x to 4x, or curve, 2 to 8 points {t, speed} with t the fraction of the " +
+		Description: "Sets either speed, from 0.25x to 4x, or curve, 2 to 8 points {t, speed} (speed is text like \"0.5x\") with t the fraction of the " +
 			"item from 0 to 1 (first 0, last 1) and a linear ramp between points; a speed clears the curve. Rescales the " +
 			"duration, the fades, the transitions and the keyframes by the ratio of the old to the new mean speed. With " +
 			"ripple track the later items of the track follow the change in length. Captions linked to the clip are " +
@@ -37,8 +37,8 @@ type clipSpeedArgs struct {
 }
 
 type speedPointArgs struct {
-	T     float64 `json:"t"     desc:"Position in the item, 0 to 1, up to 3 decimals." min:"0" max:"1"`
-	Speed any     `json:"speed" desc:"\"1.5x\" (up to 3 decimals), 1/4 to 4."                          schema:"speed"`
+	T     float64 `json:"t"     desc:"Position in the item, 0 to 1, up to 3 decimals."                       min:"0" max:"1"`
+	Speed any     `json:"speed" desc:"Text like \"0.5x\" (up to 3 decimals, 1/4 to 4), never a bare number."                 schema:"speed"`
 }
 
 // parseSpeed reads a speed argument and returns it in lowest terms.
@@ -349,7 +349,8 @@ func (c *Context) rippleSpeed(it *timeline.Item, ripple bool, oldEnd, shift int)
 	}
 	if !ripple {
 		if err := c.checkOverlap(it.ID, it.Track, it.Start, it.Duration); err != nil {
-			return 0, err
+			return 0, err.WithDetail("result_duration", it.Duration).
+				WithHint("At this speed the item is %d frames long (a curve counts at its mean speed); use ripple \"track\" to move the later items, or shorten the item first.", it.Duration)
 		}
 	}
 	return shift, nil

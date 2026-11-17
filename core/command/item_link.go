@@ -226,7 +226,8 @@ func applyItemExtractAudio(c *Context, a *itemExtractAudioArgs) error {
 	}
 	if it.AudioMuted {
 		return Errorf(CodeInvalidState, "Clip %s is already muted: its audio was extracted or silenced.", a.ItemID).
-			WithHint("Unmute it with item.set_audio muted false first, or use its audio item.").WithPath("args.item_id")
+			WithHint("Unmute it with item.set_audio audio_muted false first, or use its audio item.").
+			WithPath("args.item_id")
 	}
 	id, err := c.newID("items", timeline.PrefixItem, a.ID)
 	if err != nil {

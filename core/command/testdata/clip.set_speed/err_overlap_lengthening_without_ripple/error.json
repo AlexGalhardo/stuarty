@@ -1,10 +1,11 @@
 {
   "code": "E_OVERLAP",
   "message": "Item itm_m1n2p3q4r5 would occupy frames 30-209 on track trk_f6g7h8j9k0, where item itm_s6t7v8w9x0 already is (frames 120-139).",
-  "hint": "Use start \"140f\" (4.667s), the next free position on that track, or move to another track.",
+  "hint": "At this speed the item is 180 frames long (a curve counts at its mean speed); use ripple \"track\" to move the later items, or shorten the item first.",
   "retryable": false,
   "details": {
     "conflicting_item": "itm_s6t7v8w9x0",
-    "next_free": 140
+    "next_free": 140,
+    "result_duration": 180
   }
 }

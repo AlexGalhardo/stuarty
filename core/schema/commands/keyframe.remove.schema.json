@@ -3,7 +3,7 @@
   "additionalProperties": false,
   "properties": {
     "at": {
-      "description": "Absolute position of the keyframe.",
+      "description": "Position of the keyframe on the project timeline, from the item start to its end inclusive.",
       "type": "string",
       "x-vv-kind": "time"
     },
