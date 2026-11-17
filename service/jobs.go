@@ -809,6 +809,11 @@ func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 		Error: forCaller(c, parseError(r.Error)), Actor: r.Actor, CreatedAt: msTime(r.CreatedMs),
 	}
 
+	// The last progress message of a finished job ("Rendering (97%)") contradicts its state (VV-102).
+	if r.State == JobSucceeded {
+		j.Message = ""
+	}
+
 	if r.StartedMs != nil {
 		t := msTime(*r.StartedMs)
 		j.StartedAt = &t
