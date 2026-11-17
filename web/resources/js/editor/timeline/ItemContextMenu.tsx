@@ -10,6 +10,7 @@ import {
 	Merge,
 	Music,
 	Pencil,
+	Repeat,
 	Scissors,
 	Snowflake,
 	Split,
@@ -172,6 +173,10 @@ export default function ItemContextMenuItems({
 			<ContextMenuItem onSelect={() => void actions.duplicateSelection()}>
 				<CopyPlus aria-hidden="true" />
 				{t("ui.editor.edit.duplicate")}
+			</ContextMenuItem>
+			<ContextMenuItem onSelect={() => runtime.uiWriter.startRepeat(itemId)}>
+				<Repeat aria-hidden="true" />
+				{t("ui.editor.edit.repeat")}
 			</ContextMenuItem>
 			<ContextMenuItem onSelect={() => void actions.toggleEnabled()}>
 				{off ? <Eye aria-hidden="true" /> : <EyeOff aria-hidden="true" />}

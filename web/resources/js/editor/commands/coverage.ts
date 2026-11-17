@@ -34,6 +34,9 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"timeline.delete": ["item.delete"],
 	"timeline.ripple_delete": ["item.delete"],
 	"timeline.duplicate": ["item.duplicate"],
+	"timeline.repeat": ["item.repeat"],
+	"inspector.shadow": ["clip.set_shadow"],
+	"inspector.outline": ["clip.set_outline"],
 	"timeline.toggle_enabled": ["item.set_enabled"],
 	"inspector.enabled": ["item.set_enabled"],
 	"inspector.flip": ["clip.set_flip"],
@@ -303,6 +306,18 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	"item.duplicate": [
 		{ kind: "key", action: "timeline.duplicate", phase: "A" },
 		{ kind: "menu", action: "timeline.duplicate", phase: "A" },
+		palette,
+	],
+	"item.repeat": [
+		{ kind: "menu", action: "timeline.repeat", phase: "B" },
+		palette,
+	],
+	"clip.set_shadow": [
+		{ kind: "inspector", action: "inspector.shadow", phase: "B" },
+		palette,
+	],
+	"clip.set_outline": [
+		{ kind: "inspector", action: "inspector.outline", phase: "B" },
 		palette,
 	],
 	"item.move": [

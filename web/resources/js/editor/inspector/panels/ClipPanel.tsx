@@ -15,6 +15,8 @@ import {
 	ItemKeyframes,
 	ItemVisual,
 } from "./ItemSections";
+import OutlineSection from "./OutlineSection";
+import ShadowSection from "./ShadowSection";
 import SilencesSection from "./SilencesSection";
 import SpeedSection from "./SpeedSection";
 
@@ -43,6 +45,8 @@ export default function ClipPanel({ itemId }: { itemId: string }): ReactNode {
 							<ItemBasics itemId={itemId} />
 							<ItemVisual itemId={itemId} />
 							<FramingSection itemId={itemId} />
+							<ShadowSection itemId={itemId} />
+							<OutlineSection itemId={itemId} />
 							<ItemKeyframes itemId={itemId} />
 						</>
 					),
