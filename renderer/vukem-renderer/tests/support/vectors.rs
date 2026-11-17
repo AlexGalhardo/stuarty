@@ -5,6 +5,7 @@ use vukem_renderer::blend::BlendMode;
 use vukem_renderer::chroma::ChromaKeySpec;
 use vukem_renderer::compose::{Layer, Source, premultiply};
 use vukem_renderer::effects::{Direction, Effect, FrameInfo, Transition, TransitionKind};
+use vukem_renderer::grade::{CurvePoint, GradeSpec, HslBand, Wheel};
 use vukem_renderer::image::Image;
 use vukem_renderer::mask::{MaskShape, MaskSpec};
 
@@ -57,6 +58,7 @@ pub struct VecLayer {
 	pub flip_y: bool,
 	pub effects: Vec<Effect>,
 	pub transition: Option<Transition>,
+	pub grade: Option<GradeSpec>,
 }
 
 pub struct Case {
@@ -73,7 +75,7 @@ pub struct Case {
 pub fn read_cases() -> (u64, Vec<Case>) {
 	let mut r = Reader(VECTORS);
 	assert_eq!(r.take(4), b"VVCV");
-	assert_eq!(r.u32(), 6);
+	assert_eq!(r.u32(), 7);
 	let hash = r.u64();
 	let n = r.u32();
 	let mut cases = Vec::new();
@@ -206,6 +208,36 @@ pub fn read_cases() -> (u64, Vec<Case>) {
 					})
 				}
 			};
+			let grade = (r.u8() == 1).then(|| {
+				let mut g = GradeSpec::default();
+				for b in &mut g.hsl {
+					*b = HslBand {
+						hue: r.f64(),
+						saturation: r.f64(),
+						lightness: r.f64(),
+					};
+				}
+				for w in &mut g.wheels {
+					*w = (r.u8() == 1).then(|| Wheel {
+						hue: r.f64(),
+						amount: r.f64(),
+						luma: r.f64(),
+					});
+				}
+				let mut curve = || -> Vec<CurvePoint> {
+					(0..r.u8())
+						.map(|_| CurvePoint {
+							x: r.f64(),
+							y: r.f64(),
+						})
+						.collect()
+				};
+				g.master = curve();
+				g.red = curve();
+				g.green = curve();
+				g.blue = curve();
+				g
+			});
 			layers.push(VecLayer {
 				pixels,
 				nums,
@@ -218,6 +250,7 @@ pub fn read_cases() -> (u64, Vec<Case>) {
 				flip_y: flips & 2 != 0,
 				effects,
 				transition,
+				grade,
 			});
 		}
 		let want = r.take(w * h * 4).to_vec();
@@ -266,6 +299,7 @@ pub fn layers_of(c: &Case) -> Vec<Layer<'_>> {
 				opacity,
 				color_matrix: l.colour,
 				filter: l.filter,
+				grade: l.grade.clone(),
 				chroma_key: l.chroma_key.clone(),
 				blend: l.blend,
 				mask: l.mask,

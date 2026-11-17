@@ -8,6 +8,7 @@ use crate::chroma::ChromaKeySpec;
 use crate::compose::parse_colour;
 use crate::effects::{Direction, Effect, FrameInfo, Transition, TransitionKind};
 use crate::error::{Error, Reason};
+use crate::grade::{CurvePoint, GradeSpec, HSL_RANGES, HslBand, Wheel};
 use crate::json::{JsonError, Value, parse};
 use crate::mask::{MaskShape, MaskSpec};
 
@@ -23,6 +24,8 @@ pub const MAX_INPUT_BYTES: usize = 4 << 20;
 pub const MAX_ID_BYTES: usize = 64;
 /// The most effects on one layer: each kind at most once (SDD-004 section 3.13).
 pub const MAX_EFFECTS: usize = 6;
+/// The most points of one tone curve (SDD-001 section 3.5).
+pub const MAX_CURVE_POINTS: usize = 8;
 
 /// The frame to write.
 #[derive(Clone, Debug, PartialEq)]
@@ -56,6 +59,7 @@ pub struct LayerSpec {
 	pub opacity: f64,
 	pub color_matrix: Option<[f64; 12]>,
 	pub filter: Option<[f64; 12]>,
+	pub grade: Option<GradeSpec>,
 	pub blur: f64,
 	pub chroma_key: Option<ChromaKeySpec>,
 	pub blend: BlendMode,
@@ -202,6 +206,100 @@ fn chroma_key(v: Option<Value>) -> Result<Option<ChromaKeySpec>, Error> {
 	};
 	f.finish()?;
 	Ok(Some(spec))
+}
+
+fn grade(v: Option<Value>) -> Result<Option<GradeSpec>, Error> {
+	let Some(v) = v.filter(|v| !matches!(v, Value::Null)) else {
+		return Ok(None);
+	};
+	let mut f = Fields::of(v, "grade")?;
+	let mut spec = GradeSpec::default();
+	match f.take("hsl") {
+		None | Some(Value::Null) => {}
+		Some(Value::Arr(items)) => {
+			if items.len() > HSL_RANGES.len() {
+				return Err(limit("render_grade_bands"));
+			}
+			for it in items {
+				let mut b = Fields::of(it, "hsl")?;
+				let range = b.string("range")?;
+				let Some(i) = HSL_RANGES.iter().position(|r| *r == range) else {
+					return Err(invalid(format!(
+						"hsl: range {:?} is not a colour range",
+						truncate(&range)
+					)));
+				};
+				spec.hsl[i] = HslBand {
+					hue: b.num_or("hue", 0.0)?,
+					saturation: b.num_or("saturation", 0.0)?,
+					lightness: b.num_or("lightness", 0.0)?,
+				};
+				b.finish()?;
+			}
+		}
+		Some(_) => return Err(invalid("grade: hsl is not an array")),
+	}
+	match f.take("wheels") {
+		None | Some(Value::Null) => {}
+		Some(v) => {
+			let mut w = Fields::of(v, "wheels")?;
+			for (i, name) in ["shadows", "midtones", "highlights"]
+				.into_iter()
+				.enumerate()
+			{
+				spec.wheels[i] = match w.take(name) {
+					None | Some(Value::Null) => None,
+					Some(v) => {
+						let mut o = Fields::of(v, "wheel")?;
+						let wheel = Wheel {
+							hue: o.num_or("hue", 0.0)?,
+							amount: o.num_or("amount", 0.0)?,
+							luma: o.num_or("luma", 0.0)?,
+						};
+						o.finish()?;
+						Some(wheel)
+					}
+				};
+			}
+			w.finish()?;
+		}
+	}
+	match f.take("curves") {
+		None | Some(Value::Null) => {}
+		Some(v) => {
+			let mut c = Fields::of(v, "curves")?;
+			spec.master = curve(c.take("master"))?;
+			spec.red = curve(c.take("red"))?;
+			spec.green = curve(c.take("green"))?;
+			spec.blue = curve(c.take("blue"))?;
+			c.finish()?;
+		}
+	}
+	f.finish()?;
+	Ok(Some(spec))
+}
+
+fn curve(v: Option<Value>) -> Result<Vec<CurvePoint>, Error> {
+	let items = match v {
+		None | Some(Value::Null) => return Ok(Vec::new()),
+		Some(Value::Arr(items)) => items,
+		Some(_) => return Err(invalid("curves: a curve is not an array")),
+	};
+	if items.len() > MAX_CURVE_POINTS {
+		return Err(limit("render_curve_points"));
+	}
+	items
+		.into_iter()
+		.map(|it| {
+			let mut p = Fields::of(it, "curve point")?;
+			let point = CurvePoint {
+				x: p.num("x")?,
+				y: p.num("y")?,
+			};
+			p.finish()?;
+			Ok(point)
+		})
+		.collect()
 }
 
 fn blend(v: Option<Value>) -> Result<BlendMode, Error> {
@@ -538,6 +636,7 @@ fn decode_layer(v: Value) -> Result<LayerSpec, Error> {
 		opacity: f.num("opacity")?,
 		color_matrix: matrix(f.take("color_matrix"), "color_matrix")?,
 		filter: matrix(f.take("filter"), "filter")?,
+		grade: grade(f.take("grade"))?,
 		blur: f.num_or("blur", 0.0)?,
 		chroma_key: chroma_key(f.take("chroma_key"))?,
 		blend: blend(f.take("blend"))?,
@@ -577,6 +676,48 @@ mod tests {
 		assert_eq!(r.layers.len(), 1);
 		assert_eq!(r.layers[0].pixels, Pixels::Media("itm_a".into()));
 		assert_eq!(r.layers[0].opacity, 1.0);
+	}
+
+	#[test]
+	fn decodes_a_grade_and_refuses_a_bad_one() {
+		let with = |g: &str| GOOD.replace("\"blur\":0", &format!("\"blur\":0,\"grade\":{g}"));
+		let r = decode(
+			with(
+				r#"{"hsl":[{"range":"green","saturation":-0.5},{"range":"red","hue":0.25}],
+				"wheels":{"shadows":{"hue":220,"amount":0.5,"luma":-0.1}},
+				"curves":{"master":[{"x":0,"y":0.1},{"x":1,"y":1}]}}"#,
+			)
+			.as_bytes(),
+		)
+		.unwrap();
+		let g = r.layers[0].grade.as_ref().unwrap();
+		assert_eq!(g.hsl[3].saturation, -0.5);
+		assert_eq!(g.hsl[0].hue, 0.25);
+		assert_eq!(g.wheels[0].unwrap().amount, 0.5);
+		assert!(g.wheels[1].is_none());
+		assert_eq!(g.master.len(), 2);
+		assert!(
+			decode(with("null").as_bytes()).unwrap().layers[0]
+				.grade
+				.is_none()
+		);
+
+		assert_eq!(
+			reason(&with(r#"{"hsl":[{"range":"pink","hue":1}]}"#)),
+			Reason::InvalidPlan
+		);
+		assert_eq!(reason(&with(r#"{"extra":1}"#)), Reason::InvalidPlan);
+		assert_eq!(reason(&with("[]")), Reason::InvalidPlan);
+		let points = [r#"{"x":0,"y":0}"#; MAX_CURVE_POINTS + 1].join(",");
+		assert_eq!(
+			reason(&with(&format!(r#"{{"curves":{{"red":[{points}]}}}}"#))),
+			Reason::LimitExceeded
+		);
+		let bands = [r#"{"range":"red"}"#; 9].join(",");
+		assert_eq!(
+			reason(&with(&format!(r#"{{"hsl":[{bands}]}}"#))),
+			Reason::LimitExceeded
+		);
 	}
 
 	#[test]

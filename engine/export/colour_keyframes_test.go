@@ -16,7 +16,11 @@ func TestColourKeyframesWindowEqualsFramePlans(t *testing.T) {
 	w := plan.WindowWith(c.doc, 0, 30, plan.Options{})
 
 	if len(w.Layers) != 1 || len(w.Layers[0].ColorMatrices) != 30 {
-		t.Fatalf("the window has %d layers and %d matrices, want 1 layer and 30 matrices", len(w.Layers), len(w.Layers[0].ColorMatrices))
+		t.Fatalf(
+			"the window has %d layers and %d matrices, want 1 layer and 30 matrices",
+			len(w.Layers),
+			len(w.Layers[0].ColorMatrices),
+		)
 	}
 
 	seen := map[string]bool{}

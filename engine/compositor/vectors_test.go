@@ -167,6 +167,25 @@ func rendererVectorCases() []vecCase {
 	bright := &[12]float64{1.2, 0, 0, 0.05, 0, 1.2, 0, 0.05, 0, 0, 1.2, 0.05}
 
 	with := func(l vecLayer, f func(*plan.Layer)) vecLayer { f(&l.layer); return l }
+	cube := colourCube()
+	hsl := []timeline.HslBand{
+		{Range: "red", Hue: 0.5, Saturation: 0.4, Lightness: -0.2},
+		{Range: "yellow", Hue: -0.8, Lightness: 0.5},
+		{Range: "green", Saturation: -0.7},
+		{Range: "blue", Hue: 1, Saturation: 1, Lightness: 1},
+		{Range: "magenta", Hue: -1, Saturation: -1, Lightness: -1},
+	}
+	wheels := &timeline.Wheels{
+		Shadows:    &timeline.Wheel{Hue: 220, Amount: 0.6, Luma: -0.2},
+		Midtones:   &timeline.Wheel{Hue: 40.5, Amount: 0.3, Luma: 0.1},
+		Highlights: &timeline.Wheel{Hue: 359.9, Amount: 0.8, Luma: 0.3},
+	}
+	curves := &timeline.Curves{
+		Master: []timeline.CurvePoint{{X: 0, Y: 0.1}, {X: 0.3, Y: 0.2}, {X: 0.7, Y: 0.9}, {X: 1, Y: 1}},
+		Red:    []timeline.CurvePoint{{X: 0, Y: 0}, {X: 0.5, Y: 0.7}, {X: 1, Y: 1}},
+		Green:  []timeline.CurvePoint{{X: 0.2, Y: 0.2}, {X: 0.4, Y: 0.2}, {X: 0.8, Y: 0.6}},
+		Blue:   []timeline.CurvePoint{{X: 0, Y: 1}, {X: 1, Y: 0}},
+	}
 
 	cases := []vecCase{
 		{
@@ -623,6 +642,32 @@ func rendererVectorCases() []vecCase {
 				l.Transition = &plan.TransitionSpec{Kind: "wipe", Edge: "out", P: 9000, Direction: "right"}
 			}),
 		}},
+		{name: "grade-hsl", w: 64, h: 64, scale: 1, bg: "#000000", layers: []vecLayer{
+			with(vm("a", cube, 32, 32, 64, 64, 0, 1), func(l *plan.Layer) { l.Grade = &plan.GradeSpec{Hsl: hsl} }),
+		}},
+		{name: "grade-wheels", w: 64, h: 64, scale: 1, bg: "#000000", layers: []vecLayer{
+			with(
+				vm("a", cube, 32, 32, 64, 64, 0, 1),
+				func(l *plan.Layer) { l.Grade = &plan.GradeSpec{Wheels: wheels} },
+			),
+		}},
+		{name: "grade-curves", w: 64, h: 64, scale: 1, bg: "#000000", layers: []vecLayer{
+			with(
+				vm("a", cube, 32, 32, 64, 64, 0, 1),
+				func(l *plan.Layer) { l.Grade = &plan.GradeSpec{Curves: curves} },
+			),
+		}},
+		{name: "grade-all", w: 96, h: 72, scale: 1, bg: "#202838", layers: []vecLayer{
+			vm("a", big, 48, 36, 96, 72, 0, 1),
+			with(vm("b", soft, 40, 36, 40, 28, 12, 0.9), func(l *plan.Layer) {
+				l.ColorMatrix = bright
+				l.Grade = &plan.GradeSpec{Hsl: hsl, Wheels: wheels, Curves: curves}
+				l.Filter = sepia
+			}),
+			with(vm("c", cube, 70, 40, 50, 50, 0, 1), func(l *plan.Layer) {
+				l.Grade = &plan.GradeSpec{Hsl: hsl[:2], Curves: &timeline.Curves{Master: curves.Master}}
+			}),
+		}},
 		{name: "stack", w: 64, h: 48, scale: 1, bg: "#0a0a0a", layers: []vecLayer{
 			vm("a", big, 32, 24, 64, 48, 0, 1),
 			vm("b", soft, 20, 20, 20, 14, 12, 0.6),
@@ -711,6 +756,17 @@ func sincosHash() uint64 {
 	return h.Sum64()
 }
 
+// colourCube is an opaque 64 by 64 image of the 4096 colours of a 16 step grid on each channel.
+func colourCube() Image {
+	pix := make([]byte, 64*64*4)
+
+	for i := range 64 * 64 {
+		pix[i*4], pix[i*4+1], pix[i*4+2], pix[i*4+3] = uint8(i&15*17), uint8(i>>4&15*17), uint8(i>>8&15*17), 255
+	}
+
+	return Image{Pix: pix, W: 64, H: 64, Opaque: true}
+}
+
 func encodeVectors(t *testing.T) []byte {
 	t.Helper()
 	var buf bytes.Buffer
@@ -720,7 +776,7 @@ func encodeVectors(t *testing.T) []byte {
 		}
 	}
 	buf.WriteString("VVCV")
-	w(uint32(6))
+	w(uint32(7))
 	w(sincosHash())
 	cases := rendererVectorCases()
 	w(uint32(len(cases)))
@@ -838,6 +894,8 @@ func encodeVectors(t *testing.T) []byte {
 				col := parseColour(t.Color)
 				buf.Write(col[:])
 			}
+
+			encodeGrade(&buf, pl.Grade)
 		}
 		buf.Write(c.compose(t, 1))
 	}
@@ -871,5 +929,58 @@ func TestRendererVectorsAreCurrent(t *testing.T) {
 		t.Fatal(
 			"renderer/testdata/compose-vectors.bin is out of date: regenerate it with VUKEM_WRITE_RENDERER_VECTORS=1 and review the change",
 		)
+	}
+}
+
+// encodeGrade writes the grade of a layer: a flag, the eight HSL bands in the order of timeline.HslRanges (hue,
+// saturation, lightness), the three wheels (a flag, hue, amount, luma) and the four curves (a count, then x and y).
+func encodeGrade(buf *bytes.Buffer, g *plan.GradeSpec) {
+	w := func(v any) { _ = binary.Write(buf, binary.LittleEndian, v) }
+
+	if g == nil {
+		w(uint8(0))
+		return
+	}
+
+	w(uint8(1))
+
+	for _, name := range timeline.HslRanges {
+		var b timeline.HslBand
+
+		for _, x := range g.Hsl {
+			if x.Range == name {
+				b = x
+			}
+		}
+
+		w([3]float64{b.Hue, b.Saturation, b.Lightness})
+	}
+
+	var wheels [3]*timeline.Wheel
+	if g.Wheels != nil {
+		wheels = [3]*timeline.Wheel{g.Wheels.Shadows, g.Wheels.Midtones, g.Wheels.Highlights}
+	}
+
+	for _, wh := range wheels {
+		if wh == nil {
+			w(uint8(0))
+			continue
+		}
+
+		w(uint8(1))
+		w([3]float64{wh.Hue, wh.Amount, wh.Luma})
+	}
+
+	var curves [4][]timeline.CurvePoint
+	if g.Curves != nil {
+		curves = [4][]timeline.CurvePoint{g.Curves.Master, g.Curves.Red, g.Curves.Green, g.Curves.Blue}
+	}
+
+	for _, c := range curves {
+		w(uint8(len(c)))
+
+		for _, p := range c {
+			w([2]float64{p.X, p.Y})
+		}
 	}
 }
