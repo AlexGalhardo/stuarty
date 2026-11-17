@@ -614,6 +614,14 @@ func (s *svc) probeOf(ctx context.Context, project *ProjectRow, ar *AssetRow) *P
 		p.Duration = &tv
 	}
 
+	if sum.Kind == ingest.KindImage && len(ar.Facts.FrameDelays) > 1 {
+		p.Animated, p.Frames = true, len(ar.Facts.FrameDelays)
+
+		for _, d := range ar.Facts.FrameDelays {
+			p.LoopDurationMS += int64(d)
+		}
+	}
+
 	if v := sum.Video; v != nil {
 		p.Width, p.Height = v.DisplayWidth, v.DisplayHeight
 		p.VideoCodec = v.Codec
@@ -990,6 +998,11 @@ func probeText(fps timeval.FPS, p *ProbeSummary) string {
 	size := textview.Size(p.SizeBytes)
 
 	if p.Kind == string(ingest.KindImage) {
+		if p.Animated {
+			return fmt.Sprintf("animated image %dx%d | %d frames | loop %.3f s | %s",
+				p.Width, p.Height, p.Frames, float64(p.LoopDurationMS)/1000, size)
+		}
+
 		return fmt.Sprintf("image %dx%d | %s", p.Width, p.Height, size)
 	}
 

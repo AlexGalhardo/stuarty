@@ -30,6 +30,11 @@ type ProbeSummary struct {
 	Channels   int        `json:"channels,omitempty"`
 	HasAudio   bool       `json:"has_audio"`
 	SizeBytes  int64      `json:"size_bytes"`
+	// Animated, Frames and LoopDurationMS describe an animated image (APNG, GIF): the number of frames
+	// and the time of one pass over the delays of all of them, in milliseconds.
+	Animated       bool  `json:"animated,omitempty"`
+	Frames         int   `json:"frames,omitempty"`
+	LoopDurationMS int64 `json:"loop_duration_ms,omitempty"`
 }
 
 // ImportedAsset is one entry per file of the request, in order. It never
