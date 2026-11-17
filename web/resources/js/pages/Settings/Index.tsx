@@ -13,6 +13,7 @@ import {
 	type TimeUnit,
 	writeTimeUnit,
 } from "../../editor/state/prefs";
+import Transcription from "./Transcription";
 
 type Loaded =
 	| { state: "loading" }
@@ -106,6 +107,7 @@ export default function SettingsIndex() {
 						</Button>
 					</div>
 				</section>
+				<Transcription />
 				<section
 					aria-labelledby="settings-about"
 					className="flex flex-col gap-3"
