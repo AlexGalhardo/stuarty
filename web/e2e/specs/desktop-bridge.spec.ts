@@ -157,3 +157,63 @@ test.describe("desktop-bridge first-run tip", () => {
 		).toContainText("Paste the path of a media file in the library");
 	});
 });
+
+// TASK-0295 (SDD-012 section 21.3 item 4): the native menu bar sends an action id
+// through onMenuAction, and the page runs the same action as its own control.
+test.describe("desktop-bridge native menu", () => {
+	async function menuBridge(page: Page): Promise<void> {
+		await page.addInitScript(() => {
+			const w = window as unknown as Record<string, unknown>;
+			const callbacks: ((action: string) => void)[] = [];
+			w.vukemDesktop = {
+				onMenuAction: (cb: (action: string) => void) => {
+					callbacks.push(cb);
+					return () => {
+						callbacks.splice(callbacks.indexOf(cb), 1);
+					};
+				},
+			};
+			w.__menu = (action: string) => {
+				for (const cb of callbacks) cb(action);
+			};
+		});
+	}
+
+	test("a menu action runs the page action, and an unknown id does nothing", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+			clipDuration: "4s",
+		});
+		await menuBridge(page);
+		const batches: string[][] = [];
+		page.on("request", (r) => {
+			if (r.method() === "POST" && r.url().endsWith("/edit")) {
+				const body = r.postDataJSON() as { operations: { op: string }[] };
+				batches.push(body.operations.map((o) => o.op));
+			}
+		});
+		await page.goto(`/editor/${seeded.id}?debug=1`);
+		await expect(page.locator("[data-item-id]")).toHaveCount(1);
+		const call = (action: string): Promise<void> =>
+			page.evaluate(
+				(a) => (window as unknown as { __menu(a: string): void }).__menu(a),
+				action,
+			);
+
+		await call("surface.select_all");
+		await expect(
+			page.locator("[data-item-id][aria-selected='true']"),
+		).toHaveCount(1);
+		await call("not.an.action");
+		await call("addTrack.audio");
+		await expect.poll(() => batches).toEqual([["track.add"]]);
+		await call("surface.cheat_sheet");
+		await expect(
+			page.getByRole("dialog", { name: "Keyboard shortcuts" }),
+		).toBeVisible();
+	});
+});

@@ -74,12 +74,13 @@ func ResolveScript(id int64, paths []string, errMsg string) string {
 // files to it.
 const BridgeScript = `(function(){var w=window;` +
 	`if(w.vukemDesktop||!w._wails||typeof w._wails.invoke!=="function"){return;}` +
-	`var pending={},drops=[],next=1;` +
+	`var pending={},drops=[],menus=[],next=1;` +
 	`function send(op,id,path){var m={vukem:op,id:id};if(path){m.path=path;}w._wails.invoke(JSON.stringify(m));}` +
 	`function ask(op,path){return new Promise(function(resolve,reject){var id=next++;pending[id]={resolve:resolve,reject:reject};send(op,id,path);});}` +
 	`w._wails.vukemResolve=function(id,paths,err){var p=pending[id];if(!p){return;}delete pending[id];` +
 	`if(err){p.reject(new Error(err));}else{p.resolve(paths);}};` +
 	`w._wails.handlePlatformFileDrop=function(paths){drops.slice().forEach(function(cb){cb(paths.slice());});};` +
+	`w._wails.vukemMenu=function(id){menus.slice().forEach(function(cb){cb(String(id));});};` +
 	`var wv=w.chrome&&w.chrome.webview;` +
 	`if(wv&&typeof wv.postMessageWithAdditionalObjects==="function"){` +
 	`var files=function(e){return e.dataTransfer&&Array.prototype.indexOf.call(e.dataTransfer.types||[],"Files")>=0;};` +
@@ -90,5 +91,6 @@ const BridgeScript = `(function(){var w=window;` +
 	`pickFiles:function(){return ask("pickFiles");},` +
 	`pickTemplate:function(){return ask("pickTemplate");},` +
 	`showInFolder:function(path){return ask("showInFolder",path);},` +
-	`onDropPaths:function(cb){drops.push(cb);return function(){var i=drops.indexOf(cb);if(i>=0){drops.splice(i,1);}};}});` +
+	`onDropPaths:function(cb){drops.push(cb);return function(){var i=drops.indexOf(cb);if(i>=0){drops.splice(i,1);}};},` +
+	`onMenuAction:function(cb){menus.push(cb);return function(){var i=menus.indexOf(cb);if(i>=0){menus.splice(i,1);}};}});` +
 	`w.dispatchEvent(new Event("vukem-desktop-ready"));})();`

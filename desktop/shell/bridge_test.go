@@ -49,8 +49,8 @@ func TestResolveScriptEscapesPathsAndErrors(t *testing.T) {
 	}
 }
 
-func TestBridgeScriptDefinesTheTwoMembers(t *testing.T) {
-	for _, want := range []string{`w.vukemDesktop=`, `pickFiles:`, `pickTemplate:`, `showInFolder:`, `onDropPaths:`, `handlePlatformFileDrop`, `vukem-desktop-ready`} {
+func TestBridgeScriptDefinesTheMembers(t *testing.T) {
+	for _, want := range []string{`w.vukemDesktop=`, `pickFiles:`, `pickTemplate:`, `showInFolder:`, `onDropPaths:`, `onMenuAction:`, `vukemMenu`, `handlePlatformFileDrop`, `vukem-desktop-ready`} {
 		if !strings.Contains(BridgeScript, want) {
 			t.Errorf("BridgeScript lacks %s", want)
 		}
