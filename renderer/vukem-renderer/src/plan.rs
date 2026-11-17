@@ -46,6 +46,13 @@ pub enum Pixels {
 	Bitmap(String),
 }
 
+/// The lookup table of a layer: the lut asset and how much of it is mixed in.
+#[derive(Clone, Debug, PartialEq)]
+pub struct LutRef {
+	pub asset: String,
+	pub intensity: f64,
+}
+
 /// One layer of the plan, as the renderer reads it.
 #[derive(Clone, Debug, PartialEq)]
 pub struct LayerSpec {
@@ -60,6 +67,7 @@ pub struct LayerSpec {
 	pub color_matrix: Option<[f64; 12]>,
 	pub filter: Option<[f64; 12]>,
 	pub grade: Option<GradeSpec>,
+	pub lut: Option<LutRef>,
 	pub blur: f64,
 	pub chroma_key: Option<ChromaKeySpec>,
 	pub blend: BlendMode,
@@ -277,6 +285,20 @@ fn grade(v: Option<Value>) -> Result<Option<GradeSpec>, Error> {
 	}
 	f.finish()?;
 	Ok(Some(spec))
+}
+
+fn lut_ref(v: Option<Value>) -> Result<Option<LutRef>, Error> {
+	let Some(v) = v.filter(|v| !matches!(v, Value::Null)) else {
+		return Ok(None);
+	};
+	let mut f = Fields::of(v, "lut")?;
+	let asset = id(f.string("asset")?, "lut: asset")?;
+	let lut = LutRef {
+		asset,
+		intensity: f.num("intensity")?,
+	};
+	f.finish()?;
+	Ok(Some(lut))
 }
 
 fn curve(v: Option<Value>) -> Result<Vec<CurvePoint>, Error> {
@@ -637,6 +659,7 @@ fn decode_layer(v: Value) -> Result<LayerSpec, Error> {
 		color_matrix: matrix(f.take("color_matrix"), "color_matrix")?,
 		filter: matrix(f.take("filter"), "filter")?,
 		grade: grade(f.take("grade"))?,
+		lut: lut_ref(f.take("lut"))?,
 		blur: f.num_or("blur", 0.0)?,
 		chroma_key: chroma_key(f.take("chroma_key"))?,
 		blend: blend(f.take("blend"))?,

@@ -172,7 +172,24 @@ pub extern "C" fn vr_put_bitmap(
 	})())
 }
 
-/// Forgets the texture or bitmap with that id or key.
+/// Stores a lookup table under the id of its asset: `size` points on a side and the entries, little endian.
+#[unsafe(no_mangle)]
+pub extern "C" fn vr_put_lut(
+	id_ptr: u32,
+	id_len: u32,
+	size: u32,
+	data_ptr: u32,
+	data_len: u32,
+) -> i32 {
+	status((|| {
+		let id = text(id_ptr, id_len)?;
+		// SAFETY: a block of the host, valid for the call.
+		let data = unsafe { block(data_ptr, data_len) };
+		RENDERER.with(|r| r.borrow_mut().put_lut(id, size as usize, data))
+	})())
+}
+
+/// Forgets the texture, bitmap or lookup table with that id or key.
 #[unsafe(no_mangle)]
 pub extern "C" fn vr_release(id_ptr: u32, id_len: u32) -> i32 {
 	status((|| {

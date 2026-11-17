@@ -228,8 +228,8 @@ The limits and their errors are specified in SDD-007 §9. Variables read by vuke
 | Name | Kind | Meaning | Defined in |
 | --- | --- | --- | --- |
 | `RenderInputVersion` | constant | the version number of the render input the renderer reads, 1 | SDD-013 §2.1 |
-| `vr_api_version`, `vr_alloc`, `vr_free`, `vr_init`, `vr_put_texture`, `vr_put_bitmap`, `vr_release`, `vr_render`, `vr_error`, `vr_text_font_put`, `vr_text_run`, `vr_text_validate_font`, `vr_text_result_ptr`, `vr_text_result_len`, `vr_text_result_clear` | WebAssembly exports | the only functions the core renderer module exports, besides `memory`; the module has no import | SDD-013 §4.2 |
-| `API_VERSION` | constant | the version of that boundary (`renderer/vukem-renderer/src/lib.rs`), 2; a host refuses a module with another number | SDD-013 §4.2 |
+| `vr_api_version`, `vr_alloc`, `vr_free`, `vr_init`, `vr_put_texture`, `vr_put_bitmap`, `vr_put_lut`, `vr_release`, `vr_render`, `vr_error`, `vr_text_font_put`, `vr_text_run`, `vr_text_validate_font`, `vr_text_result_ptr`, `vr_text_result_len`, `vr_text_result_clear` | WebAssembly exports | the only functions the core renderer module exports, besides `memory`; the module has no import | SDD-013 §4.2 |
+| `API_VERSION` | constant | the version of that boundary (`renderer/vukem-renderer/src/lib.rs`), 3 (3 added `vr_put_lut`); a host refuses a module with another number | SDD-013 §4.2 |
 | `/assets/renderer-<sha256 first 12 hex>.wasm` | route | the core renderer module served to the browser, named by its digest | SDD-013 §4.1 |
 | `engine/renderhost` | Go package | the `wazero` host of the core module; the only place that knows the exports | SDD-013 §4.6 |
 | `invalid_plan`, `unsupported_version`, `unsupported_layer`, `missing_texture`, `limit_exceeded`, `out_of_memory`, `invalid_argument`, `render_trap`, `device_lost`, `unsupported_format` | renderer reasons | the closed set of reasons of a renderer failure; in an export they appear as `details.renderer_reason` of `E_EXPORT_FAILED` (`details.reason = "render_failed"`), and `limit_exceeded` as `E_LIMIT_EXCEEDED` | SDD-013 §7.1, §7.3 |

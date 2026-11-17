@@ -14,6 +14,7 @@ use crate::colour::apply_matrix;
 use crate::effects::{Effect, EffectGeom, FrameInfo, Transition, TransitionKind, apply_effects};
 use crate::grade::{Grade, GradeSpec, apply_grade};
 use crate::image::Image;
+use crate::lut::{Lut, apply_lut, lut_mix};
 use crate::mask::{MaskSpec, MaskState, clamped_q, scale};
 use crate::math::{div255, mul, round_half_away, round_half_up, sincos, u8_of};
 use crate::resize::resize;
@@ -57,6 +58,8 @@ pub struct Layer<'a> {
 	pub filter: Option<[f64; 12]>,
 	/// The advanced colour, after the colour matrix and before the filter (SDD-004 section 3.14).
 	pub grade: Option<GradeSpec>,
+	/// The lookup table and its intensity, after the grade and before the filter (SDD-004 section 3.6).
+	pub lut: Option<(&'a Lut, f64)>,
 	pub blur: f64,
 	/// Applied to the layer's own pixels before the colour matrix (SDD-004 section 3.7).
 	pub chroma_key: Option<ChromaKeySpec>,
@@ -224,6 +227,11 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 	}
 	if let Some(g) = l.grade.as_ref().and_then(Grade::new) {
 		src = Cow::Owned(apply_grade(&src, &g));
+	}
+	if let Some((table, intensity)) = l.lut
+		&& lut_mix(intensity) > 0
+	{
+		src = Cow::Owned(apply_lut(&src, table, lut_mix(intensity)));
 	}
 	if let Some(m) = &l.filter {
 		src = Cow::Owned(apply_matrix(&src, m));

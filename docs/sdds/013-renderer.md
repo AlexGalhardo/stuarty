@@ -77,6 +77,7 @@ Every number is a JSON number read as an IEEE 754 double (`f64`, correctly round
 | `color_matrix` | 12 numbers or `null` | the 3x4 colour matrix of SDD-004 §3.5, row-major, offset in the fourth column |
 | `filter` | 12 numbers or `null` | the filter matrix of SDD-004 §3.6, same form |
 | `grade` | `{hsl, wheels, curves}` or `null` | the advanced colour of SDD-004 §3.14, the JSON of `plan.GradeSpec`: `hsl` is a list of at most 8 `{range, hue, saturation, lightness}` (a number that is absent is 0), `wheels` has `shadows`, `midtones` and `highlights` as `{hue, amount, luma}`, `curves` has `master`, `red`, `green` and `blue` as lists of at most 8 `{x, y}`; more is `limit_exceeded`, an unknown range or field `invalid_plan` |
+| `lut` | `{asset, intensity}` or `null` | the lookup table of SDD-004 §3.6: `asset` (1 to 64 ASCII bytes) is the id the host gave to `vr_put_lut` and `intensity` is 0 to 1; a table that was not uploaded is `missing_texture` with the asset as the detail, unless the intensity rounds to 0 thousandths (then nothing is drawn and nothing is needed) |
 | `chroma_key` | `{color, similarity, smoothness, spill}` or `null` | the key of SDD-004 §3.7, all four members required; absent or `null` means none |
 | `blend` | string | the blend mode of SDD-004 §3.8: `multiply`, `screen`, `overlay` or `add`; absent means normal (source-over of §3.7) |
 | `flip_x`, `flip_y` | boolean | mirror the layer across its own vertical or horizontal axis (SDD-004 §3.10); absent means false |
@@ -147,7 +148,7 @@ All helpers are exact integer operations or exactly rounded IEEE 754 binary64 op
    2. Get the source. A media layer has the host's pixels (`W x H`, premultiplied RGBA, §5) and the placement `cx, cy, w, h` of the layer times `scale`, with `rot = rotation`. A bitmap layer has the bitmap premultiplied once per key and the placement `cx' = (cx - mul(CenterDX, s)) x scale`, `cy' = (cy - mul(CenterDY, s)) x scale`, `w` and `h` times `scale`, where `s = w / NaturalW` (1 when `NaturalW` is 0).
    3. If `w <= 0` or `h <= 0` after scaling, or the source has no pixel or a short buffer, the layer is skipped without an error.
    4. A bitmap whose size is at least twice the rounded drawn size in both directions is first box-filtered down to it (the 2 x 2 halving of `compositor.Resize`, then the sampler), so a small frame is not point-sampled from a large bitmap.
-   5. The chroma key (SDD-004 §3.7; `engine/compositor/chroma.go` and `renderer/vukem-renderer/src/chroma.rs` are the same integer arithmetic), then the colour matrix (§3.4), then the grade (§3.4), then the filter matrix (§3.4), then the blur (§3.5), each only when the layer has it. The mask (§3.7) is placed on the rectangle of step 2, before the blur grows it (`compose::MaskState`, `renderer/vukem-renderer/src/mask.rs`, the same integer arithmetic as `engine/compositor/mask.go`; a number outside the range of a valid plan is clamped, never a panic). The pixel effects, the whip blur and the dip of SDD-004 §3.13 and §3.2 (`renderer/vukem-renderer/src/effects.rs`, the same integer arithmetic as `engine/compositor/effects.go`) come right after the flip, and the wipe is a coverage of the mask (`MaskState` with an optional wipe; a wipe alone has no shape). Last, `flip_x` and `flip_y` mirror the prepared pixels (`compose::flipped`, an exact permutation of pixels, SDD-004 §3.10), after the blur and with the mask already placed, so the mask is not mirrored.
+   5. The chroma key (SDD-004 §3.7; `engine/compositor/chroma.go` and `renderer/vukem-renderer/src/chroma.rs` are the same integer arithmetic), then the colour matrix (§3.4), then the grade and the lookup table (§3.4), then the filter matrix (§3.4), then the blur (§3.5), each only when the layer has it. The mask (§3.7) is placed on the rectangle of step 2, before the blur grows it (`compose::MaskState`, `renderer/vukem-renderer/src/mask.rs`, the same integer arithmetic as `engine/compositor/mask.go`; a number outside the range of a valid plan is clamped, never a panic). The pixel effects, the whip blur and the dip of SDD-004 §3.13 and §3.2 (`renderer/vukem-renderer/src/effects.rs`, the same integer arithmetic as `engine/compositor/effects.go`) come right after the flip, and the wipe is a coverage of the mask (`MaskState` with an optional wipe; a wipe alone has no shape). Last, `flip_x` and `flip_y` mirror the prepared pixels (`compose::flipped`, an exact permutation of pixels, SDD-004 §3.10), after the blur and with the mask already placed, so the mask is not mirrored.
    6. Draw (§3.6) with `op`.
 
 ### 3.4 Colour matrix and filter
@@ -162,6 +163,8 @@ The matrix `m` is 12 numbers: `m[4i + j]` is the coefficient of channel `j` for 
 A coefficient is clamped to the range of 2^24 in absolute value after the rounding, so no sum can overflow; the plan never produces one that large, and the Go compositor is the same in that range. The result goes to scratch memory, never over the cached source. The filter matrix runs the same routine on the output of the colour matrix.
 
 **Grade (TASK-0254).** The HSL bands, the wheels and the curves of SDD-004 §3.14 are drawn between the two matrices by `compose::prepare_layer` (`grade.rs`), in the integer arithmetic that section gives, on the straight colour with the same unpremultiply and premultiply as the matrix. Floating point is used only to turn a parameter of the plan into its integer (a product by a power of two and `round`), never per pixel. The GPU path draws the pixels this step prepares, as it does for the matrices, so it has no shader for the grade and needs no tolerance for it; `TestRustCPUPathEqualsGoCompositor` holds the four golden cases `grade-hsl`, `grade-wheels`, `grade-curves` and `grade-all` byte for byte.
+
+**Lookup table (TASK-0254).** The trilinear lookup of SDD-004 §3.6 is `lut.rs` (`apply_lut`), run by `compose::prepare_layer` after the grade and before the filter, in the integer arithmetic of that section; the Rust side never parses a `.cube` file: the host reads it with `engine/lut` and uploads the entries as little-endian 16-bit integers (`vr_put_lut`, §4.2), like a font. The GPU path draws the pixels this step prepares, so it has no shader for it and needs no tolerance; the GPU child takes the table with the request of kind 5 (§4.9), and `TestRustCPUPathEqualsGoCompositor` holds the golden cases `lut-warm`, `lut-teal-half` and `lut-with-grade` byte for byte.
 
 ### 3.5 Blur
 
@@ -256,13 +259,14 @@ All numbers are `i32` or `u32` (WebAssembly `i32`), pointers are offsets into `m
 
 | Export | Signature | Meaning |
 | --- | --- | --- |
-| `vr_api_version` | `() -> u32` | `API_VERSION` of `renderer/vukem-renderer/src/lib.rs`, 2 here (2 added the text exports below). A host refuses a module whose number it does not know (`unsupported_version`) before any other call |
+| `vr_api_version` | `() -> u32` | `API_VERSION` of `renderer/vukem-renderer/src/lib.rs`, 3 here (2 added the text exports below, 3 added `vr_put_lut`). A host refuses a module whose number it does not know (`unsupported_version`) before any other call |
 | `vr_alloc` | `(len: u32) -> u32` | reserves `len` bytes, 8-aligned, and returns the offset; 0 when the module is out of memory (`out_of_memory`). `len` 0 returns a valid non-null offset |
 | `vr_free` | `(ptr: u32, len: u32)` | releases a block obtained from `vr_alloc` with the same `len` |
 | `vr_init` | `(max_texture_bytes: u32, max_bitmap_bytes: u32) -> i32` | prepares an empty renderer with its two budgets (§7); a second call resets it. The status is 0 or a negative code of §4.5 |
 | `vr_put_texture` | `(id_ptr: u32, id_len: u32, width: u32, height: u32, rgba_ptr: u32, opaque: u32) -> i32` | stores the pixels of a media layer under the item id (`id_len` at most 64 bytes of ASCII): `width x height x 4` bytes of premultiplied RGBA; `opaque` 1 when every alpha is 255. Replaces the texture of that id. The module copies the pixels |
 | `vr_put_bitmap` | `(key_ptr: u32, key_len: u32, width: u32, height: u32, natural_w: f64, natural_h: f64, center_dx: f64, center_dy: f64, rgba_ptr: u32) -> i32` | stores a bitmap of the rasterizer (§2.5) under its 64-character key: `width x height x 4` bytes of straight alpha; the module premultiplies it once |
-| `vr_release` | `(id_ptr: u32, id_len: u32) -> i32` | forgets the texture or bitmap with that id or key; an unknown one is not an error |
+| `vr_put_lut` | `(id_ptr: u32, id_len: u32, size: u32, data_ptr: u32, data_len: u32) -> i32` | stores the lookup table of a `lut` asset under its id (1 to 64 ASCII bytes): `size` from 2 to 65 points on a side and `data_len` exactly `size^3 x 3 x 2` bytes, the little-endian 16-bit entries of `engine/lut` (0 is 0.0, 65535 is 1.0, red varying fastest); replaces the table of that id; at most 32 tables and 64 MiB are held (`limit_exceeded`, detail `render_luts`) |
+| `vr_release` | `(id_ptr: u32, id_len: u32) -> i32` | forgets the texture, bitmap or lookup table with that id or key; an unknown one is not an error |
 | `vr_render` | `(in_ptr: u32, in_len: u32, out_ptr: u32, out_len: u32) -> i32` | reads the render input of §2 (UTF-8 JSON, `in_len` at most 4 MiB), draws it, and writes `width x height x 4` bytes at `out_ptr`; `out_len` must be exactly that. The status is 0 or a negative code of §4.5 |
 | `vr_error` | `(buf_ptr: u32, buf_len: u32) -> u32` | copies the message of the last failed call (UTF-8, truncated to `buf_len`, no personal data: ids and keys only) and returns its full length |
 | `vr_text_font_put` | `(hash_ptr: u32, hash_len: u32, data_ptr: u32, data_len: u32) -> i32` | stores the bytes of a user font under its 64 lower-case hex SHA-256 for the text requests that name it (at most 16 MiB a file, 64 MiB in all, `limit_exceeded`); no bytes forget it |
@@ -287,7 +291,7 @@ A host renders a frame with this sequence, and no other is supported:
 
 1. `vr_alloc` the output block of `output.width x output.height x 4` bytes, once, and reuse it while the size is the same.
 2. For every media layer of the plan not already uploaded, `vr_alloc` the pixels, write them, `vr_put_texture`, `vr_free` (§5).
-3. For every bitmap layer whose key is not already stored, the same with `vr_put_bitmap` (§2.5).
+3. For every bitmap layer whose key is not already stored, the same with `vr_put_bitmap` (§2.5), and for every lookup table a layer names (`lut`) that is not already stored, `vr_put_lut` (the Go export uploads and releases the tables of a frame like its textures).
 4. `vr_alloc` the input, write the render input, `vr_render`, `vr_free` the input.
 5. Read the frame from the output block. A status other than 0 means the output block holds nothing to use.
 
@@ -332,7 +336,7 @@ package renderhost
 type Host struct{ /* wazero module, memory, the output block */ }
 
 // New instantiates the embedded module (compiled once per process; the digest is checked, an
-// import or a missing export refuses it) and checks that vr_api_version is 2.
+// import or a missing export refuses it) and checks that vr_api_version is 3.
 func New(ctx context.Context, cfg Config) (*Host, error)
 
 // Output is the frame to write; Y1 > Y0 names the rows of a band.
@@ -393,7 +397,7 @@ Rules:
 
 ### 4.8 Acceptance of this section
 
-- `TestCoreModuleHasNoImports` (Go): the embedded module has zero imported functions, memories, tables and globals, exports exactly `memory` and the functions of §4.2, and `vr_api_version` returns 2.
+- `TestCoreModuleHasNoImports` (Go): the embedded module has zero imported functions, memories, tables and globals, exports exactly `memory` and the functions of §4.2, and `vr_api_version` returns 3.
 - `TestSecurity_T36_RenderHostIsSandboxed` (Go): a module compiled for the test that tries to import `wasi_snapshot_preview1` or `env` fails to instantiate, and the production configuration has no clock or file system (the test inspects the `wazero` configuration the host builds).
 - `TestRenderHostCancels` (Go): cancelling the context of a long render returns `context.Canceled` within 1 s and leaves no goroutine.
 - A Vitest and a Playwright test for the worker: a render answers `frame` with the `seq` asked; two renders posted in a row draw only the newest; the `VideoFrame` count reported by the worker is 0 after 500 renders with uploads (the leak check of stage B's gate); `missing_texture` is answered by an upload and a second `render`, not by a black frame.
@@ -403,7 +407,7 @@ Rules:
 `vukem-render` is the binary of `renderer/vukem-renderer-gpu` (`src/bin/vukem-render.rs`). It draws what `GpuRenderer` draws (§3.8) for a Go export that asked for `gpu`, in a child process because a graphics driver is code that must not live in the owner process (ADR-0029 item 4, SDD-007 §6.10). The Go side is `engine/gpuhost`; the protocol is `renderer/vukem-renderer-gpu/src/proto.rs` and nothing else knows it.
 
 - **Command line.** `vukem-render --version` prints `vukem-render <version>`; `--probe` prints the adapter (name, backend, device type) and exits 0, or exits 3 when the machine has no adapter; no argument serves the protocol on standard input and output; anything else exits 2. It takes no path, no URL and no environment variable, reads no file and opens no connection.
-- **Protocol.** Little endian. A request is `u8` kind, `u32` payload length, the payload; a reply is `u8` status, `u32` payload length, the payload. Kinds: 0 init (`u32` texture budget, `u32` bitmap budget, 0 for the defaults of §7.2; first and once; the reply is the adapter text), 1 texture (`u8` id length, id, `u32` w, `u32` h, `u8` opaque, premultiplied RGBA8), 2 bitmap (key, `u32` w, `u32` h, four `f64`, straight RGBA8), 3 release (id), 4 render (the render input of §2.1; the reply is the frame, `width x height x 4` bytes; `y0` and `y1` are accepted, the Go host sends none). Status 0 is success, 1 to 7 are the reasons of §7.1 with the detail as the payload (the child goes on), 8 is a failure of the device and 9 a failure of the protocol (the child answers and ends). End of input at a message boundary ends the child with exit 0.
+- **Protocol.** Little endian. A request is `u8` kind, `u32` payload length, the payload; a reply is `u8` status, `u32` payload length, the payload. Kinds: 0 init (`u32` texture budget, `u32` bitmap budget, 0 for the defaults of §7.2; first and once; the reply is the adapter text), 1 texture (`u8` id length, id, `u32` w, `u32` h, `u8` opaque, premultiplied RGBA8), 2 bitmap (key, `u32` w, `u32` h, four `f64`, straight RGBA8), 3 release (id), 5 lut (`u8` id length, the asset id, `u32` size, `size^3 x 3` little-endian `u16` entries), 4 render (the render input of §2.1; the reply is the frame, `width x height x 4` bytes; `y0` and `y1` are accepted, the Go host sends none). Status 0 is success, 1 to 7 are the reasons of §7.1 with the detail as the payload (the child goes on), 8 is a failure of the device and 9 a failure of the protocol (the child answers and ends). End of input at a message boundary ends the child with exit 0.
 - **Limits.** A request payload is at most `8192 x 8192 x 4 + 4096` bytes and is read with `take`, so a lying length allocates nothing; a larger length, a short payload, an unknown kind, a second init and a request before the init are protocol failures. Sizes, layers and the plan are validated by the same decoder as the CPU path, and the budgets of the init bound the stored pixels.
 - **Choice.** The Go export uses it only when `VUKEM_VIDEO_EXPORT_RENDERER=gpu`, a path is configured, the runner has no `bwrap` wrapper (which hides the devices) and the child answered the init; otherwise the CPU path (§4.6) draws, and the CPU path stays the default and the truth.
 - **Packaging.** Every archive and installer that carries `ffmpeg` carries `vukem-render` next to the server executable (or in `libexec/vukem-video/`, like FFmpeg); built by `cargo build --locked --release --bin vukem-render` in `renderer/`.
@@ -562,6 +566,7 @@ The renderer enforces these itself, as the last defence, even though the product
 | One texture or bitmap | 8192 pixels on a side | `render_texture_side` | the normalized media is at most 3840 on its long edge (SDD-011 §1.5) |
 | Textures in memory | 512 MiB in all | `render_texture_bytes` | `max_texture_bytes` of `vr_init`; the layers of one frame (§5.2) |
 | Bitmaps in memory | 128 MiB in all | `render_bitmap_bytes` | `max_bitmap_bytes` of `vr_init`; premultiplied copies included |
+| Lookup tables in memory | 32 tables and 64 MiB in all | `render_luts` | a table of 65 points on a side is 1.6 MiB; `vr_put_lut` fails and changes nothing |
 | Module memory | 1 GiB | none | the declared maximum of §4.1 and the `wazero` limit; the budgets above plus the scratch of one layer and the 64 MiB output stay under it |
 | Blur radius | 128 source pixels | none | SDD-004 §3.6; a larger blur is drawn as 128, not refused |
 
