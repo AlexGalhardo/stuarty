@@ -122,7 +122,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "agents",
 		title: "Agents",
-		pages: ["overview", "connect", "mcp", "cli", "verify", "batches", "skill", "safety", "recipes"],
+		pages: ["overview", "connect", "mcp", "cli", "verify", "batches", "skill", "safety", "recipes", "drive-the-editor"],
 	},
 	{
 		dir: "prompts",
