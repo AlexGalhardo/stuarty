@@ -653,9 +653,17 @@ export function createActions(runtime: EditorRuntime): Actions {
 			if (doc === null) return Promise.resolve(null);
 			const ids = actedIds();
 			const linked = ids.filter((id) => doc.items[id]?.link !== undefined);
-			return linked.length > 0
-				? send(unlinkOperations(linked))
-				: send(linkOperations(ids));
+			if (linked.length > 0) return send(unlinkOperations(linked));
+			// The core links two to twenty items; one item is told so, not sent (VV-125).
+			if (ids.length < 2) {
+				noticeWriter.push({
+					kind: "info",
+					message: "",
+					messageKey: "ui.editor.notice.link_needs_two",
+				});
+				return Promise.resolve(null);
+			}
+			return send(linkOperations(ids));
 		},
 		extractAudio() {
 			const doc = documents.getState().document;

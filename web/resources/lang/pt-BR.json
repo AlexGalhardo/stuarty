@@ -360,6 +360,7 @@
           "other": "Refeito. {count} alterações ficaram como estavam porque {actor} as alterou"
         },
         "source_has_only": "A mídia original tem apenas {available}",
+        "link_needs_two": "Selecione pelo menos dois itens para vinculá-los",
         "gesture_cancelled": "{actor} alterou o item que você estava arrastando. O arrasto foi cancelado.",
         "another_actor": "alguém",
         "open_words": "Mostrar as palavras"

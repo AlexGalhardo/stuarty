@@ -177,6 +177,18 @@ describe("gestures send one request and wait for the answer", () => {
 		});
 	});
 
+	test("the link key with one item says so and sends nothing (VV-125)", async () => {
+		const h = await startHarness();
+		const item = firstItem(h);
+		const sent = scripted(h, () => ({ status: 500, body: null }));
+		h.runtime.uiWriter.select([item.id]);
+		expect(await createActions(h.runtime).toggleLink()).toBeNull();
+		expect(sent).toHaveLength(0);
+		expect(h.runtime.notices.getState().notices[0]?.messageKey).toBe(
+			"ui.editor.notice.link_needs_two",
+		);
+	});
+
 	test("split with the playhead outside the item sends nothing", async () => {
 		const h = await startHarness();
 		const item = firstItem(h);
