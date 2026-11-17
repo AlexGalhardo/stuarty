@@ -92,7 +92,11 @@ func TestValidateMaskAndCropKeyframes(t *testing.T) {
 			editItem(d, clipID, keys("mask_feather", 201))
 		}, VKeyframes},
 		{"crop keyframe above 1", func(d *Document) { editItem(d, clipID, keys("crop_left", 1.5)) }, VKeyframes},
-		{"crop keyframe on a text item", func(d *Document) { editItem(d, capItemID, keys("crop_top", 0.1)) }, VKeyframes},
+		{
+			"crop keyframe on a text item",
+			func(d *Document) { editItem(d, capItemID, keys("crop_top", 0.1)) },
+			VKeyframes,
+		},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
