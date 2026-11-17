@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useLocale, useT } from "@/lib/i18n";
 import { ApiError } from "../../api/errors";
+import ErrorBody from "../../commands/ErrorBody";
 import { useRuntime } from "../../state/EditorContext";
 import { errorHeadline } from "../../ui/errorHeadline";
 import { formatDecimal } from "../../ui/format";
@@ -247,14 +248,7 @@ export default function InstallDialog({
 								<CircleAlert aria-hidden="true" className="size-4" />
 								{errorHeadline(t, phase.error.code)}
 							</p>
-							<p lang="en">
-								<UntrustedText>{phase.error.message}</UntrustedText>
-							</p>
-							{phase.error.hint !== undefined && (
-								<p lang="en" className="text-muted-foreground">
-									<UntrustedText>{phase.error.hint}</UntrustedText>
-								</p>
-							)}
+							<ErrorBody error={phase.error} />
 							<p className="font-mono text-xs">{phase.error.code}</p>
 						</div>
 					)}

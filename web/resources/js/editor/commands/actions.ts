@@ -368,6 +368,7 @@ export function createActions(runtime: EditorRuntime): Actions {
 			code: error.code,
 			message: error.message,
 			hint: error.hint,
+			details: error.details,
 		};
 		if (error.code === "E_REVISION_CONFLICT") {
 			const found = conflictOf(error);

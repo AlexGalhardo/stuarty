@@ -26,6 +26,11 @@ export function useRuntime(): EditorRuntime {
 	return runtime;
 }
 
+// For the components that also render outside an editor (the error texts).
+export function useOptionalRuntime(): EditorRuntime | null {
+	return useContext(EditorContext);
+}
+
 export function useDocumentState<T>(select: (state: DocumentState) => T): T {
 	return useStore(useRuntime().documents, select);
 }

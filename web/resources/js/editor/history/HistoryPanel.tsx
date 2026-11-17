@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type Translate, useLocale, useT } from "@/lib/i18n";
+import ErrorBody from "../commands/ErrorBody";
 import { actorLabel } from "../state/activityStore";
 import { useStore } from "../state/createStore";
 import { useRuntime } from "../state/EditorContext";
@@ -143,9 +144,7 @@ export default function HistoryPanel(): ReactNode {
 			{state.status === "failed" && state.error !== null && (
 				<div role="alert" className="flex flex-col items-start gap-2 text-sm">
 					<p className="font-semibold">{errorHeadline(t, state.error.code)}</p>
-					<p lang="en">
-						<UntrustedText>{state.error.message}</UntrustedText>
-					</p>
+					<ErrorBody error={state.error} />
 					<Button
 						type="button"
 						size="sm"

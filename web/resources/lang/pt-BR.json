@@ -296,7 +296,28 @@
         "E_WORKSPACE_LOCKED": "O espaço de trabalho está bloqueado",
         "E_PAYLOAD_TOO_LARGE": "Pedido grande demais",
         "E_TRANSCRIBE_UNAVAILABLE": "A transcrição não está disponível",
-        "unknown": "Algo deu errado"
+        "unknown": "Algo deu errado",
+        "detail": {
+          "overlap": "Ficaria sobre {item}.",
+          "overlap_free": "Use a próxima posição livre ({time}) ou mova para outra trilha.",
+          "overlap_none": "Não resta posição livre nessa trilha; use outra trilha.",
+          "allowed": "Os valores aceitos são: {values}.",
+          "id_exists": "O id {id} já está em uso.",
+          "queue_full": "Limite de {limit} atingido: {value} de {ceiling} em uso.",
+          "rate_limited": "Requisições demais. Tente de novo em {seconds} s.",
+          "nothing_to_undo": "Não há passo para desfazer.",
+          "nothing_to_redo": "Não há passo para refazer.",
+          "asset_not_ready": "A mídia ainda está sendo preparada. Tente de novo daqui a pouco.",
+          "unauthorized": "Sua sessão terminou. Entre de novo.",
+          "forbidden": "Você não tem permissão para isso.",
+          "path_not_allowed": "Esse caminho está fora das pastas que o editor pode ler.",
+          "file_not_found": "O arquivo não existe ou não pode ser lido.",
+          "ffmpeg_missing": "Nenhum FFmpeg utilizável foi encontrado nesta máquina.",
+          "no_encoder": "Nenhum codificador H.264 funciona nesta máquina.",
+          "workspace_locked": "Outro processo é dono do espaço de trabalho.",
+          "payload_too_large": "A requisição é grande demais.",
+          "cancelled": "A tarefa foi cancelada."
+        }
       },
       "library": {
         "path": "Caminho de um arquivo para importar",

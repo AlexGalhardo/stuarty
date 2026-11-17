@@ -1,9 +1,9 @@
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
 
-import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import ErrorBody from "../commands/ErrorBody";
 import { useActions } from "../commands/useActions";
 import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
@@ -95,16 +95,16 @@ export default function Notices(): ReactNode {
 											? errorHeadline(t, notice.code)
 											: null}
 								</p>
-								{notice.message !== "" && (
-									<p lang="en" className="text-xs">
-										<UntrustedText>{notice.message}</UntrustedText>
-									</p>
-								)}
-								{notice.hint !== undefined && (
-									<p lang="en" className="text-xs text-muted-foreground">
-										<UntrustedText>{notice.hint}</UntrustedText>
-									</p>
-								)}
+								<ErrorBody
+									error={{
+										code: notice.code ?? "",
+										message: notice.message,
+										hint: notice.hint,
+										details: notice.details,
+									}}
+									className="text-xs"
+									hintClassName="text-xs text-muted-foreground"
+								/>
 							</>
 						)}
 						{notice.action !== undefined && (

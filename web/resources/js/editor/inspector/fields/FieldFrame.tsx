@@ -1,8 +1,8 @@
 import { type ReactNode, useId } from "react";
 
-import UntrustedText from "@/components/UntrustedText";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
+import ErrorBody from "../../commands/ErrorBody";
 import { useActorLabel } from "../../state/useActorLabel";
 import { errorHeadline } from "../../ui/errorHeadline";
 import type { FieldSnapshot } from "./commitField";
@@ -37,15 +37,12 @@ export function FieldMessage({
 								)}
 					</p>
 				) : (
-					<p role="alert" lang="en" className="text-destructive">
-						<UntrustedText>{withoutArgPath(error.message)}</UntrustedText>
-						{error.hint !== undefined && (
-							<>
-								{" "}
-								<UntrustedText>{error.hint}</UntrustedText>
-							</>
-						)}
-					</p>
+					<div role="alert" className="text-destructive">
+						<ErrorBody
+							error={{ ...error, message: withoutArgPath(error.message) }}
+							hintClassName=""
+						/>
+					</div>
 				))}
 			{remoteActor !== null && (
 				<p role="status" className="text-agent">

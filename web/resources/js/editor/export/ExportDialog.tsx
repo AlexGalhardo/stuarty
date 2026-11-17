@@ -45,6 +45,7 @@ import type {
 	LintFinding,
 } from "../api/types";
 import { exportFileUrl } from "../api/urls";
+import ErrorBody from "../commands/ErrorBody";
 import { formatSeconds } from "../commands/units";
 import { useActions } from "../commands/useActions";
 import { useStore } from "../state/createStore";
@@ -543,14 +544,7 @@ export default function ExportDialog({
 								<CircleAlert aria-hidden="true" className="size-4" />
 								{errorHeadline(t, shown.code)}
 							</p>
-							<p lang="en">
-								<UntrustedText>{shown.message}</UntrustedText>
-							</p>
-							{shown.hint !== undefined && (
-								<p lang="en" className="text-muted-foreground">
-									<UntrustedText>{shown.hint}</UntrustedText>
-								</p>
-							)}
+							<ErrorBody error={shown} />
 							<p className="font-mono text-xs">{shown.code}</p>
 							{checks.length > 0 && (
 								<div className="text-xs">
