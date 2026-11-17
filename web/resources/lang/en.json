@@ -328,6 +328,7 @@
         }
       },
       "library": {
+        "rail": "Material panels",
         "path": "Path of a file to import",
         "import": "Import",
         "empty": "No media yet",

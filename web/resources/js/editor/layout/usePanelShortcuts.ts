@@ -22,6 +22,7 @@ export function usePanelShortcuts(): void {
 			event.preventDefault();
 			const { uiWriter } = runtime;
 			if (panel === "inspector") uiWriter.toggleInspector();
+			else if (panel === "library") uiWriter.toggleLeftRegion();
 			else uiWriter.toggleLeftTab(panel);
 			if (panel === "history" && runtime.ui.getState().panels.left) {
 				requestAnimationFrame(() =>

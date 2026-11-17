@@ -24,8 +24,8 @@ function load(client: ApiClient): Promise<ReadonlySet<string>> {
 	return names;
 }
 
-// Whether the registry the service sent holds every one of `names`.
-export function useCommandsExposed(...names: string[]): boolean {
+// The names the registry lists; empty until the list arrives.
+export function useCommandNames(): ReadonlySet<string> {
 	const runtime = useRuntime();
 	const [exposed, setExposed] = useState<ReadonlySet<string>>(new Set());
 	useEffect(() => {
@@ -37,5 +37,11 @@ export function useCommandsExposed(...names: string[]): boolean {
 			current = false;
 		};
 	}, [runtime]);
+	return exposed;
+}
+
+// Whether the registry the service sent holds every one of `names`.
+export function useCommandsExposed(...names: string[]): boolean {
+	const exposed = useCommandNames();
 	return names.every((name) => exposed.has(name));
 }

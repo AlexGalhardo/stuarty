@@ -65,9 +65,12 @@ export interface UiState {
 	historyBlocked: { undo: number | null; redo: number | null };
 	// The tab of the left panel and which panels are shown (SDD-012 sections
 	// 6.1 and 18.2: Alt+1, Alt+2 and Alt+3).
-	activePanelTab: "library" | "history";
+	activePanelTab: LeftTab;
 	panels: { left: boolean; inspector: boolean };
 }
+
+// The tabs of the material rail (SDD-012 section 6.4); "library" is Media.
+export type LeftTab = "library" | "history";
 
 export interface UiWriter {
 	select(items: readonly string[], anchor?: string | null): void;
@@ -97,9 +100,12 @@ export interface UiWriter {
 	blockHistory(kind: "undo" | "redo", revision: number): void;
 	// Show a tab of the left panel; when it is already the shown one, hide the
 	// panel (a toggle).
-	toggleLeftTab(tab: "library" | "history"): void;
+	toggleLeftTab(tab: LeftTab): void;
 	toggleInspector(): void;
-	showLeftTab(tab: "library" | "history"): void;
+	showLeftTab(tab: LeftTab): void;
+	// Alt+1: show or hide the whole left region (the rail stays). Showing it from
+	// History goes back to Media; otherwise the last tab comes back.
+	toggleLeftRegion(): void;
 }
 
 export function createUiStore(initialZoom = 1): {
@@ -248,6 +254,17 @@ export function createUiStore(initialZoom = 1): {
 						: {
 								...s,
 								activePanelTab: tab,
+								panels: { ...s.panels, left: true },
+							},
+				),
+			toggleLeftRegion: () =>
+				store.setState((s) =>
+					s.panels.left && s.activePanelTab !== "history"
+						? { ...s, panels: { ...s.panels, left: false } }
+						: {
+								...s,
+								activePanelTab:
+									s.activePanelTab === "history" ? "library" : s.activePanelTab,
 								panels: { ...s.panels, left: true },
 							},
 				),
