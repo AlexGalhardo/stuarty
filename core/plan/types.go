@@ -11,7 +11,7 @@ import (
 
 // BitmapVersion is part of every bitmap key; bump it with any change that
 // alters the bytes the rasterizer produces (SDD-004 §5).
-const BitmapVersion = 1
+const BitmapVersion = 2
 
 // Rect is a rectangle in pixels.
 type Rect struct {

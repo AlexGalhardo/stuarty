@@ -1,21 +1,92 @@
-package raster
+package rasterize
 
 import (
 	"bytes"
 	"encoding/binary"
 	"math"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem-video/core/plan"
 )
 
-// The Rust rasterizer (renderer/vukem-renderer-text, SDD-013 section 3.11) is held byte for byte to
-// this package. These vectors are the contract between the two: the specs and the bitmap this
-// package draws for each. `cargo test` in renderer/ reads the same file. Regenerating it is a
-// reviewed change of output (rule .agents/skills/renderer-parity):
-// VUKEM_WRITE_RENDERER_VECTORS=1 go test ./engine/raster -run RasterVectors.
+// vectorStyle is the style of a vector with the colours parsed, in the order the file holds it.
+type vectorStyle struct {
+	fontFamily string
+	fontWeight int
+	size       float64
+	color      colour
+
+	strokeColor colour
+	strokeWidth float64
+
+	shadowColor colour
+	shadowDX    float64
+	shadowDY    float64
+	shadowBlur  float64
+
+	background        *colour
+	backgroundPadding float64
+	backgroundRadius  float64
+
+	align      string
+	lineHeight float64
+	maxWidth   float64
+	uppercase  bool
+
+	highlight           bool
+	highlightColor      colour
+	highlightBackground *colour
+}
+
+func mustColour(t *testing.T, s string) colour {
+	t.Helper()
+
+	c, err := parseColour(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return c
+}
+
+func optColour(t *testing.T, s string) *colour {
+	t.Helper()
+
+	if s == "" {
+		return nil
+	}
+
+	c := mustColour(t, s)
+
+	return &c
+}
+
+func mustStyle(t *testing.T, p plan.ResolvedStyle) vectorStyle {
+	t.Helper()
+
+	st := vectorStyle{
+		fontFamily: p.FontFamily, fontWeight: p.FontWeight, size: p.Size,
+		color: mustColour(t, p.Color), strokeColor: mustColour(t, p.StrokeColor), strokeWidth: p.StrokeWidth,
+		shadowColor: mustColour(t, p.ShadowColor), shadowDX: p.ShadowDX, shadowDY: p.ShadowDY, shadowBlur: p.ShadowBlur,
+		background: optColour(t, p.BackgroundColor), backgroundPadding: p.BackgroundPadding,
+		backgroundRadius: p.BackgroundRadius, align: p.Align, lineHeight: p.LineHeight, maxWidth: p.MaxWidth,
+		uppercase: p.Uppercase, highlight: p.Highlight != "none",
+		highlightBackground: optColour(t, p.HighlightBackground),
+	}
+
+	if p.HighlightColor != "" {
+		st.highlightColor = mustColour(t, p.HighlightColor)
+	}
+
+	return st
+}
+
+// The Rust rasterizer (renderer/vukem-renderer-text, SDD-013 section 3.11) is the reference. These
+// vectors are the specs and the bitmap it draws for each, written by `cargo test` in renderer/
+// (VUKEM_WRITE_RASTER_VECTORS=1, a reviewed change of output, rule .agents/skills/renderer-parity).
+// This package encodes the same specs, draws them through the renderer module under wazero and must
+// get the same bytes: the file is the contract between the native crate and the module.
 const rasterVectorsPath = "../../renderer/testdata/raster-vectors.bin"
 
 type vectorCase struct {
@@ -74,7 +145,7 @@ type vectorWriter struct{ bytes.Buffer }
 func (w *vectorWriter) u32(v int)       { _ = binary.Write(w, binary.LittleEndian, uint32(v)) }
 func (w *vectorWriter) f64(v float64)   { _ = binary.Write(w, binary.LittleEndian, math.Float64bits(v)) }
 func (w *vectorWriter) str(s string)    { w.u32(len(s)); w.WriteString(s) }
-func (w *vectorWriter) colour(c Colour) { w.Write([]byte{c.R, c.G, c.B, c.A}) }
+func (w *vectorWriter) colour(c colour) { w.Write(c[:]) }
 
 // pixels writes the bytes as runs: the length of a run of zero bytes, the length of the run of other bytes
 // that follows and those bytes, until the whole bitmap is written. A text bitmap is mostly transparent, so
@@ -107,7 +178,7 @@ func (w *vectorWriter) flag(b bool) {
 	}
 }
 
-func (w *vectorWriter) optColour(c *Colour) {
+func (w *vectorWriter) optColour(c *colour) {
 	w.flag(c != nil)
 
 	if c != nil {
@@ -178,19 +249,21 @@ func encodeShapeSpec(t *testing.T, w *vectorWriter, spec plan.BitmapSpec) {
 
 	w.u32(0)
 
-	sh, err := resolveShape(*spec.Shape)
-	if err != nil {
-		t.Fatal(err)
+	sh := spec.Shape
+	kind := map[string]int{ShapeRect: 0, ShapeRoundedRect: 1, ShapeEllipse: 2}[sh.Shape]
+
+	var stroke colour
+	if sh.StrokeWidth > 0 {
+		stroke = mustColour(t, sh.StrokeColor)
 	}
 
-	kind := map[string]int{ShapeRect: 0, ShapeRoundedRect: 1, ShapeEllipse: 2}[sh.kind]
 	w.u32(kind)
-	w.f64(sh.width)
-	w.f64(sh.height)
-	w.f64(sh.radius)
-	w.f64(sh.strokeWidth)
-	w.colour(sh.fill)
-	w.colour(sh.strokeColor)
+	w.f64(sh.Width)
+	w.f64(sh.Height)
+	w.f64(sh.Radius)
+	w.f64(sh.StrokeWidth)
+	w.colour(mustColour(t, sh.Fill))
+	w.colour(stroke)
 	w.f64(spec.PixelScale)
 }
 
@@ -247,20 +320,10 @@ func encodeTextSpec(t *testing.T, w *vectorWriter, spec plan.BitmapSpec) {
 	w.f64(spec.PixelScale)
 }
 
-// TestRasterVectorsAreCurrent keeps renderer/testdata/raster-vectors.bin equal to what this package
-// draws.
+// TestRasterVectorsAreCurrent keeps renderer/testdata/raster-vectors.bin equal to what the renderer
+// module draws through this package.
 func TestRasterVectorsAreCurrent(t *testing.T) {
 	got := encodeRasterVectors(t)
-
-	if os.Getenv("VUKEM_WRITE_RENDERER_VECTORS") == "1" {
-		if err := os.MkdirAll(filepath.Dir(rasterVectorsPath), 0o750); err != nil {
-			t.Fatal(err)
-		}
-
-		if err := os.WriteFile(rasterVectorsPath, got, 0o600); err != nil {
-			t.Fatal(err)
-		}
-	}
 
 	want, err := os.ReadFile(rasterVectorsPath)
 	if err != nil {
@@ -269,6 +332,6 @@ func TestRasterVectorsAreCurrent(t *testing.T) {
 
 	if !bytes.Equal(got, want) {
 		t.Fatal("renderer/testdata/raster-vectors.bin is out of date: regenerate it with " +
-			"VUKEM_WRITE_RENDERER_VECTORS=1 and review the change")
+			"VUKEM_WRITE_RASTER_VECTORS=1 and review the change")
 	}
 }

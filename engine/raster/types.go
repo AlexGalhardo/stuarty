@@ -5,7 +5,7 @@ import "github.com/AlexGalhardo/vukem-video/core/plan"
 // Version is bumped on any change that alters output bytes (SDD-004 section 5).
 // It must equal plan.BitmapVersion, which is part of every bitmap key:
 // TestVersionMatchesThePlan fails when they differ.
-const Version = 1
+const Version = 2
 
 // Kinds of plan.BitmapSpec.
 const (

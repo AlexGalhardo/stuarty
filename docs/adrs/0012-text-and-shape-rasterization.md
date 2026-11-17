@@ -1,6 +1,6 @@
 # ADR-0012: Text and shapes are rasterized by Go code with bundled fonts
 
-- Status: Accepted (2026-11-14); library choice confirmed by the Prototype measurement below (P1-RND-003, 2026-11-14)
+- Status: Accepted (2026-11-14); library choice confirmed by the Prototype measurement below (P1-RND-003, 2026-11-14); the implementation moved to Rust and the Rust output became the reference (TASK-0220, 2026-11-16, see the last note)
 - Deciders: author (D-001, D-014, D-022), architect
 - Links: post-mortems §1, §6, stack trade-offs §3, ADR-0003, SDD-004
 
@@ -55,3 +55,7 @@ Negative: bundled fonts add to the binary size.
 ## Note (TASK-0219, 2026-11-16): the port to the renderer
 
 Stage E of ADR-0029 ports this package to `renderer/vukem-renderer-text` (shaping with `harfrust`, fonts and outlines with `skrifa`, `unicode-bidi`, `unicode-linebreak` and `unicode-script`; the bundled fonts and their licences stay where they are). The decision above, go-text and a scanline filling step of our own, stays in force until the Rust port draws the bytes of the golden suite: SDD-013 section 3.10 records how far it does (the shapes and the static fonts do, the variable fonts differ by go-text's missing kerning and its `float32` points) and what the author decides before `engine/raster` is removed.
+
+## Note (TASK-0220, 2026-11-16): the Rust rasterizer is the reference
+
+The author chose to accept the Rust output as the new reference rather than keep go-text's shaping. The reason: `harfrust` applies the kerning of the variable fonts (Inter `Wo`, `VA`, `To`, `LT`) that go-text 0.3.5 missed, so the text is spaced as the typeface intends. The cost is accepted: `plan.BitmapVersion` went from 1 to 2, which changes the key of every bitmap and invalidates the cached ones; the 15 goldens in Inter, Montserrat, Playfair Display and JetBrains Mono (and the user-font caption, whose GPOS rounding differs by 1/64 pixel) were regenerated, and the 5 in static fonts and shapes did not change. The decision of this ADR stays in force in what it says about bundled fonts, no system fonts and one rasterizer for the preview and the export; only the language and the shaping library changed. `engine/raster` is removed and `engine/rasterize` is the Go client of the module (SDD-004 section 5, SDD-013 section 4.2.1); the fonts and their licences moved to `renderer/fonts/`.

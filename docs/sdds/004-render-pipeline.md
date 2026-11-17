@@ -468,7 +468,8 @@ As built (P1-RND-003, aligned with `core/plan` by the follow-up): `BitmapSpec`, 
 
 ### 5.1 Layout rules
 
-1. Shaping with `go-text/typesetting` using the font file of the style's family and weight. Text direction per paragraph follows the Unicode bidirectional algorithm.
+1. Shaping with `harfrust` (HarfBuzz) in the Rust rasterizer `renderer/vukem-renderer-text`, using the font file of the style's family and weight (a variable font at its `wght`). The kerning, the ligatures and the other GPOS features of the font apply, so the pairs of Inter, Montserrat and Playfair Display (`Wo`, `VA`, `To`, `LT`) are kerned as the font says. Text direction per paragraph follows the Unicode bidirectional algorithm. **Reference (TASK-0220, decision of the author, 2026-11-16):** the bytes this rasterizer draws are the reference of every golden, cache and export since `BitmapVersion` 2. The Go rasterizer it replaced (go-text) missed the kerning of most pairs of the variable fonts, truncated a GPOS value where HarfBuzz rounds and computed the points of a variable glyph in `float32`; correct kerning was judged worth invalidating every cached bitmap (the key holds the version), and a document that kept its words now draws a few pixels narrower or wider lines in the variable fonts. Static fonts (Anton, Bebas Neue) and shapes are unchanged byte for byte.
+
 2. Lines break at the positions given by the library's line segmenter so that no line is wider than `max_width`; forced breaks always break. A single word wider than `max_width` stays on its own line and overflows.
 3. Line height is `size × line_height`. The block height is the number of lines times the line height.
 4. Lines are aligned inside the block's width (the widest line) by `align`.

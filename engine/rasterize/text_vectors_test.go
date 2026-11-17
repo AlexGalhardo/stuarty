@@ -1,4 +1,4 @@
-package raster
+package rasterize
 
 import "github.com/AlexGalhardo/vukem-video/core/plan"
 
