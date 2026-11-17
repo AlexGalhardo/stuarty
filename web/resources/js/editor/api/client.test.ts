@@ -123,11 +123,13 @@ describe("ALPHA snap points, fonts, system and audit", () => {
 		const { transport, requests } = fake(ok({}));
 		const client = createClient(transport);
 		await client.getFonts();
+		await client.listAssets("image");
 		await client.getSystem();
 		await client.getSystem({ full: true, verify: true });
 		await client.listAudit({ projectId: "prj_a", cursor: "c1", limit: 20 });
 		expect(requests.map((r) => [r.method, r.path, r.timeoutMs])).toEqual([
 			["GET", "/fonts", 10_000],
+			["GET", "/assets?kind=image", 10_000],
 			["GET", "/system", 10_000],
 			["GET", "/system?full=1&verify=1", 10_000],
 			["GET", "/audit?project_id=prj_a&cursor=c1&limit=20", 10_000],

@@ -13,7 +13,7 @@ function brandFont(): string {
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, "Brand Anton.ttf");
 	copyFileSync(
-		join(process.cwd(), "..", "engine", "raster", "fonts", "Anton-Regular.ttf"),
+		join(process.cwd(), "..", "renderer", "fonts", "Anton-Regular.ttf"),
 		out,
 	);
 	return out;
@@ -142,5 +142,37 @@ test.describe("brand-kit", () => {
 		await expect(
 			page.locator("[data-brand-color='accent']").first(),
 		).toBeVisible();
+	});
+
+	// VV-117: the logo is chosen from the images of the workspace, never typed as a hash.
+	test("choose the logo from the images of the workspace", async ({
+		page,
+		request,
+	}) => {
+		const call = await caller(request);
+		await call("PUT", "/brand-kit", { colors: {}, fonts: {} });
+		const logo = join(
+			process.cwd(),
+			"..",
+			".config",
+			"installers",
+			"assets",
+			"vukem-video.png",
+		);
+		await seedProject(request, { tracks: 0, files: [logo] });
+
+		await page.goto("/settings/brand-kit");
+		const pick = page.getByLabel("Logo image from this workspace");
+		await expect(
+			pick.locator("option", { hasText: "vukem-video" }),
+		).toHaveCount(1);
+		await pick.selectOption({ index: 1 });
+		await expect(page.getByLabel("Logo image hash")).toHaveValue(/^sha256:/);
+		await page.getByRole("button", { name: "Save brand kit" }).click();
+		await expect(page.getByText("Brand kit saved.")).toBeVisible();
+
+		const kit = (await call("GET", "/brand-kit")) as { logo?: string };
+		expect(kit.logo).toMatch(/^sha256:[0-9a-f]{64}$/);
+		await call("PUT", "/brand-kit", { colors: {}, fonts: {} });
 	});
 });
