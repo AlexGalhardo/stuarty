@@ -157,7 +157,7 @@ func TestListNamesSchemaHelp(t *testing.T) {
 	}
 	for _, want := range []string{
 		"test.item_add: Adds a text item.", "Arguments:", "track_id (a string, required)",
-		"duration (a whole number, required) between 1 and 108000", `Example: {"op": "test.item_add"`, "Errors: E_VALIDATION",
+		"duration (a whole number, required) between 1 and 108000", `Example: {"op": "test.item_add"`, "ids in the example are placeholders", "Errors: E_VALIDATION",
 		"Scope: edit, phase: prototype", "text (a string, optional)",
 	} {
 		if !strings.Contains(help, want) {
