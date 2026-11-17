@@ -782,6 +782,8 @@ export interface ExportOptions {
 	// A time with a unit (`120f`): the part of the timeline to render.
 	start?: string;
 	end?: string;
+	// The time of the frame of a png export (`120f`).
+	at?: string;
 }
 
 export interface ExportCapabilities {

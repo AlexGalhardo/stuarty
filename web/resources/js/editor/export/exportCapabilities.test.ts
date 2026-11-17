@@ -47,7 +47,7 @@ describe("exportCapabilities", () => {
 				properties: { format: { type: "string" } },
 			}),
 		);
-		expect(caps.formats).toEqual(["mp4", "gif", "wav", "aac"]);
+		expect(caps.formats).toEqual(["mp4", "gif", "wav", "aac", "png"]);
 	});
 
 	test("start and end together offer the range", () => {
