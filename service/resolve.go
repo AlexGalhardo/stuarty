@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"slices"
 
 	"github.com/AlexGalhardo/vukem-video/core/command"
@@ -37,13 +38,13 @@ func (s *svc) resolveOps(
 
 		switch ops[i].Op {
 		case "clip.remove_silences":
-			resolved, rerr = s.resolveSilences(ctx, tx, doc, &ops[i], i)
+			resolved, rerr = s.resolveSilences(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
 		case "caption.from_transcript", "caption.retime_from_clip":
-			resolved, rerr = s.resolveWords(ctx, tx, doc, &ops[i], i)
+			resolved, rerr = s.resolveWords(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
 		case "audio.duck":
-			resolved, rerr = s.resolveSpeech(ctx, tx, doc, &ops[i], i)
+			resolved, rerr = s.resolveSpeech(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
 		case "audio.mark_beats":
-			resolved, rerr = s.resolveBeats(ctx, tx, doc, &ops[i], i)
+			resolved, rerr = s.resolveBeats(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
 		case "font.add":
 			// Not analysis: the core cannot tell whether the font store holds the file.
 			if e := s.checkFontAdd(ctx, tx, &fonts, &ops[i], i); e != nil {
@@ -83,6 +84,44 @@ func (s *svc) resolveOps(
 	}
 
 	return out, nil
+}
+
+// viewFor is the document an operation of the batch sees: when it names an item that the batch itself
+// creates before it (a clip.add followed by caption.from_transcript on it), the document after those
+// operations, so the analysis of the created clip's asset is found (VV-084). The copy is private and is
+// only read; when the earlier operations do not apply it is the document as loaded, and the batch
+// reports their error itself.
+func (s *svc) viewFor(doc *timeline.Document, ops, resolvedSoFar []command.Operation, i int) *timeline.Document {
+	if i == 0 {
+		return doc
+	}
+
+	a, ok := unresolvedArgs(&ops[i])
+	if !ok {
+		return doc
+	}
+
+	missing := func(id string) bool { _, have := doc.Items[id]; return id != "" && !have }
+	if !missing(a.ItemID) && !missing(a.ClipItemID) {
+		return doc
+	}
+
+	prefix := ops[:i]
+	if resolvedSoFar != nil {
+		prefix = resolvedSoFar[:i]
+	}
+
+	n := 0
+	res, err := s.reg.ApplyBatch(doc, prefix, command.Env{NewIDs: func(p string) string {
+		n++
+
+		return fmt.Sprintf("%s_scratch%d", p, n)
+	}})
+	if err != nil {
+		return doc
+	}
+
+	return res.Doc
 }
 
 // opArgs reads the members the resolver needs; a malformed or incomplete
