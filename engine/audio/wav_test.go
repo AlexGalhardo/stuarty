@@ -21,7 +21,8 @@ func TestGainDB(t *testing.T) {
 	}{
 		{"boost", f(-20), f(-12), 48000, -14, 6},
 		{"cut", f(-8), f(-3), 48000, -14, -6},
-		{"the peak ceiling wins over the boost", f(-20), f(-4), 48000, -14, 2.5},
+		{"the limiter takes the excess over the ceiling", f(-20), f(-4), 48000, -14, 6},
+		{"the limit of the limiter wins over the boost", f(-30), f(-4), 48000, -14, 2.5 + MaxLimitingDB},
 		{"silent", nil, nil, 48000, -14, 0},
 		{"too short", f(-30), f(-20), MinMeasuredSamples - 1, -14, 0},
 		{"exactly 0.4 s", f(-20), f(-20), MinMeasuredSamples, -14, 6},
