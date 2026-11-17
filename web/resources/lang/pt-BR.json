@@ -890,6 +890,8 @@
         "remove": "Remover a família de fontes {name}",
         "family": "Nome da família",
         "weight": "Peso",
+        "imported": "Arquivo de fonte importado",
+        "imported_choose": "Escolher um arquivo de fonte importado",
         "hash": "Hash do arquivo da fonte (sha256:...)",
         "add": "Adicionar fonte",
         "brand": "Fontes do kit de marca",

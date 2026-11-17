@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
+import type { ImportedFont } from "../../api/types";
 import {
 	fontAddOperations,
 	fontRemoveOperations,
@@ -16,8 +17,14 @@ import { useDocumentState } from "../../state/EditorContext";
 import Section from "../Section";
 import { useBrandKit } from "../useBrandKit";
 import { useFieldCommit } from "../useFieldCommit";
+import { useFonts } from "../useFonts";
 
 const WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
+
+// A stored font file as the picker shows it: the start of its hash and its size.
+export function importedLabel(file: ImportedFont): string {
+	return `${file.hash.slice(0, 19)}… (${Math.max(1, Math.round(file.bytes / 1024))} KB)`;
+}
 
 // The Fonts section of the project panel (SDD-012 section 12.1, BETA): the
 // user families of the project with a remove button each (`font.remove`), and
@@ -34,6 +41,7 @@ export default function FontsSection(): ReactNode {
 	const brandFonts = Object.entries(useBrandKit()?.fonts ?? {})
 		.filter(([name]) => fonts?.[name] === undefined)
 		.sort(([a], [b]) => a.localeCompare(b));
+	const { imported } = useFonts();
 	const [family, setFamily] = useState("");
 	const [weight, setWeight] = useState("400");
 	const [hash, setHash] = useState("");
@@ -121,6 +129,27 @@ export default function FontsSection(): ReactNode {
 					))}
 				</select>
 			</div>
+			{imported.length > 0 && (
+				<div className="flex flex-col gap-1">
+					<Label htmlFor="font-imported" className="text-xs">
+						{t("ui.editor.fonts.imported")}
+					</Label>
+					<select
+						id="font-imported"
+						value={imported.some((file) => file.hash === hash) ? hash : ""}
+						disabled={!canEdit}
+						className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+						onChange={(event) => setHash(event.target.value)}
+					>
+						<option value="">{t("ui.editor.fonts.imported_choose")}</option>
+						{imported.map((file) => (
+							<option key={file.hash} value={file.hash}>
+								{importedLabel(file)}
+							</option>
+						))}
+					</select>
+				</div>
+			)}
 			<div className="flex flex-col gap-1">
 				<Label htmlFor="font-hash" className="text-xs">
 					{t("ui.editor.fonts.hash")}
