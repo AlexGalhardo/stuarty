@@ -345,6 +345,19 @@ export const IS_MAC: boolean =
 	typeof navigator !== "undefined" &&
 	/Mac|iPhone|iPad/.test(navigator.userAgent);
 
+// The first key of the row that is current now, as shown ("Ctrl+B"), or null
+// when the row does not exist or has no key.
+export function keyLabel(
+	id: string,
+	bindings: Bindings,
+	mac: boolean,
+): string | null {
+	const row = SHORTCUTS.find((candidate) => candidate.id === id);
+	if (row === undefined) return null;
+	const keys = isBindingId(id) ? bindings[id] : row.keys.split(", ")[0];
+	return keys === undefined || keys === "" ? null : displayCombo(keys, mac);
+}
+
 // "Split (Ctrl+B)": the label with the first key of the row that is current
 // now, so a tooltip never states a key that was rebound. A row that does not
 // exist, or has no key, leaves the label alone.
@@ -354,10 +367,6 @@ export function labelWithKey(
 	bindings: Bindings,
 	mac: boolean,
 ): string {
-	const row = SHORTCUTS.find((candidate) => candidate.id === id);
-	if (row === undefined) return label;
-	const keys = isBindingId(id) ? bindings[id] : row.keys.split(", ")[0];
-	return keys === undefined || keys === ""
-		? label
-		: `${label} (${displayCombo(keys, mac)})`;
+	const key = keyLabel(id, bindings, mac);
+	return key === null ? label : `${label} (${key})`;
 }

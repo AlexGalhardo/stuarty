@@ -3,6 +3,11 @@ import { useEffect } from "react";
 import { useT } from "@/lib/i18n";
 import { announce } from "../a11y/announce";
 import {
+	pasteFromClipboard,
+	selectAllItems,
+	takeToClipboard,
+} from "../commands/clipboard";
+import {
 	comboFromEvent,
 	editShortcut,
 	fixedRowFor,
@@ -43,15 +48,6 @@ const EDIT_BINDINGS = [
 	"add_text",
 ] as const;
 
-// The items Mod+C and Mod+X took; Mod+V puts them at the playhead: a copy
-// duplicates, a cut moves (the items stay until pasted, so no command is needed
-// to bring back what a delete removed). UI state of the page: it is not project
-// data and no other actor sees it.
-let clipboard: { ids: readonly string[]; cut: boolean } = {
-	ids: [],
-	cut: false,
-};
-
 // The editing keys (SDD-012 sections 8.2, 15 and 18.7): split, trim to the
 // playhead, Add caption and Add text have rebindable keys (Mod+B, Q, W, C and T
 // by default, section 18.2); the fixed ones split every track, select a side of
@@ -71,13 +67,7 @@ export function useShortcuts(openCaption: () => void): void {
 					: comboFromEvent(event);
 			const row = combo === null ? null : fixedRowFor(combo);
 			if (row === null) return false;
-			const { selection, focusedItem, playheadFrame } = runtime.ui.getState();
-			const held =
-				selection.items.length > 0
-					? selection.items
-					: focusedItem === null
-						? []
-						: [focusedItem];
+			const { selection, playheadFrame } = runtime.ui.getState();
 			if (row === "split_all") void actions.splitAllAtPlayhead();
 			else if (row === "marker") void actions.toggleMarkerAtPlayhead();
 			else if (row === "next_marker") {
@@ -129,13 +119,9 @@ export function useShortcuts(openCaption: () => void): void {
 					idsOnSide(items, playheadFrame, combo === "[" ? "left" : "right"),
 				);
 			} else if (row === "copy" || row === "cut") {
-				if (held.length === 0) return false;
-				clipboard = { ids: [...held], cut: row === "cut" };
+				if (!takeToClipboard(runtime, row === "cut")) return false;
 			} else if (row === "paste") {
-				if (clipboard.ids.length === 0) return false;
-				const { ids, cut } = clipboard;
-				if (cut) clipboard = { ids: [], cut: false };
-				void actions.pasteItems(ids, playheadFrame, cut);
+				if (!pasteFromClipboard(runtime, actions)) return false;
 			} else return false;
 			event.preventDefault();
 			return true;
@@ -186,8 +172,7 @@ export function useShortcuts(openCaption: () => void): void {
 				return;
 			}
 			if (isSelectAllShortcut(event) && !inOverlay(event.target)) {
-				const doc = runtime.documents.getState().document;
-				if (doc !== null) runtime.uiWriter.select(Object.keys(doc.items));
+				selectAllItems(runtime);
 				event.preventDefault();
 				return;
 			}
