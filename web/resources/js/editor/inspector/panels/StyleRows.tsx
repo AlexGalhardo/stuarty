@@ -1,14 +1,16 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 
 import type { CaptionStyle } from "@/generated/timeline";
 import { useT } from "@/lib/i18n";
 import type { StyleChanges, StyleValue } from "../../commands/builders";
+import { useDocumentState } from "../../state/EditorContext";
 import ColorField from "../fields/ColorField";
 import type { CommitResult } from "../fields/commitField";
 import NumberField from "../fields/NumberField";
 import SelectField from "../fields/SelectField";
 import ToggleField from "../fields/ToggleField";
 import { fontFamilyChanges } from "../fontWeight";
+import { useBrandKit } from "../useBrandKit";
 import { useFonts } from "../useFonts";
 
 export type StyleRow =
@@ -82,6 +84,15 @@ export default function StyleRows({
 }): ReactNode {
 	const t = useT();
 	const { families, reload } = useFonts();
+	// Brand kit families the project does not hold yet are not in the select;
+	// the hint says where they are brought in (VV-183).
+	const projectFonts = useDocumentState((s) => s.document?.fonts);
+	const kitFonts = useBrandKit()?.fonts;
+	const brandPending = Object.keys(kitFonts ?? {}).some(
+		(name) =>
+			projectFonts?.[name] === undefined &&
+			!families.some((f) => f.family === name),
+	);
 	const family = text(stored.font_family);
 	const send = (key: string, value: StyleValue): Promise<CommitResult> =>
 		commit({ [key]: value });
@@ -91,31 +102,37 @@ export default function StyleRows({
 		switch (row.kind) {
 			case "font":
 				return (
-					<SelectField
-						key={row.key}
-						label={label}
-						stored={family}
-						disabled={disabled}
-						options={[
-							unset,
-							...families.map((f) => ({
-								value: f.family,
-								label: f.family,
-							})),
-						]}
-						commit={async (value) => {
-							if (value === "") return OK;
-							const weights =
-								families.find((f) => f.family === value)?.weights ?? [];
-							const result = await commit(
-								fontFamilyChanges(value, weights, stored.font_weight),
-							);
-							if (!result.ok && result.error.code === "E_FONT_UNKNOWN") {
-								reload();
-							}
-							return result;
-						}}
-					/>
+					<Fragment key={row.key}>
+						<SelectField
+							label={label}
+							stored={family}
+							disabled={disabled}
+							options={[
+								unset,
+								...families.map((f) => ({
+									value: f.family,
+									label: f.family,
+								})),
+							]}
+							commit={async (value) => {
+								if (value === "") return OK;
+								const weights =
+									families.find((f) => f.family === value)?.weights ?? [];
+								const result = await commit(
+									fontFamilyChanges(value, weights, stored.font_weight),
+								);
+								if (!result.ok && result.error.code === "E_FONT_UNKNOWN") {
+									reload();
+								}
+								return result;
+							}}
+						/>
+						{brandPending && (
+							<p className="pl-[104px] text-xs text-muted-foreground">
+								{t("ui.editor.inspector.style.brand_fonts_hint")}
+							</p>
+						)}
+					</Fragment>
 				);
 			case "weight": {
 				const weights =

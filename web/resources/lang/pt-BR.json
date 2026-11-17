@@ -1083,6 +1083,7 @@
         "text_content": "Conteúdo",
         "style": {
           "default": "Padrão",
+          "brand_fonts_hint": "O kit de marca tem fontes que ainda não estão neste projeto. Traga-as com Usar no projeto, no painel do Projeto, em Fontes.",
           "font_family": "Fonte",
           "font_weight": "Peso",
           "size": "Tamanho",
