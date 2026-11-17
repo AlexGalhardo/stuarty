@@ -313,7 +313,7 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 		"templates.file": service.ScopeRead, "templates.import": service.ScopeEdit,
 		"system.get": service.ScopeRead, "projects.snap_points": service.ScopeRead, "fonts.list": service.ScopeRead,
 		"jobs.file": service.ScopeRead, "audit.list": service.ScopeAdmin, "trash.empty": service.ScopeAdmin,
-		"system.tools.install": service.ScopeAdmin, "system.tools": service.ScopeAdmin,
+		"system.tools.install": service.ScopeAdmin, "system.tools": service.ScopeRead,
 	} {
 		i := slices.IndexFunc(httpapi.Endpoints, func(e httpapi.Endpoint) bool { return e.ID == id })
 		if i < 0 {
@@ -342,7 +342,7 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 		"templates.file": service.ScopeRead, "templates.import": service.ScopeEdit,
 		"system.get": service.ScopeRead, "projects.snap_points": service.ScopeRead, "fonts.list": service.ScopeRead,
 		"audit.list": service.ScopeAdmin, "trash.empty": service.ScopeAdmin,
-		"system.tools.install": service.ScopeAdmin, "system.tools": service.ScopeAdmin,
+		"system.tools.install": service.ScopeAdmin, "system.tools": service.ScopeRead,
 	} {
 		i := slices.IndexFunc(httpapi.Endpoints, func(e httpapi.Endpoint) bool { return e.ID == id })
 		if i < 0 {
@@ -486,7 +486,7 @@ func TestSecurity_T28_BearerLaunchCodeGivesNoBrowserPrivileges(t *testing.T) {
 
 // The install step is a person's click: the local token and a key without
 // admin are refused before any download starts, and a route nobody listed is 404
-// (SDD-000 section 1, SDD-007 section 6.8, T-26).
+// (SDD-000 section 1, SDD-007 section 6.8, T-26). Listing what is installed is a read (VV-080).
 func TestInstallRouteRefusesTheLocalToken(t *testing.T) {
 	t.Parallel()
 
@@ -494,11 +494,14 @@ func TestInstallRouteRefusesTheLocalToken(t *testing.T) {
 
 	for _, r := range []req{
 		{method: http.MethodPost, path: "/api/v1/system/tools/install", body: `{"name":"whisper","model":"tiny"}`},
-		{method: http.MethodGet, path: "/api/v1/system/tools"},
 	} {
 		if res := h.do(r); res.status != http.StatusForbidden || res.json(t)["code"] != "E_FORBIDDEN" {
 			t.Errorf("%s %s with the local token = %d %s, want 403 E_FORBIDDEN", r.method, r.path, res.status, res.body)
 		}
+	}
+
+	if res := h.get("/api/v1/system/tools"); res.status != http.StatusOK {
+		t.Errorf("GET /api/v1/system/tools with the local token = %d %s, want 200", res.status, res.body)
 	}
 
 	if res := h.do(req{method: http.MethodPost, path: "/api/v1/system/tools/install", noAuth: true}); res.status !=

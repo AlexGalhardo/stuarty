@@ -30,7 +30,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/projects/{id}/trash` | [`projects.trash`](/docs/api/projects.trash) | Move a project to the trash |
 | `POST` | `/api/v1/projects/{id}/undo` | [`projects.undo`](/docs/api/projects.undo) | Undo the caller's latest step |
 | `POST` | `/api/v1/projects/import` | [`projects.bundle.import`](/docs/api/projects.bundle.import) | Import a .vvbundle as a project |
-| `POST` | `/api/v1/trash/empty` | [`trash.empty`](/docs/api/trash.empty) | Empty the trash for good |
+| `POST` | `/api/v1/trash/empty` | [`trash.empty`](/docs/api/trash.empty) | Empty the trash for good (a browser session or an admin key only; the local token gets 403) |
 
 ## Media
 
@@ -104,7 +104,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/system` | [`system.get`](/docs/api/system.get) | Read the diagnostic report |
 | `POST` | `/api/v1/system/launch` | [`system.launch`](/docs/api/system.launch) | Issue a one-time browser launch code |
 | `GET` | `/api/v1/system/tools` | [`system.tools`](/docs/api/system.tools) | List the installed helpers and the install progress |
-| `POST` | `/api/v1/system/tools/install` | [`system.tools.install`](/docs/api/system.tools.install) | Install the transcription helper |
+| `POST` | `/api/v1/system/tools/install` | [`system.tools.install`](/docs/api/system.tools.install) | Install the transcription helper (a browser session or an admin key only; the local token gets 403) |
 
 ## API keys
 

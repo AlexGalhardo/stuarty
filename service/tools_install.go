@@ -236,14 +236,11 @@ func (s *svc) ToolsInstall(ctx context.Context, req ToolsInstallRequest) (*Tools
 }
 
 // ToolsStatus lists what is installed and the progress of a running install.
+// It only reads, so any caller that may read may ask: an agent needs to know whether the helper is
+// installed before it asks for a transcript (VV-080). Only the install is for a person.
 func (s *svc) ToolsStatus(ctx context.Context, _ ToolsStatusRequest) (*ToolsStatusResult, error) {
-	c, err := authorizeScope(ctx, ScopeAdmin, "")
-	if err != nil {
+	if _, err := authorize(ctx, "ToolsStatus", ""); err != nil {
 		return nil, err
-	}
-
-	if c.ProjectID != "" || !humanForTools(c) {
-		return nil, installDenied()
 	}
 
 	res := &ToolsStatusResult{State: "idle", Installed: []InstalledTool{}}

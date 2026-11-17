@@ -10727,7 +10727,7 @@
             "bearer": []
           }
         ],
-        "summary": "Install the transcription helper"
+        "summary": "Install the transcription helper (a browser session or an admin key only; the local token gets 403)"
       }
     },
     "/api/v1/templates": {
@@ -11164,7 +11164,7 @@
             "bearer": []
           }
         ],
-        "summary": "Empty the trash for good"
+        "summary": "Empty the trash for good (a browser session or an admin key only; the local token gets 403)"
       }
     },
     "/api/v1/users": {
